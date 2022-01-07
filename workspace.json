@@ -1,6 +1,7 @@
 {
   "version": 2,
   "projects": {
+    "browser": "packages/browser",
     "date": "packages/date",
     "model": "packages/model",
     "util": "packages/util"

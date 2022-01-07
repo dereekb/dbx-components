@@ -1,5 +1,8 @@
 {
   "name": "@dereekb/util",
   "version": "0.0.1",
-  "type": "commonjs"
+  "type": "commonjs",
+  "dependencies": {
+    "extra-set": "2.2.11"
+  }
 }
