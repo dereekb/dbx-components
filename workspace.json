@@ -1,6 +1,8 @@
 {
   "version": 2,
   "projects": {
-    "utils": "packages/utils"
+    "date": "packages/date",
+    "model": "packages/model",
+    "util": "packages/util"
   }
 }
