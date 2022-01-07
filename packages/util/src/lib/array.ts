@@ -1,6 +1,19 @@
+import { ReadKeyFunction } from "./key";
 import { Maybe } from "./value";
 
+// MARK: Types
 export type ArrayOrValue<T> = T | T[];
+
+// MARK: Functions
+/**
+ * Converts the input value to an array containing itself, or returns itself if it is an array.
+ * 
+ * @param arrayOrValue 
+ * @returns 
+ */
+export function convertToArray<T>(arrayOrValue: ArrayOrValue<T>): T[] {
+  return Array.isArray(arrayOrValue) ? arrayOrValue : [arrayOrValue];
+}
 
 /**
  * Returns the first value from the array.

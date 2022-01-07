@@ -1,22 +1,13 @@
-import { concatArrays } from "./array";
+import { concatArrays, flattenArray } from "./array";
 import { ReadKeyFunction } from "./key";
-import { caseInsensitiveString } from "./string";
 import { Maybe } from "./value";
 
 export function concatArraysUnique<T extends string | number = string | number>(...arrays: (Maybe<T[]>)[]): T[] {
   return unique(concatArrays(...arrays));
 }
 
-export function flattenArrayUniqueCaseInsensitiveStrings(array: string[][]): string[] {
-  return unique(flattenArray(array).map(caseInsensitiveString));
-}
-
 export function flattenArrayUnique<T extends string | number = string | number>(array: T[][]): T[] {
   return unique(flattenArray(array));
-}
-
-export function flattenArray<T>(array: T[][]): T[] {
-  return array.filter((x) => Boolean(x)).reduce((accumulator, value) => accumulator.concat([...value]), []);
 }
 
 export function unique<T extends string | number = string | number>(values: T[]): T[] {
@@ -36,9 +27,4 @@ export function findUnique<T, K extends string | number = string | number>(model
 
     return false;
   });
-}
-
-// MARK: Strings
-export function findUniqueCaseInsensitiveStrings<T, K extends string = string>(models: T[], readKey: ReadKeyFunction<T, K>, additionalKeys: K[] = []): T[] {
-  return findUnique(models, (key) => caseInsensitiveString(readKey(key)), additionalKeys.map(caseInsensitiveString));
 }

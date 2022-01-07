@@ -1,3 +1,4 @@
+import { MapStringFn } from "./map";
 
 /**
  * Represents a string that is made up of comma-separated values.
@@ -13,8 +14,8 @@ export function caseInsensitiveString(input: any): any {
 }
 
 export function splitCommaSeparatedString(input: CommaSeparatedString<string>): string[];
-export function splitCommaSeparatedString<T = any>(input: CommaSeparatedString<T>, mapFn: (input: string) => T): T[];
-export function splitCommaSeparatedString<T = any>(input: CommaSeparatedString<T>, mapFn: (input: string) => T = (x) => x as any): T[] {
+export function splitCommaSeparatedString<T = any>(input: CommaSeparatedString<T>, mapFn: MapStringFn<T>): T[];
+export function splitCommaSeparatedString<T = any>(input: CommaSeparatedString<T>, mapFn: MapStringFn<T>= (x) => x as any): T[] {
   const splits = input.split(',');
   return splits.map(x => mapFn(x.trim()));
 }
