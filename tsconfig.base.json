@@ -14,7 +14,9 @@
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
-    "paths": {}
+    "paths": {
+      "@dereekb/utils": ["packages/utils/src/index.ts"]
+    }
   },
   "exclude": ["node_modules", "tmp"]
 }
