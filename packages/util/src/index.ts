@@ -5,6 +5,7 @@ export * from './lib/array.string';
 export * from './lib/array';
 export * from './lib/array.unique';
 export * from './lib/boolean';
+export * from './lib/destroyable';
 export * from './lib/getter';
 export * from './lib/grouping';
 export * from './lib/iterate';

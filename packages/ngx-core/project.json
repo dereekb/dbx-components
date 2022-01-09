@@ -1,0 +1,42 @@
+{
+  "projectType": "library",
+  "root": "packages/ngx-core",
+  "sourceRoot": "packages/ngx-core/src",
+  "prefix": "dereekb",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/angular:ng-packagr-lite",
+      "outputs": ["dist/packages/ngx-core"],
+      "options": {
+        "project": "packages/ngx-core/ng-package.json"
+      },
+      "configurations": {
+        "production": {
+          "tsConfig": "packages/ngx-core/tsconfig.lib.prod.json"
+        },
+        "development": {
+          "tsConfig": "packages/ngx-core/tsconfig.lib.json"
+        }
+      },
+      "defaultConfiguration": "production"
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": ["coverage/packages/ngx-core"],
+      "options": {
+        "jestConfig": "packages/ngx-core/jest.config.js",
+        "passWithNoTests": true
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "lintFilePatterns": [
+          "packages/ngx-core/src/**/*.ts",
+          "packages/ngx-core/src/**/*.html"
+        ]
+      }
+    }
+  },
+  "tags": []
+}

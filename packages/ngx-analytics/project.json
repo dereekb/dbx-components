@@ -1,0 +1,42 @@
+{
+  "projectType": "library",
+  "root": "packages/ngx-analytics",
+  "sourceRoot": "packages/ngx-analytics/src",
+  "prefix": "dereekb",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/angular:ng-packagr-lite",
+      "outputs": ["dist/packages/ngx-analytics"],
+      "options": {
+        "project": "packages/ngx-analytics/ng-package.json"
+      },
+      "configurations": {
+        "production": {
+          "tsConfig": "packages/ngx-analytics/tsconfig.lib.prod.json"
+        },
+        "development": {
+          "tsConfig": "packages/ngx-analytics/tsconfig.lib.json"
+        }
+      },
+      "defaultConfiguration": "production"
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": ["coverage/packages/ngx-analytics"],
+      "options": {
+        "jestConfig": "packages/ngx-analytics/jest.config.js",
+        "passWithNoTests": true
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "lintFilePatterns": [
+          "packages/ngx-analytics/src/**/*.ts",
+          "packages/ngx-analytics/src/**/*.html"
+        ]
+      }
+    }
+  },
+  "tags": []
+}

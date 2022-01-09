@@ -1,0 +1,9 @@
+{
+  "name": "@dereekb/util-rxjs",
+  "version": "0.0.1",
+  "type": "commonjs",
+  "dependencies": {
+    "rxjs": "^6.5.4",
+    "ms": "2.1.3"
+  }
+}

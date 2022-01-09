@@ -1,0 +1,96 @@
+import { exhaustMap, map, switchMap, tap } from 'rxjs/operators';
+import { Directive, Input, OnInit, OnDestroy } from '@angular/core';
+import { Host } from '@angular/core';
+import { BehaviorSubject, merge, Observable, of } from 'rxjs';
+import { ActionContextStoreSourceInstance } from '../../action/action';
+import { AbstractSubscriptionDirective } from '../../utility/subscription.directive';
+import { DbNgxAnalyticsService } from '../analytics.service';
+import { AppError } from '../../error/error';
+
+export enum DbNgxAppActionAnalyticsTriggerType {
+  TRIGGER,
+  READY,
+  SUCCESS,
+  ERROR
+}
+
+export interface DbNgxAppActionAnalyticsConfig<T = any, O = any> {
+  onTriggered: (service: DbNgxAnalyticsService) => void;
+  onReady: (service: DbNgxAnalyticsService, value: T) => void;
+  onSuccess: (service: DbNgxAnalyticsService, value: O) => void;
+  onError: (service: DbNgxAnalyticsService, error: AppError) => void;
+}
+
+/**
+ * Used to listen to an ActionContext and send analytical events based on action events.
+ */
+@Directive({
+  selector: '[dbNgxActionAnalytics]',
+})
+export class DbNgxActionAnalyticsDirective<T> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
+
+  private _config = new BehaviorSubject<DbNgxAppActionAnalyticsConfig>(undefined);
+  readonly config$ = this._config.asObservable();
+
+  @Input('appActionAnalytics')
+  get config(): DbNgxAppActionAnalyticsConfig {
+    return this._config.value;
+  }
+
+  set config(config: DbNgxAppActionAnalyticsConfig) {
+    this._config.next(config);
+  }
+
+  constructor(
+    @Host() readonly source: ActionContextStoreSourceInstance,
+    readonly analyticsService: DbNgxAnalyticsService
+  ) {
+    super();
+  }
+
+  ngOnInit(): void {
+    this.sub = this.config$.pipe(
+      switchMap(({ onTriggered, onReady, onSuccess, onError }) => {
+        const triggerObs: Observable<any>[] = [];
+
+        if (onTriggered) {
+          triggerObs.push(this.source.triggered$.pipe(
+            tap(() => onTriggered(this.analyticsService))
+          ));
+        }
+
+        if (onReady) {
+          triggerObs.push(this.source.valueReady$.pipe(
+            tap((value) => onReady(this.analyticsService, value))
+          ));
+        }
+
+        if (onSuccess) {
+          triggerObs.push(this.source.triggered$.pipe(
+            tap((result) => onSuccess(this.analyticsService, result))
+          ));
+        }
+
+        if (onError) {
+          triggerObs.push(this.source.triggered$.pipe(
+            tap((error) => onError(this.analyticsService, error))
+          ));
+        }
+
+        if (triggerObs.length) {
+          return merge(triggerObs);
+        } else {
+          return of();
+        }
+      })
+    ).subscribe();
+  }
+
+  ngOnDestroy(): void {
+    this.source.lockSet.onNextUnlock(() => {
+      super.ngOnDestroy();
+      this._config.complete();
+    });
+  }
+
+}

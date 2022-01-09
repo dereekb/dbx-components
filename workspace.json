@@ -4,6 +4,9 @@
     "browser": "packages/browser",
     "date": "packages/date",
     "model": "packages/model",
-    "util": "packages/util"
+    "ngx-analytics": "packages/ngx-analytics",
+    "ngx-core": "packages/ngx-core",
+    "util": "packages/util",
+    "util-rxjs": "packages/util-rxjs"
   }
 }

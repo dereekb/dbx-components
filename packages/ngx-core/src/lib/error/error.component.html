@@ -1,0 +1,5 @@
+<div *ngIf="errorData" class="app-error">
+  <h4>An error occured.</h4>
+  <!-- <p class="app-error-code" *ngIf="errorData.code">{{ errorData.code }}</p> -->
+  <p class="app-error-message" *ngIf="errorData.message">{{ errorData.message }}</p>
+</div>
