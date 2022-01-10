@@ -9,7 +9,7 @@ import { DbNgxInjectedComponentConfig } from './injected';
  */
 @Component({
   template: `<ng-template #content></ng-template>`,
-  selector: 'dbngx-injected-content'
+  selector: 'dbx-injected-content'
 })
 export class DbNgxInjectedComponent<T> extends AbstractSubscriptionDirective implements OnInit {
 

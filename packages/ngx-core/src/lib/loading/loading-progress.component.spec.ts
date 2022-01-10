@@ -51,7 +51,7 @@ describe('AppLoadingProgress', () => {
 
 @Component({
   template: `
-    <app-loading-progress [text]="text"></app-loading-progress>
+    <dbx-loading-progress [text]="text"></dbx-loading-progress>
   `
 })
 class LoadingProgressSpinnerComponent {
@@ -62,7 +62,7 @@ class LoadingProgressSpinnerComponent {
 
 @Component({
   template: `
-    <app-loading-progress [linear]="true" [text]="text"></app-loading-progress>
+    <dbx-loading-progress [linear]="true" [text]="text"></dbx-loading-progress>
   `
 })
 class LoadingProgressLinearComponent {

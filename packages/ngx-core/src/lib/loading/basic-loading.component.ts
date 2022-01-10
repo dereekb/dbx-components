@@ -21,7 +21,7 @@ export enum LoadingComponentState {
  * Basic loading component.
  */
 @Component({
-  selector: 'dbngx-basic-loading',
+  selector: 'dbx-basic-loading',
   templateUrl: './basic-loading.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })

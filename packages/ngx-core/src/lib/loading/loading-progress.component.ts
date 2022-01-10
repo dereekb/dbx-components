@@ -9,7 +9,7 @@ export const DEFAULT_LOADING_PROGRESS_DIAMETER = 96;
  * Basic loading progress component.
  */
 @Component({
-  selector: 'app-loading-progress',
+  selector: 'dbx-loading-progress',
   template: `
   <div class="loading-progress-view">
     <mat-progress-spinner *ngIf="!linear" [diameter]="diameter || 96" [mode]="mode" [color]="color" [value]="value" style="margin: auto;"></mat-progress-spinner>

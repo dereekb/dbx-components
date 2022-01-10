@@ -1,18 +1,18 @@
 import { Component, Input, ChangeDetectorRef, ChangeDetectionStrategy, NgZone } from '@angular/core';
 import { ThemePalette } from '@angular/material/core';
 import { MatProgressBar, ProgressBarMode } from '@angular/material/progress-bar';
-import { AbstractSubscriptionDirective } from '../utility';
+import { AbstractSubscriptionDirective } from '../subscription';
 import { LoadingContext } from './loading';
 
 @Component({
-  selector: 'app-loading',
+  selector: 'dbx-loading',
   template: `
-  <dbngx-basic-loading [show]="show" [color]="color" [text]="text" [mode]="mode" [linear]="linear" [diameter]="diameter" [error]="error" [waitFor]="loading">
+  <dbx-basic-loading [show]="show" [color]="color" [text]="text" [mode]="mode" [linear]="linear" [diameter]="diameter" [error]="error" [waitFor]="loading">
     <ng-content loading select="[loading]"></ng-content>
     <ng-content></ng-content>
     <ng-content error select="[error]"></ng-content>
     <ng-content errorAction select="[errorAction]"></ng-content>
-  </dbngx-basic-loading>
+  </dbx-basic-loading>
   `
 })
 export class AppLoadingComponent extends AbstractSubscriptionDirective {

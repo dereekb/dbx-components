@@ -1,6 +1,8 @@
+import { PrimativeKey } from './key';
 import { symmetricDifference } from "extra-set";
 import { flattenArray } from "./array";
 import { caseInsensitiveString } from "./string";
+import { Maybe } from './value';
 
 // MARK: Functions
 export function flattenArrayToSet<T>(array: T[][]): Set<T> {
@@ -13,6 +15,14 @@ export function hasDifferentValues<T>(a: T[], b: T[]): boolean {
 
 export function hasDifferentStringsNoCase(a: string[], b: string[]): boolean {
   return hasDifferentValues(a.map(caseInsensitiveString), b.map(caseInsensitiveString));
+}
+
+export function symmetricDifferenceKeys<T extends PrimativeKey = PrimativeKey>(a: Maybe<T>[], b: Maybe<T>[]): Maybe<T>[] {
+  return symmetricDifferenceKeysSet(new Set(a), new Set(b));
+}
+
+export function symmetricDifferenceKeysSet<T>(a: Set<Maybe<T>>, b: Set<Maybe<T>>): Maybe<T>[] {
+  return Array.from(symmetricDifference(a, b));
 }
 
 /**

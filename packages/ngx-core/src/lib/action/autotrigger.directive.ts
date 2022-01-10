@@ -1,0 +1,159 @@
+import { Directive, Input, OnInit, OnDestroy } from '@angular/core';
+import { AbstractSubscriptionDirective } from '../utility/subscription.directive';
+import { count, debounce, debounceTime, distinctUntilChanged, exhaustMap, filter, first, map, mergeMap, shareReplay, switchMap, tap, throttle, timeoutWith, withLatestFrom } from 'rxjs/operators';
+import { EMPTY, interval, Subject, combineLatest, of } from 'rxjs';
+import { Observable } from 'rxjs';
+import { ActionContextStoreSourceInstance } from './action';
+import { Host } from '@angular/core';
+import { BehaviorSubject } from 'rxjs';
+
+const DEFAULT_DEBOUNCE_MS = 2 * 1000;
+
+const DEFAULT_THROTTLE_MS = 10 * 1000;
+
+const DEFAULT_ERROR_THROTTLE_MS = 3 * 1000;
+
+const MAX_ERRORS_TO_THROTTLE_ON = 6;
+
+/**
+ * Extension of DbNgxActionTransitionSafetyDirective that automatically triggers the action periodically when it is in a modified state.
+ */
+@Directive({
+  selector: '[dbxActionAutoTrigger]',
+})
+export class DbNgxActionAutoTriggerDirective<T, O> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
+
+  private _triggerEnabled = new BehaviorSubject<boolean>(true);
+
+  /**
+   * How much to throttle the auto-triggering.
+   */
+  @Input('dbxActionAutoTrigger')
+  get triggerEnabled(): boolean {
+    return this._triggerEnabled.value;
+  }
+
+  set triggerEnabled(triggerEnabled: boolean) {
+    triggerEnabled = triggerEnabled !== false;  // Default to true
+
+    if (this.triggerEnabled !== triggerEnabled) {
+      this._triggerEnabled.next(triggerEnabled);
+    }
+  }
+
+  @Input()
+  triggerDebounce = DEFAULT_DEBOUNCE_MS;
+
+  @Input()
+  triggerThrottle = DEFAULT_THROTTLE_MS;
+
+  @Input()
+  triggerErrorThrottle = DEFAULT_ERROR_THROTTLE_MS;
+
+  maxErrorsForThrottle = MAX_ERRORS_TO_THROTTLE_ON;
+
+  /**
+   * Optional input to override both triggerDebounce and triggerThrottle.
+   *
+   * Used in forms that are simple.
+   */
+  @Input()
+  set fastTrigger(fastTrigger: boolean) {
+    if (fastTrigger) {
+      this.triggerDebounce = 200;
+      this.triggerThrottle = 500;
+    }
+  }
+
+  /**
+   * Optional input to override both triggerDebounce and triggerThrottle to be 0.
+   *
+   * Used in forms that generally return a single value.
+   */
+  @Input()
+  set instantTrigger(instantTrigger: boolean) {
+    if (instantTrigger) {
+      this.triggerDebounce = 10;
+      this.triggerThrottle = 0;
+    }
+  }
+
+  @Input()
+  get triggerLimit(): number {
+    return this._triggerLimit.value;
+  }
+
+  set triggerLimit(triggerLimit: number) {
+    triggerLimit = triggerLimit || 0;
+    this._triggerLimit.next(triggerLimit);
+  }
+
+  private readonly _triggerLimit = new BehaviorSubject<number | undefined>(undefined);
+  private readonly _trigger = new Subject<number>();
+  private _triggerCount = 0;
+
+  readonly _errorCount$ = this.source.errorCountSinceLastSuccess$;
+
+  readonly _triggerCount$ = this.source.isModifiedAndCanTriggerUpdates$.pipe(
+    filter(() => this.isEnabled),
+    filter((x) => x),
+    debounce(() => interval(this.triggerDebounce)),
+    throttle(() => this._errorCount$.pipe(
+      first(),
+      exhaustMap((count) => interval(this.triggerThrottle + (Math.min(count, this.maxErrorsForThrottle) * this.triggerErrorThrottle)))
+    ), { leading: true, trailing: true }),
+    // Check again for the "trailing" piece.
+    filter(() => this.isEnabled),
+    mergeMap(() => this.source.isModifiedAndCanTrigger$.pipe(first())),
+    filter((x) => x),
+    map(() => this._triggerCount += 1),
+    shareReplay(1)
+  );
+
+  /**
+   * Observable for the trigger mechanism.
+   */
+  readonly triggerCount$ = this._triggerEnabled.pipe(
+    switchMap((enabled) => {
+      if (enabled) {
+        return this._triggerCount$;
+      } else {
+        return EMPTY;
+      }
+    })
+  );
+
+  private readonly _isTriggerLimited$: Observable<[number, boolean]> =
+    combineLatest([this.triggerCount$, this._triggerLimit]).pipe(
+      map(([triggerCount, limit]) => [triggerCount, ((limit) ? (triggerCount > limit) : false)] as [number, boolean]),
+      shareReplay(1)
+    );
+
+  readonly isTriggerLimited$ = this._isTriggerLimited$.pipe(map(x => x[1]));
+  readonly trigger$: Observable<void> = this._isTriggerLimited$.pipe(
+    filter(x => !x[1]),
+    distinctUntilChanged((a, b) => a[0] === b[0]),    // Only trigger when the count changes.
+    map(() => undefined as void)
+  );
+
+  constructor(@Host() public readonly source: ActionContextStoreSourceInstance<T, O>) {
+    super();
+  }
+
+  get isEnabled(): boolean {
+    return this.triggerEnabled !== false;
+  }
+
+  ngOnInit(): void {
+    this.sub = this.trigger$.subscribe(() => {
+      this.source.trigger();
+    });
+  }
+
+  ngOnDestroy(): void {
+    super.ngOnDestroy();
+    this._trigger.complete();
+    this._triggerLimit.complete();
+  }
+
+}

@@ -11,7 +11,13 @@ export type ObjectOrGetter<T> = T | Getter<T>;
 
 export type StringOrGetter = ObjectOrGetter<string>;
 
-export function useObjectGetter<T>(input: ObjectOrGetter<T>): T {
+/**
+ * If the input is a function, it is executed. Otherwise, the value is returned.
+ * 
+ * @param input 
+ * @returns 
+ */
+export function getValueFromObjectOrGetter<T>(input: ObjectOrGetter<T>): T {
   if (typeof input === 'function') {
     return (input as () => T)();
   } else {

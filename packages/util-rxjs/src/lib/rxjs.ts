@@ -1,5 +1,6 @@
-import { combineLatest, identity, Observable, of, OperatorFunction, isObservable } from 'rxjs';
-import { map, scan, startWith, shareReplay, distinctUntilChanged } from 'rxjs/operators';
+import { Maybe } from '@dereekb/util';
+import { combineLatest, identity, Observable, of, OperatorFunction, isObservable, MonoTypeOperatorFunction } from 'rxjs';
+import { map, scan, startWith, shareReplay, distinctUntilChanged, filter } from 'rxjs/operators';
 
 /**
  * Returns the pipe if usePipe is true, otherwise returns the identity.
@@ -46,4 +47,11 @@ export function asObservable<T>(valueOrObs: T | Observable<T>): Observable<T> {
   } else {
     return of(valueOrObs);
   }
+}
+
+/**
+ * Observable filter that filters maybe value that are defined.
+ */
+export function filterMaybe<T>(): OperatorFunction<Maybe<T>, T> {
+  return filter(x => Boolean(x)) as OperatorFunction<Maybe<T>, T>;
 }

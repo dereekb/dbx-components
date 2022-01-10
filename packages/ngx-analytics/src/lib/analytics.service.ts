@@ -9,12 +9,12 @@ export type AnalyticsUserId = string;
 export interface AnalyticsUser {
   readonly user: AnalyticsUserId;
   readonly properties?: {
-    readonly [key: string]: string | number | boolean;
+    readonly [key: string]: PrimativeKey | boolean;
   };
 }
 
 export interface AnalyticsEventData {
-  readonly [key: string]: string | number | boolean;
+  readonly [key: string]: PrimativeKey | boolean;
 }
 
 export type NewUserRegistrationMethod = 'facebook' | 'google' | 'email' | string;

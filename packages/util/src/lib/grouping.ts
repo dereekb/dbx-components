@@ -20,7 +20,7 @@ export interface PairsGroupingResult<T> {
   unpaired: T[];
 }
 
-export interface ArrayContentsDifferentParams<T, K extends string | number = string | number> {
+export interface ArrayContentsDifferentParams<T, K extends PrimativeKey = PrimativeKey> {
   groupKeyFn: ReadKeyFunction<T, K>;
   isEqual: (a: T, b: T) => boolean;
 }

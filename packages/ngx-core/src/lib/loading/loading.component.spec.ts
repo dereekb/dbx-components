@@ -79,11 +79,11 @@ const TEST_CONTENT = 'Content';
 
 @Component({
   template: `
-    <app-loading [context]="context" [text]="text" [show]="show">
+    <dbx-loading [context]="context" [text]="text" [show]="show">
       <div>
         <p id="test-content">${TEST_CONTENT}</p>
       </div>
-    </app-loading>
+    </dbx-loading>
   `
 })
 class LoadingComponent {

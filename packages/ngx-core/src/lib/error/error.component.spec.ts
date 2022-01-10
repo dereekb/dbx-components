@@ -16,7 +16,7 @@ describe('ReadableErrorComponent', () => {
 
 @Component({
   template: `
-    <app-error [error]="error"></app-error>
+    <dbx-error [error]="error"></dbx-error>
   `
 })
 class ErrorComponent {

@@ -5,14 +5,14 @@ import { ActionContextStoreSourceInstance } from '@dereekb/ngx-actions';
 import { AbstractSubscriptionDirective, CodedError } from '@dereekb/ngx-core';
 import { DbNgxAnalyticsService } from '../analytics.service';
 
-export enum DbNgxAppActionAnalyticsTriggerType {
+export enum DbNgxActionAnalyticsTriggerType {
   TRIGGER,
   READY,
   SUCCESS,
   ERROR
 }
 
-export interface DbNgxAppActionAnalyticsConfig<T = any, O = any> {
+export interface DbNgxActionAnalyticsConfig<T = any, O = any> {
   onTriggered: (service: DbNgxAnalyticsService) => void;
   onReady: (service: DbNgxAnalyticsService, value: T) => void;
   onSuccess: (service: DbNgxAnalyticsService, value: O) => void;
@@ -27,15 +27,15 @@ export interface DbNgxAppActionAnalyticsConfig<T = any, O = any> {
 })
 export class DbNgxActionAnalyticsDirective<T> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
 
-  private _config = new BehaviorSubject<DbNgxAppActionAnalyticsConfig>(undefined);
+  private _config = new BehaviorSubject<DbNgxActionAnalyticsConfig>(undefined);
   readonly config$ = this._config.asObservable();
 
-  @Input('appActionAnalytics')
-  get config(): DbNgxAppActionAnalyticsConfig {
+  @Input('dbxActionAnalytics')
+  get config(): DbNgxActionAnalyticsConfig {
     return this._config.value;
   }
 
-  set config(config: DbNgxAppActionAnalyticsConfig) {
+  set config(config: DbNgxActionAnalyticsConfig) {
     this._config.next(config);
   }
 

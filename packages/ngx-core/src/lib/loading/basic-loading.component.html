@@ -1,6 +1,6 @@
 <ng-container [ngSwitch]="state">
   <ng-container *ngSwitchCase="0">
-    <app-loading-progress *ngIf="!hasCustomLoading" [mode]="mode" [color]="color" [text]="text" [linear]="linear" [diameter]="diameter"></app-loading-progress>
+    <dbx-loading-progress *ngIf="!hasCustomLoading" [mode]="mode" [color]="color" [text]="text" [linear]="linear" [diameter]="diameter"></dbx-loading-progress>
     <div #customLoading>
       <ng-content select="[loading]"></ng-content>
     </div>
@@ -9,7 +9,7 @@
     <ng-content></ng-content>
   </ng-container>
   <ng-container *ngSwitchCase="2">
-    <app-error *ngIf="!hasCustomError" [error]="error"></app-error>
+    <dbx-error *ngIf="!hasCustomError" [error]="error"></dbx-error>
     <div #customError>
       <ng-content select="[error]"></ng-content>
     </div>

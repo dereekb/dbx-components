@@ -149,11 +149,11 @@ const CUSTOM_ERROR_CONTENT = 'Error.';
 
 @Component({
   template: `
-    <dbngx-basic-loading [waitFor]="loading" [error]="error">
+    <dbx-basic-loading [waitFor]="loading" [error]="error">
       <div>
         <p id="test-content">${TEST_CONTENT}</p>
       </div>
-    </dbngx-basic-loading>
+    </dbx-basic-loading>
   `
 })
 class BasicLoadingWithContentComponent {
@@ -169,11 +169,11 @@ class BasicLoadingWithContentComponent {
 
 @Component({
   template: `
-    <dbngx-basic-loading [error]="error">
+    <dbx-basic-loading [error]="error">
       <div error>
         <p id="test-error">${CUSTOM_ERROR_CONTENT}</p>
       </div>
-    </dbngx-basic-loading>
+    </dbx-basic-loading>
   `
 })
 class BasicLoadingWithCustomErrorComponent {
@@ -187,12 +187,12 @@ class BasicLoadingWithCustomErrorComponent {
 
 @Component({
   template: `
-    <dbngx-basic-loading [waitFor]="loading">
+    <dbx-basic-loading [waitFor]="loading">
       <div>Content</div>
       <div loading>
         <p id="custom-loading">${CUSTOM_LOADING_CONTENT}</p>
       </div>
-    </dbngx-basic-loading>
+    </dbx-basic-loading>
   `
 })
 class BasicLoadingWithCustomLoadingComponent {

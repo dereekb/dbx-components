@@ -5,7 +5,7 @@ import { ErrorInput, CodedError, convertToReadableError, ReadableError } from '.
  * Basic error component.
  */
 @Component({
-  selector: 'dbngx-error',
+  selector: 'dbx-error',
   templateUrl: './error.component.html',
   styleUrls: ['./error.scss']
 })
