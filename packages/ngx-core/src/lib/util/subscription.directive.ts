@@ -34,7 +34,7 @@ export abstract class AbstractLockSetSubscriptionDirective extends AbstractSubsc
 
   readonly lockSet = new LockSet();
 
-  ngOnDestroy(): void {
+  override ngOnDestroy(): void {
     this.lockSet.onNextUnlock(() => this.onLockSetDestroy());
   }
 

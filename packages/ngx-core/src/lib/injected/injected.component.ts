@@ -1,7 +1,7 @@
 import { Component, ComponentFactoryResolver, ComponentRef, ElementRef, Type, ViewChild, ViewContainerRef, OnInit, Input } from '@angular/core';
 import { distinctUntilChanged, throttleTime } from 'rxjs/operators';
 import { BehaviorSubject } from 'rxjs';
-import { AbstractSubscriptionDirective } from '../subscription.directive';
+import { AbstractSubscriptionDirective } from '../util/subscription.directive';
 import { DbNgxInjectedComponentConfig } from './injected';
 
 /**
@@ -16,9 +16,8 @@ export class DbNgxInjectedComponent<T> extends AbstractSubscriptionDirective imp
   private _config = new BehaviorSubject<DbNgxInjectedComponentConfig<T> | undefined>(undefined);
 
   @ViewChild('content', { static: true, read: ViewContainerRef })
-  private _content: ViewContainerRef;
-
-  private _componentRef: ComponentRef<T>;
+  private _content?: ViewContainerRef;
+  private _componentRef?: ComponentRef<T>;
 
   constructor(private resolver: ComponentFactoryResolver) {
     super();
@@ -44,12 +43,12 @@ export class DbNgxInjectedComponent<T> extends AbstractSubscriptionDirective imp
   }
 
   private _initComponent(config: DbNgxInjectedComponentConfig<T>): void {
-    this._content.clear();
+    this._content!.clear();
 
     const { init, injector, componentClass } = config;
 
     const factory = this.resolver.resolveComponentFactory(componentClass);
-    const componentRef: ComponentRef<T> = this._content.createComponent(factory, undefined, injector);
+    const componentRef: ComponentRef<T> = this._content!.createComponent(factory, undefined, injector);
 
     const instance = componentRef.instance;
 
@@ -62,7 +61,7 @@ export class DbNgxInjectedComponent<T> extends AbstractSubscriptionDirective imp
 
   private _reset(): void {
     if (this._componentRef) {
-      this._content.clear();
+      this._content!.clear();
       this._componentRef = undefined;
     }
   }

@@ -1,26 +1,25 @@
 import { Component, Input } from '@angular/core';
-import { ErrorInput, CodedError, ErrorUtility } from '@gae-web/appengine-utility';
-import { AppError } from './error';
+import { ErrorInput, CodedError, convertToReadableError, ReadableError } from './error';
 
 /**
  * Basic error component.
  */
 @Component({
-  selector: 'app-error',
+  selector: 'dbngx-error',
   templateUrl: './error.component.html',
   styleUrls: ['./error.scss']
 })
-export class AppErrorComponent {
+export class DbNgxReadableErrorComponent {
 
-  private _error: AppError | CodedError;
+  private _error?: ReadableError;
 
-  get errorData(): AppError | CodedError {
+  get error(): ReadableError | undefined {
     return this._error;
   }
 
   @Input()
-  set error(error: ErrorInput | AppError) {
-    this._error = ErrorUtility.makeErrorData(error as any);
+  set error(error: ErrorInput | ReadableError | undefined) {
+    this._error = convertToReadableError(error as any) as ReadableError;
   }
 
 }

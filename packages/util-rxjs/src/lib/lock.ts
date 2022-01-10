@@ -110,7 +110,7 @@ export class LockSet {
   }
 
   addLock(key: LockKey, obs: Observable<boolean>): void {
-    obs = obs.pipe(defaultIfEmpty(false));  // empty observables count as unlocked.
+    obs = obs.pipe(defaultIfEmpty<boolean>(false));  // empty observables count as unlocked.
     this._locks.value.set(key, obs);
     this._locks.next(this.locks);
   }

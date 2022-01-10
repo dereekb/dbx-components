@@ -1,6 +1,6 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { AppErrorComponent } from './error.component';
+import { DbNgxReadableErrorComponent } from './error.component';
 import { AppLoadingErrorDirective } from './error.loading.directive';
 import { DbNgxActionErrorDirective } from './error.action.directive';
 
@@ -9,14 +9,14 @@ import { DbNgxActionErrorDirective } from './error.action.directive';
     CommonModule
   ],
   declarations: [
-    AppErrorComponent,
+    DbNgxReadableErrorComponent,
     AppLoadingErrorDirective,
     DbNgxActionErrorDirective
   ],
   exports: [
-    AppErrorComponent,
+    DbNgxReadableErrorComponent,
     AppLoadingErrorDirective,
     DbNgxActionErrorDirective
   ]
 })
-export class AppErrorModule { }
+export class ReadableErrorModule { }

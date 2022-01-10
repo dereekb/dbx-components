@@ -1,13 +1,13 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Component } from '@angular/core';
-import { ErrorInput } from '@gae-web/appengine-utility';
-import { AppErrorModule } from './error.module';
+import { ErrorInput } from './error';
+import { ReadableErrorModule } from './error.module';
 
-describe('AppErrorComponent', () => {
+describe('ReadableErrorComponent', () => {
 
   beforeEach(async () => {
     TestBed.configureTestingModule({
-      imports: [AppErrorModule],
+      imports: [ReadableErrorModule],
       declarations: [ErrorComponent]
     }).compileComponents();
   });
@@ -21,6 +21,6 @@ describe('AppErrorComponent', () => {
 })
 class ErrorComponent {
 
-  public error: ErrorInput;
+  error?: ErrorInput;
 
 }

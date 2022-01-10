@@ -1,11 +1,9 @@
 import { exhaustMap, map, switchMap, tap } from 'rxjs/operators';
-import { Directive, Input, OnInit, OnDestroy } from '@angular/core';
-import { Host } from '@angular/core';
+import { Host, Directive, Input, OnInit, OnDestroy } from '@angular/core';
 import { BehaviorSubject, merge, Observable, of } from 'rxjs';
-import { ActionContextStoreSourceInstance } from '../../action/action';
-import { AbstractSubscriptionDirective } from '../../utility/subscription.directive';
+import { ActionContextStoreSourceInstance } from '@dereekb/ngx-actions';
+import { AbstractSubscriptionDirective, CodedError } from '@dereekb/ngx-core';
 import { DbNgxAnalyticsService } from '../analytics.service';
-import { AppError } from '../../error/error';
 
 export enum DbNgxAppActionAnalyticsTriggerType {
   TRIGGER,
@@ -18,7 +16,7 @@ export interface DbNgxAppActionAnalyticsConfig<T = any, O = any> {
   onTriggered: (service: DbNgxAnalyticsService) => void;
   onReady: (service: DbNgxAnalyticsService, value: T) => void;
   onSuccess: (service: DbNgxAnalyticsService, value: O) => void;
-  onError: (service: DbNgxAnalyticsService, error: AppError) => void;
+  onError: (service: DbNgxAnalyticsService, error: ReadableError) => void;
 }
 
 /**

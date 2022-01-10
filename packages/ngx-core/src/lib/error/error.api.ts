@@ -1,18 +1,41 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { AppError } from './error';
+import { StringErrorCode, ReadableError } from './error';
 
-export interface ServerError extends AppError {
-  status?: number;
-  message: string;
+/**
+ * The expected error object returned from the server.
+ */
+export interface ServerErrorResponseData {
+  /**
+   * Unique identifier of the error returned, if available.
+   */
+  code?: StringErrorCode;
+  /**
+   * User-readable message of the error returned.
+   */
+  message?: string;
+  /**
+   * Additional keys/data returned in the error data.
+   */
+  [key: string]: any;
+}
+
+/**
+ * Human-readable server error with additional data and a status code.
+ */
+export interface ServerError extends ReadableError {
+  status: number;
   data?: any;
 }
 
+/**
+ * Base server-error class.
+ */
 export class ServerErrorResponse implements ServerError {
 
   public readonly code?: string;
-  public readonly status?: number;
+  public readonly status: number;
   public readonly message: string;
-  public readonly data: any;
+  public readonly data: ServerErrorResponseData;
 
   constructor({ code, status, data, message }: ServerError) {
     this.code = code;
@@ -25,8 +48,8 @@ export class ServerErrorResponse implements ServerError {
 
 export class UnauthorizedServerErrorResponse extends ServerErrorResponse {
 
-  constructor(public override readonly data: any) {
-    super({ status: 401, message: 'Unauthorized', data });
+  constructor({ code, data, message }: Partial<ServerError>) {
+    super({ status: 401, message: message ?? 'Unauthorized', data, code });
   }
 
 }
@@ -34,7 +57,7 @@ export class UnauthorizedServerErrorResponse extends ServerErrorResponse {
 /**
  * Converts the error response to a POJO.
  */
-export function convertToPOJOErrorResponse(httpError: HttpErrorResponse | any): ServerError {
+export function convertToPOJOServerErrorResponse(httpError: HttpErrorResponse | any): ServerError {
   const result: ServerErrorResponse | undefined = convertToServerErrorResponse(httpError);
   const pojo: ServerErrorResponse = Object.assign({}, result);
 
@@ -43,7 +66,7 @@ export function convertToPOJOErrorResponse(httpError: HttpErrorResponse | any): 
       const stringy = JSON.stringify(pojo.data);
       (pojo as any).data = JSON.parse(stringy);
     } catch (e) {
-      console.warn('Non-serializable Error Data Detected. It is being removed.: ', pojo.data);
+      console.warn('convertToPOJOServerErrorResponse(): Non-serializable Error Data Detected. It is being removed.: ', pojo.data);
       (pojo as any).data = undefined;
     }
   }
@@ -51,30 +74,30 @@ export function convertToPOJOErrorResponse(httpError: HttpErrorResponse | any): 
   return pojo;
 }
 
+/**
+ * Converts an HTTP Error Response to a ServerErrorResponse type.
+ * 
+ * @param error 
+ * @returns 
+ */
 export function convertToServerErrorResponse(error: HttpErrorResponse | any): ServerErrorResponse | undefined {
   let result: ServerErrorResponse | undefined;
 
-  // console.log('Server Error Response: ', error);
-
   if (error instanceof HttpErrorResponse) {
-    const status = error.status;
-    const data = error.error;
+    const { status, error: data }: { status: number, error: ServerErrorResponseData } = error;
 
     const code = data.code;
     const message = data.message ?? error.statusText;
 
-    // console.log('Error: ', error);
-
     switch (status) {
       case 401:
-        result = new UnauthorizedServerErrorResponse(data);
+        result = new UnauthorizedServerErrorResponse({ message, data, code });
         break;
       default:
         result = new ServerErrorResponse({ code, status, data, message });
         break;
     }
   } else if (error) {
-    // console.log('Failed serializing error: ', error);
     result = new ServerErrorResponse({ message: error.message, status: 0 });
   }
 

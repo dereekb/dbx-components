@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { convertToPOJOErrorResponse, ServerError } from './api.error';
+import { convertToPOJOServerErrorResponse, ServerError } from './error.api';
 import { of, Observable, OperatorFunction } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { Action, ActionCreator, TypedAction } from '@ngrx/store/src/models';
@@ -12,7 +12,7 @@ export interface ServerErrorParams {
  * Converts the error response to ServerErrorParams.
  */
 export function convertServerErrorParams(httpError: HttpErrorResponse | any): ServerErrorParams {
-  const error: ServerError = convertToPOJOErrorResponse(httpError);
+  const error: ServerError = convertToPOJOServerErrorResponse(httpError);
   return { error };
 }
 
