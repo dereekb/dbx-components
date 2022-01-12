@@ -1,7 +1,7 @@
 import { BehaviorSubject, Observable } from 'rxjs';
 
 export interface LoadingEvent {
-  isLoading?: boolean;
+  isLoading: boolean;
   error?: any;
 }
 
@@ -13,7 +13,6 @@ export interface LoadingContextConfiguration {
 }
 
 export interface LoadingContext {
-  readonly isLoading: boolean;
   readonly stream$: Observable<LoadingEvent>;
 }
 
@@ -31,10 +30,6 @@ export class SimpleLoadingContext implements LoadingContext {
 
   destroy(): void {
     this._subject.complete();
-  }
-
-  public get isLoading(): boolean {
-    return this._subject.value.isLoading;
   }
 
   public hasError(): boolean {

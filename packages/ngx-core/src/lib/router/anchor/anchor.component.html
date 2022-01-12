@@ -6,8 +6,7 @@
   </a>
   <!-- Router -->
   <ng-container *ngSwitchCase="2">
-
-    <ng-content></ng-content>
+    
   </ng-container>
   <a class="app-anchor app-anchor-sref {{ anchorBlockClass }}" [ngClass]="anchorClass" [attr.target]="anchor.target"
     [uiSref]="anchor.ref" [uiParams]="anchor.refParams" [uiOptions]="anchor.refOptions" *ngSwitchCase="2">
@@ -28,6 +27,6 @@
   <ng-content></ng-content>
 </ng-template>
 <!-- Template routerContent -->
-<ng-template $routerContent>
+<ng-template #routerContent>
   <dbx-injected-content></dbx-injected-content>
 </ng-template>

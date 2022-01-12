@@ -141,9 +141,9 @@ const CUSTOM_CONTENT = 'Custom Content';
 class TestViewComponent {
 
   @Input()
-  public disabled: boolean;
+  public disabled?: boolean;
 
   @Input()
-  public anchor: ClickableAnchor;
+  public anchor?: ClickableAnchor;
 
 }

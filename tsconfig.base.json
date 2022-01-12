@@ -20,6 +20,7 @@
       "@dereekb/model": ["packages/model/src/index.ts"],
       "@dereekb/ngx-analytics": ["packages/ngx-analytics/src/index.ts"],
       "@dereekb/ngx-core": ["packages/ngx-core/src/index.ts"],
+      "@dereekb/ngx-web": ["packages/ngx-web/src/index.ts"],
       "@dereekb/util": ["packages/util/src/index.ts"],
       "@dereekb/util-rxjs": ["packages/util-rxjs/src/index.ts"]
     }

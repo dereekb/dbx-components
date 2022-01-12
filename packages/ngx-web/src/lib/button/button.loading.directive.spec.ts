@@ -1,12 +1,10 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Component, ViewChild } from '@angular/core';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { DbNgxActionModule } from '../action/action.module';
-import { DbNgxButtonModule } from './button.module';
 import { DbNgxButtonComponent } from './button.component';
-import { SimpleLoadingContext } from '../loading/loading';
-import { DbNgxLoadingButtonDirective } from './button.loading.directive';
+import { DbNgxButtonModule } from './button.module';
 import { filter } from 'rxjs/operators';
+import { SimpleLoadingContext } from '@dereekb/ngx-core';
 
 describe('DbNgxLoadingButton', () => {
 

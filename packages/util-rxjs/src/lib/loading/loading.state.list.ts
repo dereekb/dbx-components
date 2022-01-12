@@ -1,6 +1,6 @@
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { ServerError } from '../error/api.error';
+import { ServerError } from '@dereekb/util';
 import { LoadingState, loadingStateFromObs } from './loading.state';
 
 /**

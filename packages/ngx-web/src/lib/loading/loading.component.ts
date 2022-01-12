@@ -1,8 +1,8 @@
 import { Component, Input, ChangeDetectorRef, ChangeDetectionStrategy, NgZone } from '@angular/core';
 import { ThemePalette } from '@angular/material/core';
 import { MatProgressBar, ProgressBarMode } from '@angular/material/progress-bar';
-import { AbstractSubscriptionDirective } from '../subscription';
-import { LoadingContext } from './loading';
+import { AbstractSubscriptionDirective } from '@dereekb/ngx-core';
+import { LoadingContext } from '@dereekb/util-rxjs';
 
 @Component({
   selector: 'dbx-loading',

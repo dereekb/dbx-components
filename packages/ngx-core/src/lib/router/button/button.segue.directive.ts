@@ -1,6 +1,6 @@
 import { Directive, OnInit, OnDestroy, Input } from '@angular/core';
 import { Maybe } from '@dereekb/util';
-import { SubscriptionObject } from '../subscription';
+import { SubscriptionObject } from '../../subscription';
 import { StateService, UIRouterGlobals } from '@uirouter/core';
 import { throttleTime } from 'rxjs/operators';
 import { AppPageButtonDirective } from '../fab/fab.directive';

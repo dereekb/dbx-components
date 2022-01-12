@@ -1,16 +1,14 @@
 import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { DbNgxBasicLoadingComponent } from './basic-loading.component';
 import { AppLoadingProgressComponent } from './loading-progress.component';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { AppLoadingComponent } from './loading.component';
-import { AppErrorModule } from '../error/error.module';
+import { BrowserModule } from '@angular/platform-browser';
 
 @NgModule({
   imports: [
-    CommonModule,
-    AppErrorModule,
+    BrowserModule,
     MatProgressSpinnerModule,
     MatProgressBarModule
   ],
@@ -27,4 +25,4 @@ import { AppErrorModule } from '../error/error.module';
     MatProgressBarModule
   ]
 })
-export class AppLoadingModule { }
+export class DbxLoadingModule { }

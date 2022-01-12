@@ -1,7 +1,6 @@
-import { BehaviorSubject, combineLatest, isObservable, Observable, of } from 'rxjs';
-import { mergeMap, tap, map, startWith, switchMap, shareReplay, catchError, delay, first, filter, distinctUntilChanged } from 'rxjs/operators';
-import { ServerError } from '../error/api.error';
-import { reduceBooleansWithAnd, reduceBooleansWithOr } from '../utility/value';
+import { combineLatest, Observable, of } from 'rxjs';
+import { map, startWith, shareReplay, catchError, delay, first, distinctUntilChanged } from 'rxjs/operators';
+import { Maybe, reduceBooleansWithAnd, reduceBooleansWithOr, ServerError } from '@dereekb/util';
 
 /**
  * A model/error pair used in loading situations.
@@ -20,7 +19,7 @@ export interface LoadingErrorPair {
  * A model/error pair used in loading situations.
  */
 export interface LoadingState<T = any> extends LoadingErrorPair {
-  model?: T;
+  model?: Maybe<T>;
 }
 
 // MARK: Utility
@@ -167,15 +166,15 @@ export interface MapMultipleLoadingStateResultsConfiguration<T, X, L extends Loa
 
 export function mapMultipleLoadingStateResults<T, X, L extends LoadingState<X>[], R extends LoadingState<T>>(
   input: L, config: MapMultipleLoadingStateResultsConfiguration<T, X, L, R>
-): R {
+): Maybe<R> {
   const { mapValues, mapState } = config;
   const loading = anyLoadingStatesIsLoading(input);
   const error = input.map(x => x?.error).filter(x => Boolean(x))[0];
-  let result: R;
+  let result: Maybe<R>;
 
   if (!error && !loading) {
     if (mapValues) {
-      const model: T = mapValues(input.map(x => x.model));
+      const model: T = mapValues(input.map(x => x.model) as X[]);
       result = {
         loading,
         model,

@@ -1,0 +1,42 @@
+{
+  "projectType": "library",
+  "root": "packages/ngx-web",
+  "sourceRoot": "packages/ngx-web/src",
+  "prefix": "dereekb",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/angular:ng-packagr-lite",
+      "outputs": ["dist/packages/ngx-web"],
+      "options": {
+        "project": "packages/ngx-web/ng-package.json"
+      },
+      "configurations": {
+        "production": {
+          "tsConfig": "packages/ngx-web/tsconfig.lib.prod.json"
+        },
+        "development": {
+          "tsConfig": "packages/ngx-web/tsconfig.lib.json"
+        }
+      },
+      "defaultConfiguration": "production"
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": ["coverage/packages/ngx-web"],
+      "options": {
+        "jestConfig": "packages/ngx-web/jest.config.js",
+        "passWithNoTests": true
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "lintFilePatterns": [
+          "packages/ngx-web/src/**/*.ts",
+          "packages/ngx-web/src/**/*.html"
+        ]
+      }
+    }
+  },
+  "tags": []
+}
