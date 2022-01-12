@@ -23,7 +23,7 @@ export class DbNgxActionValueDirective<T, O> extends AbstractSubscriptionDirecti
   ngOnInit(): void {
     this.sub = this.source.triggered$.subscribe(() => {
       const value = getValueFromObjectOrGetter(this.valueOrFunction);
-      this.source.readyValue(value as T);
+      this.source.readyValue(value);
     });
   }
 

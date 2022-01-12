@@ -23,13 +23,3 @@ export function roundToPrecision(value: number, precision: number): number {
 export function roundNumberUpToStep(value: number, step: number): number {
   return Math.ceil(value / step) * step;
 }
-
-export function range(from: number = 0, to: number): number[] {
-  const result: number[] = [];
-
-  for (let i = from; i < to; i += 1) {
-    result.push(i);
-  }
-
-  return result;
-}

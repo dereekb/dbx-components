@@ -4,7 +4,7 @@ import { AbstractSubscriptionDirective, hasValueOrNotEmpty } from '../utility';
 import { ActionContextStoreSourceInstance } from './action';
 import { BehaviorSubject, Observable, of, EMPTY } from 'rxjs';
 import { OnDestroy } from '@angular/core';
-import { SubscriptionObject } from '@gae-web/appengine-utility';
+import { SubscriptionObject } from '../subscription';
 
 export type DbNgxActionAutoTriggerIsModifiedFn<T> = (value: T) => Observable<boolean>;
 

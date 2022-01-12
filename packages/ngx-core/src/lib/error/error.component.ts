@@ -1,4 +1,5 @@
 import { Component, Input } from '@angular/core';
+import { Maybe } from '@dereekb/util';
 import { ErrorInput, CodedError, convertToReadableError, ReadableError } from './error';
 
 /**
@@ -13,12 +14,12 @@ export class DbNgxReadableErrorComponent {
 
   private _error?: ReadableError;
 
-  get error(): ReadableError | undefined {
+  get error(): Maybe<ReadableError> {
     return this._error;
   }
 
   @Input()
-  set error(error: ErrorInput | ReadableError | undefined) {
+  set error(error: Maybe<ErrorInput | ReadableError>) {
     this._error = convertToReadableError(error as any) as ReadableError;
   }
 

@@ -1,5 +1,6 @@
 import { Directive, OnInit, OnDestroy, Input } from '@angular/core';
-import { SubscriptionObject } from '@gae-web/appengine-utility';
+import { Maybe } from '@dereekb/util';
+import { SubscriptionObject } from '../subscription';
 import { StateService, UIRouterGlobals } from '@uirouter/core';
 import { throttleTime } from 'rxjs/operators';
 import { AppPageButtonDirective } from '../fab/fab.directive';
@@ -13,10 +14,10 @@ export class AppButtonSegueDirective implements OnInit, OnDestroy {
   private _sub = new SubscriptionObject();
 
   @Input()
-  public appButtonSegue: string;
+  public appButtonSegue?: string;
 
   @Input()
-  public segueParams: {};
+  public segueParams?: {};
 
   public throttle = 50;
 
@@ -35,7 +36,7 @@ export class AppButtonSegueDirective implements OnInit, OnDestroy {
   }
 
   // MARK: Segue
-  public get segueName(): string {
+  public get segueName(): Maybe<string> {
     return this.appButtonSegue;
   }
 

@@ -1,4 +1,5 @@
 import { PrimativeKey, ReadKeyFunction } from "./key";
+import { Maybe } from "./value";
 
 export interface HashSetConfig<K extends PrimativeKey, T> {
   readKey: ReadKeyFunction<T, K>;
@@ -11,7 +12,7 @@ export interface HashSetConfig<K extends PrimativeKey, T> {
  */
 export class HashSet<K extends PrimativeKey, T> implements Set<T> {
 
-  private _map = new Map<K, T>();
+  private _map = new Map<Maybe<K>, T>();
 
   constructor(readonly config: HashSetConfig<K, T>, values?: T[]) {
     if (values) {

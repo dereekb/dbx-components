@@ -1,6 +1,6 @@
 import { Directive, Host, OnInit, OnDestroy, Input, NgZone } from '@angular/core';
 import { LoadingContext } from '../loading/loading';
-import { AbstractSubscriptionDirective } from '../util/subscription.directive';
+import { AbstractSubscriptionDirective } from '../subscription/subscription.directive';
 import { DbNgxReadableErrorComponent } from './error.component';
 
 /**

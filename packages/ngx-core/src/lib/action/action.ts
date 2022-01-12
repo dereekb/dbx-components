@@ -18,7 +18,7 @@ export abstract class ActionContextStoreSource<T = any, O = any> {
    *
    * This observable by design is pre-filtered to not return null values.
    */
-  readonly store$: Observable<ActionContextStore<T, O>>;
+  abstract readonly store$: Observable<ActionContextStore<T, O>>;
 }
 
 /**

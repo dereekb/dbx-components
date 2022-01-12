@@ -1,4 +1,4 @@
-import { SubscriptionObject } from '@gae-web/appengine-utility';
+import { SubscriptionObject } from '../subscription';
 import { Directive, Host, Input, OnDestroy, OnInit } from '@angular/core';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { AppPromptConfirmConfig } from '../responsive/prompt/prompt.confirm.component';

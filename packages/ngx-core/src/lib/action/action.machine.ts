@@ -1,5 +1,5 @@
 import { OnDestroy } from '@angular/core';
-import { SubscriptionObject } from '@gae-web/appengine-utility';
+import { SubscriptionObject } from '../subscription';
 import { delay, filter, first } from 'rxjs/operators';
 import { ActionContextStoreSource, ActionContextStoreSourceInstance, SecondaryActionContextStoreSource } from './action';
 import { HandleActionFunction, handleWorkValueReadyFn, WorkHandlerContextSourceDelegate } from './action.handler';

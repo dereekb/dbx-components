@@ -1,0 +1,33 @@
+<ng-container [ngSwitch]="type">
+  <!-- Click -->
+  <a class="app-anchor app-anchor-click {{ anchorBlockClass }}" [ngClass]="anchorClass" (click)="anchor.onClick($event)"
+    *ngSwitchCase="1">
+    <ng-container *ngTemplateOutlet="content"></ng-container>
+  </a>
+  <!-- Router -->
+  <ng-container *ngSwitchCase="2">
+
+    <ng-content></ng-content>
+  </ng-container>
+  <a class="app-anchor app-anchor-sref {{ anchorBlockClass }}" [ngClass]="anchorClass" [attr.target]="anchor.target"
+    [uiSref]="anchor.ref" [uiParams]="anchor.refParams" [uiOptions]="anchor.refOptions" *ngSwitchCase="2">
+    <ng-container *ngTemplateOutlet="content"></ng-container>
+  </a>
+  <!-- Href -->
+  <a class="app-anchor app-anchor-href {{ anchorBlockClass }}" [ngClass]="anchorClass" [href]="anchor.url"
+    [attr.target]="anchor.target" *ngSwitchCase="3">
+    <ng-container *ngTemplateOutlet="content"></ng-container>
+  </a>
+  <!-- Disabled or None -->
+  <a class="app-anchor app-anchor-disabled {{ anchorBlockClass }}" [ngClass]="anchorClass" *ngSwitchDefault>
+    <ng-container *ngTemplateOutlet="content"></ng-container>
+  </a>
+</ng-container>
+<!-- Template content -->
+<ng-template #content>
+  <ng-content></ng-content>
+</ng-template>
+<!-- Template routerContent -->
+<ng-template $routerContent>
+  <dbx-injected-content></dbx-injected-content>
+</ng-template>
