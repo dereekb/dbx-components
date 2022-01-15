@@ -1,4 +1,3 @@
-import { ReadKeyFunction } from "../key";
 import { Maybe } from "../value";
 
 // MARK: Types

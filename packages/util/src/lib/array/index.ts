@@ -6,3 +6,4 @@ export * from './array.set';
 export * from './array.string';
 export * from './array';
 export * from './array.unique';
+export * from './array.value';
