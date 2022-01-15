@@ -1,6 +1,6 @@
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { ServerError } from '@dereekb/util';
+import { ReadableDataError } from '@dereekb/util';
 import { LoadingState, loadingStateFromObs } from './loading.state';
 
 /**
@@ -49,15 +49,9 @@ export interface ModelListState<T> extends LoadingState<T[]> {
    */
   page?: ModelResultsPage;
   /**
-   * Last time the models value was updated at.
-   *
-   * @deprecated Unused.
-   */
-  updatedAt?: number;
-  /**
    * Error when retrieving the list.
    */
-  error?: ServerError;
+  error?: ReadableDataError;
 }
 
 // MARK: Filtered

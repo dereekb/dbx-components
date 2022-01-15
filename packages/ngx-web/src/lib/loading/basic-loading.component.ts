@@ -67,7 +67,7 @@ export class DbNgxBasicLoadingComponent implements OnChanges, AfterViewInit {
     this._detectStateChanges();
   }
 
-  get isLoading(): boolean {
+  get loading(): boolean {
     return this._loading;
   }
 
@@ -118,7 +118,7 @@ export class DbNgxBasicLoadingComponent implements OnChanges, AfterViewInit {
     let state = LoadingComponentState.Error;
 
     if (!this.error) {
-      if (!this.isLoading && this.show) {
+      if (!this.loading && this.show) {
         state = LoadingComponentState.Content;
       } else {
         state = LoadingComponentState.Loading;

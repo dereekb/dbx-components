@@ -19,6 +19,10 @@ export interface ReadableError extends Partial<CodedError> {
   message: string;
 }
 
+export interface ReadableDataError<T = any> extends ReadableError {
+  data?: T;
+}
+
 export interface ErrorWrapper {
   data: ReadableError | CodedError;
 }

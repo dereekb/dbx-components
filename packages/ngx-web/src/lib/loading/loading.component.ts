@@ -4,6 +4,9 @@ import { MatProgressBar, ProgressBarMode } from '@angular/material/progress-bar'
 import { AbstractSubscriptionDirective } from '@dereekb/ngx-core';
 import { LoadingContext } from '@dereekb/util-rxjs';
 
+/**
+ * Loading View component that provides content sections for loading, error, and an error action.
+ */
 @Component({
   selector: 'dbx-loading',
   template: `
@@ -70,7 +73,7 @@ export class AppLoadingComponent extends AbstractSubscriptionDirective {
     if (context) {
       subscription = context.stream$.subscribe((x) => {
         this.ngZone.run(() => {
-          this._loading = x.isLoading;
+          this._loading = x.loading;
           this._error = x.error;
         });
       });

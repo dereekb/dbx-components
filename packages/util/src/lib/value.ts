@@ -6,6 +6,24 @@
 export type Maybe<T> = T | null | undefined;
 
 // MARK: Utils
+
+/**
+ * Returns true if the value is not null or undefined.
+ * 
+ * @param value 
+ * @returns 
+ */
+export function hasNonNullValue(value: any): boolean;
+export function hasNonNullValue(value: true): true;
+export function hasNonNullValue(value: false): true;
+export function hasNonNullValue(value: number): true;
+export function hasNonNullValue(value: ''): true;
+export function hasNonNullValue(value: null): false;
+export function hasNonNullValue(value: undefined): false;
+export function hasNonNullValue(value: any): boolean {
+  return value != null;
+}
+
 /**
  * Whether or not the input has any value.
  * 

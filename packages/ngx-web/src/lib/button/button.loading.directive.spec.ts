@@ -43,8 +43,8 @@ describe('DbNgxLoadingButton', () => {
   it('should set the button to working when loading is true.', (done) => {
     testComponent.context.setLoading(true);
 
-    testComponent.context.stream$.pipe(filter((x => Boolean(x.isLoading)))).subscribe((x) => {
-      expect(x.isLoading).toBe(true);
+    testComponent.context.stream$.pipe(filter((x => Boolean(x.loading)))).subscribe((x) => {
+      expect(x.loading).toBe(true);
       expect(button.working).toBe(true);
       done();
     });

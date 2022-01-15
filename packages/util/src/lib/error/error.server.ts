@@ -1,4 +1,4 @@
-import { StringErrorCode, ReadableError } from './error';
+import { StringErrorCode, ReadableError, ReadableDataError } from './error';
 
 /**
  * The expected error object returned from the server.
@@ -21,22 +21,21 @@ export interface ServerErrorResponseData {
 /**
  * Human-readable server error with additional data and a status code.
  */
-export interface ServerError extends ReadableError {
+export interface ServerError<T = any> extends ReadableDataError<T> {
   status: number;
-  data?: any;
 }
 
 /**
  * Base server-error class.
  */
-export class ServerErrorResponse implements ServerError {
+export class ServerErrorResponse<T extends ServerErrorResponseData = ServerErrorResponseData> implements ServerError<T> {
 
   public readonly code?: string;
   public readonly status: number;
   public readonly message: string;
-  public readonly data: ServerErrorResponseData;
+  public readonly data?: T;
 
-  constructor({ code, status, data, message }: ServerError) {
+  constructor({ code, status, data, message }: ServerError<T>) {
     this.code = code;
     this.message = message;
     this.status = status;

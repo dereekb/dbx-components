@@ -1,6 +1,6 @@
 import { combineLatest, Observable, of } from 'rxjs';
 import { map, startWith, shareReplay, catchError, delay, first, distinctUntilChanged } from 'rxjs/operators';
-import { Maybe, reduceBooleansWithAnd, reduceBooleansWithOr, ServerError } from '@dereekb/util';
+import { Maybe, ReadableError, reduceBooleansWithAnd, reduceBooleansWithOr, ReadableDataError } from '@dereekb/util';
 
 /**
  * A model/error pair used in loading situations.
@@ -12,7 +12,10 @@ export interface LoadingErrorPair {
    * Not being specified is considered not being loaded.
    */
   loading?: boolean;
-  error?: ServerError;
+  /**
+   * A Readable server error.
+   */
+  error?: ReadableError
 }
 
 /**
@@ -30,11 +33,11 @@ export function beginLoading<T>(pair?: LoadingState<T>): LoadingState<T> {
 }
 
 export function successResult<T>(model: T): LoadingState<T> {
-  return { model };
+  return { model, loading: false };
 }
 
-export function errorResult(error?: ServerError): LoadingState<any> {
-  return { error };
+export function errorResult(error?: ReadableDataError): LoadingState<any> {
+  return { error, loading: false };
 }
 
 export function anyLoadingStatesIsLoading(states: LoadingState[]): boolean {
@@ -45,19 +48,26 @@ export function allLoadingStatesHaveFinishedLoading(states: LoadingState[]): boo
   return reduceBooleansWithAnd(states.map(loadingStateHasFinishedLoading), true);
 }
 
-export function loadingStateIsLoading(state?: LoadingState): boolean {
-  return state?.loading ?? !Boolean(state?.model || state?.error);
+export function loadingStateIsLoading(state: Maybe<LoadingState>): boolean {
+  if (state) {
+    return state.loading ?? !Boolean(state.model || state.error);
+  } else {
+    return false;
+  }
 }
 
-export function loadingStateHasFinishedLoading(state: LoadingState): boolean {
-  return !state?.loading && Boolean(state?.model || state?.error);
+export function loadingStateHasFinishedLoading(state: Maybe<LoadingState>): boolean {
+  if (state) {
+    return state.loading === false || Boolean(state.model || state.error);
+  } else {
+    return false;
+  }
 }
 
 /**
  * Wraps an observable output and maps the value to a LoadingState.
  */
 export function loadingStateFromObs<T>(obs: Observable<T>, firstOnly?: boolean): Observable<LoadingState<T>> {
-
   if (firstOnly) {
     obs = obs.pipe(first());
   }
@@ -149,7 +159,7 @@ export function updatedStateForSetModel<T, S extends LoadingState<T> = LoadingSt
 /**
  * Updates the input state with the input error.
  */
-export function updatedStateForSetError<T, S extends LoadingState<T> = LoadingState<T>>(state: S, error?: ServerError): S {
+export function updatedStateForSetError<T, S extends LoadingState<T> = LoadingState<T>>(state: S, error?: ReadableDataError): S {
   return {
     ...state,
     loading: false,

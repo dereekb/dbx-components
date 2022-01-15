@@ -26,7 +26,7 @@ export class DbNgxLoadingButtonDirective extends AbstractSubscriptionDirective {
 
     if (context) {
       subscription = context.stream$.subscribe((x) => {
-        this.ngZone.run(() => this.button.working = x.isLoading);
+        this.ngZone.run(() => this.button.working = x.loading);
       });
     }
 

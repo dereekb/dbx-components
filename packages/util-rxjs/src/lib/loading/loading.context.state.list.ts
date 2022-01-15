@@ -1,12 +1,12 @@
 import { Maybe } from '@dereekb/util';
 import { Observable } from 'rxjs';
 import { map, shareReplay } from 'rxjs/operators';
-import { LoadingEvent } from './loading';
+import { LoadingContextEvent } from './loading.context';
 import { ModelListState } from './loading.state.list';
 import { hasResults, isRetrievingFirstPage } from './loading.state.list.reducer';
-import { AbstractLoadingEventForLoadingPairConfig, AbstractLoadingStateLoadingContext } from './loading.context';
+import { AbstractLoadingEventForLoadingPairConfig, AbstractLoadingStateLoadingContext } from './loading.context.state';
 
-export interface ModelListLoadingEvent<T> extends LoadingEvent {
+export interface ModelListLoadingEvent<T> extends LoadingContextEvent {
   list?: Maybe<T[]>;
 }
 
@@ -28,10 +28,10 @@ export class ModelListLoadingContext<L = any, S extends ModelListState<L> = Mode
   readonly list$: Observable<L[]> = this.stream$.pipe(map(x => x.list ?? []), shareReplay(1));
   readonly models$: Observable<L[]> = this.list$;
 
-  protected loadingEventForLoadingPair(state: S, { strict = false, limit }: LoadingEventForModelListStateConfig = {}): ModelListLoadingEvent<L> {
+  protected loadingEventForLoadingPair(state: S, { showLoadingOnNoModel: strict = false, limit }: LoadingEventForModelListStateConfig = {}): ModelListLoadingEvent<L> {
     const stateHasResults = hasResults(state);
 
-    let isLoading = state?.loading;
+    let loading = state?.loading;
     const error = state?.error;
     let list = state?.model;
 
@@ -42,17 +42,17 @@ export class ModelListLoadingContext<L = any, S extends ModelListState<L> = Mode
     if (state?.retrieving !== undefined) {
       // Show loading regardless of the state.
       if (strict !== false) {
-        isLoading = true;
+        loading = true;
       } else {
         // Is only loading if we're retrieving the first page and have no results.
-        isLoading = isLoading && isRetrievingFirstPage(state);
+        loading = loading && isRetrievingFirstPage(state);
       }
     } else {
-      isLoading = !stateHasResults;
+      loading = !stateHasResults;
     }
 
     return {
-      isLoading: Boolean(isLoading),
+      loading: Boolean(loading),
       error,
       list
     };
