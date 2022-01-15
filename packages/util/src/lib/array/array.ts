@@ -1,5 +1,5 @@
-import { ReadKeyFunction } from "./key";
-import { Maybe } from "./value";
+import { ReadKeyFunction } from "../key";
+import { Maybe } from "../value";
 
 // MARK: Types
 export type ArrayOrValue<T> = T | T[];

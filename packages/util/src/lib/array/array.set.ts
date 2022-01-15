@@ -1,8 +1,8 @@
-import { PrimativeKey } from './key';
+import { PrimativeKey } from '../key';
 import { symmetricDifference } from "extra-set";
 import { flattenArray } from "./array";
-import { caseInsensitiveString } from "./string";
-import { Maybe } from './value';
+import { caseInsensitiveString } from "../string";
+import { Maybe } from '../value';
 
 // MARK: Functions
 export function flattenArrayToSet<T>(array: T[][]): Set<T> {

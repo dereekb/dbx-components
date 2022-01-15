@@ -1,5 +1,5 @@
 import { Maybe } from '@dereekb/util';
-import { combineLatest, identity, Observable, of, OperatorFunction, isObservable, MonoTypeOperatorFunction } from 'rxjs';
+import { combineLatest, identity, Observable, of, OperatorFunction, isObservable } from 'rxjs';
 import { map, scan, startWith, shareReplay, distinctUntilChanged, filter } from 'rxjs/operators';
 
 /**

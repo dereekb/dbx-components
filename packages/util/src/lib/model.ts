@@ -1,5 +1,5 @@
-import { symmetricDifferenceKeys } from '..';
-import { findUnique } from './array.unique';
+import { symmetricDifferenceKeys } from './array/array.set';
+import { findUnique } from './array/array.unique';
 import { ReadKeyFunction, ReadKeysFunction } from './key';
 import { Maybe } from './value';
 

@@ -1,4 +1,4 @@
-import { removeModelsWithKey, removeModelsWithSameKey, ReadModelKeyFunction } from "./model";
+import { removeModelsWithKey, removeModelsWithSameKey, ReadModelKeyFunction } from "../model";
 
 export type BooleanStringKey = string;
 
