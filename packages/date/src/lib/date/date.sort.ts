@@ -1,10 +1,9 @@
-import { SORT_VALUE_LESS_THAN, SORT_VALUE_GREATER_THAN, SORT_VALUE_EQUAL } from './../../../util/src/lib/sort';
-import { compareFnOrder, ISO8601DateStringUTCFull, SortingOrder } from "@dereekb/util";
+import { SORT_VALUE_LESS_THAN, SORT_VALUE_GREATER_THAN, SORT_VALUE_EQUAL, compareFnOrder, ISO8601DateStringUTCFull, SortingOrder } from "@dereekb/util";
 
 /**
  * Sorts the input values by ISO8601DateStringUTCFull values from the input models.
  * 
- * @param values 
+ * @param values
  * @param readDate 
  * @param order 
  * @returns 

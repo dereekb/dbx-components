@@ -1,5 +1,8 @@
+import { ISO8601DayString } from '@dereekb/util';
 import { Expose } from 'class-transformer';
-import { Minutes, DateDurationSpan, DateUtility, ISO8601DayString } from './date';
+import { daysToMinutes } from './date';
+import { DateDurationSpan } from './date.duration';
+import { dateStringToDate } from './date.format';
 
 /**
  * CalendarDateType
@@ -24,13 +27,11 @@ export class CalendarDate extends DateDurationSpan {
    * The type of event date.
    */
   @Expose()
-  type: CalendarDateType;
+  type: CalendarDateType = CalendarDateType.TIME;
 
-  constructor(template?: Partial<CalendarDate>) {
+  constructor(template: CalendarDate) {
     super(template);
-    if (template) {
-      this.type = template.type;
-    }
+    this.type = template.type;
   }
 
 }
@@ -40,8 +41,8 @@ export class CalendarDateUtility {
   static calendarDateForDay(day: ISO8601DayString, days?: number): CalendarDate {
     return {
       type: CalendarDateType.DAYS,
-      startsAt: DateUtility.dateStringToDate(day),
-      duration: DateUtility.daysToMinutes(days)
+      startsAt: dateStringToDate(day),
+      duration: daysToMinutes(days)
     };
   }
 

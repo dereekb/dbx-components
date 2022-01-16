@@ -1,7 +1,7 @@
 import { Exclude, Expose } from 'class-transformer';
-import { DateRange, TimezoneString } from './date';
+import { CalendarDate, DateRange } from '../date';
 import { DateRRuleInstance, DateRRuleParseUtility, DateRRuleUtility, RRuleLines, RRuleStringLineSet } from './date.rrule';
-import { CalendarDate } from './date.calendar';
+import { TimezoneString } from '@dereekb/util';
 
 export interface RecurrenceModel {
   recur?: ModelRecurrenceInfo;
@@ -46,14 +46,12 @@ export class ModelRecurrenceInfo implements DateRange {
   @Expose()
   forever?: boolean;
 
-  constructor(template?: ModelRecurrenceInfo) {
-    if (template) {
-      this.timezone = template.timezone;
-      this.rrule = template.rrule;
-      this.start = template.start;
-      this.end = template.end;
-      this.forever = template.forever;
-    }
+  constructor(template: ModelRecurrenceInfo) {
+    this.timezone = template.timezone;
+    this.rrule = template.rrule;
+    this.start = template.start;
+    this.end = template.end;
+    this.forever = template.forever;
   }
 
 }

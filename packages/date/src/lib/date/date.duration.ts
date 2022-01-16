@@ -7,16 +7,14 @@ export class DateDurationSpan {
 
   @Expose()
   @Type(() => Date)
-  startsAt: Date = new Date();
+  startsAt: Date;
 
   @Expose()
-  duration: Minutes = 0;
+  duration: Minutes;
 
-  constructor(template?: DateDurationSpan) {
-    if (template) {
-      this.startsAt = template.startsAt;
-      this.duration = template.duration;
-    }
+  constructor(template: DateDurationSpan) {
+    this.startsAt = template.startsAt;
+    this.duration = template.duration;
   }
 
 }

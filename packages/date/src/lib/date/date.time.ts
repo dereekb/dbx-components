@@ -139,10 +139,21 @@ export class DateTimeUtilityInstance {
 
       let removedPm = false;
 
-      function removeAmPm(): void {
-        input = input.toLowerCase();
-        removedPm = input.indexOf('pm') !== -1;
-        input = input.replace(/\am|pm/g, '');
+      function removeAmPm(inputString: string): string {
+        inputString = inputString.toLowerCase();
+        removedPm = inputString.indexOf('pm') !== -1;
+        inputString = inputString.replace(/\am|pm/g, '');
+        return inputString;
+      }
+
+      function parseDateTimeFromNumber(inputString: string): Date {
+        const hour = inputString[0];
+        const minute = inputString[1] + inputString[2];
+        return parse(`${hour}:${minute}AM`, 'h:mma', date);
+      }
+
+      function parseDateTimeAsHmm(inputString: string): Date {
+        return parse(inputString, 'Hmm', date);
       }
 
       switch (input.length) {
@@ -153,27 +164,26 @@ export class DateTimeUtilityInstance {
           break;
         case 5:
           // 120AM
-          removeAmPm();
-        // fallthrough
-        // tslint:disable-next-line: no-switch-case-fall-through
+          input = removeAmPm(input);
+          dateTime = parseDateTimeFromNumber(input);
+          break;
         case 3:
           // 120
-          const hour = input[0];
-          const minute = input[1] + input[2];
-          dateTime = parse(`${hour}:${minute}AM`, 'h:mma', date);
+          dateTime = parseDateTimeFromNumber(input);
           break;
         case 6:
           // 1212AM
-          removeAmPm();
+          removeAmPm(input);
 
           if (removedPm) {
             removedPm = input[0] !== '2'; // If 2, ignore the PM part.
           }
-        // fallthrough
-        // tslint:disable-next-line: no-switch-case-fall-through
+
+          dateTime = parseDateTimeAsHmm(input);
+          break;
         default:
           // 2200
-          dateTime = parse(input, 'Hmm', date);
+          dateTime = parseDateTimeAsHmm(input);
           break;
       }
 

@@ -28,7 +28,7 @@ export class HashSet<K extends PrimativeKey, T> implements Set<T> {
     return this._map.values();
   }
 
-  addAll(values: T[]): this {
+  addAll(values: Maybe<T[]>): this {
     values?.forEach(x => this.add(x));
     return this;
   }

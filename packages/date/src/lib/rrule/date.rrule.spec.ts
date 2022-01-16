@@ -1,11 +1,6 @@
-import { Length } from 'class-validator';
-import { DateRRule } from './date.rrule.extension';
-import { DateRangeParams, DateRangeType } from './date.range';
-import { addMinutes, addDays, addYears, addHours, addMilliseconds } from 'date-fns';
-import { CalendarDate, CalendarDateUtility } from './date.calendar';
-import { DateRRuleInstance, DateRRuleUtility } from './date.rrule';
-import RRule from 'rrule';
-import { getTimezoneOffset, utcToZonedTime } from 'date-fns-tz';
+import { CalendarDate, CalendarDateUtility, DateRangeParams, DateRangeType, maxFutureDate } from '../date';
+import { addMinutes, addDays } from 'date-fns';
+import { DateRRuleInstance, DateRRuleUtility, RRuleStringLineSet } from './date.rrule';
 
 describe('DateRRuleUtility', () => {
 
@@ -241,7 +236,7 @@ describe('DateRRuleUtility', () => {
     describe('getRecurrenceDateRange()', () => {
 
       let calendarDate: CalendarDate;
-      let rruleStringLineSet;
+      let rruleStringLineSet: RRuleStringLineSet;
 
       describe('forever', () => {
 
@@ -266,7 +261,7 @@ describe('DateRRuleUtility', () => {
             const range = dateRRule.getRecurrenceDateRange();
             expect(range.forever).toBe(true);
             expect(range.start).toBe(calendarDate.startsAt);
-            expect(range.end).toBeSameSecondAs(DateUtility.maxFutureDate());
+            expect(range.end).toBeSameSecondAs(maxFutureDate());
             expect(range.finalRecurrenceEndsAt).not.toBeDefined();
           });
 

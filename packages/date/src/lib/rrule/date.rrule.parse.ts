@@ -1,7 +1,6 @@
 import { TimezoneString, CommaSeparatedString, flattenArray, Maybe } from '@dereekb/util';
-import { format } from 'date-fns';
-import { zonedTimeToUtc } from 'date-fns-tz';
-import { DateSet } from './date.hashset';
+import { format, zonedTimeToUtc } from 'date-fns-tz';
+import { DateSet } from '../date';
 
 /**
  * Denotes a single RRule rules string.
