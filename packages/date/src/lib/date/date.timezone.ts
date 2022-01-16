@@ -100,6 +100,10 @@ export class DateTimezoneUtcNormalInstance implements DateTimezoneBaseDateConver
       config = { timezone: config };
     }
 
+    if (config.useSystemTimezone === true || config.timezoneOffset == null) {
+      config.timezone = config.timezone ?? UTC_TIMEZONE_STRING;
+    }
+
     this.config = config;
 
     let getOffsetInMsFn: Maybe<(date: Date) => number>;
@@ -115,16 +119,11 @@ export class DateTimezoneUtcNormalInstance implements DateTimezoneBaseDateConver
 
     const hasConversion = Boolean(getOffsetInMsFn);
 
-    /*
-    if (hasConversion && config.betweenSystemAndOffset) {
-      const baseGetOffsetInMsFn = getOffsetInMsFn!;
-      getOffsetInMsFn = (date) => getCurrentSystemOffset(date) - baseGetOffsetInMsFn(date);
-    }
-    */
-
     if (hasConversion) {
       function calculateOffset(date: Date, addOffset = 0) {
-        return getOffsetInMsFn!(date) + addOffset;
+        const offset = getOffsetInMsFn!(date);
+        const total = offset + addOffset;
+        return total;
       }
 
       this._converter = {
@@ -143,8 +142,6 @@ export class DateTimezoneUtcNormalInstance implements DateTimezoneBaseDateConver
         normalDateToBaseDate: (x: Date) => x
       };
     }
-
-    console.log('Config: ', config);
 
     this.hasConversion = hasConversion;
   }

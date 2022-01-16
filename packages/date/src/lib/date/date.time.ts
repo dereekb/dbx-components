@@ -221,31 +221,6 @@ export class DateTimeUtilityInstance {
       raw = parsedDateTime!;
       parsedDateTime = relativeDateNormal._baseDateToNormalDate(raw, { betweenSystemAndOffset: true });
 
-      /*
-      const rawTimezoneOffset = raw.getTimezoneOffset();   // 360 for GMT-0600
-      const rawWithOffset = addMinutes(raw, rawTimezoneOffset);            // raw is now in UTC
-
-      let offset: Maybe<number>;
-
-      if (useSystemTimezone) {
-        const currentTzOffset = minutesToMs(new Date().getTimezoneOffset());
-        offset = currentTzOffset;
-      } else if (timezoneOffset != null) {
-        offset = timezoneOffset;
-      } else if (timezone) {
-        offset = getTimezoneOffset(timezone, date);   // -360 * 60 * 1000 for GMT-0600
-      }
-
-      if (offset) {
-        parsedDateTime = addMilliseconds(rawWithOffset, -offset);            // dateTime is now in GMT-0600
-      } else {
-        parsedDateTime = rawWithOffset;
-      }
-
-      console.log('Raw: ', input, raw, rawTimezoneOffset, rawWithOffset, parsedDateTime, timezone, timezoneOffset, offset);
-      */
-
-      // raw = rawWithOffset;
       console.log('Raw: ', input, raw, parsedDateTime, this.normalInstance.config);
     }
 
