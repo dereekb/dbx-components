@@ -156,6 +156,17 @@ export function pairGroupValues<T, K extends PrimativeKey = PrimativeKey>(values
 }
 
 /**
+ * Creates a tuples array of key and value pairs.
+ * 
+ * @param values 
+ * @param keyFn 
+ * @returns 
+ */
+export function makeKeyPairs<T, K extends string | number = string | number>(values: T[], keyFn: ReadKeyFunction<T, K>): [Maybe<K>, T][] {
+  return values.map(x => ([keyFn(x), x]));
+}
+
+/**
  * Separates the input values into an included and excluded group.
  * 
  * @param values 

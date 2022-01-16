@@ -8,6 +8,14 @@ export function toCaseInsensitiveStringArray(values: string[]): string[] {
   return values.map<string>(caseInsensitiveString);
 }
 
+export function uniqueCaseInsensitiveStrings(values: string[]): string[] {
+  return Array.from(uniqueCaseInsensitiveStringsSet(values));
+}
+
+export function uniqueCaseInsensitiveStringsSet(values: string[]): Set<string> {
+  return new Set(toCaseInsensitiveStringArray(values));
+}
+
 export function flattenArrayUniqueCaseInsensitiveStrings(array: string[][]): string[] {
   return unique(flattenArray<string>(array).map<string>(caseInsensitiveString));
 }

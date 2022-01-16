@@ -13,6 +13,7 @@ export type Maybe<T> = T | null | undefined;
  * @param value 
  * @returns 
  */
+export function hasNonNullValue<T>(value: Maybe<T>): value is T;
 export function hasNonNullValue(value: any): boolean;
 export function hasNonNullValue(value: true): true;
 export function hasNonNullValue(value: false): true;
@@ -20,7 +21,7 @@ export function hasNonNullValue(value: number): true;
 export function hasNonNullValue(value: ''): true;
 export function hasNonNullValue(value: null): false;
 export function hasNonNullValue(value: undefined): false;
-export function hasNonNullValue(value: any): boolean {
+export function hasNonNullValue<T>(value: Maybe<T>): boolean {
   return value != null;
 }
 
