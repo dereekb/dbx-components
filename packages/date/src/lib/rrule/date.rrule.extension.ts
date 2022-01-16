@@ -8,15 +8,22 @@ export const DEFAULT_LAST_ITER_RESULT_MAX_ITERATIONS_ALLOWED = 10000;
 
 export class DateRRule extends RRule {
 
+  /**
+   * Returns the last occurence that occurs in the rule chain.
+   * 
+   * @returns 
+   */
   last(): Maybe<Date> {
     return this._iter(new LastIterResult());
   }
 
   /**
    * Returns the next recurrence that occurs on/after the input date.
+   * 
+   * @returns 
    */
-  next(date: Date): Maybe<Date> {
-    return this._iter(new NextIterResult(date));
+  next(minDate: Date): Maybe<Date> {
+    return this._iter(new NextIterResult(minDate));
   }
 
   /**
@@ -123,17 +130,31 @@ export class AnyIterResult extends BaseRRuleIter {
   override readonly minDate: Date | null = null;
   override readonly maxDate: Date | null = null;
 
-  constructor(filter: { minDate?: Maybe<Date>, maxDate?: Maybe<Date> } = {}) {
+  constructor(filter?: { minDate?: Maybe<Date>, maxDate?: Maybe<Date> }, readonly maxIterationsAllowed: number = DEFAULT_LAST_ITER_RESULT_MAX_ITERATIONS_ALLOWED) {
     super();
     if (filter) {
       this.minDate = filter.minDate ?? null;
       this.maxDate = filter.maxDate ?? null;
-      throw new Error('Filter is not yet supported.');
     }
   }
 
   accept(date: Date): boolean {
-    return this.add(date);
+    ++this.total;
+    const tooEarly = this.minDate != null && (this.minDate > date);
+
+    if (tooEarly) {
+      const maxIterationReached = this.total >= this.maxIterationsAllowed;
+      return !maxIterationReached;
+    } else {
+      const tooLate = this.maxDate != null && (this.maxDate < date);
+
+      if (tooLate) {
+        return true;
+      } else {
+        this.add(date);
+        return false;
+      }
+    }
   }
 
   add(date: Date): boolean {

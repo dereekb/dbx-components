@@ -5,3 +5,6 @@
  * Typically Angular already imports this functionality. NestJS also will import this functionality on its own.
  */
 import 'reflect-metadata';
+import { RRuleError } from 'rrule';
+
+RRuleError.emitLuxonTzidError = false;
