@@ -261,7 +261,7 @@ describe('DateRRuleUtility', () => {
 
             const range = dateRRule.getRecurrenceDateRange();
             expect(range.forever).toBe(true);
-            expect(range.start).toBe(calendarDate.startsAt);
+            expect(range.start).toBeSameSecondAs(calendarDate.startsAt);
             expect(range.end).toBeSameSecondAs(maxFutureDate());
             expect(range.finalRecurrenceEndsAt).not.toBeDefined();
           });
@@ -292,7 +292,7 @@ describe('DateRRuleUtility', () => {
 
             const range = dateRRule.getRecurrenceDateRange();
             expect(range.forever).toBe(false);
-            expect(range.start).toBe(calendarDate.startsAt);
+            expect(range.start).toBeSameSecondAs(calendarDate.startsAt);
             expect(range.end).toBeSameSecondAs(new Date('2022-04-01T00:00:00.000Z'));
             expect(range.finalRecurrenceEndsAt).toBeDefined();
           });
@@ -323,7 +323,7 @@ describe('DateRRuleUtility', () => {
 
             const range = dateRRule.getRecurrenceDateRange();
             expect(range.forever).toBe(false);
-            expect(range.start).toBe(calendarDate.startsAt);
+            expect(range.start).toBeSameSecondAs(calendarDate.startsAt);
             expect(range.end).toBeSameSecondAs(new Date('2030-01-02T00:00:00.000Z'));
             expect(range.finalRecurrenceEndsAt).toBeDefined();
           });

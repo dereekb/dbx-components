@@ -31,8 +31,19 @@ export interface ParseTimeString extends DateTimezoneConversionConfig {
 }
 
 export interface DateFromTimestringResult {
-  result?: Maybe<Date>;
+  /**
+   * The "raw" date. This occurs at the UTC time of the parsed result. For instance, 1PM for any timezone will return 1PM in UTC for the same date.
+   */
   raw?: Maybe<Date>;
+  /**
+   * The real, post-timezone-converted value.
+   */
+  result?: Maybe<Date>;
+  /**
+   * Whether or not the value was parsed.
+   * 
+   * If not value, raw and result may be undefined.
+   */
   valid: boolean;
 }
 
@@ -81,8 +92,9 @@ export class DateTimeUtilityInstance {
     if (isValidDateFromTimestringResult(timestringResult)) {
       const { result, raw, valid } = timestringResult;
 
-      // Use minites since start of day since raw
-      const minutesSinceStartOfDay = differenceInMinutes(raw!, startOfDay(raw!));
+      // Use minutes since start of day. Since differenceInMinutes uses system time, we convert the raw to system time first.
+      const inSystemTime = systemNormalDateToBaseDate(raw);
+      const minutesSinceStartOfDay = differenceInMinutes(inSystemTime!, startOfDay(inSystemTime!));
 
       return {
         utc: raw,
@@ -122,14 +134,12 @@ export class DateTimeUtilityInstance {
     }
 
     /*
-     The input date needs to capture the right Day we want to parse on. 
+     The input date needs to capture the right Day we want to parse on.
      We do this by adding the offset of the system with the offset of the target timezone.
      */
 
     const relativeDateNormal = new DateTimezoneUtcNormalInstance(config);
     const relativeDate = relativeDateNormal._normalDateToBaseDate(inputDate, { betweenSystemAndOffset: true });
-
-    console.log('Relative date: ', relativeDate, inputDate);
 
     const formats = [
       'h:mma',  // 1:20AM
@@ -212,16 +222,19 @@ export class DateTimeUtilityInstance {
       valid = isValid(parsedDateTime);
     }
 
+    // console.log('Parsed: ', input, inputDate, relativeDate, parsedDateTime);
+
     // Raw parse result is always UTC for that date.
     // For example, 1AM will return 1AM UTC in a Date object.
     let raw: Maybe<Date>;
 
     if (valid) {
-      // The parsed DateTime will be in the system settings for that date, and not for the timezone specified.
-      raw = parsedDateTime!;
-      parsedDateTime = relativeDateNormal._baseDateToNormalDate(raw, { betweenSystemAndOffset: true });
 
-      console.log('Raw: ', input, raw, parsedDateTime, this.normalInstance.config);
+      // The parsed DateTime will be in the system settings for that date in as a UTC time.
+      raw = systemBaseDateToNormalDate(parsedDateTime!);
+      parsedDateTime = relativeDateNormal._baseDateToNormalDate(parsedDateTime!, { betweenSystemAndOffset: true });
+
+      // console.log('Raw: ', input, raw, parsedDateTime, this.normalInstance.config);
     }
 
     return {

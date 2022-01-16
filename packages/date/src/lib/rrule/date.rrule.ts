@@ -131,11 +131,6 @@ export class DateRRuleInstance {
     let dtstart = rrule.origOptions.dtstart;
 
     const timezone = tzid || options.timezone;
-
-    if (!timezone) {
-      throw new Error('No timezone was provided in either the rrule or options provided.');
-    }
-
     this.normalInstance = new DateTimezoneUtcNormalInstance(timezone);
 
     if (dtstart && tzid) {

@@ -1,4 +1,5 @@
 import { TimeAM } from '@dereekb/util';
+import { utcToZonedTime } from 'date-fns-tz';
 import { getTimeAM, parseReadableTimeString, readableTimeStringToDate, toReadableTimeString } from '.';
 
 describe('getTimeAM()', () => {
@@ -49,12 +50,24 @@ describe('parseReadableTimeString()', () => {
 
   describe('12:00PM', () => {
 
+    describe('no timezone', () => {
+
+      it('should parse 12PM for UTC', () => {
+        const result = parseReadableTimeString('12PM', { date })!;
+        expect(result.utc).toBeSameMinuteAs(new Date('2021-08-16T12:00:00.000Z'));
+        expect(result.date).toBeSameMinuteAs(new Date('2021-08-16T12:00:00.000Z'));
+        expect(result.minutesSinceStartOfDay).toBe(720);
+        expect(result.am).toBe(TimeAM.PM);
+      });
+
+    });
+
     describe('timezone', () => {
 
       it('should parse 12PM for America/New_York', () => {
         const result = parseReadableTimeString('12PM', { date, timezone: 'America/New_York' })!;
-        expect(result.utc).toBeSameMinuteAs(new Date('2021-08-16T12:00:00.000Z'));
-        expect(result.date).toBeSameMinuteAs(new Date('2021-08-16T16:00:00.000Z'));
+        expect(result.utc).toBeSameMinuteAs(new Date('2021-08-15T12:00:00.000Z'));
+        expect(result.date).toBeSameMinuteAs(new Date('2021-08-15T16:00:00.000Z'));
         expect(result.minutesSinceStartOfDay).toBe(720);
         expect(result.am).toBe(TimeAM.PM);
       });
@@ -141,8 +154,14 @@ describe('readableTimeStringToDate()', () => {
 
       const date = new Date('2021-08-16T00:00:00.000Z');
 
+      // https://www.timeanddate.com/worldclock/converter.html?iso=20220115T172300&p1=237&p2=179&p3=1440&p4=64&p5=770&p6=70
+      it('should parse 1:23AM as 1:23AM for Asia/Shanghai', () => {
+        const result = readableTimeStringToDate('1:23AM', { date, timezone: 'Asia/Shanghai' });
+        expect(result).toBeSameMinuteAs(new Date('2021-08-15T17:23:00.000Z'));  // 1:23AM in Shanghai
+      });
+
       it('should parse 1:23AM as 1:23AM for Europe/Amsterdam', () => {
-        const result = readableTimeStringToDate('1:23AM', { date, timezone: 'Europe/Amsterdam' });
+        const result = readableTimeStringToDate('1:23AM', { date, timezone: 'Europe/Amsterdam' });    // +01:00
         expect(result).toBeSameMinuteAs(new Date('2021-08-15T23:23:00.000Z'));
       });
 
@@ -152,13 +171,19 @@ describe('readableTimeStringToDate()', () => {
       });
 
       it('should parse 1:23AM as 1:23AM for America/Chicago', () => {
-        const result = readableTimeStringToDate('1:23AM', { date, timezone: 'America/Chicago' });
-        expect(result).toBeSameMinuteAs(new Date('2021-08-16T06:23:00.000Z'));
+        const timezone = 'America/Chicago';
+        const result = readableTimeStringToDate('1:23AM', { date, timezone: 'America/Chicago' });    // +06:00
+        const expectedDay = utcToZonedTime(date, timezone).getDay();
+        expect(result).toBeSameMinuteAs(new Date('2021-08-15T06:23:00.000Z'));
+        expect(result!.getDay()).toBe(expectedDay);
       });
 
       it('should parse 1:23AM as 1:23AM for America/New_York', () => {
-        const result = readableTimeStringToDate('1:23AM', { date, timezone: 'America/New_York' });
-        expect(result).toBeSameMinuteAs(new Date('2021-08-16T05:23:00.000Z'));
+        const timezone = 'America/New_York';
+        const result = readableTimeStringToDate('1:23AM', { date, timezone });    // +05:00
+        const expectedDay = utcToZonedTime(date, timezone).getDay();
+        expect(result).toBeSameMinuteAs(new Date('2021-08-15T05:23:00.000Z'));
+        expect(result!.getDay()).toBe(expectedDay);
       });
 
     });
