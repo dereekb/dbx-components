@@ -48,3 +48,14 @@ export function hasValueOrNotEmpty(value: any): boolean {
     return value != null && value !== '';
   }
 }
+
+/**
+ * Returns true if both the inputs are not null/undefined but the same value.
+ * 
+ * @param a 
+ * @param b 
+ * @returns 
+ */
+export function isSameNonNullValue<T>(a: Maybe<T>, b: Maybe<T>): a is T {
+  return (a === b && a != null);
+}

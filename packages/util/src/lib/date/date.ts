@@ -20,6 +20,21 @@ export type TimezoneString = string;
 export const UTC_TIMEZONE_STRING = 'UTC';
 
 /**
+ * Whether or not the input timezone string is considered UTC.
+ * 
+ * @param timezone 
+ * @returns 
+ */
+export function isConsideredUtcTimezoneString(timezone: Maybe<TimezoneString>): boolean;
+export function isConsideredUtcTimezoneString(timezone: TimezoneString): boolean;
+export function isConsideredUtcTimezoneString(timezone: 'UTC'): true;
+export function isConsideredUtcTimezoneString(timezone: null): true;
+export function isConsideredUtcTimezoneString(timezone: undefined): true;
+export function isConsideredUtcTimezoneString(timezone: Maybe<TimezoneString>): boolean {
+  return (timezone == null || timezone === UTC_TIMEZONE_STRING);
+}
+
+/**
  * A Date or an ISO8601DateString.
  */
 export type DateOrDateString = Date | ISO8601DateString;

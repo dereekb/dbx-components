@@ -1,12 +1,9 @@
 import { Maybe, TimezoneString } from '@dereekb/util';
-import { addMilliseconds } from 'date-fns';
-import { getTimezoneOffset } from 'date-fns-tz';
 import { RRule, Options } from 'rrule';
 import { CalendarDate, DateSet, DateRange, DateRangeParams, makeDateRange, maxFutureDate, durationSpanToDateRange } from '../date';
 import { BaseDateAsUTC, DateTimezoneUtcNormalInstance } from '../date/date.timezone';
 import { DateRRule } from './date.rrule.extension';
 import { DateRRuleParseUtility, RRuleLines, RRuleStringLineSet, RRuleStringSetSeparation } from './date.rrule.parse';
-export * from './date.rrule.parse';
 
 /**
  * Since RRule only deals with UTC date/times, dates going into it must always be in UTC.
@@ -108,7 +105,6 @@ export interface ForeverRecurrenceDateRange extends RecurrenceDateRange {
 export class DateRRuleInstance {
 
   readonly rrule: DateRRule;
-
   readonly normalInstance: DateTimezoneUtcNormalInstance;
 
   /**
@@ -168,6 +164,10 @@ export class DateRRuleInstance {
     }
 
     this.rrule = new DateRRule(rruleOptions, true);
+  }
+
+  get timezone(): TimezoneString {
+    return this.normalInstance.config.timezone!;
   }
 
   nextRecurrenceDate(from: Date = new Date()): Maybe<Date> {

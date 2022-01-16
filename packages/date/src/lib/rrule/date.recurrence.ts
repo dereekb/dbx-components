@@ -1,6 +1,7 @@
 import { Exclude, Expose } from 'class-transformer';
 import { CalendarDate, DateRange } from '../date';
-import { DateRRuleInstance, DateRRuleParseUtility, DateRRuleUtility, RRuleLines, RRuleStringLineSet } from './date.rrule';
+import { DateRRuleInstance, DateRRuleUtility } from './date.rrule';
+import { DateRRuleParseUtility, RRuleLines, RRuleStringLineSet } from './date.rrule.parse';
 import { TimezoneString } from '@dereekb/util';
 
 export interface RecurrenceModel {

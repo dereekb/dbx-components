@@ -131,7 +131,7 @@ describe('readableTimeStringToDate()', () => {
 
       it('should parse 1:00AM as 1AM in UTC time', () => {
         const date = new Date('2021-08-16T00:00:00.000Z');
-        const result = readableTimeStringToDate('1:00AM', { date });
+        const result = readableTimeStringToDate('1:00AM', { date, timezone: 'UTC' });
         expect(result).toBeSameMinuteAs(new Date('2021-08-16T01:00:00.000Z'));
       });
 

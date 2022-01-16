@@ -1,8 +1,8 @@
-import { parse, differenceInMinutes, isValid, addHours, addMinutes, addMilliseconds, startOfDay } from 'date-fns';
-import { getTimezoneOffset, format } from 'date-fns-tz';
+import { parse, differenceInMinutes, isValid, addHours, startOfDay } from 'date-fns';
+import { formatInTimeZone, getTimezoneOffset } from 'date-fns-tz';
 import { Maybe, ReadableTimeString, TimeAM, TimezoneString, UTC_TIMEZONE_STRING } from '@dereekb/util';
-import { minutesToMs } from './date';
 import { LimitDateTimeConfig, LimitDateTimeInstance } from './date.time.limit';
+import { systemNormalDateToBaseDate, systemBaseDateToNormalDate, DateTimezoneConversionConfig, DateTimezoneUtcNormalInstance, isSameDateTimezoneConversionConfig } from './date.timezone';
 
 export interface ParsedTimeString {
   /**
@@ -23,23 +23,11 @@ export interface ParsedTimeString {
   am: TimeAM;
 }
 
-export interface ParseTimeString {
+export interface ParseTimeString extends DateTimezoneConversionConfig {
   /**
    * Reference date to parse from.
    */
   date?: Date;
-  /**
-   * Timezone to be relative to. If not defined, values are returned in UTC.
-   */
-  timezone?: TimezoneString;
-  /**
-   * Whether or not to use the system timezone/offset.
-   */
-  useSystemTimezone?: boolean;
-  /**
-   * Custom timezone offset to specify for the result.
-   */
-  timezoneOffset?: number;
 }
 
 export interface DateFromTimestringResult {
@@ -58,21 +46,33 @@ export function isValidDateFromTimestringResult(result: ValidDateFromTimestringR
   return result.valid;
 }
 
+/**
+ * A utility instance.
+ */
 export class DateTimeUtilityInstance {
 
-  readonly timezone: TimezoneString;
+  readonly normalInstance: DateTimezoneUtcNormalInstance;
 
+  /**
+   * The default timezone all inputs should be handled with.
+   * 
+   * If the timezone is not defined, it defaults to UTC.
+   */
   constructor(timezone?: Maybe<TimezoneString>) {
-    this.timezone = (typeof timezone === 'string') ? timezone : UTC_TIMEZONE_STRING;
+    this.normalInstance = new DateTimezoneUtcNormalInstance(timezone);
+  }
+
+  get timezone(): TimezoneString {
+    return this.normalInstance.config.timezone!;
   }
 
   getTimeAM(date = new Date(), timezone?: TimezoneString): TimeAM {
-    const am: TimeAM = format(date, 'a', { timeZone: timezone ?? this.timezone }) as TimeAM;
+    const am: TimeAM = formatInTimeZone(date, timezone ?? this.timezone, 'a') as TimeAM;
     return am;
   }
 
   toTimeString(date: Date, timezone?: TimezoneString): ReadableTimeString {
-    return format(date, `h:mma`, { timeZone: timezone ?? this.timezone });
+    return formatInTimeZone(date, timezone ?? this.timezone, `h:mma`);
   }
 
   parseTimeString(input: ReadableTimeString, config?: ParseTimeString): Maybe<ParsedTimeString> {
@@ -95,6 +95,13 @@ export class DateTimeUtilityInstance {
     }
   }
 
+  /**
+   * Returns a timestring parsed relative to the input config.
+   * 
+   * @param input 
+   * @param config 
+   * @returns 
+   */
   timeStringToDate(input: ReadableTimeString, config?: ParseTimeString): Maybe<Date> {
     const { result, valid } = this._timeStringToDate(input, config);
 
@@ -105,13 +112,24 @@ export class DateTimeUtilityInstance {
     }
   }
 
-  _timeStringToDate(input: ReadableTimeString, { date = new Date(), timezone = this.timezone, useSystemTimezone, timezoneOffset }: ParseTimeString = {}): DateFromTimestringResult | ValidDateFromTimestringResult {
+  _timeStringToDate(input: ReadableTimeString, config: ParseTimeString = {}): DateFromTimestringResult | ValidDateFromTimestringResult {
+    const { date: inputDate = new Date() } = config;
 
     if (!input) {
       return { valid: false };
     } else {
       input = input.trim();
     }
+
+    /*
+     The input date needs to capture the right Day we want to parse on. 
+     We do this by adding the offset of the system with the offset of the target timezone.
+     */
+
+    const relativeDateNormal = new DateTimezoneUtcNormalInstance(config);
+    const relativeDate = relativeDateNormal._normalDateToBaseDate(inputDate, { betweenSystemAndOffset: true });
+
+    console.log('Relative date: ', relativeDate, inputDate);
 
     const formats = [
       'h:mma',  // 1:20AM
@@ -121,14 +139,14 @@ export class DateTimeUtilityInstance {
       'h:mm'    // 1:20
     ];
 
-    let dateTime: Maybe<Date>;
+    let parsedDateTime: Maybe<Date>;
     let valid = false;
 
     // tslint:disable-next-line: prefer-for-of
     for (let i = 0; i < formats.length; i += 1) {
-      dateTime = parse(input, formats[i], date);
+      parsedDateTime = parse(input, formats[i], relativeDate);
 
-      if (isValid(dateTime)) {
+      if (isValid(parsedDateTime)) {
         valid = true;
         break;  // Use time.
       }
@@ -149,27 +167,27 @@ export class DateTimeUtilityInstance {
       function parseDateTimeFromNumber(inputString: string): Date {
         const hour = inputString[0];
         const minute = inputString[1] + inputString[2];
-        return parse(`${hour}:${minute}AM`, 'h:mma', date);
+        return parse(`${hour}:${minute}AM`, 'h:mma', relativeDate);
       }
 
       function parseDateTimeAsHmm(inputString: string): Date {
-        return parse(inputString, 'Hmm', date);
+        return parse(inputString, 'Hmm', relativeDate);
       }
 
       switch (input.length) {
         case 1:
         case 2:
           // 1
-          dateTime = parse(input, 'H', date);
+          parsedDateTime = parse(input, 'H', relativeDate);
           break;
         case 5:
           // 120AM
           input = removeAmPm(input);
-          dateTime = parseDateTimeFromNumber(input);
+          parsedDateTime = parseDateTimeFromNumber(input);
           break;
         case 3:
           // 120
-          dateTime = parseDateTimeFromNumber(input);
+          parsedDateTime = parseDateTimeFromNumber(input);
           break;
         case 6:
           // 1212AM
@@ -179,19 +197,19 @@ export class DateTimeUtilityInstance {
             removedPm = input[0] !== '2'; // If 2, ignore the PM part.
           }
 
-          dateTime = parseDateTimeAsHmm(input);
+          parsedDateTime = parseDateTimeAsHmm(input);
           break;
         default:
           // 2200
-          dateTime = parseDateTimeAsHmm(input);
+          parsedDateTime = parseDateTimeAsHmm(input);
           break;
       }
 
       if (removedPm) {
-        dateTime = addHours(dateTime, 12);
+        parsedDateTime = addHours(parsedDateTime, 12);
       }
 
-      valid = isValid(dateTime);
+      valid = isValid(parsedDateTime);
     }
 
     // Raw parse result is always UTC for that date.
@@ -199,9 +217,13 @@ export class DateTimeUtilityInstance {
     let raw: Maybe<Date>;
 
     if (valid) {
-      raw = dateTime!;
+      // The parsed DateTime will be in the system settings for that date, and not for the timezone specified.
+      raw = parsedDateTime!;
+      parsedDateTime = relativeDateNormal._baseDateToNormalDate(raw, { betweenSystemAndOffset: true });
+
+      /*
       const rawTimezoneOffset = raw.getTimezoneOffset();   // 360 for GMT-0600
-      raw = addMinutes(raw, rawTimezoneOffset);            // raw is now in GMT-0
+      const rawWithOffset = addMinutes(raw, rawTimezoneOffset);            // raw is now in UTC
 
       let offset: Maybe<number>;
 
@@ -215,19 +237,38 @@ export class DateTimeUtilityInstance {
       }
 
       if (offset) {
-        dateTime = addMilliseconds(raw, -offset);            // dateTime is now in GMT-0600
+        parsedDateTime = addMilliseconds(rawWithOffset, -offset);            // dateTime is now in GMT-0600
       } else {
-        dateTime = raw;
+        parsedDateTime = rawWithOffset;
       }
 
-      console.log('Raw: ', input, raw, dateTime, timezone, timezoneOffset, offset);
+      console.log('Raw: ', input, raw, rawTimezoneOffset, rawWithOffset, parsedDateTime, timezone, timezoneOffset, offset);
+      */
+
+      // raw = rawWithOffset;
+      console.log('Raw: ', input, raw, parsedDateTime, this.normalInstance.config);
     }
 
     return {
       raw: raw,
-      result: dateTime,
+      result: parsedDateTime,
       valid
     };
+  }
+
+  private _normalizeInstanceForConfig(config: DateTimezoneConversionConfig): DateTimezoneUtcNormalInstance {
+    let instance: DateTimezoneUtcNormalInstance;
+
+    if (isSameDateTimezoneConversionConfig(this.normalInstance.config, config)) {
+      instance = this.normalInstance;
+    } else {
+      instance = new DateTimezoneUtcNormalInstance({
+        ...config,
+        timezone: config.timezone ?? this.normalInstance.config.timezone
+      });
+    }
+
+    return instance;
   }
 
 }

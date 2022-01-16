@@ -1,6 +1,7 @@
 import { CalendarDate, CalendarDateUtility, DateRangeParams, DateRangeType, maxFutureDate } from '../date';
 import { addMinutes, addDays } from 'date-fns';
-import { DateRRuleInstance, DateRRuleUtility, RRuleStringLineSet } from './date.rrule';
+import { DateRRuleInstance, DateRRuleUtility } from './date.rrule';
+import { RRuleStringLineSet } from './date.rrule.parse';
 
 describe('DateRRuleUtility', () => {
 
