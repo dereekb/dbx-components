@@ -73,6 +73,11 @@ export interface UpdateMiltiTypeRelationConfig<T> extends UpdateRelationConfig<T
   readType: ReadRelationModelTypeFn<T>;
 }
 
+/**
+ * Utility class for modifying a collection of relational objects.
+ * 
+ * For instance, a string collection of keys.
+ */
 export class ModelRelationUtility {
 
   static modifyStringCollection(current: RelationString[], change: RelationChange, mods: RelationString[]): RelationString[] {
