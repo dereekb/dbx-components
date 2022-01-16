@@ -3,17 +3,15 @@ import { addMilliseconds } from 'date-fns';
 import { getTimezoneOffset } from 'date-fns-tz';
 import { RRule, Options } from 'rrule';
 import { CalendarDate, DateSet, DateRange, DateRangeParams, makeDateRange, maxFutureDate, durationSpanToDateRange } from '../date';
+import { BaseDateAsUTC, DateTimezoneUtcNormalInstance } from '../date/date.timezone';
 import { DateRRule } from './date.rrule.extension';
 import { DateRRuleParseUtility, RRuleLines, RRuleStringLineSet, RRuleStringSetSeparation } from './date.rrule.parse';
 export * from './date.rrule.parse';
 
 /**
  * Since RRule only deals with UTC date/times, dates going into it must always be in UTC.
- *
- * We use this "weird" date when transforming an instance (11AM in Los Angeles) into a UTC date that says the same thing,
- * 11AM UTC.
  */
-export type RRuleBaseDateAsUTC = Date;
+export type RRuleBaseDateAsUTC = BaseDateAsUTC;
 
 export interface DateRRuleExpansionOptions {
 
@@ -111,10 +109,7 @@ export class DateRRuleInstance {
 
   readonly rrule: DateRRule;
 
-  /**
-   * Timezone the events originally occur in.
-   */
-  readonly timezone: Maybe<TimezoneString>;
+  readonly normalInstance: DateTimezoneUtcNormalInstance;
 
   /**
    * Creates a new DateRRuleInstance from the input.
@@ -139,16 +134,22 @@ export class DateRRuleInstance {
     const tzid = rrule.origOptions.tzid;
     let dtstart = rrule.origOptions.dtstart;
 
-    this.timezone = tzid || options.timezone;
+    const timezone = tzid || options.timezone;
+
+    if (!timezone) {
+      throw new Error('No timezone was provided in either the rrule or options provided.');
+    }
+
+    this.normalInstance = new DateTimezoneUtcNormalInstance(timezone);
 
     if (dtstart && tzid) {
       // Date was passed to both. The dtstart is the base UTC date, but correct for RRule.
-    } else if (this.timezone) {
+    } else if (timezone) {
       const startsAt: Maybe<Date> = options.date?.startsAt;
 
       // If startsAt is provided, need to change it to start from the "weird" UTC date, if any timezone is provided.
       if (startsAt) {
-        const baseStartDate: RRuleBaseDateAsUTC = this._normalDateToBaseDateFn()!(startsAt);
+        const baseStartDate: RRuleBaseDateAsUTC = this.normalInstance.normalDateToBaseDate(startsAt);
         dtstart = baseStartDate;
       }
     } else {
@@ -170,9 +171,9 @@ export class DateRRuleInstance {
   }
 
   nextRecurrenceDate(from: Date = new Date()): Maybe<Date> {
-    const baseFrom = this._normalDateToBaseDateFn()!(from);
+    const baseFrom = this.normalInstance.normalDateToBaseDate!(from);
     const rawNext = this.rrule.next(baseFrom);
-    const next = (rawNext) ? this._baseDateToNormalDateFn()!(rawNext) : undefined;
+    const next = (rawNext) ? this.normalInstance.baseDateToNormalDate(rawNext) : undefined;
     return next;
   }
 
@@ -185,15 +186,10 @@ export class DateRRuleInstance {
   expand(options: DateRRuleExpansionOptions): DateRRuleExpansion {
     let between: Maybe<DateRange>;
 
-    const convertToBaseDateFn = this._normalDateToBaseDateFn();
-
     if (options.range || options.rangeParams) {
       between = options.range ?? makeDateRange(options.rangeParams!);
-
-      if (convertToBaseDateFn) {
-        between.start = convertToBaseDateFn(between.start);
-        between.end = convertToBaseDateFn(between.end);
-      }
+      between.start = this.normalInstance.normalDateToBaseDate(between.start);
+      between.end = this.normalInstance.normalDateToBaseDate(between.end);
     }
 
     let startsAtDates: Date[];
@@ -211,10 +207,8 @@ export class DateRRuleInstance {
     let dates: CalendarDate[] = allDates;
 
     // Fix Dates w/ Timezones
-    const fixDateFn = this._baseDateToNormalDateFn();
-
-    if (fixDateFn) {
-      dates = dates.map((x) => ({ ...x, startsAt: fixDateFn(x.startsAt) }));
+    if (this.normalInstance.hasConversion) {
+      dates = dates.map((x) => ({ ...x, startsAt: this.normalInstance.baseDateToNormalDate(x.startsAt) }));
     }
 
     // Exclude dates
@@ -234,10 +228,8 @@ export class DateRRuleInstance {
    * Returns true if there is a single date within the range.
    */
   haveRecurrenceInDateRange(dateRange: DateRange): boolean {
-    const convertToBaseDateFn = this._normalDateToBaseDateFn()!;
-
-    const baseStart = convertToBaseDateFn(dateRange.start);
-    const baseEnd = convertToBaseDateFn(dateRange.end);
+    const baseStart = this.normalInstance.normalDateToBaseDate(dateRange.start);
+    const baseEnd = this.normalInstance.normalDateToBaseDate(dateRange.end);
 
     return this.rrule.any({ minDate: baseStart, maxDate: baseEnd });
   }
@@ -274,10 +266,8 @@ export class DateRRuleInstance {
     }
 
     // Fix Dates w/ timezone.
-    const fixDateFn = this._baseDateToNormalDateFn();
-
-    if (fixDateFn) {
-      const [startF, endF] = [start, end].filter(x => Boolean(x)).map(x => fixDateFn(x));
+    if (this.normalInstance.hasConversion) {
+      const [startF, endF] = [start, end].filter(x => Boolean(x)).map(x => this.normalInstance.baseDateToNormalDate(x));
       start = startF;
       end = endF;
     }
@@ -288,32 +278,6 @@ export class DateRRuleInstance {
       end,
       finalRecurrenceEndsAt
     };
-  }
-
-  _normalDateToBaseDateFn(): Maybe<((date: RRuleBaseDateAsUTC | Date) => Date)> {
-    const tzid = this.timezone;
-
-    if (tzid) {
-      return (x: Date) => {
-        const offset = getTimezoneOffset(tzid, x);
-        return addMilliseconds(x, offset);
-      };
-    } else {
-      return undefined;
-    }
-  }
-
-  _baseDateToNormalDateFn(): Maybe<((date: RRuleBaseDateAsUTC | Date) => Date)> {
-    const tzid = this.timezone;
-
-    if (tzid) {
-      return (x: Date) => {
-        const offset = getTimezoneOffset(tzid, x);
-        return addMilliseconds(x, -offset);
-      };
-    } else {
-      return undefined;
-    }
   }
 
   hasForeverRange(): boolean {

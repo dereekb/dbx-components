@@ -220,7 +220,7 @@ export class DateTimeUtilityInstance {
         dateTime = raw;
       }
 
-      // console.log('Raw: ', input, raw, dateTime, timezone, timezoneOffset, offset);
+      console.log('Raw: ', input, raw, dateTime, timezone, timezoneOffset, offset);
     }
 
     return {

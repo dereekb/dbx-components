@@ -1,6 +1,7 @@
 import { TimezoneString, CommaSeparatedString, flattenArray, Maybe } from '@dereekb/util';
-import { format, zonedTimeToUtc } from 'date-fns-tz';
+import { format } from 'date-fns-tz';
 import { DateSet } from '../date';
+import { baseDateToNormalDate } from '../date/date.timezone';
 
 /**
  * Denotes a single RRule rules string.
@@ -185,9 +186,10 @@ export class DateRRuleParseUtility {
     let date: Date = utcDate;
 
     if (!isUTCDate) {
+
       // Date was provided in a local timezone value. Convert to UTC.
       if (timezone) {
-        date = zonedTimeToUtc(utcDate, timezone);
+        date = baseDateToNormalDate(utcDate, timezone);
       } else {
         throw new Error('No timezone was provided when parsing DateTime string.');
       }

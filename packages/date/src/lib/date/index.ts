@@ -8,5 +8,6 @@ export * from './date.sort';
 export * from './date.time.limit';
 export * from './date.time.minute';
 export * from './date.time';
+export * from './date.timezone';
 export * from './date';
 export * from './date.unix';
