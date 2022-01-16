@@ -1,3 +1,4 @@
+import { Maybe } from "@dereekb/util";
 import { DateRRuleParseUtility, RRuleExdateAttribute } from "./date.rrule.parse";
 
 describe('DateRRuleParseUtility', () => {
@@ -37,7 +38,7 @@ describe('DateRRuleParseUtility', () => {
 
   describe('parseExdateAttributeFromLine()', () => {
 
-    function describeLineTests(line: string, { hasTimezone = false, testValue = (result: RRuleExdateAttribute) => undefined }) {
+    function describeLineTests(line: string, { hasTimezone = false, testValue = undefined as Maybe<((result: RRuleExdateAttribute) => void)> }) {
 
       it('should parse the exdate', () => {
         const result = DateRRuleParseUtility.parseExdateAttributeFromLine(line);
