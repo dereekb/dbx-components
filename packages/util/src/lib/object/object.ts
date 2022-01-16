@@ -1,4 +1,4 @@
-import { FieldOfType } from "./key";
+import { FieldOfType } from "../key";
 
 export function applyToMultipleFields<T extends object>(value: any, fields: FieldOfType<T>[]): Partial<T> {
   const result: any = {};

@@ -1,5 +1,27 @@
-import { MERGE_RELATION_TAG, READ_RELATION_KEY, READ_RELATION_TAG_TYPE, RelationTag } from './tags';
-import { ChangeRelationObjectsMaskFn, ModelRelationUtility, RelationChange } from './relation';
+import { ModelKey, ModelTypeString } from '../model';
+import { ChangeRelationObjectsMaskFn, ModelRelationUtility, RelationChange, RelationModelType } from './relation';
+
+class RelationTag {
+  type: ModelTypeString;
+  key: ModelKey;
+
+  constructor(template: RelationTag) {
+    this.type = template.type;
+    this.key = template.key;
+  }
+}
+
+function READ_RELATION_TAG_TYPE<T extends RelationTag>(model: T): RelationModelType {
+  return model.type;
+}
+
+function READ_RELATION_KEY<T extends RelationTag>(model: T): RelationModelType {
+  return model.key;
+}
+
+function MERGE_RELATION_TAG(a: RelationTag, b: RelationTag): RelationTag {
+  return a; // a and b are the same.
+}
 
 describe('ModelRelationUtility', () => {
 

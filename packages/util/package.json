@@ -5,6 +5,7 @@
   "peerDependencies": {
     "@angular/common": "^13.1.0",
     "@angular/core": "^13.1.0",
-    "extra-set": "2.2.11"
+    "extra-set": "2.2.11",
+    "lodash.isequal": "4.5.0"
   }
 }

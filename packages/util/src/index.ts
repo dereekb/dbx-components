@@ -13,7 +13,6 @@ export * from './lib/key';
 export * from './lib/map';
 export * from './lib/model';
 export * from './lib/number';
-export * from './lib/object.array';
 export * from './lib/object';
 export * from './lib/promise';
 export * from './lib/set.hashset';
