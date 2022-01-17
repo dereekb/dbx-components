@@ -29,10 +29,13 @@ export class DbNgxActionHandlerDirective<T, O> extends AbstractSubscriptionDirec
         return;
       }
 
-      const result = handleWorkValueReadyFn({ handlerFunction: this.handlerFunction, delegate: this._delegate })(value);
+      const context = handleWorkValueReadyFn({ handlerFunction: this.handlerFunction, delegate: this._delegate })(value);
 
-      // Add the action to the lockSet for the source to prevent it from being destroyed until the action completes.
-      this.source.lockSet.addLock('actionhandler', result.isComplete$.pipe(map(x => !x)));
+      if (context) {
+
+        // Add the action to the lockSet for the source to prevent it from being destroyed until the action completes.
+        this.source.lockSet.addLock('actionhandler', context.isComplete$.pipe(map(x => !x)));
+      }
     });
   }
 

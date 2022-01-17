@@ -27,7 +27,7 @@ export class DbNgxActionDisabledDirective<T, O> extends AbstractSubscriptionDire
     });
   }
 
-  ngOnDestroy(): void {
+  override ngOnDestroy(): void {
     super.ngOnDestroy();
     this._disabled.complete();
     this.source.enable(APP_ACTION_DISABLED_DIRECTIVE_KEY);

@@ -1,5 +1,6 @@
-import { Component, Directive, Host, Injectable, Injector, Input, OnInit, Optional, OnDestroy } from '@angular/core';
-import { ProvideActionStoreSource, ActionKey, ActionContextStoreSource } from './action';
+import { Directive, Host, Input, OnDestroy } from '@angular/core';
+import { Maybe } from '@dereekb/util';
+import { ActionKey, ActionContextStoreSource } from './action';
 import { DbNgxActionContextMapDirective } from './action.map.directive';
 
 /**
@@ -10,7 +11,7 @@ import { DbNgxActionContextMapDirective } from './action.map.directive';
 })
 export class DbNgxActionMapSourceDirective implements OnDestroy {
 
-  private _key: ActionKey;
+  private _key: Maybe<ActionKey>;
 
   constructor(@Host() public readonly source: ActionContextStoreSource, private readonly _map: DbNgxActionContextMapDirective) { }
 

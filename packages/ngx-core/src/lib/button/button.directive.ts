@@ -1,35 +1,39 @@
-import { Directive, Input, Output, Type, Provider, EventEmitter, OnDestroy, OnInit } from '@angular/core';
+import { Directive, Input, Output, EventEmitter, OnDestroy, OnInit } from '@angular/core';
 import { Maybe } from '@dereekb/util';
-import { BehaviorSubject, Observable, of, Subject, Subscription } from 'rxjs';
-import { filter, first, mergeMap, switchMap, tap } from 'rxjs/operators';
+import { BehaviorSubject, of, Subject } from 'rxjs';
+import { filter, first, switchMap } from 'rxjs/operators';
 import { AbstractSubscriptionDirective } from '../subscription';
-
-/**
- * Used for intercepting button click events.
- *
- * Can be used to delay/modify trigger/click behaviors.
- */
-export interface DbNgxButtonInterceptor {
-  /**
-   * Handles a button click event. Returns an observable that will say whether or not to continue the click event.
-   */
-  interceptButtonClick: () => Observable<boolean>;
-}
+import { DbNgxButton, DbNgxButtonInterceptor, ProvideDbNgxButton } from './button';
 
 /**
  * Abstract button component.
  */
 @Directive()
-export abstract class DbNgxButtonDirective extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
+export abstract class AbstractDbNgxButtonDirective extends AbstractSubscriptionDirective implements DbNgxButton, OnInit, OnDestroy {
+
+  private _disabled = new BehaviorSubject<boolean>(false);
+  private _working = new BehaviorSubject<boolean>(false);
+
+  readonly disabled$ = this._disabled.asObservable();
+  readonly working$ = this._working.asObservable();
 
   @Input()
-  disabled?: boolean;
+  get disabled(): boolean {
+    return this._disabled.value;
+  }
 
-  /**
-   * Optional state to show the button is working.
-   */
+  set disabled(disabled: boolean) {
+    this._disabled.next(disabled);
+  }
+
   @Input()
-  working?: boolean;
+  get working(): boolean {
+    return this._working.value;
+  }
+
+  set working(working: boolean) {
+    this._working.next(working);
+  }
 
   @Input()
   icon?: string;
@@ -40,15 +44,13 @@ export abstract class DbNgxButtonDirective extends AbstractSubscriptionDirective
   @Output()
   readonly buttonClick = new EventEmitter();
 
+  readonly clicked$ = this.buttonClick.asObservable();
+
   /**
    * Pre-interceptor button click.
    */
   protected _buttonClick = new Subject();
   protected _buttonInterceptor = new BehaviorSubject<Maybe<DbNgxButtonInterceptor>>(undefined);
-
-  constructor() {
-    super();
-  }
 
   ngOnInit(): void {
     this.sub = this._buttonClick.pipe(
@@ -71,6 +73,8 @@ export abstract class DbNgxButtonDirective extends AbstractSubscriptionDirective
 
   override ngOnDestroy(): void {
     super.ngOnDestroy();
+    this._disabled.complete();
+    this._working.complete();
     this._buttonClick.complete();
     this._buttonInterceptor.complete();
   }
@@ -100,9 +104,13 @@ export abstract class DbNgxButtonDirective extends AbstractSubscriptionDirective
 
 }
 
-export function ProvideDbNgxButtonDirective<S extends DbNgxButtonDirective>(sourceType: Type<S>): Provider[] {
-  return [{
-    provide: DbNgxButtonDirective,
-    useExisting: sourceType
-  }];
-}
+// MARK: Implementation
+/**
+ * Provides an DbNgxButton directive.
+ */
+@Directive({
+  selector: '[dbxButton]',
+  exportAs: 'dbxButton',
+  providers: ProvideDbNgxButton(DbNgxButtonDirective)
+})
+export class DbNgxButtonDirective extends AbstractDbNgxButtonDirective { }

@@ -1,4 +1,6 @@
-import { Component, Directive, Injectable, Injector, Input, OnDestroy, OnInit, Optional } from '@angular/core';
+import { filterMaybe } from '@dereekb/util-rxjs';
+import { Directive, Input, OnDestroy } from '@angular/core';
+import { Maybe } from '@dereekb/util';
 import { BehaviorSubject } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import { ProvideSecondaryActionStoreSource, ActionKey, SecondaryActionContextStoreSource } from './action';
@@ -13,8 +15,8 @@ import { DbNgxActionContextMapDirective } from './action.map.directive';
 })
 export class DbNgxActionFromMapDirective implements SecondaryActionContextStoreSource, OnDestroy {
 
-  private _key = new BehaviorSubject<ActionKey>(undefined);
-  readonly store$ = this._key.pipe(switchMap((x) => this._map.sourceForKey(x).store$));
+  private _key = new BehaviorSubject<Maybe<ActionKey>>(undefined);
+  readonly store$ = this._key.pipe(filterMaybe(), switchMap((x) => this._map.sourceForKey(x).store$));
 
   constructor(private readonly _map: DbNgxActionContextMapDirective) { }
 
@@ -23,11 +25,11 @@ export class DbNgxActionFromMapDirective implements SecondaryActionContextStoreS
   }
 
   @Input('dbxActionFromMap')
-  get key(): ActionKey {
+  get key(): Maybe<ActionKey> {
     return this._key.value;
   }
 
-  set key(key: ActionKey) {
+  set key(key: Maybe<ActionKey>) {
     this._key.next(key);
   }
 

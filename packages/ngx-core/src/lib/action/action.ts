@@ -1,11 +1,10 @@
-import { filter, first, shareReplay, switchMap } from 'rxjs/operators';
+import { first, switchMap } from 'rxjs/operators';
 import { Observable, Subscription } from 'rxjs';
 import { ActionContextState, ActionContextStore, ActionDisabledKey, ActionState } from './action.store';
 import { Directive, forwardRef, Provider, Type } from '@angular/core';
-import { ReadableError } from '../error/error';
 import { LockSet, filterMaybe } from '@dereekb/util-rxjs';
 import { OnDestroy } from '@angular/core';
-import { Maybe } from '@dereekb/util';
+import { Maybe, ReadableError } from '@dereekb/util';
 
 export type ActionKey = string;
 
@@ -64,7 +63,6 @@ export function useActionStore<T = any, O = any>(source: ActionContextStoreSourc
 export class ActionContextStoreSourceInstance<T = any, O = any> implements OnDestroy {
 
   readonly lockSet = new LockSet();
-  // readonly errorCount$ = 
 
   constructor(readonly source: ActionContextStoreSource<T, O>) {
     if (!source) {

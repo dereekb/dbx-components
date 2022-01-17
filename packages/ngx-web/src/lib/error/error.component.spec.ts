@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Component } from '@angular/core';
-import { ErrorInput } from './error';
+import { ErrorInput } from '@dereekb/util';
 import { ReadableErrorModule } from './error.module';
 
 describe('ReadableErrorComponent', () => {

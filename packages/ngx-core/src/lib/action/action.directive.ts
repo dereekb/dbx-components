@@ -1,4 +1,4 @@
-import { Component, Directive, Inject, Injectable, Input, OnInit, Optional, OnDestroy, SkipSelf, Host } from '@angular/core';
+import { Directive, Optional, OnDestroy, Host } from '@angular/core';
 import { ProvideActionStoreSource, SecondaryActionContextStoreSource } from './action';
 import { ActionContextBaseSource } from './action.holder';
 

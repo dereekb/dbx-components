@@ -1,76 +1,23 @@
-import { Directive, Host, Input, OnInit } from '@angular/core';
-import { AbstractSubscriptionDirective } from '../subscription';
-import { MatSnackBar, MatSnackBarConfig } from '@angular/material/snack-bar';
-import { ComponentType } from '@angular/cdk/portal';
+import { Directive, Host, Input, OnInit, Type } from '@angular/core';
 import { map } from 'rxjs/operators';
 import { merge } from 'rxjs';
-import { ActionContextStoreSourceInstance } from './action';
-import { DbNgxActionSnackbarComponent, DbNgxActionSnackbarComponentConfig } from './snackbar.component';
-import ms from 'ms';
+import { ActionContextStoreSourceInstance } from '../action';
+import { AbstractSubscriptionDirective } from '../../subscription';
+import { Maybe } from '@dereekb/util';
+import { ActionSnackbarFunction, ActionSnackbarDefaultType, ActionSnackbarGetUndoConfigFunction, ActionSnackbarEventType, ActionSnackbarEvent, ActionSnackbarPopupConfig, ActionSnackBarOpenConfig, DbNgxActionSnackbarComponentConfig, DEFAULT_SNACKBAR_UNDO_DIRECTIVE_DURATION } from './snackbar';
 
 // TODO: Consider moving these configurations more configurable elsewhere...
 
-export enum ActionSnackbarDefaultType {
-  NONE = 'none',
-  CREATE = 'create',
-  SAVE = 'save',
-  DELETE = 'delete',
-  MERGE = 'merge',
-  SEND = 'send',
-  CANCEL = 'cancel',
-  RESTORE = 'restore',
-  REFRESH = 'refresh',
-  MARK_READ = 'read',
-  MARK_UNREAD = 'unread'
-}
-
-export enum ActionSnackbarEventType {
-  WORKING,
-  SUCCESS,
-  REJECTED
-}
-
-export interface ActionSnackbarEvent<O = any> {
-  value: O;
-  error?: any;
-  type: ActionSnackbarEventType;
-}
-
-const DEFAULT_SNACKBAR_DIRECTIVE_DURATION = ms('4s');
-const DEFAULT_SNACKBAR_UNDO_DIRECTIVE_DURATION = ms('30s');
-
-export interface ActionSnackBarOpenConfig {
-  message: string;
-  action?: string;
-}
-
-export interface ActionSnackbarPopupConfig<D = any> {
-  open?: ActionSnackBarOpenConfig;
-  component?: ComponentType<any>;
-  config?: MatSnackBarConfig<D>;
-}
-
 /**
- * Performs the action on success.
+ * Abstract directive that shows a snackbar when success is called.
+ * 
+ * @deprecated don't use. Use the web version directly instead. This will be removed/replaced later with a better implementation.
  */
-export type ActionSnackbarFunction<O> = (event: ActionSnackbarEvent<O>) => ActionSnackbarPopupConfig;
-
-export interface DbNgxActionSnackbarGetUndoConfig extends Omit<DbNgxActionSnackbarComponentConfig, 'message' | 'action'>, Partial<Pick<DbNgxActionSnackbarComponentConfig, 'message' | 'action'>> {
-  duration?: number; // Optional duration override for the popup to stay open.
-}
-
-export type ActionSnackbarGetUndoConfigFunction = () => DbNgxActionSnackbarGetUndoConfig | undefined;
-
-/**
- * Directive that shows the snackbar when success is called.
- */
-@Directive({
-  selector: '[dbxActionSnackbar]',
-})
-export class DbNgxActionSnackbarDirective<T = any, O = any> implements OnInit {
+@Directive()
+export abstract class AbstractDbNgxActionSnackbarDirective<T = any, O = any, C = any> extends AbstractSubscriptionDirective implements OnInit {
 
   @Input('dbxActionSnackbar')
-  snackbarFunction?: ActionSnackbarFunction<O>;
+  snackbarFunction?: ActionSnackbarFunction<O, C>;
 
   @Input()
   snackbarDefault: ActionSnackbarDefaultType = ActionSnackbarDefaultType.NONE;
@@ -78,21 +25,28 @@ export class DbNgxActionSnackbarDirective<T = any, O = any> implements OnInit {
   @Input()
   snackbarUndo?: ActionSnackbarGetUndoConfigFunction;
 
-  constructor(@Host() public readonly source: ActionContextStoreSourceInstance<T, O>, private readonly snackBar: MatSnackBar) { }
+  constructor(@Host() public readonly source: ActionContextStoreSourceInstance<T, O>) {
+    super();
+  }
 
   ngOnInit(): void {
-    this.source.pipeStore((store) => merge(
+    this.sub = this.source.pipeStore((store) => merge(
       store.working$.pipe(map(() => ({ type: ActionSnackbarEventType.WORKING }))),
       store.success$.pipe(map((value) => ({ type: ActionSnackbarEventType.SUCCESS, value }))),
       store.rejected$.pipe(map((error) => ({ type: ActionSnackbarEventType.REJECTED, error }))),
     )).subscribe((event: ActionSnackbarEvent) => {
       const popupConfig = (this.snackbarFunction) ? this.snackbarFunction(event) : this._defaultSnackbarFunction(event);
 
-      // Show snackbar top.
-      popupConfig.config = {
-        ...popupConfig.config,
-        verticalPosition: popupConfig.config.verticalPosition ?? 'top'
-      };
+      if (popupConfig) {
+        this._showSnackbar(popupConfig);
+      }
+
+      /*
+        // Set default position.
+        popupConfig.config = {
+          ...popupConfig.config,
+          verticalPosition: popupConfig.config?.verticalPosition ?? 'top'
+        };
 
       if (popupConfig) {
         if (popupConfig.component) {
@@ -102,15 +56,18 @@ export class DbNgxActionSnackbarDirective<T = any, O = any> implements OnInit {
           this.snackBar.open(message, action, popupConfig.config);
         }
       }
+      */
     });
   }
 
-  private _defaultSnackbarFunction(event: ActionSnackbarEvent): ActionSnackbarPopupConfig | undefined {
-    let config: ActionSnackbarPopupConfig;
-    let open: ActionSnackBarOpenConfig;
-    let component: ComponentType<any>;
-    let data: any;
-    let duration: number;
+  protected abstract _showSnackbar(popupConfig: ActionSnackbarPopupConfig<C>): void;
+
+  private _defaultSnackbarFunction(event: ActionSnackbarEvent): Maybe<ActionSnackbarPopupConfig<C>> {
+    let config: Maybe<ActionSnackbarPopupConfig<C>>;
+    let open: Maybe<ActionSnackBarOpenConfig>;
+    let component: Maybe<Type<any>>;
+    let duration: Maybe<number>;
+    let data: Maybe<DbNgxActionSnackbarComponentConfig>;
 
     const trySetupUndo = (): void => {
       if (this.snackbarUndo) {
@@ -121,18 +78,18 @@ export class DbNgxActionSnackbarDirective<T = any, O = any> implements OnInit {
             console.error('Action source was not provided to undo...');
           }
 
-          component = DbNgxActionSnackbarComponent;
+          const undoData = this._makeDefaultUndoData();
+
+          component = undoData.component;
           data = {
             ...open,
             action: 'Undo',
             ...undoConfig
           };
-          duration = data.duration ?? DEFAULT_SNACKBAR_UNDO_DIRECTIVE_DURATION;
+          duration = undoData.duration ?? DEFAULT_SNACKBAR_UNDO_DIRECTIVE_DURATION;
         }
       }
     };
-
-    const panelClass = (event.type === ActionSnackbarEventType.REJECTED) ? 'dbx-action-snackbar-failure' : undefined;
 
     switch (this.snackbarDefault) {
       case ActionSnackbarDefaultType.CREATE:
@@ -355,12 +312,10 @@ export class DbNgxActionSnackbarDirective<T = any, O = any> implements OnInit {
 
     // If open is set/provided, show content.
     if (open) {
+      const defaultConfig = this._makeDefaultConfig({ duration, component, data })
+
       config = {
-        config: {
-          duration: duration ?? DEFAULT_SNACKBAR_DIRECTIVE_DURATION,
-          panelClass,
-          data
-        },
+        config: defaultConfig,
         open,
         component
       };
@@ -369,4 +324,21 @@ export class DbNgxActionSnackbarDirective<T = any, O = any> implements OnInit {
     return config;
   }
 
+  protected abstract _makeDefaultConfig(input: DbNgxActionSnackbarDirectiveSnackbarPopupData): C;
+  protected abstract _makeDefaultUndoData(): DbNgxActionSnackbarDirectiveSnackbarPopupData;
+
+  /*
+  {
+
+    const panelClass = (event.type === ActionSnackbarEventType.REJECTED) ? 'dbx-action-snackbar-failure' : undefined;
+
+  }
+  */
+
+}
+
+export interface DbNgxActionSnackbarDirectiveSnackbarPopupData {
+  duration?: Maybe<number>;
+  data?: Maybe<DbNgxActionSnackbarComponentConfig>;
+  component?: Maybe<Type<any>>;
 }

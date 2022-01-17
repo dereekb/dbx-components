@@ -1,6 +1,5 @@
 import { Directive, Host, OnInit, OnDestroy, Input, NgZone } from '@angular/core';
-import { ActionContextStoreSourceInstance } from '../action/action';
-import { AbstractSubscriptionDirective } from '../subscription/subscription.directive';
+import { ActionContextStoreSourceInstance, AbstractSubscriptionDirective } from '@dereekb/ngx-core';
 import { DbNgxReadableErrorComponent } from './error.component';
 
 /**

@@ -1,9 +1,9 @@
-import { OnDestroy } from '@angular/core';
 import { SubscriptionObject } from '../subscription';
-import { delay, filter, first } from 'rxjs/operators';
-import { ActionContextStoreSource, ActionContextStoreSourceInstance, SecondaryActionContextStoreSource } from './action';
+import { delay, first } from 'rxjs/operators';
+import { ActionContextStoreSource } from './action';
 import { HandleActionFunction, handleWorkValueReadyFn, WorkHandlerContextSourceDelegate } from './action.handler';
 import { ActionContextBaseSource } from './action.holder';
+import { Destroyable } from '@dereekb/util';
 
 export interface ActionContextMachineConfig<T = any, O = any> {
   /**
@@ -17,7 +17,7 @@ export interface ActionContextMachineConfig<T = any, O = any> {
 /**
  * Configurable machine that handles components of the ActionContextStore lifecycle.
  */
-export class ActionContextMachine<T = any, O = any> extends ActionContextBaseSource<T, O> {
+export class ActionContextMachine<T = any, O = any> extends ActionContextBaseSource<T, O> implements Destroyable {
 
   private _isShutdown = true;
   private _handleValueReadySub = new SubscriptionObject();
@@ -42,7 +42,7 @@ export class ActionContextMachine<T = any, O = any> extends ActionContextBaseSou
     }
   }
 
-  destroy(): void {
+  override destroy(): void {
     super.destroy();
     this._handleValueReadySub.destroy();
     this._isShutdown = true;

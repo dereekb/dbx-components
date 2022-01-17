@@ -1,12 +1,12 @@
-import { ReadableError } from '../error/error';
-import { BehaviorSubject, isObservable, Observable, combineLatest, of } from 'rxjs';
-import { filter, first, map } from 'rxjs/operators';
+import { BehaviorSubject, isObservable, Observable, of } from 'rxjs';
+import { first } from 'rxjs/operators';
 import { ActionContextStoreSourceInstance } from './action';
+import { Maybe, Destroyable } from '@dereekb/util';
 
 export interface WorkHandlerContextDelegate<O = any> {
   startWorking(): void;
-  success(result: O): void;
-  reject(error: any): void;
+  success(result?: Maybe<O>): void;
+  reject(error?: Maybe<any>): void;
 }
 
 /**
@@ -33,31 +33,19 @@ export class WorkHandlerContextSourceDelegate<T = any, O = any> implements WorkH
 /**
  * Used by DbNgxActionHandlerDirective when handling a function.
  */
-export class WorkHandlerContext<T = any, O = any> {
+export class WorkHandlerContext<T = any, O = any> implements Destroyable {
 
   private _done = false;
-  private _doneActionBegan;
+  private _doneActionBegan = false;
 
   private _actionBegan = new BehaviorSubject<boolean>(false);
   private _isComplete = new BehaviorSubject<boolean>(false);
 
   constructor(public readonly value: T, readonly delegate: WorkHandlerContextDelegate<O>) {
-
     // Schedule to cleanup self once isComplete is true.
-    // NOTE: May not be needed.
     this._isComplete.subscribe((done) => {
       if (done) {
-        this._doneActionBegan = this.actionBegan;
-        this._done = true;
-
-        // Delay to prevent error.
-        setTimeout(() => {
-          this._actionBegan.complete();
-          this._isComplete.complete();
-
-          delete this._actionBegan;
-          delete this._isComplete;
-        });
+        this.destroy();
       }
     });
   }
@@ -110,9 +98,20 @@ export class WorkHandlerContext<T = any, O = any> {
   /**
    * Sets rejected on the action.
    */
-  reject(error?: ReadableError): void {
+  reject(error?: any): void {
     this._setComplete();
     this.delegate.reject(error);
+  }
+
+  destroy(): void {
+    this._doneActionBegan = this.actionBegan;
+    this._done = true;
+
+    // Delay to prevent error.
+    setTimeout(() => {
+      this._actionBegan.complete();
+      this._isComplete.complete();
+    });
   }
 
   private _setWorking(): void {
@@ -138,7 +137,7 @@ export type HandleActionFunctionConfigFn<T, O> = (value: T) => HandleWorkValueRe
 /**
  * Creates a function that uses a provider to always handle new values.
  */
-export function handleWorkValueReadyWithConfigFn<T, O>(providerFn: HandleActionFunctionConfigFn<T, O>): (value: T) => WorkHandlerContext {
+export function handleWorkValueReadyWithConfigFn<T, O>(providerFn: HandleActionFunctionConfigFn<T, O>): (value: T) => Maybe<WorkHandlerContext<T, O>> {
   return (value) => {
     const config: HandleWorkValueReadyConfig<T, O> = providerFn(value);
     return handleWorkValueReadyFn(config)(value);
@@ -161,14 +160,14 @@ export type HandleActionFunction<T = any, O = any> = (value: T, context: WorkHan
 /**
  * Creates a function that handles the incoming value and creates a WorkHandlerContext.
  */
-export function handleWorkValueReadyFn<T, O>({ handlerFunction, delegate }: HandleWorkValueReadyConfig<T, O>): (value: T) => WorkHandlerContext {
+export function handleWorkValueReadyFn<T, O>({ handlerFunction, delegate }: HandleWorkValueReadyConfig<T, O>): (value: T) => Maybe<WorkHandlerContext<T, O>> {
   return (value: T) => {
     const handler = new WorkHandlerContext<T, O>(value, delegate);
     let fnResult: void | Observable<O>;
 
     try {
       fnResult = handlerFunction(value, handler);
-    } catch (e) {
+    } catch (e: any) {
       console.error('Action encountered an unexpected error.', e);
       handler.reject(e);
       return;

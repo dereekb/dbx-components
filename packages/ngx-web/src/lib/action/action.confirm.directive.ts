@@ -1,9 +1,9 @@
-import { SubscriptionObject } from '../subscription';
+import { SubscriptionObject } from '../../../../ngx-core/src/lib/subscription';
 import { Directive, Host, Input, OnDestroy, OnInit } from '@angular/core';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { AppPromptConfirmConfig } from '../responsive/prompt/prompt.confirm.component';
 import { AbstractPromptConfirmDirective } from '../responsive/prompt/prompt.confirm.directive';
-import { ActionContextStoreSourceInstance } from './action';
+import { ActionContextStoreSourceInstance } from '../../../../ngx-core/src/lib/action/action';
 
 /**
  * Directive that when triggered shows a dialog to accept or reject.

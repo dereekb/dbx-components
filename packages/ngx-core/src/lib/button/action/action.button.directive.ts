@@ -1,31 +1,8 @@
 import { Directive, Host, OnInit, OnDestroy, NgZone } from '@angular/core';
-import { SubscriptionObject, AbstractSubscriptionDirective } from '../../subscription';
-import { DbNgxButtonDirective } from '../../button';
-import { ActionContextStoreSourceInstance } from '../action';
-
-/**
- * Context used for linking a button to an ActionContext and only look for triggers.
- */
-@Directive({
-  selector: '[dbxActionButtonTrigger]'
-})
-export class DbNgxActionButtonTriggerDirective extends AbstractSubscriptionDirective implements OnInit {
-
-  constructor(@Host() public readonly button: DbNgxButtonDirective, public readonly source: ActionContextStoreSourceInstance) {
-    super();
-  }
-
-  ngOnInit(): void {
-    this.sub = this.button.buttonClick.subscribe(() => {
-      this._buttonClicked();
-    });
-  }
-
-  protected _buttonClicked(): void {
-    this.source.trigger();
-  }
-
-}
+import { SubscriptionObject } from '../../subscription';
+import { DbNgxButton } from '../button';
+import { ActionContextStoreSourceInstance } from '../../action';
+import { DbNgxActionButtonTriggerDirective } from './action.button.trigger.directive';
 
 /**
  * Context used for linking a button to an ActionContext.
@@ -38,7 +15,7 @@ export class DbNgxActionButtonDirective extends DbNgxActionButtonTriggerDirectiv
   private _workingSub = new SubscriptionObject();
   private _disabledSub = new SubscriptionObject();
 
-  constructor(@Host() button: DbNgxButtonDirective, source: ActionContextStoreSourceInstance, private readonly ngZone: NgZone) {
+  constructor(@Host() button: DbNgxButton, source: ActionContextStoreSourceInstance, private readonly ngZone: NgZone) {
     super(button, source);
   }
 

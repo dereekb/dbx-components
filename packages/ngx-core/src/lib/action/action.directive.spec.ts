@@ -1,10 +1,10 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { Component, ViewChild, Input, Directive, ContentChild, AfterViewInit, OnInit } from '@angular/core';
-import { Observable, of } from 'rxjs';
+import { Component, ViewChild, Input } from '@angular/core';
+import { of } from 'rxjs';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { DbNgxActionContextDirective } from './action.directive';
 import { DbNgxActionHandlerDirective } from './handler.directive';
-import { DbNgxActionModule } from './action.module';
+import { DbNgxCoreActionModule } from './action.module';
 import { first, tap } from 'rxjs/operators';
 import { ActionContextStore } from './action.store';
 import { ActionContextStoreSourceInstance } from './action';
@@ -15,7 +15,7 @@ describe('DbNgxActionContextDirective', () => {
   beforeEach(async () => {
     TestBed.configureTestingModule({
       imports: [
-        DbNgxActionModule,
+        DbNgxCoreActionModule,
         NoopAnimationsModule
       ],
       declarations: [

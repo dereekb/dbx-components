@@ -3,5 +3,4 @@ export * from './error.api';
 export * from './error.component';
 export * from './error.loading.directive';
 export * from './error.module';
-export * from './error';
 export * from './state';

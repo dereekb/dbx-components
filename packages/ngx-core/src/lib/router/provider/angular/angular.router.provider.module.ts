@@ -10,4 +10,4 @@ import { CommonModule } from '@angular/common';
   exports: [
   ]
 })
-export class DbxSegueModule { }
+export class DbNgxSegueModule { }

@@ -1,8 +1,9 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { convertToPOJOServerErrorResponse, ServerError } from './error.api';
-import { of, Observable, OperatorFunction } from 'rxjs';
+import { convertToPOJOServerErrorResponse } from './error.api';
+import { of, OperatorFunction } from 'rxjs';
 import { catchError } from 'rxjs/operators';
-import { Action, ActionCreator, TypedAction } from '@ngrx/store/src/models';
+import { ActionCreator, TypedAction } from '@ngrx/store/src/models';
+import { ServerError } from '@dereekb/util';
 
 export interface ServerErrorParams {
   error: ServerError;

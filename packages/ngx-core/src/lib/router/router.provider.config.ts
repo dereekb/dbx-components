@@ -1,6 +1,6 @@
 import { DbNgxInjectedComponentConfig } from "../injected";
 
-export abstract class DbxRouterProviderConfig {
+export abstract class DbNgxRouterProviderConfig {
 
   /**
    * Component used by the Anchor component to render a router.

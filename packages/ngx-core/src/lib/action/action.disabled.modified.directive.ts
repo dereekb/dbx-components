@@ -1,4 +1,4 @@
-import { Directive, Host, Input, OnInit, OnDestroy } from '@angular/core';
+import { Directive, Host, OnInit, OnDestroy } from '@angular/core';
 import { AbstractSubscriptionDirective } from '../subscription';
 import { ActionContextStoreSourceInstance } from './action';
 
@@ -22,7 +22,7 @@ export class DbNgxActionDisabledUntilModifiedDirective<T, O> extends AbstractSub
     });
   }
 
-  ngOnDestroy(): void {
+  override ngOnDestroy(): void {
     super.ngOnDestroy();
     this.source.enable(APP_ACTION_DISABLED_UNTIL_MODIFIED_DIRECTIVE_KEY);
   }

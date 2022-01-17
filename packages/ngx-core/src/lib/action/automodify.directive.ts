@@ -1,5 +1,5 @@
 import { Directive, Input, OnInit, OnDestroy } from '@angular/core';
-import { AbstractSubscriptionDirective } from '../utility/subscription.directive';
+import { AbstractSubscriptionDirective } from '../subscription';
 import { distinctUntilChanged, filter } from 'rxjs/operators';
 import { combineLatest } from 'rxjs';
 import { ActionContextStoreSourceInstance } from './action';
@@ -39,9 +39,11 @@ export class DbNgxActionAutoModifyDirective<T, O> extends AbstractSubscriptionDi
     });
   }
 
-  ngOnDestroy(): void {
-    super.ngOnDestroy();
-    this._autoModifyEnabled.complete();
+  override ngOnDestroy(): void {
+    this.source.lockSet.onNextUnlock(() => {
+      super.ngOnDestroy();
+      this._autoModifyEnabled.complete();
+    });
   }
 
 }

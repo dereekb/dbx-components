@@ -11,7 +11,7 @@ describe('DbNgxLoadingButton', () => {
   beforeEach(async () => {
     TestBed.configureTestingModule({
       imports: [
-        DbNgxActionModule,
+        DbNgxCoreActionModule,
         DbNgxButtonModule,
         NoopAnimationsModule
       ],

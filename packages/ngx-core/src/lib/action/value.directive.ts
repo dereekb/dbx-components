@@ -1,5 +1,8 @@
 import { Directive, Host, Input, OnInit } from '@angular/core';
-import { getValueFromObjectOrGetter, ObjectOrGetter } from '@dereekb/util';
+import { getValueFromObjectOrGetter, Maybe, ObjectOrGetter } from '@dereekb/util';
+import { filterMaybe } from '@dereekb/util-rxjs';
+import { BehaviorSubject } from 'rxjs';
+import { shareReplay, switchMap, tap } from 'rxjs/operators';
 import { AbstractSubscriptionDirective } from '../subscription';
 import { ActionContextStoreSourceInstance } from './action';
 
@@ -13,18 +16,36 @@ import { ActionContextStoreSourceInstance } from './action';
 })
 export class DbNgxActionValueDirective<T, O> extends AbstractSubscriptionDirective implements OnInit {
 
+  private _valueOrFunction = new BehaviorSubject<Maybe<ObjectOrGetter<T>>>(undefined);
+  readonly valueOrFunction$ = this._valueOrFunction.pipe(filterMaybe(), shareReplay(1));
+
   @Input('dbxActionValue')
-  valueOrFunction?: ObjectOrGetter<T>;
+  get valueOrFunction(): Maybe<ObjectOrGetter<T>> {
+    return this._valueOrFunction.value;
+  }
+
+  set valueOrFunction(valueOrFunction: Maybe<ObjectOrGetter<T>>) {
+    this._valueOrFunction.next(valueOrFunction);
+  }
 
   constructor(@Host() public readonly source: ActionContextStoreSourceInstance<T, O>) {
     super();
   }
 
   ngOnInit(): void {
-    this.sub = this.source.triggered$.subscribe(() => {
-      const value = getValueFromObjectOrGetter(this.valueOrFunction);
-      this.source.readyValue(value);
-    });
+    this.sub = this.valueOrFunction$.pipe(
+      switchMap(valueOrFunction => this.source.triggered$.pipe(
+        tap(() => {
+          const value: T = getValueFromObjectOrGetter(valueOrFunction);
+          this.source.readyValue(value);
+        })
+      ))
+    ).subscribe();
+  }
+
+  override ngOnDestroy(): void {
+    super.ngOnDestroy();
+    this._valueOrFunction.complete();
   }
 
 }

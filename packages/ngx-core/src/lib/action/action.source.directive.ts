@@ -1,4 +1,6 @@
-import { Component, Directive, Injectable, Injector, Input, OnDestroy, OnInit, Optional } from '@angular/core';
+import { filterMaybe } from '@dereekb/util-rxjs';
+import { Directive, Input, OnDestroy } from '@angular/core';
+import { Maybe } from '@dereekb/util';
 import { BehaviorSubject } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import { ProvideSecondaryActionStoreSource, SecondaryActionContextStoreSource, ActionContextStoreSource, actionContextStoreSourcePipe } from './action';
@@ -12,19 +14,19 @@ import { ProvideSecondaryActionStoreSource, SecondaryActionContextStoreSource, A
 })
 export class DbNgxActionSourceDirective implements SecondaryActionContextStoreSource, OnDestroy {
 
-  private _source = new BehaviorSubject<ActionContextStoreSource>(undefined);
-  readonly store$ = this._source.pipe(switchMap((x) => actionContextStoreSourcePipe(x.store$)));
+  private _source = new BehaviorSubject<Maybe<ActionContextStoreSource>>(undefined);
+  readonly store$ = this._source.pipe(filterMaybe(), switchMap((x) => actionContextStoreSourcePipe(x.store$)));
 
   ngOnDestroy(): void {
     this._source.complete();
   }
 
   @Input('dbxActionSource')
-  get source(): ActionContextStoreSource {
+  get source(): Maybe<ActionContextStoreSource> {
     return this._source.value;
   }
 
-  set source(source: ActionContextStoreSource) {
+  set source(source: Maybe<ActionContextStoreSource>) {
     if (source && !source.store$) {
       throw new Error('Invalid source passed to dbxActionSource.');
     }

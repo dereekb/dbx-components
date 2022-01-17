@@ -1,11 +1,12 @@
 import { Directive, Input, OnInit, OnDestroy } from '@angular/core';
-import { AbstractSubscriptionDirective } from '../utility/subscription.directive';
+import { AbstractSubscriptionDirective } from '../subscription';
 import { count, debounce, debounceTime, distinctUntilChanged, exhaustMap, filter, first, map, mergeMap, shareReplay, switchMap, tap, throttle, timeoutWith, withLatestFrom } from 'rxjs/operators';
 import { EMPTY, interval, Subject, combineLatest, of } from 'rxjs';
 import { Observable } from 'rxjs';
 import { ActionContextStoreSourceInstance } from './action';
 import { Host } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
+import { Maybe } from '@dereekb/util';
 
 const DEFAULT_DEBOUNCE_MS = 2 * 1000;
 
@@ -79,11 +80,11 @@ export class DbNgxActionAutoTriggerDirective<T, O> extends AbstractSubscriptionD
   }
 
   @Input()
-  get triggerLimit(): number {
+  get triggerLimit(): Maybe<number> {
     return this._triggerLimit.value;
   }
 
-  set triggerLimit(triggerLimit: number) {
+  set triggerLimit(triggerLimit: Maybe<number>) {
     triggerLimit = triggerLimit || 0;
     this._triggerLimit.next(triggerLimit);
   }
@@ -150,10 +151,12 @@ export class DbNgxActionAutoTriggerDirective<T, O> extends AbstractSubscriptionD
     });
   }
 
-  ngOnDestroy(): void {
-    super.ngOnDestroy();
-    this._trigger.complete();
-    this._triggerLimit.complete();
+  override ngOnDestroy(): void {
+    this.source.lockSet.onNextUnlock(() => {
+      super.ngOnDestroy();
+      this._trigger.complete();
+      this._triggerLimit.complete();
+    });
   }
 
 }

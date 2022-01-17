@@ -25,4 +25,4 @@ import { BrowserModule } from '@angular/platform-browser';
     MatProgressBarModule
   ]
 })
-export class DbxLoadingModule { }
+export class DbNgxLoadingModule { }

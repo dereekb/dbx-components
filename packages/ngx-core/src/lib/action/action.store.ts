@@ -1,9 +1,8 @@
-import { Component, Directive, Injectable, OnInit, OnDestroy } from '@angular/core';
+import { Injectable, OnDestroy } from '@angular/core';
 import { ComponentStore } from '@ngrx/component-store';
 import { Observable } from 'rxjs';
-import { distinctUntilChanged, filter, map, shareReplay, switchMap, count, startWith, tap, scan } from 'rxjs/operators';
-import { ReadableError } from '../error';
-import { BooleanStringKeyArray, BooleanStringKeyArrayUtilityInstance } from '@dereekb/util';
+import { distinctUntilChanged, filter, map, shareReplay, switchMap, startWith } from 'rxjs/operators';
+import { BooleanStringKeyArray, BooleanStringKeyArrayUtilityInstance, ReadableError } from '@dereekb/util';
 import { LockSet, scanCount } from '@dereekb/util-rxjs';
 
 /**

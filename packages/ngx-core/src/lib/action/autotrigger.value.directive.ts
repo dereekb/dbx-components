@@ -1,10 +1,10 @@
 import { switchMap, mergeMap, map, withLatestFrom, shareReplay } from 'rxjs/operators';
 import { Directive, Host, Input, OnInit } from '@angular/core';
-import { AbstractSubscriptionDirective, hasValueOrNotEmpty } from '../utility';
 import { ActionContextStoreSourceInstance } from './action';
 import { BehaviorSubject, Observable, of, EMPTY } from 'rxjs';
 import { OnDestroy } from '@angular/core';
-import { SubscriptionObject } from '../subscription';
+import { AbstractSubscriptionDirective, SubscriptionObject } from '../subscription';
+import { hasValueOrNotEmpty, Maybe } from '@dereekb/util';
 
 export type DbNgxActionAutoTriggerIsModifiedFn<T> = (value: T) => Observable<boolean>;
 
@@ -17,7 +17,7 @@ export type DbNgxActionAutoTriggerIsModifiedFn<T> = (value: T) => Observable<boo
 export class DbNgxActionAutoTriggerValueDirective<T, O> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
 
   private _valueObs = new BehaviorSubject<Observable<T>>(EMPTY);
-  private _isModifiedFn = new BehaviorSubject<DbNgxActionAutoTriggerIsModifiedFn<T>>(undefined);
+  private _isModifiedFn = new BehaviorSubject<Maybe<DbNgxActionAutoTriggerIsModifiedFn<T>>>(undefined);
   private _triggerSub = new SubscriptionObject();
 
   @Input('dbxActionAutoTriggerValue')
@@ -77,7 +77,7 @@ export class DbNgxActionAutoTriggerValueDirective<T, O> extends AbstractSubscrip
     });
   }
 
-  ngOnDestroy(): void {
+  override ngOnDestroy(): void {
     this.source.lockSet.onNextUnlock(() => {
       super.ngOnDestroy();
       this._isModifiedFn.complete();

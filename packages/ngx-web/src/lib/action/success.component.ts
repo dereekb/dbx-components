@@ -3,9 +3,9 @@ import { interval } from 'rxjs';
 import { of } from 'rxjs';
 import { BehaviorSubject } from 'rxjs';
 import { delay, delayWhen, exhaustMap, filter, mergeMap, shareReplay, startWith } from 'rxjs/operators';
-import { AbstractSubscriptionDirective } from '../subscription';
-import { ActionContextStoreSourceInstance } from './action';
-import { ActionContextStore } from './action.store';
+import { AbstractSubscriptionDirective } from '../../../../ngx-core/src/lib/subscription';
+import { ActionContextStoreSourceInstance } from '../../../../ngx-core/src/lib/action/action';
+import { ActionContextStore } from '../../../../ngx-core/src/lib/action/action.store';
 
 /**
  * Displays the input content when success is set.

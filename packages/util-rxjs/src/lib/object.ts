@@ -1,4 +1,4 @@
-import { hasEqualObjectValues } from "@dereekb/util";
+import { areEqualObjectValues } from "@dereekb/util";
 import { isObservable, MonoTypeOperatorFunction, Observable, OperatorFunction } from "rxjs";
 import { distinctUntilChanged, filter, mergeMap } from "rxjs/operators";
 
@@ -6,7 +6,7 @@ import { distinctUntilChanged, filter, mergeMap } from "rxjs/operators";
  * Equivalent to distinctUntilChanged() using isEqualObject()
  */
 export function distinctUntilObjectValuesChanged<T>(): MonoTypeOperatorFunction<T> {
-  return distinctUntilChanged((a, b) => hasEqualObjectValues(a, b));
+  return distinctUntilChanged((a, b) => areEqualObjectValues(a, b));
 }
 
 /**
@@ -20,6 +20,6 @@ export function filterIfObjectValuesUnchanged<F>(input: F | Observable<F>): Mono
       return input.pipe(filterIfObjectValuesUnchanged(inputFilter))
     });
   } else {
-    return filter((inputObject) => !hasEqualObjectValues(input, inputObject))
+    return filter((inputObject) => !areEqualObjectValues(input, inputObject))
   }
 }

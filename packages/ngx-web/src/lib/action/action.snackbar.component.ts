@@ -1,15 +1,11 @@
 import { Component, Inject } from '@angular/core';
 import { MatSnackBarRef, MAT_SNACK_BAR_DATA } from '@angular/material/snack-bar';
+import { Maybe } from '@dereekb/util';
 import ms from 'ms';
 import { map } from 'rxjs/operators';
-import { ActionContextStoreSource, ActionContextStoreSourceInstance } from './action';
-import { ActionState } from './action.store';
-
-export interface DbNgxActionSnackbarComponentConfig {
-  message: string;
-  action: string;
-  actionSource: ActionContextStoreSourceInstance;
-}
+import { ActionContextStoreSourceInstance } from '../../../../ngx-core/src/lib/action/action';
+import { ActionState } from '../../../../ngx-core/src/lib/action/action.store';
+import { DbNgxActionSnackbarComponentConfig } from '../../../../ngx-core/src/lib/action/snackbar';
 
 /**
  * Component for a snackbar that contains an action.
@@ -68,7 +64,7 @@ export class DbNgxActionSnackbarComponent {
     })
   );
 
-  get message(): string {
+  get message(): Maybe<string> {
     return this.data.message;
   }
 

@@ -12,4 +12,4 @@ import { MatButtonModule } from '@angular/material/button';
   exports: [
   ]
 })
-export class DbxSegueModule { }
+export class DbNgxSegueModule { }

@@ -1,7 +1,7 @@
 import { Directive, Host, Input, NgZone } from '@angular/core';
-import { LoadingContext } from '../loading/loading';
+import { LoadingContext } from '@dereekb/util-rxjs';
 import { AbstractSubscriptionDirective } from '../subscription';
-import { DbNgxButtonDirective } from './button.directive';
+import { DbNgxButton } from './button';
 
 /**
  * Context used for linking a button to a LoadingContext.
@@ -13,7 +13,7 @@ import { DbNgxButtonDirective } from './button.directive';
 })
 export class DbNgxLoadingButtonDirective extends AbstractSubscriptionDirective {
 
-  constructor(@Host() public readonly button: DbNgxButtonDirective, readonly ngZone: NgZone) {
+  constructor(@Host() public readonly button: DbNgxButton, readonly ngZone: NgZone) {
     super();
   }
 
