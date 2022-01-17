@@ -6,12 +6,12 @@
   </a>
   <!-- Router -->
   <ng-container *ngSwitchCase="2">
-    
+    <dbx-injected-content></dbx-injected-content>
+    <a class="app-anchor app-anchor-sref {{ anchorBlockClass }}" [ngClass]="anchorClass" [attr.target]="anchor.target"
+      [uiSref]="anchor.ref" [uiParams]="anchor.refParams" [uiOptions]="anchor.refOptions" *ngSwitchCase="2">
+      <ng-container *ngTemplateOutlet="content"></ng-container>
+    </a>
   </ng-container>
-  <a class="app-anchor app-anchor-sref {{ anchorBlockClass }}" [ngClass]="anchorClass" [attr.target]="anchor.target"
-    [uiSref]="anchor.ref" [uiParams]="anchor.refParams" [uiOptions]="anchor.refOptions" *ngSwitchCase="2">
-    <ng-container *ngTemplateOutlet="content"></ng-container>
-  </a>
   <!-- Href -->
   <a class="app-anchor app-anchor-href {{ anchorBlockClass }}" [ngClass]="anchorClass" [href]="anchor.url"
     [attr.target]="anchor.target" *ngSwitchCase="3">
@@ -25,8 +25,4 @@
 <!-- Template content -->
 <ng-template #content>
   <ng-content></ng-content>
-</ng-template>
-<!-- Template routerContent -->
-<ng-template #routerContent>
-  <dbx-injected-content></dbx-injected-content>
 </ng-template>

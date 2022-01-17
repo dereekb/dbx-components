@@ -1,3 +1,3 @@
-export * from './router.module';
+export * from './anchor';
 export * from './router.provider.config';
 export * from './segue';

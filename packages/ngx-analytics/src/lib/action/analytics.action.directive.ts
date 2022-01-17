@@ -23,7 +23,7 @@ export interface DbNgxActionAnalyticsConfig<T = any, O = any> {
  * Used to listen to an ActionContext and send analytical events based on action events.
  */
 @Directive({
-  selector: '[dbNgxActionAnalytics]',
+  selector: '[dbxActionAnalytics]',
 })
 export class DbNgxActionAnalyticsDirective<T> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
 

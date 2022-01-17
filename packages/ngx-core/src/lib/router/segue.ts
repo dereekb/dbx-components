@@ -1,13 +1,13 @@
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
-export type SegueRefRouterLink = string | any[];
+export type SegueRefRouterLink = string | any[] | any;
 
 export interface SegueRefRawSegueParams {
   [key: string]: any;
 }
 
-export interface SegueRefOptions {
+export interface SegueRefOptions<O = any> {
 
   /**
    * Raw parameters
@@ -19,14 +19,14 @@ export interface SegueRefOptions {
    * 
    * For UIRouter, this is TransitionOptions.
    */
-  refOptions?: any;
+  refOptions?: O;
 
 }
 
 /**
  * Represents a segue ref
  */
-export interface SegueRef extends SegueRefOptions {
+export interface SegueRef<O = any> extends SegueRefOptions<O> {
 
   /**
    * UI Sref reference value.
@@ -35,10 +35,10 @@ export interface SegueRef extends SegueRefOptions {
 
 }
 
-export function refStringToSegueRef(ref: string, options?: SegueRefOptions): SegueRef {
+export function refStringToSegueRef<O = any>(ref: string, options?: SegueRefOptions<O>): SegueRef<O> {
   return { ...options, ref };
 }
 
-export function mapRefStringObsToSegueRefObs(obs: Observable<string>, options?: SegueRefOptions): Observable<SegueRef> {
+export function mapRefStringObsToSegueRefObs<O = any>(obs: Observable<string>, options?: SegueRefOptions<O>): Observable<SegueRef<O>> {
   return obs.pipe(map(x => refStringToSegueRef(x, options)));
 }

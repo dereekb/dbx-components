@@ -1,73 +1,43 @@
-import { Directive } from '@angular/core';
-import { Input } from '@angular/core';
+import { map, shareReplay, debounceTime } from 'rxjs/operators';
+import { BehaviorSubject, combineLatest, Observable } from 'rxjs';
+import { Directive, Input } from '@angular/core';
 import { Maybe } from '@dereekb/util';
-import { ClickableAnchor } from './anchor';
-
-export enum AnchorComponentType {
-  None = 0,
-  Clickable = 1,
-  Sref = 2,
-  Href = 3,
-  Disabled = 4
-}
+import { AnchorType, ClickableAnchor, anchorTypeForAnchor, DbNgxAnchor } from './anchor';
 
 /**
  * Abstract anchor directive.
  */
 @Directive()
-export class AbstractAnchorDirective<T extends ClickableAnchor = ClickableAnchor> {
+export class AbstractDbNgxAnchorDirective<T extends ClickableAnchor = ClickableAnchor> implements DbNgxAnchor {
 
-  // TODO: Update to use observables
+  private _disabled = new BehaviorSubject<Maybe<boolean>>(false);
+  private _anchor = new BehaviorSubject<Maybe<T>>(undefined);
 
-  private _type?: AnchorComponentType;
-  private _disabled?: boolean;
-  private _anchor: Maybe<T>;
+  readonly disabled$ = this._disabled.asObservable();
+  readonly anchor$ = this._anchor.asObservable();
 
+  readonly type$: Observable<AnchorType> = combineLatest([this.disabled$, this.anchor$]).pipe(
+    debounceTime(10),
+    map(([disabled, anchor]) => anchorTypeForAnchor(anchor, disabled)),
+    shareReplay(1)
+  );
+
+  @Input()
   public get anchor(): Maybe<T> {
-    return this._anchor;
+    return this._anchor.value;
   }
 
-  @Input()
   public set anchor(anchor: Maybe<T>) {
-    this._anchor = anchor;
-    this._updateType();
-  }
-
-  public get disabled(): boolean | undefined {
-    return this._disabled;
+    this._anchor.next(anchor);
   }
 
   @Input()
-  public set disabled(disabled: boolean | undefined) {
-    if (this._disabled !== disabled) {
-      this._disabled = disabled;
-      this._updateType();
-    }
+  public get disabled(): Maybe<boolean> {
+    return this._disabled.value;
   }
 
-  public get type(): Maybe<AnchorComponentType> {
-    return this._type;
-  }
-
-  /**
-   * Updates the anchor's type.
-   */
-  private _updateType(): void {
-    let type: AnchorComponentType = AnchorComponentType.Disabled;
-
-    if (!this.disabled && this.anchor) {
-      if (this.anchor.disabled) {
-        type = AnchorComponentType.Disabled;
-      } else if (this.anchor.ref) {
-        type = AnchorComponentType.Sref;
-      } else if (this.anchor.onClick) {
-        type = AnchorComponentType.Clickable;
-      } else if (this.anchor.url) {
-        type = AnchorComponentType.Href;
-      }
-    }
-
-    this._type = type;
+  public set disabled(disabled: Maybe<boolean>) {
+    this._disabled.next(disabled);
   }
 
 }

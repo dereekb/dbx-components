@@ -6,7 +6,7 @@ import { DbNgxReadableErrorComponent } from './error.component';
  * Context used for linking an ReadableErrorComponent to an ActionContext.
  */
 @Directive({
-  selector: '[dbNgxActionError]'
+  selector: '[dbxActionError]'
 })
 export class DbNgxActionErrorDirective extends AbstractSubscriptionDirective implements OnInit {
 

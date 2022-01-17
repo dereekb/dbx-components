@@ -1,5 +1,5 @@
 import { Input, Component, ContentChild } from '@angular/core';
-import { AbstractAnchorDirective } from './anchor.directive';
+import { AbstractAnchorDirective } from '@dereekb/ngx-core';
 
 /**
  * Component that renders an anchor element depending on the input.
