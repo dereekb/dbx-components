@@ -46,6 +46,10 @@ export abstract class AbstractDbNgxButtonDirective extends AbstractSubscriptionD
 
   readonly clicked$ = this.buttonClick.asObservable();
 
+  constructor() {
+    super();
+  }
+
   /**
    * Pre-interceptor button click.
    */

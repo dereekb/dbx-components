@@ -8,5 +8,5 @@
     "types": []
   },
   "exclude": ["src/test-setup.ts", "**/*.spec.ts", "**/*.test.ts"],
-  "include": ["**/*.ts", "../ngx-web/src/lib/button/button.loading.directive.spec.ts", "../ngx-web/src/lib/action/key.trigger.directive.ts", "../ngx-web/src/lib/action/success.component.ts", "../ngx-web/src/lib/action/snackbar.component.ts", "../ngx-web/src/lib/action/action.confirm.directive.ts"]
+  "include": ["**/*.ts", "../ngx-web/src/lib/button/button.loading.directive.spec.ts"]
 }

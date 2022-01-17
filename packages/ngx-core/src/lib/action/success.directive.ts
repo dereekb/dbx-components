@@ -4,7 +4,7 @@ import { BehaviorSubject } from 'rxjs';
 import { Directive, Host, Input, OnInit, OnDestroy } from '@angular/core';
 import { Maybe } from '@dereekb/util';
 import { AbstractSubscriptionDirective } from '../subscription';
-import { ActionContextStoreSourceInstance } from './action';
+import { ActionContextStoreSourceInstance } from './action.store.source';
 
 /**
  * Performs the action on success.

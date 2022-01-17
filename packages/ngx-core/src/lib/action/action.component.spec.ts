@@ -3,9 +3,8 @@ import { Component, ViewChild, Input } from '@angular/core';
 import { of } from 'rxjs';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { DbNgxActionComponent } from './action.component';
-import { ActionContextStore } from './action.store';
 import { HandleActionFunction } from './action.handler';
-import { ActionContextStoreSourceInstance } from './action';
+import { ActionContextStoreSourceInstance } from './action.store.source';
 import { DbNgxActionHandlerDirective } from './handler.directive';
 import { DbNgxCoreActionModule } from './action.module';
 
@@ -72,6 +71,7 @@ describe('DbNgxActionContextComponent', () => {
         // Clear to prevent issues.
         handlerDirective.handlerFunction = undefined;
 
+        instance.trigger();
         instance.readyValue(READY_VALUE);
 
         instance.valueReady$.subscribe((x) => {
@@ -81,41 +81,6 @@ describe('DbNgxActionContextComponent', () => {
 
       });
 
-
-    });
-
-    describe('ActionContextStore', () => {
-
-      let contextStore: ActionContextStore<number, number>;
-
-      beforeEach(async () => {
-        contextStore = await component.store$.toPromise();
-      });
-
-      it('should set state to triggered on trigger()', (done) => {
-        contextStore.trigger();
-
-        contextStore.triggered$.subscribe((x) => {
-          expect(x).toBe(true);
-          done();
-        });
-
-      });
-
-      it('should set value ready on valueReady()', (done) => {
-        const READY_VALUE = 1;
-
-        // Clear to prevent issues.
-        handlerDirective.handlerFunction = undefined;
-
-        contextStore.readyValue(READY_VALUE);
-
-        contextStore.valueReady$.subscribe((x) => {
-          expect(x).toBe(READY_VALUE);
-          done();
-        });
-
-      });
 
     });
 

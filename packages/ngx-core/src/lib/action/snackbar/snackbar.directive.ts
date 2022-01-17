@@ -1,7 +1,7 @@
 import { Directive, Host, Input, OnInit, Type } from '@angular/core';
 import { map } from 'rxjs/operators';
 import { merge } from 'rxjs';
-import { ActionContextStoreSourceInstance } from '../action';
+import { ActionContextStoreSourceInstance } from '../action.store.source';
 import { AbstractSubscriptionDirective } from '../../subscription';
 import { Maybe } from '@dereekb/util';
 import { ActionSnackbarFunction, ActionSnackbarDefaultType, ActionSnackbarGetUndoConfigFunction, ActionSnackbarEventType, ActionSnackbarEvent, ActionSnackbarPopupConfig, ActionSnackBarOpenConfig, DbNgxActionSnackbarComponentConfig, DEFAULT_SNACKBAR_UNDO_DIRECTIVE_DURATION } from './snackbar';

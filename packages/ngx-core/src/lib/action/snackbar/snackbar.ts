@@ -1,7 +1,7 @@
 import { Type } from "@angular/core";
 import { Maybe } from "@dereekb/util";
 import ms from "ms";
-import { ActionContextStoreSourceInstance } from "../action";
+import { ActionContextStoreSourceInstance } from "../action.store.source";
 
 export const DEFAULT_SNACKBAR_DIRECTIVE_DURATION = ms('4s');
 export const DEFAULT_SNACKBAR_UNDO_DIRECTIVE_DURATION = ms('30s');

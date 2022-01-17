@@ -3,7 +3,7 @@ import { AbstractSubscriptionDirective } from '../subscription';
 import { count, debounce, debounceTime, distinctUntilChanged, exhaustMap, filter, first, map, mergeMap, shareReplay, switchMap, tap, throttle, timeoutWith, withLatestFrom } from 'rxjs/operators';
 import { EMPTY, interval, Subject, combineLatest, of } from 'rxjs';
 import { Observable } from 'rxjs';
-import { ActionContextStoreSourceInstance } from './action';
+import { ActionContextStoreSourceInstance } from './action.store.source';
 import { Host } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { Maybe } from '@dereekb/util';

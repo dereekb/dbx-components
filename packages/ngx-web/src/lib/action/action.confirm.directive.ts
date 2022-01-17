@@ -3,7 +3,7 @@ import { Directive, Host, Input, OnDestroy, OnInit } from '@angular/core';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { AppPromptConfirmConfig } from '../responsive/prompt/prompt.confirm.component';
 import { AbstractPromptConfirmDirective } from '../responsive/prompt/prompt.confirm.directive';
-import { ActionContextStoreSourceInstance } from '../../../../ngx-core/src/lib/action/action';
+import { ActionContextStoreSourceInstance } from '../../../../ngx-core/src/lib/action/action.store.source';
 
 /**
  * Directive that when triggered shows a dialog to accept or reject.

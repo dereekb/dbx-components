@@ -3,8 +3,9 @@ import { Directive, OnDestroy } from '@angular/core';
 import { BehaviorSubject, Observable, of } from 'rxjs';
 import { distinctUntilChanged, map, shareReplay, switchMap } from 'rxjs/operators';
 import { combineLatestFromMapValuesObsFn } from '@dereekb/util-rxjs';
-import { ActionContextStoreSource, ActionContextStoreSourceMap, actionContextStoreSourcePipe, ActionKey } from './action';
+import { ActionContextStoreSource, actionContextStoreSourcePipe } from './action.store.source';
 import { ActionContextStore } from './action.store';
+import { ActionContextStoreSourceMap, ActionKey } from './action.map';
 
 /**
  * Context used for providing actions based on the action key.

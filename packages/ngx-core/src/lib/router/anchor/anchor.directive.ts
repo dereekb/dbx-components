@@ -17,12 +17,11 @@ export enum AnchorComponentType {
 @Directive()
 export class AbstractAnchorDirective<T extends ClickableAnchor = ClickableAnchor> {
 
+  // TODO: Update to use observables
+
   private _type?: AnchorComponentType;
   private _disabled?: boolean;
   private _anchor: Maybe<T>;
-
-  @Input()
-  public anchorClass?: string | string[] | object;
 
   public get anchor(): Maybe<T> {
     return this._anchor;

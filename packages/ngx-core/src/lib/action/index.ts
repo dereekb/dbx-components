@@ -13,7 +13,7 @@ export * from './action.map.working.disable.directive';
 export * from './action.module';
 export * from './action.source.directive';
 export * from './action.store';
-export * from './action';
+export * from './action.store.source';
 export * from './automodify.directive';
 export * from './autotrigger.directive';
 export * from './autotrigger.value.directive';

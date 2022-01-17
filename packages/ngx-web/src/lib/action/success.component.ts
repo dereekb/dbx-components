@@ -4,7 +4,7 @@ import { of } from 'rxjs';
 import { BehaviorSubject } from 'rxjs';
 import { delay, delayWhen, exhaustMap, filter, mergeMap, shareReplay, startWith } from 'rxjs/operators';
 import { AbstractSubscriptionDirective } from '../../../../ngx-core/src/lib/subscription';
-import { ActionContextStoreSourceInstance } from '../../../../ngx-core/src/lib/action/action';
+import { ActionContextStoreSourceInstance } from '../../../../ngx-core/src/lib/action/action.store.source';
 import { ActionContextStore } from '../../../../ngx-core/src/lib/action/action.store';
 
 /**

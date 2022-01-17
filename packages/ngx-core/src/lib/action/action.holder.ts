@@ -1,7 +1,7 @@
 import { Observable, of } from 'rxjs';
 import { Destroyable } from '@dereekb/util';
 import { LockSet } from '@dereekb/util-rxjs';
-import { ActionContextStoreSource, ActionContextStoreSourceInstance, SecondaryActionContextStoreSource } from './action';
+import { ActionContextStoreSource, ActionContextStoreSourceInstance, SecondaryActionContextStoreSource } from './action.store.source';
 import { ActionContextStore } from './action.store';
 
 /**

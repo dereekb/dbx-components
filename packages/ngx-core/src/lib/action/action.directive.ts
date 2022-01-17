@@ -1,5 +1,5 @@
 import { Directive, Optional, OnDestroy, Host } from '@angular/core';
-import { ProvideActionStoreSource, SecondaryActionContextStoreSource } from './action';
+import { ProvideActionStoreSource, SecondaryActionContextStoreSource } from './action.store.source';
 import { ActionContextBaseSource } from './action.holder';
 
 /**

@@ -1,4 +1,4 @@
-import { ReadableError } from './../../../../ngx-core/src/lib/error/error';
+import { ReadableError } from '../error';
 import { BaseError } from 'make-error';
 import { DescriptorAssertionOptions } from "./assert";
 

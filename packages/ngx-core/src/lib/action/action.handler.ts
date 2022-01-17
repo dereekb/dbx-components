@@ -1,6 +1,6 @@
 import { BehaviorSubject, isObservable, Observable, of } from 'rxjs';
 import { first } from 'rxjs/operators';
-import { ActionContextStoreSourceInstance } from './action';
+import { ActionContextStoreSourceInstance } from './action.store.source';
 import { Maybe, Destroyable } from '@dereekb/util';
 
 export interface WorkHandlerContextDelegate<O = any> {

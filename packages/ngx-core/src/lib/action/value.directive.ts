@@ -4,7 +4,7 @@ import { filterMaybe } from '@dereekb/util-rxjs';
 import { BehaviorSubject } from 'rxjs';
 import { shareReplay, switchMap, tap } from 'rxjs/operators';
 import { AbstractSubscriptionDirective } from '../subscription';
-import { ActionContextStoreSourceInstance } from './action';
+import { ActionContextStoreSourceInstance } from './action.store.source';
 
 /**
  * Directive that provides a default value when triggered.

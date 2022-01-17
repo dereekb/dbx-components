@@ -1,8 +1,11 @@
 import { Directive, Host, Input, OnDestroy, OnInit } from '@angular/core';
-import { map } from 'rxjs/operators';
+import { map, shareReplay, switchMap, tap } from 'rxjs/operators';
 import { AbstractSubscriptionDirective } from '../subscription';
-import { ActionContextStoreSourceInstance } from './action';
+import { ActionContextStoreSourceInstance } from './action.store.source';
 import { HandleActionFunction, WorkHandlerContextSourceDelegate, handleWorkValueReadyFn } from './action.handler';
+import { Maybe } from '@dereekb/util';
+import { filterMaybe } from '@dereekb/util-rxjs';
+import { BehaviorSubject } from 'rxjs';
 
 
 /**
@@ -13,8 +16,17 @@ import { HandleActionFunction, WorkHandlerContextSourceDelegate, handleWorkValue
 })
 export class DbNgxActionHandlerDirective<T, O> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
 
+  private _handlerFunction = new BehaviorSubject<Maybe<HandleActionFunction<T, O>>>(undefined);
+  readonly handlerFunction$ = this._handlerFunction.pipe(filterMaybe(), shareReplay(1));
+
   @Input('dbxActionHandler')
-  handlerFunction?: HandleActionFunction<T, O>;
+  get handlerFunction(): Maybe<HandleActionFunction<T, O>> {
+    return this._handlerFunction.value;
+  }
+
+  set handlerFunction(handlerFunction: Maybe<HandleActionFunction<T, O>>) {
+    this._handlerFunction.next(handlerFunction);
+  }
 
   private _delegate = new WorkHandlerContextSourceDelegate<T, O>(this.source);
 
@@ -23,20 +35,20 @@ export class DbNgxActionHandlerDirective<T, O> extends AbstractSubscriptionDirec
   }
 
   ngOnInit(): void {
-    this.sub = this.source.valueReady$.subscribe((value) => {
-      if (!this.handlerFunction) {
-        console.warn('No handler function registered to handle ready value: ', value);
-        return;
-      }
+    this.sub = this.handlerFunction$.pipe(
+      switchMap(handlerFunction => this.source.valueReady$.pipe(
+        map((x: T) => ([handlerFunction, x] as [HandleActionFunction<T, O>, T])),
+        tap(([handlerFunction, value]) => {
+          const context = handleWorkValueReadyFn({ handlerFunction, delegate: this._delegate })(value);
 
-      const context = handleWorkValueReadyFn({ handlerFunction: this.handlerFunction, delegate: this._delegate })(value);
+          if (context) {
 
-      if (context) {
-
-        // Add the action to the lockSet for the source to prevent it from being destroyed until the action completes.
-        this.source.lockSet.addLock('actionhandler', context.isComplete$.pipe(map(x => !x)));
-      }
-    });
+            // Add the action to the lockSet for the source to prevent it from being destroyed until the action completes.
+            this.source.lockSet.addLock('actionhandler', context.isComplete$.pipe(map(x => !x)));
+          }
+        })
+      ))
+    ).subscribe();
   }
 
   override ngOnDestroy(): void {

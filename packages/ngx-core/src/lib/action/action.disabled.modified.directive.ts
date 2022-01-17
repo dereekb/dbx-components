@@ -1,6 +1,6 @@
 import { Directive, Host, OnInit, OnDestroy } from '@angular/core';
 import { AbstractSubscriptionDirective } from '../subscription';
-import { ActionContextStoreSourceInstance } from './action';
+import { ActionContextStoreSourceInstance } from './action.store.source';
 
 export const APP_ACTION_DISABLED_UNTIL_MODIFIED_DIRECTIVE_KEY = 'app_action_is_not_modified';
 

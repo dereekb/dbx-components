@@ -1,6 +1,6 @@
 import { Directive, Host, HostListener, Input, OnInit } from '@angular/core';
 import { Maybe } from '@dereekb/util';
-import { ActionContextStoreSourceInstance } from '../../../../ngx-core/src/lib/action/action';
+import { ActionContextStoreSourceInstance } from '../../../../ngx-core/src/lib/action/action.store.source';
 
 const DEFAULT_ACTION_KEY_TRIGGER = 'enter';
 

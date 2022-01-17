@@ -7,7 +7,7 @@ import { DbNgxActionHandlerDirective } from './handler.directive';
 import { DbNgxCoreActionModule } from './action.module';
 import { first, tap } from 'rxjs/operators';
 import { ActionContextStore } from './action.store';
-import { ActionContextStoreSourceInstance } from './action';
+import { ActionContextStoreSourceInstance } from './action.store.source';
 import { HandleActionFunction } from './action.handler';
 
 describe('DbNgxActionContextDirective', () => {
@@ -66,12 +66,10 @@ describe('DbNgxActionContextDirective', () => {
 
       });
 
-      it('should set value ready on valueReady()', (done) => {
+      it('should set value ready on valueReady() if already triggered', (done) => {
         const READY_VALUE = 1;
 
-        // Clear to prevent issues.
-        handlerDirective.handlerFunction = undefined;
-
+        instance.trigger();
         instance.readyValue(READY_VALUE);
 
         instance.valueReady$.subscribe((x) => {
@@ -81,41 +79,6 @@ describe('DbNgxActionContextDirective', () => {
 
       });
 
-
-    });
-
-    describe('ActionContextStore', () => {
-
-      let contextStore: ActionContextStore<number, number>;
-
-      beforeEach(async () => {
-        contextStore = await directive.store$.toPromise();
-      });
-
-      it('should set state to triggered on trigger()', (done) => {
-        contextStore.trigger();
-
-        contextStore.triggered$.subscribe((x) => {
-          expect(x).toBe(true);
-          done();
-        });
-
-      });
-
-      it('should set value ready on valueReady()', (done) => {
-        const READY_VALUE = 1;
-
-        // Clear to prevent issues.
-        handlerDirective.handlerFunction = undefined;
-
-        contextStore.readyValue(READY_VALUE);
-
-        contextStore.valueReady$.subscribe((x) => {
-          expect(x).toBe(READY_VALUE);
-          done();
-        });
-
-      });
 
     });
 

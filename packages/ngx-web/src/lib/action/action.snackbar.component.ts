@@ -3,7 +3,7 @@ import { MatSnackBarRef, MAT_SNACK_BAR_DATA } from '@angular/material/snack-bar'
 import { Maybe } from '@dereekb/util';
 import ms from 'ms';
 import { map } from 'rxjs/operators';
-import { ActionContextStoreSourceInstance } from '../../../../ngx-core/src/lib/action/action';
+import { ActionContextStoreSourceInstance } from '../../../../ngx-core/src/lib/action/action.store.source';
 import { ActionState } from '../../../../ngx-core/src/lib/action/action.store';
 import { DbNgxActionSnackbarComponentConfig } from '../../../../ngx-core/src/lib/action/snackbar';
 

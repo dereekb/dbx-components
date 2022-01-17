@@ -2,7 +2,7 @@ import { Directive, Input, OnInit, OnDestroy } from '@angular/core';
 import { AbstractSubscriptionDirective } from '../subscription';
 import { distinctUntilChanged, filter } from 'rxjs/operators';
 import { combineLatest } from 'rxjs';
-import { ActionContextStoreSourceInstance } from './action';
+import { ActionContextStoreSourceInstance } from './action.store.source';
 import { Host } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 

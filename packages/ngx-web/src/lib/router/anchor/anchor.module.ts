@@ -22,4 +22,4 @@ import { MatButtonModule } from '@angular/material/button';
     AppAnchorIconComponent
   ]
 })
-export class AppAnchorModule { }
+export class DbNgxAnchorModule { }

@@ -2,7 +2,7 @@ import { Directive, Host, Input, OnInit, OnDestroy } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { distinctUntilChanged } from 'rxjs/operators';
 import { AbstractSubscriptionDirective } from '../subscription';
-import { ActionContextStoreSourceInstance } from './action';
+import { ActionContextStoreSourceInstance } from './action.store.source';
 
 export const APP_ACTION_DISABLED_DIRECTIVE_KEY = 'app_action_disabled';
 
