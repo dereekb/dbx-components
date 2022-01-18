@@ -1,3 +1,4 @@
+import { skipFirstMaybe } from '@dereekb/util-rxjs';
 import { Input, Component, TemplateRef, ViewChild } from '@angular/core';
 import { AbstractDbNgxAnchorDirective, DbNgxInjectedComponentConfig } from '@dereekb/ngx-core';
 import { Maybe } from '@dereekb/util';
@@ -9,14 +10,14 @@ import { DbNgxRouterWebProviderConfig } from '../provider/router.provider.config
  * Component that renders an anchor element depending on the input.
  */
 @Component({
-  selector: 'dbx-anchor',
+  selector: 'dbx-anchor, [dbx-anchor]',
   templateUrl: './anchor.component.html',
   styleUrls: ['./anchor.scss']
 })
 export class DbNgxAnchorComponent extends AbstractDbNgxAnchorDirective {
 
   private _templateRef = new BehaviorSubject<Maybe<TemplateRef<any>>>(undefined);
-  readonly templateRef$ = this._templateRef.asObservable();
+  readonly templateRef$ = this._templateRef.pipe(skipFirstMaybe(), shareReplay(1));
 
   @Input()
   public block?: boolean;
