@@ -1,5 +1,5 @@
 import { Directive, Host, OnInit, OnDestroy, Input } from '@angular/core';
-import { SubscriptionObject } from '@gae-web/appengine-utility';
+import { SubscriptionObject } from '@dereekb/ngx-core';
 import { addSeconds, isPast } from 'date-fns';
 import { Observable, of, combineLatest } from 'rxjs';
 import { catchError, exhaustMap, filter, first, map, mergeMap, switchMap } from 'rxjs/operators';

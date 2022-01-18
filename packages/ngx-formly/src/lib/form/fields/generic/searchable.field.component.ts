@@ -1,4 +1,4 @@
-import { SubscriptionObject } from '@gae-web/appengine-utility';
+import { SubscriptionObject } from '@dereekb/ngx-core';
 import { beginLoading, LoadingState, loadingStateFromObs, LoadingStateLoadingContext } from '@/app/common/loading';
 import { ModelUtility } from '@/app/common/model';
 import {

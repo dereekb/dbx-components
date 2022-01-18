@@ -1,14 +1,12 @@
 import { Component, ComponentFactoryResolver, Inject, Input, NgZone, Type, ViewChild, ViewContainerRef, OnInit, OnDestroy, ComponentRef, ElementRef } from '@angular/core';
 import { HookMatchCriteria, TransitionService } from '@uirouter/core';
 import { NgOverlayContainerConfiguration, NgPopoverRef } from 'ng-overlay-container';
-import { AbstractTransitionWatcherDirective } from '../../utility/transition.watcher.directive';
-import { CompactContextStore } from '../container/compact.store';
-import { CompactMode } from '../container/compact';
+import { AbstractTransitionWatcherDirective } from '@dereekb/ngx-core';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { PopoverPositionStrategy } from './popover.position.strategy';
 import { filter, first, map, shareReplay, startWith } from 'rxjs/operators';
 import { Overlay } from '@angular/cdk/overlay';
-import { LockSet } from '../../utility/lock';
+import { LockSet } from '@dereekb/util-rxjs';
 
 export type DbNgxPopoverKey = string;
 

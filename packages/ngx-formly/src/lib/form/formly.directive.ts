@@ -1,6 +1,6 @@
-import { SubscriptionObject } from '@gae-web/appengine-utility';
+import { SubscriptionObject } from '@dereekb/ngx-core';
 import { Observable, BehaviorSubject } from 'rxjs';
-import { AbstractSubscriptionDirective } from '@/app/common/utility';
+import { AbstractSubscriptionDirective } from '@dereekb/ngx-core';
 import { FormlyFieldConfig } from '@ngx-formly/core/lib/core';
 import { OnInit, OnDestroy, Directive, Input } from '@angular/core';
 import { DbNgxFormlyContext } from './formly.context';

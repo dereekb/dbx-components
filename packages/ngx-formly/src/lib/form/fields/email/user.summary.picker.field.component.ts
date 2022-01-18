@@ -10,7 +10,7 @@ import { FieldType, FormlyFieldConfig } from '@ngx-formly/core';
 import { BehaviorSubject, Observable, of, combineLatest } from 'rxjs';
 import { LoadingState, LoadingStateLoadingContext } from '@/app/common/loading';
 import { isObject } from 'class-validator';
-import { SubscriptionObject } from '@gae-web/appengine-utility';
+import { SubscriptionObject } from '@dereekb/ngx-core';
 import { AfterViewInit } from '@angular/core';
 
 export interface EmailUserSummaryCorrespondence {

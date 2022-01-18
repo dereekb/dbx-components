@@ -7,7 +7,7 @@ import { AbstractControl, FormControl, ValidationErrors, Validators } from '@ang
 import { FieldType, FormlyFieldConfig } from '@ngx-formly/core';
 import { ChecklistItemDisplayContent, ChecklistItemFieldDisplayComponent, ChecklistItemFieldDisplayContentObs } from './checklist.item';
 import { DbNgxDefaultChecklistItemFieldDisplayComponent } from './checklist.item.field.content.default.component';
-import { AbstractSubscriptionDirective } from '@/app/common/utility';
+import { AbstractSubscriptionDirective } from '@dereekb/ngx-core';
 
 export interface DbNgxChecklistItemFieldConfig<T = any> {
   /**

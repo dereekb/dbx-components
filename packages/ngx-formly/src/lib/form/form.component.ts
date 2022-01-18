@@ -3,7 +3,7 @@ import { OnDestroy, AfterContentInit, Provider, Type, Inject, ChangeDetectorRef,
 import { FormGroup, FormBuilder } from '@angular/forms';
 import { Observable, Subscription, BehaviorSubject } from 'rxjs';
 import { delay, debounceTime, startWith } from 'rxjs/operators';
-import { SubscriptionObject } from '@gae-web/appengine-utility';
+import { SubscriptionObject } from '@dereekb/ngx-core';
 import { DbNgxViewUtility } from '../utility';
 import { LockSet } from '../utility/lock';
 

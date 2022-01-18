@@ -1,5 +1,6 @@
 import { ModuleWithProviders, NgModule } from '@angular/core';
-import { DbNgxRouterService } from '../../router.service';
+import { DbNgxRouterTransitionService } from '../..';
+import { DbNgxRouterService } from '../../service/router.service';
 import { DbNgxUIRouterService } from './uirouter.router.service';
 
 @NgModule({})
@@ -9,9 +10,14 @@ export class DbNgxCoreUIRouterSegueModule {
     return {
       ngModule: DbNgxCoreUIRouterSegueModule,
       providers: [
+        DbNgxUIRouterService,
         {
-          provide: DbNgxUIRouterService,
-          useValue: DbNgxRouterService
+          provide: DbNgxRouterService,
+          useExisting: DbNgxUIRouterService
+        },
+        {
+          provide: DbNgxRouterTransitionService,
+          useExisting: DbNgxUIRouterService
         }
       ]
     };

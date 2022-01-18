@@ -1,10 +1,11 @@
+import { filterMaybe } from '@dereekb/util-rxjs';
 import { BehaviorSubject, Observable, of } from 'rxjs';
-import { Directive, Host, OnInit, OnDestroy, Input, ElementRef, Output, EventEmitter } from '@angular/core';
+import { Directive, OnInit, OnDestroy, Input, ElementRef } from '@angular/core';
 import { NgPopoverCloseEvent, NgPopoverRef } from 'ng-overlay-container';
-import { ActionContextStoreSourceInstance } from '../../action/action';
-import { AbstractPopoverRefDirective, AbstractPopoverRefWithEventsDirective } from './abstract.popover.ref.directive';
-import { SubscriptionObject } from '@gae-web/appengine-utility';
-import { filter, first, map, mergeMap, switchMap } from 'rxjs/operators';
+import { AbstractPopoverRefWithEventsDirective } from './abstract.popover.ref.directive';
+import { ActionContextStoreSourceInstance, SubscriptionObject } from '@dereekb/ngx-core';
+import { first, switchMap } from 'rxjs/operators';
+import { Maybe } from '@dereekb/util';
 
 export interface DbNgxPopoverActionFnParam {
   origin: ElementRef;
@@ -26,12 +27,12 @@ export type DbNgxPopoverActionModifiedFn<T = any> = (value: T) => Observable<boo
 export class DbNgxPopoverActionDirective<T = object> extends AbstractPopoverRefWithEventsDirective<any, T> implements OnInit, OnDestroy {
 
   @Input('dbxPopoverAction')
-  fn: DbNgxPopoverActionFn<T>;
+  fn?: DbNgxPopoverActionFn<T>;
 
   @Input()
   appPopoverActionModified?: DbNgxPopoverActionModifiedFn<T>;
 
-  private _popoverValue = new BehaviorSubject<T>(undefined);
+  private _popoverValue = new BehaviorSubject<Maybe<T>>(undefined);
 
   private _triggeredSub = new SubscriptionObject();
   private _isModifiedSub = new SubscriptionObject();
@@ -47,7 +48,7 @@ export class DbNgxPopoverActionDirective<T = object> extends AbstractPopoverRefW
 
     // Used for triggering isModified on the action.
     this._isModifiedSub.subscription = this._popoverValue.pipe(
-      filter((x) => x != null),
+      filterMaybe(),
       switchMap((value) => {
         let isModifiedObs: Observable<boolean>;
 
@@ -67,7 +68,7 @@ export class DbNgxPopoverActionDirective<T = object> extends AbstractPopoverRefW
     this._triggeredSub.subscription = this.source.triggered$.pipe(
       switchMap(() => {
         return this._popoverValue.pipe(
-          filter(x => x != null),
+          filterMaybe(),
           first()
         );
       })
@@ -76,7 +77,7 @@ export class DbNgxPopoverActionDirective<T = object> extends AbstractPopoverRefW
     });
   }
 
-  ngOnDestroy(): void {
+  override ngOnDestroy(): void {
     this.source.lockSet.onNextUnlock(() => {
       super.ngOnDestroy();
       this._triggeredSub.destroy();
@@ -96,7 +97,7 @@ export class DbNgxPopoverActionDirective<T = object> extends AbstractPopoverRefW
     });
   }
 
-  protected _afterClosed(event: NgPopoverCloseEvent<T>): void {
+  protected override _afterClosed(event: NgPopoverCloseEvent<T>): void {
     super._afterClosed(event);
     const { data } = event;
 

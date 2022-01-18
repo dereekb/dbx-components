@@ -1,7 +1,5 @@
 import { Directive, Host, NgZone } from '@angular/core';
-import { ActionContextStoreSourceInstance } from '../../action/action';
-import { DbNgxActionButtonDirective } from '../../action/action.button.directive';
-import { DbNgxButtonDirective } from '../../button/button.directive';
+import { DbNgxButtonDirective, DbNgxActionButtonDirective, ActionContextStoreSourceInstance } from '@dereekb/ngx-core';
 import { DbNgxPopoverActionDirective } from './popover.action.directive';
 
 /**
@@ -20,7 +18,7 @@ export class DbNgxPopoverActionButtonDirective extends DbNgxActionButtonDirectiv
     super(button, source, ngZone);
   }
 
-  protected _buttonClicked(): void {
+  protected override _buttonClicked(): void {
     this.appPopoverActionDirective.showPopover();
   }
 

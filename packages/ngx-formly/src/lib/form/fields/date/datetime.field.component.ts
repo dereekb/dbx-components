@@ -12,7 +12,7 @@ import { BehaviorSubject, Observable, of, combineLatest, Subject, merge, interva
 import { DateTimeUtility, ReadableTimeString } from '@/app/common/model/date.time';
 import { MatDatepickerInputEvent } from '@angular/material/datepicker';
 import { addMinutes, isSameDay, isSameMinute, isSameSecond, startOfDay } from 'date-fns';
-import { SubscriptionObject } from '@gae-web/appengine-utility';
+import { SubscriptionObject } from '@dereekb/ngx-core';
 
 export enum DateTimeFieldTimeMode {
   /**

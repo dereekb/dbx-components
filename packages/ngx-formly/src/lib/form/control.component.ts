@@ -8,7 +8,7 @@ import { FormGroup, AbstractControl } from '@angular/forms';
 
 import { FormErrors, FormGroupComponent } from './form.component';
 import { ThemePalette } from '@angular/material/core';
-import { SubscriptionObject } from '@gae-web/appengine-utility';
+import { SubscriptionObject } from '@dereekb/ngx-core';
 
 @Directive({
     selector: '[dbxFormGroupErrors]'

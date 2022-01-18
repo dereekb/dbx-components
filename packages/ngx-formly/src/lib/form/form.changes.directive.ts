@@ -1,7 +1,7 @@
 import { Directive, EventEmitter, Host, Input, Output, OnInit } from '@angular/core';
 import { AbstractSubscriptionDirective } from '../utility';
 import { FormComponent, FormComponentState } from './form.component';
-import { SubscriptionObject } from '@gae-web/appengine-utility';
+import { SubscriptionObject } from '@dereekb/ngx-core';
 import { DbNgxFormlyContext } from './formly.context';
 
 /**

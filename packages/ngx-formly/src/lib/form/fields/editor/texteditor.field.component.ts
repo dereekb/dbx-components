@@ -6,7 +6,7 @@ import {
 import { FieldType, FormlyFieldConfig } from '@ngx-formly/core';
 import { Editor, toHTML } from 'ngx-editor';
 import { debounceTime, filter, map, throttle, throttleTime } from 'rxjs/operators';
-import { SubscriptionObject } from '@gae-web/appengine-utility';
+import { SubscriptionObject } from '@dereekb/ngx-core';
 
 export interface TextEditorFieldConfig extends FormlyFieldConfig {
   // TODO: Add button that can retrieve trimmed content and inject it into the editor as a quoted value.
