@@ -1,9 +1,5 @@
-import { Component, ComponentFactoryResolver, ComponentRef, ElementRef, Type, ViewChild, ViewContainerRef, OnInit, Input } from '@angular/core';
-import { distinctUntilChanged, throttleTime } from 'rxjs/operators';
-import { BehaviorSubject } from 'rxjs';
-import { AbstractSubscriptionDirective } from '../subscription/subscription.directive';
-import { DbNgxInjectedComponentConfig } from './injected';
-import { DbNgxInjectedComponentInstance } from './injected.instance';
+import { Component, ViewChild, ViewContainerRef, Input } from '@angular/core';
+import { DbNgxInjectedComponentConfig, DbNgxInjectedTemplateConfig } from './injected';
 import { AbstractDbNgxInjectedDirective } from './injected.directive';
 import { Maybe } from '@dereekb/util';
 
@@ -19,6 +15,11 @@ export class DbNgxInjectedComponent<T> extends AbstractDbNgxInjectedDirective<T>
   @Input()
   set config(config: Maybe<DbNgxInjectedComponentConfig<T>>) {
     this.setConfig(config);
+  }
+
+  @Input()
+  set template(template: Maybe<DbNgxInjectedTemplateConfig<T>>) {
+    this.setTemplate(template);
   }
 
   @ViewChild('content', { static: true, read: ViewContainerRef })

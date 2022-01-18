@@ -1,4 +1,5 @@
-import { map, shareReplay, debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { filterMaybe } from '@dereekb/util-rxjs';
+import { map, shareReplay, distinctUntilChanged } from 'rxjs/operators';
 import { BehaviorSubject, combineLatest, Observable } from 'rxjs';
 import { Directive, Input } from '@angular/core';
 import { Maybe } from '@dereekb/util';
@@ -16,9 +17,9 @@ export class AbstractDbNgxAnchorDirective<T extends ClickableAnchor = ClickableA
   readonly disabled$ = this._disabled.asObservable();
   readonly anchor$ = this._anchor.asObservable();
 
-  readonly type$: Observable<AnchorType> = combineLatest([this.disabled$, this.anchor$]).pipe(
-    debounceTime(10),
+  readonly type$: Observable<AnchorType> = combineLatest([this.disabled$, this.anchor$.pipe(filterMaybe(), distinctUntilChanged())]).pipe(
     map(([disabled, anchor]) => anchorTypeForAnchor(anchor, disabled)),
+    distinctUntilChanged(),
     shareReplay(1)
   );
 

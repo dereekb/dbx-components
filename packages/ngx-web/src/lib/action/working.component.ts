@@ -1,5 +1,5 @@
 import { Component, Input, OnInit } from '@angular/core';
-import { ActionContextStoreSourceInstance } from './action';
+import { ActionContextStoreSourceInstance } from '@dereekb/ngx-core';
 
 /**
  * Displays the input content when working is set.

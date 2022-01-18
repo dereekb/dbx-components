@@ -16,17 +16,17 @@ import { DbNgxRouterWebProviderConfig } from '../provider/router.provider.config
 export class DbNgxAnchorComponent extends AbstractDbNgxAnchorDirective {
 
   private _templateRef = new BehaviorSubject<Maybe<TemplateRef<any>>>(undefined);
+  readonly templateRef$ = this._templateRef.asObservable();
 
   @Input()
   public block?: boolean;
 
-  @ViewChild('#content', { read: TemplateRef })
+  @ViewChild('content', { read: TemplateRef })
   get templateRef(): Maybe<TemplateRef<any>> {
     return this._templateRef.value;
   }
 
   set templateRef(templateRef: Maybe<TemplateRef<any>>) {
-    console.log('Set template ref.');
     this._templateRef.next(templateRef);
   }
 

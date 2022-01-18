@@ -10,7 +10,9 @@ describe('AppLoadingComponent', () => {
 
   beforeEach(async () => {
     TestBed.configureTestingModule({
-      imports: [DbNgxLoadingModule],
+      imports: [
+        DbNgxLoadingModule
+      ],
       declarations: [LoadingComponent]
     }).compileComponents();
   });

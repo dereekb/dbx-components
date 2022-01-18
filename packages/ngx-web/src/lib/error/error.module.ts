@@ -19,4 +19,4 @@ import { DbNgxActionErrorDirective } from './error.action.directive';
     DbNgxActionErrorDirective
   ]
 })
-export class ReadableErrorModule { }
+export class DbNgxReadableErrorModule { }

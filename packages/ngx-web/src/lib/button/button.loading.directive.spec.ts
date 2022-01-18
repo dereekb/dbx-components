@@ -1,6 +1,6 @@
+import { NgxDefaultWebModule } from './../ngx-web.module';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Component, ViewChild } from '@angular/core';
-import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { DbNgxButtonComponent } from './button.component';
 import { DbNgxButtonModule } from './button.module';
 import { filter } from 'rxjs/operators';
@@ -12,9 +12,9 @@ describe('DbNgxLoadingButton', () => {
   beforeEach(async () => {
     TestBed.configureTestingModule({
       imports: [
+        NgxDefaultWebModule,
         DbNgxCoreActionModule,
-        DbNgxButtonModule,
-        NoopAnimationsModule
+        DbNgxButtonModule
       ],
       declarations: [
         TestDbNgxLoadingButtonDirectiveComponent,

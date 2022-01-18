@@ -5,7 +5,7 @@
   </a>
   <!-- Router -->
   <dbx-injected-content [config]="srefAnchorConfig" *ngSwitchCase="2">
-    <ng-container *ngTemplateOutlet="content"></ng-container>
+    <!-- Injected in child. -->
   </dbx-injected-content>
   <!-- Href -->
   <a class="dbx-anchor dbx-anchor-href {{ anchorBlockClass }}" [href]="url$ | async" [attr.target]="target$ | async"

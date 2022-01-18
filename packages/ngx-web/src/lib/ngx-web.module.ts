@@ -1,7 +1,25 @@
+import { BrowserModule } from '@angular/platform-browser';
+import { MatProgressButtonsModule } from 'mat-progress-buttons';
 import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { DbNgxButtonModule } from './button';
+import { DbNgxActionModule } from './action';
 
 @NgModule({
-  imports: [CommonModule],
+  exports: [
+    DbNgxButtonModule,
+    DbNgxActionModule,
+  ],
 })
-export class NgxWebModule {}
+export class NgxWebModule { }
+
+@NgModule({
+  imports: [
+    BrowserModule,
+    NgxWebModule,
+    MatProgressButtonsModule.forRoot()
+  ],
+  exports: [
+    NgxWebModule
+  ]
+})
+export class NgxDefaultWebModule { }

@@ -1,6 +1,6 @@
 import { ViewContainerRef, OnInit, Input, OnDestroy } from '@angular/core';
 import { Maybe } from '@dereekb/util';
-import { DbNgxInjectedComponentConfig } from './injected';
+import { DbNgxInjectedComponentConfig, DbNgxInjectedTemplateConfig } from './injected';
 import { DbNgxInjectedComponentInstance } from './injected.instance';
 
 /**
@@ -20,6 +20,10 @@ export abstract class AbstractDbNgxInjectedDirective<T> implements OnInit, OnDes
 
   setConfig(config: Maybe<DbNgxInjectedComponentConfig>) {
     this._instance.config = config;
+  }
+
+  setTemplate(template: Maybe<DbNgxInjectedTemplateConfig>) {
+    this._instance.template = template;
   }
 
   setContent(content: Maybe<ViewContainerRef>) {

@@ -1,3 +1,4 @@
+import { DbNgxInjectedComponentModule } from '@dereekb/ngx-core';
 import { NgModule } from '@angular/core';
 import { DbNgxAnchorComponent } from './anchor.component';
 import { CommonModule } from '@angular/common';
@@ -10,6 +11,7 @@ import { MatButtonModule } from '@angular/material/button';
     CommonModule,
     MatIconModule,
     MatButtonModule,
+    DbNgxInjectedComponentModule
   ],
   declarations: [
     DbNgxAnchorComponent,

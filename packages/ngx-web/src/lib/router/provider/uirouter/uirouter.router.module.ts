@@ -3,11 +3,13 @@ import { CommonModule } from '@angular/common';
 import { ModuleWithProviders, NgModule } from '@angular/core';
 import { DbNgxUIRouterSegueAnchorComponent } from './anchor.component';
 import { DbNgxRouterWebProviderConfig } from '../router.provider.config';
+import { DbNgxInjectedComponentModule } from '@dereekb/ngx-core';
 
 @NgModule({
   imports: [
     CommonModule,
-    UIRouterModule
+    UIRouterModule,
+    DbNgxInjectedComponentModule
   ],
   declarations: [DbNgxUIRouterSegueAnchorComponent],
   exports: [DbNgxUIRouterSegueAnchorComponent]

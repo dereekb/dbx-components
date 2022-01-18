@@ -5,10 +5,12 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { AppLoadingComponent } from './loading.component';
 import { BrowserModule } from '@angular/platform-browser';
+import { DbNgxReadableErrorModule } from '../error';
 
 @NgModule({
   imports: [
     BrowserModule,
+    DbNgxReadableErrorModule,
     MatProgressSpinnerModule,
     MatProgressBarModule
   ],
