@@ -18,7 +18,7 @@ export const DEFAULT_LOADING_PROGRESS_DIAMETER = 96;
   </div>
   `
 })
-export class AppLoadingProgressComponent {
+export class DbNgxLoadingProgressComponent {
 
   private _diameter: number = DEFAULT_LOADING_PROGRESS_DIAMETER;
 

@@ -1,0 +1,153 @@
+$dbx-form-container-margin: 10px;
+
+.dbx-formly {
+  margin: $dbx-form-container-margin 0;
+}
+
+.dbx-form-spacer {
+  margin-top: 24px;  
+}
+
+// OLD. Remove
+$form-submit-view-margin: 8px;
+$material-form-margin: 16px;
+
+// MARK: Form Container
+.dbx-form-container {
+  margin: $dbx-form-container-margin 0;
+}
+
+// .dbx-form-container-form-view {}
+
+// MARK: Form View
+.dbx-form-view-padded {
+  padding: 0 $material-form-margin;
+}
+
+.required-text {
+  content: "*";
+  color: red;
+  // color: mat-color($tallynote-dbx-warn);
+}
+
+.dbx-form-view {
+  // margin-bottom: $material-form-margin;
+
+}
+
+.dbx-form-view-tools {
+  text-align: right;
+}
+
+.dbx-form-view-control {
+  width: 100%;
+}
+
+// .dbx-form-view-sub-form {}
+
+.mat-input-element {
+  margin: 0; // Safari Fix
+}
+
+.mat-form-field {
+  margin: 8px 0px 16px;
+}
+
+.mat-input-placeholder {
+  text-transform: capitalize;
+}
+
+.required {
+
+  .mat-checkbox-label::after,
+  .mat-input-placeholder::after {
+    @extend .required-text;
+  }
+}
+
+.capitalized-field {
+  .mat-input-element {
+    text-transform: capitalize;
+  }
+}
+
+.dbx-form-view-checkbox-control {
+  margin: 12px 0;
+  padding-left: 15px;
+
+  .mat-checkbox-label {
+    text-transform: capitalize;
+  }
+}
+
+.form-select-align {
+  padding-top: 24px;
+}
+
+.form-anti-padding {
+  margin-top: -20px;
+}
+
+.warning {
+  color: red;
+  // color: mat-color($tallynote-dbx-warn);
+}
+
+.dbx-form-view-help {
+  font-size: 75%;
+  color: grey;
+}
+
+.dbx-form-view-hint {
+  font-size: 75%;
+  margin-top: 3px;
+}
+
+// MARK: Tabs
+.mat-tab-header {
+  margin-bottom: $material-form-margin;
+}
+
+.dbx-form-view-tab-page {
+  padding: 12px 0;
+}
+
+// MARK: Input
+.mat-form-field {
+
+  .form-suffix-button {
+    width: 1.8em;
+    height: 1.8em;
+    margin-top: -0.6em;
+  }
+
+}
+
+// MARK: Controls
+.select-form-control {
+  width: 100%;
+}
+
+.form-suffix-button {
+  .mat-icon-button {
+    width: 2em;
+    height: 2em;
+
+    .mat-icon {
+      width: 1.8em;
+      height: 1.8em;
+    }
+  }
+}
+
+.date-form-control {
+
+  .mat-datepicker-toggle {
+
+    .mat-icon-button {
+      height: 2em;
+      width: 2em;
+    }
+
+  }
+}

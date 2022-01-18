@@ -18,7 +18,7 @@ import { LoadingContext } from '@dereekb/util-rxjs';
   </dbx-basic-loading>
   `
 })
-export class AppLoadingComponent extends AbstractSubscriptionDirective {
+export class DbNgxLoadingComponent extends AbstractSubscriptionDirective {
 
   @Input()
   show?: boolean;

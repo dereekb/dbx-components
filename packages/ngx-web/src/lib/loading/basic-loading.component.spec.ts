@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Component, ElementRef, ViewChild } from '@angular/core';
 import { DbNgxLoadingModule } from './loading.module';
 import { By } from '@angular/platform-browser';
-import { AppLoadingProgressComponent } from './loading-progress.component';
+import { DbNgxLoadingProgressComponent } from './loading-progress.component';
 import { ErrorInput } from '@dereekb/util'
 import { DbNgxBasicLoadingComponent } from './basic-loading.component';
 import { DbNgxReadableErrorComponent } from '../error/error.component';
@@ -45,7 +45,7 @@ describe('DbNgxBasicLoadingComponent', () => {
       });
 
       it('should display the loading progress view.', () => {
-        const loadingProgressQueryResult = fixture.debugElement.query(By.directive(AppLoadingProgressComponent));
+        const loadingProgressQueryResult = fixture.debugElement.query(By.directive(DbNgxLoadingProgressComponent));
         expect(loadingProgressQueryResult).not.toBeNull();
       });
 

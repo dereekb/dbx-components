@@ -3,7 +3,7 @@ import { ThemePalette } from '@angular/material/core';
 import { ProvideDbNgxButton, AbstractDbNgxButtonDirective } from '@dereekb/ngx-core';
 import { MatProgressButtonOptions } from 'mat-progress-buttons';
 
-export enum AppButtonDisplayType {
+export enum DbNgxButtonDisplayType {
   RAISED,
   STROKED,
   FLAT
@@ -23,38 +23,38 @@ export enum AppButtonDisplayType {
 export class DbNgxButtonComponent extends AbstractDbNgxButtonDirective {
 
   @Input()
-  type?: AppButtonDisplayType;
+  type?: DbNgxButtonDisplayType;
 
   @Input()
   get raised(): boolean {
-    return this.type === AppButtonDisplayType.RAISED;
+    return this.type === DbNgxButtonDisplayType.RAISED;
   }
 
   set raised(raised: boolean) {
     if (raised) {
-      this.type = AppButtonDisplayType.RAISED;
+      this.type = DbNgxButtonDisplayType.RAISED;
     }
   }
 
   @Input()
   get stroked(): boolean {
-    return this.type === AppButtonDisplayType.STROKED;
+    return this.type === DbNgxButtonDisplayType.STROKED;
   }
 
   set stroked(stroked: boolean) {
     if (stroked) {
-      this.type = AppButtonDisplayType.STROKED;
+      this.type = DbNgxButtonDisplayType.STROKED;
     }
   }
 
   @Input()
   get flat(): boolean {
-    return this.type === AppButtonDisplayType.FLAT;
+    return this.type === DbNgxButtonDisplayType.FLAT;
   }
 
   set flat(flat: boolean) {
     if (flat) {
-      this.type = AppButtonDisplayType.FLAT;
+      this.type = DbNgxButtonDisplayType.FLAT;
     }
   }
 

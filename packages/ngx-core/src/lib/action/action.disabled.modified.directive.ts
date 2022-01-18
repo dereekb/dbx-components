@@ -2,7 +2,7 @@ import { Directive, Host, OnInit, OnDestroy } from '@angular/core';
 import { AbstractSubscriptionDirective } from '../subscription';
 import { ActionContextStoreSourceInstance } from './action.store.source';
 
-export const APP_ACTION_DISABLED_UNTIL_MODIFIED_DIRECTIVE_KEY = 'app_action_is_not_modified';
+export const APP_ACTION_DISABLED_UNTIL_MODIFIED_DIRECTIVE_KEY = 'dbx_action_is_not_modified';
 
 /**
  * Directive that sets the disabled state based on the current isModified state.

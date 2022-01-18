@@ -9,9 +9,9 @@ import { DbNgxReadableErrorComponent } from './error.component';
  * The error from the context is given to the app error when available.
  */
 @Directive({
-  selector: '[appLoadingError]'
+  selector: '[dbxLoadingError]'
 })
-export class AppLoadingErrorDirective extends AbstractSubscriptionDirective {
+export class DbNgxLoadingErrorDirective extends AbstractSubscriptionDirective {
 
   constructor(@Host() public readonly error: DbNgxReadableErrorComponent) {
     super();
@@ -20,7 +20,7 @@ export class AppLoadingErrorDirective extends AbstractSubscriptionDirective {
   /**
    * Sets a LoadingContext that is watched for the loading state.
    */
-  @Input('appLoadingError')
+  @Input('dbxLoadingError')
   set context(context: LoadingContext) {
     let subscription;
 

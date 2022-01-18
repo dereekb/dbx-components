@@ -2,11 +2,11 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Component } from '@angular/core';
 import { DbNgxLoadingModule } from './loading.module';
 import { By } from '@angular/platform-browser';
-import { AppLoadingProgressComponent } from './loading-progress.component';
+import { DbNgxLoadingProgressComponent } from './loading-progress.component';
 import { ValuesLoadingContext } from '@dereekb/util-rxjs';
 import { DbNgxReadableErrorComponent } from '../error';
 
-describe('AppLoadingComponent', () => {
+describe('DbNgxLoadingComponent', () => {
 
   beforeEach(async () => {
     TestBed.configureTestingModule({
@@ -67,7 +67,7 @@ describe('AppLoadingComponent', () => {
       });
 
       it('should display the loading progress view while loading.', () => {
-        const loadingProgressQueryResult = fixture.debugElement.query(By.directive(AppLoadingProgressComponent));
+        const loadingProgressQueryResult = fixture.debugElement.query(By.directive(DbNgxLoadingProgressComponent));
         expect(loadingProgressQueryResult).not.toBeNull();
       });
 

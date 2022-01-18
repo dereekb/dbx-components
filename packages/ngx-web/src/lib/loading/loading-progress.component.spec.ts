@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Component } from '@angular/core';
 import { DbNgxLoadingModule } from './loading.module';
 
-describe('AppLoadingProgress', () => {
+describe('DbNgxLoadingProgress', () => {
 
   beforeEach(async () => {
     TestBed.configureTestingModule({

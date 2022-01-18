@@ -3,7 +3,7 @@ import { MatDialogRef } from '@angular/material/dialog';
 import { AbstractDialogDirective } from '@/app/common/nav/dialog/abstract.dialog.directive';
 import { TransitionService } from '@uirouter/core';
 import { ActionContextStoreSourceInstance } from './action';
-import { AppPromptConfirmConfig, AppPromptConfirmTypes } from '../responsive/prompt/prompt.confirm.component';
+import { DbNgxPromptConfirmConfig, DbNgxPromptConfirmTypes } from '../responsive/prompt/prompt.confirm.component';
 
 export enum DbNgxActionTransitionSafetyDialogResult {
   SUCCESS,
@@ -25,8 +25,8 @@ export enum DbNgxActionTransitionSafetyDialogResult {
 })
 export class DbNgxActionTransitionSafetyDialogComponent extends AbstractDialogDirective implements OnInit {
 
-  config: AppPromptConfirmConfig = {
-    type: AppPromptConfirmTypes.NORMAL,
+  config: DbNgxPromptConfirmConfig = {
+    type: DbNgxPromptConfirmTypes.NORMAL,
     title: 'Unsaved Changes',
     prompt: 'You have unsaved changes on this page.',
     confirmText: 'Stay',

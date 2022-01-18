@@ -1,0 +1,42 @@
+{
+  "projectType": "library",
+  "root": "packages/ngx-formly",
+  "sourceRoot": "packages/ngx-formly/src",
+  "prefix": "dereekb",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/angular:ng-packagr-lite",
+      "outputs": ["dist/packages/ngx-formly"],
+      "options": {
+        "project": "packages/ngx-formly/ng-package.json"
+      },
+      "configurations": {
+        "production": {
+          "tsConfig": "packages/ngx-formly/tsconfig.lib.prod.json"
+        },
+        "development": {
+          "tsConfig": "packages/ngx-formly/tsconfig.lib.json"
+        }
+      },
+      "defaultConfiguration": "production"
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": ["coverage/packages/ngx-formly"],
+      "options": {
+        "jestConfig": "packages/ngx-formly/jest.config.js",
+        "passWithNoTests": true
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "lintFilePatterns": [
+          "packages/ngx-formly/src/**/*.ts",
+          "packages/ngx-formly/src/**/*.html"
+        ]
+      }
+    }
+  },
+  "tags": []
+}

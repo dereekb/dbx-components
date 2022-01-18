@@ -13,7 +13,7 @@ import { Maybe } from '@dereekb/util';
   </dbx-anchor>
 `
 })
-export class AppAnchorIconComponent {
+export class DbNgxAnchorIconComponent {
 
   @Input()
   anchor: Maybe<ClickableIconAnchorLink>;
