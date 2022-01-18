@@ -1,6 +1,6 @@
-import { Component, Input, ChangeDetectorRef, ChangeDetectionStrategy, NgZone } from '@angular/core';
+import { Component, Input, NgZone } from '@angular/core';
 import { ThemePalette } from '@angular/material/core';
-import { MatProgressBar, ProgressBarMode } from '@angular/material/progress-bar';
+import { ProgressBarMode } from '@angular/material/progress-bar';
 import { AbstractSubscriptionDirective } from '@dereekb/ngx-core';
 import { LoadingContext } from '@dereekb/util-rxjs';
 
@@ -21,10 +21,10 @@ import { LoadingContext } from '@dereekb/util-rxjs';
 export class AppLoadingComponent extends AbstractSubscriptionDirective {
 
   @Input()
-  show: boolean;
+  show?: boolean;
 
   @Input()
-  text: string;
+  text?: string;
 
   @Input()
   mode: ProgressBarMode = 'indeterminate';
@@ -36,9 +36,9 @@ export class AppLoadingComponent extends AbstractSubscriptionDirective {
   diameter?: number;
 
   @Input()
-  linear: boolean;
+  linear?: boolean;
 
-  private _loading: boolean;
+  private _loading: boolean = false;
   private _error: any;
 
   constructor(private ngZone: NgZone) {

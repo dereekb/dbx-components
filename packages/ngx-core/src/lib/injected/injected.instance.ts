@@ -1,6 +1,6 @@
 import { Initialized } from './../../../../util/src/lib/lifecycle';
 import { Destroyable } from '../../../../util/src/lib/lifecycle';
-import { Component, ComponentFactoryResolver, ComponentRef, ElementRef, Type, ViewChild, ViewContainerRef, OnInit, Input } from '@angular/core';
+import { ComponentRef, ViewContainerRef } from '@angular/core';
 import { distinctUntilChanged, throttleTime, shareReplay } from 'rxjs/operators';
 import { BehaviorSubject, combineLatest } from 'rxjs';
 import { DbNgxInjectedComponentConfig } from './injected';

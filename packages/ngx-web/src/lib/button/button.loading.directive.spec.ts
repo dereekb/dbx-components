@@ -4,7 +4,8 @@ import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { DbNgxButtonComponent } from './button.component';
 import { DbNgxButtonModule } from './button.module';
 import { filter } from 'rxjs/operators';
-import { SimpleLoadingContext } from '@dereekb/ngx-core';
+import { DbNgxCoreActionModule, DbNgxLoadingButtonDirective } from '@dereekb/ngx-core';
+import { SimpleLoadingContext } from '@dereekb/util-rxjs';
 
 describe('DbNgxLoadingButton', () => {
 

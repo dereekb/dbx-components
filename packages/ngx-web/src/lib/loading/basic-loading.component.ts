@@ -1,8 +1,8 @@
 import { Component, Input, OnChanges, ViewChild, ChangeDetectorRef, AfterViewInit, ElementRef, AfterContentChecked, ChangeDetectionStrategy } from '@angular/core';
 import { ThemePalette } from '@angular/material/core';
 import { ProgressBarMode } from '@angular/material/progress-bar';
-import { ErrorInput } from '../error';
-import { safeDetectChanges, checkNgContentWrapperHasContent } from '../util/view';
+import { ErrorInput } from '@dereekb/util';
+import { safeDetectChanges, checkNgContentWrapperHasContent } from '@dereekb/ngx-core';
 
 /**
  * DbNgxBasicLoadingComponent loading state.
@@ -26,6 +26,8 @@ export enum LoadingComponentState {
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbNgxBasicLoadingComponent implements OnChanges, AfterViewInit {
+
+  // TODO: Update to use rxjs
 
   private _show = true;
 

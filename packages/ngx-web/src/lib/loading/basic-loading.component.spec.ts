@@ -1,9 +1,9 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Component, ElementRef, ViewChild } from '@angular/core';
-import { AppLoadingModule } from './loading.module';
+import { DbNgxLoadingModule } from './loading.module';
 import { By } from '@angular/platform-browser';
 import { AppLoadingProgressComponent } from './loading-progress.component';
-import { ErrorInput } from '../error'
+import { ErrorInput } from '@dereekb/util'
 import { DbNgxBasicLoadingComponent } from './basic-loading.component';
 import { DbNgxReadableErrorComponent } from '../error/error.component';
 
@@ -11,7 +11,7 @@ describe('DbNgxBasicLoadingComponent', () => {
 
   beforeEach(async () => {
     TestBed.configureTestingModule({
-      imports: [AppLoadingModule],
+      imports: [DbNgxLoadingModule],
       declarations: [BasicLoadingWithContentComponent, BasicLoadingWithCustomErrorComponent, BasicLoadingWithCustomLoadingComponent]
     }).compileComponents();
   });
@@ -29,7 +29,7 @@ describe('DbNgxBasicLoadingComponent', () => {
     it('should display the content while not loading.', () => {
       const testContent: HTMLElement = fixture.debugElement.query(By.css('#test-content')).nativeElement;
       expect(testContent).not.toBeNull();
-      expect(testContent.innerText).toBe(TEST_CONTENT);
+      expect(testContent.textContent).toBe(TEST_CONTENT);
     });
 
     describe('and loading', () => {
@@ -105,7 +105,7 @@ describe('DbNgxBasicLoadingComponent', () => {
     it('should display the custom error content on error.', () => {
       const customError: HTMLElement = fixture.debugElement.query(By.css('#test-error')).nativeElement;
       expect(customError).not.toBeNull();
-      expect(customError.innerText).toBe(CUSTOM_ERROR_CONTENT);
+      expect(customError.textContent).toBe(CUSTOM_ERROR_CONTENT);
     });
 
     it('should detect the custom loading content.', () => {
@@ -131,7 +131,7 @@ describe('DbNgxBasicLoadingComponent', () => {
 
       const customLoading: HTMLElement = fixture.debugElement.query(By.css('#custom-loading')).nativeElement;
       expect(customLoading).not.toBeNull();
-      expect(customLoading.innerText).toBe(CUSTOM_LOADING_CONTENT);
+      expect(customLoading.textContent).toBe(CUSTOM_LOADING_CONTENT);
     });
 
     it('should detect the custom loading content.', () => {

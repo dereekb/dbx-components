@@ -12,6 +12,13 @@ describe('ReadableErrorComponent', () => {
     }).compileComponents();
   });
 
+  it('should render', () => {
+
+    // TODO
+    
+    expect(true).toBe(true);
+  })
+
 });
 
 @Component({

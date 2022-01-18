@@ -1,7 +1,7 @@
-import { Component, OnInit, OnDestroy, Input, NgZone } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { ThemePalette } from '@angular/material/core';
+import { ProvideDbNgxButton, AbstractDbNgxButtonDirective } from '@dereekb/ngx-core';
 import { MatProgressButtonOptions } from 'mat-progress-buttons';
-import { DbNgxButtonDirective, ProvideDbNgxButtonDirective } from './button.directive';
 
 export enum AppButtonDisplayType {
   RAISED,
@@ -18,9 +18,9 @@ export enum AppButtonDisplayType {
     <mat-spinner-button class="page-button" (btnClick)="clickButton()" [options]="btnOptions"></mat-spinner-button>
   `,
   styleUrls: ['./button.scss'],
-  providers: ProvideDbNgxButtonDirective(DbNgxButtonComponent)
+  providers: ProvideDbNgxButton(DbNgxButtonComponent)
 })
-export class DbNgxButtonComponent extends DbNgxButtonDirective {
+export class DbNgxButtonComponent extends AbstractDbNgxButtonDirective {
 
   @Input()
   type?: AppButtonDisplayType;

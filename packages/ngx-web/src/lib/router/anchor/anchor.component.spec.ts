@@ -1,22 +1,31 @@
+import { DbNgxWebUIRouterModule } from './../provider/uirouter/uirouter.router.module';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { Component, Input } from '@angular/core';
-import { By } from '@angular/platform-browser';
+import { Component, Input, ViewChild } from '@angular/core';
+import { By, BrowserModule } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { ClickableAnchor } from './anchor';
-import { AppAnchorModule } from './anchor.module';
+import { AnchorType, ClickableAnchor } from '@dereekb/ngx-core';
+import { DbNgxAnchorModule } from './anchor.module';
 import { UIRouterModule } from '@uirouter/angular';
+import { APP_BASE_HREF } from '@angular/common';
+import { DbNgxAnchorComponent } from './anchor.component';
+import { first } from 'rxjs/operators';
 
 describe('AnchorComponent', () => {
 
   beforeEach(async () => {
     TestBed.configureTestingModule({
       imports: [
+        BrowserModule,
         NoopAnimationsModule,
-        AppAnchorModule,
+        DbNgxAnchorModule,
+        DbNgxWebUIRouterModule.forRoot(),
         UIRouterModule.forRoot()
       ],
-      declarations: [TestViewComponent]
+      declarations: [
+        TestViewComponent
+      ],
+      providers: [{ provide: APP_BASE_HREF, useValue: '/' }]
     }).compileComponents();
   });
 
@@ -34,7 +43,7 @@ describe('AnchorComponent', () => {
     it('should show content', () => {
       const anchorElement: HTMLElement = fixture.debugElement.query(By.css(`#${CUSTOM_CONTENT_ID}`)).nativeElement;
       expect(anchorElement).not.toBeNull();
-      expect(anchorElement.innerText).toBe(CUSTOM_CONTENT);
+      expect(anchorElement.textContent).toBe(CUSTOM_CONTENT);
     });
 
   }
@@ -47,7 +56,7 @@ describe('AnchorComponent', () => {
         testComponent.disabled = true;
         fixture.detectChanges();
 
-        const anchorElement: HTMLElement = fixture.debugElement.query(By.css(`.app-anchor-disabled`)).nativeElement;
+        const anchorElement: HTMLElement = fixture.debugElement.query(By.css(`.dbx-anchor-disabled`)).nativeElement;
         expect(anchorElement).not.toBeNull();
       });
 
@@ -72,16 +81,23 @@ describe('AnchorComponent', () => {
     testContentWasShown();
     testDisabledTests();
 
+    it('should have the click type.', (done) => {
+      testComponent.anchorComponent?.type$.pipe(first()).subscribe((type) => {
+        expect(type).toBe(AnchorType.Clickable);
+        done();
+      });
+    });
+
     it('should display the click version.', () => {
-      const anchorElement: HTMLElement = fixture.debugElement.query(By.css(`.app-anchor-click`)).nativeElement;
+      const anchorElement: HTMLElement = fixture.debugElement.query(By.css(`.dbx-anchor-click`)).nativeElement;
       expect(anchorElement).not.toBeNull();
     });
 
     it('should respond to clicks.', (done) => {
-      const anchorElement = fixture.debugElement.query(By.css(`.app-anchor-click`));
+      const anchorElement = fixture.debugElement.query(By.css(`.dbx-anchor-click`));
       anchorElement.triggerEventHandler('click', new MouseEvent('click'));
       fixture.whenStable().then(() => {
-        expect(clicked).toBeTrue();
+        expect(clicked).toBe(true);
         done();
       });
     });
@@ -100,8 +116,15 @@ describe('AnchorComponent', () => {
     testContentWasShown();
     testDisabledTests();
 
+    it('should have the sref type.', (done) => {
+      testComponent.anchorComponent?.type$.pipe(first()).subscribe((type) => {
+        expect(type).toBe(AnchorType.Sref);
+        done();
+      });
+    });
+
     it('should display the sref version.', () => {
-      const anchorElement: HTMLElement = fixture.debugElement.query(By.css(`.app-anchor-sref`)).nativeElement;
+      const anchorElement: HTMLElement = fixture.debugElement.query(By.css(`.dbx-anchor-sref`)).nativeElement;
       expect(anchorElement).not.toBeNull();
     });
 
@@ -119,8 +142,15 @@ describe('AnchorComponent', () => {
     testContentWasShown();
     testDisabledTests();
 
+    it('should have the href type.', (done) => {
+      testComponent.anchorComponent?.type$.pipe(first()).subscribe((type) => {
+        expect(type).toBe(AnchorType.Href);
+        done();
+      });
+    });
+
     it('should display the href version.', () => {
-      const anchorElement: HTMLElement = fixture.debugElement.query(By.css(`.app-anchor-href`)).nativeElement;
+      const anchorElement: HTMLElement = fixture.debugElement.query(By.css(`.dbx-anchor-href`)).nativeElement;
       expect(anchorElement).not.toBeNull();
     });
 
@@ -133,9 +163,9 @@ const CUSTOM_CONTENT = 'Custom Content';
 
 @Component({
   template: `
-    <app-anchor [anchor]="anchor" [disabled]="disabled">
+    <dbx-anchor [anchor]="anchor" [disabled]="disabled">
       <span id="${CUSTOM_CONTENT_ID}">${CUSTOM_CONTENT}</span>
-    </app-anchor>
+    </dbx-anchor>
   `
 })
 class TestViewComponent {
@@ -145,5 +175,8 @@ class TestViewComponent {
 
   @Input()
   public anchor?: ClickableAnchor;
+
+  @ViewChild(DbNgxAnchorComponent, { static: true })
+  anchorComponent?: DbNgxAnchorComponent;
 
 }

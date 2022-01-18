@@ -1,16 +1,16 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Component } from '@angular/core';
-import { AppLoadingModule } from './loading.module';
+import { DbNgxLoadingModule } from './loading.module';
 import { By } from '@angular/platform-browser';
 import { AppLoadingProgressComponent } from './loading-progress.component';
-import { ValuesLoadingContext } from './loading';
-import { AppErrorComponent } from '../error/error.component';
+import { ValuesLoadingContext } from '@dereekb/util-rxjs';
+import { DbNgxReadableErrorComponent } from '../error';
 
 describe('AppLoadingComponent', () => {
 
   beforeEach(async () => {
     TestBed.configureTestingModule({
-      imports: [AppLoadingModule],
+      imports: [DbNgxLoadingModule],
       declarations: [LoadingComponent]
     }).compileComponents();
   });
@@ -31,7 +31,7 @@ describe('AppLoadingComponent', () => {
 
       const testContent: HTMLElement = fixture.debugElement.query(By.css('#test-content')).nativeElement;
       expect(testContent).not.toBeNull();
-      expect(testContent.innerText).toBe(TEST_CONTENT);
+      expect(testContent.textContent).toBe(TEST_CONTENT);
     });
 
     describe('and error', () => {
@@ -46,7 +46,7 @@ describe('AppLoadingComponent', () => {
       });
 
       it('should display the error.', () => {
-        const errorComponentQueryResult = fixture.debugElement.query(By.directive(AppErrorComponent));
+        const errorComponentQueryResult = fixture.debugElement.query(By.directive(DbNgxReadableErrorComponent));
         expect(errorComponentQueryResult).not.toBeNull();
       });
 
@@ -88,9 +88,9 @@ const TEST_CONTENT = 'Content';
 })
 class LoadingComponent {
 
-  public show: boolean;
+  public show?: boolean;
 
-  public text: string;
+  public text?: string;
 
   public context = new ValuesLoadingContext();
 

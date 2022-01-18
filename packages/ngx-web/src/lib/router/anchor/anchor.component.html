@@ -1,24 +1,19 @@
-<ng-container [ngSwitch]="type">
+<ng-container [ngSwitch]="type$ | async">
   <!-- Click -->
-  <a class="app-anchor app-anchor-click {{ anchorBlockClass }}" [ngClass]="anchorClass" (click)="anchor.onClick($event)"
-    *ngSwitchCase="1">
+  <a class="dbx-anchor dbx-anchor-click {{ anchorBlockClass }}" (click)="clickAnchor()" *ngSwitchCase="1">
     <ng-container *ngTemplateOutlet="content"></ng-container>
   </a>
   <!-- Router -->
-  <ng-container *ngSwitchCase="2">
-    <dbx-injected-content></dbx-injected-content>
-    <a class="app-anchor app-anchor-sref {{ anchorBlockClass }}" [ngClass]="anchorClass" [attr.target]="anchor.target"
-      [uiSref]="anchor.ref" [uiParams]="anchor.refParams" [uiOptions]="anchor.refOptions" *ngSwitchCase="2">
-      <ng-container *ngTemplateOutlet="content"></ng-container>
-    </a>
-  </ng-container>
+  <dbx-injected-content [config]="srefAnchorConfig" *ngSwitchCase="2">
+    <ng-container *ngTemplateOutlet="content"></ng-container>
+  </dbx-injected-content>
   <!-- Href -->
-  <a class="app-anchor app-anchor-href {{ anchorBlockClass }}" [ngClass]="anchorClass" [href]="anchor.url"
-    [attr.target]="anchor.target" *ngSwitchCase="3">
+  <a class="dbx-anchor dbx-anchor-href {{ anchorBlockClass }}" [href]="url$ | async" [attr.target]="target$ | async"
+    *ngSwitchCase="3">
     <ng-container *ngTemplateOutlet="content"></ng-container>
   </a>
   <!-- Disabled or None -->
-  <a class="app-anchor app-anchor-disabled {{ anchorBlockClass }}" [ngClass]="anchorClass" *ngSwitchDefault>
+  <a class="dbx-anchor dbx-anchor-disabled {{ anchorBlockClass }}" *ngSwitchDefault>
     <ng-container *ngTemplateOutlet="content"></ng-container>
   </a>
 </ng-container>

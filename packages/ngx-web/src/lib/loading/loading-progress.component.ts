@@ -20,13 +20,13 @@ export const DEFAULT_LOADING_PROGRESS_DIAMETER = 96;
 })
 export class AppLoadingProgressComponent {
 
-  private _diameter;
+  private _diameter: number = DEFAULT_LOADING_PROGRESS_DIAMETER;
 
   @Input()
-  text: string;
+  text?: string;
 
   @Input()
-  linear: boolean;
+  linear?: boolean;
 
   @Input()
   mode: ProgressBarMode | ProgressSpinnerMode = 'indeterminate';
@@ -35,10 +35,10 @@ export class AppLoadingProgressComponent {
   color: ThemePalette = 'primary';
 
   @Input()
-  value: number;
+  value?: number;
 
   @Input()
-  bufferValue: number;
+  bufferValue?: number;
 
   @Input()
   get diameter(): number {

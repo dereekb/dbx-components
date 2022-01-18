@@ -1,14 +1,12 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Component } from '@angular/core';
-import { AppLoadingModule } from './loading.module';
-import { By } from '@angular/platform-browser';
-
+import { DbNgxLoadingModule } from './loading.module';
 
 describe('AppLoadingProgress', () => {
 
   beforeEach(async () => {
     TestBed.configureTestingModule({
-      imports: [AppLoadingModule],
+      imports: [DbNgxLoadingModule],
       declarations: [LoadingProgressSpinnerComponent, LoadingProgressLinearComponent]
     }).compileComponents();
   });
@@ -56,7 +54,7 @@ describe('AppLoadingProgress', () => {
 })
 class LoadingProgressSpinnerComponent {
 
-  text: string;
+  text?: string;
 
 }
 
@@ -67,6 +65,6 @@ class LoadingProgressSpinnerComponent {
 })
 class LoadingProgressLinearComponent {
 
-  text: string;
+  text?: string;
 
 }

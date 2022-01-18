@@ -1,6 +1,7 @@
+import { Maybe } from "@dereekb/util";
 
 export interface ClickableFunction {
-  onClick?: (event?: MouseEvent) => void;
+  onClick?: (event?: Maybe<MouseEvent>) => void;
 }
 
 /**
