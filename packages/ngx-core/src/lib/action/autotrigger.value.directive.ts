@@ -3,8 +3,8 @@ import { Directive, Host, Input, OnInit } from '@angular/core';
 import { ActionContextStoreSourceInstance } from './action.store.source';
 import { BehaviorSubject, Observable, of, EMPTY } from 'rxjs';
 import { OnDestroy } from '@angular/core';
-import { AbstractSubscriptionDirective, SubscriptionObject } from '../subscription';
 import { hasValueOrNotEmpty, Maybe } from '@dereekb/util';
+import { SubscriptionObject } from '@dereekb/util-rxjs';
 
 export type DbNgxActionAutoTriggerIsModifiedFn<T> = (value: T) => Observable<boolean>;
 
@@ -14,10 +14,12 @@ export type DbNgxActionAutoTriggerIsModifiedFn<T> = (value: T) => Observable<boo
 @Directive({
   selector: '[dbxActionAutoTriggerValue]',
 })
-export class DbNgxActionAutoTriggerValueDirective<T, O> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
+export class DbNgxActionAutoTriggerValueDirective<T, O> implements OnInit, OnDestroy {
 
   private _valueObs = new BehaviorSubject<Observable<T>>(EMPTY);
   private _isModifiedFn = new BehaviorSubject<Maybe<DbNgxActionAutoTriggerIsModifiedFn<T>>>(undefined);
+
+  private _modifiedSub = new SubscriptionObject();
   private _triggerSub = new SubscriptionObject();
 
   @Input('dbxActionAutoTriggerValue')
@@ -59,13 +61,11 @@ export class DbNgxActionAutoTriggerValueDirective<T, O> extends AbstractSubscrip
     ))
   );
 
-  constructor(@Host() public readonly source: ActionContextStoreSourceInstance<T, O>) {
-    super();
-  }
+  constructor(@Host() public readonly source: ActionContextStoreSourceInstance<T, O>) { }
 
   ngOnInit(): void {
     // Update Modified value.
-    this.sub = this.modifiedValue$.subscribe(([isModified, value]) => {
+    this._modifiedSub.subscription = this.modifiedValue$.subscribe(([isModified, value]) => {
       this.source.setIsModified(isModified);
     });
 
@@ -77,11 +77,11 @@ export class DbNgxActionAutoTriggerValueDirective<T, O> extends AbstractSubscrip
     });
   }
 
-  override ngOnDestroy(): void {
+  ngOnDestroy(): void {
     this.source.lockSet.onNextUnlock(() => {
-      super.ngOnDestroy();
       this._isModifiedFn.complete();
       this._valueObs.complete();
+      this._modifiedSub.destroy();
       this._triggerSub.destroy();
     });
   }

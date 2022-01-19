@@ -16,6 +16,8 @@ import { DbNgxActionAutoModifyDirective } from './automodify.directive';
 import { DbNgxActionAutoTriggerValueDirective } from './autotrigger.value.directive';
 import { DbNgxActionDisabledUntilModifiedDirective } from './action.disabled.modified.directive';
 import { DbNgxActionContextLoggerDirective } from './action.logger.directive';
+import { DbNgxActionSuccessComponent } from './success.component';
+import { DbNgxActionWorkingComponent } from './working.component';
 
 @NgModule({
   imports: [
@@ -30,14 +32,16 @@ import { DbNgxActionContextLoggerDirective } from './action.logger.directive';
     DbNgxActionMapWorkingDisableDirective,
     DbNgxActionSourceDirective,
     DbNgxActionHandlerDirective,
-    DbNgxActionSuccessDirective,
     DbNgxActionDisabledDirective,
     DbNgxActionDisabledUntilModifiedDirective,
     DbNgxActionAutoTriggerDirective,
     DbNgxActionAutoTriggerValueDirective,
     DbNgxActionAutoModifyDirective,
     DbNgxActionValueDirective,
-    DbNgxActionContextLoggerDirective
+    DbNgxActionContextLoggerDirective,
+    DbNgxActionSuccessComponent,
+    DbNgxActionSuccessDirective,
+    DbNgxActionWorkingComponent
   ],
   exports: [
     DbNgxActionComponent,
@@ -48,14 +52,16 @@ import { DbNgxActionContextLoggerDirective } from './action.logger.directive';
     DbNgxActionMapWorkingDisableDirective,
     DbNgxActionSourceDirective,
     DbNgxActionHandlerDirective,
-    DbNgxActionSuccessDirective,
     DbNgxActionDisabledDirective,
     DbNgxActionDisabledUntilModifiedDirective,
     DbNgxActionAutoTriggerDirective,
     DbNgxActionAutoTriggerValueDirective,
     DbNgxActionAutoModifyDirective,
     DbNgxActionValueDirective,
-    DbNgxActionContextLoggerDirective
+    DbNgxActionContextLoggerDirective,
+    DbNgxActionSuccessComponent,
+    DbNgxActionSuccessDirective,
+    DbNgxActionWorkingComponent
   ]
 })
 export class DbNgxCoreActionModule { }

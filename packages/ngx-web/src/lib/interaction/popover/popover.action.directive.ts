@@ -1,9 +1,9 @@
-import { filterMaybe } from '@dereekb/util-rxjs';
 import { BehaviorSubject, Observable, of } from 'rxjs';
 import { Directive, OnInit, OnDestroy, Input, ElementRef } from '@angular/core';
 import { NgPopoverCloseEvent, NgPopoverRef } from 'ng-overlay-container';
 import { AbstractPopoverRefWithEventsDirective } from './abstract.popover.ref.directive';
-import { ActionContextStoreSourceInstance, SubscriptionObject } from '@dereekb/ngx-core';
+import { ActionContextStoreSourceInstance } from '@dereekb/ngx-core';
+import { filterMaybe, SubscriptionObject } from '@dereekb/util-rxjs';
 import { first, switchMap } from 'rxjs/operators';
 import { Maybe } from '@dereekb/util';
 

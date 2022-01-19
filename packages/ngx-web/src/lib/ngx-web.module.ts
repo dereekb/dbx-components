@@ -22,4 +22,4 @@ export class NgxWebModule { }
     NgxWebModule
   ]
 })
-export class NgxDefaultWebModule { }
+export class DbNgxSharedWebModule { }

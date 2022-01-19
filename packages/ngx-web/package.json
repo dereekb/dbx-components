@@ -2,6 +2,9 @@
   "name": "@dereekb/ngx-web",
   "version": "0.0.1",
   "peerDependencies": {
+    "@dereekb/util": "0.0.1",
+    "@dereekb/util-rxjs": "0.0.1",
+    "@dereekb/ngx-core": "0.0.1",
     "@angular/common": "13.1.2",
     "@angular/core": "13.1.2",
     "@angular/flex-layout": "^13.0.0-beta.36",

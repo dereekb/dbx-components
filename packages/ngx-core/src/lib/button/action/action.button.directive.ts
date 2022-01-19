@@ -1,8 +1,8 @@
 import { Directive, Host, OnInit, OnDestroy, NgZone } from '@angular/core';
-import { SubscriptionObject } from '../../subscription';
 import { DbNgxButton } from '../button';
 import { ActionContextStoreSourceInstance } from '../../action';
 import { DbNgxActionButtonTriggerDirective } from './action.button.trigger.directive';
+import { SubscriptionObject } from '@dereekb/util-rxjs';
 
 /**
  * Context used for linking a button to an ActionContext.

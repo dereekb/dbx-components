@@ -1,7 +1,8 @@
 import { Observable, Subscription, Subject } from 'rxjs';
 import { filter } from 'rxjs/operators';
 import { Injectable, Optional } from '@angular/core';
-import { SubscriptionObject } from '@dereekb/ngx-core';
+import { SubscriptionObject } from '@dereekb/util-rxjs';
+import { PrimativeKey } from '@dereekb/util';
 
 export type AnalyticsEventName = string;
 export type AnalyticsUserId = string;

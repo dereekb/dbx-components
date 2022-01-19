@@ -1,5 +1,5 @@
-import { Component, Inject, Input, NgZone, OnInit } from '@angular/core';
-import { AbstractDialogDirective } from '../../layout';
+import { Component, Input, OnInit } from '@angular/core';
+import { AbstractDialogDirective } from '../../interaction';
 import { DbNgxPromptConfirmConfig } from './prompt.confirm.component';
 
 @Component({
