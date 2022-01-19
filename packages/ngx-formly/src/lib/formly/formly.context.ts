@@ -1,6 +1,6 @@
 import { Provider, Type } from '@angular/core';
 import { BehaviorSubject, Observable, of } from 'rxjs';
-import { DbNgxForm, DbNgxFormEvent, DbNgxFormState, TypedFormComponent } from '../form/form';
+import { DbNgxForm, DbNgxFormEvent, DbNgxFormState, TypedDbNgxForm } from '../form/form';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { mergeMap } from 'rxjs/operators';
 import { LockSet } from '@dereekb/util-rxjs';
@@ -35,7 +35,7 @@ export function ProvideFormlyContext(): Provider[] {
 /**
  * Context used in conjunction with an DbNgxFormlyComponent.
  */
-export class DbNgxFormlyContext<T> implements TypedFormComponent<T> {
+export class DbNgxFormlyContext<T> implements TypedDbNgxForm<T> {
 
   readonly lockSet = new LockSet();
 

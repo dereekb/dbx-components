@@ -11,7 +11,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { FormlyModule } from '@ngx-formly/core';
 import { DbNgxLoadingModule } from '@/app/common/loading/loading.module';
-import { DbNgxDatePipesModule } from '@/app/common/date/pipe/date.pipe.module';
+import { DbNgxDatePipeModule } from '@/app/common/date/pipe/date.pipe.module';
 import { DbNgxSearchableChipFieldComponent } from './searchable.chip.field.component';
 import { DbNgxFormRepeatTypeComponent } from './repeat.field.component';
 import { MatButtonModule } from '@angular/material/button';
@@ -39,7 +39,7 @@ import { DbNgxInjectedComponentModule } from '@/app/common/angular/injected/inje
     ReactiveFormsModule,
     MatAutocompleteModule,
     MatListModule,
-    DbNgxDatePipesModule,
+    DbNgxDatePipeModule,
     DbNgxAnchorModule,
     MatChipsModule,
     MatIconModule,

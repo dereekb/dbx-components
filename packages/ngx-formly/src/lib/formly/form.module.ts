@@ -7,7 +7,7 @@ import { DbNgxFormValueChangesDirective } from './form.changes.directive';
 import { DbNgxFormWrapperModule } from './fields/wrappers/form.wrapper.module';
 import { FormlyMatToggleModule } from '@ngx-formly/material/toggle';
 import { DbNgxFormSourceDirective } from './form.input.directive';
-import { DbNgxFormSpacerComponent } from './form.spacer.component';
+import { DbNgxFormSpacerComponent } from '../layout/form.spacer.component';
 import { FormlyModule } from '@ngx-formly/core';
 import { DbNgxFormLoadingPairSourceDirective } from './loading/form.loading.directive';
 

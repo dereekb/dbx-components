@@ -11,7 +11,7 @@ import { MatInputModule } from '@angular/material/input';
 import { FormlyModule } from '@ngx-formly/core';
 import { DbNgxEmailUserSummaryPickerFieldComponent } from './user.summary.picker.field.component';
 import { DbNgxLoadingModule } from '@/app/common/loading/loading.module';
-import { DbNgxDatePipesModule } from '@/app/common/date/pipe/date.pipe.module';
+import { DbNgxDatePipeModule } from '@/app/common/date/pipe/date.pipe.module';
 import { DbNgxGenericFieldModule } from '../generic/generic.field.module';
 
 @NgModule({
@@ -25,7 +25,7 @@ import { DbNgxGenericFieldModule } from '../generic/generic.field.module';
     MatFormFieldModule,
     ReactiveFormsModule,
     MatAutocompleteModule,
-    DbNgxDatePipesModule,
+    DbNgxDatePipeModule,
     MatChipsModule,
     MatIconModule,
     DbNgxGenericFieldModule,

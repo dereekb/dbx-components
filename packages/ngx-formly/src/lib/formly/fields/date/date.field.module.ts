@@ -1,5 +1,3 @@
-import { DbNgxButtonModule } from '../../../button/button.module';
-import { DbNgxTextModule } from '@/app/common/responsive/text/text.module';
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -10,8 +8,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { FormlyModule } from '@ngx-formly/core';
 import { DbNgxDateTimeFieldComponent } from './datetime.field.component';
-import { DbNgxLoadingModule } from '@/app/common/loading/loading.module';
-import { DbNgxDatePipesModule } from '@/app/common/date/pipe/date.pipe.module';
+import { DbNgxDatePipeModule } from '@dereekb/ngx-core';
+import { DbNgxLoadingModule, DbNgxTextModule, DbNgxButtonModule } from '@dereekb/ngx-web';
 import { DbNgxGenericFieldModule } from '../generic/generic.field.module';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
@@ -36,7 +34,7 @@ import { MatDividerModule } from '@angular/material/divider';
     MatMenuModule,
     ReactiveFormsModule,
     MatAutocompleteModule,
-    DbNgxDatePipesModule,
+    DbNgxDatePipeModule,
     MatChipsModule,
     MatIconModule,
     DbNgxGenericFieldModule,

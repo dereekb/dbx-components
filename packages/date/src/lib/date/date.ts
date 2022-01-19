@@ -38,7 +38,7 @@ export function latestMinute(time = new Date): Date {
 }
 
 export function toISODateString(input: DateOrDateString): ISO8601DateString {
-  const date = toDate(input);
+  const date = toJsDate(input);
 
   if (!isValid(date)) {
     throw new Error('Invalid date passed.');
@@ -51,10 +51,15 @@ export function guessCurrentTimezone(): string {
   return Intl.DateTimeFormat()?.resolvedOptions()?.timeZone;
 }
 
-export function toDate(input: DateOrDateString): Date {
+/**
+ * Converts the input DateOrDateString to a Date value.
+ * 
+ * @param input 
+ * @returns 
+ */
+export function toJsDate(input: DateOrDateString): Date {
   return (isDate(input) ? input as Date : parseISO(input as string));
 }
-
 
 /**
  * Returns the latest date from the input array.
