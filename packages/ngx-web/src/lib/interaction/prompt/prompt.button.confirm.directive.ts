@@ -1,8 +1,6 @@
-import { DbNgxButtonInterceptor } from './../../button/button.directive';
-import { Directive, Host, Input, OnInit } from '@angular/core';
-import { DbNgxButtonDirective } from '../../button/button.directive';
-import { Observable, of } from 'rxjs';
-import { AbstractPromptConfirmDirective } from './prompt.confirm.directive';
+import { DbNgxButtonDirective, DbNgxButtonInterceptor } from '@dereekb/ngx-core';
+import { Directive, Host, OnInit } from '@angular/core';
+import { Observable } from 'rxjs';
 import { DbNgxPromptConfirm } from './prompt.confirm';
 
 /**

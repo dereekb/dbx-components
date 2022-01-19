@@ -12,9 +12,9 @@ import { DbNgxPromptBoxComponent } from './prompt.box.component';
 export class DbNgxPromptComponent extends DbNgxPromptBoxComponent {
 
   @Input()
-  header: string;
+  header?: string;
 
   @Input()
-  prompt: string;
+  prompt?: string;
 
 }

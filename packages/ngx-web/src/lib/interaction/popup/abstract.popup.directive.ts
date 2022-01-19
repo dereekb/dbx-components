@@ -1,4 +1,4 @@
-import { Directive, Inject, NgZone } from '@angular/core';
+import { Directive } from '@angular/core';
 import { DbNgxPopupComponent } from './popup.component';
 
 /**

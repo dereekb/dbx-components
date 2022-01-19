@@ -1,4 +1,4 @@
-import { Component, ComponentFactoryResolver, Inject, Input, NgZone, Type, ViewChild, ViewContainerRef, OnInit, OnDestroy, ComponentRef } from '@angular/core';
+import { Component } from '@angular/core';
 import { map } from 'rxjs/operators';
 import { DbNgxPopupController, DbNgxPopupWindowState } from './popup.component';
 

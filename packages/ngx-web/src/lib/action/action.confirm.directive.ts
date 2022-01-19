@@ -1,8 +1,7 @@
 import { SubscriptionObject } from '../../../../ngx-core/src/lib/subscription';
 import { Directive, Host, Input, OnDestroy, OnInit } from '@angular/core';
-import { MatDialog, MatDialogRef } from '@angular/material/dialog';
-import { DbNgxPromptConfirmConfig } from '../responsive/prompt/prompt.confirm.component';
-import { AbstractPromptConfirmDirective } from '../responsive/prompt/prompt.confirm.directive';
+import { MatDialog } from '@angular/material/dialog';
+import { DbNgxPromptConfirmConfig, AbstractPromptConfirmDirective } from '../interaction';
 import { ActionContextStoreSourceInstance } from '../../../../ngx-core/src/lib/action/action.store.source';
 
 /**
@@ -17,7 +16,7 @@ import { ActionContextStoreSourceInstance } from '../../../../ngx-core/src/lib/a
 export class DbNgxActionConfirmDirective<T, O> extends AbstractPromptConfirmDirective implements OnInit, OnDestroy {
 
   @Input('dbxActionConfirm')
-  config?: DbNgxPromptConfirmConfig;
+  override config?: DbNgxPromptConfirmConfig;
 
   private _sourceSubscription = new SubscriptionObject();
 
@@ -35,7 +34,7 @@ export class DbNgxActionConfirmDirective<T, O> extends AbstractPromptConfirmDire
     this._sourceSubscription.destroy();
   }
 
-  protected _handleDialogResult(result: boolean): boolean {
+  protected override _handleDialogResult(result: boolean): boolean {
     if (result) {
       this.source.readyValue(null);
     } else {

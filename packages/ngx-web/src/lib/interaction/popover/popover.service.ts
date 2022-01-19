@@ -1,5 +1,5 @@
 import { DbNgxPopoverComponent, DbNgxPopoverComponentConfig, FullDbNgxPopoverComponentConfig } from './popover.component';
-import { Inject, Injectable, Injector } from '@angular/core';
+import { Injectable, Injector } from '@angular/core';
 import { NgOverlayContainerConfiguration, NgOverlayContainerService, NgPopoverRef } from 'ng-overlay-container';
 import { Overlay } from '@angular/cdk/overlay';
 

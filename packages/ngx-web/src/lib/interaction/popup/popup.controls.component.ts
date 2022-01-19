@@ -1,5 +1,4 @@
-import { Component, ComponentFactoryResolver, Inject, Input, NgZone, Type, ViewChild, ViewContainerRef, OnInit, OnDestroy, ComponentRef } from '@angular/core';
-import { DbNgxPopupController } from './popup.component';
+import { Component, Input } from '@angular/core';
 
 /**
  * Popup Controls
@@ -18,6 +17,6 @@ import { DbNgxPopupController } from './popup.component';
 export class DbNgxPopupControlsComponent {
 
   @Input()
-  header: string;
+  header?: string;
 
 }

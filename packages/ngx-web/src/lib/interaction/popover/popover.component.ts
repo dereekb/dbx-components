@@ -1,19 +1,21 @@
 import { Component, ComponentFactoryResolver, Inject, Input, NgZone, Type, ViewChild, ViewContainerRef, OnInit, OnDestroy, ComponentRef, ElementRef } from '@angular/core';
 import { HookMatchCriteria, TransitionService } from '@uirouter/core';
 import { NgOverlayContainerConfiguration, NgPopoverRef } from 'ng-overlay-container';
-import { AbstractTransitionWatcherDirective } from '@dereekb/ngx-core';
+import { AbstractTransitionWatcherDirective, DbNgxRouterTransitionService } from '@dereekb/ngx-core';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { PopoverPositionStrategy } from './popover.position.strategy';
 import { filter, first, map, shareReplay, startWith } from 'rxjs/operators';
 import { Overlay } from '@angular/cdk/overlay';
 import { LockSet } from '@dereekb/util-rxjs';
+import { CompactContextStore, CompactMode } from '../../layout';
+import { Maybe } from '@dereekb/util';
 
 export type DbNgxPopoverKey = string;
 
 export abstract class DbNgxPopoverController<I = any, O = any> {
-  readonly key: DbNgxPopoverKey;
-  readonly data?: I;
-  readonly closing$: Observable<boolean>;
+  abstract readonly key: DbNgxPopoverKey;
+  abstract readonly data?: Maybe<I>;
+  abstract readonly closing$: Observable<boolean>;
   /**
    * Signals for the popover to close.
    */
@@ -49,8 +51,14 @@ export interface DbNgxPopoverComponentConfig<I, O, T> {
    * False by default.
    */
   closeOnEscape?: boolean;
+  /**
+   * Component to inject into the popover.
+   */
   componentClass: Type<T>;
-  data?: I;
+  /**
+   * Data available to the popover.
+   */
+  data?: Maybe<I>;
   init?: (component: T, controller: DbNgxPopoverController<I, O>) => void;
 }
 
@@ -63,7 +71,7 @@ export interface FullDbNgxPopoverComponentConfig<I, O, T> extends DbNgxPopoverCo
  */
 @Component({
   template: `
-  <dbx-popover-coordinator (appWindowKeyDownListener)="handleKeydown($event)" [appWindowKeyDownFilter]="triggerCloseKeys">
+  <dbx-popover-coordinator (dbxWindowKeyDownListener)="handleKeydown($event)" [appWindowKeyDownFilter]="triggerCloseKeys">
     <div class="dbx-popover-component">
       <ng-template #content></ng-template>
     </div>
@@ -82,8 +90,8 @@ export class DbNgxPopoverComponent<I = any, O = any, T = any> extends AbstractTr
   readonly lockSet = new LockSet();
 
   @ViewChild('content', { static: true, read: ViewContainerRef })
-  private _content: ViewContainerRef;
-  private _componentRef: ComponentRef<T>;
+  private _content!: ViewContainerRef;
+  private _componentRef?: ComponentRef<T>;
 
   private _startedClosing = false;
   private readonly _closing = new Subject<void>();
@@ -99,9 +107,9 @@ export class DbNgxPopoverComponent<I = any, O = any, T = any> extends AbstractTr
     private popoverRef: NgPopoverRef<FullDbNgxPopoverComponentConfig<I, O, T>, O>,
     private compactContextState: CompactContextStore,
     private resolver: ComponentFactoryResolver,
-    transitionService: TransitionService,
+    dbNgxRouterTransitionService: DbNgxRouterTransitionService,
     ngZone: NgZone) {
-    super(transitionService, ngZone);
+    super(dbNgxRouterTransitionService, ngZone);
 
     // Override Close to properly signal to listeners when a close is occuring.
     const originalClose = this.popoverRef.close;
@@ -131,7 +139,7 @@ export class DbNgxPopoverComponent<I = any, O = any, T = any> extends AbstractTr
     return this.config.key;
   }
 
-  get data(): I {
+  get data(): Maybe<I> {
     return this.config.data;
   }
 
@@ -139,7 +147,7 @@ export class DbNgxPopoverComponent<I = any, O = any, T = any> extends AbstractTr
     return this._triggerCloseKeys;
   }
 
-  ngOnInit(): void {
+  override ngOnInit(): void {
     super.ngOnInit();
     this._content.clear();
     const componentClass = this.config.componentClass;
@@ -155,19 +163,17 @@ export class DbNgxPopoverComponent<I = any, O = any, T = any> extends AbstractTr
     }
   }
 
-  ngOnDestroy(): void {
+  override ngOnDestroy(): void {
     this.lockSet.destroyOnNextUnlock(() => {
       super.ngOnDestroy();
       this._closing.complete();
     });
   }
 
-  protected getHookMatchCriteria(): HookMatchCriteria | false {
-    return (this.config.closeOnTransition === false) ? false : super.getHookMatchCriteria();
-  }
-
   protected updateForSuccessfulTransition(): void {
-    this.close();
+    if (this.config.closeOnTransition !== false) {
+      this.close();
+    }
   }
 
   // Popover Controls

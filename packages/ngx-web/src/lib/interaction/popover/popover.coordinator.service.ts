@@ -1,5 +1,5 @@
 import { DbNgxPopoverKey, DbNgxPopoverController } from './popover.component';
-import { Inject, Injectable, Injector } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 
 /**
@@ -9,10 +9,7 @@ import { BehaviorSubject } from 'rxjs';
 export class DbNgxPopoverCoordinatorService {
 
   private _popovers = new BehaviorSubject<Map<DbNgxPopoverKey, DbNgxPopoverController>>(new Map());
-
   readonly popovers$ = this._popovers.asObservable();
-
-  constructor() { }
 
   get popovers(): Map<DbNgxPopoverKey, DbNgxPopoverController> {
     return this._popovers.value;

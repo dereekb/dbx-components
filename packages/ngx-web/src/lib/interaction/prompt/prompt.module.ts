@@ -4,8 +4,8 @@ import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { DbNgxPromptBoxComponent } from './prompt.box.component';
 import { DbNgxPromptPageComponent } from './prompt.page.component';
-import { DbNgxTextModule } from '../text/text.module';
-import { DbNgxContentModule } from '../container/container.module';
+import { DbNgxTextModule } from '../../text';
+import { DbNgxContentLayoutModule, DbNgxSectionLayoutModule } from '../../layout';
 import { DbNgxPromptConfirmComponent as DbNgxPromptConfirmComponent } from './prompt.confirm.component';
 import { DbNgxPromptConfirmDialogComponent as DbNgxPromptConfirmDialogComponent } from './prompt.confirm.dialog.component';
 import { DbNgxPromptConfirmDirective } from './prompt.confirm.directive';
@@ -20,7 +20,8 @@ import { MatButtonModule } from '@angular/material/button';
     MatButtonModule,
     DbNgxTextModule,
     DbNgxButtonModule,
-    DbNgxContentModule,
+    DbNgxSectionLayoutModule,
+    DbNgxContentLayoutModule
   ],
   declarations: [
     DbNgxPromptComponent,

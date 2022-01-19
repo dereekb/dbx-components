@@ -1,4 +1,4 @@
-import { FlexibleConnectedPositionStrategy, FlexibleConnectedPositionStrategyOrigin, HorizontalConnectionPos, Overlay, VerticalConnectionPos } from '@angular/cdk/overlay';
+import { FlexibleConnectedPositionStrategy, HorizontalConnectionPos, Overlay, VerticalConnectionPos } from '@angular/cdk/overlay';
 import { ElementRef } from '@angular/core';
 import { NgOverlayContainerConfiguration } from 'ng-overlay-container';
 

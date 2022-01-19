@@ -1,5 +1,6 @@
 import { Directive, Host, Input, OnInit } from '@angular/core';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
+import { Maybe } from '@dereekb/util';
 import { Observable, from } from 'rxjs';
 import { DbNgxPromptConfirm, ProvideDbNgxPromptConfirm } from './prompt.confirm';
 import { DbNgxPromptConfirmConfig, DbNgxPromptConfirmTypes } from './prompt.confirm.component';
@@ -19,19 +20,19 @@ export abstract class AbstractPromptConfirmDirective implements DbNgxPromptConfi
 
   config?: DbNgxPromptConfirmConfig;
 
-  private _dialogRef: MatDialogRef<DbNgxPromptConfirmDialogComponent, boolean>;
-  private _dialogPromise: Promise<boolean>;
+  private _dialogRef?: MatDialogRef<DbNgxPromptConfirmDialogComponent, boolean>;
+  private _dialogPromise?: Promise<boolean>;
 
   constructor(protected readonly dialog: MatDialog) { }
 
   showDialog(): Observable<boolean> {
     if (!this._dialogPromise) {
-      this._dialogPromise = new Promise((resolve) => {
+      this._dialogPromise = new Promise<boolean>((resolve) => {
         this._dialogRef = this._makeDialog();
-        this._dialogRef.afterClosed().subscribe((result: boolean) => {
+        this._dialogRef.afterClosed().subscribe((result: Maybe<boolean>) => {
           this._dialogRef = undefined;
           this._dialogPromise = undefined;
-          resolve(this._handleDialogResult(result));
+          resolve(this._handleDialogResult(Boolean(result)));
         });
       });
     }
@@ -62,7 +63,7 @@ export abstract class AbstractPromptConfirmDirective implements DbNgxPromptConfi
 export class DbNgxPromptConfirmDirective<T, O> extends AbstractPromptConfirmDirective {
 
   @Input('dbxPromptConfirm')
-  config?: DbNgxPromptConfirmConfig;
+  override config?: DbNgxPromptConfirmConfig;
 
   constructor(dialog: MatDialog) {
     super(dialog);

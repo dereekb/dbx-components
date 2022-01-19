@@ -1,12 +1,12 @@
 import { Component, ComponentFactoryResolver, Inject, Input, NgZone, Type, ViewChild, ViewContainerRef, OnInit, OnDestroy, ComponentRef } from '@angular/core';
 import { HookMatchCriteria, TransitionService } from '@uirouter/core';
 import { NgPopoverRef } from 'ng-overlay-container';
-import { AbstractTransitionWatcherDirective } from '../../utility/transition.watcher.directive';
-import { CompactContextStore } from '../container/compact.store';
-import { CompactMode } from '../container/compact';
+import { Maybe } from '@dereekb/util';
+import { CompactMode, CompactContextStore } from '../../layout';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { PopupGlobalPositionStrategy, PopupPosition, PopupPositionOffset } from './popup.position.strategy';
 import { filter, first, map, shareReplay, startWith } from 'rxjs/operators';
+import { AbstractTransitionWatcherDirective, DbNgxRouterTransitionService } from '@dereekb/ngx-core';
 
 export const APP_POPUP_NORMAL_WIDTH = '700px';
 export const APP_POPUP_MINIMIZED_WIDTH = '300px';
@@ -21,10 +21,10 @@ export enum DbNgxPopupWindowState {
 }
 
 export abstract class DbNgxPopupController<I = any, O = any> {
-  readonly key: DbNgxPopupKey;
-  readonly data?: I;
-  readonly windowState$: Observable<DbNgxPopupWindowState>;
-  readonly closing$: Observable<boolean>;
+  abstract readonly key: DbNgxPopupKey;
+  abstract readonly data?: Maybe<I>;
+  abstract readonly windowState$: Observable<DbNgxPopupWindowState>;
+  abstract readonly closing$: Observable<boolean>;
   /**
    * Signals for the popup to close.
    */
@@ -82,8 +82,8 @@ export class DbNgxPopupComponent<I = any, O = any, T = any> extends AbstractTran
   private _position: PopupGlobalPositionStrategy;
 
   @ViewChild('content', { static: true, read: ViewContainerRef })
-  private _content: ViewContainerRef;
-  private _componentRef: ComponentRef<T>;
+  private _content!: ViewContainerRef;
+  private _componentRef?: ComponentRef<T>;
 
   private readonly closing = new Subject<void>();
   readonly isClosing$ = this.closing.pipe(first(), map(x => true), startWith(false), shareReplay(1));
@@ -98,9 +98,9 @@ export class DbNgxPopupComponent<I = any, O = any, T = any> extends AbstractTran
     private popoverRef: NgPopoverRef<DbNgxPopupComponentConfig<I, O, T>, O>,
     private compactContextState: CompactContextStore,
     private resolver: ComponentFactoryResolver,
-    transitionService: TransitionService,
+    dbNgxRouterTransitionService: DbNgxRouterTransitionService,
     ngZone: NgZone) {
-    super(transitionService, ngZone);
+    super(dbNgxRouterTransitionService, ngZone);
 
     this.compactContextState.setMode(CompactMode.COMPACT);
     this._position = new PopupGlobalPositionStrategy(this.config.position, this.config.offset);
@@ -115,11 +115,12 @@ export class DbNgxPopupComponent<I = any, O = any, T = any> extends AbstractTran
     return this.config.key;
   }
 
-  get data(): I {
+  get data(): Maybe<I> {
     return this.config.data;
   }
 
-  ngOnInit(): void {
+  override ngOnInit(): void {
+    super.ngOnInit();
     this._content.clear();
     const componentClass = this.config.componentClass;
     const factory = this.resolver.resolveComponentFactory(componentClass);
@@ -130,18 +131,16 @@ export class DbNgxPopupComponent<I = any, O = any, T = any> extends AbstractTran
     }
   }
 
-  ngOnDestroy(): void {
+  override ngOnDestroy(): void {
     super.ngOnDestroy();
     this.closing.complete();
     this._windowState.complete();
   }
 
-  protected getHookMatchCriteria(): HookMatchCriteria | false {
-    return (this.config.closeOnTransition === false) ? false : super.getHookMatchCriteria();
-  }
-
   protected updateForSuccessfulTransition(): void {
-    this.close();
+    if (this.config.closeOnTransition !== false) {
+      this.close();
+    }
   }
 
   // Popup Controls

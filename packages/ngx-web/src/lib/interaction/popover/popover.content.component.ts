@@ -1,8 +1,8 @@
 import { BehaviorSubject } from 'rxjs';
-import { OnInit, OnDestroy } from '@angular/core';
-import { Component, Inject, Input } from '@angular/core';
+import { OnDestroy } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { ResizedEvent } from 'angular-resize-event';
-import { throttle, throttleTime } from 'rxjs/operators';
+import { throttleTime } from 'rxjs/operators';
 
 /**
  * Popover content wrapper component.
@@ -34,7 +34,7 @@ export class DbNgxPopoverContentComponent implements OnDestroy {
   hasHeader = false;
 
   onResized(event: ResizedEvent): void {
-    this._height.next(`${event.newHeight}px`);
+    this._height.next(`${event.newRect.height}px`);
   }
 
   ngOnDestroy(): void {

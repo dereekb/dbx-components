@@ -1,25 +1,24 @@
-import { DbNgxPopoverCoordinatorComponent } from './popover.coordinator.component';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { CommonModule } from '@angular/common';
+import { AngularResizeEventModule } from 'angular-resize-event';
+import { MatDividerModule } from '@angular/material/divider';
 import { ModuleWithProviders, NgModule } from '@angular/core';
-import { DbNgxAnchorModule } from '../../nav/anchor/anchor.module';
 import { NgOverlayContainerModule } from 'ng-overlay-container';
+import { DbNgxPopoverCoordinatorComponent } from './popover.coordinator.component';
 import { DbNgxPopoverService } from './popover.service';
 import { DbNgxPopoverContentComponent } from './popover.content.component';
 import { DbNgxPopoverComponent } from './popover.component';
-import { DbNgxContentModule } from '../container/container.module';
-import { DbNgxActionModule } from '../../action/action.module';
 import { DbNgxPopoverControlsComponent } from './popover.controls.component';
-import { DbNgxButtonModule } from '../../button/button.module';
 import { DbNgxPopoverCoordinatorService } from './popover.coordinator.service';
 import { DbNgxPopoverHeaderComponent } from './popover.header.component';
 import { DbNgxPopoverScrollContentComponent } from './popover.scroll.content.component';
-import { AngularResizedEventModule } from 'angular-resize-event';
-import { MatDividerModule } from '@angular/material/divider';
 import { DbNgxPopoverActionButtonDirective } from './popover.action.button.directive';
 import { DbNgxPopoverActionDirective } from './popover.action.directive';
-import { DbNgxKeypressModule } from '../../keys/keypress.module';
+import { DbNgxKeypressModule } from '../../keypress';
+import { DbNgxAnchorModule } from '../../router';
+import { DbNgxActionModule } from '../../action/action.module';
+import { DbNgxButtonModule } from '../../button/button.module';
 
 @NgModule({
   imports: [
@@ -29,11 +28,10 @@ import { DbNgxKeypressModule } from '../../keys/keypress.module';
     MatDividerModule,
     DbNgxButtonModule,
     DbNgxAnchorModule,
-    DbNgxContentModule,
     DbNgxActionModule,
-    NgOverlayContainerModule,
     DbNgxKeypressModule,
-    AngularResizedEventModule
+    NgOverlayContainerModule,
+    AngularResizeEventModule
   ],
   declarations: [
     DbNgxPopoverActionButtonDirective,

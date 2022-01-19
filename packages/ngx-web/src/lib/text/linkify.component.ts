@@ -1,7 +1,7 @@
 import { Component, Input, OnDestroy } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { distinctUntilChanged, map, shareReplay } from 'rxjs/operators';
-import linkifyStr from 'linkifyjs/string';
+import * as linkifyStr from 'linkifyjs/string';
 import { DomSanitizer } from '@angular/platform-browser';
 
 // TODO: Replace linkifyjs/string with linkify-string.
@@ -16,7 +16,7 @@ import { DomSanitizer } from '@angular/platform-browser';
 })
 export class DbNgxLinkifyComponent implements OnDestroy {
 
-  private _text = new BehaviorSubject<string>(undefined);
+  private _text = new BehaviorSubject<string>('');
 
   readonly linkifiedText$ = this._text.pipe(
     distinctUntilChanged(),

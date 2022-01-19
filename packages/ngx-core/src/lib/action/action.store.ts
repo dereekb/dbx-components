@@ -2,7 +2,7 @@ import { Injectable, OnDestroy } from '@angular/core';
 import { ComponentStore } from '@ngrx/component-store';
 import { Observable } from 'rxjs';
 import { distinctUntilChanged, filter, map, shareReplay, switchMap, startWith } from 'rxjs/operators';
-import { BooleanStringKeyArray, BooleanStringKeyArrayUtilityInstance, ReadableError } from '@dereekb/util';
+import { BooleanStringKeyArray, BooleanStringKeyArrayUtilityInstance, Maybe, ReadableError } from '@dereekb/util';
 import { LockSet, scanCount } from '@dereekb/util-rxjs';
 import { ActionDisabledKey, ActionState, DEFAULT_ACTION_DISABLED_KEY, isIdleActionState } from './action';
 
@@ -49,9 +49,9 @@ export interface ActionContextState<T = any, O = any> {
   /**
    * Value that is set after a triggered action.
    */
-  value?: T;
-  result?: O;
-  error?: ReadableError;
+  value?: Maybe<T>;
+  result?: Maybe<O>;
+  error?: Maybe<ReadableError>;
   /**
    * Current disabled state.
    */
@@ -213,7 +213,7 @@ export class ActionContextStore<T = any, O = any> extends ComponentStore<ActionC
   /**
    * Updates the value, setting value ready. The current result is cleared.
    */
-  readonly readyValue = this.updater((state, value: T) => canReadyValue(state)
+  readonly readyValue = this.updater((state, value: Maybe<T>) => canReadyValue(state)
     ? ({ ...state, actionState: ActionState.ValueReady, value, result: undefined })
     : state);
 
@@ -225,7 +225,7 @@ export class ActionContextStore<T = any, O = any> extends ComponentStore<ActionC
   /**
    * Triggers rejection of the action. The value is cleared.
    */
-  readonly reject = this.updater((state, error?: ReadableError) => ({ isModified: state.isModified, actionState: ActionState.Rejected, error, errorCount: (state.errorCount ?? 0) + 1 }));
+  readonly reject = this.updater((state, error?: Maybe<ReadableError>) => ({ isModified: state.isModified, actionState: ActionState.Rejected, error, errorCount: (state.errorCount ?? 0) + 1 }));
 
   /**
    * Updates the state to success, and optionally sets a result.

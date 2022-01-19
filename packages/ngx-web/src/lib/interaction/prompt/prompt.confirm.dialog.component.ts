@@ -1,7 +1,5 @@
 import { Component, Inject, Input, NgZone, OnInit } from '@angular/core';
-import { MatDialogRef } from '@angular/material/dialog';
-import { AbstractDialogDirective } from '@/app/common/nav/dialog/abstract.dialog.directive';
-import { TransitionService } from '@uirouter/core';
+import { AbstractDialogDirective } from '../../layout';
 import { DbNgxPromptConfirmConfig } from './prompt.confirm.component';
 
 @Component({
@@ -12,18 +10,7 @@ import { DbNgxPromptConfirmConfig } from './prompt.confirm.component';
 export class DbNgxPromptConfirmDialogComponent extends AbstractDialogDirective implements OnInit {
 
   @Input()
-  config: DbNgxPromptConfirmConfig;
-
-  constructor(
-    @Inject(MatDialogRef) dialogRef: MatDialogRef<DbNgxPromptConfirmDialogComponent>,
-    transitionService: TransitionService,
-    ngZone: NgZone) {
-    super(dialogRef, transitionService, ngZone);
-  }
-
-  ngOnInit(): void {
-    super.ngOnInit();
-  }
+  config?: DbNgxPromptConfirmConfig;
 
   confirm(): void {
     this.dialogRef.close(true);

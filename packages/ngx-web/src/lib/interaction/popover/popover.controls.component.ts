@@ -1,4 +1,4 @@
-import { Component, ComponentFactoryResolver, Inject, Input, NgZone, Type, ViewChild, ViewContainerRef, OnInit, OnDestroy, ComponentRef, Optional } from '@angular/core';
+import { Component, Optional } from '@angular/core';
 import { DbNgxPopoverContentComponent } from './popover.content.component';
 
 /**

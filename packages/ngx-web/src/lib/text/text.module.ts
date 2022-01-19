@@ -3,7 +3,7 @@ import { NgModule } from '@angular/core';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { DbNgxAnchorModule } from '../../nav/anchor/anchor.module';
+import { DbNgxAnchorModule } from '../router';
 import { DbNgxHintComponent } from './hint.component';
 import { DbNgxLabelBarComponent } from './label.bar.component';
 import { DbNgxLabelComponent } from './label.component';

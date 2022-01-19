@@ -146,7 +146,7 @@ export class ActionContextStoreSourceInstance<T = any, O = any> implements OnDes
     this.useStore((x) => x.trigger());
   }
 
-  public readyValue(value: T | Observable<T>): void {
+  public readyValue(value: Maybe<T | Observable<T>>): void {
     this.useStore((x) => x.readyValue(value));
   }
 
@@ -154,7 +154,7 @@ export class ActionContextStoreSourceInstance<T = any, O = any> implements OnDes
     this.useStore((x) => x.startWorking());
   }
 
-  public reject(error: ReadableError | Observable<ReadableError>): void {
+  public reject(error: Maybe<ReadableError | Observable<ReadableError>>): void {
     this.useStore((x) => x.reject(error));
   }
 

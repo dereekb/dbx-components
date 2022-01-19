@@ -21,10 +21,10 @@ import { DbNgxPopoverContentComponent } from './popover.content.component';
 export class DbNgxPopoverHeaderComponent {
 
   @Input()
-  header: string;
+  header?: string;
 
   @Input()
-  icon: string;
+  icon?: string;
 
   constructor(@Optional() appPopoverContentComponent: DbNgxPopoverContentComponent) {
     if (appPopoverContentComponent) {

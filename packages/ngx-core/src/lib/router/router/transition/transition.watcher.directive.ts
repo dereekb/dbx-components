@@ -16,7 +16,7 @@ export abstract class AbstractTransitionWatcherDirective implements OnInit, OnDe
 
   ngOnInit(): void {
     this._transitionSub.subscription = this.dbNgxRouterTransitionService.transitions$.pipe(
-      filter(x => x.type === DbNgxRouterTransitionEventType.START)
+      filter(x => x.type === DbNgxRouterTransitionEventType.SUCCESS)
     ).subscribe(() => {
       this.updateForSuccessfulTransition();
     });

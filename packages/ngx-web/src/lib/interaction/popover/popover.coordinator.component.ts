@@ -1,5 +1,5 @@
-import { DbNgxPopoverKey, DbNgxPopoverController } from './popover.component';
-import { Component, Inject, Injectable, Injector, OnInit, OnDestroy } from '@angular/core';
+import { DbNgxPopoverController } from './popover.component';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { DbNgxPopoverCoordinatorService } from './popover.coordinator.service';
 import { delay, map, shareReplay } from 'rxjs/operators';
 

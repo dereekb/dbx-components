@@ -1,5 +1,5 @@
 import { Component, Input, OnInit } from '@angular/core';
-import { ClickableAnchor } from '../../nav/anchor/anchor';
+import { ClickableAnchor } from '@dereekb/ngx-core';
 
 @Component({
   selector: 'dbx-link',
@@ -9,7 +9,7 @@ import { ClickableAnchor } from '../../nav/anchor/anchor';
 export class DbNgxLinkComponent {
 
   @Input()
-  anchor: ClickableAnchor;
+  anchor?: ClickableAnchor;
 
   @Input()
   set ref(ref: string) {

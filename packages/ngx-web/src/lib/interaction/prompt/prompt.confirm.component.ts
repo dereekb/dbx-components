@@ -30,7 +30,7 @@ export interface DbNgxPromptConfirmConfig {
 export class DbNgxPromptConfirmComponent {
 
   @Input()
-  config: DbNgxPromptConfirmConfig;
+  config?: DbNgxPromptConfirmConfig;
 
   @Output()
   confirm = new EventEmitter<void>();

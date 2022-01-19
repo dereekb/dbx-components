@@ -1,4 +1,4 @@
-import { Component, Inject, Input } from '@angular/core';
+import { Component } from '@angular/core';
 import { map } from 'rxjs/operators';
 import { DbNgxPopupController, DbNgxPopupWindowState } from './popup.component';
 
