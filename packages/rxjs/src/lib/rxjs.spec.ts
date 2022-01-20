@@ -1,4 +1,4 @@
-import { skipFirstMaybe } from '@dereekb/util-rxjs';
+import { skipFirstMaybe } from '@dereekb/rxjs';
 
 import { Maybe } from '@dereekb/util';
 import { BehaviorSubject, Subject } from 'rxjs';

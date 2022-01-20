@@ -5,7 +5,7 @@ import { distinctUntilChanged, map, shareReplay } from 'rxjs/operators';
 import { BehaviorSubject, combineLatest } from 'rxjs';
 import { DbNgxInjectedComponentConfig, DbNgxInjectedTemplateConfig } from './injected';
 import { Maybe } from '@dereekb/util';
-import { SubscriptionObject, filterMaybe, skipFirstMaybe } from '@dereekb/util-rxjs';
+import { SubscriptionObject, filterMaybe, skipFirstMaybe } from '@dereekb/rxjs';
 
 /**
  * Instance used by components to inject content based on the configuration into the view.

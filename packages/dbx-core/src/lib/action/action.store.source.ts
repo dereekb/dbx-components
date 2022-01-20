@@ -2,7 +2,7 @@ import { first, switchMap } from 'rxjs/operators';
 import { Observable, Subscription } from 'rxjs';
 import { ActionContextState, ActionContextStore } from './action.store';
 import { Directive, forwardRef, Provider, Type } from '@angular/core';
-import { LockSet, filterMaybe } from '@dereekb/util-rxjs';
+import { LockSet, filterMaybe } from '@dereekb/rxjs';
 import { OnDestroy } from '@angular/core';
 import { Maybe, ReadableError } from '@dereekb/util';
 import { ActionDisabledKey, ActionState } from './action';

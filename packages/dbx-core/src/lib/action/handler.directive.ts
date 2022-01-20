@@ -4,7 +4,7 @@ import { AbstractSubscriptionDirective } from '../subscription';
 import { ActionContextStoreSourceInstance } from './action.store.source';
 import { HandleActionFunction, WorkHandlerContextSourceDelegate, handleWorkValueReadyFn } from './action.handler';
 import { Maybe } from '@dereekb/util';
-import { filterMaybe } from '@dereekb/util-rxjs';
+import { filterMaybe } from '@dereekb/rxjs';
 import { BehaviorSubject } from 'rxjs';
 
 

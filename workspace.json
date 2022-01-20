@@ -8,7 +8,7 @@
     "dbx-web": "packages/dbx-web",
     "model": "packages/model",
     "ngx-analytics": "packages/ngx-analytics",
-    "util": "packages/util",
-    "util-rxjs": "packages/util-rxjs"
+    "rxjs": "packages/rxjs",
+    "util": "packages/util"
   }
 }

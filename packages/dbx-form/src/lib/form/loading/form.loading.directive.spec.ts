@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Component, ViewChild, Input, Directive, ContentChild, AfterViewInit, OnInit } from '@angular/core';
 import { Observable, of } from 'rxjs';
-import { LoadingState } from '@dereekb/util-rxjs';
+import { LoadingState } from '@dereekb/rxjs';
 import { DbNgxFormLoadingPairSourceDirective } from './form.loading.directive';
 import { DbNgxTestDbNgxFormComponent, FORM_TEST_PROVIDERS } from '../formly.component.spec';
 

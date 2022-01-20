@@ -1,6 +1,6 @@
 import { Directive, Host, Input, OnInit } from '@angular/core';
 import { getValueFromObjectOrGetter, Maybe, ObjectOrGetter } from '@dereekb/util';
-import { filterMaybe } from '@dereekb/util-rxjs';
+import { filterMaybe } from '@dereekb/rxjs';
 import { BehaviorSubject } from 'rxjs';
 import { shareReplay, switchMap, tap } from 'rxjs/operators';
 import { AbstractSubscriptionDirective } from '../subscription';

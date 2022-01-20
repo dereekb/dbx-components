@@ -1,5 +1,5 @@
 import { map, tap, shareReplay, switchMap } from 'rxjs/operators';
-import { filterMaybe } from '@dereekb/util-rxjs';
+import { filterMaybe } from '@dereekb/rxjs';
 import { BehaviorSubject } from 'rxjs';
 import { Directive, Host, Input, OnInit, OnDestroy } from '@angular/core';
 import { Maybe } from '@dereekb/util';

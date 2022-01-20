@@ -3,7 +3,7 @@ import { Component } from '@angular/core';
 import { DbNgxLoadingModule } from './loading.module';
 import { By } from '@angular/platform-browser';
 import { DbNgxLoadingProgressComponent } from './loading-progress.component';
-import { ValuesLoadingContext } from '@dereekb/util-rxjs';
+import { ValuesLoadingContext } from '@dereekb/rxjs';
 import { DbNgxReadableErrorComponent } from '../error';
 
 describe('DbNgxLoadingComponent', () => {

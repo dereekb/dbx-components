@@ -2,7 +2,7 @@ import { Observable, combineLatest } from 'rxjs';
 import { Directive, Host, Input } from '@angular/core';
 import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
 import { DbNgxForm, DbNgxFormState } from '../../form/form';
-import { LoadingState } from '@dereekb/util-rxjs';
+import { LoadingState } from '@dereekb/rxjs';
 import { distinctUntilChanged, filter, first, map } from 'rxjs/operators';
 
 /**

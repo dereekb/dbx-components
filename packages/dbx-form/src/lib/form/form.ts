@@ -1,6 +1,6 @@
 import { Provider, Type } from '@angular/core';
 import { Observable } from 'rxjs';
-import { LockSet } from '@dereekb/util-rxjs';
+import { LockSet } from '@dereekb/rxjs';
 
 /**
  * Current state of a DbNgxForm

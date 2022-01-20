@@ -1,4 +1,4 @@
-import { filterMaybe } from '@dereekb/util-rxjs';
+import { filterMaybe } from '@dereekb/rxjs';
 import { Directive, OnInit, OnDestroy, Input } from '@angular/core';
 import { Maybe } from '@dereekb/util';
 import { AbstractSubscriptionDirective } from '../../subscription';

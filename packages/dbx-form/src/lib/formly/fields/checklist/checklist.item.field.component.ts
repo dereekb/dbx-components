@@ -1,4 +1,4 @@
-import { filterMaybe } from '@dereekb/util-rxjs';
+import { filterMaybe } from '@dereekb/rxjs';
 import { shareReplay, distinctUntilChanged, switchMap, map } from 'rxjs/operators';
 import { BehaviorSubject } from 'rxjs';
 import {

@@ -1,4 +1,4 @@
-import { filterMaybe, SubscriptionObject, beginLoading, LoadingState, LoadingStateLoadingContext } from '@dereekb/util-rxjs';
+import { filterMaybe, SubscriptionObject, beginLoading, LoadingState, LoadingStateLoadingContext } from '@dereekb/rxjs';
 import { Directive, ElementRef, OnDestroy, OnInit, Type, ViewChild } from '@angular/core';
 import { AbstractControl, FormControl, ValidatorFn } from '@angular/forms';
 import { FieldType, FormlyFieldConfig } from '@ngx-formly/core';

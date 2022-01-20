@@ -1,5 +1,5 @@
 import { Directive, Host, Input } from '@angular/core';
-import { LoadingContext } from '@dereekb/util-rxjs';
+import { LoadingContext } from '@dereekb/rxjs';
 import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
 import { DbNgxReadableErrorComponent } from './error.component';
 

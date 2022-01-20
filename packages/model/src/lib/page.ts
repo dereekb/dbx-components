@@ -1,11 +1,4 @@
-import { IterateFn, IteratePageFn, iterate } from '@dereekb/util';
-
-/**
- * Represents a page number.
- */
-export interface Page {
-  page?: number;
-}
+import { IterateFn, IteratePageFn, iterate, Page } from '@dereekb/util';
 
 /**
  * Represents a page number with a filter.
@@ -75,56 +68,3 @@ export class FilteredPageUtility {
   }
 
 }
-
-// MARK: PageCalculator
-export interface PageCalculatorConfig {
-  pageSize: number;
-  limitKey?: string;
-  skipKey?: string;
-}
-
-/**
- * Page calcuaktion context for calculating the amount to skip/etc.
- */
-export class PageCalculator {
-
-  public readonly pageSize: number;
-  public readonly limitKey: string;
-  public readonly skipKey: string;
-
-  constructor(config: PageCalculatorConfig) {
-    this.pageSize = config.pageSize;
-
-    if (!this.pageSize) {
-      throw new Error('Page size is required.');
-    }
-
-    this.limitKey = config.limitKey ?? 'limit';
-    this.skipKey = config.skipKey ?? 'skip';
-  }
-
-  get limit() {
-    return this.pageSize;
-  }
-
-  calcWithPage(page?: Page) {
-    return this.calc(page?.page);
-  }
-
-  calc(page: number = 0) {
-    return {
-      [this.limitKey]: this.pageSize,
-      [this.skipKey]: this.calcSkip(page)
-    };
-  }
-
-  calcSkipWithPage(page?: Page) {
-    return this.calcSkip(page?.page);
-  }
-
-  calcSkip(page: number = 0) {
-    return (page ?? 0) * this.pageSize;
-  }
-
-}
-

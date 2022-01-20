@@ -3,7 +3,7 @@ import { BehaviorSubject, Observable, of } from 'rxjs';
 import { DbNgxForm, DbNgxFormEvent, DbNgxFormState, TypedDbNgxForm } from '../form/form';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { mergeMap } from 'rxjs/operators';
-import { LockSet } from '@dereekb/util-rxjs';
+import { LockSet } from '@dereekb/rxjs';
 import { Maybe } from '@dereekb/util';
 
 /**

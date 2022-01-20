@@ -6,7 +6,7 @@ import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { PopoverPositionStrategy } from './popover.position.strategy';
 import { filter, first, map, shareReplay, startWith } from 'rxjs/operators';
 import { Overlay } from '@angular/cdk/overlay';
-import { LockSet } from '@dereekb/util-rxjs';
+import { LockSet } from '@dereekb/rxjs';
 import { CompactContextStore, CompactMode } from '../../layout';
 import { Maybe } from '@dereekb/util';
 

@@ -1,9 +1,0 @@
-{
-  "name": "@dereekb/util-rxjs",
-  "version": "0.0.1",
-  "type": "commonjs",
-  "peerDependencies": {
-    "rxjs": "6.6.7",
-    "ms": "^3.0.0-canary.1"
-  }
-}

@@ -4,7 +4,7 @@ import {
 import { FieldType, FormlyFieldConfig } from '@ngx-formly/core';
 import { Editor } from 'ngx-editor';
 import { debounceTime, filter } from 'rxjs/operators';
-import { SubscriptionObject } from '@dereekb/util-rxjs';
+import { SubscriptionObject } from '@dereekb/rxjs';
 import { Maybe } from '@dereekb/util';
 
 export interface TextEditorComponentFieldConfig extends FormlyFieldConfig {

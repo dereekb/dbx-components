@@ -1,5 +1,5 @@
 import { DbNgxInjectedComponentConfig } from "@dereekb/dbx-core";
-import { beginLoading, LoadingStateLoadingContext, LoadingState, successResult, mapLoadingStateResults, filterMaybe } from "@dereekb/util-rxjs";
+import { beginLoading, LoadingStateLoadingContext, LoadingState, successResult, mapLoadingStateResults, filterMaybe } from "@dereekb/rxjs";
 import { convertMaybeToArray, findUnique, groupValues, makeValuesGroupMap, Maybe } from "@dereekb/util";
 import { Component, Directive, ElementRef, OnDestroy, OnInit, Type, ViewChild } from "@angular/core";
 import { FormControl, AbstractControl } from "@angular/forms";

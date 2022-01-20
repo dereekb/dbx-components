@@ -2,7 +2,7 @@ import { Component, Input, NgZone } from '@angular/core';
 import { ThemePalette } from '@angular/material/core';
 import { ProgressBarMode } from '@angular/material/progress-bar';
 import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
-import { LoadingContext } from '@dereekb/util-rxjs';
+import { LoadingContext } from '@dereekb/rxjs';
 
 /**
  * Loading View component that provides content sections for loading, error, and an error action.

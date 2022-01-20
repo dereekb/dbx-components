@@ -1,5 +1,5 @@
 import { ISO8601DateString } from '@dereekb/util';
-import { DateRangeType } from './date.range';
+import { DateRangeType } from './date';
 
 export interface FindDateParamRequest {
   before?: ISO8601DateString;

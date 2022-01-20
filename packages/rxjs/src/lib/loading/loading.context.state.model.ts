@@ -1,5 +1,5 @@
 import { hasNonNullValue, Maybe } from '@dereekb/util';
-import { loadingStateIsLoading } from '@dereekb/util-rxjs';
+import { loadingStateIsLoading } from '@dereekb/rxjs';
 import { Observable } from 'rxjs';
 import { map, shareReplay, filter } from 'rxjs/operators';
 import { LoadingContextEvent } from './loading.context';

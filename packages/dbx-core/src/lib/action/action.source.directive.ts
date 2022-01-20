@@ -1,4 +1,4 @@
-import { filterMaybe } from '@dereekb/util-rxjs';
+import { filterMaybe } from '@dereekb/rxjs';
 import { Directive, Input, OnDestroy } from '@angular/core';
 import { Maybe } from '@dereekb/util';
 import { BehaviorSubject } from 'rxjs';

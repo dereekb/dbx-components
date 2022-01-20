@@ -1,5 +1,5 @@
 import { Maybe, Destroyable } from '@dereekb/util';
-import { filterMaybe } from '@dereekb/util-rxjs';
+import { filterMaybe } from '@dereekb/rxjs';
 import { BehaviorSubject, isObservable, Observable, of } from 'rxjs';
 import { mergeMap, map, startWith, switchMap, shareReplay, distinctUntilChanged, debounceTime } from 'rxjs/operators';
 import { LoadingContext, LoadingContextEvent } from './loading.context';

@@ -3,7 +3,7 @@ import { ActionContextStoreSource } from './action.store.source';
 import { HandleActionFunction, handleWorkValueReadyFn, WorkHandlerContextSourceDelegate } from './action.handler';
 import { ActionContextBaseSource } from './action.holder';
 import { Destroyable } from '@dereekb/util';
-import { SubscriptionObject } from '@dereekb/util-rxjs';
+import { SubscriptionObject } from '@dereekb/rxjs';
 
 export interface ActionContextMachineConfig<T = any, O = any> {
   /**

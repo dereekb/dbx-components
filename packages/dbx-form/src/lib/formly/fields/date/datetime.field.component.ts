@@ -10,7 +10,7 @@ import { BehaviorSubject, Observable, of, combineLatest, Subject, merge, interva
 import { Maybe, ReadableTimeString } from '@dereekb/util';
 import { MatDatepickerInputEvent } from '@angular/material/datepicker';
 import { addMinutes, isSameDay, isSameMinute, startOfDay } from 'date-fns';
-import { filterMaybe, SubscriptionObject } from '@dereekb/util-rxjs';
+import { filterMaybe, SubscriptionObject } from '@dereekb/rxjs';
 
 export enum DateTimeFieldTimeMode {
   /**

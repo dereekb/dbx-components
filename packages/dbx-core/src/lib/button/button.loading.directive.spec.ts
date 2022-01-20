@@ -3,7 +3,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Component, ViewChild } from '@angular/core';
 import { filter } from 'rxjs/operators';
 import { DbNgxButtonDirective, DbNgxLoadingButtonDirective } from '.';
-import { SimpleLoadingContext } from '@dereekb/util-rxjs';
+import { SimpleLoadingContext } from '@dereekb/rxjs';
 
 describe('DbNgxLoadingButton', () => {
 

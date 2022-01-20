@@ -1,4 +1,4 @@
-import { filterMaybe } from '@dereekb/util-rxjs';
+import { filterMaybe } from '@dereekb/rxjs';
 import { DbNgxRouterService, DbNgxRouterTransitionService } from '../../service';
 import { SegueRef } from "../../../segue";
 import { ActivatedRoute, NavigationBehaviorOptions, NavigationEnd, NavigationExtras, NavigationStart, Router } from '@angular/router';

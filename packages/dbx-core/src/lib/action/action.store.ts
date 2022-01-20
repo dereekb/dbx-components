@@ -3,7 +3,7 @@ import { ComponentStore } from '@ngrx/component-store';
 import { Observable } from 'rxjs';
 import { distinctUntilChanged, filter, map, shareReplay, switchMap, startWith } from 'rxjs/operators';
 import { BooleanStringKeyArray, BooleanStringKeyArrayUtilityInstance, Maybe, ReadableError } from '@dereekb/util';
-import { filterMaybe, LockSet, scanCount } from '@dereekb/util-rxjs';
+import { filterMaybe, LockSet, scanCount } from '@dereekb/rxjs';
 import { ActionDisabledKey, ActionState, DEFAULT_ACTION_DISABLED_KEY, isIdleActionState } from './action';
 
 export function isActionContextEnabled(state: ActionContextState): boolean {

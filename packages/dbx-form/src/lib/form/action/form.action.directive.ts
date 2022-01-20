@@ -4,7 +4,7 @@ import { Observable, of, combineLatest } from 'rxjs';
 import { catchError, filter, first, map, switchMap } from 'rxjs/operators';
 import { ActionContextStoreSourceInstance } from '@dereekb/dbx-core';
 import { ReadableError } from '@dereekb/util';
-import { SubscriptionObject, LockSet } from '@dereekb/util-rxjs';
+import { SubscriptionObject, LockSet } from '@dereekb/rxjs';
 import { DbNgxForm, DbNgxFormState } from '../../form/form';
 
 export interface DbNgxActionFormTriggerResult {

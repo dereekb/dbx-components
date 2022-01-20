@@ -1,5 +1,5 @@
 import { Directive, Host, Input, NgZone } from '@angular/core';
-import { LoadingContext } from '@dereekb/util-rxjs';
+import { LoadingContext } from '@dereekb/rxjs';
 import { AbstractSubscriptionDirective } from '../subscription';
 import { DbNgxButton } from './button';
 

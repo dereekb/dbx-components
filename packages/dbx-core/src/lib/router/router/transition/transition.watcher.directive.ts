@@ -2,7 +2,7 @@ import { Directive, NgZone, OnDestroy, OnInit } from '@angular/core';
 import { filter } from 'rxjs/operators';
 import { DbNgxRouterTransitionEventType } from './transition';
 import { DbNgxRouterTransitionService } from '../service/router.transition.service';
-import { SubscriptionObject } from '@dereekb/util-rxjs';
+import { SubscriptionObject } from '@dereekb/rxjs';
 
 /**
  * Abstract directive that listens to onSuccess transition events and runs a function.

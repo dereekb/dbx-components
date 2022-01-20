@@ -1,4 +1,4 @@
-import { SubscriptionObject } from '@dereekb/util-rxjs';
+import { SubscriptionObject } from '@dereekb/rxjs';
 import { Observable, BehaviorSubject } from 'rxjs';
 import { FormlyFieldConfig } from '@ngx-formly/core/lib/core';
 import { OnInit, OnDestroy, Directive, Input } from '@angular/core';

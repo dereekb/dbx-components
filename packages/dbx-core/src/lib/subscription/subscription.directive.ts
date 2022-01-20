@@ -1,6 +1,6 @@
 import { OnDestroy, Directive, Inject } from '@angular/core';
 import { Subscription } from 'rxjs';
-import { SubscriptionObject, LockSet } from '@dereekb/util-rxjs';
+import { SubscriptionObject, LockSet } from '@dereekb/rxjs';
 
 /**
  * Abstract component that contains a SubscriptionObject and will clean it up automatically.

@@ -1,4 +1,4 @@
-import { skipFirstMaybe } from '@dereekb/util-rxjs';
+import { skipFirstMaybe } from '@dereekb/rxjs';
 import { Input, Component, TemplateRef, ViewChild } from '@angular/core';
 import { AbstractDbNgxAnchorDirective, DbNgxInjectedComponentConfig } from '@dereekb/dbx-core';
 import { Maybe } from '@dereekb/util';

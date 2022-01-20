@@ -4,7 +4,7 @@ import { ActionContextStoreSourceInstance } from './action.store.source';
 import { BehaviorSubject, Observable, of, EMPTY } from 'rxjs';
 import { OnDestroy } from '@angular/core';
 import { hasValueOrNotEmpty, Maybe } from '@dereekb/util';
-import { SubscriptionObject } from '@dereekb/util-rxjs';
+import { SubscriptionObject } from '@dereekb/rxjs';
 
 export type DbNgxActionAutoTriggerIsModifiedFn<T> = (value: T) => Observable<boolean>;
 

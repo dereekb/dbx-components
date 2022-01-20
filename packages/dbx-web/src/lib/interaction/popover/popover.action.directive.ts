@@ -3,7 +3,7 @@ import { Directive, OnInit, OnDestroy, Input, ElementRef } from '@angular/core';
 import { NgPopoverCloseEvent, NgPopoverRef } from 'ng-overlay-container';
 import { AbstractPopoverRefWithEventsDirective } from './abstract.popover.ref.directive';
 import { ActionContextStoreSourceInstance } from '@dereekb/dbx-core';
-import { filterMaybe, SubscriptionObject } from '@dereekb/util-rxjs';
+import { filterMaybe, SubscriptionObject } from '@dereekb/rxjs';
 import { first, switchMap } from 'rxjs/operators';
 import { Maybe } from '@dereekb/util';
 

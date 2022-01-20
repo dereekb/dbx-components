@@ -1,4 +1,4 @@
-import { filterMaybe, skipFirstMaybe } from '@dereekb/util-rxjs';
+import { filterMaybe, skipFirstMaybe } from '@dereekb/rxjs';
 import { map, shareReplay, distinctUntilChanged } from 'rxjs/operators';
 import { BehaviorSubject, combineLatest, Observable } from 'rxjs';
 import { Directive, Input } from '@angular/core';
