@@ -1,9 +1,8 @@
 import { MatRippleModule } from '@angular/material/core';
-import { DbNgxAnchorModule } from './../../../nav/anchor/anchor.module';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { DbNgxDefaultChecklistItemFieldDisplayComponent } from './checklist.item.field.content.default.component';
 import { MatButtonModule } from '@angular/material/button';
-import { DbNgxTextModule } from '@/app/common/responsive/text/text.module';
+import { DbNgxAnchorModule, DbNgxTextModule } from '@dereekb/ngx-web';
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';

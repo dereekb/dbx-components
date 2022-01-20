@@ -1,28 +1,11 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { Component, ViewChild, Input } from '@angular/core';
-import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { Component } from '@angular/core';
 import { ProvideFormlyContext } from './formly.context';
 import { AbstractSyncFormlyFormDirective } from './formly.directive';
-import { textField } from './fields/text';
 import { FormlyFieldConfig } from '@ngx-formly/core';
-import { DbNgxFormModule } from './form.module';
-import { FormlyModule } from '@ngx-formly/core';
-import { FormlyMaterialModule } from '@ngx-formly/material';
 import { formlyField } from './fields/field';
 import { AbstractControl } from '@angular/forms';
-
-export const FORMLY_TEST_PROVIDERS = [
-  FormlyModule.forRoot({
-    extras: { lazyRender: true }
-  }),
-  FormlyMaterialModule
-];
-
-export const FORM_TEST_PROVIDERS = [
-  DbNgxFormModule,
-  ...FORMLY_TEST_PROVIDERS,
-  NoopAnimationsModule
-];
+import { FORM_TEST_PROVIDERS } from './formly.spec';
 
 describe('DbNgxInputFormControlComponent', () => {
 
@@ -70,7 +53,7 @@ export function testTextField(): FormlyFieldConfig {
         expression: (c: AbstractControl) => c.value !== INVALID_TEST_STRING,
         message: () => `You set the invalid text string.`
       }
-    },
+    }
   });
 }
 

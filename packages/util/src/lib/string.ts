@@ -27,7 +27,7 @@ export function splitCommaSeparatedString<T = any>(input: CommaSeparatedString<T
  * 
  * Undefined is returned if a null/undefined value is input.
  */
-export function addPlusPrefixToNumber(value?: number, prefix = '+'): string | undefined {
+export function addPlusPrefixToNumber(value?: Maybe<number>, prefix = '+'): string | undefined {
   if (value != null) {
     return (value > 0) ? `${prefix}${value}` : `${value}`;
   } else {

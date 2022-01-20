@@ -1,20 +1,16 @@
-import { SubscriptionObject } from '@dereekb/util-rxjs';
-import { beginLoading, LoadingState, loadingStateFromObs, LoadingStateLoadingContext } from '@/app/common/loading';
-import { ModelUtility } from '@/app/common/model';
-import {
-  Component, Directive, ElementRef, OnDestroy, OnInit, Type, ViewChild, ViewContainerRef
-} from '@angular/core';
+import { filterMaybe, SubscriptionObject, beginLoading, LoadingState, LoadingStateLoadingContext } from '@dereekb/util-rxjs';
+import { Directive, ElementRef, OnDestroy, OnInit, Type, ViewChild } from '@angular/core';
 import { AbstractControl, FormControl, ValidatorFn } from '@angular/forms';
 import { FieldType, FormlyFieldConfig } from '@ngx-formly/core';
-import { camelCase } from 'change-case';
-import { BehaviorSubject, combineLatest, of } from 'rxjs';
-import { Observable } from 'rxjs';
-import { debounce, debounceTime, delay, distinctUntilChanged, exhaust, exhaustMap, filter, first, map, mergeMap, shareReplay, startWith, switchMap, tap } from 'rxjs/operators';
+import { BehaviorSubject, of, Observable } from 'rxjs';
+import { debounceTime, distinctUntilChanged, filter, first, map, mergeMap, shareReplay, startWith, switchMap } from 'rxjs/operators';
 import {
   SearchableValueFieldHashFn, SearchableValueFieldStringSearchFn,
   SearchableValueFieldDisplayFn, SearchableValueFieldDisplayValue, SearchableValueFieldValue, SearchableFieldDisplayComponent, SearchableValueFieldAnchorFn
 } from './searchable';
 import { DbNgxDefaultSearchableAnchorFieldDisplayComponent, DbNgxDefaultSearchableFieldDisplayComponent } from './searchable.field.autocomplete.item.component';
+import { Maybe, convertMaybeToArray, findUnique } from '@dereekb/util';
+import { camelCase } from 'change-case';
 
 export interface StringValueFieldsFieldConfig {
   /**
@@ -44,7 +40,10 @@ export interface SearchableValueFieldsFieldConfig<T> extends StringValueFieldsFi
    * If hashForValue is not provided, the value's value will be used as is.
    */
   hashForValue?: SearchableValueFieldHashFn<T>;
-  search?: SearchableValueFieldStringSearchFn<T>;
+  /**
+   * Performs a search.
+   */
+  search: SearchableValueFieldStringSearchFn<T>;
   /**
    * Whether or not to allow searches on empty text. Is false by default.
    */
@@ -90,12 +89,12 @@ export abstract class AbstractDbNgxSearchableValueFieldDirective<T, C extends Se
   defaultComponentClass?: Type<SearchableFieldDisplayComponent<T>>;
 
   @ViewChild('textInput')
-  textInput: ElementRef<HTMLInputElement>;
+  textInput!: ElementRef<HTMLInputElement>;
 
   readonly inputCtrl = new FormControl('');
 
-  private _formControlObs = new BehaviorSubject<AbstractControl>(undefined);
-  readonly formControl$ = this._formControlObs.pipe(filter(x => Boolean(x)));
+  private _formControlObs = new BehaviorSubject<Maybe<AbstractControl>>(undefined);
+  readonly formControl$ = this._formControlObs.pipe(filterMaybe());
 
   private _displayHashMap = new BehaviorSubject<Map<any, SearchableValueFieldDisplayValue<T>>>(new Map());
 
@@ -106,7 +105,7 @@ export abstract class AbstractDbNgxSearchableValueFieldDirective<T, C extends Se
   );
 
   readonly searchResultsState$ = this.inputValueString$.pipe(
-    filter((text) => (text || this.searchOnEmptyText) && Boolean(this.search)),
+    filter((text) => Boolean(text || this.searchOnEmptyText) && Boolean(this.search)),
     // TODO: Consider caching search text/results.
     switchMap((text) => this.search(text).pipe(
       switchMap((x) => this.loadDisplayValuesForFieldValues(x)),
@@ -118,7 +117,7 @@ export abstract class AbstractDbNgxSearchableValueFieldDirective<T, C extends Se
 
   readonly singleValueSyncSubscription = new SubscriptionObject();
 
-  readonly searchContext = new LoadingStateLoadingContext({ obs: this.searchResultsState$, strict: true });
+  readonly searchContext = new LoadingStateLoadingContext({ obs: this.searchResultsState$, showLoadingOnNoModel: true });
 
   readonly searchResults$: Observable<SearchableValueFieldDisplayValue<T>[]> = this.searchResultsState$.pipe(
     map(x => x?.model ?? [])
@@ -132,20 +131,7 @@ export abstract class AbstractDbNgxSearchableValueFieldDirective<T, C extends Se
   );
 
   readonly values$: Observable<T[]> = this._formControlValue.pipe(
-    startWith([]),
-    map((x: T[]) => {
-      if (this.multiSelect) {
-        return x ?? [];
-      } else if (x) {
-        if (Array.isArray(x)) {
-          return x;
-        } else {
-          return [].concat(x);
-        }
-      } else {
-        return [];
-      }
-    }),
+    map(convertMaybeToArray),
     shareReplay(1)
   );
 
@@ -163,32 +149,32 @@ export abstract class AbstractDbNgxSearchableValueFieldDirective<T, C extends Se
     return this.field.name ?? (camelCase(this.label ?? this.key as string));
   }
 
-  get label(): string {
+  get label(): Maybe<string> {
     return this.field.templateOptions?.label;
   }
 
-  get readonly(): boolean {
-    return this.field.templateOptions.readonly;
+  get readonly(): Maybe<boolean> {
+    return this.field.templateOptions?.readonly;
   }
 
   get searchOnEmptyText(): boolean {
     return this.field.searchOnEmptyText ?? false;
   }
 
-  get required(): boolean {
-    return this.field.templateOptions.required;
+  get required(): Maybe<boolean> {
+    return this.field.templateOptions?.required;
   }
 
   get autocomplete(): string {
-    return (this.field.templateOptions?.attributes?.autocomplete as any) ?? this.key as string;
+    return (this.field.templateOptions?.attributes?.['autocomplete'] as any) ?? this.key as string;
   }
 
-  get placeholder(): string {
-    return this.field.templateOptions.placeholder;
+  get placeholder(): Maybe<string> {
+    return this.field.templateOptions?.placeholder;
   }
 
-  get description(): string {
-    return this.field.description ?? this.field.templateOptions.description;
+  get description(): Maybe<string> {
+    return this.field.description ?? this.field.templateOptions?.description;
   }
 
   get hashForValue(): SearchableValueFieldHashFn<T> {
@@ -199,15 +185,15 @@ export abstract class AbstractDbNgxSearchableValueFieldDirective<T, C extends Se
     return this.field.displayForValue;
   }
 
-  get useAnchor(): boolean {
+  get useAnchor(): Maybe<boolean> {
     return this.field.useAnchor;
   }
 
-  get anchorForValue(): SearchableValueFieldAnchorFn<T> {
+  get anchorForValue(): Maybe<SearchableValueFieldAnchorFn<T>> {
     return this.field.anchorForValue;
   }
 
-  get componentClass(): Type<SearchableFieldDisplayComponent<T>> {
+  get componentClass(): Maybe<Type<SearchableFieldDisplayComponent<T>>> {
     return this.field.componentClass;
   }
 
@@ -223,7 +209,7 @@ export abstract class AbstractDbNgxSearchableValueFieldDirective<T, C extends Se
     return this.allowStringValues ?? Boolean(this.convertStringValue);
   }
 
-  get convertStringValue(): (text: string) => T {
+  get convertStringValue(): Maybe<(text: string) => T> {
     return this.field.convertStringValue;
   }
 
@@ -385,7 +371,7 @@ export abstract class AbstractDbNgxSearchableValueFieldDirective<T, C extends Se
   setValues(values: T[]): void {
     // Use to filter non-unique values.
     if (this.hashForValue) {
-      values = ModelUtility.removeDuplicates(values, this.hashForValue);
+      values = findUnique(values, this.hashForValue);
     }
 
     this._setValueOnFormControl(values);

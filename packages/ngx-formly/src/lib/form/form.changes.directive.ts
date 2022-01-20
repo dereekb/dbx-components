@@ -1,6 +1,7 @@
 import { Directive, EventEmitter, Host, Output, OnInit } from '@angular/core';
 import { AbstractSubscriptionDirective } from '@dereekb/ngx-core';
-import { DbNgxFormlyContext } from './formly.context';
+import { DbNgxForm } from '.';
+import { DbNgxFormlyContext } from '../formly/formly.context';
 
 /**
  * Used to see form value changes.
@@ -13,13 +14,13 @@ export class DbNgxFormValueChangesDirective<T extends object = any> extends Abst
   @Output()
   readonly dbxFormValueChange = new EventEmitter<T>();
 
-  constructor(@Host() public readonly context: DbNgxFormlyContext<T>) {
+  constructor(@Host() public readonly form: DbNgxForm) {
     super();
   }
 
   ngOnInit(): void {
-    this.sub = this.context.stream$.subscribe((x) => {
-      this.dbxFormValueChange.next(this.context.value);
+    this.sub = this.form.stream$.subscribe((x) => {
+      this.dbxFormValueChange.next(this.form.value);
     });
   }
 

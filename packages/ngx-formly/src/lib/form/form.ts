@@ -29,9 +29,9 @@ export interface DbNgxFormEvent {
  */
 export abstract class DbNgxForm {
   /**
-   * LockSet the form may have exposed.
+   * LockSet for the form.
    */
-  readonly lockSet?: LockSet;
+  abstract readonly lockSet: LockSet;
   /**
    * True if the form is complete/valid.
    */

@@ -1,17 +1,13 @@
-import { MatListModule } from '@angular/material/list';
-import { DbNgxButtonModule } from '../../../button/button.module';
-import { DbNgxTextModule } from '@/app/common/responsive/text/text.module';
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { MatListModule } from '@angular/material/list';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { FormlyModule } from '@ngx-formly/core';
-import { DbNgxLoadingModule } from '@/app/common/loading/loading.module';
-import { DbNgxDatePipeModule } from '@/app/common/date/pipe/date.pipe.module';
 import { DbNgxSearchableChipFieldComponent } from './searchable.chip.field.component';
 import { DbNgxFormRepeatTypeComponent } from './repeat.field.component';
 import { MatButtonModule } from '@angular/material/button';
@@ -19,12 +15,11 @@ import {
   DbNgxDefaultSearchableAnchorFieldDisplayComponent, DbNgxDefaultSearchableFieldDisplayComponent,
   DbNgxSearchableFieldAutocompleteItemComponent
 } from './searchable.field.autocomplete.item.component';
-import { UIRouterModule } from '@uirouter/angular';
-import { DbNgxAnchorModule } from '@/app/common/nav/anchor/anchor.module';
 import { DbNgxSearchableTextFieldComponent } from './searchable.text.field.component';
 import { DbNgxPickableChipFieldComponent } from './pickable.chip.field.component';
 import { DbNgxPickableListFieldComponent } from './pickable.list.field.component';
-import { DbNgxInjectedComponentModule } from '@/app/common/angular/injected/injected.component.module';
+import { DbNgxDatePipeModule, DbNgxInjectedComponentModule } from '@dereekb/ngx-core';
+import { DbNgxAnchorModule, DbNgxTextModule, DbNgxLoadingModule, DbNgxButtonModule } from '@dereekb/ngx-web';
 
 @NgModule({
   imports: [
@@ -43,7 +38,6 @@ import { DbNgxInjectedComponentModule } from '@/app/common/angular/injected/inje
     DbNgxAnchorModule,
     MatChipsModule,
     MatIconModule,
-    UIRouterModule,
     DbNgxInjectedComponentModule,
     FormlyModule.forChild({
       types: [

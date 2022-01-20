@@ -1,18 +1,16 @@
-import { DateTimeMinuteConfig, DateTimeMinuteInstance } from './../../../model/date.time.minute';
-import { DateOrDateString, DateUtility } from '../../../model/date';
-import { switchMap, shareReplay, map, filter, startWith, tap, first, distinctUntilChanged, delay, debounce, debounceTime, throttleTime, zipAll } from 'rxjs/operators';
-import { EmailAddress, ModelKey, EmailParticipant } from '@/app/common/model';
+import { DateTimeMinuteConfig, DateTimeMinuteInstance, DateTimeUtilityInstance, guessCurrentTimezone, readableTimeStringToDate, toReadableTimeString, utcDayForDate } from '@dereekb/date';
+import { switchMap, shareReplay, map, filter, startWith, tap, first, distinctUntilChanged, debounceTime, throttleTime } from 'rxjs/operators';
 import {
   ChangeDetectorRef,
-  Component, ComponentFactoryResolver, ElementRef, NgZone, OnDestroy, OnInit, Type, ViewChild, ViewContainerRef
+  Component, OnDestroy, OnInit
 } from '@angular/core';
-import { AbstractControl, FormControl, Validators } from '@angular/forms';
+import { AbstractControl, FormControl, Validators, FormGroup } from '@angular/forms';
 import { FieldType, FormlyFieldConfig } from '@ngx-formly/core';
 import { BehaviorSubject, Observable, of, combineLatest, Subject, merge, interval } from 'rxjs';
-import { DateTimeUtility, ReadableTimeString } from '@/app/common/model/date.time';
+import { Maybe, ReadableTimeString } from '@dereekb/util';
 import { MatDatepickerInputEvent } from '@angular/material/datepicker';
-import { addMinutes, isSameDay, isSameMinute, isSameSecond, startOfDay } from 'date-fns';
-import { SubscriptionObject } from '@dereekb/util-rxjs';
+import { addMinutes, isSameDay, isSameMinute, startOfDay } from 'date-fns';
+import { filterMaybe, SubscriptionObject } from '@dereekb/util-rxjs';
 
 export enum DateTimeFieldTimeMode {
   /**
@@ -82,13 +80,13 @@ export class DbNgxDateTimeFieldComponent extends FieldType<DateTimeFormlyFieldCo
   private _sub = new SubscriptionObject();
   private _valueSub = new SubscriptionObject();
 
-  private _fullDayInputCtrl: FormControl;
-  private _fullDayControlObs = new BehaviorSubject<AbstractControl>(undefined);
-  readonly fullDayControl$ = this._fullDayControlObs.pipe(filter(x => Boolean(x)));
+  private _fullDayInputCtrl?: FormControl;
+  private _fullDayControlObs = new BehaviorSubject<Maybe<AbstractControl>>(undefined);
+  readonly fullDayControl$ = this._fullDayControlObs.pipe(filterMaybe());
 
   private _offset = new BehaviorSubject<number>(0);
-  private _formControlObs = new BehaviorSubject<AbstractControl>(undefined);
-  readonly formControl$ = this._formControlObs.pipe(filter(x => Boolean(x)));
+  private _formControlObs = new BehaviorSubject<Maybe<AbstractControl>>(undefined);
+  readonly formControl$ = this._formControlObs.pipe(filterMaybe());
 
   private _updateTime = new Subject();
 
@@ -113,8 +111,8 @@ export class DbNgxDateTimeFieldComponent extends FieldType<DateTimeFormlyFieldCo
   readonly timeString$: Observable<ReadableTimeString> = this.value$.pipe(
     filter(x => Boolean(x)),
     map((x) => {
-      const timezone = DateUtility.guessCurrentTimezone();
-      const timeString = DateTimeUtility.toTimeString(x, timezone);
+      const timezone = guessCurrentTimezone();
+      const timeString = toReadableTimeString(x, timezone);
       return timeString;
     })
   );
@@ -126,9 +124,9 @@ export class DbNgxDateTimeFieldComponent extends FieldType<DateTimeFormlyFieldCo
   });
 
   private _date = new BehaviorSubject<Date>(new Date());
-  private _config = new BehaviorSubject<Observable<DateTimePickerConfiguration>>(undefined);
+  private _config = new BehaviorSubject<Maybe<Observable<DateTimePickerConfiguration>>>(undefined);
 
-  get timeOnly(): boolean {
+  get timeOnly(): Maybe<boolean> {
     return this.field.timeOnly;
   }
 
@@ -140,8 +138,8 @@ export class DbNgxDateTimeFieldComponent extends FieldType<DateTimeFormlyFieldCo
     return (this.timeOnly) ? DateTimeFieldTimeMode.REQUIRED : (this.field.timeMode ?? DateTimeFieldTimeMode.REQUIRED);
   }
 
-  get description(): string {
-    return this.field.templateOptions.description;
+  get description(): Maybe<string> {
+    return this.field.templateOptions?.description;
   }
 
   readonly fullDay$: Observable<boolean> = this.fullDayControl$.pipe(
@@ -159,11 +157,11 @@ export class DbNgxDateTimeFieldComponent extends FieldType<DateTimeFormlyFieldCo
 
   readonly date$ = this._date.pipe(distinctUntilChanged((a, b) => isSameDay(a, b)));
   readonly dateValue$ = merge(
-    this.value$.pipe(startWith(undefined as Date)),
+    this.value$.pipe(startWith(undefined)),
     this.date$
   ).pipe(
-    filter((x: Date) => Boolean(x)),
-    map(x => startOfDay(x)),
+    filterMaybe(),
+    map((x: Date) => startOfDay(x)),
     distinctUntilChanged((a, b) => isSameDay(a, b)),
     shareReplay(1)
   );
@@ -174,24 +172,24 @@ export class DbNgxDateTimeFieldComponent extends FieldType<DateTimeFormlyFieldCo
     distinctUntilChanged()
   );
 
-  readonly config$ = this._config.pipe(switchMap(x => x), shareReplay(1));
+  readonly config$ = this._config.pipe(filterMaybe(), switchMap(x => x), shareReplay(1));
 
   readonly rawDateTime$: Observable<Date> = combineLatest([
-    this.dateValue$.pipe(filter(x => Boolean(x))),
+    this.dateValue$.pipe(filterMaybe()),
     this.timeInput$.pipe(startWith(null as any)),
     this.fullDay$
   ]).pipe(
     map(([date, timeString, fullDay]) => {
-      let result: Date;
+      let result: Maybe<Date>;
 
       if (fullDay) {
         if (this.field.fullDayInUTC) {
-          result = DateUtility.utcDay(date);
+          result = utcDayForDate(date);
         } else {
           result = startOfDay(date);
         }
       } else if (timeString) {
-        result = DateTimeUtility.timeStringToDate(timeString, {
+        result = readableTimeStringToDate(timeString, {
           date,
           useSystemTimezone: true
         });
@@ -199,7 +197,7 @@ export class DbNgxDateTimeFieldComponent extends FieldType<DateTimeFormlyFieldCo
 
       return result;
     }),
-    filter(x => Boolean(x)),
+    filterMaybe(),
     distinctUntilChanged((a, b) => isSameMinute(a, b)),
     shareReplay(1)
   );
@@ -235,7 +233,7 @@ export class DbNgxDateTimeFieldComponent extends FieldType<DateTimeFormlyFieldCo
 
   ngOnInit(): void {
     this._formControlObs.next(this.formControl);
-    this._config.next(this.field.getConfigObs?.() ?? of(undefined));
+    this._config.next(this.field.getConfigObs?.());
 
     this._sub.subscription = this.timeOutput$.subscribe((value) => {
       this.formControl.setValue(value);
@@ -248,7 +246,7 @@ export class DbNgxDateTimeFieldComponent extends FieldType<DateTimeFormlyFieldCo
     });
 
     const isFullDayField = this.field.fullDayFieldName;
-    let fullDayFieldCtrl: AbstractControl;
+    let fullDayFieldCtrl: Maybe<AbstractControl>;
 
     if (isFullDayField) {
       fullDayFieldCtrl = this.form.get(isFullDayField);
@@ -259,7 +257,7 @@ export class DbNgxDateTimeFieldComponent extends FieldType<DateTimeFormlyFieldCo
 
       // Set the control in the form too if the name is defined.
       if (isFullDayField) {
-        this.form.addControl(isFullDayField, this._fullDayInputCtrl);
+        (this.form as FormGroup).addControl(isFullDayField, this._fullDayInputCtrl);
       }
 
       fullDayFieldCtrl = this._fullDayInputCtrl;
@@ -289,8 +287,12 @@ export class DbNgxDateTimeFieldComponent extends FieldType<DateTimeFormlyFieldCo
   }
 
   datePicked(event: MatDatepickerInputEvent<Date>): void {
-    this._date.next(event.value);
-    this._updateTime.next();
+    const date = event.value;
+
+    if (date) {
+      this._date.next(date);
+      this._updateTime.next();
+    }
   }
 
   setTime(time: ReadableTimeString): void {

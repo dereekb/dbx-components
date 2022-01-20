@@ -1,10 +1,10 @@
-import { ClickableAnchor, ClickableAnchorLink, ClickableIconAnchorLink } from '@/app/common/nav/anchor/anchor';
+import { ClickableAnchor } from '@dereekb/ngx-core';
 import { Type } from '@angular/core';
 import { Observable } from 'rxjs';
 import { PickableValueFieldDisplayValue, PickableValueFieldHashFn, PickableValueFieldValue } from './pickable';
 
 export interface SearchableFieldDisplayComponent<T> {
-  displayValue: SearchableValueFieldDisplayValue<T>;
+  displayValue?: SearchableValueFieldDisplayValue<T>;
 }
 
 export interface SearchableValueFieldValue<T, M = any> extends PickableValueFieldValue<T, M> {

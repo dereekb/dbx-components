@@ -1,12 +1,11 @@
-import { CompactUtility } from './../../../responsive/container/compact';
-import { CompactContextStore } from '@/app/common/responsive/container/compact.store';
+import { CompactContextStore, mapCompactModeObs } from '@dereekb/ngx-web';
 import {
-  Component, ComponentFactoryResolver, OnDestroy, OnInit, Optional, Type, ViewChild, ViewContainerRef
-} from '@angular/core';
+  Component, OnDestroy, OnInit, Optional} from '@angular/core';
 import { FieldType, FormlyFieldConfig } from '@ngx-formly/core';
-import { Editor, toHTML } from 'ngx-editor';
-import { debounceTime, filter, map, throttle, throttleTime } from 'rxjs/operators';
+import { Editor } from 'ngx-editor';
+import { debounceTime, filter } from 'rxjs/operators';
 import { SubscriptionObject } from '@dereekb/util-rxjs';
+import { Maybe } from '@dereekb/util';
 
 export interface TextEditorFieldConfig extends FormlyFieldConfig {
   // TODO: Add button that can retrieve trimmed content and inject it into the editor as a quoted value.
@@ -28,10 +27,10 @@ export interface TextEditorFieldConfig extends FormlyFieldConfig {
 })
 export class TextEditorFieldComponent<T extends TextEditorFieldConfig = TextEditorFieldConfig> extends FieldType<T> implements OnInit, OnDestroy {
 
-  private _editor: Editor;
+  private _editor?: Editor;
   private _sub = new SubscriptionObject();
 
-  readonly compactClass$ = CompactUtility.mapModeObs(this.compact?.mode$, {
+  readonly compactClass$ = mapCompactModeObs(this.compact?.mode$, {
     compact: 'dbx-texteditor-field-compact'
   });
 
@@ -40,14 +39,14 @@ export class TextEditorFieldComponent<T extends TextEditorFieldConfig = TextEdit
   }
 
   get editor(): Editor {
-    return this._editor;
+    return this._editor!;
   }
 
-  get label(): string {
+  get label(): Maybe<string> {
     return this.field.templateOptions?.label;
   }
 
-  get placeholder(): string {
+  get placeholder(): Maybe<string> {
     return this.field.templateOptions?.placeholder;
   }
 
@@ -58,7 +57,7 @@ export class TextEditorFieldComponent<T extends TextEditorFieldConfig = TextEdit
     this._sub.subscription = this.editor.valueChanges.pipe(
       debounceTime(800),
       filter(_ => this.editor.view.hasFocus())
-    ).subscribe((x) => {
+    ).subscribe(() => {
       this.formControl.updateValueAndValidity();
       this.formControl.markAsDirty();
     });

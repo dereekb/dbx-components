@@ -141,7 +141,7 @@ export class ActionContextStore<T = any, O = any> extends ComponentStore<ActionC
   readonly errorCountSinceLastSuccess$ = this.isSuccess$.pipe(
     startWith(false),
     distinctUntilChanged(),
-    switchMap(() => this.error$.pipe(filter(x => Boolean(x)), scanCount(), startWith(0))),
+    switchMap(() => this.error$.pipe(filterMaybe(), scanCount(), startWith(0))),
     shareReplay(1)
   );
 

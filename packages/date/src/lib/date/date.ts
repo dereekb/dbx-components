@@ -86,7 +86,7 @@ export function isAfter(a: Maybe<Date>, b: Maybe<Date>, defaultValue: Maybe<bool
  *
  * For example, 1/1/2021 should be represented as a UTC-offset date for 1/1/2021 for the first instant of the day.
  */
-export function utcDay(date: Date): Date {
+export function utcDayForDate(date: Date): Date {
   return new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
 }
 

@@ -1,12 +1,21 @@
+import { Maybe } from '@dereekb/util';
 import { Observable, of } from 'rxjs';
 import { FieldConfig, formlyField } from '../field';
 import { PickableValueFieldDisplayValue } from './pickable';
 import { PickableItemFieldItem, PickableValueFieldsFieldConfig, PickableValueFieldsFormlyFieldConfig } from './pickable.field.component';
 export { PickableItemFieldItem };
 
-export function filterPickableItemFieldValuesByLabel<T>(filterText: string | undefined, values: PickableValueFieldDisplayValue<T>[]): Observable<T[]> {
-  const searchString = filterText.toLocaleLowerCase();
-  return of(values.filter(x => x.label.toLocaleLowerCase().indexOf(searchString) !== -1).map(x => x.value));
+export function filterPickableItemFieldValuesByLabel<T>(filterText: Maybe<string>, values: PickableValueFieldDisplayValue<T>[]): Observable<T[]> {
+  let filteredValues: PickableValueFieldDisplayValue<T>[];
+
+  if (filterText) {
+    const searchString = filterText.toLocaleLowerCase();
+    filteredValues = values.filter(x => x.label.toLocaleLowerCase().indexOf(searchString) !== -1);
+  } else {
+    filteredValues = values;
+  }
+
+  return of(filteredValues.map(x => x.value));
 }
 
 export function sortPickableItemsByLabel<T>(chips: PickableItemFieldItem<T>[]): PickableItemFieldItem<T>[] {

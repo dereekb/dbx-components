@@ -10,6 +10,20 @@ export type ArrayOrValue<T> = T | T[];
  * @param arrayOrValue 
  * @returns 
  */
+export function convertMaybeToArray<T>(arrayOrValue: Maybe<ArrayOrValue<T>>): T[] {
+  if (arrayOrValue != null) {
+    return convertToArray(arrayOrValue);
+  } else {
+    return [];
+  }
+}
+
+/**
+ * Converts the input value to an array containing itself, or returns itself if it is an array.
+ * 
+ * @param arrayOrValue 
+ * @returns 
+ */
 export function convertToArray<T>(arrayOrValue: ArrayOrValue<T>): T[] {
   return Array.isArray(arrayOrValue) ? arrayOrValue : [arrayOrValue];
 }

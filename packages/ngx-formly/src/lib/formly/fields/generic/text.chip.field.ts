@@ -10,7 +10,7 @@ export interface ChipTextFieldFormlyConfig extends StringValueFieldsFormlyFieldC
 }
 
 export function chipTextField<C extends ChipTextFieldFormlyConfig>(config: C): C {
-  const convertStringValue = (config.caseSensitive) ? (x => x) : ((x) => x?.toLowerCase());
+  const convertStringValue = (config.caseSensitive) ? ((x: string) => x) : ((x: string) => x?.toLowerCase());
 
   return formlyField<C>({
     type: 'searchablechipfield',

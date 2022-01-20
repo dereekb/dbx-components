@@ -1,6 +1,4 @@
-import {
-  Component, ElementRef, OnDestroy, OnInit, Type, ViewChild, ViewContainerRef
-} from '@angular/core';
+import { Component } from '@angular/core';
 import { MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
 import { MatChipInputEvent } from '@angular/material/chips';
 import { AbstractDbNgxSearchableValueFieldDirective, SearchableValueFieldsFieldConfig, SearchableValueFieldsFormlyFieldConfig } from './searchable.field.component';

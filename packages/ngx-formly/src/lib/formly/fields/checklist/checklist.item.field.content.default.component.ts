@@ -17,7 +17,7 @@ import { ChecklistItemDisplayContent, ChecklistItemFieldDisplayComponent } from 
 export class DbNgxDefaultChecklistItemFieldDisplayComponent implements ChecklistItemFieldDisplayComponent<any> {
 
   @Input()
-  displayContent: ChecklistItemDisplayContent<any>;
+  displayContent?: ChecklistItemDisplayContent<any>;
 
   get label() {
     return this.displayContent?.label;

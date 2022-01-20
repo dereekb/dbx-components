@@ -1,7 +1,11 @@
 import { FormlyFieldConfig } from '@ngx-formly/core';
-import { formlyField } from '../field';
+import { FieldConfig, formlyField } from '../field';
 
-export function textEditorField({ key, label = '', placeholder = '', maxLength = undefined as number, required = false }): FormlyFieldConfig {
+export interface TextEditorFieldConfig extends FieldConfig {
+  maxLength?: number;
+}
+
+export function textEditorField({ key, label = '', placeholder = '', maxLength, required = false }: TextEditorFieldConfig): FormlyFieldConfig {
   const fieldConfig: FormlyFieldConfig = formlyField({
     key,
     type: 'texteditor',

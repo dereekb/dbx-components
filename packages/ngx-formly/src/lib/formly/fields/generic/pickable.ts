@@ -1,3 +1,4 @@
+import { Maybe } from "@dereekb/util";
 import { Observable } from "rxjs";
 
 export interface PickableValueFieldValue<T, M = any> {
@@ -8,7 +9,7 @@ export interface PickableValueFieldValue<T, M = any> {
   /**
    * Optional metadata on the field.
    */
-  meta?: M;
+  meta?: Maybe<M>;
 }
 
 /**
@@ -19,7 +20,7 @@ export interface PickableValueFieldDisplayValue<T, M = any> extends PickableValu
   /**
    * Whether or not the value is known.
    */
-  isUnknown?: boolean;
+  isUnknown?: Maybe<boolean>;
 }
 
 /**
@@ -40,7 +41,7 @@ export type PickableValueFieldDisplayFn<T, M = any> = (values: PickableValueFiel
 /**
  * Used for filtering the values that should be displayed.
  */
-export type PickableValueFieldFilterFn<T, M = any> = (flterText: string | undefined, values: PickableValueFieldDisplayValue<T, M>[]) => Observable<T[]>;
+export type PickableValueFieldFilterFn<T, M = any> = (flterText: Maybe<string>, values: PickableValueFieldDisplayValue<T, M>[]) => Observable<T[]>;
 
 /**
  * Used to hash the value from the input pickable value.

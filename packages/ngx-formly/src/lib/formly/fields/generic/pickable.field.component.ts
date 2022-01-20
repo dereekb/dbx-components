@@ -1,7 +1,6 @@
-import { DbNgxInjectedComponentConfig } from "@/app/common/angular/injected/injected";
-import { beginLoading, LoadingStateLoadingContext, LoadingState, successResult, mapLoadingStateResults } from "@/app/common/loading";
-import { ModelUtility } from "@/app/common/model";
-import { groupValues, makeValuesGroupMap } from "@/app/common/utility";
+import { DbNgxInjectedComponentConfig } from "@dereekb/ngx-core";
+import { beginLoading, LoadingStateLoadingContext, LoadingState, successResult, mapLoadingStateResults, filterMaybe } from "@dereekb/util-rxjs";
+import { convertMaybeToArray, findUnique, groupValues, makeValuesGroupMap, Maybe } from "@dereekb/util";
 import { Component, Directive, ElementRef, OnDestroy, OnInit, Type, ViewChild } from "@angular/core";
 import { FormControl, AbstractControl } from "@angular/forms";
 import { MatInput } from "@angular/material/input";
@@ -86,7 +85,7 @@ export interface PickableValueFieldsFormlyFieldConfig<T> extends PickableValueFi
 /**
  * Displayed value with the computed hash.
  */
-export interface PickableValueFieldDisplayValueWithHash<T> extends PickableValueFieldDisplayValue<T> {
+export interface PickableValueFieldDisplayValueWithHash<T, M = any> extends PickableValueFieldDisplayValue<T, M> {
   _hash: any;
 }
 
@@ -97,12 +96,12 @@ export interface PickableValueFieldDisplayValueWithHash<T> extends PickableValue
 export class AbstractDbNgxPickableItemFieldDirective<T> extends FieldType<PickableValueFieldsFormlyFieldConfig<T>> implements OnInit, OnDestroy {
 
   @ViewChild('filterMatInput', { static: true })
-  filterMatInput: MatInput;
+  filterMatInput!: MatInput;
 
   readonly inputCtrl = new FormControl('');
 
-  private _formControlObs = new BehaviorSubject<AbstractControl>(undefined);
-  readonly formControl$ = this._formControlObs.pipe(filter(x => Boolean(x)));
+  private _formControlObs = new BehaviorSubject<Maybe<AbstractControl>>(undefined);
+  readonly formControl$ = this._formControlObs.pipe(filterMaybe());
 
   private _displayHashMap = new BehaviorSubject<Map<any, PickableValueFieldDisplayValue<T>>>(new Map());
 
@@ -137,18 +136,7 @@ export class AbstractDbNgxPickableItemFieldDirective<T> extends FieldType<Pickab
    * Current values in the form control.
    */
   readonly values$: Observable<T[]> = this._formControlValue.pipe(
-    startWith([]),
-    map((x: T[]) => {
-      if (x) {
-        if (Array.isArray(x)) {
-          return x;
-        } else {
-          return [].concat(x);
-        }
-      } else {
-        return [];
-      }
-    }),
+    map(convertMaybeToArray),
     shareReplay(1)
   );
 
@@ -163,7 +151,7 @@ export class AbstractDbNgxPickableItemFieldDirective<T> extends FieldType<Pickab
 
         currentValues.forEach((x) => {
           const key = this.hashForValue(x);
-          let displayValue: PickableValueFieldDisplayValueWithHash<T> = displayValuesMap.get(key)?.[0];
+          let displayValue: Maybe<PickableValueFieldDisplayValueWithHash<T>> = displayValuesMap.get(key)?.[0];
 
           if (!displayValue) {
             valuesNotInDisplayMap.push(x);
@@ -203,8 +191,8 @@ export class AbstractDbNgxPickableItemFieldDirective<T> extends FieldType<Pickab
   );
 
   readonly filteredSearchResults$: Observable<PickableValueFieldDisplayValueWithHash<T>[]> = this.filteredSearchResultsState$.pipe(
-    filter(x => Boolean(x.model)),
-    map(x => x.model),
+    map(x => x?.model),
+    filterMaybe(),
     shareReplay(1)
   );
 
@@ -234,7 +222,7 @@ export class AbstractDbNgxPickableItemFieldDirective<T> extends FieldType<Pickab
   /**
    * Context used for managing the loading of items, or when the current results change.
    */
-  readonly context = new LoadingStateLoadingContext({ obs: this.itemsLoadingState$, strict: false });
+  readonly context = new LoadingStateLoadingContext({ obs: this.itemsLoadingState$, showLoadingOnNoModel: false });
 
   readonly filterItemsLoadingState$: Observable<LoadingState> = this.items$.pipe(
     map(x => successResult(x)),
@@ -245,7 +233,7 @@ export class AbstractDbNgxPickableItemFieldDirective<T> extends FieldType<Pickab
   /**
    * Context used for searching/filtering.
    */
-  readonly filterResultsContext = new LoadingStateLoadingContext({ obs: this.loadResultsDisplayValuesState$, strict: true });
+  readonly filterResultsContext = new LoadingStateLoadingContext({ obs: this.loadResultsDisplayValuesState$, showLoadingOnNoModel: true });
 
   get multiSelect(): boolean {
     return this.field.multiSelect ?? true;
@@ -255,27 +243,27 @@ export class AbstractDbNgxPickableItemFieldDirective<T> extends FieldType<Pickab
     return this.field.asArrayValue ?? true;
   }
 
-  get filterLabel(): string {
+  get filterLabel(): Maybe<string> {
     return this.field.filterLabel;
   }
 
-  get readonly(): boolean {
-    return this.field.templateOptions.readonly;
+  get readonly(): Maybe<boolean> {
+    return this.field.templateOptions?.readonly;
   }
 
-  get required(): boolean {
-    return this.field.templateOptions.required;
+  get required(): Maybe<boolean> {
+    return this.field.templateOptions?.required;
   }
 
-  get placeholder(): string {
-    return this.field.templateOptions.placeholder;
+  get placeholder(): Maybe<string> {
+    return this.field.templateOptions?.placeholder;
   }
 
-  get description(): string {
-    return this.field.templateOptions.description;
+  get description(): Maybe<string> {
+    return this.field.templateOptions?.description;
   }
 
-  get sortItems(): PickableItemFieldItemSortFn<T> {
+  get sortItems(): Maybe<PickableItemFieldItemSortFn<T>> {
     return this.field.sortItems;
   }
 
@@ -300,17 +288,25 @@ export class AbstractDbNgxPickableItemFieldDirective<T> extends FieldType<Pickab
   }
 
   get _filterValues(): PickableValueFieldFilterFn<T> {
+    let fn: PickableValueFieldFilterFn<T>;
+
     if (this.skipFilterFnOnEmpty) {
-      return (filterText: string | undefined, values: PickableValueFieldDisplayValueWithHash<T>[]) => {
+      fn = (filterText: Maybe<string>, values: PickableValueFieldDisplayValue<T>[]): Observable<T[]> => {
+        let result: Observable<T[]>;
+
         if (filterText) {
-          return this.filterValuesFn(filterText, values);
+          result = this.filterValuesFn(filterText, values);
         } else {
-          return of(values.map(x => x.value));
+          result = of(values.map(x => x.value));
         }
+
+        return result;
       };
     } else {
-      return this.filterValuesFn;
+      fn = this.filterValuesFn;
     }
+
+    return fn;
   }
 
   get showTextFilter(): boolean {
@@ -325,7 +321,7 @@ export class AbstractDbNgxPickableItemFieldDirective<T> extends FieldType<Pickab
     return this._getValueOnFormControl(this.formControl.value) ?? [];
   }
 
-  get footerConfig(): DbNgxInjectedComponentConfig {
+  get footerConfig(): Maybe<DbNgxInjectedComponentConfig> {
     return this.field.footerConfig;
   }
 
@@ -391,7 +387,8 @@ export class AbstractDbNgxPickableItemFieldDirective<T> extends FieldType<Pickab
   ngOnInit(): void {
     this._formControlObs.next(this.formControl);
 
-    this.context.isLoading$.pipe(
+    // Focus after finished loading for the first time.
+    this.context.loading$.pipe(
       delay(10),
       filter(x => x),
       first(),
@@ -425,7 +422,7 @@ export class AbstractDbNgxPickableItemFieldDirective<T> extends FieldType<Pickab
 
     // Use to filter non-unique values.
     if (this.hashForValue) {
-      values = ModelUtility.removeDuplicates(values, this.hashForValue);
+      values = findUnique(values, this.hashForValue);
     }
 
     if (!this.multiSelect) {

@@ -1,13 +1,15 @@
-import { shareReplay, distinctUntilChanged, switchMap, filter, map } from 'rxjs/operators';
-import { Observable, BehaviorSubject } from 'rxjs';
+import { filterMaybe } from '@dereekb/util-rxjs';
+import { shareReplay, distinctUntilChanged, switchMap, map } from 'rxjs/operators';
+import { BehaviorSubject } from 'rxjs';
 import {
-  Component, ComponentFactoryResolver, ElementRef, NgZone, OnDestroy, OnInit, Type, ViewChild, ViewContainerRef
+  Component, ComponentFactoryResolver, NgZone, OnDestroy, OnInit, Type, ViewChild, ViewContainerRef
 } from '@angular/core';
-import { AbstractControl, FormControl, ValidationErrors, Validators } from '@angular/forms';
+import { ValidationErrors } from '@angular/forms';
 import { FieldType, FormlyFieldConfig } from '@ngx-formly/core';
-import { ChecklistItemDisplayContent, ChecklistItemFieldDisplayComponent, ChecklistItemFieldDisplayContentObs } from './checklist.item';
+import { ChecklistItemFieldDisplayComponent, ChecklistItemFieldDisplayContentObs } from './checklist.item';
 import { DbNgxDefaultChecklistItemFieldDisplayComponent } from './checklist.item.field.content.default.component';
 import { AbstractSubscriptionDirective } from '@dereekb/ngx-core';
+import { Maybe } from '@dereekb/util';
 
 export interface DbNgxChecklistItemFieldConfig<T = any> {
   /**
@@ -28,10 +30,10 @@ export interface ChecklistItemFormlyFieldConfig<T = any> extends DbNgxChecklistI
 })
 export class DbNgxChecklistItemFieldComponent<T = any> extends FieldType<ChecklistItemFormlyFieldConfig<T>> implements OnInit, OnDestroy {
 
-  private _displayContent = new BehaviorSubject<ChecklistItemFieldDisplayContentObs<T>>(undefined);
+  private _displayContent = new BehaviorSubject<Maybe<ChecklistItemFieldDisplayContentObs<T>>>(undefined);
 
   readonly displayContent$ = this._displayContent.pipe(
-    filter(x => Boolean(x)),
+    filterMaybe(),
     switchMap(x => x),
     distinctUntilChanged(),
     shareReplay(1)
@@ -48,20 +50,20 @@ export class DbNgxChecklistItemFieldComponent<T = any> extends FieldType<Checkli
     shareReplay(1)
   );
 
-  get label(): string {
-    return this.field.templateOptions.label;
+  get label(): Maybe<string> {
+    return this.field.templateOptions?.label;
   }
 
-  get description(): string {
-    return this.field.templateOptions.description;
+  get description(): Maybe<string> {
+    return this.field.templateOptions?.description;
   }
 
-  get required(): boolean {
-    return this.field.templateOptions.required;
+  get required(): Maybe<boolean> {
+    return this.field.templateOptions?.required;
   }
 
-  get errors(): ValidationErrors {
-    return this.field.formControl.errors;
+  get errors(): Maybe<ValidationErrors> {
+    return this.field.formControl?.errors;
   }
 
   get componentClass(): Type<ChecklistItemFieldDisplayComponent<T>> {
@@ -90,7 +92,7 @@ export class DbNgxChecklistItemContentComponent<T = any> extends AbstractSubscri
   readonly isLoading$ = this.checklistItemFieldComponent.displayContent$
 
   @ViewChild('content', { static: true, read: ViewContainerRef })
-  contentRef: ViewContainerRef;
+  contentRef!: ViewContainerRef;
 
   constructor(
     readonly checklistItemFieldComponent: DbNgxChecklistItemFieldComponent<T>,
@@ -103,9 +105,7 @@ export class DbNgxChecklistItemContentComponent<T = any> extends AbstractSubscri
   ngOnInit(): void {
     this.contentRef.clear();
     const componentClass = this.checklistItemFieldComponent.componentClass;
-
-    const factory = this.resolver.resolveComponentFactory(componentClass);
-    const componentRef = this.contentRef.createComponent(factory);
+    const componentRef = this.contentRef.createComponent(componentClass);
 
     this.sub = this.checklistItemFieldComponent.displayContent$.subscribe((x) => {
       this.ngZone.run(() => componentRef.instance.displayContent = x);

@@ -1,9 +1,6 @@
-import { FormlyFieldConfig } from '@ngx-formly/core/lib/core';
-import {
-  Component, ElementRef, OnDestroy, OnInit, Type, ViewChild, ViewContainerRef
-} from '@angular/core';
+import { FieldType, FormlyFieldConfig } from '@ngx-formly/core';
+import { Component } from '@angular/core';
 import { Observable } from 'rxjs';
-import { FieldType } from '@ngx-formly/core';
 import { EnumValueFieldOption } from './enum';
 
 export interface EnumValueFieldsFieldConfig<T> {

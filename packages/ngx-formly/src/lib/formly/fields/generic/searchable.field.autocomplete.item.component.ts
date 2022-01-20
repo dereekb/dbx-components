@@ -1,6 +1,4 @@
-import {
-  Component, ComponentFactoryResolver, ElementRef, Input, OnDestroy, OnInit, Type, ViewChild, ViewContainerRef
-} from '@angular/core';
+import { Component, Input, OnInit, ViewChild, ViewContainerRef } from '@angular/core';
 import { SearchableFieldDisplayComponent, SearchableValueFieldDisplayValue } from './searchable';
 
 @Component({
@@ -12,20 +10,17 @@ import { SearchableFieldDisplayComponent, SearchableValueFieldDisplayValue } fro
 export class DbNgxSearchableFieldAutocompleteItemComponent<T> implements OnInit {
 
   @ViewChild('content', { static: true, read: ViewContainerRef })
-  content: ViewContainerRef;
+  content!: ViewContainerRef;
 
   @Input()
-  displayValue: SearchableValueFieldDisplayValue<T>;
-
-  constructor(private resolver: ComponentFactoryResolver) { }
+  displayValue?: SearchableValueFieldDisplayValue<T>;
 
   ngOnInit(): void {
     this.content.clear();
-    const componentClass = this.displayValue.componentClass;
+    const componentClass = this.displayValue?.componentClass;
 
     if (componentClass) {
-      const factory = this.resolver.resolveComponentFactory(componentClass);
-      const componentRef = this.content.createComponent(factory);
+      const componentRef = this.content.createComponent(componentClass);
       componentRef.instance.displayValue = this.displayValue;
     }
   }
@@ -45,7 +40,7 @@ export class DbNgxSearchableFieldAutocompleteItemComponent<T> implements OnInit 
 export class DbNgxDefaultSearchableFieldDisplayComponent<T> implements SearchableFieldDisplayComponent<T> {
 
   @Input()
-  displayValue: SearchableValueFieldDisplayValue<T>;
+  displayValue?: SearchableValueFieldDisplayValue<T>;
 
 }
 
@@ -59,6 +54,6 @@ export class DbNgxDefaultSearchableFieldDisplayComponent<T> implements Searchabl
 export class DbNgxDefaultSearchableAnchorFieldDisplayComponent<T> implements SearchableFieldDisplayComponent<T> {
 
   @Input()
-  displayValue: SearchableValueFieldDisplayValue<T>;
+  displayValue?: SearchableValueFieldDisplayValue<T>;
 
 }

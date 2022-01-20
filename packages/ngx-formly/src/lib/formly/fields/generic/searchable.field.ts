@@ -1,5 +1,5 @@
-import { arrayToMap, separateValues } from '@/app/common/utility';
-import { Observable, of, merge } from 'rxjs';
+import { arrayToMap, separateValues } from '@dereekb/util';
+import { Observable, of } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { FieldConfig, formlyField } from '../field';
 import { SearchableValueFieldDisplayFn, SearchableValueFieldDisplayValue, SearchableValueFieldValue } from './searchable';

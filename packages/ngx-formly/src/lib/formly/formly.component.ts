@@ -1,3 +1,4 @@
+import { distinctUntilChanged } from 'rxjs/operators';
 import { Component, NgZone, OnDestroy, OnInit } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { FormlyFieldConfig, FormlyFormOptions } from '@ngx-formly/core';
@@ -5,7 +6,7 @@ import { BehaviorSubject, Observable } from 'rxjs';
 import { debounceTime, startWith } from 'rxjs/operators';
 import { AbstractSubscriptionDirective } from '@dereekb/ngx-core';
 import { DbNgxFormEvent, DbNgxFormState } from '../form/form';
-import { DbNgxFormlyContext, DbNgxFormlyDirectiveDelegate } from './formly.context';
+import { DbNgxFormlyContext, DbNgxFormlyContextDelegate } from './formly.context';
 import { cloneDeep } from 'lodash';
 
 @Component({
@@ -18,7 +19,7 @@ import { cloneDeep } from 'lodash';
   `,
   styleUrls: ['./form.scss'],
 })
-export class DbNgxFormlyComponent<T extends object> extends AbstractSubscriptionDirective implements DbNgxFormlyDirectiveDelegate<T>, OnInit, OnDestroy {
+export class DbNgxFormlyComponent<T extends object> extends AbstractSubscriptionDirective implements DbNgxFormlyContextDelegate<T>, OnInit, OnDestroy {
 
   private _changesCount = 0;
   private _lastResetAt?: Date;
@@ -38,6 +39,7 @@ export class DbNgxFormlyComponent<T extends object> extends AbstractSubscription
     this.context.setDelegate(this);
     this.sub = this.form.valueChanges.pipe(
       startWith(this.form.value),
+      distinctUntilChanged(),
       debounceTime(50)
     ).subscribe((_) => this._updateForChange());
   }
@@ -46,6 +48,7 @@ export class DbNgxFormlyComponent<T extends object> extends AbstractSubscription
     this.context.lockSet.onNextUnlock(() => {
       super.ngOnDestroy();
       this.context.clearDelegate(this);
+      this._events.complete();
     });
   }
 

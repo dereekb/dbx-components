@@ -1,5 +1,5 @@
 import { FormlyFieldConfig } from '@ngx-formly/core';
-import { FieldConfig, FieldConfigWithDescription, formlyField } from '../field';
+import { FieldConfigWithDescription, formlyField } from '../field';
 import { EnumValueFieldOption } from './enum';
 
 export interface StaticEnumFieldConfig<T> extends FieldConfigWithDescription {

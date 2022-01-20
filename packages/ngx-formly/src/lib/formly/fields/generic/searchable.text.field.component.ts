@@ -1,6 +1,4 @@
-import {
-  Component, ElementRef, OnDestroy, OnInit, Type, ViewChild, ViewContainerRef
-} from '@angular/core';
+import { Component } from '@angular/core';
 import { MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
 import { AbstractDbNgxSearchableValueFieldDirective, SearchableValueFieldsFieldConfig, SearchableValueFieldsFormlyFieldConfig } from './searchable.field.component';
 
@@ -16,7 +14,7 @@ export interface SearchableTextValueFieldsFormlyFieldConfig<T> extends Searchabl
 })
 export class DbNgxSearchableTextFieldComponent<T> extends AbstractDbNgxSearchableValueFieldDirective<T, SearchableTextValueFieldsFormlyFieldConfig<T>> {
 
-  readonly multiSelect = false;
+  override readonly multiSelect = false;
 
   selected(event: MatAutocompleteSelectedEvent): void {
     this.addWithDisplayValue(event.option.value);

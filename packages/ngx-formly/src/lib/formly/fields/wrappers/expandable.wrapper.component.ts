@@ -21,7 +21,7 @@ export class AbstractFormExpandableSectionWrapperDirective<T>
   extends FieldWrapper implements OnInit, OnDestroy {
 
   protected _formControlObs = new BehaviorSubject<AbstractControl>(undefined);
-  readonly formControl$ = this._formControlObs.pipe(filter(x => Boolean(x)));
+  readonly formControl$ = this._formControlObs.pipe(filterMaybe());
 
   protected _toggleOpen = new BehaviorSubject<boolean | null>(null);
 

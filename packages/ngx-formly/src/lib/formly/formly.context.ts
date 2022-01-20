@@ -7,9 +7,11 @@ import { LockSet } from '@dereekb/util-rxjs';
 import { Maybe } from '@dereekb/util';
 
 /**
+ * DbNgxFormlyContext delegate.
  * 
+ * This is usually the component or element that contains the form itself.
  */
-export interface DbNgxFormlyDirectiveDelegate<T = any> {
+export interface DbNgxFormlyContextDelegate<T = any> {
   readonly isComplete: boolean;
   readonly state: DbNgxFormState;
   readonly stream$: Observable<DbNgxFormEvent>;
@@ -22,6 +24,9 @@ export interface DbNgxFormlyDirectiveDelegate<T = any> {
   setDisabled(disabled?: boolean): void;
 }
 
+/**
+ * Allows a directive to provide a formly context and form.
+ */
 export function ProvideFormlyContext(): Provider[] {
   return [{
     provide: DbNgxFormlyContext,
@@ -33,7 +38,7 @@ export function ProvideFormlyContext(): Provider[] {
 }
 
 /**
- * Context used in conjunction with an DbNgxFormlyComponent.
+ * DbNgxForm Instance that registers a delegate and manages the state of that form/delegate.
  */
 export class DbNgxFormlyContext<T> implements TypedDbNgxForm<T> {
 
@@ -41,7 +46,7 @@ export class DbNgxFormlyContext<T> implements TypedDbNgxForm<T> {
 
   private static INITIAL_STATE = { isComplete: false, state: DbNgxFormState.INITIALIZING };
 
-  private static EMPTY_DELEGATE: DbNgxFormlyDirectiveDelegate<any> = {
+  private static EMPTY_DELEGATE: DbNgxFormlyContextDelegate<any> = {
     isComplete: false,
     state: DbNgxFormState.INITIALIZING,
     stream$: of(DbNgxFormlyContext.INITIAL_STATE),
@@ -72,7 +77,7 @@ export class DbNgxFormlyContext<T> implements TypedDbNgxForm<T> {
   private _initialValue?: Maybe<Partial<T>>;
   private _disabled: boolean = false;
 
-  private _delegate: DbNgxFormlyDirectiveDelegate<T> = DbNgxFormlyContext.EMPTY_DELEGATE;
+  private _delegate: DbNgxFormlyContextDelegate<T> = DbNgxFormlyContext.EMPTY_DELEGATE;
   private _streamSubject = new BehaviorSubject<Observable<DbNgxFormEvent>>(of(DbNgxFormlyContext.INITIAL_STATE));
   private _stream$ = this._streamSubject.pipe(mergeMap((stream) => stream));
 
@@ -86,7 +91,7 @@ export class DbNgxFormlyContext<T> implements TypedDbNgxForm<T> {
     return this._streamSubject.isStopped;
   }
 
-  setDelegate(delegate?: DbNgxFormlyDirectiveDelegate<T>): void {
+  setDelegate(delegate?: DbNgxFormlyContextDelegate<T>): void {
     this._delegate = delegate ?? DbNgxFormlyContext.EMPTY_DELEGATE;
     this._streamSubject.next(this._delegate.stream$);
     this._delegate.setFields(this._fields);
@@ -94,7 +99,7 @@ export class DbNgxFormlyContext<T> implements TypedDbNgxForm<T> {
     this._delegate.setDisabled(this._disabled);
   }
 
-  clearDelegate(delegate: DbNgxFormlyDirectiveDelegate<T>): void {
+  clearDelegate(delegate: DbNgxFormlyContextDelegate<T>): void {
     if (this._delegate === delegate && !this.isDestroyed) {
       this.setDelegate(undefined);
     }

@@ -3,7 +3,7 @@ import { Component, ViewChild, Input, Directive, ContentChild, AfterViewInit, On
 import { Observable, of } from 'rxjs';
 import { LoadingState } from '@dereekb/util-rxjs';
 import { DbNgxFormLoadingPairSourceDirective } from './form.loading.directive';
-import { DbNgxTestDbNgxFormComponent, FORM_TEST_PROVIDERS } from '../form.test.component.spec';
+import { DbNgxTestDbNgxFormComponent, FORM_TEST_PROVIDERS } from '../formly.component.spec';
 
 describe('DbNgxFormLoadingPairSourceDirective', () => {
 

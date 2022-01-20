@@ -3,13 +3,10 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { DbNgxFormlyComponent } from './formly.component';
 import { FormComponentFieldComponent } from './fields/component/component.field.component';
-import { DbNgxFormValueChangesDirective } from './form.changes.directive';
+import { DbNgxFormValueChangesDirective } from '../form/form.changes.directive';
 import { DbNgxFormWrapperModule } from './fields/wrappers/form.wrapper.module';
 import { FormlyMatToggleModule } from '@ngx-formly/material/toggle';
-import { DbNgxFormSourceDirective } from './form.input.directive';
-import { DbNgxFormSpacerComponent } from '../layout/form.spacer.component';
 import { FormlyModule } from '@ngx-formly/core';
-import { DbNgxFormLoadingPairSourceDirective } from './loading/form.loading.directive';
 
 @NgModule({
   imports: [
@@ -23,10 +20,7 @@ import { DbNgxFormLoadingPairSourceDirective } from './loading/form.loading.dire
   declarations: [
     DbNgxFormlyComponent,
     DbNgxFormValueChangesDirective,
-    DbNgxFormSourceDirective,
-    DbNgxFormLoadingPairSourceDirective,
-    FormComponentFieldComponent,
-    DbNgxFormSpacerComponent
+    FormComponentFieldComponent
   ],
   exports: [
     // Modules (?)
@@ -36,9 +30,7 @@ import { DbNgxFormLoadingPairSourceDirective } from './loading/form.loading.dire
     // Directives
     DbNgxFormlyComponent,
     DbNgxFormValueChangesDirective,
-    DbNgxFormSourceDirective,
-    DbNgxFormLoadingPairSourceDirective,
-    DbNgxFormSpacerComponent
+    FormComponentFieldComponent
   ]
 })
-export class DbNgxFormModule { }
+export class DbNgxFormlyModule { }

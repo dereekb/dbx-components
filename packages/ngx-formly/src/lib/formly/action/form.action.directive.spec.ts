@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Component, ViewChild } from '@angular/core';
 import { DbNgxActionContextDirective, DbNgxCoreActionModule } from '@dereekb/ngx-core';
 import { DbNgxActionFormDirective } from './form.action.directive';
-import { DbNgxTestDbNgxFormComponent, FORM_TEST_PROVIDERS } from '../form.test.component.spec';
+import { DbNgxTestDbNgxFormComponent, FORM_TEST_PROVIDERS } from '../formly.component.spec';
 import { first } from 'rxjs/operators';
 
 describe('FormActionDirective', () => {

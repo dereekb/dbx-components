@@ -6,7 +6,7 @@ import { DbNgxActionContextDirective } from './action.directive';
   selector: 'dbx-action',
   exportAs: 'action',
   template: '<ng-content></ng-content>',
-  styleUrls: ['./action.scss'],
+  
   providers: ProvideActionStoreSource(DbNgxActionComponent)
 })
 export class DbNgxActionComponent<T = any, O = any> extends DbNgxActionContextDirective<T, O>  { }

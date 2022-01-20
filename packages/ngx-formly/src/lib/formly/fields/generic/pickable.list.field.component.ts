@@ -1,4 +1,4 @@
-import { Component, ElementRef, OnDestroy, OnInit, Type, ViewChild } from "@angular/core";
+import { Component } from "@angular/core";
 import { MatSelectionListChange } from "@angular/material/list";
 import { AbstractDbNgxPickableItemFieldDirective, PickableItemFieldItem } from "./pickable.field.component";
 

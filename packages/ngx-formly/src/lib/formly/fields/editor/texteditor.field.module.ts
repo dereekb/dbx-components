@@ -1,4 +1,4 @@
-import { DbNgxTextModule } from '@/app/common/responsive/text/text.module';
+import { DbNgxTextModule } from '@dereekb/ngx-web';
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';

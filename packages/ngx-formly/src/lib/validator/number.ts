@@ -1,19 +1,5 @@
 import { AbstractControl, ValidatorFn } from '@angular/forms';
 
-export function IsTruthy(): ValidatorFn {
-    return (control: AbstractControl): { [key: string]: any } => {
-        const value: boolean | undefined = control.value;
-
-        if (!value) {
-            return {
-                isTruthy: value
-            };
-        }
-
-        return {};
-    };
-}
-
 export function IsInRange(min: number = Number.MIN_SAFE_INTEGER, max: number = Number.MAX_SAFE_INTEGER): ValidatorFn {
     return (control: AbstractControl): { [key: string]: any } => {
         const numberString: string | undefined = control.value;

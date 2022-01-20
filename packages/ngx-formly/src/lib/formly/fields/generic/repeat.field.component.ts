@@ -1,6 +1,6 @@
-import { OnInit } from '@angular/core';
 import { Component } from '@angular/core';
-import { FieldArrayType, FieldWrapper, FormlyConfig, FormlyFieldConfig, FormlyTemplateOptions } from '@ngx-formly/core';
+import { Maybe } from '@dereekb/util';
+import { FieldArrayType, FormlyTemplateOptions } from '@ngx-formly/core';
 
 export interface FormRepeatSectionConfig {
   itemLabel?: string;
@@ -39,10 +39,8 @@ export interface FormRepeatTypeTemplateOptions extends FormlyTemplateOptions, Fo
 })
 export class DbNgxFormRepeatTypeComponent extends FieldArrayType {
 
-  readonly to: FormRepeatTypeTemplateOptions;
-
   get repeatSection(): FormRepeatSectionConfig {
-    return this.to.repeatSection ?? {};
+    return (this.to as FormRepeatTypeTemplateOptions).repeatSection ?? {};
   }
 
   get itemLabel(): string {
@@ -57,7 +55,7 @@ export class DbNgxFormRepeatTypeComponent extends FieldArrayType {
     return this.repeatSection.removeText ?? 'Remove';
   }
 
-  get max(): number {
+  get max(): Maybe<number> {
     return this.field.templateOptions?.maxLength;
   }
 

@@ -1,5 +1,6 @@
 export * from './lib/array';
 export * from './lib/assertion';
+export * from './lib/contact';
 export * from './lib/error';
 export * from './lib/relation';
 export * from './lib/boolean';
