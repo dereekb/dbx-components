@@ -1,8 +1,8 @@
+import { formlyField, DescriptionFieldConfig, FieldConfig } from './../field';
 import { FormlyFieldConfig } from '@ngx-formly/core';
-import { FieldConfigWithDescription, formlyField } from '../field';
 import { EnumValueFieldOption } from './enum';
 
-export interface StaticEnumFieldConfig<T> extends FieldConfigWithDescription {
+export interface StaticEnumFieldConfig<T> extends FieldConfig, DescriptionFieldConfig {
   /**
    * Whether or not multiple values can be selected.
    */

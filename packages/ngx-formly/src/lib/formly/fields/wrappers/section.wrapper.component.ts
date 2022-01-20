@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { Maybe } from '@dereekb/util';
 import { FieldWrapper } from '@ngx-formly/core';
 
 @Component({
@@ -15,7 +16,7 @@ import { FieldWrapper } from '@ngx-formly/core';
 })
 export class FormSectionWrapperComponent extends FieldWrapper {
 
-  get description(): string {
+  get description(): Maybe<string> {
     return this.to.description;
   }
 

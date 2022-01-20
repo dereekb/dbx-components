@@ -1,17 +1,25 @@
 import { FormlyFieldConfig } from '@ngx-formly/core';
 
-export interface FieldConfig<T = any> {
+export interface FieldConfig {
   key: string;
-  name?: string;
   label?: string;
   placeholder?: string;
-  defaultValue?: T;
   required?: boolean;
   readonly?: boolean;
   autocomplete?: string;
 }
 
-export interface FieldConfigWithDescription<T = any> extends FieldConfig<T> {
+export interface DefaultValueFieldConfig<T = any> {
+  defaultValue?: T;
+}
+
+export interface AttributesFieldConfig {
+  attributes?: {
+    [key: string]: string | number
+  }
+}
+
+export interface DescriptionFieldConfig {
   description?: string;
 }
 

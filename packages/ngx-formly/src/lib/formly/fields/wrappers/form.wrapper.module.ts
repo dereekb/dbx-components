@@ -1,5 +1,4 @@
 import { MatButtonModule } from '@angular/material/button';
-import { DbNgxTextModule } from '@/app/common/responsive/text/text.module';
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
@@ -13,6 +12,7 @@ import { FormExpandableSectionWrapperComponent } from './expandable.wrapper.comp
 import { AutoTouchFieldWrapperComponent } from './autotouch.wrapper.component';
 import { FormToggleSectionWrapperComponent } from './toggle.wrapper.component';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { DbNgxTextModule } from '@dereekb/ngx-web';
 
 @NgModule({
   imports: [

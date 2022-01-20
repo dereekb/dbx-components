@@ -1,7 +1,8 @@
 import { FormlyFieldConfig } from '@ngx-formly/core';
-import { ADDRESS_LINE_MAX_LENGTH } from '../../utility/constants.validation';
-import { cityField, countryField, stateField, textField, zipCodeField } from './text';
-import { flexLayoutWrapper } from './wrappers/flex.wrapper.layout';
+import { cityField, countryField, stateField, textField, zipCodeField } from './text.field';
+import { flexLayoutWrapper } from '../wrappers/flex.wrapper.layout';
+
+export const ADDRESS_LINE_MAX_LENGTH = 100;
 
 export function addressFormlyFields(): FormlyFieldConfig[] {
   return [
@@ -10,9 +11,7 @@ export function addressFormlyFields(): FormlyFieldConfig[] {
       label: 'Line 1',
       placeholder: '',
       required: false,
-      attributes: {
-        autocomplete: 'address-line1',
-      },
+      autocomplete: 'address-line1',
       maxLength: ADDRESS_LINE_MAX_LENGTH
     }),
     textField({
@@ -20,9 +19,7 @@ export function addressFormlyFields(): FormlyFieldConfig[] {
       label: 'Line 2',
       placeholder: '',
       required: false,
-      attributes: {
-        autocomplete: 'address-line2'
-      },
+      autocomplete: 'address-line2',
       maxLength: ADDRESS_LINE_MAX_LENGTH
     }),
     flexLayoutWrapper([{

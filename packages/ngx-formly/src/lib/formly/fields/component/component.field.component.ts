@@ -1,7 +1,7 @@
-import {
-  Component, ComponentFactoryResolver, OnInit, Type, ViewChild, ViewContainerRef
-} from '@angular/core';
+import { Component, OnInit, Type } from '@angular/core';
+import { DbNgxInjectedComponentConfig } from '@dereekb/ngx-core';
 import { FieldType, FormlyFieldConfig } from '@ngx-formly/core';
+import { Maybe } from '@dereekb/util';
 
 export interface FormComponentFieldWrappedComponent {
   field: FieldType<FormComponentFieldFieldConfig>;
@@ -17,37 +17,29 @@ export interface FormComponentFieldFieldConfig<T extends FormComponentFieldWrapp
 
 @Component({
   template: `
-    <div class="form-wrapped-component">
-      <ng-template #content></ng-template>
-    </div>
+    <div class="form-wrapped-component" dbx-injected-content [config]="config"></div>
   `,
   styleUrls: ['./fields.scss']
 })
 export class FormComponentFieldComponent<T extends FormComponentFieldWrappedComponent = any> extends FieldType<FormComponentFieldFieldConfig<T>> implements OnInit {
 
-  @ViewChild('content', { static: true, read: ViewContainerRef })
-  content!: ViewContainerRef;
+  private _config?: DbNgxInjectedComponentConfig;
 
-  constructor(private resolver: ComponentFactoryResolver) {
+  get config(): Maybe<DbNgxInjectedComponentConfig> {
+    return this._config;
+  }
+
+  constructor() {
     super();
   }
 
   ngOnInit(): void {
-    this.content.clear();
-    const componentClass = this.field.componentClass;
-
-    if (componentClass) {
-      const factory = this.resolver.resolveComponentFactory(componentClass);
-      const componentRef = this.content.createComponent(factory);
-      componentRef.instance.field = this;
-    }
+    this._config = {
+      componentClass: this.field.componentClass,
+      init: (instance: FormComponentFieldWrappedComponent) => {
+        instance.field = this;
+      }
+    };
   }
 
-}
-
-export function componentField<T extends FormComponentFieldWrappedComponent>({ componentClass }: { componentClass: Type<T> }): FormComponentFieldFieldConfig<T> {
-  return {
-    type: 'component',
-    componentClass
-  };
 }

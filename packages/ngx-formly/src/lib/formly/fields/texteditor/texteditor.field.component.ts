@@ -7,7 +7,7 @@ import { debounceTime, filter } from 'rxjs/operators';
 import { SubscriptionObject } from '@dereekb/util-rxjs';
 import { Maybe } from '@dereekb/util';
 
-export interface TextEditorFieldConfig extends FormlyFieldConfig {
+export interface TextEditorComponentFieldConfig extends FormlyFieldConfig {
   // TODO: Add button that can retrieve trimmed content and inject it into the editor as a quoted value.
 }
 
@@ -25,7 +25,7 @@ export interface TextEditorFieldConfig extends FormlyFieldConfig {
   `,
   styleUrls: ['./texteditor.scss']
 })
-export class TextEditorFieldComponent<T extends TextEditorFieldConfig = TextEditorFieldConfig> extends FieldType<T> implements OnInit, OnDestroy {
+export class TextEditorFieldComponent<T extends TextEditorComponentFieldConfig = TextEditorComponentFieldConfig> extends FieldType<T> implements OnInit, OnDestroy {
 
   private _editor?: Editor;
   private _sub = new SubscriptionObject();

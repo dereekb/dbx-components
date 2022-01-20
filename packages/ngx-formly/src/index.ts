@@ -1,1 +1,1 @@
-export * from './lib/ngx-formly.module';
+export * from './lib';

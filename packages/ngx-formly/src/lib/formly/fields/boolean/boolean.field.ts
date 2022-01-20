@@ -1,7 +1,9 @@
 import { FormlyFieldConfig } from '@ngx-formly/core';
-import { FieldConfig, FieldConfigWithDescription, formlyField } from './field';
+import { FieldConfig, formlyField, DefaultValueFieldConfig, DescriptionFieldConfig } from '../field';
 
-export function toggleField({ key, label, description, defaultValue, required }: FieldConfigWithDescription<boolean>): FormlyFieldConfig {
+export interface ToggleFieldConfig extends Omit<FieldConfig, 'placeholder' | 'autocomplete'>, DefaultValueFieldConfig<boolean>, DescriptionFieldConfig { }
+
+export function toggleField({ key, label, description, defaultValue, required, readonly }: ToggleFieldConfig): FormlyFieldConfig {
   return formlyField({
     key,
     type: 'toggle',
@@ -10,23 +12,30 @@ export function toggleField({ key, label, description, defaultValue, required }:
     templateOptions: {
       label,
       description,
-      required
+      required,
+      readonly
     }
   });
 }
 
-export function agreeField({ key = 'agree', label = '', placeholder = '', required = true }: Partial<FieldConfig>): FormlyFieldConfig {
+export interface CheckboxFieldConfig extends FieldConfig, DefaultValueFieldConfig<boolean>, DescriptionFieldConfig { }
+
+export function checkboxField({ key, label = '', placeholder = '', defaultValue, required, readonly, autocomplete }: CheckboxFieldConfig): FormlyFieldConfig {
   return {
     key,
     type: 'checkbox',
+    defaultValue,
     templateOptions: {
       label,
       placeholder,
-      required
+      required,
+      readonly,
+      autocomplete
     },
   };
 }
 
+/*
 export function acceptTermsField({ key = 'accept', label = 'Accept Terms', description = 'In order to proceed, please accept terms', required = true }
   : Partial<FieldConfigWithDescription>): FormlyFieldConfig {
   return {
@@ -45,3 +54,4 @@ export function acceptTermsField({ key = 'accept', label = 'Accept Terms', descr
     },
   } as FormlyFieldConfig;
 }
+*/

@@ -19,4 +19,4 @@ import { FormComponentFieldComponent } from './component.field.component';
     FormComponentFieldComponent
   ]
 })
-export class DbNgxDateFieldModule { }
+export class DbNgxComponentFieldModule { }
