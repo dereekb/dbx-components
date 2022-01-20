@@ -3,11 +3,11 @@
   "projects": {
     "browser": "packages/browser",
     "date": "packages/date",
+    "dbx-core": "packages/dbx-core",
+    "dbx-form": "packages/dbx-form",
+    "dbx-web": "packages/dbx-web",
     "model": "packages/model",
     "ngx-analytics": "packages/ngx-analytics",
-    "ngx-core": "packages/ngx-core",
-    "ngx-formly": "packages/ngx-formly",
-    "ngx-web": "packages/ngx-web",
     "util": "packages/util",
     "util-rxjs": "packages/util-rxjs"
   }

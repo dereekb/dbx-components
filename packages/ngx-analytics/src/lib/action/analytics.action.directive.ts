@@ -2,7 +2,7 @@ import { exhaustMap, map, switchMap, tap } from 'rxjs/operators';
 import { Host, Directive, Input, OnInit, OnDestroy } from '@angular/core';
 import { BehaviorSubject, merge, Observable, of } from 'rxjs';
 import { ActionContextStoreSourceInstance } from '@dereekb/ngx-actions';
-import { AbstractSubscriptionDirective, CodedError } from '@dereekb/ngx-core';
+import { AbstractSubscriptionDirective, CodedError } from '@dereekb/dbx-core';
 import { DbNgxAnalyticsService } from '../analytics.service';
 
 export enum DbNgxActionAnalyticsTriggerType {
