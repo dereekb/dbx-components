@@ -184,6 +184,58 @@
       },
       "tags": []
     },
+    "demo-api": {
+      "root": "packages/demo-api",
+      "sourceRoot": "packages/demo-api/src",
+      "projectType": "application",
+      "targets": {
+        "build": {
+          "executor": "@nrwl/node:build",
+          "outputs": ["{options.outputPath}"],
+          "options": {
+            "outputPath": "dist/packages/demo-api",
+            "main": "packages/demo-api/src/main.ts",
+            "tsConfig": "packages/demo-api/tsconfig.app.json",
+            "assets": ["packages/demo-api/src/assets"]
+          },
+          "configurations": {
+            "production": {
+              "optimization": true,
+              "extractLicenses": true,
+              "inspect": false,
+              "fileReplacements": [
+                {
+                  "replace": "packages/demo-api/src/environments/environment.ts",
+                  "with": "packages/demo-api/src/environments/environment.prod.ts"
+                }
+              ]
+            }
+          }
+        },
+        "serve": {
+          "executor": "@nrwl/node:execute",
+          "options": {
+            "buildTarget": "demo-api:build"
+          }
+        },
+        "lint": {
+          "executor": "@nrwl/linter:eslint",
+          "outputs": ["{options.outputFile}"],
+          "options": {
+            "lintFilePatterns": ["packages/demo-api/**/*.ts"]
+          }
+        },
+        "test": {
+          "executor": "@nrwl/jest:jest",
+          "outputs": ["coverage/packages/demo-api"],
+          "options": {
+            "jestConfig": "packages/demo-api/jest.config.js",
+            "passWithNoTests": true
+          }
+        }
+      },
+      "tags": []
+    },
     "demo-e2e": {
       "root": "packages/demo-e2e",
       "sourceRoot": "packages/demo-e2e/src",
