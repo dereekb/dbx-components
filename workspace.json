@@ -46,6 +46,48 @@
       "tags": []
     },
     "dbx-core": "packages/dbx-core",
+    "dbx-firebase": {
+      "projectType": "library",
+      "root": "packages/dbx-firebase",
+      "sourceRoot": "packages/dbx-firebase/src",
+      "prefix": "dereekb",
+      "targets": {
+        "build": {
+          "executor": "@nrwl/angular:package",
+          "outputs": ["dist/packages/dbx-firebase"],
+          "options": {
+            "project": "packages/dbx-firebase/ng-package.json"
+          },
+          "configurations": {
+            "production": {
+              "tsConfig": "packages/dbx-firebase/tsconfig.lib.prod.json"
+            },
+            "development": {
+              "tsConfig": "packages/dbx-firebase/tsconfig.lib.json"
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "test": {
+          "executor": "@nrwl/jest:jest",
+          "outputs": ["coverage/packages/dbx-firebase"],
+          "options": {
+            "jestConfig": "packages/dbx-firebase/jest.config.js",
+            "passWithNoTests": true
+          }
+        },
+        "lint": {
+          "executor": "@nrwl/linter:eslint",
+          "options": {
+            "lintFilePatterns": [
+              "packages/dbx-firebase/src/**/*.ts",
+              "packages/dbx-firebase/src/**/*.html"
+            ]
+          }
+        }
+      },
+      "tags": []
+    },
     "dbx-form": "packages/dbx-form",
     "dbx-web": "packages/dbx-web",
     "model": "packages/model",
