@@ -38,6 +38,7 @@
     "date-fns-tz": "1.2.2",
     "extra-set": "^2.2.11",
     "linkify-string": "^3.0.4",
+    "linkifyjs": "^3.0.5",
     "lodash.clonedeep": "4.5.0",
     "lodash.isequal": "4.5.0",
     "mat-progress-buttons": "9.3.1",
