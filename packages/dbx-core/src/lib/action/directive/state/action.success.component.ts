@@ -1,7 +1,7 @@
 import { Component, Input } from '@angular/core';
 import { of } from 'rxjs';
 import { delay, exhaustMap, shareReplay, startWith } from 'rxjs/operators';
-import { ActionContextStoreSourceInstance } from '@dereekb/dbx-core';
+import { ActionContextStoreSourceInstance } from '../../action.store.source';
 
 /**
  * Displays the input content when success is set.

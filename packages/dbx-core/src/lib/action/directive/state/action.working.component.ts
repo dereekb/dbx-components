@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { ActionContextStoreSourceInstance } from '@dereekb/dbx-core';
+import { ActionContextStoreSourceInstance } from '../../action.store.source';
 
 /**
  * Displays the input content when working is set.
