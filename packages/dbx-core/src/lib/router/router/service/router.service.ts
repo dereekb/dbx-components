@@ -1,4 +1,4 @@
-import { SegueRef } from "@dereekb/dbx-core";
+import { SegueRef } from "../../segue";
 
 /**
  * Router service definition that can route the app and provide routing details.

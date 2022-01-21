@@ -1,6 +1,6 @@
 import { Directive, Optional, OnDestroy, Host } from '@angular/core';
-import { ProvideActionStoreSource, SecondaryActionContextStoreSource } from './action.store.source';
-import { ActionContextBaseSource } from './action.holder';
+import { ProvideActionStoreSource, SecondaryActionContextStoreSource } from '../../action.store.source';
+import { ActionContextBaseSource } from '../../action.holder';
 
 /**
  * Provides an DbNgxActionContext.

@@ -3,7 +3,7 @@ import { Directive, OnInit, OnDestroy, Input } from '@angular/core';
 import { Maybe } from '@dereekb/util';
 import { AbstractSubscriptionDirective } from '../../subscription';
 import { shareReplay, distinctUntilChanged, switchMap, tap } from 'rxjs/operators';
-import { DbNgxButton } from '@dereekb/dbx-core';
+import { DbNgxButton } from '../button';
 import { BehaviorSubject } from 'rxjs';
 import { SegueRef, DbNgxRouterService } from '../../router';
 

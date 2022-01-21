@@ -1,6 +1,6 @@
+import { ActionContextStoreSourceInstance } from '../../action.store.source';
 import { switchMap, mergeMap, map, withLatestFrom, shareReplay } from 'rxjs/operators';
 import { Directive, Host, Input, OnInit } from '@angular/core';
-import { ActionContextStoreSourceInstance } from './action.store.source';
 import { BehaviorSubject, Observable, of, EMPTY } from 'rxjs';
 import { OnDestroy } from '@angular/core';
 import { hasValueOrNotEmpty, Maybe } from '@dereekb/util';

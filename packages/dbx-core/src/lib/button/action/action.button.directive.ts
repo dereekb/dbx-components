@@ -1,6 +1,6 @@
 import { Directive, Host, OnInit, OnDestroy, NgZone } from '@angular/core';
 import { DbNgxButton } from '../button';
-import { ActionContextStoreSourceInstance } from '../../action';
+import { ActionContextStoreSourceInstance } from '../../action/action.store.source';
 import { DbNgxActionButtonTriggerDirective } from './action.button.trigger.directive';
 import { SubscriptionObject } from '@dereekb/rxjs';
 

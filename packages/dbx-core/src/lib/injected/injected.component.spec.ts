@@ -1,11 +1,9 @@
-import { DbNgxInjectedTemplateConfig } from '@dereekb/dbx-core';
-import { DbNgxInjectedComponentConfig } from '@dereekb/dbx-core';
+import { DbNgxInjectedTemplateConfig, DbNgxInjectedComponentConfig } from './injected';
 import { DbNgxInjectedComponent } from './injected.component';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Component, Input, Type, ViewChild } from '@angular/core';
 import { By, BrowserModule } from '@angular/platform-browser';
-import { AnchorType, ClickableAnchor, DbNgxInjectedComponentModule } from '@dereekb/dbx-core';
-import { first } from 'rxjs/operators';
+import { DbNgxInjectedComponentModule } from './injected.component.module';
 
 const CUSTOM_CONTENT_ID = 'custom-content';
 const CUSTOM_CONTENT = 'Custom Content';

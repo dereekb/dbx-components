@@ -2,8 +2,8 @@ import { DbNgxActionFromMapDirective } from './action.map.key.directive';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Component, ViewChild, Input } from '@angular/core';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { DbNgxCoreActionModule } from './action.module';
-import { DbNgxActionComponent } from './action.component';
+import { DbNgxCoreActionModule } from '../../action.module';
+import { DbNgxActionComponent } from '../context/action.component';
 import { DbNgxActionContextMapDirective } from './action.map.directive';
 import { DbNgxActionMapSourceDirective } from './action.map.source.directive';
 

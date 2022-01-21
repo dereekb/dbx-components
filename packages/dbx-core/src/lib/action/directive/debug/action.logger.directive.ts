@@ -1,6 +1,6 @@
 import { Directive, OnInit, Host } from '@angular/core';
-import { AbstractSubscriptionDirective } from '../subscription';
-import { ActionContextStoreSourceInstance } from './action.store.source';
+import { AbstractSubscriptionDirective } from '../../../subscription';
+import { ActionContextStoreSourceInstance } from '../../action.store.source';
 
 /**
  * Prints out the current state to the console. Useful for debugging.

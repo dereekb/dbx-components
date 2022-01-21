@@ -3,7 +3,7 @@ import { Directive, Input, OnDestroy } from '@angular/core';
 import { Maybe } from '@dereekb/util';
 import { BehaviorSubject } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
-import { ProvideSecondaryActionStoreSource, SecondaryActionContextStoreSource, ActionContextStoreSource, actionContextStoreSourcePipe } from './action.store.source';
+import { ProvideSecondaryActionStoreSource, SecondaryActionContextStoreSource, ActionContextStoreSource, actionContextStoreSourcePipe } from '../../action.store.source';
 
 /**
  * Directive that provides a DbNgxActionSourceDirective that is passed in.

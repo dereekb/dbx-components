@@ -1,4 +1,4 @@
-import { canReadyValue } from '@dereekb/dbx-core';
+import { canReadyValue } from './action.store';
 import { of } from 'rxjs';
 import { first, timeoutWith } from 'rxjs/operators';
 import { ActionContextStore } from './action.store';

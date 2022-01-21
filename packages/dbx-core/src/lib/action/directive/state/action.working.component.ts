@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { ActionContextStoreSourceInstance } from '@dereekb/dbx-core';
 
 /**
@@ -16,10 +16,6 @@ export class DbNgxActionWorkingComponent {
 
   readonly show$ = this.source.isWorking$;
 
-  constructor(public readonly source: ActionContextStoreSourceInstance) {
-    this.show$.subscribe((x) => {
-      console.log('dbx-action-working Show: ', x);
-    });
-  }
+  constructor(public readonly source: ActionContextStoreSourceInstance) { }
 
 }

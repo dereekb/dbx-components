@@ -2,7 +2,8 @@ import { DbNgxCoreButtonModule } from './button.module';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Component, ViewChild } from '@angular/core';
 import { filter } from 'rxjs/operators';
-import { DbNgxButtonDirective, DbNgxLoadingButtonDirective } from '.';
+import { DbNgxButtonDirective } from './button.directive';
+import { DbNgxLoadingButtonDirective } from './button.loading.directive';
 import { SimpleLoadingContext } from '@dereekb/rxjs';
 
 describe('DbNgxLoadingButton', () => {

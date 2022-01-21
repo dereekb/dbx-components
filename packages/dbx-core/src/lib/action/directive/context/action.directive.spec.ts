@@ -3,11 +3,11 @@ import { Component, ViewChild, Input } from '@angular/core';
 import { of } from 'rxjs';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { DbNgxActionContextDirective } from './action.directive';
-import { DbNgxActionHandlerDirective } from './handler.directive';
-import { DbNgxCoreActionModule } from './action.module';
+import { DbNgxActionHandlerDirective } from '../state/action.handler.directive';
+import { DbNgxCoreActionModule } from '../../action.module';
 import { first, tap } from 'rxjs/operators';
-import { ActionContextStoreSourceInstance } from './action.store.source';
-import { HandleActionFunction } from './action.handler';
+import { ActionContextStoreSourceInstance } from '../../action.store.source';
+import { HandleActionFunction } from '../../action.handler';
 
 describe('DbNgxActionContextDirective', () => {
 

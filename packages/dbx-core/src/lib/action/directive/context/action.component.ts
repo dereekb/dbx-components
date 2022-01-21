@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { ProvideActionStoreSource } from './action.store.source';
+import { ProvideActionStoreSource } from '../../action.store.source';
 import { DbNgxActionContextDirective } from './action.directive';
 
 @Component({

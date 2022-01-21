@@ -1,6 +1,6 @@
 import { Directive, Host, Input, OnDestroy } from '@angular/core';
 import { Maybe } from '@dereekb/util';
-import { ActionContextStoreSource } from './action.store.source';
+import { ActionContextStoreSource } from '../../action.store.source';
 import { DbNgxActionContextMapDirective } from './action.map.directive';
 import { ActionKey } from './action.map';
 

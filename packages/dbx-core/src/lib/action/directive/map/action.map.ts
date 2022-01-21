@@ -1,4 +1,4 @@
-import { ActionContextStoreSource } from "@dereekb/dbx-core";
+import { ActionContextStoreSource } from '../../action.store.source';
 
 export type ActionKey = string;
 

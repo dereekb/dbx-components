@@ -1,5 +1,5 @@
 import { ModuleWithProviders, NgModule } from '@angular/core';
-import { DbNgxRouterTransitionService } from '../..';
+import { DbNgxRouterTransitionService } from '../../service/router.transition.service';
 import { DbNgxRouterService } from '../../service/router.service';
 import { DbNgxUIRouterService } from './uirouter.router.service';
 

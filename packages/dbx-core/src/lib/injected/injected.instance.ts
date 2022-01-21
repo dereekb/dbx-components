@@ -1,10 +1,8 @@
-import { Initialized } from './../../../../util/src/lib/lifecycle';
-import { Destroyable } from '../../../../util/src/lib/lifecycle';
 import { ComponentRef, ViewContainerRef } from '@angular/core';
 import { distinctUntilChanged, map, shareReplay } from 'rxjs/operators';
 import { BehaviorSubject, combineLatest } from 'rxjs';
 import { DbNgxInjectedComponentConfig, DbNgxInjectedTemplateConfig } from './injected';
-import { Maybe } from '@dereekb/util';
+import { Initialized, Destroyable, Maybe } from '@dereekb/util';
 import { SubscriptionObject, filterMaybe, skipFirstMaybe } from '@dereekb/rxjs';
 
 /**

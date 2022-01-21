@@ -4,7 +4,7 @@ import { Maybe } from '@dereekb/util';
 import { BehaviorSubject } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import { ActionKey } from './action.map';
-import { ProvideSecondaryActionStoreSource, SecondaryActionContextStoreSource } from './action.store.source';
+import { ProvideSecondaryActionStoreSource, SecondaryActionContextStoreSource } from '../../action.store.source';
 import { DbNgxActionContextMapDirective } from './action.map.directive';
 
 /**

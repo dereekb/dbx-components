@@ -1,8 +1,8 @@
 import { Directive, Host, Input, OnDestroy, OnInit } from '@angular/core';
 import { map, shareReplay, switchMap, tap } from 'rxjs/operators';
-import { AbstractSubscriptionDirective } from '../subscription';
-import { ActionContextStoreSourceInstance } from './action.store.source';
-import { HandleActionFunction, WorkHandlerContextSourceDelegate, handleWorkValueReadyFn } from './action.handler';
+import { AbstractSubscriptionDirective } from '../../../subscription';
+import { ActionContextStoreSourceInstance } from '../../action.store.source';
+import { HandleActionFunction, WorkHandlerContextSourceDelegate, handleWorkValueReadyFn } from '../../action.handler';
 import { Maybe } from '@dereekb/util';
 import { filterMaybe } from '@dereekb/rxjs';
 import { BehaviorSubject } from 'rxjs';
