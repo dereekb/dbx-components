@@ -1,6 +1,6 @@
 import { Observable, Subject, BehaviorSubject, of } from 'rxjs';
 import { filter, first, shareReplay, switchMap } from 'rxjs/operators';
-import { Injectable, Optional } from '@angular/core';
+import { Inject, Injectable, Optional } from '@angular/core';
 import { SubscriptionObject } from '@dereekb/rxjs';
 import { AnalyticsEvent, AnalyticsEventData, AnalyticsEventName, AnalyticsUser, NewUserAnalyticsEventData, UserAnalyticsEvent } from './analytics';
 import { AnalyticsStreamEvent, AnalyticsStreamEventType } from './analytics.stream';
@@ -75,7 +75,7 @@ export class AnalyticsStreamEventAnalyticsEventWrapper implements AnalyticsStrea
 export class DbNgxAnalyticsService implements DbNgxAnalyticsEventStreamService, DbNgxAnalyticsEventEmitterService, Destroyable {
 
   // TODO: Make these configurable.
-  
+
   static readonly USER_REGISTRATION_EVENT_NAME = 'User Registered';
   static readonly USER_LOGIN_EVENT_NAME = 'User Login';
   static readonly USER_LOGOUT_EVENT_NAME = 'User Logout';
@@ -90,7 +90,10 @@ export class DbNgxAnalyticsService implements DbNgxAnalyticsEventStreamService, 
   private _userSourceSub = new SubscriptionObject();
   private _loggerSub = new SubscriptionObject();
 
-  constructor(private _config: DbNgxAnalyticsServiceConfiguration, @Optional() userSource: DbNgxAnalyticsUserSource | undefined = _config.userSource) {
+  constructor(
+    private _config: DbNgxAnalyticsServiceConfiguration,
+    @Optional() @Inject(DbNgxAnalyticsUserSource) userSource: Maybe<DbNgxAnalyticsUserSource> = _config.userSource
+  ) {
     this._init();
 
     if (userSource) {
