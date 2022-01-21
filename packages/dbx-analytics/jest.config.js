@@ -1,5 +1,5 @@
 module.exports = {
-  displayName: 'ngx-analytics',
+  displayName: 'dbx-analytics',
   preset: '../../jest.preset.js',
   setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
   globals: {
@@ -8,7 +8,7 @@ module.exports = {
       stringifyContentPathRegex: '\\.(html|svg)$',
     },
   },
-  coverageDirectory: '../../coverage/packages/ngx-analytics',
+  coverageDirectory: '../../coverage/packages/dbx-analytics',
   transform: {
     '^.+\\.(ts|mjs|js|html)$': 'jest-preset-angular',
   },

@@ -3,11 +3,52 @@
   "projects": {
     "browser": "packages/browser",
     "date": "packages/date",
+    "dbx-analytics": {
+      "projectType": "library",
+      "root": "packages/dbx-analytics",
+      "sourceRoot": "packages/dbx-analytics/src",
+      "prefix": "dereekb",
+      "targets": {
+        "build": {
+          "executor": "@nrwl/angular:package",
+          "outputs": ["dist/packages/dbx-analytics"],
+          "options": {
+            "project": "packages/dbx-analytics/ng-package.json"
+          },
+          "configurations": {
+            "production": {
+              "tsConfig": "packages/dbx-analytics/tsconfig.lib.prod.json"
+            },
+            "development": {
+              "tsConfig": "packages/dbx-analytics/tsconfig.lib.json"
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "test": {
+          "executor": "@nrwl/jest:jest",
+          "outputs": ["coverage/packages/dbx-analytics"],
+          "options": {
+            "jestConfig": "packages/dbx-analytics/jest.config.js",
+            "passWithNoTests": true
+          }
+        },
+        "lint": {
+          "executor": "@nrwl/linter:eslint",
+          "options": {
+            "lintFilePatterns": [
+              "packages/dbx-analytics/src/**/*.ts",
+              "packages/dbx-analytics/src/**/*.html"
+            ]
+          }
+        }
+      },
+      "tags": []
+    },
     "dbx-core": "packages/dbx-core",
     "dbx-form": "packages/dbx-form",
     "dbx-web": "packages/dbx-web",
     "model": "packages/model",
-    "ngx-analytics": "packages/ngx-analytics",
     "rxjs": "packages/rxjs",
     "util": "packages/util",
     "workspace": {

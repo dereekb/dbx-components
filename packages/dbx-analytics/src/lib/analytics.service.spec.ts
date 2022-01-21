@@ -1,8 +1,10 @@
 import {
-  DbNgxAnalyticsService, AnalyticsServiceConfiguration,
-  AnalyticsUserSource, AnalyticsUser, AnalyticsStreamEvent, AnalyticsStreamEventType, AbstractAnalyticsServiceListener
+  DbNgxAnalyticsService, DbNgxAnalyticsServiceConfiguration,
+  DbNgxAnalyticsUserSource, AbstractAnalyticsServiceListener
 } from './analytics.service';
 import { BehaviorSubject, Subject } from 'rxjs';
+import { AnalyticsUser } from './analytics';
+import { AnalyticsStreamEvent, AnalyticsStreamEventType } from './analytics.stream';
 
 class TestAnalyticsServiceListener extends AbstractAnalyticsServiceListener {
 
@@ -16,21 +18,18 @@ class TestAnalyticsServiceListener extends AbstractAnalyticsServiceListener {
 
 describe('Analytics Service', () => {
 
-  const userStream = new BehaviorSubject<AnalyticsUser>(undefined);
+  const userStream = new BehaviorSubject<AnalyticsUser>({ user: '0' });
 
   const testListener: TestAnalyticsServiceListener = new TestAnalyticsServiceListener();
 
-  const testUserSource: AnalyticsUserSource = {
-    userStream,
-    getAnalyticsUser() {
-      return userStream;
-    }
+  const testUserSource: DbNgxAnalyticsUserSource = {
+    analyticsUser$: userStream
   };
 
   let analyticsService: DbNgxAnalyticsService;
 
   beforeEach(() => {
-    const configuration: AnalyticsServiceConfiguration = {
+    const configuration: DbNgxAnalyticsServiceConfiguration = {
       listeners: [testListener],
       isProduction: true,
       userSource: testUserSource

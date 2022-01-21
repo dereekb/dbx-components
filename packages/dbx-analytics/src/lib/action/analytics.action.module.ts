@@ -1,4 +1,4 @@
-import { NgModule, ModuleWithProviders, Provider } from '@angular/core';
+import { NgModule } from '@angular/core';
 import { DbNgxActionAnalyticsDirective } from './analytics.action.directive';
 
 @NgModule({

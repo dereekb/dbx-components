@@ -7,7 +7,7 @@ export interface DbNgxAnalyticsModuleOptions {
   /**
    * Provides a AnalyticsServiceConfiguration value.
    */
-  analyticsConfigurationProvider?: Provider;
+  analyticsConfigurationProvider: Provider;
 
 }
 

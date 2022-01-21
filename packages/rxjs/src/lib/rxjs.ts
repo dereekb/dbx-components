@@ -1,7 +1,7 @@
 import { MonoTypeOperatorFunction } from 'rxjs';
 import { Maybe } from '@dereekb/util';
 import { combineLatest, identity, Observable, of, OperatorFunction, isObservable } from 'rxjs';
-import { map, scan, startWith, shareReplay, distinctUntilChanged, filter, skipWhile } from 'rxjs/operators';
+import { map, scan, startWith, shareReplay, distinctUntilChanged, filter, skipWhile, switchMap } from 'rxjs/operators';
 
 /**
  * Returns the pipe if usePipe is true, otherwise returns the identity.
@@ -62,4 +62,20 @@ export function filterMaybe<T>(): OperatorFunction<Maybe<T>, T> {
  */
 export function skipFirstMaybe<T>(): MonoTypeOperatorFunction<Maybe<T>> {
   return skipWhile((x: Maybe<T>) => (x == null));
+}
+
+/**
+ * Provides a switchMap that will emit the observable if the observable is defined, otherwise will return the default value.
+ * 
+ * @param defaultValue 
+ * @returns 
+ */
+export function switchMapMaybeObs<T = any>(defaultValue?: Maybe<T>): OperatorFunction<Maybe<Observable<Maybe<T>>>, Maybe<T>> {
+  return switchMap((x: Maybe<Observable<Maybe<T>>>) => {
+    if (x != null) {
+      return x;
+    } else {
+      return of(defaultValue);
+    }
+  })
 }
