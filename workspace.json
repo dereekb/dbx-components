@@ -9,6 +9,18 @@
     "model": "packages/model",
     "ngx-analytics": "packages/ngx-analytics",
     "rxjs": "packages/rxjs",
-    "util": "packages/util"
+    "util": "packages/util",
+    "workspace": {
+      "root": ".",
+      "targets": {
+        "version": {
+          "executor": "@jscutlery/semver:version",
+          "options": {
+            "syncVersions": true,
+            "commitMessageFormat": "chore(${projectName}): release version ${version}"
+          }
+        }
+      }
+    }
   }
 }
