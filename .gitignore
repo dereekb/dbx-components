@@ -40,3 +40,8 @@ testem.log
 Thumbs.db
 
 .angular
+
+# firebase
+.firebase/*
+.firebaserc
+firebase-debug.log
