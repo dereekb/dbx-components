@@ -53,7 +53,7 @@ export abstract class AbstractDbNgxButtonDirective extends AbstractSubscriptionD
   /**
    * Pre-interceptor button click.
    */
-  protected _buttonClick = new Subject();
+  protected _buttonClick = new Subject<void>();
   protected _buttonInterceptor = new BehaviorSubject<Maybe<DbNgxButtonInterceptor>>(undefined);
 
   ngOnInit(): void {

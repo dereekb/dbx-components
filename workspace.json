@@ -235,10 +235,30 @@
             }
           }
         },
-        "serve": {
+        "run-emulators": {
+          "builder": "@nrwl/workspace:run-commands",
+          "options": {
+            "command": "firebase emulators:start"
+          }
+        },
+        "serve-api": {
           "executor": "@nrwl/node:execute",
           "options": {
             "buildTarget": "demo-api:build"
+          }
+        },
+        "serve": {
+          "builder": "@nrwl/workspace:run-commands",
+          "options": {
+            "commands": [
+              {
+                "command": "nx run-emulators demo-api"
+              },
+              {
+                "command": "nx serve-api demo-api"
+              }
+            ],
+            "parallel": true
           }
         },
         "lint": {

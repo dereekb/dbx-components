@@ -88,7 +88,7 @@ export class DbNgxDateTimeFieldComponent extends FieldType<DateTimeFormlyFieldCo
   private _formControlObs = new BehaviorSubject<Maybe<AbstractControl>>(undefined);
   readonly formControl$ = this._formControlObs.pipe(filterMaybe());
 
-  private _updateTime = new Subject();
+  private _updateTime = new Subject<void>();
 
   readonly value$ = this.formControl$.pipe(
     switchMap(control => control.valueChanges.pipe(startWith(control.value))),

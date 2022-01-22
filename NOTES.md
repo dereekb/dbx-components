@@ -14,7 +14,7 @@ These steps were use for setting up firebase for the demo components. Inspiratio
 
 Setting up our workspace to work with Firebase is fairly straightforward. Start by making sure Firebase is [installed globally](https://firebase.google.com/docs/functions/get-started):
 
-> `npm install -g firebase-tools@latest `
+> `npm install -g firebase-tools@latest`
 
 Go ahead and also already set up your project on Firebase.
 

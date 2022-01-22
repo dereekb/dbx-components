@@ -24,7 +24,7 @@ const INITIAL_STATE: TwoColumnsState = {
 @Injectable()
 export class TwoColumnsContextStore extends ComponentStore<TwoColumnsState> implements OnDestroy {
 
-  private readonly _back = new Subject();
+  private readonly _back = new Subject<void>();
 
   constructor() {
     super({ ...INITIAL_STATE });

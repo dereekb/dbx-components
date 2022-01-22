@@ -56,9 +56,15 @@
     "ngx-mat-intl-tel-input": "4.1.0",
     "reflect-metadata": "0.1.13",
     "rrule": "dereekb/rrule#17adf5708d6567b4d01a3a8afd106261421ea492",
-    "rxjs": "6.6.7",
+    "rxjs": "7.5.2",
     "tslib": "^2.0.0",
     "zone.js": "~0.11.4"
+  },
+  "resolutions": {
+    "@angular/cdk": "13.1.1",
+    "@angular/common": "13.1.2",
+    "@angular/compiler": "13.1.2",
+    "@angular/core": "13.1.2"
   },
   "devDependencies": {
     "@angular-devkit/build-angular": "13.1.2",
@@ -71,8 +77,8 @@
     "@commitlint/cli": "^16.0.1",
     "@commitlint/config-angular": "^16.0.0",
     "@jscutlery/semver": "^2.17.5",
-    "@nestjs/schematics": "^8.0.0",
-    "@nestjs/testing": "^7.0.0",
+    "@nestjs/schematics": "8.0.5",
+    "@nestjs/testing": "8.2.6",
     "@ngrx/store-devtools": "^13.0.2",
     "@nrwl/angular": "^13.4.3",
     "@nrwl/cli": "13.4.3",
