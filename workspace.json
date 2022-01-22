@@ -180,6 +180,26 @@
             "jestConfig": "packages/demo/jest.config.js",
             "passWithNoTests": true
           }
+        },
+        "deploy-dist-to-hosting": {
+          "builder": "@nrwl/workspace:run-commands",
+          "options": {
+            "command": "firebase deploy --only hosting"
+          }
+        },
+        "deploy": {
+          "builder": "@nrwl/workspace:run-commands",
+          "options": {
+            "commands": [
+              {
+                "command": "nx build demo"
+              },
+              {
+                "command": "nx deploy-dist-to-hosting demo"
+              }
+            ],
+            "parallel": false
+          }
         }
       },
       "tags": []
@@ -196,7 +216,10 @@
             "outputPath": "dist/packages/demo-api",
             "main": "packages/demo-api/src/main.ts",
             "tsConfig": "packages/demo-api/tsconfig.app.json",
-            "assets": ["packages/demo-api/src/assets"]
+            "assets": [
+              "packages/demo-api/src/assets"
+            ],
+            "generatePackageJson": true
           },
           "configurations": {
             "production": {
@@ -231,6 +254,26 @@
           "options": {
             "jestConfig": "packages/demo-api/jest.config.js",
             "passWithNoTests": true
+          }
+        },
+        "deploy-dist-to-functions": {
+          "builder": "@nrwl/workspace:run-commands",
+          "options": {
+            "command": "firebase deploy --only functions"
+          }
+        },
+        "deploy": {
+          "builder": "@nrwl/workspace:run-commands",
+          "options": {
+            "commands": [
+              {
+                "command": "nx build demo-api"
+              },
+              {
+                "command": "nx deploy-dist-to-functions demo-api"
+              }
+            ],
+            "parallel": false
           }
         }
       },
