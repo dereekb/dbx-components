@@ -16,9 +16,11 @@ Setting up our workspace to work with Firebase is fairly straightforward. Start 
 
 > `npm install -g firebase-tools@latest`
 
-Go ahead and also already set up your project on Firebase.
+Go ahead and set up your project on Firebase if you have not.
 
 https://console.firebase.google.com/
+
+Create a Service Account to use for development in the Firebase console. Download the key as JSON and add to the root directory as `service_account.json`.
 
 ## Setup
 Start by initializing firebase in the root directory:

@@ -4,6 +4,9 @@ import { ExpressAdapter } from '@nestjs/platform-express';
 import { AppModule } from './app/app.module';
 import * as express from 'express';
 import * as functions from 'firebase-functions';
+import * as admin from 'firebase-admin';
+
+admin.initializeApp();
 
 const server = express();
 
@@ -22,4 +25,4 @@ createNestServer(server)
 
 export const api = functions.https.onRequest(server);
 
-functions.https.onCall
+console.log('Test');

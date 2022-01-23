@@ -1,9 +1,9 @@
-Jan 22, 2022 3:49:53 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketServer start
-INFO: Started WebSocket server on ws://localhost:36751
-API endpoint: http://localhost:9000
+Jan 23, 2022 12:36:47 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketServer start
+INFO: Started WebSocket server on ws://0.0.0.0:40017
+API endpoint: http://0.0.0.0:9902
 If you are using a library that supports the FIRESTORE_EMULATOR_HOST environment variable, run:
 
-   export FIRESTORE_EMULATOR_HOST=localhost:9000
+   export FIRESTORE_EMULATOR_HOST=0.0.0.0:9902
 
 Dev App Server is now running.
 

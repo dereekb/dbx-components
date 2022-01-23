@@ -22,7 +22,7 @@ RUN npm install
 VOLUME ["/code"]
 
 # Install Java for the Emulators
-RUN apt-get update && apt-get -y install default-jre
+RUN apt-get update -y && apt-get install -y curl openjdk-11-jre-headless
 
 # Run Project by default
 CMD sh d-run.sh

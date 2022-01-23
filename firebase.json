@@ -24,22 +24,31 @@
     "rules": "storage.rules"
   },
   "emulators": {
+    "hosting": {
+      "enabled": false
+    },
     "auth": {
+      "host": "0.0.0.0",
       "port": 9900
     },
     "functions": {
+      "host": "0.0.0.0",
       "port": 9901
     },
     "firestore": {
+      "host": "0.0.0.0",
       "port": 9902
     },
     "pubsub": {
+      "host": "0.0.0.0",
       "port": 9903
     },
     "storage": {
+      "host": "0.0.0.0",
       "port": 9904
     },
     "ui": {
+      "host": "0.0.0.0",
       "enabled": true,
       "port": 9905
     }

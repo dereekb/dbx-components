@@ -45,3 +45,15 @@ Thumbs.db
 .firebase/*
 .firebaserc
 firebase-debug.log
+
+npm-debug.log*
+firebase-debug.log*
+database-debug.log*
+firestore-debug.log*
+pubsub-debug.log*
+
+# Environment
+service_account.json
+
+# Docker
+/.cache

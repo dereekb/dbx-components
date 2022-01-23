@@ -253,9 +253,6 @@
             "commands": [
               {
                 "command": "nx run-emulators demo-api"
-              },
-              {
-                "command": "nx serve-api demo-api"
               }
             ],
             "parallel": true
