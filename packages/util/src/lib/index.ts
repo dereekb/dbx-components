@@ -2,6 +2,7 @@ export * from './array';
 export * from './assertion';
 export * from './contact';
 export * from './error';
+export * from './filter';
 export * from './relation';
 export * from './storage';
 export * from './boolean';

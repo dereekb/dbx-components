@@ -15,7 +15,7 @@ export interface LoadingErrorPair {
   /**
    * A Readable server error.
    */
-  error?: ReadableError
+  error?: ReadableError;
 }
 
 /**
@@ -59,6 +59,22 @@ export function loadingStateIsLoading(state: Maybe<LoadingState>): boolean {
 export function loadingStateHasFinishedLoading(state: Maybe<LoadingState>): boolean {
   if (state) {
     return state.loading === false || Boolean(state.model || state.error);
+  } else {
+    return false;
+  }
+}
+
+export function loadingStateHasModel(state: Maybe<LoadingState>): boolean {
+  if (state) {
+    return loadingStateHasFinishedLoading(state) && state.model != null;
+  } else {
+    return false;
+  }
+}
+
+export function loadingStateHasError(state: Maybe<LoadingState>): boolean {
+  if (state) {
+    return loadingStateHasFinishedLoading(state) && state.error != null;
   } else {
     return false;
   }

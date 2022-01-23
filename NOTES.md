@@ -158,12 +158,18 @@ The emulators require having `service_account.json` available. Make sure you get
 
 To run the emulators execute:
 
-> `./serve.sh`
+> `./run-server.sh`
+
+This file instructs docker to start a new container, and execute `nx serve demo-api` inside of it.
 
 Docker will take time to build the Docker Container from our Dockerfile the first time. This may take a few minutes.
 
 The first time the container runs, the firebase emulator function will download and cache files (mapped to .firebase via the `docker-compose.yml` file).
 
-Any changes made to the `demo-api` package will trigger VS Code to build the project and update our dist, causing the functions emulator to update. This lets us develop in real time with an active emulated database.
+Behind the scenes, `nx serve demo-api` runs two commands in parallel:
+- Watching the demo-api folder for buildings.
+- Running emulators. The functions emulator watches and pulls from the `dist/packages/demo-api` folder.
+
+Any changes made to the `demo-api` package will trigger. VS Code to build the project and update our dist, causing the functions emulator to update. This lets us develop in real time with an active emulated database.
 
 ### Testing

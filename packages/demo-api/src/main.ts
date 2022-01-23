@@ -10,6 +10,8 @@ admin.initializeApp();
 
 const server = express();
 
+console.log('Test');
+
 export const createNestServer = async (expressInstance) => {
   const app = await NestFactory.create(
     AppModule,
@@ -24,5 +26,3 @@ createNestServer(server)
     .catch(err => console.error('Nest broken', err));
 
 export const api = functions.https.onRequest(server);
-
-console.log('Test');

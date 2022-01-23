@@ -31,11 +31,22 @@ export function convertToArray<T>(arrayOrValue: ArrayOrValue<T>): T[] {
 /**
  * Returns the first value from the array.
  */
-export function firstValue<T>(input: T | T[]): T {
+export function firstValue<T>(input: ArrayOrValue<T>): T {
   return valueAtIndex(input, 0);
 }
 
-export function valueAtIndex<T>(input: T | T[], index: number): T {
+/**
+ * Returns the last value from the array.
+ */
+export function lastValue<T>(input: ArrayOrValue<T>): T {
+  if (Array.isArray(input)) {
+    return input[input.length - 1];
+  } else {
+    return input;
+  }
+}
+
+export function valueAtIndex<T>(input: ArrayOrValue<T>, index: number): T {
   if (Array.isArray(input)) {
     return input[index];
   } else {
@@ -59,7 +70,18 @@ export function copyArray<T>(input: T[] | undefined): T[] {
 }
 
 /**
- * Takes as many elements as possible from the end.
+ * Copies/takes the elements from the front of the array up to the max.
+ * 
+ * @param values 
+ * @param maxToTake 
+ * @returns 
+ */
+export function takeFront<T>(values: T[], maxToTake: number): T[] {
+  return values.slice(0, maxToTake);
+}
+
+/**
+ * Copies/takes as many elements as possible from the end.
  * 
  * @param values Values to take from.
  * @param maxToTake Max number of values to take from the end of the input array.

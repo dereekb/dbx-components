@@ -10,13 +10,12 @@ RUN npm i -g nx@13.4.3 @nestjs/cli@8.2.0 firebase-tools@10.1.2
 COPY ./package.json .
 COPY ./package-lock.json .
 
-# Skip Husky Usage inside container
+# Skip Husky triggers inside container
 ENV HUSKY=0
 
 # Install project dependencies to /code/node_modules. 
 # This is done to prevent node_modules system package conflicts
 RUN npm install
-
 
 # Create volume mount point at /code
 VOLUME ["/code"]

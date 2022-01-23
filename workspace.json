@@ -252,6 +252,9 @@
           "options": {
             "commands": [
               {
+                "command": "nx build demo-api --watch"
+              },
+              {
                 "command": "nx run-emulators demo-api"
               }
             ],
