@@ -5,11 +5,15 @@ services:
     volumes:
       - ./:/code
       - /code/node_modules  # Excludes node_modules
-      - ./.cache:/root/.cache # Cache for firebase emulators
+      - ./.firebase/emulators/:/opt/workspace:cached
+      - ./.firebase/bin/:/root/.cache:cached
+      - ./.firebase/config/:/root/.config:cached
     ports:
       - "9229:9229"
-      - "9990-9905"
+      - "9900-9906:9900-9906"
     environment:
       # Credentials URL
       - GOOGLE_APPLICATION_CREDENTIALS=/code/service_account.json
       - GCLOUD_PROJECT=dereekb-components
+    command: bash
+    tty: true

@@ -151,6 +151,19 @@ It should look like this:
   },
 ```
 
-### Emulators
+### Emulators In Docker
+We use Docker to run the emulators within a Docker Container. This lets us not worry about the host system having Java and other dependencies installed.
 
-TODO
+The emulators require having `service_account.json` available. Make sure you get a valid service account JSON key file and add it to the workspace.
+
+To run the emulators execute:
+
+> `./serve.sh`
+
+Docker will take time to build the Docker Container from our Dockerfile the first time. This may take a few minutes.
+
+The first time the container runs, the firebase emulator function will download and cache files (mapped to .firebase via the `docker-compose.yml` file).
+
+Any changes made to the `demo-api` package will trigger VS Code to build the project and update our dist, causing the functions emulator to update. This lets us develop in real time with an active emulated database.
+
+### Testing
