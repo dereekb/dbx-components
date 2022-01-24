@@ -1,5 +1,5 @@
 import { filterMaybe } from '../rxjs';
-import { distinctUntilChanged, map, scan, startWith, catchError, tap, switchMap, mergeMap } from 'rxjs/operators';
+import { distinctUntilChanged, map, scan, startWith, catchError, tap, switchMap, delay } from 'rxjs/operators';
 import { PageLoadingState, loadingStateHasError, loadingStateHasFinishedLoading, loadingStateIsLoading, PageListLoadingState, errorPageResult, successPageResult, mapLoadingStateResults, beginLoading } from "../loading";
 import { FIRST_PAGE, UNLOADED_PAGE, Destroyable, Filter, filteredPage, FilteredPage, getNextPageNumber, hasValueOrNotEmpty, Maybe, PageNumber, reduceBooleansWithAndFn } from "@dereekb/util";
 import { BehaviorSubject, combineLatest, exhaustMap, filter, first, Observable, of, shareReplay } from "rxjs";
@@ -58,11 +58,20 @@ export interface ItemPageIteratorDelegate<V, F> {
 }
 
 export interface ItemPageIteratorNextRequest {
-  n: number;
+  /**
+   * The expected page to request.
+   * 
+   * If provided, the page must equal the target page, otherwise the next is ignored.
+   */
+  page?: number;
   /**
    * Whether or not to retry loading the page.
    */
   retry?: boolean;
+}
+
+interface InternalItemPageIteratorNext extends ItemPageIteratorNextRequest {
+  n: number;
 }
 
 export interface ItemPageIterationConfig<F = any> extends Filter<F> { }
@@ -114,7 +123,7 @@ export class ItemPageIteratorIterationInstance<V, F, C extends ItemPageIteration
   /**
    * Used for triggering loading of more content.
    */
-  private readonly _next = new BehaviorSubject<ItemPageIteratorNextRequest>({ n: 0 });
+  private readonly _next = new BehaviorSubject<InternalItemPageIteratorNext>({ n: 0 });
 
   private readonly _maxPageLoadLimit = new BehaviorSubject(this.iterator.maxPageLoadLimit);
 
@@ -134,9 +143,13 @@ export class ItemPageIteratorIterationInstance<V, F, C extends ItemPageIteration
     exhaustMap((request) =>
       combineLatest([this.hasNextAndCanLoadMore$, this._lastFinishedPageResultState$]).pipe(
         first(),
-        filter(([hasNextAndCanLoadMore, prevResult]) => hasNextAndCanLoadMore && ((!loadingStateHasError(prevResult)) || request.retry)), // If next is no longer detected, do nothing.
+        filter(([hasNextAndCanLoadMore, prevResult]) =>
+          hasNextAndCanLoadMore &&                                                          // Must be able to load more
+          ((!loadingStateHasError(prevResult)) || request.retry) &&                         // Must not have any errors
+          (request.page == null || (nextIteratorPageNumber(prevResult) === request.page))   // Must match the page, if provided
+        ),
         exhaustMap(([_, prevResult]) => {
-          const nextPageNumber = loadingStateHasError(prevResult) ? prevResult.page : getNextPageNumber(prevResult);  // retry number if error occured
+          const nextPageNumber = nextIteratorPageNumber(prevResult);  // retry number if error occured
           const page = filteredPage(nextPageNumber, this.config);
 
           const iteratorResultObs = this.iterator.delegate.loadItemsForPage({
@@ -321,10 +334,11 @@ export class ItemPageIteratorIterationInstance<V, F, C extends ItemPageIteration
   /**
    * Loads the next value.
    */
-  next(retry?: boolean): void {
+  next(request: ItemPageIteratorNextRequest = {}): void {
     this._next.next({
       n: this._next.value.n + 1,
-      retry
+      retry: request.retry,
+      page: request.page
     });
   }
 
@@ -349,20 +363,25 @@ export class ItemPageIteratorIterationInstance<V, F, C extends ItemPageIteration
 
     return new Promise((resolve, reject) => {
       // Changes are triggered off of page number changes.
-      const sub = this.latestPageResultPage$.pipe(distinctUntilChanged()).pipe(
-        exhaustMap((latestPageNumber) => this.hasNextAndCanLoadMore$.pipe(
+      const sub = this.latestPageResultPage$.pipe(
+        distinctUntilChanged(),
+        delay(0)  // Delay to prevent observable in mapping from returning immediately.
+      ).pipe(
+        // Can always switch to the latest number safely
+        switchMap((latestPageNumber) => this.hasNextAndCanLoadMore$.pipe(
           map((canLoadMore) => (canLoadMore && checkPageLimit(latestPageNumber))),
           tap((canLoadMore) => {
+
             // Load more
             if (canLoadMore) {
-              this.next();
+              this.next({ page: latestPageNumber + 1 });
             }
           }),
-          mergeMap((canLoadMore) => {
+          exhaustMap((canLoadMore) => {
             if (canLoadMore) {
-              return this._lastFinishedPageResultState$.pipe(filter(x => x.page > latestPageNumber));
+              return this.latestPageResultState$.pipe(filter(x => x.page >= latestPageNumber));
             } else {
-              return this._lastFinishedPageResultState$;
+              return this.latestPageResultState$;
             }
           }),
           first()
@@ -379,6 +398,7 @@ export class ItemPageIteratorIterationInstance<V, F, C extends ItemPageIteration
     });
   }
 
+  // MARK: Destroyable
   destroy() {
     this._next.complete();
     this._maxPageLoadLimit.complete();
@@ -404,4 +424,8 @@ export function isItemPageIteratorResultEndResult<V>(result: ItemPageIteratorRes
   } else {
     return !hasValueOrNotEmpty(result);
   }
+}
+
+function nextIteratorPageNumber(prevResult: PageLoadingState<ItemPageIteratorResult<any>>): number {
+  return loadingStateHasError(prevResult) ? prevResult.page : getNextPageNumber(prevResult);
 }

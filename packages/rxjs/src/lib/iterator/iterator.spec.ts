@@ -4,6 +4,7 @@ import { loadingStateHasFinishedLoading, loadingStateIsLoading } from '../loadin
 import { delay, filter, first, of, Observable, tap } from 'rxjs';
 
 interface TestPageIteratorFilter {
+  end?: true;
   delayTime?: number;
   resultError?: any;
 }
@@ -17,13 +18,17 @@ const delegate: ItemPageIteratorDelegate<number, TestPageIteratorFilter> = {
     let resultObs: Observable<ItemPageIteratorResult<number>> = of(result);
 
     if (request.page.filter) {
-      const { delayTime, resultError } = request.page.filter;
+      const { delayTime, resultError, end } = request.page.filter;
 
       if (delayTime) {
         resultObs = resultObs.pipe(delay(delayTime));
       } else if (resultError) {
         resultObs = of({
           error: resultError
+        });
+      } else if (end) {
+        resultObs = of({
+          end: true
         });
       }
     }
@@ -174,6 +179,44 @@ describe('ItemPageIterator', () => {
         });
 
         instance.next();
+
+      });
+
+    });
+
+    describe('nextUntilPage()', () => {
+
+      it('should call next up until the given page is reached.', (done) => {
+
+        const targetPage = 10;
+
+        instance.nextUntilPage(targetPage).then(() => {
+
+          instance.latestPageResultPage$.subscribe((page) => {
+            expect(page).toBe(targetPage);
+            done();
+          });
+
+        });
+
+      });
+
+    });
+
+    describe('nextUntilLimit()', () => {
+
+      it(`should call next up until the iterator's limit is reached.`, (done) => {
+
+        instance.maxPageLoadLimit = 15;
+
+        instance.nextUntilLimit().then(() => {
+
+          instance.latestPageResultPage$.subscribe((page) => {
+            expect(page).toBe(instance.maxPageLoadLimit);
+            done();
+          });
+
+        });
 
       });
 
