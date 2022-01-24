@@ -2,6 +2,7 @@ import { FIRST_PAGE } from '@dereekb/util';
 import { ItemPageIterator, ItemPageIteratorDelegate, ItemPageIteratorIterationInstance, ItemPageIteratorRequest, ItemPageIteratorResult } from './iterator.page';
 import { loadingStateHasFinishedLoading, loadingStateIsLoading } from '../loading';
 import { delay, filter, first, of, Observable, tap } from 'rxjs';
+import { iteratorNextPageUntilPage } from './iteration.next';
 
 export interface TestPageIteratorFilter {
   end?: true;
@@ -12,7 +13,7 @@ export interface TestPageIteratorFilter {
 export const TEST_PAGE_ITERATOR_DELEGATE: ItemPageIteratorDelegate<number, TestPageIteratorFilter> = {
   loadItemsForPage: (request: ItemPageIteratorRequest<number, TestPageIteratorFilter>) => {
     const result: ItemPageIteratorResult<number> = {
-      values: request.page.page
+      value: request.page.page
     };
 
     let resultObs: Observable<ItemPageIteratorResult<number>> = of(result);
@@ -66,6 +67,8 @@ describe('ItemPageIterator', () => {
         expect(loadingStateHasFinishedLoading(state)).toBe(true);
         expect(state.page).toBe(FIRST_PAGE);
         expect(state.model).toBeDefined();
+
+        instance.destroy();
         done();
       });
 
@@ -76,6 +79,8 @@ describe('ItemPageIterator', () => {
       it('should return 0 before any items have been loaded.', (done) => {
         instance.successfulPageResultsCount$.pipe(first()).subscribe((count) => {
           expect(count).toBe(0);
+
+          instance.destroy();
           done();
         });
       });
@@ -91,9 +96,83 @@ describe('ItemPageIterator', () => {
             first()
           ).subscribe((count) => {
             expect(count).toBe(1);
+
+            instance.destroy();
             done();
           });
         });
+      });
+
+    });
+
+    describe('allItems$', () => {
+
+      it('should return all items after being subscribed to a few pages in.', (done) => {
+
+        const loadPages = 5;
+
+        iteratorNextPageUntilPage(instance, loadPages).then(() => {
+
+          instance.latestPageResultState$.subscribe((latestPage) => {
+            expect(latestPage.page).toBe(loadPages);
+
+            instance.allItems$.subscribe((allItems) => {
+              expect(allItems).toBeDefined();
+              expect(allItems.length).toBe(loadPages + 1);
+
+              instance.destroy();
+              done();
+            });
+          })
+
+        });
+
+      });
+
+      it('should emit only after the first state has come through.', (done) => {
+
+        initInstanceWithFilter({
+          delayTime: 500
+        });
+
+        let emissions = 0;
+
+        // Should trigger first page to be loaded.
+        instance.allItems$.subscribe((allItems) => {
+          emissions += 1;
+
+          expect(allItems.length).toBe(1);
+
+          instance.destroy();
+          done();
+        });
+
+        expect(emissions).toBe(0);
+      });
+
+      it('should accumulate values as pages are loaded.', (done) => {
+
+        let emissions = 0;
+
+        let latestAllItems: number[];
+
+        // Should trigger first page to be loaded.
+        instance.allItems$.subscribe((allItems) => {
+          emissions += 1;
+          latestAllItems = allItems;
+        });
+
+        const page = 1;
+
+        // Load more pages
+        iteratorNextPageUntilPage(instance, page).then(() => {
+          expect(emissions).toBe(page + 1);
+          expect(latestAllItems.length).toBe(page + 1);
+
+          instance.destroy();
+          done();
+        });
+
       });
 
     });
@@ -110,6 +189,8 @@ describe('ItemPageIterator', () => {
           expect(loadingStateHasFinishedLoading(state)).toBe(true);
           expect(state.page).toBe(FIRST_PAGE);
           expect(state.model).toBeDefined();
+
+          instance.destroy();
           done();
         });
 
@@ -141,6 +222,8 @@ describe('ItemPageIterator', () => {
               expect(loadingStateHasFinishedLoading(state)).toBe(true);
               expect(state.page).toBe(FIRST_PAGE);
               expect(state.model).toBeDefined();
+
+              instance.destroy();
               done();
             });
           });
@@ -173,6 +256,8 @@ describe('ItemPageIterator', () => {
               expect(loadingStateHasFinishedLoading(state)).toBe(true);
               expect(state.page).toBe(FIRST_PAGE + 1);
               expect(state.model).toBeDefined();
+
+              instance.destroy();
               done();
             });
           });

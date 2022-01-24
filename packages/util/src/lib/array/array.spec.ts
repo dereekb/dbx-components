@@ -1,3 +1,4 @@
+import { mergeIntoArray, range } from '@dereekb/util';
 import { takeLast } from './array';
 
 describe('takeLast', () => {
@@ -62,6 +63,47 @@ describe('takeLast', () => {
       expect(result[2]).toBe(5);
     });
 
+  });
+
+});
+
+
+describe('mergeIntoArray', () => {
+
+  it('should add the values from the second array into the target array in the same order.', () => {
+
+    const initial = [0];
+    const second = range({ start: 1, end: 5});
+
+    const target = [...initial];
+    const result = mergeIntoArray(target, second);
+
+    expect(result.length).toBe(initial.length + second.length);
+    expect(result[0]).toBe(initial[0]);
+
+    for (let i = 0; i < second.length; i += 1) {
+      expect(result[i + 1]).toBe(second[i]);
+    }
+  });
+
+  it('should add the values from the second and third array into the target array in the same order.', () => {
+
+    const initial = [0];
+    const second = range({ start: 1, end: 5});
+
+    const target = [...initial];
+    const result = mergeIntoArray(target, second, second);  // second twice
+
+    expect(result.length).toBe(initial.length + (second.length * 2));
+    expect(result[0]).toBe(initial[0]);
+
+    for (let i = 0; i < second.length; i += 1) {
+      expect(result[i + 1]).toBe(second[i]);
+    }
+
+    for (let i = 0; i < second.length; i += 1) {
+      expect(result[i + 1 + second.length]).toBe(second[i]);
+    }
   });
 
 });

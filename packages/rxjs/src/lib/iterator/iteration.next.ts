@@ -1,6 +1,19 @@
-import { map, filter, distinctUntilChanged, delay, switchMap, tap, exhaustMap, first } from "rxjs";
-import { PageItemIteration } from "./iteration";
-import { iterationHasNextAndCanLoadMore } from "./iteration.rxjs";
+import { map, filter, distinctUntilChanged, delay, switchMap, tap, exhaustMap, first, Observable, combineLatest, shareReplay } from "rxjs";
+import { ItemIteration, PageItemIteration } from "./iteration";
+import { reduceBooleansWithAndFn } from '@dereekb/util';
+
+/**
+ * Creates an observable from the input iteration that checks both the hasNext$ and canLoadMore$ states.
+ * 
+ * @param iteration 
+ * @returns 
+ */
+ export function iterationHasNextAndCanLoadMore<V>(iteration: ItemIteration<V>): Observable<boolean> {
+  return combineLatest([iteration.hasNext$, iteration.canLoadMore$]).pipe(
+    map(reduceBooleansWithAndFn(true)),
+    shareReplay(1)
+  );
+}
 
 /**
  * Automatically calls next up to the current maxPageLoadLimit.

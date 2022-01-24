@@ -1,8 +1,7 @@
-import { skipFirstMaybe } from '@dereekb/rxjs';
-
+import { skipFirstMaybe } from './value';
 import { Maybe } from '@dereekb/util';
 import { BehaviorSubject, Subject } from 'rxjs';
-import { first, tap } from 'rxjs/operators';
+import { tap } from 'rxjs/operators';
 
 describe('skipFirstMaybe', () => {
 

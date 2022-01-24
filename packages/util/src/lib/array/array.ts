@@ -66,7 +66,40 @@ export function flattenArray<T>(array: T[][]): T[] {
 }
 
 export function copyArray<T>(input: T[] | undefined): T[] {
-  return (input) ? [...input] : [];
+  return (input) ? [].concat(input) : [];
+}
+
+export function pushElementOntoArray<T>(target: T[], element: T, times: number): T[] {
+  for (let i = 0; i < times; i += 1) {
+    target.push(element);
+  }
+
+  return target;
+}
+
+export function mergeIntoArray<T>(target: Maybe<T[]>, ...arrays: T[][]) {
+  if (!target) {
+    target = [];
+  }
+  
+  arrays.forEach((array) => {
+    mergeArrayIntoArray(target, array);
+  });
+
+  return target;
+}
+
+/**
+ * Merges all the values from the second array into the first using push.
+ * 
+ * This is preferable in cases where immutability is not required.
+ * 
+ * @param target 
+ * @param array 
+ */
+export function mergeArrayIntoArray<T>(target: T[], array: T[]): T[] {
+  Array.prototype.push.apply(target, array);
+  return target;
 }
 
 /**
