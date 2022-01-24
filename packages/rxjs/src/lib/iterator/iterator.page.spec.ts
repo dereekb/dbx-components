@@ -1,15 +1,15 @@
 import { FIRST_PAGE } from '@dereekb/util';
-import { ItemPageIterator, ItemPageIteratorDelegate, ItemPageIteratorIterationInstance, ItemPageIteratorRequest, ItemPageIteratorResult } from './iterator';
+import { ItemPageIterator, ItemPageIteratorDelegate, ItemPageIteratorIterationInstance, ItemPageIteratorRequest, ItemPageIteratorResult } from './iterator.page';
 import { loadingStateHasFinishedLoading, loadingStateIsLoading } from '../loading';
 import { delay, filter, first, of, Observable, tap } from 'rxjs';
 
-interface TestPageIteratorFilter {
+export interface TestPageIteratorFilter {
   end?: true;
   delayTime?: number;
   resultError?: any;
 }
 
-const delegate: ItemPageIteratorDelegate<number, TestPageIteratorFilter> = {
+export const TEST_PAGE_ITERATOR_DELEGATE: ItemPageIteratorDelegate<number, TestPageIteratorFilter> = {
   loadItemsForPage: (request: ItemPageIteratorRequest<number, TestPageIteratorFilter>) => {
     const result: ItemPageIteratorResult<number> = {
       values: request.page.page
@@ -42,7 +42,7 @@ describe('ItemPageIterator', () => {
   let iterator: ItemPageIterator<number, TestPageIteratorFilter>;
 
   beforeAll(() => {
-    iterator = new ItemPageIterator(delegate);
+    iterator = new ItemPageIterator(TEST_PAGE_ITERATOR_DELEGATE);
   });
 
   describe('ItemPageIteratorIterationInstance', () => {
@@ -179,44 +179,6 @@ describe('ItemPageIterator', () => {
         });
 
         instance.next();
-
-      });
-
-    });
-
-    describe('nextUntilPage()', () => {
-
-      it('should call next up until the given page is reached.', (done) => {
-
-        const targetPage = 10;
-
-        instance.nextUntilPage(targetPage).then(() => {
-
-          instance.latestPageResultPage$.subscribe((page) => {
-            expect(page).toBe(targetPage);
-            done();
-          });
-
-        });
-
-      });
-
-    });
-
-    describe('nextUntilLimit()', () => {
-
-      it(`should call next up until the iterator's limit is reached.`, (done) => {
-
-        instance.maxPageLoadLimit = 15;
-
-        instance.nextUntilLimit().then(() => {
-
-          instance.latestPageResultPage$.subscribe((page) => {
-            expect(page).toBe(instance.maxPageLoadLimit);
-            done();
-          });
-
-        });
 
       });
 
