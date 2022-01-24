@@ -1,6 +1,6 @@
 import { combineLatest, Observable, of } from 'rxjs';
 import { map, startWith, shareReplay, catchError, delay, first, distinctUntilChanged } from 'rxjs/operators';
-import { Maybe, ReadableError, reduceBooleansWithAnd, reduceBooleansWithOr, ReadableDataError } from '@dereekb/util';
+import { Maybe, ReadableError, reduceBooleansWithAnd, reduceBooleansWithOr, ReadableDataError, Page, FilteredPage, PageNumber } from '@dereekb/util';
 
 /**
  * A model/error pair used in loading situations.
@@ -25,19 +25,48 @@ export interface LoadingState<T = any> extends LoadingErrorPair {
   model?: Maybe<T>;
 }
 
+/**
+ * LoadingState with a Page.
+ */
+export interface PageLoadingState<T> extends LoadingState<T>, Page { }
+
+/**
+ * PageLoadingState with a filter.
+ */
+export interface FilteredPageLoadingState<T, F> extends PageLoadingState<T>, FilteredPage<F> { }
+
+/**
+ * LoadingPageState that has an array of the model
+ */
+export interface PageListLoadingState<T> extends PageLoadingState<T[]> { }
+
+/**
+ * PageListLoadingState with a Filter.
+ */
+export interface FilteredPageListLoadingState<T, F> extends FilteredPageLoadingState<T[], F> { }
+
 // MARK: Utility
 export function beginLoading(): LoadingState<any>;
 export function beginLoading<T>(): LoadingState<T>;
-export function beginLoading<T>(pair?: LoadingState<T>): LoadingState<T> {
-  return { ...pair, loading: true };
+export function beginLoading<T>(state?: Partial<PageLoadingState<T>>): PageLoadingState<T>;
+export function beginLoading<T>(state?: Partial<LoadingState<T>>): LoadingState<T> {
+  return { ...state, loading: true };
 }
 
 export function successResult<T>(model: T): LoadingState<T> {
   return { model, loading: false };
 }
 
+export function successPageResult<T>(page: PageNumber, model: T): PageLoadingState<T> {
+  return { ...successResult(model), page };
+}
+
 export function errorResult(error?: ReadableDataError): LoadingState<any> {
   return { error, loading: false };
+}
+
+export function errorPageResult<T>(page: PageNumber, error?: ReadableDataError): PageLoadingState<T> {
+  return { ...errorResult(error), page };
 }
 
 export function anyLoadingStatesIsLoading(states: LoadingState[]): boolean {
@@ -224,7 +253,9 @@ export interface MapLoadingStateResultsConfiguration<A, L extends LoadingState<A
   mapState?: MapLoadingStateFn<A, L, B, O>;
 }
 
-export function mapLoadingStateResults<L extends LoadingState<A>, A, B, O extends LoadingState<B>>(
+export function mapLoadingStateResults<L extends PageLoadingState<A>, A, B, O extends PageLoadingState<B>>(input: L, config: MapLoadingStateResultsConfiguration<A, L, B, O>): O;
+export function mapLoadingStateResults<L extends LoadingState<A>, A, B, O extends LoadingState<B>>(input: L, config: MapLoadingStateResultsConfiguration<A, L, B, O>): O;
+export function mapLoadingStateResults<L extends Partial<PageLoadingState<A>>, A, B, O extends Partial<PageLoadingState<B>>>(
   input: L, config: MapLoadingStateResultsConfiguration<A, L, B, O>
 ): O {
   const { mapValue, mapState } = config;

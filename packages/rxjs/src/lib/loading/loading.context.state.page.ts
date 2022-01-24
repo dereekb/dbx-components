@@ -3,7 +3,7 @@ import { LimitArrayConfig, hasNonNullValue, limitArray, Maybe } from '@dereekb/u
 import { Observable } from 'rxjs';
 import { map, shareReplay } from 'rxjs/operators';
 import { LoadingContextEvent } from './loading.context';
-import { PageListLoadingState } from './loading.state.page';
+import { PageListLoadingState } from './loading.state';
 import { AbstractLoadingEventForLoadingPairConfig, AbstractLoadingStateLoadingContext } from './loading.context.state';
 
 export interface PageListLoadingContextEvent<T> extends LoadingContextEvent {
