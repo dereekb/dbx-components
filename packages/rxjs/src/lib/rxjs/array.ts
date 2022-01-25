@@ -12,7 +12,34 @@ export function distinctUntilArrayLengthChanges<A>(getArray?: (value: A) => any[
   return distinctUntilChanged((a, b) => a === b, (x) => getArray(x).length);
 }
 
+export interface ScanIntoArrayConfig {
+  immutable?: boolean;
+}
 
+/**
+ * Scans values from the observable into an array.
+ * 
+ * Can configure whether or not the accumulator array is immutable or not.
+ */
+export function scanIntoArray<T>(config?: ScanIntoArrayConfig): OperatorFunction<Maybe<ArrayOrValue<T>>, T[]>;
+export function scanIntoArray<T>(config?: ScanIntoArrayConfig): OperatorFunction<Maybe<T>, T[]>;
+export function scanIntoArray<T>(config?: ScanIntoArrayConfig): OperatorFunction<Maybe<T[]>, T[]>;
+export function scanIntoArray<T>(config: { immutable?: boolean } = {}): OperatorFunction<Maybe<ArrayOrValue<T>>, T[]> {
+  const { immutable = true } = config;
+  return scan((acc: T[], next: Maybe<ArrayOrValue<T>>) => {
+    if (next != null) {
+      if (immutable) {
+        acc = acc.concat(next);
+      } else {
+        acc = mergeArrayOrValueIntoArray(acc, next);
+      }
+    }
+
+    return acc;
+  }, []);
+}
+
+// MARK: ScanBuildArray
 export interface ScanBuildArrayConfig<T> {
   seed?: Maybe<T[]>;
   accumulatorObs: Observable<Maybe<T>>;

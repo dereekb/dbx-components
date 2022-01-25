@@ -21,14 +21,14 @@ export interface ItemIteration<V = any> extends Destroyable {
   readonly canLoadMore$: Observable<boolean>;
 
   /**
-   * Returns the latest items.
+   * The latest stable state that has finished loading.
    */
   readonly latestState$: Observable<LoadingState<Maybe<V>>>;
 
   /**
-   * Returns all items loaded so far in the iteration in a single array.
+   * The "current" page state.
    */
-  readonly allItems$: Observable<V[]>;
+  readonly currentState$: Observable<LoadingState<Maybe<V>>>;
 
   /**
    * Triggers a loading of the next page.
@@ -60,15 +60,9 @@ export interface PageItemIteration<V = any> extends ItemIteration<V> {
    */
   nextPage(request?: ItemIteratorNextRequest): Promise<PageNumber>;
 
-  /**
-   * Returns the latest items.
-   */
   readonly latestState$: Observable<PageLoadingState<V>>;
 
-  /**
-   * The "current" page state.
-   */
-  readonly currentPageState$: Observable<PageLoadingState<V>>;
+  readonly currentState$: Observable<PageLoadingState<V>>;
 
   /**
    * Returns the latest page that has been fully loaded.

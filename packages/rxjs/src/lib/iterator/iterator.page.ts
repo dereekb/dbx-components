@@ -1,7 +1,7 @@
 import { distinctUntilArrayLengthChanges, filterMaybe, scanBuildArray } from '../rxjs';
-import { distinctUntilChanged, map, scan, startWith, catchError, skip, skipWhile, tap, take, mergeMap, delay } from 'rxjs/operators';
-import { PageLoadingState, loadingStateHasError, loadingStateHasFinishedLoading, loadingStateIsLoading, errorPageResult, successPageResult, mapLoadingStateResults, beginLoading } from "../loading";
-import { FIRST_PAGE, UNLOADED_PAGE, Destroyable, Filter, filteredPage, FilteredPage, getNextPageNumber, hasValueOrNotEmpty, Maybe, PageNumber, filterMaybeValues, lastValue } from "@dereekb/util";
+import { distinctUntilChanged, map, scan, startWith, catchError, skip, skipWhile, mergeMap, delay } from 'rxjs/operators';
+import { PageLoadingState, loadingStateHasError, loadingStateHasFinishedLoading, loadingStateIsLoading, successPageResult, mapLoadingStateResults, beginLoading } from "../loading";
+import { FIRST_PAGE, Destroyable, Filter, filteredPage, FilteredPage, getNextPageNumber, hasValueOrNotEmpty, Maybe, PageNumber, filterMaybeValues, lastValue } from "@dereekb/util";
 import { BehaviorSubject, combineLatest, exhaustMap, filter, first, Observable, of, OperatorFunction, shareReplay } from "rxjs";
 import { ItemIteratorNextRequest, PageItemIteration } from './iteration';
 import { iterationHasNextAndCanLoadMore } from './iteration.next';
@@ -105,7 +105,6 @@ export interface ItemPageIteratorIterationInstanceState<V> {
   current: Maybe<PageLoadingState<ItemPageIteratorResult<V>>>;
   latestFinished: Maybe<PageLoadingState<ItemPageIteratorResult<V>>>;
   lastSuccessful: Maybe<PageLoadingState<ItemPageIteratorResult<V>>>;
-  allSuccessful: PageLoadingState<ItemPageIteratorResult<V>>[];
 }
 
 /**
@@ -177,8 +176,7 @@ export class ItemPageIteratorIterationInstance<V, F, C extends ItemPageIteration
         n,
         current: curr,
         latestFinished: acc.latestFinished,
-        lastSuccessful: acc.lastSuccessful,
-        allSuccessful: acc.allSuccessful
+        lastSuccessful: acc.lastSuccessful
       };
 
       // If it was a replay of the previous result, change nothing.
@@ -188,7 +186,6 @@ export class ItemPageIteratorIterationInstance<V, F, C extends ItemPageIteration
 
           if (!loadingStateHasError(curr)) {
             next.lastSuccessful = curr;
-            acc.allSuccessful.push(curr);
           }
         }
       }
@@ -196,7 +193,7 @@ export class ItemPageIteratorIterationInstance<V, F, C extends ItemPageIteration
       return next;
     }, {
       current: { page: FIRST_PAGE },  // Start with loading the first page
-      latestFinished: undefined, lastSuccessful: undefined, allSuccessful: []
+      latestFinished: undefined, lastSuccessful: undefined
     }),
     shareReplay(1)
   );
@@ -282,23 +279,6 @@ export class ItemPageIteratorIterationInstance<V, F, C extends ItemPageIteration
     shareReplay(1)
   );
 
-  /**
-   * All successful page results in a single array.
-   */
-  readonly allSuccessfulPageResults$: Observable<PageLoadingState<ItemPageIteratorResult<V>>[]> = this.state$.pipe(
-    map(x => x.allSuccessful),
-    distinctUntilArrayLengthChanges(),
-    shareReplay(1)
-  );
-
-  /**
-   * The total number of successful result states returned.
-   */
-  readonly successfulPageResultsCount$: Observable<number> = this.allSuccessfulPageResults$.pipe(
-    map(x => x.length),
-    shareReplay(1)
-  );
-
   // MARK: PageItemIteration
   get maxPageLoadLimit() {
     return this._maxPageLoadLimit.value;
@@ -327,7 +307,7 @@ export class ItemPageIteratorIterationInstance<V, F, C extends ItemPageIteration
     });
   }
 
-  readonly currentPageState$: Observable<PageLoadingState<V>> = this.currentPageResultState$.pipe(
+  readonly currentState$: Observable<PageLoadingState<V>> = this.currentPageResultState$.pipe(
     mapItemPageLoadingStateFromResultPageLoadingState(),
     shareReplay(1)
   );
@@ -375,35 +355,6 @@ export class ItemPageIteratorIterationInstance<V, F, C extends ItemPageIteration
     distinctUntilChanged(),
     map(x => x.model),
     shareReplay(1)
-  );
-
-  readonly allItems$: Observable<V[]> = this.state$.pipe(
-    skipWhile(x => !x.latestFinished),   // Do not emit until the first finished state occurs.
-    distinctUntilArrayLengthChanges((x) => x.allSuccessful),
-    scanBuildArray((state) => {
-      /* 
-      We start with allSuccessfulPageResults$ since it contains all page results since the start of the iterator,
-      and subscription to allItems may not have started at the same time.
-
-      We use scan to add in all models coming in afterwards by pushing them into the accumulator.
-      This is to prevent performance issues with very large iteration sets, since we can
-      append onto the array, rather than concat/copy the array each time.
-      */
-      const allPageResultsUpToFirstSubscription = state.allSuccessful;
-      const firstLatestState = lastValue(allPageResultsUpToFirstSubscription);
-      const seed: V[] = filterMaybeValues(allPageResultsUpToFirstSubscription.map(x => x.model?.value));
-
-      const accumulatorObs: Observable<V> = this.latestPageResultState$.pipe(
-        skipWhile(x => x === firstLatestState),
-        map(x => x.model?.value),
-        filterMaybe()
-      );
-
-      return {
-        seed,
-        accumulatorObs
-      };
-    })
   );
 
   next(request: ItemIteratorNextRequest = {}): void {
