@@ -94,14 +94,14 @@ export class ItemPageIterator<V, F, C extends ItemPageIterationConfig<F> = any> 
    * @param config 
    * @returns 
    */
-  instance(config: C): ItemPageIteratorIterationInstance<V, F, C> {
-    return new ItemPageIteratorIterationInstance(this, config);
+  instance(config: C): ItemPageIterationInstance<V, F, C> {
+    return new ItemPageIterationInstance(this, config);
   }
 
 }
 
 // MARK: Instance
-export interface ItemPageIteratorIterationInstanceState<V> {
+export interface ItemPageIterationInstanceState<V> {
   /**
    * Used for tracking the start/end of a specific next call.
    */
@@ -114,7 +114,7 @@ export interface ItemPageIteratorIterationInstanceState<V> {
 /**
  * Configured Iterator instance.
  */
-export class ItemPageIteratorIterationInstance<V, F, C extends ItemPageIterationConfig<F> = ItemPageIterationConfig<F>> implements PageItemIteration<V, PageLoadingState<V>>, Destroyable {
+export class ItemPageIterationInstance<V, F, C extends ItemPageIterationConfig<F> = ItemPageIterationConfig<F>> implements PageItemIteration<V, PageLoadingState<V>>, Destroyable {
 
   /**
    * Used for triggering loading of more content.
@@ -126,7 +126,7 @@ export class ItemPageIteratorIterationInstance<V, F, C extends ItemPageIteration
   constructor(readonly iterator: ItemPageIterator<V, F, C>, readonly config: C) { }
 
   // MARK: State
-  readonly state$: Observable<ItemPageIteratorIterationInstanceState<V>> = this._next.pipe(
+  readonly state$: Observable<ItemPageIterationInstanceState<V>> = this._next.pipe(
     delay(0),
     exhaustMap((request) =>
       combineLatest([this.hasNextAndCanLoadMore$, this._lastFinishedPageResultState$]).pipe(
@@ -174,7 +174,7 @@ export class ItemPageIteratorIterationInstance<V, F, C extends ItemPageIteration
         map((state) => ({ n: request.n, state }))
       )
     ),
-    scan((acc: ItemPageIteratorIterationInstanceState<V>, x: { n: number, state: PageLoadingState<ItemPageIteratorResult<V>> }) => {
+    scan((acc: ItemPageIterationInstanceState<V>, x: { n: number, state: PageLoadingState<ItemPageIteratorResult<V>> }) => {
       const { n, state: curr } = x;
 
       let next = {
@@ -208,7 +208,7 @@ export class ItemPageIteratorIterationInstance<V, F, C extends ItemPageIteration
    * 
    * This returns the n value of next.
    */
-  readonly _nextTrigger$: Observable<ItemPageIteratorIterationInstanceState<V>> = this.state$.pipe(
+  readonly _nextTrigger$: Observable<ItemPageIterationInstanceState<V>> = this.state$.pipe(
     distinctUntilChanged((a, b) => a.n === b.n && a.current === b.current),
     shareReplay(1),
     skip(1) // Wait until a new state is emitted
@@ -217,7 +217,7 @@ export class ItemPageIteratorIterationInstance<V, F, C extends ItemPageIteration
   /**
    * Same as _nextTrigger$, but catches finished loading events.
    */
-  readonly _nextFinished$: Observable<ItemPageIteratorIterationInstanceState<V>> = this._nextTrigger$.pipe(
+  readonly _nextFinished$: Observable<ItemPageIterationInstanceState<V>> = this._nextTrigger$.pipe(
     filter(x => loadingStateHasFinishedLoading(x.current))
   );
 

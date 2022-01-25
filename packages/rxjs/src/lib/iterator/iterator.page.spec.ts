@@ -1,7 +1,7 @@
 import { PageNumber, range } from '@dereekb/util';
 import { skip } from 'rxjs/operators';
 import { FIRST_PAGE } from '@dereekb/util';
-import { ItemPageIterator, ItemPageIteratorDelegate, ItemPageIteratorIterationInstance, ItemPageIteratorRequest, ItemPageIteratorResult } from './iterator.page';
+import { ItemPageIterator, ItemPageIteratorDelegate, ItemPageIterationInstance, ItemPageIteratorRequest, ItemPageIteratorResult } from './iterator.page';
 import { loadingStateHasFinishedLoading, loadingStateIsLoading } from '../loading';
 import { delay, filter, first, of, Observable, tap } from 'rxjs';
 
@@ -57,9 +57,9 @@ describe('ItemPageIterator', () => {
     iterator = new ItemPageIterator(TEST_PAGE_ITERATOR_DELEGATE);
   });
 
-  describe('ItemPageIteratorIterationInstance', () => {
+  describe('ItemPageIterationInstance', () => {
 
-    let instance: ItemPageIteratorIterationInstance<number, TestPageIteratorFilter>;
+    let instance: ItemPageIterationInstance<number, TestPageIteratorFilter>;
 
     function initInstanceWithFilter(filter?: TestPageIteratorFilter) {
       instance = iterator.instance({

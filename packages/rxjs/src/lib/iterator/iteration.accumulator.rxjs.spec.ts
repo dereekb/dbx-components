@@ -1,4 +1,4 @@
-import { ItemPageIterator, ItemPageIteratorIterationInstance } from './iterator.page';
+import { ItemPageIterator, ItemPageIterationInstance } from './iterator.page';
 import { TestPageIteratorFilter, TEST_PAGE_ARRAY_ITERATOR_DELEGATE, TEST_PAGE_ARRAY_ITERATOR_PAGE_SIZE } from './iterator.page.spec';
 import { iteratorNextPageUntilPage } from './iteration.next';
 import { flattenIterationResultItemArray } from './iteration.accumulator.rxjs';
@@ -8,7 +8,7 @@ import { itemAccumulator, ItemAccumulatorInstance } from './iteration.accumulato
 describe('iteration.rxjs', () => {
 
   let iterator: ItemPageIterator<number[], TestPageIteratorFilter>;
-  let instance: ItemPageIteratorIterationInstance<number[], TestPageIteratorFilter>;
+  let instance: ItemPageIterationInstance<number[], TestPageIteratorFilter>;
   let accumulator: ItemAccumulatorInstance<number[]>;
 
   beforeEach(() => {

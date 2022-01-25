@@ -1,4 +1,4 @@
-import { ItemPageIterator, ItemPageIteratorIterationInstance } from './iterator.page';
+import { ItemPageIterator, ItemPageIterationInstance } from './iterator.page';
 import { loadingStateHasFinishedLoading } from '../loading';
 import { filter, first } from 'rxjs';
 import { iteratorNextPageUntilPage } from './iteration.next';
@@ -15,7 +15,7 @@ describe('ItemPageIterator', () => {
 
   describe('ItemAccumulatorInstance', () => {
 
-    let instance: ItemPageIteratorIterationInstance<number, TestPageIteratorFilter>;
+    let instance: ItemPageIterationInstance<number, TestPageIteratorFilter>;
     let accumulator: ItemAccumulatorInstance<number, number>;
 
     function initInstanceWithFilter(filter?: TestPageIteratorFilter) {

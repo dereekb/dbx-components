@@ -1,4 +1,4 @@
-import { ItemPageIterator, ItemPageIteratorIterationInstance } from './iterator.page';
+import { ItemPageIterator, ItemPageIterationInstance } from './iterator.page';
 import { TestPageIteratorFilter, TEST_PAGE_ITERATOR_DELEGATE } from './iterator.page.spec';
 import { first } from 'rxjs/operators';
 import { mapItemIteration, MappedItemIterationInstance } from '@dereekb/rxjs';
@@ -6,7 +6,7 @@ import { mapItemIteration, MappedItemIterationInstance } from '@dereekb/rxjs';
 describe('iteration.mapped', () => {
 
   let iterator: ItemPageIterator<number, TestPageIteratorFilter>;
-  let instance: ItemPageIteratorIterationInstance<number, TestPageIteratorFilter>;
+  let instance: ItemPageIterationInstance<number, TestPageIteratorFilter>;
 
   beforeEach(() => {
     iterator = new ItemPageIterator(TEST_PAGE_ITERATOR_DELEGATE);
