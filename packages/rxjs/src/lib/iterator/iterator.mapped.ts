@@ -7,7 +7,7 @@ import { ItemPageIteratorIterationInstance } from "./iterator.page";
 
 export abstract class AbstractMappedPageItemIteration<I, O, M extends ItemPageIteratorIterationInstance<I, any, any>> implements PageItemIteration<O>, Destroyable {
 
-  constructor(private readonly _instance: M) { }
+  constructor(protected readonly _instance: M) { }
 
   get maxPageLoadLimit() {
     return this._instance.maxPageLoadLimit;

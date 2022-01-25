@@ -111,6 +111,10 @@ export class FirestoreItemPageIterator<T> {
 
 export class FirestoreItemPageIteratorIterationInstance<T> extends AbstractMappedPageItemIteration<FirestoreItemPageQueryResult<T>, QueryDocumentSnapshot<T>[], InternalFirestoreItemPageIteratorIterationInstance<T>> implements PageItemIteration<QueryDocumentSnapshot<T>[]>, Destroyable {
 
+  get snapshotIteration(): InternalFirestoreItemPageIteratorIterationInstance<T> {
+    return this._instance;
+  }
+
   protected _mapStateValue(input: FirestoreItemPageQueryResult<T>): QueryDocumentSnapshot<T>[] {
     return input.docs;
   }
