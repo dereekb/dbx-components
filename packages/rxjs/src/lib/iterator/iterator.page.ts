@@ -1,20 +1,24 @@
 import { filterMaybe } from '../rxjs';
 import { distinctUntilChanged, map, scan, startWith, catchError, skip, mergeMap, delay } from 'rxjs/operators';
 import { PageLoadingState, loadingStateHasError, loadingStateHasFinishedLoading, loadingStateIsLoading, successPageResult, mapLoadingStateResults, beginLoading } from "../loading";
-import { FIRST_PAGE, Destroyable, Filter, filteredPage, FilteredPage, getNextPageNumber, hasValueOrNotEmpty, Maybe, PageNumber } from "@dereekb/util";
+import { FIRST_PAGE, Destroyable, Filter, filteredPage, getNextPageNumber, hasValueOrNotEmpty, Maybe, PageNumber, Page } from "@dereekb/util";
 import { BehaviorSubject, combineLatest, exhaustMap, filter, first, Observable, of, OperatorFunction, shareReplay } from "rxjs";
 import { ItemIteratorNextRequest, PageItemIteration } from './iteration';
 import { iterationHasNextAndCanLoadMore } from './iteration.next';
 
-export interface ItemPageIteratorRequest<V, F> {
+export interface ItemPageIteratorRequest<V, F, C extends ItemPageIterationConfig<F> = ItemPageIterationConfig<F>> extends Page {
+  /**
+   * The base iterator config.
+   */
+  readonly iteratorConfig: C;
+  /**
+   * Page being loaded.
+   */
+  readonly page: PageNumber;
   /**
    * Suggested limit of items to load per request.
    */
   readonly limit?: number;
-  /**
-   * Page being loaded.
-   */
-  readonly page: FilteredPage<F>;
   /**
    * Returns the last successful item, if available.
    */
@@ -48,14 +52,14 @@ export interface ItemPageIteratorResult<V> {
   end?: boolean;
 }
 
-export interface ItemPageIteratorDelegate<V, F> {
+export interface ItemPageIteratorDelegate<V, F, C extends ItemPageIterationConfig<F> = ItemPageIterationConfig<F>> {
 
   /**
    * Returns an observable of items given the input request.
    * 
    * If the input goes out of bounds, the result should be 
    */
-  loadItemsForPage: (request: ItemPageIteratorRequest<V, F>) => Observable<ItemPageIteratorResult<V>>;
+  loadItemsForPage: (request: ItemPageIteratorRequest<V, F, C>) => Observable<ItemPageIteratorResult<V>>;
 
 }
 
@@ -74,7 +78,7 @@ export const DEFAULT_ITEM_PAGE_ITERATOR_MAX = 100;
 /**
  * Used for generating new iterations.
  */
-export class ItemPageIterator<V, F, C extends ItemPageIterationConfig<F> = ItemPageIterationConfig<F>> {
+export class ItemPageIterator<V, F, C extends ItemPageIterationConfig<F> = any> {
 
   private _maxPageLoadLimit = DEFAULT_ITEM_PAGE_ITERATOR_MAX;
 
@@ -82,7 +86,7 @@ export class ItemPageIterator<V, F, C extends ItemPageIterationConfig<F> = ItemP
     return this._maxPageLoadLimit;
   }
 
-  constructor(readonly delegate: ItemPageIteratorDelegate<V, F>) { }
+  constructor(readonly delegate: ItemPageIteratorDelegate<V, F, C>) { }
 
   /**
    * Creates a new instance based on the input config.
@@ -135,7 +139,8 @@ export class ItemPageIteratorIterationInstance<V, F, C extends ItemPageIteration
             const page = filteredPage(nextPageNumber, this.config);
 
             const iteratorResultObs = this.iterator.delegate.loadItemsForPage({
-              page,
+              iteratorConfig: this.config,
+              page: nextPageNumber,
               lastItem$: this._lastFinishedPageResultItem$,
               lastResult$: this._lastFinishedPageResult$,
               lastState$: this._lastFinishedPageResultState$

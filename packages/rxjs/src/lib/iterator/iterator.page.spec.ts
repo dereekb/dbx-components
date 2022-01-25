@@ -15,13 +15,13 @@ export function makeTestPageIteratorDelegate<T>(makeResultsFn: (page: PageNumber
   return {
     loadItemsForPage: (request: ItemPageIteratorRequest<T, TestPageIteratorFilter>) => {
       const result: ItemPageIteratorResult<T> = {
-        value: makeResultsFn(request.page.page)
+        value: makeResultsFn(request.page)
       };
 
       let resultObs: Observable<ItemPageIteratorResult<T>> = of(result);
 
-      if (request.page.filter) {
-        const { delayTime, resultError, end } = request.page.filter;
+      if (request.iteratorConfig.filter) {
+        const { delayTime, resultError, end } = request.iteratorConfig.filter ?? {};
 
         if (delayTime) {
           resultObs = resultObs.pipe(delay(delayTime));

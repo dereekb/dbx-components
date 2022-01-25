@@ -1,111 +1,118 @@
+import { Injectable } from '@angular/core';
+import { ItemPageIterator, ItemPageIteratorIterationInstance, ItemPageIterationConfig, ItemPageIteratorDelegate, ItemPageIteratorRequest, ItemPageIteratorResult, PageItemIteration, AbstractMappedPageItemIteration } from '@dereekb/rxjs';
+import { QueryDocumentSnapshot, query, startAt, CollectionReference, getDocs, QueryConstraint, limit, QuerySnapshot } from '@angular/fire/firestore';
+import { Maybe, lastValue, mergeIntoArray, Destroyable } from '@dereekb/util';
+import { from, Observable, of } from "rxjs";
+import { exhaustMap } from "rxjs/operators";
 
-import { QueryDocumentSnapshot, query, startAt, CollectionReference, getDocs, QueryConstraint, limit } from '@angular/fire/firestore';
-import { Maybe } from '@dereekb/util';
-import { BehaviorSubject, combineLatest, Observable } from "rxjs";
-import { exhaustMap, first, switchMap, shareReplay, map, startWith, scan, delay, filter } from "rxjs/operators";
+export interface FirestoreItemPageIteratorFilter {
+  queryConstraints?: Maybe<QueryConstraint[]>;
+}
 
-export abstract class AbstractDatastoreCollectionIterator<T> {
+export interface FirestoreItemPageIterationConfig<T> extends ItemPageIterationConfig<FirestoreItemPageIteratorFilter> {
+  collection: CollectionReference<T>;
+  itemsPerPage: number;
+}
 
-  private readonly _next = new BehaviorSubject(0);
+export interface FirestoreItemPageQueryResult<T> {
+  /**
+   * The relevant docs for this page result. This value will omit the cursor.
+   */
+  docs: QueryDocumentSnapshot<T>[];
+  /**
+   * The raw snapshot returned from the query.
+   */
+  snapshot: QuerySnapshot<T>;
+}
 
-  limit = 100;
+export type FirestoreItemPageIteratorDelegate<T> = ItemPageIteratorDelegate<FirestoreItemPageQueryResult<T>, FirestoreItemPageIteratorFilter, FirestoreItemPageIterationConfig<T>>;
+export type InternalFirestoreItemPageIteratorIterationInstance<T> = ItemPageIteratorIterationInstance<FirestoreItemPageQueryResult<T>, FirestoreItemPageIteratorFilter, FirestoreItemPageIterationConfig<T>>;
 
-  constructor(readonly collection: CollectionReference<T>) { }
+export function makeFirestoreItemPageIteratorDelegate<T>(): FirestoreItemPageIteratorDelegate<T> {
+  return {
+    loadItemsForPage: (request: ItemPageIteratorRequest<FirestoreItemPageQueryResult<T>, FirestoreItemPageIteratorFilter, FirestoreItemPageIterationConfig<T>>): Observable<ItemPageIteratorResult<FirestoreItemPageQueryResult<T>>> => {
+      const { page, iteratorConfig } = request;
+      const lastQueryResult$: Observable<Maybe<FirestoreItemPageQueryResult<T>>> = (page > 0) ? request.lastItem$ : of(undefined);
 
-  readonly pageResults$: Observable<QueryDocumentSnapshot<T>[]> = this._next.pipe(
-    exhaustMap(() => {
-      return combineLatest([this.hasNext$, this.pageResultsCursorDocument$]).pipe(
-        first(),
-        filter(([hasNext]) => hasNext),
-        switchMap(async ([_, cursor]) => {
-          const startsAtFilter = (cursor) ? startAt(cursor) : undefined;
-          const filters = [...this.buildQueryContraints()];
+      const { collection, itemsPerPage, filter } = iteratorConfig;
 
-          filters.push(limit(this.limit + ((cursor) ? 1 : 0)));
+      return lastQueryResult$.pipe(
+        exhaustMap((lastResult) => {
+          if (lastResult?.snapshot.empty === true) {  // TODO: Shouldn't happen. Remove this later.
+            return of<ItemPageIteratorResult<FirestoreItemPageQueryResult<T>>>({ end: true });
+          } else {
+            const constraints: QueryConstraint[] = [];
 
-          if (startsAtFilter) {
-            filters.push(startsAtFilter);
+            // Add filter constraints
+            if (filter?.queryConstraints) {
+              mergeIntoArray(constraints, filter.queryConstraints);
+            }
+
+            // Add cursor
+            const cursorDocument = (lastResult) ? lastValue(lastResult.docs) : undefined;
+            const startsAtFilter = (cursorDocument) ? startAt(cursorDocument) : undefined;
+
+            if (startsAtFilter) {
+              constraints.push(startsAtFilter);
+            }
+
+            // Add Limit
+            constraints.push(limit(itemsPerPage + ((startsAtFilter) ? 1 : 0)));   // Add 1 for cursor, since results will start at our cursor.
+
+            const batchQuery = query<T>(collection, ...constraints);
+            const resultPromise: Promise<ItemPageIteratorResult<FirestoreItemPageQueryResult<T>>> = getDocs(batchQuery).then((snapshot) => {
+              let docs = snapshot.docs;
+
+              // Remove the cursor document from the results.
+              if (cursorDocument && docs[0].id === cursorDocument.id) {
+                docs = docs.slice(1);
+              }
+
+              const result: ItemPageIteratorResult<FirestoreItemPageQueryResult<T>> = {
+                value: {
+                  docs,
+                  snapshot
+                },
+                end: snapshot.empty
+              };
+
+              return result;
+            });
+            return from(resultPromise);
           }
-
-          const batchQuery = query<T>(this.collection, ...filters);
-          let docs = await getDocs(batchQuery).then(x => x.docs);
-
-          if (cursor && docs[0].id === cursor.id) {
-            docs = docs.slice(1);
-          }
-
-          return docs;
         })
       );
-    }),
-    shareReplay(1)
-  );
+    }
+  }
+}
 
-  /**
-   * The last document from pageResults$. It is used as a cursor.
-   */
-  readonly pageResultsCursorDocument$: Observable<Maybe<QueryDocumentSnapshot<T>>> = this.pageResults$.pipe(
-    map(x => x[x.length - 1]),
-    startWith(undefined as Maybe<QueryDocumentSnapshot<T>>),   // StartWith is provided to prevent waiting on pageResults$
-    shareReplay(1)
-  );
+export const FIRESTORE_ITEM_PAGE_ITERATOR_DELEGATE: FirestoreItemPageIteratorDelegate<any> = makeFirestoreItemPageIteratorDelegate() as any;
 
-  readonly hasNext$ = this.pageResultsCursorDocument$.pipe(
-    startWith(true),
-    scan((prev: QueryDocumentSnapshot<T> | false, curr: QueryDocumentSnapshot<T>) => {
-      if (prev === false || ((prev as any) !== true && curr == null)) {
-        return false;
-      } else if (prev && curr && prev.id === curr.id) {
-        return false;
-      } else {
-        return curr;
-      }
-    }),
-    map(x => x !== false),
-    shareReplay(1)
-  );
+/**
+ * Base iterator service used to generate FirestoreItemPageIteratorIterationInstances.
+ */
+@Injectable()
+export class FirestoreItemPageIterator<T> {
 
-  readonly loadedAll$ = this.hasNext$.pipe(map(x => !x), shareReplay(1));
+  private readonly _itemPageIterator = new ItemPageIterator<
+    FirestoreItemPageQueryResult<T>,
+    FirestoreItemPageIteratorFilter,
+    FirestoreItemPageIterationConfig<T>
+  >(FIRESTORE_ITEM_PAGE_ITERATOR_DELEGATE);
 
-  readonly currentPageResultsData$: Observable<T[]> = this.pageResults$.pipe(
-    map(x => x.map(y => ({ ...y.data(), id: y.id }))),
-    shareReplay(1)
-  );
-
-  readonly results = this.pageResults$.pipe(
-    scan((acc, next) => acc.concat(next), [] as T[]),
-    shareReplay(1)
-  );
-
-  readonly resultsData$ = this.currentPageResultsData$.pipe(
-    scan((acc, next) => acc.concat(next), [] as T[]),
-    shareReplay(1)
-  );
-
-  buildQueryContraints(): QueryConstraint[] {
-    return [];
+  instance<T>(config: FirestoreItemPageIterationConfig<T>): FirestoreItemPageIteratorIterationInstance<T> {
+    // TODO: as any typings provided since angularfire has a rough time with collection typings sometimes.
+    // https://github.com/angular/angularfire/issues/2931
+    const iterator: InternalFirestoreItemPageIteratorIterationInstance<T> = this._itemPageIterator.instance(config as any) as any;
+    return new FirestoreItemPageIteratorIterationInstance<T>(iterator) as any;
   }
 
-  next(): void {
-    this._next.next(this._next.value + 1);
-  }
+}
 
-  async loadAll(): Promise<void> {
-    this.limit = 1000;
-    return new Promise((resolve) => {
-      const sub = this.hasNext$.pipe(delay(50)).subscribe((x) => {
-        if (x) {
-          this.next();
-        } else {
-          sub.unsubscribe();
-          resolve();
-        }
-      });
-    });
-  }
+export class FirestoreItemPageIteratorIterationInstance<T> extends AbstractMappedPageItemIteration<FirestoreItemPageQueryResult<T>, QueryDocumentSnapshot<T>[], InternalFirestoreItemPageIteratorIterationInstance<T>> implements PageItemIteration<QueryDocumentSnapshot<T>[]>, Destroyable {
 
-  destroy() {
-    this._next.complete();
+  protected _mapStateValue(input: FirestoreItemPageQueryResult<T>): QueryDocumentSnapshot<T>[] {
+    return input.docs;
   }
 
 }

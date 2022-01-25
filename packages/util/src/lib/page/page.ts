@@ -24,6 +24,8 @@ export interface Page {
 
   /**
    * Current page number.
+   * 
+   * // TODO: Rename to pageNumber
    */
   page: PageNumber;
 
