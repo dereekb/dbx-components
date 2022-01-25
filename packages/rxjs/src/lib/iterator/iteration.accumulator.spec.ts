@@ -2,7 +2,7 @@ import { ItemPageIterator, ItemPageIteratorIterationInstance } from './iterator.
 import { loadingStateHasFinishedLoading } from '../loading';
 import { filter, first } from 'rxjs';
 import { iteratorNextPageUntilPage } from './iteration.next';
-import { ItemIterationAccumulatorInstance } from './iteration.accumulator';
+import { itemAccumulator, ItemAccumulatorInstance } from './iteration.accumulator';
 import { TestPageIteratorFilter, TEST_PAGE_ITERATOR_DELEGATE } from './iterator.page.spec';
 
 describe('ItemPageIterator', () => {
@@ -13,16 +13,16 @@ describe('ItemPageIterator', () => {
     iterator = new ItemPageIterator(TEST_PAGE_ITERATOR_DELEGATE);
   });
 
-  describe('ItemIterationAccumulatorInstance', () => {
+  describe('ItemAccumulatorInstance', () => {
 
     let instance: ItemPageIteratorIterationInstance<number, TestPageIteratorFilter>;
-    let accumulator: ItemIterationAccumulatorInstance<number>;
+    let accumulator: ItemAccumulatorInstance<number, number>;
 
     function initInstanceWithFilter(filter?: TestPageIteratorFilter) {
       instance = iterator.instance({
         filter: filter ?? {}
       });
-      accumulator = new ItemIterationAccumulatorInstance(instance);
+      accumulator = itemAccumulator(instance);
     }
 
     beforeEach(() => {
@@ -50,11 +50,36 @@ describe('ItemPageIterator', () => {
             done();
           });
         });
+
       });
 
     });
 
     describe('allItems$', () => {
+
+      describe('with mapping', () => {
+
+        let mappedAccumulator: ItemAccumulatorInstance<string>;
+
+        beforeEach(() => {
+          mappedAccumulator = itemAccumulator(instance, (x: number) => `+${x}`);
+        })
+
+        afterEach(() => {
+          mappedAccumulator.destroy();
+        });
+
+        it('should map the items', (done) => {
+
+          mappedAccumulator.allItems$.pipe(first()).subscribe((items) => {
+            expect(items).toBeDefined();
+            expect(typeof items[0]).toBe('string');
+            done();
+          });
+
+        });
+
+      });
 
       it('should return all items after being subscribed to a few pages in.', (done) => {
 

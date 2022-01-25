@@ -3,18 +3,18 @@ import { TestPageIteratorFilter, TEST_PAGE_ARRAY_ITERATOR_DELEGATE, TEST_PAGE_AR
 import { iteratorNextPageUntilPage } from './iteration.next';
 import { flattenIterationResultItemArray } from './iteration.accumulator.rxjs';
 import { first } from 'rxjs/operators';
-import { PageItemIterationAccumulatorInstance } from './iteration.accumulator';
+import { itemAccumulator, ItemAccumulatorInstance } from './iteration.accumulator';
 
 describe('iteration.rxjs', () => {
 
   let iterator: ItemPageIterator<number[], TestPageIteratorFilter>;
   let instance: ItemPageIteratorIterationInstance<number[], TestPageIteratorFilter>;
-  let accumulator: PageItemIterationAccumulatorInstance<number[]>;
+  let accumulator: ItemAccumulatorInstance<number[]>;
 
   beforeEach(() => {
     iterator = new ItemPageIterator(TEST_PAGE_ARRAY_ITERATOR_DELEGATE);
     instance = iterator.instance({});
-    accumulator = new PageItemIterationAccumulatorInstance(instance);
+    accumulator = itemAccumulator(instance);
   });
 
   afterEach(() => {
