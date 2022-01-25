@@ -1,5 +1,5 @@
 import { distinctUntilArrayLengthChanges, filterMaybe } from '../rxjs';
-import { distinctUntilChanged, map, scan, startWith, catchError, skip, skipWhile } from 'rxjs/operators';
+import { distinctUntilChanged, map, scan, startWith, catchError, skip, skipWhile, tap, take, mergeMap, delay } from 'rxjs/operators';
 import { PageLoadingState, loadingStateHasError, loadingStateHasFinishedLoading, loadingStateIsLoading, errorPageResult, successPageResult, mapLoadingStateResults, beginLoading } from "../loading";
 import { FIRST_PAGE, UNLOADED_PAGE, Destroyable, Filter, filteredPage, FilteredPage, getNextPageNumber, hasValueOrNotEmpty, Maybe, PageNumber, filterMaybeValues, lastValue } from "@dereekb/util";
 import { BehaviorSubject, combineLatest, exhaustMap, filter, first, Observable, of, OperatorFunction, shareReplay } from "rxjs";
@@ -98,16 +98,14 @@ export class ItemPageIterator<V, F, C extends ItemPageIterationConfig<F> = ItemP
 
 // MARK: Instance
 export interface ItemPageIteratorIterationInstanceState<V> {
+  /**
+   * Used for tracking the start/end of a specific next call.
+   */
+  n: number;
   current: Maybe<PageLoadingState<ItemPageIteratorResult<V>>>;
   latestFinished: Maybe<PageLoadingState<ItemPageIteratorResult<V>>>;
   lastSuccessful: Maybe<PageLoadingState<ItemPageIteratorResult<V>>>;
   allSuccessful: PageLoadingState<ItemPageIteratorResult<V>>[];
-}
-
-function itemPageIteratorShouldLoadNextPage<V = any>(request: InternalItemPageIteratorNext, hasNextAndCanLoadMore: boolean, prevResult: PageLoadingState<ItemPageIteratorResult<V>>): boolean {
-  return hasNextAndCanLoadMore &&                                                     // Must be able to load more
-    ((!loadingStateHasError(prevResult)) || request.retry) &&                         // Must not have any errors
-    (request.page == null || (nextIteratorPageNumber(prevResult) === request.page))   // Must match the page, if provided
 }
 
 /**
@@ -126,11 +124,12 @@ export class ItemPageIteratorIterationInstance<V, F, C extends ItemPageIteration
 
   // MARK: State
   readonly state$: Observable<ItemPageIteratorIterationInstanceState<V>> = this._next.pipe(
+    delay(0),
     exhaustMap((request) =>
       combineLatest([this.hasNextAndCanLoadMore$, this._lastFinishedPageResultState$]).pipe(
         first(),
         map(([hasNextAndCanLoadMore, prevResult]) => ([itemPageIteratorShouldLoadNextPage(request, hasNextAndCanLoadMore, prevResult), prevResult])),
-        exhaustMap(([shouldLoadNextPage, prevResult]: [boolean, PageLoadingState<ItemPageIteratorResult<V>>]) => {
+        mergeMap(([shouldLoadNextPage, prevResult]: [boolean, PageLoadingState<ItemPageIteratorResult<V>>]) => {
 
           if (shouldLoadNextPage) {
             const nextPageNumber = nextIteratorPageNumber(prevResult);  // retry number if error occured
@@ -142,30 +141,40 @@ export class ItemPageIteratorIterationInstance<V, F, C extends ItemPageIteration
               lastResult$: this._lastFinishedPageResult$,
               lastState$: this._lastFinishedPageResultState$
             }).pipe(
-              catchError((error) => of({ error } as ItemPageIteratorResult<V>))
+              catchError((error) => of({ error } as ItemPageIteratorResult<V>).pipe(first()))
             );
 
             const stateObs: Observable<PageLoadingState<ItemPageIteratorResult<V>>> = iteratorResultObs.pipe(
               first(),
               map((result) => {
                 if (result.error != null) {
-                  return errorPageResult(nextPageNumber, result.error);
+                  return {
+                    loading: false,
+                    page: nextPageNumber,
+                    error: result.error,
+                    model: result
+                  };
                 } else {
                   return successPageResult(nextPageNumber, result);
                 }
               }),
-              startWith(beginLoading<ItemPageIteratorResult<V>>(page) as PageLoadingState<ItemPageIteratorResult<V>>)
+              startWith(beginLoading<ItemPageIteratorResult<V>>(page) as PageLoadingState<ItemPageIteratorResult<V>>),
+              shareReplay(1)
             );
 
             return stateObs;
           } else {
-            return of(prevResult);
+            return of(prevResult).pipe();
           }
-        })
+        }),
+        map((state) => ({ n: request.n, state }))
       )
     ),
-    scan((acc: ItemPageIteratorIterationInstanceState<V>, curr: PageLoadingState<ItemPageIteratorResult<V>>) => {
+    scan((acc: ItemPageIteratorIterationInstanceState<V>, x: { n: number, state: PageLoadingState<ItemPageIteratorResult<V>> }) => {
+      const { n, state: curr } = x;
+
       let next = {
+        n,
         current: curr,
         latestFinished: acc.latestFinished,
         lastSuccessful: acc.lastSuccessful,
@@ -190,6 +199,24 @@ export class ItemPageIteratorIterationInstance<V, F, C extends ItemPageIteration
       latestFinished: undefined, lastSuccessful: undefined, allSuccessful: []
     }),
     shareReplay(1)
+  );
+
+  /**
+   * Used to track when a next() value changes, or the current changes.
+   * 
+   * This returns the n value of next.
+   */
+  readonly _nextTrigger$: Observable<ItemPageIteratorIterationInstanceState<V>> = this.state$.pipe(
+    distinctUntilChanged((a, b) => a.n === b.n && a.current === b.current),
+    shareReplay(1),
+    skip(1) // Wait until a new state is emitted
+  );
+
+  /**
+   * Same as _nextTrigger$, but catches finished loading events.
+   */
+  readonly _nextFinished$: Observable<ItemPageIteratorIterationInstanceState<V>> = this._nextTrigger$.pipe(
+    filter(x => loadingStateHasFinishedLoading(x.current))
   );
 
   /**
@@ -281,6 +308,25 @@ export class ItemPageIteratorIterationInstance<V, F, C extends ItemPageIteration
     this._maxPageLoadLimit.next(Math.max(0, Math.ceil(maxPageLoadLimit)));
   }
 
+  nextPage(request: ItemIteratorNextRequest = {}): Promise<number> {
+    return new Promise<number>((resolve, reject) => {
+      this._nextFinished$.pipe(
+        exhaustMap(() => this.latestPageResultState$),
+        first()
+      ).subscribe({
+        next: (latestState) => {
+          if (latestState.error) {
+            reject(latestState.error);
+          } else {
+            resolve(latestState.page);
+          }
+        }
+      });
+
+      this.next(request);
+    });
+  }
+
   readonly currentPageState$: Observable<PageLoadingState<V>> = this.currentPageResultState$.pipe(
     mapItemPageLoadingStateFromResultPageLoadingState(),
     shareReplay(1)
@@ -288,7 +334,6 @@ export class ItemPageIteratorIterationInstance<V, F, C extends ItemPageIteration
 
   readonly latestLoadedPage$: Observable<PageNumber> = this.latestPageResultState$.pipe(
     map(x => x.page),
-    startWith(UNLOADED_PAGE),
     distinctUntilChanged(),
     shareReplay(1)
   );
@@ -305,7 +350,7 @@ export class ItemPageIteratorIterationInstance<V, F, C extends ItemPageIteration
   /**
    * Whether or not the successfulPageResultsCount has passed the maxPageLoadLimit
    */
-  readonly canLoadMore$: Observable<boolean> = combineLatest([this._maxPageLoadLimit, this.latestLoadedPage$]).pipe(
+  readonly canLoadMore$: Observable<boolean> = combineLatest([this._maxPageLoadLimit, this.latestLoadedPage$.pipe(startWith(UNLOADED_PAGE))]).pipe(
     map(([limit, count]) => count < limit),
     distinctUntilChanged(),
     shareReplay(1)
@@ -359,10 +404,11 @@ export class ItemPageIteratorIterationInstance<V, F, C extends ItemPageIteration
     shareReplay(1)
   );
 
-  /**
-   * Loads the next value.
-   */
   next(request: ItemIteratorNextRequest = {}): void {
+    this._pushNext(request);
+  }
+
+  protected _pushNext(request: ItemIteratorNextRequest): void {
     this._next.next({
       n: this._next.value.n + 1,
       retry: request.retry,
@@ -396,6 +442,15 @@ export function isItemPageIteratorResultEndResult<V>(result: ItemPageIteratorRes
   } else {
     return !hasValueOrNotEmpty(result);
   }
+}
+
+function itemPageIteratorShouldLoadNextPage<V = any>(
+  request: ItemIteratorNextRequest,
+  hasNextAndCanLoadMore: boolean,
+  prevResult: PageLoadingState<ItemPageIteratorResult<V>>): boolean {
+  return hasNextAndCanLoadMore &&                                                     // Must be able to load more
+    ((!loadingStateHasError(prevResult)) || request.retry) &&                         // Must not have any errors
+    (request.page == null || (nextIteratorPageNumber(prevResult) === request.page))   // Must match the page, if provided
 }
 
 function nextIteratorPageNumber(prevResult: PageLoadingState<ItemPageIteratorResult<any>>): number {

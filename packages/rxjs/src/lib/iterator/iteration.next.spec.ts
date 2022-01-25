@@ -1,6 +1,7 @@
 import { ItemPageIterator, ItemPageIteratorIterationInstance } from './iterator.page';
 import { TestPageIteratorFilter, TEST_PAGE_ITERATOR_DELEGATE } from './iterator.page.spec';
 import { iteratorNextPageUntilMaxPageLoadLimit, iteratorNextPageUntilPage } from './iteration.next';
+import { first } from 'rxjs/operators';
 
 describe('iteration.next', () => {
 
@@ -12,16 +13,38 @@ describe('iteration.next', () => {
     instance = iterator.instance({});
   });
 
+  afterEach(() => {
+    instance.destroy();
+  });
+
   describe('nextUntilPage()', () => {
 
     it('should call next up until the given page is reached.', (done) => {
-
       const targetPage = 10;
 
-      iteratorNextPageUntilPage(instance, targetPage).then(() => {
+      iteratorNextPageUntilPage(instance, targetPage).then((page) => {
+        expect(page).toBe(targetPage);
 
-        instance.latestLoadedPage$.subscribe((page) => {
-          expect(page).toBe(targetPage);
+        instance.latestLoadedPage$.pipe(first()).subscribe((latestPage) => {
+
+          expect(latestPage).toBe(targetPage);
+          done();
+        });
+      });
+
+    });
+
+    it(`should call next up until the iterator's limit is reached, even if target page is after.`, (done) => {
+
+      const testLimit = 5;
+      const targetPage = 10;
+      instance.maxPageLoadLimit = testLimit;
+
+      iteratorNextPageUntilPage(instance, targetPage).then((page) => {
+        expect(page).toBe(testLimit);
+
+        instance.latestLoadedPage$.pipe(first()).subscribe((page) => {
+          expect(page).toBe(instance.maxPageLoadLimit);
           done();
         });
 
@@ -29,18 +52,25 @@ describe('iteration.next', () => {
 
     });
 
-    it(`should call next up until the iterator's limit is reached, even if target page is after.`, (done) => {
+    describe('with error', () => {
 
-      const targetPage = 10;
-      instance.maxPageLoadLimit = 5;
+      beforeEach(() => {
+        instance = iterator.instance({
+          filter: {
+            resultError: new Error()
+          }
+        });
+      });
 
-      iteratorNextPageUntilPage(instance, targetPage).then(() => {
+      it('should return with the error.', (done) => {
+        const targetPage = 10;
 
-        instance.latestLoadedPage$.subscribe((page) => {
-          expect(page).toBe(instance.maxPageLoadLimit);
+        iteratorNextPageUntilPage(instance, targetPage).then(() => {
+          done('should not have returned successfully.');
+        }).catch((error) => {
+          expect(error).toBeDefined();
           done();
         });
-
       });
 
     });
@@ -51,11 +81,13 @@ describe('iteration.next', () => {
 
     it(`should call next up until the iterator's limit is reached.`, (done) => {
 
-      instance.maxPageLoadLimit = 15;
+      const testLimit = 15;
+      instance.maxPageLoadLimit = testLimit;
 
-      iteratorNextPageUntilMaxPageLoadLimit(instance).then(() => {
+      iteratorNextPageUntilMaxPageLoadLimit(instance).then((page) => {
+        expect(page).toBe(testLimit);
 
-        instance.latestLoadedPage$.subscribe((page) => {
+        instance.latestLoadedPage$.pipe(first()).subscribe((page) => {
           expect(page).toBe(instance.maxPageLoadLimit);
           done();
         });

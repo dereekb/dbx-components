@@ -1,6 +1,6 @@
 import { map, filter, distinctUntilChanged, delay, switchMap, tap, exhaustMap, first, Observable, combineLatest, shareReplay } from "rxjs";
 import { ItemIteration, PageItemIteration } from "./iteration";
-import { reduceBooleansWithAndFn } from '@dereekb/util';
+import { performTaskLoop, reduceBooleansWithAndFn } from '@dereekb/util';
 
 /**
  * Creates an observable from the input iteration that checks both the hasNext$ and canLoadMore$ states.
@@ -8,7 +8,7 @@ import { reduceBooleansWithAndFn } from '@dereekb/util';
  * @param iteration 
  * @returns 
  */
- export function iterationHasNextAndCanLoadMore<V>(iteration: ItemIteration<V>): Observable<boolean> {
+export function iterationHasNextAndCanLoadMore<V>(iteration: ItemIteration<V>): Observable<boolean> {
   return combineLatest([iteration.hasNext$, iteration.canLoadMore$]).pipe(
     map(reduceBooleansWithAndFn(true)),
     shareReplay(1)
@@ -22,7 +22,7 @@ import { reduceBooleansWithAndFn } from '@dereekb/util';
  * 
  * @returns 
  */
-export function iteratorNextPageUntilMaxPageLoadLimit(iterator: PageItemIteration): Promise<void> {
+export function iteratorNextPageUntilMaxPageLoadLimit(iterator: PageItemIteration): Promise<number> {
   return iteratorNextPageUntilPage(iterator, () => iterator.maxPageLoadLimit);
 }
 
@@ -35,50 +35,25 @@ export function iteratorNextPageUntilMaxPageLoadLimit(iterator: PageItemIteratio
  * @param page 
  * @returns 
  */
-export function iteratorNextPageUntilPage(iteration: PageItemIteration, page: number | (() => number)): Promise<void> {
+export function iteratorNextPageUntilPage(iteration: PageItemIteration, page: number | (() => number)): Promise<number> {
   const getPageLimit = (typeof page === 'function') ? page : () => page;
-  const hasNextAndCanLoadMore$ = iterationHasNextAndCanLoadMore(iteration);
-  const latestPage$ = iteration.latestLoadedPage$;
-  const latestPageState$ = iteration.latestState$;
 
   function checkPageLimit(page) {
     const pageLimit = getPageLimit();
-    return page < pageLimit && page < iteration.maxPageLoadLimit;
+    return page < Math.min(pageLimit, iteration.maxPageLoadLimit);
   }
 
-  return new Promise((resolve, reject) => {
-    // Changes are triggered off of page number changes.
-    const sub = latestPage$.pipe(
-      distinctUntilChanged(),
-      delay(0)  // Delay to prevent observable in mapping from returning immediately.
-    ).pipe(
-      // Can always switch to the latest number safely
-      switchMap((latestPageNumber) => hasNextAndCanLoadMore$.pipe(
-        map((canLoadMore) => (canLoadMore && checkPageLimit(latestPageNumber))),
-        tap((canLoadMore) => {
+  return new Promise((resolve) => {
+    iteration.latestLoadedPage$.pipe(
+      first(),
+    ).subscribe((firstLatestPage: number) => {
+      const promise = performTaskLoop({
+        initValue: firstLatestPage,
+        checkContinue: (latestPage) => checkPageLimit(latestPage),
+        next: () => iteration.nextPage()
+      });
 
-          // Load more
-          if (canLoadMore) {
-            iteration.next({ page: latestPageNumber + 1 });
-          }
-        }),
-        exhaustMap((canLoadMore) => {
-          if (canLoadMore) {
-            return latestPageState$.pipe(filter(x => x.page >= latestPageNumber));
-          } else {
-            return latestPageState$;
-          }
-        }),
-        first()
-      ))
-    ).subscribe((state) => {
-      if (state.error != null) {
-        reject(state.error);
-        sub.unsubscribe();
-      } else if (!checkPageLimit(state.page)) {
-        resolve();
-        sub.unsubscribe();
-      }
+      resolve(promise);
     });
   });
 }

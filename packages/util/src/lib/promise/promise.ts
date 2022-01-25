@@ -1,4 +1,4 @@
-import { Maybe } from "./value";
+import { Maybe } from "../value";
 
 export type PromiseTaskFn<T, K = any> = (value: T, tryNumber?: number) => Promise<K>;
 

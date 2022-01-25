@@ -1,3 +1,4 @@
+import { skip } from 'rxjs/operators';
 import { FIRST_PAGE } from '@dereekb/util';
 import { ItemPageIterator, ItemPageIteratorDelegate, ItemPageIteratorIterationInstance, ItemPageIteratorRequest, ItemPageIteratorResult } from './iterator.page';
 import { loadingStateHasFinishedLoading, loadingStateIsLoading } from '../loading';
@@ -42,7 +43,7 @@ describe('ItemPageIterator', () => {
 
   let iterator: ItemPageIterator<number, TestPageIteratorFilter>;
 
-  beforeAll(() => {
+  beforeEach(() => {
     iterator = new ItemPageIterator(TEST_PAGE_ITERATOR_DELEGATE);
   });
 
@@ -60,6 +61,10 @@ describe('ItemPageIterator', () => {
       initInstanceWithFilter();
     });
 
+    afterEach(() => {
+      instance.destroy();
+    });
+
     it('should return the first page without calling next().', (done) => {
 
       instance.latestSuccessfulPageResults$.pipe(first()).subscribe((state) => {
@@ -68,7 +73,6 @@ describe('ItemPageIterator', () => {
         expect(state.page).toBe(FIRST_PAGE);
         expect(state.model).toBeDefined();
 
-        instance.destroy();
         done();
       });
 
@@ -80,7 +84,6 @@ describe('ItemPageIterator', () => {
         instance.successfulPageResultsCount$.pipe(first()).subscribe((count) => {
           expect(count).toBe(0);
 
-          instance.destroy();
           done();
         });
       });
@@ -97,10 +100,93 @@ describe('ItemPageIterator', () => {
           ).subscribe((count) => {
             expect(count).toBe(1);
 
-            instance.destroy();
             done();
           });
         });
+      });
+
+    });
+
+    describe('_nextTrigger$', () => {
+
+      it('should not emit a value until next is called.', (done) => {
+        let expected = false;
+
+        instance._nextTrigger$.pipe(first()).subscribe(() => {
+          expect(expected).toBe(true);
+          done();
+        });
+
+        expected = true;
+
+        instance.next();
+      });
+
+      it('should emit a value when n changes.', (done) => {
+
+        instance._nextFinished$.pipe(first()).subscribe((state) => {
+          expect(state.n).toBe(0);
+
+          let expected = false;
+
+          instance._nextTrigger$.pipe(first()).subscribe((state) => {
+            expect(expected).toBe(true);
+            expect(state.n).toBe(1);
+
+            instance.destroy();
+            done();
+          });
+
+          expected = true;
+          instance.next();
+        });
+
+      });
+
+    });
+
+    describe('_nextFinished$', () => {
+
+      it('should emit a value when the state is in an error state and retry is not presented.', (done) => {
+
+        initInstanceWithFilter({ resultError: new Error() });
+
+        instance.latestPageResultState$.pipe(first()).subscribe((latest) => {
+          expect(latest.error).toBeDefined();
+
+          let expected = false;
+
+          instance._nextFinished$.pipe(first()).subscribe(() => {
+            expect(expected).toBe(true);
+            done();
+          });
+
+          expected = true;
+
+          instance.next();
+        });
+      });
+
+      it('should not emit a value until next is called.', (done) => {
+        let expected = false;
+
+        instance._nextFinished$.pipe(first()).subscribe(() => {
+          expect(expected).toBe(true);
+          done();
+        });
+
+        expected = true;
+
+        instance.next();
+      });
+
+      it('should not emit a value until the state has finished loading after next() is called.', (done) => {
+        instance._nextFinished$.pipe(first()).subscribe((state) => {
+          expect(loadingStateHasFinishedLoading(state.current)).toBe(true);
+          done();
+        });
+
+        instance.next();
       });
 
     });
@@ -143,7 +229,6 @@ describe('ItemPageIterator', () => {
 
           expect(allItems.length).toBe(1);
 
-          instance.destroy();
           done();
         });
 
@@ -153,7 +238,6 @@ describe('ItemPageIterator', () => {
       it('should accumulate values as pages are loaded.', (done) => {
 
         let emissions = 0;
-
         let latestAllItems: number[];
 
         // Should trigger first page to be loaded.
@@ -168,8 +252,6 @@ describe('ItemPageIterator', () => {
         iteratorNextPageUntilPage(instance, page).then(() => {
           expect(emissions).toBe(page + 1);
           expect(latestAllItems.length).toBe(page + 1);
-
-          instance.destroy();
           done();
         });
 
@@ -190,7 +272,6 @@ describe('ItemPageIterator', () => {
           expect(state.page).toBe(FIRST_PAGE);
           expect(state.model).toBeDefined();
 
-          instance.destroy();
           done();
         });
 
@@ -223,7 +304,6 @@ describe('ItemPageIterator', () => {
               expect(state.page).toBe(FIRST_PAGE);
               expect(state.model).toBeDefined();
 
-              instance.destroy();
               done();
             });
           });
@@ -231,12 +311,14 @@ describe('ItemPageIterator', () => {
 
       });
 
-      it('should not trigger loading the next page if the current page is done being loaded.', (done) => {
+      it('should trigger loading the next page if the current page is done being loaded.', (done) => {
 
         instance.currentPageResultState$.pipe(
           filter(x => loadingStateHasFinishedLoading(x)),
           first()
         ).subscribe((state) => {
+
+          // First page loads upon first subscription.
 
           expect(state).toBeDefined();
           expect(loadingStateHasFinishedLoading(state)).toBe(true);
@@ -257,13 +339,98 @@ describe('ItemPageIterator', () => {
               expect(state.page).toBe(FIRST_PAGE + 1);
               expect(state.model).toBeDefined();
 
-              instance.destroy();
               done();
             });
           });
         });
+      });
 
-        instance.next();
+      it('state$ should return the previous error/state.', (done) => {
+        initInstanceWithFilter({ resultError: new Error() });
+
+        instance.latestPageResultState$.pipe(first()).subscribe((latestState) => {
+          expect(latestState.error).toBeDefined();
+
+          // Wait for next state triggered by next.
+          instance.state$.pipe(
+            skip(1),
+            first()
+          ).subscribe((newState) => {
+            expect(newState.latestFinished).toBe(latestState);
+
+            done();
+          });
+
+          instance.next();
+        });
+
+      });
+
+    });
+
+    describe('nextPage()', () => {
+
+      it('should trigger loading the next page.', (done) => {
+
+        instance.latestPageResultState$.pipe(
+          filter(x => loadingStateHasFinishedLoading(x)),
+          first()
+        ).subscribe((state) => {
+          expect(state.page).toBe(FIRST_PAGE);
+
+          instance.nextPage().then((loadedPage) => {
+            expect(loadedPage).toBe(FIRST_PAGE + 1);
+
+            instance.currentPageResultState$.pipe(
+              filter(x => loadingStateHasFinishedLoading(x)),
+              first()
+            ).subscribe((currentState) => {
+              expect(currentState.page).toBe(FIRST_PAGE + 1);
+              done();
+            });
+
+          });
+
+        });
+
+      });
+
+      it('should return the current error.', (done) => {
+
+        initInstanceWithFilter({ resultError: new Error() });
+
+        instance.latestPageResultState$.pipe(first()).subscribe((latest) => {
+          expect(latest.error).toBeDefined();
+
+          instance.nextPage().then(() => {
+            done('next should have failed');
+          }, (error) => {
+            expect(error).toBeDefined();
+            done();
+          });
+        });
+
+      });
+
+    });
+
+    describe('first nextPage()', () => {
+
+      it('should return page 0 if next page is called before any value is loaded.', async () => {
+        let page = await instance.nextPage();
+        expect(page).toBe(0);
+      });
+
+      it('should return page 1 if next page is called before any value is loaded.', (done) => {
+
+        instance.latestLoadedPage$.pipe(first()).subscribe((page) => {
+          expect(page).toBe(FIRST_PAGE);
+
+          instance.nextPage().then((nextPage) => {
+            expect(nextPage).toBe(1);
+            done();
+          });
+        });
 
       });
 
