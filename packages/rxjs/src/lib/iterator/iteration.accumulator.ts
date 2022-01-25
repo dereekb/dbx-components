@@ -1,4 +1,4 @@
-import { SubscriptionObject } from '@dereekb/rxjs';
+import { SubscriptionObject } from '../subscription';
 import { distinctUntilChanged, filter } from 'rxjs/operators';
 import { distinctUntilArrayLengthChanges, scanBuildArray, filterMaybe, scanIntoArray } from "../rxjs";
 import { lastValue, filterMaybeValues, Destroyable } from "@dereekb/util";

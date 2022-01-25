@@ -4,7 +4,6 @@ import { FIRST_PAGE } from '@dereekb/util';
 import { ItemPageIterator, ItemPageIteratorDelegate, ItemPageIteratorIterationInstance, ItemPageIteratorRequest, ItemPageIteratorResult } from './iterator.page';
 import { loadingStateHasFinishedLoading, loadingStateIsLoading } from '../loading';
 import { delay, filter, first, of, Observable, tap } from 'rxjs';
-import { iteratorNextPageUntilPage } from './iteration.next';
 
 export interface TestPageIteratorFilter {
   end?: true;
