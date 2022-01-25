@@ -1,5 +1,5 @@
 import { Observable } from 'rxjs';
-import { Destroyable, Maybe, PageNumber } from "@dereekb/util";
+import { Destroyable, PageNumber } from "@dereekb/util";
 import { LoadingState, PageLoadingState } from '../loading';
 
 export interface ItemIteratorNextRequest {
@@ -15,7 +15,7 @@ export interface ItemIteratorNextRequest {
   retry?: boolean;
 }
 
-export interface ItemIteration<V = any> extends Destroyable {
+export interface ItemIteration<V = any, L extends LoadingState<V> = LoadingState<V>> extends Destroyable {
 
   readonly hasNext$: Observable<boolean>;
   readonly canLoadMore$: Observable<boolean>;
@@ -23,12 +23,12 @@ export interface ItemIteration<V = any> extends Destroyable {
   /**
    * The latest stable state that has finished loading.
    */
-  readonly latestState$: Observable<LoadingState<Maybe<V>>>;
+  readonly latestState$: Observable<L>;
 
   /**
    * The "current" page state.
    */
-  readonly currentState$: Observable<LoadingState<Maybe<V>>>;
+  readonly currentState$: Observable<L>;
 
   /**
    * Triggers a loading of the next page.
@@ -40,7 +40,7 @@ export interface ItemIteration<V = any> extends Destroyable {
 /**
  * An ItemIteration that has pages.
  */
-export interface PageItemIteration<V = any> extends ItemIteration<V> {
+export interface PageItemIteration<V = any, L extends PageLoadingState<V> = PageLoadingState<V>> extends ItemIteration<V, L> {
 
   /**
    * The maximum number of pages allowed to be loaded.
@@ -59,10 +59,6 @@ export interface PageItemIteration<V = any> extends ItemIteration<V> {
    * @param request 
    */
   nextPage(request?: ItemIteratorNextRequest): Promise<PageNumber>;
-
-  readonly latestState$: Observable<PageLoadingState<V>>;
-
-  readonly currentState$: Observable<PageLoadingState<V>>;
 
   /**
    * Returns the latest page that has been fully loaded.

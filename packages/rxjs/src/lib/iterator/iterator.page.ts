@@ -114,7 +114,7 @@ export interface ItemPageIteratorIterationInstanceState<V> {
 /**
  * Configured Iterator instance.
  */
-export class ItemPageIteratorIterationInstance<V, F, C extends ItemPageIterationConfig<F> = ItemPageIterationConfig<F>> implements PageItemIteration<V>, Destroyable {
+export class ItemPageIteratorIterationInstance<V, F, C extends ItemPageIterationConfig<F> = ItemPageIterationConfig<F>> implements PageItemIteration<V, PageLoadingState<V>>, Destroyable {
 
   /**
    * Used for triggering loading of more content.

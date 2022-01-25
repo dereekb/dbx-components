@@ -245,24 +245,24 @@ export function mapMultipleLoadingStateResults<T, X, L extends LoadingState<X>[]
   return result;
 }
 
-export type MapLoadingStateFn<A, L extends LoadingState<A>, B, O extends LoadingState<B>> = (input: L) => O;
-export type MapLoadingStateValuesFn<A, B> = (input: A) => B;
+export type MapLoadingStateFn<A, B, L extends LoadingState<A> = LoadingState<A>, O extends LoadingState<B> = LoadingState<B>> = (input: L) => O;
+export type MapLoadingStateValuesFn<A, B, L extends LoadingState<A> = LoadingState<A>> = (input: A, state: L) => B;
 
-export interface MapLoadingStateResultsConfiguration<A, L extends LoadingState<A>, B, O extends LoadingState<B>> {
-  mapValue?: MapLoadingStateValuesFn<A, B>;
-  mapState?: MapLoadingStateFn<A, L, B, O>;
+export interface MapLoadingStateResultsConfiguration<A, B, L extends LoadingState<A> = LoadingState<A>, O extends LoadingState<B> = LoadingState<B>> {
+  mapValue?: MapLoadingStateValuesFn<A, B, L>;
+  mapState?: MapLoadingStateFn<A, B, L, O>;
 }
 
-export function mapLoadingStateResults<L extends PageLoadingState<A>, A, B, O extends PageLoadingState<B>>(input: L, config: MapLoadingStateResultsConfiguration<A, L, B, O>): O;
-export function mapLoadingStateResults<L extends LoadingState<A>, A, B, O extends LoadingState<B>>(input: L, config: MapLoadingStateResultsConfiguration<A, L, B, O>): O;
-export function mapLoadingStateResults<L extends Partial<PageLoadingState<A>>, A, B, O extends Partial<PageLoadingState<B>>>(
-  input: L, config: MapLoadingStateResultsConfiguration<A, L, B, O>
+export function mapLoadingStateResults<A, B, L extends PageLoadingState<A> = PageLoadingState<A>, O extends PageLoadingState<B> = PageLoadingState<B>>(input: L, config: MapLoadingStateResultsConfiguration<A, B, L, O>): O;
+export function mapLoadingStateResults<A, B, L extends LoadingState<A> = LoadingState<A>, O extends LoadingState<B> = LoadingState<B>>(input: L, config: MapLoadingStateResultsConfiguration<A, B, L, O>): O;
+export function mapLoadingStateResults<A, B, L extends Partial<PageLoadingState<A>> = Partial<PageLoadingState<A>>, O extends Partial<PageLoadingState<B>> = Partial<PageLoadingState<B>>>(
+  input: L, config: MapLoadingStateResultsConfiguration<A, B, L, O>
 ): O {
   const { mapValue, mapState } = config;
   let model: B = input?.model as any;
 
-  if (model && mapValue) {
-    model = mapValue(model as any);
+  if (model != null && mapValue) {
+    model = mapValue(model as any, input);
   }
 
   let result: O;

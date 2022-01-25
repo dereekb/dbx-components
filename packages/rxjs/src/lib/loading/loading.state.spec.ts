@@ -1,4 +1,4 @@
-import { beginLoading, errorResult, loadingStateHasFinishedLoading, loadingStateIsLoading, successResult } from '.';
+import { beginLoading, errorResult, loadingStateHasFinishedLoading, loadingStateIsLoading, mapLoadingStateResults, successResult } from '.';
 
 describe('beginLoading()', () => {
 
@@ -123,6 +123,20 @@ describe('loadingStateHasFinishedLoading()', () => {
   it('should return false if a loading state has loading=undefined, and error=undefined.', () => {
     const result = loadingStateHasFinishedLoading({ loading: undefined, error: undefined });
     expect(result).toBe(false);
+  });
+
+});
+
+describe('mapLoadingStateResults()', () => {
+
+  it('should map the value of 0 and other non-null falsy values', () => {
+    const mappedValue = `MAPPED`;
+
+    const result = mapLoadingStateResults(successResult(0), {
+      mapValue: (x) => mappedValue
+    });
+
+    expect(result.model).toBe(mappedValue);
   });
 
 });
