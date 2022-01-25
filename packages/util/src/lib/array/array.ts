@@ -81,12 +81,21 @@ export function mergeIntoArray<T>(target: Maybe<T[]>, ...arrays: T[][]) {
   if (!target) {
     target = [];
   }
-  
+
   arrays.forEach((array) => {
     mergeArrayIntoArray(target, array);
   });
 
   return target;
+}
+
+export function mergeArrayOrValueIntoArray<T>(target: T[], value: ArrayOrValue<T>): T[] {
+  if (Array.isArray(value)) {
+    return mergeArrayIntoArray(target, value);
+  } else {
+    target.push(value);
+    return target;
+  }
 }
 
 /**

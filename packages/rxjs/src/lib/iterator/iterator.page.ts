@@ -1,4 +1,4 @@
-import { distinctUntilArrayLengthChanges, filterMaybe } from '../rxjs';
+import { distinctUntilArrayLengthChanges, filterMaybe, scanBuildArray } from '../rxjs';
 import { distinctUntilChanged, map, scan, startWith, catchError, skip, skipWhile, tap, take, mergeMap, delay } from 'rxjs/operators';
 import { PageLoadingState, loadingStateHasError, loadingStateHasFinishedLoading, loadingStateIsLoading, errorPageResult, successPageResult, mapLoadingStateResults, beginLoading } from "../loading";
 import { FIRST_PAGE, UNLOADED_PAGE, Destroyable, Filter, filteredPage, FilteredPage, getNextPageNumber, hasValueOrNotEmpty, Maybe, PageNumber, filterMaybeValues, lastValue } from "@dereekb/util";
@@ -338,6 +338,11 @@ export class ItemPageIteratorIterationInstance<V, F, C extends ItemPageIteration
     shareReplay(1)
   );
 
+  readonly numberOfPagesLoaded$: Observable<PageNumber> = this.latestLoadedPage$.pipe(
+    map(x => x + 1),
+    shareReplay(1)
+  );
+
   // MARK: ItemIteration
   /**
    * Whether or not there are more results to load.
@@ -350,8 +355,8 @@ export class ItemPageIteratorIterationInstance<V, F, C extends ItemPageIteration
   /**
    * Whether or not the successfulPageResultsCount has passed the maxPageLoadLimit
    */
-  readonly canLoadMore$: Observable<boolean> = combineLatest([this._maxPageLoadLimit, this.latestLoadedPage$.pipe(startWith(UNLOADED_PAGE))]).pipe(
-    map(([limit, count]) => count < limit),
+  readonly canLoadMore$: Observable<boolean> = combineLatest([this._maxPageLoadLimit, this.numberOfPagesLoaded$.pipe(startWith(0))]).pipe(
+    map(([maxPageLoadLimit, numberOfPagesLoaded]) => numberOfPagesLoaded < maxPageLoadLimit),
     distinctUntilChanged(),
     shareReplay(1)
   );
@@ -375,33 +380,30 @@ export class ItemPageIteratorIterationInstance<V, F, C extends ItemPageIteration
   readonly allItems$: Observable<V[]> = this.state$.pipe(
     skipWhile(x => !x.latestFinished),   // Do not emit until the first finished state occurs.
     distinctUntilArrayLengthChanges((x) => x.allSuccessful),
-    /* 
-    We start with allSuccessfulPageResults$ since it contains all page results since the start of the iterator,
-    and subscription to allItems may not have started at the same time.
+    scanBuildArray((state) => {
+      /* 
+      We start with allSuccessfulPageResults$ since it contains all page results since the start of the iterator,
+      and subscription to allItems may not have started at the same time.
 
-    We use scan to add in all models coming in afterwards by pushing them into the accumulator.
-    This is to prevent performance issues with very large iteration sets, since we can
-    append onto the array, rather than concat/copy the array each time.
-    */
-    exhaustMap((state) => {
+      We use scan to add in all models coming in afterwards by pushing them into the accumulator.
+      This is to prevent performance issues with very large iteration sets, since we can
+      append onto the array, rather than concat/copy the array each time.
+      */
       const allPageResultsUpToFirstSubscription = state.allSuccessful;
       const firstLatestState = lastValue(allPageResultsUpToFirstSubscription);
       const seed: V[] = filterMaybeValues(allPageResultsUpToFirstSubscription.map(x => x.model?.value));
 
-      return this.latestPageResultState$.pipe(
+      const accumulatorObs: Observable<V> = this.latestPageResultState$.pipe(
         skipWhile(x => x === firstLatestState),
-        startWith(beginLoading()),  // Start with to prevent waiting on emissions from skip.
-        scan((acc: V[], next: PageLoadingState<ItemPageIteratorResult<V>>) => {
-          if (next.model?.value != null) {
-            acc.push(next.model.value);
-          }
+        map(x => x.model?.value),
+        filterMaybe()
+      );
 
-          return acc;
-        }, seed)
-      )
-    }),
-    distinctUntilArrayLengthChanges(),
-    shareReplay(1)
+      return {
+        seed,
+        accumulatorObs
+      };
+    })
   );
 
   next(request: ItemIteratorNextRequest = {}): void {

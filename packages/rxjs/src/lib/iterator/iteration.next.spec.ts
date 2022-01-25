@@ -20,14 +20,13 @@ describe('iteration.next', () => {
   describe('nextUntilPage()', () => {
 
     it('should call next up until the given page is reached.', (done) => {
-      const targetPage = 10;
+      const targetPagesToLoad = 10;
 
-      iteratorNextPageUntilPage(instance, targetPage).then((page) => {
-        expect(page).toBe(targetPage);
+      iteratorNextPageUntilPage(instance, targetPagesToLoad).then((page) => {
+        expect(page + 1).toBe(targetPagesToLoad);
 
-        instance.latestLoadedPage$.pipe(first()).subscribe((latestPage) => {
-
-          expect(latestPage).toBe(targetPage);
+        instance.numberOfPagesLoaded$.pipe(first()).subscribe((latestPage) => {
+          expect(latestPage).toBe(targetPagesToLoad);
           done();
         });
       });
@@ -36,14 +35,14 @@ describe('iteration.next', () => {
 
     it(`should call next up until the iterator's limit is reached, even if target page is after.`, (done) => {
 
-      const testLimit = 5;
+      const testMaxPagesToLoad = 5;
       const targetPage = 10;
-      instance.maxPageLoadLimit = testLimit;
+      instance.maxPageLoadLimit = testMaxPagesToLoad;
 
       iteratorNextPageUntilPage(instance, targetPage).then((page) => {
-        expect(page).toBe(testLimit);
+        expect(page).toBe(testMaxPagesToLoad - 1);
 
-        instance.latestLoadedPage$.pipe(first()).subscribe((page) => {
+        instance.numberOfPagesLoaded$.pipe(first()).subscribe((page) => {
           expect(page).toBe(instance.maxPageLoadLimit);
           done();
         });
@@ -81,13 +80,13 @@ describe('iteration.next', () => {
 
     it(`should call next up until the iterator's limit is reached.`, (done) => {
 
-      const testLimit = 15;
-      instance.maxPageLoadLimit = testLimit;
+      const testMaxPagesToLoad = 15;
+      instance.maxPageLoadLimit = testMaxPagesToLoad;
 
       iteratorNextPageUntilMaxPageLoadLimit(instance).then((page) => {
-        expect(page).toBe(testLimit);
+        expect(page).toBe(testMaxPagesToLoad - 1);
 
-        instance.latestLoadedPage$.pipe(first()).subscribe((page) => {
+        instance.numberOfPagesLoaded$.pipe(first()).subscribe((page) => {
           expect(page).toBe(instance.maxPageLoadLimit);
           done();
         });

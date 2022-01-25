@@ -43,7 +43,9 @@ export interface ItemIteration<V = any> extends Destroyable {
 export interface PageItemIteration<V = any> extends ItemIteration<V> {
 
   /**
-   * Current page load limit.
+   * The maximum number of pages allowed to be loaded.
+   * 
+   * A page of 15 means that pages 0-14 can be loaded, but not page 15.
    */
   maxPageLoadLimit: PageNumber;
 

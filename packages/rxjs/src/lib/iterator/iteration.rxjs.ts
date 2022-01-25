@@ -1,7 +1,8 @@
-import { reduceBooleansWithAndFn } from '@dereekb/util';
-import { combineLatest, map, Observable, shareReplay } from 'rxjs';
+import { lastValue, flattenArray } from '@dereekb/util';
+import { filterMaybe, scanBuildArray } from '../rxjs';
+import { combineLatest, map, Observable, shareReplay, skipWhile } from 'rxjs';
 import { mapLoadingStateResults, PageListLoadingState } from '../loading';
-import { ItemIteration, PageItemIteration } from './iteration';
+import { PageItemIteration } from './iteration';
 
 
 /**
@@ -13,5 +14,31 @@ export function iterationCurrentPageListLoadingState<V>(iteration: PageItemItera
       mapValue: () => values
     }) as PageListLoadingState<V>),
     shareReplay(1)
+  );
+}
+
+/**
+ * Used for PageItemIterations that have an array of results returned per page instead of a single item.
+ * 
+ * @param iteration 
+ * @returns 
+ */
+export function flattenIterationResultItemArray<T>(iteration: PageItemIteration<T[]>): Observable<T[]> {
+  return iteration.allItems$.pipe(
+    scanBuildArray((allItems: T[][]) => {
+      const seed = flattenArray(allItems);
+      const latestItem = lastValue(allItems);
+
+      const accumulatorObs: Observable<T[]> = iteration.latestState$.pipe(
+        skipWhile(x => x.model === latestItem),
+        map(x => x.model),
+        filterMaybe()
+      );
+
+      return {
+        seed,
+        accumulatorObs
+      } as any;
+    })
   );
 }

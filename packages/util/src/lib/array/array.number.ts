@@ -41,6 +41,8 @@ export function reduceNumbersFn<D extends number>(reduceFn: ((a: number, b: numb
 /**
  * Generates an array containing the range of numbers specified.
  * 
+ * The end value is not included.
+ * 
  * @param param0 
  * @returns 
  */

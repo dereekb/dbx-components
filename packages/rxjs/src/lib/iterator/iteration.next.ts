@@ -1,4 +1,4 @@
-import { map, filter, distinctUntilChanged, delay, switchMap, tap, exhaustMap, first, Observable, combineLatest, shareReplay } from "rxjs";
+import { map, first, Observable, combineLatest, shareReplay } from "rxjs";
 import { ItemIteration, PageItemIteration } from "./iteration";
 import { performTaskLoop, reduceBooleansWithAndFn } from '@dereekb/util';
 
@@ -27,7 +27,7 @@ export function iteratorNextPageUntilMaxPageLoadLimit(iterator: PageItemIteratio
 }
 
 /**
- * Automatically calls next on the PageItemIteration up to the target page.
+ * Automatically calls next on the PageItemIteration up to the target page, the number of total pages that should be loaded.
  * 
  * The promise will reject with an error if an error is encountered.
  * 
@@ -40,7 +40,7 @@ export function iteratorNextPageUntilPage(iteration: PageItemIteration, page: nu
 
   function checkPageLimit(page) {
     const pageLimit = getPageLimit();
-    return page < Math.min(pageLimit, iteration.maxPageLoadLimit);
+    return (page + 1) < Math.min(pageLimit, iteration.maxPageLoadLimit);
   }
 
   return new Promise((resolve) => {

@@ -1,3 +1,4 @@
+import { PageNumber, range } from '@dereekb/util';
 import { skip } from 'rxjs/operators';
 import { FIRST_PAGE } from '@dereekb/util';
 import { ItemPageIterator, ItemPageIteratorDelegate, ItemPageIteratorIterationInstance, ItemPageIteratorRequest, ItemPageIteratorResult } from './iterator.page';
@@ -11,33 +12,43 @@ export interface TestPageIteratorFilter {
   resultError?: any;
 }
 
-export const TEST_PAGE_ITERATOR_DELEGATE: ItemPageIteratorDelegate<number, TestPageIteratorFilter> = {
-  loadItemsForPage: (request: ItemPageIteratorRequest<number, TestPageIteratorFilter>) => {
-    const result: ItemPageIteratorResult<number> = {
-      value: request.page.page
-    };
+export function makeTestPageIteratorDelegate<T>(makeResultsFn: (page: PageNumber) => T): ItemPageIteratorDelegate<T, TestPageIteratorFilter> {
+  return {
+    loadItemsForPage: (request: ItemPageIteratorRequest<T, TestPageIteratorFilter>) => {
+      const result: ItemPageIteratorResult<T> = {
+        value: makeResultsFn(request.page.page)
+      };
 
-    let resultObs: Observable<ItemPageIteratorResult<number>> = of(result);
+      let resultObs: Observable<ItemPageIteratorResult<T>> = of(result);
 
-    if (request.page.filter) {
-      const { delayTime, resultError, end } = request.page.filter;
+      if (request.page.filter) {
+        const { delayTime, resultError, end } = request.page.filter;
 
-      if (delayTime) {
-        resultObs = resultObs.pipe(delay(delayTime));
-      } else if (resultError) {
-        resultObs = of({
-          error: resultError
-        });
-      } else if (end) {
-        resultObs = of({
-          end: true
-        });
+        if (delayTime) {
+          resultObs = resultObs.pipe(delay(delayTime));
+        } else if (resultError) {
+          resultObs = of({
+            error: resultError
+          });
+        } else if (end) {
+          resultObs = of({
+            end: true
+          });
+        }
       }
-    }
 
-    return resultObs;
+      return resultObs;
+    }
   }
-};
+}
+
+export const TEST_PAGE_ARRAY_ITERATOR_PAGE_SIZE = 10;
+export const TEST_PAGE_ITERATOR_DELEGATE: ItemPageIteratorDelegate<number, TestPageIteratorFilter> = makeTestPageIteratorDelegate((page) => page);
+export const TEST_PAGE_ARRAY_ITERATOR_DELEGATE: ItemPageIteratorDelegate<number[], TestPageIteratorFilter> = makeTestPageIteratorDelegate((page) => {
+  const start = page * TEST_PAGE_ARRAY_ITERATOR_PAGE_SIZE;
+  const end = start + TEST_PAGE_ARRAY_ITERATOR_PAGE_SIZE;
+  return range({ start, end });
+});
 
 describe('ItemPageIterator', () => {
 
@@ -195,16 +206,16 @@ describe('ItemPageIterator', () => {
 
       it('should return all items after being subscribed to a few pages in.', (done) => {
 
-        const loadPages = 5;
+        const pagesToLoad = 5;
 
-        iteratorNextPageUntilPage(instance, loadPages).then(() => {
+        iteratorNextPageUntilPage(instance, pagesToLoad).then(() => {
 
-          instance.latestPageResultState$.subscribe((latestPage) => {
-            expect(latestPage.page).toBe(loadPages);
+          instance.numberOfPagesLoaded$.subscribe((pagesLoaded) => {
+            expect(pagesLoaded).toBe(pagesToLoad);
 
             instance.allItems$.subscribe((allItems) => {
               expect(allItems).toBeDefined();
-              expect(allItems.length).toBe(loadPages + 1);
+              expect(allItems.length).toBe(pagesToLoad);
 
               instance.destroy();
               done();
@@ -250,8 +261,8 @@ describe('ItemPageIterator', () => {
 
         // Load more pages
         iteratorNextPageUntilPage(instance, page).then(() => {
-          expect(emissions).toBe(page + 1);
-          expect(latestAllItems.length).toBe(page + 1);
+          expect(emissions).toBe(page);
+          expect(latestAllItems.length).toBe(page);
           done();
         });
 
