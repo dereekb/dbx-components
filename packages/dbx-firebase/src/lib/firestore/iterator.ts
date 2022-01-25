@@ -1,5 +1,6 @@
+import { PageLoadingState } from './../../../../rxjs/src/lib/loading/loading.state';
 import { Injectable } from '@angular/core';
-import { ItemPageIterator, ItemPageIteratorIterationInstance, ItemPageIterationConfig, ItemPageIteratorDelegate, ItemPageIteratorRequest, ItemPageIteratorResult, PageItemIteration, AbstractMappedPageItemIteration } from '@dereekb/rxjs';
+import { ItemPageIterator, ItemPageIteratorIterationInstance, ItemPageIterationConfig, ItemPageIteratorDelegate, ItemPageIteratorRequest, ItemPageIteratorResult, PageItemIteration, MappedPageItemIterationInstance } from '@dereekb/rxjs';
 import { QueryDocumentSnapshot, query, startAt, CollectionReference, getDocs, QueryConstraint, limit, QuerySnapshot } from '@angular/fire/firestore';
 import { Maybe, lastValue, mergeIntoArray, Destroyable } from '@dereekb/util';
 import { from, Observable, of } from "rxjs";
@@ -104,19 +105,28 @@ export class FirestoreItemPageIterator<T> {
     // TODO: as any typings provided since angularfire has a rough time with collection typings sometimes.
     // https://github.com/angular/angularfire/issues/2931
     const iterator: InternalFirestoreItemPageIteratorIterationInstance<T> = this._itemPageIterator.instance(config as any) as any;
-    return new FirestoreItemPageIteratorIterationInstance<T>(iterator) as any;
+    return new FirestoreItemPageIteratorIterationInstance<T>(iterator);
   }
 
 }
 
-export class FirestoreItemPageIteratorIterationInstance<T> extends AbstractMappedPageItemIteration<FirestoreItemPageQueryResult<T>, QueryDocumentSnapshot<T>[], InternalFirestoreItemPageIteratorIterationInstance<T>> implements PageItemIteration<QueryDocumentSnapshot<T>[]>, Destroyable {
+export class FirestoreItemPageIteratorIterationInstance<T> extends MappedPageItemIterationInstance<
+  QueryDocumentSnapshot<T>[],
+  FirestoreItemPageQueryResult<T>,
+  PageLoadingState<QueryDocumentSnapshot<T>[]>,
+  PageLoadingState<FirestoreItemPageQueryResult<T>>,
+  InternalFirestoreItemPageIteratorIterationInstance<T>
+> {
 
-  get snapshotIteration(): InternalFirestoreItemPageIteratorIterationInstance<T> {
-    return this._instance;
+  constructor(snapshotIteration: InternalFirestoreItemPageIteratorIterationInstance<T>) {
+    super(snapshotIteration, {
+      forwardDestroy: true,
+      mapValue: (x: FirestoreItemPageQueryResult<T>) => x.docs
+    });
   }
 
-  protected _mapStateValue(input: FirestoreItemPageQueryResult<T>): QueryDocumentSnapshot<T>[] {
-    return input.docs;
+  get snapshotIteration(): InternalFirestoreItemPageIteratorIterationInstance<T> {
+    return this.itemIterator;
   }
 
 }
