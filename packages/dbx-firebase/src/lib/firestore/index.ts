@@ -3,7 +3,7 @@ export * from './accessor.batch';
 export * from './accessor.default';
 export * from './accessor.transaction';
 export * from './document';
-export * from './collection';
+export * from './reference';
 export * from './context.batch';
 export * from './context.default';
 export * from './context.transaction';

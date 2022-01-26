@@ -1,16 +1,16 @@
 import { DocumentReference, DocumentSnapshot, UpdateData, WithFieldValue, WriteBatch } from "@angular/fire/firestore";
 import { getDoc } from "@firebase/firestore";
 import { from, Observable } from "rxjs";
-import { FirestoreDocumentDatabaseAccessor, FirestoreDocumentDatabaseAccessorFactory, FirestoreDocumentDatabaseAccessorStreamState } from "./accessor";
+import { FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, FirestoreDocumentDataAccessorStreamState } from "./accessor";
 
 /**
- * FirestoreDocumentDatabaseAccessor implementation for a batch.
+ * FirestoreDocumentDataAccessor implementation for a batch.
  */
-export class WriteBatchFirestoreDocumentDatabaseAccessor<T> implements FirestoreDocumentDatabaseAccessor<T> {
+export class WriteBatchFirestoreDocumentDataAccessor<T> implements FirestoreDocumentDataAccessor<T> {
 
   constructor(readonly batch: WriteBatch, readonly documentRef: DocumentReference<T>) { }
 
-  stream(): Observable<FirestoreDocumentDatabaseAccessorStreamState<T>> {
+  stream(): Observable<FirestoreDocumentDataAccessorStreamState<T>> {
     return from(this.get().then(snapshot => ({ snapshot, isActiveStream: false })));
   }
 
@@ -36,13 +36,13 @@ export class WriteBatchFirestoreDocumentDatabaseAccessor<T> implements Firestore
 }
 
 /**
- * Creates a new FirestoreDocumentDatabaseAccessorFactory for a Batch.
+ * Creates a new FirestoreDocumentDataAccessorFactory for a Batch.
  * 
  * @param batch 
  * @returns 
  */
-export function writeBatchAccessorFactory<T>(writeBatch: WriteBatch): FirestoreDocumentDatabaseAccessorFactory<T> {
+export function writeBatchAccessorFactory<T>(writeBatch: WriteBatch): FirestoreDocumentDataAccessorFactory<T> {
   return {
-    accessorFor: (ref: DocumentReference<T>) => new WriteBatchFirestoreDocumentDatabaseAccessor(writeBatch, ref)
+    accessorFor: (ref: DocumentReference<T>) => new WriteBatchFirestoreDocumentDataAccessor(writeBatch, ref)
   };
 }

@@ -1,25 +1,22 @@
 import { Observable } from 'rxjs';
 import { DocumentReference, DocumentSnapshot, UpdateData, WithFieldValue } from '@angular/fire/firestore';
+import { FirestoreDocumentReference } from './reference';
 
-export interface FirestoreDocumentDatabaseAccessorStreamState<T> {
+export interface FirestoreDocumentDataAccessorStreamState<T> {
   isActiveStream: boolean;
   snapshot: DocumentSnapshot<T>;
-}
-
-export interface FirestoreDocumentDatabaseAccessorDocumentRef<T> {
-  readonly documentRef: DocumentReference<T>;
 }
 
 /**
  * Firestore database accessor instance used to retrieve and make changes to items in the database.
  */
-export interface FirestoreDocumentDatabaseAccessor<T> extends FirestoreDocumentDatabaseAccessorDocumentRef<T> {
+export interface FirestoreDocumentDataAccessor<T> extends FirestoreDocumentReference<T> {
   /**
    * Returns a database stream of this object.
    * 
    * Depending on the current context, the stream may not be active and return only the latest value.
    */
-  stream(): Observable<FirestoreDocumentDatabaseAccessorStreamState<T>>;
+  stream(): Observable<FirestoreDocumentDataAccessorStreamState<T>>;
   /**
    * Returns the current snapshot.
    */
@@ -45,13 +42,13 @@ export interface FirestoreDocumentDatabaseAccessor<T> extends FirestoreDocumentD
 /**
  * Contextual interface used for making a FirestoreDocumentModifier for a specific document.
  */
-export interface FirestoreDocumentDatabaseAccessorFactory<T> {
+export interface FirestoreDocumentDataAccessorFactory<T> {
 
   /**
-   * Creates a new FirestoreDocumentDatabaseAccessor for the input ref.
+   * Creates a new FirestoreDocumentDataAccessor for the input ref.
    * 
    * @param ref
    */
-  accessorFor(ref: DocumentReference<T>): FirestoreDocumentDatabaseAccessor<T>;
+  accessorFor(ref: DocumentReference<T>): FirestoreDocumentDataAccessor<T>;
 
 }

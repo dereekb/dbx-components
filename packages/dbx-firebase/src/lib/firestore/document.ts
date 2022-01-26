@@ -1,11 +1,11 @@
 import { DocumentReference } from '@angular/fire/firestore';
 import { CollectionReference, doc } from '@firebase/firestore';
-import { FirestoreDocumentDatabaseAccessor, FirestoreDocumentDatabaseAccessorDocumentRef, FirestoreDocumentDatabaseAccessorFactory } from './accessor';
-import { FirestoreCollectionReference } from './collection';
+import { FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory } from './accessor';
+import { FirestoreCollectionReference, FirestoreDocumentReference } from './reference';
 import { FirestoreDocumentDatabaseContext } from './context';
 import { defaultFirestoreDatabaseContext } from './context.default';
 
-export interface FirestoreDocument<T> extends FirestoreDocumentDatabaseAccessorDocumentRef<T> { }
+export interface FirestoreDocument<T> extends FirestoreDocumentReference<T> { }
 
 export interface FirestoreDocumentAccessor<T, D extends FirestoreDocument<T>> {
 
@@ -40,9 +40,9 @@ export interface FirestoreDocumentAccessorFactory<T, D extends FirestoreDocument
 }
 
 /**
- * Used to generate a FirestoreDocument from an input FirestoreDocumentDatabaseAccessor instance.
+ * Used to generate a FirestoreDocument from an input FirestoreDocumentDataAccessor instance.
  */
-export type FirestoreDocumentFactoryFunction<T, D extends FirestoreDocument<T>> = (accessor: FirestoreDocumentDatabaseAccessor<T>) => D;
+export type FirestoreDocumentFactoryFunction<T, D extends FirestoreDocument<T>> = (accessor: FirestoreDocumentDataAccessor<T>) => D;
 
 // MARK: FirestoreDocumentAccessorInstance
 
@@ -64,7 +64,7 @@ export class FirestoreDocumentAccessorInstance<T, D extends FirestoreDocument<T>
     return this.config.collection;
   }
 
-  get accessorFactory(): FirestoreDocumentDatabaseAccessorFactory<T> {
+  get accessorFactory(): FirestoreDocumentDataAccessorFactory<T> {
     return this.databaseContext.accessorFactory;
   }
 

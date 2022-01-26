@@ -2,7 +2,7 @@ import { PageLoadingState, ItemPageIterator, ItemPageIterationInstance, ItemPage
 import { QueryDocumentSnapshot, query, startAt, getDocs, QueryConstraint, limit, QuerySnapshot } from '@angular/fire/firestore';
 import { Maybe, lastValue, mergeIntoArray } from '@dereekb/util';
 import { from, Observable, of, exhaustMap } from "rxjs";
-import { FirestoreCollectionReference } from './collection';
+import { FirestoreCollectionReference } from './reference';
 
 export interface FirestoreItemPageIteratorFilter {
   queryConstraints?: Maybe<QueryConstraint[]>;

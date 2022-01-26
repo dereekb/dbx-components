@@ -2,7 +2,7 @@ import { CollectionReference } from '@angular/fire/firestore';
 import { FirestoreDocument, FirestoreDocumentAccessor, FirestoreDocumentAccessorFactory, FirestoreDocumentAccessorFactoryFunction, FirestoreDocumentAccessorInstanceConfig, firestoreDocumentAccessorFactory } from "./document";
 import { FirestoreItemPageIterationBaseConfig, FirestoreItemPageIterationFactory, firestoreItemPageIterationFactory, FirestoreItemPageIterationFactoryFunction, FirestoreItemPageIterationInstance, FirestoreItemPageIteratorFilter } from "./iterator";
 import { FirestoreDocumentDatabaseContext } from "./context";
-import { FirestoreCollectionReference } from "./collection";
+import { FirestoreCollectionReference } from "./reference";
 
 /**
  * FirestoreCollection configuration

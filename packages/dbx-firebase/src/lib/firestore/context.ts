@@ -1,4 +1,4 @@
-import { FirestoreDocumentDatabaseAccessorFactory } from "./accessor";
+import { FirestoreDocumentDataAccessorFactory } from "./accessor";
 
 export enum FirestoreDocumentDatabaseContextType {
   NONE = 'none',
@@ -19,6 +19,6 @@ export interface FirestoreDocumentDatabaseContext<T> {
   /**
    * Database accessor
    */
-  readonly accessorFactory: FirestoreDocumentDatabaseAccessorFactory<T>;
+  readonly accessorFactory: FirestoreDocumentDataAccessorFactory<T>;
 
 }

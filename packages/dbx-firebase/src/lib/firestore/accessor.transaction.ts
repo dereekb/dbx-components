@@ -1,15 +1,15 @@
 import { DocumentReference, DocumentSnapshot, Transaction, UpdateData, WithFieldValue } from "@angular/fire/firestore";
 import { from, Observable } from "rxjs";
-import { FirestoreDocumentDatabaseAccessor, FirestoreDocumentDatabaseAccessorFactory, FirestoreDocumentDatabaseAccessorStreamState } from "./accessor";
+import { FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, FirestoreDocumentDataAccessorStreamState } from "./accessor";
 
 /**
- * FirestoreDocumentDatabaseAccessor implementation for a transaction.
+ * FirestoreDocumentDataAccessor implementation for a transaction.
  */
-export class TransactionFirestoreDocumentDatabaseAccessor<T> implements FirestoreDocumentDatabaseAccessor<T> {
+export class TransactionFirestoreDocumentDataAccessor<T> implements FirestoreDocumentDataAccessor<T> {
 
   constructor(readonly transaction: Transaction, readonly documentRef: DocumentReference<T>) { }
 
-  stream(): Observable<FirestoreDocumentDatabaseAccessorStreamState<T>> {
+  stream(): Observable<FirestoreDocumentDataAccessorStreamState<T>> {
     return from(this.get().then(snapshot => ({ snapshot, isActiveStream: false })));
   }
 
@@ -35,13 +35,13 @@ export class TransactionFirestoreDocumentDatabaseAccessor<T> implements Firestor
 }
 
 /**
- * Creates a new FirestoreDocumentDatabaseAccessorFactory for a Transaction.
+ * Creates a new FirestoreDocumentDataAccessorFactory for a Transaction.
  * 
  * @param transaction 
  * @returns 
  */
-export function transactionAccessorFactory<T>(transaction: Transaction): FirestoreDocumentDatabaseAccessorFactory<T> {
+export function transactionAccessorFactory<T>(transaction: Transaction): FirestoreDocumentDataAccessorFactory<T> {
   return {
-    accessorFor: (ref: DocumentReference<T>) => new TransactionFirestoreDocumentDatabaseAccessor(transaction, ref)
+    accessorFor: (ref: DocumentReference<T>) => new TransactionFirestoreDocumentDataAccessor(transaction, ref)
   };
 }
