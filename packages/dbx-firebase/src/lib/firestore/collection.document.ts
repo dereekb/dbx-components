@@ -5,9 +5,9 @@ import { DbNgxFirestoreCollectionReference } from './collection';
 import { FirestoreDocumentDatabaseContext } from './context';
 import { defaultFirestoreDatabaseContext } from './context.default';
 
-export interface DbNgxFirestoreCollectionDocument<T> extends FirestoreDocumentDatabaseAccessorDocumentRef<T> { }
+export interface DbNgxFirestoreDocument<T> extends FirestoreDocumentDatabaseAccessorDocumentRef<T> { }
 
-export interface DbNgxFirestoreCollectionDocumentAccessor<T, D extends DbNgxFirestoreCollectionDocument<T>> {
+export interface DbNgxFirestoreDocumentAccessor<T, D extends DbNgxFirestoreDocument<T>> {
 
   readonly databaseContext: FirestoreDocumentDatabaseContext<T>;
 
@@ -25,34 +25,34 @@ export interface DbNgxFirestoreCollectionDocumentAccessor<T, D extends DbNgxFire
 
 }
 
-export interface DbNgxFirestoreCollectionDocumentAccessorFactory<T, D extends DbNgxFirestoreCollectionDocument<T>> {
+export interface DbNgxFirestoreDocumentAccessorFactory<T, D extends DbNgxFirestoreDocument<T>> {
 
   /**
-   * Creates a new DbNgxFirestoreCollectionDocumentFactory using the given context.
+   * Creates a new DbNgxFirestoreDocumentFactory using the given context.
    * 
    * @param context Optional context to retrieve items from.
    */
-  documentAccessor(context?: FirestoreDocumentDatabaseContext<T>): DbNgxFirestoreCollectionDocumentAccessor<T, D>;
+  documentAccessor(context?: FirestoreDocumentDatabaseContext<T>): DbNgxFirestoreDocumentAccessor<T, D>;
 
 }
 
 /**
- * Used to generate a DbNgxFirestoreCollectionDocument from an input FirestoreDocumentDatabaseAccessor instance.
+ * Used to generate a DbNgxFirestoreDocument from an input FirestoreDocumentDatabaseAccessor instance.
  */
-export type DbNgxFirestoreCollectionDocumentFactoryFunction<T, D extends DbNgxFirestoreCollectionDocument<T>> = (accessor: FirestoreDocumentDatabaseAccessor<T>) => D;
+export type DbNgxFirestoreDocumentFactoryFunction<T, D extends DbNgxFirestoreDocument<T>> = (accessor: FirestoreDocumentDatabaseAccessor<T>) => D;
 
-// MARK: DbNgxFirestoreCollectionDocumentAccessorInstance
+// MARK: DbNgxFirestoreDocumentAccessorInstance
 
 /**
- * DbNgxFirestoreCollectionDocumentAccessorInstance configuration.
+ * DbNgxFirestoreDocumentAccessorInstance configuration.
  */
-export interface DbNgxFirestoreCollectionDocumentAccessorInstanceConfig<T, D extends DbNgxFirestoreCollectionDocument<T>> extends DbNgxFirestoreCollectionReference<T> {
-  readonly makeDocument: DbNgxFirestoreCollectionDocumentFactoryFunction<T, D>;
+export interface DbNgxFirestoreDocumentAccessorInstanceConfig<T, D extends DbNgxFirestoreDocument<T>> extends DbNgxFirestoreCollectionReference<T> {
+  readonly makeDocument: DbNgxFirestoreDocumentFactoryFunction<T, D>;
 }
 
-export class DbNgxFirestoreCollectionDocumentAccessorInstance<T, D extends DbNgxFirestoreCollectionDocument<T>> implements DbNgxFirestoreCollectionDocumentAccessor<T, D> {
+export class DbNgxFirestoreDocumentAccessorInstance<T, D extends DbNgxFirestoreDocument<T>> implements DbNgxFirestoreDocumentAccessor<T, D> {
 
-  constructor(readonly config: DbNgxFirestoreCollectionDocumentAccessorInstanceConfig<T, D>, readonly databaseContext: FirestoreDocumentDatabaseContext<T> = defaultFirestoreDatabaseContext()) { }
+  constructor(readonly config: DbNgxFirestoreDocumentAccessorInstanceConfig<T, D>, readonly databaseContext: FirestoreDocumentDatabaseContext<T> = defaultFirestoreDatabaseContext()) { }
 
   get collection(): CollectionReference<T> {
     return this.config.collection;
@@ -74,8 +74,8 @@ export class DbNgxFirestoreCollectionDocumentAccessorInstance<T, D extends DbNgx
 
 }
 
-export type DbNgxFirestoreCollectionDocumentAccessorFactoryFunction<T, D extends DbNgxFirestoreCollectionDocument<T>> = (context?: FirestoreDocumentDatabaseContext<T>) => DbNgxFirestoreCollectionDocumentAccessor<T, D>;
+export type DbNgxFirestoreDocumentAccessorFactoryFunction<T, D extends DbNgxFirestoreDocument<T>> = (context?: FirestoreDocumentDatabaseContext<T>) => DbNgxFirestoreDocumentAccessor<T, D>;
 
-export function firestoreCollectionDocumentAccessorFactory<T, D extends DbNgxFirestoreCollectionDocument<T>>(config: DbNgxFirestoreCollectionDocumentAccessorInstanceConfig<T, D>): DbNgxFirestoreCollectionDocumentAccessorFactoryFunction<T, D> {
-  return (context?: FirestoreDocumentDatabaseContext<T>) => new DbNgxFirestoreCollectionDocumentAccessorInstance<T, D>(config, context);
+export function firestoreDocumentAccessorFactory<T, D extends DbNgxFirestoreDocument<T>>(config: DbNgxFirestoreDocumentAccessorInstanceConfig<T, D>): DbNgxFirestoreDocumentAccessorFactoryFunction<T, D> {
+  return (context?: FirestoreDocumentDatabaseContext<T>) => new DbNgxFirestoreDocumentAccessorInstance<T, D>(config, context);
 }

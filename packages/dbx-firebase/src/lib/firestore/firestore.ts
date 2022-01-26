@@ -1,15 +1,15 @@
-import { DbNgxFirestoreCollectionDocument, DbNgxFirestoreCollectionDocumentAccessor, DbNgxFirestoreCollectionDocumentAccessorFactory, DbNgxFirestoreCollectionDocumentAccessorFactoryFunction, DbNgxFirestoreCollectionDocumentAccessorInstanceConfig, firestoreCollectionDocumentAccessorFactory } from "./collection.document";
-import { FirestoreDocumentDatabaseContext } from "./context";
-import { defaultFirestoreDatabaseContext } from "./context.default";
+import { DbNgxFirestoreDocument, DbNgxFirestoreDocumentAccessor, DbNgxFirestoreDocumentAccessorFactory, DbNgxFirestoreDocumentAccessorFactoryFunction, DbNgxFirestoreDocumentAccessorInstanceConfig, firestoreDocumentAccessorFactory } from "./collection.document";
 import { BaseFirestoreItemPageIterationConfig, FirestoreItemPageIterationFactory, firestoreItemPageIterationFactory, FirestoreItemPageIterationFactoryFunction, FirestoreItemPageIterationInstance, FirestoreItemPageIteratorFilter } from "./iterator";
+import { FirestoreDocumentDatabaseContext } from "./context";
 
+export interface DbNgxFirestoreCollectionConfig<T, D extends DbNgxFirestoreDocument<T>> extends
+  BaseFirestoreItemPageIterationConfig<T>,
+  DbNgxFirestoreDocumentAccessorInstanceConfig<T, D> { }
 
-export interface DbNgxFirestoreCollectionConfig<T, D extends DbNgxFirestoreCollectionDocument<T>> extends BaseFirestoreItemPageIterationConfig<T>, DbNgxFirestoreCollectionDocumentAccessorInstanceConfig<T, D> { }
-
-export class DbNgxFirestoreCollection<T, D extends DbNgxFirestoreCollectionDocument<T>> implements FirestoreItemPageIterationFactory<T>, DbNgxFirestoreCollectionDocumentAccessorFactory<T, D> {
+export class DbNgxFirestoreCollection<T, D extends DbNgxFirestoreDocument<T>> implements FirestoreItemPageIterationFactory<T>, DbNgxFirestoreDocumentAccessorFactory<T, D> {
 
   protected readonly _queryIterationFactory: FirestoreItemPageIterationFactoryFunction<T> = firestoreItemPageIterationFactory(this.config);
-  protected readonly _documentAccessorFactory: DbNgxFirestoreCollectionDocumentAccessorFactoryFunction<T, D> = firestoreCollectionDocumentAccessorFactory(this.config);
+  protected readonly _documentAccessorFactory: DbNgxFirestoreDocumentAccessorFactoryFunction<T, D> = firestoreDocumentAccessorFactory(this.config);
 
   constructor(readonly config: DbNgxFirestoreCollectionConfig<T, D>) { }
 
@@ -18,8 +18,12 @@ export class DbNgxFirestoreCollection<T, D extends DbNgxFirestoreCollectionDocum
     return this._queryIterationFactory(filter);
   }
 
-  documentAccessor(context?: FirestoreDocumentDatabaseContext<T>): DbNgxFirestoreCollectionDocumentAccessor<T, D> {
+  documentAccessor(context?: FirestoreDocumentDatabaseContext<T>): DbNgxFirestoreDocumentAccessor<T, D> {
     return this._documentAccessorFactory(context);
   }
 
+}
+
+export function firestoreCollection<T, D extends DbNgxFirestoreDocument<T>>(config: DbNgxFirestoreCollectionConfig<T, D>): DbNgxFirestoreCollection<T, D> {
+  return new DbNgxFirestoreCollection(config);
 }
