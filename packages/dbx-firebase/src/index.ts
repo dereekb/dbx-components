@@ -1,1 +1,1 @@
-export * from './lib/dbx-firebase.module';
+export * from './lib';

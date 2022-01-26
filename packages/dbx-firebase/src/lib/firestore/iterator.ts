@@ -2,17 +2,17 @@ import { PageLoadingState, ItemPageIterator, ItemPageIterationInstance, ItemPage
 import { QueryDocumentSnapshot, query, startAt, getDocs, QueryConstraint, limit, QuerySnapshot } from '@angular/fire/firestore';
 import { Maybe, lastValue, mergeIntoArray } from '@dereekb/util';
 import { from, Observable, of, exhaustMap } from "rxjs";
-import { DbNgxFirestoreCollectionReference } from './collection';
+import { FirestoreCollectionReference } from './collection';
 
 export interface FirestoreItemPageIteratorFilter {
   queryConstraints?: Maybe<QueryConstraint[]>;
 }
 
-export interface BaseFirestoreItemPageIterationConfig<T> extends DbNgxFirestoreCollectionReference<T> {
+export interface FirestoreItemPageIterationBaseConfig<T> extends FirestoreCollectionReference<T> {
   itemsPerPage: number;
 }
 
-export interface FirestoreItemPageIterationConfig<T> extends BaseFirestoreItemPageIterationConfig<T>, ItemPageIterationConfig<FirestoreItemPageIteratorFilter> { }
+export interface FirestoreItemPageIterationConfig<T> extends FirestoreItemPageIterationBaseConfig<T>, ItemPageIterationConfig<FirestoreItemPageIteratorFilter> { }
 
 export interface FirestoreItemPageQueryResult<T> {
   /**
@@ -126,7 +126,7 @@ export type FirestoreItemPageIterationFactoryFunction<T> = (filter?: FirestoreIt
  * @param baseConfig 
  * @returns FirestoreItemPageIterationInstance
  */
-export function firestoreItemPageIterationFactory<T>(baseConfig: BaseFirestoreItemPageIterationConfig<T>): FirestoreItemPageIterationFactoryFunction<T> {
+export function firestoreItemPageIterationFactory<T>(baseConfig: FirestoreItemPageIterationBaseConfig<T>): FirestoreItemPageIterationFactoryFunction<T> {
   return (filter?: FirestoreItemPageIteratorFilter) => {
     const result: FirestoreItemPageIterationInstance<T> = firestoreItemPageIteration<T>({
       collection: baseConfig.collection,
