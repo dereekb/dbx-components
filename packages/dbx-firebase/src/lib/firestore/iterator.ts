@@ -1,5 +1,5 @@
 import { PageLoadingState, ItemPageIterator, ItemPageIterationInstance, ItemPageIterationConfig, ItemPageIteratorDelegate, ItemPageIteratorRequest, ItemPageIteratorResult, MappedPageItemIterationInstance } from '@dereekb/rxjs';
-import { QueryDocumentSnapshot, query, startAt, getDocs, QueryConstraint, limit, QuerySnapshot } from '@angular/fire/firestore';
+import { QueryDocumentSnapshot, query, startAt, getDocs, QueryConstraint, limit, QuerySnapshot } from "@firebase/firestore";
 import { Maybe, lastValue, mergeIntoArray } from '@dereekb/util';
 import { from, Observable, of, exhaustMap } from "rxjs";
 import { FirestoreCollectionReference } from './reference';

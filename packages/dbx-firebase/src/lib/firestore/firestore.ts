@@ -1,4 +1,4 @@
-import { CollectionReference } from '@angular/fire/firestore';
+import { CollectionReference } from "@firebase/firestore";
 import { FirestoreDocument, FirestoreDocumentAccessor, FirestoreDocumentAccessorFactory, FirestoreDocumentAccessorFactoryFunction, FirestoreDocumentAccessorInstanceConfig, firestoreDocumentAccessorFactory } from "./document";
 import { FirestoreItemPageIterationBaseConfig, FirestoreItemPageIterationFactory, firestoreItemPageIterationFactory, FirestoreItemPageIterationFactoryFunction, FirestoreItemPageIterationInstance, FirestoreItemPageIteratorFilter } from "./iterator";
 import { FirestoreDocumentDatabaseContext } from "./context";

@@ -1,5 +1,5 @@
-import { DocumentReference, DocumentSnapshot, UpdateData, WithFieldValue, docSnapshots, setDoc } from "@angular/fire/firestore";
-import { deleteDoc, getDoc, updateDoc } from "@firebase/firestore";
+import { DocumentReference, DocumentSnapshot, UpdateData, WithFieldValue, setDoc, deleteDoc, getDoc, updateDoc } from "@firebase/firestore";
+import { docSnapshots } from "@angular/fire/firestore";
 import { map, Observable } from "rxjs";
 import { FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, FirestoreDocumentDataAccessorStreamState } from "./accessor";
 

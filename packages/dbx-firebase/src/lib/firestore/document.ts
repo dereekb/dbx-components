@@ -1,5 +1,4 @@
-import { DocumentReference } from '@angular/fire/firestore';
-import { CollectionReference, doc } from '@firebase/firestore';
+import { DocumentReference, CollectionReference, doc } from '@firebase/firestore';
 import { FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory } from './accessor';
 import { FirestoreCollectionReference, FirestoreDocumentReference } from './reference';
 import { FirestoreDocumentDatabaseContext } from './context';

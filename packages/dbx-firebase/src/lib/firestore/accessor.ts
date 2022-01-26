@@ -1,5 +1,5 @@
+import { DocumentReference, DocumentSnapshot, UpdateData, WithFieldValue } from "@firebase/firestore";
 import { Observable } from 'rxjs';
-import { DocumentReference, DocumentSnapshot, UpdateData, WithFieldValue } from '@angular/fire/firestore';
 import { FirestoreDocumentReference } from './reference';
 
 export interface FirestoreDocumentDataAccessorStreamState<T> {
