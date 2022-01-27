@@ -1,4 +1,3 @@
-
 /**
  * A fixture instance that is generated new for each test run.
  */
@@ -51,7 +50,7 @@ export abstract class AbstractJestTestContextFixture<I> implements JestTestConte
 
     return () => {
       delete this._instance;
-    }
+    };
   }
 
 }
@@ -146,14 +145,15 @@ export function jestTestContextBuilder<I, F extends JestTestContextFixture<I>, C
 
       // Cleanup
       afterEach(async () => {
-        if (fixture.instance == instance) {
-          clearInstance();
-        } else if (fixture.instance != null) {
+        clearInstance();
+
+        if (fixture.instance != null) {
           console.warn('Expected instance to be set on fixture for cleanup but was set to something else.');
         }
 
         try {
           await builder.teardownInstance(instance, config);
+          instance = undefined as any;
         } catch (e) {
           console.error('Failed due to error in destroyingInstance()');
           throw e;

@@ -1,12 +1,6 @@
 import { JestTestContextFactory } from '@dereekb/util';
 import { firebaseTestBuilder, FirebaseTestingContextFixture } from './firebase';
 
-import { getApp } from "firebase/app";
-// import { getFunctions, connectFunctionsEmulator } from "firebase/functions";
-
-// const functions = getFunctions(getApp());
-// connectFunctionsEmulator(functions, "localhost", 5001);
-
 export const TESTING_AUTHORIZED_FIREBASE_USER_ID = '0';
 
 export type FirebaseTestContextFactory = JestTestContextFactory<FirebaseTestingContextFixture>;

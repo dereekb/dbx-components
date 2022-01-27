@@ -19,6 +19,7 @@ export interface FirebaseTestingRulesContextConfig {
 export interface FirebaseTestingConfig {
   testEnvironment: TestEnvironmentConfig;
   rulesContext?: Maybe<FirebaseTestingRulesContextConfig>;
+  retainFirestoreBetweenTests?: boolean;
 }
 
 export class FirebaseTestInstance {
@@ -68,7 +69,11 @@ export const firebaseTestBuilder = jestTestContextBuilder<FirebaseTestInstance, 
     const rulesTestContext = rulesTestContextForConfig(rulesTestEnv, config.rulesContext);
     return new FirebaseTestInstance(rulesTestEnv, rulesTestContext);
   },
-  teardownInstance: async (instance) => {
+  teardownInstance: async (instance, config) => {
+    if (config.retainFirestoreBetweenTests !== true) {
+      await instance.clearFirestore();  // Clear the firestore
+    }
+
     await instance.rulesTestEnvironment.cleanup();  // Cleanup
   }
 });
@@ -79,7 +84,6 @@ function rulesTestContextForConfig(rulesTestEnv: RulesTestEnvironment, testingRu
 
   if (testingRulesConfig != null) {
     rulesTestContext = rulesTestEnv.authenticatedContext(testingRulesConfig.userId, testingRulesConfig.tokenOptions ?? undefined);
-    console.log('Authneticated?: ', rulesTestContext);
   } else {
     rulesTestContext = rulesTestEnv.unauthenticatedContext();
   }

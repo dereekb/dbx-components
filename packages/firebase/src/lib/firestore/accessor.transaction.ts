@@ -1,6 +1,6 @@
 import { DocumentReference, DocumentSnapshot, Transaction, UpdateData, WithFieldValue } from "@firebase/firestore";
 import { from, Observable } from "rxjs";
-import { FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, FirestoreDocumentDataAccessorStreamState } from "./accessor";
+import { FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory } from "./accessor";
 
 /**
  * FirestoreDocumentDataAccessor implementation for a transaction.
@@ -9,8 +9,8 @@ export class TransactionFirestoreDocumentDataAccessor<T> implements FirestoreDoc
 
   constructor(readonly transaction: Transaction, readonly documentRef: DocumentReference<T>) { }
 
-  stream(): Observable<FirestoreDocumentDataAccessorStreamState<T>> {
-    return from(this.get().then(snapshot => ({ snapshot, isActiveStream: false })));
+  stream(): Observable<DocumentSnapshot<T>> {
+    return from(this.get());
   }
 
   get(): Promise<DocumentSnapshot<T>> {

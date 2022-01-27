@@ -1,6 +1,6 @@
 import { DocumentReference, DocumentSnapshot, UpdateData, WithFieldValue, WriteBatch, getDoc } from "@firebase/firestore";
 import { from, Observable } from "rxjs";
-import { FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, FirestoreDocumentDataAccessorStreamState } from "./accessor";
+import { FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory } from "./accessor";
 
 /**
  * FirestoreDocumentDataAccessor implementation for a batch.
@@ -9,8 +9,8 @@ export class WriteBatchFirestoreDocumentDataAccessor<T> implements FirestoreDocu
 
   constructor(readonly batch: WriteBatch, readonly documentRef: DocumentReference<T>) { }
 
-  stream(): Observable<FirestoreDocumentDataAccessorStreamState<T>> {
-    return from(this.get().then(snapshot => ({ snapshot, isActiveStream: false })));
+  stream(): Observable<DocumentSnapshot<T>> {
+    return from(this.get());
   }
 
   get(): Promise<DocumentSnapshot<T>> {

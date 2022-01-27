@@ -1,7 +1,7 @@
 import { DocumentReference, DocumentSnapshot, UpdateData, WithFieldValue, setDoc, deleteDoc, getDoc, updateDoc } from "@firebase/firestore";
 import { fromRef } from 'rxfire/firestore';
 import { map, Observable } from "rxjs";
-import { FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, FirestoreDocumentDataAccessorStreamState } from "./accessor";
+import { FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory } from "./accessor";
 
 /**
  * FirestoreDocumentDataAccessor implementation for a batch.
@@ -10,10 +10,8 @@ export class DefaultFirestoreDocumentDataAccessor<T> implements FirestoreDocumen
 
   constructor(readonly documentRef: DocumentReference<T>) { }
 
-  stream(): Observable<FirestoreDocumentDataAccessorStreamState<T>> {
-    return fromRef(this.documentRef).pipe(
-      map(snapshot => ({ snapshot, isActiveStream: true }))
-    );
+  stream(): Observable<DocumentSnapshot<T>> {
+    return fromRef(this.documentRef);
   }
 
   get(): Promise<DocumentSnapshot<T>> {

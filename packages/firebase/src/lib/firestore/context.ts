@@ -1,6 +1,11 @@
 import { FirestoreDocumentDataAccessorFactory } from "./accessor";
 
-export enum FirestoreDocumentDatabaseContextType {
+/**
+ * A specific document context type.
+ * 
+ * Used by a FirestoreDocumentContext to communicate which kind of context it was created in.
+ */
+export enum FirestoreDocumentContextType {
   NONE = 'none',
   TRANSACTION = 'transaction',
   BATCH = 'batch'
@@ -9,12 +14,12 @@ export enum FirestoreDocumentDatabaseContextType {
 /**
  * Firebase database context used for accessing and modifying documents in a specific context, such as a transaction.
  */
-export interface FirestoreDocumentDatabaseContext<T> {
+export interface FirestoreDocumentContext<T> {
 
   /**
    * Context type
    */
-  readonly contextType: FirestoreDocumentDatabaseContextType;
+  readonly contextType: FirestoreDocumentContextType;
 
   /**
    * Database accessor

@@ -1,9 +1,10 @@
-
-import { AbstractWrappedFixtureWithInstance, JestTestWrappedContextFactoryBuilder, instanceWrapJestTestContextFactory } from '@dereekb/util';
-import { Firestore, collection, CollectionReference, DocumentReference, WithFieldValue, DocumentData, SetOptions, QueryDocumentSnapshot, SnapshotOptions } from 'firebase/firestore';
+import { AbstractWrappedFixtureWithInstance, JestTestWrappedContextFactoryBuilder, instanceWrapJestTestContextFactory, Maybe } from '@dereekb/util';
+import { Firestore, collection, CollectionReference, WithFieldValue, DocumentData, QueryDocumentSnapshot, SnapshotOptions } from 'firebase/firestore';
 import { FirebaseTestingContextFixture } from './firebase';
 import { authorizedFirebase } from './firebase.context';
-import { FirestoreDocument } from '../lib/firestore/document';
+import { AbstractFirestoreDocument } from '../lib/firestore/document';
+import { FirestoreCollection, makeFirestoreCollection } from '../lib/firestore/firestore';
+import { FirestoreDocumentDataAccessor } from '../lib/firestore/accessor';
 
 // MARK: Test Item
 /**
@@ -11,13 +12,10 @@ import { FirestoreDocument } from '../lib/firestore/document';
  */
 export interface TestItem {
   test?: boolean;
+  value?: Maybe<string>;
 }
 
-export class TestItemDocument implements FirestoreDocument<TestItem> {
-
-  constructor(readonly documentRef: DocumentReference<TestItem>) { }
-
-}
+export class TestItemDocument extends AbstractFirestoreDocument<TestItem> { }
 
 export const testItemCollectionPath = 'test';
 
@@ -29,19 +27,30 @@ export const testItemCollectionPath = 'test';
  */
 export function testItemCollection(firestore: Firestore): CollectionReference<TestItem> {
   return collection(firestore, testItemCollectionPath).withConverter<TestItem>({
-
-    // TODO: Change later?
-
     toFirestore(modelObject: WithFieldValue<TestItem>): DocumentData {
       return {
-        test: false
+        test: modelObject.test || false,
+        value: modelObject.value || null
       };
     },
     fromFirestore(snapshot: QueryDocumentSnapshot<DocumentData>, options?: SnapshotOptions): TestItem {
       const data = snapshot.data();
-      const result: TestItem = { test: data['test'] || false };
+      const result: TestItem = {
+        test: data['test'] || false,
+        value: data['value'] || null
+      };
       return result;
     }
+  });
+}
+
+export type TestItemFirestoreCollection = FirestoreCollection<TestItem, TestItemDocument>;
+
+export function testItemFirestoreCollection(firestore: Firestore): TestItemFirestoreCollection {
+  return makeFirestoreCollection({
+    itemsPerPage: 50,
+    collection: testItemCollection(firestore),
+    makeDocument: (x: FirestoreDocumentDataAccessor<TestItem>) => new TestItemDocument(x)
   });
 }
 

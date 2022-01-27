@@ -1,22 +1,18 @@
+import { filterMaybe } from '@dereekb/rxjs';
+import { Maybe } from "@dereekb/util";
 import { DocumentReference, DocumentSnapshot, UpdateData, WithFieldValue } from "@firebase/firestore";
-import { Observable } from 'rxjs';
+import { SnapshotOptions } from "firebase/firestore";
+import { map, Observable, OperatorFunction } from 'rxjs';
 import { FirestoreDocumentReference } from './reference';
-
-export interface FirestoreDocumentDataAccessorStreamState<T> {
-  isActiveStream: boolean;
-  snapshot: DocumentSnapshot<T>;
-}
 
 /**
  * Firestore database accessor instance used to retrieve and make changes to items in the database.
  */
 export interface FirestoreDocumentDataAccessor<T> extends FirestoreDocumentReference<T> {
   /**
-   * Returns a database stream of this object.
-   * 
-   * Depending on the current context, the stream may not be active and return only the latest value.
+   * Returns a database stream of DocumentSnapshots.
    */
-  stream(): Observable<FirestoreDocumentDataAccessorStreamState<T>>;
+  stream(): Observable<DocumentSnapshot<T>>;
   /**
    * Returns the current snapshot.
    */
@@ -51,4 +47,27 @@ export interface FirestoreDocumentDataAccessorFactory<T> {
    */
   accessorFor(ref: DocumentReference<T>): FirestoreDocumentDataAccessor<T>;
 
+}
+
+/**
+ * Maps data from the given snapshot stream.
+ * 
+ * Maybe values are filtered from the stream until data is provided.
+ * 
+ * @param stream 
+ * @param options 
+ * @returns 
+ */
+export function dataFromSnapshotStream<T>(stream: Observable<DocumentSnapshot<T>>, options?: SnapshotOptions): Observable<T> {
+  return stream.pipe(mapDataFromSnapshot(options), filterMaybe());
+}
+
+/**
+ * OperatorFunction to map data from the snapshot.
+ * 
+ * @param options 
+ * @returns 
+ */
+export function mapDataFromSnapshot<T>(options?: SnapshotOptions): OperatorFunction<DocumentSnapshot<T>, Maybe<T>> {
+  return map((x) => x.data(options));
 }

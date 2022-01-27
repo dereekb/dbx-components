@@ -1,9 +1,9 @@
 import { defaultFirestoreAccessorFactory } from "./accessor.default";
-import { FirestoreDocumentDatabaseContext, FirestoreDocumentDatabaseContextType } from "./context";
+import { FirestoreDocumentContext, FirestoreDocumentContextType } from "./context";
 
-export function defaultFirestoreDatabaseContext<T>(): FirestoreDocumentDatabaseContext<T> {
+export function defaultFirestoreDocumentContext<T>(): FirestoreDocumentContext<T> {
   return {
-    contextType: FirestoreDocumentDatabaseContextType.NONE,
+    contextType: FirestoreDocumentContextType.NONE,
     accessorFactory: defaultFirestoreAccessorFactory<T>()
   }
 }

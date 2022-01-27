@@ -1,14 +1,31 @@
+import { Observable } from 'rxjs';
 import { DocumentReference, CollectionReference, doc } from '@firebase/firestore';
-import { FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory } from './accessor';
+import { dataFromSnapshotStream, FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory } from './accessor';
 import { FirestoreCollectionReference, FirestoreDocumentReference } from './reference';
-import { FirestoreDocumentDatabaseContext } from './context';
-import { defaultFirestoreDatabaseContext } from './context.default';
+import { FirestoreDocumentContext } from './context';
+import { defaultFirestoreDocumentContext } from './context.default';
 
 export interface FirestoreDocument<T> extends FirestoreDocumentReference<T> { }
 
+/**
+ * Abstract FirestoreDocument implementation that extends a FirestoreDocumentDataAccessor.
+ */
+export abstract class AbstractFirestoreDocument<T, A extends FirestoreDocumentDataAccessor<T> = FirestoreDocumentDataAccessor<T>> {
+
+  readonly stream$ = this.accessor.stream();
+  readonly data$: Observable<T> = dataFromSnapshotStream(this.stream$);
+
+  constructor(readonly accessor: A) { }
+
+  get documentRef(): DocumentReference<T> {
+    return this.accessor.documentRef;
+  }
+
+}
+
 export interface FirestoreDocumentAccessor<T, D extends FirestoreDocument<T>> {
 
-  readonly databaseContext: FirestoreDocumentDatabaseContext<T>;
+  readonly databaseContext: FirestoreDocumentContext<T>;
 
   /**
    * Creates a new document.
@@ -22,6 +39,13 @@ export interface FirestoreDocumentAccessor<T, D extends FirestoreDocument<T>> {
    */
   loadDocument(ref: DocumentReference<T>): D;
 
+  /**
+   * Loads a document from an existing FirestoreDocument
+   * 
+   * @param document 
+   */
+  loadDocumentFrom(document: FirestoreDocument<T>): D;
+
 }
 
 /**
@@ -34,7 +58,7 @@ export interface FirestoreDocumentAccessorFactory<T, D extends FirestoreDocument
    * 
    * @param context Optional context to retrieve items from.
    */
-  documentAccessor(context?: FirestoreDocumentDatabaseContext<T>): FirestoreDocumentAccessor<T, D>;
+  documentAccessor(context?: FirestoreDocumentContext<T>): FirestoreDocumentAccessor<T, D>;
 
 }
 
@@ -55,7 +79,7 @@ export class FirestoreDocumentAccessorInstance<T, D extends FirestoreDocument<T>
 
   constructor(
     readonly config: FirestoreDocumentAccessorInstanceConfig<T, D>,
-    readonly databaseContext: FirestoreDocumentDatabaseContext<T> = defaultFirestoreDatabaseContext()
+    readonly databaseContext: FirestoreDocumentContext<T> = defaultFirestoreDocumentContext()
   ) { }
 
   get collection(): CollectionReference<T> {
@@ -76,10 +100,14 @@ export class FirestoreDocumentAccessorInstance<T, D extends FirestoreDocument<T>
     return this.config.makeDocument(accessor);
   }
 
+  loadDocumentFrom(document: FirestoreDocument<T>): D {
+    return this.loadDocument(document.documentRef);
+  }
+
 }
 
-export type FirestoreDocumentAccessorFactoryFunction<T, D extends FirestoreDocument<T>> = (context?: FirestoreDocumentDatabaseContext<T>) => FirestoreDocumentAccessor<T, D>;
+export type FirestoreDocumentAccessorFactoryFunction<T, D extends FirestoreDocument<T>> = (context?: FirestoreDocumentContext<T>) => FirestoreDocumentAccessor<T, D>;
 
 export function firestoreDocumentAccessorFactory<T, D extends FirestoreDocument<T>>(config: FirestoreDocumentAccessorInstanceConfig<T, D>): FirestoreDocumentAccessorFactoryFunction<T, D> {
-  return (context?: FirestoreDocumentDatabaseContext<T>) => new FirestoreDocumentAccessorInstance<T, D>(config, context);
+  return (context?: FirestoreDocumentContext<T>) => new FirestoreDocumentAccessorInstance<T, D>(config, context);
 }

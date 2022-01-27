@@ -1,17 +1,17 @@
 import { Transaction } from "@firebase/firestore";
 import { transactionAccessorFactory } from "./accessor.transaction";
-import { FirestoreDocumentDatabaseContext, FirestoreDocumentDatabaseContextType } from "./context";
+import { FirestoreDocumentContext, FirestoreDocumentContextType } from "./context";
 
 // MARK: Transaction
-export class TransactionFirestoreDocumentDatabaseContext<T> implements FirestoreDocumentDatabaseContext<T> {
+export class TransactionFirestoreDocumentContext<T> implements FirestoreDocumentContext<T> {
 
-  readonly contextType = FirestoreDocumentDatabaseContextType.TRANSACTION;
+  readonly contextType = FirestoreDocumentContextType.TRANSACTION;
   readonly accessorFactory = transactionAccessorFactory<T>(this.transaction);
 
   constructor(readonly transaction: Transaction) { }
 
 }
 
-export function transactionDatabaseContext<T>(transaction: Transaction): TransactionFirestoreDocumentDatabaseContext<T> {
-  return new TransactionFirestoreDocumentDatabaseContext<T>(transaction);
+export function transactionDocumentContext<T>(transaction: Transaction): TransactionFirestoreDocumentContext<T> {
+  return new TransactionFirestoreDocumentContext<T>(transaction);
 }
