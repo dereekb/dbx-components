@@ -1,5 +1,5 @@
 import { DocumentReference, DocumentSnapshot, UpdateData, WithFieldValue, setDoc, deleteDoc, getDoc, updateDoc } from "@firebase/firestore";
-import { docSnapshots } from "@angular/fire/firestore";
+import { fromRef } from 'rxfire/firestore';
 import { map, Observable } from "rxjs";
 import { FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, FirestoreDocumentDataAccessorStreamState } from "./accessor";
 
@@ -11,7 +11,7 @@ export class DefaultFirestoreDocumentDataAccessor<T> implements FirestoreDocumen
   constructor(readonly documentRef: DocumentReference<T>) { }
 
   stream(): Observable<FirestoreDocumentDataAccessorStreamState<T>> {
-    return docSnapshots(this.documentRef).pipe(
+    return fromRef(this.documentRef).pipe(
       map(snapshot => ({ snapshot, isActiveStream: true }))
     );
   }

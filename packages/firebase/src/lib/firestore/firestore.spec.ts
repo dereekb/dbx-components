@@ -23,7 +23,7 @@ describe('FirestoreCollection', () => {
       it('should create a new collection.', () => {
 
         firestoreCollection = makeFirestoreCollection({
-          itemsPerPage: 50,
+          itemsPerPage: 1,
           collection: testItemCollection(firestore),
           makeDocument: (x) => new TestItemDocument(x.documentRef)
         });

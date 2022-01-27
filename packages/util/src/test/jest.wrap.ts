@@ -115,7 +115,9 @@ export function instanceWrapJestTestContextFactory<I, W extends AbstractWrappedF
 
       return effect;
     },
-    teardownWrap: async (wrap: W) => {
+    teardownWrap: async (wrap: W, deleteInstanceEffect: JestTestContextFixtureClearInstanceFunction) => {
+      deleteInstanceEffect();
+
       if (config.teardownInstance) {
         await config.teardownInstance(wrap.instance);
       }

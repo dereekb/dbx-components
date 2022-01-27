@@ -131,8 +131,8 @@ export function jestTestContextBuilder<I, F extends JestTestContextFixture<I>, C
           instance = await builder.setupInstance(config);
           clearInstance = fixture.setInstance(instance);
         } catch (e) {
-          clearInstance();
           console.error('Failed building a test instance due to an error in buildInstance(). Error: ', e);
+          clearInstance();
           throw e;
         }
       });

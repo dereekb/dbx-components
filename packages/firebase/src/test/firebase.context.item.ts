@@ -1,10 +1,9 @@
 
 import { AbstractWrappedFixtureWithInstance, JestTestWrappedContextFactoryBuilder, instanceWrapJestTestContextFactory } from '@dereekb/util';
-import { Firestore, collection, CollectionReference, DocumentReference } from '@firebase/firestore';
-import { WithFieldValue, DocumentData, PartialWithFieldValue, SetOptions, QueryDocumentSnapshot, SnapshotOptions } from 'firebase/firestore';
-import { FirestoreDocument } from '../lib/firestore';
+import { Firestore, collection, CollectionReference, DocumentReference, WithFieldValue, DocumentData, SetOptions, QueryDocumentSnapshot, SnapshotOptions } from 'firebase/firestore';
 import { FirebaseTestingContextFixture } from './firebase';
 import { authorizedFirebase } from './firebase.context';
+import { FirestoreDocument } from '../lib/firestore/document';
 
 // MARK: Test Item
 /**

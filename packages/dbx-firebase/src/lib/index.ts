@@ -1,1 +1,1 @@
-export * from './firestore';
+export const test = '';

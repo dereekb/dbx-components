@@ -14,7 +14,8 @@ export type FirebaseTestContextFactory = JestTestContextFactory<FirebaseTestingC
 export const authorizedFirebase: FirebaseTestContextFactory = firebaseTestBuilder({
   testEnvironment: {
     firestore: {
-      rules: `rules_version = '2';
+      rules: `
+      rules_version = '2';
       service cloud.firestore {
         match /databases/{database}/documents {
           match /{document=**} {
