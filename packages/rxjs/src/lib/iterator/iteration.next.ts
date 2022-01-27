@@ -38,7 +38,7 @@ export function iteratorNextPageUntilMaxPageLoadLimit(iterator: PageItemIteratio
 export function iteratorNextPageUntilPage(iteration: PageItemIteration, page: number | (() => number)): Promise<number> {
   const getPageLimit = (typeof page === 'function') ? page : () => page;
 
-  function checkPageLimit(page) {
+  function checkPageLimit(page: number): boolean {
     const pageLimit = getPageLimit();
     return (page + 1) < Math.min(pageLimit, iteration.maxPageLoadLimit);
   }
@@ -47,10 +47,10 @@ export function iteratorNextPageUntilPage(iteration: PageItemIteration, page: nu
     iteration.latestLoadedPage$.pipe(
       first(),
     ).subscribe((firstLatestPage: number) => {
-      const promise = performTaskLoop({
+      const promise: Promise<number> = performTaskLoop<number>({
         initValue: firstLatestPage,
-        checkContinue: (latestPage) => checkPageLimit(latestPage),
-        next: () => iteration.nextPage()
+        checkContinue: (latestPage: number) => checkPageLimit(latestPage),
+        next: async () => await iteration.nextPage()
       });
 
       resolve(promise);

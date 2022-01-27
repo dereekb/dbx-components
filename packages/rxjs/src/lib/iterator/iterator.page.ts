@@ -131,8 +131,9 @@ export class ItemPageIterationInstance<V, F, C extends ItemPageIterationConfig<F
     exhaustMap((request) =>
       combineLatest([this.hasNextAndCanLoadMore$, this._lastFinishedPageResultState$]).pipe(
         first(),
-        map(([hasNextAndCanLoadMore, prevResult]) => ([itemPageIteratorShouldLoadNextPage(request, hasNextAndCanLoadMore, prevResult), prevResult])),
-        mergeMap(([shouldLoadNextPage, prevResult]: [boolean, PageLoadingState<ItemPageIteratorResult<V>>]) => {
+        map(([hasNextAndCanLoadMore, prevResult]: [boolean, Maybe<PageLoadingState<ItemPageIteratorResult<V>>>]) =>
+          ([itemPageIteratorShouldLoadNextPage(request, hasNextAndCanLoadMore, prevResult), prevResult] as [boolean, Maybe<PageLoadingState<ItemPageIteratorResult<V>>>])),
+        mergeMap(([shouldLoadNextPage, prevResult]: [boolean, Maybe<PageLoadingState<ItemPageIteratorResult<V>>>]) => {
 
           if (shouldLoadNextPage) {
             const nextPageNumber = nextIteratorPageNumber(prevResult);  // retry number if error occured
@@ -174,7 +175,7 @@ export class ItemPageIterationInstance<V, F, C extends ItemPageIterationConfig<F
         map((state) => ({ n: request.n, state }))
       )
     ),
-    scan((acc: ItemPageIterationInstanceState<V>, x: { n: number, state: PageLoadingState<ItemPageIteratorResult<V>> }) => {
+    scan((acc: ItemPageIterationInstanceState<V>, x: { n: number, state: Maybe<PageLoadingState<ItemPageIteratorResult<V>>> }) => {
       const { n, state: curr } = x;
 
       let next = {
@@ -197,6 +198,7 @@ export class ItemPageIterationInstance<V, F, C extends ItemPageIterationConfig<F
 
       return next;
     }, {
+      n: -1,
       current: { page: FIRST_PAGE },  // Start with loading the first page
       latestFinished: undefined, lastSuccessful: undefined
     }),
@@ -248,13 +250,13 @@ export class ItemPageIterationInstance<V, F, C extends ItemPageIterationConfig<F
    * Will emit every time the latest page has finished loading.
    */
   readonly hasReachedEndResult$: Observable<boolean> = this.latestPageResultState$.pipe(
-    map(x => isItemPageIteratorResultEndResult(x.model)),
+    map(x => isItemPageIteratorResultEndResult(x.model!)),
     startWith(false),  // Has not reached the end
     shareReplay(1)
   );
 
   private readonly _currentPageResultState$: Observable<Maybe<PageLoadingState<ItemPageIteratorResult<V>>>> = this.currentPageResultState$.pipe(
-    startWith(undefined as Maybe<PageLoadingState<ItemPageIteratorResult<V>>>),
+    startWith(undefined as any),
     shareReplay(1)
   );
 
@@ -268,7 +270,7 @@ export class ItemPageIterationInstance<V, F, C extends ItemPageIterationConfig<F
   );
 
   private readonly _lastFinishedPageResultState$: Observable<Maybe<PageLoadingState<ItemPageIteratorResult<V>>>> = this.latestPageResultState$.pipe(
-    startWith(undefined as Maybe<PageLoadingState<ItemPageIteratorResult<V>>>),
+    startWith(undefined as any),
     shareReplay(1)
   );
 
@@ -405,14 +407,14 @@ export function isItemPageIteratorResultEndResult<V>(result: ItemPageIteratorRes
 function itemPageIteratorShouldLoadNextPage<V = any>(
   request: ItemIteratorNextRequest,
   hasNextAndCanLoadMore: boolean,
-  prevResult: PageLoadingState<ItemPageIteratorResult<V>>): boolean {
-  return hasNextAndCanLoadMore &&                                                     // Must be able to load more
-    ((!loadingStateHasError(prevResult)) || request.retry) &&                         // Must not have any errors
-    (request.page == null || (nextIteratorPageNumber(prevResult) === request.page))   // Must match the page, if provided
+  prevResult: Maybe<PageLoadingState<ItemPageIteratorResult<V>>>): boolean {
+  return hasNextAndCanLoadMore &&                                                             // Must be able to load more
+    Boolean((!loadingStateHasError(prevResult)) || request.retry) &&                          // Must not have any errors
+    Boolean(request.page == null || (nextIteratorPageNumber(prevResult) === request.page));   // Must match the page, if provided
 }
 
-function nextIteratorPageNumber(prevResult: PageLoadingState<ItemPageIteratorResult<any>>): number {
-  return loadingStateHasError(prevResult) ? prevResult.page : getNextPageNumber(prevResult);
+function nextIteratorPageNumber(prevResult: Maybe<PageLoadingState<ItemPageIteratorResult<any>>>): number {
+  return loadingStateHasError(prevResult) ? prevResult!.page : getNextPageNumber(prevResult);
 }
 
 function mapItemPageLoadingStateFromResultPageLoadingState<V>(): OperatorFunction<PageLoadingState<ItemPageIteratorResult<V>>, PageLoadingState<V>> {

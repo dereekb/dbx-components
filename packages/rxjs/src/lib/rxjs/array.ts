@@ -9,7 +9,7 @@ export function distinctUntilArrayLengthChanges<A>(getArray?: (value: A) => any[
     getArray = (value: A) => value as any as any[]
   }
 
-  return distinctUntilChanged((a, b) => a === b, (x) => getArray(x).length);
+  return distinctUntilChanged((a, b) => a === b, (x) => getArray!(x).length);
 }
 
 export interface ScanIntoArrayConfig {
@@ -63,14 +63,14 @@ export function scanBuildArray<S, T>(init: ScanBuildArrayConfigFn<S, T>): Operat
     const { seed = [], accumulatorObs } = init(seedState);
 
     return accumulatorObs.pipe(
-      startWith(undefined), // Start with to not wait for the accumulator to pass a value.
-      scan((acc: T[], next: Maybe<ArrayOrValue<T>>) => {
+      startWith(undefined as any), // Start with to not wait for the accumulator to pass a value.
+      scan((acc: Maybe<T[]>, next: Maybe<ArrayOrValue<T>>) => {
         if (next != null) {
-          mergeArrayOrValueIntoArray(acc, next);
+          acc = mergeArrayOrValueIntoArray(acc!, next!);
         }
 
-        return acc;
-      }, seed),
+        return acc!;
+      }, seed!) as OperatorFunction<ArrayOrValue<T>, T[]>, 
       distinctUntilArrayLengthChanges(),
       shareReplay(1)
     );

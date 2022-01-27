@@ -44,7 +44,6 @@ export interface FirestoreDocumentAccessorFactory<T, D extends FirestoreDocument
 export type FirestoreDocumentFactoryFunction<T, D extends FirestoreDocument<T>> = (accessor: FirestoreDocumentDataAccessor<T>) => D;
 
 // MARK: FirestoreDocumentAccessorInstance
-
 /**
  * FirestoreDocumentAccessorInstance configuration.
  */

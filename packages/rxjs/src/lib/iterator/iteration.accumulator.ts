@@ -71,7 +71,7 @@ export class ItemAccumulatorInstance<O, I = any, N extends ItemIteration<I> = It
   // MARK: ItemAccumulator
   readonly allItems$: Observable<O[]> = this.allSuccessfulStates$.pipe(
     scanBuildArray((allSuccessfulStates) => {
-      const mapStateToItem: (state: LoadingState<I>) => O = (state) => {
+      const mapStateToItem: (state: LoadingState<I>) => Maybe<O> = (state) => {
         let result: Maybe<O>;
 
         if (state.model != null) {
@@ -125,7 +125,7 @@ export function itemAccumulator<I, N extends ItemIteration<I>>(itemIteration: N)
 export function itemAccumulator<O, I, N extends ItemIteration<I>>(itemIteration: N, mapItem?: ItemAccumulatorMapFunction<O, I>): ItemAccumulatorInstance<O, I, N>;
 export function itemAccumulator<O, I, N extends ItemIteration<I>>(itemIteration: N, mapItemFunction?: ItemAccumulatorMapFunction<O, I>): ItemAccumulatorInstance<O, I, N> {
   if (!mapItemFunction) {
-    mapItemFunction = (a) => a;
+    mapItemFunction = (a: any) => a;
   }
 
   return new ItemAccumulatorInstance<O, I, N>(itemIteration, mapItemFunction);

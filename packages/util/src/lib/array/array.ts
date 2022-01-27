@@ -65,8 +65,8 @@ export function flattenArray<T>(array: T[][]): T[] {
   return array.filter((x) => Boolean(x)).reduce((accumulator, value) => accumulator.concat([...value]), []);
 }
 
-export function copyArray<T>(input: T[] | undefined): T[] {
-  return (input) ? [].concat(input) : [];
+export function copyArray<T>(input: Maybe<T[]>): T[] {
+  return (input != null) ? Array.from(input) : [] as T[];
 }
 
 export function pushElementOntoArray<T>(target: T[], element: T, times: number): T[] {
@@ -78,12 +78,12 @@ export function pushElementOntoArray<T>(target: T[], element: T, times: number):
 }
 
 export function mergeIntoArray<T>(target: Maybe<T[]>, ...arrays: T[][]) {
-  if (!target) {
+  if (target == null) {
     target = [];
   }
 
   arrays.forEach((array) => {
-    mergeArrayIntoArray(target, array);
+    mergeArrayIntoArray(target!, array);
   });
 
   return target;

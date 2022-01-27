@@ -68,12 +68,24 @@
           },
           "defaultConfiguration": "production"
         },
-        "test": {
+        "run-tests": {
           "executor": "@nrwl/jest:jest",
           "outputs": ["coverage/packages/dbx-firebase"],
           "options": {
             "jestConfig": "packages/dbx-firebase/jest.config.js",
             "passWithNoTests": true
+          }
+        },
+        "watch": {
+          "builder": "@nrwl/workspace:run-commands",
+          "options": {
+            "command": "./exec-with-emulator.sh 'nx run-tests dbx-firebase --watch'"
+          }
+        },
+        "test": {
+          "builder": "@nrwl/workspace:run-commands",
+          "options": {
+            "command": "./exec-with-emulator.sh 'nx run-tests dbx-firebase'"
           }
         },
         "lint": {

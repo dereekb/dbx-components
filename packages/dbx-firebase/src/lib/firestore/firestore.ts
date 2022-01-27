@@ -42,6 +42,6 @@ export class FirestoreCollection<T, D extends FirestoreDocument<T>>
  * @param config 
  * @returns 
  */
-export function firestoreCollection<T, D extends FirestoreDocument<T>>(config: FirestoreCollectionConfig<T, D>): FirestoreCollection<T, D> {
+export function makeFirestoreCollection<T, D extends FirestoreDocument<T>>(config: FirestoreCollectionConfig<T, D>): FirestoreCollection<T, D> {
   return new FirestoreCollection(config);
 }
