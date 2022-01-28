@@ -1,5 +1,5 @@
 const nxPreset = require('@nrwl/jest/preset');
-const isCI = true; // require('is-ci');
+const isCI = require('is-ci');
 
 module.exports = {
   ...nxPreset,

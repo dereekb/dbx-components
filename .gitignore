@@ -58,3 +58,6 @@ service_account.json
 
 # Docker
 /.cache
+
+# CI/Jest
+/.reports
