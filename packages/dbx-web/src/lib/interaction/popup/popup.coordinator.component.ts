@@ -13,7 +13,7 @@ import { delay, map, shareReplay } from 'rxjs/operators';
     <ng-content></ng-content>
   </ng-container>
   `,
-  styleUrls: ['./popup.scss']
+  // TODO: styleUrls: ['./popup.scss']
 })
 export class DbNgxPopupCoordinatorComponent implements OnInit, OnDestroy {
 

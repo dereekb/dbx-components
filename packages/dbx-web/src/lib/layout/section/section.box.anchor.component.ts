@@ -13,7 +13,7 @@ import { ClickableAnchor } from '@dereekb/dbx-core';
     </div>
   </dbx-anchor>
   `,
-  styleUrls: ['./container.scss']
+  // TODO: styleUrls: ['./container.scss']
 })
 export class DbNgxSectionBoxAnchorComponent {
 

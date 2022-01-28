@@ -15,7 +15,7 @@ export enum DbNgxDialogContentContainerWidth {
     <ng-content></ng-content>
   </div>
   `,
-  styleUrls: ['./container.scss']
+  // TODO: styleUrls: ['./container.scss']
 })
 export class DbNgxDialogContentComponent {
 

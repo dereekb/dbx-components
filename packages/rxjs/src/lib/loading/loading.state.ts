@@ -11,11 +11,11 @@ export interface LoadingErrorPair {
    *
    * Not being specified is considered not being loaded.
    */
-  loading?: boolean;
+  loading?: Maybe<boolean>;
   /**
    * A Readable server error.
    */
-  error?: ReadableError;
+  error?: Maybe<ReadableError>;
 }
 
 /**

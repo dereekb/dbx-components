@@ -1,57 +1,102 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { Component, ElementRef, ViewChild } from '@angular/core';
+import { Component, ViewChild } from '@angular/core';
 import { DbNgxLoadingModule } from './loading.module';
 import { By } from '@angular/platform-browser';
 import { DbNgxLoadingProgressComponent } from './loading-progress.component';
 import { ErrorInput } from '@dereekb/util'
-import { DbNgxBasicLoadingComponent } from './basic-loading.component';
+import { LoadingComponentState, DbNgxBasicLoadingComponent } from './basic-loading.component';
 import { DbNgxReadableErrorComponent } from '../error/error.component';
+import { filter, first } from 'rxjs';
+
+export function waitForState(state: LoadingComponentState): (component: DbNgxBasicLoadingComponent) => (checkFn: () => void) => void {
+  return (component: DbNgxBasicLoadingComponent) => {
+    return (checkFn: () => void) => {
+      component.state$.pipe(
+        filter(x => x === state), first()
+      ).subscribe(checkFn);
+    };
+  };
+}
 
 describe('DbNgxBasicLoadingComponent', () => {
 
   beforeEach(async () => {
-    TestBed.configureTestingModule({
+    await TestBed.configureTestingModule({
       imports: [DbNgxLoadingModule],
       declarations: [BasicLoadingWithContentComponent, BasicLoadingWithCustomErrorComponent, BasicLoadingWithCustomLoadingComponent]
     }).compileComponents();
   });
 
   describe('with content', () => {
+
     let fixture: ComponentFixture<BasicLoadingWithContentComponent>;
     let component: BasicLoadingWithContentComponent;
+
+    let waitForComponentToBeLoading: (checkFn: () => void) => void;
+    let waitForComponentToHaveContent: (checkFn: () => void) => void;
+    let waitForComponentToHaveError: (checkFn: () => void) => void;
 
     beforeEach(() => {
       fixture = TestBed.createComponent(BasicLoadingWithContentComponent);
       component = fixture.componentInstance;
+
+      component.loading = false;
       fixture.detectChanges();
+
+      waitForComponentToBeLoading = waitForState(LoadingComponentState.LOADING)(component.component!);
+      waitForComponentToHaveContent = waitForState(LoadingComponentState.CONTENT)(component.component!);
+      waitForComponentToHaveError = waitForState(LoadingComponentState.ERROR)(component.component!);
     });
 
-    it('should display the content while not loading.', () => {
-      const testContent: HTMLElement = fixture.debugElement.query(By.css('#test-content')).nativeElement;
-      expect(testContent).not.toBeNull();
-      expect(testContent.textContent).toBe(TEST_CONTENT);
+    afterEach(() => {
+      fixture.destroy();
+    });
+
+    it('should display the content while not loading.', (done) => {
+      console.log('adsfadsfasdf');
+      waitForComponentToHaveContent(() => {
+        expect(component.loading).toBe(false);
+        const testContent: HTMLElement = fixture.debugElement.query(By.css('#test-content')).nativeElement;
+        expect(testContent).not.toBeNull();
+        expect(testContent.textContent).toBe(TEST_CONTENT);
+        done();
+      });
     });
 
     describe('and loading', () => {
 
-      beforeEach(() => {
+      beforeEach(async () => {
         component.loading = true;
         fixture.detectChanges();
       });
 
-      it('should not display the content.', () => {
-        const testContentQueryResult = fixture.debugElement.query(By.css('#test-content'));
-        expect(testContentQueryResult).toBeNull();
+      it('should not display the content.', (done) => {
+        waitForComponentToBeLoading(() => {
+          const testContentQueryResult = fixture.debugElement.query(By.css('#test-content'));
+          expect(testContentQueryResult).toBeNull();
+          done();
+        });
       });
 
-      it('should display the loading progress view.', () => {
-        const loadingProgressQueryResult = fixture.debugElement.query(By.directive(DbNgxLoadingProgressComponent));
-        expect(loadingProgressQueryResult).not.toBeNull();
+      it('should display the loading progress view.', (done) => {
+        waitForComponentToBeLoading(() => {
+          fixture.componentInstance.component?.hasNoCustomLoading$.pipe(filter(x => x), first()).subscribe((hasNoCustomLoading) => {
+            expect(hasNoCustomLoading).toBe(true);
+            const loadingProgressQueryResult = fixture.debugElement.query(By.directive(DbNgxLoadingProgressComponent));
+            expect(loadingProgressQueryResult).not.toBeNull();
+            done();
+          });
+        });
       });
 
-      it('should not detect custom loading content (that does not exist).', () => {
-        fixture.detectChanges();
-        expect(fixture.componentInstance.component!.hasCustomLoading).toBe(false);
+      it('should not detect custom loading content (that does not exist).', (done) => {
+        waitForComponentToBeLoading(() => {
+          fixture.detectChanges();
+          fixture.componentInstance.component?.hasNoCustomLoading$.pipe(filter(x => x), first()).subscribe((hasNoCustomLoading) => {
+            expect(hasNoCustomLoading).toBe(true);
+            done();
+          });
+        });
       });
 
     });
@@ -67,19 +112,30 @@ describe('DbNgxBasicLoadingComponent', () => {
         fixture.detectChanges();
       });
 
-      it('should not display the content.', () => {
-        const testContentQueryResult = fixture.debugElement.query(By.css('#test-content'));
-        expect(testContentQueryResult).toBeNull();
+      it('should not display the content.', (done) => {
+        waitForComponentToHaveError(() => {
+          const testContentQueryResult = fixture.debugElement.query(By.css('#test-content'));
+          expect(testContentQueryResult).toBeNull();
+          done();
+        });
       });
 
-      it('should display the error view.', () => {
-        const errorComponentQueryResult = fixture.debugElement.query(By.directive(DbNgxReadableErrorComponent));
-        expect(errorComponentQueryResult).not.toBeNull();
+      it('should display the error view.', (done) => {
+        waitForComponentToHaveError(() => {
+          const errorComponentQueryResult = fixture.debugElement.query(By.directive(DbNgxReadableErrorComponent));
+          expect(errorComponentQueryResult).not.toBeNull();
+          done();
+        });
       });
 
-      it('should not detect custom error content (that does not exist).', () => {
-        fixture.detectChanges();
-        expect(fixture.componentInstance.component!.hasCustomError).toBe(false);
+      it('should not detect custom error content (that does not exist).', (done) => {
+        waitForComponentToHaveError(() => {
+          fixture.detectChanges();
+          fixture.componentInstance.component?.hasNoCustomError$.pipe(filter(x => x), first()).subscribe((hasNoCustomError) => {
+            expect(hasNoCustomError).toBe(true);
+            done();
+          });
+        });
       });
 
     });
@@ -90,9 +146,12 @@ describe('DbNgxBasicLoadingComponent', () => {
     let fixture: ComponentFixture<BasicLoadingWithCustomErrorComponent>;
     let component: BasicLoadingWithCustomErrorComponent;
 
+    let waitForComponentToHaveError: (checkFn: () => void) => void;
+
     beforeEach(async () => {
       fixture = TestBed.createComponent(BasicLoadingWithCustomErrorComponent);
       component = fixture.componentInstance;
+      waitForComponentToHaveError = waitForState(LoadingComponentState.ERROR)(component.component!);
 
       component.error = {
         code: 'Test',
@@ -102,15 +161,26 @@ describe('DbNgxBasicLoadingComponent', () => {
       fixture.detectChanges();
     });
 
-    it('should display the custom error content on error.', () => {
-      const customError: HTMLElement = fixture.debugElement.query(By.css('#test-error')).nativeElement;
-      expect(customError).not.toBeNull();
-      expect(customError.textContent).toBe(CUSTOM_ERROR_CONTENT);
+    afterEach(() => {
+      fixture.destroy();
     });
 
-    it('should detect the custom loading content.', () => {
-      fixture.detectChanges();
-      expect(fixture.componentInstance.component!.hasCustomError).toBe(true);
+    it('should display the custom error content on error.', (done) => {
+      waitForComponentToHaveError(() => {
+        const customError: HTMLElement = fixture.debugElement.query(By.css('#test-error')).nativeElement;
+        expect(customError).not.toBeNull();
+        expect(customError.textContent).toBe(CUSTOM_ERROR_CONTENT);
+        done();
+      });
+    });
+
+    it('should detect the custom error content.', (done) => {
+      waitForComponentToHaveError(() => {
+        fixture.componentInstance.component?.hasNoCustomError$.pipe(filter(x => !x), first()).subscribe((hasNoCustomError) => {
+          expect(hasNoCustomError).toBe(false);
+          done();
+        });
+      });
     });
 
   });
@@ -119,24 +189,37 @@ describe('DbNgxBasicLoadingComponent', () => {
     let fixture: ComponentFixture<BasicLoadingWithCustomLoadingComponent>;
     let component: BasicLoadingWithCustomLoadingComponent;
 
+    let waitForComponentToBeLoading: (checkFn: () => void) => void;
+
     beforeEach(async () => {
       fixture = TestBed.createComponent(BasicLoadingWithCustomLoadingComponent);
       component = fixture.componentInstance;
       component.loading = true;
       fixture.detectChanges();
+      waitForComponentToBeLoading = waitForState(LoadingComponentState.LOADING)(component.component!);
     });
 
-    it('should display the custom loading content while loading.', () => {
-      fixture.detectChanges();
-
-      const customLoading: HTMLElement = fixture.debugElement.query(By.css('#custom-loading')).nativeElement;
-      expect(customLoading).not.toBeNull();
-      expect(customLoading.textContent).toBe(CUSTOM_LOADING_CONTENT);
+    afterEach(() => {
+      fixture.destroy();
     });
 
-    it('should detect the custom loading content.', () => {
-      fixture.detectChanges();
-      expect(fixture.componentInstance.component!.hasCustomLoading).toBe(true);
+    it('should display the custom loading content while loading.', (done) => {
+      waitForComponentToBeLoading(() => {
+        const customLoading: HTMLElement = fixture.debugElement.query(By.css('#custom-loading')).nativeElement;
+        expect(customLoading).not.toBeNull();
+        expect(customLoading.textContent).toBe(CUSTOM_LOADING_CONTENT);
+        done();
+      });
+    });
+
+    it('should detect the custom loading content.', (done) => {
+      waitForComponentToBeLoading(() => {
+        fixture.detectChanges();
+        fixture.componentInstance.component?.hasNoCustomLoading$.pipe(filter(x => !x), first()).subscribe((hasNoCustomLoading) => {
+          expect(hasNoCustomLoading).toBe(false);
+          done();
+        });
+      });
     });
 
   });
@@ -149,7 +232,7 @@ const CUSTOM_ERROR_CONTENT = 'Error.';
 
 @Component({
   template: `
-    <dbx-basic-loading [waitFor]="loading" [error]="error">
+    <dbx-basic-loading [loading]="loading" [error]="error">
       <div>
         <p id="test-content">${TEST_CONTENT}</p>
       </div>
@@ -158,7 +241,7 @@ const CUSTOM_ERROR_CONTENT = 'Error.';
 })
 class BasicLoadingWithContentComponent {
 
-  public loading = false;
+  public loading = true;
 
   public error?: ErrorInput;
 
@@ -187,7 +270,7 @@ class BasicLoadingWithCustomErrorComponent {
 
 @Component({
   template: `
-    <dbx-basic-loading [waitFor]="loading">
+    <dbx-basic-loading [loading]="loading">
       <div>Content</div>
       <div loading>
         <p id="custom-loading">${CUSTOM_LOADING_CONTENT}</p>
@@ -197,7 +280,7 @@ class BasicLoadingWithCustomErrorComponent {
 })
 class BasicLoadingWithCustomLoadingComponent {
 
-  public loading = false;
+  public loading = true;
 
   @ViewChild(DbNgxBasicLoadingComponent, { static: true })
   public readonly component?: DbNgxBasicLoadingComponent;

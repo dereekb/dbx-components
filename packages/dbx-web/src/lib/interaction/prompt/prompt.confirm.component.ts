@@ -25,7 +25,7 @@ export interface DbNgxPromptConfirmConfig {
 @Component({
   selector: 'dbx-prompt-confirm',
   templateUrl: './prompt.confirm.component.html',
-  styleUrls: ['./prompt.scss']
+  // TODO: styleUrls: ['./prompt.scss']
 })
 export class DbNgxPromptConfirmComponent {
 

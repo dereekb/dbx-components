@@ -10,7 +10,7 @@ export interface SearchableTextValueFieldsFormlyFieldConfig<T> extends Searchabl
  */
 @Component({
   templateUrl: 'searchable.text.field.component.html',
-  styleUrls: ['./generic.scss']
+  // TODO: styleUrls: ['./generic.scss']
 })
 export class DbNgxSearchableTextFieldComponent<T> extends AbstractDbNgxSearchableValueFieldDirective<T, SearchableTextValueFieldsFormlyFieldConfig<T>> {
 

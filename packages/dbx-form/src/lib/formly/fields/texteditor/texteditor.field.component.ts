@@ -23,7 +23,7 @@ export interface TextEditorComponentFieldConfig extends FormlyFieldConfig {
       </div>
     </div>
   `,
-  styleUrls: ['./texteditor.scss']
+  // TODO: styleUrls: ['./texteditor.scss']
 })
 export class TextEditorFieldComponent<T extends TextEditorComponentFieldConfig = TextEditorComponentFieldConfig> extends FieldType<T> implements OnInit, OnDestroy {
 

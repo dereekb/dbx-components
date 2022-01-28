@@ -13,7 +13,7 @@ import { ThemePalette } from '@angular/material/core';
       </mat-toolbar>
     </div>
   `,
-  styleUrls: ['./container.scss']
+  // TODO: styleUrls: ['./container.scss']
 })
 export class DbNgxFlagComponent {
 

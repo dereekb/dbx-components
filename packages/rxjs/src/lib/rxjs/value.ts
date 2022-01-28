@@ -7,7 +7,7 @@ import { filter, skipWhile, switchMap } from 'rxjs/operators';
  * Observable filter that filters maybe value that are defined.
  */
 export function filterMaybe<T>(): OperatorFunction<Maybe<T>, T> {
-  return filter(x => Boolean(x)) as OperatorFunction<Maybe<T>, T>;
+  return filter(x => x != null) as OperatorFunction<Maybe<T>, T>;
 }
 
 /**

@@ -15,7 +15,7 @@ import { DbNgxPopupController, DbNgxPopupWindowState } from './popup.component';
     </div>
   </div>
 `,
-  styleUrls: ['./popup.scss']
+  // TODO: styleUrls: ['./popup.scss']
 })
 export class DbNgxPopupContentComponent {
 

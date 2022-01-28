@@ -9,7 +9,7 @@ export interface SearchableChipValueFieldsFormlyFieldConfig<T> extends Searchabl
 
 @Component({
   templateUrl: 'searchable.chip.field.component.html',
-  styleUrls: ['./generic.scss']
+  // TODO: styleUrls: ['./generic.scss']
 })
 export class DbNgxSearchableChipFieldComponent<T> extends AbstractDbNgxSearchableValueFieldDirective<T, SearchableChipValueFieldsFormlyFieldConfig<T>> {
 

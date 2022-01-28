@@ -35,7 +35,7 @@ export interface FormRepeatTypeTemplateOptions extends FormlyTemplateOptions, Fo
       </div>
     </div>
   `,
-  styleUrls: ['./generic.scss']
+  // TODO: styleUrls: ['./generic.scss']
 })
 export class DbNgxFormRepeatTypeComponent extends FieldArrayType {
 

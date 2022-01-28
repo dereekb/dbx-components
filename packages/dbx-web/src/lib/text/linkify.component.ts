@@ -10,7 +10,7 @@ import { DomSanitizer } from '@angular/platform-browser';
 @Component({
   selector: 'dbx-linkify',
   template: `<span class="dbx-linkify" [innerHTML]="linkifiedBody$ | async"></span>`,
-  styleUrls: ['./text.scss']
+  // TODO: styleUrls: ['./text.scss']
 })
 export class DbNgxLinkifyComponent implements OnDestroy {
 

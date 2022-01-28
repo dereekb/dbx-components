@@ -10,7 +10,7 @@ import { Component, Input } from '@angular/core';
     <mat-icon class="button-spacer" *ngIf="icon">{{ icon }}</mat-icon>
     <span *ngIf="text">{{ text }}</span>
   </div>`,
-  styleUrls: ['./text.scss']
+  // TODO: styleUrls: ['./text.scss']
 })
 export class DbNgxLabelBarComponent {
 

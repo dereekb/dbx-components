@@ -7,7 +7,7 @@ import { Component, Input } from '@angular/core';
       <ng-content></ng-content>
     </div>
   `,
-  styleUrls: ['./prompt.scss']
+  // TODO: styleUrls: ['./prompt.scss']
 })
 export class DbNgxPromptBoxComponent {
 

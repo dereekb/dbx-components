@@ -33,7 +33,7 @@ jobs:
         # initialize nx
         - nx/set-shas
         # build content
-        - run: npx nx affected --base=$NX_BASE --target=build --parallel --max-parallel=3
+        - run: npx nx affected --base=$NX_BASE --target=build --parallel --max-parallel=2
         # persist builds to workspace
         - persist_to_workspace:
             root: ~/code

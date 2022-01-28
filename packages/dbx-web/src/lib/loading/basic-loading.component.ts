@@ -1,20 +1,20 @@
-import { Component, Input, OnChanges, ViewChild, ChangeDetectorRef, AfterViewInit, ElementRef, AfterContentChecked, ChangeDetectionStrategy } from '@angular/core';
+import { startWith } from 'rxjs';
+import { OnDestroy } from '@angular/core';
+import { distinctUntilChanged, shareReplay, combineLatest, map, BehaviorSubject } from 'rxjs';
+import { Component, Input, ViewChild, ElementRef } from '@angular/core';
 import { ThemePalette } from '@angular/material/core';
 import { ProgressBarMode } from '@angular/material/progress-bar';
-import { ErrorInput } from '@dereekb/util';
-import { safeDetectChanges, checkNgContentWrapperHasContent } from '@dereekb/dbx-core';
+import { ErrorInput, Maybe } from '@dereekb/util';
+import { checkNgContentWrapperHasContent } from '@dereekb/dbx-core';
 
 /**
  * DbNgxBasicLoadingComponent loading state.
  */
 export enum LoadingComponentState {
-
-  Loading = 0,
-
-  Content = 1,
-
-  Error = 2
-
+  NONE = -1,
+  LOADING = 0,
+  CONTENT = 1,
+  ERROR = 2
 }
 
 /**
@@ -22,20 +22,43 @@ export enum LoadingComponentState {
  */
 @Component({
   selector: 'dbx-basic-loading',
-  templateUrl: './basic-loading.component.html',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  templateUrl: './basic-loading.component.html'
 })
-export class DbNgxBasicLoadingComponent implements OnChanges, AfterViewInit {
+export class DbNgxBasicLoadingComponent implements OnDestroy {
 
-  // TODO: Update to use rxjs
+  private _loading = new BehaviorSubject<Maybe<boolean>>(undefined);
+  private _show = new BehaviorSubject<boolean>(true);
+  private _error = new BehaviorSubject<Maybe<ErrorInput>>(undefined);
 
-  private _show = true;
+  private _customErrorContent = new BehaviorSubject<Maybe<ElementRef>>(undefined);
+  private _customLoadingContent = new BehaviorSubject<Maybe<ElementRef>>(undefined);
+
+  readonly state$ = combineLatest([this._loading, this._show, this._error]).pipe(
+    map(([loading, show, error]) => {
+      let state: LoadingComponentState;
+
+      if (error) {
+        state = LoadingComponentState.ERROR;
+      } else if (loading == null) { // If loading has not yet been defined and no error has occured, we're waiting for some input on loading or error.
+        state = LoadingComponentState.NONE;
+      } else if (loading || !show) {
+        state = LoadingComponentState.LOADING;
+      } else {
+        state = LoadingComponentState.CONTENT;
+      }
+
+      return state;
+    }),
+    distinctUntilChanged(),
+    startWith(LoadingComponentState.NONE),
+    shareReplay(1)
+  );
+
+  readonly hasNoCustomError$ = this._customErrorContent.pipe(map(x => !checkNgContentWrapperHasContent(x)));
+  readonly hasNoCustomLoading$ = this._customLoadingContent.pipe(map(x => !checkNgContentWrapperHasContent(x)));
 
   @Input()
-  text?: string;
-
-  @Input()
-  diameter?: number;
+  diameter?: Maybe<number>;
 
   @Input()
   mode: ProgressBarMode = 'indeterminate';
@@ -44,90 +67,58 @@ export class DbNgxBasicLoadingComponent implements OnChanges, AfterViewInit {
   color: ThemePalette = 'primary';
 
   @Input()
-  linear = false;
+  text?: Maybe<string>;
 
   @Input()
-  error?: ErrorInput;
+  linear: Maybe<boolean> = false;
+
+  ngOnDestroy() {
+    this._error.complete();
+    this._loading.complete();
+    this._show.complete();
+    this._customErrorContent.complete();
+    this._customLoadingContent.complete();
+  }
+
+  @Input()
+  get show(): boolean {
+    return this._show.value;
+  }
+
+  set show(show: Maybe<boolean>) {
+    this._show.next(show ?? true);
+  }
+
+  @Input()
+  get loading(): Maybe<boolean> {
+    return this._loading.value;
+  }
+
+  set loading(loading: Maybe<boolean>) {
+    this._loading.next(loading);
+  }
+
+  @Input()
+  get error(): Maybe<ErrorInput> {
+    return this._error.value;
+  }
+
+  set error(error: Maybe<ErrorInput>) {
+    this._error.next(error);
+  }
 
   @ViewChild('customError')
-  customErrorContent?: ElementRef;
+  set customErrorContent(customErrorContent: Maybe<ElementRef>) {
+    setTimeout(() => {
+      this._customErrorContent.next(customErrorContent);
+    }, 0);
+  }
 
   @ViewChild('customLoading')
-  customLoadingContent?: ElementRef;
-
-  private _loading: boolean = false;
-  private _state: LoadingComponentState = LoadingComponentState.Loading;
-
-  constructor(private _cdRef: ChangeDetectorRef) { }
-
-  ngAfterViewInit(): void {
-    this._tryUpdateState();
-    safeDetectChanges(this._cdRef);
-  }
-
-  ngOnChanges(): void {
-    this._detectStateChanges();
-  }
-
-  get loading(): boolean {
-    return this._loading;
-  }
-
-  get show(): boolean {
-    return this._show;
-  }
-
-  @Input()
-  set show(show: boolean | undefined) {
-    this._show = show ?? true;
-  }
-
-  @Input()
-  set waitFor(object: any) {
-    this._loading = Boolean(object);
-  }
-
-  public get hasCustomError(): boolean {
-    return checkNgContentWrapperHasContent(this.customErrorContent);
-  }
-
-  public get hasCustomLoading(): boolean {
-    return checkNgContentWrapperHasContent(this.customLoadingContent);
-  }
-
-  public get state(): LoadingComponentState {
-    return this._state;
-  }
-
-  private _detectStateChanges(): void {
-    if (this._tryUpdateState()) {
-      safeDetectChanges(this._cdRef);
-    }
-  }
-
-  private _tryUpdateState(): boolean {
-    const state = this._calculateNewState();
-
-    if (this._state !== state) {
-      this._state = state;
-      return true;
-    } else {
-      return false;
-    }
-  }
-
-  private _calculateNewState(): LoadingComponentState {
-    let state = LoadingComponentState.Error;
-
-    if (!this.error) {
-      if (!this.loading && this.show) {
-        state = LoadingComponentState.Content;
-      } else {
-        state = LoadingComponentState.Loading;
-      }
-    }
-
-    return state;
+  set customLoadingContent(customLoadingContent: Maybe<ElementRef>) {
+    setTimeout(() => {
+      this._customLoadingContent.next(customLoadingContent);
+    }, 0);
   }
 
 }

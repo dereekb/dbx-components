@@ -73,7 +73,7 @@ export interface DateTimeFormlyFieldConfig extends DbNgxDateTimeFieldConfig, For
 
 @Component({
   templateUrl: 'datetime.field.component.html',
-  styleUrls: ['./date.scss']
+  // TODO: styleUrls: ['./date.scss']
 })
 export class DbNgxDateTimeFieldComponent extends FieldType<DateTimeFormlyFieldConfig> implements OnInit, OnDestroy {
 

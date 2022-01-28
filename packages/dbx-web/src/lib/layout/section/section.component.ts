@@ -20,7 +20,7 @@ import { Component, Input } from '@angular/core';
     </div>
   </div>
   `,
-  styleUrls: ['./container.scss']
+  // TODO: styleUrls: ['./container.scss']
 })
 export class DbNgxSectionComponent {
 

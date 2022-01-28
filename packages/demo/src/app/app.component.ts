@@ -3,7 +3,7 @@ import { Component } from '@angular/core';
 @Component({
   selector: 'dereekb-root',
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.scss'],
+  // TODO: styleUrls: ['./app.component.scss'],
 })
 export class AppComponent {
   title = 'demo';

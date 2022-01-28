@@ -16,7 +16,7 @@ import { DbNgxPopoverContentComponent } from './popover.content.component';
   </div>
   <mat-divider></mat-divider>
   `,
-  styleUrls: ['./popover.scss']
+  // TODO: styleUrls: ['./popover.scss']
 })
 export class DbNgxPopoverHeaderComponent {
 

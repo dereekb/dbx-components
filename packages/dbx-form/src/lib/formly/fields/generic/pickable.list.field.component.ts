@@ -7,7 +7,7 @@ import { AbstractDbNgxPickableItemFieldDirective, PickableItemFieldItem } from "
  */
 @Component({
   templateUrl: 'pickable.list.field.component.html',
-  styleUrls: ['./generic.scss']
+  // TODO: styleUrls: ['./generic.scss']
 })
 export class DbNgxPickableListFieldComponent<T> extends AbstractDbNgxPickableItemFieldDirective<T> {
 

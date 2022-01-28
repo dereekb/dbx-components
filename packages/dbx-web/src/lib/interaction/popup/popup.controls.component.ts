@@ -12,7 +12,7 @@ import { Component, Input } from '@angular/core';
     <dbx-popup-control-buttons></dbx-popup-control-buttons>
   </div>
   `,
-  styleUrls: ['./popup.scss']
+  // TODO: styleUrls: ['./popup.scss']
 })
 export class DbNgxPopupControlsComponent {
 

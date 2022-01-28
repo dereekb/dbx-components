@@ -23,12 +23,12 @@ import { DbNgxSectionComponent } from './section.component';
     </ng-container>
   </div>
   `,
-  styleUrls: ['./container.scss']
+  // TODO: styleUrls: ['./container.scss']
 })
 export class DbNgxIntroActionSectionComponent extends DbNgxSectionComponent implements OnDestroy {
 
   @Output()
-  showAction = new EventEmitter();
+  showAction = new EventEmitter<void>();
 
   @Input()
   showIntro?: boolean;

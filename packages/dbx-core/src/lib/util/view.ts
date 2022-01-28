@@ -1,4 +1,5 @@
 import { ChangeDetectorRef, ViewRef, ElementRef } from "@angular/core";
+import { Maybe } from "@dereekb/util";
 
 /**
  * Triggers a detection change on the input view as long as the view has not been destroyed.
@@ -24,11 +25,11 @@ export function safeDetectChanges(cdRef: ChangeDetectorRef): void {
  *  <ng-content select="[content]"></ng-content>
  * </div>
  */
-export function checkNgContentWrapperHasContent(ref: ElementRef<Element> | undefined): boolean {
+export function checkNgContentWrapperHasContent(ref: Maybe<ElementRef<Element>>): boolean {
   // https://github.com/angular/angular/issues/26083
   let hasContent = false;
 
-  if (ref) {
+  if (ref != null) {
     const childNodes = ref.nativeElement.childNodes;
     const hasChildNodes = childNodes && childNodes.length > 0;
     hasContent = Boolean(hasChildNodes);

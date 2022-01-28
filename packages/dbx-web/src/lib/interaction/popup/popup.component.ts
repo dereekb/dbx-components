@@ -69,7 +69,7 @@ export interface DbNgxPopupComponentConfig<I, O, T> {
     </div>
   </dbx-popup-coordinator>
   `,
-  styleUrls: ['./popup.scss'],
+  // TODO: styleUrls: ['./popup.scss'],
   providers: [{
     provide: DbNgxPopupController,
     useExisting: DbNgxPopupComponent

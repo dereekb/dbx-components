@@ -27,7 +27,7 @@ export interface FormToggleSectionWrapperTemplateOptions<T = any> extends Formly
     </ng-container>
   </div>
   `,
-  styleUrls: ['./wrapper.scss']
+  // TODO: styleUrls: ['./wrapper.scss']
 })
 export class FormToggleSectionWrapperComponent<T = any> extends AbstractFormExpandableSectionWrapperDirective<T> {
 

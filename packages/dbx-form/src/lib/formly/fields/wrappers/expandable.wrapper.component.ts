@@ -79,7 +79,7 @@ export interface FormExpandableSectionWrapperTemplateOptions<T = any> extends Fo
     </ng-container>
   </ng-container>
   `,
-  styleUrls: ['./wrapper.scss']
+  // TODO: styleUrls: ['./wrapper.scss']
 })
 export class FormExpandableSectionWrapperComponent<T = any> extends AbstractFormExpandableSectionWrapperDirective<T> {
 

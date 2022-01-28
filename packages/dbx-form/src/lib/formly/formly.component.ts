@@ -17,7 +17,7 @@ import { cloneDeep } from 'lodash';
       <formly-form [form]="form" [fields]="fields" [model]="model"></formly-form>
     </form>
   `,
-  styleUrls: ['./form.scss'],
+  // TODO: styleUrls: ['./form.scss'],
 })
 export class DbNgxFormlyComponent<T extends object> extends AbstractSubscriptionDirective implements DbNgxFormlyContextDelegate<T>, OnInit, OnDestroy {
 

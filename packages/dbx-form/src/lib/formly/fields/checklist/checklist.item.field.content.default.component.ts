@@ -12,7 +12,7 @@ import { ChecklistItemDisplayContent, ChecklistItemFieldDisplayComponent } from 
       <div *ngIf="description" class="dbx-hint item-description">{{ description }}</div>
     </div>
   `,
-  styleUrls: ['./checklist.item.scss']
+  // TODO: styleUrls: ['./checklist.item.scss']
 })
 export class DbNgxDefaultChecklistItemFieldDisplayComponent implements ChecklistItemFieldDisplayComponent<any> {
 

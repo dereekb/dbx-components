@@ -5,11 +5,23 @@ import { By } from '@angular/platform-browser';
 import { DbNgxLoadingProgressComponent } from './loading-progress.component';
 import { ValuesLoadingContext } from '@dereekb/rxjs';
 import { DbNgxReadableErrorComponent } from '../error';
+import { DbNgxBasicLoadingComponent, LoadingComponentState } from './basic-loading.component';
+import { filter, first } from 'rxjs';
+
+export function waitForState(state: LoadingComponentState): (component: DbNgxBasicLoadingComponent) => (checkFn: () => void) => void {
+  return (component: DbNgxBasicLoadingComponent) => {
+    return (checkFn: () => void) => {
+      component.state$.pipe(
+        filter(x => x === state), first()
+      ).subscribe(checkFn);
+    };
+  };
+}
 
 describe('DbNgxLoadingComponent', () => {
 
   beforeEach(async () => {
-    TestBed.configureTestingModule({
+    await TestBed.configureTestingModule({
       imports: [
         DbNgxLoadingModule
       ],
@@ -20,20 +32,36 @@ describe('DbNgxLoadingComponent', () => {
   describe('with content', () => {
     let fixture: ComponentFixture<LoadingComponent>;
     let component: LoadingComponent;
+    let basicLoadingComponent: DbNgxBasicLoadingComponent;
+
+    let waitForComponentToBeLoading: (checkFn: () => void) => void;
+    let waitForComponentToHaveContent: (checkFn: () => void) => void;
+    let waitForComponentToHaveError: (checkFn: () => void) => void;
 
     beforeEach(async () => {
       fixture = TestBed.createComponent(LoadingComponent);
       component = fixture.componentInstance;
-      fixture.detectChanges();
+      basicLoadingComponent = fixture.debugElement.query(By.directive(DbNgxBasicLoadingComponent)).componentInstance;
+
+      waitForComponentToBeLoading = waitForState(LoadingComponentState.LOADING)(basicLoadingComponent);
+      waitForComponentToHaveContent = waitForState(LoadingComponentState.CONTENT)(basicLoadingComponent);
+      waitForComponentToHaveError = waitForState(LoadingComponentState.ERROR)(basicLoadingComponent);
     });
 
-    it('should display the content if not loading and no error.', () => {
+    afterEach(() => {
+      fixture.destroy();
+    });
+
+    it('should display the content if not loading and no error.', (done) => {
       component.context.setLoading(false);
       fixture.detectChanges();
 
-      const testContent: HTMLElement = fixture.debugElement.query(By.css('#test-content')).nativeElement;
-      expect(testContent).not.toBeNull();
-      expect(testContent.textContent).toBe(TEST_CONTENT);
+      waitForComponentToHaveContent(() => {
+        const testContent: HTMLElement = fixture.debugElement.query(By.css('#test-content')).nativeElement;
+        expect(testContent).not.toBeNull();
+        expect(testContent.textContent).toBe(TEST_CONTENT);
+        done();
+      });
     });
 
     describe('and error', () => {
@@ -47,14 +75,20 @@ describe('DbNgxLoadingComponent', () => {
         fixture.detectChanges();
       });
 
-      it('should display the error.', () => {
-        const errorComponentQueryResult = fixture.debugElement.query(By.directive(DbNgxReadableErrorComponent));
-        expect(errorComponentQueryResult).not.toBeNull();
+      it('should display the error.', (done) => {
+        waitForComponentToHaveError(() => {
+          const errorComponentQueryResult = fixture.debugElement.query(By.directive(DbNgxReadableErrorComponent));
+          expect(errorComponentQueryResult).not.toBeNull();
+          done();
+        });
       });
 
-      it('should not display the content.', () => {
-        const testContentQueryResult = fixture.debugElement.query(By.css('#test-content'));
-        expect(testContentQueryResult).toBeNull();
+      it('should not display the content.', (done) => {
+        waitForComponentToHaveError(() => {
+          const testContentQueryResult = fixture.debugElement.query(By.css('#test-content'));
+          expect(testContentQueryResult).toBeNull();
+          done();
+        });
       });
 
     });
@@ -66,9 +100,12 @@ describe('DbNgxLoadingComponent', () => {
         fixture.detectChanges();
       });
 
-      it('should display the loading progress view while loading.', () => {
-        const loadingProgressQueryResult = fixture.debugElement.query(By.directive(DbNgxLoadingProgressComponent));
-        expect(loadingProgressQueryResult).not.toBeNull();
+      it('should display the loading progress view while loading.', (done) => {
+        waitForComponentToBeLoading(() => {
+          const loadingProgressQueryResult = fixture.debugElement.query(By.directive(DbNgxLoadingProgressComponent));
+          expect(loadingProgressQueryResult).not.toBeNull();
+          done();
+        });
       });
 
     });

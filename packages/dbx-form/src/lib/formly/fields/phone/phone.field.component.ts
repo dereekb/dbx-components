@@ -17,7 +17,7 @@ export const DEFAULT_PREFERRED_COUNTRIES = ['us'];
 
 @Component({
   templateUrl: 'phone.field.component.html',
-  styleUrls: ['./phone.scss']
+  // TODO: styleUrls: ['./phone.scss']
 })
 export class DbNgxInternationalPhoneFieldComponent extends FieldType<InternationalPhoneFormlyFieldConfig> {
 

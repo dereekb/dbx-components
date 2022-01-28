@@ -17,7 +17,7 @@ export interface TextChip<T = any> {
     </mat-chip>
   </mat-chip-list>
   `,
-  styleUrls: ['./text.scss']
+  // TODO: styleUrls: ['./text.scss']
 })
 export class DbNgxTextChipsComponent<T = any> {
 

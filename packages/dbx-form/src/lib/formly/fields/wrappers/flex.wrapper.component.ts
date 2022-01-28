@@ -7,6 +7,6 @@ import { FieldWrapper } from '@ngx-formly/core';
       <ng-container #fieldComponent></ng-container>
     </div>
   `,
-  styleUrls: ['./wrapper.scss']
+  // TODO: styleUrls: ['./wrapper.scss']
 })
 export class FormFlexWrapperComponent extends FieldWrapper { }

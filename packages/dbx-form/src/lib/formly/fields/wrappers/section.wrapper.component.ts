@@ -12,7 +12,7 @@ import { FieldWrapper } from '@ngx-formly/core';
       <dbx-hint *ngIf="description">{{ description }}</dbx-hint>
     </div>
   `,
-  styleUrls: ['./wrapper.scss']
+  // TODO: styleUrls: ['./wrapper.scss']
 })
 export class FormSectionWrapperComponent extends FieldWrapper {
 

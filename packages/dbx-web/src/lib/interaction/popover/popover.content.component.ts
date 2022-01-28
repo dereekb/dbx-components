@@ -17,7 +17,7 @@ import { throttleTime } from 'rxjs/operators';
     </div>
   </div>
 `,
-  styleUrls: ['./popover.scss']
+  // TODO: styleUrls: ['./popover.scss']
 })
 export class DbNgxPopoverContentComponent implements OnDestroy {
 

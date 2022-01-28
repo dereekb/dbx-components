@@ -19,7 +19,7 @@ export interface FormComponentFieldFieldConfig<T extends FormComponentFieldWrapp
   template: `
     <div class="form-wrapped-component" dbx-injected-content [config]="config"></div>
   `,
-  styleUrls: ['./fields.scss']
+  // TODO: styleUrls: ['./fields.scss']
 })
 export class FormComponentFieldComponent<T extends FormComponentFieldWrappedComponent = any> extends FieldType<FormComponentFieldFieldConfig<T>> implements OnInit {
 

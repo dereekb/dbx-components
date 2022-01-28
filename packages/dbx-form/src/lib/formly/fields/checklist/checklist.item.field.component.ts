@@ -26,7 +26,7 @@ export interface ChecklistItemFormlyFieldConfig<T = any> extends DbNgxChecklistI
 
 @Component({
   templateUrl: 'checklist.item.field.component.html',
-  styleUrls: ['./checklist.item.scss']
+  // TODO: styleUrls: ['./checklist.item.scss']
 })
 export class DbNgxChecklistItemFieldComponent<T = any> extends FieldType<ChecklistItemFormlyFieldConfig<T>> implements OnInit, OnDestroy {
 

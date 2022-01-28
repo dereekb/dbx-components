@@ -25,7 +25,7 @@ export interface FormInfoSectionWrapperTemplateOptions<T = any> extends FormlyTe
       </div>
     </div>
   `,
-  styleUrls: ['./wrapper.scss']
+  // TODO: styleUrls: ['./wrapper.scss']
 })
 export class FormInfoSectionWrapperComponent<T> extends FieldWrapper {
 

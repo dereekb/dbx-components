@@ -28,7 +28,7 @@ import { ActionContextStoreSourceInstance, ActionState, DbNgxActionSnackbarCompo
       </ng-container>
     </div>
   `,
-  styleUrls: ['./action.scss']
+  // TODO: styleUrls: ['./action.scss']
 })
 export class DbNgxActionSnackbarComponent {
 

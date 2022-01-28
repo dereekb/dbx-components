@@ -7,7 +7,7 @@ import { DbNgxPromptBoxComponent } from './prompt.box.component';
 @Component({
   selector: 'dbx-prompt',
   templateUrl: './prompt.component.html',
-  styleUrls: ['./prompt.scss']
+  // TODO: styleUrls: ['./prompt.scss']
 })
 export class DbNgxPromptComponent extends DbNgxPromptBoxComponent {
 

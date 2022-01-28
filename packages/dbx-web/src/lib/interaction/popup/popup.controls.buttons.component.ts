@@ -22,7 +22,7 @@ import { DbNgxPopupController, DbNgxPopupWindowState } from './popup.component';
     <dbx-button [flat]="true" icon="close" color="warn" (buttonClick)="closeClicked()"></dbx-button>
   </span>
   `,
-  styleUrls: ['./popup.scss']
+  // TODO: styleUrls: ['./popup.scss']
 })
 export class DbNgxPopupControlButtonsComponent {
 

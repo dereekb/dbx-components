@@ -13,7 +13,7 @@ import { ThemePalette } from '@angular/material/core';
       <ng-content></ng-content>
     </dbx-flag>
   `,
-  styleUrls: ['./container.scss']
+  // TODO: styleUrls: ['./container.scss']
 })
 export class DbNgxFlagPromptComponent {
 

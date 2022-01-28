@@ -8,7 +8,7 @@ import { delay } from 'rxjs/operators';
  */
 @Component({
   template: `<ng-container #fieldComponent></ng-container>`,
-  styleUrls: ['./wrapper.scss']
+  // TODO: styleUrls: ['./wrapper.scss']
 })
 export class AutoTouchFieldWrapperComponent extends FieldWrapper implements OnInit {
 

@@ -17,7 +17,7 @@ export enum DbNgxButtonDisplayType {
   template: `
     <mat-spinner-button class="page-button" (btnClick)="clickButton()" [options]="btnOptions"></mat-spinner-button>
   `,
-  styleUrls: ['./button.scss'],
+  // TODO: styleUrls: ['./button.scss'],
   providers: ProvideDbNgxButton(DbNgxButtonComponent)
 })
 export class DbNgxButtonComponent extends AbstractDbNgxButtonDirective {

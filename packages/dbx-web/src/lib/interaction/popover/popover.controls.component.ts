@@ -11,7 +11,7 @@ import { DbNgxPopoverContentComponent } from './popover.content.component';
     <ng-content></ng-content>
   </div>
   `,
-  styleUrls: ['./popover.scss']
+  // TODO: styleUrls: ['./popover.scss']
 })
 export class DbNgxPopoverControlsComponent {
 

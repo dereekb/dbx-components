@@ -15,6 +15,6 @@ import { DbNgxSectionComponent } from './section.component';
     </div>
   </div>
   `,
-  styleUrls: ['./container.scss']
+  // TODO: styleUrls: ['./container.scss']
 })
 export class DbNgxSubSectionComponent extends DbNgxSectionComponent {}

@@ -3,7 +3,7 @@ import { Component, Input, OnInit } from '@angular/core';
 @Component({
   selector: 'dbx-step',
   templateUrl: './step.component.html',
-  styleUrls: ['./step.scss']
+  // TODO: styleUrls: ['./step.scss']
 })
 export class DbNgxStepComponent {
 

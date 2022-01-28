@@ -12,7 +12,7 @@ import { DbNgxRouterWebProviderConfig } from '../provider/router.provider.config
 @Component({
   selector: 'dbx-anchor, [dbx-anchor]',
   templateUrl: './anchor.component.html',
-  styleUrls: ['./anchor.scss']
+  // TODO: styleUrls: ['./anchor.scss']
 })
 export class DbNgxAnchorComponent extends AbstractDbNgxAnchorDirective {
 

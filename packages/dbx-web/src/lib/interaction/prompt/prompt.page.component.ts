@@ -11,6 +11,6 @@ import { Component } from '@angular/core';
       </dbx-full-width-content-container>
     </div>
   `,
-  styleUrls: ['./prompt.scss']
+  // TODO: styleUrls: ['./prompt.scss']
 })
 export class DbNgxPromptPageComponent { }

@@ -77,7 +77,7 @@ export interface FullDbNgxPopoverComponentConfig<I, O, T> extends DbNgxPopoverCo
     </div>
   </dbx-popover-coordinator>
   `,
-  styleUrls: ['./popover.scss'],
+  // TODO: styleUrls: ['./popover.scss'],
   providers: [{
     provide: DbNgxPopoverController,
     useExisting: DbNgxPopoverComponent
