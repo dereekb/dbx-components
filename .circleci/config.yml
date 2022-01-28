@@ -3,7 +3,7 @@ version: 2.1 # use CircleCI 2.1
 # YAML trick
 defaults: &defaults
   working_directory: ~/code   # "code" is our working directory
-  resource_class: medium
+  resource_class: medium+
   docker:
     - image: cimg/node:16.13
 
@@ -19,15 +19,15 @@ jobs:
         # look for existing cache and restore if found
         - restore_cache:
             keys:
-                - v1-deps-{{ checksum "package-lock.json" }}
-                - v1-deps-
+                - node-cache-{{ checksum "package-lock.json" }}
+                - node-cache-
         # install dependencies    
         - run:
             name: install dependencies
             command: npm install
         # save any changes to the cache
         - save_cache:
-            key: v1-deps-{{ checksum "package-lock.json" }}
+            key: node-cache-{{ checksum "package-lock.json" }}
             paths: 
               - node_modules
         # initialize nx
@@ -46,7 +46,6 @@ jobs:
       - checkout
       - attach_workspace:
           at: ~/code
-      - run: ls ~/code
       - run:
           name: run util tests
           command: npx nx test util --ci
@@ -78,13 +77,13 @@ jobs:
             JEST_SUITE_NAME: dbx-web
             JEST_JUNIT_OUTPUT_FILE: dbx-web.junit.xml
       - store_test_results:
-          path: ./reports/junit/
+          path: ~/code/.reports/junit/
   test-with-node-firebase:
     <<: *defaults
     steps:
       - attach_workspace:
           at: ~/code
-      - run: apt-get update -y && apt-get install -y curl openjdk-11-jre-headless
+      - run: sudo apt-get update -y && sudo apt-get install -y curl openjdk-11-jre-headless
       - run:
           name: run firebase tests
           command: npx nx test firebase
@@ -92,7 +91,7 @@ jobs:
             JEST_SUITE_NAME: firebase
             JEST_JUNIT_OUTPUT_FILE: firebase.junit.xml
       - store_test_results:
-          path: ./reports/junit/
+          path: ~/code/.reports/junit/
   publish-to-npm:
     <<: *defaults
     steps:
