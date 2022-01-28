@@ -6,6 +6,7 @@ import { ThemePalette } from '@angular/material/core';
 import { ProgressBarMode } from '@angular/material/progress-bar';
 import { ErrorInput, Maybe } from '@dereekb/util';
 import { checkNgContentWrapperHasContent } from '@dereekb/dbx-core';
+import { ProgressSpinnerMode } from '@angular/material/progress-spinner';
 
 /**
  * DbNgxBasicLoadingComponent loading state.
@@ -54,6 +55,8 @@ export class DbNgxBasicLoadingComponent implements OnDestroy {
     shareReplay(1)
   );
 
+  readonly error$ = this._error.asObservable();
+
   readonly hasNoCustomError$ = this._customErrorContent.pipe(map(x => !checkNgContentWrapperHasContent(x)));
   readonly hasNoCustomLoading$ = this._customLoadingContent.pipe(map(x => !checkNgContentWrapperHasContent(x)));
 
@@ -61,7 +64,7 @@ export class DbNgxBasicLoadingComponent implements OnDestroy {
   diameter?: Maybe<number>;
 
   @Input()
-  mode: ProgressBarMode = 'indeterminate';
+  mode: ProgressBarMode | ProgressSpinnerMode = 'indeterminate';
 
   @Input()
   color: ThemePalette = 'primary';

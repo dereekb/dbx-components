@@ -1,4 +1,4 @@
-import { DbNgxPopupController } from './popup.component';
+import { DbNgxPopupController } from './popup';
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { DbNgxPopupCoordinatorService } from './popup.coordinator.service';
 import { delay, map, shareReplay } from 'rxjs/operators';

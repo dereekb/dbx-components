@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { map } from 'rxjs/operators';
-import { DbNgxPopupController, DbNgxPopupWindowState } from './popup.component';
+import { DbNgxPopupController, DbNgxPopupWindowState } from './popup';
 
 /**
  * Popup Control Buttons.

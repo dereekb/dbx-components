@@ -1,6 +1,7 @@
 import { Directive, Host, Input, OnDestroy, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
-import { DbNgxPromptConfirmConfig, AbstractPromptConfirmDirective } from '../interaction/prompt';
+import { AbstractPromptConfirmDirective } from '../interaction/prompt/prompt.confirm.directive';
+import { DbNgxPromptConfirmConfig } from '../interaction/prompt/prompt.confirm.component';
 import { SubscriptionObject } from '@dereekb/rxjs';
 import { ActionContextStoreSourceInstance } from '@dereekb/dbx-core';
 

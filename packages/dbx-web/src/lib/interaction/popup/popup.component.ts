@@ -1,42 +1,16 @@
-import { Component, ComponentFactoryResolver, Inject, Input, NgZone, Type, ViewChild, ViewContainerRef, OnInit, OnDestroy, ComponentRef } from '@angular/core';
-import { HookMatchCriteria, TransitionService } from '@uirouter/core';
+import { Component, ComponentFactoryResolver, NgZone, Type, ViewChild, ViewContainerRef, OnInit, OnDestroy, ComponentRef } from '@angular/core';
 import { NgPopoverRef } from 'ng-overlay-container';
 import { Maybe } from '@dereekb/util';
 import { CompactMode, CompactContextStore } from '../../layout';
-import { BehaviorSubject, Observable, Subject } from 'rxjs';
+import { BehaviorSubject, Subject } from 'rxjs';
 import { PopupGlobalPositionStrategy, PopupPosition, PopupPositionOffset } from './popup.position.strategy';
 import { filter, first, map, shareReplay, startWith } from 'rxjs/operators';
 import { AbstractTransitionWatcherDirective, DbNgxRouterTransitionService } from '@dereekb/dbx-core';
+import { DbNgxPopupController, DbNgxPopupKey, DbNgxPopupWindowState } from './popup';
 
 export const APP_POPUP_NORMAL_WIDTH = '700px';
 export const APP_POPUP_MINIMIZED_WIDTH = '300px';
 export const APP_POPUP_NORMAL_HEIGHT = 'auto';
-
-export type DbNgxPopupKey = string;
-
-export enum DbNgxPopupWindowState {
-  NORMAL = 'normal',
-  MINIMIZED = 'minimized',
-  FULLSCREEN = 'fullscreen'
-}
-
-export abstract class DbNgxPopupController<I = any, O = any> {
-  abstract readonly key: DbNgxPopupKey;
-  abstract readonly data?: Maybe<I>;
-  abstract readonly windowState$: Observable<DbNgxPopupWindowState>;
-  abstract readonly closing$: Observable<boolean>;
-  /**
-   * Signals for the popup to close.
-   */
-  abstract close(): void;
-  /**
-   * Closes the popup and returns the input value.
-   */
-  abstract return(value?: O): void;
-  abstract minimize(): void;
-  abstract normalscreen(): void;
-  abstract fullscreen(): void;
-}
 
 export abstract class DbNgxPopupComponentController<I, O> extends DbNgxPopupController<I, O> {
   getClosingValueFn?: (value?: I) => Promise<O>;

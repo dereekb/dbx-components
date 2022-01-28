@@ -1,4 +1,5 @@
 import { Component, Input } from '@angular/core';
+import { Maybe } from '@dereekb/util';
 
 /**
  * Component used to format content on a page within a section.
@@ -25,12 +26,12 @@ import { Component, Input } from '@angular/core';
 export class DbNgxSectionComponent {
 
   @Input()
-  header?: string;
+  header?: Maybe<string>;
 
   @Input()
-  icon?: string;
+  icon?: Maybe<string>;
 
   @Input()
-  hint?: string;
+  hint?: Maybe<string>;
 
 }

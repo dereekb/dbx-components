@@ -1,5 +1,6 @@
 import { Component, Input, OnInit } from '@angular/core';
-import { AbstractDialogDirective } from '../../interaction';
+import { Maybe } from '@dereekb/util';
+import { AbstractDialogDirective } from '../../interaction/dialog/abstract.dialog.directive';
 import { DbNgxPromptConfirmConfig } from './prompt.confirm.component';
 
 @Component({
@@ -10,7 +11,7 @@ import { DbNgxPromptConfirmConfig } from './prompt.confirm.component';
 export class DbNgxPromptConfirmDialogComponent extends AbstractDialogDirective implements OnInit {
 
   @Input()
-  config?: DbNgxPromptConfirmConfig;
+  config?: Maybe<DbNgxPromptConfirmConfig>;
 
   confirm(): void {
     this.dialogRef.close(true);

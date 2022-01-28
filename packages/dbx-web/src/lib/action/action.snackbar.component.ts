@@ -1,3 +1,5 @@
+import { distinctUntilChanged, Observable } from 'rxjs';
+import { shareReplay } from 'rxjs';
 import { Component, Inject } from '@angular/core';
 import { MatSnackBarRef, MAT_SNACK_BAR_DATA } from '@angular/material/snack-bar';
 import { Maybe } from '@dereekb/util';
@@ -10,7 +12,7 @@ import { ActionContextStoreSourceInstance, ActionState, DbNgxActionSnackbarCompo
  */
 @Component({
   template: `
-    <div class="dbx-action-snackbar" [ngClass]="snackbarStatusClass$ | async">
+    <div class="dbx-action-snackbar" [ngClass]="(snackbarStatusClass$ | async)!">
       <ng-container [ngSwitch]="complete$ | async">
         <ng-container *ngSwitchCase="true">
           <div class="spacer"></div>
@@ -41,8 +43,8 @@ export class DbNgxActionSnackbarComponent {
     }
   }
 
-  complete$ = this.actionSourceInstance.isSuccess$;
-  snackbarStatusClass$ = this.actionSourceInstance.actionState$.pipe(
+  readonly complete$ = this.actionSourceInstance.isSuccess$;
+  readonly snackbarStatusClass$: Observable<string> = this.actionSourceInstance.actionState$.pipe(
     map((x) => {
       let classes = 'dbx-action-snackbar-';
 
@@ -59,7 +61,9 @@ export class DbNgxActionSnackbarComponent {
       }
 
       return classes;
-    })
+    }),
+    distinctUntilChanged(),
+    shareReplay(1)
   );
 
   get message(): Maybe<string> {

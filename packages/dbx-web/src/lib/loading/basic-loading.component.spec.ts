@@ -53,7 +53,6 @@ describe('DbNgxBasicLoadingComponent', () => {
     });
 
     it('should display the content while not loading.', (done) => {
-      console.log('adsfadsfasdf');
       waitForComponentToHaveContent(() => {
         expect(component.loading).toBe(false);
         const testContent: HTMLElement = fixture.debugElement.query(By.css('#test-content')).nativeElement;

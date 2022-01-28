@@ -1,30 +1,14 @@
-import { Component, ComponentFactoryResolver, Inject, Input, NgZone, Type, ViewChild, ViewContainerRef, OnInit, OnDestroy, ComponentRef, ElementRef } from '@angular/core';
-import { HookMatchCriteria, TransitionService } from '@uirouter/core';
+import { Component, ComponentFactoryResolver, NgZone, Type, ViewChild, ViewContainerRef, OnInit, OnDestroy, ComponentRef, ElementRef } from '@angular/core';
 import { NgOverlayContainerConfiguration, NgPopoverRef } from 'ng-overlay-container';
 import { AbstractTransitionWatcherDirective, DbNgxRouterTransitionService } from '@dereekb/dbx-core';
-import { BehaviorSubject, Observable, Subject } from 'rxjs';
+import { Subject } from 'rxjs';
 import { PopoverPositionStrategy } from './popover.position.strategy';
 import { filter, first, map, shareReplay, startWith } from 'rxjs/operators';
 import { Overlay } from '@angular/cdk/overlay';
 import { LockSet } from '@dereekb/rxjs';
 import { CompactContextStore, CompactMode } from '../../layout';
 import { Maybe } from '@dereekb/util';
-
-export type DbNgxPopoverKey = string;
-
-export abstract class DbNgxPopoverController<I = any, O = any> {
-  abstract readonly key: DbNgxPopoverKey;
-  abstract readonly data?: Maybe<I>;
-  abstract readonly closing$: Observable<boolean>;
-  /**
-   * Signals for the popover to close.
-   */
-  abstract close(): void;
-  /**
-   * Closes the popover and returns the input value.
-   */
-  abstract return(value?: O): void;
-}
+import { DbNgxPopoverController, DbNgxPopoverKey } from './popover';
 
 export abstract class DbNgxPopoverComponentController<I, O> extends DbNgxPopoverController<I, O> {
   getClosingValueFn?: (value?: I) => Promise<O>;

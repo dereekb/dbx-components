@@ -1,4 +1,4 @@
-import { DbNgxPopupKey, DbNgxPopupController } from './popup.component';
+import { DbNgxPopupKey, DbNgxPopupController } from './popup';
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 

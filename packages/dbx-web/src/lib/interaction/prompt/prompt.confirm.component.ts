@@ -1,4 +1,5 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Maybe } from '@dereekb/util';
 
 export enum DbNgxPromptConfirmTypes {
   /**
@@ -29,14 +30,22 @@ export interface DbNgxPromptConfirmConfig {
 })
 export class DbNgxPromptConfirmComponent {
 
-  @Input()
-  config?: DbNgxPromptConfirmConfig;
+  private _config: DbNgxPromptConfirmConfig = {};
 
   @Output()
   confirm = new EventEmitter<void>();
 
   @Output()
   cancel = new EventEmitter<void>();
+
+  @Input()
+  get config(): DbNgxPromptConfirmConfig {
+    return this._config;
+  }
+
+  set config(config: Maybe<DbNgxPromptConfirmConfig>) {
+    this._config = config ?? {};
+  }
 
   onConfirm(): void {
     this.confirm.emit();

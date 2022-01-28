@@ -23,4 +23,8 @@ export class DbNgxReadableErrorComponent {
     this._error = convertToReadableError(error as any) as ReadableError;
   }
 
+  get message(): Maybe<string> {
+    return this._error?.message;
+  }
+
 }

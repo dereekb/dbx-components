@@ -1,4 +1,5 @@
 import { Component, Input } from '@angular/core';
+import { Maybe } from '@dereekb/util';
 import { DbNgxPromptBoxComponent } from './prompt.box.component';
 
 /**
@@ -12,9 +13,9 @@ import { DbNgxPromptBoxComponent } from './prompt.box.component';
 export class DbNgxPromptComponent extends DbNgxPromptBoxComponent {
 
   @Input()
-  header?: string;
+  header?: Maybe<string>;
 
   @Input()
-  prompt?: string;
+  prompt?: Maybe<string>;
 
 }

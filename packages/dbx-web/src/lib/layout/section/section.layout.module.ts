@@ -10,7 +10,6 @@ import { DbNgxSectionElevatedComponent } from './section.elevated.component';
 import { DbNgxSectionBoxAnchorComponent } from './section.box.anchor.component';
 import { MatRippleModule } from '@angular/material/core';
 import { MatIconModule } from '@angular/material/icon';
-import { DbNgxTwoBlocksComponent } from '../block/two.block.component';
 import { DbNgxIntroActionSectionComponent } from './section.intro.component';
 
 /**
@@ -31,8 +30,7 @@ import { DbNgxIntroActionSectionComponent } from './section.intro.component';
     DbNgxSectionElevatedComponent,
     DbNgxSectionComponent,
     DbNgxSubSectionComponent,
-    DbNgxIntroActionSectionComponent,
-    DbNgxTwoBlocksComponent
+    DbNgxIntroActionSectionComponent
   ],
   exports: [
     DbNgxSectionPageComponent,
@@ -41,8 +39,7 @@ import { DbNgxIntroActionSectionComponent } from './section.intro.component';
     DbNgxSectionElevatedComponent,
     DbNgxSectionComponent,
     DbNgxSubSectionComponent,
-    DbNgxIntroActionSectionComponent,
-    DbNgxTwoBlocksComponent
+    DbNgxIntroActionSectionComponent
   ]
 })
 export class DbNgxSectionLayoutModule { }

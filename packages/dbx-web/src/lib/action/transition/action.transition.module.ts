@@ -5,6 +5,7 @@ import { DbNgxActionTransitionSafetyDirective as DbNgxActionUIRouterTransitionSa
 import { DbNgxCoreActionModule } from '@dereekb/dbx-core';
 import { DbNgxButtonModule } from '../../button';
 import { DbNgxPromptModule } from './../../interaction';
+import { DbNgxReadableErrorModule } from '../../error';
 
 /**
  * Provides the DbNgxActionUIRouterTransitionSafetyDirective.
@@ -17,6 +18,7 @@ import { DbNgxPromptModule } from './../../interaction';
     DbNgxCoreActionModule,
     DbNgxPromptModule,
     DbNgxButtonModule,
+    DbNgxReadableErrorModule
   ],
   declarations: [
     DbNgxActionUIRouterTransitionSafetyDirective,
