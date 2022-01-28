@@ -9,6 +9,3 @@ Unit tests are run through the Docker container. This lets our tests access the 
 Run `nx watch dbx-firebase` to execute the unit tests and watch for changes.
 
 Run `nx test dbx-firebase` to execute the unit tests.
-
-### Firebase Related Unit Test Notes
-https://firebase.google.com/docs/rules/unit-tests#rut-v2-common-methods
