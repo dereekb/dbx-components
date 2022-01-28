@@ -2,7 +2,7 @@ version: 2.1 # use CircleCI 2.1
 
 # YAML trick
 defaults: &defaults
-  working_directory: /code   # "code" is our working directory
+  working_directory: ~/code   # "code" is our working directory
   resource_class: medium
   docker:
     - image: cimg/node:16.13
@@ -36,7 +36,7 @@ jobs:
         - run: npx nx affected --base=$NX_BASE --target=build --parallel --max-parallel=2 --exclude=dbx-form  # TODO: unexclude dbx-form later.
         # persist builds to workspace
         - persist_to_workspace:
-            root: /code
+            root: ~/code
             paths:
               - node_modules
               - dist
@@ -44,8 +44,8 @@ jobs:
     <<: *defaults
     steps:
       - attach_workspace:
-          at: /code
-      - run: ls /code
+          at: ~/code
+      - run: ls ~/code
       - run:
           name: run util tests
           command: nx test util --ci
