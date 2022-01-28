@@ -49,19 +49,19 @@ jobs:
       - run: ls ~/code
       - run:
           name: run util tests
-          command: nx test util --ci
+          command: npx nx test util --ci
           environment:
             JEST_SUITE_NAME: util
             JEST_JUNIT_OUTPUT_FILE: util.junit.xml
       - run:
           name: run rxjs tests
-          command: nx test rxjs --ci
+          command: npx nx test rxjs --ci
           environment:
             JEST_SUITE_NAME: rxjs
             JEST_JUNIT_OUTPUT_FILE: rxjs.junit.xml
       - run:
           name: run date tests
-          command: nx test date --ci
+          command: npx nx test date --ci
           environment:
             JEST_SUITE_NAME: date
             JEST_JUNIT_OUTPUT_FILE: date.junit.xml
@@ -70,7 +70,6 @@ jobs:
   test-with-node-firebase:
     <<: *defaults
     steps:
-      - checkout
       - attach_workspace:
           at: ~/code
       - run: npm i -g nx@13.4.3 @nestjs/cli@8.2.0 firebase-tools@10.1.2
