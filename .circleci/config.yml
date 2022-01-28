@@ -33,7 +33,7 @@ jobs:
         # initialize nx
         - nx/set-shas
         # build content
-        - run: npx nx affected --base=$NX_BASE --target=build --parallel --max-parallel=2
+        - run: npx nx affected --base=$NX_BASE --target=build --parallel --max-parallel=2 --exclude=dbx-form  # TODO: unexclude dbx-form later.
         # persist builds to workspace
         - persist_to_workspace:
             root: ~/code
