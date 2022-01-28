@@ -175,3 +175,14 @@ Behind the scenes, `nx serve demo-api` runs two commands in parallel:
 Any changes made to the `demo-api` package will trigger. VS Code to build the project and update our dist, causing the functions emulator to update. This lets us develop in real time with an active emulated database.
 
 ### Testing
+Some tests run in just the node context, while others are run with the firebase emulators.
+
+
+### CI Testing Output
+A couple things are configured for the CI to enable reports to be output to `.reports/jest`:
+
+- All our project configurations for `nx test` and `nx run-tests` have an added `outputs` values that communicates to nx that they have output that belongs in the nx cloud cache. This is important, because it lets nx avoid having to re-run tests. The problem would be that without this output, the test's CLI output is cached and played back, but the jest-junit output would not be reported. This configuration resolves that issue.
+- `jest-junit` is configured partially in `jest.preset.js` to output to the `.reports/jest` folder. It also only adds the jest-junit reporter in CI environments.
+- All projects have a `.env` file that adds environment variables to tell jest-junit what to export the file as.
+
+These three items come together and enable jest-junit to do it's job, and circleci to capture our testing output.
