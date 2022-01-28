@@ -118,6 +118,10 @@ jobs:
     <<: *defaults
     steps:
       - checkout
+  deploy-demo:
+    <<: *defaults
+    steps:
+      - checkout
 # --- WORKFLOWS ---
 workflows:
   version: 2
