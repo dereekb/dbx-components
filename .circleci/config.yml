@@ -81,6 +81,7 @@ jobs:
   test-with-node-firebase:
     <<: *defaults
     steps:
+      - checkout
       - attach_workspace:
           at: ~/code
       - run: sudo apt-get update -y && sudo apt-get install -y curl openjdk-11-jre-headless
