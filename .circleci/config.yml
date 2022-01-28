@@ -43,6 +43,7 @@ jobs:
   test-with-node:
     <<: *defaults
     steps:
+      - checkout
       - attach_workspace:
           at: ~/code
       - run: ls ~/code
@@ -69,6 +70,7 @@ jobs:
   test-with-node-firebase:
     <<: *defaults
     steps:
+      - checkout
       - attach_workspace:
           at: ~/code
       - run: npm i -g nx@13.4.3 @nestjs/cli@8.2.0 firebase-tools@10.1.2
@@ -76,6 +78,7 @@ jobs:
   publish-to-npm:
     <<: *defaults
     steps:
+      - checkout
       - attach_workspace:
           at: ~/code
       - run: echo pushing to npm
