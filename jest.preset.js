@@ -1,6 +1,10 @@
 const nxPreset = require('@nrwl/jest/preset');
+const isCI = true; // require('is-ci');
 
 module.exports = {
   ...nxPreset,
-  setupFilesAfterEnv: [...nxPreset.setupFilesAfterEnv ?? [], 'jest-date', '<rootDir>/../../jest.setup.ts']
+  setupFilesAfterEnv: [...nxPreset.setupFilesAfterEnv ?? [], 'jest-date', '<rootDir>/../../jest.setup.ts'],
+  reporters: (isCI) ? ['default', ['jest-junit', {
+    outputDirectory: '<rootDir>/../../.reports/jest',
+  }]] : ['default']
 };
