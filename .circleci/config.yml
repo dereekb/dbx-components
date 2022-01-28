@@ -40,6 +40,7 @@ jobs:
           paths:
             - node_modules
             - dist
+  # Runs tests for the projects that do not require the firebase emulators.
   test-with-node:
     <<: *defaults
     steps:
@@ -63,6 +64,7 @@ jobs:
           command: npx nx test dbx-web
       - store_test_results:
           path: ~/code/.reports/jest/
+  # Runs tests for the projects that require the firebase emulators.
   test-with-node-firebase:
     <<: *defaults
     steps:
@@ -84,6 +86,26 @@ jobs:
             - ~/.cache/firebase/emulators
       - store_test_results:
           path: ~/code/.reports/jest/
+  # Performs release operations on the release branch.
+  run-version:
+    <<: *defaults
+    steps:
+      - checkout
+      - attach_workspace:
+          at: ~/code
+      - add_ssh_keys:
+          fingerprints:
+            - "d9:53:28:55:d6:96:4e:1e:d1:53:5e:79:e4:80:7e:28"
+      - run:
+          name: build release
+          command: npx nx run workspace:version
+      - run:
+          name: setup git
+          command: git config user.email "ci@dereekb.com" & git config user.name "ci"
+      - run:
+          name: push to main
+          command: git status & echo 'pushing to main!'
+  # Publishes content to npm. This should occur after running a release.
   publish-to-npm:
     <<: *defaults
     steps:
@@ -91,8 +113,15 @@ jobs:
       - attach_workspace:
           at: ~/code
       - run: echo pushing to npm
+  # Used to automatically rebase develop onto main.
+  merge-main-into-develop:
+    <<: *defaults
+    steps:
+      - checkout
+# --- WORKFLOWS ---
 workflows:
   version: 2
+  # builds and tests the content. Occurs on every branch.
   build-and-test:
     jobs:
       - build
@@ -102,3 +131,32 @@ workflows:
       - test-with-node-firebase:
           requires:
             - build
+  # TODO: Publish demo to firebase hosting as prerelease
+  # Publishes all packages.
+  run-version:
+    jobs:
+      - run-version:
+          requires:
+            - test-with-node
+            - test-with-node-firebase
+          filters:
+            branches:
+              only: release
+  # Publishes to npm
+  publish:
+    jobs:
+      - publish-to-npm:
+          filters:
+            branches:
+              only: master
+          requires:
+            - run-release
+  # Deploys the demo to firebase.
+  deploy:
+    jobs:
+      - deploy-demo:
+          requires:
+            - build
+          filters:
+            branches:
+              only: master
