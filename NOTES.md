@@ -80,10 +80,10 @@ Add the section below to add an action that calls build before calling deploy.
   "options": {
     "commands": [
       {
-        "command": "nx build demo"
+        "command": "npx nx build demo"
       },
       {
-        "command": "nx deploy-dist-to-hosting demo"
+        "command": "npx nx deploy-dist-to-hosting demo"
       }
     ],
     "parallel": false

@@ -65,6 +65,18 @@ jobs:
           environment:
             JEST_SUITE_NAME: date
             JEST_JUNIT_OUTPUT_FILE: date.junit.xml
+      - run:
+          name: run dbx-core tests
+          command: npx nx test dbx-core --ci
+          environment:
+            JEST_SUITE_NAME: dbx-core
+            JEST_JUNIT_OUTPUT_FILE: dbx-core.junit.xml
+      - run:
+          name: run dbx-web tests
+          command: npx nx test dbx-web --ci
+          environment:
+            JEST_SUITE_NAME: dbx-web
+            JEST_JUNIT_OUTPUT_FILE: dbx-web.junit.xml
       - store_test_results:
           path: ./reports/junit/
   test-with-node-firebase:
@@ -72,8 +84,15 @@ jobs:
     steps:
       - attach_workspace:
           at: ~/code
-      - run: npm i -g nx@13.4.3 @nestjs/cli@8.2.0 firebase-tools@10.1.2
       - run: apt-get update -y && apt-get install -y curl openjdk-11-jre-headless
+      - run:
+          name: run firebase tests
+          command: npx nx test firebase
+          environment:
+            JEST_SUITE_NAME: firebase
+            JEST_JUNIT_OUTPUT_FILE: firebase.junit.xml
+      - store_test_results:
+          path: ./reports/junit/
   publish-to-npm:
     <<: *defaults
     steps:

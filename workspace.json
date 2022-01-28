@@ -204,10 +204,10 @@
           "options": {
             "commands": [
               {
-                "command": "nx build demo"
+                "command": "npx nx build demo"
               },
               {
-                "command": "nx deploy-dist-to-hosting demo"
+                "command": "npx nx deploy-dist-to-hosting demo"
               }
             ],
             "parallel": false
@@ -262,10 +262,10 @@
           "options": {
             "commands": [
               {
-                "command": "nx build demo-api --watch"
+                "command": "npx nx build demo-api --watch"
               },
               {
-                "command": "nx run-emulators demo-api"
+                "command": "npx nx run-emulators demo-api"
               }
             ],
             "parallel": true
@@ -297,10 +297,10 @@
           "options": {
             "commands": [
               {
-                "command": "nx build demo-api"
+                "command": "npx nx build demo-api"
               },
               {
-                "command": "nx deploy-dist-to-functions demo-api"
+                "command": "npx nx deploy-dist-to-functions demo-api"
               }
             ],
             "parallel": false

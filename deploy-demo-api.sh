@@ -1,3 +1,3 @@
 #!/bin/bash
 # Builds and Deploys demo-api to Firebase Functions
-nx deploy demo-api
+npx nx deploy demo-api
