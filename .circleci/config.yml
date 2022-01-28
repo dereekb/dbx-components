@@ -62,7 +62,7 @@ jobs:
           name: run dbx-web tests
           command: npx nx test dbx-web
       - store_test_results:
-          path: ~/code/.reports/junit/
+          path: ~/code/.reports/jest/
   test-with-node-firebase:
     <<: *defaults
     steps:
@@ -72,12 +72,12 @@ jobs:
       - run: sudo apt-get update -y && sudo apt-get install -y curl openjdk-11-jre-headless
       - run:
           name: run firebase tests
-          command: npx nx test firebase
+          command: npx firebase emulators:exec --only auth,firestore,storage 'npx nx run-tests firebase'
       - run:
           name: run dbx-firebase tests
-          command: npx nx test dbx-firebase
+          command: npx firebase emulators:exec --only auth,firestore,storage 'npx nx run-tests dbx-firebase'
       - store_test_results:
-          path: ~/code/.reports/junit/
+          path: ~/code/.reports/jest/
   publish-to-npm:
     <<: *defaults
     steps:
