@@ -48,34 +48,19 @@ jobs:
           at: ~/code
       - run:
           name: run util tests
-          command: npx nx test util --ci
-          environment:
-            JEST_SUITE_NAME: util
-            JEST_JUNIT_OUTPUT_FILE: util.junit.xml
+          command: npx nx test util
       - run:
           name: run rxjs tests
-          command: npx nx test rxjs --ci
-          environment:
-            JEST_SUITE_NAME: rxjs
-            JEST_JUNIT_OUTPUT_FILE: rxjs.junit.xml
+          command: npx nx test rxjs
       - run:
           name: run date tests
-          command: npx nx test date --ci
-          environment:
-            JEST_SUITE_NAME: date
-            JEST_JUNIT_OUTPUT_FILE: date.junit.xml
+          command: npx nx test date
       - run:
           name: run dbx-core tests
-          command: npx nx test dbx-core --ci
-          environment:
-            JEST_SUITE_NAME: dbx-core
-            JEST_JUNIT_OUTPUT_FILE: dbx-core.junit.xml
+          command: npx nx test dbx-core
       - run:
           name: run dbx-web tests
-          command: npx nx test dbx-web --ci
-          environment:
-            JEST_SUITE_NAME: dbx-web
-            JEST_JUNIT_OUTPUT_FILE: dbx-web.junit.xml
+          command: npx nx test dbx-web
       - store_test_results:
           path: ~/code/.reports/junit/
   test-with-node-firebase:
@@ -88,9 +73,9 @@ jobs:
       - run:
           name: run firebase tests
           command: npx nx test firebase
-          environment:
-            JEST_SUITE_NAME: firebase
-            JEST_JUNIT_OUTPUT_FILE: firebase.junit.xml
+      - run:
+          name: run dbx-firebase tests
+          command: npx nx test dbx-firebase
       - store_test_results:
           path: ~/code/.reports/junit/
   publish-to-npm:

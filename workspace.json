@@ -2,7 +2,40 @@
   "version": 2,
   "projects": {
     "browser": "packages/browser",
-    "date": "packages/date",
+    "date": {
+      "root": "packages/date",
+      "sourceRoot": "packages/date/src",
+      "projectType": "library",
+      "targets": {
+        "build": {
+          "executor": "@nrwl/node:package",
+          "outputs": ["{options.outputPath}"],
+          "options": {
+            "outputPath": "dist/packages/date",
+            "tsConfig": "packages/date/tsconfig.lib.json",
+            "packageJson": "packages/date/package.json",
+            "main": "packages/date/src/index.ts",
+            "assets": ["packages/date/*.md"]
+          }
+        },
+        "lint": {
+          "executor": "@nrwl/linter:eslint",
+          "outputs": ["{options.outputFile}"],
+          "options": {
+            "lintFilePatterns": ["packages/date/**/*.ts"]
+          }
+        },
+        "test": {
+          "executor": "@nrwl/jest:jest",
+          "outputs": ["coverage/packages/date", "./.reports/jest/date.junit.xml"],
+          "options": {
+            "jestConfig": "packages/date/jest.config.js",
+            "passWithNoTests": true
+          }
+        }
+      },
+      "tags": []
+    },    
     "dbx-analytics": {
       "projectType": "library",
       "root": "packages/dbx-analytics",
@@ -27,7 +60,7 @@
         },
         "test": {
           "executor": "@nrwl/jest:jest",
-          "outputs": ["coverage/packages/dbx-analytics"],
+          "outputs": ["coverage/packages/dbx-analytics", "./.reports/jest/dbx-analytics.junit.xml"],
           "options": {
             "jestConfig": "packages/dbx-analytics/jest.config.js",
             "passWithNoTests": true
@@ -45,7 +78,48 @@
       },
       "tags": []
     },
-    "dbx-core": "packages/dbx-core",
+    "dbx-core": {
+      "projectType": "library",
+      "root": "packages/dbx-core",
+      "sourceRoot": "packages/dbx-core/src",
+      "prefix": "dereekb",
+      "targets": {
+        "build": {
+          "executor": "@nrwl/angular:package",
+          "outputs": ["dist/packages/dbx-core"],
+          "options": {
+            "project": "packages/dbx-core/ng-package.json"
+          },
+          "configurations": {
+            "production": {
+              "tsConfig": "packages/dbx-core/tsconfig.lib.prod.json"
+            },
+            "development": {
+              "tsConfig": "packages/dbx-core/tsconfig.lib.json"
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "test": {
+          "executor": "@nrwl/jest:jest",
+          "outputs": ["coverage/packages/dbx-core", "./.reports/jest/dbx-core.junit.xml"],
+          "options": {
+            "jestConfig": "packages/dbx-core/jest.config.js",
+            "passWithNoTests": true
+          }
+        },
+        "lint": {
+          "executor": "@nrwl/linter:eslint",
+          "options": {
+            "lintFilePatterns": [
+              "packages/dbx-core/src/**/*.ts",
+              "packages/dbx-core/src/**/*.html"
+            ]
+          }
+        }
+      },
+      "tags": []
+    },    
     "dbx-firebase": {
       "projectType": "library",
       "root": "packages/dbx-firebase",
@@ -70,7 +144,7 @@
         },
         "run-tests": {
           "executor": "@nrwl/jest:jest",
-          "outputs": ["coverage/packages/dbx-firebase"],
+          "outputs": ["coverage/packages/dbx-firebase", "./.reports/jest/dbx-firebase.junit.xml"],
           "options": {
             "jestConfig": "packages/dbx-firebase/jest.config.js",
             "passWithNoTests": true
@@ -79,13 +153,13 @@
         "watch": {
           "executor": "@nrwl/workspace:run-commands",
           "options": {
-            "command": "./exec-with-emulator.sh 'nx run-tests dbx-firebase --watch'"
+            "command": "./exec-with-emulator.sh 'npx nx run-tests dbx-firebase --watch'"
           }
         },
         "test": {
           "executor": "@nrwl/workspace:run-commands",
           "options": {
-            "command": "./exec-with-emulator.sh 'nx run-tests dbx-firebase'"
+            "command": "./exec-with-emulator.sh 'npx nx run-tests dbx-firebase'"
           }
         },
         "lint": {
@@ -100,8 +174,90 @@
       },
       "tags": []
     },
-    "dbx-form": "packages/dbx-form",
-    "dbx-web": "packages/dbx-web",
+    "dbx-form": {
+      "projectType": "library",
+      "root": "packages/dbx-form",
+      "sourceRoot": "packages/dbx-form/src",
+      "prefix": "dereekb",
+      "targets": {
+        "build": {
+          "executor": "@nrwl/angular:package",
+          "outputs": ["dist/packages/dbx-form"],
+          "options": {
+            "project": "packages/dbx-form/ng-package.json"
+          },
+          "configurations": {
+            "production": {
+              "tsConfig": "packages/dbx-form/tsconfig.lib.prod.json"
+            },
+            "development": {
+              "tsConfig": "packages/dbx-form/tsconfig.lib.json"
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "test": {
+          "executor": "@nrwl/jest:jest",
+          "outputs": ["coverage/packages/dbx-form", "./.reports/jest/dbx-form.junit.xml"],
+          "options": {
+            "jestConfig": "packages/dbx-form/jest.config.js",
+            "passWithNoTests": true
+          }
+        },
+        "lint": {
+          "executor": "@nrwl/linter:eslint",
+          "options": {
+            "lintFilePatterns": [
+              "packages/dbx-form/src/**/*.ts",
+              "packages/dbx-form/src/**/*.html"
+            ]
+          }
+        }
+      },
+      "tags": []
+    },    
+    "dbx-web": {
+      "projectType": "library",
+      "root": "packages/dbx-web",
+      "sourceRoot": "packages/dbx-web/src",
+      "prefix": "dereekb",
+      "targets": {
+        "build": {
+          "executor": "@nrwl/angular:package",
+          "outputs": ["dist/packages/dbx-web"],
+          "options": {
+            "project": "packages/dbx-web/ng-package.json"
+          },
+          "configurations": {
+            "production": {
+              "tsConfig": "packages/dbx-web/tsconfig.lib.prod.json"
+            },
+            "development": {
+              "tsConfig": "packages/dbx-web/tsconfig.lib.json"
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "test": {
+          "executor": "@nrwl/jest:jest",
+          "outputs": ["coverage/packages/dbx-web", "./.reports/jest/dbx-web.junit.xml"],
+          "options": {
+            "jestConfig": "packages/dbx-web/jest.config.js",
+            "passWithNoTests": true
+          }
+        },
+        "lint": {
+          "executor": "@nrwl/linter:eslint",
+          "options": {
+            "lintFilePatterns": [
+              "packages/dbx-web/src/**/*.ts",
+              "packages/dbx-web/src/**/*.html"
+            ]
+          }
+        }
+      },
+      "tags": []
+    },    
     "demo": {
       "projectType": "application",
       "root": "packages/demo",
@@ -187,7 +343,7 @@
         },
         "test": {
           "executor": "@nrwl/jest:jest",
-          "outputs": ["coverage/packages/demo"],
+          "outputs": ["coverage/packages/demo", "./.reports/jest/demo.junit.xml"],
           "options": {
             "jestConfig": "packages/demo/jest.config.js",
             "passWithNoTests": true
@@ -280,7 +436,7 @@
         },
         "test": {
           "executor": "@nrwl/jest:jest",
-          "outputs": ["coverage/packages/demo-api"],
+          "outputs": ["coverage/packages/demo-api", "./.reports/jest/demo-api"],
           "options": {
             "jestConfig": "packages/demo-api/jest.config.js",
             "passWithNoTests": true
@@ -362,7 +518,7 @@
         },
         "run-tests": {
           "executor": "@nrwl/jest:jest",
-          "outputs": ["coverage/packages/firebase"],
+          "outputs": ["coverage/packages/firebase", "./.reports/jest/firebase.junit.xml"],
           "options": {
             "jestConfig": "packages/firebase/jest.config.js",
             "passWithNoTests": true
@@ -371,20 +527,53 @@
         "watch": {
           "executor": "@nrwl/workspace:run-commands",
           "options": {
-            "command": "./exec-with-emulator.sh 'nx run-tests firebase --watch'"
+            "command": "./exec-with-emulator.sh 'npx nx run-tests firebase --watch'"
           }
         },
         "test": {
           "executor": "@nrwl/workspace:run-commands",
           "options": {
-            "command": "./exec-with-emulator.sh 'nx run-tests firebase'"
+            "command": "./exec-with-emulator.sh 'npx nx run-tests firebase'"
           }
         }
       },
       "tags": []
     },
     "model": "packages/model",
-    "rxjs": "packages/rxjs",
+    "rxjs": {
+      "root": "packages/rxjs",
+      "sourceRoot": "packages/rxjs/src",
+      "projectType": "library",
+      "targets": {
+        "build": {
+          "executor": "@nrwl/node:package",
+          "outputs": ["{options.outputPath}"],
+          "options": {
+            "outputPath": "dist/packages/rxjs",
+            "tsConfig": "packages/rxjs/tsconfig.lib.json",
+            "packageJson": "packages/rxjs/package.json",
+            "main": "packages/rxjs/src/index.ts",
+            "assets": ["packages/rxjs/*.md"]
+          }
+        },
+        "lint": {
+          "executor": "@nrwl/linter:eslint",
+          "outputs": ["{options.outputFile}"],
+          "options": {
+            "lintFilePatterns": ["packages/rxjs/**/*.ts"]
+          }
+        },
+        "test": {
+          "executor": "@nrwl/jest:jest",
+          "outputs": ["coverage/packages/rxjs", "./.reports/jest/rxjs.junit.xml"],
+          "options": {
+            "jestConfig": "packages/rxjs/jest.config.js",
+            "passWithNoTests": true
+          }
+        }
+      },
+      "tags": []
+    },    
     "util": {
       "root": "packages/util",
       "sourceRoot": "packages/util/src",
@@ -410,7 +599,7 @@
         },
         "test": {
           "executor": "@nrwl/jest:jest",
-          "outputs": ["coverage/packages/util"],
+          "outputs": ["coverage/packages/util", "./.reports/jest/util.junit.xml"],
           "options": {
             "jestConfig": "packages/util/jest.config.js",
             "passWithNoTests": true
