@@ -3,6 +3,7 @@ version: 2.1 # use CircleCI 2.1
 # YAML trick
 defaults: &defaults
   working_directory: ~/code   # "code" is our working directory
+  resource_class: medium
   docker:
     - image: cimg/node:16.13
 
