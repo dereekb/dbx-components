@@ -122,7 +122,7 @@ jobs:
       - checkout
       - attach_workspace:
           at: ~/code
-      - run: echo pushing to npm
+      - run: echo pushing to npm  # todo
 # --- WORKFLOWS ---
 workflows:
   version: 2
@@ -151,11 +151,5 @@ workflows:
           filters:
             branches:
               only: main
-      - deploy-demo:
-          filters:
-            branches:
-              only: main
-      - publish-to-npm:
-          filters:
-            branches:
-              only: main
+      - deploy-demo
+      - publish-to-npm

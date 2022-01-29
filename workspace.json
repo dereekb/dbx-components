@@ -615,8 +615,7 @@
           "executor": "@jscutlery/semver:version",
           "options": {
             "syncVersions": true,
-            "commitMessageFormat": "release(${projectName}): release version ${version}",
-            "baseBranch": "main"
+            "commitMessageFormat": "release(${projectName}): release version ${version}"
           }
         }
       }
