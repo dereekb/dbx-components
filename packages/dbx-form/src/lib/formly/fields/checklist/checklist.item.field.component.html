@@ -1,0 +1,18 @@
+<div class="dbx-checklist-item-wrapper" [formGroup]="form">
+  <div *ngIf="label" class="dbx-checklist-item-label">{{ label }}</div>
+  <div class="dbx-checklist-item">
+    <div class="dbx-checklist-item-check">
+      <mat-checkbox [formControlName]="field.key"></mat-checkbox>
+    </div>
+    <div class="dbx-checklist-item-content-wrapper">
+      <dbx-anchor [block]="true" [anchor]="anchor$ | async">
+        <div class="dbx-checklist-item-content" matRipple [matRippleDisabled]="rippleDisabled$ | async">
+          <dbx-checklist-item-content-component></dbx-checklist-item-content-component>
+          <span class="spacer"></span>
+          <mat-icon>navigate_next</mat-icon>
+        </div>
+      </dbx-anchor>
+    </div>
+  </div>
+  <div *ngIf="description" class="dbx-hint">{{ description }}</div>
+</div>

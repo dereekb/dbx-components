@@ -1,0 +1,36 @@
+@import 'shared';
+
+.dbx-searchable-field {
+  .s-chip-sublabel {
+    margin-left: 4px;
+  }
+}
+
+.dbx-searchable-field-form-field {
+  width: 100%;
+
+  .participant-name {
+    margin-left: 4px;
+  }
+}
+
+.form-repeat-section {
+  .form-repeat-section-field {
+    h4 {
+      margin: 0;
+      display: inline;
+    }
+  }
+}
+
+.searchable-field-form-loading {
+  margin: -18px;
+}
+
+.dbx-pickable-item-field, .dbx-pickable-item-field-filter-field {
+  width: 100%;
+}
+
+.dbx-pickable-item-field-chips {
+  padding: 8px;
+}

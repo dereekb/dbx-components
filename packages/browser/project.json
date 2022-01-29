@@ -1,0 +1,33 @@
+{
+  "root": "packages/browser",
+  "sourceRoot": "packages/browser/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/packages/browser",
+        "main": "packages/browser/src/index.ts",
+        "tsConfig": "packages/browser/tsconfig.lib.json",
+        "assets": ["packages/browser/*.md"]
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["packages/browser/**/*.ts"]
+      }
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": ["coverage/packages/browser"],
+      "options": {
+        "jestConfig": "packages/browser/jest.config.js",
+        "passWithNoTests": true
+      }
+    }
+  },
+  "tags": []
+}
