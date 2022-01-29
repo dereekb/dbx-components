@@ -1,6 +1,625 @@
 {
   "version": 2,
   "projects": {
-    "utils": "packages/utils"
+    "browser": "packages/browser",
+    "date": {
+      "root": "packages/date",
+      "sourceRoot": "packages/date/src",
+      "projectType": "library",
+      "targets": {
+        "build": {
+          "executor": "@nrwl/node:package",
+          "outputs": ["{options.outputPath}"],
+          "options": {
+            "outputPath": "dist/packages/date",
+            "tsConfig": "packages/date/tsconfig.lib.json",
+            "packageJson": "packages/date/package.json",
+            "main": "packages/date/src/index.ts",
+            "assets": ["packages/date/*.md"]
+          }
+        },
+        "lint": {
+          "executor": "@nrwl/linter:eslint",
+          "outputs": ["{options.outputFile}"],
+          "options": {
+            "lintFilePatterns": ["packages/date/**/*.ts"]
+          }
+        },
+        "test": {
+          "executor": "@nrwl/jest:jest",
+          "outputs": ["coverage/packages/date", "./.reports/jest/date.junit.xml"],
+          "options": {
+            "jestConfig": "packages/date/jest.config.js",
+            "passWithNoTests": true
+          }
+        }
+      },
+      "tags": []
+    },    
+    "dbx-analytics": {
+      "projectType": "library",
+      "root": "packages/dbx-analytics",
+      "sourceRoot": "packages/dbx-analytics/src",
+      "prefix": "dereekb",
+      "targets": {
+        "build": {
+          "executor": "@nrwl/angular:package",
+          "outputs": ["dist/packages/dbx-analytics"],
+          "options": {
+            "project": "packages/dbx-analytics/ng-package.json"
+          },
+          "configurations": {
+            "production": {
+              "tsConfig": "packages/dbx-analytics/tsconfig.lib.prod.json"
+            },
+            "development": {
+              "tsConfig": "packages/dbx-analytics/tsconfig.lib.json"
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "test": {
+          "executor": "@nrwl/jest:jest",
+          "outputs": ["coverage/packages/dbx-analytics", "./.reports/jest/dbx-analytics.junit.xml"],
+          "options": {
+            "jestConfig": "packages/dbx-analytics/jest.config.js",
+            "passWithNoTests": true
+          }
+        },
+        "lint": {
+          "executor": "@nrwl/linter:eslint",
+          "options": {
+            "lintFilePatterns": [
+              "packages/dbx-analytics/src/**/*.ts",
+              "packages/dbx-analytics/src/**/*.html"
+            ]
+          }
+        }
+      },
+      "tags": []
+    },
+    "dbx-core": {
+      "projectType": "library",
+      "root": "packages/dbx-core",
+      "sourceRoot": "packages/dbx-core/src",
+      "prefix": "dereekb",
+      "targets": {
+        "build": {
+          "executor": "@nrwl/angular:package",
+          "outputs": ["dist/packages/dbx-core"],
+          "options": {
+            "project": "packages/dbx-core/ng-package.json"
+          },
+          "configurations": {
+            "production": {
+              "tsConfig": "packages/dbx-core/tsconfig.lib.prod.json"
+            },
+            "development": {
+              "tsConfig": "packages/dbx-core/tsconfig.lib.json"
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "test": {
+          "executor": "@nrwl/jest:jest",
+          "outputs": ["coverage/packages/dbx-core", "./.reports/jest/dbx-core.junit.xml"],
+          "options": {
+            "jestConfig": "packages/dbx-core/jest.config.js",
+            "passWithNoTests": true
+          }
+        },
+        "lint": {
+          "executor": "@nrwl/linter:eslint",
+          "options": {
+            "lintFilePatterns": [
+              "packages/dbx-core/src/**/*.ts",
+              "packages/dbx-core/src/**/*.html"
+            ]
+          }
+        }
+      },
+      "tags": []
+    },    
+    "dbx-firebase": {
+      "projectType": "library",
+      "root": "packages/dbx-firebase",
+      "sourceRoot": "packages/dbx-firebase/src",
+      "prefix": "dereekb",
+      "targets": {
+        "build": {
+          "executor": "@nrwl/angular:package",
+          "outputs": ["dist/packages/dbx-firebase"],
+          "options": {
+            "project": "packages/dbx-firebase/ng-package.json"
+          },
+          "configurations": {
+            "production": {
+              "tsConfig": "packages/dbx-firebase/tsconfig.lib.prod.json"
+            },
+            "development": {
+              "tsConfig": "packages/dbx-firebase/tsconfig.lib.json"
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "run-tests": {
+          "executor": "@nrwl/jest:jest",
+          "outputs": ["coverage/packages/dbx-firebase", "./.reports/jest/dbx-firebase.junit.xml"],
+          "options": {
+            "jestConfig": "packages/dbx-firebase/jest.config.js",
+            "passWithNoTests": true
+          }
+        },
+        "watch": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "command": "./exec-with-emulator.sh 'npx nx run-tests dbx-firebase --watch'"
+          }
+        },
+        "test": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "command": "./exec-with-emulator.sh 'npx nx run-tests dbx-firebase'"
+          }
+        },
+        "lint": {
+          "executor": "@nrwl/linter:eslint",
+          "options": {
+            "lintFilePatterns": [
+              "packages/dbx-firebase/src/**/*.ts",
+              "packages/dbx-firebase/src/**/*.html"
+            ]
+          }
+        }
+      },
+      "tags": []
+    },
+    "dbx-form": {
+      "projectType": "library",
+      "root": "packages/dbx-form",
+      "sourceRoot": "packages/dbx-form/src",
+      "prefix": "dereekb",
+      "targets": {
+        "build": {
+          "executor": "@nrwl/angular:package",
+          "outputs": ["dist/packages/dbx-form"],
+          "options": {
+            "project": "packages/dbx-form/ng-package.json"
+          },
+          "configurations": {
+            "production": {
+              "tsConfig": "packages/dbx-form/tsconfig.lib.prod.json"
+            },
+            "development": {
+              "tsConfig": "packages/dbx-form/tsconfig.lib.json"
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "test": {
+          "executor": "@nrwl/jest:jest",
+          "outputs": ["coverage/packages/dbx-form", "./.reports/jest/dbx-form.junit.xml"],
+          "options": {
+            "jestConfig": "packages/dbx-form/jest.config.js",
+            "passWithNoTests": true
+          }
+        },
+        "lint": {
+          "executor": "@nrwl/linter:eslint",
+          "options": {
+            "lintFilePatterns": [
+              "packages/dbx-form/src/**/*.ts",
+              "packages/dbx-form/src/**/*.html"
+            ]
+          }
+        }
+      },
+      "tags": []
+    },    
+    "dbx-web": {
+      "projectType": "library",
+      "root": "packages/dbx-web",
+      "sourceRoot": "packages/dbx-web/src",
+      "prefix": "dereekb",
+      "targets": {
+        "build": {
+          "executor": "@nrwl/angular:package",
+          "outputs": ["dist/packages/dbx-web"],
+          "options": {
+            "project": "packages/dbx-web/ng-package.json"
+          },
+          "configurations": {
+            "production": {
+              "tsConfig": "packages/dbx-web/tsconfig.lib.prod.json"
+            },
+            "development": {
+              "tsConfig": "packages/dbx-web/tsconfig.lib.json"
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "test": {
+          "executor": "@nrwl/jest:jest",
+          "outputs": ["coverage/packages/dbx-web", "./.reports/jest/dbx-web.junit.xml"],
+          "options": {
+            "jestConfig": "packages/dbx-web/jest.config.js",
+            "passWithNoTests": true
+          }
+        },
+        "lint": {
+          "executor": "@nrwl/linter:eslint",
+          "options": {
+            "lintFilePatterns": [
+              "packages/dbx-web/src/**/*.ts",
+              "packages/dbx-web/src/**/*.html"
+            ]
+          }
+        }
+      },
+      "tags": []
+    },    
+    "demo": {
+      "projectType": "application",
+      "root": "packages/demo",
+      "sourceRoot": "packages/demo/src",
+      "prefix": "dereekb",
+      "targets": {
+        "build": {
+          "executor": "@angular-devkit/build-angular:browser",
+          "outputs": ["{options.outputPath}"],
+          "options": {
+            "outputPath": "dist/packages/demo",
+            "index": "packages/demo/src/index.html",
+            "main": "packages/demo/src/main.ts",
+            "polyfills": "packages/demo/src/polyfills.ts",
+            "tsConfig": "packages/demo/tsconfig.app.json",
+            "inlineStyleLanguage": "scss",
+            "assets": [
+              "packages/demo/src/favicon.ico",
+              "packages/demo/src/assets"
+            ],
+            "styles": ["packages/demo/src/styles.scss"],
+            "scripts": []
+          },
+          "configurations": {
+            "production": {
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "500kb",
+                  "maximumError": "1mb"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "2kb",
+                  "maximumError": "4kb"
+                }
+              ],
+              "fileReplacements": [
+                {
+                  "replace": "packages/demo/src/environments/environment.ts",
+                  "with": "packages/demo/src/environments/environment.prod.ts"
+                }
+              ],
+              "outputHashing": "all"
+            },
+            "development": {
+              "buildOptimizer": false,
+              "optimization": false,
+              "vendorChunk": true,
+              "extractLicenses": false,
+              "sourceMap": true,
+              "namedChunks": true
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "serve": {
+          "executor": "@angular-devkit/build-angular:dev-server",
+          "configurations": {
+            "production": {
+              "browserTarget": "demo:build:production"
+            },
+            "development": {
+              "browserTarget": "demo:build:development"
+            }
+          },
+          "defaultConfiguration": "development"
+        },
+        "extract-i18n": {
+          "executor": "@angular-devkit/build-angular:extract-i18n",
+          "options": {
+            "browserTarget": "demo:build"
+          }
+        },
+        "lint": {
+          "executor": "@nrwl/linter:eslint",
+          "options": {
+            "lintFilePatterns": [
+              "packages/demo/src/**/*.ts",
+              "packages/demo/src/**/*.html"
+            ]
+          }
+        },
+        "test": {
+          "executor": "@nrwl/jest:jest",
+          "outputs": ["coverage/packages/demo", "./.reports/jest/demo.junit.xml"],
+          "options": {
+            "jestConfig": "packages/demo/jest.config.js",
+            "passWithNoTests": true
+          }
+        },
+        "deploy-dist-to-hosting": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "command": "firebase deploy --only hosting"
+          }
+        },
+        "deploy": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "commands": [
+              {
+                "command": "npx nx build demo"
+              },
+              {
+                "command": "npx nx deploy-dist-to-hosting demo"
+              }
+            ],
+            "parallel": false
+          }
+        }
+      },
+      "tags": []
+    },
+    "demo-api": {
+      "root": "packages/demo-api",
+      "sourceRoot": "packages/demo-api/src",
+      "projectType": "application",
+      "targets": {
+        "build": {
+          "executor": "@nrwl/node:build",
+          "outputs": ["{options.outputPath}"],
+          "options": {
+            "outputPath": "dist/packages/demo-api",
+            "main": "packages/demo-api/src/main.ts",
+            "tsConfig": "packages/demo-api/tsconfig.app.json",
+            "assets": ["packages/demo-api/src/assets"],
+            "generatePackageJson": true
+          },
+          "configurations": {
+            "production": {
+              "optimization": true,
+              "extractLicenses": true,
+              "inspect": false,
+              "fileReplacements": [
+                {
+                  "replace": "packages/demo-api/src/environments/environment.ts",
+                  "with": "packages/demo-api/src/environments/environment.prod.ts"
+                }
+              ]
+            }
+          }
+        },
+        "run-emulators": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "command": "firebase emulators:start"
+          }
+        },
+        "serve-api": {
+          "executor": "@nrwl/node:execute",
+          "options": {
+            "buildTarget": "demo-api:build"
+          }
+        },
+        "serve": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "commands": [
+              {
+                "command": "npx nx build demo-api --watch"
+              },
+              {
+                "command": "npx nx run-emulators demo-api"
+              }
+            ],
+            "parallel": true
+          }
+        },
+        "lint": {
+          "executor": "@nrwl/linter:eslint",
+          "outputs": ["{options.outputFile}"],
+          "options": {
+            "lintFilePatterns": ["packages/demo-api/**/*.ts"]
+          }
+        },
+        "test": {
+          "executor": "@nrwl/jest:jest",
+          "outputs": ["coverage/packages/demo-api", "./.reports/jest/demo-api"],
+          "options": {
+            "jestConfig": "packages/demo-api/jest.config.js",
+            "passWithNoTests": true
+          }
+        },
+        "deploy-dist-to-functions": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "command": "firebase deploy --only functions"
+          }
+        },
+        "deploy": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "commands": [
+              {
+                "command": "npx nx build demo-api"
+              },
+              {
+                "command": "npx nx deploy-dist-to-functions demo-api"
+              }
+            ],
+            "parallel": false
+          }
+        }
+      },
+      "tags": []
+    },
+    "demo-e2e": {
+      "root": "packages/demo-e2e",
+      "sourceRoot": "packages/demo-e2e/src",
+      "projectType": "application",
+      "targets": {
+        "e2e": {
+          "executor": "@nrwl/cypress:cypress",
+          "options": {
+            "cypressConfig": "packages/demo-e2e/cypress.json",
+            "devServerTarget": "demo:serve:development"
+          },
+          "configurations": {
+            "production": {
+              "devServerTarget": "demo:serve:production"
+            }
+          }
+        },
+        "lint": {
+          "executor": "@nrwl/linter:eslint",
+          "outputs": ["{options.outputFile}"],
+          "options": {
+            "lintFilePatterns": ["packages/demo-e2e/**/*.{js,ts}"]
+          }
+        }
+      },
+      "tags": [],
+      "implicitDependencies": ["demo"]
+    },
+    "firebase": {
+      "root": "packages/firebase",
+      "sourceRoot": "packages/firebase/src",
+      "projectType": "library",
+      "targets": {
+        "build": {
+          "executor": "@nrwl/node:package",
+          "outputs": ["{options.outputPath}"],
+          "options": {
+            "outputPath": "dist/packages/firebase",
+            "tsConfig": "packages/firebase/tsconfig.lib.json",
+            "packageJson": "packages/firebase/package.json",
+            "main": "packages/firebase/src/index.ts",
+            "assets": ["packages/firebase/*.md"]
+          }
+        },
+        "lint": {
+          "executor": "@nrwl/linter:eslint",
+          "outputs": ["{options.outputFile}"],
+          "options": {
+            "lintFilePatterns": ["packages/firebase/**/*.ts"]
+          }
+        },
+        "run-tests": {
+          "executor": "@nrwl/jest:jest",
+          "outputs": ["coverage/packages/firebase", "./.reports/jest/firebase.junit.xml"],
+          "options": {
+            "jestConfig": "packages/firebase/jest.config.js",
+            "passWithNoTests": true
+          }
+        },
+        "watch": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "command": "./exec-with-emulator.sh 'npx nx run-tests firebase --watch'"
+          }
+        },
+        "test": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "command": "./exec-with-emulator.sh 'npx nx run-tests firebase'"
+          }
+        }
+      },
+      "tags": []
+    },
+    "model": "packages/model",
+    "rxjs": {
+      "root": "packages/rxjs",
+      "sourceRoot": "packages/rxjs/src",
+      "projectType": "library",
+      "targets": {
+        "build": {
+          "executor": "@nrwl/node:package",
+          "outputs": ["{options.outputPath}"],
+          "options": {
+            "outputPath": "dist/packages/rxjs",
+            "tsConfig": "packages/rxjs/tsconfig.lib.json",
+            "packageJson": "packages/rxjs/package.json",
+            "main": "packages/rxjs/src/index.ts",
+            "assets": ["packages/rxjs/*.md"]
+          }
+        },
+        "lint": {
+          "executor": "@nrwl/linter:eslint",
+          "outputs": ["{options.outputFile}"],
+          "options": {
+            "lintFilePatterns": ["packages/rxjs/**/*.ts"]
+          }
+        },
+        "test": {
+          "executor": "@nrwl/jest:jest",
+          "outputs": ["coverage/packages/rxjs", "./.reports/jest/rxjs.junit.xml"],
+          "options": {
+            "jestConfig": "packages/rxjs/jest.config.js",
+            "passWithNoTests": true
+          }
+        }
+      },
+      "tags": []
+    },    
+    "util": {
+      "root": "packages/util",
+      "sourceRoot": "packages/util/src",
+      "projectType": "library",
+      "targets": {
+        "build": {
+          "executor": "@nrwl/node:package",
+          "outputs": ["{options.outputPath}"],
+          "options": {
+            "outputPath": "dist/packages/util",
+            "tsConfig": "packages/util/tsconfig.lib.json",
+            "packageJson": "packages/util/package.json",
+            "main": "packages/util/src/index.ts",
+            "assets": ["packages/util/*.md"]
+          }
+        },
+        "lint": {
+          "executor": "@nrwl/linter:eslint",
+          "outputs": ["{options.outputFile}"],
+          "options": {
+            "lintFilePatterns": ["packages/util/**/*.ts"]
+          }
+        },
+        "test": {
+          "executor": "@nrwl/jest:jest",
+          "outputs": ["coverage/packages/util", "./.reports/jest/util.junit.xml"],
+          "options": {
+            "jestConfig": "packages/util/jest.config.js",
+            "passWithNoTests": true
+          }
+        }
+      },
+      "tags": []
+    },    
+    "workspace": {
+      "root": ".",
+      "targets": {
+        "version": {
+          "executor": "@jscutlery/semver:version",
+          "options": {
+            "syncVersions": true,
+            "commitMessageFormat": "release(${projectName}): release version ${version}",
+            "baseBranch": "main"
+          }
+        }
+      }
+    }
   }
 }

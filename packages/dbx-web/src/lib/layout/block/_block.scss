@@ -1,0 +1,9 @@
+
+.two-blocks {
+  height: 100%;
+  --two-blocks-top-height: 50;
+
+  .bottom-block {
+    height: calc(100% - var(--two-blocks-top-height));
+  }
+}

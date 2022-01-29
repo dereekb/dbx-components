@@ -1,0 +1,13 @@
+
+.dbx-action-snackbar {
+  display: flex;
+  align-items: center;
+
+  &.dbx-action-snackbar-success {
+    // background: $success-color;
+  }
+
+  &.dbx-action-snackbar-error {
+    // background: red;
+  }
+}
