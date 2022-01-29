@@ -126,7 +126,7 @@ jobs:
 workflows:
   version: 2
   # builds and tests the content. Occurs on every branch.
-  build-and-test:
+  build-and-test-and-version:
     jobs:
       - build
       - test-with-node:
@@ -135,10 +135,6 @@ workflows:
       - test-with-node-firebase:
           requires:
             - build
-  # TODO: Publish demo to firebase hosting as prerelease
-  # Publishes all packages.
-  run-version:
-    jobs:
       - run-version:
           requires:
             - test-with-node
