@@ -1,0 +1,120 @@
+import { Directive, Input, Output, EventEmitter, OnDestroy, OnInit } from '@angular/core';
+import { Maybe } from '@dereekb/util';
+import { BehaviorSubject, of, Subject } from 'rxjs';
+import { filter, first, switchMap } from 'rxjs/operators';
+import { AbstractSubscriptionDirective } from '../subscription';
+import { DbNgxButton, DbNgxButtonInterceptor, ProvideDbNgxButton } from './button';
+
+/**
+ * Abstract button component.
+ */
+@Directive()
+export abstract class AbstractDbNgxButtonDirective extends AbstractSubscriptionDirective implements DbNgxButton, OnInit, OnDestroy {
+
+  private _disabled = new BehaviorSubject<boolean>(false);
+  private _working = new BehaviorSubject<boolean>(false);
+
+  readonly disabled$ = this._disabled.asObservable();
+  readonly working$ = this._working.asObservable();
+
+  @Input()
+  get disabled(): boolean {
+    return this._disabled.value;
+  }
+
+  set disabled(disabled: boolean) {
+    this._disabled.next(disabled);
+  }
+
+  @Input()
+  get working(): boolean {
+    return this._working.value;
+  }
+
+  set working(working: boolean) {
+    this._working.next(working);
+  }
+
+  @Input()
+  icon?: string;
+
+  @Input()
+  text?: string;
+
+  @Output()
+  readonly buttonClick = new EventEmitter();
+
+  readonly clicked$ = this.buttonClick.asObservable();
+
+  constructor() {
+    super();
+  }
+
+  /**
+   * Pre-interceptor button click.
+   */
+  protected _buttonClick = new Subject<void>();
+  protected _buttonInterceptor = new BehaviorSubject<Maybe<DbNgxButtonInterceptor>>(undefined);
+
+  ngOnInit(): void {
+    this.sub = this._buttonClick.pipe(
+      switchMap(() => this._buttonInterceptor.pipe(
+        switchMap((x) => {
+          if (x) {
+            return x.interceptButtonClick().pipe(
+              first()
+            );
+          } else {
+            return of(true);
+          }
+        }),
+        filter((x) => Boolean(x)) // Ignore false values.
+      ))
+    ).subscribe(() => {
+      this._forceButtonClicked();
+    });
+  }
+
+  override ngOnDestroy(): void {
+    super.ngOnDestroy();
+    this._disabled.complete();
+    this._working.complete();
+    this._buttonClick.complete();
+    this._buttonInterceptor.complete();
+  }
+
+  /**
+   * Sets the button interceptor. If any interceptor is already set, it is replaced.
+   */
+  public setButtonInterceptor(interceptor: DbNgxButtonInterceptor): void {
+    this._buttonInterceptor.next(interceptor);
+  }
+
+  /**
+   * Main function to use for handling clicks on the button.
+   */
+  public clickButton(): void {
+    if (!this.disabled) {
+      this._buttonClick.next();
+    }
+  }
+
+  /**
+   * Forces a button click. Skips the interceptors if any are configured.
+   */
+  protected _forceButtonClicked(): void {
+    this.buttonClick.emit();
+  }
+
+}
+
+// MARK: Implementation
+/**
+ * Provides an DbNgxButton directive.
+ */
+@Directive({
+  selector: '[dbxButton]',
+  exportAs: 'dbxButton',
+  providers: ProvideDbNgxButton(DbNgxButtonDirective)
+})
+export class DbNgxButtonDirective extends AbstractDbNgxButtonDirective { }

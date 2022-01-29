@@ -1,0 +1,33 @@
+<div class="dbx-searchable-field">
+  <!-- Autocomplete -->
+  <mat-autocomplete #auto="matAutocomplete" (optionSelected)="selected($event)">
+    <mat-option *ngFor="let displayValue of (searchResults$ | async)" [value]="displayValue">
+      <dbx-searchable-field-autocomplete-item-component [displayValue]="displayValue">
+      </dbx-searchable-field-autocomplete-item-component>
+    </mat-option>
+  </mat-autocomplete>
+  <!-- Template -->
+  <ng-template #content>
+    <mat-form-field class="dbx-searchable-field-form-field">
+      <mat-label>{{ label }}</mat-label>
+      <!-- TODO: Add back aria-label  [attr.aria-label]="'email ' + emailParticipantsType" -->
+      <mat-chip-list [required]="required" [disabled]="readonly" #chipList>
+        <mat-chip *ngFor="let displayValue of displayValues$ | async" [removable]="true"
+          (removed)="removeWithDisplayValue(displayValue)">
+          <span class="s-chip-label">{{ displayValue.label }}</span>
+          <span class="s-chip-sublabel" *ngIf="displayValue.sublabel">({{ displayValue.sublabel }})</span>
+          <mat-icon *ngIf="!readonly" matChipRemove>cancel</mat-icon>
+        </mat-chip>
+        <input #textInput [name]="name" [placeholder]="placeholder" [formControl]="inputCtrl" [matAutocomplete]="auto"
+          autocomplete="{{ autocomplete }}" [matChipInputFor]="chipList" (keydown)="tabPressedOnInput($event)"
+          [matChipInputSeparatorKeyCodes]="separatorKeysCodes" (matChipInputTokenEnd)="addChip($event)">
+      </mat-chip-list>
+      <mat-hint *ngIf="description">{{ description }}</mat-hint>
+    </mat-form-field>
+    <div class="searchable-field-form-loading">
+      <dbx-loading [linear]="true" [context]="searchContext"></dbx-loading>
+    </div>
+  </ng-template>
+  <!-- View -->
+  <ng-container *ngTemplateOutlet="content"></ng-container>
+</div>

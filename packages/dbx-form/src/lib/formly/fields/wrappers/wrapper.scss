@@ -1,0 +1,34 @@
+@import 'shared';
+
+.form-section {
+  margin-bottom: $form-section-margin;
+
+  h3,h4 {
+    margin-bottom: 0;
+  }
+
+  .form-section-content {
+    // padding-left: 12px;
+  }
+
+}
+
+.form-wrapped-component {
+  margin: $form-section-margin 0;
+}
+
+.form-info-section-info {
+  margin-left: 4px;
+}
+
+.form-flex-section {}
+
+.form-expandable-section-button {
+  text-decoration: underline;
+  margin-right: 8px;
+  margin-bottom: 6px;
+}
+
+.form-toggle-wrapper {
+  margin-bottom: $form-section-margin;
+}
