@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/date",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "type": "commonjs",
   "peerDependencies": {
     "date-fns": "2.28.0",
