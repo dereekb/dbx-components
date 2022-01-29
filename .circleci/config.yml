@@ -98,13 +98,13 @@ jobs:
             - "d9:53:28:55:d6:96:4e:1e:d1:53:5e:79:e4:80:7e:28"
       - run:
           name: setup git
-          command: git config user.email "ci@dereekb.com" & git config user.name "ci"
+          command: git config user.email "ci@dereekb.com" && git config user.name "ci"
       - run:
           name: build release
           command: npx nx run workspace:version
       - run:
           name: rebase main onto release
-          command: git checkout main & git rebase ${CIRCLE_SHA1}
+          command: git checkout testd && git merge ${CIRCLE_SHA1} --squash && git commit -m "git log ${CIRCLE_SHA1} --pretty=%B | cat" 
       - run:
           name: push to origin
           command: git push
@@ -159,4 +159,3 @@ workflows:
           filters:
             branches:
               only: main
-
