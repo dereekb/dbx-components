@@ -32,6 +32,12 @@
             "jestConfig": "packages/date/jest.config.js",
             "passWithNoTests": true
           }
+        },
+        "publish-npmjs": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "command": "cd ./dist/packages/date && npm publish"
+          }
         }
       },
       "tags": []
@@ -74,6 +80,12 @@
               "packages/dbx-analytics/src/**/*.html"
             ]
           }
+        },
+        "publish-npmjs": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "command": "cd ./dist/packages/dbx-analytics && npm publish"
+          }
         }
       },
       "tags": []
@@ -115,6 +127,12 @@
               "packages/dbx-core/src/**/*.ts",
               "packages/dbx-core/src/**/*.html"
             ]
+          }
+        },
+        "publish-npmjs": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "command": "cd ./dist/packages/dbx-core && npm publish"
           }
         }
       },
@@ -170,6 +188,12 @@
               "packages/dbx-firebase/src/**/*.html"
             ]
           }
+        },
+        "publish-npmjs": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "command": "cd ./dist/packages/dbx-firebase && npm publish"
+          }
         }
       },
       "tags": []
@@ -212,6 +236,12 @@
               "packages/dbx-form/src/**/*.html"
             ]
           }
+        },
+        "publish-npmjs-TODO": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "command": "cd ./dist/packages/dbx-form && npm publish"
+          }
         }
       },
       "tags": []
@@ -253,6 +283,12 @@
               "packages/dbx-web/src/**/*.ts",
               "packages/dbx-web/src/**/*.html"
             ]
+          }
+        },
+        "publish-npmjs": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "command": "cd ./dist/packages/dbx-web && npm publish"
           }
         }
       },
@@ -535,6 +571,12 @@
           "options": {
             "command": "./exec-with-emulator.sh 'npx nx run-tests firebase'"
           }
+        },
+        "publish-npmjs": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "command": "cd ./dist/packages/firebase && npm publish"
+          }
         }
       },
       "tags": []
@@ -570,6 +612,12 @@
             "jestConfig": "packages/rxjs/jest.config.js",
             "passWithNoTests": true
           }
+        },
+        "publish-npmjs": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "command": "cd ./dist/packages/rxjs && npm publish"
+          }
         }
       },
       "tags": []
@@ -604,6 +652,12 @@
             "jestConfig": "packages/util/jest.config.js",
             "passWithNoTests": true
           }
+        },
+        "publish-npmjs": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "command": "cd ./dist/packages/util && npm publish"
+          }
         }
       },
       "tags": []
@@ -615,7 +669,7 @@
           "executor": "@jscutlery/semver:version",
           "options": {
             "syncVersions": true,
-            "commitMessageFormat": "release(${projectName}): release version ${version}"
+            "commitMessageFormat": "release(${projectName}): ${version} release"
           }
         }
       }
