@@ -105,6 +105,13 @@ jobs:
       - run:
           name: push to main
           command: git status & echo 'pushing to main!'
+  deploy-demo:
+    <<: *defaults
+    steps:
+      - checkout
+      - run:
+          name: deploy updated projects
+          command: nx affected --target=deploy  # deploy any updated projects
   # Publishes content to npm. This should occur after running a release.
   publish-to-npm:
     <<: *defaults
@@ -115,10 +122,6 @@ jobs:
       - run: echo pushing to npm
   # Used to automatically rebase develop onto main.
   merge-main-into-develop:
-    <<: *defaults
-    steps:
-      - checkout
-  deploy-demo:
     <<: *defaults
     steps:
       - checkout
@@ -137,6 +140,7 @@ workflows:
             - build
       - run-version:
           requires:
+            - build
             - test-with-node
             - test-with-node-firebase
           filters:
@@ -145,17 +149,15 @@ workflows:
   # Publishes to npm
   publish:
     jobs:
-      - publish-to-npm:
+      - build:
           filters:
             branches:
               only: master
-  # Deploys the demo to firebase.
-  deploy:
-    jobs:
-      - build
       - deploy-demo:
-          requires:
-            - build
+          filters:
+            branches:
+              only: master
+      - publish-to-npm:
           filters:
             branches:
               only: master
