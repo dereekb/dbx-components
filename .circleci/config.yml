@@ -103,10 +103,10 @@ jobs:
           name: build release
           command: npx nx run workspace:version
       - run:
-          name: rebase main onto release
-          command: git checkout testd && git merge ${CIRCLE_SHA1} --squash && git commit -m "git log ${CIRCLE_SHA1} --pretty=%B | cat" 
+          name: merge release into main and use the release commit message
+          command: git checkout testd && git merge ${CIRCLE_SHA1} --squash && git commit -m "$(git log ${CIRCLE_SHA1} --pretty=%B | cat)"
       - run:
-          name: push to origin
+          name: push main to origin
           command: git push
   deploy-demo:
     <<: *defaults
