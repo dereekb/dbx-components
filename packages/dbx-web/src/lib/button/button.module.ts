@@ -4,11 +4,11 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatProgressButtonsModule } from 'mat-progress-buttons';
 import { DbNgxButtonComponent } from './button.component';
 import { DbNgxButtonSpacerComponent } from './button.spacer.component';
-import { BrowserModule } from '@angular/platform-browser';
+import { CommonModule } from '@angular/common';
 
 @NgModule({
   imports: [
-    BrowserModule,
+    CommonModule,
     MatIconModule,
     MatButtonModule,
     MatProgressButtonsModule

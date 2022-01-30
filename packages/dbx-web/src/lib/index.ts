@@ -7,3 +7,4 @@ export * from './loading';
 export * from './layout';
 export * from './router';
 export * from './text';
+export * from './dbx-web.module';
