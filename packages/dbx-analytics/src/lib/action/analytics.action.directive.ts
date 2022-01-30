@@ -3,7 +3,7 @@ import { switchMap, tap, shareReplay } from 'rxjs/operators';
 import { Host, Directive, Input, OnInit, OnDestroy } from '@angular/core';
 import { BehaviorSubject, merge, Observable, of } from 'rxjs';
 import { ActionContextStoreSourceInstance, AbstractSubscriptionDirective } from '@dereekb/dbx-core';
-import { DbNgxAnalyticsService } from '../analytics.service';
+import { DbNgxAnalyticsService } from '../analytics/analytics.service';
 import { Maybe, ReadableError } from '@dereekb/util';
 
 export enum DbNgxActionAnalyticsTriggerType {

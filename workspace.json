@@ -350,7 +350,8 @@
             "inlineStyleLanguage": "scss",
             "assets": [
               "packages/demo/src/favicon.ico",
-              "packages/demo/src/assets"
+              "packages/demo/src/assets",
+              "packages/demo/src/lib"
             ],
             "styles": ["packages/demo/src/styles.scss"],
             "scripts": []

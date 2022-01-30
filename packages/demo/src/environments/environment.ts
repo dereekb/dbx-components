@@ -4,6 +4,10 @@
 
 export const environment = {
   production: false,
+  testing: true,
+  analytics: {
+    segment: '0GAAlnvz7dqWk5N6t3Cw89Ep6N1G1MQM'
+  }
 };
 
 /*

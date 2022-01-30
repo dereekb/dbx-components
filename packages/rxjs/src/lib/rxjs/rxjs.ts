@@ -1,4 +1,4 @@
-import { combineLatest, Observable, of, isObservable } from 'rxjs';
+import { combineLatest, Observable, of, isObservable, MonoTypeOperatorFunction, concatMap, skipWhile } from 'rxjs';
 
 export function combineLatestFromMapValuesObsFn<T, O>(mapToObs: (value: T) => Observable<O>): (map: Map<any, T>) => Observable<O[]> {
   const combineArrayFn = combineLatestFromArrayObsFn(mapToObs);
@@ -24,4 +24,17 @@ export function asObservable<T>(valueOrObs: T | Observable<T>): Observable<T> {
   } else {
     return of(valueOrObs);
   }
+}
+
+/**
+ * Taps once on the first element.
+ * 
+ * @param tap 
+ * @returns 
+ */
+export function tapFirst<T>(tap: (value: T) => void): MonoTypeOperatorFunction<T> {
+  return skipWhile((value) => {
+    tap(value);
+    return false;
+  });
 }

@@ -1,7 +1,7 @@
-import { Observable, Subject, BehaviorSubject, of } from 'rxjs';
+import { Observable, Subject, BehaviorSubject, of, Subscription } from 'rxjs';
 import { filter, first, shareReplay, switchMap } from 'rxjs/operators';
 import { Inject, Injectable, Optional } from '@angular/core';
-import { SubscriptionObject } from '@dereekb/rxjs';
+import { SubscriptionObject, filterMaybe } from '@dereekb/rxjs';
 import { AnalyticsEvent, AnalyticsEventData, AnalyticsEventName, AnalyticsUser, NewUserAnalyticsEventData, UserAnalyticsEvent } from './analytics';
 import { AnalyticsStreamEvent, AnalyticsStreamEventType } from './analytics.stream';
 import { Maybe, Destroyable } from '@dereekb/util';
@@ -28,22 +28,34 @@ export abstract class DbNgxAnalyticsServiceListener {
   public abstract listenToService(service: DbNgxAnalyticsService): void;
 }
 
-export abstract class AbstractAnalyticsServiceListener implements DbNgxAnalyticsServiceListener {
+/**
+ * Abstract DbNgxAnalyticsServiceListener implementation.
+ */
+export abstract class AbstractAnalyticsServiceListener implements DbNgxAnalyticsServiceListener, Destroyable {
 
-  protected _service?: DbNgxAnalyticsService;
-  protected _sub = new SubscriptionObject();
+  private _sub = new SubscriptionObject();
+  protected _analytics = new BehaviorSubject<Maybe<DbNgxAnalyticsService>>(undefined);
 
-  public listenToService(service: DbNgxAnalyticsService): void {
-    this._service = service;
-    this._sub.subscription = service.events$.pipe(filter((e) => this.filterEvent(e)))
-      .subscribe((event) => this.updateOnStreamEvent(event));
+  readonly analytics$ = this._analytics.pipe(filterMaybe(), shareReplay(1));
+  readonly analyticsEvents$ = this.analytics$.pipe(switchMap(x => x.events$), shareReplay(1));
+
+  // MARK: DbNgxAnalyticsServiceListener
+  listenToService(service: DbNgxAnalyticsService): void {
+    this._analytics.next(service);
+    const sub = this._initializeServiceSubscription();
+
+    if (sub !== false) {
+      this._sub.subscription = sub;
+    }
   }
 
-  protected filterEvent(streamEvent: AnalyticsStreamEvent): boolean {
-    return true;
-  }
+  protected abstract _initializeServiceSubscription(): Subscription | false;
 
-  protected abstract updateOnStreamEvent(event: AnalyticsStreamEvent): void;
+  // MARK: Destroy
+  destroy(): void {
+    this._analytics.complete();
+    this._sub.destroy();
+  }
 
 }
 
