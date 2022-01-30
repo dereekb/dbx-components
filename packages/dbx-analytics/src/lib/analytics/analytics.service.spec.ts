@@ -1,6 +1,6 @@
 import {
-  DbNgxAnalyticsService, DbNgxAnalyticsServiceConfiguration,
-  DbNgxAnalyticsUserSource, AbstractAnalyticsServiceListener
+  AnalyticsService, AnalyticsServiceConfiguration,
+  AnalyticsUserSource, AbstractAnalyticsServiceListener
 } from './analytics.service';
 import { BehaviorSubject, Subject } from 'rxjs';
 import { AnalyticsUser } from './analytics';
@@ -22,20 +22,20 @@ describe('Analytics Service', () => {
 
   const testListener: TestAnalyticsServiceListener = new TestAnalyticsServiceListener();
 
-  const testUserSource: DbNgxAnalyticsUserSource = {
+  const testUserSource: AnalyticsUserSource = {
     analyticsUser$: userStream
   };
 
-  let analyticsService: DbNgxAnalyticsService;
+  let analyticsService: AnalyticsService;
 
   beforeEach(() => {
-    const configuration: DbNgxAnalyticsServiceConfiguration = {
+    const configuration: AnalyticsServiceConfiguration = {
       listeners: [testListener],
       isProduction: true,
       userSource: testUserSource
     };
 
-    analyticsService = new DbNgxAnalyticsService(configuration);
+    analyticsService = new AnalyticsService(configuration);
   });
 
   it('#sendPageView() should send a page view event', (done) => {

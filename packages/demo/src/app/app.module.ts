@@ -1,4 +1,4 @@
-import { DbNgxAnalyticsModule, DbNgxAnalyticsService, SegmentModule } from '@dereekb/dbx-analytics';
+import { DbNgxAnalyticsModule, AnalyticsService, SegmentModule } from '@dereekb/dbx-analytics';
 import { AppLayoutComponent } from './container/layout.component';
 import { Injector, NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
@@ -7,11 +7,11 @@ import { AppSharedModule } from '@/shared/app.shared.module';
 import { ROOT_STATES } from './app.router';
 import { environment } from '../environments/environment';
 import { DbNgxWebRootModule, DbNgxWebUIRouterModule } from '@dereekb/dbx-web';
-import { DbNgxAnalyticsServiceConfiguration, SegmentAnalyticsListenerService, SegmentApiService, SegmentApiServiceConfig } from '@dereekb/dbx-analytics';
+import { AnalyticsServiceConfiguration, SegmentAnalyticsListenerService, SegmentApiService, SegmentApiServiceConfig } from '@dereekb/dbx-analytics';
 
 export function routerConfigFn(router: UIRouter, injector: Injector, module: StatesModule): any {
   const transitionService = router.transitionService;
-  const service: DbNgxAnalyticsService = injector.get<DbNgxAnalyticsService>(DbNgxAnalyticsService);
+  const service: AnalyticsService = injector.get<AnalyticsService>(AnalyticsService);
 
   transitionService.onSuccess({}, () => {
     // Send a page view on each successful transition.
@@ -30,10 +30,10 @@ export function routerConfigFn(router: UIRouter, injector: Injector, module: Sta
   return undefined;
 }
 
-export function analyticsServiceConfigurationFactory(segmentApi: SegmentApiService): DbNgxAnalyticsServiceConfiguration {
+export function analyticsServiceConfigurationFactory(segmentApi: SegmentApiService): AnalyticsServiceConfiguration {
   const segmentListener = new SegmentAnalyticsListenerService(segmentApi);
 
-  const config: DbNgxAnalyticsServiceConfiguration = {
+  const config: AnalyticsServiceConfiguration = {
     isProduction: environment.production,
     logEvents: environment.testing,
     listeners: [
@@ -58,7 +58,7 @@ export function makeSegmentConfig(): SegmentApiServiceConfig {
     DbNgxWebRootModule,
     DbNgxAnalyticsModule.forRoot({
       analyticsConfigurationProvider: {
-        provide: DbNgxAnalyticsServiceConfiguration,
+        provide: AnalyticsServiceConfiguration,
         useFactory: analyticsServiceConfigurationFactory,
         deps: [SegmentApiService]
       }

@@ -1,5 +1,5 @@
 import { NgModule, ModuleWithProviders, Provider } from '@angular/core';
-import { DbNgxAnalyticsService } from './analytics.service';
+import { AnalyticsService } from './analytics.service';
 
 
 export interface DbNgxAnalyticsModuleOptions {
@@ -21,7 +21,7 @@ export class DbNgxAnalyticsModule {
         // Configuration
         options.analyticsConfigurationProvider,
         // Service
-        DbNgxAnalyticsService
+        AnalyticsService
       ]
     };
   }

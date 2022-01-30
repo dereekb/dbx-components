@@ -9,4 +9,4 @@ import { DbNgxActionAnalyticsDirective } from './analytics.action.directive';
     DbNgxActionAnalyticsDirective
   ]
 })
-export class DbNgxAnalyticsActionModule { }
+export class AnalyticsActionModule { }

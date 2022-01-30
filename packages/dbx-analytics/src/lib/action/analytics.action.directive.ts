@@ -3,7 +3,7 @@ import { switchMap, tap, shareReplay } from 'rxjs/operators';
 import { Host, Directive, Input, OnInit, OnDestroy } from '@angular/core';
 import { BehaviorSubject, merge, Observable, of } from 'rxjs';
 import { ActionContextStoreSourceInstance, AbstractSubscriptionDirective } from '@dereekb/dbx-core';
-import { DbNgxAnalyticsService } from '../analytics/analytics.service';
+import { AnalyticsService } from '../analytics/analytics.service';
 import { Maybe, ReadableError } from '@dereekb/util';
 
 export enum DbNgxActionAnalyticsTriggerType {
@@ -14,10 +14,10 @@ export enum DbNgxActionAnalyticsTriggerType {
 }
 
 export interface DbNgxActionAnalyticsConfig<T = any, O = any> {
-  onTriggered: (service: DbNgxAnalyticsService) => void;
-  onReady: (service: DbNgxAnalyticsService, value: T) => void;
-  onSuccess: (service: DbNgxAnalyticsService, value: Maybe<O>) => void;
-  onError: (service: DbNgxAnalyticsService, error: Maybe<ReadableError>) => void;
+  onTriggered: (service: AnalyticsService) => void;
+  onReady: (service: AnalyticsService, value: T) => void;
+  onSuccess: (service: AnalyticsService, value: Maybe<O>) => void;
+  onError: (service: AnalyticsService, error: Maybe<ReadableError>) => void;
 }
 
 /**
@@ -42,7 +42,7 @@ export class DbNgxActionAnalyticsDirective<T> extends AbstractSubscriptionDirect
 
   constructor(
     @Host() readonly source: ActionContextStoreSourceInstance,
-    readonly analyticsService: DbNgxAnalyticsService
+    readonly analyticsService: AnalyticsService
   ) {
     super();
   }
