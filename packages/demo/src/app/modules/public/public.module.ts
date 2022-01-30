@@ -1,0 +1,15 @@
+import { NgModule } from '@angular/core';
+import { UIRouterModule } from '@uirouter/angular';
+import { STATES } from './public.router';
+import { AppSharedModule } from '@/shared/app.shared.module';
+
+@NgModule({
+  imports: [
+    AppSharedModule,
+    UIRouterModule.forChild({
+      states: STATES
+    })
+  ],
+  declarations: [],
+})
+export class PublicModule { }

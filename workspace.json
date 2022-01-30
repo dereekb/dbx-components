@@ -84,7 +84,7 @@
       "projectType": "library",
       "root": "packages/dbx-analytics",
       "sourceRoot": "packages/dbx-analytics/src",
-      "prefix": "dereekb",
+      "prefix": "dbx",
       "targets": {
         "build": {
           "executor": "@nrwl/angular:package",
@@ -132,7 +132,7 @@
       "projectType": "library",
       "root": "packages/dbx-core",
       "sourceRoot": "packages/dbx-core/src",
-      "prefix": "dereekb",
+      "prefix": "dbx",
       "targets": {
         "build": {
           "executor": "@nrwl/angular:package",
@@ -180,7 +180,7 @@
       "projectType": "library",
       "root": "packages/dbx-firebase",
       "sourceRoot": "packages/dbx-firebase/src",
-      "prefix": "dereekb",
+      "prefix": "dbx",
       "targets": {
         "build": {
           "executor": "@nrwl/angular:package",
@@ -240,7 +240,7 @@
       "projectType": "library",
       "root": "packages/dbx-form",
       "sourceRoot": "packages/dbx-form/src",
-      "prefix": "dereekb",
+      "prefix": "dbx",
       "targets": {
         "build": {
           "executor": "@nrwl/angular:package",
@@ -288,7 +288,7 @@
       "projectType": "library",
       "root": "packages/dbx-web",
       "sourceRoot": "packages/dbx-web/src",
-      "prefix": "dereekb",
+      "prefix": "dbx",
       "targets": {
         "build": {
           "executor": "@nrwl/angular:package",
@@ -336,7 +336,7 @@
       "projectType": "application",
       "root": "packages/demo",
       "sourceRoot": "packages/demo/src",
-      "prefix": "dereekb",
+      "prefix": "app",
       "targets": {
         "build": {
           "executor": "@angular-devkit/build-angular:browser",
