@@ -19,15 +19,7 @@
     "noImplicitOverride": true,
     "noPropertyAccessFromIndexSignature": true,
     "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
-    "paths": {
-      /* 
-        Configure ability to access the shared app module directory via @shared in ts files.
-
-        Since Nx executes this project from the root folder, our paths extend from the root folder.
-      */
-      "@/shared/*": ["packages/demo/src/app/modules/shared/*"]
-    }
+    "noFallthroughCasesInSwitch": true
   },
   "angularCompilerOptions": {
     "strictInjectionParameters": true,
