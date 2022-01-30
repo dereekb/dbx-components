@@ -14,7 +14,7 @@ import { Component, Input } from '@angular/core';
   `,
   // TODO: styleUrls: ['./popup.scss']
 })
-export class DbNgxPopupControlsComponent {
+export class DbxPopupControlsComponent {
 
   @Input()
   header?: string;

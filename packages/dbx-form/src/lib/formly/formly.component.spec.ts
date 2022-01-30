@@ -7,7 +7,7 @@ import { formlyField } from './fields/field';
 import { AbstractControl } from '@angular/forms';
 import { FORM_TEST_PROVIDERS } from './formly.spec';
 
-describe('DbNgxInputFormControlComponent', () => {
+describe('DbxInputFormControlComponent', () => {
 
   beforeEach(async () => {
     TestBed.configureTestingModule({
@@ -15,16 +15,16 @@ describe('DbNgxInputFormControlComponent', () => {
         ...FORM_TEST_PROVIDERS
       ],
       declarations: [
-        DbNgxTestDbNgxFormComponent
+        DbxTestDbxFormComponent
       ]
     }).compileComponents();
   });
 
-  let testComponent: DbNgxTestDbNgxFormComponent;
-  let fixture: ComponentFixture<DbNgxTestDbNgxFormComponent>;
+  let testComponent: DbxTestDbxFormComponent;
+  let fixture: ComponentFixture<DbxTestDbxFormComponent>;
 
   beforeEach(async () => {
-    fixture = TestBed.createComponent(DbNgxTestDbNgxFormComponent);
+    fixture = TestBed.createComponent(DbxTestDbxFormComponent);
     testComponent = fixture.componentInstance;
     fixture.detectChanges();
   });
@@ -62,7 +62,7 @@ export function testTextField(): FormlyFieldConfig {
   selector: 'dbx-test-dbx-form',
   providers: [ProvideFormlyContext()]
 })
-export class DbNgxTestDbNgxFormComponent extends AbstractSyncFormlyFormDirective<TestFormValue> {
+export class DbxTestDbxFormComponent extends AbstractSyncFormlyFormDirective<TestFormValue> {
 
   fields: FormlyFieldConfig[] = [
     testTextField()

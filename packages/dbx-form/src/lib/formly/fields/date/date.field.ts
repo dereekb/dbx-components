@@ -1,9 +1,9 @@
 import { Observable, of } from 'rxjs';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { FieldConfig, formlyField } from '../field';
-import { DbNgxDateTimeFieldConfig, DateTimeFieldTimeMode, DateTimeFormlyFieldConfig, DateTimePickerConfiguration } from './datetime.field.component';
+import { DbxDateTimeFieldConfig, DateTimeFieldTimeMode, DateTimeFormlyFieldConfig, DateTimePickerConfiguration } from './datetime.field.component';
 
-export interface DateTimeFieldConfig extends FieldConfig, DbNgxDateTimeFieldConfig { }
+export interface DateTimeFieldConfig extends FieldConfig, DbxDateTimeFieldConfig { }
 export interface TimeFieldConfig extends Omit<DateTimeFieldConfig, 'showDate'> { }
 
 export const TAKE_NEXT_UPCOMING_TIME_CONFIG_OBS: () => Observable<DateTimePickerConfiguration> = () => of({

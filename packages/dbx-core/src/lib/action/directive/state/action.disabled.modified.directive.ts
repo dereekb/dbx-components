@@ -10,7 +10,7 @@ export const APP_ACTION_DISABLED_UNTIL_MODIFIED_DIRECTIVE_KEY = 'dbx_action_is_n
 @Directive({
   selector: '[dbxActionDisabledUntilModified]'
 })
-export class DbNgxActionDisabledUntilModifiedDirective<T, O> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
+export class DbxActionDisabledUntilModifiedDirective<T, O> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
 
   constructor(@Host() public readonly source: ActionContextStoreSourceInstance<T, O>) {
     super();

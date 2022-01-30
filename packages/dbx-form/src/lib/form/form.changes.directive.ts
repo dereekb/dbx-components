@@ -1,6 +1,6 @@
 import { Directive, EventEmitter, Host, Output, OnInit } from '@angular/core';
 import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
-import { DbNgxForm } from './form';
+import { DbxForm } from './form';
 
 /**
  * Used to see form value changes.
@@ -8,12 +8,12 @@ import { DbNgxForm } from './form';
 @Directive({
   selector: '[dbxFormValueChange]'
 })
-export class DbNgxFormValueChangesDirective<T extends object = any> extends AbstractSubscriptionDirective implements OnInit {
+export class DbxFormValueChangesDirective<T extends object = any> extends AbstractSubscriptionDirective implements OnInit {
 
   @Output()
   readonly dbxFormValueChange = new EventEmitter<T>();
 
-  constructor(@Host() public readonly form: DbNgxForm) {
+  constructor(@Host() public readonly form: DbxForm) {
     super();
   }
 

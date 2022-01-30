@@ -1,9 +1,9 @@
 import { Component, Input } from '@angular/core';
 import { ThemePalette } from '@angular/material/core';
-import { ProvideDbNgxButton, AbstractDbNgxButtonDirective } from '@dereekb/dbx-core';
+import { ProvideDbxButton, AbstractDbxButtonDirective } from '@dereekb/dbx-core';
 import { MatProgressButtonOptions } from 'mat-progress-buttons';
 
-export enum DbNgxButtonDisplayType {
+export enum DbxButtonDisplayType {
   RAISED,
   STROKED,
   FLAT
@@ -18,43 +18,43 @@ export enum DbNgxButtonDisplayType {
     <mat-spinner-button class="page-button" (btnClick)="clickButton()" [options]="btnOptions"></mat-spinner-button>
   `,
   // TODO: styleUrls: ['./button.scss'],
-  providers: ProvideDbNgxButton(DbNgxButtonComponent)
+  providers: ProvideDbxButton(DbxButtonComponent)
 })
-export class DbNgxButtonComponent extends AbstractDbNgxButtonDirective {
+export class DbxButtonComponent extends AbstractDbxButtonDirective {
 
   @Input()
-  type?: DbNgxButtonDisplayType;
+  type?: DbxButtonDisplayType;
 
   @Input()
   get raised(): boolean {
-    return this.type === DbNgxButtonDisplayType.RAISED;
+    return this.type === DbxButtonDisplayType.RAISED;
   }
 
   set raised(raised: boolean) {
     if (raised) {
-      this.type = DbNgxButtonDisplayType.RAISED;
+      this.type = DbxButtonDisplayType.RAISED;
     }
   }
 
   @Input()
   get stroked(): boolean {
-    return this.type === DbNgxButtonDisplayType.STROKED;
+    return this.type === DbxButtonDisplayType.STROKED;
   }
 
   set stroked(stroked: boolean) {
     if (stroked) {
-      this.type = DbNgxButtonDisplayType.STROKED;
+      this.type = DbxButtonDisplayType.STROKED;
     }
   }
 
   @Input()
   get flat(): boolean {
-    return this.type === DbNgxButtonDisplayType.FLAT;
+    return this.type === DbxButtonDisplayType.FLAT;
   }
 
   set flat(flat: boolean) {
     if (flat) {
-      this.type = DbNgxButtonDisplayType.FLAT;
+      this.type = DbxButtonDisplayType.FLAT;
     }
   }
 

@@ -6,12 +6,12 @@ import { AbstractControl, FormControl, ValidationErrors, Validators } from '@ang
 import { FieldType, FormlyFieldConfig } from '@ngx-formly/core';
 import { BehaviorSubject, Observable, of, combineLatest, Subject, merge } from 'rxjs';
 
-export interface DbNgxInternationalPhoneFieldConfig {
+export interface DbxInternationalPhoneFieldConfig {
   preferredCountries?: string[];
   onlyCountries?: string[];
 }
 
-export interface InternationalPhoneFormlyFieldConfig extends DbNgxInternationalPhoneFieldConfig, FormlyFieldConfig { }
+export interface InternationalPhoneFormlyFieldConfig extends DbxInternationalPhoneFieldConfig, FormlyFieldConfig { }
 
 export const DEFAULT_PREFERRED_COUNTRIES = ['us'];
 
@@ -19,7 +19,7 @@ export const DEFAULT_PREFERRED_COUNTRIES = ['us'];
   templateUrl: 'phone.field.component.html',
   // TODO: styleUrls: ['./phone.scss']
 })
-export class DbNgxInternationalPhoneFieldComponent extends FieldType<InternationalPhoneFormlyFieldConfig> {
+export class DbxInternationalPhoneFieldComponent extends FieldType<InternationalPhoneFormlyFieldConfig> {
 
   get label(): string {
     return this.field.templateOptions.label;

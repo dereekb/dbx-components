@@ -1,20 +1,20 @@
 import { Provider, Type } from '@angular/core';
 import { BehaviorSubject, Observable, of } from 'rxjs';
-import { DbNgxForm, DbNgxFormEvent, DbNgxFormState, TypedDbNgxForm } from '../form/form';
+import { DbxForm, DbxFormEvent, DbxFormState, TypedDbxForm } from '../form/form';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { mergeMap } from 'rxjs/operators';
 import { LockSet } from '@dereekb/rxjs';
 import { Maybe } from '@dereekb/util';
 
 /**
- * DbNgxFormlyContext delegate.
+ * DbxFormlyContext delegate.
  * 
  * This is usually the component or element that contains the form itself.
  */
-export interface DbNgxFormlyContextDelegate<T = any> {
+export interface DbxFormlyContextDelegate<T = any> {
   readonly isComplete: boolean;
-  readonly state: DbNgxFormState;
-  readonly stream$: Observable<DbNgxFormEvent>;
+  readonly state: DbxFormState;
+  readonly stream$: Observable<DbxFormEvent>;
   setFields(fields: Maybe<FormlyFieldConfig[]>): void;
   getValue(): T;
   setValue(value: Maybe<Partial<T>>): void;
@@ -29,27 +29,27 @@ export interface DbNgxFormlyContextDelegate<T = any> {
  */
 export function ProvideFormlyContext(): Provider[] {
   return [{
-    provide: DbNgxFormlyContext,
-    useClass: DbNgxFormlyContext
+    provide: DbxFormlyContext,
+    useClass: DbxFormlyContext
   }, {
-    provide: DbNgxForm,
-    useExisting: DbNgxFormlyContext
+    provide: DbxForm,
+    useExisting: DbxFormlyContext
   }];
 }
 
 /**
- * DbNgxForm Instance that registers a delegate and manages the state of that form/delegate.
+ * DbxForm Instance that registers a delegate and manages the state of that form/delegate.
  */
-export class DbNgxFormlyContext<T> implements TypedDbNgxForm<T> {
+export class DbxFormlyContext<T> implements TypedDbxForm<T> {
 
   readonly lockSet = new LockSet();
 
-  private static INITIAL_STATE = { isComplete: false, state: DbNgxFormState.INITIALIZING };
+  private static INITIAL_STATE = { isComplete: false, state: DbxFormState.INITIALIZING };
 
-  private static EMPTY_DELEGATE: DbNgxFormlyContextDelegate<any> = {
+  private static EMPTY_DELEGATE: DbxFormlyContextDelegate<any> = {
     isComplete: false,
-    state: DbNgxFormState.INITIALIZING,
-    stream$: of(DbNgxFormlyContext.INITIAL_STATE),
+    state: DbxFormState.INITIALIZING,
+    stream$: of(DbxFormlyContext.INITIAL_STATE),
     setFields(fields: FormlyFieldConfig[]): void {
       // Do nothing.
     },
@@ -77,8 +77,8 @@ export class DbNgxFormlyContext<T> implements TypedDbNgxForm<T> {
   private _initialValue?: Maybe<Partial<T>>;
   private _disabled: boolean = false;
 
-  private _delegate: DbNgxFormlyContextDelegate<T> = DbNgxFormlyContext.EMPTY_DELEGATE;
-  private _streamSubject = new BehaviorSubject<Observable<DbNgxFormEvent>>(of(DbNgxFormlyContext.INITIAL_STATE));
+  private _delegate: DbxFormlyContextDelegate<T> = DbxFormlyContext.EMPTY_DELEGATE;
+  private _streamSubject = new BehaviorSubject<Observable<DbxFormEvent>>(of(DbxFormlyContext.INITIAL_STATE));
   private _stream$ = this._streamSubject.pipe(mergeMap((stream) => stream));
 
   constructor() { }
@@ -91,15 +91,15 @@ export class DbNgxFormlyContext<T> implements TypedDbNgxForm<T> {
     return this._streamSubject.isStopped;
   }
 
-  setDelegate(delegate?: DbNgxFormlyContextDelegate<T>): void {
-    this._delegate = delegate ?? DbNgxFormlyContext.EMPTY_DELEGATE;
+  setDelegate(delegate?: DbxFormlyContextDelegate<T>): void {
+    this._delegate = delegate ?? DbxFormlyContext.EMPTY_DELEGATE;
     this._streamSubject.next(this._delegate.stream$);
     this._delegate.setFields(this._fields);
     this._delegate.setValue(this._initialValue);
     this._delegate.setDisabled(this._disabled);
   }
 
-  clearDelegate(delegate: DbNgxFormlyContextDelegate<T>): void {
+  clearDelegate(delegate: DbxFormlyContextDelegate<T>): void {
     if (this._delegate === delegate && !this.isDestroyed) {
       this.setDelegate(undefined);
     }
@@ -119,11 +119,11 @@ export class DbNgxFormlyContext<T> implements TypedDbNgxForm<T> {
     return this._delegate.isComplete;
   }
 
-  get state(): DbNgxFormState {
+  get state(): DbxFormState {
     return this._delegate.state;
   }
 
-  get stream$(): Observable<DbNgxFormEvent> {
+  get stream$(): Observable<DbxFormEvent> {
     return this._stream$;
   }
 

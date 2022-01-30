@@ -6,8 +6,8 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { FormlyModule } from '@ngx-formly/core';
-import { DbNgxInternationalPhoneFieldComponent } from './phone.field.component';
-import { DbNgxGenericFieldModule } from '../generic/generic.field.module';
+import { DbxInternationalPhoneFieldComponent } from './phone.field.component';
+import { DbxGenericFieldModule } from '../generic/generic.field.module';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { NgxMatIntlTelInputModule } from 'ngx-mat-intl-tel-input';
 
@@ -24,15 +24,15 @@ import { NgxMatIntlTelInputModule } from 'ngx-mat-intl-tel-input';
     FlexLayoutModule,
     FormlyModule.forChild({
       types: [
-        { name: 'intphone', component: DbNgxInternationalPhoneFieldComponent }
+        { name: 'intphone', component: DbxInternationalPhoneFieldComponent }
       ]
     })
   ],
   declarations: [
-    DbNgxInternationalPhoneFieldComponent
+    DbxInternationalPhoneFieldComponent
   ],
   exports: [
-    DbNgxGenericFieldModule
+    DbxGenericFieldModule
   ]
 })
-export class DbNgxPhoneFieldModule { }
+export class DbxPhoneFieldModule { }

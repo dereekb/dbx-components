@@ -12,7 +12,7 @@ import { DomSanitizer } from '@angular/platform-browser';
   template: `<span class="dbx-linkify" [innerHTML]="linkifiedBody$ | async"></span>`,
   // TODO: styleUrls: ['./text.scss']
 })
-export class DbNgxLinkifyComponent implements OnDestroy {
+export class DbxLinkifyComponent implements OnDestroy {
 
   private _text = new BehaviorSubject<string>('');
 

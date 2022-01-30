@@ -1,5 +1,5 @@
 import { Component, Optional } from '@angular/core';
-import { DbNgxPopoverContentComponent } from './popover.content.component';
+import { DbxPopoverContentComponent } from './popover.content.component';
 
 /**
  * Popover Controls
@@ -13,9 +13,9 @@ import { DbNgxPopoverContentComponent } from './popover.content.component';
   `,
   // TODO: styleUrls: ['./popover.scss']
 })
-export class DbNgxPopoverControlsComponent {
+export class DbxPopoverControlsComponent {
 
-  constructor(@Optional() appPopoverContentComponent: DbNgxPopoverContentComponent) {
+  constructor(@Optional() appPopoverContentComponent: DbxPopoverContentComponent) {
     if (appPopoverContentComponent) {
       appPopoverContentComponent.hasControls = true;
     }

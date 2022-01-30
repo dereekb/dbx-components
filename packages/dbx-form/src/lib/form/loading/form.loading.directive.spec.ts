@@ -2,10 +2,10 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Component, ViewChild, Input, Directive, ContentChild, AfterViewInit, OnInit } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { LoadingState } from '@dereekb/rxjs';
-import { DbNgxFormLoadingPairSourceDirective } from './form.loading.directive';
-import { DbNgxTestDbNgxFormComponent, FORM_TEST_PROVIDERS } from '../formly.component.spec';
+import { DbxFormLoadingPairSourceDirective } from './form.loading.directive';
+import { DbxTestDbxFormComponent, FORM_TEST_PROVIDERS } from '../formly.component.spec';
 
-describe('DbNgxFormLoadingPairSourceDirective', () => {
+describe('DbxFormLoadingPairSourceDirective', () => {
 
   beforeEach(async () => {
     TestBed.configureTestingModule({
@@ -13,20 +13,20 @@ describe('DbNgxFormLoadingPairSourceDirective', () => {
         ...FORM_TEST_PROVIDERS,
       ],
       declarations: [
-        TestDbNgxActionFormDirectiveComponent,
-        DbNgxTestDbNgxFormComponent
+        TestDbxActionFormDirectiveComponent,
+        DbxTestDbxFormComponent
       ]
     }).compileComponents();
   });
 
-  let directive: DbNgxFormLoadingPairSourceDirective;
-  let form: DbNgxTestDbNgxFormComponent;
+  let directive: DbxFormLoadingPairSourceDirective;
+  let form: DbxTestDbxFormComponent;
 
-  let testComponent: TestDbNgxActionFormDirectiveComponent;
-  let fixture: ComponentFixture<TestDbNgxActionFormDirectiveComponent>;
+  let testComponent: TestDbxActionFormDirectiveComponent;
+  let fixture: ComponentFixture<TestDbxActionFormDirectiveComponent>;
 
   beforeEach(async () => {
-    fixture = TestBed.createComponent(TestDbNgxActionFormDirectiveComponent);
+    fixture = TestBed.createComponent(TestDbxActionFormDirectiveComponent);
     testComponent = fixture.componentInstance;
 
     directive = testComponent.directive;
@@ -59,15 +59,15 @@ describe('DbNgxFormLoadingPairSourceDirective', () => {
     </div>
   `
 })
-class TestDbNgxActionFormDirectiveComponent {
+class TestDbxActionFormDirectiveComponent {
 
   source?: Observable<LoadingState<{ text: string }>>;
 
-  @ViewChild(DbNgxFormLoadingPairSourceDirective, { static: true })
-  directive!: DbNgxFormLoadingPairSourceDirective;
+  @ViewChild(DbxFormLoadingPairSourceDirective, { static: true })
+  directive!: DbxFormLoadingPairSourceDirective;
 
-  @ViewChild(DbNgxTestDbNgxFormComponent, { static: true })
-  form!: DbNgxTestDbNgxFormComponent;
+  @ViewChild(DbxTestDbxFormComponent, { static: true })
+  form!: DbxTestDbxFormComponent;
 
   constructor() { }
 

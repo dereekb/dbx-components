@@ -31,7 +31,7 @@ export class WorkHandlerContextSourceDelegate<T = any, O = any> implements WorkH
 }
 
 /**
- * Used by DbNgxActionHandlerDirective when handling a function.
+ * Used by DbxActionHandlerDirective when handling a function.
  */
 export class WorkHandlerContext<T = any, O = any> implements Destroyable {
 

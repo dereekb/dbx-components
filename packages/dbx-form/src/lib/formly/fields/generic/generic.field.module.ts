@@ -8,25 +8,25 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { FormlyModule } from '@ngx-formly/core';
-import { DbNgxSearchableChipFieldComponent } from './searchable.chip.field.component';
-import { DbNgxFormRepeatTypeComponent } from './repeat.field.component';
+import { DbxSearchableChipFieldComponent } from './searchable.chip.field.component';
+import { DbxFormRepeatTypeComponent } from './repeat.field.component';
 import { MatButtonModule } from '@angular/material/button';
 import {
-  DbNgxDefaultSearchableAnchorFieldDisplayComponent, DbNgxDefaultSearchableFieldDisplayComponent,
-  DbNgxSearchableFieldAutocompleteItemComponent
+  DbxDefaultSearchableAnchorFieldDisplayComponent, DbxDefaultSearchableFieldDisplayComponent,
+  DbxSearchableFieldAutocompleteItemComponent
 } from './searchable.field.autocomplete.item.component';
-import { DbNgxSearchableTextFieldComponent } from './searchable.text.field.component';
-import { DbNgxPickableChipFieldComponent } from './pickable.chip.field.component';
-import { DbNgxPickableListFieldComponent } from './pickable.list.field.component';
-import { DbNgxDatePipeModule, DbNgxInjectedComponentModule } from '@dereekb/dbx-core';
-import { DbNgxAnchorModule, DbNgxTextModule, DbNgxLoadingModule, DbNgxButtonModule } from '@dereekb/dbx-web';
+import { DbxSearchableTextFieldComponent } from './searchable.text.field.component';
+import { DbxPickableChipFieldComponent } from './pickable.chip.field.component';
+import { DbxPickableListFieldComponent } from './pickable.list.field.component';
+import { DbxDatePipeModule, DbxInjectedComponentModule } from '@dereekb/dbx-core';
+import { DbxAnchorModule, DbxTextModule, DbxLoadingModule, DbxButtonModule } from '@dereekb/dbx-web';
 
 @NgModule({
   imports: [
     CommonModule,
-    DbNgxTextModule,
-    DbNgxLoadingModule,
-    DbNgxButtonModule,
+    DbxTextModule,
+    DbxLoadingModule,
+    DbxButtonModule,
     FormsModule,
     MatButtonModule,
     MatInputModule,
@@ -34,31 +34,31 @@ import { DbNgxAnchorModule, DbNgxTextModule, DbNgxLoadingModule, DbNgxButtonModu
     ReactiveFormsModule,
     MatAutocompleteModule,
     MatListModule,
-    DbNgxDatePipeModule,
-    DbNgxAnchorModule,
+    DbxDatePipeModule,
+    DbxAnchorModule,
     MatChipsModule,
     MatIconModule,
-    DbNgxInjectedComponentModule,
+    DbxInjectedComponentModule,
     FormlyModule.forChild({
       types: [
-        { name: 'repeat', component: DbNgxFormRepeatTypeComponent },
-        { name: 'pickablechipfield', component: DbNgxPickableChipFieldComponent },
-        { name: 'pickablelistfield', component: DbNgxPickableListFieldComponent },
-        { name: 'searchablechipfield', component: DbNgxSearchableChipFieldComponent },
-        { name: 'searchabletextfield', component: DbNgxSearchableTextFieldComponent }
+        { name: 'repeat', component: DbxFormRepeatTypeComponent },
+        { name: 'pickablechipfield', component: DbxPickableChipFieldComponent },
+        { name: 'pickablelistfield', component: DbxPickableListFieldComponent },
+        { name: 'searchablechipfield', component: DbxSearchableChipFieldComponent },
+        { name: 'searchabletextfield', component: DbxSearchableTextFieldComponent }
       ]
     })
   ],
   declarations: [
-    DbNgxFormRepeatTypeComponent,
-    DbNgxPickableChipFieldComponent,
-    DbNgxPickableListFieldComponent,
-    DbNgxSearchableChipFieldComponent,
-    DbNgxSearchableTextFieldComponent,
-    DbNgxSearchableFieldAutocompleteItemComponent,
-    DbNgxDefaultSearchableFieldDisplayComponent,
-    DbNgxDefaultSearchableAnchorFieldDisplayComponent
+    DbxFormRepeatTypeComponent,
+    DbxPickableChipFieldComponent,
+    DbxPickableListFieldComponent,
+    DbxSearchableChipFieldComponent,
+    DbxSearchableTextFieldComponent,
+    DbxSearchableFieldAutocompleteItemComponent,
+    DbxDefaultSearchableFieldDisplayComponent,
+    DbxDefaultSearchableAnchorFieldDisplayComponent
   ],
   exports: []
 })
-export class DbNgxGenericFieldModule { }
+export class DbxGenericFieldModule { }

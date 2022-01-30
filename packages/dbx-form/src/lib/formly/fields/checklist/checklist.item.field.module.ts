@@ -1,41 +1,41 @@
 import { MatRippleModule } from '@angular/material/core';
 import { MatCheckboxModule } from '@angular/material/checkbox';
-import { DbNgxDefaultChecklistItemFieldDisplayComponent } from './checklist.item.field.content.default.component';
+import { DbxDefaultChecklistItemFieldDisplayComponent } from './checklist.item.field.content.default.component';
 import { MatButtonModule } from '@angular/material/button';
-import { DbNgxAnchorModule, DbNgxTextModule } from '@dereekb/dbx-web';
+import { DbxAnchorModule, DbxTextModule } from '@dereekb/dbx-web';
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { FormlyModule } from '@ngx-formly/core';
-import { DbNgxFormWrapperModule } from '../wrappers/form.wrapper.module';
-import { DbNgxChecklistItemContentComponent, DbNgxChecklistItemFieldComponent } from './checklist.item.field.component';
+import { DbxFormWrapperModule } from '../wrappers/form.wrapper.module';
+import { DbxChecklistItemContentComponent, DbxChecklistItemFieldComponent } from './checklist.item.field.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 @NgModule({
   imports: [
     CommonModule,
-    DbNgxTextModule,
+    DbxTextModule,
     FormsModule,
     ReactiveFormsModule,
     MatRippleModule,
     MatCheckboxModule,
     MatButtonModule,
     MatIconModule,
-    DbNgxAnchorModule,
-    DbNgxFormWrapperModule,
+    DbxAnchorModule,
+    DbxFormWrapperModule,
     FormlyModule.forChild({
       types: [
-        { name: 'checklistitem', component: DbNgxChecklistItemFieldComponent }
+        { name: 'checklistitem', component: DbxChecklistItemFieldComponent }
       ]
     })
   ],
   declarations: [
-    DbNgxChecklistItemFieldComponent,
-    DbNgxChecklistItemContentComponent,
-    DbNgxDefaultChecklistItemFieldDisplayComponent
+    DbxChecklistItemFieldComponent,
+    DbxChecklistItemContentComponent,
+    DbxDefaultChecklistItemFieldDisplayComponent
   ],
   exports: [
-    DbNgxFormWrapperModule
+    DbxFormWrapperModule
   ]
 })
-export class DbNgxFormChecklistItemFieldModule { }
+export class DbxFormChecklistItemFieldModule { }

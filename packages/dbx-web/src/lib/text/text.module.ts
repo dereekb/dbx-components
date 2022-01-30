@@ -3,18 +3,18 @@ import { NgModule } from '@angular/core';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { DbNgxAnchorModule } from '../router';
-import { DbNgxHintComponent } from './hint.component';
-import { DbNgxLabelBarComponent } from './label.bar.component';
-import { DbNgxLabelComponent } from './label.component';
-import { DbNgxLinkComponent } from './link.component';
-import { DbNgxLinkifyComponent } from './linkify.component';
-import { DbNgxNoteComponent } from './note.component';
-import { DbNgxNoticeComponent } from './notice.component';
-import { DbNgxOkComponent } from './ok.component';
-import { DbNgxSuccessComponent } from './success.component';
-import { DbNgxTextChipsComponent } from './text.chips.component';
-import { DbNgxWarnComponent } from './warn.component';
+import { DbxAnchorModule } from '../router';
+import { DbxHintComponent } from './hint.component';
+import { DbxLabelBarComponent } from './label.bar.component';
+import { DbxLabelComponent } from './label.component';
+import { DbxLinkComponent } from './link.component';
+import { DbxLinkifyComponent } from './linkify.component';
+import { DbxNoteComponent } from './note.component';
+import { DbxNoticeComponent } from './notice.component';
+import { DbxOkComponent } from './ok.component';
+import { DbxSuccessComponent } from './success.component';
+import { DbxTextChipsComponent } from './text.chips.component';
+import { DbxWarnComponent } from './warn.component';
 
 @NgModule({
   imports: [
@@ -22,33 +22,33 @@ import { DbNgxWarnComponent } from './warn.component';
     MatChipsModule,
     MatTooltipModule,
     MatIconModule,
-    DbNgxAnchorModule
+    DbxAnchorModule
   ],
   declarations: [
-    DbNgxNoteComponent,
-    DbNgxNoticeComponent,
-    DbNgxSuccessComponent,
-    DbNgxWarnComponent,
-    DbNgxHintComponent,
-    DbNgxLinkComponent,
-    DbNgxLabelComponent,
-    DbNgxLinkifyComponent,
-    DbNgxOkComponent,
-    DbNgxTextChipsComponent,
-    DbNgxLabelBarComponent
+    DbxNoteComponent,
+    DbxNoticeComponent,
+    DbxSuccessComponent,
+    DbxWarnComponent,
+    DbxHintComponent,
+    DbxLinkComponent,
+    DbxLabelComponent,
+    DbxLinkifyComponent,
+    DbxOkComponent,
+    DbxTextChipsComponent,
+    DbxLabelBarComponent
   ],
   exports: [
-    DbNgxNoteComponent,
-    DbNgxNoticeComponent,
-    DbNgxSuccessComponent,
-    DbNgxWarnComponent,
-    DbNgxHintComponent,
-    DbNgxLinkComponent,
-    DbNgxLabelComponent,
-    DbNgxLinkifyComponent,
-    DbNgxOkComponent,
-    DbNgxTextChipsComponent,
-    DbNgxLabelBarComponent
+    DbxNoteComponent,
+    DbxNoticeComponent,
+    DbxSuccessComponent,
+    DbxWarnComponent,
+    DbxHintComponent,
+    DbxLinkComponent,
+    DbxLabelComponent,
+    DbxLinkifyComponent,
+    DbxOkComponent,
+    DbxTextChipsComponent,
+    DbxLabelBarComponent
   ],
 })
-export class DbNgxTextModule { }
+export class DbxTextModule { }

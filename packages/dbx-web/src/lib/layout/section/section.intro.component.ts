@@ -1,6 +1,6 @@
 import { OnDestroy } from '@angular/core';
 import { Component, Input, EventEmitter, Output } from '@angular/core';
-import { DbNgxSectionComponent } from './section.component';
+import { DbxSectionComponent } from './section.component';
 
 /**
  * Component used to format content that displays an intro until a button is pressed.
@@ -25,7 +25,7 @@ import { DbNgxSectionComponent } from './section.component';
   `,
   // TODO: styleUrls: ['./container.scss']
 })
-export class DbNgxIntroActionSectionComponent extends DbNgxSectionComponent implements OnDestroy {
+export class DbxIntroActionSectionComponent extends DbxSectionComponent implements OnDestroy {
 
   @Output()
   showAction = new EventEmitter<void>();

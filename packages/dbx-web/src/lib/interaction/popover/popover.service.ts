@@ -1,9 +1,9 @@
-import { DbNgxPopoverComponent, DbNgxPopoverComponentConfig, FullDbNgxPopoverComponentConfig } from './popover.component';
+import { DbxPopoverComponent, DbxPopoverComponentConfig, FullDbxPopoverComponentConfig } from './popover.component';
 import { Injectable, Injector } from '@angular/core';
 import { NgOverlayContainerConfiguration, NgOverlayContainerService, NgPopoverRef } from 'ng-overlay-container';
 import { Overlay } from '@angular/cdk/overlay';
 
-export interface DbNgxPopoverConfig<I, O, T> extends DbNgxPopoverComponentConfig<I, O, T> {
+export interface DbxPopoverConfig<I, O, T> extends DbxPopoverComponentConfig<I, O, T> {
   injector?: Injector;
   height?: string;
   width?: string;
@@ -13,7 +13,7 @@ export interface DbNgxPopoverConfig<I, O, T> extends DbNgxPopoverComponentConfig
  * Used for displaying a popover.
  */
 @Injectable()
-export class DbNgxPopoverService {
+export class DbxPopoverService {
 
   private _overlayContainerService: NgOverlayContainerService;
 
@@ -21,7 +21,7 @@ export class DbNgxPopoverService {
     this._overlayContainerService = new NgOverlayContainerService(this._overlay, this._injector);
   }
 
-  open<I, O, T>(config: DbNgxPopoverConfig<I, O, T>): NgPopoverRef<DbNgxPopoverComponentConfig<I, O, T>, O> {
+  open<I, O, T>(config: DbxPopoverConfig<I, O, T>): NgPopoverRef<DbxPopoverComponentConfig<I, O, T>, O> {
     const service = (config.injector) ? new NgOverlayContainerService(this._overlay, config.injector) : this._overlayContainerService;
 
     const configuration: NgOverlayContainerConfiguration = {
@@ -37,8 +37,8 @@ export class DbNgxPopoverService {
       disableBackdropClose: false
     };
 
-    return service.open<FullDbNgxPopoverComponentConfig<I, O, T>, O>({
-      content: DbNgxPopoverComponent,
+    return service.open<FullDbxPopoverComponentConfig<I, O, T>, O>({
+      content: DbxPopoverComponent,
       data: {
         ...config,
         configuration

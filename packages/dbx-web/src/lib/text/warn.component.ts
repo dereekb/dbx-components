@@ -5,4 +5,4 @@ import { Component, Input, OnInit } from '@angular/core';
   template: `<p class="dbx-warn"><ng-content></ng-content></p>`,
   // TODO: styleUrls: ['./text.scss']
 })
-export class DbNgxWarnComponent {}
+export class DbxWarnComponent {}

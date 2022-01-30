@@ -5,4 +5,4 @@ import { Component } from '@angular/core';
   template: `<p class="dbx-ok"><ng-content></ng-content></p>`,
   // TODO: styleUrls: ['./text.scss']
 })
-export class DbNgxOkComponent { }
+export class DbxOkComponent { }

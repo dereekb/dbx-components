@@ -1,15 +1,15 @@
-import { DbNgxButtonModule } from './../../button/button.module';
-import { DbNgxPromptComponent } from './prompt.component';
+import { DbxButtonModule } from './../../button/button.module';
+import { DbxPromptComponent } from './prompt.component';
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { DbNgxPromptBoxComponent } from './prompt.box.component';
-import { DbNgxPromptPageComponent } from './prompt.page.component';
-import { DbNgxTextModule } from '../../text';
-import { DbNgxContentLayoutModule, DbNgxSectionLayoutModule } from '../../layout';
-import { DbNgxPromptConfirmComponent as DbNgxPromptConfirmComponent } from './prompt.confirm.component';
-import { DbNgxPromptConfirmDialogComponent as DbNgxPromptConfirmDialogComponent } from './prompt.confirm.dialog.component';
-import { DbNgxPromptConfirmDirective } from './prompt.confirm.directive';
-import { DbNgxPromptConfirmButtonDirective } from './prompt.button.confirm.directive';
+import { DbxPromptBoxComponent } from './prompt.box.component';
+import { DbxPromptPageComponent } from './prompt.page.component';
+import { DbxTextModule } from '../../text';
+import { DbxContentLayoutModule, DbxSectionLayoutModule } from '../../layout';
+import { DbxPromptConfirmComponent as DbxPromptConfirmComponent } from './prompt.confirm.component';
+import { DbxPromptConfirmDialogComponent as DbxPromptConfirmDialogComponent } from './prompt.confirm.dialog.component';
+import { DbxPromptConfirmDirective } from './prompt.confirm.directive';
+import { DbxPromptConfirmButtonDirective } from './prompt.button.confirm.directive';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 
@@ -18,27 +18,27 @@ import { MatButtonModule } from '@angular/material/button';
     CommonModule,
     MatDialogModule,
     MatButtonModule,
-    DbNgxTextModule,
-    DbNgxButtonModule,
-    DbNgxSectionLayoutModule,
-    DbNgxContentLayoutModule
+    DbxTextModule,
+    DbxButtonModule,
+    DbxSectionLayoutModule,
+    DbxContentLayoutModule
   ],
   declarations: [
-    DbNgxPromptComponent,
-    DbNgxPromptBoxComponent,
-    DbNgxPromptPageComponent,
-    DbNgxPromptConfirmComponent,
-    DbNgxPromptConfirmButtonDirective,
-    DbNgxPromptConfirmDialogComponent,
-    DbNgxPromptConfirmDirective,
+    DbxPromptComponent,
+    DbxPromptBoxComponent,
+    DbxPromptPageComponent,
+    DbxPromptConfirmComponent,
+    DbxPromptConfirmButtonDirective,
+    DbxPromptConfirmDialogComponent,
+    DbxPromptConfirmDirective,
   ],
   exports: [
-    DbNgxPromptComponent,
-    DbNgxPromptBoxComponent,
-    DbNgxPromptPageComponent,
-    DbNgxPromptConfirmComponent,
-    DbNgxPromptConfirmButtonDirective,
-    DbNgxPromptConfirmDirective,
+    DbxPromptComponent,
+    DbxPromptBoxComponent,
+    DbxPromptPageComponent,
+    DbxPromptConfirmComponent,
+    DbxPromptConfirmButtonDirective,
+    DbxPromptConfirmDirective,
   ],
 })
-export class DbNgxPromptModule { }
+export class DbxPromptModule { }

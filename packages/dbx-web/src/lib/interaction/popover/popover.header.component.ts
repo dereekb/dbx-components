@@ -1,5 +1,5 @@
 import { Component, Input, Optional } from '@angular/core';
-import { DbNgxPopoverContentComponent } from './popover.content.component';
+import { DbxPopoverContentComponent } from './popover.content.component';
 
 /**
  * Component used to format a header for a popover.
@@ -18,7 +18,7 @@ import { DbNgxPopoverContentComponent } from './popover.content.component';
   `,
   // TODO: styleUrls: ['./popover.scss']
 })
-export class DbNgxPopoverHeaderComponent {
+export class DbxPopoverHeaderComponent {
 
   @Input()
   header?: string;
@@ -26,7 +26,7 @@ export class DbNgxPopoverHeaderComponent {
   @Input()
   icon?: string;
 
-  constructor(@Optional() appPopoverContentComponent: DbNgxPopoverContentComponent) {
+  constructor(@Optional() appPopoverContentComponent: DbxPopoverContentComponent) {
     if (appPopoverContentComponent) {
       appPopoverContentComponent.hasHeader = true;
     }

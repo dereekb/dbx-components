@@ -1,7 +1,7 @@
 import { Injector, TemplateRef, Type, ViewRef } from "@angular/core";
 import { Maybe } from "@dereekb/util";
 
-export interface DbNgxInjectedComponentConfig<T = any> {
+export interface DbxInjectedComponentConfig<T = any> {
   /**
    * Type of Component to initialize.
    */
@@ -16,7 +16,7 @@ export interface DbNgxInjectedComponentConfig<T = any> {
   init?: (instance: T) => void;
 }
 
-export interface DbNgxInjectedTemplateConfig<T = any> {
+export interface DbxInjectedTemplateConfig<T = any> {
   /**
    * Template ref to display.
    */

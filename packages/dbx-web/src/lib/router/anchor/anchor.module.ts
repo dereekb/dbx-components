@@ -1,8 +1,8 @@
-import { DbNgxInjectedComponentModule } from '@dereekb/dbx-core';
+import { DbxInjectedComponentModule } from '@dereekb/dbx-core';
 import { NgModule } from '@angular/core';
-import { DbNgxAnchorComponent } from './anchor.component';
+import { DbxAnchorComponent } from './anchor.component';
 import { CommonModule } from '@angular/common';
-import { DbNgxAnchorIconComponent } from './anchor.icon.component';
+import { DbxAnchorIconComponent } from './anchor.icon.component';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 
@@ -11,15 +11,15 @@ import { MatButtonModule } from '@angular/material/button';
     CommonModule,
     MatIconModule,
     MatButtonModule,
-    DbNgxInjectedComponentModule
+    DbxInjectedComponentModule
   ],
   declarations: [
-    DbNgxAnchorComponent,
-    DbNgxAnchorIconComponent
+    DbxAnchorComponent,
+    DbxAnchorIconComponent
   ],
   exports: [
-    DbNgxAnchorComponent,
-    DbNgxAnchorIconComponent
+    DbxAnchorComponent,
+    DbxAnchorIconComponent
   ]
 })
-export class DbNgxAnchorModule { }
+export class DbxAnchorModule { }

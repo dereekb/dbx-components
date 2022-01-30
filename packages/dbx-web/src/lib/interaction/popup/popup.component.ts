@@ -5,31 +5,31 @@ import { CompactMode, CompactContextStore } from '../../layout';
 import { BehaviorSubject, Subject } from 'rxjs';
 import { PopupGlobalPositionStrategy, PopupPosition, PopupPositionOffset } from './popup.position.strategy';
 import { filter, first, map, shareReplay, startWith } from 'rxjs/operators';
-import { AbstractTransitionWatcherDirective, DbNgxRouterTransitionService } from '@dereekb/dbx-core';
-import { DbNgxPopupController, DbNgxPopupKey, DbNgxPopupWindowState } from './popup';
+import { AbstractTransitionWatcherDirective, DbxRouterTransitionService } from '@dereekb/dbx-core';
+import { DbxPopupController, DbxPopupKey, DbxPopupWindowState } from './popup';
 
 export const APP_POPUP_NORMAL_WIDTH = '700px';
 export const APP_POPUP_MINIMIZED_WIDTH = '300px';
 export const APP_POPUP_NORMAL_HEIGHT = 'auto';
 
-export abstract class DbNgxPopupComponentController<I, O> extends DbNgxPopupController<I, O> {
+export abstract class DbxPopupComponentController<I, O> extends DbxPopupController<I, O> {
   getClosingValueFn?: (value?: I) => Promise<O>;
 }
 
-export interface DbNgxPopupComponentConfig<I, O, T> {
+export interface DbxPopupComponentConfig<I, O, T> {
   /**
    * Key used for uniquely identifying a limited instance.
    *
    * Only one popup should exist at a time given a certain key.
    */
-  key: DbNgxPopupKey;
+  key: DbxPopupKey;
   position?: PopupPosition;
   offset?: PopupPositionOffset;
   closeOnTransition?: boolean;
   componentClass: Type<T>;
   data?: I;
   isDraggable?: boolean;
-  init?: (component: T, controller: DbNgxPopupController<I, O>) => void;
+  init?: (component: T, controller: DbxPopupController<I, O>) => void;
 }
 
 /**
@@ -45,13 +45,13 @@ export interface DbNgxPopupComponentConfig<I, O, T> {
   `,
   // TODO: styleUrls: ['./popup.scss'],
   providers: [{
-    provide: DbNgxPopupController,
-    useExisting: DbNgxPopupComponent
+    provide: DbxPopupController,
+    useExisting: DbxPopupComponent
   }, {
     provide: CompactContextStore
   }]
 })
-export class DbNgxPopupComponent<I = any, O = any, T = any> extends AbstractTransitionWatcherDirective implements DbNgxPopupController<I, O>, OnInit, OnDestroy {
+export class DbxPopupComponent<I = any, O = any, T = any> extends AbstractTransitionWatcherDirective implements DbxPopupController<I, O>, OnInit, OnDestroy {
 
   private _position: PopupGlobalPositionStrategy;
 
@@ -63,16 +63,16 @@ export class DbNgxPopupComponent<I = any, O = any, T = any> extends AbstractTran
   readonly isClosing$ = this.closing.pipe(first(), map(x => true), startWith(false), shareReplay(1));
   readonly closing$ = this.isClosing$.pipe(filter(x => x));
 
-  private readonly _windowState = new BehaviorSubject<DbNgxPopupWindowState>(DbNgxPopupWindowState.NORMAL);
+  private readonly _windowState = new BehaviorSubject<DbxPopupWindowState>(DbxPopupWindowState.NORMAL);
   readonly windowState$ = this._windowState.asObservable();
 
   getClosingValueFn?: (value?: I) => Promise<O>;
 
   constructor(
-    private popoverRef: NgPopoverRef<DbNgxPopupComponentConfig<I, O, T>, O>,
+    private popoverRef: NgPopoverRef<DbxPopupComponentConfig<I, O, T>, O>,
     private compactContextState: CompactContextStore,
     private resolver: ComponentFactoryResolver,
-    dbNgxRouterTransitionService: DbNgxRouterTransitionService,
+    dbNgxRouterTransitionService: DbxRouterTransitionService,
     ngZone: NgZone) {
     super(dbNgxRouterTransitionService, ngZone);
 
@@ -81,11 +81,11 @@ export class DbNgxPopupComponent<I = any, O = any, T = any> extends AbstractTran
     this.popoverRef.overlay.updatePositionStrategy(this._position);
   }
 
-  get config(): DbNgxPopupComponentConfig<I, O, T> {
+  get config(): DbxPopupComponentConfig<I, O, T> {
     return this.popoverRef.data;
   }
 
-  get key(): DbNgxPopupKey {
+  get key(): DbxPopupKey {
     return this.config.key;
   }
 
@@ -141,21 +141,21 @@ export class DbNgxPopupComponent<I = any, O = any, T = any> extends AbstractTran
     this.popoverRef.isDraggable = false;
     this.popoverRef.resize(APP_POPUP_MINIMIZED_WIDTH, APP_POPUP_NORMAL_HEIGHT);
     this.popoverRef.overlay.updatePosition();
-    this._windowState.next(DbNgxPopupWindowState.MINIMIZED);
+    this._windowState.next(DbxPopupWindowState.MINIMIZED);
   }
 
   public normalscreen(): void {
     this.popoverRef.isDraggable = this.config.isDraggable;
     this.popoverRef.resize(APP_POPUP_NORMAL_WIDTH, APP_POPUP_NORMAL_HEIGHT);
     this.popoverRef.overlay.updatePosition();
-    this._windowState.next(DbNgxPopupWindowState.NORMAL);
+    this._windowState.next(DbxPopupWindowState.NORMAL);
   }
 
   public fullscreen(): void {
     this.popoverRef.isDraggable = false;
     this.popoverRef.resize('100%', '100%');
     this.popoverRef.overlay.updatePosition();
-    this._windowState.next(DbNgxPopupWindowState.FULLSCREEN);
+    this._windowState.next(DbxPopupWindowState.FULLSCREEN);
   }
 
 }

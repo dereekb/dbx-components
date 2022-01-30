@@ -15,7 +15,7 @@ import { ClickableAnchor } from '@dereekb/dbx-core';
   `,
   // TODO: styleUrls: ['./container.scss']
 })
-export class DbNgxSectionBoxAnchorComponent {
+export class DbxSectionBoxAnchorComponent {
 
   @Input()
   anchor?: ClickableAnchor;

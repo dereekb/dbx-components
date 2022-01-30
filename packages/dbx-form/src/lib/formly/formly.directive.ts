@@ -2,7 +2,7 @@ import { SubscriptionObject } from '@dereekb/rxjs';
 import { Observable, BehaviorSubject } from 'rxjs';
 import { FormlyFieldConfig } from '@ngx-formly/core/lib/core';
 import { OnInit, OnDestroy, Directive, Input } from '@angular/core';
-import { DbNgxFormlyContext } from './formly.context';
+import { DbxFormlyContext } from './formly.context';
 import { Maybe } from '@dereekb/util';
 
 /**
@@ -20,7 +20,7 @@ export abstract class AbstractFormlyFormDirective<T> implements OnDestroy {
     this.context.setDisabled(disabled);
   }
 
-  constructor(public readonly context: DbNgxFormlyContext<T>) { }
+  constructor(public readonly context: DbxFormlyContext<T>) { }
 
   ngOnDestroy(): void {
     this.context.destroy();

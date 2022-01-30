@@ -1,8 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Component, ViewChild } from '@angular/core';
-import { DbNgxActionContextDirective, DbNgxCoreActionModule } from '@dereekb/dbx-core';
-import { DbNgxActionFormDirective } from './form.action.directive';
-import { DbNgxTestDbNgxFormComponent, FORM_TEST_PROVIDERS } from '../formly.component.spec';
+import { DbxActionContextDirective, DbxCoreActionModule } from '@dereekb/dbx-core';
+import { DbxActionFormDirective } from './form.action.directive';
+import { DbxTestDbxFormComponent, FORM_TEST_PROVIDERS } from '../formly.component.spec';
 import { first } from 'rxjs/operators';
 
 describe('FormActionDirective', () => {
@@ -11,23 +11,23 @@ describe('FormActionDirective', () => {
     TestBed.configureTestingModule({
       imports: [
         ...FORM_TEST_PROVIDERS,
-        DbNgxCoreActionModule
+        DbxCoreActionModule
       ],
       declarations: [
-        TestDbNgxActionFormDirectiveComponent,
-        DbNgxTestDbNgxFormComponent
+        TestDbxActionFormDirectiveComponent,
+        DbxTestDbxFormComponent
       ]
     }).compileComponents();
   });
 
-  let directive: DbNgxActionContextDirective<number, number>;
-  let form: DbNgxTestDbNgxFormComponent;
+  let directive: DbxActionContextDirective<number, number>;
+  let form: DbxTestDbxFormComponent;
 
-  let testComponent: TestDbNgxActionFormDirectiveComponent;
-  let fixture: ComponentFixture<TestDbNgxActionFormDirectiveComponent>;
+  let testComponent: TestDbxActionFormDirectiveComponent;
+  let fixture: ComponentFixture<TestDbxActionFormDirectiveComponent>;
 
   beforeEach(async () => {
-    fixture = TestBed.createComponent(TestDbNgxActionFormDirectiveComponent);
+    fixture = TestBed.createComponent(TestDbxActionFormDirectiveComponent);
     testComponent = fixture.componentInstance;
 
     directive = testComponent.directive;
@@ -85,15 +85,15 @@ describe('FormActionDirective', () => {
     </div>
   `
 })
-class TestDbNgxActionFormDirectiveComponent {
+class TestDbxActionFormDirectiveComponent {
 
-  @ViewChild(DbNgxActionContextDirective, { static: true })
-  directive!: DbNgxActionContextDirective<number, number>;
+  @ViewChild(DbxActionContextDirective, { static: true })
+  directive!: DbxActionContextDirective<number, number>;
 
-  @ViewChild(DbNgxActionFormDirective, { static: true })
-  formDirective!: DbNgxActionFormDirective;
+  @ViewChild(DbxActionFormDirective, { static: true })
+  formDirective!: DbxActionFormDirective;
 
-  @ViewChild(DbNgxTestDbNgxFormComponent, { static: true })
-  form!: DbNgxTestDbNgxFormComponent;
+  @ViewChild(DbxTestDbxFormComponent, { static: true })
+  form!: DbxTestDbxFormComponent;
 
 }

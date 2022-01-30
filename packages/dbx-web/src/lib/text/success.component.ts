@@ -5,4 +5,4 @@ import { Component, Input, OnInit } from '@angular/core';
   template: `<p class="dbx-success"><ng-content></ng-content></p>`,
   // TODO: styleUrls: ['./text.scss']
 })
-export class DbNgxSuccessComponent { }
+export class DbxSuccessComponent { }

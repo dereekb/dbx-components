@@ -1,12 +1,12 @@
 import { Observable, combineLatest } from 'rxjs';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { FieldConfig, formlyField } from '../field';
-import { DbNgxChecklistItemFieldConfig, ChecklistItemFormlyFieldConfig } from './checklist.item.field.component';
+import { DbxChecklistItemFieldConfig, ChecklistItemFormlyFieldConfig } from './checklist.item.field.component';
 import { map, shareReplay } from 'rxjs/operators';
 import { ChecklistItemDisplayContent, ChecklistItemFieldDisplayContentObs } from './checklist.item';
 import { KeyValueTransformMap, addPlusPrefixToNumber, Maybe } from '@dereekb/util';
 
-export interface ChecklistItemFieldConfig<T = any> extends FieldConfig, DbNgxChecklistItemFieldConfig<T> { }
+export interface ChecklistItemFieldConfig<T = any> extends FieldConfig, DbxChecklistItemFieldConfig<T> { }
 export type ChecklistItemFieldBuilderInput<T = any> = Partial<ChecklistItemFieldConfig<T>> & Pick<ChecklistItemFieldConfig<T>, 'key' | 'displayContentObs'>;
 
 export function checklistItemField<T = any>({

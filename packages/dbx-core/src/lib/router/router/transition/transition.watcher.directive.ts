@@ -1,7 +1,7 @@
 import { Directive, NgZone, OnDestroy, OnInit } from '@angular/core';
 import { filter } from 'rxjs/operators';
-import { DbNgxRouterTransitionEventType } from './transition';
-import { DbNgxRouterTransitionService } from '../service/router.transition.service';
+import { DbxRouterTransitionEventType } from './transition';
+import { DbxRouterTransitionService } from '../service/router.transition.service';
 import { SubscriptionObject } from '@dereekb/rxjs';
 
 /**
@@ -12,11 +12,11 @@ export abstract class AbstractTransitionWatcherDirective implements OnInit, OnDe
 
   private _transitionSub = new SubscriptionObject();
 
-  constructor(protected readonly dbNgxRouterTransitionService: DbNgxRouterTransitionService, protected readonly ngZone: NgZone) { }
+  constructor(protected readonly dbNgxRouterTransitionService: DbxRouterTransitionService, protected readonly ngZone: NgZone) { }
 
   ngOnInit(): void {
     this._transitionSub.subscription = this.dbNgxRouterTransitionService.transitions$.pipe(
-      filter(x => x.type === DbNgxRouterTransitionEventType.SUCCESS)
+      filter(x => x.type === DbxRouterTransitionEventType.SUCCESS)
     ).subscribe(() => {
       this.updateForSuccessfulTransition();
     });

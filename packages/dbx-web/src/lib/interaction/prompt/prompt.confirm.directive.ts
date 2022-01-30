@@ -2,25 +2,25 @@ import { Directive, Input } from '@angular/core';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { Maybe } from '@dereekb/util';
 import { Observable, from } from 'rxjs';
-import { DbNgxPromptConfirm, ProvideDbNgxPromptConfirm } from './prompt.confirm';
-import { DbNgxPromptConfirmConfig, DbNgxPromptConfirmTypes } from './prompt.confirm.component';
-import { DbNgxPromptConfirmDialogComponent } from './prompt.confirm.dialog.component';
+import { DbxPromptConfirm, ProvideDbxPromptConfirm } from './prompt.confirm';
+import { DbxPromptConfirmConfig, DbxPromptConfirmTypes } from './prompt.confirm.component';
+import { DbxPromptConfirmDialogComponent } from './prompt.confirm.dialog.component';
 
 // MARK: Abstract
 /**
  * Directive that when triggered shows a dialog to accept or reject.
  */
 @Directive()
-export abstract class AbstractPromptConfirmDirective implements DbNgxPromptConfirm {
+export abstract class AbstractPromptConfirmDirective implements DbxPromptConfirm {
 
   private static readonly DEFAULT_CONFIG = {
     title: 'Confirm?',
-    type: DbNgxPromptConfirmTypes.NORMAL
+    type: DbxPromptConfirmTypes.NORMAL
   };
 
-  config?: DbNgxPromptConfirmConfig;
+  config?: DbxPromptConfirmConfig;
 
-  private _dialogRef?: MatDialogRef<DbNgxPromptConfirmDialogComponent, boolean>;
+  private _dialogRef?: MatDialogRef<DbxPromptConfirmDialogComponent, boolean>;
   private _dialogPromise?: Promise<boolean>;
 
   constructor(protected readonly dialog: MatDialog) { }
@@ -40,8 +40,8 @@ export abstract class AbstractPromptConfirmDirective implements DbNgxPromptConfi
     return from(this._dialogPromise);
   }
 
-  protected _makeDialog(): MatDialogRef<DbNgxPromptConfirmDialogComponent, boolean> {
-    const dialogRef = this.dialog.open(DbNgxPromptConfirmDialogComponent);
+  protected _makeDialog(): MatDialogRef<DbxPromptConfirmDialogComponent, boolean> {
+    const dialogRef = this.dialog.open(DbxPromptConfirmDialogComponent);
     dialogRef.componentInstance.config = this.config ?? AbstractPromptConfirmDirective.DEFAULT_CONFIG;
     return dialogRef;
   }
@@ -58,12 +58,12 @@ export abstract class AbstractPromptConfirmDirective implements DbNgxPromptConfi
  */
 @Directive({
   selector: '[dbxPromptConfirm]',
-  providers: ProvideDbNgxPromptConfirm(DbNgxPromptConfirmDirective)
+  providers: ProvideDbxPromptConfirm(DbxPromptConfirmDirective)
 })
-export class DbNgxPromptConfirmDirective<T, O> extends AbstractPromptConfirmDirective {
+export class DbxPromptConfirmDirective<T, O> extends AbstractPromptConfirmDirective {
 
   @Input('dbxPromptConfirm')
-  override config?: DbNgxPromptConfirmConfig;
+  override config?: DbxPromptConfirmConfig;
 
   constructor(dialog: MatDialog) {
     super(dialog);

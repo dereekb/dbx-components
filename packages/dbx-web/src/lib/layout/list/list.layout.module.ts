@@ -1,16 +1,16 @@
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { DbNgxListEmptyContentComponent } from './list.empty.component';
+import { DbxListEmptyContentComponent } from './list.empty.component';
 
 @NgModule({
   imports: [
     CommonModule
   ],
   declarations: [
-    DbNgxListEmptyContentComponent
+    DbxListEmptyContentComponent
   ],
   exports: [
-    DbNgxListEmptyContentComponent
+    DbxListEmptyContentComponent
   ]
 })
-export class DbNgxListLayoutModule { }
+export class DbxListLayoutModule { }

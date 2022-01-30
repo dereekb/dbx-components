@@ -17,7 +17,7 @@ export type SuccessActionFunction<O> = (value: O) => void;
 @Directive({
   selector: '[dbxActionSuccess]',
 })
-export class DbNgxActionSuccessDirective<T, O> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
+export class DbxActionSuccessDirective<T, O> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
 
   private _successFunction = new BehaviorSubject<Maybe<SuccessActionFunction<O>>>(undefined);
   readonly successFunction$ = this._successFunction.pipe(filterMaybe(), shareReplay(1));

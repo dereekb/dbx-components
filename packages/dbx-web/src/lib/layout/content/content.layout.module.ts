@@ -1,9 +1,9 @@
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { DbNgxContentComponent } from './content.component';
-import { DbNgxFullWidthContentContainerComponent } from './content.container.fullwidth.component';
-import { DbNgxBorderedContentComponent } from './content.bordered.component';
-import { DbNgxContentContainerComponent } from './content.container.component';
+import { DbxContentComponent } from './content.component';
+import { DbxFullWidthContentContainerComponent } from './content.container.fullwidth.component';
+import { DbxBorderedContentComponent } from './content.bordered.component';
+import { DbxContentContainerComponent } from './content.container.component';
 
 /**
  * Module for container-type components.
@@ -13,16 +13,16 @@ import { DbNgxContentContainerComponent } from './content.container.component';
     CommonModule
   ],
   declarations: [
-    DbNgxContentComponent,
-    DbNgxContentContainerComponent,
-    DbNgxBorderedContentComponent,
-    DbNgxFullWidthContentContainerComponent
+    DbxContentComponent,
+    DbxContentContainerComponent,
+    DbxBorderedContentComponent,
+    DbxFullWidthContentContainerComponent
   ],
   exports: [
-    DbNgxContentComponent,
-    DbNgxContentContainerComponent,
-    DbNgxBorderedContentComponent,
-    DbNgxFullWidthContentContainerComponent
+    DbxContentComponent,
+    DbxContentContainerComponent,
+    DbxBorderedContentComponent,
+    DbxFullWidthContentContainerComponent
   ]
 })
-export class DbNgxContentLayoutModule { }
+export class DbxContentLayoutModule { }

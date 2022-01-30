@@ -2,8 +2,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { NgModule } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressButtonsModule } from 'mat-progress-buttons';
-import { DbNgxButtonComponent } from './button.component';
-import { DbNgxButtonSpacerComponent } from './button.spacer.component';
+import { DbxButtonComponent } from './button.component';
+import { DbxButtonSpacerComponent } from './button.spacer.component';
 import { CommonModule } from '@angular/common';
 
 @NgModule({
@@ -14,12 +14,12 @@ import { CommonModule } from '@angular/common';
     MatProgressButtonsModule
   ],
   declarations: [
-    DbNgxButtonComponent,
-    DbNgxButtonSpacerComponent
+    DbxButtonComponent,
+    DbxButtonSpacerComponent
   ],
   exports: [
-    DbNgxButtonComponent,
-    DbNgxButtonSpacerComponent
+    DbxButtonComponent,
+    DbxButtonSpacerComponent
   ],
 })
-export class DbNgxButtonModule {}
+export class DbxButtonModule {}

@@ -1,4 +1,4 @@
-import { DbNgxAnalyticsModule, AnalyticsService, SegmentModule } from '@dereekb/dbx-analytics';
+import { DbxAnalyticsModule, AnalyticsService, SegmentModule } from '@dereekb/dbx-analytics';
 import { AppLayoutComponent } from './container/layout.component';
 import { Injector, NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
@@ -6,7 +6,7 @@ import { Category, StatesModule, UIRouter, UIRouterModule, UIView } from '@uirou
 import { AppSharedModule } from '@/shared/app.shared.module';
 import { ROOT_STATES } from './app.router';
 import { environment } from '../environments/environment';
-import { DbNgxWebRootModule, DbNgxWebUIRouterModule } from '@dereekb/dbx-web';
+import { DbxWebRootModule, DbxWebUIRouterModule } from '@dereekb/dbx-web';
 import { AnalyticsServiceConfiguration, SegmentAnalyticsListenerService, SegmentApiService, SegmentApiServiceConfig } from '@dereekb/dbx-analytics';
 
 export function routerConfigFn(router: UIRouter, injector: Injector, module: StatesModule): any {
@@ -55,8 +55,8 @@ export function makeSegmentConfig(): SegmentApiServiceConfig {
   imports: [
     BrowserModule,
     AppSharedModule,
-    DbNgxWebRootModule,
-    DbNgxAnalyticsModule.forRoot({
+    DbxWebRootModule,
+    DbxAnalyticsModule.forRoot({
       analyticsConfigurationProvider: {
         provide: AnalyticsServiceConfiguration,
         useFactory: analyticsServiceConfigurationFactory,
@@ -64,7 +64,7 @@ export function makeSegmentConfig(): SegmentApiServiceConfig {
       }
     }),
     SegmentModule.forRoot(),
-    DbNgxWebUIRouterModule.forRoot(),
+    DbxWebUIRouterModule.forRoot(),
     UIRouterModule.forRoot({
       states: ROOT_STATES,
       useHash: false,

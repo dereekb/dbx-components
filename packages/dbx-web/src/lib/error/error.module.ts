@@ -1,22 +1,22 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { DbNgxReadableErrorComponent } from './error.component';
-import { DbNgxLoadingErrorDirective } from './error.loading.directive';
-import { DbNgxActionErrorDirective } from './error.action.directive';
+import { DbxReadableErrorComponent } from './error.component';
+import { DbxLoadingErrorDirective } from './error.loading.directive';
+import { DbxActionErrorDirective } from './error.action.directive';
 
 @NgModule({
   imports: [
     CommonModule
   ],
   declarations: [
-    DbNgxReadableErrorComponent,
-    DbNgxLoadingErrorDirective,
-    DbNgxActionErrorDirective
+    DbxReadableErrorComponent,
+    DbxLoadingErrorDirective,
+    DbxActionErrorDirective
   ],
   exports: [
-    DbNgxReadableErrorComponent,
-    DbNgxLoadingErrorDirective,
-    DbNgxActionErrorDirective
+    DbxReadableErrorComponent,
+    DbxLoadingErrorDirective,
+    DbxActionErrorDirective
   ]
 })
-export class DbNgxReadableErrorModule { }
+export class DbxReadableErrorModule { }

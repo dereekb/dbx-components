@@ -16,7 +16,7 @@ import { ActionContextStoreSourceInstance } from '../../action.store.source';
     </ng-container>
   `
 })
-export class DbNgxActionSuccessComponent {
+export class DbxActionSuccessComponent {
 
   @Input()
   hideAfter?: number;

@@ -5,8 +5,8 @@ import { FormlyFieldConfig, FormlyFormOptions } from '@ngx-formly/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { debounceTime, startWith } from 'rxjs/operators';
 import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
-import { DbNgxFormEvent, DbNgxFormState } from '../form/form';
-import { DbNgxFormlyContext, DbNgxFormlyContextDelegate } from './formly.context';
+import { DbxFormEvent, DbxFormState } from '../form/form';
+import { DbxFormlyContext, DbxFormlyContextDelegate } from './formly.context';
 import { cloneDeep } from 'lodash';
 
 @Component({
@@ -19,19 +19,19 @@ import { cloneDeep } from 'lodash';
   `,
   // TODO: styleUrls: ['./form.scss'],
 })
-export class DbNgxFormlyComponent<T extends object> extends AbstractSubscriptionDirective implements DbNgxFormlyContextDelegate<T>, OnInit, OnDestroy {
+export class DbxFormlyComponent<T extends object> extends AbstractSubscriptionDirective implements DbxFormlyContextDelegate<T>, OnInit, OnDestroy {
 
   private _changesCount = 0;
   private _lastResetAt?: Date;
 
   private _fields: FormlyFieldConfig[] = [];
-  private _events = new BehaviorSubject<DbNgxFormEvent>({ isComplete: false, state: DbNgxFormState.INITIALIZING });
+  private _events = new BehaviorSubject<DbxFormEvent>({ isComplete: false, state: DbxFormState.INITIALIZING });
 
   form = new FormGroup({});
   model: any = {};
   options: FormlyFormOptions = {};
 
-  constructor(private readonly context: DbNgxFormlyContext<T>, private readonly ngZone: NgZone) {
+  constructor(private readonly context: DbxFormlyContext<T>, private readonly ngZone: NgZone) {
     super();
   }
 
@@ -61,11 +61,11 @@ export class DbNgxFormlyComponent<T extends object> extends AbstractSubscription
     return this._events.value.isComplete;
   }
 
-  get state(): DbNgxFormState {
+  get state(): DbxFormState {
     return this._events.value.state;
   }
 
-  get stream$(): Observable<DbNgxFormEvent> {
+  get stream$(): Observable<DbxFormEvent> {
     return this._events.asObservable();
   }
 
@@ -135,9 +135,9 @@ export class DbNgxFormlyComponent<T extends object> extends AbstractSubscription
 
     this._changesCount += 1;
 
-    const nextState: DbNgxFormEvent = {
+    const nextState: DbxFormEvent = {
       isComplete: complete,
-      state: (complete) ? DbNgxFormState.COMPLETE : DbNgxFormState.INCOMPLETE,
+      state: (complete) ? DbxFormState.COMPLETE : DbxFormState.INCOMPLETE,
       untouched: this.form.untouched,
       pristine: this.form.pristine,
       changesCount: this._changesCount,

@@ -6,14 +6,14 @@ import { ActionContextStoreSourceInstance, AbstractSubscriptionDirective } from 
 import { AnalyticsService } from '../analytics/analytics.service';
 import { Maybe, ReadableError } from '@dereekb/util';
 
-export enum DbNgxActionAnalyticsTriggerType {
+export enum DbxActionAnalyticsTriggerType {
   TRIGGER,
   READY,
   SUCCESS,
   ERROR
 }
 
-export interface DbNgxActionAnalyticsConfig<T = any, O = any> {
+export interface DbxActionAnalyticsConfig<T = any, O = any> {
   onTriggered: (service: AnalyticsService) => void;
   onReady: (service: AnalyticsService, value: T) => void;
   onSuccess: (service: AnalyticsService, value: Maybe<O>) => void;
@@ -26,17 +26,17 @@ export interface DbNgxActionAnalyticsConfig<T = any, O = any> {
 @Directive({
   selector: '[dbxActionAnalytics]',
 })
-export class DbNgxActionAnalyticsDirective<T> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
+export class DbxActionAnalyticsDirective<T> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
 
-  private _config = new BehaviorSubject<Maybe<DbNgxActionAnalyticsConfig>>(undefined);
+  private _config = new BehaviorSubject<Maybe<DbxActionAnalyticsConfig>>(undefined);
   readonly config$ = this._config.pipe(filterMaybe(), shareReplay(1));
 
   @Input('dbxActionAnalytics')
-  get config(): Maybe<DbNgxActionAnalyticsConfig> {
+  get config(): Maybe<DbxActionAnalyticsConfig> {
     return this._config.value;
   }
 
-  set config(config: Maybe<DbNgxActionAnalyticsConfig>) {
+  set config(config: Maybe<DbxActionAnalyticsConfig>) {
     this._config.next(config);
   }
 

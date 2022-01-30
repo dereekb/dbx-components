@@ -8,7 +8,7 @@ import { ActionContextStoreSourceInstance } from '../../action.store.source';
 @Directive({
   selector: '[dbxActionContextLogger]'
 })
-export class DbNgxActionContextLoggerDirective extends AbstractSubscriptionDirective implements OnInit {
+export class DbxActionContextLoggerDirective extends AbstractSubscriptionDirective implements OnInit {
 
   constructor(@Host() public readonly source: ActionContextStoreSourceInstance) {
     super();

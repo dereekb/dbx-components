@@ -1,4 +1,4 @@
-import { DbNgxTextModule } from '@dereekb/dbx-web';
+import { DbxTextModule } from '@dereekb/dbx-web';
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -11,7 +11,7 @@ import { TextEditorFieldComponent } from './texteditor.field.component';
 @NgModule({
   imports: [
     CommonModule,
-    DbNgxTextModule,
+    DbxTextModule,
     FormsModule,
     ReactiveFormsModule,
     NgxEditorModule,
@@ -28,4 +28,4 @@ import { TextEditorFieldComponent } from './texteditor.field.component';
   ],
   exports: []
 })
-export class DbNgxTextEditorFieldModule { }
+export class DbxTextEditorFieldModule { }

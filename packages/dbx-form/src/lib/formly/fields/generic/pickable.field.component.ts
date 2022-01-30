@@ -1,4 +1,4 @@
-import { DbNgxInjectedComponentConfig } from "@dereekb/dbx-core";
+import { DbxInjectedComponentConfig } from "@dereekb/dbx-core";
 import { beginLoading, LoadingStateLoadingContext, LoadingState, successResult, mapLoadingStateResults, filterMaybe } from "@dereekb/rxjs";
 import { convertMaybeToArray, findUnique, groupValues, makeValuesGroupMap, Maybe } from "@dereekb/util";
 import { Component, Directive, ElementRef, OnDestroy, OnInit, Type, ViewChild } from "@angular/core";
@@ -77,7 +77,7 @@ export interface PickableValueFieldsFieldConfig<T> {
   /**
    * Footer Display
    */
-  footerConfig?: DbNgxInjectedComponentConfig;
+  footerConfig?: DbxInjectedComponentConfig;
 }
 
 export interface PickableValueFieldsFormlyFieldConfig<T> extends PickableValueFieldsFieldConfig<T>, FormlyFieldConfig { }
@@ -93,7 +93,7 @@ export interface PickableValueFieldDisplayValueWithHash<T, M = any> extends Pick
  * Used for picking pre-set values using items as the presentation.
  */
 @Directive()
-export class AbstractDbNgxPickableItemFieldDirective<T> extends FieldType<PickableValueFieldsFormlyFieldConfig<T>> implements OnInit, OnDestroy {
+export class AbstractDbxPickableItemFieldDirective<T> extends FieldType<PickableValueFieldsFormlyFieldConfig<T>> implements OnInit, OnDestroy {
 
   @ViewChild('filterMatInput', { static: true })
   filterMatInput!: MatInput;
@@ -321,7 +321,7 @@ export class AbstractDbNgxPickableItemFieldDirective<T> extends FieldType<Pickab
     return this._getValueOnFormControl(this.formControl.value) ?? [];
   }
 
-  get footerConfig(): Maybe<DbNgxInjectedComponentConfig> {
+  get footerConfig(): Maybe<DbxInjectedComponentConfig> {
     return this.field.footerConfig;
   }
 

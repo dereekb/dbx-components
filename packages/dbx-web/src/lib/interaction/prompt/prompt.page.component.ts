@@ -13,4 +13,4 @@ import { Component } from '@angular/core';
   `,
   // TODO: styleUrls: ['./prompt.scss']
 })
-export class DbNgxPromptPageComponent { }
+export class DbxPromptPageComponent { }

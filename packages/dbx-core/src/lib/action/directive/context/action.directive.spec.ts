@@ -2,19 +2,19 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Component, ViewChild, Input } from '@angular/core';
 import { of } from 'rxjs';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { DbNgxActionContextDirective } from './action.directive';
-import { DbNgxActionHandlerDirective } from '../state/action.handler.directive';
-import { DbNgxCoreActionModule } from '../../action.module';
+import { DbxActionContextDirective } from './action.directive';
+import { DbxActionHandlerDirective } from '../state/action.handler.directive';
+import { DbxCoreActionModule } from '../../action.module';
 import { first, tap } from 'rxjs/operators';
 import { ActionContextStoreSourceInstance } from '../../action.store.source';
 import { HandleActionFunction } from '../../action.handler';
 
-describe('DbNgxActionContextDirective', () => {
+describe('DbxActionContextDirective', () => {
 
   beforeEach(async () => {
     TestBed.configureTestingModule({
       imports: [
-        DbNgxCoreActionModule,
+        DbxCoreActionModule,
         NoopAnimationsModule
       ],
       declarations: [
@@ -25,8 +25,8 @@ describe('DbNgxActionContextDirective', () => {
 
   let testComponent: TestActionContextDirectiveComponent;
 
-  let directive: DbNgxActionContextDirective<number, number>;
-  let handlerDirective: DbNgxActionHandlerDirective<number, number>;
+  let directive: DbxActionContextDirective<number, number>;
+  let handlerDirective: DbxActionHandlerDirective<number, number>;
 
   let fixture: ComponentFixture<TestActionContextDirectiveComponent>;
 
@@ -127,11 +127,11 @@ describe('DbNgxActionContextDirective', () => {
 })
 class TestActionContextDirectiveComponent {
 
-  @ViewChild(DbNgxActionContextDirective, { static: true })
-  directive?: DbNgxActionContextDirective<number, number>;
+  @ViewChild(DbxActionContextDirective, { static: true })
+  directive?: DbxActionContextDirective<number, number>;
 
-  @ViewChild(DbNgxActionHandlerDirective, { static: true })
-  handlerDirective?: DbNgxActionHandlerDirective<number, number>;
+  @ViewChild(DbxActionHandlerDirective, { static: true })
+  handlerDirective?: DbxActionHandlerDirective<number, number>;
 
   @Input()
   handlerFunction?: HandleActionFunction<number, number>;

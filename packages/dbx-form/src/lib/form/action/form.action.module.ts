@@ -1,7 +1,7 @@
 import { MatDialogModule } from '@angular/material/dialog';
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { DbNgxActionFormDirective } from './form.action.directive';
+import { DbxActionFormDirective } from './form.action.directive';
 
 @NgModule({
   imports: [
@@ -9,10 +9,10 @@ import { DbNgxActionFormDirective } from './form.action.directive';
     MatDialogModule
   ],
   declarations: [
-    DbNgxActionFormDirective
+    DbxActionFormDirective
   ],
   exports: [
-    DbNgxActionFormDirective
+    DbxActionFormDirective
   ]
 })
-export class DbNgxFormlyActionModule { }
+export class DbxFormlyActionModule { }

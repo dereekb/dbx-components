@@ -8,4 +8,4 @@ import { Component } from '@angular/core';
   template: `<span class="button-spacer"></span>`,
   // TODO: styleUrls: ['./button.scss']
 })
-export class DbNgxButtonSpacerComponent { }
+export class DbxButtonSpacerComponent { }

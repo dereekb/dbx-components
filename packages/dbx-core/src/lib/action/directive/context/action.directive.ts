@@ -3,14 +3,14 @@ import { ProvideActionStoreSource, SecondaryActionContextStoreSource } from '../
 import { ActionContextBaseSource } from '../../action.holder';
 
 /**
- * Provides an DbNgxActionContext.
+ * Provides an DbxActionContext.
  */
 @Directive({
   selector: '[dbxActionContext]',
   exportAs: 'action',
-  providers: ProvideActionStoreSource(DbNgxActionContextDirective)
+  providers: ProvideActionStoreSource(DbxActionContextDirective)
 })
-export class DbNgxActionContextDirective<T = any, O = any> extends ActionContextBaseSource implements OnDestroy {
+export class DbxActionContextDirective<T = any, O = any> extends ActionContextBaseSource implements OnDestroy {
 
   constructor(@Optional() @Host() inputSource: SecondaryActionContextStoreSource) {
     super(inputSource);

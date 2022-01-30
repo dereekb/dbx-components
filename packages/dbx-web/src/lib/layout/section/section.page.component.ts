@@ -19,7 +19,7 @@ import { Component, Input } from '@angular/core';
   `,
   // TODO: styleUrls: ['./container.scss']
 })
-export class DbNgxSectionPageComponent {
+export class DbxSectionPageComponent {
 
   @Input()
   header?: string;

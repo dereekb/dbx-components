@@ -1,11 +1,11 @@
 import { NgModule } from '@angular/core';
-import { DbNgxFormWrapperModule } from '../wrappers/form.wrapper.module';
+import { DbxFormWrapperModule } from '../wrappers/form.wrapper.module';
 
 @NgModule({
   imports: [],
   declarations: [],
   exports: [
-    DbNgxFormWrapperModule
+    DbxFormWrapperModule
   ]
 })
-export class DbNgxTextFieldModule { }
+export class DbxTextFieldModule { }

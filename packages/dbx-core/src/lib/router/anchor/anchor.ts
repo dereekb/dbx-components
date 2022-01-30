@@ -43,7 +43,7 @@ export function anchorTypeForAnchor(anchor: Maybe<ClickableAnchor>, disabled?: M
   return type;
 }
 
-export abstract class DbNgxAnchor<T extends ClickableAnchor = ClickableAnchor> {
+export abstract class DbxAnchor<T extends ClickableAnchor = ClickableAnchor> {
   abstract disabled$: Observable<Maybe<boolean>>;
   abstract anchor$: Observable<Maybe<T>>;
   abstract disabled: Maybe<boolean>;
@@ -51,9 +51,9 @@ export abstract class DbNgxAnchor<T extends ClickableAnchor = ClickableAnchor> {
   abstract type$: Observable<AnchorType>;
 }
 
-export function ProvideDbNgxAnchor<S extends DbNgxAnchor>(sourceType: Type<S>): Provider[] {
+export function ProvideDbxAnchor<S extends DbxAnchor>(sourceType: Type<S>): Provider[] {
   return [{
-    provide: DbNgxAnchor,
+    provide: DbxAnchor,
     useExisting: sourceType
   }];
 }

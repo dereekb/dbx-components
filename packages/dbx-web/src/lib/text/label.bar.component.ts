@@ -12,7 +12,7 @@ import { Component, Input } from '@angular/core';
   </div>`,
   // TODO: styleUrls: ['./text.scss']
 })
-export class DbNgxLabelBarComponent {
+export class DbxLabelBarComponent {
 
   @Input()
   text?: string;

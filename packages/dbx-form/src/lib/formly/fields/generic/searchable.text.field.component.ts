@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
-import { AbstractDbNgxSearchableValueFieldDirective, SearchableValueFieldsFieldConfig, SearchableValueFieldsFormlyFieldConfig } from './searchable.field.component';
+import { AbstractDbxSearchableValueFieldDirective, SearchableValueFieldsFieldConfig, SearchableValueFieldsFormlyFieldConfig } from './searchable.field.component';
 
 export interface SearchableTextValueFieldsFieldConfig<T> extends SearchableValueFieldsFieldConfig<T> { }
 export interface SearchableTextValueFieldsFormlyFieldConfig<T> extends SearchableTextValueFieldsFieldConfig<T>, SearchableValueFieldsFormlyFieldConfig<T> { }
@@ -12,7 +12,7 @@ export interface SearchableTextValueFieldsFormlyFieldConfig<T> extends Searchabl
   templateUrl: 'searchable.text.field.component.html',
   // TODO: styleUrls: ['./generic.scss']
 })
-export class DbNgxSearchableTextFieldComponent<T> extends AbstractDbNgxSearchableValueFieldDirective<T, SearchableTextValueFieldsFormlyFieldConfig<T>> {
+export class DbxSearchableTextFieldComponent<T> extends AbstractDbxSearchableValueFieldDirective<T, SearchableTextValueFieldsFormlyFieldConfig<T>> {
 
   override readonly multiSelect = false;
 

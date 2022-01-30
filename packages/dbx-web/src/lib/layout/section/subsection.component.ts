@@ -1,5 +1,5 @@
 import { Component, Input } from '@angular/core';
-import { DbNgxSectionComponent } from './section.component';
+import { DbxSectionComponent } from './section.component';
 
 /**
  * Component used to format content on a page within a section.
@@ -17,4 +17,4 @@ import { DbNgxSectionComponent } from './section.component';
   `,
   // TODO: styleUrls: ['./container.scss']
 })
-export class DbNgxSubSectionComponent extends DbNgxSectionComponent {}
+export class DbxSubSectionComponent extends DbxSectionComponent {}

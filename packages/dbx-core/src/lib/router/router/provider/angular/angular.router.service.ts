@@ -1,30 +1,30 @@
 import { filterMaybe } from '@dereekb/rxjs';
-import { DbNgxRouterService, DbNgxRouterTransitionService } from '../../service';
+import { DbxRouterService, DbxRouterTransitionService } from '../../service';
 import { SegueRef } from "../../../segue";
 import { ActivatedRoute, NavigationBehaviorOptions, NavigationEnd, NavigationExtras, NavigationStart, Router } from '@angular/router';
 import { Injectable } from "@angular/core";
 import { isArray } from "class-validator";
-import { DbNgxRouterTransitionEvent, DbNgxRouterTransitionEventType } from "../../transition/transition";
+import { DbxRouterTransitionEvent, DbxRouterTransitionEventType } from "../../transition/transition";
 import { map } from "rxjs/operators";
 import { Maybe } from '@dereekb/util';
 
 /**
- * AngularRouter implementation of DbNgxRouterService and DbNgxRouterTransitionService.
+ * AngularRouter implementation of DbxRouterService and DbxRouterTransitionService.
  */
 @Injectable()
-export class DbNgxAngularRouterService implements DbNgxRouterService, DbNgxRouterTransitionService {
+export class DbxAngularRouterService implements DbxRouterService, DbxRouterTransitionService {
 
   readonly transitions$ = this.router.events.pipe(
     map((x) => {
-      let event: Maybe<DbNgxRouterTransitionEvent>;
+      let event: Maybe<DbxRouterTransitionEvent>;
 
       if (x instanceof NavigationStart) {
         event = {
-          type: DbNgxRouterTransitionEventType.START
+          type: DbxRouterTransitionEventType.START
         };
       } else if (x instanceof NavigationEnd) {
         event = {
-          type: DbNgxRouterTransitionEventType.SUCCESS
+          type: DbxRouterTransitionEventType.SUCCESS
         };
       }
 

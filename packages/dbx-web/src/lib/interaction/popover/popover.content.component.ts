@@ -19,7 +19,7 @@ import { throttleTime } from 'rxjs/operators';
 `,
   // TODO: styleUrls: ['./popover.scss']
 })
-export class DbNgxPopoverContentComponent implements OnDestroy {
+export class DbxPopoverContentComponent implements OnDestroy {
 
   private readonly _height = new BehaviorSubject<string>('');
   readonly height$ = this._height.asObservable().pipe(throttleTime(100, undefined, { leading: true, trailing: true }));

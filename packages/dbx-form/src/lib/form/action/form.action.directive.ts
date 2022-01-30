@@ -5,15 +5,15 @@ import { catchError, filter, first, map, switchMap } from 'rxjs/operators';
 import { ActionContextStoreSourceInstance } from '@dereekb/dbx-core';
 import { ReadableError } from '@dereekb/util';
 import { SubscriptionObject, LockSet } from '@dereekb/rxjs';
-import { DbNgxForm, DbNgxFormState } from '../../form/form';
+import { DbxForm, DbxFormState } from '../../form/form';
 
-export interface DbNgxActionFormTriggerResult {
+export interface DbxActionFormTriggerResult {
   value?: any;
   reject?: ReadableError;
 }
 
-export type DbNgxActionFormValidateFn<T = any> = (value: T) => Observable<boolean>;
-export type DbNgxActionFormModifiedFn<T = any> = (value: T) => Observable<boolean>;
+export type DbxActionFormValidateFn<T = any> = (value: T) => Observable<boolean>;
+export type DbxActionFormModifiedFn<T = any> = (value: T) => Observable<boolean>;
 
 export const APP_ACTION_FORM_DISABLED_KEY = 'actionForm';
 
@@ -27,7 +27,7 @@ export const APP_ACTION_FORM_DISABLED_KEY = 'actionForm';
 @Directive({
   selector: '[dbxActionForm]'
 })
-export class DbNgxActionFormDirective<T = any> implements OnInit, OnDestroy {
+export class DbxActionFormDirective<T = any> implements OnInit, OnDestroy {
 
   readonly lockSet = new LockSet();
 
@@ -36,18 +36,18 @@ export class DbNgxActionFormDirective<T = any> implements OnInit, OnDestroy {
    * ready to send before the context store is marked enabled.
    */
   @Input()
-  appActionFormValidator?: DbNgxActionFormValidateFn<T>;
+  appActionFormValidator?: DbxActionFormValidateFn<T>;
 
   /**
    * Optional function that checks whether or not the value has been modified.
    */
   @Input()
-  appActionFormModified?: DbNgxActionFormModifiedFn<T>;
+  appActionFormModified?: DbxActionFormModifiedFn<T>;
 
   private _triggeredSub = new SubscriptionObject();
   private _isCompleteSub = new SubscriptionObject();
 
-  constructor(@Host() public readonly form: DbNgxForm, public readonly source: ActionContextStoreSourceInstance<object, any>) {
+  constructor(@Host() public readonly form: DbxForm, public readonly source: ActionContextStoreSourceInstance<object, any>) {
     if (form.lockSet) {
       this.lockSet.addChildLockSet(form.lockSet, 'form');
     }
@@ -74,13 +74,13 @@ export class DbNgxActionFormDirective<T = any> implements OnInit, OnDestroy {
                 return of(doNothing);
               }
             }),
-            catchError((error) => of({ error } as DbNgxActionFormTriggerResult))
+            catchError((error) => of({ error } as DbxActionFormTriggerResult))
           );
         } else {
           return of(doNothing);
         }
       }),
-    ).subscribe((result: DbNgxActionFormTriggerResult) => {
+    ).subscribe((result: DbxActionFormTriggerResult) => {
       if (result.reject) {
         this.source.reject(result.reject);
       } else if (result.value != null) {
@@ -92,7 +92,7 @@ export class DbNgxActionFormDirective<T = any> implements OnInit, OnDestroy {
 
     // Update the enabled/disabled state
     this._isCompleteSub.subscription = this.form.stream$.pipe(
-      filter((x) => x.state !== DbNgxFormState.INITIALIZING),
+      filter((x) => x.state !== DbxFormState.INITIALIZING),
       switchMap((event) => {
 
         // Use both changes count and whether or not something was in the past to guage whether or not the item has been touched.
@@ -165,7 +165,7 @@ export class DbNgxActionFormDirective<T = any> implements OnInit, OnDestroy {
     );
   }
 
-  protected readyValue(value: T): Observable<DbNgxActionFormTriggerResult> {
+  protected readyValue(value: T): Observable<DbxActionFormTriggerResult> {
     return of({ value });
   }
 

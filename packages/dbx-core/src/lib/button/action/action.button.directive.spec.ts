@@ -1,11 +1,11 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Component, ViewChild } from '@angular/core';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { DbNgxActionContextDirective, DbNgxCoreActionModule } from '../../action';
-import { DbNgxActionButtonDirective } from './action.button.directive';
-import { DbNgxCoreButtonModule } from '../button.module';
-import { DbNgxActionButtonTriggerDirective } from './action.button.trigger.directive';
-import { DbNgxButtonDirective } from '../button.directive';
+import { DbxActionContextDirective, DbxCoreActionModule } from '../../action';
+import { DbxActionButtonDirective } from './action.button.directive';
+import { DbxCoreButtonModule } from '../button.module';
+import { DbxActionButtonTriggerDirective } from './action.button.trigger.directive';
+import { DbxButtonDirective } from '../button.directive';
 import { Maybe } from '@dereekb/util';
 
 describe('Action Button', () => {
@@ -13,26 +13,26 @@ describe('Action Button', () => {
   beforeEach(async () => {
     TestBed.configureTestingModule({
       imports: [
-        DbNgxCoreActionModule,
-        DbNgxCoreButtonModule,
+        DbxCoreActionModule,
+        DbxCoreButtonModule,
         NoopAnimationsModule
       ],
       declarations: [
-        TestDbNgxActionButtonTriggerDirectiveComponent,
-        TestDbNgxActionButtonDirectiveComponent,
+        TestDbxActionButtonTriggerDirectiveComponent,
+        TestDbxActionButtonDirectiveComponent,
       ]
     }).compileComponents();
   });
 
-  let directive: Maybe<DbNgxActionContextDirective<number, number>>;
+  let directive: Maybe<DbxActionContextDirective<number, number>>;
 
   describe('dbxActionButton', () => {
 
-    let testComponent: TestDbNgxActionButtonDirectiveComponent;
-    let fixture: ComponentFixture<TestDbNgxActionButtonDirectiveComponent>;
+    let testComponent: TestDbxActionButtonDirectiveComponent;
+    let fixture: ComponentFixture<TestDbxActionButtonDirectiveComponent>;
 
     beforeEach(async () => {
-      fixture = TestBed.createComponent(TestDbNgxActionButtonDirectiveComponent);
+      fixture = TestBed.createComponent(TestDbxActionButtonDirectiveComponent);
       testComponent = fixture.componentInstance;
 
       directive = testComponent.directive;
@@ -78,11 +78,11 @@ describe('Action Button', () => {
 
   describe('dbxActionButtonTrigger', () => {
 
-    let testComponent: TestDbNgxActionButtonTriggerDirectiveComponent;
-    let fixture: ComponentFixture<TestDbNgxActionButtonTriggerDirectiveComponent>;
+    let testComponent: TestDbxActionButtonTriggerDirectiveComponent;
+    let fixture: ComponentFixture<TestDbxActionButtonTriggerDirectiveComponent>;
 
     beforeEach(async () => {
-      fixture = TestBed.createComponent(TestDbNgxActionButtonTriggerDirectiveComponent);
+      fixture = TestBed.createComponent(TestDbxActionButtonTriggerDirectiveComponent);
       testComponent = fixture.componentInstance;
 
       directive = testComponent.directive;
@@ -114,16 +114,16 @@ describe('Action Button', () => {
     </div>
   `
 })
-class TestDbNgxActionButtonTriggerDirectiveComponent {
+class TestDbxActionButtonTriggerDirectiveComponent {
 
-  @ViewChild(DbNgxActionContextDirective, { static: true })
-  directive?: DbNgxActionContextDirective<number, number>;
+  @ViewChild(DbxActionContextDirective, { static: true })
+  directive?: DbxActionContextDirective<number, number>;
 
-  @ViewChild(DbNgxActionButtonTriggerDirective, { static: true })
-  buttonDirective?: DbNgxActionButtonTriggerDirective;
+  @ViewChild(DbxActionButtonTriggerDirective, { static: true })
+  buttonDirective?: DbxActionButtonTriggerDirective;
 
-  @ViewChild(DbNgxButtonDirective, { static: true })
-  button?: DbNgxButtonDirective;
+  @ViewChild(DbxButtonDirective, { static: true })
+  button?: DbxButtonDirective;
 
   constructor() { }
 
@@ -136,16 +136,16 @@ class TestDbNgxActionButtonTriggerDirectiveComponent {
     </div>
   `
 })
-class TestDbNgxActionButtonDirectiveComponent {
+class TestDbxActionButtonDirectiveComponent {
 
-  @ViewChild(DbNgxActionContextDirective, { static: true })
-  directive?: DbNgxActionContextDirective<number, number>;
+  @ViewChild(DbxActionContextDirective, { static: true })
+  directive?: DbxActionContextDirective<number, number>;
 
-  @ViewChild(DbNgxActionButtonDirective, { static: true })
-  buttonDirective?: DbNgxActionButtonDirective;
+  @ViewChild(DbxActionButtonDirective, { static: true })
+  buttonDirective?: DbxActionButtonDirective;
 
-  @ViewChild(DbNgxButtonDirective, { static: true })
-  button?: DbNgxButtonDirective;
+  @ViewChild(DbxButtonDirective, { static: true })
+  button?: DbxButtonDirective;
 
   constructor() { }
 

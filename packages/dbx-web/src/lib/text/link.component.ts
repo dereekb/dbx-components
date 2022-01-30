@@ -6,7 +6,7 @@ import { ClickableAnchor } from '@dereekb/dbx-core';
   template: `<span class="dbx-link"><dbx-anchor [anchor]="anchor"><ng-content></ng-content></dbx-anchor></span>`,
   // TODO: styleUrls: ['./text.scss']
 })
-export class DbNgxLinkComponent {
+export class DbxLinkComponent {
 
   @Input()
   anchor?: ClickableAnchor;

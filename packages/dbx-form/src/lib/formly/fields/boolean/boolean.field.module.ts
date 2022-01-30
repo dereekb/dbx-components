@@ -1,11 +1,11 @@
 import { NgModule } from '@angular/core';
-import { DbNgxGenericFieldModule } from '../generic/generic.field.module';
+import { DbxGenericFieldModule } from '../generic/generic.field.module';
 
 @NgModule({
   imports: [],
   declarations: [],
   exports: [
-    DbNgxGenericFieldModule
+    DbxGenericFieldModule
   ]
 })
-export class DbNgxBooleanFieldModule { }
+export class DbxBooleanFieldModule { }

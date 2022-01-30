@@ -29,7 +29,7 @@ export enum DateTimeFieldTimeMode {
 
 export interface DateTimePickerConfiguration extends Omit<DateTimeMinuteConfig, 'date'> { }
 
-export interface DbNgxDateTimeFieldConfig {
+export interface DbxDateTimeFieldConfig {
 
   /**
    * Whether or not the date is hidden, and automatically uses today/input date.
@@ -69,13 +69,13 @@ export interface DbNgxDateTimeFieldConfig {
 
 }
 
-export interface DateTimeFormlyFieldConfig extends DbNgxDateTimeFieldConfig, FormlyFieldConfig { }
+export interface DateTimeFormlyFieldConfig extends DbxDateTimeFieldConfig, FormlyFieldConfig { }
 
 @Component({
   templateUrl: 'datetime.field.component.html',
   // TODO: styleUrls: ['./date.scss']
 })
-export class DbNgxDateTimeFieldComponent extends FieldType<DateTimeFormlyFieldConfig> implements OnInit, OnDestroy {
+export class DbxDateTimeFieldComponent extends FieldType<DateTimeFormlyFieldConfig> implements OnInit, OnDestroy {
 
   private _sub = new SubscriptionObject();
   private _valueSub = new SubscriptionObject();

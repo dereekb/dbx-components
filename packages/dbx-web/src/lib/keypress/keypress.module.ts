@@ -1,16 +1,16 @@
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { DbNgxWindowKeyDownListenerDirective } from './keydown.listener.directive';
+import { DbxWindowKeyDownListenerDirective } from './keydown.listener.directive';
 
 @NgModule({
   imports: [
     CommonModule
   ],
   declarations: [
-    DbNgxWindowKeyDownListenerDirective
+    DbxWindowKeyDownListenerDirective
   ],
   exports: [
-    DbNgxWindowKeyDownListenerDirective
+    DbxWindowKeyDownListenerDirective
   ]
 })
-export class DbNgxKeypressModule { }
+export class DbxKeypressModule { }

@@ -1,22 +1,22 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { DbNgxFormValueChangesDirective } from './form.changes.directive';
-import { DbNgxFormSourceDirective } from './form.input.directive';
-import { DbNgxFormLoadingPairSourceDirective } from './loading/form.loading.directive';
+import { DbxFormValueChangesDirective } from './form.changes.directive';
+import { DbxFormSourceDirective } from './form.input.directive';
+import { DbxFormLoadingPairSourceDirective } from './loading/form.loading.directive';
 
 @NgModule({
   imports: [
     CommonModule
   ],
   declarations: [
-    DbNgxFormSourceDirective,
-    DbNgxFormValueChangesDirective,
-    DbNgxFormLoadingPairSourceDirective
+    DbxFormSourceDirective,
+    DbxFormValueChangesDirective,
+    DbxFormLoadingPairSourceDirective
   ],
   exports: [
-    DbNgxFormSourceDirective,
-    DbNgxFormValueChangesDirective,
-    DbNgxFormLoadingPairSourceDirective
+    DbxFormSourceDirective,
+    DbxFormValueChangesDirective,
+    DbxFormLoadingPairSourceDirective
   ]
 })
-export class DbNgxFormModule { }
+export class DbxFormModule { }

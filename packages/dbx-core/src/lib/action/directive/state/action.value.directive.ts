@@ -14,7 +14,7 @@ import { ActionContextStoreSourceInstance } from '../../action.store.source';
 @Directive({
   selector: '[dbxActionValue]',
 })
-export class DbNgxActionValueDirective<T, O> extends AbstractSubscriptionDirective implements OnInit {
+export class DbxActionValueDirective<T, O> extends AbstractSubscriptionDirective implements OnInit {
 
   private _valueOrFunction = new BehaviorSubject<Maybe<ObjectOrGetter<T>>>(undefined);
   readonly valueOrFunction$ = this._valueOrFunction.pipe(filterMaybe(), shareReplay(1));

@@ -9,7 +9,7 @@ import { Component, Input } from '@angular/core';
   `,
   // TODO: styleUrls: ['./prompt.scss']
 })
-export class DbNgxPromptBoxComponent {
+export class DbxPromptBoxComponent {
 
   @Input()
   elevated = true;

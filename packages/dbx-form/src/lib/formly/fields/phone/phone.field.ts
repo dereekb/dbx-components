@@ -2,9 +2,9 @@ import { textField, TextFieldConfig } from '../text/text.field';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { FieldConfig, formlyField } from '../field';
 import { flexLayoutWrapper } from '../wrappers/flex.wrapper.layout';
-import { DbNgxInternationalPhoneFieldConfig, InternationalPhoneFormlyFieldConfig } from './phone.field.component';
+import { DbxInternationalPhoneFieldConfig, InternationalPhoneFormlyFieldConfig } from './phone.field.component';
 
-export interface InternationalPhoneFieldConfig extends FieldConfig, DbNgxInternationalPhoneFieldConfig { }
+export interface InternationalPhoneFieldConfig extends FieldConfig, DbxInternationalPhoneFieldConfig { }
 
 export function internationalPhoneField({
   key, label = '', placeholder = '',

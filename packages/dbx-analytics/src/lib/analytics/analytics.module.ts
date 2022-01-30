@@ -2,7 +2,7 @@ import { NgModule, ModuleWithProviders, Provider } from '@angular/core';
 import { AnalyticsService } from './analytics.service';
 
 
-export interface DbNgxAnalyticsModuleOptions {
+export interface DbxAnalyticsModuleOptions {
 
   /**
    * Provides a AnalyticsServiceConfiguration value.
@@ -12,11 +12,11 @@ export interface DbNgxAnalyticsModuleOptions {
 }
 
 @NgModule()
-export class DbNgxAnalyticsModule {
+export class DbxAnalyticsModule {
 
-  static forRoot(options: DbNgxAnalyticsModuleOptions): ModuleWithProviders<DbNgxAnalyticsModule> {
+  static forRoot(options: DbxAnalyticsModuleOptions): ModuleWithProviders<DbxAnalyticsModule> {
     return {
-      ngModule: DbNgxAnalyticsModule,
+      ngModule: DbxAnalyticsModule,
       providers: [
         // Configuration
         options.analyticsConfigurationProvider,

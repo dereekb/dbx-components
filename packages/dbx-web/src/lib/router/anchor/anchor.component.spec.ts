@@ -1,14 +1,14 @@
-import { DbNgxWebUIRouterModule } from './../provider/uirouter/uirouter.router.module';
+import { DbxWebUIRouterModule } from './../provider/uirouter/uirouter.router.module';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { Component, Input, ViewChild } from '@angular/core';
 import { By, BrowserModule } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { AnchorType, ClickableAnchor } from '@dereekb/dbx-core';
-import { DbNgxAnchorModule } from './anchor.module';
+import { DbxAnchorModule } from './anchor.module';
 import { UIRouterModule } from '@uirouter/angular';
 import { APP_BASE_HREF } from '@angular/common';
-import { DbNgxAnchorComponent } from './anchor.component';
+import { DbxAnchorComponent } from './anchor.component';
 import { first } from 'rxjs/operators';
 
 describe('AnchorComponent', () => {
@@ -18,8 +18,8 @@ describe('AnchorComponent', () => {
       imports: [
         BrowserModule,
         NoopAnimationsModule,
-        DbNgxAnchorModule,
-        DbNgxWebUIRouterModule.forRoot(),
+        DbxAnchorModule,
+        DbxWebUIRouterModule.forRoot(),
         UIRouterModule.forRoot()
       ],
       declarations: [
@@ -176,7 +176,7 @@ class TestViewComponent {
   @Input()
   public anchor?: ClickableAnchor;
 
-  @ViewChild(DbNgxAnchorComponent, { static: true })
-  anchorComponent?: DbNgxAnchorComponent;
+  @ViewChild(DbxAnchorComponent, { static: true })
+  anchorComponent?: DbxAnchorComponent;
 
 }

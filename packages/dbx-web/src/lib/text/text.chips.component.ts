@@ -19,7 +19,7 @@ export interface TextChip<T = any> {
   `,
   // TODO: styleUrls: ['./text.scss']
 })
-export class DbNgxTextChipsComponent<T = any> {
+export class DbxTextChipsComponent<T = any> {
 
   @Input()
   chips?: Maybe<TextChip<T>[]>;

@@ -3,9 +3,9 @@ import { Observable } from 'rxjs';
 import { LockSet } from '@dereekb/rxjs';
 
 /**
- * Current state of a DbNgxForm
+ * Current state of a DbxForm
  */
-export enum DbNgxFormState {
+export enum DbxFormState {
   INITIALIZING = -1,
   INCOMPLETE = 0,
   COMPLETE = 1,
@@ -13,11 +13,11 @@ export enum DbNgxFormState {
 }
 
 /**
- * DbNgxForm stream event
+ * DbxForm stream event
  */
-export interface DbNgxFormEvent {
+export interface DbxFormEvent {
   readonly isComplete: boolean;
-  readonly state: DbNgxFormState;
+  readonly state: DbxFormState;
   readonly pristine?: boolean;
   readonly untouched?: boolean;
   readonly lastResetAt?: Date;
@@ -27,7 +27,7 @@ export interface DbNgxFormEvent {
 /**
  * Form that has an event stream, value, and state items.
  */
-export abstract class DbNgxForm {
+export abstract class DbxForm {
   /**
    * LockSet for the form.
    */
@@ -36,8 +36,8 @@ export abstract class DbNgxForm {
    * True if the form is complete/valid.
    */
   abstract readonly isComplete: boolean;
-  abstract readonly state: DbNgxFormState;
-  abstract readonly stream$: Observable<DbNgxFormEvent>;
+  abstract readonly state: DbxFormState;
+  abstract readonly stream$: Observable<DbxFormEvent>;
   abstract readonly value: any;
   abstract setValue(value: any): void;
   abstract resetForm(): void;
@@ -45,14 +45,14 @@ export abstract class DbNgxForm {
 }
 
 /**
- * A typed DbNgxForm
+ * A typed DbxForm
  */
-export interface TypedDbNgxForm<T> extends DbNgxForm {
+export interface TypedDbxForm<T> extends DbxForm {
   readonly value: T;
   setValue(value: T): void;
   resetForm(): void;
 }
 
-export function ProvideDbNgxForm<S extends DbNgxForm>(sourceType: Type<S>): Provider[] {
-  return [{ provide: DbNgxForm, useExisting: sourceType }];
+export function ProvideDbxForm<S extends DbxForm>(sourceType: Type<S>): Provider[] {
+  return [{ provide: DbxForm, useExisting: sourceType }];
 }

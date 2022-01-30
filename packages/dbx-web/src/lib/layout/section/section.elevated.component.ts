@@ -12,4 +12,4 @@ import { Component, Input } from '@angular/core';
   `,
   // TODO: styleUrls: ['./container.scss']
 })
-export class DbNgxSectionElevatedComponent { }
+export class DbxSectionElevatedComponent { }

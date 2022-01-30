@@ -4,9 +4,9 @@ import { HookResult, Transition, TransitionService } from '@uirouter/core';
 import { Observable, of, race } from 'rxjs';
 import { delay, first, map, mergeMap, tap } from 'rxjs/operators';
 import { ActionContextStoreSourceInstance, canTriggerAction, isIdleActionState } from '@dereekb/dbx-core';
-import { DbNgxActionTransitionSafetyDialogResult, DbNgxActionUIRouterTransitionSafetyDialogComponent } from './transition.safety.dialog.component';
+import { DbxActionTransitionSafetyDialogResult, DbxActionUIRouterTransitionSafetyDialogComponent } from './transition.safety.dialog.component';
 
-export enum DbNgxActionTransitionSafetyType {
+export enum DbxActionTransitionSafetyType {
   /**
    * Nothing occurs.
    */
@@ -27,7 +27,7 @@ export enum DbNgxActionTransitionSafetyType {
   AUTO_TRIGGER = 'auto'
 }
 
-type DbNgxActionTransitionSafetyRaceResult = [boolean | undefined, HookResult | undefined];
+type DbxActionTransitionSafetyRaceResult = [boolean | undefined, HookResult | undefined];
 
 /**
  * Context used for preventing a transition from occuring if the action is not complete or is in a modified state.
@@ -39,12 +39,12 @@ type DbNgxActionTransitionSafetyRaceResult = [boolean | undefined, HookResult | 
 @Directive({
   selector: '[dbxActionTransitionSafety]',
 })
-export class DbNgxActionTransitionSafetyDirective<T, O> implements OnInit, OnDestroy {
+export class DbxActionTransitionSafetyDirective<T, O> implements OnInit, OnDestroy {
 
   @Input('dbxActionTransitionSafety')
-  inputSafetyType?: DbNgxActionTransitionSafetyType;
+  inputSafetyType?: DbxActionTransitionSafetyType;
 
-  private _dialogRef?: MatDialogRef<DbNgxActionUIRouterTransitionSafetyDialogComponent, DbNgxActionTransitionSafetyDialogResult>;
+  private _dialogRef?: MatDialogRef<DbxActionUIRouterTransitionSafetyDialogComponent, DbxActionTransitionSafetyDialogResult>;
   private stopWatchingTransition?: () => void;
 
   constructor(
@@ -54,8 +54,8 @@ export class DbNgxActionTransitionSafetyDirective<T, O> implements OnInit, OnDes
     protected readonly dialog: MatDialog
   ) { }
 
-  get safetyType(): DbNgxActionTransitionSafetyType {
-    return this.inputSafetyType || DbNgxActionTransitionSafetyType.DIALOG;
+  get safetyType(): DbxActionTransitionSafetyType {
+    return this.inputSafetyType || DbxActionTransitionSafetyType.DIALOG;
   }
 
   private get _destroyed(): boolean {
@@ -84,10 +84,10 @@ export class DbNgxActionTransitionSafetyDirective<T, O> implements OnInit, OnDes
         if (isModified) {
           return race([
             // Watch for success to occur. At that point, close everything.
-            this.source.success$.pipe(first(), map((x) => [true, undefined] as DbNgxActionTransitionSafetyRaceResult)),
-            this._handleIsModifiedState(transition).pipe(first(), map((x) => [undefined, x] as DbNgxActionTransitionSafetyRaceResult))
+            this.source.success$.pipe(first(), map((x) => [true, undefined] as DbxActionTransitionSafetyRaceResult)),
+            this._handleIsModifiedState(transition).pipe(first(), map((x) => [undefined, x] as DbxActionTransitionSafetyRaceResult))
           ]).pipe(
-            map(([saveSuccess, handleResult]: DbNgxActionTransitionSafetyRaceResult) => {
+            map(([saveSuccess, handleResult]: DbxActionTransitionSafetyRaceResult) => {
               if (saveSuccess) {
                 return true;
               } else {
@@ -111,13 +111,13 @@ export class DbNgxActionTransitionSafetyDirective<T, O> implements OnInit, OnDes
     // console.log('Safety type: ', safetyType);
 
     switch (safetyType) {
-      case DbNgxActionTransitionSafetyType.NONE:
+      case DbxActionTransitionSafetyType.NONE:
         obs = of(true); // Do nothing.
         break;
-      case DbNgxActionTransitionSafetyType.DIALOG:
+      case DbxActionTransitionSafetyType.DIALOG:
         obs = this._showDialog(transition);
         break;
-      case DbNgxActionTransitionSafetyType.AUTO_TRIGGER:
+      case DbxActionTransitionSafetyType.AUTO_TRIGGER:
         obs = this._autoTrigger(transition);
         break;
     }
@@ -153,21 +153,21 @@ export class DbNgxActionTransitionSafetyDirective<T, O> implements OnInit, OnDes
     }
 
     if (!this._dialogRef) {
-      this._dialogRef = this.dialog.open(DbNgxActionUIRouterTransitionSafetyDialogComponent, {
+      this._dialogRef = this.dialog.open(DbxActionUIRouterTransitionSafetyDialogComponent, {
         viewContainerRef: this.viewContainerRef
       });
     }
 
     return this._dialogRef.afterClosed().pipe(
       first(),
-      map((result: DbNgxActionTransitionSafetyDialogResult = DbNgxActionTransitionSafetyDialogResult.STAY) => {
+      map((result: DbxActionTransitionSafetyDialogResult = DbxActionTransitionSafetyDialogResult.STAY) => {
         // Default to Stay if the user clicks outside.
         switch (result) {
-          case DbNgxActionTransitionSafetyDialogResult.DISCARD:
-          case DbNgxActionTransitionSafetyDialogResult.SUCCESS:
-          case DbNgxActionTransitionSafetyDialogResult.NONE:
+          case DbxActionTransitionSafetyDialogResult.DISCARD:
+          case DbxActionTransitionSafetyDialogResult.SUCCESS:
+          case DbxActionTransitionSafetyDialogResult.NONE:
             return true;
-          case DbNgxActionTransitionSafetyDialogResult.STAY:
+          case DbxActionTransitionSafetyDialogResult.STAY:
             return false;
         }
       })
@@ -176,7 +176,7 @@ export class DbNgxActionTransitionSafetyDirective<T, O> implements OnInit, OnDes
 
   private _closeDialog(): void {
     if (this._dialogRef) {
-      this._dialogRef.close(DbNgxActionTransitionSafetyDialogResult.NONE);
+      this._dialogRef.close(DbxActionTransitionSafetyDialogResult.NONE);
     }
 
     this._dialogRef = undefined;

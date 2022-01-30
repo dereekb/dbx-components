@@ -14,7 +14,7 @@ import { ChecklistItemDisplayContent, ChecklistItemFieldDisplayComponent } from 
   `,
   // TODO: styleUrls: ['./checklist.item.scss']
 })
-export class DbNgxDefaultChecklistItemFieldDisplayComponent implements ChecklistItemFieldDisplayComponent<any> {
+export class DbxDefaultChecklistItemFieldDisplayComponent implements ChecklistItemFieldDisplayComponent<any> {
 
   @Input()
   displayContent?: ChecklistItemDisplayContent<any>;

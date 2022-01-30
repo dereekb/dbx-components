@@ -7,11 +7,11 @@ import {
 import { ValidationErrors } from '@angular/forms';
 import { FieldType, FormlyFieldConfig } from '@ngx-formly/core';
 import { ChecklistItemFieldDisplayComponent, ChecklistItemFieldDisplayContentObs } from './checklist.item';
-import { DbNgxDefaultChecklistItemFieldDisplayComponent } from './checklist.item.field.content.default.component';
+import { DbxDefaultChecklistItemFieldDisplayComponent } from './checklist.item.field.content.default.component';
 import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
 import { Maybe } from '@dereekb/util';
 
-export interface DbNgxChecklistItemFieldConfig<T = any> {
+export interface DbxChecklistItemFieldConfig<T = any> {
   /**
    * Observable used to retrieve content to display for the item.
    */
@@ -22,13 +22,13 @@ export interface DbNgxChecklistItemFieldConfig<T = any> {
   componentClass?: Type<ChecklistItemFieldDisplayComponent<T>>;
 }
 
-export interface ChecklistItemFormlyFieldConfig<T = any> extends DbNgxChecklistItemFieldConfig<T>, FormlyFieldConfig { }
+export interface ChecklistItemFormlyFieldConfig<T = any> extends DbxChecklistItemFieldConfig<T>, FormlyFieldConfig { }
 
 @Component({
   templateUrl: 'checklist.item.field.component.html',
   // TODO: styleUrls: ['./checklist.item.scss']
 })
-export class DbNgxChecklistItemFieldComponent<T = any> extends FieldType<ChecklistItemFormlyFieldConfig<T>> implements OnInit, OnDestroy {
+export class DbxChecklistItemFieldComponent<T = any> extends FieldType<ChecklistItemFormlyFieldConfig<T>> implements OnInit, OnDestroy {
 
   private _displayContent = new BehaviorSubject<Maybe<ChecklistItemFieldDisplayContentObs<T>>>(undefined);
 
@@ -67,7 +67,7 @@ export class DbNgxChecklistItemFieldComponent<T = any> extends FieldType<Checkli
   }
 
   get componentClass(): Type<ChecklistItemFieldDisplayComponent<T>> {
-    return this.field.componentClass ?? DbNgxDefaultChecklistItemFieldDisplayComponent;
+    return this.field.componentClass ?? DbxDefaultChecklistItemFieldDisplayComponent;
   }
 
   ngOnInit() {
@@ -86,7 +86,7 @@ export class DbNgxChecklistItemFieldComponent<T = any> extends FieldType<Checkli
     <ng-template #content></ng-template>
   `
 })
-export class DbNgxChecklistItemContentComponent<T = any> extends AbstractSubscriptionDirective implements OnInit {
+export class DbxChecklistItemContentComponent<T = any> extends AbstractSubscriptionDirective implements OnInit {
 
   readonly displayContent$ = this.checklistItemFieldComponent.displayContent$;
   readonly isLoading$ = this.checklistItemFieldComponent.displayContent$
@@ -95,7 +95,7 @@ export class DbNgxChecklistItemContentComponent<T = any> extends AbstractSubscri
   contentRef!: ViewContainerRef;
 
   constructor(
-    readonly checklistItemFieldComponent: DbNgxChecklistItemFieldComponent<T>,
+    readonly checklistItemFieldComponent: DbxChecklistItemFieldComponent<T>,
     readonly resolver: ComponentFactoryResolver,
     readonly ngZone: NgZone
   ) {

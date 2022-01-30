@@ -8,7 +8,7 @@ import {
   SearchableValueFieldHashFn, SearchableValueFieldStringSearchFn,
   SearchableValueFieldDisplayFn, SearchableValueFieldDisplayValue, SearchableValueFieldValue, SearchableFieldDisplayComponent, SearchableValueFieldAnchorFn
 } from './searchable';
-import { DbNgxDefaultSearchableAnchorFieldDisplayComponent, DbNgxDefaultSearchableFieldDisplayComponent } from './searchable.field.autocomplete.item.component';
+import { DbxDefaultSearchableAnchorFieldDisplayComponent, DbxDefaultSearchableFieldDisplayComponent } from './searchable.field.autocomplete.item.component';
 import { Maybe, convertMaybeToArray, findUnique } from '@dereekb/util';
 import { camelCase } from 'change-case';
 
@@ -78,7 +78,7 @@ export interface SearchableValueFieldsFormlyFieldConfig<T> extends SearchableVal
  * Display values are cached for performance.
  */
 @Directive()
-export abstract class AbstractDbNgxSearchableValueFieldDirective<T, C extends SearchableValueFieldsFormlyFieldConfig<T>>
+export abstract class AbstractDbxSearchableValueFieldDirective<T, C extends SearchableValueFieldsFormlyFieldConfig<T>>
   extends FieldType<C> implements OnInit, OnDestroy {
 
   /**
@@ -289,9 +289,9 @@ export abstract class AbstractDbNgxSearchableValueFieldDirective<T, C extends Se
 
     if (!this.defaultComponentClass) {
       if (this.useAnchor) {
-        this.defaultComponentClass = DbNgxDefaultSearchableAnchorFieldDisplayComponent;
+        this.defaultComponentClass = DbxDefaultSearchableAnchorFieldDisplayComponent;
       } else {
-        this.defaultComponentClass = DbNgxDefaultSearchableFieldDisplayComponent;
+        this.defaultComponentClass = DbxDefaultSearchableFieldDisplayComponent;
       }
     }
 

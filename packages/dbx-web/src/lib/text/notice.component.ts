@@ -5,4 +5,4 @@ import { Component } from '@angular/core';
   template: `<p class="dbx-notice"><ng-content></ng-content></p>`,
   // TODO: styleUrls: ['./text.scss']
 })
-export class DbNgxNoticeComponent { }
+export class DbxNoticeComponent { }

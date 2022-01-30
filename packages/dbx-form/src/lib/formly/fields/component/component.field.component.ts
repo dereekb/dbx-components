@@ -1,5 +1,5 @@
 import { Component, OnInit, Type } from '@angular/core';
-import { DbNgxInjectedComponentConfig } from '@dereekb/dbx-core';
+import { DbxInjectedComponentConfig } from '@dereekb/dbx-core';
 import { FieldType, FormlyFieldConfig } from '@ngx-formly/core';
 import { Maybe } from '@dereekb/util';
 
@@ -23,9 +23,9 @@ export interface FormComponentFieldFieldConfig<T extends FormComponentFieldWrapp
 })
 export class FormComponentFieldComponent<T extends FormComponentFieldWrappedComponent = any> extends FieldType<FormComponentFieldFieldConfig<T>> implements OnInit {
 
-  private _config?: DbNgxInjectedComponentConfig;
+  private _config?: DbxInjectedComponentConfig;
 
-  get config(): Maybe<DbNgxInjectedComponentConfig> {
+  get config(): Maybe<DbxInjectedComponentConfig> {
     return this._config;
   }
 

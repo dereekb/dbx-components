@@ -1,6 +1,6 @@
-import { DbNgxPopupController } from './popup';
+import { DbxPopupController } from './popup';
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { DbNgxPopupCoordinatorService } from './popup.coordinator.service';
+import { DbxPopupCoordinatorService } from './popup.coordinator.service';
 import { delay, map, shareReplay } from 'rxjs/operators';
 
 /**
@@ -15,12 +15,12 @@ import { delay, map, shareReplay } from 'rxjs/operators';
   `,
   // TODO: styleUrls: ['./popup.scss']
 })
-export class DbNgxPopupCoordinatorComponent implements OnInit, OnDestroy {
+export class DbxPopupCoordinatorComponent implements OnInit, OnDestroy {
 
   readonly isPopupForKey$ = this.service.popups$.pipe(map(x => x.get(this.popup.key) === this.popup), shareReplay(1));
   readonly show$ = this.isPopupForKey$.pipe(delay(0));
 
-  constructor(private readonly service: DbNgxPopupCoordinatorService, private readonly popup: DbNgxPopupController) { }
+  constructor(private readonly service: DbxPopupCoordinatorService, private readonly popup: DbxPopupController) { }
 
   ngOnInit(): void {
     this.service.addPopup(this.popup);

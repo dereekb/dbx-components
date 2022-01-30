@@ -23,7 +23,7 @@ import { Maybe } from '@dereekb/util';
   `,
   // TODO: styleUrls: ['./container.scss']
 })
-export class DbNgxSectionComponent {
+export class DbxSectionComponent {
 
   @Input()
   header?: Maybe<string>;

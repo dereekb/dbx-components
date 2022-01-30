@@ -7,7 +7,7 @@ import { SearchableFieldDisplayComponent, SearchableValueFieldDisplayValue } fro
     <ng-template #content></ng-template>
   `
 })
-export class DbNgxSearchableFieldAutocompleteItemComponent<T> implements OnInit {
+export class DbxSearchableFieldAutocompleteItemComponent<T> implements OnInit {
 
   @ViewChild('content', { static: true, read: ViewContainerRef })
   content!: ViewContainerRef;
@@ -37,7 +37,7 @@ export class DbNgxSearchableFieldAutocompleteItemComponent<T> implements OnInit 
     <span class="s-chip-sublabel" *ngIf="displayValue.sublabel">({{ displayValue.sublabel }})</span>
   `
 })
-export class DbNgxDefaultSearchableFieldDisplayComponent<T> implements SearchableFieldDisplayComponent<T> {
+export class DbxDefaultSearchableFieldDisplayComponent<T> implements SearchableFieldDisplayComponent<T> {
 
   @Input()
   displayValue?: SearchableValueFieldDisplayValue<T>;
@@ -51,7 +51,7 @@ export class DbNgxDefaultSearchableFieldDisplayComponent<T> implements Searchabl
     </dbx-anchor>
   `
 })
-export class DbNgxDefaultSearchableAnchorFieldDisplayComponent<T> implements SearchableFieldDisplayComponent<T> {
+export class DbxDefaultSearchableAnchorFieldDisplayComponent<T> implements SearchableFieldDisplayComponent<T> {
 
   @Input()
   displayValue?: SearchableValueFieldDisplayValue<T>;

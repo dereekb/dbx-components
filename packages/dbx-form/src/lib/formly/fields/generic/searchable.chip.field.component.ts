@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
 import { MatChipInputEvent } from '@angular/material/chips';
-import { AbstractDbNgxSearchableValueFieldDirective, SearchableValueFieldsFieldConfig, SearchableValueFieldsFormlyFieldConfig } from './searchable.field.component';
+import { AbstractDbxSearchableValueFieldDirective, SearchableValueFieldsFieldConfig, SearchableValueFieldsFormlyFieldConfig } from './searchable.field.component';
 import { COMMA, ENTER } from '@angular/cdk/keycodes';
 
 export interface SearchableChipValueFieldsFieldConfig<T> extends SearchableValueFieldsFieldConfig<T> { }
@@ -11,7 +11,7 @@ export interface SearchableChipValueFieldsFormlyFieldConfig<T> extends Searchabl
   templateUrl: 'searchable.chip.field.component.html',
   // TODO: styleUrls: ['./generic.scss']
 })
-export class DbNgxSearchableChipFieldComponent<T> extends AbstractDbNgxSearchableValueFieldDirective<T, SearchableChipValueFieldsFormlyFieldConfig<T>> {
+export class DbxSearchableChipFieldComponent<T> extends AbstractDbxSearchableValueFieldDirective<T, SearchableChipValueFieldsFormlyFieldConfig<T>> {
 
   readonly separatorKeysCodes: number[] = [ENTER, COMMA];
 

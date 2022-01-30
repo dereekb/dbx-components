@@ -17,12 +17,12 @@ const DEFAULT_ERROR_THROTTLE_MS = 3 * 1000;
 const MAX_ERRORS_TO_THROTTLE_ON = 6;
 
 /**
- * Extension of DbNgxActionTransitionSafetyDirective that automatically triggers the action periodically when it is in a modified state.
+ * Extension of DbxActionTransitionSafetyDirective that automatically triggers the action periodically when it is in a modified state.
  */
 @Directive({
   selector: '[dbxActionAutoTrigger]',
 })
-export class DbNgxActionAutoTriggerDirective<T, O> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
+export class DbxActionAutoTriggerDirective<T, O> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
 
   private _triggerEnabled = new BehaviorSubject<boolean>(true);
 

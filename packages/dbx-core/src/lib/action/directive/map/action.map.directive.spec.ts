@@ -1,38 +1,38 @@
-import { DbNgxActionFromMapDirective } from './action.map.key.directive';
+import { DbxActionFromMapDirective } from './action.map.key.directive';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Component, ViewChild, Input } from '@angular/core';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { DbNgxCoreActionModule } from '../../action.module';
-import { DbNgxActionComponent } from '../context/action.component';
-import { DbNgxActionContextMapDirective } from './action.map.directive';
-import { DbNgxActionMapSourceDirective } from './action.map.source.directive';
+import { DbxCoreActionModule } from '../../action.module';
+import { DbxActionComponent } from '../context/action.component';
+import { DbxActionContextMapDirective } from './action.map.directive';
+import { DbxActionMapSourceDirective } from './action.map.source.directive';
 
-describe('DbNgxActionContextMapDirective', () => {
+describe('DbxActionContextMapDirective', () => {
 
   beforeEach(async () => {
     TestBed.configureTestingModule({
       imports: [
-        DbNgxCoreActionModule,
+        DbxCoreActionModule,
         NoopAnimationsModule
       ],
       declarations: [
-        TestDbNgxActionContextMapDirectiveComponent
+        TestDbxActionContextMapDirectiveComponent
       ]
     }).compileComponents();
   });
 
-  let testComponent: TestDbNgxActionContextMapDirectiveComponent;
+  let testComponent: TestDbxActionContextMapDirectiveComponent;
 
-  let directive: DbNgxActionContextMapDirective;
-  let dbxActionFromMap: DbNgxActionFromMapDirective;
-  let dbxActionMapSource: DbNgxActionMapSourceDirective;
-  let aActionComponent: DbNgxActionComponent<number, number>;
-  let bActionComponent: DbNgxActionComponent<number, number>;
+  let directive: DbxActionContextMapDirective;
+  let dbxActionFromMap: DbxActionFromMapDirective;
+  let dbxActionMapSource: DbxActionMapSourceDirective;
+  let aActionComponent: DbxActionComponent<number, number>;
+  let bActionComponent: DbxActionComponent<number, number>;
 
-  let fixture: ComponentFixture<TestDbNgxActionContextMapDirectiveComponent>;
+  let fixture: ComponentFixture<TestDbxActionContextMapDirectiveComponent>;
 
   beforeEach(async () => {
-    fixture = TestBed.createComponent(TestDbNgxActionContextMapDirectiveComponent);
+    fixture = TestBed.createComponent(TestDbxActionContextMapDirectiveComponent);
     testComponent = fixture.componentInstance;
 
     directive = testComponent.map!;
@@ -44,7 +44,7 @@ describe('DbNgxActionContextMapDirective', () => {
     fixture.detectChanges();
   });
 
-  describe('DbNgxActionMapSourceDirective', () => {
+  describe('DbxActionMapSourceDirective', () => {
 
     it('should be defined.', () => {
       expect(dbxActionMapSource).toBeDefined();
@@ -61,7 +61,7 @@ describe('DbNgxActionContextMapDirective', () => {
 
   });
 
-  describe('DbNgxActionFromMapDirective', () => {
+  describe('DbxActionFromMapDirective', () => {
 
     it('should have a key', () => {
       expect(dbxActionFromMap.key).toBeDefined();
@@ -90,24 +90,24 @@ describe('DbNgxActionContextMapDirective', () => {
     </ng-container>
   `
 })
-class TestDbNgxActionContextMapDirectiveComponent {
+class TestDbxActionContextMapDirectiveComponent {
 
   @Input()
   key = 'test';
 
-  @ViewChild(DbNgxActionContextMapDirective, { static: true })
-  map?: DbNgxActionContextMapDirective;
+  @ViewChild(DbxActionContextMapDirective, { static: true })
+  map?: DbxActionContextMapDirective;
 
-  @ViewChild(DbNgxActionMapSourceDirective, { static: true })
-  dbxActionMapSource?: DbNgxActionMapSourceDirective;
+  @ViewChild(DbxActionMapSourceDirective, { static: true })
+  dbxActionMapSource?: DbxActionMapSourceDirective;
 
-  @ViewChild(DbNgxActionFromMapDirective, { static: true })
-  dbxActionFromMap?: DbNgxActionFromMapDirective;
+  @ViewChild(DbxActionFromMapDirective, { static: true })
+  dbxActionFromMap?: DbxActionFromMapDirective;
 
   @ViewChild('a', { static: true })
-  aAction?: DbNgxActionComponent<number, number>;
+  aAction?: DbxActionComponent<number, number>;
 
   @ViewChild('b', { static: true })
-  bAction?: DbNgxActionComponent<number, number>;
+  bAction?: DbxActionComponent<number, number>;
 
 }

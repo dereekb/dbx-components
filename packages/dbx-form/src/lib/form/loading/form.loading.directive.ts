@@ -1,7 +1,7 @@
 import { Observable, combineLatest } from 'rxjs';
 import { Directive, Host, Input } from '@angular/core';
 import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
-import { DbNgxForm, DbNgxFormState } from '../../form/form';
+import { DbxForm, DbxFormState } from '../../form/form';
 import { LoadingState } from '@dereekb/rxjs';
 import { distinctUntilChanged, filter, first, map } from 'rxjs/operators';
 
@@ -11,9 +11,9 @@ import { distinctUntilChanged, filter, first, map } from 'rxjs/operators';
 @Directive({
   selector: '[dbxFormLoadingPairSource]'
 })
-export class DbNgxFormLoadingPairSourceDirective<T extends object = any> extends AbstractSubscriptionDirective {
+export class DbxFormLoadingPairSourceDirective<T extends object = any> extends AbstractSubscriptionDirective {
 
-  constructor(@Host() public readonly form: DbNgxForm) {
+  constructor(@Host() public readonly form: DbxForm) {
     super();
   }
 
@@ -32,7 +32,7 @@ export class DbNgxFormLoadingPairSourceDirective<T extends object = any> extends
       subscription = combineLatest([
         // Emit the first time initializing isn't there.
         this.form.stream$.pipe(
-          filter((x) => x.state !== DbNgxFormState.INITIALIZING),
+          filter((x) => x.state !== DbxFormState.INITIALIZING),
           first()
         ),
         obs

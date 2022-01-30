@@ -1,20 +1,20 @@
 import { Component, Input } from '@angular/core';
 
-export enum DbNgxContentContainerPadding {
+export enum DbxContentContainerPadding {
   NONE = 'none',
   MIN = 'min',
   SMALL = 'small',
   NORMAL = 'normal'
 }
 
-export enum DbNgxContentContainerWidth {
+export enum DbxContentContainerWidth {
   SMALL = 'small',
   MEDIUM = 'medium',
   WIDE = 'wide',
   FULL = 'full'
 }
 
-export enum DbNgxContentContainerType {
+export enum DbxContentContainerType {
   /**
    * Full/unrestricted height content.
    */
@@ -37,16 +37,16 @@ export enum DbNgxContentContainerType {
   `,
   // TODO: styleUrls: ['./container.scss']
 })
-export class DbNgxContentContainerComponent {
+export class DbxContentContainerComponent {
 
   @Input()
-  type = DbNgxContentContainerType.NORMAL;
+  type = DbxContentContainerType.NORMAL;
 
   @Input()
-  width = DbNgxContentContainerWidth.WIDE;
+  width = DbxContentContainerWidth.WIDE;
 
   @Input()
-  padding = DbNgxContentContainerPadding.NORMAL;
+  padding = DbxContentContainerPadding.NORMAL;
 
   @Input()
   scrollingContent = false;

@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { DbNgxDialogContentComponent } from './dialog.content.component';
+import { DbxDialogContentComponent } from './dialog.content.component';
 
 /**
  * Module for block components.
@@ -10,10 +10,10 @@ import { DbNgxDialogContentComponent } from './dialog.content.component';
     CommonModule
   ],
   declarations: [
-    DbNgxDialogContentComponent
+    DbxDialogContentComponent
   ],
   exports: [
-    DbNgxDialogContentComponent
+    DbxDialogContentComponent
   ]
 })
-export class DbNgxDialogLayoutModule { }
+export class DbxDialogLayoutModule { }

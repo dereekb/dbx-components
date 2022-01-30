@@ -1,6 +1,6 @@
 import { Component, Input } from '@angular/core';
 
-export enum DbNgxDialogContentContainerWidth {
+export enum DbxDialogContentContainerWidth {
   NORMAL = 'normal',
   WIDE = 'wide'
 }
@@ -17,9 +17,9 @@ export enum DbNgxDialogContentContainerWidth {
   `,
   // TODO: styleUrls: ['./container.scss']
 })
-export class DbNgxDialogContentComponent {
+export class DbxDialogContentComponent {
 
   @Input()
-  width = DbNgxDialogContentContainerWidth.NORMAL;
+  width = DbxDialogContentContainerWidth.NORMAL;
 
 }

@@ -12,7 +12,7 @@ import { Component, Input } from '@angular/core';
   `,
   // TODO: styleUrls: ['./container.scss']
 })
-export class DbNgxSectionBoxComponent {
+export class DbxSectionBoxComponent {
 
   @Input()
   elevated = true;

@@ -2,7 +2,7 @@ import {
   AnalyticsService, AnalyticsServiceConfiguration,
   AnalyticsUserSource, AbstractAnalyticsServiceListener
 } from './analytics.service';
-import { BehaviorSubject, Subject } from 'rxjs';
+import { BehaviorSubject, Subject, Subscription } from 'rxjs';
 import { AnalyticsUser } from './analytics';
 import { AnalyticsStreamEvent, AnalyticsStreamEventType } from './analytics.stream';
 
@@ -10,8 +10,8 @@ class TestAnalyticsServiceListener extends AbstractAnalyticsServiceListener {
 
   readonly events = new Subject<AnalyticsStreamEvent>();
 
-  updateOnStreamEvent(event: AnalyticsStreamEvent) {
-    this.events.next(event);
+  protected _initializeServiceSubscription(): false | Subscription {
+    return this.analyticsEvents$.subscribe((event) => this.events.next(event));
   }
 
 }

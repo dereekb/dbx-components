@@ -13,7 +13,7 @@ export interface EnumValueFieldsFormlyFieldConfig<T> extends EnumValueFieldsFiel
   templateUrl: 'dynamic.enum.field.component.html',
   // TODO: styleUrls: ['./generic.scss']
 })
-export class DbNgxDynamicEnumFieldComponent<T> extends FieldType<EnumValueFieldsFormlyFieldConfig<T>> {
+export class DbxDynamicEnumFieldComponent<T> extends FieldType<EnumValueFieldsFormlyFieldConfig<T>> {
 
   // TODO: ...
 

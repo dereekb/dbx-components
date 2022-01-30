@@ -37,7 +37,7 @@ export interface FormRepeatTypeTemplateOptions extends FormlyTemplateOptions, Fo
   `,
   // TODO: styleUrls: ['./generic.scss']
 })
-export class DbNgxFormRepeatTypeComponent extends FieldArrayType {
+export class DbxFormRepeatTypeComponent extends FieldArrayType {
 
   get repeatSection(): FormRepeatSectionConfig {
     return (this.to as FormRepeatTypeTemplateOptions).repeatSection ?? {};

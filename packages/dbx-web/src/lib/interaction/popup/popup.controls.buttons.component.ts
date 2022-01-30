@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { map } from 'rxjs/operators';
-import { DbNgxPopupController, DbNgxPopupWindowState } from './popup';
+import { DbxPopupController, DbxPopupWindowState } from './popup';
 
 /**
  * Popup Control Buttons.
@@ -24,12 +24,12 @@ import { DbNgxPopupController, DbNgxPopupWindowState } from './popup';
   `,
   // TODO: styleUrls: ['./popup.scss']
 })
-export class DbNgxPopupControlButtonsComponent {
+export class DbxPopupControlButtonsComponent {
 
-  readonly isMinimized$ = this.appPopupController.windowState$.pipe(map(x => x === DbNgxPopupWindowState.MINIMIZED));
-  readonly isFullscreen$ = this.appPopupController.windowState$.pipe(map(x => x === DbNgxPopupWindowState.FULLSCREEN));
+  readonly isMinimized$ = this.appPopupController.windowState$.pipe(map(x => x === DbxPopupWindowState.MINIMIZED));
+  readonly isFullscreen$ = this.appPopupController.windowState$.pipe(map(x => x === DbxPopupWindowState.FULLSCREEN));
 
-  constructor(private appPopupController: DbNgxPopupController) { }
+  constructor(private appPopupController: DbxPopupController) { }
 
   minimizeClicked(): void {
     this.appPopupController.minimize();
