@@ -1,7 +1,16 @@
-@import 'shared';
+@use '../../style/theming';
 
 $dbx-popup-controls-height: 33px;
 
+@mixin typography($typography-config) {
+
+}
+
+@mixin theme($theme-config) {
+  @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-interaction-popup') {
+
+    /*
+   
 .dbx-popup-content {
   @include modalContentView($allowScroll: 0);
   overflow: hidden;
@@ -35,4 +44,8 @@ $dbx-popup-controls-height: 33px;
   min-width: 220px;
   display: inline-block;
   text-align: right;
+}
+    */
+    
+  }
 }

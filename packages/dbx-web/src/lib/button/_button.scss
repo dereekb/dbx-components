@@ -1,0 +1,17 @@
+@use '../style/theming';
+
+@mixin typography($typography-config) {
+  
+}
+
+@mixin theme($theme-config) {
+  @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-button') {
+
+    /*
+    .dbx-error {
+      color: $error-text-color;
+    }
+    */
+    
+  }
+}

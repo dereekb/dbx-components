@@ -1,0 +1,21 @@
+@use '../../style/theming';
+
+@mixin typography($typography-config) {
+
+}
+
+@mixin theme($theme-config) {
+  @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-router-anchor') {
+
+    .dbx-anchor {
+      color: inherit;
+      text-decoration: none;
+    }
+    
+    .dbx-anchor-block {
+      display: block;
+      width: 100%
+    }
+    
+  }
+}

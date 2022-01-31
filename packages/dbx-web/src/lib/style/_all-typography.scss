@@ -1,9 +1,17 @@
 @use './theming';
+@use '../button/button';
+@use '../error/error';
+@use '../interaction/interaction';
 @use '../text/text';
 @use '../layout/layout';
+@use '../router/router';
 
 // Includes all of the typographic styles.
 @mixin all-component-typographies($typography-config) {
+  @include button.typography($typography-config);
+  @include error.typography($typography-config);
+  @include interaction.all-interaction-typography($typography-config);
   @include text.typography($typography-config);
-  @include layout.typography($typography-config);
+  @include layout.all-layout-typography($typography-config);
+  @include router.all-router-typography($typography-config);
 }

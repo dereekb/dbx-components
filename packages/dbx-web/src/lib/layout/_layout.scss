@@ -15,7 +15,6 @@
   @include block.typography($typography-config);
   @include card.typography($typography-config);
   @include column.typography($typography-config);
-  @include context.typography($typography-config);
   @include dialog.typography($typography-config);
   @include flag.typography($typography-config);
   @include item.typography($typography-config);
@@ -29,7 +28,6 @@
   @include block.theme($theme-config);
   @include card.theme($theme-config);
   @include column.theme($theme-config);
-  @include context.theme($theme-config);
   @include dialog.theme($theme-config);
   @include flag.theme($theme-config);
   @include item.theme($theme-config);

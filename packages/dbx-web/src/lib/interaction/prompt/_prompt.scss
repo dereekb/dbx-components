@@ -1,5 +1,14 @@
-@import 'shared';
+@use '../../style/theming';
 
+@mixin typography($typography-config) {
+
+}
+
+@mixin theme($theme-config) {
+  @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-interaction-prompt') {
+
+    /*
+   
 .prompt-page {
   .prompt-page-content-wrap {
     padding-top: 20vh;
@@ -24,4 +33,9 @@
     background: $boxview-elevated-background-color;
   }
 
+}
+
+    */
+    
+  }
 }

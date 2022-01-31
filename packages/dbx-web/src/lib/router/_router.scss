@@ -1,0 +1,9 @@
+@use './anchor/anchor';
+
+@mixin all-router-typography($typography-config) {
+  @include anchor.typography($typography-config);
+}
+
+@mixin all-router-theme($theme-config) {
+  @include anchor.theme($theme-config);
+}
