@@ -306,6 +306,34 @@
           },
           "defaultConfiguration": "production"
         },
+
+        "buildb": {
+          "executor": "@nrwl/angular:package",
+          "outputs": ["dist/packages/dbx-web"],
+          "options": {
+            "project": "packages/dbx-web/ng-package.json"
+          },
+          "configurations": {
+            "production": {
+              "tsConfig": "packages/dbx-web/tsconfig.lib.prod.json"
+            },
+            "development": {
+              "tsConfig": "packages/dbx-web/tsconfig.lib.json"
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "build-total": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "commands": [{
+              "command": "npx nx build dbx-web"
+            }, {
+              "command": "echo do next command"
+            }],
+            "parallel": false
+          }
+        },
         "test": {
           "executor": "@nrwl/jest:jest",
           "outputs": ["coverage/packages/dbx-web", "./.reports/jest/dbx-web.junit.xml"],
