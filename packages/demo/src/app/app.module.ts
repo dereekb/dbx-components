@@ -1,3 +1,4 @@
+import { DbxScreenModule } from './../../../dbx-web/src/lib/screen/screen.module';
 import { DbxAnalyticsModule, AnalyticsService, SegmentModule } from '@dereekb/dbx-analytics';
 import { AppLayoutComponent } from './container/layout.component';
 import { Injector, NgModule } from '@angular/core';
@@ -6,7 +7,7 @@ import { Category, StatesModule, UIRouter, UIRouterModule, UIView } from '@uirou
 import { AppSharedModule } from '@/shared/app.shared.module';
 import { ROOT_STATES } from './app.router';
 import { environment } from '../environments/environment';
-import { DbxWebRootModule, DbxWebUIRouterModule } from '@dereekb/dbx-web';
+import { DbxWebRootModule, DbxWebUIRouterModule, DEFAULT_SCREEN_MEDIA_SERVICE_CONFIG } from '@dereekb/dbx-web';
 import { AnalyticsServiceConfiguration, SegmentAnalyticsListenerService, SegmentApiService, SegmentApiServiceConfig } from '@dereekb/dbx-analytics';
 
 export function routerConfigFn(router: UIRouter, injector: Injector, module: StatesModule): any {
@@ -56,6 +57,7 @@ export function makeSegmentConfig(): SegmentApiServiceConfig {
     BrowserModule,
     AppSharedModule,
     DbxWebRootModule,
+    DbxScreenModule.forRoot(DEFAULT_SCREEN_MEDIA_SERVICE_CONFIG),
     DbxAnalyticsModule.forRoot({
       analyticsConfigurationProvider: {
         provide: AnalyticsServiceConfiguration,
