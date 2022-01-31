@@ -306,30 +306,13 @@
           },
           "defaultConfiguration": "production"
         },
-
-        "buildb": {
-          "executor": "@nrwl/angular:package",
-          "outputs": ["dist/packages/dbx-web"],
-          "options": {
-            "project": "packages/dbx-web/ng-package.json"
-          },
-          "configurations": {
-            "production": {
-              "tsConfig": "packages/dbx-web/tsconfig.lib.prod.json"
-            },
-            "development": {
-              "tsConfig": "packages/dbx-web/tsconfig.lib.json"
-            }
-          },
-          "defaultConfiguration": "production"
-        },
-        "build-total": {
+        "build": {
           "executor": "@nrwl/workspace:run-commands",
           "options": {
             "commands": [{
-              "command": "npx nx build dbx-web"
+              "command": "npx nx build-lib dbx-web"
             }, {
-              "command": "echo do next command"
+              "command": "echo do command to do things on assets"
             }],
             "parallel": false
           }
