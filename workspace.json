@@ -39,7 +39,7 @@
         }
       },
       "tags": []
-    },    
+    },
     "date": {
       "root": "packages/date",
       "sourceRoot": "packages/date/src",
@@ -79,7 +79,7 @@
         }
       },
       "tags": []
-    },    
+    },
     "dbx-analytics": {
       "projectType": "library",
       "root": "packages/dbx-analytics",
@@ -175,7 +175,7 @@
         }
       },
       "tags": []
-    },    
+    },
     "dbx-firebase": {
       "projectType": "library",
       "root": "packages/dbx-firebase",
@@ -283,7 +283,7 @@
         }
       },
       "tags": []
-    },    
+    },
     "dbx-web": {
       "projectType": "library",
       "root": "packages/dbx-web",
@@ -305,6 +305,23 @@
             }
           },
           "defaultConfiguration": "production"
+        },
+        "build-for-npm": {
+          "executor": "@nrwl/workspace:run-commands",
+          "outputs": ["dist/packages/dbx-web"],
+          "options": {
+            "commands": [{
+              "description": "build dbx-web production",
+              "command": "npx nx run dbx-web:build:production"
+            }, {
+              "description": "copy all style files from src to map to respective directory",
+              "command": "cd dist/packages/dbx-web/src && find * -type f -name \"*.scss\" -exec cp -n {} ../{} \\;"
+            }, {
+              "description": "delete unnecessary src directory",
+              "command": "rm -r dist/packages/dbx-web/src"
+            }],
+            "parallel": false
+          }
         },
         "test": {
           "executor": "@nrwl/jest:jest",
@@ -331,7 +348,7 @@
         }
       },
       "tags": []
-    },    
+    },
     "demo": {
       "projectType": "application",
       "root": "packages/demo",
@@ -353,13 +370,14 @@
               "packages/demo/src/assets",
               "packages/demo/src/lib"
             ],
-            "styles": ["packages/demo/src/styles.scss"],
+            "styles": [
+              "packages/demo/src/styles.scss"
+            ],
             "scripts": []
           },
           "configurations": {
             "production": {
-              "budgets": [
-                {
+              "budgets": [{
                   "type": "initial",
                   "maximumWarning": "500kb",
                   "maximumError": "1mb"
@@ -370,12 +388,10 @@
                   "maximumError": "4kb"
                 }
               ],
-              "fileReplacements": [
-                {
-                  "replace": "packages/demo/src/environments/environment.ts",
-                  "with": "packages/demo/src/environments/environment.prod.ts"
-                }
-              ],
+              "fileReplacements": [{
+                "replace": "packages/demo/src/environments/environment.ts",
+                "with": "packages/demo/src/environments/environment.prod.ts"
+              }],
               "outputHashing": "all"
             },
             "development": {
@@ -433,8 +449,7 @@
         "deploy": {
           "executor": "@nrwl/workspace:run-commands",
           "options": {
-            "commands": [
-              {
+            "commands": [{
                 "command": "npx nx build demo"
               },
               {
@@ -467,12 +482,10 @@
               "optimization": true,
               "extractLicenses": true,
               "inspect": false,
-              "fileReplacements": [
-                {
-                  "replace": "packages/demo-api/src/environments/environment.ts",
-                  "with": "packages/demo-api/src/environments/environment.prod.ts"
-                }
-              ]
+              "fileReplacements": [{
+                "replace": "packages/demo-api/src/environments/environment.ts",
+                "with": "packages/demo-api/src/environments/environment.prod.ts"
+              }]
             }
           }
         },
@@ -491,8 +504,7 @@
         "serve": {
           "executor": "@nrwl/workspace:run-commands",
           "options": {
-            "commands": [
-              {
+            "commands": [{
                 "command": "npx nx build demo-api --watch"
               },
               {
@@ -526,8 +538,7 @@
         "deploy": {
           "executor": "@nrwl/workspace:run-commands",
           "options": {
-            "commands": [
-              {
+            "commands": [{
                 "command": "npx nx build demo-api"
               },
               {
@@ -660,7 +671,7 @@
         }
       },
       "tags": []
-    },    
+    },
     "util": {
       "root": "packages/util",
       "sourceRoot": "packages/util/src",
@@ -700,7 +711,7 @@
         }
       },
       "tags": []
-    },    
+    },
     "workspace": {
       "root": ".",
       "targets": {
