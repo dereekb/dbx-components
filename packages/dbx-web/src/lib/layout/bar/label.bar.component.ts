@@ -20,4 +20,6 @@ export class DbxLabelBarComponent {
   @Input()
   icon?: string;
 
+  // todo: add color config
+
 }

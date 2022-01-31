@@ -5,7 +5,6 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { DbxAnchorModule } from '../router';
 import { DbxHintComponent } from './hint.component';
-import { DbxLabelBarComponent } from './label.bar.component';
 import { DbxLabelComponent } from './label.component';
 import { DbxLinkComponent } from './link.component';
 import { DbxLinkifyComponent } from './linkify.component';
@@ -34,8 +33,7 @@ import { DbxWarnComponent } from './warn.component';
     DbxLabelComponent,
     DbxLinkifyComponent,
     DbxOkComponent,
-    DbxTextChipsComponent,
-    DbxLabelBarComponent
+    DbxTextChipsComponent
   ],
   exports: [
     DbxNoteComponent,
@@ -47,8 +45,7 @@ import { DbxWarnComponent } from './warn.component';
     DbxLabelComponent,
     DbxLinkifyComponent,
     DbxOkComponent,
-    DbxTextChipsComponent,
-    DbxLabelBarComponent
+    DbxTextChipsComponent
   ],
 })
 export class DbxTextModule { }

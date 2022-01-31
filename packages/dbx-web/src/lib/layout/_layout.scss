@@ -1,0 +1,39 @@
+@use './bar/bar';
+@use './block/block';
+@use './card/card';
+@use './column/column';
+@use './content/content';
+@use './dialog/dialog';
+@use './flag/flag';
+@use './item/item';
+@use './list/list';
+@use './section/section';
+@use './step/step';
+
+@mixin all-layout-typography($typography-config) {
+  @include bar.typography($typography-config);
+  @include block.typography($typography-config);
+  @include card.typography($typography-config);
+  @include column.typography($typography-config);
+  @include context.typography($typography-config);
+  @include dialog.typography($typography-config);
+  @include flag.typography($typography-config);
+  @include item.typography($typography-config);
+  @include list.typography($typography-config);
+  @include section.typography($typography-config);
+  @include step.typography($typography-config);
+}
+
+@mixin all-layout-theme($theme-config) {
+  @include bar.theme($theme-config);
+  @include block.theme($theme-config);
+  @include card.theme($theme-config);
+  @include column.theme($theme-config);
+  @include context.theme($theme-config);
+  @include dialog.theme($theme-config);
+  @include flag.theme($theme-config);
+  @include item.theme($theme-config);
+  @include list.theme($theme-config);
+  @include section.theme($theme-config);
+  @include step.theme($theme-config);
+}

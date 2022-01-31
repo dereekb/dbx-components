@@ -1,9 +1,20 @@
+@use '../../style/theming';
 
-.two-blocks {
-  height: 100%;
-  --two-blocks-top-height: 50;
+@mixin typography($typography-config) {
+  
+}
 
-  .bottom-block {
-    height: calc(100% - var(--two-blocks-top-height));
+@mixin theme($theme-config) {
+  @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-layout-block') {
+
+    .two-blocks {
+      height: 100%;
+      --two-blocks-top-height: 50;
+    
+      .bottom-block {
+        height: calc(100% - var(--two-blocks-top-height));
+      }
+    }
+        
   }
 }

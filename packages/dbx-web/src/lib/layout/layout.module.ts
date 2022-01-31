@@ -10,9 +10,11 @@ import { DbxCardBoxLayoutModule } from './card/card.box.layout.module';
 import { DbxBlockLayoutModule } from './block/block.layout.module';
 import { DbxCompactLayoutModule } from './compact/compact.layout.module';
 import { DbxStepLayoutModule } from './step/step.layout.module';
+import { DbxBarLayoutModule } from './bar/bar.layout.module';
 
 @NgModule({
   exports: [
+    DbxBarLayoutModule,
     DbxBlockLayoutModule,
     DbxCardBoxLayoutModule,
     DbxColumnLayoutModule,

@@ -1,0 +1,25 @@
+@use '../style/theming';
+
+/*
+.dbx-label-bar {
+  padding: 2px 0;
+  background: $opmore-navy;
+  color: $opmore-white;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dbx-linkify {}
+*/
+
+@mixin typography($typography-config) {
+  // todo
+}
+
+@mixin theme($theme-config) {
+  @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-text') {
+
+  }
+}

@@ -370,6 +370,11 @@
               "packages/demo/src/assets",
               "packages/demo/src/lib"
             ],
+            "stylePreprocessorOptions": {
+              "includePaths": [
+                "packages"
+              ]
+            },
             "styles": [
               "packages/demo/src/styles.scss"
             ],

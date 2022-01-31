@@ -1,0 +1,9 @@
+@use './theming';
+@use '../text/text';
+@use '../layout/layout';
+
+// Includes all of the typographic styles.
+@mixin all-component-typographies($typography-config) {
+  @include text.typography($typography-config);
+  @include layout.typography($typography-config);
+}

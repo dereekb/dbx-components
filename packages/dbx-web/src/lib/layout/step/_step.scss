@@ -1,32 +1,40 @@
-@import 'shared';
+@use '../../style/theming';
 
-.step-section {
-  margin: 12px 0;
+@mixin typography($typography-config) {}
 
-  &.done {
-    .text {
-      // text-decoration: line-through;
+@mixin theme($theme-config) {
+  @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-layout-section') {
+
+    .step-section {
+      margin: 12px 0;
+
+      &.done {
+        .text {
+          // text-decoration: line-through;
+        }
+      }
+
+      .step-section-header {
+        margin-bottom: 8px;
+
+        .step {
+          font-weight: bold;
+          font-size: 1.3em;
+          margin-right: 8px;
+        }
+
+        .hint {
+          opacity: $hint-opacity;
+        }
+
+        .done-check {
+          color: green;
+        }
+      }
+
+      .step-section-content {}
+
     }
+
   }
-  
-  .step-section-header {
-    margin-bottom: 8px;
-
-    .step {
-      font-weight: bold;
-      font-size: 1.3em;
-      margin-right: 8px;
-    }
-
-    .hint {
-      opacity: $hint-opacity;
-    }
-
-    .done-check {
-      color: green;
-    }
-  }
-
-  .step-section-content {}
-
 }
