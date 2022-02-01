@@ -21,8 +21,16 @@ export const publicDocFutureState: Ng2StateDeclaration = {
   loadChildren: () => import('./modules/doc/doc.module').then(m => m.DocModule)
 };
 
+export const publicDemoFutureState: Ng2StateDeclaration = {
+  parent: 'app',
+  name: 'demo.**',
+  url: '/demo',
+  loadChildren: () => import('./modules/demo/demo.module').then(m => m.DemoModule)
+};
+
 export const STATES = [
   layoutState,
   publicLandingFutureState,
-  publicDocFutureState
+  publicDocFutureState,
+  publicDemoFutureState
 ];

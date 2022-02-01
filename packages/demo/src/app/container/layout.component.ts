@@ -15,4 +15,8 @@ export class AppLayoutComponent {
     ref: 'doc'
   };
 
+  readonly demo: ClickableAnchor = {
+    ref: 'demo'
+  };
+
 }
