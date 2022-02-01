@@ -1,0 +1,116 @@
+@use '../../../style/theming';
+
+$side-nav-width: 220px;
+$side-nav-mobile-width: 80vw;
+$side-nav-icon-only-width: 64px;
+
+@mixin typography($typography-config) {}
+
+@mixin theme($theme-config) {
+  @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-router-sidenav') {
+
+    .dbx-sidenav {
+      height: var(--vh100);
+
+      mat-sidenav {
+        width: $side-nav-width;
+      }
+    }
+
+    /*
+    .side-nav {
+      // overflow hidden set on style.scss
+
+      &.side-nav-mobile {
+        mat-sidenav {
+          width: $side-nav-mobile-width;
+        }
+      }
+
+      &.side-nav-icon {
+        mat-sidenav {
+          width: $side-nav-icon-only-width;
+        }
+
+        mat-sidenav-content {
+          margin-left: $side-nav-icon-only-width;
+        }
+      }
+
+      &.side-nav-full {
+        mat-sidenav {
+          width: $side-nav-width;
+        }
+
+        mat-sidenav-content {
+          margin-left: $side-nav-width;
+        }
+      }
+
+      .side-nav-top-bar {
+
+        .mat-toolbar {
+          height: $side-nav-top-bar-top-navbar-height;
+        }
+
+      }
+
+    }
+
+    $active-border-left-width: 4px;
+
+    .mat-list-base {
+      padding-top: 0;
+    }
+
+    .mat-list-item {
+      .mat-icon {
+        padding-right: 18px;
+      }
+    }
+
+    .active {
+      &.mat-list-item {
+        background-color: rgba(0, 0, 0, 0.1);
+        border-left: $active-border-left-width solid $sidenav-active-color;
+      }
+
+      mat-icon {
+        color: $sidenav-active-color;
+
+        // Offset the added border by clearing the default padding width (4px)
+        padding-left: 4px - $active-border-left-width;
+      }
+    }
+
+    $app-side-nav-bar-padding: 14px;
+
+    .app-side-nav-bar-title {
+      // text-align: center;
+      padding: $app-side-nav-bar-padding;
+
+      .app-side-nav-bar-title-header {
+        display: flex;
+
+        >img {
+          width: 32px;
+          height: 32px;
+          padding-left: 2px;
+          padding-right: 16px;
+        }
+
+        span {
+          @include mat-typography-level-to-styles($config, title);
+          font-weight: 300;
+        }
+      }
+
+    }
+
+    .app-side-nav-bar-title-content {
+      padding-top: $app-side-nav-bar-padding;
+    }
+    */
+
+  }
+}

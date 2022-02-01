@@ -1,9 +1,12 @@
-@use './anchor/anchor';
+@use './layout/anchor/anchor';
+@use './layout/sidenav/sidenav';
 
 @mixin all-router-typography($typography-config) {
   @include anchor.typography($typography-config);
+  @include sidenav.typography($typography-config);
 }
 
 @mixin all-router-theme($theme-config) {
   @include anchor.theme($theme-config);
+  @include sidenav.theme($theme-config);
 }

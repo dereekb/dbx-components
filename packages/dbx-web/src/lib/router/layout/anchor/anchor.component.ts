@@ -4,7 +4,7 @@ import { AbstractDbxAnchorDirective, DbxInjectedComponentConfig } from '@dereekb
 import { Maybe } from '@dereekb/util';
 import { BehaviorSubject } from 'rxjs';
 import { map, distinctUntilChanged, shareReplay } from 'rxjs/operators';
-import { DbxRouterWebProviderConfig } from '../provider/router.provider.config';
+import { DbxRouterWebProviderConfig } from '../../provider/router.provider.config';
 
 /**
  * Component that renders an anchor element depending on the input.

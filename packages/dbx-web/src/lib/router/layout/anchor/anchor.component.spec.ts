@@ -1,4 +1,4 @@
-import { DbxWebUIRouterModule } from './../provider/uirouter/uirouter.router.module';
+import { DbxWebUIRouterModule } from './../../provider/uirouter/uirouter.router.module';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { Component, Input, ViewChild } from '@angular/core';

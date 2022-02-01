@@ -1,3 +1,4 @@
+import { initialize, tapFirst } from '@dereekb/rxjs';
 import { Destroyable } from '@dereekb/util';
 import { MediaMatcher } from "@angular/cdk/layout";
 import { Subject, map, shareReplay, distinctUntilChanged, throttleTime, Observable } from "rxjs";
@@ -55,6 +56,7 @@ export class DbxScreenMediaService implements Destroyable {
   private _updateHeight = new Subject<void>();
 
   readonly widthType$: Observable<ScreenMediaWidthType> = this._updateWidth.pipe(
+    initialize(() => this._updateWidth.next()),
     throttleTime(100, undefined, { leading: true, trailing: true }),
     map(() => this._readWeightType()),
     distinctUntilChanged(),
@@ -62,6 +64,7 @@ export class DbxScreenMediaService implements Destroyable {
   );
 
   readonly heightType$: Observable<ScreenMediaHeightType> = this._updateWidth.pipe(
+    initialize(() => this._updateHeight.next()),
     throttleTime(100, undefined, { leading: true, trailing: true }),
     map(() => this._readHeightType()),
     distinctUntilChanged(),

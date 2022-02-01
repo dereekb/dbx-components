@@ -1,0 +1,18 @@
+<!-- Template is projected into other outlets. -->
+<ng-template #content>
+  <mat-icon mat-list-icon>{{ anchor.icon }}</mat-icon>
+  <div mat-line>{{ anchor.title }}</div>
+  <mat-divider [inset]="true" *ngIf="!last"></mat-divider>
+</ng-template>
+<ng-container [ngSwitch]="type">
+  <!-- Click -->
+  <a mat-list-item class="app-anchor app-anchor-click" [ngClass]="anchorClass" (click)="anchor.onClick($event)"
+    *ngSwitchCase="1">
+    <ng-container *ngTemplateOutlet="content"></ng-container>
+  </a>
+  <!-- Sref -->
+  <a mat-list-item class="app-anchor app-anchor-sref" [ngClass]="anchorClass" [uiSref]="anchor.ref"
+    [uiParams]="anchor.refParams" uiSrefActive="active" [uiOptions]="anchor.refOptions" *ngSwitchCase="2">
+    <ng-container *ngTemplateOutlet="content"></ng-container>
+  </a>
+</ng-container>

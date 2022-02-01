@@ -14,7 +14,7 @@ export const publicFutureState: Ng2StateDeclaration = {
   loadChildren: () => import('./modules/public/public.module').then(m => m.PublicModule)
 };
 
-export const ROOT_STATES = [
+export const STATES = [
   layoutState,
   publicFutureState
 ];

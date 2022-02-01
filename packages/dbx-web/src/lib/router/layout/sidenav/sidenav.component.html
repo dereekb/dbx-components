@@ -1,0 +1,19 @@
+<mat-sidenav-container class="dbx-sidenav">
+  <mat-sidenav [mode]="(drawer$ | async)!">
+    <ng-content select="[top]"></ng-content>
+    <p>Side navigation</p>
+    <mat-nav-list>
+      <ng-container *ngFor="let anchor of anchors">
+        <dbx-anchor mat-list-item>
+          <mat-icon mat-list-icon>{{ anchor.icon }}</mat-icon>
+          <div mat-line>{{ anchor.title }}</div>
+        </dbx-anchor>
+        <!-- <mat-divider *ngIf="!last"></mat-divider> -->
+      </ng-container>
+    </mat-nav-list>
+    <ng-content select="[bottom]"></ng-content>
+  </mat-sidenav>
+  <mat-sidenav-content>
+    <ng-content></ng-content>
+  </mat-sidenav-content>
+</mat-sidenav-container>

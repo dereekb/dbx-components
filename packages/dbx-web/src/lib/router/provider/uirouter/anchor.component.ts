@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { AbstractDbxSegueAnchorDirective } from '../../anchor/anchor.segue.directive';
+import { AbstractDbxSegueAnchorDirective } from '../../layout/anchor/anchor.segue.directive';
 
 /**
  * SegueAnchor implementation for UIRouter.
