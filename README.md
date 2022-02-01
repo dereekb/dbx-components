@@ -1,6 +1,14 @@
-
-
 # @dereekb/components
+
+### Status
+main:
+
+[![CircleCI](https://circleci.com/gh/dereekb/dbcomponents/tree/main.svg?style=shield)](https://circleci.com/gh/dereekb/dbcomponents/tree/main)
+
+develop: 
+
+[![CircleCI](https://circleci.com/gh/dereekb/dbcomponents/tree/develop.svg?style=shield)](https://circleci.com/gh/dereekb/dbcomponents/tree/develop)
+
 
 This project was generated using [Nx](https://nx.dev).
 
