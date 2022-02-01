@@ -2,8 +2,9 @@ import { Ng2StateDeclaration } from '@uirouter/angular';
 import { LandingLayoutComponent } from './container/layout.component';
 
 export const layoutState: Ng2StateDeclaration = {
-  url: '/',
-  name: 'public.landing',
+  parent: 'app',
+  name: 'landing',
+  url: '/landing',
   component: LandingLayoutComponent,
 };
 

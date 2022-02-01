@@ -1,10 +1,10 @@
 import { filterMaybe } from '@dereekb/rxjs';
 import { DbxRouterService, DbxRouterTransitionService } from '../../service';
 import { SegueRef } from "../../../segue";
+import { DbxRouterTransitionEvent, DbxRouterTransitionEventType } from "../../transition/transition";
 import { ActivatedRoute, NavigationBehaviorOptions, NavigationEnd, NavigationExtras, NavigationStart, Router } from '@angular/router';
 import { Injectable } from "@angular/core";
 import { isArray } from "class-validator";
-import { DbxRouterTransitionEvent, DbxRouterTransitionEventType } from "../../transition/transition";
 import { map } from "rxjs/operators";
 import { Maybe } from '@dereekb/util';
 

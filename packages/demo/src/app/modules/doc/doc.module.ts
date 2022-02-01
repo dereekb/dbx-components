@@ -1,3 +1,4 @@
+import { DocLayoutComponent } from './container/layout.component';
 import { NgModule } from '@angular/core';
 import { UIRouterModule } from '@uirouter/angular';
 import { STATES } from './doc.router';
@@ -10,6 +11,8 @@ import { AppSharedModule } from '@/shared/app.shared.module';
       states: STATES
     })
   ],
-  declarations: [],
+  declarations: [
+    DocLayoutComponent
+  ],
 })
 export class DocModule { }

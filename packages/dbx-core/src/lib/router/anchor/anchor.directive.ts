@@ -1,6 +1,6 @@
-import { filterMaybe, skipFirstMaybe } from '@dereekb/rxjs';
+import { skipFirstMaybe } from '@dereekb/rxjs';
 import { map, shareReplay, distinctUntilChanged } from 'rxjs/operators';
-import { BehaviorSubject, combineLatest, Observable } from 'rxjs';
+import { BehaviorSubject, combineLatest, Observable, delay } from 'rxjs';
 import { Directive, Input } from '@angular/core';
 import { Maybe } from '@dereekb/util';
 import { AnchorType, ClickableAnchor, anchorTypeForAnchor, DbxAnchor } from './anchor';
@@ -18,6 +18,7 @@ export class AbstractDbxAnchorDirective<T extends ClickableAnchor = ClickableAnc
   readonly anchor$ = this._anchor.pipe(skipFirstMaybe(), distinctUntilChanged(), shareReplay(1));
 
   readonly type$: Observable<AnchorType> = combineLatest([this.disabled$, this.anchor$]).pipe(
+    delay(0),
     map(([disabled, anchor]) => anchorTypeForAnchor(anchor, disabled)),
     distinctUntilChanged(),
     shareReplay(1)

@@ -72,8 +72,8 @@ export function makeSegmentConfig(): SegmentApiServiceConfig {
     DbxWebUIRouterModule.forRoot(),
     UIRouterModule.forRoot({
       useHash: false,
-      initial: { state: 'public.landing' },
-      otherwise: { state: 'public.landing' },
+      initial: { state: 'app' },
+      otherwise: { state: 'app' },
       config: routerConfigFn
     }),
   ],

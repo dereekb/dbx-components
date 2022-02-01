@@ -2,8 +2,9 @@ import { Ng2StateDeclaration } from '@uirouter/angular';
 import { DocLayoutComponent } from './container/layout.component';
 
 export const layoutState: Ng2StateDeclaration = {
+  parent: 'app',
   url: '/doc',
-  name: 'public.doc',
+  name: 'doc',
   component: DocLayoutComponent,
 };
 

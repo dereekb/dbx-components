@@ -10,7 +10,6 @@ import { CommonModule } from '@angular/common';
   imports: [
     CommonModule,
     AppSharedModule,
-    DbxSidenavModule,
     UIRouterModule.forChild({
       states: STATES
     })

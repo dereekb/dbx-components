@@ -1,4 +1,4 @@
-<ng-container [ngSwitch]="type$ | async">
+<ng-container [ngSwitch]="(type$ | async)">
   <!-- Click -->
   <a class="dbx-anchor dbx-anchor-click {{ anchorBlockClass }}" (click)="clickAnchor()" *ngSwitchCase="1">
     <ng-container *ngTemplateOutlet="content"></ng-container>

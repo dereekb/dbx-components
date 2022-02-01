@@ -1,8 +1,10 @@
 <mat-toolbar class="app-toolbar">
-  <dbx-anchor>
+  <dbx-anchor [anchor]="landing">
     <button mat-button>Home</button>
   </dbx-anchor>
+  <dbx-button-spacer></dbx-button-spacer>
+  <dbx-anchor [anchor]="doc">
+    <button mat-button>Docs</button>
+  </dbx-anchor>
 </mat-toolbar>
-<dbx-sidenav>
-  <ui-view></ui-view>
-</dbx-sidenav>
+<ui-view></ui-view>

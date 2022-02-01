@@ -4,7 +4,7 @@ import { DbxScreenMediaService, ScreenMediaWidthType } from '../../../screen';
 import { AbstractTransitionWatcherDirective, DbxRouterTransitionService, ClickableAnchorLink } from '@dereekb/dbx-core';
 import { SubscriptionObject } from '@dereekb/rxjs';
 import { Maybe } from '@dereekb/util';
-import { distinctUntilChanged, map, shareReplay, Subject, Observable, first, tap } from 'rxjs';
+import { distinctUntilChanged, map, shareReplay, Observable, first } from 'rxjs';
 
 export enum SideNavDisplayMode {
   NONE = 'none',
@@ -48,6 +48,7 @@ export class DbxSidenavComponent extends AbstractTransitionWatcherDirective impl
         case ScreenMediaWidthType.TABLET:
           mode = SideNavDisplayMode.ICON;
           break;
+        case ScreenMediaWidthType.LARGE:
         case ScreenMediaWidthType.FULL:
           mode = SideNavDisplayMode.FULL;
           break;
@@ -84,7 +85,7 @@ export class DbxSidenavComponent extends AbstractTransitionWatcherDirective impl
     shareReplay(1)
   );
 
-  readonly drawer$: Observable<MatDrawerMode> = this.state$.pipe(map(x => x.drawer));
+  readonly drawer$: Observable<MatDrawerMode> = this.state$.pipe(map(x => x.drawer), distinctUntilChanged(), shareReplay(1));
 
   private _watcherSub = new SubscriptionObject();
   private _stateSub = new SubscriptionObject();
