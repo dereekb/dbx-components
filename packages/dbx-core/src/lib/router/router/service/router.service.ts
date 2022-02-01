@@ -12,4 +12,11 @@ export abstract class DbxRouterService {
    */
   abstract go(segueRef: SegueRef): Promise<boolean>;
 
+  /**
+   * Returns true if the input segue ref is considered active.
+   * 
+   * @param segueRef 
+   */
+  abstract isActive(segueRef: SegueRef): boolean;
+
 }

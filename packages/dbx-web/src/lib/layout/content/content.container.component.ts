@@ -1,29 +1,17 @@
 import { Component, Input } from '@angular/core';
 
-export enum DbxContentContainerPadding {
-  NONE = 'none',
-  MIN = 'min',
-  SMALL = 'small',
-  NORMAL = 'normal'
-}
+export type DbxContentContainerPadding = 'none' | 'min' | 'small' | 'normal';
 
-export enum DbxContentContainerWidth {
-  SMALL = 'small',
-  MEDIUM = 'medium',
-  WIDE = 'wide',
-  FULL = 'full'
-}
+export type DbxContentContainerWidth = 'small' | 'medium' | 'wide' | 'full';
 
-export enum DbxContentContainerType {
-  /**
-   * Full/unrestricted height content.
-   */
-  NORMAL = 'normal',
-  /**
-   * Content that has a header above it and should take up the rest of the height of the page.
-   */
-  CONTENT = 'content'
-}
+/**
+ * DbxContentContainer type.
+ * 
+ * Two values:
+ * - normal: Full/unrestricted height content.
+ * - content: Content that has a header above it and should take up the rest of the height of the page.
+ */
+export type DbxContentContainerType = 'normal' | 'content';
 
 /**
  * Component that limits the max-width of the content.
@@ -40,13 +28,13 @@ export enum DbxContentContainerType {
 export class DbxContentContainerComponent {
 
   @Input()
-  type = DbxContentContainerType.NORMAL;
+  type = 'normal';
 
   @Input()
-  width = DbxContentContainerWidth.WIDE;
+  width = 'wide';
 
   @Input()
-  padding = DbxContentContainerPadding.NORMAL;
+  padding = 'normal';
 
   @Input()
   scrollingContent = false;

@@ -50,4 +50,8 @@ export class DbxAngularRouterService implements DbxRouterService, DbxRouterTrans
     }
   }
 
+  isActive(segueRef: SegueRef<any>): boolean {
+    return false; // TODO!
+  }
+
 }

@@ -37,4 +37,12 @@ export class DbxUIRouterService implements DbxRouterService, DbxRouterTransition
     return this.state.go(segueRef.ref, params, segueRef.refOptions).then(_ => true).catch(_ => false);
   }
 
+  isActive(segueRef: SegueRef): boolean {
+    const { ref, refParams } = segueRef;
+
+    const targetRef = (ref.startsWith('.') ? `^${ref}` : ref);
+    const active = this.state.includes(targetRef, refParams);
+    return active;
+  }
+
 }

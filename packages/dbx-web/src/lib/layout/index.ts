@@ -1,3 +1,4 @@
+export * from './bar';
 export * from './block';
 export * from './card';
 export * from './column';

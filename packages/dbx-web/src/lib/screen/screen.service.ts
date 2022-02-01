@@ -58,7 +58,7 @@ export class DbxScreenMediaService implements Destroyable {
   readonly widthType$: Observable<ScreenMediaWidthType> = this._updateWidth.pipe(
     initialize(() => this._updateWidth.next()),
     throttleTime(100, undefined, { leading: true, trailing: true }),
-    map(() => this._readWeightType()),
+    map(() => this._readWidthType()),
     distinctUntilChanged(),
     shareReplay(1)
   );
@@ -100,25 +100,29 @@ export class DbxScreenMediaService implements Destroyable {
     this._updateWidth.complete();
   }
 
-  private _readWeightType(): ScreenMediaWidthType {
+  private _readWidthType(): ScreenMediaWidthType {
+    let width: ScreenMediaWidthType;
+
     if (this._microQuery.matches) {
-      return ScreenMediaWidthType.MICRO;
+      width = 'micro';
     } else if (this._smallQuery.matches) {
-      return ScreenMediaWidthType.SMALL;
+      width = 'small';
     } else if (this._tabletQuery.matches) {
-      return ScreenMediaWidthType.TABLET;
+      width = 'tablet';
     } else if (this._largeQuery.matches) {
-      return ScreenMediaWidthType.LARGE;
+      width = 'large';
     } else {
-      return ScreenMediaWidthType.FULL;
+      width = 'full';
     }
+
+    return width;
   }
 
   private _readHeightType(): ScreenMediaHeightType {
     if (this._tinyHeightQuery) {
-      return ScreenMediaHeightType.TINY;
+      return 'tiny';
     } else {
-      return ScreenMediaHeightType.NORMAL;
+      return 'normal';
     }
   }
 

@@ -41,15 +41,15 @@ export class DbxSidenavComponent extends AbstractTransitionWatcherDirective impl
       let mode!: SideNavDisplayMode;
 
       switch (width) {
-        case ScreenMediaWidthType.MICRO:
-        case ScreenMediaWidthType.SMALL:
+        case 'micro':
+        case 'small':
           mode = SideNavDisplayMode.MOBILE;
           break;
-        case ScreenMediaWidthType.TABLET:
+        case 'tablet':
           mode = SideNavDisplayMode.ICON;
           break;
-        case ScreenMediaWidthType.LARGE:
-        case ScreenMediaWidthType.FULL:
+        case 'large':
+        case 'full':
           mode = SideNavDisplayMode.FULL;
           break;
       }
