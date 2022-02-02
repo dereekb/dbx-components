@@ -35,7 +35,7 @@ export const DEFAULT_SCREEN_MEDIA_SERVICE_CONFIG: DbxScreenMediaServiceConfig = 
   microScreenWidthMax: 360,
   smallScreenWidthMax: 520,
   tabletScreenWidthMax: 786,
-  largeScreenWidthMax: 1200,
+  largeScreenWidthMax: 1280,
   tinyScreenHeightMax: 280
 }
 

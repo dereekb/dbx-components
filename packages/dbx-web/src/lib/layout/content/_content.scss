@@ -1,11 +1,73 @@
 @use '../../style/theming';
 
-@mixin typography($typography-config) {
-  
-}
+@mixin typography($typography-config) {}
 
 @mixin theme($theme-config) {
   @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-layout-content') {
+
+    $max-content-width: theming.get-dbx-layout-content-max-width($theme-config);
+
+    $dbx-max-small-content-container-width: $max-content-width / 3;
+    $dbx-max-medium-content-container-width: $max-content-width / 2;
+    $dbx-max-content-container-width: $max-content-width;
+
+    $dbx-content-container-padding: theming.get-dbx-layout-padding($theme-config, 4);
+    $dbx-content-container-padding-small-screen: theming.get-dbx-layout-padding($theme-config, 2);
+
+    .dbx-content-container {
+      margin: auto;
+      padding: 0 $dbx-content-container-padding;
+
+      // NOTE: Order of these classes matters.
+
+      // Padding
+      &.container-padding-none {
+        padding: 0;
+      }
+
+      &.container-padding-min {
+        padding: 0 2px;
+      }
+
+      &.container-padding-small {
+        padding: 0 $dbx-content-container-padding/3;
+      }
+
+      @include theming.if-small-screen($theme-config) {
+        padding: 0 $dbx-content-container-padding-small-screen;
+      }
+
+      // Scrolling
+      &.container-scrolling-content {
+        height: 100%;
+        overflow: hidden;
+        padding: 0 2px; // Override padding
+      }
+
+      // Width
+      &.small-container {
+        max-width: $dbx-max-small-content-container-width;
+      }
+
+      &.medium-container {
+        max-width: $dbx-max-medium-content-container-width;
+      }
+
+      &.wide-container {
+        max-width: $dbx-max-content-container-width;
+      }
+
+      // Type
+      &.normal-container-type {
+        // No restriction.
+      }
+
+      &.content-container-type {
+        // @include fillContentWithAppPageHeaderHeight();
+        overflow-x: hidden;
+        overflow-y: auto;
+      }
+    }
 
   }
 }

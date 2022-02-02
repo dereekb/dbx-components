@@ -1,5 +1,7 @@
 @use '../../style/theming';
+@import '../../layout/content/content';
 
+// Sections
 @mixin typography($typography-config) {
   
 }
@@ -7,5 +9,32 @@
 @mixin theme($theme-config) {
   @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-layout-section') {
 
+    /*
+    .dbx-section-header {
+      padding: 0 0 $dbx-section-header-bottom-padding;
+      box-sizing: border-box;
+    
+      .dbx-section-header-content {
+    
+        h1,
+        h2 {
+          padding-top: 5px;
+          height: $dbx-section-page-h1-height;
+          display: inline;
+    
+          margin: 0; // Margin goes into the dbx-section-page-header instead.
+        }
+    
+        display: flex;
+        align-items: center;
+      }
+    }
+    
+    .dbx-section-box {
+      padding: $dbx-section-box-padding;
+      margin-bottom: $dbx-section-box-bottom-margin;
+    }
+    */
+    
   }
 }

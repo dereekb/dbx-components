@@ -16,6 +16,11 @@ $my-theme: mat.define-light-theme((
  )
 ));
 
+$my-theme: dbx.define-dbx-theme-config($my-theme, (
+  'screen': ('mobile': 200)
+));
+@debug $my-theme;
+
 @include mat.all-component-themes($my-theme);
 @include dbx.all-component-themes($my-theme);
 

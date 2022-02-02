@@ -1,6 +1,10 @@
+@forward './lib/layout/layout';
 
 // Structural
 @forward './lib/style/core' show core;
+
+// Config
+@forward './lib/style/config' show define-dbx-theme-config, get-dbx-theme-config;
 
 // Theme bundles
 @forward './lib/style/all-theme' show all-component-themes;

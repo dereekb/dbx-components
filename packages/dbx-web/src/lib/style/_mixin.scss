@@ -1,0 +1,47 @@
+@use "sass:map";
+@use './config';
+
+@mixin if-mobile-screen($theme-config) {
+  $dbx-screen-config: config.get-dbx-screen-config($theme-config);
+  $mobile-screen-cutoff: map.get($dbx-screen-config, 'mobile');
+
+  @media screen and (max-width: #{$mobile-screen-cutoff}) {
+    @content;
+  }
+}
+
+@mixin if-small-screen($theme-config) {
+  $dbx-screen-config: config.get-dbx-screen-config($theme-config);
+  $small-screen-cutoff: map.get($dbx-screen-config, 'small');
+
+  @media screen and (max-width: #{$small-screen-cutoff}) {
+    @content;
+  }
+}
+
+@mixin if-medium-screen($theme-config) {
+  $dbx-screen-config: config.get-dbx-screen-config($dbx-theme-config);
+  $medium-screen-cutoff: map.get($dbx-screen-config, 'medium');
+
+  @media screen and (max-width: #{$medium-screen-cutoff}) {
+    @content;
+  }
+}
+
+@mixin if-large-screen($theme-config) {
+  $dbx-screen-config: config.get-dbx-screen-config($dbx-theme-config);
+  $large-screen-cutoff: map.get($dbx-screen-config, 'large');
+
+  @media screen and (max-width: #{$large-screen-cutoff}) {
+    @content;
+  }
+}
+
+@mixin if-tiny-vertical-screen($theme-config) {
+  $dbx-screen-config: config.get-dbx-screen-config($dbx-theme-config);
+  $tiny-vertical-screen-cutoff: map.get($dbx-screen-config, 'tiny-vertical');
+
+  @media screen and (max-width: #{$tiny-vertical-screen-cutoff}) {
+    @content;
+  }
+}
