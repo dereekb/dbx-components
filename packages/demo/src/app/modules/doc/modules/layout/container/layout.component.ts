@@ -9,6 +9,9 @@ export class DocLayoutLayoutComponent {
   readonly navAnchors: ClickableAnchorLink[] = [{
     title: 'Layout',
     ref: 'doc.layout'
+  }, {
+    title: 'Section',
+    ref: 'doc.layout.section'
   }];
 
 }

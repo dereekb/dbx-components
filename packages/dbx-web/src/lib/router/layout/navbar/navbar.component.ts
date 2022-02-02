@@ -1,7 +1,7 @@
 import { Observable } from 'rxjs';
 import { ScreenMediaWidthType, screenMediaWidthTypeIsActive } from './../../../screen/screen';
 import { DbxScreenMediaService } from '../../../screen/screen.service';
-import { Maybe } from '@dereekb/util';
+import { applyBestFit, Maybe } from '@dereekb/util';
 import { Input, Component, NgZone, OnDestroy, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { ClickableAnchorLink, AbstractTransitionWatcherDirective, DbxRouterService, DbxRouterTransitionService, AbstractTransitionDirective, tapDetectChanges } from '@dereekb/dbx-core';
 import { BehaviorSubject, combineLatest, map, shareReplay, distinctUntilChanged, startWith, tap } from 'rxjs';
@@ -48,7 +48,7 @@ export class DbxNavbarComponent extends AbstractTransitionDirective implements O
 
   readonly anchors$: Observable<NavAnchorLink[]> = combineLatest([this._anchors, this.initAndUpdateOnTransitionSuccess$]).pipe(
     map(([anchors]) => {
-      return anchors.map((anchor) => {
+      const results = anchors.map((anchor) => {
         let selected = this._dbxRouterService.isActive(anchor);
 
         return {
@@ -56,6 +56,8 @@ export class DbxNavbarComponent extends AbstractTransitionDirective implements O
           anchor
         };
       });
+
+      return applyBestFit(results, (x) => x.selected, (a, b) => this._dbxRouterService.comparePrecision(a.anchor, b.anchor), (loser) => ({ ...loser, selected: false }));
     }),
     tapDetectChanges(this.cdr),
     shareReplay(1)

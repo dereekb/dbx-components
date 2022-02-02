@@ -45,4 +45,10 @@ export class DbxUIRouterService implements DbxRouterService, DbxRouterTransition
     return active;
   }
 
+  comparePrecision(a: SegueRef, b: SegueRef): number {
+    const aLength = (a.ref as string).length;
+    const bLength = (b.ref as string).length;
+    return (aLength > bLength) ? 1 : (aLength === bLength) ? 0 : -1;
+  }
+
 }

@@ -9,6 +9,7 @@ import { DbxSidenavComponent } from './sidenav.component';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatListModule } from '@angular/material/list';
 import { DbxAnchorModule } from '../anchor/anchor.module';
+import { DbxAnchorListModule } from '../anchorlist/anchorlist.module';
 
 /**
  * Module for container-type components.
@@ -17,6 +18,7 @@ import { DbxAnchorModule } from '../anchor/anchor.module';
   imports: [
     CommonModule,
     DbxAnchorModule,
+    DbxAnchorListModule,
     MatToolbarModule,
     MatButtonModule,
     MatIconModule,

@@ -1,0 +1,12 @@
+<mat-nav-list class="dbx-anchor-list">
+  <ng-container *ngFor="let anchor of anchors; let last = last;">
+    <span dbx-anchor [anchor]="anchor">
+      <a mat-list-item>
+        <mat-icon mat-list-icon *ngIf="anchor.icon">{{ anchor.icon }}</mat-icon>
+        <!-- TODO: Add an icon from a letter if anchor.icon is unavailable. -->
+        <div mat-line>{{ anchor.title }}</div>
+        <mat-divider *ngIf="!last"></mat-divider>
+      </a>
+    </span>
+  </ng-container>
+</mat-nav-list>

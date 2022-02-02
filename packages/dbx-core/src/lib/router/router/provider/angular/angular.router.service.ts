@@ -54,4 +54,8 @@ export class DbxAngularRouterService implements DbxRouterService, DbxRouterTrans
     return false; // TODO!
   }
 
+  comparePrecision(a: SegueRef, b: SegueRef): number {
+    return 0;   // TODO!
+  }
+
 }
