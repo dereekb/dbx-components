@@ -1,0 +1,85 @@
+@use 'node_modules/@angular/material/core/theming/palette';
+@use '@angular/material'as mat;
+@use 'dbx-web/src/index' as dbx;
+
+$opmore-navy: #1C3454;
+$opmore-pink: #ec4565;
+$opmore-white: #fff;
+
+$dark-primary-text: palette.$dark-primary-text;
+$light-primary-text: palette.$light-primary-text;
+
+$opmore-blue: (
+  50: #e5e9ed,
+  100: #bec7d3,
+  200: #95a3b6,
+  300: #6e8098,
+  400: #4f6685,
+  500: #2f4e73,
+  600: #29476c,
+  700: #213e61,
+  800: $opmore-navy,
+  900: #16243b,
+  contrast: (
+    50: $dark-primary-text,
+    100: $dark-primary-text,
+    200: $dark-primary-text,
+    300: $dark-primary-text,
+    400: $dark-primary-text,
+    500: $light-primary-text,
+    600: $light-primary-text,
+    700: $light-primary-text,
+    800: $light-primary-text,
+    900: $light-primary-text,
+    A100: $dark-primary-text,
+    A200: $light-primary-text,
+    A400: $light-primary-text,
+    A700: $light-primary-text,
+  )
+);
+
+$opmore-pink: (
+  50: #fde6ec,
+  100: #fac0cf,
+  200: #f898b0,
+  300: #f47191,
+  400: #f05779,
+  500: $opmore-pink,
+  600: #db4061,
+  700: #c53a5c,
+  800: #b03558,
+  900: #8a2d50,
+  contrast: (
+    50: $dark-primary-text,
+    100: $dark-primary-text,
+    200: $dark-primary-text,
+    300: $dark-primary-text,
+    400: $light-primary-text,
+    500: $light-primary-text,
+    600: $light-primary-text,
+    700: $light-primary-text,
+    800: $light-primary-text,
+    900: $light-primary-text,
+    A100: $dark-primary-text,
+    A200: $light-primary-text,
+    A400: $light-primary-text,
+    A700: $light-primary-text,
+  )
+);
+
+// Define an alternate dark theme.
+$doc-primary: mat.define-palette($opmore-blue);
+$doc-accent: mat.define-palette($opmore-pink);
+$doc-warn: mat.define-palette(mat.$red-palette);
+$doc-mat-theme: mat.define-light-theme((color: (primary: $doc-primary, accent: $doc-accent, warn: $doc-warn), density: null, typography: null));
+$doc-theme: dbx.define-dbx-theme-config($doc-mat-theme);
+
+@mixin doc-theme($root-selector) {
+
+  #{$root-selector} {
+    @include mat.all-component-themes($doc-theme);
+    @include dbx.all-component-themes($doc-theme);
+  }
+
+  @include dbx.root-variables($root-selector, $doc-theme);
+}

@@ -1,0 +1,12 @@
+@use './theming';
+
+// Includes all theming config
+@mixin root-variables($root-selector, $theme-config) {
+
+  #{$root-selector} {
+    #{theming.$main-navbar-var}: theming.get-dbx-layout-main-navbar-initial-height($theme-config);
+    #{theming.$content-navbar-var}: theming.get-dbx-layout-content-navbar-initial-height($theme-config);
+  }
+
+}
+

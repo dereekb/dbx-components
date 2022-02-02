@@ -9,6 +9,7 @@
 @use './list/list';
 @use './section/section';
 @use './step/step';
+@use './styles/styles';
 
 @mixin all-layout-typography($typography-config) {
   @include bar.typography($typography-config);
@@ -22,6 +23,7 @@
   @include list.typography($typography-config);
   @include section.typography($typography-config);
   @include step.typography($typography-config);
+  @include styles.typography($typography-config);
 }
 
 @mixin all-layout-theme($theme-config) {
@@ -36,4 +38,5 @@
   @include list.theme($theme-config);
   @include section.theme($theme-config);
   @include step.theme($theme-config);
+  @include styles.theme($theme-config);
 }

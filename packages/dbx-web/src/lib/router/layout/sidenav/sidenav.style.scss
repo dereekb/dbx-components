@@ -1,0 +1,39 @@
+
+$side-nav-width: 220px;
+$side-nav-mobile-width: 80vw;
+$side-nav-icon-only-width: 64px;
+
+.dbx-sidenav {
+  height: 100%;
+
+  mat-sidenav {
+    width: $side-nav-width;
+  }
+
+  &.dbx-sidenav-mobile {
+    mat-sidenav {
+      width: $side-nav-mobile-width;
+    }
+  }
+
+  &.dbx-sidenav-icon {
+    mat-sidenav {
+      width: $side-nav-icon-only-width;
+    }
+
+    mat-sidenav-content {
+      margin-left: $side-nav-icon-only-width;
+    }
+  }
+
+  &.dbx-sidenav-full {
+    mat-sidenav {
+      width: $side-nav-width;
+    }
+
+    mat-sidenav-content {
+      margin-left: $side-nav-width;
+    }
+  }
+
+}

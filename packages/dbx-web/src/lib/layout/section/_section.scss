@@ -1,40 +1,82 @@
 @use '../../style/theming';
 @import '../../layout/content/content';
 
+$section-page-h1-height: 32px;
+$section-box-bottom-margin: 2vh;
+
 // Sections
-@mixin typography($typography-config) {
-  
-}
+@mixin typography($typography-config) {}
 
 @mixin theme($theme-config) {
   @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-layout-section') {
 
-    /*
+    $content-navbar-height: calc(theming.$main-navbar-var);
+    $section-box-padding: theming.get-dbx-layout-padding($theme-config, 4);
+    $section-header-bottom-padding: theming.get-dbx-layout-padding($theme-config, 3);
+
+    $section-header-bottom-padding: 16px;
+    $section-header-left-reserved-space: 200px;
+    $section-header-left-reserved-space-small-screen: 120px;
+    
+    // MARK: Header
     .dbx-section-header {
-      padding: 0 0 $dbx-section-header-bottom-padding;
+      padding: 0 0 $section-header-bottom-padding;
       box-sizing: border-box;
-    
+
       .dbx-section-header-content {
-    
+
         h1,
         h2 {
           padding-top: 5px;
-          height: $dbx-section-page-h1-height;
+          height: $section-page-h1-height;
           display: inline;
-    
-          margin: 0; // Margin goes into the dbx-section-page-header instead.
+          margin: 0;
         }
-    
+
         display: flex;
         align-items: center;
       }
     }
-    
+
     .dbx-section-box {
-      padding: $dbx-section-box-padding;
-      margin-bottom: $dbx-section-box-bottom-margin;
+      padding: $section-box-padding;
+      margin-bottom: $section-box-bottom-margin;
     }
-    */
-    
+
+    // MARK: Page
+    .dbx-section-page {
+
+      // Limit the header height on pages.
+      >.dbx-section-header,
+      >.dbx-section-header>.dbx-section-header-content {
+        height: $content-navbar-height;
+        max-height: $content-navbar-height;
+        overflow-x: auto;
+        overflow-y: hidden;
+        max-width: 100%;
+
+        .dbx-section-header-content-title {
+          max-width: calc(80% - #{$section-header-left-reserved-space});
+
+          @include theming.if-small-screen($theme-config) {
+            max-width: calc(80% - #{$section-header-left-reserved-space-small-screen});
+          }
+
+          display: inline-flex !important;
+          justify-content: center;
+          align-items: center;
+
+          .mat-icon {
+            margin-right: 4px;
+          }
+
+          >.title-text {
+            @include theming.limitText();
+          }
+        }
+      }
+
+    }
+
   }
 }

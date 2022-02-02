@@ -1,4 +1,5 @@
-@forward 'node_modules/@angular/material/core/theming/theming'show define-light-theme,
+@forward 'node_modules/@angular/material/core/theming/theming'
+show define-light-theme,
 define-dark-theme,
 define-palette,
 get-contrast-color-from-palette,
@@ -11,4 +12,4 @@ $theme-ignore-duplication-warnings;
 
 @forward './config';
 @forward './variables';
-@forward  './mixin';
+@forward './mixin';

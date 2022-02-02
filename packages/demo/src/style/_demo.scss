@@ -1,0 +1,20 @@
+@use 'node_modules/@angular/material/core/theming/palette';
+@use '@angular/material'as mat;
+@use 'dbx-web/src/index' as dbx;
+
+// Define an alternate dark theme.
+$demo-primary: mat.define-palette(mat.$deep-purple-palette);
+$demo-accent: mat.define-palette(mat.$amber-palette);
+$demo-warn: mat.define-palette(mat.$red-palette);
+$demo-mat-theme: mat.define-light-theme((color: (primary: $demo-primary, accent: $demo-accent, warn: $demo-warn), density: null, typography: null));
+$demo-theme: dbx.define-dbx-theme-config($demo-mat-theme);
+
+@mixin demo-theme($root-selector) {
+
+  #{$root-selector} {
+    @include mat.all-component-themes($demo-theme);
+    @include dbx.all-component-themes($demo-theme);
+  }
+
+  @include dbx.root-variables($root-selector, $demo-theme);
+}

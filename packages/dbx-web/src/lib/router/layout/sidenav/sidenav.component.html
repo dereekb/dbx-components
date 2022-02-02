@@ -1,4 +1,4 @@
-<mat-sidenav-container class="dbx-sidenav">
+<mat-sidenav-container class="dbx-sidenav" [ngClass]="(sizeClass$ | async) ?? ''">
   <mat-sidenav [mode]="(drawer$ | async)!">
     <ng-content select="[top]"></ng-content>
     <dbx-anchor-list [anchors]="anchors"></dbx-anchor-list>

@@ -1,3 +1,4 @@
+@use 'sass:map';
 @use '../../../style/theming';
 
 $side-nav-width: 220px;
@@ -7,45 +8,26 @@ $side-nav-icon-only-width: 64px;
 @mixin typography($typography-config) {}
 
 @mixin theme($theme-config) {
+  $color: theming.get-color-config($theme-config);
+  @debug $color;
+  $primary: map.get($color, primary);
+
   @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-router-sidenav') {
 
     .dbx-sidenav {
-      height: var(--vh100);
-
       mat-sidenav {
-        width: $side-nav-width;
+        background-color: theming.get-color-from-palette($primary, 800);
+        color: white;
+
+        .mat-list-item {
+          color: white;
+        }
       }
     }
 
     /*
     .side-nav {
       // overflow hidden set on style.scss
-
-      &.side-nav-mobile {
-        mat-sidenav {
-          width: $side-nav-mobile-width;
-        }
-      }
-
-      &.side-nav-icon {
-        mat-sidenav {
-          width: $side-nav-icon-only-width;
-        }
-
-        mat-sidenav-content {
-          margin-left: $side-nav-icon-only-width;
-        }
-      }
-
-      &.side-nav-full {
-        mat-sidenav {
-          width: $side-nav-width;
-        }
-
-        mat-sidenav-content {
-          margin-left: $side-nav-width;
-        }
-      }
 
       .side-nav-top-bar {
 

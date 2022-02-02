@@ -25,7 +25,8 @@ export interface DbxSidenavSidebarState {
 @Component({
   selector: 'dbx-sidenav',
   exportAs: 'sidenav',
-  templateUrl: './sidenav.component.html'
+  templateUrl: './sidenav.component.html',
+  styleUrls: ['./sidenav.style.scss']
 })
 export class DbxSidenavComponent extends AbstractTransitionWatcherDirective implements OnInit, OnDestroy {
 
@@ -56,6 +57,12 @@ export class DbxSidenavComponent extends AbstractTransitionWatcherDirective impl
 
       return mode;
     }),
+    shareReplay(1)
+  );
+
+  readonly sizeClass$: Observable<string> = this.mode$.pipe(
+    map((mode) => `dbx-sidenav-${mode}`),
+    distinctUntilChanged(),
     shareReplay(1)
   );
 

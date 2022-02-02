@@ -19,7 +19,7 @@ export type DbxContentContainerType = 'normal' | 'content';
 @Component({
   selector: 'dbx-content-container',
   template: `
-    <div class="dbx-content-container" [ngClass]="width + '-container ' + type + '-container-type container-padding-' + padding + ((scrollingContent) ? ' container-scrolling-content' : '')">
+    <div class="dbx-content-container" [ngClass]="grow + '-container ' + type + '-container-type container-padding-' + padding + ((scrollingContent) ? ' container-scrolling-content' : '')">
       <ng-content></ng-content>
     </div>
   `,
@@ -31,7 +31,7 @@ export class DbxContentContainerComponent {
   type = 'normal';
 
   @Input()
-  width = 'wide';
+  grow = 'wide';
 
   @Input()
   padding = 'normal';

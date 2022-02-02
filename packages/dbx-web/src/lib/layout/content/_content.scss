@@ -7,8 +7,8 @@
 
     $max-content-width: theming.get-dbx-layout-content-max-width($theme-config);
 
-    $dbx-max-small-content-container-width: $max-content-width / 3;
-    $dbx-max-medium-content-container-width: $max-content-width / 2;
+    $dbx-max-small-content-container-width: calc($max-content-width / 3);
+    $dbx-max-medium-content-container-width: calc($max-content-width / 2);
     $dbx-max-content-container-width: $max-content-width;
 
     $dbx-content-container-padding: theming.get-dbx-layout-padding($theme-config, 4);
@@ -30,7 +30,7 @@
       }
 
       &.container-padding-small {
-        padding: 0 $dbx-content-container-padding/3;
+        padding: 0 calc($dbx-content-container-padding / 3);
       }
 
       @include theming.if-small-screen($theme-config) {

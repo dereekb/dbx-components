@@ -1,18 +1,4 @@
 @use "sass:map";
-@use './config';
 
-@function get-dbx-layout-content-max-width($theme-config) {
-  @return get-dbx-layout-config-var($theme-config, 'content-max-width');
-}
-
-@function get-dbx-layout-box-max-width($theme-config) {
-  @return get-dbx-layout-config-var($theme-config, 'box-max-width');
-}
-
-@function get-dbx-layout-padding($theme-config, $padding-level) {
-  @return get-dbx-layout-config-var($theme-config, 'padding-' + $padding-level);
-}
-
-@function get-dbx-layout-config-var($theme-config, $item) {
-  @return map.get(config.get-dbx-layout-config($theme-config), $item);
-}
+$main-navbar-var: --dbx-main-navbar-height;
+$content-navbar-var: --dbx-content-navbar-height;

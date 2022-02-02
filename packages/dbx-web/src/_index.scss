@@ -2,6 +2,7 @@
 
 // Structural
 @forward './lib/style/core' show core;
+@forward './lib/style/root-variables' show root-variables;
 
 // Config
 @forward './lib/style/config' show define-dbx-theme-config, get-dbx-theme-config;

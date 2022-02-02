@@ -11,6 +11,7 @@ import { DbxSectionBoxAnchorComponent } from './section.box.anchor.component';
 import { MatRippleModule } from '@angular/material/core';
 import { MatIconModule } from '@angular/material/icon';
 import { DbxIntroActionSectionComponent } from './section.intro.component';
+import { DbxSectionHeaderComponent } from './section.header.component';
 
 /**
  * Module for container-type components.
@@ -24,6 +25,7 @@ import { DbxIntroActionSectionComponent } from './section.intro.component';
     MatIconModule
   ],
   declarations: [
+    DbxSectionHeaderComponent,
     DbxSectionPageComponent,
     DbxSectionBoxComponent,
     DbxSectionBoxAnchorComponent,
@@ -33,6 +35,7 @@ import { DbxIntroActionSectionComponent } from './section.intro.component';
     DbxIntroActionSectionComponent
   ],
   exports: [
+    DbxSectionHeaderComponent,
     DbxSectionPageComponent,
     DbxSectionBoxComponent,
     DbxSectionBoxAnchorComponent,

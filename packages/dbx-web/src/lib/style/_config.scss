@@ -1,4 +1,5 @@
 @use "sass:map";
+@use './variables';
 
 // theme
 @function define-dbx-theme-config($theme-config, $input-dbx-theme-config: ()) {
@@ -48,16 +49,16 @@
 // layout
 @function define-dbx-layout-config($input-dbx-theme-layout-config: null) {
   $dbx-layout-config: (
+    // selector
+    // 'selector': 'dbx-app',          // root selector to apply variables to.
     // banner
     'top-banner-var': --dbx-top-banner-height,
     'bottom-banner-var': --dbx-bottom-banner-height,
     // app
     'app-height-var': --dbx-app-height,
     // navbars
-    'top-navbar-var': --dbx-top-navbar-height,
-    'top-navbar-height': 42px,
-    'content-navbar-var': --dbx-content-navbar-height,
-    'content-navbar-height': 54px,
+    'main-navbar-height': 42px,     // initial main navbar height
+    'content-navbar-height': 54px,  // initial content navbar height
     // content
     'box-max-width': 600px,         // max width of box content, such as popups.
     'content-max-width': 1200px,    // max width of restricted-width content
@@ -79,4 +80,28 @@
 
 @function get-dbx-layout-config($theme-config) {
   @return map.get(get-dbx-theme-config($theme-config), 'layout');
+}
+
+@function get-dbx-layout-config-var($theme-config, $item) {
+  @return map.get(get-dbx-layout-config($theme-config), $item);
+}
+
+@function get-dbx-layout-main-navbar-initial-height($theme-config) {
+  @return get-dbx-layout-config-var($theme-config, 'main-navbar-height');
+}
+
+@function get-dbx-layout-content-navbar-initial-height($theme-config) {
+  @return get-dbx-layout-config-var($theme-config, 'content-navbar-height');
+}
+
+@function get-dbx-layout-content-max-width($theme-config) {
+  @return get-dbx-layout-config-var($theme-config, 'content-max-width');
+}
+
+@function get-dbx-layout-box-max-width($theme-config) {
+  @return get-dbx-layout-config-var($theme-config, 'box-max-width');
+}
+
+@function get-dbx-layout-padding($theme-config, $padding-level) {
+  @return get-dbx-layout-config-var($theme-config, 'padding-'+ $padding-level);
 }
