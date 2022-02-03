@@ -1,6 +1,6 @@
 import { ClickableFunction, ClickableUrl } from './clickable';
 import { SegueRef } from '../segue';
-import { Maybe } from '@dereekb/util';
+import { expandFlattenTreeFunction, expandTreeFunction, ExpandTreeFunction, expandTrees, flattenTree, FlattenTreeFunction, flattenTrees, flattenTreeToArray, flattenTreeToArrayFunction, Maybe, TreeNode } from '@dereekb/util';
 import { Type, Provider } from '@angular/core';
 import { Observable } from 'rxjs';
 
@@ -16,6 +16,34 @@ export interface ClickableAnchorLink extends ClickableAnchor {
 export interface ClickableIconAnchorLink extends Omit<ClickableAnchorLink, 'title'> {
   icon: string;
 }
+
+export interface ClickableAnchorLinkTree extends ClickableAnchorLink {
+  children?: ClickableAnchorLinkTree[];
+}
+
+export type ExpandedClickableAnchorLinkTree = TreeNode<ClickableAnchorLinkTree>;
+
+export const expandClickableAnchorLinkTreeNode: ExpandTreeFunction<ClickableAnchorLinkTree, ExpandedClickableAnchorLinkTree> = expandTreeFunction({
+  getChildren: (x) => x.children
+});
+
+export const flattenExpandedClickableAnchorLinkTree: FlattenTreeFunction<ExpandedClickableAnchorLinkTree, ExpandedClickableAnchorLinkTree> = flattenTreeToArrayFunction();
+export const flattenExpandedClickableAnchorLinkTreeToLinks: FlattenTreeFunction<ExpandedClickableAnchorLinkTree, ClickableAnchorLinkTree> = flattenTreeToArrayFunction((x) => x.value);
+
+/**
+ * Fully expands the given parent link and flattens the tree to a single parent link.
+ * 
+ * @param link 
+ * @returns 
+ */
+export function expandClickableAnchorLinkTree(link: ClickableAnchorLinkTree): ExpandedClickableAnchorLinkTree[] {
+  return flattenExpandedClickableAnchorLinkTree(expandClickableAnchorLinkTreeNode(link));
+}
+
+/**
+ * Expands an array of links into an array of ExpandedClickableAnchorLinkTree tree values.
+ */
+export const expandClickableAnchorLinkTrees = expandFlattenTreeFunction<ClickableAnchorLinkTree, ExpandedClickableAnchorLinkTree>(expandClickableAnchorLinkTreeNode, flattenExpandedClickableAnchorLinkTree);
 
 export enum AnchorType {
   None = 0,

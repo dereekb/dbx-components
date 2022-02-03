@@ -1,4 +1,35 @@
 @use "sass:map";
 
-$main-navbar-var: --dbx-main-navbar-height;
-$content-navbar-var: --dbx-content-navbar-height;
+// variable names
+$top-banner-height-var: --dbx-top-banner-height;
+$bottom-banner-height-var: --dbx-bottom-banner-height;
+
+$main-navbar-height-var: --dbx-main-navbar-height;
+$content-navbar-height-var: --dbx-content-navbar-height;
+
+$box-max-width-var: --dbx-box-max-width;
+$content-max-width-var: --dbx-content-max-width;
+
+$padding-0-var: --dbx-padding-0;
+$padding-1-var: --dbx-padding-1;
+$padding-2-var: --dbx-padding-2;
+$padding-3-var: --dbx-padding-3;
+$padding-4-var: --dbx-padding-4;
+$padding-5-var: --dbx-padding-5;
+
+// vars
+$top-banner-height: var($top-banner-height-var);
+$bottom-banner-height: var($bottom-banner-height-var);
+
+$main-navbar-height: var($main-navbar-height-var);
+$content-navbar-height: var($content-navbar-height-var);
+
+$box-max-width: var($box-max-width-var);
+$content-max-width: var($content-max-width-var);
+
+$padding-0: var($padding-0-var);
+$padding-1: var($padding-1-var);
+$padding-2: var($padding-2-var);
+$padding-3: var($padding-3-var);
+$padding-4: var($padding-4-var);
+$padding-5: var($padding-5-var);

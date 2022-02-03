@@ -1,5 +1,7 @@
+import { OnDestroy, ViewEncapsulation } from '@angular/core';
+import { BehaviorSubject, map, shareReplay, distinctUntilChanged } from 'rxjs';
 import { Input, Component } from '@angular/core';
-import { ClickableAnchorLink } from '@dereekb/dbx-core';
+import { ClickableAnchorLinkTree, expandClickableAnchorLinkTrees } from '@dereekb/dbx-core';
 import { Maybe } from '@dereekb/util';
 
 /**
@@ -7,11 +9,23 @@ import { Maybe } from '@dereekb/util';
  */
 @Component({
   selector: 'dbx-anchor-list',
-  templateUrl: './anchorlist.component.html'
+  templateUrl: './anchorlist.component.html',
+  styleUrls: ['./anchorlist.component.scss'],
+  encapsulation: ViewEncapsulation.None
 })
-export class DbxAnchorListComponent {
+export class DbxAnchorListComponent implements OnDestroy {
+
+  private _anchors = new BehaviorSubject<ClickableAnchorLinkTree[]>([]);
+
+  readonly expandedAnchors$ = this._anchors.pipe(distinctUntilChanged(), map(x => expandClickableAnchorLinkTrees(x)), shareReplay(1));
 
   @Input()
-  anchors?: Maybe<ClickableAnchorLink[]>;
+  set anchors(anchors: Maybe<ClickableAnchorLinkTree[]>) {
+    this._anchors.next(anchors ?? []);
+  }
+
+  ngOnDestroy(): void {
+    this._anchors.complete();
+  }
 
 }

@@ -9,7 +9,6 @@ import { Component, Input } from '@angular/core';
   <div class="dbx-section-elevated">
     <ng-content></ng-content>
   </div>
-  `,
-  // TODO: styleUrls: ['./container.scss']
+  `
 })
 export class DbxSectionElevatedComponent { }

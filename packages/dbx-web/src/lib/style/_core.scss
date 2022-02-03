@@ -1,4 +1,5 @@
+@use './all-typography';
 
 @mixin core($typography-config) {
-  // todo
+  @include all-typography.all-component-typographies($typography-config);
 }

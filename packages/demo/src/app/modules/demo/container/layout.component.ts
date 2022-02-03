@@ -9,8 +9,8 @@ import { ClickableAnchorLink } from '@dereekb/dbx-core';
 export class DemoLayoutComponent {
 
   readonly navAnchors: ClickableAnchorLink[] = [{
-    title: 'Docs',
-    ref: 'doc'
+    title: 'Home',
+    ref: 'demo.home'
   }];
 
 }

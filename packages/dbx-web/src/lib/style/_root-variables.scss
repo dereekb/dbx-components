@@ -4,8 +4,21 @@
 @mixin root-variables($root-selector, $theme-config) {
 
   #{$root-selector} {
-    #{theming.$main-navbar-var}: theming.get-dbx-layout-main-navbar-initial-height($theme-config);
-    #{theming.$content-navbar-var}: theming.get-dbx-layout-content-navbar-initial-height($theme-config);
+    #{theming.$top-banner-height-var}: theming.get-dbx-layout-top-banner-height($theme-config);
+    #{theming.$bottom-banner-height-var}: theming.get-dbx-layout-bottom-banner-height($theme-config);
+
+    #{theming.$main-navbar-height-var}: theming.get-dbx-layout-main-navbar-height($theme-config);
+    #{theming.$content-navbar-height-var}: theming.get-dbx-layout-content-navbar-height($theme-config);
+    
+    #{theming.$box-max-width-var}: theming.get-dbx-layout-box-max-width($theme-config);
+    #{theming.$content-max-width-var}: theming.get-dbx-layout-content-max-width($theme-config);
+
+    #{theming.$padding-0-var}: theming.get-dbx-layout-padding($theme-config, 0);
+    #{theming.$padding-1-var}: theming.get-dbx-layout-padding($theme-config, 1);
+    #{theming.$padding-2-var}: theming.get-dbx-layout-padding($theme-config, 2);
+    #{theming.$padding-3-var}: theming.get-dbx-layout-padding($theme-config, 3);
+    #{theming.$padding-4-var}: theming.get-dbx-layout-padding($theme-config, 4);
+    #{theming.$padding-5-var}: theming.get-dbx-layout-padding($theme-config, 5);
   }
 
 }

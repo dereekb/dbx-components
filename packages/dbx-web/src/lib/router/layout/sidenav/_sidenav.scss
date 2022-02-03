@@ -1,15 +1,14 @@
 @use 'sass:map';
 @use '../../../style/theming';
 
-$side-nav-width: 220px;
-$side-nav-mobile-width: 80vw;
-$side-nav-icon-only-width: 64px;
+$width: 240px;
+$mobile-width: 80vw;
+$icon-only-width: 65px;
 
 @mixin typography($typography-config) {}
 
 @mixin theme($theme-config) {
   $color: theming.get-color-config($theme-config);
-  @debug $color;
   $primary: map.get($color, primary);
 
   @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-router-sidenav') {
@@ -17,10 +16,10 @@ $side-nav-icon-only-width: 64px;
     .dbx-sidenav {
       mat-sidenav {
         background-color: theming.get-color-from-palette($primary, 800);
-        color: white;
+        color: theming.get-color-from-palette($primary, '800-contrast');
 
         .mat-list-item {
-          color: white;
+          color: theming.get-color-from-palette($primary, '800-contrast');
         }
       }
     }

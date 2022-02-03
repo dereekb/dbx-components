@@ -1,17 +1,23 @@
 import { Component } from '@angular/core';
-import { ClickableAnchorLink } from '@dereekb/dbx-core';
+import { ClickableAnchorLinkTree } from '@dereekb/dbx-core';
 
 @Component({
   templateUrl: './layout.component.html'
 })
 export class DocLayoutComponent {
 
-  readonly navAnchors: ClickableAnchorLink[] = [{
+  readonly navAnchors: ClickableAnchorLinkTree[] = [{
     title: 'Docs',
-    ref: 'doc'
+    ref: 'doc.home'
   }, {
     title: 'Layout',
-    ref: 'doc.layout'
+    ref: 'doc.layout.home',
+    icon: 'view_module',
+    children: [{
+      icon: 'view_module',
+      title: 'Section',
+      ref: 'doc.layout.section'
+    }]
   }, {
     title: 'Router',
     ref: 'doc.router'

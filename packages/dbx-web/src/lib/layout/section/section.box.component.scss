@@ -1,0 +1,7 @@
+@use '../../style/theming';
+@use './section';
+
+.dbx-section-box {
+  padding: section.$box-padding;
+  margin-bottom: section.$box-bottom-margin;
+}

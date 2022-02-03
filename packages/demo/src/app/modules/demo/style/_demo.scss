@@ -3,10 +3,10 @@
 @use 'dbx-web/src/index' as dbx;
 
 // Define an alternate dark theme.
-$demo-primary: mat.define-palette(mat.$deep-purple-palette);
-$demo-accent: mat.define-palette(mat.$amber-palette);
+$demo-primary: mat.define-palette(mat.$amber-palette);
+$demo-accent: mat.define-palette(mat.$deep-purple-palette);
 $demo-warn: mat.define-palette(mat.$red-palette);
-$demo-mat-theme: mat.define-light-theme((color: (primary: $demo-primary, accent: $demo-accent, warn: $demo-warn), density: null, typography: null));
+$demo-mat-theme: mat.define-dark-theme((color: (primary: $demo-primary, accent: $demo-accent, warn: $demo-warn), density: null, typography: null));
 $demo-theme: dbx.define-dbx-theme-config($demo-mat-theme);
 
 @mixin demo-theme($root-selector) {

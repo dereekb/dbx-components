@@ -1,10 +1,88 @@
+@use 'sass:map';
+@use 'sass:color';
 @use '../../../style/theming';
 
-@mixin typography($typography-config) {}
+@mixin color($theme-config) {
+  $config: theming.get-color-config($theme-config);
+  $background: map.get($config, 'background');
+
+  .dbx-anchor-list.mat-nav-list {
+
+    // MARK: Muting
+    // items that are not active are muted
+    .mat-list-item {
+      opacity: 0.74;
+    }
+
+    // active route as a parent
+    .dbx-anchor-active {
+      .mat-list-item {
+        opacity: 0.9;
+      }
+    }
+
+    // active route
+    .dbx-anchor-active-eq {
+      .mat-list-item {
+        opacity: 1;
+        background: adjust-color($color: theming.get-color-from-palette($background, 'hover'), $alpha: 0.25);
+      }
+    }
+
+    // MARK: Anchor Tree
+    /*
+    .dbx-anchor-list-root {
+      // nothing
+    }
+    */
+
+    .dbx-anchor-list-child {
+      background: adjust-color(theming.get-color-from-palette($background, 'hover'), $alpha: 0.1);
+    }
+
+  }
+
+}
+
+@mixin typography($typography-config) {
+
+  @debug $typography-config;
+
+  .dbx-anchor-list.mat-nav-list {
+
+    .mat-list-item .mat-list-icon {
+      font-size: 28px;
+      width: 28px;
+      height: 28px;
+      padding: 2px;
+    }
+
+    // MARK: Anchor Tree
+    .dbx-anchor-list-child {
+      font-size: 0.875em;
+
+      .mat-list-icon {
+        font-size: 22px;
+        width: 22px;
+        height: 22px;
+        padding: 5px;
+      }
+    }
+
+  }
+
+}
 
 @mixin theme($theme-config) {
   @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-router-anchorlist') {
+    $color: theming.get-color-config($theme-config);
+    $typography: theming.get-typography-config($theme-config);
 
-
+    @if $color != null {
+      @include color($color);
+    }
+    @if $typography != null {
+      @include typography($typography);
+    }
   }
 }

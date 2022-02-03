@@ -1,7 +1,7 @@
 import { NgZone, OnDestroy, OnInit, Component, Input, ViewChild } from '@angular/core';
 import { MatDrawerMode, MatSidenav } from '@angular/material/sidenav';
 import { DbxScreenMediaService, ScreenMediaWidthType } from '../../../screen';
-import { AbstractTransitionWatcherDirective, DbxRouterTransitionService, ClickableAnchorLink } from '@dereekb/dbx-core';
+import { AbstractTransitionWatcherDirective, DbxRouterTransitionService, ClickableAnchorLink, ClickableAnchorLinkTree } from '@dereekb/dbx-core';
 import { SubscriptionObject } from '@dereekb/rxjs';
 import { Maybe } from '@dereekb/util';
 import { distinctUntilChanged, map, shareReplay, Observable, first } from 'rxjs';
@@ -26,12 +26,12 @@ export interface DbxSidenavSidebarState {
   selector: 'dbx-sidenav',
   exportAs: 'sidenav',
   templateUrl: './sidenav.component.html',
-  styleUrls: ['./sidenav.style.scss']
+  styleUrls: ['./sidenav.component.scss']
 })
 export class DbxSidenavComponent extends AbstractTransitionWatcherDirective implements OnInit, OnDestroy {
 
   @Input()
-  anchors?: Maybe<ClickableAnchorLink[]>;
+  anchors?: Maybe<ClickableAnchorLinkTree[]>;
 
   @ViewChild(MatSidenav, { static: true })
   readonly sidenav!: MatSidenav;
@@ -57,6 +57,12 @@ export class DbxSidenavComponent extends AbstractTransitionWatcherDirective impl
 
       return mode;
     }),
+    shareReplay(1)
+  );
+
+  readonly disableBackdrop$: Observable<boolean> = this.mode$.pipe(
+    map(x => x !== SideNavDisplayMode.MOBILE),
+    distinctUntilChanged(),
     shareReplay(1)
   );
 

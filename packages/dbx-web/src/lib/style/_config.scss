@@ -49,26 +49,22 @@
 // layout
 @function define-dbx-layout-config($input-dbx-theme-layout-config: null) {
   $dbx-layout-config: (
-    // selector
-    // 'selector': 'dbx-app',          // root selector to apply variables to.
     // banner
-    'top-banner-var': --dbx-top-banner-height,
-    'bottom-banner-var': --dbx-bottom-banner-height,
-    // app
-    'app-height-var': --dbx-app-height,
+    'top-banner-height': 0,
+    'bottom-banner-height': 0,
     // navbars
     'main-navbar-height': 42px,     // initial main navbar height
     'content-navbar-height': 54px,  // initial content navbar height
     // content
-    'box-max-width': 600px,         // max width of box content, such as popups.
-    'content-max-width': 1200px,    // max width of restricted-width content
+    'box-max-width': 600px,         // initial max width of box content, such as popups.
+    'content-max-width': 1200px,    // initial max width of restricted-width content
     // padding
-    'padding-0': 0px,
-    'padding-1': 2px,
-    'padding-2': 6px,
-    'padding-3': 12px,
-    'padding-4': 18px,
-    'padding-5': 24px
+    'padding-0': 0px,                 // initial padding-0
+    'padding-1': 2px,                 // initial padding-1
+    'padding-2': 6px,                 // initial padding-2
+    'padding-3': 12px,                // initial padding-3
+    'padding-4': 18px,                // initial padding-4
+    'padding-5': 24px                 // initial padding-5
   );
 
   @if ($input-dbx-theme-layout-config != null) {
@@ -86,11 +82,19 @@
   @return map.get(get-dbx-layout-config($theme-config), $item);
 }
 
-@function get-dbx-layout-main-navbar-initial-height($theme-config) {
+@function get-dbx-layout-top-banner-height($theme-config) {
+  @return get-dbx-layout-config-var($theme-config, 'top-banner-height');
+}
+
+@function get-dbx-layout-bottom-banner-height($theme-config) {
+  @return get-dbx-layout-config-var($theme-config, 'bottom-banner-height');
+}
+
+@function get-dbx-layout-main-navbar-height($theme-config) {
   @return get-dbx-layout-config-var($theme-config, 'main-navbar-height');
 }
 
-@function get-dbx-layout-content-navbar-initial-height($theme-config) {
+@function get-dbx-layout-content-navbar-height($theme-config) {
   @return get-dbx-layout-config-var($theme-config, 'content-navbar-height');
 }
 

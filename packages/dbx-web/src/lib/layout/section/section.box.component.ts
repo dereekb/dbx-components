@@ -10,7 +10,7 @@ import { Component, Input } from '@angular/core';
     <ng-content></ng-content>
   </div>
   `,
-  // TODO: styleUrls: ['./container.scss']
+  styleUrls: ['./section.box.component.scss']
 })
 export class DbxSectionBoxComponent {
 

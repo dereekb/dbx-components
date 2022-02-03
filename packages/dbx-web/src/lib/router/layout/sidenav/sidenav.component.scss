@@ -1,0 +1,36 @@
+@use './sidenav';
+
+.dbx-sidenav {
+  height: 100%;
+
+  mat-sidenav {
+    width: sidenav.$width;
+  }
+
+  &.dbx-sidenav-mobile {
+    mat-sidenav {
+      width: sidenav.$mobile-width;
+    }
+  }
+
+  &.dbx-sidenav-icon {
+    mat-sidenav {
+      width: sidenav.$icon-only-width;
+    }
+
+    mat-sidenav-content {
+      margin-left: sidenav.$icon-only-width;
+    }
+  }
+
+  &.dbx-sidenav-full {
+    mat-sidenav {
+      width: sidenav.$width;
+    }
+
+    mat-sidenav-content {
+      margin-left: sidenav.$width;
+    }
+  }
+
+}
