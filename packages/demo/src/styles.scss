@@ -8,8 +8,8 @@ $app-typography-config: mat.define-typography-config();
 @include dbx.core($app-typography-config);
 
 @include style.default-theme();
-@include style.demo-theme('.demo-app');
 @include style.doc-theme('.doc-app');
+// NOTE: There is a third style that is lazy-loaded within demo.
 
 html,
 body {

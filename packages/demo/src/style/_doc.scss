@@ -71,9 +71,12 @@ $opmore-pink: (
 $doc-primary: mat.define-palette($opmore-blue);
 $doc-accent: mat.define-palette($opmore-pink);
 $doc-warn: mat.define-palette(mat.$red-palette);
-$doc-mat-theme: mat.define-light-theme((color: (primary: $doc-primary, accent: $doc-accent, warn: $doc-warn), density: null, typography: null));
+$doc-mat-theme: mat.define-light-theme((color: (primary: $doc-primary, accent: $doc-accent, warn: $doc-warn), density: null, typography: null));    // NOTE: setting density and typography to null is important!
 $doc-theme: dbx.define-dbx-theme-config($doc-mat-theme);
 
+/**
+This mixin creates the doc-theme components and elements for @angular/material and @dereekb/dbx-web to be enabled for a specific css selector, which is usually ".doc-app"
+*/
 @mixin doc-theme($root-selector) {
 
   #{$root-selector} {

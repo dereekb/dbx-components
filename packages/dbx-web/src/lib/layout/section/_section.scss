@@ -10,7 +10,7 @@ $section-box-bottom-margin: 2vh;
 @mixin theme($theme-config) {
   @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-layout-section') {
 
-    $content-navbar-height: calc(theming.$main-navbar-var);
+    $content-navbar-height: var(theming.$content-navbar-var);
     $section-box-padding: theming.get-dbx-layout-padding($theme-config, 4);
     $section-header-bottom-padding: theming.get-dbx-layout-padding($theme-config, 3);
 
