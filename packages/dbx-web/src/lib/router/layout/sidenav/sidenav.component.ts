@@ -1,4 +1,4 @@
-import { NgZone, OnDestroy, OnInit, Component, Input, ViewChild } from '@angular/core';
+import { NgZone, OnDestroy, OnInit, Component, Input, ViewChild, ViewEncapsulation } from '@angular/core';
 import { MatDrawerMode, MatSidenav } from '@angular/material/sidenav';
 import { DbxScreenMediaService, ScreenMediaWidthType } from '../../../screen';
 import { AbstractTransitionWatcherDirective, DbxRouterTransitionService, ClickableAnchorLink, ClickableAnchorLinkTree } from '@dereekb/dbx-core';
@@ -26,7 +26,8 @@ export interface DbxSidenavSidebarState {
   selector: 'dbx-sidenav',
   exportAs: 'sidenav',
   templateUrl: './sidenav.component.html',
-  styleUrls: ['./sidenav.component.scss']
+  styleUrls: ['./sidenav.component.scss'],
+  encapsulation: ViewEncapsulation.None
 })
 export class DbxSidenavComponent extends AbstractTransitionWatcherDirective implements OnInit, OnDestroy {
 

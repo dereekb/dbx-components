@@ -1,5 +1,5 @@
 import { Component, ViewEncapsulation } from '@angular/core';
-import { ClickableAnchorLink } from '@dereekb/dbx-core';
+import { ClickableAnchorLink, ClickableAnchorLinkTree } from '@dereekb/dbx-core';
 
 @Component({
   templateUrl: './layout.component.html',
@@ -10,7 +10,16 @@ export class DemoLayoutComponent {
 
   readonly navAnchors: ClickableAnchorLink[] = [{
     title: 'Home',
-    ref: 'demo.home'
+    ref: 'demo.home',
+    icon: 'home'
+  }];
+
+  readonly bottomNavAnchors: ClickableAnchorLinkTree[] = [{
+    title: 'Notifications',
+    ref: 'demo.notification'
+  }, {
+    title: 'Settings',
+    ref: 'demo.setting'
   }];
 
 }

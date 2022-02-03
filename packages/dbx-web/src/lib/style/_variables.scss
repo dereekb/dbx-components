@@ -20,6 +20,7 @@ $padding-5-var: --dbx-padding-5;
 // vars
 $top-banner-height: var($top-banner-height-var);
 $bottom-banner-height: var($bottom-banner-height-var);
+$app-height: calc(100% - ($top-banner-height - $bottom-banner-height));
 
 $main-navbar-height: var($main-navbar-height-var);
 $content-navbar-height: var($content-navbar-height-var);

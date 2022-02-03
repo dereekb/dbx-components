@@ -1,15 +1,28 @@
 @use "sass:map";
 @use './variables';
 
+// convenience
+@function quick-define-dbx-config-via-banners($top-banner: 0px, $bottom-banner: 0px) {
+  @return ('layout': (
+    'top-banner-height': $top-banner,
+    'bottom-banner-height': $bottom-banner,
+  ));
+}
+
 // theme
-@function define-dbx-theme-config($theme-config, $input-dbx-theme-config: ()) {
+@function define-dbx-theme-config($theme-config, $input-dbx-theme-config: null) {
 
   @if ($input-dbx-theme-config == null) {
     $input-dbx-theme-config: ();
   }
 
-  $dbx-screen: define-dbx-screen-config(map.get($input-dbx-theme-config, 'screen'));
-  $dbx-layout: define-dbx-layout-config(map.get($input-dbx-theme-config, 'layout'));
+  $input-dbx-screen-theme-config: map.get($input-dbx-theme-config, 'screen');
+  $input-dbx-layout-theme-config: map.get($input-dbx-theme-config, 'layout');
+
+  @debug $input-dbx-screen-theme-config;
+
+  $dbx-screen: define-dbx-screen-config($input-dbx-screen-theme-config);
+  $dbx-layout: define-dbx-layout-config($input-dbx-layout-theme-config);
 
   $dbx-theme-config: (
     'screen': $dbx-screen,
@@ -28,11 +41,11 @@
 // screen
 @function define-dbx-screen-config($input-dbx-theme-screen-config: null) {
   $dbx-screen-config: (
-    'mobile': 360px,      // 0-360px
-    'small': 520px,       //361-520px
-    'medium': 768px,      //521-768px
-    'large': 1280px,      //769-1280px
-    'tiny-vertical': 280  //0-280px
+    'mobile': 360px,        // 0-360px
+    'small': 520px,         //361-520px
+    'medium': 768px,        //521-768px
+    'large': 1280px,        //769-1280px
+    'tiny-vertical': 280px  //0-280px
   );
 
   @if ($input-dbx-theme-screen-config != null) {
@@ -50,8 +63,8 @@
 @function define-dbx-layout-config($input-dbx-theme-layout-config: null) {
   $dbx-layout-config: (
     // banner
-    'top-banner-height': 0,
-    'bottom-banner-height': 0,
+    'top-banner-height': 0px,
+    'bottom-banner-height': 0px,
     // navbars
     'main-navbar-height': 42px,     // initial main navbar height
     'content-navbar-height': 54px,  // initial content navbar height

@@ -5,7 +5,7 @@
 @forward './lib/style/root-variables' show root-variables;
 
 // Config
-@forward './lib/style/config' show define-dbx-theme-config, get-dbx-theme-config;
+@forward './lib/style/config' show define-dbx-theme-config, get-dbx-theme-config, quick-define-dbx-config-via-banners;
 
 // Theme bundles
 @forward './lib/style/all-theme' show all-component-themes;

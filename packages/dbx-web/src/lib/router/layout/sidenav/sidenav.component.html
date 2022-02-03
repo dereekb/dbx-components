@@ -1,7 +1,8 @@
 <mat-sidenav-container class="dbx-sidenav" [ngClass]="(sizeClass$ | async) ?? ''">
   <mat-sidenav [disableClose]="disableBackdrop$ | async" [mode]="(drawer$ | async)!">
     <ng-content select="[top]"></ng-content>
-    <dbx-anchor-list [anchors]="anchors"></dbx-anchor-list>
+    <dbx-anchor-list class="dbx-sidenav-anchor-list" [anchors]="anchors"></dbx-anchor-list>
+    <span class="spacer"></span>
     <ng-content select="[bottom]"></ng-content>
   </mat-sidenav>
   <mat-sidenav-content>

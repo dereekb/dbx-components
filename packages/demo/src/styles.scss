@@ -1,5 +1,5 @@
-@use '@angular/material' as mat;
-@use 'dbx-web/src/index' as dbx;
+@use '@angular/material'as mat;
+@use 'dbx-web/src/index'as dbx;
 @use './style/style';
 
 $app-typography-config: mat.define-typography-config();
@@ -13,6 +13,7 @@ $app-typography-config: mat.define-typography-config();
 
 html,
 body {
+  background: black;
   height: 100%;
   overflow-x: hidden;
 }
