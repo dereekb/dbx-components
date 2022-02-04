@@ -1,6 +1,6 @@
-import { environment as base } from "./environment";
+import { base, DemoEnvironment } from "./base";
 
-export const environment = {
+export const environment: DemoEnvironment = {
   ...base,
   production: true
 };

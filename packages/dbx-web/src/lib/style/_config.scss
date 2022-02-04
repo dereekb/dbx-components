@@ -19,8 +19,6 @@
   $input-dbx-screen-theme-config: map.get($input-dbx-theme-config, 'screen');
   $input-dbx-layout-theme-config: map.get($input-dbx-theme-config, 'layout');
 
-  @debug $input-dbx-screen-theme-config;
-
   $dbx-screen: define-dbx-screen-config($input-dbx-screen-theme-config);
   $dbx-layout: define-dbx-layout-config($input-dbx-layout-theme-config);
 
