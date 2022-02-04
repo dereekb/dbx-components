@@ -1,3 +1,12 @@
-<div class="doc-feature-card-list">
-  
+<div class="doc-feature-card-list" fxLayout="row wrap" fxLayout.xs="column" fxLayoutGap="12px grid">
+  <div *ngFor="let card of cards" class="doc-feature-card" fxFlex="100%" fxFlex.sm="50%" fxFlex.gt-sm="430px">
+    <dbx-anchor [anchor]="card.anchor">
+      <mat-card matRipple>
+        <mat-card-header>
+          <mat-card-title>{{ card.title }}</mat-card-title>
+          <mat-card-subtitle>{{ card.detail }}</mat-card-subtitle>
+        </mat-card-header>
+      </mat-card>
+    </dbx-anchor>
+  </div>
 </div>

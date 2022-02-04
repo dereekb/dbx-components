@@ -4,11 +4,11 @@ import { Component } from '@angular/core';
   selector: 'dbx-prompt-page',
   template: `
     <div class="prompt-page">
-      <dbx-full-width-content-container>
+      <dbx-content-container width="full">
         <div class="prompt-page-content-wrap">
           <ng-content></ng-content>
         </div>
-      </dbx-full-width-content-container>
+      </dbx-content-container>
     </div>
   `,
   // TODO: styleUrls: ['./prompt.scss']
