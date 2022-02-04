@@ -3,7 +3,8 @@
 @use '../../../style/theming';
 
 // MARK: Variables
-
+$active-root-item-left-padding: 2px;
+$active-child-item-left-padding: 5px;
 
 // MARK: Mixin
 @mixin core() {}
@@ -58,7 +59,7 @@
       font-size: 28px;
       width: 28px;
       height: 28px;
-      padding: 2px;
+      padding: $active-root-item-left-padding;
     }
 
     // MARK: Anchor Tree
@@ -69,7 +70,7 @@
         font-size: 22px;
         width: 22px;
         height: 22px;
-        padding: 5px;
+        padding: $active-child-item-left-padding;
       }
     }
 
@@ -82,10 +83,11 @@
     $color: theming.get-color-config($theme-config);
     $typography: theming.get-typography-config($theme-config);
 
-    @if $color != null {
+    @if $color !=null {
       @include color($theme-config);
     }
-    @if $typography != null {
+
+    @if $typography !=null {
       @include typography($typography);
     }
   }

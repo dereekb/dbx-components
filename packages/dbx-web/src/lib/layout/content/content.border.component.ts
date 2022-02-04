@@ -9,8 +9,6 @@ import { Component, Input, ViewEncapsulation } from '@angular/core';
   <div class="dbx-content-border">
     <ng-content></ng-content>
   </div>
-  `,
-  styleUrls: ['./content.border.component.scss'],
-  encapsulation: ViewEncapsulation.None
+  `
 })
 export class DbxContentBorderComponent { }

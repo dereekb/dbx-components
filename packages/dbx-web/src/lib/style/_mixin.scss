@@ -1,5 +1,6 @@
 @use "sass:map";
 @use './config';
+@use './variables';
 
 @mixin if-mobile-screen($theme-config) {
   $dbx-screen-config: config.get-dbx-screen-config($theme-config);
@@ -46,7 +47,40 @@
   }
 }
 
-@mixin limitText {
+/**
+  Convenience function for page height that sets the height to $page-height with an optional offset.
+*/
+@mixin page-height($additionalOffset: 0) {
+  @if $additionalOffset !=0 {
+    height: calc(variables.$page-height - #{$additionalOffset});
+  }
+  @else {
+    height: variables.$page-height;
+  }
+}
+
+/**
+  Content height that sets the height to $content-height with an optional offset.
+*/
+@mixin content-height($additionalOffset: 0) {
+  @if $additionalOffset !=0 {
+    height: calc(variables.$content-height - #{$additionalOffset});
+  }
+  @else {
+    height: variables.$content-height;
+  }
+}
+
+/**
+  Will set the minimum height to the screen size on tiny-vertical screens.
+*/
+@mixin vh100-on-tiny-vertical-screen($theme-config, $additionalOffset: 0) {
+  @include if-tiny-vertical-screen($theme-config) {
+    min-height: $vh100;
+  }
+}
+
+@mixin limit-text {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;

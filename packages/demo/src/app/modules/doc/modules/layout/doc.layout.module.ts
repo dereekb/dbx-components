@@ -5,6 +5,7 @@ import { UIRouterModule } from '@uirouter/angular';
 import { STATES } from './doc.layout.router';
 import { DocLayoutHomeComponent } from './container/home.component';
 import { DocSharedModule } from '../shared/doc.shared.module';
+import { DocLayoutContentComponent } from './container/content.component';
 
 @NgModule({
   imports: [
@@ -16,7 +17,8 @@ import { DocSharedModule } from '../shared/doc.shared.module';
   declarations: [
     DocLayoutLayoutComponent,
     DocLayoutHomeComponent,
-    DocLayoutSectionComponent
+    DocLayoutSectionComponent,
+    DocLayoutContentComponent
   ],
 })
 export class DocLayoutModule { }

@@ -1,19 +1,14 @@
 import { Component, Input } from '@angular/core';
 
 /**
- * Component that sets the height of it's content to fill the page with respect to the top two navigation bars.
+ * Component that sets the height of it's content to fill the page.
  */
 @Component({
   selector: 'dbx-content',
   template: `
-    <div class="dbx-content" [ngClass]="{ 'has-second-bar': hasSecondBar }">
+    <div class="dbx-content">
       <ng-content></ng-content>
     </div>
   `
 })
-export class DbxContentComponent {
-
-  @Input()
-  hasSecondBar = true;
-
-}
+export class DbxContentComponent { }

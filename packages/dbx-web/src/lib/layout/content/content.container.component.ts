@@ -5,21 +5,12 @@ export type DbxContentContainerPadding = 'none' | 'min' | 'small' | 'normal';
 export type DbxContentContainerWidth = 'small' | 'medium' | 'wide' | 'full';
 
 /**
- * DbxContentContainer type.
- * 
- * Two values:
- * - normal: Full/unrestricted height content.
- * - content: Content that has a header above it and should take up the rest of the height of the page.
- */
-export type DbxContentContainerType = 'normal' | 'content';
-
-/**
  * Component that limits the max-width of the content.
  */
 @Component({
   selector: 'dbx-content-container',
   template: `
-    <div class="dbx-content-container" [ngClass]="grow + '-container ' + type + '-container-type container-padding-' + padding + ((scrollingContent) ? ' container-scrolling-content' : '')">
+    <div class="dbx-content-container" [ngClass]="grow + '-container container-padding-' + padding">
       <ng-content></ng-content>
     </div>
   `
@@ -27,15 +18,9 @@ export type DbxContentContainerType = 'normal' | 'content';
 export class DbxContentContainerComponent {
 
   @Input()
-  type = 'normal';
-
-  @Input()
   grow = 'wide';
 
   @Input()
   padding = 'normal';
-
-  @Input()
-  scrollingContent = false;
 
 }

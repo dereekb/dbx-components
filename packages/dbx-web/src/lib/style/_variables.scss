@@ -1,6 +1,8 @@
 @use "sass:map";
 
 // variable names
+$vh100-var: --vh100;                                        // variable to use for 100vh.
+
 $top-banner-height-var: --dbx-top-banner-height;
 $bottom-banner-height-var: --dbx-bottom-banner-height;
 
@@ -18,12 +20,17 @@ $padding-4-var: --dbx-padding-4;
 $padding-5-var: --dbx-padding-5;
 
 // vars
+$vh100: var($vh100-var);
+
 $top-banner-height: var($top-banner-height-var);
 $bottom-banner-height: var($bottom-banner-height-var);
-$app-height: calc(100% - ($top-banner-height - $bottom-banner-height));
+$app-height: calc($vh100 - ($top-banner-height - $bottom-banner-height));
 
 $main-navbar-height: var($main-navbar-height-var);
 $content-navbar-height: var($content-navbar-height-var);
+
+$page-height: calc($app-height - $main-navbar-height);
+$content-height: calc($page-height - $content-navbar-height);
 
 $box-max-width: var($box-max-width-var);
 $content-max-width: var($content-max-width-var);

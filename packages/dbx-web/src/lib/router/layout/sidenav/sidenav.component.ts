@@ -25,9 +25,7 @@ export interface DbxSidenavSidebarState {
 @Component({
   selector: 'dbx-sidenav',
   exportAs: 'sidenav',
-  templateUrl: './sidenav.component.html',
-  styleUrls: ['./sidenav.component.scss'],
-  encapsulation: ViewEncapsulation.None
+  templateUrl: './sidenav.component.html'
 })
 export class DbxSidenavComponent extends AbstractTransitionWatcherDirective implements OnInit, OnDestroy {
 

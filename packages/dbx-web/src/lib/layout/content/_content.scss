@@ -2,11 +2,16 @@
 @use 'sass:color';
 @use '../../style/theming';
 
-$max-content-width: theming.$content-max-width;
+$content-max-width: theming.$content-max-width;
+$content-border-inner-padding: theming.$padding-3;
 
-$max-small-content-container-width: calc($max-content-width / 3);
-$max-medium-content-container-width: calc($max-content-width / 2);
-$max-content-container-width: $max-content-width;
+$box-bottom-margin: 2vh;
+$box-padding: theming.$padding-4;
+$box-max-width: theming.$box-max-width;
+
+$max-small-content-container-width: calc($content-max-width / 3);
+$max-medium-content-container-width: calc($content-max-width / 2);
+$max-content-container-width: $content-max-width;
 
 $content-container-padding: theming.$padding-4;
 $content-container-padding-small-screen: theming.$padding-2;
@@ -14,33 +19,45 @@ $content-container-padding-small-screen: theming.$padding-2;
 @mixin core() {
 
   .dbx-content-border {
-    padding: 8px;
-    border: 3px dashed rgba(0, 0, 0, 0.05);
+    padding: $content-border-inner-padding;
   }
 
-  .dbx-content-box {
-    // padding: section.$box-padding;
-    // margin-bottom: section.$box-bottom-margin;
-  }
-
-  .dbx-section-elevate {
+  .dbx-content-elevate {
+    padding: $content-border-inner-padding;
     @include theming.elevation(2);
   }
 
-}
+  .dbx-content-box {
+    margin: auto;
+    padding: $box-padding;
+    margin-bottom: $box-bottom-margin;
+    max-width: $box-max-width;
+  }
 
-@mixin color($theme-config) {
-  $color-config: theming.get-color-config($theme-config);
-  $background: map.get($color-config, 'background');
+  .dbx-content,
+  .dbx-content-page {                   //dbx-content page always has page height
+    @include theming.page-height();
+  }
 
-  // TODO: Copy/clean up to move to core.
+  .dbx-content .dbx-content,            // if a child of another dbx-content, give it content height instead of page height.
+  .dbx-content-page .dbx-content,
+  .dbx-content-without-content-navbar {
+    @include theming.content-height();
+  }
+
+  .dbx-content-scroll {
+    height: 100%;
+    overflow: hidden;
+    padding: 0 2px; // Override padding
+  }
+
   .dbx-content-container {
     margin: auto;
     padding: 0 $content-container-padding;
 
-    // NOTE: Order of these classes matters.
+    // NOTE: the order of these classes matters.
 
-    // Padding
+    // padding
     &.container-padding-none {
       padding: 0;
     }
@@ -53,18 +70,7 @@ $content-container-padding-small-screen: theming.$padding-2;
       padding: 0 calc($content-container-padding / 3);
     }
 
-    @include theming.if-small-screen($theme-config) {
-      padding: 0 $content-container-padding-small-screen;
-    }
-
-    // Scrolling
-    &.container-scrolling-content {
-      height: 100%;
-      overflow: hidden;
-      padding: 0 2px; // Override padding
-    }
-
-    // Width
+    // width
     &.small-container {
       max-width: $max-small-content-container-width;
     }
@@ -77,7 +83,7 @@ $content-container-padding-small-screen: theming.$padding-2;
       max-width: $max-content-container-width;
     }
 
-    // Type
+    // type
     &.normal-container-type {
       // No restriction.
     }
@@ -87,8 +93,27 @@ $content-container-padding-small-screen: theming.$padding-2;
       overflow-x: hidden;
       overflow-y: auto;
     }
+
   }
 
+}
+
+@mixin color($theme-config) {
+  $color-config: theming.get-color-config($theme-config);
+  $background: map.get($color-config, 'background');
+  $content-border-background: theming.get-color-from-palette($background, 'hover');
+
+  .dbx-content-border {
+    border: 3px dashed $content-border-background;
+  }
+
+  .dbx-content-container {
+
+    @include theming.if-small-screen($theme-config) {
+      padding: 0 $content-container-padding-small-screen;
+    }
+
+  }
 
 }
 

@@ -15,6 +15,10 @@ export class DocLayoutComponent {
     icon: 'view_module',
     children: [{
       icon: 'view_module',
+      title: 'Content',
+      ref: 'doc.layout.content'
+    },{
+      icon: 'view_module',
       title: 'Section',
       ref: 'doc.layout.section'
     }]

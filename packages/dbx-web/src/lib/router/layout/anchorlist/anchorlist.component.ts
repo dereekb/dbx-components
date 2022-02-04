@@ -9,9 +9,7 @@ import { Maybe } from '@dereekb/util';
  */
 @Component({
   selector: 'dbx-anchor-list',
-  templateUrl: './anchorlist.component.html',
-  styleUrls: ['./anchorlist.component.scss'],
-  encapsulation: ViewEncapsulation.None
+  templateUrl: './anchorlist.component.html'
 })
 export class DbxAnchorListComponent implements OnDestroy {
 

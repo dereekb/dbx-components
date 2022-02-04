@@ -6,9 +6,7 @@
 $content-navbar-height: theming.$content-navbar-height;
 
 $page-h1-height: 32px;
-$box-bottom-margin: 2vh;
 
-$box-padding: theming.$padding-4;
 $header-bottom-padding: 16px;
 $header-left-reserved-space: 200px;
 $header-left-reserved-space-small-screen: 120px;
@@ -61,7 +59,7 @@ $header-left-reserved-space-small-screen: 120px;
         }
 
         >.title-text {
-          @include theming.limitText();
+          @include theming.limit-text();
         }
       }
     }
@@ -79,26 +77,16 @@ $header-left-reserved-space-small-screen: 120px;
 
 @mixin color($theme-config) {
 
-  // Border
-  .dbx-section-border {
-    padding: 8px;
-    border: 3px dashed rgba(0, 0, 0, 0.05);
-  }
-
-  // Elevation
-
-
-
   // MARK: Page
   .dbx-section-page {
 
     >.dbx-section-header>.dbx-section-header-content {
       .dbx-section-header-content-title {
-        max-width: calc(80% - #{$header-left-reserved-space});
 
         @include theming.if-small-screen($theme-config) {
           max-width: calc(80% - #{$header-left-reserved-space-small-screen});
         }
+        
       }
     }
 
