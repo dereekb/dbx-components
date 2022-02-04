@@ -54,8 +54,6 @@ $active-border-left-width: 2px;
 
 }
 
-@mixin typography($typography-config) {}
-
 @mixin color($theme-config) {
   $color-config: theming.get-color-config($theme-config);
   $primary: map.get($color-config, 'primary');
@@ -146,6 +144,8 @@ $active-border-left-width: 2px;
     }
     */
 }
+
+@mixin typography($typography-config) {}
 
 @mixin theme($theme-config) {
   @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-router-sidenav') {

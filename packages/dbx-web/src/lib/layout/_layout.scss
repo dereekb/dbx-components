@@ -10,6 +10,7 @@
 @use './section/section';
 @use './step/step';
 @use './styles/styles';
+@use './text/text';
 
 @mixin all-layout-core() {
   @include bar.core();
@@ -24,6 +25,7 @@
   @include section.core();
   @include step.core();
   @include styles.core();
+  @include text.core();
 }
 
 @mixin all-layout-typography($typography-config) {
@@ -39,6 +41,7 @@
   @include section.typography($typography-config);
   @include step.typography($typography-config);
   @include styles.typography($typography-config);
+  @include text.typography($typography-config);
 }
 
 @mixin all-layout-theme($theme-config) {
@@ -54,4 +57,5 @@
   @include section.theme($theme-config);
   @include step.theme($theme-config);
   @include styles.theme($theme-config);
+  @include text.theme($theme-config);
 }

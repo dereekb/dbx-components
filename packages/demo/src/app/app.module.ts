@@ -1,4 +1,3 @@
-import { DbxSidenavModule } from '@dereekb/dbx-web';
 import { AppLayoutComponent } from './container/layout.component';
 import { NgModule } from '@angular/core';
 import { UIRouterModule } from '@uirouter/angular';

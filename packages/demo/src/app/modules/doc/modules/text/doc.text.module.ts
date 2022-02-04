@@ -2,11 +2,11 @@ import { DocTextLayoutComponent } from './container/layout.component';
 import { NgModule } from '@angular/core';
 import { UIRouterModule } from '@uirouter/angular';
 import { STATES } from './doc.text.router';
-import { AppSharedModule } from '@/shared/app.shared.module';
+import { DocSharedModule } from '../shared/doc.shared.module';
 
 @NgModule({
   imports: [
-    AppSharedModule,
+    DocSharedModule,
     UIRouterModule.forChild({
       states: STATES
     })

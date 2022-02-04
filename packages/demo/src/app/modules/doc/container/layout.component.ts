@@ -7,6 +7,7 @@ import { ClickableAnchorLinkTree } from '@dereekb/dbx-core';
 export class DocLayoutComponent {
 
   readonly navAnchors: ClickableAnchorLinkTree[] = [{
+    icon: 'home',
     title: 'Docs',
     ref: 'doc.home'
   }, {
@@ -23,9 +24,11 @@ export class DocLayoutComponent {
       ref: 'doc.layout.section'
     }]
   }, {
+    icon: 'route',
     title: 'Router',
     ref: 'doc.router'
   }, {
+    icon: 'text_fields',
     title: 'Text',
     ref: 'doc.text'
   }];

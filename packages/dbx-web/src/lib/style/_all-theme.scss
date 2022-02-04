@@ -2,7 +2,6 @@
 @use '../button/button';
 @use '../error/error';
 @use '../interaction/interaction';
-@use '../text/text';
 @use '../layout/layout';
 @use '../router/router';
 
@@ -11,7 +10,6 @@
   @include button.theme($theme-config);
   @include error.theme($theme-config);
   @include interaction.all-interaction-theme($theme-config);
-  @include text.theme($theme-config);
   @include layout.all-layout-theme($theme-config);
   @include router.all-router-theme($theme-config);
 }

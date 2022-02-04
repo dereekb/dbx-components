@@ -1,4 +1,4 @@
-import { Component, Input, ViewEncapsulation } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { Maybe } from '@dereekb/util';
 import { DbxSectionHeaderHType } from './section';
 
@@ -29,7 +29,7 @@ import { DbxSectionHeaderHType } from './section';
       <span class="spacer"></span>
       <ng-content></ng-content>
     </div>
-    <p *ngIf="hint" class="dbx-section-hint">{{ hint }}</p>
+    <p *ngIf="hint" class="dbx-section-hint dbx-hint">{{ hint }}</p>
     <ng-template #headerContentTitleTemplate>
         <mat-icon *ngIf="icon">{{icon}}</mat-icon><span class="title-text">{{ header }}</span>
     </ng-template>

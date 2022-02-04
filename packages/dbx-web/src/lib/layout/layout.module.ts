@@ -11,6 +11,7 @@ import { DbxBlockLayoutModule } from './block/block.layout.module';
 import { DbxCompactLayoutModule } from './compact/compact.layout.module';
 import { DbxStepLayoutModule } from './step/step.layout.module';
 import { DbxBarLayoutModule } from './bar/bar.layout.module';
+import { DbxTextModule } from './text/text.module';
 
 @NgModule({
   exports: [
@@ -25,7 +26,8 @@ import { DbxBarLayoutModule } from './bar/bar.layout.module';
     DbxItemLayoutModule,
     DbxListLayoutModule,
     DbxSectionLayoutModule,
-    DbxStepLayoutModule
+    DbxStepLayoutModule,
+    DbxTextModule
   ],
 })
 export class DbxLayoutModule { }

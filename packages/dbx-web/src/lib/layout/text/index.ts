@@ -1,7 +1,5 @@
 export * from './hint.component';
-export * from '../layout/bar/label.bar.component';
 export * from './label.component';
-export * from './link.component';
 export * from './linkify.component';
 export * from './note.component';
 export * from './notice.component';

@@ -1,69 +1,5 @@
 @import 'shared';
 
-.dbx-content {
-  @include fillContentHeight();
-}
-
-.dbx-content-container {
-  margin: auto;
-  padding: 0 $dbx-content-container-padding;
-
-  // NOTE: Order of these classes matters.
-
-  // Padding
-  &.container-padding-none {
-    padding: 0;
-  }
-
-  &.container-padding-min {
-    padding: 0 2px;
-  }
-
-  &.container-padding-small {
-    padding: 0 $dbx-content-container-padding/3;
-  }
-
-  @include if-small-screen {
-    padding: 0 $dbx-content-container-padding-small-screen;
-  }
-
-  // Scrolling
-  &.container-scrolling-content {
-    height: 100%;
-    overflow: hidden;
-    padding: 0 2px; // Override padding
-  }
-
-  // Width
-  &.small-container {
-    max-width: $max-small-content-container-width;
-  }
-
-  &.medium-container {
-    max-width: $max-medium-content-container-width;
-  }
-
-  &.wide-container {
-    max-width: $max-content-container-width;
-  }
-
-  // Type
-  &.normal-container-type {
-    // No restriction.
-  }
-
-  &.content-container-type {
-    @include fillContentWithAppPageHeaderHeight();
-    overflow-x: hidden;
-    overflow-y: auto;
-  }
-}
-
-.dbx-full-width-content-container {
-  margin: auto;
-  padding: 0 $dbx-content-container-padding;
-}
-
 $dbx-section-header-bottom-padding: 16px;
 $dbx-section-header-left-reserved-space: 200px;
 $dbx-section-header-left-reserved-space-small-screen: 120px;
@@ -102,22 +38,6 @@ $dbx-section-header-left-reserved-space-small-screen: 120px;
 
 }
 
-.dbx-section {
-  // padding-bottom: $dbx-section-bottom-padding;
-
-  >h2 {
-    margin: 0;
-  }
-}
-
-.dbx-subsection {
-  padding-bottom: $dbx-subsection-bottom-padding;
-
-  >h3 {
-    margin: 0;
-  }
-}
-
 .dbx-card-box-container {
   box-sizing: border-box;
   padding: $dbx-card-box-padding;
@@ -138,22 +58,6 @@ $dbx-section-header-left-reserved-space-small-screen: 120px;
       margin: 0;
     }
   }
-}
-
-.dbx-section-elevated {
-  @include mat-elevation(2);
-  background: $opmore-white;
-}
-
-.dbx-section-hint {
-  margin: 0;
-  opacity: $hint-opacity;
-}
-
-.dbx-bordered-content {
-  padding: 6px;
-  border-radius: 6px;
-  border: 1px solid rgba(0, 0, 0, .5);
 }
 
 .dbx-flag {

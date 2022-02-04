@@ -1,7 +1,7 @@
 import { Component, Input, OnDestroy } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { distinctUntilChanged, map, shareReplay } from 'rxjs/operators';
-import * as linkifyStr from 'linkify-string';
+import linkifyStr from 'linkify-string';
 import { DomSanitizer } from '@angular/platform-browser';
 
 /**
@@ -9,8 +9,7 @@ import { DomSanitizer } from '@angular/platform-browser';
  */
 @Component({
   selector: 'dbx-linkify',
-  template: `<span class="dbx-linkify" [innerHTML]="linkifiedBody$ | async"></span>`,
-  // TODO: styleUrls: ['./text.scss']
+  template: `<span class="dbx-linkify" [innerHTML]="linkifiedBody$ | async"></span>`
 })
 export class DbxLinkifyComponent implements OnDestroy {
 

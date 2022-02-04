@@ -3,10 +3,8 @@ import { NgModule } from '@angular/core';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { DbxAnchorModule } from '../router';
 import { DbxHintComponent } from './hint.component';
 import { DbxLabelComponent } from './label.component';
-import { DbxLinkComponent } from './link.component';
 import { DbxLinkifyComponent } from './linkify.component';
 import { DbxNoteComponent } from './note.component';
 import { DbxNoticeComponent } from './notice.component';
@@ -20,8 +18,7 @@ import { DbxWarnComponent } from './warn.component';
     CommonModule,
     MatChipsModule,
     MatTooltipModule,
-    MatIconModule,
-    DbxAnchorModule
+    MatIconModule
   ],
   declarations: [
     DbxNoteComponent,
@@ -29,7 +26,6 @@ import { DbxWarnComponent } from './warn.component';
     DbxSuccessComponent,
     DbxWarnComponent,
     DbxHintComponent,
-    DbxLinkComponent,
     DbxLabelComponent,
     DbxLinkifyComponent,
     DbxOkComponent,
@@ -41,7 +37,6 @@ import { DbxWarnComponent } from './warn.component';
     DbxSuccessComponent,
     DbxWarnComponent,
     DbxHintComponent,
-    DbxLinkComponent,
     DbxLabelComponent,
     DbxLinkifyComponent,
     DbxOkComponent,

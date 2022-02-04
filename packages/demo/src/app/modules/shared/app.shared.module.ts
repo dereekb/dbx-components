@@ -47,7 +47,7 @@ import { OverlayModule } from '@angular/cdk/overlay';
 import { MatProgressButtonsModule } from 'mat-progress-buttons';
 import { CommonModule } from '@angular/common';
 import { FlexLayoutModule } from '@angular/flex-layout';
-import { DbxButtonModule, DbxRouterLayoutModule, DbxTextModule, DbxLayoutModule } from '@dereekb/dbx-web';
+import { DbxButtonModule, DbxRouterLayoutModule, DbxLayoutModule } from '@dereekb/dbx-web';
 
 const ANGULAR_MODULES = [
   CommonModule
@@ -107,8 +107,7 @@ const ANGULAR_MATERIAL_MODULES = [
 const DBX_MODULES = [
   DbxButtonModule,
   DbxRouterLayoutModule,
-  DbxLayoutModule,
-  DbxTextModule
+  DbxLayoutModule
 ];
 
 @NgModule({

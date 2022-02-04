@@ -1,1 +1,40 @@
-<p>Todo</p>
+<dbx-content-container grow="full">
+  <dbx-section-page header="Text Docs" hint="text related components">
+
+    <dbx-content-container>
+      <doc-feature-layout header="Text" hint="Various text-related classes and components are available.">
+
+        <!-- Examples -->
+        <doc-feature-example header="dbx-linkify" hint="Uses linkify to turn plaintext into html with links, etc.">
+          <dbx-linkify [text]="linkify"></dbx-linkify>
+        </doc-feature-example>
+        <doc-feature-example header="dbx-text-chips">
+          <dbx-text-chips [chips]="chips"></dbx-text-chips>
+        </doc-feature-example>
+        <h4>Colors</h4>
+        <doc-feature-example header=".dbx-hint">
+          <dbx-hint>{{ lorem }}</dbx-hint>
+        </doc-feature-example>
+        <doc-feature-example header=".dbx-warn">
+          <dbx-warn>{{ lorem }}</dbx-warn>
+        </doc-feature-example>
+        <doc-feature-example header=".dbx-success">
+          <dbx-success>{{ lorem }}</dbx-success>
+        </doc-feature-example>
+        <doc-feature-example header=".dbx-ok">
+          <dbx-ok>{{ lorem }}</dbx-ok>
+        </doc-feature-example>
+        <doc-feature-example header=".dbx-label">
+          <dbx-label>{{ lorem }}</dbx-label>
+        </doc-feature-example>
+        <doc-feature-example header=".dbx-notice">
+          <dbx-notice>{{ lorem }}</dbx-notice>
+        </doc-feature-example>
+        <doc-feature-example header=".dbx-note">
+          <dbx-note>{{ lorem }}</dbx-note>
+        </doc-feature-example>
+      </doc-feature-layout>
+    </dbx-content-container>
+
+  </dbx-section-page>
+</dbx-content-container>

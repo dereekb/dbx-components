@@ -1,7 +1,6 @@
 @use '../button/button';
 @use '../error/error';
 @use '../interaction/interaction';
-@use '../text/text';
 @use '../layout/layout';
 @use '../router/router';
 
@@ -10,7 +9,6 @@
   @include button.core();
   @include error.core();
   @include interaction.all-interaction-core();
-  @include text.core();
   @include layout.all-layout-core();
   @include router.all-router-core();
 }

@@ -16,8 +16,7 @@ export interface TextChip<T = any> {
       {{chip.text}}
     </mat-chip>
   </mat-chip-list>
-  `,
-  // TODO: styleUrls: ['./text.scss']
+  `
 })
 export class DbxTextChipsComponent<T = any> {
 
