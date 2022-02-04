@@ -2,9 +2,15 @@
 @use 'sass:color';
 @use '../../../style/theming';
 
+// MARK: Variables
+
+
+// MARK: Mixin
+@mixin core() {}
+
 @mixin color($theme-config) {
-  $config: theming.get-color-config($theme-config);
-  $background: map.get($config, 'background');
+  $color-config: theming.get-color-config($theme-config);
+  $background: map.get($color-config, 'background');
 
   .dbx-anchor-list.mat-nav-list {
 
@@ -77,7 +83,7 @@
     $typography: theming.get-typography-config($theme-config);
 
     @if $color != null {
-      @include color($color);
+      @include color($theme-config);
     }
     @if $typography != null {
       @include typography($typography);

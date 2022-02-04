@@ -22,8 +22,7 @@ export type DbxContentContainerType = 'normal' | 'content';
     <div class="dbx-content-container" [ngClass]="grow + '-container ' + type + '-container-type container-padding-' + padding + ((scrollingContent) ? ' container-scrolling-content' : '')">
       <ng-content></ng-content>
     </div>
-  `,
-  // TODO: styleUrls: ['./container.scss']
+  `
 })
 export class DbxContentContainerComponent {
 

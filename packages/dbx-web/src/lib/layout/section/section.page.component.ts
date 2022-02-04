@@ -1,5 +1,5 @@
-import { DbxSectionComponent } from './section.component';
 import { Component, Input } from '@angular/core';
+import { DbxSectionHeaderComponent } from './section.header.component';
 
 /**
  * Component used to style a page that is made up of app sections.
@@ -13,7 +13,6 @@ import { Component, Input } from '@angular/core';
     </div>
     <ng-content></ng-content>
   </div>
-  `,
-  styleUrls: ['./section.page.component.scss']
+  `
 })
-export class DbxSectionPageComponent extends DbxSectionComponent { }
+export class DbxSectionPageComponent extends DbxSectionHeaderComponent { }

@@ -7,7 +7,7 @@ import { DbxSectionHeaderComponent } from './section.header.component';
 @Component({
   selector: 'dbx-section',
   template: `
-  <div class="dbx-section">
+  <div class="dbx-section" [ngClass]="(elevated) ? 'dbx-section-elevated' : ''">
     <div class="dbx-section-header" [h]="3" [header]="header" [icon]="icon" [hint]="hint">
       <ng-content select="[sectionHeader]"></ng-content>
     </div>
@@ -17,4 +17,9 @@ import { DbxSectionHeaderComponent } from './section.header.component';
   </div>
   `
 })
-export class DbxSectionComponent extends DbxSectionHeaderComponent { }
+export class DbxSectionComponent extends DbxSectionHeaderComponent {
+
+  @Input()
+  elevated = false;
+
+}

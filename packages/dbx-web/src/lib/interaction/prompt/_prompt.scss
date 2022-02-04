@@ -1,11 +1,12 @@
 @use '../../style/theming';
 
-@mixin typography($typography-config) {
+// MARK: Variables
+$dbx-popup-controls-height: 33px;
 
-}
+// MARK: Mixin
+@mixin core() {}
 
-@mixin theme($theme-config) {
-  @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-interaction-prompt') {
+@mixin color($theme-config) {
 
     /*
    
@@ -36,6 +37,22 @@
 }
 
     */
-    
+
+}
+
+@mixin typography($typography-config) {}
+
+@mixin theme($theme-config) {
+  @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-interaction-prompt') {
+    $color: theming.get-color-config($theme-config);
+    $typography: theming.get-typography-config($theme-config);
+
+    @if $color !=null {
+      @include color($theme-config);
+    }
+
+    @if $typography !=null {
+      @include typography($typography);
+    }
   }
 }

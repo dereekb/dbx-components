@@ -1,42 +1,59 @@
 @use '../../style/theming';
 
+// MARK: Variables
+
+
+// MARK: Mixin
+@mixin core() {}
+
+@mixin color($theme-config) {}
+
 @mixin typography($typography-config) {}
 
 @mixin theme($theme-config) {
   @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-layout-step') {
+    $color: theming.get-color-config($theme-config);
+    $typography: theming.get-typography-config($theme-config);
 
-    /*
-    .step-section {
-      margin: 12px 0;
-
-      &.done {
-        .text {
-          // text-decoration: line-through;
-        }
-      }
-
-      .step-section-header {
-        margin-bottom: 8px;
-
-        .step {
-          font-weight: bold;
-          font-size: 1.3em;
-          margin-right: 8px;
-        }
-
-        .hint {
-          opacity: $hint-opacity;
-        }
-
-        .done-check {
-          color: green;
-        }
-      }
-
-      .step-section-content {}
-
+    @if $color !=null {
+      @include color($theme-config);
     }
-    */
 
+    @if $typography !=null {
+      @include typography($typography);
+    }
   }
 }
+
+/*
+  .step-section {
+    margin: 12px 0;
+
+    &.done {
+      .text {
+        // text-decoration: line-through;
+      }
+    }
+
+    .step-section-header {
+      margin-bottom: 8px;
+
+      .step {
+        font-weight: bold;
+        font-size: 1.3em;
+        margin-right: 8px;
+      }
+
+      .hint {
+        opacity: $hint-opacity;
+      }
+
+      .done-check {
+        color: green;
+      }
+    }
+
+    .step-section-content {}
+
+  }
+  */

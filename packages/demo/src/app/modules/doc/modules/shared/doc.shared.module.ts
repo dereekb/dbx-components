@@ -1,18 +1,22 @@
-import { DocLayoutComponent } from './container/layout.component';
+import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { UIRouterModule } from '@uirouter/angular';
-import { STATES } from './doc.router';
 import { AppSharedModule } from '@/shared/app.shared.module';
+import { DocFeatureLayoutComponent } from './component/feature.layout.component';
+import { DocFeatureExampleComponent } from './component/feature.example.component';
 
 @NgModule({
   imports: [
-    AppSharedModule,
-    UIRouterModule.forChild({
-      states: STATES
-    })
+    CommonModule,
+    AppSharedModule
   ],
   declarations: [
-    DocLayoutComponent
+    DocFeatureLayoutComponent,
+    DocFeatureExampleComponent
   ],
+  exports: [
+    AppSharedModule,
+    DocFeatureLayoutComponent,
+    DocFeatureExampleComponent
+  ]
 })
-export class DocModule { }
+export class DocSharedModule { }

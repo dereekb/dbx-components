@@ -1,15 +1,15 @@
 @use '../../style/theming';
 
+// MARK: Variables
 $dbx-popup-controls-height: 33px;
 
-@mixin typography($typography-config) {
+// MARK: Mixin
+@mixin core() {}
 
-}
+@mixin color($theme-config) {
 
-@mixin theme($theme-config) {
-  @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-interaction-popup') {
 
-    /*
+  /*
    
 .dbx-popup-content {
   @include modalContentView($allowScroll: 0);
@@ -46,6 +46,22 @@ $dbx-popup-controls-height: 33px;
   text-align: right;
 }
     */
-    
+
+}
+
+@mixin typography($typography-config) {}
+
+@mixin theme($theme-config) {
+  @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-interaction-popup') {
+    $color: theming.get-color-config($theme-config);
+    $typography: theming.get-typography-config($theme-config);
+
+    @if $color !=null {
+      @include color($theme-config);
+    }
+
+    @if $typography !=null {
+      @include typography($typography);
+    }
   }
 }

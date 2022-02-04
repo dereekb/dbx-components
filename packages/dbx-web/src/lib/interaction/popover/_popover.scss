@@ -1,20 +1,15 @@
 @use '../../style/theming';
 
+// MARK: Variables
 $dbx-popover-controls-height: 48px;
 $dbx-popover-header-height: 48px;
 
-@mixin fillPopoverContentHeight($hasControls: 0, $hasHeader: 0) {
-  height: calc(var(--popoverh) - #{$dbx-popover-controls-height * $hasControls} - #{$dbx-popover-header-height * $hasHeader});
-}
+// MARK: Mixin
+@mixin core() {}
 
-@mixin typography($typography-config) {
+@mixin color($theme-config) {
 
-}
-
-@mixin theme($theme-config) {
-  @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-interaction-popover') {
-
-    /*
+  /*
     .dbx-popover-content {
       height: 100%;
       overflow-y: hidden;
@@ -81,6 +76,26 @@ $dbx-popover-header-height: 48px;
     
     }
     */
-    
+
+}
+
+@mixin typography($typography-config) {}
+
+@mixin theme($theme-config) {
+  @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-interaction-popover') {
+    $color: theming.get-color-config($theme-config);
+    $typography: theming.get-typography-config($theme-config);
+
+    @if $color !=null {
+      @include color($theme-config);
+    }
+
+    @if $typography !=null {
+      @include typography($typography);
+    }
   }
+}
+
+@mixin fillPopoverContentHeight($hasControls: 0, $hasHeader: 0) {
+  height: calc(var(--popoverh) - #{$dbx-popover-controls-height * $hasControls} - #{$dbx-popover-header-height * $hasHeader});
 }

@@ -1,17 +1,26 @@
 @use '../style/theming';
 
-@mixin typography($typography-config) {
-  
-}
+// MARK: Variables
+
+
+// MARK: Mixin
+@mixin core() {}
+
+@mixin color($theme-config) {}
+
+@mixin typography($typography-config) {}
 
 @mixin theme($theme-config) {
   @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-button') {
+    $color: theming.get-color-config($theme-config);
+    $typography: theming.get-typography-config($theme-config);
 
-    /*
-    .dbx-error {
-      color: $error-text-color;
+    @if $color !=null {
+      @include color($theme-config);
     }
-    */
-    
+
+    @if $typography !=null {
+      @include typography($typography);
+    }
   }
 }

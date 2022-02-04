@@ -22,8 +22,7 @@ import { DbxSectionComponent } from './section.component';
       <ng-content></ng-content>
     </ng-container>
   </div>
-  `,
-  styleUrls: ['./section.intro.component.scss']
+  `
 })
 export class DbxIntroActionSectionComponent extends DbxSectionComponent implements OnDestroy {
 

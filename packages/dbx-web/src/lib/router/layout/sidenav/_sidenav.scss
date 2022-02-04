@@ -2,19 +2,23 @@
 @use 'sass:color';
 @use '../../../style/theming';
 
+// MARK: Variables
 $width: 240px;
 $mobile-width: 80vw;
 $icon-only-width: 65px;
 $mat-list-item-height: 48px;
 
+// MARK: Mixin
+@mixin core() {}
+
 @mixin typography($typography-config) {}
 
 @mixin color($theme-config) {
-  $config: theming.get-color-config($theme-config);
-  $primary: map.get($config, 'primary');
-  $accent: map.get($config, 'accent');
+  $color-config: theming.get-color-config($theme-config);
+  $primary: map.get($color-config, 'primary');
+  $accent: map.get($color-config, 'accent');
 
-  $background: map.get($config, 'background');
+  $background: map.get($color-config, 'background');
   $inactive-text-color: theming.get-color-from-palette($primary, '800-contrast');
   $active-icon-color: theming.get-color-from-palette($accent, 400);
 
@@ -105,7 +109,7 @@ $mat-list-item-height: 48px;
         }
 
         span {
-          @include mat-typography-level-to-styles($config, title);
+          @include mat-typography-level-to-styles($color-config, title);
           font-weight: 300;
         }
       }
@@ -124,7 +128,7 @@ $mat-list-item-height: 48px;
     $typography: theming.get-typography-config($theme-config);
 
     @if $color !=null {
-      @include color($color);
+      @include color($theme-config);
     }
 
     @if $typography !=null {

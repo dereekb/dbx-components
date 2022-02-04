@@ -11,6 +11,21 @@
 @use './step/step';
 @use './styles/styles';
 
+@mixin all-layout-core() {
+  @include bar.core();
+  @include block.core();
+  @include card.core();
+  @include column.core();
+  @include content.core();
+  @include dialog.core();
+  @include flag.core();
+  @include item.core();
+  @include list.core();
+  @include section.core();
+  @include step.core();
+  @include styles.core();
+}
+
 @mixin all-layout-typography($typography-config) {
   @include bar.typography($typography-config);
   @include block.typography($typography-config);

@@ -2,6 +2,12 @@
 @use './popup/popup';
 @use './prompt/prompt';
 
+@mixin all-interaction-core() {
+  @include popover.core();
+  @include popup.core();
+  @include prompt.core();
+}
+
 @mixin all-interaction-typography($typography-config) {
   @include popover.typography($typography-config);
   @include popup.typography($typography-config);

@@ -1,4 +1,4 @@
-@use '../../style/theming';
+@use '../style/theming';
 
 // MARK: Variables
 
@@ -11,7 +11,7 @@
 @mixin typography($typography-config) {}
 
 @mixin theme($theme-config) {
-  @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-layout-item') {
+  @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-action') {
     $color: theming.get-color-config($theme-config);
     $typography: theming.get-typography-config($theme-config);
 
@@ -22,5 +22,19 @@
     @if $typography !=null {
       @include typography($typography);
     }
+  }
+}
+
+// TODO:
+.dbx-action-snackbar {
+  display: flex;
+  align-items: center;
+
+  &.dbx-action-snackbar-success {
+    // background: $success-color;
+  }
+
+  &.dbx-action-snackbar-error {
+    // background: red;
   }
 }

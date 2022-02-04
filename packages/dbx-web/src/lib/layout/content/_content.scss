@@ -1,73 +1,110 @@
+@use 'sass:map';
+@use 'sass:color';
 @use '../../style/theming';
+
+$max-content-width: theming.$content-max-width;
+
+$max-small-content-container-width: calc($max-content-width / 3);
+$max-medium-content-container-width: calc($max-content-width / 2);
+$max-content-container-width: $max-content-width;
+
+$content-container-padding: theming.$padding-4;
+$content-container-padding-small-screen: theming.$padding-2;
+
+@mixin core() {
+
+  .dbx-content-border {
+    padding: 8px;
+    border: 3px dashed rgba(0, 0, 0, 0.05);
+  }
+
+  .dbx-content-box {
+    // padding: section.$box-padding;
+    // margin-bottom: section.$box-bottom-margin;
+  }
+
+  .dbx-section-elevate {
+    @include theming.elevation(2);
+  }
+
+}
+
+@mixin color($theme-config) {
+  $color-config: theming.get-color-config($theme-config);
+  $background: map.get($color-config, 'background');
+
+  // TODO: Copy/clean up to move to core.
+  .dbx-content-container {
+    margin: auto;
+    padding: 0 $content-container-padding;
+
+    // NOTE: Order of these classes matters.
+
+    // Padding
+    &.container-padding-none {
+      padding: 0;
+    }
+
+    &.container-padding-min {
+      padding: 0 2px;
+    }
+
+    &.container-padding-small {
+      padding: 0 calc($content-container-padding / 3);
+    }
+
+    @include theming.if-small-screen($theme-config) {
+      padding: 0 $content-container-padding-small-screen;
+    }
+
+    // Scrolling
+    &.container-scrolling-content {
+      height: 100%;
+      overflow: hidden;
+      padding: 0 2px; // Override padding
+    }
+
+    // Width
+    &.small-container {
+      max-width: $max-small-content-container-width;
+    }
+
+    &.medium-container {
+      max-width: $max-medium-content-container-width;
+    }
+
+    &.wide-container {
+      max-width: $max-content-container-width;
+    }
+
+    // Type
+    &.normal-container-type {
+      // No restriction.
+    }
+
+    &.content-container-type {
+      // @include fillContentWithAppPageHeaderHeight();
+      overflow-x: hidden;
+      overflow-y: auto;
+    }
+  }
+
+
+}
 
 @mixin typography($typography-config) {}
 
 @mixin theme($theme-config) {
   @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-layout-content') {
+    $color: theming.get-color-config($theme-config);
+    $typography: theming.get-typography-config($theme-config);
 
-    $max-content-width: theming.get-dbx-layout-content-max-width($theme-config);
-
-    $dbx-max-small-content-container-width: calc($max-content-width / 3);
-    $dbx-max-medium-content-container-width: calc($max-content-width / 2);
-    $dbx-max-content-container-width: $max-content-width;
-
-    $dbx-content-container-padding: theming.get-dbx-layout-padding($theme-config, 4);
-    $dbx-content-container-padding-small-screen: theming.get-dbx-layout-padding($theme-config, 2);
-
-    .dbx-content-container {
-      margin: auto;
-      padding: 0 $dbx-content-container-padding;
-
-      // NOTE: Order of these classes matters.
-
-      // Padding
-      &.container-padding-none {
-        padding: 0;
-      }
-
-      &.container-padding-min {
-        padding: 0 2px;
-      }
-
-      &.container-padding-small {
-        padding: 0 calc($dbx-content-container-padding / 3);
-      }
-
-      @include theming.if-small-screen($theme-config) {
-        padding: 0 $dbx-content-container-padding-small-screen;
-      }
-
-      // Scrolling
-      &.container-scrolling-content {
-        height: 100%;
-        overflow: hidden;
-        padding: 0 2px; // Override padding
-      }
-
-      // Width
-      &.small-container {
-        max-width: $dbx-max-small-content-container-width;
-      }
-
-      &.medium-container {
-        max-width: $dbx-max-medium-content-container-width;
-      }
-
-      &.wide-container {
-        max-width: $dbx-max-content-container-width;
-      }
-
-      // Type
-      &.normal-container-type {
-        // No restriction.
-      }
-
-      &.content-container-type {
-        // @include fillContentWithAppPageHeaderHeight();
-        overflow-x: hidden;
-        overflow-y: auto;
-      }
+    @if $color !=null {
+      @include color($theme-config);
     }
 
+    @if $typography !=null {
+      @include typography($typography);
+    }
   }
 }

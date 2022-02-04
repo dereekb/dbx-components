@@ -3,6 +3,13 @@
 @use './layout/navbar/navbar';
 @use './layout/sidenav/sidenav';
 
+@mixin all-router-core() {
+  @include anchor.core();
+  @include anchorlist.core();
+  @include navbar.core();
+  @include sidenav.core();
+}
+
 @mixin all-router-typography($typography-config) {
   @include anchor.typography($typography-config);
   @include anchorlist.typography($typography-config);

@@ -1,5 +1,7 @@
+@use './all-core';
 @use './all-typography';
 
 @mixin core($typography-config) {
+  @include all-core.all-component-core();
   @include all-typography.all-component-typographies($typography-config);
 }

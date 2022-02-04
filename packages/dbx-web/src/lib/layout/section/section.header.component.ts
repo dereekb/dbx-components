@@ -33,9 +33,7 @@ import { DbxSectionHeaderHType } from './section';
     <ng-template #headerContentTitleTemplate>
         <mat-icon *ngIf="icon">{{icon}}</mat-icon><span class="title-text">{{ header }}</span>
     </ng-template>
-  `,
-  styleUrls: ['./section.header.component.scss'],
-  encapsulation: ViewEncapsulation.None
+  `
 })
 export class DbxSectionHeaderComponent {
 

@@ -9,8 +9,7 @@ import { Component, Input } from '@angular/core';
     <div class="dbx-content" [ngClass]="{ 'has-second-bar': hasSecondBar }">
       <ng-content></ng-content>
     </div>
-  `,
-  // TODO: styleUrls: ['./container.scss']
+  `
 })
 export class DbxContentComponent {
 
