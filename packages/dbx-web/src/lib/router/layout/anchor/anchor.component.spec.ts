@@ -9,7 +9,7 @@ import { DbxAnchorModule } from './anchor.module';
 import { UIRouterModule } from '@uirouter/angular';
 import { APP_BASE_HREF } from '@angular/common';
 import { DbxAnchorComponent } from './anchor.component';
-import { first } from 'rxjs/operators';
+import { delay, filter, first } from 'rxjs/operators';
 
 describe('AnchorComponent', () => {
 
@@ -52,12 +52,16 @@ describe('AnchorComponent', () => {
 
     describe('when disabled', () => {
 
-      it('should display the disabled version.', () => {
+      it('should display the disabled version.', (done) => {
         testComponent.disabled = true;
         fixture.detectChanges();
 
-        const anchorElement: HTMLElement = fixture.debugElement.query(By.css(`.dbx-anchor-disabled`)).nativeElement;
-        expect(anchorElement).not.toBeNull();
+        testComponent.anchorComponent?.disabled$.pipe(filter(() => true), delay(0)).subscribe((disabled) => {
+          expect(disabled).toBe(true);
+          const anchorElement: HTMLElement = fixture.debugElement.query(By.css(`.dbx-anchor-disabled`)).nativeElement;
+          expect(anchorElement).not.toBeNull();
+          done();
+        });
       });
 
     });
@@ -88,17 +92,25 @@ describe('AnchorComponent', () => {
       });
     });
 
-    it('should display the click version.', () => {
-      const anchorElement: HTMLElement = fixture.debugElement.query(By.css(`.dbx-anchor-click`)).nativeElement;
-      expect(anchorElement).not.toBeNull();
+    it('should display the click version.', (done) => {
+      testComponent.anchorComponent?.type$.pipe(filter((x) => x === AnchorType.Clickable), delay(0)).subscribe(() => {
+        fixture.detectChanges();
+        const anchorElement: HTMLElement = fixture.debugElement.query(By.css(`.dbx-anchor-click`)).nativeElement;
+        expect(anchorElement).not.toBeNull();
+        done();
+      });
     });
 
     it('should respond to clicks.', (done) => {
-      const anchorElement = fixture.debugElement.query(By.css(`.dbx-anchor-click`));
-      anchorElement.triggerEventHandler('click', new MouseEvent('click'));
-      fixture.whenStable().then(() => {
-        expect(clicked).toBe(true);
-        done();
+      testComponent.anchorComponent?.type$.pipe(filter((x) => x === AnchorType.Clickable), delay(0)).subscribe(() => {
+        fixture.detectChanges();
+        
+        const anchorElement = fixture.debugElement.query(By.css(`.dbx-anchor-click`));
+        anchorElement.triggerEventHandler('click', new MouseEvent('click'));
+        fixture.whenStable().then(() => {
+          expect(clicked).toBe(true);
+          done();
+        });
       });
     });
 
@@ -123,9 +135,13 @@ describe('AnchorComponent', () => {
       });
     });
 
-    it('should display the sref version.', () => {
-      const anchorElement: HTMLElement = fixture.debugElement.query(By.css(`.dbx-anchor-sref`)).nativeElement;
-      expect(anchorElement).not.toBeNull();
+    it('should display the sref version.', (done) => {
+      testComponent.anchorComponent?.type$.pipe(filter((x) => x === AnchorType.Sref), delay(0)).subscribe(() => {
+        fixture.detectChanges();
+        const anchorElement: HTMLElement = fixture.debugElement.query(By.css(`.dbx-anchor-sref`)).nativeElement;
+        expect(anchorElement).not.toBeNull();
+        done();
+      });
     });
 
   });
@@ -149,9 +165,13 @@ describe('AnchorComponent', () => {
       });
     });
 
-    it('should display the href version.', () => {
-      const anchorElement: HTMLElement = fixture.debugElement.query(By.css(`.dbx-anchor-href`)).nativeElement;
-      expect(anchorElement).not.toBeNull();
+    it('should display the href version.', (done) => {
+      testComponent.anchorComponent?.type$.pipe(filter((x) => x === AnchorType.Href), delay(0)).subscribe(() => {
+        fixture.detectChanges();
+        const anchorElement: HTMLElement = fixture.debugElement.query(By.css(`.dbx-anchor-href`)).nativeElement;
+        expect(anchorElement).not.toBeNull();
+        done();
+      });
     });
 
   });
