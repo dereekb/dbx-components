@@ -1,6 +1,6 @@
 import { ClickableFunction, ClickableUrl } from './clickable';
 import { SegueRef } from '../segue';
-import { expandFlattenTreeFunction, expandTreeFunction, ExpandTreeFunction, expandTrees, flattenTree, FlattenTreeFunction, flattenTrees, flattenTreeToArray, flattenTreeToArrayFunction, Maybe, TreeNode } from '@dereekb/util';
+import { expandFlattenTreeFunction, expandTreeFunction, ExpandTreeFunction, FlattenTreeFunction, flattenTreeToArrayFunction, Maybe, TreeNode } from '@dereekb/util';
 import { Type, Provider } from '@angular/core';
 import { Observable } from 'rxjs';
 

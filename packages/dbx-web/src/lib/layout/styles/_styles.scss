@@ -17,9 +17,18 @@
 
   @for $i from 1 through length(theming.$padding-map) {
     $padding: nth(theming.$padding-map, $i);
+
     .padding-#{i} {
       padding: $padding;
     }
+  }
+
+  .d-block {
+    display: block;
+  }
+
+  .d-inline {
+    display: inline;
   }
 
 }

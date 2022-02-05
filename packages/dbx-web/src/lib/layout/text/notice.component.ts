@@ -1,7 +1,11 @@
 import { Component } from '@angular/core';
 
+
 @Component({
   selector: 'dbx-notice',
-  template: `<p class="dbx-notice"><ng-content></ng-content></p>`
+  template: `<ng-content></ng-content>`,
+  host: {
+    'class': 'dbx-notice'
+  }
 })
 export class DbxNoticeComponent { }

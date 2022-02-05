@@ -71,15 +71,15 @@ $content-container-padding-small-screen: theming.$padding-2;
     }
 
     // width
-    &.small-container {
+    &.container-small {
       max-width: $max-small-content-container-width;
     }
 
-    &.medium-container {
+    &.container-medium {
       max-width: $max-medium-content-container-width;
     }
 
-    &.wide-container {
+    &.container-wide {
       max-width: $max-content-container-width;
     }
 

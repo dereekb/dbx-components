@@ -8,11 +8,13 @@ import { Maybe } from '@dereekb/util';
 @Component({
   selector: 'dbx-link',
   template: `
-  <span class="dbx-link">
     <dbx-anchor [anchor]="anchor">
       <ng-content></ng-content>
     </dbx-anchor>
-  </span>`
+    `,
+  host: {
+    'class': 'd-inline dbx-link'
+  }
 })
 export class DbxAnchorLinkComponent {
 

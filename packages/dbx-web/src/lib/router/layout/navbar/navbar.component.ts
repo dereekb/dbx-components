@@ -2,9 +2,10 @@ import { Observable } from 'rxjs';
 import { ScreenMediaWidthType, screenMediaWidthTypeIsActive } from './../../../screen/screen';
 import { DbxScreenMediaService } from '../../../screen/screen.service';
 import { applyBestFit, Maybe } from '@dereekb/util';
-import { Input, Component, NgZone, OnDestroy, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
-import { ClickableAnchorLink, AbstractTransitionWatcherDirective, DbxRouterService, DbxRouterTransitionService, AbstractTransitionDirective, tapDetectChanges } from '@dereekb/dbx-core';
-import { BehaviorSubject, combineLatest, map, shareReplay, distinctUntilChanged, startWith, tap } from 'rxjs';
+import { Input, Component, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { ClickableAnchorLink, DbxRouterService, DbxRouterTransitionService, AbstractTransitionDirective, tapDetectChanges } from '@dereekb/dbx-core';
+import { BehaviorSubject, combineLatest, map, shareReplay, distinctUntilChanged } from 'rxjs';
+import { HorizontalConnectionPos } from '@angular/cdk/overlay';
 
 interface NavAnchorLink {
   selected: boolean;
@@ -20,12 +21,15 @@ export type NavbarMode = 'bar' | 'button';
 @Component({
   selector: 'dbx-navbar',
   templateUrl: './navbar.component.html',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  host: {
+    'class': 'dbx-navbar'
+  }
 })
 export class DbxNavbarComponent extends AbstractTransitionDirective implements OnDestroy {
 
   @Input()
-  navAlign = 'center';
+  navAlign: HorizontalConnectionPos = 'center';
 
   private _inputMode = new BehaviorSubject<Maybe<NavbarMode>>(undefined);
   private _breakpoint = new BehaviorSubject<ScreenMediaWidthType>('large');

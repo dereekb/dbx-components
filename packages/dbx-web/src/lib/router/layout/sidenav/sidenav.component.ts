@@ -1,7 +1,7 @@
-import { NgZone, OnDestroy, OnInit, Component, Input, ViewChild, ViewEncapsulation } from '@angular/core';
+import { NgZone, OnDestroy, OnInit, Component, Input, ViewChild } from '@angular/core';
 import { MatDrawerMode, MatSidenav } from '@angular/material/sidenav';
-import { DbxScreenMediaService, ScreenMediaWidthType } from '../../../screen';
-import { AbstractTransitionWatcherDirective, DbxRouterTransitionService, ClickableAnchorLink, ClickableAnchorLinkTree } from '@dereekb/dbx-core';
+import { DbxScreenMediaService } from '../../../screen';
+import { AbstractTransitionWatcherDirective, DbxRouterTransitionService, ClickableAnchorLinkTree } from '@dereekb/dbx-core';
 import { SubscriptionObject } from '@dereekb/rxjs';
 import { Maybe } from '@dereekb/util';
 import { distinctUntilChanged, map, shareReplay, Observable, first } from 'rxjs';

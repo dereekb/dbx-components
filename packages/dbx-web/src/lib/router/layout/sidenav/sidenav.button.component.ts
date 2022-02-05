@@ -9,7 +9,7 @@ import { DbxSidenavComponent, SideNavDisplayMode } from './sidenav.component';
   selector: 'dbx-sidenav-button',
   template: `
   <button class="dbx-sidenav-button" mat-icon-button *ngIf="showMenuButton$ | async" (click)="toggleNav()" aria-label="open sidenav button">
-    <mat-icon>menu</mat-icon>
+    <mat-icon>view_sidebar</mat-icon>
   </button>
   `
 })

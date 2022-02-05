@@ -9,11 +9,11 @@ export type DbxContentContainerWidth = 'small' | 'medium' | 'wide' | 'full';
  */
 @Component({
   selector: 'dbx-content-container',
-  template: `
-    <div class="dbx-content-container" [ngClass]="grow + '-container container-padding-' + padding">
-      <ng-content></ng-content>
-    </div>
-  `
+  template: `<ng-content></ng-content>`,
+  host: {
+    'class': 'd-block dbx-content-container',
+    '[class]': `"container-" + grow + " container-padding-" + padding`
+  }
 })
 export class DbxContentContainerComponent {
 

@@ -7,15 +7,17 @@ import { DbxSectionHeaderComponent } from './section.header.component';
 @Component({
   selector: 'dbx-section',
   template: `
-  <div class="dbx-section" [ngClass]="(elevated) ? 'dbx-section-elevated' : ''">
     <div class="dbx-section-header" [h]="3" [header]="header" [icon]="icon" [hint]="hint">
       <ng-content select="[sectionHeader]"></ng-content>
     </div>
     <div class="dbx-section-content">
       <ng-content></ng-content>
     </div>
-  </div>
-  `
+  `,
+  host: {
+    'class': 'd-block, dbx-section',
+    '[class]': `(elevated) ? 'dbx-section-elevated' : ''`
+  }
 })
 export class DbxSectionComponent extends DbxSectionHeaderComponent {
 

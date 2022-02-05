@@ -2,6 +2,9 @@ import { Component } from '@angular/core';
 
 @Component({
   selector: 'dbx-hint',
-  template: `<p class="dbx-hint"><ng-content></ng-content></p>`
+  template: `<ng-content></ng-content>`,
+  host: {
+    'class': 'dbx-hint'
+  }
 })
-export class DbxHintComponent {}
+export class DbxHintComponent { }

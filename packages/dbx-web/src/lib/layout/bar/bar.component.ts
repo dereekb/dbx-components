@@ -8,10 +8,14 @@ import { DbxBarColor } from './bar';
 @Component({
   selector: 'dbx-bar',
   template: `
-  <div class="dbx-bar dbx-hint" [ngClass]="(color) ? ('dbx-bar-' + color) : ''">
     <mat-icon class="button-spacer" *ngIf="icon">{{ icon }}</mat-icon>
     <span *ngIf="text">{{ text }}</span>
-  </div>`
+    `,
+  host: {
+    'class': 'dbx-bar dbx-hint',
+    '[class.dbx-bar-primary]': 'color === "primary"',
+    '[class.dbx-bar-accent]': 'color === "accent"'
+  }
 })
 export class DbxBarComponent {
 
