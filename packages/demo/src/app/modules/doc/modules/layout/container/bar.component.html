@@ -1,0 +1,36 @@
+<dbx-content-container>
+  <doc-feature-layout header="Bar" hint="Bars are horizontal layout components.">
+
+    <!-- Examples -->
+    <doc-feature-example header="dbx-pagebar" hint="Bar that is used for containing the navigation of the page, aka the top navbar.">
+      <dbx-pagebar>
+        <button left mat-raised-button>Left</button>
+        <div right>
+          <button mat-raised-button>Right A</button>
+          <dbx-button-spacer></dbx-button-spacer>
+          <button mat-raised-button>Right B</button>
+        </div>
+      </dbx-pagebar>
+    </doc-feature-example>
+    <doc-feature-example header="dbx-bar" hint="Used to divide sections of vertical content.">
+      <dbx-content-border>
+        <div>
+          <dbx-bar text="Bar Label" icon="home"></dbx-bar>
+          <p>{{ lorem }}</p>
+        </div>
+      </dbx-content-border>
+      <dbx-content-border>
+        <div>
+          <dbx-bar text="Bar Label" icon="home" color="primary"></dbx-bar>
+          <p>{{ lorem }}</p>
+        </div>
+      </dbx-content-border>
+      <dbx-content-border>
+        <div>
+          <dbx-bar text="Bar Label" icon="home" color="accent"></dbx-bar>
+          <p>{{ lorem }}</p>
+        </div>
+      </dbx-content-border>
+    </doc-feature-example>
+  </doc-feature-layout>
+</dbx-content-container>

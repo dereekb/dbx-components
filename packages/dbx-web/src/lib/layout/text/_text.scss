@@ -22,7 +22,7 @@ $icon-spacing: 6px;
     text-overflow: unset !important;
   }
 
-  .dbx-icon-spacing {
+  .dbx-icon-spacer {
     margin-right: $icon-spacing;
   }
 
@@ -68,7 +68,13 @@ $icon-spacing: 6px;
 
 }
 
-@mixin typography($typography-config) {}
+@mixin typography($typography-config) {
+
+  .dbx-label {
+    font-size: theming.font-size($typography-config, 'caption');
+  }
+
+}
 
 @mixin theme($theme-config) {
   @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-text') {

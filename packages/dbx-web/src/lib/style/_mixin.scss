@@ -50,6 +50,18 @@
 /**
   Convenience function for page height that sets the height to $page-height with an optional offset.
 */
+@mixin app-height($additionalOffset: 0) {
+  @if $additionalOffset !=0 {
+    height: calc(variables.$app-height - #{$additionalOffset});
+  }
+  @else {
+    height: variables.$app-height;
+  }
+}
+
+/**
+  Convenience function for page height that sets the height to $page-height with an optional offset.
+*/
 @mixin page-height($additionalOffset: 0) {
   @if $additionalOffset !=0 {
     height: calc(variables.$page-height - #{$additionalOffset});

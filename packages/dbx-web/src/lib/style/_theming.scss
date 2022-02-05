@@ -12,6 +12,8 @@ elevation;
 show private-check-duplicate-theme-styles,
 $theme-ignore-duplication-warnings;
 
+@forward 'node_modules/@angular/material/core/typography/typography-utils';
+
 @forward './config';
 @forward './variables';
 @forward './mixin';

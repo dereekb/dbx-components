@@ -1,14 +1,84 @@
+@use 'sass:map';
+@use 'sass:color';
 @use '../../style/theming';
 
 // MARK: Variables
-
+$pagebar-height-var: theming.$page-navbar-height-var;
+$pagebar-height: theming.$page-navbar-height;
+$bar-vertical-padding: theming.$padding-1;
 
 // MARK: Mixin
-@mixin core() {}
+@mixin core() {
 
-@mixin color($theme-config) {}
+  .dbx-banner {
+    @include theming.elevation(3);
+  }
 
-@mixin typography($typography-config) {}
+  .dbx-pagebar.mat-toolbar {
+    height: $pagebar-height;
+  }
+
+  .dbx-bar {
+    padding: $bar-vertical-padding 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .dbx-pagebar-hide {
+    #{$pagebar-height-var}: 0px;
+
+    .dbx-pagebar {
+      display: none;
+    }
+  }
+
+}
+
+@mixin color($theme-config) {
+  $color-config: theming.get-color-config($theme-config);
+  $background: map.get($color-config, 'background');
+  $primary: map.get($color-config, 'primary');
+  $accent: map.get($color-config, 'accent');
+
+  $dbx-bar-bg-color: theming.get-color-from-palette($background, 'app-bar');
+  $dbx-bar-color: theming.get-color-from-palette($background, 'contrast');
+
+  $dbx-bar-primary-bg-color: theming.get-color-from-palette($primary, 500);
+  $dbx-bar-primary-color: theming.get-color-from-palette($primary, '500-contrast');
+
+  $dbx-bar-accent-bg-color: theming.get-color-from-palette($accent, 500);
+  $dbx-bar-accent-color: theming.get-color-from-palette($accent, '500-contrast');
+
+  .dbx-pagebar .mat-toolbar {
+    // todo?
+  }
+
+  .dbx-bar,
+  .dbx-bar-background {
+    background: $dbx-bar-bg-color;
+    color: $dbx-bar-color;
+  }
+
+  .dbx-bar-primary {
+    background: $dbx-bar-primary-bg-color;
+    color: $dbx-bar-primary-color;
+  }
+
+  .dbx-bar-accent {
+    background: $dbx-bar-accent-bg-color;
+    color: $dbx-bar-accent-color;
+  }
+
+}
+
+@mixin typography($typography-config) {
+
+  .dbx-bar {
+    font-size: theming.font-size($typography-config, 'caption');
+  }
+
+}
 
 @mixin theme($theme-config) {
   @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-layout-bar') {

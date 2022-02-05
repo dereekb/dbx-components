@@ -64,7 +64,7 @@
     'top-banner-height': 0px,
     'bottom-banner-height': 0px,
     // navbars
-    'main-navbar-height': 42px,     // initial main navbar height
+    'page-navbar-height': 42px,     // initial main navbar height
     'content-navbar-height': 54px,  // initial content navbar height
     // content
     'box-max-width': 600px,         // initial max width of box content, such as popups.
@@ -101,8 +101,8 @@
   @return get-dbx-layout-config-var($theme-config, 'bottom-banner-height');
 }
 
-@function get-dbx-layout-main-navbar-height($theme-config) {
-  @return get-dbx-layout-config-var($theme-config, 'main-navbar-height');
+@function get-dbx-layout-page-navbar-height($theme-config) {
+  @return get-dbx-layout-config-var($theme-config, 'page-navbar-height');
 }
 
 @function get-dbx-layout-content-navbar-height($theme-config) {

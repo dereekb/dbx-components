@@ -1,7 +1,9 @@
+import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatIconModule } from '@angular/material/icon';
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { DbxLabelBarComponent } from './label.bar.component';
+import { DbxBarComponent } from './bar.component';
+import { DbxPagebarComponent } from './pagebar.component';
 
 /**
  * Module for block components.
@@ -9,13 +11,16 @@ import { DbxLabelBarComponent } from './label.bar.component';
 @NgModule({
   imports: [
     CommonModule,
+    MatToolbarModule,
     MatIconModule
   ],
   declarations: [
-    DbxLabelBarComponent
+    DbxBarComponent,
+    DbxPagebarComponent
   ],
   exports: [
-    DbxLabelBarComponent
+    DbxBarComponent,
+    DbxPagebarComponent
   ]
 })
 export class DbxBarLayoutModule { }

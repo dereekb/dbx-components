@@ -12,7 +12,7 @@
     #{theming.$top-banner-height-var}: $initial-top-banner-height;
     #{theming.$bottom-banner-height-var}: $initial-bottom-banner-height;
 
-    #{theming.$main-navbar-height-var}: theming.get-dbx-layout-main-navbar-height($theme-config);
+    #{theming.$page-navbar-height-var}: theming.get-dbx-layout-page-navbar-height($theme-config);
     #{theming.$content-navbar-height-var}: theming.get-dbx-layout-content-navbar-height($theme-config);
 
     #{theming.$box-max-width-var}: theming.get-dbx-layout-box-max-width($theme-config);

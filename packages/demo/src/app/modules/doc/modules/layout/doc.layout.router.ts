@@ -1,4 +1,5 @@
 import { Ng2StateDeclaration } from '@uirouter/angular';
+import { DocLayoutBarComponent } from './container/bar.component';
 import { DocLayoutContentComponent } from './container/content.component';
 import { DocLayoutHomeComponent } from './container/home.component';
 import { DocLayoutLayoutComponent } from './container/layout.component';
@@ -17,6 +18,12 @@ export const homeState: Ng2StateDeclaration = {
   component: DocLayoutHomeComponent,
 };
 
+export const docLayoutBarState: Ng2StateDeclaration = {
+  url: '/bar',
+  name: 'doc.layout.bar',
+  component: DocLayoutBarComponent,
+};
+
 export const docLayoutContentState: Ng2StateDeclaration = {
   url: '/content',
   name: 'doc.layout.content',
@@ -32,6 +39,7 @@ export const docLayoutSectionState: Ng2StateDeclaration = {
 export const STATES: Ng2StateDeclaration[] = [
   layoutState,
   homeState,
+  docLayoutBarState,
   docLayoutContentState,
   docLayoutSectionState
 ];

@@ -52,6 +52,16 @@ $active-border-left-width: 2px;
 
   }
 
+  .dbx-sidenav-page {
+    height: 100%;
+    max-height: 100%;
+    overflow: hidden;
+
+    .dbx-sidenav-page-content {
+      overflow: auto;
+    }
+  }
+
 }
 
 @mixin color($theme-config) {

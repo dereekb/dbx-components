@@ -1,3 +1,12 @@
 <dbx-sidenav [anchors]="navAnchors" class="doc-app">
-  <ui-view></ui-view>
+  <dbx-sidenav-page [mobileOnly]="true" color="primary">
+    <span navRight>
+      <dbx-anchor [anchor]="home">
+        <button mat-button>
+          <mat-icon class="dbx-icon-spacer">home</mat-icon>Home
+        </button>
+      </dbx-anchor>
+    </span>
+    <ui-view></ui-view>
+  </dbx-sidenav-page>
 </dbx-sidenav>

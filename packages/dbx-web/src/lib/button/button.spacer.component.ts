@@ -5,7 +5,6 @@ import { Component } from '@angular/core';
  */
 @Component({
   selector: 'dbx-button-spacer',
-  template: `<span class="button-spacer"></span>`,
-  // TODO: styleUrls: ['./button.scss']
+  template: `<span class="dbx-button-spacer"></span>`
 })
 export class DbxButtonSpacerComponent { }

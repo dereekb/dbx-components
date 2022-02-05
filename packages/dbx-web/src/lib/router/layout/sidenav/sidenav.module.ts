@@ -10,15 +10,21 @@ import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatListModule } from '@angular/material/list';
 import { DbxAnchorModule } from '../anchor/anchor.module';
 import { DbxAnchorListModule } from '../anchorlist/anchorlist.module';
+import { DbxSidenavPagebarComponent } from './sidenav.pagebar.component';
+import { DbxSidenavPageComponent } from './sidenav.page.component';
+import { DbxBarLayoutModule } from '../../../layout/bar/bar.layout.module';
+import { DbxButtonModule } from '../../../button/button.module';
+import { DbxContentLayoutModule } from './../../../layout/content/content.layout.module';
+import { DbxSidenavButtonComponent } from './sidenav.button.component';
 
-/**
- * Module for container-type components.
- */
 @NgModule({
   imports: [
     CommonModule,
+    DbxBarLayoutModule,
     DbxAnchorModule,
     DbxAnchorListModule,
+    DbxButtonModule,
+    DbxContentLayoutModule,
     MatToolbarModule,
     MatButtonModule,
     MatIconModule,
@@ -28,16 +34,16 @@ import { DbxAnchorListModule } from '../anchorlist/anchorlist.module';
     UIRouterModule
   ],
   declarations: [
-    DbxSidenavComponent
-    // AppSideNavBarTitleContentComponent,
-    // AppSideNavBarItemComponent,
-    // AppSideNavBarTitleComponent
+    DbxSidenavComponent,
+    DbxSidenavButtonComponent,
+    DbxSidenavPagebarComponent,
+    DbxSidenavPageComponent
   ],
   exports: [
-    DbxSidenavComponent
-    // AppSideNavBarTitleContentComponent,
-    // AppSideNavBarTitleComponent,
-    // AppSideNavBarTitleComponent
+    DbxSidenavComponent,
+    DbxSidenavButtonComponent,
+    DbxSidenavPagebarComponent,
+    DbxSidenavPageComponent
   ]
 })
 export class DbxSidenavModule { }

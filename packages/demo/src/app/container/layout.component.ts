@@ -1,9 +1,9 @@
-import { ClickableAnchor, ClickableAnchorLink } from '@dereekb/dbx-core';
+import { ClickableAnchor } from '@dereekb/dbx-core';
 import { Component } from '@angular/core';
 
 @Component({
   templateUrl: './layout.component.html',
-  styleUrls: ['../app.scss']
+  styleUrls: ['./layout.component.scss']
 })
 export class AppLayoutComponent {
 
@@ -17,6 +17,11 @@ export class AppLayoutComponent {
 
   readonly demo: ClickableAnchor = {
     ref: 'demo'
+  };
+
+  readonly github: ClickableAnchor = {
+    url: 'https://github.com/dereekb/dbcomponents',
+    target: '_blank'
   };
 
 }

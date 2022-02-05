@@ -1,2 +1,3 @@
 export * from './bar.layout.module';
-export * from './label.bar.component';
+export * from './bar.component';
+export * from './pagebar.component';

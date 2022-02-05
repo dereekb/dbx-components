@@ -9,7 +9,7 @@ import { DbxPopoverContentComponent } from './popover.content.component';
   template: `
   <div class="dbx-popover-header">
     <div class="dbx-popover-header-content">
-      <h3><mat-icon *ngIf="icon" class="dbx-icon-spacing">{{ icon }}</mat-icon> {{ header }}</h3>
+      <h3><mat-icon *ngIf="icon" class="dbx-icon-spacer">{{ icon }}</mat-icon> {{ header }}</h3>
       <span class="spacer"></span>
       <ng-content></ng-content>
     </div>
