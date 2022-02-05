@@ -1,4 +1,4 @@
-import { filterMaybe, SubscriptionObject, beginLoading, LoadingState, LoadingStateLoadingContext } from '@dereekb/rxjs';
+import { filterMaybe, SubscriptionObject, beginLoading, LoadingState, LoadingStateContext } from '@dereekb/rxjs';
 import { Directive, ElementRef, OnDestroy, OnInit, Type, ViewChild } from '@angular/core';
 import { AbstractControl, FormControl, ValidatorFn } from '@angular/forms';
 import { FieldType, FormlyFieldConfig } from '@ngx-formly/core';
@@ -117,7 +117,7 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, C extends Sear
 
   readonly singleValueSyncSubscription = new SubscriptionObject();
 
-  readonly searchContext = new LoadingStateLoadingContext({ obs: this.searchResultsState$, showLoadingOnNoModel: true });
+  readonly searchContext = new LoadingStateContext({ obs: this.searchResultsState$, showLoadingOnNoModel: true });
 
   readonly searchResults$: Observable<SearchableValueFieldDisplayValue<T>[]> = this.searchResultsState$.pipe(
     map(x => x?.model ?? [])

@@ -26,6 +26,11 @@ export interface LoadingState<T = any> extends LoadingErrorPair {
 }
 
 /**
+ * Convenience identifier for a LoadingState that returns a list.
+ */
+export type ListLoadingState<T> = LoadingState<T[]>;
+
+/**
  * LoadingState with a Page.
  */
 export interface PageLoadingState<T> extends LoadingState<T>, Page { }

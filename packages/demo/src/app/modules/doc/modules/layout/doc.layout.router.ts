@@ -3,6 +3,7 @@ import { DocLayoutBarComponent } from './container/bar.component';
 import { DocLayoutContentComponent } from './container/content.component';
 import { DocLayoutHomeComponent } from './container/home.component';
 import { DocLayoutLayoutComponent } from './container/layout.component';
+import { DocLayoutListComponent } from './container/list.component';
 import { DocLayoutSectionComponent } from './container/section.component';
 
 export const layoutState: Ng2StateDeclaration = {
@@ -36,10 +37,17 @@ export const docLayoutSectionState: Ng2StateDeclaration = {
   component: DocLayoutSectionComponent,
 };
 
+export const docLayoutListState: Ng2StateDeclaration = {
+  url: '/list',
+  name: 'doc.layout.list',
+  component: DocLayoutListComponent,
+};
+
 export const STATES: Ng2StateDeclaration[] = [
   layoutState,
   homeState,
   docLayoutBarState,
   docLayoutContentState,
-  docLayoutSectionState
+  docLayoutSectionState,
+  docLayoutListState
 ];

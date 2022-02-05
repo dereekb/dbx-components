@@ -1,5 +1,5 @@
 export * from './loading.context.state';
-export * from './loading.context.state.page';
+export * from './loading.context.state.list';
 export * from './loading.context.state.model';
 export * from './loading.context.simple';
 export * from './loading.context';

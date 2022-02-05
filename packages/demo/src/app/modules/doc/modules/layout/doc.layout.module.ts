@@ -1,3 +1,4 @@
+import { DocLayoutListComponent } from './container/list.component';
 import { DocLayoutSectionComponent } from './container/section.component';
 import { DocLayoutLayoutComponent } from './container/layout.component';
 import { NgModule } from '@angular/core';
@@ -20,7 +21,8 @@ import { DocLayoutBarComponent } from './container/bar.component';
     DocLayoutHomeComponent,
     DocLayoutBarComponent,
     DocLayoutSectionComponent,
-    DocLayoutContentComponent
+    DocLayoutContentComponent,
+    DocLayoutListComponent
   ],
 })
 export class DocLayoutModule { }

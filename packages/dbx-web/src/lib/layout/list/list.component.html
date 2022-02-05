@@ -1,0 +1,10 @@
+<dbx-loading [context]="context" [linear]="true">
+  <dbx-list-view infinite-scroll [infiniteScrollDistance]="scrollDistance" [hidden]="hideContent$ | async"
+    [infiniteScrollUpDistance]="scrollDistance" [infiniteScrollThrottle]="throttle" [scrollWindow]="false"
+    (scrolled)="onScrollDown()" (scrolledUp)="onScrollUp()">
+    <ng-content select="[top]"></ng-content>
+    <dbx-injected-content [config]="injectedComponentConfig$ | async"></dbx-injected-content>
+    <ng-content select="[bottom]"></ng-content>
+  </dbx-list-view>
+  <ng-content *ngIf="isEmpty$ | async" select="[empty]"></ng-content>
+</dbx-loading>

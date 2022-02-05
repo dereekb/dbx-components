@@ -11,6 +11,10 @@ export const DOC_LAYOUT_ROUTES = [{
   icon: 'view_module',
   title: 'Section',
   ref: 'doc.layout.section'
+}, {
+  icon: 'list',
+  title: 'List',
+  ref: 'doc.layout.list'
 }];
 
 export const DOC_LAYOUT_ROOT_ROUTE = {

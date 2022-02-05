@@ -7,11 +7,11 @@ export interface DbxInjectedComponentConfig<T = any> {
    */
   componentClass: Type<T>;
   /**
-   * Custom Injector to use when creating the component.
+   * (Optional) Custom Injector to use when creating the component.
    */
   injector?: Injector;
   /**
-   * Custom initialization code when an instance is created.
+   * (Optional) Custom initialization code when an instance is created.
    */
   init?: (instance: T) => void;
 }

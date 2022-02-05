@@ -6,7 +6,7 @@ import { LoadingContext, LoadingContextEvent } from './loading.context';
 import { LoadingState } from './loading.state';
 
 
-export interface AbstractLoadingStateLoadingEvent<T = any> extends LoadingContextEvent {
+export interface AbstractLoadingStateEvent<T = any> extends LoadingContextEvent {
   model?: Maybe<T>;
 }
 
@@ -24,7 +24,7 @@ export interface AbstractLoadingEventForLoadingPairConfig<S extends LoadingState
 /**
  * Abstract LoadingContext implementation using LoadingState.
  */
-export abstract class AbstractLoadingStateLoadingContext<T = any, S extends LoadingState<T> = LoadingState<T>, E extends LoadingContextEvent = LoadingContextEvent, C extends AbstractLoadingEventForLoadingPairConfig<S> = AbstractLoadingEventForLoadingPairConfig<S>> implements LoadingContext, Destroyable {
+export abstract class AbstractLoadingStateContext<T = any, S extends LoadingState<T> = LoadingState<T>, E extends LoadingContextEvent = LoadingContextEvent, C extends AbstractLoadingEventForLoadingPairConfig<S> = AbstractLoadingEventForLoadingPairConfig<S>> implements LoadingContext, Destroyable {
 
   private _stateSubject$ = new BehaviorSubject<Maybe<Observable<S>>>(undefined);
   private _config: C;

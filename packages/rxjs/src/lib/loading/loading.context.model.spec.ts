@@ -1,16 +1,16 @@
-import { LoadingStateLoadingContext } from './loading.context.state.model';
+import { LoadingStateContext } from './loading.context.state.model';
 import { loadingStateIsLoading, successResult } from '.';
 import { of } from 'rxjs';
 import { first } from 'rxjs/operators';
 
-describe('LoadingStateLoadingContext', () => {
+describe('LoadingStateContext', () => {
 
   describe('no state observable.', () => {
 
-    let context: LoadingStateLoadingContext;
+    let context: LoadingStateContext;
 
     beforeEach(() => {
-      context = new LoadingStateLoadingContext();
+      context = new LoadingStateContext();
     });
 
     it('should return a loading state stream.', (done) => {
@@ -49,7 +49,7 @@ describe('LoadingStateLoadingContext', () => {
 
           expect(loadingStateIsLoading(state)).toBe(false);
 
-          const context = new LoadingStateLoadingContext({ obs: of(state), showLoadingOnNoModel: true });
+          const context = new LoadingStateContext({ obs: of(state), showLoadingOnNoModel: true });
 
           context.stream$.pipe(first()).subscribe({
             next: ({ loading }) => {
@@ -70,7 +70,7 @@ describe('LoadingStateLoadingContext', () => {
 
           expect(loadingStateIsLoading(state)).toBe(false);
 
-          const context = new LoadingStateLoadingContext({ obs: of(state), showLoadingOnNoModel: false });
+          const context = new LoadingStateContext({ obs: of(state), showLoadingOnNoModel: false });
 
           context.stream$.pipe(first()).subscribe({
             next: ({ loading }) => {
