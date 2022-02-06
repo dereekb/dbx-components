@@ -5,11 +5,20 @@
       <!-- Examples -->
 
       <doc-feature-example header="dbx-list">
-        <p>It is important that a dbx-list has a set height available to it, otherwise it will expand to it's content height.</p>
+        <p>It is important that a dbx-list has a set height available to it, otherwise it will expand to it's content
+          height.</p>
         <p>Selected: {{ selectionState | json }}</p>
         <p>Values: {{ count$ | async }}</p>
         <div style="height: 400px">
           <doc-item-list [state$]="state$" (loadMore)="loadMore()" (selectionChange)="onSelectionChange($event)">
+            <p top>This is the top.</p>
+            <p bottom>This is the bottom.</p>
+          </doc-item-list>
+        </div>
+
+        <h4>Static List</h4>
+        <div style="height: 300px">
+          <doc-item-list [state$]="staticState$">
             <p top>This is the top.</p>
             <p bottom>This is the bottom.</p>
           </doc-item-list>

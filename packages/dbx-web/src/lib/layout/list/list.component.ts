@@ -1,9 +1,10 @@
-import { catchError, filter, exhaustMap, merge, map, Subject, switchMap, shareReplay, distinctUntilChanged, of, Observable, BehaviorSubject } from 'rxjs';
+import { catchError, filter, exhaustMap, merge, map, Subject, switchMap, shareReplay, distinctUntilChanged, of, Observable, BehaviorSubject, first, startWith } from 'rxjs';
 import { Component, Input, EventEmitter, Output, OnDestroy, ElementRef, HostListener, ChangeDetectorRef } from '@angular/core';
 import { DbxInjectedComponentConfig, tapDetectChanges } from '@dereekb/dbx-core';
-import { SubscriptionObject, ListLoadingStateContextInstance, ListLoadingState, filterMaybe, tapLog } from '@dereekb/rxjs';
+import { SubscriptionObject, ListLoadingStateContextInstance, ListLoadingState, filterMaybe, tapLog, loadingStateHasFinishedLoading, successResult, beginLoading } from '@dereekb/rxjs';
 import { Maybe, Milliseconds } from '@dereekb/util';
 import { DbxListView, ListSelectionState } from './list.view';
+import { E } from '@angular/cdk/keycodes';
 
 /**
  * Direction the scroll was triggered moving.
@@ -175,14 +176,35 @@ export class DbxListComponent<T = any, V extends DbxListView<T> = DbxListView<T>
     shareReplay(1)
   );
 
-  readonly hideContent$ = this.hideOnEmpty$.pipe(
-    switchMap((hide) => (hide) ? this.isEmpty$ : of(false)),
-    distinctUntilChanged(),
-    tapDetectChanges(this.cdRef),
-    shareReplay(1)
+  readonly hideContent$: Observable<boolean> = this.context.stateChange$.pipe(
+    switchMap(() => this.context.state$.pipe(
+      tapLog('state new'),
+      filter((x) => loadingStateHasFinishedLoading(x)),
+      first(),
+      tapLog('state finished'),
+      startWith(beginLoading())
+    )),
+    switchMap((state) => {
+      console.log('Switch: ', state);
+      if (state?.loading) {
+        return of(true);
+      } else {
+        return this.hideOnEmpty$.pipe(
+          switchMap((hide) => (hide === false) ? of(false) : this.isEmpty$),
+          distinctUntilChanged(),
+          tapDetectChanges(this.cdRef),
+          shareReplay(1)
+        );
+      }
+    }),
+    tapLog('hide')
   );
 
   constructor(readonly cdRef: ChangeDetectorRef) { }
+
+  ngOnInit(): void {
+    this.hideContent$.subscribe((x) => console.log('x', x));
+  }
 
   ngOnDestroy(): void {
     delete (this as any)._content;  // remove parent-child relation.
@@ -275,10 +297,14 @@ export class DbxListComponent<T = any, V extends DbxListView<T> = DbxListView<T>
   selector: 'dbx-list-view',
   template: '<ng-content></ng-content>',
   host: {
-    'class': 'd-block dbx-list-view'
+    'class': 'd-block dbx-list-view',
+    '[class.dbx-list-view-hidden]': 'hide'
   }
 })
 export class DbxListInternalViewComponent {
+
+  @Input()
+  hide: Maybe<Boolean> = false;
 
   constructor(private readonly parent: DbxListComponent, readonly elementRef: ElementRef) {
     this.parent.__content = this;

@@ -1,6 +1,6 @@
 <dbx-loading [context]="context" [linear]="true"></dbx-loading>
 <dbx-list-view infinite-scroll [infiniteScrollDistance]="(scrollDistance$ | async) ?? DEFAULT_SCROLL_DISTANCE"
-  [infiniteScrollUpDistance]="(scrollDistance$ | async) ?? DEFAULT_SCROLL_DISTANCE" [hidden]="hideContent$ | async"
+  [infiniteScrollUpDistance]="(scrollDistance$ | async) ?? DEFAULT_SCROLL_DISTANCE" [hide]="hideContent$ | async"
   [infiniteScrollThrottle]="(throttleScroll$ | async) ?? DEFAULT_THROTTLE_SCROLL" [scrollWindow]="false"
   (scrolled)="onScrollDown()" (scrolledUp)="onScrollUp()">
   <ng-content select="[top]"></ng-content>

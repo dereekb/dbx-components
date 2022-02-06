@@ -24,6 +24,10 @@
       padding-top: 0;
     }
 
+    &.dbx-list-view-hidden {
+      display: none;
+    }
+
   }
 
   .dbx-list-content-box {

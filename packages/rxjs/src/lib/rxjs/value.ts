@@ -1,7 +1,8 @@
+import { ObjectOrGetter } from './../../../../util/src/lib/getter';
 import { MonoTypeOperatorFunction } from 'rxjs';
-import { Maybe } from '@dereekb/util';
+import { Getter, getValueFromObjectOrGetter, Maybe } from '@dereekb/util';
 import { Observable, of, OperatorFunction } from 'rxjs';
-import { filter, skipWhile, switchMap } from 'rxjs/operators';
+import { filter, skipWhile, startWith, switchMap, timeout } from 'rxjs/operators';
 
 /**
  * Observable filter that filters maybe value that are defined.
@@ -45,6 +46,18 @@ export function switchMapMaybeObs<T = any>(): OperatorFunction<Maybe<Observable<
       switchMap(x => x)
     ) as Observable<T>;
 
+    return subscriber;
+  };
+}
+
+/**
+ * Used to pass a default value incase an observable has not yet started emititng values.
+ */
+export function timeoutStartWith<T>(defaultValue: ObjectOrGetter<T>): MonoTypeOperatorFunction<T> {
+  return (source: Observable<T>) => {
+    const subscriber: Observable<T> = source.pipe(
+      timeout({ first: 0, with: () => source.pipe(startWith(getValueFromObjectOrGetter(defaultValue))) }),
+    ) as Observable<T>;
     return subscriber;
   };
 }

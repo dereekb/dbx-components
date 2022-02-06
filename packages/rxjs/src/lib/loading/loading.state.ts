@@ -84,7 +84,13 @@ export function allLoadingStatesHaveFinishedLoading(states: LoadingState[]): boo
 
 export function loadingStateIsLoading(state: Maybe<LoadingState>): boolean {
   if (state) {
-    return state.loading ?? !Boolean(state.value || state.error);
+    const loading = state.loading;
+
+    if (loading === true) {
+      return true;
+    } else {
+      return loading ?? !Boolean(state.value || state.error);
+    }
   } else {
     return false;
   }
@@ -92,7 +98,13 @@ export function loadingStateIsLoading(state: Maybe<LoadingState>): boolean {
 
 export function loadingStateHasFinishedLoading(state: Maybe<LoadingState>): boolean {
   if (state) {
-    return state.loading === false || Boolean(state.value || state.error);
+    const loading = state.loading;
+
+    if (loading === true) {
+      return false;
+    } else {
+      return loading === false || Boolean(state.value || state.error);
+    }
   } else {
     return false;
   }

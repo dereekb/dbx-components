@@ -1,7 +1,6 @@
 import { Maybe, Destroyable } from '@dereekb/util';
-import { filterMaybe } from '@dereekb/rxjs';
-import { BehaviorSubject, isObservable, Observable, of } from 'rxjs';
-import { mergeMap, map, startWith, switchMap, shareReplay, distinctUntilChanged, debounceTime } from 'rxjs/operators';
+import { filterMaybe, timeoutStartWith, beginLoading } from '@dereekb/rxjs';
+import { mergeMap, map, switchMap, shareReplay, distinctUntilChanged, BehaviorSubject, isObservable, Observable, of } from 'rxjs';
 import { LoadingContext, LoadingContextEvent } from './loading.context';
 import { LoadingState } from './loading.state';
 
@@ -33,7 +32,7 @@ export type LoadingStateContextInstanceInputConfig<S, C> = Observable<S> | C;
 /**
  * Abstract LoadingContext implementation using LoadingState.
  */
-export abstract class AbstractLoadingStateContextInstance<T = any, S extends LoadingState<T> = LoadingState<T>, E extends LoadingContextEvent = LoadingContextEvent, C extends AbstractLoadingEventForLoadingPairConfig<S> = AbstractLoadingEventForLoadingPairConfig<S>>
+export abstract class AbstractLoadingStateContextInstance<T = any, S extends LoadingState<T> = LoadingState<T>, E extends AbstractLoadingStateEvent<T> = AbstractLoadingStateEvent<T>, C extends AbstractLoadingEventForLoadingPairConfig<S> = AbstractLoadingEventForLoadingPairConfig<S>>
   implements AbstractLoadingStateContext<T, S, E>, LoadingContext, Destroyable {
 
   private _stateSubject$ = new BehaviorSubject<Maybe<Observable<S>>>(undefined);
@@ -45,23 +44,26 @@ export abstract class AbstractLoadingStateContextInstance<T = any, S extends Loa
 
   readonly stream$: Observable<E> = this._stateSubject$.pipe(
     mergeMap((obs) => {
-      const start = {
-        loading: true
-      } as E;
-
       if (obs) {
         return obs.pipe(
-          startWith(start as any as S), // Always start with loading. Observable may not always update immediately.
+          // If the observable did not pass a value immediately, we start with the start value.
+          timeoutStartWith<S>(beginLoading() as S),
           map((x) => this.loadingEventForLoadingPair(x, this._config))
         );
       } else {
-        return of(start);
+        return of(beginLoading() as E);
       }
     }),
-    debounceTime(0),  // Debounce emissions
+    distinctUntilChanged((a: E, b: E) => {
+      return a.loading === b.loading && a.error === b.error && a.value === b.value
+    }),
     shareReplay(1)
   );
 
+  /**
+   * Emits when the input state has changed.
+   */
+  readonly stateChange$: Observable<void> = this._stateSubject$.pipe(map(() => undefined));
   readonly loading$: Observable<boolean> = this.stream$.pipe(map(x => x.loading), shareReplay(1));
 
   constructor(config?: LoadingStateContextInstanceInputConfig<S, C>) {

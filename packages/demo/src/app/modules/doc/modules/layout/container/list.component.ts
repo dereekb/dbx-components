@@ -24,10 +24,12 @@ export class DocLayoutListComponent implements OnInit {
     })
   );
 
+  readonly staticState$: Observable<ListLoadingState<DocItem>> = of(successResult(this.makeValues()));
+
   readonly count$ = this.state$.pipe(map(x => x.value?.length ?? 0));
 
   loadMore() {
-    this._values.next(this._values.value.concat(range(this.numberToLoadPerUpdate).map(x => ({ icon: 'house', name: `${x}-${Math.random() * x}` }))))
+    this._values.next(this._values.value.concat(this.makeValues()))
   }
 
   onSelectionChange(event: ListSelectionState<DocItem>) {
@@ -36,6 +38,10 @@ export class DocLayoutListComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadMore();
+  }
+
+  makeValues() {
+    return range(this.numberToLoadPerUpdate).map(x => ({ icon: 'house', name: `${x}-${Math.random() * x}` }));
   }
 
 }

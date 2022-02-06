@@ -1,5 +1,11 @@
 import { FieldOfType } from "../key";
 
+export function objectHasKey<T, K extends keyof T = keyof T>(obj: T, key: K): boolean;
+export function objectHasKey<T>(obj: T, key: string): boolean;
+export function objectHasKey<T>(obj: T, key: string): boolean {
+  return Object.prototype.hasOwnProperty.call(obj, key);
+}
+
 export function applyToMultipleFields<T extends object>(value: any, fields: FieldOfType<T>[]): Partial<T> {
   const result: any = {};
 
