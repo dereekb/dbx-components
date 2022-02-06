@@ -129,7 +129,7 @@ export class AbstractDbxPickableItemFieldDirective<T> extends FieldType<Pickable
   );
 
   readonly loadResultsDisplayValues$: Observable<PickableValueFieldDisplayValueWithHash<T>[]> = this.loadResultsDisplayValuesState$.pipe(
-    map(x => x?.model ?? [])
+    map(x => x?.value ?? [])
   );
 
   /**
@@ -191,7 +191,7 @@ export class AbstractDbxPickableItemFieldDirective<T> extends FieldType<Pickable
   );
 
   readonly filteredSearchResults$: Observable<PickableValueFieldDisplayValueWithHash<T>[]> = this.filteredSearchResultsState$.pipe(
-    map(x => x?.model),
+    map(x => x?.value),
     filterMaybe(),
     shareReplay(1)
   );
@@ -222,7 +222,7 @@ export class AbstractDbxPickableItemFieldDirective<T> extends FieldType<Pickable
   /**
    * Context used for managing the loading of items, or when the current results change.
    */
-  readonly context = new LoadingStateContextInstance({ obs: this.itemsLoadingState$, showLoadingOnNoModel: false });
+  readonly context = new LoadingStateContextInstance({ obs: this.itemsLoadingState$, showLoadingOnNoValue: false });
 
   readonly filterItemsLoadingState$: Observable<LoadingState> = this.items$.pipe(
     map(x => successResult(x)),
@@ -233,7 +233,7 @@ export class AbstractDbxPickableItemFieldDirective<T> extends FieldType<Pickable
   /**
    * Context used for searching/filtering.
    */
-  readonly filterResultsContext = new LoadingStateContextInstance({ obs: this.loadResultsDisplayValuesState$, showLoadingOnNoModel: true });
+  readonly filterResultsContext = new LoadingStateContextInstance({ obs: this.loadResultsDisplayValuesState$, showLoadingOnNoValue: true });
 
   get multiSelect(): boolean {
     return this.field.multiSelect ?? true;

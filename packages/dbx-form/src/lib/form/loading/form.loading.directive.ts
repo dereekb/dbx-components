@@ -39,11 +39,11 @@ export class DbxFormLoadingPairSourceDirective<T extends object = any> extends A
       ]).pipe(
         map((x) => x[1]),
         filter((x) => Boolean(x)),
-        distinctUntilChanged((x, y) => x.model === y.model),
+        distinctUntilChanged((x, y) => x.value === y.value),
       ).subscribe((x) => {
         if (!x.error && !x.loading) {
           // console.log('Setting value: ', x.model);
-          this.form.setValue(x.model);
+          this.form.setValue(x.value);
         }
       });
     }

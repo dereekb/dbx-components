@@ -14,7 +14,6 @@ export interface LoadingEventForListLoadingStateConfig<S extends ListLoadingStat
 
 export interface ListLoadingStateContext<L = any, S extends ListLoadingState<L> = ListLoadingState<L>> extends AbstractLoadingStateContext<L[], S, ListLoadingStateContextEvent<L>> {
   readonly list$: Observable<L[]>;
-  readonly models$: Observable<L[]>;
   readonly isEmpty$: Observable<boolean>;
 }
 
@@ -24,10 +23,9 @@ export interface ListLoadingStateContext<L = any, S extends ListLoadingState<L> 
 export class ListLoadingStateContextInstance<L = any, S extends ListLoadingState<L> = ListLoadingState<L>> extends AbstractLoadingStateContextInstance<L[], S, ListLoadingStateContextEvent<L>, LoadingEventForListLoadingStateConfig<S>>  {
 
   /**
-   * Returns the current models or an empty list.
+   * Returns the current values or an empty list.
    */
   readonly list$: Observable<L[]> = this.stream$.pipe(map(x => x.list ?? []), shareReplay(1));
-  readonly models$: Observable<L[]> = this.list$;
   readonly isEmpty$: Observable<boolean> = this.stream$.pipe(
     filter(x => !loadingStateIsLoading(x)),
     map(x => Boolean(x.list && !(x.list?.length > 0))),
@@ -35,22 +33,22 @@ export class ListLoadingStateContextInstance<L = any, S extends ListLoadingState
   );
 
   protected loadingEventForLoadingPair(state: S, config: LoadingEventForListLoadingStateConfig = {}): ListLoadingStateContextEvent<L> {
-    const { showLoadingOnNoModel } = config;
+    const { showLoadingOnNoValue } = config;
 
     let loading = state?.loading;
     const error = state?.error;
-    let list = state?.model;
+    let list = state?.value;
 
-    const hasModel = list != null;
+    const hasValue = list != null;
 
-    if (hasModel) {
-      list = limitArray(list, config);  // Always limit the model/results.
+    if (hasValue) {
+      list = limitArray(list, config);  // Always limit the value/results.
     }
 
     // If there is no error
     if (!hasNonNullValue(error)) {
-      if (showLoadingOnNoModel) {
-        loading = !hasModel;
+      if (showLoadingOnNoValue) {
+        loading = !hasValue;
       } else {
         loading = loadingStateIsLoading(state);
       }

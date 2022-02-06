@@ -81,7 +81,7 @@ describe('ItemPageIterator', () => {
         expect(state).toBeDefined();
         expect(loadingStateHasFinishedLoading(state)).toBe(true);
         expect(state.page).toBe(FIRST_PAGE);
-        expect(state.model).toBeDefined();
+        expect(state.value).toBeDefined();
 
         done();
       });
@@ -183,7 +183,7 @@ describe('ItemPageIterator', () => {
           expect(state).toBeDefined();
           expect(loadingStateHasFinishedLoading(state)).toBe(true);
           expect(state.page).toBe(FIRST_PAGE);
-          expect(state.model).toBeDefined();
+          expect(state.value).toBeDefined();
 
           done();
         });
@@ -215,7 +215,7 @@ describe('ItemPageIterator', () => {
               expect(state).toBeDefined();
               expect(loadingStateHasFinishedLoading(state)).toBe(true);
               expect(state.page).toBe(FIRST_PAGE);
-              expect(state.model).toBeDefined();
+              expect(state.value).toBeDefined();
 
               done();
             });
@@ -250,7 +250,7 @@ describe('ItemPageIterator', () => {
               expect(state).toBeDefined();
               expect(loadingStateHasFinishedLoading(state)).toBe(true);
               expect(state.page).toBe(FIRST_PAGE + 1);
-              expect(state.model).toBeDefined();
+              expect(state.value).toBeDefined();
 
               done();
             });

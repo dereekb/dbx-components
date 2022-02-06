@@ -19,12 +19,12 @@ export class DocLayoutListComponent implements OnInit {
     switchMap((x) => {
       return of(successResult(x)).pipe(
         delay((Math.random() * 500) + 1000),
-        startWith<ListLoadingState<DocItem>>({ loading: true, model: takeFront(x, x.length - this.numberToLoadPerUpdate) })
+        startWith<ListLoadingState<DocItem>>({ loading: true, value: takeFront(x, x.length - this.numberToLoadPerUpdate) })
       );
     })
   );
 
-  readonly count$ = this.state$.pipe(map(x => x.model?.length ?? 0));
+  readonly count$ = this.state$.pipe(map(x => x.value?.length ?? 0));
 
   loadMore() {
     this._values.next(this._values.value.concat(range(this.numberToLoadPerUpdate).map(x => ({ icon: 'house', name: `${x}-${Math.random() * x}` }))))

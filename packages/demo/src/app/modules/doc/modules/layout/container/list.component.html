@@ -7,7 +7,7 @@
       <doc-feature-example header="dbx-list">
         <p>It is important that a dbx-list has a set height available to it, otherwise it will expand to it's content height.</p>
         <p>Selected: {{ selectionState | json }}</p>
-        <p>Models: {{ count$ | async }}</p>
+        <p>Values: {{ count$ | async }}</p>
         <div style="height: 400px">
           <doc-item-list [state$]="state$" (loadMore)="loadMore()" (selectionChange)="onSelectionChange($event)"></doc-item-list>
         </div>

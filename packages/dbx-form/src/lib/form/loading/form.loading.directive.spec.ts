@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Component, ViewChild, Input, Directive, ContentChild, AfterViewInit, OnInit } from '@angular/core';
 import { Observable, of } from 'rxjs';
-import { LoadingState } from '@dereekb/rxjs';
+import { LoadingState, successResult } from '@dereekb/rxjs';
 import { DbxFormLoadingPairSourceDirective } from './form.loading.directive';
 import { DbxTestDbxFormComponent, FORM_TEST_PROVIDERS } from '../formly.component.spec';
 
@@ -41,7 +41,7 @@ describe('DbxFormLoadingPairSourceDirective', () => {
 
   it('should pass the value of the observable to the form', () => {
     const TEST_VALUE = 'TEST VALUE';
-    testComponent.source = of({ model: { text: TEST_VALUE, invalidField: 0 } });
+    testComponent.source = of(successResult({ text: TEST_VALUE, invalidField: 0 }));
     form.detectFormChanges(fixture);
 
     const value = form.getValue();

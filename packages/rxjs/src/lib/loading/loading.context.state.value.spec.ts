@@ -1,4 +1,4 @@
-import { LoadingStateContextInstance } from './loading.context.state.model';
+import { LoadingStateContextInstance } from './loading.context.state.value';
 import { loadingStateIsLoading, successResult } from '.';
 import { of } from 'rxjs';
 import { first } from 'rxjs/operators';
@@ -43,13 +43,13 @@ describe('LoadingStateContext', () => {
 
       describe('=true', () => {
 
-        it(`loading should be true if the result's model is undefined but loading is false.`, (done) => {
-          const model = undefined;
-          const state = successResult(model);
+        it(`loading should be true if the result's value is undefined but loading is false.`, (done) => {
+          const value = undefined;
+          const state = successResult(value);
 
           expect(loadingStateIsLoading(state)).toBe(false);
 
-          const context = new LoadingStateContextInstance({ obs: of(state), showLoadingOnNoModel: true });
+          const context = new LoadingStateContextInstance({ obs: of(state), showLoadingOnNoValue: true });
 
           context.stream$.pipe(first()).subscribe({
             next: ({ loading }) => {
@@ -64,13 +64,13 @@ describe('LoadingStateContext', () => {
 
       describe('=false', () => {
 
-        it(`loading should be false if the result's model is undefined but loading is false.`, (done) => {
-          const model = undefined;
-          const state = successResult(model);
+        it(`loading should be false if the result's value is undefined but loading is false.`, (done) => {
+          const value = undefined;
+          const state = successResult(value);
 
           expect(loadingStateIsLoading(state)).toBe(false);
 
-          const context = new LoadingStateContextInstance({ obs: of(state), showLoadingOnNoModel: false });
+          const context = new LoadingStateContextInstance({ obs: of(state), showLoadingOnNoValue: false });
 
           context.stream$.pipe(first()).subscribe({
             next: ({ loading }) => {

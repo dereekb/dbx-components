@@ -96,7 +96,7 @@ export class DbxListComponent<T = any, V extends DbxListView<T> = DbxListView<T>
   private _onClickSub = new SubscriptionObject();
   private _onSelectionChangeSub = new SubscriptionObject();
 
-  readonly context = new ListLoadingStateContextInstance<T, S>({ showLoadingOnNoModel: false });
+  readonly context = new ListLoadingStateContextInstance<T, S>({ showLoadingOnNoValue: false });
   readonly isEmpty$ = this.context.isEmpty$;
 
   readonly hideOnEmpty$: Observable<boolean> = this._config.pipe(filterMaybe(), map(x => Boolean(x.hideOnEmpty)), distinctUntilChanged(), shareReplay(1));

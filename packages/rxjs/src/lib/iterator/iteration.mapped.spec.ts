@@ -36,7 +36,7 @@ describe('iteration.mapped', () => {
 
       it('should returned the latest state with the mapped value', (done) => {
         mappedInstance.latestState$.pipe(first()).subscribe((x) => {
-          expect(typeof x.model).toBe('string');
+          expect(typeof x.value).toBe('string');
           done();
         });
       });

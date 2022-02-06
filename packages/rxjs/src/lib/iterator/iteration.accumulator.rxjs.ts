@@ -17,8 +17,8 @@ export function flattenIterationResultItemArray<T>(iteration: ItemAccumulator<T[
       const latestItem = lastValue(allItems);
 
       const accumulatorObs: Observable<T[]> = iteration.itemIteration.latestState$.pipe(
-        skipWhile(x => x.model === latestItem),
-        map(x => x.model),
+        skipWhile(x => x.value === latestItem),
+        map(x => x.value),
         filterMaybe()
       );
 

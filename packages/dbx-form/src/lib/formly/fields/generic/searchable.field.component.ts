@@ -117,10 +117,10 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, C extends Sear
 
   readonly singleValueSyncSubscription = new SubscriptionObject();
 
-  readonly searchContext = new LoadingStateContextInstance({ obs: this.searchResultsState$, showLoadingOnNoModel: true });
+  readonly searchContext = new LoadingStateContextInstance({ obs: this.searchResultsState$, showLoadingOnNoValue: true });
 
   readonly searchResults$: Observable<SearchableValueFieldDisplayValue<T>[]> = this.searchResultsState$.pipe(
-    map(x => x?.model ?? [])
+    map(x => x?.value ?? [])
   );
 
   readonly _formControlValue: Observable<T | T[]> = this.formControl$.pipe(
@@ -142,7 +142,7 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, C extends Sear
   );
 
   readonly displayValues$: Observable<SearchableValueFieldDisplayValue<T>[]> = this.displayValuesState$.pipe(
-    map(x => x?.model ?? [])
+    map(x => x?.value ?? [])
   );
 
   get name(): string {

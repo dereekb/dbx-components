@@ -38,7 +38,7 @@ export abstract class AbstractDbxListViewDirective<T> implements DbxListView<T>,
   }
 
   setListContext(state: ListLoadingStateContext<T>): void {
-    this.setValues(state.models$);
+    this.setValues(state.list$);
   }
 
   setValues(valuesObs: Maybe<Observable<T[]>>): void {

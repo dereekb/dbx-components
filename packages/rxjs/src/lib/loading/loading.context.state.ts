@@ -6,7 +6,7 @@ import { LoadingContext, LoadingContextEvent } from './loading.context';
 import { LoadingState } from './loading.state';
 
 export interface AbstractLoadingStateEvent<T = any> extends LoadingContextEvent {
-  model?: Maybe<T>;
+  value?: Maybe<T>;
 }
 
 export interface AbstractLoadingEventForLoadingPairConfig<S extends LoadingState = LoadingState> {
@@ -15,9 +15,9 @@ export interface AbstractLoadingEventForLoadingPairConfig<S extends LoadingState
    */
   obs?: Observable<S>;
   /**
-   * Whether or not to show loading if a model is defined.
+   * Whether or not to show loading if a value is defined.
    */
-  showLoadingOnNoModel?: boolean;
+  showLoadingOnNoValue?: boolean;
 }
 
 export interface AbstractLoadingStateContext<T = any, S extends LoadingState<T> = LoadingState<T>, E extends LoadingContextEvent = LoadingContextEvent> {
@@ -71,7 +71,7 @@ export abstract class AbstractLoadingStateContextInstance<T = any, S extends Loa
       } as C;
     } else {
       this._config = config ?? {
-        showLoadingOnNoModel: false
+        showLoadingOnNoValue: false
       } as C;
     }
 

@@ -8,14 +8,14 @@ import { LoadingState } from './loading.state';
 
 
 export interface LoadingStateContextEvent<T = any> extends LoadingContextEvent {
-  model?: Maybe<T>;
+  value?: Maybe<T>;
 }
 
 export interface LoadingEventForLoadingPairConfig<S extends LoadingState = LoadingState> extends AbstractLoadingEventForLoadingPairConfig<S> { }
 
 export interface LoadingStateContext<L = any, S extends LoadingState<L> = LoadingState<L>> extends AbstractLoadingStateContext<L, S, LoadingStateContextEvent<L>> {
   readonly list$: Observable<L[]>;
-  readonly models$: Observable<L[]>;
+  readonly values$: Observable<L[]>;
   readonly isEmpty$: Observable<boolean>;
 }
 
@@ -24,18 +24,18 @@ export interface LoadingStateContext<L = any, S extends LoadingState<L> = Loadin
  */
 export class LoadingStateContextInstance<T = any, S extends LoadingState<T> = LoadingState<T>> extends AbstractLoadingStateContextInstance<T, S, LoadingStateContextEvent<T>, LoadingEventForLoadingPairConfig<S>> {
 
-  readonly model$: Observable<Maybe<T>> = this.stream$.pipe(map(x => x.model), shareReplay(1));
-  readonly modelAfterLoaded$: Observable<Maybe<T>> = this.stream$.pipe(filter(x => !x.loading), map(x => x.model), shareReplay(1));
+  readonly value$: Observable<Maybe<T>> = this.stream$.pipe(map(x => x.value), shareReplay(1));
+  readonly valueAfterLoaded$: Observable<Maybe<T>> = this.stream$.pipe(filter(x => !x.loading), map(x => x.value), shareReplay(1));
 
-  protected loadingEventForLoadingPair(pair: S, { showLoadingOnNoModel }: LoadingEventForLoadingPairConfig = {}): LoadingStateContextEvent<T> {
+  protected loadingEventForLoadingPair(pair: S, { showLoadingOnNoValue }: LoadingEventForLoadingPairConfig = {}): LoadingStateContextEvent<T> {
     let loading: boolean = false;
 
     const error = pair?.error;
-    const model = pair?.model;
+    const value = pair?.value;
 
     if (!hasNonNullValue(error)) {
-      if (showLoadingOnNoModel) {
-        loading = !hasNonNullValue(model);
+      if (showLoadingOnNoValue) {
+        loading = !hasNonNullValue(value);
       } else {
         loading = loadingStateIsLoading(pair);
       }
@@ -44,7 +44,7 @@ export class LoadingStateContextInstance<T = any, S extends LoadingState<T> = Lo
     return {
       loading,
       error,
-      model
+      value
     };
   }
 
