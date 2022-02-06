@@ -4,7 +4,33 @@
 
 
 // MARK: Mixin
-@mixin core() {}
+@mixin core() {
+
+  .dbx-list {
+    overflow: hidden;
+    height: 100%;
+  }
+
+  .dbx-list-view {
+    max-height: 100%;
+    overflow: auto;
+    box-sizing: border-box;
+
+    &.dbx-list-padded {
+      padding-bottom: 8px;
+    }
+
+    .mat-list-base {
+      padding-top: 0;
+    }
+
+  }
+
+  .dbx-list-content-box {
+    padding: 4px;
+  }
+
+}
 
 @mixin color($theme-config) {}
 

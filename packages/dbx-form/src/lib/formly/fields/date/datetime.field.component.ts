@@ -10,7 +10,7 @@ import { BehaviorSubject, Observable, of, combineLatest, Subject, merge, interva
 import { Maybe, ReadableTimeString } from '@dereekb/util';
 import { MatDatepickerInputEvent } from '@angular/material/datepicker';
 import { addMinutes, isSameDay, isSameMinute, startOfDay } from 'date-fns';
-import { filterMaybe, SubscriptionObject } from '@dereekb/rxjs';
+import { filterMaybe, SubscriptionObject, switchMapMaybeObs } from '@dereekb/rxjs';
 
 export enum DateTimeFieldTimeMode {
   /**
@@ -172,7 +172,7 @@ export class DbxDateTimeFieldComponent extends FieldType<DateTimeFormlyFieldConf
     distinctUntilChanged()
   );
 
-  readonly config$ = this._config.pipe(filterMaybe(), switchMap(x => x), shareReplay(1));
+  readonly config$ = this._config.pipe(switchMapMaybeObs(), shareReplay(1));
 
   readonly rawDateTime$: Observable<Date> = combineLatest([
     this.dateValue$.pipe(filterMaybe()),

@@ -1,5 +1,5 @@
 import { DbxInjectedComponentConfig } from "@dereekb/dbx-core";
-import { beginLoading, LoadingStateContext, LoadingState, successResult, mapLoadingStateResults, filterMaybe } from "@dereekb/rxjs";
+import { beginLoading, LoadingStateContextInstance, LoadingState, successResult, mapLoadingStateResults, filterMaybe } from "@dereekb/rxjs";
 import { convertMaybeToArray, findUnique, groupValues, makeValuesGroupMap, Maybe } from "@dereekb/util";
 import { Component, Directive, ElementRef, OnDestroy, OnInit, Type, ViewChild } from "@angular/core";
 import { FormControl, AbstractControl } from "@angular/forms";
@@ -222,7 +222,7 @@ export class AbstractDbxPickableItemFieldDirective<T> extends FieldType<Pickable
   /**
    * Context used for managing the loading of items, or when the current results change.
    */
-  readonly context = new LoadingStateContext({ obs: this.itemsLoadingState$, showLoadingOnNoModel: false });
+  readonly context = new LoadingStateContextInstance({ obs: this.itemsLoadingState$, showLoadingOnNoModel: false });
 
   readonly filterItemsLoadingState$: Observable<LoadingState> = this.items$.pipe(
     map(x => successResult(x)),
@@ -233,7 +233,7 @@ export class AbstractDbxPickableItemFieldDirective<T> extends FieldType<Pickable
   /**
    * Context used for searching/filtering.
    */
-  readonly filterResultsContext = new LoadingStateContext({ obs: this.loadResultsDisplayValuesState$, showLoadingOnNoModel: true });
+  readonly filterResultsContext = new LoadingStateContextInstance({ obs: this.loadResultsDisplayValuesState$, showLoadingOnNoModel: true });
 
   get multiSelect(): boolean {
     return this.field.multiSelect ?? true;

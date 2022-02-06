@@ -23,7 +23,7 @@ export function skipFirstMaybe<T>(): MonoTypeOperatorFunction<Maybe<T>> {
  * @param defaultValue 
  * @returns 
  */
-export function switchMapMaybeObs<T = any>(defaultValue?: Maybe<T>): OperatorFunction<Maybe<Observable<Maybe<T>>>, Maybe<T>> {
+export function switchMapMaybeDefault<T = any>(defaultValue: Maybe<T> = undefined): OperatorFunction<Maybe<Observable<Maybe<T>>>, Maybe<T>> {
   return switchMap((x: Maybe<Observable<Maybe<T>>>) => {
     if (x != null) {
       return x;
@@ -31,4 +31,20 @@ export function switchMapMaybeObs<T = any>(defaultValue?: Maybe<T>): OperatorFun
       return of(defaultValue);
     }
   })
+}
+
+/**
+ * Combines both filterMaybe and switchMap to build a subscriber that emits only concrete values.
+ * 
+ * @returns 
+ */
+export function switchMapMaybeObs<T = any>(): OperatorFunction<Maybe<Observable<Maybe<T>>>, T> {
+  return (source: Observable<Maybe<Observable<Maybe<T>>>>) => {
+    const subscriber: Observable<T> = source.pipe(
+      filterMaybe(),
+      switchMap(x => x)
+    ) as Observable<T>;
+
+    return subscriber;
+  };
 }

@@ -8,6 +8,7 @@ import { DocLayoutHomeComponent } from './container/home.component';
 import { DocSharedModule } from '../shared/doc.shared.module';
 import { DocLayoutContentComponent } from './container/content.component';
 import { DocLayoutBarComponent } from './container/bar.component';
+import { DocItemListComponent, DocItemListViewComponent } from './component/item.list.component';
 
 @NgModule({
   imports: [
@@ -22,7 +23,9 @@ import { DocLayoutBarComponent } from './container/bar.component';
     DocLayoutBarComponent,
     DocLayoutSectionComponent,
     DocLayoutContentComponent,
-    DocLayoutListComponent
-  ],
+    DocLayoutListComponent,
+    DocItemListComponent,
+    DocItemListViewComponent
+  ]
 })
 export class DocLayoutModule { }

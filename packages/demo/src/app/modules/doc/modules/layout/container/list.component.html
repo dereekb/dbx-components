@@ -1,9 +1,17 @@
-<dbx-content-container>
-  <doc-feature-layout header="List" hint="Lists are used to display items vertically.">
+<dbx-content-container class="dbx-content-scroll-lock">
+  <dbx-content>
+    <doc-feature-layout header="List" hint="Lists are used to display items vertically.">
 
-    <!-- Examples -->
-    <doc-feature-example header="dbx-list">
+      <!-- Examples -->
 
-    </doc-feature-example>
-  </doc-feature-layout>
+      <doc-feature-example header="dbx-list">
+        <p>It is important that a dbx-list has a set height available to it, otherwise it will expand to it's content height.</p>
+        <p>Selected: {{ selectionState | json }}</p>
+        <p>Models: {{ count$ | async }}</p>
+        <div style="height: 400px">
+          <doc-item-list [state$]="state$" (loadMore)="loadMore()" (selectionChange)="onSelectionChange($event)"></doc-item-list>
+        </div>
+      </doc-feature-example>
+    </doc-feature-layout>
+  </dbx-content>
 </dbx-content-container>

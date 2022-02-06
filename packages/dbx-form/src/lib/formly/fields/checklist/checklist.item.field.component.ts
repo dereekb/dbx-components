@@ -1,4 +1,4 @@
-import { filterMaybe } from '@dereekb/rxjs';
+import { filterMaybe, switchMapMaybeObs } from '@dereekb/rxjs';
 import { shareReplay, distinctUntilChanged, switchMap, map } from 'rxjs/operators';
 import { BehaviorSubject } from 'rxjs';
 import {
@@ -33,8 +33,7 @@ export class DbxChecklistItemFieldComponent<T = any> extends FieldType<Checklist
   private _displayContent = new BehaviorSubject<Maybe<ChecklistItemFieldDisplayContentObs<T>>>(undefined);
 
   readonly displayContent$ = this._displayContent.pipe(
-    filterMaybe(),
-    switchMap(x => x),
+    switchMapMaybeObs(),
     distinctUntilChanged(),
     shareReplay(1)
   );

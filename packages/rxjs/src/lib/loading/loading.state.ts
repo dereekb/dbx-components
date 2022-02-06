@@ -22,7 +22,7 @@ export interface LoadingErrorPair {
  * A model/error pair used in loading situations.
  */
 export interface LoadingState<T = any> extends LoadingErrorPair {
-  model?: Maybe<T>;
+  model?: Maybe<T>; // todo: rename to value
 }
 
 /**

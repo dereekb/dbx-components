@@ -4,7 +4,7 @@ import { Observable, distinctUntilChanged } from 'rxjs';
 import { filter, map, shareReplay } from 'rxjs/operators';
 import { LoadingContextEvent } from './loading.context';
 import { ListLoadingState } from './loading.state';
-import { AbstractLoadingEventForLoadingPairConfig, AbstractLoadingStateContext } from './loading.context.state';
+import { AbstractLoadingEventForLoadingPairConfig, AbstractLoadingStateContext, AbstractLoadingStateContextInstance, LoadingStateContextInstanceInputConfig } from './loading.context.state';
 
 export interface ListLoadingStateContextEvent<T> extends LoadingContextEvent {
   list?: Maybe<T[]>;
@@ -12,10 +12,16 @@ export interface ListLoadingStateContextEvent<T> extends LoadingContextEvent {
 
 export interface LoadingEventForListLoadingStateConfig<S extends ListLoadingState<any> = ListLoadingState<any>> extends AbstractLoadingEventForLoadingPairConfig<S>, Partial<LimitArrayConfig> { }
 
+export interface ListLoadingStateContext<L = any, S extends ListLoadingState<L> = ListLoadingState<L>> extends AbstractLoadingStateContext<L[], S, ListLoadingStateContextEvent<L>> {
+  readonly list$: Observable<L[]>;
+  readonly models$: Observable<L[]>;
+  readonly isEmpty$: Observable<boolean>;
+}
+
 /**
  * LoadingContext implementation that uses a ListLoadingState observable.
  */
-export class ListLoadingStateContext<L = any, S extends ListLoadingState<L> = ListLoadingState<L>> extends AbstractLoadingStateContext<L[], S, ListLoadingStateContextEvent<L>, LoadingEventForListLoadingStateConfig<S>>  {
+export class ListLoadingStateContextInstance<L = any, S extends ListLoadingState<L> = ListLoadingState<L>> extends AbstractLoadingStateContextInstance<L[], S, ListLoadingStateContextEvent<L>, LoadingEventForListLoadingStateConfig<S>>  {
 
   /**
    * Returns the current models or an empty list.
@@ -57,4 +63,8 @@ export class ListLoadingStateContext<L = any, S extends ListLoadingState<L> = Li
     };
   }
 
+}
+
+export function listLoadingStateContext<T = any, S extends ListLoadingState<T> = ListLoadingState<T>>(config: LoadingStateContextInstanceInputConfig<S, LoadingEventForListLoadingStateConfig<S>>): ListLoadingStateContextInstance<T, S> {
+  return new ListLoadingStateContextInstance(config);
 }

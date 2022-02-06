@@ -5,7 +5,6 @@ import { mergeMap, map, startWith, switchMap, shareReplay, distinctUntilChanged,
 import { LoadingContext, LoadingContextEvent } from './loading.context';
 import { LoadingState } from './loading.state';
 
-
 export interface AbstractLoadingStateEvent<T = any> extends LoadingContextEvent {
   model?: Maybe<T>;
 }
@@ -21,10 +20,21 @@ export interface AbstractLoadingEventForLoadingPairConfig<S extends LoadingState
   showLoadingOnNoModel?: boolean;
 }
 
+export interface AbstractLoadingStateContext<T = any, S extends LoadingState<T> = LoadingState<T>, E extends LoadingContextEvent = LoadingContextEvent> {
+  readonly stateObs$: Observable<Maybe<Observable<S>>>;
+  readonly stateSubject$: Observable<Observable<S>>;
+  readonly state$: Observable<S>;
+  readonly stream$: Observable<E>;
+  readonly loading$: Observable<boolean>;
+}
+
+export type LoadingStateContextInstanceInputConfig<S, C> = Observable<S> | C;
+
 /**
  * Abstract LoadingContext implementation using LoadingState.
  */
-export abstract class AbstractLoadingStateContext<T = any, S extends LoadingState<T> = LoadingState<T>, E extends LoadingContextEvent = LoadingContextEvent, C extends AbstractLoadingEventForLoadingPairConfig<S> = AbstractLoadingEventForLoadingPairConfig<S>> implements LoadingContext, Destroyable {
+export abstract class AbstractLoadingStateContextInstance<T = any, S extends LoadingState<T> = LoadingState<T>, E extends LoadingContextEvent = LoadingContextEvent, C extends AbstractLoadingEventForLoadingPairConfig<S> = AbstractLoadingEventForLoadingPairConfig<S>>
+  implements AbstractLoadingStateContext<T, S, E>, LoadingContext, Destroyable {
 
   private _stateSubject$ = new BehaviorSubject<Maybe<Observable<S>>>(undefined);
   private _config: C;
@@ -54,7 +64,7 @@ export abstract class AbstractLoadingStateContext<T = any, S extends LoadingStat
 
   readonly loading$: Observable<boolean> = this.stream$.pipe(map(x => x.loading), shareReplay(1));
 
-  constructor(config?: Observable<S> | C) {
+  constructor(config?: LoadingStateContextInstanceInputConfig<S, C>) {
     if (isObservable(config)) {
       this._config = {
         obs: config
@@ -72,7 +82,7 @@ export abstract class AbstractLoadingStateContext<T = any, S extends LoadingStat
 
   protected abstract loadingEventForLoadingPair(state: S, config: C): E;
 
-  setStateObs(state: Observable<S>): void {
+  setStateObs(state: Maybe<Observable<S>>): void {
     this._stateSubject$.next(state);
   }
 
