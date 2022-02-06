@@ -1,4 +1,4 @@
-<dbx-content-container class="dbx-content-scroll-lock">
+<dbx-content-container>
   <dbx-content>
     <doc-feature-layout header="List" hint="Lists are used to display items vertically.">
 
@@ -9,7 +9,10 @@
         <p>Selected: {{ selectionState | json }}</p>
         <p>Values: {{ count$ | async }}</p>
         <div style="height: 400px">
-          <doc-item-list [state$]="state$" (loadMore)="loadMore()" (selectionChange)="onSelectionChange($event)"></doc-item-list>
+          <doc-item-list [state$]="state$" (loadMore)="loadMore()" (selectionChange)="onSelectionChange($event)">
+            <p top>This is the top.</p>
+            <p bottom>This is the bottom.</p>
+          </doc-item-list>
         </div>
       </doc-feature-example>
     </doc-feature-layout>

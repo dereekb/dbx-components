@@ -8,18 +8,18 @@ import { Maybe } from '@dereekb/util';
 
 export const DEFAULT_STATIC_LIST_DIRECTIVE_TEMPLATE = `
 <dbx-list [config]="config">
-  <ng-content top></ng-content>
-  <ng-content bottom></ng-content>
-  <ng-content empty></ng-content>
+  <ng-content top select="[top]"></ng-content>
+  <ng-content bottom select="[bottom]"></ng-content>
+  <ng-content empty select="[empty]"></ng-content>
 </dbx-list>
 `;
 
 // MARK: Wrapper
 export const DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE = `
 <dbx-list [state$]="state$" [config]="config$ | async">
-  <ng-content top></ng-content>
-  <ng-content bottom></ng-content>
-  <ng-content empty></ng-content>
+  <ng-content top select="[top]"></ng-content>
+  <ng-content bottom select="[bottom]"></ng-content>
+  <ng-content empty select="[empty]"></ng-content>
 </dbx-list>
 `;
 
