@@ -1,6 +1,6 @@
 import { Observable } from 'rxjs';
 import { ListLoadingState, ListLoadingStateContext } from "@dereekb/rxjs";
-import { EventEmitter, Provider, Type } from "@angular/core";
+import { EventEmitter, forwardRef, Provider, Type } from "@angular/core";
 
 export interface ListSelectionStateItem<T> {
   disabled?: boolean;
@@ -41,6 +41,6 @@ export abstract class DbxListView<T, S extends ListLoadingState<T> = ListLoading
 export function ProvideDbxListView<V extends DbxListView<any>>(sourceType: Type<V>): Provider[] {
   return [{
     provide: DbxListView,
-    useExisting: sourceType
+    useExisting: forwardRef(() => sourceType)
   }];
 }

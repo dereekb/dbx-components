@@ -1,7 +1,7 @@
 import { ClickableFunction, ClickableUrl } from './clickable';
 import { SegueRef } from '../segue';
 import { expandFlattenTreeFunction, expandTreeFunction, ExpandTreeFunction, FlattenTreeFunction, flattenTreeToArrayFunction, Maybe, TreeNode } from '@dereekb/util';
-import { Type, Provider } from '@angular/core';
+import { Type, Provider, forwardRef } from '@angular/core';
 import { Observable } from 'rxjs';
 
 export interface ClickableAnchor extends ClickableFunction, ClickableUrl, SegueRef {
@@ -89,6 +89,6 @@ export abstract class DbxAnchor<T extends ClickableAnchor = ClickableAnchor> {
 export function ProvideDbxAnchor<S extends DbxAnchor>(sourceType: Type<S>): Provider[] {
   return [{
     provide: DbxAnchor,
-    useExisting: sourceType
+    useExisting: forwardRef(() => sourceType)
   }];
 }

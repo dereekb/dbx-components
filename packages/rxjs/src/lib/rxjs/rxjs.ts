@@ -17,17 +17,6 @@ export function combineLatestFromArrayObsFn<T, O>(mapToObs: (value: T) => Observ
 }
 
 /**
- * Wraps the input value as an observable, if it is not an observable.
- */
-export function asObservable<T>(valueOrObs: T | Observable<T>): Observable<T> {
-  if (isObservable(valueOrObs)) {
-    return valueOrObs;
-  } else {
-    return of(valueOrObs);
-  }
-}
-
-/**
  * Merges both startWith and tapFirst to initialize a pipe.
  * 
  * @param initial 

@@ -1,4 +1,4 @@
-import { Type, Provider } from '@angular/core';
+import { Type, Provider, forwardRef } from '@angular/core';
 import { Maybe } from '@dereekb/util';
 import { Observable } from 'rxjs';
 
@@ -29,6 +29,6 @@ export abstract class DbxButton {
 export function ProvideDbxButton<S extends DbxButton>(sourceType: Type<S>): Provider[] {
   return [{
     provide: DbxButton,
-    useExisting: sourceType
+    useExisting: forwardRef(() => sourceType)
   }];
 }

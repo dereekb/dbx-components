@@ -1,4 +1,4 @@
-import { Provider, Type } from '@angular/core';
+import { forwardRef, Provider, Type } from '@angular/core';
 import { Observable } from 'rxjs';
 import { LockSet } from '@dereekb/rxjs';
 
@@ -54,5 +54,5 @@ export interface TypedDbxForm<T> extends DbxForm {
 }
 
 export function ProvideDbxForm<S extends DbxForm>(sourceType: Type<S>): Provider[] {
-  return [{ provide: DbxForm, useExisting: sourceType }];
+  return [{ provide: DbxForm, useExisting: forwardRef(() => sourceType) }];
 }
