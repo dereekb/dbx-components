@@ -20,7 +20,7 @@ const MAX_ERRORS_TO_THROTTLE_ON = 6;
  * Extension of DbxActionTransitionSafetyDirective that automatically triggers the action periodically when it is in a modified state.
  */
 @Directive({
-  selector: '[dbxActionAutoTrigger]',
+  selector: 'dbxActionAutoTrigger, [dbxActionAutoTrigger]',
 })
 export class DbxActionAutoTriggerDirective<T, O> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
 
@@ -34,7 +34,7 @@ export class DbxActionAutoTriggerDirective<T, O> extends AbstractSubscriptionDir
     return this._triggerEnabled.value;
   }
 
-  set triggerEnabled(triggerEnabled: boolean) {
+  set triggerEnabled(triggerEnabled: Maybe<boolean> | any) {
     triggerEnabled = triggerEnabled !== false;  // Default to true
 
     if (this.triggerEnabled !== triggerEnabled) {

@@ -1,8 +1,7 @@
 import { of, Observable } from 'rxjs';
 import { Directive, OnDestroy, OnInit } from '@angular/core';
-import { FilterSource, FilterSourceInstance } from '@dereekb/rxjs';
+import { FilterSource, FilterSourceInstance, ObservableGetter } from '@dereekb/rxjs';
 import { Maybe } from '@dereekb/util';
-import { ObservableGetter } from '@dereekb/rxjs';
 
 /**
  * Abstract FilterSource implementation.

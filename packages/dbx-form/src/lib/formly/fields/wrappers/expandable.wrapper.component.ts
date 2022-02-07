@@ -1,9 +1,9 @@
-import { hasValueOrNotEmpty } from '@/app/common/utility/value';
+import { hasValueOrNotEmpty } from '@dereekb/util';
 import { Component, Directive, OnDestroy, OnInit } from '@angular/core';
 import { AbstractControl } from '@angular/forms';
-import { FieldWrapper, FormlyConfig, FormlyFieldConfig, FormlyTemplateOptions } from '@ngx-formly/core';
-import { BehaviorSubject, combineLatest, of, merge } from 'rxjs';
-import { filter, first, map, mergeMap, publishReplay, shareReplay, startWith, switchMap, tap } from 'rxjs/operators';
+import { FieldWrapper, FormlyTemplateOptions } from '@ngx-formly/core';
+import { BehaviorSubject, of } from 'rxjs';
+import { map, mergeMap, shareReplay, startWith, switchMap } from 'rxjs/operators';
 
 
 export interface FormExpandableSectionConfig<T = any> {

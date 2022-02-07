@@ -61,7 +61,7 @@ export function textAreaField({ key, label = '', placeholder = '', rows = 3, req
   });
 }
 
-export function nameField({ key = 'name', label = 'Name', placeholder = 'John Doe', required = false, minLength, maxLength, attributes }: TextFieldConfig): FormlyFieldConfig {
+export function nameField({ key = 'name', label = 'Name', placeholder = 'John Doe', required = false, minLength, maxLength, attributes }: Partial<TextFieldConfig> = {}): FormlyFieldConfig {
   return textField({
     key,
     label,

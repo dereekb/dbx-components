@@ -1,0 +1,6 @@
+<dbx-filter-wrapper (applyFilter)="applyFilter()" (resetFilter)="resetFilter()">
+  <dbx-action [dbxActionHandler]="setFilterAction">
+    <dbx-interaction-test-filter-custom-filter-form appActionForm [dbxFormSource]="filter$">
+    </dbx-interaction-test-filter-custom-filter-form>
+  </dbx-action>
+</dbx-filter-wrapper>

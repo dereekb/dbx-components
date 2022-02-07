@@ -1,20 +1,24 @@
+@use './filter/filter';
 @use './popover/popover';
 @use './popup/popup';
 @use './prompt/prompt';
 
 @mixin all-interaction-core() {
+  @include filter.core();
   @include popover.core();
   @include popup.core();
   @include prompt.core();
 }
 
 @mixin all-interaction-typography($typography-config) {
+  @include filter.typography($typography-config);
   @include popover.typography($typography-config);
   @include popup.typography($typography-config);
   @include prompt.typography($typography-config);
 }
 
 @mixin all-interaction-theme($theme-config) {
+  @include filter.theme($theme-config);
   @include popover.theme($theme-config);
   @include popup.theme($theme-config);
   @include prompt.theme($theme-config);

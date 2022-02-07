@@ -1,3 +1,5 @@
+import { DbxInteractionModule } from './../../../../../dbx-web/src/lib/interaction/interaction.module';
+import { DbxCoreActionModule } from '@dereekb/dbx-core';
 import { UIRouterModule } from '@uirouter/angular';
 import { NgModule } from '@angular/core';
 import { A11yModule } from '@angular/cdk/a11y';
@@ -47,7 +49,8 @@ import { OverlayModule } from '@angular/cdk/overlay';
 import { MatProgressButtonsModule } from 'mat-progress-buttons';
 import { CommonModule } from '@angular/common';
 import { FlexLayoutModule } from '@angular/flex-layout';
-import { DbxButtonModule, DbxRouterLayoutModule, DbxLayoutModule } from '@dereekb/dbx-web';
+import { DbxButtonModule, DbxRouterLayoutModule, DbxLayoutModule, DbxActionModule } from '@dereekb/dbx-web';
+import { DbxFormlyModule, DbxFormModule } from '@dereekb/dbx-form';
 
 const ANGULAR_MODULES = [
   CommonModule
@@ -105,7 +108,11 @@ const ANGULAR_MATERIAL_MODULES = [
 ];
 
 const DBX_MODULES = [
+  DbxFormModule,
+  DbxFormlyModule,
+  DbxActionModule,
   DbxButtonModule,
+  DbxInteractionModule,
   DbxRouterLayoutModule,
   DbxLayoutModule
 ];

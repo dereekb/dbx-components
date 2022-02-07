@@ -2,9 +2,8 @@ import { NgModule } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { DbxFormlyComponent } from './formly.component';
-import { FormComponentFieldComponent } from './fields/component/component.field.component';
-import { DbxFormValueChangesDirective } from '../form/form.changes.directive';
-import { DbxFormWrapperModule } from './fields/wrappers/form.wrapper.module';
+// import { FormComponentFieldComponent } from './fields/component/component.field.component';
+// import { DbxFormWrapperModule } from './fields/wrappers/form.wrapper.module';
 import { FormlyMatToggleModule } from '@ngx-formly/material/toggle';
 import { FormlyModule } from '@ngx-formly/core';
 
@@ -13,24 +12,21 @@ import { FormlyModule } from '@ngx-formly/core';
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
-    DbxFormWrapperModule,
     FormlyModule,
     FormlyMatToggleModule
   ],
   declarations: [
     DbxFormlyComponent,
-    DbxFormValueChangesDirective,
-    FormComponentFieldComponent
+    // FormComponentFieldComponent
   ],
   exports: [
     // Modules (?)
     FormsModule,
     ReactiveFormsModule,
-    DbxFormWrapperModule,
+    // DbxFormWrapperModule, // todo!
     // Directives
     DbxFormlyComponent,
-    DbxFormValueChangesDirective,
-    FormComponentFieldComponent
+    // FormComponentFieldComponent
   ]
 })
 export class DbxFormlyModule { }
