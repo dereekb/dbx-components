@@ -1,8 +1,5 @@
-import { ObjectOrGetter } from './../../../../util/src/lib/getter';
-import { MonoTypeOperatorFunction } from 'rxjs';
-import { Getter, getValueFromObjectOrGetter, Maybe } from '@dereekb/util';
-import { Observable, of, OperatorFunction } from 'rxjs';
-import { filter, skipWhile, startWith, switchMap, timeout } from 'rxjs/operators';
+import { filter, skipWhile, startWith, switchMap, timeout, MonoTypeOperatorFunction, Observable, of, OperatorFunction } from 'rxjs';
+import { ObjectOrGetter, getValueFromObjectOrGetter, Maybe } from '@dereekb/util';
 
 /**
  * Observable filter that filters maybe value that are defined.
