@@ -2,7 +2,8 @@
   <doc-feature-layout header="Anchor" hint="Anchors are used for creating links within the app and externally.">
 
     <!-- Examples -->
-    <doc-feature-example header="dbx-anchor" hint="Anchor can be configured with a url, a segueRef, or an onClick function. It can wrap any content.">
+    <doc-feature-example header="dbx-anchor"
+      hint="Anchor can be configured with a url, a segueRef, or an onClick function. It can wrap any content.">
 
       <h4>Example with a url.</h4>
       <p>
@@ -38,6 +39,28 @@
       <p>
         {{ lorem }}
       </p>
+
+      <h4>Examples with disabled = true</h4>
+      <p>
+        <dbx-anchor [anchor]="ref" [disabled]="true">
+          <!-- disabled does not pass to the button automatically! -->
+          <button mat-raised-button [disabled]="true">With Button</button>
+        </dbx-anchor>
+        <dbx-anchor [anchor]="url" [disabled]="true">
+          <!-- disabled does not pass to card ripple automatically! -->
+          <mat-card class="example-card" matRipple [matRippleDisabled]="true">
+            <mat-card-title-group>
+              <mat-card-title>With Card</mat-card-title>
+              <mat-card-subtitle>(To Url)</mat-card-subtitle>
+              <img mat-card-sm-image src="https://material.angular.io/assets/img/examples/shiba2.jpg">
+            </mat-card-title-group>
+            <mat-card-content>
+              {{ lorem }}
+            </mat-card-content>
+          </mat-card>
+        </dbx-anchor>
+      </p>
+
     </doc-feature-example>
     <doc-feature-example header="dbx-anchor-icon" hint="A pre-configured mat-icon-button view with dbx-anchor.">
       <p>

@@ -87,13 +87,13 @@ describe('AnchorComponent', () => {
 
     it('should have the click type.', (done) => {
       testComponent.anchorComponent?.type$.pipe(first()).subscribe((type) => {
-        expect(type).toBe(AnchorType.Clickable);
+        expect(type).toBe(AnchorType.CLICKABLE);
         done();
       });
     });
 
     it('should display the click version.', (done) => {
-      testComponent.anchorComponent?.type$.pipe(filter((x) => x === AnchorType.Clickable), delay(0)).subscribe(() => {
+      testComponent.anchorComponent?.type$.pipe(filter((x) => x === AnchorType.CLICKABLE), delay(0)).subscribe(() => {
         fixture.detectChanges();
         const anchorElement: HTMLElement = fixture.debugElement.query(By.css(`.dbx-anchor-click`)).nativeElement;
         expect(anchorElement).not.toBeNull();
@@ -102,7 +102,7 @@ describe('AnchorComponent', () => {
     });
 
     it('should respond to clicks.', (done) => {
-      testComponent.anchorComponent?.type$.pipe(filter((x) => x === AnchorType.Clickable), delay(0)).subscribe(() => {
+      testComponent.anchorComponent?.type$.pipe(filter((x) => x === AnchorType.CLICKABLE), delay(0)).subscribe(() => {
         fixture.detectChanges();
         
         const anchorElement = fixture.debugElement.query(By.css(`.dbx-anchor-click`));
@@ -130,13 +130,13 @@ describe('AnchorComponent', () => {
 
     it('should have the sref type.', (done) => {
       testComponent.anchorComponent?.type$.pipe(first()).subscribe((type) => {
-        expect(type).toBe(AnchorType.Sref);
+        expect(type).toBe(AnchorType.SREF);
         done();
       });
     });
 
     it('should display the sref version.', (done) => {
-      testComponent.anchorComponent?.type$.pipe(filter((x) => x === AnchorType.Sref), delay(0)).subscribe(() => {
+      testComponent.anchorComponent?.type$.pipe(filter((x) => x === AnchorType.SREF), delay(0)).subscribe(() => {
         fixture.detectChanges();
         const anchorElement: HTMLElement = fixture.debugElement.query(By.css(`.dbx-anchor-sref`)).nativeElement;
         expect(anchorElement).not.toBeNull();
@@ -160,13 +160,13 @@ describe('AnchorComponent', () => {
 
     it('should have the href type.', (done) => {
       testComponent.anchorComponent?.type$.pipe(first()).subscribe((type) => {
-        expect(type).toBe(AnchorType.Href);
+        expect(type).toBe(AnchorType.HREF);
         done();
       });
     });
 
     it('should display the href version.', (done) => {
-      testComponent.anchorComponent?.type$.pipe(filter((x) => x === AnchorType.Href), delay(0)).subscribe(() => {
+      testComponent.anchorComponent?.type$.pipe(filter((x) => x === AnchorType.HREF), delay(0)).subscribe(() => {
         fixture.detectChanges();
         const anchorElement: HTMLElement = fixture.debugElement.query(By.css(`.dbx-anchor-href`)).nativeElement;
         expect(anchorElement).not.toBeNull();

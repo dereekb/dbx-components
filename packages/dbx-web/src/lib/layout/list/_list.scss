@@ -11,7 +11,7 @@
     height: 100%;
   }
 
-  .dbx-list-view {
+  .dbx-list-content {
     max-height: 100%;
     overflow: auto;
     box-sizing: border-box;
@@ -24,7 +24,7 @@
       padding-top: 0;
     }
 
-    &.dbx-list-view-hidden {
+    &.dbx-list-content-hidden {
       display: none;
     }
 
@@ -34,9 +34,9 @@
     padding: 4px;
   }
 
-  .dbx-selection-list-view {
+  .dbx-list-view {
 
-    .mat-list-base .dbx-selection-list-view-item.mat-list-item {
+    .mat-list-base .dbx-list-view-item.mat-list-item {
       height: unset;
 
       &.mat-list-item-with-avatar {

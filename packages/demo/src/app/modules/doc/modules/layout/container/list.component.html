@@ -25,8 +25,22 @@
         </div>
 
       </doc-feature-example>
+      <doc-feature-example header="dbx-list-view">
+        <p>To simplify declaration of lists, you can use dbx-list-view, which will inject your configured item
+          components within a mat-list view that are wrapped by a dbx-anchor.</p>
+        <p>This pattern allows for a lot of flexibility and lets the developer focus on the item component without
+          having to worry about non-visual elements.</p>
+
+        <p>Clicked Item (Plain): {{ clickedItemPlain | json }}</p>
+        <p>Clicked Item (Anchor): {{ clickedItem | json }}</p>
+        <div style="height: 200px">
+          <doc-custom-item-list [state$]="stateWithAnchors$" (clickItem)="onPlainClick($event)"></doc-custom-item-list>
+          <button bottom mat-raised-button (click)="loadMore()">Load More</button>
+        </div>
+      </doc-feature-example>
       <doc-feature-example header="dbx-selection-list-view">
-        <p>To simplify declaration of lists, you can use dbx-selection-list-view, which will inject your configured item
+        <p>To simplify declaration of selection lists, you can use dbx-selection-list-view, which will inject your
+          configured item
           components within a mat-selection-list view and handle the the proper events.</p>
         <p>This pattern allows for a lot of flexibility and lets the developer focus on the item component without
           having to worry about the selection elements.</p>
@@ -34,8 +48,8 @@
 
         <div style="height: 200px">
           <doc-complex-item-list [state$]="stateWithSelection$"></doc-complex-item-list>
+          <button bottom mat-raised-button (click)="loadMore()">Load More</button>
         </div>
-
       </doc-feature-example>
     </doc-feature-layout>
   </dbx-content>

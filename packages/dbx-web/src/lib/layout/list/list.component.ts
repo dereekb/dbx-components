@@ -285,11 +285,11 @@ export class DbxListComponent<T = any, V extends DbxListView<T> = DbxListView<T>
  * Used internally by DbxListComponent
  */
 @Component({
-  selector: 'dbx-list-view',
+  selector: 'dbx-list-content',
   template: '<ng-content></ng-content>',
   host: {
-    'class': 'd-block dbx-list-view',
-    '[class.dbx-list-view-hidden]': 'hide'
+    'class': 'd-block dbx-list-content',
+    '[class.dbx-list-content-hidden]': 'hide'
   }
 })
 export class DbxListInternalViewComponent {

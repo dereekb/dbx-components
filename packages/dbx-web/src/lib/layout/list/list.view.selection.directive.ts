@@ -3,7 +3,7 @@ import { MatSelectionListChange } from '@angular/material/list';
 import { ListSelectionState, ListSelectionStateItem } from './list.view';
 import { AbstractDbxListViewDirective } from './list.view.directive';
 
-
+// MARK: List View
 /**
  * Abstract list view that has a pre-built-in selection change event for an Angular Material MatSelectionListChange.
  */
@@ -28,3 +28,5 @@ export abstract class AbstractSelectionValueListViewDirective<T> extends Abstrac
   }
 
 }
+
+// MARK: List View Item

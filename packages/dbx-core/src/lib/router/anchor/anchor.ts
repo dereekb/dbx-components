@@ -46,25 +46,32 @@ export function expandClickableAnchorLinkTree(link: ClickableAnchorLinkTree): Ex
 export const expandClickableAnchorLinkTrees = expandFlattenTreeFunction<ClickableAnchorLinkTree, ExpandedClickableAnchorLinkTree>(expandClickableAnchorLinkTreeNode, flattenExpandedClickableAnchorLinkTree);
 
 export enum AnchorType {
-  None = 0,
-  Clickable = 1,
-  Sref = 2,
-  Href = 3,
-  Disabled = 4
+  /**
+   * When the anchor has no specific content but is not disabled.
+   * 
+   * Is a passthrough for the content.
+   */
+  PLAIN = 0,
+  CLICKABLE = 1,
+  SREF = 2,
+  HREF = 3,
+  DISABLED = 4
 }
 
 export function anchorTypeForAnchor(anchor: Maybe<ClickableAnchor>, disabled?: Maybe<boolean>): AnchorType {
-  let type: AnchorType = AnchorType.Disabled;
+  let type: AnchorType = AnchorType.DISABLED;
 
   if (!disabled && anchor) {
     if (anchor.disabled) {
-      type = AnchorType.Disabled;
+      type = AnchorType.DISABLED;
     } else if (anchor.ref) {
-      type = AnchorType.Sref;
+      type = AnchorType.SREF;
     } else if (anchor.onClick) {
-      type = AnchorType.Clickable;
+      type = AnchorType.CLICKABLE;
     } else if (anchor.url) {
-      type = AnchorType.Href;
+      type = AnchorType.HREF;
+    } else {
+      type = AnchorType.PLAIN;
     }
   }
 
