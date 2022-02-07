@@ -1,4 +1,4 @@
-import { ComponentRef, ViewContainerRef } from '@angular/core';
+import { ComponentRef, Injector, ViewContainerRef } from '@angular/core';
 import { distinctUntilChanged, map, shareReplay } from 'rxjs/operators';
 import { BehaviorSubject, combineLatest } from 'rxjs';
 import { DbxInjectedComponentConfig, DbxInjectedTemplateConfig } from './injected';
@@ -54,6 +54,8 @@ export class DbxInjectedComponentInstance<T> implements Initialized, Destroyable
     this._componentRef.next(componentRef);
   }
 
+  constructor(private readonly _injector: Injector) { }
+
   init(): void {
 
     // Wait until the first of either of the two inputs comes in as not defined, and then emit.
@@ -94,9 +96,20 @@ export class DbxInjectedComponentInstance<T> implements Initialized, Destroyable
   private _initComponent(config: DbxInjectedComponentConfig<T>, content: ViewContainerRef): void {
     content.clear();
 
-    const { init, injector, componentClass } = config;
+    const { init, injector: inputInjector, providers, ngModuleRef, componentClass } = config;
 
-    const componentRef: ComponentRef<T> = content.createComponent(componentClass, { injector });
+    let injector: Injector | undefined;
+
+    if (inputInjector) {
+      injector = inputInjector;
+    } else if (providers) {
+      injector = Injector.create({
+        parent: this._injector,
+        providers
+      });
+    }
+
+    const componentRef: ComponentRef<T> = content.createComponent(componentClass, { injector, ngModuleRef });
 
     const instance = componentRef.instance;
 

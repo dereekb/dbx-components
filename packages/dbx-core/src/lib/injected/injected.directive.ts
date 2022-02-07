@@ -1,4 +1,4 @@
-import { ViewContainerRef, OnInit, OnDestroy, Directive } from '@angular/core';
+import { ViewContainerRef, OnInit, OnDestroy, Directive, Injector } from '@angular/core';
 import { Maybe } from '@dereekb/util';
 import { DbxInjectedComponentConfig, DbxInjectedTemplateConfig } from './injected';
 import { DbxInjectedComponentInstance } from './injected.instance';
@@ -9,7 +9,9 @@ import { DbxInjectedComponentInstance } from './injected.instance';
 @Directive()
 export abstract class AbstractDbxInjectedDirective<T> implements OnInit, OnDestroy {
 
-  private _instance = new DbxInjectedComponentInstance<T>();
+  private _instance = new DbxInjectedComponentInstance<T>(this._injector);
+
+  constructor(private readonly _injector: Injector) { }
 
   ngOnInit(): void {
     this._instance.init();

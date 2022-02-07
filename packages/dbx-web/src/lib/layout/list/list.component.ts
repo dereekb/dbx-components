@@ -4,7 +4,6 @@ import { DbxInjectedComponentConfig, tapDetectChanges } from '@dereekb/dbx-core'
 import { SubscriptionObject, ListLoadingStateContextInstance, ListLoadingState, filterMaybe, tapLog, loadingStateHasFinishedLoading, successResult, beginLoading } from '@dereekb/rxjs';
 import { Maybe, Milliseconds } from '@dereekb/util';
 import { DbxListView, ListSelectionState } from './list.view';
-import { E } from '@angular/cdk/keycodes';
 
 /**
  * Direction the scroll was triggered moving.
@@ -178,14 +177,11 @@ export class DbxListComponent<T = any, V extends DbxListView<T> = DbxListView<T>
 
   readonly hideContent$: Observable<boolean> = this.context.stateChange$.pipe(
     switchMap(() => this.context.state$.pipe(
-      tapLog('state new'),
       filter((x) => loadingStateHasFinishedLoading(x)),
       first(),
-      tapLog('state finished'),
       startWith(beginLoading())
     )),
     switchMap((state) => {
-      console.log('Switch: ', state);
       if (state?.loading) {
         return of(true);
       } else {
@@ -196,15 +192,10 @@ export class DbxListComponent<T = any, V extends DbxListView<T> = DbxListView<T>
           shareReplay(1)
         );
       }
-    }),
-    tapLog('hide')
+    })
   );
 
   constructor(readonly cdRef: ChangeDetectorRef) { }
-
-  ngOnInit(): void {
-    this.hideContent$.subscribe((x) => console.log('x', x));
-  }
 
   ngOnDestroy(): void {
     delete (this as any)._content;  // remove parent-child relation.

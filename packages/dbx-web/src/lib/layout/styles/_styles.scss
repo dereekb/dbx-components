@@ -1,3 +1,4 @@
+@use 'sass:list';
 @use '../../style/theming';
 
 // Sections
@@ -11,14 +12,20 @@
     pointer-events: none;
   }
 
+  .no-margin {
+    margin: 0 !important;
+  }
+
   .no-padding {
     padding: 0 !important;
   }
 
-  @for $i from 1 through length(theming.$padding-map) {
-    $padding: nth(theming.$padding-map, $i);
+  @each $i, $padding in theming.$padding-map {
+    @debug $i;
+    @debug $padding;
 
-    .padding-#{i} {
+    .pad-#{$i},
+    .padding-#{$i} {
       padding: $padding;
     }
   }

@@ -9,6 +9,7 @@ import { DocSharedModule } from '../shared/doc.shared.module';
 import { DocLayoutContentComponent } from './container/content.component';
 import { DocLayoutBarComponent } from './container/bar.component';
 import { DocItemListComponent, DocItemListViewComponent } from './component/item.list.component';
+import { DocComplexItemListComponent, DocComplexItemListViewComponent, DocComplexItemListViewItemComponent } from './component/item.list.complex.component';
 
 @NgModule({
   imports: [
@@ -18,14 +19,19 @@ import { DocItemListComponent, DocItemListViewComponent } from './component/item
     })
   ],
   declarations: [
+    // components
+    DocItemListComponent,
+    DocItemListViewComponent,
+    DocComplexItemListComponent,
+    DocComplexItemListViewComponent,
+    DocComplexItemListViewItemComponent,
+    // containers
     DocLayoutLayoutComponent,
     DocLayoutHomeComponent,
     DocLayoutBarComponent,
     DocLayoutSectionComponent,
     DocLayoutContentComponent,
-    DocLayoutListComponent,
-    DocItemListComponent,
-    DocItemListViewComponent
+    DocLayoutListComponent
   ]
 })
 export class DocLayoutModule { }

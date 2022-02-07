@@ -1,4 +1,4 @@
-import { Injector, TemplateRef, Type, ViewRef } from "@angular/core";
+import { Injector, NgModuleRef, StaticProvider, TemplateRef, Type, ViewRef } from "@angular/core";
 import { Maybe } from "@dereekb/util";
 
 export interface DbxInjectedComponentConfig<T = any> {
@@ -7,9 +7,17 @@ export interface DbxInjectedComponentConfig<T = any> {
    */
   componentClass: Type<T>;
   /**
-   * (Optional) Custom Injector to use when creating the component.
+   * (Optional) providers to provide to the existing injector.
+   */
+  providers?: StaticProvider[];
+  /**
+   * (Optional) Custom Injector to use when creating the component. If provided, providers is ignored.
    */
   injector?: Injector;
+  /**
+   * (Optional) Module ref to use when creating the component.
+   */
+  ngModuleRef?: NgModuleRef<unknown>;
   /**
    * (Optional) Custom initialization code when an instance is created.
    */
