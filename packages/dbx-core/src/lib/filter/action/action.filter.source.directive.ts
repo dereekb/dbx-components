@@ -1,6 +1,6 @@
 import { HandleActionFunction } from '../../action/action.handler';
 import { AbstractFilterSourceDirective } from '../filter.abstract.source.directive';
-import { DbxActionContextDirective } from '@dereekb/dbx-core';
+import { DbxActionContextDirective } from '../../action/directive/context/action.directive';
 import { Directive, ViewChild } from '@angular/core';
 import { of } from 'rxjs';
 
