@@ -34,10 +34,17 @@ export const docTextState: Ng2StateDeclaration = {
   loadChildren: () => import('./modules/text/doc.text.module').then(m => m.DocTextModule)
 };
 
+export const docInteractionState: Ng2StateDeclaration = {
+  url: '/interaction',
+  name: 'doc.interaction.**',
+  loadChildren: () => import('./modules/interaction/doc.interaction.module').then(m => m.DocInteractionModule)
+};
+
 export const STATES: Ng2StateDeclaration[] = [
   layoutState,
   docHomeState,
   docLayoutState,
   docRouterState,
-  docTextState
+  docTextState,
+  docInteractionState
 ];

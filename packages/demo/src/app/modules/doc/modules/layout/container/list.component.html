@@ -34,8 +34,9 @@
         <p>Clicked Item (Plain): {{ clickedItemPlain | json }}</p>
         <p>Clicked Item (Anchor): {{ clickedItem | json }}</p>
         <div style="height: 200px">
-          <doc-custom-item-list [state$]="stateWithAnchors$" (clickItem)="onPlainClick($event)"></doc-custom-item-list>
-          <button bottom mat-raised-button (click)="loadMore()">Load More</button>
+          <doc-custom-item-list [state$]="stateWithAnchors$" (clickItem)="onPlainClick($event)">
+            <button bottom mat-raised-button (click)="loadMore()">Load More</button>
+          </doc-custom-item-list>
         </div>
       </doc-feature-example>
       <doc-feature-example header="dbx-selection-list-view">
@@ -47,8 +48,9 @@
         <p>In this demo, ~50% are selected already, and ~20% are disabled.</p>
 
         <div style="height: 200px">
-          <doc-complex-item-list [state$]="stateWithSelection$"></doc-complex-item-list>
-          <button bottom mat-raised-button (click)="loadMore()">Load More</button>
+          <doc-complex-item-list [state$]="stateWithSelection$">
+            <button bottom mat-raised-button (click)="loadMore()">Load More</button>
+          </doc-complex-item-list>
         </div>
       </doc-feature-example>
     </doc-feature-layout>
