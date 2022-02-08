@@ -2,7 +2,7 @@ import { HandleActionFunction } from '../../action/action.handler';
 import { AbstractFilterSourceDirective } from '../filter.abstract.source.directive';
 import { Directive, ViewChild } from '@angular/core';
 import { of } from 'rxjs';
-import { ActionContextStoreSourceInstance } from '@dereekb/dbx-core';
+import { ActionContextStoreSourceInstance } from '../../action/action.store.source';
 
 /**
  * Abstract filter source for components that use an action to filter.
