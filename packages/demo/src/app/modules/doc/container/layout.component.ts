@@ -1,3 +1,4 @@
+import { DOC_FORM_ROOT_ROUTE } from './../modules/form/doc.form';
 import { Component } from '@angular/core';
 import { ClickableAnchorLink, ClickableAnchorLinkTree } from '@dereekb/dbx-core';
 import { DOC_INTERACTION_ROOT_ROUTE } from '../modules/interaction/doc.interaction';
@@ -19,9 +20,10 @@ export class DocLayoutComponent {
     DOC_LAYOUT_ROOT_ROUTE,
     DOC_ROUTER_ROOT_ROUTE,
     DOC_INTERACTION_ROOT_ROUTE, {
-    icon: 'text_fields',
-    title: 'Text',
-    ref: 'doc.text'
-  }];
+      icon: 'text_fields',
+      title: 'Text',
+      ref: 'doc.text'
+    },
+    DOC_FORM_ROOT_ROUTE];
 
 }

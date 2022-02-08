@@ -6,7 +6,7 @@ import { ActionContextBaseSource } from '../../action.holder';
  * Provides an DbxActionContext.
  */
 @Directive({
-  selector: 'dbx-action,dbx-action-context,dbxAction,[dbxActionContext]',
+  selector: 'dbx-action,[dbxAction],dbx-action-context,[dbxActionContext]',
   exportAs: 'action',
   providers: ProvideActionStoreSource(DbxActionDirective)
 })

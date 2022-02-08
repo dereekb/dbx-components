@@ -46,6 +46,10 @@ $active-border-left-width: 2px;
       }
     }
 
+    .dbx-sidenav-anchor-list {
+      overflow-y: scroll;
+    }
+
     .mat-nav-list.dbx-anchor-list {
       padding-top: 0;
     }

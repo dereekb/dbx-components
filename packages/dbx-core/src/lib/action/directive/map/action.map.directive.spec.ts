@@ -44,6 +44,10 @@ describe('DbxActionContextMapDirective', () => {
     fixture.detectChanges();
   });
 
+  afterEach(() => {
+    fixture.destroy();
+  })
+
   describe('DbxActionMapSourceDirective', () => {
 
     it('should be defined.', () => {
@@ -53,6 +57,7 @@ describe('DbxActionContextMapDirective', () => {
     describe('actionB', () => {
 
       it('should have the input source equal to the directive.', () => {
+        expect(dbxActionFromMap).toBeDefined();
         expect(bActionComponent.inputSource).toBeDefined();
         expect(bActionComponent.inputSource).toBe(dbxActionFromMap);
       });
@@ -104,10 +109,10 @@ class TestDbxActionContextMapDirectiveComponent {
   @ViewChild(DbxActionFromMapDirective, { static: true })
   dbxActionFromMap?: DbxActionFromMapDirective;
 
-  @ViewChild('a', { static: true })
+  @ViewChild('a', { static: true, read: DbxActionDirective })
   aAction?: DbxActionDirective<number, number>;
 
-  @ViewChild('b', { static: true })
+  @ViewChild('b', { static: true, read: DbxActionDirective })
   bAction?: DbxActionDirective<number, number>;
 
 }

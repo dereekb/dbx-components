@@ -40,11 +40,18 @@ export const docInteractionState: Ng2StateDeclaration = {
   loadChildren: () => import('./modules/interaction/doc.interaction.module').then(m => m.DocInteractionModule)
 };
 
+export const docFormState: Ng2StateDeclaration = {
+  url: '/form',
+  name: 'doc.form.**',
+  loadChildren: () => import('./modules/form/doc.form.module').then(m => m.DocFormModule)
+};
+
 export const STATES: Ng2StateDeclaration[] = [
   layoutState,
   docHomeState,
   docLayoutState,
   docRouterState,
   docTextState,
-  docInteractionState
+  docInteractionState,
+  docFormState
 ];
