@@ -315,7 +315,7 @@
               "command": "npx nx run dbx-web:build:production"
             }, {
               "description": "copy all style files from src to map to respective directory",
-              "command": "cd dist/packages/dbx-web/src && find * -type f -name \"*.scss\" -exec cp -n {} ../{} \\;"
+              "command": "cd dist/packages/dbx-web/src && find * -type f -name \"*.scss\" -exec sh -c 'mkdir -p ../\"$(dirname {})\"' \\; -exec cp {} ../{} \\;"
             }, {
               "description": "delete unnecessary src directory",
               "command": "rm -r dist/packages/dbx-web/src"
