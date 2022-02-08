@@ -16,4 +16,4 @@ import { DbxDialogContentComponent } from './dialog.content.component';
     DbxDialogContentComponent
   ]
 })
-export class DbxDialogLayoutModule { }
+export class DbxDialogInteractionModule { }

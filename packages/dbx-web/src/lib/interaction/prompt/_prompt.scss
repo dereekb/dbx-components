@@ -1,44 +1,32 @@
 @use '../../style/theming';
 
 // MARK: Variables
+$box-max-width: theming.$box-max-width;
 $dbx-popup-controls-height: 33px;
 
 // MARK: Mixin
-@mixin core() {}
+@mixin core() {
 
-@mixin color($theme-config) {
-
-    /*
-   
-.prompt-page {
-  .prompt-page-content-wrap {
-    padding-top: 20vh;
-  }
-}
-
-.prompt-box {
-  margin: auto;
-  padding: 40px;
-  max-width: $max-boxview-width;
-
-  &.no-padding {
-    padding: 0;
+  .dbx-prompt-page {
+    .dbx-prompt-page-content-wrap {
+      padding-top: calc(theming.$app-height * .2)
+    }
   }
 
-  &.full-width {
-    max-width: $max-boxview-full-width;
-  }
+  .dbx-prompt-box {
+    margin: auto;
+    padding: 40px;
+    max-width: $box-max-width;
 
-  &.elevated {
-    @include mat-elevation(2);
-    background: $boxview-elevated-background-color;
+    &.elevated {
+      @include theming.elevation(2);
+    }
+
   }
 
 }
 
-    */
-
-}
+@mixin color($theme-config) {}
 
 @mixin typography($typography-config) {}
 

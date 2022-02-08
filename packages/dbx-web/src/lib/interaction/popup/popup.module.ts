@@ -1,3 +1,4 @@
+import { DbxInjectedComponentModule } from '@dereekb/dbx-core';
 import { DbxPopupCoordinatorComponent } from './popup.coordinator.component';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -22,7 +23,8 @@ import { DbxPopupCoordinatorService } from './popup.coordinator.service';
     DbxButtonModule,
     DbxAnchorModule,
     DbxActionModule,
-    NgOverlayContainerModule
+    DbxInjectedComponentModule,
+    NgOverlayContainerModule,
   ],
   declarations: [
     DbxPopupComponent,
@@ -40,11 +42,11 @@ import { DbxPopupCoordinatorService } from './popup.coordinator.service';
     DbxPopupService
   ]
 })
-export class DbxPopupModule {
+export class DbxPopupInteractionModule {
 
-  static forRoot(): ModuleWithProviders<DbxPopupModule> {
+  static forRoot(): ModuleWithProviders<DbxPopupInteractionModule> {
     return {
-      ngModule: DbxPopupModule,
+      ngModule: DbxPopupInteractionModule,
       providers: [
         DbxPopupCoordinatorService
       ]

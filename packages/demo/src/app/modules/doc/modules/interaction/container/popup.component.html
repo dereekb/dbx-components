@@ -3,7 +3,10 @@
 
     <!-- Examples -->
     <doc-feature-example header="dbx-popup" hint="">
-
+      <p>Opens Automatically when the page opens. Closes automatically on transition.</p>
+      <button mat-raised-button (click)="openExamplePopup()">Open Popup</button>
+      <dbx-button-spacer></dbx-button-spacer>
+      <button mat-raised-button (click)="openExamplePopup('ok', 'center')">Open Popup in Center</button>
     </doc-feature-example>
   </doc-feature-layout>
 </dbx-content-container>

@@ -19,7 +19,9 @@ $bar-vertical-padding: theming.$padding-1;
   }
 
   .dbx-bar {
-    padding: $bar-vertical-padding 0;
+    height: 100%;
+    box-sizing: border-box;
+    padding: $bar-vertical-padding;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -44,12 +46,6 @@ $bar-vertical-padding: theming.$padding-1;
   $dbx-bar-bg-color: theming.get-color-from-palette($background, 'app-bar');
   $dbx-bar-color: theming.get-color-from-palette($background, 'contrast');
 
-  $dbx-bar-primary-bg-color: theming.get-color-from-palette($primary, 500);
-  $dbx-bar-primary-color: theming.get-color-from-palette($primary, '500-contrast');
-
-  $dbx-bar-accent-bg-color: theming.get-color-from-palette($accent, 500);
-  $dbx-bar-accent-color: theming.get-color-from-palette($accent, '500-contrast');
-
   .dbx-pagebar .mat-toolbar {
     // todo?
   }
@@ -58,16 +54,6 @@ $bar-vertical-padding: theming.$padding-1;
   .dbx-bar-background {
     background: $dbx-bar-bg-color;
     color: $dbx-bar-color;
-  }
-
-  .dbx-bar-primary {
-    background: $dbx-bar-primary-bg-color;
-    color: $dbx-bar-primary-color;
-  }
-
-  .dbx-bar-accent {
-    background: $dbx-bar-accent-bg-color;
-    color: $dbx-bar-accent-color;
   }
 
 }

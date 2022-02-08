@@ -3,6 +3,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { DbxBarComponent } from './bar.component';
+import { DbxBarHeaderComponent } from './bar.header.component';
 import { DbxPagebarComponent } from './pagebar.component';
 
 /**
@@ -16,10 +17,12 @@ import { DbxPagebarComponent } from './pagebar.component';
   ],
   declarations: [
     DbxBarComponent,
+    DbxBarHeaderComponent,
     DbxPagebarComponent
   ],
   exports: [
     DbxBarComponent,
+    DbxBarHeaderComponent,
     DbxPagebarComponent
   ]
 })

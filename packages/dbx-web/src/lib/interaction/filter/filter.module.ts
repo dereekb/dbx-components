@@ -2,7 +2,7 @@ import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { DbxFilterPopoverButtonComponent } from './filter.popover.button.component';
-import { DbxPopoverModule } from '../popover/popover.module';
+import { DbxPopoverInteractionModule } from '../popover/popover.module';
 import { DbxFilterPopoverComponent } from './filter.popover.component';
 import { MatIconModule } from '@angular/material/icon';
 import { DbxFilterWrapperComponent } from './filter.wrapper.component';
@@ -12,7 +12,7 @@ import { DbxCoreFilterModule, DbxInjectedComponentModule } from '@dereekb/dbx-co
 @NgModule({
   imports: [
     CommonModule,
-    DbxPopoverModule,
+    DbxPopoverInteractionModule,
     DbxCoreFilterModule,
     DbxInjectedComponentModule,
     FlexLayoutModule,
@@ -31,4 +31,4 @@ import { DbxCoreFilterModule, DbxInjectedComponentModule } from '@dereekb/dbx-co
     DbxFilterWrapperComponent,
   ]
 })
-export class DbxFilterModule { }
+export class DbxFilterInteractionModule { }

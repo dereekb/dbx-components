@@ -1,2 +1,2 @@
 
-export type DbxBarColor = 'primary' | 'accent' | 'background';
+export type DbxBarColor = 'primary' | 'accent' | 'warn' | 'background';

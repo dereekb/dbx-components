@@ -3,7 +3,7 @@ import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { Maybe } from '@dereekb/util';
 import { Observable, from } from 'rxjs';
 import { DbxPromptConfirm, ProvideDbxPromptConfirm } from './prompt.confirm';
-import { DbxPromptConfirmConfig, DbxPromptConfirmTypes } from './prompt.confirm.component';
+import { DbxPromptConfirmConfig } from './prompt.confirm.component';
 import { DbxPromptConfirmDialogComponent } from './prompt.confirm.dialog.component';
 
 // MARK: Abstract
@@ -13,22 +13,17 @@ import { DbxPromptConfirmDialogComponent } from './prompt.confirm.dialog.compone
 @Directive()
 export abstract class AbstractPromptConfirmDirective implements DbxPromptConfirm {
 
-  private static readonly DEFAULT_CONFIG = {
-    title: 'Confirm?',
-    type: DbxPromptConfirmTypes.NORMAL
-  };
-
   config?: DbxPromptConfirmConfig;
 
   private _dialogRef?: MatDialogRef<DbxPromptConfirmDialogComponent, boolean>;
   private _dialogPromise?: Promise<boolean>;
 
-  constructor(protected readonly dialog: MatDialog) { }
+  constructor(protected readonly matDialog: MatDialog) { }
 
   showDialog(): Observable<boolean> {
     if (!this._dialogPromise) {
       this._dialogPromise = new Promise<boolean>((resolve) => {
-        this._dialogRef = this._makeDialog();
+        this._dialogRef = DbxPromptConfirmDialogComponent.openDialog(this.matDialog);
         this._dialogRef.afterClosed().subscribe((result: Maybe<boolean>) => {
           this._dialogRef = undefined;
           this._dialogPromise = undefined;
@@ -38,12 +33,6 @@ export abstract class AbstractPromptConfirmDirective implements DbxPromptConfirm
     }
 
     return from(this._dialogPromise);
-  }
-
-  protected _makeDialog(): MatDialogRef<DbxPromptConfirmDialogComponent, boolean> {
-    const dialogRef = this.dialog.open(DbxPromptConfirmDialogComponent);
-    dialogRef.componentInstance.config = this.config ?? AbstractPromptConfirmDirective.DEFAULT_CONFIG;
-    return dialogRef;
   }
 
   protected _handleDialogResult(result: boolean): boolean {

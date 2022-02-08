@@ -9,7 +9,7 @@ export enum DbxPopupWindowState {
   FULLSCREEN = 'fullscreen'
 }
 
-export abstract class DbxPopupController<I = any, O = any> {
+export abstract class DbxPopupController<O = any, I = any> {
   abstract readonly key: DbxPopupKey;
   abstract readonly data?: Maybe<I>;
   abstract readonly windowState$: Observable<DbxPopupWindowState>;

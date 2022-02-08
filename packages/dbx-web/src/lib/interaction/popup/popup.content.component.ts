@@ -8,14 +8,14 @@ import { DbxPopupController, DbxPopupWindowState } from './popup';
 @Component({
   selector: 'dbx-popup-content',
   template: `
-  <div class="dbx-popup-content">
     <ng-content select="[controls]"></ng-content>
     <div *ngIf="showContent$ | async" class="dbx-popup-content-container">
       <ng-content></ng-content>
     </div>
-  </div>
-`,
-  // TODO: styleUrls: ['./popup.scss']
+  `,
+  host: {
+    'class': 'dbx-popup-content'
+  }
 })
 export class DbxPopupContentComponent {
 

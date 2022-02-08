@@ -6,12 +6,11 @@ import { DbxPopoverContentComponent } from './popover.content.component';
  */
 @Component({
   selector: 'dbx-popover-scroll-content',
-  template: `
-  <div class="dbx-popover-scroll-content" [ngClass]="sizingClasses">
-    <ng-content></ng-content>
-  </div>
-`,
-  // TODO: styleUrls: ['./popover.scss']
+  template: `<ng-content></ng-content>`,
+  host: {
+    'class': 'd-block dbx-popover-scroll-content',
+    '[class]': 'sizingClasses'
+  }
 })
 export class DbxPopoverScrollContentComponent {
 
@@ -40,6 +39,6 @@ export class DbxPopoverScrollContentComponent {
     return this.appPopoverContentComponent.hasControls;
   }
 
-  constructor(readonly appPopoverContentComponent: DbxPopoverContentComponent) {}
+  constructor(readonly appPopoverContentComponent: DbxPopoverContentComponent) { }
 
 }

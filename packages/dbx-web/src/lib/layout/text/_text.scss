@@ -36,17 +36,12 @@ $icon-spacing: 6px;
   $hint-opacity: 0.8;
   $mat-hint-opacity: 0.54; // Opacity to mirror mat-hint
 
-  $warn-color: theming.get-color-from-palette($warn);
   $ok-color: color.scale(blue, $lightness: 30%);
   $success-color: green;
   $notice-color: #f28600;
 
   .dbx-hint {
     opacity: $hint-opacity;
-  }
-
-  .dbx-warn {
-    color: $warn-color;
   }
 
   .dbx-success {

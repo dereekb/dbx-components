@@ -5,10 +5,9 @@ import { Component, Input } from '@angular/core';
  */
 @Component({
   selector: 'dbx-content',
-  template: `
-    <div class="dbx-content">
-      <ng-content></ng-content>
-    </div>
-  `
+  template: `<ng-content></ng-content>`,
+  host: {
+    'class': 'd-block dbx-content'
+  }
 })
 export class DbxContentComponent { }

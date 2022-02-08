@@ -3,7 +3,7 @@ import { Injectable, Injector } from '@angular/core';
 import { NgOverlayContainerService, NgPopoverRef } from 'ng-overlay-container';
 import { Overlay } from '@angular/cdk/overlay';
 
-export interface DbxPopupConfig<I, O, T> extends DbxPopupComponentConfig<I, O, T> {
+export interface DbxPopupConfig<O, I, T> extends DbxPopupComponentConfig<O, I, T> {
   injector?: Injector;
 }
 
@@ -19,15 +19,17 @@ export class DbxPopupService {
     this._overlayContainerService = new NgOverlayContainerService(this._overlay, this._injector);
   }
 
-  open<I, O, T>(config: DbxPopupConfig<I, O, T>): NgPopoverRef<DbxPopupComponentConfig<I, O, T>, O> {
+  open<O, I, T>(config: DbxPopupConfig<O, I, T>): NgPopoverRef<DbxPopupComponentConfig<O, I, T>, O> {
     const service = (config.injector) ? new NgOverlayContainerService(this._overlay, config.injector) : this._overlayContainerService;
     const isDraggable = config.isDraggable ?? false;
+    const position = config.position ?? 'bottom_right';
 
-    return service.open<DbxPopupComponentConfig<I, O, T>, O>({
+    return service.open<DbxPopupComponentConfig<O, I, T>, O>({
       content: DbxPopupComponent,
       data: {
         ...config,
         isDraggable,
+        position
       },
       configuration: {
         panelClass: 'dbx-popup-container',

@@ -15,8 +15,7 @@ import { DbxPopoverContentComponent } from './popover.content.component';
     </div>
   </div>
   <mat-divider></mat-divider>
-  `,
-  // TODO: styleUrls: ['./popover.scss']
+  `
 })
 export class DbxPopoverHeaderComponent {
 

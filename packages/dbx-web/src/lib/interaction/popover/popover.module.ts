@@ -19,6 +19,7 @@ import { DbxKeypressModule } from '../../keypress';
 import { DbxAnchorModule } from '../../router';
 import { DbxActionModule } from '../../action/action.module';
 import { DbxButtonModule } from '../../button/button.module';
+import { DbxInjectedComponentModule } from '@dereekb/dbx-core';
 
 @NgModule({
   imports: [
@@ -30,6 +31,7 @@ import { DbxButtonModule } from '../../button/button.module';
     DbxAnchorModule,
     DbxActionModule,
     DbxKeypressModule,
+    DbxInjectedComponentModule,
     NgOverlayContainerModule,
     AngularResizeEventModule
   ],
@@ -55,11 +57,11 @@ import { DbxButtonModule } from '../../button/button.module';
     DbxPopoverService
   ]
 })
-export class DbxPopoverModule {
+export class DbxPopoverInteractionModule {
 
-  static forRoot(): ModuleWithProviders<DbxPopoverModule> {
+  static forRoot(): ModuleWithProviders<DbxPopoverInteractionModule> {
     return {
-      ngModule: DbxPopoverModule,
+      ngModule: DbxPopoverInteractionModule,
       providers: [
         DbxPopoverCoordinatorService
       ]

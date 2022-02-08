@@ -1,55 +1,70 @@
+@use 'sass:map';
+@use 'sass:color';
 @use '../../style/theming';
 
 // MARK: Variables
 $dbx-popup-controls-height: 33px;
+$dbx-popup-content-padding: 8px;
+$dbx-popup-content-padding-top: 2px;
+
+$dbx-popup-container-margin: 16px;
+$dbx-popup-controls-vertical-padding: 4px;
+$dbx-popup-border-radius: 4px;
 
 // MARK: Mixin
-@mixin core() {}
+@mixin core() {
+
+  .dbx-popup-content {
+    box-sizing: border-box;
+    overflow: hidden;
+    max-height: theming.$app-height;
+  }
+
+  .dbx-popup-content-container {
+    max-height: calc(theming.$app-height - #{ $dbx-popup-controls-height });
+    padding: $dbx-popup-content-padding;
+    padding-top: $dbx-popup-content-padding-top;
+    overflow: auto;
+    box-sizing: border-box;
+  }
+
+  .dbx-popup-controls {
+    height: $dbx-popup-controls-height;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    padding: $dbx-popup-controls-vertical-padding $dbx-popup-content-padding;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.15);
+    box-sizing: border-box;
+  }
+
+  .dbx-popup-control-buttons {
+    min-width: 220px;
+    display: inline-block;
+    text-align: right;
+  }
+
+}
 
 @mixin color($theme-config) {
+  $color-config: theming.get-color-config($theme-config);
+  $background: map.get($color-config, 'background');
+  $controls-bg-color: theming.get-color-from-palette($background);
+  $controls-text-color: theming.get-color-from-palette($background, 'contrast');
 
-
-  /*
-   
-.dbx-popup-content {
-  @include modalContentView($allowScroll: 0);
-  overflow: hidden;
+  .dbx-popup-controls {
+    color: $controls-text-color;
+    background: $controls-bg-color;
+  }
 }
 
-.dbx-popup-content-container {
-  max-height: calc(var(--vh100) - #{ $dbx-popup-controls-height });
-  padding: $dbx-popup-content-padding;
-  padding-top: $dbx-popup-content-padding/4;
-  overflow: auto;
-  box-sizing: border-box;
-}
+@mixin typography($typography-config) {
 
-.dbx-popup-controls {
-  height: $dbx-popup-controls-height;
-  overflow: hidden;
-  color: $opmore-offwhite;
-  display: flex;
-  align-items: center;
-  padding: $dbx-popup-controls-vertical-padding $dbx-popup-content-padding;
-  background: transparentize($color: mat-color($light-dbx-primary, 500), $amount: 0);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.15);
-  box-sizing: border-box;
-}
-
-.dbx-popup-controls-header {
-  @include limitedTextView();
-}
-
-.dbx-popup-control-buttons {
-  min-width: 220px;
-  display: inline-block;
-  text-align: right;
-}
-    */
+  .dbx-popup-controls-header {
+    @include theming.limit-text();
+  }
 
 }
-
-@mixin typography($typography-config) {}
 
 @mixin theme($theme-config) {
   @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-interaction-popup') {

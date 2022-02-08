@@ -12,3 +12,4 @@ export * from './popover.module';
 export * from './popover.position.strategy';
 export * from './popover.scroll.content.component';
 export * from './popover.service';
+export * from './popover';

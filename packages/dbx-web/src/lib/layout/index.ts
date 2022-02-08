@@ -4,7 +4,6 @@ export * from './card';
 export * from './column';
 export * from './compact';
 export * from './content';
-export * from './dialog';
 export * from './flag';
 export * from './item';
 export * from './list';

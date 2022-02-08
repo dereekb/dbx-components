@@ -1,29 +1,22 @@
+
 import { Component, Input } from '@angular/core';
 import { Maybe } from '@dereekb/util';
 import { DbxBarColor } from './bar';
 
 /**
- * Acts as a divider between content and centers a label within a background.
+ * Acts as a wrapper for content distributed along a bar.
  */
 @Component({
   selector: 'dbx-bar',
-  template: `
-    <mat-icon class="button-spacer" *ngIf="icon">{{ icon }}</mat-icon>
-    <span *ngIf="text">{{ text }}</span>
-    `,
+  template: `<ng-content></ng-content>`,
   host: {
-    'class': 'dbx-bar dbx-hint',
-    '[class.dbx-bar-primary]': 'color === "primary"',
-    '[class.dbx-bar-accent]': 'color === "accent"'
+    'class': 'dbx-bar',
+    '[class.dbx-primary-bg]': 'color === "primary"',
+    '[class.dbx-accent-bg]': 'color === "accent"',
+    '[class.dbx-warn-bg]': 'color === "warn"'
   }
 })
 export class DbxBarComponent {
-
-  @Input()
-  text?: Maybe<string>;
-
-  @Input()
-  icon?: Maybe<string>;
 
   @Input()
   color?: Maybe<DbxBarColor>;

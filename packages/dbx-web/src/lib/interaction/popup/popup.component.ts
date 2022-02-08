@@ -5,18 +5,18 @@ import { CompactMode, CompactContextStore } from '../../layout';
 import { BehaviorSubject, Subject } from 'rxjs';
 import { PopupGlobalPositionStrategy, PopupPosition, PopupPositionOffset } from './popup.position.strategy';
 import { filter, first, map, shareReplay, startWith } from 'rxjs/operators';
-import { AbstractTransitionWatcherDirective, DbxRouterTransitionService } from '@dereekb/dbx-core';
+import { AbstractTransitionWatcherDirective, DbxInjectedComponentConfig, DbxRouterTransitionService } from '@dereekb/dbx-core';
 import { DbxPopupController, DbxPopupKey, DbxPopupWindowState } from './popup';
 
 export const APP_POPUP_NORMAL_WIDTH = '700px';
 export const APP_POPUP_MINIMIZED_WIDTH = '300px';
 export const APP_POPUP_NORMAL_HEIGHT = 'auto';
 
-export abstract class DbxPopupComponentController<I, O> extends DbxPopupController<I, O> {
+export abstract class DbxPopupComponentController<O, I> extends DbxPopupController<O, I> {
   getClosingValueFn?: (value?: I) => Promise<O>;
 }
 
-export interface DbxPopupComponentConfig<I, O, T> {
+export interface DbxPopupComponentConfig<O, I, T> {
   /**
    * Key used for uniquely identifying a limited instance.
    *
@@ -29,7 +29,7 @@ export interface DbxPopupComponentConfig<I, O, T> {
   componentClass: Type<T>;
   data?: I;
   isDraggable?: boolean;
-  init?: (component: T, controller: DbxPopupController<I, O>) => void;
+  init?: (component: T, controller: DbxPopupController<O, I>) => void;
 }
 
 /**
@@ -38,12 +38,9 @@ export interface DbxPopupComponentConfig<I, O, T> {
 @Component({
   template: `
   <dbx-popup-coordinator>
-    <div class="dbx-popup-component">
-      <ng-template #content></ng-template>
-    </div>
+    <div class="dbx-popup-component" dbx-injected-content [config]="contentConfig"></div>
   </dbx-popup-coordinator>
   `,
-  // TODO: styleUrls: ['./popup.scss'],
   providers: [{
     provide: DbxPopupController,
     useExisting: DbxPopupComponent
@@ -51,13 +48,14 @@ export interface DbxPopupComponentConfig<I, O, T> {
     provide: CompactContextStore
   }]
 })
-export class DbxPopupComponent<I = any, O = any, T = any> extends AbstractTransitionWatcherDirective implements DbxPopupController<I, O>, OnInit, OnDestroy {
+export class DbxPopupComponent<O = any, I = any, T = any> extends AbstractTransitionWatcherDirective implements DbxPopupController<O, I>, OnDestroy {
 
   private _position: PopupGlobalPositionStrategy;
 
-  @ViewChild('content', { static: true, read: ViewContainerRef })
-  private _content!: ViewContainerRef;
-  private _componentRef?: ComponentRef<T>;
+  readonly contentConfig: DbxInjectedComponentConfig = {
+    componentClass: this.config.componentClass,
+    init: this.config.init ? ((instance) => this.config.init!(instance, this)) : undefined
+  };
 
   private readonly closing = new Subject<void>();
   readonly isClosing$ = this.closing.pipe(first(), map(x => true), startWith(false), shareReplay(1));
@@ -69,9 +67,8 @@ export class DbxPopupComponent<I = any, O = any, T = any> extends AbstractTransi
   getClosingValueFn?: (value?: I) => Promise<O>;
 
   constructor(
-    private popoverRef: NgPopoverRef<DbxPopupComponentConfig<I, O, T>, O>,
+    private popoverRef: NgPopoverRef<DbxPopupComponentConfig<O, I, T>, O>,
     private compactContextState: CompactContextStore,
-    private resolver: ComponentFactoryResolver,
     dbNgxRouterTransitionService: DbxRouterTransitionService,
     ngZone: NgZone) {
     super(dbNgxRouterTransitionService, ngZone);
@@ -81,7 +78,7 @@ export class DbxPopupComponent<I = any, O = any, T = any> extends AbstractTransi
     this.popoverRef.overlay.updatePositionStrategy(this._position);
   }
 
-  get config(): DbxPopupComponentConfig<I, O, T> {
+  get config(): DbxPopupComponentConfig<O, I, T> {
     return this.popoverRef.data;
   }
 
@@ -91,18 +88,6 @@ export class DbxPopupComponent<I = any, O = any, T = any> extends AbstractTransi
 
   get data(): Maybe<I> {
     return this.config.data;
-  }
-
-  override ngOnInit(): void {
-    super.ngOnInit();
-    this._content.clear();
-    const componentClass = this.config.componentClass;
-    const factory = this.resolver.resolveComponentFactory(componentClass);
-    this._componentRef = this._content.createComponent(factory);
-
-    if (this.config.init) {
-      this.config.init(this._componentRef.instance, this);
-    }
   }
 
   override ngOnDestroy(): void {

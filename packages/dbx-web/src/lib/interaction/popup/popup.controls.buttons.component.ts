@@ -8,7 +8,6 @@ import { DbxPopupController, DbxPopupWindowState } from './popup';
 @Component({
   selector: 'dbx-popup-control-buttons',
   template: `
-  <span class="dbx-popup-control-buttons">
     <ng-container [ngSwitch]="isMinimized$ | async">
       <dbx-button [flat]="true" *ngSwitchCase="false" icon="minimize" (buttonClick)="minimizeClicked()"></dbx-button>
       <dbx-button [flat]="true" *ngSwitchCase="true" icon="maximize" (buttonClick)="maximizeClicked()"></dbx-button>
@@ -20,9 +19,10 @@ import { DbxPopupController, DbxPopupWindowState } from './popup';
     </ng-container>
     <dbx-button-spacer></dbx-button-spacer>
     <dbx-button [flat]="true" icon="close" color="warn" (buttonClick)="closeClicked()"></dbx-button>
-  </span>
   `,
-  // TODO: styleUrls: ['./popup.scss']
+  host: {
+    'class': 'dbx-popup-control-buttons'
+  }
 })
 export class DbxPopupControlButtonsComponent {
 

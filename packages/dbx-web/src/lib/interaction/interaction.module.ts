@@ -1,15 +1,17 @@
 import { NgModule } from '@angular/core';
+import { DbxDialogInteractionModule } from './dialog/dialog.module';
 import { DbxPromptModule } from './prompt/prompt.module';
-import { DbxPopupModule } from './popup/popup.module';
-import { DbxPopoverModule } from './popover/popover.module';
-import { DbxFilterModule } from './filter/filter.module';
+import { DbxPopupInteractionModule } from './popup/popup.module';
+import { DbxPopoverInteractionModule } from './popover/popover.module';
+import { DbxFilterInteractionModule } from './filter/filter.module';
 
 @NgModule({
   exports: [
-    DbxFilterModule,
+    DbxDialogInteractionModule,
+    DbxFilterInteractionModule,
     DbxPromptModule,
-    DbxPopoverModule,
-    DbxPopupModule
+    DbxPopoverInteractionModule,
+    DbxPopupInteractionModule
   ],
 })
 export class DbxInteractionModule { }

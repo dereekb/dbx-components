@@ -5,7 +5,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { Category, StatesModule, UIRouter, UIRouterModule, UIView } from '@uirouter/angular';
 import { AppSharedModule } from '@/shared/app.shared.module';
 import { environment } from './environments/environment';
-import { DbxPopupModule, DbxPopoverModule, DbxScreenModule, DbxWebRootModule, DbxWebUIRouterModule, DEFAULT_SCREEN_MEDIA_SERVICE_CONFIG } from '@dereekb/dbx-web';
+import { DbxPopupInteractionModule, DbxPopoverInteractionModule, DbxScreenModule, DbxWebRootModule, DbxWebUIRouterModule, DEFAULT_SCREEN_MEDIA_SERVICE_CONFIG } from '@dereekb/dbx-web';
 import { AnalyticsServiceConfiguration, SegmentAnalyticsListenerService, SegmentApiService, SegmentApiServiceConfig } from '@dereekb/dbx-analytics';
 import { AppModule } from './app/app.module';
 import { DbxCoreUIRouterSegueModule } from '@dereekb/dbx-core';
@@ -70,8 +70,8 @@ export function makeSegmentConfig(): SegmentApiServiceConfig {
     SegmentModule.forRoot(),
     DbxCoreUIRouterSegueModule.forRoot(),
     DbxWebUIRouterModule.forRoot(),
-    DbxPopupModule.forRoot(),
-    DbxPopoverModule.forRoot(),
+    DbxPopupInteractionModule.forRoot(),
+    DbxPopoverInteractionModule.forRoot(),
     UIRouterModule.forRoot({
       useHash: false,
       initial: { state: 'app' },

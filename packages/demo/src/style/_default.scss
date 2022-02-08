@@ -12,4 +12,5 @@ $default-theme: dbx.define-dbx-theme-config($default-mat-theme, $default-dbx-the
 @mixin default-theme() {
   @include mat.all-component-themes($default-theme);
   @include dbx.all-component-themes($default-theme);
+  @include dbx.root-variables('body', $default-theme);
 }

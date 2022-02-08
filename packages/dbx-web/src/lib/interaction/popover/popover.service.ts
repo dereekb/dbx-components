@@ -3,7 +3,7 @@ import { Injectable, Injector } from '@angular/core';
 import { NgOverlayContainerConfiguration, NgOverlayContainerService, NgPopoverRef } from 'ng-overlay-container';
 import { Overlay } from '@angular/cdk/overlay';
 
-export interface DbxPopoverConfig<I, O, T> extends DbxPopoverComponentConfig<I, O, T> {
+export interface DbxPopoverConfig<O, I, T> extends DbxPopoverComponentConfig<O, I, T> {
   injector?: Injector;
   height?: string;
   width?: string;
@@ -21,7 +21,7 @@ export class DbxPopoverService {
     this._overlayContainerService = new NgOverlayContainerService(this._overlay, this._injector);
   }
 
-  open<I, O, T>(config: DbxPopoverConfig<I, O, T>): NgPopoverRef<DbxPopoverComponentConfig<I, O, T>, O> {
+  open<O, I, T>(config: DbxPopoverConfig<O, I, T>): NgPopoverRef<DbxPopoverComponentConfig<O, I, T>, O> {
     const service = (config.injector) ? new NgOverlayContainerService(this._overlay, config.injector) : this._overlayContainerService;
 
     const configuration: NgOverlayContainerConfiguration = {
@@ -37,7 +37,7 @@ export class DbxPopoverService {
       disableBackdropClose: false
     };
 
-    return service.open<FullDbxPopoverComponentConfig<I, O, T>, O>({
+    return service.open<FullDbxPopoverComponentConfig<O, I, T>, O>({
       content: DbxPopoverComponent,
       data: {
         ...config,

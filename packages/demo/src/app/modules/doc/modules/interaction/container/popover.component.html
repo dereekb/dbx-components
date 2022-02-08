@@ -1,11 +1,21 @@
 <dbx-content-container>
   <doc-feature-layout header="Popover"
-    hint="A popover is a small view that can popover existing content without taking focus from the rest of the screen.">
+    hint="A popover is a small modal-type view that can be attached to another object, such as a button. The popover can return a value.">
 
     <!-- Examples -->
     <doc-feature-example header="dbx-popover"
-      hint="">
-
+      hint="A dbx-popover is generally configured by the class that is contained within the popover.">
+      <div style="margin-top: 10px">
+        <p #popoverOrigin>
+          Origin will open here.
+        </p>
+      </div>
+      <div fxLayout="row">
+        <button mat-raised-button (click)="openExamplePopover()">Open Popover</button>
+        <dbx-spacer></dbx-spacer>
+        <button #buttonPopoverOrigin mat-raised-button (click)="openExamplePopoverOnButton()">Open Popover On Button</button>
+      </div>
+      <p>Result {{ result | json }}</p>
     </doc-feature-example>
   </doc-feature-layout>
 </dbx-content-container>

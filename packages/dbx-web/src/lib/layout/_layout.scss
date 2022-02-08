@@ -3,13 +3,12 @@
 @use './card/card';
 @use './column/column';
 @use './content/content';
-@use './dialog/dialog';
 @use './flag/flag';
 @use './item/item';
 @use './list/list';
 @use './section/section';
 @use './step/step';
-@use './styles/styles';
+@use './style/style';
 @use './text/text';
 
 @mixin all-layout-core() {
@@ -18,13 +17,12 @@
   @include card.core();
   @include column.core();
   @include content.core();
-  @include dialog.core();
   @include flag.core();
   @include item.core();
   @include list.core();
   @include section.core();
   @include step.core();
-  @include styles.core();
+  @include style.core();
   @include text.core();
 }
 
@@ -34,13 +32,12 @@
   @include card.typography($typography-config);
   @include column.typography($typography-config);
   @include content.typography($typography-config);
-  @include dialog.typography($typography-config);
   @include flag.typography($typography-config);
   @include item.typography($typography-config);
   @include list.typography($typography-config);
   @include section.typography($typography-config);
   @include step.typography($typography-config);
-  @include styles.typography($typography-config);
+  @include style.typography($typography-config);
   @include text.typography($typography-config);
 }
 
@@ -50,12 +47,11 @@
   @include card.theme($theme-config);
   @include column.theme($theme-config);
   @include content.theme($theme-config);
-  @include dialog.theme($theme-config);
   @include flag.theme($theme-config);
   @include item.theme($theme-config);
   @include list.theme($theme-config);
   @include section.theme($theme-config);
   @include step.theme($theme-config);
-  @include styles.theme($theme-config);
+  @include style.theme($theme-config);
   @include text.theme($theme-config);
 }

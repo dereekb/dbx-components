@@ -27,7 +27,7 @@ export const docInteractionDialogState: Ng2StateDeclaration = {
 };
 
 export const docInteractionFilterState: Ng2StateDeclaration = {
-  url: '/prompt',
+  url: '/filter',
   name: 'doc.interaction.filter',
   component: DocInteractionFilterComponent,
 };

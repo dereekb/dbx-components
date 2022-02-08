@@ -6,12 +6,10 @@ import { DbxPopoverContentComponent } from './popover.content.component';
  */
 @Component({
   selector: 'dbx-popover-controls',
-  template: `
-  <div class="dbx-popover-controls">
-    <ng-content></ng-content>
-  </div>
-  `,
-  // TODO: styleUrls: ['./popover.scss']
+  template: `<ng-content></ng-content>`,
+  host: {
+    'class': 'd-block dbx-popover-controls'
+  }
 })
 export class DbxPopoverControlsComponent {
 

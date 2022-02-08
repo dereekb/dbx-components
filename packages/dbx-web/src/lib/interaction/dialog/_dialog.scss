@@ -11,7 +11,7 @@
 @mixin typography($typography-config) {}
 
 @mixin theme($theme-config) {
-  @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-layout-dialog') {
+  @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-interaction-dialog') {
     $color: theming.get-color-config($theme-config);
     $typography: theming.get-typography-config($theme-config);
 
