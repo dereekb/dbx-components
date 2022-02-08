@@ -3,7 +3,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Component, ViewChild, Input } from '@angular/core';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { DbxCoreActionModule } from '../../action.module';
-import { DbxActionComponent } from '../context/action.component';
+import { DbxActionDirective } from '../context/action.directive';
 import { DbxActionContextMapDirective } from './action.map.directive';
 import { DbxActionMapSourceDirective } from './action.map.source.directive';
 
@@ -26,8 +26,8 @@ describe('DbxActionContextMapDirective', () => {
   let directive: DbxActionContextMapDirective;
   let dbxActionFromMap: DbxActionFromMapDirective;
   let dbxActionMapSource: DbxActionMapSourceDirective;
-  let aActionComponent: DbxActionComponent<number, number>;
-  let bActionComponent: DbxActionComponent<number, number>;
+  let aActionComponent: DbxActionDirective<number, number>;
+  let bActionComponent: DbxActionDirective<number, number>;
 
   let fixture: ComponentFixture<TestDbxActionContextMapDirectiveComponent>;
 
@@ -105,9 +105,9 @@ class TestDbxActionContextMapDirectiveComponent {
   dbxActionFromMap?: DbxActionFromMapDirective;
 
   @ViewChild('a', { static: true })
-  aAction?: DbxActionComponent<number, number>;
+  aAction?: DbxActionDirective<number, number>;
 
   @ViewChild('b', { static: true })
-  bAction?: DbxActionComponent<number, number>;
+  bAction?: DbxActionDirective<number, number>;
 
 }

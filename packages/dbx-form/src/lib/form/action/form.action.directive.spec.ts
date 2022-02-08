@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Component, ViewChild } from '@angular/core';
-import { DbxActionContextDirective, DbxCoreActionModule } from '@dereekb/dbx-core';
+import { DbxActionDirective, DbxCoreActionModule } from '@dereekb/dbx-core';
 import { DbxActionFormDirective } from './form.action.directive';
 import { DbxTestDbxFormComponent, FORM_TEST_PROVIDERS } from '../formly.component.spec';
 import { first } from 'rxjs/operators';
@@ -20,7 +20,7 @@ describe('FormActionDirective', () => {
     }).compileComponents();
   });
 
-  let directive: DbxActionContextDirective<number, number>;
+  let directive: DbxActionDirective<number, number>;
   let form: DbxTestDbxFormComponent;
 
   let testComponent: TestDbxActionFormDirectiveComponent;
@@ -87,8 +87,8 @@ describe('FormActionDirective', () => {
 })
 class TestDbxActionFormDirectiveComponent {
 
-  @ViewChild(DbxActionContextDirective, { static: true })
-  directive!: DbxActionContextDirective<number, number>;
+  @ViewChild(DbxActionDirective, { static: true })
+  directive!: DbxActionDirective<number, number>;
 
   @ViewChild(DbxActionFormDirective, { static: true })
   formDirective!: DbxActionFormDirective;

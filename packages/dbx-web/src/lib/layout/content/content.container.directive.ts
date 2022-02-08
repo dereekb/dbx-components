@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, Directive } from '@angular/core';
 
 export type DbxContentContainerPadding = 'none' | 'min' | 'small' | 'normal';
 
@@ -7,15 +7,14 @@ export type DbxContentContainerWidth = 'small' | 'medium' | 'wide' | 'full';
 /**
  * Component that limits the max-width of the content.
  */
-@Component({
-  selector: 'dbx-content-container',
-  template: `<ng-content></ng-content>`,
+@Directive({
+  selector: 'dbx-content-container,[dbx-content-container],.dbx-content-container',
   host: {
     'class': 'd-block dbx-content-container',
     '[class]': `"container-" + grow + " container-padding-" + padding`
   }
 })
-export class DbxContentContainerComponent {
+export class DbxContentContainerDirective {
 
   @Input()
   grow = 'wide';

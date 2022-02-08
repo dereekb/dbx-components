@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Component, ViewChild } from '@angular/core';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { DbxActionContextDirective, DbxCoreActionModule } from '../../action';
+import { DbxActionDirective, DbxCoreActionModule } from '../../action';
 import { DbxActionButtonDirective } from './action.button.directive';
 import { DbxCoreButtonModule } from '../button.module';
 import { DbxActionButtonTriggerDirective } from './action.button.trigger.directive';
@@ -24,7 +24,7 @@ describe('Action Button', () => {
     }).compileComponents();
   });
 
-  let directive: Maybe<DbxActionContextDirective<number, number>>;
+  let directive: Maybe<DbxActionDirective<number, number>>;
 
   describe('dbxActionButton', () => {
 
@@ -116,8 +116,8 @@ describe('Action Button', () => {
 })
 class TestDbxActionButtonTriggerDirectiveComponent {
 
-  @ViewChild(DbxActionContextDirective, { static: true })
-  directive?: DbxActionContextDirective<number, number>;
+  @ViewChild(DbxActionDirective, { static: true })
+  directive?: DbxActionDirective<number, number>;
 
   @ViewChild(DbxActionButtonTriggerDirective, { static: true })
   buttonDirective?: DbxActionButtonTriggerDirective;
@@ -138,8 +138,8 @@ class TestDbxActionButtonTriggerDirectiveComponent {
 })
 class TestDbxActionButtonDirectiveComponent {
 
-  @ViewChild(DbxActionContextDirective, { static: true })
-  directive?: DbxActionContextDirective<number, number>;
+  @ViewChild(DbxActionDirective, { static: true })
+  directive?: DbxActionDirective<number, number>;
 
   @ViewChild(DbxActionButtonDirective, { static: true })
   buttonDirective?: DbxActionButtonDirective;

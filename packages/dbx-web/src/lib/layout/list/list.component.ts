@@ -1,5 +1,5 @@
 import { catchError, filter, exhaustMap, merge, map, Subject, switchMap, shareReplay, distinctUntilChanged, of, Observable, BehaviorSubject, first, startWith } from 'rxjs';
-import { Component, Input, EventEmitter, Output, OnDestroy, ElementRef, HostListener, ChangeDetectorRef } from '@angular/core';
+import { Component, Input, EventEmitter, Output, OnDestroy, ElementRef, HostListener, ChangeDetectorRef, Directive } from '@angular/core';
 import { DbxInjectedComponentConfig, tapDetectChanges } from '@dereekb/dbx-core';
 import { SubscriptionObject, ListLoadingStateContextInstance, ListLoadingState, filterMaybe, tapLog, loadingStateHasFinishedLoading, successResult, beginLoading } from '@dereekb/rxjs';
 import { Maybe, Milliseconds } from '@dereekb/util';
@@ -86,7 +86,7 @@ export class DbxListComponent<T = any, V extends DbxListView<T> = DbxListView<T>
   @Output()
   contentScrolled = new EventEmitter<number>();
 
-  private _content!: DbxListInternalViewComponent;
+  private _content!: DbxListInternalContentDirective;
 
   private _loadMoreTrigger = new Subject<void>();
   private _scrollTrigger = new Subject<DbxListScrollDirectionTrigger>();
@@ -267,11 +267,11 @@ export class DbxListComponent<T = any, V extends DbxListView<T> = DbxListView<T>
     return this._content.elementRef.nativeElement;
   }
 
-  get __content(): DbxListInternalViewComponent {
+  get __content(): DbxListInternalContentDirective {
     return this._content;
   }
 
-  set __content(content: DbxListInternalViewComponent) {
+  set __content(content: DbxListInternalContentDirective) {
     if (this._content == null) {
       this._content = content;
     } else {
@@ -284,15 +284,14 @@ export class DbxListComponent<T = any, V extends DbxListView<T> = DbxListView<T>
 /**
  * Used internally by DbxListComponent
  */
-@Component({
-  selector: 'dbx-list-content',
-  template: '<ng-content></ng-content>',
+@Directive({
+  selector: '[dbx-list-internal-content]',
   host: {
     'class': 'd-block dbx-list-content',
     '[class.dbx-list-content-hidden]': 'hide'
   }
 })
-export class DbxListInternalViewComponent {
+export class DbxListInternalContentDirective {
 
   @Input()
   hide: Maybe<Boolean> = false;

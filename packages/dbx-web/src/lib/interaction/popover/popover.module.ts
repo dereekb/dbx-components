@@ -9,7 +9,7 @@ import { DbxPopoverCoordinatorComponent } from './popover.coordinator.component'
 import { DbxPopoverService } from './popover.service';
 import { DbxPopoverContentComponent } from './popover.content.component';
 import { DbxPopoverComponent } from './popover.component';
-import { DbxPopoverControlsComponent } from './popover.controls.component';
+import { DbxPopoverControlsDirective } from './popover.controls.directive';
 import { DbxPopoverCoordinatorService } from './popover.coordinator.service';
 import { DbxPopoverHeaderComponent } from './popover.header.component';
 import { DbxPopoverScrollContentComponent } from './popover.scroll.content.component';
@@ -20,6 +20,7 @@ import { DbxAnchorModule } from '../../router';
 import { DbxActionModule } from '../../action/action.module';
 import { DbxButtonModule } from '../../button/button.module';
 import { DbxInjectedComponentModule } from '@dereekb/dbx-core';
+import { DbxStyleLayoutModule } from '../../layout/style/style.layout.module';
 
 @NgModule({
   imports: [
@@ -31,6 +32,7 @@ import { DbxInjectedComponentModule } from '@dereekb/dbx-core';
     DbxAnchorModule,
     DbxActionModule,
     DbxKeypressModule,
+    DbxStyleLayoutModule,
     DbxInjectedComponentModule,
     NgOverlayContainerModule,
     AngularResizeEventModule
@@ -41,7 +43,7 @@ import { DbxInjectedComponentModule } from '@dereekb/dbx-core';
     DbxPopoverComponent,
     DbxPopoverCoordinatorComponent,
     DbxPopoverContentComponent,
-    DbxPopoverControlsComponent,
+    DbxPopoverControlsDirective,
     DbxPopoverHeaderComponent,
     DbxPopoverScrollContentComponent
   ],
@@ -49,7 +51,7 @@ import { DbxInjectedComponentModule } from '@dereekb/dbx-core';
     DbxPopoverActionButtonDirective,
     DbxPopoverActionDirective,
     DbxPopoverContentComponent,
-    DbxPopoverControlsComponent,
+    DbxPopoverControlsDirective,
     DbxPopoverHeaderComponent,
     DbxPopoverScrollContentComponent
   ],

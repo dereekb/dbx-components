@@ -3,6 +3,7 @@
 
 .app-toolbar {
   height: variables.$app-top-banner-height;
+  background: white;
   @include material.elevation(2);
   position: relative;
   z-index: 10;

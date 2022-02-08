@@ -46,7 +46,7 @@ export class DbxNavbarComponent extends AbstractTransitionDirective implements O
       return (breakpointActive) ? (inputMode ?? 'bar') : 'button';
     }),
     distinctUntilChanged(),
-    tapDetectChanges(this.cdr),
+    tapDetectChanges(this.cdRef),
     shareReplay(1)
   );
 
@@ -63,13 +63,13 @@ export class DbxNavbarComponent extends AbstractTransitionDirective implements O
 
       return applyBestFit(results, (x) => x.selected, (a, b) => this._dbxRouterService.comparePrecision(a.anchor, b.anchor), (loser) => ({ ...loser, selected: false }));
     }),
-    tapDetectChanges(this.cdr),
+    tapDetectChanges(this.cdRef),
     shareReplay(1)
   );
 
   constructor(
     dbxRouterTransitionService: DbxRouterTransitionService,
-    private cdr: ChangeDetectorRef,
+    private cdRef: ChangeDetectorRef,
     private readonly _dbxScreenMediaService: DbxScreenMediaService,
     private readonly _dbxRouterService: DbxRouterService
   ) {

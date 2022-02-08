@@ -11,7 +11,7 @@ import { DbxCompactLayoutModule } from './compact/compact.layout.module';
 import { DbxStepLayoutModule } from './step/step.layout.module';
 import { DbxBarLayoutModule } from './bar/bar.layout.module';
 import { DbxTextModule } from './text/text.module';
-import { DbxStyleLayoutModule } from './style/styles.layout.module';
+import { DbxStyleLayoutModule } from './style/style.layout.module';
 
 @NgModule({
   exports: [

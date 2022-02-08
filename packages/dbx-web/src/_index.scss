@@ -1,11 +1,27 @@
+@use '@angular/material'as mat;
+@use './lib/style/all-theme' as dbx-theme;
+@use './lib/style/root-variables' as dbx-variables;
+
 @forward './lib/layout/layout';
 
 // Structural
-@forward './lib/style/core' show core;
-@forward './lib/style/root-variables' show root-variables;
+@forward './lib/style/core'show core;
+@forward './lib/style/root-variables'show root-variables;
 
 // Config
-@forward './lib/style/config' show define-dbx-theme-config, get-dbx-theme-config, quick-define-dbx-config-via-banners;
+@forward './lib/style/config'show define-dbx-theme-config,
+get-dbx-theme-config,
+quick-define-dbx-config-via-banners;
 
 // Theme bundles
-@forward './lib/style/all-theme' show all-component-themes;
+@forward './lib/style/all-theme'show all-component-themes;
+
+// Create Theme
+@mixin theme($root-selector, $theme-config) {
+  #{$root-selector} {
+    @include mat.all-component-themes($theme-config);
+    @include dbx-theme.all-component-themes($theme-config);
+  }
+
+  @include dbx-variables.root-variables($root-selector, $theme-config);
+}

@@ -56,7 +56,7 @@ export interface FullDbxPopoverComponentConfig<O, I, T> extends DbxPopoverCompon
 @Component({
   template: `
   <dbx-popover-coordinator (dbxWindowKeyDownListener)="handleKeydown($event)" [appWindowKeyDownFilter]="triggerCloseKeys">
-    <div class="dbx-popover-component" dbx-injected-content [config]="contentConfig"></div>
+    <div dbx-style class="dbx-popover-component" dbx-injected-content [config]="contentConfig"></div>
   </dbx-popover-coordinator>
   `,
   providers: [{

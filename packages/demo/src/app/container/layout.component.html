@@ -1,20 +1,22 @@
-<mat-toolbar class="app-toolbar">
-  <dbx-anchor [anchor]="landing">
-    <button mat-button>Home</button>
-  </dbx-anchor>
-  <dbx-button-spacer></dbx-button-spacer>
-  <dbx-anchor [anchor]="doc">
-    <button mat-button>Docs</button>
-  </dbx-anchor>
-  <dbx-button-spacer></dbx-button-spacer>
-  <dbx-anchor [anchor]="demo">
-    <button mat-button>Demo</button>
-  </dbx-anchor>
-  <span class="spacer"></span>
-  <dbx-anchor [anchor]="github">
-    <button mat-button>
-      <mat-icon class="dbx-icon-spacer">code</mat-icon>Github
-    </button>
-  </dbx-anchor>
-</mat-toolbar>
-<ui-view></ui-view>
+<div dbxSetStyle="app">
+  <mat-toolbar class="app-toolbar">
+    <dbx-anchor [anchor]="landing">
+      <button mat-button>Home</button>
+    </dbx-anchor>
+    <dbx-button-spacer></dbx-button-spacer>
+    <dbx-anchor [anchor]="doc">
+      <button mat-button>Docs</button>
+    </dbx-anchor>
+    <dbx-button-spacer></dbx-button-spacer>
+    <dbx-anchor [anchor]="demo">
+      <button mat-button>Demo</button>
+    </dbx-anchor>
+    <span class="spacer"></span>
+    <dbx-anchor [anchor]="github">
+      <button mat-button>
+        <mat-icon class="dbx-icon-spacer">code</mat-icon>Github
+      </button>
+    </dbx-anchor>
+  </mat-toolbar>
+  <ui-view></ui-view>
+</div>

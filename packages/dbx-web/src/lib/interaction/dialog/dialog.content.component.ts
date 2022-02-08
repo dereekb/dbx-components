@@ -8,7 +8,9 @@ export type DbxDialogContentContainerWidth = 'normal' | 'wide';
 @Component({
   selector: 'dbx-dialog-content',
   template: `
-    <ng-content></ng-content>
+    <dbx-style>
+      <ng-content></ng-content>
+    </dbx-style>
   `,
   host: {
     'class': 'dbx-dialog-content',

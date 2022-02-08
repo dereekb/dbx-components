@@ -2,14 +2,14 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Component, ViewChild, Input } from '@angular/core';
 import { of } from 'rxjs';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { DbxActionContextDirective } from './action.directive';
+import { DbxActionDirective } from './action.directive';
 import { DbxActionHandlerDirective } from '../state/action.handler.directive';
 import { DbxCoreActionModule } from '../../action.module';
 import { first, tap } from 'rxjs/operators';
 import { ActionContextStoreSourceInstance } from '../../action.store.source';
 import { HandleActionFunction } from '../../action.handler';
 
-describe('DbxActionContextDirective', () => {
+describe('DbxActionDirective', () => {
 
   beforeEach(async () => {
     TestBed.configureTestingModule({
@@ -25,7 +25,7 @@ describe('DbxActionContextDirective', () => {
 
   let testComponent: TestActionContextDirectiveComponent;
 
-  let directive: DbxActionContextDirective<number, number>;
+  let directive: DbxActionDirective<number, number>;
   let handlerDirective: DbxActionHandlerDirective<number, number>;
 
   let fixture: ComponentFixture<TestActionContextDirectiveComponent>;
@@ -127,8 +127,8 @@ describe('DbxActionContextDirective', () => {
 })
 class TestActionContextDirectiveComponent {
 
-  @ViewChild(DbxActionContextDirective, { static: true })
-  directive?: DbxActionContextDirective<number, number>;
+  @ViewChild(DbxActionDirective, { static: true })
+  directive?: DbxActionDirective<number, number>;
 
   @ViewChild(DbxActionHandlerDirective, { static: true })
   handlerDirective?: DbxActionHandlerDirective<number, number>;

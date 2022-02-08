@@ -11,6 +11,7 @@ export class DocInteractionDialogComponent {
 
   openDialog() {
     this.matDialog.open(DocInteractionExampleDialogComponent);
+    
   }
 
 }

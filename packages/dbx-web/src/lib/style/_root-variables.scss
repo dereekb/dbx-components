@@ -2,7 +2,6 @@
 
 // Includes all theming config
 @mixin root-variables($root-selector, $theme-config) {
-
   $initial-top-banner-height: theming.get-dbx-layout-top-banner-height($theme-config);
   $initial-bottom-banner-height: theming.get-dbx-layout-bottom-banner-height($theme-config);
 
@@ -26,9 +25,11 @@
     #{theming.$padding-5-var}: theming.get-dbx-layout-padding($theme-config, 5);
 
     // root height
-    display: block;
-    height: theming.$app-height;
-    overflow: hidden;
+    &.dbx-style-root {
+      display: block;
+      height: theming.$app-height;
+      overflow: hidden;
+    }
   }
 
 }

@@ -16,9 +16,11 @@ export interface DbxPromptConfirmDialogConfig extends DbxPromptConfirmConfig {
 
 @Component({
   template: `
-    <dbx-prompt-confirm [config]="config" (confirm)="confirm()" (cancel)="cancel()">
-      <dbx-injected-content [config]="injectedConfig"></dbx-injected-content>
-    </dbx-prompt-confirm>
+    <dbx-dialog-content>
+      <dbx-prompt-confirm [config]="config" (confirm)="confirm()" (cancel)="cancel()">
+        <dbx-injected-content [config]="injectedConfig"></dbx-injected-content>
+      </dbx-prompt-confirm>
+    </dbx-dialog-content>
   `
 })
 export class DbxPromptConfirmDialogComponent extends AbstractDialogDirective<boolean, DbxPromptConfirmDialogConfig> implements OnInit {

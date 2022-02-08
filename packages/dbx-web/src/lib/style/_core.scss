@@ -1,7 +1,17 @@
+@use "sass:map";
 @use './all-core';
 @use './all-typography';
+@use './root-variables';
+@use './config';
 
-@mixin core($typography-config) {
+@mixin core($typography-config, $theme-config: null) {
   @include all-core.all-component-core();
   @include all-typography.all-component-typographies($typography-config);
+
+  // add root variables to body
+  @if ($theme-config == null) {
+    $theme-config: config.define-dbx-theme-config(());
+  }
+
+  @include root-variables.root-variables('body', $theme-config);
 }

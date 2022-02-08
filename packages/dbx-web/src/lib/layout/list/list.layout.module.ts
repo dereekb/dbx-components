@@ -5,7 +5,7 @@ import { MatListModule } from '@angular/material/list';
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { DbxInjectedComponentModule } from '@dereekb/dbx-core';
-import { DbxListComponent, DbxListInternalViewComponent } from './list.component';
+import { DbxListComponent, DbxListInternalContentDirective } from './list.component';
 import { DbxListEmptyContentComponent } from './list.content.empty.component';
 import { InfiniteScrollModule } from 'ngx-infinite-scroll';
 import { DbxSelectionValueListViewComponent } from './list.view.value.selection.component';
@@ -23,7 +23,7 @@ import { DbxValueListViewComponent } from './list.view.value.component';
   ],
   declarations: [
     DbxListComponent,
-    DbxListInternalViewComponent,
+    DbxListInternalContentDirective,
     DbxListEmptyContentComponent,
     DbxValueListViewComponent,
     DbxSelectionValueListViewComponent

@@ -14,6 +14,7 @@ import { DbxPromptConfirmDirective } from './prompt.confirm.directive';
 import { DbxPromptConfirmButtonDirective } from './prompt.button.confirm.directive';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
+import { DbxDialogInteractionModule } from '../dialog/dialog.module';
 
 @NgModule({
   imports: [
@@ -23,6 +24,7 @@ import { MatButtonModule } from '@angular/material/button';
     DbxTextModule,
     DbxButtonModule,
     DbxInjectedComponentModule,
+    DbxDialogInteractionModule,
     DbxSectionLayoutModule,
     DbxContentLayoutModule
   ],

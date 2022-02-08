@@ -1,6 +1,6 @@
 @use 'node_modules/@angular/material/core/theming/palette';
 @use '@angular/material'as mat;
-@use 'dbx-web/src/index' as dbx;
+@use 'dbx-web/src/index'as dbx;
 @use '../../../../style/variables';
 
 // Define an alternate dark theme.
@@ -12,11 +12,5 @@ $demo-dbx-theme-with-banner-config: dbx.quick-define-dbx-config-via-banners(vari
 $demo-theme: dbx.define-dbx-theme-config($demo-mat-theme, $demo-dbx-theme-with-banner-config);
 
 @mixin demo-theme($root-selector) {
-
-  #{$root-selector} {
-    @include mat.all-component-themes($demo-theme);
-    @include dbx.all-component-themes($demo-theme);
-  }
-
-  @include dbx.root-variables($root-selector, $demo-theme);
+  @include dbx.theme($root-selector, $demo-theme);
 }

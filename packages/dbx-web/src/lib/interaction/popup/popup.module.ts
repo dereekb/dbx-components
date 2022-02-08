@@ -14,6 +14,7 @@ import { DbxPopupControlsComponent } from './popup.controls.component';
 import { DbxPopupControlButtonsComponent } from './popup.controls.buttons.component';
 import { DbxButtonModule } from '../../button/button.module';
 import { DbxPopupCoordinatorService } from './popup.coordinator.service';
+import { DbxStyleLayoutModule } from '../../layout/style/style.layout.module';
 
 @NgModule({
   imports: [
@@ -23,6 +24,7 @@ import { DbxPopupCoordinatorService } from './popup.coordinator.service';
     DbxButtonModule,
     DbxAnchorModule,
     DbxActionModule,
+    DbxStyleLayoutModule,
     DbxInjectedComponentModule,
     NgOverlayContainerModule,
   ],

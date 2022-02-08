@@ -1,17 +1,16 @@
-import { Component, Optional } from '@angular/core';
+import { Directive, Optional } from '@angular/core';
 import { DbxPopoverContentComponent } from './popover.content.component';
 
 /**
  * Popover Controls
  */
-@Component({
-  selector: 'dbx-popover-controls',
-  template: `<ng-content></ng-content>`,
+@Directive({
+  selector: 'dbx-popover-controls,[dbx-popover-controls],.dbx-popover-controls',
   host: {
     'class': 'd-block dbx-popover-controls'
   }
 })
-export class DbxPopoverControlsComponent {
+export class DbxPopoverControlsDirective {
 
   constructor(@Optional() appPopoverContentComponent: DbxPopoverContentComponent) {
     if (appPopoverContentComponent) {
