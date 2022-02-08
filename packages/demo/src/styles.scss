@@ -1,11 +1,13 @@
 @use '@angular/material'as mat;
 @use 'dbx-web/src/index'as dbx;
+@use 'dbx-form/src/index' as dbx-form;
 @use './style/style';
 
 $app-typography-config: mat.define-typography-config();
 
 @include mat.core($app-typography-config);
 @include dbx.core($app-typography-config);
+@include dbx-form.core($app-typography-config);
 
 @include style.default-theme('body');
 @include style.doc-theme('.doc-app');

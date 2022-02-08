@@ -1,0 +1,45 @@
+@use './boolean/boolean';
+@use './checklist/checklist';
+@use './component/component';
+@use './date/date';
+@use './generic/generic';
+@use './phone/phone';
+@use './text/text';
+@use './texteditor/texteditor';
+@use './wrappers/wrapper';
+
+@mixin all-layout-core() {
+  @include boolean.core();
+  @include checklist.core();
+  @include component.core();
+  @include date.core();
+  @include generic.core();
+  @include phone.core();
+  @include text.core();
+  @include texteditor.core();
+  @include wrapper.core();
+}
+
+@mixin all-layout-typography($typography-config) {
+  @include boolean.typography($typography-config);
+  @include checklist.typography($typography-config);
+  @include component.typography($typography-config);
+  @include date.typography($typography-config);
+  @include generic.typography($typography-config);
+  @include phone.typography($typography-config);
+  @include text.typography($typography-config);
+  @include texteditor.typography($typography-config);
+  @include wrapper.typography($typography-config);
+}
+
+@mixin all-layout-theme($theme-config) {
+  @include boolean.theme($theme-config);
+  @include checklist.theme($theme-config);
+  @include component.theme($theme-config);
+  @include date.theme($theme-config);
+  @include generic.theme($theme-config);
+  @include phone.theme($theme-config);
+  @include text.theme($theme-config);
+  @include texteditor.theme($theme-config);
+  @include wrapper.theme($theme-config);
+}

@@ -1,6 +1,7 @@
 @use 'node_modules/@angular/material/core/theming/palette';
 @use '@angular/material'as mat;
 @use 'dbx-web/src/index' as dbx;
+@use 'dbx-form/src/index' as dbx-form;
 @use './variables';
 
 $opmore-navy: #1C3454;
@@ -75,10 +76,12 @@ $doc-warn: mat.define-palette(mat.$red-palette);
 $doc-mat-theme: mat.define-light-theme((color: (primary: $doc-primary, accent: $doc-accent, warn: $doc-warn), density: null, typography: null));    // NOTE: setting density and typography to null is important!
 $doc-dbx-theme-with-banner-config: dbx.quick-define-dbx-config-via-banners(variables.$app-top-banner-height);
 $doc-theme: dbx.define-dbx-theme-config($doc-mat-theme, $doc-dbx-theme-with-banner-config);
+$doc-form-theme: dbx-form.define-dbx-form-theme-config($doc-theme);
 
 /**
 This mixin creates the doc-theme components and elements for @angular/material and @dereekb/dbx-web to be enabled for a specific css selector, which is usually ".doc-app"
 */
 @mixin doc-theme($root-selector) {
   @include dbx.theme($root-selector, $doc-theme);
+  @include dbx-form.all-component-themes($doc-theme);
 }
