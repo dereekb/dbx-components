@@ -1,10 +1,5 @@
 
 export const DOC_FORM_ROUTES = [{
-  icon: 'check_box',
-  title: 'Boolean',
-  detail: 'boolean forms',
-  ref: 'doc.form.boolean'
-}, {
   icon: 'format_list_bulleted',
   title: 'Checklist',
   detail: 'checklist form',
@@ -15,25 +10,15 @@ export const DOC_FORM_ROUTES = [{
   detail: 'component form',
   ref: 'doc.form.component'
 }, {
-  icon: 'event',
-  title: 'Date',
-  detail: 'date forms',
-  ref: 'doc.form.date'
-}, {
   icon: 'keyboard',
-  title: 'Generic',
-  detail: 'gerneric forms',
-  ref: 'doc.form.generic'
+  title: 'Value Fields',
+  detail: 'value form fields',
+  ref: 'doc.form.value'
 }, {
-  icon: 'phone',
-  title: 'Phone Number',
-  detail: 'phone number forms',
-  ref: 'doc.form.phone'
-}, {
-  icon: 'edit',
-  title: 'Text',
-  detail: 'text forms',
-  ref: 'doc.form.text'
+  icon: 'highlight_alt',
+  title: 'Selection Fields',
+  detail: 'selection form fields',
+  ref: 'doc.form.selection'
 }, {
   icon: 'article',
   title: 'Text Editor',

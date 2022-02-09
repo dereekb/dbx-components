@@ -1,10 +1,12 @@
 @use '../form/form';
 @use '../formly/formly';
 @use '../layout/layout';
+@use '../formly/field/field';
 
 // Includes all theming config
 @mixin all-component-core() {
   @include form.core();
   @include formly.core();
+  @include field.all-field-core();
   @include layout.core();
 }
