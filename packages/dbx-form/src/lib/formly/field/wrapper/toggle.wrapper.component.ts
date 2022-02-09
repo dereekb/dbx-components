@@ -1,19 +1,10 @@
 import { Component } from '@angular/core';
 import { Maybe } from '@dereekb/util';
-import { FormlyFieldConfig } from '@ngx-formly/core';
 import { first, shareReplay, switchMap, Observable, of } from 'rxjs';
-import { AbstractFormExpandableSectionWrapperDirective, FormExpandableSectionWrapperTemplateOptions } from './expandable.wrapper.delegate';
+import { AbstractFormExpandableSectionConfig, AbstractFormExpandableSectionWrapperDirective, FormExpandableSectionWrapperTemplateOptions } from './expandable.wrapper.delegate';
 
-export interface FormToggleSectionConfig {
+export interface FormToggleSectionConfig<T = any> extends AbstractFormExpandableSectionConfig<T> {
   toggleLabelObs?: (open: Maybe<boolean>) => Observable<string>;
-}
-
-export interface FormToggleSectionWrapperTemplateOptions<T = any> extends FormExpandableSectionWrapperTemplateOptions<T> {
-  toggleSection?: FormToggleSectionConfig;
-}
-
-export interface FormToggleSectionFormlyConfig<T = any> extends FormlyFieldConfig {
-  templateOptions?: FormToggleSectionWrapperTemplateOptions<T>;
 }
 
 /**
@@ -23,7 +14,7 @@ export interface FormToggleSectionFormlyConfig<T = any> extends FormlyFieldConfi
   template: `
   <div class="form-toggle-wrapper" [ngSwitch]="show$ | async">
     <div class="form-toggle-wrapper-toggle">
-      <mat-slide-toggle [checked]="show$ | async" (toggleChange)="onToggleChange()">{{ $slideLabel | async }}</mat-slide-toggle>
+      <mat-slide-toggle [checked]="show$ | async" (toggleChange)="onToggleChange()">{{ slideLabel$ | async }}</mat-slide-toggle>
     </div>
     <ng-container *ngSwitchCase="true">
       <ng-container #fieldComponent></ng-container>
@@ -31,16 +22,12 @@ export interface FormToggleSectionFormlyConfig<T = any> extends FormlyFieldConfi
   </div>
   `
 })
-export class FormToggleSectionWrapperComponent<T = any> extends AbstractFormExpandableSectionWrapperDirective<T, FormToggleSectionFormlyConfig<T>> {
+export class FormToggleSectionWrapperComponent extends AbstractFormExpandableSectionWrapperDirective<FormToggleSectionConfig> {
 
-  get toggleSection(): Maybe<FormToggleSectionConfig> {
-    return this.to.toggleSection;
-  }
-
-  readonly $slideLabel = this._toggleOpen.pipe(
+  readonly slideLabel$ = this._toggleOpen.pipe(
     switchMap(x => {
-      if (this.toggleSection?.toggleLabelObs) {
-        return this.toggleSection?.toggleLabelObs(x);
+      if (this.expandableSection?.toggleLabelObs) {
+        return this.expandableSection?.toggleLabelObs(x);
       } else {
         return of(this.expandLabel);
       }

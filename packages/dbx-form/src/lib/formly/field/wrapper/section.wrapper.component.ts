@@ -1,22 +1,35 @@
 import { Component } from '@angular/core';
 import { Maybe } from '@dereekb/util';
-import { FieldWrapper } from '@ngx-formly/core';
+import { FieldTypeConfig, FieldWrapper, FormlyFieldConfig, FormlyTemplateOptions } from '@ngx-formly/core';
+
+export interface FormSectionConfig {
+  header?: string;
+  hint?: string;
+}
+
+export interface FormSectionWrapperTemplateOptions extends FormlyTemplateOptions {
+  section?: FormSectionConfig;
+}
+
+export interface FormSectionFormlyConfig extends FormlyFieldConfig {
+  templateOptions?: FormSectionWrapperTemplateOptions;
+}
 
 @Component({
   template: `
-    <div class="form-section">
-      <h3>{{ to.label }}</h3>
-      <div class="form-section-content">
-        <ng-container #fieldComponent></ng-container>
-      </div>
-      <dbx-hint *ngIf="description">{{ description }}</dbx-hint>
-    </div>
+    <dbx-section [header]="header" [hint]="hint">
+      <ng-container #fieldComponent></ng-container>
+    </dbx-section>
   `
 })
-export class FormSectionWrapperComponent extends FieldWrapper {
+export class FormSectionWrapperComponent extends FieldWrapper<FormSectionFormlyConfig & FieldTypeConfig> {
 
-  get description(): Maybe<string> {
-    return this.to.description;
+  get header(): Maybe<string> {
+    return this.to.section?.header;
+  }
+
+  get hint(): Maybe<string> {
+    return this.to.section?.hint;
   }
 
 }

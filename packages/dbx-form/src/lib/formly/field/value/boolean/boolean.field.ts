@@ -1,7 +1,7 @@
 import { FormlyFieldConfig } from '@ngx-formly/core';
-import { FieldConfig, formlyField, DefaultValueFieldConfig, DescriptionFieldConfig } from '../../field';
+import { LabeledFieldConfig, formlyField, DefaultValueFieldConfig, DescriptionFieldConfig } from '../../field';
 
-export interface ToggleFieldConfig extends Omit<FieldConfig, 'placeholder' | 'autocomplete'>, DefaultValueFieldConfig<boolean>, DescriptionFieldConfig { }
+export interface ToggleFieldConfig extends Omit<LabeledFieldConfig, 'placeholder' | 'autocomplete'>, DefaultValueFieldConfig<boolean>, DescriptionFieldConfig { }
 
 export function toggleField({ key, label, description, defaultValue, required, readonly }: ToggleFieldConfig): FormlyFieldConfig {
   return formlyField({
@@ -18,7 +18,7 @@ export function toggleField({ key, label, description, defaultValue, required, r
   });
 }
 
-export interface CheckboxFieldConfig extends FieldConfig, DefaultValueFieldConfig<boolean>, DescriptionFieldConfig { }
+export interface CheckboxFieldConfig extends LabeledFieldConfig, DefaultValueFieldConfig<boolean>, DescriptionFieldConfig { }
 
 export function checkboxField({ key, label = '', placeholder = '', defaultValue, required, readonly, autocomplete }: CheckboxFieldConfig): FormlyFieldConfig {
   return {

@@ -1,7 +1,7 @@
 import { arrayToMap, separateValues } from '@dereekb/util';
 import { Observable, of } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { FieldConfig, formlyField } from '../../field';
+import { LabeledFieldConfig, formlyField } from '../../field';
 import { SearchableValueFieldDisplayFn, SearchableValueFieldDisplayValue, SearchableValueFieldValue } from './searchable';
 import { SearchableChipValueFieldsFieldConfig, SearchableChipValueFieldsFormlyFieldConfig } from './searchable.chip.field.component';
 import { SearchableTextValueFieldsFieldConfig, SearchableTextValueFieldsFormlyFieldConfig } from './searchable.text.field.component';
@@ -44,7 +44,7 @@ export function makeMetaFilterSearchableFieldValueDisplayFn<T = string | number>
   };
 }
 
-export interface SearchableChipFieldConfig<T = any> extends FieldConfig, SearchableChipValueFieldsFieldConfig<T> { }
+export interface SearchableChipFieldConfig<T = any> extends LabeledFieldConfig, SearchableChipValueFieldsFieldConfig<T> { }
 export interface SearchableChipFieldFormlyConfig<T = any> extends Omit<SearchableChipValueFieldsFormlyFieldConfig<T>, 'type'> { }
 
 export function searchableChipField<C extends SearchableChipFieldFormlyConfig<any>>(config: C): C {
@@ -54,7 +54,7 @@ export function searchableChipField<C extends SearchableChipFieldFormlyConfig<an
   });
 }
 
-export interface SearchableTextFieldConfig<T = any> extends FieldConfig, SearchableTextValueFieldsFieldConfig<T> { }
+export interface SearchableTextFieldConfig<T = any> extends LabeledFieldConfig, SearchableTextValueFieldsFieldConfig<T> { }
 export interface SearchableTextFieldFormlyConfig<T = any> extends Omit<SearchableTextValueFieldsFormlyFieldConfig<T>, 'type'> { }
 
 export function searchableTextField<C extends SearchableTextFieldFormlyConfig<any>>(config: C): C {

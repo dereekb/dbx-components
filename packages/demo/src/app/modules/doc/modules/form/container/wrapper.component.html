@@ -2,7 +2,27 @@
   <doc-feature-layout header="" hint="">
 
     <!-- Examples -->
-    <doc-feature-example header="dbx-anchor-icon" hint="">
+    <doc-feature-example header="expandableField()"
+      hint="Creates a field that can be expanded to reveal optional fields.">
+      <dbx-formly [dbxFormlyFields]="expandableField" (dbxFormValueChange)="expandableFieldValue = $event"></dbx-formly>
+      <p>{{ expandableFieldValue | json }}</p>
     </doc-feature-example>
+
+    <doc-feature-example header="toggleField()" hint="Creates a field that can be toggle to hide or reveal fields.">
+      <dbx-formly [dbxFormlyFields]="toggleField" (dbxFormValueChange)="toggleFieldValue = $event"></dbx-formly>
+      <p>{{ toggleFieldValue | json }}</p>
+    </doc-feature-example>
+
+    <doc-feature-example header="sectionField()" hint="Creates a field that can be expanded to reveal optional fields.">
+      <dbx-formly [dbxFormlyFields]="sectionField" (dbxFormValueChange)="sectionFieldValue = $event"></dbx-formly>
+      <p>{{ sectionFieldValue | json }}</p>
+    </doc-feature-example>
+
+    <doc-feature-example header="subsectionField()"
+      hint="Creates a field that can be expanded to reveal optional fields.">
+      <dbx-formly [dbxFormlyFields]="subsectionField" (dbxFormValueChange)="subsectionFieldValue = $event"></dbx-formly>
+      <p>{{ subsectionFieldValue | json }}</p>
+    </doc-feature-example>
+
   </doc-feature-layout>
 </dbx-content-container>

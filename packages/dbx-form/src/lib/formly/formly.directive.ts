@@ -1,5 +1,5 @@
 import { SubscriptionObject, filterMaybe } from '@dereekb/rxjs';
-import { Observable, BehaviorSubject, shareReplay } from 'rxjs';
+import { Observable, BehaviorSubject, shareReplay, distinctUntilChanged } from 'rxjs';
 import { FormlyFieldConfig } from '@ngx-formly/core/lib/core';
 import { OnInit, OnDestroy, Directive, Input } from '@angular/core';
 import { DbxFormlyContext } from './formly.context';
@@ -66,12 +66,15 @@ export abstract class AbstractSyncFormlyFormDirective<T> extends AbstractFormlyF
 @Directive()
 export abstract class AbstractAsyncFormlyFormDirective<T> extends AbstractFormlyFormDirective<T> implements OnInit, OnDestroy {
 
-  abstract readonly fields$: Observable<FormlyFieldConfig[]>;
+  /**
+   * Used to provide fields to the context.
+   */
+  abstract readonly fields$: Observable<Maybe<FormlyFieldConfig[]>>;
 
   private _fieldsSub = new SubscriptionObject();
 
   ngOnInit(): void {
-    this._fieldsSub.subscription = this.fields$.subscribe((fields) => {
+    this._fieldsSub.subscription = this.fields$.pipe(distinctUntilChanged()).subscribe((fields) => {
       this.context.fields = fields;
     });
   }

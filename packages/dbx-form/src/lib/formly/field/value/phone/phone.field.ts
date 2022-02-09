@@ -1,10 +1,10 @@
 import { textField, TextFieldConfig } from '../text/text.field';
 import { FormlyFieldConfig } from '@ngx-formly/core';
-import { FieldConfig, formlyField } from '../../field';
+import { LabeledFieldConfig, formlyField } from '../../field';
 import { flexLayoutWrapper } from '../../wrapper/flex.wrapper.layout';
 import { DbxInternationalPhoneFieldConfig, InternationalPhoneFormlyFieldConfig } from './phone.field.component';
 
-export interface InternationalPhoneFieldConfig extends FieldConfig, DbxInternationalPhoneFieldConfig { }
+export interface InternationalPhoneFieldConfig extends LabeledFieldConfig, DbxInternationalPhoneFieldConfig { }
 
 export function internationalPhoneField({
   key, label = '', placeholder = '',

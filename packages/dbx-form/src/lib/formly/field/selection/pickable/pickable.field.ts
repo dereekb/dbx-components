@@ -1,6 +1,6 @@
 import { Maybe } from '@dereekb/util';
 import { Observable, of } from 'rxjs';
-import { FieldConfig, formlyField } from '../../field';
+import { LabeledFieldConfig, formlyField } from '../../field';
 import { PickableValueFieldDisplayValue } from './pickable';
 import { PickableItemFieldItem, PickableValueFieldsFieldConfig, PickableValueFieldsFormlyFieldConfig } from './pickable.field.directive';
 export { PickableItemFieldItem };
@@ -22,7 +22,7 @@ export function sortPickableItemsByLabel<T>(chips: PickableItemFieldItem<T>[]): 
   return chips.sort((a, b) => a.display.label.localeCompare(b.display.label));
 }
 
-export interface PickableItemFieldConfig<T = any> extends FieldConfig, PickableValueFieldsFieldConfig<T> { }
+export interface PickableItemFieldConfig<T = any> extends LabeledFieldConfig, PickableValueFieldsFieldConfig<T> { }
 export interface PickableItemFieldFormlyConfig<T = any> extends Omit<PickableValueFieldsFormlyFieldConfig<T>, 'type'> { }
 
 export function pickableChipItemField<C extends PickableItemFieldFormlyConfig<any>>(config: C): C {

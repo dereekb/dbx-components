@@ -12,12 +12,13 @@ import { FormExpandableSectionWrapperComponent } from './expandable.wrapper.comp
 import { AutoTouchFieldWrapperComponent } from './autotouch.wrapper.component';
 import { FormToggleSectionWrapperComponent } from './toggle.wrapper.component';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
-import { DbxTextModule } from '@dereekb/dbx-web';
+import { DbxSectionLayoutModule, DbxTextModule } from '@dereekb/dbx-web';
 
 @NgModule({
   imports: [
     CommonModule,
     DbxTextModule,
+    DbxSectionLayoutModule,
     MatButtonModule,
     MatSlideToggleModule,
     MatIconModule,

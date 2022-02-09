@@ -1,7 +1,7 @@
 import { FormlyFieldConfig } from '@ngx-formly/core';
-import { FieldConfig, formlyField } from '../field';
+import { LabeledFieldConfig, formlyField } from '../field';
 
-export interface TextEditorFieldConfig extends FieldConfig {
+export interface TextEditorFieldConfig extends LabeledFieldConfig {
   maxLength?: number;
 }
 

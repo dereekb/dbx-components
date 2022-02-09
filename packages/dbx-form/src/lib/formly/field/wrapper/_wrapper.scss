@@ -4,7 +4,15 @@
 
 
 // MARK: Mixin
-@mixin core() {}
+@mixin core() {
+
+  .form-expandable-section-button {
+    text-decoration: underline;
+    margin-right: 8px;
+    margin-bottom: 6px;
+  }
+
+}
 
 @mixin color($theme-config) {}
 

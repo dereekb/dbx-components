@@ -1,5 +1,11 @@
 import { Component } from '@angular/core';
-import { FormExpandableSectionFormlyConfig, AbstractFormExpandableSectionWrapperDirective } from './expandable.wrapper.delegate';
+import { AbstractFormExpandableSectionWrapperDirective, AbstractFormExpandableSectionConfig } from './expandable.wrapper.delegate';
+
+export type FormExpandableSectionWrapperButtonType = 'button' | 'text';
+
+export interface FormExpandableSectionConfig<T = any> extends AbstractFormExpandableSectionConfig<T> {
+  buttonType: FormExpandableSectionWrapperButtonType;
+}
 
 /**
  * Section that is expandable by a button until a value is set, or the button is pressed.
@@ -16,7 +22,11 @@ import { FormExpandableSectionFormlyConfig, AbstractFormExpandableSectionWrapper
   </ng-container>
   `
 })
-export class FormExpandableSectionWrapperComponent<T = any, F extends FormExpandableSectionFormlyConfig<T> = FormExpandableSectionFormlyConfig<T>>
-  extends AbstractFormExpandableSectionWrapperDirective<T, F> {
+export class FormExpandableSectionWrapperComponent
+  extends AbstractFormExpandableSectionWrapperDirective<FormExpandableSectionConfig> {
+
+  get buttonType(): FormExpandableSectionWrapperButtonType {
+    return this.expandableSection?.buttonType ?? 'button';
+  }
 
 }

@@ -1,8 +1,16 @@
 <dbx-content-container>
-  <doc-feature-layout header="" hint="">
+  <doc-feature-layout header="Values Fields" hint="">
 
     <!-- Examples -->
-    <doc-feature-example header="dbx-anchor-icon" hint="">
+    <doc-feature-example header="textField()" hint="Used to configure a text field.">
+      <p>There are also several helper builders available.</p>
+      <dbx-formly [dbxFormlyFields]="textFields"></dbx-formly>
+    </doc-feature-example>
+    <doc-feature-example header="textAreaField()" hint="Used to configure a text area.">
+      <dbx-formly [dbxFormlyFields]="textAreaField"></dbx-formly>
+    </doc-feature-example>
+    <doc-feature-example header="addressField()" hint="Used to configure an address.">
+      <dbx-formly [dbxFormlyFields]="addressFields"></dbx-formly>
     </doc-feature-example>
   </doc-feature-layout>
 </dbx-content-container>

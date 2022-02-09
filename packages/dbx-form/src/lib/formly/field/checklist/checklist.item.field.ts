@@ -1,7 +1,7 @@
-import { FieldConfig, formlyField } from '../field';
+import { LabeledFieldConfig, formlyField } from '../field';
 import { DbxChecklistItemFieldConfig, ChecklistItemFormlyFieldConfig } from './checklist.item.field.component';
 
-export interface ChecklistItemFieldConfig<T = any> extends FieldConfig, DbxChecklistItemFieldConfig<T> { }
+export interface ChecklistItemFieldConfig<T = any> extends LabeledFieldConfig, DbxChecklistItemFieldConfig<T> { }
 export type ChecklistItemFieldBuilderInput<T = any> = Partial<ChecklistItemFieldConfig<T>> & Pick<ChecklistItemFieldConfig<T>, 'key' | 'displayContentObs'>;
 
 export function checklistItemField<T = any>({

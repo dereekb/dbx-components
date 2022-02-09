@@ -9,6 +9,8 @@ import { DbxPopupInteractionModule, DbxPopoverInteractionModule, DbxScreenModule
 import { AnalyticsServiceConfiguration, SegmentAnalyticsListenerService, SegmentApiService, SegmentApiServiceConfig } from '@dereekb/dbx-analytics';
 import { AppModule } from './app/app.module';
 import { DbxCoreUIRouterSegueModule } from '@dereekb/dbx-core';
+import { FormlyModule } from '@ngx-formly/core';
+import { defaultValidationMessages } from '@dereekb/dbx-form';
 
 export function routerConfigFn(router: UIRouter, injector: Injector, module: StatesModule): any {
   const transitionService = router.transitionService;
@@ -72,6 +74,9 @@ export function makeSegmentConfig(): SegmentApiServiceConfig {
     DbxWebUIRouterModule.forRoot(),
     DbxPopupInteractionModule.forRoot(),
     DbxPopoverInteractionModule.forRoot(),
+    FormlyModule.forRoot({
+      validationMessages: defaultValidationMessages()
+    }),
     UIRouterModule.forRoot({
       useHash: false,
       initial: { state: 'app' },

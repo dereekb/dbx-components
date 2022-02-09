@@ -6,7 +6,6 @@
 export type Maybe<T> = T | null | undefined;
 
 // MARK: Utils
-
 /**
  * Returns true if the value is not null or undefined.
  * 

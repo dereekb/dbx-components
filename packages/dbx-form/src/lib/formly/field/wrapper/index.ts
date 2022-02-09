@@ -8,4 +8,4 @@ export * from './info.wrapper.component';
 export * from './section.wrapper.component';
 export * from './subsection.wrapper.component';
 export * from './toggle.wrapper.component';
-export * from './toggle.wrapper';
+export * from './wrapper';

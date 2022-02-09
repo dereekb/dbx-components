@@ -1,6 +1,8 @@
 import { FormlyFieldConfig } from '@ngx-formly/core';
-import { cityField, countryField, stateField, textField, zipCodeField } from './text.field';
+import { textField } from './text.field';
+import { cityField, countryField, stateField, zipCodeField } from './text.additional.field';
 import { flexLayoutWrapper } from '../../wrapper/flex.wrapper.layout';
+import { FieldConfig, LabeledFieldConfig } from '../../field';
 
 export const ADDRESS_LINE_MAX_LENGTH = 100;
 
@@ -34,7 +36,9 @@ export function addressFormlyFields(): FormlyFieldConfig[] {
   ];
 }
 
-export function addressField({ key = 'address', required = false }): FormlyFieldConfig {
+export interface AddressFieldConfig extends FieldConfig { }
+
+export function addressField({ key = 'address', required = false }: Partial<AddressFieldConfig> = {}): FormlyFieldConfig {
   return {
     key,
     wrappers: ['section'],
@@ -47,7 +51,11 @@ export function addressField({ key = 'address', required = false }): FormlyField
   };
 }
 
-export function addressListField({ key = 'addresses', required = false, maxAddresses = 6 }): FormlyFieldConfig {
+export interface AddressListFieldConfig extends FieldConfig {
+  maxAddresses?: number;
+}
+
+export function addressListField({ key = 'addresses', required = false, maxAddresses = 6 }: Partial<AddressListFieldConfig> = {}): FormlyFieldConfig {
   return {
     key,
     type: 'repeat',

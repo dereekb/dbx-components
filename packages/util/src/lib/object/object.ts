@@ -1,4 +1,6 @@
+import { isNotEmptyObject } from "class-validator";
 import { FieldOfType } from "../key";
+import { hasValueOrNotEmpty, Maybe } from "../value";
 
 export function objectHasKey<T, K extends keyof T = keyof T>(obj: T, key: K): boolean;
 export function objectHasKey<T>(obj: T, key: string): boolean;
@@ -47,4 +49,31 @@ export function removeUndefinedFromPOJO<T extends object = object>(obj: T, copy?
   });
 
   return obj;
+}
+
+/**
+ * Recursively function that returns true if the input is not an object or if every key on the object is empty.
+ * 
+ * @param obj 
+ */
+export function objectIsEmpty<T extends object>(obj: Maybe<T>): boolean {
+  if (obj != null && typeof obj === 'object') {
+    const keys = Object.keys(obj);
+
+    if (keys.length > 0) {
+      for (let i = 0; i < keys.length; i += 1) {
+        const key = keys[i];
+        const value = (obj as any)[key];
+
+        const isEmpty = (typeof obj === 'object') ? objectIsEmpty(value) : !hasValueOrNotEmpty(value);
+
+        if (!isEmpty) {
+          return false;
+        }
+      }
+    }
+
+  }
+
+  return true;
 }

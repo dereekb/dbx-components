@@ -1,9 +1,7 @@
-import { distinctUntilChanged, map, throttleTime } from 'rxjs/operators';
-import { Component, NgZone, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { FormlyFieldConfig, FormlyFormOptions } from '@ngx-formly/core';
-import { BehaviorSubject, Observable, Subject, switchMap, shareReplay, of } from 'rxjs';
-import { startWith } from 'rxjs/operators';
+import { distinctUntilChanged, map, throttleTime, startWith, BehaviorSubject, Observable, Subject, switchMap, shareReplay, of } from 'rxjs';
 import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
 import { DbxFormEvent, DbxFormState } from '../form/form';
 import { DbxFormlyContext, DbxFormlyContextDelegate, DbxFormlyInitialize } from './formly.context';
@@ -11,6 +9,9 @@ import { cloneDeep } from 'lodash';
 import { scanCount, switchMapMaybeObs } from '@dereekb/rxjs';
 import { Maybe } from '@dereekb/util';
 
+/**
+ * Used for rending a form from a DbxFormlyContext.
+ */
 @Component({
   selector: 'dbx-formly',
   exportAs: 'formly',
@@ -18,9 +19,12 @@ import { Maybe } from '@dereekb/util';
     <form [formGroup]="form" class="dbx-formly">
       <formly-form [form]="form" [fields]="(fields$ | async) ?? []" [model]="model"></formly-form>
     </form>
-  `
+  `,
+  host: {
+    'class': 'dbx-formly'
+  }
 })
-export class DbxFormlyComponent<T extends object> extends AbstractSubscriptionDirective implements DbxFormlyContextDelegate<T>, OnInit, OnDestroy {
+export class DbxFormlyFormComponent<T extends object> extends AbstractSubscriptionDirective implements DbxFormlyContextDelegate<T>, OnInit, OnDestroy {
 
   private _fields = new BehaviorSubject<Maybe<Observable<FormlyFieldConfig[]>>>(undefined);
   private _events = new BehaviorSubject<DbxFormEvent>({ isComplete: false, state: DbxFormState.INITIALIZING });
@@ -60,7 +64,7 @@ export class DbxFormlyComponent<T extends object> extends AbstractSubscriptionDi
     shareReplay(1)
   );
 
-  constructor(private readonly context: DbxFormlyContext<T>, private readonly ngZone: NgZone) {
+  constructor(private readonly context: DbxFormlyContext<T>) {
     super();
   }
 

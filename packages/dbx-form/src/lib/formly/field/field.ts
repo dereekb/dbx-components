@@ -2,6 +2,12 @@ import { FormlyFieldConfig } from '@ngx-formly/core';
 
 export interface FieldConfig {
   key: string;
+  required?: boolean;
+  readonly?: boolean;
+}
+
+export interface LabeledFieldConfig extends FieldConfig {
+  key: string;
   label?: string;
   placeholder?: string;
   required?: boolean;
