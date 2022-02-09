@@ -1,15 +1,15 @@
 import { forwardRef, Provider, Type } from '@angular/core';
 import { Observable } from 'rxjs';
 import { LockSet } from '@dereekb/rxjs';
+import { Maybe } from '@dereekb/util';
 
 /**
  * Current state of a DbxForm
  */
 export enum DbxFormState {
   INITIALIZING = -1,
-  INCOMPLETE = 0,
-  COMPLETE = 1,
-  RESET = 2
+  RESET = 0,
+  USED = 1
 }
 
 /**
@@ -22,35 +22,47 @@ export interface DbxFormEvent {
   readonly untouched?: boolean;
   readonly lastResetAt?: Date;
   readonly changesCount?: number;
+  readonly isDisabled?: boolean;
 }
 
 /**
  * Form that has an event stream, value, and state items.
  */
-export abstract class DbxForm {
+export abstract class DbxForm<T = any> {
   /**
    * LockSet for the form.
    */
   abstract readonly lockSet: LockSet;
-  /**
-   * True if the form is complete/valid.
-   */
-  abstract readonly isComplete: boolean;
-  abstract readonly state: DbxFormState;
   abstract readonly stream$: Observable<DbxFormEvent>;
-  abstract readonly value: any;
-  abstract setValue(value: any): void;
-  abstract resetForm(): void;
-  abstract forceFormUpdate(): void;
-}
 
-/**
- * A typed DbxForm
- */
-export interface TypedDbxForm<T> extends DbxForm {
-  readonly value: T;
-  setValue(value: T): void;
-  resetForm(): void;
+  /**
+   * Returns an observable that returns the current state of the form.
+   */
+  abstract getValue(): Observable<T>;
+
+  /**
+   * Sets the initial value of the form, and resets the form.
+   * 
+   * @param value 
+   */
+  abstract setValue(value: Maybe<Partial<T>>): void;
+
+  /**
+   * Resets the form to the initial value.
+   */
+  abstract resetForm(): void;
+
+  /**
+   * Sets the form's disabled state.
+   * 
+   * @param disabled 
+   */
+  abstract setDisabled(disabled?: boolean): void;
+
+  /**
+   * Force the form to update itself as if it was changed.
+   */
+  abstract forceFormUpdate(): void;
 }
 
 export function ProvideDbxForm<S extends DbxForm>(sourceType: Type<S>): Provider[] {

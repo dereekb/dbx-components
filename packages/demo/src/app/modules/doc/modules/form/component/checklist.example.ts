@@ -59,7 +59,7 @@ export function docFormExampleChecklistFields({ dataObs, display }: DocFormExamp
   return b.build();
 }
 
-export function docFormExampleChecklistFieldsSection({ key = '', config }: { key?: string, config: DocFormExampleChecklistFieldsConfig }): FormlyFieldConfig {
+export function docFormExampleChecklistFieldsSection({ key = undefined, config }: { key?: string, config: DocFormExampleChecklistFieldsConfig }): FormlyFieldConfig {
   const fields = docFormExampleChecklistFields(config).map(field => ({ field }));
 
   return {

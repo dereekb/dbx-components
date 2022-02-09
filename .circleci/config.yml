@@ -33,7 +33,7 @@ jobs:
       # initialize nx
       - nx/set-shas
       # build content
-      - run: npx nx affected --base=$NX_BASE --target=build --parallel --max-parallel=2 --exclude=dbx-form
+      - run: npx nx affected --base=$NX_BASE --target=build --parallel --max-parallel=2
       - run: npx nx affected --base=$NX_BASE --target=build-for-npm --parallel --max-parallel=2
       # prune node_modules
       - run: npx clean-modules --yes --exclude "**/firebase*/**"
@@ -65,6 +65,9 @@ jobs:
       - run:
           name: run dbx-web tests
           command: npx nx test dbx-web
+      - run:
+          name: run dbx-form tests
+          command: npx nx test dbx-form
       - store_test_results:
           path: ~/code/.reports/jest/
   # Runs tests for the projects that require the firebase emulators.

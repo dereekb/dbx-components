@@ -5,7 +5,7 @@ import { ActionContextStoreSourceInstance } from '../../action.store.source';
 import { DbxActionContextMapDirective } from './action.map.directive';
 import { ActionDisabledKey } from '../../action';
 
-export const DEFAULT_ACTION_MAP_WORKING_DISABLED_KEY = '';
+export const DEFAULT_ACTION_MAP_WORKING_DISABLED_KEY = '__disabled';
 
 /**
  * Used to communicate with an dbxActionMap and set the ActionContextStore to be disabled if any other element in the map is working.

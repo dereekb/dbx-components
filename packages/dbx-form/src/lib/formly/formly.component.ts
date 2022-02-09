@@ -1,34 +1,64 @@
-import { distinctUntilChanged } from 'rxjs/operators';
+import { distinctUntilChanged, map, throttleTime } from 'rxjs/operators';
 import { Component, NgZone, OnDestroy, OnInit } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { FormlyFieldConfig, FormlyFormOptions } from '@ngx-formly/core';
-import { BehaviorSubject, Observable } from 'rxjs';
-import { debounceTime, startWith } from 'rxjs/operators';
+import { BehaviorSubject, Observable, Subject, switchMap, shareReplay, of } from 'rxjs';
+import { startWith } from 'rxjs/operators';
 import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
 import { DbxFormEvent, DbxFormState } from '../form/form';
-import { DbxFormlyContext, DbxFormlyContextDelegate } from './formly.context';
+import { DbxFormlyContext, DbxFormlyContextDelegate, DbxFormlyInitialize } from './formly.context';
 import { cloneDeep } from 'lodash';
+import { scanCount, switchMapMaybeObs } from '@dereekb/rxjs';
+import { Maybe } from '@dereekb/util';
 
 @Component({
   selector: 'dbx-formly',
   exportAs: 'formly',
   template: `
     <form [formGroup]="form" class="dbx-formly">
-      <formly-form [form]="form" [fields]="fields" [model]="model"></formly-form>
+      <formly-form [form]="form" [fields]="(fields$ | async) ?? []" [model]="model"></formly-form>
     </form>
   `
 })
 export class DbxFormlyComponent<T extends object> extends AbstractSubscriptionDirective implements DbxFormlyContextDelegate<T>, OnInit, OnDestroy {
 
-  private _changesCount = 0;
-  private _lastResetAt?: Date;
-
-  private _fields: FormlyFieldConfig[] = [];
+  private _fields = new BehaviorSubject<Maybe<Observable<FormlyFieldConfig[]>>>(undefined);
   private _events = new BehaviorSubject<DbxFormEvent>({ isComplete: false, state: DbxFormState.INITIALIZING });
+
+  private _reset = new BehaviorSubject<Date>(new Date());
+  private _forceUpdate = new Subject<void>();
 
   form = new FormGroup({});
   model: any = {};
   options: FormlyFormOptions = {};
+
+  readonly fields$ = this._fields.pipe(switchMapMaybeObs(), distinctUntilChanged(), shareReplay(1));
+
+  readonly stream$: Observable<DbxFormEvent> = this._reset.pipe(
+    switchMap((lastResetAt) => this.form.valueChanges.pipe(
+      startWith(0),
+      distinctUntilChanged(),
+      throttleTime(50, undefined, { leading: true, trailing: true }),
+      scanCount(),
+      map((changesSinceLastResetCount: number) => {
+        const isReset = changesSinceLastResetCount === 1;
+        const complete = this.form.valid;
+
+        const nextState: DbxFormEvent = {
+          isComplete: complete,
+          state: (isReset) ? DbxFormState.RESET : DbxFormState.USED,
+          untouched: this.form.untouched,
+          pristine: this.form.pristine,
+          changesCount: changesSinceLastResetCount,
+          lastResetAt,
+          isDisabled: this.disabled
+        };
+
+        return nextState;
+      })
+    )),
+    shareReplay(1)
+  );
 
   constructor(private readonly context: DbxFormlyContext<T>, private readonly ngZone: NgZone) {
     super();
@@ -36,11 +66,6 @@ export class DbxFormlyComponent<T extends object> extends AbstractSubscriptionDi
 
   ngOnInit(): void {
     this.context.setDelegate(this);
-    this.sub = this.form.valueChanges.pipe(
-      startWith(this.form.value),
-      distinctUntilChanged(),
-      debounceTime(50),
-    ).subscribe((_) => this._updateForChange());
   }
 
   override ngOnDestroy(): void {
@@ -48,42 +73,23 @@ export class DbxFormlyComponent<T extends object> extends AbstractSubscriptionDi
       super.ngOnDestroy();
       this.context.clearDelegate(this);
       this._events.complete();
+      this._fields.complete();
+      this._reset.complete();
+      this._forceUpdate.complete();
     });
   }
 
-  get fields(): FormlyFieldConfig[] {
-    return this._fields;
-  }
-
   // MARK: Delegate
-  get isComplete(): boolean {
-    return this._events.value.isComplete;
+  init(initialize: DbxFormlyInitialize<T>): void {
+    this._fields.next(initialize.fields);
   }
 
-  get state(): DbxFormState {
-    return this._events.value.state;
-  }
-
-  get stream$(): Observable<DbxFormEvent> {
-    return this._events.asObservable();
-  }
-
-  setFields(fields: FormlyFieldConfig[]): void {
-    this._fields = fields;
-  }
-
-  getValue(): T {
-    return this.form.value; // this.model
+  getValue(): Observable<T> {
+    return of(this.form.value);
   }
 
   setValue(value: T): void {
-    /*
-    if (value === this.model) {
-      return; // Ignore the same value being set.
-    }
-    */
     // console.log('set value: ', value);
-
     this.model = cloneDeep(value) as T;
 
     if (this.options.updateInitialValue) {
@@ -94,8 +100,6 @@ export class DbxFormlyComponent<T extends object> extends AbstractSubscriptionDi
     // Re-mark as untouched and pristine.
     this.form.markAsUntouched();
     this.form.markAsPristine();
-    this._lastResetAt = new Date();
-    this._changesCount = 0;
 
     // After updating the value, if the form is still untouched mark it as pristine again.
     // Sometimes the values get marked as changed and break pristine before a user has time to interact.
@@ -112,39 +116,23 @@ export class DbxFormlyComponent<T extends object> extends AbstractSubscriptionDi
     }
   }
 
-  isDisabled(): boolean {
+  get disabled(): boolean {
     return this.form.disabled;
   }
 
   setDisabled(disabled = true): void {
-    // console.log('setting disabled: ', disabled);
-    if (disabled) {
-      this.form.disable();
-    } else {
-      this.form.enable();
+    if (disabled !== this.disabled) {
+      if (disabled) {
+        this.form.disable({ emitEvent: true });
+      } else {
+        this.form.enable({ emitEvent: true });
+      }
     }
   }
 
   // MARK: Update
   forceFormUpdate(): void {
-    this._updateForChange();
-  }
-
-  private _updateForChange(): void {
-    const complete = this.form.valid;
-
-    this._changesCount += 1;
-
-    const nextState: DbxFormEvent = {
-      isComplete: complete,
-      state: (complete) ? DbxFormState.COMPLETE : DbxFormState.INCOMPLETE,
-      untouched: this.form.untouched,
-      pristine: this.form.pristine,
-      changesCount: this._changesCount,
-      lastResetAt: this._lastResetAt
-    };
-
-    this._events.next(nextState);
+    this._forceUpdate.next();
   }
 
 }

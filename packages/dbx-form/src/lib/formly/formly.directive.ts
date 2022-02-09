@@ -27,12 +27,16 @@ export abstract class AbstractFormlyFormDirective<T> implements OnDestroy {
   }
 
   // Utility Functions
-  getValue(): T {
-    return this.context.value;
+  getValue(): Observable<T> {
+    return this.context.getValue();
   }
 
   setValue(value: Partial<T>): void {
     this.context.setValue(value);
+  }
+
+  resetForm(): void {
+    this.context.resetForm();
   }
 
   clearValue(): void {

@@ -1,5 +1,6 @@
 import { Directive, EventEmitter, Host, Output, OnInit } from '@angular/core';
 import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
+import { filter, first, mergeMap, delay } from 'rxjs';
 import { DbxForm } from '../form';
 
 /**
@@ -18,8 +19,12 @@ export class DbxFormValueChangesDirective<T extends object = any> extends Abstra
   }
 
   ngOnInit(): void {
-    this.sub = this.form.stream$.subscribe((x) => {
-      this.dbxFormValueChange.next(this.form.value);
+    this.sub = this.form.stream$.pipe(
+      filter(x => x.isComplete),
+      mergeMap(() => this.form.getValue().pipe(first())),
+      delay(0)
+    ).subscribe((value) => {
+      this.dbxFormValueChange.next(value);
     });
   }
 

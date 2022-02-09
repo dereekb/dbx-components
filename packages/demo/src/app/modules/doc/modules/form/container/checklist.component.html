@@ -4,13 +4,8 @@
 
     <!-- Examples -->
     <doc-feature-example header="Example" hint="">
-      <dbx-action [dbxActionHandler]="updateChecklist" dbxActionAutoTrigger [fastTrigger]="true"
-        dbxActionTransitionSafety dbxActionSnackbar snackbarDefault="save">
-        <dbx-error dbxActionError></dbx-error>
-        <dbx-form-example-checklist-form dbxActionForm dbxActionFormSafety="auto"
-          [dbxFormLoadingSource]="dataLoadingState$" [config]="config">
-        </dbx-form-example-checklist-form>
-      </dbx-action>
+      <dbx-form-example-checklist-form (dbxFormValueChange)="value = $event" [dbxFormLoadingSource]="dataLoadingState$"
+        [config]="config"></dbx-form-example-checklist-form>
       <p>Value: {{ value | json }}</p>
     </doc-feature-example>
   </doc-feature-layout>
