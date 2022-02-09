@@ -1,7 +1,7 @@
-import { Observable, of, delay, map, startWith } from 'rxjs';
+import { Observable, of, map } from 'rxjs';
 import { Component } from '@angular/core';
 import { DocFormExampleChecklistValues, DocFormExampleChecklistFieldsConfig } from '../component/checklist.example';
-import { beginLoading, successResult } from '@dereekb/rxjs';
+import { successResult } from '@dereekb/rxjs';
 import { DocFormExampleChecklistFormValue } from '../component/checklist.example.form.component';
 
 @Component({
@@ -22,7 +22,7 @@ export class DocFormChecklistComponent {
     itemA: true
   });
 
-  readonly dataLoadingState$ = this.dataChecklist$.pipe(map(x => successResult(x)), delay(1000), startWith(beginLoading()));
+  readonly dataLoadingState$ = this.dataChecklist$.pipe(map(x => successResult(x)));
 
   readonly config: DocFormExampleChecklistFieldsConfig = {
     dataObs: this.data$

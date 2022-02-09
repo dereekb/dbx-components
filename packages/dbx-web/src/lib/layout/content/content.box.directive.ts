@@ -6,7 +6,7 @@ import { Directive, Input } from '@angular/core';
 @Directive({
   selector: 'dbx-content-box, [dbx-content-box]',
   host: {
-    'class': 'dbx-content-box',
+    'class': 'd-block dbx-content-box',
     '[class.dbx-content-elevate]': 'elevated'
   }
 })

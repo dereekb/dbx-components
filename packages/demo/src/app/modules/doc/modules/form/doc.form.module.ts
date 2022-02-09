@@ -11,6 +11,7 @@ import { DocFormLayoutComponent } from './container/layout.component';
 import { STATES } from './doc.form.router';
 import { DocFormValueComponent } from './container/value.component';
 import { DocFormExampleChecklistFormComponent } from './component/checklist.example.form.component';
+import { DocFormExampleComponentFormComponent, DocFormExampleComponentFormTestViewAComponent, DocFormExampleComponentFormTestViewBComponent } from './component/component.example.form.component';
 
 @NgModule({
   imports: [
@@ -22,6 +23,9 @@ import { DocFormExampleChecklistFormComponent } from './component/checklist.exam
   declarations: [
     // component
     DocFormExampleChecklistFormComponent,
+    DocFormExampleComponentFormComponent,
+    DocFormExampleComponentFormTestViewAComponent,
+    DocFormExampleComponentFormTestViewBComponent,
     // container
     DocFormLayoutComponent,
     DocFormHomeComponent,

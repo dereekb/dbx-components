@@ -1,9 +1,16 @@
 <dbx-content-container>
-  <doc-feature-layout header="" hint="">
+  <doc-feature-layout header="Component Field"
+    hint="The component field is used to inject an arbitrary component into a form.">
 
     <!-- Examples -->
-    <doc-feature-example header="checklistitem" hint="">
-
+    <doc-feature-example header="component" hint="">
+      <dbx-bar>
+        <button mat-raised-button (click)="showA()">Show A</button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <button mat-raised-button (click)="showB()">Show B</button>
+        <dbx-spacer></dbx-spacer>
+      </dbx-bar>
+      <dbx-form-example-component-form [config]="config"></dbx-form-example-component-form>
     </doc-feature-example>
   </doc-feature-layout>
 </dbx-content-container>
