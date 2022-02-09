@@ -1,10 +1,8 @@
 import { Component } from '@angular/core';
 import { Maybe } from '@dereekb/util';
 import { FormlyFieldConfig } from '@ngx-formly/core';
-import { Observable } from 'rxjs';
-import { of } from 'rxjs';
-import { first, shareReplay, switchMap } from 'rxjs/operators';
-import { AbstractFormExpandableSectionWrapperDirective, FormExpandableSectionWrapperTemplateOptions } from './expandable.wrapper.component';
+import { first, shareReplay, switchMap, Observable, of } from 'rxjs';
+import { AbstractFormExpandableSectionWrapperDirective, FormExpandableSectionWrapperTemplateOptions } from './expandable.wrapper.delegate';
 
 export interface FormToggleSectionConfig {
   toggleLabelObs?: (open: Maybe<boolean>) => Observable<string>;

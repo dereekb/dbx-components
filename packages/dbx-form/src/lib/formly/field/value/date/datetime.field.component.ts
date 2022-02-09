@@ -5,7 +5,7 @@ import {
   Component, OnDestroy, OnInit
 } from '@angular/core';
 import { AbstractControl, FormControl, Validators, FormGroup } from '@angular/forms';
-import { FieldType, FormlyFieldConfig } from '@ngx-formly/core';
+import { FieldType, FieldTypeConfig, FormlyFieldConfig } from '@ngx-formly/core';
 import { BehaviorSubject, Observable, combineLatest, Subject, merge, interval } from 'rxjs';
 import { Maybe, ReadableTimeString } from '@dereekb/util';
 import { MatDatepickerInputEvent } from '@angular/material/datepicker';
@@ -75,7 +75,7 @@ export interface DateTimeFormlyFieldConfig extends DbxDateTimeFieldConfig, Forml
   templateUrl: 'datetime.field.component.html',
   // TODO: styleUrls: ['./date.scss']
 })
-export class DbxDateTimeFieldComponent extends FieldType<DateTimeFormlyFieldConfig> implements OnInit, OnDestroy {
+export class DbxDateTimeFieldComponent extends FieldType<DateTimeFormlyFieldConfig & FieldTypeConfig> implements OnInit, OnDestroy {
 
   private _sub = new SubscriptionObject();
   private _valueSub = new SubscriptionObject();

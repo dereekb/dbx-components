@@ -4,7 +4,7 @@ import { convertMaybeToArray, findUnique, groupValues, makeValuesGroupMap, Maybe
 import { Component, Directive, ElementRef, OnDestroy, OnInit, Type, ViewChild } from "@angular/core";
 import { FormControl, AbstractControl } from "@angular/forms";
 import { MatInput } from "@angular/material/input";
-import { FieldType, FormlyFieldConfig } from "@ngx-formly/core";
+import { FieldType, FieldTypeConfig, FormlyFieldConfig } from "@ngx-formly/core";
 import { BehaviorSubject, combineLatest, Observable, of } from "rxjs";
 import { filter, map, debounceTime, distinctUntilChanged, switchMap, startWith, shareReplay, mergeMap, first, tap, delay } from "rxjs/operators";
 import { PickableValueFieldDisplayFn, PickableValueFieldDisplayValue, PickableValueFieldFilterFn, PickableValueFieldHashFn, PickableValueFieldLoadValuesFn, PickableValueFieldValue } from "./pickable";
@@ -93,7 +93,7 @@ export interface PickableValueFieldDisplayValueWithHash<T, M = any> extends Pick
  * Used for picking pre-set values using items as the presentation.
  */
 @Directive()
-export class AbstractDbxPickableItemFieldDirective<T> extends FieldType<PickableValueFieldsFormlyFieldConfig<T>> implements OnInit, OnDestroy {
+export class AbstractDbxPickableItemFieldDirective<T> extends FieldType<PickableValueFieldsFormlyFieldConfig<T> & FieldTypeConfig> implements OnInit, OnDestroy {
 
   @ViewChild('filterMatInput', { static: true })
   filterMatInput!: MatInput;

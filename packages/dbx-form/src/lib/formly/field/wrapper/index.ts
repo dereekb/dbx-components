@@ -1,3 +1,4 @@
+export * from './expandable.wrapper.delegate';
 export * from './autotouch.wrapper.component';
 export * from './expandable.wrapper.component';
 export * from './flex.wrapper.component';

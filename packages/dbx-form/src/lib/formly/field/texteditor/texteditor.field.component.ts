@@ -1,7 +1,8 @@
 import { CompactContextStore, mapCompactModeObs } from '@dereekb/dbx-web';
 import {
-  Component, OnDestroy, OnInit, Optional} from '@angular/core';
-import { FieldType, FormlyFieldConfig } from '@ngx-formly/core';
+  Component, OnDestroy, OnInit, Optional
+} from '@angular/core';
+import { FieldType, FieldTypeConfig, FormlyFieldConfig } from '@ngx-formly/core';
 import { Editor } from 'ngx-editor';
 import { debounceTime, filter } from 'rxjs/operators';
 import { SubscriptionObject } from '@dereekb/rxjs';
@@ -24,7 +25,7 @@ export interface TextEditorComponentFieldConfig extends FormlyFieldConfig {
     </div>
   `
 })
-export class TextEditorFieldComponent<T extends TextEditorComponentFieldConfig = TextEditorComponentFieldConfig> extends FieldType<T> implements OnInit, OnDestroy {
+export class TextEditorFieldComponent<T extends TextEditorComponentFieldConfig = TextEditorComponentFieldConfig> extends FieldType<T & FieldTypeConfig> implements OnInit, OnDestroy {
 
   private _editor?: Editor;
   private _sub = new SubscriptionObject();

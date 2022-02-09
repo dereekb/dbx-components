@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FieldWrapper } from '@ngx-formly/core';
+import { FieldTypeConfig, FieldWrapper } from '@ngx-formly/core';
 import { delay } from 'rxjs/operators';
 
 
@@ -9,7 +9,7 @@ import { delay } from 'rxjs/operators';
 @Component({
   template: `<ng-container #fieldComponent></ng-container>`
 })
-export class AutoTouchFieldWrapperComponent extends FieldWrapper implements OnInit {
+export class AutoTouchFieldWrapperComponent extends FieldWrapper<FieldTypeConfig> implements OnInit {
 
   ngOnInit(): void {
     this.formControl.valueChanges.pipe(delay(200)).subscribe(() => {

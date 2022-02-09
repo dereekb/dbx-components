@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { ValidationErrors, FormGroup } from '@angular/forms';
-import { FieldType, FormlyFieldConfig } from '@ngx-formly/core';
+import { FieldType, FieldTypeConfig, FormlyFieldConfig } from '@ngx-formly/core';
 import { Maybe } from '@dereekb/util';
 
 export interface DbxInternationalPhoneFieldConfig {
@@ -15,7 +15,7 @@ export const DEFAULT_PREFERRED_COUNTRIES = ['us'];
 @Component({
   templateUrl: 'phone.field.component.html'
 })
-export class DbxInternationalPhoneFieldComponent extends FieldType<InternationalPhoneFormlyFieldConfig> {
+export class DbxInternationalPhoneFieldComponent extends FieldType<InternationalPhoneFormlyFieldConfig & FieldTypeConfig> {
 
   get fieldInputKey(): string {
     return this.key as string;

@@ -1,7 +1,7 @@
 import { filterMaybe, SubscriptionObject, beginLoading, LoadingState, LoadingStateContextInstance } from '@dereekb/rxjs';
 import { Directive, ElementRef, OnDestroy, OnInit, Type, ViewChild } from '@angular/core';
 import { AbstractControl, FormControl, ValidatorFn } from '@angular/forms';
-import { FieldType, FormlyFieldConfig } from '@ngx-formly/core';
+import { FieldType, FieldTypeConfig, FormlyFieldConfig } from '@ngx-formly/core';
 import { debounceTime, distinctUntilChanged, filter, first, map, mergeMap, shareReplay, startWith, switchMap, BehaviorSubject, of, Observable } from 'rxjs';
 import {
   SearchableValueFieldHashFn, SearchableValueFieldStringSearchFn,
@@ -78,7 +78,7 @@ export interface SearchableValueFieldsFormlyFieldConfig<T> extends SearchableVal
  */
 @Directive()
 export abstract class AbstractDbxSearchableValueFieldDirective<T, C extends SearchableValueFieldsFormlyFieldConfig<T>>
-  extends FieldType<C> implements OnInit, OnDestroy {
+  extends FieldType<C & FieldTypeConfig> implements OnInit, OnDestroy {
 
   /**
    * Whether or not to set/get values as an array.

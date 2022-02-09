@@ -5,7 +5,7 @@ import {
   Component, ComponentFactoryResolver, NgZone, OnDestroy, OnInit, Type, ViewChild, ViewContainerRef
 } from '@angular/core';
 import { ValidationErrors, FormGroup } from '@angular/forms';
-import { FieldType, FormlyFieldConfig } from '@ngx-formly/core';
+import { FieldType, FieldTypeConfig, FormlyFieldConfig } from '@ngx-formly/core';
 import { ChecklistItemFieldDisplayComponent, ChecklistItemFieldDisplayContentObs } from './checklist.item';
 import { DbxDefaultChecklistItemFieldDisplayComponent } from './checklist.item.field.content.default.component';
 import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
@@ -27,7 +27,7 @@ export interface ChecklistItemFormlyFieldConfig<T = any> extends DbxChecklistIte
 @Component({
   templateUrl: 'checklist.item.field.component.html'
 })
-export class DbxChecklistItemFieldComponent<T = any> extends FieldType<ChecklistItemFormlyFieldConfig<T>> implements OnInit, OnDestroy {
+export class DbxChecklistItemFieldComponent<T = any> extends FieldType<ChecklistItemFormlyFieldConfig<T> & FieldTypeConfig> implements OnInit, OnDestroy {
 
   private _displayContent = new BehaviorSubject<Maybe<ChecklistItemFieldDisplayContentObs<T>>>(undefined);
 
