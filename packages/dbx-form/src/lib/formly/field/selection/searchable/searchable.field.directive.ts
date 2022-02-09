@@ -2,8 +2,7 @@ import { filterMaybe, SubscriptionObject, beginLoading, LoadingState, LoadingSta
 import { Directive, ElementRef, OnDestroy, OnInit, Type, ViewChild } from '@angular/core';
 import { AbstractControl, FormControl, ValidatorFn } from '@angular/forms';
 import { FieldType, FormlyFieldConfig } from '@ngx-formly/core';
-import { BehaviorSubject, of, Observable } from 'rxjs';
-import { debounceTime, distinctUntilChanged, filter, first, map, mergeMap, shareReplay, startWith, switchMap } from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged, filter, first, map, mergeMap, shareReplay, startWith, switchMap, BehaviorSubject, of, Observable } from 'rxjs';
 import {
   SearchableValueFieldHashFn, SearchableValueFieldStringSearchFn,
   SearchableValueFieldDisplayFn, SearchableValueFieldDisplayValue, SearchableValueFieldValue, SearchableFieldDisplayComponent, SearchableValueFieldAnchorFn
@@ -169,8 +168,8 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, C extends Sear
     return (this.field.templateOptions?.attributes?.['autocomplete'] as any) ?? this.key as string;
   }
 
-  get placeholder(): Maybe<string> {
-    return this.field.templateOptions?.placeholder;
+  get placeholder(): string {
+    return this.field.templateOptions?.placeholder ?? '';
   }
 
   get description(): Maybe<string> {

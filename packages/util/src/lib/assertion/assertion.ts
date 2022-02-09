@@ -36,7 +36,7 @@ export class PropertyDescriptorUtility {
       return function (this: any, value: T) {
         if (assertValueFn(value)) {
           const mappedValue = map(value);
-          setValue.call(this, mappedValue); // TODO: "this" may not be necessary here, if setValue is expected to always be an arrow function.
+          setValue.call(this, mappedValue);
         } else {
           const error: AssertionIssue = { target, propertyKey, options };
           ASSERTION_HANDLER.handle(error);

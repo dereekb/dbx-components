@@ -2,7 +2,7 @@ import { Component, Input, OnInit, ViewChild, ViewContainerRef } from '@angular/
 import { SearchableFieldDisplayComponent, SearchableValueFieldDisplayValue } from './searchable';
 
 @Component({
-  selector: 'dbx-searchable-field-autocomplete-item-component',
+  selector: 'dbx-searchable-field-autocomplete-item',
   template: `
     <ng-template #content></ng-template>
   `
@@ -40,13 +40,13 @@ export class DbxSearchableFieldAutocompleteItemComponent<T> implements OnInit {
 export class DbxDefaultSearchableFieldDisplayComponent<T> implements SearchableFieldDisplayComponent<T> {
 
   @Input()
-  displayValue?: SearchableValueFieldDisplayValue<T>;
+  displayValue!: SearchableValueFieldDisplayValue<T>;
 
 }
 
 @Component({
   template: `
-    <dbx-anchor [block]="true" [anchor]="displayValue.anchor">
+    <dbx-anchor [block]="true" [anchor]="displayValue?.anchor">
       <dbx-default-searchable-field-display [displayValue]="displayValue"></dbx-default-searchable-field-display>
     </dbx-anchor>
   `
@@ -54,6 +54,6 @@ export class DbxDefaultSearchableFieldDisplayComponent<T> implements SearchableF
 export class DbxDefaultSearchableAnchorFieldDisplayComponent<T> implements SearchableFieldDisplayComponent<T> {
 
   @Input()
-  displayValue?: SearchableValueFieldDisplayValue<T>;
+  displayValue!: SearchableValueFieldDisplayValue<T>;
 
 }

@@ -50,6 +50,9 @@ import { DbxAnchorModule, DbxTextModule, DbxLoadingModule, DbxButtonModule } fro
     DbxDefaultSearchableFieldDisplayComponent,
     DbxDefaultSearchableAnchorFieldDisplayComponent
   ],
-  exports: []
+  exports: [
+    DbxSearchableChipFieldComponent,
+    DbxSearchableTextFieldComponent
+  ]
 })
 export class DbxFormFormlySearchableFieldModule { }

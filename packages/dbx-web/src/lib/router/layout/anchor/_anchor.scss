@@ -9,11 +9,16 @@
   .dbx-anchor a {
     color: inherit;
     text-decoration: none;
-  }
 
-  .dbx-anchor-block {
-    display: block;
-    width: 100%
+    &.dbx-anchor-block {
+      display: block;
+      width: 100%;
+
+      .dbx-anchor-a {
+        display: block;
+        width: 100%
+      }
+    }
   }
 
   .dbx-link {

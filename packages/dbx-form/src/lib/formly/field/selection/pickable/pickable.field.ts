@@ -1,8 +1,8 @@
 import { Maybe } from '@dereekb/util';
 import { Observable, of } from 'rxjs';
-import { FieldConfig, formlyField } from '../field';
+import { FieldConfig, formlyField } from '../../field';
 import { PickableValueFieldDisplayValue } from './pickable';
-import { PickableItemFieldItem, PickableValueFieldsFieldConfig, PickableValueFieldsFormlyFieldConfig } from './pickable.field.component';
+import { PickableItemFieldItem, PickableValueFieldsFieldConfig, PickableValueFieldsFormlyFieldConfig } from './pickable.field.directive';
 export { PickableItemFieldItem };
 
 export function filterPickableItemFieldValuesByLabel<T>(filterText: Maybe<string>, values: PickableValueFieldDisplayValue<T>[]): Observable<T[]> {

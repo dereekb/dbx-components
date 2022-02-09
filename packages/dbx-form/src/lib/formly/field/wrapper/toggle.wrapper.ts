@@ -1,6 +1,6 @@
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { FormToggleSectionConfig } from './toggle.wrapper.component';
-import { concatArraysUnique } from '@/app/common/utility';
+import { concatArraysUnique } from '@dereekb/util';
 
 export interface FormToggleWrapperConfig {
   fieldConfig: FormlyFieldConfig;

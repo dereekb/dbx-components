@@ -5,6 +5,7 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { FormlyModule } from '@ngx-formly/core';
 import { DbxFormRepeatTypeComponent } from './array.field.component';
+import { DbxButtonModule } from '@dereekb/dbx-web';
 
 @NgModule({
   imports: [
@@ -12,6 +13,7 @@ import { DbxFormRepeatTypeComponent } from './array.field.component';
     MatFormFieldModule,
     ReactiveFormsModule,
     MatDividerModule,
+    DbxButtonModule,
     FormlyModule.forChild({
       types: [
         { name: 'repeat', component: DbxFormRepeatTypeComponent }

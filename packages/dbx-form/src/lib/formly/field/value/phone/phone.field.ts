@@ -1,7 +1,7 @@
 import { textField, TextFieldConfig } from '../text/text.field';
 import { FormlyFieldConfig } from '@ngx-formly/core';
-import { FieldConfig, formlyField } from '../field';
-import { flexLayoutWrapper } from '../wrappers/flex.wrapper.layout';
+import { FieldConfig, formlyField } from '../../field';
+import { flexLayoutWrapper } from '../../wrapper/flex.wrapper.layout';
 import { DbxInternationalPhoneFieldConfig, InternationalPhoneFormlyFieldConfig } from './phone.field.component';
 
 export interface InternationalPhoneFieldConfig extends FieldConfig, DbxInternationalPhoneFieldConfig { }

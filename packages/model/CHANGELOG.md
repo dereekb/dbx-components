@@ -7,5 +7,4 @@ This file was generated using [@jscutlery/semver](https://github.com/jscutlery/s
 
 ### Features
 
-* added env files ([bc0acbb](https://github.com/dereekb/dbcomponents/commit/bc0acbb615c03ab3d9ae0d57b67d0b865c959b23))
 * pageLoadingState ([1a5851d](https://github.com/dereekb/dbcomponents/commit/1a5851d689b980fff9db3bd592e465e22d54c612))

@@ -2,7 +2,7 @@ import { FormlyFieldConfig } from "@ngx-formly/core";
 import { of } from "rxjs";
 import { FieldConfig, formlyField } from "../../field";
 import { SearchableValueFieldValue } from "./searchable";
-import { StringValueFieldsFieldConfig, StringValueFieldsFormlyFieldConfig } from "./searchable.field.component";
+import { StringValueFieldsFieldConfig, StringValueFieldsFormlyFieldConfig } from "./searchable.field.directive";
 
 export interface ChipTextFieldConfig extends FieldConfig, StringValueFieldsFieldConfig { }
 export interface ChipTextFieldFormlyConfig extends StringValueFieldsFormlyFieldConfig, FormlyFieldConfig {

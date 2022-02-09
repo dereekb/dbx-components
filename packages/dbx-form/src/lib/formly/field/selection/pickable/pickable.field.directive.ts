@@ -255,8 +255,8 @@ export class AbstractDbxPickableItemFieldDirective<T> extends FieldType<Pickable
     return this.field.templateOptions?.required;
   }
 
-  get placeholder(): Maybe<string> {
-    return this.field.templateOptions?.placeholder;
+  get placeholder(): string {
+    return this.field.templateOptions?.placeholder ?? '';
   }
 
   get description(): Maybe<string> {

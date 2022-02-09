@@ -26,10 +26,6 @@ export abstract class AbstractDbxSegueAnchorDirective {
     shareReplay(1)
   );
 
-  get anchorBlockClass(): string {
-    return this.parent.anchorBlockClass;
-  }
-
   get anchor() {
     return this.parent.anchor;
   }

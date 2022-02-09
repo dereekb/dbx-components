@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { ValidationErrors } from '@angular/forms';
+import { ValidationErrors, FormGroup } from '@angular/forms';
 import { FieldType, FormlyFieldConfig } from '@ngx-formly/core';
 import { Maybe } from '@dereekb/util';
 
@@ -13,10 +13,17 @@ export interface InternationalPhoneFormlyFieldConfig extends DbxInternationalPho
 export const DEFAULT_PREFERRED_COUNTRIES = ['us'];
 
 @Component({
-  templateUrl: 'phone.field.component.html',
-  // TODO: styleUrls: ['./phone.scss']
+  templateUrl: 'phone.field.component.html'
 })
 export class DbxInternationalPhoneFieldComponent extends FieldType<InternationalPhoneFormlyFieldConfig> {
+
+  get fieldInputKey(): string {
+    return this.key as string;
+  }
+
+  get fieldFormGroup(): FormGroup {
+    return this.form as FormGroup;
+  }
 
   get label(): Maybe<string> {
     return this.field.templateOptions!.label;
@@ -38,8 +45,8 @@ export class DbxInternationalPhoneFieldComponent extends FieldType<International
     return this.field.onlyCountries ?? [];
   }
 
-  get required(): Maybe<boolean> {
-    return this.field.templateOptions!.required;
+  get required(): boolean {
+    return this.field.templateOptions!.required ?? false;
   }
 
   get errors(): Maybe<ValidationErrors> {

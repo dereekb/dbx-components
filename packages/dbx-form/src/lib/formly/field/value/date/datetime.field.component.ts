@@ -1,4 +1,4 @@
-import { DateTimeMinuteConfig, DateTimeMinuteInstance, DateTimeUtilityInstance, guessCurrentTimezone, readableTimeStringToDate, toReadableTimeString, utcDayForDate } from '@dereekb/date';
+import { DateTimeMinuteConfig, DateTimeMinuteInstance, guessCurrentTimezone, readableTimeStringToDate, toReadableTimeString, utcDayForDate } from '@dereekb/date';
 import { switchMap, shareReplay, map, filter, startWith, tap, first, distinctUntilChanged, debounceTime, throttleTime } from 'rxjs/operators';
 import {
   ChangeDetectorRef,
@@ -6,7 +6,7 @@ import {
 } from '@angular/core';
 import { AbstractControl, FormControl, Validators, FormGroup } from '@angular/forms';
 import { FieldType, FormlyFieldConfig } from '@ngx-formly/core';
-import { BehaviorSubject, Observable, of, combineLatest, Subject, merge, interval } from 'rxjs';
+import { BehaviorSubject, Observable, combineLatest, Subject, merge, interval } from 'rxjs';
 import { Maybe, ReadableTimeString } from '@dereekb/util';
 import { MatDatepickerInputEvent } from '@angular/material/datepicker';
 import { addMinutes, isSameDay, isSameMinute, startOfDay } from 'date-fns';

@@ -4,7 +4,7 @@ import { BehaviorSubject } from 'rxjs';
 import {
   Component, ComponentFactoryResolver, NgZone, OnDestroy, OnInit, Type, ViewChild, ViewContainerRef
 } from '@angular/core';
-import { ValidationErrors } from '@angular/forms';
+import { ValidationErrors, FormGroup } from '@angular/forms';
 import { FieldType, FormlyFieldConfig } from '@ngx-formly/core';
 import { ChecklistItemFieldDisplayComponent, ChecklistItemFieldDisplayContentObs } from './checklist.item';
 import { DbxDefaultChecklistItemFieldDisplayComponent } from './checklist.item.field.content.default.component';
@@ -25,8 +25,7 @@ export interface DbxChecklistItemFieldConfig<T = any> {
 export interface ChecklistItemFormlyFieldConfig<T = any> extends DbxChecklistItemFieldConfig<T>, FormlyFieldConfig { }
 
 @Component({
-  templateUrl: 'checklist.item.field.component.html',
-  // TODO: styleUrls: ['./checklist.item.scss']
+  templateUrl: 'checklist.item.field.component.html'
 })
 export class DbxChecklistItemFieldComponent<T = any> extends FieldType<ChecklistItemFormlyFieldConfig<T>> implements OnInit, OnDestroy {
 
@@ -48,6 +47,14 @@ export class DbxChecklistItemFieldComponent<T = any> extends FieldType<Checklist
     distinctUntilChanged(),
     shareReplay(1)
   );
+
+  get formGroup(): FormGroup {
+    return this.form as FormGroup;
+  }
+
+  get checkboxFieldKey(): string {
+    return this.key as string;
+  }
 
   get label(): Maybe<string> {
     return this.field.templateOptions?.label;

@@ -1,9 +1,9 @@
 <div class="dbx-searchable-text-field">
   <!-- Autocomplete -->
-  <mat-autocomplete #auto="matAutocomplete" (optionSelected)="selected($event)">
+  <mat-autocomplete #auto (optionSelected)="selected($event)">
     <mat-option *ngFor="let displayValue of (searchResults$ | async)" [value]="displayValue">
-      <dbx-searchable-field-autocomplete-item-component [displayValue]="displayValue">
-      </dbx-searchable-field-autocomplete-item-component>
+      <dbx-searchable-field-autocomplete-item [displayValue]="displayValue">
+      </dbx-searchable-field-autocomplete-item>
     </mat-option>
   </mat-autocomplete>
   <!-- Template -->

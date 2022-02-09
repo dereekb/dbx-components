@@ -1,6 +1,6 @@
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { cityField, countryField, stateField, textField, zipCodeField } from './text.field';
-import { flexLayoutWrapper } from '../wrappers/flex.wrapper.layout';
+import { flexLayoutWrapper } from '../../wrapper/flex.wrapper.layout';
 
 export const ADDRESS_LINE_MAX_LENGTH = 100;
 

@@ -292,7 +292,7 @@
             ]
           }
         },
-        "publish-npmjs-TODO": {
+        "publish-npmjs": {
           "executor": "@nrwl/workspace:run-commands",
           "options": {
             "command": "cd ./dist/packages/dbx-form && npm publish"

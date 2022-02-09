@@ -17,7 +17,7 @@ export interface FormRepeatTypeTemplateOptions extends FormlyTemplateOptions, Fo
     <div class="form-repeat-section">
       <!-- Fields -->
       <div class="form-repeat-section-fields">
-        <ng-container *ngFor="let field of field.fieldGroup; let i = index;">
+        <ng-container *ngFor="let field of field.fieldGroup; let i = index; let last = last;">
           <div class="form-repeat-section-field">
             <div>
               <h4><span>{{ itemLabel }}</span><span>{{ i + 1 }}</span></h4>
@@ -34,8 +34,7 @@ export interface FormRepeatTypeTemplateOptions extends FormlyTemplateOptions, Fo
         <button *ngIf="canAdd" mat-button (click)="add()">{{ addText }}</button>
       </div>
     </div>
-  `,
-  // TODO: styleUrls: ['./generic.scss']
+  `
 })
 export class DbxFormRepeatTypeComponent extends FieldArrayType {
 

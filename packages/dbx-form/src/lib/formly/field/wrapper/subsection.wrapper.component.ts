@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { Maybe } from '@dereekb/util';
 import { FieldWrapper } from '@ngx-formly/core';
 
 @Component({
@@ -10,12 +11,11 @@ import { FieldWrapper } from '@ngx-formly/core';
       </div>
       <dbx-hint *ngIf="description"><small>{{ description }}</small></dbx-hint>
     </div>
-  `,
-  // TODO: styleUrls: ['./wrapper.scss']
+  `
 })
 export class FormSubsectionWrapperComponent extends FieldWrapper {
 
-  get description(): string {
+  get description(): Maybe<string> {
     return this.to.description;
   }
 

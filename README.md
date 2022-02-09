@@ -20,13 +20,19 @@ TODO
 
 ## Build
 
-Run `nx build my-app` to build the project. The build artifacts will be stored in the `dist/` directory. Use the `--prod` flag for a production build.
+Run `nx build demo` to build the project. The build artifacts will be stored in the `dist/` directory. Use the `--prod` flag for a production build.
 
 ## Running unit tests
 
-Run `nx test my-app` to execute the unit tests via [Jest](https://jestjs.io).
-
 Run `nx affected:test` to execute the unit tests affected by a change.
+
+## Running unit tests with firebase
+
+Unit tests that require firebase are run through the Docker container. This lets our tests access the emulator. Since all tests are run within the container, and the container is not configured to use service ports, it can be run at the same time as the demo.
+
+Run `nx watch firebase` to execute the unit tests and watch for changes.
+
+Run `nx test firebase` to execute the unit tests.
 
 ## Further help
 

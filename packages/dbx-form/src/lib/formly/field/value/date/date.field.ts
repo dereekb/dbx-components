@@ -1,6 +1,6 @@
 import { Observable, of } from 'rxjs';
 import { FormlyFieldConfig } from '@ngx-formly/core';
-import { FieldConfig, formlyField } from '../field';
+import { FieldConfig, formlyField } from '../../field';
 import { DbxDateTimeFieldConfig, DateTimeFieldTimeMode, DateTimeFormlyFieldConfig, DateTimePickerConfiguration } from './datetime.field.component';
 
 export interface DateTimeFieldConfig extends FieldConfig, DbxDateTimeFieldConfig { }

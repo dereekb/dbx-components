@@ -11,8 +11,7 @@ import { ChecklistItemDisplayContent, ChecklistItemFieldDisplayComponent } from 
       <div *ngIf="sublabel" class="item-sublabel">{{ sublabel }}</div>
       <div *ngIf="description" class="dbx-hint item-description">{{ description }}</div>
     </div>
-  `,
-  // TODO: styleUrls: ['./checklist.item.scss']
+  `
 })
 export class DbxDefaultChecklistItemFieldDisplayComponent implements ChecklistItemFieldDisplayComponent<any> {
 

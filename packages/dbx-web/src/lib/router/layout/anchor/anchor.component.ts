@@ -13,7 +13,8 @@ import { DbxRouterWebProviderConfig } from '../../provider/router.provider.confi
   selector: 'dbx-anchor, [dbx-anchor]',
   templateUrl: './anchor.component.html',
   host: {
-    class: 'd-inline dbx-anchor'
+    class: 'd-inline dbx-anchor',
+    'dbx-anchor-block': 'block'
   }
 })
 export class DbxAnchorComponent extends AbstractDbxAnchorDirective {
@@ -42,10 +43,6 @@ export class DbxAnchorComponent extends AbstractDbxAnchorDirective {
 
   get srefAnchorConfig(): DbxInjectedComponentConfig {
     return this.dbNgxRouterWebProviderConfig.anchorSegueRefComponent;
-  }
-
-  get anchorBlockClass(): string {
-    return this.block ? 'dbx-anchor-block' : '';
   }
 
   clickAnchor(event?: Maybe<MouseEvent>): void {

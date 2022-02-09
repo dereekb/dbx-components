@@ -1,14 +1,16 @@
 import { Component } from '@angular/core';
-import { FieldWrapper, FormlyConfig, FormlyFieldConfig, FormlyTemplateOptions } from '@ngx-formly/core';
-
+import { FieldWrapper, FormlyFieldConfig, FormlyTemplateOptions } from '@ngx-formly/core';
 
 export interface FormInfoSectionConfig<T> {
-  onClicked: (data: T) => void;
-  data?: T;
+  onInfoClick: () => void;
 }
 
 export interface FormInfoSectionWrapperTemplateOptions<T = any> extends FormlyTemplateOptions {
   infoSection: FormInfoSectionConfig<T>;
+}
+
+export interface FormInfoSectionWFormlyConfig<T = any> extends FormlyFieldConfig {
+  templateOptions?: FormInfoSectionWrapperTemplateOptions<T>;
 }
 
 @Component({
@@ -19,24 +21,21 @@ export interface FormInfoSectionWrapperTemplateOptions<T = any> extends FormlyTe
       </div>
       <div class="form-info-section-info" fxFlex="noshrink" fxLayout="column" fxLayoutAlign="center center">
         <button mat-icon-button [attr.aria-label]="'show info button for ' + to.label || 'section'"
-          (click)="infoClicked()">
+          (click)="onInfoClick()">
           <mat-icon>info</mat-icon>
         </button>
       </div>
     </div>
-  `,
-  // TODO: styleUrls: ['./wrapper.scss']
+  `
 })
-export class FormInfoSectionWrapperComponent<T> extends FieldWrapper {
-
-  readonly to: FormInfoSectionWrapperTemplateOptions<T>;
+export class FormInfoSectionWrapperComponent<T> extends FieldWrapper<FormInfoSectionWFormlyConfig<T>> {
 
   get infoSection(): FormInfoSectionConfig<T> {
     return this.to.infoSection;
   }
 
-  infoClicked(): void {
-    this.infoSection.onClicked(this.infoSection.data);
+  onInfoClick(): void {
+    this.infoSection.onInfoClick();
   }
 
 }

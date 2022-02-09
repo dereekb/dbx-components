@@ -1,5 +1,5 @@
 import { FormlyFieldConfig } from '@ngx-formly/core';
-import { FieldConfig, formlyField, DefaultValueFieldConfig, DescriptionFieldConfig } from '../field';
+import { FieldConfig, formlyField, DefaultValueFieldConfig, DescriptionFieldConfig } from '../../field';
 
 export interface ToggleFieldConfig extends Omit<FieldConfig, 'placeholder' | 'autocomplete'>, DefaultValueFieldConfig<boolean>, DescriptionFieldConfig { }
 

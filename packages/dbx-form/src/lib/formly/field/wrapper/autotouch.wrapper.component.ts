@@ -1,5 +1,5 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
-import { FieldWrapper, FormlyConfig, FormlyFieldConfig, FormlyTemplateOptions } from '@ngx-formly/core';
+import { Component, OnInit } from '@angular/core';
+import { FieldWrapper } from '@ngx-formly/core';
 import { delay } from 'rxjs/operators';
 
 
@@ -7,8 +7,7 @@ import { delay } from 'rxjs/operators';
  * Wrapper than sets the field to "touched" when the value changes and the field is not pristine.
  */
 @Component({
-  template: `<ng-container #fieldComponent></ng-container>`,
-  // TODO: styleUrls: ['./wrapper.scss']
+  template: `<ng-container #fieldComponent></ng-container>`
 })
 export class AutoTouchFieldWrapperComponent extends FieldWrapper implements OnInit {
 

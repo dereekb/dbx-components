@@ -4,7 +4,7 @@
     <ng-container *ngTemplateOutlet="content"></ng-container>
   </ng-container>
   <!-- Click -->
-  <a class="dbx-anchor-click {{ anchorBlockClass }}" (click)="clickAnchor()" *ngSwitchCase="1">
+  <a class="dbx-anchor-a dbx-anchor-click" (click)="clickAnchor()" *ngSwitchCase="1">
     <ng-container *ngTemplateOutlet="content"></ng-container>
   </a>
   <!-- Router -->
@@ -12,12 +12,12 @@
     <!-- Injected in child. -->
   </dbx-injected-content>
   <!-- Href -->
-  <a class="dbx-anchor-href {{ anchorBlockClass }}" [href]="url$ | async" [attr.target]="target$ | async"
+  <a class="dbx-anchor-a dbx-anchor-href" [href]="url$ | async" [attr.target]="target$ | async"
     *ngSwitchCase="3">
     <ng-container *ngTemplateOutlet="content"></ng-container>
   </a>
   <!-- Disabled or None -->
-  <a class="dbx-anchor-disabled {{ anchorBlockClass }}" *ngSwitchDefault>
+  <a class="dbx-anchor-a dbx-anchor-disable" *ngSwitchDefault>
     <ng-container *ngTemplateOutlet="content"></ng-container>
   </a>
 </ng-container>

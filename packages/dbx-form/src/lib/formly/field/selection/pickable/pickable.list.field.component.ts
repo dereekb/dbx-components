@@ -1,13 +1,12 @@
 import { Component } from "@angular/core";
 import { MatSelectionListChange } from "@angular/material/list";
-import { AbstractDbxPickableItemFieldDirective, PickableItemFieldItem } from "./pickable.field.component";
+import { AbstractDbxPickableItemFieldDirective, PickableItemFieldItem } from "./pickable.field.directive";
 
 /**
  * Used for picking pre-set values using a selection list as the presentation.
  */
 @Component({
-  templateUrl: 'pickable.list.field.component.html',
-  // TODO: styleUrls: ['./generic.scss']
+  templateUrl: 'pickable.list.field.component.html'
 })
 export class DbxPickableListFieldComponent<T> extends AbstractDbxPickableItemFieldDirective<T> {
 

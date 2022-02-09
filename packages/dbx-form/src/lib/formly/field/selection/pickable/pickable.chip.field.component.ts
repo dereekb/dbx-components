@@ -1,12 +1,11 @@
-import { Component, ElementRef, OnDestroy, OnInit, Type, ViewChild } from "@angular/core";
-import { AbstractDbxPickableItemFieldDirective, PickableItemFieldItem } from "./pickable.field.component";
+import { Component } from "@angular/core";
+import { AbstractDbxPickableItemFieldDirective, PickableItemFieldItem } from "./pickable.field.directive";
 
 /**
  * Used for picking pre-set values using chips as the presentation.
  */
 @Component({
-  templateUrl: 'pickable.chip.field.component.html',
-  // TODO: styleUrls: ['./generic.scss']
+  templateUrl: 'pickable.chip.field.component.html'
 })
 export class DbxPickableChipFieldComponent<T> extends AbstractDbxPickableItemFieldDirective<T> {
 

@@ -1,7 +1,7 @@
 import { arrayToMap, separateValues } from '@dereekb/util';
 import { Observable, of } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { FieldConfig, formlyField } from '../field';
+import { FieldConfig, formlyField } from '../../field';
 import { SearchableValueFieldDisplayFn, SearchableValueFieldDisplayValue, SearchableValueFieldValue } from './searchable';
 import { SearchableChipValueFieldsFieldConfig, SearchableChipValueFieldsFormlyFieldConfig } from './searchable.chip.field.component';
 import { SearchableTextValueFieldsFieldConfig, SearchableTextValueFieldsFormlyFieldConfig } from './searchable.text.field.component';
