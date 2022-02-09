@@ -58,6 +58,7 @@ describe('AnchorComponent', () => {
 
         testComponent.anchorComponent?.disabled$.pipe(filter(() => true), delay(0)).subscribe((disabled) => {
           expect(disabled).toBe(true);
+          fixture.detectChanges();
           const anchorElement: HTMLElement = fixture.debugElement.query(By.css(`.dbx-anchor-disabled`)).nativeElement;
           expect(anchorElement).not.toBeNull();
           done();
