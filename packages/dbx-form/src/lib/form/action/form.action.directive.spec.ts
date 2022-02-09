@@ -91,9 +91,9 @@ describe('FormActionDirective', () => {
 
 @Component({
   template: `
-    <div appActionContext>
-      <dbx-test-dbx-form appActionForm></dbx-test-dbx-form>
-    </div>
+    <dbx-action>
+      <dbx-test-dbx-form dbxActionForm></dbx-test-dbx-form>
+    </dbx-action>
   `
 })
 class TestDbxActionFormDirectiveComponent {

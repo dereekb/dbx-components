@@ -8,7 +8,7 @@ import { DbxTestDbxFormComponent, FORM_TEST_PROVIDERS } from '../../../test';
 describe('DbxFormLoadingPairSourceDirective', () => {
 
   beforeEach(async () => {
-    TestBed.configureTestingModule({
+    await TestBed.configureTestingModule({
       imports: [
         ...FORM_TEST_PROVIDERS,
       ],
@@ -33,6 +33,10 @@ describe('DbxFormLoadingPairSourceDirective', () => {
     form = testComponent.form;
 
     fixture.detectChanges();
+  });
+
+  afterEach(() => {
+    fixture.destroy();
   });
 
   it('should be created', () => {
