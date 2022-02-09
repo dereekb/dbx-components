@@ -3,3 +3,4 @@ export * from './filter';
 export * from './popover';
 export * from './popup';
 export * from './prompt';
+export * from './interaction.module';

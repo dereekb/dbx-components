@@ -1,3 +1,4 @@
+import { FormGroup } from '@angular/forms';
 import { CompactContextStore, mapCompactModeObs } from '@dereekb/dbx-web';
 import {
   Component, OnDestroy, OnInit, Optional
@@ -14,10 +15,10 @@ export interface TextEditorComponentFieldConfig extends FormlyFieldConfig {
 
 @Component({
   template: `
-    <div class="dbx-texteditor-field NgxEditor__Wrapper" [ngClass]="compactClass$ | async" [formGroup]="form">
+    <div class="dbx-texteditor-field NgxEditor__Wrapper" [ngClass]="(compactClass$ | async) ?? ''" [formGroup]="formGroup">
       <dbx-label *ngIf="label">{{ label }}</dbx-label>
       <div class="dbx-texteditor-field-input">
-        <ngx-editor [editor]="editor" outputFormat="html" [placeholder]="placeholder" [formControlName]="field.key"></ngx-editor>
+        <ngx-editor [editor]="editor" outputFormat="html" [placeholder]="placeholder" [formControlName]="formGroupName"></ngx-editor>
       </div>
       <div class="dbx-texteditor-field-menu">
         <ngx-editor-menu [editor]="editor"></ngx-editor-menu>
@@ -38,6 +39,14 @@ export class TextEditorFieldComponent<T extends TextEditorComponentFieldConfig =
     super();
   }
 
+  get formGroupName(): string {
+    return this.field.key as string;
+  }
+
+  get formGroup(): FormGroup {
+    return this.form as FormGroup;
+  }
+
   get editor(): Editor {
     return this._editor!;
   }
@@ -46,8 +55,8 @@ export class TextEditorFieldComponent<T extends TextEditorComponentFieldConfig =
     return this.field.templateOptions?.label;
   }
 
-  get placeholder(): Maybe<string> {
-    return this.field.templateOptions?.placeholder;
+  get placeholder(): string {
+    return this.field.templateOptions?.placeholder ?? '';
   }
 
   ngOnInit(): void {

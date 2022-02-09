@@ -1,8 +1,12 @@
-import { Observable, startWith, distinctUntilChanged, shareReplay, map } from "rxjs";
+import { Observable, startWith, distinctUntilChanged, shareReplay, map, OperatorFunction, first } from "rxjs";
 
 /**
- * Observable that returns true initially, then returns false as soon as a value is recieved.
+ * Operator that returns true until the first item is emitted. Then returns false.
+ * 
+ * @returns 
  */
- export function isLoadingFromObservable(obs: Observable<any>): Observable<boolean> {
-  return obs.pipe(map(_ => false), startWith(true), distinctUntilChanged(), shareReplay(1));
+export function isLoading<T>(): OperatorFunction<T, boolean> {
+  return (source: Observable<T>) => {
+    return source.pipe(first(), map(_ => false), startWith(true), distinctUntilChanged(), shareReplay(1));
+  };
 }

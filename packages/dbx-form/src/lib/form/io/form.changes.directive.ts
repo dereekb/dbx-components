@@ -1,6 +1,6 @@
 import { Directive, EventEmitter, Host, Output, OnInit } from '@angular/core';
 import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
-import { DbxForm } from './form';
+import { DbxForm } from '../form';
 
 /**
  * Used to see form value changes.

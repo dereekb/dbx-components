@@ -17,12 +17,12 @@ export const DEFAULT_PREFERRED_COUNTRIES = ['us'];
 })
 export class DbxInternationalPhoneFieldComponent extends FieldType<InternationalPhoneFormlyFieldConfig & FieldTypeConfig> {
 
-  get fieldInputKey(): string {
-    return this.key as string;
+  get formGroup(): FormGroup {
+    return this.form as FormGroup;
   }
 
-  get fieldFormGroup(): FormGroup {
-    return this.form as FormGroup;
+  get formControlName(): string {
+    return this.key as string;
   }
 
   get label(): Maybe<string> {

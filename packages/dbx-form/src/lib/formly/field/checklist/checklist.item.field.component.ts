@@ -1,14 +1,16 @@
-import { filterMaybe, switchMapMaybeObs } from '@dereekb/rxjs';
-import { shareReplay, distinctUntilChanged, switchMap, map } from 'rxjs/operators';
+import { ChangeDetectorRef } from '@angular/core';
+import { DbxInjectedComponentConfig } from '@dereekb/dbx-core';
+import { switchMapMaybeObs } from '@dereekb/rxjs';
+import { shareReplay, distinctUntilChanged, map } from 'rxjs/operators';
 import { BehaviorSubject } from 'rxjs';
 import {
-  Component, ComponentFactoryResolver, NgZone, OnDestroy, OnInit, Type, ViewChild, ViewContainerRef
+  Component, OnDestroy, OnInit, Type
 } from '@angular/core';
 import { ValidationErrors, FormGroup } from '@angular/forms';
 import { FieldType, FieldTypeConfig, FormlyFieldConfig } from '@ngx-formly/core';
 import { ChecklistItemFieldDisplayComponent, ChecklistItemFieldDisplayContentObs } from './checklist.item';
 import { DbxDefaultChecklistItemFieldDisplayComponent } from './checklist.item.field.content.default.component';
-import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
+import { AbstractSubscriptionDirective, safeDetectChanges } from '@dereekb/dbx-core';
 import { Maybe } from '@dereekb/util';
 
 export interface DbxChecklistItemFieldConfig<T = any> {
@@ -52,7 +54,7 @@ export class DbxChecklistItemFieldComponent<T = any> extends FieldType<Checklist
     return this.form as FormGroup;
   }
 
-  get checkboxFieldKey(): string {
+  get formControlName(): string {
     return this.key as string;
   }
 
@@ -88,34 +90,29 @@ export class DbxChecklistItemFieldComponent<T = any> extends FieldType<Checklist
 
 @Component({
   selector: 'dbx-checklist-item-content-component',
-  template: `
-    <ng-template #content></ng-template>
-  `
+  template: `<dbx-injected-content [config]="config"></dbx-injected-content>`
 })
-export class DbxChecklistItemContentComponent<T = any> extends AbstractSubscriptionDirective implements OnInit {
+export class DbxChecklistItemContentComponent<T = any> extends AbstractSubscriptionDirective {
 
-  readonly displayContent$ = this.checklistItemFieldComponent.displayContent$;
-  readonly isLoading$ = this.checklistItemFieldComponent.displayContent$
-
-  @ViewChild('content', { static: true, read: ViewContainerRef })
-  contentRef!: ViewContainerRef;
+  config?: DbxInjectedComponentConfig;
 
   constructor(
     readonly checklistItemFieldComponent: DbxChecklistItemFieldComponent<T>,
-    readonly resolver: ComponentFactoryResolver,
-    readonly ngZone: NgZone
+    readonly cdRef: ChangeDetectorRef
   ) {
     super();
   }
 
   ngOnInit(): void {
-    this.contentRef.clear();
-    const componentClass = this.checklistItemFieldComponent.componentClass;
-    const componentRef = this.contentRef.createComponent(componentClass);
-
-    this.sub = this.checklistItemFieldComponent.displayContent$.subscribe((x) => {
-      this.ngZone.run(() => componentRef.instance.displayContent = x);
-    });
+    this.config = {
+      componentClass: this.checklistItemFieldComponent.componentClass,
+      init: (instance) => {
+        this.checklistItemFieldComponent.displayContent$.subscribe((x) => {
+          instance.displayContent = x;
+          safeDetectChanges(this.cdRef);
+        });
+      }
+    };
   }
 
 }

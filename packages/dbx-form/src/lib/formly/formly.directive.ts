@@ -1,5 +1,5 @@
-import { SubscriptionObject } from '@dereekb/rxjs';
-import { Observable, BehaviorSubject } from 'rxjs';
+import { SubscriptionObject, filterMaybe } from '@dereekb/rxjs';
+import { Observable, BehaviorSubject, shareReplay } from 'rxjs';
 import { FormlyFieldConfig } from '@ngx-formly/core/lib/core';
 import { OnInit, OnDestroy, Directive, Input } from '@angular/core';
 import { DbxFormlyContext } from './formly.context';
@@ -83,7 +83,7 @@ export abstract class AbstractAsyncFormlyFormDirective<T> extends AbstractFormly
 export abstract class AbstractConfigAsyncFormlyFormDirective<T, C> extends AbstractAsyncFormlyFormDirective<T> {
 
   private readonly _config = new BehaviorSubject<Maybe<C>>(undefined);
-  readonly config$ = this._config.asObservable();
+  readonly config$ = this._config.pipe(filterMaybe(), shareReplay(1));
 
   @Input()
   get config(): Maybe<C> {

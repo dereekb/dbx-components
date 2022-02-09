@@ -1,8 +1,17 @@
 <dbx-content-container>
-  <doc-feature-layout header="" hint="">
+  <doc-feature-layout header="Checklist"
+    hint="A complex form field that is used to map values from the input data to boolean values to form a checklist. The value's display can be configured to display anything.">
 
     <!-- Examples -->
-    <doc-feature-example header="dbx-anchor-icon" hint="">
+    <doc-feature-example header="Example" hint="">
+      <dbx-action [dbxActionHandler]="updateChecklist" dbxActionAutoTrigger [fastTrigger]="true"
+        dbxActionTransitionSafety dbxActionSnackbar snackbarDefault="save">
+        <dbx-error dbxActionError></dbx-error>
+        <dbx-form-example-checklist-form dbxActionForm dbxActionFormSafety="auto"
+          [dbxFormLoadingSource]="dataLoadingState$" [config]="config">
+        </dbx-form-example-checklist-form>
+      </dbx-action>
+      <p>Value: {{ value | json }}</p>
     </doc-feature-example>
   </doc-feature-layout>
 </dbx-content-container>

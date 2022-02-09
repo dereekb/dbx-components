@@ -1,7 +1,7 @@
-<div class="dbx-international-phone-field" [formGroup]="fieldFormGroup">
+<div class="dbx-international-phone-field" [formGroup]="formGroup">
   <mat-form-field class="dbx-international-phone-form-field">
     <ngx-mat-intl-tel-input [required]="required" [preferredCountries]="preferredCountries" [enablePlaceholder]="false"
-      name="phone" [formControlName]="fieldInputKey">
+      name="phone" [formControlName]="formControlName">
     </ngx-mat-intl-tel-input>
     <mat-error *ngIf="errors?.['required']">Required Field</mat-error>
     <mat-error *ngIf="errors?.['validatePhoneNumber']">Invalid Number</mat-error>

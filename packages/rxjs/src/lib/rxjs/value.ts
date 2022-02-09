@@ -52,9 +52,8 @@ export function switchMapMaybeObs<T = any>(): OperatorFunction<Maybe<Observable<
  */
 export function timeoutStartWith<T>(defaultValue: ObjectOrGetter<T>): MonoTypeOperatorFunction<T> {
   return (source: Observable<T>) => {
-    const subscriber: Observable<T> = source.pipe(
-      timeout({ first: 0, with: () => source.pipe(startWith(getValueFromObjectOrGetter(defaultValue))) }),
-    ) as Observable<T>;
-    return subscriber;
+    return source.pipe(
+      timeout({ first: 0, with: () => source.pipe(startWith(getValueFromObjectOrGetter(defaultValue))) })
+    );
   };
 }

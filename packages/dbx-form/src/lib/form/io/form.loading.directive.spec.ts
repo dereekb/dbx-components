@@ -1,9 +1,9 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { Component, ViewChild, Input, Directive, ContentChild, AfterViewInit, OnInit } from '@angular/core';
+import { Component, ViewChild } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { LoadingState, successResult } from '@dereekb/rxjs';
-import { DbxFormLoadingPairSourceDirective } from './form.loading.directive';
-import { DbxTestDbxFormComponent, FORM_TEST_PROVIDERS } from '../formly.component.spec';
+import { DbxFormLoadingSourceDirective } from './form.loading.directive';
+import { DbxTestDbxFormComponent, FORM_TEST_PROVIDERS } from '../../../test';
 
 describe('DbxFormLoadingPairSourceDirective', () => {
 
@@ -19,7 +19,7 @@ describe('DbxFormLoadingPairSourceDirective', () => {
     }).compileComponents();
   });
 
-  let directive: DbxFormLoadingPairSourceDirective;
+  let directive: DbxFormLoadingSourceDirective;
   let form: DbxTestDbxFormComponent;
 
   let testComponent: TestDbxActionFormDirectiveComponent;
@@ -55,7 +55,7 @@ describe('DbxFormLoadingPairSourceDirective', () => {
 @Component({
   template: `
     <div>
-      <dbx-test-dbx-form [appFormLoadingPairSource]="source"></dbx-test-dbx-form>
+      <dbx-test-dbx-form [dbxFormLoadingSource]="source"></dbx-test-dbx-form>
     </div>
   `
 })
@@ -63,8 +63,8 @@ class TestDbxActionFormDirectiveComponent {
 
   source?: Observable<LoadingState<{ text: string }>>;
 
-  @ViewChild(DbxFormLoadingPairSourceDirective, { static: true })
-  directive!: DbxFormLoadingPairSourceDirective;
+  @ViewChild(DbxFormLoadingSourceDirective, { static: true })
+  directive!: DbxFormLoadingSourceDirective;
 
   @ViewChild(DbxTestDbxFormComponent, { static: true })
   form!: DbxTestDbxFormComponent;

@@ -16,8 +16,7 @@ import { cloneDeep } from 'lodash';
     <form [formGroup]="form" class="dbx-formly">
       <formly-form [form]="form" [fields]="fields" [model]="model"></formly-form>
     </form>
-  `,
-  // TODO: styleUrls: ['./form.scss'],
+  `
 })
 export class DbxFormlyComponent<T extends object> extends AbstractSubscriptionDirective implements DbxFormlyContextDelegate<T>, OnInit, OnDestroy {
 
@@ -40,7 +39,7 @@ export class DbxFormlyComponent<T extends object> extends AbstractSubscriptionDi
     this.sub = this.form.valueChanges.pipe(
       startWith(this.form.value),
       distinctUntilChanged(),
-      debounceTime(50)
+      debounceTime(50),
     ).subscribe((_) => this._updateForChange());
   }
 
@@ -83,6 +82,7 @@ export class DbxFormlyComponent<T extends object> extends AbstractSubscriptionDi
       return; // Ignore the same value being set.
     }
     */
+    // console.log('set value: ', value);
 
     this.model = cloneDeep(value) as T;
 

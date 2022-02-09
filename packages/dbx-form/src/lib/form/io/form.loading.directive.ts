@@ -1,16 +1,17 @@
 import { Observable, combineLatest } from 'rxjs';
 import { Directive, Host, Input } from '@angular/core';
 import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
-import { DbxForm, DbxFormState } from '../form/form';
+import { DbxForm, DbxFormState } from '../../form/form';
+import { LoadingState } from '@dereekb/rxjs';
 import { distinctUntilChanged, filter, first, map } from 'rxjs/operators';
 
 /**
- * Used with a FormComponent to set the value based on the input value.
+ * Used with a FormComponent to set the value from a LoadingState when the value is available.
  */
 @Directive({
-  selector: '[dbxFormSource]'
+  selector: '[dbxFormLoadingSource]'
 })
-export class DbxFormSourceDirective<T extends object = any> extends AbstractSubscriptionDirective {
+export class DbxFormLoadingSourceDirective<T extends object = any> extends AbstractSubscriptionDirective {
 
   constructor(@Host() public readonly form: DbxForm) {
     super();
@@ -19,12 +20,12 @@ export class DbxFormSourceDirective<T extends object = any> extends AbstractSubs
   /**
    * Sets a LoadingContext that is watched for the loading state.
    */
-  @Input('dbxFormSource')
-  set obs(obs: Observable<T>) {
+  @Input('dbxFormLoadingSource')
+  set obs(obs: Observable<LoadingState<T>>) {
     this._setObs(obs);
   }
 
-  private _setObs(obs: Observable<T>): void {
+  private _setObs(obs: Observable<LoadingState<T>>): void {
     let subscription;
 
     if (obs) {
@@ -37,9 +38,13 @@ export class DbxFormSourceDirective<T extends object = any> extends AbstractSubs
         obs
       ]).pipe(
         map((x) => x[1]),
-        distinctUntilChanged((x, y) => x === y),
+        filter((x) => Boolean(x)),
+        distinctUntilChanged((x, y) => x.value === y.value),
       ).subscribe((x) => {
-        this.form.setValue(x);
+        if (!x.error && !x.loading) {
+          // console.log('Setting value: ', x.model);
+          this.form.setValue(x.value);
+        }
       });
     }
 

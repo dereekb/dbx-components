@@ -15,4 +15,4 @@ import { DbxActionFormDirective } from './form.action.directive';
     DbxActionFormDirective
   ]
 })
-export class DbxFormlyActionModule { }
+export class DbxFormActionModule { }

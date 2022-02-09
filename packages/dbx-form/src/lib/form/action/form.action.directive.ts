@@ -101,8 +101,6 @@ export class DbxActionFormDirective<T = any> implements OnInit, OnDestroy {
         const isProbablyTouched = !event.untouched ||
           ((event.changesCount ?? 0) > 3 && isPast(addSeconds(event.lastResetAt ?? new Date(), 2)));
 
-        // console.log('Event: ', event, isProbablyTouched);
-
         const value = this.form.value;
 
         let validatorObs: Observable<boolean>;

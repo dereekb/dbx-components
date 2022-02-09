@@ -6,26 +6,15 @@ import { delay, first, map, mergeMap, tap } from 'rxjs/operators';
 import { ActionContextStoreSourceInstance, canTriggerAction, isIdleActionState } from '@dereekb/dbx-core';
 import { DbxActionTransitionSafetyDialogResult, DbxActionUIRouterTransitionSafetyDialogComponent } from './transition.safety.dialog.component';
 
-export enum DbxActionTransitionSafetyType {
-  /**
-   * Nothing occurs.
-   */
-  NONE = 'none',
-
-  /**
-   * Always show a dialog and act based on the result.
-   */
-  DIALOG = 'dialog',
-
-  /**
-   * Try to auto-trigger if in a triggerable state.
-   *
-   * If it is modified but in a non-triggerable state show a dialog.
-   *
-   * Should be used in conjuction with the auto-saver.
-   */
-  AUTO_TRIGGER = 'auto'
-}
+/**
+ * How to handle transitions.
+ * 
+ * Values:
+ * - none: Nothing occurs.
+ * - dialog: Always show a dialog and act based on the result.
+ * - auto: Try to auto-trigger if in a triggerable state. If it is modified but in a non-triggerable state, show a dialog. Should be used in conjuction with the auto-saver.
+ */
+export type DbxActionTransitionSafetyType = 'none' | 'dialog' | 'auto';
 
 type DbxActionTransitionSafetyRaceResult = [boolean | undefined, HookResult | undefined];
 
@@ -55,7 +44,7 @@ export class DbxActionTransitionSafetyDirective<T, O> implements OnInit, OnDestr
   ) { }
 
   get safetyType(): DbxActionTransitionSafetyType {
-    return this.inputSafetyType || DbxActionTransitionSafetyType.DIALOG;
+    return this.inputSafetyType ?? 'dialog';
   }
 
   private get _destroyed(): boolean {
@@ -111,14 +100,15 @@ export class DbxActionTransitionSafetyDirective<T, O> implements OnInit, OnDestr
     // console.log('Safety type: ', safetyType);
 
     switch (safetyType) {
-      case DbxActionTransitionSafetyType.NONE:
+      case 'none':
         obs = of(true); // Do nothing.
         break;
-      case DbxActionTransitionSafetyType.DIALOG:
-        obs = this._showDialog(transition);
-        break;
-      case DbxActionTransitionSafetyType.AUTO_TRIGGER:
+      case 'auto':
         obs = this._autoTrigger(transition);
+        break;
+      default:
+      case 'dialog':
+        obs = this._showDialog(transition);
         break;
     }
 
