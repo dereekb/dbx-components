@@ -5,3 +5,4 @@ export * from './texteditor';
 export * from './value';
 export * from './wrapper';
 export * from './field';
+export * from './form.field.module';

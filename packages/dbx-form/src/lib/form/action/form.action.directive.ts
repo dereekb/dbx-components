@@ -139,7 +139,7 @@ export class DbxActionFormDirective<T = any> implements OnInit, OnDestroy {
       })
     ).subscribe(({ valid, modified, value, event }) => {
 
-      console.log('x: ', value, event, valid, modified);
+      // console.log('x: ', value, event, valid, modified);
 
       // Update Modified State
       this.source.setIsModified(modified);
