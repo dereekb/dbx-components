@@ -36,7 +36,7 @@ jobs:
       - run: npx nx affected --base=$NX_BASE --target=build --parallel --max-parallel=2 --exclude=dbx-form
       - run: npx nx affected --base=$NX_BASE --target=build-for-npm --parallel --max-parallel=2
       # prune node_modules
-      - run: npx clean-modules --yes
+      - run: npx clean-modules --yes --exclude "**/firebase*/**"
       # persist builds to workspace
       - persist_to_workspace:
           root: ~/code
