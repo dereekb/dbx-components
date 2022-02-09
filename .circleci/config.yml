@@ -19,8 +19,8 @@ jobs:
       # look for existing cache and restore if found
       - restore_cache:
           keys:
-            - node-cache-x{{ checksum "package-lock.json" }}
-            - node-cache-x
+            - node-cache-{{ checksum "package-lock.json" }}
+            - node-cache-
       # install dependencies
       - run:
           name: install dependencies
@@ -29,7 +29,7 @@ jobs:
       - run: npx clean-modules --yes --exclude "**/firebase*/**"
       # save any changes to the cache
       - save_cache:
-          key: node-cache-x{{ checksum "package-lock.json" }}
+          key: node-cache-{{ checksum "package-lock.json" }}
           paths:
             - node_modules
       # initialize nx
@@ -37,8 +37,6 @@ jobs:
       # build content
       - run: npx nx affected --base=$NX_BASE --target=build --parallel --max-parallel=2
       - run: npx nx affected --base=$NX_BASE --target=build-for-npm --parallel --max-parallel=2
-      # clean node_modules
-      - run: npx clean-modules --yes --exclude "**/firebase*/**"
       # persist builds to workspace
       - persist_to_workspace:
           root: ~/code
