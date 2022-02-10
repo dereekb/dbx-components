@@ -14,5 +14,5 @@ $demo-theme: dbx.define-dbx-theme-config($demo-mat-theme, $demo-dbx-theme-with-b
 
 @mixin demo-theme($root-selector) {
   @include dbx.theme($root-selector, $demo-theme);
-  @include dbx-form.all-component-themes($demo-theme);
+  @include dbx-form.theme($root-selector, $demo-theme);
 }

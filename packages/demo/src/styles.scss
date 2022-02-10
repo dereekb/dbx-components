@@ -9,7 +9,7 @@ $app-typography-config: mat.define-typography-config();
 @include dbx.core($app-typography-config);
 @include dbx-form.core($app-typography-config);
 
-@include style.default-theme('body');
+@include style.dark-doc-theme('.doc-app-dark');
 @include style.doc-theme('.doc-app');
 // NOTE: There is a third style that is lazy-loaded within demo.
 

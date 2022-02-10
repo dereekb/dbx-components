@@ -19,7 +19,6 @@ export class DbxStyleDirective extends AbstractSubscriptionDirective {
   constructor(readonly styleService: DbxStyleService, private cdRef: ChangeDetectorRef) {
     super(styleService.style$.pipe(delay(0)).subscribe((style) => {
       this.style = style;
-      console.log('inporting style: ', this.style);
       safeDetectChanges(this.cdRef);
     }));
   }

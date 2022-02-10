@@ -8,12 +8,12 @@ import { map, Observable } from "rxjs";
   <div>
     <dbx-formly (dbxFormValueChange)="value = $event"></dbx-formly>
     <p></p>
-    <dbx-content-border>
+    <dbx-content-border style="white-space: break-spaces;">
       <p>> {{ value | json }}</p>
     </dbx-content-border>
   </div>
   `,
-  selector: 'dbx-form-example-form',
+  selector: 'doc-form-example-form',
   providers: [ProvideFormlyContext()]
 })
 export class DocFormExampleComponent extends AbstractConfigAsyncFormlyFormDirective<any, FormlyFieldConfig[]> {

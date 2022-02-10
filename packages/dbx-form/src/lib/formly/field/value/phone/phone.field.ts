@@ -54,7 +54,7 @@ export interface PhoneAndLabelFieldGroupConfig extends PhoneFormlyFieldsConfig {
   required?: boolean;
 }
 
-export function phoneAndLabelFieldGroup({ key = 'phone', label = 'Phone Number', required, phoneField, labelField }: PhoneAndLabelFieldGroupConfig): FormlyFieldConfig {
+export function phoneAndLabelFieldGroup({ key = 'phone', label = 'Phone Number', required = false, phoneField, labelField }: PhoneAndLabelFieldGroupConfig = {}): FormlyFieldConfig {
   return {
     key,
     wrappers: ['section'],
@@ -74,7 +74,7 @@ export interface PhoneListFieldConfig extends PhoneAndLabelFieldGroupConfig {
   }
 }
 
-export function phoneListField({ key = 'phones', label = 'Phone Numbers', repeatSection, required = false, maxPhones = 6, phoneField, labelField }: PhoneListFieldConfig): FormlyFieldConfig {
+export function phoneListField({ key = 'phones', label = 'Phone Numbers', repeatSection, required = false, maxPhones = 6, phoneField, labelField }: PhoneListFieldConfig = {}): FormlyFieldConfig {
   return {
     key,
     type: 'repeat',

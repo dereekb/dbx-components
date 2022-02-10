@@ -1,49 +1,56 @@
+import { CdkDragDrop } from '@angular/cdk/drag-drop';
 import { Component } from '@angular/core';
-import { Maybe } from '@dereekb/util';
-import { FieldArrayType, FormlyTemplateOptions } from '@ngx-formly/core';
+import { GetterWithInput, getValueFromObjectOrGetter, Maybe } from '@dereekb/util';
+import { FieldArrayTypeConfig, FieldArrayType, FormlyTemplateOptions, FormlyFieldConfig } from '@ngx-formly/core';
 
-export interface FormRepeatSectionConfig {
-  itemLabel?: string;
+export interface DbxFormRepeatArrayConfig {
+  labelForField?: string | GetterWithInput<string, FormlyFieldConfig>;
   addText?: string;
   removeText?: string;
 }
 
-export interface FormRepeatTypeTemplateOptions extends FormlyTemplateOptions, FormRepeatSectionConfig {
-  repeatSection?: FormRepeatSectionConfig;
+export interface DbxFormRepeatArrayTemplateOptions extends FormlyTemplateOptions, DbxFormRepeatArrayConfig {
+  repeatSection: DbxFormRepeatArrayConfig;
+}
+
+export interface DbxFormRepeatArrayFormlyConfig extends FieldArrayTypeConfig {
+  templateOptions: DbxFormRepeatArrayTemplateOptions;
 }
 
 @Component({
   template: `
-    <div class="form-repeat-section">
-      <!-- Fields -->
-      <div class="form-repeat-section-fields">
-        <ng-container *ngFor="let field of field.fieldGroup; let i = index; let last = last;">
-          <div class="form-repeat-section-field">
-            <div>
-              <h4><span>{{ itemLabel }}</span><span>{{ i + 1 }}</span></h4>
-              <dbx-button-spacer></dbx-button-spacer>
-              <button mat-button color="warn" (click)="remove(i)">{{ removeText }}</button>
+    <div class="dbx-form-repeat-array">
+      <dbx-subsection [header]="label">
+        <!-- Fields -->
+        <div class="dbx-form-repeat-array-fields" cdkDropList (cdkDropListDropped)="drop($event)">
+            <div class="dbx-form-repeat-array-field" cdkDrag cdkDragLockAxis="y" *ngFor="let field of field.fieldGroup; let i = index; let last = last;">
+              <div class="example-custom-placeholder" *cdkDragPlaceholder></div>
+              <dbx-bar>
+                <button cdkDragHandle mat-flat-button><mat-icon>drag_handle</mat-icon></button>
+                <dbx-button-spacer></dbx-button-spacer>
+                <h4><span class="repeat-array-number">{{ i + 1 }}</span><span>{{ labelForItem(field) }}</span></h4>
+                <span class="dbx-spacer"></span>
+                <button mat-flat-button color="warn" (click)="remove(i)">{{ removeText }}</button>
+              </dbx-bar>
+              <formly-field class="dbx-form-repeat-array-field-content" [field]="field"></formly-field>
             </div>
-            <formly-field [field]="field"></formly-field>
-          </div>
-          <mat-divider [inset]="true" *ngIf="!last"></mat-divider>
-        </ng-container>
-      </div>
-      <!-- Add Button -->
-      <div class="form-repeat-section-footer">
-        <button *ngIf="canAdd" mat-button (click)="add()">{{ addText }}</button>
-      </div>
+        </div>
+        <!-- Add Button -->
+        <div class="dbx-form-repeat-array-footer">
+          <button *ngIf="canAdd" mat-raised-button (click)="add()">{{ addText }}</button>
+        </div>
+      </dbx-subsection>
     </div>
   `
 })
-export class DbxFormRepeatTypeComponent extends FieldArrayType {
+export class DbxFormRepeatArrayTypeComponent extends FieldArrayType<DbxFormRepeatArrayFormlyConfig>{
 
-  get repeatSection(): FormRepeatSectionConfig {
-    return (this.to as FormRepeatTypeTemplateOptions).repeatSection ?? {};
+  get repeatSection(): DbxFormRepeatArrayConfig {
+    return this.to.repeatSection;
   }
 
-  get itemLabel(): string {
-    return this.repeatSection.itemLabel ?? '#';
+  get label(): string {
+    return this.field.templateOptions.label ?? this.field.key as string;
   }
 
   get addText(): string {
@@ -70,6 +77,43 @@ export class DbxFormRepeatTypeComponent extends FieldArrayType {
     } else {
       return (this.count < max);
     }
+  }
+
+  /**
+   * Moves the target index up one value.
+   * 
+   * @param index 
+   */
+  moveUp(index: number) {
+    if (index === 0) {
+      return;
+    }
+
+    this.swapIndexes(index, index - 1);
+  }
+
+  moveDown(index: number) {
+    this.swapIndexes(index, index + 1);
+  }
+
+  swapIndexes(currentIndex: number, targetIndex: number) {
+    const array: any[] = this.model;
+    const targetValue = array[currentIndex];
+
+    if (!targetValue) {
+      return;
+    }
+
+    this.remove(currentIndex);
+    this.add(targetIndex, targetValue);
+  }
+
+  drop(event: CdkDragDrop<any>) {
+    this.swapIndexes(event.previousIndex, event.currentIndex);
+  }
+
+  labelForItem(field: FormlyFieldConfig): string {
+    return getValueFromObjectOrGetter(this.repeatSection.labelForField ?? '', field);
   }
 
 }

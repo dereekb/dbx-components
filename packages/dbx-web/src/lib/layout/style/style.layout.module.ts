@@ -3,6 +3,7 @@ import { DbxStyleDirective } from './style.directive';
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { DbxSpacerDirective } from './spacer.directive';
+import { DbxStyleBodyDirective } from './style.body.directive';
 
 @NgModule({
   imports: [
@@ -11,12 +12,14 @@ import { DbxSpacerDirective } from './spacer.directive';
   declarations: [
     DbxSpacerDirective,
     DbxStyleDirective,
-    DbxSetStyleDirective
+    DbxSetStyleDirective,
+    DbxStyleBodyDirective
   ],
   exports: [
     DbxSpacerDirective,
     DbxStyleDirective,
-    DbxSetStyleDirective
+    DbxSetStyleDirective,
+    DbxStyleBodyDirective
   ]
 })
 export class DbxStyleLayoutModule { }

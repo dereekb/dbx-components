@@ -1,3 +1,4 @@
+import { DbxStyleService } from '@dereekb/dbx-web';
 import { ClickableAnchor } from '@dereekb/dbx-core';
 import { Component } from '@angular/core';
 
@@ -19,9 +20,15 @@ export class AppLayoutComponent {
     ref: 'demo'
   };
 
+  readonly toggleDarkTheme: ClickableAnchor = {
+    onClick: () => this.dbxStyleService.toggleDarkSuffix()
+  }
+
   readonly github: ClickableAnchor = {
     url: 'https://github.com/dereekb/dbcomponents',
     target: '_blank'
   };
+
+  constructor(readonly dbxStyleService: DbxStyleService) { }
 
 }

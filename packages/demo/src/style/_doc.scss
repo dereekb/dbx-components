@@ -83,5 +83,14 @@ This mixin creates the doc-theme components and elements for @angular/material a
 */
 @mixin doc-theme($root-selector) {
   @include dbx.theme($root-selector, $doc-theme);
-  @include dbx-form.all-component-themes($doc-theme);
+  @include dbx-form.theme($root-selector, $doc-form-theme);
+}
+
+$dark-doc-mat-theme: mat.define-dark-theme((color: (primary: $doc-primary, accent: $doc-accent, warn: $doc-warn), density: null, typography: null));    // NOTE: setting density and typography to null is important!
+$dark-doc-theme: dbx.define-dbx-theme-config($dark-doc-mat-theme, $doc-dbx-theme-with-banner-config);
+$dark-doc-form-theme: dbx-form.define-dbx-form-theme-config($dark-doc-theme);
+
+@mixin dark-doc-theme($root-selector) {
+  @include dbx.theme($root-selector, $dark-doc-theme);
+  @include dbx-form.theme($root-selector, $dark-doc-form-theme);
 }

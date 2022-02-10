@@ -22,6 +22,10 @@ export function splitCommaSeparatedString<T = any>(input: CommaSeparatedString<T
   return splits.map(x => mapFn(x.trim()));
 }
 
+export function splitCommaSeparatedStringToSet(input: Maybe<CommaSeparatedString>): Set<string> {
+  return new Set(input != null ? splitCommaSeparatedString(input) : []);
+}
+
 /**
  * Adds a plus prefix to the input value and converts it to a string. If the value is negative or 0, no prefix is added.
  * 

@@ -5,7 +5,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { Category, StatesModule, UIRouter, UIRouterModule, UIView } from '@uirouter/angular';
 import { AppSharedModule } from '@/shared/app.shared.module';
 import { environment } from './environments/environment';
-import { DbxPopupInteractionModule, DbxPopoverInteractionModule, DbxScreenModule, DbxWebRootModule, DbxWebUIRouterModule, DEFAULT_SCREEN_MEDIA_SERVICE_CONFIG } from '@dereekb/dbx-web';
+import { DbxPopupInteractionModule, DbxPopoverInteractionModule, DbxScreenModule, DbxWebRootModule, DbxWebUIRouterModule, DEFAULT_SCREEN_MEDIA_SERVICE_CONFIG, DBX_STYLE_DEFAULT_CONFIG_TOKEN } from '@dereekb/dbx-web';
 import { AnalyticsServiceConfiguration, SegmentAnalyticsListenerService, SegmentApiService, SegmentApiServiceConfig } from '@dereekb/dbx-analytics';
 import { AppModule } from './app/app.module';
 import { DbxCoreUIRouterSegueModule } from '@dereekb/dbx-core';
@@ -87,6 +87,12 @@ export function makeSegmentConfig(): SegmentApiServiceConfig {
   providers: [{
     provide: SegmentApiServiceConfig,
     useFactory: makeSegmentConfig
+  }, {
+    provide: DBX_STYLE_DEFAULT_CONFIG_TOKEN,
+    useValue: {
+      style: 'doc-app',
+      suffixes: new Set(['dark'])
+    }
   }],
   bootstrap: [UIView]
 })

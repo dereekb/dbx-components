@@ -3,6 +3,7 @@ import { textField } from './text.field';
 import { cityField, countryField, stateField, zipCodeField } from './text.additional.field';
 import { flexLayoutWrapper } from '../../wrapper/wrapper';
 import { FieldConfig } from '../../field';
+import { repeatArrayField } from '..';
 
 export const ADDRESS_LINE_MAX_LENGTH = 100;
 
@@ -56,22 +57,13 @@ export interface AddressListFieldConfig extends FieldConfig {
 }
 
 export function addressListField({ key = 'addresses', required = false, maxAddresses = 6 }: Partial<AddressListFieldConfig> = {}): FormlyFieldConfig {
-  return {
+  return repeatArrayField({
     key,
-    type: 'repeat',
-    wrappers: ['section'],
-    templateOptions: {
-      label: 'Addresses',
-      placeholder: '',
-      required,
-      repeatSection: {
-        addText: 'Add Address',
-        removeText: 'Remove Address'
-      },
-      maxLength: maxAddresses
-    },
-    fieldArray: {
-      fieldGroup: addressFormlyFields()
-    }
-  };
+    label: 'Addresses',
+    labelForField: 'Address',
+    addText: 'Add Address',
+    removeText: 'Remove Address',
+    maxLength: maxAddresses,
+    repeatFieldGroup: addressFormlyFields()
+  });
 }

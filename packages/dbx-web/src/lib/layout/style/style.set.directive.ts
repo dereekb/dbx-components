@@ -1,8 +1,11 @@
+import { splitCommaSeparatedStringToSet } from '@dereekb/util';
+import { Observable, distinctUntilChanged, map, shareReplay } from 'rxjs';
 import { filterMaybe } from '@dereekb/rxjs';
-import { BehaviorSubject } from 'rxjs';
-import { Directive, Input, OnDestroy, AfterViewInit, ChangeDetectorRef, OnInit } from '@angular/core';
+import { BehaviorSubject, delay, combineLatest } from 'rxjs';
+import { Directive, Input, OnDestroy, ChangeDetectorRef, OnInit } from '@angular/core';
 import { Maybe } from '@dereekb/util';
-import { DbxStyleService } from './style.service';
+import { DbxStyleConfig, DbxStyleService } from './style.service';
+import { AbstractSubscriptionDirective, safeDetectChanges } from '@dereekb/dbx-core';
 
 /**
  * Used to denote which app style to use for all children below this.
@@ -13,15 +16,41 @@ import { DbxStyleService } from './style.service';
   selector: '[dbxSetStyle]',
   host: {
     'class': 'dbx-style-root',
-    '[class]': 'style'
+    '[class]': 'outputStyle'
   }
 })
-export class DbxSetStyleDirective implements OnDestroy, OnInit {
+export class DbxSetStyleDirective extends AbstractSubscriptionDirective implements OnDestroy, OnInit {
 
+  private _suffixes = new BehaviorSubject<Maybe<string>>(undefined);
   private _style = new BehaviorSubject<Maybe<string>>(undefined);
-  readonly style$ = this._style.pipe(filterMaybe());
 
-  constructor(readonly styleService: DbxStyleService, readonly cdRef: ChangeDetectorRef) {}
+  readonly style$ = this._style.pipe(filterMaybe());
+  readonly suffixes$ = this._suffixes.pipe(distinctUntilChanged(), map(splitCommaSeparatedStringToSet));
+
+  readonly config$: Observable<DbxStyleConfig> = combineLatest([this.style$, this.suffixes$]).pipe(
+    map(([style, suffixes]) => ({ style, suffixes })),
+    shareReplay(1)
+  );
+
+  readonly outputStyle$ = this.styleService.getStyleWithConfig(this.config$);
+  outputStyle: string = '';
+
+  constructor(readonly styleService: DbxStyleService, readonly cdRef: ChangeDetectorRef) {
+    super();
+  }
+
+  ngOnInit(): void {
+    this.styleService.setConfig(this.config$);
+    this.sub = this.outputStyle$.pipe(delay(0)).subscribe((style) => {
+      this.outputStyle = style;
+      safeDetectChanges(this.cdRef);
+    });
+  }
+
+  override ngOnDestroy(): void {
+    super.ngOnDestroy();
+    this._style.complete();
+  }
 
   @Input('dbxSetStyle')
   get style(): string {
@@ -32,12 +61,15 @@ export class DbxSetStyleDirective implements OnDestroy, OnInit {
     this._style.next(style);
   }
 
-  ngOnDestroy(): void {
-    this._style.complete();
+  @Input()
+  get suffixes(): Maybe<string> {
+    return this._suffixes.value;
   }
 
-  ngOnInit(): void {
-    this.styleService.setStyle(this.style$);
+  set suffixes(suffixes: Maybe<string>) {
+    this._suffixes.next(suffixes);
   }
+
+
 
 }
