@@ -1,4 +1,3 @@
-import { DbxFlexLayoutModule } from './../../../../../../dbx-web/src/lib/layout/flex/flex.layout.module';
 import { MatButtonModule } from '@angular/material/button';
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
@@ -13,7 +12,7 @@ import { DbxFormExpandWrapperComponent } from './expandable.wrapper.component';
 import { AutoTouchFieldWrapperComponent } from './autotouch.wrapper.component';
 import { DbxFormToggleWrapperComponent } from './toggle.wrapper.component';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
-import { DbxSectionLayoutModule, DbxTextModule } from '@dereekb/dbx-web';
+import { DbxSectionLayoutModule, DbxTextModule, DbxFlexLayoutModule } from '@dereekb/dbx-web';
 
 @NgModule({
   imports: [
