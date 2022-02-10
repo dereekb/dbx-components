@@ -4,6 +4,7 @@
 @use './column/column';
 @use './content/content';
 @use './flag/flag';
+@use './flex/flex';
 @use './item/item';
 @use './list/list';
 @use './section/section';
@@ -18,6 +19,7 @@
   @include column.core();
   @include content.core();
   @include flag.core();
+  @include flex.core();
   @include item.core();
   @include list.core();
   @include section.core();
@@ -33,6 +35,7 @@
   @include column.typography($typography-config);
   @include content.typography($typography-config);
   @include flag.typography($typography-config);
+  @include flex.typography($typography-config);
   @include item.typography($typography-config);
   @include list.typography($typography-config);
   @include section.typography($typography-config);
@@ -48,6 +51,7 @@
   @include column.theme($theme-config);
   @include content.theme($theme-config);
   @include flag.theme($theme-config);
+  @include flex.theme($theme-config);
   @include item.theme($theme-config);
   @include list.theme($theme-config);
   @include section.theme($theme-config);

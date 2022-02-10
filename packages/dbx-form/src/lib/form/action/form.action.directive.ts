@@ -5,7 +5,7 @@ import { catchError, filter, first, map, switchMap } from 'rxjs/operators';
 import { ActionContextStoreSourceInstance } from '@dereekb/dbx-core';
 import { ReadableError } from '@dereekb/util';
 import { SubscriptionObject, LockSet } from '@dereekb/rxjs';
-import { DbxForm, DbxFormState } from '../../form/form';
+import { DbxForm, DbxFormState, DbxMutableForm } from '../../form/form';
 
 export interface DbxActionFormTriggerResult {
   value?: any;
@@ -47,7 +47,7 @@ export class DbxActionFormDirective<T = any> implements OnInit, OnDestroy {
   private _triggeredSub = new SubscriptionObject();
   private _isCompleteSub = new SubscriptionObject();
 
-  constructor(@Host() public readonly form: DbxForm, public readonly source: ActionContextStoreSourceInstance<object, any>) {
+  constructor(@Host() public readonly form: DbxMutableForm, public readonly source: ActionContextStoreSourceInstance<object, any>) {
     if (form.lockSet) {
       this.lockSet.addChildLockSet(form.lockSet, 'form');
     }

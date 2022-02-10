@@ -1,7 +1,7 @@
 import { Observable, combineLatest } from 'rxjs';
 import { Directive, Host, Input } from '@angular/core';
 import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
-import { DbxForm, DbxFormState } from '../../form/form';
+import { DbxFormState, DbxMutableForm } from '../../form/form';
 import { LoadingState } from '@dereekb/rxjs';
 import { distinctUntilChanged, filter, first, map } from 'rxjs/operators';
 
@@ -13,7 +13,7 @@ import { distinctUntilChanged, filter, first, map } from 'rxjs/operators';
 })
 export class DbxFormLoadingSourceDirective<T extends object = any> extends AbstractSubscriptionDirective {
 
-  constructor(@Host() public readonly form: DbxForm) {
+  constructor(@Host() public readonly form: DbxMutableForm) {
     super();
   }
 

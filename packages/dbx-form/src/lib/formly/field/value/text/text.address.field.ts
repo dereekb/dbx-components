@@ -1,8 +1,8 @@
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { textField } from './text.field';
 import { cityField, countryField, stateField, zipCodeField } from './text.additional.field';
-import { flexLayoutWrapper } from '../../wrapper/flex.wrapper.layout';
-import { FieldConfig, LabeledFieldConfig } from '../../field';
+import { flexLayoutWrapper } from '../../wrapper/wrapper';
+import { FieldConfig } from '../../field';
 
 export const ADDRESS_LINE_MAX_LENGTH = 100;
 
@@ -32,7 +32,7 @@ export function addressFormlyFields(): FormlyFieldConfig[] {
       field: zipCodeField({})
     }, {
       field: countryField({})
-    }])
+    }], { size: 1, relative: true })
   ];
 }
 

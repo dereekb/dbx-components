@@ -11,11 +11,12 @@
         <button mat-button mat-flat-button color="primary">Ok</button>
       </dbx-section>
     </doc-feature-example>
-    <doc-feature-example header="dbx-subsection">
-
-    </doc-feature-example>
-    <doc-feature-example header="section">
-
+    <doc-feature-example header="dbx-subsection" hint="The subsection has a smaller header than a section.">
+      <dbx-subsection header="Subsection Header" hint="This is the subsection hint.">
+        <span sectionHeader>Custom Navigation Span</span>
+        <p>{{ lorem }}</p>
+        <button mat-button mat-flat-button color="primary">Ok</button>
+      </dbx-subsection>
     </doc-feature-example>
   </doc-feature-layout>
 </dbx-content-container>

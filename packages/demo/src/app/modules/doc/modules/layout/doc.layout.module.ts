@@ -1,3 +1,4 @@
+import { DocLayoutFlexComponent } from './container/flex.component';
 import { DocLayoutListComponent } from './container/list.component';
 import { DocLayoutSectionComponent } from './container/section.component';
 import { DocLayoutLayoutComponent } from './container/layout.component';
@@ -33,6 +34,7 @@ import { DocCustomItemListComponent, DocCustomItemListViewComponent, DocCustomIt
     DocLayoutLayoutComponent,
     DocLayoutHomeComponent,
     DocLayoutBarComponent,
+    DocLayoutFlexComponent,
     DocLayoutSectionComponent,
     DocLayoutContentComponent,
     DocLayoutListComponent

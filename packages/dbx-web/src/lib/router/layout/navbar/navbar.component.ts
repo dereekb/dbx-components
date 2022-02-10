@@ -35,11 +35,7 @@ export class DbxNavbarComponent extends AbstractTransitionDirective implements O
   private _breakpoint = new BehaviorSubject<ScreenMediaWidthType>('large');
   private _anchors = new BehaviorSubject<ClickableAnchorLink[]>([]);
 
-  readonly isBreakpointActive$ = combineLatest([this._dbxScreenMediaService.widthType$, this._breakpoint]).pipe(
-    map(([current, breakpoint]) => screenMediaWidthTypeIsActive(current, breakpoint)),
-    distinctUntilChanged(),
-    shareReplay(1)
-  );
+  readonly isBreakpointActive$ = this._dbxScreenMediaService.isBreakpointActive(this._breakpoint);
 
   readonly mode$ = combineLatest([this._inputMode, this.isBreakpointActive$]).pipe(
     map(([inputMode, breakpointActive]) => {

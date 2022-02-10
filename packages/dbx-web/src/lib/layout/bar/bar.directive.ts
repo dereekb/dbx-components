@@ -1,14 +1,13 @@
 
-import { Component, Input } from '@angular/core';
+import { Component, Input, Directive } from '@angular/core';
 import { Maybe } from '@dereekb/util';
 import { DbxBarColor } from './bar';
 
 /**
  * Acts as a wrapper for content distributed along a bar.
  */
-@Component({
+@Directive({
   selector: 'dbx-bar',
-  template: `<ng-content></ng-content>`,
   host: {
     'class': 'dbx-bar',
     '[class.dbx-primary-bg]': 'color === "primary"',
@@ -16,7 +15,7 @@ import { DbxBarColor } from './bar';
     '[class.dbx-warn-bg]': 'color === "warn"'
   }
 })
-export class DbxBarComponent {
+export class DbxBarDirective {
 
   @Input()
   color?: Maybe<DbxBarColor>;

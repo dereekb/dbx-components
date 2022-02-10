@@ -29,17 +29,19 @@ export interface DbxFormEvent {
  * Form that has an event stream, value, and state items.
  */
 export abstract class DbxForm<T = any> {
-  /**
-   * LockSet for the form.
-   */
-  abstract readonly lockSet: LockSet;
   abstract readonly stream$: Observable<DbxFormEvent>;
 
   /**
    * Returns an observable that returns the current state of the form.
    */
   abstract getValue(): Observable<T>;
+}
 
+export abstract class DbxMutableForm<T = any> extends DbxForm<T> {
+  /**
+   * LockSet for the form.
+   */
+  abstract readonly lockSet?: LockSet;
   /**
    * Sets the initial value of the form, and resets the form.
    * 
@@ -67,4 +69,11 @@ export abstract class DbxForm<T = any> {
 
 export function ProvideDbxForm<S extends DbxForm>(sourceType: Type<S>): Provider[] {
   return [{ provide: DbxForm, useExisting: forwardRef(() => sourceType) }];
+}
+
+export function ProvideDbxMutableForm<S extends DbxMutableForm>(sourceType: Type<S>): Provider[] {
+  return [
+    ...ProvideDbxForm(sourceType),
+    { provide: DbxMutableForm, useExisting: forwardRef(() => sourceType) }
+  ];
 }

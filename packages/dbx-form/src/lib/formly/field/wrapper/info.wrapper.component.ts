@@ -1,26 +1,26 @@
 import { Component } from '@angular/core';
 import { FieldWrapper, FormlyFieldConfig, FormlyTemplateOptions } from '@ngx-formly/core';
 
-export interface FormInfoSectionConfig<T> {
+export interface DbxFormInfoConfig {
   onInfoClick: () => void;
 }
 
-export interface FormInfoSectionWrapperTemplateOptions<T = any> extends FormlyTemplateOptions {
-  infoSection: FormInfoSectionConfig<T>;
+export interface DbxFormInfoWrapperTemplateOptions extends FormlyTemplateOptions {
+  infoWrapper: DbxFormInfoConfig;
 }
 
-export interface FormInfoSectionWFormlyConfig<T = any> extends FormlyFieldConfig {
-  templateOptions?: FormInfoSectionWrapperTemplateOptions<T>;
+export interface DbxFormInfoWrapperConfig extends FormlyFieldConfig {
+  templateOptions?: DbxFormInfoWrapperTemplateOptions;
 }
 
 @Component({
   template: `
-    <div class="form-info-section" fxLayout="row">
-      <div class="form-info-section-content" fxFlex="grow">
+    <div class="dbx-form-info-wrapper" fxLayout="row">
+      <div class="dbx-form-info-wrapper-content" fxFlex="grow">
         <ng-container #fieldComponent></ng-container>
       </div>
-      <div class="form-info-section-info" fxFlex="noshrink" fxLayout="column" fxLayoutAlign="center center">
-        <button mat-icon-button [attr.aria-label]="'show info button for ' + to.label || 'section'"
+      <div class="dbx-form-info-wrapper-info" fxFlex="noshrink" fxLayout="column" fxLayoutAlign="center center">
+        <button mat-icon-button [attr.aria-label]="'show info button for ' + (to.label || 'section')"
           (click)="onInfoClick()">
           <mat-icon>info</mat-icon>
         </button>
@@ -28,14 +28,14 @@ export interface FormInfoSectionWFormlyConfig<T = any> extends FormlyFieldConfig
     </div>
   `
 })
-export class FormInfoSectionWrapperComponent<T> extends FieldWrapper<FormInfoSectionWFormlyConfig<T>> {
+export class DbxFormInfoWrapperComponent extends FieldWrapper<DbxFormInfoWrapperConfig> {
 
-  get infoSection(): FormInfoSectionConfig<T> {
-    return this.to.infoSection;
+  get infoWrapper(): DbxFormInfoConfig {
+    return this.to.infoWrapper;
   }
 
   onInfoClick(): void {
-    this.infoSection.onInfoClick();
+    this.infoWrapper.onInfoClick();
   }
 
 }

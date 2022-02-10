@@ -9,6 +9,7 @@ $mobile-width: 80vw;
 $icon-only-width: 65px;
 $mat-list-item-height: 48px;
 $active-border-left-width: 2px;
+$dbx-sidenav-nav-bottom-padding: 24px;
 
 // MARK: Mixin
 @mixin core() {
@@ -18,6 +19,11 @@ $active-border-left-width: 2px;
 
     mat-sidenav {
       width: $width;
+
+      .mat-drawer-inner-container {
+        box-sizing: border-box;
+        padding-bottom: 24px;
+      }
     }
 
     &.dbx-sidenav-mobile {
@@ -46,8 +52,14 @@ $active-border-left-width: 2px;
       }
     }
 
-    .dbx-sidenav-anchor-list {
-      overflow-y: scroll;
+    .mat-sidenav .mat-drawer-inner-container {
+      overflow-y: scroll !important
+    }
+
+    .dbx-sidenav-nav {
+      .dbx-sidenav-nav-end {
+        padding-bottom: $dbx-sidenav-nav-bottom-padding;
+      }
     }
 
     .mat-nav-list.dbx-anchor-list {

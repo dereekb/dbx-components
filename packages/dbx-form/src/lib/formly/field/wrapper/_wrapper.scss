@@ -1,14 +1,19 @@
 @use '../../../style/theming';
 
 // MARK: Variables
-
+$form-flex-section-group-padding: 4px;
+$form-flex-section-group-item-padding: $form-flex-section-group-padding * 2;
 
 // MARK: Mixin
 @mixin core() {
 
-  .form-expandable-section-button {
+  .dbx-form-expand-wrapper-button {
     text-decoration: underline;
     margin-right: 8px;
+    margin-bottom: 6px;
+  }
+
+  .dbx-form-toggle-wrapper-toggle {
     margin-bottom: 6px;
   }
 

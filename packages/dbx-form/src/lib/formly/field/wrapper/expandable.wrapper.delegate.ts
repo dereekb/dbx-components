@@ -15,7 +15,7 @@ export interface AbstractFormExpandableSectionConfig<T = any> {
 }
 
 export interface FormExpandableSectionWrapperTemplateOptions<S extends AbstractFormExpandableSectionConfig> extends FormlyTemplateOptions {
-  expandableSection?: S;
+  expandWrapper?: S;
 }
 
 export interface FormExpandableSectionFormlyConfig<S> extends FormlyFieldConfig {
@@ -54,7 +54,7 @@ export class AbstractFormExpandableSectionWrapperDirective<S extends AbstractFor
   );
 
   get expandableSection(): Maybe<S> {
-    return this.to.expandableSection;
+    return this.to.expandWrapper;
   }
 
   get hasValueFn(): (value: any) => any {

@@ -1,10 +1,10 @@
 import { Component } from '@angular/core';
 import { AbstractFormExpandableSectionWrapperDirective, AbstractFormExpandableSectionConfig } from './expandable.wrapper.delegate';
 
-export type FormExpandableSectionWrapperButtonType = 'button' | 'text';
+export type DbxFormExpandWrapperButtonType = 'button' | 'text';
 
-export interface FormExpandableSectionConfig<T = any> extends AbstractFormExpandableSectionConfig<T> {
-  buttonType: FormExpandableSectionWrapperButtonType;
+export interface DbxFormExpandWrapperConfig<T = any> extends AbstractFormExpandableSectionConfig<T> {
+  buttonType?: DbxFormExpandWrapperButtonType;
 }
 
 /**
@@ -17,15 +17,15 @@ export interface FormExpandableSectionConfig<T = any> extends AbstractFormExpand
       <ng-container #fieldComponent></ng-container>
     </ng-container>
     <ng-container *ngSwitchCase="false">
-      <span class="form-expandable-section-button" (click)="open()">{{ expandLabel }}</span>
+      <span class="dbx-form-expandable-section-button" (click)="open()">{{ expandLabel }}</span>
     </ng-container>
   </ng-container>
   `
 })
-export class FormExpandableSectionWrapperComponent
-  extends AbstractFormExpandableSectionWrapperDirective<FormExpandableSectionConfig> {
+export class DbxFormExpandWrapperComponent
+  extends AbstractFormExpandableSectionWrapperDirective<DbxFormExpandWrapperConfig> {
 
-  get buttonType(): FormExpandableSectionWrapperButtonType {
+  get buttonType(): DbxFormExpandWrapperButtonType {
     return this.expandableSection?.buttonType ?? 'button';
   }
 

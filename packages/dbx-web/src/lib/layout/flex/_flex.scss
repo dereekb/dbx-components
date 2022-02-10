@@ -1,0 +1,76 @@
+@use '../../style/theming';
+
+// MARK: Variables
+$dbx-flex-group-padding: 8px;
+$dbx-flex-group-columns-count: 6;
+
+// MARK: Mixin
+@mixin core() {
+
+  .dbx-flex-group {
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: row;
+    align-content: stretch;
+    box-sizing: border-box;
+
+    // padding: $dbx-flex-group-padding;
+    margin: 0 #{-$dbx-flex-group-padding} #{-$dbx-flex-group-padding} 0;
+    padding: $dbx-flex-group-padding $dbx-flex-group-padding 0;
+
+    >* {
+      box-sizing: border-box;
+      padding: 0 $dbx-flex-group-padding $dbx-flex-group-padding 0;
+    }
+
+    @for $i from 1 through 6 {
+      .dbx-flex-#{$i} {
+        box-sizing: border-box;
+        padding: 0 $dbx-flex-group-padding $dbx-flex-group-padding 0;
+        flex: 1 1 calc((100% * (#{$i}/#{$dbx-flex-group-columns-count})));
+        max-width: calc((100% * (#{$i}/#{$dbx-flex-group-columns-count})));
+      }
+    }
+
+  }
+
+  .dbx-flex-group-relative>.dbx-flex-group,
+  .dbx-flex-group.dbx-flex-group-relative {
+    @for $i from 1 through 6 {
+      .dbx-flex-#{$i} {
+        max-width: unset;
+      }
+    }
+  }
+
+  .dbx-flex-group-small>.dbx-flex-group,
+  .dbx-flex-group.dbx-flex-group-small {
+    @for $i from 1 through 5 {
+      .dbx-flex-#{$i} {
+        box-sizing: border-box;
+        flex: 1 1 calc(100%);
+        max-width: 100%;
+      }
+    }
+  }
+
+}
+
+@mixin color($theme-config) {}
+
+@mixin typography($typography-config) {}
+
+@mixin theme($theme-config) {
+  @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-layout-flex') {
+    $color: theming.get-color-config($theme-config);
+    $typography: theming.get-typography-config($theme-config);
+
+    @if $color !=null {
+      @include color($theme-config);
+    }
+
+    @if $typography !=null {
+      @include typography($typography);
+    }
+  }
+}

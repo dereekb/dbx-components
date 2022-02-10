@@ -1,6 +1,6 @@
-import { Provider } from '@angular/core';
+import { Provider, Type } from '@angular/core';
 import { BehaviorSubject, Observable, of, switchMap, shareReplay, distinctUntilChanged } from 'rxjs';
-import { DbxForm, DbxFormEvent, DbxFormState } from '../form/form';
+import { DbxForm, DbxFormEvent, DbxFormState, DbxMutableForm, ProvideDbxMutableForm } from '../form/form';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { LockSet, filterMaybe } from '@dereekb/rxjs';
 import { Maybe } from '@dereekb/util';
@@ -16,7 +16,7 @@ export interface DbxFormlyInitialize<T> {
  * 
  * This is usually the component or element that contains the form itself.
  */
-export interface DbxFormlyContextDelegate<T = any> extends Omit<DbxForm<T>, 'lockSet' | 'setDisabled'> {
+export interface DbxFormlyContextDelegate<T = any> extends Omit<DbxMutableForm<T>, 'lockSet' | 'setDisabled'> {
   readonly stream$: Observable<DbxFormEvent>;
   init(initialize: DbxFormlyInitialize<T>): void;
 }
@@ -28,10 +28,8 @@ export function ProvideFormlyContext(): Provider[] {
   return [{
     provide: DbxFormlyContext,
     useClass: DbxFormlyContext
-  }, {
-    provide: DbxForm,
-    useExisting: DbxFormlyContext
-  }];
+  },
+  ...ProvideDbxMutableForm(DbxFormlyContext)];
 }
 
 /**

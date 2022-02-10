@@ -3,7 +3,7 @@ import { FormGroup } from '@angular/forms';
 import { FormlyFieldConfig, FormlyFormOptions } from '@ngx-formly/core';
 import { distinctUntilChanged, map, throttleTime, startWith, BehaviorSubject, Observable, Subject, switchMap, shareReplay, of } from 'rxjs';
 import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
-import { DbxFormEvent, DbxFormState } from '../form/form';
+import { DbxForm, DbxFormEvent, DbxFormState, ProvideDbxMutableForm } from '../form/form';
 import { DbxFormlyContext, DbxFormlyContextDelegate, DbxFormlyInitialize } from './formly.context';
 import { cloneDeep } from 'lodash';
 import { scanCount, switchMapMaybeObs } from '@dereekb/rxjs';
@@ -20,11 +20,12 @@ import { Maybe } from '@dereekb/util';
       <formly-form [form]="form" [fields]="(fields$ | async) ?? []" [model]="model"></formly-form>
     </form>
   `,
+  providers: ProvideDbxMutableForm(DbxFormlyFormComponent),
   host: {
     'class': 'dbx-formly'
   }
 })
-export class DbxFormlyFormComponent<T extends object> extends AbstractSubscriptionDirective implements DbxFormlyContextDelegate<T>, OnInit, OnDestroy {
+export class DbxFormlyFormComponent<T extends object> extends AbstractSubscriptionDirective implements DbxForm, DbxFormlyContextDelegate<T>, OnInit, OnDestroy {
 
   private _fields = new BehaviorSubject<Maybe<Observable<FormlyFieldConfig[]>>>(undefined);
   private _events = new BehaviorSubject<DbxFormEvent>({ isComplete: false, state: DbxFormState.INITIALIZING });

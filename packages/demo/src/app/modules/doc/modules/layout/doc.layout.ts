@@ -11,6 +11,11 @@ export const DOC_LAYOUT_ROUTES = [{
   ref: 'doc.layout.content'
 }, {
   icon: 'view_module',
+  title: 'Flex',
+  detail: 'dbxFlexGroup',
+  ref: 'doc.layout.flex'
+}, {
+  icon: 'view_module',
   title: 'Section',
   detail: 'dbx-section',
   ref: 'doc.layout.section'

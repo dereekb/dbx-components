@@ -3,7 +3,7 @@ import { Maybe } from '@dereekb/util';
 import { first, shareReplay, switchMap, Observable, of } from 'rxjs';
 import { AbstractFormExpandableSectionConfig, AbstractFormExpandableSectionWrapperDirective, FormExpandableSectionWrapperTemplateOptions } from './expandable.wrapper.delegate';
 
-export interface FormToggleSectionConfig<T = any> extends AbstractFormExpandableSectionConfig<T> {
+export interface DbxFormToggleWrapperConfig<T = any> extends AbstractFormExpandableSectionConfig<T> {
   toggleLabelObs?: (open: Maybe<boolean>) => Observable<string>;
 }
 
@@ -12,8 +12,8 @@ export interface FormToggleSectionConfig<T = any> extends AbstractFormExpandable
  */
 @Component({
   template: `
-  <div class="form-toggle-wrapper" [ngSwitch]="show$ | async">
-    <div class="form-toggle-wrapper-toggle">
+  <div class="dbx-form-toggle-wrapper" [ngSwitch]="show$ | async">
+    <div class="dbx-form-toggle-wrapper-toggle">
       <mat-slide-toggle [checked]="show$ | async" (toggleChange)="onToggleChange()">{{ slideLabel$ | async }}</mat-slide-toggle>
     </div>
     <ng-container *ngSwitchCase="true">
@@ -22,7 +22,7 @@ export interface FormToggleSectionConfig<T = any> extends AbstractFormExpandable
   </div>
   `
 })
-export class FormToggleSectionWrapperComponent extends AbstractFormExpandableSectionWrapperDirective<FormToggleSectionConfig> {
+export class DbxFormToggleWrapperComponent extends AbstractFormExpandableSectionWrapperDirective<DbxFormToggleWrapperConfig> {
 
   readonly slideLabel$ = this._toggleOpen.pipe(
     switchMap(x => {

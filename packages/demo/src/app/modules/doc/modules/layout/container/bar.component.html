@@ -2,7 +2,8 @@
   <doc-feature-layout header="Bar" hint="Bars are horizontal layout components.">
 
     <!-- Examples -->
-    <doc-feature-example header="dbx-pagebar" hint="Bar that is used for containing the navigation of the page, aka the top navbar.">
+    <doc-feature-example header="dbx-pagebar"
+      hint="Bar that is used for containing the navigation of the page, aka the top navbar.">
       <dbx-pagebar>
         <button left mat-raised-button>Left</button>
         <div right>
@@ -12,12 +13,15 @@
         </div>
       </dbx-pagebar>
     </doc-feature-example>
-    <doc-feature-example header="dbx-bar" hint="Used to center and pad horizontal content, such as buttons, using flex.">
+    <doc-feature-example header="dbx-bar"
+      hint="Used to center and pad horizontal content, such as buttons, using flex.">
       <dbx-content-border>
         <div>
           <dbx-bar>
             <button mat-raised-button>A</button>
+            <dbx-button-spacer></dbx-button-spacer>
             <button mat-raised-button>B</button>
+            <dbx-button-spacer></dbx-button-spacer>
             <button mat-raised-button>C</button>
             <dbx-spacer></dbx-spacer>
             <button mat-raised-button>D</button>

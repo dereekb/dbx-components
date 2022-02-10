@@ -12,8 +12,8 @@ import { DbxBarColor } from '../../../layout/bar/bar';
 @Component({
   selector: 'dbx-sidenav-page',
   template: `
-    <div class="" [ngClass]="(hidePagebar$ | async) ? 'dbx-pagebar-hide' : ''">
-      <dbx-sidenav-pagebar [color]="color">
+    <div>
+      <dbx-sidenav-pagebar [color]="color" [ngClass]="(hidePagebar$ | async) ? 'dbx-pagebar-hide' : ''">
         <ng-content left select="[navLeft]"></ng-content>
         <ng-content select="[navRight]"></ng-content>
       </dbx-sidenav-pagebar>

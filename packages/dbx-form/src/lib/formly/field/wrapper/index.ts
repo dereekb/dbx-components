@@ -2,7 +2,6 @@ export * from './expandable.wrapper.delegate';
 export * from './autotouch.wrapper.component';
 export * from './expandable.wrapper.component';
 export * from './flex.wrapper.component';
-export * from './flex.wrapper.layout';
 export * from './form.wrapper.module';
 export * from './info.wrapper.component';
 export * from './section.wrapper.component';

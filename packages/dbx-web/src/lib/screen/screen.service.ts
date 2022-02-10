@@ -1,8 +1,8 @@
-import { initialize, tapFirst } from '@dereekb/rxjs';
 import { Destroyable } from '@dereekb/util';
 import { MediaMatcher } from "@angular/cdk/layout";
-import { Subject, map, shareReplay, distinctUntilChanged, throttleTime, Observable } from "rxjs";
-import { ScreenMediaWidthType, ScreenMediaHeightType } from "./screen";
+import { ObservableGetter, asObservable, initialize, tapFirst } from '@dereekb/rxjs';
+import { Subject, map, shareReplay, distinctUntilChanged, throttleTime, Observable, combineLatest } from "rxjs";
+import { ScreenMediaWidthType, ScreenMediaHeightType, screenMediaWidthTypeIsActive } from "./screen";
 import { Injectable } from '@angular/core';
 
 /**
@@ -98,6 +98,20 @@ export class DbxScreenMediaService implements Destroyable {
     this._tabletQuery.onchange = null;
     this._largeQuery.onchange = null;
     this._updateWidth.complete();
+  }
+
+  /**
+   * Returns an observable that detects whether or no the current width is greater or equal to the given breakpoint.
+   * 
+   * @param inputBreakpoint 
+   * @returns 
+   */
+  isBreakpointActive(inputBreakpoint: ObservableGetter<ScreenMediaWidthType>): Observable<boolean> {
+    return combineLatest([this.widthType$, asObservable(inputBreakpoint)]).pipe(
+      map(([current, breakpoint]) => screenMediaWidthTypeIsActive(current, breakpoint)),
+      distinctUntilChanged(),
+      shareReplay(1)
+    );
   }
 
   private _readWidthType(): ScreenMediaWidthType {

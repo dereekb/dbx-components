@@ -2,7 +2,7 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatIconModule } from '@angular/material/icon';
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { DbxBarComponent } from './bar.component';
+import { DbxBarDirective } from './bar.directive';
 import { DbxBarHeaderComponent } from './bar.header.component';
 import { DbxPagebarComponent } from './pagebar.component';
 
@@ -16,12 +16,12 @@ import { DbxPagebarComponent } from './pagebar.component';
     MatIconModule
   ],
   declarations: [
-    DbxBarComponent,
+    DbxBarDirective,
     DbxBarHeaderComponent,
     DbxPagebarComponent
   ],
   exports: [
-    DbxBarComponent,
+    DbxBarDirective,
     DbxBarHeaderComponent,
     DbxPagebarComponent
   ]
