@@ -19,8 +19,8 @@ jobs:
       # look for existing cache and restore if found
       - restore_cache:
           keys:
-            - node-cache-{{ checksum "package-lock.json" }}
-            - node-cache-
+            - node-cache-x{{ checksum "package-lock.json" }}
+            - node-cache-x
       # install dependencies
       - run:
           name: install dependencies
@@ -29,7 +29,7 @@ jobs:
       - run: npx clean-modules --yes --exclude "**/firebase*/**" --exclude "**/@angular*/**"
       # save any changes to the cache
       - save_cache:
-          key: node-cache-{{ checksum "package-lock.json" }}
+          key: node-cache-x{{ checksum "package-lock.json" }}
           paths:
             - node_modules
       # initialize nx
