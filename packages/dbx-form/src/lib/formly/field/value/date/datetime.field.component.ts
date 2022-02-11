@@ -1,16 +1,18 @@
+import { MatInput } from '@angular/material/input';
 import { DateTimeMinuteConfig, DateTimeMinuteInstance, guessCurrentTimezone, readableTimeStringToDate, toReadableTimeString, utcDayForDate } from '@dereekb/date';
 import { switchMap, shareReplay, map, filter, startWith, tap, first, distinctUntilChanged, debounceTime, throttleTime } from 'rxjs/operators';
 import {
   ChangeDetectorRef,
-  Component, OnDestroy, OnInit
+  Component, OnDestroy, OnInit, ViewChild
 } from '@angular/core';
 import { AbstractControl, FormControl, Validators, FormGroup } from '@angular/forms';
-import { FieldType, FieldTypeConfig, FormlyFieldConfig } from '@ngx-formly/core';
+import { FieldType } from '@ngx-formly/material';
+import { FieldTypeConfig, FormlyFieldConfig } from '@ngx-formly/core';
 import { BehaviorSubject, Observable, combineLatest, Subject, merge, interval } from 'rxjs';
 import { Maybe, ReadableTimeString } from '@dereekb/util';
 import { MatDatepickerInputEvent } from '@angular/material/datepicker';
 import { addMinutes, isSameDay, isSameMinute, startOfDay } from 'date-fns';
-import { filterMaybe, SubscriptionObject, switchMapMaybeObs } from '@dereekb/rxjs';
+import { filterMaybe, skipFirstMaybe, SubscriptionObject, switchMapMaybeDefault, switchMapMaybeObs, tapLog } from '@dereekb/rxjs';
 
 export enum DateTimeFieldTimeMode {
   /**
@@ -44,7 +46,7 @@ export interface DbxDateTimeFieldConfig {
   timeMode?: DateTimeFieldTimeMode;
 
   /**
-   * Other form contro for enabling/disabling whether or not it is a full day.
+   * Other form control for enabling/disabling whether or not it is a full day.
    *
    * This field is only used if time is optional.
    *
@@ -72,10 +74,12 @@ export interface DbxDateTimeFieldConfig {
 export interface DateTimeFormlyFieldConfig extends DbxDateTimeFieldConfig, FormlyFieldConfig { }
 
 @Component({
-  templateUrl: 'datetime.field.component.html',
-  // TODO: styleUrls: ['./date.scss']
+  templateUrl: 'datetime.field.component.html'
 })
 export class DbxDateTimeFieldComponent extends FieldType<DateTimeFormlyFieldConfig & FieldTypeConfig> implements OnInit, OnDestroy {
+
+  @ViewChild('dateInput', { read: MatInput })
+  dateInput!: MatInput;
 
   private _sub = new SubscriptionObject();
   private _valueSub = new SubscriptionObject();
@@ -109,7 +113,7 @@ export class DbxDateTimeFieldComponent extends FieldType<DateTimeFormlyFieldConf
   );
 
   readonly timeString$: Observable<ReadableTimeString> = this.value$.pipe(
-    filter(x => Boolean(x)),
+    filterMaybe(),
     map((x) => {
       const timezone = guessCurrentTimezone();
       const timeString = toReadableTimeString(x, timezone);
@@ -123,8 +127,12 @@ export class DbxDateTimeFieldComponent extends FieldType<DateTimeFormlyFieldConf
     ]
   });
 
-  private _date = new BehaviorSubject<Date>(new Date());
+  private _date = new BehaviorSubject<Maybe<Date>>(new Date());
   private _config = new BehaviorSubject<Maybe<Observable<DateTimePickerConfiguration>>>(undefined);
+
+  get dateOnly(): boolean {
+    return this.timeMode === DateTimeFieldTimeMode.NONE;
+  }
 
   get timeOnly(): Maybe<boolean> {
     return this.field.timeOnly;
@@ -155,93 +163,106 @@ export class DbxDateTimeFieldComponent extends FieldType<DateTimeFormlyFieldConf
     shareReplay(1)
   );
 
-  readonly date$ = this._date.pipe(distinctUntilChanged((a, b) => isSameDay(a, b)));
+  readonly date$ = this._date.asObservable();
+
   readonly dateValue$ = merge(
     this.value$.pipe(startWith(undefined)),
     this.date$
   ).pipe(
-    filterMaybe(),
-    map((x: Date) => startOfDay(x)),
-    distinctUntilChanged((a, b) => isSameDay(a, b)),
+    map((x: Maybe<Date>) => (x) ? startOfDay(x) : x),
+    distinctUntilChanged((a, b) => Boolean(a && b) && isSameDay(a!, b!)),
     shareReplay(1)
   );
 
   readonly timeInput$: Observable<ReadableTimeString> = this._updateTime.pipe(
     debounceTime(5),
-    map(x => this.timeInputCtrl.value),
+    map(_ => this.timeInputCtrl.value),
     distinctUntilChanged()
   );
 
-  readonly config$ = this._config.pipe(switchMapMaybeObs(), shareReplay(1));
+  readonly config$ = this._config.pipe(switchMapMaybeDefault(), shareReplay(1));
 
-  readonly rawDateTime$: Observable<Date> = combineLatest([
-    this.dateValue$.pipe(filterMaybe()),
+  readonly rawDateTime$: Observable<Maybe<Date>> = combineLatest([
+    this.dateValue$,
     this.timeInput$.pipe(startWith(null as any)),
     this.fullDay$
   ]).pipe(
     map(([date, timeString, fullDay]) => {
       let result: Maybe<Date>;
 
-      if (fullDay) {
-        if (this.field.fullDayInUTC) {
-          result = utcDayForDate(date);
+      if (date) {
+        if (fullDay) {
+          if (this.field.fullDayInUTC) {
+            result = utcDayForDate(date);
+          } else {
+            result = startOfDay(date);
+          }
+        } else if (timeString) {
+          result = readableTimeStringToDate(timeString, {
+            date,
+            useSystemTimezone: true
+          }) ?? date;
         } else {
-          result = startOfDay(date);
+          result = date;
         }
-      } else if (timeString) {
-        result = readableTimeStringToDate(timeString, {
-          date,
-          useSystemTimezone: true
-        });
       }
 
       return result;
     }),
-    filterMaybe(),
-    distinctUntilChanged((a, b) => isSameMinute(a, b)),
+    distinctUntilChanged<Maybe<Date>>((a, b) => Boolean(a && b) && isSameMinute(a!, b!)),
     shareReplay(1)
   );
 
-  readonly timeOutput$ = combineLatest([
+  readonly timeOutput$: Observable<Maybe<Date>> = combineLatest([
     this.rawDateTime$,
     this._offset,
     this.config$.pipe(distinctUntilChanged()),
   ]).pipe(
-    throttleTime(10, undefined, { leading: false, trailing: true }),
+    throttleTime(40, undefined, { leading: false, trailing: true }),
     distinctUntilChanged((current, next) => current[0] === next[0] && next[1] === 0),
     tap(([_, stepsOffset]) => (stepsOffset) ? this._offset.next(0) : 0),
     map(([date, stepsOffset, config]) => {
-      const instance = new DateTimeMinuteInstance({
-        date,
-        ...config,
-        roundDownToMinute: true
-      });
 
-      date = instance.limit(date);
+      if (date != null) {
+        const instance = new DateTimeMinuteInstance({
+          date,
+          ...config,
+          roundDownToMinute: true
+        });
 
-      const minutes = stepsOffset * 5;
-      date = addMinutes(date, minutes);
+        date = instance.limit(date);
+
+        const minutes = stepsOffset * 5;
+        date = addMinutes(date, minutes);
+      }
 
       return date;
     }),
-    distinctUntilChanged((a, b) => a && b && isSameMinute(a, b)),
+    distinctUntilChanged((a, b) => Boolean(a && b) && isSameMinute(a!, b!)),
+    shareReplay(1)
   );
 
   constructor(private readonly cdRef: ChangeDetectorRef) {
     super();
   }
 
-  ngOnInit(): void {
+  override ngOnInit(): void {
+    super.ngOnInit();
     this._formControlObs.next(this.formControl);
     this._config.next(this.field.getConfigObs?.());
 
-    this._sub.subscription = this.timeOutput$.subscribe((value) => {
+    this._sub.subscription = this.timeOutput$.pipe(skipFirstMaybe()).subscribe((value) => {
       this.formControl.setValue(value);
       this.formControl.markAsDirty();
       this.formControl.markAsTouched();
     });
 
     this._valueSub.subscription = this.timeString$.subscribe((x) => {
+      // Skip events where the timeInput value is cleared.
+      if (!this.timeInputCtrl.value && x === '12:00AM') {
+        return;
+      }
+
       this.timeInputCtrl.setValue(x);
     });
 
@@ -277,13 +298,22 @@ export class DbxDateTimeFieldComponent extends FieldType<DateTimeFormlyFieldConf
     }
   }
 
-  ngOnDestroy(): void {
+  override ngOnDestroy(): void {
+    super.ngOnDestroy();
     this._formControlObs.complete();
     this._date.complete();
     this._updateTime.complete();
     this._config.complete();
     this._sub.destroy();
     this._valueSub.destroy();
+  }
+
+  dateTextChanged(e: any): void {
+    const value = this.dateInput.value;
+
+    if (value == null) {
+      this._date.next(undefined);
+    }
   }
 
   datePicked(event: MatDatepickerInputEvent<Date>): void {

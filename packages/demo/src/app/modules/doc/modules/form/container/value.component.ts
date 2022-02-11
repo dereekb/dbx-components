@@ -1,6 +1,6 @@
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { Component } from '@angular/core';
-import { addressField, addressListField, cityField, countryField, emailField, phoneField, nameField, phoneAndLabelSectionField, wrappedPhoneAndLabelField, repeatArrayField, stateField, textAreaField, textField, zipCodeField, phoneListField } from '@dereekb/dbx-form';
+import { addressField, addressListField, cityField, countryField, emailField, phoneField, nameField, phoneAndLabelSectionField, wrappedPhoneAndLabelField, repeatArrayField, stateField, textAreaField, textField, zipCodeField, phoneListField, dateTimeField, DateTimeFieldTimeMode } from '@dereekb/dbx-form';
 
 @Component({
   templateUrl: './value.component.html'
@@ -19,6 +19,13 @@ export class DocFormValueComponent {
 
   readonly textAreaField: FormlyFieldConfig[] = [
     textAreaField({ key: 'test', label: 'Text Area Field', placeholder: 'Placeholder', required: true })
+  ];
+
+  readonly dateTimeFields: FormlyFieldConfig[] = [
+    dateTimeField({ key: 'date', required: true, description: 'This is the default date field that requires the user pick a date and time.' }),
+    dateTimeField({ key: 'timeOptional', timeMode: DateTimeFieldTimeMode.OPTIONAL, description: 'This date field is for picking a day, with an optional time.' }),
+    dateTimeField({ key: 'dayOnly', timeMode: DateTimeFieldTimeMode.NONE, description: 'This date field is for picking a day only.' }),
+    dateTimeField({ key: 'timeOnly', timeOnly: true, description: 'This date field is for picking a time only.' })
   ];
 
   readonly addressFields: FormlyFieldConfig[] = [

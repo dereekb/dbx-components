@@ -23,7 +23,7 @@ export function timeOnlyField(config: Partial<TimeFieldConfig>): DateTimeFormlyF
 }
 
 export function dateTimeField({
-  key,
+  key = 'date',
   label = '',
   placeholder = '',
   description = '',
@@ -44,7 +44,10 @@ export function dateTimeField({
       label,
       placeholder,
       required,
-      description
+      description,
+      styleWrapper: {
+        style: 'dbx-datetime-parent-form-field'
+      }
     },
   });
 

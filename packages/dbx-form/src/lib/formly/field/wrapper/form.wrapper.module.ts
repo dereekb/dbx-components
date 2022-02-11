@@ -13,6 +13,7 @@ import { AutoTouchFieldWrapperComponent } from './autotouch.wrapper.component';
 import { DbxFormToggleWrapperComponent } from './toggle.wrapper.component';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { DbxSectionLayoutModule, DbxTextModule, DbxFlexLayoutModule } from '@dereekb/dbx-web';
+import { DbxFormStyleWrapperComponent } from './style.wrapper.component';
 
 @NgModule({
   imports: [
@@ -32,7 +33,8 @@ import { DbxSectionLayoutModule, DbxTextModule, DbxFlexLayoutModule } from '@der
         { name: 'section', component: DbxFormSectionWrapperComponent },
         { name: 'subsection', component: DbxFormSubsectionWrapperComponent },
         { name: 'info', component: DbxFormInfoWrapperComponent },
-        { name: 'flex', component: DbxFormFlexWrapperComponent }
+        { name: 'flex', component: DbxFormFlexWrapperComponent },
+        { name: 'style', component: DbxFormStyleWrapperComponent }
       ]
     })
   ],
@@ -43,7 +45,8 @@ import { DbxSectionLayoutModule, DbxTextModule, DbxFlexLayoutModule } from '@der
     DbxFormInfoWrapperComponent,
     DbxFormExpandWrapperComponent,
     DbxFormToggleWrapperComponent,
-    DbxFormFlexWrapperComponent
+    DbxFormFlexWrapperComponent,
+    DbxFormStyleWrapperComponent
   ],
   exports: []
 })

@@ -1,4 +1,5 @@
-import { DbxFormSectionConfig, sectionWrapper } from '@dereekb/dbx-form';
+import { DbxFormSectionConfig } from '../../wrapper/section.wrapper.component';
+import { sectionWrapper } from '../../wrapper/wrapper';
 import { textField, TextFieldConfig } from '../text/text.field';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { LabeledFieldConfig, formlyField } from '../../field';
