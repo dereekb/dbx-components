@@ -1,6 +1,5 @@
-import { addMinutes } from 'date-fns';
-import { isConsideredUtcTimezoneString, isSameNonNullValue, Maybe, TimezoneString, UTC_TIMEZONE_STRING } from '@dereekb/util';
-import { addMilliseconds } from 'date-fns';
+import { addMinutes, addMilliseconds } from 'date-fns';
+import { isConsideredUtcTimezoneString, isSameNonNullValue, Maybe, Milliseconds, TimezoneString, UTC_TIMEZONE_STRING } from '@dereekb/util';
 import { getTimezoneOffset } from 'date-fns-tz';
 import { minutesToMs } from './date';
 
@@ -16,15 +15,6 @@ import { minutesToMs } from './date';
  */
 export type BaseDateAsUTC = Date;
 
-export interface DateTimezoneConversionFnConfig {
-
-  /**
-   * Uses the computed offset between the system and the timezone specified here.
-   */
-  betweenSystemAndOffset?: boolean;
-
-}
-
 export interface DateTimezoneConversionConfig {
   /**
    * Timezone to be relative to. If not defined, values are returned in UTC.
@@ -34,14 +24,17 @@ export interface DateTimezoneConversionConfig {
   /**
    * Whether or not to use the system timezone/offset. 
    * 
-   * This will convert between UTC and the system timezone.
+   * This will convert between UTC and the current system's timezone.
    */
   useSystemTimezone?: boolean;
 
   /**
-   * Custom timezone offset to specify for the result.
+   * Custom timezone offset (in ms) between the "normal" and the base date.
+   * 
+   * Examples:
+   * - UTC-6 is negative 6 hours, in milliseconds.
    */
-  timezoneOffset?: number;
+  timezoneOffset?: Milliseconds;
 
 }
 
@@ -64,19 +57,65 @@ export function isSameDateTimezoneConversionConfig(a: DateTimezoneConversionConf
   return isSame;
 }
 
+/**
+ * Returns the current offset in milliseconds.
+ * 
+ * The offset corresponds positively with the UTC offset, so UTC-6 is negative 6 hours, in milliseconds.
+ * 
+ * @param date Date is required to get the correct offset for the given date.
+ * @returns 
+ */
 export function getCurrentSystemOffsetInMs(date: Date): number {
-  return minutesToMs(date.getTimezoneOffset());
+  return -minutesToMs(date.getTimezoneOffset());
 }
 
-interface InternalDateTimezoneBaseDateConverter {
-  getCurrentOffset(date: Date): number;
-  normalDateToBaseDate(date: Date, addOffset?: number): Date;
-  baseDateToNormalDate(date: Date, addOffset?: number): Date;
+export type DateTimezoneConversionTarget = 'target' | 'base' | 'system';
+
+export type DateTimezoneOffsetFunction = (date: Date, from: DateTimezoneConversionTarget, to: DateTimezoneConversionTarget) => Milliseconds;
+
+export interface DateTimezoneBaseDateConverter {
+  getCurrentOffset: DateTimezoneOffsetFunction;
+  /**
+   * Converts the given date into a date relative to the UTC's date.
+   * 
+   * For example, if it is 2PM in the input time, the resulting time will be 2PM UTC.
+   * - Input: 2021-08-16T14:00:00.000-06:00
+   * - Output: 2021-08-16T14:00:00.000Z
+   * 
+   * @param date 
+   * @param addOffset 
+   */
+  targetDateToBaseDate(date: Date): Date;
+  baseDateToTargetDate(date: Date): Date;
+  baseDateToSystemDate(date: Date): Date;
+  /**
+   * Converts the given date into a date relative to the system's date.
+   * 
+   * For example, if it is 2PM in the input time, the resulting time will be 2PM in the current system time.
+   * - Input: 2021-08-16T14:00:00.000-06:00
+   * - Output: 2021-08-16T14:00:00.000+02:00
+   * 
+   * @param date 
+   * @param addOffset 
+   */
+  targetDateToSystemDate(date: Date): Date;
+  systemDateToTargetDate(date: Date): Date;
+  systemDateToBaseDate(date: Date): Date;
 }
 
-export interface DateTimezoneBaseDateConverter extends InternalDateTimezoneBaseDateConverter {
-  normalDateToBaseDate(date: Date): Date;
-  baseDateToNormalDate(date: Date): Date;
+export function calculateAllConversions(date: Date, converter: DateTimezoneBaseDateConverter, map: (time: Milliseconds) => number = (x) => x): any {
+  const options: DateTimezoneConversionTarget[] = ['target', 'base', 'system'];
+  const conversions: any = {};
+
+  options.forEach((from) => {
+    options.forEach((to) => {
+      if (from !== to) {
+        conversions[`${from}-${to}`] = map(converter.getCurrentOffset(date, from, to));
+      }
+    })
+  })
+
+  return conversions;
 }
 
 /**
@@ -89,7 +128,7 @@ export class DateTimezoneUtcNormalInstance implements DateTimezoneBaseDateConver
   readonly config: DateTimezoneConversionConfig;
 
   readonly hasConversion: boolean;
-  private readonly _converter: InternalDateTimezoneBaseDateConverter;
+  private readonly _getOffset: DateTimezoneOffsetFunction;
 
   constructor(config: Maybe<TimezoneString> | DateTimezoneConversionConfig) {
     if (config == null) {
@@ -120,77 +159,102 @@ export class DateTimezoneUtcNormalInstance implements DateTimezoneBaseDateConver
     const hasConversion = Boolean(getOffsetInMsFn);
 
     if (hasConversion) {
-      function calculateOffset(date: Date, addOffset = 0) {
-        const offset = getOffsetInMsFn!(date);
-        const total = offset + addOffset;
-        return total;
+      function calculateOffset(date: Date, fn = getOffsetInMsFn!) {
+        const offset = fn(date);
+        return offset;
       }
 
-      this._converter = {
-        getCurrentOffset: getOffsetInMsFn!,
-        baseDateToNormalDate: (x, addOffset) => {
-          return addMilliseconds(x, -calculateOffset(x, addOffset));
-        },
-        normalDateToBaseDate: (x, addOffset) => {
-          return addMilliseconds(x, calculateOffset(x, addOffset));
+      function calculateSystemNormalDifference(date: Date) {
+        const normalOffset = calculateOffset(date);
+        const systemOffset = getCurrentSystemOffsetInMs(date);
+        return -normalOffset + systemOffset;
+      }
+
+      this._getOffset = function getCurrentOffset(x: Date, from: DateTimezoneConversionTarget, to: DateTimezoneConversionTarget): number {
+        if (from === to) {
+          return 0;
+        } else {
+          const target = `${from}-${to}`;
+          let offset: number;
+
+          switch (target) {
+            case 'target-base':
+              offset = -calculateOffset(x);
+              break;
+            case 'base-target':
+              offset = calculateOffset(x);
+              break;
+            case 'target-system':
+              offset = calculateSystemNormalDifference(x);
+              break;
+            case 'system-target':
+              offset = -calculateSystemNormalDifference(x);
+              break;
+            case 'base-system':
+              offset = getCurrentSystemOffsetInMs(x);
+              break;
+            case 'system-base':
+              offset = -getCurrentSystemOffsetInMs(x);
+              break;
+          }
+
+          return offset!;
         }
       };
     } else {
-      this._converter = {
-        getCurrentOffset: () => 0,
-        baseDateToNormalDate: (x: Date) => x,
-        normalDateToBaseDate: (x: Date) => x
-      };
+      this._getOffset = () => 0
     }
 
     this.hasConversion = hasConversion;
   }
 
+  private _computeOffsetDate(date: Date, from: DateTimezoneConversionTarget, to: DateTimezoneConversionTarget) {
+    return addMilliseconds(date, this._getOffset(date, from, to));
+  }
+
   // MARK: DateTimezoneBaseDateConverter
-  getCurrentOffset(date: Date): number {
-    return this._converter.getCurrentOffset(date);
+  getCurrentOffset(date: Date, from: DateTimezoneConversionTarget, to: DateTimezoneConversionTarget): number {
+    return this._getOffset(date, from, to);
   }
 
-  baseDateToNormalDate(date: Date): Date {
-    return this._converter.baseDateToNormalDate(date);
+  targetDateToBaseDate(date: Date): Date {
+    return this._computeOffsetDate(date, 'target', 'base');
   }
 
-  normalDateToBaseDate(date: Date): Date {
-    return this._converter.normalDateToBaseDate(date);
+  baseDateToTargetDate(date: Date): Date {
+    return this._computeOffsetDate(date, 'base', 'target');
   }
 
-  _baseDateToNormalDate(date: Date, config: DateTimezoneConversionFnConfig): Date {
-    return this._converter.baseDateToNormalDate(date, this._calculateAddFromConfig(date, config));
+  baseDateToSystemDate(date: Date): Date {
+    return this._computeOffsetDate(date, 'base', 'system');
   }
 
-  _normalDateToBaseDate(date: Date, config: DateTimezoneConversionFnConfig): Date {
-    return this._converter.normalDateToBaseDate(date, this._calculateAddFromConfig(date, config));
+  systemDateToBaseDate(date: Date): Date {
+    return this._computeOffsetDate(date, 'system', 'base');
   }
 
-  _calculateAddFromConfig(date: Date, config: DateTimezoneConversionFnConfig): number {
-    let add: number = 0;
+  targetDateToSystemDate(date: Date): Date {
+    return this._computeOffsetDate(date, 'target', 'system');
+  }
 
-    if (config.betweenSystemAndOffset) {
-      add = getCurrentSystemOffsetInMs(date);
-    }
-
-    return add;
+  systemDateToTargetDate(date: Date): Date {
+    return this._computeOffsetDate(date, 'system', 'target');
   }
 
 }
 
 export function baseDateToNormalDate(date: Date, timezone: Maybe<TimezoneString>): Date {
-  return new DateTimezoneUtcNormalInstance(timezone).baseDateToNormalDate(date);
+  return new DateTimezoneUtcNormalInstance(timezone).baseDateToTargetDate(date);
 }
 
 export function normalDateToBaseDate(date: Date, timezone: Maybe<TimezoneString>): Date {
-  return new DateTimezoneUtcNormalInstance(timezone).normalDateToBaseDate(date);
+  return new DateTimezoneUtcNormalInstance(timezone).targetDateToBaseDate(date);
 }
 
 export function systemBaseDateToNormalDate(date: Date): Date {
-  return new DateTimezoneUtcNormalInstance({ useSystemTimezone: true }).baseDateToNormalDate(date);
+  return new DateTimezoneUtcNormalInstance({ useSystemTimezone: true }).baseDateToTargetDate(date);
 }
 
 export function systemNormalDateToBaseDate(date: Date): Date {
-  return new DateTimezoneUtcNormalInstance({ useSystemTimezone: true }).normalDateToBaseDate(date);
+  return new DateTimezoneUtcNormalInstance({ useSystemTimezone: true }).targetDateToBaseDate(date);
 }

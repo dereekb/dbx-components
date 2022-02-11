@@ -76,15 +76,15 @@
           "executor": "@nrwl/workspace:run-commands",
           "options": {
             "commands": [{
-              "command": "TZ=america/new_york nx test date"
+              "command": "TZ=America/New_York nx test date"
             }, {
-              "command": "TZ=america/chicago nx test date"
+              "command": "TZ=America/Chicago nx test date"
             }, {
-              "command": "TZ=america/los_angeles nx test date"
+              "command": "TZ=America/Los_Angeles nx test date"
             }, {
-              "command": "TZ=europe/dublin nx test date"
+              "command": "TZ=Europe/Dublin nx test date"
             }, {
-              "command": "TZ=asia/tokyo nx test date"
+              "command": "TZ=Asia/Tokyo nx test date"
             }, {
               "command": "nx test date"
             }],
