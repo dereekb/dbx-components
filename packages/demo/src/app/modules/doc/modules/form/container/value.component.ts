@@ -1,6 +1,6 @@
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { Component } from '@angular/core';
-import { addressField, addressListField, cityField, countryField, emailField, nameField, phoneAndLabelFieldGroup, phoneAndLabelFields, repeatArrayField, stateField, textAreaField, textField, zipCodeField } from '@dereekb/dbx-form';
+import { addressField, addressListField, cityField, countryField, emailField, phoneField, nameField, phoneAndLabelSectionField, wrappedPhoneAndLabelField, repeatArrayField, stateField, textAreaField, textField, zipCodeField, phoneListField } from '@dereekb/dbx-form';
 
 @Component({
   templateUrl: './value.component.html'
@@ -35,10 +35,26 @@ export class DocFormValueComponent {
       repeatFieldGroup: [
         nameField(),
         emailField(),
-        phoneAndLabelFieldGroup(),
+        phoneAndLabelSectionField(),
         addressListField()
       ]
     })
+  ];
+
+  readonly phoneFields: FormlyFieldConfig[] = [
+    phoneField(),
+    wrappedPhoneAndLabelField({
+      phoneField: {
+        key: 'labeledPhoneKey'
+      }
+    }),
+    phoneAndLabelSectionField({
+      key: 'section'
+    })
+  ];
+
+  readonly phoneListField: FormlyFieldConfig[] = [
+    phoneListField()
   ];
 
 }

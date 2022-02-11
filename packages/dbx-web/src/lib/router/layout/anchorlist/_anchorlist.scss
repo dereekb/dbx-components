@@ -12,6 +12,7 @@ $active-child-item-left-padding: 5px;
 @mixin color($theme-config) {
   $color-config: theming.get-color-config($theme-config);
   $background: map.get($color-config, 'background');
+  $background-hover-color: theming.get-color-from-palette($background, 'hover');
 
   .dbx-anchor-list.mat-nav-list {
 
@@ -32,7 +33,7 @@ $active-child-item-left-padding: 5px;
     .dbx-anchor-active-eq {
       .mat-list-item {
         opacity: 1;
-        background: adjust-color($color: theming.get-color-from-palette($background, 'hover'), $alpha: 0.25);
+        background: color.scale($color:$background-hover-color, $alpha: 25%);
       }
     }
 
@@ -44,7 +45,7 @@ $active-child-item-left-padding: 5px;
     */
 
     .dbx-anchor-list-child {
-      background: adjust-color(theming.get-color-from-palette($background, 'hover'), $alpha: 0.1);
+      background: color.scale($background-hover-color, $alpha: 10%);
     }
 
   }

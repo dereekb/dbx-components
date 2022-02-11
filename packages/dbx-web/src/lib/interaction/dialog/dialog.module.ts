@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { DbxDialogContentComponent } from './dialog.content.component';
+import { DbxDialogContentDirective } from './dialog.content.component';
 import { DbxStyleLayoutModule } from '../../layout/style/style.layout.module';
 
 /**
@@ -12,10 +12,10 @@ import { DbxStyleLayoutModule } from '../../layout/style/style.layout.module';
     DbxStyleLayoutModule
   ],
   declarations: [
-    DbxDialogContentComponent,
+    DbxDialogContentDirective,
   ],
   exports: [
-    DbxDialogContentComponent
+    DbxDialogContentDirective
   ]
 })
 export class DbxDialogInteractionModule { }

@@ -3,13 +3,14 @@ import { FormlyFieldConfig } from '@ngx-formly/core';
 import { LabeledFieldConfig, formlyField } from '../../field';
 import { flexLayoutWrapper } from '../../wrapper/wrapper';
 import { DbxInternationalPhoneFieldConfig, InternationalPhoneFormlyFieldConfig } from './phone.field.component';
+import { repeatArrayField, RepeatArrayFieldConfig } from '../array/array.field';
 
 export interface InternationalPhoneFieldConfig extends LabeledFieldConfig, DbxInternationalPhoneFieldConfig { }
 
-export function internationalPhoneField({
-  key, label = '', placeholder = '',
+export function phoneField({
+  key = 'phone', label = '', placeholder,
   required = false
-}: Partial<InternationalPhoneFieldConfig>): InternationalPhoneFormlyFieldConfig {
+}: Partial<InternationalPhoneFieldConfig> = {}): InternationalPhoneFormlyFieldConfig {
   const fieldConfig: FormlyFieldConfig = formlyField({
     key,
     type: 'intphone',
@@ -25,71 +26,65 @@ export function internationalPhoneField({
   return fieldConfig;
 }
 
-export interface PhoneFormlyFieldsConfig {
-  phoneField?: InternationalPhoneFieldConfig;
+export interface WrappedPhoneAndLabelFieldConfig {
+  phoneField?: Partial<InternationalPhoneFieldConfig>;
   labelField?: TextFieldConfig;
 }
 
-export function phoneAndLabelFields({ phoneField: phone, labelField: label }: PhoneFormlyFieldsConfig): FormlyFieldConfig[] {
-  return [
-    flexLayoutWrapper([
-      {
-        field: internationalPhoneField({ key: 'phone', ...phone })
-      },
-      {
-        field: textField({
-          key: 'label',
-          label: 'Label',
-          autocomplete: 'phone-label',
-          ...label
-        })
-      }
-    ])
-  ];
+/**
+ * Puts a phone and 
+ * @param param0 
+ * @returns 
+ */
+export function wrappedPhoneAndLabelField({ phoneField: phone, labelField: label }: WrappedPhoneAndLabelFieldConfig = {}): FormlyFieldConfig {
+  return flexLayoutWrapper([
+    {
+      field: phoneField(phone),
+      size: 2
+    },
+    {
+      field: textField({
+        key: 'label',
+        label: 'Label',
+        autocomplete: 'phone-label',
+        ...label
+      }),
+      size: 4
+    }
+  ], { relative: true });
 }
 
-export interface PhoneAndLabelFieldGroupConfig extends PhoneFormlyFieldsConfig {
+export interface PhoneAndLabelFieldSectionConfig extends WrappedPhoneAndLabelFieldConfig {
   key?: string;
   label?: string;
   required?: boolean;
 }
 
-export function phoneAndLabelFieldGroup({ key = 'phone', label = 'Phone Number', required = false, phoneField, labelField }: PhoneAndLabelFieldGroupConfig = {}): FormlyFieldConfig {
+export function phoneAndLabelSectionField({ key, label = 'Phone Number', phoneField, labelField }: PhoneAndLabelFieldSectionConfig = {}): FormlyFieldConfig {
   return {
     key,
     wrappers: ['section'],
     templateOptions: {
-      label,
-      required
+      label
     },
-    fieldGroup: phoneAndLabelFields({ phoneField, labelField })
+    fieldGroup: [wrappedPhoneAndLabelField({ phoneField, labelField })]
   };
 }
 
-export interface PhoneListFieldConfig extends PhoneAndLabelFieldGroupConfig {
-  maxPhones?: number;
-  repeatSection?: {
-    addText: string
-    removeText: string
-  }
+export interface PhoneListFieldConfig extends Omit<RepeatArrayFieldConfig, 'repeatFieldGroup'> {
+  phoneAndLabel?: WrappedPhoneAndLabelFieldConfig;
+  repeatFieldGroup?: FormlyFieldConfig[];
 }
 
-export function phoneListField({ key = 'phones', label = 'Phone Numbers', repeatSection, required = false, maxPhones = 6, phoneField, labelField }: PhoneListFieldConfig = {}): FormlyFieldConfig {
-  return {
+export function phoneListField(repeatConfig: Partial<PhoneListFieldConfig> = {}): FormlyFieldConfig {
+  const { key = 'phones', label = 'Phone Numbers', addText = 'Add Phone Number', removeText = 'Remove Phone Number', repeatFieldGroup, phoneAndLabel } = repeatConfig;
+
+  return repeatArrayField({
+    ...repeatConfig,
     key,
-    type: 'repeat',
-    wrappers: ['section'],
-    templateOptions: {
-      label,
-      required,
-      repeatSection: repeatSection ?? {
-        addText: 'Add Phone Number',
-        removeText: 'Remove Phone Number'
-      },
-      maxLength: maxPhones
-    },
-    fieldArray: {
-      fieldGroup: phoneAndLabelFields({ phoneField, labelField })
-    }
-  };
-}
+    label,
+    addText,
+    removeText,
+    repeatFieldGroup: repeatFieldGroup ?? [wrappedPhoneAndLabelField(phoneAndLabel)]
+  });
+};

@@ -4,7 +4,22 @@
 
 
 // MARK: Mixin
-@mixin core() {}
+@mixin core() {
+
+  .dbx-form-phone-field,
+  .mat-form-field {
+    width: 100%;
+  }
+
+  .mat-form-field {
+    margin-top: 1px;
+
+    button.country-selector {
+      opacity: 100;
+    }
+  }
+
+}
 
 @mixin color($theme-config) {}
 

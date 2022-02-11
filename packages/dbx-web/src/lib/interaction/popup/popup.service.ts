@@ -32,7 +32,6 @@ export class DbxPopupService {
         position
       },
       configuration: {
-        panelClass: 'dbx-popup-container',
         width: APP_POPUP_NORMAL_WIDTH,
         height: APP_POPUP_NORMAL_HEIGHT,
         useGlobalPositionStrategy: true,

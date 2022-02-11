@@ -38,7 +38,7 @@ export interface DbxPopupComponentConfig<O, I, T> {
 @Component({
   template: `
   <dbx-popup-coordinator>
-    <div dbx-style class="dbx-popup-component" dbx-injected-content [config]="contentConfig"></div>
+    <div class="dbx-popup-component" dbx-injected-content [config]="contentConfig"></div>
   </dbx-popup-coordinator>
   `,
   providers: [{

@@ -1,0 +1,50 @@
+@use 'sass:map';
+@use 'sass:list';
+@use 'sass:color';
+@use '../../style/theming';
+
+// Sections
+@mixin core() {
+
+  .cdk-overlay-pane .mat-menu-panel {
+    max-width: 90vw;
+  }
+
+}
+
+@mixin color($theme-config) {
+  $color-config: theming.get-color-config($theme-config);
+  $background: map.get($color-config, 'background');
+  $foreground: map.get($color-config, 'foreground');
+  $cdk-background-color: theming.get-color-from-palette($background, 'background');
+  $cdk-text-color: theming.get-color-from-palette($foreground, 'text');
+  $cdk-border-color: color.adjust($color: $cdk-text-color, $alpha: -0.90);
+
+  @debug $foreground;
+  @debug $cdk-text-color;
+
+  .ng-overlay-container {
+    color: $cdk-text-color;
+    background: $cdk-background-color;
+    @include theming.elevation(8);
+    border: 1px solid $cdk-border-color;
+  }
+
+}
+
+@mixin typography($typography-config) {}
+
+@mixin theme($theme-config) {
+  @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-interaction-style') {
+    $color: theming.get-color-config($theme-config);
+    $typography: theming.get-typography-config($theme-config);
+
+    @if $color !=null {
+      @include color($theme-config);
+    }
+
+    @if $typography !=null {
+      @include typography($typography);
+    }
+  }
+}

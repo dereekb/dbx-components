@@ -12,8 +12,14 @@
     <doc-feature-example header="addressField()" hint="Used to configure an address.">
       <doc-form-example-form [dbxFormlyFields]="addressFields"></doc-form-example-form>
     </doc-feature-example>
-    <doc-feature-example header="repeatArrayField()" hint="Used to configure an array of a specific field type.">
+    <doc-feature-example header="repeatArrayField()" hint="Used to configure an array of a customizable field type.">
       <doc-form-example-form [dbxFormlyFields]="repeatArrayFields"></doc-form-example-form>
+    </doc-feature-example>
+    <doc-feature-example header="phoneField()" hint="Used to configure a phone input field.">
+      <h4>Phone Number Only</h4>
+      <doc-form-example-form [dbxFormlyFields]="phoneFields"></doc-form-example-form>
+      <h4>Phone Number List</h4>
+      <doc-form-example-form [dbxFormlyFields]="phoneListField"></doc-form-example-form>
     </doc-feature-example>
   </doc-feature-layout>
 </dbx-content-container>
