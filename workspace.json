@@ -92,7 +92,7 @@
             }, {
               "command": "nx test date"
             }],
-            "parallel": true
+            "parallel": false
           }
         },
         "publish-npmjs": {
