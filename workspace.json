@@ -72,7 +72,11 @@
           }
         },
         "test-timezones": {
-          "outputs": ["coverage/packages/date", "./.reports/jest/date.junit.xml"],
+          "outputs": [
+            "coverage/packages/date", "./.reports/jest/utc.date.junit.xml", "./.reports/jest/america-chicago.date.junit.xml",
+            "./.reports/jest/america-los_angeles.date.junit.xml", "./.reports/jest/america-new_york.date.junit.xml",
+            "./.reports/jest/asia-tokyo.date.junit.xml", "./.reports/jest/europe-dublic.date.junit.xml"
+          ],
           "executor": "@nrwl/workspace:run-commands",
           "options": {
             "commands": [{
