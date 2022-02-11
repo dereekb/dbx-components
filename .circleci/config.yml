@@ -58,7 +58,7 @@ jobs:
           command: npx nx test rxjs
       - run:
           name: run date tests
-          command: npx nx test date
+          command: npx nx test-timezones date
       - run:
           name: run dbx-core tests
           command: npx nx test dbx-core

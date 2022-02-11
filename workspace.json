@@ -65,10 +65,30 @@
         },
         "test": {
           "executor": "@nrwl/jest:jest",
-          "outputs": ["coverage/packages/date", "./.reports/jest/date.junit.xml"],
+          "outputs": ["coverage/packages/date", "./.reports/jest/utc.date.junit.xml"],
           "options": {
             "jestConfig": "packages/date/jest.config.js",
             "passWithNoTests": true
+          }
+        },
+        "test-timezones": {
+          "outputs": ["coverage/packages/date", "./.reports/jest/date.junit.xml"],
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "commands": [{
+              "command": "TZ=america/new_york nx test date"
+            }, {
+              "command": "TZ=america/chicago nx test date"
+            }, {
+              "command": "TZ=america/los_angeles nx test date"
+            }, {
+              "command": "TZ=europe/dublin nx test date"
+            }, {
+              "command": "TZ=asia/tokyo nx test date"
+            }, {
+              "command": "nx test date"
+            }],
+            "parallel": true
           }
         },
         "publish-npmjs": {
