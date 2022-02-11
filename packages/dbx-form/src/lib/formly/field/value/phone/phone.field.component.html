@@ -1,9 +1,3 @@
-<div class="dbx-form-phone-field" [formGroup]="formGroup">
-  <mat-form-field class="dbx-phone-form-field">
-    <ngx-mat-intl-tel-input [required]="required" [preferredCountries]="preferredCountries" [enablePlaceholder]="false"
-      name="phone" [formControlName]="formControlName">
-    </ngx-mat-intl-tel-input>
-    <formly-validation-message [field]="field"></formly-validation-message>
-    <mat-hint>{{ description }}</mat-hint>
-  </mat-form-field>
-</div>
+<ngx-mat-intl-tel-input class="dbx-form-phone-field" [required]="required" [preferredCountries]="preferredCountries"
+  [enablePlaceholder]="false" name="phone" [formControl]="formControl">
+</ngx-mat-intl-tel-input>

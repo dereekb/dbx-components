@@ -1,3 +1,4 @@
+import { DbxFormSectionConfig, sectionWrapper } from '@dereekb/dbx-form';
 import { textField, TextFieldConfig } from '../text/text.field';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { LabeledFieldConfig, formlyField } from '../../field';
@@ -54,21 +55,18 @@ export function wrappedPhoneAndLabelField({ phoneField: phone, labelField: label
   ], { relative: true });
 }
 
-export interface PhoneAndLabelFieldSectionConfig extends WrappedPhoneAndLabelFieldConfig {
+export interface PhoneAndLabelFieldSectionConfig extends DbxFormSectionConfig, WrappedPhoneAndLabelFieldConfig {
   key?: string;
-  label?: string;
-  required?: boolean;
 }
 
-export function phoneAndLabelSectionField({ key, label = 'Phone Number', phoneField, labelField }: PhoneAndLabelFieldSectionConfig = {}): FormlyFieldConfig {
-  return {
+export function phoneAndLabelSectionField({ key, header = 'Phone Number', hint, phoneField, labelField }: PhoneAndLabelFieldSectionConfig = {}): FormlyFieldConfig {
+  return sectionWrapper({
     key,
-    wrappers: ['section'],
-    templateOptions: {
-      label
-    },
     fieldGroup: [wrappedPhoneAndLabelField({ phoneField, labelField })]
-  };
+  }, {
+    header,
+    hint
+  })
 }
 
 export interface PhoneListFieldConfig extends Omit<RepeatArrayFieldConfig, 'repeatFieldGroup'> {
