@@ -291,10 +291,10 @@
               "command": "npx nx run dbx-form:build:production"
             }, {
               "description": "copy all style files from src to map to respective directory",
-              "command": "cd dist/packages/dbx-form/src && find * -type f -name \"*.scss\" -exec sh -c 'mkdir -p ../\"$(dirname {})\"' \\; -exec cp {} ../{} \\;"
+              "command": "echo 'copying dbx-form scss files' && cd dist/packages/dbx-form/src && find * -type f -name \"*.scss\" -exec sh -c 'mkdir -p ../\"$(dirname {})\" && cp {} ../{}' \\;"
             }, {
               "description": "delete unnecessary src directory",
-              "command": "rm -r dist/packages/dbx-form/src"
+              "command": "echo 'cleaning dbx-form up scss files' && rm -r dist/packages/dbx-form/src"
             }],
             "parallel": false
           }
@@ -356,10 +356,10 @@
               "command": "npx nx run dbx-web:build:production"
             }, {
               "description": "copy all style files from src to map to respective directory. How this works is it finds all .scss files in the dist/packages/dbx-web/src folder, then iterates over each file's path creates the directory one level up if it does not exist, followed by copying the file.",
-              "command": "cd dist/packages/dbx-web/src && find * -type f -name \"*.scss\" -exec sh -c 'mkdir -p ../\"$(dirname {})\"' \\; -exec cp {} ../{} \\;"
+              "command": "echo 'copying dbx-web scss files' && cd dist/packages/dbx-web/src && find * -type f -name \"*.scss\" -exec sh -c 'mkdir -p ../\"$(dirname {})\" && cp {} ../{}' \\;"
             }, {
               "description": "delete unnecessary src directory",
-              "command": "rm -r dist/packages/dbx-web/src"
+              "command": "echo 'cleaning up dbx-web scss files' && rm -r dist/packages/dbx-web/src"
             }],
             "parallel": false
           }
