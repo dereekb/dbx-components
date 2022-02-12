@@ -1,4 +1,4 @@
-import { addMinutes, addMilliseconds } from 'date-fns';
+import { addMilliseconds } from 'date-fns';
 import { isConsideredUtcTimezoneString, isSameNonNullValue, Maybe, Milliseconds, TimezoneString, UTC_TIMEZONE_STRING } from '@dereekb/util';
 import { getTimezoneOffset } from 'date-fns-tz';
 import { minutesToMs } from './date';
@@ -76,7 +76,11 @@ export type DateTimezoneOffsetFunction = (date: Date, from: DateTimezoneConversi
 export interface DateTimezoneBaseDateConverter {
   getCurrentOffset: DateTimezoneOffsetFunction;
   /**
-   * Converts the given date into a date relative to the UTC's date.
+   * Converts the given date into a date relative to the UTC's date by 
+   * adding the timezone offset for the current timezone.
+   * 
+   * This is generally used for cases where you are dealing with conversational strings, such as "2AM today". By using the base UTC date,
+   * as 2PM we can get "2PM" in UTC, then convert back using baseDateToTargetDate avoid timezone conversion issues and other headaches.
    * 
    * For example, if it is 2PM in the input time, the resulting time will be 2PM UTC.
    * - Input: 2021-08-16T14:00:00.000-06:00
@@ -86,10 +90,11 @@ export interface DateTimezoneBaseDateConverter {
    * @param addOffset 
    */
   targetDateToBaseDate(date: Date): Date;
-  baseDateToTargetDate(date: Date): Date;
-  baseDateToSystemDate(date: Date): Date;
   /**
    * Converts the given date into a date relative to the system's date.
+   * 
+   * This is available for cases where the system uses Date's internal functionality (and therefore the system's timezone), 
+   * and conversions need to be done to/from the system time to the target timezone.
    * 
    * For example, if it is 2PM in the input time, the resulting time will be 2PM in the current system time.
    * - Input: 2021-08-16T14:00:00.000-06:00
@@ -99,6 +104,8 @@ export interface DateTimezoneBaseDateConverter {
    * @param addOffset 
    */
   targetDateToSystemDate(date: Date): Date;
+  baseDateToTargetDate(date: Date): Date;
+  baseDateToSystemDate(date: Date): Date;
   systemDateToTargetDate(date: Date): Date;
   systemDateToBaseDate(date: Date): Date;
 }
@@ -243,11 +250,13 @@ export class DateTimezoneUtcNormalInstance implements DateTimezoneBaseDateConver
 
 }
 
-export function baseDateToNormalDate(date: Date, timezone: Maybe<TimezoneString>): Date {
-  return new DateTimezoneUtcNormalInstance(timezone).baseDateToTargetDate(date);
+export function baseDateToTargetDate(date: Date, timezone: Maybe<TimezoneString>): Date {
+  const instance = new DateTimezoneUtcNormalInstance(timezone);
+  const result = instance.baseDateToTargetDate(date);
+  return result;
 }
 
-export function normalDateToBaseDate(date: Date, timezone: Maybe<TimezoneString>): Date {
+export function targetDateToBaseDate(date: Date, timezone: Maybe<TimezoneString>): Date {
   return new DateTimezoneUtcNormalInstance(timezone).targetDateToBaseDate(date);
 }
 

@@ -1,4 +1,4 @@
-import { CalendarDate, CalendarDateUtility, DateRangeParams, DateRangeType, maxFutureDate } from '../date';
+import { CalendarDate, CalendarDateUtility, DateRangeParams, DateRangeType, maxFutureDate, targetDateToBaseDate } from '../date';
 import { addMinutes, addDays } from 'date-fns';
 import { DateRRuleInstance, DateRRuleUtility } from './date.rrule';
 import { RRuleStringLineSet } from './date.rrule.parse';
@@ -25,6 +25,15 @@ describe('DateRRuleUtility', () => {
             let rruleStringLineSet = ['DTSTART;TZID=America/Denver:20181101T190000;',
               'RRULE:FREQ=WEEKLY;BYDAY=MO,WE,TH;INTERVAL=1;COUNT=3'];
 
+            const firstBaseDate = new Date(Date.UTC(2018, 10, 1, 19, 0, 0)); // what the parser will return from 
+            const expectedFirstDate = targetDateToBaseDate(firstBaseDate, 'America/Denver');  // 2018-11-02T01:00:00.000Z
+
+            const expectedExpandResults = [
+              expectedFirstDate,
+              addDays(expectedFirstDate, 4),
+              addDays(expectedFirstDate, 6)
+            ];
+
             it('should build the proper dates', () => {
               const results = DateRRuleUtility.expand({
                 instanceFrom: {
@@ -33,17 +42,34 @@ describe('DateRRuleUtility', () => {
                 }
               });
 
-              const expectedResults = [
-                new Date('2018-11-02T01:00:00.000Z'),
-                new Date('2018-11-06T02:00:00.000Z'),
-                new Date('2018-11-08T02:00:00.000Z')
-              ];
-
-              expect(results.dates.length).toBe(expectedResults.length);
+              expect(results.dates.length).toBe(expectedExpandResults.length);
 
               for (let i = 0; i < results.dates.length; i += 1) {
-                expect(results.dates[i].startsAt).toBeSameSecondAs(expectedResults[i]);
+                expect(results.dates[i].startsAt).toBeSameSecondAs(expectedExpandResults[i]);
               }
+            });
+
+            describe('with range', () => {
+
+              it('it should return only the first date if start and end date equals first date', () => {
+                const results = DateRRuleUtility.expand({
+                  range: {
+                    start: expectedFirstDate,
+                    end: expectedFirstDate
+                  },
+                  instanceFrom: {
+                    rruleStringLineSet,
+                    options: {}
+                  }
+                });
+
+                const expectedResults = [expectedFirstDate];
+
+                expect(results.between).toBeDefined();
+                expect(results.dates.length).toBe(expectedResults.length);
+                expect(results.dates[0].startsAt).toBeSameSecondAs(expectedExpandResults[0]);
+              });
+
             });
 
           });
@@ -100,6 +126,7 @@ describe('DateRRuleUtility', () => {
                 expect(results.dates[i].startsAt).toBeSameSecondAs(expectedResults[i]);
               }
             });
+
           });
 
         });
@@ -207,6 +234,9 @@ describe('DateRRuleUtility', () => {
           'RRULE:FREQ=WEEKLY;BYDAY=MO,WE,TH;INTERVAL=1;COUNT=3'];
         let dateRRule: DateRRuleInstance;
 
+        const firstBaseDate = new Date(Date.UTC(2018, 10, 1, 19, 0, 0)); // what the parser will return from 
+        const expectedFirstDate = targetDateToBaseDate(firstBaseDate, 'America/Denver');  // 2018-11-02T01:00:00.000Z
+
         beforeEach(async () => {
           dateRRule = DateRRuleUtility.makeInstance({
             rruleStringLineSet,
@@ -215,7 +245,7 @@ describe('DateRRuleUtility', () => {
         });
 
         it('should be the date if the next date is now.', () => {
-          const currentDate = new Date('2018-11-02T01:00:00.000Z');
+          const currentDate = expectedFirstDate;
           const nextDate = currentDate;
 
           const next = dateRRule.nextRecurrenceDate(currentDate);
@@ -223,8 +253,8 @@ describe('DateRRuleUtility', () => {
         });
 
         it('should return the next date', () => {
-          const currentDate = addMinutes(new Date('2018-11-02T01:00:00.000Z'), 5);
-          const nextDate = new Date('2018-11-06T02:00:00.000Z');
+          const currentDate = addMinutes(expectedFirstDate, 5);
+          const nextDate = addDays(expectedFirstDate, 4);
 
           const next = dateRRule.nextRecurrenceDate(currentDate);
           expect(next).toBeSameSecondAs(nextDate);
