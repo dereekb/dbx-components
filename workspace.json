@@ -7,8 +7,19 @@
       "projectType": "library",
       "targets": {
         "build": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "command": "npx nx run browser:build-base",
+            "color": true
+          }
+        },
+        "build-base": {
           "executor": "@nrwl/js:tsc",
           "outputs": ["{options.outputPath}"],
+          "dependsOn": [{
+            "target": "build",
+            "projects": "dependencies"
+          }],
           "options": {
             "outputPath": "dist/packages/browser",
             "main": "packages/browser/src/index.ts",
@@ -46,8 +57,19 @@
       "projectType": "library",
       "targets": {
         "build": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "command": "npx nx run date:build-base",
+            "color": true
+          }
+        },
+        "build-base": {
           "executor": "@nrwl/node:package",
           "outputs": ["{options.outputPath}"],
+          "dependsOn": [{
+            "target": "build",
+            "projects": "dependencies"
+          }],
           "options": {
             "outputPath": "dist/packages/date",
             "tsConfig": "packages/date/tsconfig.lib.json",
@@ -111,8 +133,19 @@
       "prefix": "dbx",
       "targets": {
         "build": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "command": "npx nx run dbx-analytics:build-base:production",
+            "color": true
+          }
+        },
+        "build-base": {
           "executor": "@nrwl/angular:package",
           "outputs": ["dist/packages/dbx-analytics"],
+          "dependsOn": [{
+            "target": "build",
+            "projects": "dependencies"
+          }],
           "options": {
             "project": "packages/dbx-analytics/ng-package.json"
           },
@@ -159,8 +192,19 @@
       "prefix": "dbx",
       "targets": {
         "build": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "command": "npx nx run dbx-core:build-base:production",
+            "color": true
+          }
+        },
+        "build-base": {
           "executor": "@nrwl/angular:package",
           "outputs": ["dist/packages/dbx-core"],
+          "dependsOn": [{
+            "target": "build",
+            "projects": "dependencies"
+          }],
           "options": {
             "project": "packages/dbx-core/ng-package.json"
           },
@@ -207,8 +251,19 @@
       "prefix": "dbx",
       "targets": {
         "build": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "command": "npx nx run dbx-firebase:build-base:production",
+            "color": true
+          }
+        },
+        "build-base": {
           "executor": "@nrwl/angular:package",
           "outputs": ["dist/packages/dbx-firebase"],
+          "dependsOn": [{
+            "target": "build",
+            "projects": "dependencies"
+          }],
           "options": {
             "project": "packages/dbx-firebase/ng-package.json"
           },
@@ -267,8 +322,30 @@
       "prefix": "dbx",
       "targets": {
         "build": {
+          "executor": "@nrwl/workspace:run-commands",
+          "outputs": ["dist/packages/dbx-form"],
+          "options": {
+            "commands": [{
+              "description": "build dbx-form production",
+              "command": "npx nx run dbx-form:build-base:production"
+            }, {
+              "description": "copy all style files from src to map to respective directory",
+              "command": "echo 'copying dbx-form scss files' && cd dist/packages/dbx-form/src && find * -type f -name \"*.scss\" -exec sh -c 'mkdir -p ../\"$(dirname {})\" && cp {} ../{}' \\;"
+            }, {
+              "description": "delete unnecessary src directory",
+              "command": "echo 'cleaning dbx-form up scss files' && rm -r dist/packages/dbx-form/src"
+            }],
+            "parallel": false,
+            "color": true
+          }
+        },
+        "build-base": {
           "executor": "@nrwl/angular:package",
           "outputs": ["dist/packages/dbx-form"],
+          "dependsOn": [{
+            "target": "build",
+            "projects": "dependencies"
+          }],
           "options": {
             "project": "packages/dbx-form/ng-package.json"
           },
@@ -281,23 +358,6 @@
             }
           },
           "defaultConfiguration": "production"
-        },
-        "build-for-npm": {
-          "executor": "@nrwl/workspace:run-commands",
-          "outputs": ["dist/packages/dbx-form"],
-          "options": {
-            "commands": [{
-              "description": "build dbx-form production",
-              "command": "npx nx run dbx-form:build:production"
-            }, {
-              "description": "copy all style files from src to map to respective directory",
-              "command": "echo 'copying dbx-form scss files' && cd dist/packages/dbx-form/src && find * -type f -name \"*.scss\" -exec sh -c 'mkdir -p ../\"$(dirname {})\" && cp {} ../{}' \\;"
-            }, {
-              "description": "delete unnecessary src directory",
-              "command": "echo 'cleaning dbx-form up scss files' && rm -r dist/packages/dbx-form/src"
-            }],
-            "parallel": false
-          }
         },
         "test": {
           "executor": "@nrwl/jest:jest",
@@ -332,8 +392,30 @@
       "prefix": "dbx",
       "targets": {
         "build": {
+          "executor": "@nrwl/workspace:run-commands",
+          "outputs": ["dist/packages/dbx-web"],
+          "options": {
+            "commands": [{
+              "description": "build dbx-web production",
+              "command": "npx nx run dbx-web:build-base:production"
+            }, {
+              "description": "copy all style files from src to map to respective directory. How this works is it finds all .scss files in the dist/packages/dbx-web/src folder, then iterates over each file's path creates the directory one level up if it does not exist, followed by copying the file.",
+              "command": "echo 'copying dbx-web scss files' && cd dist/packages/dbx-web/src && find * -type f -name \"*.scss\" -exec sh -c 'mkdir -p ../\"$(dirname {})\" && cp {} ../{}' \\;"
+            }, {
+              "description": "delete unnecessary src directory",
+              "command": "echo 'cleaning up dbx-web scss files' && rm -r dist/packages/dbx-web/src"
+            }],
+            "parallel": false,
+            "color": true
+          }
+        },
+        "build-base": {
           "executor": "@nrwl/angular:package",
           "outputs": ["dist/packages/dbx-web"],
+          "dependsOn": [{
+            "target": "build",
+            "projects": "dependencies"
+          }],
           "options": {
             "project": "packages/dbx-web/ng-package.json"
           },
@@ -346,23 +428,6 @@
             }
           },
           "defaultConfiguration": "production"
-        },
-        "build-for-npm": {
-          "executor": "@nrwl/workspace:run-commands",
-          "outputs": ["dist/packages/dbx-web"],
-          "options": {
-            "commands": [{
-              "description": "build dbx-web production",
-              "command": "npx nx run dbx-web:build:production"
-            }, {
-              "description": "copy all style files from src to map to respective directory. How this works is it finds all .scss files in the dist/packages/dbx-web/src folder, then iterates over each file's path creates the directory one level up if it does not exist, followed by copying the file.",
-              "command": "echo 'copying dbx-web scss files' && cd dist/packages/dbx-web/src && find * -type f -name \"*.scss\" -exec sh -c 'mkdir -p ../\"$(dirname {})\" && cp {} ../{}' \\;"
-            }, {
-              "description": "delete unnecessary src directory",
-              "command": "echo 'cleaning up dbx-web scss files' && rm -r dist/packages/dbx-web/src"
-            }],
-            "parallel": false
-          }
         },
         "test": {
           "executor": "@nrwl/jest:jest",
@@ -397,8 +462,19 @@
       "prefix": "app",
       "targets": {
         "build": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "command": "npx nx run demo:build-base",
+            "color": true
+          }
+        },
+        "build-base": {
           "executor": "@angular-devkit/build-angular:browser",
           "outputs": ["{options.outputPath}"],
+          "dependsOn": [{
+            "target": "build",
+            "projects": "dependencies"
+          }],
           "options": {
             "outputPath": "dist/packages/demo",
             "index": "packages/demo/src/index.html",
@@ -492,10 +568,18 @@
           "executor": "@nrwl/workspace:run-commands",
           "options": {
             "command": "firebase deploy --only hosting"
-          }
+          },
+          "dependsOn": [{
+            "target": "build",
+            "projects": "self"
+          }]
         },
         "deploy": {
           "executor": "@nrwl/workspace:run-commands",
+          "dependsOn": [{
+            "target": "build",
+            "projects": "self"
+          }],
           "options": {
             "commands": [{
                 "command": "npx nx build demo"
@@ -516,8 +600,19 @@
       "projectType": "application",
       "targets": {
         "build": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "command": "npx nx run demo-api:build-base",
+            "color": true
+          }
+        },
+        "build-base": {
           "executor": "@nrwl/node:build",
           "outputs": ["{options.outputPath}"],
+          "dependsOn": [{
+            "target": "build",
+            "projects": "dependencies"
+          }],
           "options": {
             "outputPath": "dist/packages/demo-api",
             "main": "packages/demo-api/src/main.ts",
@@ -633,8 +728,19 @@
       "projectType": "library",
       "targets": {
         "build": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "command": "npx nx run firebase:build-base",
+            "color": true
+          }
+        },
+        "build-base": {
           "executor": "@nrwl/node:package",
           "outputs": ["{options.outputPath}"],
+          "dependsOn": [{
+            "target": "build",
+            "projects": "dependencies"
+          }],
           "options": {
             "outputPath": "dist/packages/firebase",
             "tsConfig": "packages/firebase/tsconfig.lib.json",
@@ -686,8 +792,19 @@
       "projectType": "library",
       "targets": {
         "build": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "command": "npx nx run rxjs:build-base",
+            "color": true
+          }
+        },
+        "build-base": {
           "executor": "@nrwl/node:package",
           "outputs": ["{options.outputPath}"],
+          "dependsOn": [{
+            "target": "build",
+            "projects": "dependencies"
+          }],
           "options": {
             "outputPath": "dist/packages/rxjs",
             "tsConfig": "packages/rxjs/tsconfig.lib.json",
@@ -726,8 +843,19 @@
       "projectType": "library",
       "targets": {
         "build": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "command": "npx nx run util:build-base",
+            "color": true
+          }
+        },
+        "build-base": {
           "executor": "@nrwl/node:package",
           "outputs": ["{options.outputPath}"],
+          "dependsOn": [{
+            "target": "build",
+            "projects": "dependencies"
+          }],
           "options": {
             "outputPath": "dist/packages/util",
             "tsConfig": "packages/util/tsconfig.lib.json",
