@@ -77,6 +77,7 @@ describe('parseReadableTimeString()', () => {
 
         const systemOffset = getCurrentSystemOffsetInMs(date);
 
+        
         const result = parseReadableTimeString('12PM', { date, useSystemTimezone: true })!;
 
         // if the offset is after midnight, the parsed date will be on the 15th
@@ -259,7 +260,8 @@ describe('readableTimeStringToDate()', () => {
           it('should parse 12:00AM as 12AM 2022-02-11 using the system timezone at 11:55PM in LA', () => {
             const date = new Date();
             const expectedDate = new Date('2022-02-10T08:00:00.000Z');
-            const result = readableTimeStringToDate('12:00AM', { date, useSystemTimezone: true });
+            const timezone = 'America/Los_Angeles';
+            const result = readableTimeStringToDate('12:00AM', { date, timezone });
             expect(result).toBeSameMinuteAs(expectedDate);    // 2022-02-11 12PM, in UTC time.
           });
 
