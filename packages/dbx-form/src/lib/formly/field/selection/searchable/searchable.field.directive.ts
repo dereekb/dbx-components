@@ -1,7 +1,8 @@
-import { filterMaybe, SubscriptionObject, beginLoading, LoadingState, LoadingStateContextInstance } from '@dereekb/rxjs';
+import { filterMaybe, SubscriptionObject, beginLoading, LoadingState, LoadingStateContextInstance, tapLog, successResult } from '@dereekb/rxjs';
 import { Directive, ElementRef, OnDestroy, OnInit, Type, ViewChild } from '@angular/core';
 import { AbstractControl, FormControl, ValidatorFn } from '@angular/forms';
-import { FieldType, FieldTypeConfig, FormlyFieldConfig } from '@ngx-formly/core';
+import { FieldTypeConfig, FormlyFieldConfig } from '@ngx-formly/core';
+import { FieldType } from '@ngx-formly/material';
 import { debounceTime, distinctUntilChanged, filter, first, map, mergeMap, shareReplay, startWith, switchMap, BehaviorSubject, of, Observable } from 'rxjs';
 import {
   SearchableValueFieldHashFn, SearchableValueFieldStringSearchFn,
@@ -97,7 +98,7 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, C extends Sear
 
   private _displayHashMap = new BehaviorSubject<Map<any, SearchableValueFieldDisplayValue<T>>>(new Map());
 
-  readonly inputValue$: Observable<string> = this.inputCtrl.valueChanges.pipe();
+  readonly inputValue$: Observable<string> = this.inputCtrl.valueChanges.pipe(startWith(this.inputCtrl.value));
   readonly inputValueString$: Observable<string> = this.inputValue$.pipe(
     debounceTime(200),
     distinctUntilChanged()
@@ -105,21 +106,22 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, C extends Sear
 
   readonly searchResultsState$ = this.inputValueString$.pipe(
     filter((text) => Boolean(text || this.searchOnEmptyText) && Boolean(this.search)),
-    // TODO: Consider caching search text/results.
     switchMap((text) => this.search(text).pipe(
       switchMap((x) => this.loadDisplayValuesForFieldValues(x)),
       // Return begin loading to setup the loading state.
       startWith(beginLoading())
     )),
+    tapLog('Search State'),
     shareReplay(1)
   );
 
   readonly singleValueSyncSubscription = new SubscriptionObject();
 
-  readonly searchContext = new LoadingStateContextInstance({ obs: this.searchResultsState$, showLoadingOnNoValue: true });
+  readonly searchContext = new LoadingStateContextInstance({ obs: this.searchResultsState$, showLoadingOnNoValue: false });
 
   readonly searchResults$: Observable<SearchableValueFieldDisplayValue<T>[]> = this.searchResultsState$.pipe(
-    map(x => x?.value ?? [])
+    map(x => x?.value ?? []),
+    tapLog('Search'),
   );
 
   readonly _formControlValue: Observable<T | T[]> = this.formControl$.pipe(
@@ -136,12 +138,15 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, C extends Sear
 
   readonly displayValuesState$: Observable<LoadingState<SearchableValueFieldDisplayValue<T>[]>> = this.values$.pipe(
     distinctUntilChanged(),
+    tapLog('A'),
     switchMap((values: T[]) => this.loadDisplayValuesForValues(values)),
+    tapLog('B'),
     shareReplay(1)
   );
 
   readonly displayValues$: Observable<SearchableValueFieldDisplayValue<T>[]> = this.displayValuesState$.pipe(
-    map(x => x?.value ?? [])
+    map(x => x?.value ?? []),
+    tapLog('C'),
   );
 
   get name(): string {
@@ -160,16 +165,8 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, C extends Sear
     return this.field.searchOnEmptyText ?? false;
   }
 
-  get required(): Maybe<boolean> {
-    return this.field.templateOptions?.required;
-  }
-
   get autocomplete(): string {
     return (this.field.templateOptions?.attributes?.['autocomplete'] as any) ?? this.key as string;
-  }
-
-  get placeholder(): string {
-    return this.field.templateOptions?.placeholder ?? '';
   }
 
   get description(): Maybe<string> {
@@ -218,8 +215,8 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, C extends Sear
 
   loadDisplayValuesForFieldValues(values: SearchableValueFieldValue<T>[]): Observable<LoadingState<SearchableValueFieldDisplayValue<T>[]>> {
     return this.getDisplayValuesForFieldValues(values).pipe(
-      map((displayValues: SearchableValueFieldDisplayValue<T>[]) => ({ loading: false, model: displayValues })),
-      startWith({ loading: true }),
+      map((displayValues: SearchableValueFieldDisplayValue<T>[]) => successResult(displayValues)),
+      startWith(beginLoading()),
       shareReplay(1)
     );
   }
@@ -233,6 +230,7 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, C extends Sear
 
         const hasDisplay = mappingResult.filter(x => Boolean(x[3]));
         const needsDisplay = mappingResult.filter(x => !x[3]);
+        let obs: Observable<SearchableValueFieldDisplayValue<T>[]>;
 
         if (needsDisplay.length > 0) {
 
@@ -241,7 +239,7 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, C extends Sear
           const componentClass = this.componentClass ?? this.defaultComponentClass;
           const anchorForValue = this.useAnchor && this.anchorForValue;
 
-          return displayValuesObs.pipe(
+          obs = displayValuesObs.pipe(
             first(),
             map((displayResults) => {
 
@@ -273,13 +271,16 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, C extends Sear
         } else {
 
           // If all display values are hashed return that.
-          return of(hasDisplay.map(x => x[3])) as Observable<SearchableValueFieldDisplayValue<T>[]>;
+          obs = of(hasDisplay.map(x => x[3]));
         }
+
+        return obs;
       })
     );
   }
 
-  ngOnInit(): void {
+  override ngOnInit(): void {
+    super.ngOnInit();
     this._formControlObs.next(this.formControl);
 
     if (this.field.textInputValidator) {
@@ -303,7 +304,8 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, C extends Sear
     }
   }
 
-  ngOnDestroy(): void {
+  override ngOnDestroy(): void {
+    super.ngOnDestroy();
     this._displayHashMap.complete();
     this._formControlObs.complete();
     this.searchContext.destroy();

@@ -38,8 +38,8 @@ import { DbxAnchorModule, DbxTextModule, DbxLoadingModule, DbxButtonModule } fro
     DbxInjectedComponentModule,
     FormlyModule.forChild({
       types: [
-        { name: 'searchablechipfield', component: DbxSearchableChipFieldComponent },
-        { name: 'searchabletextfield', component: DbxSearchableTextFieldComponent }
+        { name: 'searchablechipfield', component: DbxSearchableChipFieldComponent, wrappers: ['form-field'] },
+        { name: 'searchabletextfield', component: DbxSearchableTextFieldComponent, wrappers: ['form-field'] },
       ]
     })
   ],

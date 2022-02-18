@@ -1,7 +1,8 @@
 import { arrayToMap, separateValues } from '@dereekb/util';
+import { FormlyFieldConfig } from '@ngx-formly/core';
 import { Observable, of } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { LabeledFieldConfig, formlyField } from '../../field';
+import { LabeledFieldConfig, formlyField, templateOptionsForFieldConfig } from '../../field';
 import { SearchableValueFieldDisplayFn, SearchableValueFieldDisplayValue, SearchableValueFieldValue } from './searchable';
 import { SearchableChipValueFieldsFieldConfig, SearchableChipValueFieldsFormlyFieldConfig } from './searchable.chip.field.component';
 import { SearchableTextValueFieldsFieldConfig, SearchableTextValueFieldsFormlyFieldConfig } from './searchable.text.field.component';
@@ -44,21 +45,33 @@ export function makeMetaFilterSearchableFieldValueDisplayFn<T = string | number>
   };
 }
 
+// MARK: Chips
 export interface SearchableChipFieldConfig<T = any> extends LabeledFieldConfig, SearchableChipValueFieldsFieldConfig<T> { }
 export interface SearchableChipFieldFormlyConfig<T = any> extends Omit<SearchableChipValueFieldsFormlyFieldConfig<T>, 'type'> { }
 
-export function searchableChipField<C extends SearchableChipFieldFormlyConfig<any>>(config: C): C {
-  return formlyField<C>({
+export function searchableChipField<T>(config: SearchableChipFieldConfig<T>): FormlyFieldConfig {
+  return formlyField({
     type: 'searchablechipfield',
-    ...config
+    ...templateOptionsForFieldConfig(config)
   });
 }
 
+export interface StringSearchableChipFieldConfig extends SearchableChipFieldConfig<string> { }
+export interface StringSearchableChipFieldFormlyConfig extends SearchableChipFieldFormlyConfig<string> { }
+
+export function searchableStringChipField(config: StringSearchableChipFieldConfig): FormlyFieldConfig {
+  return searchableChipField({
+    ...config,
+    allowStringValues: true
+  });
+}
+
+// MARK: Text
 export interface SearchableTextFieldConfig<T = any> extends LabeledFieldConfig, SearchableTextValueFieldsFieldConfig<T> { }
 export interface SearchableTextFieldFormlyConfig<T = any> extends Omit<SearchableTextValueFieldsFormlyFieldConfig<T>, 'type'> { }
 
-export function searchableTextField<C extends SearchableTextFieldFormlyConfig<any>>(config: C): C {
-  return formlyField<C>({
+export function searchableTextField<T>(config: SearchableTextFieldConfig<T>): FormlyFieldConfig {
+  return formlyField({
     type: 'searchabletextfield',
     ...config
   });

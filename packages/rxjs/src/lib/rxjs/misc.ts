@@ -1,4 +1,5 @@
-import { MonoTypeOperatorFunction, tap } from 'rxjs';
+import { MakeRandomFunction, makeRandomFunction, RandomNumberFunction } from '@dereekb/util';
+import { MonoTypeOperatorFunction, tap, delay, delayWhen, of } from 'rxjs';
 
 /**
  * Used to log a message to the console.
@@ -18,4 +19,19 @@ export function tapLog<T = any>(messageOrFunction: (string | number) | ((value: 
   }
 
   return operator;
+}
+
+/**
+ * Used to make a random delay for each observable value.
+ * 
+ * @param maxOrArgs 
+ * @returns 
+ */
+export function randomDelay<T = any>(maxOrArgs: number | MakeRandomFunction): MonoTypeOperatorFunction<T> {
+  const makeRandomDelay = makeRandomFunction(maxOrArgs);
+  return randomDelayWithRandomFunction(makeRandomDelay);
+}
+
+export function randomDelayWithRandomFunction<T = any>(makeRandomDelay: RandomNumberFunction): MonoTypeOperatorFunction<T> {
+  return delayWhen(() => of(makeRandomDelay()));
 }

@@ -22,7 +22,14 @@ export interface LoadingErrorPair {
  * A value/error pair used in loading situations.
  */
 export interface LoadingState<T = any> extends LoadingErrorPair {
-  value?: Maybe<T>; // todo: rename to value
+  value?: Maybe<T>;
+}
+
+/**
+ * Loading state with a value key.
+ */
+export interface LoadingStateWithValue<T = any> extends LoadingState {
+  value: Maybe<T>;
 }
 
 /**
@@ -58,7 +65,7 @@ export function beginLoading<T>(state?: Partial<LoadingState<T>>): LoadingState<
   return { ...state, loading: true };
 }
 
-export function successResult<T>(value: T): LoadingState<T> {
+export function successResult<T>(value: T): LoadingStateWithValue<T> {
   return { value, loading: false };
 }
 

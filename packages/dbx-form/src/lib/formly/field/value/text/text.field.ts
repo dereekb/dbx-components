@@ -1,5 +1,5 @@
 import { FormlyFieldConfig } from '@ngx-formly/core/lib/core';
-import { AttributesFieldConfig, LabeledFieldConfig, formlyField } from '../../field';
+import { AttributesFieldConfig, LabeledFieldConfig, formlyField, templateOptionsForFieldConfig } from '../../field';
 
 export interface TextFieldLengthConfig {
   minLength?: number;
@@ -10,23 +10,16 @@ export interface TextFieldConfig extends LabeledFieldConfig, TextFieldLengthConf
   pattern?: string | RegExp;
 }
 
-export function textField({ key, label = '', placeholder = '', required = false, attributes, readonly, autocomplete, minLength, maxLength, pattern }: TextFieldConfig): FormlyFieldConfig {
+export function textField(config: TextFieldConfig): FormlyFieldConfig {
+  const { key, pattern, minLength, maxLength = 1000 } = config;
   return formlyField({
     key,
     type: 'input',
-    templateOptions: {
-      label,
-      placeholder,
-      required,
+    ...templateOptionsForFieldConfig(config, {
       minLength,
       maxLength,
-      pattern,
-      readonly,
-      attributes: {
-        ...attributes,
-        ...(autocomplete) ? { autocomplete } : undefined
-      }
-    }
+      pattern
+    })
   });
 }
 
@@ -34,18 +27,15 @@ export interface TextAreaFieldConfig extends LabeledFieldConfig, TextFieldLength
   rows?: number;
 }
 
-export function textAreaField({ key, label = '', placeholder = '', rows = 3, required = false, minLength, maxLength = 1000, attributes }: TextAreaFieldConfig): FormlyFieldConfig {
+export function textAreaField(config: TextAreaFieldConfig): FormlyFieldConfig {
+  const { key, rows = 3, minLength, maxLength = 1000 } = config;
   return formlyField({
     key,
     type: 'textarea',
-    templateOptions: {
-      label,
-      placeholder,
-      required,
+    ...templateOptionsForFieldConfig(config, {
       rows,
       minLength,
       maxLength,
-      attributes
-    }
+    })
   });
 }

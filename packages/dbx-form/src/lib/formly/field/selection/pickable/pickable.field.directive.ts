@@ -331,8 +331,8 @@ export class AbstractDbxPickableItemFieldDirective<T> extends FieldType<Pickable
 
   loadDisplayValuesForFieldValues(values: PickableValueFieldValue<T>[]): Observable<LoadingState<PickableValueFieldDisplayValueWithHash<T>[]>> {
     return this.getDisplayValuesForFieldValues(values).pipe(
-      map((displayValues: PickableValueFieldDisplayValueWithHash<T>[]) => ({ loading: false, model: displayValues })),
-      startWith({ loading: true }),
+      map((displayValues: PickableValueFieldDisplayValueWithHash<T>[]) => successResult(displayValues)),
+      startWith(beginLoading()),
       shareReplay(1)
     );
   }

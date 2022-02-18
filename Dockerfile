@@ -21,4 +21,4 @@ VOLUME ["/code"]
 RUN apt-get update -y && apt-get install -y curl openjdk-11-jre-headless
 
 # Run serve by default
-ENTRYPOINT ["npx nx serve demo-api"]
+CMD ["npx nx serve demo-api"]

@@ -1,4 +1,5 @@
-import { FormlyFieldConfig } from '@ngx-formly/core';
+import { mergeObjects, objectMergeMatrix, filterFromPOJO } from '@dereekb/util';
+import { FormlyFieldConfig, FormlyTemplateOptions } from '@ngx-formly/core';
 
 export interface FieldConfig {
   key: string;
@@ -6,13 +7,18 @@ export interface FieldConfig {
   readonly?: boolean;
 }
 
+export type DisableAutocompleteForField = false;
+
 export interface LabeledFieldConfig extends FieldConfig {
   key: string;
   label?: string;
   placeholder?: string;
   required?: boolean;
   readonly?: boolean;
-  autocomplete?: string;
+  /**
+   * Sets the autocomplete values.
+   */
+  autocomplete?: string | DisableAutocompleteForField;
 }
 
 export interface DefaultValueFieldConfig<T = any> {
@@ -41,10 +47,44 @@ export function formlyField<T extends FormlyFieldConfig = FormlyFieldConfig>(fie
   return fieldConfig;
 }
 
+export function templateOptionsForFieldConfig(fieldConfig: Partial<FieldConfig> & Partial<LabeledFieldConfig> & Partial<AttributesFieldConfig> & Partial<DescriptionFieldConfig>, override?: any) {
+  const templateOptions = templateOptionsValueForFieldConfig(fieldConfig, override);
+
+  return {
+    templateOptions
+  };
+}
+
+export function templateOptionsValueForFieldConfig<T extends FormlyTemplateOptions>(fieldConfig: Partial<FieldConfig> & Partial<LabeledFieldConfig> & Partial<AttributesFieldConfig> & Partial<DescriptionFieldConfig>, override?: any): Partial<T> {
+  const { label, placeholder, required } = mergeObjects([fieldConfig, override], { keysFilter: ['label', 'placeholder', 'required'] });
+  const attributes = mergeObjects([fieldConfig.attributes, override.attributes]);
+
+  const result = filterFromPOJO({
+    label,
+    placeholder,
+    required,
+    attributes
+  }) as T;
+
+  // Apply autocomplete
+  if (fieldConfig.autocomplete != null) {
+    if (fieldConfig.autocomplete === false) {
+      result.attributes = {
+        ...result.attributes,
+        ...disableFormlyFieldAutofillAttributes()
+      }
+    } else {
+      result.attributes!['autocomplete'] = fieldConfig.autocomplete;
+    }
+  }
+
+  return result;
+}
+
 /**
  * Returns configuration for a formlyField that will disable autofill/autocomplete for a field.
  */
-export function disableFormlyFieldAutofill(): { name: string, autocomplete: string } {
+export function disableFormlyFieldAutofillAttributes(): { name: string, autocomplete: string } {
   // https://stackoverflow.com/questions/15738259/disabling-chrome-autofill
   return {
     name: 'password',
