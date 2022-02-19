@@ -24,7 +24,9 @@ export interface DbxChecklistItemFieldConfig<T = any> {
   componentClass?: Type<ChecklistItemFieldDisplayComponent<T>>;
 }
 
-export interface ChecklistItemFormlyFieldConfig<T = any> extends DbxChecklistItemFieldConfig<T>, FormlyFieldConfig { }
+export interface ChecklistItemFormlyFieldConfig<T = any> extends FormlyFieldConfig {
+  checklistField: DbxChecklistItemFieldConfig<T>;
+}
 
 @Component({
   templateUrl: 'checklist.item.field.component.html'
@@ -70,16 +72,20 @@ export class DbxChecklistItemFieldComponent<T = any> extends FieldType<Checklist
     return this.field.templateOptions?.required;
   }
 
+  get checklistField(): DbxChecklistItemFieldConfig<T> {
+    return this.field.checklistField;
+  }
+
   get errors(): Maybe<ValidationErrors> {
     return this.field.formControl?.errors;
   }
 
   get componentClass(): Type<ChecklistItemFieldDisplayComponent<T>> {
-    return this.field.componentClass ?? DbxDefaultChecklistItemFieldDisplayComponent;
+    return this.checklistField.componentClass ?? DbxDefaultChecklistItemFieldDisplayComponent;
   }
 
   ngOnInit() {
-    this._displayContent.next(this.field.displayContentObs);
+    this._displayContent.next(this.checklistField.displayContentObs);
   }
 
   ngOnDestroy() {

@@ -12,7 +12,9 @@ export abstract class AbstractFormComponentFieldWrappedComponent implements Form
 }
 
 export interface FormComponentFieldFieldConfig<T extends FormComponentFieldWrappedComponent = any> extends FormlyFieldConfig {
-  componentClass: Type<T>;
+  componentField: {
+    componentClass: Type<T>;
+  }
 }
 
 @Component({
@@ -28,13 +30,13 @@ export class FormComponentFieldComponent<T extends FormComponentFieldWrappedComp
     return this._config;
   }
 
-  constructor() {
-    super();
+  get componentField() {
+    return this.field.componentField;
   }
 
   ngOnInit(): void {
     this._config = {
-      componentClass: this.field.componentClass,
+      componentClass: this.componentField.componentClass,
       init: (instance: FormComponentFieldWrappedComponent) => {
         instance.field = this;
       }

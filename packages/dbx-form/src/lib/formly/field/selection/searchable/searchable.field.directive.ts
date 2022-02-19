@@ -17,10 +17,6 @@ export interface StringValueFieldsFieldConfig {
    * Custom input validators.
    */
   textInputValidator?: ValidatorFn | ValidatorFn[];
-  /**
-   * Optional description/hint to display.
-   */
-  description?: string;
 }
 
 export interface StringValueFieldsFormlyFieldConfig extends StringValueFieldsFieldConfig, FormlyFieldConfig { }
@@ -70,7 +66,9 @@ export interface SearchableValueFieldsFieldConfig<T> extends StringValueFieldsFi
   anchorForValue?: SearchableValueFieldAnchorFn<T>;
 }
 
-export interface SearchableValueFieldsFormlyFieldConfig<T> extends SearchableValueFieldsFieldConfig<T>, FormlyFieldConfig { }
+export interface SearchableValueFieldsFormlyFieldConfig<T> extends FormlyFieldConfig {
+  searchableField: SearchableValueFieldsFieldConfig<T>;
+}
 
 /**
  * Abstract searchable field that provides a feature for searching for values, and for displaying values using Observables.
@@ -161,40 +159,47 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, C extends Sear
     return this.field.templateOptions?.readonly;
   }
 
+  get searchableField(): SearchableValueFieldsFieldConfig<T> {
+    return this.field.searchableField;
+  }
+
   get searchOnEmptyText(): boolean {
-    return this.field.searchOnEmptyText ?? false;
+    return this.searchableField.searchOnEmptyText ?? false;
   }
 
   get autocomplete(): string {
     return (this.field.templateOptions?.attributes?.['autocomplete'] as any) ?? this.key as string;
   }
 
+  /**
+   * @deprecated
+   */
   get description(): Maybe<string> {
-    return this.field.description ?? this.field.templateOptions?.description;
+    return this.field.templateOptions?.description;
   }
 
   get hashForValue(): SearchableValueFieldHashFn<T> {
-    return this.field.hashForValue ?? ((x) => x as any);
+    return this.searchableField.hashForValue ?? ((x) => x as any);
   }
 
   get displayForValue(): SearchableValueFieldDisplayFn<T> {
-    return this.field.displayForValue;
+    return this.searchableField.displayForValue;
   }
 
   get useAnchor(): Maybe<boolean> {
-    return this.field.useAnchor;
+    return this.searchableField.useAnchor;
   }
 
   get anchorForValue(): Maybe<SearchableValueFieldAnchorFn<T>> {
-    return this.field.anchorForValue;
+    return this.searchableField.anchorForValue;
   }
 
   get componentClass(): Maybe<Type<SearchableFieldDisplayComponent<T>>> {
-    return this.field.componentClass;
+    return this.searchableField.componentClass;
   }
 
   get search(): SearchableValueFieldStringSearchFn<T> {
-    return this.field.search;
+    return this.searchableField.search;
   }
 
   get values(): T[] {
@@ -206,7 +211,7 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, C extends Sear
   }
 
   get convertStringValue(): Maybe<(text: string) => T> {
-    return this.field.convertStringValue;
+    return this.searchableField.convertStringValue;
   }
 
   loadDisplayValuesForValues(values: T[]): Observable<LoadingState<SearchableValueFieldDisplayValue<T>[]>> {
@@ -283,8 +288,8 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, C extends Sear
     super.ngOnInit();
     this._formControlObs.next(this.formControl);
 
-    if (this.field.textInputValidator) {
-      this.inputCtrl.setValidators(this.field.textInputValidator);
+    if (this.searchableField.textInputValidator) {
+      this.inputCtrl.setValidators(this.searchableField.textInputValidator);
     }
 
     if (!this.defaultComponentClass) {
@@ -321,7 +326,7 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, C extends Sear
   }
 
   protected _addWithTextValue(text: string): void {
-    if (!this.field.allowStringValues) {
+    if (!this.searchableField.allowStringValues) {
       return;
     }
 
@@ -367,6 +372,10 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, C extends Sear
     }
 
     this.setValues(values);
+  }
+
+  clearValues(): void {
+    this.setValues([]);
   }
 
   setValues(values: T[]): void {

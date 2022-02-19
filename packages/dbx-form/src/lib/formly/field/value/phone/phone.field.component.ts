@@ -7,7 +7,9 @@ export interface DbxInternationalPhoneFieldConfig {
   onlyCountries?: string[];
 }
 
-export interface InternationalPhoneFormlyFieldConfig extends DbxInternationalPhoneFieldConfig, FormlyFieldConfig { }
+export interface InternationalPhoneFormlyFieldConfig extends FormlyFieldConfig {
+  phoneField: DbxInternationalPhoneFieldConfig;
+}
 
 export const DEFAULT_PREFERRED_COUNTRIES = ['us'];
 
@@ -16,12 +18,16 @@ export const DEFAULT_PREFERRED_COUNTRIES = ['us'];
 })
 export class DbxPhoneFieldComponent extends FieldType<InternationalPhoneFormlyFieldConfig & FieldTypeConfig> {
 
+  get phoneField(): DbxInternationalPhoneFieldConfig {
+    return this.field.phoneField;
+  }
+
   get preferredCountries(): string[] {
-    return this.field.preferredCountries ?? DEFAULT_PREFERRED_COUNTRIES;
+    return this.phoneField.preferredCountries ?? DEFAULT_PREFERRED_COUNTRIES;
   }
 
   get onlyCountries(): string[] {
-    return this.field.onlyCountries ?? [];
+    return this.phoneField.onlyCountries ?? [];
   }
 
 }

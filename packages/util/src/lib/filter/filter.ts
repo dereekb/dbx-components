@@ -14,10 +14,10 @@ export interface OptionalFilter<F> extends Partial<Filter<F>> { }
  */
 export function invertFilter<F extends (((value: any, index: number) => boolean) | ((value: any) => boolean) | (() => boolean)) = () => boolean>(filterFn: F, invert = true): F {
   if (invert) {
-    return (() => {
-      const result: boolean = (filterFn as any).apply(undefined, arguments as any);
+    return function () {
+      const result: boolean = (filterFn as any).apply(undefined, arguments);
       return !result;
-    }) as any;
+    } as F;
   } else {
     return filterFn;
   }

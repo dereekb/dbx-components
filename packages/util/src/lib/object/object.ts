@@ -118,9 +118,6 @@ export function filterKeyValueTuplesFn<T extends object = object, K extends keyo
   let filterFn: (tuples: KeyValueTuple<T, K>) => boolean;
 
   switch (type) {
-    case KeyValueTypleValueFilter.NONE:
-      filterFn = () => true;
-      break;
     case KeyValueTypleValueFilter.UNDEFINED:
       filterFn = ([_, x]) => x !== undefined;
       break;
@@ -129,6 +126,10 @@ export function filterKeyValueTuplesFn<T extends object = object, K extends keyo
       break;
     case KeyValueTypleValueFilter.FALSY:
       filterFn = ([_, x]) => Boolean(x);
+      break;
+    case KeyValueTypleValueFilter.NONE:
+    default:
+      filterFn = () => true;
       break;
   }
 

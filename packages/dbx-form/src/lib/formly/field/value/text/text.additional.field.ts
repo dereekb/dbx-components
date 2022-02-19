@@ -66,9 +66,7 @@ export function stateField({ key = 'state', required = false }: Partial<TextFiel
     label: 'State',
     placeholder: '',
     required,
-    attributes: {
-      autocomplete: 'state'
-    },
+    autocomplete: 'state',
     maxLength: ADDRESS_STATE_MAX_LENGTH
   });
 }
@@ -79,9 +77,7 @@ export function countryField({ key = 'country', required = false }: Partial<Text
     label: 'Country',
     placeholder: '',
     required,
-    attributes: {
-      autocomplete: 'country'
-    },
+    autocomplete: 'country',
     maxLength: ADDRESS_COUNTRY_MAX_LENGTH
   });
 }
@@ -92,9 +88,7 @@ export function zipCodeField({ key = 'zip', required = false }: Partial<TextFiel
     label: 'Zip Code',
     placeholder: '',
     required,
-    attributes: {
-      autocomplete: 'postal-code'
-    },
+    autocomplete: 'postal-code',
     maxLength: ADDRESS_ZIP_MAX_LENGTH
   });
 }

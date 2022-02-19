@@ -1,3 +1,4 @@
+import { DbxFormStyleWrapperConfig } from './style.wrapper.component';
 import { DbxFlexWrapperConfig } from './flex.wrapper.component';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { DbxFormToggleWrapperConfig } from './toggle.wrapper.component';
@@ -13,6 +14,7 @@ export const SECTION_WRAPPER_KEY = 'section';
 export const SUBSECTION_WRAPPER_KEY = 'subsection';
 export const INFO_WRAPPER_KEY = 'info';
 export const FLEX_WRAPPER_KEY = 'flex';
+export const STYLE_WRAPPER_KEY = 'style';
 
 export function addWrapperToFormlyFieldConfig<T extends object>(fieldConfig: FormlyFieldConfig, wrapperKey: string, wrapperTemplateOptionsConfig: T): FormlyFieldConfig {
   fieldConfig.templateOptions = {
@@ -51,9 +53,15 @@ export function subsectionWrapper(fieldConfig: FormlyFieldConfig, subsectionWrap
   });
 }
 
-export function infoWrapper(fieldConfig: FormlyFieldConfig, infoWrapper?: DbxFormInfoConfig): FormlyFieldConfig {
+export function infoWrapper(fieldConfig: FormlyFieldConfig, infoWrapper: DbxFormInfoConfig): FormlyFieldConfig {
   return addWrapperToFormlyFieldConfig(fieldConfig, INFO_WRAPPER_KEY, {
     infoWrapper
+  });
+}
+
+export function styleWrapper(fieldConfig: FormlyFieldConfig, styleWrapper: DbxFormStyleWrapperConfig): FormlyFieldConfig {
+  return addWrapperToFormlyFieldConfig(fieldConfig, STYLE_WRAPPER_KEY, {
+    styleWrapper
   });
 }
 

@@ -8,6 +8,8 @@ export interface ComponentFieldConfig<T> {
 export function componentField<T extends FormComponentFieldWrappedComponent>({ componentClass }: ComponentFieldConfig<T>): FormComponentFieldFieldConfig<T> {
   return {
     type: 'component',
-    componentClass
+    componentField: {
+      componentClass
+    }
   };
 }

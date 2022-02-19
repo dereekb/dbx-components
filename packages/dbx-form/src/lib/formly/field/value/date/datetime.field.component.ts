@@ -64,14 +64,11 @@ export interface DbxDateTimeFieldConfig {
    */
   getConfigObs?: () => Observable<DateTimePickerConfiguration>;
 
-  /**
-   * Optional description/hint to display.
-   */
-  description?: string;
-
 }
 
-export interface DateTimeFormlyFieldConfig extends DbxDateTimeFieldConfig, FormlyFieldConfig { }
+export interface DateTimeFormlyFieldConfig extends FormlyFieldConfig {
+  dateTimeField: DbxDateTimeFieldConfig;
+}
 
 @Component({
   templateUrl: 'datetime.field.component.html'
@@ -134,8 +131,12 @@ export class DbxDateTimeFieldComponent extends FieldType<DateTimeFormlyFieldConf
     return this.timeMode === DateTimeFieldTimeMode.NONE;
   }
 
+  get dateTimeField() {
+    return this.field.dateTimeField;
+  }
+
   get timeOnly(): Maybe<boolean> {
-    return this.field.timeOnly;
+    return this.dateTimeField.timeOnly;
   }
 
   get showDateInput(): boolean {
@@ -143,7 +144,7 @@ export class DbxDateTimeFieldComponent extends FieldType<DateTimeFormlyFieldConf
   }
 
   get timeMode(): DateTimeFieldTimeMode {
-    return (this.timeOnly) ? DateTimeFieldTimeMode.REQUIRED : (this.field.timeMode ?? DateTimeFieldTimeMode.REQUIRED);
+    return (this.timeOnly) ? DateTimeFieldTimeMode.REQUIRED : (this.dateTimeField.timeMode ?? DateTimeFieldTimeMode.REQUIRED);
   }
 
   get description(): Maybe<string> {
@@ -192,7 +193,7 @@ export class DbxDateTimeFieldComponent extends FieldType<DateTimeFormlyFieldConf
 
       if (date) {
         if (fullDay) {
-          if (this.field.fullDayInUTC) {
+          if (this.dateTimeField.fullDayInUTC) {
             result = utcDayForDate(date);
           } else {
             result = startOfDay(date);
@@ -249,7 +250,7 @@ export class DbxDateTimeFieldComponent extends FieldType<DateTimeFormlyFieldConf
   override ngOnInit(): void {
     super.ngOnInit();
     this._formControlObs.next(this.formControl);
-    this._config.next(this.field.getConfigObs?.());
+    this._config.next(this.dateTimeField.getConfigObs?.());
 
     this._sub.subscription = this.timeOutput$.pipe(skipFirstMaybe()).subscribe((value) => {
       this.formControl.setValue(value);
@@ -266,7 +267,7 @@ export class DbxDateTimeFieldComponent extends FieldType<DateTimeFormlyFieldConf
       this.timeInputCtrl.setValue(x);
     });
 
-    const isFullDayField = this.field.fullDayFieldName;
+    const isFullDayField = this.dateTimeField.fullDayFieldName;
     let fullDayFieldCtrl: Maybe<AbstractControl>;
 
     if (isFullDayField) {
@@ -286,7 +287,7 @@ export class DbxDateTimeFieldComponent extends FieldType<DateTimeFormlyFieldConf
 
     this._fullDayControlObs.next(fullDayFieldCtrl);
 
-    switch (this.field.timeMode) {
+    switch (this.dateTimeField.timeMode) {
       case DateTimeFieldTimeMode.OPTIONAL:
         break;
       case DateTimeFieldTimeMode.NONE:

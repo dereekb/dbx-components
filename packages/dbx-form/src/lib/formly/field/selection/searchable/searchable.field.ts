@@ -46,18 +46,7 @@ export function makeMetaFilterSearchableFieldValueDisplayFn<T = string | number>
 }
 
 // MARK: Chips
-export interface SearchableChipFieldConfig<T = any> extends LabeledFieldConfig, SearchableChipValueFieldsFieldConfig<T> { }
-export interface SearchableChipFieldFormlyConfig<T = any> extends Omit<SearchableChipValueFieldsFormlyFieldConfig<T>, 'type'> { }
-
-export function searchableChipField<T>(config: SearchableChipFieldConfig<T>): FormlyFieldConfig {
-  return formlyField({
-    type: 'searchablechipfield',
-    ...templateOptionsForFieldConfig(config)
-  });
-}
-
-export interface StringSearchableChipFieldConfig extends SearchableChipFieldConfig<string> { }
-export interface StringSearchableChipFieldFormlyConfig extends SearchableChipFieldFormlyConfig<string> { }
+export interface StringSearchableChipFieldConfig extends Omit<SearchableChipFieldConfig<string>, 'allowStringValues'> { }
 
 export function searchableStringChipField(config: StringSearchableChipFieldConfig): FormlyFieldConfig {
   return searchableChipField({
@@ -66,13 +55,32 @@ export function searchableStringChipField(config: StringSearchableChipFieldConfi
   });
 }
 
+export interface SearchableChipFieldConfig<T = any> extends LabeledFieldConfig, SearchableChipValueFieldsFieldConfig<T> { }
+
+export function searchableChipField<T>(config: SearchableChipFieldConfig<T>): FormlyFieldConfig {
+  const { key, placeholder } = config;
+  return formlyField({
+    key,
+    type: 'searchablechipfield',
+    ...templateOptionsForFieldConfig(config, {
+      placeholder: placeholder ?? 'Add...',
+      autocomplete: false
+    }),
+    searchableField: config
+  });
+}
+
 // MARK: Text
 export interface SearchableTextFieldConfig<T = any> extends LabeledFieldConfig, SearchableTextValueFieldsFieldConfig<T> { }
-export interface SearchableTextFieldFormlyConfig<T = any> extends Omit<SearchableTextValueFieldsFormlyFieldConfig<T>, 'type'> { }
 
 export function searchableTextField<T>(config: SearchableTextFieldConfig<T>): FormlyFieldConfig {
+  const { key } = config;
   return formlyField({
+    key,
     type: 'searchabletextfield',
-    ...config
+    ...templateOptionsForFieldConfig(config, {
+      autocomplete: false
+    }),
+    searchableField: config
   });
 }

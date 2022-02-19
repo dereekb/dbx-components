@@ -1,23 +1,16 @@
 <div class="dbx-searchable-text-field">
-  <!-- Autocomplete -->
-  <mat-autocomplete #auto (optionSelected)="selected($event)">
-    <mat-option *ngFor="let displayValue of (searchResults$ | async)" [value]="displayValue">
-      <dbx-searchable-field-autocomplete-item [displayValue]="displayValue">
-      </dbx-searchable-field-autocomplete-item>
-    </mat-option>
-  </mat-autocomplete>
-  <!-- Template -->
-  <ng-template #content>
-    <mat-form-field class="dbx-searchable-field-form-field">
-      <mat-label>{{ label }}</mat-label>
-      <input type="search" [name]="name" matInput #textInput [placeholder]="placeholder" [formControl]="inputCtrl" [matAutocomplete]="auto"
-        autocomplete="{{ autocomplete }}">
-      <mat-hint *ngIf="description">{{ description }}</mat-hint>
-    </mat-form-field>
-    <div class="searchable-field-form-loading">
-      <dbx-loading [linear]="true" [context]="searchContext"></dbx-loading>
-    </div>
-  </ng-template>
   <!-- View -->
-  <ng-container *ngTemplateOutlet="content"></ng-container>
+  <input type="search" [name]="name" matInput #textInput [placeholder]="placeholder" [formControl]="inputCtrl"
+    [matAutocomplete]="auto" autocomplete="{{ autocomplete }}">
+  <div class="searchable-field-form-loading">
+    <dbx-loading [linear]="true" [context]="searchContext"></dbx-loading>
+  </div>
 </div>
+
+<!-- Autocomplete -->
+<mat-autocomplete #auto (optionSelected)="selected($event)">
+  <mat-option *ngFor="let displayValue of (searchResults$ | async)" [value]="displayValue">
+    <dbx-searchable-field-autocomplete-item [displayValue]="displayValue">
+    </dbx-searchable-field-autocomplete-item>
+  </mat-option>
+</mat-autocomplete>

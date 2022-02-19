@@ -9,12 +9,8 @@ export interface DbxFormRepeatArrayConfig {
   removeText?: string;
 }
 
-export interface DbxFormRepeatArrayTemplateOptions extends FormlyTemplateOptions, DbxFormRepeatArrayConfig {
-  repeatSection: DbxFormRepeatArrayConfig;
-}
-
 export interface DbxFormRepeatArrayFormlyConfig extends FieldArrayTypeConfig {
-  templateOptions: DbxFormRepeatArrayTemplateOptions;
+  repeatArrayField: DbxFormRepeatArrayConfig;
 }
 
 @Component({
@@ -45,8 +41,8 @@ export interface DbxFormRepeatArrayFormlyConfig extends FieldArrayTypeConfig {
 })
 export class DbxFormRepeatArrayTypeComponent extends FieldArrayType<DbxFormRepeatArrayFormlyConfig>{
 
-  get repeatSection(): DbxFormRepeatArrayConfig {
-    return this.to.repeatSection;
+  get repeatArrayField(): DbxFormRepeatArrayConfig {
+    return this.field.repeatArrayField;
   }
 
   get label(): string {
@@ -54,11 +50,11 @@ export class DbxFormRepeatArrayTypeComponent extends FieldArrayType<DbxFormRepea
   }
 
   get addText(): string {
-    return this.repeatSection.addText ?? 'Add';
+    return this.repeatArrayField.addText ?? 'Add';
   }
 
   get removeText(): string {
-    return this.repeatSection.removeText ?? 'Remove';
+    return this.repeatArrayField.removeText ?? 'Remove';
   }
 
   get max(): Maybe<number> {
@@ -113,7 +109,7 @@ export class DbxFormRepeatArrayTypeComponent extends FieldArrayType<DbxFormRepea
   }
 
   labelForItem(field: FormlyFieldConfig): string {
-    return getValueFromObjectOrGetter(this.repeatSection.labelForField ?? '', field);
+    return getValueFromObjectOrGetter(this.repeatArrayField.labelForField ?? '', field);
   }
 
 }

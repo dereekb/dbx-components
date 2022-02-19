@@ -1,38 +1,31 @@
 import { FormlyFieldConfig } from '@ngx-formly/core';
-import { LabeledFieldConfig, formlyField, DefaultValueFieldConfig, DescriptionFieldConfig } from '../../field';
+import { LabeledFieldConfig, formlyField, DefaultValueFieldConfig, DescriptionFieldConfig, templateOptionsForFieldConfig } from '../../field';
 
 export interface ToggleFieldConfig extends Omit<LabeledFieldConfig, 'placeholder' | 'autocomplete'>, DefaultValueFieldConfig<boolean>, DescriptionFieldConfig { }
 
-export function toggleField({ key, label, description, defaultValue, required, readonly }: ToggleFieldConfig): FormlyFieldConfig {
+export function toggleField(config: ToggleFieldConfig): FormlyFieldConfig {
+  const { key, defaultValue } = config;
+
   return formlyField({
     key,
     type: 'toggle',
     wrappers: ['autotouch', 'form-field'],  // NOTE: Must specify form-field if other wrapper specified, otherwise it will not be used.
     defaultValue: defaultValue ?? false,
-    templateOptions: {
-      label,
-      description,
-      required,
-      readonly
-    }
+    ...templateOptionsForFieldConfig(config)
   });
 }
 
 export interface CheckboxFieldConfig extends LabeledFieldConfig, DefaultValueFieldConfig<boolean>, DescriptionFieldConfig { }
 
-export function checkboxField({ key, label = '', placeholder = '', defaultValue, required, readonly, autocomplete }: CheckboxFieldConfig): FormlyFieldConfig {
-  return {
+export function checkboxField(config: CheckboxFieldConfig): FormlyFieldConfig {
+  const { key, defaultValue } = config;
+
+  return formlyField({
     key,
     type: 'checkbox',
-    defaultValue,
-    templateOptions: {
-      label,
-      placeholder,
-      required,
-      readonly,
-      autocomplete
-    },
-  };
+    defaultValue: defaultValue ?? false,
+    ...templateOptionsForFieldConfig(config)
+  });
 }
 
 /*

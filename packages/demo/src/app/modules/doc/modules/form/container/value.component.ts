@@ -1,6 +1,6 @@
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { Component } from '@angular/core';
-import { addressField, addressListField, cityField, countryField, emailField, phoneField, nameField, phoneAndLabelSectionField, wrappedPhoneAndLabelField, repeatArrayField, stateField, textAreaField, textField, zipCodeField, phoneListField, dateTimeField, DateTimeFieldTimeMode } from '@dereekb/dbx-form';
+import { addressField, addressListField, cityField, countryField, emailField, phoneField, nameField, phoneAndLabelSectionField, wrappedPhoneAndLabelField, repeatArrayField, stateField, textAreaField, textField, zipCodeField, phoneListField, dateTimeField, DateTimeFieldTimeMode, toggleField, checkboxField } from '@dereekb/dbx-form';
 
 @Component({
   templateUrl: './value.component.html'
@@ -31,6 +31,20 @@ export class DocFormValueComponent {
   readonly addressFields: FormlyFieldConfig[] = [
     addressField(),
     addressListField()
+  ];
+
+  readonly toggleField: FormlyFieldConfig[] = [
+    toggleField({
+      key: 'toggle',
+      description: 'this is a toggle field'
+    })
+  ];
+
+  readonly checkboxField: FormlyFieldConfig[] = [
+    checkboxField({
+      key: 'checkbox',
+      description: 'this is a checkbox field'
+    })
   ];
 
   readonly repeatArrayFields: FormlyFieldConfig[] = [

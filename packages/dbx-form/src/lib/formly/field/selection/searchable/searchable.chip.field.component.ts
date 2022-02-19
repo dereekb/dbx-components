@@ -20,10 +20,7 @@ export class DbxSearchableChipFieldComponent<T> extends AbstractDbxSearchableVal
 
   tabPressedOnInput(event: KeyboardEvent): boolean {
     if (event?.key?.toLowerCase() === 'tab') {
-      const value = this.inputCtrl.value;
-
-      if ((value || '').trim()) {
-        this._addWithTextValue(value);
+      if (this._tryAddCurrentInputValue()) {
         event.preventDefault();
         event.stopImmediatePropagation();
         return false;
@@ -36,6 +33,25 @@ export class DbxSearchableChipFieldComponent<T> extends AbstractDbxSearchableVal
   addChip(event: MatChipInputEvent): void {
     const text = event.value ?? this.inputCtrl.value;
     return this._addWithTextValue(text);
+  }
+
+  onBlur(): void {
+    this._tryAddCurrentInputValue();
+  }
+
+  _tryAddCurrentInputValue(): boolean {
+    let addedValue = false;
+
+    if (this.allowStringValues) {
+      const value = this.inputCtrl.value;
+
+      if ((value || '').trim()) {
+        this._addWithTextValue(value);
+        addedValue = true;
+      }
+    }
+
+    return addedValue;
   }
 
 }

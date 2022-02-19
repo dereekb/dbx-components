@@ -35,6 +35,8 @@ export interface DescriptionFieldConfig {
   description?: string;
 }
 
+export type PartialPotentialFieldConfig = Partial<FieldConfig> & Partial<LabeledFieldConfig> & Partial<AttributesFieldConfig> & Partial<DescriptionFieldConfig>;
+
 /**
  * Validates the configuration on the input field.
  */
@@ -55,26 +57,27 @@ export function templateOptionsForFieldConfig(fieldConfig: Partial<FieldConfig> 
   };
 }
 
-export function templateOptionsValueForFieldConfig<T extends FormlyTemplateOptions>(fieldConfig: Partial<FieldConfig> & Partial<LabeledFieldConfig> & Partial<AttributesFieldConfig> & Partial<DescriptionFieldConfig>, override?: any): Partial<T> {
-  const { label, placeholder, required } = mergeObjects([fieldConfig, override], { keysFilter: ['label', 'placeholder', 'required'] });
-  const attributes = mergeObjects([fieldConfig.attributes, override.attributes]);
+export function templateOptionsValueForFieldConfig<T extends FormlyTemplateOptions>(fieldConfig: PartialPotentialFieldConfig, override?: PartialPotentialFieldConfig & unknown): Partial<T> {
+  const { label, placeholder, required, description, autocomplete } = mergeObjects<PartialPotentialFieldConfig>([fieldConfig, override], { keysFilter: ['label', 'placeholder', 'required', 'description', 'autocomplete'] });
+  const attributes = mergeObjects([fieldConfig.attributes, override?.attributes]);
 
   const result = filterFromPOJO({
     label,
     placeholder,
     required,
+    description,
     attributes
   }) as T;
 
   // Apply autocomplete
-  if (fieldConfig.autocomplete != null) {
-    if (fieldConfig.autocomplete === false) {
+  if (autocomplete != null) {
+    if (autocomplete === false) {
       result.attributes = {
         ...result.attributes,
         ...disableFormlyFieldAutofillAttributes()
       }
     } else {
-      result.attributes!['autocomplete'] = fieldConfig.autocomplete;
+      result.attributes!['autocomplete'] = autocomplete;
     }
   }
 

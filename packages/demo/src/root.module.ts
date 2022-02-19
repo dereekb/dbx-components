@@ -11,6 +11,7 @@ import { AppModule } from './app/app.module';
 import { DbxCoreUIRouterSegueModule } from '@dereekb/dbx-core';
 import { FormlyModule } from '@ngx-formly/core';
 import { defaultValidationMessages } from '@dereekb/dbx-form';
+import { MAT_FORM_FIELD_DEFAULT_OPTIONS } from '@angular/material/form-field';
 
 export function routerConfigFn(router: UIRouter, injector: Injector, module: StatesModule): any {
   const transitionService = router.transitionService;
@@ -92,6 +93,12 @@ export function makeSegmentConfig(): SegmentApiServiceConfig {
     useValue: {
       style: 'doc-app',
       suffixes: new Set(['dark'])
+    }
+  }, {
+    provide: MAT_FORM_FIELD_DEFAULT_OPTIONS,
+    useValue: {
+      floatLabel: 'always',
+      
     }
   }],
   bootstrap: [UIView]

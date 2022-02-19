@@ -2,28 +2,24 @@ import { DbxFormSectionConfig } from '../../wrapper/section.wrapper.component';
 import { sectionWrapper } from '../../wrapper/wrapper';
 import { textField, TextFieldConfig } from '../text/text.field';
 import { FormlyFieldConfig } from '@ngx-formly/core';
-import { LabeledFieldConfig, formlyField } from '../../field';
+import { LabeledFieldConfig, formlyField, templateOptionsForFieldConfig } from '../../field';
 import { flexLayoutWrapper } from '../../wrapper/wrapper';
-import { DbxInternationalPhoneFieldConfig, InternationalPhoneFormlyFieldConfig } from './phone.field.component';
+import { DbxInternationalPhoneFieldConfig } from './phone.field.component';
 import { repeatArrayField, RepeatArrayFieldConfig } from '../array/array.field';
 
 export interface InternationalPhoneFieldConfig extends LabeledFieldConfig, DbxInternationalPhoneFieldConfig { }
 
-export function phoneField({
-  key = 'phone', label = '', placeholder,
-  required = false
-}: Partial<InternationalPhoneFieldConfig> = {}): InternationalPhoneFormlyFieldConfig {
+export function phoneField(config: Partial<InternationalPhoneFieldConfig> = {}): FormlyFieldConfig {
+  const { key = 'phone', preferredCountries, onlyCountries } = config;
   const fieldConfig: FormlyFieldConfig = formlyField({
     key,
     type: 'intphone',
-    templateOptions: {
-      label,
-      placeholder,
-      required
-    }
+    phoneField: {
+      preferredCountries,
+      onlyCountries
+    },
+    ...templateOptionsForFieldConfig(config)
   });
-
-  // TODO: Add configuration...
 
   return fieldConfig;
 }

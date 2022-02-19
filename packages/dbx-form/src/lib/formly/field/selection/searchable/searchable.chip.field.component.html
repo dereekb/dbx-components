@@ -1,21 +1,5 @@
 <div class="dbx-searchable-field">
   <!-- View -->
-  <ng-container *ngTemplateOutlet="content"></ng-container>
-</div>
-
-<!-- Autocomplete -->
-<mat-autocomplete #auto="matAutocomplete" (optionSelected)="selected($event)">
-  <mat-option *ngFor="let displayValue of (searchResults$ | async)" [value]="displayValue">
-    <dbx-searchable-field-autocomplete-item [displayValue]="displayValue">
-    </dbx-searchable-field-autocomplete-item>
-  </mat-option>
-</mat-autocomplete>
-
-<!-- Template -->
-<ng-template #content>
-  <p>Display: {{ displayValues$ | async | json }}</p>
-  <p>Search results: {{ searchResults$ | async | json }}</p>
-  <!-- TODO: Add back aria-label  [attr.aria-label]="'email ' + emailParticipantsType" -->
   <mat-chip-list [required]="required" [disabled]="readonly" #chipList>
     <mat-chip *ngFor="let displayValue of displayValues$ | async" [removable]="true"
       (removed)="removeWithDisplayValue(displayValue)">
@@ -25,9 +9,17 @@
     </mat-chip>
     <input #textInput [name]="name" [placeholder]="placeholder" [formControl]="inputCtrl" [matAutocomplete]="auto"
       autocomplete="{{ autocomplete }}" [matChipInputFor]="chipList" (keydown)="tabPressedOnInput($event)"
-      [matChipInputSeparatorKeyCodes]="separatorKeysCodes" (matChipInputTokenEnd)="addChip($event)">
+      [matChipInputSeparatorKeyCodes]="separatorKeysCodes" (matChipInputTokenEnd)="addChip($event)" (blur)="onBlur()">
   </mat-chip-list>
   <div class="searchable-field-form-loading">
     <dbx-loading [linear]="true" [context]="searchContext"></dbx-loading>
   </div>
-</ng-template>
+</div>
+
+<!-- Autocomplete -->
+<mat-autocomplete #auto="matAutocomplete" (optionSelected)="selected($event)">
+  <mat-option *ngFor="let displayValue of (searchResults$ | async)" [value]="displayValue">
+    <dbx-searchable-field-autocomplete-item [displayValue]="displayValue">
+    </dbx-searchable-field-autocomplete-item>
+  </mat-option>
+</mat-autocomplete>

@@ -1,7 +1,7 @@
 import { BehaviorSubject, map, Observable, of, delay, switchMap } from 'rxjs';
 import { Component } from '@angular/core';
 import { FormlyFieldConfig } from '@ngx-formly/core';
-import { searchableChipField, SearchableValueFieldDisplayFn, SearchableValueFieldDisplayValue, SearchableValueFieldStringSearchFn, SearchableValueFieldValue } from '@dereekb/dbx-form';
+import { searchableChipField, searchableTextField, SearchableValueFieldDisplayFn, SearchableValueFieldDisplayValue, SearchableValueFieldStringSearchFn, SearchableValueFieldValue } from '@dereekb/dbx-form';
 import { randomDelay, randomDelayWithRandomFunction } from '@dereekb/rxjs';
 import { makeRandomFunction } from '@dereekb/util';
 
@@ -33,7 +33,7 @@ export const DISPLAY_FOR_STRING_VALUE: SearchableValueFieldDisplayFn<string> = (
 })
 export class DocFormSelectionComponent {
 
-  private _searchStrings = new BehaviorSubject<TestStringSearchFunction>((search) => ['A', 'B', 'C', 'D'].map(x => `${search} ${x}`));
+  private _searchStrings = new BehaviorSubject<TestStringSearchFunction>((search) => ['A', 'B', 'C', 'D'].map(x => `${search} ${x}`.trim()));
   readonly searchFn$ = this._searchStrings.asObservable();
 
   readonly searchableChipFields: FormlyFieldConfig[] = [
@@ -47,6 +47,15 @@ export class DocFormSelectionComponent {
     })
   ];
 
-  readonly searchableTextFields: FormlyFieldConfig[] = [];
+  readonly searchableTextFields: FormlyFieldConfig[] = [
+    searchableTextField({
+      key: 'stringText',
+      label: 'Search And Pick A String Value',
+      allowStringValues: true,
+      searchOnEmptyText: true,
+      search: makeSearchForStringValue(this.searchFn$),
+      displayForValue: DISPLAY_FOR_STRING_VALUE
+    })
+  ];
 
 }
