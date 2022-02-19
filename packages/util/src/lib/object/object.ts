@@ -50,7 +50,7 @@ export function filterFromPOJO<T extends object = object>(obj: T, { copy = false
   forEachKeyValue<T>(obj, {
     filter: {
       ...filter,
-      invertFilter: true
+      invertFilter: !filter.invertFilter
     },
     forEach: ([key]) => {
       delete (obj as any)[key];
