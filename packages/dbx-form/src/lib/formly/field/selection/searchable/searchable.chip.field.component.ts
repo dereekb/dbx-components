@@ -1,16 +1,25 @@
+import { SubscriptionObject } from '@dereekb/rxjs';
+import { Subject } from 'rxjs';
 import { Component } from '@angular/core';
 import { MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
 import { MatChipInputEvent } from '@angular/material/chips';
 import { AbstractDbxSearchableValueFieldDirective, SearchableValueFieldsFieldConfig, SearchableValueFieldsFormlyFieldConfig } from './searchable.field.directive';
 import { COMMA, ENTER } from '@angular/cdk/keycodes';
+import { skipUntilTimeElapsedAfterLastEmission } from '@dereekb/date';
 
 export interface SearchableChipValueFieldsFieldConfig<T> extends SearchableValueFieldsFieldConfig<T> { }
-export interface SearchableChipValueFieldsFormlyFieldConfig<T> extends SearchableChipValueFieldsFieldConfig<T>, SearchableValueFieldsFormlyFieldConfig<T> { }
+
+export interface SearchableChipValueFieldsFormlyFieldConfig<T> extends SearchableValueFieldsFormlyFieldConfig<T> {
+  searchableField: SearchableChipValueFieldsFieldConfig<T>;
+}
 
 @Component({
   templateUrl: 'searchable.chip.field.component.html'
 })
 export class DbxSearchableChipFieldComponent<T> extends AbstractDbxSearchableValueFieldDirective<T, SearchableChipValueFieldsFormlyFieldConfig<T>> {
+
+  private _blur = new Subject<void>();
+  private _blurSub = new SubscriptionObject();
 
   readonly separatorKeysCodes: number[] = [ENTER, COMMA];
 
@@ -35,23 +44,23 @@ export class DbxSearchableChipFieldComponent<T> extends AbstractDbxSearchableVal
     return this._addWithTextValue(text);
   }
 
-  onBlur(): void {
-    this._tryAddCurrentInputValue();
+  override ngOnInit(): void {
+    super.ngOnInit();
+
+    // Only try and add the text item as a value if a value wasn't just added (for example, clicking a value).
+    this._blurSub.subscription = this._blur.pipe(skipUntilTimeElapsedAfterLastEmission(this.values$, 100)).subscribe(() => {
+      this._tryAddCurrentInputValue();
+    });
   }
 
-  _tryAddCurrentInputValue(): boolean {
-    let addedValue = false;
+  override ngOnDestroy(): void {
+    super.ngOnDestroy();
+    this._blur.complete();
+    this._blurSub.destroy();
+  }
 
-    if (this.allowStringValues) {
-      const value = this.inputCtrl.value;
-
-      if ((value || '').trim()) {
-        this._addWithTextValue(value);
-        addedValue = true;
-      }
-    }
-
-    return addedValue;
+  onBlur(): void {
+    this._blur.next();
   }
 
 }

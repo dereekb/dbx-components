@@ -1,5 +1,7 @@
-import { Injector, NgModuleRef, StaticProvider, TemplateRef, Type, ViewRef } from "@angular/core";
-import { Maybe } from "@dereekb/util";
+import { InjectionToken, Injector, NgModuleRef, StaticProvider, TemplateRef, Type, ViewRef } from "@angular/core";
+import { filterMaybeValues, Maybe, mergeArrays, mergeIntoArray, mergeObjects } from "@dereekb/util";
+
+export const DBX_INJECTED_COMPONENT_DATA = new InjectionToken('DbxInjectedComponentConfigData');
 
 export interface DbxInjectedComponentConfig<T = any> {
   /**
@@ -22,6 +24,10 @@ export interface DbxInjectedComponentConfig<T = any> {
    * (Optional) Custom initialization code when an instance is created.
    */
   init?: (instance: T) => void;
+  /**
+   * Any optional data to inject into the component.
+   */
+  data?: any;
 }
 
 export interface DbxInjectedTemplateConfig<T = any> {
@@ -33,4 +39,17 @@ export interface DbxInjectedTemplateConfig<T = any> {
    * View ref to inject.
    */
   viewRef?: Maybe<ViewRef>;
+}
+
+/**
+ * Merges multiple configurations into a single configuration.
+ * 
+ * @param configs 
+ * @returns 
+ */
+export function mergeDbxInjectedComponentConfigs(configs: Maybe<Partial<DbxInjectedComponentConfig>>[]): Partial<DbxInjectedComponentConfig> {
+  const providers = mergeArrays(filterMaybeValues(configs).map(x => x.providers));
+  const result = mergeObjects(configs);
+  result.providers = providers;
+  return result;
 }

@@ -2,6 +2,7 @@ export * from './array.boolean';
 export * from './array.filter';
 export * from './array.index';
 export * from './array.limit';
+export * from './array.make';
 export * from './array.map';
 export * from './array.number';
 export * from './array.set';

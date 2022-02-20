@@ -1,11 +1,7 @@
-import { ClickableAnchor } from '@dereekb/dbx-core';
-import { Type } from '@angular/core';
+import { DbxInjectedComponentConfig, ClickableAnchor } from '@dereekb/dbx-core';
 import { Observable } from 'rxjs';
 import { SelectionDisplayValue, SelectionValue, SelectionValueHashFn } from '../selection';
 
-export interface SearchableFieldDisplayComponent<T> {
-  displayValue?: SearchableValueFieldDisplayValue<T>;
-}
 
 export interface SearchableValueFieldValue<T, M = any> extends SelectionValue<T, M> {
 
@@ -21,9 +17,13 @@ export interface SearchableValueFieldValue<T, M = any> extends SelectionValue<T,
 export interface SearchableValueFieldDisplayValue<T, M = any> extends SelectionDisplayValue<T, M>, SearchableValueFieldValue<T, M> {
   sublabel?: string;
   /**
-   * Custom component class to use.
+   * Display override configuration
    */
-  componentClass?: Type<SearchableFieldDisplayComponent<T>>;
+  display?: Partial<DbxInjectedComponentConfig>;
+}
+
+export interface ConfiguredSearchableValueFieldDisplayValue<T, M = any> extends Omit<SearchableValueFieldDisplayValue<T, M>, 'display'> {
+  display: DbxInjectedComponentConfig;
 }
 
 /**

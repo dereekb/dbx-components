@@ -97,10 +97,9 @@ describe('DbxInjectedComponent', () => {
           const anchorElement: HTMLElement = fixture.debugElement.query(By.css(`#${CUSTOM_CONTENT_ID}`)).nativeElement;
           expect(anchorElement).not.toBeNull();
           expect(anchorElement.textContent).toBe(CUSTOM_CONTENT);
-
-
-
         });
+
+        // todo: test injecting data.
 
       });
 

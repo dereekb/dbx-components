@@ -11,7 +11,7 @@ import { FormlyModule } from '@ngx-formly/core';
 import { DbxSearchableChipFieldComponent } from './searchable.chip.field.component';
 import { MatButtonModule } from '@angular/material/button';
 import {
-  DbxDefaultSearchableAnchorFieldDisplayComponent, DbxDefaultSearchableFieldDisplayComponent,
+  DbxDefaultSearchableFieldDisplayComponent,
   DbxSearchableFieldAutocompleteItemComponent
 } from './searchable.field.autocomplete.item.component';
 import { DbxSearchableTextFieldComponent } from './searchable.text.field.component';
@@ -47,8 +47,7 @@ import { DbxAnchorModule, DbxTextModule, DbxLoadingModule, DbxButtonModule } fro
     DbxSearchableChipFieldComponent,
     DbxSearchableTextFieldComponent,
     DbxSearchableFieldAutocompleteItemComponent,
-    DbxDefaultSearchableFieldDisplayComponent,
-    DbxDefaultSearchableAnchorFieldDisplayComponent
+    DbxDefaultSearchableFieldDisplayComponent
   ],
   exports: [
     DbxSearchableChipFieldComponent,

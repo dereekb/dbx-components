@@ -4,7 +4,7 @@ import { BehaviorSubject, Observable, combineLatest, distinctUntilChanged, map, 
 import { Inject, Injectable, InjectionToken, Optional } from '@angular/core';
 import { Maybe } from '@dereekb/util';
 
-export const DBX_STYLE_DEFAULT_CONFIG_TOKEN = new InjectionToken('DbxStyleService_DefaultConfig');
+export const DBX_STYLE_DEFAULT_CONFIG_TOKEN = new InjectionToken('DbxStyleServiceDefaultConfig');
 
 export interface DbxStyleConfig {
   /**

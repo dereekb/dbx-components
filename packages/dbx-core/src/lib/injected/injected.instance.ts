@@ -1,8 +1,8 @@
 import { ComponentRef, Injector, ViewContainerRef } from '@angular/core';
 import { distinctUntilChanged, map, shareReplay } from 'rxjs/operators';
 import { BehaviorSubject, combineLatest } from 'rxjs';
-import { DbxInjectedComponentConfig, DbxInjectedTemplateConfig } from './injected';
-import { Initialized, Destroyable, Maybe } from '@dereekb/util';
+import { DbxInjectedComponentConfig, DbxInjectedTemplateConfig, DBX_INJECTED_COMPONENT_DATA } from './injected';
+import { Initialized, Destroyable, Maybe, mergeArrayOrValueIntoArray } from '@dereekb/util';
 import { SubscriptionObject, filterMaybe, skipFirstMaybe } from '@dereekb/rxjs';
 
 /**
@@ -96,16 +96,18 @@ export class DbxInjectedComponentInstance<T> implements Initialized, Destroyable
   private _initComponent(config: DbxInjectedComponentConfig<T>, content: ViewContainerRef): void {
     content.clear();
 
-    const { init, injector: inputInjector, providers, ngModuleRef, componentClass } = config;
+    const { init, injector: inputInjector, providers, ngModuleRef, componentClass, data } = config;
 
     let injector: Injector | undefined;
+    const parentInjector = inputInjector ?? this._injector;
 
-    if (inputInjector) {
-      injector = inputInjector;
-    } else if (providers) {
+    if (Boolean(providers || data)) {
       injector = Injector.create({
-        parent: this._injector,
-        providers
+        parent: parentInjector,
+        providers: mergeArrayOrValueIntoArray([{
+          provide: DBX_INJECTED_COMPONENT_DATA,
+          useValue: data
+        }], providers ?? [])
       });
     }
 

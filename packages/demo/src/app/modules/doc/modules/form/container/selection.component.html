@@ -7,8 +7,16 @@
       <doc-form-example-form [dbxFormlyFields]="searchableChipFields"></doc-form-example-form>
     </doc-feature-example>
     <doc-feature-example header="searchableTextField()"
-      hint="A field that lets you search items and select multiple values for a list.">
+      hint="A field that lets you search for a single item and pick it using a search field. It can also accept the user's text input as the value.">
+      <p>The intention of this field is to make searching and picking a single item easy, and leaves a lot of power to
+        the developer.</p>
+      <p>This field is highly customizable, allowing for customization on a per-pick basis.</p>
       <doc-form-example-form [dbxFormlyFields]="searchableTextFields"></doc-form-example-form>
+      <h4>Anchors</h4>
+      <p>It can also be configured to display content within a dbx-anchor value, allowing for navigation as a result of
+        searching.</p>
+      <p>Value Clicked: {{ valueClicked }}</p>
+      <doc-form-example-form [dbxFormlyFields]="searchableTextFieldsWithAnchors"></doc-form-example-form>
     </doc-feature-example>
   </doc-feature-layout>
 </dbx-content-container>

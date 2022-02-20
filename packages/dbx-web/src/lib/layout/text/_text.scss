@@ -4,11 +4,14 @@
 
 // MARK: Variables
 $icon-spacing: 6px;
+$hint-opacity: 0.8;
+$mat-hint-opacity: 0.54; // Opacity to mirror mat-hint
 
 // MARK: Mixin
 @mixin core() {
 
-  .dbx-small {
+  .dbx-small,
+  .dbx-clear-hint {
     font-size: 0.8em;
   }
 
@@ -34,14 +37,12 @@ $icon-spacing: 6px;
   $accent: map.get($color-config, 'accent');
   $warn: map.get($color-config, 'warn');
 
-  $hint-opacity: 0.8;
-  $mat-hint-opacity: 0.54; // Opacity to mirror mat-hint
-
   $ok-color: color.scale(blue, $lightness: 30%);
   $success-color: green;
   $notice-color: #f28600;
 
-  .dbx-hint {
+  .dbx-hint,
+  .dbx-clear-hint {
     opacity: $hint-opacity;
   }
 
@@ -54,7 +55,7 @@ $icon-spacing: 6px;
   }
 
   .dbx-label {
-    opacity: $hint-opacity;
+    opacity: $mat-hint-opacity;
   }
 
   .dbx-notice {

@@ -1,15 +1,16 @@
-import { filterMaybe, SubscriptionObject, beginLoading, LoadingState, LoadingStateContextInstance, tapLog, successResult } from '@dereekb/rxjs';
-import { Directive, ElementRef, OnDestroy, OnInit, Type, ViewChild } from '@angular/core';
+import { DbxInjectedComponentConfig, mergeDbxInjectedComponentConfigs } from '@dereekb/dbx-core';
+import { filterMaybe, SubscriptionObject, beginLoading, LoadingState, LoadingStateContextInstance, successResult } from '@dereekb/rxjs';
+import { ChangeDetectorRef, Directive, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { AbstractControl, FormControl, ValidatorFn } from '@angular/forms';
 import { FieldTypeConfig, FormlyFieldConfig } from '@ngx-formly/core';
 import { FieldType } from '@ngx-formly/material';
-import { debounceTime, distinctUntilChanged, filter, first, map, mergeMap, shareReplay, startWith, switchMap, BehaviorSubject, of, Observable } from 'rxjs';
+import { debounceTime, distinctUntilChanged, first, map, mergeMap, shareReplay, startWith, switchMap, BehaviorSubject, of, Observable } from 'rxjs';
 import {
   SearchableValueFieldHashFn, SearchableValueFieldStringSearchFn,
-  SearchableValueFieldDisplayFn, SearchableValueFieldDisplayValue, SearchableValueFieldValue, SearchableFieldDisplayComponent, SearchableValueFieldAnchorFn
+  SearchableValueFieldDisplayFn, SearchableValueFieldDisplayValue, SearchableValueFieldValue, SearchableValueFieldAnchorFn, ConfiguredSearchableValueFieldDisplayValue
 } from './searchable';
-import { DbxDefaultSearchableAnchorFieldDisplayComponent, DbxDefaultSearchableFieldDisplayComponent } from './searchable.field.autocomplete.item.component';
-import { Maybe, convertMaybeToArray, findUnique } from '@dereekb/util';
+import { DbxDefaultSearchableFieldDisplayComponent } from './searchable.field.autocomplete.item.component';
+import { Maybe, convertMaybeToArray, findUnique, lastValue } from '@dereekb/util';
 import { camelCase } from 'change-case';
 
 export interface StringValueFieldsFieldConfig {
@@ -45,9 +46,9 @@ export interface SearchableValueFieldsFieldConfig<T> extends StringValueFieldsFi
    */
   searchOnEmptyText?: boolean;
   /**
-   * Custom component class to use by default.
+   * Default injected config to use for display values.
    */
-  componentClass?: Type<SearchableFieldDisplayComponent<T>>;
+  display?: Partial<DbxInjectedComponentConfig>;
   /**
    * Used for building a display value given the input.
    */
@@ -64,6 +65,10 @@ export interface SearchableValueFieldsFieldConfig<T> extends StringValueFieldsFi
    * Only used when useAnchor is true.
    */
   anchorForValue?: SearchableValueFieldAnchorFn<T>;
+  /**
+   * Whether or not to show "Clear" in the autcomplete list.
+   */
+  showClearValue?: boolean;
 }
 
 export interface SearchableValueFieldsFormlyFieldConfig<T> extends FormlyFieldConfig {
@@ -84,7 +89,10 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, C extends Sear
    */
   multiSelect = true;
 
-  defaultComponentClass?: Type<SearchableFieldDisplayComponent<T>>;
+  /**
+   * Optional override set by the parent class for picking a default display for this directive.
+   */
+  defaultDisplay?: DbxInjectedComponentConfig;
 
   @ViewChild('textInput')
   textInput!: ElementRef<HTMLInputElement>;
@@ -94,7 +102,7 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, C extends Sear
   private _formControlObs = new BehaviorSubject<Maybe<AbstractControl>>(undefined);
   readonly formControl$ = this._formControlObs.pipe(filterMaybe());
 
-  private _displayHashMap = new BehaviorSubject<Map<any, SearchableValueFieldDisplayValue<T>>>(new Map());
+  private _displayHashMap = new BehaviorSubject<Map<any, ConfiguredSearchableValueFieldDisplayValue<T>>>(new Map());
 
   readonly inputValue$: Observable<string> = this.inputCtrl.valueChanges.pipe(startWith(this.inputCtrl.value));
   readonly inputValueString$: Observable<string> = this.inputValue$.pipe(
@@ -103,13 +111,11 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, C extends Sear
   );
 
   readonly searchResultsState$ = this.inputValueString$.pipe(
-    filter((text) => Boolean(text || this.searchOnEmptyText) && Boolean(this.search)),
-    switchMap((text) => this.search(text).pipe(
+    switchMap((text) => ((text || this.searchOnEmptyText) ? this.search(text ?? '') : of([])).pipe(
       switchMap((x) => this.loadDisplayValuesForFieldValues(x)),
       // Return begin loading to setup the loading state.
       startWith(beginLoading())
     )),
-    tapLog('Search State'),
     shareReplay(1)
   );
 
@@ -117,9 +123,8 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, C extends Sear
 
   readonly searchContext = new LoadingStateContextInstance({ obs: this.searchResultsState$, showLoadingOnNoValue: false });
 
-  readonly searchResults$: Observable<SearchableValueFieldDisplayValue<T>[]> = this.searchResultsState$.pipe(
+  readonly searchResults$: Observable<ConfiguredSearchableValueFieldDisplayValue<T>[]> = this.searchResultsState$.pipe(
     map(x => x?.value ?? []),
-    tapLog('Search'),
   );
 
   readonly _formControlValue: Observable<T | T[]> = this.formControl$.pipe(
@@ -134,17 +139,14 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, C extends Sear
     shareReplay(1)
   );
 
-  readonly displayValuesState$: Observable<LoadingState<SearchableValueFieldDisplayValue<T>[]>> = this.values$.pipe(
+  readonly displayValuesState$: Observable<LoadingState<ConfiguredSearchableValueFieldDisplayValue<T>[]>> = this.values$.pipe(
     distinctUntilChanged(),
-    tapLog('A'),
     switchMap((values: T[]) => this.loadDisplayValuesForValues(values)),
-    tapLog('B'),
     shareReplay(1)
   );
 
-  readonly displayValues$: Observable<SearchableValueFieldDisplayValue<T>[]> = this.displayValuesState$.pipe(
-    map(x => x?.value ?? []),
-    tapLog('C'),
+  readonly displayValues$: Observable<ConfiguredSearchableValueFieldDisplayValue<T>[]> = this.displayValuesState$.pipe(
+    map(x => x?.value ?? [])
   );
 
   get name(): string {
@@ -171,13 +173,6 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, C extends Sear
     return (this.field.templateOptions?.attributes?.['autocomplete'] as any) ?? this.key as string;
   }
 
-  /**
-   * @deprecated
-   */
-  get description(): Maybe<string> {
-    return this.field.templateOptions?.description;
-  }
-
   get hashForValue(): SearchableValueFieldHashFn<T> {
     return this.searchableField.hashForValue ?? ((x) => x as any);
   }
@@ -194,8 +189,8 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, C extends Sear
     return this.searchableField.anchorForValue;
   }
 
-  get componentClass(): Maybe<Type<SearchableFieldDisplayComponent<T>>> {
-    return this.searchableField.componentClass;
+  get display(): Maybe<Partial<DbxInjectedComponentConfig>> {
+    return this.searchableField.display;
   }
 
   get search(): SearchableValueFieldStringSearchFn<T> {
@@ -207,51 +202,57 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, C extends Sear
   }
 
   get allowStringValues(): boolean {
-    return this.allowStringValues ?? Boolean(this.convertStringValue);
+    return this.searchableField.allowStringValues ?? Boolean(this.convertStringValue);
   }
 
   get convertStringValue(): Maybe<(text: string) => T> {
     return this.searchableField.convertStringValue;
   }
 
-  loadDisplayValuesForValues(values: T[]): Observable<LoadingState<SearchableValueFieldDisplayValue<T>[]>> {
+  get showClearValue(): boolean {
+    return this.searchableField.showClearValue ?? true;
+  }
+
+  loadDisplayValuesForValues(values: T[]): Observable<LoadingState<ConfiguredSearchableValueFieldDisplayValue<T>[]>> {
     return this.loadDisplayValuesForFieldValues(values.map((value) => ({ value })));
   }
 
-  loadDisplayValuesForFieldValues(values: SearchableValueFieldValue<T>[]): Observable<LoadingState<SearchableValueFieldDisplayValue<T>[]>> {
+  loadDisplayValuesForFieldValues(values: SearchableValueFieldValue<T>[]): Observable<LoadingState<ConfiguredSearchableValueFieldDisplayValue<T>[]>> {
     return this.getDisplayValuesForFieldValues(values).pipe(
-      map((displayValues: SearchableValueFieldDisplayValue<T>[]) => successResult(displayValues)),
+      map((displayValues: ConfiguredSearchableValueFieldDisplayValue<T>[]) => successResult(displayValues)),
       startWith(beginLoading()),
       shareReplay(1)
     );
   }
 
-  getDisplayValuesForFieldValues(values: SearchableValueFieldValue<T>[]): Observable<SearchableValueFieldDisplayValue<T>[]> {
+  getDisplayValuesForFieldValues(values: SearchableValueFieldValue<T>[]): Observable<ConfiguredSearchableValueFieldDisplayValue<T>[]> {
     return this._displayHashMap.pipe(
       mergeMap((displayMap) => {
         const mappingResult = values
           .map(x => [x, this.hashForValue(x.value)])
-          .map(([x, hash], i) => [i, hash, x, displayMap.get(hash)] as [number, any, SearchableValueFieldValue<T>, SearchableValueFieldDisplayValue<T>]);
+          .map(([x, hash], i) => [i, hash, x, displayMap.get(hash)] as [number, any, SearchableValueFieldValue<T>, ConfiguredSearchableValueFieldDisplayValue<T>]);
 
         const hasDisplay = mappingResult.filter(x => Boolean(x[3]));
         const needsDisplay = mappingResult.filter(x => !x[3]);
-        let obs: Observable<SearchableValueFieldDisplayValue<T>[]>;
+        let obs: Observable<ConfiguredSearchableValueFieldDisplayValue<T>[]>;
 
         if (needsDisplay.length > 0) {
 
           // Go get the display value.
           const displayValuesObs = this.displayForValue(needsDisplay.map(x => x[2]));
-          const componentClass = this.componentClass ?? this.defaultComponentClass;
+          const defaultDisplay = mergeDbxInjectedComponentConfigs([this.defaultDisplay, this.display]);
           const anchorForValue = this.useAnchor && this.anchorForValue;
 
           obs = displayValuesObs.pipe(
             first(),
             map((displayResults) => {
 
-              // Assign the default component classes.
+              // Assign the default component classes to complete configuration.
               displayResults.forEach(x => {
-                if (!x.componentClass) {
-                  x.componentClass = componentClass;
+                if (!x.display) {
+                  x.display = defaultDisplay;
+                } else {
+                  x.display = mergeDbxInjectedComponentConfigs([defaultDisplay, x.display]);
                 }
 
                 if (!x.anchor && anchorForValue) {
@@ -260,7 +261,7 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, C extends Sear
               });
 
               // Create a map to re-join values later.
-              const displayResultsMapping: [SearchableValueFieldDisplayValue<T>, any][] = displayResults.map(x => [x, this.hashForValue(x.value)]);
+              const displayResultsMapping: [ConfiguredSearchableValueFieldDisplayValue<T>, any][] = (displayResults as ConfiguredSearchableValueFieldDisplayValue<T>[]).map(x => [x, this.hashForValue(x.value)]);
               const valueIndexHashMap = new Map(displayResultsMapping.map(([x, hash]) => [hash, x]));
 
               // Update displayMap. No need to push an update notification.
@@ -284,6 +285,10 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, C extends Sear
     );
   }
 
+  constructor(readonly cdRef: ChangeDetectorRef) {
+    super();
+  }
+
   override ngOnInit(): void {
     super.ngOnInit();
     this._formControlObs.next(this.formControl);
@@ -292,12 +297,11 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, C extends Sear
       this.inputCtrl.setValidators(this.searchableField.textInputValidator);
     }
 
-    if (!this.defaultComponentClass) {
-      if (this.useAnchor) {
-        this.defaultComponentClass = DbxDefaultSearchableAnchorFieldDisplayComponent;
-      } else {
-        this.defaultComponentClass = DbxDefaultSearchableFieldDisplayComponent;
-      }
+    if (!this.defaultDisplay?.componentClass) {
+      this.defaultDisplay = {
+        ...this.defaultDisplay,
+        componentClass: DbxDefaultSearchableFieldDisplayComponent
+      };
     }
 
     if (this.multiSelect === false) {
@@ -355,6 +359,21 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, C extends Sear
     this.removeValue(displayValue.value);
   }
 
+  _tryAddCurrentInputValue(): boolean {
+    let addedValue = false;
+
+    if (this.allowStringValues) {
+      const value = this.inputCtrl.value;
+
+      if ((value || '').trim()) {
+        this._addWithTextValue(value);
+        addedValue = true;
+      }
+    }
+
+    return addedValue;
+  }
+
   addValue(value: T): void {
     this.textInput.nativeElement.value = '';
     this.inputCtrl.setValue(null);
@@ -394,7 +413,7 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, C extends Sear
   }
 
   protected _setValueOnFormControl(values: T[]): void {
-    const value = (this.multiSelect) ? values : values?.[0];
+    const value = (this.multiSelect) ? values : lastValue(values);  // pick last value, as the last value added is the newest value.
     this.formControl.setValue(value);
     this.formControl.markAsDirty();
     this.formControl.markAsTouched();

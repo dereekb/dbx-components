@@ -4,7 +4,40 @@
 
 
 // MARK: Mixin
-@mixin core() {}
+@mixin core() {
+
+  .dbx-searchable-text-field-value {
+    width: 100%;
+  }
+
+  .dbx-searchable-text-field-value.mat-option,
+  .dbx-searchable-text-field-autocomplete .mat-option {
+    padding: 0;
+  }
+
+  .dbx-default-searchable-field-display {
+    padding: 0 16px;
+  }
+
+  .dbx-searchable-text-field-has-value.dbx-searchable-text-field-show-value {
+
+    .dbx-searchable-text-field-value {
+      margin-bottom: -6px;
+    }
+
+    // hide without clearing display, which will prevent the input from being clickable.
+    .dbx-searchable-text-field-input {
+      height: 0;
+      opacity: 0;
+    }
+  }
+
+  .mat-focused .dbx-searchable-text-field-has-value.dbx-searchable-text-field-show-value .dbx-searchable-text-field-input {
+    opacity: unset;
+    height: unset;
+  }
+
+}
 
 @mixin color($theme-config) {}
 

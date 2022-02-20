@@ -1,5 +1,5 @@
 import { MakeRandomFunction, makeRandomFunction, RandomNumberFunction } from '@dereekb/util';
-import { MonoTypeOperatorFunction, tap, delay, delayWhen, of } from 'rxjs';
+import { MonoTypeOperatorFunction, tap, delay, delayWhen, of, timer, SchedulerLike, asyncScheduler } from 'rxjs';
 
 /**
  * Used to log a message to the console.
@@ -32,6 +32,6 @@ export function randomDelay<T = any>(maxOrArgs: number | MakeRandomFunction): Mo
   return randomDelayWithRandomFunction(makeRandomDelay);
 }
 
-export function randomDelayWithRandomFunction<T = any>(makeRandomDelay: RandomNumberFunction): MonoTypeOperatorFunction<T> {
-  return delayWhen(() => of(makeRandomDelay()));
+export function randomDelayWithRandomFunction<T = any>(makeRandomDelay: RandomNumberFunction, scheduler: SchedulerLike = asyncScheduler): MonoTypeOperatorFunction<T> {
+  return delayWhen(() =>  timer(makeRandomDelay(), scheduler));
 }
