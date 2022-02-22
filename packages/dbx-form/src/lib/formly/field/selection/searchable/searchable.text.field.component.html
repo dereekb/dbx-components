@@ -1,4 +1,5 @@
-<div class="dbx-searchable-text-field" [ngClass]="{ 'dbx-searchable-text-field-has-value': (hasValue$ | async), 'dbx-searchable-text-field-show-value': showSelectedValue }">
+<div class="dbx-searchable-text-field"
+  [ngClass]="{ 'dbx-searchable-text-field-has-value': (hasValue$ | async), 'dbx-searchable-text-field-show-value': showSelectedValue }">
   <!-- Result View -->
   <div class="dbx-searchable-text-field-value mat-option mat-option-text" *ngIf="showSelectedDisplayValue$ | async">
     <dbx-searchable-field-autocomplete-item [displayValue]="(selectedDisplayValue$ | async)!">
@@ -8,7 +9,7 @@
     <div class="dbx-label">Search</div>
     <!-- View -->
     <input type="search" [name]="name" matInput #textInput [placeholder]="placeholder" [formControl]="inputCtrl"
-      [matAutocomplete]="auto" autocomplete="{{ autocomplete }}">
+      [matAutocomplete]="auto" [matAutocompleteDisabled]="readonly" autocomplete="{{ autocomplete }}">
     <div class="searchable-field-form-loading">
       <dbx-loading [linear]="true" [context]="searchContext"></dbx-loading>
     </div>
@@ -26,7 +27,7 @@
     <p class="dbx-clear-hint text-center">"{{ inputValue$ | async }}"</p>
   </mat-option>
   <!-- Show clear value -->
-  <mat-option *ngIf="showClearValue" value="">
+  <mat-option *ngIf="showClearValue && (hasValue$ | async)" value="">
     <p class="dbx-clear-hint text-center">Clear</p>
   </mat-option>
 </mat-autocomplete>

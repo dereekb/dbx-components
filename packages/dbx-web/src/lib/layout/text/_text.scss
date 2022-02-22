@@ -54,7 +54,9 @@ $mat-hint-opacity: 0.54; // Opacity to mirror mat-hint
     color: $ok-color;
   }
 
-  .dbx-label {
+  .dbx-label,
+  .dbx-sublabel,
+  .dbx-chip-sublabel {
     opacity: $mat-hint-opacity;
   }
 
@@ -67,8 +69,14 @@ $mat-hint-opacity: 0.54; // Opacity to mirror mat-hint
 
 @mixin typography($typography-config) {
 
-  .dbx-label {
+  .dbx-label,
+  .dbx-sublabel,
+  .dbx-chip-sublabel {
     font-size: theming.font-size($typography-config, 'caption');
+  }
+
+  .dbx-chip-sublabel {
+    margin-left: $icon-spacing;
   }
 
 }

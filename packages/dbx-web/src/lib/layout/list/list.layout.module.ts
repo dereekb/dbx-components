@@ -8,7 +8,7 @@ import { DbxInjectedComponentModule } from '@dereekb/dbx-core';
 import { DbxListComponent, DbxListInternalContentDirective } from './list.component';
 import { DbxListEmptyContentComponent } from './list.content.empty.component';
 import { InfiniteScrollModule } from 'ngx-infinite-scroll';
-import { DbxSelectionValueListViewComponent } from './list.view.value.selection.component';
+import { DbxSelectionValueListItemViewComponent, DbxSelectionValueListViewComponent } from './list.view.value.selection.component';
 import { DbxValueListViewComponent } from './list.view.value.component';
 
 @NgModule({
@@ -26,13 +26,15 @@ import { DbxValueListViewComponent } from './list.view.value.component';
     DbxListInternalContentDirective,
     DbxListEmptyContentComponent,
     DbxValueListViewComponent,
-    DbxSelectionValueListViewComponent
+    DbxSelectionValueListViewComponent,
+    DbxSelectionValueListItemViewComponent
   ],
   exports: [
     DbxListComponent,
     DbxListEmptyContentComponent,
     DbxValueListViewComponent,
-    DbxSelectionValueListViewComponent
+    DbxSelectionValueListViewComponent,
+    DbxSelectionValueListItemViewComponent
   ]
 })
 export class DbxListLayoutModule { }

@@ -7,13 +7,15 @@ import { AbstractDbxPickableItemFieldDirective, PickableItemFieldItem } from "./
 @Component({
   templateUrl: 'pickable.chip.field.component.html'
 })
-export class DbxPickableChipFieldComponent<T> extends AbstractDbxPickableItemFieldDirective<T> {
+export class DbxPickableChipListFieldComponent<T> extends AbstractDbxPickableItemFieldDirective<T> {
 
   itemClicked(item: PickableItemFieldItem<T>): void {
-    if (item.selected) {
-      this.removeValue(item.display.value);
-    } else {
-      this.addValue(item.display.value);
+    if (!item.disabled && !this.isReadonlyOrDisabled) {
+      if (item.selected) {
+        this.removeValue(item.value.value);
+      } else {
+        this.addValue(item.value.value);
+      }
     }
   }
 

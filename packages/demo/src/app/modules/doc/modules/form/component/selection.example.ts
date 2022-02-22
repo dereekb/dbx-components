@@ -20,13 +20,14 @@ export function MAKE_EXAMPLE_SELECTION_VALUE(id?: string) {
   };
 }
 
+export const MAKE_RANDOM_SELECTION_VALUES = makeRandomArrayFn({ random: { min: 12, max: 25 }, make: () => MAKE_EXAMPLE_SELECTION_VALUE() });
+
 export function EXAMPLE_SEARCH_FOR_SELECTION_VALUE(): SearchableValueFieldStringSearchFn<DocFormExampleSelectionValueId> {
   const makeRandomDelay = makeRandomFunction(200);  // use to show the loading bar.
-  const makeRandomItems = makeRandomArrayFn({ random: { min: 12, max: 25 }, make: () => MAKE_EXAMPLE_SELECTION_VALUE() });
 
   return (search: string = '') => {
     if (search.length > 3) {
-      const result: SearchableValueFieldValue<DocFormExampleSelectionValueId>[] = makeRandomItems().map(x => ({ meta: x, value: x.id }));
+      const result: SearchableValueFieldValue<DocFormExampleSelectionValueId>[] = MAKE_RANDOM_SELECTION_VALUES().map(x => ({ meta: x, value: x.id }));
       return of(result).pipe(randomDelayWithRandomFunction(makeRandomDelay));
     } else {
       return of([]).pipe(randomDelayWithRandomFunction(makeRandomDelay));

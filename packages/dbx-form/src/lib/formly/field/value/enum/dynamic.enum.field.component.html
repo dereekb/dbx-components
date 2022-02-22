@@ -2,8 +2,8 @@
   <!-- Autocomplete -->
   <mat-autocomplete #auto="matAutocomplete" (optionSelected)="selected($event)">
     <mat-option *ngFor="let option of (options$ | async)" [value]="option">
-      <span class="s-chip-label">{{ option.label }}</span>
-      <span class="s-chip-sublabel" *ngIf="option.sublabel">({{ option.sublabel }})</span>
+      <span class="dbx-chip-label">{{ option.label }}</span>
+      <span class="dbx-chip-sublabel" *ngIf="option.sublabel">({{ option.sublabel }})</span>
     </mat-option>
   </mat-autocomplete>
   <!-- Template -->

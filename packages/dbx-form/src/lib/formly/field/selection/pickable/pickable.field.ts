@@ -1,6 +1,7 @@
+import { FormlyFieldConfig } from '@ngx-formly/core';
 import { Maybe } from '@dereekb/util';
 import { Observable, of } from 'rxjs';
-import { LabeledFieldConfig, formlyField } from '../../field';
+import { LabeledFieldConfig, formlyField, templateOptionsForFieldConfig } from '../../field';
 import { PickableValueFieldDisplayValue } from './pickable';
 import { PickableItemFieldItem, PickableValueFieldsFieldConfig, PickableValueFieldsFormlyFieldConfig } from './pickable.field.directive';
 export { PickableItemFieldItem };
@@ -19,22 +20,31 @@ export function filterPickableItemFieldValuesByLabel<T>(filterText: Maybe<string
 }
 
 export function sortPickableItemsByLabel<T>(chips: PickableItemFieldItem<T>[]): PickableItemFieldItem<T>[] {
-  return chips.sort((a, b) => a.display.label.localeCompare(b.display.label));
+  return chips.sort((a, b) => a.value.label.localeCompare(b.value.label));
 }
 
 export interface PickableItemFieldConfig<T = any> extends LabeledFieldConfig, PickableValueFieldsFieldConfig<T> { }
-export interface PickableItemFieldFormlyConfig<T = any> extends Omit<PickableValueFieldsFormlyFieldConfig<T>, 'type'> { }
 
-export function pickableChipItemField<C extends PickableItemFieldFormlyConfig<any>>(config: C): C {
-  return formlyField<C>({
+export function pickableItemChipField<T = any>(config: PickableItemFieldConfig<T>): FormlyFieldConfig {
+  const { key } = config;
+  return formlyField({
+    key,
     type: 'pickablechipfield',
-    ...config
+    ...templateOptionsForFieldConfig(config, {
+      autocomplete: false
+    }),
+    pickableField: config
   });
 }
 
-export function pickableListItemField<C extends PickableItemFieldFormlyConfig<any>>(config: C): C {
-  return formlyField<C>({
+export function pickableItemListField<T = any>(config: PickableItemFieldConfig<T>): FormlyFieldConfig {
+  const { key } = config;
+  return formlyField({
+    key,
     type: 'pickablelistfield',
-    ...config
+    ...templateOptionsForFieldConfig(config, {
+      autocomplete: false
+    }),
+    pickableField: config
   });
 }

@@ -57,8 +57,8 @@ export abstract class AbstractDbxSearchableFieldDisplayDirective<T> {
   selector: 'dbx-default-searchable-field-display',
   template: `
   <div class="dbx-default-searchable-field-display">
-    <span class="s-chip-label">{{ displayValue.label }}</span>
-    <span class="s-chip-sublabel" *ngIf="displayValue.sublabel">({{ displayValue.sublabel }})</span>
+    <span class="dbx-chip-label">{{ displayValue.label }}</span>
+    <span class="dbx-chip-sublabel" *ngIf="displayValue.sublabel">({{ displayValue.sublabel }})</span>
   </div>
   `
 })

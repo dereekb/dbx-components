@@ -1,5 +1,5 @@
 import { Maybe, Destroyable } from '@dereekb/util';
-import { filterMaybe, timeoutStartWith, beginLoading } from '@dereekb/rxjs';
+import { filterMaybe, timeoutStartWith, beginLoading, tapLog } from '@dereekb/rxjs';
 import { mergeMap, map, switchMap, shareReplay, distinctUntilChanged, BehaviorSubject, isObservable, Observable, of } from 'rxjs';
 import { LoadingContext, LoadingContextEvent } from './loading.context';
 import { LoadingState } from './loading.state';
@@ -55,7 +55,7 @@ export abstract class AbstractLoadingStateContextInstance<T = any, S extends Loa
       }
     }),
     distinctUntilChanged((a: E, b: E) => {
-      return a.loading === b.loading && a.error === b.error && a.value === b.value
+      return a.loading === b.loading && a.error === b.error && a.value === b.value;
     }),
     shareReplay(1)
   );

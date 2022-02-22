@@ -17,6 +17,10 @@ export interface ListSelectionState<T> {
  */
 export abstract class DbxListView<T, S extends ListLoadingState<T> = ListLoadingState<T>> {
   /**
+   * Current disabled state.
+   */
+  abstract readonly disabled$: Observable<boolean>;
+  /**
    * Values of the list view.
    */
   abstract readonly values$: Observable<T[]>;
@@ -36,6 +40,10 @@ export abstract class DbxListView<T, S extends ListLoadingState<T> = ListLoading
    * Sets the models input loading state context for the view to render from.
    */
   abstract setListContext(state: ListLoadingStateContext<T, S>): void;
+  /**
+   * Sets the disabled state of the list view.
+   */
+  abstract setDisabled(disabled: boolean): void;
 }
 
 export function ProvideDbxListView<V extends DbxListView<any>>(sourceType: Type<V>): Provider[] {

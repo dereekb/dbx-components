@@ -2,6 +2,18 @@
   <doc-feature-layout header="" hint="">
 
     <!-- Examples -->
+    <h3>Pickable</h3>
+    <p>Pickable fields are use to display a list of preset/static values that the user can choose from.</p>
+    <doc-feature-example header="pickableItemChipField()"
+      hint="A field that lets you choose items from a set of chips.">
+      <doc-form-example-form [dbxFormlyFields]="pickableItemChipFields"></doc-form-example-form>
+    </doc-feature-example>
+    <doc-feature-example header="pickableItemListField()"
+      hint="A field that lets you choose values from a set of items.">
+      <doc-form-example-form [dbxFormlyFields]="pickableItemListFields"></doc-form-example-form>
+    </doc-feature-example>
+    <h3>Searchable</h3>
+    <p>Seaarchable fields are more complex fields that support searching for items that the user can pick.</p>
     <doc-feature-example header="searchableChipField()"
       hint="A field that provides a way to search items and select multiple values as chips.">
       <doc-form-example-form [dbxFormlyFields]="searchableChipFields"></doc-form-example-form>
@@ -15,7 +27,7 @@
       <h4>Anchors</h4>
       <p>It can also be configured to display content within a dbx-anchor value, allowing for navigation as a result of
         searching.</p>
-      <p>Value Clicked: {{ valueClicked }}</p>
+      <p *ngIf="valueClicked" class="dbx-ok">Value Clicked: {{ valueClicked }}</p>
       <doc-form-example-form [dbxFormlyFields]="searchableTextFieldsWithAnchors"></doc-form-example-form>
     </doc-feature-example>
   </doc-feature-layout>

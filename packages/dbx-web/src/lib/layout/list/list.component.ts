@@ -87,6 +87,7 @@ export class DbxListComponent<T = any, V extends DbxListView<T> = DbxListView<T>
   contentScrolled = new EventEmitter<number>();
 
   private _content!: DbxListInternalContentDirective;
+  private _disabled = new BehaviorSubject<boolean>(false);
 
   private _loadMoreTrigger = new Subject<void>();
   private _scrollTrigger = new Subject<DbxListScrollDirectionTrigger>();
@@ -94,10 +95,12 @@ export class DbxListComponent<T = any, V extends DbxListView<T> = DbxListView<T>
 
   private _loadMoreSub = new SubscriptionObject();
   private _onClickSub = new SubscriptionObject();
+  private _disabledSub = new SubscriptionObject();
   private _onSelectionChangeSub = new SubscriptionObject();
 
   readonly context = new ListLoadingStateContextInstance<T, S>({ showLoadingOnNoValue: false });
   readonly isEmpty$ = this.context.isEmpty$;
+  readonly disabled$ = this._disabled.asObservable();
 
   readonly hideOnEmpty$: Observable<boolean> = this._config.pipe(filterMaybe(), map(x => Boolean(x.hideOnEmpty)), distinctUntilChanged(), shareReplay(1));
   readonly invertedList$: Observable<boolean> = this._config.pipe(filterMaybe(), map(x => Boolean(x?.throttle)), distinctUntilChanged(), shareReplay(1));
@@ -125,6 +128,9 @@ export class DbxListComponent<T = any, V extends DbxListView<T> = DbxListView<T>
           componentClass: config.componentClass,
           injector: config.injector,
           init: (instance: V) => {
+
+            // Synchronize disabled
+            this._disabledSub.subscription = this.disabled$.subscribe((disabled) => instance.setDisabled(disabled));
 
             if (init) {
               init(instance);
@@ -202,10 +208,12 @@ export class DbxListComponent<T = any, V extends DbxListView<T> = DbxListView<T>
     this._scrollTrigger.complete();
     this._loadMoreTrigger.complete();
     this._config.complete();
+    this._disabled.complete();
 
     this._onClickSub.destroy();
     this._loadMoreSub.destroy();
     this._onSelectionChangeSub.destroy();
+    this._disabledSub.destroy();
 
     this.context.destroy();
   }
@@ -222,6 +230,15 @@ export class DbxListComponent<T = any, V extends DbxListView<T> = DbxListView<T>
   @Input()
   set config(config: Maybe<DbxListConfig<T, V>>) {
     this._config.next(config);
+  }
+
+  @Input()
+  get disabled(): boolean {
+    return this._disabled.value;
+  }
+
+  set disabled(disabled: Maybe<boolean>) {
+    this._disabled.next(disabled ?? false);
   }
 
   getScrollPositionRelativeToBottom(): number {

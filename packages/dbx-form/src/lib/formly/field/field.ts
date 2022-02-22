@@ -58,13 +58,14 @@ export function templateOptionsForFieldConfig(fieldConfig: Partial<FieldConfig> 
 }
 
 export function templateOptionsValueForFieldConfig<T extends FormlyTemplateOptions>(fieldConfig: PartialPotentialFieldConfig, override?: PartialPotentialFieldConfig & unknown): Partial<T> {
-  const { label, placeholder, required, description, autocomplete } = mergeObjects<PartialPotentialFieldConfig>([fieldConfig, override], { keysFilter: ['label', 'placeholder', 'required', 'description', 'autocomplete'] });
+  const { label, placeholder, required, readonly, description, autocomplete } = mergeObjects<PartialPotentialFieldConfig>([fieldConfig, override], { keysFilter: ['label', 'placeholder', 'required', 'readonly', 'description', 'autocomplete'] });
   const attributes = mergeObjects([fieldConfig.attributes, override?.attributes]);
 
   const result = filterFromPOJO({
     label,
     placeholder,
     required,
+    readonly,
     description,
     attributes
   }) as T;

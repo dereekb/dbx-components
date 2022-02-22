@@ -3,12 +3,11 @@
     <ng-container *ngIf="showFilterInput">
       <ng-container *ngTemplateOutlet="filterTemplate"></ng-container>
     </ng-container>
+    <!-- Content -->
     <div class="dbx-model-list dbx-pickable-item-field-list">
-      <mat-selection-list [multiple]="multiSelect" (selectionChange)="matSelectionChanged($event)">
-        <mat-list-option *ngFor="let item of items$ | async" [selected]="item.selected" [value]="item">
-          <p>{{ item.display.label }}</p>
-        </mat-list-option>
-      </mat-selection-list>
+      <dbx-form-pickable-item-field-item-list [disabled]="isReadonlyOrDisabled" [state$]="filterItemsLoadingState$"
+        (selectionChange)="onSelectionChange($event)">
+      </dbx-form-pickable-item-field-item-list>
       <dbx-injected-content [config]="footerConfig"></dbx-injected-content>
     </div>
   </dbx-loading>
@@ -17,13 +16,12 @@
 <!-- Filter Input -->
 <ng-template #filterTemplate>
   <div class="dbx-pickable-item-field-filter">
-    <mat-form-field class="dbx-pickable-item-field-filter-field" appearance="fill">
-      <mat-label>{{ filterLabel }}</mat-label>
-      <input name="filter items" #filterMatInput="matInput" matInput [placeholder]="placeholder"
-        [formControl]="inputCtrl">
-    </mat-form-field>
-    <div class="searchable-field-form-loading">
-      <dbx-loading [linear]="true" [context]="filterResultsContext"></dbx-loading>
-    </div>
+    <div class="dbx-label">{{ filterLabel }}</div>
+    <input [name]="name" autocomplete="{{ autocomplete }}" #filterMatInput="matInput" matInput [placeholder]="placeholder"
+      [formControl]="inputCtrl">
+    <mat-divider></mat-divider>
+    <dbx-loading [linear]="true" [context]="filterResultsContext"></dbx-loading>
+    <!-- No items found. -->
+    <p *ngIf="noItemsAvailable$ | async" class="dbx-label">No items match this filter.</p>
   </div>
 </ng-template>

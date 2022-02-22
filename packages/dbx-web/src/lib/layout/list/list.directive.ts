@@ -1,7 +1,6 @@
-import { ListLoadingState } from '@dereekb/rxjs';
-import { switchMapMaybeObs, filterMaybe, ObservableGetter, getter } from '@dereekb/rxjs';
-import { Observable, BehaviorSubject, map, shareReplay, isObservable, of, switchMap } from 'rxjs';
-import { Output, EventEmitter, OnInit, OnDestroy, Directive, Type, Input } from "@angular/core";
+import { ListLoadingState, filterMaybe, ObservableGetter, getter } from '@dereekb/rxjs';
+import { Observable, BehaviorSubject, map, shareReplay } from 'rxjs';
+import { Output, EventEmitter, OnInit, OnDestroy, Directive, Input } from "@angular/core";
 import { DbxListConfig } from "./list.component";
 import { DbxListView, ListSelectionState } from "./list.view";
 import { Maybe } from '@dereekb/util';
@@ -16,7 +15,7 @@ export const DEFAULT_STATIC_LIST_DIRECTIVE_TEMPLATE = `
 
 // MARK: Wrapper
 export const DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE = `
-<dbx-list [state$]="state$" [config]="config$ | async">
+<dbx-list [state$]="state$" [config]="config$ | async" [disabled]="disabled">
   <ng-content top select="[top]"></ng-content>
   <ng-content bottom select="[bottom]"></ng-content>
   <ng-content empty select="[empty]"></ng-content>
@@ -34,6 +33,9 @@ export abstract class AbstractDbxListWrapperDirective<T, V extends DbxListView<T
     getter(),
     map((x: C) => this._buildListConfig(x)),
     shareReplay(1));
+
+  @Input()
+  disabled?: Maybe<boolean>;
 
   @Input()
   state$?: Maybe<Observable<S>>;

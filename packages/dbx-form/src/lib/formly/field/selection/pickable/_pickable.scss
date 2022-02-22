@@ -4,7 +4,11 @@
 
 
 // MARK: Mixin
-@mixin core() {}
+@mixin core() {
+  .dbx-pickable-item-field-filter {
+    margin-bottom: 4px;
+  }
+}
 
 @mixin color($theme-config) {}
 

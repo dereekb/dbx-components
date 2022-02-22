@@ -15,7 +15,6 @@ export interface SearchableValueFieldValue<T, M = any> extends SelectionValue<T,
  * Displayed value.
  */
 export interface SearchableValueFieldDisplayValue<T, M = any> extends SelectionDisplayValue<T, M>, SearchableValueFieldValue<T, M> {
-  sublabel?: string;
   /**
    * Display override configuration
    */

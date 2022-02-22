@@ -1,13 +1,15 @@
 <div class="dbx-pickable-item-field">
-  <dbx-loading [context]="context">
+  <dbx-loading [context]="context" [linear]="true">
     <ng-container *ngIf="showFilterInput">
       <ng-container *ngTemplateOutlet="filterTemplate"></ng-container>
     </ng-container>
+    <!-- Content -->
     <div class="dbx-pickable-item-field-chips">
-      <!-- TODO: Add back aria-label  [attr.aria-label]="'email ' + emailParticipantsType" -->
-      <mat-chip-list [selectable]="!readonly" [disabled]="readonly" #chipList>
-        <mat-chip *ngFor="let item of items$ | async" (click)="itemClicked(item)" [selected]="item.selected">
-          <span class="s-chip-label">{{ item.display.label }}</span>
+      <mat-chip-list [required]="required" [selectable]="!isReadonlyOrDisabled" #chipList>
+        <mat-chip *ngFor="let item of items$ | async" (click)="itemClicked(item)" [selected]="item.selected"
+          [disabled]="isReadonlyOrDisabled || item.disabled">
+          <span class="dbx-chip-label">{{ item.value.label }}</span>
+          <span class="dbx-chip-sublabel" *ngIf="item.value.sublabel">{{ item.value.sublabel }}</span>
         </mat-chip>
       </mat-chip-list>
       <dbx-injected-content [config]="footerConfig"></dbx-injected-content>
@@ -18,13 +20,12 @@
 <!-- Filter Input -->
 <ng-template #filterTemplate>
   <div class="dbx-pickable-item-field-filter">
-    <mat-form-field class="dbx-pickable-item-field-filter-field" appearance="fill">
-      <mat-label>{{ filterLabel }}</mat-label>
-      <input name="filter items" #filterMatInput="matInput" matInput [placeholder]="placeholder"
-        [formControl]="inputCtrl">
-    </mat-form-field>
-    <div class="searchable-field-form-loading">
-      <dbx-loading [linear]="true" [context]="filterResultsContext"></dbx-loading>
-    </div>
+    <div class="dbx-label">{{ filterLabel }}</div>
+    <input [name]="name" autocomplete="{{ autocomplete }}" #filterMatInput="matInput" matInput
+      [placeholder]="placeholder" [formControl]="inputCtrl">
+    <mat-divider></mat-divider>
+    <dbx-loading [linear]="true" [context]="filterResultsContext"></dbx-loading>
+    <!-- No items found. -->
+    <p *ngIf="noItemsAvailable$ | async" class="dbx-label">No items match this filter.</p>
   </div>
 </ng-template>

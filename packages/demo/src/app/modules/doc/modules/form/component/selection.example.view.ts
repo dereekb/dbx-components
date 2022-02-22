@@ -4,7 +4,7 @@ import { AbstractDbxSearchableFieldDisplayDirective } from "@dereekb/dbx-form";
 @Component({
   template: `
   <div class="dbx-primary-bg">
-    <span class="s-chip-label">{{ displayValue.label }}</span>
+    <span class="dbx-chip-label">{{ displayValue.label }}</span>
   </div>
   `
 })
@@ -13,7 +13,7 @@ export class DocFormExamplePrimarySearchableFieldDisplayComponent<T> extends Abs
 @Component({
   template: `
   <div class="dbx-accent-bg">
-    <span class="s-chip-label">{{ displayValue.label }}</span>
+    <span class="dbx-chip-label">{{ displayValue.label }}</span>
   </div>
   `
 })
@@ -22,7 +22,7 @@ export class DocFormExampleAccentSearchableFieldDisplayComponent<T> extends Abst
 @Component({
   template: `
   <div class="dbx-warn-bg">
-    <span class="s-chip-label">{{ displayValue.label }}</span>
+    <span class="dbx-chip-label">{{ displayValue.label }}</span>
   </div>
   `
 })

@@ -6,7 +6,7 @@ import { map, Observable, of } from "rxjs";
 export const DBX_VALUE_LIST_VIEW_ITEM = new InjectionToken<any>('DbxValueListViewItem');
 
 export interface DbxValueListItem<T> {
-  value: T;
+  value: T;   // todo: rename to data
   icon?: string;
   disabled?: boolean;
   selected?: boolean;

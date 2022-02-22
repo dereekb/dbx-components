@@ -1,10 +1,13 @@
 import { OnDestroy, Input, Directive } from "@angular/core";
 import { filterMaybe } from "@dereekb/rxjs";
 import { Maybe } from "@dereekb/util";
-import { BehaviorSubject, distinctUntilChanged, shareReplay, combineLatest, switchMap, map } from "rxjs";
+import { BehaviorSubject, distinctUntilChanged, shareReplay, combineLatest, switchMap, Observable } from "rxjs";
 import { DbxListView } from "./list.view";
-import { AbstractDbxValueListViewConfig, DbxValueListItem, mapValuesToValuesListItemConfigObs } from "./list.view.value";
+import { AbstractDbxValueListViewConfig, DbxValueListItem, DbxValueListItemConfig, mapValuesToValuesListItemConfigObs } from "./list.view.value";
 
+/**
+ * Abstract list directive that takes in items and a AbstractDbxValueItemListViewConfig configuration.
+ */
 @Directive()
 export abstract class AbstractDbxValueListViewDirective<T, I extends DbxValueListItem<T> = DbxValueListItem<T>, V = any, C extends AbstractDbxValueListViewConfig<T, I, V> = AbstractDbxValueListViewConfig<T, I, V>> implements OnDestroy {
 

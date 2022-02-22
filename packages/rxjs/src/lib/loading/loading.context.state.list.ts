@@ -1,13 +1,12 @@
 import { loadingStateIsLoading } from '@dereekb/rxjs';
 import { LimitArrayConfig, hasNonNullValue, limitArray, Maybe } from '@dereekb/util';
-import { Observable, distinctUntilChanged } from 'rxjs';
-import { filter, map, shareReplay } from 'rxjs/operators';
-import { LoadingContextEvent } from './loading.context';
+import { Observable, distinctUntilChanged, map, shareReplay } from 'rxjs';
 import { ListLoadingState } from './loading.state';
-import { AbstractLoadingEventForLoadingPairConfig, AbstractLoadingStateContext, AbstractLoadingStateContextInstance, LoadingStateContextInstanceInputConfig } from './loading.context.state';
+import { AbstractLoadingEventForLoadingPairConfig, AbstractLoadingStateContext, AbstractLoadingStateContextInstance, AbstractLoadingStateEvent, LoadingStateContextInstanceInputConfig } from './loading.context.state';
+import { isListLoadingStateEmpty } from './loading.state.list';
 
-export interface ListLoadingStateContextEvent<T> extends LoadingContextEvent {
-  list?: Maybe<T[]>;
+export interface ListLoadingStateContextEvent<T> extends AbstractLoadingStateEvent<T[]> {
+  value?: Maybe<T[]>;
 }
 
 export interface LoadingEventForListLoadingStateConfig<S extends ListLoadingState<any> = ListLoadingState<any>> extends AbstractLoadingEventForLoadingPairConfig<S>, Partial<LimitArrayConfig> { }
@@ -25,10 +24,9 @@ export class ListLoadingStateContextInstance<L = any, S extends ListLoadingState
   /**
    * Returns the current values or an empty list.
    */
-  readonly list$: Observable<L[]> = this.stream$.pipe(map(x => x.list ?? []), shareReplay(1));
+  readonly list$: Observable<L[]> = this.stream$.pipe(map(x => x.value ?? []), shareReplay(1));
   readonly isEmpty$: Observable<boolean> = this.stream$.pipe(
-    filter(x => !loadingStateIsLoading(x)),
-    map(x => Boolean(x.list && !(x.list?.length > 0))),
+    isListLoadingStateEmpty(),
     distinctUntilChanged()
   );
 
@@ -37,12 +35,12 @@ export class ListLoadingStateContextInstance<L = any, S extends ListLoadingState
 
     let loading = state?.loading;
     const error = state?.error;
-    let list = state?.value;
+    let value = state?.value;
 
-    const hasValue = list != null;
+    const hasValue = value != null;
 
     if (hasValue) {
-      list = limitArray(list, config);  // Always limit the value/results.
+      value = limitArray(value, config);  // Always limit the value/results.
     }
 
     // If there is no error
@@ -57,7 +55,7 @@ export class ListLoadingStateContextInstance<L = any, S extends ListLoadingState
     return {
       loading: Boolean(loading),
       error,
-      list
+      value
     };
   }
 

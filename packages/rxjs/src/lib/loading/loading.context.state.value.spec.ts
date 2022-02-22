@@ -7,7 +7,7 @@ import { objectHasKey } from '@dereekb/util';
 
 describe('LoadingStateContextInstance', () => {
 
-  describe('content', () => {
+  describe('context', () => {
 
     let context: LoadingStateContextInstance;
 

@@ -11,8 +11,11 @@ import { Maybe } from '@dereekb/util';
 @Directive()
 export abstract class AbstractDbxListViewDirective<T> implements DbxListView<T>, OnDestroy {
 
+  private readonly _disabled = new BehaviorSubject<boolean>(false);
   private readonly _values$ = new BehaviorSubject<Maybe<Observable<T[]>>>(undefined);
+
   readonly values$ = this._values$.pipe(switchMapMaybeObs(), shareReplay(1));
+  readonly disabled$ = this._disabled.asObservable();
 
   @Output()
   clickValue = new EventEmitter<T>();
@@ -43,6 +46,10 @@ export abstract class AbstractDbxListViewDirective<T> implements DbxListView<T>,
 
   setValues(valuesObs: Maybe<Observable<T[]>>): void {
     this._values$.next(valuesObs);
+  }
+
+  setDisabled(disabled: boolean): void {
+    this._disabled.next(disabled);
   }
 
 }

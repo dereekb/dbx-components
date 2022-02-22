@@ -28,5 +28,3 @@ export abstract class AbstractSelectionValueListViewDirective<T> extends Abstrac
   }
 
 }
-
-// MARK: List View Item

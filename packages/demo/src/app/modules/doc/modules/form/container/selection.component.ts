@@ -1,11 +1,11 @@
 import { safeDetectChanges } from '@dereekb/dbx-core';
-import { BehaviorSubject, map, Observable, of, delay, switchMap } from 'rxjs';
+import { BehaviorSubject, map, Observable, of, delay } from 'rxjs';
 import { ChangeDetectorRef, Component } from '@angular/core';
 import { FormlyFieldConfig } from '@ngx-formly/core';
-import { searchableChipField, searchableStringChipField, searchableTextField, SearchableValueFieldDisplayFn, SearchableValueFieldDisplayValue, SearchableValueFieldStringSearchFn, SearchableValueFieldValue } from '@dereekb/dbx-form';
-import { randomDelay, randomDelayWithRandomFunction } from '@dereekb/rxjs';
+import { filterPickableItemFieldValuesByLabel, pickableItemChipField, pickableItemListField, searchableChipField, searchableStringChipField, searchableTextField, SearchableValueFieldDisplayFn, SearchableValueFieldDisplayValue, SearchableValueFieldStringSearchFn, SearchableValueFieldValue } from '@dereekb/dbx-form';
+import { randomDelayWithRandomFunction } from '@dereekb/rxjs';
 import { makeRandomFunction } from '@dereekb/util';
-import { DocFormExampleSelectionValue, DocFormExampleSelectionValueId, EXAMPLE_DISPLAY_FOR_SELECTION_VALUE, EXAMPLE_DISPLAY_FOR_SELECTION_VALUE_WITH_CUSTOM_DISPLAYS, EXAMPLE_SEARCH_FOR_SELECTION_VALUE } from '../component/selection.example';
+import { DocFormExampleSelectionValueId, EXAMPLE_DISPLAY_FOR_SELECTION_VALUE, EXAMPLE_DISPLAY_FOR_SELECTION_VALUE_WITH_CUSTOM_DISPLAYS, EXAMPLE_SEARCH_FOR_SELECTION_VALUE, MAKE_RANDOM_SELECTION_VALUES } from '../component/selection.example';
 import { DocFormExamplePrimarySearchableFieldDisplayComponent } from '../component/selection.example.view';
 
 export type TestStringSearchFunction = (text: string) => string[];
@@ -26,7 +26,7 @@ export function makeSearchForStringValue(obs: Observable<TestStringSearchFunctio
 }
 
 export const DISPLAY_FOR_STRING_VALUE: SearchableValueFieldDisplayFn<string> = (values: SearchableValueFieldValue<string>[]) => {
-  const displayValues: SearchableValueFieldDisplayValue<string>[] = values.map(x => ({ ...x, label: x.value }));
+  const displayValues: SearchableValueFieldDisplayValue<string>[] = values.map(x => ({ ...x, label: x.value, sublabel: 'item' }));
   const obs: Observable<SearchableValueFieldDisplayValue<string>[]> = of(displayValues);
   return obs;
 }
@@ -48,6 +48,15 @@ export class DocFormSelectionComponent {
       search: makeSearchForStringValue(this.searchFn$),
       displayForValue: DISPLAY_FOR_STRING_VALUE
     }),
+    searchableStringChipField({
+      key: 'typeAndPickChips',
+      label: 'Read Only Text Field',
+      description: 'This input is read-only.',
+      readonly: true,
+      searchOnEmptyText: true,
+      search: makeSearchForStringValue(this.searchFn$),
+      displayForValue: DISPLAY_FOR_STRING_VALUE
+    }),
     searchableChipField({
       key: 'pickOnly',
       label: 'Only Pick Strings',
@@ -58,13 +67,22 @@ export class DocFormSelectionComponent {
       displayForValue: DISPLAY_FOR_STRING_VALUE
     }),
     searchableChipField({
-      key: 'pickOnly',
+      key: 'nonEmptySearch',
       label: 'Search Non-Empty Strings',
       description: 'This input does not search empty string value.',
       allowStringValues: false,
       searchOnEmptyText: false,
       search: makeSearchForStringValue(this.searchFn$),
       displayForValue: DISPLAY_FOR_STRING_VALUE
+    }),
+    searchableChipField({
+      key: 'customView',
+      label: 'Search Non-Empty Strings',
+      description: 'This input has custom display configuration.',
+      allowStringValues: false,
+      searchOnEmptyText: true,
+      search: EXAMPLE_SEARCH_FOR_SELECTION_VALUE(),
+      displayForValue: EXAMPLE_DISPLAY_FOR_SELECTION_VALUE_WITH_CUSTOM_DISPLAYS
     })
   ];
 
@@ -80,6 +98,16 @@ export class DocFormSelectionComponent {
     }),
     searchableTextField({
       key: 'strings',
+      label: 'Read-only Text Field',
+      description: 'View is read only.',
+      readonly: true,
+      allowStringValues: true,
+      searchOnEmptyText: true,
+      search: makeSearchForStringValue(this.searchFn$),
+      displayForValue: DISPLAY_FOR_STRING_VALUE
+    }),
+    searchableTextField({
+      key: 'pickStrings',
       label: 'Search And Pick A String Value only.',
       description: 'Search for values only.',
       allowStringValues: false,
@@ -115,10 +143,7 @@ export class DocFormSelectionComponent {
       allowStringValues: false,
       searchOnEmptyText: true,
       search: EXAMPLE_SEARCH_FOR_SELECTION_VALUE(),
-      displayForValue: EXAMPLE_DISPLAY_FOR_SELECTION_VALUE_WITH_CUSTOM_DISPLAYS,
-      display: {
-        componentClass: DocFormExamplePrimarySearchableFieldDisplayComponent
-      }
+      displayForValue: EXAMPLE_DISPLAY_FOR_SELECTION_VALUE_WITH_CUSTOM_DISPLAYS
     })
   ];
 
@@ -126,7 +151,7 @@ export class DocFormSelectionComponent {
 
   readonly searchableTextFieldsWithAnchors: FormlyFieldConfig[] = [
     searchableTextField({
-      key: 'strings',
+      key: 'anchor1',
       label: 'Anchor Segue',
       description: 'Anchors are enabled and set on the field. Result is configured to not show.',
       allowStringValues: false,
@@ -145,7 +170,7 @@ export class DocFormSelectionComponent {
       },
     }),
     searchableTextField({
-      key: 'strings',
+      key: 'anchor2',
       label: 'Anchor Segue',
       description: 'Anchors are set on each item. Result is configured to not show.',
       allowStringValues: false,
@@ -160,6 +185,69 @@ export class DocFormSelectionComponent {
           }
         }
       }))),
+      displayForValue: DISPLAY_FOR_STRING_VALUE
+    })
+  ];
+
+  readonly pickableItemChipFields: FormlyFieldConfig[] = [
+    pickableItemChipField({
+      key: 'stringItemChips',
+      label: 'String Item Chips',
+      description: 'This is a simple string item chip picker.',
+      loadValues: () => of([{ value: 'a' }, { value: 'b' }, { value: 'c' }]),
+      displayForValue: DISPLAY_FOR_STRING_VALUE
+    }),
+    pickableItemChipField({
+      key: 'stringItemChips',
+      label: 'Read Only String Item Chips',
+      description: 'This is read only.',
+      readonly: true,
+      loadValues: () => of([{ value: 'a' }, { value: 'b' }, { value: 'c' }]),
+      displayForValue: DISPLAY_FOR_STRING_VALUE
+    }),
+    pickableItemChipField({
+      key: 'stringItemChipsWithFilter',
+      label: 'String Item Chips With Filter',
+      filterLabel: 'Filter',
+      description: 'You can filter these items by their label.',
+      filterValues: filterPickableItemFieldValuesByLabel,
+      loadValues: () => of([{ value: 'a' }, { value: 'b' }, { value: 'c' }]),
+      displayForValue: DISPLAY_FOR_STRING_VALUE
+    }),
+    pickableItemChipField({
+      key: 'stringItemChipsWithFilter',
+      label: 'String Item Chips With Filter With Delay',
+      filterLabel: 'Filter',
+      description: 'You can filter these items by their label.',
+      filterValues: (a, b) => filterPickableItemFieldValuesByLabel(a, b).pipe(delay(300)),
+      loadValues: () => of([{ value: 'a' }, { value: 'b' }, { value: 'c' }]),
+      displayForValue: DISPLAY_FOR_STRING_VALUE
+    })
+  ];
+
+  readonly pickableItemListFields: FormlyFieldConfig[] = [
+    pickableItemListField<DocFormExampleSelectionValueId>({
+      key: 'stringItemList',
+      label: 'String Item List',
+      description: 'This is a simple string item list picker.',
+      loadValues: () => of([{ value: 'a' }, { value: 'b' }, { value: 'c' }]),
+      displayForValue: DISPLAY_FOR_STRING_VALUE
+    }),
+    pickableItemListField<DocFormExampleSelectionValueId>({
+      key: 'stringItemList',
+      label: 'Read Only String Item List',
+      readonly: true,
+      description: 'This is read only.',
+      loadValues: () => of([{ value: 'a' }, { value: 'b' }, { value: 'c' }]),
+      displayForValue: DISPLAY_FOR_STRING_VALUE
+    }),
+    pickableItemListField<DocFormExampleSelectionValueId>({
+      key: 'stringItemListWithFilter',
+      label: 'String Item List',
+      filterLabel: 'Filter',
+      description: 'You can filter these items by their label.',
+      filterValues: filterPickableItemFieldValuesByLabel,
+      loadValues: () => of([{ value: 'a' }, { value: 'b' }, { value: 'c' }]),
       displayForValue: DISPLAY_FOR_STRING_VALUE
     })
   ];

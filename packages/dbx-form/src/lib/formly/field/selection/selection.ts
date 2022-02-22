@@ -16,6 +16,7 @@ export interface SelectionValue<T, M = any> {
  */
 export interface SelectionDisplayValue<T, M = any> extends SelectionValue<T, M> {
   label: string;
+  sublabel?: string;
   /**
    * Whether or not the value is known.
    */
