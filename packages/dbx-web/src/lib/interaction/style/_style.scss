@@ -20,9 +20,6 @@
   $cdk-text-color: theming.get-color-from-palette($foreground, 'text');
   $cdk-border-color: color.adjust($color: $cdk-text-color, $alpha: -0.90);
 
-  @debug $foreground;
-  @debug $cdk-text-color;
-
   .ng-overlay-container {
     color: $cdk-text-color;
     background: $cdk-background-color;
