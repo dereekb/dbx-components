@@ -28,7 +28,7 @@ export interface TextEditorComponentFieldConfig extends FormlyFieldConfig { }
     </div>
   `
 })
-export class TextEditorFieldComponent<T extends TextEditorComponentFieldConfig = TextEditorComponentFieldConfig> extends FieldType<T & FieldTypeConfig> implements OnInit, OnDestroy {
+export class DbxTextEditorFieldComponent<T extends TextEditorComponentFieldConfig = TextEditorComponentFieldConfig> extends FieldType<T & FieldTypeConfig> implements OnInit, OnDestroy {
 
   private _editor?: Editor;
   private _sub = new SubscriptionObject();

@@ -6,7 +6,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { FormlyModule } from '@ngx-formly/core';
 import { NgxEditorModule } from 'ngx-editor';
-import { TextEditorFieldComponent } from './texteditor.field.component';
+import { DbxTextEditorFieldComponent } from './texteditor.field.component';
 
 @NgModule({
   imports: [
@@ -19,12 +19,12 @@ import { TextEditorFieldComponent } from './texteditor.field.component';
     MatInputModule,
     FormlyModule.forChild({
       types: [
-        { name: 'texteditor', component: TextEditorFieldComponent }
+        { name: 'texteditor', component: DbxTextEditorFieldComponent }
       ]
     })
   ],
   declarations: [
-    TextEditorFieldComponent
+    DbxTextEditorFieldComponent
   ],
   exports: []
 })

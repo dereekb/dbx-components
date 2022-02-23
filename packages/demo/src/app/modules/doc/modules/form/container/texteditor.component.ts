@@ -10,7 +10,8 @@ export class DocFormTextEditorComponent {
   readonly textEditorField: FormlyFieldConfig[] = [
     textEditorField({
       key: 'editor',
-      label: 'Text Editor'
+      label: 'Text Editor',
+      description: 'This is a text editor.'
     })
   ]
 
