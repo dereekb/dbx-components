@@ -1,11 +1,12 @@
+import { DescriptionFieldConfig } from './../field';
 import { FormlyFieldConfig } from '@ngx-formly/core';
-import { LabeledFieldConfig, formlyField } from '../field';
+import { LabeledFieldConfig, formlyField, templateOptionsForFieldConfig } from '../field';
+import { TextFieldLengthConfig } from '../value/text/text.field';
 
-export interface TextEditorFieldConfig extends LabeledFieldConfig {
-  maxLength?: number;
-}
+export interface TextEditorFieldConfig extends LabeledFieldConfig, DescriptionFieldConfig, TextFieldLengthConfig { }
 
-export function textEditorField({ key, label = '', placeholder = '', maxLength, required = false }: TextEditorFieldConfig): FormlyFieldConfig {
+export function textEditorField(config: TextEditorFieldConfig): FormlyFieldConfig {
+  const { key, minLength, maxLength } = config;
   const fieldConfig: FormlyFieldConfig = formlyField({
     key,
     type: 'texteditor',
@@ -15,12 +16,11 @@ export function textEditorField({ key, label = '', placeholder = '', maxLength, 
       // Set to trigger value update on blurs with the form. However, the value is set internally too.
       updateOn: 'blur'
     },
-    templateOptions: {
-      label,
-      placeholder,
-      maxLength,
-      required
-    },
+    ...templateOptionsForFieldConfig(config, {
+      minLength,
+      maxLength
+    })
   });
+
   return fieldConfig;
 }

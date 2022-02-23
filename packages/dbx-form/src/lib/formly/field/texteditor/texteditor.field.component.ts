@@ -3,25 +3,27 @@ import { CompactContextStore, mapCompactModeObs } from '@dereekb/dbx-web';
 import {
   Component, OnDestroy, OnInit, Optional
 } from '@angular/core';
-import { FieldType, FieldTypeConfig, FormlyFieldConfig } from '@ngx-formly/core';
+import { FieldTypeConfig, FormlyFieldConfig } from '@ngx-formly/core';
+import { FieldType } from '@ngx-formly/material';
 import { Editor } from 'ngx-editor';
 import { debounceTime, filter } from 'rxjs/operators';
 import { SubscriptionObject } from '@dereekb/rxjs';
 import { Maybe } from '@dereekb/util';
 
-export interface TextEditorComponentFieldConfig extends FormlyFieldConfig {
-  // TODO: Add button that can retrieve trimmed content and inject it into the editor as a quoted value.
-}
+export interface TextEditorComponentFieldConfig extends FormlyFieldConfig { }
 
 @Component({
   template: `
-    <div class="dbx-texteditor-field NgxEditor__Wrapper" [ngClass]="(compactClass$ | async) ?? ''" [formGroup]="formGroup">
+    <div class="dbx-texteditor-field" [ngClass]="(compactClass$ | async) ?? ''" [formGroup]="formGroup">
       <dbx-label *ngIf="label">{{ label }}</dbx-label>
       <div class="dbx-texteditor-field-input">
         <ngx-editor [editor]="editor" outputFormat="html" [placeholder]="placeholder" [formControlName]="formGroupName"></ngx-editor>
       </div>
       <div class="dbx-texteditor-field-menu">
         <ngx-editor-menu [editor]="editor"></ngx-editor-menu>
+      </div>
+      <div>
+        <dbx-hint *ngIf="description">{{ description }}</dbx-hint>
       </div>
     </div>
   `
@@ -55,16 +57,18 @@ export class TextEditorFieldComponent<T extends TextEditorComponentFieldConfig =
     return this.field.templateOptions?.label;
   }
 
-  get placeholder(): string {
-    return this.field.templateOptions?.placeholder ?? '';
+  get description(): Maybe<string> {
+    return this.to.description;
   }
 
-  ngOnInit(): void {
+  override ngOnInit(): void {
+    super.ngOnInit();
+
     this._editor = new Editor({});
 
     // Watch for value changes every second and update the pristine level.
     this._sub.subscription = this.editor.valueChanges.pipe(
-      debounceTime(800),
+      debounceTime(100),
       filter(_ => this.editor.view.hasFocus())
     ).subscribe(() => {
       this.formControl.updateValueAndValidity();
@@ -72,7 +76,9 @@ export class TextEditorFieldComponent<T extends TextEditorComponentFieldConfig =
     });
   }
 
-  ngOnDestroy(): void {
+  override ngOnDestroy(): void {
+    super.ngOnDestroy();
+
     if (this.editor) {
       this.editor.destroy();
       delete this._editor;

@@ -1,3 +1,6 @@
+@use 'sass:map';
+@use 'sass:list';
+@use 'sass:color';
 @use '../../../../style/theming';
 
 // MARK: Variables
@@ -22,7 +25,17 @@
 
 }
 
-@mixin color($theme-config) {}
+@mixin color($theme-config) {
+  $color-config: theming.get-color-config($theme-config);
+  $background: map.get($color-config, 'background');
+  $foreground: map.get($color-config, 'foreground');
+  $text-color: theming.get-color-from-palette($foreground, 'text');
+
+  .country-selector.mat-button,
+  .country-list-button.mat-menu-item {
+    color: $text-color;
+  }
+}
 
 @mixin typography($typography-config) {}
 

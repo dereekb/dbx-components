@@ -33,7 +33,7 @@ export class DocFormExampleComponentFormComponent extends AbstractConfigAsyncFor
 @Component({
   template: `
   <div class="pad-3">
-    <dbx-content-box>
+    <dbx-content-box class="dbx-primary-bg">
       <dbx-section header="A" [hint]="lorem"></dbx-section>
     </dbx-content-box>
   </div>

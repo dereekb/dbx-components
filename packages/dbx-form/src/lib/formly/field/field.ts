@@ -62,6 +62,7 @@ export function templateOptionsValueForFieldConfig<T extends FormlyTemplateOptio
   const attributes = mergeObjects([fieldConfig.attributes, override?.attributes]);
 
   const result = filterFromPOJO({
+    ...override,
     label,
     placeholder,
     required,

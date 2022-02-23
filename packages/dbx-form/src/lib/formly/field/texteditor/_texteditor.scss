@@ -1,12 +1,84 @@
+@use 'sass:map';
+@use 'sass:list';
+@use 'sass:color';
 @use '../../../style/theming';
 
 // MARK: Variables
 
 
 // MARK: Mixin
-@mixin core() {}
+@mixin core() {
 
-@mixin color($theme-config) {}
+  .dbx-texteditor-field-compact {
+    .dbx-texteditor-field-input {
+      min-height: 120px;
+      height: 300px;
+      max-height: calc(var(--vh100) * 0.5);
+    }
+  }
+
+  .dbx-texteditor-field-input {
+    max-height: 400px;
+    overflow: auto;
+  }
+
+}
+
+@mixin color($theme-config) {
+  $color-config: theming.get-color-config($theme-config);
+  $background: map.get($color-config, 'background');
+  $foreground: map.get($color-config, 'foreground');
+  $background-color: theming.get-color-from-palette($background, 'background');
+  $hover-color: theming.get-color-from-palette($background, 'hover');
+  $focused-color: theming.get-color-from-palette($background, 'focused-button');
+  $border-color: theming.get-color-from-palette($foreground, 'divider');
+  $text-color: theming.get-color-from-palette($foreground, 'text');
+
+  @debug $border-color;
+
+  .dbx-texteditor-field {
+
+    .NgxEditor {
+      background: transparent;
+      color: $text-color;
+      border-color: $border-color;
+    }
+
+    .NgxEditor__MenuBar {
+      background: $background-color;
+      color: $text-color;
+      @include theming.elevation(2);
+
+      svg {
+        fill: $text-color;
+      }
+    }
+
+    .NgxEditor__MenuItem:hover,
+    .NgxEditor__Dropdown:hover {
+      background-color: $hover-color;
+    }
+
+    .NgxEditor__MenuItem.NgxEditor__MenuItem--Active {
+      background-color: $focused-color;
+    }
+
+    .NgxEditor__Popup,
+    .NgxEditor__Dropdown.NgxEditor__Dropdown--Selected, 
+    .NgxEditor__Dropdown.NgxEditor__Dropdown--Open,
+    .NgxEditor__Dropdown .NgxEditor__Dropdown--DropdownMenu,
+    .NgxEditor__Popup--FormGroup input {
+      background: $background-color;
+      color: $text-color;
+    }
+
+    .NgxEditor__Dropdown.NgxEditor__Dropdown--Selected .NgxEditor__Dropdown--Text {
+      color: $text-color;
+    }
+
+  }
+
+}
 
 @mixin typography($typography-config) {}
 
