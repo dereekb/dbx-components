@@ -16,7 +16,7 @@ export interface PageAndFilter<F> extends OptionalFilter<F> {
 
 export interface FilteredPageIterateFn<T> {
   /**
-   * Uses each model one-by-one.
+   * Uses each value one-by-one.
    */
   use?: IterateFn<T>;
   /**

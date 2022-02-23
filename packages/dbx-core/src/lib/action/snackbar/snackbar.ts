@@ -48,13 +48,13 @@ export interface ActionSnackbarPopupConfig<C = any> {
  */
 export type ActionSnackbarFunction<O = any, C = any> = (event: ActionSnackbarEvent<O>) => ActionSnackbarPopupConfig<C>;
 
-export interface DbNgxActionSnackbarGetUndoConfig extends Omit<DbNgxActionSnackbarComponentConfig, 'message' | 'action'>, Partial<Pick<DbNgxActionSnackbarComponentConfig, 'message' | 'action'>> {
+export interface DbxActionSnackbarGetUndoConfig extends Omit<DbxActionSnackbarComponentConfig, 'message' | 'action'>, Partial<Pick<DbxActionSnackbarComponentConfig, 'message' | 'action'>> {
   duration?: number; // Optional duration override for the popup to stay open.
 }
 
-export type ActionSnackbarGetUndoConfigFunction = () => Maybe<DbNgxActionSnackbarGetUndoConfig>;
+export type ActionSnackbarGetUndoConfigFunction = () => Maybe<DbxActionSnackbarGetUndoConfig>;
 
-export interface DbNgxActionSnackbarComponentConfig {
+export interface DbxActionSnackbarComponentConfig {
   action: string;
   message?: Maybe<string>;
   actionSource: ActionContextStoreSourceInstance;

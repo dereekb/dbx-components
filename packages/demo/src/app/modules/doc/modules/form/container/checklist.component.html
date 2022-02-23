@@ -1,0 +1,12 @@
+<dbx-content-container>
+  <doc-feature-layout header="Checklist Field"
+    hint="A complex form field that is used to map values from the input data to boolean values to form a checklist. The value's display can be configured to display anything.">
+
+    <!-- Examples -->
+    <doc-feature-example header="Example" hint="">
+      <dbx-form-example-checklist-form (dbxFormValueChange)="value = $event" [dbxFormLoadingSource]="dataLoadingState$"
+        [config]="config"></dbx-form-example-checklist-form>
+      <p>Value: {{ value | json }}</p>
+    </doc-feature-example>
+  </doc-feature-layout>
+</dbx-content-container>

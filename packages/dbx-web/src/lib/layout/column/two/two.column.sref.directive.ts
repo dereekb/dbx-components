@@ -3,12 +3,12 @@ import { SegueRef } from '@dereekb/dbx-core';
 import { TwoColumnsContextStore } from './two.column.store';
 
 /**
- * Used with a DbNgxTwoColumnsComponent to set the backRef of the TwoColumnsContextStore.
+ * Used with a DbxTwoColumnsComponent to set the backRef of the TwoColumnsContextStore.
  */
 @Directive({
   selector: '[dbxTwoColumnsSref]'
 })
-export class DbNgxTwoColumnsSrefDirective {
+export class DbxTwoColumnsSrefDirective {
 
   constructor(private readonly _twoColumnsContextStore: TwoColumnsContextStore) { }
 

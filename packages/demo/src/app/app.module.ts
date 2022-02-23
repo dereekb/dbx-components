@@ -1,13 +1,18 @@
+import { AppLayoutComponent } from './container/layout.component';
 import { NgModule } from '@angular/core';
-import { BrowserModule } from '@angular/platform-browser';
-
-import { AppComponent } from './app.component';
-import { NxWelcomeComponent } from './nx-welcome.component';
+import { UIRouterModule } from '@uirouter/angular';
+import { AppSharedModule } from '@/shared/app.shared.module';
+import { STATES } from './app.router';
+import { CommonModule } from '@angular/common';
 
 @NgModule({
-  declarations: [AppComponent, NxWelcomeComponent],
-  imports: [BrowserModule],
-  providers: [],
-  bootstrap: [AppComponent],
+  imports: [
+    CommonModule,
+    AppSharedModule,
+    UIRouterModule.forChild({
+      states: STATES
+    })
+  ],
+  declarations: [AppLayoutComponent],
 })
-export class AppModule {}
+export class AppModule { }

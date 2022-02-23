@@ -1,1 +1,1 @@
-export * from './lib/window';
+export * from './lib';

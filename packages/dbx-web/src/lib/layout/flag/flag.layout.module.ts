@@ -1,8 +1,8 @@
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { DbNgxFlagComponent } from './flag.component';
-import { DbNgxFlagPromptComponent } from './flag.prompt.component';
+import { DbxFlagComponent } from './flag.component';
+import { DbxFlagPromptComponent } from './flag.prompt.component';
 
 /**
  * Module for block components.
@@ -13,12 +13,12 @@ import { DbNgxFlagPromptComponent } from './flag.prompt.component';
     MatToolbarModule
   ],
   declarations: [
-    DbNgxFlagComponent,
-    DbNgxFlagPromptComponent
+    DbxFlagComponent,
+    DbxFlagPromptComponent
   ],
   exports: [
-    DbNgxFlagComponent,
-    DbNgxFlagPromptComponent
+    DbxFlagComponent,
+    DbxFlagPromptComponent
   ]
 })
-export class DbNgxFlagLayoutModule { }
+export class DbxFlagLayoutModule { }

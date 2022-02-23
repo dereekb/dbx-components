@@ -1,13 +1,5 @@
 {
   "name": "@dereekb/date",
-  "version": "0.0.1",
-  "type": "commonjs",
-  "peerDependencies": {
-    "date-fns": "2.28.0",
-    "date-fns-tz": "1.2.2",
-    "class-transformer": "0.5.1",
-    "class-validator": "0.13.2",
-    "reflect-metadata": "0.1.13",
-    "rrule": "2.6.8"
-  }
+  "version": "1.0.0",
+  "type": "commonjs"
 }

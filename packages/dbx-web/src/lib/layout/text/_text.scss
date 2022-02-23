@@ -1,0 +1,97 @@
+@use 'sass:map';
+@use 'sass:color';
+@use '../../style/theming';
+
+// MARK: Variables
+$icon-spacing: 6px;
+$hint-opacity: 0.8;
+$mat-hint-opacity: 0.54; // Opacity to mirror mat-hint
+
+// MARK: Mixin
+@mixin core() {
+
+  .dbx-small,
+  .dbx-clear-hint {
+    font-size: 0.8em;
+  }
+
+  .text-center,
+  .dbx-text-center {
+    text-align: center;
+  }
+
+  .dbx-text-no-overflow {
+    white-space: pre-wrap !important;
+    overflow: visible !important;
+    text-overflow: unset !important;
+  }
+
+  .dbx-icon-spacer {
+    margin-right: $icon-spacing;
+  }
+
+}
+
+@mixin color($theme-config) {
+  $color-config: theming.get-color-config($theme-config);
+  $accent: map.get($color-config, 'accent');
+  $warn: map.get($color-config, 'warn');
+
+  $ok-color: color.scale(blue, $lightness: 30%);
+  $success-color: green;
+  $notice-color: #f28600;
+
+  .dbx-hint,
+  .dbx-clear-hint {
+    opacity: $hint-opacity;
+  }
+
+  .dbx-success {
+    color: $success-color;
+  }
+
+  .dbx-ok {
+    color: $ok-color;
+  }
+
+  .dbx-label,
+  .dbx-sublabel,
+  .dbx-chip-sublabel {
+    opacity: $mat-hint-opacity;
+  }
+
+  .dbx-notice {
+    font-weight: bold;
+    color: $notice-color;
+  }
+
+}
+
+@mixin typography($typography-config) {
+
+  .dbx-label,
+  .dbx-sublabel,
+  .dbx-chip-sublabel {
+    font-size: theming.font-size($typography-config, 'caption');
+  }
+
+  .dbx-chip-sublabel {
+    margin-left: $icon-spacing;
+  }
+
+}
+
+@mixin theme($theme-config) {
+  @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-text') {
+    $color: theming.get-color-config($theme-config);
+    $typography: theming.get-typography-config($theme-config);
+
+    @if $color !=null {
+      @include color($theme-config);
+    }
+
+    @if $typography !=null {
+      @include typography($typography);
+    }
+  }
+}

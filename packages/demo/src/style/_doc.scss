@@ -1,0 +1,96 @@
+@use 'node_modules/@angular/material/core/theming/palette';
+@use '@angular/material'as mat;
+@use 'dbx-web/src/index' as dbx;
+@use 'dbx-form/src/index' as dbx-form;
+@use './variables';
+
+$opmore-navy: #1C3454;
+$opmore-pink: #ec4565;
+$opmore-white: #fff;
+
+$dark-primary-text: palette.$dark-primary-text;
+$light-primary-text: palette.$light-primary-text;
+
+$opmore-blue: (
+  50: #e5e9ed,
+  100: #bec7d3,
+  200: #95a3b6,
+  300: #6e8098,
+  400: #4f6685,
+  500: #2f4e73,
+  600: #29476c,
+  700: #213e61,
+  800: $opmore-navy,
+  900: #16243b,
+  contrast: (
+    50: $dark-primary-text,
+    100: $dark-primary-text,
+    200: $dark-primary-text,
+    300: $dark-primary-text,
+    400: $dark-primary-text,
+    500: $light-primary-text,
+    600: $light-primary-text,
+    700: $light-primary-text,
+    800: $light-primary-text,
+    900: $light-primary-text,
+    A100: $dark-primary-text,
+    A200: $light-primary-text,
+    A400: $light-primary-text,
+    A700: $light-primary-text,
+  )
+);
+
+$opmore-pink: (
+  50: #fde6ec,
+  100: #fac0cf,
+  200: #f898b0,
+  300: #f47191,
+  400: #f05779,
+  500: $opmore-pink,
+  600: #db4061,
+  700: #c53a5c,
+  800: #b03558,
+  900: #8a2d50,
+  contrast: (
+    50: $dark-primary-text,
+    100: $dark-primary-text,
+    200: $dark-primary-text,
+    300: $dark-primary-text,
+    400: $light-primary-text,
+    500: $light-primary-text,
+    600: $light-primary-text,
+    700: $light-primary-text,
+    800: $light-primary-text,
+    900: $light-primary-text,
+    A100: $dark-primary-text,
+    A200: $light-primary-text,
+    A400: $light-primary-text,
+    A700: $light-primary-text,
+  )
+);
+
+// Define an alternate dark theme.
+$doc-primary: mat.define-palette($opmore-blue);
+$doc-accent: mat.define-palette($opmore-pink);
+$doc-warn: mat.define-palette(mat.$red-palette);
+$doc-mat-theme: mat.define-light-theme((color: (primary: $doc-primary, accent: $doc-accent, warn: $doc-warn), density: null, typography: null));    // NOTE: setting density and typography to null is important!
+$doc-dbx-theme-with-banner-config: dbx.quick-define-dbx-config-via-banners(variables.$app-top-banner-height);
+$doc-theme: dbx.define-dbx-theme-config($doc-mat-theme, $doc-dbx-theme-with-banner-config);
+$doc-form-theme: dbx-form.define-dbx-form-theme-config($doc-theme);
+
+/**
+This mixin creates the doc-theme components and elements for @angular/material and @dereekb/dbx-web to be enabled for a specific css selector, which is usually ".doc-app"
+*/
+@mixin doc-theme($root-selector) {
+  @include dbx.theme($root-selector, $doc-theme);
+  @include dbx-form.theme($root-selector, $doc-form-theme);
+}
+
+$dark-doc-mat-theme: mat.define-dark-theme((color: (primary: $doc-primary, accent: $doc-accent, warn: $doc-warn), density: null, typography: null));    // NOTE: setting density and typography to null is important!
+$dark-doc-theme: dbx.define-dbx-theme-config($dark-doc-mat-theme, $doc-dbx-theme-with-banner-config);
+$dark-doc-form-theme: dbx-form.define-dbx-form-theme-config($dark-doc-theme);
+
+@mixin dark-doc-theme($root-selector) {
+  @include dbx.theme($root-selector, $dark-doc-theme);
+  @include dbx-form.theme($root-selector, $dark-doc-form-theme);
+}

@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
-import { DbNgxPromptConfirmConfig, DbNgxPromptConfirmTypes, AbstractDialogDirective } from '../../interaction';
+import { DbxPromptConfirmConfig, DbxPromptConfirmTypes, AbstractDialogDirective } from '../../interaction';
 
-export enum DbNgxActionTransitionSafetyDialogResult {
+export enum DbxActionTransitionSafetyDialogResult {
   SUCCESS,
   STAY,
   DISCARD,
@@ -9,7 +9,7 @@ export enum DbNgxActionTransitionSafetyDialogResult {
 }
 
 /**
- * Dialog that is shown/triggered as part of the DbNgxActionTransitionSafety
+ * Dialog that is shown/triggered as part of the DbxActionTransitionSafety
  */
 @Component({
   template: `
@@ -22,10 +22,10 @@ export enum DbNgxActionTransitionSafetyDialogResult {
     </dbx-prompt-confirm>
   `
 })
-export class DbNgxActionUIRouterTransitionSafetyDialogComponent extends AbstractDialogDirective implements OnInit {
+export class DbxActionUIRouterTransitionSafetyDialogComponent extends AbstractDialogDirective implements OnInit {
 
-  config: DbNgxPromptConfirmConfig = {
-    type: DbNgxPromptConfirmTypes.NORMAL,
+  config: DbxPromptConfirmConfig = {
+    type: DbxPromptConfirmTypes.NORMAL,
     title: 'Unsaved Changes',
     prompt: 'You have unsaved changes on this page.',
     confirmText: 'Stay',
@@ -33,11 +33,11 @@ export class DbNgxActionUIRouterTransitionSafetyDialogComponent extends Abstract
   };
 
   confirm(): void {
-    this.dialogRef.close(DbNgxActionTransitionSafetyDialogResult.STAY);
+    this.dialogRef.close(DbxActionTransitionSafetyDialogResult.STAY);
   }
 
   cancel(): void {
-    this.dialogRef.close(DbNgxActionTransitionSafetyDialogResult.DISCARD);
+    this.dialogRef.close(DbxActionTransitionSafetyDialogResult.DISCARD);
   }
 
 }

@@ -6,6 +6,7 @@ export * from './filter';
 export * from './promise';
 export * from './relation';
 export * from './storage';
+export * from './tree';
 export * from './boolean';
 export * from './date';
 export * from './lifecycle';

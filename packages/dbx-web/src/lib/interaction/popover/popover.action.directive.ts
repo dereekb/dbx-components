@@ -7,12 +7,12 @@ import { filterMaybe, SubscriptionObject } from '@dereekb/rxjs';
 import { first, switchMap } from 'rxjs/operators';
 import { Maybe } from '@dereekb/util';
 
-export interface DbNgxPopoverActionFnParam {
+export interface DbxPopoverActionFnParam {
   origin: ElementRef;
 }
 
-export type DbNgxPopoverActionFn<T = object> = (params: DbNgxPopoverActionFnParam) => NgPopoverRef<any, T>;
-export type DbNgxPopoverActionModifiedFn<T = any> = (value: T) => Observable<boolean>;
+export type DbxPopoverActionFn<T = object> = (params: DbxPopoverActionFnParam) => NgPopoverRef<any, T>;
+export type DbxPopoverActionModifiedFn<T = any> = (value: T) => Observable<boolean>;
 
 /**
  * Action directive that is used to trigger/display a popover,
@@ -24,13 +24,13 @@ export type DbNgxPopoverActionModifiedFn<T = any> = (value: T) => Observable<boo
   exportAs: 'popoverAction',
   selector: '[dbxPopoverAction]'
 })
-export class DbNgxPopoverActionDirective<T = object> extends AbstractPopoverRefWithEventsDirective<any, T> implements OnInit, OnDestroy {
+export class DbxPopoverActionDirective<T = object> extends AbstractPopoverRefWithEventsDirective<any, T> implements OnInit, OnDestroy {
 
   @Input('dbxPopoverAction')
-  fn?: DbNgxPopoverActionFn<T>;
+  fn?: DbxPopoverActionFn<T>;
 
   @Input()
-  appPopoverActionModified?: DbNgxPopoverActionModifiedFn<T>;
+  appPopoverActionModified?: DbxPopoverActionModifiedFn<T>;
 
   private _popoverValue = new BehaviorSubject<Maybe<T>>(undefined);
 

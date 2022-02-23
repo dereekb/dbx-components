@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { AbstractDbNgxSegueAnchorDirective } from '../../anchor/anchor.segue.directive';
+import { AbstractDbxSegueAnchorDirective } from '../../layout/anchor/anchor.segue.directive';
 
 /**
  * SegueAnchor implementation for Angular Router.
@@ -7,4 +7,4 @@ import { AbstractDbNgxSegueAnchorDirective } from '../../anchor/anchor.segue.dir
 @Component({
   templateUrl: './anchor.component.html'
 })
-export class DbNgxAngularRouterSegueAnchorComponent extends AbstractDbNgxSegueAnchorDirective { }
+export class DbxAngularRouterSegueAnchorComponent extends AbstractDbxSegueAnchorDirective { }

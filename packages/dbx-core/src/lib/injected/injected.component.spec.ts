@@ -1,9 +1,9 @@
-import { DbNgxInjectedTemplateConfig, DbNgxInjectedComponentConfig } from './injected';
-import { DbNgxInjectedComponent } from './injected.component';
+import { DbxInjectedTemplateConfig, DbxInjectedComponentConfig } from './injected';
+import { DbxInjectedComponent } from './injected.component';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Component, Input, Type, ViewChild } from '@angular/core';
 import { By, BrowserModule } from '@angular/platform-browser';
-import { DbNgxInjectedComponentModule } from './injected.component.module';
+import { DbxInjectedComponentModule } from './injected.component.module';
 
 const CUSTOM_CONTENT_ID = 'custom-content';
 const CUSTOM_CONTENT = 'Custom Content';
@@ -19,13 +19,13 @@ class TestInjectedComponentContent { }
 abstract class TestInjectedComponent<T = any> {
 
   @Input()
-  config?: DbNgxInjectedComponentConfig;
+  config?: DbxInjectedComponentConfig;
 
   @Input()
-  template?: DbNgxInjectedTemplateConfig;
+  template?: DbxInjectedTemplateConfig;
 
-  @ViewChild(DbNgxInjectedComponent, { static: true })
-  injectedComponent?: DbNgxInjectedComponent<T>;
+  @ViewChild(DbxInjectedComponent, { static: true })
+  injectedComponent?: DbxInjectedComponent<T>;
 
 }
 
@@ -43,13 +43,13 @@ class TestInjectedComponentWithElement<T = any> extends TestInjectedComponent<T>
 })
 class TestInjectedComponentWithAttribute<T = any> extends TestInjectedComponent<T> { }
 
-describe('DbNgxInjectedComponent', () => {
+describe('DbxInjectedComponent', () => {
 
   beforeEach(async () => {
     TestBed.configureTestingModule({
       imports: [
         BrowserModule,
-        DbNgxInjectedComponentModule
+        DbxInjectedComponentModule
       ],
       declarations: [
         TestInjectedComponentContent,
@@ -97,10 +97,9 @@ describe('DbNgxInjectedComponent', () => {
           const anchorElement: HTMLElement = fixture.debugElement.query(By.css(`#${CUSTOM_CONTENT_ID}`)).nativeElement;
           expect(anchorElement).not.toBeNull();
           expect(anchorElement.textContent).toBe(CUSTOM_CONTENT);
-
-
-
         });
+
+        // todo: test injecting data.
 
       });
 

@@ -1,58 +1,79 @@
-import { Provider, Type } from '@angular/core';
+import { forwardRef, Provider, Type } from '@angular/core';
 import { Observable } from 'rxjs';
 import { LockSet } from '@dereekb/rxjs';
+import { Maybe } from '@dereekb/util';
 
 /**
- * Current state of a DbNgxForm
+ * Current state of a DbxForm
  */
-export enum DbNgxFormState {
+export enum DbxFormState {
   INITIALIZING = -1,
-  INCOMPLETE = 0,
-  COMPLETE = 1,
-  RESET = 2
+  RESET = 0,
+  USED = 1
 }
 
 /**
- * DbNgxForm stream event
+ * DbxForm stream event
  */
-export interface DbNgxFormEvent {
+export interface DbxFormEvent {
   readonly isComplete: boolean;
-  readonly state: DbNgxFormState;
+  readonly state: DbxFormState;
   readonly pristine?: boolean;
   readonly untouched?: boolean;
   readonly lastResetAt?: Date;
   readonly changesCount?: number;
+  readonly isDisabled?: boolean;
 }
 
 /**
  * Form that has an event stream, value, and state items.
  */
-export abstract class DbNgxForm {
+export abstract class DbxForm<T = any> {
+  abstract readonly stream$: Observable<DbxFormEvent>;
+
+  /**
+   * Returns an observable that returns the current state of the form.
+   */
+  abstract getValue(): Observable<T>;
+}
+
+export abstract class DbxMutableForm<T = any> extends DbxForm<T> {
   /**
    * LockSet for the form.
    */
-  abstract readonly lockSet: LockSet;
+  abstract readonly lockSet?: LockSet;
   /**
-   * True if the form is complete/valid.
+   * Sets the initial value of the form, and resets the form.
+   * 
+   * @param value 
    */
-  abstract readonly isComplete: boolean;
-  abstract readonly state: DbNgxFormState;
-  abstract readonly stream$: Observable<DbNgxFormEvent>;
-  abstract readonly value: any;
-  abstract setValue(value: any): void;
+  abstract setValue(value: Maybe<Partial<T>>): void;
+
+  /**
+   * Resets the form to the initial value.
+   */
   abstract resetForm(): void;
+
+  /**
+   * Sets the form's disabled state.
+   * 
+   * @param disabled 
+   */
+  abstract setDisabled(disabled?: boolean): void;
+
+  /**
+   * Force the form to update itself as if it was changed.
+   */
   abstract forceFormUpdate(): void;
 }
 
-/**
- * A typed DbNgxForm
- */
-export interface TypedDbNgxForm<T> extends DbNgxForm {
-  readonly value: T;
-  setValue(value: T): void;
-  resetForm(): void;
+export function ProvideDbxForm<S extends DbxForm>(sourceType: Type<S>): Provider[] {
+  return [{ provide: DbxForm, useExisting: forwardRef(() => sourceType) }];
 }
 
-export function ProvideDbNgxForm<S extends DbNgxForm>(sourceType: Type<S>): Provider[] {
-  return [{ provide: DbNgxForm, useExisting: sourceType }];
+export function ProvideDbxMutableForm<S extends DbxMutableForm>(sourceType: Type<S>): Provider[] {
+  return [
+    ...ProvideDbxForm(sourceType),
+    { provide: DbxMutableForm, useExisting: forwardRef(() => sourceType) }
+  ];
 }

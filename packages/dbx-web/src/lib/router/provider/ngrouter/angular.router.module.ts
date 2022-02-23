@@ -1,32 +1,32 @@
 import { UIRouterModule } from '@uirouter/angular';
 import { CommonModule } from '@angular/common';
 import { ModuleWithProviders, NgModule } from '@angular/core';
-import { DbNgxAngularRouterSegueAnchorComponent } from './anchor.component';
-import { DbNgxRouterWebProviderConfig } from '../router.provider.config';
-import { DbNgxInjectedComponentModule } from '@dereekb/dbx-core';
+import { DbxAngularRouterSegueAnchorComponent } from './anchor.component';
+import { DbxRouterWebProviderConfig } from '../router.provider.config';
+import { DbxInjectedComponentModule } from '@dereekb/dbx-core';
 
 @NgModule({
   imports: [
     CommonModule,
     UIRouterModule,
-    DbNgxInjectedComponentModule
+    DbxInjectedComponentModule
   ],
-  declarations: [DbNgxAngularRouterSegueAnchorComponent],
-  exports: [DbNgxAngularRouterSegueAnchorComponent]
+  declarations: [DbxAngularRouterSegueAnchorComponent],
+  exports: [DbxAngularRouterSegueAnchorComponent]
 })
-export class DbNgxWebAngularRouterModule {
+export class DbxWebAngularRouterModule {
 
-  static forRoot(): ModuleWithProviders<DbNgxWebAngularRouterModule> {
+  static forRoot(): ModuleWithProviders<DbxWebAngularRouterModule> {
     return {
-      ngModule: DbNgxWebAngularRouterModule,
+      ngModule: DbxWebAngularRouterModule,
       providers: [
         {
-          provide: DbNgxRouterWebProviderConfig,
+          provide: DbxRouterWebProviderConfig,
           useValue: {
             anchorSegueRefComponent: {
-              componentClass: DbNgxAngularRouterSegueAnchorComponent
+              componentClass: DbxAngularRouterSegueAnchorComponent
             }
-          } as DbNgxRouterWebProviderConfig
+          } as DbxRouterWebProviderConfig
         }
       ]
     };

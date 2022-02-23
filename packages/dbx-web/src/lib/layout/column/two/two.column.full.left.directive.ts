@@ -4,12 +4,12 @@ import { BehaviorSubject } from 'rxjs';
 import { TwoColumnsContextStore } from './two.column.store';
 
 /**
- * Used with a DbNgxTwoColumnsComponent to set the full left to true.
+ * Used with a DbxTwoColumnsComponent to set the full left to true.
  */
 @Directive({
   selector: '[dbxTwoColumnsFullLeft]'
 })
-export class DbNgxTwoColumnsFullLeftDirective implements OnInit, OnDestroy {
+export class DbxTwoColumnsFullLeftDirective implements OnInit, OnDestroy {
 
   private _fullLeft = new BehaviorSubject<boolean>(true);
 

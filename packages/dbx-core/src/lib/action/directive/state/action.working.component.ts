@@ -12,7 +12,7 @@ import { ActionContextStoreSourceInstance } from '../../action.store.source';
     </ng-container>
   `
 })
-export class DbNgxActionWorkingComponent {
+export class DbxActionWorkingComponent {
 
   readonly show$ = this.source.isWorking$;
 

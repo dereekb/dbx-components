@@ -1,4 +1,4 @@
-import { DbNgxPopoverKey, DbNgxPopoverController } from './popover';
+import { DbxPopoverKey, DbxPopoverController } from './popover';
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 
@@ -6,16 +6,16 @@ import { BehaviorSubject } from 'rxjs';
  * Used for coordinating popovers and closing/replacing existing ones when a new popover of the same name appears.
  */
 @Injectable()
-export class DbNgxPopoverCoordinatorService {
+export class DbxPopoverCoordinatorService {
 
-  private _popovers = new BehaviorSubject<Map<DbNgxPopoverKey, DbNgxPopoverController>>(new Map());
+  private _popovers = new BehaviorSubject<Map<DbxPopoverKey, DbxPopoverController>>(new Map());
   readonly popovers$ = this._popovers.asObservable();
 
-  get popovers(): Map<DbNgxPopoverKey, DbNgxPopoverController> {
+  get popovers(): Map<DbxPopoverKey, DbxPopoverController> {
     return this._popovers.value;
   }
 
-  public addPopover(popover: DbNgxPopoverController): void {
+  public addPopover(popover: DbxPopoverController): void {
     const key = popover.key;
 
     if (key) {
@@ -25,7 +25,7 @@ export class DbNgxPopoverCoordinatorService {
     }
   }
 
-  public removePopover(key: DbNgxPopoverKey, popover?: DbNgxPopoverController): void {
+  public removePopover(key: DbxPopoverKey, popover?: DbxPopoverController): void {
     if (key) {
       const existing = this.popovers.get(key);
 

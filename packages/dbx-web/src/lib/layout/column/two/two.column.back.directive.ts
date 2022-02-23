@@ -3,12 +3,12 @@ import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
 import { TwoColumnsContextStore } from './two.column.store';
 
 /**
- * Used with an DbNgxTwoColumnsComponent to help respond to a "back" function.
+ * Used with an DbxTwoColumnsComponent to help respond to a "back" function.
  */
 @Directive({
   selector: '[dbxTwoColumnsBack]'
 })
-export class DbNgxTwoColumnsBackDirective extends AbstractSubscriptionDirective implements OnInit {
+export class DbxTwoColumnsBackDirective extends AbstractSubscriptionDirective implements OnInit {
 
   @Output('dbxTwoColumnsBack')
   public back = new EventEmitter();

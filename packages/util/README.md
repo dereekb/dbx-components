@@ -1,7 +1,6 @@
-# util
+@dereekb/util
+=======
 
-This library was generated with [Nx](https://nx.dev).
+The sources for this package are in the main [@dereekb/dbcomponents](https://github.com/dereekb/dbcomponents) repo. Please file issues and pull requests against that repo.
 
-## Running unit tests
-
-Run `nx test util` to execute the unit tests via [Jest](https://jestjs.io).
+License: MIT

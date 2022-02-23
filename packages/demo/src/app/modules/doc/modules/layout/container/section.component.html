@@ -1,0 +1,22 @@
+<dbx-content-container>
+  <doc-feature-layout header="Sections"
+    hint="Sections are used to wrap content vertically. They provide an optional header at the top, and an optional hint.">
+
+
+    <!-- Examples -->
+    <doc-feature-example header="dbx-section">
+      <dbx-section header="Header" hint="This is a section hint.">
+        <span sectionHeader>Custom Navigation Span</span>
+        <p>{{ lorem }}</p>
+        <button mat-button mat-flat-button color="primary">Ok</button>
+      </dbx-section>
+    </doc-feature-example>
+    <doc-feature-example header="dbx-subsection" hint="The subsection has a smaller header than a section.">
+      <dbx-subsection header="Subsection Header" hint="This is the subsection hint.">
+        <span sectionHeader>Custom Navigation Span</span>
+        <p>{{ lorem }}</p>
+        <button mat-button mat-flat-button color="primary">Ok</button>
+      </dbx-subsection>
+    </doc-feature-example>
+  </doc-feature-layout>
+</dbx-content-container>

@@ -1,16 +1,21 @@
 import { Component, Input } from '@angular/core';
 import { Maybe } from '@dereekb/util';
-import { DbNgxPromptBoxComponent } from './prompt.box.component';
 
 /**
  * Pre-configured prompt.
  */
 @Component({
   selector: 'dbx-prompt',
-  templateUrl: './prompt.component.html',
-  // TODO: styleUrls: ['./prompt.scss']
+  template: `
+    <div class="dbx-prompt">
+      <ng-content select="[hero]"></ng-content>
+      <dbx-subsection [header]="header" [hint]="prompt">
+        <ng-content></ng-content>
+      </dbx-subsection>
+    </div>
+  `
 })
-export class DbNgxPromptComponent extends DbNgxPromptBoxComponent {
+export class DbxPromptComponent {
 
   @Input()
   header?: Maybe<string>;

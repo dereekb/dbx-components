@@ -1,30 +1,30 @@
+import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { DbNgxBasicLoadingComponent } from './basic-loading.component';
-import { DbNgxLoadingProgressComponent } from './loading-progress.component';
+import { DbxBasicLoadingComponent } from './basic-loading.component';
+import { DbxLoadingProgressComponent } from './loading-progress.component';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { DbNgxLoadingComponent } from './loading.component';
-import { BrowserModule } from '@angular/platform-browser';
-import { DbNgxReadableErrorModule } from '../error';
+import { DbxLoadingComponent } from './loading.component';
+import { DbxReadableErrorModule } from '../error';
 
 @NgModule({
   imports: [
-    BrowserModule,
-    DbNgxReadableErrorModule,
+    CommonModule,
+    DbxReadableErrorModule,
     MatProgressSpinnerModule,
     MatProgressBarModule
   ],
   declarations: [
-    DbNgxLoadingComponent,
-    DbNgxBasicLoadingComponent,
-    DbNgxLoadingProgressComponent
+    DbxLoadingComponent,
+    DbxBasicLoadingComponent,
+    DbxLoadingProgressComponent
   ],
   exports: [
-    DbNgxLoadingComponent,
-    DbNgxBasicLoadingComponent,
-    DbNgxLoadingProgressComponent,
+    DbxLoadingComponent,
+    DbxBasicLoadingComponent,
+    DbxLoadingProgressComponent,
     MatProgressSpinnerModule,
     MatProgressBarModule
   ]
 })
-export class DbNgxLoadingModule { }
+export class DbxLoadingModule { }

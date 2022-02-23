@@ -1,0 +1,9 @@
+@use "sass:map";
+@use './all-core';
+@use './all-typography';
+@use './config';
+
+@mixin core($typography-config, $theme-config: null) {
+  @include all-core.all-component-core();
+  @include all-typography.all-component-typographies($typography-config);
+}

@@ -1,0 +1,12 @@
+<div class="dbx-filter-wrapper">
+  <div class="dbx-filter-wrapper-content">
+    <ng-content></ng-content>
+  </div>
+  <div fxLayout="row">
+    <button mat-raised-button (click)="filterClicked()">Apply Filter</button>
+    <div class="spacer"></div>
+    <button mat-icon-button (click)="resetClicked()">
+      <mat-icon>clear</mat-icon>
+    </button>
+  </div>
+</div>

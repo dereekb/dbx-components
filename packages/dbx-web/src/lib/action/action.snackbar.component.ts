@@ -1,11 +1,10 @@
-import { distinctUntilChanged, Observable } from 'rxjs';
-import { shareReplay } from 'rxjs';
+import { distinctUntilChanged, Observable, shareReplay } from 'rxjs';
 import { Component, Inject } from '@angular/core';
 import { MatSnackBarRef, MAT_SNACK_BAR_DATA } from '@angular/material/snack-bar';
 import { Maybe } from '@dereekb/util';
 import ms from 'ms';
 import { map } from 'rxjs/operators';
-import { ActionContextStoreSourceInstance, ActionState, DbNgxActionSnackbarComponentConfig } from '@dereekb/dbx-core';
+import { ActionContextStoreSourceInstance, ActionState, DbxActionSnackbarComponentConfig } from '@dereekb/dbx-core';
 
 /**
  * Component for a snackbar that contains an action.
@@ -32,11 +31,11 @@ import { ActionContextStoreSourceInstance, ActionState, DbNgxActionSnackbarCompo
   `,
   // TODO: styleUrls: ['./action.scss']
 })
-export class DbNgxActionSnackbarComponent {
+export class DbxActionSnackbarComponent {
 
   constructor(
-    readonly snackbar: MatSnackBarRef<DbNgxActionSnackbarComponent>,
-    @Inject(MAT_SNACK_BAR_DATA) readonly data: DbNgxActionSnackbarComponentConfig
+    readonly snackbar: MatSnackBarRef<DbxActionSnackbarComponent>,
+    @Inject(MAT_SNACK_BAR_DATA) readonly data: DbxActionSnackbarComponentConfig
   ) {
     if (!data.actionSource) {
       throw new Error('No action was provided to ActionSnackbar.');

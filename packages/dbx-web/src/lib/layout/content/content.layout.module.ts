@@ -1,9 +1,11 @@
+import { DbxContentElevateDirective } from './content.elevate.directive';
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { DbNgxContentComponent } from './content.component';
-import { DbNgxFullWidthContentContainerComponent } from './content.container.fullwidth.component';
-import { DbNgxBorderedContentComponent } from './content.bordered.component';
-import { DbNgxContentContainerComponent } from './content.container.component';
+import { DbxContentDirective } from './content.directive';
+import { DbxContentBorderDirective } from './content.border.directive';
+import { DbxContentContainerDirective } from './content.container.directive';
+import { DbxContentBoxDirective } from './content.box.directive';
+import { DbxContentPageDirective } from './content.page.directive';
 
 /**
  * Module for container-type components.
@@ -13,16 +15,20 @@ import { DbNgxContentContainerComponent } from './content.container.component';
     CommonModule
   ],
   declarations: [
-    DbNgxContentComponent,
-    DbNgxContentContainerComponent,
-    DbNgxBorderedContentComponent,
-    DbNgxFullWidthContentContainerComponent
+    DbxContentDirective,
+    DbxContentContainerDirective,
+    DbxContentBorderDirective,
+    DbxContentElevateDirective,
+    DbxContentBoxDirective,
+    DbxContentPageDirective
   ],
   exports: [
-    DbNgxContentComponent,
-    DbNgxContentContainerComponent,
-    DbNgxBorderedContentComponent,
-    DbNgxFullWidthContentContainerComponent
+    DbxContentDirective,
+    DbxContentContainerDirective,
+    DbxContentBorderDirective,
+    DbxContentElevateDirective,
+    DbxContentBoxDirective,
+    DbxContentPageDirective
   ]
 })
-export class DbNgxContentLayoutModule { }
+export class DbxContentLayoutModule { }

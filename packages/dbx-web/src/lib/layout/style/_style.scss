@@ -1,0 +1,101 @@
+@use 'sass:map';
+@use 'sass:list';
+@use '../../style/theming';
+
+// Sections
+@mixin core() {
+
+  .dbx-spacer,
+  .spacer {
+    flex: 1 1 auto;
+  }
+
+  .decoration {
+    pointer-events: none;
+  }
+
+  .no-margin {
+    margin: 0 !important;
+  }
+
+  .no-padding {
+    padding: 0 !important;
+  }
+
+  @each $i, $padding in theming.$padding-map {
+    .pad-#{$i},
+    .padding-#{$i} {
+      padding: $padding;
+    }
+  }
+
+  .d-block {
+    display: block;
+  }
+
+  .d-inline {
+    display: inline;
+  }
+
+}
+
+@mixin color($theme-config) {
+  $color-config: theming.get-color-config($theme-config);
+  $primary: map.get($color-config, 'primary');
+  $accent: map.get($color-config, 'accent');
+  $warn: map.get($color-config, 'warn');
+
+  $primary-color: theming.get-color-from-palette($primary, 500);
+  $primary-color-contrast: theming.get-color-from-palette($primary, '500-contrast');
+
+  $accent-color: theming.get-color-from-palette($accent, 500);
+  $accent-color-contrast: theming.get-color-from-palette($accent, '500-contrast');
+
+  $warn-color: theming.get-color-from-palette($warn, 500);
+  $warn-color-contrast: theming.get-color-from-palette($warn, '500-contrast');
+
+  .dbx-primary {
+    color: $primary-color;
+  }
+
+  .dbx-primary-bg {
+    background: $primary-color;
+    color: $primary-color-contrast;
+  }
+
+  .dbx-accent {
+    color: $accent-color;
+  }
+
+  .dbx-accent-bg {
+    background: $accent-color;
+    color: $accent-color-contrast;
+  }
+
+  .dbx-warn {
+    color: $warn-color;
+  }
+
+  .dbx-warn-bg {
+    background: $warn-color;
+    color: $warn-color-contrast;
+  }
+
+}
+
+@mixin typography($typography-config) {}
+
+@mixin theme($theme-config) {
+  @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-layout-style') {
+    $color: theming.get-color-config($theme-config);
+    $typography: theming.get-typography-config($theme-config);
+
+    @if $color !=null {
+      @include color($theme-config);
+    }
+
+    @if $typography !=null {
+      @include typography($typography);
+    }
+  }
+}

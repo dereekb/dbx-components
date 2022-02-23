@@ -1,7 +1,7 @@
 import { Maybe, TimezoneString } from '@dereekb/util';
 import { RRule, Options } from 'rrule';
 import { CalendarDate, DateSet, DateRange, DateRangeParams, makeDateRange, maxFutureDate, durationSpanToDateRange } from '../date';
-import { BaseDateAsUTC, DateTimezoneUtcNormalInstance } from '../date/date.timezone';
+import { BaseDateAsUTC, calculateAllConversions, DateTimezoneUtcNormalInstance } from '../date/date.timezone';
 import { DateRRule } from './date.rrule.extension';
 import { DateRRuleParseUtility, RRuleLines, RRuleStringLineSet, RRuleStringSetSeparation } from './date.rrule.parse';
 
@@ -131,6 +131,11 @@ export class DateRRuleInstance {
     let dtstart = rrule.origOptions.dtstart;
 
     const timezone = tzid || options.timezone;
+
+    /**
+     * The normal instance for DateRRuleInstance is used backwards in most cases because DateRRule always
+     * parses dates as UTC, so we handle all input dates as base dates, an
+     */
     this.normalInstance = new DateTimezoneUtcNormalInstance(timezone);
 
     if (dtstart && tzid) {
@@ -138,9 +143,9 @@ export class DateRRuleInstance {
     } else if (timezone) {
       const startsAt: Maybe<Date> = options.date?.startsAt;
 
-      // If startsAt is provided, need to change it to start from the "weird" UTC date, if any timezone is provided.
+      // If startsAt is provided, need to change it to start from the base UTC date, if any timezone is provided.
       if (startsAt) {
-        const baseStartDate: RRuleBaseDateAsUTC = this.normalInstance.normalDateToBaseDate(startsAt);
+        const baseStartDate: RRuleBaseDateAsUTC = this.normalInstance.baseDateToTargetDate(startsAt);
         dtstart = baseStartDate;
       }
     } else {
@@ -166,9 +171,9 @@ export class DateRRuleInstance {
   }
 
   nextRecurrenceDate(from: Date = new Date()): Maybe<Date> {
-    const baseFrom = this.normalInstance.normalDateToBaseDate!(from);
+    const baseFrom = this.normalInstance.baseDateToTargetDate(from);
     const rawNext = this.rrule.next(baseFrom);
-    const next = (rawNext) ? this.normalInstance.baseDateToNormalDate(rawNext) : undefined;
+    const next = (rawNext) ? this.normalInstance.targetDateToBaseDate(rawNext) : undefined;
     return next;
   }
 
@@ -183,13 +188,14 @@ export class DateRRuleInstance {
 
     if (options.range || options.rangeParams) {
       between = options.range ?? makeDateRange(options.rangeParams!);
-      between.start = this.normalInstance.normalDateToBaseDate(between.start);
-      between.end = this.normalInstance.normalDateToBaseDate(between.end);
+      between.start = this.normalInstance.baseDateToTargetDate(between.start);
+      between.end = this.normalInstance.baseDateToTargetDate(between.end);
     }
 
     let startsAtDates: Date[];
 
     if (between) {
+      // This finds all 
       startsAtDates = this.rrule.between(between.start, between.end, true);
     } else if (this.hasForeverRange()) {
       throw new Error('Rule expands infinitely. Specify a range.');
@@ -203,7 +209,7 @@ export class DateRRuleInstance {
 
     // Fix Dates w/ Timezones
     if (this.normalInstance.hasConversion) {
-      dates = dates.map((x) => ({ ...x, startsAt: this.normalInstance.baseDateToNormalDate(x.startsAt) }));
+      dates = dates.map((x) => ({ ...x, startsAt: this.normalInstance.targetDateToBaseDate(x.startsAt) }));
     }
 
     // Exclude dates
@@ -223,8 +229,8 @@ export class DateRRuleInstance {
    * Returns true if there is a single date within the range.
    */
   haveRecurrenceInDateRange(dateRange: DateRange): boolean {
-    const baseStart = this.normalInstance.normalDateToBaseDate(dateRange.start);
-    const baseEnd = this.normalInstance.normalDateToBaseDate(dateRange.end);
+    const baseStart = this.normalInstance.targetDateToBaseDate(dateRange.start);
+    const baseEnd = this.normalInstance.targetDateToBaseDate(dateRange.end);
 
     return this.rrule.any({ minDate: baseStart, maxDate: baseEnd });
   }
@@ -262,7 +268,7 @@ export class DateRRuleInstance {
 
     // Fix Dates w/ timezone.
     if (this.normalInstance.hasConversion) {
-      const [startF, endF] = [start, end].filter(x => Boolean(x)).map(x => this.normalInstance.baseDateToNormalDate(x));
+      const [startF, endF] = [start, end].filter(x => Boolean(x)).map(x => this.normalInstance.baseDateToTargetDate(x));
       start = startF;
       end = endF;
     }

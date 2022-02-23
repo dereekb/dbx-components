@@ -1,0 +1,19 @@
+<ng-container [ngSwitch]="mode$ | async">
+  <!-- Button -->
+  <ng-container *ngSwitchCase="'button'">
+    <button mat-icon-button [matMenuTriggerFor]="menu" class="nav-menu-button" aria-label="open navigation">
+      <mat-icon>menu</mat-icon>
+    </button>
+    <mat-menu #menu>
+      <dbx-anchor *ngFor="let x of anchors$ | async" [anchor]="x.anchor">
+        <button mat-menu-item [ngClass]="(x.selected) ? 'active' : ''">{{ x.anchor.title }}</button>
+      </dbx-anchor>
+    </mat-menu>
+  </ng-container>
+  <!-- Bar -->
+  <nav *ngSwitchDefault mat-tab-nav-bar [attr.mat-align-tabs]="navAlign">
+    <dbx-anchor *ngFor="let x of anchors$ | async" [anchor]="x.anchor">
+      <a mat-tab-link [active]="x.selected">{{ x.anchor.title }}</a>
+    </dbx-anchor>
+  </nav>
+</ng-container>

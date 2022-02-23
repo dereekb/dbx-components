@@ -1,0 +1,84 @@
+<dbx-content-container>
+  <doc-feature-layout header="Bar" hint="Bars are horizontal layout components.">
+
+    <!-- Examples -->
+    <doc-feature-example header="dbxFlexGroup"
+      hint="Used to apply dbxFlex columns to an element. Children values are intended to use dbxFlexSize for column sizing.">
+      <p>Broken into 6 columns. Each flex item has a set amount of built-in padding.</p>
+      <div dbxFlexGroup class="text-center">
+        <div class="dbx-warn-bg" [dbxFlexSize]="3">3</div>
+        <div class="dbx-primary-bg" [dbxFlexSize]="1">1</div>
+        <div class="dbx-accent-bg" [dbxFlexSize]="2">2</div>
+      </div>
+      <div dbxFlexGroup class="text-center">
+        <div class="dbx-warn-bg" [dbxFlexSize]="1">1</div>
+        <div class="dbx-primary-bg" [dbxFlexSize]="1">1</div>
+        <div class="dbx-accent-bg" [dbxFlexSize]="4">4</div>
+      </div>
+      <div dbxFlexGroup class="text-center">
+        <div class="dbx-warn-bg" [dbxFlexSize]="1">1</div>
+        <div class="dbx-primary-bg" [dbxFlexSize]="1">1</div>
+        <div class="dbx-accent-bg" [dbxFlexSize]="2">2</div>
+        <div class="dbx-primary-bg" [dbxFlexSize]="1">1</div>
+        <div class="dbx-warn-bg" [dbxFlexSize]="1">1</div>
+      </div>
+      <div dbxFlexGroup class="text-center">
+        <div class="dbx-warn-bg" [dbxFlexSize]="2">2</div>
+        <div class="dbx-primary-bg" [dbxFlexSize]="2">2</div>
+        <div class="dbx-accent-bg" [dbxFlexSize]="2">2</div>
+      </div>
+      <h4>Can configure a width breakpoint to make the flex a column instead of a row.</h4>
+      <p>Small</p>
+      <div dbxFlexGroup breakpoint="small" class="text-center">
+        <div class="dbx-warn-bg" [dbxFlexSize]="1">1</div>
+        <div class="dbx-primary-bg" [dbxFlexSize]="1">1</div>
+        <div class="dbx-accent-bg" [dbxFlexSize]="2">2</div>
+        <div class="dbx-primary-bg" [dbxFlexSize]="1">1</div>
+        <div class="dbx-warn-bg" [dbxFlexSize]="1">1</div>
+      </div>
+      <p>Tablet</p>
+      <div dbxFlexGroup breakpoint="tablet" class="text-center">
+        <div class="dbx-warn-bg" [dbxFlexSize]="1">1</div>
+        <div class="dbx-primary-bg" [dbxFlexSize]="1">1</div>
+        <div class="dbx-accent-bg" [dbxFlexSize]="2">2</div>
+        <div class="dbx-primary-bg" [dbxFlexSize]="1">1</div>
+        <div class="dbx-warn-bg" [dbxFlexSize]="1">1</div>
+      </div>
+      <p>Large</p>
+      <div dbxFlexGroup breakpoint="large" class="text-center">
+        <div class="dbx-warn-bg" [dbxFlexSize]="1">1</div>
+        <div class="dbx-primary-bg" [dbxFlexSize]="1">1</div>
+        <div class="dbx-accent-bg" [dbxFlexSize]="2">2</div>
+        <div class="dbx-primary-bg" [dbxFlexSize]="1">1</div>
+        <div class="dbx-warn-bg" [dbxFlexSize]="1">1</div>
+      </div>
+      <p>Full</p>
+      <div dbxFlexGroup breakpoint="full" class="text-center">
+        <div class="dbx-warn-bg" [dbxFlexSize]="1">1</div>
+        <div class="dbx-primary-bg" [dbxFlexSize]="1">1</div>
+        <div class="dbx-accent-bg" [dbxFlexSize]="2">2</div>
+        <div class="dbx-primary-bg" [dbxFlexSize]="1">1</div>
+        <div class="dbx-warn-bg" [dbxFlexSize]="1">1</div>
+      </div>
+      <h4>With Relative Enabled</h4>
+      <div dbxFlexGroup [relative]="true" class="dbx-flex-group-relative text-center">
+        <div class="dbx-warn-bg" [dbxFlexSize]="3">3</div>
+        <div class="dbx-primary-bg" [dbxFlexSize]="1">1</div>
+      </div>
+      <div dbxFlexGroup class="dbx-flex-group-relative text-center">
+        <div class="dbx-warn-bg" [dbxFlexSize]="1">1</div>
+        <div class="dbx-primary-bg" [dbxFlexSize]="1">1</div>
+      </div>
+      <div dbxFlexGroup class="dbx-flex-group-relative text-center">
+        <div class="dbx-warn-bg" [dbxFlexSize]="1">1</div>
+        <div class="dbx-accent-bg" [dbxFlexSize]="2">2</div>
+        <div class="dbx-primary-bg" [dbxFlexSize]="1">1</div>
+        <div class="dbx-warn-bg" [dbxFlexSize]="1">1</div>
+      </div>
+      <div dbxFlexGroup class="dbx-flex-group-relative text-center">
+        <div class="dbx-warn-bg" [dbxFlexSize]="2">2</div>
+        <div class="dbx-primary-bg" [dbxFlexSize]="2">2</div>
+      </div>
+    </doc-feature-example>
+  </doc-feature-layout>
+</dbx-content-container>

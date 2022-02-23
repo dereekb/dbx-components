@@ -1,0 +1,110 @@
+@use '../../style/theming';
+
+// MARK: Variables
+$dbx-popover-height-var: --popoverh;
+$dbx-popover-controls-height: 48px;
+$dbx-popover-header-height: 48px;
+
+// MARK: Mixin
+@mixin core() {
+
+  .dbx-popover-content,
+  .dbx-popover-component {
+    height: 100%;
+  }
+
+  .dbx-popover-content {
+    height: 100%;
+    overflow-y: hidden;
+
+    .dbx-popover-content-container {
+      @include fillPopoverContentHeight();
+
+      &.dbx-popover-content-container-scrollable {
+        overflow-y: scroll;
+      }
+    }
+
+    .dbx-popover-controls {
+      height: $dbx-popover-controls-height;
+      overflow-y: hidden;
+    }
+
+    &.popover-has-controls {
+      .dbx-popover-content-container {
+        @include fillPopoverContentHeight($hasControls: 1);
+      }
+    }
+  }
+
+  .dbx-popover-header {
+    padding: 4px;
+    display: flex;
+    box-sizing: border-box;
+    height: $dbx-popover-header-height;
+    overflow-y: hidden;
+
+    .dbx-popover-header-content {
+      width: 100%;
+      display: flex;
+      align-items: center;
+    }
+
+    h3 {
+      display: flex;
+      align-items: center;
+      margin: 0;
+    }
+  }
+
+  .dbx-popover-scroll-content {
+    overflow: auto;
+    @include fillPopoverContentHeight(1);
+
+    &.popover-has-header {
+      @include fillPopoverContentHeight(0, 1);
+    }
+
+    &.popover-has-controls {
+      @include fillPopoverContentHeight(0, 1);
+    }
+
+    &.popover-has-controls-and-header {
+      @include fillPopoverContentHeight(1, 1);
+    }
+
+  }
+}
+
+@mixin color($theme-config) {
+
+  .dbx-popover-header {
+    .dbx-popover-header-content {
+      @include theming.if-small-screen($theme-config) {
+        flex-wrap: wrap;
+      }
+    }
+  }
+
+}
+
+@mixin typography($typography-config) {}
+
+@mixin theme($theme-config) {
+  @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-interaction-popover') {
+    $color: theming.get-color-config($theme-config);
+    $typography: theming.get-typography-config($theme-config);
+
+    @if $color !=null {
+      @include color($theme-config);
+    }
+
+    @if $typography !=null {
+      @include typography($typography);
+    }
+  }
+}
+
+@mixin fillPopoverContentHeight($hasControls: 0, $hasHeader: 0) {
+  height: calc(var(#{$dbx-popover-height-var}) - #{$dbx-popover-controls-height * $hasControls} - #{$dbx-popover-header-height * $hasHeader});
+}

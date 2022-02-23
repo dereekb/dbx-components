@@ -1,13 +1,13 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Component } from '@angular/core';
 import { ErrorInput } from '@dereekb/util';
-import { DbNgxReadableErrorModule } from './error.module';
+import { DbxReadableErrorModule } from './error.module';
 
 describe('ReadableErrorComponent', () => {
 
   beforeEach(async () => {
     TestBed.configureTestingModule({
-      imports: [DbNgxReadableErrorModule],
+      imports: [DbxReadableErrorModule],
       declarations: [ErrorComponent]
     }).compileComponents();
   });

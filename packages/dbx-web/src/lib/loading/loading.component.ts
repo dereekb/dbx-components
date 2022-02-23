@@ -5,7 +5,7 @@ import { ProgressBarMode } from '@angular/material/progress-bar';
 import { LoadingContext } from '@dereekb/rxjs';
 import { ErrorInput, Maybe } from '@dereekb/util';
 
-export interface DbNgxLoadingComponentState {
+export interface DbxLoadingComponentState {
   loading: boolean;
   error: Maybe<ErrorInput>;
 }
@@ -24,19 +24,19 @@ export interface DbNgxLoadingComponentState {
   </dbx-basic-loading>
   `
 })
-export class DbNgxLoadingComponent implements OnDestroy {
+export class DbxLoadingComponent implements OnDestroy {
 
   private _context = new BehaviorSubject<Maybe<LoadingContext>>(undefined);
 
   private _inputLoading = new BehaviorSubject<Maybe<boolean>>(true);
   private _inputError = new BehaviorSubject<Maybe<ErrorInput>>(undefined);
 
-  readonly state$: Observable<DbNgxLoadingComponentState> = combineLatest([this._inputLoading, this._inputError, this._context.pipe(
+  readonly state$: Observable<DbxLoadingComponentState> = combineLatest([this._inputLoading, this._inputError, this._context.pipe(
     switchMap(x => (x != null) ? x.stream$ : of(undefined))
   )]).pipe(
     map(([inputLoading, inputError, loadingState]) => {
       if (loadingState) {
-        return loadingState as DbNgxLoadingComponentState;
+        return loadingState as DbxLoadingComponentState;
       } else {
         return {
           loading: inputLoading ?? false,

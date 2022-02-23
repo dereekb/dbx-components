@@ -1,7 +1,7 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { Maybe } from '@dereekb/util';
 
-export enum DbNgxPromptConfirmTypes {
+export enum DbxPromptConfirmTypes {
   /**
    * Dialog is for yes/no.
    */
@@ -12,8 +12,8 @@ export enum DbNgxPromptConfirmTypes {
   DELETE = 'delete'
 }
 
-export interface DbNgxPromptConfirmConfig {
-  type?: DbNgxPromptConfirmTypes;
+export interface DbxPromptConfirmConfig {
+  type?: DbxPromptConfirmTypes;
   title?: string;
   prompt?: string;
   confirmText?: string;
@@ -25,12 +25,11 @@ export interface DbNgxPromptConfirmConfig {
  */
 @Component({
   selector: 'dbx-prompt-confirm',
-  templateUrl: './prompt.confirm.component.html',
-  // TODO: styleUrls: ['./prompt.scss']
+  templateUrl: './prompt.confirm.component.html'
 })
-export class DbNgxPromptConfirmComponent {
+export class DbxPromptConfirmComponent {
 
-  private _config: DbNgxPromptConfirmConfig = {};
+  private _config: DbxPromptConfirmConfig = {};
 
   @Output()
   confirm = new EventEmitter<void>();
@@ -39,11 +38,11 @@ export class DbNgxPromptConfirmComponent {
   cancel = new EventEmitter<void>();
 
   @Input()
-  get config(): DbNgxPromptConfirmConfig {
+  get config(): DbxPromptConfirmConfig {
     return this._config;
   }
 
-  set config(config: Maybe<DbNgxPromptConfirmConfig>) {
+  set config(config: Maybe<DbxPromptConfirmConfig>) {
     this._config = config ?? {};
   }
 

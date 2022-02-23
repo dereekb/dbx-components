@@ -1,0 +1,12 @@
+@use '../form/form';
+@use '../formly/formly';
+@use '../layout/layout';
+@use '../formly/field/field';
+
+// Includes all theming config
+@mixin all-component-themes($theme-config) {
+  @include form.theme($theme-config);
+  @include formly.theme($theme-config);
+  @include field.all-field-theme($theme-config);
+  @include layout.theme($theme-config);
+}

@@ -1,10 +1,10 @@
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import {
-  DbNgxActionComponent, DbNgxActionContextDirective, DbNgxActionContextMapDirective, DbNgxActionFromMapDirective, DbNgxActionMapSourceDirective,
-  DbNgxActionMapWorkingDisableDirective, DbNgxActionSourceDirective, DbNgxActionHandlerDirective, DbNgxActionDisabledDirective, DbNgxActionDisabledUntilModifiedDirective,
-  DbNgxActionAutoTriggerDirective, DbNgxActionAutoTriggerValueDirective, DbNgxActionAutoModifyDirective, DbNgxActionValueDirective, DbNgxActionContextLoggerDirective,
-  DbNgxActionSuccessComponent, DbNgxActionSuccessDirective, DbNgxActionWorkingComponent
+  DbxActionDirective, DbxActionContextMapDirective, DbxActionFromMapDirective, DbxActionMapSourceDirective,
+  DbxActionMapWorkingDisableDirective, DbxActionSourceDirective, DbxActionHandlerDirective, DbxActionDisabledDirective, DbxActionDisabledUntilModifiedDirective,
+  DbxActionAutoTriggerDirective, DbxActionAutoTriggerValueDirective, DbxActionAutoModifyDirective, DbxActionValueDirective, DbxActionContextLoggerDirective,
+  DbxActionSuccessComponent, DbxActionSuccessDirective, DbxActionWorkingComponent
 } from './directive';
 
 @NgModule({
@@ -12,16 +12,16 @@ import {
     CommonModule
   ],
   declarations: [
-    DbNgxActionComponent, DbNgxActionContextDirective, DbNgxActionContextMapDirective, DbNgxActionFromMapDirective, DbNgxActionMapSourceDirective,
-    DbNgxActionMapWorkingDisableDirective, DbNgxActionSourceDirective, DbNgxActionHandlerDirective, DbNgxActionDisabledDirective, DbNgxActionDisabledUntilModifiedDirective,
-    DbNgxActionAutoTriggerDirective, DbNgxActionAutoTriggerValueDirective, DbNgxActionAutoModifyDirective, DbNgxActionValueDirective, DbNgxActionContextLoggerDirective,
-    DbNgxActionSuccessComponent, DbNgxActionSuccessDirective, DbNgxActionWorkingComponent
+    DbxActionDirective, DbxActionContextMapDirective, DbxActionFromMapDirective, DbxActionMapSourceDirective,
+    DbxActionMapWorkingDisableDirective, DbxActionSourceDirective, DbxActionHandlerDirective, DbxActionDisabledDirective, DbxActionDisabledUntilModifiedDirective,
+    DbxActionAutoTriggerDirective, DbxActionAutoTriggerValueDirective, DbxActionAutoModifyDirective, DbxActionValueDirective, DbxActionContextLoggerDirective,
+    DbxActionSuccessComponent, DbxActionSuccessDirective, DbxActionWorkingComponent
   ],
   exports: [
-    DbNgxActionComponent, DbNgxActionContextDirective, DbNgxActionContextMapDirective, DbNgxActionFromMapDirective, DbNgxActionMapSourceDirective,
-    DbNgxActionMapWorkingDisableDirective, DbNgxActionSourceDirective, DbNgxActionHandlerDirective, DbNgxActionDisabledDirective, DbNgxActionDisabledUntilModifiedDirective,
-    DbNgxActionAutoTriggerDirective, DbNgxActionAutoTriggerValueDirective, DbNgxActionAutoModifyDirective, DbNgxActionValueDirective, DbNgxActionContextLoggerDirective,
-    DbNgxActionSuccessComponent, DbNgxActionSuccessDirective, DbNgxActionWorkingComponent
+    DbxActionDirective, DbxActionContextMapDirective, DbxActionFromMapDirective, DbxActionMapSourceDirective,
+    DbxActionMapWorkingDisableDirective, DbxActionSourceDirective, DbxActionHandlerDirective, DbxActionDisabledDirective, DbxActionDisabledUntilModifiedDirective,
+    DbxActionAutoTriggerDirective, DbxActionAutoTriggerValueDirective, DbxActionAutoModifyDirective, DbxActionValueDirective, DbxActionContextLoggerDirective,
+    DbxActionSuccessComponent, DbxActionSuccessDirective, DbxActionWorkingComponent
   ]
 })
-export class DbNgxCoreActionModule { }
+export class DbxCoreActionModule { }

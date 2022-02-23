@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { map } from 'rxjs/operators';
-import { DbNgxPopupController, DbNgxPopupWindowState } from './popup';
+import { DbxPopupController, DbxPopupWindowState } from './popup';
 
 /**
  * Popup content wrapper component.
@@ -8,19 +8,19 @@ import { DbNgxPopupController, DbNgxPopupWindowState } from './popup';
 @Component({
   selector: 'dbx-popup-content',
   template: `
-  <div class="dbx-popup-content">
     <ng-content select="[controls]"></ng-content>
     <div *ngIf="showContent$ | async" class="dbx-popup-content-container">
       <ng-content></ng-content>
     </div>
-  </div>
-`,
-  // TODO: styleUrls: ['./popup.scss']
+  `,
+  host: {
+    'class': 'dbx-popup-content'
+  }
 })
-export class DbNgxPopupContentComponent {
+export class DbxPopupContentComponent {
 
-  readonly showContent$ = this.appPopupController.windowState$.pipe(map(x => x !== DbNgxPopupWindowState.MINIMIZED));
+  readonly showContent$ = this.appPopupController.windowState$.pipe(map(x => x !== DbxPopupWindowState.MINIMIZED));
 
-  constructor(private appPopupController: DbNgxPopupController) { }
+  constructor(private appPopupController: DbxPopupController) { }
 
 }

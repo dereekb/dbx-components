@@ -1,27 +1,27 @@
-import { DbNgxLoadingModule } from './loading/loading.module';
-import { BrowserModule } from '@angular/platform-browser';
+import { DbxLoadingModule } from './loading/loading.module';
 import { MatProgressButtonsModule } from 'mat-progress-buttons';
 import { NgModule } from '@angular/core';
-import { DbNgxButtonModule } from './button';
-import { DbNgxActionModule } from './action';
+import { DbxButtonModule } from './button';
+import { DbxActionModule } from './action';
 
 @NgModule({
   exports: [
-    DbNgxButtonModule,
-    DbNgxActionModule,
-    DbNgxLoadingModule
+    DbxButtonModule,
+    DbxActionModule,
+    DbxLoadingModule
   ],
 })
-export class DbNgxWebModule { }
+export class DbxWebModule { }
 
+/**
+ * Should only be imported once in the root app.
+ * 
+ * Pre-configures the following modules:
+ * - MatProgressButtonsModule
+ */
 @NgModule({
   imports: [
-    BrowserModule,
-    DbNgxWebModule,
     MatProgressButtonsModule.forRoot()
-  ],
-  exports: [
-    DbNgxWebModule
   ]
 })
-export class DbNgxSharedWebModule { }
+export class DbxWebRootModule { }
