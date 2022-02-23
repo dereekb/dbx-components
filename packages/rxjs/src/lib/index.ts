@@ -1,3 +1,4 @@
+export * from './filter';
 export * from './iterator';
 export * from './loading';
 export * from './lock';

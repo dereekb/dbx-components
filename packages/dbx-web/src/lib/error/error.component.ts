@@ -7,10 +7,9 @@ import { ErrorInput, convertToReadableError, ReadableError } from '@dereekb/util
  */
 @Component({
   selector: 'dbx-error',
-  templateUrl: './error.component.html',
-  // TODO: styleUrls: ['./error.scss']
+  templateUrl: './error.component.html'
 })
-export class DbNgxReadableErrorComponent {
+export class DbxReadableErrorComponent {
 
   private _error?: ReadableError;
 

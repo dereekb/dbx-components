@@ -1,0 +1,79 @@
+@use '../../../../style/theming';
+
+// MARK: Variables
+
+
+// MARK: Mixin
+@mixin core() {
+
+  .dbx-datetime-parent-form-field {
+    >formly-wrapper-mat-form-field {
+      >mat-form-field.mat-form-field {
+        >.mat-form-field-wrapper>.mat-form-field-underline {
+          display: none;
+        }
+      }
+    }
+  }
+
+  .dbx-datetime-field {
+    width: 100%;
+  }
+
+  $dbx-datetime-button-width: 40px;
+
+  .dbx-datetime-row {
+
+    .dbx-datetime-row-field {
+      width: calc(100% - #{$dbx-datetime-button-width});
+    }
+
+    &.dbx-datetime-hint-row {
+      margin-top: -6px;
+    }
+  }
+
+  .add-time-button {
+    max-height: 40px;
+
+    &.add-time-button-full {
+      width: 100%;
+      margin-bottom: 6px;
+    }
+  }
+
+  .add-time-button-wrapper {
+    padding-left: 6px;
+    margin: auto;
+    margin-bottom: 4px;
+    height: 100%;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-items: left;
+  }
+
+  .dbx-datetime-hint-row {
+    // margin-left: 12px;
+  }
+
+}
+
+@mixin color($theme-config) {}
+
+@mixin typography($typography-config) {}
+
+@mixin theme($theme-config) {
+  @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-form-field-value-date') {
+    $color: theming.get-color-config($theme-config);
+    $typography: theming.get-typography-config($theme-config);
+
+    @if $color !=null {
+      @include color($theme-config);
+    }
+
+    @if $typography !=null {
+      @include typography($typography);
+    }
+  }
+}

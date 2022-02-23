@@ -13,6 +13,7 @@
     "lib": ["es2017", "dom"],
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
+    "allowSyntheticDefaultImports": true,
     "strict": true,
     "baseUrl": ".",
     "paths": {
@@ -26,7 +27,14 @@
       "@dereekb/firebase": ["packages/firebase/src/index.ts"],
       "@dereekb/model": ["packages/model/src/index.ts"],
       "@dereekb/rxjs": ["packages/rxjs/src/index.ts"],
-      "@dereekb/util": ["packages/util/src/index.ts"]
+      "@dereekb/util": ["packages/util/src/index.ts"],
+      // DEMO RELEVANT ONLY
+      /* 
+        Configure ability to access the shared app module directory via @shared in ts files.
+
+        Since Nx executes this project from the root folder, our paths extend from the root folder.
+      */
+      "@/shared/*": ["packages/demo/src/app/modules/shared/*"]
     }
   },
   "exclude": ["node_modules", "tmp"]

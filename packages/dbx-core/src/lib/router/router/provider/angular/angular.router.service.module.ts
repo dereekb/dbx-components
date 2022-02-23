@@ -1,22 +1,22 @@
 import { ModuleWithProviders, NgModule } from '@angular/core';
-import { DbNgxRouterService, DbNgxRouterTransitionService } from '../../service';
-import { DbNgxAngularRouterService } from './angular.router.service';
+import { DbxRouterService, DbxRouterTransitionService } from '../../service';
+import { DbxAngularRouterService } from './angular.router.service';
 
 @NgModule({})
-export class DbNgxCoreAngularRouterSegueModule {
+export class DbxCoreAngularRouterSegueModule {
 
-  static forRoot(): ModuleWithProviders<DbNgxCoreAngularRouterSegueModule> {
+  static forRoot(): ModuleWithProviders<DbxCoreAngularRouterSegueModule> {
     return {
-      ngModule: DbNgxCoreAngularRouterSegueModule,
+      ngModule: DbxCoreAngularRouterSegueModule,
       providers: [
-        DbNgxAngularRouterService,
+        DbxAngularRouterService,
         {
-          provide: DbNgxRouterService,
-          useExisting: DbNgxAngularRouterService
+          provide: DbxRouterService,
+          useExisting: DbxAngularRouterService
         },
         {
-          provide: DbNgxRouterTransitionService,
-          useExisting: DbNgxAngularRouterService
+          provide: DbxRouterTransitionService,
+          useExisting: DbxAngularRouterService
         }
       ]
     };

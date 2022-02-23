@@ -1,6 +1,6 @@
 import { Directive, Host, OnInit, OnDestroy, Input, NgZone } from '@angular/core';
 import { ActionContextStoreSourceInstance, AbstractSubscriptionDirective } from '@dereekb/dbx-core';
-import { DbNgxReadableErrorComponent } from './error.component';
+import { DbxReadableErrorComponent } from './error.component';
 
 /**
  * Context used for linking an ReadableErrorComponent to an ActionContext.
@@ -8,9 +8,9 @@ import { DbNgxReadableErrorComponent } from './error.component';
 @Directive({
   selector: '[dbxActionError]'
 })
-export class DbNgxActionErrorDirective extends AbstractSubscriptionDirective implements OnInit {
+export class DbxActionErrorDirective extends AbstractSubscriptionDirective implements OnInit {
 
-  constructor(@Host() public readonly error: DbNgxReadableErrorComponent, public readonly source: ActionContextStoreSourceInstance) {
+  constructor(@Host() public readonly error: DbxReadableErrorComponent, public readonly source: ActionContextStoreSourceInstance) {
     super();
   }
 

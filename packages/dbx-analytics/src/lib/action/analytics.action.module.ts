@@ -1,12 +1,12 @@
 import { NgModule } from '@angular/core';
-import { DbNgxActionAnalyticsDirective } from './analytics.action.directive';
+import { DbxActionAnalyticsDirective } from './analytics.action.directive';
 
 @NgModule({
   declarations: [
-    DbNgxActionAnalyticsDirective
+    DbxActionAnalyticsDirective
   ],
   exports: [
-    DbNgxActionAnalyticsDirective
+    DbxActionAnalyticsDirective
   ]
 })
-export class DbNgxAnalyticsActionModule { }
+export class AnalyticsActionModule { }

@@ -17,7 +17,7 @@ import { TwoColumnsContextStore } from '../two';
   exportAs: 'columns',
   providers: [TwoColumnsContextStore]
 })
-export class DbNgxOneColumnComponent {
+export class DbxOneColumnComponent {
 
   constructor(@Inject(TwoColumnsContextStore) public readonly twoColumnsContextStore: TwoColumnsContextStore) {
     twoColumnsContextStore.setFullLeft(true);

@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { map } from 'rxjs/operators';
-import { DbNgxPopupController, DbNgxPopupWindowState } from './popup';
+import { DbxPopupController, DbxPopupWindowState } from './popup';
 
 /**
  * Popup Control Buttons.
@@ -8,7 +8,6 @@ import { DbNgxPopupController, DbNgxPopupWindowState } from './popup';
 @Component({
   selector: 'dbx-popup-control-buttons',
   template: `
-  <span class="dbx-popup-control-buttons">
     <ng-container [ngSwitch]="isMinimized$ | async">
       <dbx-button [flat]="true" *ngSwitchCase="false" icon="minimize" (buttonClick)="minimizeClicked()"></dbx-button>
       <dbx-button [flat]="true" *ngSwitchCase="true" icon="maximize" (buttonClick)="maximizeClicked()"></dbx-button>
@@ -20,16 +19,17 @@ import { DbNgxPopupController, DbNgxPopupWindowState } from './popup';
     </ng-container>
     <dbx-button-spacer></dbx-button-spacer>
     <dbx-button [flat]="true" icon="close" color="warn" (buttonClick)="closeClicked()"></dbx-button>
-  </span>
   `,
-  // TODO: styleUrls: ['./popup.scss']
+  host: {
+    'class': 'dbx-popup-control-buttons'
+  }
 })
-export class DbNgxPopupControlButtonsComponent {
+export class DbxPopupControlButtonsComponent {
 
-  readonly isMinimized$ = this.appPopupController.windowState$.pipe(map(x => x === DbNgxPopupWindowState.MINIMIZED));
-  readonly isFullscreen$ = this.appPopupController.windowState$.pipe(map(x => x === DbNgxPopupWindowState.FULLSCREEN));
+  readonly isMinimized$ = this.appPopupController.windowState$.pipe(map(x => x === DbxPopupWindowState.MINIMIZED));
+  readonly isFullscreen$ = this.appPopupController.windowState$.pipe(map(x => x === DbxPopupWindowState.FULLSCREEN));
 
-  constructor(private appPopupController: DbNgxPopupController) { }
+  constructor(private appPopupController: DbxPopupController) { }
 
   minimizeClicked(): void {
     this.appPopupController.minimize();

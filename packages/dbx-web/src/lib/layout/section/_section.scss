@@ -1,0 +1,116 @@
+@use 'sass:map';
+@use 'sass:color';
+@use '../../style/theming';
+
+// MARK: Variables
+$content-navbar-height: theming.$content-navbar-height;
+
+$page-h1-height: 32px;
+
+$header-bottom-padding: 16px;
+$header-left-reserved-space: 200px;
+$header-left-reserved-space-small-screen: 120px;
+
+// MARK: Mixin
+@mixin core() {
+
+  // MARK: Header
+  .dbx-section-header {
+    padding: 0 0 $header-bottom-padding;
+    box-sizing: border-box;
+
+    .dbx-section-header-content {
+
+      h1,
+      h2,
+      h3,
+      h4,
+      h5 {
+        padding-top: 5px;
+        height: $page-h1-height;
+        display: inline;
+        margin: 0;
+      }
+
+      display: flex;
+      align-items: center;
+    }
+  }
+
+  .dbx-section-hint {
+    margin: 0;
+  }
+
+  // MARK: Page
+  .dbx-section-page {
+
+    >.dbx-section-header>.dbx-section-header-content {
+      height: $content-navbar-height;
+      max-height: $content-navbar-height;
+      overflow-x: auto;
+      overflow-y: hidden;
+      max-width: 100%;
+
+      .dbx-section-header-content-title {
+        max-width: calc(80% - #{$header-left-reserved-space});
+
+        display: inline-flex !important;
+        justify-content: center;
+        align-items: center;
+
+        .mat-icon {
+          margin-right: 4px;
+        }
+
+        >.title-text {
+          @include theming.limit-text();
+        }
+      }
+    }
+
+  }
+
+  // MARK: Subsection
+  .dbx-subsection {
+
+    >.dbx-section-header>.dbx-section-header-content {}
+
+  }
+
+}
+
+@mixin color($theme-config) {
+
+  // MARK: Page
+  .dbx-section-page {
+
+    >.dbx-section-header>.dbx-section-header-content {
+      .dbx-section-header-content-title {
+
+        @include theming.if-small-screen($theme-config) {
+          max-width: calc(80% - #{$header-left-reserved-space-small-screen});
+        }
+        
+      }
+    }
+
+  }
+
+}
+
+@mixin typography($typography-config) {}
+
+@mixin theme($theme-config) {
+  @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-layout-section') {
+    $color: theming.get-color-config($theme-config);
+    $typography: theming.get-typography-config($theme-config);
+
+    @if $color !=null {
+      @include color($theme-config);
+    }
+
+    @if $typography !=null {
+      @include typography($typography);
+    }
+  }
+}

@@ -5,21 +5,21 @@ import { BehaviorSubject } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import { ActionKey } from './action.map';
 import { ProvideSecondaryActionStoreSource, SecondaryActionContextStoreSource } from '../../action.store.source';
-import { DbNgxActionContextMapDirective } from './action.map.directive';
+import { DbxActionContextMapDirective } from './action.map.directive';
 
 /**
- * Directive that provides a ActionContextStoreSource using the input key and DbNgxActionContextMapDirective.
+ * Directive that provides a ActionContextStoreSource using the input key and DbxActionContextMapDirective.
  */
 @Directive({
   selector: '[dbxActionFromMap]',
-  providers: ProvideSecondaryActionStoreSource(DbNgxActionFromMapDirective)
+  providers: ProvideSecondaryActionStoreSource(DbxActionFromMapDirective)
 })
-export class DbNgxActionFromMapDirective implements SecondaryActionContextStoreSource, OnDestroy {
+export class DbxActionFromMapDirective implements SecondaryActionContextStoreSource, OnDestroy {
 
   private _key = new BehaviorSubject<Maybe<ActionKey>>(undefined);
   readonly store$ = this._key.pipe(filterMaybe(), switchMap((x) => this._map.sourceForKey(x).store$));
 
-  constructor(private readonly _map: DbNgxActionContextMapDirective) { }
+  constructor(private readonly _map: DbxActionContextMapDirective) { }
 
   ngOnDestroy(): void {
     this._key.complete();

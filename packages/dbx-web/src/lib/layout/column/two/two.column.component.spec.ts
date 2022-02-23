@@ -1,14 +1,14 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Component } from '@angular/core';
-import { DbNgxTwoColumnLayoutModule } from './two.column.module';
+import { DbxTwoColumnLayoutModule } from './two.column.module';
 import { ProvideTwoColumnsContext } from './two.column.store';
 
 
-describe('DbNgxTwoColumnsComponent', () => {
+describe('DbxTwoColumnsComponent', () => {
 
   beforeEach(async () => {
     TestBed.configureTestingModule({
-      imports: [DbNgxTwoColumnLayoutModule],
+      imports: [DbxTwoColumnLayoutModule],
       declarations: [TwoColumnsTestComponent]
     }).compileComponents();
   });

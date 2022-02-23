@@ -14,7 +14,7 @@ import { BehaviorSubject } from 'rxjs';
 @Directive({
   selector: '[dbxActionHandler]',
 })
-export class DbNgxActionHandlerDirective<T, O> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
+export class DbxActionHandlerDirective<T, O> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
 
   private _handlerFunction = new BehaviorSubject<Maybe<HandleActionFunction<T, O>>>(undefined);
   readonly handlerFunction$ = this._handlerFunction.pipe(filterMaybe(), shareReplay(1));

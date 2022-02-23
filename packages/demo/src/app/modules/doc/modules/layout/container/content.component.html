@@ -1,0 +1,74 @@
+<dbx-content-container grow="full">
+  <doc-feature-layout header="Content"
+    hint="Content components used to wrap content and/or control content widths and presentation.">
+
+    <!-- Examples -->
+    <doc-feature-example header=".dbx-content-container"
+      hint="A content container that can be configured to restrict growth and handle padding responsively. Uses margin: auto to center content horizontally.">
+
+      <h4>Padding can be customized.</h4>
+      <dbx-content-container padding="none">
+        <p style="background: rgba(200, 47, 142, 0.25);">This container has no padding.</p>
+      </dbx-content-container>
+      <dbx-content-container padding="min">
+        <p style="background: rgba(200, 47, 142, 0.25);">This container has min padding.</p>
+      </dbx-content-container>
+      <dbx-content-container padding="small">
+        <p style="background: rgba(200, 47, 142, 0.25);">This container has small padding.</p>
+      </dbx-content-container>
+      <dbx-content-container padding="normal">
+        <p style="background: rgba(200, 47, 142, 0.25);">This container has normal padding.</p>
+      </dbx-content-container>
+
+      <h4>Growth can be customized.</h4>
+      <dbx-content-container grow="small">
+        <p style="background: rgba(200, 47, 142, 0.25);">This container is limited to small.</p>
+      </dbx-content-container>
+      <dbx-content-container grow="medium">
+        <p style="background: rgba(200, 47, 142, 0.25);">This container is limited to medium.</p>
+      </dbx-content-container>
+      <dbx-content-container grow="wide">
+        <p style="background: rgba(200, 47, 142, 0.25);">This container is limited to large.</p>
+      </dbx-content-container>
+      <dbx-content-container grow="full">
+        <p style="background: rgba(200, 47, 142, 0.25);">This container is limited to full.</p>
+      </dbx-content-container>
+
+    </doc-feature-example>
+    <doc-feature-example header=".dbx-content-border" hint="">
+      <dbx-content-border>
+        <p>This content is bordered.</p>
+      </dbx-content-border>
+    </doc-feature-example>
+    <doc-feature-example header=".dbx-content-elevate"
+      hint="Elevates the content with material elevation with the same padding as dbx-content-border.">
+      <dbx-content-elevate>
+        <p>This content is elevated.</p>
+      </dbx-content-elevate>
+    </doc-feature-example>
+    <doc-feature-example header=".dbx-content-box" hint="Wraps the content in a box with box-sizing.">
+      <dbx-content-box>
+        <p>This content is in a box that is elevated.</p>
+      </dbx-content-box>
+      <dbx-content-box [elevated]="false">
+        <p>This content is in a box that is not elevated.</p>
+      </dbx-content-box>
+    </doc-feature-example>
+    <doc-feature-example header=".dbx-content"
+      hint="This view/class sets the height to be the height of the page, minus the top and (if known) content navigation bars.">
+      <dbx-content>
+        <div style="background: grey; height: 100%;"></div>
+      </dbx-content>
+    </doc-feature-example>
+    <doc-feature-example header=".dbx-content-scroll-lock"
+      hint="This view/class is used with potentially infinitely scrollable content. The dbx-content-scroll-lock has a fixed sized, and lets the children content scroll.">
+      <dbx-content>
+        <div class="dbx-content-scroll-lock" style="background: grey;">
+          <div style="overflow: scroll; height: 100%;">
+            <div style="height: 5000px; border-left: dotted 14px red"></div>
+          </div>
+        </div>
+      </dbx-content>
+    </doc-feature-example>
+  </doc-feature-layout>
+</dbx-content-container>

@@ -1,18 +1,18 @@
 import { Maybe } from '@dereekb/util';
 import { Observable } from 'rxjs';
 
-export type DbNgxPopupKey = string;
+export type DbxPopupKey = string;
 
-export enum DbNgxPopupWindowState {
+export enum DbxPopupWindowState {
   NORMAL = 'normal',
   MINIMIZED = 'minimized',
   FULLSCREEN = 'fullscreen'
 }
 
-export abstract class DbNgxPopupController<I = any, O = any> {
-  abstract readonly key: DbNgxPopupKey;
+export abstract class DbxPopupController<O = any, I = any> {
+  abstract readonly key: DbxPopupKey;
   abstract readonly data?: Maybe<I>;
-  abstract readonly windowState$: Observable<DbNgxPopupWindowState>;
+  abstract readonly windowState$: Observable<DbxPopupWindowState>;
   abstract readonly closing$: Observable<boolean>;
   /**
    * Signals for the popup to close.

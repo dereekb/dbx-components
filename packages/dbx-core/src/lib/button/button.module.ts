@@ -1,24 +1,24 @@
 import { NgModule } from '@angular/core';
-import { DbNgxActionButtonTriggerDirective, DbNgxActionButtonDirective } from './action';
-import { DbNgxButtonDirective } from './button.directive';
-import { DbNgxLoadingButtonDirective } from './button.loading.directive';
-import { DbNgxButtonSegueDirective } from './router/button.segue.directive';
+import { DbxActionButtonTriggerDirective, DbxActionButtonDirective } from './action';
+import { DbxButtonDirective } from './button.directive';
+import { DbxLoadingButtonDirective } from './button.loading.directive';
+import { DbxButtonSegueDirective } from './router/button.segue.directive';
 
 @NgModule({
   imports: [],
   declarations: [
-    DbNgxButtonDirective,
-    DbNgxLoadingButtonDirective,
-    DbNgxActionButtonTriggerDirective,
-    DbNgxActionButtonDirective,
-    DbNgxButtonSegueDirective
+    DbxButtonDirective,
+    DbxLoadingButtonDirective,
+    DbxActionButtonTriggerDirective,
+    DbxActionButtonDirective,
+    DbxButtonSegueDirective
   ],
   exports: [
-    DbNgxButtonDirective,
-    DbNgxLoadingButtonDirective,
-    DbNgxActionButtonTriggerDirective,
-    DbNgxActionButtonDirective,
-    DbNgxButtonSegueDirective
+    DbxButtonDirective,
+    DbxLoadingButtonDirective,
+    DbxActionButtonTriggerDirective,
+    DbxActionButtonDirective,
+    DbxButtonSegueDirective
   ],
 })
-export class DbNgxCoreButtonModule { }
+export class DbxCoreButtonModule { }

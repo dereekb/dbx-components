@@ -1,8 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Component, ViewChild } from '@angular/core';
-import { DbNgxActionContextDirective, DbNgxCoreActionModule } from '@dereekb/dbx-core';
-import { DbNgxActionFormDirective } from './form.action.directive';
-import { DbNgxTestDbNgxFormComponent, FORM_TEST_PROVIDERS } from '../formly.component.spec';
+import { DbxActionDirective, DbxCoreActionModule } from '@dereekb/dbx-core';
+import { DbxActionFormDirective } from './form.action.directive';
+import { DbxTestDbxFormComponent, FORM_TEST_PROVIDERS } from '../../../test';
 import { first } from 'rxjs/operators';
 
 describe('FormActionDirective', () => {
@@ -11,23 +11,23 @@ describe('FormActionDirective', () => {
     TestBed.configureTestingModule({
       imports: [
         ...FORM_TEST_PROVIDERS,
-        DbNgxCoreActionModule
+        DbxCoreActionModule
       ],
       declarations: [
-        TestDbNgxActionFormDirectiveComponent,
-        DbNgxTestDbNgxFormComponent
+        TestDbxActionFormDirectiveComponent,
+        DbxTestDbxFormComponent
       ]
     }).compileComponents();
   });
 
-  let directive: DbNgxActionContextDirective<number, number>;
-  let form: DbNgxTestDbNgxFormComponent;
+  let directive: DbxActionDirective<number, number>;
+  let form: DbxTestDbxFormComponent;
 
-  let testComponent: TestDbNgxActionFormDirectiveComponent;
-  let fixture: ComponentFixture<TestDbNgxActionFormDirectiveComponent>;
+  let testComponent: TestDbxActionFormDirectiveComponent;
+  let fixture: ComponentFixture<TestDbxActionFormDirectiveComponent>;
 
   beforeEach(async () => {
-    fixture = TestBed.createComponent(TestDbNgxActionFormDirectiveComponent);
+    fixture = TestBed.createComponent(TestDbxActionFormDirectiveComponent);
     testComponent = fixture.componentInstance;
 
     directive = testComponent.directive;
@@ -36,15 +36,23 @@ describe('FormActionDirective', () => {
     fixture.detectChanges();
   });
 
+  afterEach(() => {
+    fixture.destroy();
+  })
+
   it('should be created', () => {
     expect(testComponent.formDirective).toBeDefined();
   });
 
   describe('when form valid', () => {
 
-    beforeEach(() => {
+    beforeEach((done) => {
       form.setTextForTest('text value', fixture);
-      expect(form.context.isComplete).toBe(true);
+
+      form.context.stream$.pipe(first()).subscribe(({ isComplete }) => {
+        expect(isComplete).toBe(true);
+        done();
+      });
     });
 
     it('should provide the value when triggered.', (done) => {
@@ -62,7 +70,10 @@ describe('FormActionDirective', () => {
 
     beforeEach(() => {
       form.setInvalidTextForTest(fixture);
-      expect(form.context.isComplete).toBe(false);
+
+      form.context.stream$.pipe(first()).subscribe(({ isComplete }) => {
+        expect(isComplete).toBe(false);
+      });
     });
 
     it('isModifiedAndCanTrigger$ should be false.', (done) => {
@@ -80,20 +91,20 @@ describe('FormActionDirective', () => {
 
 @Component({
   template: `
-    <div appActionContext>
-      <dbx-test-dbx-form appActionForm></dbx-test-dbx-form>
-    </div>
+    <dbx-action>
+      <dbx-test-dbx-form dbxActionForm></dbx-test-dbx-form>
+    </dbx-action>
   `
 })
-class TestDbNgxActionFormDirectiveComponent {
+class TestDbxActionFormDirectiveComponent {
 
-  @ViewChild(DbNgxActionContextDirective, { static: true })
-  directive!: DbNgxActionContextDirective<number, number>;
+  @ViewChild(DbxActionDirective, { static: true })
+  directive!: DbxActionDirective<number, number>;
 
-  @ViewChild(DbNgxActionFormDirective, { static: true })
-  formDirective!: DbNgxActionFormDirective;
+  @ViewChild(DbxActionFormDirective, { static: true })
+  formDirective!: DbxActionFormDirective;
 
-  @ViewChild(DbNgxTestDbNgxFormComponent, { static: true })
-  form!: DbNgxTestDbNgxFormComponent;
+  @ViewChild(DbxTestDbxFormComponent, { static: true })
+  form!: DbxTestDbxFormComponent;
 
 }

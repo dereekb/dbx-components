@@ -4,7 +4,7 @@ import { merge } from 'rxjs';
 import { ActionContextStoreSourceInstance } from '../action.store.source';
 import { AbstractSubscriptionDirective } from '../../subscription';
 import { Maybe } from '@dereekb/util';
-import { ActionSnackbarFunction, ActionSnackbarDefaultType, ActionSnackbarGetUndoConfigFunction, ActionSnackbarEventType, ActionSnackbarEvent, ActionSnackbarPopupConfig, ActionSnackBarOpenConfig, DbNgxActionSnackbarComponentConfig, DEFAULT_SNACKBAR_UNDO_DIRECTIVE_DURATION } from './snackbar';
+import { ActionSnackbarFunction, ActionSnackbarDefaultType, ActionSnackbarGetUndoConfigFunction, ActionSnackbarEventType, ActionSnackbarEvent, ActionSnackbarPopupConfig, ActionSnackBarOpenConfig, DbxActionSnackbarComponentConfig, DEFAULT_SNACKBAR_UNDO_DIRECTIVE_DURATION } from './snackbar';
 
 // TODO: Consider moving these configurations more configurable elsewhere...
 
@@ -14,7 +14,7 @@ import { ActionSnackbarFunction, ActionSnackbarDefaultType, ActionSnackbarGetUnd
  * @deprecated don't use. Use the web version directly instead. This will be removed/replaced later with a better implementation.
  */
 @Directive()
-export abstract class AbstractDbNgxActionSnackbarDirective<T = any, O = any, C = any> extends AbstractSubscriptionDirective implements OnInit {
+export abstract class AbstractDbxActionSnackbarDirective<T = any, O = any, C = any> extends AbstractSubscriptionDirective implements OnInit {
 
   @Input('dbxActionSnackbar')
   snackbarFunction?: ActionSnackbarFunction<O, C>;
@@ -67,7 +67,7 @@ export abstract class AbstractDbNgxActionSnackbarDirective<T = any, O = any, C =
     let open: Maybe<ActionSnackBarOpenConfig>;
     let component: Maybe<Type<any>>;
     let duration: Maybe<number>;
-    let data: Maybe<DbNgxActionSnackbarComponentConfig>;
+    let data: Maybe<DbxActionSnackbarComponentConfig>;
 
     const trySetupUndo = (): void => {
       if (this.snackbarUndo) {
@@ -324,8 +324,8 @@ export abstract class AbstractDbNgxActionSnackbarDirective<T = any, O = any, C =
     return config;
   }
 
-  protected abstract _makeDefaultConfig(input: DbNgxActionSnackbarDirectiveSnackbarPopupData): C;
-  protected abstract _makeDefaultUndoData(): DbNgxActionSnackbarDirectiveSnackbarPopupData;
+  protected abstract _makeDefaultConfig(input: DbxActionSnackbarDirectiveSnackbarPopupData): C;
+  protected abstract _makeDefaultUndoData(): DbxActionSnackbarDirectiveSnackbarPopupData;
 
   /*
   {
@@ -337,8 +337,8 @@ export abstract class AbstractDbNgxActionSnackbarDirective<T = any, O = any, C =
 
 }
 
-export interface DbNgxActionSnackbarDirectiveSnackbarPopupData {
+export interface DbxActionSnackbarDirectiveSnackbarPopupData {
   duration?: Maybe<number>;
-  data?: Maybe<DbNgxActionSnackbarComponentConfig>;
+  data?: Maybe<DbxActionSnackbarComponentConfig>;
   component?: Maybe<Type<any>>;
 }

@@ -1,0 +1,25 @@
+@use './layout/anchor/anchor';
+@use './layout/anchorlist/anchorlist';
+@use './layout/navbar/navbar';
+@use './layout/sidenav/sidenav';
+
+@mixin all-router-core() {
+  @include anchor.core();
+  @include anchorlist.core();
+  @include navbar.core();
+  @include sidenav.core();
+}
+
+@mixin all-router-typography($typography-config) {
+  @include anchor.typography($typography-config);
+  @include anchorlist.typography($typography-config);
+  @include navbar.typography($typography-config);
+  @include sidenav.typography($typography-config);
+}
+
+@mixin all-router-theme($theme-config) {
+  @include anchor.theme($theme-config);
+  @include anchorlist.theme($theme-config);
+  @include navbar.theme($theme-config);
+  @include sidenav.theme($theme-config);
+}

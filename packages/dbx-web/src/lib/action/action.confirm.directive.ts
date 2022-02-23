@@ -1,7 +1,7 @@
 import { Directive, Host, Input, OnDestroy, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { AbstractPromptConfirmDirective } from '../interaction/prompt/prompt.confirm.directive';
-import { DbNgxPromptConfirmConfig } from '../interaction/prompt/prompt.confirm.component';
+import { DbxPromptConfirmConfig } from '../interaction/prompt/prompt.confirm.component';
 import { SubscriptionObject } from '@dereekb/rxjs';
 import { ActionContextStoreSourceInstance } from '@dereekb/dbx-core';
 
@@ -14,10 +14,10 @@ import { ActionContextStoreSourceInstance } from '@dereekb/dbx-core';
 @Directive({
   selector: '[dbxActionConfirm]'
 })
-export class DbNgxActionConfirmDirective<T, O> extends AbstractPromptConfirmDirective implements OnInit, OnDestroy {
+export class DbxActionConfirmDirective<T, O> extends AbstractPromptConfirmDirective implements OnInit, OnDestroy {
 
   @Input('dbxActionConfirm')
-  override config?: DbNgxPromptConfirmConfig;
+  override config?: DbxPromptConfirmConfig;
 
   private _sourceSubscription = new SubscriptionObject();
 

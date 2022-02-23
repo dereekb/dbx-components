@@ -1,4 +1,4 @@
-import { DbNgxPopupKey, DbNgxPopupController } from './popup';
+import { DbxPopupKey, DbxPopupController } from './popup';
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 
@@ -6,19 +6,19 @@ import { BehaviorSubject } from 'rxjs';
  * Used for coordinating popups and closing/replacing existing ones when a new popup of the same name appears.
  */
 @Injectable()
-export class DbNgxPopupCoordinatorService {
+export class DbxPopupCoordinatorService {
 
-  private _popups = new BehaviorSubject<Map<DbNgxPopupKey, DbNgxPopupController>>(new Map());
+  private _popups = new BehaviorSubject<Map<DbxPopupKey, DbxPopupController>>(new Map());
 
   readonly popups$ = this._popups.asObservable();
 
   constructor() { }
 
-  get popups(): Map<DbNgxPopupKey, DbNgxPopupController> {
+  get popups(): Map<DbxPopupKey, DbxPopupController> {
     return this._popups.value;
   }
 
-  public addPopup(popup: DbNgxPopupController): void {
+  public addPopup(popup: DbxPopupController): void {
     const key = popup.key;
 
     if (key) {
@@ -28,7 +28,7 @@ export class DbNgxPopupCoordinatorService {
     }
   }
 
-  public removePopup(key: DbNgxPopupKey, popup?: DbNgxPopupController): void {
+  public removePopup(key: DbxPopupKey, popup?: DbxPopupController): void {
     if (key) {
       const existing = this.popups.get(key);
 

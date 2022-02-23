@@ -1,0 +1,12 @@
+@use '../form/form';
+@use '../formly/formly';
+@use '../layout/layout';
+@use '../formly/field/field';
+
+// Includes all of the typographic styles.
+@mixin all-component-typographies($typography-config) {
+  @include form.typography($typography-config);
+  @include formly.typography($typography-config);
+  @include field.all-field-typography($typography-config);
+  @include layout.typography($typography-config);
+}

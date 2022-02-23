@@ -1,15 +1,15 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Component } from '@angular/core';
-import { DbNgxLoadingModule } from './loading.module';
+import { DbxLoadingModule } from './loading.module';
 import { By } from '@angular/platform-browser';
-import { DbNgxLoadingProgressComponent } from './loading-progress.component';
+import { DbxLoadingProgressComponent } from './loading-progress.component';
 import { ValuesLoadingContext } from '@dereekb/rxjs';
-import { DbNgxReadableErrorComponent } from '../error';
-import { DbNgxBasicLoadingComponent, LoadingComponentState } from './basic-loading.component';
+import { DbxReadableErrorComponent } from '../error';
+import { DbxBasicLoadingComponent, LoadingComponentState } from './basic-loading.component';
 import { filter, first } from 'rxjs';
 
-export function waitForState(state: LoadingComponentState): (component: DbNgxBasicLoadingComponent) => (checkFn: () => void) => void {
-  return (component: DbNgxBasicLoadingComponent) => {
+export function waitForState(state: LoadingComponentState): (component: DbxBasicLoadingComponent) => (checkFn: () => void) => void {
+  return (component: DbxBasicLoadingComponent) => {
     return (checkFn: () => void) => {
       component.state$.pipe(
         filter(x => x === state), first()
@@ -18,12 +18,12 @@ export function waitForState(state: LoadingComponentState): (component: DbNgxBas
   };
 }
 
-describe('DbNgxLoadingComponent', () => {
+describe('DbxLoadingComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [
-        DbNgxLoadingModule
+        DbxLoadingModule
       ],
       declarations: [LoadingComponent]
     }).compileComponents();
@@ -32,7 +32,7 @@ describe('DbNgxLoadingComponent', () => {
   describe('with content', () => {
     let fixture: ComponentFixture<LoadingComponent>;
     let component: LoadingComponent;
-    let basicLoadingComponent: DbNgxBasicLoadingComponent;
+    let basicLoadingComponent: DbxBasicLoadingComponent;
 
     let waitForComponentToBeLoading: (checkFn: () => void) => void;
     let waitForComponentToHaveContent: (checkFn: () => void) => void;
@@ -41,7 +41,7 @@ describe('DbNgxLoadingComponent', () => {
     beforeEach(async () => {
       fixture = TestBed.createComponent(LoadingComponent);
       component = fixture.componentInstance;
-      basicLoadingComponent = fixture.debugElement.query(By.directive(DbNgxBasicLoadingComponent)).componentInstance;
+      basicLoadingComponent = fixture.debugElement.query(By.directive(DbxBasicLoadingComponent)).componentInstance;
 
       waitForComponentToBeLoading = waitForState(LoadingComponentState.LOADING)(basicLoadingComponent);
       waitForComponentToHaveContent = waitForState(LoadingComponentState.CONTENT)(basicLoadingComponent);
@@ -77,7 +77,7 @@ describe('DbNgxLoadingComponent', () => {
 
       it('should display the error.', (done) => {
         waitForComponentToHaveError(() => {
-          const errorComponentQueryResult = fixture.debugElement.query(By.directive(DbNgxReadableErrorComponent));
+          const errorComponentQueryResult = fixture.debugElement.query(By.directive(DbxReadableErrorComponent));
           expect(errorComponentQueryResult).not.toBeNull();
           done();
         });
@@ -102,7 +102,7 @@ describe('DbNgxLoadingComponent', () => {
 
       it('should display the loading progress view while loading.', (done) => {
         waitForComponentToBeLoading(() => {
-          const loadingProgressQueryResult = fixture.debugElement.query(By.directive(DbNgxLoadingProgressComponent));
+          const loadingProgressQueryResult = fixture.debugElement.query(By.directive(DbxLoadingProgressComponent));
           expect(loadingProgressQueryResult).not.toBeNull();
           done();
         });

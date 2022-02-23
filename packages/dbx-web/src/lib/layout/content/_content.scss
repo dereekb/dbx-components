@@ -1,0 +1,136 @@
+@use 'sass:map';
+@use 'sass:color';
+@use '../../style/theming';
+
+$content-max-width: theming.$content-max-width;
+$content-border-inner-padding: theming.$padding-3;
+
+$box-bottom-margin: 2vh;
+$box-padding: theming.$padding-4;
+$box-max-width: theming.$box-max-width;
+
+$max-small-content-container-width: calc($content-max-width / 3);
+$max-medium-content-container-width: calc($content-max-width / 2);
+$max-content-container-width: $content-max-width;
+
+$content-container-padding: theming.$padding-4;
+$content-container-padding-small-screen: theming.$padding-2;
+
+@mixin core() {
+
+  .dbx-content-border {
+    padding: $content-border-inner-padding;
+  }
+
+  .dbx-content-elevate {
+    padding: $content-border-inner-padding;
+    @include theming.elevation(2);
+  }
+
+  .dbx-content-box {
+    margin: auto;
+    padding: $box-padding;
+    margin-bottom: $box-bottom-margin;
+    max-width: $box-max-width;
+  }
+
+  .dbx-content,
+  .dbx-content-page {                   //dbx-content page always has page height
+    @include theming.page-height();
+  }
+
+  .dbx-content .dbx-content,            // if a child of another dbx-content, give it content height instead of page height.
+  .dbx-content-page .dbx-content,
+  .dbx-content-without-content-navbar {
+    @include theming.content-height();
+  }
+
+  .dbx-content-scroll-lock {
+    height: 100%;
+    overflow: hidden;
+    padding: 0 2px; // Override padding
+  }
+
+  .dbx-content-container {
+    margin: auto;
+    padding: 0 $content-container-padding;
+
+    // NOTE: the order of these classes matters.
+
+    // padding
+    &.container-padding-none {
+      padding: 0;
+    }
+
+    &.container-padding-min {
+      padding: 0 2px;
+    }
+
+    &.container-padding-small {
+      padding: 0 calc($content-container-padding / 3);
+    }
+
+    // width
+    &.container-small {
+      max-width: $max-small-content-container-width;
+    }
+
+    &.container-medium {
+      max-width: $max-medium-content-container-width;
+    }
+
+    &.container-wide {
+      max-width: $max-content-container-width;
+    }
+
+    // type
+    &.normal-container-type {
+      // No restriction.
+    }
+
+    &.content-container-type {
+      // @include fillContentWithAppPageHeaderHeight();
+      overflow-x: hidden;
+      overflow-y: auto;
+    }
+
+  }
+
+}
+
+@mixin color($theme-config) {
+  $color-config: theming.get-color-config($theme-config);
+  $background: map.get($color-config, 'background');
+  $content-border-background: theming.get-color-from-palette($background, 'hover');
+
+  .dbx-content-border {
+    // border-radius: 6px;
+    border: 3px dashed $content-border-background;
+  }
+
+  .dbx-content-container {
+
+    @include theming.if-small-screen($theme-config) {
+      padding: 0 $content-container-padding-small-screen;
+    }
+
+  }
+
+}
+
+@mixin typography($typography-config) {}
+
+@mixin theme($theme-config) {
+  @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-layout-content') {
+    $color: theming.get-color-config($theme-config);
+    $typography: theming.get-typography-config($theme-config);
+
+    @if $color !=null {
+      @include color($theme-config);
+    }
+
+    @if $typography !=null {
+      @include typography($typography);
+    }
+  }
+}

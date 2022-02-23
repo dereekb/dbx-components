@@ -1,0 +1,29 @@
+<div class="dbx-pickable-item-field">
+  <dbx-loading [context]="context">
+    <ng-container *ngIf="showFilterInput">
+      <ng-container *ngTemplateOutlet="filterTemplate"></ng-container>
+    </ng-container>
+    <!-- Content -->
+    <div class="dbx-pickable-item-field-list">
+      <div class="dbx-pickable-item-field-list-content">
+        <dbx-form-pickable-item-field-item-list [disabled]="isReadonlyOrDisabled" [state$]="filterItemsLoadingState$"
+          (selectionChange)="onSelectionChange($event)">
+        </dbx-form-pickable-item-field-item-list>
+      </div>
+      <dbx-injected-content [config]="footerConfig"></dbx-injected-content>
+    </div>
+  </dbx-loading>
+</div>
+
+<!-- Filter Input -->
+<ng-template #filterTemplate>
+  <div class="dbx-pickable-item-field-filter">
+    <div class="dbx-label">{{ filterLabel }}</div>
+    <input [name]="name" autocomplete="{{ autocomplete }}" #filterMatInput="matInput" matInput
+      [placeholder]="placeholder" [formControl]="inputCtrl">
+    <mat-divider></mat-divider>
+    <dbx-loading [linear]="true" [context]="filterResultsContext"></dbx-loading>
+    <!-- No items found. -->
+    <p *ngIf="noItemsAvailable$ | async" class="dbx-label">No items match this filter.</p>
+  </div>
+</ng-template>

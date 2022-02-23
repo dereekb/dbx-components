@@ -1,8 +1,8 @@
-import { DbNgxActionSnackbarComponent } from './action.snackbar.component';
+import { DbxActionSnackbarComponent } from './action.snackbar.component';
 import { Directive, Host, Input, OnInit, Type } from '@angular/core';
 import { map } from 'rxjs/operators';
 import { merge } from 'rxjs';
-import { AbstractSubscriptionDirective, ActionContextStoreSourceInstance, ActionSnackbarFunction, ActionSnackbarDefaultType, ActionSnackbarGetUndoConfigFunction, ActionSnackbarEventType, ActionSnackbarEvent, ActionSnackbarPopupConfig, ActionSnackBarOpenConfig, DbNgxActionSnackbarComponentConfig } from '@dereekb/dbx-core';
+import { AbstractSubscriptionDirective, ActionContextStoreSourceInstance, ActionSnackbarFunction, ActionSnackbarDefaultType, ActionSnackbarGetUndoConfigFunction, ActionSnackbarEventType, ActionSnackbarEvent, ActionSnackbarPopupConfig, ActionSnackBarOpenConfig, DbxActionSnackbarComponentConfig } from '@dereekb/dbx-core';
 import { Maybe } from '@dereekb/util';
 import ms from 'ms';
 import { MatSnackBar, MatSnackBarConfig } from '@angular/material/snack-bar';
@@ -16,7 +16,7 @@ const DEFAULT_SNACKBAR_UNDO_DIRECTIVE_DURATION = ms('30s');
  * Abstract directive that shows a snackbar when success is called.
  */
 @Directive()
-export class DbNgxActionSnackbarDirective<T = any, O = any> extends AbstractSubscriptionDirective implements OnInit {
+export class DbxActionSnackbarDirective<T = any, O = any> extends AbstractSubscriptionDirective implements OnInit {
 
   @Input('dbxActionSnackbar')
   snackbarFunction?: ActionSnackbarFunction<O, MatSnackBarConfig>;
@@ -62,7 +62,7 @@ export class DbNgxActionSnackbarDirective<T = any, O = any> extends AbstractSubs
     let open: Maybe<ActionSnackBarOpenConfig>;
     let component: Maybe<Type<any>>;
     let duration: Maybe<number>;
-    let data: Maybe<DbNgxActionSnackbarComponentConfig>;
+    let data: Maybe<DbxActionSnackbarComponentConfig>;
 
     const trySetupUndo = (): void => {
       if (this.snackbarUndo) {
@@ -73,7 +73,7 @@ export class DbNgxActionSnackbarDirective<T = any, O = any> extends AbstractSubs
             console.error('Action source was not provided to undo...');
           }
 
-          component = DbNgxActionSnackbarComponent;
+          component = DbxActionSnackbarComponent;
           data = {
             ...open,
             action: 'Undo',
@@ -324,8 +324,8 @@ export class DbNgxActionSnackbarDirective<T = any, O = any> extends AbstractSubs
 
 }
 
-export interface DbNgxActionSnackbarDirectiveSnackbarPopupData {
+export interface DbxActionSnackbarDirectiveSnackbarPopupData {
   duration?: Maybe<number>;
-  data?: Maybe<DbNgxActionSnackbarComponentConfig>;
+  data?: Maybe<DbxActionSnackbarComponentConfig>;
   component?: Maybe<Type<any>>;
 }

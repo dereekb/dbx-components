@@ -1,6 +1,6 @@
-import { Component, ComponentFactoryResolver, NgZone, Type, ViewChild, ViewContainerRef, OnInit, OnDestroy, ComponentRef, ElementRef } from '@angular/core';
+import { Component, NgZone, Type, OnInit, OnDestroy, ElementRef } from '@angular/core';
 import { NgOverlayContainerConfiguration, NgPopoverRef } from 'ng-overlay-container';
-import { AbstractTransitionWatcherDirective, DbNgxRouterTransitionService } from '@dereekb/dbx-core';
+import { AbstractTransitionWatcherDirective, DbxRouterTransitionService, DbxInjectedComponentConfig } from '@dereekb/dbx-core';
 import { Subject } from 'rxjs';
 import { PopoverPositionStrategy } from './popover.position.strategy';
 import { filter, first, map, shareReplay, startWith } from 'rxjs/operators';
@@ -8,19 +8,19 @@ import { Overlay } from '@angular/cdk/overlay';
 import { LockSet } from '@dereekb/rxjs';
 import { CompactContextStore, CompactMode } from '../../layout';
 import { Maybe } from '@dereekb/util';
-import { DbNgxPopoverController, DbNgxPopoverKey } from './popover';
+import { DbxPopoverController, DbxPopoverKey } from './popover';
 
-export abstract class DbNgxPopoverComponentController<I, O> extends DbNgxPopoverController<I, O> {
+export abstract class DbxPopoverComponentController<O, I> extends DbxPopoverController<O, I> {
   getClosingValueFn?: (value?: I) => Promise<O>;
 }
 
-export interface DbNgxPopoverComponentConfig<I, O, T> {
+export interface DbxPopoverComponentConfig<O, I, T> {
   /**
    * Key used for uniquely identifying a limited instance.
    *
    * Only one popover should exist at a time given a certain key.
    */
-  key: DbNgxPopoverKey;
+  key: DbxPopoverKey;
   /**
    * Origin element to position on.
    */
@@ -43,10 +43,10 @@ export interface DbNgxPopoverComponentConfig<I, O, T> {
    * Data available to the popover.
    */
   data?: Maybe<I>;
-  init?: (component: T, controller: DbNgxPopoverController<I, O>) => void;
+  init?: (component: T, controller: DbxPopoverController<O, I>) => void;
 }
 
-export interface FullDbNgxPopoverComponentConfig<I, O, T> extends DbNgxPopoverComponentConfig<I, O, T> {
+export interface FullDbxPopoverComponentConfig<O, I, T> extends DbxPopoverComponentConfig<O, I, T> {
   configuration: NgOverlayContainerConfiguration;
 }
 
@@ -56,26 +56,24 @@ export interface FullDbNgxPopoverComponentConfig<I, O, T> extends DbNgxPopoverCo
 @Component({
   template: `
   <dbx-popover-coordinator (dbxWindowKeyDownListener)="handleKeydown($event)" [appWindowKeyDownFilter]="triggerCloseKeys">
-    <div class="dbx-popover-component">
-      <ng-template #content></ng-template>
-    </div>
+    <div dbx-style class="dbx-popover-component" dbx-injected-content [config]="contentConfig"></div>
   </dbx-popover-coordinator>
   `,
-  // TODO: styleUrls: ['./popover.scss'],
   providers: [{
-    provide: DbNgxPopoverController,
-    useExisting: DbNgxPopoverComponent
+    provide: DbxPopoverController,
+    useExisting: DbxPopoverComponent
   }, {
     provide: CompactContextStore
   }]
 })
-export class DbNgxPopoverComponent<I = any, O = any, T = any> extends AbstractTransitionWatcherDirective implements DbNgxPopoverController<I, O>, OnInit, OnDestroy {
+export class DbxPopoverComponent<O = any, I = any, T = any> extends AbstractTransitionWatcherDirective implements DbxPopoverController<O, I>, OnInit, OnDestroy {
 
   readonly lockSet = new LockSet();
 
-  @ViewChild('content', { static: true, read: ViewContainerRef })
-  private _content!: ViewContainerRef;
-  private _componentRef?: ComponentRef<T>;
+  readonly contentConfig: DbxInjectedComponentConfig = {
+    componentClass: this.config.componentClass,
+    init: this.config.init ? ((instance) => this.config.init!(instance, this)) : undefined
+  };
 
   private _startedClosing = false;
   private readonly _closing = new Subject<void>();
@@ -88,10 +86,9 @@ export class DbNgxPopoverComponent<I = any, O = any, T = any> extends AbstractTr
   getClosingValueFn?: (value?: I) => Promise<O>;
 
   constructor(
-    private popoverRef: NgPopoverRef<FullDbNgxPopoverComponentConfig<I, O, T>, O>,
+    private popoverRef: NgPopoverRef<FullDbxPopoverComponentConfig<O, I, T>, O>,
     private compactContextState: CompactContextStore,
-    private resolver: ComponentFactoryResolver,
-    dbNgxRouterTransitionService: DbNgxRouterTransitionService,
+    dbNgxRouterTransitionService: DbxRouterTransitionService,
     ngZone: NgZone) {
     super(dbNgxRouterTransitionService, ngZone);
 
@@ -115,11 +112,11 @@ export class DbNgxPopoverComponent<I = any, O = any, T = any> extends AbstractTr
     this.popoverRef.overlay.updatePositionStrategy(position);
   }
 
-  get config(): FullDbNgxPopoverComponentConfig<I, O, T> {
+  get config(): FullDbxPopoverComponentConfig<O, I, T> {
     return this.popoverRef.data;
   }
 
-  get key(): DbNgxPopoverKey {
+  get key(): DbxPopoverKey {
     return this.config.key;
   }
 
@@ -133,14 +130,6 @@ export class DbNgxPopoverComponent<I = any, O = any, T = any> extends AbstractTr
 
   override ngOnInit(): void {
     super.ngOnInit();
-    this._content.clear();
-    const componentClass = this.config.componentClass;
-    const factory = this.resolver.resolveComponentFactory(componentClass);
-    this._componentRef = this._content.createComponent(factory);
-
-    if (this.config.init) {
-      this.config.init(this._componentRef.instance, this);
-    }
 
     if (this.config.closeOnEscape) {
       this._triggerCloseKeys = ['Escape'];

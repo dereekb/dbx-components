@@ -20,7 +20,7 @@ import { Component, Input } from '@angular/core';
   </div>
   `
 })
-export class DbNgxCardBoxComponent {
+export class DbxCardBoxComponent {
 
   @Input()
   header?: string;

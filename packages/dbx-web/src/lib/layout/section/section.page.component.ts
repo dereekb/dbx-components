@@ -1,4 +1,5 @@
 import { Component, Input } from '@angular/core';
+import { DbxSectionHeaderComponent } from './section.header.component';
 
 /**
  * Component used to style a page that is made up of app sections.
@@ -6,25 +7,12 @@ import { Component, Input } from '@angular/core';
 @Component({
   selector: 'dbx-section-page',
   template: `
-  <div class="dbx-section-page">
-    <div class="dbx-section-header">
-      <div class="dbx-section-header-content">
-        <h1 class="dbx-section-header-content-title"><mat-icon *ngIf="icon">{{icon}}</mat-icon><span class="title-text">{{ header }}</span></h1>
-        <span class="spacer"></span>
-        <ng-content select="[sectionHeader]"></ng-content>
-      </div>
+  <div class="dbx-content-page dbx-section-page">
+    <div class="dbx-section-header" [h]="h ?? 2" [header]="header" [icon]="icon" [hint]="hint">
+      <ng-content select="[sectionHeader]"></ng-content>
     </div>
     <ng-content></ng-content>
   </div>
-  `,
-  // TODO: styleUrls: ['./container.scss']
+  `
 })
-export class DbNgxSectionPageComponent {
-
-  @Input()
-  header?: string;
-
-  @Input()
-  icon?: string;
-
-}
+export class DbxSectionPageComponent extends DbxSectionHeaderComponent { }

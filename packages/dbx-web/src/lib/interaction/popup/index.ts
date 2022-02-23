@@ -8,3 +8,4 @@ export * from './popup.coordinator.service';
 export * from './popup.module';
 export * from './popup.position.strategy';
 export * from './popup.service';
+export * from './popup';

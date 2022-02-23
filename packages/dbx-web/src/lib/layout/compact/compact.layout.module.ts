@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { DbNgxCompactDirective } from './compact.directive';
+import { DbxCompactDirective } from './compact.directive';
 
 /**
  * Module for block components.
@@ -10,10 +10,10 @@ import { DbNgxCompactDirective } from './compact.directive';
     CommonModule
   ],
   declarations: [
-    DbNgxCompactDirective
+    DbxCompactDirective
   ],
   exports: [
-    DbNgxCompactDirective
+    DbxCompactDirective
   ]
 })
-export class DbNgxCompactLayoutModule { }
+export class DbxCompactLayoutModule { }

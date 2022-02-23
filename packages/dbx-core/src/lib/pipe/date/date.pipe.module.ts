@@ -29,4 +29,4 @@ import { DateDistancePipe } from './datedistance.pipe';
     ToMinutesPipe
   ]
 })
-export class DbNgxDatePipeModule { }
+export class DbxDatePipeModule { }

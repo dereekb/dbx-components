@@ -1,7 +1,7 @@
 import { MatIconModule } from '@angular/material/icon';
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { DbNgxIconItemComponent } from './item.icon.component';
+import { DbxIconItemComponent } from './item.icon.component';
 
 @NgModule({
   imports: [
@@ -9,10 +9,10 @@ import { DbNgxIconItemComponent } from './item.icon.component';
     MatIconModule
   ],
   declarations: [
-    DbNgxIconItemComponent
+    DbxIconItemComponent
   ],
   exports: [
-    DbNgxIconItemComponent
+    DbxIconItemComponent
   ]
 })
-export class DbNgxItemLayoutModule { }
+export class DbxItemLayoutModule { }

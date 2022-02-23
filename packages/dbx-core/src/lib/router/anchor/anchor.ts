@@ -1,7 +1,7 @@
 import { ClickableFunction, ClickableUrl } from './clickable';
 import { SegueRef } from '../segue';
-import { Maybe } from '@dereekb/util';
-import { Type, Provider } from '@angular/core';
+import { expandFlattenTreeFunction, expandTreeFunction, ExpandTreeFunction, FlattenTreeFunction, flattenTreeToArrayFunction, Maybe, TreeNode } from '@dereekb/util';
+import { Type, Provider, forwardRef } from '@angular/core';
 import { Observable } from 'rxjs';
 
 export interface ClickableAnchor extends ClickableFunction, ClickableUrl, SegueRef {
@@ -17,33 +17,68 @@ export interface ClickableIconAnchorLink extends Omit<ClickableAnchorLink, 'titl
   icon: string;
 }
 
+export interface ClickableAnchorLinkTree extends ClickableAnchorLink {
+  children?: ClickableAnchorLinkTree[];
+}
+
+export type ExpandedClickableAnchorLinkTree = TreeNode<ClickableAnchorLinkTree>;
+
+export const expandClickableAnchorLinkTreeNode: ExpandTreeFunction<ClickableAnchorLinkTree, ExpandedClickableAnchorLinkTree> = expandTreeFunction({
+  getChildren: (x) => x.children
+});
+
+export const flattenExpandedClickableAnchorLinkTree: FlattenTreeFunction<ExpandedClickableAnchorLinkTree, ExpandedClickableAnchorLinkTree> = flattenTreeToArrayFunction();
+export const flattenExpandedClickableAnchorLinkTreeToLinks: FlattenTreeFunction<ExpandedClickableAnchorLinkTree, ClickableAnchorLinkTree> = flattenTreeToArrayFunction((x) => x.value);
+
+/**
+ * Fully expands the given parent link and flattens the tree to a single parent link.
+ * 
+ * @param link 
+ * @returns 
+ */
+export function expandClickableAnchorLinkTree(link: ClickableAnchorLinkTree): ExpandedClickableAnchorLinkTree[] {
+  return flattenExpandedClickableAnchorLinkTree(expandClickableAnchorLinkTreeNode(link));
+}
+
+/**
+ * Expands an array of links into an array of ExpandedClickableAnchorLinkTree tree values.
+ */
+export const expandClickableAnchorLinkTrees = expandFlattenTreeFunction<ClickableAnchorLinkTree, ExpandedClickableAnchorLinkTree>(expandClickableAnchorLinkTreeNode, flattenExpandedClickableAnchorLinkTree);
+
 export enum AnchorType {
-  None = 0,
-  Clickable = 1,
-  Sref = 2,
-  Href = 3,
-  Disabled = 4
+  /**
+   * When the anchor has no specific content but is not disabled.
+   * 
+   * Is a passthrough for the content.
+   */
+  PLAIN = 0,
+  CLICKABLE = 1,
+  SREF = 2,
+  HREF = 3,
+  DISABLED = 4
 }
 
 export function anchorTypeForAnchor(anchor: Maybe<ClickableAnchor>, disabled?: Maybe<boolean>): AnchorType {
-  let type: AnchorType = AnchorType.Disabled;
+  let type: AnchorType = AnchorType.DISABLED;
 
   if (!disabled && anchor) {
     if (anchor.disabled) {
-      type = AnchorType.Disabled;
+      type = AnchorType.DISABLED;
     } else if (anchor.ref) {
-      type = AnchorType.Sref;
+      type = AnchorType.SREF;
     } else if (anchor.onClick) {
-      type = AnchorType.Clickable;
+      type = AnchorType.CLICKABLE;
     } else if (anchor.url) {
-      type = AnchorType.Href;
+      type = AnchorType.HREF;
+    } else {
+      type = AnchorType.PLAIN;
     }
   }
 
   return type;
 }
 
-export abstract class DbNgxAnchor<T extends ClickableAnchor = ClickableAnchor> {
+export abstract class DbxAnchor<T extends ClickableAnchor = ClickableAnchor> {
   abstract disabled$: Observable<Maybe<boolean>>;
   abstract anchor$: Observable<Maybe<T>>;
   abstract disabled: Maybe<boolean>;
@@ -51,9 +86,9 @@ export abstract class DbNgxAnchor<T extends ClickableAnchor = ClickableAnchor> {
   abstract type$: Observable<AnchorType>;
 }
 
-export function ProvideDbNgxAnchor<S extends DbNgxAnchor>(sourceType: Type<S>): Provider[] {
+export function ProvideDbxAnchor<S extends DbxAnchor>(sourceType: Type<S>): Provider[] {
   return [{
-    provide: DbNgxAnchor,
-    useExisting: sourceType
+    provide: DbxAnchor,
+    useExisting: forwardRef(() => sourceType)
   }];
 }

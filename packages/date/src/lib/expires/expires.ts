@@ -1,5 +1,5 @@
-import { dateFromDateOrTimeNumber } from '@dereekb/date';
-import { Maybe, UnixDateTimeNumber } from '@dereekb/util';
+import { dateFromDateOrTimeNumber } from '../date/date.unix';
+import { DateOrUnixDateTimeNumber, Maybe, UnixDateTimeNumber } from '@dereekb/util';
 import { addMilliseconds, addMinutes, isPast } from 'date-fns';
 
 /**
@@ -46,19 +46,26 @@ export function anyHaveExpired(expires: Maybe<Expires>[], expireIfEmpty = true):
   return false;
 }
 
-export function timeNumberHasExpired(timeNumber: UnixDateTimeNumber, expiresIn?: number): boolean {
-  return hasExpired(timeNumberToExpires(timeNumber, expiresIn));
+/**
+ * Convenience function for checking if the input time has expired.
+ * 
+ * @param timeNumber 
+ * @param expiresIn 
+ * @returns 
+ */
+export function timeHasExpired(time: Maybe<DateOrUnixDateTimeNumber>, expiresIn?: number): boolean {
+  return hasExpired(toExpires(time, expiresIn));
 }
 
 /**
- * Creates an Expires object from the input time number.
+ * Creates an Expires object from the input date or time number.
  *
  * @param timeNumber Number to convert to a date.
  * @param expiresIn If the input number is the initial date, and not the
  * expiration date, this is used to find the expiresAt time.
  */
-export function timeNumberToExpires(timeNumber: UnixDateTimeNumber, expiresIn?: number): Expires {
-  let expiresAt = dateFromDateOrTimeNumber(timeNumber);
+export function toExpires(time: Maybe<DateOrUnixDateTimeNumber>, expiresIn?: number): Expires {
+  let expiresAt = dateFromDateOrTimeNumber(time);
 
   if (expiresAt && expiresIn) {
     expiresAt = addMilliseconds(expiresAt, expiresIn);

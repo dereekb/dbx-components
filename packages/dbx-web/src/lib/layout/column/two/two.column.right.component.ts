@@ -12,7 +12,7 @@ import { Maybe } from '@dereekb/util';
   selector: 'dbx-two-columns-right',
   templateUrl: './two.column.right.component.html'
 })
-export class DbNgxTwoColumnsRightComponent implements AfterViewInit, OnDestroy {
+export class DbxTwoColumnsRightComponent implements AfterViewInit, OnDestroy {
 
   private _showBack = new BehaviorSubject<boolean>(true);
 

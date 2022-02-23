@@ -1,20 +1,20 @@
 import { Directive, Host, NgZone } from '@angular/core';
-import { DbNgxButtonDirective, DbNgxActionButtonDirective, ActionContextStoreSourceInstance } from '@dereekb/dbx-core';
-import { DbNgxPopoverActionDirective } from './popover.action.directive';
+import { DbxButtonDirective, DbxActionButtonDirective, ActionContextStoreSourceInstance } from '@dereekb/dbx-core';
+import { DbxPopoverActionDirective } from './popover.action.directive';
 
 /**
- * Action directive that is used to link an DbNgxButton to an DbNgxPopoverActionDirective.
+ * Action directive that is used to link an DbxButton to an DbxPopoverActionDirective.
  */
 @Directive({
   selector: '[dbxPopoverActionButton]'
 })
-export class DbNgxPopoverActionButtonDirective extends DbNgxActionButtonDirective {
+export class DbxPopoverActionButtonDirective extends DbxActionButtonDirective {
 
   constructor(
-    @Host() button: DbNgxButtonDirective,
+    @Host() button: DbxButtonDirective,
     source: ActionContextStoreSourceInstance,
     ngZone: NgZone,
-    readonly appPopoverActionDirective: DbNgxPopoverActionDirective) {
+    readonly appPopoverActionDirective: DbxPopoverActionDirective) {
     super(button, source, ngZone);
   }
 
