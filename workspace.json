@@ -93,8 +93,6 @@
             "passWithNoTests": true
           }
         },
-<<<<<<< HEAD
-=======
         "test-timezones": {
           "outputs": [
             "coverage/packages/date", "./.reports/jest/utc.date.junit.xml", "./.reports/jest/america-chicago.date.junit.xml",
@@ -119,7 +117,6 @@
             "parallel": false
           }
         },
->>>>>>> main
         "publish-npmjs": {
           "executor": "@nrwl/workspace:run-commands",
           "options": {
@@ -379,11 +376,7 @@
             ]
           }
         },
-<<<<<<< HEAD
-        "publish-npmjs-TODO": {
-=======
         "publish-npmjs": {
->>>>>>> main
           "executor": "@nrwl/workspace:run-commands",
           "options": {
             "command": "cd ./dist/packages/dbx-form && npm publish"
