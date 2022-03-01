@@ -157,6 +157,8 @@ workflows:
           filters:
             branches:
               only: release
+            tags:
+              ignore: /.*/  # ignore all tagged items
   # Publishes to npm
   publish:
     jobs:
@@ -164,15 +166,21 @@ workflows:
           filters:
             branches:
               only: main
+            tags:
+              only: /^v.*/
       - deploy-demo:
           requires:
             - build
           filters:
             branches:
               only: main
+            tags:
+              only: /^v.*/
       - publish-to-npm:
           requires:
             - build
           filters:
             branches:
               only: main
+            tags:
+              only: /^v.*/
