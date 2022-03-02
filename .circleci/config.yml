@@ -115,7 +115,13 @@ jobs:
           command: git checkout main && git merge release --squash -Xtheirs && git commit -m "$(git log release --pretty=%B | cat)"
       - run:
           name: push main to origin
-          command: git push
+          command: git push origin main
+      - run:
+          name: switch back to release branch
+          command: git checkout release
+      - run:
+          name: reset release branch to newly pushhed main branch
+          command: git reset --hard main && git push origin release --force
   deploy-demo:
     <<: *defaults
     steps:
