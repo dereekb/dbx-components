@@ -1,0 +1,280 @@
+import { combineLatest, Observable, of } from 'rxjs';
+import { map, startWith, shareReplay, catchError, delay, first, distinctUntilChanged } from 'rxjs/operators';
+import { Maybe, ReadableError, reduceBooleansWithAnd, reduceBooleansWithOr, ReadableDataError, Page, FilteredPage, PageNumber } from '@dereekb/util';
+
+/**
+ * A model/error pair used in loading situations.
+ */
+export interface LoadingErrorPair {
+  /**
+   * Field used to denote whether or not the model is being loaded.
+   *
+   * Not being specified is considered not being loaded.
+   */
+  loading?: Maybe<boolean>;
+  /**
+   * A Readable server error.
+   */
+  error?: Maybe<ReadableError>;
+}
+
+/**
+ * A model/error pair used in loading situations.
+ */
+export interface LoadingState<T = any> extends LoadingErrorPair {
+  model?: Maybe<T>;
+}
+
+/**
+ * LoadingState with a Page.
+ */
+export interface PageLoadingState<T> extends LoadingState<T>, Page { }
+
+/**
+ * PageLoadingState with a filter.
+ */
+export interface FilteredPageLoadingState<T, F> extends PageLoadingState<T>, FilteredPage<F> { }
+
+/**
+ * LoadingPageState that has an array of the model
+ */
+export interface PageListLoadingState<T> extends PageLoadingState<T[]> { }
+
+/**
+ * PageListLoadingState with a Filter.
+ */
+export interface FilteredPageListLoadingState<T, F> extends FilteredPageLoadingState<T[], F> { }
+
+// MARK: Utility
+export function beginLoading(): LoadingState<any>;
+export function beginLoading<T>(): LoadingState<T>;
+export function beginLoading<T>(state?: Partial<PageLoadingState<T>>): PageLoadingState<T>;
+export function beginLoading<T>(state?: Partial<LoadingState<T>>): LoadingState<T> {
+  return { ...state, loading: true };
+}
+
+export function successResult<T>(model: T): LoadingState<T> {
+  return { model, loading: false };
+}
+
+export function successPageResult<T>(page: PageNumber, model: T): PageLoadingState<T> {
+  return { ...successResult(model), page };
+}
+
+export function errorResult(error?: ReadableDataError): LoadingState<any> {
+  return { error, loading: false };
+}
+
+export function errorPageResult<T>(page: PageNumber, error?: ReadableDataError): PageLoadingState<T> {
+  return { ...errorResult(error), page };
+}
+
+export function anyLoadingStatesIsLoading(states: LoadingState[]): boolean {
+  return reduceBooleansWithOr(states.map(loadingStateIsLoading), false);
+}
+
+export function allLoadingStatesHaveFinishedLoading(states: LoadingState[]): boolean {
+  return reduceBooleansWithAnd(states.map(loadingStateHasFinishedLoading), true);
+}
+
+export function loadingStateIsLoading(state: Maybe<LoadingState>): boolean {
+  if (state) {
+    return state.loading ?? !Boolean(state.model || state.error);
+  } else {
+    return false;
+  }
+}
+
+export function loadingStateHasFinishedLoading(state: Maybe<LoadingState>): boolean {
+  if (state) {
+    return state.loading === false || Boolean(state.model || state.error);
+  } else {
+    return false;
+  }
+}
+
+export function loadingStateHasModel(state: Maybe<LoadingState>): boolean {
+  if (state) {
+    return loadingStateHasFinishedLoading(state) && state.model != null;
+  } else {
+    return false;
+  }
+}
+
+export function loadingStateHasError(state: Maybe<LoadingState>): boolean {
+  if (state) {
+    return loadingStateHasFinishedLoading(state) && state.error != null;
+  } else {
+    return false;
+  }
+}
+
+/**
+ * Wraps an observable output and maps the value to a LoadingState.
+ */
+export function loadingStateFromObs<T>(obs: Observable<T>, firstOnly?: boolean): Observable<LoadingState<T>> {
+  if (firstOnly) {
+    obs = obs.pipe(first());
+  }
+
+  return obs.pipe(
+    map((model) => ({ loading: false, model, error: undefined })),
+    catchError((error) => of({ loading: false, error })),
+    delay(50),
+    startWith(({ loading: true })),
+  );
+}
+
+export function combineLoadingStates<A, B>(obsA: Observable<LoadingState<A>>, obsB: Observable<LoadingState<B>>): Observable<LoadingState<A & B>>;
+export function combineLoadingStates<A, B, C>(obsA: Observable<LoadingState<A>>, obsB: Observable<LoadingState<B>>, mergeFn?: (a: A, b: B) => C): Observable<LoadingState<C>>;
+
+/**
+ * Convenience function for creating a pipe that merges the two input observables.
+ */
+export function combineLoadingStates(obsA: Observable<LoadingState<any>>, obsB: Observable<LoadingState<any>>, mergeFn?: any): Observable<LoadingState<any>> {
+  return combineLatest([obsA, obsB])
+    .pipe(
+      distinctUntilChanged((x, y) => x?.[0] === y?.[0] && x?.[1] === y?.[1]), // Prevent remerging the same values!
+      map(([a, b]) => mergeLoadingStates(a, b, mergeFn)),
+      shareReplay(1)  // Share the result.
+    );
+}
+
+export function mergeLoadingStates<A, B>(a: LoadingState<A>, b: LoadingState<B>): LoadingState<A & B>;
+export function mergeLoadingStates<A, B, C>(a: LoadingState<A>, b: LoadingState<B>, mergeFn: (a: A, b: B) => C): LoadingState<C>;
+
+/**
+ * Merges the input loading states.
+ *
+ * If one is unavailable, it is considered loading.
+ * If one is loading, will return the loading state.
+ * If one has an error and is not loading, will return the error with loading false.
+ */
+export function mergeLoadingStates(a: LoadingState<any>, b: LoadingState<any>, mergeFn = (aa: object, bb: object) => ({ ...aa, ...bb } as any)): LoadingState<any> {
+  const error = a?.error ?? b?.error;
+  let result: LoadingState<any>;
+
+  if (error) {
+    result = {
+      // Evaluate both for the loading state.
+      loading: (a?.error) ? a.loading : false || (b?.error) ? b.loading : false,
+      error
+    };
+  } else {
+    const loading = (!a || !b) || (a?.loading ?? b?.loading);
+    if (loading) {
+      result = {
+        loading: true
+      };
+    } else {
+      result = {
+        loading: false,
+        model: mergeFn(a.model, b.model)
+      };
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Updates the input state to start loading.
+ */
+export function updatedStateForSetLoading<T, S extends LoadingState<T> = LoadingState<T>>(state: S, loading = true): S {
+  return {
+    ...state,
+    model: undefined,
+    loading,
+    error: undefined
+  };
+}
+
+/**
+ * Updates the input state with the input error.
+ */
+export function updatedStateForSetModel<T, S extends LoadingState<T> = LoadingState<T>>(state: S, model: T | undefined): S {
+  return {
+    ...state,
+    model: model ?? undefined,
+    loading: false,
+    error: undefined
+  };
+}
+
+/**
+ * Updates the input state with the input error.
+ */
+export function updatedStateForSetError<T, S extends LoadingState<T> = LoadingState<T>>(state: S, error?: ReadableDataError): S {
+  return {
+    ...state,
+    loading: false,
+    error
+  };
+}
+
+export type MapMultipleLoadingStateValuesFn<T, X> = (input: X[]) => T;
+
+export interface MapMultipleLoadingStateResultsConfiguration<T, X, L extends LoadingState<X>[], R extends LoadingState<T>> {
+  mapValues?: MapMultipleLoadingStateValuesFn<T, X>;
+  mapState?: (input: L) => R;
+}
+
+export function mapMultipleLoadingStateResults<T, X, L extends LoadingState<X>[], R extends LoadingState<T>>(
+  input: L, config: MapMultipleLoadingStateResultsConfiguration<T, X, L, R>
+): Maybe<R> {
+  const { mapValues, mapState } = config;
+  const loading = anyLoadingStatesIsLoading(input);
+  const error = input.map(x => x?.error).filter(x => Boolean(x))[0];
+  let result: Maybe<R>;
+
+  if (!error && !loading) {
+    if (mapValues) {
+      const model: T = mapValues(input.map(x => x.model) as X[]);
+      result = {
+        loading,
+        model,
+        error
+      } as R;
+    } else if (mapState) {
+      result = mapState(input);
+    } else {
+      throw new Error('Incomplete mapMultipleLoadingStateResults configuration');
+    }
+  }
+
+  return result;
+}
+
+export type MapLoadingStateFn<A, B, L extends LoadingState<A> = LoadingState<A>, O extends LoadingState<B> = LoadingState<B>> = (input: L) => O;
+export type MapLoadingStateValuesFn<A, B, L extends LoadingState<A> = LoadingState<A>> = (input: A, state: L) => B;
+
+export interface MapLoadingStateResultsConfiguration<A, B, L extends LoadingState<A> = LoadingState<A>, O extends LoadingState<B> = LoadingState<B>> {
+  mapValue?: MapLoadingStateValuesFn<A, B, L>;
+  mapState?: MapLoadingStateFn<A, B, L, O>;
+}
+
+export function mapLoadingStateResults<A, B, L extends PageLoadingState<A> = PageLoadingState<A>, O extends PageLoadingState<B> = PageLoadingState<B>>(input: L, config: MapLoadingStateResultsConfiguration<A, B, L, O>): O;
+export function mapLoadingStateResults<A, B, L extends LoadingState<A> = LoadingState<A>, O extends LoadingState<B> = LoadingState<B>>(input: L, config: MapLoadingStateResultsConfiguration<A, B, L, O>): O;
+export function mapLoadingStateResults<A, B, L extends Partial<PageLoadingState<A>> = Partial<PageLoadingState<A>>, O extends Partial<PageLoadingState<B>> = Partial<PageLoadingState<B>>>(
+  input: L, config: MapLoadingStateResultsConfiguration<A, B, L, O>
+): O {
+  const { mapValue, mapState } = config;
+  let model: B = input?.model as any;
+
+  if (model != null && mapValue) {
+    model = mapValue(model as any, input);
+  }
+
+  let result: O;
+
+  if (!mapState) {
+    result = {
+      ...input,
+      model
+    } as any;
+  } else {
+    result = mapState(input);
+  }
+
+  return result;
+}

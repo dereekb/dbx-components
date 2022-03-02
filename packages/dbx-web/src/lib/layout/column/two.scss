@@ -1,0 +1,114 @@
+@import 'shared';
+
+.two-column {
+  height: 100%;
+  max-width: 100%;
+  display: flex;
+  flex-direction: row;
+  overflow-x: hidden;
+}
+
+.left-column,
+.right-column {
+  @include fillContentHeight(1, 0);
+
+  .dbx-section-page-two & {
+    @include fillContentWithAppPageHeaderHeight();
+  }
+}
+
+.left-column {
+  @include mat-elevation(1);
+
+  width: $two-left-column-width;
+  flex: 0 0 auto;
+
+  overflow: auto;
+  // background: red;
+
+  .two-column-reverse-sizing & {
+    width: calc(100% - #{$two-left-column-width});
+    overflow: hidden;
+  }
+
+  .full-left & {
+    width: 100% !important;
+
+    .right-shown & {
+      width: $two-left-column-width;
+    }
+  }
+
+  @include if-small-screen {
+    width: 100% !important;
+
+    .right-shown & {
+      display: none !important;
+    }
+  }
+}
+
+.right-column {
+  flex: 1 1 auto;
+  max-width: calc(100% - #{$two-left-column-width});
+  overflow: hidden;
+  // background: green;
+
+  .two-column-reverse-sizing & {
+    max-width: $two-left-column-width;
+  }
+
+  @include if-small-screen {
+    max-width: 100% !important;
+    width: 100% !important;
+    padding-left: 0 !important;
+  }
+}
+
+.dbx-two-columns-head {
+  padding: 0 6px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.14);
+  height: $second-navbar-height;
+
+  display: flex;
+  align-items: center;
+  overflow-y: hidden;
+
+  &.block {
+    display: block;
+  }
+
+  &.full {
+    padding: 0;
+  }
+}
+
+.two-columns-right {
+  height: 100%;
+
+  .two-columns-right-content {
+    height: calc(100% - #{$second-navbar-height});
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  .two-columns-right-content-bottom {
+    min-height: 12px;
+    height: 3vh;
+  }
+
+  $two-columns-right-padding-size: 6px;
+
+  .back-button {
+    margin-right: $two-columns-right-padding-size;
+  }
+
+  .right-spacer {
+    padding-right: 5vw;
+  }
+
+  .side-spacer {
+    padding-left: $two-columns-right-padding-size;
+  }
+
+}

@@ -1,0 +1,29 @@
+<div class="dbx-pickable-item-field">
+  <dbx-loading [context]="context">
+    <ng-container *ngIf="showFilterInput">
+      <ng-container *ngTemplateOutlet="filterTemplate"></ng-container>
+    </ng-container>
+    <div class="dbx-model-list dbx-pickable-item-field-list">
+      <mat-selection-list [multiple]="multiSelect" (selectionChange)="matSelectionChanged($event)">
+        <mat-list-option *ngFor="let item of items$ | async" [selected]="item.selected" [value]="item">
+          <p>{{ item.display.label }}</p>
+        </mat-list-option>
+      </mat-selection-list>
+      <dbx-injected-content [config]="footerConfig"></dbx-injected-content>
+    </div>
+  </dbx-loading>
+</div>
+
+<!-- Filter Input -->
+<ng-template #filterTemplate>
+  <div class="dbx-pickable-item-field-filter">
+    <mat-form-field class="dbx-pickable-item-field-filter-field" appearance="fill">
+      <mat-label>{{ filterLabel }}</mat-label>
+      <input name="filter items" #filterMatInput="matInput" matInput [placeholder]="placeholder"
+        [formControl]="inputCtrl">
+    </mat-form-field>
+    <div class="searchable-field-form-loading">
+      <dbx-loading [linear]="true" [context]="filterResultsContext"></dbx-loading>
+    </div>
+  </div>
+</ng-template>

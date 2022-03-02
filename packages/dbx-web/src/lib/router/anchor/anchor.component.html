@@ -1,0 +1,23 @@
+<ng-container [ngSwitch]="type$ | async">
+  <!-- Click -->
+  <a class="dbx-anchor dbx-anchor-click {{ anchorBlockClass }}" (click)="clickAnchor()" *ngSwitchCase="1">
+    <ng-container *ngTemplateOutlet="content"></ng-container>
+  </a>
+  <!-- Router -->
+  <dbx-injected-content [config]="srefAnchorConfig" *ngSwitchCase="2">
+    <!-- Injected in child. -->
+  </dbx-injected-content>
+  <!-- Href -->
+  <a class="dbx-anchor dbx-anchor-href {{ anchorBlockClass }}" [href]="url$ | async" [attr.target]="target$ | async"
+    *ngSwitchCase="3">
+    <ng-container *ngTemplateOutlet="content"></ng-container>
+  </a>
+  <!-- Disabled or None -->
+  <a class="dbx-anchor dbx-anchor-disabled {{ anchorBlockClass }}" *ngSwitchDefault>
+    <ng-container *ngTemplateOutlet="content"></ng-container>
+  </a>
+</ng-container>
+<!-- Template content -->
+<ng-template #content>
+  <ng-content></ng-content>
+</ng-template>

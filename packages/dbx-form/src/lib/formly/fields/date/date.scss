@@ -1,0 +1,27 @@
+@import 'shared';
+
+.dbx-datetime-field {
+  width: 100%;
+}
+
+$dbx-datetime-button-width: 40px;
+
+.dbx-datetime-row {
+  .dbx-datetime-row-field {
+    width: calc(100% - #{$dbx-datetime-button-width});
+  }
+}
+
+.add-time-button {
+  margin-top: 3px;
+  width: 100%;
+}
+
+.add-time-button-wrapper {
+  margin: auto;
+  margin-bottom: 4px;
+}
+
+.dbx-datetime-hint-row {
+  // margin-left: 12px;
+}
