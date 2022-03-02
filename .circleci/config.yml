@@ -87,7 +87,7 @@ jobs:
       - store_test_results:
           path: ~/code/.reports/jest/
   # Performs release operations on the release branch.
-  run-version:
+  run-release-and-push-to-main:
     <<: *defaults
     steps:
       - checkout
@@ -97,14 +97,17 @@ jobs:
           fingerprints:
             - "d9:53:28:55:d6:96:4e:1e:d1:53:5e:79:e4:80:7e:28"
       - run:
+          name: setup git
+          command: git config user.email "ci@dereekb.com" && git config user.name "ci"
+      - run:
           name: build release
           command: npx nx run workspace:version
       - run:
-          name: setup git
-          command: git config user.email "ci@dereekb.com" & git config user.name "ci"
+          name: merge release into main and use the release commit message
+          command: git checkout main && git merge ${CIRCLE_SHA1} --squash && git commit -m "$(git log ${CIRCLE_SHA1} --pretty=%B | cat)"
       - run:
-          name: push to main
-          command: git status & echo 'pushing to main!'
+          name: push main to origin
+          command: git push
   deploy-demo:
     <<: *defaults
     steps:
@@ -120,11 +123,6 @@ jobs:
       - attach_workspace:
           at: ~/code
       - run: echo pushing to npm
-  # Used to automatically rebase develop onto main.
-  merge-main-into-develop:
-    <<: *defaults
-    steps:
-      - checkout
 # --- WORKFLOWS ---
 workflows:
   version: 2
@@ -138,7 +136,7 @@ workflows:
       - test-with-node-firebase:
           requires:
             - build
-      - run-version:
+      - run-release-and-push-to-main:
           requires:
             - build
             - test-with-node
@@ -152,12 +150,12 @@ workflows:
       - build:
           filters:
             branches:
-              only: master
+              only: main
       - deploy-demo:
           filters:
             branches:
-              only: master
+              only: main
       - publish-to-npm:
           filters:
             branches:
-              only: master
+              only: main
