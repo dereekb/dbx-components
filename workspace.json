@@ -885,6 +885,12 @@
     "workspace": {
       "root": ".",
       "targets": {
+        "start-release": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "command": "./start-release.sh"
+          }
+        },
         "version": {
           "executor": "@jscutlery/semver:version",
           "options": {

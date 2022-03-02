@@ -1,4 +1,4 @@
-FROM node:16.13-bullseye
+FROM node:16.14-bullseye
 
 # Set the working directory in the container to /code
 WORKDIR /code
