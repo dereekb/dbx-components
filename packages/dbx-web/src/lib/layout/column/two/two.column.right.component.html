@@ -1,0 +1,24 @@
+<div class="two-columns-right">
+  <dbx-two-columns-head>
+    <!-- Back Buttons -->
+    <ng-container *ngIf="showBack$ | async">
+      <button mat-icon-button class="back-button" (click)="backClicked()" aria-label="back button">
+        <mat-icon>navigate_before</mat-icon>
+      </button>
+    </ng-container>
+    <ng-container *ngIf="ref$ | async">
+      <dbx-anchor [anchor]="ref$ | async">
+        <button mat-icon-button class="back-button" aria-label="back button">
+          <mat-icon>navigate_before</mat-icon>
+        </button>
+      </dbx-anchor>
+    </ng-container>
+    <span *ngIf="header" class="right-nav-title">{{ header }}</span>
+    <span class="right-nav-spacer"></span>
+    <span class="spacer"></span>
+    <ng-content select="[nav]"></ng-content>
+  </dbx-two-columns-head>
+  <div class="two-columns-right-content">
+    <ng-content></ng-content>
+  </div>
+</div>

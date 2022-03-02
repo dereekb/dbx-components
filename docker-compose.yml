@@ -1,0 +1,19 @@
+version: '3'
+services:
+  demo-api-server:
+    build: .
+    volumes:
+      - ./:/code
+      - /code/node_modules  # Excludes node_modules
+      - ./.firebase/emulators/:/opt/workspace:cached
+      - ./.firebase/bin/:/root/.cache:cached
+      - ./.firebase/config/:/root/.config:cached
+    ports:
+      - "9229:9229"
+      - "9900-9906:9900-9906" # expose for external/web consumption
+    environment:
+      # Credentials URL
+      - GOOGLE_APPLICATION_CREDENTIALS=/code/service_account.json
+      - GCLOUD_PROJECT=dereekb-components
+    command: bash
+    tty: true
