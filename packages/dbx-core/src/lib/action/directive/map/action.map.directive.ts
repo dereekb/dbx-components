@@ -17,7 +17,7 @@ import { ActionContextStoreSourceMap, ActionKey } from './action.map';
   exportAs: 'actionMap',
   providers: [],
 })
-export class DbNgxActionContextMapDirective implements ActionContextStoreSourceMap, OnDestroy {
+export class DbxActionContextMapDirective implements ActionContextStoreSourceMap, OnDestroy {
 
   private readonly _map = new BehaviorSubject<Map<ActionKey, ActionContextStoreSource>>(new Map());
   readonly map$ = this._map.asObservable();
@@ -31,7 +31,7 @@ export class DbNgxActionContextMapDirective implements ActionContextStoreSourceM
   }
 
   sourceForKey(key: ActionKey): ActionContextStoreSource<any, any> {
-    return new DbNgxActionContextMapDirectiveSourceInstance(this, key);
+    return new DbxActionContextMapDirectiveSourceInstance(this, key);
   }
 
   addStoreSource(key: ActionKey, source: ActionContextStoreSource): void {
@@ -72,12 +72,12 @@ export class DbNgxActionContextMapDirective implements ActionContextStoreSourceM
 
 }
 
-export class DbNgxActionContextMapDirectiveSourceInstance implements ActionContextStoreSource {
+export class DbxActionContextMapDirectiveSourceInstance implements ActionContextStoreSource {
 
   readonly _source$ = this.parent.map$.pipe(map(x => x.get(this.key)), distinctUntilChanged());
   readonly _store$ = this._source$.pipe(switchMap((x) => x?.store$ ?? of(undefined)), shareReplay(1));
   readonly store$ = actionContextStoreSourcePipe(this._store$);
 
-  constructor(private readonly parent: DbNgxActionContextMapDirective, readonly key: ActionKey) { }
+  constructor(private readonly parent: DbxActionContextMapDirective, readonly key: ActionKey) { }
 
 }

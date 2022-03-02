@@ -11,4 +11,4 @@ import { Component, Input } from '@angular/core';
   </div>
   `
 })
-export class DbNgxCardBoxContainerComponent { }
+export class DbxCardBoxContainerComponent { }

@@ -2,24 +2,24 @@ import { Directive, Host, ViewContainerRef, Input } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { HookResult, Transition, TransitionService } from '@uirouter/core';
 import { ActionContextStoreSourceInstance } from '@dereekb/dbx-core';
-import { DbNgxActionTransitionSafetyType, DbNgxActionTransitionSafetyDirective } from '@dereekb/dbx-web';
-import { DbNgxActionFormDirective } from '../form.action.directive';
+import { DbxActionTransitionSafetyType, DbxActionTransitionSafetyDirective } from '@dereekb/dbx-web';
+import { DbxActionFormDirective } from '../form.action.directive';
 
 /**
- * Extension of DbNgxActionTransitionSafetyDirective that forces the form to update first.
+ * Extension of DbxActionTransitionSafetyDirective that forces the form to update first.
  * 
  * NOTE: Only works with UIRouter
  */
 @Directive({
   selector: '[dbxActionFormSafety]',
 })
-export class DbNgxActionFormSafetyDirective<T, O> extends DbNgxActionTransitionSafetyDirective<T, O> {
+export class DbxActionFormSafetyDirective<T, O> extends DbxActionTransitionSafetyDirective<T, O> {
 
   @Input('dbxActionFormSafety')
-  override inputSafetyType?: DbNgxActionTransitionSafetyType;
+  override inputSafetyType?: DbxActionTransitionSafetyType;
 
   constructor(
-    @Host() public readonly appActionForm: DbNgxActionFormDirective<T>,
+    @Host() public readonly appActionForm: DbxActionFormDirective<T>,
     source: ActionContextStoreSourceInstance<T, O>,
     transitionService: TransitionService,
     viewContainerRef: ViewContainerRef,

@@ -1,12 +1,12 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Component } from '@angular/core';
-import { DbNgxLoadingModule } from './loading.module';
+import { DbxLoadingModule } from './loading.module';
 
-describe('DbNgxLoadingProgress', () => {
+describe('DbxLoadingProgress', () => {
 
   beforeEach(async () => {
     TestBed.configureTestingModule({
-      imports: [DbNgxLoadingModule],
+      imports: [DbxLoadingModule],
       declarations: [LoadingProgressSpinnerComponent, LoadingProgressLinearComponent]
     }).compileComponents();
   });

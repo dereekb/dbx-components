@@ -1,7 +1,7 @@
 import { TimezoneString, CommaSeparatedString, flattenArray, Maybe } from '@dereekb/util';
 import { format } from 'date-fns-tz';
 import { DateSet } from '../date';
-import { baseDateToNormalDate } from '../date/date.timezone';
+import { baseDateToTargetDate, DateTimezoneBaseDateConverter, DateTimezoneUtcNormalInstance } from '../date/date.timezone';
 
 /**
  * Denotes a single RRule rules string.
@@ -156,11 +156,17 @@ export class DateRRuleParseUtility {
   static parseExdateAttributeFromProperty(property: RRuleProperty): RRuleExdateAttribute {
     const timezone: Maybe<TimezoneString> = property.params.find(x => x.key === 'TZID')?.value;
     const rawDates: (RFC5545DateString | RFC5545DateTimeString)[] = property.values.split(',');
-    const dates = rawDates.map(x => DateRRuleParseUtility.parseDateTimeString(x, timezone));
+
+    const conversion = new DateTimezoneUtcNormalInstance({ timezone });
+    const dates = rawDates.map(x => DateRRuleParseUtility.parseDateTimeString(x, conversion));
     return {
       timezone,
       dates
     };
+  }
+
+  static parseDateTimeStringWithTimezone(rfcDateString: RFC5545DateString | RFC5545DateTimeString, timezone: Maybe<string>): Date {
+    return DateRRuleParseUtility.parseDateTimeString(rfcDateString, timezone ? new DateTimezoneUtcNormalInstance({ timezone }) : undefined);
   }
 
   /**
@@ -168,7 +174,7 @@ export class DateRRuleParseUtility {
    *
    * Timezone used to convert date to UTC if date is not specified in UTC (ends in Z).
    */
-  static parseDateTimeString(rfcDateString: RFC5545DateString | RFC5545DateTimeString, timezone?: Maybe<TimezoneString>): Date {
+  static parseDateTimeString(rfcDateString: RFC5545DateString | RFC5545DateTimeString, converter: Maybe<DateTimezoneBaseDateConverter>): Date {
     const RFC5545_DATE_TIME_FORMAT = /^((\d{4})(\d{2})(\d{2}))(T(\d{2})(\d{2})(\d{2})Z?)?$/;
     const isDateString = (rfcDateString.length === 6);
     const isUTCDate = isDateString || rfcDateString.endsWith('Z');
@@ -187,9 +193,9 @@ export class DateRRuleParseUtility {
 
     if (!isUTCDate) {
 
-      // Date was provided in a local timezone value. Convert to UTC.
-      if (timezone) {
-        date = baseDateToNormalDate(utcDate, timezone);
+      // Date was parsed as a base/UTC value by rrule, so convert it to the real date.
+      if (converter) {
+        date = converter.baseDateToTargetDate(date);
       } else {
         throw new Error('No timezone was provided when parsing DateTime string.');
       }

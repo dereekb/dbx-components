@@ -5,7 +5,7 @@ import { Component, Input, OnInit } from '@angular/core';
   templateUrl: './step.component.html',
   // TODO: styleUrls: ['./step.scss']
 })
-export class DbNgxStepComponent {
+export class DbxStepComponent {
 
   @Input()
   done?: boolean;

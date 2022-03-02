@@ -15,7 +15,9 @@
         "refactor",
         "style",
         "test",
-        "release"
+        "release",
+        "demo",
+        "checkpoint"
       ]
     ]
   }

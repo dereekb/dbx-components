@@ -1,52 +1,56 @@
-import { DbNgxPopupCoordinatorComponent } from './popup.coordinator.component';
+import { DbxInjectedComponentModule } from '@dereekb/dbx-core';
+import { DbxPopupCoordinatorComponent } from './popup.coordinator.component';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { CommonModule } from '@angular/common';
 import { ModuleWithProviders, NgModule } from '@angular/core';
 import { NgOverlayContainerModule } from 'ng-overlay-container';
-import { DbNgxPopupService } from './popup.service';
-import { DbNgxPopupContentComponent } from './popup.content.component';
-import { DbNgxPopupComponent } from './popup.component';
-import { DbNgxAnchorModule } from '../../router';
-import { DbNgxActionModule } from '../../action/action.module';
-import { DbNgxPopupControlsComponent } from './popup.controls.component';
-import { DbNgxPopupControlButtonsComponent } from './popup.controls.buttons.component';
-import { DbNgxButtonModule } from '../../button/button.module';
-import { DbNgxPopupCoordinatorService } from './popup.coordinator.service';
+import { DbxPopupService } from './popup.service';
+import { DbxPopupContentComponent } from './popup.content.component';
+import { DbxPopupComponent } from './popup.component';
+import { DbxAnchorModule } from '../../router';
+import { DbxActionModule } from '../../action/action.module';
+import { DbxPopupControlsComponent } from './popup.controls.component';
+import { DbxPopupControlButtonsComponent } from './popup.controls.buttons.component';
+import { DbxButtonModule } from '../../button/button.module';
+import { DbxPopupCoordinatorService } from './popup.coordinator.service';
+import { DbxStyleLayoutModule } from '../../layout/style/style.layout.module';
 
 @NgModule({
   imports: [
     CommonModule,
     MatIconModule,
     MatButtonModule,
-    DbNgxButtonModule,
-    DbNgxAnchorModule,
-    DbNgxActionModule,
-    NgOverlayContainerModule
+    DbxButtonModule,
+    DbxAnchorModule,
+    DbxActionModule,
+    DbxStyleLayoutModule,
+    DbxInjectedComponentModule,
+    NgOverlayContainerModule,
   ],
   declarations: [
-    DbNgxPopupComponent,
-    DbNgxPopupCoordinatorComponent,
-    DbNgxPopupContentComponent,
-    DbNgxPopupControlsComponent,
-    DbNgxPopupControlButtonsComponent
+    DbxPopupComponent,
+    DbxPopupCoordinatorComponent,
+    DbxPopupContentComponent,
+    DbxPopupControlsComponent,
+    DbxPopupControlButtonsComponent
   ],
   exports: [
-    DbNgxPopupContentComponent,
-    DbNgxPopupControlsComponent,
-    DbNgxPopupControlButtonsComponent
+    DbxPopupContentComponent,
+    DbxPopupControlsComponent,
+    DbxPopupControlButtonsComponent
   ],
   providers: [
-    DbNgxPopupService
+    DbxPopupService
   ]
 })
-export class DbNgxPopupModule {
+export class DbxPopupInteractionModule {
 
-  static forRoot(): ModuleWithProviders<DbNgxPopupModule> {
+  static forRoot(): ModuleWithProviders<DbxPopupInteractionModule> {
     return {
-      ngModule: DbNgxPopupModule,
+      ngModule: DbxPopupInteractionModule,
       providers: [
-        DbNgxPopupCoordinatorService
+        DbxPopupCoordinatorService
       ]
     };
   }

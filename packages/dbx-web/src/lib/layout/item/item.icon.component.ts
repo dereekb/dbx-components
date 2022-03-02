@@ -19,7 +19,7 @@ import { Component, Input } from '@angular/core';
   </div>
   `
 })
-export class DbNgxIconItemComponent {
+export class DbxIconItemComponent {
 
   @Input()
   icon?: string;

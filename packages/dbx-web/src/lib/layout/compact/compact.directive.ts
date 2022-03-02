@@ -11,7 +11,7 @@ import { CompactContextStore } from './compact.store';
   providers: [CompactContextStore],
   exportAs: 'compact',
 })
-export class DbNgxCompactDirective {
+export class DbxCompactDirective {
 
   mode$ = this.compactContextStore.mode$;
 

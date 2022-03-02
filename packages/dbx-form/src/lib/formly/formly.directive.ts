@@ -1,8 +1,8 @@
-import { SubscriptionObject } from '@dereekb/rxjs';
-import { Observable, BehaviorSubject } from 'rxjs';
+import { SubscriptionObject, filterMaybe } from '@dereekb/rxjs';
+import { Observable, BehaviorSubject, shareReplay, distinctUntilChanged } from 'rxjs';
 import { FormlyFieldConfig } from '@ngx-formly/core/lib/core';
 import { OnInit, OnDestroy, Directive, Input } from '@angular/core';
-import { DbNgxFormlyContext } from './formly.context';
+import { DbxFormlyContext } from './formly.context';
 import { Maybe } from '@dereekb/util';
 
 /**
@@ -20,19 +20,23 @@ export abstract class AbstractFormlyFormDirective<T> implements OnDestroy {
     this.context.setDisabled(disabled);
   }
 
-  constructor(public readonly context: DbNgxFormlyContext<T>) { }
+  constructor(public readonly context: DbxFormlyContext<T>) { }
 
   ngOnDestroy(): void {
     this.context.destroy();
   }
 
   // Utility Functions
-  getValue(): T {
-    return this.context.value;
+  getValue(): Observable<T> {
+    return this.context.getValue();
   }
 
   setValue(value: Partial<T>): void {
     this.context.setValue(value);
+  }
+
+  resetForm(): void {
+    this.context.resetForm();
   }
 
   clearValue(): void {
@@ -62,12 +66,15 @@ export abstract class AbstractSyncFormlyFormDirective<T> extends AbstractFormlyF
 @Directive()
 export abstract class AbstractAsyncFormlyFormDirective<T> extends AbstractFormlyFormDirective<T> implements OnInit, OnDestroy {
 
-  abstract readonly fields$: Observable<FormlyFieldConfig[]>;
+  /**
+   * Used to provide fields to the context.
+   */
+  abstract readonly fields$: Observable<Maybe<FormlyFieldConfig[]>>;
 
   private _fieldsSub = new SubscriptionObject();
 
   ngOnInit(): void {
-    this._fieldsSub.subscription = this.fields$.subscribe((fields) => {
+    this._fieldsSub.subscription = this.fields$.pipe(distinctUntilChanged()).subscribe((fields) => {
       this.context.fields = fields;
     });
   }
@@ -83,7 +90,7 @@ export abstract class AbstractAsyncFormlyFormDirective<T> extends AbstractFormly
 export abstract class AbstractConfigAsyncFormlyFormDirective<T, C> extends AbstractAsyncFormlyFormDirective<T> {
 
   private readonly _config = new BehaviorSubject<Maybe<C>>(undefined);
-  readonly config$ = this._config.asObservable();
+  readonly config$ = this._config.pipe(filterMaybe(), shareReplay(1));
 
   @Input()
   get config(): Maybe<C> {

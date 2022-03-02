@@ -1,10 +1,6 @@
 import { GlobalPositionStrategy } from '@angular/cdk/overlay';
 
-export enum PopupPosition {
-  CENTERED = 'centered',
-  BOTTOM_LEFT = 'bottom_left',
-  BOTTOM_RIGHT = 'bottom_right'
-}
+export type PopupPosition = 'center' | 'bottom_left' | 'bottom_right';
 
 export interface PopupPositionOffset {
   x?: string;
@@ -13,10 +9,10 @@ export interface PopupPositionOffset {
 
 export class PopupGlobalPositionStrategy extends GlobalPositionStrategy {
 
-  private _position: PopupPosition = PopupPosition.BOTTOM_RIGHT;
+  private _position!: PopupPosition;
   private _offset: PopupPositionOffset = {};
 
-  constructor(position = PopupPosition.BOTTOM_RIGHT, offset?: PopupPositionOffset) {
+  constructor(position: PopupPosition = 'bottom_right', offset?: PopupPositionOffset) {
     super();
     this.setPopupPosition(position, offset);
   }
@@ -27,6 +23,7 @@ export class PopupGlobalPositionStrategy extends GlobalPositionStrategy {
 
   setPopupPosition(position: PopupPosition, offset?: PopupPositionOffset): void {
     this._resetPositions();
+    this._position = position;
 
     if (offset) {
       this._offset = offset;
@@ -36,13 +33,15 @@ export class PopupGlobalPositionStrategy extends GlobalPositionStrategy {
     const offsetY = this._offset.y ?? '0';
 
     switch (position) {
-      case PopupPosition.CENTERED:
+      case 'center':
+        this.centerHorizontally();
+        this.centerVertically();
         break;
-      case PopupPosition.BOTTOM_LEFT:
+      case 'bottom_left':
         this.bottom(offsetY);
         this.left(offsetX);
         break;
-      case PopupPosition.BOTTOM_RIGHT:
+      case 'bottom_right':
         this.bottom(offsetY);
         this.right(offsetX);
         break;

@@ -1,16 +1,16 @@
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { DbNgxInjectedComponent } from './injected.component';
+import { DbxInjectedComponent } from './injected.component';
 
 @NgModule({
   imports: [
     CommonModule
   ],
   declarations: [
-    DbNgxInjectedComponent
+    DbxInjectedComponent
   ],
   exports: [
-    DbNgxInjectedComponent
+    DbxInjectedComponent
   ],
 })
-export class DbNgxInjectedComponentModule { }
+export class DbxInjectedComponentModule { }

@@ -1,7 +1,7 @@
 import { MatIconModule } from '@angular/material/icon';
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { DbNgxStepComponent } from './step.component';
+import { DbxStepComponent } from './step.component';
 
 @NgModule({
   imports: [
@@ -9,10 +9,10 @@ import { DbNgxStepComponent } from './step.component';
     MatIconModule
   ],
   declarations: [
-    DbNgxStepComponent
+    DbxStepComponent
   ],
   exports: [
-    DbNgxStepComponent
+    DbxStepComponent
   ],
 })
-export class DbNgxStepLayoutModule { }
+export class DbxStepLayoutModule { }

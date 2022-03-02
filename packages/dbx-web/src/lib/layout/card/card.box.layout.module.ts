@@ -1,8 +1,8 @@
 import { MatIconModule } from '@angular/material/icon';
-import { DbNgxCardBoxContainerComponent } from './card.box.container.component';
+import { DbxCardBoxContainerComponent } from './card.box.container.component';
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { DbNgxCardBoxComponent } from './card.box.component';
+import { DbxCardBoxComponent } from './card.box.component';
 
 @NgModule({
   imports: [
@@ -10,12 +10,12 @@ import { DbNgxCardBoxComponent } from './card.box.component';
     MatIconModule
   ],
   declarations: [
-    DbNgxCardBoxComponent,
-    DbNgxCardBoxContainerComponent
+    DbxCardBoxComponent,
+    DbxCardBoxContainerComponent
   ],
   exports: [
-    DbNgxCardBoxComponent,
-    DbNgxCardBoxContainerComponent
+    DbxCardBoxComponent,
+    DbxCardBoxContainerComponent
   ]
 })
-export class DbNgxCardBoxLayoutModule { }
+export class DbxCardBoxLayoutModule { }

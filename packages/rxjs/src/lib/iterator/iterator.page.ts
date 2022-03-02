@@ -157,7 +157,7 @@ export class ItemPageIterationInstance<V, F, C extends ItemPageIterationConfig<F
                     loading: false,
                     page: nextPageNumber,
                     error: result.error,
-                    model: result
+                    value: result
                   };
                 } else {
                   return successPageResult(nextPageNumber, result);
@@ -250,7 +250,7 @@ export class ItemPageIterationInstance<V, F, C extends ItemPageIterationConfig<F
    * Will emit every time the latest page has finished loading.
    */
   readonly hasReachedEndResult$: Observable<boolean> = this.latestPageResultState$.pipe(
-    map(x => isItemPageIteratorResultEndResult(x.model!)),
+    map(x => isItemPageIteratorResultEndResult(x.value!)),
     startWith(false),  // Has not reached the end
     shareReplay(1)
   );
@@ -274,7 +274,7 @@ export class ItemPageIterationInstance<V, F, C extends ItemPageIterationConfig<F
     shareReplay(1)
   );
 
-  private readonly _lastFinishedPageResult$: Observable<Maybe<ItemPageIteratorResult<V>>> = this._lastFinishedPageResultState$.pipe(map(x => x?.model));
+  private readonly _lastFinishedPageResult$: Observable<Maybe<ItemPageIteratorResult<V>>> = this._lastFinishedPageResultState$.pipe(map(x => x?.value));
   private readonly _lastFinishedPageResultItem$: Observable<Maybe<V>> = this._lastFinishedPageResult$.pipe(map(x => x?.value));
 
   /**
@@ -360,7 +360,7 @@ export class ItemPageIterationInstance<V, F, C extends ItemPageIterationConfig<F
 
   readonly latestItems$: Observable<Maybe<V>> = this.latestState$.pipe(
     distinctUntilChanged(),
-    map(x => x.model),
+    map(x => x.value),
     shareReplay(1)
   );
 

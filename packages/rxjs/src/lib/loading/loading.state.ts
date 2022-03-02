@@ -3,11 +3,11 @@ import { map, startWith, shareReplay, catchError, delay, first, distinctUntilCha
 import { Maybe, ReadableError, reduceBooleansWithAnd, reduceBooleansWithOr, ReadableDataError, Page, FilteredPage, PageNumber } from '@dereekb/util';
 
 /**
- * A model/error pair used in loading situations.
+ * A value/error pair used in loading situations.
  */
 export interface LoadingErrorPair {
   /**
-   * Field used to denote whether or not the model is being loaded.
+   * Field used to denote whether or not the value is being loaded.
    *
    * Not being specified is considered not being loaded.
    */
@@ -19,11 +19,23 @@ export interface LoadingErrorPair {
 }
 
 /**
- * A model/error pair used in loading situations.
+ * A value/error pair used in loading situations.
  */
 export interface LoadingState<T = any> extends LoadingErrorPair {
-  model?: Maybe<T>;
+  value?: Maybe<T>;
 }
+
+/**
+ * Loading state with a value key.
+ */
+export interface LoadingStateWithValue<T = any> extends LoadingState {
+  value: Maybe<T>;
+}
+
+/**
+ * Convenience identifier for a LoadingState that returns a list.
+ */
+export type ListLoadingState<T> = LoadingState<T[]>;
 
 /**
  * LoadingState with a Page.
@@ -36,7 +48,7 @@ export interface PageLoadingState<T> extends LoadingState<T>, Page { }
 export interface FilteredPageLoadingState<T, F> extends PageLoadingState<T>, FilteredPage<F> { }
 
 /**
- * LoadingPageState that has an array of the model
+ * LoadingPageState that has an array of the value
  */
 export interface PageListLoadingState<T> extends PageLoadingState<T[]> { }
 
@@ -53,12 +65,12 @@ export function beginLoading<T>(state?: Partial<LoadingState<T>>): LoadingState<
   return { ...state, loading: true };
 }
 
-export function successResult<T>(model: T): LoadingState<T> {
-  return { model, loading: false };
+export function successResult<T>(value: T): LoadingStateWithValue<T> {
+  return { value, loading: false };
 }
 
-export function successPageResult<T>(page: PageNumber, model: T): PageLoadingState<T> {
-  return { ...successResult(model), page };
+export function successPageResult<T>(page: PageNumber, value: T): PageLoadingState<T> {
+  return { ...successResult(value), page };
 }
 
 export function errorResult(error?: ReadableDataError): LoadingState<any> {
@@ -79,7 +91,13 @@ export function allLoadingStatesHaveFinishedLoading(states: LoadingState[]): boo
 
 export function loadingStateIsLoading(state: Maybe<LoadingState>): boolean {
   if (state) {
-    return state.loading ?? !Boolean(state.model || state.error);
+    const loading = state.loading;
+
+    if (loading === true) {
+      return true;
+    } else {
+      return loading ?? !Boolean(state.value || state.error);
+    }
   } else {
     return false;
   }
@@ -87,15 +105,21 @@ export function loadingStateIsLoading(state: Maybe<LoadingState>): boolean {
 
 export function loadingStateHasFinishedLoading(state: Maybe<LoadingState>): boolean {
   if (state) {
-    return state.loading === false || Boolean(state.model || state.error);
+    const loading = state.loading;
+
+    if (loading === true) {
+      return false;
+    } else {
+      return loading === false || Boolean(state.value || state.error);
+    }
   } else {
     return false;
   }
 }
 
-export function loadingStateHasModel(state: Maybe<LoadingState>): boolean {
+export function loadingStateHasValue(state: Maybe<LoadingState>): boolean {
   if (state) {
-    return loadingStateHasFinishedLoading(state) && state.model != null;
+    return loadingStateHasFinishedLoading(state) && state.value != null;
   } else {
     return false;
   }
@@ -118,7 +142,7 @@ export function loadingStateFromObs<T>(obs: Observable<T>, firstOnly?: boolean):
   }
 
   return obs.pipe(
-    map((model) => ({ loading: false, model, error: undefined })),
+    map((value) => ({ loading: false, value, error: undefined })),
     catchError((error) => of({ loading: false, error })),
     delay(50),
     startWith(({ loading: true })),
@@ -169,7 +193,7 @@ export function mergeLoadingStates(a: LoadingState<any>, b: LoadingState<any>, m
     } else {
       result = {
         loading: false,
-        model: mergeFn(a.model, b.model)
+        value: mergeFn(a.value, b.value)
       };
     }
   }
@@ -183,7 +207,7 @@ export function mergeLoadingStates(a: LoadingState<any>, b: LoadingState<any>, m
 export function updatedStateForSetLoading<T, S extends LoadingState<T> = LoadingState<T>>(state: S, loading = true): S {
   return {
     ...state,
-    model: undefined,
+    value: undefined,
     loading,
     error: undefined
   };
@@ -192,10 +216,10 @@ export function updatedStateForSetLoading<T, S extends LoadingState<T> = Loading
 /**
  * Updates the input state with the input error.
  */
-export function updatedStateForSetModel<T, S extends LoadingState<T> = LoadingState<T>>(state: S, model: T | undefined): S {
+export function updatedStateForSetValue<T, S extends LoadingState<T> = LoadingState<T>>(state: S, value: T | undefined): S {
   return {
     ...state,
-    model: model ?? undefined,
+    value: value ?? undefined,
     loading: false,
     error: undefined
   };
@@ -229,10 +253,10 @@ export function mapMultipleLoadingStateResults<T, X, L extends LoadingState<X>[]
 
   if (!error && !loading) {
     if (mapValues) {
-      const model: T = mapValues(input.map(x => x.model) as X[]);
+      const value: T = mapValues(input.map(x => x.value) as X[]);
       result = {
         loading,
-        model,
+        value,
         error
       } as R;
     } else if (mapState) {
@@ -253,16 +277,17 @@ export interface MapLoadingStateResultsConfiguration<A, B, L extends LoadingStat
   mapState?: MapLoadingStateFn<A, B, L, O>;
 }
 
-export function mapLoadingStateResults<A, B, L extends PageLoadingState<A> = PageLoadingState<A>, O extends PageLoadingState<B> = PageLoadingState<B>>(input: L, config: MapLoadingStateResultsConfiguration<A, B, L, O>): O;
 export function mapLoadingStateResults<A, B, L extends LoadingState<A> = LoadingState<A>, O extends LoadingState<B> = LoadingState<B>>(input: L, config: MapLoadingStateResultsConfiguration<A, B, L, O>): O;
+export function mapLoadingStateResults<A, B, L extends PageLoadingState<A> = PageLoadingState<A>, O extends PageLoadingState<B> = PageLoadingState<B>>(input: L, config: MapLoadingStateResultsConfiguration<A, B, L, O>): O;
+export function mapLoadingStateResults<A, B, L extends Partial<PageLoadingState<A>> = Partial<PageLoadingState<A>>, O extends Partial<PageLoadingState<B>> = Partial<PageLoadingState<B>>>(input: L, config: MapLoadingStateResultsConfiguration<A, B, L, O>): O;
 export function mapLoadingStateResults<A, B, L extends Partial<PageLoadingState<A>> = Partial<PageLoadingState<A>>, O extends Partial<PageLoadingState<B>> = Partial<PageLoadingState<B>>>(
   input: L, config: MapLoadingStateResultsConfiguration<A, B, L, O>
 ): O {
   const { mapValue, mapState } = config;
-  let model: B = input?.model as any;
+  let value: B = input?.value as any;
 
-  if (model != null && mapValue) {
-    model = mapValue(model as any, input);
+  if (value != null && mapValue) {
+    value = mapValue(value as any, input);
   }
 
   let result: O;
@@ -270,7 +295,7 @@ export function mapLoadingStateResults<A, B, L extends Partial<PageLoadingState<
   if (!mapState) {
     result = {
       ...input,
-      model
+      value
     } as any;
   } else {
     result = mapState(input);

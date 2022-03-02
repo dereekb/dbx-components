@@ -1,4 +1,4 @@
-export enum DbNgxRouterTransitionEventType {
+export enum DbxRouterTransitionEventType {
   /**
    * A transition started.
    */
@@ -9,6 +9,6 @@ export enum DbNgxRouterTransitionEventType {
   SUCCESS = 'ended'
 }
 
-export interface DbNgxRouterTransitionEvent {
-  type: DbNgxRouterTransitionEventType;
+export interface DbxRouterTransitionEvent {
+  type: DbxRouterTransitionEventType;
 }

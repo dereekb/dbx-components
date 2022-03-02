@@ -1,18 +1,18 @@
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { DbNgxTwoColumnLayoutModule } from '../two';
-import { DbNgxOneColumnComponent } from './one.column.component';
+import { DbxTwoColumnLayoutModule } from '../two';
+import { DbxOneColumnComponent } from './one.column.component';
 
 @NgModule({
   imports: [
     CommonModule,
-    DbNgxTwoColumnLayoutModule
+    DbxTwoColumnLayoutModule
   ],
   declarations: [
-    DbNgxOneColumnComponent
+    DbxOneColumnComponent
   ],
   exports: [
-    DbNgxOneColumnComponent
+    DbxOneColumnComponent
   ],
 })
-export class DbNgxOneColumnLayoutModule { }
+export class DbxOneColumnLayoutModule { }

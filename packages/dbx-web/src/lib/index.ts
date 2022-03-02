@@ -6,4 +6,5 @@ export * from './keypress';
 export * from './loading';
 export * from './layout';
 export * from './router';
-export * from './text';
+export * from './screen';
+export * from './dbx-web.module';

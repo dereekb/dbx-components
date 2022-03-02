@@ -1,8 +1,8 @@
-import { parse, differenceInMinutes, isValid, addHours, startOfDay } from 'date-fns';
+import { parse, differenceInMinutes, isValid, addHours, startOfDay, differenceInHours, millisecondsToHours } from 'date-fns';
 import { formatInTimeZone, getTimezoneOffset } from 'date-fns-tz';
 import { Maybe, ReadableTimeString, TimeAM, TimezoneString, UTC_TIMEZONE_STRING } from '@dereekb/util';
 import { LimitDateTimeConfig, LimitDateTimeInstance } from './date.time.limit';
-import { systemNormalDateToBaseDate, systemBaseDateToNormalDate, DateTimezoneConversionConfig, DateTimezoneUtcNormalInstance, isSameDateTimezoneConversionConfig } from './date.timezone';
+import { DateTimezoneConversionConfig, DateTimezoneUtcNormalInstance, isSameDateTimezoneConversionConfig, calculateAllConversions, systemNormalDateToBaseDate } from './date.timezone';
 
 export interface ParsedTimeString {
   /**
@@ -14,7 +14,7 @@ export interface ParsedTimeString {
    */
   date: Date;
   /**
-   * Minute in the day.
+   * The minute in the day.
    */
   minutesSinceStartOfDay: number;
   /**
@@ -134,12 +134,13 @@ export class DateTimeUtilityInstance {
     }
 
     /*
-     The input date needs to capture the right Day we want to parse on.
+     The input date needs to capture the right Day we want to parse on, since parse uses the system's information for hours/date information.
      We do this by adding the offset of the system with the offset of the target timezone.
      */
-
     const relativeDateNormal = new DateTimezoneUtcNormalInstance(config);
-    const relativeDate = relativeDateNormal._normalDateToBaseDate(inputDate, { betweenSystemAndOffset: true });
+    const relativeDate = relativeDateNormal.systemDateToTargetDate(inputDate);
+
+    // console.log('Relative Date: ', relativeDate, calculateAllConversions(inputDate, relativeDateNormal, (x) => millisecondsToHours(x)));
 
     const formats = [
       'h:mma',  // 1:20AM
@@ -149,14 +150,14 @@ export class DateTimeUtilityInstance {
       'h:mm'    // 1:20
     ];
 
-    let parsedDateTime: Maybe<Date>;
+    let systemParsedDateTime: Maybe<Date>;
     let valid = false;
 
     // tslint:disable-next-line: prefer-for-of
     for (let i = 0; i < formats.length; i += 1) {
-      parsedDateTime = parse(input, formats[i], relativeDate);
+      systemParsedDateTime = parse(input, formats[i], relativeDate);
 
-      if (isValid(parsedDateTime)) {
+      if (isValid(systemParsedDateTime)) {
         valid = true;
         break;  // Use time.
       }
@@ -188,16 +189,16 @@ export class DateTimeUtilityInstance {
         case 1:
         case 2:
           // 1
-          parsedDateTime = parse(input, 'H', relativeDate);
+          systemParsedDateTime = parse(input, 'H', relativeDate);
           break;
         case 5:
           // 120AM
           input = removeAmPm(input);
-          parsedDateTime = parseDateTimeFromNumber(input);
+          systemParsedDateTime = parseDateTimeFromNumber(input);
           break;
         case 3:
           // 120
-          parsedDateTime = parseDateTimeFromNumber(input);
+          systemParsedDateTime = parseDateTimeFromNumber(input);
           break;
         case 6:
           // 1212AM
@@ -207,39 +208,40 @@ export class DateTimeUtilityInstance {
             removedPm = input[0] !== '2'; // If 2, ignore the PM part.
           }
 
-          parsedDateTime = parseDateTimeAsHmm(input);
+          systemParsedDateTime = parseDateTimeAsHmm(input);
           break;
         default:
           // 2200
-          parsedDateTime = parseDateTimeAsHmm(input);
+          systemParsedDateTime = parseDateTimeAsHmm(input);
           break;
       }
 
       if (removedPm) {
-        parsedDateTime = addHours(parsedDateTime, 12);
+        systemParsedDateTime = addHours(systemParsedDateTime, 12);
       }
 
-      valid = isValid(parsedDateTime);
+      valid = isValid(systemParsedDateTime);
     }
 
-    // console.log('Parsed: ', input, inputDate, relativeDate, parsedDateTime);
+    // console.log('Parsed: ', systemParsedDateTime, relativeDate, input, inputDate, relativeDateNormal);
 
     // Raw parse result is always UTC for that date.
     // For example, 1AM will return 1AM UTC in a Date object.
     let raw: Maybe<Date>;
+    let result: Maybe<Date>;
 
     if (valid) {
 
       // The parsed DateTime will be in the system settings for that date in as a UTC time.
-      raw = systemBaseDateToNormalDate(parsedDateTime!);
-      parsedDateTime = relativeDateNormal._baseDateToNormalDate(parsedDateTime!, { betweenSystemAndOffset: true });
+      raw = relativeDateNormal.baseDateToSystemDate(systemParsedDateTime!);
+      result = relativeDateNormal.targetDateToSystemDate(systemParsedDateTime!);
 
-      // console.log('Raw: ', input, raw, parsedDateTime, this.normalInstance.config);
+      // console.log('Raw: ', input, systemParsedDateTime, differenceInHours(raw, systemParsedDateTime!), raw, differenceInHours(raw, result), result, this.normalInstance.config);
     }
 
     return {
-      raw: raw,
-      result: parsedDateTime,
+      raw,
+      result,
       valid
     };
   }
@@ -277,6 +279,15 @@ export function toReadableTimeString(date: Date, timezone?: Maybe<TimezoneString
   return dateTimeInstance(timezone).toTimeString(date);
 }
 
+/**
+ * Parses the input string relative to the timezone in the configuration.
+ * 
+ * If no conversion timezone is provided, then it is parsed relative to UTC.
+ * 
+ * @param input 
+ * @param config 
+ * @returns 
+ */
 export function parseReadableTimeString(input: ReadableTimeString, config?: ParseTimeString): Maybe<ParsedTimeString> {
   return dateTimeInstance(config?.timezone).parseTimeString(input, config);
 }

@@ -9,7 +9,7 @@ import { BehaviorSubject } from 'rxjs';
 @Directive({
   selector: '[dbxActionAutoModify]',
 })
-export class DbNgxActionAutoModifyDirective<T, O> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
+export class DbxActionAutoModifyDirective<T, O> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
 
   private readonly _autoModifyEnabled = new BehaviorSubject<boolean>(true);
 

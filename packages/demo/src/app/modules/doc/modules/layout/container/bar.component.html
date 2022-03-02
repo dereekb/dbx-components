@@ -1,0 +1,54 @@
+<dbx-content-container>
+  <doc-feature-layout header="Bar" hint="Bars are horizontal layout components.">
+
+    <!-- Examples -->
+    <doc-feature-example header="dbx-pagebar"
+      hint="Bar that is used for containing the navigation of the page, aka the top navbar.">
+      <dbx-pagebar>
+        <button left mat-raised-button>Left</button>
+        <div right>
+          <button mat-raised-button>Right A</button>
+          <dbx-button-spacer></dbx-button-spacer>
+          <button mat-raised-button>Right B</button>
+        </div>
+      </dbx-pagebar>
+    </doc-feature-example>
+    <doc-feature-example header="dbx-bar"
+      hint="Used to center and pad horizontal content, such as buttons, using flex.">
+      <dbx-content-border>
+        <div>
+          <dbx-bar>
+            <button mat-raised-button>A</button>
+            <dbx-button-spacer></dbx-button-spacer>
+            <button mat-raised-button>B</button>
+            <dbx-button-spacer></dbx-button-spacer>
+            <button mat-raised-button>C</button>
+            <dbx-spacer></dbx-spacer>
+            <button mat-raised-button>D</button>
+          </dbx-bar>
+          <p>{{ lorem }}</p>
+        </div>
+      </dbx-content-border>
+    </doc-feature-example>
+    <doc-feature-example header="dbx-bar-header" hint="Used to divide sections of vertical content.">
+      <dbx-content-border>
+        <div>
+          <dbx-bar-header text="Bar Label" icon="home"></dbx-bar-header>
+          <p>{{ lorem }}</p>
+        </div>
+      </dbx-content-border>
+      <dbx-content-border>
+        <div>
+          <dbx-bar-header text="Bar Label" icon="home" color="primary"></dbx-bar-header>
+          <p>{{ lorem }}</p>
+        </div>
+      </dbx-content-border>
+      <dbx-content-border>
+        <div>
+          <dbx-bar-header text="Bar Label" icon="home" color="accent"></dbx-bar-header>
+          <p>{{ lorem }}</p>
+        </div>
+      </dbx-content-border>
+    </doc-feature-example>
+  </doc-feature-layout>
+</dbx-content-container>

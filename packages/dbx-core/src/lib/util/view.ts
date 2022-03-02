@@ -1,5 +1,17 @@
+import { MonoTypeOperatorFunction, tap } from 'rxjs';
 import { ChangeDetectorRef, ViewRef, ElementRef } from "@angular/core";
 import { Maybe } from "@dereekb/util";
+
+/**
+ * Convenience function used within observables for views that need to detect changes after a value changes.
+ * 
+ * @param cdRef 
+ * @param timeout 
+ * @returns 
+ */
+export function tapDetectChanges<T>(cdRef: ChangeDetectorRef, timeout = 0): MonoTypeOperatorFunction<T> {
+  return tap(() => setTimeout(() => safeDetectChanges(cdRef), timeout));
+}
 
 /**
  * Triggers a detection change on the input view as long as the view has not been destroyed.

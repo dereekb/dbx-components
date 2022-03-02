@@ -15,7 +15,7 @@ import { ThemePalette } from '@angular/material/core';
   `,
   // TODO: styleUrls: ['./container.scss']
 })
-export class DbNgxFlagComponent {
+export class DbxFlagComponent {
 
   @Input()
   color: ThemePalette = 'accent';

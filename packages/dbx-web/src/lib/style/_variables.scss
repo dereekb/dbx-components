@@ -1,0 +1,45 @@
+@use "sass:map";
+
+// variable names
+$vh100-var: --vh100;                                        // variable to use for 100vh.
+
+$top-banner-height-var: --dbx-top-banner-height;
+$bottom-banner-height-var: --dbx-bottom-banner-height;
+
+$page-navbar-height-var: --dbx-page-navbar-height;
+$content-navbar-height-var: --dbx-content-navbar-height;
+
+$box-max-width-var: --dbx-box-max-width;
+$content-max-width-var: --dbx-content-max-width;
+
+$padding-0-var: --dbx-padding-0;
+$padding-1-var: --dbx-padding-1;
+$padding-2-var: --dbx-padding-2;
+$padding-3-var: --dbx-padding-3;
+$padding-4-var: --dbx-padding-4;
+$padding-5-var: --dbx-padding-5;
+
+// vars
+$vh100: var($vh100-var);
+
+$top-banner-height: var($top-banner-height-var);
+$bottom-banner-height: var($bottom-banner-height-var);
+$app-height: calc($vh100 - ($top-banner-height - $bottom-banner-height));
+
+$page-navbar-height: var($page-navbar-height-var);
+$content-navbar-height: var($content-navbar-height-var);
+
+$page-height: calc($app-height - $page-navbar-height);
+$content-height: calc($page-height - $content-navbar-height);
+
+$box-max-width: var($box-max-width-var);
+$content-max-width: var($content-max-width-var);
+
+$padding-0: var($padding-0-var);
+$padding-1: var($padding-1-var);
+$padding-2: var($padding-2-var);
+$padding-3: var($padding-3-var);
+$padding-4: var($padding-4-var);
+$padding-5: var($padding-5-var);
+
+$padding-map: (0: $padding-0, 1: $padding-1, 2: $padding-2, 3: $padding-3, 4: $padding-4, 5: $padding-5);

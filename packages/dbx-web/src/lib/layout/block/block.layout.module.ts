@@ -1,7 +1,7 @@
-import { DbNgxAnchorModule } from '../../router';
+import { DbxAnchorModule } from '../../router';
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { DbNgxTwoBlocksComponent } from './two.block.component';
+import { DbxTwoBlocksComponent } from './two.block.component';
 import { AngularResizeEventModule } from 'angular-resize-event';
 
 /**
@@ -10,14 +10,14 @@ import { AngularResizeEventModule } from 'angular-resize-event';
 @NgModule({
   imports: [
     CommonModule,
-    DbNgxAnchorModule,
+    DbxAnchorModule,
     AngularResizeEventModule
   ],
   declarations: [
-    DbNgxTwoBlocksComponent
+    DbxTwoBlocksComponent
   ],
   exports: [
-    DbNgxTwoBlocksComponent
+    DbxTwoBlocksComponent
   ]
 })
-export class DbNgxBlockLayoutModule { }
+export class DbxBlockLayoutModule { }

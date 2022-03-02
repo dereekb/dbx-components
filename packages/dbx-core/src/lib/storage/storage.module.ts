@@ -16,11 +16,11 @@ export function defaultStorageObjectFactory(): FullStorageObject {
 }
 
 @NgModule()
-export class AppStorageModule {
+export class DbxStorageModule {
 
-  static forRoot(): ModuleWithProviders<AppStorageModule> {
+  static forRoot(): ModuleWithProviders<DbxStorageModule> {
     return {
-      ngModule: AppStorageModule,
+      ngModule: DbxStorageModule,
       providers: [{
         provide: DEFAULT_STORAGE_OBJECT_TOKEN,
         useFactory: defaultStorageObjectFactory

@@ -4,7 +4,7 @@ import { Maybe } from '@dereekb/util';
 @Directive({
   selector: '[dbxWindowKeyDownListener]'
 })
-export class DbNgxWindowKeyDownListenerDirective implements OnDestroy {
+export class DbxWindowKeyDownListenerDirective implements OnDestroy {
 
   private _keysFilter?: Maybe<Set<string>>;
 

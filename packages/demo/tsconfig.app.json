@@ -2,7 +2,10 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "../../dist/out-tsc",
-    "types": [],
+    /* 
+      Add jest types to avoid angular compiler issues when importing from util.
+    */
+    "types": ["segment-analytics", "jest"],
     "target": "ES2017"
   },
   "files": ["src/main.ts", "src/polyfills.ts"],

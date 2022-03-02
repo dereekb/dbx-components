@@ -1,0 +1,42 @@
+<dbx-content-container>
+  <doc-feature-layout header="Navbar"
+    hint="Navbars are used to show anchors horizontally within a mat-nav, or as a menu button.">
+
+    <!-- Examples -->
+    <doc-feature-example header="dbx-navbar" hint="">
+      <h4>Breakpoints</h4>
+      <p>Breakpoints declare the minimum amount of width (via ScreenMediaWidthType) that is available before the view is
+        cut to a button.</p>
+      <div>
+        <span>Micro</span>
+        <dbx-navbar [anchors]="anchors" breakpoint="micro"></dbx-navbar>
+      </div>
+      <div>
+        <span>Small</span>
+        <dbx-navbar [anchors]="anchors" breakpoint="small"></dbx-navbar>
+      </div>
+      <div>
+        <span>Tablet</span>
+        <dbx-navbar [anchors]="anchors" breakpoint="tablet"></dbx-navbar>
+      </div>
+      <div>
+        <span>Large</span>
+        <dbx-navbar [anchors]="anchors" breakpoint="large"></dbx-navbar>
+      </div>
+      <div>
+        <span>Full</span>
+        <dbx-navbar [anchors]="anchors" breakpoint="full"></dbx-navbar>
+      </div>
+      <div>
+        <span>Mode set to button</span>
+        <dbx-navbar [anchors]="anchors" mode="button"></dbx-navbar>
+      </div>
+
+      <h4>Nav Align</h4>
+      <p>Navigation alignment can be set.</p>
+      <dbx-navbar [anchors]="anchors" breakpoint="micro" navAlign="start"></dbx-navbar>
+      <dbx-navbar [anchors]="anchors" breakpoint="micro" navAlign="center"></dbx-navbar>
+      <dbx-navbar [anchors]="anchors" breakpoint="micro" navAlign="end"></dbx-navbar>
+    </doc-feature-example>
+  </doc-feature-layout>
+</dbx-content-container>

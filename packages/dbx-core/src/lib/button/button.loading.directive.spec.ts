@@ -1,30 +1,30 @@
-import { DbNgxCoreButtonModule } from './button.module';
+import { DbxCoreButtonModule } from './button.module';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Component, ViewChild } from '@angular/core';
 import { filter } from 'rxjs/operators';
-import { DbNgxButtonDirective } from './button.directive';
-import { DbNgxLoadingButtonDirective } from './button.loading.directive';
+import { DbxButtonDirective } from './button.directive';
+import { DbxLoadingButtonDirective } from './button.loading.directive';
 import { SimpleLoadingContext } from '@dereekb/rxjs';
 
-describe('DbNgxLoadingButton', () => {
+describe('DbxLoadingButton', () => {
 
   beforeEach(async () => {
     TestBed.configureTestingModule({
       imports: [
-        DbNgxCoreButtonModule
+        DbxCoreButtonModule
       ],
       declarations: [
-        TestDbNgxLoadingButtonDirectiveComponent,
+        TestDbxLoadingButtonDirectiveComponent,
       ]
     }).compileComponents();
   });
 
-  let testComponent: TestDbNgxLoadingButtonDirectiveComponent;
-  let fixture: ComponentFixture<TestDbNgxLoadingButtonDirectiveComponent>;
-  let button: DbNgxButtonDirective;
+  let testComponent: TestDbxLoadingButtonDirectiveComponent;
+  let fixture: ComponentFixture<TestDbxLoadingButtonDirectiveComponent>;
+  let button: DbxButtonDirective;
 
   beforeEach(async () => {
-    fixture = TestBed.createComponent(TestDbNgxLoadingButtonDirectiveComponent);
+    fixture = TestBed.createComponent(TestDbxLoadingButtonDirectiveComponent);
     testComponent = fixture.componentInstance;
     button = testComponent.button!;
     fixture.detectChanges();
@@ -57,14 +57,14 @@ describe('DbNgxLoadingButton', () => {
     </div>
   `
 })
-class TestDbNgxLoadingButtonDirectiveComponent {
+class TestDbxLoadingButtonDirectiveComponent {
 
   context = new SimpleLoadingContext(false);
 
-  @ViewChild(DbNgxLoadingButtonDirective, { static: true })
-  loadingButtonDirective?: DbNgxLoadingButtonDirective;
+  @ViewChild(DbxLoadingButtonDirective, { static: true })
+  loadingButtonDirective?: DbxLoadingButtonDirective;
 
-  @ViewChild(DbNgxButtonDirective, { static: true })
-  button?: DbNgxButtonDirective;
+  @ViewChild(DbxButtonDirective, { static: true })
+  button?: DbxButtonDirective;
 
 }

@@ -1,19 +1,19 @@
 import { Directive } from '@angular/core';
-import { DbNgxPopoverComponent } from './popover.component';
+import { DbxPopoverComponent } from './popover.component';
 
 /**
  * Abstract popover directive.
  */
 @Directive()
-export abstract class AbstractPopoverDirective<I = any, O = any, T = any> {
+export abstract class AbstractPopoverDirective<O = any, I = any, T = any> {
 
-  constructor(public readonly popover: DbNgxPopoverComponent<I, O, T>) { }
+  constructor(public readonly popover: DbxPopoverComponent<O, I, T>) { }
 
-  closePopover(): void {
+  close(): void {
     this.popover.close();
   }
 
-  returnAndClosePopover(value: O): void {
+  returnAndClose(value: O): void {
     this.popover.return(value);
   }
 

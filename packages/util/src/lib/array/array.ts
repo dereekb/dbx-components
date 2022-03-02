@@ -77,13 +77,32 @@ export function pushElementOntoArray<T>(target: T[], element: T, times: number):
   return target;
 }
 
-export function mergeIntoArray<T>(target: Maybe<T[]>, ...arrays: T[][]) {
+/**
+ * Merges all input arrays into a single array.
+ * 
+ * @param arrays 
+ * @returns 
+ */
+export function mergeArrays<T>(arrays: Maybe<T[]>[]): T[] {
+  return mergeIntoArray([], ...arrays);
+}
+
+/**
+ * Merges the input arrays into the target.
+ * 
+ * @param target 
+ * @param arrays 
+ * @returns 
+ */
+export function mergeIntoArray<T>(target: Maybe<T[]>, ...arrays: Maybe<T[]>[]) {
   if (target == null) {
     target = [];
   }
 
   arrays.forEach((array) => {
-    mergeArrayIntoArray(target!, array);
+    if (array != null) {
+      mergeArrayIntoArray(target!, array);
+    }
   });
 
   return target;
@@ -147,4 +166,15 @@ export function takeLast<T>(values: T[], maxToTake: number, keepFromFront: numbe
   }
 
   return results;
+}
+
+/**
+ * Picks an item randomly from the input array. If the array is empty, returns undefined.
+ * 
+ * @param values 
+ */
+export function pickOneRandomly<T>(values: T[]): T {
+  const random = Math.random();
+  const index = Math.round(random * (values.length - 1));
+  return values[index];
 }

@@ -1,11 +1,6 @@
-# browser
+@dereekb/browser
+=======
 
-This library was generated with [Nx](https://nx.dev).
+The sources for this package are in the main [@dereekb/dbcomponents](https://github.com/dereekb/dbcomponents) repo. Please file issues and pull requests against that repo.
 
-## Building
-
-Run `nx build browser` to build the library.
-
-## Running unit tests
-
-Run `nx test browser` to execute the unit tests via [Jest](https://jestjs.io).
+License: MIT

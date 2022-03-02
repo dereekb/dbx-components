@@ -19,21 +19,23 @@ jobs:
       # look for existing cache and restore if found
       - restore_cache:
           keys:
-            - node-cache-{{ checksum "package-lock.json" }}
-            - node-cache-
+            - node-cache-a{{ checksum "package-lock.json" }}
+            - node-cache-a
       # install dependencies
       - run:
           name: install dependencies
-          command: npm install
+          command: npm ci
+      # clean node_modules
+      - run: npx clean-modules --yes --exclude "**/firebase*/**" --exclude "**/@angular*/**"
       # save any changes to the cache
       - save_cache:
-          key: node-cache-{{ checksum "package-lock.json" }}
+          key: node-cache-a{{ checksum "package-lock.json" }}
           paths:
             - node_modules
       # initialize nx
       - nx/set-shas
       # build content
-      - run: npx nx affected --base=$NX_BASE --target=build --parallel --max-parallel=2 --exclude=dbx-form # TODO: unexclude dbx-form later.
+      - run: npx nx affected --base=$NX_BASE --target=build --parallel --max-parallel=2
       # persist builds to workspace
       - persist_to_workspace:
           root: ~/code
@@ -55,13 +57,16 @@ jobs:
           command: npx nx test rxjs
       - run:
           name: run date tests
-          command: npx nx test date
+          command: npx nx test-timezones date
       - run:
           name: run dbx-core tests
           command: npx nx test dbx-core
       - run:
           name: run dbx-web tests
           command: npx nx test dbx-web
+      - run:
+          name: run dbx-form tests
+          command: npx nx test dbx-form
       - store_test_results:
           path: ~/code/.reports/jest/
   # Runs tests for the projects that require the firebase emulators.
@@ -93,6 +98,9 @@ jobs:
       - checkout
       - attach_workspace:
           at: ~/code
+      - run:
+          name: remove node_modules and reinstall dependencies
+          command: rm -rd node_modules && npm ci
       - add_ssh_keys:
           fingerprints:
             - "d9:53:28:55:d6:96:4e:1e:d1:53:5e:79:e4:80:7e:28"
@@ -104,7 +112,7 @@ jobs:
           command: npx nx run workspace:version
       - run:
           name: merge release into main and use the release commit message
-          command: git checkout main && git merge ${CIRCLE_SHA1} --squash && git commit -m "$(git log ${CIRCLE_SHA1} --pretty=%B | cat)"
+          command: git checkout main && git merge release --squash -Xtheirs && git commit -m "$(git log release --pretty=%B | cat)"
       - run:
           name: push main to origin
           command: git push
@@ -112,9 +120,11 @@ jobs:
     <<: *defaults
     steps:
       - checkout
+      - attach_workspace:
+          at: ~/code
       - run:
           name: deploy updated projects
-          command: nx affected --target=deploy  # deploy any updated projects
+          command: npx nx affected --target=ci-deploy # deploy any updated projects
   # Publishes content to npm. This should occur after running a release.
   publish-to-npm:
     <<: *defaults
@@ -122,7 +132,10 @@ jobs:
       - checkout
       - attach_workspace:
           at: ~/code
-      - run: echo pushing to npm  # todo
+      - run:
+          name: configure npmrc / npm login
+          command: echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > ~/.npmrc
+      - run: npx nx affected --target=publish-npmjs --all
 # --- WORKFLOWS ---
 workflows:
   version: 2
@@ -151,5 +164,15 @@ workflows:
           filters:
             branches:
               only: main
-      - deploy-demo
-      - publish-to-npm
+      - deploy-demo:
+          requires:
+            - build
+          filters:
+            branches:
+              only: main
+      - publish-to-npm:
+          requires:
+            - build
+          filters:
+            branches:
+              only: main

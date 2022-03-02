@@ -1,7 +1,7 @@
 import { Directive, Host, Input } from '@angular/core';
 import { LoadingContext } from '@dereekb/rxjs';
 import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
-import { DbNgxReadableErrorComponent } from './error.component';
+import { DbxReadableErrorComponent } from './error.component';
 
 /**
  * Context used for linking an ReadableErrorComponent to a LoadingContext.
@@ -11,9 +11,9 @@ import { DbNgxReadableErrorComponent } from './error.component';
 @Directive({
   selector: '[dbxLoadingError]'
 })
-export class DbNgxLoadingErrorDirective extends AbstractSubscriptionDirective {
+export class DbxLoadingErrorDirective extends AbstractSubscriptionDirective {
 
-  constructor(@Host() public readonly error: DbNgxReadableErrorComponent) {
+  constructor(@Host() public readonly error: DbxReadableErrorComponent) {
     super();
   }
 

@@ -1,0 +1,32 @@
+@use '../style/theming';
+
+// MARK: Variables
+$button-spacer-width: 6px;
+
+// MARK: Mixin
+@mixin core() {
+
+  .dbx-button-spacer {
+    padding-right: $button-spacer-width;
+  }
+
+}
+
+@mixin color($theme-config) {}
+
+@mixin typography($typography-config) {}
+
+@mixin theme($theme-config) {
+  @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-button') {
+    $color: theming.get-color-config($theme-config);
+    $typography: theming.get-typography-config($theme-config);
+
+    @if $color !=null {
+      @include color($theme-config);
+    }
+
+    @if $typography !=null {
+      @include typography($typography);
+    }
+  }
+}

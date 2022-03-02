@@ -74,8 +74,8 @@ export class ItemAccumulatorInstance<O, I = any, N extends ItemIteration<I> = It
       const mapStateToItem: (state: LoadingState<I>) => Maybe<O> = (state) => {
         let result: Maybe<O>;
 
-        if (state.model != null) {
-          result = this.mapItemFunction(state.model, state);
+        if (state.value != null) {
+          result = this.mapItemFunction(state.value, state);
         }
 
         return result;

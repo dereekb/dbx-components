@@ -1,9 +1,9 @@
-import { DbNgxPopupComponent, DbNgxPopupComponentConfig, APP_POPUP_NORMAL_HEIGHT, APP_POPUP_NORMAL_WIDTH } from './popup.component';
+import { DbxPopupComponent, DbxPopupComponentConfig, APP_POPUP_NORMAL_HEIGHT, APP_POPUP_NORMAL_WIDTH } from './popup.component';
 import { Injectable, Injector } from '@angular/core';
 import { NgOverlayContainerService, NgPopoverRef } from 'ng-overlay-container';
 import { Overlay } from '@angular/cdk/overlay';
 
-export interface DbNgxPopupConfig<I, O, T> extends DbNgxPopupComponentConfig<I, O, T> {
+export interface DbxPopupConfig<O, I, T> extends DbxPopupComponentConfig<O, I, T> {
   injector?: Injector;
 }
 
@@ -11,7 +11,7 @@ export interface DbNgxPopupConfig<I, O, T> extends DbNgxPopupComponentConfig<I, 
  * Used for displaying a popup.
  */
 @Injectable()
-export class DbNgxPopupService {
+export class DbxPopupService {
 
   private _overlayContainerService: NgOverlayContainerService;
 
@@ -19,18 +19,19 @@ export class DbNgxPopupService {
     this._overlayContainerService = new NgOverlayContainerService(this._overlay, this._injector);
   }
 
-  open<I, O, T>(config: DbNgxPopupConfig<I, O, T>): NgPopoverRef<DbNgxPopupComponentConfig<I, O, T>, O> {
+  open<O, I, T>(config: DbxPopupConfig<O, I, T>): NgPopoverRef<DbxPopupComponentConfig<O, I, T>, O> {
     const service = (config.injector) ? new NgOverlayContainerService(this._overlay, config.injector) : this._overlayContainerService;
     const isDraggable = config.isDraggable ?? false;
+    const position = config.position ?? 'bottom_right';
 
-    return service.open<DbNgxPopupComponentConfig<I, O, T>, O>({
-      content: DbNgxPopupComponent,
+    return service.open<DbxPopupComponentConfig<O, I, T>, O>({
+      content: DbxPopupComponent,
       data: {
         ...config,
         isDraggable,
+        position
       },
       configuration: {
-        panelClass: 'dbx-popup-container',
         width: APP_POPUP_NORMAL_WIDTH,
         height: APP_POPUP_NORMAL_HEIGHT,
         useGlobalPositionStrategy: true,
