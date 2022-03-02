@@ -55,6 +55,7 @@ ui-debug.log*
 
 # Environment
 service_account.json
+.npmrc
 
 # Docker
 /.cache

@@ -12,6 +12,7 @@ export interface PerformTaskLoopWithInitConfig<O> {
 }
 
 // MARK: Loop
+export function performTaskLoop(config: PerformTaskLoopConfig<void>): Promise<void>;
 export function performTaskLoop<O>(config: PerformTaskLoopConfig<O>): Promise<Maybe<O>>;
 export function performTaskLoop<O>(config: PerformTaskLoopWithInitConfig<O>): Promise<O>;
 export function performTaskLoop<O>(config: any): Promise<O> {

@@ -1,0 +1,34 @@
+<dbx-content-container>
+  <doc-feature-layout header="Prompt"
+    hint="A prompt is a view that takes control of the screen and returns a value when closed.">
+
+    <!-- Examples -->
+    <doc-feature-example header="dbx-prompt-confirm-dialog"
+      hint="A pre-configured prompt that can be used to confirm something from the user.">
+      <button mat-raised-button (click)="openExamplePrompt()">Open Prompt</button>
+      <p>Result: {{ result }}</p>
+    </doc-feature-example>
+
+    <doc-feature-example header="dbx-prompt" hint="A pre-styled prompt layout.">
+      <dbx-prompt header='Setup Required' prompt='Your account has not yet been setup.'>
+        <a mat-raised-button>Setup</a>
+      </dbx-prompt>
+    </doc-feature-example>
+
+    <doc-feature-example header="dbx-prompt-box" hint="A pre-styled box for prompt content.">
+      <dbx-prompt-box>
+        <dbx-prompt header='Setup Required' prompt='Your account has not yet been setup.'>
+          <a mat-raised-button>Setup</a>
+        </dbx-prompt>
+      </dbx-prompt-box>
+    </doc-feature-example>
+
+    <doc-feature-example header="dbx-prompt-page" hint="A pre-configured page that prompts the user to do something.">
+      <dbx-prompt-page>
+        <dbx-prompt header='Setup Required' prompt='Your account has not yet been setup.'>
+          <a mat-raised-button>Setup</a>
+        </dbx-prompt>
+      </dbx-prompt-page>
+    </doc-feature-example>
+  </doc-feature-layout>
+</dbx-content-container>

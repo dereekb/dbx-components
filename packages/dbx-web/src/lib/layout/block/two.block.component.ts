@@ -21,7 +21,7 @@ import { ResizedEvent } from 'angular-resize-event';
   </div>
   `
 })
-export class DbNgxTwoBlocksComponent {
+export class DbxTwoBlocksComponent {
 
   @ViewChild('two', { read: ElementRef, static: true })
   twoElement!: ElementRef;

@@ -9,7 +9,7 @@ import { checkNgContentWrapperHasContent } from '@dereekb/dbx-core';
 import { ProgressSpinnerMode } from '@angular/material/progress-spinner';
 
 /**
- * DbNgxBasicLoadingComponent loading state.
+ * DbxBasicLoadingComponent loading state.
  */
 export enum LoadingComponentState {
   NONE = -1,
@@ -25,7 +25,7 @@ export enum LoadingComponentState {
   selector: 'dbx-basic-loading',
   templateUrl: './basic-loading.component.html'
 })
-export class DbNgxBasicLoadingComponent implements OnDestroy {
+export class DbxBasicLoadingComponent implements OnDestroy {
 
   private _loading = new BehaviorSubject<Maybe<boolean>>(undefined);
   private _show = new BehaviorSubject<boolean>(true);

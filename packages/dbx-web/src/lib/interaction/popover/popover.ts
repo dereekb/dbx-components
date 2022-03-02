@@ -1,10 +1,10 @@
 import { Maybe } from "@dereekb/util";
 import { Observable } from "rxjs";
 
-export type DbNgxPopoverKey = string;
+export type DbxPopoverKey = string;
 
-export abstract class DbNgxPopoverController<I = any, O = any> {
-  abstract readonly key: DbNgxPopoverKey;
+export abstract class DbxPopoverController<O = any, I = any> {
+  abstract readonly key: DbxPopoverKey;
   abstract readonly data?: Maybe<I>;
   abstract readonly closing$: Observable<boolean>;
   /**

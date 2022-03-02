@@ -14,7 +14,7 @@ import { TwoColumnsContextStore } from './two.column.store';
   templateUrl: './two.column.component.html',
   exportAs: 'columns'
 })
-export class DbNgxTwoColumnsComponent {
+export class DbxTwoColumnsComponent {
 
   readonly showRight$: Observable<boolean> = this.twoColumnsContextStore.showRight$;
   readonly hideRight$: Observable<boolean> = this.twoColumnsContextStore.hideRight$;

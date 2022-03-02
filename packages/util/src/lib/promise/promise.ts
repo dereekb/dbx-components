@@ -1,4 +1,5 @@
 import { Maybe } from "../value";
+import { waitForMs } from "./wait";
 
 export type PromiseTaskFn<T, K = any> = (value: T, tryNumber?: number) => Promise<K>;
 
@@ -126,7 +127,7 @@ export class PromiseUtility {
           return iterateTask(value, tryNumber + 1);
         };
 
-        return (retryWait) ? PromiseUtility.wait(retryWait).then(() => doNextTry()) : doNextTry();
+        return (retryWait) ? waitForMs(retryWait).then(() => doNextTry()) : doNextTry();
       } else {
         // Error out.
         if (throwError) {
@@ -138,11 +139,6 @@ export class PromiseUtility {
     }
 
     return iterateTask(value, 0);
-  }
-
-  static async wait(ms: number): Promise<void>;
-  static async wait<T>(ms: number, value?: T): Promise<T> {
-    return new Promise(resolve => setTimeout(resolve, ms, value));
   }
 
 }

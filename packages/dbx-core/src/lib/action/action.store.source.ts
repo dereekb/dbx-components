@@ -20,7 +20,7 @@ export abstract class ActionContextStoreSource<T = any, O = any> {
 }
 
 /**
- * Secondary source. Used by DbNgxActionContextComponent to find secondary sources.
+ * Secondary source. Used by DbxActionContextComponent to find secondary sources.
  */
 export abstract class SecondaryActionContextStoreSource<T = any, O = any> extends ActionContextStoreSource<T, O> { }
 

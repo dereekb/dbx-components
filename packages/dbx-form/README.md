@@ -1,7 +1,6 @@
-# dbx-form
+@dereekb/dbx-form
+=======
 
-This library was generated with [Nx](https://nx.dev).
+The sources for this package are in the main [@dereekb/dbcomponents](https://github.com/dereekb/dbcomponents) repo. Please file issues and pull requests against that repo.
 
-## Running unit tests
-
-Run `nx test dbx-form` to execute the unit tests.
+License: MIT

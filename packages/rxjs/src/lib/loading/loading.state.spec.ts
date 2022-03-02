@@ -11,10 +11,10 @@ describe('beginLoading()', () => {
 
 describe('successResult()', () => {
 
-  it('should return a loading state that has the model.', () => {
-    const model = {};
-    const state = successResult(model);
-    expect(state.model).toBe(model);
+  it('should return a loading state that has the value.', () => {
+    const value = {};
+    const state = successResult(value);
+    expect(state.value).toBe(value);
   });
 
   it('should return a loading state that is not loading.', () => {
@@ -22,7 +22,7 @@ describe('successResult()', () => {
     expect(loadingStateIsLoading(state)).toBe(false);
   });
 
-  it('should return a loading state that is not loading even if the model is undefined.', () => {
+  it('should return a loading state that is not loading even if the value is undefined.', () => {
     const state = successResult(undefined);
     expect(loadingStateIsLoading(state)).toBe(false);
   });
@@ -56,14 +56,24 @@ describe('loadingStateIsLoading()', () => {
     expect(result).toBe(true);
   });
 
+  it('should return true if a loading state has loading = true even if a value is present.', () => {
+    const result = loadingStateIsLoading({ loading: true, value: 'value' });
+    expect(result).toBe(true);
+  });
+
   it('should return false if a loading state has loading = false.', () => {
     const result = loadingStateIsLoading({ loading: false });
     expect(result).toBe(false);
   });
 
-  it('should return false if a loading state has loading=undefined, and model is set.', () => {
-    const result = loadingStateIsLoading({ loading: undefined, model: 'model' });
+  it('should return false if a loading state has loading=undefined, and value is set.', () => {
+    const result = loadingStateIsLoading({ loading: undefined, value: 'value' });
     expect(result).toBe(false);
+  });
+
+  it('should return true if a loading state has value=undefined', () => {
+    const result = loadingStateIsLoading({ value: undefined });
+    expect(result).toBe(true);
   });
 
   it('should return false if a loading state has loading=undefined, and error is set.', () => {
@@ -76,8 +86,8 @@ describe('loadingStateIsLoading()', () => {
     expect(result).toBe(true);
   });
 
-  it('should return true if a loading state has loading=undefined, and model=undefined.', () => {
-    const result = loadingStateIsLoading({ loading: undefined, model: undefined });
+  it('should return true if a loading state has loading=undefined, and value=undefined.', () => {
+    const result = loadingStateIsLoading({ loading: undefined, value: undefined });
     expect(result).toBe(true);
   });
 
@@ -95,13 +105,23 @@ describe('loadingStateHasFinishedLoading()', () => {
     expect(result).toBe(false);
   });
 
+  it('should return false if a loading state has loading = true even if a value is present.', () => {
+    const result = loadingStateHasFinishedLoading({ loading: true, value: 'value' });
+    expect(result).toBe(false);
+  });
+
+  it('should return false if a loading state has loading = true even if an error is present.', () => {
+    const result = loadingStateHasFinishedLoading({ loading: true, error: { message: '' } });
+    expect(result).toBe(false);
+  });
+
   it('should return true if a loading state has loading = false.', () => {
     const result = loadingStateHasFinishedLoading({ loading: false });
     expect(result).toBe(true);
   });
 
-  it('should return true if a loading state has loading=undefined, and model is set.', () => {
-    const result = loadingStateHasFinishedLoading({ loading: undefined, model: 'model' });
+  it('should return true if a loading state has loading=undefined, and value is set.', () => {
+    const result = loadingStateHasFinishedLoading({ loading: undefined, value: 'value' });
     expect(result).toBe(true);
   });
 
@@ -115,8 +135,8 @@ describe('loadingStateHasFinishedLoading()', () => {
     expect(result).toBe(false);
   });
 
-  it('should return false if a loading state has loading=undefined, and model=undefined.', () => {
-    const result = loadingStateHasFinishedLoading({ loading: undefined, model: undefined });
+  it('should return false if a loading state has loading=undefined, and value=undefined.', () => {
+    const result = loadingStateHasFinishedLoading({ loading: undefined, value: undefined });
     expect(result).toBe(false);
   });
 
@@ -136,7 +156,7 @@ describe('mapLoadingStateResults()', () => {
       mapValue: (x) => mappedValue
     });
 
-    expect(result.model).toBe(mappedValue);
+    expect(result.value).toBe(mappedValue);
   });
 
 });

@@ -1,0 +1,72 @@
+@use '../../style/theming';
+
+// MARK: Variables
+
+
+// MARK: Mixin
+@mixin core() {
+
+  .dbx-list {
+    overflow: hidden;
+    height: 100%;
+  }
+
+  .dbx-list-content {
+    max-height: 100%;
+    overflow: auto;
+    box-sizing: border-box;
+
+    &.dbx-list-padded {
+      padding-bottom: 8px;
+    }
+
+    .mat-list-base {
+      padding-top: 0;
+    }
+
+    &.dbx-list-content-hidden {
+      display: none;
+    }
+
+  }
+
+  .dbx-list-content-box {
+    padding: 4px;
+  }
+
+  .dbx-list-view {
+
+    .mat-list-base .dbx-list-view-item.mat-list-item {
+      height: unset;
+
+      &.mat-list-item-with-avatar {
+        min-height: 56px;
+
+        .mat-list-item-content {
+          min-height: 56px;
+        }
+      }
+
+    }
+  }
+
+}
+
+@mixin color($theme-config) {}
+
+@mixin typography($typography-config) {}
+
+@mixin theme($theme-config) {
+  @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-layout-list') {
+    $color: theming.get-color-config($theme-config);
+    $typography: theming.get-typography-config($theme-config);
+
+    @if $color !=null {
+      @include color($theme-config);
+    }
+
+    @if $typography !=null {
+      @include typography($typography);
+    }
+  }
+}

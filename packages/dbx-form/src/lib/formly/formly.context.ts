@@ -1,27 +1,24 @@
 import { Provider, Type } from '@angular/core';
-import { BehaviorSubject, Observable, of } from 'rxjs';
-import { DbNgxForm, DbNgxFormEvent, DbNgxFormState, TypedDbNgxForm } from '../form/form';
+import { BehaviorSubject, Observable, of, switchMap, shareReplay, distinctUntilChanged } from 'rxjs';
+import { DbxForm, DbxFormEvent, DbxFormState, DbxMutableForm, ProvideDbxMutableForm } from '../form/form';
 import { FormlyFieldConfig } from '@ngx-formly/core';
-import { mergeMap } from 'rxjs/operators';
-import { LockSet } from '@dereekb/rxjs';
+import { LockSet, filterMaybe } from '@dereekb/rxjs';
 import { Maybe } from '@dereekb/util';
 
+export interface DbxFormlyInitialize<T> {
+  fields: Observable<FormlyFieldConfig[]>;
+  initialValue: Maybe<Partial<T>>;
+  initialDisabled: boolean;
+}
+
 /**
- * DbNgxFormlyContext delegate.
+ * DbxFormlyContext delegate.
  * 
  * This is usually the component or element that contains the form itself.
  */
-export interface DbNgxFormlyContextDelegate<T = any> {
-  readonly isComplete: boolean;
-  readonly state: DbNgxFormState;
-  readonly stream$: Observable<DbNgxFormEvent>;
-  setFields(fields: Maybe<FormlyFieldConfig[]>): void;
-  getValue(): T;
-  setValue(value: Maybe<Partial<T>>): void;
-  resetForm(): void;
-  forceFormUpdate(): void;
-  isDisabled(): boolean;
-  setDisabled(disabled?: boolean): void;
+export interface DbxFormlyContextDelegate<T = any> extends Omit<DbxMutableForm<T>, 'lockSet' | 'setDisabled'> {
+  readonly stream$: Observable<DbxFormEvent>;
+  init(initialize: DbxFormlyInitialize<T>): void;
 }
 
 /**
@@ -29,128 +26,100 @@ export interface DbNgxFormlyContextDelegate<T = any> {
  */
 export function ProvideFormlyContext(): Provider[] {
   return [{
-    provide: DbNgxFormlyContext,
-    useClass: DbNgxFormlyContext
-  }, {
-    provide: DbNgxForm,
-    useExisting: DbNgxFormlyContext
-  }];
+    provide: DbxFormlyContext,
+    useClass: DbxFormlyContext
+  },
+  ...ProvideDbxMutableForm(DbxFormlyContext)];
 }
 
 /**
- * DbNgxForm Instance that registers a delegate and manages the state of that form/delegate.
+ * DbxForm Instance that registers a delegate and manages the state of that form/delegate.
  */
-export class DbNgxFormlyContext<T> implements TypedDbNgxForm<T> {
+export class DbxFormlyContext<T> implements DbxForm<T> {
 
   readonly lockSet = new LockSet();
 
-  private static INITIAL_STATE = { isComplete: false, state: DbNgxFormState.INITIALIZING };
+  private static INITIAL_STATE = { isComplete: false, state: DbxFormState.INITIALIZING };
 
-  private static EMPTY_DELEGATE: DbNgxFormlyContextDelegate<any> = {
-    isComplete: false,
-    state: DbNgxFormState.INITIALIZING,
-    stream$: of(DbNgxFormlyContext.INITIAL_STATE),
-    setFields(fields: FormlyFieldConfig[]): void {
-      // Do nothing.
-    },
-    getValue(): any {
-      return undefined;
-    },
-    setValue(value: any): void {
-      // Do nothing.
-    },
-    resetForm(): void {
-      // Do nothing.
-    },
-    forceFormUpdate(): void {
-      // Do nothing.
-    },
-    isDisabled(): boolean {
-      return false;
-    },
-    setDisabled(disabled?: boolean): void {
-      // Do nothing.
-    }
-  };
+  private _fields = new BehaviorSubject<Maybe<FormlyFieldConfig[]>>(undefined);
+  private _initialValue = new BehaviorSubject<Maybe<Partial<T>>>(undefined);
+  private _disabled = new BehaviorSubject<boolean>(false);
+  private _delegate = new BehaviorSubject<Maybe<DbxFormlyContextDelegate<T>>>(undefined);
 
-  private _fields?: Maybe<FormlyFieldConfig[]>;
-  private _initialValue?: Maybe<Partial<T>>;
-  private _disabled: boolean = false;
-
-  private _delegate: DbNgxFormlyContextDelegate<T> = DbNgxFormlyContext.EMPTY_DELEGATE;
-  private _streamSubject = new BehaviorSubject<Observable<DbNgxFormEvent>>(of(DbNgxFormlyContext.INITIAL_STATE));
-  private _stream$ = this._streamSubject.pipe(mergeMap((stream) => stream));
+  readonly fields$ = this._fields.pipe(filterMaybe());
+  readonly stream$: Observable<DbxFormEvent> = this._delegate.pipe(distinctUntilChanged(), switchMap(x => (x) ? x.stream$ : of(DbxFormlyContext.INITIAL_STATE)), shareReplay(1));
 
   constructor() { }
 
   destroy(): void {
-    this._streamSubject.complete();
+    this.lockSet.destroyOnNextUnlock(() => {
+      this._fields.complete();
+      this._initialValue.complete();
+      this._disabled.complete();
+      this._delegate.complete();
+    });
   }
 
-  get isDestroyed(): boolean {
-    return this._streamSubject.isStopped;
+  setDelegate(delegate?: DbxFormlyContextDelegate<T>): void {
+    if (delegate !== this._delegate.value) {
+
+      if (delegate != null) {
+        delegate.init({
+          fields: this.fields$,
+          initialValue: this._initialValue.value,
+          initialDisabled: this._disabled.value
+        });
+      }
+
+      this._delegate.next(delegate);
+    }
   }
 
-  setDelegate(delegate?: DbNgxFormlyContextDelegate<T>): void {
-    this._delegate = delegate ?? DbNgxFormlyContext.EMPTY_DELEGATE;
-    this._streamSubject.next(this._delegate.stream$);
-    this._delegate.setFields(this._fields);
-    this._delegate.setValue(this._initialValue);
-    this._delegate.setDisabled(this._disabled);
-  }
-
-  clearDelegate(delegate: DbNgxFormlyContextDelegate<T>): void {
-    if (this._delegate === delegate && !this.isDestroyed) {
+  clearDelegate(delegate: DbxFormlyContextDelegate<T>): void {
+    if (delegate === this._delegate.value) {
       this.setDelegate(undefined);
     }
   }
 
   get fields(): Maybe<FormlyFieldConfig[]> {
-    return this._fields;
+    return this._fields.value;
   }
 
   set fields(fields: Maybe<FormlyFieldConfig[]>) {
-    this._fields = fields;
-    this._delegate.setFields(this._fields);
+    this._fields.next(fields);
   }
 
   // MARK: FormComponent
-  get isComplete(): boolean {
-    return this._delegate.isComplete;
-  }
-
-  get state(): DbNgxFormState {
-    return this._delegate.state;
-  }
-
-  get stream$(): Observable<DbNgxFormEvent> {
-    return this._stream$;
-  }
-
-  get value(): T {
-    return this._delegate.getValue();
+  getValue(): Observable<T> {
+    return this._delegate.pipe(filterMaybe(), switchMap(x => x.getValue()), shareReplay(1));
   }
 
   setValue(value: Partial<T>): void {
-    this._initialValue = value;
-    this._delegate.setValue(value);
+    this._initialValue.next(value);
+
+    if (this._delegate.value) {
+      this._delegate.value.setValue(value);
+    }
   }
 
   isDisabled(): boolean {
-    return this._delegate.isDisabled();
+    return this._disabled.value;
   }
 
   setDisabled(disabled = true): void {
-    this._disabled = disabled;
-    this._delegate.setDisabled(disabled);
+    this._disabled.next(disabled);
   }
 
   resetForm(): void {
-    this._delegate.resetForm();
+    if (this._delegate.value) {
+      this._delegate.value.resetForm();
+    }
   }
 
   forceFormUpdate(): void {
-    this._delegate.forceFormUpdate();
+    if (this._delegate.value) {
+      this._delegate.value.forceFormUpdate();
+    }
   }
 
 }

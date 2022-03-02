@@ -1,0 +1,8 @@
+/**
+  Shows how to lazy-load an SCSS file and additional styles through a child module.
+
+  This file is imported by the layout.
+*/
+@use './style/demo' as style;
+
+@include style.demo-theme('.demo-app');

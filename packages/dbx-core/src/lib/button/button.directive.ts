@@ -3,13 +3,13 @@ import { Maybe } from '@dereekb/util';
 import { BehaviorSubject, of, Subject } from 'rxjs';
 import { filter, first, switchMap } from 'rxjs/operators';
 import { AbstractSubscriptionDirective } from '../subscription';
-import { DbNgxButton, DbNgxButtonInterceptor, ProvideDbNgxButton } from './button';
+import { DbxButton, DbxButtonInterceptor, ProvideDbxButton } from './button';
 
 /**
  * Abstract button component.
  */
 @Directive()
-export abstract class AbstractDbNgxButtonDirective extends AbstractSubscriptionDirective implements DbNgxButton, OnInit, OnDestroy {
+export abstract class AbstractDbxButtonDirective extends AbstractSubscriptionDirective implements DbxButton, OnInit, OnDestroy {
 
   private _disabled = new BehaviorSubject<boolean>(false);
   private _working = new BehaviorSubject<boolean>(false);
@@ -54,7 +54,7 @@ export abstract class AbstractDbNgxButtonDirective extends AbstractSubscriptionD
    * Pre-interceptor button click.
    */
   protected _buttonClick = new Subject<void>();
-  protected _buttonInterceptor = new BehaviorSubject<Maybe<DbNgxButtonInterceptor>>(undefined);
+  protected _buttonInterceptor = new BehaviorSubject<Maybe<DbxButtonInterceptor>>(undefined);
 
   ngOnInit(): void {
     this.sub = this._buttonClick.pipe(
@@ -86,7 +86,7 @@ export abstract class AbstractDbNgxButtonDirective extends AbstractSubscriptionD
   /**
    * Sets the button interceptor. If any interceptor is already set, it is replaced.
    */
-  public setButtonInterceptor(interceptor: DbNgxButtonInterceptor): void {
+  public setButtonInterceptor(interceptor: DbxButtonInterceptor): void {
     this._buttonInterceptor.next(interceptor);
   }
 
@@ -110,11 +110,11 @@ export abstract class AbstractDbNgxButtonDirective extends AbstractSubscriptionD
 
 // MARK: Implementation
 /**
- * Provides an DbNgxButton directive.
+ * Provides an DbxButton directive.
  */
 @Directive({
   selector: '[dbxButton]',
   exportAs: 'dbxButton',
-  providers: ProvideDbNgxButton(DbNgxButtonDirective)
+  providers: ProvideDbxButton(DbxButtonDirective)
 })
-export class DbNgxButtonDirective extends AbstractDbNgxButtonDirective { }
+export class DbxButtonDirective extends AbstractDbxButtonDirective { }

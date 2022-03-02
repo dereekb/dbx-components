@@ -6,9 +6,9 @@ import { ActionContextStoreSourceInstance } from '../../action.store.source';
  * Prints out the current state to the console. Useful for debugging.
  */
 @Directive({
-  selector: '[dbxActionContextLogger]'
+  selector: '[dbxActionLogger],[dbxActionContextLogger]'
 })
-export class DbNgxActionContextLoggerDirective extends AbstractSubscriptionDirective implements OnInit {
+export class DbxActionContextLoggerDirective extends AbstractSubscriptionDirective implements OnInit {
 
   constructor(@Host() public readonly source: ActionContextStoreSourceInstance) {
     super();

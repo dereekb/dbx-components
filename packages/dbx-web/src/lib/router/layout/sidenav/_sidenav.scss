@@ -1,0 +1,189 @@
+@use 'sass:map';
+@use 'sass:color';
+@use '../../../style/theming';
+@use '../anchorlist/anchorlist';
+
+// MARK: Variables
+$width: 240px;
+$mobile-width: 80vw;
+$icon-only-width: 65px;
+$mat-list-item-height: 48px;
+$active-border-left-width: 2px;
+$dbx-sidenav-nav-bottom-padding: 24px;
+
+// MARK: Mixin
+@mixin core() {
+
+  .dbx-sidenav {
+    height: 100%;
+
+    mat-sidenav {
+      width: $width;
+
+      .mat-drawer-inner-container {
+        box-sizing: border-box;
+        padding-bottom: 24px;
+      }
+    }
+
+    &.dbx-sidenav-mobile {
+      mat-sidenav {
+        width: $mobile-width;
+      }
+    }
+
+    &.dbx-sidenav-icon {
+      mat-sidenav {
+        width: $icon-only-width;
+      }
+
+      mat-sidenav-content {
+        margin-left: $icon-only-width;
+      }
+    }
+
+    &.dbx-sidenav-full {
+      mat-sidenav {
+        width: $width;
+      }
+
+      mat-sidenav-content {
+        margin-left: $width;
+      }
+    }
+
+    .mat-sidenav .mat-drawer-inner-container {
+      overflow-y: scroll !important
+    }
+
+    .dbx-sidenav-nav {
+      .dbx-sidenav-nav-end {
+        padding-bottom: $dbx-sidenav-nav-bottom-padding;
+      }
+    }
+
+    .mat-nav-list.dbx-anchor-list {
+      padding-top: 0;
+    }
+
+  }
+
+  .dbx-sidenav-page {
+    height: 100%;
+    max-height: 100%;
+    overflow: hidden;
+
+    .dbx-sidenav-page-content {
+      overflow: auto;
+    }
+  }
+
+}
+
+@mixin color($theme-config) {
+  $color-config: theming.get-color-config($theme-config);
+  $primary: map.get($color-config, 'primary');
+  $accent: map.get($color-config, 'accent');
+
+  $background: map.get($color-config, 'background');
+  $inactive-text-color: theming.get-color-from-palette($primary, '800-contrast');
+  $active-icon-color: theming.get-color-from-palette($accent, 400);
+
+  .dbx-sidenav {
+    mat-sidenav {
+      background-color: theming.get-color-from-palette($primary, 800);
+
+      .mat-drawer-inner-container {
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        height: 100%;
+        min-height: 320px;
+      }
+
+      .dbx-anchor-list.mat-nav-list {
+        color: $inactive-text-color;
+
+        .mat-list-item {
+          color: $inactive-text-color;
+          height: $mat-list-item-height;
+        }
+
+        .dbx-anchor-active-eq {
+
+          .mat-list-item {
+            border-left: $active-border-left-width solid $active-icon-color;
+
+            .mat-list-icon {
+              color: $active-icon-color;
+
+              // Offset the added border by clearing the default padding width (4px)
+              padding-left: anchorlist.$active-root-item-left-padding - $active-border-left-width;
+            }
+          }
+
+          .dbx-anchor-list-child {
+            padding-left: anchorlist.$active-child-item-left-padding - $active-border-left-width;
+          }
+        }
+      }
+    }
+  }
+
+  /*
+    .active {
+      &.mat-list-item {
+        background-color: rgba(0, 0, 0, 0.1);
+      }
+
+      mat-icon {
+        color: $sidenav-active-color;
+      }
+    }
+
+    $app-side-nav-bar-padding: 14px;
+
+    .app-side-nav-bar-title {
+      // text-align: center;
+      padding: $app-side-nav-bar-padding;
+
+      .app-side-nav-bar-title-header {
+        display: flex;
+
+        >img {
+          width: 32px;
+          height: 32px;
+          padding-left: 2px;
+          padding-right: 16px;
+        }
+
+        span {
+          @include mat-typography-level-to-styles($color-config, title);
+          font-weight: 300;
+        }
+      }
+
+    }
+
+    .app-side-nav-bar-title-content {
+      padding-top: $app-side-nav-bar-padding;
+    }
+    */
+}
+
+@mixin typography($typography-config) {}
+
+@mixin theme($theme-config) {
+  @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-router-sidenav') {
+    $color: theming.get-color-config($theme-config);
+    $typography: theming.get-typography-config($theme-config);
+
+    @if $color !=null {
+      @include color($theme-config);
+    }
+
+    @if $typography !=null {
+      @include typography($typography);
+    }
+  }
+}

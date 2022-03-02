@@ -1,22 +1,27 @@
-import { Directive, Inject, NgZone } from '@angular/core';
-import { MatDialogRef } from '@angular/material/dialog';
-import { AbstractTransitionWatcherDirective, DbNgxRouterTransitionService } from '@dereekb/dbx-core';
+import { Directive, Inject, NgZone, Optional } from '@angular/core';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { AbstractTransitionWatcherDirective, DbxRouterTransitionService } from '@dereekb/dbx-core';
 
 /**
  * Abstract dialog component that closes when a transition is successful.
  */
 @Directive()
-export abstract class AbstractDialogDirective<T = any, R = any> extends AbstractTransitionWatcherDirective {
+export abstract class AbstractDialogDirective<R = any, D = any, T = any> extends AbstractTransitionWatcherDirective {
 
   constructor(
-    @Inject(MatDialogRef) public readonly dialogRef: MatDialogRef<T, R>,
-    dbNgxRouterTransitionService: DbNgxRouterTransitionService,
+    @Optional() @Inject(MAT_DIALOG_DATA) readonly data: D,
+    @Inject(MatDialogRef) readonly dialogRef: MatDialogRef<T, R>,
+    dbNgxRouterTransitionService: DbxRouterTransitionService,
     ngZone: NgZone) {
     super(dbNgxRouterTransitionService, ngZone);
   }
 
   protected updateForSuccessfulTransition(): void {
-    this.dialogRef.close();
+    this.close();
+  }
+
+  close(value?: R) {
+    this.dialogRef.close(value);
   }
 
 }

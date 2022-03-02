@@ -1,0 +1,46 @@
+@use '../../style/theming';
+
+// MARK: Variables
+$box-max-width: theming.$box-max-width;
+$dbx-popup-controls-height: 33px;
+
+// MARK: Mixin
+@mixin core() {
+
+  .dbx-prompt-page {
+    .dbx-prompt-page-content-wrap {
+      padding-top: calc(theming.$app-height * .2)
+    }
+  }
+
+  .dbx-prompt-box {
+    margin: auto;
+    padding: 40px;
+    max-width: $box-max-width;
+
+    &.elevated {
+      @include theming.elevation(2);
+    }
+
+  }
+
+}
+
+@mixin color($theme-config) {}
+
+@mixin typography($typography-config) {}
+
+@mixin theme($theme-config) {
+  @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-interaction-prompt') {
+    $color: theming.get-color-config($theme-config);
+    $typography: theming.get-typography-config($theme-config);
+
+    @if $color !=null {
+      @include color($theme-config);
+    }
+
+    @if $typography !=null {
+      @include typography($typography);
+    }
+  }
+}

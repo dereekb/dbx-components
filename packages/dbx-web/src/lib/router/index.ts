@@ -1,2 +1,2 @@
-export * from './anchor';
+export * from './layout';
 export * from './provider';

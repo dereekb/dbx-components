@@ -5,20 +5,22 @@ import { AngularResizeEventModule } from 'angular-resize-event';
 import { MatDividerModule } from '@angular/material/divider';
 import { ModuleWithProviders, NgModule } from '@angular/core';
 import { NgOverlayContainerModule } from 'ng-overlay-container';
-import { DbNgxPopoverCoordinatorComponent } from './popover.coordinator.component';
-import { DbNgxPopoverService } from './popover.service';
-import { DbNgxPopoverContentComponent } from './popover.content.component';
-import { DbNgxPopoverComponent } from './popover.component';
-import { DbNgxPopoverControlsComponent } from './popover.controls.component';
-import { DbNgxPopoverCoordinatorService } from './popover.coordinator.service';
-import { DbNgxPopoverHeaderComponent } from './popover.header.component';
-import { DbNgxPopoverScrollContentComponent } from './popover.scroll.content.component';
-import { DbNgxPopoverActionButtonDirective } from './popover.action.button.directive';
-import { DbNgxPopoverActionDirective } from './popover.action.directive';
-import { DbNgxKeypressModule } from '../../keypress';
-import { DbNgxAnchorModule } from '../../router';
-import { DbNgxActionModule } from '../../action/action.module';
-import { DbNgxButtonModule } from '../../button/button.module';
+import { DbxPopoverCoordinatorComponent } from './popover.coordinator.component';
+import { DbxPopoverService } from './popover.service';
+import { DbxPopoverContentComponent } from './popover.content.component';
+import { DbxPopoverComponent } from './popover.component';
+import { DbxPopoverControlsDirective } from './popover.controls.directive';
+import { DbxPopoverCoordinatorService } from './popover.coordinator.service';
+import { DbxPopoverHeaderComponent } from './popover.header.component';
+import { DbxPopoverScrollContentComponent } from './popover.scroll.content.component';
+import { DbxPopoverActionButtonDirective } from './popover.action.button.directive';
+import { DbxPopoverActionDirective } from './popover.action.directive';
+import { DbxKeypressModule } from '../../keypress';
+import { DbxAnchorModule } from '../../router';
+import { DbxActionModule } from '../../action/action.module';
+import { DbxButtonModule } from '../../button/button.module';
+import { DbxInjectedComponentModule } from '@dereekb/dbx-core';
+import { DbxStyleLayoutModule } from '../../layout/style/style.layout.module';
 
 @NgModule({
   imports: [
@@ -26,42 +28,44 @@ import { DbNgxButtonModule } from '../../button/button.module';
     MatIconModule,
     MatButtonModule,
     MatDividerModule,
-    DbNgxButtonModule,
-    DbNgxAnchorModule,
-    DbNgxActionModule,
-    DbNgxKeypressModule,
+    DbxButtonModule,
+    DbxAnchorModule,
+    DbxActionModule,
+    DbxKeypressModule,
+    DbxStyleLayoutModule,
+    DbxInjectedComponentModule,
     NgOverlayContainerModule,
     AngularResizeEventModule
   ],
   declarations: [
-    DbNgxPopoverActionButtonDirective,
-    DbNgxPopoverActionDirective,
-    DbNgxPopoverComponent,
-    DbNgxPopoverCoordinatorComponent,
-    DbNgxPopoverContentComponent,
-    DbNgxPopoverControlsComponent,
-    DbNgxPopoverHeaderComponent,
-    DbNgxPopoverScrollContentComponent
+    DbxPopoverActionButtonDirective,
+    DbxPopoverActionDirective,
+    DbxPopoverComponent,
+    DbxPopoverCoordinatorComponent,
+    DbxPopoverContentComponent,
+    DbxPopoverControlsDirective,
+    DbxPopoverHeaderComponent,
+    DbxPopoverScrollContentComponent
   ],
   exports: [
-    DbNgxPopoverActionButtonDirective,
-    DbNgxPopoverActionDirective,
-    DbNgxPopoverContentComponent,
-    DbNgxPopoverControlsComponent,
-    DbNgxPopoverHeaderComponent,
-    DbNgxPopoverScrollContentComponent
+    DbxPopoverActionButtonDirective,
+    DbxPopoverActionDirective,
+    DbxPopoverContentComponent,
+    DbxPopoverControlsDirective,
+    DbxPopoverHeaderComponent,
+    DbxPopoverScrollContentComponent
   ],
   providers: [
-    DbNgxPopoverService
+    DbxPopoverService
   ]
 })
-export class DbNgxPopoverModule {
+export class DbxPopoverInteractionModule {
 
-  static forRoot(): ModuleWithProviders<DbNgxPopoverModule> {
+  static forRoot(): ModuleWithProviders<DbxPopoverInteractionModule> {
     return {
-      ngModule: DbNgxPopoverModule,
+      ngModule: DbxPopoverInteractionModule,
       providers: [
-        DbNgxPopoverCoordinatorService
+        DbxPopoverCoordinatorService
       ]
     };
   }

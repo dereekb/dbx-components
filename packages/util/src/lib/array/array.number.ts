@@ -46,8 +46,19 @@ export function reduceNumbersFn<D extends number>(reduceFn: ((a: number, b: numb
  * @param param0 
  * @returns 
  */
-export function range({ start = 0, end }: { start?: number, end: number }): number[] {
+export function range(input: number | { start?: number, end: number }): number[] {
   const range = [];
+
+  let start: number;
+  let end: number;
+
+  if (typeof input === 'number') {
+    start = 0;
+    end = input;
+  } else {
+    start = input.start ?? 0;
+    end = input.end;
+  }
 
   for (let i = start; i < end; i += 1) {
     range.push(i);

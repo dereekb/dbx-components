@@ -1,4 +1,5 @@
-import { combineLatest, Observable, of, isObservable } from 'rxjs';
+import { Maybe } from '@dereekb/util';
+import { combineLatest, Observable, of, isObservable, MonoTypeOperatorFunction, skipWhile, startWith } from 'rxjs';
 
 export function combineLatestFromMapValuesObsFn<T, O>(mapToObs: (value: T) => Observable<O>): (map: Map<any, T>) => Observable<O[]> {
   const combineArrayFn = combineLatestFromArrayObsFn(mapToObs);
@@ -16,12 +17,35 @@ export function combineLatestFromArrayObsFn<T, O>(mapToObs: (value: T) => Observ
 }
 
 /**
- * Wraps the input value as an observable, if it is not an observable.
+ * Merges both startWith and tapFirst to initialize a pipe.
+ * 
+ * @param initial 
+ * @param tap 
+ * @param skipFirst 
+ * @returns 
  */
-export function asObservable<T>(valueOrObs: T | Observable<T>): Observable<T> {
-  if (isObservable(valueOrObs)) {
-    return valueOrObs;
-  } else {
-    return of(valueOrObs);
-  }
+export function initialize<T>(tap: (value: Maybe<T>) => void, initial?: Maybe<T>, skipFirst?: boolean): MonoTypeOperatorFunction<T> {
+  return (source: Observable<T>) => {
+    const subscriber: Observable<T> = source.pipe(
+      startWith(initial),
+      tapFirst((x: Maybe<T>) => tap(x), initial == null || skipFirst)
+    ) as Observable<T>;
+
+    return subscriber;
+  };
+}
+
+
+/**
+ * Taps once on the first element.
+ * 
+ * @param tap 
+ * @param skipFirst 
+ * @returns 
+ */
+export function tapFirst<T>(tap: (value: T) => void, skipFirst = false): MonoTypeOperatorFunction<T> {
+  return skipWhile((value, i = 0) => {
+    tap(value);
+    return (i === 0 && !skipFirst);
+  });
 }

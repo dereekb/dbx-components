@@ -1,6 +1,6 @@
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { timeNumberHasExpired, unixTimeNumberForNow } from '@dereekb/date';
+import { timeHasExpired, unixTimeNumberForNow } from '@dereekb/date';
 import { filterMaybeValuesFn, DataDoesNotExistError, DataIsExpiredError, ReadStoredData, StoredData, StoredDataStorageKey, StoredDataString, Maybe } from '@dereekb/util';
 import { StorageAccessor } from './storage.accessor';
 
@@ -199,7 +199,7 @@ export class SimpleStorageAccessor<T> implements StorageAccessor<T> {
     const expiresIn = this._config.expiresIn;
     if (expiresIn) {
       if (storeData.storedAt) {
-        return timeNumberHasExpired(storeData.storedAt, expiresIn);
+        return timeHasExpired(storeData.storedAt, expiresIn);
       }
 
       return true;

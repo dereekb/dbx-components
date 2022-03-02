@@ -1,16 +1,16 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { DbNgxFormSpacerComponent } from './form.spacer.component';
+import { DbxFormSpacerComponent } from './form.spacer.component';
 
 @NgModule({
   imports: [
     CommonModule
   ],
   declarations: [
-    DbNgxFormSpacerComponent
+    DbxFormSpacerComponent
   ],
   exports: [
-    DbNgxFormSpacerComponent
+    DbxFormSpacerComponent
   ]
 })
-export class DbNgxFormLayoutModule { }
+export class DbxFormLayoutModule { }

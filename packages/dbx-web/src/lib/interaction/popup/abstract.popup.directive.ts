@@ -1,13 +1,13 @@
 import { Directive } from '@angular/core';
-import { DbNgxPopupComponent } from './popup.component';
+import { DbxPopupComponent } from './popup.component';
 
 /**
  * Abstract popup directive.
  */
 @Directive()
-export abstract class AbstractPopupDirective<I = any, O = any, T = any> {
+export abstract class AbstractPopupDirective<O = any, I = any, T = any> {
 
-  constructor(public readonly popup: DbNgxPopupComponent<I, O, T>) { }
+  constructor(public readonly popup: DbxPopupComponent<O, I, T>) { }
 
   closePopup(): void {
     this.popup.close();

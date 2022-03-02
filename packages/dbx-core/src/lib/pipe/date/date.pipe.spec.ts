@@ -2,14 +2,14 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { Component } from '@angular/core';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { DbNgxDatePipeModule } from './date.pipe.module';
+import { DbxDatePipeModule } from './date.pipe.module';
 
 describe('Date Pipe Test Component', () => {
 
   beforeEach(async () => {
     TestBed.configureTestingModule({
       imports: [
-        DbNgxDatePipeModule,
+        DbxDatePipeModule,
         NoopAnimationsModule
       ],
       declarations: [DatePipesTestComponent]

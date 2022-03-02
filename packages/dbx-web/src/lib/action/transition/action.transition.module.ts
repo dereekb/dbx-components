@@ -1,31 +1,31 @@
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { DbNgxActionUIRouterTransitionSafetyDialogComponent } from './transition.safety.dialog.component';
-import { DbNgxActionTransitionSafetyDirective as DbNgxActionUIRouterTransitionSafetyDirective } from './transition.safety.directive';
-import { DbNgxCoreActionModule } from '@dereekb/dbx-core';
-import { DbNgxButtonModule } from '../../button';
-import { DbNgxPromptModule } from './../../interaction';
-import { DbNgxReadableErrorModule } from '../../error';
+import { DbxActionUIRouterTransitionSafetyDialogComponent } from './transition.safety.dialog.component';
+import { DbxActionTransitionSafetyDirective as DbxActionUIRouterTransitionSafetyDirective } from './transition.safety.directive';
+import { DbxCoreActionModule } from '@dereekb/dbx-core';
+import { DbxButtonModule } from '../../button';
+import { DbxPromptModule } from './../../interaction';
+import { DbxReadableErrorModule } from '../../error';
 
 /**
- * Provides the DbNgxActionUIRouterTransitionSafetyDirective.
+ * Provides the DbxActionUIRouterTransitionSafetyDirective.
  * 
  * NOTE: Only works with UIRouter
  */
 @NgModule({
   imports: [
     CommonModule,
-    DbNgxCoreActionModule,
-    DbNgxPromptModule,
-    DbNgxButtonModule,
-    DbNgxReadableErrorModule
+    DbxCoreActionModule,
+    DbxPromptModule,
+    DbxButtonModule,
+    DbxReadableErrorModule
   ],
   declarations: [
-    DbNgxActionUIRouterTransitionSafetyDirective,
-    DbNgxActionUIRouterTransitionSafetyDialogComponent
+    DbxActionUIRouterTransitionSafetyDirective,
+    DbxActionUIRouterTransitionSafetyDialogComponent
   ],
   exports: [
-    DbNgxActionUIRouterTransitionSafetyDirective
+    DbxActionUIRouterTransitionSafetyDirective
   ]
 })
-export class DbNgxActionUIRouterTransitionModule { }
+export class DbxActionUIRouterTransitionModule { }

@@ -1,0 +1,35 @@
+@use '../../../../style/theming';
+
+// MARK: Variables
+
+
+// MARK: Mixin
+@mixin core() {
+  .dbx-pickable-item-field-filter {
+    margin-bottom: 4px;
+  }
+
+  .dbx-pickable-item-field-list-content {
+    max-height: 400px;
+    overflow: auto;
+  }
+}
+
+@mixin color($theme-config) {}
+
+@mixin typography($typography-config) {}
+
+@mixin theme($theme-config) {
+  @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-form-field-selection-pickable') {
+    $color: theming.get-color-config($theme-config);
+    $typography: theming.get-typography-config($theme-config);
+
+    @if $color !=null {
+      @include color($theme-config);
+    }
+
+    @if $typography !=null {
+      @include typography($typography);
+    }
+  }
+}

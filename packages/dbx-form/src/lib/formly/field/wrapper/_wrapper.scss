@@ -1,0 +1,39 @@
+@use '../../../style/theming';
+
+// MARK: Variables
+$form-flex-section-group-padding: 4px;
+$form-flex-section-group-item-padding: $form-flex-section-group-padding * 2;
+
+// MARK: Mixin
+@mixin core() {
+
+  .dbx-form-expand-wrapper-button {
+    text-decoration: underline;
+    margin-right: 8px;
+    margin-bottom: 6px;
+  }
+
+  .dbx-form-toggle-wrapper-toggle {
+    margin-bottom: 6px;
+  }
+
+}
+
+@mixin color($theme-config) {}
+
+@mixin typography($typography-config) {}
+
+@mixin theme($theme-config) {
+  @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-form-field-wrapper') {
+    $color: theming.get-color-config($theme-config);
+    $typography: theming.get-typography-config($theme-config);
+
+    @if $color !=null {
+      @include color($theme-config);
+    }
+
+    @if $typography !=null {
+      @include typography($typography);
+    }
+  }
+}

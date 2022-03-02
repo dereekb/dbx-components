@@ -6,7 +6,7 @@ import { OnDestroy } from '@angular/core';
 import { hasValueOrNotEmpty, Maybe } from '@dereekb/util';
 import { SubscriptionObject } from '@dereekb/rxjs';
 
-export type DbNgxActionAutoTriggerIsModifiedFn<T> = (value: T) => Observable<boolean>;
+export type DbxActionAutoTriggerIsModifiedFn<T> = (value: T) => Observable<boolean>;
 
 /**
  * Directive that watches an observable for changes and sets the new value and modified states as necessary.
@@ -14,10 +14,10 @@ export type DbNgxActionAutoTriggerIsModifiedFn<T> = (value: T) => Observable<boo
 @Directive({
   selector: '[dbxActionAutoTriggerValue]',
 })
-export class DbNgxActionAutoTriggerValueDirective<T, O> implements OnInit, OnDestroy {
+export class DbxActionAutoTriggerValueDirective<T, O> implements OnInit, OnDestroy {
 
   private _valueObs = new BehaviorSubject<Observable<T>>(EMPTY);
-  private _isModifiedFn = new BehaviorSubject<Maybe<DbNgxActionAutoTriggerIsModifiedFn<T>>>(undefined);
+  private _isModifiedFn = new BehaviorSubject<Maybe<DbxActionAutoTriggerIsModifiedFn<T>>>(undefined);
 
   private _modifiedSub = new SubscriptionObject();
   private _triggerSub = new SubscriptionObject();
@@ -37,7 +37,7 @@ export class DbNgxActionAutoTriggerValueDirective<T, O> implements OnInit, OnDes
   }
 
   @Input()
-  set dbxActionAutoTriggerModified(dbxActionAutoTriggerModified: DbNgxActionAutoTriggerIsModifiedFn<T>) {
+  set dbxActionAutoTriggerModified(dbxActionAutoTriggerModified: DbxActionAutoTriggerIsModifiedFn<T>) {
     this._isModifiedFn.next(dbxActionAutoTriggerModified);
   }
 

@@ -1,15 +1,75 @@
 {
   "version": 2,
   "projects": {
-    "browser": "packages/browser",
+    "browser": {
+      "root": "packages/browser",
+      "sourceRoot": "packages/browser/src",
+      "projectType": "library",
+      "targets": {
+        "build": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "command": "npx nx run browser:build-base",
+            "color": true
+          }
+        },
+        "build-base": {
+          "executor": "@nrwl/js:tsc",
+          "outputs": ["{options.outputPath}"],
+          "dependsOn": [{
+            "target": "build",
+            "projects": "dependencies"
+          }],
+          "options": {
+            "outputPath": "dist/packages/browser",
+            "main": "packages/browser/src/index.ts",
+            "tsConfig": "packages/browser/tsconfig.lib.json",
+            "assets": ["packages/browser/*.md"]
+          }
+        },
+        "lint": {
+          "executor": "@nrwl/linter:eslint",
+          "outputs": ["{options.outputFile}"],
+          "options": {
+            "lintFilePatterns": ["packages/browser/**/*.ts"]
+          }
+        },
+        "test": {
+          "executor": "@nrwl/jest:jest",
+          "outputs": ["coverage/packages/browser"],
+          "options": {
+            "jestConfig": "packages/browser/jest.config.js",
+            "passWithNoTests": true
+          }
+        },
+        "publish-npmjs": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "command": "cd ./dist/packages/browser && npm publish"
+          }
+        }
+      },
+      "tags": []
+    },
     "date": {
       "root": "packages/date",
       "sourceRoot": "packages/date/src",
       "projectType": "library",
       "targets": {
         "build": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "command": "npx nx run date:build-base",
+            "color": true
+          }
+        },
+        "build-base": {
           "executor": "@nrwl/node:package",
           "outputs": ["{options.outputPath}"],
+          "dependsOn": [{
+            "target": "build",
+            "projects": "dependencies"
+          }],
           "options": {
             "outputPath": "dist/packages/date",
             "tsConfig": "packages/date/tsconfig.lib.json",
@@ -27,24 +87,65 @@
         },
         "test": {
           "executor": "@nrwl/jest:jest",
-          "outputs": ["coverage/packages/date", "./.reports/jest/date.junit.xml"],
+          "outputs": ["coverage/packages/date", "./.reports/jest/utc.date.junit.xml"],
           "options": {
             "jestConfig": "packages/date/jest.config.js",
             "passWithNoTests": true
           }
+        },
+        "test-timezones": {
+          "outputs": [
+            "coverage/packages/date", "./.reports/jest/utc.date.junit.xml", "./.reports/jest/america-chicago.date.junit.xml",
+            "./.reports/jest/america-los_angeles.date.junit.xml", "./.reports/jest/america-new_york.date.junit.xml",
+            "./.reports/jest/asia-tokyo.date.junit.xml", "./.reports/jest/europe-dublic.date.junit.xml"
+          ],
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "commands": [{
+              "command": "TZ=America/New_York nx test date"
+            }, {
+              "command": "TZ=America/Chicago nx test date"
+            }, {
+              "command": "TZ=America/Los_Angeles nx test date"
+            }, {
+              "command": "TZ=Europe/Dublin nx test date"
+            }, {
+              "command": "TZ=Asia/Tokyo nx test date"
+            }, {
+              "command": "nx test date"
+            }],
+            "parallel": false
+          }
+        },
+        "publish-npmjs": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "command": "cd ./dist/packages/date && npm publish"
+          }
         }
       },
       "tags": []
-    },    
+    },
     "dbx-analytics": {
       "projectType": "library",
       "root": "packages/dbx-analytics",
       "sourceRoot": "packages/dbx-analytics/src",
-      "prefix": "dereekb",
+      "prefix": "dbx",
       "targets": {
         "build": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "command": "npx nx run dbx-analytics:build-base:production",
+            "color": true
+          }
+        },
+        "build-base": {
           "executor": "@nrwl/angular:package",
           "outputs": ["dist/packages/dbx-analytics"],
+          "dependsOn": [{
+            "target": "build",
+            "projects": "dependencies"
+          }],
           "options": {
             "project": "packages/dbx-analytics/ng-package.json"
           },
@@ -74,6 +175,12 @@
               "packages/dbx-analytics/src/**/*.html"
             ]
           }
+        },
+        "publish-npmjs": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "command": "cd ./dist/packages/dbx-analytics && npm publish"
+          }
         }
       },
       "tags": []
@@ -82,11 +189,22 @@
       "projectType": "library",
       "root": "packages/dbx-core",
       "sourceRoot": "packages/dbx-core/src",
-      "prefix": "dereekb",
+      "prefix": "dbx",
       "targets": {
         "build": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "command": "npx nx run dbx-core:build-base:production",
+            "color": true
+          }
+        },
+        "build-base": {
           "executor": "@nrwl/angular:package",
           "outputs": ["dist/packages/dbx-core"],
+          "dependsOn": [{
+            "target": "build",
+            "projects": "dependencies"
+          }],
           "options": {
             "project": "packages/dbx-core/ng-package.json"
           },
@@ -116,19 +234,36 @@
               "packages/dbx-core/src/**/*.html"
             ]
           }
+        },
+        "publish-npmjs": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "command": "cd ./dist/packages/dbx-core && npm publish"
+          }
         }
       },
       "tags": []
-    },    
+    },
     "dbx-firebase": {
       "projectType": "library",
       "root": "packages/dbx-firebase",
       "sourceRoot": "packages/dbx-firebase/src",
-      "prefix": "dereekb",
+      "prefix": "dbx",
       "targets": {
         "build": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "command": "npx nx run dbx-firebase:build-base:production",
+            "color": true
+          }
+        },
+        "build-base": {
           "executor": "@nrwl/angular:package",
           "outputs": ["dist/packages/dbx-firebase"],
+          "dependsOn": [{
+            "target": "build",
+            "projects": "dependencies"
+          }],
           "options": {
             "project": "packages/dbx-firebase/ng-package.json"
           },
@@ -170,6 +305,12 @@
               "packages/dbx-firebase/src/**/*.html"
             ]
           }
+        },
+        "publish-npmjs": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "command": "cd ./dist/packages/dbx-firebase && npm publish"
+          }
         }
       },
       "tags": []
@@ -178,11 +319,33 @@
       "projectType": "library",
       "root": "packages/dbx-form",
       "sourceRoot": "packages/dbx-form/src",
-      "prefix": "dereekb",
+      "prefix": "dbx",
       "targets": {
         "build": {
+          "executor": "@nrwl/workspace:run-commands",
+          "outputs": ["dist/packages/dbx-form"],
+          "options": {
+            "commands": [{
+              "description": "build dbx-form production",
+              "command": "npx nx run dbx-form:build-base:production"
+            }, {
+              "description": "copy all style files from src to map to respective directory",
+              "command": "echo 'copying dbx-form scss files' && cd dist/packages/dbx-form/src && find * -type f -name \"*.scss\" -exec sh -c 'mkdir -p ../\"$(dirname {})\" && cp {} ../{}' \\;"
+            }, {
+              "description": "delete unnecessary src directory",
+              "command": "echo 'cleaning up dbx-form scss files' && rm -r dist/packages/dbx-form/src"
+            }],
+            "parallel": false,
+            "color": true
+          }
+        },
+        "build-base": {
           "executor": "@nrwl/angular:package",
           "outputs": ["dist/packages/dbx-form"],
+          "dependsOn": [{
+            "target": "build",
+            "projects": "dependencies"
+          }],
           "options": {
             "project": "packages/dbx-form/ng-package.json"
           },
@@ -212,19 +375,47 @@
               "packages/dbx-form/src/**/*.html"
             ]
           }
+        },
+        "publish-npmjs": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "command": "cd ./dist/packages/dbx-form && npm publish"
+          }
         }
       },
       "tags": []
-    },    
+    },
     "dbx-web": {
       "projectType": "library",
       "root": "packages/dbx-web",
       "sourceRoot": "packages/dbx-web/src",
-      "prefix": "dereekb",
+      "prefix": "dbx",
       "targets": {
         "build": {
+          "executor": "@nrwl/workspace:run-commands",
+          "outputs": ["dist/packages/dbx-web"],
+          "options": {
+            "commands": [{
+              "description": "build dbx-web production",
+              "command": "npx nx run dbx-web:build-base:production"
+            }, {
+              "description": "copy all style files from src to map to respective directory. How this works is it finds all .scss files in the dist/packages/dbx-web/src folder, then iterates over each file's path creates the directory one level up if it does not exist, followed by copying the file.",
+              "command": "echo 'copying dbx-web scss files' && cd dist/packages/dbx-web/src && find * -type f -name \"*.scss\" -exec sh -c 'mkdir -p ../\"$(dirname {})\" && cp {} ../{}' \\;"
+            }, {
+              "description": "delete unnecessary src directory",
+              "command": "echo 'cleaning up dbx-web scss files' && rm -r dist/packages/dbx-web/src"
+            }],
+            "parallel": false,
+            "color": true
+          }
+        },
+        "build-base": {
           "executor": "@nrwl/angular:package",
           "outputs": ["dist/packages/dbx-web"],
+          "dependsOn": [{
+            "target": "build",
+            "projects": "dependencies"
+          }],
           "options": {
             "project": "packages/dbx-web/ng-package.json"
           },
@@ -254,19 +445,36 @@
               "packages/dbx-web/src/**/*.html"
             ]
           }
+        },
+        "publish-npmjs": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "command": "cd ./dist/packages/dbx-web && npm publish"
+          }
         }
       },
       "tags": []
-    },    
+    },
     "demo": {
       "projectType": "application",
       "root": "packages/demo",
       "sourceRoot": "packages/demo/src",
-      "prefix": "dereekb",
+      "prefix": "app",
       "targets": {
         "build": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "command": "npx nx run demo:build-base",
+            "color": true
+          }
+        },
+        "build-base": {
           "executor": "@angular-devkit/build-angular:browser",
           "outputs": ["{options.outputPath}"],
+          "dependsOn": [{
+            "target": "build",
+            "projects": "dependencies"
+          }],
           "options": {
             "outputPath": "dist/packages/demo",
             "index": "packages/demo/src/index.html",
@@ -276,31 +484,36 @@
             "inlineStyleLanguage": "scss",
             "assets": [
               "packages/demo/src/favicon.ico",
-              "packages/demo/src/assets"
+              "packages/demo/src/assets",
+              "packages/demo/src/lib"
             ],
-            "styles": ["packages/demo/src/styles.scss"],
+            "stylePreprocessorOptions": {
+              "includePaths": [
+                "packages"
+              ]
+            },
+            "styles": [
+              "packages/demo/src/styles.scss"
+            ],
             "scripts": []
           },
           "configurations": {
             "production": {
-              "budgets": [
-                {
+              "budgets": [{
                   "type": "initial",
-                  "maximumWarning": "500kb",
-                  "maximumError": "1mb"
+                  "maximumWarning": "2.5mb",
+                  "maximumError": "4mb"
                 },
                 {
                   "type": "anyComponentStyle",
                   "maximumWarning": "2kb",
-                  "maximumError": "4kb"
+                  "maximumError": "100kb"
                 }
               ],
-              "fileReplacements": [
-                {
-                  "replace": "packages/demo/src/environments/environment.ts",
-                  "with": "packages/demo/src/environments/environment.prod.ts"
-                }
-              ],
+              "fileReplacements": [{
+                "replace": "packages/demo/src/environments/environment.ts",
+                "with": "packages/demo/src/environments/environment.prod.ts"
+              }],
               "outputHashing": "all"
             },
             "development": {
@@ -318,10 +531,12 @@
           "executor": "@angular-devkit/build-angular:dev-server",
           "configurations": {
             "production": {
-              "browserTarget": "demo:build:production"
+              "browserTarget": "demo:build-base:production",
+              "port": 9010
             },
             "development": {
-              "browserTarget": "demo:build:development"
+              "browserTarget": "demo:build-base:development",
+              "port": 9010
             }
           },
           "defaultConfiguration": "development"
@@ -349,24 +564,24 @@
             "passWithNoTests": true
           }
         },
-        "deploy-dist-to-hosting": {
+        "deploy": {
           "executor": "@nrwl/workspace:run-commands",
+          "dependsOn": [{
+            "target": "build",
+            "projects": "self"
+          }],
           "options": {
             "command": "firebase deploy --only hosting"
           }
         },
-        "deploy": {
+        "ci-deploy": {
           "executor": "@nrwl/workspace:run-commands",
+          "dependsOn": [{
+            "target": "build",
+            "projects": "self"
+          }],
           "options": {
-            "commands": [
-              {
-                "command": "npx nx build demo"
-              },
-              {
-                "command": "npx nx deploy-dist-to-hosting demo"
-              }
-            ],
-            "parallel": false
+            "command": "firebase deploy --only hosting --token \"$FIREBASE_TOKEN\""
           }
         }
       },
@@ -378,8 +593,19 @@
       "projectType": "application",
       "targets": {
         "build": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "command": "npx nx run demo-api:build-base",
+            "color": true
+          }
+        },
+        "build-base": {
           "executor": "@nrwl/node:build",
           "outputs": ["{options.outputPath}"],
+          "dependsOn": [{
+            "target": "build",
+            "projects": "dependencies"
+          }],
           "options": {
             "outputPath": "dist/packages/demo-api",
             "main": "packages/demo-api/src/main.ts",
@@ -392,12 +618,10 @@
               "optimization": true,
               "extractLicenses": true,
               "inspect": false,
-              "fileReplacements": [
-                {
-                  "replace": "packages/demo-api/src/environments/environment.ts",
-                  "with": "packages/demo-api/src/environments/environment.prod.ts"
-                }
-              ]
+              "fileReplacements": [{
+                "replace": "packages/demo-api/src/environments/environment.ts",
+                "with": "packages/demo-api/src/environments/environment.prod.ts"
+              }]
             }
           }
         },
@@ -416,8 +640,7 @@
         "serve": {
           "executor": "@nrwl/workspace:run-commands",
           "options": {
-            "commands": [
-              {
+            "commands": [{
                 "command": "npx nx build demo-api --watch"
               },
               {
@@ -442,24 +665,24 @@
             "passWithNoTests": true
           }
         },
-        "deploy-dist-to-functions": {
+        "deploy": {
           "executor": "@nrwl/workspace:run-commands",
+          "dependsOn": [{
+            "target": "build",
+            "projects": "self"
+          }],
           "options": {
             "command": "firebase deploy --only functions"
           }
         },
-        "deploy": {
+        "ci-deploy": {
           "executor": "@nrwl/workspace:run-commands",
+          "dependsOn": [{
+            "target": "build",
+            "projects": "self"
+          }],
           "options": {
-            "commands": [
-              {
-                "command": "npx nx build demo-api"
-              },
-              {
-                "command": "npx nx deploy-dist-to-functions demo-api"
-              }
-            ],
-            "parallel": false
+            "command": "firebase deploy --only functions --token \"$FIREBASE_TOKEN\""
           }
         }
       },
@@ -499,8 +722,19 @@
       "projectType": "library",
       "targets": {
         "build": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "command": "npx nx run firebase:build-base",
+            "color": true
+          }
+        },
+        "build-base": {
           "executor": "@nrwl/node:package",
           "outputs": ["{options.outputPath}"],
+          "dependsOn": [{
+            "target": "build",
+            "projects": "dependencies"
+          }],
           "options": {
             "outputPath": "dist/packages/firebase",
             "tsConfig": "packages/firebase/tsconfig.lib.json",
@@ -535,6 +769,12 @@
           "options": {
             "command": "./exec-with-emulator.sh 'npx nx run-tests firebase'"
           }
+        },
+        "publish-npmjs": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "command": "cd ./dist/packages/firebase && npm publish"
+          }
         }
       },
       "tags": []
@@ -546,8 +786,19 @@
       "projectType": "library",
       "targets": {
         "build": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "command": "npx nx run rxjs:build-base",
+            "color": true
+          }
+        },
+        "build-base": {
           "executor": "@nrwl/node:package",
           "outputs": ["{options.outputPath}"],
+          "dependsOn": [{
+            "target": "build",
+            "projects": "dependencies"
+          }],
           "options": {
             "outputPath": "dist/packages/rxjs",
             "tsConfig": "packages/rxjs/tsconfig.lib.json",
@@ -570,18 +821,35 @@
             "jestConfig": "packages/rxjs/jest.config.js",
             "passWithNoTests": true
           }
+        },
+        "publish-npmjs": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "command": "cd ./dist/packages/rxjs && npm publish"
+          }
         }
       },
       "tags": []
-    },    
+    },
     "util": {
       "root": "packages/util",
       "sourceRoot": "packages/util/src",
       "projectType": "library",
       "targets": {
         "build": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "command": "npx nx run util:build-base",
+            "color": true
+          }
+        },
+        "build-base": {
           "executor": "@nrwl/node:package",
           "outputs": ["{options.outputPath}"],
+          "dependsOn": [{
+            "target": "build",
+            "projects": "dependencies"
+          }],
           "options": {
             "outputPath": "dist/packages/util",
             "tsConfig": "packages/util/tsconfig.lib.json",
@@ -604,10 +872,16 @@
             "jestConfig": "packages/util/jest.config.js",
             "passWithNoTests": true
           }
+        },
+        "publish-npmjs": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "command": "cd ./dist/packages/util && npm publish"
+          }
         }
       },
       "tags": []
-    },    
+    },
     "workspace": {
       "root": ".",
       "targets": {
@@ -615,7 +889,7 @@
           "executor": "@jscutlery/semver:version",
           "options": {
             "syncVersions": true,
-            "commitMessageFormat": "release(${projectName}): release version ${version}"
+            "commitMessageFormat": "release(${projectName}): ${version} release"
           }
         }
       }

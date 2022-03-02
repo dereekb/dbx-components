@@ -12,7 +12,7 @@ export const APP_ACTION_DISABLED_DIRECTIVE_KEY = 'dbx_action_disabled';
 @Directive({
   selector: '[dbxActionDisabled]'
 })
-export class DbNgxActionDisabledDirective<T, O> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
+export class DbxActionDisabledDirective<T, O> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
 
   private _disabled = new BehaviorSubject<boolean>(false);
   readonly disabled$ = this._disabled.pipe(distinctUntilChanged());
