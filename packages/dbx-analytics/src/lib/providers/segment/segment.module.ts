@@ -1,21 +1,21 @@
 import { NgModule, ModuleWithProviders } from '@angular/core';
-import { PRELOAD_SEGMENT_TOKEN, SegmentApiService } from './segment.service';
+import { PRELOAD_SEGMENT_TOKEN, DbxAnalyticsSegmentApiService } from './segment.service';
 
 @NgModule({
   declarations: [],
   imports: []
 })
-export class SegmentModule {
+export class DbxAnalyticsSegmentModule {
 
-  static forRoot(preloadService?: boolean): ModuleWithProviders<SegmentModule> {
+  static forRoot(preloadService?: boolean): ModuleWithProviders<DbxAnalyticsSegmentModule> {
     return {
-      ngModule: SegmentModule,
+      ngModule: DbxAnalyticsSegmentModule,
       providers: [
         {
           provide: PRELOAD_SEGMENT_TOKEN,
           useValue: preloadService
         },
-        SegmentApiService
+        DbxAnalyticsSegmentApiService
       ]
     };
   }

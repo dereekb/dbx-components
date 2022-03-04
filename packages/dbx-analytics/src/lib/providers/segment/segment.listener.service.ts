@@ -1,16 +1,16 @@
 import { Injectable } from '@angular/core';
 import { Maybe } from '@dereekb/util';
 import { combineLatest } from 'rxjs';
-import { AbstractAnalyticsServiceListener, AnalyticsStreamEvent, AnalyticsStreamEventType, AnalyticsUser } from '../../analytics';
-import { SegmentApiService } from './segment.service';
+import { AbstractDbxAnalyticsServiceListener, DbxAnalyticsStreamEvent, DbxAnalyticsStreamEventType, DbxAnalyticsUser } from '../../analytics';
+import { DbxAnalyticsSegmentApiService } from './segment.service';
 
 /**
- * AnalyticsServiceListener adapter for Segment.
+ * DbxAnalyticsServiceListener adapter for Segment.
  */
 @Injectable()
-export class SegmentAnalyticsListenerService extends AbstractAnalyticsServiceListener {
+export class DbxAnalyticsSegmentServiceListener extends AbstractDbxAnalyticsServiceListener {
 
-  constructor(private _segmentApi: SegmentApiService) {
+  constructor(private _segmentApi: DbxAnalyticsSegmentApiService) {
     super();
 
     if (this._segmentApi.config.logging) {
@@ -24,7 +24,7 @@ export class SegmentAnalyticsListenerService extends AbstractAnalyticsServiceLis
 
   protected _initializeServiceSubscription() {
     return combineLatest([this._segmentApi.service$, this.analyticsEvents$]).subscribe(
-      ([segment, streamEvent]: [SegmentAnalytics.AnalyticsJS, AnalyticsStreamEvent]) => {
+      ([segment, streamEvent]: [SegmentAnalytics.AnalyticsJS, DbxAnalyticsStreamEvent]) => {
         if (this._segmentApi.config.logging) {
           console.log('Segment Listener Logging Event: ', streamEvent);
         }
@@ -35,32 +35,32 @@ export class SegmentAnalyticsListenerService extends AbstractAnalyticsServiceLis
       });
   }
 
-  protected handleStreamEvent(api: SegmentAnalytics.AnalyticsJS, streamEvent: AnalyticsStreamEvent): void {
+  protected handleStreamEvent(api: SegmentAnalytics.AnalyticsJS, streamEvent: DbxAnalyticsStreamEvent): void {
     switch (streamEvent.type) {
-      case AnalyticsStreamEventType.NewUserEvent:
+      case DbxAnalyticsStreamEventType.NewUserEvent:
         this.updateWithNewUserEvent(api, streamEvent);
         break;
-      case AnalyticsStreamEventType.UserLoginEvent:
-      case AnalyticsStreamEventType.Event:
+      case DbxAnalyticsStreamEventType.UserLoginEvent:
+      case DbxAnalyticsStreamEventType.Event:
         this.updateWithEvent(api, streamEvent);
         break;
-      case AnalyticsStreamEventType.UserLogoutEvent:
+      case DbxAnalyticsStreamEventType.UserLogoutEvent:
         this.changeUser(api, undefined);
         break;
-      case AnalyticsStreamEventType.PageView:
+      case DbxAnalyticsStreamEventType.PageView:
         api.page();
         break;
-      case AnalyticsStreamEventType.UserChange:
+      case DbxAnalyticsStreamEventType.UserChange:
         this.changeUser(api, streamEvent.user);
         break;
     }
   }
 
-  protected updateWithNewUserEvent(api: SegmentAnalytics.AnalyticsJS, streamEvent: AnalyticsStreamEvent): void {
+  protected updateWithNewUserEvent(api: SegmentAnalytics.AnalyticsJS, streamEvent: DbxAnalyticsStreamEvent): void {
     this.changeUser(api, streamEvent.user);
   }
 
-  protected updateWithEvent(api: SegmentAnalytics.AnalyticsJS, streamEvent: AnalyticsStreamEvent, name?: string): void {
+  protected updateWithEvent(api: SegmentAnalytics.AnalyticsJS, streamEvent: DbxAnalyticsStreamEvent, name?: string): void {
     const event = streamEvent.event;
     const eventName = name || event?.name;
 
@@ -81,7 +81,7 @@ export class SegmentAnalyticsListenerService extends AbstractAnalyticsServiceLis
     }
   }
 
-  private changeUser(api: SegmentAnalytics.AnalyticsJS, user: Maybe<AnalyticsUser>): void {
+  private changeUser(api: SegmentAnalytics.AnalyticsJS, user: Maybe<DbxAnalyticsUser>): void {
     if (user) {
       api.identify(user.user, {
         ...user.properties

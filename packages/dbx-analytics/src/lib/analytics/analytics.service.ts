@@ -2,45 +2,45 @@ import { Observable, Subject, BehaviorSubject, of, Subscription } from 'rxjs';
 import { filter, first, shareReplay, switchMap } from 'rxjs/operators';
 import { Inject, Injectable, Optional } from '@angular/core';
 import { SubscriptionObject, filterMaybe } from '@dereekb/rxjs';
-import { AnalyticsEvent, AnalyticsEventData, AnalyticsEventName, AnalyticsUser, NewUserAnalyticsEventData, UserAnalyticsEvent } from './analytics';
-import { AnalyticsStreamEvent, AnalyticsStreamEventType } from './analytics.stream';
+import { DbxAnalyticsEvent, DbxAnalyticsEventData, DbxAnalyticsEventName, DbxAnalyticsUser, NewUserAnalyticsEventData, DbxUserAnalyticsEvent } from './analytics';
+import { DbxAnalyticsStreamEvent, DbxAnalyticsStreamEventType } from './analytics.stream';
 import { Maybe, Destroyable } from '@dereekb/util';
 
-export abstract class AnalyticsEventEmitterService {
-  abstract sendNewUserEvent(user: AnalyticsUser, data: NewUserAnalyticsEventData): void;
-  abstract sendUserLoginEvent(user: AnalyticsUser, data?: AnalyticsEventData): void;
-  abstract sendUserLogoutEvent(data?: AnalyticsEventData): void;
-  abstract sendUserPropertiesEvent(user: AnalyticsUser, data?: AnalyticsEventData): void;
-  abstract sendEventData(name: AnalyticsEventName, data?: AnalyticsEventData): void;
-  abstract sendEvent(event: AnalyticsEvent): void;
+export abstract class DbxAnalyticsEventEmitterService {
+  abstract sendNewUserEvent(user: DbxAnalyticsUser, data: NewUserAnalyticsEventData): void;
+  abstract sendUserLoginEvent(user: DbxAnalyticsUser, data?: DbxAnalyticsEventData): void;
+  abstract sendUserLogoutEvent(data?: DbxAnalyticsEventData): void;
+  abstract sendUserPropertiesEvent(user: DbxAnalyticsUser, data?: DbxAnalyticsEventData): void;
+  abstract sendEventData(name: DbxAnalyticsEventName, data?: DbxAnalyticsEventData): void;
+  abstract sendEvent(event: DbxAnalyticsEvent): void;
   abstract sendPageView(page?: string): void;
 }
 
-export abstract class AnalyticsEventStreamService {
-  abstract readonly events$: Observable<AnalyticsStreamEvent>;
+export abstract class DbxAnalyticsEventStreamService {
+  abstract readonly events$: Observable<DbxAnalyticsStreamEvent>;
 }
 
-export abstract class AnalyticsUserSource {
-  abstract readonly analyticsUser$: Observable<Maybe<AnalyticsUser>>;
+export abstract class DbxAnalyticsUserSource {
+  abstract readonly analyticsUser$: Observable<Maybe<DbxAnalyticsUser>>;
 }
 
-export abstract class AnalyticsServiceListener {
-  public abstract listenToService(service: AnalyticsService): void;
+export abstract class DbxAnalyticsServiceListener {
+  public abstract listenToService(service: DbxAnalyticsService): void;
 }
 
 /**
  * Abstract AnalyticsServiceListener implementation.
  */
-export abstract class AbstractAnalyticsServiceListener implements AnalyticsServiceListener, Destroyable {
+export abstract class AbstractDbxAnalyticsServiceListener implements DbxAnalyticsServiceListener, Destroyable {
 
   private _sub = new SubscriptionObject();
-  protected _analytics = new BehaviorSubject<Maybe<AnalyticsService>>(undefined);
+  protected _analytics = new BehaviorSubject<Maybe<DbxAnalyticsService>>(undefined);
 
   readonly analytics$ = this._analytics.pipe(filterMaybe(), shareReplay(1));
   readonly analyticsEvents$ = this.analytics$.pipe(switchMap(x => x.events$), shareReplay(1));
 
   // MARK: AnalyticsServiceListener
-  listenToService(service: AnalyticsService): void {
+  listenToService(service: DbxAnalyticsService): void {
     this._analytics.next(service);
     const sub = this._initializeServiceSubscription();
 
@@ -59,18 +59,18 @@ export abstract class AbstractAnalyticsServiceListener implements AnalyticsServi
 
 }
 
-export abstract class AnalyticsServiceConfiguration {
-  listeners: AnalyticsServiceListener[] = [];
+export abstract class DbxAnalyticsServiceConfiguration {
+  listeners: DbxAnalyticsServiceListener[] = [];
   isProduction?: boolean;
   logEvents?: boolean;
-  userSource?: AnalyticsUserSource;
+  userSource?: DbxAnalyticsUserSource;
 }
 
-export class AnalyticsStreamEventAnalyticsEventWrapper implements AnalyticsStreamEvent {
+export class DbxAnalyticsStreamEventAnalyticsEventWrapper implements DbxAnalyticsStreamEvent {
 
-  constructor(public readonly event: UserAnalyticsEvent, public readonly type: AnalyticsStreamEventType = AnalyticsStreamEventType.Event) { }
+  constructor(public readonly event: DbxUserAnalyticsEvent, public readonly type: DbxAnalyticsStreamEventType = DbxAnalyticsStreamEventType.Event) { }
 
-  public get user(): Maybe<AnalyticsUser> {
+  public get user(): Maybe<DbxAnalyticsUser> {
     return this.event.user;
   }
 
@@ -84,7 +84,7 @@ export class AnalyticsStreamEventAnalyticsEventWrapper implements AnalyticsStrea
  * Primary analytics service that emits analytics events that components can listen to.
  */
 @Injectable()
-export class AnalyticsService implements AnalyticsEventStreamService, AnalyticsEventEmitterService, Destroyable {
+export class DbxAnalyticsService implements DbxAnalyticsEventStreamService, DbxAnalyticsEventEmitterService, Destroyable {
 
   // TODO: Make these configurable.
 
@@ -93,18 +93,18 @@ export class AnalyticsService implements AnalyticsEventStreamService, AnalyticsE
   static readonly USER_LOGOUT_EVENT_NAME = 'User Logout';
   static readonly USER_PROPERTIES_EVENT_NAME = 'User Properties';
 
-  private _subject = new Subject<AnalyticsStreamEvent>();
+  private _subject = new Subject<DbxAnalyticsStreamEvent>();
   readonly events$ = this._subject.asObservable();
 
-  private _userSource = new BehaviorSubject<Maybe<AnalyticsUserSource>>(undefined);
+  private _userSource = new BehaviorSubject<Maybe<DbxAnalyticsUserSource>>(undefined);
   readonly user$ = this._userSource.pipe(switchMap(x => (x) ? x.analyticsUser$ : of(undefined)), shareReplay(1));
 
   private _userSourceSub = new SubscriptionObject();
   private _loggerSub = new SubscriptionObject();
 
   constructor(
-    private _config: AnalyticsServiceConfiguration,
-    @Optional() @Inject(AnalyticsUserSource) userSource: Maybe<AnalyticsUserSource> = _config.userSource
+    private _config: DbxAnalyticsServiceConfiguration,
+    @Optional() @Inject(DbxAnalyticsUserSource) userSource: Maybe<DbxAnalyticsUserSource> = _config.userSource
   ) {
     this._init();
 
@@ -117,8 +117,8 @@ export class AnalyticsService implements AnalyticsEventStreamService, AnalyticsE
   /**
    * Sets the user directly.
    */
-  public setUser(user: Maybe<AnalyticsUser>): void {
-    let source: Maybe<AnalyticsUserSource>;
+  public setUser(user: Maybe<DbxAnalyticsUser>): void {
+    let source: Maybe<DbxAnalyticsUserSource>;
 
     if (user) {
       source = { analyticsUser$: of(user) };
@@ -127,7 +127,7 @@ export class AnalyticsService implements AnalyticsEventStreamService, AnalyticsE
     this._userSource.next(source);
   }
 
-  public setUserSource(source: AnalyticsUserSource): void {
+  public setUserSource(source: DbxAnalyticsUserSource): void {
     this._userSource.next(source);
   }
 
@@ -135,71 +135,71 @@ export class AnalyticsService implements AnalyticsEventStreamService, AnalyticsE
   /**
    * Sends an event.
    */
-  public sendNewUserEvent(user: AnalyticsUser, data: NewUserAnalyticsEventData): void {
+  public sendNewUserEvent(user: DbxAnalyticsUser, data: NewUserAnalyticsEventData): void {
     this.sendNextEvent({
-      name: AnalyticsService.USER_REGISTRATION_EVENT_NAME,
+      name: DbxAnalyticsService.USER_REGISTRATION_EVENT_NAME,
       data
-    }, AnalyticsStreamEventType.NewUserEvent, user);
+    }, DbxAnalyticsStreamEventType.NewUserEvent, user);
   }
 
-  public sendUserLoginEvent(user: AnalyticsUser, data?: AnalyticsEventData): void {
+  public sendUserLoginEvent(user: DbxAnalyticsUser, data?: DbxAnalyticsEventData): void {
     this.sendNextEvent({
-      name: AnalyticsService.USER_LOGIN_EVENT_NAME,
+      name: DbxAnalyticsService.USER_LOGIN_EVENT_NAME,
       data
-    }, AnalyticsStreamEventType.UserLoginEvent, user);
+    }, DbxAnalyticsStreamEventType.UserLoginEvent, user);
   }
 
-  public sendUserLogoutEvent(data?: AnalyticsEventData, clearUser = true): void {
+  public sendUserLogoutEvent(data?: DbxAnalyticsEventData, clearUser = true): void {
     this.sendNextEvent({
-      name: AnalyticsService.USER_LOGOUT_EVENT_NAME,
+      name: DbxAnalyticsService.USER_LOGOUT_EVENT_NAME,
       data
-    }, AnalyticsStreamEventType.UserLogoutEvent);
+    }, DbxAnalyticsStreamEventType.UserLogoutEvent);
 
     if (clearUser) {
       this.setUser(undefined);
     }
   }
 
-  public sendUserPropertiesEvent(user: AnalyticsUser, data?: AnalyticsEventData): void {
+  public sendUserPropertiesEvent(user: DbxAnalyticsUser, data?: DbxAnalyticsEventData): void {
     this.sendNextEvent({
-      name: AnalyticsService.USER_PROPERTIES_EVENT_NAME,
+      name: DbxAnalyticsService.USER_PROPERTIES_EVENT_NAME,
       data
-    }, AnalyticsStreamEventType.UserPropertiesEvent, user);
+    }, DbxAnalyticsStreamEventType.UserPropertiesEvent, user);
   }
 
-  public sendEventData(name: AnalyticsEventName, data?: AnalyticsEventData): void {
+  public sendEventData(name: DbxAnalyticsEventName, data?: DbxAnalyticsEventData): void {
     return this.sendEvent({
       name,
       data
     });
   }
 
-  public sendEventType(eventType: AnalyticsEventName): void {
+  public sendEventType(eventType: DbxAnalyticsEventName): void {
     this.sendNextEvent({
       name: eventType
-    }, AnalyticsStreamEventType.Event);
+    }, DbxAnalyticsStreamEventType.Event);
   }
 
-  public sendEvent(event: AnalyticsEvent): void {
-    this.sendNextEvent(event, AnalyticsStreamEventType.Event);
+  public sendEvent(event: DbxAnalyticsEvent): void {
+    this.sendNextEvent(event, DbxAnalyticsStreamEventType.Event);
   }
 
   public sendPageView(page?: string): void {
     this.sendNextEvent({
       name: page
-    }, AnalyticsStreamEventType.PageView);
+    }, DbxAnalyticsStreamEventType.PageView);
   }
 
-  protected sendNextEvent(event: AnalyticsEvent = {}, type: AnalyticsStreamEventType, userOverride?: AnalyticsUser): void {
+  protected sendNextEvent(event: DbxAnalyticsEvent = {}, type: DbxAnalyticsStreamEventType, userOverride?: DbxAnalyticsUser): void {
     this.user$.pipe(first()).subscribe((analyticsUser) => {
-      const user: Maybe<AnalyticsUser> = (userOverride != null) ? userOverride : analyticsUser;
-      const analyticsEvent: UserAnalyticsEvent = { ...event, user };
+      const user: Maybe<DbxAnalyticsUser> = (userOverride != null) ? userOverride : analyticsUser;
+      const analyticsEvent: DbxUserAnalyticsEvent = { ...event, user };
       this.nextEvent(analyticsEvent, type);
     });
   }
 
-  protected nextEvent(event: UserAnalyticsEvent, type: AnalyticsStreamEventType): void {
-    const wrapper = new AnalyticsStreamEventAnalyticsEventWrapper(event, type);
+  protected nextEvent(event: DbxUserAnalyticsEvent, type: DbxAnalyticsStreamEventType): void {
+    const wrapper = new DbxAnalyticsStreamEventAnalyticsEventWrapper(event, type);
     this._subject.next(wrapper);
   }
 
@@ -220,12 +220,12 @@ export class AnalyticsService implements AnalyticsEventStreamService, AnalyticsE
 
       // Create a new subscription
       this._loggerSub.subscription = this._subject.subscribe((x) => {
-        console.log(`AnalyticsService: Analytics Event - ${AnalyticsStreamEventType[x.type]} User: ${x.userId} Data: ${JSON.stringify(x.event)}.`);
+        console.log(`AnalyticsService: Analytics Event - ${DbxAnalyticsStreamEventType[x.type]} User: ${x.userId} Data: ${JSON.stringify(x.event)}.`);
       });
     }
 
     this._userSourceSub.subscription = this.user$.subscribe(() => {
-      this.sendNextEvent({}, AnalyticsStreamEventType.UserChange);
+      this.sendNextEvent({}, DbxAnalyticsStreamEventType.UserChange);
     });
   }
 

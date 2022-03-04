@@ -1,31 +1,32 @@
 import { Maybe, PrimativeKey } from "@dereekb/util";
 
-export type AnalyticsEventName = string;
-export type AnalyticsUserId = string;
+export type DbxAnalyticsEventName = string;
+export type DbxAnalyticsUserId = string;
 
-export interface AnalyticsUser {
-  readonly user: AnalyticsUserId;
+export interface DbxAnalyticsUser {
+  readonly user: DbxAnalyticsUserId;
   readonly properties?: {
     readonly [key: string]: PrimativeKey | boolean;
   };
 }
 
-export interface AnalyticsEventData {
+export interface DbxAnalyticsEventData {
   readonly [key: string]: PrimativeKey | boolean;
 }
 
+export interface DbxAnalyticsEvent {
+  readonly name?: DbxAnalyticsEventName;
+  readonly value?: number;
+  readonly data?: DbxAnalyticsEventData;
+}
+
+export interface DbxUserAnalyticsEvent extends DbxAnalyticsEvent {
+  readonly user?: Maybe<DbxAnalyticsUser>;
+}
+
+// MARK: New User
 export type NewUserRegistrationMethod = 'facebook' | 'google' | 'email' | string;
 
-export interface NewUserAnalyticsEventData extends AnalyticsEventData {
+export interface NewUserAnalyticsEventData extends DbxAnalyticsEventData {
   method: NewUserRegistrationMethod;
-}
-
-export interface AnalyticsEvent {
-  readonly name?: AnalyticsEventName;
-  readonly value?: number;
-  readonly data?: AnalyticsEventData;
-}
-
-export interface UserAnalyticsEvent extends AnalyticsEvent {
-  readonly user?: Maybe<AnalyticsUser>;
 }

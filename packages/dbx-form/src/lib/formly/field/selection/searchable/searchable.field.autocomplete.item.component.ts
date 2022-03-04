@@ -5,7 +5,7 @@ import { ConfiguredSearchableValueFieldDisplayValue } from './searchable';
 import { Maybe, mergeIntoArray } from '@dereekb/util';
 import { DbxInjectedComponentConfig } from '@dereekb/dbx-core';
 
-export const DBX_SEARCHABLE_FIELD_COMPONENT_DATA = new InjectionToken('DbxSearchableField');
+export const DBX_SEARCHABLE_FIELD_COMPONENT_DATA_TOKEN = new InjectionToken('DbxSearchableField');
 
 @Component({
   selector: 'dbx-searchable-field-autocomplete-item',
@@ -24,7 +24,7 @@ export class DbxSearchableFieldAutocompleteItemComponent<T> implements OnDestroy
     const config: DbxInjectedComponentConfig = {
       ...x.display,
       providers: mergeIntoArray([{
-        provide: DBX_SEARCHABLE_FIELD_COMPONENT_DATA,
+        provide: DBX_SEARCHABLE_FIELD_COMPONENT_DATA_TOKEN,
         useValue: x
       }], x.display.providers)
     };
@@ -49,7 +49,7 @@ export class DbxSearchableFieldAutocompleteItemComponent<T> implements OnDestroy
 @Directive()
 export abstract class AbstractDbxSearchableFieldDisplayDirective<T> {
 
-  constructor(@Inject(DBX_SEARCHABLE_FIELD_COMPONENT_DATA) readonly displayValue: ConfiguredSearchableValueFieldDisplayValue<T>) { }
+  constructor(@Inject(DBX_SEARCHABLE_FIELD_COMPONENT_DATA_TOKEN) readonly displayValue: ConfiguredSearchableValueFieldDisplayValue<T>) { }
 
 }
 

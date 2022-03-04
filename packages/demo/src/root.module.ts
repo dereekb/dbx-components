@@ -1,4 +1,4 @@
-import { DbxAnalyticsModule, AnalyticsService, SegmentModule } from '@dereekb/dbx-analytics';
+import { DbxAnalyticsModule, DbxAnalyticsService, DbxAnalyticsSegmentModule } from '@dereekb/dbx-analytics';
 import { Injector, NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
@@ -6,7 +6,7 @@ import { Category, StatesModule, UIRouter, UIRouterModule, UIView } from '@uirou
 import { AppSharedModule } from '@/shared/app.shared.module';
 import { environment } from './environments/environment';
 import { DbxPopupInteractionModule, DbxPopoverInteractionModule, DbxScreenModule, DbxWebRootModule, DbxWebUIRouterModule, DEFAULT_SCREEN_MEDIA_SERVICE_CONFIG, DBX_STYLE_DEFAULT_CONFIG_TOKEN } from '@dereekb/dbx-web';
-import { AnalyticsServiceConfiguration, SegmentAnalyticsListenerService, SegmentApiService, SegmentApiServiceConfig } from '@dereekb/dbx-analytics';
+import { DbxAnalyticsServiceConfiguration, DbxAnalyticsSegmentServiceListener, DbxAnalyticsSegmentApiService, DbxAnalyticsSegmentApiServiceConfig } from '@dereekb/dbx-analytics';
 import { AppModule } from './app/app.module';
 import { DbxCoreUIRouterSegueModule } from '@dereekb/dbx-core';
 import { FormlyModule } from '@ngx-formly/core';
@@ -15,7 +15,7 @@ import { MAT_FORM_FIELD_DEFAULT_OPTIONS } from '@angular/material/form-field';
 
 export function routerConfigFn(router: UIRouter, injector: Injector, module: StatesModule): any {
   const transitionService = router.transitionService;
-  const service: AnalyticsService = injector.get<AnalyticsService>(AnalyticsService);
+  const service: DbxAnalyticsService = injector.get<DbxAnalyticsService>(DbxAnalyticsService);
 
   transitionService.onSuccess({}, () => {
     // Send a page view on each successful transition.
@@ -34,10 +34,10 @@ export function routerConfigFn(router: UIRouter, injector: Injector, module: Sta
   return undefined;
 }
 
-export function analyticsServiceConfigurationFactory(segmentApi: SegmentApiService): AnalyticsServiceConfiguration {
-  const segmentListener = new SegmentAnalyticsListenerService(segmentApi);
+export function analyticsServiceConfigurationFactory(segmentApi: DbxAnalyticsSegmentApiService): DbxAnalyticsServiceConfiguration {
+  const segmentListener = new DbxAnalyticsSegmentServiceListener(segmentApi);
 
-  const config: AnalyticsServiceConfiguration = {
+  const config: DbxAnalyticsServiceConfiguration = {
     isProduction: environment.production,
     logEvents: environment.testing,
     listeners: [
@@ -48,8 +48,8 @@ export function analyticsServiceConfigurationFactory(segmentApi: SegmentApiServi
   return config;
 }
 
-export function makeSegmentConfig(): SegmentApiServiceConfig {
-  const config = new SegmentApiServiceConfig(environment.analytics.segment);
+export function makeSegmentConfig(): DbxAnalyticsSegmentApiServiceConfig {
+  const config = new DbxAnalyticsSegmentApiServiceConfig(environment.analytics.segment);
   config.active = environment.production;
   config.logging = false; // environment.testing;
   return config;
@@ -65,12 +65,12 @@ export function makeSegmentConfig(): SegmentApiServiceConfig {
     DbxScreenModule.forRoot(DEFAULT_SCREEN_MEDIA_SERVICE_CONFIG),
     DbxAnalyticsModule.forRoot({
       analyticsConfigurationProvider: {
-        provide: AnalyticsServiceConfiguration,
+        provide: DbxAnalyticsServiceConfiguration,
         useFactory: analyticsServiceConfigurationFactory,
-        deps: [SegmentApiService]
+        deps: [DbxAnalyticsSegmentApiService]
       }
     }),
-    SegmentModule.forRoot(),
+    DbxAnalyticsSegmentModule.forRoot(),
     DbxCoreUIRouterSegueModule.forRoot(),
     DbxWebUIRouterModule.forRoot(),
     DbxPopupInteractionModule.forRoot(),
@@ -86,7 +86,7 @@ export function makeSegmentConfig(): SegmentApiServiceConfig {
     }),
   ],
   providers: [{
-    provide: SegmentApiServiceConfig,
+    provide: DbxAnalyticsSegmentApiServiceConfig,
     useFactory: makeSegmentConfig
   }, {
     provide: DBX_STYLE_DEFAULT_CONFIG_TOKEN,
