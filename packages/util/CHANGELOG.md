@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [1.2.0](https://github.com/dereekb/dbcomponents/compare/v1.1.0...v1.2.0) (2022-03-04)
+
+
+### Features
+
+* added setContainsAnyValue() ([ea0ee9a](https://github.com/dereekb/dbcomponents/commit/ea0ee9a76fc6b093b2608356179e9f633fc896be))
+
+
+
 # [1.1.0](https://github.com/dereekb/dbcomponents/compare/v1.0.0...v1.1.0) (2022-03-02)
 
 

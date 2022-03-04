@@ -14,9 +14,7 @@ else
   echo starting release
   echo pulling latest develop branch
   git checkout origin/develop
-  echo creating release branch on origin develop branch
-  git checkout -b release
   echo pushing release to origin
   git push origin release
-  echo release started. git is on release branch
+  echo release pushed to origin
 fi
