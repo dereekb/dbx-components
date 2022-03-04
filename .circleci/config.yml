@@ -115,7 +115,7 @@ jobs:
           command: git checkout main && git merge release --squash -Xtheirs && git commit -m "$(git log release --pretty=%B | cat)"
       - run:
           name: push main to origin
-          command: git push origin main
+          command: git push --follow-tags origin main
       - run:
           name: delete release branch
           command: git push origin --delete release
