@@ -124,7 +124,7 @@ describe('containsAnyValue', () => {
     const array = [value];
 
     expect(array.indexOf(value) !== -1);
-    expect(containsAnyValue(array, [value])).toBe(false);
+    expect(containsAnyValue(array, [value])).toBe(true);
   });
 
   it('should return false if the array does not contain a value from the array.', () => {
