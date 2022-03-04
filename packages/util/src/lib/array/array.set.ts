@@ -52,11 +52,15 @@ export function filterValuesFromSet<T>(values: T[], set: Set<T>, exclude = false
 /**
  * Returns true if the input array contains any value from the second array.
  */
-export function containsAnyValue<T>(values: T[], valuesToFind: T[]): boolean {
+export function containsAnyValue<T>(values: Iterable<T>, valuesToFind: Iterable<T>): boolean {
   const set = new Set(valuesToFind);
-  return setContainsAnyValue(values, set);
+  return containsAnyValueFromSet(values, set);
 }
 
-export function setContainsAnyValue<T>(values: T[], valuesToFind: Set<T>): boolean {
-  return (values) ? values.findIndex((x) => valuesToFind.has(x)) !== -1 : false;
+export function containsAnyValueFromSet<T>(values: Iterable<T>, valuesToFind: Set<T>): boolean {
+  return setContainsAnyValue(valuesToFind, values);
+}
+
+export function setContainsAnyValue<T>(valuesSet: Set<T>, valuesToFind: Iterable<T>): boolean {
+  return (valuesSet) ? Array.from(valuesToFind).findIndex((x) => valuesSet.has(x)) !== -1 : false;
 }

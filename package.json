@@ -1,12 +1,16 @@
 {
   "name": "@dereekb/components",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "license": "MIT",
   "scripts": {
     "postinstall": "ngcc --properties es2015 browser module main",
     "prepare": "husky install"
   },
   "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dereekb/dbcomponents"
+  },
   "dependencies": {
     "@angular/animations": "^13.0.0",
     "@angular/cdk": "^13.0.0",
@@ -50,7 +54,7 @@
     "lodash.isequal": "^4.5.0",
     "mat-progress-buttons": "git+https://git@github.com/dereekb/mat-progress-buttons.git#60b0374a45644e8756f20b8d761738151ca3df64",
     "ms": "^3.0.0-canary.1",
-    "ng-overlay-container": "git+https://git@github.com/dereekb/ng-overlay-container.git#24931e7094c4f8f76bda061d044426febf810a4f",
+    "ng-overlay-container": "^13.0.0",
     "ngx-editor": "^12.1.1",
     "ngx-infinite-scroll": "^10.0.1",
     "ngx-mat-intl-tel-input": "^4.1.0",
