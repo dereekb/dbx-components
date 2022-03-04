@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { DbxInjectedComponentModule } from '@dereekb/dbx-core';
 import { FormlyModule } from '@ngx-formly/core';
-import { FormComponentFieldComponent } from './component.field.component';
+import { DbxFormComponentFieldComponent } from './component.field.component';
 
 @NgModule({
   imports: [
@@ -10,15 +10,15 @@ import { FormComponentFieldComponent } from './component.field.component';
     DbxInjectedComponentModule,
     FormlyModule.forChild({
       types: [
-        { name: 'component', component: FormComponentFieldComponent }
+        { name: 'component', component: DbxFormComponentFieldComponent }
       ]
     })
   ],
   declarations: [
-    FormComponentFieldComponent
+    DbxFormComponentFieldComponent
   ],
   exports: [
-    FormComponentFieldComponent
+    DbxFormComponentFieldComponent
   ]
 })
 export class DbxFormFormlyComponentFieldModule { }

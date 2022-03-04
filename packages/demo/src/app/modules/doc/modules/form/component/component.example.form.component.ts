@@ -1,9 +1,11 @@
 import { LOREM } from './../../shared/lorem';
-import { Type } from '@angular/core';
+import { Type, InjectionToken, Inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { Component } from '@angular/core';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { AbstractConfigAsyncFormlyFormDirective, componentField, ProvideFormlyContext } from '@dereekb/dbx-form';
+
+export const DOC_FORM_EXAMPLE_COMPONENT_DATA_TOKEN = new InjectionToken('DOC_FORM_EXAMPLE_COMPONENT_DATA_TOKEN');
 
 export interface DocFormExampleComponentFormValue { }
 
@@ -22,7 +24,11 @@ export class DocFormExampleComponentFormComponent extends AbstractConfigAsyncFor
     map((config) => {
       return [
         componentField({
-          componentClass: config.componentClass
+          componentClass: config.componentClass,
+          providers: [{
+            provide: DOC_FORM_EXAMPLE_COMPONENT_DATA_TOKEN,
+            useValue: 'example injected value'
+          }]
         })
       ];
     })
@@ -34,7 +40,9 @@ export class DocFormExampleComponentFormComponent extends AbstractConfigAsyncFor
   template: `
   <div class="pad-3">
     <dbx-content-box class="dbx-primary-bg">
-      <dbx-section header="A" [hint]="lorem"></dbx-section>
+      <dbx-section header="A" [hint]="lorem">
+        <p>Data injected from configuration: {{ injectedData }}</p>
+      </dbx-section>
     </dbx-content-box>
   </div>
   `
@@ -42,6 +50,8 @@ export class DocFormExampleComponentFormComponent extends AbstractConfigAsyncFor
 export class DocFormExampleComponentFormTestViewAComponent {
 
   lorem = LOREM;
+
+  constructor(@Inject(DOC_FORM_EXAMPLE_COMPONENT_DATA_TOKEN) readonly injectedData: string) { }
 
 }
 
@@ -57,6 +67,4 @@ export class DocFormExampleComponentFormTestViewAComponent {
     </div>
 `
 })
-export class DocFormExampleComponentFormTestViewBComponent {
-
-}
+export class DocFormExampleComponentFormTestViewBComponent { }

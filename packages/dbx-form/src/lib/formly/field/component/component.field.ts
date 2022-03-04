@@ -1,15 +1,10 @@
-import { Type } from "@angular/core";
-import { FormComponentFieldWrappedComponent, FormComponentFieldFieldConfig } from "./component.field.component";
+import { DbxFormComponentFieldConfig, DbxFormComponentFormlyFieldConfig } from "./component.field.component";
 
-export interface ComponentFieldConfig<T> {
-  componentClass: Type<T>;
-}
+export interface ComponentFieldConfig<T = any> extends DbxFormComponentFieldConfig<T> { }
 
-export function componentField<T extends FormComponentFieldWrappedComponent>({ componentClass }: ComponentFieldConfig<T>): FormComponentFieldFieldConfig<T> {
+export function componentField<T>(config: ComponentFieldConfig<T>): DbxFormComponentFormlyFieldConfig {
   return {
     type: 'component',
-    componentField: {
-      componentClass
-    }
+    componentField: config
   };
 }
