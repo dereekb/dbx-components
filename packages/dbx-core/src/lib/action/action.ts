@@ -1,57 +1,80 @@
+import { LoadingStateType } from "@dereekb/rxjs";
 
 /**
  * Used by ActionContextState to denote what state the action is in.
  */
- export enum ActionState {
+export enum DbxActionState {
   /**
    * No action in progress. Waiting for the trigger.
    */
-  Idle = 'idle',
+  IDLE = 'idle',
   /**
    * Idle state that can be set to show that the source is not yet ready.
    */
-  Disabled = 'disabled',
+  DISABLED = 'disabled',
   /**
    * The action was triggered. We wait (and allow) the value to be updated.
    */
-  Triggered = 'triggered',
+  TRIGGERED = 'triggered',
   /**
    * The trigger was accepted and the value is updated. It should begin working immediately.
    *
    * ValueReady cannot be set until triggered is set.
    */
-  ValueReady = 'valueReady',
+  VALUE_READY = 'valueReady',
   /**
    * The action is in progress.
    */
-  Working = 'working',
+  WORKING = 'working',
   /**
    * The trigger, action, or value was rejected due to an error or other issue.
    *
    * An error may be specified optionally.
    */
-  Rejected = 'rejected',
+  REJECTED = 'rejected',
   /**
    * The action was successful.
    */
-  Success = 'success'
+  SUCCESS = 'success'
 }
 
 /**
  * Unique key for disabling/enabling.
  */
-export type ActionDisabledKey = string;
+export type DbxActionDisabledKey = string;
 
 export const DEFAULT_ACTION_DISABLED_KEY = 'default';
 
-export function isIdleActionState(actionState: ActionState): boolean {
+export function isIdleActionState(actionState: DbxActionState): boolean {
   switch (actionState) {
-    case ActionState.Idle:
-    case ActionState.Disabled:
-    case ActionState.Rejected:
-    case ActionState.Success:
+    case DbxActionState.IDLE:
+    case DbxActionState.DISABLED:
+    case DbxActionState.REJECTED:
+    case DbxActionState.SUCCESS:
       return true;
     default:
       return false;
   }
+}
+
+export function loadingStateTypeForActionState(actionState: DbxActionState): LoadingStateType {
+  let loadingStateType: LoadingStateType;
+
+  switch (actionState) {
+    case DbxActionState.SUCCESS:
+      loadingStateType = LoadingStateType.SUCCESS;
+      break;
+    case DbxActionState.REJECTED:
+      loadingStateType = LoadingStateType.ERROR;
+      break;
+    case DbxActionState.IDLE:
+    case DbxActionState.DISABLED:
+      loadingStateType = LoadingStateType.IDLE;
+      break;
+    default:
+      loadingStateType = LoadingStateType.LOADING;
+      break;
+  }
+
+  return loadingStateType;
 }

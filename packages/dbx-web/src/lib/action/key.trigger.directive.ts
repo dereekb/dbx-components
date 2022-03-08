@@ -1,6 +1,6 @@
 import { Directive, Host, HostListener, Input } from '@angular/core';
 import { Maybe } from '@dereekb/util';
-import { ActionContextStoreSourceInstance } from '@dereekb/dbx-core';
+import { DbxActionContextStoreSourceInstance } from '@dereekb/dbx-core';
 
 const DEFAULT_ACTION_KEY_TRIGGER = 'enter';
 
@@ -17,7 +17,7 @@ export class DbxActionKeyTriggerDirective<T = any, O = any> {
   @Input('dbxActionKeyTrigger')
   inputKey: Maybe<string>;
 
-  constructor(@Host() public readonly source: ActionContextStoreSourceInstance<T, O>) { }
+  constructor(@Host() public readonly source: DbxActionContextStoreSourceInstance<T, O>) { }
 
   get key(): string {
     return this.inputKey || DEFAULT_ACTION_KEY_TRIGGER;

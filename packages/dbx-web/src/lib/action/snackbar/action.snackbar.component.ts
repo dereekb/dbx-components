@@ -2,9 +2,10 @@ import { distinctUntilChanged, Observable, shareReplay } from 'rxjs';
 import { Component, Inject } from '@angular/core';
 import { MatSnackBarRef, MAT_SNACK_BAR_DATA } from '@angular/material/snack-bar';
 import { Maybe } from '@dereekb/util';
-import ms from 'ms';
 import { map } from 'rxjs/operators';
-import { ActionContextStoreSourceInstance, ActionState, DbxActionSnackbarComponentConfig } from '@dereekb/dbx-core';
+import { DbxActionSnackbarDisplayConfig, DbxActionSnackbarActionConfig } from './action.snackbar';
+import { DbxActionContextStoreSourceInstance, DbxActionState } from '@dereekb/dbx-core';
+import ms from 'ms';
 
 /**
  * Component for a snackbar that contains an action.
@@ -28,18 +29,17 @@ import { ActionContextStoreSourceInstance, ActionState, DbxActionSnackbarCompone
         </ng-container>
       </ng-container>
     </div>
-  `,
-  // TODO: styleUrls: ['./action.scss']
+  `
 })
 export class DbxActionSnackbarComponent {
 
+  readonly action: Maybe<string>;
+
   constructor(
     readonly snackbar: MatSnackBarRef<DbxActionSnackbarComponent>,
-    @Inject(MAT_SNACK_BAR_DATA) readonly data: DbxActionSnackbarComponentConfig
+    @Inject(MAT_SNACK_BAR_DATA) readonly data: DbxActionSnackbarDisplayConfig
   ) {
-    if (!data.actionSource) {
-      throw new Error('No action was provided to ActionSnackbar.');
-    }
+    this.action = this.data.action?.button ?? this.data.button;
   }
 
   readonly complete$ = this.actionSourceInstance.isSuccess$;
@@ -48,10 +48,10 @@ export class DbxActionSnackbarComponent {
       let classes = 'dbx-action-snackbar-';
 
       switch (x) {
-        case ActionState.Rejected:
+        case DbxActionState.REJECTED:
           classes += 'error';
           break;
-        case ActionState.Success:
+        case DbxActionState.SUCCESS:
           classes += 'success';
           break;
         default:
@@ -69,12 +69,8 @@ export class DbxActionSnackbarComponent {
     return this.data.message;
   }
 
-  get action(): string {
+  get actionConfig(): Maybe<DbxActionSnackbarActionConfig> {
     return this.data.action;
-  }
-
-  get actionSourceInstance(): ActionContextStoreSourceInstance {
-    return this.data.actionSource;
   }
 
   dismissEarly = (): void => {

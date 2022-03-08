@@ -1,5 +1,5 @@
 import { Directive, Host, NgZone } from '@angular/core';
-import { DbxButtonDirective, DbxActionButtonDirective, ActionContextStoreSourceInstance } from '@dereekb/dbx-core';
+import { DbxButtonDirective, DbxActionButtonDirective, DbxActionContextStoreSourceInstance } from '@dereekb/dbx-core';
 import { DbxPopoverActionDirective } from './popover.action.directive';
 
 /**
@@ -12,7 +12,7 @@ export class DbxPopoverActionButtonDirective extends DbxActionButtonDirective {
 
   constructor(
     @Host() button: DbxButtonDirective,
-    source: ActionContextStoreSourceInstance,
+    source: DbxActionContextStoreSourceInstance,
     ngZone: NgZone,
     readonly appPopoverActionDirective: DbxPopoverActionDirective) {
     super(button, source, ngZone);

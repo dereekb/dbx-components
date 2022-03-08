@@ -2,7 +2,7 @@ import { Directive, Host, OnInit, OnDestroy, Input } from '@angular/core';
 import { addSeconds, isPast } from 'date-fns';
 import { Observable, of, combineLatest, exhaustMap } from 'rxjs';
 import { catchError, filter, first, map, switchMap } from 'rxjs/operators';
-import { ActionContextStoreSourceInstance } from '@dereekb/dbx-core';
+import { DbxActionContextStoreSourceInstance } from '@dereekb/dbx-core';
 import { ReadableError } from '@dereekb/util';
 import { SubscriptionObject, LockSet } from '@dereekb/rxjs';
 import { DbxForm, DbxFormState, DbxMutableForm } from '../../form/form';
@@ -47,7 +47,7 @@ export class DbxActionFormDirective<T = any> implements OnInit, OnDestroy {
   private _triggeredSub = new SubscriptionObject();
   private _isCompleteSub = new SubscriptionObject();
 
-  constructor(@Host() public readonly form: DbxMutableForm, public readonly source: ActionContextStoreSourceInstance<object, any>) {
+  constructor(@Host() public readonly form: DbxMutableForm, public readonly source: DbxActionContextStoreSourceInstance<object, any>) {
     if (form.lockSet) {
       this.lockSet.addChildLockSet(form.lockSet, 'form');
     }

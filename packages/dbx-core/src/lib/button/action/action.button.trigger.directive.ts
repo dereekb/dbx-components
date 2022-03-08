@@ -1,7 +1,7 @@
 import { Directive, Host, OnInit } from '@angular/core';
 import { AbstractSubscriptionDirective } from '../../subscription';
 import { DbxButton } from '../button';
-import { ActionContextStoreSourceInstance } from '../../action/action.store.source';
+import { DbxActionContextStoreSourceInstance } from '../../action/action.store.source';
 
 /**
  * Context used for linking a button to an ActionContext and only look for triggers.
@@ -11,7 +11,7 @@ import { ActionContextStoreSourceInstance } from '../../action/action.store.sour
 })
 export class DbxActionButtonTriggerDirective extends AbstractSubscriptionDirective implements OnInit {
 
-  constructor(@Host() public readonly button: DbxButton, public readonly source: ActionContextStoreSourceInstance) {
+  constructor(@Host() public readonly button: DbxButton, public readonly source: DbxActionContextStoreSourceInstance) {
     super();
   }
 

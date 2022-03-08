@@ -1,6 +1,6 @@
 import { Directive, Host, OnInit, OnDestroy, NgZone } from '@angular/core';
 import { DbxButton } from '../button';
-import { ActionContextStoreSourceInstance } from '../../action/action.store.source';
+import { DbxActionContextStoreSourceInstance } from '../../action/action.store.source';
 import { DbxActionButtonTriggerDirective } from './action.button.trigger.directive';
 import { SubscriptionObject } from '@dereekb/rxjs';
 
@@ -15,7 +15,7 @@ export class DbxActionButtonDirective extends DbxActionButtonTriggerDirective im
   private _workingSub = new SubscriptionObject();
   private _disabledSub = new SubscriptionObject();
 
-  constructor(@Host() button: DbxButton, source: ActionContextStoreSourceInstance, private readonly ngZone: NgZone) {
+  constructor(@Host() button: DbxButton, source: DbxActionContextStoreSourceInstance, private readonly ngZone: NgZone) {
     super(button, source);
   }
 

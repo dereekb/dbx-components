@@ -6,7 +6,7 @@ import { DbxActionDirective } from './action.directive';
 import { DbxActionHandlerDirective } from '../state/action.handler.directive';
 import { DbxCoreActionModule } from '../../action.module';
 import { first, tap } from 'rxjs/operators';
-import { ActionContextStoreSourceInstance } from '../../action.store.source';
+import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
 import { HandleActionFunction } from '../../action.handler';
 
 describe('DbxActionDirective', () => {
@@ -47,9 +47,9 @@ describe('DbxActionDirective', () => {
       expect(directive).toBeDefined();
     });
 
-    describe('ActionContextStoreSourceInstance', () => {
+    describe('DbxActionContextStoreSourceInstance', () => {
 
-      let instance: ActionContextStoreSourceInstance<number, number>;
+      let instance: DbxActionContextStoreSourceInstance<number, number>;
 
       beforeEach(() => {
         instance = directive.sourceInstance;

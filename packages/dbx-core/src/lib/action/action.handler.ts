@@ -1,6 +1,6 @@
 import { BehaviorSubject, isObservable, Observable, of } from 'rxjs';
 import { first } from 'rxjs/operators';
-import { ActionContextStoreSourceInstance } from './action.store.source';
+import { DbxActionContextStoreSourceInstance } from './action.store.source';
 import { Maybe, Destroyable } from '@dereekb/util';
 
 export interface WorkHandlerContextDelegate<O = any> {
@@ -10,11 +10,11 @@ export interface WorkHandlerContextDelegate<O = any> {
 }
 
 /**
- * WorkHandlerContextDelegate implementation using an ActionContextStoreSourceInstance.
+ * WorkHandlerContextDelegate implementation using an DbxActionContextStoreSourceInstance.
  */
 export class WorkHandlerContextSourceDelegate<T = any, O = any> implements WorkHandlerContextDelegate<O> {
 
-  constructor(readonly source: ActionContextStoreSourceInstance<T, O>) { }
+  constructor(readonly source: DbxActionContextStoreSourceInstance<T, O>) { }
 
   startWorking(): void {
     this.source.startWorking();

@@ -3,7 +3,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { AbstractPromptConfirmDirective } from '../interaction/prompt/prompt.confirm.directive';
 import { DbxPromptConfirmConfig } from '../interaction/prompt/prompt.confirm.component';
 import { SubscriptionObject } from '@dereekb/rxjs';
-import { ActionContextStoreSourceInstance } from '@dereekb/dbx-core';
+import { DbxActionContextStoreSourceInstance } from '@dereekb/dbx-core';
 
 /**
  * Directive that when triggered shows a dialog to accept or reject.
@@ -21,7 +21,7 @@ export class DbxActionConfirmDirective<T, O> extends AbstractPromptConfirmDirect
 
   private _sourceSubscription = new SubscriptionObject();
 
-  constructor(@Host() public readonly source: ActionContextStoreSourceInstance<T, O>, dialog: MatDialog) {
+  constructor(@Host() public readonly source: DbxActionContextStoreSourceInstance<T, O>, dialog: MatDialog) {
     super(dialog);
   }
 

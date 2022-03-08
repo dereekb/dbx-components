@@ -1,6 +1,6 @@
 import { combineLatest, Observable, of } from 'rxjs';
 import { map, startWith, shareReplay, catchError, delay, first, distinctUntilChanged } from 'rxjs/operators';
-import { Maybe, ReadableError, reduceBooleansWithAnd, reduceBooleansWithOr, ReadableDataError, Page, FilteredPage, PageNumber } from '@dereekb/util';
+import { Maybe, ReadableError, reduceBooleansWithAnd, reduceBooleansWithOr, ReadableDataError, Page, FilteredPage, PageNumber, objectHasKey } from '@dereekb/util';
 
 /**
  * A value/error pair used in loading situations.
@@ -58,6 +58,53 @@ export interface PageListLoadingState<T> extends PageLoadingState<T[]> { }
 export interface FilteredPageListLoadingState<T, F> extends FilteredPageLoadingState<T[], F> { }
 
 // MARK: Utility
+/**
+ * Describes a LoadingState's current state type.
+ */
+export enum LoadingStateType {
+  /**
+   * The loadingState is not loading, and has no value key.
+   */
+  IDLE = 'idle',
+  /**
+   * The loading state is loading.
+   */
+  LOADING = 'loading',
+  /**
+   * The loading state is success.
+   */
+  SUCCESS = 'success',
+  /**
+   * The loading state has an error.
+   */
+  ERROR = 'error'
+}
+
+/**
+ * Returns the LoadingStateType for the input LoadingState
+ * 
+ * @param loadingState 
+ * @returns 
+ */
+export function loadingStateType(loadingState: LoadingState): LoadingStateType {
+  if (loadingState.loading) {
+    return LoadingStateType.LOADING;
+  } else if (objectHasKey(loadingState, 'value')) {
+    return LoadingStateType.SUCCESS;
+  } else if (objectHasKey(loadingState, 'error')) {
+    return LoadingStateType.ERROR;
+  } else {
+    return LoadingStateType.IDLE;
+  }
+}
+
+/**
+ * Returns a LoadingState that has no result and is not loading.
+ */
+export function idleLoadingState<T>(): LoadingState<T> {
+  return { loading: false };
+}
+
 export function beginLoading(): LoadingState<any>;
 export function beginLoading<T>(): LoadingState<T>;
 export function beginLoading<T>(state?: Partial<PageLoadingState<T>>): PageLoadingState<T>;
@@ -73,11 +120,11 @@ export function successPageResult<T>(page: PageNumber, value: T): PageLoadingSta
   return { ...successResult(value), page };
 }
 
-export function errorResult(error?: ReadableDataError): LoadingState<any> {
+export function errorResult<T = any>(error?: Maybe<ReadableError | ReadableDataError>): LoadingState<T> {
   return { error, loading: false };
 }
 
-export function errorPageResult<T>(page: PageNumber, error?: ReadableDataError): PageLoadingState<T> {
+export function errorPageResult<T>(page: PageNumber, error?: Maybe<ReadableError | ReadableDataError>): PageLoadingState<T> {
   return { ...errorResult(error), page };
 }
 

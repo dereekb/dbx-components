@@ -1,17 +1,17 @@
 import { Observable, of } from 'rxjs';
 import { Destroyable } from '@dereekb/util';
 import { LockSet } from '@dereekb/rxjs';
-import { ActionContextStoreSource, ActionContextStoreSourceInstance, SecondaryActionContextStoreSource } from './action.store.source';
+import { ActionContextStoreSource, DbxActionContextStoreSourceInstance, SecondaryActionContextStoreSource } from './action.store.source';
 import { ActionContextStore } from './action.store';
 
 /**
  * Abstract class that can either use SecondaryActionContextStoreSource or create it's own.
  */
-export class ActionContextBaseSource<T = any, O = any> implements ActionContextStoreSource, Destroyable {
+export class DbxActionContextBaseSource<T = any, O = any> implements ActionContextStoreSource, Destroyable {
 
   private readonly _store?: ActionContextStore;
   private readonly _store$: Observable<ActionContextStore<T, O>>;
-  private readonly _instance: ActionContextStoreSourceInstance<T, O>;
+  private readonly _instance: DbxActionContextStoreSourceInstance<T, O>;
 
   readonly isModified$: Observable<boolean>;
   readonly triggered$: Observable<boolean>;
@@ -25,7 +25,7 @@ export class ActionContextBaseSource<T = any, O = any> implements ActionContextS
       this._store$ = of(this._store);
     }
 
-    this._instance = new ActionContextStoreSourceInstance(this);
+    this._instance = new DbxActionContextStoreSourceInstance(this);
     this.isModified$ = this._instance.isModified$;
     this.triggered$ = this._instance.triggered$;
     this.success$ = this._instance.success$;
@@ -42,7 +42,7 @@ export class ActionContextBaseSource<T = any, O = any> implements ActionContextS
     return this._instance.lockSet;
   }
 
-  get sourceInstance(): ActionContextStoreSourceInstance<T, O> {
+  get sourceInstance(): DbxActionContextStoreSourceInstance<T, O> {
     return this._instance;
   }
 

@@ -1,4 +1,4 @@
-import { ActionContextStoreSourceInstance } from '../../action.store.source';
+import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
 import { switchMap, mergeMap, map, withLatestFrom, shareReplay } from 'rxjs/operators';
 import { Directive, Host, Input, OnInit } from '@angular/core';
 import { BehaviorSubject, Observable, of, EMPTY } from 'rxjs';
@@ -61,7 +61,7 @@ export class DbxActionAutoTriggerValueDirective<T, O> implements OnInit, OnDestr
     ))
   );
 
-  constructor(@Host() public readonly source: ActionContextStoreSourceInstance<T, O>) { }
+  constructor(@Host() public readonly source: DbxActionContextStoreSourceInstance<T, O>) { }
 
   ngOnInit(): void {
     // Update Modified value.

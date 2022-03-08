@@ -1,11 +1,11 @@
 import { first, switchMap } from 'rxjs/operators';
 import { Observable, Subscription } from 'rxjs';
-import { Directive, forwardRef, Provider, Type } from '@angular/core';
+import { Directive, forwardRef, Injectable, Provider, Type } from '@angular/core';
 import { LockSet, filterMaybe } from '@dereekb/rxjs';
 import { OnDestroy } from '@angular/core';
 import { Maybe, ReadableError } from '@dereekb/util';
 import { ActionContextState, ActionContextStore } from './action.store';
-import { ActionDisabledKey, ActionState } from './action';
+import { DbxActionDisabledKey, DbxActionState } from './action';
 
 /**
  * Source that provides a ActionContextStore observable.
@@ -45,9 +45,11 @@ export function useActionStore<T = any, O = any>(source: ActionContextStoreSourc
   return source.store$.pipe(first()).subscribe(useFn);
 }
 
-@Directive()
-// tslint:disable-next-line: directive-class-suffix
-export class ActionContextStoreSourceInstance<T = any, O = any> implements OnDestroy {
+/**
+ * Service that wraps a ActionContextStoreSource
+ */
+@Injectable()
+export class DbxActionContextStoreSourceInstance<T = any, O = any> implements OnDestroy {
 
   readonly lockSet = new LockSet();
 
@@ -110,7 +112,7 @@ export class ActionContextStoreSourceInstance<T = any, O = any> implements OnDes
     return this.pipeStore(x => x.isModifiedAndCanTrigger$);
   }
 
-  get actionState$(): Observable<ActionState> {
+  get actionState$(): Observable<DbxActionState> {
     return this.pipeStore(x => x.actionState$);
   }
 
@@ -130,11 +132,11 @@ export class ActionContextStoreSourceInstance<T = any, O = any> implements OnDes
     return this.pipeStore(x => x.errorCountSinceLastSuccess$);
   }
 
-  public enable(key?: ActionDisabledKey, enable = true): void {
+  public enable(key?: DbxActionDisabledKey, enable = true): void {
     this.disable(key, !enable);
   }
 
-  public disable(key?: ActionDisabledKey, disable = true): void {
+  public disable(key?: DbxActionDisabledKey, disable = true): void {
     this.useStore((x) => (disable) ? x.disable(key) : x.enable(key));
   }
 
@@ -169,11 +171,11 @@ export class ActionContextStoreSourceInstance<T = any, O = any> implements OnDes
 }
 
 export const actionContextStoreSourceInstanceFactory = (source: ActionContextStoreSource) => {
-  return new ActionContextStoreSourceInstance(source);
+  return new DbxActionContextStoreSourceInstance(source);
 };
 
 /**
- * Provides an ActionContextStoreSource, as well as an ActionContextStoreSourceInstance.
+ * Provides an ActionContextStoreSource, as well as an DbxActionContextStoreSourceInstance.
  */
 export function ProvideActionStoreSource<S>(sourceType: Type<S>): Provider[] {
   return [{
@@ -181,7 +183,7 @@ export function ProvideActionStoreSource<S>(sourceType: Type<S>): Provider[] {
     useExisting: forwardRef(() => sourceType)
   },
   {
-    provide: ActionContextStoreSourceInstance,
+    provide: DbxActionContextStoreSourceInstance,
     useFactory: actionContextStoreSourceInstanceFactory,
     deps: [ActionContextStoreSource]
   }];

@@ -3,7 +3,7 @@ import { AbstractSubscriptionDirective } from '../../../subscription';
 import { debounce, distinctUntilChanged, exhaustMap, filter, first, map, mergeMap, shareReplay, switchMap, throttle } from 'rxjs/operators';
 import { EMPTY, interval, Subject, combineLatest } from 'rxjs';
 import { Observable } from 'rxjs';
-import { ActionContextStoreSourceInstance } from '../../action.store.source';
+import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
 import { Host } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { Maybe } from '@dereekb/util';
@@ -137,7 +137,7 @@ export class DbxActionAutoTriggerDirective<T, O> extends AbstractSubscriptionDir
     map(() => undefined as void)
   );
 
-  constructor(@Host() public readonly source: ActionContextStoreSourceInstance<T, O>) {
+  constructor(@Host() public readonly source: DbxActionContextStoreSourceInstance<T, O>) {
     super();
   }
 
