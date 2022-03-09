@@ -7,7 +7,7 @@ import { DbxActionContextBaseSource } from '../../action.holder';
  */
 @Directive({
   selector: 'dbx-action,[dbxAction],dbx-action-context,[dbxActionContext]',
-  exportAs: 'action',
+  exportAs: 'action,dbxAction',
   providers: ProvideActionStoreSource(DbxActionDirective)
 })
 export class DbxActionDirective<T = any, O = any> extends DbxActionContextBaseSource implements OnDestroy {

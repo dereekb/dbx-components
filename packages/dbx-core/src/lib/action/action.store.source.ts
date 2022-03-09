@@ -1,6 +1,6 @@
 import { first, switchMap } from 'rxjs/operators';
 import { Observable, Subscription } from 'rxjs';
-import { Directive, forwardRef, Injectable, Provider, Type } from '@angular/core';
+import { forwardRef, Injectable, Provider, Type } from '@angular/core';
 import { LockSet, filterMaybe } from '@dereekb/rxjs';
 import { OnDestroy } from '@angular/core';
 import { Maybe, ReadableError } from '@dereekb/util';
@@ -46,10 +46,10 @@ export function useActionStore<T = any, O = any>(source: ActionContextStoreSourc
 }
 
 /**
- * Service that wraps a ActionContextStoreSource
+ * Service that wraps a ActionContextStoreSource.
  */
 @Injectable()
-export class DbxActionContextStoreSourceInstance<T = any, O = any> implements OnDestroy {
+export class DbxActionContextStoreSourceInstance<T = any, O = any> implements ActionContextStoreSource, OnDestroy {
 
   readonly lockSet = new LockSet();
 
@@ -104,6 +104,10 @@ export class DbxActionContextStoreSourceInstance<T = any, O = any> implements On
     return this.pipeStore(x => x.isModified$);
   }
 
+  get canTrigger$(): Observable<boolean> {
+    return this.pipeStore(x => x.canTrigger$);
+  }
+
   get isModifiedAndCanTriggerUpdates$(): Observable<boolean> {
     return this.pipeStore(x => x.isModifiedAndCanTriggerUpdates$);
   }
@@ -122,6 +126,10 @@ export class DbxActionContextStoreSourceInstance<T = any, O = any> implements On
 
   get isSuccess$(): Observable<boolean> {
     return this.pipeStore(x => x.isSuccess$);
+  }
+
+  get disabledKeys$(): Observable<string[]> {
+    return this.pipeStore(x => x.disabledKeys$);
   }
 
   get isDisabled$(): Observable<boolean> {
@@ -160,8 +168,8 @@ export class DbxActionContextStoreSourceInstance<T = any, O = any> implements On
     this.useStore((x) => x.reject(error));
   }
 
-  public success(value: O | Observable<O>): void {
-    this.useStore((x) => x.success(value));
+  public resolve(value: O | Observable<O>): void {
+    this.useStore((x) => x.resolve(value));
   }
 
   public reset(): void {

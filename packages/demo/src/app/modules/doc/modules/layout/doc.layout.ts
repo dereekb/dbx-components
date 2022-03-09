@@ -29,6 +29,7 @@ export const DOC_LAYOUT_ROUTES = [{
 export const DOC_LAYOUT_ROOT_ROUTE = {
   icon: 'view_module',
   title: 'Layout',
+  detail: 'layouts',
   ref: 'doc.layout.home',
   children: DOC_LAYOUT_ROUTES
 };

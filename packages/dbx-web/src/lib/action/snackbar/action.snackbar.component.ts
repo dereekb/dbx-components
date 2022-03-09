@@ -11,35 +11,19 @@ import ms from 'ms';
  * Component for a snackbar that contains an action.
  */
 @Component({
-  template: `
-    <div class="dbx-action-snackbar" [ngClass]="(snackbarStatusClass$ | async)!">
-      <ng-container [ngSwitch]="complete$ | async">
-        <ng-container *ngSwitchCase="true">
-          <div class="spacer"></div>
-          <dbx-button (buttonClick)="dismiss()" color="accent" icon="done" text="Success"></dbx-button>
-        </ng-container>
-        <ng-container *ngSwitchCase="false">
-          <span>{{ message }}</span>
-          <div class="spacer"></div>
-          <dbx-action dbxActionValue [dbxActionSource]="actionSourceInstance" [dbxActionSuccess]="dismissEarly">
-            <dbx-button dbxActionButton color="warn" [text]="action"></dbx-button>
-          </dbx-action>
-          <dbx-button-spacer></dbx-button-spacer>
-          <dbx-button (buttonClick)="dismiss()" color="accent" icon="close"></dbx-button>
-        </ng-container>
-      </ng-container>
-    </div>
-  `
+  templateUrl: './action.snackbar.component.html'
 })
 export class DbxActionSnackbarComponent {
 
   readonly action: Maybe<string>;
+  readonly hasAction: boolean;
 
   constructor(
     readonly snackbar: MatSnackBarRef<DbxActionSnackbarComponent>,
     @Inject(MAT_SNACK_BAR_DATA) readonly data: DbxActionSnackbarDisplayConfig
   ) {
     this.action = this.data.action?.button ?? this.data.button;
+    this.hasAction = Boolean(this.actionConfig?.reference);
   }
 
   readonly complete$ = this.actionSourceInstance.isSuccess$;
@@ -51,7 +35,7 @@ export class DbxActionSnackbarComponent {
         case DbxActionState.REJECTED:
           classes += 'error';
           break;
-        case DbxActionState.SUCCESS:
+        case DbxActionState.RESOLVED:
           classes += 'success';
           break;
         default:

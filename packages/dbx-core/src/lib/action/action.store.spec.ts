@@ -2,6 +2,7 @@ import { canReadyValue } from './action.store';
 import { of } from 'rxjs';
 import { first, timeoutWith } from 'rxjs/operators';
 import { ActionContextStore } from './action.store';
+import { containsStringAnyCase } from '@dereekb/util';
 
 describe('ActionContextStore', () => {
 
@@ -58,6 +59,39 @@ describe('ActionContextStore', () => {
           expect(x).toBe(READY_VALUE);
           done();
         });
+      });
+    });
+
+  });
+
+  describe('with disabled keys', () => {
+
+    const disableKeyA = 'a';
+    const disableKeyB = 'b';
+    const allKeys = [disableKeyA, disableKeyB];
+
+    beforeEach(() => {
+      contextStore.disable(disableKeyA);
+      contextStore.disable(disableKeyB);
+    })
+
+    it('should retain the disabled keys if resolve() is called', () => {
+      contextStore.resolve('a');
+
+      contextStore.disabledKeys$.pipe(first()).subscribe((keys) => {
+        expect(keys.length).toBe(allKeys.length);
+        expect(containsStringAnyCase(keys, disableKeyA)).toBe(true);
+        expect(containsStringAnyCase(keys, disableKeyB)).toBe(true);
+      });
+    });
+
+    it('should retain the disabled keys if reject() is called', () => {
+      contextStore.reject(undefined);
+
+      contextStore.disabledKeys$.pipe(first()).subscribe((keys) => {
+        expect(keys.length).toBe(allKeys.length);
+        expect(containsStringAnyCase(keys, disableKeyA)).toBe(true);
+        expect(containsStringAnyCase(keys, disableKeyB)).toBe(true);
       });
     });
 

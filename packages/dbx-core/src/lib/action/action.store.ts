@@ -49,7 +49,7 @@ export function loadingStateForActionContextState<O>(state: ActionContextState):
   let loadingState: LoadingState<O>;
 
   switch (state.actionState) {
-    case DbxActionState.SUCCESS:
+    case DbxActionState.RESOLVED:
       loadingState = successResult(state.value);
       break;
     case DbxActionState.REJECTED:
@@ -109,9 +109,9 @@ export class ActionContextStore<T = any, O = any> extends ComponentStore<ActionC
   readonly actionState$ = this.state$.pipe(map(x => isDisabledActionContextState(x) ? DbxActionState.DISABLED : x.actionState), shareReplay(1));
 
   /**
-   * Returns the current disabled reasons.
+   * Returns the current disabled reasons/keys.
    */
-  readonly disabled$ = this.state$.pipe(map(x => [...x.disabled ?? []]), distinctUntilChanged(), shareReplay(1));
+  readonly disabledKeys$ = this.state$.pipe(map(x => [...x.disabled ?? []]), distinctUntilChanged(), shareReplay(1));
 
   /**
    * Maps the current state to true or not when the action state changes to/from disabled.
@@ -156,12 +156,12 @@ export class ActionContextStore<T = any, O = any> extends ComponentStore<ActionC
   /**
    * Pipes the result when the ActionState becomes success.
    */
-  readonly success$ = this.afterDistinctActionState(DbxActionState.SUCCESS, x => x.result);
+  readonly success$ = this.afterDistinctActionState(DbxActionState.RESOLVED, x => x.result);
 
   /**
    * Whether or not it is currently in a success state.
    */
-  readonly isSuccess$ = this.afterDistinctBoolean(x => x.actionState === DbxActionState.SUCCESS);
+  readonly isSuccess$ = this.afterDistinctBoolean(x => x.actionState === DbxActionState.RESOLVED);
 
   /**
    * Returns a loading state based on the current state.
@@ -235,7 +235,7 @@ export class ActionContextStore<T = any, O = any> extends ComponentStore<ActionC
    */
   readonly setIsModified = this.updater((state, isModified: void | boolean) => ({
     ...state,
-    actionState: (state.actionState === DbxActionState.SUCCESS) ? DbxActionState.IDLE : state.actionState,  // Set to idle from success.
+    actionState: (state.actionState === DbxActionState.RESOLVED) ? DbxActionState.IDLE : state.actionState,  // Set to idle from success.
     isModified: (isModified as boolean) ?? true
   }));
 
@@ -263,14 +263,14 @@ export class ActionContextStore<T = any, O = any> extends ComponentStore<ActionC
   /**
    * Triggers rejection of the action. The value is cleared.
    */
-  readonly reject = this.updater((state, error?: Maybe<ReadableError>) => ({ isModified: state.isModified, actionState: DbxActionState.REJECTED, error, errorCount: (state.errorCount ?? 0) + 1 }));
+  readonly reject = this.updater((state, error?: Maybe<ReadableError>) => ({ isModified: state.isModified, actionState: DbxActionState.REJECTED, error, errorCount: (state.errorCount ?? 0) + 1, disabled: state.disabled }));
 
   /**
    * Updates the state to success, and optionally sets a result.
    *
    * Clears modified state, and any errors.
    */
-  readonly success = this.updater((state, result?: O) => ({ isModified: false, actionState: DbxActionState.SUCCESS, value: state.value, result, error: undefined }));
+  readonly resolve = this.updater((state, result?: Maybe<O>) => ({ isModified: false, actionState: DbxActionState.RESOLVED, value: state.value, result, error: undefined, disabled: state.disabled }));
 
   /**
    * Completely resets the store.

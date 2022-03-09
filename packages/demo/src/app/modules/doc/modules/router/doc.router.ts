@@ -19,6 +19,7 @@ export const DOC_ROUTER_ROUTES = [{
 export const DOC_ROUTER_ROOT_ROUTE = {
   icon: 'route',
   title: 'Router',
+  detail: 'router',
   ref: 'doc.router',
   children: DOC_ROUTER_ROUTES
 };

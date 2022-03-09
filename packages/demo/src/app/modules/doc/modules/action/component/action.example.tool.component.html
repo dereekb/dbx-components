@@ -1,0 +1,18 @@
+<div [dbxActionSource]="source$ | async">
+  <ng-content></ng-content>
+  <mat-divider></mat-divider>
+  <div class="">
+    <p class="dbx-label">dbx-action Tools</p>
+    <div>
+      <p>State: {{ state$ | async }}</p>
+      <p>isModified: {{ isModified$ | async }}</p>
+      <p>canTrigger: {{ canTrigger$ | async }}</p>
+      <p>isModifiedAndCanTrigger: {{ isModifiedAndCanTrigger$ | async }}</p>
+      <p>isDisabled: {{ isDisabled$ | async }}</p>
+      <p>disabledKeys: {{ disabledKeys$ | async }}</p>
+      <p>errorCountSinceLastSuccess: {{ errorCountSinceLastSuccess$ | async }}</p>
+      <p>valueReady: {{ valueReady$ | async | json }}</p>
+      <dbx-error dbxActionError></dbx-error>
+    </div>
+  </div>
+</div>

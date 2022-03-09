@@ -69,7 +69,7 @@ describe('Action Button', () => {
       testComponent.directive!.sourceInstance.readyValue(1);
 
       const SUCCESS_RESULT = 1;
-      testComponent.directive!.sourceInstance.success(SUCCESS_RESULT);
+      testComponent.directive!.sourceInstance.resolve(SUCCESS_RESULT);
 
       expect(testComponent.button!.working).toBe(false);
     });

@@ -3,6 +3,7 @@ import { Destroyable } from '@dereekb/util';
 import { LockSet } from '@dereekb/rxjs';
 import { ActionContextStoreSource, DbxActionContextStoreSourceInstance, SecondaryActionContextStoreSource } from './action.store.source';
 import { ActionContextStore } from './action.store';
+import { DbxActionDisabledKey } from './action';
 
 /**
  * Abstract class that can either use SecondaryActionContextStoreSource or create it's own.
@@ -63,6 +64,18 @@ export class DbxActionContextBaseSource<T = any, O = any> implements ActionConte
 
   public reset(): void {
     this._instance.reset();
+  }
+
+  public enable(key?: DbxActionDisabledKey, enable?: boolean): void {
+    this._instance.enable(key, enable);
+  }
+
+  public disable(key?: DbxActionDisabledKey, disable?: boolean): void {
+    this._instance.disable(key, disable);
+  }
+
+  public setIsModified(isModified?: boolean): void {
+    this._instance.setIsModified(isModified);
   }
 
 }

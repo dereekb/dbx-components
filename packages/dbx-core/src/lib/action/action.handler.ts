@@ -21,7 +21,7 @@ export class WorkHandlerContextSourceDelegate<T = any, O = any> implements WorkH
   }
 
   success(result: O): void {
-    this.source.success(result);
+    this.source.resolve(result);
   }
 
   reject(error: any): void {

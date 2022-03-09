@@ -33,9 +33,9 @@ export enum DbxActionState {
    */
   REJECTED = 'rejected',
   /**
-   * The action was successful.
+   * The action resolved without issue.
    */
-  SUCCESS = 'success'
+  RESOLVED = 'resolved'
 }
 
 /**
@@ -50,7 +50,7 @@ export function isIdleActionState(actionState: DbxActionState): boolean {
     case DbxActionState.IDLE:
     case DbxActionState.DISABLED:
     case DbxActionState.REJECTED:
-    case DbxActionState.SUCCESS:
+    case DbxActionState.RESOLVED:
       return true;
     default:
       return false;
@@ -61,7 +61,7 @@ export function loadingStateTypeForActionState(actionState: DbxActionState): Loa
   let loadingStateType: LoadingStateType;
 
   switch (actionState) {
-    case DbxActionState.SUCCESS:
+    case DbxActionState.RESOLVED:
       loadingStateType = LoadingStateType.SUCCESS;
       break;
     case DbxActionState.REJECTED:
