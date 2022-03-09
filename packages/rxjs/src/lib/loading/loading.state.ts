@@ -136,6 +136,14 @@ export function allLoadingStatesHaveFinishedLoading(states: LoadingState[]): boo
   return reduceBooleansWithAnd(states.map(loadingStateHasFinishedLoading), true);
 }
 
+export function loadingStateIsIdle(state: Maybe<LoadingState>): boolean {
+  if (state) {
+    return loadingStateType(state) === LoadingStateType.IDLE;
+  } else {
+    return true;
+  }
+}
+
 export function loadingStateIsLoading(state: Maybe<LoadingState>): boolean {
   if (state) {
     const loading = state.loading;
@@ -145,6 +153,22 @@ export function loadingStateIsLoading(state: Maybe<LoadingState>): boolean {
     } else {
       return loading ?? !Boolean(state.value || state.error);
     }
+  } else {
+    return false;
+  }
+}
+
+export function isSuccessLoadingState(state: Maybe<LoadingState>): boolean {
+  if (state) {
+    return loadingStateType(state) === LoadingStateType.SUCCESS;
+  } else {
+    return false;
+  }
+}
+
+export function isErrorLoadingState(state: Maybe<LoadingState>): boolean {
+  if (state) {
+    return loadingStateType(state) === LoadingStateType.ERROR;
   } else {
     return false;
   }
@@ -164,6 +188,12 @@ export function loadingStateHasFinishedLoading(state: Maybe<LoadingState>): bool
   }
 }
 
+/**
+ * Whether or not the input loading state has a non-null value.
+ * 
+ * @param state 
+ * @returns 
+ */
 export function loadingStateHasValue(state: Maybe<LoadingState>): boolean {
   if (state) {
     return loadingStateHasFinishedLoading(state) && state.value != null;
@@ -172,6 +202,12 @@ export function loadingStateHasValue(state: Maybe<LoadingState>): boolean {
   }
 }
 
+/**
+ * Whether or not the input loading state has an error defined.
+ * 
+ * @param state 
+ * @returns 
+ */
 export function loadingStateHasError(state: Maybe<LoadingState>): boolean {
   if (state) {
     return loadingStateHasFinishedLoading(state) && state.error != null;

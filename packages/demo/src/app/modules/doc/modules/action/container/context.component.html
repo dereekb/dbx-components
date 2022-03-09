@@ -18,7 +18,7 @@
           action that fires off immediately without waiting for a trigger.</p>
         <button mat-raised-button (click)="beginWorking(action)">Begin Working</button>
         <p>The working state can be resolved or rejected, similar to promises.</p>
-        <p>These states can akso be set at any time, regardless of the current state.</p>
+        <p>These states can also be set at any time, regardless of the current state.</p>
         <div>
           <button mat-raised-button (click)="stopWorking(action, true)">Resolve Successfully</button>
           <dbx-button-spacer></dbx-button-spacer>
@@ -48,8 +48,19 @@
           <dbx-button-spacer></dbx-button-spacer>
           <button mat-raised-button (click)="action.setIsModified(false)">Set Not Modified</button>
         </div>
-
-        <p>There are various integrations with other components, including dbx-form, dbx-error, interactions, etc.</p>
+        <h4>Loading State</h4>
+        <p>A loading state is available that represents the action.</p>
+        <p>Loading State: {{ action.sourceInstance.loadingState$ | async | json }}</p>
+        <p>Loading State Type: {{ action.sourceInstance.loadingStateType$ | async }}</p>
+        <dbx-content-border>
+          <dbx-label>dbx-loading with dbxActionLoadingContext</dbx-label>
+          <dbx-loading dbxActionLoadingContext>
+            <p>Success view.</p>
+          </dbx-loading>
+        </dbx-content-border>
+        <p>There are various integrations with other components, including dbx-form, dbx-error, loadingState,
+          interactions, etc.</p>
+        <button mat-raised-button color="warn" (click)="action.reset()">Reset</button>
       </dbx-action-example-tools>
 
     </doc-feature-example>

@@ -3,7 +3,7 @@ import { delay, first } from 'rxjs/operators';
 import { ActionContextStoreSource } from './action.store.source';
 import { HandleActionFunction, handleWorkValueReadyFn, WorkHandlerContextSourceDelegate } from './action.handler';
 import { DbxActionContextBaseSource } from './action.holder';
-import { Destroyable } from '@dereekb/util';
+import { Destroyable, Maybe } from '@dereekb/util';
 import { SubscriptionObject } from '@dereekb/rxjs';
 
 /**
@@ -21,7 +21,7 @@ export interface DbxActionContextMachineConfig<T = any, O = any> {
   /**
    * Optional function to execute after the action has succeeded.
    */
-  onSuccess?: (value: O) => void;
+  onSuccess?: (value: Maybe<O>) => void;
 }
 
 /**

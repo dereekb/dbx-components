@@ -1,11 +1,12 @@
+import { DbxActionContextStoreSourceInstance, DbxActionDirective } from '@dereekb/dbx-core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { Component } from '@angular/core';
+import { Component, ViewChild } from '@angular/core';
 import { DbxLoadingModule } from './loading.module';
 import { By } from '@angular/platform-browser';
 import { DbxLoadingProgressComponent } from './loading-progress.component';
-import { ValuesLoadingContext } from '@dereekb/rxjs';
 import { DbxReadableErrorComponent } from '../error';
 import { DbxBasicLoadingComponent, LoadingComponentState } from './basic-loading.component';
+import { DbxActionModule } from '../action/action.module';
 import { filter, first } from 'rxjs';
 
 export function waitForState(state: LoadingComponentState): (component: DbxBasicLoadingComponent) => (checkFn: () => void) => void {
@@ -18,30 +19,35 @@ export function waitForState(state: LoadingComponentState): (component: DbxBasic
   };
 }
 
-describe('DbxLoadingComponent', () => {
+describe('DbxActionLoadingContextDirective', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [
-        DbxLoadingModule
+        DbxLoadingModule,
+        DbxActionModule
       ],
-      declarations: [TestLoadingComponent]
+      declarations: [LoadingComponent]
     }).compileComponents();
   });
 
   describe('with content', () => {
-    let fixture: ComponentFixture<TestLoadingComponent>;
-    let component: TestLoadingComponent;
+    let fixture: ComponentFixture<LoadingComponent>;
+    let component: LoadingComponent;
     let basicLoadingComponent: DbxBasicLoadingComponent;
+    let dbxActionDirective: DbxActionDirective;
+    let dbxActionContextStoreSourceInstance: DbxActionContextStoreSourceInstance;
 
     let waitForComponentToBeLoading: (checkFn: () => void) => void;
     let waitForComponentToHaveContent: (checkFn: () => void) => void;
     let waitForComponentToHaveError: (checkFn: () => void) => void;
 
     beforeEach(async () => {
-      fixture = TestBed.createComponent(TestLoadingComponent);
+      fixture = TestBed.createComponent(LoadingComponent);
       component = fixture.componentInstance;
       basicLoadingComponent = fixture.debugElement.query(By.directive(DbxBasicLoadingComponent)).componentInstance;
+      dbxActionDirective = component.dbxActionDirective!;
+      dbxActionContextStoreSourceInstance = dbxActionDirective.sourceInstance;
 
       waitForComponentToBeLoading = waitForState(LoadingComponentState.LOADING)(basicLoadingComponent);
       waitForComponentToHaveContent = waitForState(LoadingComponentState.CONTENT)(basicLoadingComponent);
@@ -52,8 +58,8 @@ describe('DbxLoadingComponent', () => {
       fixture.destroy();
     });
 
-    it('should display the content if not loading and no error.', (done) => {
-      component.context.setLoading(false);
+    it('should display the content if state is idle.', (done) => {
+      dbxActionContextStoreSourceInstance.reset();
       fixture.detectChanges();
 
       waitForComponentToHaveContent(() => {
@@ -64,10 +70,10 @@ describe('DbxLoadingComponent', () => {
       });
     });
 
-    describe('and error', () => {
+    describe('and error/rejection', () => {
 
       beforeEach(async () => {
-        component.context.setError({
+        dbxActionContextStoreSourceInstance.reject({
           code: 'Test',
           message: 'Test'
         });
@@ -93,10 +99,10 @@ describe('DbxLoadingComponent', () => {
 
     });
 
-    describe('and loading', () => {
+    describe('and working', () => {
 
       beforeEach(() => {
-        component.context.setLoading(true);
+        dbxActionContextStoreSourceInstance.startWorking();
         fixture.detectChanges();
       });
 
@@ -118,19 +124,22 @@ const TEST_CONTENT = 'Content';
 
 @Component({
   template: `
-    <dbx-loading [context]="context" [text]="text" [show]="show">
-      <div>
-        <p id="test-content">${TEST_CONTENT}</p>
-      </div>
-    </dbx-loading>
+    <dbx-action>
+      <dbx-loading dbxActionLoadingContext [text]="text" [show]="show">
+        <div>
+          <p id="test-content">${TEST_CONTENT}</p>
+        </div>
+      </dbx-loading>
+    </dbx-action>
   `
 })
-class TestLoadingComponent {
+class LoadingComponent {
 
   public show?: boolean;
 
   public text?: string;
 
-  public context = new ValuesLoadingContext();
+  @ViewChild(DbxActionDirective, { static: true })
+  dbxActionDirective?: DbxActionDirective;
 
 }

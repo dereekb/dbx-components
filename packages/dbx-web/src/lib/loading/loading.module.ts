@@ -6,6 +6,7 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { DbxLoadingComponent } from './loading.component';
 import { DbxReadableErrorModule } from '../error';
+import { DbxActionLoadingContextDirective } from './loading.action.directive';
 
 @NgModule({
   imports: [
@@ -17,14 +18,16 @@ import { DbxReadableErrorModule } from '../error';
   declarations: [
     DbxLoadingComponent,
     DbxBasicLoadingComponent,
-    DbxLoadingProgressComponent
+    DbxLoadingProgressComponent,
+    DbxActionLoadingContextDirective
   ],
   exports: [
     DbxLoadingComponent,
     DbxBasicLoadingComponent,
     DbxLoadingProgressComponent,
     MatProgressSpinnerModule,
-    MatProgressBarModule
+    MatProgressBarModule,
+    DbxActionLoadingContextDirective
   ]
 })
 export class DbxLoadingModule { }

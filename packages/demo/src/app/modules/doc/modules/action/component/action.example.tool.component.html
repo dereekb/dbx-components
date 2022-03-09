@@ -12,6 +12,8 @@
       <p>disabledKeys: {{ disabledKeys$ | async }}</p>
       <p>errorCountSinceLastSuccess: {{ errorCountSinceLastSuccess$ | async }}</p>
       <p>valueReady: {{ valueReady$ | async | json }}</p>
+      <p>success: {{ success$ | async | json }}</p>
+      <p>error: {{ error$ | async | json }}</p>
       <dbx-error dbxActionError></dbx-error>
     </div>
   </div>

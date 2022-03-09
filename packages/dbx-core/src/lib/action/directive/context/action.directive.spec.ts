@@ -1,11 +1,10 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Component, ViewChild, Input } from '@angular/core';
-import { of } from 'rxjs';
+import { first, tap, of } from 'rxjs';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { DbxActionDirective } from './action.directive';
 import { DbxActionHandlerDirective } from '../state/action.handler.directive';
 import { DbxCoreActionModule } from '../../action.module';
-import { first, tap } from 'rxjs/operators';
 import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
 import { HandleActionFunction } from '../../action.handler';
 

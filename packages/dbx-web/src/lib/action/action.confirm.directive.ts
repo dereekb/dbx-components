@@ -6,6 +6,16 @@ import { SubscriptionObject } from '@dereekb/rxjs';
 import { DbxActionContextStoreSourceInstance } from '@dereekb/dbx-core';
 
 /**
+ * DbxActionConfirmDirective configuration.
+ */
+export interface DbxActionConfirmConfig<T> extends DbxPromptConfirmConfig {
+  /**
+   * Optionally set the readyValue passed to the instance.
+   */
+  readyValue?: T;
+}
+
+/**
  * Directive that when triggered shows a dialog to accept or reject.
  *
  * This only works to pass a ready value or reject through, not to work with a button.
@@ -17,7 +27,7 @@ import { DbxActionContextStoreSourceInstance } from '@dereekb/dbx-core';
 export class DbxActionConfirmDirective<T, O> extends AbstractPromptConfirmDirective implements OnInit, OnDestroy {
 
   @Input('dbxActionConfirm')
-  override config?: DbxPromptConfirmConfig;
+  override config?: DbxActionConfirmConfig<T>;
 
   private _sourceSubscription = new SubscriptionObject();
 
@@ -37,7 +47,7 @@ export class DbxActionConfirmDirective<T, O> extends AbstractPromptConfirmDirect
 
   protected override _handleDialogResult(result: boolean): boolean {
     if (result) {
-      this.source.readyValue(null);
+      this.source.readyValue(this.config?.readyValue as unknown as T);
     } else {
       this.source.reject(undefined);
     }

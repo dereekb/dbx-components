@@ -3,6 +3,7 @@ import { of } from 'rxjs';
 import { first, timeoutWith } from 'rxjs/operators';
 import { ActionContextStore } from './action.store';
 import { containsStringAnyCase } from '@dereekb/util';
+import { isErrorLoadingState, isSuccessLoadingState, loadingStateHasError, loadingStateHasValue, loadingStateIsIdle, loadingStateIsLoading, LoadingStateType } from '@dereekb/rxjs';
 
 describe('ActionContextStore', () => {
 
@@ -93,6 +94,52 @@ describe('ActionContextStore', () => {
         expect(containsStringAnyCase(keys, disableKeyA)).toBe(true);
         expect(containsStringAnyCase(keys, disableKeyB)).toBe(true);
       });
+    });
+
+  });
+
+  describe('loadingState', () => {
+
+    it('should be an idle loading state after a reset.', () => {
+      contextStore.reset();
+
+      contextStore.loadingState$.pipe(first()).subscribe((x) => {
+        expect(loadingStateIsIdle(x)).toBe(true);
+      });
+
+      contextStore.loadingStateType$.pipe(first()).subscribe((x) => {
+        expect(x).toBe(LoadingStateType.IDLE);
+      });
+
+    });
+
+    it('should be a success loading state after resolving..', () => {
+      const value = 'result';
+      contextStore.resolve(value);
+
+      contextStore.loadingState$.pipe(first()).subscribe((x) => {
+        expect(loadingStateHasValue(x)).toBe(true);
+        expect(isSuccessLoadingState(x)).toBe(true);
+        expect(x.value).toBe(value);
+      });
+
+      contextStore.loadingStateType$.pipe(first()).subscribe((x) => {
+        expect(x).toBe(LoadingStateType.SUCCESS);
+      });
+
+    });
+
+    it('should be an error loading state after rejecting.', () => {
+      contextStore.reject(undefined);
+
+      contextStore.loadingState$.pipe(first()).subscribe((x) => {
+        expect(isErrorLoadingState(x)).toBe(true);
+      });
+
+      contextStore.loadingStateType$.pipe(first()).subscribe((x) => {
+        expect(x).toBe(LoadingStateType.ERROR);
+      });
+
     });
 
   });

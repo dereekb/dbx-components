@@ -47,7 +47,7 @@ import { OverlayModule } from '@angular/cdk/overlay';
 import { MatProgressButtonsModule } from 'mat-progress-buttons';
 import { CommonModule } from '@angular/common';
 import { FlexLayoutModule } from '@angular/flex-layout';
-import { DbxButtonModule, DbxInteractionModule, DbxRouterLayoutModule, DbxLayoutModule, DbxActionModule, DbxReadableErrorModule } from '@dereekb/dbx-web';
+import { DbxButtonModule, DbxInteractionModule, DbxRouterLayoutModule, DbxLayoutModule, DbxActionModule, DbxReadableErrorModule, DbxLoadingModule } from '@dereekb/dbx-web';
 import { DbxFormExtensionModule } from '@dereekb/dbx-form';
 
 
@@ -110,6 +110,7 @@ const DBX_MODULES = [
   DbxReadableErrorModule,
   DbxActionModule,
   DbxButtonModule,
+  DbxLoadingModule,
   DbxInteractionModule,
   DbxRouterLayoutModule,
   DbxLayoutModule,

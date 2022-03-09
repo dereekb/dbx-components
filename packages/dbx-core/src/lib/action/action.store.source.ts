@@ -1,7 +1,7 @@
 import { first, switchMap } from 'rxjs/operators';
 import { Observable, Subscription } from 'rxjs';
 import { forwardRef, Injectable, Provider, Type } from '@angular/core';
-import { LockSet, filterMaybe } from '@dereekb/rxjs';
+import { LockSet, filterMaybe, LoadingState, LoadingStateType } from '@dereekb/rxjs';
 import { OnDestroy } from '@angular/core';
 import { Maybe, ReadableError } from '@dereekb/util';
 import { ActionContextState, ActionContextStore } from './action.store';
@@ -88,7 +88,7 @@ export class DbxActionContextStoreSourceInstance<T = any, O = any> implements Ac
     return this.pipeStore(x => x.valueReady$);
   }
 
-  get success$(): Observable<O> {
+  get success$(): Observable<Maybe<O>> {
     return this.pipeStore(x => x.success$);
   }
 
@@ -118,6 +118,14 @@ export class DbxActionContextStoreSourceInstance<T = any, O = any> implements Ac
 
   get actionState$(): Observable<DbxActionState> {
     return this.pipeStore(x => x.actionState$);
+  }
+
+  get loadingState$(): Observable<LoadingState<O>> {
+    return this.pipeStore(x => x.loadingState$);
+  }
+
+  get loadingStateType$(): Observable<LoadingStateType> {
+    return this.pipeStore(x => x.loadingStateType$);
   }
 
   get isWorking$(): Observable<boolean> {
@@ -156,7 +164,7 @@ export class DbxActionContextStoreSourceInstance<T = any, O = any> implements Ac
     this.useStore((x) => x.trigger());
   }
 
-  public readyValue(value: Maybe<T | Observable<T>>): void {
+  public readyValue(value: T | Observable<T>): void {
     this.useStore((x) => x.readyValue(value));
   }
 

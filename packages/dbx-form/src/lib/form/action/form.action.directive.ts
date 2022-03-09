@@ -5,7 +5,7 @@ import { catchError, filter, first, map, switchMap } from 'rxjs/operators';
 import { DbxActionContextStoreSourceInstance } from '@dereekb/dbx-core';
 import { ReadableError } from '@dereekb/util';
 import { SubscriptionObject, LockSet } from '@dereekb/rxjs';
-import { DbxForm, DbxFormState, DbxMutableForm } from '../../form/form';
+import { DbxFormState, DbxMutableForm } from '../../form/form';
 
 export interface DbxActionFormTriggerResult {
   value?: any;

@@ -1,12 +1,10 @@
-import { LoadingStateType } from './../../../../rxjs/src/lib/loading/loading.state';
 import { Injectable, OnDestroy } from '@angular/core';
 import { ComponentStore } from '@ngrx/component-store';
 import { Observable } from 'rxjs';
 import { distinctUntilChanged, filter, map, shareReplay, switchMap, startWith } from 'rxjs/operators';
 import { BooleanStringKeyArray, BooleanStringKeyArrayUtilityInstance, Maybe, ReadableError } from '@dereekb/util';
-import { idleLoadingState, errorResult, filterMaybe, LoadingState, LockSet, scanCount, successResult, beginLoading } from '@dereekb/rxjs';
-import { DbxActionDisabledKey, DbxActionState, DEFAULT_ACTION_DISABLED_KEY, isIdleActionState } from './action';
-import { loadingStateTypeForActionState } from '.';
+import { LoadingStateType, idleLoadingState, errorResult, filterMaybe, LoadingState, LockSet, scanCount, successResult, beginLoading } from '@dereekb/rxjs';
+import { DbxActionDisabledKey, DbxActionState, DEFAULT_ACTION_DISABLED_KEY, isIdleActionState, loadingStateTypeForActionState } from './action';
 
 export function isActionContextEnabled(state: ActionContextState): boolean {
   return BooleanStringKeyArrayUtilityInstance.isFalse(state.disabled);
@@ -50,7 +48,7 @@ export function loadingStateForActionContextState<O>(state: ActionContextState):
 
   switch (state.actionState) {
     case DbxActionState.RESOLVED:
-      loadingState = successResult(state.value);
+      loadingState = successResult(state.result);
       break;
     case DbxActionState.REJECTED:
       loadingState = errorResult(state.error);
@@ -75,10 +73,16 @@ export interface ActionContextState<T = any, O = any> {
   actionState: DbxActionState;
   isModified: boolean;
   /**
-   * Value that is set after a triggered action.
+   * Value that is set after a triggered action. Not to be confused with result.
    */
   value?: Maybe<T>;
+  /**
+   * Resolved result value.
+   */
   result?: Maybe<O>;
+  /**
+   * Rejected error, if available.
+   */
   error?: Maybe<ReadableError>;
   /**
    * Current disabled state.
@@ -131,7 +135,7 @@ export class ActionContextStore<T = any, O = any> extends ComponentStore<ActionC
   /**
    * Pipes the readied value on ValueReady.
    */
-  readonly valueReady$ = this.afterDistinctActionState(DbxActionState.VALUE_READY, x => x.value);
+  readonly valueReady$: Observable<T> = this.afterDistinctActionState(DbxActionState.VALUE_READY, x => x.value!);
 
   /**
    * Pipes the error on the rejection state.
@@ -166,7 +170,7 @@ export class ActionContextStore<T = any, O = any> extends ComponentStore<ActionC
   /**
    * Returns a loading state based on the current state.
    */
-  readonly loadingState$ = this.afterDistinctLoadingStateTypeChange().pipe(map(x => loadingStateForActionContextState(x)), shareReplay(1));
+  readonly loadingState$ = this.afterDistinctLoadingStateTypeChange().pipe(map(x => loadingStateForActionContextState<O>(x)), shareReplay(1));
 
   /**
    * Returns the current LoadingStateType based on the current state.
@@ -251,7 +255,7 @@ export class ActionContextStore<T = any, O = any> extends ComponentStore<ActionC
   /**
    * Updates the value, setting value ready. The current result is cleared.
    */
-  readonly readyValue = this.updater((state, value: Maybe<T>) => canReadyValue(state)
+  readonly readyValue = this.updater((state, value: T) => canReadyValue(state)
     ? ({ ...state, actionState: DbxActionState.VALUE_READY, value, result: undefined })
     : state);
 
@@ -278,7 +282,7 @@ export class ActionContextStore<T = any, O = any> extends ComponentStore<ActionC
   readonly reset = this.updater((state) => ({ ...INITIAL_STATE }));
 
   // MARK: Utility
-  afterDistinctBoolean(fromState: (state: ActionContextState) => boolean): Observable<boolean> {
+  afterDistinctBoolean(fromState: (state: ActionContextState<T, O>) => boolean): Observable<boolean> {
     return this.state$.pipe(
       map(x => fromState(x)),
       distinctUntilChanged(),
@@ -286,7 +290,7 @@ export class ActionContextStore<T = any, O = any> extends ComponentStore<ActionC
     );
   }
 
-  afterDistinctActionState<X>(actionState: DbxActionState, fromState: (state: ActionContextState) => X): Observable<X> {
+  afterDistinctActionState<X>(actionState: DbxActionState, fromState: (state: ActionContextState<T, O>) => X): Observable<X> {
     return this.afterDistinctActionStateChange().pipe(
       filter((x) => x.actionState === actionState),  // Only pipe when the new action state matches.
       map(x => fromState(x)),
@@ -294,7 +298,7 @@ export class ActionContextStore<T = any, O = any> extends ComponentStore<ActionC
     );
   }
 
-  afterDistinctActionStateChange(): Observable<ActionContextState> {
+  afterDistinctActionStateChange(): Observable<ActionContextState<T, O>> {
     return this.state$.pipe(
       map((x) => ([x, x.actionState]) as [ActionContextState, DbxActionState]),
       distinctUntilChanged((a, b) => a?.[1] === b?.[1]),  // Filter out when the state remains the same.
@@ -303,7 +307,7 @@ export class ActionContextStore<T = any, O = any> extends ComponentStore<ActionC
     );
   }
 
-  afterDistinctLoadingStateTypeChange(): Observable<ActionContextState> {
+  afterDistinctLoadingStateTypeChange(): Observable<ActionContextState<T, O>> {
     return this.state$.pipe(
       map((x) => ([x, loadingStateForActionContextState(x)]) as [ActionContextState, LoadingStateType]),
       distinctUntilChanged((a, b) => a?.[1] === b?.[1]),  // Filter out when the loading state remains the same.

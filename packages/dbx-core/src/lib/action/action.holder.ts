@@ -1,5 +1,5 @@
 import { Observable, of } from 'rxjs';
-import { Destroyable } from '@dereekb/util';
+import { Destroyable, Maybe } from '@dereekb/util';
 import { LockSet } from '@dereekb/rxjs';
 import { ActionContextStoreSource, DbxActionContextStoreSourceInstance, SecondaryActionContextStoreSource } from './action.store.source';
 import { ActionContextStore } from './action.store';
@@ -16,7 +16,7 @@ export class DbxActionContextBaseSource<T = any, O = any> implements ActionConte
 
   readonly isModified$: Observable<boolean>;
   readonly triggered$: Observable<boolean>;
-  readonly success$: Observable<O>;
+  readonly success$: Observable<Maybe<O>>;
 
   constructor(readonly inputSource?: SecondaryActionContextStoreSource) {
     if (this.inputSource) {
