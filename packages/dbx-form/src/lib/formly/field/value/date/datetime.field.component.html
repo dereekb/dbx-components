@@ -51,6 +51,9 @@
       </button>
       <mat-divider></mat-divider>
     </ng-container>
+    <button mat-menu-item (click)="setLogicalTime('now')">
+      <span>Now</span>
+    </button>
     <button mat-menu-item (click)="setTime('12:00AM')">
       <span>Midnight</span>
     </button>

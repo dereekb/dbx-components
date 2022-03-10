@@ -1,5 +1,7 @@
+import { LogicalDateStringCode } from './../../../../../../../util/src/lib/date/date.time';
+import { DATE_NOW_VALUE, dateFromLogicalDate } from '@dereekb/util';
 import { MatInput } from '@angular/material/input';
-import { DateTimeMinuteConfig, DateTimeMinuteInstance, guessCurrentTimezone, readableTimeStringToDate, toReadableTimeString, utcDayForDate } from '@dereekb/date';
+import { DateTimeMinuteConfig, DateTimeMinuteInstance, guessCurrentTimezone, readableTimeStringToDate, toLocalReadableTimeString, toReadableTimeString, utcDayForDate } from '@dereekb/date';
 import { switchMap, shareReplay, map, filter, startWith, tap, first, distinctUntilChanged, debounceTime, throttleTime } from 'rxjs/operators';
 import {
   ChangeDetectorRef,
@@ -9,7 +11,7 @@ import { AbstractControl, FormControl, Validators, FormGroup } from '@angular/fo
 import { FieldType } from '@ngx-formly/material';
 import { FieldTypeConfig, FormlyFieldConfig } from '@ngx-formly/core';
 import { BehaviorSubject, Observable, combineLatest, Subject, merge, interval } from 'rxjs';
-import { Maybe, ReadableTimeString } from '@dereekb/util';
+import { Maybe, ReadableTimeString, isLogicalDateStringCode } from '@dereekb/util';
 import { MatDatepickerInputEvent } from '@angular/material/datepicker';
 import { addMinutes, isSameDay, isSameMinute, startOfDay } from 'date-fns';
 import { filterMaybe, skipFirstMaybe, SubscriptionObject, switchMapMaybeDefault, switchMapMaybeObs, tapLog } from '@dereekb/rxjs';
@@ -120,7 +122,7 @@ export class DbxDateTimeFieldComponent extends FieldType<DateTimeFormlyFieldConf
 
   readonly timeInputCtrl = new FormControl('', {
     validators: [
-      Validators.pattern(/^([0-9]|(0[0-9])|(1[0-9])|(2[0-3]))(:)?([0-5][0-9])?(\s)?([apAP][Mm])?(\\s)*$/)
+      Validators.pattern(/^(now)$|^([0-9]|(0[0-9])|(1[0-9])|(2[0-3]))(:)?([0-5][0-9])?(\s)?([apAP][Mm])?(\\s)*$/)
     ]
   });
 
@@ -164,11 +166,11 @@ export class DbxDateTimeFieldComponent extends FieldType<DateTimeFormlyFieldConf
     shareReplay(1)
   );
 
-  readonly date$ = this._date.asObservable();
+  readonly date$ = this._date.pipe(filterMaybe(), shareReplay(1));
 
   readonly dateValue$ = merge(
-    this.value$.pipe(startWith(undefined)),
-    this.date$
+    this.date$,
+    this.value$.pipe(skipFirstMaybe())
   ).pipe(
     map((x: Maybe<Date>) => (x) ? startOfDay(x) : x),
     distinctUntilChanged((a, b) => Boolean(a && b) && isSameDay(a!, b!)),
@@ -259,12 +261,13 @@ export class DbxDateTimeFieldComponent extends FieldType<DateTimeFormlyFieldConf
     });
 
     this._valueSub.subscription = this.timeString$.subscribe((x) => {
+
       // Skip events where the timeInput value is cleared.
       if (!this.timeInputCtrl.value && x === '12:00AM') {
         return;
       }
 
-      this.timeInputCtrl.setValue(x);
+      this.setTime(x);
     });
 
     const isFullDayField = this.dateTimeField.fullDayFieldName;
@@ -323,6 +326,15 @@ export class DbxDateTimeFieldComponent extends FieldType<DateTimeFormlyFieldConf
     if (date) {
       this._date.next(date);
       this._updateTime.next();
+    }
+  }
+
+  setLogicalTime(time: LogicalDateStringCode): void {
+    const date = dateFromLogicalDate(time);
+
+    if (date) {
+      const timeString = toLocalReadableTimeString(date);
+      this.setTime(timeString);
     }
   }
 

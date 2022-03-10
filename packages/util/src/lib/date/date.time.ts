@@ -20,10 +20,12 @@ export enum TimeAM {
 export type DateNow = 'now';
 export const DATE_NOW_VALUE = 'now';
 
+export type LogicalDateStringCode = DateNow;
+
 /**
  * A date that is characterized by either a known string value, or a Date.
  */
-export type LogicalDate = Date | DateNow;
+export type LogicalDate = Date | LogicalDateStringCode;
 
 /**
  * Returns a Date value from the input LogicalDate.
@@ -48,4 +50,18 @@ export function dateFromLogicalDate(logicalDate: Maybe<LogicalDate>): Maybe<Date
   }
 
   return result;
+}
+
+export function isLogicalDateStringCode(logicalDate: Maybe<string | LogicalDate>): logicalDate is LogicalDateStringCode {
+  let isLogicalDateStringCode = false;
+
+  if (typeof logicalDate === 'string') {
+    switch (logicalDate.toLocaleLowerCase()) {
+      case DATE_NOW_VALUE:
+        isLogicalDateStringCode = true;
+        break;
+    }
+  }
+
+  return isLogicalDateStringCode;
 }

@@ -15,7 +15,7 @@ export const TAKE_NEXT_UPCOMING_TIME_CONFIG_OBS: () => Observable<DateTimePicker
 /**
  * Same as DateTime field but with the Date input hidden by default.
  */
-export function timeOnlyField(config: Partial<TimeFieldConfig>): FormlyFieldConfig {
+export function timeOnlyField(config: Partial<TimeFieldConfig> = {}): FormlyFieldConfig {
   return dateTimeField({
     ...config,
     timeMode: DateTimeFieldTimeMode.REQUIRED,
@@ -23,7 +23,7 @@ export function timeOnlyField(config: Partial<TimeFieldConfig>): FormlyFieldConf
   });
 }
 
-export function dateTimeField(config: Partial<DateTimeFieldConfig>): FormlyFieldConfig {
+export function dateTimeField(config: Partial<DateTimeFieldConfig> = {}): FormlyFieldConfig {
   const {
     key = 'date',
     timeMode = DateTimeFieldTimeMode.REQUIRED,
