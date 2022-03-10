@@ -4,6 +4,7 @@ import { FormlyFieldConfig } from '@ngx-formly/core/lib/core';
 import { OnInit, OnDestroy, Directive, Input } from '@angular/core';
 import { DbxFormlyContext } from './formly.context';
 import { Maybe } from '@dereekb/util';
+import { DbxFormDisabledKey } from '../form/form';
 
 /**
  * Abstract component for wrapping a form.
@@ -17,7 +18,7 @@ export abstract class AbstractFormlyFormDirective<T> implements OnDestroy {
   }
 
   set disabled(disabled: boolean) {
-    this.context.setDisabled(disabled);
+    this.context.setDisabled(undefined, disabled);
   }
 
   constructor(public readonly context: DbxFormlyContext<T>) { }
@@ -41,6 +42,10 @@ export abstract class AbstractFormlyFormDirective<T> implements OnDestroy {
 
   clearValue(): void {
     this.setValue({});
+  }
+
+  setDisabled(key?: DbxFormDisabledKey, disabled?: boolean): void {
+    this.context.setDisabled(key, disabled);
   }
 
 }

@@ -1,7 +1,9 @@
+import { BehaviorSubject, Observable } from 'rxjs';
+import { OnDestroy } from '@angular/core';
 import { ComponentFixture } from '@angular/core/testing';
 import { Component } from '@angular/core';
 import { FormlyFieldConfig } from '@ngx-formly/core';
-import { AbstractSyncFormlyFormDirective, formlyField, ProvideFormlyContext } from '../lib';
+import { AbstractAsyncFormlyFormDirective, formlyField, ProvideFormlyContext } from '../lib';
 import { AbstractControl } from '@angular/forms';
 
 export interface TestFormValue {
@@ -31,13 +33,24 @@ export function testTextField(): FormlyFieldConfig {
   selector: 'dbx-test-dbx-form',
   providers: [ProvideFormlyContext()]
 })
-export class DbxTestDbxFormComponent extends AbstractSyncFormlyFormDirective<TestFormValue> {
+export class DbxTestDbxFormComponent<T = TestFormValue> extends AbstractAsyncFormlyFormDirective<T> implements OnDestroy {
 
-  fields: FormlyFieldConfig[] = [
+  private _fields = new BehaviorSubject<FormlyFieldConfig[]>([
     testTextField()
-  ];
+  ]);
+
+  readonly fields$: Observable<FormlyFieldConfig[]> = this._fields.asObservable();
+
+  override ngOnDestroy() {
+    super.ngOnDestroy();
+    this._fields.complete();
+  }
 
   // MARK: Testing
+  setFields(fields: FormlyFieldConfig[]) {
+    this._fields.next(fields);
+  }
+
   setValidTextForTest(fixture: ComponentFixture<any>): string {
     const text = 'valid';
     this.setTextForTest(text, fixture);
@@ -49,7 +62,7 @@ export class DbxTestDbxFormComponent extends AbstractSyncFormlyFormDirective<Tes
   }
 
   setTextForTest(text: string, fixture: ComponentFixture<any>): void {
-    this.setValue({ text });
+    this.setValue({ text } as any);
     this.detectFormChanges(fixture);
   }
 

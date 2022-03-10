@@ -1,4 +1,5 @@
 import { removeModelsWithKey, removeModelsWithSameKey, ReadModelKeyFunction } from "../model";
+import { Maybe } from "../value";
 
 export type BooleanStringKey = string;
 
@@ -12,7 +13,7 @@ export type BooleanStringKeyArray = BooleanKeyArray<BooleanStringKey>;
  *
  * Having any values in the array is considered "true".
  */
-export type BooleanKeyArray<T = any> = T[] | undefined;
+export type BooleanKeyArray<T = any> = Maybe<T[]>;
 
 export function readBooleanKeySafetyWrap<T>(readKey: ReadModelKeyFunction<T>): ReadModelKeyFunction<T> {
   return (value: T) => {
@@ -56,6 +57,18 @@ export class BooleanKeyArrayUtilityInstance<T> {
 
   isTrue(value: BooleanKeyArray): boolean {
     return isTrueBooleanKeyArray(value);
+  }
+
+  set(array: BooleanKeyArray<T>, value: T, enable = true): BooleanKeyArray<T> {
+    let result: BooleanKeyArray<T>;
+
+    if (enable) {
+      result = this.insert(array, value);
+    } else {
+      result = this.remove(array, value);
+    }
+
+    return result;
   }
 
   insert(array: BooleanKeyArray<T>, value: T): BooleanKeyArray<T> {

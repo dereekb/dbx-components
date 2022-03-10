@@ -3,11 +3,13 @@ import { FormGroup } from '@angular/forms';
 import { FormlyFieldConfig, FormlyFormOptions } from '@ngx-formly/core';
 import { distinctUntilChanged, map, throttleTime, startWith, BehaviorSubject, Observable, Subject, switchMap, shareReplay, of } from 'rxjs';
 import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
-import { DbxForm, DbxFormEvent, DbxFormState, ProvideDbxMutableForm } from '../form/form';
+import { DbxForm, DbxFormDisabledKey, DbxFormEvent, DbxFormState, DEFAULT_FORM_DISABLED_KEY, ProvideDbxMutableForm } from '../form/form';
 import { DbxFormlyContext, DbxFormlyContextDelegate, DbxFormlyInitialize } from './formly.context';
 import { cloneDeep } from 'lodash';
-import { scanCount, switchMapMaybeObs } from '@dereekb/rxjs';
-import { Maybe } from '@dereekb/util';
+import { scanCount, switchMapMaybeObs, SubscriptionObject } from '@dereekb/rxjs';
+import { BooleanStringKeyArray, BooleanStringKeyArrayUtilityInstance, Maybe } from '@dereekb/util';
+
+
 
 /**
  * Used for rending a form from a DbxFormlyContext.
@@ -29,9 +31,12 @@ export class DbxFormlyFormComponent<T extends object> extends AbstractSubscripti
 
   private _fields = new BehaviorSubject<Maybe<Observable<FormlyFieldConfig[]>>>(undefined);
   private _events = new BehaviorSubject<DbxFormEvent>({ isComplete: false, state: DbxFormState.INITIALIZING });
+  private _disabled = new BehaviorSubject<BooleanStringKeyArray>(undefined);
 
   private _reset = new BehaviorSubject<Date>(new Date());
   private _forceUpdate = new Subject<void>();
+
+  private _disabledSub = new SubscriptionObject();
 
   form = new FormGroup({});
   model: any = {};
@@ -56,7 +61,8 @@ export class DbxFormlyFormComponent<T extends object> extends AbstractSubscripti
           pristine: this.form.pristine,
           changesCount: changesSinceLastResetCount,
           lastResetAt,
-          isDisabled: this.disabled
+          disabled: this.disabled,
+          isDisabled: this.isDisabled
         };
 
         return nextState;
@@ -71,6 +77,18 @@ export class DbxFormlyFormComponent<T extends object> extends AbstractSubscripti
 
   ngOnInit(): void {
     this.context.setDelegate(this);
+
+    this._disabledSub.subscription = this._disabled.pipe(distinctUntilChanged()).subscribe((disabled) => {
+      const isDisabled = BooleanStringKeyArrayUtilityInstance.isTrue(disabled);
+
+      if (this.form.disabled !== isDisabled) {
+        if (isDisabled) {
+          this.form.disable({ emitEvent: true });
+        } else {
+          this.form.enable({ emitEvent: true });
+        }
+      }
+    });
   }
 
   override ngOnDestroy(): void {
@@ -81,12 +99,15 @@ export class DbxFormlyFormComponent<T extends object> extends AbstractSubscripti
       this._fields.complete();
       this._reset.complete();
       this._forceUpdate.complete();
+      this._disabled.complete();
+      this._disabledSub.destroy();
     });
   }
 
   // MARK: Delegate
   init(initialize: DbxFormlyInitialize<T>): void {
     this._fields.next(initialize.fields);
+    this._disabled.next(initialize.initialDisabled);
   }
 
   getValue(): Observable<T> {
@@ -121,18 +142,20 @@ export class DbxFormlyFormComponent<T extends object> extends AbstractSubscripti
     }
   }
 
-  get disabled(): boolean {
-    return this.form.disabled;
+  get isDisabled(): boolean {
+    return BooleanStringKeyArrayUtilityInstance.isTrue(this.disabled);
   }
 
-  setDisabled(disabled = true): void {
-    if (disabled !== this.disabled) {
-      if (disabled) {
-        this.form.disable({ emitEvent: true });
-      } else {
-        this.form.enable({ emitEvent: true });
-      }
-    }
+  get disabled(): BooleanStringKeyArray {
+    return this._disabled.value;
+  }
+
+  getDisabled(): Observable<BooleanStringKeyArray> {
+    return this._disabled.asObservable();
+  }
+
+  setDisabled(key?: DbxFormDisabledKey, disabled = true): void {
+    this._disabled.next(BooleanStringKeyArrayUtilityInstance.set(this.disabled, key ?? DEFAULT_FORM_DISABLED_KEY, disabled))
   }
 
   // MARK: Update

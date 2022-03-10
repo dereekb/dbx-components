@@ -18,7 +18,7 @@ describe('DbxInputFormControlComponent', () => {
   let fixture: ComponentFixture<DbxTestDbxFormComponent>;
 
   beforeEach(async () => {
-    fixture = TestBed.createComponent(DbxTestDbxFormComponent);
+    fixture = TestBed.createComponent(DbxTestDbxFormComponent) as ComponentFixture<DbxTestDbxFormComponent>;
     testComponent = fixture.componentInstance;
     fixture.detectChanges();
   });
@@ -26,5 +26,7 @@ describe('DbxInputFormControlComponent', () => {
   it('should be created', () => {
     expect(testComponent).toBeDefined();
   });
+
+  // TODO: Test disabled
 
 });

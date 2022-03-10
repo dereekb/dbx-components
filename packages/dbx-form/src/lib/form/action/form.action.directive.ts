@@ -1,7 +1,6 @@
 import { Directive, Host, OnInit, OnDestroy, Input } from '@angular/core';
 import { addSeconds, isPast } from 'date-fns';
-import { Observable, of, combineLatest, exhaustMap } from 'rxjs';
-import { catchError, filter, first, map, switchMap } from 'rxjs/operators';
+import { Observable, of, combineLatest, exhaustMap, catchError, delay, filter, first, map, switchMap, BehaviorSubject, distinctUntilChanged } from 'rxjs';
 import { DbxActionContextStoreSourceInstance } from '@dereekb/dbx-core';
 import { ReadableError } from '@dereekb/util';
 import { SubscriptionObject, LockSet } from '@dereekb/rxjs';
@@ -15,7 +14,7 @@ export interface DbxActionFormTriggerResult {
 export type DbxActionFormValidateFn<T = any> = (value: T) => Observable<boolean>;
 export type DbxActionFormModifiedFn<T = any> = (value: T) => Observable<boolean>;
 
-export const APP_ACTION_FORM_DISABLED_KEY = 'actionForm';
+export const APP_ACTION_FORM_DISABLED_KEY = 'dbx_action_form';
 
 /**
  * Used with an action to bind a form to an action as it's value source.
@@ -36,16 +35,19 @@ export class DbxActionFormDirective<T = any> implements OnInit, OnDestroy {
    * ready to send before the context store is marked enabled.
    */
   @Input()
-  appActionFormValidator?: DbxActionFormValidateFn<T>;
+  dbxActionFormValidator?: DbxActionFormValidateFn<T>;
 
   /**
    * Optional function that checks whether or not the value has been modified.
    */
   @Input()
-  appActionFormModified?: DbxActionFormModifiedFn<T>;
+  dbxActionFormModified?: DbxActionFormModifiedFn<T>;
+
+  private _formDisabledWhileWorking = new BehaviorSubject<boolean>(true);
 
   private _triggeredSub = new SubscriptionObject();
   private _isCompleteSub = new SubscriptionObject();
+  private _isWorkingSub = new SubscriptionObject();
 
   constructor(@Host() public readonly form: DbxMutableForm, public readonly source: DbxActionContextStoreSourceInstance<object, any>) {
     if (form.lockSet) {
@@ -53,6 +55,15 @@ export class DbxActionFormDirective<T = any> implements OnInit, OnDestroy {
     }
 
     this.lockSet.addChildLockSet(source.lockSet, 'source');
+  }
+
+  @Input()
+  get dbxActionFormDisabledWhileWorking() {
+    return this._formDisabledWhileWorking.value;
+  }
+
+  set dbxActionFormDisabledWhileWorking(dbxActionFormDisabledWhileWorking: boolean) {
+    this._formDisabledWhileWorking.next(Boolean(dbxActionFormDisabledWhileWorking ?? true));
   }
 
   ngOnInit(): void {
@@ -98,6 +109,7 @@ export class DbxActionFormDirective<T = any> implements OnInit, OnDestroy {
 
     // Update the enabled/disabled state
     this._isCompleteSub.subscription = this.form.stream$.pipe(
+      delay(0),
       filter((x) => x.state !== DbxFormState.INITIALIZING),
       switchMap((event) => {
         return this.form.getValue().pipe(
@@ -114,7 +126,7 @@ export class DbxActionFormDirective<T = any> implements OnInit, OnDestroy {
 
             const initialIsValidCheck = event.isComplete;
             if (initialIsValidCheck) {
-              validatorObs = (this.appActionFormValidator) ? this.appActionFormValidator(value) : of(true);
+              validatorObs = (this.dbxActionFormValidator) ? this.dbxActionFormValidator(value) : of(true);
             } else {
               validatorObs = of(false);
             }
@@ -123,7 +135,7 @@ export class DbxActionFormDirective<T = any> implements OnInit, OnDestroy {
 
             const isConsideredModified = (event.pristine === false && isProbablyTouched);
             if (isConsideredModified) {
-              modifiedObs = (this.appActionFormModified) ? this.appActionFormModified(value) : of(true);
+              modifiedObs = (this.dbxActionFormModified) ? this.dbxActionFormModified(value) : of(true);
             } else {
               modifiedObs = of(false);
             }
@@ -148,8 +160,13 @@ export class DbxActionFormDirective<T = any> implements OnInit, OnDestroy {
       this.source.enable(APP_ACTION_FORM_DISABLED_KEY, valid);
     });
 
-    // TODO: Watch the working state and stop allowing input on working..?
-    // TODO: Watch the disabled state for when another disabled key disables this form.
+    // Watch the working state and disable form while working
+    this._isWorkingSub.subscription = combineLatest([this.source.isWorking$, this._formDisabledWhileWorking]).pipe(
+      map(([isWorking, lockOnWorking]: [boolean, boolean]) => lockOnWorking && isWorking),
+      distinctUntilChanged()
+    ).subscribe((disable) => {
+      this.form.setDisabled(APP_ACTION_FORM_DISABLED_KEY, disable);
+    });
   }
 
   ngOnDestroy(): void {
@@ -157,12 +174,15 @@ export class DbxActionFormDirective<T = any> implements OnInit, OnDestroy {
     this.lockSet.destroyOnNextUnlock(() => {
       this._triggeredSub.destroy();
       this._isCompleteSub.destroy();
+      this._isWorkingSub.destroy();
+      this._formDisabledWhileWorking.complete();
+      this.form.setDisabled(APP_ACTION_FORM_DISABLED_KEY, false);
     });
   }
 
   protected preCheckReadyValue(value: T): Observable<boolean> {
-    let validatorObs: Observable<boolean> = (this.appActionFormValidator) ? this.appActionFormValidator(value) : of(true);
-    let modifiedObs: Observable<boolean> = (this.appActionFormModified) ? this.appActionFormModified(value) : of(true);
+    let validatorObs: Observable<boolean> = (this.dbxActionFormValidator) ? this.dbxActionFormValidator(value) : of(true);
+    let modifiedObs: Observable<boolean> = (this.dbxActionFormModified) ? this.dbxActionFormModified(value) : of(true);
 
     return combineLatest([
       validatorObs,

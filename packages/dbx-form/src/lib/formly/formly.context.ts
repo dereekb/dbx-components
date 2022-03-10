@@ -1,14 +1,14 @@
-import { Provider, Type } from '@angular/core';
+import { Provider } from '@angular/core';
 import { BehaviorSubject, Observable, of, switchMap, shareReplay, distinctUntilChanged } from 'rxjs';
-import { DbxForm, DbxFormEvent, DbxFormState, DbxMutableForm, ProvideDbxMutableForm } from '../form/form';
+import { DbxForm, DbxFormDisabledKey, DbxFormEvent, DbxFormState, DbxMutableForm, DEFAULT_FORM_DISABLED_KEY, ProvideDbxMutableForm } from '../form/form';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { LockSet, filterMaybe } from '@dereekb/rxjs';
-import { Maybe } from '@dereekb/util';
+import { BooleanStringKeyArray, BooleanStringKeyArrayUtilityInstance, Maybe } from '@dereekb/util';
 
 export interface DbxFormlyInitialize<T> {
   fields: Observable<FormlyFieldConfig[]>;
+  initialDisabled: BooleanStringKeyArray;
   initialValue: Maybe<Partial<T>>;
-  initialDisabled: boolean;
 }
 
 /**
@@ -16,7 +16,7 @@ export interface DbxFormlyInitialize<T> {
  * 
  * This is usually the component or element that contains the form itself.
  */
-export interface DbxFormlyContextDelegate<T = any> extends Omit<DbxMutableForm<T>, 'lockSet' | 'setDisabled'> {
+export interface DbxFormlyContextDelegate<T = any> extends Omit<DbxMutableForm<T>, 'lockSet'> {
   readonly stream$: Observable<DbxFormEvent>;
   init(initialize: DbxFormlyInitialize<T>): void;
 }
@@ -43,10 +43,11 @@ export class DbxFormlyContext<T> implements DbxForm<T> {
 
   private _fields = new BehaviorSubject<Maybe<FormlyFieldConfig[]>>(undefined);
   private _initialValue = new BehaviorSubject<Maybe<Partial<T>>>(undefined);
-  private _disabled = new BehaviorSubject<boolean>(false);
+  private _disabled = new BehaviorSubject<BooleanStringKeyArray>(undefined);
   private _delegate = new BehaviorSubject<Maybe<DbxFormlyContextDelegate<T>>>(undefined);
 
   readonly fields$ = this._fields.pipe(filterMaybe());
+  readonly disabled$ = this._disabled.pipe(filterMaybe());
   readonly stream$: Observable<DbxFormEvent> = this._delegate.pipe(distinctUntilChanged(), switchMap(x => (x) ? x.stream$ : of(DbxFormlyContext.INITIAL_STATE)), shareReplay(1));
 
   constructor() { }
@@ -66,8 +67,8 @@ export class DbxFormlyContext<T> implements DbxForm<T> {
       if (delegate != null) {
         delegate.init({
           fields: this.fields$,
-          initialValue: this._initialValue.value,
-          initialDisabled: this._disabled.value
+          initialDisabled: this._disabled.value,
+          initialValue: this._initialValue.value
         });
       }
 
@@ -103,11 +104,23 @@ export class DbxFormlyContext<T> implements DbxForm<T> {
   }
 
   isDisabled(): boolean {
+    return BooleanStringKeyArrayUtilityInstance.isTrue(this.disabled);
+  }
+
+  get disabled(): BooleanStringKeyArray {
     return this._disabled.value;
   }
 
-  setDisabled(disabled = true): void {
-    this._disabled.next(disabled);
+  getDisabled(): Observable<BooleanStringKeyArray> {
+    return this._disabled.asObservable();
+  }
+
+  setDisabled(key?: DbxFormDisabledKey, disabled = true): void {
+    this._disabled.next(BooleanStringKeyArrayUtilityInstance.set(this.disabled, key ?? DEFAULT_FORM_DISABLED_KEY, disabled));
+
+    if (this._delegate.value) {
+      this._delegate.value.setDisabled(key, disabled);
+    }
   }
 
   resetForm(): void {
