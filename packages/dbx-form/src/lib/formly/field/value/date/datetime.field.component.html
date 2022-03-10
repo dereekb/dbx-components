@@ -28,20 +28,20 @@
 
 <!-- Date Input Template -->
 <ng-template #dateInputTemplate>
-  <button mat-icon-button (click)="picker.open()">
+  <button mat-icon-button (click)="picker.open()" [disabled]="disabled">
     <mat-icon>calendar_today</mat-icon>
   </button>
   <mat-form-field class="dbx-datetime-row-field">
     <mat-label>Date</mat-label>
-    <input #dateInput matInput [matDatepicker]="picker" (change)="dateTextChanged($event)"
-      (dateChange)="datePicked($event)" [value]="dateValue$ | async">
+    <input #dateInput matInput [formControl]="dateInputCtrl" [matDatepicker]="picker" (dateChange)="datePicked($event)"
+      [value]="dateValue$ | async">
     <mat-datepicker #picker></mat-datepicker>
   </mat-form-field>
 </ng-template>
 
 <!-- Time Menu/Input Template -->
 <ng-template #timeMenuAndInputTemplate>
-  <button mat-icon-button [matMenuTriggerFor]="timemenu" aria-label="opens the time menu">
+  <button mat-icon-button [matMenuTriggerFor]="timemenu" aria-label="opens the time menu" [disabled]="disabled">
     <mat-icon>timer</mat-icon>
   </button>
   <mat-menu #timemenu="matMenu">

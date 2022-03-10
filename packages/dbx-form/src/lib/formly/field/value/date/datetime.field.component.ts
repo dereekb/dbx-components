@@ -77,9 +77,6 @@ export interface DateTimeFormlyFieldConfig extends FormlyFieldConfig {
 })
 export class DbxDateTimeFieldComponent extends FieldType<DateTimeFormlyFieldConfig & FieldTypeConfig> implements OnInit, OnDestroy {
 
-  @ViewChild('dateInput', { read: MatInput })
-  dateInput!: MatInput;
-
   private _sub = new SubscriptionObject();
   private _valueSub = new SubscriptionObject();
 
@@ -120,13 +117,16 @@ export class DbxDateTimeFieldComponent extends FieldType<DateTimeFormlyFieldConf
     })
   );
 
+  readonly dateInputCtrl = new FormControl(new Date(), {
+    validators: []
+  });
+
   readonly timeInputCtrl = new FormControl('', {
     validators: [
       Validators.pattern(/^(now)$|^([0-9]|(0[0-9])|(1[0-9])|(2[0-3]))(:)?([0-5][0-9])?(\s)?([apAP][Mm])?(\\s)*$/)
     ]
   });
 
-  private _date = new BehaviorSubject<Maybe<Date>>(new Date());
   private _config = new BehaviorSubject<Maybe<Observable<DateTimePickerConfiguration>>>(undefined);
 
   get dateOnly(): boolean {
@@ -166,7 +166,7 @@ export class DbxDateTimeFieldComponent extends FieldType<DateTimeFormlyFieldConf
     shareReplay(1)
   );
 
-  readonly date$ = this._date.pipe(filterMaybe(), shareReplay(1));
+  readonly date$ = this.dateInputCtrl.valueChanges.pipe(filterMaybe(), shareReplay(1));
 
   readonly dateValue$ = merge(
     this.date$,
@@ -270,6 +270,17 @@ export class DbxDateTimeFieldComponent extends FieldType<DateTimeFormlyFieldConf
       this.setTime(x);
     });
 
+    // Watch for disabled changes so we can propogate them properly.
+    this.formControl.registerOnDisabledChange((disabled) => {
+      if (disabled) {
+        this.dateInputCtrl.disable({ emitEvent: false });
+        this.timeInputCtrl.disable({ emitEvent: false });
+      } else {
+        this.dateInputCtrl.enable({ emitEvent: false });
+        this.timeInputCtrl.enable({ emitEvent: false });
+      }
+    });
+
     const isFullDayField = this.dateTimeField.fullDayFieldName;
     let fullDayFieldCtrl: Maybe<AbstractControl>;
 
@@ -305,26 +316,17 @@ export class DbxDateTimeFieldComponent extends FieldType<DateTimeFormlyFieldConf
   override ngOnDestroy(): void {
     super.ngOnDestroy();
     this._formControlObs.complete();
-    this._date.complete();
     this._updateTime.complete();
     this._config.complete();
     this._sub.destroy();
     this._valueSub.destroy();
   }
 
-  dateTextChanged(e: any): void {
-    const value = this.dateInput.value;
-
-    if (value == null) {
-      this._date.next(undefined);
-    }
-  }
-
   datePicked(event: MatDatepickerInputEvent<Date>): void {
     const date = event.value;
 
     if (date) {
-      this._date.next(date);
+      this.dateInputCtrl.setValue(date);
       this._updateTime.next();
     }
   }

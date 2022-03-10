@@ -43,7 +43,7 @@ export enum DbxActionState {
  */
 export type DbxActionDisabledKey = string;
 
-export const DEFAULT_ACTION_DISABLED_KEY = 'default';
+export const DEFAULT_ACTION_DISABLED_KEY = 'dbx_action_disabled';
 
 export function isIdleActionState(actionState: DbxActionState): boolean {
   switch (actionState) {

@@ -19,7 +19,7 @@ export class DbxActionFormSafetyDirective<T, O> extends DbxActionTransitionSafet
   override inputSafetyType?: DbxActionTransitionSafetyType;
 
   constructor(
-    @Host() public readonly appActionForm: DbxActionFormDirective<T>,
+    @Host() public readonly dbxActionForm: DbxActionFormDirective<T>,
     source: DbxActionContextStoreSourceInstance<T, O>,
     transitionService: TransitionService,
     viewContainerRef: ViewContainerRef,
@@ -29,7 +29,7 @@ export class DbxActionFormSafetyDirective<T, O> extends DbxActionTransitionSafet
   }
 
   protected override _handleOnBeforeTransition(transition: Transition): HookResult {
-    this.appActionForm.form.forceFormUpdate();
+    this.dbxActionForm.form.forceFormUpdate();
     return super._handleOnBeforeTransition(transition);
   }
 

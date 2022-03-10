@@ -1,5 +1,7 @@
 import { Ng2StateDeclaration } from '@uirouter/angular';
 import { DocActionContextComponent } from './container/context.component';
+import { DocActionDirectivesComponent } from './container/directives.component';
+import { DocActionFormComponent } from './container/form.component';
 import { DocActionHomeComponent } from './container/home.component';
 import { DocActionLayoutComponent } from './container/layout.component';
 
@@ -22,8 +24,22 @@ export const docActionContextState: Ng2StateDeclaration = {
   component: DocActionContextComponent
 };
 
+export const docActionDirectivesState: Ng2StateDeclaration = {
+  url: '/directives',
+  name: 'doc.action.directives',
+  component: DocActionDirectivesComponent
+};
+
+export const docActionFormState: Ng2StateDeclaration = {
+  url: '/form',
+  name: 'doc.action.form',
+  component: DocActionFormComponent
+};
+
 export const STATES: Ng2StateDeclaration[] = [
   layoutState,
   homeState,
-  docActionContextState
+  docActionContextState,
+  docActionDirectivesState,
+  docActionFormState
 ];
