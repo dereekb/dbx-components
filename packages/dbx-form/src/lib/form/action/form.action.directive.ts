@@ -3,7 +3,7 @@ import { addSeconds, isPast } from 'date-fns';
 import { Observable, of, combineLatest, exhaustMap, catchError, delay, filter, first, map, switchMap, BehaviorSubject, distinctUntilChanged } from 'rxjs';
 import { DbxActionContextStoreSourceInstance } from '@dereekb/dbx-core';
 import { ReadableError } from '@dereekb/util';
-import { SubscriptionObject, LockSet } from '@dereekb/rxjs';
+import { SubscriptionObject, LockSet, tapLog } from '@dereekb/rxjs';
 import { DbxFormState, DbxMutableForm } from '../../form/form';
 
 export interface DbxActionFormTriggerResult {
@@ -72,7 +72,8 @@ export class DbxActionFormDirective<T = any> implements OnInit, OnDestroy {
     this._triggeredSub.subscription = this.source.triggered$.pipe(
       switchMap(() => this.form.stream$.pipe(
         first(),
-        exhaustMap(({ isComplete }) => {
+        exhaustMap((stream) => {
+          const { isComplete } = stream;
           const doNothing = {}; // nothing, form not complete
 
           let obs: Observable<DbxActionFormTriggerResult>;
@@ -151,7 +152,7 @@ export class DbxActionFormDirective<T = any> implements OnInit, OnDestroy {
       })
     ).subscribe(({ valid, modified, value, event }) => {
 
-      // console.log('x: ', value, event, valid, modified);
+      console.log('x: ', value, event, valid, modified);
 
       // Update Modified State
       this.source.setIsModified(modified);
@@ -189,6 +190,7 @@ export class DbxActionFormDirective<T = any> implements OnInit, OnDestroy {
       modifiedObs
     ]).pipe(
       first(),
+      tapLog('prechecl'),
       map(([valid, modified]: [boolean, boolean]) => valid && modified)
     );
   }

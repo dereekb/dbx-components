@@ -1,4 +1,5 @@
 import { Directive, Host, Input, OnInit, OnDestroy } from '@angular/core';
+import { Maybe } from '@dereekb/util';
 import { BehaviorSubject } from 'rxjs';
 import { distinctUntilChanged } from 'rxjs/operators';
 import { AbstractSubscriptionDirective } from '../../../subscription';
@@ -38,8 +39,8 @@ export class DbxActionDisabledDirective<T, O> extends AbstractSubscriptionDirect
     return this._disabled.value;
   }
 
-  set disabled(disabled: boolean) {
-    this._disabled.next(disabled);
+  set disabled(disabled: Maybe<boolean>) {
+    this._disabled.next(disabled ?? false);
   }
 
 }

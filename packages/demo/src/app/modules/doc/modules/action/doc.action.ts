@@ -14,6 +14,11 @@ export const DOC_ACTION_ROUTES = [{
   title: 'Form Actions',
   detail: 'dbx-form action directives and examples',
   ref: 'doc.action.form'
+}, {
+  icon: 'dynamic_form',
+  title: 'Action Map',
+  detail: 'dbx-form action map',
+  ref: 'doc.action.map'
 }];
 
 export const DOC_ACTION_ROOT_ROUTE = {

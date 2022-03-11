@@ -4,6 +4,7 @@ import { DocActionDirectivesComponent } from './container/directives.component';
 import { DocActionFormComponent } from './container/form.component';
 import { DocActionHomeComponent } from './container/home.component';
 import { DocActionLayoutComponent } from './container/layout.component';
+import { DocActionMapComponent } from './container/map.component';
 
 export const layoutState: Ng2StateDeclaration = {
   url: '/action',
@@ -36,10 +37,17 @@ export const docActionFormState: Ng2StateDeclaration = {
   component: DocActionFormComponent
 };
 
+export const docActionMapState: Ng2StateDeclaration = {
+  url: '/map',
+  name: 'doc.action.map',
+  component: DocActionMapComponent
+};
+
 export const STATES: Ng2StateDeclaration[] = [
   layoutState,
   homeState,
   docActionContextState,
   docActionDirectivesState,
-  docActionFormState
+  docActionFormState,
+  docActionMapState
 ];

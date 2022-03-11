@@ -9,6 +9,7 @@ import { STATES } from './doc.action.router';
 import { DocActionContextComponent } from './container/context.component';
 import { DocActionExampleToolsComponent } from './component/action.example.tool.component';
 import { DocActionFormExampleFormComponent } from './component/action.example.form.component';
+import { DocActionMapComponent } from './container/map.component';
 
 @NgModule({
   imports: [
@@ -26,7 +27,8 @@ import { DocActionFormExampleFormComponent } from './component/action.example.fo
     DocActionHomeComponent,
     DocActionContextComponent,
     DocActionFormComponent,
-    DocActionDirectivesComponent
+    DocActionDirectivesComponent,
+    DocActionMapComponent
   ],
 })
 export class DocActionModule { }
