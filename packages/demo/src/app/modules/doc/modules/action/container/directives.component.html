@@ -3,11 +3,43 @@
 
     <!-- Examples -->
     <h3>Auto</h3>
-    <doc-feature-example header="dbx-action" hint="Primary action directive that sets up an action context.">
+    <p>Auto action directives are used to automatically change the state of the action.</p>
+    <doc-feature-example header="dbxActionAutoModify"
+      hint="Used to automatically set the action's isModified flag to true any time isModified is false.">
 
-      <dbx-action-example-tools dbxAction #action="action" [action]="action">
+      <dbx-action-example-tools dbxAction dbxActionAutoModify></dbx-action-example-tools>
 
+      <h4>Enabling/Disabling Behavior</h4>
+      <p>Behavior can be disabled by passing in false to the directive.</p>
+      <dbx-action-example-tools dbxAction [dbxActionAutoModify]="false"></dbx-action-example-tools>
+
+    </doc-feature-example>
+    <doc-feature-example header="dbxActionAutoTrigger"
+      hint="Used to automatically trigger the action when the action's isModifiedAndCanTriggerUpdate value is true. The auto trigger can be configured to emit a limited number of times, throttle itself, and trigger intervals.">
+
+      <dbx-action-example-tools dbxAction [dbxActionHandler]="handleAction" [dbxActionAutoTriggerValue]="value$"
+        dbxActionAutoTrigger>
       </dbx-action-example-tools>
+
+      <button mat-raised-button (click)="resetValue()">Reset Value</button>
+
+      <h4>fastTrigger</h4>
+      <p>The fastTrigger and instantTrigger inputs exist to make it easy to set the trigger debounce and throttle times
+        without explicitly passing them values.</p>
+      <p>The fast trigger is useful for autosave cases of forms. It has a 200ms debounce and 500ms throttle.</p>
+      <dbx-action-example-tools dbxAction [dbxActionHandler]="handleAction" [dbxActionAutoTriggerValue]="value$"
+        dbxActionAutoTrigger fastTrigger>
+      </dbx-action-example-tools>
+
+      <h4>instantTrigger</h4>
+      <p>The instant trigger is useful for cases where the action should go off immediately. It has no throttle and a
+        minor debounce. An example is when an
+        action recieve it's value from a user popup.</p>
+      <dbx-action-example-tools dbxAction [dbxActionHandler]="handleAction" [dbxActionAutoTriggerValue]="value$"
+        dbxActionAutoTrigger instantTrigger>
+      </dbx-action-example-tools>
+
+      <button mat-raised-button (click)="resetValue()">Reset Value</button>
 
     </doc-feature-example>
   </doc-feature-layout>

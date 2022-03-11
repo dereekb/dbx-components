@@ -50,6 +50,16 @@ export function hasValueOrNotEmpty(value: any): boolean {
 }
 
 /**
+ * True if the input is not null/undefined/false.
+ * 
+ * @param value 
+ * @returns 
+ */
+export function isDefinedAndNotFalse(value: any): boolean {
+  return value != null && value !== false;
+}
+
+/**
  * Returns true if both the inputs are not null/undefined but the same value.
  * 
  * @param a 
