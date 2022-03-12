@@ -9,7 +9,7 @@
   "private": true,
   "repository": {
     "type": "git",
-    "url": "https://github.com/dereekb/dbcomponents"
+    "url": "https://github.com/dereekb/dbx-components"
   },
   "dependencies": {
     "@angular/animations": "^13.0.0",

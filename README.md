@@ -3,11 +3,11 @@
 ### Status
 main:
 
-[![CircleCI](https://circleci.com/gh/dereekb/dbcomponents/tree/main.svg?style=shield)](https://circleci.com/gh/dereekb/dbcomponents/tree/main)
+[![CircleCI](https://circleci.com/gh/dereekb/dbx-components/tree/main.svg?style=shield)](https://circleci.com/gh/dereekb/dbx-components/tree/main)
 
 develop: 
 
-[![CircleCI](https://circleci.com/gh/dereekb/dbcomponents/tree/develop.svg?style=shield)](https://circleci.com/gh/dereekb/dbcomponents/tree/develop)
+[![CircleCI](https://circleci.com/gh/dereekb/dbx-components/tree/develop.svg?style=shield)](https://circleci.com/gh/dereekb/dbx-components/tree/develop)
 
 
 This project was generated using [Nx](https://nx.dev).
