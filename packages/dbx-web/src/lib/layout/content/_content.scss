@@ -34,6 +34,11 @@ $content-container-padding-small-screen: theming.$padding-2;
     max-width: $box-max-width;
   }
 
+  .dbx-app-page {
+    @include theming.app-height();
+    overflow: hidden;
+  }
+
   .dbx-content,
   .dbx-content-page {                   //dbx-content page always has page height
     @include theming.page-height();
@@ -101,7 +106,15 @@ $content-container-padding-small-screen: theming.$padding-2;
 @mixin color($theme-config) {
   $color-config: theming.get-color-config($theme-config);
   $background: map.get($color-config, 'background');
+  $foreground: map.get($color-config, 'foreground');
+  $content-color: theming.get-color-from-palette($foreground, 'text');
+  $content-background: theming.get-color-from-palette($background, 'background');
   $content-border-background: theming.get-color-from-palette($background, 'hover');
+
+  .dbx-background {
+    color: $content-color;
+    background: $content-background;
+  }
 
   .dbx-content-border {
     // border-radius: 6px;

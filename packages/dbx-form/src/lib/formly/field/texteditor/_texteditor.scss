@@ -34,8 +34,6 @@
   $border-color: theming.get-color-from-palette($foreground, 'divider');
   $text-color: theming.get-color-from-palette($foreground, 'text');
 
-  @debug $border-color;
-
   .dbx-texteditor-field {
 
     .NgxEditor {

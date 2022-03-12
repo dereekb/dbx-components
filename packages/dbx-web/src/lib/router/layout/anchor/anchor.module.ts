@@ -6,6 +6,7 @@ import { DbxAnchorIconComponent } from './anchor.icon.component';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { DbxAnchorLinkComponent } from './anchor.link.component';
+import { DbxAnchorContentComponent } from './anchor.content.component';
 
 @NgModule({
   imports: [
@@ -17,12 +18,14 @@ import { DbxAnchorLinkComponent } from './anchor.link.component';
   declarations: [
     DbxAnchorComponent,
     DbxAnchorIconComponent,
-    DbxAnchorLinkComponent
+    DbxAnchorLinkComponent,
+    DbxAnchorContentComponent
   ],
   exports: [
     DbxAnchorComponent,
     DbxAnchorIconComponent,
-    DbxAnchorLinkComponent
+    DbxAnchorLinkComponent,
+    DbxAnchorContentComponent
   ]
 })
 export class DbxAnchorModule { }

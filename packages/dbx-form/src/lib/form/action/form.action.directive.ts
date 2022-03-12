@@ -187,7 +187,6 @@ export class DbxActionFormDirective<T = any> implements OnInit, OnDestroy {
       modifiedObs
     ]).pipe(
       first(),
-      tapLog('prechecl'),
       map(([valid, modified]: [boolean, boolean]) => valid && modified)
     );
   }
