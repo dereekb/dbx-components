@@ -175,8 +175,6 @@ export function handleWorkValueReadyFn<T, O>({ handlerFunction, delegate }: Hand
     const handler = new WorkHandlerContext<T, O>(value, delegate);
     let fnResult: void | Observable<O>;
 
-    console.log('Handkle ready?');
-
     try {
       fnResult = handlerFunction(value, handler);
     } catch (e: any) {
