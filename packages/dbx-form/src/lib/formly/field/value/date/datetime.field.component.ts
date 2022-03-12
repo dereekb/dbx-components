@@ -1,20 +1,17 @@
-import { LogicalDateStringCode } from './../../../../../../../util/src/lib/date/date.time';
-import { DATE_NOW_VALUE, dateFromLogicalDate } from '@dereekb/util';
-import { MatInput } from '@angular/material/input';
+import { LogicalDateStringCode, dateFromLogicalDate, Maybe, ReadableTimeString } from '@dereekb/util';
 import { DateTimeMinuteConfig, DateTimeMinuteInstance, guessCurrentTimezone, readableTimeStringToDate, toLocalReadableTimeString, toReadableTimeString, utcDayForDate } from '@dereekb/date';
-import { switchMap, shareReplay, map, filter, startWith, tap, first, distinctUntilChanged, debounceTime, throttleTime } from 'rxjs/operators';
+import { switchMap, shareReplay, map, startWith, tap, first, distinctUntilChanged, debounceTime, throttleTime } from 'rxjs/operators';
 import {
   ChangeDetectorRef,
-  Component, OnDestroy, OnInit, ViewChild
+  Component, OnDestroy, OnInit
 } from '@angular/core';
 import { AbstractControl, FormControl, Validators, FormGroup } from '@angular/forms';
 import { FieldType } from '@ngx-formly/material';
 import { FieldTypeConfig, FormlyFieldConfig } from '@ngx-formly/core';
 import { BehaviorSubject, Observable, combineLatest, Subject, merge, interval } from 'rxjs';
-import { Maybe, ReadableTimeString, isLogicalDateStringCode } from '@dereekb/util';
 import { MatDatepickerInputEvent } from '@angular/material/datepicker';
 import { addMinutes, isSameDay, isSameMinute, startOfDay } from 'date-fns';
-import { filterMaybe, skipFirstMaybe, SubscriptionObject, switchMapMaybeDefault, switchMapMaybeObs, tapLog } from '@dereekb/rxjs';
+import { filterMaybe, skipFirstMaybe, SubscriptionObject, switchMapMaybeDefault } from '@dereekb/rxjs';
 
 export enum DateTimeFieldTimeMode {
   /**

@@ -98,6 +98,10 @@ export class LandingLayoutComponent {
     title: 'Docker',
     url: 'https://www.docker.com/',
     target: '_blank'
+  }, {
+    title: 'CircleCI',
+    url: 'https://circleci.com/',
+    target: '_blank'
   }];
 
   readonly latestVersion = packageInfo.version;
