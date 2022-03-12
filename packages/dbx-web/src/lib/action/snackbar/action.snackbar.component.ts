@@ -1,10 +1,12 @@
-import { distinctUntilChanged, Observable, shareReplay } from 'rxjs';
-import { Component, Inject } from '@angular/core';
+import { OnInit } from '@angular/core';
+import { filterMaybe, LoadingStateType } from '@dereekb/rxjs';
+import { distinctUntilChanged, Observable, shareReplay, BehaviorSubject, switchMap, startWith, Subject, of } from 'rxjs';
+import { Component, Inject, OnDestroy, AfterViewInit } from '@angular/core';
 import { MatSnackBarRef, MAT_SNACK_BAR_DATA } from '@angular/material/snack-bar';
 import { Maybe } from '@dereekb/util';
-import { map } from 'rxjs/operators';
+import { filter, map } from 'rxjs/operators';
 import { DbxActionSnackbarDisplayConfig, DbxActionSnackbarActionConfig } from './action.snackbar';
-import { DbxActionContextStoreSourceInstance, DbxActionState } from '@dereekb/dbx-core';
+import { DbxActionContextSourceReference, AbstractSubscriptionDirective } from '@dereekb/dbx-core';
 import ms from 'ms';
 
 /**
@@ -13,29 +15,24 @@ import ms from 'ms';
 @Component({
   templateUrl: './action.snackbar.component.html'
 })
-export class DbxActionSnackbarComponent {
+export class DbxActionSnackbarComponent extends AbstractSubscriptionDirective implements OnInit, AfterViewInit, OnDestroy {
 
-  readonly action: Maybe<string>;
-  readonly hasAction: boolean;
+  private _durationTimeout = new Subject<void>();
+  private _actionRef = new BehaviorSubject<Maybe<DbxActionContextSourceReference>>(undefined);
 
-  constructor(
-    readonly snackbar: MatSnackBarRef<DbxActionSnackbarComponent>,
-    @Inject(MAT_SNACK_BAR_DATA) readonly data: DbxActionSnackbarDisplayConfig
-  ) {
-    this.action = this.data.action?.button ?? this.data.button;
-    this.hasAction = Boolean(this.actionConfig?.reference);
-  }
-
-  readonly complete$ = this.actionSourceInstance.isSuccess$;
-  readonly snackbarStatusClass$: Observable<string> = this.actionSourceInstance.actionState$.pipe(
+  readonly value$ = of(0);  // value passed to the action.
+  readonly sourceInstance$ = this._actionRef.pipe(filterMaybe(), map(x => x?.sourceInstance));
+  readonly complete$ = this.sourceInstance$.pipe(switchMap(x => x.isSuccess$), startWith(false), shareReplay(1));
+  readonly loadingStateType$ = this.sourceInstance$.pipe(switchMap(x => x.loadingStateType$), startWith(LoadingStateType.IDLE), shareReplay(1));
+  readonly snackbarStatusClass$: Observable<string> = this.loadingStateType$.pipe(
     map((x) => {
       let classes = 'dbx-action-snackbar-';
 
       switch (x) {
-        case DbxActionState.REJECTED:
+        case LoadingStateType.ERROR:
           classes += 'error';
           break;
-        case DbxActionState.RESOLVED:
+        case LoadingStateType.SUCCESS:
           classes += 'success';
           break;
         default:
@@ -49,6 +46,16 @@ export class DbxActionSnackbarComponent {
     shareReplay(1)
   );
 
+  readonly button: Maybe<string>;
+
+  get action() {
+    return this.data.action;
+  }
+
+  get hasAction(): boolean {
+    return Boolean(this._actionRef.value);
+  }
+
   get message(): Maybe<string> {
     return this.data.message;
   }
@@ -57,7 +64,42 @@ export class DbxActionSnackbarComponent {
     return this.data.action;
   }
 
-  dismissEarly = (): void => {
+  constructor(
+    readonly snackbar: MatSnackBarRef<DbxActionSnackbarComponent>,
+    @Inject(MAT_SNACK_BAR_DATA) readonly data: DbxActionSnackbarDisplayConfig
+  ) {
+    super();
+    this.button = this.data.action?.button ?? this.data.button;
+    this._actionRef.next(this.data.action?.reference);
+  }
+
+  ngOnInit(): void {
+    // Subscribe and close if the duration is up and the action state is idle.
+    this.sub = this._durationTimeout.pipe(
+      switchMap((x) => this.loadingStateType$),
+      filter(x => x === LoadingStateType.IDLE)
+    ).subscribe(() => {
+      this.dismiss();
+    });
+  }
+
+  override ngOnDestroy(): void {
+    super.ngOnDestroy();
+    this._actionRef.value?.destroy();
+    this._actionRef.complete();
+    this._durationTimeout.complete();
+  }
+
+  ngAfterViewInit(): void {
+    // Responsible for hiding itself if it has an action.
+    if (this.hasAction) {
+      setTimeout(() => {
+        this._durationTimeout.next();
+      }, this.action?.duration ?? ms('10s'));
+    }
+  }
+
+  dismissAfterActionCompletes = (): void => {
     this.snackbar._dismissAfter(ms('3s'));
   }
 

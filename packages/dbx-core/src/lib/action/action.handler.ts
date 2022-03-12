@@ -153,9 +153,19 @@ export interface HandleWorkValueReadyConfig<T, O> {
 }
 
 /**
+ * Performs the action using the value and returns an observable.
+ */
+export type HandleActionUsingObservable<T = any, O = any> = (value: T) => Observable<O>;
+
+/**
+ * Performs the action that uses the context handler to handle the event.
+ */
+export type HandleActionUsingContext<T = any, O = any> = (value: T, context: WorkHandlerContext<T, O>) => void;
+
+/**
  * Performs the action. Can either return an observable that will use the handler, or can use the handler itself.
  */
-export type HandleActionFunction<T = any, O = any> = (value: T, context: WorkHandlerContext<T, O>) => Observable<O> | void;
+export type HandleActionFunction<T = any, O = any> = HandleActionUsingObservable<T, O> | HandleActionUsingContext<T, O>;
 
 /**
  * Creates a function that handles the incoming value and creates a WorkHandlerContext.
@@ -164,6 +174,8 @@ export function handleWorkValueReadyFn<T, O>({ handlerFunction, delegate }: Hand
   return (value: T) => {
     const handler = new WorkHandlerContext<T, O>(value, delegate);
     let fnResult: void | Observable<O>;
+
+    console.log('Handkle ready?');
 
     try {
       fnResult = handlerFunction(value, handler);

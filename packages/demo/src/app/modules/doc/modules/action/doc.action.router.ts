@@ -1,3 +1,4 @@
+import { DocActionInteractionComponent } from './container/interaction.component';
 import { Ng2StateDeclaration } from '@uirouter/angular';
 import { DocActionContextComponent } from './container/context.component';
 import { DocActionDirectivesComponent } from './container/directives.component';
@@ -31,6 +32,12 @@ export const docActionDirectivesState: Ng2StateDeclaration = {
   component: DocActionDirectivesComponent
 };
 
+export const docActionInteractionState: Ng2StateDeclaration = {
+  url: '/interaction',
+  name: 'doc.action.interaction',
+  component: DocActionInteractionComponent
+};
+
 export const docActionFormState: Ng2StateDeclaration = {
   url: '/form',
   name: 'doc.action.form',
@@ -48,6 +55,7 @@ export const STATES: Ng2StateDeclaration[] = [
   homeState,
   docActionContextState,
   docActionDirectivesState,
+  docActionInteractionState,
   docActionFormState,
   docActionMapState
 ];

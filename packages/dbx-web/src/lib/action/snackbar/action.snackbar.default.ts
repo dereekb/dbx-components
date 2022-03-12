@@ -91,5 +91,18 @@ export const DBX_ACTION_SNACKBAR_DEFAULTS: DbxActionSnackbarEventMakeConfig = {
       button: 'X',
       message: 'Refresh Failed'
     }
+  },
+  'do': {
+    loading: {
+      message: 'Doing...'
+    },
+    success: {
+      button: 'Ok',
+      message: 'Done'
+    },
+    error: {
+      button: 'X',
+      message: 'Failed'
+    }
   }
 };

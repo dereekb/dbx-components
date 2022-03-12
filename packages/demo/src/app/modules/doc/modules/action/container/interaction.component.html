@@ -1,0 +1,51 @@
+<dbx-content-container>
+  <doc-feature-layout header="Action Interaction Directives" hint="Compose your action with directives.">
+
+    <!-- Examples -->
+    <h3>Button</h3>
+    <doc-feature-example header="dbxActionButton"
+      hint="Used to link a dbx-button to an action. The button will be disabled when the action is disabled, be in a loading/working state when the action is in a working state, and trigger the action when the button is clicked.">
+
+      <dbx-action-example-tools dbxAction [dbxActionHandler]="handleAction" [dbxActionValueStream]="value$">
+        <dbx-button dbxActionButton text="Action Button"></dbx-button>
+      </dbx-action-example-tools>
+
+      <h4>Disabled Example</h4>
+      <dbx-action-example-tools dbxAction [dbxActionHandler]="handleAction" [dbxActionDisabled]="true">
+        <dbx-button dbxActionButton text="Disabled Action"></dbx-button>
+      </dbx-action-example-tools>
+
+    </doc-feature-example>
+
+    <doc-feature-example header="dbxActionButtonTrigger"
+      hint="Used to link a dbx-button to an action and pass through click events..">
+
+      <dbx-action-example-tools dbxAction [dbxActionHandler]="handleAction" [dbxActionValueStream]="value$">
+        <dbx-button dbxActionButtonTrigger text="Action Button Trigger"></dbx-button>
+      </dbx-action-example-tools>
+
+    </doc-feature-example>
+
+    <h3>Snackbar</h3>
+    <doc-feature-example header="dbxActionSnackbar"
+      hint="Used to show a snackbar depending on the state of an action context.">
+
+      <p>There are a number of different built-in premade types available, such as "save", "delete", etc.</p>
+      <dbx-action-example-tools dbxAction dbxActionSnackbar dbxActionSnackbarDefault="save"
+        [dbxActionHandler]="handleAction" [dbxActionValueStream]="value$">
+        <dbx-button dbxActionButton text="Save"></dbx-button>
+      </dbx-action-example-tools>
+
+      <h4>Undo</h4>
+      <p>The snackbar is has the capability to add an additional action to the state. For the pre-made available states,
+        this is the undo function.</p>
+      <p>Undo Value: {{ undoValue }}</p>
+      <dbx-action-example-tools dbxAction dbxActionSnackbar dbxActionSnackbarDefault="do"
+        [dbxActionHandler]="handleAction" [dbxActionSnackbarUndo]="getUndoAction" [dbxActionValueStream]="value$">
+        <dbx-button dbxActionButton text="Do Action With Undo"></dbx-button>
+      </dbx-action-example-tools>
+
+    </doc-feature-example>
+
+  </doc-feature-layout>
+</dbx-content-container>

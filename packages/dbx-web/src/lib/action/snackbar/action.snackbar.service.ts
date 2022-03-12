@@ -43,7 +43,9 @@ export class DbxActionSnackbarService<C = DbxActionSnackbarComponent> {
 
   constructor(
     readonly matSnackBar: MatSnackBar,
-    @Optional() @Inject(DBX_ACTION_SNACKBAR_SERVICE_CONFIG) inputConfig: Partial<DbxActionSnackbarServiceConfig<C>> = {}) {
+    @Optional() @Inject(DBX_ACTION_SNACKBAR_SERVICE_CONFIG) inputConfig: Partial<DbxActionSnackbarServiceConfig<C>>) {
+
+    inputConfig = inputConfig ?? {};
 
     this.config = {
       ...inputConfig,
@@ -69,7 +71,18 @@ export class DbxActionSnackbarService<C = DbxActionSnackbarComponent> {
       data: config
     };
 
-    matSnackbarConfig.duration = matSnackbarConfig.duration ?? defaultDuration ?? DEFAULT_SNACKBAR_DIRECTIVE_DURATION;
+    const duration = config.action?.duration ?? matSnackbarConfig.duration ?? defaultDuration ?? DEFAULT_SNACKBAR_DIRECTIVE_DURATION;
+
+    if (config.action) {
+      // Set the duration on the action
+      config.action = {
+        ...config.action,
+        duration
+      }
+    } else {
+      // The snackbar does not close here. The duration is passed to the component and it will close it.
+      matSnackbarConfig.duration = duration;
+    }
 
     return this.matSnackBar.openFromComponent(this.componentClass, matSnackbarConfig);
   }

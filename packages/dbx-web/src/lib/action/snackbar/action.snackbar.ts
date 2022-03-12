@@ -49,4 +49,8 @@ export interface DbxActionSnackbarActionConfig {
    * The referred to action is used for triggering and lifecycle.
    */
   reference: DbxActionContextSourceReference;
+  /**
+   * Duration to show the action.
+   */
+  duration?: number;
 }

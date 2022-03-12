@@ -1,5 +1,5 @@
 import { DbxActionContextSourceReference } from "@dereekb/dbx-core";
-import { Milliseconds, Maybe, ObjectOrGetter, getValueFromObjectOrGetter } from "@dereekb/util";
+import { Milliseconds, Maybe, ObjectOrGetter, getValueFromObjectOrGetter, Getter } from "@dereekb/util";
 import { DbxActionSnackbarDisplayConfig, DbxActionSnackbarEvent } from "./action.snackbar";
 
 export interface DbxActionSnackbarGeneratorInput<O = any> {
@@ -7,9 +7,11 @@ export interface DbxActionSnackbarGeneratorInput<O = any> {
   undo?: Maybe<DbxActionSnackbarGeneratorUndoInput>;
 }
 
-export interface DbxActionSnackbarGeneratorUndoInput {
+export type DbxActionSnackbarGeneratorUndoInput = DbxActionSnackbarGeneratorUndoInputConfig | Getter<DbxActionContextSourceReference>;
+
+export interface DbxActionSnackbarGeneratorUndoInputConfig {
   duration?: Milliseconds;
-  getUndoAction: () => DbxActionContextSourceReference;
+  getUndoAction: Getter<DbxActionContextSourceReference>;
 }
 
 export type DbxActionSnackbarDisplayConfigGeneratorFunction<O = any> = (input: DbxActionSnackbarGeneratorInput<O>) => Maybe<DbxActionSnackbarDisplayConfig>;
@@ -22,12 +24,6 @@ export interface DbxMakeActionSnackbarGeneratorConfiguration {
 }
 
 export interface DbxMakeActionSnackbarGeneratorEventConfiguration extends Omit<DbxActionSnackbarDisplayConfig, 'action'> {
-  /**
-   * Whether or not to enable undo for this event.
-   * 
-   * This only configures the display to show undo as the action, but the input must also provide undo configuration.
-   */
-  enableUndo?: boolean;
   /**
    * Sets the undo action text. If undefined, will default to 'undo'
    */
@@ -42,7 +38,7 @@ export interface DbxMakeActionSnackbarGeneratorEventConfiguration extends Omit<D
  */
 export function makeDbxActionSnackbarDisplayConfigGeneratorFunction<O = any>(config: DbxMakeActionSnackbarGeneratorConfiguration): DbxActionSnackbarDisplayConfigGeneratorFunction<O> {
   return (input: DbxActionSnackbarGeneratorInput<O>) => {
-    const { event, undo } = input;
+    const { event, undo: undoInput } = input;
     const type = event.type;
     const eventConfigObjectOrGetter = config[type];
     const eventConfig = eventConfigObjectOrGetter && getValueFromObjectOrGetter(eventConfigObjectOrGetter);
@@ -50,21 +46,27 @@ export function makeDbxActionSnackbarDisplayConfigGeneratorFunction<O = any>(con
     let result: Maybe<DbxActionSnackbarDisplayConfig>;
 
     if (eventConfig) {
-      const { enableUndo, undoButtonText } = eventConfig;
+      const { undoButtonText } = eventConfig;
       result = {
         button: eventConfig.button,
         message: eventConfig.message,
         snackbar: eventConfig.snackbar
       };
 
-      if (enableUndo && undo) {
-        const reference = undo.getUndoAction();
+      if (undoInput) {
+        let reference: DbxActionContextSourceReference;
+
+        if (typeof undoInput === 'object') {
+          reference = undoInput.getUndoAction();
+        } else {
+          reference = getValueFromObjectOrGetter(undoInput);
+        }
 
         if (!reference) {
           console.error('Expected action source reference was not provided to undo...');
         } else {
           result.action = {
-            button: undoButtonText ?? 'undo',
+            button: undoButtonText ?? 'Undo',
             reference
           };
         }

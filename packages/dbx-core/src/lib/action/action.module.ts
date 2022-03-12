@@ -3,7 +3,7 @@ import { NgModule } from '@angular/core';
 import {
   DbxActionDirective, DbxActionContextMapDirective, DbxActionFromMapDirective, DbxActionMapSourceDirective,
   DbxActionMapWorkingDisableDirective, DbxActionSourceDirective, DbxActionHandlerDirective, DbxActionDisabledDirective, DbxActionEnforceModifiedDirective,
-  DbxActionAutoTriggerDirective, dbxActionStreamValueDirective, DbxActionAutoModifyDirective, DbxActionValueDirective, DbxActionContextLoggerDirective,
+  DbxActionAutoTriggerDirective, dbxActionValueStreamDirective, DbxActionAutoModifyDirective, DbxActionValueDirective, DbxActionContextLoggerDirective,
   DbxActionSuccessComponent, DbxActionSuccessDirective, DbxActionWorkingComponent
 } from './directive';
 
@@ -14,13 +14,13 @@ import {
   declarations: [
     DbxActionDirective, DbxActionContextMapDirective, DbxActionFromMapDirective, DbxActionMapSourceDirective,
     DbxActionMapWorkingDisableDirective, DbxActionSourceDirective, DbxActionHandlerDirective, DbxActionDisabledDirective, DbxActionEnforceModifiedDirective,
-    DbxActionAutoTriggerDirective, dbxActionStreamValueDirective, DbxActionAutoModifyDirective, DbxActionValueDirective, DbxActionContextLoggerDirective,
+    DbxActionAutoTriggerDirective, dbxActionValueStreamDirective, DbxActionAutoModifyDirective, DbxActionValueDirective, DbxActionContextLoggerDirective,
     DbxActionSuccessComponent, DbxActionSuccessDirective, DbxActionWorkingComponent,
   ],
   exports: [
     DbxActionDirective, DbxActionContextMapDirective, DbxActionFromMapDirective, DbxActionMapSourceDirective,
     DbxActionMapWorkingDisableDirective, DbxActionSourceDirective, DbxActionHandlerDirective, DbxActionDisabledDirective, DbxActionEnforceModifiedDirective,
-    DbxActionAutoTriggerDirective, dbxActionStreamValueDirective, DbxActionAutoModifyDirective, DbxActionValueDirective, DbxActionContextLoggerDirective,
+    DbxActionAutoTriggerDirective, dbxActionValueStreamDirective, DbxActionAutoModifyDirective, DbxActionValueDirective, DbxActionContextLoggerDirective,
     DbxActionSuccessComponent, DbxActionSuccessDirective, DbxActionWorkingComponent
   ]
 })

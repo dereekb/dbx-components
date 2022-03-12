@@ -10,9 +10,9 @@ import { IsModifiedFn, SubscriptionObject } from '@dereekb/rxjs';
  * Directive that watches a value observable for changes and sets the new value and modified states as necessary.
  */
 @Directive({
-  selector: '[dbxActionStreamValue]',
+  selector: '[dbxActionValueStream]',
 })
-export class dbxActionStreamValueDirective<T, O> implements OnInit, OnDestroy {
+export class dbxActionValueStreamDirective<T, O> implements OnInit, OnDestroy {
 
   private _valueObs = new BehaviorSubject<Observable<T>>(EMPTY);
   private _isModifiedFn = new BehaviorSubject<Maybe<IsModifiedFn<T>>>(undefined);
@@ -21,32 +21,32 @@ export class dbxActionStreamValueDirective<T, O> implements OnInit, OnDestroy {
   private _triggerSub = new SubscriptionObject();
 
   @Input()
-  set dbxActionStreamValue(dbxActionStreamValue: Observable<T>) {
-    this._valueObs.next(dbxActionStreamValue);
+  set dbxActionValueStream(dbxActionValueStream: Observable<T>) {
+    this._valueObs.next(dbxActionValueStream);
   }
 
   @Input()
-  set dbxActionStreamValueIsNotEmpty(requireNonEmpty: any) {
+  set dbxActionValueStreamIsNotEmpty(requireNonEmpty: any) {
     if (isDefinedAndNotFalse(requireNonEmpty)) {
-      this.dbxActionStreamValueModified = (value) => {
+      this.dbxActionValueStreamModified = (value) => {
         return of(hasValueOrNotEmpty(value));
       };
     }
   }
 
   @Input()
-  set dbxActionStreamValueModified(dbxActionStreamValueModified: IsModifiedFn<T>) {
-    this._isModifiedFn.next(dbxActionStreamValueModified);
+  set dbxActionValueStreamModified(dbxActionValueStreamModified: IsModifiedFn<T>) {
+    this._isModifiedFn.next(dbxActionValueStreamModified);
   }
 
   readonly modifiedValue$ = this._valueObs.pipe(
     switchMap((obs) => obs.pipe(
       withLatestFrom(this._isModifiedFn),
-      mergeMap(([value, dbxActionStreamValueModified]) => {
+      mergeMap(([value, dbxActionValueStreamModified]) => {
         let result: Observable<[boolean, T]>;
 
-        if (dbxActionStreamValueModified) {
-          result = dbxActionStreamValueModified(value).pipe(
+        if (dbxActionValueStreamModified) {
+          result = dbxActionValueStreamModified(value).pipe(
             map((isModified) => [isModified, value] as [boolean, T])
           );
         } else {

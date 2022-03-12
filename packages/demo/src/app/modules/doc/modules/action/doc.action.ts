@@ -10,6 +10,11 @@ export const DOC_ACTION_ROUTES = [{
   detail: 'list of dbx-action directives',
   ref: 'doc.action.directives'
 }, {
+  icon: 'ads_click',
+  title: 'Interactions',
+  detail: 'interaction related action directives',
+  ref: 'doc.action.interaction'
+}, {
   icon: 'dynamic_form',
   title: 'Form Actions',
   detail: 'dbx-form action directives and examples',

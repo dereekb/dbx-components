@@ -44,7 +44,7 @@
     <doc-feature-example header="dbxActionAutoTrigger"
       hint="Used to automatically trigger the action when the action's isModifiedAndCanTriggerUpdate value is true. The auto trigger can be configured to emit a limited number of times, throttle itself, and trigger intervals.">
 
-      <dbx-action-example-tools dbxAction [dbxActionHandler]="handleAction" [dbxActionStreamValue]="value$"
+      <dbx-action-example-tools dbxAction [dbxActionHandler]="handleAction" [dbxActionValueStream]="value$"
         dbxActionAutoTrigger>
       </dbx-action-example-tools>
 
@@ -54,14 +54,14 @@
       <p>The fastTrigger and instantTrigger inputs exist to make it easy to set the trigger debounce and throttle times
         without explicitly passing them values.</p>
       <p>The fast trigger is useful for autosave cases of forms. It has a 200ms debounce and 500ms throttle.</p>
-      <dbx-action-example-tools dbxAction [dbxActionHandler]="handleAction" [dbxActionStreamValue]="value$"
+      <dbx-action-example-tools dbxAction [dbxActionHandler]="handleAction" [dbxActionValueStream]="value$"
         dbxActionAutoTrigger fastTrigger>
       </dbx-action-example-tools>
 
       <h4>instantTrigger</h4>
       <p>The instant trigger is useful for cases where the action should go off immediately. It has no throttle and a
         minor debounce. An example is when an action recieve it's value from a user popup.</p>
-      <dbx-action-example-tools dbxAction [dbxActionHandler]="handleAction" [dbxActionStreamValue]="value$"
+      <dbx-action-example-tools dbxAction [dbxActionHandler]="handleAction" [dbxActionValueStream]="value$"
         dbxActionAutoTrigger instantTrigger>
       </dbx-action-example-tools>
 
@@ -69,26 +69,20 @@
 
     </doc-feature-example>
 
-    <h3>Button</h3>
-    <doc-feature-example header="dbxActionButton"
-      hint="Used to link a dbx-button to an action. The button will be disabled when the action is disabled, be in a loading/working state when the action is in a working state, and trigger the action when the button is clicked.">
+    <h3>Value</h3>
+    <doc-feature-example header="dbxActionValue" hint="Passes a value to the action to ready a value.">
 
-      <dbx-action-example-tools dbxAction [dbxActionHandler]="handleAction" [dbxActionStreamValue]="value$">
-        <dbx-button dbxActionButton text="Action Button"></dbx-button>
-      </dbx-action-example-tools>
-
-      <h4>Disabled Example</h4>
-      <dbx-action-example-tools dbxAction [dbxActionHandler]="handleAction" [dbxActionDisabled]="true">
-        <dbx-button dbxActionButton text="Disabled Action"></dbx-button>
+      <dbx-action-example-tools dbxAction [dbxActionValue]="value$ | async" [dbxActionHandler]="handleAction">
+        <dbx-button dbxActionButton text="Submit"></dbx-button>
       </dbx-action-example-tools>
 
     </doc-feature-example>
 
-    <doc-feature-example header="dbxActionButtonTrigger"
-      hint="Used to link a dbx-button to an action and pass through click events..">
+    <doc-feature-example header="dbxActionValueStream"
+      hint="Passes an observable that is used to retrieve a value. Has an optional isModified check that is used each time input is received.">
 
-      <dbx-action-example-tools dbxAction [dbxActionHandler]="handleAction" [dbxActionStreamValue]="value$">
-        <dbx-button dbxActionButtonTrigger text="Action Button Trigger"></dbx-button>
+      <dbx-action-example-tools dbxAction [dbxActionValueStream]="value$" [dbxActionHandler]="handleAction">
+        <dbx-button dbxActionButton text="Submit"></dbx-button>
       </dbx-action-example-tools>
 
     </doc-feature-example>
@@ -107,24 +101,6 @@
 
       <dbx-action-example-tools dbxAction [dbxActionHandler]="handleAction" dbxActionEnforceModified>
         <doc-action-form-example-form dbxActionForm></doc-action-form-example-form>
-        <dbx-button dbxActionButton text="Submit"></dbx-button>
-      </dbx-action-example-tools>
-
-    </doc-feature-example>
-
-    <h3>Value</h3>
-    <doc-feature-example header="dbxActionValue" hint="Passes a value to the action to ready a value.">
-
-      <dbx-action-example-tools dbxAction [dbxActionValue]="value$ | async" [dbxActionHandler]="handleAction">
-        <dbx-button dbxActionButton text="Submit"></dbx-button>
-      </dbx-action-example-tools>
-
-    </doc-feature-example>
-
-    <doc-feature-example header="dbxActionValueStream"
-      hint="Passes an observable that is used to retrieve a value. Has an optional isModified check that is used each time input is received.">
-
-      <dbx-action-example-tools dbxAction [dbxActionStreamValue]="value$" [dbxActionHandler]="handleAction">
         <dbx-button dbxActionButton text="Submit"></dbx-button>
       </dbx-action-example-tools>
 

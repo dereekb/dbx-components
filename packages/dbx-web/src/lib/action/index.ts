@@ -1,3 +1,4 @@
+export * from './snackbar';
 export * from './transition';
 export * from './action.confirm.directive';
 export * from './action.module';

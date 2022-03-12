@@ -1,3 +1,4 @@
+import { DocActionInteractionComponent } from './container/interaction.component';
 import { DocActionDirectivesComponent } from './container/directives.component';
 import { DocActionFormComponent } from './container/form.component';
 import { NgModule } from '@angular/core';
@@ -26,6 +27,7 @@ import { DocActionMapComponent } from './container/map.component';
     DocActionLayoutComponent,
     DocActionHomeComponent,
     DocActionContextComponent,
+    DocActionInteractionComponent,
     DocActionFormComponent,
     DocActionDirectivesComponent,
     DocActionMapComponent

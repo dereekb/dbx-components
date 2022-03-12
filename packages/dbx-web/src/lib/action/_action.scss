@@ -1,40 +1,13 @@
-@use '../style/theming';
+@use './snackbar/snackbar';
 
-// MARK: Variables
-
-
-// MARK: Mixin
-@mixin core() {}
-
-@mixin color($theme-config) {}
-
-@mixin typography($typography-config) {}
-
-@mixin theme($theme-config) {
-  @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-action') {
-    $color: theming.get-color-config($theme-config);
-    $typography: theming.get-typography-config($theme-config);
-
-    @if $color !=null {
-      @include color($theme-config);
-    }
-
-    @if $typography !=null {
-      @include typography($typography);
-    }
-  }
+@mixin all-action-core() {
+  @include snackbar.core();
 }
 
-// TODO:
-.dbx-action-snackbar {
-  display: flex;
-  align-items: center;
+@mixin all-action-typography($typography-config) {
+  @include snackbar.typography($typography-config);
+}
 
-  &.dbx-action-snackbar-success {
-    // background: $success-color;
-  }
-
-  &.dbx-action-snackbar-error {
-    // background: red;
-  }
+@mixin all-action-theme($theme-config) {
+  @include snackbar.theme($theme-config);
 }
