@@ -74,7 +74,6 @@ export class DbxActionAutoTriggerDirective<T, O> extends AbstractSubscriptionDir
   @Input()
   set instantTrigger(instantTrigger: any) {
     if (isDefinedAndNotFalse(instantTrigger)) {
-      console.log('Instant?');
       this.triggerDebounce = 10;
       this.triggerThrottle = 0;
     }

@@ -25,7 +25,7 @@ export class DbxActionValueDirective<T, O> extends AbstractSubscriptionDirective
   }
 
   set valueOrFunction(valueOrFunction: Maybe<ObjectOrGetter<T>>) {
-    this._valueOrFunction.next(valueOrFunction);
+    this._valueOrFunction.next(valueOrFunction || undefined);
   }
 
   constructor(@Host() public readonly source: DbxActionContextStoreSourceInstance<T, O>) {
@@ -44,8 +44,10 @@ export class DbxActionValueDirective<T, O> extends AbstractSubscriptionDirective
   }
 
   override ngOnDestroy(): void {
-    super.ngOnDestroy();
-    this._valueOrFunction.complete();
+    this.source.lockSet.onNextUnlock(() => {
+      super.ngOnDestroy();
+      this._valueOrFunction.complete();
+    });
   }
 
 }

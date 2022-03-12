@@ -44,7 +44,7 @@ export class DbxActionHandlerDirective<T, O> extends AbstractSubscriptionDirecti
           if (context) {
 
             // Add the action to the lockSet for the source to prevent it from being destroyed until the action completes.
-            this.source.lockSet.addLock('actionhandler', context.isComplete$.pipe(map(x => !x)));
+            this.source.lockSet.addLock('dbxActionHandler', context.isComplete$.pipe(map(x => !x)));
           }
         })
       ))

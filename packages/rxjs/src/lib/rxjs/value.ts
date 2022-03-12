@@ -1,6 +1,19 @@
 import { filter, skipWhile, startWith, switchMap, timeout, MonoTypeOperatorFunction, Observable, of, OperatorFunction } from 'rxjs';
 import { ObjectOrGetter, getValueFromObjectOrGetter, Maybe } from '@dereekb/util';
 
+// MARK: Types
+
+/**
+ * Function that validates the input value and returns an observable.
+ */
+export type IsValidFn<T = any> = (value: T) => Observable<boolean>;
+
+/**
+ * Function that checks modification status of the input value and returns a value.
+ */
+export type IsModifiedFn<T = any> = (value: T) => Observable<boolean>;
+
+// MARK:
 /**
  * Observable filter that filters maybe value that are defined.
  */

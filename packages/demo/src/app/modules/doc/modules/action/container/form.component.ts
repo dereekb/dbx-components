@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { HandleActionFunction, WorkHandlerContext } from '@dereekb/dbx-core';
-import { DbxActionFormModifiedFn, DbxActionFormValidateFn } from '@dereekb/dbx-form';
+import { IsModifiedFn, IsValidFn } from '@dereekb/rxjs';
 import { addDays, isSameMinute, isFriday } from 'date-fns';
 import { map, of, delay } from 'rxjs';
 import { DocActionFormExampleValue } from '../component/action.example.form.component';
@@ -17,7 +17,7 @@ export class DocActionFormComponent {
 
   readonly defaultValue$ = of(this.defaultValue);
 
-  readonly isFormModified: DbxActionFormModifiedFn<DocActionFormExampleValue> = (value: DocActionFormExampleValue) => {
+  readonly isFormModified: IsModifiedFn<DocActionFormExampleValue> = (value: DocActionFormExampleValue) => {
     return this.defaultValue$.pipe(
       map((defaultValue) => {
         const isModified = Boolean(value.name === defaultValue.name) || !isSameMinute(value.date, defaultValue.date);
@@ -25,7 +25,7 @@ export class DocActionFormComponent {
       }));
   }
 
-  readonly validateForm: DbxActionFormValidateFn<DocActionFormExampleValue> = (value: DocActionFormExampleValue) => {
+  readonly validateForm: IsValidFn<DocActionFormExampleValue> = (value: DocActionFormExampleValue) => {
     return of(isFriday(value.date));
   }
 

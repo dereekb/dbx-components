@@ -3,16 +3,13 @@ import { addSeconds, isPast } from 'date-fns';
 import { Observable, of, combineLatest, exhaustMap, catchError, delay, filter, first, map, switchMap, BehaviorSubject, distinctUntilChanged } from 'rxjs';
 import { DbxActionContextStoreSourceInstance } from '@dereekb/dbx-core';
 import { ReadableError } from '@dereekb/util';
-import { SubscriptionObject, LockSet, tapLog } from '@dereekb/rxjs';
+import { SubscriptionObject, LockSet, tapLog, IsModifiedFn, IsValidFn } from '@dereekb/rxjs';
 import { DbxFormState, DbxMutableForm } from '../../form/form';
 
 export interface DbxActionFormTriggerResult {
   value?: any;
   reject?: ReadableError;
 }
-
-export type DbxActionFormValidateFn<T = any> = (value: T) => Observable<boolean>;
-export type DbxActionFormModifiedFn<T = any> = (value: T) => Observable<boolean>;
 
 export const APP_ACTION_FORM_DISABLED_KEY = 'dbx_action_form';
 
@@ -35,13 +32,13 @@ export class DbxActionFormDirective<T = any> implements OnInit, OnDestroy {
    * ready to send before the context store is marked enabled.
    */
   @Input()
-  dbxActionFormValidator?: DbxActionFormValidateFn<T>;
+  dbxActionFormValidator?: IsValidFn<T>;
 
   /**
    * Optional function that checks whether or not the value has been modified.
    */
   @Input()
-  dbxActionFormModified?: DbxActionFormModifiedFn<T>;
+  dbxActionFormModified?: IsModifiedFn<T>;
 
   private _formDisabledWhileWorking = new BehaviorSubject<boolean>(true);
 
@@ -90,7 +87,7 @@ export class DbxActionFormDirective<T = any> implements OnInit, OnDestroy {
                     return of(doNothing);
                   }
                 }),
-                catchError((error) => of({ error } as DbxActionFormTriggerResult))
+                catchError((error) => of({ reject: error }))
               )));
           } else {
             obs = of(doNothing);
@@ -152,7 +149,7 @@ export class DbxActionFormDirective<T = any> implements OnInit, OnDestroy {
       })
     ).subscribe(({ valid, modified, value, event }) => {
 
-      console.log('x: ', value, event, valid, modified);
+      // console.log('x: ', value, event, valid, modified);
 
       // Update Modified State
       this.source.setIsModified(modified);
