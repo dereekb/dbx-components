@@ -1,0 +1,23 @@
+<div [dbxActionSource]="source$ | async">
+  <ng-content></ng-content>
+  <mat-divider></mat-divider>
+  <div class="">
+    <p class="dbx-label">dbx-action state and tools</p>
+    <div class="dbx-content-border">
+      <div fxLayout="row wrap" fxLayoutGap="10px" fxLayoutWrap>
+        <span><span class="dbx-label">State:</span>{{ state$ | async }}</span>
+        <span><span class="dbx-label">isModified:</span>{{ isModified$ | async }}</span>
+        <span><span class="dbx-label">canTrigger:</span>{{ canTrigger$ | async }}</span>
+        <span><span class="dbx-label">isModifiedAndCanTrigger:</span>{{ isModifiedAndCanTrigger$ | async }}</span>
+        <span><span class="dbx-label">isDisabled:</span>{{ isDisabled$ | async }}</span>
+        <span><span class="dbx-label">disabledKeys:</span>{{ disabledKeys$ | async }}</span>
+        <span><span class="dbx-label">errorCountSinceLastSuccess:</span>
+          {{ errorCountSinceLastSuccess$ | async }}</span>
+        <span><span class="dbx-label">valueReady:</span>{{ valueReady$ | async | json }}</span>
+        <span><span class="dbx-label">success:</span>{{ success$ | async | json }}</span>
+        <span><span class="dbx-label">error:</span>{{ error$ | async | json }}</span>
+      </div>
+      <dbx-error dbxActionError></dbx-error>
+    </div>
+  </div>
+</div>

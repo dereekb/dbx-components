@@ -1,10 +1,12 @@
-import { Component } from '@angular/core';
+import { Directive } from '@angular/core';
 
 /**
- * Button spacer component.
+ * Button spacer directive.
  */
-@Component({
-  selector: 'dbx-button-spacer',
-  template: `<span class="dbx-button-spacer"></span>`
+@Directive({
+  selector: 'dbx-button-spacer,dbxButtonSpacer',
+  host: {
+    class: 'dbx-button-spacer d-inline'
+  }
 })
-export class DbxButtonSpacerComponent { }
+export class DbxButtonSpacerDirective { }

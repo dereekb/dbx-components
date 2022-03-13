@@ -1,12 +1,15 @@
 @use '@angular/material'as mat;
-@use './lib/style/all-theme' as dbx-theme;
-@use './lib/style/root-variables' as dbx-variables;
+@use './lib/style/all-theme'as dbx-theme;
+@use './lib/style/root-variables'as dbx-variables;
 
 @forward './lib/layout/layout';
 
 // Structural
 @forward './lib/style/core'show core;
 @forward './lib/style/root-variables'show root-variables;
+
+// Functions/Mixins
+@forward './lib/style/function';
 
 // Config
 @forward './lib/style/config'show define-dbx-theme-config,

@@ -3,7 +3,7 @@ import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { HookResult, Transition, TransitionService } from '@uirouter/core';
 import { Observable, of, race } from 'rxjs';
 import { delay, first, map, mergeMap, tap } from 'rxjs/operators';
-import { ActionContextStoreSourceInstance, canTriggerAction, isIdleActionState } from '@dereekb/dbx-core';
+import { DbxActionContextStoreSourceInstance, canTriggerAction, isIdleActionState } from '@dereekb/dbx-core';
 import { DbxActionTransitionSafetyDialogResult, DbxActionUIRouterTransitionSafetyDialogComponent } from './transition.safety.dialog.component';
 
 /**
@@ -37,7 +37,7 @@ export class DbxActionTransitionSafetyDirective<T, O> implements OnInit, OnDestr
   private stopWatchingTransition?: () => void;
 
   constructor(
-    public readonly source: ActionContextStoreSourceInstance<T, O>,
+    public readonly source: DbxActionContextStoreSourceInstance<T, O>,
     protected readonly transitionService: TransitionService,
     protected readonly viewContainerRef: ViewContainerRef,
     protected readonly dialog: MatDialog

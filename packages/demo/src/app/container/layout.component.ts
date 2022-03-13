@@ -25,7 +25,7 @@ export class AppLayoutComponent {
   }
 
   readonly github: ClickableAnchor = {
-    url: 'https://github.com/dereekb/dbcomponents',
+    url: 'https://github.com/dereekb/dbx-components',
     target: '_blank'
   };
 

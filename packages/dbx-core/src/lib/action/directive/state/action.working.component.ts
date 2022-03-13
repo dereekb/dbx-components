@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { ActionContextStoreSourceInstance } from '../../action.store.source';
+import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
 
 /**
  * Displays the input content when working is set.
@@ -16,6 +16,6 @@ export class DbxActionWorkingComponent {
 
   readonly show$ = this.source.isWorking$;
 
-  constructor(public readonly source: ActionContextStoreSourceInstance) { }
+  constructor(public readonly source: DbxActionContextStoreSourceInstance) { }
 
 }

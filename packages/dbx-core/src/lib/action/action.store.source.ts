@@ -1,11 +1,11 @@
 import { first, switchMap } from 'rxjs/operators';
 import { Observable, Subscription } from 'rxjs';
-import { Directive, forwardRef, Provider, Type } from '@angular/core';
-import { LockSet, filterMaybe } from '@dereekb/rxjs';
+import { forwardRef, Injectable, Provider, Type } from '@angular/core';
+import { LockSet, filterMaybe, LoadingState, LoadingStateType } from '@dereekb/rxjs';
 import { OnDestroy } from '@angular/core';
 import { Maybe, ReadableError } from '@dereekb/util';
 import { ActionContextState, ActionContextStore } from './action.store';
-import { ActionDisabledKey, ActionState } from './action';
+import { DbxActionDisabledKey, DbxActionState } from './action';
 
 /**
  * Source that provides a ActionContextStore observable.
@@ -45,9 +45,11 @@ export function useActionStore<T = any, O = any>(source: ActionContextStoreSourc
   return source.store$.pipe(first()).subscribe(useFn);
 }
 
-@Directive()
-// tslint:disable-next-line: directive-class-suffix
-export class ActionContextStoreSourceInstance<T = any, O = any> implements OnDestroy {
+/**
+ * Service that wraps a ActionContextStoreSource.
+ */
+@Injectable()
+export class DbxActionContextStoreSourceInstance<T = any, O = any> implements ActionContextStoreSource, OnDestroy {
 
   readonly lockSet = new LockSet();
 
@@ -86,7 +88,7 @@ export class ActionContextStoreSourceInstance<T = any, O = any> implements OnDes
     return this.pipeStore(x => x.valueReady$);
   }
 
-  get success$(): Observable<O> {
+  get success$(): Observable<Maybe<O>> {
     return this.pipeStore(x => x.success$);
   }
 
@@ -102,6 +104,10 @@ export class ActionContextStoreSourceInstance<T = any, O = any> implements OnDes
     return this.pipeStore(x => x.isModified$);
   }
 
+  get canTrigger$(): Observable<boolean> {
+    return this.pipeStore(x => x.canTrigger$);
+  }
+
   get isModifiedAndCanTriggerUpdates$(): Observable<boolean> {
     return this.pipeStore(x => x.isModifiedAndCanTriggerUpdates$);
   }
@@ -110,8 +116,16 @@ export class ActionContextStoreSourceInstance<T = any, O = any> implements OnDes
     return this.pipeStore(x => x.isModifiedAndCanTrigger$);
   }
 
-  get actionState$(): Observable<ActionState> {
+  get actionState$(): Observable<DbxActionState> {
     return this.pipeStore(x => x.actionState$);
+  }
+
+  get loadingState$(): Observable<LoadingState<O>> {
+    return this.pipeStore(x => x.loadingState$);
+  }
+
+  get loadingStateType$(): Observable<LoadingStateType> {
+    return this.pipeStore(x => x.loadingStateType$);
   }
 
   get isWorking$(): Observable<boolean> {
@@ -122,6 +136,10 @@ export class ActionContextStoreSourceInstance<T = any, O = any> implements OnDes
     return this.pipeStore(x => x.isSuccess$);
   }
 
+  get disabledKeys$(): Observable<string[]> {
+    return this.pipeStore(x => x.disabledKeys$);
+  }
+
   get isDisabled$(): Observable<boolean> {
     return this.pipeStore(x => x.isDisabled$);
   }
@@ -130,11 +148,11 @@ export class ActionContextStoreSourceInstance<T = any, O = any> implements OnDes
     return this.pipeStore(x => x.errorCountSinceLastSuccess$);
   }
 
-  public enable(key?: ActionDisabledKey, enable = true): void {
+  public enable(key?: DbxActionDisabledKey, enable = true): void {
     this.disable(key, !enable);
   }
 
-  public disable(key?: ActionDisabledKey, disable = true): void {
+  public disable(key?: DbxActionDisabledKey, disable = true): void {
     this.useStore((x) => (disable) ? x.disable(key) : x.enable(key));
   }
 
@@ -146,7 +164,7 @@ export class ActionContextStoreSourceInstance<T = any, O = any> implements OnDes
     this.useStore((x) => x.trigger());
   }
 
-  public readyValue(value: Maybe<T | Observable<T>>): void {
+  public readyValue(value: T | Observable<T>): void {
     this.useStore((x) => x.readyValue(value));
   }
 
@@ -158,8 +176,8 @@ export class ActionContextStoreSourceInstance<T = any, O = any> implements OnDes
     this.useStore((x) => x.reject(error));
   }
 
-  public success(value: O | Observable<O>): void {
-    this.useStore((x) => x.success(value));
+  public resolve(value: O | Observable<O>): void {
+    this.useStore((x) => x.resolve(value));
   }
 
   public reset(): void {
@@ -169,11 +187,11 @@ export class ActionContextStoreSourceInstance<T = any, O = any> implements OnDes
 }
 
 export const actionContextStoreSourceInstanceFactory = (source: ActionContextStoreSource) => {
-  return new ActionContextStoreSourceInstance(source);
+  return new DbxActionContextStoreSourceInstance(source);
 };
 
 /**
- * Provides an ActionContextStoreSource, as well as an ActionContextStoreSourceInstance.
+ * Provides an ActionContextStoreSource, as well as an DbxActionContextStoreSourceInstance.
  */
 export function ProvideActionStoreSource<S>(sourceType: Type<S>): Provider[] {
   return [{
@@ -181,7 +199,7 @@ export function ProvideActionStoreSource<S>(sourceType: Type<S>): Provider[] {
     useExisting: forwardRef(() => sourceType)
   },
   {
-    provide: ActionContextStoreSourceInstance,
+    provide: DbxActionContextStoreSourceInstance,
     useFactory: actionContextStoreSourceInstanceFactory,
     deps: [ActionContextStoreSource]
   }];

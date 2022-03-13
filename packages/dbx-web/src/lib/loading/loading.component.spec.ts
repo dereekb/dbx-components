@@ -25,13 +25,13 @@ describe('DbxLoadingComponent', () => {
       imports: [
         DbxLoadingModule
       ],
-      declarations: [LoadingComponent]
+      declarations: [TestLoadingComponent]
     }).compileComponents();
   });
 
   describe('with content', () => {
-    let fixture: ComponentFixture<LoadingComponent>;
-    let component: LoadingComponent;
+    let fixture: ComponentFixture<TestLoadingComponent>;
+    let component: TestLoadingComponent;
     let basicLoadingComponent: DbxBasicLoadingComponent;
 
     let waitForComponentToBeLoading: (checkFn: () => void) => void;
@@ -39,7 +39,7 @@ describe('DbxLoadingComponent', () => {
     let waitForComponentToHaveError: (checkFn: () => void) => void;
 
     beforeEach(async () => {
-      fixture = TestBed.createComponent(LoadingComponent);
+      fixture = TestBed.createComponent(TestLoadingComponent);
       component = fixture.componentInstance;
       basicLoadingComponent = fixture.debugElement.query(By.directive(DbxBasicLoadingComponent)).componentInstance;
 
@@ -125,7 +125,7 @@ const TEST_CONTENT = 'Content';
     </dbx-loading>
   `
 })
-class LoadingComponent {
+class TestLoadingComponent {
 
   public show?: boolean;
 

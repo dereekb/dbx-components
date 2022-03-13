@@ -1,6 +1,6 @@
 import { BehaviorSubject, isObservable, Observable, of } from 'rxjs';
 import { first } from 'rxjs/operators';
-import { ActionContextStoreSourceInstance } from './action.store.source';
+import { DbxActionContextStoreSourceInstance } from './action.store.source';
 import { Maybe, Destroyable } from '@dereekb/util';
 
 export interface WorkHandlerContextDelegate<O = any> {
@@ -10,18 +10,18 @@ export interface WorkHandlerContextDelegate<O = any> {
 }
 
 /**
- * WorkHandlerContextDelegate implementation using an ActionContextStoreSourceInstance.
+ * WorkHandlerContextDelegate implementation using an DbxActionContextStoreSourceInstance.
  */
 export class WorkHandlerContextSourceDelegate<T = any, O = any> implements WorkHandlerContextDelegate<O> {
 
-  constructor(readonly source: ActionContextStoreSourceInstance<T, O>) { }
+  constructor(readonly source: DbxActionContextStoreSourceInstance<T, O>) { }
 
   startWorking(): void {
     this.source.startWorking();
   }
 
   success(result: O): void {
-    this.source.success(result);
+    this.source.resolve(result);
   }
 
   reject(error: any): void {
@@ -153,9 +153,19 @@ export interface HandleWorkValueReadyConfig<T, O> {
 }
 
 /**
+ * Performs the action using the value and returns an observable.
+ */
+export type HandleActionUsingObservable<T = any, O = any> = (value: T) => Observable<O>;
+
+/**
+ * Performs the action that uses the context handler to handle the event.
+ */
+export type HandleActionUsingContext<T = any, O = any> = (value: T, context: WorkHandlerContext<T, O>) => void;
+
+/**
  * Performs the action. Can either return an observable that will use the handler, or can use the handler itself.
  */
-export type HandleActionFunction<T = any, O = any> = (value: T, context: WorkHandlerContext<T, O>) => Observable<O> | void;
+export type HandleActionFunction<T = any, O = any> = HandleActionUsingObservable<T, O> | HandleActionUsingContext<T, O>;
 
 /**
  * Creates a function that handles the incoming value and creates a WorkHandlerContext.

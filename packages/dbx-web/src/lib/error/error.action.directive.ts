@@ -1,5 +1,5 @@
 import { Directive, Host, OnInit, OnDestroy, Input, NgZone } from '@angular/core';
-import { ActionContextStoreSourceInstance, AbstractSubscriptionDirective } from '@dereekb/dbx-core';
+import { DbxActionContextStoreSourceInstance, AbstractSubscriptionDirective } from '@dereekb/dbx-core';
 import { DbxReadableErrorComponent } from './error.component';
 
 /**
@@ -10,7 +10,7 @@ import { DbxReadableErrorComponent } from './error.component';
 })
 export class DbxActionErrorDirective extends AbstractSubscriptionDirective implements OnInit {
 
-  constructor(@Host() public readonly error: DbxReadableErrorComponent, public readonly source: ActionContextStoreSourceInstance) {
+  constructor(@Host() public readonly error: DbxReadableErrorComponent, public readonly source: DbxActionContextStoreSourceInstance) {
     super();
   }
 

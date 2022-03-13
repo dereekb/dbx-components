@@ -59,7 +59,7 @@ export class DocLayoutListComponent implements OnInit {
           };
         } else {
           anchor = {
-            url: 'https://github.com/dereekb/dbcomponents',
+            url: 'https://github.com/dereekb/dbx-components',
             target: '_'
           };
         }

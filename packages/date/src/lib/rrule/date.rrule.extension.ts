@@ -1,6 +1,6 @@
-import { maxFutureDate } from '@dereekb/date';
 import { Maybe } from '@dereekb/util';
-import { RRule, Options } from 'rrule';
+import { maxFutureDate } from '../date/date';
+import { RRule } from 'rrule';
 
 // TODO: Fix typings in RRule, or better yet, add the given types up to RRule.
 

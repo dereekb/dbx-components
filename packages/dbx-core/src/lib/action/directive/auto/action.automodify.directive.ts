@@ -2,9 +2,10 @@ import { Directive, Input, OnInit, OnDestroy } from '@angular/core';
 import { AbstractSubscriptionDirective } from '../../../subscription';
 import { distinctUntilChanged, filter } from 'rxjs/operators';
 import { combineLatest } from 'rxjs';
-import { ActionContextStoreSourceInstance } from '../../action.store.source';
+import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
 import { Host } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
+import { Maybe } from '@dereekb/util';
 
 @Directive({
   selector: '[dbxActionAutoModify]',
@@ -18,11 +19,11 @@ export class DbxActionAutoModifyDirective<T, O> extends AbstractSubscriptionDire
     return this._autoModifyEnabled.value;
   }
 
-  set autoModifyEnabled(autoModifyEnabled: boolean) {
-    this._autoModifyEnabled.next(autoModifyEnabled as any !== 'false');
+  set autoModifyEnabled(autoModifyEnabled: Maybe<any>) {
+    this._autoModifyEnabled.next(autoModifyEnabled !== false);
   }
 
-  constructor(@Host() public readonly source: ActionContextStoreSourceInstance<T, O>) {
+  constructor(@Host() public readonly source: DbxActionContextStoreSourceInstance<T, O>) {
     super();
   }
 

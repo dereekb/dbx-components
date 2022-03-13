@@ -36,10 +36,10 @@ export abstract class AbstractDbxButtonDirective extends AbstractSubscriptionDir
   }
 
   @Input()
-  icon?: string;
+  icon?: Maybe<string>;
 
   @Input()
-  text?: string;
+  text?: Maybe<string>;
 
   @Output()
   readonly buttonClick = new EventEmitter();

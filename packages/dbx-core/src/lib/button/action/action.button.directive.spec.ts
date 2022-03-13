@@ -1,7 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Component, ViewChild } from '@angular/core';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { DbxActionDirective, DbxCoreActionModule } from '../../action';
+import { DbxCoreActionModule } from '../../action/action.module';
+import { DbxActionDirective } from '../../action/directive/context/action.directive';
 import { DbxActionButtonDirective } from './action.button.directive';
 import { DbxCoreButtonModule } from '../button.module';
 import { DbxActionButtonTriggerDirective } from './action.button.trigger.directive';
@@ -69,7 +70,7 @@ describe('Action Button', () => {
       testComponent.directive!.sourceInstance.readyValue(1);
 
       const SUCCESS_RESULT = 1;
-      testComponent.directive!.sourceInstance.success(SUCCESS_RESULT);
+      testComponent.directive!.sourceInstance.resolve(SUCCESS_RESULT);
 
       expect(testComponent.button!.working).toBe(false);
     });

@@ -3,7 +3,17 @@ import { MatDialog } from '@angular/material/dialog';
 import { AbstractPromptConfirmDirective } from '../interaction/prompt/prompt.confirm.directive';
 import { DbxPromptConfirmConfig } from '../interaction/prompt/prompt.confirm.component';
 import { SubscriptionObject } from '@dereekb/rxjs';
-import { ActionContextStoreSourceInstance } from '@dereekb/dbx-core';
+import { DbxActionContextStoreSourceInstance } from '@dereekb/dbx-core';
+
+/**
+ * DbxActionConfirmDirective configuration.
+ */
+export interface DbxActionConfirmConfig<T> extends DbxPromptConfirmConfig {
+  /**
+   * Optionally set the readyValue passed to the instance.
+   */
+  readyValue?: T;
+}
 
 /**
  * Directive that when triggered shows a dialog to accept or reject.
@@ -17,11 +27,11 @@ import { ActionContextStoreSourceInstance } from '@dereekb/dbx-core';
 export class DbxActionConfirmDirective<T, O> extends AbstractPromptConfirmDirective implements OnInit, OnDestroy {
 
   @Input('dbxActionConfirm')
-  override config?: DbxPromptConfirmConfig;
+  override config?: DbxActionConfirmConfig<T>;
 
   private _sourceSubscription = new SubscriptionObject();
 
-  constructor(@Host() public readonly source: ActionContextStoreSourceInstance<T, O>, dialog: MatDialog) {
+  constructor(@Host() public readonly source: DbxActionContextStoreSourceInstance<T, O>, dialog: MatDialog) {
     super(dialog);
   }
 
@@ -37,7 +47,7 @@ export class DbxActionConfirmDirective<T, O> extends AbstractPromptConfirmDirect
 
   protected override _handleDialogResult(result: boolean): boolean {
     if (result) {
-      this.source.readyValue(null);
+      this.source.readyValue(this.config?.readyValue as unknown as T);
     } else {
       this.source.reject(undefined);
     }

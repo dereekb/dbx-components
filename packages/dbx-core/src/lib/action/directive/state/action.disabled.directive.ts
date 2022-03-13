@@ -1,8 +1,9 @@
 import { Directive, Host, Input, OnInit, OnDestroy } from '@angular/core';
+import { Maybe, isDefinedAndNotFalse, isUndefinedAndNotFalse } from '@dereekb/util';
 import { BehaviorSubject } from 'rxjs';
 import { distinctUntilChanged } from 'rxjs/operators';
 import { AbstractSubscriptionDirective } from '../../../subscription';
-import { ActionContextStoreSourceInstance } from '../../action.store.source';
+import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
 
 export const APP_ACTION_DISABLED_DIRECTIVE_KEY = 'dbx_action_disabled';
 
@@ -17,7 +18,7 @@ export class DbxActionDisabledDirective<T, O> extends AbstractSubscriptionDirect
   private _disabled = new BehaviorSubject<boolean>(false);
   readonly disabled$ = this._disabled.pipe(distinctUntilChanged());
 
-  constructor(@Host() public readonly source: ActionContextStoreSourceInstance<T, O>) {
+  constructor(@Host() public readonly source: DbxActionContextStoreSourceInstance<T, O>) {
     super();
   }
 
@@ -38,8 +39,9 @@ export class DbxActionDisabledDirective<T, O> extends AbstractSubscriptionDirect
     return this._disabled.value;
   }
 
-  set disabled(disabled: boolean) {
-    this._disabled.next(disabled);
+  set disabled(disabled: Maybe<any>) {
+    const disable = isUndefinedAndNotFalse(disabled);
+    this._disabled.next(disable);
   }
 
 }

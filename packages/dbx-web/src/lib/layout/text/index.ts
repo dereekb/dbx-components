@@ -1,4 +1,5 @@
 export * from './hint.component';
+export * from './icon.spacer.component';
 export * from './label.component';
 export * from './linkify.component';
 export * from './note.component';

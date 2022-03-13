@@ -2,7 +2,7 @@ import { filterMaybe } from '@dereekb/rxjs';
 import { switchMap, tap, shareReplay } from 'rxjs/operators';
 import { Host, Directive, Input, OnInit, OnDestroy } from '@angular/core';
 import { BehaviorSubject, merge, Observable, of } from 'rxjs';
-import { ActionContextStoreSourceInstance, AbstractSubscriptionDirective } from '@dereekb/dbx-core';
+import { DbxActionContextStoreSourceInstance, AbstractSubscriptionDirective } from '@dereekb/dbx-core';
 import { DbxAnalyticsService } from '../analytics/analytics.service';
 import { Maybe, ReadableError } from '@dereekb/util';
 
@@ -41,7 +41,7 @@ export class DbxActionAnalyticsDirective<T> extends AbstractSubscriptionDirectiv
   }
 
   constructor(
-    @Host() readonly source: ActionContextStoreSourceInstance,
+    @Host() readonly source: DbxActionContextStoreSourceInstance,
     readonly analyticsService: DbxAnalyticsService
   ) {
     super();

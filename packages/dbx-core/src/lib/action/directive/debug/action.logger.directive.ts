@@ -1,6 +1,6 @@
 import { Directive, OnInit, Host } from '@angular/core';
 import { AbstractSubscriptionDirective } from '../../../subscription';
-import { ActionContextStoreSourceInstance } from '../../action.store.source';
+import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
 
 /**
  * Prints out the current state to the console. Useful for debugging.
@@ -10,7 +10,7 @@ import { ActionContextStoreSourceInstance } from '../../action.store.source';
 })
 export class DbxActionContextLoggerDirective extends AbstractSubscriptionDirective implements OnInit {
 
-  constructor(@Host() public readonly source: ActionContextStoreSourceInstance) {
+  constructor(@Host() public readonly source: DbxActionContextStoreSourceInstance) {
     super();
   }
 

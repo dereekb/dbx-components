@@ -4,7 +4,7 @@ import { BehaviorSubject } from 'rxjs';
 import { Directive, Host, Input, OnInit, OnDestroy } from '@angular/core';
 import { Maybe } from '@dereekb/util';
 import { AbstractSubscriptionDirective } from '../../../subscription';
-import { ActionContextStoreSourceInstance } from '../../action.store.source';
+import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
 
 /**
  * Performs the action on success.
@@ -31,7 +31,7 @@ export class DbxActionSuccessDirective<T, O> extends AbstractSubscriptionDirecti
     this._successFunction.next(successFunction);
   }
 
-  constructor(@Host() public readonly source: ActionContextStoreSourceInstance) {
+  constructor(@Host() public readonly source: DbxActionContextStoreSourceInstance) {
     super();
   }
 

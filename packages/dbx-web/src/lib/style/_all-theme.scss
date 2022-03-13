@@ -1,4 +1,5 @@
 @use './theming';
+@use '../action/action';
 @use '../button/button';
 @use '../error/error';
 @use '../interaction/interaction';
@@ -9,6 +10,7 @@
 @mixin all-component-themes($theme-config) {
   @include button.theme($theme-config);
   @include error.theme($theme-config);
+  @include action.all-action-theme($theme-config);
   @include interaction.all-interaction-theme($theme-config);
   @include layout.all-layout-theme($theme-config);
   @include router.all-router-theme($theme-config);

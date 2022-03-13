@@ -4,7 +4,7 @@ import { filterMaybe } from '@dereekb/rxjs';
 import { BehaviorSubject } from 'rxjs';
 import { shareReplay, switchMap, tap } from 'rxjs/operators';
 import { AbstractSubscriptionDirective } from '../../../subscription';
-import { ActionContextStoreSourceInstance } from '../../action.store.source';
+import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
 
 /**
  * Directive that provides a default value when triggered.
@@ -25,10 +25,10 @@ export class DbxActionValueDirective<T, O> extends AbstractSubscriptionDirective
   }
 
   set valueOrFunction(valueOrFunction: Maybe<ObjectOrGetter<T>>) {
-    this._valueOrFunction.next(valueOrFunction);
+    this._valueOrFunction.next(valueOrFunction || undefined);
   }
 
-  constructor(@Host() public readonly source: ActionContextStoreSourceInstance<T, O>) {
+  constructor(@Host() public readonly source: DbxActionContextStoreSourceInstance<T, O>) {
     super();
   }
 
@@ -44,8 +44,10 @@ export class DbxActionValueDirective<T, O> extends AbstractSubscriptionDirective
   }
 
   override ngOnDestroy(): void {
-    super.ngOnDestroy();
-    this._valueOrFunction.complete();
+    this.source.lockSet.onNextUnlock(() => {
+      super.ngOnDestroy();
+      this._valueOrFunction.complete();
+    });
   }
 
 }

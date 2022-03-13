@@ -1,4 +1,5 @@
 @use './theming';
+@use '../action/action';
 @use '../button/button';
 @use '../error/error';
 @use '../interaction/interaction';
@@ -9,6 +10,7 @@
 @mixin all-component-typographies($typography-config) {
   @include button.typography($typography-config);
   @include error.typography($typography-config);
+  @include action.all-action-typography($typography-config);
   @include interaction.all-interaction-typography($typography-config);
   @include layout.all-layout-typography($typography-config);
   @include router.all-router-typography($typography-config);
