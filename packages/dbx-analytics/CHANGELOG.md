@@ -2,6 +2,20 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [2.0.0](https://github.com/dereekb/dbx-components/compare/v1.2.0...v2.0.0) (2022-03-13)
+
+
+### Code Refactoring
+
+* **dbx-analytics:** added prefixes to all analytics related classes ([5db960f](https://github.com/dereekb/dbx-components/commit/5db960f0409ff0380b937257b3c9ffc3e9d362d3))
+
+
+### BREAKING CHANGES
+
+* **dbx-analytics:** Added dbx prefix to all analytics items to keep consistency
+
+
+
 # [1.2.0](https://github.com/dereekb/dbx-components/compare/v1.1.0...v1.2.0) (2022-03-04)
 
 

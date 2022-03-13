@@ -2,6 +2,16 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [2.0.0](https://github.com/dereekb/dbx-components/compare/v1.2.0...v2.0.0) (2022-03-13)
+
+
+### Features
+
+* added dbxActionFormDisabledWhileWorking to dbxActionForm ([4d6d67b](https://github.com/dereekb/dbx-components/commit/4d6d67b3b21b57baefa280ad3a72ac2b281e0a19))
+* added now to dbxDateTimeFieldComponent ([812e704](https://github.com/dereekb/dbx-components/commit/812e704b9bf44daa7441f236d6fe1e2c499ec7dd))
+
+
+
 # [1.2.0](https://github.com/dereekb/dbx-components/compare/v1.1.0...v1.2.0) (2022-03-04)
 
 

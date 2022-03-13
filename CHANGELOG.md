@@ -2,6 +2,35 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [2.0.0](https://github.com/dereekb/dbx-components/compare/v1.2.0...v2.0.0) (2022-03-13)
+
+
+### Code Refactoring
+
+* **dbx-analytics:** added prefixes to all analytics related classes ([5db960f](https://github.com/dereekb/dbx-components/commit/5db960f0409ff0380b937257b3c9ffc3e9d362d3))
+
+
+### demo
+
+* added docs page for action context ([a8cbf38](https://github.com/dereekb/dbx-components/commit/a8cbf38c631c4c9f837df274192cbb76f861612c))
+
+
+### Features
+
+* added dbxActionEnforceModified ([5a4c4b2](https://github.com/dereekb/dbx-components/commit/5a4c4b267f95eda02abccc0fb8a9ae6ab910f738))
+* added dbxActionFormDisabledWhileWorking to dbxActionForm ([4d6d67b](https://github.com/dereekb/dbx-components/commit/4d6d67b3b21b57baefa280ad3a72ac2b281e0a19))
+* added dbxActionLoadingContextDirective ([c20aa02](https://github.com/dereekb/dbx-components/commit/c20aa0283c6d248e623f32b2026077e854ada090))
+* added now to dbxDateTimeFieldComponent ([812e704](https://github.com/dereekb/dbx-components/commit/812e704b9bf44daa7441f236d6fe1e2c499ec7dd))
+* added setContainsAnyValue() ([ea0ee9a](https://github.com/dereekb/dbx-components/commit/ea0ee9a76fc6b093b2608356179e9f633fc896be))
+
+
+### BREAKING CHANGES
+
+* Renamed DbxActionState SUCCESS state to RESOLVED
+* **dbx-analytics:** Added dbx prefix to all analytics items to keep consistency
+
+
+
 # [1.2.0](https://github.com/dereekb/dbx-components/compare/v1.1.0...v1.2.0) (2022-03-04)
 
 
