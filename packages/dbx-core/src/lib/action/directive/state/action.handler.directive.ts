@@ -1,7 +1,7 @@
 import { Directive, Host, Input, OnDestroy, OnInit } from '@angular/core';
 import { map, shareReplay, switchMap, tap } from 'rxjs/operators';
 import { AbstractSubscriptionDirective } from '../../../subscription';
-import { ActionContextStoreSourceInstance } from '../../action.store.source';
+import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
 import { HandleActionFunction, WorkHandlerContextSourceDelegate, handleWorkValueReadyFn } from '../../action.handler';
 import { Maybe } from '@dereekb/util';
 import { filterMaybe } from '@dereekb/rxjs';
@@ -30,7 +30,7 @@ export class DbxActionHandlerDirective<T, O> extends AbstractSubscriptionDirecti
 
   private _delegate = new WorkHandlerContextSourceDelegate<T, O>(this.source);
 
-  constructor(@Host() public readonly source: ActionContextStoreSourceInstance<T, O>) {
+  constructor(@Host() public readonly source: DbxActionContextStoreSourceInstance<T, O>) {
     super();
   }
 
@@ -44,7 +44,7 @@ export class DbxActionHandlerDirective<T, O> extends AbstractSubscriptionDirecti
           if (context) {
 
             // Add the action to the lockSet for the source to prevent it from being destroyed until the action completes.
-            this.source.lockSet.addLock('actionhandler', context.isComplete$.pipe(map(x => !x)));
+            this.source.lockSet.addLock('dbxActionHandler', context.isComplete$.pipe(map(x => !x)));
           }
         })
       ))

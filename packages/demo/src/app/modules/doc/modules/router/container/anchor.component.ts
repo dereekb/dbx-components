@@ -10,7 +10,7 @@ export class DocRouterAnchorComponent {
   lorem = LOREM;
 
   url: ClickableAnchor = {
-    url: 'https://github.com/dereekb/dbcomponents',
+    url: 'https://github.com/dereekb/dbx-components',
     target: '_blank'
   };
 

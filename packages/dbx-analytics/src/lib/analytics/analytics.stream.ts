@@ -1,7 +1,7 @@
 import { Maybe } from "@dereekb/util";
-import { AnalyticsUser, UserAnalyticsEvent, AnalyticsUserId } from "./analytics";
+import { DbxAnalyticsUser, DbxUserAnalyticsEvent, DbxAnalyticsUserId } from "./analytics";
 
-export enum AnalyticsStreamEventType {
+export enum DbxAnalyticsStreamEventType {
 
   PageView,
   UserChange,
@@ -17,9 +17,9 @@ export enum AnalyticsStreamEventType {
 
 }
 
-export interface AnalyticsStreamEvent {
-  readonly type: AnalyticsStreamEventType;
-  readonly user?: Maybe<AnalyticsUser>;
-  readonly event?: UserAnalyticsEvent;
-  readonly userId?: AnalyticsUserId;
+export interface DbxAnalyticsStreamEvent {
+  readonly type: DbxAnalyticsStreamEventType;
+  readonly user?: Maybe<DbxAnalyticsUser>;
+  readonly event?: DbxUserAnalyticsEvent;
+  readonly userId?: DbxAnalyticsUserId;
 }

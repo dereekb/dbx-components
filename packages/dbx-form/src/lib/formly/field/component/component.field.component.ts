@@ -1,46 +1,22 @@
-import { Component, OnInit, Type } from '@angular/core';
+import { Component } from '@angular/core';
 import { DbxInjectedComponentConfig } from '@dereekb/dbx-core';
 import { FieldType, FormlyFieldConfig } from '@ngx-formly/core';
-import { Maybe } from '@dereekb/util';
 
-export interface FormComponentFieldWrappedComponent {
-  field: FieldType<FormComponentFieldFieldConfig>;
-}
+export interface DbxFormComponentFieldConfig<T> extends DbxInjectedComponentConfig<T> { }
 
-export abstract class AbstractFormComponentFieldWrappedComponent implements FormComponentFieldWrappedComponent {
-  abstract field: FieldType<FormComponentFieldFieldConfig>;
-}
-
-export interface FormComponentFieldFieldConfig<T extends FormComponentFieldWrappedComponent = any> extends FormlyFieldConfig {
-  componentField: {
-    componentClass: Type<T>;
-  }
+export interface DbxFormComponentFormlyFieldConfig<T = any> extends FormlyFieldConfig {
+  componentField: DbxFormComponentFieldConfig<T>;
 }
 
 @Component({
   template: `
-    <div class="form-wrapped-component" dbx-injected-content [config]="config"></div>
+    <div class="dbx-form-component" dbx-injected-content [config]="config"></div>
   `
 })
-export class FormComponentFieldComponent<T extends FormComponentFieldWrappedComponent = any> extends FieldType<FormComponentFieldFieldConfig<T>> implements OnInit {
+export class DbxFormComponentFieldComponent<T = any> extends FieldType<DbxFormComponentFormlyFieldConfig<T>> {
 
-  private _config?: DbxInjectedComponentConfig;
-
-  get config(): Maybe<DbxInjectedComponentConfig> {
-    return this._config;
-  }
-
-  get componentField() {
+  get config(): DbxInjectedComponentConfig<T> {
     return this.field.componentField;
-  }
-
-  ngOnInit(): void {
-    this._config = {
-      componentClass: this.componentField.componentClass,
-      init: (instance: FormComponentFieldWrappedComponent) => {
-        instance.field = this;
-      }
-    };
   }
 
 }

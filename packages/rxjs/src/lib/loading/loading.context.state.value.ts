@@ -6,7 +6,6 @@ import { LoadingContextEvent } from './loading.context';
 import { AbstractLoadingEventForLoadingPairConfig, AbstractLoadingStateContext, AbstractLoadingStateContextInstance, LoadingStateContextInstanceInputConfig } from './loading.context.state';
 import { LoadingState } from './loading.state';
 
-
 export interface LoadingStateContextEvent<T = any> extends LoadingContextEvent {
   value?: Maybe<T>;
 }

@@ -3,10 +3,10 @@ import { AbstractSubscriptionDirective } from '../../../subscription';
 import { debounce, distinctUntilChanged, exhaustMap, filter, first, map, mergeMap, shareReplay, switchMap, throttle } from 'rxjs/operators';
 import { EMPTY, interval, Subject, combineLatest } from 'rxjs';
 import { Observable } from 'rxjs';
-import { ActionContextStoreSourceInstance } from '../../action.store.source';
+import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
 import { Host } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
-import { Maybe } from '@dereekb/util';
+import { isDefinedAndNotFalse, Maybe } from '@dereekb/util';
 
 const DEFAULT_DEBOUNCE_MS = 2 * 1000;
 
@@ -17,7 +17,7 @@ const DEFAULT_ERROR_THROTTLE_MS = 3 * 1000;
 const MAX_ERRORS_TO_THROTTLE_ON = 6;
 
 /**
- * Extension of DbxActionTransitionSafetyDirective that automatically triggers the action periodically when it is in a modified state.
+ * Directive that automatically triggers the action periodically when it is in a modified state.
  */
 @Directive({
   selector: 'dbxActionAutoTrigger, [dbxActionAutoTrigger]',
@@ -59,8 +59,8 @@ export class DbxActionAutoTriggerDirective<T, O> extends AbstractSubscriptionDir
    * Used in forms that are simple.
    */
   @Input()
-  set fastTrigger(fastTrigger: boolean) {
-    if (fastTrigger) {
+  set fastTrigger(fastTrigger: any) {
+    if (isDefinedAndNotFalse(fastTrigger)) {
       this.triggerDebounce = 200;
       this.triggerThrottle = 500;
     }
@@ -72,8 +72,8 @@ export class DbxActionAutoTriggerDirective<T, O> extends AbstractSubscriptionDir
    * Used in forms that generally return a single value.
    */
   @Input()
-  set instantTrigger(instantTrigger: boolean) {
-    if (instantTrigger) {
+  set instantTrigger(instantTrigger: any) {
+    if (isDefinedAndNotFalse(instantTrigger)) {
       this.triggerDebounce = 10;
       this.triggerThrottle = 0;
     }
@@ -137,7 +137,7 @@ export class DbxActionAutoTriggerDirective<T, O> extends AbstractSubscriptionDir
     map(() => undefined as void)
   );
 
-  constructor(@Host() public readonly source: ActionContextStoreSourceInstance<T, O>) {
+  constructor(@Host() public readonly source: DbxActionContextStoreSourceInstance<T, O>) {
     super();
   }
 

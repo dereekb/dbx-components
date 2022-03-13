@@ -6,7 +6,6 @@ import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { DbxButtonModule } from '../button/button.module';
 // import { DbxErrorModule } from '../error/error.module';
 import { DbxActionKeyTriggerDirective } from './key.trigger.directive';
-import { DbxActionSnackbarComponent } from './action.snackbar.component';
 import { DbxCoreActionModule } from '@dereekb/dbx-core';
 import { DbxActionConfirmDirective } from './action.confirm.directive';
 import { DbxPromptModule } from '../interaction/prompt/prompt.module';
@@ -23,13 +22,11 @@ import { DbxPromptModule } from '../interaction/prompt/prompt.module';
   ],
   declarations: [
     DbxActionKeyTriggerDirective,
-    DbxActionSnackbarComponent,
     DbxActionConfirmDirective,
   ],
   exports: [
     DbxCoreActionModule,
     DbxActionKeyTriggerDirective,
-    DbxActionSnackbarComponent,
     DbxActionConfirmDirective,
   ]
 })

@@ -1,0 +1,20 @@
+<div class="dbx-action-snackbar" [ngClass]="(snackbarStatusClass$ | async)!">
+  <ng-container [ngSwitch]="complete$ | async">
+    <ng-container *ngSwitchCase="true">
+      <dbx-spacer></dbx-spacer>
+      <dbx-button (buttonClick)="dismiss()" color="accent" icon="done" text="Success"></dbx-button>
+    </ng-container>
+    <ng-container *ngSwitchCase="false">
+      <span>{{ message }}</span>
+      <dbx-spacer></dbx-spacer>
+      <ng-container *ngIf="hasAction">
+        <dbx-action [dbxActionValueStream]="value$" [dbxActionSource]="sourceInstance$ | async"
+          [dbxActionSuccess]="dismissAfterActionCompletes">
+          <dbx-button dbxActionButton color="warn" [text]="button"></dbx-button>
+        </dbx-action>
+        <dbx-button-spacer></dbx-button-spacer>
+      </ng-container>
+      <dbx-button (buttonClick)="dismiss()" color="accent" icon="close"></dbx-button>
+    </ng-container>
+  </ng-container>
+</div>

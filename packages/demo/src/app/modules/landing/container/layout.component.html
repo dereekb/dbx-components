@@ -1,5 +1,63 @@
-<dbx-content-page>
+<div class="dbx-app-page landing-page dbx-background" dbxSetStyle="doc-app">
   <div class="landing">
-    <p>landing</p>
+    <div class="hero dbx-primary-bg" fxLayout="column">
+      <dbx-spacer></dbx-spacer>
+      <dbx-content-container>
+        <h1 class="headline">DbxComponents</h1>
+        <p class="subheading-2">Components for Angular. Utilities in Typescript.</p>
+        <div>
+          <dbx-anchor [anchor]="docsAnchor">
+            <button mat-flat-button>View Docs</button>
+          </dbx-anchor>
+          <dbx-button-spacer></dbx-button-spacer>
+          <dbx-anchor [anchor]="demoAnchor">
+            <button mat-flat-button>View Demo (Coming Soon)</button>
+          </dbx-anchor>
+        </div>
+      </dbx-content-container>
+      <dbx-spacer></dbx-spacer>
+    </div>
+    <div class="features">
+      <dbx-content-container>
+        <h2>What's Available?</h2>
+        <p>This collection is a set of open-source Typescript repositories target several different libraries, such
+          as
+          RxJS, Angular, and other open-source projects. I use these components on my projects and wanted to share
+          them to help enable developers to build advanced products without reinventing the wheel.</p>
+        <p class="dbx-warn">The best way to learn this library for right now is to open up the demo project while
+          scrolling through the docs/demo.</p>
+        <h4>Packages List</h4>
+        <p>You can install the latest version of these projects from npm. Project versioning is synchronized across
+          all packages. The latest version is {{ latestVersion }}.</p>
+        <div>
+          <div class="package-list">
+            <div class="package-list-item" *ngFor="let package of packages">
+              <h4>{{ package.name }}</h4>
+              <p>{{ package.description }}</p>
+              <div *ngIf="package.packages" class="package-primary-package-list">
+                <p class="dbx-label">Primary Packages</p>
+                <ng-container *ngFor="let anchor of package.packages; let last = last;">
+                  <dbx-anchor [anchor]="anchor" class="package-primary-package-list-item">
+                    <dbx-anchor-content class="dbx-link" [anchor]="anchor"></dbx-anchor-content>
+                  </dbx-anchor>
+                  <span class="dbx-button-spacer" *ngIf="!last">,</span>
+                </ng-container>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <p>Other tools this project uses:</p>
+          <div class="package-primary-package-list">
+            <ng-container *ngFor="let anchor of otherPackages; let last = last;">
+              <dbx-anchor [anchor]="anchor" class="package-primary-package-list-item">
+                <dbx-anchor-content class="dbx-link" [anchor]="anchor"></dbx-anchor-content>
+              </dbx-anchor>
+              <span class="dbx-button-spacer" *ngIf="!last">,</span>
+            </ng-container>
+          </div>
+        </div>
+      </dbx-content-container>
+    </div>
   </div>
-</dbx-content-page>
+</div>

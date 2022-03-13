@@ -2,9 +2,9 @@ import { Injectable, InjectionToken, Inject } from '@angular/core';
 import { AbstractAsyncWindowLoadedService } from '@dereekb/browser';
 import { poll } from '@dereekb/util';
 
-export const PRELOAD_SEGMENT_TOKEN = new InjectionToken<string>('PreLoadSegmentService');
+export const PRELOAD_SEGMENT_TOKEN = new InjectionToken<string>('DbxAnalyticsSegmentApiServicePreload');
 
-export class SegmentApiServiceConfig {
+export class DbxAnalyticsSegmentApiServiceConfig {
   logging = true;
   active = true;
   constructor(public writeKey: string) { }
@@ -17,16 +17,16 @@ export class SegmentApiServiceConfig {
  * This requires some setup in index.html.
  */
 @Injectable()
-export class SegmentApiService extends AbstractAsyncWindowLoadedService<SegmentAnalytics.AnalyticsJS> {
+export class DbxAnalyticsSegmentApiService extends AbstractAsyncWindowLoadedService<SegmentAnalytics.AnalyticsJS> {
 
   static readonly SEGMENT_API_WINDOW_KEY = 'analytics';
   static readonly SEGMENT_READY_KEY = 'SegmentReady';
 
-  constructor(private _config: SegmentApiServiceConfig, @Inject(PRELOAD_SEGMENT_TOKEN) preload: boolean = true) {
-    super(SegmentApiService.SEGMENT_API_WINDOW_KEY, undefined, 'Segment', preload);
+  constructor(private _config: DbxAnalyticsSegmentApiServiceConfig, @Inject(PRELOAD_SEGMENT_TOKEN) preload: boolean = true) {
+    super(DbxAnalyticsSegmentApiService.SEGMENT_API_WINDOW_KEY, undefined, 'Segment', preload);
   }
 
-  get config(): SegmentApiServiceConfig {
+  get config(): DbxAnalyticsSegmentApiServiceConfig {
     return this._config;
   }
 
@@ -46,7 +46,7 @@ export class SegmentApiService extends AbstractAsyncWindowLoadedService<SegmentA
         // Wait for the service to ready itself.
         service.ready(() => {
           // Segment changes itself or rather the target, and the previous initial target is ignored after.
-          const segment: SegmentAnalytics.AnalyticsJS = window[SegmentApiService.SEGMENT_API_WINDOW_KEY];
+          const segment: SegmentAnalytics.AnalyticsJS = window[DbxAnalyticsSegmentApiService.SEGMENT_API_WINDOW_KEY];
           resolve(segment);
         });
       } catch (e) {

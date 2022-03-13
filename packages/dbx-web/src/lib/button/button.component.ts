@@ -17,7 +17,6 @@ export enum DbxButtonDisplayType {
   template: `
     <mat-spinner-button class="page-button" (btnClick)="clickButton()" [options]="btnOptions"></mat-spinner-button>
   `,
-  // TODO: styleUrls: ['./button.scss'],
   providers: ProvideDbxButton(DbxButtonComponent)
 })
 export class DbxButtonComponent extends AbstractDbxButtonDirective {

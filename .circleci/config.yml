@@ -115,7 +115,7 @@ jobs:
           command: git checkout main && git merge release --squash -Xtheirs && git commit -m "$(git log release --pretty=%B | cat)"
       - run:
           name: push main to origin
-          command: git push origin main
+          command: git push --follow-tags origin main
       - run:
           name: delete release branch
           command: git push origin --delete release
@@ -160,8 +160,6 @@ workflows:
           filters:
             branches:
               only: release
-            tags:
-              ignore: /.*/  # ignore all tagged items
   # Publishes to npm
   publish:
     jobs:
@@ -169,21 +167,15 @@ workflows:
           filters:
             branches:
               only: main
-            tags:
-              only: /^v.*/
       - deploy-demo:
           requires:
             - build
           filters:
             branches:
               only: main
-            tags:
-              only: /^v.*/
       - publish-to-npm:
           requires:
             - build
           filters:
             branches:
               only: main
-            tags:
-              only: /^v.*/

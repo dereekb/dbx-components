@@ -1,54 +1,52 @@
-import { ActionContextStoreSourceInstance } from '../../action.store.source';
+import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
 import { switchMap, mergeMap, map, withLatestFrom, shareReplay } from 'rxjs/operators';
 import { Directive, Host, Input, OnInit } from '@angular/core';
 import { BehaviorSubject, Observable, of, EMPTY } from 'rxjs';
 import { OnDestroy } from '@angular/core';
-import { hasValueOrNotEmpty, Maybe } from '@dereekb/util';
-import { SubscriptionObject } from '@dereekb/rxjs';
-
-export type DbxActionAutoTriggerIsModifiedFn<T> = (value: T) => Observable<boolean>;
+import { hasValueOrNotEmpty, Maybe, isDefinedAndNotFalse } from '@dereekb/util';
+import { IsModifiedFn, SubscriptionObject } from '@dereekb/rxjs';
 
 /**
- * Directive that watches an observable for changes and sets the new value and modified states as necessary.
+ * Directive that watches a value observable for changes and sets the new value and modified states as necessary.
  */
 @Directive({
-  selector: '[dbxActionAutoTriggerValue]',
+  selector: '[dbxActionValueStream]',
 })
-export class DbxActionAutoTriggerValueDirective<T, O> implements OnInit, OnDestroy {
+export class dbxActionValueStreamDirective<T, O> implements OnInit, OnDestroy {
 
   private _valueObs = new BehaviorSubject<Observable<T>>(EMPTY);
-  private _isModifiedFn = new BehaviorSubject<Maybe<DbxActionAutoTriggerIsModifiedFn<T>>>(undefined);
+  private _isModifiedFn = new BehaviorSubject<Maybe<IsModifiedFn<T>>>(undefined);
 
   private _modifiedSub = new SubscriptionObject();
   private _triggerSub = new SubscriptionObject();
 
-  @Input('dbxActionAutoTriggerValue')
-  set dbxActionAutoTriggerValue(dbxActionAutoTriggerValue: Observable<T>) {
-    this._valueObs.next(dbxActionAutoTriggerValue);
+  @Input()
+  set dbxActionValueStream(dbxActionValueStream: Observable<T>) {
+    this._valueObs.next(dbxActionValueStream);
   }
 
   @Input()
-  set dbxActionAutoTriggerModifiedNonEmptyValue(requireNonEmpty: boolean) {
-    if (requireNonEmpty) {
-      this.dbxActionAutoTriggerModified = (value) => {
+  set dbxActionValueStreamIsNotEmpty(requireNonEmpty: any) {
+    if (isDefinedAndNotFalse(requireNonEmpty)) {
+      this.dbxActionValueStreamModified = (value) => {
         return of(hasValueOrNotEmpty(value));
       };
     }
   }
 
   @Input()
-  set dbxActionAutoTriggerModified(dbxActionAutoTriggerModified: DbxActionAutoTriggerIsModifiedFn<T>) {
-    this._isModifiedFn.next(dbxActionAutoTriggerModified);
+  set dbxActionValueStreamModified(dbxActionValueStreamModified: IsModifiedFn<T>) {
+    this._isModifiedFn.next(dbxActionValueStreamModified);
   }
 
   readonly modifiedValue$ = this._valueObs.pipe(
     switchMap((obs) => obs.pipe(
       withLatestFrom(this._isModifiedFn),
-      mergeMap(([value, dbxActionAutoTriggerModified]) => {
+      mergeMap(([value, dbxActionValueStreamModified]) => {
         let result: Observable<[boolean, T]>;
 
-        if (dbxActionAutoTriggerModified) {
-          result = dbxActionAutoTriggerModified(value).pipe(
+        if (dbxActionValueStreamModified) {
+          result = dbxActionValueStreamModified(value).pipe(
             map((isModified) => [isModified, value] as [boolean, T])
           );
         } else {
@@ -61,7 +59,7 @@ export class DbxActionAutoTriggerValueDirective<T, O> implements OnInit, OnDestr
     ))
   );
 
-  constructor(@Host() public readonly source: ActionContextStoreSourceInstance<T, O>) { }
+  constructor(@Host() public readonly source: DbxActionContextStoreSourceInstance<T, O>) { }
 
   ngOnInit(): void {
     // Update Modified value.
@@ -71,16 +69,18 @@ export class DbxActionAutoTriggerValueDirective<T, O> implements OnInit, OnDestr
 
     // Set the value on triggers.
     this._triggerSub.subscription = this.source.triggered$.pipe(
-      mergeMap(x => this.modifiedValue$)
+      switchMap(_ => this.modifiedValue$)
     ).subscribe(([isModified, value]) => {
-      this.source.readyValue(value);
+      if (isModified) {
+        this.source.readyValue(value);
+      }
     });
   }
 
   ngOnDestroy(): void {
     this.source.lockSet.onNextUnlock(() => {
-      this._isModifiedFn.complete();
       this._valueObs.complete();
+      this._isModifiedFn.complete();
       this._modifiedSub.destroy();
       this._triggerSub.destroy();
     });

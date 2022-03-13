@@ -9,7 +9,7 @@ import { DbxSectionHeaderHType } from './section';
   selector: '.dbx-section-header',
   template: `
     <div class="dbx-section-header-content">
-      <ng-container [ngSwitch]="h ?? 1">
+      <ng-container [ngSwitch]="showTitle && (h ?? 1)">
         <h1 *ngSwitchCase="1" class="dbx-section-header-content-title">
           <ng-container *ngTemplateOutlet="headerContentTitleTemplate"></ng-container>
         </h1>
@@ -48,5 +48,9 @@ export class DbxSectionHeaderComponent {
 
   @Input()
   hint?: Maybe<string>;
+
+  get showTitle() {
+    return Boolean(this.header || this.icon);
+  }
 
 }

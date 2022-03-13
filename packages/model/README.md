@@ -1,6 +1,6 @@
 @dereekb/model
 =======
 
-The sources for this package are in the main [@dereekb/dbcomponents](https://github.com/dereekb/dbcomponents) repo. Please file issues and pull requests against that repo.
+The sources for this package are in the main [@dereekb/dbx-components](https://github.com/dereekb/dbx-components) repo. Please file issues and pull requests against that repo.
 
 License: MIT

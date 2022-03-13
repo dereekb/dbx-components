@@ -4,6 +4,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { DbxHintComponent } from './hint.component';
+import { DbxIconSpacerDirective } from './icon.spacer.component';
 import { DbxLabelComponent } from './label.component';
 import { DbxLinkifyComponent } from './linkify.component';
 import { DbxNoteComponent } from './note.component';
@@ -29,7 +30,8 @@ import { DbxWarnComponent } from './warn.component';
     DbxLabelComponent,
     DbxLinkifyComponent,
     DbxOkComponent,
-    DbxTextChipsComponent
+    DbxTextChipsComponent,
+    DbxIconSpacerDirective
   ],
   exports: [
     DbxNoteComponent,
@@ -40,7 +42,8 @@ import { DbxWarnComponent } from './warn.component';
     DbxLabelComponent,
     DbxLinkifyComponent,
     DbxOkComponent,
-    DbxTextChipsComponent
+    DbxTextChipsComponent,
+    DbxIconSpacerDirective
   ],
 })
 export class DbxTextModule { }

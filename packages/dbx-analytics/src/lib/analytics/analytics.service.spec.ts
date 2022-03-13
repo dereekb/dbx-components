@@ -1,14 +1,14 @@
 import {
-  AnalyticsService, AnalyticsServiceConfiguration,
-  AnalyticsUserSource, AbstractAnalyticsServiceListener
+  DbxAnalyticsService, DbxAnalyticsServiceConfiguration,
+  DbxAnalyticsUserSource, AbstractDbxAnalyticsServiceListener
 } from './analytics.service';
 import { BehaviorSubject, Subject, Subscription } from 'rxjs';
-import { AnalyticsUser } from './analytics';
-import { AnalyticsStreamEvent, AnalyticsStreamEventType } from './analytics.stream';
+import { DbxAnalyticsUser } from './analytics';
+import { DbxAnalyticsStreamEvent, DbxAnalyticsStreamEventType } from './analytics.stream';
 
-class TestAnalyticsServiceListener extends AbstractAnalyticsServiceListener {
+class TestAnalyticsServiceListener extends AbstractDbxAnalyticsServiceListener {
 
-  readonly events = new Subject<AnalyticsStreamEvent>();
+  readonly events = new Subject<DbxAnalyticsStreamEvent>();
 
   protected _initializeServiceSubscription(): false | Subscription {
     return this.analyticsEvents$.subscribe((event) => this.events.next(event));
@@ -16,32 +16,32 @@ class TestAnalyticsServiceListener extends AbstractAnalyticsServiceListener {
 
 }
 
-describe('Analytics Service', () => {
+describe('DbxAnalyticsService', () => {
 
-  const userStream = new BehaviorSubject<AnalyticsUser>({ user: '0' });
+  const userStream = new BehaviorSubject<DbxAnalyticsUser>({ user: '0' });
 
   const testListener: TestAnalyticsServiceListener = new TestAnalyticsServiceListener();
 
-  const testUserSource: AnalyticsUserSource = {
+  const testUserSource: DbxAnalyticsUserSource = {
     analyticsUser$: userStream
   };
 
-  let analyticsService: AnalyticsService;
+  let analyticsService: DbxAnalyticsService;
 
   beforeEach(() => {
-    const configuration: AnalyticsServiceConfiguration = {
+    const configuration: DbxAnalyticsServiceConfiguration = {
       listeners: [testListener],
       isProduction: true,
       userSource: testUserSource
     };
 
-    analyticsService = new AnalyticsService(configuration);
+    analyticsService = new DbxAnalyticsService(configuration);
   });
 
   it('#sendPageView() should send a page view event', (done) => {
 
     testListener.events.subscribe((event) => {
-      expect(event.type).toBe(AnalyticsStreamEventType.PageView);
+      expect(event.type).toBe(DbxAnalyticsStreamEventType.PageView);
       done();
     });
 

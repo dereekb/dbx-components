@@ -34,6 +34,7 @@ export const DOC_FORM_ROUTES = [{
 export const DOC_FORM_ROOT_ROUTE = {
   icon: 'list_alt',
   title: 'Forms',
+  detail: 'dbx-form',
   ref: 'doc.form',
   children: DOC_FORM_ROUTES
 };

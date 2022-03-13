@@ -1,7 +1,7 @@
 import { Directive, Host, ViewContainerRef, Input } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { HookResult, Transition, TransitionService } from '@uirouter/core';
-import { ActionContextStoreSourceInstance } from '@dereekb/dbx-core';
+import { DbxActionContextStoreSourceInstance } from '@dereekb/dbx-core';
 import { DbxActionTransitionSafetyType, DbxActionTransitionSafetyDirective } from '@dereekb/dbx-web';
 import { DbxActionFormDirective } from '../form.action.directive';
 
@@ -19,8 +19,8 @@ export class DbxActionFormSafetyDirective<T, O> extends DbxActionTransitionSafet
   override inputSafetyType?: DbxActionTransitionSafetyType;
 
   constructor(
-    @Host() public readonly appActionForm: DbxActionFormDirective<T>,
-    source: ActionContextStoreSourceInstance<T, O>,
+    @Host() public readonly dbxActionForm: DbxActionFormDirective<T>,
+    source: DbxActionContextStoreSourceInstance<T, O>,
     transitionService: TransitionService,
     viewContainerRef: ViewContainerRef,
     dialog: MatDialog
@@ -29,7 +29,7 @@ export class DbxActionFormSafetyDirective<T, O> extends DbxActionTransitionSafet
   }
 
   protected override _handleOnBeforeTransition(transition: Transition): HookResult {
-    this.appActionForm.form.forceFormUpdate();
+    this.dbxActionForm.form.forceFormUpdate();
     return super._handleOnBeforeTransition(transition);
   }
 

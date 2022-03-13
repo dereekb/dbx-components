@@ -29,6 +29,7 @@ export const DOC_INTERACTION_ROUTES = [{
 export const DOC_INTERACTION_ROOT_ROUTE = {
   icon: 'picture_in_picture',
   title: 'Interaction',
+  detail: 'interactions',
   ref: 'doc.interaction',
   children: DOC_INTERACTION_ROUTES
 };

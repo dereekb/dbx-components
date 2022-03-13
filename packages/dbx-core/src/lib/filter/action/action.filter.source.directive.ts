@@ -2,7 +2,7 @@ import { HandleActionFunction } from '../../action/action.handler';
 import { AbstractFilterSourceDirective } from '../filter.abstract.source.directive';
 import { Directive, ViewChild } from '@angular/core';
 import { of } from 'rxjs';
-import { ActionContextStoreSourceInstance } from '../../action/action.store.source';
+import { DbxActionContextStoreSourceInstance } from '../../action/action.store.source';
 
 /**
  * Abstract filter source for components that use an action to filter.
@@ -10,8 +10,8 @@ import { ActionContextStoreSourceInstance } from '../../action/action.store.sour
 @Directive()
 export abstract class AbstractActionFilterSourceDirective<F> extends AbstractFilterSourceDirective<F> {
 
-  @ViewChild(ActionContextStoreSourceInstance, { static: true, read: ActionContextStoreSourceInstance })
-  readonly filterAction!: ActionContextStoreSourceInstance;
+  @ViewChild(DbxActionContextStoreSourceInstance, { static: true, read: DbxActionContextStoreSourceInstance })
+  readonly filterAction!: DbxActionContextStoreSourceInstance;
 
   applyFilter(): void {
     this.filterAction.setIsModified(true); // Force setting modified.

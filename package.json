@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/components",
-  "version": "1.2.0",
+  "version": "2.0.0",
   "license": "MIT",
   "scripts": {
     "postinstall": "ngcc --properties es2015 browser module main",
@@ -9,7 +9,7 @@
   "private": true,
   "repository": {
     "type": "git",
-    "url": "https://github.com/dereekb/dbcomponents"
+    "url": "https://github.com/dereekb/dbx-components"
   },
   "dependencies": {
     "@angular/animations": "^13.0.0",
@@ -63,7 +63,8 @@
     "rxfire": "^6.0.3",
     "rxjs": "^7.5.2",
     "tslib": "^2.0.0",
-    "zone.js": "^0.11.4"
+    "zone.js": "^0.11.4",
+    "make-error": "^1.3.0"
   },
   "resolutions": {
     "@angular/cdk": "^13.0.0",

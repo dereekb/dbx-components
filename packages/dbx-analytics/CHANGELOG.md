@@ -2,11 +2,25 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
-# [1.2.0](https://github.com/dereekb/dbcomponents/compare/v1.1.0...v1.2.0) (2022-03-04)
+# [2.0.0](https://github.com/dereekb/dbx-components/compare/v1.2.0...v2.0.0) (2022-03-13)
+
+
+### Code Refactoring
+
+* **dbx-analytics:** added prefixes to all analytics related classes ([5db960f](https://github.com/dereekb/dbx-components/commit/5db960f0409ff0380b937257b3c9ffc3e9d362d3))
+
+
+### BREAKING CHANGES
+
+* **dbx-analytics:** Added dbx prefix to all analytics items to keep consistency
 
 
 
-# [1.1.0](https://github.com/dereekb/dbcomponents/compare/v1.0.0...v1.1.0) (2022-03-02)
+# [1.2.0](https://github.com/dereekb/dbx-components/compare/v1.1.0...v1.2.0) (2022-03-04)
+
+
+
+# [1.1.0](https://github.com/dereekb/dbx-components/compare/v1.0.0...v1.1.0) (2022-03-02)
 
 
 
@@ -15,12 +29,12 @@ This file was generated using [@jscutlery/semver](https://github.com/jscutlery/s
 
 ### Code Refactoring
 
-* renamed dbNgx prefix to dbx ([a545a76](https://github.com/dereekb/dbcomponents/commit/a545a76ed9300b594a3aafe4d89902d18c9d5e3d))
+* renamed dbNgx prefix to dbx ([a545a76](https://github.com/dereekb/dbx-components/commit/a545a76ed9300b594a3aafe4d89902d18c9d5e3d))
 
 
 ### Features
 
-* segment analytics ([b81d5a6](https://github.com/dereekb/dbcomponents/commit/b81d5a6a70ecf3bc35852d441cfd79e91e5dcb51))
+* segment analytics ([b81d5a6](https://github.com/dereekb/dbx-components/commit/b81d5a6a70ecf3bc35852d441cfd79e91e5dcb51))
 
 
 ### BREAKING CHANGES

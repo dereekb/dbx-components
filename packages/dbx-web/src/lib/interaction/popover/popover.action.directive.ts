@@ -2,7 +2,7 @@ import { BehaviorSubject, Observable, of } from 'rxjs';
 import { Directive, OnInit, OnDestroy, Input, ElementRef } from '@angular/core';
 import { NgPopoverCloseEvent, NgPopoverRef } from 'ng-overlay-container';
 import { AbstractPopoverRefWithEventsDirective } from './abstract.popover.ref.directive';
-import { ActionContextStoreSourceInstance } from '@dereekb/dbx-core';
+import { DbxActionContextStoreSourceInstance } from '@dereekb/dbx-core';
 import { filterMaybe, SubscriptionObject } from '@dereekb/rxjs';
 import { first, switchMap } from 'rxjs/operators';
 import { Maybe } from '@dereekb/util';
@@ -39,7 +39,7 @@ export class DbxPopoverActionDirective<T = object> extends AbstractPopoverRefWit
 
   constructor(
     readonly elementRef: ElementRef,
-    readonly source: ActionContextStoreSourceInstance<T, any>
+    readonly source: DbxActionContextStoreSourceInstance<T, any>
   ) {
     super();
   }
