@@ -127,7 +127,7 @@ jobs:
           at: ~/code
       - run:
           name: deploy updated projects
-          command: npx nx affected --target=ci-deploy # deploy any updated projects
+          command: npx nx run-many --target=ci-deploy --all --parallel=false # deploy any updated projects
   # Publishes content to npm. This should occur after running a release.
   publish-to-npm:
     <<: *defaults
