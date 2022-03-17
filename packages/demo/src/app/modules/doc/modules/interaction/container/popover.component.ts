@@ -30,8 +30,7 @@ export class DocInteractionPopoverComponent {
 
   openExamplePopover(key?: string, origin = this.popoverOrigin) {
     DocInteractionExamplePopoverComponent.openPopover(this.popoverService, {
-      origin,
-      config: {}
+      origin
     }, key).afterClosed$.pipe(first()).subscribe((x) => {
       this.result = x;
       safeDetectChanges(this.cdRef);

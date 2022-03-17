@@ -1,15 +1,9 @@
 import { Directive, Host, OnInit, OnDestroy, Input } from '@angular/core';
 import { addSeconds, isPast } from 'date-fns';
 import { Observable, of, combineLatest, exhaustMap, catchError, delay, filter, first, map, switchMap, BehaviorSubject, distinctUntilChanged } from 'rxjs';
-import { DbxActionContextStoreSourceInstance } from '@dereekb/dbx-core';
-import { ReadableError } from '@dereekb/util';
-import { SubscriptionObject, LockSet, tapLog, IsModifiedFn, IsValidFn } from '@dereekb/rxjs';
+import { DbxActionContextStoreSourceInstance, DbxActionValueOnTriggerResult } from '@dereekb/dbx-core';
+import { SubscriptionObject, LockSet, IsModifiedFunction, IsValidFunction } from '@dereekb/rxjs';
 import { DbxFormState, DbxMutableForm } from '../../form/form';
-
-export interface DbxActionFormTriggerResult {
-  value?: any;
-  reject?: ReadableError;
-}
 
 export const APP_ACTION_FORM_DISABLED_KEY = 'dbx_action_form';
 
@@ -32,13 +26,13 @@ export class DbxActionFormDirective<T = any> implements OnInit, OnDestroy {
    * ready to send before the context store is marked enabled.
    */
   @Input()
-  dbxActionFormValidator?: IsValidFn<T>;
+  dbxActionFormValidator?: IsValidFunction<T>;
 
   /**
    * Optional function that checks whether or not the value has been modified.
    */
   @Input()
-  dbxActionFormModified?: IsModifiedFn<T>;
+  dbxActionFormModified?: IsModifiedFunction<T>;
 
   private _formDisabledWhileWorking = new BehaviorSubject<boolean>(true);
 
@@ -73,7 +67,7 @@ export class DbxActionFormDirective<T = any> implements OnInit, OnDestroy {
           const { isComplete } = stream;
           const doNothing = {}; // nothing, form not complete
 
-          let obs: Observable<DbxActionFormTriggerResult>;
+          let obs: Observable<DbxActionValueOnTriggerResult>;
 
           if (isComplete) {
             obs = this.form.getValue().pipe(
@@ -95,7 +89,7 @@ export class DbxActionFormDirective<T = any> implements OnInit, OnDestroy {
 
           return obs;
         })))
-    ).subscribe((result: DbxActionFormTriggerResult) => {
+    ).subscribe((result: DbxActionValueOnTriggerResult) => {
       if (result.reject) {
         this.source.reject(result.reject);
       } else if (result.value != null) {
@@ -191,7 +185,7 @@ export class DbxActionFormDirective<T = any> implements OnInit, OnDestroy {
     );
   }
 
-  protected readyValue(value: T): Observable<DbxActionFormTriggerResult> {
+  protected readyValue(value: T): Observable<DbxActionValueOnTriggerResult> {
     return of({ value });
   }
 

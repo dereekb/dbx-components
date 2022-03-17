@@ -4,7 +4,7 @@ import { Directive, Host, Input, OnInit } from '@angular/core';
 import { BehaviorSubject, Observable, of, EMPTY } from 'rxjs';
 import { OnDestroy } from '@angular/core';
 import { hasValueOrNotEmpty, Maybe, isDefinedAndNotFalse } from '@dereekb/util';
-import { IsModifiedFn, SubscriptionObject } from '@dereekb/rxjs';
+import { IsModifiedFunction, SubscriptionObject } from '@dereekb/rxjs';
 
 /**
  * Directive that watches a value observable for changes and sets the new value and modified states as necessary.
@@ -15,7 +15,7 @@ import { IsModifiedFn, SubscriptionObject } from '@dereekb/rxjs';
 export class dbxActionValueStreamDirective<T, O> implements OnInit, OnDestroy {
 
   private _valueObs = new BehaviorSubject<Observable<T>>(EMPTY);
-  private _isModifiedFn = new BehaviorSubject<Maybe<IsModifiedFn<T>>>(undefined);
+  private _isModifiedFn = new BehaviorSubject<Maybe<IsModifiedFunction<T>>>(undefined);
 
   private _modifiedSub = new SubscriptionObject();
   private _triggerSub = new SubscriptionObject();
@@ -35,7 +35,7 @@ export class dbxActionValueStreamDirective<T, O> implements OnInit, OnDestroy {
   }
 
   @Input()
-  set dbxActionValueStreamModified(dbxActionValueStreamModified: IsModifiedFn<T>) {
+  set dbxActionValueStreamModified(dbxActionValueStreamModified: IsModifiedFunction<T>) {
     this._isModifiedFn.next(dbxActionValueStreamModified);
   }
 

@@ -13,8 +13,7 @@ import { DbxPopoverControlsDirective } from './popover.controls.directive';
 import { DbxPopoverCoordinatorService } from './popover.coordinator.service';
 import { DbxPopoverHeaderComponent } from './popover.header.component';
 import { DbxPopoverScrollContentComponent } from './popover.scroll.content.component';
-import { DbxPopoverActionButtonDirective } from './popover.action.button.directive';
-import { DbxPopoverActionDirective } from './popover.action.directive';
+import { DbxActionPopoverDirective } from './popover.action.directive';
 import { DbxKeypressModule } from '../../keypress';
 import { DbxAnchorModule } from '../../router';
 import { DbxActionModule } from '../../action/action.module';
@@ -38,8 +37,7 @@ import { DbxStyleLayoutModule } from '../../layout/style/style.layout.module';
     AngularResizeEventModule
   ],
   declarations: [
-    DbxPopoverActionButtonDirective,
-    DbxPopoverActionDirective,
+    DbxActionPopoverDirective,
     DbxPopoverComponent,
     DbxPopoverCoordinatorComponent,
     DbxPopoverContentComponent,
@@ -48,8 +46,7 @@ import { DbxStyleLayoutModule } from '../../layout/style/style.layout.module';
     DbxPopoverScrollContentComponent
   ],
   exports: [
-    DbxPopoverActionButtonDirective,
-    DbxPopoverActionDirective,
+    DbxActionPopoverDirective,
     DbxPopoverContentComponent,
     DbxPopoverControlsDirective,
     DbxPopoverHeaderComponent,

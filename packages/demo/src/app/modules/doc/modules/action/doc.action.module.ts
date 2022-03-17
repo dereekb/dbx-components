@@ -11,6 +11,7 @@ import { DocActionContextComponent } from './container/context.component';
 import { DocActionExampleToolsComponent } from './component/action.example.tool.component';
 import { DocActionFormExampleFormComponent } from './component/action.example.form.component';
 import { DocActionMapComponent } from './container/map.component';
+import { DocActionExamplePopoverComponent } from './component/action.example.popover.form.component';
 
 @NgModule({
   imports: [
@@ -23,6 +24,7 @@ import { DocActionMapComponent } from './container/map.component';
     // component
     DocActionExampleToolsComponent,
     DocActionFormExampleFormComponent,
+    DocActionExamplePopoverComponent,
     // container
     DocActionLayoutComponent,
     DocActionHomeComponent,

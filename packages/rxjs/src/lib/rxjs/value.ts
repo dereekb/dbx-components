@@ -1,19 +1,40 @@
-import { filter, skipWhile, startWith, switchMap, timeout, MonoTypeOperatorFunction, Observable, of, OperatorFunction } from 'rxjs';
+import { filter, skipWhile, startWith, switchMap, timeout, MonoTypeOperatorFunction, Observable, of, OperatorFunction, map } from 'rxjs';
 import { ObjectOrGetter, getValueFromObjectOrGetter, Maybe } from '@dereekb/util';
 
 // MARK: Types
+export type IsCheckFunction<T = any> = (value: T) => Observable<boolean>;
 
 /**
  * Function that validates the input value and returns an observable.
  */
-export type IsValidFn<T = any> = (value: T) => Observable<boolean>;
+export type IsValidFunction<T = any> = IsCheckFunction<T>;
 
 /**
  * Function that checks modification status of the input value and returns a value.
  */
-export type IsModifiedFn<T = any> = (value: T) => Observable<boolean>;
+export type IsModifiedFunction<T = any> = IsCheckFunction<T>;
 
-// MARK:
+// MARK: IsCheck
+export function makeReturnIfIsFunction<T>(isCheckFunction: Maybe<IsModifiedFunction<T>>, defaultValueOnMaybe?: boolean): (value: Maybe<T>) => Observable<Maybe<T>> {
+  return (value) => returnIfIs(isCheckFunction, value, defaultValueOnMaybe);
+}
+
+export function returnIfIs<T>(isCheckFunction: Maybe<IsModifiedFunction<T>>, value: Maybe<T>, defaultValueOnMaybe?: boolean): Observable<Maybe<T>> {
+  return checkIs<T>(isCheckFunction, value, defaultValueOnMaybe).pipe(map(x => (x) ? value : undefined));
+}
+
+export function makeCheckIsFunction<T>(isCheckFunction: Maybe<IsModifiedFunction<T>>, defaultValueOnMaybe?: boolean): (value: Maybe<T>) => Observable<boolean> {
+  return (value) => checkIs(isCheckFunction, value, defaultValueOnMaybe);
+}
+
+export function checkIs<T>(isCheckFunction: Maybe<IsModifiedFunction<T>>, value: Maybe<T>, defaultValueOnMaybe = false): Observable<boolean> {
+  const is: Observable<boolean> = (isCheckFunction) ?
+    ((value != null) ? isCheckFunction(value) : of(defaultValueOnMaybe)) :
+    of(true);
+  return is;
+}
+
+// MARK: Filter
 /**
  * Observable filter that filters maybe value that are defined.
  */

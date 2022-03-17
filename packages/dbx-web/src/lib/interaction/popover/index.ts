@@ -1,6 +1,5 @@
 export * from './abstract.popover.directive';
 export * from './abstract.popover.ref.directive';
-export * from './popover.action.button.directive';
 export * from './popover.action.directive';
 export * from './popover.component';
 export * from './popover.content.component';

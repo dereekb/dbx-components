@@ -644,7 +644,7 @@
                 "command": "npx nx build demo-api --watch"
               },
               {
-                "command": "npx nx run-emulators demo-api"
+                "command": "npx nx run demo-api:run-emulators"
               }
             ],
             "parallel": true
@@ -659,7 +659,7 @@
         },
         "test": {
           "executor": "@nrwl/jest:jest",
-          "outputs": ["coverage/packages/demo-api", "./.reports/jest/demo-api"],
+          "outputs": ["coverage/packages/demo-api", "./.reports/jest/demo-api.junit.xml"],
           "options": {
             "jestConfig": "packages/demo-api/jest.config.js",
             "passWithNoTests": true

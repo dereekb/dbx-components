@@ -6,7 +6,6 @@ export const DEFAULT_INTERACTION_POPOVER_COMPOSER_POPOVER_KEY = 'popover';
 
 export interface DocInteractionPopoverConfig {
   origin: ElementRef;
-  config: {}
 }
 
 @Component({
@@ -30,12 +29,11 @@ export interface DocInteractionPopoverConfig {
 })
 export class DocInteractionExamplePopoverComponent extends AbstractPopoverDirective<number> {
 
-  static openPopover(popoverService: DbxPopoverService, { origin, config }: DocInteractionPopoverConfig, popoverKey?: DbxPopoverKey): NgPopoverRef<any, number> {
+  static openPopover(popoverService: DbxPopoverService, { origin }: DocInteractionPopoverConfig, popoverKey?: DbxPopoverKey): NgPopoverRef<any, number> {
     return popoverService.open({
       key: popoverKey ?? DEFAULT_INTERACTION_POPOVER_COMPOSER_POPOVER_KEY,
       origin,
       componentClass: DocInteractionExamplePopoverComponent,
-      data: config
     });
   }
 
