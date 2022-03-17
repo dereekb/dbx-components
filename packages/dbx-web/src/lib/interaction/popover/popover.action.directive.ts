@@ -1,91 +1,46 @@
-import { BehaviorSubject, Observable, of } from 'rxjs';
+import { first, Observable } from 'rxjs';
 import { Directive, OnInit, OnDestroy, Input, ElementRef } from '@angular/core';
-import { NgPopoverCloseEvent, NgPopoverRef } from 'ng-overlay-container';
-import { AbstractPopoverRefWithEventsDirective } from './abstract.popover.ref.directive';
-import { DbxActionContextStoreSourceInstance } from '@dereekb/dbx-core';
-import { filterMaybe, SubscriptionObject } from '@dereekb/rxjs';
-import { first, switchMap } from 'rxjs/operators';
+import { NgPopoverRef } from 'ng-overlay-container';
+import { DbxActionContextStoreSourceInstance, AbstractDbxActionValueOnTriggerDirective } from '@dereekb/dbx-core';
+import { IsModifiedFunction } from '@dereekb/rxjs';
 import { Maybe } from '@dereekb/util';
+import { map } from 'rxjs';
 
-export interface DbxPopoverActionFnParam {
+export interface DbxActionPopoverFunctionParams {
   origin: ElementRef;
 }
 
-export type DbxPopoverActionFn<T = object> = (params: DbxPopoverActionFnParam) => NgPopoverRef<any, T>;
-export type DbxPopoverActionModifiedFn<T = any> = (value: T) => Observable<boolean>;
+export type DbxActionPopoverFunction<T = any> = (params: DbxActionPopoverFunctionParams) => NgPopoverRef<any, Maybe<T>>;
 
 /**
- * Action directive that is used to trigger/display a popover,
- * then watches that popover for a value.
- *
- * The value is passed to the isModified function (ifProvided), and if that returns true it will 
+ * Action directive that is used to trigger/display a popover, then watches that popover for a value.
  */
 @Directive({
-  exportAs: 'popoverAction',
-  selector: '[dbxPopoverAction]'
+  exportAs: 'dbxActionPopover',
+  selector: '[dbxActionPopover]'
 })
-export class DbxPopoverActionDirective<T = object> extends AbstractPopoverRefWithEventsDirective<any, T> implements OnInit, OnDestroy {
+export class DbxActionPopoverDirective<T = any> extends AbstractDbxActionValueOnTriggerDirective<T> implements OnInit, OnDestroy {
 
-  @Input('dbxPopoverAction')
-  fn?: DbxPopoverActionFn<T>;
+  @Input('dbxActionPopover')
+  fn?: DbxActionPopoverFunction<T>;
 
   @Input()
-  appPopoverActionModified?: DbxPopoverActionModifiedFn<T>;
-
-  private _popoverValue = new BehaviorSubject<Maybe<T>>(undefined);
-
-  private _triggeredSub = new SubscriptionObject();
-  private _isModifiedSub = new SubscriptionObject();
+  set dbxActionPopoverModified(isModifiedFunction: Maybe<IsModifiedFunction>) {
+    this.isModifiedFunction = isModifiedFunction;
+  }
 
   constructor(
     readonly elementRef: ElementRef,
-    readonly source: DbxActionContextStoreSourceInstance<T, any>
+    source: DbxActionContextStoreSourceInstance<T, any>
   ) {
-    super();
+    super(source, () => this._getDataFromPopover());
   }
 
-  ngOnInit(): void {
-
-    // Used for triggering isModified on the action.
-    this._isModifiedSub.subscription = this._popoverValue.pipe(
-      filterMaybe(),
-      switchMap((value) => {
-        let isModifiedObs: Observable<boolean>;
-
-        if (this.appPopoverActionModified) {
-          isModifiedObs = this.appPopoverActionModified(value).pipe(first());
-        } else {
-          isModifiedObs = of(true);  // Considered modified
-        }
-
-        return isModifiedObs;
-      })
-    ).subscribe((isModified) => {
-      this.source.setIsModified(isModified);
-    });
-
-    // Ready the value after the source is triggered.
-    this._triggeredSub.subscription = this.source.triggered$.pipe(
-      switchMap(() => {
-        return this._popoverValue.pipe(
-          filterMaybe(),
-          first()
-        );
-      })
-    ).subscribe((x) => {
-      this.source.readyValue(x);
-    });
+  protected _getDataFromPopover(): Observable<Maybe<T>> {
+    return this._makePopoverRef().afterClosed$.pipe(first(), map(x => x.data));
   }
 
-  override ngOnDestroy(): void {
-    this.source.lockSet.onNextUnlock(() => {
-      super.ngOnDestroy();
-      this._triggeredSub.destroy();
-      this._popoverValue.complete();
-    });
-  }
-
-  protected _makePopoverRef(): NgPopoverRef<any, T> {
+  protected _makePopoverRef(): NgPopoverRef<any, Maybe<T>> {
     const origin = this.elementRef;
 
     if (!this.fn) {
@@ -95,15 +50,6 @@ export class DbxPopoverActionDirective<T = object> extends AbstractPopoverRefWit
     return this.fn({
       origin
     });
-  }
-
-  protected override _afterClosed(event: NgPopoverCloseEvent<T>): void {
-    super._afterClosed(event);
-    const { data } = event;
-
-    if (data != null) {
-      this._popoverValue.next(data);
-    }
   }
 
 }

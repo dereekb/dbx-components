@@ -9,6 +9,13 @@ export class DocRouterAnchorComponent {
 
   lorem = LOREM;
 
+  link: ClickableAnchorLink = {
+    icon: 'home',
+    title: 'Link To Current Page',
+    ref: '.',
+    target: '_blank'
+  };
+
   url: ClickableAnchor = {
     url: 'https://github.com/dereekb/dbx-components',
     target: '_blank'

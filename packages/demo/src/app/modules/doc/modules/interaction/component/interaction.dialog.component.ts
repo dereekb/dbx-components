@@ -1,12 +1,5 @@
 import { Component } from '@angular/core';
-import { PopupPosition, AbstractDialogDirective } from '@dereekb/dbx-web';
-
-export const DEFAULT_INTERACTION_POPUP_COMPOSER_POPUP_KEY = 'popup';
-
-export interface DocInteractionPopupConfig {
-  draggable?: boolean;
-  position?: PopupPosition;
-}
+import { AbstractDialogDirective } from '@dereekb/dbx-web';
 
 @Component({
   template: `

@@ -47,5 +47,25 @@
 
     </doc-feature-example>
 
+    <h3>Popover, Popup</h3>
+    <doc-feature-example header="dbxActionPopover"
+      hint="Used to display a popover action when trigger is called. Use this directive for popup values, as they have the same return type as Popover.">
+
+      <dbx-action-example-tools dbxAction [dbxActionPopover]="handleOpenPopover" [dbxActionHandler]="handleAction">
+        <dbx-button dbxActionButton text="Open Popover Action"></dbx-button>
+      </dbx-action-example-tools>
+
+    </doc-feature-example>
+
+    <h3>Dialog</h3>
+    <doc-feature-example header="dbxActionDialog"
+      hint="Used to display a dialog when trigger is called, and passes the return value.">
+
+      <dbx-action-example-tools dbxAction [dbxActionDialog]="handleOpenDialog" [dbxActionHandler]="handleAction">
+        <dbx-button dbxActionButton text="Open Dialog Action"></dbx-button>
+      </dbx-action-example-tools>
+
+    </doc-feature-example>
+
   </doc-feature-layout>
 </dbx-content-container>

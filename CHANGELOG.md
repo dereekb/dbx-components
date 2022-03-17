@@ -2,6 +2,24 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [2.1.0](https://github.com/dereekb/dbx-components/compare/v2.0.0...v2.1.0) (2022-03-17)
+
+
+### Bug Fixes
+
+* dbx-web, dbx-form now export scss in package.json ([c7f7c14](https://github.com/dereekb/dbx-components/commit/c7f7c1485aedfe80243c78435d8b39ece60c3a60))
+* dbxDateTimeFieldComponent initial date fix ([1704052](https://github.com/dereekb/dbx-components/commit/1704052a31822dc880a03aaf52a4488f58305086))
+* updated force-start-release.sh ([3b4da48](https://github.com/dereekb/dbx-components/commit/3b4da487bd58265b67e4ee6b1cda287e076a28a7))
+
+
+### Features
+
+* date query builder ([9adfe56](https://github.com/dereekb/dbx-components/commit/9adfe56b15ae2ebd1e938ec33d971f410d7ec373))
+* dbxActionDialogDirective ([63fb871](https://github.com/dereekb/dbx-components/commit/63fb8717ea1213b602e34640ec1be81d6ca14098))
+* dbxActionPopoverDirective ([a808ac9](https://github.com/dereekb/dbx-components/commit/a808ac9a7b62841311d63df1d1ee55e57876f47f))
+
+
+
 # [2.0.0](https://github.com/dereekb/dbx-components/compare/v1.2.0...v2.0.0) (2022-03-13)
 
 

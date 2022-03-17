@@ -13,8 +13,11 @@ then
 else
   echo starting release
   echo pulling latest develop branch
-  git checkout origin/develop
+  git checkout origin/develop -q
   echo pushing release to origin
-  git push origin release
+  git branch release -q
+  git push origin release -q
   echo release pushed to origin
+  git branch -d release
+  echo cleaned up release branch
 fi

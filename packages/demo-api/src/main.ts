@@ -10,8 +10,6 @@ admin.initializeApp();
 
 const server = express();
 
-console.log('Test');
-
 export const createNestServer = async (expressInstance: any) => {
   const app = await NestFactory.create(
     AppModule,

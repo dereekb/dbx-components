@@ -20,6 +20,10 @@ export abstract class AbstractDialogDirective<R = any, D = any, T = any> extends
     this.close();
   }
 
+  returnValue(value?: R) {
+    this.close(value);
+  }
+
   close(value?: R) {
     this.dialogRef.close(value);
   }

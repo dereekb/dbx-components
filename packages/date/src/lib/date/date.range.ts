@@ -99,7 +99,7 @@ export class DateRangeParams {
   @IsOptional()
   @IsDate()
   @Type(() => Date)
-  date?: Date;
+  date: Date = new Date();
 
   @IsNumber()
   @IsOptional()
