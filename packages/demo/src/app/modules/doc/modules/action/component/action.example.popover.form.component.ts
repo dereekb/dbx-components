@@ -15,10 +15,12 @@ export interface DocInteractionPopoverConfig {
   template: `
   <dbx-popover-content>
     <dbx-popover-header icon="home" header="Header"></dbx-popover-header>
-    <dbx-action [dbxActionHandler]="handleSubmitForm">
-      <doc-action-form-example-form dbxActionForm></doc-action-form-example-form>
-      <dbx-button dbxActionButton text="Submit"></dbx-button>
-    </dbx-action>
+    <dbx-content-container style="margin-top: 12px">
+      <dbx-action [dbxActionHandler]="handleSubmitForm">
+        <doc-action-form-example-form dbxActionForm></doc-action-form-example-form>
+        <dbx-button dbxActionButton text="Submit"></dbx-button>
+      </dbx-action>
+    </dbx-content-container>
   </dbx-popover-content>
   `
 })

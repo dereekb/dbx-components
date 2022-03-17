@@ -48,15 +48,20 @@
     </doc-feature-example>
 
     <h3>Popover</h3>
-    <doc-feature-example header="dbxActionPopover"
-      hint="Used to display a popover action when trigger is called.">
+    <doc-feature-example header="dbxActionPopover" hint="Used to display a popover action when trigger is called.">
 
-      <h4>Undo</h4>
-      <p>The snackbar is has the capability to add an additional action to the state. For the pre-made available states,
-        this is the undo function.</p>
-      <p>Undo Value: {{ undoValue }}</p>
       <dbx-action-example-tools dbxAction [dbxActionPopover]="handleOpenPopover" [dbxActionHandler]="handleAction">
         <dbx-button dbxActionButton text="Open Popover Action"></dbx-button>
+      </dbx-action-example-tools>
+
+    </doc-feature-example>
+
+    <h3>Dialog</h3>
+    <doc-feature-example header="dbxActionDialog"
+      hint="Used to display a dialog when trigger is called, and passes the return value.">
+
+      <dbx-action-example-tools dbxAction [dbxActionDialog]="handleOpenDialog" [dbxActionHandler]="handleAction">
+        <dbx-button dbxActionButton text="Open Dialog Action"></dbx-button>
       </dbx-action-example-tools>
 
     </doc-feature-example>

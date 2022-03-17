@@ -6,7 +6,7 @@ import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
 /**
  * DbxActionValueOnTriggerInstance function. Returns an ObervableGetter that returns a value.
  */
-export type DbxActionValueOnTriggerFunction<T> = () => ObservableGetter<T>;
+export type DbxActionValueOnTriggerFunction<T> = () => ObservableGetter<Maybe<T>>;
 
 export interface DbxActionValueOnTriggerResult<T = any> {
   value?: Maybe<T>;

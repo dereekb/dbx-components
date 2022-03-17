@@ -1,4 +1,4 @@
-import { Observable } from 'rxjs';
+import { first, Observable } from 'rxjs';
 import { Directive, OnInit, OnDestroy, Input, ElementRef } from '@angular/core';
 import { NgPopoverRef } from 'ng-overlay-container';
 import { DbxActionContextStoreSourceInstance, AbstractDbxActionValueOnTriggerDirective } from '@dereekb/dbx-core';
@@ -10,7 +10,7 @@ export interface DbxActionPopoverFunctionParams {
   origin: ElementRef;
 }
 
-export type DbxActionPopoverFunction<T = object> = (params: DbxActionPopoverFunctionParams) => NgPopoverRef<any, T>;
+export type DbxActionPopoverFunction<T = any> = (params: DbxActionPopoverFunctionParams) => NgPopoverRef<any, Maybe<T>>;
 
 /**
  * Action directive that is used to trigger/display a popover, then watches that popover for a value.
@@ -19,7 +19,7 @@ export type DbxActionPopoverFunction<T = object> = (params: DbxActionPopoverFunc
   exportAs: 'dbxActionPopover',
   selector: '[dbxActionPopover]'
 })
-export class DbxActionPopoverDirective<T = object> extends AbstractDbxActionValueOnTriggerDirective<T> implements OnInit, OnDestroy {
+export class DbxActionPopoverDirective<T = any> extends AbstractDbxActionValueOnTriggerDirective<T> implements OnInit, OnDestroy {
 
   @Input('dbxActionPopover')
   fn?: DbxActionPopoverFunction<T>;
@@ -36,11 +36,11 @@ export class DbxActionPopoverDirective<T = object> extends AbstractDbxActionValu
     super(source, () => this._getDataFromPopover());
   }
 
-  protected _getDataFromPopover(): Observable<T> {
-    return this._makePopoverRef().afterClosed$.pipe(map(x => x.data));
+  protected _getDataFromPopover(): Observable<Maybe<T>> {
+    return this._makePopoverRef().afterClosed$.pipe(first(), map(x => x.data));
   }
 
-  protected _makePopoverRef(): NgPopoverRef<any, T> {
+  protected _makePopoverRef(): NgPopoverRef<any, Maybe<T>> {
     const origin = this.elementRef;
 
     if (!this.fn) {

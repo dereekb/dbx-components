@@ -1,4 +1,4 @@
-import { Directive } from "@angular/core";
+import { Directive, ElementRef, Input, OnDestroy, OnInit } from "@angular/core";
 import { IsModifiedFunction, SubscriptionObject } from "@dereekb/rxjs";
 import { Maybe } from "@dereekb/util";
 import { DbxActionContextStoreSourceInstance } from "../../action.store.source";
@@ -47,6 +47,34 @@ export abstract class AbstractDbxActionValueOnTriggerDirective<T> {
   ngOnDestroy(): void {
     this._instance.destroy();
     this._triggeredSub.destroy();
+  }
+
+}
+
+/**
+ * Action directive that is used to trigger/display a popover, then watches that popover for a value.
+ */
+@Directive({
+  exportAs: 'dbxActionValueOnTrigger',
+  selector: '[dbxActionValueOnTrigger]'
+})
+export class DbxActionValueTriggerDirective<T = object> extends AbstractDbxActionValueOnTriggerDirective<T> implements OnInit, OnDestroy {
+
+  @Input('dbxActionValueOnTrigger')
+  set dbxActionValueOnTrigger(dbxActionValueTrigger: Maybe<DbxActionValueOnTriggerFunction<T>>) {
+    this.valueGetter = dbxActionValueTrigger;
+  }
+
+  @Input()
+  set dbxActionValueTriggerModified(isModifiedFunction: Maybe<IsModifiedFunction>) {
+    this.isModifiedFunction = isModifiedFunction;
+  }
+
+  constructor(
+    readonly elementRef: ElementRef,
+    source: DbxActionContextStoreSourceInstance<T, any>
+  ) {
+    super(source);
   }
 
 }
