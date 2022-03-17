@@ -62,6 +62,21 @@
       </p>
 
     </doc-feature-example>
+    <doc-feature-example header="dbx-anchor-content"
+      hint="Use to fill a dbx-anchor with the default content of an icon and/or title.">
+
+      <h4>Text Only Example</h4>
+      <dbx-anchor [anchor]="link">
+        <dbx-anchor-content></dbx-anchor-content>
+      </dbx-anchor>
+
+      <h4>Button Example</h4>
+      <dbx-anchor [anchor]="link">
+        <button mat-raised-button>
+          <dbx-anchor-content></dbx-anchor-content>
+        </button>
+      </dbx-anchor>
+    </doc-feature-example>
     <doc-feature-example header="dbx-anchor-icon" hint="A pre-configured mat-icon-button view with dbx-anchor.">
       <p>
         <dbx-anchor-icon [anchor]="icon"></dbx-anchor-icon>

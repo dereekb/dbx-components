@@ -26,6 +26,11 @@
     cursor: pointer;
   }
 
+  .dbx-anchor-content {
+    display: flex;
+    align-items: center;
+  }
+
 }
 
 @mixin color($theme-config) {}
