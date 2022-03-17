@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [2.1.0](https://github.com/dereekb/dbx-components/compare/v2.0.0...v2.1.0) (2022-03-17)
+
+
+### Features
+
+* date query builder ([9adfe56](https://github.com/dereekb/dbx-components/commit/9adfe56b15ae2ebd1e938ec33d971f410d7ec373))
+
+
+
 # [2.0.0](https://github.com/dereekb/dbx-components/compare/v1.2.0...v2.0.0) (2022-03-13)
 
 
