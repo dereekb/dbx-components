@@ -487,6 +487,10 @@
               "packages/demo/src/assets",
               "packages/demo/src/lib"
             ],
+            "allowedCommonJsDependencies": [
+              "validator",
+              "date-fns-tz"
+            ],
             "stylePreprocessorOptions": {
               "includePaths": [
                 "packages"
