@@ -114,6 +114,9 @@ jobs:
           name: merge release into main and use the release commit message
           command: git checkout main && git merge release --squash -Xtheirs && git commit -m "$(git log release --pretty=%B | cat)"
       - run:
+          name: move tag from release to main
+          command: git tag -f $(git describe --abbrev=0)
+      - run:
           name: push main to origin
           command: git push --follow-tags origin main
       - run:
