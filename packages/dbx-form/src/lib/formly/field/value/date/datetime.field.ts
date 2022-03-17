@@ -1,8 +1,7 @@
 import { Observable, of } from 'rxjs';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { LabeledFieldConfig, formlyField, templateOptionsForFieldConfig, DescriptionFieldConfig } from '../../field';
-import { DbxDateTimeFieldConfig, DateTimeFieldTimeMode, DateTimeFormlyFieldConfig, DateTimePickerConfiguration } from './datetime.field.component';
-import { FieldConfig } from '../..';
+import { DbxDateTimeFieldConfig, DbxDateTimeFieldTimeMode, DateTimePickerConfiguration } from './datetime.field.component';
 
 export interface DateTimeFieldConfig extends LabeledFieldConfig, DescriptionFieldConfig, DbxDateTimeFieldConfig { }
 export interface TimeFieldConfig extends Omit<DateTimeFieldConfig, 'showDate'> { }
@@ -18,7 +17,7 @@ export const TAKE_NEXT_UPCOMING_TIME_CONFIG_OBS: () => Observable<DateTimePicker
 export function timeOnlyField(config: Partial<TimeFieldConfig> = {}): FormlyFieldConfig {
   return dateTimeField({
     ...config,
-    timeMode: DateTimeFieldTimeMode.REQUIRED,
+    timeMode: DbxDateTimeFieldTimeMode.REQUIRED,
     timeOnly: true
   });
 }
@@ -26,7 +25,7 @@ export function timeOnlyField(config: Partial<TimeFieldConfig> = {}): FormlyFiel
 export function dateTimeField(config: Partial<DateTimeFieldConfig> = {}): FormlyFieldConfig {
   const {
     key = 'date',
-    timeMode = DateTimeFieldTimeMode.REQUIRED,
+    timeMode = DbxDateTimeFieldTimeMode.REQUIRED,
     fullDayFieldName,
     getConfigObs,
     timeOnly = false
@@ -36,7 +35,7 @@ export function dateTimeField(config: Partial<DateTimeFieldConfig> = {}): Formly
     key,
     type: 'datetime',
     dateTimeField: {
-      timeMode: (timeOnly) ? DateTimeFieldTimeMode.REQUIRED : timeMode,
+      timeMode: (timeOnly) ? DbxDateTimeFieldTimeMode.REQUIRED : timeMode,
       fullDayFieldName,
       getConfigObs,
       timeOnly,
