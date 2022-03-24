@@ -1,4 +1,4 @@
-import { ClickableAnchor, ClickableAnchorLink, ClickableIconAnchorLink } from './../../../../../../dbx-core/src/lib/router/anchor/anchor';
+import { ClickableAnchor, ClickableAnchorLink, ClickableIconAnchorLink } from '@dereekb/dbx-core';
 import { Component } from '@angular/core';
 import packageInfo from '../../../../../../../package.json';
 

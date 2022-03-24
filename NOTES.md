@@ -38,16 +38,16 @@ Create an angular project using ng generate.
 
 Example: `nx generate @nrwl/angular:app --name=demo`
 
-The angular project is now setup properly. When built, its output will go to the `dist/packages/demo` folder.
+The angular project is now setup properly. When built, its output will go to the `dist/apps/demo` folder.
 
 ### Configuring Firebase.json
-We just need to update the folder firebase pulls from to instead pull from the webapp's dist folder. Update `firebase.json` by changing the `hosting` section's `public` value to be `dist/packages/demo`.
+We just need to update the folder firebase pulls from to instead pull from the webapp's dist folder. Update `firebase.json` by changing the `hosting` section's `public` value to be `dist/apps/demo`.
 
 It should look like this:
 
 ```
 "hosting": {
-    "public": "dist/packages/demo",
+    "public": "dist/apps/demo",
     "ignore": [
       "firebase.json",
       "**/.*",
@@ -70,7 +70,7 @@ Find `targets` in your `project.json`, and add the following targets:
 }
 ```
 
-This will deploy whatever content is configured for `public` in `firebase.json`, which we configured above to be `dist/packages/demo`.
+This will deploy whatever content is configured for `public` in `firebase.json`, which we configured above to be `dist/apps/demo`.
 
 Add the section below to add an action that calls build before calling deploy.
 
@@ -103,7 +103,7 @@ Create a NestJS project using the following:
 Example: `nx generate @nrwl/nest:application demo-api`
 
 ### Setting Up NestJS for Firebase Functions Using onRequest()
-Copy the contents of `packages/demo-api/src/main.ts`. This will instruct your app to direct all https requests to 
+Copy the contents of `apps/demo-api/src/main.ts`. This will instruct your app to direct all https requests to 
 
 More details here:
 https://firebase.google.com/docs/functions/http-events
@@ -137,13 +137,13 @@ https://stackoverflow.com/questions/53307541/firebase-handle-cloud-events-within
 
 
 ### Configuring Firebase.json
-We just need to update the folder firebase pulls from to instead pull from the webapp's dist folder. Update `firebase.json` by changing the `functions` section's `source` value to be `dist/packages/demo-api`. Also add `runtime` and set it to `nodejs16`.
+We just need to update the folder firebase pulls from to instead pull from the webapp's dist folder. Update `firebase.json` by changing the `functions` section's `source` value to be `dist/apps/demo-api`. Also add `runtime` and set it to `nodejs16`.
 
 It should look like this:
 
 ```
 "functions": {
-    "source": "dist/packages/demo-api",
+    "source": "dist/apps/demo-api",
     "runtime": "nodejs16",
     "ignore": [
       "firebase.json",
@@ -170,7 +170,7 @@ The first time the container runs, the firebase emulator function will download 
 
 Behind the scenes, `nx serve demo-api` runs two commands in parallel:
 - Watching the demo-api folder for buildings.
-- Running emulators. The functions emulator watches and pulls from the `dist/packages/demo-api` folder.
+- Running emulators. The functions emulator watches and pulls from the `dist/apps/demo-api` folder.
 
 Any changes made to the `demo-api` package will trigger. VS Code to build the project and update our dist, causing the functions emulator to update. This lets us develop in real time with an active emulated database.
 

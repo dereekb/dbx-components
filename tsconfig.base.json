@@ -35,7 +35,7 @@
 
         Since Nx executes this project from the root folder, our paths extend from the root folder.
       */
-      "@/shared/*": ["packages/demo/src/app/modules/shared/*"]
+      "@/shared/*": ["apps/demo/src/app/modules/shared/*"]
     }
   },
   "exclude": ["node_modules", "tmp"]

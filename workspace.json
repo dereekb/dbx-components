@@ -457,8 +457,8 @@
     },
     "demo": {
       "projectType": "application",
-      "root": "packages/demo",
-      "sourceRoot": "packages/demo/src",
+      "root": "apps/demo",
+      "sourceRoot": "apps/demo/src",
       "prefix": "app",
       "targets": {
         "build": {
@@ -476,16 +476,16 @@
             "projects": "dependencies"
           }],
           "options": {
-            "outputPath": "dist/packages/demo",
-            "index": "packages/demo/src/index.html",
-            "main": "packages/demo/src/main.ts",
-            "polyfills": "packages/demo/src/polyfills.ts",
-            "tsConfig": "packages/demo/tsconfig.app.json",
+            "outputPath": "dist/apps/demo",
+            "index": "apps/demo/src/index.html",
+            "main": "apps/demo/src/main.ts",
+            "polyfills": "apps/demo/src/polyfills.ts",
+            "tsConfig": "apps/demo/tsconfig.app.json",
             "inlineStyleLanguage": "scss",
             "assets": [
-              "packages/demo/src/favicon.ico",
-              "packages/demo/src/assets",
-              "packages/demo/src/lib"
+              "apps/demo/src/favicon.ico",
+              "apps/demo/src/assets",
+              "apps/demo/src/lib"
             ],
             "allowedCommonJsDependencies": [
               "validator",
@@ -497,7 +497,7 @@
               ]
             },
             "styles": [
-              "packages/demo/src/styles.scss"
+              "apps/demo/src/styles.scss"
             ],
             "scripts": []
           },
@@ -515,8 +515,8 @@
                 }
               ],
               "fileReplacements": [{
-                "replace": "packages/demo/src/environments/environment.ts",
-                "with": "packages/demo/src/environments/environment.prod.ts"
+                "replace": "apps/demo/src/environments/environment.ts",
+                "with": "apps/demo/src/environments/environment.prod.ts"
               }],
               "outputHashing": "all"
             },
@@ -555,16 +555,16 @@
           "executor": "@nrwl/linter:eslint",
           "options": {
             "lintFilePatterns": [
-              "packages/demo/src/**/*.ts",
-              "packages/demo/src/**/*.html"
+              "apps/demo/src/**/*.ts",
+              "apps/demo/src/**/*.html"
             ]
           }
         },
         "test": {
           "executor": "@nrwl/jest:jest",
-          "outputs": ["coverage/packages/demo", "./.reports/jest/demo.junit.xml"],
+          "outputs": ["coverage/apps/demo", "./.reports/jest/demo.junit.xml"],
           "options": {
-            "jestConfig": "packages/demo/jest.config.js",
+            "jestConfig": "apps/demo/jest.config.js",
             "passWithNoTests": true
           }
         },
@@ -592,8 +592,8 @@
       "tags": []
     },
     "demo-api": {
-      "root": "packages/demo-api",
-      "sourceRoot": "packages/demo-api/src",
+      "root": "apps/demo-api",
+      "sourceRoot": "apps/demo-api/src",
       "projectType": "application",
       "targets": {
         "build": {
@@ -611,10 +611,10 @@
             "projects": "dependencies"
           }],
           "options": {
-            "outputPath": "dist/packages/demo-api",
-            "main": "packages/demo-api/src/main.ts",
-            "tsConfig": "packages/demo-api/tsconfig.app.json",
-            "assets": ["packages/demo-api/src/assets"],
+            "outputPath": "dist/apps/demo-api",
+            "main": "apps/demo-api/src/main.ts",
+            "tsConfig": "apps/demo-api/tsconfig.app.json",
+            "assets": ["apps/demo-api/src/assets"],
             "generatePackageJson": true
           },
           "configurations": {
@@ -623,8 +623,8 @@
               "extractLicenses": true,
               "inspect": false,
               "fileReplacements": [{
-                "replace": "packages/demo-api/src/environments/environment.ts",
-                "with": "packages/demo-api/src/environments/environment.prod.ts"
+                "replace": "apps/demo-api/src/environments/environment.ts",
+                "with": "apps/demo-api/src/environments/environment.prod.ts"
               }]
             }
           }
@@ -658,14 +658,14 @@
           "executor": "@nrwl/linter:eslint",
           "outputs": ["{options.outputFile}"],
           "options": {
-            "lintFilePatterns": ["packages/demo-api/**/*.ts"]
+            "lintFilePatterns": ["apps/demo-api/**/*.ts"]
           }
         },
         "test": {
           "executor": "@nrwl/jest:jest",
-          "outputs": ["coverage/packages/demo-api", "./.reports/jest/demo-api.junit.xml"],
+          "outputs": ["coverage/apps/demo-api", "./.reports/jest/demo-api.junit.xml"],
           "options": {
-            "jestConfig": "packages/demo-api/jest.config.js",
+            "jestConfig": "apps/demo-api/jest.config.js",
             "passWithNoTests": true
           }
         },
@@ -693,14 +693,14 @@
       "tags": []
     },
     "demo-e2e": {
-      "root": "packages/demo-e2e",
-      "sourceRoot": "packages/demo-e2e/src",
+      "root": "apps/demo-e2e",
+      "sourceRoot": "apps/demo-e2e/src",
       "projectType": "application",
       "targets": {
         "e2e": {
           "executor": "@nrwl/cypress:cypress",
           "options": {
-            "cypressConfig": "packages/demo-e2e/cypress.json",
+            "cypressConfig": "apps/demo-e2e/cypress.json",
             "devServerTarget": "demo:serve:development"
           },
           "configurations": {
@@ -713,7 +713,7 @@
           "executor": "@nrwl/linter:eslint",
           "outputs": ["{options.outputFile}"],
           "options": {
-            "lintFilePatterns": ["packages/demo-e2e/**/*.{js,ts}"]
+            "lintFilePatterns": ["apps/demo-e2e/**/*.{js,ts}"]
           }
         }
       },

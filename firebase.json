@@ -1,6 +1,6 @@
 {
   "hosting": {
-    "public": "dist/packages/demo",
+    "public": "dist/apps/demo",
     "ignore": [
       "firebase.json",
       "**/.*",
@@ -19,7 +19,7 @@
     }]
   },
   "functions": {
-    "source": "dist/packages/demo-api",
+    "source": "dist/apps/demo-api",
     "runtime": "nodejs16",
     "ignore": [
       "firebase.json",
