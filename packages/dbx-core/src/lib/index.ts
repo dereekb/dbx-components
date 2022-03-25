@@ -1,4 +1,5 @@
 export * from './action';
+export * from './auth';
 export * from './button';
 export * from './router';
 export * from './pipe';
