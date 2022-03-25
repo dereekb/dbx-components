@@ -1,3 +1,5 @@
+import { DbxFirebaseEmulatorModule } from './../../../packages/dbx-firebase/src/lib/firebase/firebase.emulator.module';
+import { DbxFirebaseDefaultProvidersModule } from './../../../packages/dbx-firebase/src/lib/firebase/firebase.module';
 import { DbxAnalyticsModule, DbxAnalyticsService, DbxAnalyticsSegmentModule } from '@dereekb/dbx-analytics';
 import { Injector, NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
@@ -12,6 +14,7 @@ import { DbxCoreUIRouterSegueModule } from '@dereekb/dbx-core';
 import { FormlyModule } from '@ngx-formly/core';
 import { defaultValidationMessages } from '@dereekb/dbx-form';
 import { MAT_FORM_FIELD_DEFAULT_OPTIONS } from '@angular/material/form-field';
+import { RootFirebaseModule } from './firebase/root.firebase.module';
 
 export function routerConfigFn(router: UIRouter, injector: Injector, module: StatesModule): any {
   const transitionService = router.transitionService;
@@ -73,8 +76,9 @@ export function makeSegmentConfig(): DbxAnalyticsSegmentApiServiceConfig {
     DbxAnalyticsSegmentModule.forRoot(),
     DbxCoreUIRouterSegueModule.forRoot(),
     DbxWebUIRouterModule.forRoot(),
-    DbxPopupInteractionModule.forRoot(),
-    DbxPopoverInteractionModule.forRoot(),
+    // dbx-firebase
+    RootFirebaseModule,
+    // other modules
     FormlyModule.forRoot({
       validationMessages: defaultValidationMessages()
     }),

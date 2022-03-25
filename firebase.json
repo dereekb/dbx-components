@@ -1,5 +1,6 @@
 {
   "hosting": {
+    "site": "dereekb-components",
     "public": "dist/apps/demo",
     "ignore": [
       "firebase.json",
