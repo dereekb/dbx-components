@@ -5,7 +5,9 @@ import { BehaviorSubject } from 'rxjs';
 /**
  * Used for coordinating popovers and closing/replacing existing ones when a new popover of the same name appears.
  */
-@Injectable()
+@Injectable({
+  providedIn: 'root'
+})
 export class DbxPopoverCoordinatorService {
 
   private _popovers = new BehaviorSubject<Map<DbxPopoverKey, DbxPopoverController>>(new Map());

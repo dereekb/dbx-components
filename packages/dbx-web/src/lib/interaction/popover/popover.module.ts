@@ -10,7 +10,6 @@ import { DbxPopoverService } from './popover.service';
 import { DbxPopoverContentComponent } from './popover.content.component';
 import { DbxPopoverComponent } from './popover.component';
 import { DbxPopoverControlsDirective } from './popover.controls.directive';
-import { DbxPopoverCoordinatorService } from './popover.coordinator.service';
 import { DbxPopoverHeaderComponent } from './popover.header.component';
 import { DbxPopoverScrollContentComponent } from './popover.scroll.content.component';
 import { DbxActionPopoverDirective } from './popover.action.directive';
@@ -56,15 +55,4 @@ import { DbxStyleLayoutModule } from '../../layout/style/style.layout.module';
     DbxPopoverService
   ]
 })
-export class DbxPopoverInteractionModule {
-
-  static forRoot(): ModuleWithProviders<DbxPopoverInteractionModule> {
-    return {
-      ngModule: DbxPopoverInteractionModule,
-      providers: [
-        DbxPopoverCoordinatorService
-      ]
-    };
-  }
-
-}
+export class DbxPopoverInteractionModule { }

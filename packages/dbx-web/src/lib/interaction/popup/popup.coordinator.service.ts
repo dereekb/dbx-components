@@ -5,7 +5,9 @@ import { BehaviorSubject } from 'rxjs';
 /**
  * Used for coordinating popups and closing/replacing existing ones when a new popup of the same name appears.
  */
-@Injectable()
+@Injectable({
+  providedIn: 'root'
+})
 export class DbxPopupCoordinatorService {
 
   private _popups = new BehaviorSubject<Map<DbxPopupKey, DbxPopupController>>(new Map());

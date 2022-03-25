@@ -44,15 +44,4 @@ import { DbxStyleLayoutModule } from '../../layout/style/style.layout.module';
     DbxPopupService
   ]
 })
-export class DbxPopupInteractionModule {
-
-  static forRoot(): ModuleWithProviders<DbxPopupInteractionModule> {
-    return {
-      ngModule: DbxPopupInteractionModule,
-      providers: [
-        DbxPopupCoordinatorService
-      ]
-    };
-  }
-
-}
+export class DbxPopupInteractionModule {}
