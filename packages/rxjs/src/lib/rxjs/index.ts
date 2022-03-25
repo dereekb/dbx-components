@@ -4,6 +4,7 @@ export * from './delta';
 export * from './getter';
 export * from './loading';
 export * from './misc';
+export * from './map';
 export * from './number';
 export * from './value';
 export * from './rxjs';

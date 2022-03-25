@@ -1,4 +1,4 @@
-import { MapStringFn } from "./map";
+import { MapStringFn } from "./map/map";
 import { Maybe } from "./value";
 
 /**
