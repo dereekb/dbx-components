@@ -6,5 +6,6 @@ export * from './loading';
 export * from './misc';
 export * from './map';
 export * from './number';
-export * from './value';
 export * from './rxjs';
+export * from './set';
+export * from './value';

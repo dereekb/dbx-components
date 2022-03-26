@@ -1,4 +1,4 @@
-import { filter, skipWhile, startWith, switchMap, timeout, MonoTypeOperatorFunction, Observable, of, OperatorFunction, map } from 'rxjs';
+import { combineLatest, filter, skipWhile, startWith, switchMap, timeout, MonoTypeOperatorFunction, Observable, of, OperatorFunction, map } from 'rxjs';
 import { ObjectOrGetter, getValueFromObjectOrGetter, Maybe } from '@dereekb/util';
 
 // MARK: Types
@@ -90,4 +90,16 @@ export function timeoutStartWith<T>(defaultValue: ObjectOrGetter<T>): MonoTypeOp
       timeout({ first: 0, with: () => source.pipe(startWith(getValueFromObjectOrGetter(defaultValue))) })
     );
   };
+}
+
+/**
+ * Combines both combineLatest with map values to an other value.
+ * 
+ * @param combineObs 
+ * @param mapFn 
+ * @returns 
+ */
+export function combineLatestMapFrom<A, B, C>(combineObs: Observable<B>, mapFn: (a: A, b: B) => C): OperatorFunction<A, C> {
+  // return (obs: Observable<A>) => obs.pipe(switchMap((a: A) => combineObs.pipe(map((b: B) => mapFn(a, b)))));  // todo: alternative way to write. May behave differently in some edge cases?
+  return (obs: Observable<A>) => combineLatest([obs, combineObs]).pipe(map(([a, b]) => mapFn(a, b)));
 }

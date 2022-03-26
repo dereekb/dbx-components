@@ -1,4 +1,4 @@
-import { containsAnyStringAnyCase, containsStringAnyCase, findUniqueCaseInsensitiveStrings } from ".";
+import { containsAllStringsAnyCase, containsAnyStringAnyCase, containsStringAnyCase, findUniqueCaseInsensitiveStrings } from "./array.string";
 
 describe('findUniqueCaseInsensitiveStrings', () => {
 
@@ -48,6 +48,26 @@ describe('containsAnyStringAnyCase', () => {
     const values: string[] = [];
 
     const result = containsAnyStringAnyCase(values, [value]);
+    expect(result).toBe(false);
+  });
+
+});
+
+describe('containsAllStringsAnyCase', () => {
+
+  it('should return true if the array contains all of the input strings in any case.', () => {
+    const value = 'a';
+    const values = [value.toUpperCase()];
+
+    const result = containsAllStringsAnyCase(values, [value]);
+    expect(result).toBe(true);
+  });
+
+  it('should return false if the array does not contain all of the input values.', () => {
+    const value = 'a';
+    const values: string[] = [];
+
+    const result = containsAllStringsAnyCase(values, [value]);
     expect(result).toBe(false);
   });
 
