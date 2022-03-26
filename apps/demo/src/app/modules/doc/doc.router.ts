@@ -28,6 +28,12 @@ export const docActionState: Ng2StateDeclaration = {
   loadChildren: () => import('./modules/action/doc.action.module').then(m => m.DocActionModule)
 };
 
+export const docAuthState: Ng2StateDeclaration = {
+  url: '/auth',
+  name: 'doc.auth.**',
+  loadChildren: () => import('./modules/auth/doc.auth.module').then(m => m.DocAuthModule)
+};
+
 export const docRouterState: Ng2StateDeclaration = {
   url: '/router',
   name: 'doc.router.**',
@@ -57,6 +63,7 @@ export const STATES: Ng2StateDeclaration[] = [
   docHomeState,
   docLayoutState,
   docActionState,
+  docAuthState,
   docRouterState,
   docTextState,
   docInteractionState,

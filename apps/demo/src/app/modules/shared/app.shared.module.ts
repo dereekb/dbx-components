@@ -49,6 +49,7 @@ import { CommonModule } from '@angular/common';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { DbxButtonModule, DbxInteractionModule, DbxRouterLayoutModule, DbxLayoutModule, DbxActionModule, DbxReadableErrorModule, DbxLoadingModule, DbxActionSnackbarModule } from '@dereekb/dbx-web';
 import { DbxFormExtensionModule } from '@dereekb/dbx-form';
+import { DbxCoreAuthModule } from '@dereekb/dbx-core';
 
 
 const ANGULAR_MODULES = [
@@ -108,6 +109,7 @@ const ANGULAR_MATERIAL_MODULES = [
 
 const DBX_MODULES = [
   DbxReadableErrorModule,
+  DbxCoreAuthModule,
   DbxActionModule,
   DbxButtonModule,
   DbxLoadingModule,

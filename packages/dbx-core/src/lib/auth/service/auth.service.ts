@@ -1,5 +1,5 @@
 import { Observable } from 'rxjs';
-import { AuthRoleSet } from '../auth.role';
+import { AuthRole, AuthRoleSet } from '../auth.role';
 import { AuthUserState } from '../auth.state';
 
 /**

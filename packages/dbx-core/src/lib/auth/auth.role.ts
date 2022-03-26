@@ -3,6 +3,8 @@
  * An application role.
  * 
  * Is used in the client to decide which content a user can view.
+ * 
+ * Roles should always be lowercase.
  */
 export type AuthRole = string;
 
