@@ -5,6 +5,16 @@
  */
 export type Maybe<T> = T | null | undefined;
 
+/**
+ * Converts one value to another.
+ */
+export type ConversionFunction<I, O> = (input: I) => O;
+
+/**
+ * Converts values from the input, and applies them to the target if a target is supplied.
+ */
+export type ApplyConversionFunction<I, O> = (input: I, target?: Maybe<Partial<O>>) => O;
+
 // MARK: Utils
 /**
  * Returns true if the value is not null or undefined.
