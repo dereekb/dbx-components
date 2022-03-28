@@ -1,3 +1,4 @@
+import { asGetter, Getter, getValueFromObjectOrGetter, ObjectOrGetter } from "../getter";
 import { toKeyValueTuples } from "../object";
 import { ApplyConversionFunction, ConversionFunction, Maybe } from "../value";
 
@@ -11,11 +12,11 @@ export interface ModelConversionFunctions<V extends object, D extends object> {
   to: ModelToFunction<V, D>;
 }
 
-export type ModelFieldsConverterConfig<I extends object> = {
+export type ModelFieldsConversionConfig<I extends object> = {
   [K in keyof I]: ModelFieldConversionConfig;
 }
 
-export function makeModelConversionFunctions<V extends object, D extends object>(fields: ModelFieldsConverterConfig<V>): ModelConversionFunctions<V, D> {
+export function makeModelConversionFunctions<V extends object, D extends object>(fields: ModelFieldsConversionConfig<V>): ModelConversionFunctions<V, D> {
   const keys = toKeyValueTuples(fields);
   const conversionsByKey: [keyof V, ModelFieldConversionFunctions][] = keys.map(([key, field]) => [key, makeModelFieldConversionFunctions(field)]);
   const fromConversions: [keyof D, ModelFieldConversionFunction][] = conversionsByKey.map(([key, configs]) => ([key as any as keyof D, configs.from]));
@@ -57,7 +58,7 @@ export interface ModelFieldConvertConfig<I, O> {
   /**
    * Default value to use if the input value is null/undefined.
    */
-  default?: O;
+  default?: ObjectOrGetter<O>;
 
   /**
    * Whether or not to pass through maybe values to the convert function. Must be explicitly set.
@@ -69,7 +70,7 @@ export interface ModelFieldConvertConfig<I, O> {
   /**
    * Conversion from I to O.
    */
-  convert?: (input: I) => O;
+  convert?: ConversionFunction<I, O>;
 
 }
 
@@ -88,13 +89,14 @@ export interface ModelFieldConversionFunctions<V = any, D = any> {
 export function makeModelFieldConversionFunction<I, O>(inputConfig: Maybe<ModelFieldConvertConfig<I, O>>): ModelFieldConversionFunction<I, O> {
   const config = inputConfig ?? {};
   const { convertMaybe, convert = (x: I) => x as any, default: defaultValue } = config;
+  const getDefaultValue: Getter<Maybe<O>> = asGetter(defaultValue);
 
   return (input: Maybe<I>) => {
     if (input == null) {
       if (convertMaybe) {
         return convert(input as any);
       } else {
-        return defaultValue;
+        return getDefaultValue();
       }
     } else {
       return convert(input);
@@ -111,4 +113,3 @@ export function makeModelFieldConversionFunctions<V = any, D = any>(config: Mode
     to: makeModelFieldConversionFunction(config.to),
   }
 }
-

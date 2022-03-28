@@ -10,20 +10,31 @@ export interface FirestoreDocument<T> extends FirestoreDocumentReference<T> { }
 /**
  * Abstract FirestoreDocument implementation that extends a FirestoreDocumentDataAccessor.
  */
-export abstract class AbstractFirestoreDocument<T, A extends FirestoreDocumentDataAccessor<T> = FirestoreDocumentDataAccessor<T>> {
+export abstract class AbstractFirestoreDocument<T,
+  D extends AbstractFirestoreDocument<T, any, any>,
+  A extends FirestoreDocumentDataAccessor<T> = FirestoreDocumentDataAccessor<T>,
+  > implements FirestoreDocument<T>, FirestoreDocumentAccessorRef<T, D>, FirestoreCollectionReference<T> {
 
   readonly stream$ = this.accessor.stream();
   readonly data$: Observable<T> = dataFromSnapshotStream(this.stream$);
 
-  constructor(readonly accessor: A) { }
+  constructor(readonly accessor: A, readonly documentAccessor: FirestoreDocumentAccessor<T, D>) { }
 
   get documentRef(): DocumentReference<T> {
     return this.accessor.documentRef;
   }
 
+  get collection(): CollectionReference<T> {
+    return this.documentAccessor.collection;
+  }
+
 }
 
-export interface FirestoreDocumentAccessor<T, D extends FirestoreDocument<T>> {
+export interface FirestoreDocumentAccessorRef<T, D extends FirestoreDocument<T>> {
+  readonly documentAccessor: FirestoreDocumentAccessor<T, D>;
+}
+
+export interface FirestoreDocumentAccessor<T, D extends FirestoreDocument<T>> extends FirestoreCollectionReference<T> {
 
   readonly databaseContext: FirestoreDocumentContext<T>;
 
@@ -65,7 +76,7 @@ export interface FirestoreDocumentAccessorFactory<T, D extends FirestoreDocument
 /**
  * Used to generate a FirestoreDocument from an input FirestoreDocumentDataAccessor instance.
  */
-export type FirestoreDocumentFactoryFunction<T, D extends FirestoreDocument<T>> = (accessor: FirestoreDocumentDataAccessor<T>) => D;
+export type FirestoreDocumentFactoryFunction<T, D extends FirestoreDocument<T>> = (accessor: FirestoreDocumentDataAccessor<T>, documentAaccessor: FirestoreDocumentAccessor<T, D>) => D;
 
 // MARK: FirestoreDocumentAccessorInstance
 /**
@@ -75,7 +86,7 @@ export interface FirestoreDocumentAccessorInstanceConfig<T, D extends FirestoreD
   readonly makeDocument: FirestoreDocumentFactoryFunction<T, D>;
 }
 
-export class FirestoreDocumentAccessorInstance<T, D extends FirestoreDocument<T>> implements FirestoreDocumentAccessor<T, D> {
+export class FirestoreDocumentAccessorInstance<T, D extends FirestoreDocument<T>> implements FirestoreDocumentAccessor<T, D>, FirestoreCollectionReference<T> {
 
   constructor(
     readonly config: FirestoreDocumentAccessorInstanceConfig<T, D>,
@@ -97,7 +108,7 @@ export class FirestoreDocumentAccessorInstance<T, D extends FirestoreDocument<T>
 
   loadDocument(ref: DocumentReference<T>): D {
     const accessor = this.accessorFactory.accessorFor(ref);
-    return this.config.makeDocument(accessor);
+    return this.config.makeDocument(accessor, this);
   }
 
   loadDocumentFrom(document: FirestoreDocument<T>): D {

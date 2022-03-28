@@ -1,6 +1,7 @@
 import { Firestore } from '@firebase/firestore';
 import { first } from 'rxjs';
-import { authorizedTestWithTestItemCollection, TestItem, TestItemDocument, TestItemFirestoreCollection, testItemFirestoreCollection } from "../../test/firebase.context.item";
+import { TestItem, TestItemDocument, TestItemFirestoreCollection, testItemFirestoreCollection } from "../../test/firebase.context.item";
+import { authorizedTestWithTestItemCollection } from "../../test/firebase.context.item.fixture";
 import { FirestoreDocumentAccessor } from './document';
 
 describe('FirestoreDocumentDataAccessor', () => {

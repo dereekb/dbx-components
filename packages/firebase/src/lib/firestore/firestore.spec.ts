@@ -1,6 +1,7 @@
 import { DocumentReference, runTransaction, Transaction, Firestore } from '@firebase/firestore';
 import { makeFirestoreCollection } from './firestore';
-import { authorizedTestWithTestItemCollection, TestItem, testItemCollection, TestItemDocument, TestItemFirestoreCollection, testItemFirestoreCollection } from "../../test/firebase.context.item";
+import { TestItem, testItemCollectionReference, TestItemDocument, TestItemFirestoreCollection, testItemFirestoreCollection } from "../../test/firebase.context.item";
+import { authorizedTestWithTestItemCollection } from "../../test/firebase.context.item.fixture";
 import { FirestoreDocumentContext } from './context';
 import { transactionDocumentContext } from './context.transaction';
 import { Maybe } from '@dereekb/util';
@@ -23,8 +24,8 @@ describe('FirestoreCollection', () => {
 
         firestoreCollection = makeFirestoreCollection({
           itemsPerPage,
-          collection: testItemCollection(firestore),
-          makeDocument: (x) => new TestItemDocument(x)
+          collection: testItemCollectionReference(firestore),
+          makeDocument: (a, d) => new TestItemDocument(a, d)
         });
 
         expect(firestoreCollection).toBeDefined();

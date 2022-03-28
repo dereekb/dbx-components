@@ -1,5 +1,5 @@
 import { setDoc } from '@firebase/firestore';
-import { TestItemCollectionFixture, testWithTestItemFixture } from './firebase.context.item';
+import { TestItemCollectionFixture, testWithTestItemFixture } from './firebase.context.item.fixture';
 import { authorizedFirebase } from './firebase.context';
 import { doc, getDoc } from 'firebase/firestore';
 

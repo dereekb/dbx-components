@@ -10,3 +10,5 @@ export * from './context.transaction';
 export * from './context';
 export * from './firestore';
 export * from './iterator';
+export * from './snapshot';
+export * from './snapshot.field';

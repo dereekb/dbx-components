@@ -37,3 +37,17 @@ export function getValueFromObjectOrGetter<T, A>(this: any, input: ObjectOrGette
     return input;
   }
 }
+
+/**
+ * Returns the input as a getter.
+ * 
+ * @param input 
+ * @returns 
+ */
+export function asGetter<T>(input: ObjectOrGetter<T>): Getter<T> {
+  if (typeof input === 'function') {
+    return input as Getter<T>;
+  } else {
+    return () => input;
+  }
+}

@@ -87,7 +87,10 @@
         },
         "test": {
           "executor": "@nrwl/jest:jest",
-          "outputs": ["coverage/packages/date", "./.reports/jest/utc.date.junit.xml"],
+          "outputs": [
+            "coverage/packages/date",
+            "./.reports/jest/utc.date.junit.xml"
+          ],
           "options": {
             "jestConfig": "packages/date/jest.config.js",
             "passWithNoTests": true
@@ -95,25 +98,35 @@
         },
         "test-timezones": {
           "outputs": [
-            "coverage/packages/date", "./.reports/jest/utc.date.junit.xml", "./.reports/jest/america-chicago.date.junit.xml",
-            "./.reports/jest/america-los_angeles.date.junit.xml", "./.reports/jest/america-new_york.date.junit.xml",
-            "./.reports/jest/asia-tokyo.date.junit.xml", "./.reports/jest/europe-dublic.date.junit.xml"
+            "coverage/packages/date",
+            "./.reports/jest/utc.date.junit.xml",
+            "./.reports/jest/america-chicago.date.junit.xml",
+            "./.reports/jest/america-los_angeles.date.junit.xml",
+            "./.reports/jest/america-new_york.date.junit.xml",
+            "./.reports/jest/asia-tokyo.date.junit.xml",
+            "./.reports/jest/europe-dublic.date.junit.xml"
           ],
           "executor": "@nrwl/workspace:run-commands",
           "options": {
             "commands": [{
-              "command": "TZ=America/New_York nx test date"
-            }, {
-              "command": "TZ=America/Chicago nx test date"
-            }, {
-              "command": "TZ=America/Los_Angeles nx test date"
-            }, {
-              "command": "TZ=Europe/Dublin nx test date"
-            }, {
-              "command": "TZ=Asia/Tokyo nx test date"
-            }, {
-              "command": "nx test date"
-            }],
+                "command": "TZ=America/New_York nx test date"
+              },
+              {
+                "command": "TZ=America/Chicago nx test date"
+              },
+              {
+                "command": "TZ=America/Los_Angeles nx test date"
+              },
+              {
+                "command": "TZ=Europe/Dublin nx test date"
+              },
+              {
+                "command": "TZ=Asia/Tokyo nx test date"
+              },
+              {
+                "command": "nx test date"
+              }
+            ],
             "parallel": false
           }
         },
@@ -161,7 +174,10 @@
         },
         "test": {
           "executor": "@nrwl/jest:jest",
-          "outputs": ["coverage/packages/dbx-analytics", "./.reports/jest/dbx-analytics.junit.xml"],
+          "outputs": [
+            "coverage/packages/dbx-analytics",
+            "./.reports/jest/dbx-analytics.junit.xml"
+          ],
           "options": {
             "jestConfig": "packages/dbx-analytics/jest.config.js",
             "passWithNoTests": true
@@ -220,7 +236,10 @@
         },
         "test": {
           "executor": "@nrwl/jest:jest",
-          "outputs": ["coverage/packages/dbx-core", "./.reports/jest/dbx-core.junit.xml"],
+          "outputs": [
+            "coverage/packages/dbx-core",
+            "./.reports/jest/dbx-core.junit.xml"
+          ],
           "options": {
             "jestConfig": "packages/dbx-core/jest.config.js",
             "passWithNoTests": true
@@ -279,7 +298,10 @@
         },
         "run-tests": {
           "executor": "@nrwl/jest:jest",
-          "outputs": ["coverage/packages/dbx-firebase", "./.reports/jest/dbx-firebase.junit.xml"],
+          "outputs": [
+            "coverage/packages/dbx-firebase",
+            "./.reports/jest/dbx-firebase.junit.xml"
+          ],
           "options": {
             "jestConfig": "packages/dbx-firebase/jest.config.js",
             "passWithNoTests": true
@@ -326,15 +348,18 @@
           "outputs": ["dist/packages/dbx-form"],
           "options": {
             "commands": [{
-              "description": "build dbx-form production",
-              "command": "npx nx run dbx-form:build-base:production"
-            }, {
-              "description": "copy all style files from src to map to respective directory",
-              "command": "echo 'copying dbx-form scss files' && cd dist/packages/dbx-form/src && find * -type f -name \"*.scss\" -exec sh -c 'mkdir -p ../\"$(dirname {})\" && cp {} ../{}' \\;"
-            }, {
-              "description": "delete unnecessary src directory",
-              "command": "echo 'cleaning up dbx-form scss files' && rm -r dist/packages/dbx-form/src"
-            }],
+                "description": "build dbx-form production",
+                "command": "npx nx run dbx-form:build-base:production"
+              },
+              {
+                "description": "copy all style files from src to map to respective directory",
+                "command": "echo 'copying dbx-form scss files' && cd dist/packages/dbx-form/src && find * -type f -name \"*.scss\" -exec sh -c 'mkdir -p ../\"$(dirname {})\" && cp {} ../{}' \\;"
+              },
+              {
+                "description": "delete unnecessary src directory",
+                "command": "echo 'cleaning up dbx-form scss files' && rm -r dist/packages/dbx-form/src"
+              }
+            ],
             "parallel": false,
             "color": true
           }
@@ -361,7 +386,10 @@
         },
         "test": {
           "executor": "@nrwl/jest:jest",
-          "outputs": ["coverage/packages/dbx-form", "./.reports/jest/dbx-form.junit.xml"],
+          "outputs": [
+            "coverage/packages/dbx-form",
+            "./.reports/jest/dbx-form.junit.xml"
+          ],
           "options": {
             "jestConfig": "packages/dbx-form/jest.config.js",
             "passWithNoTests": true
@@ -396,15 +424,18 @@
           "outputs": ["dist/packages/dbx-web"],
           "options": {
             "commands": [{
-              "description": "build dbx-web production",
-              "command": "npx nx run dbx-web:build-base:production"
-            }, {
-              "description": "copy all style files from src to map to respective directory. How this works is it finds all .scss files in the dist/packages/dbx-web/src folder, then iterates over each file's path creates the directory one level up if it does not exist, followed by copying the file.",
-              "command": "echo 'copying dbx-web scss files' && cd dist/packages/dbx-web/src && find * -type f -name \"*.scss\" -exec sh -c 'mkdir -p ../\"$(dirname {})\" && cp {} ../{}' \\;"
-            }, {
-              "description": "delete unnecessary src directory",
-              "command": "echo 'cleaning up dbx-web scss files' && rm -r dist/packages/dbx-web/src"
-            }],
+                "description": "build dbx-web production",
+                "command": "npx nx run dbx-web:build-base:production"
+              },
+              {
+                "description": "copy all style files from src to map to respective directory. How this works is it finds all .scss files in the dist/packages/dbx-web/src folder, then iterates over each file's path creates the directory one level up if it does not exist, followed by copying the file.",
+                "command": "echo 'copying dbx-web scss files' && cd dist/packages/dbx-web/src && find * -type f -name \"*.scss\" -exec sh -c 'mkdir -p ../\"$(dirname {})\" && cp {} ../{}' \\;"
+              },
+              {
+                "description": "delete unnecessary src directory",
+                "command": "echo 'cleaning up dbx-web scss files' && rm -r dist/packages/dbx-web/src"
+              }
+            ],
             "parallel": false,
             "color": true
           }
@@ -431,7 +462,10 @@
         },
         "test": {
           "executor": "@nrwl/jest:jest",
-          "outputs": ["coverage/packages/dbx-web", "./.reports/jest/dbx-web.junit.xml"],
+          "outputs": [
+            "coverage/packages/dbx-web",
+            "./.reports/jest/dbx-web.junit.xml"
+          ],
           "options": {
             "jestConfig": "packages/dbx-web/jest.config.js",
             "passWithNoTests": true
@@ -487,18 +521,11 @@
               "apps/demo/src/assets",
               "apps/demo/src/lib"
             ],
-            "allowedCommonJsDependencies": [
-              "validator",
-              "date-fns-tz"
-            ],
+            "allowedCommonJsDependencies": ["validator", "date-fns-tz"],
             "stylePreprocessorOptions": {
-              "includePaths": [
-                "packages"
-              ]
+              "includePaths": ["packages"]
             },
-            "styles": [
-              "apps/demo/src/styles.scss"
-            ],
+            "styles": ["apps/demo/src/styles.scss"],
             "scripts": []
           },
           "configurations": {
@@ -663,7 +690,10 @@
         },
         "test": {
           "executor": "@nrwl/jest:jest",
-          "outputs": ["coverage/apps/demo-api", "./.reports/jest/demo-api.junit.xml"],
+          "outputs": [
+            "coverage/apps/demo-api",
+            "./.reports/jest/demo-api.junit.xml"
+          ],
           "options": {
             "jestConfig": "apps/demo-api/jest.config.js",
             "passWithNoTests": true
@@ -687,6 +717,46 @@
           }],
           "options": {
             "command": "firebase deploy --only functions --token \"$FIREBASE_TOKEN\""
+          }
+        }
+      },
+      "tags": []
+    },
+    "demo-firebase": {
+      "root": "apps/demo-firebase",
+      "sourceRoot": "apps/demo-firebase/src",
+      "projectType": "library",
+      "targets": {
+        "build": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "command": "npx nx run demo-firebase:build-base",
+            "color": true
+          }
+        },
+        "build-base": {
+          "executor": "@nrwl/js:tsc",
+          "outputs": ["{options.outputPath}"],
+          "options": {
+            "outputPath": "dist/apps/demo-firebase",
+            "main": "apps/demo-firebase/src/index.ts",
+            "tsConfig": "apps/demo-firebase/tsconfig.lib.json",
+            "assets": ["apps/demo-firebase/*.md"]
+          }
+        },
+        "lint": {
+          "executor": "@nrwl/linter:eslint",
+          "outputs": ["{options.outputFile}"],
+          "options": {
+            "lintFilePatterns": ["apps/demo-firebase/**/*.ts"]
+          }
+        },
+        "test": {
+          "executor": "@nrwl/jest:jest",
+          "outputs": ["coverage/apps/demo-firebase"],
+          "options": {
+            "jestConfig": "apps/demo-firebase/jest.config.js",
+            "passWithNoTests": true
           }
         }
       },
@@ -756,7 +826,10 @@
         },
         "run-tests": {
           "executor": "@nrwl/jest:jest",
-          "outputs": ["coverage/packages/firebase", "./.reports/jest/firebase.junit.xml"],
+          "outputs": [
+            "coverage/packages/firebase",
+            "./.reports/jest/firebase.junit.xml"
+          ],
           "options": {
             "jestConfig": "packages/firebase/jest.config.js",
             "passWithNoTests": true
@@ -820,7 +893,10 @@
         },
         "test": {
           "executor": "@nrwl/jest:jest",
-          "outputs": ["coverage/packages/rxjs", "./.reports/jest/rxjs.junit.xml"],
+          "outputs": [
+            "coverage/packages/rxjs",
+            "./.reports/jest/rxjs.junit.xml"
+          ],
           "options": {
             "jestConfig": "packages/rxjs/jest.config.js",
             "passWithNoTests": true
@@ -871,7 +947,10 @@
         },
         "test": {
           "executor": "@nrwl/jest:jest",
-          "outputs": ["coverage/packages/util", "./.reports/jest/util.junit.xml"],
+          "outputs": [
+            "coverage/packages/util",
+            "./.reports/jest/util.junit.xml"
+          ],
           "options": {
             "jestConfig": "packages/util/jest.config.js",
             "passWithNoTests": true
