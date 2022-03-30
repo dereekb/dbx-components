@@ -1,9 +1,5 @@
 import { Maybe } from '@dereekb/util';
-import { Firestore, collection, CollectionReference } from 'firebase/firestore';
-import { AbstractFirestoreDocument } from '../lib/firestore/document';
-import { FirestoreCollection, makeFirestoreCollection } from '../lib/firestore/firestore';
-import { makeSnapshotConverterFunctions } from '../lib/firestore/snapshot';
-import { firestoreBoolean, firestoreString } from '../lib/firestore/snapshot.field';
+import { makeSnapshotConverterFunctions, firestoreBoolean, firestoreString, CollectionReference, FirestoreCollection, FirestoreContext, AbstractFirestoreDocument } from '../lib/common';
 
 // MARK: Test Item
 /**
@@ -40,16 +36,16 @@ export const testItemConverter = makeSnapshotConverterFunctions<TestItem>({
  * @param firestore 
  * @returns 
  */
-export function testItemCollectionReference(firestore: Firestore): CollectionReference<TestItem> {
-  return collection(firestore, testItemCollectionPath).withConverter<TestItem>(testItemConverter);
+export function testItemCollectionReference(context: FirestoreContext): CollectionReference<TestItem> {
+  return context.collection(testItemCollectionPath).withConverter<TestItem>(testItemConverter);
 }
 
 export type TestItemFirestoreCollection = FirestoreCollection<TestItem, TestItemDocument>;
 
-export function testItemFirestoreCollection(firestore: Firestore): TestItemFirestoreCollection {
-  return makeFirestoreCollection({
+export function testItemFirestoreCollection(context: FirestoreContext): TestItemFirestoreCollection {
+  return context.firestoreCollection({
     itemsPerPage: 50,
-    collection: testItemCollectionReference(firestore),
+    collection: testItemCollectionReference(context.firestore),
     makeDocument: (a, d) => new TestItemDocument(a, d)
   });
 }

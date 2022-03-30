@@ -1,12 +1,11 @@
 import { AbstractWrappedFixtureWithInstance, JestTestWrappedContextFactoryBuilder, instanceWrapJestTestContextFactory } from '@dereekb/util';
 import { FirebaseTestingContextFixture } from './firebase';
-import { authorizedFirebase } from './firebase.context';
-import { testItemCollectionReference } from './firebase.context.item';
+import { testItemFirestoreCollection } from './firebase.context.item';
 
 // MARK: Test Item Testing Fixture
 export class TestItemCollectionFixtureInstance {
 
-  readonly testItemCollection = testItemCollectionReference(this.fixture.parent.firestore);
+  readonly testItemFirestoreCollection = testItemFirestoreCollection(this.fixture.parent.firestore);
 
   constructor(readonly fixture: TestItemCollectionFixture) { }
 
@@ -29,8 +28,3 @@ export function testWithTestItemFixture(config?: TestItemCollectionFirebaseConte
     // TODO: Utilize config here using the setup/teardown later if needed.
   });
 }
-
-/**
- * Tests within an authorized context.
- */
-export const authorizedTestWithTestItemCollection = testWithTestItemFixture()(authorizedFirebase);

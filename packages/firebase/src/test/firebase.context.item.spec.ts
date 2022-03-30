@@ -1,7 +1,5 @@
-import { setDoc } from '@firebase/firestore';
 import { TestItemCollectionFixture, testWithTestItemFixture } from './firebase.context.item.fixture';
 import { authorizedFirebase } from './firebase.context';
-import { doc, getDoc } from 'firebase/firestore';
 
 describe('testWithTestItemFixture', () => {
 
@@ -10,6 +8,8 @@ describe('testWithTestItemFixture', () => {
   testWrapper((f: TestItemCollectionFixture) => {
 
     it('should create a document', async () => {
+
+      f.instance.fixture.
 
       const documentRef = doc(f.instance.testItemCollection);
 

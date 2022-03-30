@@ -1,2 +1,2 @@
-export * from './firestore';
+export * from './common';
 export * from './model';

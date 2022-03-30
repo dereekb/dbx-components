@@ -1,12 +1,4 @@
-import { Firestore } from '@firebase/firestore';
-import {
-  TestEnvironmentConfig,
-  initializeTestEnvironment,
-  RulesTestEnvironment,
-  RulesTestContext,
-  TokenOptions,
-} from "@firebase/rules-unit-testing";
-
+import { Firestore } from '../lib/common';
 import { AbstractJestTestContextFixture, jestTestContextBuilder, JestTestContextFactory, Maybe } from "@dereekb/util";
 
 // import { connectFirestoreEmulator } from "firebase/firestore";
