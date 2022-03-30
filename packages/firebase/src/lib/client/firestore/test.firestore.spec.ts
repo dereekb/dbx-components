@@ -1,7 +1,7 @@
 import { DocumentSnapshot, DocumentReference, runTransaction, Transaction, Firestore } from '@firebase/firestore';
 import { MockItem, testItemCollectionReference, MockItemDocument, MockItemFirestoreCollection, testItemFirestoreCollection, authorizedTestWithMockItemCollection } from "../../../test";
 import { FirestoreDocumentContext, makeFirestoreCollection } from "../../common/firestore";
-import { transactionDocumentContext } from './context.transaction';
+import { transactionDocumentContext } from './driver.accessor.transaction';
 import { Maybe } from '@dereekb/util';
 import { firestoreClientDrivers } from './driver';
 

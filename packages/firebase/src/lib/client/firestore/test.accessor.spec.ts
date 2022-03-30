@@ -122,7 +122,6 @@ describe('FirestoreDocumentDataAccessor', () => {
 
       });
 
-
     });
 
   });

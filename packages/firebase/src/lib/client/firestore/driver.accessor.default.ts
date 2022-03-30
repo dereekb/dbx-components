@@ -1,11 +1,10 @@
-import { DocumentReference, DocumentSnapshot, UpdateData, WithFieldValue, setDoc, deleteDoc, getDoc, updateDoc } from "@firebase/firestore";
-import { fromRef } from 'rxfire/firestore';
+import { DocumentReference, DocumentSnapshot, UpdateData, WithFieldValue, getDoc } from "@firebase/firestore";
+import { deleteDoc, setDoc, updateDoc } from "firebase/firestore";
+import { fromRef } from "rxfire/firestore";
 import { Observable } from "rxjs";
-import { FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory } from "../../common/firestore";
+import { FirestoreDocumentContext, FirestoreDocumentContextType, FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory } from "../../common/firestore";
 
-/**
- * FirestoreDocumentDataAccessor implementation for a batch.
- */
+// MARK: Accessor
 export class DefaultFirestoreDocumentDataAccessor<T> implements FirestoreDocumentDataAccessor<T> {
 
   constructor(readonly documentRef: DocumentReference<T>) { }
@@ -32,14 +31,16 @@ export class DefaultFirestoreDocumentDataAccessor<T> implements FirestoreDocumen
 
 }
 
-/**
- * Creates a new FirestoreDocumentDataAccessorFactory for a Batch.
- * 
- * @param batch 
- * @returns 
- */
 export function defaultFirestoreAccessorFactory<T>(): FirestoreDocumentDataAccessorFactory<T> {
   return {
     accessorFor: (ref: DocumentReference<T>) => new DefaultFirestoreDocumentDataAccessor(ref)
   };
+}
+
+// MARK: Context
+export function defaultFirestoreDocumentContext<T>(): FirestoreDocumentContext<T> {
+  return {
+    contextType: FirestoreDocumentContextType.NONE,
+    accessorFactory: defaultFirestoreAccessorFactory<T>()
+  }
 }

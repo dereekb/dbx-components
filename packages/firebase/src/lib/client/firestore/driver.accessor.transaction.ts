@@ -1,7 +1,8 @@
 import { DocumentReference, DocumentSnapshot, Transaction, UpdateData, WithFieldValue } from "@firebase/firestore";
 import { from, Observable } from "rxjs";
-import { FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory } from "../../common/firestore";
+import { FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, FirestoreDocumentContext, FirestoreDocumentContextType } from "../../common/firestore";
 
+// MARK: Accessor
 /**
  * FirestoreDocumentDataAccessor implementation for a transaction.
  */
@@ -44,4 +45,18 @@ export function transactionAccessorFactory<T>(transaction: Transaction): Firesto
   return {
     accessorFor: (ref: DocumentReference<T>) => new TransactionFirestoreDocumentDataAccessor(transaction, ref)
   };
+}
+
+// MARK: Context
+export class TransactionFirestoreDocumentContext<T> implements FirestoreDocumentContext<T> {
+
+  readonly contextType = FirestoreDocumentContextType.TRANSACTION;
+  readonly accessorFactory = transactionAccessorFactory<T>(this.transaction);
+
+  constructor(readonly transaction: Transaction) { }
+
+}
+
+export function transactionDocumentContext<T>(transaction: Transaction): TransactionFirestoreDocumentContext<T> {
+  return new TransactionFirestoreDocumentContext<T>(transaction);
 }
