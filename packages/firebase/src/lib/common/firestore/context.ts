@@ -1,11 +1,12 @@
 import { FirestoreAccessorDriver } from './accessor/driver';
 import { FirestoreDocument } from './accessor/document';
 import { makeFirestoreCollection, FirestoreCollection, FirestoreDrivers, FirestoreCollectionConfig } from "./firestore";
-import { Firestore } from "./types";
+import { CollectionReference, DocumentData, Firestore } from "./types";
 
 export interface FirestoreContext<F extends Firestore = Firestore> extends Pick<FirestoreAccessorDriver, 'collection'> {
   readonly firestore: F;
   readonly drivers: FirestoreDrivers;
+  collection<T = DocumentData>(collectionPath: string): CollectionReference<T>;
   firestoreCollection<T, D extends FirestoreDocument<T>>(config: FirestoreContextCollectionConfig<T, D>): FirestoreCollection<T, D>;
 }
 
@@ -18,7 +19,7 @@ export function firestoreContextFactory<F>(drivers: FirestoreDrivers): Firestore
     const context: FirestoreContext<F> = {
       firestore,
       drivers,
-      collection: drivers.firestoreAccessorDriver.collection,
+      collection: (collectionPath: string) => drivers.firestoreAccessorDriver.collection(firestore, collectionPath),
       firestoreCollection: <T, D extends FirestoreDocument<T>>(config: FirestoreContextCollectionConfig<T, D>) => makeFirestoreCollection({
         ...config,
         firestoreQueryDriver: drivers.firestoreQueryDriver,

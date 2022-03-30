@@ -1,9 +1,9 @@
-import { DocumentData, CollectionReference, DocumentReference } from '../types';
+import { DocumentData, CollectionReference, DocumentReference, Firestore } from '../types';
 import { DefaultFirestoreDocumentContextFactory } from './context.default';
 import { WriteBatchFirestoreDocumentContextFactory } from './context.batch';
 import { TransactionFirestoreDocumentContextFactory } from './context.transaction';
 
-export type FirestoreAccessorDriverCollectionRefFunction = <T = DocumentData>(collectionPath: string) => CollectionReference<T>;
+export type FirestoreAccessorDriverCollectionRefFunction = <T = DocumentData>(firestore: Firestore, collectionPath: string) => CollectionReference<T>;
 export type FirestoreAccessorDriverDocumentRefFunction = <T = DocumentData>(collection: CollectionReference<T>, path?: string) => DocumentReference<T>;
 
 /**

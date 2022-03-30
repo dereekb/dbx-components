@@ -1,6 +1,6 @@
-import { DocumentReference, DocumentSnapshot, UpdateData, WithFieldValue, WriteBatch, getDoc, collection } from "@firebase/firestore";
+import { DocumentReference, DocumentSnapshot, UpdateData, WithFieldValue, WriteBatch, getDoc } from "@firebase/firestore";
 import { from, Observable } from "rxjs";
-import { FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory } from "./accessor";
+import { FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory } from "../../common/firestore";
 
 /**
  * FirestoreDocumentDataAccessor implementation for a batch.

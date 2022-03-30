@@ -1,6 +1,6 @@
 import { DocumentReference, DocumentSnapshot, Transaction, UpdateData, WithFieldValue } from "@firebase/firestore";
 import { from, Observable } from "rxjs";
-import { FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory } from "./accessor";
+import { FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory } from "../../common/firestore";
 
 /**
  * FirestoreDocumentDataAccessor implementation for a transaction.

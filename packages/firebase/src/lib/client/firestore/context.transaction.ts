@@ -1,6 +1,6 @@
 import { Transaction } from "@firebase/firestore";
 import { transactionAccessorFactory } from "./accessor.transaction";
-import { FirestoreDocumentContext, FirestoreDocumentContextType } from "./context";
+import { FirestoreDocumentContext, FirestoreDocumentContextType } from "../../common/firestore";
 
 // MARK: Transaction
 export class TransactionFirestoreDocumentContext<T> implements FirestoreDocumentContext<T> {

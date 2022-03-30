@@ -1,11 +1,11 @@
 import { makeSnapshotConverterFunctions } from './snapshot';
-import { TestItem } from "../../../../test/firebase.context.item";
+import { MockItem } from "../../../../test/common/firebase.mock.item";
 import { firestoreBoolean } from './snapshot.field';
 
 describe('makeSnapshotConverterFunctions()', () => {
 
   it('should create conversion functions for the input.', () => {
-    const result = makeSnapshotConverterFunctions<TestItem>({
+    const result = makeSnapshotConverterFunctions<MockItem>({
       fields: {
         test: firestoreBoolean({ default: false, defaultBeforeSave: false })
       }

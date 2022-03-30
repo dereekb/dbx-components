@@ -1,17 +1,16 @@
-import { DocumentReference, runTransaction, Transaction, Firestore } from '@firebase/firestore';
-import { makeFirestoreCollection } from '../../common/firestore/firestore';
-import { TestItem, testItemCollectionReference, TestItemDocument, TestItemFirestoreCollection, testItemFirestoreCollection } from "../../../test/firebase.context.item";
-import { authorizedTestWithTestItemCollection } from "../../../test/firebase.context.item.fixture";
-import { FirestoreDocumentContext } from './context';
+import { DocumentSnapshot, DocumentReference, runTransaction, Transaction, Firestore } from '@firebase/firestore';
+import { MockItem, testItemCollectionReference, MockItemDocument, MockItemFirestoreCollection, testItemFirestoreCollection, authorizedTestWithMockItemCollection } from "../../../test";
+import { FirestoreDocumentContext, makeFirestoreCollection } from "../../common/firestore";
 import { transactionDocumentContext } from './context.transaction';
 import { Maybe } from '@dereekb/util';
+import { firestoreClientDrivers } from './driver';
 
 describe('FirestoreCollection', () => {
 
-  authorizedTestWithTestItemCollection((f) => {
+  authorizedTestWithMockItemCollection((f) => {
 
     let firestore: Firestore;
-    let firestoreCollection: TestItemFirestoreCollection;
+    let firestoreCollection: MockItemFirestoreCollection;
 
     beforeEach(async () => {
       firestore = f.parent.firestore;
@@ -24,8 +23,9 @@ describe('FirestoreCollection', () => {
 
         firestoreCollection = makeFirestoreCollection({
           itemsPerPage,
-          collection: testItemCollectionReference(firestore),
-          makeDocument: (a, d) => new TestItemDocument(a, d)
+          collection: testItemCollectionReference(f.parent.context),
+          makeDocument: (a, d) => new MockItemDocument(a, d),
+          ...firestoreClientDrivers()
         });
 
         expect(firestoreCollection).toBeDefined();
@@ -35,7 +35,7 @@ describe('FirestoreCollection', () => {
     });
 
     beforeEach(async () => {
-      firestoreCollection = testItemFirestoreCollection(firestore);
+      firestoreCollection = testItemFirestoreCollection(f.parent.context);
     });
 
     describe('documentAccessor()', () => {
@@ -47,11 +47,11 @@ describe('FirestoreCollection', () => {
 
       it('should create a new document accessor instance that uses the passed context.', async () => {
 
-        let ref: Maybe<DocumentReference<TestItem>>;
+        let ref: Maybe<DocumentReference<MockItem>>;
 
         await runTransaction(firestore, async (transaction: Transaction) => {
 
-          const context: FirestoreDocumentContext<TestItem> = transactionDocumentContext(transaction);
+          const context: FirestoreDocumentContext<MockItem> = transactionDocumentContext(transaction);
           const result = firestoreCollection.documentAccessor(context);
           expect(result).toBeDefined();
 
@@ -67,7 +67,7 @@ describe('FirestoreCollection', () => {
         expect(ref).toBeDefined();
 
         const loadedDoc = firestoreCollection.documentAccessor().loadDocument(ref!);
-        const loadedData = await loadedDoc.accessor.get();
+        const loadedData: DocumentSnapshot<MockItem> = await loadedDoc.accessor.get() as DocumentSnapshot<MockItem>;
 
         expect(loadedData.exists()).toBe(true);
       });

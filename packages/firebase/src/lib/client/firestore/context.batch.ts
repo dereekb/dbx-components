@@ -1,11 +1,11 @@
 import { WriteBatch } from "@firebase/firestore";
 import { writeBatchAccessorFactory } from "./accessor.batch";
-import { FirestoreDocumentContext, FirestoreDocumentContextType } from "./context";
+import { FirestoreDocumentContext, FirestoreDocumentContextType } from "../../common/firestore";
 
 // MARK: Batch
 export class WriteBatchFirestoreDocumentContext<T> implements FirestoreDocumentContext<T> {
 
-  readonly contextType = FirestoreDocumentContextType.TRANSACTION;
+  readonly contextType = FirestoreDocumentContextType.BATCH;
   readonly accessorFactory = writeBatchAccessorFactory<T>(this.batch);
 
   constructor(readonly batch: WriteBatch) { }

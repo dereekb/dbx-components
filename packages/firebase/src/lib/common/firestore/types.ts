@@ -127,10 +127,8 @@ export interface QuerySnapshot<T = DocumentData> {
   readonly docs: Array<QueryDocumentSnapshot<T>>;
   readonly size: number;
   readonly empty: boolean;
-  readonly readTime: Timestamp;
-  docChanges(): DocumentChange<T>[];
   forEach(callback: (result: QueryDocumentSnapshot<T>) => void, thisArg?: any): void;
-  isEqual(other: QuerySnapshot<T>): boolean;
+  docChanges(): DocumentChange<T>[];
 }
 
 export interface QueryDocumentSnapshot<T = DocumentData> extends DocumentSnapshot<T> {
@@ -146,15 +144,4 @@ export declare interface DocumentChange<T = DocumentData> {
   readonly doc: QueryDocumentSnapshot<T>;
   readonly oldIndex: number;
   readonly newIndex: number;
-}
-
-export interface QuerySnapshot<T = DocumentData> {
-  readonly query: Query<T>;
-  readonly docs: Array<QueryDocumentSnapshot<T>>;
-  readonly size: number;
-  readonly empty: boolean;
-  readonly readTime: Timestamp;
-  docChanges(): DocumentChange<T>[];
-  forEach(callback: (result: QueryDocumentSnapshot<T>) => void, thisArg?: any): void;
-  isEqual(other: QuerySnapshot<T>): boolean;
 }

@@ -1,23 +1,16 @@
-import { FirestoreContext } from './../../common/firestore/context';
-import { Firestore } from '@firebase/firestore';
-import { TestItem, TestItemDocument, TestItemFirestoreCollection, testItemFirestoreCollection } from "../../../test/firebase.context.item";
-import { authorizedTestWithTestItemCollection } from '../../../test/firebase.context.item.fixture';
+import { DocumentSnapshot } from '@firebase/firestore';
+import { MockItem, MockItemDocument, MockItemFirestoreCollection, testItemFirestoreCollection, authorizedTestWithMockItemCollection } from "../../../test";
 import { FirestoreDocumentAccessor } from '../../common';
-import { makeFirestoreContext } from './firestore';
 
 describe('FirestoreDocumentAccessorInstance', () => {
 
-  authorizedTestWithTestItemCollection((f) => {
+  authorizedTestWithMockItemCollection((f) => {
 
-    let firestore: Firestore;
-    let firestoreCollection: TestItemFirestoreCollection;
-    let firestoreContext: FirestoreContext;
-    let documentAccessor: FirestoreDocumentAccessor<TestItem, TestItemDocument>;
+    let firestoreCollection: MockItemFirestoreCollection;
+    let documentAccessor: FirestoreDocumentAccessor<MockItem, MockItemDocument>;
 
     beforeEach(async () => {
-      firestore = f.parent.firestore;
-      firestoreContext = makeFirestoreContext(firestore);
-      firestoreCollection = testItemFirestoreCollection(firestoreContext);
+      firestoreCollection = testItemFirestoreCollection(f.parent.context);
       documentAccessor = firestoreCollection.documentAccessor();
     });
 
@@ -27,7 +20,7 @@ describe('FirestoreDocumentAccessorInstance', () => {
         const document = documentAccessor.newDocument();
         expect(document).toBeDefined();
 
-        const snapshot = await document.accessor.get();
+        const snapshot = await document.accessor.get() as DocumentSnapshot<MockItem>;
         expect(snapshot).toBeDefined();
         expect(snapshot.exists()).toBe(false);
       });
@@ -43,7 +36,7 @@ describe('FirestoreDocumentAccessorInstance', () => {
         const document = documentAccessor.loadDocument(newDocument.documentRef);
         expect(document).toBeDefined();
 
-        const snapshot = await document.accessor.get();
+        const snapshot = await document.accessor.get() as DocumentSnapshot<MockItem>;
         expect(snapshot).toBeDefined();
         expect(snapshot.exists()).toBe(true);
       });
@@ -59,7 +52,7 @@ describe('FirestoreDocumentAccessorInstance', () => {
         const document = documentAccessor.loadDocumentFrom(newDocument);
         expect(document).toBeDefined();
 
-        const snapshot = await document.accessor.get();
+        const snapshot = await document.accessor.get() as DocumentSnapshot<MockItem>;
         expect(snapshot).toBeDefined();
         expect(snapshot.exists()).toBe(true);
       });

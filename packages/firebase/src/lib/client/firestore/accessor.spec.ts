@@ -1,21 +1,18 @@
-import { Firestore } from '@firebase/firestore';
+import { DocumentSnapshot } from '@firebase/firestore';
 import { first } from 'rxjs';
-import { TestItem, TestItemDocument, TestItemFirestoreCollection, testItemFirestoreCollection } from "../../../test/firebase.context.item";
-import { authorizedTestWithTestItemCollection } from "../../../test/firebase.context.item.fixture";
-import { FirestoreDocumentAccessor } from './document';
+import { MockItem, MockItemDocument, MockItemFirestoreCollection, testItemFirestoreCollection, authorizedTestWithMockItemCollection } from "../../../test";
+import { FirestoreDocumentAccessor } from '../../common';
 
 describe('FirestoreDocumentDataAccessor', () => {
 
-  authorizedTestWithTestItemCollection((f) => {
+  authorizedTestWithMockItemCollection((f) => {
 
-    let firestore: Firestore;
-    let firestoreCollection: TestItemFirestoreCollection;
-    let documentAccessor: FirestoreDocumentAccessor<TestItem, TestItemDocument>;
-    let document: TestItemDocument;
+    let firestoreCollection: MockItemFirestoreCollection;
+    let documentAccessor: FirestoreDocumentAccessor<MockItem, MockItemDocument>;
+    let document: MockItemDocument;
 
     beforeEach(async () => {
-      firestore = f.parent.firestore;
-      firestoreCollection = testItemFirestoreCollection(firestore);
+      firestoreCollection = testItemFirestoreCollection(f.parent.context);
       documentAccessor = firestoreCollection.documentAccessor();
       document = documentAccessor.newDocument();
     });
@@ -26,7 +23,7 @@ describe('FirestoreDocumentDataAccessor', () => {
         const document = documentAccessor.newDocument();
         expect(document).toBeDefined();
 
-        const snapshot = await document.accessor.get();
+        const snapshot = await document.accessor.get() as DocumentSnapshot<MockItem>;
         expect(snapshot).toBeDefined();
         expect(snapshot.exists()).toBe(false);
       });
@@ -41,7 +38,7 @@ describe('FirestoreDocumentDataAccessor', () => {
 
         document.accessor.stream().pipe(first()).subscribe((snapshot) => {
           expect(snapshot).toBeDefined();
-          expect(snapshot.exists()).toBe(false);
+          expect((snapshot as DocumentSnapshot<MockItem>).exists()).toBe(false);
           done();
         });
       });
@@ -61,7 +58,7 @@ describe('FirestoreDocumentDataAccessor', () => {
         it('should return the document snapshot.', (done) => {
           document.accessor.stream().pipe(first()).subscribe((snapshot) => {
             expect(snapshot).toBeDefined();
-            expect(snapshot.exists()).toBe(true);
+            expect((snapshot as DocumentSnapshot<MockItem>).exists()).toBe(true);
             done();
           });
         });
@@ -73,7 +70,7 @@ describe('FirestoreDocumentDataAccessor', () => {
         it('should return the document snapshot.', async () => {
           const snapshot = await document.accessor.get();
           expect(snapshot).toBeDefined();
-          expect(snapshot.exists()).toBe(true);
+          expect((snapshot as DocumentSnapshot<MockItem>).exists()).toBe(true);
         });
 
       });
@@ -81,12 +78,12 @@ describe('FirestoreDocumentDataAccessor', () => {
       describe('delete()', () => {
 
         it(`should delete the document.`, async () => {
-          let snapshot = await document.accessor.get();
+          let snapshot = await document.accessor.get() as DocumentSnapshot<MockItem>;
           expect(snapshot.exists()).toBe(true);
 
           await document.accessor.delete();
 
-          snapshot = await document.accessor.get();
+          snapshot = await document.accessor.get() as DocumentSnapshot<MockItem>;
           expect(snapshot.exists()).toBe(false);
         });
 
