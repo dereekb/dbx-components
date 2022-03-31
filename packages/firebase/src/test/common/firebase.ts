@@ -21,7 +21,7 @@ export class FirestoreTestInstance {
 
 }
 
-export class FirebaseTestingContextFixture<F extends FirestoreTestInstance = FirestoreTestInstance> extends AbstractJestTestContextFixture<F> {
+export class FirestoreTestingContextFixture<F extends FirestoreTestInstance = FirestoreTestInstance> extends AbstractJestTestContextFixture<F> {
 
   get firestore(): Firestore {
     return this.instance.firestore;

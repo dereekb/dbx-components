@@ -1,5 +1,5 @@
 import { ModelFieldsConversionConfig, makeModelConversionFunctions, Maybe, ApplyConversionFunctionWithOptions } from "@dereekb/util";
-import { PartialWithFieldValue, DocumentData, SnapshotOptions, SnapshotSetOptions, WithFieldValue, DocumentSnapshot, FirestoreDataConverter } from "../types";
+import { PartialWithFieldValue, DocumentData, SnapshotOptions, SetOptions, WithFieldValue, DocumentSnapshot, FirestoreDataConverter } from "../types";
 
 // MARK: From
 export interface SnapshotConverterConfig<T extends object> {
@@ -13,7 +13,7 @@ export interface SnapshotConverterFunctions<T extends object> extends FirestoreD
 
 export type SnapshotConverterFromFirestoreFunction<T extends object> = (snapshot: DocumentSnapshot, options?: SnapshotOptions) => T;
 export type SnapshotConverterFromFunction<T extends object> = ApplyConversionFunctionWithOptions<DocumentSnapshot, T, SnapshotOptions>;
-export type SnapshotConverterToFunction<T extends object> = ApplyConversionFunctionWithOptions<T, DocumentData, SnapshotSetOptions>;
+export type SnapshotConverterToFunction<T extends object> = ApplyConversionFunctionWithOptions<T, DocumentData, SetOptions>;
 
 export function makeSnapshotConverterFunctions<T extends object>(config: SnapshotConverterConfig<T>): SnapshotConverterFunctions<T> {
   const { from: fromData, to: toData } = makeModelConversionFunctions(config.fields);
@@ -23,7 +23,7 @@ export function makeSnapshotConverterFunctions<T extends object>(config: Snapsho
     return fromData(data);
   };
 
-  const to: SnapshotConverterToFunction<T> = (input: T, target?: Maybe<Partial<DocumentData>>, options?: SnapshotSetOptions) => {
+  const to: SnapshotConverterToFunction<T> = (input: T, target?: Maybe<Partial<DocumentData>>, options?: SetOptions) => {
     return toData(input);
   };
 
@@ -31,6 +31,6 @@ export function makeSnapshotConverterFunctions<T extends object>(config: Snapsho
     from,
     to,
     fromFirestore: (snapshot: DocumentSnapshot, options?: SnapshotOptions) => from(snapshot, undefined, options),
-    toFirestore: (modelObject: WithFieldValue<T> | PartialWithFieldValue<T>, options?: SnapshotSetOptions) => to(modelObject as T, undefined, options)
+    toFirestore: (modelObject: WithFieldValue<T> | PartialWithFieldValue<T>, options?: SetOptions) => to(modelObject as T, undefined, options)
   }
 }

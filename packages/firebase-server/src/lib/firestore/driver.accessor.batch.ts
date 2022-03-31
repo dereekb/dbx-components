@@ -1,6 +1,6 @@
-import { DocumentReference, DocumentSnapshot, UpdateData, WithFieldValue, WriteBatch, getDoc } from "@firebase/firestore";
+import { DocumentReference, WithFieldValue, WriteBatch, DocumentSnapshot, UpdateData as GoogleCloudUpdateData } from "@google-cloud/firestore";
 import { from, Observable } from "rxjs";
-import { FirestoreDocumentContext, FirestoreDocumentContextType, FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, SetOptions } from "../../common/firestore";
+import { FirestoreDocumentContext, FirestoreDocumentContextType, FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, FirestoreDocumentDeleteParams, FirestoreDocumentUpdateParams, UpdateData } from "@dereekb/firebase";
 
 // MARK: Accessor
 /**
@@ -11,29 +11,29 @@ export class WriteBatchFirestoreDocumentDataAccessor<T> implements FirestoreDocu
   constructor(readonly batch: WriteBatch, readonly documentRef: DocumentReference<T>) { }
 
   stream(): Observable<DocumentSnapshot<T>> {
-    return from(this.get());
+    return from(this.get());  // todo
   }
 
   exists(): Promise<boolean> {
-    return this.get().then(x => x.exists());
+    return this.get().then(x => x.exists);
   }
 
   get(): Promise<DocumentSnapshot<T>> {
-    return getDoc(this.documentRef);
+    return this.documentRef.get();
   }
 
-  delete(): Promise<void> {
-    this.batch.delete(this.documentRef);
+  delete(params?: FirestoreDocumentDeleteParams): Promise<void> {
+    this.batch.delete(this.documentRef, params?.precondition);
     return Promise.resolve();
   }
 
-  set(data: WithFieldValue<T>, options?: SetOptions): Promise<void> {
-    this.batch.set(this.documentRef, data, options as SetOptions);
+  set(data: WithFieldValue<T>): Promise<void> {
+    this.batch.set(this.documentRef, data);
     return Promise.resolve();
   }
 
-  update(data: UpdateData<T>): Promise<void> {
-    this.batch.update(this.documentRef, data);
+  update(data: UpdateData<T>, params?: FirestoreDocumentUpdateParams): Promise<void> {
+    this.batch.update(this.documentRef, data as GoogleCloudUpdateData<T>); // , params?.precondition);
     return Promise.resolve();
   }
 

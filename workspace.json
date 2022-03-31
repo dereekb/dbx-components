@@ -899,6 +899,13 @@
       "projectType": "library",
       "targets": {
         "build": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "command": "npx nx run firebase-server:build-base",
+            "color": true
+          }
+        },
+        "build-base": {
           "executor": "@nrwl/node:package",
           "outputs": ["{options.outputPath}"],
           "options": {
@@ -916,12 +923,33 @@
             "lintFilePatterns": ["packages/firebase-server/**/*.ts"]
           }
         },
-        "test": {
+        "run-tests": {
           "executor": "@nrwl/jest:jest",
-          "outputs": ["coverage/packages/firebase-server"],
+          "outputs": [
+            "coverage/packages/firebase-server",
+            "./.reports/jest/firebase-server.junit.xml"
+          ],
           "options": {
             "jestConfig": "packages/firebase-server/jest.config.js",
             "passWithNoTests": true
+          }
+        },
+        "watch": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "command": "./exec-with-emulator.sh 'npx nx run-tests firebase-server --watch'"
+          }
+        },
+        "test": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "command": "./exec-with-emulator.sh 'npx nx run-tests firebase-server'"
+          }
+        },
+        "publish-npmjs": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "command": "cd ./dist/packages/firebase-server && npm publish"
           }
         }
       },

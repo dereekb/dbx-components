@@ -1,8 +1,17 @@
+import { WriteResult } from '@google-cloud/firestore';
 import { filterMaybe } from '@dereekb/rxjs';
 import { Maybe } from "@dereekb/util";
-import { SnapshotOptions, DocumentReference, DocumentSnapshot, UpdateData, WithFieldValue } from "../types";
+import { SnapshotOptions, DocumentReference, DocumentSnapshot, UpdateData, WithFieldValue, PartialWithFieldValue, SetOptions, Precondition } from "../types";
 import { map, Observable, OperatorFunction } from 'rxjs';
 import { FirestoreDocumentReference } from '../reference';
+
+export interface FirestoreDocumentDeleteParams {
+  precondition?: Precondition;
+}
+
+export interface FirestoreDocumentUpdateParams {
+  precondition?: Precondition;
+}
 
 /**
  * Firestore database accessor instance used to retrieve and make changes to items in the database.
@@ -17,21 +26,26 @@ export interface FirestoreDocumentDataAccessor<T> extends FirestoreDocumentRefer
    */
   get(): Promise<DocumentSnapshot<T>>;
   /**
+   * Whether or not the target object exists.
+   */
+  exists(): Promise<boolean>;
+  /**
    * Deletes the document
    */
-  delete(): Promise<any | void>;
+  delete(params?: FirestoreDocumentDeleteParams): Promise<WriteResult | void>;
   /**
    * Sets the data in the database.
    * 
    * @param data 
    */
-  set(data: WithFieldValue<T>): Promise<void>;
+  set(data: WithFieldValue<T>): Promise<WriteResult | void>;
+  set(data: PartialWithFieldValue<T>, options: SetOptions): Promise<WriteResult | void>;
   /**
    * Updates the data in the database.
    * 
    * @param data 
    */
-  update(data: UpdateData<T>): Promise<void>;
+  update(data: UpdateData<T>, params?: FirestoreDocumentUpdateParams): Promise<WriteResult | void>;
 }
 
 /**

@@ -1,5 +1,5 @@
 import { ArrayOrValue } from '@dereekb/util';
-import { DocumentSnapshot, getDocs, limit, query, QueryConstraint, startAt } from "firebase/firestore";
+import { DocumentSnapshot, getDocs, limit, query, QueryConstraint, startAt, Query as FirebaseFirestoreQuery } from "firebase/firestore";
 import { FIRESTORE_LIMIT_QUERY_CONSTRAINT_TYPE, FIRESTORE_START_AT_QUERY_CONSTRAINT_TYPE, FullFirestoreQueryConstraintHandlersMapping, makeFirestoreQueryConstraintFunctionsDriver, Query, QuerySnapshot } from "../../common";
 import { FirestoreQueryConstraintFunctionsDriver, FirestoreQueryDriver } from "../../common/firestore/query/driver";
 
@@ -12,7 +12,7 @@ export function addConstraintToBuilder<T>(builder: FirestoreClientQueryBuilder<T
   return {
     query: builder.query,
     constraints: builder.constraints.concat(constraint)
-  }
+  };
 }
 
 export const FIRESTORE_CLIENT_QUERY_CONSTRAINT_HANDLER_MAPPING: FullFirestoreQueryConstraintHandlersMapping<FirestoreClientQueryBuilder> = {
@@ -24,7 +24,7 @@ export function firestoreClientQueryConstraintFunctionsDriver(): FirestoreQueryC
   return makeFirestoreQueryConstraintFunctionsDriver({
     mapping: FIRESTORE_CLIENT_QUERY_CONSTRAINT_HANDLER_MAPPING,
     init: <T>(query: Query<T>) => ({ query, constraints: [] }),
-    build: <T>({ query: initialQuery, constraints }: FirestoreClientQueryBuilder<T>) => query(initialQuery, ...constraints)
+    build: <T>({ query: initialQuery, constraints }: FirestoreClientQueryBuilder<T>) => query(initialQuery as FirebaseFirestoreQuery<T>, ...constraints)
   });
 }
 
@@ -32,7 +32,7 @@ export function firestoreClientQueryDriver(): FirestoreQueryDriver {
   return {
     ...firestoreClientQueryConstraintFunctionsDriver(),
     getDocs<T>(query: Query<T>): Promise<QuerySnapshot<T>> {
-      return getDocs(query);
+      return getDocs(query as FirebaseFirestoreQuery<T>);
     }
   };
 }

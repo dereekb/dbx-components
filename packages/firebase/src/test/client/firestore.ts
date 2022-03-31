@@ -1,4 +1,4 @@
-import { FirestoreTestContext, FirestoreTestInstance, FirebaseTestingContextFixture } from '../common/firebase';
+import { FirestoreTestContext, FirestoreTestInstance, FirestoreTestingContextFixture } from '../common/firebase';
 import { jestTestContextBuilder, Maybe } from "@dereekb/util";
 import { makeFirestoreContext } from '../../lib/client/firestore/firestore';
 import {
@@ -8,15 +8,16 @@ import {
   RulesTestContext,
   TokenOptions,
 } from "@firebase/rules-unit-testing";
+import { makeTestingFirestoreContext } from '../common/firestore.mock';
 
-export interface FirebaseTestingRulesContextConfig {
+export interface RulesUnitTestingContextConfig {
   userId: string;
   tokenOptions?: Maybe<TokenOptions>;
 }
 
-export interface FirebaseTestingConfig {
+export interface RulesUnitTestingConfig {
   testEnvironment: TestEnvironmentConfig;
-  rulesContext?: Maybe<FirebaseTestingRulesContextConfig>;
+  rulesContext?: Maybe<RulesUnitTestingContextConfig>;
   retainFirestoreBetweenTests?: boolean;
 }
 
@@ -27,7 +28,7 @@ export interface RulesUnitTestFirestoreTestContext extends FirestoreTestContext 
 
 export function makeRulesTestFirestoreContext(rulesTestEnvironment: RulesTestEnvironment, rulesTestContext: RulesTestContext): FirestoreTestContext {
   const context: RulesUnitTestFirestoreTestContext = {
-    ...makeFirestoreContext(rulesTestContext.firestore()),
+    ...makeTestingFirestoreContext(makeFirestoreContext(rulesTestContext.firestore())),
     rulesTestContext,
     rulesTestEnvironment,
     clearFirestore: () => rulesTestEnvironment.clearFirestore()
@@ -46,16 +47,16 @@ export class RulesUnitTestFirestoreTestInstance extends FirestoreTestInstance {
 
 }
 
-export class RulesUnitTestFirebaseTestingContextFixture extends FirebaseTestingContextFixture<RulesUnitTestFirestoreTestInstance> { }
+export class RulesUnitTestFirebaseTestingContextFixture extends FirestoreTestingContextFixture<RulesUnitTestFirestoreTestInstance> { }
 
 /**
- * A JestTestContextBuilderFunction for building firebase test context factories using @firebase/firebase and @firebase/rules-unit-testing.
+ * A JestTestContextBuilderFunction for building firebase test context factories using @firebase/firebase and @firebase/rules-unit-testing. This means CLIENT TESTING ONLY. For server testing, look at @dereekb/firestore-server.
  * 
  * This can be used to easily build a testing context that sets up RulesTestEnvironment for tests that sets itself up and tears itself down.
  */
-export const firebaseTestBuilder = jestTestContextBuilder<RulesUnitTestFirestoreTestInstance, RulesUnitTestFirebaseTestingContextFixture, FirebaseTestingConfig>({
-  buildConfig: (input?: Partial<FirebaseTestingConfig>) => {
-    const config: FirebaseTestingConfig = {
+export const firestoreTestBuilder = jestTestContextBuilder<RulesUnitTestFirestoreTestInstance, RulesUnitTestFirebaseTestingContextFixture, RulesUnitTestingConfig>({
+  buildConfig: (input?: Partial<RulesUnitTestingConfig>) => {
+    const config: RulesUnitTestingConfig = {
       testEnvironment: input?.testEnvironment ?? {},
       rulesContext: input?.rulesContext
     };
@@ -78,7 +79,7 @@ export const firebaseTestBuilder = jestTestContextBuilder<RulesUnitTestFirestore
 });
 
 // MARK: Internal
-function rulesTestContextForConfig(rulesTestEnv: RulesTestEnvironment, testingRulesConfig?: Maybe<FirebaseTestingRulesContextConfig>): RulesTestContext {
+function rulesTestContextForConfig(rulesTestEnv: RulesTestEnvironment, testingRulesConfig?: Maybe<RulesUnitTestingContextConfig>): RulesTestContext {
   let rulesTestContext: RulesTestContext;
 
   if (testingRulesConfig != null) {

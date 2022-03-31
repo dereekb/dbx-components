@@ -1,13 +1,13 @@
-import { DocumentSnapshot, DocumentReference, runTransaction, Transaction, Firestore } from '@firebase/firestore';
-import { MockItem, testItemCollectionReference, MockItemDocument, MockItemFirestoreCollection, testItemFirestoreCollection, authorizedTestWithMockItemCollection } from "../../../test";
-import { FirestoreDocumentContext, makeFirestoreCollection } from "../../common/firestore";
+import { DocumentSnapshot, DocumentReference, Transaction, Firestore } from '@google-cloud/firestore';
+import { MockItem, testItemCollectionReference, MockItemDocument, MockItemFirestoreCollection, testItemFirestoreCollection, authorizedTestWithMockItemCollection, FirestoreDocumentContext, makeFirestoreCollection } from "@dereekb/firebase";
 import { transactionDocumentContext } from './driver.accessor.transaction';
 import { Maybe } from '@dereekb/util';
-import { firestoreClientDrivers } from './driver';
+import { adminTestWithMockItemCollection } from '../../test/firestore.fixture.admin';
+import { googleCloudFirestoreDrivers } from './driver';
 
 describe('FirestoreCollection', () => {
 
-  authorizedTestWithMockItemCollection((f) => {
+  adminTestWithMockItemCollection((f) => {
 
     let firestore: Firestore;
     let firestoreCollection: MockItemFirestoreCollection;
@@ -25,7 +25,7 @@ describe('FirestoreCollection', () => {
           itemsPerPage,
           collection: testItemCollectionReference(f.parent.context),
           makeDocument: (a, d) => new MockItemDocument(a, d),
-          ...firestoreClientDrivers()
+          ...googleCloudFirestoreDrivers()
         });
 
         expect(firestoreCollection).toBeDefined();
@@ -49,7 +49,7 @@ describe('FirestoreCollection', () => {
 
         let ref: Maybe<DocumentReference<MockItem>>;
 
-        await runTransaction(firestore, async (transaction: Transaction) => {
+        await firestore.runTransaction(async (transaction: Transaction) => {
 
           const context: FirestoreDocumentContext<MockItem> = transactionDocumentContext(transaction);
           const result = firestoreCollection.documentAccessor(context);
@@ -69,7 +69,7 @@ describe('FirestoreCollection', () => {
         const loadedDoc = firestoreCollection.documentAccessor().loadDocument(ref!);
         const loadedData: DocumentSnapshot<MockItem> = await loadedDoc.accessor.get() as DocumentSnapshot<MockItem>;
 
-        expect(loadedData.exists()).toBe(true);
+        expect(loadedData.exists).toBe(true);
       });
 
     });

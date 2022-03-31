@@ -1,6 +1,6 @@
-import { DocumentReference, DocumentSnapshot, Transaction, UpdateData, WithFieldValue } from "@firebase/firestore";
+import { DocumentReference, DocumentSnapshot, Transaction, UpdateData, WithFieldValue, SetOptions } from "@google-cloud/firestore";
 import { from, Observable } from "rxjs";
-import { FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, FirestoreDocumentContext, FirestoreDocumentContextType, SetOptions } from "../../common/firestore";
+import { FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, FirestoreDocumentContext, FirestoreDocumentContextType, FirestoreDocumentUpdateParams } from "@dereekb/firebase";
 
 // MARK: Accessor
 /**
@@ -15,7 +15,7 @@ export class TransactionFirestoreDocumentDataAccessor<T> implements FirestoreDoc
   }
 
   exists(): Promise<boolean> {
-    return this.get().then(x => x.exists());
+    return this.get().then(x => x.exists);
   }
 
   get(): Promise<DocumentSnapshot<T>> {
@@ -32,8 +32,8 @@ export class TransactionFirestoreDocumentDataAccessor<T> implements FirestoreDoc
     return Promise.resolve();
   }
 
-  update(data: UpdateData<T>): Promise<void> {
-    this.transaction.update(this.documentRef, data);
+  update(data: UpdateData<T>, params?: FirestoreDocumentUpdateParams): Promise<void> {
+    this.transaction.update(this.documentRef, data); //, params?.precondition);
     return Promise.resolve();
   }
 

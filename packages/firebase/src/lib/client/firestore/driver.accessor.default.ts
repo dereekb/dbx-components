@@ -2,7 +2,7 @@ import { DocumentReference, DocumentSnapshot, UpdateData, WithFieldValue, getDoc
 import { deleteDoc, setDoc, updateDoc } from "firebase/firestore";
 import { fromRef } from "rxfire/firestore";
 import { Observable } from "rxjs";
-import { FirestoreDocumentContext, FirestoreDocumentContextType, FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory } from "../../common/firestore";
+import { FirestoreDocumentContext, FirestoreDocumentContextType, FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, SetOptions } from "../../common/firestore";
 
 // MARK: Accessor
 export class DefaultFirestoreDocumentDataAccessor<T> implements FirestoreDocumentDataAccessor<T> {
@@ -13,6 +13,10 @@ export class DefaultFirestoreDocumentDataAccessor<T> implements FirestoreDocumen
     return fromRef(this.documentRef);
   }
 
+  exists(): Promise<boolean> {
+    return this.get().then(x => x.exists());
+  }
+
   get(): Promise<DocumentSnapshot<T>> {
     return getDoc(this.documentRef);
   }
@@ -21,8 +25,8 @@ export class DefaultFirestoreDocumentDataAccessor<T> implements FirestoreDocumen
     return deleteDoc(this.documentRef);
   }
 
-  set(data: WithFieldValue<T>): Promise<void> {
-    return setDoc(this.documentRef, data);
+  set(data: WithFieldValue<T>, options?: SetOptions): Promise<void> {
+    return setDoc(this.documentRef, data, options as SetOptions);
   }
 
   update(data: UpdateData<T>): Promise<void> {

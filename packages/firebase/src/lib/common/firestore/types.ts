@@ -30,7 +30,7 @@ export type UnionToIntersection<U> = (U extends unknown ? (k: U) => void : never
 export type AddPrefixToKeys<Prefix extends string, T extends Record<string, unknown>> = { [K in keyof T & string as `${Prefix}.${K}`]+?: T[K] };
 export type ChildUpdateFields<K extends string, V> = V extends Record<string, unknown> ? AddPrefixToKeys<K, UpdateData<V>> : never;
 export type NestedUpdateFields<T extends Record<string, unknown>> = UnionToIntersection<{ [K in keyof T & string]: ChildUpdateFields<K, T[K]>; }[keyof T & string]>;
-export declare type UpdateData<T> = T extends Primitive ? T : T extends {} ? { [K in keyof T]?: UpdateData<T[K]> | FieldValue; } & NestedUpdateFields<T> : Partial<T>;
+export type UpdateData<T> = T extends Primitive ? T : T extends {} ? { [K in keyof T]?: UpdateData<T[K]> | FieldValue; } & NestedUpdateFields<T> : Partial<T>;
 
 export interface FieldPath {
   isEqual(other: FieldPath): boolean;
@@ -56,13 +56,13 @@ export interface DocumentData {
 }
 
 export interface DocumentSnapshot<T = DocumentData> {
-  get id(): string;
-  get ref(): DocumentReference<T>;
+  readonly id: string;
+  readonly ref: DocumentReference<T>;
   data(options?: SnapshotOptions): T | undefined;
 }
 
-export type SnapshotSetOptions = {
-  readonly merge?: boolean;
+export type SetOptions = {
+  readonly merge?: boolean | undefined;
 } | {
   readonly mergeFields?: Array<string | FieldPath>;
 };
@@ -77,25 +77,25 @@ export interface SnapshotOptions {
  */
 export interface FirestoreDataConverter<T> {
   toFirestore(modelObject: WithFieldValue<T>): DocumentData;
-  toFirestore(modelObject: PartialWithFieldValue<T>, options: SnapshotSetOptions): DocumentData;
+  toFirestore(modelObject: PartialWithFieldValue<T>, options: SetOptions): DocumentData;
   fromFirestore(snapshot: QueryDocumentSnapshot<DocumentData>, options?: SnapshotOptions): T;
 }
 
 // MARK: Document
 export interface DocumentReference<T = DocumentData> {
-  readonly converter: FirestoreDataConverter<T> | null;
-  readonly type: "document";
+  readonly converter?: FirestoreDataConverter<T> | null;
+  readonly type?: 'document';
   readonly firestore: Firestore;
   readonly id: string;
   readonly path: string;
-  readonly parent: CollectionReference<T>;
+  readonly parent?: CollectionReference<T>;
   withConverter<U>(converter: FirestoreDataConverter<U>): DocumentReference<U>;
   withConverter(converter: null): DocumentReference<DocumentData>;
 }
 
 // MARK: Collection
 export interface CollectionReference<T = DocumentData> extends Query<T> {
-  readonly type: "collection";
+  readonly type?: 'collection';
   readonly id: string;
   readonly path: string;
   readonly parent: DocumentReference<DocumentData> | null;
@@ -109,8 +109,8 @@ export type Transaction = any;
 
 // MARK: Query
 export interface Query<T = DocumentData> {
-  readonly converter: FirestoreDataConverter<T> | null;
-  readonly type: 'query' | 'collection';
+  readonly converter?: FirestoreDataConverter<T> | null;
+  readonly type?: 'query' | 'collection';
   readonly firestore: Firestore;
   withConverter<U>(converter: FirestoreDataConverter<U>): Query<U>;
   withConverter(converter: null): Query<DocumentData>;
@@ -132,8 +132,8 @@ export interface QuerySnapshot<T = DocumentData> {
 }
 
 export interface QueryDocumentSnapshot<T = DocumentData> extends DocumentSnapshot<T> {
-  readonly createTime?: Timestamp;
-  readonly updateTime?: Timestamp;
+  // readonly createTime: Timestamp;
+  // readonly updateTime: Timestamp;
   data(options?: SnapshotOptions): T;
 }
 
@@ -144,4 +144,14 @@ export declare interface DocumentChange<T = DocumentData> {
   readonly doc: QueryDocumentSnapshot<T>;
   readonly oldIndex: number;
   readonly newIndex: number;
+}
+
+// MARK: Server-Specific
+export interface WriteResult {
+  readonly writeTime: Timestamp;
+}
+
+export interface Precondition {
+  readonly lastUpdateTime?: Timestamp;
+  readonly exists?: boolean;
 }
