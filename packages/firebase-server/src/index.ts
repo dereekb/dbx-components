@@ -1,1 +1,1 @@
-export * from './lib/firebase-server';
+export * from './lib';
