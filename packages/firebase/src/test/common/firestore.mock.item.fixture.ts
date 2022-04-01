@@ -1,6 +1,6 @@
 import { CollectionReference } from '../../lib/common/firestore/types';
 import { AbstractWrappedFixtureWithInstance, JestTestWrappedContextFactoryBuilder, instanceWrapJestTestContextFactory } from '@dereekb/util';
-import { FirestoreTestingContextFixture } from './firebase';
+import { FirestoreTestingContextFixture } from './firestore';
 import { MockItem, testItemFirestoreCollection } from './firestore.mock.item';
 
 // MARK: Test Item Testing Fixture

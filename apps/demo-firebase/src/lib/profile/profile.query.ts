@@ -1,15 +1,11 @@
-import { Observable } from 'rxjs';
-import { FirestoreCollectionReference } from "@dereekb/firebase";
-import { query, where } from "firebase/firestore";
-import { collectionData } from "rxfire/firestore";
-import { Profile } from "./profile";
+import { FirestoreQueryConstraint, where } from "@dereekb/firebase";
 
-export interface ProfileQuery extends FirestoreCollectionReference<Profile> { }
+export interface ProfileQuery { }
 
 export interface ProfileWithUsernameQuery extends ProfileQuery {
   username: string;
 }
 
-export function queryProfileWithUsername({ username, collection }: ProfileWithUsernameQuery): Observable<Profile[]> {
-  return collectionData<Profile>(query<Profile>(collection, where('username', '==', username)));
+export function profileWithUsername({ username }: ProfileWithUsernameQuery): FirestoreQueryConstraint[] {
+  return [where('username', '==', username)];
 }

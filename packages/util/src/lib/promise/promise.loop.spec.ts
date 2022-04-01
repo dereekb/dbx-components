@@ -1,4 +1,4 @@
-import { performTaskLoop } from './promise.loop';
+import { performMakeLoop, performTaskCountLoop, performTaskLoop } from './promise.loop';
 
 describe('performTaskLoop()', () => {
 
@@ -61,6 +61,37 @@ describe('performTaskLoop()', () => {
       expect(e).toBeDefined();
     }
 
+  });
+
+});
+
+describe('performTaskCountLoop()', () => {
+
+  it('should loop the expected number of times.', async () => {
+    let i = 0;
+    const count = 3;
+
+    await performTaskCountLoop({
+      count,
+      next: async (x) => i += 1
+    });
+
+    expect(i).toBe(count);
+  });
+
+});
+
+describe('performMakeLoop()', () => {
+
+  it('should create n number of items, where n = count', async () => {
+    const count = 3;
+    const results = await performMakeLoop({
+      count,
+      make: async (i: number) => 1
+    });
+
+    expect(results.length).toBe(3);
+    expect(results[0]).toBe(1);
   });
 
 });

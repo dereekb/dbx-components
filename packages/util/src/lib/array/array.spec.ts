@@ -1,5 +1,20 @@
-import { mergeIntoArray, range } from '@dereekb/util';
+import { mergeIntoArray, range, flattenArray, Maybe } from '@dereekb/util';
 import { takeLast } from './array';
+
+describe('flattenArray', () => {
+
+  it('should return all non-null/undefined values from first dimension, and all values from the second dimension.', () => {
+    const expected = [1, 2, null];
+    const array: Maybe<(number | null)[]>[] = [[expected[0]], null, undefined, [expected[1], null]];
+
+    const result = flattenArray(array);
+    expect(result.length).toBe(expected.length);
+    expect(result[0]).toBe(expected[0]);
+    expect(result[1]).toBe(expected[1]);
+    expect(result[2]).toBe(expected[2]);
+  });
+
+});
 
 describe('takeLast', () => {
 

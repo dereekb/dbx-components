@@ -4,6 +4,7 @@ import { transactionDocumentContext } from './driver.accessor.transaction';
 import { Maybe } from '@dereekb/util';
 import { adminTestWithMockItemCollection } from '../../test/firestore.fixture.admin';
 import { googleCloudFirestoreDrivers } from './driver';
+import { writeBatchDocumentContext } from './driver.accessor.batch';
 
 describe('FirestoreCollection', () => {
 
@@ -45,7 +46,7 @@ describe('FirestoreCollection', () => {
         expect(result).toBeDefined();
       });
 
-      it('should create a new document accessor instance that uses the passed context.', async () => {
+      it('should create a new document accessor instance that uses the passed transaction context.', async () => {
 
         let ref: Maybe<DocumentReference<MockItem>>;
 
@@ -70,6 +71,37 @@ describe('FirestoreCollection', () => {
         const loadedData: DocumentSnapshot<MockItem> = await loadedDoc.accessor.get() as DocumentSnapshot<MockItem>;
 
         expect(loadedData.exists).toBe(true);
+      });
+
+      it('should create a new document accessor instance that uses the passed batch context.', async () => {
+
+        let ref: Maybe<DocumentReference<MockItem>>;
+
+        const batch = firestore.batch();
+        const context: FirestoreDocumentContext<MockItem> = writeBatchDocumentContext(batch);
+
+        const result = firestoreCollection.documentAccessor(context);
+        expect(result).toBeDefined();
+
+        const document = result.newDocument();
+        ref = document.documentRef as DocumentReference<MockItem>;
+
+        expect(document.documentRef).toBeDefined();
+        expect(document.accessor).toBeDefined();
+
+        await document.accessor.set({ test: true });
+
+        expect(ref).toBeDefined();
+
+        // Should not exist yet as the batch is not complete.
+        let exists: boolean = await document.accessor.exists();
+        expect(exists).toBe(false);
+
+        await batch.commit();
+
+        exists = await document.accessor.exists();
+        expect(exists).toBe(true);
+
       });
 
     });

@@ -1,5 +1,5 @@
 import { Maybe, ObjectMap } from '@dereekb/util';
-import { DocumentSnapshot, DocumentData } from '../types';
+import { DocumentSnapshot, DocumentData, FieldPath } from '../types';
 
 /**
  * A constraint. Used by drivers to apply native firebase query constraints.
@@ -7,6 +7,17 @@ import { DocumentSnapshot, DocumentData } from '../types';
 export interface FirestoreQueryConstraint<T = any> {
   type: string;
   data: T;
+}
+
+export function firestoreQueryConstraint<T>(type: string, data: T): FirestoreQueryConstraint<T> {
+  return {
+    type,
+    data
+  };
+}
+
+export function firestoreQueryConstraintFactory(type: string): <T>(data: T) => FirestoreQueryConstraint<T> {
+  return <T>(data: T) => firestoreQueryConstraint(type, data);
 }
 
 // MARK: Limit
@@ -17,12 +28,22 @@ export interface LimitQueryConstraintData {
 }
 
 export function limit(limit: number): FirestoreQueryConstraint<LimitQueryConstraintData> {
-  return {
-    type: FIRESTORE_LIMIT_QUERY_CONSTRAINT_TYPE,
-    data: {
-      limit
-    }
-  };
+  return firestoreQueryConstraint(FIRESTORE_LIMIT_QUERY_CONSTRAINT_TYPE, { limit });
+}
+
+// MARK: Where
+export const FIRESTORE_WHERE_QUERY_CONSTRAINT_TYPE = 'where';
+
+export type WhereFilterOp = '<' | '<=' | '==' | '!=' | '>=' | '>' | 'array-contains' | 'in' | 'array-contains-any' | 'not-in';
+
+export interface WhereQueryConstraintData {
+  fieldPath: string | FieldPath;
+  opStr: WhereFilterOp;
+  value: unknown;
+}
+
+export function where(fieldPath: string | FieldPath, opStr: WhereFilterOp, value: unknown): FirestoreQueryConstraint<WhereQueryConstraintData> {
+  return firestoreQueryConstraint(FIRESTORE_WHERE_QUERY_CONSTRAINT_TYPE, { fieldPath, opStr, value });
 }
 
 // MARK: Start At
@@ -33,12 +54,7 @@ export interface StartAtQueryConstraintData<T = DocumentData> {
 }
 
 export function startAt<T = DocumentData>(snapshot: DocumentSnapshot<T>): FirestoreQueryConstraint<StartAtQueryConstraintData<T>> {
-  return {
-    type: FIRESTORE_START_AT_QUERY_CONSTRAINT_TYPE,
-    data: {
-      snapshot
-    }
-  };
+  return firestoreQueryConstraint(FIRESTORE_START_AT_QUERY_CONSTRAINT_TYPE, { snapshot });
 }
 
 // MARK: Handler
@@ -51,6 +67,7 @@ export type FirestoreQueryConstraintHandlerMap<B> = ObjectMap<Maybe<FirestoreQue
 
 export type FullFirestoreQueryConstraintDataMapping = {
   [FIRESTORE_LIMIT_QUERY_CONSTRAINT_TYPE]: LimitQueryConstraintData,
+  [FIRESTORE_WHERE_QUERY_CONSTRAINT_TYPE]: WhereQueryConstraintData,
   [FIRESTORE_START_AT_QUERY_CONSTRAINT_TYPE]: StartAtQueryConstraintData
 }
 

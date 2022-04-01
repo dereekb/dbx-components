@@ -1,4 +1,4 @@
-import { FirestoreCollectionReference } from "@dereekb/firebase";
+import { CollectionReferenceRef } from "@dereekb/firebase";
 import { Profile } from "./profile";
 
 export interface SetProfileUsername {

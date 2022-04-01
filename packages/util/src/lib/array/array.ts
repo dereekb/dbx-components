@@ -61,8 +61,24 @@ export function concatArrays<T>(...arrays: (Maybe<T[]>)[]): T[] {
   return flattenArray(arrays.filter(x => Boolean(x)) as T[][]);
 }
 
-export function flattenArray<T>(array: T[][]): T[] {
-  return array.filter((x) => Boolean(x)).reduce((accumulator, value) => accumulator.concat([...value]), []);
+/**
+ * Flattens a two dimensional array into a single dimensional array. Any null/undefined values from the first dimension are filtered out.
+ * 
+ * @param array 
+ * @returns 
+ */
+export function flattenArray<T>(array: (Maybe<T[]>)[]): T[] {
+  return (array.filter((x) => Boolean(x)) as T[][]).reduce((accumulator: T[], value: T[]) => accumulator.concat(value), []);
+}
+
+/**
+ * Flattens an array of ArrayOrValue values into a single array.
+ * 
+ * @param array 
+ * @returns 
+ */
+export function flattenArrayOrValueArray<T>(array: ArrayOrValue<Maybe<T>>[]): T[] {
+  return flattenArray(array.map(x => (x) ? convertToArray(x) : undefined) as Maybe<T[]>[]);
 }
 
 export function copyArray<T>(input: Maybe<T[]>): T[] {

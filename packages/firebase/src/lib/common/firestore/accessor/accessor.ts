@@ -3,7 +3,7 @@ import { filterMaybe } from '@dereekb/rxjs';
 import { Maybe } from "@dereekb/util";
 import { SnapshotOptions, DocumentReference, DocumentSnapshot, UpdateData, WithFieldValue, PartialWithFieldValue, SetOptions, Precondition } from "../types";
 import { map, Observable, OperatorFunction } from 'rxjs';
-import { FirestoreDocumentReference } from '../reference';
+import { DocumentReferenceRef } from '../reference';
 
 export interface FirestoreDocumentDeleteParams {
   precondition?: Precondition;
@@ -16,7 +16,7 @@ export interface FirestoreDocumentUpdateParams {
 /**
  * Firestore database accessor instance used to retrieve and make changes to items in the database.
  */
-export interface FirestoreDocumentDataAccessor<T> extends FirestoreDocumentReference<T> {
+export interface FirestoreDocumentDataAccessor<T> extends DocumentReferenceRef<T> {
   /**
    * Returns a database stream of DocumentSnapshots.
    */

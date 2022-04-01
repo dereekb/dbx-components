@@ -33,7 +33,7 @@ export class WriteBatchFirestoreDocumentDataAccessor<T> implements FirestoreDocu
   }
 
   update(data: UpdateData<T>, params?: FirestoreDocumentUpdateParams): Promise<void> {
-    this.batch.update(this.documentRef, data as GoogleCloudUpdateData<T>); // , params?.precondition);
+    this.batch.update(this.documentRef, data as GoogleCloudUpdateData<T>, params?.precondition);
     return Promise.resolve();
   }
 

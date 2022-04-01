@@ -1,4 +1,4 @@
-import { FirestoreTestContext, FirestoreTestInstance, FirestoreTestingContextFixture } from '../common/firebase';
+import { FirestoreTestContext, FirestoreTestInstance, FirestoreTestingContextFixture } from '../common/firestore';
 import { jestTestContextBuilder, Maybe } from "@dereekb/util";
 import { makeFirestoreContext } from '../../lib/client/firestore/firestore';
 import {

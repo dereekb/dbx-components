@@ -33,6 +33,8 @@ export interface PerformTasksConfig<T = any> extends PerformTaskConfig<T> {
   sequential?: boolean;
 }
 
+export type ValuesTaskConfig<T = any> = Omit<PerformTasksConfig<T>, 'throwError'>;
+
 export class PromiseUtility {
 
   // MARK: Run
@@ -46,6 +48,23 @@ export class PromiseUtility {
     });
 
     return value;
+  }
+
+  /**
+   * Returns the task for each input value, and returns the values. Is always configured to throw the error if it fails.
+   * 
+   * @param input 
+   * @param taskFn 
+   * @param config 
+   * @returns 
+   */
+  static async runTasksForValues<T, K = any>(input: T[], taskFn: PromiseTaskFn<T, K>, config?: PerformTasksConfig<T>): Promise<K[]> {
+    const results = await PromiseUtility.performTasks(input, taskFn, {
+      ...config,
+      throwError: true
+    });
+
+    return results.results.map(x => x[1]);
   }
 
   // MARK: Perform

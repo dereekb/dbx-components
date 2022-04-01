@@ -2,15 +2,15 @@ import { PageLoadingState, ItemPageIterator, ItemPageIterationInstance, ItemPage
 import { QueryDocumentSnapshot, QuerySnapshot } from "../types";
 import { Maybe, lastValue, mergeIntoArray } from '@dereekb/util';
 import { from, Observable, of, exhaustMap } from "rxjs";
-import { FirestoreCollectionReference } from '../reference';
-import { FirestoreQueryDriver, FirestoreQueryDriverRef } from './driver';
+import { CollectionReferenceRef } from '../reference';
+import { FirestoreQueryDriverRef } from './driver';
 import { FirestoreQueryConstraint, limit, startAt } from './constraint';
 
 export interface FirestoreItemPageIteratorFilter {
   queryConstraints?: Maybe<FirestoreQueryConstraint[]>;
 }
 
-export interface FirestoreItemPageIterationBaseConfig<T> extends FirestoreCollectionReference<T>, FirestoreQueryDriverRef {
+export interface FirestoreItemPageIterationBaseConfig<T> extends CollectionReferenceRef<T>, FirestoreQueryDriverRef {
   itemsPerPage: number;
 }
 

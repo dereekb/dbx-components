@@ -1,5 +1,4 @@
-import { AbstractFirestoreDocument, makeSnapshotConverterFunctions, firestoreUID, firestoreString, firestoreDate, makeFirestoreCollection, FirestoreDocumentDataAccessor, FirestoreCollection, UserRelated, FirestoreDocumentReference } from "@dereekb/firebase";
-import { Firestore, CollectionReference, collection } from "firebase/firestore";
+import { CollectionReference, AbstractFirestoreDocument, makeSnapshotConverterFunctions, firestoreUID, firestoreString, firestoreDate, makeFirestoreCollection, FirestoreDocumentDataAccessor, FirestoreCollection, UserRelated, DocumentReferenceRef, FirestoreContext } from "@dereekb/firebase";
 
 export interface Profile extends UserRelated {
   /**
@@ -12,7 +11,7 @@ export interface Profile extends UserRelated {
   updatedAt: Date;
 }
 
-export interface ProfileRef extends FirestoreDocumentReference<Profile> { }
+export interface ProfileRef extends DocumentReferenceRef<Profile> { }
 
 export class ProfileDocument extends AbstractFirestoreDocument<Profile, ProfileDocument> { }
 
@@ -26,16 +25,16 @@ export const profileConverter = makeSnapshotConverterFunctions<Profile>({
   }
 });
 
-export function profileCollectionReference(firestore: Firestore): CollectionReference<Profile> {
-  return collection(firestore, profileCollectionPath).withConverter<Profile>(profileConverter);
+export function profileCollectionReference(context: FirestoreContext): CollectionReference<Profile> {
+  return context.collection(profileCollectionPath).withConverter<Profile>(profileConverter);
 }
 
 export type ProfileFirestoreCollection = FirestoreCollection<Profile, ProfileDocument>;
 
-export function profileFirestoreCollection(firestore: Firestore): ProfileFirestoreCollection {
-  return makeFirestoreCollection({
+export function profileFirestoreCollection(context: FirestoreContext): ProfileFirestoreCollection {
+  return context.firestoreCollection({
     itemsPerPage: 50,
-    collection: profileCollectionReference(firestore),
+    collection: profileCollectionReference(context.firestore),
     makeDocument: (accessor, documentAccessor) => new ProfileDocument(accessor, documentAccessor)
   });
 }

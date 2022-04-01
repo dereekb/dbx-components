@@ -1,10 +1,11 @@
 import { DocumentSnapshot, Query as GoogleCloudQuery } from "@google-cloud/firestore";
-import { Query, FIRESTORE_LIMIT_QUERY_CONSTRAINT_TYPE, FIRESTORE_START_AT_QUERY_CONSTRAINT_TYPE, FullFirestoreQueryConstraintHandlersMapping, makeFirestoreQueryConstraintFunctionsDriver, QuerySnapshot, FirestoreQueryConstraintFunctionsDriver, FirestoreQueryDriver } from "@dereekb/firebase";
+import { Query, FIRESTORE_LIMIT_QUERY_CONSTRAINT_TYPE, FIRESTORE_START_AT_QUERY_CONSTRAINT_TYPE, FullFirestoreQueryConstraintHandlersMapping, makeFirestoreQueryConstraintFunctionsDriver, QuerySnapshot, FirestoreQueryConstraintFunctionsDriver, FirestoreQueryDriver, FIRESTORE_WHERE_QUERY_CONSTRAINT_TYPE } from "@dereekb/firebase";
 
 export type FirestoreServerQueryBuilder<T = any> = GoogleCloudQuery<T>;
 
 export const FIRESTORE_CLIENT_QUERY_CONSTRAINT_HANDLER_MAPPING: FullFirestoreQueryConstraintHandlersMapping<FirestoreServerQueryBuilder> = {
   [FIRESTORE_LIMIT_QUERY_CONSTRAINT_TYPE]: (builder, data) => builder.limit(data.limit),
+  [FIRESTORE_WHERE_QUERY_CONSTRAINT_TYPE]: (builder, data) => builder.where(data.fieldPath, data.opStr, data.value),
   [FIRESTORE_START_AT_QUERY_CONSTRAINT_TYPE]: (builder, data) => builder.startAt(data.snapshot as DocumentSnapshot)
 };
 

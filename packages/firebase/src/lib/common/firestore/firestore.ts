@@ -4,7 +4,8 @@ import { CollectionReference } from "./types";
 import { FirestoreDocument, FirestoreDocumentAccessor, FirestoreDocumentAccessorFactory, FirestoreDocumentAccessorFactoryFunction, FirestoreDocumentAccessorInstanceConfig, firestoreDocumentAccessorFactory } from "./accessor/document";
 import { FirestoreItemPageIterationBaseConfig, FirestoreItemPageIterationFactory, firestoreItemPageIterationFactory, FirestoreItemPageIterationFactoryFunction, FirestoreItemPageIterationInstance, FirestoreItemPageIteratorFilter } from "./query/iterator";
 import { FirestoreDocumentContext } from "./accessor/context";
-import { FirestoreCollectionReference } from "./reference";
+import { CollectionReferenceRef } from "./reference";
+import { firestoreCollectionQueryFactory, FirestoreCollectionQueryFactory } from './query/query';
 
 /**
  * Implements all Firestore related driver reference interfaces.
@@ -21,10 +22,11 @@ export interface FirestoreCollectionConfig<T, D extends FirestoreDocument<T> = F
  * Instance that provides several accessors for accessing documents of a collection.
  */
 export class FirestoreCollection<T, D extends FirestoreDocument<T> = FirestoreDocument<T>>
-  implements FirestoreCollectionReference<T>, FirestoreItemPageIterationFactory<T>, FirestoreDocumentAccessorFactory<T, D> {
+  implements CollectionReferenceRef<T>, FirestoreItemPageIterationFactory<T>, FirestoreDocumentAccessorFactory<T, D>, FirestoreCollectionQueryFactory<T> {
 
   protected readonly _iterationFactory: FirestoreItemPageIterationFactoryFunction<T> = firestoreItemPageIterationFactory(this.config);
   protected readonly _documentAccessorFactory: FirestoreDocumentAccessorFactoryFunction<T, D> = firestoreDocumentAccessorFactory(this.config);
+  protected readonly _queryFactory: FirestoreCollectionQueryFactory<T> = firestoreCollectionQueryFactory(this.config);
 
   constructor(readonly config: FirestoreCollectionConfig<T, D>) { }
 
@@ -37,10 +39,21 @@ export class FirestoreCollection<T, D extends FirestoreDocument<T> = FirestoreDo
     return this._iterationFactory(filter);
   }
 
+  // MARK: FirestoreDocumentAccessorFactory<T, D>
   documentAccessor(context?: FirestoreDocumentContext<T>): FirestoreDocumentAccessor<T, D> {
     return this._documentAccessorFactory(context);
   }
 
+  // MARK: FirestoreCollectionQueryFactory<T>
+  readonly query = this._queryFactory.query;
+
+}
+
+/**
+ * Ref to a FirestoreCollection
+ */
+export interface FirestoreCollectionRef<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> {
+  readonly firestoreCollection: FirestoreCollection<T, D>;
 }
 
 /**
