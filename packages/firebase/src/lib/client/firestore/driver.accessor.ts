@@ -7,7 +7,7 @@ import { transactionDocumentContext } from "./driver.accessor.transaction";
 export function firestoreClientAccessorDriver(): FirestoreAccessorDriver {
   return {
     doc: doc as any,  // typing issue. Override with any.
-    collection,
+    collection: collection as any,
     defaultContextFactory: defaultFirestoreDocumentContext,
     transactionContextFactory: transactionDocumentContext,
     writeBatchContextFactory: writeBatchDocumentContext

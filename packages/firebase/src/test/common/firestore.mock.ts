@@ -1,51 +1,32 @@
-import { firestoreContextFactory } from '@dereekb/firebase';
-import { Firestore } from '../../lib/common/firestore/types';
-import { FirestoreAccessorDriver } from '../../lib/common/firestore/accessor/driver';
-import { FirestoreContext } from '../../lib/common/firestore/context';
+import { AbstractJestTestContextFixture } from "@dereekb/util";
+import { Firestore } from "../../lib/common/firestore/types";
+import { TestFirestoreContext } from "./firestore";
 
-export function injectTestingCollectionNameFuzzerIntoDriver(driver: FirestoreAccessorDriver): FirestoreAccessorDriver {
-  let fuzzerKey = 0;
-  const fuzzerBase = new Date().getTime();
-  const fuzzedMap = new Map<string, string>();
-  const collection = driver.collection;
+export class TestFirestoreInstance {
 
-  const fuzzedCollection = <T>(f: Firestore, path: string) => {
-    let fuzzedPath: string = fuzzedMap.get(path)!;
+  constructor(readonly context: TestFirestoreContext) { }
 
-    if (!fuzzedPath) {
-      fuzzedPath = `${fuzzerBase}_${path}_${fuzzerKey += 1}`;
-      fuzzedMap.set(path, fuzzedPath);
-    }
+  get firestore(): Firestore {
+    return this.context.firestore;
+  }
 
-    console.log('afsdfasdf path: ', fuzzedPath);
+  async clearFirestore(): Promise<void> {
 
-    return collection<T>(f, fuzzedPath);
-  };
+    // return this.context.clearFirestore();
+  }
 
-  const injectedDriver = {
-    ...driver,
-    collection: fuzzedCollection,
-    hello: 'test'
-  } as any;
+  // TODO: Add storage
 
-  console.log('Injected: ', injectedDriver);
-
-  return injectedDriver;
 }
 
-/**
- * Injects testing-related functions into drivers, etc. into a new FirestoreContext object.
- * 
- * @param firestoreContext 
- * @returns 
- */
-export function makeTestingFirestoreContext<T, C extends FirestoreContext<T>>(firestoreContext: C): C {
-  const drivers = {
-    ...firestoreContext.drivers,
-    firestoreAccessorDriver: injectTestingCollectionNameFuzzerIntoDriver(firestoreContext.drivers.firestoreAccessorDriver)
-  };
+export class TestFirestoreContextFixture<F extends TestFirestoreInstance = TestFirestoreInstance> extends AbstractJestTestContextFixture<F> {
 
-  console.log('Make testing context', drivers);
+  get firestore(): Firestore {
+    return this.instance.firestore;
+  }
 
-  return firestoreContextFactory<T>(drivers)(firestoreContext.firestore) as C;
+  get context(): TestFirestoreContext {
+    return this.instance.context;
+  }
+
 }

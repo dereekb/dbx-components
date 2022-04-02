@@ -14,7 +14,7 @@ describe('FirestoreCollection', () => {
     let firestoreCollection: MockItemFirestoreCollection;
 
     beforeEach(async () => {
-      firestore = f.parent.firestore;
+      firestore = f.parent.firestore as Firestore;
     });
 
     describe('makeFirestoreCollection()', () => {

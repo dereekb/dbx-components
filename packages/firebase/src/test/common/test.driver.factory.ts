@@ -1,5 +1,5 @@
 import { limit } from "../../lib";
-import { makeDocuments, newDocuments } from "../../lib/common/firestore/accessor/document.utility";
+import { makeDocuments } from "../../lib/common/firestore/accessor/document.utility";
 import { FirestoreCollectionQueryFactoryFunction } from "../../lib/common/firestore/query/query";
 import { MockItemDocument, MockItem } from "./firestore.mock.item";
 import { MockItemCollectionFixture } from "./firestore.mock.item.fixture";

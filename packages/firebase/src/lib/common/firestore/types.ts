@@ -1,10 +1,14 @@
 // A set of copied types from @google-cloud/firestore and firebase/firestore to allow cross-compatability.
 
 // MARK: Firestore
+// These types are provided to avoid us from using the "any".
+export type FirebaseFirestoreLikeFirestore = { type: string };
+export type GoogleCloudLikeFirestore = { terminate(): Promise<void>; };
+
 /**
  * Cast to the local type's firestore if direct access is needed. In most cases, direct access to this type is unncessary.
  */
-export interface Firestore { }
+export type Firestore = FirebaseFirestoreLikeFirestore | GoogleCloudLikeFirestore;
 
 // MARK: Data
 export type Primitive = string | number | boolean | undefined | null;

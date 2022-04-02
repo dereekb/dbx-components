@@ -1,4 +1,3 @@
-import { doc } from 'firebase/firestore';
 import { FirestoreAccessorDriver, CollectionReference, Firestore } from "@dereekb/firebase";
 import { CollectionReference as GoogleCloudFirestoreCollection, Firestore as GoogleCloudFirestore } from "@google-cloud/firestore";
 import { writeBatchDocumentContext } from "./driver.accessor.batch";

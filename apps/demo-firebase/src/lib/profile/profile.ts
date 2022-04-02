@@ -34,7 +34,7 @@ export type ProfileFirestoreCollection = FirestoreCollection<Profile, ProfileDoc
 export function profileFirestoreCollection(context: FirestoreContext): ProfileFirestoreCollection {
   return context.firestoreCollection({
     itemsPerPage: 50,
-    collection: profileCollectionReference(context.firestore),
+    collection: profileCollectionReference(context),
     makeDocument: (accessor, documentAccessor) => new ProfileDocument(accessor, documentAccessor)
   });
 }

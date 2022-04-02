@@ -3,7 +3,7 @@ import { MockItem, testItemCollectionReference, MockItemDocument, MockItemFirest
 import { FirestoreDocumentContext, makeFirestoreCollection } from "../../common/firestore";
 import { transactionDocumentContext } from './driver.accessor.transaction';
 import { Maybe } from '@dereekb/util';
-import { firestoreClientDrivers } from './driver';
+import { firebaseFirestoreClientDrivers } from './driver';
 import { writeBatchDocumentContext } from './driver.accessor.batch';
 
 describe('Firestore', () => {

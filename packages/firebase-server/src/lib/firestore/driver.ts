@@ -6,6 +6,8 @@ export interface GoogleCloudFirestoreDrivers extends FirestoreDrivers { }
 
 export function googleCloudFirestoreDrivers(): GoogleCloudFirestoreDrivers {
   return {
+    driverIdentifier: '@google-cloud/firestore',
+    driverType: 'production',
     firestoreAccessorDriver: firestoreClientAccessorDriver(),
     firestoreQueryDriver: firestoreClientQueryDriver()
   };

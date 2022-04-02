@@ -7,10 +7,16 @@ import { FirestoreDocumentContext } from "./accessor/context";
 import { CollectionReferenceRef } from "./reference";
 import { firestoreCollectionQueryFactory, FirestoreCollectionQueryFactory } from './query/query';
 
+export type FirestoreDriverIdentifier = string;
+export type FirestoreDriverType = 'production' | 'testing';
+
 /**
  * Implements all Firestore related driver reference interfaces.
  */
-export interface FirestoreDrivers extends FirestoreQueryDriverRef, FirestoreAccessorDriverRef { }
+export interface FirestoreDrivers extends FirestoreQueryDriverRef, FirestoreAccessorDriverRef {
+  driverIdentifier?: FirestoreDriverIdentifier;
+  driverType: FirestoreDriverType;
+}
 
 /**
  * FirestoreCollection configuration
