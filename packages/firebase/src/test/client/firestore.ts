@@ -1,6 +1,5 @@
 import { makeTestingFirestoreDrivers, TestFirestoreContext, TestingFirestoreDrivers } from '../common/firestore';
 import { jestTestContextBuilder, Maybe } from "@dereekb/util";
-import { makeFirebaseFirestoreContext } from '../../lib/client/firestore/firestore';
 import {
   TestEnvironmentConfig,
   initializeTestEnvironment,
@@ -27,9 +26,9 @@ export interface RulesUnitTestingTestEnvironmentConfig extends TestEnvironmentCo
 }
 
 export interface RulesUnitTestingConfig {
+  clearFirestoreBetweenTests?: boolean;
   testEnvironment: RulesUnitTestingTestEnvironmentConfig;
   rulesContext?: Maybe<RulesUnitTestingContextConfig>;
-  retainFirestoreBetweenTests?: boolean;
 }
 
 export interface RulesUnitTestTestFirestoreContext extends TestFirestoreContext {
@@ -93,8 +92,8 @@ export const firestoreTestBuilder = jestTestContextBuilder<RulesUnitTestTestFire
     return new RulesUnitTestTestFirestoreInstance(drivers, rulesTestEnv, rulesTestContext);
   },
   teardownInstance: async (instance, config) => {
-    if (config.retainFirestoreBetweenTests !== true) {
-      await instance.clearFirestore();  // Clear the firestore
+    if (config.clearFirestoreBetweenTests) {
+      await instance.clearFirestore();
     }
 
     await instance.rulesTestEnvironment.cleanup();  // Cleanup

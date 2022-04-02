@@ -1,6 +1,6 @@
-import { DocumentReference, DocumentSnapshot, UpdateData, WithFieldValue, WriteResult } from "@google-cloud/firestore";
+import { DocumentReference, DocumentSnapshot, WriteResult, UpdateData as GoogleCloudUpdateData } from "@google-cloud/firestore";
 import { from, Observable } from "rxjs";
-import { FirestoreDocumentContext, FirestoreDocumentContextType, FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, FirestoreDocumentDeleteParams, FirestoreDocumentUpdateParams, SetOptions } from "@dereekb/firebase";
+import { WithFieldValue, UpdateData, FirestoreDocumentContext, FirestoreDocumentContextType, FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, FirestoreDocumentDeleteParams, FirestoreDocumentUpdateParams, SetOptions } from "@dereekb/firebase";
 
 // MARK: Accessor
 export class DefaultFirestoreDocumentDataAccessor<T> implements FirestoreDocumentDataAccessor<T> {
@@ -24,11 +24,11 @@ export class DefaultFirestoreDocumentDataAccessor<T> implements FirestoreDocumen
   }
 
   set(data: WithFieldValue<T>, options?: SetOptions): Promise<WriteResult> {
-    return this.documentRef.set(data, options as SetOptions);
+    return this.documentRef.set(data as any, options as SetOptions);
   }
 
   update(data: UpdateData<T>, params?: FirestoreDocumentUpdateParams): Promise<WriteResult> {
-    return this.documentRef.update(data);
+    return this.documentRef.update(data as any, params?.precondition ?? {});
   }
 
 }

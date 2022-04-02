@@ -1,6 +1,6 @@
-import { DocumentReference, WithFieldValue, WriteBatch, DocumentSnapshot, UpdateData as GoogleCloudUpdateData } from "@google-cloud/firestore";
+import { DocumentReference, WriteBatch, DocumentSnapshot, UpdateData as GoogleCloudUpdateData } from "@google-cloud/firestore";
 import { from, Observable } from "rxjs";
-import { FirestoreDocumentContext, FirestoreDocumentContextType, FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, FirestoreDocumentDeleteParams, FirestoreDocumentUpdateParams, UpdateData } from "@dereekb/firebase";
+import { WithFieldValue, FirestoreDocumentContext, FirestoreDocumentContextType, FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, FirestoreDocumentDeleteParams, FirestoreDocumentUpdateParams, UpdateData } from "@dereekb/firebase";
 
 // MARK: Accessor
 /**
@@ -33,7 +33,9 @@ export class WriteBatchFirestoreDocumentDataAccessor<T> implements FirestoreDocu
   }
 
   update(data: UpdateData<T>, params?: FirestoreDocumentUpdateParams): Promise<void> {
-    this.batch.update(this.documentRef, data as GoogleCloudUpdateData<T>, params?.precondition);
+    // todo: look into data typing casting more for this and the other types. Currently fails the building the demo-api app. "data as GoogleCloudUpdateData<T>"
+    // problem is related to T here being too open, but also the demo-api project shouldn't care.
+    this.batch.update(this.documentRef, data as any, params?.precondition);
     return Promise.resolve();
   }
 

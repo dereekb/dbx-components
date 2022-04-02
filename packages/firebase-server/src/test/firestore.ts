@@ -1,7 +1,7 @@
 import { Firestore } from '@google-cloud/firestore';
 import { TestFirestoreContext, TestFirestoreInstance, TestFirestoreContextFixture, TestingFirestoreDrivers, firestoreContextFactory, makeTestingFirestoreDrivers } from '@dereekb/firebase';
 import { jestTestContextBuilder } from "@dereekb/util";
-import { makeFirestoreContext } from '../lib/firestore/firestore';
+import { googleCloudFirestoreContextFactory } from '../lib/firestore/firestore';
 import { googleCloudFirestoreDrivers } from '../lib';
 
 export interface GoogleFirestoreConfig {

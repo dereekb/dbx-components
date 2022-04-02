@@ -1,4 +1,5 @@
-import { Firestore, FirestoreAccessorDriver, FirestoreContext, firestoreContextFactory, FirestoreDrivers } from '../../lib/common';
+import { PromiseUtility } from '@dereekb/util';
+import { Firestore, FirestoreAccessorDriver, FirestoreContext, FirestoreDrivers } from '../../lib/common';
 
 // MARK: Test Accessor
 export interface TestingFirestoreAccessorDriver extends FirestoreAccessorDriver {
@@ -82,10 +83,10 @@ export interface TestingFirestoreContextExtension {
 export type TestFirestoreContext<C = FirestoreContext> = C & TestingFirestoreContextExtension;
 
 // MARK: Cleanup
-export function clearTestFirestoreContextCollections(context: TestFirestoreContext) {
+export type ClearTestFirestoreCollectionFunction = (collectionName: string, realCollectionPath: string) => Promise<void>;
+
+export async function clearTestFirestoreContextCollections(context: TestFirestoreContext, clearCollection: ClearTestFirestoreCollectionFunction): Promise<void> {
   const names = context.drivers.firestoreAccessorDriver.getFuzzedCollectionsNameMap();
   const tuples = Array.from(names.entries());
-
-  // todo: clear collections by name
-
+  await PromiseUtility.performTasks(tuples, ([name, fuzzyPath]) => clearCollection(name, fuzzyPath));
 }

@@ -1,3 +1,4 @@
+import { SortingOrder } from '@dereekb/util';
 import { Maybe, ObjectMap } from '@dereekb/util';
 import { DocumentSnapshot, DocumentData, FieldPath } from '../types';
 
@@ -46,6 +47,21 @@ export function where(fieldPath: string | FieldPath, opStr: WhereFilterOp, value
   return firestoreQueryConstraint(FIRESTORE_WHERE_QUERY_CONSTRAINT_TYPE, { fieldPath, opStr, value });
 }
 
+
+// MARK: OrderBy
+export const FIRESTORE_ORDER_BY_QUERY_CONSTRAINT_TYPE = 'order_by';
+
+export type OrderByDirection = SortingOrder;
+
+export interface OrderByQueryConstraintData {
+  fieldPath: string | FieldPath;
+  directionStr?: OrderByDirection;
+}
+
+export function orderBy(fieldPath: string | FieldPath, directionStr?: OrderByDirection): FirestoreQueryConstraint<OrderByQueryConstraintData> {
+  return firestoreQueryConstraint(FIRESTORE_ORDER_BY_QUERY_CONSTRAINT_TYPE, { fieldPath, directionStr });
+}
+
 // MARK: Start At
 export const FIRESTORE_START_AT_QUERY_CONSTRAINT_TYPE = 'start_at';
 
@@ -55,6 +71,18 @@ export interface StartAtQueryConstraintData<T = DocumentData> {
 
 export function startAt<T = DocumentData>(snapshot: DocumentSnapshot<T>): FirestoreQueryConstraint<StartAtQueryConstraintData<T>> {
   return firestoreQueryConstraint(FIRESTORE_START_AT_QUERY_CONSTRAINT_TYPE, { snapshot });
+}
+
+
+// MARK: Start After
+export const FIRESTORE_START_AFTER_QUERY_CONSTRAINT_TYPE = 'start_after';
+
+export interface StartAfterQueryConstraintData<T = DocumentData> {
+  snapshot: DocumentSnapshot<T>;
+}
+
+export function startAfter<T = DocumentData>(snapshot: DocumentSnapshot<T>): FirestoreQueryConstraint<StartAfterQueryConstraintData<T>> {
+  return firestoreQueryConstraint(FIRESTORE_START_AFTER_QUERY_CONSTRAINT_TYPE, { snapshot });
 }
 
 // MARK: Handler
@@ -68,8 +96,10 @@ export type FirestoreQueryConstraintHandlerMap<B> = ObjectMap<Maybe<FirestoreQue
 export type FullFirestoreQueryConstraintDataMapping = {
   [FIRESTORE_LIMIT_QUERY_CONSTRAINT_TYPE]: LimitQueryConstraintData,
   [FIRESTORE_WHERE_QUERY_CONSTRAINT_TYPE]: WhereQueryConstraintData,
-  [FIRESTORE_START_AT_QUERY_CONSTRAINT_TYPE]: StartAtQueryConstraintData
-}
+  [FIRESTORE_ORDER_BY_QUERY_CONSTRAINT_TYPE]: OrderByQueryConstraintData,
+  [FIRESTORE_START_AT_QUERY_CONSTRAINT_TYPE]: StartAtQueryConstraintData,
+  [FIRESTORE_START_AFTER_QUERY_CONSTRAINT_TYPE]: StartAfterQueryConstraintData
+};
 
 export type FullFirestoreQueryConstraintMapping = {
   [K in keyof FullFirestoreQueryConstraintDataMapping]: FirestoreQueryConstraint<FullFirestoreQueryConstraintDataMapping[K]>;

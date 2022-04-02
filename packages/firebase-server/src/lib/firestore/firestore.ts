@@ -4,4 +4,4 @@ import { googleCloudFirestoreDrivers } from "./driver";
 /**
  * Creates a FirestoreContextFactory that uses the @firebase/firebase package.
  */
-export const makeFirestoreContext: FirestoreContextFactory = firestoreContextFactory(googleCloudFirestoreDrivers());
+export const googleCloudFirestoreContextFactory: FirestoreContextFactory = firestoreContextFactory(googleCloudFirestoreDrivers());
