@@ -1,6 +1,6 @@
 import { authorizedTestWithMockItemCollection } from "../../../test/client/firestore.mock.item.fixture.authorized";
-import { describeQueryDriverTests } from "../../../test/common/test.driver.query";
+import { describeAccessorDriverTests } from "../../../test/common/test.driver.accessor";
 
 authorizedTestWithMockItemCollection((f) => {
-  describeQueryDriverTests(f);
+  describeAccessorDriverTests(f);
 });

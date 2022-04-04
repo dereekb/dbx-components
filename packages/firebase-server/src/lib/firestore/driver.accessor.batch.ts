@@ -1,4 +1,4 @@
-import { DocumentReference, WriteBatch, DocumentSnapshot, UpdateData as GoogleCloudUpdateData } from "@google-cloud/firestore";
+import { DocumentReference, WriteBatch as GoogleCloudWriteBatch, DocumentSnapshot, UpdateData as GoogleCloudUpdateData } from "@google-cloud/firestore";
 import { from, Observable } from "rxjs";
 import { WithFieldValue, FirestoreDocumentContext, FirestoreDocumentContextType, FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, FirestoreDocumentDeleteParams, FirestoreDocumentUpdateParams, UpdateData } from "@dereekb/firebase";
 
@@ -8,7 +8,7 @@ import { WithFieldValue, FirestoreDocumentContext, FirestoreDocumentContextType,
  */
 export class WriteBatchFirestoreDocumentDataAccessor<T> implements FirestoreDocumentDataAccessor<T> {
 
-  constructor(readonly batch: WriteBatch, readonly documentRef: DocumentReference<T>) { }
+  constructor(readonly batch: GoogleCloudWriteBatch, readonly documentRef: DocumentReference<T>) { }
 
   stream(): Observable<DocumentSnapshot<T>> {
     return from(this.get());  // todo
@@ -47,7 +47,7 @@ export class WriteBatchFirestoreDocumentDataAccessor<T> implements FirestoreDocu
  * @param batch 
  * @returns 
  */
-export function writeBatchAccessorFactory<T>(writeBatch: WriteBatch): FirestoreDocumentDataAccessorFactory<T> {
+export function writeBatchAccessorFactory<T>(writeBatch: GoogleCloudWriteBatch): FirestoreDocumentDataAccessorFactory<T> {
   return {
     accessorFor: (ref: DocumentReference<T>) => new WriteBatchFirestoreDocumentDataAccessor(writeBatch, ref)
   };
@@ -59,10 +59,10 @@ export class WriteBatchFirestoreDocumentContext<T> implements FirestoreDocumentC
   readonly contextType = FirestoreDocumentContextType.BATCH;
   readonly accessorFactory = writeBatchAccessorFactory<T>(this.batch);
 
-  constructor(readonly batch: WriteBatch) { }
+  constructor(readonly batch: GoogleCloudWriteBatch) { }
 
 }
 
-export function writeBatchDocumentContext<T>(batch: WriteBatch): WriteBatchFirestoreDocumentContext<T> {
+export function writeBatchDocumentContext<T>(batch: GoogleCloudWriteBatch): WriteBatchFirestoreDocumentContext<T> {
   return new WriteBatchFirestoreDocumentContext<T>(batch);
 }

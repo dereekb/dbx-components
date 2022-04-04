@@ -1,3 +1,4 @@
+import { Observable } from 'rxjs';
 import { ArrayOrValue, flattenArrayOrValueArray } from "@dereekb/util";
 import { CollectionReferenceRef } from "../reference";
 import { Query, QuerySnapshot } from "../types";
@@ -9,7 +10,14 @@ import { FirestoreQueryDriverRef } from "./driver";
  */
 export interface FirestoreExecutableQuery<T> {
   readonly query: Query<T>;
+  /**
+   * Returns the results in a Promise.
+   */
   getDocs(): Promise<QuerySnapshot<T>>;
+  /**
+   * Streams the results as an Observable.
+   */
+  streamDocs(): Observable<QuerySnapshot<T>>;
   /**
    * Extend this query by adding additional filters.
    * 
@@ -37,7 +45,7 @@ export interface FirestoreCollectionQueryConfig<T> extends FirestoreQueryDriverR
  */
 export function firestoreCollectionQueryFactory<T>(config: FirestoreCollectionQueryConfig<T>): FirestoreCollectionQueryFactory<T> {
   const { collection, firestoreQueryDriver: driver } = config;
-  const { getDocs, query: makeQuery } = driver;
+  const { getDocs, streamDocs, query: makeQuery } = driver;
 
   const filterQuery = (inputQuery: Query<T>, queryConstraints: ArrayOrValue<FirestoreQueryConstraint>[]) => {
     const allConstraints = flattenArrayOrValueArray(queryConstraints);
@@ -46,6 +54,7 @@ export function firestoreCollectionQueryFactory<T>(config: FirestoreCollectionQu
     return {
       query,
       getDocs: () => getDocs(query),
+      streamDocs: () => streamDocs(query),
       filter: (...queryConstraints: ArrayOrValue<FirestoreQueryConstraint>[]) => filterQuery(query, queryConstraints)
     };
   };

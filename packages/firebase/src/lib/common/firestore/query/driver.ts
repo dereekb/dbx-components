@@ -1,3 +1,4 @@
+import { Observable } from 'rxjs';
 import { Query, QuerySnapshot } from "../types";
 import { FirestoreQueryConstraint } from "./constraint";
 
@@ -13,6 +14,7 @@ export interface FirestoreQueryConstraintFunctionsDriver {
  */
 export interface FirestoreQueryDriver extends FirestoreQueryConstraintFunctionsDriver {
   getDocs<T>(query: Query<T>): Promise<QuerySnapshot<T>>;
+  streamDocs<T>(query: Query<T>): Observable<QuerySnapshot<T>>;
 }
 
 /**

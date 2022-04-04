@@ -1,4 +1,5 @@
-import { limit, orderBy, startAfter, startAt, where } from "../../lib";
+import { first, from } from "rxjs";
+import { limit, orderBy, startAfter, startAt, where, limitToLast } from "../../lib";
 import { makeDocuments } from "../../lib/common/firestore/accessor/document.utility";
 import { FirestoreCollectionQueryFactoryFunction } from "../../lib/common/firestore/query/query";
 import { MockItemDocument, MockItem } from "./firestore.mock.item";
@@ -45,6 +46,63 @@ export function describeQueryDriverTests(f: MockItemCollectionFixture) {
 
             const result = await query(limit(limitCount)).getDocs();
             expect(result.docs.length).toBe(limitCount);
+          });
+
+          it('should limit the streamed results.', (done) => {
+            const limitCount = 2;
+            const resultObs = query(limit(limitCount)).streamDocs();
+
+            from(resultObs).pipe(first()).subscribe((results) => {
+              expect(results.docs.length).toBe(limitCount);
+              done();
+            });
+          });
+
+        });
+
+        describe('limitToLast', () => {
+
+          it('should limit the number of items returned.', async () => {
+            const limitCount = 2;
+
+            const unlimited = await query().getDocs();
+            expect(unlimited.docs.length).toBe(testDocumentCount);
+
+            const result = await query(orderBy('value'), limitToLast(limitCount)).getDocs();
+            expect(result.docs.length).toBe(limitCount);
+          });
+
+          it('the results should be returned from the end of the list. The results are still in the same order as requested.', async () => {
+            const limitCount = 2;
+
+            const result = await query(orderBy('value', 'asc'), limitToLast(limitCount)).getDocs();
+            expect(result.docs.length).toBe(limitCount);
+            expect(result.docs[0].data().value).toBe('3');
+            expect(result.docs[1].data().value).toBe('4');
+          });
+
+          it('should fail if orderby is not provided.', async () => {
+            const limitCount = 2;
+
+            const unlimited = await query().getDocs();
+            expect(unlimited.docs.length).toBe(testDocumentCount);
+
+            try {
+              await query(limitToLast(limitCount)).getDocs();
+              fail();
+            } catch (e) {
+              expect(e).toBeDefined();
+            }
+          });
+
+          it('should stream results.', (done) => {
+            const limitCount = 2;
+            const resultObs = query(orderBy('value'), limitToLast(limitCount)).streamDocs();
+
+            from(resultObs).pipe(first()).subscribe((results) => {
+              expect(results.docs.length).toBe(limitCount);
+              done();
+            });
           });
 
         });
@@ -105,7 +163,7 @@ export function describeQueryDriverTests(f: MockItemCollectionFixture) {
 
           it('should return values sorted in descending order.', async () => {
             const results = await query(orderBy('value', 'desc')).getDocs();
-            expect(results.docs[0].data().value).toBe(`${ items.length - 1 }`);
+            expect(results.docs[0].data().value).toBe(`${items.length - 1}`);
           });
 
         });

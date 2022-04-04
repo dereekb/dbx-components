@@ -1,16 +1,6 @@
-import { DocumentSnapshot, DocumentReference, runTransaction, Transaction, Firestore, writeBatch } from '@firebase/firestore';
-import { MockItem, testItemCollectionReference, MockItemDocument, MockItemFirestoreCollection, testItemFirestoreCollection, authorizedTestWithMockItemCollection } from "../../../test";
-import { FirestoreDocumentContext, makeFirestoreCollection } from "../../common/firestore";
-import { transactionDocumentContext } from './driver.accessor.transaction';
-import { Maybe } from '@dereekb/util';
-import { firebaseFirestoreClientDrivers } from './driver';
-import { writeBatchDocumentContext } from './driver.accessor.batch';
+import { authorizedTestWithMockItemCollection } from "../../../test";
+import { describeFirestoreIterationTests } from "../../../test/common/test.iterator";
 
-describe('Firestore', () => {
-
-  authorizedTestWithMockItemCollection((f) => {
-
-
-  });
-
+authorizedTestWithMockItemCollection((f) => {
+  describeFirestoreIterationTests(f);
 });

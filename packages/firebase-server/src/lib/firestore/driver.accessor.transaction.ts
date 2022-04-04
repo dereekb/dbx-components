@@ -1,4 +1,4 @@
-import { DocumentReference, DocumentSnapshot, Transaction, SetOptions, UpdateData as GoogleCloudUpdateData } from "@google-cloud/firestore";
+import { DocumentReference, DocumentSnapshot, Transaction as GoogleCloudTransaction, SetOptions, UpdateData as GoogleCloudUpdateData } from "@google-cloud/firestore";
 import { from, Observable } from "rxjs";
 import { WithFieldValue, UpdateData, FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, FirestoreDocumentContext, FirestoreDocumentContextType, FirestoreDocumentUpdateParams } from "@dereekb/firebase";
 
@@ -8,7 +8,7 @@ import { WithFieldValue, UpdateData, FirestoreDocumentDataAccessor, FirestoreDoc
  */
 export class TransactionFirestoreDocumentDataAccessor<T> implements FirestoreDocumentDataAccessor<T> {
 
-  constructor(readonly transaction: Transaction, readonly documentRef: DocumentReference<T>) { }
+  constructor(readonly transaction: GoogleCloudTransaction, readonly documentRef: DocumentReference<T>) { }
 
   stream(): Observable<DocumentSnapshot<T>> {
     return from(this.get());
@@ -45,7 +45,7 @@ export class TransactionFirestoreDocumentDataAccessor<T> implements FirestoreDoc
  * @param transaction 
  * @returns 
  */
-export function transactionAccessorFactory<T>(transaction: Transaction): FirestoreDocumentDataAccessorFactory<T> {
+export function transactionAccessorFactory<T>(transaction: GoogleCloudTransaction): FirestoreDocumentDataAccessorFactory<T> {
   return {
     accessorFor: (ref: DocumentReference<T>) => new TransactionFirestoreDocumentDataAccessor(transaction, ref)
   };
@@ -57,10 +57,10 @@ export class TransactionFirestoreDocumentContext<T> implements FirestoreDocument
   readonly contextType = FirestoreDocumentContextType.TRANSACTION;
   readonly accessorFactory = transactionAccessorFactory<T>(this.transaction);
 
-  constructor(readonly transaction: Transaction) { }
+  constructor(readonly transaction: GoogleCloudTransaction) { }
 
 }
 
-export function transactionDocumentContext<T>(transaction: Transaction): TransactionFirestoreDocumentContext<T> {
+export function transactionDocumentContext<T>(transaction: GoogleCloudTransaction): TransactionFirestoreDocumentContext<T> {
   return new TransactionFirestoreDocumentContext<T>(transaction);
 }

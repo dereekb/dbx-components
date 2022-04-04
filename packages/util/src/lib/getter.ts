@@ -5,6 +5,11 @@
 export type Getter<T> = () => T;
 
 /**
+ * Getter with the design of returning a new value each time.
+ */
+export type Factory<T> = Getter<T>;
+
+/**
  * Function that returns a value with a single argument.
  */
 export type GetterWithInput<T, A> = (args?: A) => T;

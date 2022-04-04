@@ -1,6 +1,6 @@
-import { DocumentReference, DocumentSnapshot, WriteResult, UpdateData as GoogleCloudUpdateData } from "@google-cloud/firestore";
-import { from, Observable } from "rxjs";
-import { WithFieldValue, UpdateData, FirestoreDocumentContext, FirestoreDocumentContextType, FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, FirestoreDocumentDeleteParams, FirestoreDocumentUpdateParams, SetOptions } from "@dereekb/firebase";
+import { DocumentReference, DocumentSnapshot, WriteResult } from "@google-cloud/firestore";
+import { Observable } from "rxjs";
+import { WithFieldValue, UpdateData, FirestoreDocumentContext, FirestoreDocumentContextType, FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, FirestoreDocumentDeleteParams, FirestoreDocumentUpdateParams, SetOptions, streamFromOnSnapshot } from "@dereekb/firebase";
 
 // MARK: Accessor
 export class DefaultFirestoreDocumentDataAccessor<T> implements FirestoreDocumentDataAccessor<T> {
@@ -8,7 +8,7 @@ export class DefaultFirestoreDocumentDataAccessor<T> implements FirestoreDocumen
   constructor(readonly documentRef: DocumentReference<T>) { }
 
   stream(): Observable<DocumentSnapshot<T>> {
-    return from(this.get());  // todo
+    return streamFromOnSnapshot(({ next, error }) => this.documentRef.onSnapshot(next, error));
   }
 
   exists(): Promise<boolean> {

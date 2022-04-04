@@ -42,10 +42,11 @@ export function testItemCollectionReference(context: FirestoreContext): Collecti
 
 export type MockItemFirestoreCollection = FirestoreCollection<MockItem, MockItemDocument>;
 
-export function testItemFirestoreCollection(context: FirestoreContext): MockItemFirestoreCollection {
-  return context.firestoreCollection({
+export function testItemFirestoreCollection(firestoreContext: FirestoreContext): MockItemFirestoreCollection {
+  return firestoreContext.firestoreCollection({
     itemsPerPage: 50,
-    collection: testItemCollectionReference(context),
-    makeDocument: (a, d) => new MockItemDocument(a, d)
+    collection: testItemCollectionReference(firestoreContext),
+    makeDocument: (a, d) => new MockItemDocument(a, d),
+    firestoreContext
   });
 }

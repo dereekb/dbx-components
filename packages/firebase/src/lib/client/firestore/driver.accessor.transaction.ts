@@ -1,4 +1,4 @@
-import { DocumentReference, DocumentSnapshot, Transaction, UpdateData, WithFieldValue } from "@firebase/firestore";
+import { DocumentReference, DocumentSnapshot, Transaction as FirebaseFirestoreTransaction, UpdateData, WithFieldValue } from "@firebase/firestore";
 import { from, Observable } from "rxjs";
 import { FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, FirestoreDocumentContext, FirestoreDocumentContextType, SetOptions } from "../../common/firestore";
 
@@ -8,7 +8,7 @@ import { FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, Fi
  */
 export class TransactionFirestoreDocumentDataAccessor<T> implements FirestoreDocumentDataAccessor<T> {
 
-  constructor(readonly transaction: Transaction, readonly documentRef: DocumentReference<T>) { }
+  constructor(readonly transaction: FirebaseFirestoreTransaction, readonly documentRef: DocumentReference<T>) { }
 
   stream(): Observable<DocumentSnapshot<T>> {
     return from(this.get());
@@ -45,7 +45,7 @@ export class TransactionFirestoreDocumentDataAccessor<T> implements FirestoreDoc
  * @param transaction 
  * @returns 
  */
-export function transactionAccessorFactory<T>(transaction: Transaction): FirestoreDocumentDataAccessorFactory<T> {
+export function transactionAccessorFactory<T>(transaction: FirebaseFirestoreTransaction): FirestoreDocumentDataAccessorFactory<T> {
   return {
     accessorFor: (ref: DocumentReference<T>) => new TransactionFirestoreDocumentDataAccessor(transaction, ref)
   };
@@ -57,10 +57,10 @@ export class TransactionFirestoreDocumentContext<T> implements FirestoreDocument
   readonly contextType = FirestoreDocumentContextType.TRANSACTION;
   readonly accessorFactory = transactionAccessorFactory<T>(this.transaction);
 
-  constructor(readonly transaction: Transaction) { }
+  constructor(readonly transaction: FirebaseFirestoreTransaction) { }
 
 }
 
-export function transactionDocumentContext<T>(transaction: Transaction): TransactionFirestoreDocumentContext<T> {
+export function transactionDocumentContext<T>(transaction: FirebaseFirestoreTransaction): TransactionFirestoreDocumentContext<T> {
   return new TransactionFirestoreDocumentContext<T>(transaction);
 }

@@ -111,8 +111,8 @@ export interface CollectionReference<T = DocumentData> extends Query<T> {
 }
 
 // MARK: Batch
-export type WriteBatch = any;
-export type Transaction = any;
+export type WriteBatch = {};
+export type Transaction = {};
 
 // MARK: Query
 export interface Query<T = DocumentData> {
@@ -161,4 +161,14 @@ export interface WriteResult {
 export interface Precondition {
   readonly lastUpdateTime?: Timestamp;
   readonly exists?: boolean;
+}
+
+export interface ReadOnlyTransactionOptions {
+  readOnly: true;
+  readTime?: Timestamp;
+}
+
+export interface ReadWriteTransactionOptions {
+  readOnly?: false;
+  maxAttempts?: number;
 }

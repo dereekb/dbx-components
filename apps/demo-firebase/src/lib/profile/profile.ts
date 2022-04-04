@@ -31,10 +31,11 @@ export function profileCollectionReference(context: FirestoreContext): Collectio
 
 export type ProfileFirestoreCollection = FirestoreCollection<Profile, ProfileDocument>;
 
-export function profileFirestoreCollection(context: FirestoreContext): ProfileFirestoreCollection {
-  return context.firestoreCollection({
+export function profileFirestoreCollection(firestoreContext: FirestoreContext): ProfileFirestoreCollection {
+  return firestoreContext.firestoreCollection({
     itemsPerPage: 50,
-    collection: profileCollectionReference(context),
-    makeDocument: (accessor, documentAccessor) => new ProfileDocument(accessor, documentAccessor)
+    collection: profileCollectionReference(firestoreContext),
+    makeDocument: (accessor, documentAccessor) => new ProfileDocument(accessor, documentAccessor),
+    firestoreContext
   });
 }

@@ -3,3 +3,4 @@ export * from './constraint.handler';
 export * from './driver';
 export * from './iterator';
 export * from './query';
+export * from './query.util';

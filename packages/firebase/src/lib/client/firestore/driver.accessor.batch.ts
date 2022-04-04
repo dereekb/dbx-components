@@ -1,6 +1,6 @@
-import { DocumentReference, DocumentSnapshot, getDoc } from "@firebase/firestore";
+import { DocumentReference, DocumentSnapshot, getDoc, WriteBatch as FirebaseFirestoreWriteBatch } from "@firebase/firestore";
 import { from, Observable } from "rxjs";
-import { FirestoreDocumentContext, UpdateData, WithFieldValue, WriteBatch, FirestoreDocumentContextType, FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, SetOptions } from "../../common/firestore";
+import { FirestoreDocumentContext, UpdateData, WithFieldValue, FirestoreDocumentContextType, FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, SetOptions } from "../../common/firestore";
 
 // MARK: Accessor
 /**
@@ -8,7 +8,7 @@ import { FirestoreDocumentContext, UpdateData, WithFieldValue, WriteBatch, Fires
  */
 export class WriteBatchFirestoreDocumentDataAccessor<T> implements FirestoreDocumentDataAccessor<T> {
 
-  constructor(readonly batch: WriteBatch, readonly documentRef: DocumentReference<T>) { }
+  constructor(readonly batch: FirebaseFirestoreWriteBatch, readonly documentRef: DocumentReference<T>) { }
 
   stream(): Observable<DocumentSnapshot<T>> {
     return from(this.get());
@@ -33,7 +33,7 @@ export class WriteBatchFirestoreDocumentDataAccessor<T> implements FirestoreDocu
   }
 
   update(data: UpdateData<T>): Promise<void> {
-    this.batch.update(this.documentRef, data);
+    this.batch.update(this.documentRef, data as any);
     return Promise.resolve();
   }
 
@@ -45,7 +45,7 @@ export class WriteBatchFirestoreDocumentDataAccessor<T> implements FirestoreDocu
  * @param batch 
  * @returns 
  */
-export function writeBatchAccessorFactory<T>(writeBatch: WriteBatch): FirestoreDocumentDataAccessorFactory<T> {
+export function writeBatchAccessorFactory<T>(writeBatch: FirebaseFirestoreWriteBatch): FirestoreDocumentDataAccessorFactory<T> {
   return {
     accessorFor: (ref: DocumentReference<T>) => new WriteBatchFirestoreDocumentDataAccessor(writeBatch, ref)
   };
@@ -57,10 +57,10 @@ export class WriteBatchFirestoreDocumentContext<T> implements FirestoreDocumentC
   readonly contextType = FirestoreDocumentContextType.BATCH;
   readonly accessorFactory = writeBatchAccessorFactory<T>(this.batch);
 
-  constructor(readonly batch: WriteBatch) { }
+  constructor(readonly batch: FirebaseFirestoreWriteBatch) { }
 
 }
 
-export function writeBatchDocumentContext<T>(batch: WriteBatch): WriteBatchFirestoreDocumentContext<T> {
+export function writeBatchDocumentContext<T>(batch: FirebaseFirestoreWriteBatch): WriteBatchFirestoreDocumentContext<T> {
   return new WriteBatchFirestoreDocumentContext<T>(batch);
 }
