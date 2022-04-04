@@ -1,5 +1,6 @@
-import { first, from } from "rxjs";
-import { limit, orderBy, startAfter, startAt, where, limitToLast } from "../../lib";
+import { SubscriptionObject } from "@dereekb/rxjs";
+import { filter, first, from } from "rxjs";
+import { limit, orderBy, startAfter, startAt, where, limitToLast, endAt, endBefore } from "../../lib/common/firestore/query/constraint";
 import { makeDocuments } from "../../lib/common/firestore/accessor/document.utility";
 import { FirestoreCollectionQueryFactoryFunction } from "../../lib/common/firestore/query/query";
 import { MockItemDocument, MockItem } from "./firestore.mock.item";
@@ -32,6 +33,53 @@ export function describeQueryDriverTests(f: MockItemCollectionFixture) {
             };
           }
         });
+      });
+
+      describe('streamDocs()', () => {
+
+        let sub: SubscriptionObject;
+
+        beforeEach(() => {
+          sub = new SubscriptionObject();
+        });
+
+        afterEach(() => {
+          sub.destroy();
+        });
+
+        it('should emit when the query results update (an item is added).', (done) => {
+          const itemsToAdd = 1;
+
+          sub.subscription = query().streamDocs().pipe(filter(x => x.docs.length > items.length)).subscribe((results) => {
+            expect(results.docs.length).toBe(items.length + itemsToAdd);
+            done();
+          });
+
+          // add one item
+          makeDocuments(f.instance.firestoreCollection.documentAccessor(), {
+            count: itemsToAdd,
+            init: (i) => {
+              return {
+                value: `${i + items.length}`,
+                test: true
+              };
+            }
+          });
+
+        });
+
+        it('should emit when the query results update (an item is removed).', (done) => {
+          const itemsToRemove = 1;
+
+          sub.subscription = query().streamDocs().pipe(filter(x => x.docs.length < items.length)).subscribe((results) => {
+            expect(results.docs.length).toBe(items.length - itemsToRemove);
+            done();
+          });
+
+          // remove one item
+          items[0].accessor.delete();
+        });
+
       });
 
       describe('constraint', () => {
@@ -107,6 +155,20 @@ export function describeQueryDriverTests(f: MockItemCollectionFixture) {
 
         });
 
+        describe('orderBy', () => {
+
+          it('should return values sorted in ascending order.', async () => {
+            const results = await query(orderBy('value', 'asc')).getDocs();
+            expect(results.docs[0].data().value).toBe('0');
+          });
+
+          it('should return values sorted in descending order.', async () => {
+            const results = await query(orderBy('value', 'desc')).getDocs();
+            expect(results.docs[0].data().value).toBe(`${items.length - 1}`);
+          });
+
+        });
+
         describe('where', () => {
 
           it('should return the documents matching the query.', async () => {
@@ -154,16 +216,34 @@ export function describeQueryDriverTests(f: MockItemCollectionFixture) {
 
         });
 
-        describe('orderBy', () => {
+        describe('endAt', () => {
 
-          it('should return values sorted in ascending order.', async () => {
-            const results = await query(orderBy('value', 'asc')).getDocs();
-            expect(results.docs[0].data().value).toBe('0');
+          it('should return values ending with the specified endAt point (inclusive).', async () => {
+            const limitCount = 2;
+
+            const firstQuery = query(limit(limitCount));
+            const first = await firstQuery.getDocs();
+            expect(first.docs.length).toBe(limitCount);
+
+            const second = await firstQuery.filter(endAt(first.docs[0])).getDocs();
+            expect(second.docs.length).toBe(limitCount - 1);
+            expect(second.docs[0].id).toBe(first.docs[0].id);
           });
 
-          it('should return values sorted in descending order.', async () => {
-            const results = await query(orderBy('value', 'desc')).getDocs();
-            expect(results.docs[0].data().value).toBe(`${items.length - 1}`);
+        });
+
+        describe('endBefore', () => {
+
+          it('should return values ending with the specified endBefore point (exclusive).', async () => {
+            const limitCount = 2;
+
+            const firstQuery = query(limit(limitCount));
+            const first = await firstQuery.getDocs();
+            expect(first.docs.length).toBe(limitCount);
+
+            const second = await firstQuery.filter(endBefore(first.docs[1])).getDocs();
+            expect(second.docs.length).toBe(limitCount - 1);
+            expect(second.docs[0].id).toBe(first.docs[0].id);
           });
 
         });

@@ -31,7 +31,7 @@ export interface ItemIteration<V = any, L extends LoadingState<V> = LoadingState
   readonly currentState$: Observable<L>;
 
   /**
-   * Triggers a loading of the next page.
+   * Triggers a loading of the next set of items.
    */
   next(request?: ItemIteratorNextRequest): void;
 

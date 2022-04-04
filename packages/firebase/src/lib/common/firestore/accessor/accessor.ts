@@ -34,14 +34,14 @@ export interface FirestoreDocumentDataAccessor<T> extends DocumentReferenceRef<T
    */
   delete(params?: FirestoreDocumentDeleteParams): Promise<WriteResult | void>;
   /**
-   * Sets the data in the database.
+   * Sets the data in the database. Can additionally pass options to configure merging of fields.
    * 
    * @param data 
    */
   set(data: WithFieldValue<T>): Promise<WriteResult | void>;
   set(data: PartialWithFieldValue<T>, options: SetOptions): Promise<WriteResult | void>;
   /**
-   * Updates the data in the database.
+   * Updates the data in the database. If the document doesn't exist, it will fail.
    * 
    * @param data 
    */

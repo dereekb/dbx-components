@@ -7,6 +7,7 @@ import { FirestoreDocumentContext } from './context';
 
 export interface FirestoreDocument<T, A extends FirestoreDocumentDataAccessor<T> = FirestoreDocumentDataAccessor<T>> extends DocumentReferenceRef<T>, CollectionReferenceRef<T> {
   readonly accessor: A;
+  readonly id: string;
 }
 
 /**
@@ -21,6 +22,10 @@ export abstract class AbstractFirestoreDocument<T,
   readonly data$: Observable<T> = dataFromSnapshotStream(this.stream$);
 
   constructor(readonly accessor: A, readonly documentAccessor: FirestoreDocumentAccessor<T, D>) { }
+
+  get id(): string {
+    return this.documentRef.id;
+  }
 
   get documentRef(): DocumentReference<T> {
     return this.accessor.documentRef;

@@ -1,13 +1,20 @@
 import { PageLoadingState, ItemPageIterator, ItemPageIterationInstance, ItemPageIterationConfig, ItemPageIteratorDelegate, ItemPageIteratorRequest, ItemPageIteratorResult, MappedPageItemIterationInstance } from '@dereekb/rxjs';
 import { QueryDocumentSnapshot, QuerySnapshot } from "../types";
-import { Maybe, lastValue, mergeIntoArray } from '@dereekb/util';
+import { asArray, Maybe, lastValue, mergeIntoArray, ArrayOrValue } from '@dereekb/util';
 import { from, Observable, of, exhaustMap } from "rxjs";
 import { CollectionReferenceRef } from '../reference';
 import { FirestoreQueryDriverRef } from './driver';
-import { FirestoreQueryConstraint, limit, startAt } from './constraint';
+import { FIRESTORE_LIMIT_QUERY_CONSTRAINT_TYPE, FirestoreQueryConstraint, limit, startAfter } from './constraint';
 
 export interface FirestoreItemPageIteratorFilter {
-  queryConstraints?: Maybe<FirestoreQueryConstraint[]>;
+  /**
+   * Overrides the default limit, if applicable.
+   */
+  limit?: number;
+  /**
+   * Constraints to query on.
+   */
+  constraints?: Maybe<ArrayOrValue<FirestoreQueryConstraint>>;
 }
 
 export interface FirestoreItemPageIterationBaseConfig<T> extends CollectionReferenceRef<T>, FirestoreQueryDriverRef {
@@ -30,6 +37,11 @@ export interface FirestoreItemPageQueryResult<T> {
 export type FirestoreItemPageIteratorDelegate<T> = ItemPageIteratorDelegate<FirestoreItemPageQueryResult<T>, FirestoreItemPageIteratorFilter, FirestoreItemPageIterationConfig<T>>;
 export type InternalFirestoreItemPageIterationInstance<T> = ItemPageIterationInstance<FirestoreItemPageQueryResult<T>, FirestoreItemPageIteratorFilter, FirestoreItemPageIterationConfig<T>>;
 
+export function filterDisallowedFirestoreItemPageIteratorInputContraints(constraints: FirestoreQueryConstraint[]): FirestoreQueryConstraint[] {
+  const isIllegal = new Set([FIRESTORE_LIMIT_QUERY_CONSTRAINT_TYPE]);
+  return constraints.filter(x => !isIllegal.has(x.type));
+}
+
 export function makeFirestoreItemPageIteratorDelegate<T>(): FirestoreItemPageIteratorDelegate<T> {
   return {
     loadItemsForPage: (request: ItemPageIteratorRequest<FirestoreItemPageQueryResult<T>, FirestoreItemPageIteratorFilter, FirestoreItemPageIterationConfig<T>>): Observable<ItemPageIteratorResult<FirestoreItemPageQueryResult<T>>> => {
@@ -37,6 +49,7 @@ export function makeFirestoreItemPageIteratorDelegate<T>(): FirestoreItemPageIte
       const lastQueryResult$: Observable<Maybe<FirestoreItemPageQueryResult<T>>> = (page > 0) ? request.lastItem$ : of(undefined);
 
       const { collection, itemsPerPage, filter, firestoreQueryDriver: driver } = iteratorConfig;
+      const { limit: filterLimit, constraints: filterConstraints } = filter ?? {};
 
       return lastQueryResult$.pipe(
         exhaustMap((lastResult) => {
@@ -46,20 +59,21 @@ export function makeFirestoreItemPageIteratorDelegate<T>(): FirestoreItemPageIte
             const constraints: FirestoreQueryConstraint[] = [];
 
             // Add filter constraints
-            if (filter?.queryConstraints) {
-              mergeIntoArray(constraints, filter.queryConstraints);
+            if (filterConstraints != null) {
+              mergeIntoArray(constraints, filterDisallowedFirestoreItemPageIteratorInputContraints(asArray(filterConstraints)));
             }
 
             // Add cursor
             const cursorDocument = (lastResult) ? lastValue(lastResult.docs) : undefined;
-            const startsAtFilter = (cursorDocument) ? startAt(cursorDocument) : undefined;  // TODO: Can try switching to startAfter?
+            const startAfterFilter = (cursorDocument) ? startAfter(cursorDocument) : undefined;
 
-            if (startsAtFilter) {
-              constraints.push(startsAtFilter);
+            if (startAfterFilter) {
+              constraints.push(startAfterFilter);
             }
 
             // Add Limit
-            constraints.push(limit(itemsPerPage + ((startsAtFilter) ? 1 : 0)));   // Add 1 for cursor, since results will start at our cursor.
+            const limitCount = filter?.limit ?? itemsPerPage + ((startAfterFilter) ? 1 : 0);
+            constraints.push(limit(limitCount));   // Add 1 for cursor, since results will start at our cursor.
 
             const batchQuery = driver.query<T>(collection, ...constraints);
             const resultPromise: Promise<ItemPageIteratorResult<FirestoreItemPageQueryResult<T>>> = driver.getDocs(batchQuery).then((snapshot) => {
@@ -110,11 +124,12 @@ export class FirestoreItemPageIterationInstance<T> extends MappedPageItemIterati
 }
 
 // MARK: Iterator
+
 /**
  * FirestoreItemPageIteration factory.
  */
 export interface FirestoreItemPageIterationFactory<T> {
-  firestoreIteration(filter?: FirestoreItemPageIteratorFilter): FirestoreItemPageIterationInstance<T>;
+  readonly firestoreIteration: FirestoreItemPageIterationFactoryFunction<T>;
 }
 
 /**

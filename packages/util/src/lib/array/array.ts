@@ -18,6 +18,8 @@ export function convertMaybeToArray<T>(arrayOrValue: Maybe<ArrayOrValue<T>>): T[
   }
 }
 
+export const asArray = convertMaybeToArray;
+
 /**
  * Converts the input value to an array containing itself, or returns itself if it is an array.
  * 
@@ -27,7 +29,6 @@ export function convertMaybeToArray<T>(arrayOrValue: Maybe<ArrayOrValue<T>>): T[
 export function convertToArray<T>(arrayOrValue: ArrayOrValue<T>): T[] {
   return Array.isArray(arrayOrValue) ? arrayOrValue : [arrayOrValue];
 }
-
 /**
  * Returns the first value from the array.
  */

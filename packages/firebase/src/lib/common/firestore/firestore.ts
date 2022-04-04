@@ -46,8 +46,8 @@ export class FirestoreCollection<T, D extends FirestoreDocument<T> = FirestoreDo
   }
 
   // MARK: FirestoreItemPageIterationFactory<T>
-  firestoreIteration(filter?: FirestoreItemPageIteratorFilter): FirestoreItemPageIterationInstance<T> {
-    return this._iterationFactory(filter);
+  get firestoreIteration() {
+    return this._iterationFactory;
   }
 
   // MARK: FirestoreDocumentAccessorFactory<T, D>

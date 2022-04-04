@@ -3,8 +3,7 @@ import { FirestoreDocumentDataAccessor } from "../../lib/common/firestore/access
 import { FirestoreDocumentAccessor } from "../../lib/common/firestore/accessor/document";
 import { makeDocuments } from "../../lib/common/firestore/accessor/document.utility";
 import { RunTransactionFunction } from '../../lib/common/firestore/factory';
-import { FirestoreCollectionQueryFactoryFunction } from "../../lib/common/firestore/query/query";
-import { Transaction, WriteBatch } from '../../lib/common/firestore/types';
+import { WriteBatch } from '../../lib/common/firestore/types';
 import { MockItemDocument, MockItem } from "./firestore.mock.item";
 import { MockItemCollectionFixture } from "./firestore.mock.item.fixture";
 
@@ -19,12 +18,10 @@ export function describeAccessorDriverTests(f: MockItemCollectionFixture) {
 
     const testDocumentCount = 5;
 
-    let query: FirestoreCollectionQueryFactoryFunction<MockItem>;
     let firestoreDocumentAccessor: FirestoreDocumentAccessor<MockItem, MockItemDocument>;
     let items: MockItemDocument[];
 
     beforeEach(async () => {
-      query = f.instance.firestoreCollection.query;
       firestoreDocumentAccessor = f.instance.firestoreCollection.documentAccessor();
       items = await makeDocuments(f.instance.firestoreCollection.documentAccessor(), {
         count: testDocumentCount,
@@ -140,14 +137,77 @@ export function describeAccessorDriverTests(f: MockItemCollectionFixture) {
 
         });
 
+        describe('exists()', () => {
+
+          it('should return true if the document exists', async () => {
+            const exists = await accessor.exists();
+            expect(exists).toBe(true);
+          });
+
+          it('should return false if the document does not exist', async () => {
+            await accessor.delete();
+            const exists = await accessor.exists();
+            expect(exists).toBe(false);
+          });
+
+        });
+
         describe('update()', () => {
 
-          it('should update the data.', async () => {
+          it('should update the data if the document exists.', async () => {
             const testValue = false;
             await accessor.update({ test: testValue });
 
             const snapshot = await accessor.get();
             expect(snapshot.data()?.test).toBe(testValue);
+          });
+
+          it('should fail if the document does not exist.', async () => {
+            await accessor.delete();
+
+            const snapshot = await accessor.get();
+            expect(snapshot.data()).toBe(undefined);
+
+            const exists = await accessor.exists();
+            expect(exists).toBe(false);
+
+            try {
+              await accessor.update({ test: false });
+              fail();
+            } catch (e) {
+              expect(e).toBeDefined();
+            }
+          });
+
+        });
+
+        describe('set()', () => {
+
+          it('should update the data on the document for fields that are not undefined.', async () => {
+            const newValue = 'x';
+
+            await accessor.set({
+              value: newValue,
+              test: undefined
+            });
+
+            const snapshot = await accessor.get();
+            expect(snapshot.data()?.value).toBe(newValue);
+            expect(snapshot.data()?.test).toBe(false);
+          });
+
+        });
+
+        describe('delete()', () => {
+
+          it('should delete the document.', async () => {
+            await accessor.delete();
+
+            const snapshot = await accessor.get();
+            expect(snapshot.data()).toBe(undefined);
+
+            const exists = await accessor.exists();
+            expect(exists).toBe(false);
           });
 
         });

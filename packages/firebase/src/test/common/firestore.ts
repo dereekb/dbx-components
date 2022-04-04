@@ -26,7 +26,8 @@ export function makeTestingFirestoreAccesorDriver(driver: FirestoreAccessorDrive
     let fuzzedPath: string = fuzzedMap.get(path)!;
 
     if (!fuzzedPath) {
-      fuzzedPath = `${time}_${path}_${fuzzerKey += 1}`;
+      const random = Math.ceil(Math.random() * 9999) % 9999;
+      fuzzedPath = `${time}_${random}_${path}_${fuzzerKey += 1}`;
       fuzzedMap.set(path, fuzzedPath);
     }
 

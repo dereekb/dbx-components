@@ -8,17 +8,17 @@ import { itemAccumulator, ItemAccumulatorInstance } from './iteration.accumulato
 describe('iteration.rxjs', () => {
 
   let iterator: ItemPageIterator<number[], TestPageIteratorFilter>;
-  let instance: ItemPageIterationInstance<number[], TestPageIteratorFilter>;
+  let iteration: ItemPageIterationInstance<number[], TestPageIteratorFilter>;
   let accumulator: ItemAccumulatorInstance<number[]>;
 
   beforeEach(() => {
     iterator = new ItemPageIterator(TEST_PAGE_ARRAY_ITERATOR_DELEGATE);
-    instance = iterator.instance({});
-    accumulator = itemAccumulator(instance);
+    iteration = iterator.instance({});
+    accumulator = itemAccumulator(iteration);
   });
 
   afterEach(() => {
-    instance.destroy();
+    iteration.destroy();
   });
 
   describe('flattenIterationResultItemArray()', () => {
@@ -27,7 +27,7 @@ describe('iteration.rxjs', () => {
 
       const testPagesToLoad = 10;
 
-      iteratorNextPageUntilPage(instance, testPagesToLoad).then((page) => {
+      iteratorNextPageUntilPage(iteration, testPagesToLoad).then((page) => {
         expect(page).toBe(testPagesToLoad - 1);
 
         const obs = flattenIterationResultItemArray(accumulator);

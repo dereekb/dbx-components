@@ -11,6 +11,7 @@ import {
 import { TestFirestoreContextFixture, TestFirestoreInstance } from '../common/firestore.mock';
 import { firebaseFirestoreClientDrivers } from '../../lib/client/firestore/driver';
 import { firestoreContextFactory } from '../../lib/common/firestore/context';
+import { setLogLevel } from 'firebase/firestore';
 
 export interface RulesUnitTestingContextConfig {
   userId: string;
@@ -130,4 +131,10 @@ function rewriteRulesForFuzzedCollectionNames(rules: string | undefined, fuzzedC
   // TODO: rewrite the rules using regex matching/replacement.
 
   return rules;
+}
+
+// MARK: Utility
+export function changeFirestoreLogLevelBeforeAndAfterTests() {
+  beforeAll(() => setLogLevel('error'));
+  afterAll(() => setLogLevel('warn'));
 }

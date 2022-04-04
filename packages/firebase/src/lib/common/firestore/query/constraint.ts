@@ -1,5 +1,4 @@
-import { SortingOrder } from '@dereekb/util';
-import { Maybe, ObjectMap } from '@dereekb/util';
+import { SortingOrder, Maybe, ObjectMap } from '@dereekb/util';
 import { DocumentSnapshot, DocumentData, FieldPath } from '../types';
 
 /**
@@ -76,7 +75,9 @@ export interface WhereQueryConstraintData {
   value: unknown;
 }
 
-export function where(fieldPath: string | FieldPath, opStr: WhereFilterOp, value: unknown): FirestoreQueryConstraint<WhereQueryConstraintData> {
+export function where<T>(fieldPath: keyof T, opStr: WhereFilterOp, value: unknown): FirestoreQueryConstraint<WhereQueryConstraintData>;
+export function where(fieldPath: string | FieldPath, opStr: WhereFilterOp, value: unknown): FirestoreQueryConstraint<WhereQueryConstraintData>
+export function where(fieldPath: any, opStr: WhereFilterOp, value: unknown): FirestoreQueryConstraint<WhereQueryConstraintData> {
   return firestoreQueryConstraint(FIRESTORE_WHERE_QUERY_CONSTRAINT_TYPE, { fieldPath, opStr, value });
 }
 
@@ -124,6 +125,11 @@ export interface EndAtQueryConstraintData<T = DocumentData> {
   snapshot: DocumentSnapshot<T>;
 }
 
+/**
+ * 
+ * @param snapshot 
+ * @returns 
+ */
 export function endAt<T = DocumentData>(snapshot: DocumentSnapshot<T>): FirestoreQueryConstraint<EndAtQueryConstraintData<T>> {
   return firestoreQueryConstraint(FIRESTORE_END_AT_QUERY_CONSTRAINT_TYPE, { snapshot });
 }
@@ -136,6 +142,11 @@ export interface EndBeforeQueryConstraintData<T = DocumentData> {
   snapshot: DocumentSnapshot<T>;
 }
 
+/**
+ * 
+ * @param snapshot 
+ * @returns 
+ */
 export function endBefore<T = DocumentData>(snapshot: DocumentSnapshot<T>): FirestoreQueryConstraint<EndBeforeQueryConstraintData<T>> {
   return firestoreQueryConstraint(FIRESTORE_END_BEFORE_QUERY_CONSTRAINT_TYPE, { snapshot });
 }

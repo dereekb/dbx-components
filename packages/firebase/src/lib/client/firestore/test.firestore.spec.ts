@@ -102,7 +102,6 @@ describe('FirestoreCollection', () => {
 
         exists = await document.accessor.exists();
         expect(exists).toBe(true);
-
       });
 
     });
