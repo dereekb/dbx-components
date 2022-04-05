@@ -49,7 +49,7 @@ export function firestoreClientAccessorDriver(): FirestoreAccessorDriver {
   return {
     doc: <T>(collection: CollectionReference<T>, path?: string, ...pathSegments: string[]) => docRefForPath(collection as GoogleCloudCollectionReference, path, pathSegments) as DocumentReference<T>,
     collection: <T>(firestore: Firestore, path: string, ...pathSegments: string[]) => collectionRefForPath((firestore as GoogleCloudFirestore), path, pathSegments) as CollectionReference<T>,
-    subCollection: <T>(document: DocumentReference, path: string, ...pathSegments: string[]) => collectionRefForPath((document as GoogleCloudDocumentReference), path, pathSegments) as CollectionReference<T>,
+    subcollection: <T>(document: DocumentReference, path: string, ...pathSegments: string[]) => collectionRefForPath((document as GoogleCloudDocumentReference), path, pathSegments) as CollectionReference<T>,
     transactionFactoryForFirestore: (firestore) => async <T>(fn: TransactionFunction<T>) => (firestore as GoogleCloudFirestore).runTransaction(fn),
     writeBatchFactoryForFirestore: (firestore) => () => (firestore as GoogleCloudFirestore).batch(),
     defaultContextFactory: defaultFirestoreDocumentContext,

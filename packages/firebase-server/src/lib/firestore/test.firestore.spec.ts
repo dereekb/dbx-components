@@ -23,6 +23,7 @@ describe('FirestoreCollection', () => {
         const itemsPerPage = 50;
 
         firestoreCollection = makeFirestoreCollection({
+          firestoreContext: f.parent.context,
           itemsPerPage,
           collection: mockItemCollectionReference(f.parent.context),
           makeDocument: (a, d) => new MockItemDocument(a, d),

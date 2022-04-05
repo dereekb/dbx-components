@@ -1,7 +1,7 @@
 import { FirestoreAccessorDriverRef } from './accessor/driver';
 import { FirestoreQueryDriverRef } from './query/driver';
 import { WriteBatch, Transaction } from "./types";
-import { FirestoreDocument, FirestoreDocumentAccessor, FirestoreDocumentAccessorFactory, FirestoreDocumentAccessorFactoryFunction, FirestoreDocumentAccessorFactoryConfig, firestoreDocumentAccessorFactory, FirestoreDocumentAccessorForTransactionFactory, FirestoreDocumentAccessorForWriteBatchFactory } from "./accessor/document";
+import { FirestoreDocument, FirestoreDocumentAccessor, FirestoreDocumentAccessorFactory, FirestoreDocumentAccessorFactoryFunction, FirestoreDocumentAccessorFactoryConfig, firestoreDocumentAccessorFactory, FirestoreDocumentAccessorForTransactionFactory, FirestoreDocumentAccessorForWriteBatchFactory, FirestoreSingleDocumentAccessor, firestoreSingleDocumentAccessor } from "./accessor/document";
 import { FirestoreItemPageIterationBaseConfig, FirestoreItemPageIterationFactory, firestoreItemPageIterationFactory, FirestoreItemPageIterationFactoryFunction } from "./query/iterator";
 import { CollectionReferenceRef, FirestoreContextReference } from "./reference";
 import { firestoreCollectionQueryFactory, FirestoreCollectionQueryFactory } from './query/query';
@@ -65,9 +65,9 @@ export function makeFirestoreCollection<T, D extends FirestoreDocument<T>>(confi
   };
 }
 
-// MARK: Subcollection
+// MARK: Sub-Collection
 /**
- * Used for SubCollection types that 
+ * Used for Subcollection types that 
  */
 export interface FirestoreCollectionWithParentConfig<T, PT, D extends FirestoreDocument<T> = FirestoreDocument<T>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>> extends FirestoreCollectionConfig<T, D> {
 
@@ -91,4 +91,31 @@ export function makeFirestoreCollectionWithParent<T, PT, D extends FirestoreDocu
   const result = makeFirestoreCollection(config) as FirestoreCollection<T, D> & { parent: PD };
   result.parent = config.parent;
   return result;
+}
+
+// MARK: Single-Item Subcollection
+export interface SingleItemFirestoreCollectionConfig<T, PT, D extends FirestoreDocument<T> = FirestoreDocument<T>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>> extends FirestoreCollectionWithParentConfig<T, PT, D, PD> {
+
+  /**
+   * Identifier of the single item.
+   */
+  readonly singleItemIdentifier: string;
+
+}
+
+
+export interface SingleItemFirestoreCollection<T, PT, D extends FirestoreDocument<T> = FirestoreDocument<T>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>> extends FirestoreSingleDocumentAccessor<T, D> {
+  readonly collection: FirestoreCollectionWithParent<T, PT, D, PD>;
+}
+
+export function makeSingleItemFirestoreCollection<T, PT, D extends FirestoreDocument<T> = FirestoreDocument<T>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>>(config: SingleItemFirestoreCollectionConfig<T, PT, D, PD>): SingleItemFirestoreCollection<T, PT, D, PD> {
+  const collection = makeFirestoreCollectionWithParent(config);
+
+  return {
+    collection,
+    ...firestoreSingleDocumentAccessor({
+      accessors: collection,
+      singleItemIdentifier: config.singleItemIdentifier
+    })
+  };
 }

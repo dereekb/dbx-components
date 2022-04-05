@@ -176,7 +176,7 @@ export class ModelRelationUtility {
     const typesModified = new Set<Maybe<string>>([...inputMap.keys(), ...modsMap.keys()]);
 
     // Break the collections up into their individual types and process separately.
-    const modifiedSubCollections = Array.from(typesModified).map((type) => {
+    const modifiedSubcollections = Array.from(typesModified).map((type) => {
       const values = inputMap.get(type) ?? [];
       const mods = modsMap.get(type) ?? [];
 
@@ -189,7 +189,7 @@ export class ModelRelationUtility {
     });
 
     // Rejoin all changes.
-    return modifiedSubCollections.reduce((x, y) => x.concat(y), []);
+    return modifiedSubcollections.reduce((x, y) => x.concat(y), []);
   }
 
   private static _insertSingleTypeCollection<T extends RelationObject>(current: T[], insert: T[], { readKey, merge }: UpdateRelationConfig<T>): T[] {

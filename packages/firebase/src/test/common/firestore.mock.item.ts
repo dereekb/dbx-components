@@ -1,5 +1,5 @@
 import { Maybe } from '@dereekb/util';
-import { makeSnapshotConverterFunctions, firestoreBoolean, firestoreString, CollectionReference, FirestoreCollection, FirestoreContext, AbstractFirestoreDocument, firestoreNumber } from '../../lib/common';
+import { makeSnapshotConverterFunctions, firestoreDate, firestoreBoolean, firestoreString, CollectionReference, FirestoreCollection, FirestoreContext, AbstractFirestoreDocument, firestoreNumber, SingleItemFirestoreCollection } from '../../lib/common';
 
 // MARK: Mock Item
 /**
@@ -53,10 +53,13 @@ export function mockItemFirestoreCollection(firestoreContext: FirestoreContext):
 
 // MARK: MockItemPrivateData
 /**
- * Data for a sub item in our firestore collection.
+ * Private data for each MockItem.
+ * 
+ * There is only a single private data item per each MockItem.
  */
 export interface MockItemPrivateData {
-  value?: Maybe<number>;
+  comments?: string;
+  createdAt?: Date
 }
 
 /**
@@ -75,7 +78,8 @@ export const mockItemPrivateDataIdentifier = '0';
  */
 export const mockItemPrivateDataConverter = makeSnapshotConverterFunctions<MockItemPrivateData>({
   fields: {
-    value: firestoreNumber()
+    comments: firestoreString(),
+    createdAt: firestoreDate({ saveDefaultAsNow: true })
   }
 });
 
@@ -87,23 +91,24 @@ export const mockItemPrivateDataConverter = makeSnapshotConverterFunctions<MockI
  */
 export function mockItemPrivateDataCollectionReferenceFactory(context: FirestoreContext): (parent: MockItemDocument) => CollectionReference<MockItemPrivateData> {
   return (parent: MockItemDocument) => {
-    return context.subCollection(parent.documentRef, mockItemPrivateDataCollectionPath, mockItemPrivateDataIdentifier).withConverter<MockItemPrivateData>(mockItemPrivateDataConverter);
+    return context.subcollection(parent.documentRef, mockItemPrivateDataCollectionPath).withConverter<MockItemPrivateData>(mockItemPrivateDataConverter);
   };
 }
 
-export type MockItemPrivateDataFirestoreCollection = FirestoreCollection<MockItemPrivateData, MockItemPrivateDataDocument>;
+export type MockItemPrivateDataFirestoreCollection = SingleItemFirestoreCollection<MockItemPrivateData, MockItem, MockItemPrivateDataDocument>;
 export type MockItemPrivateDataFirestoreCollectionFactory = (parent: MockItemDocument) => MockItemPrivateDataFirestoreCollection;
 
 export function mockItemPrivateDataFirestoreCollection(firestoreContext: FirestoreContext): MockItemPrivateDataFirestoreCollectionFactory {
   const factory = mockItemPrivateDataCollectionReferenceFactory(firestoreContext);
 
   return (parent: MockItemDocument) => {
-    return firestoreContext.firestoreCollectionWithParent({
+    return firestoreContext.singleItemFirestoreCollection({
       itemsPerPage: 50,
       collection: factory(parent),
       makeDocument: (a, d) => new MockItemPrivateDataDocument(a, d),
       firestoreContext,
-      parent
+      parent,
+      singleItemIdentifier: mockItemPrivateDataIdentifier
     });
   };
 }
@@ -111,6 +116,8 @@ export function mockItemPrivateDataFirestoreCollection(firestoreContext: Firesto
 // MARK: MockItemSubItem
 /**
  * Data for a sub item in our firestore collection.
+ * 
+ * There may be an unlimited number of MockItemSubItems for a MockItem.
  */
 export interface MockItemSubItem {
   value?: Maybe<number>;
@@ -137,7 +144,7 @@ export const mockItemSubItemConverter = makeSnapshotConverterFunctions<MockItemS
 
 export function mockItemSubItemCollectionReferenceFactory(context: FirestoreContext): (parent: MockItemDocument) => CollectionReference<MockItemSubItem> {
   return (parent: MockItemDocument) => {
-    return context.subCollection(parent.documentRef, mockItemSubItemCollectionPath).withConverter<MockItemSubItem>(mockItemSubItemConverter);
+    return context.subcollection(parent.documentRef, mockItemSubItemCollectionPath).withConverter<MockItemSubItem>(mockItemSubItemConverter);
   };
 }
 

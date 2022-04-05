@@ -5,7 +5,7 @@ import { TransactionFirestoreDocumentContextFactory } from './context.transactio
 import { FirestoreTransactionFactory, FirestoreWriteBatchFactory } from '../factory';
 
 export type FirestoreAccessorDriverCollectionRefFunction = <T = DocumentData>(firestore: Firestore, path: string, ...pathSegments: string[]) => CollectionReference<T>;
-export type FirestoreAccessorDriverSubCollectionRefFunction = <T = DocumentData>(document: DocumentReference, path: string, ...pathSegments: string[]) => CollectionReference<T>;
+export type FirestoreAccessorDriverSubcollectionRefFunction = <T = DocumentData>(document: DocumentReference, path: string, ...pathSegments: string[]) => CollectionReference<T>;
 export type FirestoreAccessorDriverDocumentRefFunction = <T = DocumentData>(collection: CollectionReference<T>, path?: string, ...pathSegments: string[]) => DocumentReference<T>;
 
 /**
@@ -14,7 +14,7 @@ export type FirestoreAccessorDriverDocumentRefFunction = <T = DocumentData>(coll
 export interface FirestoreAccessorDriver extends FirestoreTransactionFactory, FirestoreWriteBatchFactory {
   readonly doc: FirestoreAccessorDriverDocumentRefFunction;
   readonly collection: FirestoreAccessorDriverCollectionRefFunction;
-  readonly subCollection: FirestoreAccessorDriverSubCollectionRefFunction;
+  readonly subcollection: FirestoreAccessorDriverSubcollectionRefFunction;
   readonly defaultContextFactory: DefaultFirestoreDocumentContextFactory;
   readonly writeBatchContextFactory: WriteBatchFirestoreDocumentContextFactory;
   readonly transactionContextFactory: TransactionFirestoreDocumentContextFactory;
