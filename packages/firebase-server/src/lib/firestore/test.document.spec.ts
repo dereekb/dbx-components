@@ -1,8 +1,8 @@
 import { DocumentSnapshot } from '@google-cloud/firestore';
-import { MockItem, MockItemDocument, MockItemFirestoreCollection, testItemFirestoreCollection, authorizedTestWithMockItemCollection, FirestoreDocumentAccessor } from '@dereekb/firebase';
+import { MockItem, MockItemDocument, MockItemFirestoreCollection, mockItemFirestoreCollection, authorizedTestWithMockItemCollection, FirestoreDocumentAccessor } from '@dereekb/firebase';
 import { adminTestWithMockItemCollection } from '../../test/firestore.fixture.admin';
 
-describe('FirestoreDocumentAccessorInstance', () => {
+describe('FirestoreDocumentAccessor', () => {
 
   adminTestWithMockItemCollection((f) => {
 
@@ -10,7 +10,7 @@ describe('FirestoreDocumentAccessorInstance', () => {
     let documentAccessor: FirestoreDocumentAccessor<MockItem, MockItemDocument>;
 
     beforeEach(async () => {
-      firestoreCollection = testItemFirestoreCollection(f.parent.context);
+      firestoreCollection = mockItemFirestoreCollection(f.parent.context);
       documentAccessor = firestoreCollection.documentAccessor();
     });
 

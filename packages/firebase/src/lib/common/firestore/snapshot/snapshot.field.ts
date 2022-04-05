@@ -60,3 +60,13 @@ export function firestoreBoolean(config: FirestoreBooleanFieldConfig = {}) {
     toData: (input: boolean) => input
   });
 }
+
+export interface FirestoreNumberFieldConfig extends DefaultOnlyFirestoreFieldConfig<number, number> { }
+
+export function firestoreNumber(config: FirestoreNumberFieldConfig = {}) {
+  return firestoreField({
+    default: config.default,
+    fromData: (input: number) => input,
+    toData: (input: number) => input
+  });
+}

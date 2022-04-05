@@ -85,7 +85,7 @@ export function describeAccessorDriverTests(f: MockItemCollectionFixture) {
             let runTransaction: RunTransactionFunction;
 
             beforeEach(() => {
-              runTransaction = f.parent.context.transaction();
+              runTransaction = f.parent.context.runTransaction;
             });
 
             it('should not stream values (observable completes immediately)', (done) => {
@@ -109,7 +109,7 @@ export function describeAccessorDriverTests(f: MockItemCollectionFixture) {
             let writeBatch: WriteBatch;
 
             beforeEach(() => {
-              writeBatch = f.parent.context.writeBatch() as WriteBatch;
+              writeBatch = f.parent.context.batch();
             });
 
             it('should not stream values (observable completes immediately)', (done) => {

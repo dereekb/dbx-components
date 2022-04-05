@@ -1,12 +1,10 @@
 import { FirestoreAccessorDriverRef } from './accessor/driver';
 import { FirestoreQueryDriverRef } from './query/driver';
-import { WriteBatch, Transaction, CollectionReference, Firestore } from "./types";
-import { FirestoreDocument, FirestoreDocumentAccessor, FirestoreDocumentAccessorFactory, FirestoreDocumentAccessorFactoryFunction, FirestoreDocumentAccessorInstanceConfig, firestoreDocumentAccessorFactory } from "./accessor/document";
-import { FirestoreItemPageIterationBaseConfig, FirestoreItemPageIterationFactory, firestoreItemPageIterationFactory, FirestoreItemPageIterationFactoryFunction, FirestoreItemPageIterationInstance, FirestoreItemPageIteratorFilter } from "./query/iterator";
-import { FirestoreDocumentContext } from "./accessor/context";
+import { WriteBatch, Transaction } from "./types";
+import { FirestoreDocument, FirestoreDocumentAccessor, FirestoreDocumentAccessorFactory, FirestoreDocumentAccessorFactoryFunction, FirestoreDocumentAccessorFactoryConfig, firestoreDocumentAccessorFactory, FirestoreDocumentAccessorForTransactionFactory, FirestoreDocumentAccessorForWriteBatchFactory } from "./accessor/document";
+import { FirestoreItemPageIterationBaseConfig, FirestoreItemPageIterationFactory, firestoreItemPageIterationFactory, FirestoreItemPageIterationFactoryFunction } from "./query/iterator";
 import { CollectionReferenceRef, FirestoreContextReference } from "./reference";
 import { firestoreCollectionQueryFactory, FirestoreCollectionQueryFactory } from './query/query';
-import { FirestoreContext } from './context';
 
 export type FirestoreDriverIdentifier = string;
 export type FirestoreDriverType = 'production' | 'testing';
@@ -23,49 +21,16 @@ export interface FirestoreDrivers extends FirestoreQueryDriverRef, FirestoreAcce
  * FirestoreCollection configuration
  */
 export interface FirestoreCollectionConfig<T, D extends FirestoreDocument<T> = FirestoreDocument<T>>
-  extends FirestoreContextReference, FirestoreDrivers, FirestoreItemPageIterationBaseConfig<T>, FirestoreDocumentAccessorInstanceConfig<T, D> { }
+  extends FirestoreContextReference, FirestoreDrivers, FirestoreItemPageIterationBaseConfig<T>, FirestoreDocumentAccessorFactoryConfig<T, D> {
+}
 
 /**
  * Instance that provides several accessors for accessing documents of a collection.
  */
-export class FirestoreCollection<T, D extends FirestoreDocument<T> = FirestoreDocument<T>>
-  implements FirestoreContextReference, CollectionReferenceRef<T>, FirestoreItemPageIterationFactory<T>, FirestoreDocumentAccessorFactory<T, D>, FirestoreCollectionQueryFactory<T> {
-
-  protected readonly _iterationFactory: FirestoreItemPageIterationFactoryFunction<T> = firestoreItemPageIterationFactory(this.config);
-  protected readonly _documentAccessorFactory: FirestoreDocumentAccessorFactoryFunction<T, D> = firestoreDocumentAccessorFactory(this.config);
-  protected readonly _queryFactory: FirestoreCollectionQueryFactory<T> = firestoreCollectionQueryFactory(this.config);
-
-  constructor(readonly config: FirestoreCollectionConfig<T, D>) { }
-
-  get collection(): CollectionReference<T> {
-    return this.config.collection;
-  }
-
-  get firestoreContext(): FirestoreContext {
-    return this.config.firestoreContext;
-  }
-
-  // MARK: FirestoreItemPageIterationFactory<T>
-  get firestoreIteration() {
-    return this._iterationFactory;
-  }
-
-  // MARK: FirestoreDocumentAccessorFactory<T, D>
-  documentAccessorForTransaction(transaction: Transaction): FirestoreDocumentAccessor<T, D> {
-    return this.documentAccessor(this.config.firestoreAccessorDriver.transactionContextFactory(transaction));
-  }
-
-  documentAccessorForWriteBatch(writeBatch: WriteBatch): FirestoreDocumentAccessor<T, D> {
-    return this.documentAccessor(this.config.firestoreAccessorDriver.writeBatchContextFactory(writeBatch));
-  }
-
-  documentAccessor(context?: FirestoreDocumentContext<T>): FirestoreDocumentAccessor<T, D> {
-    return this._documentAccessorFactory(context);
-  }
-
-  // MARK: FirestoreCollectionQueryFactory<T>
-  readonly query = this._queryFactory.query;
-
+export interface FirestoreCollection<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> extends
+  FirestoreContextReference, CollectionReferenceRef<T>, FirestoreItemPageIterationFactory<T>, FirestoreDocumentAccessorFactory<T, D>, FirestoreCollectionQueryFactory<T>,
+  FirestoreDocumentAccessorForTransactionFactory<T, D>, FirestoreDocumentAccessorForWriteBatchFactory<T, D> {
+  readonly config: FirestoreCollectionConfig<T, D>;
 }
 
 /**
@@ -76,11 +41,54 @@ export interface FirestoreCollectionRef<T, D extends FirestoreDocument<T> = Fire
 }
 
 /**
- * Creates a new FirestoreCollection instance from the input config.
- * 
- * @param config 
- * @returns 
+ * Creates a new FirestoreCollection from the input config.
  */
 export function makeFirestoreCollection<T, D extends FirestoreDocument<T>>(config: FirestoreCollectionConfig<T, D>): FirestoreCollection<T, D> {
-  return new FirestoreCollection(config);
+  const { collection, firestoreContext, firestoreAccessorDriver } = config;
+  const firestoreIteration: FirestoreItemPageIterationFactoryFunction<T> = firestoreItemPageIterationFactory(config);
+  const documentAccessor: FirestoreDocumentAccessorFactoryFunction<T, D> = firestoreDocumentAccessorFactory(config);
+  const { query }: FirestoreCollectionQueryFactory<T> = firestoreCollectionQueryFactory(config);
+
+  return {
+    config,
+    collection,
+    firestoreContext,
+    firestoreIteration,
+    documentAccessor,
+    documentAccessorForTransaction(transaction: Transaction): FirestoreDocumentAccessor<T, D> {
+      return documentAccessor(firestoreAccessorDriver.transactionContextFactory(transaction));
+    },
+    documentAccessorForWriteBatch(writeBatch: WriteBatch): FirestoreDocumentAccessor<T, D> {
+      return documentAccessor(firestoreAccessorDriver.writeBatchContextFactory(writeBatch));
+    },
+    query
+  };
+}
+
+// MARK: Subcollection
+/**
+ * Used for SubCollection types that 
+ */
+export interface FirestoreCollectionWithParentConfig<T, PT, D extends FirestoreDocument<T> = FirestoreDocument<T>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>> extends FirestoreCollectionConfig<T, D> {
+
+  /**
+   * The parent document.
+   */
+  readonly parent: PD;
+}
+
+/**
+ * A FirestoreCollection as a reference to a Subcollection.
+ */
+export interface FirestoreCollectionWithParent<T, PT, D extends FirestoreDocument<T> = FirestoreDocument<T>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>> extends FirestoreCollection<T, D> {
+  readonly parent: PD;
+}
+
+/**
+ * Creates a new FirestoreCollectionWithParent from the input config.
+ */
+export function makeFirestoreCollectionWithParent<T, PT, D extends FirestoreDocument<T> = FirestoreDocument<T>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>>(config: FirestoreCollectionWithParentConfig<T, PT, D, PD>): FirestoreCollectionWithParent<T, PT, D, PD> {
+  const result = makeFirestoreCollection(config) as FirestoreCollection<T, D> & { parent: PD };
+  result.parent = config.parent;
+  return result;
 }

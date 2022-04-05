@@ -1,6 +1,6 @@
 import { DocumentSnapshot } from '@google-cloud/firestore';
 import { first } from 'rxjs';
-import { MockItem, MockItemDocument, MockItemFirestoreCollection, testItemFirestoreCollection, FirestoreDocumentAccessor } from '@dereekb/firebase';
+import { MockItem, MockItemDocument, MockItemFirestoreCollection, mockItemFirestoreCollection, FirestoreDocumentAccessor } from '@dereekb/firebase';
 import { adminTestWithMockItemCollection } from '../../test/firestore.fixture.admin';
 
 describe('FirestoreDocumentDataAccessor', () => {
@@ -12,7 +12,7 @@ describe('FirestoreDocumentDataAccessor', () => {
     let document: MockItemDocument;
 
     beforeEach(async () => {
-      firestoreCollection = testItemFirestoreCollection(f.parent.context);
+      firestoreCollection = mockItemFirestoreCollection(f.parent.context);
       documentAccessor = firestoreCollection.documentAccessor();
       document = documentAccessor.newDocument();
     });

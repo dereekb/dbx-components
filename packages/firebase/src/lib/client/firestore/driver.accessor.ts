@@ -10,8 +10,9 @@ export function firestoreClientAccessorDriver(): FirestoreAccessorDriver {
   return {
     doc: doc as any,  // typing issue. Override with any.
     collection: collection as any,
-    transaction: (firestore) => async <T>(fn: TransactionFunction<T>) => await runTransaction(firestore as Firestore, fn as (transaction: Transaction) => Promise<T>),
-    writeBatch: (firestore) => writeBatch(firestore as Firestore),
+    subCollection: collection as any,
+    transactionFactoryForFirestore: (firestore) => async <T>(fn: TransactionFunction<T>) => await runTransaction(firestore as Firestore, fn as (transaction: Transaction) => Promise<T>),
+    writeBatchFactoryForFirestore: (firestore) => () => writeBatch(firestore as Firestore),
     defaultContextFactory: defaultFirestoreDocumentContext,
     transactionContextFactory: transactionDocumentContext as any,
     writeBatchContextFactory: writeBatchDocumentContext as any

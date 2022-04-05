@@ -1,12 +1,18 @@
+import { MockItemFirestoreCollection } from '@dereekb/firebase';
 import { CollectionReference } from '../../lib/common/firestore/types';
 import { AbstractWrappedFixtureWithInstance, JestTestWrappedContextFactoryBuilder, instanceWrapJestTestContextFactory } from '@dereekb/util';
-import { MockItem, testItemFirestoreCollection } from './firestore.mock.item';
+import { MockItem } from './firestore.mock.item';
 import { TestFirestoreContextFixture } from './firestore.mock';
+import { makeMockItemCollections } from '.';
 
 // MARK: Test Item Testing Fixture
 export class MockItemCollectionFixtureInstance {
 
-  readonly firestoreCollection = testItemFirestoreCollection(this.fixture.parent.context);
+  readonly collections = makeMockItemCollections(this.fixture.parent.context);
+
+  get firestoreCollection(): MockItemFirestoreCollection {
+    return this.collections.mockItem;
+  }
 
   get collection(): CollectionReference<MockItem> {
     return this.firestoreCollection.collection;

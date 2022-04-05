@@ -1,5 +1,5 @@
 import { DocumentSnapshot, DocumentReference, runTransaction, Transaction, Firestore, writeBatch } from '@firebase/firestore';
-import { MockItem, testItemCollectionReference, MockItemDocument, MockItemFirestoreCollection, testItemFirestoreCollection, authorizedTestWithMockItemCollection } from "../../../test";
+import { MockItem, mockItemCollectionReference, MockItemDocument, MockItemFirestoreCollection, mockItemFirestoreCollection, authorizedTestWithMockItemCollection } from "../../../test";
 import { FirestoreDocumentContext, makeFirestoreCollection } from "../../common/firestore";
 import { transactionDocumentContext } from './driver.accessor.transaction';
 import { Maybe } from '@dereekb/util';
@@ -25,7 +25,7 @@ describe('FirestoreCollection', () => {
         firestoreCollection = makeFirestoreCollection({
           firestoreContext: f.parent.context,
           itemsPerPage,
-          collection: testItemCollectionReference(f.parent.context),
+          collection: mockItemCollectionReference(f.parent.context),
           makeDocument: (a, d) => new MockItemDocument(a, d),
           ...firebaseFirestoreClientDrivers()
         });
@@ -37,7 +37,7 @@ describe('FirestoreCollection', () => {
     });
 
     beforeEach(async () => {
-      firestoreCollection = testItemFirestoreCollection(f.parent.context);
+      firestoreCollection = mockItemFirestoreCollection(f.parent.context);
     });
 
     describe('documentAccessor()', () => {

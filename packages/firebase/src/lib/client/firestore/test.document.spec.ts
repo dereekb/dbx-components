@@ -1,8 +1,8 @@
 import { DocumentSnapshot } from '@firebase/firestore';
-import { MockItem, MockItemDocument, MockItemFirestoreCollection, testItemFirestoreCollection, authorizedTestWithMockItemCollection } from "../../../test";
+import { MockItem, MockItemDocument, MockItemFirestoreCollection, mockItemFirestoreCollection, authorizedTestWithMockItemCollection } from "../../../test";
 import { FirestoreDocumentAccessor } from '../../common';
 
-describe('FirestoreDocumentAccessorInstance', () => {
+describe('FirestoreDocumentAccessor', () => {
 
   authorizedTestWithMockItemCollection((f) => {
 
@@ -10,7 +10,7 @@ describe('FirestoreDocumentAccessorInstance', () => {
     let documentAccessor: FirestoreDocumentAccessor<MockItem, MockItemDocument>;
 
     beforeEach(async () => {
-      firestoreCollection = testItemFirestoreCollection(f.parent.context);
+      firestoreCollection = mockItemFirestoreCollection(f.parent.context);
       documentAccessor = firestoreCollection.documentAccessor();
     });
 
