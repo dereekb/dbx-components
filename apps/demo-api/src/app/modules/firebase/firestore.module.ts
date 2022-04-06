@@ -20,6 +20,6 @@ const demoFirestoreCollectionsFactory = (context: FirestoreContext) => makeDemoF
     provide: DemoFirestoreCollections,
     useFactory: demoFirestoreCollectionsFactory,
     inject: [FIRESTORE_CONTEXT_TOKEN]
-  }],
+  }]
 })
 export class AppFirestoreModule { }

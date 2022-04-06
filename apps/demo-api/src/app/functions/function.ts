@@ -1,10 +1,15 @@
 import { INestApplication } from '@nestjs/common';
-import * as functions from 'firebase-functions';
-import { HttpsFunction, Runnable } from 'firebase-functions';
+import { DemoFirestoreCollections } from '@dereekb/demo-firebase';
+import { AbstractNestContext, onCallWithNestApplicationFactory, onCallWithNestContextFactory } from '@dereekb/firebase-server';
 import { getNestServerApp } from '../app';
 
-export type OnCallWithNestApp<I = any, O = any> = (nest: INestApplication, data: I, context: functions.https.CallableContext) => O;
+export class DemoApiNestContext extends AbstractNestContext {
 
-export function onCallWithNestContext<I, O>(fn: OnCallWithNestApp<I, O>): HttpsFunction & Runnable<any> {
-  return functions.https.onCall((data: I, context: functions.https.CallableContext) => getNestServerApp().then(x => fn(x, data, context)));
+  get demoFirestoreCollections(): DemoFirestoreCollections {
+    return this.nest.get(DemoFirestoreCollections);
+  }
+
 }
+
+export const onCallWithNestApp = onCallWithNestApplicationFactory(getNestServerApp);
+export const onCallWithNestContext = onCallWithNestContextFactory(onCallWithNestApp, (nest: INestApplication) => new DemoApiNestContext(nest));
