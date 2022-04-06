@@ -2,8 +2,8 @@ import { Observable } from 'rxjs';
 import { ArrayOrValue } from '@dereekb/util';
 import { DocumentSnapshot, getDocs, limit, query, QueryConstraint, startAt, Query as FirebaseFirestoreQuery, where, startAfter, orderBy, limitToLast, endBefore, endAt, onSnapshot } from "firebase/firestore";
 import { FIRESTORE_LIMIT_QUERY_CONSTRAINT_TYPE, FIRESTORE_START_AFTER_QUERY_CONSTRAINT_TYPE, FIRESTORE_START_AT_QUERY_CONSTRAINT_TYPE, FIRESTORE_WHERE_QUERY_CONSTRAINT_TYPE, FIRESTORE_LIMIT_TO_LAST_QUERY_CONSTRAINT_TYPE, FIRESTORE_ORDER_BY_QUERY_CONSTRAINT_TYPE, FullFirestoreQueryConstraintHandlersMapping, FIRESTORE_OFFSET_QUERY_CONSTRAINT_TYPE, FIRESTORE_END_AT_QUERY_CONSTRAINT_TYPE, FIRESTORE_END_BEFORE_QUERY_CONSTRAINT_TYPE } from './../../common/firestore/query/constraint';
-import { makeFirestoreQueryConstraintFunctionsDriver } from '../../common/firestore/query/constraint.handler';
-import { FirestoreQueryConstraintFunctionsDriver, FirestoreQueryDriver } from "../../common/firestore/query/driver";
+import { makeFirestoreQueryConstraintFunctionsDriver } from '../../common/firestore/driver/query.handler';
+import { FirestoreQueryConstraintFunctionsDriver, FirestoreQueryDriver } from "../../common/firestore/driver/query";
 import { Query, QuerySnapshot } from "../../common/firestore/types";
 import { streamFromOnSnapshot } from '../../common/firestore/query/query.util';
 

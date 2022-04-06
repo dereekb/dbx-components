@@ -3,7 +3,7 @@ import { ArrayOrValue, flattenArrayOrValueArray } from "@dereekb/util";
 import { CollectionReferenceRef } from "../reference";
 import { Query, QuerySnapshot } from "../types";
 import { FirestoreQueryConstraint } from "./constraint";
-import { FirestoreQueryDriverRef } from "./driver";
+import { FirestoreQueryDriverRef } from '../driver/query';
 
 /**
  * Immutable wrapper of a query and a way to retrieve the docs.

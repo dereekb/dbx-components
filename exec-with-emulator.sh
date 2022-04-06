@@ -10,3 +10,4 @@ echo "service ports are being used"
 fi
 
 docker compose run --rm $USE_PORTS_ARG demo-api-server npx firebase emulators:exec --only auth,firestore,storage "$RUN_COMMAND"
+docker volume prune -f # TODO: Remove when anonymous volumes are removed from docker compose

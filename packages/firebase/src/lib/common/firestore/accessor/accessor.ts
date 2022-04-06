@@ -1,7 +1,6 @@
-import { WriteResult } from '@google-cloud/firestore';
 import { filterMaybe } from '@dereekb/rxjs';
 import { Maybe } from "@dereekb/util";
-import { SnapshotOptions, DocumentReference, DocumentSnapshot, UpdateData, WithFieldValue, PartialWithFieldValue, SetOptions, Precondition } from "../types";
+import { WriteResult, SnapshotOptions, DocumentReference, DocumentSnapshot, UpdateData, WithFieldValue, PartialWithFieldValue, SetOptions, Precondition } from "../types";
 import { map, Observable, OperatorFunction } from 'rxjs';
 import { DocumentReferenceRef } from '../reference';
 

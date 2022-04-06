@@ -1,8 +1,7 @@
 import { SubscriptionObject } from '../subscription';
-import { distinctUntilChanged, filter } from 'rxjs/operators';
+import { map, Observable, shareReplay, skipWhile, distinctUntilChanged, filter } from 'rxjs';
 import { distinctUntilArrayLengthChanges, scanBuildArray, filterMaybe, scanIntoArray } from "../rxjs";
 import { lastValue, filterMaybeValues, Destroyable, Maybe } from "@dereekb/util";
-import { map, Observable, shareReplay, skipWhile } from "rxjs";
 import { ItemIteration, PageItemIteration } from "./iteration";
 import { LoadingState, loadingStateHasError } from '../loading';
 

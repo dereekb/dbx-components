@@ -1,5 +1,4 @@
-import { DocumentReference, DocumentSnapshot, UpdateData, WithFieldValue, getDoc } from "@firebase/firestore";
-import { deleteDoc, setDoc, updateDoc } from "firebase/firestore";
+import { DocumentReference, DocumentSnapshot, UpdateData, WithFieldValue, getDoc, deleteDoc, setDoc, updateDoc } from "@firebase/firestore";
 import { fromRef } from "rxfire/firestore";
 import { Observable } from "rxjs";
 import { FirestoreDocumentContext, FirestoreDocumentContextType, FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, SetOptions } from "../../common/firestore";

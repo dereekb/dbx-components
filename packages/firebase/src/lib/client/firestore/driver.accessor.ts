@@ -1,7 +1,7 @@
 import { Firestore, runTransaction } from '@firebase/firestore';
 import { doc, collection, writeBatch, Transaction } from "firebase/firestore";
-import { FirestoreAccessorDriver } from "../../common/firestore/accessor/driver";
-import { TransactionFunction } from '../../common/firestore/factory';
+import { FirestoreAccessorDriver } from "../../common/firestore/driver/accessor";
+import { TransactionFunction } from '../../common/firestore/driver';
 import { writeBatchDocumentContext } from "./driver.accessor.batch";
 import { defaultFirestoreDocumentContext } from "./driver.accessor.default";
 import { transactionDocumentContext } from "./driver.accessor.transaction";

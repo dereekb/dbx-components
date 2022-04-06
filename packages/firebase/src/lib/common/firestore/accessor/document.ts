@@ -1,5 +1,5 @@
 import { Observable } from 'rxjs';
-import { FirestoreAccessorDriverRef } from './driver';
+import { FirestoreAccessorDriverRef } from '../driver/accessor';
 import { DocumentReference, CollectionReference, Transaction, WriteBatch } from '../types';
 import { dataFromSnapshotStream, FirestoreDocumentDataAccessor } from './accessor';
 import { CollectionReferenceRef, DocumentReferenceRef } from '../reference';

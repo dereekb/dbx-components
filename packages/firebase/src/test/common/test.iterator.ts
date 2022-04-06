@@ -1,11 +1,10 @@
-import { flattenIterationResultItemArray, ItemAccumulator, iteratorNextPageUntilPage, SubscriptionObject } from "@dereekb/rxjs";
+import { flattenIterationResultItemArray, itemAccumulator, ItemAccumulator, iteratorNextPageUntilPage, SubscriptionObject } from "@dereekb/rxjs";
 import { filter, first, from, switchMap } from "rxjs";
 import { makeDocuments } from "../../lib/common/firestore/accessor/document.utility";
 import { FirestoreItemPageIterationFactoryFunction, FirestoreItemPageIterationInstance } from "../../lib/common/firestore/query/iterator";
 import { MockItemDocument, MockItem } from "./firestore.mock.item";
 import { MockItemCollectionFixture } from "./firestore.mock.item.fixture";
 import { mockItemWithValue } from "./firestore.mock.item.query";
-import { itemAccumulator } from 'packages/rxjs/src/lib/iterator/iteration.accumulator';
 import { arrayContainsDuplicateValue } from "@dereekb/util";
 
 /**

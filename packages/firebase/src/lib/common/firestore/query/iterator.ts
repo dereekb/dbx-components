@@ -3,7 +3,7 @@ import { QueryDocumentSnapshot, QuerySnapshot } from "../types";
 import { asArray, Maybe, lastValue, mergeIntoArray, ArrayOrValue } from '@dereekb/util';
 import { from, Observable, of, exhaustMap } from "rxjs";
 import { CollectionReferenceRef } from '../reference';
-import { FirestoreQueryDriverRef } from './driver';
+import { FirestoreQueryDriverRef } from '../driver/query';
 import { FIRESTORE_LIMIT_QUERY_CONSTRAINT_TYPE, FirestoreQueryConstraint, limit, startAfter } from './constraint';
 
 export interface FirestoreItemPageIteratorFilter {

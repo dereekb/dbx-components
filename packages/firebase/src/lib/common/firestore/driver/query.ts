@@ -1,6 +1,6 @@
 import { Observable } from 'rxjs';
 import { Query, QuerySnapshot } from "../types";
-import { FirestoreQueryConstraint } from "./constraint";
+import { FirestoreQueryConstraint } from "../query/constraint";
 
 export type FirestoreQueryDriverQueryFunction = <T>(query: Query<T>, ...queryConstraints: FirestoreQueryConstraint[]) => Query<T>;
 
@@ -21,5 +21,5 @@ export interface FirestoreQueryDriver extends FirestoreQueryConstraintFunctionsD
  * Ref to a FirestoreQueryDriver.
  */
 export interface FirestoreQueryDriverRef {
-  firestoreQueryDriver: FirestoreQueryDriver;
+  readonly firestoreQueryDriver: FirestoreQueryDriver;
 }

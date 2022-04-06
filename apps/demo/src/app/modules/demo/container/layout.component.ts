@@ -1,8 +1,8 @@
-import { DbxAuthService, ClickableAnchorLink, ClickableAnchorLinkTree } from '@dereekb/dbx-core';
+import { ClickableAnchorLink, ClickableAnchorLinkTree } from '@dereekb/dbx-core';
 import { Component, ViewEncapsulation } from '@angular/core';
 import { Observable, map, of, shareReplay } from 'rxjs';
 import { mapKeysIntersectionToArray } from '@dereekb/rxjs';
-import { DbxFirebaseAuthService } from 'packages/dbx-firebase/src/lib/auth/service/firebase.auth.service';
+import { DbxFirebaseAuthService } from '@dereekb/dbx-firebase';
 
 @Component({
   templateUrl: './layout.component.html',

@@ -3,7 +3,7 @@ import { FirestoreDocumentDataAccessor } from "../../lib/common/firestore/access
 import { FirestoreDocument, FirestoreDocumentAccessor } from "../../lib/common/firestore/accessor/document";
 import { makeDocuments } from "../../lib/common/firestore/accessor/document.utility";
 import { FirestoreContext } from '../../lib/common/firestore/context';
-import { RunTransactionFunction } from '../../lib/common/firestore/factory';
+import { RunTransaction } from '../../lib/common/firestore/driver';
 import { DocumentReference, Transaction, WriteBatch } from '../../lib/common/firestore/types';
 import { MockItemDocument, MockItem, MockItemPrivateDataDocument, MockItemPrivateDataFirestoreCollection, MockItemPrivateData, MockItemSubItem, MockItemSubItemDocument, MockItemSubItemFirestoreCollection } from "./firestore.mock.item";
 import { MockItemCollectionFixture } from "./firestore.mock.item.fixture";
@@ -209,7 +209,7 @@ export function describeAccessorTests<T>(init: () => DescribeAccessorTests<T>) {
 
     describe('in transition context', () => {
 
-      let runTransaction: RunTransactionFunction;
+      let runTransaction: RunTransaction;
 
       beforeEach(() => {
         runTransaction = c.context.runTransaction;

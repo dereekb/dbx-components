@@ -1,7 +1,7 @@
 import { objectToMap } from '@dereekb/util';
 import { Query } from '../types';
-import { FirestoreQueryConstraint, FirestoreQueryConstraintHandlerMap } from "./constraint";
-import { FirestoreQueryConstraintFunctionsDriver, FirestoreQueryDriverQueryFunction } from './driver';
+import { FirestoreQueryConstraint, FirestoreQueryConstraintHandlerMap } from "../query/constraint";
+import { FirestoreQueryConstraintFunctionsDriver, FirestoreQueryDriverQueryFunction } from './query';
 
 export interface MakeFirestoreQueryConstraintFunctionsDriver<B> {
   mapping: FirestoreQueryConstraintHandlerMap<B>;
