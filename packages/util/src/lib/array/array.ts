@@ -111,7 +111,7 @@ export function mergeArrays<T>(arrays: Maybe<T[]>[]): T[] {
  * @param arrays 
  * @returns 
  */
-export function mergeIntoArray<T>(target: Maybe<T[]>, ...arrays: Maybe<T[]>[]) {
+export function mergeIntoArray<T>(target: Maybe<T[]>, ...arrays: Maybe<T[]>[]): T[] {
   if (target == null) {
     target = [];
   }

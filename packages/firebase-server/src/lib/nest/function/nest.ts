@@ -63,3 +63,5 @@ export function onCallWithNestContextFactory<C>(appFactory: OnCallWithNestAppFac
 export abstract class AbstractNestContext {
   constructor(readonly nest: INestApplication) { }
 }
+
+// TODO: Add more factories that can validate the nest context before reaching the function.

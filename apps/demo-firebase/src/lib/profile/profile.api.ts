@@ -3,6 +3,10 @@ import { IsNotEmpty, IsOptional, IsString, MaxLength } from "class-validator";
 
 export class SetProfileUsernameParams {
 
+  @IsString()
+  @IsOptional()
+  profile?: string;
+
   @IsNotEmpty()
   @IsString()
   @MaxLength(20)
@@ -12,10 +16,4 @@ export class SetProfileUsernameParams {
   /**
    * Sets the target profile. If not defined, assumes the current profile.
    */
-  @IsString()
-  @IsOptional({
-    groups: [ProfileRole.SYS_ADMIN]
-  })
-  targetProfile?: string;
-
 }

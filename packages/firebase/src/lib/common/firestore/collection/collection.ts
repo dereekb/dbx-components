@@ -37,6 +37,9 @@ export function makeFirestoreCollection<T, D extends FirestoreDocument<T>>(confi
   const documentAccessor: FirestoreDocumentAccessorFactoryFunction<T, D> = firestoreDocumentAccessorFactory(config);
   const { query }: FirestoreCollectionQueryFactory<T> = firestoreCollectionQueryFactory(config);
 
+  // TODO: Update/Add to query to query the DocumentType optionally instead of the data type only.
+  // TODO: FirestoreCollectionQueryFactory is not reltaed to the FirestoreCollection above. Renamed to FirestoreQueryFactory, or similar.
+
   return {
     config,
     collection,

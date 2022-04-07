@@ -10,7 +10,7 @@ export interface ProfileServerActionsContext extends FirebaseServerActionsContex
  * Server-only profile actions.
  */
 export abstract class ProfileServerActions {
-  abstract setProfileUsername(params: SetProfileUsernameParams): AsyncProfileUpdateAction;
+  abstract setProfileUsername(params: SetProfileUsernameParams): AsyncProfileUpdateAction<SetProfileUsernameParams>;
 }
 
 /**
@@ -23,10 +23,10 @@ export function profileServerActions(context: ProfileServerActionsContext): Prof
 }
 
 // MARK: Actions
-export function setProfileUsernameFactory({ firebaseServerActionTransformFactory: transformFactory, profileFirestoreCollection, profilePrivateDataCollectionFactory }: ProfileServerActionsContext) {
+export function setProfileUsernameFactory({ firebaseServerActionTransformFactory, profileFirestoreCollection, profilePrivateDataCollectionFactory }: ProfileServerActionsContext) {
   const { query: queryProfile } = profileFirestoreCollection;
 
-  return transformFactory(SetProfileUsernameParams, async (params) => {
+  return firebaseServerActionTransformFactory(SetProfileUsernameParams, async (params) => {
     const { username } = params;
 
     return async (document: ProfileDocument) => {
@@ -34,7 +34,7 @@ export function setProfileUsernameFactory({ firebaseServerActionTransformFactory
 
       // perform the change in a transaction
       await profileFirestoreCollection.firestoreContext.runTransaction(async (transaction) => {
-        const docs = await queryProfile(profileWithUsername(username)).getDocs();
+        const docs = await queryProfile(profileWithUsername(username)).getDocs(transaction);
 
         if (docs.empty) {
           const documentInTransaction = profileFirestoreCollection.documentAccessorForTransaction(transaction).loadDocument(documentRef);

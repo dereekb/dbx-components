@@ -1,11 +1,14 @@
+import { ArrayOrValue, asArray, excludeValuesFromArray, mergeArrayOrValueIntoArray, mergeIntoArray, SeparateResult, separateValues } from '@dereekb/util';
 import { SortingOrder, Maybe, ObjectMap } from '@dereekb/util';
 import { DocumentSnapshot, DocumentData, FieldPath } from '../types';
+
+export type FirestoreQueryConstraintType = string;
 
 /**
  * A constraint. Used by drivers to apply native firebase query constraints.
  */
 export interface FirestoreQueryConstraint<T = any> {
-  type: string;
+  type: FirestoreQueryConstraintType;
   data: T;
 }
 
@@ -41,7 +44,7 @@ export function limit(limit: number): FirestoreQueryConstraint<LimitQueryConstra
 export const FIRESTORE_LIMIT_TO_LAST_QUERY_CONSTRAINT_TYPE = 'limit_to_last';
 
 export interface LimitToLastQueryConstraintData {
-  limitToLast: number;
+  limit: number;
 }
 
 /**
@@ -49,8 +52,8 @@ export interface LimitToLastQueryConstraintData {
  * 
  * Does not work with queries with streamed results.
  */
-export function limitToLast(limitToLast: number): FirestoreQueryConstraint<LimitToLastQueryConstraintData> {
-  return firestoreQueryConstraint(FIRESTORE_LIMIT_TO_LAST_QUERY_CONSTRAINT_TYPE, { limitToLast });
+export function limitToLast(limit: number): FirestoreQueryConstraint<LimitToLastQueryConstraintData> {
+  return firestoreQueryConstraint(FIRESTORE_LIMIT_TO_LAST_QUERY_CONSTRAINT_TYPE, { limit });
 }
 
 // MARK: Offset
@@ -177,4 +180,51 @@ export type FullFirestoreQueryConstraintMapping = {
 
 export type FullFirestoreQueryConstraintHandlersMapping<B> = {
   [K in keyof FullFirestoreQueryConstraintMapping]: Maybe<FirestoreQueryConstraintHandlerFunction<B, FullFirestoreQueryConstraintDataMapping[K]>>;
+}
+
+// MARK: Utils
+export function addOrReplaceLimitInConstraints(limit: number, addedLimitType: (typeof FIRESTORE_LIMIT_QUERY_CONSTRAINT_TYPE | typeof FIRESTORE_LIMIT_TO_LAST_QUERY_CONSTRAINT_TYPE) = FIRESTORE_LIMIT_QUERY_CONSTRAINT_TYPE): (constraints: FirestoreQueryConstraint[]) => FirestoreQueryConstraint[] {
+  const replace = replaceConstraints((constraints) => {
+    let type: FirestoreQueryConstraintType;
+
+    if (constraints.length) {
+      type = constraints[0].type;
+    } else {
+      type = addedLimitType;
+    }
+
+    return {
+      type,
+      data: {
+        limit
+      } as LimitQueryConstraintData | LimitToLastQueryConstraintData
+    };
+  }, [FIRESTORE_LIMIT_QUERY_CONSTRAINT_TYPE, FIRESTORE_LIMIT_TO_LAST_QUERY_CONSTRAINT_TYPE]);
+
+  return replace;
+}
+
+export type FirestoreQueryConstraintMapFunction = (constraints: FirestoreQueryConstraint[]) => FirestoreQueryConstraint[];
+
+export function filterConstraintsOfType(...types: FirestoreQueryConstraintType[]): FirestoreQueryConstraintMapFunction {
+  const typesToFilterOut = new Set(types);
+  return (constraints) => constraints.filter(x => !typesToFilterOut.has(x.type));
+}
+
+export function replaceConstraints(replaceFn: (constraints: FirestoreQueryConstraint[]) => Maybe<ArrayOrValue<FirestoreQueryConstraint>>, types: FirestoreQueryConstraintType[]): (constraints: FirestoreQueryConstraint[]) => FirestoreQueryConstraint[] {
+  const separateFn = separateConstraints(...types);
+
+  return (constraints) => {
+    const separated = separateFn(constraints);
+    const replacements = asArray(replaceFn(separated.excluded));
+    return (replacements) ? mergeArrayOrValueIntoArray(separated.included, replacements) : separated.included;
+  };
+}
+
+export function separateConstraints(...types: FirestoreQueryConstraintType[]): (constraints: FirestoreQueryConstraint[]) => SeparateResult<FirestoreQueryConstraint> {
+  return (constraints) => {
+    const typesToFilterOut = new Set(types);
+    const separated = separateValues(constraints, (x) => !typesToFilterOut.has(x.type));
+    return separated;
+  };
 }

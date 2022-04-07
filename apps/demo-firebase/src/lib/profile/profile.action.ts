@@ -1,8 +1,8 @@
-import { AsyncFirebaseFunctionUpdateAction, FirebaseFunctionUpdateAction } from "@dereekb/firebase";
+import { AsyncFirebaseFunctionParsedUpdateAction, FirebaseFunctionParsedUpdateAction } from "@dereekb/firebase";
 import { ProfileDocument, ProfileFirestoreCollection } from "./profile";
 
-export type ProfileUpdateAction = FirebaseFunctionUpdateAction<ProfileDocument>;
-export type AsyncProfileUpdateAction = AsyncFirebaseFunctionUpdateAction<ProfileDocument>;
+export type ProfileUpdateAction<P> = FirebaseFunctionParsedUpdateAction<P, ProfileDocument>;
+export type AsyncProfileUpdateAction<P> = AsyncFirebaseFunctionParsedUpdateAction<P, ProfileDocument>;
 
 export abstract class ProfileActions { }
 
