@@ -13,7 +13,7 @@ export class TestTransformAndValidateClass {
 describe('transformAndValidateObjectFactory()', () => {
 
   const errorValue = 0;
-  const factory = transformAndValidateObjectFactory({ onValidationError: async () => errorValue });
+  const factory = transformAndValidateObjectFactory({ handleValidationError: async () => errorValue });
 
   it('should create a transformAndValidateFunction', async () => {
     const successValue = 100;
@@ -66,5 +66,7 @@ describe('transformAndValidateObjectResult()', () => {
     expect(result.validationErrors.length > 0).toBe(true);
     expect(result.validationErrors[0].property).toBe('valid');  // missing
   });
+
+  // TODO: Add context/groups for validation tests
 
 });

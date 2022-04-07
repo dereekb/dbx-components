@@ -1,4 +1,9 @@
-import { CollectionReference, AbstractFirestoreDocument, makeSnapshotConverterFunctions, firestoreUID, firestoreString, firestoreDate, makeFirestoreCollection, FirestoreDocumentDataAccessor, FirestoreCollection, UserRelated, DocumentReferenceRef, FirestoreContext } from "@dereekb/firebase";
+import { CollectionReference, AbstractFirestoreDocument, makeSnapshotConverterFunctions, firestoreUID, firestoreString, firestoreDate, makeFirestoreCollection, FirestoreDocumentDataAccessor, FirestoreCollection, UserRelated, DocumentReferenceRef, FirestoreContext, SingleItemFirestoreCollection } from "@dereekb/firebase";
+
+export interface ProfileFirestoreCollections {
+  profileFirestoreCollection: ProfileFirestoreCollection;
+  profilePrivateDataCollectionFactory: ProfilePrivateDataFirestoreCollectionFactory;
+}
 
 // MARK: Profile
 export interface Profile extends UserRelated {
@@ -58,6 +63,7 @@ export interface ProfilePrivateDataRef extends DocumentReferenceRef<ProfilePriva
 export class ProfilePrivateDataDocument extends AbstractFirestoreDocument<ProfilePrivateData, ProfilePrivateDataDocument> { }
 
 export const profilePrivateDataCollectionPath = 'profilePrivateData';
+export const profilePrivateDataIdentifier = '0';
 
 export const profilePrivateDataConverter = makeSnapshotConverterFunctions<ProfilePrivateData>({
   fields: {
@@ -68,23 +74,24 @@ export const profilePrivateDataConverter = makeSnapshotConverterFunctions<Profil
 
 export function profilePrivateDataCollectionReferenceFactory(context: FirestoreContext): (profile: ProfileDocument) => CollectionReference<ProfilePrivateData> {
   return (profile: ProfileDocument) => {
-    return context.collection(profilePrivateDataCollectionPath, profile.id).withConverter<ProfilePrivateData>(profilePrivateDataConverter);
+    return context.subcollection(profile.documentRef, profilePrivateDataCollectionPath).withConverter<ProfilePrivateData>(profilePrivateDataConverter);
   };
 }
 
-export type ProfilePrivateDataFirestoreCollection = FirestoreCollection<ProfilePrivateData, ProfilePrivateDataDocument>;
-export type ProfilePrivateDataFirestoreCollectionFactory = (profile: ProfileDocument) => ProfilePrivateDataFirestoreCollection;
+export type ProfilePrivateDataFirestoreCollection = SingleItemFirestoreCollection<ProfilePrivateData, Profile, ProfilePrivateDataDocument>;
+export type ProfilePrivateDataFirestoreCollectionFactory = (parent: ProfileDocument) => ProfilePrivateDataFirestoreCollection;
 
 export function profilePrivateDataFirestoreCollectionFactory(firestoreContext: FirestoreContext): ProfilePrivateDataFirestoreCollectionFactory {
   const factory = profilePrivateDataCollectionReferenceFactory(firestoreContext);
 
   return (parent: ProfileDocument) => {
-    return firestoreContext.firestoreCollectionWithParent({
+    return firestoreContext.singleItemFirestoreCollection({
       itemsPerPage: 50,
       collection: factory(parent),
       makeDocument: (accessor, documentAccessor) => new ProfilePrivateDataDocument(accessor, documentAccessor),
       firestoreContext,
-      parent
+      parent,
+      singleItemIdentifier: profilePrivateDataIdentifier
     });
   }
 }
