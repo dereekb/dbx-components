@@ -1,4 +1,5 @@
-import { transformAndValidateObjectResult, TransformAndValidateObjectResultFunction, TransformAndValidateObjectSuccessResultOutput, TransformAndValidateObjectErrorResultOutput, transformAndValidateObjectFactory, transformAndValidateResultFactory } from './transform';
+import { transformAndValidateObjectResult, TransformAndValidateObjectResultFunction, TransformAndValidateObjectSuccessResultOutput, TransformAndValidateObjectErrorResultOutput, transformAndValidateObjectFactory } from './transform';
+import { transformAndValidateResultFactory } from './transform.result';
 import { Expose } from 'class-transformer';
 import { IsBoolean } from 'class-validator';
 

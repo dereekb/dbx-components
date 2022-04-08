@@ -18,7 +18,6 @@ export * from './grouping';
 export * from './hash';
 export * from './iterate';
 export * from './key';
-export * from './map/map';
 export * from './number';
 export * from './object';
 export * from './page';

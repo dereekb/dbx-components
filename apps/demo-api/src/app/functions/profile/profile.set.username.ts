@@ -3,15 +3,18 @@ import { onCallWithNestContext } from '../function';
 
 export const profileSetUsername = onCallWithNestContext(async (nest, data: SetProfileUsernameParams, context) => {
   const setProfileUsername = await nest.profileActions.setProfileUsername(data);
-  const params = setProfileUsername.object;
+
+  const profileFirestoreCollection = nest.demoFirestoreCollections.profileFirestoreCollection;
+  const params = setProfileUsername.params;
 
   let profileDocument: ProfileDocument;
 
   if (params.profile) {
-    profileDocument = await nest.demoFirestoreCollections.profileFirestoreCollection.documentAccessor().loadDocumentForPath(params.profile);
+    profileDocument = await profileFirestoreCollection.documentAccessor().loadDocumentForPath(params.profile);
   } else {
-    // todo: profiles should have the same id as their user's uid to make it easy to find.
-    profileDocument = await nest.demoFirestoreCollections.profileFirestoreCollection.query(profileWithUid(context.auth?.uid!)).query();
-    // get the profile for the current user.
+    profileDocument = (await profileFirestoreCollection.queryDocument(profileWithUid(context.auth?.uid!)).getFirstDoc())!;
   }
+
+  await setProfileUsername(profileDocument);
+  return { success: true };
 });

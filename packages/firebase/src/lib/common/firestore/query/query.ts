@@ -1,5 +1,5 @@
 import { Observable } from 'rxjs';
-import { ArrayOrValue, flattenArrayOrValueArray } from "@dereekb/util";
+import { ArrayOrValue, flattenArrayOrValueArray, Maybe } from "@dereekb/util";
 import { CollectionReferenceRef } from "../reference";
 import { Query, QueryDocumentSnapshot, QuerySnapshot, Transaction } from "../types";
 import { addOrReplaceLimitInConstraints, FirestoreQueryConstraint } from "./constraint";
@@ -17,7 +17,7 @@ export interface FirestoreExecutableQuery<T> {
   /**
    * Returns the first/single document.
    */
-  getFirstDoc(transaction?: Transaction): Promise<QueryDocumentSnapshot<T>>;
+  getFirstDoc(transaction?: Transaction): Promise<Maybe<QueryDocumentSnapshot<T>>>;
   /**
    * Returns the results in a Promise.
    */
@@ -34,16 +34,16 @@ export interface FirestoreExecutableQuery<T> {
   filter(...queryConstraints: ArrayOrValue<FirestoreQueryConstraint>[]): FirestoreExecutableQuery<T>;
 }
 
-export type FirestoreCollectionQueryFactoryFunction<T> = (...queryConstraints: ArrayOrValue<FirestoreQueryConstraint>[]) => FirestoreExecutableQuery<T>;
+export type FirestoreQueryFactoryFunction<T> = (...queryConstraints: ArrayOrValue<FirestoreQueryConstraint>[]) => FirestoreExecutableQuery<T>;
 
-export interface FirestoreCollectionQueryFactory<T> {
+export interface FirestoreQueryFactory<T> {
   /**
    * Creates a new FirestoreExecutableQuery from the input constraints.
    */
-  readonly query: FirestoreCollectionQueryFactoryFunction<T>
+  readonly query: FirestoreQueryFactoryFunction<T>;
 }
 
-export interface FirestoreCollectionQueryConfig<T> extends FirestoreQueryDriverRef, CollectionReferenceRef<T> { }
+export interface FirestoreQueryConfig<T> extends FirestoreQueryDriverRef, CollectionReferenceRef<T> { }
 
 /**
  * Creates a FirestoreCollectionQuery.
@@ -51,11 +51,11 @@ export interface FirestoreCollectionQueryConfig<T> extends FirestoreQueryDriverR
  * @param config 
  * @returns 
  */
-export function firestoreCollectionQueryFactory<T>(config: FirestoreCollectionQueryConfig<T>): FirestoreCollectionQueryFactory<T> {
+export function firestoreQueryFactory<T>(config: FirestoreQueryConfig<T>): FirestoreQueryFactory<T> {
   const { collection, firestoreQueryDriver: driver } = config;
   const { getDocs, streamDocs, query: makeQuery } = driver;
 
-  const filterQuery = (inputQuery: Query<T>, queryConstraints: ArrayOrValue<FirestoreQueryConstraint>[]) => {
+  const extendQuery = (inputQuery: Query<T>, queryConstraints: ArrayOrValue<FirestoreQueryConstraint>[]) => {
     const allConstraints = flattenArrayOrValueArray(queryConstraints);
     const query = makeQuery(inputQuery, ...allConstraints);
 
@@ -69,11 +69,11 @@ export function firestoreCollectionQueryFactory<T>(config: FirestoreCollectionQu
       },
       getDocs: (transaction?: Transaction) => getDocs(query, transaction),
       streamDocs: () => streamDocs(query),
-      filter: (...queryConstraints: ArrayOrValue<FirestoreQueryConstraint>[]) => filterQuery(query, queryConstraints)
+      filter: (...queryConstraints: ArrayOrValue<FirestoreQueryConstraint>[]) => extendQuery(query, queryConstraints)
     };
   };
 
   return {
-    query: (...queryConstraints: ArrayOrValue<FirestoreQueryConstraint>[]) => filterQuery(collection, queryConstraints)
+    query: (...queryConstraints: ArrayOrValue<FirestoreQueryConstraint>[]) => extendQuery(collection, queryConstraints)
   };
 }

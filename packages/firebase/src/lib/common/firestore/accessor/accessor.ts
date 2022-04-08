@@ -37,8 +37,8 @@ export interface FirestoreDocumentDataAccessor<T> extends DocumentReferenceRef<T
    * 
    * @param data 
    */
-  set(data: WithFieldValue<T>): Promise<WriteResult | void>;
   set(data: PartialWithFieldValue<T>, options: SetOptions): Promise<WriteResult | void>;
+  set(data: WithFieldValue<T>): Promise<WriteResult | void>;
   /**
    * Updates the data in the database. If the document doesn't exist, it will fail.
    * 

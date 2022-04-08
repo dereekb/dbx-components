@@ -1,11 +1,6 @@
-import { ProfileRole } from './profile.role';
 import { IsNotEmpty, IsOptional, IsString, MaxLength } from "class-validator";
 
 export class SetProfileUsernameParams {
-
-  @IsString()
-  @IsOptional()
-  profile?: string;
 
   @IsNotEmpty()
   @IsString()
@@ -14,6 +9,10 @@ export class SetProfileUsernameParams {
 
   // MARK: Admin Only
   /**
-   * Sets the target profile. If not defined, assumes the current profile.
+   * Sets the target profile. If not defined, assumes the current user's profile
    */
+  @IsString()
+  @IsOptional()
+  profile?: string;
+
 }

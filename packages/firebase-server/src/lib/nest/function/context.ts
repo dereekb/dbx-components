@@ -1,4 +1,4 @@
-import { TransformAndValidateObjectFactory } from "@dereekb/model";
+import { TransformAndValidateFunctionResultFactory, TransformAndValidateObjectFactory } from "@dereekb/model";
 import { firebaseServerActionsTransformContext, FirebaseServerActionsTransformContext } from "./transform";
 
 /**
@@ -8,6 +8,7 @@ export interface FirebaseServerActionsContext extends FirebaseServerActionsTrans
 
 export abstract class AbstractFirebaseServerActionsContext implements FirebaseServerActionsContext {
   abstract readonly firebaseServerActionTransformFactory: TransformAndValidateObjectFactory;
+  abstract readonly firebaseServerActionTransformFunctionFactory: TransformAndValidateFunctionResultFactory<any>;
 }
 
 export function firebaseServerActionsContext(): FirebaseServerActionsContext {

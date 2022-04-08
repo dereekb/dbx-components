@@ -2,7 +2,7 @@ import { SubscriptionObject } from "@dereekb/rxjs";
 import { filter, first, from } from "rxjs";
 import { limit, orderBy, startAfter, startAt, where, limitToLast, endAt, endBefore } from "../../lib/common/firestore/query/constraint";
 import { makeDocuments } from "../../lib/common/firestore/accessor/document.utility";
-import { FirestoreCollectionQueryFactoryFunction } from "../../lib/common/firestore/query/query";
+import { FirestoreQueryFactoryFunction } from "../../lib/common/firestore/query/query";
 import { MockItemDocument, MockItem } from "./firestore.mock.item";
 import { MockItemCollectionFixture } from "./firestore.mock.item.fixture";
 
@@ -19,7 +19,7 @@ export function describeQueryDriverTests(f: MockItemCollectionFixture) {
 
       const testDocumentCount = 5;
 
-      let query: FirestoreCollectionQueryFactoryFunction<MockItem>;
+      let query: FirestoreQueryFactoryFunction<MockItem>;
       let items: MockItemDocument[];
 
       beforeEach(async () => {

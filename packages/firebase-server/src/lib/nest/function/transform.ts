@@ -1,5 +1,5 @@
 import { ValidationError } from 'class-validator';
-import { transformAndValidateObjectFactory, TransformAndValidateObjectFactory } from "@dereekb/model";
+import { toTransformAndValidateFunctionResultFactory, TransformAndValidateFunctionResultFactory, transformAndValidateObjectFactory, TransformAndValidateObjectFactory } from "@dereekb/model";
 import { HttpException, ValidationPipe } from '@nestjs/common';
 import * as functions from 'firebase-functions';
 
@@ -8,12 +8,16 @@ import * as functions from 'firebase-functions';
  */
 export interface FirebaseServerActionsTransformContext {
   readonly firebaseServerActionTransformFactory: TransformAndValidateObjectFactory;
+  readonly firebaseServerActionTransformFunctionFactory: TransformAndValidateFunctionResultFactory;
 }
 
 export function firebaseServerActionsTransformContext(): FirebaseServerActionsTransformContext {
   const firebaseServerActionTransformFactory = firebaseServerActionsTransformFactory();
+  const firebaseServerActionTransformFunctionFactory = toTransformAndValidateFunctionResultFactory(firebaseServerActionTransformFactory);
+
   return {
-    firebaseServerActionTransformFactory
+    firebaseServerActionTransformFactory,
+    firebaseServerActionTransformFunctionFactory
   };
 }
 

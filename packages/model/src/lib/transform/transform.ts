@@ -1,28 +1,6 @@
-import { ClassType } from "@dereekb/util";
+import { ClassType, isPromise } from "@dereekb/util";
 import { ClassTransformOptions, plainToClass } from "class-transformer";
 import { validate, ValidationError, ValidationOptions } from "class-validator";
-
-
-// MARK: Transform and Validate Result
-/**
- * TransformAndValidate function that returns only the result.
- */
-export type TransformAndValidateResultFunction<O, I extends object = object, C = any> = (input: I, context?: C) => Promise<O>;
-export type TransformAndValidateResultFactory<C = any> = <T extends object, O, I extends object = object>(classType: ClassType<T>, fn: (parsed: T) => Promise<O>, handleValidationError?: TransformAndValidateObjectHandleValidate<O>) => TransformAndValidateResultFunction<O, I, C>;
-
-export function transformAndValidateResultFactory<C = any>(defaults: TransformAndValidateObjectFactoryDefaults<C>): TransformAndValidateResultFactory<C> {
-  // const { handleValidationError: defaultHandleValidationError, optionsForContext } = defaults;
-  const factory = transformAndValidateObjectFactory(defaults);
-
-  return <T extends object, O, I extends object = object>(classType: ClassType<T>, fn: (parsed: T) => Promise<O>, handleValidationError?: TransformAndValidateObjectHandleValidate<any>) => {
-    const transformAndValidateObjectFn = factory(classType, fn, handleValidationError);
-
-    return async (input: I, context?: C) => {
-      const { result } = await transformAndValidateObjectFn(input, context);
-      return result;
-    };
-  };
-}
 
 // MARK: Transform and Validate Object
 export interface TransformAndValidateObjectOutput<T, O> {

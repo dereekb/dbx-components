@@ -1,9 +1,10 @@
 import { WriteBatch, Transaction } from "../types";
-import { FirestoreDocument, FirestoreDocumentAccessor, FirestoreDocumentAccessorFactory, FirestoreDocumentAccessorFactoryFunction, FirestoreDocumentAccessorFactoryConfig, firestoreDocumentAccessorFactory, FirestoreDocumentAccessorForTransactionFactory, FirestoreDocumentAccessorForWriteBatchFactory } from "../accessor/document";
+import { FirestoreDocument, FirestoreDocumentAccessor, FirestoreDocumentAccessorFactory, FirestoreDocumentAccessorFactoryFunction, FirestoreDocumentAccessorFactoryConfig, firestoreDocumentAccessorFactory, FirestoreDocumentAccessorForTransactionFactory, FirestoreDocumentAccessorForWriteBatchFactory, firestoreDocumentAccessorContextExtension } from "../accessor/document";
 import { FirestoreItemPageIterationBaseConfig, FirestoreItemPageIterationFactory, firestoreItemPageIterationFactory, FirestoreItemPageIterationFactoryFunction } from "../query/iterator";
 import { CollectionReferenceRef, FirestoreContextReference } from "../reference";
-import { firestoreCollectionQueryFactory, FirestoreCollectionQueryFactory } from '../query/query';
+import { firestoreQueryFactory, FirestoreQueryFactory } from '../query/query';
 import { FirestoreDrivers } from '../driver/driver';
+import { FirestoreCollectionQueryFactory, firestoreCollectionQueryFactory } from "./collection.query";
 
 /**
  * FirestoreCollection configuration
@@ -16,8 +17,8 @@ export interface FirestoreCollectionConfig<T, D extends FirestoreDocument<T> = F
 * Instance that provides several accessors for accessing documents of a collection.
 */
 export interface FirestoreCollection<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> extends
-  FirestoreContextReference, CollectionReferenceRef<T>, FirestoreItemPageIterationFactory<T>, FirestoreDocumentAccessorFactory<T, D>, FirestoreCollectionQueryFactory<T>,
-  FirestoreDocumentAccessorForTransactionFactory<T, D>, FirestoreDocumentAccessorForWriteBatchFactory<T, D> {
+  FirestoreContextReference, CollectionReferenceRef<T>, FirestoreItemPageIterationFactory<T>, FirestoreDocumentAccessorFactory<T, D>, FirestoreQueryFactory<T>,
+  FirestoreDocumentAccessorForTransactionFactory<T, D>, FirestoreDocumentAccessorForWriteBatchFactory<T, D>, FirestoreCollectionQueryFactory<T, D> {
   readonly config: FirestoreCollectionConfig<T, D>;
 }
 
@@ -35,23 +36,19 @@ export function makeFirestoreCollection<T, D extends FirestoreDocument<T>>(confi
   const { collection, firestoreContext, firestoreAccessorDriver } = config;
   const firestoreIteration: FirestoreItemPageIterationFactoryFunction<T> = firestoreItemPageIterationFactory(config);
   const documentAccessor: FirestoreDocumentAccessorFactoryFunction<T, D> = firestoreDocumentAccessorFactory(config);
-  const { query }: FirestoreCollectionQueryFactory<T> = firestoreCollectionQueryFactory(config);
+  const queryFactory: FirestoreQueryFactory<T> = firestoreQueryFactory(config);
 
-  // TODO: Update/Add to query to query the DocumentType optionally instead of the data type only.
-  // TODO: FirestoreCollectionQueryFactory is not reltaed to the FirestoreCollection above. Renamed to FirestoreQueryFactory, or similar.
+  const documentAccessorExtension = firestoreDocumentAccessorContextExtension({ documentAccessor, firestoreAccessorDriver });
+  const { queryDocument: documentQuery } = firestoreCollectionQueryFactory(queryFactory, documentAccessorExtension);
+  const { query } = queryFactory;
 
   return {
     config,
     collection,
     firestoreContext,
+    ...documentAccessorExtension,
     firestoreIteration,
-    documentAccessor,
-    documentAccessorForTransaction(transaction: Transaction): FirestoreDocumentAccessor<T, D> {
-      return documentAccessor(firestoreAccessorDriver.transactionContextFactory(transaction));
-    },
-    documentAccessorForWriteBatch(writeBatch: WriteBatch): FirestoreDocumentAccessor<T, D> {
-      return documentAccessor(firestoreAccessorDriver.writeBatchContextFactory(writeBatch));
-    },
-    query
+    query,
+    queryDocument: documentQuery
   };
 }

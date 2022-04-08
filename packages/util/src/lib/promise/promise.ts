@@ -1,6 +1,8 @@
 import { Maybe } from "../value";
 import { waitForMs } from "./wait";
 
+export type PromiseOrValue<T> = Promise<T> | T;
+
 export type PromiseTaskFn<T, K = any> = (value: T, tryNumber?: number) => Promise<K>;
 
 export interface PerformTaskResult<O> {

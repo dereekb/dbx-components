@@ -1,3 +1,4 @@
+import { DocumentReference, QueryDocumentSnapshot, QuerySnapshot } from './../types';
 import { Observable } from "rxjs";
 
 // MARK: OnSnapshot
@@ -26,5 +27,6 @@ export function streamFromOnSnapshot<O>(callOnSnapshot: (params: StreamDocsWithO
   });
 }
 
-// MARK: Doc Changes
-// todo
+export function documentReferencesFromSnapshot<T>(snapshots: QuerySnapshot<T>): DocumentReference<T>[] {
+  return snapshots.docs.map(x => x.ref);
+}

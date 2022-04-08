@@ -1,5 +1,6 @@
 import { FirebaseServerActionsContext } from "@dereekb/firebase-server";
-import { AsyncProfileUpdateAction, ProfileDocument, ProfileFirestoreCollections, profileWithUsername, SetProfileUsernameParams } from "@dereekb/demo-firebase";
+import { AsyncProfileUpdateAction, ProfileDocument, ProfileFirestoreCollections, profileWithUid, profileWithUsername, SetProfileUsernameParams } from "@dereekb/demo-firebase";
+import { Maybe } from "@dereekb/util";
 
 /**
  * FirebaseServerActionsContextt required for ProfileServerActions.
@@ -10,6 +11,7 @@ export interface ProfileServerActionsContext extends FirebaseServerActionsContex
  * Server-only profile actions.
  */
 export abstract class ProfileServerActions {
+  abstract initProfileForUid(uid: string): Promise<ProfileDocument>;
   abstract setProfileUsername(params: SetProfileUsernameParams): AsyncProfileUpdateAction<SetProfileUsernameParams>;
 }
 
@@ -18,15 +20,50 @@ export abstract class ProfileServerActions {
  */
 export function profileServerActions(context: ProfileServerActionsContext): ProfileServerActions {
   return {
+    initProfileForUid: initProfileForUidFactory(context),
     setProfileUsername: setProfileUsernameFactory(context)
   };
 }
 
 // MARK: Actions
-export function setProfileUsernameFactory({ firebaseServerActionTransformFactory, profileFirestoreCollection, profilePrivateDataCollectionFactory }: ProfileServerActionsContext) {
+export function initProfileForUidFactory({ profileFirestoreCollection, profilePrivateDataCollectionFactory }: ProfileServerActionsContext) {
+  const { queryDocument } = profileFirestoreCollection;
+
+  return async (uid: string) => {
+
+    // init within a transaction.
+    const profile = await profileFirestoreCollection.firestoreContext.runTransaction(async (transaction) => {
+      let profile: Maybe<ProfileDocument> = await queryDocument(profileWithUid(uid)).getFirstDoc();
+
+      if (!profile) {
+        profile = profileFirestoreCollection.documentAccessorForTransaction(transaction).newDocument();
+
+        // create the profile
+        await profile.accessor.set({
+          uid,
+          username: uid,
+          updatedAt: new Date()
+        });
+
+        // create the private profile data
+        const profilePrivateData = profilePrivateDataCollectionFactory(profile);
+        await profilePrivateData.loadDocument().accessor.set({
+          usernameSetAt: new Date(),
+          createdAt: new Date()
+        });
+      }
+
+      return profile!;
+    });
+
+    return profile;
+  };
+}
+
+export function setProfileUsernameFactory({ firebaseServerActionTransformFunctionFactory, profileFirestoreCollection, profilePrivateDataCollectionFactory }: ProfileServerActionsContext) {
   const { query: queryProfile } = profileFirestoreCollection;
 
-  return firebaseServerActionTransformFactory(SetProfileUsernameParams, async (params) => {
+  return firebaseServerActionTransformFunctionFactory(SetProfileUsernameParams, async (params) => {
     const { username } = params;
 
     return async (document: ProfileDocument) => {
