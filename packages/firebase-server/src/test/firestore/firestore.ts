@@ -1,10 +1,9 @@
 import { Firestore } from '@google-cloud/firestore';
 import { TestFirestoreContext, TestFirestoreInstance, TestFirestoreContextFixture, TestingFirestoreDrivers, firestoreContextFactory, makeTestingFirestoreDrivers } from '@dereekb/firebase';
 import { jestTestContextBuilder } from "@dereekb/util";
-import { googleCloudFirestoreContextFactory } from '../lib/firestore/firestore';
-import { googleCloudFirestoreDrivers } from '../lib';
+import { googleCloudFirestoreDrivers } from '../../lib/firestore/driver';
 
-export interface GoogleFirestoreConfig {
+export interface GoogleCloudTestFirestoreConfig {
   host: string;
   port: number;
 }
@@ -12,9 +11,9 @@ export interface GoogleFirestoreConfig {
 export interface GoogleCloudTestFirestoreContext extends TestFirestoreContext { }
 
 export function makeGoogleFirestoreContext(drivers: TestingFirestoreDrivers, firestore: Firestore): TestFirestoreContext {
-  const context = firestoreContextFactory(drivers)(firestore);
-  (context as GoogleCloudTestFirestoreContext).drivers = drivers;
-  return context as GoogleCloudTestFirestoreContext;
+  const context = firestoreContextFactory(drivers)(firestore) as GoogleCloudTestFirestoreContext;
+  context.drivers = drivers;
+  return context;
 }
 
 export class GoogleCloudTestFirestoreInstance extends TestFirestoreInstance {
@@ -27,25 +26,26 @@ export class GoogleCloudTestFirestoreInstance extends TestFirestoreInstance {
 
 }
 
-export class GoogleFirestoreFirebaseTestingContextFixture extends TestFirestoreContextFixture<GoogleCloudTestFirestoreInstance> { }
+export class GoogleCloudTestFirestoreContextFixture extends TestFirestoreContextFixture<GoogleCloudTestFirestoreInstance> { }
 
 /**
- * A JestTestContextBuilderFunction for building firebase test context factories using @firebase/firebase and @firebase/rules-unit-testing. This means CLIENT TESTING ONLY. For server testing, look at @dereekb/firestore-server.
+ * A JestTestContextBuilderFunction for building firestore test context factories using @google-cloud/firestore. This means SERVER TESTING ONLY. For client testing, look at @dereekb/firestore.
  * 
- * This can be used to easily build a testing context that sets up RulesTestEnvironment for tests that sets itself up and tears itself down.
+ * This is used to build a @google-cloud/firestore Firestore instance for testing and point it to the emulators.
+ * 
+ * If you need all of Firebase (firebase-admin library), look at adminFirebaseAdminTestBuilder() instead.
  */
-export const googleFirestoreTestBuilder = jestTestContextBuilder<GoogleCloudTestFirestoreInstance, GoogleFirestoreFirebaseTestingContextFixture, GoogleFirestoreConfig>({
-  buildConfig: (input?: Partial<GoogleFirestoreConfig>) => {
-    const config: GoogleFirestoreConfig = {
+export const googleCloudTestFirestoreBuilder = jestTestContextBuilder<GoogleCloudTestFirestoreInstance, GoogleCloudTestFirestoreContextFixture, GoogleCloudTestFirestoreConfig>({
+  buildConfig: (input?: Partial<GoogleCloudTestFirestoreConfig>) => {
+    const config: GoogleCloudTestFirestoreConfig = {
       host: input?.host ?? 'localhost',
       port: input?.port ?? 0
     };
 
     return config;
   },
-  buildFixture: () => new GoogleFirestoreFirebaseTestingContextFixture(),
+  buildFixture: () => new GoogleCloudTestFirestoreContextFixture(),
   setupInstance: async (config) => {
-
     const drivers = makeTestingFirestoreDrivers(googleCloudFirestoreDrivers());
     const firestore = new Firestore({
       projectId: 'test',

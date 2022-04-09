@@ -50,10 +50,6 @@ export interface Timestamp {
   toMillis(): number;
   isEqual(other: Timestamp): boolean;
   toString(): string;
-  toJSON(): {
-    seconds: number;
-    nanoseconds: number;
-  };
   valueOf(): string;
 }
 

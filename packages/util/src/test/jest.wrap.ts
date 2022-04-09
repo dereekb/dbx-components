@@ -72,7 +72,6 @@ export function wrapJestTestContextFactory<W, F, E = any>(config: JestWrapTestCo
             await config.teardownWrap!(wrap, effect);
           });
         }
-
       });
     };
   }

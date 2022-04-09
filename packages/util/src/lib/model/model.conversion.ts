@@ -1,4 +1,4 @@
-import { asGetter, Getter, getValueFromObjectOrGetter, ObjectOrGetter } from "../getter";
+import { asGetter, Getter, getValueFromObjectOrGetter, ObjectOrGetter } from "../getter/getter";
 import { toKeyValueTuples } from "../object";
 import { ApplyConversionFunction, ConversionFunction, Maybe } from "../value";
 

@@ -1,2 +1,2 @@
-export * from './firestore.fixture.admin';
+export * from './firebase';
 export * from './firestore';

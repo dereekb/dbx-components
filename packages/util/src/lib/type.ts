@@ -1,5 +1,5 @@
 
-export declare type ClassType<T> = {
+export declare type ClassType<T = any> = {
   new(...args: any[]): T;
 };
 

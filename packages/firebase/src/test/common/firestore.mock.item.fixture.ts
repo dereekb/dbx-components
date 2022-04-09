@@ -40,7 +40,7 @@ export function testWithMockItemFixture(config?: MockItemCollectionFirebaseConte
     makeInstance: (wrap) => new MockItemCollectionFixtureInstance(wrap),
     teardownInstance: (instance: MockItemCollectionFixtureInstance) => {
       // instance.fixture.parent.instance.clearFirestore();
-    }
+    },
     // TODO: Utilize config here using the setup/teardown later if needed.
   });
 }

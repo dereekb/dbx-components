@@ -1,4 +1,4 @@
-import { AbstractJestTestContextFixture } from "@dereekb/util";
+import { AbstractJestTestContextFixture, JestTestContextFactory } from "@dereekb/util";
 import { Firestore } from "../../lib/common/firestore/types";
 import { TestFirestoreContext } from "./firestore";
 
@@ -30,3 +30,5 @@ export class TestFirestoreContextFixture<F extends TestFirestoreInstance = TestF
   }
 
 }
+
+export type JestTestFirestoreContextFactory = JestTestContextFactory<TestFirestoreContextFixture>;

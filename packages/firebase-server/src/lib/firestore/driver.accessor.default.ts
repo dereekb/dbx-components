@@ -1,6 +1,6 @@
-import { DocumentReference, DocumentSnapshot, WriteResult } from "@google-cloud/firestore";
+import { DocumentReference, WriteResult as GoogleCloudWriteResult, DocumentSnapshot, UpdateData as GoogleCloudUpdateData } from "@google-cloud/firestore";
 import { Observable } from "rxjs";
-import { WithFieldValue, UpdateData, FirestoreDocumentContext, FirestoreDocumentContextType, FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, FirestoreDocumentDeleteParams, FirestoreDocumentUpdateParams, SetOptions, streamFromOnSnapshot } from "@dereekb/firebase";
+import { WithFieldValue, UpdateData, FirestoreDocumentContext, FirestoreDocumentContextType, FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, FirestoreDocumentDeleteParams, FirestoreDocumentUpdateParams, SetOptions, streamFromOnSnapshot, WriteResult } from "@dereekb/firebase";
 
 // MARK: Accessor
 export class DefaultFirestoreDocumentDataAccessor<T> implements FirestoreDocumentDataAccessor<T> {
@@ -19,15 +19,15 @@ export class DefaultFirestoreDocumentDataAccessor<T> implements FirestoreDocumen
     return this.documentRef.get();
   }
 
-  delete(params: FirestoreDocumentDeleteParams): Promise<WriteResult> {
+  delete(params: FirestoreDocumentDeleteParams): Promise<GoogleCloudWriteResult> {
     return this.documentRef.delete(params?.precondition);
   }
 
-  set(data: WithFieldValue<T>, options?: SetOptions): Promise<WriteResult> {
+  set(data: WithFieldValue<T>, options?: SetOptions): Promise<GoogleCloudWriteResult> {
     return this.documentRef.set(data as any, options as SetOptions);
   }
 
-  update(data: UpdateData<T>, params?: FirestoreDocumentUpdateParams): Promise<WriteResult> {
+  update(data: UpdateData<T>, params?: FirestoreDocumentUpdateParams): Promise<GoogleCloudWriteResult> {
     return this.documentRef.update(data as any, params?.precondition ?? {});
   }
 

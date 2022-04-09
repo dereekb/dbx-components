@@ -1,7 +1,6 @@
 import { INestApplication } from '@nestjs/common';
 import { DemoFirestoreCollections } from '@dereekb/demo-firebase';
 import { AbstractNestContext, onCallWithNestApplicationFactory, onCallWithNestContextFactory } from '@dereekb/firebase-server';
-import { getNestServerApp } from '../app';
 import { ProfileServerActions } from '../common/model/profile/profile.action.server';
 
 export class DemoApiNestContext extends AbstractNestContext {
@@ -16,5 +15,5 @@ export class DemoApiNestContext extends AbstractNestContext {
 
 }
 
-export const onCallWithNestApp = onCallWithNestApplicationFactory(getNestServerApp);
-export const onCallWithNestContext = onCallWithNestContextFactory(onCallWithNestApp, (nest: INestApplication) => new DemoApiNestContext(nest));
+export const onCallWithDemoNest = onCallWithNestApplicationFactory();
+export const onCallWithDemoNestContext = onCallWithNestContextFactory(onCallWithDemoNest, (nest: INestApplication) => new DemoApiNestContext(nest));

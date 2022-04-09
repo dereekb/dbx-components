@@ -2,7 +2,7 @@ import { DocumentSnapshot, DocumentReference, Transaction, Firestore } from '@go
 import { MockItem, mockItemCollectionReference, MockItemDocument, MockItemFirestoreCollection, mockItemFirestoreCollection, authorizedTestWithMockItemCollection, FirestoreDocumentContext, makeFirestoreCollection } from "@dereekb/firebase";
 import { transactionDocumentContext } from './driver.accessor.transaction';
 import { Maybe } from '@dereekb/util';
-import { adminTestWithMockItemCollection } from '../../test/firestore.fixture.admin';
+import { adminTestWithMockItemCollection } from '../../test/firestore/firestore.fixture.admin';
 import { googleCloudFirestoreDrivers } from './driver';
 import { writeBatchDocumentContext } from './driver.accessor.batch';
 
