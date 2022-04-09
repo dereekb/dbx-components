@@ -1,5 +1,5 @@
 import { MockItemFirestoreCollection, mockItemFirestoreCollection, TestFirestoreContextFixture, TestFirestoreInstance } from "@dereekb/firebase";
-import { initFirebaseAdminTestEnvironment } from "./firebase.admin";
+import { initFirebaseAdminTestEnvironment } from "./firebase";
 
 export function initFirebaseServerAdminTestEnvironment() {
   initFirebaseAdminTestEnvironment({
@@ -10,7 +10,6 @@ export function initFirebaseServerAdminTestEnvironment() {
     }
   })
 }
-
 
 export function describeFirestoreTest(s: TestFirestoreContextFixture<TestFirestoreInstance>) {
 

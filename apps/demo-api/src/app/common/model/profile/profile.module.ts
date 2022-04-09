@@ -11,6 +11,7 @@ export const profileServerActionsFactory = (context: DemoFirebaseServerActionsCo
     provide: ProfileServerActions,
     useFactory: profileServerActionsFactory,
     inject: [DemoFirebaseServerActionsContext]
-  }]
+  }],
+  exports: [ProfileServerActions]
 })
 export class ProfileModule { }

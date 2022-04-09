@@ -13,7 +13,7 @@ export class TestThing { }
 })
 export class AppModule { }
 
-export const firebaseAdminFunctionNestContext = firebaseAdminFunctionNestContextFactory({ moduleClass: AppModule });
+export const firebaseAdminFunctionNestContext = firebaseAdminFunctionNestContextFactory({ nestModules: AppModule });
 
 describe('firebaseAdminFunctionNestContext', () => {
 

@@ -719,7 +719,7 @@
             "lintFilePatterns": ["apps/demo-api/**/*.ts"]
           }
         },
-        "test": {
+        "run-tests": {
           "executor": "@nrwl/jest:jest",
           "outputs": [
             "coverage/apps/demo-api",
@@ -728,6 +728,18 @@
           "options": {
             "jestConfig": "apps/demo-api/jest.config.js",
             "passWithNoTests": true
+          }
+        },
+        "watch": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "command": "./exec-with-emulator.sh 'npx nx run-tests demo-api --watch'"
+          }
+        },
+        "test": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "command": "./exec-with-emulator.sh 'npx nx run-tests demo-api'"
           }
         },
         "deploy": {

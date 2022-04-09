@@ -13,11 +13,11 @@ const demoFirebaseServerActionsContextFactory = (collections: DemoFirestoreColle
 
 @Module({
   imports: [AppFirestoreModule],
-  controllers: [],
   providers: [{
     provide: DemoFirebaseServerActionsContext,
     useFactory: demoFirebaseServerActionsContextFactory,
     inject: [DemoFirestoreCollections]
-  }]
+  }],
+  exports: [DemoFirebaseServerActionsContext]
 })
 export class AppActionModule { }

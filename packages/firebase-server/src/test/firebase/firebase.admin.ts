@@ -1,76 +1,17 @@
-import * as functions from 'firebase-functions-test';
 import * as admin from 'firebase-admin';
+import * as functions from 'firebase-functions-test';
 import { Firestore } from '@google-cloud/firestore';
 import { FirestoreContext, JestTestFirestoreContextFactory, makeTestingFirestoreDrivers, TestFirestoreContext, TestFirestoreContextFixture, TestFirestoreInstance } from '@dereekb/firebase';
 import { AbstractJestTestContextFixture, cachedGetter, JestBuildTestsWithContextFunction, jestTestContextBuilder, JestTestContextFactory, JestTestContextFixture, Maybe, useJestContextFixture } from "@dereekb/util";
 import { FeaturesList } from 'firebase-functions-test/lib/features';
 import { googleCloudFirestoreDrivers } from '../../lib/firestore/driver';
 import { GoogleCloudTestFirestoreInstance } from '../firestore/firestore';
-
-let adminEnvironmentInitialized = false;
-let functionsInitialized = false;
-
-/**
- * Host url:port combo.
- * 
- * I.E. localhost:8080
- */
-export type FirebaseAdminTestEnvironmentHost = string;
-
-export interface FirebaseAdminTestEnvironmentEmulatorsConfig {
-  auth: FirebaseAdminTestEnvironmentHost | null;
-  storage: FirebaseAdminTestEnvironmentHost | null;
-  firestore: FirebaseAdminTestEnvironmentHost | null;
-}
-
-export interface FirebaseAdminTestEnvironmentConfig {
-  emulators: FirebaseAdminTestEnvironmentEmulatorsConfig;
-}
-
-export function generateNewProjectId() {
-  const projectId = 'firebase-test-' + new Date().getTime();
-  return projectId;
-}
-
-export function rollNewGCloudProjectEnvironmentVariable() {
-  const projectId = generateNewProjectId();
-  process.env.GCLOUD_PROJECT = projectId;
-  return projectId;
-}
-
-/**
- * Should be called before calling/using adminFirebaseTestBuilder(). This should only be called once.
- */
-export function initFirebaseAdminTestEnvironment(config: FirebaseAdminTestEnvironmentConfig) {
-
-  function crashForEmulator(emulator: string) {
-    throw new Error(`Emulator for ${emulator} was not set null or to a host. Crashing to prevent contamination.`);
-  }
-
-  function configureEmulator(emulator: keyof FirebaseAdminTestEnvironmentEmulatorsConfig, envKey: string) {
-    const emulatorConfig = config.emulators.firestore;
-
-    if (emulatorConfig) {
-      process.env[envKey] = emulatorConfig;
-    } else if (config.emulators.firestore !== null) {
-      crashForEmulator(emulator);
-    }
-  }
-
-  rollNewGCloudProjectEnvironmentVariable();
-  configureEmulator('auth', 'FIREBASE_AUTH_EMULATOR_HOST');
-  configureEmulator('firestore', 'FIRESTORE_EMULATOR_HOST');
-  configureEmulator('storage', 'FIREBASE_STORAGE_EMULATOR_HOST');
-
-  adminEnvironmentInitialized = true;
-}
+import { generateNewProjectId, isAdminEnvironmentInitialized } from './firebase';
 
 export interface FirebaseAdminTestConfig { }
 
 export interface FirebaseAdminTestContext {
-
   readonly firestoreContext: TestFirestoreContext;
-
 }
 
 export class FirebaseAdminTestContextFixture extends AbstractJestTestContextFixture<FirebaseAdminTestInstance> { }
@@ -115,7 +56,7 @@ export const firebaseAdminTestBuilder = jestTestContextBuilder<FirebaseAdminTest
   buildFixture: () => new FirebaseAdminTestContextFixture(),
   setupInstance: async (config) => {
 
-    if (!adminEnvironmentInitialized) {
+    if (!isAdminEnvironmentInitialized()) {
       throw new Error('Call initFirebaseAdminTestEnvironment() from @dereekb/firebase-server was not called before using adminFirebaseTestBuilder().');
     }
 
@@ -132,13 +73,15 @@ export type FirebaseAdminTestContextFactory = JestTestContextFactory<FirebaseAdm
 export const firebaseAdminTestContextFactory: FirebaseAdminTestContextFactory = firebaseAdminTestBuilder({});
 
 // MARK: FirebaseAdminFunctionTestBuilder
+let functionsInitialized = false;
+
 /**
  * firebase-functions-test uses a singleton internally, so we must track the reference to properly tear it down too.
  */
 let firebaseFunctionsTestInstance: Maybe<FeaturesList>;
 
 export function setupFirebaseAdminFunctionTestSingleton() {
-  if (!adminEnvironmentInitialized) {
+  if (!isAdminEnvironmentInitialized()) {
     throw new Error('initFirebaseAdminTestEnvironment() was not called.');
   }
 
@@ -167,6 +110,8 @@ export class FirebaseAdminFunctionTestInstance extends FirebaseAdminTestInstance
     super(app);
   }
 
+  readonly wrapCloudFunction = this.instance.wrap;
+
 }
 
 export let DEFAULT_FIREBASE_ADMIN_FUNCTION_TEST_USE_FUNCTION_SINGLETON_CONTEXT = true;
@@ -192,7 +137,7 @@ export const firebaseAdminFunctionTestBuilder = jestTestContextBuilder<FirebaseA
   buildFixture: () => new FirebaseAdminFunctionTestContextFixture(),
   setupInstance: async (config) => {
 
-    if (!adminEnvironmentInitialized) {
+    if (!isAdminEnvironmentInitialized()) {
       throw new Error('initFirebaseAdminTestEnvironment() (in @dereekb/firebase-server package) was not called before using adminFirebaseTestBuilder().');
     }
 

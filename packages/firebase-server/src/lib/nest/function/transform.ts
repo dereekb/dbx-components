@@ -1,7 +1,7 @@
 import { ValidationError } from 'class-validator';
 import { toTransformAndValidateFunctionResultFactory, TransformAndValidateFunctionResultFactory, transformAndValidateObjectFactory, TransformAndValidateObjectFactory } from "@dereekb/model";
 import { HttpException, ValidationPipe } from '@nestjs/common';
-import * as functions from 'firebase-functions';
+import { https } from 'firebase-functions';
 
 /**
  * Context used for transforming content.
@@ -28,7 +28,7 @@ export function firebaseServerActionsTransformFactory(): TransformAndValidateObj
     handleValidationError: (validationError: ValidationError[]) => {
       const nestError = nestValidationExceptionFactory(validationError);
       const details = (nestError as HttpException).getResponse();
-      throw new functions.https.HttpsError('invalid-argument', 'Parameters validation check failed.', details);
+      throw new https.HttpsError('invalid-argument', 'Parameters validation check failed.', details);
     }
   });
 }

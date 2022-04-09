@@ -24,7 +24,7 @@ export function asObservable<T>(valueOrObs: Maybe<ObservableGetter<T>>): Observa
  * 
  * @returns 
  */
-export function getter<T>(): OperatorFunction<ObservableGetter<T>, T> {
+export function getFromObservable<T>(): OperatorFunction<ObservableGetter<T>, T> {
   return switchMap(x => {
     if (isObservable(x)) {
       return x;

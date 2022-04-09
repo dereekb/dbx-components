@@ -5,4 +5,4 @@ import { AppActionModule } from './action.module';
 @Module({
   imports: [AppFirestoreModule, AppActionModule]
 })
-export class AppFirebaseModule { }
+export class DemoApiFirebaseModule { }
