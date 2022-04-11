@@ -57,10 +57,7 @@ export class AuthorizedUserTestContextInstance implements AuthorizedUserTestCont
   }
 
   loadDecodedIdToken(): Promise<DecodedIdToken> {
-    return this.loadIdToken().then(x => {
-      console.log(x);
-      return this.testInstance.auth.verifyIdToken(x)
-    });
+    return this.loadIdToken().then(decodeEncodedCreateCustomTokenResult);
   }
 
   makeContextOptions(): Promise<ContextOptions> {
@@ -175,6 +172,11 @@ export const testUidFactory: Factory<FirebaseAuthUserIdentifier> = mapGetter(inc
 export type TestEncodedFirestoreToken = string;
 
 /**
+ * Structure of the token created by Auth.createCustomToken().
+ */
+export type DecodedFirestoreCreateCustomTokenResult = { claims?: any } & Pick<DecodedIdToken, 'uid' | 'sub' | 'iss' | 'exp' | 'iat' | 'aud'>;
+
+/**
  * Creates a CallableContextOptions with auth attached corresponding to the input UserRecord.
  * 
  * @param auth 
@@ -199,7 +201,7 @@ export async function createTestFunctionContextOptions(auth: Auth, userRecord: U
  * @returns 
  */
 export function createTestFirestoreTokenForUserRecord(auth: Auth, userRecord: UserRecord): Promise<DecodedIdToken> {
-  return createEncodedTestFirestoreTokenForUserRecord(auth, userRecord).then(decodeTestFirestoreToken);
+  return createEncodedTestFirestoreTokenForUserRecord(auth, userRecord).then(decodeEncodedCreateCustomTokenResult);
 }
 
 /**
@@ -210,11 +212,24 @@ export function createTestFirestoreTokenForUserRecord(auth: Auth, userRecord: Us
  * @returns 
  */
 export function createEncodedTestFirestoreTokenForUserRecord(auth: Auth, userRecord: UserRecord): Promise<TestEncodedFirestoreToken> {
+
+  // TODO: Consider replacing createCustomToken, as the custom claims are put into an object called claims in the JWT, instead of spread over.
+
   return auth.createCustomToken(userRecord.uid, testFirestoreClaimsFromUserRecord(userRecord));
 }
 
-export function decodeTestFirestoreToken(token: TestEncodedFirestoreToken): DecodedIdToken {
-  return decodeJwt(token) as DecodedIdToken;
+export function decodeEncodedCreateCustomTokenResult(token: TestEncodedFirestoreToken): DecodedIdToken {
+  const decoded = decodeJwt(token) as DecodedFirestoreCreateCustomTokenResult;
+  const decodedToken: DecodedIdToken = {
+    ...decoded,
+    ...decoded.claims,
+    auth_time: decoded.iat,
+    firebase: decoded.claims?.firebase ?? {}
+  };
+
+  delete decodedToken.claims; // remove the "claims" item if it exists.
+
+  return decodedToken;
 }
 
 export function testFirestoreClaimsFromUserRecord(userRecord: UserRecord): object {
@@ -231,9 +246,10 @@ export function testFirestoreClaimsFromUserRecord(userRecord: UserRecord): objec
   };
 
   const customClaims = userRecord.customClaims;
-
-  return {
+  const claims = {
     ...customClaims,
     ...baseClaims
   };
+
+  return claims;
 }

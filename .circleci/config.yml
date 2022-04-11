@@ -3,7 +3,7 @@ version: 2.1 # use CircleCI 2.1
 # YAML trick
 defaults: &defaults
   working_directory: ~/code # "code" is our working directory
-  resource_class: medium+
+  resource_class: large
   docker:
     - image: cimg/node:16.14
 
@@ -26,7 +26,7 @@ jobs:
           name: install dependencies
           command: npm ci
       # clean node_modules
-      - run: npx clean-modules --yes --exclude "**/firebase*/**" --exclude "**/@angular*/**"
+      # - run: npx clean-modules --yes --exclude "**/firebase*/**" --exclude "**/@angular*/**" --exclude "**/@nestjs/**"
       # save any changes to the cache
       - save_cache:
           key: node-cache-a{{ checksum "package-lock.json" }}
@@ -55,6 +55,9 @@ jobs:
       - run:
           name: run rxjs tests
           command: npx nx test rxjs
+      - run:
+          name: run model tests
+          command: npx nx test model
       - run:
           name: run date tests
           command: npx nx test-timezones date
@@ -133,7 +136,7 @@ jobs:
           at: ~/code
       - run:
           name: deploy updated projects
-          command: npx nx run-many --target=ci-deploy --all --parallel=false # deploy any updated projects
+          command: npx nx run-many --target=ci-deploy --all --parallel=false # deploy all projects
   # Publishes content to npm. This should occur after running a release.
   publish-to-npm:
     <<: *defaults

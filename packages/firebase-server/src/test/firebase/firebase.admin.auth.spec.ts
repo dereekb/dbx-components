@@ -35,6 +35,10 @@ describe('authorizedUserContextFactory()', () => {
           });
 
           it('should have added the custom claims.', async () => {
+            const record = await u.instance.loadUserRecord();
+            expect(record.customClaims).toBeDefined();
+            expect(record.customClaims!['test']).toBe(expectedTestClaimValue);
+
             const token = await u.instance.loadDecodedIdToken();
             expect(token['test']).toBe(expectedTestClaimValue);
           });
@@ -42,6 +46,8 @@ describe('authorizedUserContextFactory()', () => {
         });
 
       });
+
+      // todo: add more tests
 
     });
 
