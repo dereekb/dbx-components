@@ -39,4 +39,8 @@ describe('firebaseAdminNestContext', () => {
 
   });
 
+  // todo: add tests
+  // - test providers are available on the glboal scope
+  // - test modules are imported
+
 });

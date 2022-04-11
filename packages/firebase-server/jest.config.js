@@ -1,6 +1,7 @@
 module.exports = {
   displayName: 'firebase-server',
   preset: '../../jest.preset.js',
+  setupFilesAfterEnv: ['<rootDir>/test-setup.ts'],
   globals: {
     'ts-jest': {
       tsconfig: '<rootDir>/tsconfig.spec.json',
