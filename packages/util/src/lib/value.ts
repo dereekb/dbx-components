@@ -7,6 +7,8 @@ export type Maybe<T> = T | null | undefined;
 
 /**
  * Converts one value to another.
+ * 
+ * TODO: rename to MapFunction
  */
 export type ConversionFunction<I, O> = (input: I) => O;
 

@@ -1,23 +1,52 @@
 import * as admin from 'firebase-admin';
 import * as functions from 'firebase-functions-test';
 import { Firestore } from '@google-cloud/firestore';
-import { FirestoreContext, JestTestFirestoreContextFactory, makeTestingFirestoreDrivers, TestFirestoreContext, TestFirestoreContextFixture, TestFirestoreInstance } from '@dereekb/firebase';
+import { Auth } from 'firebase-admin/lib/auth/auth';
+import { JestTestFirestoreContextFactory, makeTestingFirestoreDrivers, TestFirestoreContext, TestFirestoreContextFixture, TestFirestoreInstance } from '@dereekb/firebase';
 import { AbstractJestTestContextFixture, cachedGetter, JestBuildTestsWithContextFunction, jestTestContextBuilder, JestTestContextFactory, JestTestContextFixture, Maybe, useJestContextFixture } from "@dereekb/util";
 import { FeaturesList } from 'firebase-functions-test/lib/features';
 import { googleCloudFirestoreDrivers } from '../../lib/firestore/driver';
 import { GoogleCloudTestFirestoreInstance } from '../firestore/firestore';
 import { generateNewProjectId, isAdminEnvironmentInitialized } from './firebase';
+import { wrap } from 'firebase-functions-test/lib/main';
 
 export interface FirebaseAdminTestConfig { }
 
 export interface FirebaseAdminTestContext {
+  readonly app: admin.app.App;
+  readonly auth: Auth;
+  readonly firestore: Firestore
+  readonly firestoreInstance: TestFirestoreInstance;
   readonly firestoreContext: TestFirestoreContext;
 }
 
-export class FirebaseAdminTestContextFixture extends AbstractJestTestContextFixture<FirebaseAdminTestInstance> { }
+export class FirebaseAdminTestContextFixture extends AbstractJestTestContextFixture<FirebaseAdminTestContextInstance> implements FirebaseAdminTestContext {
+
+  // MARK: FirebaseAdminTestContext (Forwarded)
+  get app(): admin.app.App {
+    return this.instance.app;
+  }
+
+  get auth(): Auth {
+    return this.instance.auth;
+  }
+
+  get firestore(): Firestore {
+    return this.instance.firestore;
+  }
+
+  get firestoreInstance(): TestFirestoreInstance {
+    return this.instance.firestoreInstance;
+  }
+
+  get firestoreContext(): TestFirestoreContext {
+    return this.instance.firestoreContext;
+  }
+
+}
 
 // MARK: FirebaseAdminTestBuilder
-export class FirebaseAdminTestInstance implements FirebaseAdminTestInstance {
+export class FirebaseAdminTestContextInstance implements FirebaseAdminTestContext {
 
   readonly getTestFirestoreInstance = cachedGetter(() => {
     const drivers = makeTestingFirestoreDrivers(googleCloudFirestoreDrivers());
@@ -25,6 +54,10 @@ export class FirebaseAdminTestInstance implements FirebaseAdminTestInstance {
   });
 
   constructor(readonly app: admin.app.App) { }
+
+  get auth(): Auth {
+    return this.app.auth();
+  }
 
   get firestore(): Firestore {
     return this.app.firestore();
@@ -34,8 +67,35 @@ export class FirebaseAdminTestInstance implements FirebaseAdminTestInstance {
     return this.getTestFirestoreInstance();
   }
 
-  get firestoreContext(): FirestoreContext {
+  get firestoreContext(): TestFirestoreContext {
     return this.firestoreInstance.context;
+  }
+
+}
+
+export abstract class AbstractFirebaseAdminTestContextInstanceChild implements FirebaseAdminTestContext {
+
+  constructor(readonly parent: FirebaseAdminTestContextInstance) { }
+
+  // MARK: FirebaseAdminTestContext (Forwarded)
+  get app(): admin.app.App {
+    return this.parent.app;
+  }
+
+  get auth(): Auth {
+    return this.parent.auth;
+  }
+
+  get firestore(): Firestore {
+    return this.parent.firestore;
+  }
+
+  get firestoreInstance(): TestFirestoreInstance {
+    return this.parent.firestoreInstance;
+  }
+
+  get firestoreContext(): TestFirestoreContext {
+    return this.parent.firestoreContext;
   }
 
 }
@@ -45,7 +105,7 @@ export class FirebaseAdminTestInstance implements FirebaseAdminTestInstance {
  * 
  * This can be used to easily build a testing context that sets up RulesTestEnvironment for tests that sets itself up and tears itself down.
  */
-export const firebaseAdminTestBuilder = jestTestContextBuilder<FirebaseAdminTestInstance, FirebaseAdminTestContextFixture, FirebaseAdminTestConfig>({
+export const firebaseAdminTestBuilder = jestTestContextBuilder<FirebaseAdminTestContextInstance, FirebaseAdminTestContextFixture, FirebaseAdminTestConfig>({
   buildConfig: (input?: Partial<FirebaseAdminTestConfig>) => {
     const config: FirebaseAdminTestConfig = {
       ...input
@@ -62,10 +122,10 @@ export const firebaseAdminTestBuilder = jestTestContextBuilder<FirebaseAdminTest
 
     const projectId = generateNewProjectId();
     const app = admin.initializeApp({ projectId });
-    return new FirebaseAdminTestInstance(app);
+    return new FirebaseAdminTestContextInstance(app);
   },
   teardownInstance: async (instance, config) => {
-    await (instance as FirebaseAdminTestInstance).app.delete();  // clean up the instance
+    await (instance as FirebaseAdminTestContextInstance).app.delete();  // clean up the instance
   }
 });
 
@@ -102,15 +162,48 @@ export interface FirebaseAdminFunctionTestConfig {
   useFunctionSingletonContext: boolean;
 }
 
-export class FirebaseAdminFunctionTestContextFixture extends AbstractJestTestContextFixture<FirebaseAdminFunctionTestInstance> { }
+export type WrapCloudFunction = typeof wrap;
 
-export class FirebaseAdminFunctionTestInstance extends FirebaseAdminTestInstance {
+export interface FirebaseAdminFunctionTestContext extends FirebaseAdminTestContext {
+  readonly wrapCloudFunction: WrapCloudFunction;
+}
+
+export class FirebaseAdminFunctionTestContextFixture extends AbstractJestTestContextFixture<FirebaseAdminFunctionTestInstance> implements FirebaseAdminFunctionTestContext {
+
+  // MARK: FirebaseAdminTestContext (Forwarded)
+  get app(): admin.app.App {
+    return this.instance.app;
+  }
+
+  get auth(): Auth {
+    return this.instance.auth;
+  }
+
+  get firestore(): Firestore {
+    return this.instance.firestore;
+  }
+
+  get firestoreInstance(): TestFirestoreInstance {
+    return this.instance.firestoreInstance;
+  }
+
+  get firestoreContext(): TestFirestoreContext {
+    return this.instance.firestoreContext;
+  }
+
+  get wrapCloudFunction(): WrapCloudFunction {
+    return this.instance.wrapCloudFunction;
+  }
+
+}
+
+export class FirebaseAdminFunctionTestInstance extends FirebaseAdminTestContextInstance implements FirebaseAdminFunctionTestContext {
 
   constructor(readonly instance: FeaturesList, app: admin.app.App) {
     super(app);
   }
 
-  readonly wrapCloudFunction = this.instance.wrap;
+  readonly wrapCloudFunction: WrapCloudFunction = this.instance.wrap;
 
 }
 
@@ -125,7 +218,7 @@ export function setDefaultFirebaseAdminFunctionTestUseFunctionSingleton(use: boo
  * 
  * This can be used to easily build a testing context that sets up RulesTestEnvironment for tests that sets itself up and tears itself down.
  */
-export const firebaseAdminFunctionTestBuilder = jestTestContextBuilder<FirebaseAdminTestInstance, FirebaseAdminFunctionTestContextFixture, FirebaseAdminFunctionTestConfig>({
+export const firebaseAdminFunctionTestBuilder = jestTestContextBuilder<FirebaseAdminTestContextInstance, FirebaseAdminFunctionTestContextFixture, FirebaseAdminFunctionTestConfig>({
   buildConfig: (input?: Partial<FirebaseAdminFunctionTestConfig>) => {
     const config: FirebaseAdminFunctionTestConfig = {
       ...input,
@@ -173,13 +266,13 @@ export const firebaseAdminFunctionTestContextFactory: FirebaseAdminFunctionTestC
  * @param factory 
  * @returns 
  */
-export function firebaseAdminFirestoreContextFixture(factory: JestTestContextFactory<JestTestContextFixture<FirebaseAdminTestInstance>>): JestTestFirestoreContextFactory {
+export function firebaseAdminFirestoreContextFixture(factory: JestTestContextFactory<JestTestContextFixture<FirebaseAdminTestContextInstance>>): JestTestFirestoreContextFactory {
   return (buildTests: JestBuildTestsWithContextFunction<TestFirestoreContextFixture>) => {
     factory((f) => firebaseAdminFirestoreContextWithFixture(f, buildTests));
   };
 }
 
-export function firebaseAdminFirestoreContextWithFixture(f: JestTestContextFixture<FirebaseAdminTestInstance>, buildTests: JestBuildTestsWithContextFunction<TestFirestoreContextFixture>) {
+export function firebaseAdminFirestoreContextWithFixture(f: JestTestContextFixture<FirebaseAdminTestContextInstance>, buildTests: JestBuildTestsWithContextFunction<TestFirestoreContextFixture>) {
   useJestContextFixture({
     fixture: new TestFirestoreContextFixture(),
     /**

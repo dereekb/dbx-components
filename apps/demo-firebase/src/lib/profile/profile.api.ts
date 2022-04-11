@@ -11,11 +11,11 @@ export class SetProfileUsernameParams {
 
   // MARK: Admin Only
   /**
-   * Sets the target profile. If not defined, assumes the current user's profile
+   * Sets the target profile/user. If not defined, assumes the current user's profile.
    */
   @Expose()
   @IsString()
   @IsOptional()
-  profile?: string;
+  uid?: string;
 
 }

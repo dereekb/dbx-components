@@ -1,3 +1,4 @@
+import { ConversionFunction } from "../value";
 
 /**
  * Function that returns a value.
@@ -16,6 +17,8 @@ export type GetterWithInput<T, A> = (args?: A) => T;
 
 /**
  * Either a Getter, or an instance of the item.
+ * 
+ * TODO: Rename to GetterOrValue to be inline with other similar type naming schemes.
  */
 export type ObjectOrGetter<T> = T | Getter<T>;
 

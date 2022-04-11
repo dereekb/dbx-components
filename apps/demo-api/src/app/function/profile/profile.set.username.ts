@@ -1,25 +1,28 @@
 import { ProfileDocument, profileWithUid, SetProfileUsernameParams } from '@dereekb/demo-firebase';
+import { inAuthContext } from '@dereekb/firebase-server';
 import { onCallWithDemoNestContext } from '../function';
-import { assertIsLoggedIn } from '@dereekb/firebase-server';
+import { preconditionConflictError } from 'packages/firebase-server/src/lib/function/error';
+import { userHasNoProfileError } from '../../common/model/profile/profile.error';
 
 
-export const profileSetUsername = onCallWithDemoNestContext(async (nest, data: SetProfileUsernameParams, context) => {
-
-  assertIsLoggedIn(context);
-
+export const profileSetUsername = onCallWithDemoNestContext(inAuthContext(async (nest, data: SetProfileUsernameParams, context) => {
   const setProfileUsername = await nest.profileActions.setProfileUsername(data);
 
   const profileFirestoreCollection = nest.demoFirestoreCollections.profileFirestoreCollection;
   const params = setProfileUsername.params;
 
+  context.auth.token
+
   let profileDocument: ProfileDocument;
 
-  if (params.profile) {
-    profileDocument = await profileFirestoreCollection.documentAccessor().loadDocumentForPath(params.profile);
-  } else {
-    profileDocument = (await profileFirestoreCollection.queryDocument(profileWithUid(context.auth?.uid!)).getFirstDoc())!;
+  const uid = params.uid ?? context.auth?.uid!;
+
+  profileDocument = await profileFirestoreCollection.documentAccessor().loadDocumentForPath(params.uid);
+
+  if (!profileDocument) {
+    throw userHasNoProfileError(uid);
   }
 
   await setProfileUsername(profileDocument);
   return { success: true };
-});
+}));

@@ -1,7 +1,9 @@
 import * as functions from 'firebase-functions';
+import { isContextWithAuthData } from './context';
+import { unauthenticatedContextHasNoUidError } from './error';
 
-export function assertIsLoggedIn(context: functions.https.CallableContext) {
-  if (!context.auth?.uid) {
-    throw new functions.https.HttpsError('unauthenticated', 'User has no uid.');
+export function assertContextHasAuth(context: functions.https.CallableContext): void {
+  if (!isContextWithAuthData(context)) {
+    throw unauthenticatedContextHasNoUidError();
   }
 }

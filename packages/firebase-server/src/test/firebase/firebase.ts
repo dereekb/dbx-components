@@ -42,7 +42,7 @@ export function initFirebaseAdminTestEnvironment(config: FirebaseAdminTestEnviro
   }
 
   function configureEmulator(emulator: keyof FirebaseAdminTestEnvironmentEmulatorsConfig, envKey: string) {
-    const emulatorConfig = config.emulators.firestore;
+    const emulatorConfig = config.emulators[emulator];
 
     if (emulatorConfig) {
       process.env[envKey] = emulatorConfig;

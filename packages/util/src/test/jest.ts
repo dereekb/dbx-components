@@ -156,21 +156,21 @@ export function jestTestContextBuilder<I, F extends JestTestContextFixture<I>, C
   };
 }
 
-export interface UseJestContextFixture<O extends JestTestContextFixture<C>, C> {
-  readonly fixture: O;
-  readonly buildTests: JestBuildTestsWithContextFunction<O>;
-  initInstance(): PromiseOrValue<C>;
-  destroyInstance?(instance: C): PromiseOrValue<void>;
+export interface UseJestContextFixture<C extends JestTestContextFixture<I>, I> {
+  readonly fixture: C;
+  readonly buildTests: JestBuildTestsWithContextFunction<C>;
+  initInstance(): PromiseOrValue<I>;
+  destroyInstance?(instance: I): PromiseOrValue<void>;
 }
 
 /**
  * Creates a test context and jest configurations that will initialize an instance 
  */
-export function useJestContextFixture<O extends JestTestContextFixture<C>, C>(config: UseJestContextFixture<O, C>): void {
+export function useJestContextFixture<C extends JestTestContextFixture<I>, I>(config: UseJestContextFixture<C, I>): void {
   const { buildTests, fixture, initInstance, destroyInstance } = config;
 
   let clearInstance: JestTestContextFixtureClearInstanceFunction;
-  let instance: C;
+  let instance: I;
 
   // Create an instance
   beforeEach(async () => {

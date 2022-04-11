@@ -1,4 +1,4 @@
-import { makeRandomFunction, MakeRandomFunctionInput, RandomNumberFunction } from "../number";
+import { makeRandomFunction, MakeRandomFunctionInput, RandomNumberFunction } from "../number/random";
 
 export interface MakeArray<T> {
   count: number;
