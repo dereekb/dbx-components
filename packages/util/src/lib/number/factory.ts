@@ -1,4 +1,4 @@
-import { asGetter, ObjectOrGetter } from '@dereekb/util';
+import { asGetter, GetterOrValue } from '@dereekb/util';
 import { Factory } from './../getter/getter';
 
 /**
@@ -12,7 +12,7 @@ export interface IncrementingNumberFactoryConfig {
   /**
    * Getter to increase by. Defaults to 1.
    */
-  increaseBy?: ObjectOrGetter<number>;
+  increaseBy?: GetterOrValue<number>;
 }
 
 /**

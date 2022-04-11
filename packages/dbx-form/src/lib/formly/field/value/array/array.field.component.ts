@@ -1,6 +1,6 @@
 import { CdkDragDrop } from '@angular/cdk/drag-drop';
 import { Component } from '@angular/core';
-import { GetterWithInput, getValueFromObjectOrGetter, Maybe } from '@dereekb/util';
+import { GetterWithInput, getValueFromGetter, Maybe } from '@dereekb/util';
 import { FieldArrayTypeConfig, FieldArrayType, FormlyTemplateOptions, FormlyFieldConfig } from '@ngx-formly/core';
 
 export interface DbxFormRepeatArrayConfig {
@@ -109,7 +109,7 @@ export class DbxFormRepeatArrayTypeComponent extends FieldArrayType<DbxFormRepea
   }
 
   labelForItem(field: FormlyFieldConfig): string {
-    return getValueFromObjectOrGetter(this.repeatArrayField.labelForField ?? '', field);
+    return getValueFromGetter(this.repeatArrayField.labelForField ?? '', field);
   }
 
 }

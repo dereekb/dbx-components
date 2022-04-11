@@ -1,5 +1,3 @@
-import { ConversionFunction } from "../value";
-
 /**
  * Function that returns a value.
  */
@@ -17,17 +15,15 @@ export type GetterWithInput<T, A> = (args?: A) => T;
 
 /**
  * Either a Getter, or an instance of the item.
- * 
- * TODO: Rename to GetterOrValue to be inline with other similar type naming schemes.
  */
-export type ObjectOrGetter<T> = T | Getter<T>;
+export type GetterOrValue<T> = T | Getter<T>;
 
 /**
  * Either a GetterWithInput, or a Getter.
  */
-export type ObjectOrGetterWithInput<T, A> = Getter<T> | GetterWithInput<T, A>;
+export type GetterOrValueWithInput<T, A> = Getter<T> | GetterWithInput<T, A>;
 
-export type StringOrGetter = ObjectOrGetter<string>;
+export type StringOrGetter = GetterOrValue<string>;
 
 /**
  * If the input is a function, it is executed. Otherwise, the value is returned.
@@ -35,10 +31,10 @@ export type StringOrGetter = ObjectOrGetter<string>;
  * @param input 
  * @returns 
  */
-export function getValueFromObjectOrGetter<T>(input: ObjectOrGetter<T>): T;
-export function getValueFromObjectOrGetter<T>(this: any, input: ObjectOrGetter<T>, inputArgs?: any): T;
-export function getValueFromObjectOrGetter<T, A>(this: any, input: ObjectOrGetterWithInput<T, A>, args?: A): T;
-export function getValueFromObjectOrGetter<T, A>(this: any, input: ObjectOrGetterWithInput<T, A>, args?: A): T {
+export function getValueFromGetter<T>(input: GetterOrValue<T>): T;
+export function getValueFromGetter<T>(this: any, input: GetterOrValue<T>, inputArgs?: any): T;
+export function getValueFromGetter<T, A>(this: any, input: GetterOrValueWithInput<T, A>, args?: A): T;
+export function getValueFromGetter<T, A>(this: any, input: GetterOrValueWithInput<T, A>, args?: A): T {
   if (typeof input === 'function') {
     return input(args);
   } else {
@@ -52,7 +48,7 @@ export function getValueFromObjectOrGetter<T, A>(this: any, input: ObjectOrGette
  * @param input 
  * @returns 
  */
-export function asGetter<T>(input: ObjectOrGetter<T>): Getter<T> {
+export function asGetter<T>(input: GetterOrValue<T>): Getter<T> {
   if (typeof input === 'function') {
     return input as Getter<T>;
   } else {

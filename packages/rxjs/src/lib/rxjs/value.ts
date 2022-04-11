@@ -1,5 +1,5 @@
 import { combineLatest, filter, skipWhile, startWith, switchMap, timeout, MonoTypeOperatorFunction, Observable, of, OperatorFunction, map } from 'rxjs';
-import { ObjectOrGetter, getValueFromObjectOrGetter, Maybe } from '@dereekb/util';
+import { GetterOrValue, getValueFromGetter, Maybe } from '@dereekb/util';
 
 // MARK: Types
 export type IsCheckFunction<T = any> = (value: T) => Observable<boolean>;
@@ -84,10 +84,10 @@ export function switchMapMaybeObs<T = any>(): OperatorFunction<Maybe<Observable<
 /**
  * Used to pass a default value incase an observable has not yet started emititng values.
  */
-export function timeoutStartWith<T>(defaultValue: ObjectOrGetter<T>): MonoTypeOperatorFunction<T> {
+export function timeoutStartWith<T>(defaultValue: GetterOrValue<T>): MonoTypeOperatorFunction<T> {
   return (source: Observable<T>) => {
     return source.pipe(
-      timeout({ first: 0, with: () => source.pipe(startWith(getValueFromObjectOrGetter(defaultValue))) })
+      timeout({ first: 0, with: () => source.pipe(startWith(getValueFromGetter(defaultValue))) })
     );
   };
 }

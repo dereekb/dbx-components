@@ -1,10 +1,10 @@
-import { ConversionFunction, ModelFieldConversionConfig, ObjectOrGetter } from '@dereekb/util';
+import { ConversionFunction, ModelFieldConversionConfig, GetterOrValue } from '@dereekb/util';
 
 export type FirestoreDatastoreType = any;
 
 export interface FirestoreFieldConfig<V, D = any> {
-  default?: ObjectOrGetter<V>;
-  defaultBeforeSave?: ObjectOrGetter<D | null>;
+  default?: GetterOrValue<V>;
+  defaultBeforeSave?: GetterOrValue<D | null>;
   fromData: ConversionFunction<D, V>;
   toData: ConversionFunction<V, D>;
 }

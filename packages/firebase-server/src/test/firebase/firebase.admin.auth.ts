@@ -1,5 +1,5 @@
 import { FirebaseAuthUserIdentifier } from '../../lib/auth/auth';
-import { RemoveIndex, incrementingNumberFactory, mapGetter, AbstractChildJestTestContextFixture, asGetter, Factory, JestTestContextFixture, KnownKeys, ObjectOrGetter, PromiseOrValue, useJestContextFixture } from "@dereekb/util";
+import { RemoveIndex, incrementingNumberFactory, mapGetter, AbstractChildJestTestContextFixture, asGetter, Factory, JestTestContextFixture, KnownKeys, GetterOrValue, PromiseOrValue, useJestContextFixture } from "@dereekb/util";
 import { FirebaseAdminTestContext, FirebaseAdminTestContextFixture, FirebaseAdminTestContextInstance } from "./firebase.admin";
 import { CreateRequest } from 'firebase-admin/lib/auth/auth-config';
 import { UserRecord } from 'firebase-admin/lib/auth/user-record';
@@ -93,7 +93,7 @@ export interface AuthorizedUserTestContextParams<I extends AuthorizedUserTestCon
   /**
    * uid value/getter to use. If not provided, a random one will be generated.
    */
-  uid?: ObjectOrGetter<FirebaseAuthUserIdentifier>;
+  uid?: GetterOrValue<FirebaseAuthUserIdentifier>;
 
   /**
    * Additional user details to attach to the create request.

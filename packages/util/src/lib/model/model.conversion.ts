@@ -1,4 +1,4 @@
-import { asGetter, Getter, getValueFromObjectOrGetter, ObjectOrGetter } from "../getter/getter";
+import { asGetter, Getter, getValueFromGetter, GetterOrValue } from "../getter/getter";
 import { toKeyValueTuples } from "../object";
 import { ApplyConversionFunction, ConversionFunction, Maybe } from "../value";
 
@@ -58,7 +58,7 @@ export interface ModelFieldConvertConfig<I, O> {
   /**
    * Default value to use if the input value is null/undefined.
    */
-  default?: ObjectOrGetter<O>;
+  default?: GetterOrValue<O>;
 
   /**
    * Whether or not to pass through maybe values to the convert function. Must be explicitly set.
