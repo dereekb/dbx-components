@@ -1,4 +1,4 @@
-import { Maybe } from "../value";
+import { Maybe } from "../value/maybe";
 
 export function joinHostAndPort(config: Maybe<{ host: string, port: number | string }>): Maybe<string> {
   if (config) {

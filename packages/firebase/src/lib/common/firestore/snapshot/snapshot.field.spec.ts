@@ -1,4 +1,4 @@
-import { makeModelFieldConversionFunctions } from '@dereekb/util';
+import { makeModelFieldMapFunctions } from '@dereekb/util';
 import { firestoreField } from './snapshot.field';
 
 describe('firestoreField()', () => {
@@ -25,7 +25,7 @@ describe('firestoreField()', () => {
 
   describe('conversion', () => {
 
-    const { from, to } = makeModelFieldConversionFunctions(firestoreField(config));
+    const { from, to } = makeModelFieldMapFunctions(firestoreField(config));
 
     describe('from', () => {
 

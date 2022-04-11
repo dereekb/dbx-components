@@ -1,4 +1,4 @@
-import { Maybe } from "../value";
+import { Maybe } from "../value/maybe";
 
 // MARK: Types
 export type ArrayOrValue<T> = T | T[];

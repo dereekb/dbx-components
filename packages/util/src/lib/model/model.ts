@@ -1,7 +1,7 @@
 import { symmetricDifferenceKeys } from '../set/set';
 import { findUnique } from '../array/array.unique';
 import { ReadKeyFunction, ReadKeysFunction } from '../key';
-import { Maybe } from '../value';
+import { Maybe } from '../value/maybe';
 
 /**
  * A string model key

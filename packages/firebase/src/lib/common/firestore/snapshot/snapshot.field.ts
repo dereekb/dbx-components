@@ -1,12 +1,12 @@
-import { ConversionFunction, ModelFieldConversionConfig, GetterOrValue } from '@dereekb/util';
+import { MapFunction, ModelFieldConversionConfig, GetterOrValue } from '@dereekb/util';
 
 export type FirestoreDatastoreType = any;
 
 export interface FirestoreFieldConfig<V, D = any> {
   default?: GetterOrValue<V>;
   defaultBeforeSave?: GetterOrValue<D | null>;
-  fromData: ConversionFunction<D, V>;
-  toData: ConversionFunction<V, D>;
+  fromData: MapFunction<D, V>;
+  toData: MapFunction<V, D>;
 }
 
 export interface DefaultOnlyFirestoreFieldConfig<V, D = any> extends Pick<FirestoreFieldConfig<V, D>, 'default' | 'defaultBeforeSave'> { }

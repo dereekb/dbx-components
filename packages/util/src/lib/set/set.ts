@@ -1,4 +1,4 @@
-import { Maybe } from '../value';
+import { Maybe } from '../value/maybe';
 import { symmetricDifference } from "extra-set";
 import { flattenArray } from "../array/array";
 

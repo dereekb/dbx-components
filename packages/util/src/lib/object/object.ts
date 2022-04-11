@@ -1,5 +1,5 @@
 import { FieldOfType } from "../key";
-import { hasValueOrNotEmpty, Maybe } from "../value";
+import { hasValueOrNotEmpty, Maybe } from "../value/maybe";
 import { filterMaybeValues } from '../array/array.value';
 import { invertFilter } from "../filter/filter";
 

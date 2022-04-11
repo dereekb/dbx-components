@@ -1,4 +1,4 @@
-import { Maybe } from "./value";
+import { Maybe } from "./value/maybe";
 
 /**
  * A key made up of either a string or number value.

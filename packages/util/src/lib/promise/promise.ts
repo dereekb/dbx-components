@@ -1,4 +1,4 @@
-import { Maybe } from "../value";
+import { Maybe } from "../value/maybe";
 import { waitForMs } from "./wait";
 
 export type PromiseOrValue<T> = Promise<T> | T;

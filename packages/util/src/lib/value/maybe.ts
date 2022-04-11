@@ -1,28 +1,9 @@
 
-// MARK: Types
 /**
  * A value that might exist, or be null/undefined instead.
  */
 export type Maybe<T> = T | null | undefined;
 
-/**
- * Converts one value to another.
- * 
- * TODO: rename to MapFunction
- */
-export type ConversionFunction<I, O> = (input: I) => O;
-
-/**
- * Converts values from the input, and applies them to the target if a target is supplied.
- */
-export type ApplyConversionFunction<I, O> = (input: I, target?: Maybe<Partial<O>>) => O;
-
-/**
- * Converts values from the input, and applies them to the target if a target is supplied.
- */
-export type ApplyConversionFunctionWithOptions<I, O, C> = (input: I, target?: Maybe<Partial<O>>, config?: C) => O;
-
-// MARK: Utils
 /**
  * Returns true if the value is not null or undefined.
  * 

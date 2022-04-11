@@ -1,5 +1,5 @@
 import { MapStringFn } from "./map/map";
-import { Maybe } from "./value";
+import { Maybe } from "./value/maybe";
 
 /**
  * Represents a string that is made up of comma-separated values.

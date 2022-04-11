@@ -1,4 +1,4 @@
-import { makeModelFieldConversionFunction } from './model.conversion';
+import { makeModelFieldMapFunction } from './model.conversion';
 
 interface TestConversionFromModel {
   name: string;
@@ -10,13 +10,13 @@ interface TestConversionToModel {
   test?: string;
 }
 
-describe('makeModelConversionFunctions', () => {
+describe('makeModelMapFunctions', () => {
 
   // todo
 
 });
 
-describe('makeModelFieldConversionFunction()', () => {
+describe('makeModelFieldMapFunction()', () => {
 
   const testModel: TestConversionFromModel = {
     name: 'test',
@@ -27,7 +27,7 @@ describe('makeModelFieldConversionFunction()', () => {
 
     it('should return the default value if convertMaybe is false/undefined and null/undefined is input.', () => {
       const defaultValue = 1;
-      const fn = makeModelFieldConversionFunction({ default: defaultValue });
+      const fn = makeModelFieldMapFunction({ default: defaultValue });
 
       const result = fn(undefined);
 
@@ -36,7 +36,7 @@ describe('makeModelFieldConversionFunction()', () => {
 
     it('should call convert if convertMaybe is true and null/undefined is input.', () => {
       const convertResultValue = 1;
-      const fn = makeModelFieldConversionFunction({ convert: () => convertResultValue, convertMaybe: true });
+      const fn = makeModelFieldMapFunction({ convert: () => convertResultValue, convertMaybe: true });
 
       const result = fn(undefined);
 
@@ -45,7 +45,7 @@ describe('makeModelFieldConversionFunction()', () => {
 
     it('should convert the value if a non-null value is passed in..', () => {
       const convertResultValue = 1;
-      const fn = makeModelFieldConversionFunction({ convert: () => convertResultValue, convertMaybe: true });
+      const fn = makeModelFieldMapFunction({ convert: () => convertResultValue, convertMaybe: true });
 
       const result = fn(100);
 

@@ -1,4 +1,4 @@
-import { Maybe } from "../value";
+import { Maybe } from "../value/maybe";
 
 /**
  * Page value used when no list items have been loaded.

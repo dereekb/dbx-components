@@ -1,5 +1,5 @@
 import { takeFront, takeLast } from "../array";
-import { Maybe } from "../value";
+import { Maybe } from "../value/maybe";
 
 export interface LimitArrayConfig {
   /**

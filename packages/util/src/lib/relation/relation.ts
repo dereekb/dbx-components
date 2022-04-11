@@ -1,6 +1,6 @@
 import { arrayToMap, findUnique } from "../array";
 import { makeKeyPairs, makeValuesGroupMap, restoreOrderWithValues, separateValues } from "../grouping";
-import { Maybe } from "../value";
+import { Maybe } from "../value/maybe";
 
 export enum RelationChange {
   /**
