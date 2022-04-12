@@ -28,8 +28,44 @@ export function generateNewProjectId() {
 
 export function rollNewGCloudProjectEnvironmentVariable() {
   const projectId = generateNewProjectId();
+  process.env.GCLOUD_TEST_PROJECT = projectId;
   process.env.GCLOUD_PROJECT = projectId;
+  applyFirebaseGCloudTestProjectIdToFirebaseConfigEnv();
   return projectId;
+}
+
+export function getGCloudProjectId() {
+  return process.env.GCLOUD_PROJECT;
+}
+
+export function getGCloudTestProjectId() {
+  return process.env.GCLOUD_TEST_PROJECT;
+}
+
+/**
+ * Applies the current GCLOUD_PROJECT to FIREBASE_CONFIG.
+ * 
+ * This is done as some external testing libraries (firebase-functions-test) will overwrite but we want to enforce using our project id 
+ * so that each component can also 
+ */
+export function applyFirebaseGCloudTestProjectIdToFirebaseConfigEnv() {
+  // firebase-functions-test overwrites this each time.
+  // https://github.com/firebase/firebase-functions-test/blob/acb068f4c086f3355b2960b9e9e5895716c7f8cc/src/lifecycle.ts#L37
+  const testProjectId = getGCloudTestProjectId();
+
+  // console.log('Test project: ', testProjectId);
+
+  if (!testProjectId) {
+    throw new Error('No test project id was available in the environment. Did you call initFirebaseAdminTestEnvironment() first?');
+  }
+
+  let config: any = JSON.parse(process.env.FIREBASE_CONFIG ?? '{}');
+  config.projectId = testProjectId;
+
+  process.env.FIREBASE_CONFIG = JSON.stringify(config);
+  process.env.GCLOUD_PROJECT = testProjectId;  // re-apply to GCLOUD_PROJECT too
+
+  return testProjectId;
 }
 
 /**
@@ -56,9 +92,7 @@ export function initFirebaseAdminTestEnvironment(config: FirebaseAdminTestEnviro
   configureEmulator('firestore', 'FIRESTORE_EMULATOR_HOST');
   configureEmulator('storage', 'FIREBASE_STORAGE_EMULATOR_HOST');
 
-  process.env.FIREBASE_CONFIG = JSON.stringify({
-    projectId: process.env.GCLOUD_PROJECT
-  });
+  applyFirebaseGCloudTestProjectIdToFirebaseConfigEnv();
 
   adminEnvironmentInitialized = true;
 }

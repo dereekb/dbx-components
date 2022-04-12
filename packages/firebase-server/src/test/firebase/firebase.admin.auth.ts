@@ -6,7 +6,7 @@ import { UserRecord } from 'firebase-admin/lib/auth/user-record';
 import { DecodedIdToken } from 'firebase-admin/lib/auth/token-verifier';
 import { Auth } from 'firebase-admin/lib/auth/auth';
 import { decode as decodeJwt } from 'jsonwebtoken';
-import { CallableContextOptions, ContextOptions } from 'firebase-functions-test/lib/main';
+import { CallableContextOptions, ContextOptions, WrappedFunction, WrappedScheduledFunction } from 'firebase-functions-test/lib/main';
 
 /**
  * Testing context for a single user.
@@ -17,6 +17,7 @@ export interface AuthorizedUserTestContext {
   loadIdToken(): Promise<string>;
   loadDecodedIdToken(): Promise<DecodedIdToken>;
   makeContextOptions(): Promise<ContextOptions>;
+  callCloudFunction<T = any>(fn: WrappedScheduledFunction | WrappedFunction, params: any): Promise<T>;
 }
 
 export class AuthorizedUserTestContextFixture<I extends AuthorizedUserTestContextInstance = AuthorizedUserTestContextInstance> extends AbstractChildJestTestContextFixture<I, JestTestContextFixture<FirebaseAdminTestContext>> implements AuthorizedUserTestContext {
@@ -42,6 +43,10 @@ export class AuthorizedUserTestContextFixture<I extends AuthorizedUserTestContex
     return this.instance.makeContextOptions();
   }
 
+  callCloudFunction<T = any>(fn: WrappedScheduledFunction | WrappedFunction, params: any): Promise<T> {
+    return this.instance.callCloudFunction(fn, params);
+  }
+
 }
 
 export class AuthorizedUserTestContextInstance implements AuthorizedUserTestContext {
@@ -62,6 +67,10 @@ export class AuthorizedUserTestContextInstance implements AuthorizedUserTestCont
 
   makeContextOptions(): Promise<ContextOptions> {
     return this.loadUserRecord().then((record) => createTestFunctionContextOptions(this.testInstance.auth, record));
+  }
+
+  callCloudFunction<T = any>(fn: WrappedScheduledFunction | WrappedFunction, params: any): Promise<T> {
+    return this.makeContextOptions().then(options => fn(params, options));
   }
 
 }
@@ -107,6 +116,11 @@ export interface AuthorizedUserTestContextParams<I extends AuthorizedUserTestCon
    */
   makeInstance?: (uid: FirebaseAuthUserIdentifier, testInstance: FirebaseAdminTestContext, userRecord: UserRecord) => PromiseOrValue<I>;
 
+  /**
+   * Optional function to initialize the user for this instance.
+   */
+  initUser?: (instance: I) => Promise<void>;
+
 }
 
 /**
@@ -127,6 +141,7 @@ export function authorizedUserContextFactory<I extends AuthorizedUserTestContext
     makeInstance = (uid, testInstance) => new AuthorizedUserTestContextInstance(uid, testInstance) as I,
     makeFixture = (f) => new AuthorizedUserTestContextFixture(f),
     makeUserDetails = () => ({} as AuthorizedUserTestContextDetailsTemplate),
+    initUser
   } = config;
   const makeUid = (uidGetter) ? asGetter(uidGetter) : testUidFactory;
 
@@ -150,6 +165,11 @@ export function authorizedUserContextFactory<I extends AuthorizedUserTestContext
         }
 
         const instance: I = await makeInstance(uid, f.instance, userRecord);
+
+        if (initUser) {
+          await initUser(instance);
+        }
+
         return instance;
       },
       destroyInstance: async (instance: I) => {

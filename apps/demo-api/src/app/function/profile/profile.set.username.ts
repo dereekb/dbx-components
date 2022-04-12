@@ -1,7 +1,6 @@
-import { ProfileDocument, profileWithUid, SetProfileUsernameParams } from '@dereekb/demo-firebase';
+import { ProfileDocument, SetProfileUsernameParams } from '@dereekb/demo-firebase';
 import { inAuthContext } from '@dereekb/firebase-server';
 import { onCallWithDemoNestContext } from '../function';
-import { preconditionConflictError } from 'packages/firebase-server/src/lib/function/error';
 import { userHasNoProfileError } from '../../common/model/profile/profile.error';
 
 
@@ -11,10 +10,7 @@ export const profileSetUsername = onCallWithDemoNestContext(inAuthContext(async 
   const profileFirestoreCollection = nest.demoFirestoreCollections.profileFirestoreCollection;
   const params = setProfileUsername.params;
 
-  context.auth.token
-
   let profileDocument: ProfileDocument;
-
   const uid = params.uid ?? context.auth?.uid!;
 
   profileDocument = await profileFirestoreCollection.documentAccessor().loadDocumentForPath(params.uid);

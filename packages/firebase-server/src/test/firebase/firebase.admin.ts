@@ -7,7 +7,7 @@ import { AbstractJestTestContextFixture, cachedGetter, JestBuildTestsWithContext
 import { FeaturesList } from 'firebase-functions-test/lib/features';
 import { googleCloudFirestoreDrivers } from '../../lib/firestore/driver';
 import { GoogleCloudTestFirestoreInstance } from '../firestore/firestore';
-import { generateNewProjectId, isAdminEnvironmentInitialized } from './firebase';
+import { applyFirebaseGCloudTestProjectIdToFirebaseConfigEnv, generateNewProjectId, getGCloudProjectId, getGCloudTestProjectId, isAdminEnvironmentInitialized, rollNewGCloudProjectEnvironmentVariable } from './firebase';
 import { wrap } from 'firebase-functions-test/lib/main';
 
 export interface FirebaseAdminTestConfig { }
@@ -73,9 +73,9 @@ export class FirebaseAdminTestContextInstance implements FirebaseAdminTestContex
 
 }
 
-export abstract class AbstractFirebaseAdminTestContextInstanceChild implements FirebaseAdminTestContext {
+export abstract class AbstractFirebaseAdminTestContextInstanceChild<F extends FirebaseAdminTestContextInstance = FirebaseAdminTestContextInstance> implements FirebaseAdminTestContext {
 
-  constructor(readonly parent: FirebaseAdminTestContextInstance) { }
+  constructor(readonly parent: F) { }
 
   // MARK: FirebaseAdminTestContext (Forwarded)
   get app(): admin.app.App {
@@ -140,7 +140,7 @@ let functionsInitialized = false;
  */
 let firebaseFunctionsTestInstance: Maybe<FeaturesList>;
 
-export function setupFirebaseAdminFunctionTestSingleton() {
+export function setupFirebaseAdminFunctionTestSingleton(reroll = false) {
   if (!isAdminEnvironmentInitialized()) {
     throw new Error('initFirebaseAdminTestEnvironment() was not called.');
   }
@@ -150,7 +150,19 @@ export function setupFirebaseAdminFunctionTestSingleton() {
   }
 
   firebaseFunctionsTestInstance = functions();
+
+  if (reroll) {
+    rollNewGCloudProjectEnvironmentVariable();
+  } else {
+    applyFirebaseGCloudTestProjectIdToFirebaseConfigEnv();
+  }
+
   functionsInitialized = true;
+  return firebaseFunctionsTestInstance;
+}
+
+export function rerollFirebaseAdminFunctionTestSingleton() {
+  return setupFirebaseAdminFunctionTestSingleton(true);
 }
 
 export interface FirebaseAdminFunctionTestConfig {
@@ -158,6 +170,8 @@ export interface FirebaseAdminFunctionTestConfig {
    * Whether or not the use the functions singleton. Is true by default. Requires that setupFirebaseAdminFunctionTestSingleton() be called.
    * 
    * If false, your tests may need to be run in serial rather than parallel to avoid cross-test contamination.
+   * 
+   * @deprecated Is false by default to allow a new app to be defined each time. Usage of the singleton does not make sense. Remove later, and require that tests be run in serial if jest isn't behaving.
    */
   useFunctionSingletonContext: boolean;
 }
@@ -168,7 +182,7 @@ export interface FirebaseAdminFunctionTestContext extends FirebaseAdminTestConte
   readonly wrapCloudFunction: WrapCloudFunction;
 }
 
-export class FirebaseAdminFunctionTestContextFixture extends AbstractJestTestContextFixture<FirebaseAdminFunctionTestInstance> implements FirebaseAdminFunctionTestContext {
+export class FirebaseAdminFunctionTestContextFixture extends AbstractJestTestContextFixture<FirebaseAdminFunctionTestContextInstance> implements FirebaseAdminFunctionTestContext {
 
   // MARK: FirebaseAdminTestContext (Forwarded)
   get app(): admin.app.App {
@@ -197,7 +211,7 @@ export class FirebaseAdminFunctionTestContextFixture extends AbstractJestTestCon
 
 }
 
-export class FirebaseAdminFunctionTestInstance extends FirebaseAdminTestContextInstance implements FirebaseAdminFunctionTestContext {
+export class FirebaseAdminFunctionTestContextInstance extends FirebaseAdminTestContextInstance implements FirebaseAdminFunctionTestContext {
 
   constructor(readonly instance: FeaturesList, app: admin.app.App) {
     super(app);
@@ -207,7 +221,7 @@ export class FirebaseAdminFunctionTestInstance extends FirebaseAdminTestContextI
 
 }
 
-export let DEFAULT_FIREBASE_ADMIN_FUNCTION_TEST_USE_FUNCTION_SINGLETON_CONTEXT = true;
+export let DEFAULT_FIREBASE_ADMIN_FUNCTION_TEST_USE_FUNCTION_SINGLETON_CONTEXT = false;
 
 export function setDefaultFirebaseAdminFunctionTestUseFunctionSingleton(use: boolean) {
   DEFAULT_FIREBASE_ADMIN_FUNCTION_TEST_USE_FUNCTION_SINGLETON_CONTEXT = use;
@@ -234,23 +248,31 @@ export const firebaseAdminFunctionTestBuilder = jestTestContextBuilder<FirebaseA
       throw new Error('initFirebaseAdminTestEnvironment() (in @dereekb/firebase-server package) was not called before using adminFirebaseTestBuilder().');
     }
 
-    if (config.useFunctionSingletonContext && !functionsInitialized) {
-      throw new Error('Call setupFirebaseAdminFunctionTestSingleton() (in @dereekb/firebase-server package) if using functions in a singleton context (useFunctionSingletonContext = true/undefined).');
+    if (config.useFunctionSingletonContext) {
+      if (!functionsInitialized) {
+        throw new Error('Call setupFirebaseAdminFunctionTestSingleton() (in @dereekb/firebase-server package) if using functions in a singleton context (useFunctionSingletonContext = true/undefined).');
+      }
     } else if (config.useFunctionSingletonContext === false) {
-      firebaseFunctionsTestInstance = functions();
+      firebaseFunctionsTestInstance = rerollFirebaseAdminFunctionTestSingleton();
     }
 
-    const app = admin.initializeApp();
-    return new FirebaseAdminFunctionTestInstance(firebaseFunctionsTestInstance!, app);
+    const projectId = getGCloudTestProjectId();
+    const app = admin.initializeApp({ projectId });
+
+
+    return new FirebaseAdminFunctionTestContextInstance(firebaseFunctionsTestInstance!, app);
   },
   teardownInstance: async (instance, config) => {
     if (config.useFunctionSingletonContext === false) {
-      await admin.app().delete();
-      firebaseFunctionsTestInstance!.cleanup();
+      try {
+        await instance.app.delete(); // will be called in cleanup
+        firebaseFunctionsTestInstance!.cleanup();
+      } catch (e) {
+
+      }
+
       firebaseFunctionsTestInstance = undefined;
     }
-
-    await (instance as FirebaseAdminFunctionTestInstance).app.delete();  // clean up the instance
   }
 });
 

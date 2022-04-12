@@ -1,6 +1,6 @@
 import { Observable } from 'rxjs';
 import { FirestoreAccessorDriverRef } from '../driver/accessor';
-import { DocumentReference, CollectionReference, Transaction, WriteBatch } from '../types';
+import { DocumentReference, CollectionReference, Transaction, WriteBatch, DocumentSnapshot } from '../types';
 import { dataFromSnapshotStream, FirestoreDocumentDataAccessor } from './accessor';
 import { CollectionReferenceRef, DocumentReferenceRef } from '../reference';
 import { FirestoreDocumentContext } from './context';
@@ -33,6 +33,10 @@ export abstract class AbstractFirestoreDocument<T,
 
   get collection(): CollectionReference<T> {
     return this.documentAccessor.collection;
+  }
+
+  snapshot(): Promise<DocumentSnapshot<T>> {
+    return this.accessor.get();
   }
 
 }

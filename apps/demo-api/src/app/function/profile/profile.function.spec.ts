@@ -9,16 +9,19 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
     demoAuthorizedUserContext(f, (u) => {
 
       it('should set the profile username.', async () => {
+        const username = 'username';
         const fn = f.parent.instance.wrapCloudFunction(profileSetUsername(f.nestAppPromiseGetter));
 
         const params: SetProfileUsernameParams = {
-          username: 'username'
+          username
         };
 
+        const result = await u.callCloudFunction(fn, params);
 
-        const result = await fn(params, await u.makeContextOptions());
-        console.log('Result: ', result);
+        const profileDocument = u.instance.loadUserProfile();
+        const profileDocumentSnapshot = await profileDocument.snapshot();
 
+        expect(profileDocumentSnapshot.data()?.username).toBe(username);
       });
 
       // second user

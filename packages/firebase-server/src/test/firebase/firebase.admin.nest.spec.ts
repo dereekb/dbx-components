@@ -1,19 +1,20 @@
-import { Module } from '@nestjs/common';
+import { Injectable, Module } from '@nestjs/common';
 import { firebaseAdminFirestoreContextWithFixture } from './firebase.admin';
 import { firebaseAdminNestContextFactory } from './firebase.admin.nest';
 import { describeFirestoreTest, initFirebaseServerAdminTestEnvironment } from './firebase.admin.test.server';
 
-export class TestThing { }
+@Injectable()
+export class TestInjectable { }
 
 @Module({
   providers: [{
-    provide: TestThing,
-    useFactory: () => new TestThing()
+    provide: TestInjectable,
+    useFactory: () => new TestInjectable()
   }]
 })
-export class AppModule { }
+export class TestAppModule { }
 
-export const firebaseAdminNestContext = firebaseAdminNestContextFactory({ nestModules: AppModule });
+export const firebaseAdminNestContext = firebaseAdminNestContextFactory({ nestModules: TestAppModule });
 
 describe('firebaseAdminNestContext', () => {
 
@@ -24,7 +25,7 @@ describe('firebaseAdminNestContext', () => {
     describe('nest', () => {
 
       it('should have initialized the nest module.', () => {
-        const thing = f.instance.get(TestThing);
+        const thing = f.instance.get(TestInjectable);
         expect(thing).toBeDefined();
       });
 
