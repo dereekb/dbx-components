@@ -91,6 +91,9 @@ jobs:
       - run:
           name: run dbx-firebase tests
           command: npx firebase emulators:exec --only auth,firestore,storage 'npx nx run-tests dbx-firebase'
+      - run:
+          name: run demo-api tests
+          command: npx firebase emulators:exec --only auth,firestore,storage 'npx nx run-tests demo-api'
       - save_cache:
           key: firebase-cache-
           paths:
