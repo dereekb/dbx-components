@@ -22,6 +22,9 @@
   "functions": {
     "source": "dist/apps/demo-api",
     "runtime": "nodejs16",
+    "engines": {
+      "node": "16"
+    },
     "ignore": [
       "firebase.json",
       "**/.*",
