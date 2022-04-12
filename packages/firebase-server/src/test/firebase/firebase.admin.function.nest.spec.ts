@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
-import { firebaseAdminFirestoreContextWithFixture, setupFirebaseAdminFunctionTestSingleton } from './firebase.admin';
-import { firebaseAdminFunctionNestContextFactory } from './firebase.admin.nest';
+import { firebaseAdminFirestoreContextWithFixture } from './firebase.admin';
+import { setupFirebaseAdminFunctionTestSingleton } from './firebase.admin.function';
+import { firebaseAdminFunctionNestContextFactory } from './firebase.admin.nest.function';
 import { describeFirestoreTest, initFirebaseServerAdminTestEnvironment } from './firebase.admin.test.server';
 
 export class TestThing { }

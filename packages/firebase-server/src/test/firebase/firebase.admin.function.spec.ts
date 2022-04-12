@@ -1,4 +1,5 @@
-import { firebaseAdminFirestoreContextWithFixture, firebaseAdminFunctionTestContextFactory, setupFirebaseAdminFunctionTestSingleton } from './firebase.admin';
+import { firebaseAdminFirestoreContextWithFixture} from './firebase.admin';
+import { setupFirebaseAdminFunctionTestSingleton, firebaseAdminFunctionTestContextFactory } from './firebase.admin.function';
 import { describeFirestoreTest, initFirebaseServerAdminTestEnvironment } from './firebase.admin.test.server';
 
 describe('firebaseAdminFunctionContext', () => {

@@ -15,7 +15,8 @@ export class DemoApiNestContext extends AbstractNestContext {
 
 }
 
+export const mapDemoApiNestContext = (nest: INestApplicationContext) => new DemoApiNestContext(nest);
 export const onCallWithDemoNest = onCallWithNestApplicationFactory();
-export const onCallWithDemoNestContext = onCallWithNestContextFactory(onCallWithDemoNest, (nest: INestApplicationContext) => new DemoApiNestContext(nest));
+export const onCallWithDemoNestContext = onCallWithNestContextFactory(onCallWithDemoNest, mapDemoApiNestContext);
 export const onEventWithDemoNest = onEventWithNestApplicationFactory();
-export const onEventWithDemoNestContext = onEventWithNestContextFactory((nest: INestApplicationContext) => new DemoApiNestContext(nest));
+export const onEventWithDemoNestContext = onEventWithNestContextFactory(mapDemoApiNestContext);

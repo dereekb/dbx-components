@@ -1,6 +1,6 @@
 import { DemoFirestoreCollections } from '@dereekb/demo-firebase';
 import { ProfileDocument } from '@dereekb/demo-firebase';
-import { authorizedUserContextFactory, AuthorizedUserTestContextFixture, AuthorizedUserTestContextInstance, firebaseAdminFunctionNestContextFactory, FirebaseAdminFunctionTestContextInstance, firebaseAdminNestContextFactory, FirebaseAdminNestTestContextFixture, FirebaseAdminNestTestInstance, FirebaseAdminTestContextInstance, firebaseServerAppTokenProvider, initFirebaseAdminTestEnvironment, setupFirebaseAdminFunctionTestSingleton } from '@dereekb/firebase-server';
+import { authorizedUserContextFactory, AuthorizedUserTestContextFixture, AuthorizedUserTestContextInstance, firebaseAdminFunctionNestContextFactory, FirebaseAdminFunctionNestTestContextInstance, FirebaseAdminFunctionTestContextInstance, firebaseAdminNestContextFactory, FirebaseAdminNestTestContextFixture, FirebaseAdminNestTestContextInstance, FirebaseAdminTestContextInstance, firebaseServerAppTokenProvider, initFirebaseAdminTestEnvironment, setupFirebaseAdminFunctionTestSingleton } from '@dereekb/firebase-server';
 import { asGetter, JestBuildTestsWithContextFunction } from '@dereekb/util';
 import { Module } from '@nestjs/common';
 import { DemoApiAppModule } from '../app/app.module';
@@ -11,9 +11,7 @@ import { DemoApiAppModule } from '../app/app.module';
 })
 export class TestDemoApiAppModule { }
 
-export interface DemoApiContext {
-
-}
+export interface DemoApiContext {}
 
 /**
  * Used to expose a CollectionReference to DemoApi for simple tests.
@@ -24,7 +22,15 @@ export interface DemoApiContextFixture<F extends FirebaseAdminTestContextInstanc
 
 }
 
-export class DemoApiContextFixtureInstance<F extends FirebaseAdminTestContextInstance = FirebaseAdminTestContextInstance> extends FirebaseAdminNestTestInstance<F> implements DemoApiContext {
+export class DemoApiContextFixtureInstance<F extends FirebaseAdminTestContextInstance = FirebaseAdminTestContextInstance> extends FirebaseAdminNestTestContextInstance<F> implements DemoApiContext {
+
+  get demoFirestoreCollections(): DemoFirestoreCollections {
+    return this.get(DemoFirestoreCollections);
+  }
+
+}
+
+export class DemoApiContextFunctionFixtureInstance<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends FirebaseAdminFunctionNestTestContextInstance<F> implements DemoApiContext {
 
   get demoFirestoreCollections(): DemoFirestoreCollections {
     return this.get(DemoFirestoreCollections);
@@ -57,13 +63,7 @@ export const demoApiContextFactory = (buildTests: JestBuildTestsWithContextFunct
 const _demoApiFunctionContextFactory = firebaseAdminFunctionNestContextFactory({
   nestModules: TestDemoApiAppModule,
   makeProviders: (instance) => [firebaseServerAppTokenProvider(asGetter(instance.app))],
-  makeInstance: (instance, nest) => new DemoApiContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>(instance, nest),
-  initInstance: async (instance: DemoApiContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>) => {
-
-    instance.parent.wrapCloudFunction()
-
-    return x;
-  }
+  makeInstance: (instance, nest) => new DemoApiContextFunctionFixtureInstance<FirebaseAdminFunctionTestContextInstance>(instance, nest)
 });
 
 export type DemoApiFunctionContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> = FirebaseAdminNestTestContextFixture<F, DemoApiContextFixtureInstance<F>>;
@@ -101,8 +101,6 @@ export const demoAuthorizedUserContextFactory = (params: DemoAuthorizedUserConte
   makeUserDetails: () => ({ claims: { demoUserLevel: params.demoUserLevel ?? 'user' } }),
   makeInstance: (uid, testInstance) => new DemoApiAuthorizedUserTestContextInstance(uid, testInstance),
   initUser: async (instance) => {
-
-    // Create Profile, etc.
 
 
   }
