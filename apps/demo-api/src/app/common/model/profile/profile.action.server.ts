@@ -1,5 +1,5 @@
 import { FirebaseServerActionsContext } from "@dereekb/firebase-server";
-import { AsyncProfileUpdateAction, ProfileDocument, ProfileFirestoreCollections, profileWithUid, profileWithUsername, SetProfileUsernameParams } from "@dereekb/demo-firebase";
+import { AsyncProfileUpdateAction, ProfileDocument, ProfileFirestoreCollections, profileWithUsername, SetProfileUsernameParams } from "@dereekb/demo-firebase";
 import { Maybe } from "@dereekb/util";
 
 /**
@@ -27,21 +27,27 @@ export function profileServerActions(context: ProfileServerActionsContext): Prof
 
 // MARK: Actions
 export function initProfileForUidFactory({ profileFirestoreCollection, profilePrivateDataCollectionFactory }: ProfileServerActionsContext) {
-  const { queryDocument } = profileFirestoreCollection;
+  const { query: queryProfile } = profileFirestoreCollection;
 
   return async (uid: string) => {
 
     // init within a transaction.
     const profile = await profileFirestoreCollection.firestoreContext.runTransaction(async (transaction) => {
-      let profile: Maybe<ProfileDocument> = await queryDocument(profileWithUid(uid)).getFirstDoc();
+      let profile: Maybe<ProfileDocument> = profileFirestoreCollection.documentAccessorForTransaction(transaction).loadDocumentForPath(uid);
 
-      if (!profile) {
-        profile = profileFirestoreCollection.documentAccessorForTransaction(transaction).newDocument();
+      const exists = await profile.accessor.exists();
+
+      if (!exists) {
+        let username = uid;
+        const docs = await queryProfile(profileWithUsername(username)).getDocs(transaction);
+
+        if (!docs.empty) {
+          username = `${uid}-1`;  // "-" isn't allowed in usernames by users, so this name should be safe.
+        }
 
         // create the profile
         await profile.accessor.set({
-          uid,
-          username: uid,
+          username,
           updatedAt: new Date()
         });
 

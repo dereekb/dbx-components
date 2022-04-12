@@ -153,6 +153,41 @@ export function describeAccessorDriverTests(f: MockItemCollectionFixture) {
 
     });
 
+    describe('documentAccessor()', () => {
+
+      describe('loadDocumentForPath()', () => {
+
+        it('should return a document at the given path.', () => {
+          const document = firestoreDocumentAccessor.loadDocumentForPath('path');
+          expect(document).toBeDefined();
+        });
+
+        it('should throw an exception if the path is empty.', () => {
+
+          try {
+            firestoreDocumentAccessor.loadDocumentForPath('');
+            fail();
+          } catch (e) {
+            expect(e).toBeDefined();
+          }
+
+        });
+
+        it('should throw an exception if the path is undefined.', () => {
+
+          try {
+            firestoreDocumentAccessor.loadDocumentForPath(undefined as any);
+            fail();
+          } catch (e) {
+            expect(e).toBeDefined();
+          }
+
+        });
+
+      });
+
+    });
+
   });
 
 }

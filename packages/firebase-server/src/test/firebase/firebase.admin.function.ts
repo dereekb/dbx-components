@@ -2,12 +2,11 @@ import * as admin from 'firebase-admin';
 import * as functions from 'firebase-functions-test';
 import { Firestore } from '@google-cloud/firestore';
 import { Auth } from 'firebase-admin/lib/auth/auth';
-import { wrap } from 'firebase-functions-test/lib/main';
 import { FeaturesList } from 'firebase-functions-test/lib/features';
-import { JestTestFirestoreContextFactory, TestFirestoreContext, TestFirestoreContextFixture, TestFirestoreInstance } from '@dereekb/firebase';
-import { AbstractJestTestContextFixture, JestBuildTestsWithContextFunction, jestTestContextBuilder, JestTestContextFactory, JestTestContextFixture, Maybe, useJestContextFixture } from "@dereekb/util";
+import { TestFirestoreContext, TestFirestoreInstance } from '@dereekb/firebase';
+import { AbstractJestTestContextFixture, jestTestContextBuilder, JestTestContextFactory, Maybe } from "@dereekb/util";
 import { applyFirebaseGCloudTestProjectIdToFirebaseConfigEnv, getGCloudTestProjectId, isAdminEnvironmentInitialized, rollNewGCloudProjectEnvironmentVariable } from './firebase';
-import { FirebaseAdminTestContext, FirebaseAdminTestContextInstance } from './firebase.admin';
+import { FirebaseAdminTestContext, FirebaseAdminTestContextInstance, WrapCloudFunction } from './firebase.admin';
 
 // MARK: FirebaseAdminFunctionTestBuilder
 let functionsInitialized = false;
@@ -53,11 +52,7 @@ export interface FirebaseAdminFunctionTestConfig {
   useFunctionSingletonContext: boolean;
 }
 
-export type WrapCloudFunction = typeof wrap;
-
-export interface FirebaseAdminFunctionTestContext extends FirebaseAdminTestContext {
-  readonly wrapCloudFunction: WrapCloudFunction;
-}
+export interface FirebaseAdminFunctionTestContext extends FirebaseAdminTestContext { }
 
 export class FirebaseAdminFunctionTestContextFixture extends AbstractJestTestContextFixture<FirebaseAdminFunctionTestContextInstance> implements FirebaseAdminFunctionTestContext {
 
@@ -94,7 +89,9 @@ export class FirebaseAdminFunctionTestContextInstance extends FirebaseAdminTestC
     super(app);
   }
 
-  readonly wrapCloudFunction: WrapCloudFunction = this.instance.wrap;
+  get wrapCloudFunction(): WrapCloudFunction {
+    return this.instance.wrap;
+  }
 
 }
 

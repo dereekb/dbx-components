@@ -1,16 +1,16 @@
 import * as admin from 'firebase-admin';
-import * as functions from 'firebase-functions-test';
 import { Firestore } from '@google-cloud/firestore';
 import { Auth } from 'firebase-admin/lib/auth/auth';
 import { JestTestFirestoreContextFactory, makeTestingFirestoreDrivers, TestFirestoreContext, TestFirestoreContextFixture, TestFirestoreInstance } from '@dereekb/firebase';
-import { AbstractJestTestContextFixture, cachedGetter, JestBuildTestsWithContextFunction, jestTestContextBuilder, JestTestContextFactory, JestTestContextFixture, Maybe, useJestContextFixture } from "@dereekb/util";
-import { FeaturesList } from 'firebase-functions-test/lib/features';
+import { AbstractJestTestContextFixture, cachedGetter, JestBuildTestsWithContextFunction, jestTestContextBuilder, JestTestContextFactory, JestTestContextFixture, useJestContextFixture } from "@dereekb/util";
 import { googleCloudFirestoreDrivers } from '../../lib/firestore/driver';
 import { GoogleCloudTestFirestoreInstance } from '../firestore/firestore';
-import { applyFirebaseGCloudTestProjectIdToFirebaseConfigEnv, generateNewProjectId, getGCloudProjectId, getGCloudTestProjectId, isAdminEnvironmentInitialized, rollNewGCloudProjectEnvironmentVariable } from './firebase';
+import { generateNewProjectId, isAdminEnvironmentInitialized } from './firebase';
 import { wrap } from 'firebase-functions-test/lib/main';
 
 export interface FirebaseAdminTestConfig { }
+
+export type WrapCloudFunction = typeof wrap;
 
 export interface FirebaseAdminTestContext {
   readonly app: admin.app.App;
@@ -18,6 +18,11 @@ export interface FirebaseAdminTestContext {
   readonly firestore: Firestore
   readonly firestoreInstance: TestFirestoreInstance;
   readonly firestoreContext: TestFirestoreContext;
+
+  /**
+   * Wrap function if available. If not in the right context/supported then this will throw an exception.
+   */
+  get wrapCloudFunction(): WrapCloudFunction;
 }
 
 export class FirebaseAdminTestContextFixture extends AbstractJestTestContextFixture<FirebaseAdminTestContextInstance> implements FirebaseAdminTestContext {
@@ -41,6 +46,10 @@ export class FirebaseAdminTestContextFixture extends AbstractJestTestContextFixt
 
   get firestoreContext(): TestFirestoreContext {
     return this.instance.firestoreContext;
+  }
+
+  get wrapCloudFunction(): WrapCloudFunction {
+    return this.instance.wrapCloudFunction;
   }
 
 }
@@ -71,6 +80,12 @@ export class FirebaseAdminTestContextInstance implements FirebaseAdminTestContex
     return this.firestoreInstance.context;
   }
 
+  get wrapCloudFunction(): WrapCloudFunction {
+    return () => {
+      throw new Error('wrapCloudFunction is unsupported by this type.');
+    };
+  }
+
 }
 
 export abstract class AbstractFirebaseAdminTestContextInstanceChild<F extends FirebaseAdminTestContextInstance = FirebaseAdminTestContextInstance> implements FirebaseAdminTestContext {
@@ -96,6 +111,10 @@ export abstract class AbstractFirebaseAdminTestContextInstanceChild<F extends Fi
 
   get firestoreContext(): TestFirestoreContext {
     return this.parent.firestoreContext;
+  }
+
+  get wrapCloudFunction(): WrapCloudFunction {
+    return this.parent.wrapCloudFunction;
   }
 
 }

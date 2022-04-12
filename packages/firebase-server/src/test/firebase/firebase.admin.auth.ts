@@ -1,12 +1,13 @@
 import { FirebaseAuthUserIdentifier } from '../../lib/auth/auth';
 import { RemoveIndex, incrementingNumberFactory, mapGetter, AbstractChildJestTestContextFixture, asGetter, Factory, JestTestContextFixture, GetterOrValue, PromiseOrValue, useJestContextFixture } from "@dereekb/util";
-import { FirebaseAdminTestContext, FirebaseAdminTestContextFixture } from "./firebase.admin";
+import { FirebaseAdminTestContext } from "./firebase.admin";
 import { CreateRequest } from 'firebase-admin/lib/auth/auth-config';
 import { UserRecord } from 'firebase-admin/lib/auth/user-record';
 import { DecodedIdToken } from 'firebase-admin/lib/auth/token-verifier';
 import { Auth } from 'firebase-admin/lib/auth/auth';
 import { decode as decodeJwt } from 'jsonwebtoken';
 import { CallableContextOptions, ContextOptions, WrappedFunction, WrappedScheduledFunction } from 'firebase-functions-test/lib/main';
+import { EventContext } from 'firebase-functions/lib/cloud-functions';
 
 /**
  * Testing context for a single user.
@@ -20,7 +21,13 @@ export interface AuthorizedUserTestContext {
   callCloudFunction<T = any>(fn: WrappedScheduledFunction | WrappedFunction, params: any): Promise<T>;
 }
 
-export class AuthorizedUserTestContextFixture<I extends AuthorizedUserTestContextInstance = AuthorizedUserTestContextInstance> extends AbstractChildJestTestContextFixture<I, JestTestContextFixture<FirebaseAdminTestContext>> implements AuthorizedUserTestContext {
+export class AuthorizedUserTestContextFixture<
+  PI extends FirebaseAdminTestContext = FirebaseAdminTestContext,
+  PF extends JestTestContextFixture<PI> = JestTestContextFixture<PI>,
+  I extends AuthorizedUserTestContextInstance<PI> = AuthorizedUserTestContextInstance<PI>
+  >
+  extends AbstractChildJestTestContextFixture<I, PF>
+  implements AuthorizedUserTestContext {
 
   // MARK: AuthorizedUserTestContext (Forwarded)
   get uid(): FirebaseAuthUserIdentifier {
@@ -49,16 +56,20 @@ export class AuthorizedUserTestContextFixture<I extends AuthorizedUserTestContex
 
 }
 
-export class AuthorizedUserTestContextInstance implements AuthorizedUserTestContext {
+export interface CallEventFunctionEventContext extends Partial<Omit<EventContext, 'auth'>> { }
 
-  constructor(readonly uid: FirebaseAuthUserIdentifier, readonly testInstance: FirebaseAdminTestContext) { }
+export class AuthorizedUserTestContextInstance<
+  PI extends FirebaseAdminTestContext = FirebaseAdminTestContext
+  > implements AuthorizedUserTestContext {
+
+  constructor(readonly uid: FirebaseAuthUserIdentifier, readonly testContext: PI) { }
 
   loadUserRecord(): Promise<UserRecord> {
-    return this.testInstance.auth.getUser(this.uid);
+    return this.testContext.auth.getUser(this.uid);
   }
 
   loadIdToken(): Promise<string> {
-    return this.loadUserRecord().then((record) => createEncodedTestFirestoreTokenForUserRecord(this.testInstance.auth, record));
+    return this.loadUserRecord().then((record) => createEncodedTestFirestoreTokenForUserRecord(this.testContext.auth, record));
   }
 
   loadDecodedIdToken(): Promise<DecodedIdToken> {
@@ -66,11 +77,15 @@ export class AuthorizedUserTestContextInstance implements AuthorizedUserTestCont
   }
 
   makeContextOptions(): Promise<ContextOptions> {
-    return this.loadUserRecord().then((record) => createTestFunctionContextOptions(this.testInstance.auth, record));
+    return this.loadUserRecord().then((record) => createTestFunctionContextOptions(this.testContext.auth, record));
   }
 
   callCloudFunction<T = any>(fn: WrappedScheduledFunction | WrappedFunction, params: any): Promise<T> {
     return this.makeContextOptions().then(options => fn(params, options));
+  }
+
+  callEventCloudFunction<T = any>(fn: WrappedScheduledFunction | WrappedFunction, params: any, contextOptions?: CallEventFunctionEventContext): Promise<T> {
+    return this.makeContextOptions().then(options => fn(params, (contextOptions) ? { ...contextOptions, ...options } : options));
   }
 
 }
@@ -92,9 +107,14 @@ export interface AuthorizedUserTestContextDetailsTemplate {
 /**
  * authorizedUserContext/authorizedUserContextFactory parameters.
  */
-export interface AuthorizedUserTestContextParams<I extends AuthorizedUserTestContextInstance = AuthorizedUserTestContextInstance, C extends AuthorizedUserTestContextFixture<I> = AuthorizedUserTestContextFixture<I>> {
+export interface AuthorizedUserTestContextParams<
+  PI extends FirebaseAdminTestContext = FirebaseAdminTestContext,
+  PF extends JestTestContextFixture<PI> = JestTestContextFixture<PI>,
+  I extends AuthorizedUserTestContextInstance<PI> = AuthorizedUserTestContextInstance<PI>,
+  F extends AuthorizedUserTestContextFixture<PI, PF, I> = AuthorizedUserTestContextFixture<PI, PF, I>
+  > {
 
-  f: FirebaseAdminTestContextFixture;
+  f: PF;
 
   /**
    * uid value/getter to use. If not provided, a random one will be generated.
@@ -109,12 +129,12 @@ export interface AuthorizedUserTestContextParams<I extends AuthorizedUserTestCon
   /**
    * Creates the custom fixture. If not defined, a AuthorizedUserTestContextFixture is created.
    */
-  makeFixture?: (parent: JestTestContextFixture<FirebaseAdminTestContext>) => C;
+  makeFixture?: (parent: PF) => F;
 
   /**
    * Custom make instance function. If not defined, a AuthorizedUserTestContextInstance will be generated.
    */
-  makeInstance?: (uid: FirebaseAuthUserIdentifier, testInstance: FirebaseAdminTestContext, userRecord: UserRecord) => PromiseOrValue<I>;
+  makeInstance?: (uid: FirebaseAuthUserIdentifier, testInstance: PI, userRecord: UserRecord) => PromiseOrValue<I>;
 
   /**
    * Optional function to initialize the user for this instance.
@@ -126,28 +146,43 @@ export interface AuthorizedUserTestContextParams<I extends AuthorizedUserTestCon
 /**
  * Convenience function for using authorizedUserContextFactory directly and passing buildTests.
  */
-export function authorizedUserContext<I extends AuthorizedUserTestContextInstance = AuthorizedUserTestContextInstance, C extends AuthorizedUserTestContextFixture<I> = AuthorizedUserTestContextFixture<I>>(config: AuthorizedUserTestContextParams<I, C>, buildTests: (u: C) => void) {
+export function authorizedUserContext<
+  PI extends FirebaseAdminTestContext = FirebaseAdminTestContext,
+  PF extends JestTestContextFixture<PI> = JestTestContextFixture<PI>,
+  I extends AuthorizedUserTestContextInstance<PI> = AuthorizedUserTestContextInstance<PI>,
+  F extends AuthorizedUserTestContextFixture<PI, PF, I> = AuthorizedUserTestContextFixture<PI, PF, I>
+>(config: AuthorizedUserTestContextParams<PI, PF, I, F>, buildTests: (u: F) => void) {
   authorizedUserContextFactory(config)(config.f, buildTests);
 };
 
-export type AuthorizedUserTestContextFactoryParams<I extends AuthorizedUserTestContextInstance = AuthorizedUserTestContextInstance, C extends AuthorizedUserTestContextFixture<I> = AuthorizedUserTestContextFixture<I>> = Omit<AuthorizedUserTestContextParams<I, C>, 'f'>;
+export type AuthorizedUserTestContextFactoryParams<
+  PI extends FirebaseAdminTestContext = FirebaseAdminTestContext,
+  PF extends JestTestContextFixture<PI> = JestTestContextFixture<PI>,
+  I extends AuthorizedUserTestContextInstance<PI> = AuthorizedUserTestContextInstance<PI>,
+  F extends AuthorizedUserTestContextFixture<PI, PF, I> = AuthorizedUserTestContextFixture<PI, PF, I>
+  > = Omit<AuthorizedUserTestContextParams<PI, PF, I, F>, 'f'>;
 
 /**
  * Creates a new Jest Context that has a random user for authorization for use in firebase server tests.
  */
-export function authorizedUserContextFactory<I extends AuthorizedUserTestContextInstance = AuthorizedUserTestContextInstance, C extends AuthorizedUserTestContextFixture<I> = AuthorizedUserTestContextFixture<I>>(config: AuthorizedUserTestContextFactoryParams<I, C>): (f: JestTestContextFixture<FirebaseAdminTestContext>, buildTests: (u: C) => void) => void {
+export function authorizedUserContextFactory<
+  PI extends FirebaseAdminTestContext = FirebaseAdminTestContext,
+  PF extends JestTestContextFixture<PI> = JestTestContextFixture<PI>,
+  I extends AuthorizedUserTestContextInstance<PI> = AuthorizedUserTestContextInstance<PI>,
+  F extends AuthorizedUserTestContextFixture<PI, PF, I> = AuthorizedUserTestContextFixture<PI, PF, I>
+>(config: AuthorizedUserTestContextFactoryParams<PI, PF, I, F>): (f: PF, buildTests: (u: F) => void) => void {
   const {
     uid: uidGetter,
     makeInstance = (uid, testInstance) => new AuthorizedUserTestContextInstance(uid, testInstance) as I,
-    makeFixture = (f) => new AuthorizedUserTestContextFixture(f),
+    makeFixture = (f: PF) => new AuthorizedUserTestContextFixture<PI, PF, I>(f),
     makeUserDetails = () => ({} as AuthorizedUserTestContextDetailsTemplate),
     initUser
   } = config;
   const makeUid = (uidGetter) ? asGetter(uidGetter) : testUidFactory;
 
-  return (f: JestTestContextFixture<FirebaseAdminTestContext>, buildTests: (u: C) => void) => {
-    return useJestContextFixture<C, I>({
-      fixture: makeFixture(f) as C,
+  return (f: PF, buildTests: (u: F) => void) => {
+    return useJestContextFixture<F, I>({
+      fixture: makeFixture(f) as F,
       buildTests,
       initInstance: async () => {
         const uid = makeUid();
@@ -173,7 +208,7 @@ export function authorizedUserContextFactory<I extends AuthorizedUserTestContext
         return instance;
       },
       destroyInstance: async (instance: I) => {
-        const app = instance.testInstance.app;
+        const app = instance.testContext.app;
         const uid = instance.uid;
         await app.auth().deleteUser(uid);
       }

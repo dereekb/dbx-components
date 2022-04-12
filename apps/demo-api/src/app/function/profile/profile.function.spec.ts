@@ -10,7 +10,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
 
       it('should set the profile username.', async () => {
         const username = 'username';
-        const fn = f.parent.instance.wrapCloudFunction(profileSetUsername(f.nestAppPromiseGetter));
+        const fn = f.wrapCloudFunction(profileSetUsername(f.nestAppPromiseGetter));
 
         const params: SetProfileUsernameParams = {
           username
@@ -28,7 +28,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
       demoAuthorizedUserContext(f, (u2) => {
 
         it('should fail if the username is already taken.', async () => {
-          const fn = f.parent.instance.wrapCloudFunction(profileSetUsername(f.instance.nestAppPromiseGetter));
+          const fn = f.wrapCloudFunction(profileSetUsername(f.nestAppPromiseGetter));
 
           const params: SetProfileUsernameParams = {
             username: 'username'

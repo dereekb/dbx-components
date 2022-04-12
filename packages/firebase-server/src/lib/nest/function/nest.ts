@@ -1,5 +1,4 @@
-import { PromiseOrValue } from './../../../../../util/src/lib/promise/promise';
-import { Getter } from '@dereekb/util';
+import { PromiseOrValue, Getter } from '@dereekb/util';
 import { INestApplicationContext } from '@nestjs/common';
 import * as functions from 'firebase-functions';
 import { EventContext, HttpsFunction, Runnable } from 'firebase-functions';

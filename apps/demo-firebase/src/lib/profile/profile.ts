@@ -1,4 +1,4 @@
-import { CollectionReference, AbstractFirestoreDocument, makeSnapshotConverterFunctions, firestoreUID, firestoreString, firestoreDate, makeFirestoreCollection, FirestoreDocumentDataAccessor, FirestoreCollection, UserRelated, DocumentReferenceRef, FirestoreContext, SingleItemFirestoreCollection } from "@dereekb/firebase";
+import { CollectionReference, AbstractFirestoreDocument, makeSnapshotConverterFunctions, firestoreUID, firestoreString, firestoreDate, makeFirestoreCollection, FirestoreDocumentDataAccessor, FirestoreCollection, UserRelatedById, DocumentReferenceRef, FirestoreContext, SingleItemFirestoreCollection } from "@dereekb/firebase";
 
 export interface ProfileFirestoreCollections {
   profileFirestoreCollection: ProfileFirestoreCollection;
@@ -6,7 +6,7 @@ export interface ProfileFirestoreCollections {
 }
 
 // MARK: Profile
-export interface Profile extends UserRelated {
+export interface Profile extends UserRelatedById {
   /**
    * Unique username.
    */
@@ -25,7 +25,6 @@ export const profileCollectionPath = 'profile';
 
 export const profileConverter = makeSnapshotConverterFunctions<Profile>({
   fields: {
-    uid: firestoreUID(),
     username: firestoreString({}),
     updatedAt: firestoreDate({ saveDefaultAsNow: true })
   }

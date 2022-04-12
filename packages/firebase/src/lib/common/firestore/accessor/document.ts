@@ -59,7 +59,7 @@ export interface FirestoreDocumentAccessor<T, D extends FirestoreDocument<T> = F
    * 
    * @param ref
    */
-  loadDocumentForPath(path?: string, ...pathSegments: string[]): D;
+  loadDocumentForPath(path: string, ...pathSegments: string[]): D;
 
   /**
    * Loads a document from the datastore.
@@ -126,7 +126,11 @@ export function firestoreDocumentAccessorFactory<T, D extends FirestoreDocument<
         const newDocRef = firestoreAccessorDriver.doc(collection);
         return this.loadDocument(newDocRef);
       },
-      loadDocumentForPath(path?: string, ...pathSegments: string[]): D {
+      loadDocumentForPath(path: string, ...pathSegments: string[]): D {
+        if (!path) {
+          throw new Error('Path was not provided to loadDocumentForPath(). Use newDocument() for generating an id.');
+        }
+
         const docRef = firestoreAccessorDriver.doc(collection, path, ...pathSegments);
         return this.loadDocument(docRef);
       },
