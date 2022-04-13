@@ -1,8 +1,13 @@
 
 /**
+ * A null/undefined value.
+ */
+export type MaybeNot = null | undefined;
+
+/**
  * A value that might exist, or be null/undefined instead.
  */
-export type Maybe<T> = T | null | undefined;
+export type Maybe<T> = T | MaybeNot;
 
 /**
  * Returns true if the value is not null or undefined.
