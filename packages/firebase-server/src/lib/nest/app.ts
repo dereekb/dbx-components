@@ -1,23 +1,29 @@
-import { ClassType } from '@dereekb/util';
-import { INestApplication } from '@nestjs/common';
+import { ClassType, Getter, asGetter, makeGetter } from '@dereekb/util';
+import { INestApplication, INestApplicationContext } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { ExpressAdapter } from '@nestjs/platform-express';
 import * as express from 'express';
 
 export interface NestServer {
   server: express.Express;
-  nest: Promise<INestApplication>;
+  nest: NestAppPromiseGetter;
 }
 
+export type NestAppPromiseGetter = Getter<Promise<INestApplicationContext>>;
+
 export interface NestServerInstance<T> {
-  getNestServer(): NestServer;
-  getNestServerApp(): Promise<INestApplication>;
+  /**
+   * Initializes and returns the Nest Server.
+   * 
+   * If already initialized the server will not be initialized again.
+   */
+  initNestServer(): NestServer;
 }
 
 export function nestServerInstance<T>(moduleClass: ClassType<T>): NestServerInstance<T> {
   let nestServer: NestServer;
 
-  const getNestServer = (): NestServer => {
+  const initNestServer = (): NestServer => {
     if (!nestServer) {
       const server = express();
 
@@ -32,23 +38,22 @@ export function nestServerInstance<T>(moduleClass: ClassType<T>): NestServerInst
 
       const nest: Promise<INestApplication> = createNestServer(server)
         .then(v => {
-          console.log('Nest Ready')
+          console.log('Nest Ready');
           return v;
         })
-        .catch(err => console.error('Nest broken', err)) as Promise<INestApplication>;
+        .catch(err => {
+          console.error('Nest broken', err);
+          throw err;
+        }) as Promise<INestApplication>;
 
-      return { server, nest };
+      return { server, nest: makeGetter(nest) };
     }
 
     return nestServer;
   };
 
-  const getNestServerApp = (): Promise<INestApplication> => {
-    return getNestServer().nest;
-  }
 
   return {
-    getNestServer,
-    getNestServerApp
+    initNestServer
   };
 }

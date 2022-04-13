@@ -52,6 +52,16 @@ export function asGetter<T>(input: GetterOrValue<T>): Getter<T> {
   if (typeof input === 'function') {
     return input as Getter<T>;
   } else {
-    return () => input;
+    return makeGetter(input);
   }
+}
+
+/**
+ * Wraps the input and returns a Getter for that value.
+ * 
+ * @param input 
+ * @returns 
+ */
+export function makeGetter<T>(input: T): Getter<T> {
+  return () => input;
 }

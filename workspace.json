@@ -16,12 +16,10 @@
         "build-base": {
           "executor": "@nrwl/js:tsc",
           "outputs": ["{options.outputPath}"],
-          "dependsOn": [
-            {
-              "target": "build",
-              "projects": "dependencies"
-            }
-          ],
+          "dependsOn": [{
+            "target": "build",
+            "projects": "dependencies"
+          }],
           "options": {
             "outputPath": "dist/packages/browser",
             "main": "packages/browser/src/index.ts",
@@ -68,12 +66,10 @@
         "build-base": {
           "executor": "@nrwl/js:tsc",
           "outputs": ["{options.outputPath}"],
-          "dependsOn": [
-            {
-              "target": "build",
-              "projects": "dependencies"
-            }
-          ],
+          "dependsOn": [{
+            "target": "build",
+            "projects": "dependencies"
+          }],
           "options": {
             "outputPath": "dist/packages/date",
             "tsConfig": "packages/date/tsconfig.lib.json",
@@ -112,8 +108,7 @@
           ],
           "executor": "@nrwl/workspace:run-commands",
           "options": {
-            "commands": [
-              {
+            "commands": [{
                 "command": "TZ=America/New_York nx test date"
               },
               {
@@ -160,12 +155,10 @@
         "build-base": {
           "executor": "@nrwl/angular:package",
           "outputs": ["dist/packages/dbx-analytics"],
-          "dependsOn": [
-            {
-              "target": "build",
-              "projects": "dependencies"
-            }
-          ],
+          "dependsOn": [{
+            "target": "build",
+            "projects": "dependencies"
+          }],
           "options": {
             "project": "packages/dbx-analytics/ng-package.json"
           },
@@ -224,12 +217,10 @@
         "build-base": {
           "executor": "@nrwl/angular:package",
           "outputs": ["dist/packages/dbx-core"],
-          "dependsOn": [
-            {
-              "target": "build",
-              "projects": "dependencies"
-            }
-          ],
+          "dependsOn": [{
+            "target": "build",
+            "projects": "dependencies"
+          }],
           "options": {
             "project": "packages/dbx-core/ng-package.json"
           },
@@ -288,12 +279,10 @@
         "build-base": {
           "executor": "@nrwl/angular:package",
           "outputs": ["dist/packages/dbx-firebase"],
-          "dependsOn": [
-            {
-              "target": "build",
-              "projects": "dependencies"
-            }
-          ],
+          "dependsOn": [{
+            "target": "build",
+            "projects": "dependencies"
+          }],
           "options": {
             "project": "packages/dbx-firebase/ng-package.json"
           },
@@ -358,8 +347,7 @@
           "executor": "@nrwl/workspace:run-commands",
           "outputs": ["dist/packages/dbx-form"],
           "options": {
-            "commands": [
-              {
+            "commands": [{
                 "description": "build dbx-form production",
                 "command": "npx nx run dbx-form:build-base:production"
               },
@@ -379,12 +367,10 @@
         "build-base": {
           "executor": "@nrwl/angular:package",
           "outputs": ["dist/packages/dbx-form"],
-          "dependsOn": [
-            {
-              "target": "build",
-              "projects": "dependencies"
-            }
-          ],
+          "dependsOn": [{
+            "target": "build",
+            "projects": "dependencies"
+          }],
           "options": {
             "project": "packages/dbx-form/ng-package.json"
           },
@@ -437,8 +423,7 @@
           "executor": "@nrwl/workspace:run-commands",
           "outputs": ["dist/packages/dbx-web"],
           "options": {
-            "commands": [
-              {
+            "commands": [{
                 "description": "build dbx-web production",
                 "command": "npx nx run dbx-web:build-base:production"
               },
@@ -458,12 +443,10 @@
         "build-base": {
           "executor": "@nrwl/angular:package",
           "outputs": ["dist/packages/dbx-web"],
-          "dependsOn": [
-            {
-              "target": "build",
-              "projects": "dependencies"
-            }
-          ],
+          "dependsOn": [{
+            "target": "build",
+            "projects": "dependencies"
+          }],
           "options": {
             "project": "packages/dbx-web/ng-package.json"
           },
@@ -522,12 +505,10 @@
         "build-base": {
           "executor": "@angular-devkit/build-angular:browser",
           "outputs": ["{options.outputPath}"],
-          "dependsOn": [
-            {
-              "target": "build",
-              "projects": "dependencies"
-            }
-          ],
+          "dependsOn": [{
+            "target": "build",
+            "projects": "dependencies"
+          }],
           "options": {
             "outputPath": "dist/apps/demo",
             "index": "apps/demo/src/index.html",
@@ -549,8 +530,7 @@
           },
           "configurations": {
             "production": {
-              "budgets": [
-                {
+              "budgets": [{
                   "type": "initial",
                   "maximumWarning": "5mb",
                   "maximumError": "4mb"
@@ -561,12 +541,10 @@
                   "maximumError": "100kb"
                 }
               ],
-              "fileReplacements": [
-                {
-                  "replace": "apps/demo/src/environments/environment.ts",
-                  "with": "apps/demo/src/environments/environment.prod.ts"
-                }
-              ],
+              "fileReplacements": [{
+                "replace": "apps/demo/src/environments/environment.ts",
+                "with": "apps/demo/src/environments/environment.prod.ts"
+              }],
               "outputHashing": "all"
             },
             "development": {
@@ -619,24 +597,20 @@
         },
         "deploy": {
           "executor": "@nrwl/workspace:run-commands",
-          "dependsOn": [
-            {
-              "target": "build",
-              "projects": "self"
-            }
-          ],
+          "dependsOn": [{
+            "target": "build",
+            "projects": "self"
+          }],
           "options": {
             "command": "firebase deploy --only hosting"
           }
         },
         "ci-deploy": {
           "executor": "@nrwl/workspace:run-commands",
-          "dependsOn": [
-            {
-              "target": "build",
-              "projects": "self"
-            }
-          ],
+          "dependsOn": [{
+            "target": "build",
+            "projects": "self"
+          }],
           "options": {
             "command": "firebase deploy --only hosting --token \"$FIREBASE_TOKEN\""
           }
@@ -659,12 +633,10 @@
         "build-base": {
           "executor": "@nrwl/node:webpack",
           "outputs": ["{options.outputPath}"],
-          "dependsOn": [
-            {
-              "target": "build",
-              "projects": "dependencies"
-            }
-          ],
+          "dependsOn": [{
+            "target": "build",
+            "projects": "dependencies"
+          }],
           "options": {
             "outputPath": "dist/apps/demo-api",
             "main": "apps/demo-api/src/main.ts",
@@ -677,12 +649,10 @@
               "optimization": true,
               "extractLicenses": true,
               "inspect": false,
-              "fileReplacements": [
-                {
-                  "replace": "apps/demo-api/src/environments/environment.ts",
-                  "with": "apps/demo-api/src/environments/environment.prod.ts"
-                }
-              ]
+              "fileReplacements": [{
+                "replace": "apps/demo-api/src/environments/environment.ts",
+                "with": "apps/demo-api/src/environments/environment.prod.ts"
+              }]
             }
           }
         },
@@ -692,21 +662,20 @@
             "command": "firebase emulators:start"
           }
         },
-        "serve-api": {
-          "executor": "@nrwl/node:node",
+        "watch-emulators": {
+          "executor": "@nrwl/workspace:run-commands",
           "options": {
-            "buildTarget": "demo-api:build"
+            "command": "find dist/apps/demo-api | entr -r firebase emulators:start"
           }
         },
         "serve": {
           "executor": "@nrwl/workspace:run-commands",
           "options": {
-            "commands": [
-              {
-                "command": "npx nx build demo-api --watch"
+            "commands": [{
+                "command": "npx nx build-base demo-api --watch"
               },
               {
-                "command": "npx nx run demo-api:run-emulators"
+                "command": "npx nx run demo-api:watch-emulators"
               }
             ],
             "parallel": true
@@ -744,24 +713,20 @@
         },
         "deploy": {
           "executor": "@nrwl/workspace:run-commands",
-          "dependsOn": [
-            {
-              "target": "build",
-              "projects": "self"
-            }
-          ],
+          "dependsOn": [{
+            "target": "build",
+            "projects": "self"
+          }],
           "options": {
             "command": "firebase deploy --only functions"
           }
         },
         "ci-deploy": {
           "executor": "@nrwl/workspace:run-commands",
-          "dependsOn": [
-            {
-              "target": "build",
-              "projects": "self"
-            }
-          ],
+          "dependsOn": [{
+            "target": "build",
+            "projects": "self"
+          }],
           "options": {
             "command": "firebase deploy --only functions --token \"$FIREBASE_TOKEN\""
           }
@@ -852,12 +817,10 @@
         "build-base": {
           "executor": "@nrwl/js:tsc",
           "outputs": ["{options.outputPath}"],
-          "dependsOn": [
-            {
-              "target": "build",
-              "projects": "dependencies"
-            }
-          ],
+          "dependsOn": [{
+            "target": "build",
+            "projects": "dependencies"
+          }],
           "options": {
             "outputPath": "dist/packages/firebase",
             "tsConfig": "packages/firebase/tsconfig.lib.json",
@@ -982,12 +945,10 @@
         "build-base": {
           "executor": "@nrwl/js:tsc",
           "outputs": ["{options.outputPath}"],
-          "dependsOn": [
-            {
-              "target": "build",
-              "projects": "dependencies"
-            }
-          ],
+          "dependsOn": [{
+            "target": "build",
+            "projects": "dependencies"
+          }],
           "options": {
             "outputPath": "dist/packages/model",
             "tsConfig": "packages/model/tsconfig.lib.json",
@@ -1032,12 +993,10 @@
         "build-base": {
           "executor": "@nrwl/js:tsc",
           "outputs": ["{options.outputPath}"],
-          "dependsOn": [
-            {
-              "target": "build",
-              "projects": "dependencies"
-            }
-          ],
+          "dependsOn": [{
+            "target": "build",
+            "projects": "dependencies"
+          }],
           "options": {
             "outputPath": "dist/packages/rxjs",
             "tsConfig": "packages/rxjs/tsconfig.lib.json",
@@ -1088,12 +1047,10 @@
         "build-base": {
           "executor": "@nrwl/js:tsc",
           "outputs": ["{options.outputPath}"],
-          "dependsOn": [
-            {
-              "target": "build",
-              "projects": "dependencies"
-            }
-          ],
+          "dependsOn": [{
+            "target": "build",
+            "projects": "dependencies"
+          }],
           "options": {
             "outputPath": "dist/packages/util",
             "tsConfig": "packages/util/tsconfig.lib.json",

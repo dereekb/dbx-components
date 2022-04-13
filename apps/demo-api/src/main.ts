@@ -1,11 +1,14 @@
-import { getNestServer } from './app/app';
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
+import { demoAppFunctions, initNestServer } from './app/app';
 
 admin.initializeApp();
 
-const { server } = getNestServer();
+const { server, nest } = initNestServer();
 
 export const api = functions.https.onRequest(server);
 
-// TODO: Import functions
+export const {
+  // initUserOnCreate,
+  profileSetUsername
+} = demoAppFunctions(nest);

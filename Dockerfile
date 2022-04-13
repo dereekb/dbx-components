@@ -18,7 +18,8 @@ RUN npm install
 VOLUME ["/code"]
 
 # Install Java for the Emulators
-RUN apt-get update -y && apt-get install -y curl openjdk-11-jre-headless
+# Install entr for file watching, as the 
+RUN apt-get update -y && apt-get install -y curl openjdk-11-jre-headless entr
 
 # Run serve by default
 CMD ["npx nx serve demo-api"]
