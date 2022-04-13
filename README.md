@@ -50,8 +50,9 @@ The firebase emulator is run within a docker container. This is to allow consist
 
 Run `./server-web.sh` to start the firebase development server.
 
-Notes: 
-- `demo-api`'s `watch-emulators` nx target uses [entr](http://eradman.com/entrproject/) to watch for changes in the demo-api's dist directory and restart the emulators automatically. The firebase emulator suite does not support hot-reload by default.
+### Development Server Notes
+- `demo-api`'s `watch-emulators` nx target uses [entr](http://eradman.com/entrproject/) to watch for changes in the demo-api's dist directory and restart the emulators automatically. The firebase emulator suite does not support hot-reload of functions.
+- Firebase rules files are hot-reloaded by the emulators.
 
 ## Running end-to-end tests
 
