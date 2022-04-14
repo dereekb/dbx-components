@@ -1,5 +1,5 @@
 import { Observable } from 'rxjs';
-import { AuthRole, AuthRoleSet } from '../auth.role';
+import { AuthRoleSet } from '../auth.role';
 import { AuthUserState } from '../auth.state';
 
 /**
@@ -8,7 +8,9 @@ import { AuthUserState } from '../auth.state';
 export abstract class DbxAuthService {
 
   /**
-   * Whether or not the client is logged in.
+   * Whether or not the client is logged in. 
+   * 
+   * This will only emit once the authentication has been determined, preventing issues with premature decision making.
    * 
    * A user is considered logged in even if there is an anonymous user. For more detailed info, consider using authUserState$.
    */
@@ -22,11 +24,11 @@ export abstract class DbxAuthService {
   /**
    * Current state of the user.
    */
-   abstract readonly authUserState$: Observable<AuthUserState>;
+  abstract readonly authUserState$: Observable<AuthUserState>;
 
-   /**
-    * Role set for the current user.
-    */
-   abstract readonly authRoles$: Observable<AuthRoleSet>;
- 
+  /**
+   * Role set for the current user.
+   */
+  abstract readonly authRoles$: Observable<AuthRoleSet>;
+
 }

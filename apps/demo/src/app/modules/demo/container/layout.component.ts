@@ -43,9 +43,9 @@ export class DemoLayoutComponent {
   ) { }
 
   readonly noUserBottomAnchors: ClickableAnchorLink[] = [{
-    title: 'Sign In',
-    ref: 'demo.signup',
-    icon: 'signup'
+    title: 'Log In',
+    ref: 'demo.auth.login',
+    icon: 'login'
   }];
 
   readonly userBottomNavAnchors: ClickableAnchorLinkTree[] = [{

@@ -665,7 +665,7 @@
         "watch-emulators": {
           "executor": "@nrwl/workspace:run-commands",
           "options": {
-            "command": "find dist/apps/demo-api | entr -r firebase emulators:start"
+            "command": "find dist/apps/demo-api | entr -rc firebase emulators:start && sleep 2"
           }
         },
         "serve": {

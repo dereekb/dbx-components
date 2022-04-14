@@ -29,7 +29,7 @@ export interface SegueRefOptions<O = any> {
 export interface SegueRef<O = any> extends SegueRefOptions<O> {
 
   /**
-   * UI Sref reference value.
+   * Ref path value.
    */
   ref?: SegueRefRouterLink;
 

@@ -1,4 +1,4 @@
-import { Component, Input, Directive } from '@angular/core';
+import { Input, Directive } from '@angular/core';
 
 export type DbxContentContainerPadding = 'none' | 'min' | 'small' | 'normal';
 

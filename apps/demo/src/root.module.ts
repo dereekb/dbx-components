@@ -1,5 +1,3 @@
-import { DbxFirebaseEmulatorModule } from './../../../packages/dbx-firebase/src/lib/firebase/firebase.emulator.module';
-import { DbxFirebaseDefaultProvidersModule } from './../../../packages/dbx-firebase/src/lib/firebase/firebase.module';
 import { DbxAnalyticsModule, DbxAnalyticsService, DbxAnalyticsSegmentModule } from '@dereekb/dbx-analytics';
 import { Injector, NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
@@ -7,10 +5,10 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { Category, StatesModule, UIRouter, UIRouterModule, UIView } from '@uirouter/angular';
 import { AppSharedModule } from '@/shared/app.shared.module';
 import { environment } from './environments/environment';
-import { DbxPopupInteractionModule, DbxPopoverInteractionModule, DbxScreenModule, DbxWebRootModule, DbxWebUIRouterModule, DEFAULT_SCREEN_MEDIA_SERVICE_CONFIG, DBX_STYLE_DEFAULT_CONFIG_TOKEN } from '@dereekb/dbx-web';
+import { DbxScreenModule, DbxWebRootModule, DbxWebUIRouterModule, DEFAULT_SCREEN_MEDIA_SERVICE_CONFIG, DBX_STYLE_DEFAULT_CONFIG_TOKEN } from '@dereekb/dbx-web';
 import { DbxAnalyticsServiceConfiguration, DbxAnalyticsSegmentServiceListener, DbxAnalyticsSegmentApiService, DbxAnalyticsSegmentApiServiceConfig } from '@dereekb/dbx-analytics';
 import { AppModule } from './app/app.module';
-import { DbxCoreUIRouterSegueModule } from '@dereekb/dbx-core';
+import { AuthTransitionHookOptions, DbxCoreUIRouterSegueModule, enableHasAuthRoleHook, enableHasAuthStateHook, enableIsLoggedInHook } from '@dereekb/dbx-core';
 import { FormlyModule } from '@ngx-formly/core';
 import { defaultValidationMessages } from '@dereekb/dbx-form';
 import { MAT_FORM_FIELD_DEFAULT_OPTIONS } from '@angular/material/form-field';
@@ -24,6 +22,14 @@ export function routerConfigFn(router: UIRouter, injector: Injector, module: Sta
     // Send a page view on each successful transition.
     service.sendPageView();
   });
+
+  const options: AuthTransitionHookOptions = {
+    defaultRedirectTarget: 'demo.login'
+  };
+
+  enableHasAuthStateHook(transitionService, { options });
+  enableHasAuthRoleHook(transitionService, { options });
+  enableIsLoggedInHook(transitionService, { options });
 
   // In testing, print transitions.
   if (!environment.production) {
@@ -102,7 +108,7 @@ export function makeSegmentConfig(): DbxAnalyticsSegmentApiServiceConfig {
     provide: MAT_FORM_FIELD_DEFAULT_OPTIONS,
     useValue: {
       floatLabel: 'always',
-      
+
     }
   }],
   bootstrap: [UIView]

@@ -1,3 +1,4 @@
+import { DemoHomeComponent } from './container/home.component';
 import { DemoLayoutComponent } from './container/layout.component';
 import { NgModule } from '@angular/core';
 import { UIRouterModule } from '@uirouter/angular';
@@ -12,7 +13,8 @@ import { AppSharedModule } from '@/shared/app.shared.module';
     })
   ],
   declarations: [
-    DemoLayoutComponent
+    DemoLayoutComponent,
+    DemoHomeComponent,
   ],
 })
 export class DemoModule { }

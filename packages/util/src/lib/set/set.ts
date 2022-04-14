@@ -32,6 +32,37 @@ export function filterValuesFromSet<T>(values: T[], set: Set<T>, exclude = false
 }
 
 /**
+ * Set inclusion comparison type.
+ * - all: All values must be included
+ * - any: Any value is included
+ */
+export type SetIncludesMode = 'all' | 'any';
+
+/**
+ * Contextual function that checks whether or not the input values are included.
+ */
+export type SetIncludesFunction<T> = (valuesToFind: Iterable<T>) => boolean;
+
+/**
+ * Creates a SetIncludesFunction using the input valuesSet and optional mode. By default the mode defaults to 'all'.
+ * 
+ * @param valuesSet 
+ * @param valuesToFind 
+ * @param mode 
+ */
+export function setIncludesFunction<T>(valuesSet: Set<T>, mode: SetIncludesMode = 'all'): SetIncludesFunction<T> {
+  let fn: (set: Set<T>, values: Iterable<T>) => boolean;
+
+  if (mode === 'any') {
+    fn = setContainsAnyValue;
+  } else {
+    fn = setContainsAllValues;
+  }
+
+  return (valuesToFind) => fn(valuesSet, valuesToFind);
+}
+
+/**
  * Returns true if the input array contains any value from the second array.
  */
 export function containsAnyValue<T>(values: Iterable<T>, valuesToFind: Iterable<T>): boolean {

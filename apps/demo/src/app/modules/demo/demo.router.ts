@@ -16,7 +16,27 @@ export const homeState: Ng2StateDeclaration = {
   component: DemoHomeComponent,
 };
 
+export const loginState: Ng2StateDeclaration = {
+  url: '/login',
+  name: 'demo.login',
+  redirectTo: 'demo.auth.login'
+};
+
+export const demoAuthFutureState: Ng2StateDeclaration = {
+  name: 'demo.auth.**',
+  url: '/auth',
+  loadChildren: () => import('./modules/auth/demo.auth.module').then(m => m.DemoAuthModule)
+};
+
+export const demoAppFutureState: Ng2StateDeclaration = {
+  name: 'demo.app.**',
+  url: '/app',
+  loadChildren: () => import('./modules/app/demo.app.module').then(m => m.DemoAppModule)
+};
+
 export const STATES: Ng2StateDeclaration[] = [
   layoutState,
-  homeState
+  homeState,
+  loginState,
+  demoAuthFutureState
 ];
