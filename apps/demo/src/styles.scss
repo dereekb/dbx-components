@@ -1,6 +1,7 @@
 @use '@angular/material'as mat;
 @use 'dbx-web/src/index'as dbx;
 @use 'dbx-form/src/index' as dbx-form;
+@use 'dbx-firebase/src/index' as dbx-firebase;
 @use './style/style';
 
 $app-typography-config: mat.define-typography-config();
@@ -8,10 +9,10 @@ $app-typography-config: mat.define-typography-config();
 @include mat.core($app-typography-config);
 @include dbx.core($app-typography-config);
 @include dbx-form.core($app-typography-config);
+@include dbx-firebase.core($app-typography-config);
 
 @include style.dark-doc-theme('.doc-app-dark');
 @include style.doc-theme('.doc-app');
-// NOTE: There is a third style that is lazy-loaded within demo.
 
 html,
 body {

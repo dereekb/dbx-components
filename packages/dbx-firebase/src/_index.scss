@@ -1,0 +1,18 @@
+@use '@angular/material'as mat;
+@use './lib/style/all-theme' as dbx-firebase-theme;
+
+// Structural
+@forward './lib/style/core'show core;
+
+// Config
+@forward './lib/style/config'show define-dbx-firebase-theme-config, get-dbx-firebase-theme-config;
+
+// Theme bundles
+@forward './lib/style/all-theme'show all-component-themes;
+
+// Create Theme
+@mixin theme($root-selector, $theme-config) {
+  #{$root-selector} {
+    @include dbx-firebase-theme.all-component-themes($theme-config);
+  }
+}
