@@ -19,6 +19,7 @@ import { DocInteractionTestFilterPresetFilterFormComponent } from './component/f
 import { DocInteractionExampleDialogComponent } from './component/interaction.dialog.component';
 import { DocInteractionExamplePopoverComponent } from './component/interaction.popover.component';
 import { DocInteractionExamplePopoverContentComponent } from './component/interaction.popover.content.component';
+import { DocInteractionButtonComponent } from './container/button.component';
 
 @NgModule({
   imports: [
@@ -42,11 +43,12 @@ import { DocInteractionExamplePopoverContentComponent } from './component/intera
     // container
     DocInteractionLayoutComponent,
     DocInteractionHomeComponent,
+    DocInteractionButtonComponent,
     DocInteractionDialogComponent,
     DocInteractionFilterComponent,
     DocInteractionPopupComponent,
     DocInteractionPopoverComponent,
     DocInteractionPromptComponent
-  ],
+  ]
 })
 export class DocInteractionModule { }

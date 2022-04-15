@@ -44,7 +44,6 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatTreeModule } from '@angular/material/tree';
 import { OverlayModule } from '@angular/cdk/overlay';
-import { MatProgressButtonsModule } from 'mat-progress-buttons';
 import { CommonModule } from '@angular/common';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { DbxButtonModule, DbxInteractionModule, DbxRouterLayoutModule, DbxLayoutModule, DbxActionModule, DbxReadableErrorModule, DbxLoadingModule, DbxActionSnackbarModule } from '@dereekb/dbx-web';
@@ -103,8 +102,7 @@ const ANGULAR_MATERIAL_MODULES = [
   PortalModule,
   ScrollingModule,
   // Other Modules
-  FlexLayoutModule,
-  MatProgressButtonsModule
+  FlexLayoutModule
 ];
 
 const DBX_MODULES = [

@@ -1,7 +1,7 @@
 import { Component, Input } from '@angular/core';
 import { ThemePalette } from '@angular/material/core';
 import { ProvideDbxButton, AbstractDbxButtonDirective } from '@dereekb/dbx-core';
-import { MatProgressButtonOptions } from 'mat-progress-buttons';
+import { DbxProgressButtonOptions } from './progress/button.progress.config';
 
 export enum DbxButtonDisplayType {
   RAISED,
@@ -15,7 +15,9 @@ export enum DbxButtonDisplayType {
 @Component({
   selector: 'dbx-button',
   template: `
-    <mat-spinner-button class="page-button" (btnClick)="clickButton()" [options]="btnOptions"></mat-spinner-button>
+    <dbx-spinner-button class="page-button" (btnClick)="clickButton()" [options]="btnOptions">
+      <ng-content></ng-content>
+    </dbx-spinner-button>
   `,
   providers: ProvideDbxButton(DbxButtonComponent)
 })
@@ -60,7 +62,7 @@ export class DbxButtonComponent extends AbstractDbxButtonDirective {
   @Input()
   public color: ThemePalette = 'primary';
 
-  public get btnOptions(): MatProgressButtonOptions {
+  public get btnOptions(): DbxProgressButtonOptions {
     const buttonIcon = (this.icon) ? {
       fontIcon: this.icon
     } : undefined;
@@ -78,7 +80,6 @@ export class DbxButtonComponent extends AbstractDbxButtonDirective {
       stroked: this.stroked,
       flat: this.flat,
       mode: 'indeterminate',
-      spinnerSize: 18,
       spinnerColor: 'accent', // TODO: Set spinner color to opposite of button color.
       // Only disabled if we're not working, in order to show the animation.
       disabled: !this.working && this.disabled

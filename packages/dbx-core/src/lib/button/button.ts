@@ -15,13 +15,13 @@ export interface DbxButtonInterceptor {
 }
 
 export abstract class DbxButton {
-  abstract disabled$: Observable<boolean>;
-  abstract working$: Observable<boolean>;
+  abstract readonly disabled$: Observable<boolean>;
+  abstract readonly working$: Observable<boolean>;
   abstract disabled: Maybe<boolean>;
   abstract working: Maybe<boolean>;
   abstract icon?: Maybe<string>;
   abstract text?: Maybe<string>;
-  abstract clicked$: Observable<any>;
+  abstract readonly clicked$: Observable<any>;
   abstract setButtonInterceptor(interceptor: DbxButtonInterceptor): void;
   abstract clickButton(): void;
 }

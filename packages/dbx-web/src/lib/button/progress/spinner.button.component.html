@@ -1,0 +1,57 @@
+<button #button mat-button
+  [type]="options.type"
+  [color]="options.buttonColor"
+  [class.working]="options.working"
+  [class.fullWidth]="options.fullWidth"
+  [class.mat-raised-button]="options.raised"
+  [class.mat-stroked-button]="options.stroked"
+  [class.mat-flat-button]="options.flat"
+  [class.mat-fab]="options.fab"
+  [ngClass]="options.customClass!"
+  [disabled]="options.working || options.disabled">
+
+  <ng-container
+    *ngIf="options.buttonIcon">
+    <mat-icon
+      class="mat-button-icon"
+      [class.is-mat-icon]="!options.buttonIcon.fontSet"
+      [class.working]="options.working && !options.disabled"
+      [ngClass]="options.buttonIcon.customClass!"
+      [fontSet]="options.buttonIcon.fontSet!"
+      [fontIcon]="options.buttonIcon.fontIcon!"
+      [color]="options.buttonIcon.color!"
+      [svgIcon]="options.buttonIcon.svgIcon!"
+      [inline]="options.buttonIcon.inline!">
+      {{ options.buttonIcon.fontSet ? '' : options.buttonIcon.fontIcon }}
+    </mat-icon>
+  </ng-container>
+
+  <span
+    class="button-text"
+    *ngIf="!options.fab"
+    [class.working]="options.working && !options.disabled">
+      {{ options.text }}
+      <ng-content></ng-content>
+  </span>
+
+  <ng-container
+    *ngIf="options.fab && options.icon">
+    <mat-icon
+      [fontSet]="options.icon.fontSet!"
+      [fontIcon]="options.icon.fontIcon!"
+      [color]="options.icon.color!"
+      [svgIcon]="options.icon.svgIcon!"
+      [inline]="options.icon.inline!">
+        {{ options.icon.fontSet ? '' : options.icon.fontIcon }}
+    </mat-icon>
+  </ng-container>
+
+  <mat-spinner class="spinner"
+    *ngIf="options.working && !options.disabled"
+    [diameter]="calcSpinnerSize()"
+    [color]="options.spinnerColor!"
+    [mode]="options.mode!"
+    [value]="options.value!"
+    [class.working]="options.working && !options.disabled">
+  </mat-spinner>
+</button>

@@ -1,5 +1,4 @@
 import { DbxLoadingModule } from './loading/loading.module';
-import { MatProgressButtonsModule } from 'mat-progress-buttons';
 import { NgModule } from '@angular/core';
 import { DbxButtonModule } from './button';
 import { DbxActionModule } from './action';
@@ -17,11 +16,8 @@ export class DbxWebModule { }
  * Should only be imported once in the root app.
  * 
  * Pre-configures the following modules:
- * - MatProgressButtonsModule
  */
 @NgModule({
-  imports: [
-    MatProgressButtonsModule.forRoot()
-  ]
+  imports: []
 })
 export class DbxWebRootModule { }

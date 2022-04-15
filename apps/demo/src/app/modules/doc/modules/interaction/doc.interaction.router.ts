@@ -6,6 +6,7 @@ import { DocInteractionPopoverComponent } from './container/popover.component';
 import { DocInteractionPopupComponent } from './container/popup.component';
 import { DocInteractionPromptComponent } from './container/prompt.component';
 import { DocInteractionFilterComponent } from './container/filter.component';
+import { DocInteractionButtonComponent } from './container/button.component';
 
 export const layoutState: Ng2StateDeclaration = {
   url: '/interaction',
@@ -18,6 +19,12 @@ export const homeState: Ng2StateDeclaration = {
   url: '/home',
   name: 'doc.interaction.home',
   component: DocInteractionHomeComponent,
+};
+
+export const docInteractionButtonState: Ng2StateDeclaration = {
+  url: '/button',
+  name: 'doc.interaction.button',
+  component: DocInteractionButtonComponent,
 };
 
 export const docInteractionDialogState: Ng2StateDeclaration = {
@@ -53,6 +60,7 @@ export const docInteractionPopoverState: Ng2StateDeclaration = {
 export const STATES: Ng2StateDeclaration[] = [
   layoutState,
   homeState,
+  docInteractionButtonState,
   docInteractionDialogState,
   docInteractionFilterState,
   docInteractionPromptState,

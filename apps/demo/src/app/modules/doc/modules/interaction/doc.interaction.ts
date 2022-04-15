@@ -1,5 +1,10 @@
 
 export const DOC_INTERACTION_ROUTES = [{
+  icon: 'ads_click',
+  title: 'Button',
+  detail: 'dbx-button',
+  ref: 'doc.interaction.button'
+}, {
   icon: 'call_to_action',
   title: 'Dialog',
   detail: 'dbx-dialog',
