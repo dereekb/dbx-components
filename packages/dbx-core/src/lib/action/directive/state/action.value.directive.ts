@@ -9,7 +9,7 @@ import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
 /**
  * Directive that provides a default value when triggered.
  *
- * No value is required, allowing the directive to automatically call readyValue with undefined.
+ * No value is required, allowing the directive to automatically call readyValue.
  */
 @Directive({
   selector: '[dbxActionValue]',
@@ -25,7 +25,7 @@ export class DbxActionValueDirective<T, O> extends AbstractSubscriptionDirective
   }
 
   set valueOrFunction(valueOrFunction: Maybe<GetterOrValue<T>>) {
-    this._valueOrFunction.next(valueOrFunction || undefined);
+    this._valueOrFunction.next(valueOrFunction);
   }
 
   constructor(@Host() public readonly source: DbxActionContextStoreSourceInstance<T, O>) {

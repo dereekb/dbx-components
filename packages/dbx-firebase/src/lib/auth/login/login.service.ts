@@ -20,6 +20,32 @@ export interface DbxFirebaseAuthLoginProvider {
    * Custom registration type to use instead. If false, registration is not allowd for this type.
    */
   readonly registrationComponentClass?: Type<any> | false;
+  /**
+   * Asset configuration for this type.
+   */
+  readonly assets: DbxFirebaseAuthLoginProviderAssets;
+}
+
+/**
+ * Asset configurations for a provider.
+ */
+export interface DbxFirebaseAuthLoginProviderAssets {
+  /**
+   * URL of the logo to use.
+   */
+  readonly logoUrl?: string;
+  /**
+   * Icon to use in place of the logo.
+   */
+  readonly loginIcon?: string;
+  /**
+   * Log in text to display next to the logo.
+   */
+  readonly loginText?: string;
+  /**
+   * Optional background color to apply.
+   */
+  readonly backgroundColor?: string;
 }
 
 /**
@@ -33,6 +59,7 @@ export interface DbxFirebaseAuthLoginProvider {
 export class DbxFirebaseAuthLoginService {
 
   private _providers = new Map<FirebaseLoginMethodType, DbxFirebaseAuthLoginProvider>();
+  private _assets = new Map<FirebaseLoginMethodType, DbxFirebaseAuthLoginProviderAssets>();
   private _enabled = new Set<FirebaseLoginMethodType>();
 
   constructor(@Optional() @Inject(DEFAULT_FIREBASE_AUTH_LOGIN_PROVIDERS_TOKEN) defaultProviders: DbxFirebaseAuthLoginProvider[]) {
@@ -50,10 +77,30 @@ export class DbxFirebaseAuthLoginService {
   register(provider: DbxFirebaseAuthLoginProvider, override: boolean = true): boolean {
     if (override || !this._providers.has(provider.loginMethodType)) {
       this._providers.set(provider.loginMethodType, provider);
+
+      if (provider.assets) {
+        this.updateAssetsForProvider(provider.loginMethodType, provider.assets);
+      }
       return true;
     } else {
       return false;
     }
+  }
+
+  /**
+   * Updates the assets for a provider type.
+   * 
+   * @param type
+   * @param assets 
+   */
+  updateAssetsForProvider(type: FirebaseLoginMethodType, assets: Partial<DbxFirebaseAuthLoginProviderAssets>): void {
+    const current = this._assets.get(type);
+    const update = {
+      ...current,
+      ...assets
+    };
+
+    this._assets.set(type, update);
   }
 
   // MARK: Enable/Disable
@@ -97,6 +144,10 @@ export class DbxFirebaseAuthLoginService {
 
   getRegisterProviders(types: Iterable<FirebaseLoginMethodType>): DbxFirebaseAuthLoginProvider[] {
     return filterMaybeValues(mapIterable(types ?? [], (x) => this._providers.get(x))).filter(x => x.registrationComponentClass !== false);
+  }
+
+  getProviderAssets(type: FirebaseLoginMethodType): Maybe<DbxFirebaseAuthLoginProviderAssets> {
+    return this._assets.get(type);
   }
 
 }

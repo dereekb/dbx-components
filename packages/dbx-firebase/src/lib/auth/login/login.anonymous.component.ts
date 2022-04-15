@@ -4,12 +4,12 @@ import { AbstractConfiguredDbxFirebaseLoginButtonDirective, DEFAULT_CONFIGURED_D
 @Component({
   template: DEFAULT_CONFIGURED_DBX_FIREBASE_LOGIN_BUTTON_TEMPLATE
 })
-export class DbxFirebaseLoginGoogleComponent extends AbstractConfiguredDbxFirebaseLoginButtonDirective {
+export class DbxFirebaseLoginAnonymousComponent extends AbstractConfiguredDbxFirebaseLoginButtonDirective {
 
-  readonly loginProvider = 'google';
+  readonly loginProvider = 'anonymous';
 
   handleLogin(): Promise<any> {
-    return this.dbxFirebaseAuthService.signInWithGoogle();
+    return this.dbxFirebaseAuthService.signInAsAnonymous();
   }
 
 }
