@@ -7,7 +7,7 @@ import { Maybe } from '@dereekb/util';
  * Component that injects content based on the configuration into the view.
  */
 @Component({
-  selector: 'dbx-injected-content, [dbx-injected-content]',
+  selector: 'dbx-injected-content, [dbxInjectedContext], [dbx-injected-content]',
   template: `<ng-template #content></ng-template>`
 })
 export class DbxInjectedComponent<T> extends AbstractDbxInjectedDirective<T> {

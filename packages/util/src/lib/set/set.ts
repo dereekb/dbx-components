@@ -1,6 +1,15 @@
 import { Maybe } from '../value/maybe';
-import { symmetricDifference } from "extra-set";
 import { flattenArray } from "../array/array";
+import { IterableOrValue, useIterableOrValue } from '../iterable/iterable';
+import { symmetricDifference } from "extra-set";
+
+export function addToSet<T>(set: Set<T>, values: Maybe<IterableOrValue<T>>) {
+  useIterableOrValue(values, (x) => set.add(x));
+}
+
+export function removeFromSet<T>(set: Set<T>, values: Maybe<IterableOrValue<T>>) {
+  useIterableOrValue(values, (x) => set.delete(x));
+}
 
 export function hasDifferentValues<T>(a: Maybe<Iterable<T>>, b: Maybe<Iterable<T>>): boolean {
   return symmetricDifference(new Set(a), new Set(b)).size > 0;

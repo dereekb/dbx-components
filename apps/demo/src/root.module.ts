@@ -13,6 +13,7 @@ import { FormlyModule } from '@ngx-formly/core';
 import { defaultValidationMessages } from '@dereekb/dbx-form';
 import { MAT_FORM_FIELD_DEFAULT_OPTIONS } from '@angular/material/form-field';
 import { RootFirebaseModule } from './firebase/root.firebase.module';
+import { DbxFirebaseLoginModule } from '@dereekb/dbx-firebase';
 
 export function routerConfigFn(router: UIRouter, injector: Injector, module: StatesModule): any {
   const transitionService = router.transitionService;
@@ -71,6 +72,9 @@ export function makeSegmentConfig(): DbxAnalyticsSegmentApiServiceConfig {
     AppModule,
     AppSharedModule,
     DbxWebRootModule,
+    DbxFirebaseLoginModule.forRoot({
+      enabledLoginMethods: ['email', 'google', 'facebook']
+    }),
     DbxScreenModule.forRoot(DEFAULT_SCREEN_MEDIA_SERVICE_CONFIG),
     DbxAnalyticsModule.forRoot({
       analyticsConfigurationProvider: {

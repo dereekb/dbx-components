@@ -1,4 +1,5 @@
 import { Ng2StateDeclaration } from '@uirouter/angular';
+import { DocAuthFirebaseComponent } from './container/firebase.component';
 import { DocAuthHomeComponent } from './container/home.component';
 import { DocAuthLayoutComponent } from './container/layout.component';
 import { DocAuthRoleComponent } from './container/role.component';
@@ -17,13 +18,20 @@ export const homeState: Ng2StateDeclaration = {
 };
 
 export const docAuthRoleState: Ng2StateDeclaration = {
-  url: '/value',
+  url: '/role',
   name: 'doc.auth.role',
   component: DocAuthRoleComponent
+};
+
+export const docAuthFirebaseState: Ng2StateDeclaration = {
+  url: '/firebase',
+  name: 'doc.auth.firebase',
+  component: DocAuthFirebaseComponent
 };
 
 export const STATES: Ng2StateDeclaration[] = [
   layoutState,
   homeState,
-  docAuthRoleState
+  docAuthRoleState,
+  docAuthFirebaseState
 ];

@@ -3,7 +3,7 @@ import { unique, findUnique } from "./array.unique";
 import { ReadKeyFunction } from "../key";
 import { caseInsensitiveString } from "../string";
 import { containsAllValues, containsAnyValue, hasDifferentValues } from "../set/set";
-import { mapIterable } from "./array.iterable";
+import { mapIterable } from "../iterable/iterable.map";
 
 export function hasDifferentStringsNoCase(a: string[], b: string[]): boolean {
   return hasDifferentValues(a.map(caseInsensitiveString), b.map(caseInsensitiveString));

@@ -1,0 +1,5 @@
+<div class="dbx-firebase-login dbx-firebase-register">
+  <div class="dbx-firebase-login-item" *ngFor="let config of (providerInjectionConfigs$ | async)">
+    <dbx-injected-content [config]="config"></dbx-injected-content>
+  </div>
+</div>

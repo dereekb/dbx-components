@@ -4,6 +4,7 @@ export * from './contact';
 export * from './error';
 export * from './filter';
 export * from './getter';
+export * from './iterable';
 export * from './map';
 export * from './model';
 export * from './misc';
