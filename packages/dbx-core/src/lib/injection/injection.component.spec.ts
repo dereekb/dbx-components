@@ -1,9 +1,9 @@
-import { DbxInjectionTemplateConfig, DbxInjectionComponentConfig } from './injected';
-import { DbxInjectionComponent } from './injected.component';
+import { DbxInjectionTemplateConfig, DbxInjectionComponentConfig } from './injection';
+import { DbxInjectionComponent } from './injection.component';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Component, Input, Type, ViewChild, OnDestroy } from '@angular/core';
 import { By, BrowserModule } from '@angular/platform-browser';
-import { DbxInjectionComponentModule } from './injected.component.module';
+import { DbxInjectionComponentModule } from './injection.component.module';
 
 const CUSTOM_CONTENT_ID = 'custom-content';
 const CUSTOM_CONTENT = 'Custom Content';

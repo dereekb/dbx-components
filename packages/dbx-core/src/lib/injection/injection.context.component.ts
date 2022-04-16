@@ -1,7 +1,7 @@
 import { Directive, EmbeddedViewRef, Injector, Input, TemplateRef, ViewContainerRef } from '@angular/core';
-import { DbxInjectionComponentConfig } from './injected';
-import { DbxInjectionContext, DbxInjectionContextConfig, ProvideDbxInjectionContext } from './injected.context';
-import { DbxInjectionInstance } from './injected.instance';
+import { DbxInjectionComponentConfig } from './injection';
+import { DbxInjectionContext, DbxInjectionContextConfig, ProvideDbxInjectionContext } from './injection.context';
+import { DbxInjectionInstance } from './injection.instance';
 import { Maybe } from '@dereekb/util';
 
 /**

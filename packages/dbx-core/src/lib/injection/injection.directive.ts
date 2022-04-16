@@ -1,7 +1,7 @@
 import { ViewContainerRef, OnInit, OnDestroy, Directive, Injector } from '@angular/core';
 import { Maybe } from '@dereekb/util';
-import { DbxInjectionComponentConfig, DbxInjectionTemplateConfig } from './injected';
-import { DbxInjectionInstance as DbxInjectionInstance } from './injected.instance';
+import { DbxInjectionComponentConfig, DbxInjectionTemplateConfig } from './injection';
+import { DbxInjectionInstance as DbxInjectionInstance } from './injection.instance';
 
 /**
  * Abstract directive that injects content based on the configuration into the view.
