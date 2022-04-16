@@ -1,9 +1,15 @@
 import { Component } from "@angular/core";
+import { AbstractConfiguredDbxFirebaseLoginButtonDirective } from "./login.button.component";
 
-/**
- * Email/Password login components.
- */
 @Component({
   templateUrl: './login.email.component.html'
 })
-export class DbxFirebaseLoginEmailComponent { }
+export class DbxFirebaseLoginEmailComponent extends AbstractConfiguredDbxFirebaseLoginButtonDirective {
+
+  readonly loginProvider = 'email';
+
+  handleLogin(): Promise<any> {
+    return Promise.resolve(undefined); //  this.dbxFirebaseAuthService.logInWithEmailAndPassword();
+  }
+
+}

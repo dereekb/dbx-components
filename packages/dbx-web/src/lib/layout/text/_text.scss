@@ -20,6 +20,10 @@ $mat-hint-opacity: 0.54; // Opacity to mirror mat-hint
     text-align: center;
   }
 
+  .prettyjson {
+    white-space: pre-wrap !important;
+  }
+
   .dbx-text-no-overflow {
     white-space: pre-wrap !important;
     overflow: visible !important;

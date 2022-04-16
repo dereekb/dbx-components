@@ -1,6 +1,7 @@
 import { Component, Input } from '@angular/core';
 import { ThemePalette } from '@angular/material/core';
 import { ProvideDbxButton, AbstractDbxButtonDirective } from '@dereekb/dbx-core';
+import { Maybe } from '@dereekb/util';
 import { DbxProgressButtonOptions } from './progress/button.progress.config';
 
 export enum DbxButtonDisplayType {
@@ -62,15 +63,37 @@ export class DbxButtonComponent extends AbstractDbxButtonDirective {
   @Input()
   public color: ThemePalette = 'primary';
 
+  @Input()
+  public customButtonColor: Maybe<string>;
+
+  @Input()
+  public customTextColor: Maybe<string>;
+
+  @Input()
+  public customSpinnerColor: Maybe<string>;
+
   public get btnOptions(): DbxProgressButtonOptions {
     const buttonIcon = (this.icon) ? {
       fontIcon: this.icon
     } : undefined;
 
+    let customStyle = {} as any;
+
+    if (this.customButtonColor) {
+      customStyle.background = this.customButtonColor;
+    }
+
+    if (this.customTextColor) {
+      customStyle.color = this.customTextColor;
+    }
+
+    const customSpinnerColor: Maybe<string> = this.customSpinnerColor ?? this.customTextColor;
+
     return {
       fab: false,
       active: this.working,
       buttonIcon,
+      customStyle,
       customClass: 'dbx-button ' + ((buttonIcon && !this.text) ? 'dbx-button-no-text' : ''),
       // buttonIcon: icon,
       text: this.text ?? '',
@@ -80,7 +103,8 @@ export class DbxButtonComponent extends AbstractDbxButtonDirective {
       stroked: this.stroked,
       flat: this.flat,
       mode: 'indeterminate',
-      spinnerColor: 'accent', // TODO: Set spinner color to opposite of button color.
+      spinnerColor: (this.color === 'primary') ? 'accent' : 'primary',
+      customSpinnerColor,
       // Only disabled if we're not working, in order to show the animation.
       disabled: !this.working && this.disabled
     };

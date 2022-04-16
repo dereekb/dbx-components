@@ -6,6 +6,11 @@
     <doc-feature-example header="dbx-firebase-login"
       hint="Component that displays all the login options for an app. Has an optional input to show only specific providers.">
 
+      <dbx-content-border>
+        <h4>Auth User</h4>
+        <p class="prettyjson">{{ authUserInfo$ | async | prettyjson }}</p>
+      </dbx-content-border>
+
       <!-- TODO: Show showing/hiding different logins via form. -->
       <dbx-firebase-login></dbx-firebase-login>
 

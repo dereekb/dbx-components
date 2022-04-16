@@ -1,12 +1,18 @@
-import { AUTH_APP_USER_ROLE } from '@dereekb/dbx-core';
 import { Component } from '@angular/core';
-import { DbxFirebaseAuthLoginService } from '@dereekb/dbx-firebase';
+import { DbxFirebaseAuthLoginService, DbxFirebaseAuthService } from '@dereekb/dbx-firebase';
+import { map } from 'rxjs';
 
 @Component({
   templateUrl: './firebase.component.html'
 })
 export class DocAuthFirebaseComponent {
 
-  constructor(readonly dbxFirebaseAuthLoginService: DbxFirebaseAuthLoginService) { }
+  readonly authUserInfo$ = this.dbxFirebaseAuthService.currentAuthUserInfo$;
+
+  constructor(readonly dbxFirebaseAuthLoginService: DbxFirebaseAuthLoginService, readonly dbxFirebaseAuthService: DbxFirebaseAuthService) { }
+
+  logOut() {
+    this.dbxFirebaseAuthService.logOut();
+  }
 
 }

@@ -56,7 +56,7 @@ export class DemoLayoutComponent {
     ref: 'demo.setting'
   }, {
     title: 'Logout',
-    onClick: () => this.dbxAuthService.signOut()    // todo: change to signout confirmation popup
+    onClick: () => this.dbxAuthService.logOut()    // todo: change to signout confirmation popup
   }];
 
   readonly anonymousBottomNavAnchors: ClickableAnchorLinkTree[] = [];

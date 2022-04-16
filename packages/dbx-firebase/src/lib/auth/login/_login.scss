@@ -1,19 +1,52 @@
 @use '../../style/theming';
 
 // MARK: Variables
+// NOTE: sizing guided by https://developers.google.com/identity/branding-guidelines
+$login-button-height: 42px;
+$login-button-width: 220px;
+$login-button-content-width: $login-button-width - 20px;
+$login-button-icon-box-size: 28px;
+$login-button-icon-size: 18px;
 
 // MARK: Mixin
 @mixin core() {
 
+  .dbx-firebase-login-button-container {
+    margin-bottom: 6px;    
+  }
+
+  .dbx-firebase-login-button {
+    display: inline-block;
+
+    .dbx-button {
+      width: $login-button-width;
+    }
+  }
+
+  .dbx-firebase-login-button-content {
+    height: $login-button-height;
+    width: $login-button-content-width;
+    display: flex;
+    align-items: center;
+  }
+
+  .dbx-firebase-login-button-icon {
+    height: $login-button-icon-box-size;
+    width: $login-button-icon-box-size;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    img {
+      height: $login-button-icon-size;
+    }
+  }
+
 }
 
-@mixin color($theme-config) {
+@mixin color($theme-config) {}
 
-}
-
-@mixin typography($typography-config) {
-
-}
+@mixin typography($typography-config) {}
 
 @mixin theme($theme-config) {
   @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-firebase-login') {

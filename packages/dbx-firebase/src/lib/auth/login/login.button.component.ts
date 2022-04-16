@@ -10,6 +10,8 @@ export interface DbxFirebaseLoginButtonConfig {
   text: string;
   iconUrl?: string;
   icon?: string;
+  buttonColor?: string;
+  buttonTextColor?: string;
   handleLogin: () => Promise<void>;
 }
 
@@ -19,19 +21,22 @@ export interface DbxFirebaseLoginButtonConfig {
 @Component({
   selector: 'dbx-firebase-login-button',
   template: `
-  <div class="dbx-firebase-login-button" dbxAction [dbxActionHandler]="handleAction" dbxActionValue
+  <ng-container dbxAction [dbxActionHandler]="handleAction" dbxActionValue
     [dbxActionSuccess]="onActionSuccess">
-    <dbx-button dbxActionButton>
+    <dbx-button dbxActionButton [customTextColor]="buttonTextColor" [customButtonColor]="buttonColor" [raised]="true">
       <div class="dbx-firebase-login-button-content">
         <span class="dbx-firebase-login-button-icon dbx-icon-spacer">
           <img *ngIf="iconUrl" [src]="iconUrl"/>
-          <mat-icon *ngIf="icon"></mat-icon>
+          <mat-icon *ngIf="icon">{{icon}}</mat-icon>
         </span>
         <span class="dbx-firebase-login-button-text">{{ text }}</span>
       </div>
     </dbx-button>
-  </div>
-  `
+  </ng-container>
+  `,
+  host: {
+    'class': 'dbx-firebase-login-button'
+  }
 })
 export class DbxFirebaseLoginButtonComponent {
 
@@ -48,6 +53,14 @@ export class DbxFirebaseLoginButtonComponent {
 
   get text() {
     return this.config?.text;
+  }
+
+  get buttonColor() {
+    return this.config?.buttonColor ?? 'transparent';
+  }
+
+  get buttonTextColor() {
+    return this.config?.buttonTextColor;
   }
 
   readonly handleAction: HandleActionFunction = (value: any, context: WorkHandlerContext) => {
@@ -91,7 +104,10 @@ export abstract class AbstractConfiguredDbxFirebaseLoginButtonDirective implemen
 
     this._config = {
       text: assets.loginText ?? `<loginText not configured>`,
-      icon: assets.logoUrl!,
+      icon: assets.loginIcon,
+      iconUrl: assets.logoUrl,
+      buttonColor: assets.backgroundColor,
+      buttonTextColor: assets.textColor,
       handleLogin: () => this.handleLogin()
     };
   }

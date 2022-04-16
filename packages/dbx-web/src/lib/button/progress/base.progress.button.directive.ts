@@ -76,6 +76,12 @@ export abstract class AbstractProgressButtonDirective extends AbstractSubscripti
     return this._computedOptions;
   }
 
+  get customSpinnerStyle() {
+    const customSpinnerColor = this._computedOptions.customSpinnerColor;
+    console.log('Spinner: ', customSpinnerColor);
+    return (customSpinnerColor) ? { stroke: customSpinnerColor } : undefined;
+  }
+
   @Input()
   set options(options: DbxProgressButtonOptions) {
     this._options.next(options);

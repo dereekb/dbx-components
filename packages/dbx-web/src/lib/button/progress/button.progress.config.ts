@@ -1,6 +1,7 @@
 import { InjectionToken } from '@angular/core';
 import { ThemePalette } from '@angular/material/core';
 import { ProgressSpinnerMode } from '@angular/material/progress-spinner';
+import { Maybe } from '@dereekb/util';
 
 export interface DbxProgressButtonOptions {
   /**
@@ -25,7 +26,12 @@ export interface DbxProgressButtonOptions {
   disabled?: boolean;
   icon?: DbxProgressButtonIcon;
   type?: string;
+  customStyle?: { [key: string]: any; };
   customClass?: string;
+  /**
+   * Custom spinner color. Overrides the normal spinner color if provided.
+   */
+  customSpinnerColor?: Maybe<string>;
   buttonIcon?: DbxProgressButtonIcon;
   id?: string;
 }

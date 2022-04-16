@@ -4,12 +4,12 @@ import { AbstractConfiguredDbxFirebaseLoginButtonDirective, DEFAULT_CONFIGURED_D
 @Component({
   template: DEFAULT_CONFIGURED_DBX_FIREBASE_LOGIN_BUTTON_TEMPLATE
 })
-export class DbxFirebaseLoginFacebookComponent extends AbstractConfiguredDbxFirebaseLoginButtonDirective {
+export class DbxFirebaseLoginTwitterComponent extends AbstractConfiguredDbxFirebaseLoginButtonDirective {
 
-  readonly loginProvider = 'facebook';
+  readonly loginProvider = 'twitter';
 
   handleLogin(): Promise<any> {
-    return this.dbxFirebaseAuthService.logInWithFacebook();
+    return this.dbxFirebaseAuthService.logInWithTwitter();
   }
 
 }

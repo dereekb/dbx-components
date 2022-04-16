@@ -1,10 +1,11 @@
 import { filterMaybe, isNot } from '@dereekb/rxjs';
 import { Injectable, Optional } from "@angular/core";
 import { AuthUserState, AuthRoleSet, DbxAuthService, signedOutEventFromIsLoggedIn } from "@dereekb/dbx-core";
-import { Auth, authState, User, IdTokenResult, ParsedToken, GoogleAuthProvider, signInWithPopup, AuthProvider, PopupRedirectResolver, signInAnonymously, signInWithEmailAndPassword, UserCredential, FacebookAuthProvider } from '@angular/fire/auth';
+import { Auth, authState, User, IdTokenResult, ParsedToken, GoogleAuthProvider, signInWithPopup, AuthProvider, PopupRedirectResolver, signInAnonymously, signInWithEmailAndPassword, UserCredential, FacebookAuthProvider, UserInfo, GithubAuthProvider, TwitterAuthProvider, PhoneAuthProvider, signInWithPhoneNumber } from '@angular/fire/auth';
 import { Observable, timeout, startWith, distinctUntilChanged, shareReplay, map, switchMap, of } from "rxjs";
 import { Maybe } from "@dereekb/util";
 import { authUserStateFromFirebaseAuthService } from './firebase.auth.rxjs';
+import { AuthUserInfo, authUserInfoFromAuthUser } from '../auth';
 
 export abstract class DbxFirebaseAuthServiceDelegate {
   abstract authUserStateObs(dbxFirebaseAuthService: DbxFirebaseAuthService): Observable<AuthUserState>;
@@ -34,7 +35,10 @@ export class DbxFirebaseAuthService implements DbxAuthService {
     shareReplay(1)
   );
 
+  readonly currentAuthUserInfo$: Observable<Maybe<AuthUserInfo>> = this.currentAuthUser$.pipe(map((x) => (x) ? authUserInfoFromAuthUser(x) : undefined));
+
   readonly authUser$: Observable<User> = this.currentAuthUser$.pipe(filterMaybe());
+  readonly authUserInfo$: Observable<AuthUserInfo> = this.authUser$.pipe(map(authUserInfoFromAuthUser));
 
   readonly hasAuthUser$: Observable<boolean> = this.currentAuthUser$.pipe(map(x => Boolean(x)), distinctUntilChanged(), shareReplay(1));
   readonly isAnonymousUser$: Observable<boolean> = this.authUser$.pipe(map(x => x.isAnonymous), distinctUntilChanged(), shareReplay(1));
@@ -42,7 +46,7 @@ export class DbxFirebaseAuthService implements DbxAuthService {
 
   readonly isLoggedIn$: Observable<boolean> = this.hasAuthUser$;
   readonly isNotLoggedIn$: Observable<boolean> = this.isLoggedIn$.pipe(isNot());
-  readonly signedOut$: Observable<void> = signedOutEventFromIsLoggedIn(this.isLoggedIn$);
+  readonly onLogout$: Observable<void> = signedOutEventFromIsLoggedIn(this.isLoggedIn$);
 
   readonly idTokenResult$: Observable<IdTokenResult> = this.authUser$.pipe(
     switchMap(x => x.getIdTokenResult())
@@ -62,27 +66,49 @@ export class DbxFirebaseAuthService implements DbxAuthService {
     this.authRoles$ = delegate.authRolesObs(this);
   }
 
-  signInWithGoogle(): Promise<UserCredential> {
-    return this.signInWithPopup(new GoogleAuthProvider());
+  logInWithGoogle(): Promise<UserCredential> {
+    return this.logInWithPopup(new GoogleAuthProvider());
   }
 
-  signInWithFacebook(): Promise<UserCredential> {
-    return this.signInWithPopup(new FacebookAuthProvider());
+  logInWithFacebook(): Promise<UserCredential> {
+    return this.logInWithPopup(new FacebookAuthProvider());
   }
 
-  signInWithPopup(provider: AuthProvider, resolver?: PopupRedirectResolver): Promise<UserCredential> {
+  logInWithTwitter(): Promise<UserCredential> {
+    return this.logInWithPopup(new TwitterAuthProvider());
+  }
+
+  logInWithGithub(): Promise<UserCredential> {
+    return this.logInWithPopup(new GithubAuthProvider());
+  }
+
+  logInWithApple(): Promise<UserCredential> {
+    throw new Error('todo');
+  }
+
+  logInWithMicrosoft(): Promise<UserCredential> {
+    // return this.logInWithPopup(new MicrosoftAuthProvider());
+    throw new Error('todo');
+  }
+
+  logInWithPhone(): Promise<UserCredential> {
+    throw new Error('todo');
+    // return signInWithPhoneNumber(this.firebaseAuth, )
+  }
+
+  logInWithPopup(provider: AuthProvider, resolver?: PopupRedirectResolver): Promise<UserCredential> {
     return signInWithPopup(this.firebaseAuth, provider, resolver);
   }
 
-  signInWithEmailAndPassword(email: string, password: string): Promise<UserCredential> {
+  logInWithEmailAndPassword(email: string, password: string): Promise<UserCredential> {
     return signInWithEmailAndPassword(this.firebaseAuth, email, password);
   }
 
-  signInAsAnonymous(): Promise<UserCredential> {
+  logInAsAnonymous(): Promise<UserCredential> {
     return signInAnonymously(this.firebaseAuth);
   }
 
-  signOut(): Promise<void> {
+  logOut(): Promise<void> {
     return this.firebaseAuth.signOut();
   }
 

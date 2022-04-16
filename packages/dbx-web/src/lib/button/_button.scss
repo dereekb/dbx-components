@@ -10,6 +10,12 @@ $button-spacer-width: 6px;
     padding-right: $button-spacer-width;
   }
 
+  .dbx-spinner-custom.mat-progress-spinner.mat-accent circle,
+  .dbx-spinner-custom.mat-spinner.mat-accent circle {
+    // mat-spinners marked with dbx-spinner-custom should allow the stroke to be inherited.
+    stroke: unset !important;
+  }
+
 }
 
 @mixin color($theme-config) {}

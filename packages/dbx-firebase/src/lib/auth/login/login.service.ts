@@ -46,6 +46,10 @@ export interface DbxFirebaseAuthLoginProviderAssets {
    * Optional background color to apply.
    */
   readonly backgroundColor?: string;
+  /**
+   * Optional background color to apply.
+   */
+  readonly textColor?: string;
 }
 
 /**
@@ -58,6 +62,7 @@ export interface DbxFirebaseAuthLoginProviderAssets {
 })
 export class DbxFirebaseAuthLoginService {
 
+  private _enableAll = false;
   private _providers = new Map<FirebaseLoginMethodType, DbxFirebaseAuthLoginProvider>();
   private _assets = new Map<FirebaseLoginMethodType, DbxFirebaseAuthLoginProviderAssets>();
   private _enabled = new Set<FirebaseLoginMethodType>();
@@ -104,6 +109,13 @@ export class DbxFirebaseAuthLoginService {
   }
 
   // MARK: Enable/Disable
+  /**
+   * Enables all providers and any providers that will be registered.
+   */
+  setEnableAll(enableAll = true) {
+    this._enableAll = enableAll;
+  }
+
   clearEnabled(): void {
     this._enabled = new Set();
   }
@@ -127,7 +139,7 @@ export class DbxFirebaseAuthLoginService {
   }
 
   getEnabledTypes(): FirebaseLoginMethodType[] {
-    return Array.from(this._enabled);
+    return (this._enableAll) ? this.getRegisteredTypes() : Array.from(this._enabled);
   }
 
   getLoginProvider(type: FirebaseLoginMethodType): Maybe<DbxFirebaseAuthLoginProvider> {

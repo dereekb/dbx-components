@@ -19,7 +19,7 @@ export abstract class DbxAuthService {
   /**
    * Emits an event every time the user was signed in but signs out.
    */
-  abstract readonly signedOut$: Observable<void>;
+  abstract readonly onLogout$: Observable<void>;
 
   /**
    * Current state of the user.

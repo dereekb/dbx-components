@@ -8,6 +8,7 @@
   [class.mat-flat-button]="options.flat"
   [class.mat-fab]="options.fab"
   [ngClass]="options.customClass!"
+  [ngStyle]="options.customStyle!"
   [disabled]="options.working || options.disabled">
 
   <ng-container
@@ -52,6 +53,8 @@
     [color]="options.spinnerColor!"
     [mode]="options.mode!"
     [value]="options.value!"
+    [ngStyle]="customSpinnerStyle!"
+    [ngClass]="{ 'dbx-spinner-custom': customSpinnerStyle! }"
     [class.working]="options.working && !options.disabled">
   </mat-spinner>
 </button>
