@@ -1,4 +1,4 @@
-import { DbxInjectedComponentConfig } from "@dereekb/dbx-core";
+import { DbxInjectionComponentConfig } from "@dereekb/dbx-core";
 import { beginLoading, LoadingState, successResult, mapLoadingStateResults, filterMaybe, ListLoadingStateContextInstance, isListLoadingStateEmpty } from "@dereekb/rxjs";
 import { convertMaybeToArray, findUnique, makeValuesGroupMap, Maybe } from "@dereekb/util";
 import { Directive, OnDestroy, OnInit, ViewChild } from "@angular/core";
@@ -76,7 +76,7 @@ export interface PickableValueFieldsFieldConfig<T> {
   /**
    * Footer Display
    */
-  footerConfig?: DbxInjectedComponentConfig;
+  footerConfig?: DbxInjectionComponentConfig;
 }
 
 export interface PickableValueFieldsFormlyFieldConfig<T> extends FormlyFieldConfig {
@@ -333,7 +333,7 @@ export class AbstractDbxPickableItemFieldDirective<T> extends FieldType<Pickable
     return this._getValueOnFormControl(this.formControl.value) ?? [];
   }
 
-  get footerConfig(): Maybe<DbxInjectedComponentConfig> {
+  get footerConfig(): Maybe<DbxInjectionComponentConfig> {
     return this.pickableField.footerConfig;
   }
 

@@ -4,7 +4,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatListModule } from '@angular/material/list';
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { DbxInjectedComponentModule } from '@dereekb/dbx-core';
+import { DbxInjectionComponentModule } from '@dereekb/dbx-core';
 import { DbxListComponent, DbxListInternalContentDirective } from './list.component';
 import { DbxListEmptyContentComponent } from './list.content.empty.component';
 import { InfiniteScrollModule } from 'ngx-infinite-scroll';
@@ -17,7 +17,7 @@ import { DbxValueListViewComponent } from './list.view.value.component';
     DbxLoadingModule,
     DbxAnchorModule,
     InfiniteScrollModule,
-    DbxInjectedComponentModule,
+    DbxInjectionComponentModule,
     MatListModule,
     MatIconModule
   ],

@@ -38,7 +38,7 @@ export class DbxSelectionValueListViewComponent<T, I extends DbxValueListItem<T>
     <mat-selection-list [disabled]="disabled$ | async" [multiple]="multiple" (selectionChange)="matSelectionChanged($event)">
       <mat-list-option class="dbx-list-view-item" *ngFor="let item of items" [selected]="item.selected" [disabled]="item.disabled" [value]="item.value" (click)="onClickValue(item.value)">
         <mat-icon matListIcon *ngIf="item.icon">{{ item.icon }}</mat-icon>
-        <div dbx-injected-content [config]="item.config"></div>
+        <div dbx-injection [config]="item.config"></div>
       </mat-list-option>
     </mat-selection-list>
   `,

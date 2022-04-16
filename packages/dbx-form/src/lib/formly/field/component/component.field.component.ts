@@ -1,8 +1,8 @@
 import { Component } from '@angular/core';
-import { DbxInjectedComponentConfig } from '@dereekb/dbx-core';
+import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { FieldType, FormlyFieldConfig } from '@ngx-formly/core';
 
-export interface DbxFormComponentFieldConfig<T> extends DbxInjectedComponentConfig<T> { }
+export interface DbxFormComponentFieldConfig<T> extends DbxInjectionComponentConfig<T> { }
 
 export interface DbxFormComponentFormlyFieldConfig<T = any> extends FormlyFieldConfig {
   componentField: DbxFormComponentFieldConfig<T>;
@@ -10,12 +10,12 @@ export interface DbxFormComponentFormlyFieldConfig<T = any> extends FormlyFieldC
 
 @Component({
   template: `
-    <div class="dbx-form-component" dbx-injected-content [config]="config"></div>
+    <div class="dbx-form-component" dbx-injection [config]="config"></div>
   `
 })
 export class DbxFormComponentFieldComponent<T = any> extends FieldType<DbxFormComponentFormlyFieldConfig<T>> {
 
-  get config(): DbxInjectedComponentConfig<T> {
+  get config(): DbxInjectionComponentConfig<T> {
     return this.field.componentField;
   }
 

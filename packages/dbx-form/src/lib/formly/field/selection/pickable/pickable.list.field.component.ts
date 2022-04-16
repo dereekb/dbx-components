@@ -1,5 +1,5 @@
 import { Component } from "@angular/core";
-import { DbxInjectedComponentConfig } from "@dereekb/dbx-core";
+import { DbxInjectionComponentConfig } from "@dereekb/dbx-core";
 import { DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE, AbstractDbxSelectionListWrapperDirective, ProvideDbxListView, AbstractSelectionValueListViewDirective, AbstractDbxSelectionValueListViewItemComponent, ListSelectionState, mapItemValuesToValueListItemConfig } from "@dereekb/dbx-web";
 import { map, shareReplay } from "rxjs";
 import { PickableValueFieldDisplayValue } from "./pickable";
@@ -45,7 +45,7 @@ export class DbxPickableListFieldItemListComponent<T> extends AbstractDbxSelecti
 })
 export class DbxPickableListFieldItemListViewComponent<T> extends AbstractSelectionValueListViewDirective<PickableItemFieldItem<T>> {
 
-  readonly config: DbxInjectedComponentConfig = {
+  readonly config: DbxInjectionComponentConfig = {
     componentClass: DbxPickableListFieldItemListViewItemComponent
   };
 

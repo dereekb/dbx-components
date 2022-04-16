@@ -1,6 +1,6 @@
 import { Component, NgZone, Type, OnInit, OnDestroy, ElementRef } from '@angular/core';
 import { NgOverlayContainerConfiguration, NgPopoverRef } from 'ng-overlay-container';
-import { AbstractTransitionWatcherDirective, DbxRouterTransitionService, DbxInjectedComponentConfig } from '@dereekb/dbx-core';
+import { AbstractTransitionWatcherDirective, DbxRouterTransitionService, DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { Subject } from 'rxjs';
 import { PopoverPositionStrategy } from './popover.position.strategy';
 import { filter, first, map, shareReplay, startWith } from 'rxjs/operators';
@@ -56,7 +56,7 @@ export interface FullDbxPopoverComponentConfig<O, I, T> extends DbxPopoverCompon
 @Component({
   template: `
   <dbx-popover-coordinator (dbxWindowKeyDownListener)="handleKeydown($event)" [appWindowKeyDownFilter]="triggerCloseKeys">
-    <div dbx-style class="dbx-popover-component" dbx-injected-content [config]="contentConfig"></div>
+    <div dbx-style class="dbx-popover-component" dbx-injection [config]="contentConfig"></div>
   </dbx-popover-coordinator>
   `,
   providers: [{
@@ -70,7 +70,7 @@ export class DbxPopoverComponent<O = any, I = any, T = any> extends AbstractTran
 
   readonly lockSet = new LockSet();
 
-  readonly contentConfig: DbxInjectedComponentConfig = {
+  readonly contentConfig: DbxInjectionComponentConfig = {
     componentClass: this.config.componentClass,
     init: this.config.init ? ((instance) => this.config.init!(instance, this)) : undefined
   };

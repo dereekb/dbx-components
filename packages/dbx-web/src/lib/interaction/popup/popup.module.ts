@@ -1,4 +1,4 @@
-import { DbxInjectedComponentModule } from '@dereekb/dbx-core';
+import { DbxInjectionComponentModule } from '@dereekb/dbx-core';
 import { DbxPopupCoordinatorComponent } from './popup.coordinator.component';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -25,7 +25,7 @@ import { DbxStyleLayoutModule } from '../../layout/style/style.layout.module';
     DbxAnchorModule,
     DbxActionModule,
     DbxStyleLayoutModule,
-    DbxInjectedComponentModule,
+    DbxInjectionComponentModule,
     NgOverlayContainerModule,
   ],
   declarations: [

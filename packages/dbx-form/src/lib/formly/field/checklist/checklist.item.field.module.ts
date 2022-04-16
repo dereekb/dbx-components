@@ -1,4 +1,4 @@
-import { DbxInjectedComponentModule } from '@dereekb/dbx-core';
+import { DbxInjectionComponentModule } from '@dereekb/dbx-core';
 import { MatRippleModule } from '@angular/material/core';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { DbxDefaultChecklistItemFieldDisplayComponent } from './checklist.item.field.content.default.component';
@@ -23,7 +23,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
     MatButtonModule,
     MatIconModule,
     DbxAnchorModule,
-    DbxInjectedComponentModule,
+    DbxInjectionComponentModule,
     DbxFormFormlyWrapperModule,
     FormlyModule.forChild({
       types: [

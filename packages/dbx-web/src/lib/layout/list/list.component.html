@@ -4,7 +4,7 @@
   [infiniteScrollThrottle]="(throttleScroll$ | async) ?? DEFAULT_THROTTLE_SCROLL" [scrollWindow]="false"
   (scrolled)="onScrollDown()" (scrolledUp)="onScrollUp()">
   <ng-content select="[top]"></ng-content>
-  <dbx-injected-content [config]="injectedComponentConfig$ | async"></dbx-injected-content>
+  <dbx-injection [config]="injectedComponentConfig$ | async"></dbx-injection>
   <ng-content select="[bottom]"></ng-content>
 </div>
 <ng-content *ngIf="isEmpty$ | async" select="[empty]"></ng-content>

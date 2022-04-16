@@ -1,5 +1,5 @@
 import { ChangeDetectorRef } from '@angular/core';
-import { DbxInjectedComponentConfig } from '@dereekb/dbx-core';
+import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { switchMapMaybeObs } from '@dereekb/rxjs';
 import { shareReplay, distinctUntilChanged, map } from 'rxjs/operators';
 import { BehaviorSubject } from 'rxjs';
@@ -96,11 +96,11 @@ export class DbxChecklistItemFieldComponent<T = any> extends FieldType<Checklist
 
 @Component({
   selector: 'dbx-checklist-item-content-component',
-  template: `<dbx-injected-content [config]="config"></dbx-injected-content>`
+  template: `<dbx-injection [config]="config"></dbx-injection>`
 })
 export class DbxChecklistItemContentComponent<T = any> extends AbstractSubscriptionDirective {
 
-  config?: DbxInjectedComponentConfig;
+  config?: DbxInjectionComponentConfig;
 
   constructor(
     readonly checklistItemFieldComponent: DbxChecklistItemFieldComponent<T>,

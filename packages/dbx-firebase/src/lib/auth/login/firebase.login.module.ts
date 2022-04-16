@@ -3,7 +3,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { DbxFirebaseLoginButtonComponent, DbxFirebaseLoginButtonContainerComponent } from './login.button.component';
 import { CommonModule } from '@angular/common';
 import { ModuleWithProviders, NgModule } from '@angular/core';
-import { DbxInjectedComponentModule } from '@dereekb/dbx-core';
+import { DbxInjectionComponentModule } from '@dereekb/dbx-core';
 import { DbxActionModule, DbxButtonModule } from '@dereekb/dbx-web';
 import { FirebaseLoginMethodType, KnownFirebaseLoginMethodType } from './login';
 import { DbxFirebaseLoginAnonymousComponent } from './login.anonymous.component';
@@ -112,7 +112,7 @@ export function defaultFirebaseAuthLoginProvidersFactory(): DbxFirebaseAuthLogin
     MatIconModule,
     DbxActionModule,
     DbxButtonModule,
-    DbxInjectedComponentModule
+    DbxInjectionComponentModule
   ],
   declarations: [
     DbxFirebaseLoginComponent,

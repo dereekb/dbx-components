@@ -1,4 +1,4 @@
-import { DbxInjectedComponentConfig } from '@dereekb/dbx-core';
+import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { Component, ElementRef, Type, OnInit } from '@angular/core';
 import { NgPopoverRef } from 'ng-overlay-container';
 import { Observable, BehaviorSubject, map } from 'rxjs';
@@ -49,7 +49,7 @@ export class DbxFilterPopoverComponent<F> extends AbstractPopoverDirective imple
   private _showPreset = new BehaviorSubject<boolean>(false);
   readonly showPreset$ = this._showPreset.asObservable();
 
-  readonly config$: Observable<DbxInjectedComponentConfig> = this._showPreset.pipe(
+  readonly config$: Observable<DbxInjectionComponentConfig> = this._showPreset.pipe(
     map((showPreset) => {
       const { connector, initialFilterObs, customFilterComponentClass, presetFilterComponentClass } = this.config;
       let componentClass: Type<FilterSource<F>>;
@@ -60,7 +60,7 @@ export class DbxFilterPopoverComponent<F> extends AbstractPopoverDirective imple
         componentClass = customFilterComponentClass!;
       }
 
-      const config: DbxInjectedComponentConfig<FilterSource<F>> = {
+      const config: DbxInjectionComponentConfig<FilterSource<F>> = {
         componentClass,
         init: (filterSource) => {
           connector.connectWithSource(filterSource);

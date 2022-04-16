@@ -1,4 +1,4 @@
-import { DbxInjectedComponentModule } from '@dereekb/dbx-core';
+import { DbxInjectionComponentModule } from '@dereekb/dbx-core';
 import { DbxButtonModule } from './../../button/button.module';
 import { DbxPromptComponent } from './prompt.component';
 import { CommonModule } from '@angular/common';
@@ -23,7 +23,7 @@ import { DbxDialogInteractionModule } from '../dialog/dialog.module';
     MatButtonModule,
     DbxTextModule,
     DbxButtonModule,
-    DbxInjectedComponentModule,
+    DbxInjectionComponentModule,
     DbxDialogInteractionModule,
     DbxSectionLayoutModule,
     DbxContentLayoutModule

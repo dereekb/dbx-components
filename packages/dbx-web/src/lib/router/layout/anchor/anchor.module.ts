@@ -1,4 +1,4 @@
-import { DbxInjectedComponentModule } from '@dereekb/dbx-core';
+import { DbxInjectionComponentModule } from '@dereekb/dbx-core';
 import { NgModule } from '@angular/core';
 import { DbxAnchorComponent } from './anchor.component';
 import { CommonModule } from '@angular/common';
@@ -13,7 +13,7 @@ import { DbxAnchorContentComponent } from './anchor.content.component';
     CommonModule,
     MatIconModule,
     MatButtonModule,
-    DbxInjectedComponentModule
+    DbxInjectionComponentModule
   ],
   declarations: [
     DbxAnchorComponent,

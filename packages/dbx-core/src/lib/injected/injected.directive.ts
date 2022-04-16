@@ -1,15 +1,15 @@
 import { ViewContainerRef, OnInit, OnDestroy, Directive, Injector } from '@angular/core';
 import { Maybe } from '@dereekb/util';
-import { DbxInjectedComponentConfig, DbxInjectedTemplateConfig } from './injected';
-import { DbxInjectedComponentInstance } from './injected.instance';
+import { DbxInjectionComponentConfig, DbxInjectionTemplateConfig } from './injected';
+import { DbxInjectionInstance as DbxInjectionInstance } from './injected.instance';
 
 /**
  * Abstract directive that injects content based on the configuration into the view.
  */
 @Directive()
-export abstract class AbstractDbxInjectedDirective<T> implements OnInit, OnDestroy {
+export abstract class AbstractDbxInjectionDirective<T> implements OnInit, OnDestroy {
 
-  private _instance = new DbxInjectedComponentInstance<T>(this._injector);
+  private _instance = new DbxInjectionInstance<T>(this._injector);
 
   constructor(private readonly _injector: Injector) { }
 
@@ -21,11 +21,11 @@ export abstract class AbstractDbxInjectedDirective<T> implements OnInit, OnDestr
     this._instance.destroy();
   }
 
-  setConfig(config: Maybe<DbxInjectedComponentConfig>) {
+  setConfig(config: Maybe<DbxInjectionComponentConfig>) {
     this._instance.config = config;
   }
 
-  setTemplate(template: Maybe<DbxInjectedTemplateConfig>) {
+  setTemplate(template: Maybe<DbxInjectionTemplateConfig>) {
     this._instance.template = template;
   }
 

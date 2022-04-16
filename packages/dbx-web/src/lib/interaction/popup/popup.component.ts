@@ -5,7 +5,7 @@ import { CompactMode, CompactContextStore } from '../../layout';
 import { BehaviorSubject, Subject } from 'rxjs';
 import { PopupGlobalPositionStrategy, PopupPosition, PopupPositionOffset } from './popup.position.strategy';
 import { filter, first, map, shareReplay, startWith } from 'rxjs/operators';
-import { AbstractTransitionWatcherDirective, DbxInjectedComponentConfig, DbxRouterTransitionService } from '@dereekb/dbx-core';
+import { AbstractTransitionWatcherDirective, DbxInjectionComponentConfig, DbxRouterTransitionService } from '@dereekb/dbx-core';
 import { DbxPopupController, DbxPopupKey, DbxPopupWindowState } from './popup';
 
 export const APP_POPUP_NORMAL_WIDTH = '700px';
@@ -38,7 +38,7 @@ export interface DbxPopupComponentConfig<O, I, T> {
 @Component({
   template: `
   <dbx-popup-coordinator>
-    <div class="dbx-popup-component" dbx-injected-content [config]="contentConfig"></div>
+    <div class="dbx-popup-component" dbx-injection [config]="contentConfig"></div>
   </dbx-popup-coordinator>
   `,
   providers: [{
@@ -52,7 +52,7 @@ export class DbxPopupComponent<O = any, I = any, T = any> extends AbstractTransi
 
   private _position: PopupGlobalPositionStrategy;
 
-  readonly contentConfig: DbxInjectedComponentConfig = {
+  readonly contentConfig: DbxInjectionComponentConfig = {
     componentClass: this.config.componentClass,
     init: this.config.init ? ((instance) => this.config.init!(instance, this)) : undefined
   };

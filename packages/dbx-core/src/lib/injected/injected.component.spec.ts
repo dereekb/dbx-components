@@ -1,9 +1,9 @@
-import { DbxInjectedTemplateConfig, DbxInjectedComponentConfig } from './injected';
-import { DbxInjectedComponent } from './injected.component';
+import { DbxInjectionTemplateConfig, DbxInjectionComponentConfig } from './injected';
+import { DbxInjectionComponent } from './injected.component';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { Component, Input, Type, ViewChild } from '@angular/core';
+import { Component, Input, Type, ViewChild, OnDestroy } from '@angular/core';
 import { By, BrowserModule } from '@angular/platform-browser';
-import { DbxInjectedComponentModule } from './injected.component.module';
+import { DbxInjectionComponentModule } from './injected.component.module';
 
 const CUSTOM_CONTENT_ID = 'custom-content';
 const CUSTOM_CONTENT = 'Custom Content';
@@ -13,62 +13,70 @@ const CUSTOM_CONTENT = 'Custom Content';
     <span id="${CUSTOM_CONTENT_ID}">${CUSTOM_CONTENT}</span>
   `
 })
-class TestInjectedComponentContent { }
+class TestInjectionComponentContent implements OnDestroy {
+
+  destroyed = false;
+
+  ngOnDestroy(): void {
+    this.destroyed = true;
+  }
+
+}
 
 @Component({})
-abstract class TestInjectedComponent<T = any> {
+abstract class TestInjectionComponent<T = any> {
 
   @Input()
-  config?: DbxInjectedComponentConfig;
+  config?: DbxInjectionComponentConfig;
 
   @Input()
-  template?: DbxInjectedTemplateConfig;
+  template?: DbxInjectionTemplateConfig;
 
-  @ViewChild(DbxInjectedComponent, { static: true })
-  injectedComponent?: DbxInjectedComponent<T>;
+  @ViewChild(DbxInjectionComponent, { static: true })
+  injectedComponent?: DbxInjectionComponent<T>;
 
 }
 
 @Component({
   template: `
-    <div dbx-injected-content [config]="config" [template]="template"></div>
+    <div dbxInjection [config]="config" [template]="template"></div>
   `
 })
-class TestInjectedComponentWithElement<T = any> extends TestInjectedComponent<T> { }
+class TestInjectionComponentWithElement<T = any> extends TestInjectionComponent<T> { }
 
 @Component({
   template: `
-    <dbx-injected-content [config]="config" [template]="template"></dbx-injected-content>
+    <dbx-injection [config]="config" [template]="template"></dbx-injection>
   `
 })
-class TestInjectedComponentWithAttribute<T = any> extends TestInjectedComponent<T> { }
+class TestInjectionComponentWithAttribute<T = any> extends TestInjectionComponent<T> { }
 
-describe('DbxInjectedComponent', () => {
+describe('DbxInjectionComponent', () => {
 
   beforeEach(async () => {
     TestBed.configureTestingModule({
       imports: [
         BrowserModule,
-        DbxInjectedComponentModule
+        DbxInjectionComponentModule
       ],
       declarations: [
-        TestInjectedComponentContent,
-        TestInjectedComponentWithElement,
-        TestInjectedComponentWithAttribute,
+        TestInjectionComponentContent,
+        TestInjectionComponentWithElement,
+        TestInjectionComponentWithAttribute,
       ],
       providers: []
     }).compileComponents();
   });
 
-  buildTestsWithComponentClass(TestInjectedComponentWithElement, 'element');
-  buildTestsWithComponentClass(TestInjectedComponentWithAttribute, 'attribute');
+  buildTestsWithComponentClass(TestInjectionComponentWithElement, 'element');
+  buildTestsWithComponentClass(TestInjectionComponentWithAttribute, 'attribute');
 
-  function buildTestsWithComponentClass<C extends TestInjectedComponent>(type: Type<C>, selector: string): void {
+  function buildTestsWithComponentClass<C extends TestInjectionComponent>(type: Type<C>, selector: string): void {
 
     describe(`selector "${selector}"`, () => {
 
-      let testComponent: TestInjectedComponent;
-      let fixture: ComponentFixture<TestInjectedComponent>;
+      let testComponent: TestInjectionComponent;
+      let fixture: ComponentFixture<TestInjectionComponent>;
 
       beforeEach(async () => {
         fixture = TestBed.createComponent(type);
@@ -80,10 +88,14 @@ describe('DbxInjectedComponent', () => {
 
         beforeEach(async () => {
           testComponent.config = {
-            componentClass: TestInjectedComponentContent
+            componentClass: TestInjectionComponentContent
           };
 
           fixture.detectChanges();
+        });
+
+        afterEach(() => {
+          fixture.destroy();
         });
 
         it('should show content', () => {
@@ -94,12 +106,33 @@ describe('DbxInjectedComponent', () => {
 
 
         it('should show destroy the content when config is cleared.', () => {
-          const anchorElement: HTMLElement = fixture.debugElement.query(By.css(`#${CUSTOM_CONTENT_ID}`)).nativeElement;
-          expect(anchorElement).not.toBeNull();
-          expect(anchorElement.textContent).toBe(CUSTOM_CONTENT);
+          let instance: TestInjectionComponentContent;
+
+          testComponent.config = {
+            componentClass: TestInjectionComponentContent,
+            init: (x) => {
+              instance = x;
+            }
+          };
+
+          fixture.detectChanges();
+
+          expect(instance!).toBeDefined();
+          expect(instance!.destroyed).toBe(false);
+
+          // clear the item
+          testComponent.config = undefined;
+
+          fixture.detectChanges();
+
+          // check is destroyed
+          expect(instance!.destroyed).toBe(true);
+
         });
 
         // todo: test injecting data.
+
+        // todo: test with template view being defaulted to when config isn't available.
 
       });
 

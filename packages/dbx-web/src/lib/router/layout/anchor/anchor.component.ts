@@ -1,6 +1,6 @@
 import { skipFirstMaybe } from '@dereekb/rxjs';
 import { Input, Component, TemplateRef, ViewChild } from '@angular/core';
-import { AbstractDbxAnchorDirective, DbxInjectedComponentConfig } from '@dereekb/dbx-core';
+import { AbstractDbxAnchorDirective, DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { Maybe } from '@dereekb/util';
 import { BehaviorSubject } from 'rxjs';
 import { map, distinctUntilChanged, shareReplay } from 'rxjs/operators';
@@ -41,7 +41,7 @@ export class DbxAnchorComponent extends AbstractDbxAnchorDirective {
     super();
   }
 
-  get srefAnchorConfig(): DbxInjectedComponentConfig {
+  get srefAnchorConfig(): DbxInjectionComponentConfig {
     return this.dbNgxRouterWebProviderConfig.anchorSegueRefComponent;
   }
 

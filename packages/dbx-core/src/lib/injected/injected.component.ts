@@ -1,24 +1,24 @@
 import { Component, ViewChild, ViewContainerRef, Input } from '@angular/core';
-import { DbxInjectedComponentConfig, DbxInjectedTemplateConfig } from './injected';
-import { AbstractDbxInjectedDirective } from './injected.directive';
+import { DbxInjectionComponentConfig, DbxInjectionTemplateConfig } from './injected';
+import { AbstractDbxInjectionDirective } from './injected.directive';
 import { Maybe } from '@dereekb/util';
 
 /**
  * Component that injects content based on the configuration into the view.
  */
 @Component({
-  selector: 'dbx-injected-content, [dbxInjectedContext], [dbx-injected-content]',
+  selector: 'dbx-injection, [dbxInjection], [dbx-injection]',
   template: `<ng-template #content></ng-template>`
 })
-export class DbxInjectedComponent<T> extends AbstractDbxInjectedDirective<T> {
+export class DbxInjectionComponent<T> extends AbstractDbxInjectionDirective<T> {
 
   @Input()
-  set config(config: Maybe<DbxInjectedComponentConfig<T>>) {
+  set config(config: Maybe<DbxInjectionComponentConfig<T>>) {
     this.setConfig(config);
   }
 
   @Input()
-  set template(template: Maybe<DbxInjectedTemplateConfig<T>>) {
+  set template(template: Maybe<DbxInjectionTemplateConfig<T>>) {
     this.setTemplate(template);
   }
 

@@ -15,7 +15,7 @@ import {
   DbxSearchableFieldAutocompleteItemComponent
 } from './searchable.field.autocomplete.item.component';
 import { DbxSearchableTextFieldComponent } from './searchable.text.field.component';
-import { DbxDatePipeModule, DbxInjectedComponentModule } from '@dereekb/dbx-core';
+import { DbxDatePipeModule, DbxInjectionComponentModule } from '@dereekb/dbx-core';
 import { DbxAnchorModule, DbxTextModule, DbxLoadingModule, DbxButtonModule } from '@dereekb/dbx-web';
 
 @NgModule({
@@ -35,7 +35,7 @@ import { DbxAnchorModule, DbxTextModule, DbxLoadingModule, DbxButtonModule } fro
     DbxAnchorModule,
     MatChipsModule,
     MatIconModule,
-    DbxInjectedComponentModule,
+    DbxInjectionComponentModule,
     FormlyModule.forChild({
       types: [
         { name: 'searchablechipfield', component: DbxSearchableChipFieldComponent, wrappers: ['form-field'] },

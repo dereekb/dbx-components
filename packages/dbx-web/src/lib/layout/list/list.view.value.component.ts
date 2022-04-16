@@ -18,7 +18,7 @@ export interface DbxValueListViewConfig<T, I extends DbxValueListItem<T> = DbxVa
       <dbx-anchor *ngFor="let item of (items$ | async)" [anchor]="item.anchor" [disabled]="item.disabled">
         <a mat-list-item class="dbx-list-view-item" [disabled]="item.disabled" (click)="onClickItem(item)">
           <mat-icon matListIcon *ngIf="item.icon">{{ item.icon }}</mat-icon>
-          <div dbx-injected-content [config]="item.config"></div>
+          <div dbx-injection [config]="item.config"></div>
         </a>
       </dbx-anchor>
     </mat-nav-list>

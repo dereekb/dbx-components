@@ -17,7 +17,7 @@ import { DbxKeypressModule } from '../../keypress';
 import { DbxAnchorModule } from '../../router';
 import { DbxActionModule } from '../../action/action.module';
 import { DbxButtonModule } from '../../button/button.module';
-import { DbxInjectedComponentModule } from '@dereekb/dbx-core';
+import { DbxInjectionComponentModule } from '@dereekb/dbx-core';
 import { DbxStyleLayoutModule } from '../../layout/style/style.layout.module';
 
 @NgModule({
@@ -31,7 +31,7 @@ import { DbxStyleLayoutModule } from '../../layout/style/style.layout.module';
     DbxActionModule,
     DbxKeypressModule,
     DbxStyleLayoutModule,
-    DbxInjectedComponentModule,
+    DbxInjectionComponentModule,
     NgOverlayContainerModule,
     AngularResizeEventModule
   ],

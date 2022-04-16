@@ -1,6 +1,6 @@
 import { catchError, filter, exhaustMap, merge, map, Subject, switchMap, shareReplay, distinctUntilChanged, of, Observable, BehaviorSubject, first, startWith } from 'rxjs';
 import { Component, Input, EventEmitter, Output, OnDestroy, ElementRef, HostListener, ChangeDetectorRef, Directive } from '@angular/core';
-import { DbxInjectedComponentConfig, tapDetectChanges } from '@dereekb/dbx-core';
+import { DbxInjectionComponentConfig, tapDetectChanges } from '@dereekb/dbx-core';
 import { SubscriptionObject, ListLoadingStateContextInstance, ListLoadingState, filterMaybe, tapLog, loadingStateHasFinishedLoading, successResult, beginLoading } from '@dereekb/rxjs';
 import { Maybe, Milliseconds } from '@dereekb/util';
 import { DbxListView, ListSelectionState } from './list.view';
@@ -20,7 +20,7 @@ export type DbxListLoadMoreHandler = () => Observable<void> | void;
 /**
  * DbxListComponent configuration.
  */
-export interface DbxListConfig<T = any, V extends DbxListView<T> = DbxListView<T>> extends DbxInjectedComponentConfig<V> {
+export interface DbxListConfig<T = any, V extends DbxListView<T> = DbxListView<T>> extends DbxInjectionComponentConfig<V> {
 
   /**
    * Whether or not to hide the list content when it is an empty list.
@@ -116,10 +116,10 @@ export class DbxListComponent<T = any, V extends DbxListView<T> = DbxListView<T>
 
   readonly loadMore$ = merge(this.scrollLoadMoreTrigger$, this._loadMoreTrigger);
 
-  readonly injectedComponentConfig$: Observable<Maybe<DbxInjectedComponentConfig<V>>> = this._config.pipe(
+  readonly injectedComponentConfig$: Observable<Maybe<DbxInjectionComponentConfig<V>>> = this._config.pipe(
     distinctUntilChanged(),
     map((config) => {
-      let injectedComponentConfig: Maybe<DbxInjectedComponentConfig<V>>;
+      let injectedComponentConfig: Maybe<DbxInjectionComponentConfig<V>>;
 
       if (config) {
         const { componentClass, init, onClick, onSelectionChange, loadMore } = config;

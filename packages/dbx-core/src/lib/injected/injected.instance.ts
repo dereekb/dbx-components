@@ -1,19 +1,19 @@
 import { ComponentRef, Injector, ViewContainerRef } from '@angular/core';
 import { distinctUntilChanged, map, shareReplay } from 'rxjs/operators';
 import { BehaviorSubject, combineLatest } from 'rxjs';
-import { DbxInjectedComponentConfig, DbxInjectedTemplateConfig, DBX_INJECTED_COMPONENT_DATA } from './injected';
+import { DbxInjectionComponentConfig, DbxInjectionTemplateConfig, DBX_INJECTION_COMPONENT_DATA } from './injected';
 import { Initialized, Destroyable, Maybe, mergeArrayOrValueIntoArray } from '@dereekb/util';
 import { SubscriptionObject, filterMaybe, skipFirstMaybe } from '@dereekb/rxjs';
 
 /**
  * Instance used by components to inject content based on the configuration into the view.
  */
-export class DbxInjectedComponentInstance<T> implements Initialized, Destroyable {
+export class DbxInjectionInstance<T> implements Initialized, Destroyable {
 
   private _subscriptionObject = new SubscriptionObject();
 
-  private _config = new BehaviorSubject<Maybe<DbxInjectedComponentConfig<T>>>(undefined);
-  private _template = new BehaviorSubject<Maybe<DbxInjectedTemplateConfig<T>>>(undefined);
+  private _config = new BehaviorSubject<Maybe<DbxInjectionComponentConfig<T>>>(undefined);
+  private _template = new BehaviorSubject<Maybe<DbxInjectionTemplateConfig<T>>>(undefined);
 
   private _content = new BehaviorSubject<Maybe<ViewContainerRef>>(undefined);
   private _componentRef = new BehaviorSubject<Maybe<ComponentRef<T>>>(undefined);
@@ -22,19 +22,19 @@ export class DbxInjectedComponentInstance<T> implements Initialized, Destroyable
   readonly template$ = this._template.pipe(distinctUntilChanged());
   readonly content$ = this._content.pipe(filterMaybe(), distinctUntilChanged(), shareReplay(1));
 
-  get config(): Maybe<DbxInjectedComponentConfig<T>> {
+  get config(): Maybe<DbxInjectionComponentConfig<T>> {
     return this._config.value;
   }
 
-  set config(config: Maybe<DbxInjectedComponentConfig<T>>) {
+  set config(config: Maybe<DbxInjectionComponentConfig<T>>) {
     this._config.next(config);
   }
 
-  get template(): Maybe<DbxInjectedTemplateConfig<T>> {
+  get template(): Maybe<DbxInjectionTemplateConfig<T>> {
     return this._template.value;
   }
 
-  set template(template: Maybe<DbxInjectedTemplateConfig<T>>) {
+  set template(template: Maybe<DbxInjectionTemplateConfig<T>>) {
     this._template.next(template);
   }
 
@@ -93,7 +93,7 @@ export class DbxInjectedComponentInstance<T> implements Initialized, Destroyable
     this._componentRef.complete();
   }
 
-  private _initComponent(config: DbxInjectedComponentConfig<T>, content: ViewContainerRef): void {
+  private _initComponent(config: DbxInjectionComponentConfig<T>, content: ViewContainerRef): void {
     content.clear();
 
     const { init, injector: inputInjector, providers, ngModuleRef, componentClass, data } = config;
@@ -105,7 +105,7 @@ export class DbxInjectedComponentInstance<T> implements Initialized, Destroyable
       injector = Injector.create({
         parent: parentInjector,
         providers: mergeArrayOrValueIntoArray([{
-          provide: DBX_INJECTED_COMPONENT_DATA,
+          provide: DBX_INJECTION_COMPONENT_DATA,
           useValue: data
         }], providers ?? [])
       });
@@ -122,7 +122,7 @@ export class DbxInjectedComponentInstance<T> implements Initialized, Destroyable
     this.componentRef = componentRef;
   }
 
-  private _initTemplate(config: DbxInjectedTemplateConfig<T>, content: ViewContainerRef): void {
+  private _initTemplate(config: DbxInjectionTemplateConfig<T>, content: ViewContainerRef): void {
     content.clear();
 
     const { templateRef, viewRef } = config;
