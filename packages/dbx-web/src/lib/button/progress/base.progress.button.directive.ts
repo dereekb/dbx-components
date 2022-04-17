@@ -78,7 +78,6 @@ export abstract class AbstractProgressButtonDirective extends AbstractSubscripti
 
   get customSpinnerStyle() {
     const customSpinnerColor = this._computedOptions.customSpinnerColor;
-    console.log('Spinner: ', customSpinnerColor);
     return (customSpinnerColor) ? { stroke: customSpinnerColor } : undefined;
   }
 

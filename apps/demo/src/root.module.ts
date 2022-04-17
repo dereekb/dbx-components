@@ -73,7 +73,9 @@ export function makeSegmentConfig(): DbxAnalyticsSegmentApiServiceConfig {
     AppSharedModule,
     DbxWebRootModule,
     DbxFirebaseLoginModule.forRoot({
-      enabledLoginMethods: true
+      enabledLoginMethods: true,
+      tosUrl: '/tos/terms',
+      privacyUrl: '/tos/privacy'
     }),
     DbxScreenModule.forRoot(DEFAULT_SCREEN_MEDIA_SERVICE_CONFIG),
     DbxAnalyticsModule.forRoot({

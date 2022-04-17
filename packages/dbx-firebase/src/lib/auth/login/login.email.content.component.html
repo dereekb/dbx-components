@@ -1,0 +1,9 @@
+<div class="dbx-firebase-login-email-content" dbxAction [dbxActionHandler]="handleFormAction">
+  <dbx-firebase-email-form dbxActionForm></dbx-firebase-email-form>
+  <div class="dbx-flex">
+    <dbx-button class="dbx-wide-button" [text]="buttonText" [raised]="true" color="primary" dbxActionButton></dbx-button>
+    <span class="dbx-spacer"></span>
+    <button mat-flat-button (click)="onCancel()">Cancel</button>
+  </div>
+  <dbx-error dbxActionError></dbx-error>
+</div>

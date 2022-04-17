@@ -1,3 +1,4 @@
+import { capitalCase } from "change-case";
 import { MapStringFn } from "./map/map";
 import { Maybe } from "./value/maybe";
 
@@ -37,4 +38,14 @@ export function addPlusPrefixToNumber(value?: Maybe<number>, prefix = '+'): stri
   } else {
     return undefined;
   }
+}
+
+/**
+ * Capitalizes the first letter of the input.
+ * 
+ * @param value 
+ * @returns 
+ */
+export function capitalizeFirstLetter(value: string): string {
+  return value.charAt(0).toUpperCase() + value.slice(1);
 }

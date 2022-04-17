@@ -5,6 +5,7 @@ import { from } from "rxjs";
 import { DbxFirebaseAuthService } from "../service/firebase.auth.service";
 import { FirebaseLoginMethodType } from "./login";
 import { DbxFirebaseAuthLoginService } from "./login.service";
+import { DbxFirebaseLoginContext } from './login.context';
 
 export interface DbxFirebaseLoginButtonConfig {
   text: string;
@@ -66,7 +67,7 @@ export class DbxFirebaseLoginButtonComponent {
   readonly handleAction: HandleActionFunction = (value: any, context: WorkHandlerContext) => {
     const loginPromise: Promise<void> = this.config!.handleLogin();
     return from(loginPromise);
-  }
+  };
 
   onActionSuccess = (value: any) => {
     // todo: show checkmark on success?
@@ -97,7 +98,10 @@ export abstract class AbstractConfiguredDbxFirebaseLoginButtonDirective implemen
 
   abstract readonly loginProvider: FirebaseLoginMethodType;
 
-  constructor(readonly dbxFirebaseAuthService: DbxFirebaseAuthService, readonly dbxFirebaseAuthLoginService: DbxFirebaseAuthLoginService) { }
+  constructor(
+    readonly dbxFirebaseAuthService: DbxFirebaseAuthService,
+    readonly dbxFirebaseAuthLoginService: DbxFirebaseAuthLoginService,
+    readonly dbxFirebaseLoginContext: DbxFirebaseLoginContext) { }
 
   ngOnInit(): void {
     const assets = this.dbxFirebaseAuthLoginService.getProviderAssets(this.loginProvider) ?? {};

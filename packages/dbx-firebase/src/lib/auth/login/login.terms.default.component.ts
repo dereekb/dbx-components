@@ -1,0 +1,33 @@
+import { ClickableAnchor } from '@dereekb/dbx-core';
+import { Component } from "@angular/core";
+import { DbxFirebaseLoginModuleRootConfig } from "./firebase.login.module";
+
+
+export interface DbxFirebaseLoginTermsView {
+
+}
+
+@Component({
+  template: `
+  <div class="dbx-firebase-login-terms-view">
+    <dbx-link [anchor]="tosAnchor">Terms</dbx-link>
+    <span class="dbx-link-spacer"></span>
+    <dbx-link [anchor]="privacyAnchor">Privacy</dbx-link>
+  </div>
+  `
+})
+export class DbxFirebaseLoginTermsViewComponent {
+
+  readonly tosAnchor: ClickableAnchor = {
+    url: this.dbxFirebaseLoginModuleRootConfig.tosUrl,
+    target: '_blank'
+  };
+
+  readonly privacyAnchor: ClickableAnchor = {
+    url: this.dbxFirebaseLoginModuleRootConfig.privacyUrl,
+    target: '_blank'
+  };
+
+  constructor(readonly dbxFirebaseLoginModuleRootConfig: DbxFirebaseLoginModuleRootConfig) { }
+
+}

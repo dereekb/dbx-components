@@ -19,19 +19,34 @@ export function isIterable<T = any>(values: any): values is Iterable<T> {
 }
 
 /**
- * Function to iterate over iterable values.
+ * Returns the first value from the Iterable. If there are no values, returns undefined.
+ * 
+ * @param values 
+ * @returns 
+ */
+export function firstValueFromIterable<T>(values: Iterable<T>): Maybe<T> {
+  for (const value of values) {
+    return value;
+  }
+
+  return undefined;
+}
+
+
+/**
+ * Iterates over iterable values.
  * 
  * @param values 
  * @param fn 
  */
- export function forEachInIterable<T>(values: Iterable<T>, fn: (value: T) => void): void {
+export function forEachInIterable<T>(values: Iterable<T>, fn: (value: T) => void): void {
   for (const value of values) {
     fn(value);
   }
 }
 
 /**
- * Function to use the input iterable if it is defined.
+ * Uses the input iterable if it is defined.
  * 
  * @param values 
  * @param fn 
@@ -44,4 +59,20 @@ export function useIterableOrValue<T>(values: Maybe<IterableOrValue<T>>, fn: (va
       fn(values);
     }
   }
+}
+
+/**
+ * Find values within an iterable.
+ * 
+ * @param values 
+ * @param fn 
+ */
+export function findInIterable<T>(values: Iterable<T>, fn: (value: T) => boolean): Maybe<T> {
+  for (const value of values) {
+    if (fn(value)) {
+      return value;
+    }
+  }
+
+  return undefined;
 }

@@ -53,13 +53,23 @@ export function hasValueOrNotEmpty(value: any): boolean {
 }
 
 /**
- * True if the input is null/undefined and not false.
+ * True if the input is MaybeNot and not false.
  * 
  * @param value 
  * @returns 
  */
-export function isUndefinedAndNotFalse(value: any): boolean {
+export function isMaybeNotAndNotFalse(value: any): boolean {
   return value == null && value !== false;
+}
+
+/**
+ * True if the input is MaybeNot and true.
+ * 
+ * @param value 
+ * @returns 
+ */
+export function isMaybeNotOrTrue(value: any): boolean {
+  return value == null || value === true;
 }
 
 /**

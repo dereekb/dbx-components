@@ -26,6 +26,11 @@
     cursor: pointer;
   }
 
+  .dbx-link-spacer:before {
+    content: "|";
+    margin: 0 8px;
+  }
+
   .dbx-anchor-content {
     display: flex;
     align-items: center;

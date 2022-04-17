@@ -71,6 +71,26 @@ export function assignValuesToPOJO<T extends object = object>(target: T, obj: T,
   return obj;
 }
 
+/**
+ * Reads all values from the pojo based on the filter and puts them into an array.
+ * 
+ * @param target 
+ * @param filter 
+ * @returns 
+ */
+export function valuesFromPOJO<O = any, I extends object = object>(target: I, filter: FilterKeyValueTuplesInput<I> = KeyValueTypleValueFilter.UNDEFINED): O[] {
+  const values: O[] = [];
+
+  forEachKeyValue<I>(target, {
+    filter,
+    forEach: ([key, value]) => {
+      values.push(value as unknown as O);
+    }
+  });
+
+  return values;
+}
+
 export type KeyValueTuple<T extends object = object, K extends keyof T = keyof T> = [K, T[K]];
 
 export enum KeyValueTypleValueFilter {

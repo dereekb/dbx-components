@@ -1,11 +1,14 @@
 import { mapIterable, addToSet, removeFromSet, Maybe, ArrayOrValue, filterMaybeValues } from "@dereekb/util";
 import { Inject, Injectable, InjectionToken, Optional, Type } from "@angular/core";
 import { FirebaseLoginMethodType, KnownFirebaseLoginMethodType } from "./login";
+import { DbxFirebaseLoginTermsViewComponent } from "./login.terms.default.component";
 
 /**
  * Default providers to inject.
  */
 export const DEFAULT_FIREBASE_AUTH_LOGIN_PROVIDERS_TOKEN = new InjectionToken('DefaultDbxFirebaseAuthLoginProviders');
+export const DEFAULT_FIREBASE_AUTH_LOGIN_TERMS_COMPONENT_CLASS_TOKEN = new InjectionToken('DefaultDbxFirebaseAuthLoginTermsComponentClass');
+
 
 export interface DbxFirebaseAuthLoginProvider {
   /**
@@ -67,7 +70,10 @@ export class DbxFirebaseAuthLoginService {
   private _assets = new Map<FirebaseLoginMethodType, DbxFirebaseAuthLoginProviderAssets>();
   private _enabled = new Set<FirebaseLoginMethodType>();
 
-  constructor(@Optional() @Inject(DEFAULT_FIREBASE_AUTH_LOGIN_PROVIDERS_TOKEN) defaultProviders: DbxFirebaseAuthLoginProvider[]) {
+  constructor(
+    @Optional() @Inject(DEFAULT_FIREBASE_AUTH_LOGIN_PROVIDERS_TOKEN) defaultProviders: DbxFirebaseAuthLoginProvider[],
+    @Optional() @Inject(DEFAULT_FIREBASE_AUTH_LOGIN_TERMS_COMPONENT_CLASS_TOKEN) readonly termsComponentClass: Type<any> = DbxFirebaseLoginTermsViewComponent
+  ) {
     if (defaultProviders) {
       defaultProviders.forEach((x) => this.register(x, false));
     }

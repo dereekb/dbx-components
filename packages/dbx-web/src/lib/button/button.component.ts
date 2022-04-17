@@ -88,6 +88,7 @@ export class DbxButtonComponent extends AbstractDbxButtonDirective {
     }
 
     const customSpinnerColor: Maybe<string> = this.customSpinnerColor ?? this.customTextColor;
+    const disabled = !this.working && this.disabled; // Only disabled if we're not working, in order to show the animation.
 
     return {
       fab: false,
@@ -105,8 +106,7 @@ export class DbxButtonComponent extends AbstractDbxButtonDirective {
       mode: 'indeterminate',
       spinnerColor: (this.color === 'primary') ? 'accent' : 'primary',
       customSpinnerColor,
-      // Only disabled if we're not working, in order to show the animation.
-      disabled: !this.working && this.disabled
+      disabled
     };
   }
 

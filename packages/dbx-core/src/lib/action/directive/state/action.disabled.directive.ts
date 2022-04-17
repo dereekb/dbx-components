@@ -1,5 +1,5 @@
 import { Directive, Host, Input, OnInit, OnDestroy } from '@angular/core';
-import { Maybe, isDefinedAndNotFalse, isUndefinedAndNotFalse } from '@dereekb/util';
+import { Maybe, isDefinedAndNotFalse, isMaybeNotAndNotFalse } from '@dereekb/util';
 import { BehaviorSubject } from 'rxjs';
 import { distinctUntilChanged } from 'rxjs/operators';
 import { AbstractSubscriptionDirective } from '../../../subscription';
@@ -40,7 +40,7 @@ export class DbxActionDisabledDirective<T, O> extends AbstractSubscriptionDirect
   }
 
   set disabled(disabled: Maybe<any>) {
-    const disable = isUndefinedAndNotFalse(disabled);
+    const disable = disabled !== false;
     this._disabled.next(disable);
   }
 

@@ -25,6 +25,7 @@ import { DbxFormlyFieldsContextDirective } from './formly.context.directive';
     // Directives
     DbxFormlyFormComponent,
     DbxFormlyFieldsContextDirective
+    // Helper Modules
   ]
 })
 export class DbxFormlyModule { }

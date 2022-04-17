@@ -1,7 +1,7 @@
 import { filterMaybe, isNot } from '@dereekb/rxjs';
 import { Injectable, Optional } from "@angular/core";
 import { AuthUserState, AuthRoleSet, DbxAuthService, signedOutEventFromIsLoggedIn } from "@dereekb/dbx-core";
-import { Auth, authState, User, IdTokenResult, ParsedToken, GoogleAuthProvider, signInWithPopup, AuthProvider, PopupRedirectResolver, signInAnonymously, signInWithEmailAndPassword, UserCredential, FacebookAuthProvider, UserInfo, GithubAuthProvider, TwitterAuthProvider, PhoneAuthProvider, signInWithPhoneNumber } from '@angular/fire/auth';
+import { Auth, authState, User, IdTokenResult, ParsedToken, GoogleAuthProvider, signInWithPopup, AuthProvider, PopupRedirectResolver, signInAnonymously, signInWithEmailAndPassword, UserCredential, FacebookAuthProvider, UserInfo, GithubAuthProvider, TwitterAuthProvider, PhoneAuthProvider, signInWithPhoneNumber, createUserWithEmailAndPassword } from '@angular/fire/auth';
 import { Observable, timeout, startWith, distinctUntilChanged, shareReplay, map, switchMap, of } from "rxjs";
 import { Maybe } from "@dereekb/util";
 import { authUserStateFromFirebaseAuthService } from './firebase.auth.rxjs';
@@ -98,6 +98,10 @@ export class DbxFirebaseAuthService implements DbxAuthService {
 
   logInWithPopup(provider: AuthProvider, resolver?: PopupRedirectResolver): Promise<UserCredential> {
     return signInWithPopup(this.firebaseAuth, provider, resolver);
+  }
+
+  registerWithEmailAndPassword(email: string, password: string): Promise<UserCredential> {
+    return createUserWithEmailAndPassword(this.firebaseAuth, email, password);
   }
 
   logInWithEmailAndPassword(email: string, password: string): Promise<UserCredential> {

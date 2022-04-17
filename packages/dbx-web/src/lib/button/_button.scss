@@ -6,6 +6,21 @@ $button-spacer-width: 6px;
 // MARK: Mixin
 @mixin core() {
 
+  .dbx-wide-button {
+    .dbx-button {
+      min-width: 120px;
+      max-width: 100%;
+    }
+  }
+
+  .dbx-grow-button {
+    width: 100%;
+
+    .dbx-button {
+      width: 100%;
+    }
+  }
+
   .dbx-button-spacer {
     padding-right: $button-spacer-width;
   }

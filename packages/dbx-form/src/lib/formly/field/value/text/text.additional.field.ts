@@ -29,25 +29,27 @@ export interface EmailFieldConfig extends Partial<LabeledFieldConfig>, Descripti
   rows?: number;
 }
 
-export function emailField({ key = 'email', label = 'Email Address', placeholder = 'person@email.com', description = '', required = false, readonly = false }: EmailFieldConfig = {}): FormlyFieldConfig {
-  return formlyField({
+export function emailField(config: EmailFieldConfig = {}): FormlyFieldConfig {
+  const { key = 'email', label = 'Email Address', placeholder = 'you@example.com' } = config;
+  const emailFieldConfig = textField({
+    ...config,
     key,
-    type: 'input',
-    templateOptions: {
-      label,
-      placeholder,
-      description,
-      required,
-      readonly
-    },
-    validators: {
-      email: {
-        expression: (c: AbstractControl) => !Validators.email(c),
-        message: () => `Not a valid email address.`
-      }
-    },
+    label,
+    placeholder,
+    inputType: 'email'
   });
+
+  emailFieldConfig.validators = {
+    email: {
+      expression: (c: AbstractControl) => !Validators.email(c),
+      message: () => `Not a valid email address.`
+    }
+  };
+
+  return emailFieldConfig;
 }
+
+
 
 export function cityField({ key = 'city', required = false }: Partial<TextFieldConfig> = {}): FormlyFieldConfig {
   return textField({

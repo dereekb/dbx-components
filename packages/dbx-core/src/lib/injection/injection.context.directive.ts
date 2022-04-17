@@ -1,8 +1,8 @@
 import { Directive, EmbeddedViewRef, Injector, Input, TemplateRef, ViewContainerRef } from '@angular/core';
-import { DbxInjectionComponentConfig } from './injection';
 import { DbxInjectionContext, DbxInjectionContextConfig, ProvideDbxInjectionContext } from './injection.context';
 import { DbxInjectionInstance } from './injection.instance';
-import { Maybe } from '@dereekb/util';
+import { DbxInjectionComponentConfig } from './injection';
+import { PromiseFullRef, makePromiseFullRef, Maybe } from '@dereekb/util';
 
 /**
  * DbxInjectedViewContext implementation. Acts similar to *ngIf, but instead switches to a different view without destroying the original child view.
@@ -13,6 +13,7 @@ import { Maybe } from '@dereekb/util';
 })
 export class DbxInjectionContextDirective<O = any> implements DbxInjectionContext {
 
+  private _currentPromise: Maybe<PromiseFullRef<any>>;
   private _instance = new DbxInjectionInstance(this._injector);
   private _embeddedView!: EmbeddedViewRef<O>;
   private _isDetached = false;
@@ -42,6 +43,7 @@ export class DbxInjectionContextDirective<O = any> implements DbxInjectionContex
 
     if (reattach) {
       this._viewContainer.insert(this._embeddedView);
+      this._isDetached = false;
     }
   }
 
@@ -66,15 +68,21 @@ export class DbxInjectionContextDirective<O = any> implements DbxInjectionContex
   }
 
   async showContext<T, O>(config: DbxInjectionContextConfig<T>): Promise<O> {
+
+    // clear the current context before showing something new.
+    this.resetContext();
+
+    let promiseRef: PromiseFullRef<O>;
+
     let result: O;
     let error: any;
 
     // wait for the promise to resolve and use to finish using that instance.
     try {
-      result = await new Promise<O>((resolve, reject) => {
+      promiseRef = makePromiseFullRef(async (resolve, reject) => {
         const injectionConfig: DbxInjectionComponentConfig<T> = {
           ...config.config,
-          init: (instance: T) => {
+          init: async (instance: T) => {
 
             // init if available in the base config.
             if (config.config.init) {
@@ -91,18 +99,50 @@ export class DbxInjectionContextDirective<O = any> implements DbxInjectionContex
 
         this.config = injectionConfig as any;
       });
+
+      this._currentPromise = promiseRef;
+
+      // await the promise
+      await promiseRef.promise;
     } catch (e) {
       error = e;
     }
 
-    // clear the config to show the template again.
-    this.config = undefined;
+    // if we're still using the same promiseRef
+    if (promiseRef! && promiseRef! === this._currentPromise) {
+      // clear the config to reshow the view
+      this.config = undefined;
+
+      // clear the current promise
+      this._currentPromise = undefined;
+    }
 
     if (error != null) {
       return Promise.reject(error);
     } else {
       return result!;
     }
+  }
+
+  resetContext(): boolean {
+    let clearedValue = false;
+
+    if (this._currentPromise) {
+      const promise = this._currentPromise;
+
+      // clear the current promise too
+      this._currentPromise = undefined;
+
+      // clear the config.
+      this.config = undefined;
+
+      // send a rejection signal to bail out.
+      promise.reject(new Error('dbxInjectionContext bailout'));
+
+      clearedValue = true;
+    }
+
+    return clearedValue;
   }
 
 }

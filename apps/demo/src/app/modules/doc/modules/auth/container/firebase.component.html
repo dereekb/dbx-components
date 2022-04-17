@@ -9,10 +9,24 @@
       <dbx-content-border>
         <h4>Auth User</h4>
         <p class="prettyjson">{{ authUserInfo$ | async | prettyjson }}</p>
+        <button mat-flat-button color="warn" (click)="logOut()">Log Out</button>
       </dbx-content-border>
 
-      <!-- TODO: Show showing/hiding different logins via form. -->
+      <h3>standalone</h3>
+      <p class="dbx-hint">The standalone component only lists the items, but provides no styling otherwise.</p>
       <dbx-firebase-login></dbx-firebase-login>
+
+      <h3>standalone with providers limited</h3>
+      <p class="dbx-hint">Using the [providerTypes] input you can limit the providers at the component level.</p>
+      <dbx-firebase-login [providerTypes]="['email', 'google']"></dbx-firebase-login>
+
+      <h3>Styled Example</h3>
+
+      <dbx-content-container grow="small">
+        <h3>Log In</h3>
+        <dbx-firebase-login></dbx-firebase-login>
+        <dbx-firebase-login-terms></dbx-firebase-login-terms>
+      </dbx-content-container>
 
     </doc-feature-example>
 

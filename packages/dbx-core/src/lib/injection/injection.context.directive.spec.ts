@@ -1,8 +1,8 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { DbxInjectionContextDirective } from './injection.context.directive';
+import { DbxInjectionComponentModule } from './injection.component.module';
 import { Component, OnDestroy, Type, ViewChild } from '@angular/core';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By, BrowserModule } from '@angular/platform-browser';
-import { DbxInjectionComponentModule } from './injected.component.module';
-import { DbxInjectionContextDirective } from './injected.context.component';
 import { waitForMs } from '@dereekb/util';
 
 const EXISTING_CONTENT_ID = 'existing-content';
@@ -10,6 +10,8 @@ const EXISTING_CONTENT = 'Existing Content';
 
 const CUSTOM_CONTENT_ID = 'custom-content';
 const CUSTOM_CONTENT = 'Custom Content';
+
+// todo: add tests showing AbstractForwardDbxInjectionContextDirective usage.
 
 @Component({
   template: `
@@ -116,7 +118,7 @@ describe('DbxInjectionContextDirective', () => {
         expect(content.destroyed).toBe(false);
 
         fixture.destroy();
-        
+
         expect(content.destroyed).toBe(true);
       });
 
@@ -150,6 +152,7 @@ describe('DbxInjectionContextDirective', () => {
       describe('showContext()', () => {
 
         it('should show the config-injected content.', (done) => {
+
           directive.showContext({
             config: {
               componentClass: TestInjectionContent
@@ -211,6 +214,80 @@ describe('DbxInjectionContextDirective', () => {
             expect(e).toBeDefined();
             done();
           });
+
+        });
+
+      });
+
+      describe('resetContext()', () => {
+
+        it('should reset the context immediately without use() returning.', (done) => {
+
+          directive.showContext({
+            config: {
+              componentClass: TestInjectionContent
+            },
+            use: () => waitForMs(2000)
+          }).then(() => {
+            fail('should have returned an error.');
+          }, (e) => {
+            expect(e).toBeDefined();
+
+            // check the existing content is back.
+            assetExistingContentVisible();
+
+            done();
+          });
+
+          fixture.detectChanges();
+
+          directive.resetContext();
+
+        });
+
+        it('should not delete existing content if called without a context.', () => {
+
+          directive.resetContext();
+
+          fixture.detectChanges();
+
+          directive.resetContext();
+
+          fixture.detectChanges();
+
+          assetExistingContentVisible();
+
+        });
+
+        it('reset, show, reset, show, reset, show.', (done) => {
+
+          function showContext(i = 0) {
+            assetExistingContentVisible();
+
+            directive.showContext({
+              config: {
+                componentClass: TestInjectionContent
+              },
+              use: () => waitForMs(2000)
+            }).then(() => {
+              fail('should have returned an error.');
+            }, (e) => {
+              expect(e).toBeDefined();
+
+              // check the existing content is back.
+              assetExistingContentVisible();
+
+              if (i < 3) {
+                showContext(i + 1);
+              } else {
+                done();
+              }
+            });
+
+            directive.resetContext();
+          }
+
+          setTimeout(() => showContext());
 
         });
 

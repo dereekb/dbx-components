@@ -30,12 +30,19 @@ export abstract class DbxInjectionContext {
    */
   abstract showContext<T = any, O = any>(config: DbxInjectionContextConfig<T>): Promise<O>;
 
+  /**
+   * Bails out of any current promise, if one is set.
+   * 
+   * Returns true if the bail signal has been sent.
+   */
+  abstract resetContext(): boolean;
+
 }
 
 /**
  * Allows a directive to provide a formly context and form.
  */
-export function ProvideDbxInjectionContext<T>(type: Type<T>): Provider[] {
+export function ProvideDbxInjectionContext<T extends DbxInjectionContext>(type: Type<T>): Provider[] {
   return [{
     provide: DbxInjectionContext,
     useExisting: type

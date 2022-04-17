@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { DbxInjectionComponent } from './injection.component';
-import { DbxInjectionContextDirective } from './injection.context.component';
+import { DbxInjectionContextDirective } from './injection.context.directive';
 
 @NgModule({
   imports: [
