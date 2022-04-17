@@ -7,6 +7,7 @@ import { DocFormTextEditorComponent } from './container/texteditor.component';
 import { DocFormSelectionComponent } from './container/selection.component';
 import { DocFormComponentComponent } from './container/component.component';
 import { DocFormChecklistComponent } from './container/checklist.component';
+import { DocFormTemplateComponent } from './container/template.component';
 
 export const layoutState: Ng2StateDeclaration = {
   url: '/form',
@@ -57,6 +58,12 @@ export const docFormWrapperState: Ng2StateDeclaration = {
   component: DocFormWrapperComponent,
 };
 
+export const docFormTemplateState: Ng2StateDeclaration = {
+  url: '/template',
+  name: 'doc.form.template',
+  component: DocFormTemplateComponent
+};
+
 export const STATES: Ng2StateDeclaration[] = [
   layoutState,
   homeState,
@@ -65,5 +72,6 @@ export const STATES: Ng2StateDeclaration[] = [
   docFormComponentState,
   docFormSelectionState,
   docFormTextEditorState,
-  docFormWrapperState
+  docFormWrapperState,
+  docFormTemplateState
 ];

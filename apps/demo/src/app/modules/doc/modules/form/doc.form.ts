@@ -29,6 +29,11 @@ export const DOC_FORM_ROUTES = [{
   title: 'Wrappers',
   detail: 'form wrappers',
   ref: 'doc.form.wrapper'
+}, {
+  icon: 'template',
+  title: 'Templates',
+  detail: 'form field templates',
+  ref: 'doc.form.template'
 }];
 
 export const DOC_FORM_ROOT_ROUTE = {

@@ -13,6 +13,7 @@ import { DocFormValueComponent } from './container/value.component';
 import { DocFormExampleChecklistFormComponent } from './component/checklist.example.form.component';
 import { DocFormExampleComponentFormComponent, DocFormExampleComponentFormTestViewAComponent, DocFormExampleComponentFormTestViewBComponent } from './component/component.example.form.component';
 import { DocFormExampleComponent } from './component/example.form.component';
+import { DocFormTemplateComponent } from './container/template.component';
 
 @NgModule({
   imports: [
@@ -36,6 +37,7 @@ import { DocFormExampleComponent } from './component/example.form.component';
     DocFormSelectionComponent,
     DocFormComponentComponent,
     DocFormTextEditorComponent,
+    DocFormTemplateComponent,
     DocFormWrapperComponent
   ],
 })

@@ -12,8 +12,9 @@
 <!-- Login View -->
 <ng-template #loginView>
   <ng-container dbxAction [dbxActionHandler]="handleLoginAction">
-    <dbx-firebase-email-form dbxActionForm></dbx-firebase-email-form>
-    <div class="dbx-firebase-login-email-forgot-prompt">
+    <dbx-firebase-email-form [loginMode]="loginMode" dbxActionForm [dbxFormSource]="emailFormValue">
+    </dbx-firebase-email-form>
+    <div class="dbx-firebase-login-email-forgot-prompt" *ngIf="isLoginMode">
       <dbx-link [anchor]="forgotAnchor">Forgot Password?</dbx-link>
     </div>
     <div class="dbx-flex">
@@ -30,7 +31,8 @@
 <!-- Reset Password View -->
 <ng-template #resetPassword>
   <ng-container dbxAction [dbxActionHandler]="handleRecoveryAction">
-    <dbx-firebase-email-recovery-form dbxActionForm [dbxFormSource]="emailFormValue"></dbx-firebase-email-recovery-form>
+    <dbx-firebase-email-recovery-form dbxActionForm [dbxFormSource]="recoveryFormValue">
+    </dbx-firebase-email-recovery-form>
     <p class="dbx-hint">An email will be sent to the above address to help you reset your password.</p>
     <div class="dbx-flex">
       <dbx-button class="dbx-wide-button" text="Send Recovery Email" [raised]="true" color="primary" dbxActionButton>

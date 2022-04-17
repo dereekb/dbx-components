@@ -19,7 +19,7 @@ export function isIterable<T = any>(values: any): values is Iterable<T> {
 }
 
 /**
- * Returns the first value from the Iterable. If there are no values, returns undefined.
+ * Returns the first value from the Iterable. If there are no values, returns undefined. Order is not guranteed.
  * 
  * @param values 
  * @returns 
@@ -30,6 +30,27 @@ export function firstValueFromIterable<T>(values: Iterable<T>): Maybe<T> {
   }
 
   return undefined;
+}
+
+/**
+ * Takes items from the iterable in the order they are read. Order is not guranteed.
+ * 
+ * @param values 
+ * @param count 
+ * @returns 
+ */
+export function takeValuesFromIterable<T>(values: Iterable<T>, count: number): T[] {
+  let result: T[] = [];
+
+  for (const value of values) {
+    if (result.length < count) {
+      result.push(value);
+    } else {
+      break;
+    }
+  }
+
+  return result;
 }
 
 
@@ -62,7 +83,7 @@ export function useIterableOrValue<T>(values: Maybe<IterableOrValue<T>>, fn: (va
 }
 
 /**
- * Find values within an iterable.
+ * Find the first matching value in the Iterable.
  * 
  * @param values 
  * @param fn 
@@ -75,4 +96,21 @@ export function findInIterable<T>(values: Iterable<T>, fn: (value: T) => boolean
   }
 
   return undefined;
+}
+
+/**
+ * Whether or not the value exists in the iterable.
+ * 
+ * @param values 
+ * @param fn 
+ * @returns 
+ */
+export function existsInIterable<T>(values: Iterable<T>, fn: (value: T) => boolean): boolean {
+  for (const value of values) {
+    if (fn(value)) {
+      return true;
+    }
+  }
+
+  return false;
 }

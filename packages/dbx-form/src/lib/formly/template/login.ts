@@ -19,7 +19,7 @@ export function textPasswordField(config?: TextPasswordFieldConfig): FormlyField
   return textField({
     key: 'password',
     ...config,
-    label: 'Password',
+    label: config?.label ?? 'Password',
     inputType: 'password',
     required: true
   });
@@ -31,6 +31,8 @@ export function textPasswordField(config?: TextPasswordFieldConfig): FormlyField
  * @returns 
  */
 export function textVerifyPasswordField(config?: TextPasswordFieldConfig): FormlyFieldConfig {
+  console.log('Verify password config: ', config);
+
   return textPasswordField({
     key: 'verifyPassword',
     label: 'Verify Password',
@@ -50,11 +52,19 @@ export function textPasswordWithVerifyFieldGroup(config: TextPasswordWithVerifyF
   const verifyPasswordField = textVerifyPasswordField({
     ...config.password,
     ...config.verifyPassword,
+    label: (config.verifyPassword?.label) ?? `Verify ${passwordFieldConfig.templateOptions?.label}`,
     key: verifyPasswordFieldKey
   });
 
+  const validators: any = {
+    validation: [{
+      errorPath: verifyPasswordFieldKey,
+      expression: fieldValuesAreEqualValidator({ message: 'The passwords do not match.' })
+    }]
+  };
+
   const groupFieldConfig: FormlyFieldConfig = {
-    validators: [fieldValuesAreEqualValidator()],
+    validators,
     fieldGroup: [passwordFieldConfig, verifyPasswordField]
   };
 

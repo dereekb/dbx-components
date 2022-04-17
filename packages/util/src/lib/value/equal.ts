@@ -1,5 +1,4 @@
-import { asArray } from '../array';
-import { findInIterable, firstValueFromIterable, isIterable, IterableOrValue } from './../iterable/iterable';
+import { existsInIterable, findInIterable, firstValueFromIterable, isIterable, IterableOrValue, takeValuesFromIterable } from './../iterable/iterable';
 
 /**
  * Function used for equivalence comparisons on an object.
@@ -45,8 +44,7 @@ export function areEqualContext<T>(contextValue: T, fn: IsEqualFunction<T>): Are
     let areEqual = false;
 
     if (isIterable(input)) {
-      const findResult = findInIterable(input, (x) => !isEqual(x));
-      areEqual = findResult == null;
+      areEqual = !existsInIterable(input, (x) => !isEqual(x));
     } else {
       areEqual = isEqual(input);
     }
@@ -66,9 +64,9 @@ export function areEqualContext<T>(contextValue: T, fn: IsEqualFunction<T>): Are
  */
 export function allObjectsAreEqual<T>(values: IterableOrValue<T>, fn: IsEqualFunction<T>): boolean {
   if (isIterable(values)) {
-    const firstValue = firstValueFromIterable(values);
-    return (firstValue != null) ? areEqualContext(firstValue, fn)(values) : true;
+    const firstValues = takeValuesFromIterable(values, 2);
+    return (firstValues.length > 1) ? areEqualContext(firstValues[0], fn)(values) : true;
   }
-  
+
   return true;
 }

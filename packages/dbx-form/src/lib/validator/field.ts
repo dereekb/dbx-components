@@ -1,6 +1,5 @@
-import { FilterKeyValueTuples } from './../../../../util/src/lib/object/object';
 import { AbstractControl, ValidatorFn } from "@angular/forms";
-import { allObjectsAreEqual, IsEqualFunction, KeyValueTypleValueFilter, ObjectMap, valuesFromPOJO } from "@dereekb/util";
+import { FilterKeyValueTuples, allObjectsAreEqual, IsEqualFunction, KeyValueTypleValueFilter, ObjectMap, valuesFromPOJO } from "@dereekb/util";
 
 export const FIELD_VALUES_ARE_EQUAL_VALIDATION_KEY = 'fieldValuesAreEqual';
 

@@ -1,4 +1,4 @@
-import { KeyValueTypleValueFilter } from '..';
+import { allKeyValueTuples, filterKeyValueTupleFunction, KeyValueTypleValueFilter } from '..';
 import { filterFromPOJO, objectHasKey } from './object';
 
 describe('filterFromPOJO()', () => {
@@ -71,6 +71,36 @@ describe('filterFromPOJO()', () => {
           expect(objectHasKey(result, 'z')).toBe(false);
         });
 
+      });
+
+    });
+
+  });
+
+});
+
+
+describe('filterKeyValueTuplesFn()', () => {
+
+  describe('config', () => {
+
+    describe('invertFilter', () => {
+
+      it('should not invert the filter if invertFilter is not defined.', () => {
+        const object = {
+          'a': 0,
+          'b': 1,
+          'c': undefined
+        };
+
+        const tuples = allKeyValueTuples(object);
+        const filter = filterKeyValueTupleFunction<typeof object>({
+          valueFilter: KeyValueTypleValueFilter.NONE
+        });
+
+        const result = tuples.filter(filter);
+
+        expect(result.length).toBe(3);
       });
 
     });

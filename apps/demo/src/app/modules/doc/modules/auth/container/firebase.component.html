@@ -30,5 +30,27 @@
 
     </doc-feature-example>
 
+    <doc-feature-example header="dbx-firebase-register"
+      hint="Component that displays all the login options for an app in registration mode. Has an optional input to show only specific providers.">
+
+      <dbx-content-border>
+        <h4>Auth User</h4>
+        <p class="prettyjson">{{ authUserInfo$ | async | prettyjson }}</p>
+        <button mat-flat-button color="warn" (click)="logOut()">Log Out</button>
+      </dbx-content-border>
+
+      <h3>standalone with providers limited</h3>
+      <p class="dbx-hint">Using the [providerTypes] input you can limit the providers at the component level.</p>
+      <dbx-firebase-register [providerTypes]="['email', 'google']"></dbx-firebase-register>
+
+      <h3>Styled Example</h3>
+      <dbx-content-container grow="small">
+        <h3>Register</h3>
+        <dbx-firebase-register></dbx-firebase-register>
+        <dbx-firebase-login-terms></dbx-firebase-login-terms>
+      </dbx-content-container>
+
+    </doc-feature-example>
+
   </doc-feature-layout>
 </dbx-content-container>

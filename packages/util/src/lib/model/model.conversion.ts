@@ -1,5 +1,5 @@
 import { asGetter, Getter, GetterOrValue } from "../getter/getter";
-import { toKeyValueTuples } from "../object";
+import { filterKeyValueTuples } from "../object";
 import { Maybe } from "../value/maybe";
 import { ApplyMapFunction, MapFunction } from "../value/map";
 
@@ -18,7 +18,7 @@ export type ModelFieldsConversionConfig<I extends object> = {
 }
 
 export function makeModelMapFunctions<V extends object, D extends object>(fields: ModelFieldsConversionConfig<V>): ModelMapFunctions<V, D> {
-  const keys = toKeyValueTuples(fields);
+  const keys = filterKeyValueTuples(fields);
   const conversionsByKey: [keyof V, ModelFieldMapFunctions][] = keys.map(([key, field]) => [key, makeModelFieldMapFunctions(field)]);
   const fromConversions: [keyof D, ModelFieldMapFunction][] = conversionsByKey.map(([key, configs]) => ([key as any as keyof D, configs.from]));
   const toConversions: [keyof V, ModelFieldMapFunction][] = conversionsByKey.map(([key, configs]) => ([key, configs.to]));

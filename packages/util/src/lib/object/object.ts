@@ -93,6 +93,10 @@ export function valuesFromPOJO<O = any, I extends object = object>(target: I, fi
 
 export type KeyValueTuple<T extends object = object, K extends keyof T = keyof T> = [K, T[K]];
 
+export function allKeyValueTuples<T extends object = object, K extends keyof T = keyof T>(obj: T): KeyValueTuple<T, K>[] {
+  return Object.entries(obj) as KeyValueTuple<T, K>[];
+}
+
 export enum KeyValueTypleValueFilter {
   NONE = 0,
   UNDEFINED = 1,
@@ -108,15 +112,15 @@ export interface ForEachKeyValue<T extends object = object, K extends keyof T = 
 }
 
 export function forEachKeyValue<T extends object = object, K extends keyof T = keyof T>(obj: T, { forEach, filter }: ForEachKeyValue<T, K>): void {
-  const keyValues = toKeyValueTuples<T, K>(obj, filter);
+  const keyValues = filterKeyValueTuples<T, K>(obj, filter);
   keyValues.forEach(forEach);
 }
 
-export function toKeyValueTuples<T extends object = object, K extends keyof T = keyof T>(obj: T, filter?: FilterKeyValueTuplesInput<T, K>): KeyValueTuple<T, K>[] {
-  let pairs: KeyValueTuple<T, K>[] = Object.entries(obj) as KeyValueTuple<T, K>[];
+export function filterKeyValueTuples<T extends object = object, K extends keyof T = keyof T>(obj: T, filter?: FilterKeyValueTuplesInput<T, K>): KeyValueTuple<T, K>[] {
+  let pairs: KeyValueTuple<T, K>[] = allKeyValueTuples(obj);
 
   if (filter) {
-    const filterFn = filterKeyValueTuplesFn<T, K>(filter);
+    const filterFn = filterKeyValueTupleFunction<T, K>(filter);
     pairs = pairs.filter(filterFn);
   }
 
@@ -131,9 +135,11 @@ export interface FilterKeyValueTuples<T extends object = object, K extends keyof
   keysFilter?: K[];
 }
 
-export function filterKeyValueTuplesFn<T extends object = object, K extends keyof T = keyof T>(input: FilterKeyValueTuplesInput<T, K>): (tuples: KeyValueTuple<T, K>) => boolean {
+export type FilterKeyValueTupleFunction<T extends object = object, K extends keyof T = keyof T> = (tuples: KeyValueTuple<T, K>) => boolean;
+
+export function filterKeyValueTupleFunction<T extends object = object, K extends keyof T = keyof T>(input: FilterKeyValueTuplesInput<T, K>): FilterKeyValueTupleFunction<T, K> {
   const filter = (typeof input === 'object') ? input as FilterKeyValueTuples<T, K> : { valueFilter: input };
-  const { valueFilter: type, invertFilter: inverseFilter, keysFilter }: FilterKeyValueTuples<T, K> = filter;
+  const { valueFilter: type, invertFilter: inverseFilter = false, keysFilter }: FilterKeyValueTuples<T, K> = filter;
 
   let filterFn: (tuples: KeyValueTuple<T, K>) => boolean;
 
