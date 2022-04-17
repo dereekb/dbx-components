@@ -6,6 +6,7 @@ import { Observable, timeout, startWith, distinctUntilChanged, shareReplay, map,
 import { Maybe } from "@dereekb/util";
 import { authUserStateFromFirebaseAuthService } from './firebase.auth.rxjs';
 import { AuthUserInfo, authUserInfoFromAuthUser } from '../auth';
+import { sendPasswordResetEmail } from 'firebase/auth';
 
 export abstract class DbxFirebaseAuthServiceDelegate {
   abstract authUserStateObs(dbxFirebaseAuthService: DbxFirebaseAuthService): Observable<AuthUserState>;
@@ -102,6 +103,10 @@ export class DbxFirebaseAuthService implements DbxAuthService {
 
   registerWithEmailAndPassword(email: string, password: string): Promise<UserCredential> {
     return createUserWithEmailAndPassword(this.firebaseAuth, email, password);
+  }
+
+  sendPasswordResetEmail(email: string): Promise<void> {
+    return sendPasswordResetEmail(this.firebaseAuth, email);
   }
 
   logInWithEmailAndPassword(email: string, password: string): Promise<UserCredential> {

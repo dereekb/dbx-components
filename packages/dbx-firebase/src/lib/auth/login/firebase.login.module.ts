@@ -21,11 +21,12 @@ import { DbxFirebaseLoginListComponent } from './login.list.component';
 import { DbxFirebaseRegisterEmailComponent } from './register.email.component';
 import { DbxFirebaseLoginContextDirective } from './login.context.directive';
 import { DbxFirebaseLoginEmailContentComponent } from './login.email.content.component';
-import { DbxFormActionModule, DbxFormFormlyTextFieldModule, DbxFormlyModule, DbxFormModule } from '@dereekb/dbx-form';
+import { DbxFormActionModule, DbxFormFormlyTextFieldModule, DbxFormIoModule, DbxFormlyModule, DbxFormModule } from '@dereekb/dbx-form';
 import { DbxFirebaseEmailFormComponent } from './login.email.form.component';
 import { DbxFirebaseLoginTermsComponent } from './login.terms.component';
 import { DbxFirebaseLoginTermsViewComponent } from './login.terms.default.component';
 import { DbxFirebaseLoginContextBackButtonComponent } from './login.context.back.component';
+import { DbxFirebaseEmailRecoveryFormComponent } from './login.email.recovery.form.component';
 
 export abstract class DbxFirebaseLoginModuleRootConfig {
   abstract readonly tosUrl: string;
@@ -126,6 +127,7 @@ export function defaultFirebaseAuthLoginProvidersFactory(): DbxFirebaseAuthLogin
     MatIconModule,
     MatButtonModule,
     DbxAnchorModule,
+    DbxFormIoModule,
     DbxFormModule,
     DbxFormlyModule,
     DbxFormActionModule,
@@ -146,6 +148,7 @@ export function defaultFirebaseAuthLoginProvidersFactory(): DbxFirebaseAuthLogin
     DbxFirebaseLoginEmailComponent,
     DbxFirebaseLoginEmailContentComponent,
     DbxFirebaseEmailFormComponent,
+    DbxFirebaseEmailRecoveryFormComponent,
     DbxFirebaseRegisterEmailComponent,
     DbxFirebaseLoginGoogleComponent,
     DbxFirebaseLoginGitHubComponent,
@@ -168,6 +171,7 @@ export function defaultFirebaseAuthLoginProvidersFactory(): DbxFirebaseAuthLogin
     DbxFirebaseLoginEmailComponent,
     DbxFirebaseLoginEmailContentComponent,
     DbxFirebaseEmailFormComponent,
+    DbxFirebaseEmailRecoveryFormComponent,
     DbxFirebaseRegisterEmailComponent,
     DbxFirebaseLoginGoogleComponent,
     DbxFirebaseLoginGitHubComponent,

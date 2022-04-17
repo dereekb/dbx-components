@@ -46,6 +46,10 @@ $login-button-icon-size: 18px;
     }
   }
 
+  .dbx-firebase-login-email-forgot-prompt {
+    margin-bottom: 18px;
+  }
+
 }
 
 @mixin color($theme-config) {}

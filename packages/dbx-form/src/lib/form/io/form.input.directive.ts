@@ -4,6 +4,7 @@ import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
 import { DbxForm, DbxFormState, DbxMutableForm } from '../form';
 import { distinctUntilChanged, filter, first, map } from 'rxjs/operators';
 import { Maybe } from '@dereekb/util';
+import { asObservable, ObservableGetter } from '@dereekb/rxjs';
 
 /**
  * Used with a FormComponent to set the value based on the input value.
@@ -17,25 +18,24 @@ export class DbxFormSourceDirective<T extends object = any> extends AbstractSubs
     super();
   }
 
-  /**
-   * Sets a LoadingContext that is watched for the loading state.
-   */
   @Input('dbxFormSource')
-  set obs(obs: Observable<Maybe<Partial<T>>>) {
-    this._setObs(obs);
+  set obs(obs: Maybe<ObservableGetter<Maybe<Partial<T>>>>) {
+    this.setObs(obs);
   }
 
-  private _setObs(obs: Observable<Maybe<Partial<T>>>): void {
+  private setObs(obs: Maybe<ObservableGetter<Maybe<Partial<T>>>>): void {
     let subscription;
 
     if (obs) {
+      const observable = asObservable(obs);
+
       subscription = combineLatest([
         // Emit the first time initializing isn't there.
         this.form.stream$.pipe(
           filter((x) => x.state !== DbxFormState.INITIALIZING),
           first()
         ),
-        obs
+        observable
       ]).pipe(
         map((x) => x[1]),
         distinctUntilChanged((x, y) => x === y),
