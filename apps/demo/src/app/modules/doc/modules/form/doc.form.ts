@@ -30,7 +30,7 @@ export const DOC_FORM_ROUTES = [{
   detail: 'form wrappers',
   ref: 'doc.form.wrapper'
 }, {
-  icon: 'template',
+  icon: 'article',
   title: 'Templates',
   detail: 'form field templates',
   ref: 'doc.form.template'

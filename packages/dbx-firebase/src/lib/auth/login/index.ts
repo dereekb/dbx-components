@@ -12,6 +12,7 @@ export * from './login.github.component';
 export * from './login.google.component';
 export * from './login.list.component';
 export * from './login.microsoft.component';
+export * from './login.password';
 export * from './login.service';
 export * from './login';
 export * from './login.twitter.component';

@@ -1,10 +1,13 @@
 import { Directive, EventEmitter, Host, Output, OnInit } from '@angular/core';
 import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
-import { filter, first, mergeMap, delay } from 'rxjs';
+import { Maybe } from '@dereekb/util';
+import { first, mergeMap, delay, map } from 'rxjs';
 import { DbxForm } from '../form';
 
 /**
  * Used to see form value changes.
+ * 
+ * Emits undefined when the form is incomplete, and the value when the form is complete.
  */
 @Directive({
   selector: '[dbxFormValueChange]'
@@ -12,7 +15,7 @@ import { DbxForm } from '../form';
 export class DbxFormValueChangesDirective<T extends object = any> extends AbstractSubscriptionDirective implements OnInit {
 
   @Output()
-  readonly dbxFormValueChange = new EventEmitter<T>();
+  readonly dbxFormValueChange = new EventEmitter<Maybe<T>>();
 
   constructor(@Host() public readonly form: DbxForm) {
     super();
@@ -20,11 +23,14 @@ export class DbxFormValueChangesDirective<T extends object = any> extends Abstra
 
   ngOnInit(): void {
     this.sub = this.form.stream$.pipe(
-      filter(x => x.isComplete),
-      mergeMap(() => this.form.getValue().pipe(first())),
+      mergeMap((x) => this.form.getValue().pipe(first(), map((value) => ({ isComplete: x.isComplete, value })))),
       delay(0)
-    ).subscribe((value) => {
-      this.dbxFormValueChange.next(value);
+    ).subscribe(({ isComplete, value }) => {
+      if (isComplete) {
+        this.dbxFormValueChange.next(value);
+      } else {
+        this.dbxFormValueChange.next(undefined);
+      }
     });
   }
 

@@ -5,6 +5,11 @@ import { FormlyFieldConfig } from "@ngx-formly/core";
 import { capitalizeFirstLetter, Maybe } from '@dereekb/util';
 
 /**
+ * Convenience interface for the password parameters configuration for a TextPasswordField.
+ */
+export interface TextPasswordFieldPasswordParameters extends Partial<Pick<TextFieldConfig, 'maxLength' | 'minLength' | 'pattern'>> { };
+
+/**
  * textPasswordField() configuration.
  */
 export interface TextPasswordFieldConfig extends Omit<TextFieldConfig, 'inputType' | 'key'>, Partial<Pick<TextFieldConfig, 'key'>> { }
@@ -31,8 +36,6 @@ export function textPasswordField(config?: TextPasswordFieldConfig): FormlyField
  * @returns 
  */
 export function textVerifyPasswordField(config?: TextPasswordFieldConfig): FormlyFieldConfig {
-  console.log('Verify password config: ', config);
-
   return textPasswordField({
     key: 'verifyPassword',
     label: 'Verify Password',
@@ -59,7 +62,7 @@ export function textPasswordWithVerifyFieldGroup(config: TextPasswordWithVerifyF
   const validators: any = {
     validation: [{
       errorPath: verifyPasswordFieldKey,
-      expression: fieldValuesAreEqualValidator({ message: 'The passwords do not match.' })
+      expression: fieldValuesAreEqualValidator({ keysFilter: [passwordFieldConfig.key, verifyPasswordField.key] as string[], message: 'The passwords do not match.' })
     }]
   };
 

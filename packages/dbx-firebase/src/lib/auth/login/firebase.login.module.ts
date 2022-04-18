@@ -12,7 +12,7 @@ import { DbxFirebaseLoginComponent } from './login.component';
 import { DbxFirebaseLoginEmailComponent } from './login.email.component';
 import { DbxFirebaseLoginFacebookComponent } from './login.facebook.component';
 import { DbxFirebaseLoginGoogleComponent } from './login.google.component';
-import { DbxFirebaseAuthLoginProvider, DbxFirebaseAuthLoginService, DEFAULT_FIREBASE_AUTH_LOGIN_PROVIDERS_TOKEN, DEFAULT_FIREBASE_AUTH_LOGIN_TERMS_COMPONENT_CLASS_TOKEN } from './login.service';
+import { DbxFirebaseAuthLoginProvider, DbxFirebaseAuthLoginService, DEFAULT_FIREBASE_AUTH_LOGIN_PASSWORD_CONFIG_TOKEN, DEFAULT_FIREBASE_AUTH_LOGIN_PROVIDERS_TOKEN, DEFAULT_FIREBASE_AUTH_LOGIN_TERMS_COMPONENT_CLASS_TOKEN } from './login.service';
 import { DbxFirebaseRegisterComponent } from './register.component';
 import { DbxFirebaseLoginGitHubComponent } from './login.github.component';
 import { DbxFirebaseLoginTwitterComponent } from './login.twitter.component';
@@ -27,12 +27,14 @@ import { DbxFirebaseLoginTermsComponent } from './login.terms.component';
 import { DbxFirebaseLoginTermsViewComponent } from './login.terms.default.component';
 import { DbxFirebaseLoginContextBackButtonComponent } from './login.context.back.component';
 import { DbxFirebaseEmailRecoveryFormComponent } from './login.email.recovery.form.component';
+import { DbxFirebaseAuthLoginPasswordConfig } from './login.password';
 
 export abstract class DbxFirebaseLoginModuleRootConfig {
   abstract readonly tosUrl: string;
   abstract readonly privacyUrl: string;
   abstract readonly enabledLoginMethods: FirebaseLoginMethodType[] | true;
   abstract readonly termsComponentClass?: Type<any>;
+  abstract readonly passwordConfig?: DbxFirebaseAuthLoginPasswordConfig;
 }
 
 export function defaultFirebaseAuthLoginProvidersFactory(): DbxFirebaseAuthLoginProvider[] {
@@ -204,6 +206,9 @@ export class DbxFirebaseLoginModule {
       }, {
         provide: DEFAULT_FIREBASE_AUTH_LOGIN_TERMS_COMPONENT_CLASS_TOKEN,
         useValue: config.termsComponentClass
+      }, {
+        provide: DEFAULT_FIREBASE_AUTH_LOGIN_PASSWORD_CONFIG_TOKEN,
+        useValue: config.passwordConfig
       }, {
         provide: DbxFirebaseLoginModuleRootConfig,
         useValue: config

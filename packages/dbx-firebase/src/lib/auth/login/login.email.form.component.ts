@@ -1,11 +1,16 @@
 import { Component, Input, OnDestroy } from "@angular/core";
-import { ProvideFormlyContext, AbstractAsyncFormlyFormDirective, usernamePasswordLoginFields, UsernameLoginFieldsConfig, DefaultUsernameLoginFieldsValue } from "@dereekb/dbx-form";
+import { TextPasswordFieldConfig, ProvideFormlyContext, AbstractAsyncFormlyFormDirective, usernamePasswordLoginFields, DefaultUsernameLoginFieldsValue } from "@dereekb/dbx-form";
 import { Maybe } from "@dereekb/util";
 import { FormlyFieldConfig } from "@ngx-formly/core";
 import { BehaviorSubject, map, Observable } from "rxjs";
 import { DbxFirebaseLoginMode } from "./login";
 
 export interface DbxFirebaseEmailFormValue extends DefaultUsernameLoginFieldsValue { }
+
+export interface DbxFirebaseEmailFormConfig {
+  loginMode: DbxFirebaseLoginMode;
+  passwordConfig?: TextPasswordFieldConfig;
+}
 
 @Component({
   template: `<dbx-formly></dbx-formly>`,
@@ -14,23 +19,23 @@ export interface DbxFirebaseEmailFormValue extends DefaultUsernameLoginFieldsVal
 })
 export class DbxFirebaseEmailFormComponent extends AbstractAsyncFormlyFormDirective<DbxFirebaseEmailFormValue> implements OnDestroy {
 
-  private _mode = new BehaviorSubject<DbxFirebaseLoginMode>('login');
+  private _config = new BehaviorSubject<DbxFirebaseEmailFormConfig>({ loginMode: 'login' });
 
-  readonly fields$: Observable<Maybe<FormlyFieldConfig[]>> = this._mode.pipe(
-    map((mode) => {
-      const fields: FormlyFieldConfig[] = usernamePasswordLoginFields({ username: 'email', verifyPassword: (mode === 'register') });
+  readonly fields$: Observable<Maybe<FormlyFieldConfig[]>> = this._config.pipe(
+    map(({ loginMode = 'login', passwordConfig }) => {
+      const fields: FormlyFieldConfig[] = usernamePasswordLoginFields({ username: 'email', password: passwordConfig, verifyPassword: (loginMode === 'register') });
       return fields;
     })
   );
 
   @Input()
-  set loginMode(loginMode: DbxFirebaseLoginMode) {
-    this._mode.next(loginMode);
+  set config(config: DbxFirebaseEmailFormConfig) {
+    this._config.next(config);
   }
 
   override ngOnDestroy() {
     super.ngOnDestroy();
-    this._mode.complete();
+    this._config.complete();
   }
 
 }

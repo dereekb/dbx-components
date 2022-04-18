@@ -12,7 +12,7 @@
 <!-- Login View -->
 <ng-template #loginView>
   <ng-container dbxAction [dbxActionHandler]="handleLoginAction">
-    <dbx-firebase-email-form [loginMode]="loginMode" dbxActionForm [dbxFormSource]="emailFormValue">
+    <dbx-firebase-email-form [config]="formConfig" dbxActionForm [dbxFormSource]="emailFormValue">
     </dbx-firebase-email-form>
     <div class="dbx-firebase-login-email-forgot-prompt" *ngIf="isLoginMode">
       <dbx-link [anchor]="forgotAnchor">Forgot Password?</dbx-link>

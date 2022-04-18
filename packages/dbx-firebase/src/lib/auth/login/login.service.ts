@@ -2,15 +2,16 @@ import { mapIterable, addToSet, removeFromSet, Maybe, ArrayOrValue, filterMaybeV
 import { Inject, Injectable, InjectionToken, Optional, Type } from "@angular/core";
 import { FirebaseLoginMethodType, KnownFirebaseLoginMethodType } from "./login";
 import { DbxFirebaseLoginTermsViewComponent } from "./login.terms.default.component";
+import { DbxFirebaseAuthLoginPasswordConfig, DEFAULT_FIREBASE_AUTH_LOGIN_PASSWORD_CONFIG } from "./login.password";
 
 /**
  * Default providers to inject.
  */
 export const DEFAULT_FIREBASE_AUTH_LOGIN_PROVIDERS_TOKEN = new InjectionToken('DefaultDbxFirebaseAuthLoginProviders');
 export const DEFAULT_FIREBASE_AUTH_LOGIN_TERMS_COMPONENT_CLASS_TOKEN = new InjectionToken('DefaultDbxFirebaseAuthLoginTermsComponentClass');
+export const DEFAULT_FIREBASE_AUTH_LOGIN_PASSWORD_CONFIG_TOKEN = new InjectionToken('DefaultDbxFirebaseAuthLoginPasswordConfig');
 
-
-export interface DbxFirebaseAuthLoginProvider {
+export interface DbxFirebaseAuthLoginProvider<D = any> {
   /**
    * Login method key for this type.
    */
@@ -23,6 +24,12 @@ export interface DbxFirebaseAuthLoginProvider {
    * Custom registration type to use instead. If false, registration is not allowd for this type.
    */
   readonly registrationComponentClass?: Type<any> | false;
+  /**
+   * Custom data available to the components.
+   * 
+   * Components are responsible for knowing the typing information of this data.
+   */
+  readonly componentData?: D;
   /**
    * Asset configuration for this type.
    */
@@ -66,17 +73,21 @@ export interface DbxFirebaseAuthLoginProviderAssets {
 export class DbxFirebaseAuthLoginService {
 
   private _enableAll = false;
+  private _passwordConfig: DbxFirebaseAuthLoginPasswordConfig;
   private _providers = new Map<FirebaseLoginMethodType, DbxFirebaseAuthLoginProvider>();
   private _assets = new Map<FirebaseLoginMethodType, DbxFirebaseAuthLoginProviderAssets>();
   private _enabled = new Set<FirebaseLoginMethodType>();
 
   constructor(
     @Optional() @Inject(DEFAULT_FIREBASE_AUTH_LOGIN_PROVIDERS_TOKEN) defaultProviders: DbxFirebaseAuthLoginProvider[],
+    @Optional() @Inject(DEFAULT_FIREBASE_AUTH_LOGIN_PASSWORD_CONFIG_TOKEN) passwordConfig: DbxFirebaseAuthLoginPasswordConfig,
     @Optional() @Inject(DEFAULT_FIREBASE_AUTH_LOGIN_TERMS_COMPONENT_CLASS_TOKEN) readonly termsComponentClass: Type<any> = DbxFirebaseLoginTermsViewComponent
   ) {
     if (defaultProviders) {
       defaultProviders.forEach((x) => this.register(x, false));
     }
+
+    this._passwordConfig = passwordConfig ?? DEFAULT_FIREBASE_AUTH_LOGIN_PASSWORD_CONFIG;
   }
 
   /**
@@ -166,6 +177,14 @@ export class DbxFirebaseAuthLoginService {
 
   getProviderAssets(type: FirebaseLoginMethodType): Maybe<DbxFirebaseAuthLoginProviderAssets> {
     return this._assets.get(type);
+  }
+
+  getPasswordConfig() {
+    return this._passwordConfig;
+  }
+
+  setPasswordConfig(passwordConfig: DbxFirebaseAuthLoginPasswordConfig) {
+    this._passwordConfig = passwordConfig;
   }
 
 }

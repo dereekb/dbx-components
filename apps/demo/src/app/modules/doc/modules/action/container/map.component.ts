@@ -20,7 +20,6 @@ export class DocActionMapComponent {
   saveThrottleTime = ms('2s');
 
   handleSaveDraft: HandleActionFunction<DocActionFormExampleValue, any> = (value: DocActionFormExampleValue) => {
-    console.log('Save?');
     return of(value).pipe(
       delay(ms('1s')),
       tap(() => {

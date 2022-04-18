@@ -104,7 +104,7 @@ export abstract class AbstractConfiguredDbxFirebaseLoginButtonDirective implemen
     readonly dbxFirebaseLoginContext: DbxFirebaseLoginContext) { }
 
   ngOnInit(): void {
-    const assets = this.dbxFirebaseAuthLoginService.getProviderAssets(this.loginProvider) ?? {};
+    const assets = this.assetConfig;
 
     this._config = {
       text: assets.loginText ?? `<loginText not configured>`,
@@ -117,6 +117,14 @@ export abstract class AbstractConfiguredDbxFirebaseLoginButtonDirective implemen
   }
 
   abstract handleLogin(): Promise<any>;
+
+  get providerConfig() {
+    return this.dbxFirebaseAuthLoginService.getLoginProvider(this.loginProvider);
+  }
+
+  get assetConfig() {
+    return this.dbxFirebaseAuthLoginService.getProviderAssets(this.loginProvider) ?? {};
+  }
 
   get config() {
     return this._config;

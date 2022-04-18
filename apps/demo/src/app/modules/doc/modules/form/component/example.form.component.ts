@@ -19,6 +19,7 @@ import { map, Observable } from "rxjs";
 export class DocFormExampleComponent extends AbstractConfigAsyncFormlyFormDirective<any, FormlyFieldConfig[]> {
 
   value: any;
+
   readonly fields$: Observable<FormlyFieldConfig[]> = this.config$.pipe(map((fields: FormlyFieldConfig[]) => fields ?? []));
 
 }
