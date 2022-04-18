@@ -8,6 +8,7 @@ services:
       - ./.firebase/emulators/:/opt/workspace:cached
       - ./.firebase/bin/:/root/.cache:cached
       - ./.firebase/config/:/root/.config:cached
+      - ./.firebase/data/:/root/data
     ports:
       - "9229:9229"
       - "9900-9906:9900-9906" # expose for external/web consumption
