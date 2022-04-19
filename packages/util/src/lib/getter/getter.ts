@@ -9,9 +9,14 @@ export type Getter<T> = () => T;
 export type Factory<T> = Getter<T>;
 
 /**
- * Function that returns a value with a single argument.
+ * Function that returns a value with an optional single argument.
  */
 export type GetterWithInput<T, A> = (args?: A) => T;
+
+/**
+ * Function that returns a value with a single argument.
+ */
+export type GetterWithRequiredInput<T, A> = (args: A) => T;
 
 /**
  * Either a Getter, or an instance of the item.
@@ -26,12 +31,23 @@ export type GetterOrValueWithInput<T, A> = Getter<T> | GetterWithInput<T, A>;
 export type StringOrGetter = GetterOrValue<string>;
 
 /**
+ * Returns true if the input object looks like a Getter (is a function).
+ * 
+ * @param value 
+ * @returns 
+ */
+export function isGetter<T = any>(value: any): value is Getter<T> {
+  return (typeof value === 'function');
+}
+
+/**
  * If the input is a function, it is executed. Otherwise, the value is returned.
  * 
  * @param input 
  * @returns 
  */
 export function getValueFromGetter<T>(input: GetterOrValue<T>): T;
+export function getValueFromGetter<T>(this: any, input: GetterOrValue<T>): T;
 export function getValueFromGetter<T>(this: any, input: GetterOrValue<T>, inputArgs?: any): T;
 export function getValueFromGetter<T, A>(this: any, input: GetterOrValueWithInput<T, A>, args?: A): T;
 export function getValueFromGetter<T, A>(this: any, input: GetterOrValueWithInput<T, A>, args?: A): T {

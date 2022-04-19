@@ -56,7 +56,7 @@ export class DbxFirebaseAuthService implements DbxAuthService {
   readonly claims$: Observable<ParsedToken> = this.idTokenResult$.pipe(map(x => x.claims));
 
   readonly authUserState$: Observable<AuthUserState>;
-  readonly authRoles$: Observable<AuthRoleSet>
+  readonly authRoles$: Observable<AuthRoleSet>;
 
   constructor(
     readonly firebaseAuth: Auth,

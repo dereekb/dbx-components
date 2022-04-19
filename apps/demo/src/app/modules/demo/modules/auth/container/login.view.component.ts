@@ -1,19 +1,12 @@
 import { Component } from '@angular/core';
+import { DbxFirebaseLoginMode } from '@dereekb/dbx-firebase';
 
 @Component({
   selector: 'demo-login-view',
-  template: `
-  <div>
-    <button mat-stroked-button (click)="login()">Log In</button>
-    <dbx-button-spacer></dbx-button-spacer>
-    <button mat-stroked-button (click)="login()">Register</button>
-  </div>
-  `
+  templateUrl: './login.view.component.html'
 })
 export class DemoAuthLoginViewComponent {
 
-  login(): void {
-    // todo
-  }
+  mode: DbxFirebaseLoginMode = 'login';
 
 }

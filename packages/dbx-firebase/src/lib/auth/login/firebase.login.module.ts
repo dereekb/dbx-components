@@ -6,7 +6,7 @@ import { DbxFirebaseLoginButtonComponent, DbxFirebaseLoginButtonContainerCompone
 import { ModuleWithProviders, NgModule, Type } from '@angular/core';
 import { DbxInjectionComponentModule } from '@dereekb/dbx-core';
 import { DbxActionModule, DbxAnchorModule, DbxButtonModule, DbxReadableErrorModule } from '@dereekb/dbx-web';
-import { FirebaseLoginMethodType, KnownFirebaseLoginMethodType } from './login';
+import { FirebaseLoginMethodType, KnownFirebaseLoginMethodType, OAUTH_FIREBASE_LOGIN_METHOD_CATEGORY, DEFAULT_FIREBASE_LOGIN_METHOD_CATEGORY } from './login';
 import { DbxFirebaseLoginAnonymousComponent } from './login.anonymous.component';
 import { DbxFirebaseLoginComponent } from './login.component';
 import { DbxFirebaseLoginEmailComponent } from './login.email.component';
@@ -45,6 +45,7 @@ export function defaultFirebaseAuthLoginProvidersFactory(): DbxFirebaseAuthLogin
   // NOTE: Colors are from https://brandcolors.net/
 
   return [{
+    category: DEFAULT_FIREBASE_LOGIN_METHOD_CATEGORY,
     loginMethodType: 'email' as KnownFirebaseLoginMethodType,
     componentClass: DbxFirebaseLoginEmailComponent,
     registrationComponentClass: DbxFirebaseRegisterEmailComponent,
@@ -52,9 +53,10 @@ export function defaultFirebaseAuthLoginProvidersFactory(): DbxFirebaseAuthLogin
       logoUrl: `${baseFirebaseJSUrl}/mail.svg`,
       loginText: 'Continue with Email',
       backgroundColor: '#ea4335', // gmail red color
-      textColor: '#FFF',
+      textColor: '#FFF'
     }
   }, {
+    category: OAUTH_FIREBASE_LOGIN_METHOD_CATEGORY,
     loginMethodType: 'google' as KnownFirebaseLoginMethodType,
     componentClass: DbxFirebaseLoginGoogleComponent,
     assets: {
@@ -64,6 +66,7 @@ export function defaultFirebaseAuthLoginProvidersFactory(): DbxFirebaseAuthLogin
       textColor: '#757575'
     }
   }, {
+    category: OAUTH_FIREBASE_LOGIN_METHOD_CATEGORY,
     loginMethodType: 'facebook' as KnownFirebaseLoginMethodType,
     componentClass: DbxFirebaseLoginFacebookComponent,
     assets: {
@@ -73,6 +76,7 @@ export function defaultFirebaseAuthLoginProvidersFactory(): DbxFirebaseAuthLogin
       textColor: '#FFF'
     }
   }, {
+    category: OAUTH_FIREBASE_LOGIN_METHOD_CATEGORY,
     loginMethodType: 'twitter' as KnownFirebaseLoginMethodType,
     componentClass: DbxFirebaseLoginTwitterComponent,
     assets: {
@@ -82,6 +86,7 @@ export function defaultFirebaseAuthLoginProvidersFactory(): DbxFirebaseAuthLogin
       textColor: '#FFF'
     }
   }, {
+    category: OAUTH_FIREBASE_LOGIN_METHOD_CATEGORY,
     loginMethodType: 'github' as KnownFirebaseLoginMethodType,
     componentClass: DbxFirebaseLoginGitHubComponent,
     assets: {
@@ -91,6 +96,7 @@ export function defaultFirebaseAuthLoginProvidersFactory(): DbxFirebaseAuthLogin
       textColor: '#FFF'
     }
   }, /*{
+    category: OAUTH_FIREBASE_LOGIN_METHOD_CATEGORY,
     loginMethodType: 'apple' as KnownFirebaseLoginMethodType,
     componentClass: DbxFirebaseLoginGitHubComponent,
     assets: {
@@ -100,6 +106,7 @@ export function defaultFirebaseAuthLoginProvidersFactory(): DbxFirebaseAuthLogin
       textColor: '#FFF'
     }
   }, {
+    category: OAUTH_FIREBASE_LOGIN_METHOD_CATEGORY,
     loginMethodType: 'microsoft' as KnownFirebaseLoginMethodType,
     componentClass: DbxFirebaseLoginGitHubComponent,
     assets: {
@@ -109,6 +116,7 @@ export function defaultFirebaseAuthLoginProvidersFactory(): DbxFirebaseAuthLogin
       textColor: '#FFF'
     }
   },*/ {
+    category: DEFAULT_FIREBASE_LOGIN_METHOD_CATEGORY,
     loginMethodType: 'anonymous' as KnownFirebaseLoginMethodType,
     componentClass: DbxFirebaseLoginAnonymousComponent,
     assets: {

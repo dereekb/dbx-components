@@ -1,0 +1,17 @@
+<div class="demo-login-view" [ngSwitch]="mode">
+
+  <ng-container *ngSwitchCase="'login'">
+    <h3>Login</h3>
+    <dbx-firebase-login></dbx-firebase-login>
+    <p>Need an account? Register <dbx-link (click)="mode = 'register'">here</dbx-link>.</p>
+    <dbx-firebase-login-terms></dbx-firebase-login-terms>
+  </ng-container>
+
+  <ng-container *ngSwitchCase="'register'">
+    <h3>Register</h3>
+    <dbx-firebase-register></dbx-firebase-register>
+    <p>Have an account? Log in <dbx-link (click)="mode = 'login'">here</dbx-link>.</p>
+    <dbx-firebase-login-terms></dbx-firebase-login-terms>
+  </ng-container>
+
+</div>

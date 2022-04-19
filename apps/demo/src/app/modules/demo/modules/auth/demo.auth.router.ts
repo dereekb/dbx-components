@@ -1,9 +1,9 @@
 import { Ng2StateDeclaration } from '@uirouter/angular';
-import { DemoAuthAuthorizeComponent } from './component/authorize.component';
-import { DemoAuthErrorComponent } from './component/error.component';
-import { DemoAuthLayoutComponent } from './component/layout.component';
-import { DemoAuthLoggedOutComponent } from './component/loggedout.component';
-import { DemoAuthLoginComponent } from './component/login.component';
+import { DemoAuthAuthorizeComponent } from './container/authorize.component';
+import { DemoAuthErrorComponent } from './container/error.component';
+import { DemoAuthLayoutComponent } from './container/layout.component';
+import { DemoAuthLoggedOutComponent } from './container/loggedout.component';
+import { DemoAuthLoginComponent } from './container/login.component';
 
 export const authState: Ng2StateDeclaration = {
   url: '/auth?target',

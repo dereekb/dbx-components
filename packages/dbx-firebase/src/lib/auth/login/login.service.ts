@@ -1,6 +1,6 @@
 import { mapIterable, addToSet, removeFromSet, Maybe, ArrayOrValue, filterMaybeValues } from "@dereekb/util";
 import { Inject, Injectable, InjectionToken, Optional, Type } from "@angular/core";
-import { FirebaseLoginMethodType, KnownFirebaseLoginMethodType } from "./login";
+import { FirebaseLoginMethodCategory, FirebaseLoginMethodType, KnownFirebaseLoginMethodType } from "./login";
 import { DbxFirebaseLoginTermsViewComponent } from "./login.terms.default.component";
 import { DbxFirebaseAuthLoginPasswordConfig, DEFAULT_FIREBASE_AUTH_LOGIN_PASSWORD_CONFIG } from "./login.password";
 
@@ -12,6 +12,10 @@ export const DEFAULT_FIREBASE_AUTH_LOGIN_TERMS_COMPONENT_CLASS_TOKEN = new Injec
 export const DEFAULT_FIREBASE_AUTH_LOGIN_PASSWORD_CONFIG_TOKEN = new InjectionToken('DefaultDbxFirebaseAuthLoginPasswordConfig');
 
 export interface DbxFirebaseAuthLoginProvider<D = any> {
+  /**
+   * Category for this login method.
+   */
+  readonly category?: FirebaseLoginMethodCategory;
   /**
    * Login method key for this type.
    */

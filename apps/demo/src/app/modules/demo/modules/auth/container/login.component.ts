@@ -4,6 +4,7 @@ import { Component } from '@angular/core';
   template: `
   <dbx-content-box>
     <demo-login-view></demo-login-view>
-  </dbx-content-box>`
+  </dbx-content-box>
+  `
 })
 export class DemoAuthLoginComponent { }

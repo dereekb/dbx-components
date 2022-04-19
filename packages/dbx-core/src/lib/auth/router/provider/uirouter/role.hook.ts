@@ -3,7 +3,7 @@ import { SetIncludesMode, ArrayOrValue, Maybe, setIncludesFunction } from '@dere
 import { TransitionService, TransitionHookFn, Transition, HookMatchCriteria } from '@uirouter/core';
 import { AuthRole } from '../../../auth.role';
 import { DbxAuthService } from '../../../service/auth.service';
-import { AuthTransitionDecision, AuthTransitionHookOptions, makeAuthTransitionHook } from './hook';
+import { AuthTransitionDecision, AuthTransitionHookOptions, AuthTransitionStateData, makeAuthTransitionHook } from './hook';
 
 export interface HasAuthRoleHookConfig {
   options: AuthTransitionHookOptions;
@@ -12,7 +12,7 @@ export interface HasAuthRoleHookConfig {
 /**
  * UIRouter State data with configuration for the hasAuthRoleHook.
  */
-export interface HasAuthRoleStateData {
+export interface HasAuthRoleStateData extends AuthTransitionStateData {
 
   /**
    * Auth roles marked for this state
