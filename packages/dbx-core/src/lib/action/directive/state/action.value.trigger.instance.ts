@@ -73,6 +73,7 @@ export class DbxActionValueOnTriggerInstance<T> implements Initialized, Destroya
   destroy(): void {
     this.source.lockSet.onNextUnlock(() => {
       this._triggeredSub.destroy();
+      this._valueGetter.complete();
     });
   }
 

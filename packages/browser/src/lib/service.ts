@@ -1,11 +1,13 @@
 import { Maybe } from '@dereekb/util';
 import { filterMaybe, tapFirst } from '@dereekb/rxjs';
-import { Observable, BehaviorSubject, switchMap, tap, shareReplay, from, firstValueFrom } from 'rxjs';
+import { Observable, BehaviorSubject, switchMap, shareReplay, from, firstValueFrom } from 'rxjs';
+import { Inject, Injectable, OnDestroy, Optional } from '@angular/core';
 
 /**
  * Used for loading services in the browser that are imported from other scripts, such as Facebook, Segment, Stripe, etc.
  */
-export abstract class AbstractAsyncWindowLoadedService<T> {
+@Injectable()
+export abstract class AbstractAsyncWindowLoadedService<T> implements OnDestroy {
 
   private _loading = new BehaviorSubject<Maybe<Promise<T>>>(undefined);
 
@@ -17,14 +19,18 @@ export abstract class AbstractAsyncWindowLoadedService<T> {
    * @param _callbackKey Optional key attached to window that is a function that is executed when the setup is complete.
    */
   constructor(
-    private _windowKey: string,
-    private _callbackKey?: string,
-    private _serviceName: string = _windowKey,
-    preload: boolean = true) {
+    @Inject(null) private _windowKey: string,
+    @Inject(null) private _callbackKey?: string,
+    @Inject(null) private _serviceName: string = _windowKey,
+    @Inject(null) preload: boolean = true) {
     if (preload) {
       // Begin loading the service immediately.
       setTimeout(() => this.loadService().catch());
     }
+  }
+
+  ngOnDestroy(): void {
+    this._loading.complete();
   }
 
   getService(): Promise<T> {

@@ -1,6 +1,6 @@
 import { SubscriptionObject } from '@dereekb/rxjs';
 import { Subject } from 'rxjs';
-import { Component } from '@angular/core';
+import { Component, OnDestroy } from '@angular/core';
 import { MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
 import { MatChipInputEvent } from '@angular/material/chips';
 import { AbstractDbxSearchableValueFieldDirective, SearchableValueFieldsFieldConfig, SearchableValueFieldsFormlyFieldConfig } from './searchable.field.directive';
@@ -16,7 +16,7 @@ export interface SearchableChipValueFieldsFormlyFieldConfig<T> extends Searchabl
 @Component({
   templateUrl: 'searchable.chip.field.component.html'
 })
-export class DbxSearchableChipFieldComponent<T> extends AbstractDbxSearchableValueFieldDirective<T, SearchableChipValueFieldsFormlyFieldConfig<T>> {
+export class DbxSearchableChipFieldComponent<T> extends AbstractDbxSearchableValueFieldDirective<T, SearchableChipValueFieldsFormlyFieldConfig<T>> implements OnDestroy {
 
   private _blur = new Subject<void>();
   private _blurSub = new SubscriptionObject();

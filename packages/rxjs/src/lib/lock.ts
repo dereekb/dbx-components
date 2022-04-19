@@ -2,7 +2,7 @@ import { defaultIfEmpty, delay, filter, first, map, shareReplay, switchMap, tap,
 import { Observable, of, Subscription } from 'rxjs';
 import { BehaviorSubject } from 'rxjs';
 import { combineLatestFromMapValuesObsFn } from './rxjs';
-import { reduceBooleansWithOrFn } from '@dereekb/util';
+import { Destroyable, reduceBooleansWithOrFn } from '@dereekb/util';
 import ms from 'ms';
 
 export type LockKey = string;
@@ -49,7 +49,7 @@ export function onLockSetNextUnlock({ lockSet, fn, timeout = ms('50s'), delayTim
  *
  * Added Observables do not need to be strictly removed; empty observables are counted as unlocked.
  */
-export class LockSet {
+export class LockSet implements Destroyable {
 
   private static LOCK_SET_CHILD_INDEX_STEPPER = 0;
 

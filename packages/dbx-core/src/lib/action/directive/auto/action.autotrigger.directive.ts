@@ -24,7 +24,9 @@ const MAX_ERRORS_TO_THROTTLE_ON = 6;
 })
 export class DbxActionAutoTriggerDirective<T, O> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
 
-  private _triggerEnabled = new BehaviorSubject<boolean>(true);
+  private readonly _triggerEnabled = new BehaviorSubject<boolean>(true);
+  private readonly _triggerLimit = new BehaviorSubject<number | undefined>(undefined);
+  private readonly _trigger = new Subject<number>();
 
   /**
    * How much to throttle the auto-triggering.
@@ -89,8 +91,6 @@ export class DbxActionAutoTriggerDirective<T, O> extends AbstractSubscriptionDir
     this._triggerLimit.next(triggerLimit);
   }
 
-  private readonly _triggerLimit = new BehaviorSubject<number | undefined>(undefined);
-  private readonly _trigger = new Subject<number>();
   private _triggerCount = 0;
 
   readonly _errorCount$ = this.source.errorCountSinceLastSuccess$;
@@ -154,6 +154,7 @@ export class DbxActionAutoTriggerDirective<T, O> extends AbstractSubscriptionDir
   override ngOnDestroy(): void {
     this.source.lockSet.onNextUnlock(() => {
       super.ngOnDestroy();
+      this._triggerEnabled.complete();
       this._trigger.complete();
       this._triggerLimit.complete();
     });

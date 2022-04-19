@@ -2,14 +2,14 @@ import { Subject } from 'rxjs';
 import { DbxRouterService, DbxRouterTransitionService } from '../../service';
 import { SegueRef } from "../../../segue";
 import { StateService, UIRouterGlobals, TransitionOptions, TransitionService } from '@uirouter/core';
-import { Injectable } from "@angular/core";
+import { Injectable, OnDestroy } from "@angular/core";
 import { DbxRouterTransitionEvent, DbxRouterTransitionEventType } from '../../transition/transition';
 
 /**
  * UIRouter implementation of DbxRouterService and DbxRouterTransitionService.
  */
 @Injectable()
-export class DbxUIRouterService implements DbxRouterService, DbxRouterTransitionService {
+export class DbxUIRouterService implements DbxRouterService, DbxRouterTransitionService, OnDestroy {
 
   private readonly _transitions = new Subject<DbxRouterTransitionEvent>();
   readonly transitions$ = this._transitions.asObservable();
@@ -30,6 +30,10 @@ export class DbxUIRouterService implements DbxRouterService, DbxRouterTransition
       emitTransition(DbxRouterTransitionEventType.SUCCESS);
     }) as any;
 
+  }
+
+  ngOnDestroy(): void {
+    this._transitions.complete();
   }
 
   go(segueRef: SegueRef<TransitionOptions>): Promise<boolean> {

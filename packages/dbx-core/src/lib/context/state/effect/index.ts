@@ -34,13 +34,13 @@ export abstract class AbstractOnDbxAppContextStateEffects<S> implements OnRunEff
    */
   ngrxOnRunEffects(resolvedEffects$: Observable<EffectNotification>): Observable<EffectNotification> {
     return this.actions$.pipe(
-      ofType(onDbxAppContext.DbxAppContextActions.dbxAppContextSetState),
+      ofType(onDbxAppContext.DbxAppContextActions.setState),
       filter((x) => x.state === this.activeState),
       exhaustMap(() =>
         resolvedEffects$.pipe(
           takeUntil(
             this.actions$.pipe(
-              ofType(onDbxAppContext.DbxAppContextActions.dbxAppContextSetState),
+              ofType(onDbxAppContext.DbxAppContextActions.setState),
               filter((x) => x.state !== this.activeState),
             )
           )

@@ -13,7 +13,7 @@ describe('boolean operators', () => {
   beforeEach(() => {
     subject = new Subject<boolean>();
     sub = new SubscriptionObject();
-  })
+  });
 
   afterEach(() => {
     sub.destroy();

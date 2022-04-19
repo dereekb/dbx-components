@@ -1,7 +1,7 @@
 import { MatDialog } from '@angular/material/dialog';
 import { DbxActionDialogFunction, DbxPopoverService } from '@dereekb/dbx-web';
 import { DbxActionPopoverFunction, DbxActionSnackbarGeneratorUndoInput } from '@dereekb/dbx-web';
-import { ChangeDetectorRef, Component } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy } from '@angular/core';
 import { DbxActionContextMachine, DbxActionContextSourceReference, HandleActionFunction, WorkHandlerContext, safeDetectChanges } from '@dereekb/dbx-core';
 import { of, delay, BehaviorSubject, tap } from 'rxjs';
 import { DocActionExamplePopoverComponent } from '../component/action.example.popover.form.component';
@@ -10,7 +10,7 @@ import { DocActionExampleDialogComponent } from '../component/action.example.dia
 @Component({
   templateUrl: './interaction.component.html'
 })
-export class DocActionInteractionComponent {
+export class DocActionInteractionComponent implements OnDestroy {
 
   successValue: any;
   undoValue: any;
@@ -22,6 +22,10 @@ export class DocActionInteractionComponent {
     readonly dbxPopoverService: DbxPopoverService,
     readonly matDialog: MatDialog,
     readonly cdRef: ChangeDetectorRef) { }
+
+  ngOnDestroy(): void {
+    this._value.complete();
+  }
 
   readonly handleAction: HandleActionFunction = (value: any, context: WorkHandlerContext) => {
     return of(true).pipe(delay(1000));

@@ -49,6 +49,7 @@ export class DbxSetStyleDirective extends AbstractSubscriptionDirective implemen
 
   override ngOnDestroy(): void {
     super.ngOnDestroy();
+    this._suffixes.complete();
     this._style.complete();
   }
 
@@ -69,7 +70,5 @@ export class DbxSetStyleDirective extends AbstractSubscriptionDirective implemen
   set suffixes(suffixes: Maybe<string>) {
     this._suffixes.next(suffixes);
   }
-
-
 
 }

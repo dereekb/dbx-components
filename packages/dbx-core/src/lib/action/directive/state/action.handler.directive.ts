@@ -54,6 +54,7 @@ export class DbxActionHandlerDirective<T, O> extends AbstractSubscriptionDirecti
   override ngOnDestroy(): void {
     this.source.lockSet.onNextUnlock(() => {
       super.ngOnDestroy();
+      this._handlerFunction.complete();
     });
   }
 

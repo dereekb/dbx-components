@@ -95,7 +95,9 @@ export class DbxStyleService implements Destroyable {
   }
 
   destroy(): void {
+    this._defaultConfig.complete();
     this._config.complete();
+    this._suffix.complete();
   }
 
 }

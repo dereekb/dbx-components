@@ -1,6 +1,6 @@
 import { safeDetectChanges } from '@dereekb/dbx-core';
 import { BehaviorSubject, map, Observable, of, delay } from 'rxjs';
-import { ChangeDetectorRef, Component } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy } from '@angular/core';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { filterPickableItemFieldValuesByLabel, pickableItemChipField, pickableItemListField, searchableChipField, searchableStringChipField, searchableTextField, SearchableValueFieldDisplayFn, SearchableValueFieldDisplayValue, SearchableValueFieldStringSearchFn, SearchableValueFieldValue } from '@dereekb/dbx-form';
 import { randomDelayWithRandomFunction } from '@dereekb/rxjs';
@@ -36,11 +36,10 @@ export const MAKE_RANDOM_STRING_VALUES = makeRandomArrayFn({ random: { min: 40, 
 @Component({
   templateUrl: './selection.component.html'
 })
-export class DocFormSelectionComponent {
+export class DocFormSelectionComponent implements OnDestroy {
 
   private _searchStrings = new BehaviorSubject<TestStringSearchFunction>((search) => ['A', 'B', 'C', 'D'].map(x => `${search} ${x}`.trim()));
   readonly searchFn$ = this._searchStrings.asObservable();
-
 
   readonly pickableItemChipFields: FormlyFieldConfig[] = [
     pickableItemChipField({
@@ -256,5 +255,9 @@ export class DocFormSelectionComponent {
   ];
 
   constructor(readonly cdRef: ChangeDetectorRef) { }
+
+  ngOnDestroy(): void {
+    this._searchStrings.complete();
+  }
 
 }

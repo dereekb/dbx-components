@@ -3,14 +3,14 @@ import { CustomDocValue } from './../component/item.list.custom.component';
 import { ListSelectionState } from '@dereekb/dbx-web';
 import { ListLoadingState, mapLoadingStateResults, successResult } from '@dereekb/rxjs';
 import { BehaviorSubject, map, switchMap, startWith, Observable, delay, of } from 'rxjs';
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, OnDestroy } from '@angular/core';
 import { DocValue, DocValueWithSelection } from '../component/item.list';
 import { Maybe, range, takeFront } from '@dereekb/util';
 
 @Component({
   templateUrl: './list.component.html'
 })
-export class DocLayoutListComponent implements OnInit {
+export class DocLayoutListComponent implements OnInit, OnDestroy {
 
   readonly numberToLoadPerUpdate = 50;
 
@@ -75,6 +75,14 @@ export class DocLayoutListComponent implements OnInit {
 
   constructor(readonly cdRef: ChangeDetectorRef) { }
 
+  ngOnInit(): void {
+    this.loadMore();
+  }
+
+  ngOnDestroy(): void {
+    this._values.complete();
+  }
+
   loadMore() {
     this._values.next(this._values.value.concat(this.makeValues()))
   }
@@ -85,10 +93,6 @@ export class DocLayoutListComponent implements OnInit {
 
   onPlainClick(value: CustomDocValue) {
     this.clickedItemPlain = value;
-  }
-
-  ngOnInit(): void {
-    this.loadMore();
   }
 
   makeValues() {

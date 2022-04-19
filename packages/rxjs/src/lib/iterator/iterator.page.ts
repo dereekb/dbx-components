@@ -120,7 +120,6 @@ export class ItemPageIterationInstance<V, F, C extends ItemPageIterationConfig<F
    * Used for triggering loading of more content.
    */
   private readonly _next = new BehaviorSubject<InternalItemPageIteratorNext>({ n: 0 });
-
   private readonly _maxPageLoadLimit = new BehaviorSubject(this.iterator.maxPageLoadLimit);
 
   constructor(readonly iterator: ItemPageIterator<V, F, C>, readonly config: C) { }

@@ -23,5 +23,5 @@ export const reducer = createReducer(
   /**
    * When DbxAppContextActions.dbxAppContextSetState is pushed, update the app's state to match the argument state.
    */
-  on(DbxAppContextActions.dbxAppContextSetState, (_, { state }) => ({ state }))
+  on(DbxAppContextActions.setState, (_, { state }) => ({ state }))
 );

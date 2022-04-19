@@ -38,6 +38,7 @@ export class DbxTwoColumnsRightComponent implements AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this._showBack.complete();
     this.twoColumnsContextStore.setShowRight(false);
   }
 

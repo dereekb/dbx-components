@@ -98,6 +98,7 @@ export class DbxScreenMediaService implements Destroyable {
     this._tabletQuery.onchange = null;
     this._largeQuery.onchange = null;
     this._updateWidth.complete();
+    this._updateHeight.complete();
   }
 
   /**

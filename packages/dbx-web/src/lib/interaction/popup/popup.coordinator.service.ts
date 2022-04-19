@@ -1,5 +1,5 @@
 import { DbxPopupKey, DbxPopupController } from './popup';
-import { Injectable } from '@angular/core';
+import { Injectable, OnDestroy } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 
 /**
@@ -8,13 +8,17 @@ import { BehaviorSubject } from 'rxjs';
 @Injectable({
   providedIn: 'root'
 })
-export class DbxPopupCoordinatorService {
+export class DbxPopupCoordinatorService implements OnDestroy {
 
   private _popups = new BehaviorSubject<Map<DbxPopupKey, DbxPopupController>>(new Map());
 
   readonly popups$ = this._popups.asObservable();
 
   constructor() { }
+
+  ngOnDestroy(): void {
+    this._popups.complete();
+  }
 
   get popups(): Map<DbxPopupKey, DbxPopupController> {
     return this._popups.value;

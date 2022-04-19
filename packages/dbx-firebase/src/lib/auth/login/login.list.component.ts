@@ -62,6 +62,9 @@ export class DbxFirebaseLoginListComponent implements OnDestroy {
   constructor(readonly dbxFirebaseAuthLoginService: DbxFirebaseAuthLoginService) { }
 
   ngOnDestroy(): void {
+    this._loginMode.complete();
+    this._inputProviderCategories.complete();
+    this._omitProviderTypes.complete();
     this._inputProviderTypes.complete();
   }
 

@@ -16,7 +16,7 @@ describe('onMatchDelta', () => {
   beforeEach(() => {
     subject = new Subject<number>();
     sub = new SubscriptionObject();
-  })
+  });
 
   afterEach(() => {
     sub.destroy();

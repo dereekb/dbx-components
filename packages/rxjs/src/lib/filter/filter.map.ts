@@ -3,13 +3,14 @@ import { ObservableGetter } from '../rxjs/getter';
 import { FilterSourceInstance } from './filter.source';
 import { BehaviorSubject, Observable, switchMap, map, distinctUntilChanged, shareReplay, first } from 'rxjs';
 import { FilterSource, FilterSourceConnector } from './filter';
+import { Destroyable } from '@dereekb/util';
 
 export type FilterMapKey = string;
 
 /**
  * Class used to keep track of filters keyed by a specific string identifier.
  */
-export class FilterMap<F> {
+export class FilterMap<F> implements Destroyable {
 
   private readonly _map = new BehaviorSubject<Map<FilterMapKey, FilterMapItem<F>>>(new Map());
 

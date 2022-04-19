@@ -1,5 +1,5 @@
 import { DbxPopoverKey, DbxPopoverController } from './popover';
-import { Injectable } from '@angular/core';
+import { Injectable, OnDestroy } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 
 /**
@@ -8,10 +8,14 @@ import { BehaviorSubject } from 'rxjs';
 @Injectable({
   providedIn: 'root'
 })
-export class DbxPopoverCoordinatorService {
+export class DbxPopoverCoordinatorService implements OnDestroy {
 
   private _popovers = new BehaviorSubject<Map<DbxPopoverKey, DbxPopoverController>>(new Map());
   readonly popovers$ = this._popovers.asObservable();
+
+  ngOnDestroy(): void {
+    this._popovers.complete();
+  }
 
   get popovers(): Map<DbxPopoverKey, DbxPopoverController> {
     return this._popovers.value;

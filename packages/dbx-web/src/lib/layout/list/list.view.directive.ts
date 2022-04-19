@@ -33,6 +33,7 @@ export abstract class AbstractDbxListViewDirective<T> implements DbxListView<T>,
   }
 
   ngOnDestroy(): void {
+    this._disabled.complete();
     this._values$.complete();
   }
 

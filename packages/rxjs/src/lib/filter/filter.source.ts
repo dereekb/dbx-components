@@ -3,12 +3,12 @@ import { FilterSource } from './filter';
 import { distinctUntilObjectValuesChanged } from '../object';
 import { asObservable, ObservableGetter } from '../rxjs/getter';
 import { switchMapMaybeObs, filterMaybe } from '../rxjs/value';
-import { Maybe } from '@dereekb/util';
+import { Destroyable, Maybe } from '@dereekb/util';
 
 /**
  * A basic FilterSource implementation.
  */
-export class FilterSourceInstance<F> implements FilterSource<F> {
+export class FilterSourceInstance<F> implements FilterSource<F>, Destroyable {
 
   private _filter = new BehaviorSubject<Maybe<F>>(undefined);
   private _initialFilter = new BehaviorSubject<Maybe<Observable<F>>>(undefined);

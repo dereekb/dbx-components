@@ -1,7 +1,7 @@
 import { ArrayOrValue } from '@dereekb/util';
 import { AuthRole } from './auth.role';
 import { BehaviorSubject } from 'rxjs';
-import { Directive, Input, TemplateRef, ViewContainerRef } from '@angular/core';
+import { Directive, Input, TemplateRef, ViewContainerRef, OnDestroy } from '@angular/core';
 import { authRolesSetContainsAllRolesFrom, DbxAuthService } from './service';
 import { Maybe } from '@dereekb/util';
 import { AbstractIfDirective } from '../view/if.directive';
@@ -12,7 +12,7 @@ import { AbstractIfDirective } from '../view/if.directive';
 @Directive({
   selector: '[dbxAuthHasRoles]'
 })
-export class DbxAuthHasRolesDirective extends AbstractIfDirective {
+export class DbxAuthHasRolesDirective extends AbstractIfDirective implements OnDestroy {
 
   private _targetRoles = new BehaviorSubject<Maybe<ArrayOrValue<AuthRole>>>(undefined);
   readonly targetRoles$ = this._targetRoles.asObservable();
@@ -25,6 +25,10 @@ export class DbxAuthHasRolesDirective extends AbstractIfDirective {
     private dbxAuthService: DbxAuthService
   ) {
     super(templateRef, viewContainer);
+  }
+
+  override ngOnDestroy(): void {
+    this._targetRoles.complete();
   }
 
   @Input('dbxAuthHasRoles')
