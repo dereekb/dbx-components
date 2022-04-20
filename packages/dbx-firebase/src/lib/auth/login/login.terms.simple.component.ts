@@ -1,11 +1,6 @@
 import { ClickableAnchor } from '@dereekb/dbx-core';
 import { Component } from "@angular/core";
-import { DbxFirebaseLoginModuleRootConfig } from "./firebase.login.module";
-
-
-export interface DbxFirebaseLoginTermsView {
-
-}
+import { DbxFirebaseLoginTermsConfig } from './login.terms';
 
 @Component({
   template: `
@@ -16,18 +11,18 @@ export interface DbxFirebaseLoginTermsView {
   </div>
   `
 })
-export class DbxFirebaseLoginTermsViewComponent {
+export class DbxFirebaseLoginTermsSimpleComponent {
 
   readonly tosAnchor: ClickableAnchor = {
-    url: this.dbxFirebaseLoginModuleRootConfig.tosUrl,
+    url: this.dbxFirebaseLoginTermsConfig.tosUrl,
     target: '_blank'
   };
 
   readonly privacyAnchor: ClickableAnchor = {
-    url: this.dbxFirebaseLoginModuleRootConfig.privacyUrl,
+    url: this.dbxFirebaseLoginTermsConfig.privacyUrl,
     target: '_blank'
   };
 
-  constructor(readonly dbxFirebaseLoginModuleRootConfig: DbxFirebaseLoginModuleRootConfig) { }
+  constructor(readonly dbxFirebaseLoginTermsConfig: DbxFirebaseLoginTermsConfig) { }
 
 }

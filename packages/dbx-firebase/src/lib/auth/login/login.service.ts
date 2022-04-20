@@ -1,7 +1,7 @@
 import { mapIterable, addToSet, removeFromSet, Maybe, ArrayOrValue, filterMaybeValues } from "@dereekb/util";
 import { Inject, Injectable, InjectionToken, Optional, Type } from "@angular/core";
 import { FirebaseLoginMethodCategory, FirebaseLoginMethodType, KnownFirebaseLoginMethodType } from "./login";
-import { DbxFirebaseLoginTermsViewComponent } from "./login.terms.default.component";
+import { DbxFirebaseLoginTermsSimpleComponent } from "./login.terms.simple.component";
 import { DbxFirebaseAuthLoginPasswordConfig, DEFAULT_FIREBASE_AUTH_LOGIN_PASSWORD_CONFIG } from "./login.password";
 
 /**
@@ -85,7 +85,7 @@ export class DbxFirebaseAuthLoginService {
   constructor(
     @Optional() @Inject(DEFAULT_FIREBASE_AUTH_LOGIN_PROVIDERS_TOKEN) defaultProviders: DbxFirebaseAuthLoginProvider[],
     @Optional() @Inject(DEFAULT_FIREBASE_AUTH_LOGIN_PASSWORD_CONFIG_TOKEN) passwordConfig: DbxFirebaseAuthLoginPasswordConfig,
-    @Optional() @Inject(DEFAULT_FIREBASE_AUTH_LOGIN_TERMS_COMPONENT_CLASS_TOKEN) readonly termsComponentClass: Type<any> = DbxFirebaseLoginTermsViewComponent
+    @Optional() @Inject(DEFAULT_FIREBASE_AUTH_LOGIN_TERMS_COMPONENT_CLASS_TOKEN) readonly termsComponentClass: Type<any> = DbxFirebaseLoginTermsSimpleComponent
   ) {
     if (defaultProviders) {
       defaultProviders.forEach((x) => this.register(x, false));

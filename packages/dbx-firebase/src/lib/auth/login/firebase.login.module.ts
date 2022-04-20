@@ -24,14 +24,13 @@ import { DbxFirebaseLoginEmailContentComponent } from './login.email.content.com
 import { DbxFormActionModule, DbxFormFormlyTextFieldModule, DbxFormIoModule, DbxFormlyModule, DbxFormModule } from '@dereekb/dbx-form';
 import { DbxFirebaseEmailFormComponent } from './login.email.form.component';
 import { DbxFirebaseLoginTermsComponent } from './login.terms.component';
-import { DbxFirebaseLoginTermsViewComponent } from './login.terms.default.component';
+import { DbxFirebaseLoginTermsSimpleComponent } from './login.terms.simple.component';
 import { DbxFirebaseLoginContextBackButtonComponent } from './login.context.back.component';
 import { DbxFirebaseEmailRecoveryFormComponent } from './login.email.recovery.form.component';
 import { DbxFirebaseAuthLoginPasswordConfig } from './login.password';
+import { DbxFirebaseLoginTermsConfig } from './login.terms';
 
-export abstract class DbxFirebaseLoginModuleRootConfig {
-  abstract readonly tosUrl: string;
-  abstract readonly privacyUrl: string;
+export abstract class DbxFirebaseLoginModuleRootConfig extends DbxFirebaseLoginTermsConfig {
   abstract readonly enabledLoginMethods: FirebaseLoginMethodType[] | true;
   abstract readonly termsComponentClass?: Type<any>;
   abstract readonly passwordConfig?: DbxFirebaseAuthLoginPasswordConfig;
@@ -168,7 +167,7 @@ export function defaultFirebaseAuthLoginProvidersFactory(): DbxFirebaseAuthLogin
     DbxFirebaseLoginFacebookComponent,
     DbxFirebaseLoginAnonymousComponent,
     DbxFirebaseLoginTermsComponent,
-    DbxFirebaseLoginTermsViewComponent
+    DbxFirebaseLoginTermsSimpleComponent
   ],
   exports: [
     DbxFirebaseLoginComponent,
@@ -191,7 +190,7 @@ export function defaultFirebaseAuthLoginProvidersFactory(): DbxFirebaseAuthLogin
     DbxFirebaseLoginFacebookComponent,
     DbxFirebaseLoginAnonymousComponent,
     DbxFirebaseLoginTermsComponent,
-    DbxFirebaseLoginTermsViewComponent
+    DbxFirebaseLoginTermsSimpleComponent
   ],
   providers: []
 })
@@ -219,6 +218,9 @@ export class DbxFirebaseLoginModule {
         useValue: config.passwordConfig
       }, {
         provide: DbxFirebaseLoginModuleRootConfig,
+        useValue: config
+      }, {
+        provide: DbxFirebaseLoginTermsConfig,
         useValue: config
       }]
     };
