@@ -1,4 +1,4 @@
-import { ClickableAnchorLink, ClickableAnchorLinkTree } from '@dereekb/dbx-core';
+import { ClickableAnchorLinkSegueRef, ClickableAnchorLink, ClickableAnchorLinkTree } from '@dereekb/dbx-core';
 import { Component, ViewEncapsulation } from '@angular/core';
 import { Observable, map, of, shareReplay } from 'rxjs';
 import { mapKeysIntersectionToArray } from '@dereekb/rxjs';
@@ -11,25 +11,25 @@ import { DbxFirebaseAuthService } from '@dereekb/dbx-firebase';
 })
 export class DemoLayoutComponent {
 
-  readonly everyoneAnchors: ClickableAnchorLink[] = [{
+  readonly everyoneAnchors = [{
     title: 'Home',
     ref: 'demo.home',
     icon: 'home'
   }];
 
-  readonly adminAnchors: ClickableAnchorLink[] = [{
+  readonly adminAnchors = [{
     title: 'Home',
     ref: 'demo.home',
     icon: 'home'
   }];
 
-  readonly userAnchors: ClickableAnchorLink[] = [{
+  readonly userAnchors = [{
     title: 'Home',
     ref: 'demo.home',
     icon: 'home'
   }];
 
-  readonly navAnchors$: Observable<ClickableAnchorLink[]> = of({
+  readonly navAnchors$: Observable<ClickableAnchorLinkSegueRef[]> = of({
     'admin': this.adminAnchors,
     'user': this.userAnchors
   }).pipe(

@@ -1,21 +1,23 @@
 import { OnRunEffects, Actions, EffectNotification, ofType } from '@ngrx/effects';
 import { Store } from '@ngrx/store';
-import { Observable } from 'rxjs';
-import { exhaustMap, filter, takeUntil } from 'rxjs/operators';
+import { Observable, exhaustMap, filter, takeUntil, tap } from 'rxjs';
 import { DbxAppContextState } from '../../context';
 import { onDbxAppContext } from '../';
+import { ArrayOrValue } from '@dereekb/util';
 
 // MARK: Abstract Context Effects
 /**
  * Abstract effects class that only runs/allows effects when the DbxAppContextState in the ngrx state matches input activeState value.
  */
-export abstract class AbstractOnDbxAppContextStateEffects<S> implements OnRunEffects {
+export abstract class AbstractOnDbxAppContextStateEffects<S = any> implements OnRunEffects {
+
+  private _activeStatesSet: Set<DbxAppContextState>;
 
   constructor(
     /**
-     * The state to activate on.
+     * The state(s) to activate on.
      */
-    private readonly activeState: DbxAppContextState,
+    activeStates: ArrayOrValue<DbxAppContextState>,
     /**
      * ngrx Actions
      */
@@ -24,7 +26,10 @@ export abstract class AbstractOnDbxAppContextStateEffects<S> implements OnRunEff
      * ngrx Store
      */
     protected readonly store: Store<S>
-  ) { }
+  ) {
+    this._activeStatesSet = new Set(activeStates);
+    console.log('Active states: ', this._activeStatesSet);
+  }
 
   /**
    * Configures all actions of the sub-class to only activate when the DbxAppContextState in App
@@ -35,13 +40,18 @@ export abstract class AbstractOnDbxAppContextStateEffects<S> implements OnRunEff
   ngrxOnRunEffects(resolvedEffects$: Observable<EffectNotification>): Observable<EffectNotification> {
     return this.actions$.pipe(
       ofType(onDbxAppContext.DbxAppContextActions.setState),
-      filter((x) => x.state === this.activeState),
+      filter(({ state }) => {
+        console.log('saw staet: ', state);
+        return this._activeStatesSet.has(state);
+      }),
+      tap(() => console.log('Entering...')),
       exhaustMap(() =>
         resolvedEffects$.pipe(
           takeUntil(
             this.actions$.pipe(
               ofType(onDbxAppContext.DbxAppContextActions.setState),
-              filter((x) => x.state !== this.activeState),
+              filter(({ state }) => !this._activeStatesSet.has(state)),
+              tap(() => console.log('Exiting...'))
             )
           )
         )

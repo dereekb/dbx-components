@@ -1,7 +1,8 @@
 import { first, Observable, of, switchMap } from 'rxjs';
 import { getValueFromGetter, isGetter, Maybe, ObjectMap } from "@dereekb/util";
 import { AuthTransitionDecisionGetterInput, AuthTransitionRedirectTargetGetter, AuthTransitionRedirectTargetOrGetter } from "./hook";
-import { SegueRef, AuthUserState } from '@dereekb/dbx-core';
+import { SegueRef } from '../../../../router/segue';
+import { AuthUserState } from '../../../auth.user';
 
 /**
  * Creates a AuthTransitionRedirectTargetGetter that can redirect values based on the current authUserState.

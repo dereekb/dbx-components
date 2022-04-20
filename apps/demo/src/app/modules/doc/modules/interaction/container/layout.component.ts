@@ -1,12 +1,12 @@
 import { Component } from '@angular/core';
-import { ClickableAnchorLink } from '@dereekb/dbx-core';
+import { ClickableAnchorLinkSegueRef } from '@dereekb/dbx-core';
 
 @Component({
   templateUrl: './layout.component.html'
 })
 export class DocInteractionLayoutComponent {
 
-  readonly navAnchors: ClickableAnchorLink[] = [{
+  readonly navAnchors: ClickableAnchorLinkSegueRef[] = [{
     title: 'Interaction Components',
     ref: 'doc.interaction'
   }];

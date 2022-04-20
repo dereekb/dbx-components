@@ -1,15 +1,15 @@
 import { Observable } from 'rxjs';
-import { ScreenMediaWidthType, screenMediaWidthTypeIsActive } from './../../../screen/screen';
+import { ScreenMediaWidthType } from './../../../screen/screen';
 import { DbxScreenMediaService } from '../../../screen/screen.service';
 import { applyBestFit, Maybe } from '@dereekb/util';
 import { Input, Component, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
-import { ClickableAnchorLink, DbxRouterService, DbxRouterTransitionService, AbstractTransitionDirective, tapDetectChanges } from '@dereekb/dbx-core';
+import { ClickableAnchorLinkSegueRef, DbxRouterService, DbxRouterTransitionService, AbstractTransitionDirective, tapDetectChanges } from '@dereekb/dbx-core';
 import { BehaviorSubject, combineLatest, map, shareReplay, distinctUntilChanged } from 'rxjs';
 import { HorizontalConnectionPos } from '@angular/cdk/overlay';
 
 interface NavAnchorLink {
   selected: boolean;
-  anchor: ClickableAnchorLink;
+  anchor: ClickableAnchorLinkSegueRef;
 }
 
 export type NavBarContentAlign = 'center' | 'left' | 'right';
@@ -33,7 +33,7 @@ export class DbxNavbarComponent extends AbstractTransitionDirective implements O
 
   private _inputMode = new BehaviorSubject<Maybe<NavbarMode>>(undefined);
   private _breakpoint = new BehaviorSubject<ScreenMediaWidthType>('large');
-  private _anchors = new BehaviorSubject<ClickableAnchorLink[]>([]);
+  private _anchors = new BehaviorSubject<ClickableAnchorLinkSegueRef[]>([]);
 
   readonly isBreakpointActive$ = this._dbxScreenMediaService.isBreakpointActive(this._breakpoint);
 
@@ -80,7 +80,7 @@ export class DbxNavbarComponent extends AbstractTransitionDirective implements O
 
   // MARK: Accessors
   @Input()
-  public set anchors(anchors: Maybe<ClickableAnchorLink[]>) {
+  public set anchors(anchors: Maybe<ClickableAnchorLinkSegueRef[]>) {
     this._anchors.next(anchors ?? []);
   }
 

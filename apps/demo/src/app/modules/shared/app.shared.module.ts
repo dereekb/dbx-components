@@ -48,7 +48,7 @@ import { CommonModule } from '@angular/common';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { DbxButtonModule, DbxInteractionModule, DbxRouterLayoutModule, DbxLayoutModule, DbxActionModule, DbxReadableErrorModule, DbxLoadingModule, DbxActionSnackbarModule } from '@dereekb/dbx-web';
 import { DbxFormExtensionModule } from '@dereekb/dbx-form';
-import { DbxCoreAuthModule, DbxPipesModule } from '@dereekb/dbx-core';
+import { DbxAppContextStateModule, DbxCoreAuthModule, DbxPipesModule } from '@dereekb/dbx-core';
 
 
 const ANGULAR_MODULES = [
@@ -116,7 +116,8 @@ const DBX_MODULES = [
   DbxLayoutModule,
   DbxFormExtensionModule,
   DbxActionSnackbarModule,
-  DbxPipesModule
+  DbxPipesModule,
+  DbxAppContextStateModule
 ];
 
 @NgModule({

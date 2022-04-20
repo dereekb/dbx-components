@@ -1,6 +1,6 @@
 import { filterMaybe } from '@dereekb/rxjs';
 import { DbxRouterService, DbxRouterTransitionService } from '../../service';
-import { SegueRef } from "../../../segue";
+import { asSegueRef, SegueRef, SegueRefOrSegueRefRouterLink } from "../../../segue";
 import { DbxRouterTransitionEvent, DbxRouterTransitionEventType } from "../../transition/transition";
 import { ActivatedRoute, NavigationBehaviorOptions, NavigationEnd, NavigationExtras, NavigationStart, Router } from '@angular/router';
 import { Injectable } from "@angular/core";
@@ -35,7 +35,8 @@ export class DbxAngularRouterService implements DbxRouterService, DbxRouterTrans
 
   constructor(readonly router: Router, readonly activatedRoute: ActivatedRoute) { }
 
-  go(segueRef: SegueRef<NavigationExtras | NavigationBehaviorOptions>): Promise<boolean> {
+  go(input: SegueRefOrSegueRefRouterLink<NavigationExtras | NavigationBehaviorOptions>): Promise<boolean> {
+    const segueRef = asSegueRef(input);
     let ref = segueRef.ref;
 
     if (isArray(ref)) {
@@ -50,11 +51,11 @@ export class DbxAngularRouterService implements DbxRouterService, DbxRouterTrans
     }
   }
 
-  isActive(segueRef: SegueRef<any>): boolean {
+  isActive(segueRef: SegueRefOrSegueRefRouterLink): boolean {
     return false; // TODO!
   }
 
-  comparePrecision(a: SegueRef, b: SegueRef): number {
+  comparePrecision(a: SegueRefOrSegueRefRouterLink, b: SegueRefOrSegueRefRouterLink): number {
     return 0;   // TODO!
   }
 

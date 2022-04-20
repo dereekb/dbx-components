@@ -1,8 +1,8 @@
 import { filterMaybe, isNot } from '@dereekb/rxjs';
 import { Injectable, Optional } from "@angular/core";
-import { AuthUserState, AuthRoleSet, DbxAuthService, signedOutEventFromIsLoggedIn } from "@dereekb/dbx-core";
-import { Auth, authState, User, IdTokenResult, ParsedToken, GoogleAuthProvider, signInWithPopup, AuthProvider, PopupRedirectResolver, signInAnonymously, signInWithEmailAndPassword, UserCredential, FacebookAuthProvider, UserInfo, GithubAuthProvider, TwitterAuthProvider, PhoneAuthProvider, signInWithPhoneNumber, createUserWithEmailAndPassword } from '@angular/fire/auth';
-import { Observable, timeout, startWith, distinctUntilChanged, shareReplay, map, switchMap, of } from "rxjs";
+import { AuthUserState, AuthRoleSet, DbxAuthService, loggedOutObsFromIsLoggedIn, loggedInObsFromIsLoggedIn, AuthUserIdentifier, authUserIdentifier } from "@dereekb/dbx-core";
+import { Auth, authState, User, IdTokenResult, ParsedToken, GoogleAuthProvider, signInWithPopup, AuthProvider, PopupRedirectResolver, signInAnonymously, signInWithEmailAndPassword, UserCredential, FacebookAuthProvider, GithubAuthProvider, TwitterAuthProvider, createUserWithEmailAndPassword } from '@angular/fire/auth';
+import { Observable, timeout, startWith, distinctUntilChanged, shareReplay, map, switchMap } from "rxjs";
 import { Maybe } from "@dereekb/util";
 import { authUserStateFromFirebaseAuthService } from './firebase.auth.rxjs';
 import { AuthUserInfo, authUserInfoFromAuthUser } from '../auth';
@@ -11,14 +11,18 @@ import { sendPasswordResetEmail } from 'firebase/auth';
 export abstract class DbxFirebaseAuthServiceDelegate {
   abstract authUserStateObs(dbxFirebaseAuthService: DbxFirebaseAuthService): Observable<AuthUserState>;
   abstract authRolesObs(dbxFirebaseAuthService: DbxFirebaseAuthService): Observable<AuthRoleSet>;
+  abstract isOnboarded(dbxFirebaseAuthService: DbxFirebaseAuthService): Observable<boolean>;
 }
 
-export const DEFAULT_DBX_FIREBASE_AUTH_SERVICE_DELEGATE = {
+export const DEFAULT_DBX_FIREBASE_AUTH_SERVICE_DELEGATE: DbxFirebaseAuthServiceDelegate = {
   authUserStateObs(dbxFirebaseAuthService: DbxFirebaseAuthService): Observable<AuthUserState> {
     return authUserStateFromFirebaseAuthService(dbxFirebaseAuthService);
   },
   authRolesObs(dbxFirebaseAuthService: DbxFirebaseAuthService): Observable<AuthRoleSet> {
     return dbxFirebaseAuthService.authUserState$.pipe(map(x => x === 'user' ? new Set(['user']) : new Set()));
+  },
+  isOnboarded(dbxFirebaseAuthService: DbxFirebaseAuthService): Observable<boolean> {
+    return dbxFirebaseAuthService.authUserState$.pipe(map(x => x === 'user'));
   }
 }
 
@@ -46,8 +50,11 @@ export class DbxFirebaseAuthService implements DbxAuthService {
   readonly isNotAnonymousUser$: Observable<boolean> = this.isAnonymousUser$.pipe(isNot());
 
   readonly isLoggedIn$: Observable<boolean> = this.hasAuthUser$;
+
   readonly isNotLoggedIn$: Observable<boolean> = this.isLoggedIn$.pipe(isNot());
-  readonly onLogout$: Observable<void> = signedOutEventFromIsLoggedIn(this.isLoggedIn$);
+  readonly onLogIn$: Observable<void> = loggedInObsFromIsLoggedIn(this.isLoggedIn$);
+  readonly onLogOut$: Observable<void> = loggedOutObsFromIsLoggedIn(this.isLoggedIn$);
+  readonly userIdentifier$: Observable<AuthUserIdentifier> = this.currentAuthUser$.pipe(map(x => authUserIdentifier(x?.uid)));
 
   readonly idTokenResult$: Observable<IdTokenResult> = this.authUser$.pipe(
     switchMap(x => x.getIdTokenResult())
@@ -57,6 +64,7 @@ export class DbxFirebaseAuthService implements DbxAuthService {
 
   readonly authUserState$: Observable<AuthUserState>;
   readonly authRoles$: Observable<AuthRoleSet>;
+  readonly isOnboarded$: Observable<boolean>;
 
   constructor(
     readonly firebaseAuth: Auth,
@@ -65,6 +73,7 @@ export class DbxFirebaseAuthService implements DbxAuthService {
     delegate = delegate ?? DEFAULT_DBX_FIREBASE_AUTH_SERVICE_DELEGATE;
     this.authUserState$ = delegate.authUserStateObs(this).pipe(distinctUntilChanged(), shareReplay(1));
     this.authRoles$ = delegate.authRolesObs(this);
+    this.isOnboarded$ = delegate.isOnboarded(this);
   }
 
   logInWithGoogle(): Promise<UserCredential> {
