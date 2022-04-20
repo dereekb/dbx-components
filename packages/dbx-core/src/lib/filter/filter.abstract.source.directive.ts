@@ -1,6 +1,6 @@
 import { of, Observable } from 'rxjs';
 import { Directive, OnDestroy, OnInit } from '@angular/core';
-import { FilterSource, FilterSourceInstance, ObservableGetter } from '@dereekb/rxjs';
+import { FilterSource, FilterSourceInstance, ObservableOrValue } from '@dereekb/rxjs';
 import { Maybe } from '@dereekb/util';
 
 /**
@@ -34,7 +34,7 @@ export abstract class AbstractFilterSourceDirective<F> implements FilterSource<F
   }
 
   // MARK: Internal
-  protected makeDefaultFilter(): ObservableGetter<Maybe<F>> {
+  protected makeDefaultFilter(): ObservableOrValue<Maybe<F>> {
     return of(undefined);
   }
 

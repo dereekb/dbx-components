@@ -1,4 +1,4 @@
-import { ListLoadingState, filterMaybe, ObservableGetter, getFromObservable } from '@dereekb/rxjs';
+import { ListLoadingState, filterMaybe, ObservableOrValue, valueFromObservableOrValue } from '@dereekb/rxjs';
 import { Observable, BehaviorSubject, map, shareReplay } from 'rxjs';
 import { Output, EventEmitter, OnInit, OnDestroy, Directive, Input } from "@angular/core";
 import { DbxListConfig } from "./list.component";
@@ -27,10 +27,10 @@ export interface DbxListWrapperConfig<T, V extends DbxListView<T> = DbxListView<
 @Directive()
 export abstract class AbstractDbxListWrapperDirective<T, V extends DbxListView<T> = DbxListView<T>, C extends DbxListWrapperConfig<T, V> = DbxListWrapperConfig<T, V>, S extends ListLoadingState<T> = ListLoadingState<T>> implements OnInit, OnDestroy {
 
-  private readonly _init = new BehaviorSubject<Maybe<ObservableGetter<C>>>(undefined);
+  private readonly _init = new BehaviorSubject<Maybe<ObservableOrValue<C>>>(undefined);
   readonly config$ = this._init.pipe(
     filterMaybe(),
-    getFromObservable(),
+    valueFromObservableOrValue(),
     map((x: C) => this._buildListConfig(x)),
     shareReplay(1));
 
@@ -46,7 +46,7 @@ export abstract class AbstractDbxListWrapperDirective<T, V extends DbxListView<T
   @Output()
   loadMore = new EventEmitter<void>();
 
-  constructor(readonly initConfig: ObservableGetter<C>) { }
+  constructor(readonly initConfig: ObservableOrValue<C>) { }
 
   ngOnInit(): void {
     this._init.next(this.initConfig);

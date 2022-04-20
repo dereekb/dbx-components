@@ -4,7 +4,7 @@ import { ArrayOrValue, Maybe } from '@dereekb/util';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { Store } from '@ngrx/store';
 import { DbxAppContextState, DBX_KNOWN_APP_CONTEXT_STATES } from '../../../../context/context';
-import { AbstractOnDbxAppContextStateEffects } from 'packages/dbx-core/src/lib/context/state/effect';
+import { AbstractOnDbxAppContextStateEffects } from '../../../../context/state/effect';
 import { fromDbxAppAuth, onDbxAppAuth } from '../../../state';
 import { DbxAppAuthRouterService } from '../../auth.router.service';
 

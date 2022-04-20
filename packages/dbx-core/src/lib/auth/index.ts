@@ -1,5 +1,6 @@
 export * from './router';
 export * from './service';
+export * from './state'
 export * from './auth.user';
 export * from './auth.role';
 export * from './auth.module';

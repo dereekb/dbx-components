@@ -1,4 +1,4 @@
-import { ObservableGetter } from "@dereekb/rxjs";
+import { ObservableOrValue } from "@dereekb/rxjs";
 import { SegueRefOrSegueRefRouterLink } from "../../segue";
 
 /**
@@ -11,7 +11,7 @@ export abstract class DbxRouterService {
    * 
    * @param segueRef 
    */
-  abstract go(segueRef: ObservableGetter<SegueRefOrSegueRefRouterLink>): Promise<boolean>;
+  abstract go(segueRef: ObservableOrValue<SegueRefOrSegueRefRouterLink>): Promise<boolean>;
 
   /**
    * Returns true if the input segue ref is considered active.

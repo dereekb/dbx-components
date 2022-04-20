@@ -4,7 +4,7 @@ import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
 import { DbxForm, DbxFormState, DbxMutableForm } from '../form';
 import { distinctUntilChanged, filter, first, map } from 'rxjs/operators';
 import { Maybe } from '@dereekb/util';
-import { asObservable, ObservableGetter } from '@dereekb/rxjs';
+import { asObservable, ObservableOrValue } from '@dereekb/rxjs';
 
 /**
  * Used with a FormComponent to set the value based on the input value.
@@ -19,11 +19,11 @@ export class DbxFormSourceDirective<T extends object = any> extends AbstractSubs
   }
 
   @Input('dbxFormSource')
-  set obs(obs: Maybe<ObservableGetter<Maybe<Partial<T>>>>) {
+  set obs(obs: Maybe<ObservableOrValue<Maybe<Partial<T>>>>) {
     this.setObs(obs);
   }
 
-  private setObs(obs: Maybe<ObservableGetter<Maybe<Partial<T>>>>): void {
+  private setObs(obs: Maybe<ObservableOrValue<Maybe<Partial<T>>>>): void {
     let subscription;
 
     if (obs) {

@@ -1,10 +1,10 @@
 import { Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
-import * as fromDbxAppAuth from '../reducer';
 import { Store } from '@ngrx/store';
 import { DbxAuthService } from '../../service';
 import { onDbxAppAuth } from '../';
 import { map, tap } from 'rxjs';
+import * as fromDbxAppAuth from '../reducer';
 
 /**
  * Set of ngrx effects that repeat events from DbxAuthService.

@@ -1,12 +1,12 @@
 import { switchMap, map, catchError, of, BehaviorSubject } from 'rxjs';
-import { ObservableGetter, SubscriptionObject, IsModifiedFunction, asObservable, returnIfIs, filterMaybe } from '@dereekb/rxjs';
+import { ObservableOrValue, SubscriptionObject, IsModifiedFunction, asObservable, returnIfIs, filterMaybe } from '@dereekb/rxjs';
 import { Destroyable, Initialized, Maybe } from '@dereekb/util';
 import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
 
 /**
  * DbxActionValueOnTriggerInstance function. Returns an ObervableGetter that returns a value.
  */
-export type DbxActionValueOnTriggerFunction<T> = () => ObservableGetter<Maybe<T>>;
+export type DbxActionValueOnTriggerFunction<T> = () => ObservableOrValue<Maybe<T>>;
 
 export interface DbxActionValueOnTriggerResult<T = any> {
   value?: Maybe<T>;
