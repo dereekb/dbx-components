@@ -2,7 +2,7 @@ import { ListLoadingState, filterMaybe, ObservableOrValue, valueFromObservableOr
 import { Observable, BehaviorSubject, map, shareReplay } from 'rxjs';
 import { Output, EventEmitter, OnInit, OnDestroy, Directive, Input } from "@angular/core";
 import { DbxListConfig } from "./list.component";
-import { DbxListView, ListSelectionState } from "./list.view";
+import { DbxListSelectionMode, DbxListView, ListSelectionState } from "./list.view";
 import { Maybe } from '@dereekb/util';
 
 export const DEFAULT_STATIC_LIST_DIRECTIVE_TEMPLATE = `
@@ -15,7 +15,7 @@ export const DEFAULT_STATIC_LIST_DIRECTIVE_TEMPLATE = `
 
 // MARK: Wrapper
 export const DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE = `
-<dbx-list [state$]="state$" [config]="config$ | async" [disabled]="disabled">
+<dbx-list [state$]="state$" [config]="config$ | async" [disabled]="disabled" [selectionMode]="selectionMode">
   <ng-content top select="[top]"></ng-content>
   <ng-content bottom select="[bottom]"></ng-content>
   <ng-content empty select="[empty]"></ng-content>
@@ -36,6 +36,9 @@ export abstract class AbstractDbxListWrapperDirective<T, V extends DbxListView<T
 
   @Input()
   disabled?: Maybe<boolean>;
+
+  @Input()
+  selectionMode?: Maybe<DbxListSelectionMode>;
 
   @Input()
   state$?: Maybe<Observable<S>>;

@@ -9,7 +9,7 @@ import { DbxListComponent, DbxListInternalContentDirective } from './list.compon
 import { DbxListEmptyContentComponent } from './list.content.empty.component';
 import { InfiniteScrollModule } from 'ngx-infinite-scroll';
 import { DbxSelectionValueListItemViewComponent, DbxSelectionValueListViewComponent } from './list.view.value.selection.component';
-import { DbxValueListViewComponent } from './list.view.value.component';
+import { DbxValueListItemViewComponent, DbxValueListViewComponent } from './list.view.value.component';
 
 @NgModule({
   imports: [
@@ -26,6 +26,7 @@ import { DbxValueListViewComponent } from './list.view.value.component';
     DbxListInternalContentDirective,
     DbxListEmptyContentComponent,
     DbxValueListViewComponent,
+    DbxValueListItemViewComponent,
     DbxSelectionValueListViewComponent,
     DbxSelectionValueListItemViewComponent
   ],
@@ -33,6 +34,7 @@ import { DbxValueListViewComponent } from './list.view.value.component';
     DbxListComponent,
     DbxListEmptyContentComponent,
     DbxValueListViewComponent,
+    DbxValueListItemViewComponent,
     DbxSelectionValueListViewComponent,
     DbxSelectionValueListItemViewComponent
   ]

@@ -15,7 +15,8 @@ export class DocSelectionItemListComponent extends AbstractDbxSelectionListWrapp
 
   constructor() {
     super({
-      componentClass: DocSelectionItemListViewComponent
+      componentClass: DocSelectionItemListViewComponent,
+      defaultSelectionMode: 'select'
     });
   }
 

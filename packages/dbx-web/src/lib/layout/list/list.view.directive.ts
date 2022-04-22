@@ -2,7 +2,7 @@ import { ListLoadingStateContext, switchMapMaybeObs } from '@dereekb/rxjs';
 import { BehaviorSubject, Observable, of } from 'rxjs';
 import { Directive, EventEmitter, Input, OnDestroy, Output } from '@angular/core';
 import { shareReplay } from 'rxjs/operators';
-import { DbxListView } from './list.view';
+import { DbxListSelectionMode, DbxListView } from './list.view';
 import { Maybe } from '@dereekb/util';
 
 /**
@@ -12,10 +12,12 @@ import { Maybe } from '@dereekb/util';
 export abstract class AbstractDbxListViewDirective<T> implements DbxListView<T>, OnDestroy {
 
   private readonly _disabled = new BehaviorSubject<boolean>(false);
+  private readonly _selectionMode = new BehaviorSubject<Maybe<DbxListSelectionMode>>(undefined);
   private readonly _values$ = new BehaviorSubject<Maybe<Observable<T[]>>>(undefined);
 
   readonly values$ = this._values$.pipe(switchMapMaybeObs(), shareReplay(1));
   readonly disabled$ = this._disabled.asObservable();
+  readonly selectionMode$ = this._selectionMode.asObservable();
 
   @Output()
   clickValue = new EventEmitter<T>();
@@ -34,6 +36,7 @@ export abstract class AbstractDbxListViewDirective<T> implements DbxListView<T>,
 
   ngOnDestroy(): void {
     this._disabled.complete();
+    this._selectionMode.complete();
     this._values$.complete();
   }
 
@@ -51,6 +54,10 @@ export abstract class AbstractDbxListViewDirective<T> implements DbxListView<T>,
 
   setDisabled(disabled: boolean): void {
     this._disabled.next(disabled);
+  }
+
+  setSelectionMode(selectionMode: Maybe<DbxListSelectionMode>): void {
+    this._selectionMode.next(selectionMode);
   }
 
 }

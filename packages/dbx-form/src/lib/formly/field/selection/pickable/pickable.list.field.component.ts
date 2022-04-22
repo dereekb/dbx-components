@@ -1,6 +1,7 @@
 import { Component } from "@angular/core";
 import { DbxInjectionComponentConfig } from "@dereekb/dbx-core";
-import { DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE, AbstractDbxSelectionListWrapperDirective, ProvideDbxListView, AbstractSelectionValueListViewDirective, AbstractDbxSelectionValueListViewItemComponent, ListSelectionState, mapItemValuesToValueListItemConfig } from "@dereekb/dbx-web";
+import { DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE, AbstractDbxSelectionListWrapperDirective, ProvideDbxListView, AbstractSelectionValueListViewDirective, AbstractDbxSelectionValueListViewItemComponent, ListSelectionState, mapItemValuesToValueListItemConfig, DbxListSelectionMode } from "@dereekb/dbx-web";
+import { Maybe } from "@dereekb/util";
 import { map, shareReplay } from "rxjs";
 import { PickableValueFieldDisplayValue } from "./pickable";
 import { AbstractDbxPickableItemFieldDirective, PickableItemFieldItem } from "./pickable.field.directive";
@@ -40,7 +41,7 @@ export class DbxPickableListFieldItemListComponent<T> extends AbstractDbxSelecti
  * NOTE: Values input are PickableItemFieldItem<T>, but output values are PickableValueFieldDisplayValue<T>.
  */
 @Component({
-  template: `<dbx-selection-list-view-content [multiple]="multiple" [items]="items$ | async"></dbx-selection-list-view-content>`,
+  template: `<dbx-selection-list-view-content [multiple]="multiple" [selectionMode]="selectionMode" [items]="items$ | async"></dbx-selection-list-view-content>`,
   providers: ProvideDbxListView(DbxPickableListFieldItemListViewComponent)
 })
 export class DbxPickableListFieldItemListViewComponent<T> extends AbstractSelectionValueListViewDirective<PickableItemFieldItem<T>> {
@@ -51,6 +52,16 @@ export class DbxPickableListFieldItemListViewComponent<T> extends AbstractSelect
 
   get multiple(): boolean {
     return this.dbxPickableListFieldComponent.multiSelect;
+  }
+
+  get selectionMode(): Maybe<DbxListSelectionMode> {
+    let selectionMode: Maybe<DbxListSelectionMode> = 'select';
+
+    if (this.dbxPickableListFieldComponent.disabled && this.dbxPickableListFieldComponent.changeSelectionModeToViewOnDisabled) {
+      selectionMode = 'view';
+    }
+
+    return selectionMode;
   }
 
   readonly items$ = this.values$.pipe(

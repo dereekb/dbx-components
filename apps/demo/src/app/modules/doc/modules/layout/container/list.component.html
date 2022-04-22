@@ -48,10 +48,24 @@
         <p>In this demo, ~50% are selected already, and ~20% are disabled.</p>
 
         <div style="height: 200px">
+
           <doc-complex-item-list [state$]="stateWithSelection$">
             <button bottom mat-raised-button (click)="loadMore()">Load More</button>
           </doc-complex-item-list>
+
         </div>
+
+        <h4>With Selection Disabled</h4>
+        <p>Selection can be toggled via the selectionMode input.</p>
+        <p>When the selection mode is set to "view", it will render items within a dbx-list-view instead. This lets you
+          get the benefit of being able to turn the selection on/off without having to create another set of components.</p>
+
+        <div style="height: 200px">
+          <doc-complex-item-list [state$]="stateWithSelection$" selectionMode="view">
+            <button bottom mat-raised-button (click)="loadMore()">Load More</button>
+          </doc-complex-item-list>
+        </div>
+
       </doc-feature-example>
     </doc-feature-layout>
   </dbx-content>

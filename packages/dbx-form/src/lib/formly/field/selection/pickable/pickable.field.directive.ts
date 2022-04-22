@@ -77,6 +77,10 @@ export interface PickableValueFieldsFieldConfig<T> {
    * Footer Display
    */
   footerConfig?: DbxInjectionComponentConfig;
+  /**
+   * Changes the selection mode of the list to "view" mode on disabled, hiding the selection boxes.
+   */
+  changeSelectionModeToViewOnDisabled?: boolean;
 }
 
 export interface PickableValueFieldsFormlyFieldConfig<T> extends FormlyFieldConfig {
@@ -273,6 +277,10 @@ export class AbstractDbxPickableItemFieldDirective<T> extends FieldType<Pickable
 
   get autocomplete(): string {
     return (this.field.templateOptions?.attributes?.['autocomplete'] as any) ?? this.key as string;
+  }
+
+  get changeSelectionModeToViewOnDisabled(): boolean {
+    return this.pickableField.changeSelectionModeToViewOnDisabled ?? false;
   }
 
   get sortItems(): Maybe<PickableItemFieldItemSortFn<T>> {
