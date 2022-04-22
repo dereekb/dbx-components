@@ -20,7 +20,7 @@ export function filterPickableItemFieldValuesByLabel<T>(filterText: Maybe<string
 }
 
 export function sortPickableItemsByLabel<T>(chips: PickableItemFieldItem<T>[]): PickableItemFieldItem<T>[] {
-  return chips.sort((a, b) => a.value.label.localeCompare(b.value.label));
+  return chips.sort((a, b) => a.itemValue.label.localeCompare(b.itemValue.label));
 }
 
 export interface PickableItemFieldConfig<T = any> extends LabeledFieldConfig, PickableValueFieldsFieldConfig<T> { }

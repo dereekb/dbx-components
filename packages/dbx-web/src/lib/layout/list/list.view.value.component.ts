@@ -63,7 +63,7 @@ export class DbxValueListItemViewComponent<T> {
 
       if (this.emitAllClicks || !item.anchor || anchorTypeForAnchor(item.anchor) === AnchorType.PLAIN) {
         // only emit clicks for items with no anchor, or plain anchors.
-        this.onClickValue(item.value);
+        this.onClickValue(item.itemValue);
       }
     }
   }

@@ -40,7 +40,7 @@ export class DbxSelectionValueListViewComponent<T, I extends DbxValueListItem<T>
       </ng-container>
       <ng-container *ngSwitchDefault>
         <mat-selection-list [disabled]="disabled$ | async" [multiple]="multiple" (selectionChange)="matSelectionChanged($event)">
-          <mat-list-option class="dbx-list-view-item" *ngFor="let item of items" [selected]="item.selected" [disabled]="item.disabled" [value]="item.value" (click)="onClickValue(item.value)">
+          <mat-list-option class="dbx-list-view-item" *ngFor="let item of items" [selected]="item.selected" [disabled]="item.disabled" [value]="item.itemValue" (click)="onClickValue(item.itemValue)">
             <mat-icon matListIcon *ngIf="item.icon">{{ item.icon }}</mat-icon>
             <div dbx-injection [config]="item.config"></div>
           </mat-list-option>
@@ -71,8 +71,8 @@ export class DbxSelectionValueListItemViewComponent<T> extends DbxValueListItemV
   matSelectionChanged(selection: MatSelectionListChange): void {
     const options = selection.source.selectedOptions.selected;
     const items: ListSelectionStateItem<T>[] = options.map(x => {
-      const { value, selected, disabled } = x;
-      return ({ value, selected, disabled });
+      const { value: itemValue, selected, disabled } = x;
+      return ({ itemValue, selected, disabled });
     });
 
     this.dbxListView.selectionChange!.next({

@@ -1,8 +1,8 @@
-import { DbxValueListItem } from "@dereekb/dbx-web";
+import { DbxValueAsListItem } from "@dereekb/dbx-web";
 
 export interface DocValue {
   name: string;
   icon: string;
 }
 
-export type DocValueWithSelection = DocValue & Omit<DbxValueListItem<DocValue>, 'value'>;
+export type DocValueWithSelection = DbxValueAsListItem<DocValue>;

@@ -16,7 +16,7 @@ export class DbxPickableListFieldComponent<T> extends AbstractDbxPickableItemFie
 
   onSelectionChange(event: unknown) {
     const items = (event as ListSelectionState<PickableValueFieldDisplayValue<T>>).items;
-    const values = items.map(x => x.value.value);
+    const values = items.map(x => x.itemValue.value);
     this.setValues(values);
   }
 
@@ -84,7 +84,7 @@ export class DbxPickableListFieldItemListViewComponent<T> extends AbstractDbxSel
 export class DbxPickableListFieldItemListViewItemComponent<T> extends AbstractDbxValueListViewItemComponent<PickableValueFieldDisplayValue<T>> {
 
   get label(): string {
-    return this.value.label;
+    return this.itemValue.label;
   }
 
 }

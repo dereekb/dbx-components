@@ -34,7 +34,7 @@ export class DocCustomItemListViewComponent extends AbstractDbxListViewDirective
 
   readonly config: DbxValueListViewConfig<DocValueWithSelection> = {
     componentClass: DocCustomItemListViewItemComponent,
-    mapValuesToItemValues: (x) => of(x.map((y) => ({ ...y, icon: y.icon, value: y })))
+    mapValuesToItemValues: (x) => of(x.map((y) => ({ ...y, icon: y.icon, itemValue: y })))
   };
 
 }
@@ -43,7 +43,7 @@ export class DocCustomItemListViewComponent extends AbstractDbxListViewDirective
   template: `
     <div class="pad-3">
       <h4 class="no-margin">{{ anchorType }}</h4>
-      <p>{{ value.name }}</p>
+      <p>{{ name }}</p>
     </div>
   `
 })
@@ -53,6 +53,10 @@ export class DocCustomItemListViewItemComponent extends AbstractDbxValueListView
 
   get anchorType() {
     return AnchorType[anchorTypeForAnchor(this.item.anchor)];
+  }
+
+  get name() {
+    return this.itemValue.name;
   }
 
 }

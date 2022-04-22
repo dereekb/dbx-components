@@ -31,7 +31,10 @@ export class DocLayoutListComponent implements OnInit, OnDestroy {
 
   readonly stateWithSelection$: Observable<ListLoadingState<DocValueWithSelection>> = this.state$.pipe(
     map((x) => mapLoadingStateResults<DocValue[], DocValueWithSelection[]>(x, {
-      mapValue: ((values) => values.map((x) => ({ ...x, selected: Math.random() > 0.5, disabled: Math.random() > 0.8 })))
+      mapValue: ((values) => values.map((x: DocValue) => {
+        const item: DocValueWithSelection = ({ ...x, selected: Math.random() > 0.5, disabled: Math.random() > 0.8 });
+        return item;
+      }))
     }))
   );
 

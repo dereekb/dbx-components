@@ -22,8 +22,8 @@ export abstract class AbstractDbxSelectionListViewDirective<T> extends AbstractD
   matSelectionChanged(selection: MatSelectionListChange): void {
     const options = selection.source.selectedOptions.selected;
     const items: ListSelectionStateItem<T>[] = options.map(x => {
-      const { value, selected, disabled } = x;
-      return ({ value, selected, disabled });
+      const { value: itemValue, selected, disabled } = x;
+      return ({ itemValue, selected, disabled });
     });
 
     this.selectionChanged({ items });

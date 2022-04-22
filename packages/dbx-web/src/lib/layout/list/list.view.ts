@@ -8,7 +8,7 @@ export type DbxListSelectionMode = 'select' | 'view';
 export interface ListSelectionStateItem<T> {
   disabled?: boolean;
   selected?: boolean;
-  value: T;
+  itemValue: T;
 }
 
 export interface ListSelectionState<T> {

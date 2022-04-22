@@ -205,7 +205,7 @@ export class AbstractDbxPickableItemFieldDirective<T> extends FieldType<Pickable
   readonly items$: Observable<PickableItemFieldItem<T>[]> = combineLatest([this.filteredSearchResults$, this.values$]).pipe(
     map(([displayValues, values]) => {
       const selectedHashValuesSet = new Set(values.map(x => this.hashForValue(x)));
-      let items: PickableItemFieldItem<T>[] = displayValues.map((x) => ({ value: x, selected: selectedHashValuesSet.has(x._hash) }));
+      let items: PickableItemFieldItem<T>[] = displayValues.map((x) => ({ itemValue: x, selected: selectedHashValuesSet.has(x._hash) }));
 
       if (this.sortItems) {
         items = this.sortItems(items);

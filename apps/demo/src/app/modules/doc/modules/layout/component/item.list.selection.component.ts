@@ -30,7 +30,7 @@ export class DocSelectionItemListViewComponent extends AbstractDbxSelectionListV
 
   readonly config: DbxSelectionValueListViewConfig<DocValueWithSelection> = {
     componentClass: DocSelectionItemListViewItemComponent,
-    mapValuesToItemValues: (x) => of(x.map((y) => ({ ...y, icon: y.icon, value: y })))
+    mapValuesToItemValues: (x) => of(x.map((y) => ({ ...y, icon: y.icon, itemValue: y })))
   };
 
 }
@@ -38,7 +38,7 @@ export class DocSelectionItemListViewComponent extends AbstractDbxSelectionListV
 @Component({
   template: `
     <div class="pad-3">
-      <h5 class="no-margin pad-0">{{ value.name }}</h5>
+      <h5 class="no-margin pad-0">{{ name }}</h5>
       <div>{{ lorem }}</div>
     </div>
   `
@@ -46,5 +46,9 @@ export class DocSelectionItemListViewComponent extends AbstractDbxSelectionListV
 export class DocSelectionItemListViewItemComponent extends AbstractDbxValueListViewItemComponent<DocValue> {
 
   readonly lorem = LOREM;
+
+  get name() {
+    return this.itemValue.name;
+  }
 
 }
