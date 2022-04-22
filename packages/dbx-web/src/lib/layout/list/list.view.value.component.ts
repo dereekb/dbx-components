@@ -1,5 +1,5 @@
 import { Component, Input } from '@angular/core';
-import { shareReplay, map, first } from 'rxjs';
+import { shareReplay, map } from 'rxjs';
 import { DbxValueListItem, AbstractDbxValueListViewConfig, DbxValueListItemConfig } from './list.view.value';
 import { AbstractDbxValueListViewDirective } from './list.view.value.directive';
 import { AnchorType, anchorTypeForAnchor } from '@dereekb/dbx-core';

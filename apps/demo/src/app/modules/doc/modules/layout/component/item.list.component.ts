@@ -1,5 +1,5 @@
 import { Component } from "@angular/core";
-import { AbstractDbxSelectionListWrapperDirective, AbstractSelectionValueListViewDirective, DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE } from "@dereekb/dbx-web";
+import { AbstractDbxSelectionListWrapperDirective, AbstractDbxSelectionListViewDirective, DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE } from "@dereekb/dbx-web";
 import { DocValue } from "./item.list";
 
 /**
@@ -23,4 +23,4 @@ export class DocItemListComponent extends AbstractDbxSelectionListWrapperDirecti
   selector: 'doc-item-list-view',
   templateUrl: './item.list.view.component.html'
 })
-export class DocItemListViewComponent extends AbstractSelectionValueListViewDirective<DocValue> { }
+export class DocItemListViewComponent extends AbstractDbxSelectionListViewDirective<DocValue> { }

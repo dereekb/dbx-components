@@ -1,6 +1,6 @@
 import { LOREM } from '../../shared/lorem';
 import { Component } from "@angular/core";
-import { AbstractDbxSelectionListWrapperDirective, AbstractDbxSelectionValueListViewItemComponent, AbstractSelectionValueListViewDirective, DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE, DbxSelectionValueListViewConfig, ProvideDbxListView } from "@dereekb/dbx-web";
+import { AbstractDbxSelectionListWrapperDirective, AbstractDbxValueListViewItemComponent, AbstractDbxSelectionListViewDirective, DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE, DbxSelectionValueListViewConfig, ProvideDbxListView, DEFAULT_DBX_SELECTION_VALUE_LIST_DIRECTIVE_TEMPLATE } from "@dereekb/dbx-web";
 import { of } from "rxjs";
 import { DocValue, DocValueWithSelection } from "./item.list";
 
@@ -23,10 +23,10 @@ export class DocSelectionItemListComponent extends AbstractDbxSelectionListWrapp
 }
 
 @Component({
-  template: `<dbx-selection-list-view [config]="config"></dbx-selection-list-view>`,
+  template: DEFAULT_DBX_SELECTION_VALUE_LIST_DIRECTIVE_TEMPLATE,
   providers: ProvideDbxListView(DocSelectionItemListViewComponent)
 })
-export class DocSelectionItemListViewComponent extends AbstractSelectionValueListViewDirective<DocValue> {
+export class DocSelectionItemListViewComponent extends AbstractDbxSelectionListViewDirective<DocValue> {
 
   readonly config: DbxSelectionValueListViewConfig<DocValueWithSelection> = {
     componentClass: DocSelectionItemListViewItemComponent,
@@ -43,7 +43,7 @@ export class DocSelectionItemListViewComponent extends AbstractSelectionValueLis
     </div>
   `
 })
-export class DocSelectionItemListViewItemComponent extends AbstractDbxSelectionValueListViewItemComponent<DocValue> {
+export class DocSelectionItemListViewItemComponent extends AbstractDbxValueListViewItemComponent<DocValue> {
 
   readonly lorem = LOREM;
 

@@ -257,7 +257,6 @@ export class DbxListComponent<T = any, V extends DbxListView<T> = DbxListView<T>
   }
 
   set selectionMode(selectionMode: Maybe<DbxListSelectionMode>) {
-    console.log('Set selection mode: ', selectionMode);
     this._selectionMode.next(selectionMode);
   }
 

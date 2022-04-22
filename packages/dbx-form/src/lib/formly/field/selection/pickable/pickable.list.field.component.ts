@@ -1,6 +1,6 @@
 import { Component } from "@angular/core";
 import { DbxInjectionComponentConfig } from "@dereekb/dbx-core";
-import { DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE, AbstractDbxSelectionListWrapperDirective, ProvideDbxListView, AbstractSelectionValueListViewDirective, AbstractDbxSelectionValueListViewItemComponent, ListSelectionState, mapItemValuesToValueListItemConfig, DbxListSelectionMode } from "@dereekb/dbx-web";
+import { DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE, AbstractDbxSelectionListWrapperDirective, ProvideDbxListView, AbstractDbxSelectionListViewDirective, AbstractDbxValueListViewItemComponent, ListSelectionState, mapItemValuesToValueListItemConfig, DbxListSelectionMode } from "@dereekb/dbx-web";
 import { Maybe } from "@dereekb/util";
 import { map, shareReplay } from "rxjs";
 import { PickableValueFieldDisplayValue } from "./pickable";
@@ -44,7 +44,7 @@ export class DbxPickableListFieldItemListComponent<T> extends AbstractDbxSelecti
   template: `<dbx-selection-list-view-content [multiple]="multiple" [selectionMode]="selectionMode" [items]="items$ | async"></dbx-selection-list-view-content>`,
   providers: ProvideDbxListView(DbxPickableListFieldItemListViewComponent)
 })
-export class DbxPickableListFieldItemListViewComponent<T> extends AbstractSelectionValueListViewDirective<PickableItemFieldItem<T>> {
+export class DbxPickableListFieldItemListViewComponent<T> extends AbstractDbxSelectionListViewDirective<PickableItemFieldItem<T>> {
 
   readonly config: DbxInjectionComponentConfig = {
     componentClass: DbxPickableListFieldItemListViewItemComponent
@@ -81,7 +81,7 @@ export class DbxPickableListFieldItemListViewComponent<T> extends AbstractSelect
     <p>{{ label }}</p>
   `
 })
-export class DbxPickableListFieldItemListViewItemComponent<T> extends AbstractDbxSelectionValueListViewItemComponent<PickableValueFieldDisplayValue<T>> {
+export class DbxPickableListFieldItemListViewItemComponent<T> extends AbstractDbxValueListViewItemComponent<PickableValueFieldDisplayValue<T>> {
 
   get label(): string {
     return this.value.label;
