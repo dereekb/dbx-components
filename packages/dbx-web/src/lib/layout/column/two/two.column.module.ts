@@ -10,6 +10,7 @@ import { DbxTwoColumnsColumnHeadComponent } from './two.column.head.component';
 import { DbxTwoColumnsRightComponent } from './two.column.right.component';
 import { DbxTwoColumnsBackDirective } from './two.column.back.directive';
 import { DbxTwoColumnsFullLeftDirective } from './two.column.full.left.directive';
+import { DbxTwoColumnsContextDirective } from './two.column.context.directive';
 
 @NgModule({
   imports: [
@@ -25,7 +26,8 @@ import { DbxTwoColumnsFullLeftDirective } from './two.column.full.left.directive
     DbxTwoColumnsColumnHeadComponent,
     DbxTwoColumnsSrefDirective,
     DbxTwoColumnsBackDirective,
-    DbxTwoColumnsFullLeftDirective
+    DbxTwoColumnsFullLeftDirective,
+    DbxTwoColumnsContextDirective
   ],
   exports: [
     DbxTwoColumnsComponent,
@@ -33,7 +35,8 @@ import { DbxTwoColumnsFullLeftDirective } from './two.column.full.left.directive
     DbxTwoColumnsColumnHeadComponent,
     DbxTwoColumnsSrefDirective,
     DbxTwoColumnsBackDirective,
-    DbxTwoColumnsFullLeftDirective
+    DbxTwoColumnsFullLeftDirective,
+    DbxTwoColumnsContextDirective
   ],
 })
 export class DbxTwoColumnLayoutModule { }

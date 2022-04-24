@@ -63,12 +63,22 @@ export function isMaybeNotAndNotFalse(value: any): boolean {
 }
 
 /**
+ * True if the input is MaybeNot.
+ * 
+ * @param value 
+ * @returns 
+ */
+export function isMaybeNot(value: any): value is MaybeNot {
+  return value == null;
+}
+
+/**
  * True if the input is MaybeNot and true.
  * 
  * @param value 
  * @returns 
  */
-export function isMaybeNotOrTrue(value: any): boolean {
+export function isMaybeNotOrTrue(value: any): value is MaybeNot | true {
   return value == null || value === true;
 }
 

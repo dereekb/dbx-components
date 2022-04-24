@@ -3,6 +3,7 @@ import { ComponentStore } from '@ngrx/component-store';
 import { Subject } from 'rxjs';
 import { distinct, map } from 'rxjs/operators';
 import { SegueRef } from '@dereekb/dbx-core';
+import { isMaybeNot, isMaybeNotOrTrue, Maybe } from '@dereekb/util';
 
 export interface TwoColumnsState {
   showRight: boolean;
@@ -70,12 +71,12 @@ export class TwoColumnsContextStore extends ComponentStore<TwoColumnsState> impl
   /**
    * Changes the state to show right or not.
    */
-  readonly setShowRight = this.updater((state, showRight: boolean) => ({ ...state, showRight }));
+  readonly setShowRight = this.updater((state, showRight: Maybe<boolean>) => isMaybeNot(showRight) ? state : ({ ...state, showRight }));
 
   /**
-   * Sets the full left.
+   * Sets the full left. If undefined is passed, no change occurs.
    */
-  readonly setFullLeft = this.updater((state, fullLeft: boolean) => ({ ...state, fullLeft }));
+  readonly setFullLeft = this.updater((state, fullLeft: Maybe<boolean>) => isMaybeNot(fullLeft) ? state : ({ ...state, fullLeft }));
 
   /**
    * Sets the new back ref.

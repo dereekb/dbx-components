@@ -17,9 +17,9 @@ export type DbxContentContainerWidth = 'small' | 'medium' | 'wide' | 'full';
 export class DbxContentContainerDirective {
 
   @Input()
-  grow = 'wide';
+  grow: DbxContentContainerWidth = 'wide';
 
   @Input()
-  padding = 'normal';
+  padding: DbxContentContainerPadding = 'normal';
 
 }

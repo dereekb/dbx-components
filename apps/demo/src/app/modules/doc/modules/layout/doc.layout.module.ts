@@ -12,6 +12,7 @@ import { DocLayoutBarComponent } from './container/bar.component';
 import { DocItemListComponent, DocItemListViewComponent } from './component/item.list.component';
 import { DocSelectionItemListComponent, DocSelectionItemListViewComponent, DocSelectionItemListViewItemComponent } from './component/item.list.selection.component';
 import { DocCustomItemListComponent, DocCustomItemListViewComponent, DocCustomItemListViewItemComponent } from './component/item.list.custom.component';
+import { DocLayoutTwoColumnsComponent } from './container/two.component';
 
 @NgModule({
   imports: [
@@ -37,7 +38,8 @@ import { DocCustomItemListComponent, DocCustomItemListViewComponent, DocCustomIt
     DocLayoutFlexComponent,
     DocLayoutSectionComponent,
     DocLayoutContentComponent,
-    DocLayoutListComponent
+    DocLayoutListComponent,
+    DocLayoutTwoColumnsComponent
   ]
 })
 export class DocLayoutModule { }

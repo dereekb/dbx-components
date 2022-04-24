@@ -1,12 +1,126 @@
 @use '../../style/theming';
 
 // MARK: Variables
-
+$two-column-left-width-var: theming.$two-column-left-width-var;
+$two-column-left-width: theming.$two-column-left-width;
+$two-column-navbar-height: theming.$content-navbar-height;
+$two-columns-right-padding-size: 6px;
 
 // MARK: Mixin
-@mixin core() {}
+@mixin core() {
 
-@mixin color($theme-config) {}
+  .dbx-two-columns {
+    height: 100%;
+    max-width: 100%;
+    display: flex;
+    flex-direction: row;
+    overflow-x: hidden;
+
+    .dbx-content-container {
+      margin: 0;
+    }
+
+    .left-column {
+      @include theming.elevation(1);
+
+      width: $two-column-left-width;
+      flex: 0 0 auto;
+
+      overflow: auto;
+      // background: red;
+
+      .two-column-reverse-sizing & {
+        width: calc(100% - #{$two-column-left-width});
+        overflow: hidden;
+      }
+
+      .full-left & {
+        width: 100% !important;
+
+        .right-shown & {
+          width: $two-column-left-width;
+        }
+      }
+    }
+
+
+    .right-column {
+      flex: 1 1 auto;
+      max-width: calc(100% - #{$two-column-left-width});
+      overflow: hidden;
+
+      .two-column-reverse-sizing & {
+        max-width: $two-column-left-width;
+      }
+    }
+  }
+
+  .dbx-two-columns-head {
+    padding: 0 6px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.14);
+    height: $two-column-navbar-height;
+
+    display: flex;
+    align-items: center;
+    overflow-y: hidden;
+
+    &.block {
+      display: block;
+    }
+
+    &.full {
+      padding: 0;
+    }
+  }
+
+  .dbx-two-columns-right {
+    height: 100%;
+
+    .dbx-two-columns-right-content {
+      height: calc(100% - #{$two-column-navbar-height});
+      overflow-x: hidden;
+      overflow-y: auto;
+    }
+
+    .back-button {
+      margin-right: $two-columns-right-padding-size;
+    }
+
+    .right-spacer {
+      padding-right: 5vw;
+    }
+
+    .side-spacer {
+      padding-left: $two-columns-right-padding-size;
+    }
+
+  }
+
+}
+
+@mixin color($theme-config) {
+
+
+  .dbx-two-columns {
+    .left-column {
+      @include theming.if-small-screen($theme-config) {
+        width: 100% !important;
+
+        .right-shown & {
+          display: none !important;
+        }
+      }
+    }
+
+    .right-column {
+      @include theming.if-small-screen($theme-config) {
+        max-width: 100% !important;
+        width: 100% !important;
+        padding-left: 0 !important;
+      }
+    }
+  }
+}
 
 @mixin typography($typography-config) {}
 

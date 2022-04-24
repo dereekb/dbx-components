@@ -1,10 +1,6 @@
-<div class="two-column" [ngClass]="{ 'two-column-reverse-sizing': reverseSizing, 'right-shown': showRight$ | async, 'full-left': (showFullLeft$ | async), 'dbx-section-page-two': inSectionPage }">
-  <div class="left-column">
-    <ng-content select="[left]"></ng-content>
-  </div>
-  <div class="right-column" *ngIf="showRight$ | async">
-    <!-- NOTE: This will only hide the content project. Be sure to use *ngIf separately on the right's content if needed. -->
-    <!-- https://github.com/angular/angular/issues/17983 -->
-    <ng-content select="[right]"></ng-content>
-  </div>
-</div>
+<dbx-content-container grow="full" padding="none" class="dbx-content left-column">
+  <ng-content select="[left]"></ng-content>
+</dbx-content-container>
+<dbx-content-container grow="full" padding="none" class="dbx-content right-column" *ngIf="v.showRight">
+  <ng-content select="[right]"></ng-content>
+</dbx-content-container>

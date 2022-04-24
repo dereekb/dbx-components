@@ -1,5 +1,6 @@
 export * from './two.column.back.directive';
 export * from './two.column.component';
+export * from './two.column.context.directive';
 export * from './two.column.full.left.directive';
 export * from './two.column.head.component';
 export * from './two.column.module';

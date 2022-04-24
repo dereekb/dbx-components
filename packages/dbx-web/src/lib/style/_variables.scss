@@ -19,6 +19,8 @@ $padding-3-var: --dbx-padding-3;
 $padding-4-var: --dbx-padding-4;
 $padding-5-var: --dbx-padding-5;
 
+$two-column-left-width-var: --dbx-two-column-left-width;
+
 // vars
 $vh100: var($vh100-var);
 
@@ -43,3 +45,5 @@ $padding-4: var($padding-4-var);
 $padding-5: var($padding-5-var);
 
 $padding-map: (0: $padding-0, 1: $padding-1, 2: $padding-2, 3: $padding-3, 4: $padding-4, 5: $padding-5);
+
+$two-column-left-width: var($two-column-left-width-var);
