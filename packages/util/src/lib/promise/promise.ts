@@ -3,6 +3,10 @@ import { waitForMs } from "./wait";
 
 export type PromiseOrValue<T> = Promise<T> | T;
 
+export function asPromise<T>(input: PromiseOrValue<T>): Promise<T> {
+  return Promise.resolve(input);
+}
+
 export type PromiseTaskFn<T, K = any> = (value: T, tryNumber?: number) => Promise<K>;
 
 export interface PerformTaskResult<O> {

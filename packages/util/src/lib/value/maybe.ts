@@ -99,6 +99,6 @@ export function isDefinedAndNotFalse(value: any): boolean {
  * @param b 
  * @returns 
  */
-export function isSameNonNullValue<T>(a: Maybe<T>, b: Maybe<T>): a is T {
+export function isSameNonNullValue<T>(a: Maybe<T>, b: Maybe<T>): a is NonNullable<T> {
   return (a === b && a != null);
 }

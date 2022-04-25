@@ -1,7 +1,15 @@
 
-export declare type ClassType<T = any> = {
+/**
+ * Class typing, restricted to types that have a constructor via the new keyword.
+ */
+export type ClassType<T = any> = {
   new(...args: any[]): T;
 };
+
+/**
+ * Similar to ClassType, but allows for abstract classes.
+ */
+export type ClassLikeType<T = any> = abstract new (...args: any[]) => T;
 
 /**
  * Special type used to defined other type definitions that state the defined type has every key of one type, but each key has a single/new value type.
@@ -13,7 +21,7 @@ export type BooleanKeyValueTransformMap<T> = KeyValueTransformMap<T, boolean>;
 
 // MARK: Typings
 export type RemoveIndex<T> = {
-  [ K in keyof T as string extends K ? never : number extends K ? never : K ] : T[K]
+  [K in keyof T as string extends K ? never : number extends K ? never : K]: T[K]
 };
 
 /**

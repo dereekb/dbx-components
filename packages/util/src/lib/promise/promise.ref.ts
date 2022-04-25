@@ -1,6 +1,6 @@
 
 
-export interface PromiseFullRef<O> {
+export interface PromiseFullRef<O = any> {
   readonly promise: Promise<O>;
   readonly resolve: (value: O | PromiseLike<O>) => void
   readonly reject: (reason?: any) => void
