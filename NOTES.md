@@ -160,7 +160,7 @@ The emulators require having `service_account.json` available. Make sure you get
 
 To run the emulators execute:
 
-> `./run-server.sh`
+> `./serve-server.sh`
 
 This file instructs docker to start a new container, and execute `nx serve demo-api` inside of it.
 

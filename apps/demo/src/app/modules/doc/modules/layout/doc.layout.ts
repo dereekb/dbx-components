@@ -25,6 +25,11 @@ export const DOC_LAYOUT_ROUTES = [{
   detail: 'dbx-list',
   ref: 'doc.layout.list'
 }, {
+  icon: 'table_rows',
+  title: 'Two Block',
+  detail: 'dbx-two-block',
+  ref: 'doc.layout.block'
+}, {
   icon: 'view_column',
   title: 'Two Columns',
   detail: 'dbx-two-columns',

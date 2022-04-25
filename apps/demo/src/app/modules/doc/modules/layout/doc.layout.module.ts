@@ -1,3 +1,4 @@
+import { DocLayoutTwoBlockComponent } from './container/block.component';
 import { DocLayoutFlexComponent } from './container/flex.component';
 import { DocLayoutListComponent } from './container/list.component';
 import { DocLayoutSectionComponent } from './container/section.component';
@@ -39,7 +40,8 @@ import { DocLayoutTwoColumnsComponent } from './container/two.component';
     DocLayoutSectionComponent,
     DocLayoutContentComponent,
     DocLayoutListComponent,
-    DocLayoutTwoColumnsComponent
+    DocLayoutTwoColumnsComponent,
+    DocLayoutTwoBlockComponent
   ]
 })
 export class DocLayoutModule { }

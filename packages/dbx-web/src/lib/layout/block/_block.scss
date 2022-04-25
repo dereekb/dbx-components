@@ -1,19 +1,18 @@
 @use '../../style/theming';
 
 // MARK: Variables
-
+$two-block-top-height-init-height: 50px;
+$two-block-top-height-var: --dbx-two-block-top-height;
 
 // MARK: Mixin
 @mixin core() {
 
-  // todo
-
-  .two-blocks {
+  .dbx-two-block-content {
     height: 100%;
-    --two-blocks-top-height: 50;
+    #{$two-block-top-height-var}: $two-block-top-height-init-height;
   
-    .bottom-block {
-      height: calc(100% - var(--two-blocks-top-height));
+    .dbx-two-block-bottom {
+      height: calc(100% - var($two-block-top-height-var));
     }
   }
       

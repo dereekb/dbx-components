@@ -15,7 +15,21 @@ export const homeState: Ng2StateDeclaration = {
   component: DemoAppHomeComponent,
 };
 
+export const demoGuestbookFutureState: Ng2StateDeclaration = {
+  name: 'demo.app.guestbook.**',
+  url: '/guestbook',
+  loadChildren: () => import('./modules/guestbook/guestbook.module').then(m => m.DemoGuestbookModule)
+};
+
+export const demoProfileFutureState: Ng2StateDeclaration = {
+  name: 'demo.app.profile.**',
+  url: '/profile',
+  loadChildren: () => import('./modules/profile/profile.module').then(m => m.DemoProfileModule)
+};
+
 export const DEMO_APP_STATES: Ng2StateDeclaration[] = [
   demoAppState,
-  homeState
+  homeState,
+  demoGuestbookFutureState,
+  demoProfileFutureState
 ];
