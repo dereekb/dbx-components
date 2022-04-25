@@ -1,5 +1,5 @@
 import * as admin from 'firebase-admin';
-import { FactoryProvider, InjectionToken, Module, Provider } from "@nestjs/common";
+import { FactoryProvider, InjectionToken, Module } from "@nestjs/common";
 
 // MARK: Tokens
 /**
@@ -13,7 +13,7 @@ export const FIREBASE_APP_TOKEN: InjectionToken = 'FIREBASE_APP_TOKEN';
 export const FIRESTORE_TOKEN: InjectionToken = 'FIRESTORE_TOKEN';
 
 /**
- * 
+ * Token to access the root FirestoreContext for a server.
  */
 export const FIRESTORE_CONTEXT_TOKEN: InjectionToken = 'FIRESTORE_CONTEXT_TOKEN';
 

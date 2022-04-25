@@ -1,8 +1,7 @@
 import { DemoFirestoreCollections, makeDemoFirestoreCollections } from "@dereekb/demo-firebase";
 import { Firestore, FirestoreContext } from "@dereekb/firebase";
-import { firebaseServerAppTokenProvider, FirebaseServerFirestoreModule, FIRESTORE_CONTEXT_TOKEN, FIRESTORE_TOKEN, googleCloudFirestoreContextFactory } from "@dereekb/firebase-server";
-import { Module, InjectionToken } from "@nestjs/common";
-import * as admin from 'firebase-admin';
+import { FirebaseServerFirestoreModule, FIRESTORE_CONTEXT_TOKEN, FIRESTORE_TOKEN, googleCloudFirestoreContextFactory } from "@dereekb/firebase-server";
+import { Module } from "@nestjs/common";
 
 const demoFirestoreContextFactory = (firestore: Firestore) => googleCloudFirestoreContextFactory(firestore);
 const demoFirestoreCollectionsFactory = (context: FirestoreContext) => makeDemoFirestoreCollections(context);

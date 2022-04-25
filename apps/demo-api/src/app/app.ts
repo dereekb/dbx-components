@@ -1,10 +1,10 @@
-import { NestAppPromiseGetter, NestServer, nestServerInstance } from '@dereekb/firebase-server';
+import { NestAppPromiseGetter, nestServerInstance } from '@dereekb/firebase-server';
 import { DemoApiAppModule } from './app.module';
 import { profileSetUsername, initUserOnCreate } from './function';
 
 export const {
   initNestServer
-} = nestServerInstance(DemoApiAppModule);
+} = nestServerInstance({ moduleClass: DemoApiAppModule });
 
 /**
  * Builder for all functions in the app.
