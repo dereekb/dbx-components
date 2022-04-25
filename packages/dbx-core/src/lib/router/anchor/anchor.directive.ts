@@ -4,6 +4,7 @@ import { BehaviorSubject, combineLatest, Observable, delay } from 'rxjs';
 import { Directive, Input, OnDestroy } from '@angular/core';
 import { Maybe } from '@dereekb/util';
 import { AnchorType, ClickableAnchor, anchorTypeForAnchor, DbxAnchor } from './anchor';
+import { SegueRefOrSegueRefRouterLink, asSegueRef } from '../segue';
 
 /**
  * Abstract anchor directive.
@@ -29,6 +30,14 @@ export class AbstractDbxAnchorDirective<T extends ClickableAnchor = ClickableAnc
   ngOnDestroy(): void {
     this._disabled.complete();
     this._anchor.complete();
+  }
+
+  /**
+   * Convenience input to create an Anchor from the input SegueRef.
+   */
+  @Input()
+  public set ref(ref: Maybe<SegueRefOrSegueRefRouterLink>) {
+    this.anchor = asSegueRef(ref) as T;
   }
 
   @Input()

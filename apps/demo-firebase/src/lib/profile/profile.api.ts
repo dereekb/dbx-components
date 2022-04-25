@@ -1,6 +1,6 @@
 import { Profile } from './profile';
 import { Expose } from "class-transformer";
-import { FirebaseFunctionMap, FirebaseFunctionMapFactory, firebaseFunctionMapFactory, FirebaseFunctionMapFunction, FirebaseFunctionTypeConfigMap } from "@dereekb/firebase";
+import { FirebaseFunctionMap, firebaseFunctionMapFactory, FirebaseFunctionTypeConfigMap } from "@dereekb/firebase";
 import { IsNotEmpty, IsOptional, IsString, MaxLength } from "class-validator";
 
 export class SetProfileUsernameParams {

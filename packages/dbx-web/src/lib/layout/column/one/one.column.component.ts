@@ -8,10 +8,10 @@ import { TwoColumnsContextStore } from '../two';
   selector: 'dbx-one-column',
   template: `
     <ng-container>
-      <dbx-two-columns [inSectionPage]="inSectionPage">
+      <dbx-two-column [inSectionPage]="inSectionPage">
         <ng-content top select="[top]"></ng-content>
         <ng-content left></ng-content>
-      </dbx-two-columns>
+      </dbx-two-column>
     </ng-container>
   `,
   exportAs: 'columns',

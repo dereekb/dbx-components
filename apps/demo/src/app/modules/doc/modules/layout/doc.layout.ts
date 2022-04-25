@@ -32,7 +32,7 @@ export const DOC_LAYOUT_ROUTES = [{
 }, {
   icon: 'view_column',
   title: 'Two Columns',
-  detail: 'dbx-two-columns',
+  detail: 'dbx-two-column',
   ref: 'doc.layout.two'
 }];
 

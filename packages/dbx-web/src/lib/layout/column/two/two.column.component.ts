@@ -21,11 +21,11 @@ export interface DbxTwoColumnsViewState {
  * Requires a TwoColumnsContextStore to be provided.
  */
 @Component({
-  selector: 'dbx-two-columns',
+  selector: 'dbx-two-column',
   templateUrl: './two.column.component.html',
   exportAs: 'columns',
   host: {
-    "class": "dbx-two-columns",
+    "class": "dbx-two-column",
     "[class]": "{ 'right-shown': v.showRight, 'full-left': v.fullLeft, 'two-column-reverse-sizing': v.reverseSizing, 'dbx-section-page-two': v.inSectionPage }"
   },
   changeDetection: ChangeDetectionStrategy.OnPush

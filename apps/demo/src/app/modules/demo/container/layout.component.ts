@@ -12,21 +12,29 @@ import { DbxFirebaseAuthService } from '@dereekb/dbx-firebase';
 export class DemoLayoutComponent {
 
   readonly everyoneAnchors = [{
-    title: 'Home',
+    title: 'Public Home',
     ref: 'demo.home',
     icon: 'home'
   }];
 
   readonly adminAnchors = [{
-    title: 'Home',
+    title: 'Admin Home',
     ref: 'demo.home',
     icon: 'home'
   }];
 
   readonly userAnchors = [{
-    title: 'Home',
-    ref: 'demo.home',
+    title: 'App Home',
+    ref: 'demo.app.home',
     icon: 'home'
+  }, {
+    title: 'Guest Book',
+    ref: 'demo.app.guestbook.list',
+    icon: 'list'
+  }, {
+    title: 'Your Profile',
+    ref: 'demo.app.profile',
+    icon: 'person'
   }];
 
   readonly navAnchors$: Observable<ClickableAnchorLinkSegueRef[]> = of({

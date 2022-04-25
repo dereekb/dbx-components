@@ -20,6 +20,10 @@ export interface DbxFirebaseEmulatorsConfig {
    */
   host?: string;
   /**
+   * emulator UI configuration
+   */
+  ui?: DbxFirebaseEmulatorConfig;
+  /**
    * Auth emulator configuration
    */
   auth?: DbxFirebaseEmulatorConfig;

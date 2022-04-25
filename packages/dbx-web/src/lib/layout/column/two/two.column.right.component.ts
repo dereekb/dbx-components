@@ -11,10 +11,10 @@ import { Maybe } from '@dereekb/util';
  * When rendered it will trigger the context to show left.
  */
 @Component({
-  selector: 'dbx-two-columns-right',
+  selector: 'dbx-two-column-right',
   templateUrl: './two.column.right.component.html',
   host: {
-    'class': "dbx-two-columns-right d-block"
+    'class': "dbx-two-column-right d-block"
   }
 })
 export class DbxTwoColumnsRightComponent implements AfterViewInit, OnDestroy {

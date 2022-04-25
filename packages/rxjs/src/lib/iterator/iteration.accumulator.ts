@@ -81,7 +81,7 @@ export class ItemAccumulatorInstance<O, I = any, N extends ItemIteration<I> = It
       };
 
       /* 
-      We start with allSuccessfulPageResults$ since it contains all page results since the start of the iterator,
+      Start with allSuccessfulPageResults$ since it contains all page results since the start of the iterator,
       and subscription to allItems may not have started at the same time.
 
       We use scan to add in all models coming in afterwards by pushing them into the accumulator.

@@ -9,7 +9,7 @@ $two-columns-right-padding-size: 6px;
 // MARK: Mixin
 @mixin core() {
 
-  .dbx-two-columns {
+  .dbx-two-column {
     height: 100%;
     max-width: 100%;
     display: flex;
@@ -55,7 +55,7 @@ $two-columns-right-padding-size: 6px;
     }
   }
 
-  .dbx-two-columns-head {
+  .dbx-two-column-head {
     padding: 0 6px;
     border-bottom: 1px solid rgba(0, 0, 0, 0.14);
     height: $two-column-navbar-height;
@@ -73,10 +73,10 @@ $two-columns-right-padding-size: 6px;
     }
   }
 
-  .dbx-two-columns-right {
+  .dbx-two-column-right {
     height: 100%;
 
-    .dbx-two-columns-right-content {
+    .dbx-two-column-right-content {
       height: calc(100% - #{$two-column-navbar-height});
       overflow-x: hidden;
       overflow-y: auto;
@@ -101,7 +101,7 @@ $two-columns-right-padding-size: 6px;
 @mixin color($theme-config) {
 
 
-  .dbx-two-columns {
+  .dbx-two-column {
     .left-column {
       @include theming.if-small-screen($theme-config) {
         width: 100% !important;

@@ -10,7 +10,7 @@ export interface FirestoreItemPageIteratorFilter {
   /**
    * Overrides the default limit, if applicable.
    */
-  limit?: number;
+  limit?: Maybe<number>;
   /**
    * Constraints to query on.
    */

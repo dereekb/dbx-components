@@ -1,4 +1,4 @@
-<dbx-two-columns-head>
+<dbx-two-column-head>
   <!-- Back Buttons -->
   <ng-container *ngIf="showBack$ | async">
     <button mat-icon-button class="back-button" (click)="backClicked()" aria-label="back button">
@@ -16,7 +16,7 @@
   <span class="right-nav-spacer"></span>
   <span class="spacer"></span>
   <ng-content select="[nav]"></ng-content>
-</dbx-two-columns-head>
-<div class="dbx-two-columns-right-content">
+</dbx-two-column-head>
+<div class="dbx-two-column-right-content">
   <ng-content></ng-content>
 </div>

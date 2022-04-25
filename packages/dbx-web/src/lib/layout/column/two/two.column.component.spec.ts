@@ -30,14 +30,14 @@ describe('DbxTwoColumnsComponent', () => {
 
 @Component({
   template: `
-    <dbx-two-columns>
+    <dbx-two-column>
       <ng-container left>
         <p>Left Content</p>
       </ng-container>
       <div right>
         <p>Right Content</p>
       </div>
-    </dbx-two-columns>
+    </dbx-two-column>
   `,
   providers: ProvideTwoColumnsContext()
 })
