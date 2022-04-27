@@ -1,3 +1,4 @@
+import { startWith } from 'rxjs/operators';
 import { SubscriptionObject } from '../subscription';
 import { map, Observable, shareReplay, skipWhile, distinctUntilChanged, filter } from 'rxjs';
 import { distinctUntilArrayLengthChanges, scanBuildArray, filterMaybe, scanIntoArray } from "../rxjs";
@@ -58,6 +59,10 @@ export class ItemAccumulatorInstance<O, I = any, N extends ItemIteration<I> = It
    */
   readonly allSuccessfulStates$: Observable<LoadingState<I>[]> = this.latestSuccessfulState$.pipe(
     scanIntoArray({ immutable: false }),
+    /**
+     * Don't wait for the first successful state in order to avoid never returning a value on immediate failures.
+     */
+    startWith([] as LoadingState<I>[]),
     distinctUntilArrayLengthChanges(),
     shareReplay(1)
   );
@@ -102,7 +107,8 @@ export class ItemAccumulatorInstance<O, I = any, N extends ItemIteration<I> = It
         seed,
         accumulatorObs
       };
-    })
+    }),
+    shareReplay(1)
   );
 
   private _sub = new SubscriptionObject(this.allSuccessfulStates$.subscribe());

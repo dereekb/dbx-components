@@ -24,7 +24,6 @@ describe('iteration.rxjs', () => {
   describe('flattenIterationResultItemArray()', () => {
 
     it(`should aggregate the array of results into a single array.`, (done) => {
-
       const testPagesToLoad = 10;
 
       iteratorNextPageUntilPage(iteration, testPagesToLoad).then((page) => {

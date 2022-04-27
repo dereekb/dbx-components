@@ -1,6 +1,6 @@
 import { ItemPageIterator, ItemPageIterationInstance } from './iterator.page';
 import { loadingStateHasFinishedLoading } from '../loading';
-import { filter, first } from 'rxjs';
+import { filter, first, skip } from 'rxjs';
 import { iteratorNextPageUntilPage } from './iteration.next';
 import { itemAccumulator, ItemAccumulatorInstance } from './iteration.accumulator';
 import { TestPageIteratorFilter, TEST_PAGE_ITERATOR_DELEGATE } from './iterator.page.spec';
@@ -57,6 +57,25 @@ describe('ItemPageIterator', () => {
 
     describe('allItems$', () => {
 
+      describe('with error and no successes', () => {
+
+        beforeEach(() => {
+          initInstanceWithFilter({
+            resultError: new Error('test error')
+          });
+        });
+
+        it('should return an empty array.', (done) => {
+          accumulator.allItems$.pipe(first()).subscribe((items) => {
+            expect(items).toBeDefined();
+            expect(items.length).toBe(0);
+            done();
+          });
+
+        });
+
+      });
+
       describe('with mapping', () => {
 
         let mappedAccumulator: ItemAccumulatorInstance<string>;
@@ -71,7 +90,7 @@ describe('ItemPageIterator', () => {
 
         it('should map the items', (done) => {
 
-          mappedAccumulator.allItems$.pipe(first()).subscribe((items) => {
+          mappedAccumulator.allItems$.pipe(filter(x => x.length > 0)).subscribe((items) => {
             expect(items).toBeDefined();
             expect(typeof items[0]).toBe('string');
             done();
@@ -103,7 +122,7 @@ describe('ItemPageIterator', () => {
 
       });
 
-      it('should emit only after the first state has come through.', (done) => {
+      it('should emit an empty array before the first state has come through.', (done) => {
 
         initInstanceWithFilter({
           delayTime: 500
@@ -115,12 +134,14 @@ describe('ItemPageIterator', () => {
         accumulator.allItems$.subscribe((allItems) => {
           emissions += 1;
 
-          expect(allItems.length).toBe(1);
-
-          done();
+          if (emissions === 1) {
+            expect(allItems.length).toBe(0);
+          } else if (emissions === 2) {
+            expect(allItems.length).toBe(1);
+            done();
+          }
         });
 
-        expect(emissions).toBe(0);
       });
 
       it('should accumulate values as pages are loaded.', (done) => {
@@ -129,7 +150,9 @@ describe('ItemPageIterator', () => {
         let latestAllItems: number[];
 
         // Should trigger first page to be loaded.
-        accumulator.allItems$.subscribe((allItems) => {
+        accumulator.allItems$.pipe(
+          skip(1)   // skip the first empty emission
+        ).subscribe((allItems) => {
           emissions += 1;
           latestAllItems = allItems;
         });
