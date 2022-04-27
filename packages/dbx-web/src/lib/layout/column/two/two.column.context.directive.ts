@@ -5,13 +5,13 @@ import { BehaviorSubject } from 'rxjs';
 import { ProvideTwoColumnsContext, TwoColumnsContextStore } from './two.column.store';
 
 /**
- * Provides a dbxTwoColumnsContextStore
+ * Provides a dbxTwoColumnContextStore
  */
 @Directive({
-  selector: '[dbxTwoColumnsContext]',
+  selector: '[dbxTwoColumnContext]',
   providers: ProvideTwoColumnsContext()
 })
-export class DbxTwoColumnsContextDirective implements OnInit, OnDestroy {
+export class DbxTwoColumnContextDirective implements OnInit, OnDestroy {
 
   private _showRight = new BehaviorSubject<Maybe<boolean>>(undefined);
 

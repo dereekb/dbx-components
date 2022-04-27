@@ -11,7 +11,7 @@ import { Component, Input } from '@angular/core';
     </div>
   `
 })
-export class DbxTwoColumnsColumnHeadComponent {
+export class DbxTwoColumnColumnHeadComponent {
 
   @Input()
   block?: boolean;

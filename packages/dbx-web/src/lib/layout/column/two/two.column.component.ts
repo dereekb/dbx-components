@@ -6,7 +6,7 @@ import { Observable, BehaviorSubject, combineLatest } from 'rxjs';
 import { TwoColumnsContextStore } from './two.column.store';
 
 
-export interface DbxTwoColumnsViewState {
+export interface DbxTwoColumnViewState {
   showRight: boolean;
   showFullLeft: boolean;
   reverseSizing: boolean;
@@ -30,9 +30,9 @@ export interface DbxTwoColumnsViewState {
   },
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class DbxTwoColumnsComponent extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
+export class DbxTwoColumnComponent extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
 
-  private _view: DbxTwoColumnsViewState = { showRight: false, showFullLeft: true, reverseSizing: false, inSectionPage: false };
+  private _view: DbxTwoColumnViewState = { showRight: false, showFullLeft: true, reverseSizing: false, inSectionPage: false };
 
   private _reverseSizing = new BehaviorSubject<boolean>(false);
   private _inSectionPage = new BehaviorSubject<boolean>(false);
@@ -66,7 +66,7 @@ export class DbxTwoColumnsComponent extends AbstractSubscriptionDirective implem
     this._inSectionPage.complete();
   }
 
-  get v(): DbxTwoColumnsViewState {
+  get v(): DbxTwoColumnViewState {
     return this._view;
   }
 

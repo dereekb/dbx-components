@@ -17,7 +17,7 @@ import { Maybe } from '@dereekb/util';
     'class': "dbx-two-column-right d-block"
   }
 })
-export class DbxTwoColumnsRightComponent implements AfterViewInit, OnDestroy {
+export class DbxTwoColumnRightComponent implements AfterViewInit, OnDestroy {
 
   @Input()
   header?: string;

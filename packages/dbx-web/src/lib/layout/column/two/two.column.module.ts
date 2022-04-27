@@ -4,13 +4,13 @@ import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { DbxAnchorModule } from '../../../router';
 import { DbxContentLayoutModule } from '../../content';
-import { DbxTwoColumnsSrefDirective } from './two.column.sref.directive';
-import { DbxTwoColumnsComponent } from './two.column.component';
-import { DbxTwoColumnsColumnHeadComponent } from './two.column.head.component';
-import { DbxTwoColumnsRightComponent } from './two.column.right.component';
-import { DbxTwoColumnsBackDirective } from './two.column.back.directive';
-import { DbxTwoColumnsFullLeftDirective } from './two.column.full.left.directive';
-import { DbxTwoColumnsContextDirective } from './two.column.context.directive';
+import { DbxTwoColumnSrefDirective } from './two.column.sref.directive';
+import { DbxTwoColumnComponent } from './two.column.component';
+import { DbxTwoColumnColumnHeadComponent } from './two.column.head.component';
+import { DbxTwoColumnRightComponent } from './two.column.right.component';
+import { DbxTwoColumnBackDirective } from './two.column.back.directive';
+import { DbxTwoColumnFullLeftDirective } from './two.column.full.left.directive';
+import { DbxTwoColumnContextDirective } from './two.column.context.directive';
 
 @NgModule({
   imports: [
@@ -21,22 +21,22 @@ import { DbxTwoColumnsContextDirective } from './two.column.context.directive';
     DbxContentLayoutModule
   ],
   declarations: [
-    DbxTwoColumnsComponent,
-    DbxTwoColumnsRightComponent,
-    DbxTwoColumnsColumnHeadComponent,
-    DbxTwoColumnsSrefDirective,
-    DbxTwoColumnsBackDirective,
-    DbxTwoColumnsFullLeftDirective,
-    DbxTwoColumnsContextDirective
+    DbxTwoColumnComponent,
+    DbxTwoColumnRightComponent,
+    DbxTwoColumnColumnHeadComponent,
+    DbxTwoColumnSrefDirective,
+    DbxTwoColumnBackDirective,
+    DbxTwoColumnFullLeftDirective,
+    DbxTwoColumnContextDirective
   ],
   exports: [
-    DbxTwoColumnsComponent,
-    DbxTwoColumnsRightComponent,
-    DbxTwoColumnsColumnHeadComponent,
-    DbxTwoColumnsSrefDirective,
-    DbxTwoColumnsBackDirective,
-    DbxTwoColumnsFullLeftDirective,
-    DbxTwoColumnsContextDirective
+    DbxTwoColumnComponent,
+    DbxTwoColumnRightComponent,
+    DbxTwoColumnColumnHeadComponent,
+    DbxTwoColumnSrefDirective,
+    DbxTwoColumnBackDirective,
+    DbxTwoColumnFullLeftDirective,
+    DbxTwoColumnContextDirective
   ],
 })
 export class DbxTwoColumnLayoutModule { }

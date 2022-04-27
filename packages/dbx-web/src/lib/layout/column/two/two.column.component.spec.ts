@@ -4,7 +4,7 @@ import { DbxTwoColumnLayoutModule } from './two.column.module';
 import { ProvideTwoColumnsContext } from './two.column.store';
 
 
-describe('DbxTwoColumnsComponent', () => {
+describe('DbxTwoColumnComponent', () => {
 
   beforeEach(async () => {
     TestBed.configureTestingModule({
