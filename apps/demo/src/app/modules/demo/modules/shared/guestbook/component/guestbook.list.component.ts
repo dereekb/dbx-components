@@ -1,13 +1,14 @@
 import { Guestbook } from '@dereekb/demo-firebase';
 import { Component } from "@angular/core";
-import { AbstractDbxSelectionListWrapperDirective, AbstractDbxValueListViewItemComponent, AbstractDbxSelectionListViewDirective, DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE, DbxSelectionValueListViewConfig, ProvideDbxListView, DEFAULT_DBX_SELECTION_VALUE_LIST_DIRECTIVE_TEMPLATE, DbxValueAsListItem } from "@dereekb/dbx-web";
+import { AbstractDbxSelectionListWrapperDirective, AbstractDbxValueListViewItemComponent, AbstractDbxSelectionListViewDirective, DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE, DbxSelectionValueListViewConfig, ProvideDbxListView, DEFAULT_DBX_SELECTION_VALUE_LIST_DIRECTIVE_TEMPLATE, DbxValueAsListItem, ProvideDbxListViewWrapper } from "@dereekb/dbx-web";
 import { of } from "rxjs";
 
 export type GuestbookWithSelection = DbxValueAsListItem<Guestbook>;
 
 @Component({
   selector: 'demo-guestbook-list',
-  template: DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE
+  template: DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE,
+  providers: ProvideDbxListViewWrapper(DemoGuestbookListComponent)
 })
 export class DemoGuestbookListComponent extends AbstractDbxSelectionListWrapperDirective<Guestbook> {
 

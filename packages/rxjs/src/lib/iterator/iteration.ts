@@ -1,5 +1,5 @@
 import { Observable } from 'rxjs';
-import { Destroyable, PageNumber } from "@dereekb/util";
+import { Destroyable, Maybe, PageNumber } from "@dereekb/util";
 import { LoadingState, PageLoadingState } from '../loading';
 
 export interface ItemIteratorNextRequest {
@@ -46,8 +46,12 @@ export interface PageItemIteration<V = any, L extends PageLoadingState<V> = Page
    * The maximum number of pages allowed to be loaded.
    * 
    * A page of 15 means that pages 0-14 can be loaded, but not page 15.
+   * 
+   * If this value is unset, there is no limit to the number of pages that can be loaded.
+   * 
+   * For most cases you should always have a maxPageLoadLimit set to avoid iterating too many unused items.
    */
-  maxPageLoadLimit: PageNumber;
+  maxPageLoadLimit: Maybe<PageNumber>;
 
   /**
    * Attempts to loads the next page of results and returns a promise.

@@ -80,7 +80,7 @@ export interface FirestoreDocumentAccessor<T, D extends FirestoreDocument<T> = F
 /**
  * Used to generate a FirestoreDocument from an input FirestoreDocumentDataAccessor instance.
  */
-export type FirestoreDocumentFactoryFunction<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> = (accessor: FirestoreDocumentDataAccessor<T>, documentAaccessor: FirestoreDocumentAccessor<T, D>) => D;
+export type FirestoreDocumentFactoryFunction<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> = (accessor: FirestoreDocumentDataAccessor<T>, documentAccessor: FirestoreDocumentAccessor<T, D>) => D;
 
 // MARK: FirestoreDocumentAccessor
 /**

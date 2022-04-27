@@ -1,4 +1,4 @@
-import { PageLoadingState, ItemPageIterator, ItemPageIterationInstance, ItemPageIterationConfig, ItemPageIteratorDelegate, ItemPageIteratorRequest, ItemPageIteratorResult, MappedPageItemIterationInstance } from '@dereekb/rxjs';
+import { PageLoadingState, ItemPageIterator, ItemPageIterationInstance, ItemPageIterationConfig, ItemPageIteratorDelegate, ItemPageIteratorRequest, ItemPageIteratorResult, MappedPageItemIterationInstance, ItemPageLimit } from '@dereekb/rxjs';
 import { QueryDocumentSnapshot, QuerySnapshot } from "../types";
 import { asArray, Maybe, lastValue, mergeIntoArray, ArrayOrValue } from '@dereekb/util';
 import { from, Observable, of, exhaustMap } from "rxjs";
@@ -6,7 +6,7 @@ import { CollectionReferenceRef } from '../reference';
 import { FirestoreQueryDriverRef } from '../driver/query';
 import { FIRESTORE_LIMIT_QUERY_CONSTRAINT_TYPE, FirestoreQueryConstraint, limit, startAfter } from './constraint';
 
-export interface FirestoreItemPageIteratorFilter {
+export interface FirestoreItemPageIteratorFilter extends ItemPageLimit {
   /**
    * Overrides the default limit, if applicable.
    */
@@ -17,7 +17,7 @@ export interface FirestoreItemPageIteratorFilter {
   constraints?: Maybe<ArrayOrValue<FirestoreQueryConstraint>>;
 }
 
-export interface FirestoreItemPageIterationBaseConfig<T> extends CollectionReferenceRef<T>, FirestoreQueryDriverRef {
+export interface FirestoreItemPageIterationBaseConfig<T> extends CollectionReferenceRef<T>, FirestoreQueryDriverRef, ItemPageLimit {
   itemsPerPage: number;
 }
 
@@ -149,6 +149,7 @@ export function firestoreItemPageIterationFactory<T>(baseConfig: FirestoreItemPa
       collection: baseConfig.collection,
       itemsPerPage: baseConfig.itemsPerPage,
       firestoreQueryDriver: baseConfig.firestoreQueryDriver,
+      maxPageLoadLimit: filter?.maxPageLoadLimit ?? baseConfig.maxPageLoadLimit,
       filter
     });
 

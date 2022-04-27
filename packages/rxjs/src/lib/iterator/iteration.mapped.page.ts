@@ -2,6 +2,7 @@ import { PageLoadingState } from '../loading';
 import { Observable } from "rxjs";
 import { ItemIteratorNextRequest, PageItemIteration } from "./iteration";
 import { MappedItemIteration, MappedItemIterationInstance, MappedItemIterationInstanceMapConfig } from './iteration.mapped';
+import { Maybe } from '@dereekb/util';
 
 /**
  * MappedItemIteration for PageItemIteration
@@ -31,7 +32,7 @@ export class MappedPageItemIterationInstance<
     return this.itemIterator.maxPageLoadLimit;
   }
 
-  set maxPageLoadLimit(maxPageLoadLimit: number) {
+  set maxPageLoadLimit(maxPageLoadLimit: Maybe<number>) {
     this.itemIterator.maxPageLoadLimit = maxPageLoadLimit;
   }
 

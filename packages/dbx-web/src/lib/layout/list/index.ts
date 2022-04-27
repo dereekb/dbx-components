@@ -10,3 +10,4 @@ export * from './list.view.value.item.directive';
 export * from './list.view.value.selection.component';
 export * from './list.view.value';
 export * from './list.view';
+export * from './list.wrapper';
