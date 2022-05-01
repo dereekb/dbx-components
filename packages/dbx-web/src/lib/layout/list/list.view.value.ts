@@ -1,16 +1,16 @@
-import { ClickableAnchor } from '@dereekb/dbx-core';
-import { InjectionToken, StaticProvider } from "@angular/core";
-import { DbxInjectionComponentConfig } from "@dereekb/dbx-core";
+import { forwardRef, InjectionToken, Provider, StaticProvider, Type } from "@angular/core";
+import { ClickableAnchor, DbxInjectionComponentConfig } from "@dereekb/dbx-core";
 import { map, Observable, of } from "rxjs";
+import { Maybe } from '@dereekb/util';
 
 export const DBX_VALUE_LIST_VIEW_ITEM = new InjectionToken<any>('DbxValueListViewItem');
 
 export interface DbxValueListItem<T> {
-  itemValue: T;   // todo: rename to itemValue
+  itemValue: T;
   icon?: string;
   disabled?: boolean;
   selected?: boolean;
-  anchor?: ClickableAnchor;
+  anchor?: Maybe<ClickableAnchor>;
 }
 
 /**
@@ -24,36 +24,53 @@ export interface AbstractDbxValueListViewConfig<T, I extends DbxValueListItem<T>
 
 export const DEFAULT_DBX_VALUE_LIST_CONFIG_MAP_VALUES = <T, I extends DbxValueListItem<T>>(itemValues: T[]) => of(itemValues.map(itemValue => ({ itemValue })) as I[]);
 
-export interface DbxValueListItemConfig<T> extends DbxValueListItem<T> {
+export type DbxValueListItemConfig<T, I extends DbxValueListItem<T> = DbxValueListItem<T>> = I & {
   config: DbxInjectionComponentConfig;
-}
+};
 
-export function mapValuesToValuesListItemConfigObs<T>(listViewConfig: AbstractDbxValueListViewConfig<T>, itemValues: T[]): Observable<DbxValueListItemConfig<T>[]> {
-  return (listViewConfig.mapValuesToItemValues ?? DEFAULT_DBX_VALUE_LIST_CONFIG_MAP_VALUES)(itemValues).pipe(
-    map((listItems) => {
-      const listItemConfigs: DbxValueListItemConfig<T>[] = mapItemValuesToValueListItemConfig(listViewConfig, listItems);
+export function mapValuesToValuesListItemConfigObs<T, I extends DbxValueListItem<T>>(listViewConfig: AbstractDbxValueListViewConfig<T, I>, itemValues: T[]): Observable<DbxValueListItemConfig<T, I>[]> {
+  const makeObs = listViewConfig.mapValuesToItemValues ?? DEFAULT_DBX_VALUE_LIST_CONFIG_MAP_VALUES;
+  return makeObs(itemValues).pipe(
+    map((listItems: I[]) => {
+      const listItemConfigs: DbxValueListItemConfig<T, I>[] = addConfigToValueListItems(listViewConfig, listItems);
       return listItemConfigs;
     })
   );
 }
 
-export function mapItemValuesToValueListItemConfig<T>(listViewConfig: AbstractDbxValueListViewConfig<T>, listItmes: DbxValueListItem<T>[]): DbxValueListItemConfig<T>[] {
-  return listItmes.map((listItem) => {
+/**
+ * Adds config to the input value list items.
+ * 
+ * @param listViewConfig 
+ * @param listItems 
+ * @returns 
+ */
+export function addConfigToValueListItems<T, I extends DbxValueListItem<T>>(listViewConfig: AbstractDbxValueListViewConfig<T, I>, listItems: I[]): DbxValueListItemConfig<T, I>[] {
+  const itemConfigs: DbxValueListItemConfig<T, I>[] = listItems.map((listItem: I) => {
     const anchor = listItem.anchor;
-    const disabled = listItem.disabled || anchor?.disabled;
 
-    return {
-      itemValue: listItem.itemValue,
-      icon: listItem.icon,
-      selected: listItem.selected,
-      disabled,
-      anchor: listItem.anchor,
-      config: Object.assign({
-        providers: [{
-          provide: DBX_VALUE_LIST_VIEW_ITEM,
-          useValue: listItem
-        }] as StaticProvider[]
-      }, listViewConfig)
-    }
+    listItem.disabled = listItem.disabled || anchor?.disabled;
+    (listItem as DbxValueListItemConfig<T, I>).config = Object.assign({
+      providers: [{
+        provide: DBX_VALUE_LIST_VIEW_ITEM,
+        useValue: listItem
+      }] as StaticProvider[]
+    }, listViewConfig);
+
+    return listItem as DbxValueListItemConfig<T, I>;
   });
+
+  return itemConfigs;
+}
+
+// MARK: ValueListView
+export abstract class DbxValueListView<T, I extends DbxValueListItem<T> = DbxValueListItem<T>> {
+  readonly abstract items$: Observable<I[]>;
+}
+
+export function ProvideDbxValueListView<V extends DbxValueListView<any>>(sourceType: Type<V>): Provider[] {
+  return [{
+    provide: DbxValueListView,
+    useExisting: forwardRef(() => sourceType)
+  }];
 }

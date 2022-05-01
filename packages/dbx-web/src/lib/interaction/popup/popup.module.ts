@@ -8,7 +8,7 @@ import { NgOverlayContainerModule } from 'ng-overlay-container';
 import { DbxPopupService } from './popup.service';
 import { DbxPopupContentComponent } from './popup.content.component';
 import { DbxPopupComponent } from './popup.component';
-import { DbxAnchorModule } from '../../router';
+import { DbxRouterAnchorModule } from '../../router';
 import { DbxActionModule } from '../../action/action.module';
 import { DbxPopupControlsComponent } from './popup.controls.component';
 import { DbxPopupControlButtonsComponent } from './popup.controls.buttons.component';
@@ -22,7 +22,7 @@ import { DbxStyleLayoutModule } from '../../layout/style/style.layout.module';
     MatIconModule,
     MatButtonModule,
     DbxButtonModule,
-    DbxAnchorModule,
+    DbxRouterAnchorModule,
     DbxActionModule,
     DbxStyleLayoutModule,
     DbxInjectionComponentModule,

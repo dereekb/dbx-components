@@ -28,4 +28,4 @@ import { DbxAnchorContentComponent } from './anchor.content.component';
     DbxAnchorContentComponent
   ]
 })
-export class DbxAnchorModule { }
+export class DbxRouterAnchorModule { }

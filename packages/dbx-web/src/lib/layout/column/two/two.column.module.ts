@@ -2,7 +2,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { DbxAnchorModule } from '../../../router';
+import { DbxRouterAnchorModule } from '../../../router';
 import { DbxContentLayoutModule } from '../../content';
 import { DbxTwoColumnSrefDirective } from './two.column.sref.directive';
 import { DbxTwoColumnComponent } from './two.column.component';
@@ -17,7 +17,7 @@ import { DbxTwoColumnContextDirective } from './two.column.context.directive';
     CommonModule,
     MatIconModule,
     MatButtonModule,
-    DbxAnchorModule,
+    DbxRouterAnchorModule,
     DbxContentLayoutModule
   ],
   declarations: [

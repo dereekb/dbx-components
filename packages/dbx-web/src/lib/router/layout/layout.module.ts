@@ -1,15 +1,17 @@
 import { NgModule } from '@angular/core';
-import { DbxAnchorModule } from './anchor/anchor.module';
-import { DbxAnchorListModule } from './anchorlist/anchorlist.module';
-import { DbxNavbarModule } from './navbar/navbar.module';
-import { DbxSidenavModule } from './sidenav/sidenav.module';
+import { DbxRouterAnchorModule } from './anchor/anchor.module';
+import { DbxRouterAnchorListModule } from './anchorlist/anchorlist.module';
+import { DbxRouterListModule } from './list/list.module';
+import { DbxRouterNavbarModule } from './navbar/navbar.module';
+import { DbxRouterSidenavModule } from './sidenav/sidenav.module';
 
 @NgModule({
   exports: [
-    DbxAnchorModule,
-    DbxAnchorListModule,
-    DbxNavbarModule,
-    DbxSidenavModule
+    DbxRouterAnchorModule,
+    DbxRouterAnchorListModule,
+    DbxRouterListModule,
+    DbxRouterNavbarModule,
+    DbxRouterSidenavModule
   ]
 })
 export class DbxRouterLayoutModule { }

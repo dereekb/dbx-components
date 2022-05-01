@@ -195,3 +195,21 @@ export function pickOneRandomly<T>(values: T[]): T {
   const index = Math.round(random * (values.length - 1));
   return values[index];
 }
+
+/**
+ * Performs forEach with the input array and returns the array.
+ * 
+ * @param array 
+ * @param forEach 
+ * @returns 
+ */
+export function forEachWithArray<T>(array: Maybe<ArrayOrValue<T>>, forEach: (value: T) => void): T[] {
+  if (array) {
+    array = convertToArray(array);
+    array.forEach(forEach);
+  } else {
+    array = [];
+  }
+
+  return array;
+}

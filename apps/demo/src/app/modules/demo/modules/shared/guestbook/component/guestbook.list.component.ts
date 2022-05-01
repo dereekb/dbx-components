@@ -15,7 +15,7 @@ export class DemoGuestbookListComponent extends AbstractDbxSelectionListWrapperD
   constructor() {
     super({
       componentClass: DemoGuestbookListViewComponent,
-      defaultSelectionMode: 'view'
+      defaultSelectionMode: 'view',
     });
   }
 
@@ -41,4 +41,8 @@ export class DemoGuestbookListViewComponent extends AbstractDbxSelectionListView
     </div>
   `
 })
-export class DemoGuestbookListViewItemComponent extends AbstractDbxValueListViewItemComponent<Guestbook> { }
+export class DemoGuestbookListViewItemComponent extends AbstractDbxValueListViewItemComponent<Guestbook> {
+
+  // todo add title, etc.
+
+}

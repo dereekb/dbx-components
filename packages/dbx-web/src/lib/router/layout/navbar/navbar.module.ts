@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTabsModule } from '@angular/material/tabs';
-import { DbxAnchorModule } from '../anchor/anchor.module';
+import { DbxRouterAnchorModule } from '../anchor/anchor.module';
 import { MatMenuModule } from '@angular/material/menu';
 import { DbxNavbarComponent } from './navbar.component';
 
@@ -15,7 +15,7 @@ import { DbxNavbarComponent } from './navbar.component';
     MatButtonModule,
     MatIconModule,
     MatMenuModule,
-    DbxAnchorModule,
+    DbxRouterAnchorModule,
   ],
   declarations: [
     DbxNavbarComponent
@@ -24,4 +24,4 @@ import { DbxNavbarComponent } from './navbar.component';
     DbxNavbarComponent
   ]
 })
-export class DbxNavbarModule { }
+export class DbxRouterNavbarModule { }

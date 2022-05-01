@@ -16,7 +16,7 @@ import {
 } from './searchable.field.autocomplete.item.component';
 import { DbxSearchableTextFieldComponent } from './searchable.text.field.component';
 import { DbxDatePipeModule, DbxInjectionComponentModule } from '@dereekb/dbx-core';
-import { DbxAnchorModule, DbxTextModule, DbxLoadingModule, DbxButtonModule } from '@dereekb/dbx-web';
+import { DbxRouterAnchorModule, DbxTextModule, DbxLoadingModule, DbxButtonModule } from '@dereekb/dbx-web';
 
 @NgModule({
   imports: [
@@ -32,7 +32,7 @@ import { DbxAnchorModule, DbxTextModule, DbxLoadingModule, DbxButtonModule } fro
     MatAutocompleteModule,
     MatListModule,
     DbxDatePipeModule,
-    DbxAnchorModule,
+    DbxRouterAnchorModule,
     MatChipsModule,
     MatIconModule,
     DbxInjectionComponentModule,

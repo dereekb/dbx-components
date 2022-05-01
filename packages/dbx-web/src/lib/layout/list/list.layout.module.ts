@@ -1,4 +1,4 @@
-import { DbxAnchorModule } from '../../router/layout/anchor/anchor.module';
+import { DbxRouterAnchorModule } from '../../router/layout/anchor/anchor.module';
 import { DbxLoadingModule } from '../../loading/loading.module';
 import { MatIconModule } from '@angular/material/icon';
 import { MatListModule } from '@angular/material/list';
@@ -10,12 +10,13 @@ import { DbxListEmptyContentComponent } from './list.content.empty.component';
 import { InfiniteScrollModule } from 'ngx-infinite-scroll';
 import { DbxSelectionValueListItemViewComponent, DbxSelectionValueListViewComponent } from './list.view.value.selection.component';
 import { DbxValueListItemViewComponent, DbxValueListViewComponent } from './list.view.value.component';
+import { DbxValueListItemModifierDirective } from './list.view.value.modifier.directive';
 
 @NgModule({
   imports: [
     CommonModule,
     DbxLoadingModule,
-    DbxAnchorModule,
+    DbxRouterAnchorModule,
     InfiniteScrollModule,
     DbxInjectionComponentModule,
     MatListModule,
@@ -28,7 +29,8 @@ import { DbxValueListItemViewComponent, DbxValueListViewComponent } from './list
     DbxValueListViewComponent,
     DbxValueListItemViewComponent,
     DbxSelectionValueListViewComponent,
-    DbxSelectionValueListItemViewComponent
+    DbxSelectionValueListItemViewComponent,
+    DbxValueListItemModifierDirective
   ],
   exports: [
     DbxListComponent,
@@ -36,7 +38,8 @@ import { DbxValueListItemViewComponent, DbxValueListViewComponent } from './list
     DbxValueListViewComponent,
     DbxValueListItemViewComponent,
     DbxSelectionValueListViewComponent,
-    DbxSelectionValueListItemViewComponent
+    DbxSelectionValueListItemViewComponent,
+    DbxValueListItemModifierDirective
   ]
 })
 export class DbxListLayoutModule { }

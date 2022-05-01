@@ -5,7 +5,7 @@ import { DbxFirebaseLoginAppleComponent } from './login.apple.component';
 import { DbxFirebaseLoginButtonComponent, DbxFirebaseLoginButtonContainerComponent } from './login.button.component';
 import { ModuleWithProviders, NgModule, Type } from '@angular/core';
 import { DbxInjectionComponentModule } from '@dereekb/dbx-core';
-import { DbxActionModule, DbxAnchorModule, DbxButtonModule, DbxReadableErrorModule } from '@dereekb/dbx-web';
+import { DbxActionModule, DbxRouterAnchorModule, DbxButtonModule, DbxReadableErrorModule } from '@dereekb/dbx-web';
 import { FirebaseLoginMethodType, KnownFirebaseLoginMethodType, OAUTH_FIREBASE_LOGIN_METHOD_CATEGORY, DEFAULT_FIREBASE_LOGIN_METHOD_CATEGORY } from './login';
 import { DbxFirebaseLoginAnonymousComponent } from './login.anonymous.component';
 import { DbxFirebaseLoginComponent } from './login.component';
@@ -135,7 +135,7 @@ export function defaultFirebaseAuthLoginProvidersFactory(): DbxFirebaseAuthLogin
     CommonModule,
     MatIconModule,
     MatButtonModule,
-    DbxAnchorModule,
+    DbxRouterAnchorModule,
     DbxFormIoModule,
     DbxFormModule,
     DbxFormlyModule,

@@ -1,6 +1,6 @@
-import { exhaustMap, scan, shareReplay, startWith } from 'rxjs/operators';
+import { exhaustMap, map, scan, shareReplay, startWith } from 'rxjs/operators';
 import { distinctUntilChanged, MonoTypeOperatorFunction, Observable, OperatorFunction } from "rxjs";
-import { Maybe, ArrayOrValue, mergeArrayOrValueIntoArray } from '@dereekb/util';
+import { Maybe, ArrayOrValue, mergeArrayOrValueIntoArray, forEachWithArray } from '@dereekb/util';
 
 export function distinctUntilArrayLengthChanges<A>(getArray: (value: A) => any[]): MonoTypeOperatorFunction<A>;
 export function distinctUntilArrayLengthChanges<T>(): MonoTypeOperatorFunction<T[]>;
@@ -70,10 +70,19 @@ export function scanBuildArray<S, T>(init: ScanBuildArrayConfigFn<S, T>): Operat
         }
 
         return acc!;
-      }, seed!) as OperatorFunction<ArrayOrValue<T>, T[]>, 
+      }, seed!) as OperatorFunction<ArrayOrValue<T>, T[]>,
       distinctUntilArrayLengthChanges(),
       shareReplay(1)
     );
   });
 }
 
+/**
+ * Convenience function with map to forEachWithArray
+ * 
+ * @param forEach 
+ * @returns 
+ */
+export function mapForEach<T>(forEach: Maybe<(value: T) => void>): OperatorFunction<T[], T[]> {
+  return (forEach) ? map(x => forEachWithArray(x, forEach)) : map(x => x);
+}

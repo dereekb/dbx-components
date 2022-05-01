@@ -14,7 +14,7 @@ import { DbxPopoverHeaderComponent } from './popover.header.component';
 import { DbxPopoverScrollContentComponent } from './popover.scroll.content.component';
 import { DbxActionPopoverDirective } from './popover.action.directive';
 import { DbxKeypressModule } from '../../keypress';
-import { DbxAnchorModule } from '../../router';
+import { DbxRouterAnchorModule } from '../../router';
 import { DbxActionModule } from '../../action/action.module';
 import { DbxButtonModule } from '../../button/button.module';
 import { DbxInjectionComponentModule } from '@dereekb/dbx-core';
@@ -27,7 +27,7 @@ import { DbxStyleLayoutModule } from '../../layout/style/style.layout.module';
     MatButtonModule,
     MatDividerModule,
     DbxButtonModule,
-    DbxAnchorModule,
+    DbxRouterAnchorModule,
     DbxActionModule,
     DbxKeypressModule,
     DbxStyleLayoutModule,

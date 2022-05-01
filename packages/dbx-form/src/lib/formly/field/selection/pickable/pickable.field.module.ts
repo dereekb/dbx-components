@@ -12,7 +12,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { DbxPickableChipListFieldComponent } from './pickable.chip.field.component';
 import { DbxPickableListFieldComponent, DbxPickableListFieldItemListComponent, DbxPickableListFieldItemListViewComponent, DbxPickableListFieldItemListViewItemComponent } from './pickable.list.field.component';
 import { DbxDatePipeModule, DbxInjectionComponentModule } from '@dereekb/dbx-core';
-import { DbxAnchorModule, DbxTextModule, DbxLoadingModule, DbxButtonModule, DbxListLayoutModule } from '@dereekb/dbx-web';
+import { DbxRouterAnchorModule, DbxTextModule, DbxLoadingModule, DbxButtonModule, DbxListLayoutModule } from '@dereekb/dbx-web';
 
 @NgModule({
   imports: [
@@ -28,7 +28,7 @@ import { DbxAnchorModule, DbxTextModule, DbxLoadingModule, DbxButtonModule, DbxL
     MatAutocompleteModule,
     MatListModule,
     DbxDatePipeModule,
-    DbxAnchorModule,
+    DbxRouterAnchorModule,
     MatChipsModule,
     MatIconModule,
     DbxInjectionComponentModule,

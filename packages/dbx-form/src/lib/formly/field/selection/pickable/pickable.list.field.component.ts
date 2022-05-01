@@ -1,6 +1,6 @@
 import { Component } from "@angular/core";
 import { DbxInjectionComponentConfig } from "@dereekb/dbx-core";
-import { DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE, AbstractDbxSelectionListWrapperDirective, ProvideDbxListView, AbstractDbxSelectionListViewDirective, AbstractDbxValueListViewItemComponent, ListSelectionState, mapItemValuesToValueListItemConfig, DbxListSelectionMode } from "@dereekb/dbx-web";
+import { DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE, AbstractDbxSelectionListWrapperDirective, ProvideDbxListView, AbstractDbxSelectionListViewDirective, AbstractDbxValueListViewItemComponent, ListSelectionState, addConfigToValueListItems, DbxListSelectionMode } from "@dereekb/dbx-web";
 import { Maybe } from "@dereekb/util";
 import { map, shareReplay } from "rxjs";
 import { PickableValueFieldDisplayValue } from "./pickable";
@@ -66,7 +66,7 @@ export class DbxPickableListFieldItemListViewComponent<T> extends AbstractDbxSel
 
   readonly items$ = this.values$.pipe(
     // NOTE: This causes the "value" to be a PickableValueFieldDisplayValue<T>, which means we emit PickableValueFieldDisplayValue<T> to DbxPickableListFieldComponent.
-    map(x => mapItemValuesToValueListItemConfig(this.config, x)),
+    map(x => addConfigToValueListItems(this.config, x)),
     shareReplay(1)
   );
 

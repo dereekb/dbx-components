@@ -44,19 +44,19 @@ export class DbxValueListViewComponent<T, I extends DbxValueListItem<T> = DbxVal
     'class': 'dbx-list-view'
   }
 })
-export class DbxValueListItemViewComponent<T> {
+export class DbxValueListItemViewComponent<T, I extends DbxValueListItem<T> = DbxValueListItem<T>> {
 
   @Input()
   emitAllClicks?: Maybe<boolean>;
 
   @Input()
-  items?: Maybe<DbxValueListItemConfig<T>[]>;
+  items?: Maybe<DbxValueListItemConfig<T, I>[]>;
 
   readonly disabled$ = this.dbxListView.disabled$;
 
   constructor(readonly dbxListView: DbxListView<T>) { }
 
-  onClickItem(item: DbxValueListItem<T>) {
+  onClickItem(item: I) {
 
     // do not emit clicks for disabled items.
     if (!item.disabled) {
