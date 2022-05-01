@@ -29,6 +29,20 @@ export interface Modifier<T> {
 }
 
 /**
+ * Creates a new modifier
+ * 
+ * @param key 
+ * @param modify 
+ * @returns 
+ */
+export function modifier<T>(key: string, modify: ModifierFunction<T>): Modifier<T> {
+  return {
+    key,
+    modify
+  };
+}
+
+/**
  * Map of Modifiers keyed by the modifier key.
  */
 export type ModifierMap<T> = Map<ModifierKey, Modifier<T>>;

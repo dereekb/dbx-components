@@ -12,7 +12,7 @@ import { SubscriptionObject } from '@dereekb/rxjs';
 @Directive()
 export abstract class AbstractDbxFirebaseModelLoaderInstanceDirective<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> implements DbxFirebaseModelLoader<T>, OnInit, OnDestroy {
 
-  readonly constraints$ = this.instance.constraints$;;
+  readonly constraints$ = this.instance.constraints$;
   readonly firestoreIteration$ = this.instance.firestoreIteration$;
   readonly pageLoadingState$ = this.instance.pageLoadingState$;
 

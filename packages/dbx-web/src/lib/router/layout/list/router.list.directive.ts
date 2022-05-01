@@ -5,7 +5,7 @@ import { BehaviorSubject, map, Observable } from "rxjs";
 import { DbxValueListItem } from "../../../layout/list/list.view.value";
 import { AbstractDbxValueListItemModifierDirective } from "../../../layout/list/list.view.value.modifier.directive";
 
-export type AnchorForValueFunction<T> = (value: T) => Maybe<ClickableAnchor>;
+export type AnchorForValueFunction<T> = (value: T, item: DbxValueListItem<T>) => Maybe<ClickableAnchor>;
 
 export const DBX_ROUTER_VALUE_LIST_ITEM_MODIFIER_KEY = 'router_anchor';
 
@@ -24,7 +24,7 @@ export class DbxListItemAnchorModifierDirective<T> extends AbstractDbxValueListI
         modifiers = {
           key: DBX_ROUTER_VALUE_LIST_ITEM_MODIFIER_KEY,
           modify: (x: DbxValueListItem<T>) => {
-            x.anchor = anchorForItem(x.itemValue);
+            x.anchor = anchorForItem(x.itemValue, x);
           }
         };
       }
@@ -38,7 +38,7 @@ export class DbxListItemAnchorModifierDirective<T> extends AbstractDbxValueListI
     this._anchorForItem.complete();
   }
 
-  @Input('[dbxListItemAnchorModifier]')
+  @Input('dbxListItemAnchorModifier')
   set anchorForItem(anchorForItem: Maybe<AnchorForValueFunction<T>>) {
     this._anchorForItem.next(anchorForItem);
   }

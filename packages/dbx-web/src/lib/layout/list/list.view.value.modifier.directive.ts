@@ -40,7 +40,7 @@ export class DbxValueListItemModifierDirective<T, I extends DbxValueListItem<T> 
   }
 
   // MARK: Input Modifiers
-  @Input('[dbxListItemModifier]')
+  @Input('dbxListItemModifier')
   set inputModifiers(inputModifiers: Maybe<ArrayOrValue<Modifier<I>>>) {
     this._inputModifiers.next(inputModifiers);
   }

@@ -1,5 +1,5 @@
 import { forwardRef, Provider, Type } from "@angular/core";
-import { ArrayOrValue, Modifier, ModifierMap } from "@dereekb/util";
+import { ArrayOrValue, modifier, Modifier, ModifierFunction, ModifierMap } from "@dereekb/util";
 import { Observable } from "rxjs";
 import { DbxValueListItem } from "./list.view.value";
 
@@ -18,4 +18,11 @@ export function ProvideDbxValueListViewModifier<V extends DbxValueListItemModifi
     provide: DbxValueListItemModifier,
     useExisting: forwardRef(() => sourceType)
   }];
+}
+
+// MARK: Utility
+export type ListItemModifier<T, I extends DbxValueListItem<T> = DbxValueListItem<T>> = Modifier<I>;
+
+export function listItemModifier<T, I extends DbxValueListItem<T> = DbxValueListItem<T>>(key: string, modify: ModifierFunction<I>): ListItemModifier<T, I> {
+  return modifier(key, modify);
 }

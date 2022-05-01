@@ -1,11 +1,12 @@
 import { ClickableAnchor, safeDetectChanges } from '@dereekb/dbx-core';
 import { CustomDocValue } from './../component/item.list.custom.component';
-import { ListSelectionState } from '@dereekb/dbx-web';
+import { listItemModifier, ListItemModifier, ListSelectionState } from '@dereekb/dbx-web';
 import { ListLoadingState, mapLoadingStateResults, successResult } from '@dereekb/rxjs';
 import { BehaviorSubject, map, switchMap, startWith, Observable, delay, of } from 'rxjs';
 import { ChangeDetectorRef, Component, OnInit, OnDestroy } from '@angular/core';
 import { DocValue, DocValueWithSelection } from '../component/item.list';
-import { Maybe, range, takeFront } from '@dereekb/util';
+import { Maybe, modifier, Modifier, range, takeFront } from '@dereekb/util';
+import { AnchorForValueFunction } from '@dereekb/dbx-web';
 
 @Component({
   templateUrl: './list.component.html'
@@ -75,6 +76,25 @@ export class DocLayoutListComponent implements OnInit, OnDestroy {
   readonly staticState$: Observable<ListLoadingState<DocValue>> = of(successResult(this.makeValues()));
 
   readonly count$ = this.state$.pipe(map(x => x.value?.length ?? 0));
+
+  clickedModifiedAnchorItem?: CustomDocValue;
+  readonly inputDbxListItemModifier: ListItemModifier<CustomDocValue> = listItemModifier('test', (item) => {
+    item.anchor = {
+      onClick: () => {
+        this.clickedModifiedAnchorItem = item.itemValue;
+        safeDetectChanges(this.cdRef);
+      }
+    }
+  });
+
+  makeClickAnchor: AnchorForValueFunction<CustomDocValue> = (itemValue) => {
+    return {
+      onClick: () => {
+        this.clickedModifiedAnchorItem = itemValue;
+        safeDetectChanges(this.cdRef);
+      }
+    };
+  }
 
   constructor(readonly cdRef: ChangeDetectorRef) { }
 
