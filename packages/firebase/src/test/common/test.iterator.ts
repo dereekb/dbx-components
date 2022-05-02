@@ -1,4 +1,4 @@
-import { flattenIterationResultItemArray, itemAccumulator, ItemAccumulator, iteratorNextPageUntilPage, SubscriptionObject } from "@dereekb/rxjs";
+import { flattenAccumulatorResultItemArray, itemAccumulator, ItemAccumulator, accumulatorCurrentPageListLoadingState, iteratorNextPageUntilPage, loadingStateHasFinishedLoading, SubscriptionObject, accumulatorFlattenPageListLoadingState } from "@dereekb/rxjs";
 import { filter, first, from, switchMap } from "rxjs";
 import { makeDocuments } from "../../lib/common/firestore/accessor/document.utility";
 import { FirestoreItemPageIterationFactoryFunction, FirestoreItemPageIterationInstance } from "../../lib/common/firestore/query/iterator";
@@ -6,6 +6,8 @@ import { MockItemDocument, MockItem } from "./firestore.mock.item";
 import { MockItemCollectionFixture } from "./firestore.mock.item.fixture";
 import { mockItemWithValue } from "./firestore.mock.item.query";
 import { arrayContainsDuplicateValue } from "@dereekb/util";
+import { firebaseQueryItemAccumulator, FirebaseQueryItemAccumulator, firebaseQuerySnapshotAccumulator, FirebaseQuerySnapshotAccumulator } from "../../lib/common/firestore/query/accumulator";
+import { QueryDocumentSnapshot, QuerySnapshot } from "../../lib";
 
 /**
  * Describes accessor driver tests, using a MockItemCollectionFixture.
@@ -33,6 +35,7 @@ export function describeFirestoreIterationTests(f: MockItemCollectionFixture) {
           };
         }
       });
+
       sub = new SubscriptionObject();
     });
 
@@ -139,34 +142,183 @@ export function describeFirestoreIterationTests(f: MockItemCollectionFixture) {
 
       describe('with accumulator', () => {
 
-        let accumulator: ItemAccumulator<MockItemDocument[]>;
+        let accumulatorSub: SubscriptionObject;
 
         beforeEach(() => {
-          accumulator = itemAccumulator(iteration);
+          accumulatorSub = new SubscriptionObject();
         });
 
-        describe('flattenIterationResultItemArray()', () => {
+        afterEach(() => {
+          accumulatorSub.destroy();
+        });
 
-          it(`should aggregate the array of results into a single array.`, (done) => {
-            const pagesToLoad = 2;
+        describe('firebaseQuerySnapshotAccumulator()', () => {
 
-            iteratorNextPageUntilPage(iteration, pagesToLoad).then((page) => {
-              expect(page).toBe(pagesToLoad - 1);
-      
-              const obs = flattenIterationResultItemArray(accumulator);
-      
-              obs.pipe(first()).subscribe((values) => {
-                expect(values.length).toBe(pagesToLoad * limit);
-                expect(arrayContainsDuplicateValue(values.map(x => x.id))).toBe(false);
+          let accumulator: FirebaseQuerySnapshotAccumulator<MockItem>;
+
+          beforeEach(() => {
+            accumulator = firebaseQuerySnapshotAccumulator(iteration);
+          });
+
+          it('should accumulate values from the query.', () => {
+
+            // todo
+
+          });
+
+          describe('flattenAccumulatorResultItemArray()', () => {
+
+            it(`should aggregate the array of results into a single array.`, (done) => {
+              const pagesToLoad = 2;
+
+              // load up to page 2
+              iteratorNextPageUntilPage(iteration, pagesToLoad).then((page) => {
+                expect(page).toBe(pagesToLoad - 1);
+
+                const obs = flattenAccumulatorResultItemArray(accumulator);
+
+                accumulatorSub.subscription = obs.pipe(first()).subscribe((values) => {
+                  expect(values.length).toBe(pagesToLoad * limit);
+                  expect(arrayContainsDuplicateValue(values.map(x => x.id))).toBe(false);
+
+                  // should not be a query snapshot
+                  expect(values[0].ref).toBeDefined();
+
+                  done();
+                });
+
+              });
+
+            });
+
+          });
+
+          describe('accumulatorCurrentPageListLoadingState()', () => {
+
+            it('should return a loading state for the current page.', (done) => {
+
+              const obs = accumulatorCurrentPageListLoadingState(accumulator);
+
+              accumulatorSub.subscription = obs.pipe(filter(x => !x.loading)).subscribe((state) => {
+                const value = state.value;
+
+                expect(loadingStateHasFinishedLoading(state)).toBe(true);
+                expect(value).toBeDefined();
+                expect(Array.isArray(value)).toBe(true);
+                expect(Array.isArray(value![0])).toBe(true);
+
                 done();
               });
-      
+
             });
-      
+
           });
-      
+
         });
-      
+
+        describe('firebaseQueryItemAccumulator()', () => {
+
+          let itemAccumulator: FirebaseQueryItemAccumulator<MockItem>;
+
+          beforeEach(() => {
+            itemAccumulator = firebaseQueryItemAccumulator(iteration);
+          });
+
+          describe('flattenAccumulatorResultItemArray()', () => {
+
+            it(`should aggregate the array of results into a single array.`, (done) => {
+              const pagesToLoad = 2;
+
+              // load up to page 2
+              iteratorNextPageUntilPage(iteration, pagesToLoad).then((page) => {
+                expect(page).toBe(pagesToLoad - 1);
+
+                const obs = flattenAccumulatorResultItemArray(itemAccumulator);
+
+                accumulatorSub.subscription = obs.pipe(first()).subscribe((values) => {
+                  expect(values.length).toBe(pagesToLoad * limit);
+                  expect(arrayContainsDuplicateValue(values.map(x => x.id))).toBe(false);
+                  done();
+                });
+
+              });
+
+            });
+
+          });
+
+          describe('flattenAccumulatorResultItemArray()', () => {
+
+            it(`should aggregate the array of results into a single array of the items.`, (done) => {
+              const pagesToLoad = 2;
+
+              // load up to page 2
+              iteratorNextPageUntilPage(iteration, pagesToLoad).then((page) => {
+                expect(page).toBe(pagesToLoad - 1);
+
+                const obs = flattenAccumulatorResultItemArray(itemAccumulator);
+
+                accumulatorSub.subscription = obs.pipe(first()).subscribe((values) => {
+
+                  expect(values.length).toBe(pagesToLoad * limit);
+                  expect(arrayContainsDuplicateValue(values.map(x => x.id))).toBe(false);
+
+                  // should not be a query snapshot
+                  expect((values[0] as unknown as QueryDocumentSnapshot<MockItem>).ref).not.toBeDefined();
+
+                  done();
+                });
+
+              });
+
+            });
+
+          });
+
+          describe('accumulatorFlattenPageListLoadingState()', () => {
+
+            it('should return a loading state for the current page with all items in a single array.', (done) => {
+
+              const obs = accumulatorFlattenPageListLoadingState(itemAccumulator);
+
+              accumulatorSub.subscription = obs.pipe(filter(x => !x.loading)).subscribe((state) => {
+                const value = state.value;
+
+                expect(loadingStateHasFinishedLoading(state)).toBe(true);
+                expect(value).toBeDefined();
+                expect(Array.isArray(value)).toBe(true);
+                expect(Array.isArray(value![0])).toBe(false);
+
+                done();
+              });
+
+            });
+
+          });
+
+          describe('accumulatorCurrentPageListLoadingState()', () => {
+
+            it('should return a loading state for the current page.', (done) => {
+
+              const obs = accumulatorCurrentPageListLoadingState(itemAccumulator);
+
+              accumulatorSub.subscription = obs.pipe(filter(x => !x.loading)).subscribe((state) => {
+                const value = state.value;
+
+                expect(loadingStateHasFinishedLoading(state)).toBe(true);
+                expect(value).toBeDefined();
+                expect(Array.isArray(value)).toBe(true);
+                expect(Array.isArray(value![0])).toBe(true);
+
+                done();
+              });
+
+            });
+
+          });
+
+        });
+
       });
 
     });

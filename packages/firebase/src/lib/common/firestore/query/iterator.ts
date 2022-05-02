@@ -1,5 +1,5 @@
 import { PageLoadingState, ItemPageIterator, ItemPageIterationInstance, ItemPageIterationConfig, ItemPageIteratorDelegate, ItemPageIteratorRequest, ItemPageIteratorResult, MappedPageItemIterationInstance, ItemPageLimit } from '@dereekb/rxjs';
-import { QueryDocumentSnapshot, QuerySnapshot } from "../types";
+import { QueryDocumentSnapshotArray, QuerySnapshot } from "../types";
 import { asArray, Maybe, lastValue, mergeIntoArray, ArrayOrValue } from '@dereekb/util';
 import { from, Observable, of, exhaustMap } from "rxjs";
 import { CollectionReferenceRef } from '../reference';
@@ -27,7 +27,7 @@ export interface FirestoreItemPageQueryResult<T> {
   /**
    * The relevant docs for this page result. This value will omit the cursor.
    */
-  docs: QueryDocumentSnapshot<T>[];
+  docs: QueryDocumentSnapshotArray<T>;
   /**
    * The raw snapshot returned from the query.
    */
@@ -94,6 +94,7 @@ export function makeFirestoreItemPageIteratorDelegate<T>(): FirestoreItemPageIte
 
               return result;
             });
+
             return from(resultPromise);
           }
         })
@@ -103,9 +104,9 @@ export function makeFirestoreItemPageIteratorDelegate<T>(): FirestoreItemPageIte
 }
 
 export class FirestoreItemPageIterationInstance<T> extends MappedPageItemIterationInstance<
-  QueryDocumentSnapshot<T>[],
+  QueryDocumentSnapshotArray<T>,
   FirestoreItemPageQueryResult<T>,
-  PageLoadingState<QueryDocumentSnapshot<T>[]>,
+  PageLoadingState<QueryDocumentSnapshotArray<T>>,
   PageLoadingState<FirestoreItemPageQueryResult<T>>,
   InternalFirestoreItemPageIterationInstance<T>
 > {

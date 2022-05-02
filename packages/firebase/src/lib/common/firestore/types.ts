@@ -58,6 +58,11 @@ export interface DocumentData {
   [field: string]: any;
 }
 
+/**
+ * Document data with the id appended to it.
+ */
+export type DocumentDataWithId<T = DocumentData> = T & { id: string };
+
 export interface DocumentSnapshot<T = DocumentData> {
   readonly id: string;
   readonly ref: DocumentReference<T>;
@@ -139,6 +144,8 @@ export interface QueryDocumentSnapshot<T = DocumentData> extends DocumentSnapsho
   // readonly updateTime: Timestamp;
   data(options?: SnapshotOptions): T;
 }
+
+export type QueryDocumentSnapshotArray<T> = QueryDocumentSnapshot<T>[];
 
 export declare type DocumentChangeType = 'added' | 'removed' | 'modified';
 

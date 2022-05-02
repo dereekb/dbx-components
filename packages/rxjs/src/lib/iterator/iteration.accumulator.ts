@@ -3,7 +3,9 @@ import { startWith, map, Observable, shareReplay, skipWhile, distinctUntilChange
 import { distinctUntilArrayLengthChanges, scanBuildArray, filterMaybe, scanIntoArray } from "../rxjs";
 import { lastValue, filterMaybeValues, Destroyable, Maybe } from "@dereekb/util";
 import { ItemIteration, PageItemIteration } from "./iteration";
-import { LoadingState, loadingStateHasError } from '../loading';
+import { LoadingState, loadingStateHasError, mapLoadingStateValueFunction, MapLoadingStateValueMapFunction } from '../loading';
+
+export type ItemAccumulatorMapFunction<O, I> = MapLoadingStateValueMapFunction<O, I>;
 
 /**
  * An object that accumulates and exposes values from an ItemIteration.
@@ -19,6 +21,11 @@ export interface ItemAccumulator<O, I = any, N extends ItemIteration<I> = ItemIt
    * Returns all items loaded so far in the iteration in a single array.
    */
   readonly allItems$: Observable<O[]>;
+
+  /**
+   * The item mapping function for this accumulator.
+   */
+  mapItemFunction: ItemAccumulatorMapFunction<O, I>;
 
 }
 
@@ -36,9 +43,6 @@ export type MonotypeItemAccumulator<I, N extends ItemIteration<I> = ItemIteratio
  * A page accumulator with no mapping.
  */
 export type MonotypePageItemAccumulator<I, N extends PageItemIteration<I> = PageItemIteration<I>> = ItemAccumulator<I, I, N>;
-
-
-export type ItemAccumulatorMapFunction<O, I> = ((item: I) => Maybe<O>) | ((item: I, state: LoadingState<I>) => Maybe<O>);
 
 /**
  * ItemAccumulator implementation.
@@ -74,15 +78,7 @@ export class ItemAccumulatorInstance<O, I = any, N extends ItemIteration<I> = It
   // MARK: ItemAccumulator
   readonly allItems$: Observable<O[]> = this.allSuccessfulStates$.pipe(
     scanBuildArray((allSuccessfulStates) => {
-      const mapStateToItem: (state: LoadingState<I>) => Maybe<O> = (state) => {
-        let result: Maybe<O>;
-
-        if (state.value != null) {
-          result = this.mapItemFunction(state.value, state);
-        }
-
-        return result;
-      };
+      const mapStateToItem = mapLoadingStateValueFunction(this.mapItemFunction);
 
       /* 
       Start with allSuccessfulPageResults$ since it contains all page results since the start of the iterator,

@@ -386,3 +386,18 @@ export function mapLoadingStateResults<A, B, L extends Partial<PageLoadingState<
 
   return result;
 }
+
+export type MapLoadingStateValueFunction<O, I, L extends LoadingState<I> = LoadingState<I>> = (state: L) => Maybe<O>;
+export type MapLoadingStateValueMapFunction<O, I, L extends LoadingState<I> = LoadingState<I>> = ((item: I) => Maybe<O>) | ((item: I, state: L) => Maybe<O>);
+
+export function mapLoadingStateValueFunction<O, I, L extends LoadingState<I> = LoadingState<I>>(mapFn: MapLoadingStateValueMapFunction<O, I, L>): MapLoadingStateValueFunction<O, I, L> {
+  return (state: L) => {
+    let result: Maybe<O>;
+
+    if (state.value != null) {
+      result = mapFn(state.value, state);
+    }
+
+    return result;
+  };
+}

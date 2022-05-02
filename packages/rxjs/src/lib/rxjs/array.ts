@@ -1,6 +1,5 @@
-import { exhaustMap, map, scan, shareReplay, startWith } from 'rxjs/operators';
-import { distinctUntilChanged, MonoTypeOperatorFunction, Observable, OperatorFunction } from "rxjs";
-import { Maybe, ArrayOrValue, mergeArrayOrValueIntoArray, forEachWithArray } from '@dereekb/util';
+import { exhaustMap, map, scan, shareReplay, startWith, distinctUntilChanged, MonoTypeOperatorFunction, Observable, OperatorFunction } from "rxjs";
+import { Maybe, ArrayOrValue, mergeArrayOrValueIntoArray, forEachWithArray, mergeArrayIntoArray } from '@dereekb/util';
 
 export function distinctUntilArrayLengthChanges<A>(getArray: (value: A) => any[]): MonoTypeOperatorFunction<A>;
 export function distinctUntilArrayLengthChanges<T>(): MonoTypeOperatorFunction<T[]>;
@@ -49,6 +48,10 @@ export interface ScanBuildArrayConfig<T> {
    * 
    */
   accumulatorObs: Observable<Maybe<T>>;
+  /**
+   * Whether or not to flatten array values that are input.
+   */
+  flattenArray?: boolean;
 };
 
 export type ScanBuildArrayConfigFn<S, T> = (seedState: S) => ScanBuildArrayConfig<T>;
@@ -66,14 +69,18 @@ export type ScanBuildArrayConfigFn<S, T> = (seedState: S) => ScanBuildArrayConfi
  */
 export function scanBuildArray<S, T>(init: ScanBuildArrayConfigFn<S, T>): OperatorFunction<S, T[]> {
   return exhaustMap((seedState: S) => {
-    const { seed = [], accumulatorObs } = init(seedState);
+    const { seed = [], accumulatorObs, flattenArray = false } = init(seedState);
 
     return accumulatorObs.pipe(
       startWith(undefined as any), // Start with to not wait for the accumulator to pass a value.
-      scan((acc: T[], next: Maybe<T>) => {
+      scan((acc: T[], next: Maybe<ArrayOrValue<T>>) => {
 
         if (next != null) {
-          acc.push(next);
+          if (flattenArray && Array.isArray(next)) {
+            mergeArrayIntoArray(acc, next);
+          } else {
+            acc.push(next as any);
+          }
         }
 
         return acc!;
