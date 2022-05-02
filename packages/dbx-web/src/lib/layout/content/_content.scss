@@ -50,6 +50,10 @@ $content-container-padding-small-screen: theming.$padding-2;
     @include theming.content-height();
   }
 
+  .dbx-content.dbx-content-auto-height {
+    height: 100% !important;
+  }
+
   .dbx-content-scroll-lock {
     height: 100%;
     overflow: hidden;

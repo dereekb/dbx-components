@@ -1,4 +1,4 @@
-import { ElementRef, Component, ViewChild } from '@angular/core';
+import { ElementRef, Component, ViewChild, Input } from '@angular/core';
 import { ResizedEvent } from 'angular-resize-event';
 
 /**
@@ -21,10 +21,17 @@ import { ResizedEvent } from 'angular-resize-event';
   </div>
   `,
   host: {
-    'class': 'dbx-two-block d-block'
+    'class': 'dbx-two-block d-block',
+    '[class]': '{ "dbx-two-block-fixed-top": fixedTop }'
   }
 })
 export class DbxTwoBlocksComponent {
+
+  /**
+   * Whether or not the top bar should be fixed in place instead of scrolling with the bottom when content is too tall.
+   */
+  @Input()
+  fixedTop = true;
 
   @ViewChild('two', { read: ElementRef, static: true })
   twoElement!: ElementRef;

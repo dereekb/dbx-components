@@ -23,5 +23,6 @@ export const guestbookListRightState: Ng2StateDeclaration = {
 
 export const STATES: Ng2StateDeclaration[] = [
   layoutState,
-  guestbookListState
+  guestbookListState,
+  guestbookListRightState
 ];

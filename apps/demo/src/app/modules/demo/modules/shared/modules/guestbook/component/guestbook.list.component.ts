@@ -37,12 +37,14 @@ export class DemoGuestbookListViewComponent extends AbstractDbxSelectionListView
 @Component({
   template: `
     <div>
-      <p>Guestbook</p>
+      <p>{{ name }}</p>
     </div>
   `
 })
 export class DemoGuestbookListViewItemComponent extends AbstractDbxValueListViewItemComponent<Guestbook> {
 
-  // todo add title, etc.
+  get name() {
+    return this.itemValue.name;
+  }
 
 }

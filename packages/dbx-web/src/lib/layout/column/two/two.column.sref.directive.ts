@@ -1,5 +1,5 @@
 import { Directive, Input } from '@angular/core';
-import { SegueRef } from '@dereekb/dbx-core';
+import { asSegueRef, SegueRefOrSegueRefRouterLink } from '@dereekb/dbx-core';
 import { TwoColumnsContextStore } from './two.column.store';
 
 /**
@@ -13,15 +13,9 @@ export class DbxTwoColumnSrefDirective {
   constructor(private readonly _twoColumnsContextStore: TwoColumnsContextStore) { }
 
   @Input('dbxTwoColumnSref')
-  public set refString(ref: string) {
-    this.ref = {
-      ref
-    };
-  }
-
-  @Input()
-  public set ref(ref: SegueRef) {
-    this._twoColumnsContextStore.setBackRef(ref);
+  public set ref(ref: SegueRefOrSegueRefRouterLink) {
+    const segueRef = asSegueRef(ref);
+    this._twoColumnsContextStore.setBackRef(segueRef);
   }
 
 }

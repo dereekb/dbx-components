@@ -28,7 +28,6 @@ export abstract class AbstractOnDbxAppContextStateEffects<S = any> implements On
     protected readonly store: Store<S>
   ) {
     this._activeStatesSet = new Set(activeStates);
-    console.log('Active states: ', this._activeStatesSet);
   }
 
   /**
@@ -41,17 +40,14 @@ export abstract class AbstractOnDbxAppContextStateEffects<S = any> implements On
     return this.actions$.pipe(
       ofType(onDbxAppContext.DbxAppContextActions.setState),
       filter(({ state }) => {
-        console.log('saw staet: ', state);
         return this._activeStatesSet.has(state);
       }),
-      tap(() => console.log('Entering...')),
       exhaustMap(() =>
         resolvedEffects$.pipe(
           takeUntil(
             this.actions$.pipe(
               ofType(onDbxAppContext.DbxAppContextActions.setState),
               filter(({ state }) => !this._activeStatesSet.has(state)),
-              tap(() => console.log('Exiting...'))
             )
           )
         )

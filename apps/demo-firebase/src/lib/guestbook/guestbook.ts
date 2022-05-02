@@ -1,4 +1,4 @@
-import { CollectionReference, AbstractFirestoreDocument, makeSnapshotConverterFunctions, firestoreString, firestoreDate, FirestoreCollection, UserRelatedById, DocumentReferenceRef, FirestoreContext, FirestoreCollectionWithParent, firestoreBoolean } from "@dereekb/firebase";
+import { CollectionReference, AbstractFirestoreDocument, makeSnapshotConverterFunctions, firestoreString, firestoreDate, FirestoreCollection, UserRelatedById, DocumentReferenceRef, FirestoreContext, FirestoreCollectionWithParent, firestoreBoolean, DocumentDataWithId } from "@dereekb/firebase";
 
 export interface GuestbookFirestoreCollections {
   guestbookFirestoreCollection: GuestbookFirestoreCollection;
@@ -26,6 +26,8 @@ export interface Guestbook {
    */
   lockedAt: Date;
 }
+
+export type GuestbookWithId = DocumentDataWithId<Guestbook>;
 
 export interface GuestbookRef extends DocumentReferenceRef<Guestbook> { }
 

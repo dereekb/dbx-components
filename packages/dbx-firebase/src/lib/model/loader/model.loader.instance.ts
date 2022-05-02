@@ -1,6 +1,6 @@
-import { itemAccumulator, iterationCurrentPageListLoadingState, PageListLoadingState, cleanupDestroyable, filterMaybe, useFirst, SubscriptionObject } from '@dereekb/rxjs';
+import { PageListLoadingState, cleanupDestroyable, filterMaybe, useFirst, SubscriptionObject, accumulatorFlattenPageListLoadingState, tapLog } from '@dereekb/rxjs';
 import { BehaviorSubject, combineLatest, map, shareReplay, distinctUntilChanged, Subject, throttleTime, switchMap, Observable, tap, startWith } from 'rxjs';
-import { FirestoreCollection, FirestoreDocument, FirestoreItemPageIteratorFilter, FirestoreQueryConstraint } from '@dereekb/firebase';
+import { FirebaseQueryItemAccumulator, firebaseQueryItemAccumulator, FirestoreCollection, FirestoreDocument, FirestoreItemPageIterationInstance, FirestoreItemPageIteratorFilter, FirestoreQueryConstraint } from '@dereekb/firebase';
 import { ArrayOrValue, Destroyable, Initialized, Maybe } from '@dereekb/util';
 import { DbxFirebaseModelLoader } from './model.loader';
 
@@ -29,21 +29,21 @@ export class DbxFirebaseModelLoaderInstance<T, D extends FirestoreDocument<T> = 
     shareReplay(1)
   );
 
-  readonly firestoreIteration$ = combineLatest([this.collection$, this.iteratorFilter$, this._reset.pipe(startWith(undefined))]).pipe(
+  readonly firestoreIteration$: Observable<FirestoreItemPageIterationInstance<T>> = combineLatest([this.collection$, this.iteratorFilter$, this._reset.pipe(startWith(undefined))]).pipe(
     throttleTime(100, undefined, { trailing: true }),  // prevent rapid changes and executing filters too quickly.
     map(([collection, iteratorFilter]) => collection.firestoreIteration(iteratorFilter)),
     cleanupDestroyable(), // cleanup the iteration
     shareReplay(1)
   );
 
-  readonly accumulator$ = this.firestoreIteration$.pipe(
-    map(x => itemAccumulator(x)),
+  readonly accumulator$: Observable<FirebaseQueryItemAccumulator<T>> = this.firestoreIteration$.pipe(
+    map(x => firebaseQueryItemAccumulator<T>(x)),
     cleanupDestroyable(),
     shareReplay(1)
   );
 
   readonly pageLoadingState$: Observable<PageListLoadingState<T>> = this.accumulator$.pipe(
-    switchMap(x => iterationCurrentPageListLoadingState(x) as Observable<PageListLoadingState<T>>),
+    switchMap(x => accumulatorFlattenPageListLoadingState(x) as Observable<PageListLoadingState<T>>),
     shareReplay(1)
   );
 

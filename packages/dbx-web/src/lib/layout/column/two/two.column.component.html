@@ -1,6 +1,7 @@
-<dbx-content-container grow="full" padding="none" class="dbx-content left-column">
+<dbx-content-container grow="full" padding="none" class="dbx-content dbx-content-auto-height left-column">
   <ng-content select="[left]"></ng-content>
 </dbx-content-container>
-<dbx-content-container grow="full" padding="none" class="dbx-content right-column" *ngIf="v.showRight">
+<dbx-content-container grow="full" padding="none" class="dbx-content dbx-content-auto-height right-column"
+  *ngIf="v.showRight">
   <ng-content select="[right]"></ng-content>
 </dbx-content-container>
