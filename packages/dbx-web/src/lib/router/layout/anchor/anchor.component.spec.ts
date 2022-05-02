@@ -5,7 +5,7 @@ import { Component, Input, ViewChild } from '@angular/core';
 import { By, BrowserModule } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { AnchorType, ClickableAnchor } from '@dereekb/dbx-core';
-import { DbxAnchorModule } from './anchor.module';
+import { DbxRouterAnchorModule } from './anchor.module';
 import { UIRouterModule } from '@uirouter/angular';
 import { APP_BASE_HREF } from '@angular/common';
 import { DbxAnchorComponent } from './anchor.component';
@@ -18,7 +18,7 @@ describe('AnchorComponent', () => {
       imports: [
         BrowserModule,
         NoopAnimationsModule,
-        DbxAnchorModule,
+        DbxRouterAnchorModule,
         DbxWebUIRouterModule.forRoot(),
         UIRouterModule.forRoot()
       ],
