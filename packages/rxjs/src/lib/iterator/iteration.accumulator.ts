@@ -1,6 +1,5 @@
-import { startWith } from 'rxjs/operators';
 import { SubscriptionObject } from '../subscription';
-import { map, Observable, shareReplay, skipWhile, distinctUntilChanged, filter } from 'rxjs';
+import { startWith, map, Observable, shareReplay, skipWhile, distinctUntilChanged, filter } from 'rxjs';
 import { distinctUntilArrayLengthChanges, scanBuildArray, filterMaybe, scanIntoArray } from "../rxjs";
 import { lastValue, filterMaybeValues, Destroyable, Maybe } from "@dereekb/util";
 import { ItemIteration, PageItemIteration } from "./iteration";
@@ -128,10 +127,10 @@ export class ItemAccumulatorInstance<O, I = any, N extends ItemIteration<I> = It
  */
 export function itemAccumulator<I, N extends ItemIteration<I>>(itemIteration: N): ItemAccumulatorInstance<I, I, N>;
 export function itemAccumulator<O, I, N extends ItemIteration<I>>(itemIteration: N, mapItem?: ItemAccumulatorMapFunction<O, I>): ItemAccumulatorInstance<O, I, N>;
-export function itemAccumulator<O, I, N extends ItemIteration<I>>(itemIteration: N, mapItemFunction?: ItemAccumulatorMapFunction<O, I>): ItemAccumulatorInstance<O, I, N> {
-  if (!mapItemFunction) {
-    mapItemFunction = (a: any) => a;
+export function itemAccumulator<O, I, N extends ItemIteration<I>>(itemIteration: N, mapItem?: ItemAccumulatorMapFunction<O, I>): ItemAccumulatorInstance<O, I, N> {
+  if (!mapItem) {
+    mapItem = (a: any) => a;
   }
 
-  return new ItemAccumulatorInstance<O, I, N>(itemIteration, mapItemFunction);
+  return new ItemAccumulatorInstance<O, I, N>(itemIteration, mapItem);
 }

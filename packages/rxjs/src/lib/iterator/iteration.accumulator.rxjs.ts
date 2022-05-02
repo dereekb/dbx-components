@@ -33,8 +33,8 @@ export function flattenIterationResultItemArray<T>(iteration: ItemAccumulator<T[
 /**
  * A PageListLoadingState that captures all the values that have been loaded so far, and the current loading state of currentPageResult$.
  */
-export function iterationCurrentPageListLoadingState<V>(iteration: PageItemAccumulator<V>): Observable<PageListLoadingState<V>> {
-  return combineLatest([iteration.itemIteration.currentState$, iteration.allItems$]).pipe(
+export function iterationCurrentPageListLoadingState<V>(accumulator: PageItemAccumulator<V>): Observable<PageListLoadingState<V>> {
+  return combineLatest([accumulator.itemIteration.currentState$, accumulator.allItems$]).pipe(
     map(([state, values]) => mapLoadingStateResults(state, {
       mapValue: () => values
     }) as PageListLoadingState<V>),

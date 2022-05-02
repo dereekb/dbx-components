@@ -41,7 +41,13 @@ export function scanIntoArray<T>(config: { immutable?: boolean } = {}): Operator
 
 // MARK: ScanBuildArray
 export interface ScanBuildArrayConfig<T> {
+  /**
+   * 
+   */
   seed?: Maybe<T[]>;
+  /**
+   * 
+   */
   accumulatorObs: Observable<Maybe<T>>;
 };
 
@@ -64,13 +70,14 @@ export function scanBuildArray<S, T>(init: ScanBuildArrayConfigFn<S, T>): Operat
 
     return accumulatorObs.pipe(
       startWith(undefined as any), // Start with to not wait for the accumulator to pass a value.
-      scan((acc: Maybe<T[]>, next: Maybe<ArrayOrValue<T>>) => {
+      scan((acc: T[], next: Maybe<T>) => {
+
         if (next != null) {
-          acc = mergeArrayOrValueIntoArray(acc!, next!);
+          acc.push(next);
         }
 
         return acc!;
-      }, seed!) as OperatorFunction<ArrayOrValue<T>, T[]>,
+      }, seed ?? []) as OperatorFunction<ArrayOrValue<T>, T[]>,
       distinctUntilArrayLengthChanges(),
       shareReplay(1)
     );
