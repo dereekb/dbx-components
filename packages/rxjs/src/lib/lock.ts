@@ -1,8 +1,6 @@
-import { defaultIfEmpty, delay, filter, first, map, shareReplay, switchMap, tap, timeoutWith, startWith } from 'rxjs/operators';
-import { Observable, of, Subscription } from 'rxjs';
-import { BehaviorSubject } from 'rxjs';
+import { defaultIfEmpty, delay, filter, first, map, shareReplay, switchMap, tap, startWith, timeout, Observable, of, Subscription, BehaviorSubject } from 'rxjs';
 import { combineLatestFromMapValuesObsFn } from './rxjs';
-import { Destroyable, reduceBooleansWithOrFn } from '@dereekb/util';
+import { Destroyable, Maybe, reduceBooleansWithOrFn } from '@dereekb/util';
 import ms from 'ms';
 
 export type LockKey = string;
@@ -12,8 +10,8 @@ export type OnLockSetUnlockedFunction = (unlocked: boolean) => void;
 export interface OnLockSetUnlockedConfig {
   lockSet: LockSet;
   fn: OnLockSetUnlockedFunction;
-  timeout?: number;
-  delayTime?: number;
+  timeout?: Maybe<number>;
+  delayTime?: Maybe<number>;
 }
 
 export interface SetLockedConfig {
@@ -34,13 +32,16 @@ export const DEFAULT_LOCK_SET_TIME_LOCK_KEY = 'timelock';
 /**
  * Executes the input function when the lockSet is set unlocked, or the timeout is reached.
  */
-export function onLockSetNextUnlock({ lockSet, fn, timeout = ms('50s'), delayTime }: OnLockSetUnlockedConfig): Subscription {
+export function onLockSetNextUnlock({ lockSet, fn, timeout: timeoutTime = ms('50s'), delayTime }: OnLockSetUnlockedConfig): Subscription {
   return lockSet.isUnlocked$.pipe(
     filter((x) => x),
     delay(delayTime ?? 0),
-    timeoutWith(timeout, of(false).pipe(
-      tap(() => console.warn('LockSet time out. Potential issue detected.'))
-    )),
+    timeout({
+      first: timeoutTime!,
+      with: () => of(false).pipe(
+        tap(() => console.warn('LockSet time out. Potential issue detected.'))
+      )
+    }),
     first()).subscribe(fn);
 }
 
@@ -92,7 +93,7 @@ export class LockSet implements Destroyable {
       let obs = of(true);
 
       if (lockedConfig.duration) {
-        obs = obs.pipe(timeoutWith(lockedConfig.duration, of(false)));
+        obs = obs.pipe(timeout({ first: lockedConfig.duration, with: () => of(false) }));
       }
 
       this.addLock(key, obs);

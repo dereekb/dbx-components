@@ -1,9 +1,9 @@
 import { NgModule } from "@angular/core";
-import { DbxFirebaseModelLoaderModule } from "./loader/model.loader.module";
+import { DbxFirebaseModelStoreModule } from "./store/model.store.module";
 
 @NgModule({
   exports: [
-    DbxFirebaseModelLoaderModule
+    DbxFirebaseModelStoreModule
   ]
 })
 export class DbxFirebaseModelModule { }

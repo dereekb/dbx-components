@@ -2,14 +2,14 @@ import { NgModule } from '@angular/core';
 import { AppSharedModule } from '@/shared/app.shared.module';
 import { DemoGuestbookListComponent, DemoGuestbookListViewComponent, DemoGuestbookListViewItemComponent } from './component/guestbook.list.component';
 import { DemoGuestbookEntryListComponent, DemoGuestbookEntryListViewComponent, DemoGuestbookEntryListViewItemComponent } from './component/guestbook.entry.list.component';
-import { DemoGuestbookLoaderDirective } from './component/guestbook.loader.directive';
+import { DemoGuestbookCollectionStoreDirective } from './store/guestbook.collection.store.directive';
 
 @NgModule({
   imports: [
     AppSharedModule
   ],
   declarations: [
-    DemoGuestbookLoaderDirective,
+    DemoGuestbookCollectionStoreDirective,
     DemoGuestbookListComponent,
     DemoGuestbookListViewComponent,
     DemoGuestbookListViewItemComponent,
@@ -18,7 +18,7 @@ import { DemoGuestbookLoaderDirective } from './component/guestbook.loader.direc
     DemoGuestbookEntryListViewItemComponent
   ],
   exports: [
-    DemoGuestbookLoaderDirective,
+    DemoGuestbookCollectionStoreDirective,
     DemoGuestbookListComponent,
     DemoGuestbookEntryListComponent
   ]
