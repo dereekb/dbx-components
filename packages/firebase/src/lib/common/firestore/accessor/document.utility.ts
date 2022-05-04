@@ -1,5 +1,5 @@
 import { makeArray, Maybe, performMakeLoop, PromiseUtility } from '@dereekb/util';
-import { DocumentReference, DocumentSnapshot, QuerySnapshot, Transaction } from '../types';
+import { DocumentDataWithId, DocumentReference, DocumentSnapshot, QuerySnapshot, Transaction } from '../types';
 import { FirestoreDocument, FirestoreDocumentAccessor, FirestoreDocumentAccessorContextExtension } from './document';
 
 export function newDocuments<T, D extends FirestoreDocument<T>>(documentAccessor: FirestoreDocumentAccessor<T, D>, count: number): D[] {
@@ -72,4 +72,20 @@ export function firestoreDocumentLoader<T, D extends FirestoreDocument<T>>(acces
     const accessor = (transaction) ? accessorContext.documentAccessorForTransaction(transaction) : accessorContext.documentAccessor();
     return loadDocumentsForDocumentReferences(accessor, references);
   }
+}
+
+/**
+ * Creates a DocumentDataWithId from the input DocumentSnapshot. If the data does not exist, returns undefined.
+ * 
+ * @param snapshot 
+ * @returns 
+ */
+export function documentDataWithId<T>(snapshot: DocumentSnapshot<T>): Maybe<DocumentDataWithId<T>> {
+  const data = snapshot.data() as DocumentDataWithId<T>;
+
+  if (data) {
+    data.id = snapshot.id;    // attach the id to data
+  }
+
+  return data;
 }

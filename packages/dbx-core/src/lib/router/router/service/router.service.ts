@@ -1,10 +1,16 @@
 import { ObservableOrValue } from "@dereekb/rxjs";
-import { SegueRefOrSegueRefRouterLink } from "../../segue";
+import { Observable } from "rxjs";
+import { SegueRefOrSegueRefRouterLink, SegueRefRawSegueParams } from "../../segue";
 
 /**
  * Router service definition that can route the app and provide routing details.
  */
 export abstract class DbxRouterService {
+
+  /**
+   * Params of the current successfully loaded route.
+   */
+  abstract readonly params$: Observable<SegueRefRawSegueParams>;
 
   /**
    * Navigates to the target SegueRef.

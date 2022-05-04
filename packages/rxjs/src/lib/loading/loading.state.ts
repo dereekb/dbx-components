@@ -352,7 +352,7 @@ export function mapMultipleLoadingStateResults<T, X, L extends LoadingState<X>[]
   return result;
 }
 
-export type MapLoadingStateFn<A, B, L extends LoadingState<A> = LoadingState<A>, O extends LoadingState<B> = LoadingState<B>> = (input: L) => O;
+export type MapLoadingStateFn<A, B, L extends LoadingState<A> = LoadingState<A>, O extends LoadingState<B> = LoadingState<B>> = (input: L, value?: B) => O;
 export type MapLoadingStateValuesFn<A, B, L extends LoadingState<A> = LoadingState<A>> = (input: A, state: L) => B;
 
 export interface MapLoadingStateResultsConfiguration<A, B, L extends LoadingState<A> = LoadingState<A>, O extends LoadingState<B> = LoadingState<B>> {
@@ -381,7 +381,7 @@ export function mapLoadingStateResults<A, B, L extends Partial<PageLoadingState<
       value
     } as any;
   } else {
-    result = mapState(input);
+    result = mapState(input, value);
   }
 
   return result;

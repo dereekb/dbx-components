@@ -69,9 +69,9 @@ export class DbxPopupComponent<O = any, I = any, T = any> extends AbstractTransi
   constructor(
     private popoverRef: NgPopoverRef<DbxPopupComponentConfig<O, I, T>, O>,
     private compactContextState: CompactContextStore,
-    dbNgxRouterTransitionService: DbxRouterTransitionService,
+    dbxRouterTransitionService: DbxRouterTransitionService,
     ngZone: NgZone) {
-    super(dbNgxRouterTransitionService, ngZone);
+    super(dbxRouterTransitionService, ngZone);
 
     this.compactContextState.setMode(CompactMode.COMPACT);
     this._position = new PopupGlobalPositionStrategy(this.config.position, this.config.offset);

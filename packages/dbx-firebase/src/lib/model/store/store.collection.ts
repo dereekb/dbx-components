@@ -4,11 +4,11 @@ import { FirebaseQueryItemAccumulator, FirestoreCollection, FirestoreDocument, F
 import { ObservableOrValue, cleanupDestroyable, PageListLoadingState } from '@dereekb/rxjs';
 import { ArrayOrValue, Maybe } from '@dereekb/util';
 import { LockSetComponentStore } from '@dereekb/dbx-core';
-import { DbxFirebaseModelLoaderInstance, dbxFirebaseModelLoaderInstance, DbxFirebaseModelLoaderInstanceData } from '../loader/model.loader.instance';
+import { DbxFirebaseCollectionLoaderInstance, dbxFirebaseCollectionLoaderInstance, DbxFirebaseCollectionLoaderInstanceData } from '../loader/collection.loader.instance';
 
-export interface DbxFirebaseCollectionStore<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> extends DbxFirebaseModelLoaderInstanceData<T, D> {
+export interface DbxFirebaseCollectionStore<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> extends DbxFirebaseCollectionLoaderInstanceData<T, D> {
   readonly firestoreCollection$: Observable<FirestoreCollection<T, D>>;
-  readonly loader$: Observable<DbxFirebaseModelLoaderInstance<T, D>>;
+  readonly loader$: Observable<DbxFirebaseCollectionLoaderInstance<T, D>>;
 
   setMaxPages(observableOrValue: ObservableOrValue<Maybe<number>>): Subscription;
   setItemsPerPage(observableOrValue: ObservableOrValue<Maybe<number>>): Subscription;
@@ -80,10 +80,10 @@ export class AbstractDbxFirebaseCollectionStore<T, D extends FirestoreDocument<T
     shareReplay(1)
   );
 
-  readonly loader$: Observable<DbxFirebaseModelLoaderInstance<T, D>> = this.firestoreCollection$.pipe(
+  readonly loader$: Observable<DbxFirebaseCollectionLoaderInstance<T, D>> = this.firestoreCollection$.pipe(
     switchMap((collection) => this.state$.pipe(
       first(),
-      map(x => dbxFirebaseModelLoaderInstance({
+      map(x => dbxFirebaseCollectionLoaderInstance({
         collection,
         maxPages: x.maxPages,
         itemsPerPage: x.itemsPerPage,

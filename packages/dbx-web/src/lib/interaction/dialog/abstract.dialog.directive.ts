@@ -11,9 +11,9 @@ export abstract class AbstractDialogDirective<R = any, D = any, T = any> extends
   constructor(
     @Optional() @Inject(MAT_DIALOG_DATA) readonly data: D,
     @Inject(MatDialogRef) readonly dialogRef: MatDialogRef<T, R>,
-    dbNgxRouterTransitionService: DbxRouterTransitionService,
+    dbxRouterTransitionService: DbxRouterTransitionService,
     ngZone: NgZone) {
-    super(dbNgxRouterTransitionService, ngZone);
+    super(dbxRouterTransitionService, ngZone);
   }
 
   protected updateForSuccessfulTransition(): void {

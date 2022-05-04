@@ -5,6 +5,11 @@
 export type MaybeNot = null | undefined;
 
 /**
+ * A non-null/undefined value.
+ */
+export type MaybeSo<T = any> = T extends MaybeNot ? never : T;
+
+/**
  * A value that might exist, or be null/undefined instead.
  */
 export type Maybe<T> = T | MaybeNot;
@@ -70,6 +75,16 @@ export function isMaybeNotAndNotFalse(value: any): boolean {
  */
 export function isMaybeNot(value: any): value is MaybeNot {
   return value == null;
+}
+
+/**
+ * True if the input is MaybeSo
+ * 
+ * @param value 
+ * @returns 
+ */
+export function isMaybeSo<T>(value: Maybe<T>): value is MaybeSo<T> {
+  return !isMaybeNot(value);
 }
 
 /**

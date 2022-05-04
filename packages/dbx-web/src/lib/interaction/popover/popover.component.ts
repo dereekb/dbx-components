@@ -88,9 +88,9 @@ export class DbxPopoverComponent<O = any, I = any, T = any> extends AbstractTran
   constructor(
     private popoverRef: NgPopoverRef<FullDbxPopoverComponentConfig<O, I, T>, O>,
     private compactContextState: CompactContextStore,
-    dbNgxRouterTransitionService: DbxRouterTransitionService,
+    dbxRouterTransitionService: DbxRouterTransitionService,
     ngZone: NgZone) {
-    super(dbNgxRouterTransitionService, ngZone);
+    super(dbxRouterTransitionService, ngZone);
 
     // Override Close to properly signal to listeners when a close is occuring.
     const originalClose = this.popoverRef.close;

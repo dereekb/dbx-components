@@ -1,6 +1,7 @@
+import { Observable } from 'rxjs';
 import { filterMaybe } from '@dereekb/rxjs';
 import { DbxRouterService, DbxRouterTransitionService } from '../../service';
-import { asSegueRef, SegueRef, SegueRefOrSegueRefRouterLink } from "../../../segue";
+import { asSegueRef, SegueRef, SegueRefOrSegueRefRouterLink, SegueRefRawSegueParams } from "../../../segue";
 import { DbxRouterTransitionEvent, DbxRouterTransitionEventType } from "../../transition/transition";
 import { ActivatedRoute, NavigationBehaviorOptions, NavigationEnd, NavigationExtras, NavigationStart, Router } from '@angular/router';
 import { Injectable } from "@angular/core";
@@ -13,6 +14,8 @@ import { Maybe } from '@dereekb/util';
  */
 @Injectable()
 export class DbxAngularRouterService implements DbxRouterService, DbxRouterTransitionService {
+
+  readonly params$: Observable<SegueRefRawSegueParams> = this.activatedRoute.params;
 
   readonly transitions$ = this.router.events.pipe(
     map((x) => {

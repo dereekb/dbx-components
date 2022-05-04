@@ -1,15 +1,19 @@
-import { Subject } from 'rxjs';
+import { Subject, BehaviorSubject } from 'rxjs';
 import { DbxRouterService, DbxRouterTransitionService } from '../../service';
-import { asSegueRef, SegueRef, SegueRefOrSegueRefRouterLink } from "../../../segue";
+import { asSegueRef, SegueRef, SegueRefOrSegueRefRouterLink, SegueRefRawSegueParams } from "../../../segue";
 import { StateService, UIRouterGlobals, TransitionOptions, TransitionService } from '@uirouter/core';
 import { Injectable, OnDestroy } from "@angular/core";
 import { DbxRouterTransitionEvent, DbxRouterTransitionEventType } from '../../transition/transition';
+import { Maybe } from '@dereekb/util';
 
 /**
  * UIRouter implementation of DbxRouterService and DbxRouterTransitionService.
  */
 @Injectable()
 export class DbxUIRouterService implements DbxRouterService, DbxRouterTransitionService, OnDestroy {
+
+  private readonly _params = new BehaviorSubject<SegueRefRawSegueParams>(this.uiRouterGlobals.params);
+  readonly params$ = this._params.asObservable();
 
   private readonly _transitions = new Subject<DbxRouterTransitionEvent>();
   readonly transitions$ = this._transitions.asObservable();
@@ -20,6 +24,8 @@ export class DbxUIRouterService implements DbxRouterService, DbxRouterTransition
       this._transitions.next({
         type
       });
+
+      this._params.next(this.uiRouterGlobals.params);
     }
 
     this.transitionService.onStart({}, () => {
@@ -34,6 +40,10 @@ export class DbxUIRouterService implements DbxRouterService, DbxRouterTransition
 
   ngOnDestroy(): void {
     this._transitions.complete();
+  }
+
+  get params() {
+    return this.uiRouterGlobals.params;
   }
 
   go(input: SegueRefOrSegueRefRouterLink<TransitionOptions>): Promise<boolean> {

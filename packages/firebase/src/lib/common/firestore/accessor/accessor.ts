@@ -25,7 +25,7 @@ export interface FirestoreDocumentDataAccessor<T> extends DocumentReferenceRef<T
    */
   get(): Promise<DocumentSnapshot<T>>;
   /**
-   * Whether or not the target object exists.
+   * Whether or not the target object currently exists.
    */
   exists(): Promise<boolean>;
   /**

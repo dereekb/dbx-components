@@ -2,18 +2,18 @@ import { PageListLoadingState, cleanupDestroyable, filterMaybe, useFirst, Subscr
 import { BehaviorSubject, combineLatest, map, shareReplay, distinctUntilChanged, Subject, throttleTime, switchMap, Observable, tap, startWith } from 'rxjs';
 import { FirebaseQueryItemAccumulator, firebaseQueryItemAccumulator, FirestoreCollection, FirestoreDocument, FirestoreItemPageIterationInstance, FirestoreItemPageIteratorFilter, FirestoreQueryConstraint } from '@dereekb/firebase';
 import { ArrayOrValue, Destroyable, Initialized, Maybe } from '@dereekb/util';
-import { DbxFirebaseModelLoader } from './model.loader';
+import { DbxFirebaseCollectionLoader } from './collection.loader';
 
-export interface DbxFirebaseModelLoaderInstanceInitConfig<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> {
+export interface DbxFirebaseCollectionLoaderInstanceInitConfig<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> {
   collection?: Maybe<FirestoreCollection<T, D>>,
   maxPages?: Maybe<number>;
   itemsPerPage?: Maybe<number>;
   constraints?: Maybe<ArrayOrValue<FirestoreQueryConstraint<T>>>;
 }
 
-export type MinimalDbxFirebaseModelLoaderInstanceInitConfig<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> = Partial<Omit<DbxFirebaseModelLoaderInstanceInitConfig<T, D>, 'collection'>> & Required<Pick<DbxFirebaseModelLoaderInstanceInitConfig<T, D>, 'collection'>>;
+export type MinimalDbxFirebaseCollectionLoaderInstanceInitConfig<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> = Partial<Omit<DbxFirebaseCollectionLoaderInstanceInitConfig<T, D>, 'collection'>> & Required<Pick<DbxFirebaseCollectionLoaderInstanceInitConfig<T, D>, 'collection'>>;
 
-export interface DbxFirebaseModelLoaderInstanceData<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> {
+export interface DbxFirebaseCollectionLoaderInstanceData<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> {
   readonly firestoreIteration$: Observable<FirestoreItemPageIterationInstance<T>>;
   readonly accumulator$: Observable<FirebaseQueryItemAccumulator<T>>;
   readonly pageLoadingState$: Observable<PageListLoadingState<T>>;
@@ -22,7 +22,7 @@ export interface DbxFirebaseModelLoaderInstanceData<T, D extends FirestoreDocume
 /**
  * DbxFirebaseModelLoader implementation within an instance.
  */
-export class DbxFirebaseModelLoaderInstance<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> implements DbxFirebaseModelLoader<T>, DbxFirebaseModelLoaderInstanceData<T, D>, Initialized, Destroyable {
+export class DbxFirebaseCollectionLoaderInstance<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> implements DbxFirebaseCollectionLoader<T>, DbxFirebaseCollectionLoaderInstanceData<T, D>, Initialized, Destroyable {
 
   protected readonly _collection = new BehaviorSubject<Maybe<FirestoreCollection<T, D>>>(this._initConfig?.collection);
 
@@ -62,7 +62,7 @@ export class DbxFirebaseModelLoaderInstance<T, D extends FirestoreDocument<T> = 
     shareReplay(1)
   );
 
-  constructor(private readonly _initConfig?: DbxFirebaseModelLoaderInstanceInitConfig<T, D>) { }
+  constructor(private readonly _initConfig?: DbxFirebaseCollectionLoaderInstanceInitConfig<T, D>) { }
 
   init(): void {
 
@@ -108,6 +108,22 @@ export class DbxFirebaseModelLoaderInstance<T, D extends FirestoreDocument<T> = 
     }
   }
 
+  get constraints(): Maybe<ArrayOrValue<FirestoreQueryConstraint>> {
+    return this._constraints.value;
+  }
+
+  set constraints(constraints: Maybe<ArrayOrValue<FirestoreQueryConstraint>>) {
+    this._constraints.next(constraints);
+  }
+
+  get collection(): Maybe<FirestoreCollection<T, D>> {
+    return this._collection.value;
+  }
+
+  set collection(collection: Maybe<FirestoreCollection<T, D>>) {
+    this._collection.next(collection);
+  }
+
   // MARK: DbxFirebaseModelList
   next() {
     useFirst(this.firestoreIteration$, (x) => x.next());
@@ -118,19 +134,19 @@ export class DbxFirebaseModelLoaderInstance<T, D extends FirestoreDocument<T> = 
   }
 
   setConstraints(constraints: Maybe<ArrayOrValue<FirestoreQueryConstraint>>) {
-    this._constraints.next(constraints);
+    this.constraints = constraints;
   }
 
   setCollection(firestoreCollection: FirestoreCollection<T, D>) {
-    this._collection.next(firestoreCollection);
+    this.collection = firestoreCollection;
   }
 
 }
 
-export function dbxFirebaseModelLoaderInstance<T, D extends FirestoreDocument<T> = FirestoreDocument<T>>(config: MinimalDbxFirebaseModelLoaderInstanceInitConfig<T, D>): DbxFirebaseModelLoaderInstance<T, D> {
-  return new DbxFirebaseModelLoaderInstance<T, D>(config);
+export function dbxFirebaseCollectionLoaderInstance<T, D extends FirestoreDocument<T> = FirestoreDocument<T>>(config: MinimalDbxFirebaseCollectionLoaderInstanceInitConfig<T, D>): DbxFirebaseCollectionLoaderInstance<T, D> {
+  return new DbxFirebaseCollectionLoaderInstance<T, D>(config);
 }
 
-export function dbxFirebaseModelLoaderInstanceWithCollection<T, D extends FirestoreDocument<T> = FirestoreDocument<T>>(collection: Maybe<FirestoreCollection<T, D>>): DbxFirebaseModelLoaderInstance<T, D> {
-  return new DbxFirebaseModelLoaderInstance<T, D>({ collection });
+export function dbxFirebaseCollectionLoaderInstanceWithCollection<T, D extends FirestoreDocument<T> = FirestoreDocument<T>>(collection: Maybe<FirestoreCollection<T, D>>): DbxFirebaseCollectionLoaderInstance<T, D> {
+  return new DbxFirebaseCollectionLoaderInstance<T, D>({ collection });
 }

@@ -8,6 +8,8 @@ module.exports = {
       stringifyContentPathRegex: '\\.(html|svg)$',
     },
   },
+  maxConcurrency: 1,
+  maxWorkers: 1,
   coverageDirectory: '../../coverage/packages/dbx-firebase',
   transform: {
     '^.+\\.(ts|mjs|js|html)$': 'jest-preset-angular',

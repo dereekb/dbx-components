@@ -1,2 +1,2 @@
-export * from './model.loader.instance';
-export * from './model.loader';
+export * from './collection.loader.instance';
+export * from './collection.loader';
