@@ -7,6 +7,7 @@ import { authorizedTestWithMockItemCollection, DocumentReference, MockItem, Mock
 import { loadingStateIsLoading } from "@dereekb/rxjs";
 import { filter, first, of, timeout } from "rxjs";
 import { AbstractDbxFirebaseDocumentStore } from './store.document';
+import { SubscriptionObject } from '@dereekb/rxjs';
 
 export class TestDbxFirebaseDocumentStore extends AbstractDbxFirebaseDocumentStore<MockItem, MockItemDocument> {
 
@@ -20,21 +21,24 @@ describe('AbstractDbxFirebaseDocumentStore', () => {
 
   authorizedTestWithMockItemCollection((f) => {
 
+    let sub: SubscriptionObject;
     let store: TestDbxFirebaseDocumentStore;
 
     beforeEach(() => {
       const firestoreCollection = f.instance.firestoreCollection;
       store = new TestDbxFirebaseDocumentStore(firestoreCollection);
+      sub = new SubscriptionObject();
     });
 
     afterEach(() => {
       store.ngOnDestroy();
+      sub.destroy();
     });
 
     describe('loading a document', () => {
 
       it('should not load anything if neither id nor ref are set.', (done) => {
-        store.document$.pipe(first(), timeout({ first: 500, with: () => of(false) })).subscribe((result) => {
+        sub.subscription = store.document$.pipe(first(), timeout({ first: 500, with: () => of(false) })).subscribe((result) => {
           expect(result).toBe(false);
           done();
         });
@@ -47,7 +51,7 @@ describe('AbstractDbxFirebaseDocumentStore', () => {
 
           store.setId(id);
 
-          store.document$.pipe(first()).subscribe((document) => {
+          sub.subscription = store.document$.pipe(first()).subscribe((document) => {
             expect(document).toBeDefined();
             done();
           });
@@ -67,7 +71,7 @@ describe('AbstractDbxFirebaseDocumentStore', () => {
         it('should load the document with the input ref.', (done) => {
           store.setRef(ref);
 
-          store.document$.pipe(first()).subscribe((document) => {
+          sub.subscription = store.document$.pipe(first()).subscribe((document) => {
             expect(document).toBeDefined();
             expect(document.documentRef).toBe(ref);
             done();
@@ -84,7 +88,7 @@ describe('AbstractDbxFirebaseDocumentStore', () => {
 
         it('documentLoadingState$ should be loading.', (done) => {
 
-          store.documentLoadingState$.pipe(first()).subscribe((x) => {
+          sub.subscription = store.documentLoadingState$.pipe(first()).subscribe((x) => {
             expect(loadingStateIsLoading(x)).toBe(true);
             done();
           });
@@ -93,7 +97,7 @@ describe('AbstractDbxFirebaseDocumentStore', () => {
 
         it('snapshotLoadingState$ should be loading.', (done) => {
 
-          store.snapshotLoadingState$.pipe(first()).subscribe((x) => {
+          sub.subscription = store.snapshotLoadingState$.pipe(first()).subscribe((x) => {
             expect(loadingStateIsLoading(x)).toBe(true);
             done();
           });
@@ -102,7 +106,7 @@ describe('AbstractDbxFirebaseDocumentStore', () => {
 
         it('dataLoadingState$ should be loading.', (done) => {
 
-          store.dataLoadingState$.pipe(first()).subscribe((x) => {
+          sub.subscription = store.dataLoadingState$.pipe(first()).subscribe((x) => {
             expect(loadingStateIsLoading(x)).toBe(true);
             done();
           });
@@ -126,12 +130,11 @@ describe('AbstractDbxFirebaseDocumentStore', () => {
           });
 
           store.setRef(testDoc.documentRef);
-
         });
 
         it('documentLoadingState$ should have a document.', (done) => {
 
-          store.documentLoadingState$.pipe(first()).subscribe((x) => {
+          sub.subscription = store.documentLoadingState$.pipe(first()).subscribe((x) => {
             expect(loadingStateIsLoading(x)).toBe(false);
             expect(x.value).toBeDefined();
             expect(x.value?.documentRef).toBe(testDoc.documentRef);
@@ -142,7 +145,7 @@ describe('AbstractDbxFirebaseDocumentStore', () => {
 
         it('snapshotLoadingState$ should have a snapshot.', (done) => {
 
-          store.snapshotLoadingState$.pipe(filter(x => !loadingStateIsLoading(x)), first()).subscribe((x) => {
+          sub.subscription = store.snapshotLoadingState$.pipe(filter(x => !loadingStateIsLoading(x)), first()).subscribe((x) => {
             expect(loadingStateIsLoading(x)).toBe(false);
             expect(x.value).toBeDefined();
             expect(x.value?.id).toBe(testDoc.id);
@@ -159,7 +162,7 @@ describe('AbstractDbxFirebaseDocumentStore', () => {
 
           it('should not exist', (done) => {
 
-            store.exists$.pipe(first()).subscribe((exists) => {
+            sub.subscription = store.exists$.pipe(first()).subscribe((exists) => {
               expect(exists).toBe(false);
               done();
             });
@@ -168,7 +171,7 @@ describe('AbstractDbxFirebaseDocumentStore', () => {
 
           it('dataLoadingState$ should return an error state.', (done) => {
 
-            store.dataLoadingState$.pipe(filter(x => !loadingStateIsLoading(x)), first()).subscribe({
+            sub.subscription = store.dataLoadingState$.pipe(filter(x => !loadingStateIsLoading(x)), first()).subscribe({
               next: (state) => {
                 expect(state.error).toBeDefined();
                 done();
@@ -183,7 +186,7 @@ describe('AbstractDbxFirebaseDocumentStore', () => {
 
           it('should exist', (done) => {
 
-            store.exists$.pipe(first()).subscribe((exists) => {
+            sub.subscription = store.exists$.pipe(first()).subscribe((exists) => {
               expect(exists).toBe(true);
               done();
             });
@@ -192,7 +195,7 @@ describe('AbstractDbxFirebaseDocumentStore', () => {
 
           it('dataLoadingState$ should return a success state', (done) => {
 
-            store.dataLoadingState$.pipe(filter(x => !loadingStateIsLoading(x)), first()).subscribe({
+            sub.subscription = store.dataLoadingState$.pipe(filter(x => !loadingStateIsLoading(x)), first()).subscribe({
               next: (state) => {
                 expect(state.value).toBeDefined();
                 expect(state.value?.test).toBe(testValue);

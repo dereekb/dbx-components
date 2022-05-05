@@ -1,7 +1,7 @@
 import { SubscriptionObject } from './../subscription';
 import { BehaviorSubject } from 'rxjs';
 import { cleanup } from './lifecycle';
-import { makePromiseFullRef, PromiseFullRef, waitForMs } from '@dereekb/util';
+import { makePromiseFullRef, PromiseFullRef } from '@dereekb/util';
 
 describe('cleanup()', () => {
 
@@ -16,7 +16,6 @@ describe('cleanup()', () => {
   });
 
   it('should call the destroy function when a new value is presented.', (done) => {
-
     let destroyed = false;
 
     const initialValue = 1;
@@ -35,16 +34,38 @@ describe('cleanup()', () => {
     subject.next(2);
 
     setTimeout(() => {
-
       expect(destroyed).toBe(true);
+      subject.complete();
+      done();
+    });
+  });
 
+  it('should call the destroy function when the observable finishes.', (done) => {
+    let destroyed = false;
+
+    const initialValue = 1;
+
+    const subject = new BehaviorSubject<number>(initialValue);
+
+    const obs = subject.pipe(cleanup((x) => {
+      expect(x).toBe(initialValue);
+      destroyed = true;
+    }));
+
+    sub.subscription = obs.subscribe();
+
+    expect(destroyed).toBe(false);
+
+    subject.complete();
+
+    setTimeout(() => {
+      expect(destroyed).toBe(true);
+      subject.complete();
       done();
     });
   });
 
   it('should wait for the destroy function to finish before the next value is passed.', (done) => {
-
-
     const initialValue = 1;
     const secondValue = 2;
 
@@ -84,6 +105,7 @@ describe('cleanup()', () => {
       // cleanup
       isDone = true;
       promiseRef.resolve(0);
+      subject.complete();
       done();
     });
   });

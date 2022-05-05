@@ -1,5 +1,5 @@
-import { asPromise, Destroyable, PromiseOrValue } from '@dereekb/util';
-import { map, MonoTypeOperatorFunction, Observable, of, scan, switchMap } from "rxjs";
+import { asPromise, Destroyable, Maybe, PromiseOrValue } from '@dereekb/util';
+import { finalize, map, MonoTypeOperatorFunction, Observable, of, scan, switchMap, tap } from "rxjs";
 
 // MARK: Cleanup
 interface CleanupInternalState<T> {
@@ -24,6 +24,8 @@ interface CleanupInternalState<T> {
  */
 export function cleanup<T>(destroy: (instance: T) => PromiseOrValue<any | void>, wait = false): MonoTypeOperatorFunction<T> {
   return (obs: Observable<T>) => {
+    let currentInstance: Maybe<T>;
+
     return obs.pipe(
       scan<T, CleanupInternalState<T>>((acc: CleanupInternalState<T>, instance: T) => {
         let cleanup: Promise<void> | undefined;
@@ -32,10 +34,12 @@ export function cleanup<T>(destroy: (instance: T) => PromiseOrValue<any | void>,
           cleanup = asPromise(destroy(acc.instance));
         }
 
+        currentInstance = instance;
+
         return {
           cleanup,
           instance
-        }
+        };
       }, {}),
       switchMap(x => {
         let result: Observable<T> | Promise<T>;
@@ -48,6 +52,11 @@ export function cleanup<T>(destroy: (instance: T) => PromiseOrValue<any | void>,
         }
 
         return result;
+      }),
+      finalize(() => {
+        if (currentInstance) {
+          destroy(currentInstance);
+        }
       })
     )
   };

@@ -160,7 +160,7 @@ export class AbstractDbxFirebaseDocumentStore<T, D extends FirestoreDocument<T> 
     shareReplay(1)
   );
 
-  readonly exists$: Observable<boolean> = this.data$.pipe(
+  readonly exists$: Observable<boolean> = this.currentData$.pipe(
     map(x => isMaybeSo(x)),
     shareReplay(1)
   );
