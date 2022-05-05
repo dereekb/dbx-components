@@ -3,10 +3,10 @@ import { Observable, shareReplay, distinctUntilChanged, map, switchMap, combineL
 import { DocumentSnapshot, DocumentReference, FirestoreCollection, FirestoreDocument, documentDataWithId, DocumentDataWithId } from '@dereekb/firebase';
 import { filterMaybe, LoadingState, beginLoading, successResult, loadingStateFromObs, errorResult, ObservableOrValue } from '@dereekb/rxjs';
 import { Maybe, ModelKey, isMaybeSo } from '@dereekb/util';
-import { LockSetComponentStore } from '@dereekb/dbx-core';
+import { LockSetComponent, LockSetComponentStore } from '@dereekb/dbx-core';
 import { modelDoesNotExistError } from '../error';
 
-export interface DbxFirebaseDocumentStore<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> {
+export interface DbxFirebaseDocumentStore<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> extends LockSetComponent {
   readonly firestoreCollection$: Observable<FirestoreCollection<T, D>>;
 
   readonly currentInputId$: Observable<Maybe<ModelKey>>;
@@ -28,11 +28,15 @@ export interface DbxFirebaseDocumentStore<T, D extends FirestoreDocument<T> = Fi
 
   setId: (observableOrValue: ObservableOrValue<string>) => Subscription;
   setRef: (observableOrValue: ObservableOrValue<DocumentReference<T>>) => Subscription;
-  setFirestoreCollection: (observableOrValue: ObservableOrValue<FirestoreCollection<T, D>>) => Subscription;
+
+  /**
+   * Sets the firestore collection to retrieve document from.
+   */
+  readonly setFirestoreCollection: (() => void) | ((observableOrValue: ObservableOrValue<Maybe<FirestoreCollection<T, D>>>) => Subscription);
 }
 
 export interface DbxFirebaseDocumentStoreContextState<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> {
-  readonly firestoreCollection: FirestoreCollection<T, D>;
+  readonly firestoreCollection?: Maybe<FirestoreCollection<T, D>>;
   readonly id?: Maybe<ModelKey>;
   readonly ref?: Maybe<DocumentReference<T>>;
 }
@@ -47,10 +51,14 @@ export class AbstractDbxFirebaseDocumentStore<T, D extends FirestoreDocument<T> 
 
 
   // MARK: Accessors
-  readonly firestoreCollection$: Observable<FirestoreCollection<T, D>> = this.state$.pipe(
-    map(x => x.firestoreCollection),
+  readonly currentFirestoreCollection$: Observable<Maybe<FirestoreCollection<T, D>>> = this.state$.pipe(
+    map((x) => x.firestoreCollection),
     distinctUntilChanged(),
     shareReplay(1)
+  );
+
+  readonly firestoreCollection$: Observable<FirestoreCollection<T, D>> = this.currentFirestoreCollection$.pipe(
+    filterMaybe()
   );
 
   readonly currentInputId$: Observable<Maybe<ModelKey>> = this.state$.pipe(
@@ -77,14 +85,16 @@ export class AbstractDbxFirebaseDocumentStore<T, D extends FirestoreDocument<T> 
     shareReplay(1)
   );
 
-  readonly currentDocument$: Observable<Maybe<D>> = combineLatest([this.firestoreCollection$, this.currentInputId$, this.currentInputRef$]).pipe(
+  readonly currentDocument$: Observable<Maybe<D>> = combineLatest([this.currentFirestoreCollection$, this.currentInputId$, this.currentInputRef$]).pipe(
     map(([collection, id, ref]) => {
       let document: Maybe<D>;
 
-      if (ref) {
-        document = collection.documentAccessor().loadDocument(ref);
-      } else if (id) {
-        document = collection.documentAccessor().loadDocumentForPath(id);
+      if (collection) {
+        if (ref) {
+          document = collection.documentAccessor().loadDocument(ref);
+        } else if (id) {
+          document = collection.documentAccessor().loadDocumentForPath(id);
+        }
       }
 
       return document;
@@ -172,13 +182,10 @@ export class AbstractDbxFirebaseDocumentStore<T, D extends FirestoreDocument<T> 
   readonly setId = this.updater((state, id: ModelKey) => (id) ? ({ ...state, id, ref: undefined }) : ({ ...state, id }));
 
   /**
-   * Sets the id of the document to load.
+   * Sets the ref of the document to load.
    */
   readonly setRef = this.updater((state, ref: DocumentReference<T>) => (ref) ? ({ ...state, id: undefined, ref }) : ({ ...state, ref }));
 
-  /**
-   * Sets the id of the document to load.
-   */
-  readonly setFirestoreCollection = this.updater((state, firestoreCollection: FirestoreCollection<T, D>) => ({ ...state, firestoreCollection }));
+  readonly setFirestoreCollection = this.updater((state, firestoreCollection: Maybe<FirestoreCollection<T, D>>) => ({ ...state, firestoreCollection }));
 
 }

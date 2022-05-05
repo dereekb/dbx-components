@@ -8,6 +8,7 @@ export * from './misc';
 export * from './map';
 export * from './number';
 export * from './rxjs';
+export * from './rxjs.map';
 export * from './set';
 export * from './use';
 export * from './value';

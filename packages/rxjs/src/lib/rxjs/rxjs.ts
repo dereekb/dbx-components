@@ -1,20 +1,5 @@
 import { Maybe } from '@dereekb/util';
-import { combineLatest, Observable, of, isObservable, MonoTypeOperatorFunction, skipWhile, startWith } from 'rxjs';
-
-export function combineLatestFromMapValuesObsFn<T, O>(mapToObs: (value: T) => Observable<O>): (map: Map<any, T>) => Observable<O[]> {
-  const combineArrayFn = combineLatestFromArrayObsFn(mapToObs);
-  return (latestMap: Map<any, T>) => {
-    const mapValues = Array.from(latestMap).map(y => y[1]);
-    return combineArrayFn(mapValues);
-  };
-}
-
-export function combineLatestFromArrayObsFn<T, O>(mapToObs: (value: T) => Observable<O>): (values: T[]) => Observable<O[]> {
-  return (latest) => {
-    const newObs = latest.map(mapToObs);
-    return (newObs.length) ? combineLatest(newObs) : of([]);
-  };
-}
+import { combineLatest, Observable, of, MonoTypeOperatorFunction, skipWhile, startWith, BehaviorSubject, shareReplay, map, finalize } from 'rxjs';
 
 /**
  * Merges both startWith and tapFirst to initialize a pipe.
@@ -48,4 +33,25 @@ export function tapFirst<T>(tap: (value: T) => void, skipFirst = false): MonoTyp
     tap(value);
     return (i === 0 && !skipFirst);
   });
+}
+
+/**
+ * Prevents an observable from emitting complete until it is unsubscribed from.
+ * 
+ * The subscription will never have complete() called as complete only gets called after it unsubscribes, 
+ * so use finalize() if additional cleanup is required.
+ * 
+ * @param obs 
+ * @returns 
+ */
+export function preventComplete<T>(obs: Observable<T>): Observable<T> {
+  const complete = new BehaviorSubject<number>(0);
+
+  return combineLatest([obs, complete]).pipe(
+    map(([x]) => x),
+    shareReplay(1),
+    finalize(() => {
+      complete.complete();
+    })
+  );
 }

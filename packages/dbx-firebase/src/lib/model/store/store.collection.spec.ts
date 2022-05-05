@@ -3,9 +3,8 @@
  */
 // use the node environment, as the jsdom environment breaks for tests that use the firestore.
 
-import { authorizedTestWithMockItemCollection, DocumentReference, MockItem, MockItemDocument, MockItemFirestoreCollection } from "@dereekb/firebase";
-import { loadingStateIsLoading } from "@dereekb/rxjs";
-import { filter, first, of, timeout } from "rxjs";
+import { authorizedTestWithMockItemCollection, MockItem, MockItemDocument, MockItemFirestoreCollection } from "@dereekb/firebase";
+import { first } from "rxjs";
 import { AbstractDbxFirebaseCollectionStore } from './store.collection';
 
 export class TestDbxFirebaseCollectionStore extends AbstractDbxFirebaseCollectionStore<MockItem, MockItemDocument> {
@@ -28,7 +27,7 @@ describe('AbstractDbxFirebaseCollectionStore', () => {
     });
 
     afterEach(() => {
-      store.ngOnDestroy();
+      store._destroyNow();
     });
 
     describe('loader$', () => {

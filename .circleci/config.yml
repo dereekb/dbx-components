@@ -17,6 +17,7 @@ jobs:
     steps:
       - checkout
       # look for existing cache and restore if found
+      # NOTE: With use of npm ci, the cache is ignored.
       # - restore_cache:
       #    keys:
       #      - node-cache-a{{ checksum "package-lock.json" }}

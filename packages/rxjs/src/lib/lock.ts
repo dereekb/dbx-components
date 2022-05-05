@@ -1,11 +1,15 @@
-import { defaultIfEmpty, delay, filter, first, map, shareReplay, switchMap, tap, startWith, timeout, Observable, of, Subscription, BehaviorSubject } from 'rxjs';
-import { combineLatestFromMapValuesObsFn } from './rxjs';
+import { asObservable, tapLog } from '@dereekb/rxjs';
+import { ObservableOrValue } from './rxjs/getter';
+import { defaultIfEmpty, delay, filter, first, map, shareReplay, switchMap, tap, startWith, timeout, Observable, of, Subscription, BehaviorSubject, finalize } from 'rxjs';
+import { cleanup, combineLatestFromMapValuesObsFn, preventComplete } from './rxjs';
 import { Destroyable, Maybe, reduceBooleansWithOrFn } from '@dereekb/util';
 import ms from 'ms';
+import { SubscriptionObject } from './subscription';
 
 export type LockKey = string;
 
 export type OnLockSetUnlockedFunction = (unlocked: boolean) => void;
+export type RemoveLockFunction = () => void;
 
 export interface OnLockSetUnlockedConfig {
   lockSet: LockSet;
@@ -56,6 +60,7 @@ export class LockSet implements Destroyable {
   private static LOCK_SET_CHILD_INDEX_STEPPER = 0;
 
   private _locks = new BehaviorSubject<Map<LockKey, Observable<boolean>>>(new Map());
+  private _parentSub = new SubscriptionObject();
 
   readonly locks$ = this._locks.asObservable();
 
@@ -64,8 +69,9 @@ export class LockSet implements Destroyable {
    */
   readonly isLocked$ = this.locks$.pipe(
     switchMap(combineLatestFromMapValuesObsFn((x) => x)),
+    filter(x => x.length > 2),
     map(reduceBooleansWithOrFn(false)), // Empty map is unlocked.
-    shareReplay(1),
+    shareReplay(1)
   );
 
   readonly isUnlocked$ = this.isLocked$.pipe(map(x => !x));
@@ -111,10 +117,25 @@ export class LockSet implements Destroyable {
     this.addLock(key ?? DEFAULT_LOCK_SET_TIME_LOCK_KEY, of(false).pipe(delay(milliseconds), startWith(true)));
   }
 
-  addLock(key: LockKey, obs: Observable<boolean>): void {
-    obs = obs.pipe(defaultIfEmpty<boolean, boolean>(false));  // empty observables count as unlocked.
+  addLock(key: LockKey, obs: Observable<boolean>): RemoveLockFunction {
+    obs = obs.pipe(
+      defaultIfEmpty<boolean, boolean>(false),  // empty observables count as unlocked.
+    );
+
+    let removeLock: RemoveLockFunction = () => this._removeObsForKey(obs, key);
+
     this._locks.value.set(key, obs);
-    this._locks.next(this.locks);
+    this._locks.next(this._locks.value);
+
+    return removeLock;
+  }
+
+  private _removeObsForKey(obs: Observable<boolean>, key: LockKey): void {
+    const current = this._locks.value.get(key);
+
+    if (current && obs === current) {
+      this.removeLock(key);
+    }
   }
 
   removeLock(key: LockKey): void {
@@ -131,11 +152,28 @@ export class LockSet implements Destroyable {
     });
   }
 
+  setParentLockSet(parent: ObservableOrValue<Maybe<LockSet>>): void {
+    this._parentSub.subscription = preventComplete(asObservable(parent)).pipe(
+      map((parentLockSet) => {
+        let removeFn: Maybe<RemoveLockFunction>;
+
+        if (parentLockSet) {
+          removeFn = parentLockSet.addChildLockSet(this);
+        }
+
+        return removeFn;
+      }),
+      cleanup((removeLockSet) => {
+        removeLockSet?.();
+      })
+    ).subscribe();
+  }
+
   /**
-   * Convenience function for watching a child lockset's locked state.
+   * Convenience function for watching a child lockset's locked state and propogating it upward.
    */
-  addChildLockSet(lockSet: LockSet, key: LockKey = `${LockSet.LOCK_SET_CHILD_INDEX_STEPPER++}`): void {
-    this.addLock(key, lockSet.isLocked$);
+  addChildLockSet(lockSet: LockSet, key: LockKey = `${LockSet.LOCK_SET_CHILD_INDEX_STEPPER++}`): RemoveLockFunction {
+    return this.addLock(key, lockSet.isLocked$);
   }
 
   // Cleanup
@@ -156,7 +194,6 @@ export class LockSet implements Destroyable {
       ...mergeConfig,
       fn: (unlocked) => {
         fn?.(unlocked);
-
         setTimeout(() => this.destroy(), 100);
       },
       delayTime
@@ -165,6 +202,7 @@ export class LockSet implements Destroyable {
 
   destroy(): void {
     this._locks.complete();
+    this._parentSub.destroy();
   }
 
 }

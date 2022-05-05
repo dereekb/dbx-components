@@ -1,7 +1,7 @@
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { ComponentStore } from '@ngrx/component-store';
 import { Inject, Optional, Injectable, OnDestroy } from '@angular/core';
-import { LockSet } from '@dereekb/rxjs';
+import { LockSet, SubscriptionObject, ObservableOrValue, asObservable } from '@dereekb/rxjs';
 import { Maybe } from '@dereekb/util';
 
 export interface LockSetComponent {
@@ -36,7 +36,7 @@ export abstract class LockSetComponentStore<S extends object> extends ComponentS
   // MARK: Locks
   protected setupLockSet({ parent, locks }: LockSetComponentStoreConfig): void {
     if (parent) {
-      this.addParentLockSet(parent);
+      this.setParentLockSet(parent);
     }
 
     if (locks) {
@@ -48,11 +48,11 @@ export abstract class LockSetComponentStore<S extends object> extends ComponentS
     }
   }
 
-  protected addParentLockSet(obs: Observable<LockSetComponent>): void {
-    obs.subscribe((x) => x.lockSet.addChildLockSet(this.lockSet));
+  setParentLockSet(obs: ObservableOrValue<Maybe<LockSetComponent>>): void {
+    this.lockSet.setParentLockSet(asObservable(obs).pipe(map(x => x?.lockSet)));
   }
 
-  protected addLock(key: string, obs: Observable<boolean>): void {
+  addLock(key: string, obs: Observable<boolean>): void {
     this.lockSet.addLock(key, obs);
   }
 
@@ -62,13 +62,16 @@ export abstract class LockSetComponentStore<S extends object> extends ComponentS
     // Wait for any actions to complete before destroying.
     this.lockSet.destroyOnNextUnlock({
       fn: () => {
-        this._ngFinishDestroy();
+        this._destroyNow();
       },
       timeout: this.lockSetDestroyTimeoutMs,
     }, this.lockSetDestroyDelayMs);
   }
 
-  protected _ngFinishDestroy() {
+  /**
+   * Completes the cleanup of the object.
+   */
+  _destroyNow() {
     this.lockSet.destroy();
   }
 

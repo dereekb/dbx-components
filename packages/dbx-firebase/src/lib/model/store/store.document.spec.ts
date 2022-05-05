@@ -32,7 +32,7 @@ describe('AbstractDbxFirebaseDocumentStore', () => {
 
     afterEach(() => {
       sub.destroy();
-      store.ngOnDestroy();
+      store._destroyNow();
     });
 
     describe('loading a document', () => {
@@ -73,9 +73,6 @@ describe('AbstractDbxFirebaseDocumentStore', () => {
 
       });
 
-      /*
-      // NOTE: This test breaks in the CI environment for some reason.
-      
       it('should not load anything if neither id nor ref are set.', (done) => {
 
         let sub: SubscriptionObject = new SubscriptionObject();
@@ -90,7 +87,6 @@ describe('AbstractDbxFirebaseDocumentStore', () => {
         });
 
       });
-      */
 
     });
 

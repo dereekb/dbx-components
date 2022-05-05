@@ -4,6 +4,7 @@ import { DemoGuestbookListComponent, DemoGuestbookListViewComponent, DemoGuestbo
 import { DemoGuestbookEntryListComponent, DemoGuestbookEntryListViewComponent, DemoGuestbookEntryListViewItemComponent } from './component/guestbook.entry.list.component';
 import { DemoGuestbookCollectionStoreDirective } from './store/guestbook.collection.store.directive';
 import { DemoGuestbookDocumentStoreDirective } from './store/guestbook.document.store.directive';
+import { DemoGuestbookEntryCollectionStoreDirective } from './store/guestbook.entry.collection.store.directive';
 
 @NgModule({
   imports: [
@@ -12,6 +13,7 @@ import { DemoGuestbookDocumentStoreDirective } from './store/guestbook.document.
   declarations: [
     DemoGuestbookCollectionStoreDirective,
     DemoGuestbookDocumentStoreDirective,
+    DemoGuestbookEntryCollectionStoreDirective,
     DemoGuestbookListComponent,
     DemoGuestbookListViewComponent,
     DemoGuestbookListViewItemComponent,
@@ -22,6 +24,7 @@ import { DemoGuestbookDocumentStoreDirective } from './store/guestbook.document.
   exports: [
     DemoGuestbookCollectionStoreDirective,
     DemoGuestbookDocumentStoreDirective,
+    DemoGuestbookEntryCollectionStoreDirective,
     DemoGuestbookListComponent,
     DemoGuestbookEntryListComponent
   ]

@@ -1,74 +1,27 @@
-import { filterMaybe, cleanup } from '@dereekb/rxjs';
+import { filterMaybe } from '@dereekb/rxjs';
 import { Injectable } from '@angular/core';
-import { Observable, shareReplay, distinctUntilChanged, map, switchMap, tap, NEVER, Subscription } from 'rxjs';
+import { Observable, shareReplay, distinctUntilChanged, map } from 'rxjs';
 import { FirestoreCollectionWithParentFactory, FirestoreDocument } from '@dereekb/firebase';
 import { Maybe } from '@dereekb/util';
 import { AbstractDbxFirebaseCollectionStore, DbxFirebaseCollectionStore, DbxFirebaseCollectionStoreContextState } from './store.collection';
-import { DbxFirebaseDocumentStore } from './store.document';
+import { DbxFirebaseComponentStoreWithParent, DbxFirebaseComponentStoreWithParentContextState, DbxFirebaseComponentStoreWithParentSetParentEffectFunction, DbxFirebaseComponentStoreWithParentSetParentStoreEffectFunction, setParentEffect, setParentStoreEffect } from './store.subcollection.rxjs';
 
 export interface DbxFirebaseCollectionWithParentStore<T, PT, D extends FirestoreDocument<T> = FirestoreDocument<T>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>>
-  extends DbxFirebaseCollectionStore<T, D> {
-  readonly parent$: Observable<PD>;
-  readonly collectionFactory$: Observable<FirestoreCollectionWithParentFactory<T, PT, D, PD>>;
-}
+  extends DbxFirebaseCollectionStore<T, D>, DbxFirebaseComponentStoreWithParent<T, PT, D, PD> { }
 
 export interface DbxFirebaseCollectionWithParentStoreContextState<T, PT, D extends FirestoreDocument<T> = FirestoreDocument<T>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>>
-  extends DbxFirebaseCollectionStoreContextState<T, D> {
-  readonly parent?: Maybe<PD>;
-  readonly collectionFactory?: Maybe<FirestoreCollectionWithParentFactory<T, PT, D, PD>>;
-}
+  extends DbxFirebaseCollectionStoreContextState<T, D>, DbxFirebaseComponentStoreWithParentContextState<T, PT, D, PD> { }
 
 /**
- * Used for storing the state of a Person and related email threads.
+ * Abstract DbxFirebaseCollectionStore that has a parent document from which is derives it's FiresbaseCollection from.
  */
 @Injectable()
 export class AbstractDbxFirebaseCollectionWithParentStore<T, PT, D extends FirestoreDocument<T> = FirestoreDocument<T>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>, C extends DbxFirebaseCollectionWithParentStoreContextState<T, PT, D, PD> = DbxFirebaseCollectionWithParentStoreContextState<T, PT, D, PD>>
   extends AbstractDbxFirebaseCollectionStore<T, D, C> implements DbxFirebaseCollectionWithParentStore<T, PT, D, PD> {
 
   // MARK: Effects
-  readonly setParentStore = this.effect((input: Observable<DbxFirebaseDocumentStore<PT, PD>>) => {
-    return input.pipe(
-      map((parentStore) => {
-        let result: Maybe<Subscription>;
-
-        if (parentStore) {
-          result = this.setParent(parentStore.currentDocument$) as Subscription;
-        } else {
-          result = undefined;
-        }
-
-        return result;
-      }),
-      cleanup((sub) => {
-        if (sub) {
-          sub.unsubscribe();
-        }
-      })
-    );
-  });
-
-  readonly setParent = this.effect((input: Observable<Maybe<PD>>) => {
-    return input.pipe(
-      switchMap((parent) => {
-        this._setParent(parent);
-
-        if (parent) {
-          return this.collectionFactory$.pipe(
-            tap((collectionFactory) => {
-              const collection = collectionFactory(parent);
-              this.setFirestoreCollection(collection);
-            })
-          );
-        } else {
-          // clear the current collection
-          this.setFirestoreCollection(undefined);
-
-          // do nothing until a parent is returned.
-          return NEVER;
-        }
-      })
-    );
-  });
+  readonly setParent: DbxFirebaseComponentStoreWithParentSetParentEffectFunction<PD> = setParentEffect(this);
+  readonly setParentStore: DbxFirebaseComponentStoreWithParentSetParentStoreEffectFunction<PT, PD> = setParentStoreEffect(this);
 
   // MARK: Accessors
   readonly currentParent$: Observable<Maybe<PD>> = this.state$.pipe(
@@ -100,6 +53,6 @@ export class AbstractDbxFirebaseCollectionWithParentStore<T, PT, D extends Fires
   /**
    * Sets the parent on the current state.
    */
-  private readonly _setParent = this.updater((state, parent: Maybe<PD>) => ({ ...state, parent }));
+  readonly _setParentDocument = this.updater((state, parent: Maybe<PD>) => ({ ...state, parent }));
 
 }

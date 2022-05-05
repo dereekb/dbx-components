@@ -20,7 +20,7 @@ export class TestDbxFirebaseDocumentStore extends AbstractDbxFirebaseDocumentSto
 export class TestDbxFirebaseCollectionWithParentStore extends AbstractDbxFirebaseCollectionWithParentStore<MockItemSubItem, MockItem, MockItemSubItemDocument, MockItemDocument> {
 
   constructor(collectionFactory: MockItemSubItemFirestoreCollectionFactory) {
-    super({ collectionFactory })
+    super({ collectionFactory });
   }
 
 }
@@ -41,8 +41,8 @@ describe('AbstractDbxFirebaseCollectionWithParentStore', () => {
     });
 
     afterEach(() => {
-      parentStore.ngOnDestroy();
-      store.ngOnDestroy();
+      parentStore._destroyNow();
+      store._destroyNow();
       sub.destroy();
     });
 
@@ -77,7 +77,6 @@ describe('AbstractDbxFirebaseCollectionWithParentStore', () => {
     });
 
     describe('loader$', () => {
-
 
       describe('with parent loaded', () => {
 

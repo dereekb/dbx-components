@@ -15,6 +15,8 @@ export interface DbxFirebaseCollectionStore<T, D extends FirestoreDocument<T> = 
   setConstraints(observableOrValue: ObservableOrValue<Maybe<ArrayOrValue<FirestoreQueryConstraint<T>>>>): Subscription;
   next(observableOrValue: ObservableOrValue<void>): void;
   restart(observableOrValue: ObservableOrValue<void>): void;
+  
+  readonly setFirestoreCollection: (() => void) | ((observableOrValue: ObservableOrValue<Maybe<FirestoreCollection<T, D>>>) => Subscription);
 }
 
 export interface DbxFirebaseCollectionStoreContextState<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> {
@@ -103,6 +105,6 @@ export class AbstractDbxFirebaseCollectionStore<T, D extends FirestoreDocument<T
   readonly accumulator$: Observable<FirebaseQueryItemAccumulator<T>> = this.loader$.pipe(switchMap(x => x.accumulator$));
   readonly pageLoadingState$: Observable<PageListLoadingState<T>> = this.loader$.pipe(switchMap(x => x.pageLoadingState$));
 
-  readonly setFirestoreCollection = this.updater((state, firestoreCollection: Maybe<FirestoreCollection<T, D>>) => ({ ...state, firestoreCollection }));
+  readonly setFirestoreCollection = this.updater((state, firestoreCollection: FirestoreCollection<T, D> | null | undefined) => ({ ...state, firestoreCollection }));
 
 }
