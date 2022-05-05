@@ -1,5 +1,5 @@
 import { PageListLoadingState, cleanupDestroyable, filterMaybe, useFirst, SubscriptionObject, accumulatorFlattenPageListLoadingState, tapLog } from '@dereekb/rxjs';
-import { BehaviorSubject, combineLatest, map, shareReplay, distinctUntilChanged, Subject, throttleTime, switchMap, Observable, tap, startWith } from 'rxjs';
+import { BehaviorSubject, combineLatest, map, shareReplay, distinctUntilChanged, Subject, throttleTime, switchMap, Observable, tap, startWith, NEVER, of, filter } from 'rxjs';
 import { FirebaseQueryItemAccumulator, firebaseQueryItemAccumulator, FirestoreCollection, FirestoreDocument, FirestoreItemPageIterationInstance, FirestoreItemPageIteratorFilter, FirestoreQueryConstraint } from '@dereekb/firebase';
 import { ArrayOrValue, Destroyable, Initialized, Maybe } from '@dereekb/util';
 import { DbxFirebaseCollectionLoader } from './collection.loader';
@@ -10,8 +10,6 @@ export interface DbxFirebaseCollectionLoaderInstanceInitConfig<T, D extends Fire
   itemsPerPage?: Maybe<number>;
   constraints?: Maybe<ArrayOrValue<FirestoreQueryConstraint<T>>>;
 }
-
-export type MinimalDbxFirebaseCollectionLoaderInstanceInitConfig<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> = Partial<Omit<DbxFirebaseCollectionLoaderInstanceInitConfig<T, D>, 'collection'>> & Required<Pick<DbxFirebaseCollectionLoaderInstanceInitConfig<T, D>, 'collection'>>;
 
 export interface DbxFirebaseCollectionLoaderInstanceData<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> {
   readonly firestoreIteration$: Observable<FirestoreItemPageIterationInstance<T>>;
@@ -33,7 +31,7 @@ export class DbxFirebaseCollectionLoaderInstance<T, D extends FirestoreDocument<
 
   private readonly _maxPagesSub = new SubscriptionObject();
 
-  readonly collection$ = this._collection.pipe(filterMaybe());
+  readonly collection$ = this._collection.pipe(distinctUntilChanged());
   readonly constraints$ = this._constraints.pipe(distinctUntilChanged());
 
   readonly iteratorFilter$: Observable<FirestoreItemPageIteratorFilter> = combineLatest([
@@ -44,9 +42,19 @@ export class DbxFirebaseCollectionLoaderInstance<T, D extends FirestoreDocument<
     shareReplay(1)
   );
 
-  readonly firestoreIteration$: Observable<FirestoreItemPageIterationInstance<T>> = combineLatest([this.collection$, this.iteratorFilter$, this._restart.pipe(startWith(undefined))]).pipe(
-    throttleTime(100, undefined, { trailing: true }),  // prevent rapid changes and executing filters too quickly.
-    map(([collection, iteratorFilter]) => collection.firestoreIteration(iteratorFilter)),
+  readonly firestoreIteration$: Observable<FirestoreItemPageIterationInstance<T>> = this.collection$.pipe(
+    switchMap((collection) => {
+      if (collection) {
+        return combineLatest([this.iteratorFilter$, this._restart.pipe(startWith(undefined))]).pipe(
+          throttleTime(100, undefined, { trailing: true }),  // prevent rapid changes and executing filters too quickly.
+          map(([iteratorFilter]) => collection.firestoreIteration(iteratorFilter)),
+          cleanupDestroyable(), // cleanup the iteration
+          shareReplay(1)
+        );
+      } else {
+        return NEVER; // don't emit anything until collection is provided.
+      }
+    }),
     cleanupDestroyable(), // cleanup the iteration
     shareReplay(1)
   );
@@ -137,13 +145,13 @@ export class DbxFirebaseCollectionLoaderInstance<T, D extends FirestoreDocument<
     this.constraints = constraints;
   }
 
-  setCollection(firestoreCollection: FirestoreCollection<T, D>) {
+  setCollection(firestoreCollection: Maybe<FirestoreCollection<T, D>>) {
     this.collection = firestoreCollection;
   }
 
 }
 
-export function dbxFirebaseCollectionLoaderInstance<T, D extends FirestoreDocument<T> = FirestoreDocument<T>>(config: MinimalDbxFirebaseCollectionLoaderInstanceInitConfig<T, D>): DbxFirebaseCollectionLoaderInstance<T, D> {
+export function dbxFirebaseCollectionLoaderInstance<T, D extends FirestoreDocument<T> = FirestoreDocument<T>>(config: DbxFirebaseCollectionLoaderInstanceInitConfig<T, D>): DbxFirebaseCollectionLoaderInstance<T, D> {
   return new DbxFirebaseCollectionLoaderInstance<T, D>(config);
 }
 

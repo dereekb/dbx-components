@@ -5,9 +5,9 @@
 
 import { authorizedTestWithMockItemCollection, DocumentReference, MockItem, MockItemDocument, MockItemFirestoreCollection } from "@dereekb/firebase";
 import { loadingStateIsLoading } from "@dereekb/rxjs";
+import { SubscriptionObject } from '@dereekb/rxjs';
 import { filter, first, of, timeout } from "rxjs";
 import { AbstractDbxFirebaseDocumentStore } from './store.document';
-import { SubscriptionObject } from '@dereekb/rxjs';
 
 export class TestDbxFirebaseDocumentStore extends AbstractDbxFirebaseDocumentStore<MockItem, MockItemDocument> {
 
@@ -25,23 +25,25 @@ describe('AbstractDbxFirebaseDocumentStore', () => {
     let store: TestDbxFirebaseDocumentStore;
 
     beforeEach(() => {
+      sub = new SubscriptionObject();
       const firestoreCollection = f.instance.firestoreCollection;
       store = new TestDbxFirebaseDocumentStore(firestoreCollection);
-      sub = new SubscriptionObject();
     });
 
     afterEach(() => {
-      store.ngOnDestroy();
       sub.destroy();
+      store.ngOnDestroy();
     });
 
     describe('loading a document', () => {
 
       it('should not load anything if neither id nor ref are set.', (done) => {
-        sub.subscription = store.document$.pipe(first(), timeout({ first: 500, with: () => of(false) })).subscribe((result) => {
+
+        sub.subscription = store.document$.pipe(timeout({ first: 500, with: () => of(false) }), first()).subscribe((result) => {
           expect(result).toBe(false);
           done();
         });
+
       });
 
       describe('setId', () => {

@@ -1,5 +1,5 @@
 import { Maybe } from '@dereekb/util';
-import { makeSnapshotConverterFunctions, firestoreDate, firestoreBoolean, firestoreString, CollectionReference, FirestoreCollection, FirestoreContext, AbstractFirestoreDocument, firestoreNumber, SingleItemFirestoreCollection } from '../../lib/common';
+import { makeSnapshotConverterFunctions, firestoreDate, firestoreBoolean, firestoreString, CollectionReference, FirestoreCollection, FirestoreContext, AbstractFirestoreDocument, firestoreNumber, SingleItemFirestoreCollection, FirestoreCollectionWithParent } from '../../lib/common';
 
 // MARK: Mock Item
 /**
@@ -148,7 +148,7 @@ export function mockItemSubItemCollectionReferenceFactory(context: FirestoreCont
   };
 }
 
-export type MockItemSubItemFirestoreCollection = FirestoreCollection<MockItemSubItem, MockItemSubItemDocument>;
+export type MockItemSubItemFirestoreCollection = FirestoreCollectionWithParent<MockItemSubItem, MockItem, MockItemSubItemDocument, MockItemDocument>;
 export type MockItemSubItemFirestoreCollectionFactory = (parent: MockItemDocument) => MockItemSubItemFirestoreCollection;
 
 export function mockItemSubItemFirestoreCollection(firestoreContext: FirestoreContext): MockItemSubItemFirestoreCollectionFactory {

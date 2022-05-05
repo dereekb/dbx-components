@@ -5,7 +5,7 @@
 
 import { SubscriptionObject } from '@dereekb/rxjs';
 import { authorizedTestWithMockItemCollection, MockItem, MockItemDocument } from "@dereekb/firebase";
-import { first } from "rxjs";
+import { first, map, of, timeout } from "rxjs";
 import { DbxFirebaseCollectionLoaderInstance, dbxFirebaseCollectionLoaderInstanceWithCollection } from "./collection.loader.instance";
 
 describe('DbxFirebaseCollectionLoaderInstance', () => {
@@ -41,6 +41,32 @@ describe('DbxFirebaseCollectionLoaderInstance', () => {
 
         sub.subscription = instance.accumulator$.pipe(first()).subscribe((x) => {
           expect(x).toBeDefined();
+          done();
+        });
+
+      });
+
+    });
+
+    describe('no collection set', () => {
+
+      beforeEach(() => {
+        instance.setCollection(undefined);
+      });
+
+      it('firestoreIteration$ should not emit anything.', (done) => {
+
+        sub.subscription = instance.firestoreIteration$.pipe(map(x => false), timeout({ first: 200, with: () => of(true) }), first()).subscribe((x) => {
+          expect(x).toBe(true);
+          done();
+        });
+
+      });
+
+      it('accumulator$ should not emit anything.', (done) => {
+
+        sub.subscription = instance.accumulator$.pipe(map(x => false), timeout({ first: 200, with: () => of(true) }), first()).subscribe((x) => {
+          expect(x).toBe(true);
           done();
         });
 
