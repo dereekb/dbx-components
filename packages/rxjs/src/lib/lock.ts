@@ -42,7 +42,8 @@ export function onLockSetNextUnlock({ lockSet, fn, timeout: timeoutTime = ms('50
         tap(() => console.warn('LockSet time out. Potential issue detected.'))
       )
     }),
-    first()).subscribe(fn);
+    first()
+  ).subscribe(fn);
 }
 
 /**

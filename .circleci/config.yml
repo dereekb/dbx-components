@@ -17,10 +17,10 @@ jobs:
     steps:
       - checkout
       # look for existing cache and restore if found
-      - restore_cache:
-          keys:
-            - node-cache-a{{ checksum "package-lock.json" }}
-            - node-cache-a
+      # - restore_cache:
+      #    keys:
+      #      - node-cache-a{{ checksum "package-lock.json" }}
+      #      - node-cache-a
       # install dependencies
       - run:
           name: install dependencies
@@ -28,10 +28,10 @@ jobs:
       # clean node_modules
       # - run: npx clean-modules --yes --exclude "**/firebase*/**" --exclude "**/@angular*/**" --exclude "**/@nestjs/**"
       # save any changes to the cache
-      - save_cache:
-          key: node-cache-a{{ checksum "package-lock.json" }}
-          paths:
-            - node_modules
+      # - save_cache:
+      #    key: node-cache-a{{ checksum "package-lock.json" }}
+      #    paths:
+      #      - node_modules
       # initialize nx
       - nx/set-shas
       # build content

@@ -69,7 +69,6 @@ export abstract class LockSetComponentStore<S extends object> extends ComponentS
   }
 
   protected _ngFinishDestroy() {
-    this.ngOnDestroy();
     this.lockSet.destroy();
   }
 
