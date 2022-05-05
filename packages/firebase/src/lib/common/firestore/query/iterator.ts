@@ -46,14 +46,14 @@ export function makeFirestoreItemPageIteratorDelegate<T>(): FirestoreItemPageIte
   return {
     loadItemsForPage: (request: ItemPageIteratorRequest<FirestoreItemPageQueryResult<T>, FirestoreItemPageIteratorFilter, FirestoreItemPageIterationConfig<T>>): Observable<ItemPageIteratorResult<FirestoreItemPageQueryResult<T>>> => {
       const { page, iteratorConfig } = request;
-      const lastQueryResult$: Observable<Maybe<FirestoreItemPageQueryResult<T>>> = (page > 0) ? request.lastItem$ : of(undefined);
+      const prevQueryResult$: Observable<Maybe<FirestoreItemPageQueryResult<T>>> = (page > 0) ? request.lastItem$ : of(undefined);
 
       const { collection, itemsPerPage, filter, firestoreQueryDriver: driver } = iteratorConfig;
       const { limit: filterLimit, constraints: filterConstraints } = filter ?? {};
 
-      return lastQueryResult$.pipe(
-        exhaustMap((lastResult) => {
-          if (lastResult?.snapshot.empty === true) {  // TODO: Shouldn't happen. Remove this later.
+      return prevQueryResult$.pipe(
+        exhaustMap((prevResult) => {
+          if (prevResult?.snapshot.empty === true) {  // TODO: Shouldn't happen. Remove this later.
             return of<ItemPageIteratorResult<FirestoreItemPageQueryResult<T>>>({ end: true });
           } else {
             const constraints: FirestoreQueryConstraint[] = [];
@@ -64,7 +64,7 @@ export function makeFirestoreItemPageIteratorDelegate<T>(): FirestoreItemPageIte
             }
 
             // Add cursor
-            const cursorDocument = (lastResult) ? lastValue(lastResult.docs) : undefined;
+            const cursorDocument = (prevResult) ? lastValue(prevResult.docs) : undefined;
             const startAfterFilter = (cursorDocument) ? startAfter(cursorDocument) : undefined;
 
             if (startAfterFilter) {

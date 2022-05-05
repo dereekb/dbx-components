@@ -1,0 +1,15 @@
+<dbx-loading [linear]="true" [context]="context">
+  <dbx-content-container>
+    <dbx-two-block class="guestbook-view">
+      <div top class="guestbook-view-header">
+        <h2>{{ name$ | async }}</h2>
+      </div>
+      <div class="guestbook-view-content">
+        <mat-divider></mat-divider>
+        <div>
+          <!-- <demo-guestbook-entry-list dbxFirebaseCollectionList demoGuestbookEntryCollection></demo-guestbook-entry-list> -->
+        </div>
+      </div>
+    </dbx-two-block>
+  </dbx-content-container>
+</dbx-loading>

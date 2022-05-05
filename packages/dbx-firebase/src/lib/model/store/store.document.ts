@@ -21,7 +21,8 @@ export interface DbxFirebaseDocumentStore<T, D extends FirestoreDocument<T> = Fi
   readonly documentLoadingState$: Observable<LoadingState<D>>;
   readonly snapshot$: Observable<DocumentSnapshot<T>>;
   readonly snapshotLoadingState$: Observable<LoadingState<DocumentSnapshot<T>>>;
-  readonly data$: Observable<Maybe<DocumentDataWithId<T>>>;
+  readonly currentData$: Observable<Maybe<DocumentDataWithId<T>>>;
+  readonly data$: Observable<DocumentDataWithId<T>>;
   readonly dataLoadingState$: Observable<LoadingState<DocumentDataWithId<T>>>;
   readonly exists$: Observable<boolean>;
 
@@ -123,8 +124,15 @@ export class AbstractDbxFirebaseDocumentStore<T, D extends FirestoreDocument<T> 
     shareReplay(1)
   );
 
-  readonly data$: Observable<Maybe<DocumentDataWithId<T>>> = this.document$.pipe(
+  readonly currentData$: Observable<Maybe<DocumentDataWithId<T>>> = this.document$.pipe(
     switchMap(x => x.accessor.stream().pipe(map(y => documentDataWithId(y)))),
+    shareReplay(1)
+  );
+
+  readonly data$: Observable<DocumentDataWithId<T>> = this.currentDocument$.pipe(
+    switchMap(() => this.currentData$.pipe(
+      filterMaybe()
+    )),
     shareReplay(1)
   );
 

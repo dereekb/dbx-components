@@ -1,3 +1,4 @@
+import { tapLog } from '@dereekb/rxjs';
 import { shareReplay } from 'rxjs/operators';
 import { Observable, distinctUntilChanged } from 'rxjs';
 import { OnDestroy } from '@angular/core';
@@ -7,7 +8,7 @@ import { DbxRouterService, AbstractSubscriptionDirective } from '@dereekb/dbx-co
 import { DbxFirebaseDocumentStoreDirective } from './store.document.directive';
 import { ModelKey } from '@dereekb/util';
 
-export const DBX_FIREBASE_ROUTER_SYNC_DEFAULT_ID_PARAM_KEY = 'id;'
+export const DBX_FIREBASE_ROUTER_SYNC_DEFAULT_ID_PARAM_KEY = 'id';
 
 /**
  * Used for synchronizing the document store id to the param of the route.
@@ -50,7 +51,7 @@ export class DbxFirebaseDocumentStoreRouteIdDirective extends AbstractSubscripti
   }
 
   set idParam(idParam: string) {
-    this._idParamKey.next(idParam ?? DBX_FIREBASE_ROUTER_SYNC_DEFAULT_ID_PARAM_KEY)
+    this._idParamKey.next(idParam || DBX_FIREBASE_ROUTER_SYNC_DEFAULT_ID_PARAM_KEY)
   }
 
 }

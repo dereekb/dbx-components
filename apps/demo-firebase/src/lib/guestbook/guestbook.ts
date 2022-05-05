@@ -22,7 +22,7 @@ export interface Guestbook {
    */
   locked: boolean;
   /**
-   * Last date the guestbook was updated at.
+   * Date the guestbook was locked at.
    */
   lockedAt: Date;
 }
@@ -39,7 +39,7 @@ export const guestbookConverter = makeSnapshotConverterFunctions<Guestbook>({
   fields: {
     active: firestoreBoolean(),
     name: firestoreString(),
-    locked: firestoreBoolean(),
+    locked: firestoreBoolean({ default: false }),
     lockedAt: firestoreDate()
   }
 });
