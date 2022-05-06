@@ -1,6 +1,6 @@
-import { asObservable, tapLog } from '@dereekb/rxjs';
+import { asObservable } from '@dereekb/rxjs';
 import { ObservableOrValue } from './rxjs/getter';
-import { defaultIfEmpty, delay, filter, first, map, shareReplay, switchMap, tap, startWith, timeout, Observable, of, Subscription, BehaviorSubject, finalize } from 'rxjs';
+import { defaultIfEmpty, delay, filter, first, map, shareReplay, switchMap, tap, startWith, timeout, Observable, of, Subscription, BehaviorSubject } from 'rxjs';
 import { cleanup, combineLatestFromMapValuesObsFn, preventComplete } from './rxjs';
 import { Destroyable, Maybe, reduceBooleansWithOrFn } from '@dereekb/util';
 import ms from 'ms';
@@ -69,7 +69,6 @@ export class LockSet implements Destroyable {
    */
   readonly isLocked$ = this.locks$.pipe(
     switchMap(combineLatestFromMapValuesObsFn((x) => x)),
-    filter(x => x.length > 2),
     map(reduceBooleansWithOrFn(false)), // Empty map is unlocked.
     shareReplay(1)
   );
@@ -145,6 +144,7 @@ export class LockSet implements Destroyable {
   }
 
   onNextUnlock(config: OnLockSetUnlockedFunction | Omit<OnLockSetUnlockedConfig, 'lockSet'>, delayTime?: number): Subscription {
+
     return onLockSetNextUnlock({
       lockSet: this,
       delayTime,

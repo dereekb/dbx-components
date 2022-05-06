@@ -1,8 +1,3 @@
-/**
- * @jest-environment node
- */
-// use the node environment, as the jsdom environment breaks for tests that use the firestore.
-
 import { authorizedTestWithMockItemCollection, MockItem, MockItemDocument, MockItemFirestoreCollection } from "@dereekb/firebase";
 import { first } from "rxjs";
 import { AbstractDbxFirebaseCollectionStore } from './store.collection';

@@ -1,14 +1,11 @@
-/**
- * @jest-environment node
- */
-// use the node environment, as the jsdom environment breaks for tests that use the firestore.
-
+import { Injectable } from "@angular/core";
 import { MockItemSubItem, MockItemSubItemDocument, authorizedTestWithMockItemCollection, MockItem, MockItemDocument, MockItemFirestoreCollection, MockItemSubItemFirestoreCollectionFactory } from "@dereekb/firebase";
 import { SubscriptionObject } from "@dereekb/rxjs";
 import { filter, first, of, timeout } from "rxjs";
 import { AbstractDbxFirebaseDocumentStore } from "./store.document";
 import { AbstractDbxFirebaseCollectionWithParentStore } from './store.subcollection';
 
+@Injectable()
 export class TestDbxFirebaseDocumentStore extends AbstractDbxFirebaseDocumentStore<MockItem, MockItemDocument> {
 
   constructor(firestoreCollection: MockItemFirestoreCollection) {
@@ -17,6 +14,7 @@ export class TestDbxFirebaseDocumentStore extends AbstractDbxFirebaseDocumentSto
 
 }
 
+@Injectable()
 export class TestDbxFirebaseCollectionWithParentStore extends AbstractDbxFirebaseCollectionWithParentStore<MockItemSubItem, MockItem, MockItemSubItemDocument, MockItemDocument> {
 
   constructor(collectionFactory: MockItemSubItemFirestoreCollectionFactory) {

@@ -1,14 +1,11 @@
-/**
- * @jest-environment node
- */
-// use the node environment, as the jsdom environment breaks for tests that use the firestore.
-
+import { Injectable } from '@angular/core';
 import { MockItemSubItem, MockItemSubItemDocument, authorizedTestWithMockItemCollection, MockItem, MockItemDocument, MockItemFirestoreCollection, MockItemSubItemFirestoreCollectionFactory } from "@dereekb/firebase";
 import { SubscriptionObject } from "@dereekb/rxjs";
-import { filter, first, of, timeout } from "rxjs";
+import { first, of, timeout } from "rxjs";
 import { AbstractDbxFirebaseDocumentStore } from "./store.document";
 import { AbstractDbxFirebaseDocumentWithParentStore } from './store.subcollection.document';
 
+@Injectable()
 export class TestDbxFirebaseDocumentStore extends AbstractDbxFirebaseDocumentStore<MockItem, MockItemDocument> {
 
   constructor(firestoreCollection: MockItemFirestoreCollection) {
@@ -17,6 +14,7 @@ export class TestDbxFirebaseDocumentStore extends AbstractDbxFirebaseDocumentSto
 
 }
 
+@Injectable()
 export class TestDbxFirebaseDocumentWithParentStore extends AbstractDbxFirebaseDocumentWithParentStore<MockItemSubItem, MockItem, MockItemSubItemDocument, MockItemDocument> {
 
   constructor(collectionFactory: MockItemSubItemFirestoreCollectionFactory) {
@@ -25,7 +23,7 @@ export class TestDbxFirebaseDocumentWithParentStore extends AbstractDbxFirebaseD
 
 }
 
-describe('AbstractDbxFirebaseCollectionWithParentStore', () => {
+describe('AbstractDbxFirebaseDocumentWithParentStore', () => {
 
   authorizedTestWithMockItemCollection((f) => {
 
@@ -41,8 +39,8 @@ describe('AbstractDbxFirebaseCollectionWithParentStore', () => {
     });
 
     afterEach(() => {
-      parentStore.ngOnDestroy();
-      store.ngOnDestroy();
+      parentStore._destroyNow();
+      store._destroyNow();
       sub.destroy();
     });
 
@@ -66,10 +64,13 @@ describe('AbstractDbxFirebaseCollectionWithParentStore', () => {
         });
 
         it('should load the document.', (done) => {
+          store.setId('test');
+
           sub.subscription = store.document$.pipe(first()).subscribe((iteration) => {
             expect(iteration).toBeDefined();
             done();
           });
+
         });
 
       });
