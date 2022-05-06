@@ -1,6 +1,6 @@
 import { Profile } from './profile';
 import { Expose } from "class-transformer";
-import { FirebaseFunctionMap, firebaseFunctionMapFactory, FirebaseFunctionTypeConfigMap } from "@dereekb/firebase";
+import { FirebaseFunctionMap, firebaseFunctionMapFactory, FirebaseFunctionMapFunction, FirebaseFunctionTypeConfigMap } from "@dereekb/firebase";
 import { IsNotEmpty, IsOptional, IsString, MaxLength } from "class-validator";
 
 export class SetProfileUsernameParams {
@@ -44,9 +44,9 @@ export const profileFunctionTypeConfigMap: FirebaseFunctionTypeConfigMap<Profile
 /**
  * Declared as an abstract class so we can inject it into our Angular app using this token.
  */
-// ignore to prevent having to re-implement all function map types. We only want to use this as an Angular token without importing InjectionToken.
-// @ts-ignore
-export abstract class ProfileFunctions implements FirebaseFunctionMap<ProfileFunctionTypeMap> { }
+export abstract class ProfileFunctions implements FirebaseFunctionMap<ProfileFunctionTypeMap> {
+  [profileSetUsernameKey]: FirebaseFunctionMapFunction<ProfileFunctionTypeMap, 'profileSetUsername'>;
+}
 
 /**
  * Used to generate our ProfileFunctionMap for a Functions instance.

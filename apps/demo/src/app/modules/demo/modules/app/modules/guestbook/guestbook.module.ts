@@ -6,6 +6,7 @@ import { DemoGuestbookListPageRightComponent } from './container/list.right.comp
 import { DemoGuestbookListPageComponent } from './container/list.component';
 import { DemoGuestbookLayoutComponent } from './container/layout.component';
 import { DemoGuestbookViewComponent } from './container/guestbook.view.component';
+import { DemoGuestbookEntryPopupComponent } from './container/guestbook.entry.popup.component';
 
 @NgModule({
   imports: [
@@ -15,6 +16,7 @@ import { DemoGuestbookViewComponent } from './container/guestbook.view.component
     })
   ],
   declarations: [
+    DemoGuestbookEntryPopupComponent,
     DemoGuestbookViewComponent,
     DemoGuestbookLayoutComponent,
     DemoGuestbookListPageComponent,

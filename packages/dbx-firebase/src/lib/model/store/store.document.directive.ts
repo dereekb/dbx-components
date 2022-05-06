@@ -11,6 +11,8 @@ export abstract class DbxFirebaseDocumentStoreDirective<T, D extends FirestoreDo
 
   constructor(readonly store: S) { }
 
+  readonly exists$ = this.store.exists$;
+
   readonly document$ = this.store.document$;
   readonly documentLoadingState$ = this.store.documentLoadingState$;
 

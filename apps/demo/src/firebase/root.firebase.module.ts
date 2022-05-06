@@ -1,8 +1,8 @@
 import { FirestoreContext } from '@dereekb/firebase';
-import { DbxFirebaseFirestoreCollectionModule, DbxFirebaseEmulatorModule, DbxFirebaseDefaultProvidersModule, DbxFirebaseAuthModule } from '@dereekb/dbx-firebase';
+import { DbxFirebaseFirestoreCollectionModule, DbxFirebaseEmulatorModule, DbxFirebaseDefaultProvidersModule, DbxFirebaseAuthModule, DbxFirebaseFunctionsModule } from '@dereekb/dbx-firebase';
 import { NgModule } from '@angular/core';
 import { environment } from '../environments/environment';
-import { DemoFirestoreCollections, makeDemoFirestoreCollections } from '@dereekb/demo-firebase';
+import { DemoFirebaseFunctionsGetter, DemoFirestoreCollections, DEMO_FIREBASE_FUNCTIONS_CONFIG, makeDemoFirebaseFunctions, makeDemoFirestoreCollections } from '@dereekb/demo-firebase';
 
 @NgModule({
   imports: [
@@ -12,6 +12,11 @@ import { DemoFirestoreCollections, makeDemoFirestoreCollections } from '@dereekb
     DbxFirebaseFirestoreCollectionModule.forRoot({
       appCollectionClass: DemoFirestoreCollections,
       collectionFactory: (firestoreContext: FirestoreContext) => makeDemoFirestoreCollections(firestoreContext)
+    }),
+    DbxFirebaseFunctionsModule.forRoot({
+      functionsGetterToken: DemoFirebaseFunctionsGetter,
+      functionsGetterFactory: makeDemoFirebaseFunctions,
+      functionsConfigMap: DEMO_FIREBASE_FUNCTIONS_CONFIG
     }),
     DbxFirebaseAuthModule.forRoot({
       delegateFactory: undefined  // todo

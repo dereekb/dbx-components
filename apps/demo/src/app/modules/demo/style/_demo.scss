@@ -5,7 +5,7 @@
 @use '../../../../style/variables';
 
 // Define an alternate dark theme.
-$demo-primary: mat.define-palette(mat.$amber-palette);
+$demo-primary: mat.define-palette(mat.$deep-purple-palette);
 $demo-accent: mat.define-palette(mat.$blue-palette);
 $demo-warn: mat.define-palette(mat.$red-palette);
 $demo-mat-theme: mat.define-light-theme((color: (primary: $demo-primary, accent: $demo-accent, warn: $demo-warn), density: null, typography: null));

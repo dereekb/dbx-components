@@ -62,10 +62,6 @@ export function guestbookFirestoreCollection(firestoreContext: FirestoreContext)
 // MARK: Guestbook Entry
 export interface GuestbookEntry extends UserRelatedById {
   /**
-   * Arbitrary word without spaces
-   */
-  word: string;
-  /**
    * Guestbook message.
    */
   message: string;
@@ -81,6 +77,10 @@ export interface GuestbookEntry extends UserRelatedById {
    * Date the entry was originally created at.
    */
   createdAt: Date;
+  /**
+   * Whether or not the entry has been published. This cannot be changed one published.
+   */
+  published: boolean;
 }
 
 export interface GuestbookEntryRef extends DocumentReferenceRef<GuestbookEntry> { }
@@ -91,11 +91,11 @@ export const guestbookEntryCollectionPath = 'guestbookEntry';
 
 export const guestbookEntryConverter = makeSnapshotConverterFunctions<GuestbookEntry>({
   fields: {
-    word: firestoreString(),
     message: firestoreString(),
     signed: firestoreString(),
     updatedAt: firestoreDate(),
-    createdAt: firestoreDate({ saveDefaultAsNow: true })
+    createdAt: firestoreDate({ saveDefaultAsNow: true }),
+    published: firestoreBoolean({ defaultBeforeSave: false })
   }
 });
 

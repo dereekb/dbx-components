@@ -5,28 +5,36 @@ import { DemoGuestbookEntryListComponent, DemoGuestbookEntryListViewComponent, D
 import { DemoGuestbookCollectionStoreDirective } from './store/guestbook.collection.store.directive';
 import { DemoGuestbookDocumentStoreDirective } from './store/guestbook.document.store.directive';
 import { DemoGuestbookEntryCollectionStoreDirective } from './store/guestbook.entry.collection.store.directive';
+import { DemoGuestbookEntryDocumentStoreDirective } from './store/guestbook.entry.document.store.directive';
+import { DemoGuestbookEntryFormComponent } from './component/guestbook.entry.form.component';
 
 @NgModule({
   imports: [
     AppSharedModule
   ],
   declarations: [
-    DemoGuestbookCollectionStoreDirective,
-    DemoGuestbookDocumentStoreDirective,
-    DemoGuestbookEntryCollectionStoreDirective,
+    // component
+    DemoGuestbookEntryFormComponent,
     DemoGuestbookListComponent,
     DemoGuestbookListViewComponent,
     DemoGuestbookListViewItemComponent,
     DemoGuestbookEntryListComponent,
     DemoGuestbookEntryListViewComponent,
-    DemoGuestbookEntryListViewItemComponent
-  ],
-  exports: [
+    DemoGuestbookEntryListViewItemComponent,
+    // store
     DemoGuestbookCollectionStoreDirective,
     DemoGuestbookDocumentStoreDirective,
     DemoGuestbookEntryCollectionStoreDirective,
+    DemoGuestbookEntryDocumentStoreDirective,
+  ],
+  exports: [
+    DemoGuestbookEntryFormComponent,
     DemoGuestbookListComponent,
-    DemoGuestbookEntryListComponent
+    DemoGuestbookEntryListComponent,
+    DemoGuestbookCollectionStoreDirective,
+    DemoGuestbookDocumentStoreDirective,
+    DemoGuestbookEntryCollectionStoreDirective,
+    DemoGuestbookEntryDocumentStoreDirective
   ]
 })
 export class DemoSharedGuestbookModule { }
