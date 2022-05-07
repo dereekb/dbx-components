@@ -18,7 +18,7 @@ export interface AuthorizedUserTestContext {
   loadIdToken(): Promise<string>;
   loadDecodedIdToken(): Promise<DecodedIdToken>;
   makeContextOptions(): Promise<ContextOptions>;
-  callCloudFunction<T = any>(fn: WrappedScheduledFunction | WrappedFunction, params: any): Promise<T>;
+  callCloudFunction<O = any, I = any>(fn: WrappedScheduledFunction | WrappedFunction<I>, params: any): Promise<O>;
 }
 
 export class AuthorizedUserTestContextFixture<
@@ -50,7 +50,7 @@ export class AuthorizedUserTestContextFixture<
     return this.instance.makeContextOptions();
   }
 
-  callCloudFunction<T = any>(fn: WrappedScheduledFunction | WrappedFunction, params: any): Promise<T> {
+  callCloudFunction<O = any, I = any>(fn: WrappedScheduledFunction | WrappedFunction<I>, params: any): Promise<O> {
     return this.instance.callCloudFunction(fn, params);
   }
 
@@ -80,11 +80,11 @@ export class AuthorizedUserTestContextInstance<
     return this.loadUserRecord().then((record) => createTestFunctionContextOptions(this.testContext.auth, record));
   }
 
-  callCloudFunction<T = any>(fn: WrappedScheduledFunction | WrappedFunction, params: any): Promise<T> {
+  callCloudFunction<O = any, I = any>(fn: WrappedScheduledFunction | WrappedFunction<I>, params: any): Promise<O> {
     return this.makeContextOptions().then(options => fn(params, options));
   }
 
-  callEventCloudFunction<T = any>(fn: WrappedScheduledFunction | WrappedFunction, params: any, contextOptions?: CallEventFunctionEventContext): Promise<T> {
+  callEventCloudFunction<O = any, I = any>(fn: WrappedScheduledFunction | WrappedFunction<I>, params: any, contextOptions?: CallEventFunctionEventContext): Promise<O> {
     return this.makeContextOptions().then(options => fn(params, (contextOptions) ? { ...contextOptions, ...options } : options));
   }
 
