@@ -47,10 +47,13 @@ export const googleCloudTestFirestoreBuilder = jestTestContextBuilder<GoogleClou
   buildFixture: () => new GoogleCloudTestFirestoreContextFixture(),
   setupInstance: async (config) => {
     const drivers = makeTestingFirestoreDrivers(googleCloudFirestoreDrivers());
+
+    const projectId = 'firebase-server-test-' + new Date().getTime();
     const firestore = new Firestore({
-      projectId: 'test',
+      projectId,
       host: config.host,
-      port: config.port
+      port: config.port,
+      maxIdleChannels: 0
     });
 
     return new GoogleCloudTestFirestoreInstance(drivers, firestore);

@@ -1,12 +1,8 @@
 import { DocumentReference, Transaction, Firestore } from '@google-cloud/firestore';
 import { DocumentSnapshot, MockItem, mockItemCollectionReference, MockItemDocument, MockItemFirestoreCollection, mockItemFirestoreCollection, authorizedTestWithMockItemCollection, FirestoreDocumentContext, makeFirestoreCollection } from "@dereekb/firebase";
-import { transactionDocumentContext } from './driver.accessor.transaction';
 import { Maybe } from '@dereekb/util';
 import { adminTestWithMockItemCollection } from '../../test/firestore/firestore.fixture.admin';
 import { googleCloudFirestoreDrivers } from './driver';
-import { writeBatchDocumentContext } from './driver.accessor.batch';
-
-jest.setTimeout(15000);
 
 describe('FirestoreCollection', () => {
 
@@ -46,27 +42,19 @@ describe('FirestoreCollection', () => {
         expect(result).toBeDefined();
       });
 
-      // TODO: Uncomment this later. Transaction tests are acting weird.
-      it.skip('should create a new document accessor instance that uses the passed transaction context.', async () => {
-
-        let ref: Maybe<DocumentReference<MockItem>>;
+      it('should create a new document accessor instance that uses the passed transaction context.', async () => {
+        let ref: DocumentReference<MockItem>;
 
         await firestore.runTransaction(async (transaction: Transaction) => {
+          const documentAccessor = firestoreCollection.documentAccessorForTransaction(transaction);
 
-          const context: FirestoreDocumentContext<MockItem> = transactionDocumentContext(transaction);
-          const result = firestoreCollection.documentAccessor(context);
-          expect(result).toBeDefined();
-
-          const document = result.newDocument();
+          const document = documentAccessor.newDocument();
           ref = document.documentRef as DocumentReference<MockItem>;
-
-          expect(document.documentRef).toBeDefined();
-          expect(document.accessor).toBeDefined();
 
           await document.accessor.set({ test: true });
         });
 
-        expect(ref).toBeDefined();
+        expect(ref!).toBeDefined();
 
         const loadedDoc = firestoreCollection.documentAccessor().loadDocument(ref!);
         const loadedData: DocumentSnapshot<MockItem> = await loadedDoc.accessor.get() as DocumentSnapshot<MockItem>;
@@ -81,9 +69,7 @@ describe('FirestoreCollection', () => {
         let ref: Maybe<DocumentReference<MockItem>>;
 
         const batch = firestore.batch();
-        const context: FirestoreDocumentContext<MockItem> = writeBatchDocumentContext(batch);
-
-        const result = firestoreCollection.documentAccessor(context);
+        const result = firestoreCollection.documentAccessorForWriteBatch(batch);
         expect(result).toBeDefined();
 
         const document = result.newDocument();
