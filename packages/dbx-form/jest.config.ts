@@ -1,6 +1,6 @@
 module.exports = {
-  displayName: 'dbx-firebase',
-  preset: '../../jest.preset.js',
+  displayName: 'dbx-form',
+
   setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
   globals: {
     'ts-jest': {
@@ -8,9 +8,7 @@ module.exports = {
       stringifyContentPathRegex: '\\.(html|svg)$',
     },
   },
-  maxConcurrency: 1,
-  maxWorkers: 1,
-  coverageDirectory: '../../coverage/packages/dbx-firebase',
+  coverageDirectory: '../../coverage/packages/dbx-form',
   transform: {
     '^.+\\.(ts|mjs|js|html)$': 'jest-preset-angular',
   },
@@ -20,4 +18,5 @@ module.exports = {
     'jest-preset-angular/build/serializers/ng-snapshot',
     'jest-preset-angular/build/serializers/html-comment',
   ],
+  preset: '../../jest.preset.ts',
 };

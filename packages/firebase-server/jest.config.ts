@@ -1,6 +1,6 @@
 module.exports = {
   displayName: 'firebase-server',
-  preset: '../../jest.preset.js',
+
   setupFilesAfterEnv: ['<rootDir>/test-setup.ts'],
   globals: {
     'ts-jest': {
@@ -13,4 +13,5 @@ module.exports = {
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
   coverageDirectory: '../../coverage/packages/firebase-server',
+  preset: '../../jest.preset.ts',
 };

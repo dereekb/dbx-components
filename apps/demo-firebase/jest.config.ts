@@ -1,16 +1,15 @@
 module.exports = {
-  displayName: 'demo-api',
-  preset: '../../jest.preset.js',
-  setupFilesAfterEnv: ['<rootDir>/test-setup.ts'],
+  displayName: 'demo-firebase',
+
   globals: {
     'ts-jest': {
       tsconfig: '<rootDir>/tsconfig.spec.json',
     },
   },
-  testEnvironment: 'node',
   transform: {
     '^.+\\.[tj]s$': 'ts-jest',
   },
   moduleFileExtensions: ['ts', 'js', 'html'],
-  coverageDirectory: '../../coverage/apps/demo-api',
+  coverageDirectory: '../../coverage/apps/demo-firebase',
+  preset: '../../jest.preset.ts',
 };

@@ -1,6 +1,6 @@
 module.exports = {
-  displayName: 'util',
-  preset: '../../jest.preset.js',
+  displayName: 'rxjs',
+
   globals: {
     'ts-jest': {
       tsconfig: '<rootDir>/tsconfig.spec.json',
@@ -11,5 +11,6 @@ module.exports = {
     '^.+\\.[tj]sx?$': 'ts-jest',
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
-  coverageDirectory: '../../coverage/packages/util',
+  coverageDirectory: '../../coverage/packages/rxjs',
+  preset: '../../jest.preset.ts',
 };

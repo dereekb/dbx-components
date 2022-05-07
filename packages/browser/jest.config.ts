@@ -1,6 +1,6 @@
 module.exports = {
-  displayName: 'model',
-  preset: '../../jest.preset.js',
+  displayName: 'browser',
+
   globals: {
     'ts-jest': {
       tsconfig: '<rootDir>/tsconfig.spec.json',
@@ -10,5 +10,6 @@ module.exports = {
     '^.+\\.[tj]s$': 'ts-jest',
   },
   moduleFileExtensions: ['ts', 'js', 'html'],
-  coverageDirectory: '../../coverage/packages/model',
+  coverageDirectory: '../../coverage/packages/browser',
+  preset: '../../jest.preset.ts',
 };
