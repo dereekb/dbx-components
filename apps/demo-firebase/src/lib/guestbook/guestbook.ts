@@ -1,4 +1,4 @@
-import { CollectionReference, AbstractFirestoreDocument, makeSnapshotConverterFunctions, firestoreString, firestoreDate, FirestoreCollection, UserRelatedById, DocumentReferenceRef, FirestoreContext, FirestoreCollectionWithParent, firestoreBoolean, DocumentDataWithId } from "@dereekb/firebase";
+import { CollectionReference, AbstractFirestoreDocument, makeSnapshotConverterFunctions, firestoreString, firestoreDate, FirestoreCollection, UserRelatedById, DocumentReferenceRef, FirestoreContext, FirestoreCollectionWithParent, firestoreBoolean, DocumentDataWithId, AbstractFirestoreDocumentWithParent } from "@dereekb/firebase";
 
 export interface GuestbookFirestoreCollections {
   guestbookFirestoreCollection: GuestbookFirestoreCollection;
@@ -85,7 +85,7 @@ export interface GuestbookEntry extends UserRelatedById {
 
 export interface GuestbookEntryRef extends DocumentReferenceRef<GuestbookEntry> { }
 
-export class GuestbookEntryDocument extends AbstractFirestoreDocument<GuestbookEntry, GuestbookEntryDocument> { }
+export class GuestbookEntryDocument extends AbstractFirestoreDocumentWithParent<Guestbook, GuestbookEntry, GuestbookEntryDocument> { }
 
 export const guestbookEntryCollectionPath = 'guestbookEntry';
 
@@ -115,7 +115,7 @@ export function guestbookEntryFirestoreCollectionFactory(firestoreContext: Fires
     return firestoreContext.firestoreCollectionWithParent({
       itemsPerPage: 50,
       collection: factory(parent),
-      makeDocument: (accessor, documentAccessor) => new GuestbookEntryDocument(accessor, documentAccessor),
+      makeDocument: (accessor, documentAccessor) => new GuestbookEntryDocument(parent.documentRef, accessor, documentAccessor),
       firestoreContext,
       parent
     });

@@ -1,8 +1,9 @@
 import { Module } from "@nestjs/common";
-import { ProfileModule } from "./profile";
+import { GuestbookModule } from "./guestbook/guestbook.module";
+import { ProfileModule } from "./profile/profile.module";
 
 @Module({
-  imports: [ProfileModule],
-  exports: [ProfileModule]
+  imports: [ProfileModule, GuestbookModule],
+  exports: [ProfileModule, GuestbookModule]
 })
 export class AppModelModule { }

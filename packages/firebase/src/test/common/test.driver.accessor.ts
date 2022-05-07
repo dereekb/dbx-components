@@ -251,15 +251,17 @@ export function describeAccessorTests<T>(init: () => DescribeAccessorTests<T>) {
       });
 
       it('should not stream values (observable completes immediately)', (done) => {
-        runTransaction((transaction) => {
+        runTransaction(async (transaction) => {
           const transactionItemDocument = c.loadDocumentForTransaction(transaction, c.accessor.documentRef);
-          sub.subscription = transactionItemDocument.accessor.stream().subscribe({
-            complete: () => {
-              done();
-            }
-          });
 
-          return Promise.resolve();
+          return new Promise<void>((resolve) => {
+            sub.subscription = transactionItemDocument.accessor.stream().subscribe({
+              complete: () => {
+                resolve();
+                done();
+              }
+            });
+          });
         });
       });
 

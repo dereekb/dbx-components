@@ -184,6 +184,22 @@ export function firestoreDocumentAccessorContextExtension<T, D extends Firestore
   };
 }
 
+// MARK: Document With Parent (Subcollection Items)
+export interface FirestoreDocumentWithParent<P, T, A extends FirestoreDocumentDataAccessor<T> = FirestoreDocumentDataAccessor<T>> extends FirestoreDocument<T, A> {
+  readonly parent: DocumentReference<P>;
+}
+
+export abstract class AbstractFirestoreDocumentWithParent<P, T,
+  D extends AbstractFirestoreDocument<T, any, any>,
+  A extends FirestoreDocumentDataAccessor<T> = FirestoreDocumentDataAccessor<T>,
+  > extends AbstractFirestoreDocument<T, D, A> implements FirestoreDocumentWithParent<P, T, A> {
+
+  constructor(readonly parent: DocumentReference<P>, accessor: A, documentAccessor: FirestoreDocumentAccessor<T, D>) {
+    super(accessor, documentAccessor);
+  }
+
+}
+
 // MARK: Single-Document Accessor
 export interface FirestoreSingleDocumentAccessor<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> {
   loadDocument(): D;

@@ -1,5 +1,5 @@
 import { Maybe } from '@dereekb/util';
-import { makeSnapshotConverterFunctions, firestoreDate, firestoreBoolean, firestoreString, CollectionReference, FirestoreCollection, FirestoreContext, AbstractFirestoreDocument, firestoreNumber, SingleItemFirestoreCollection, FirestoreCollectionWithParent } from '../../lib/common';
+import { makeSnapshotConverterFunctions, firestoreDate, firestoreBoolean, firestoreString, CollectionReference, FirestoreCollection, FirestoreContext, AbstractFirestoreDocument, firestoreNumber, SingleItemFirestoreCollection, FirestoreCollectionWithParent, AbstractFirestoreDocumentWithParent } from '../../lib/common';
 
 // MARK: Mock Item
 /**
@@ -126,7 +126,7 @@ export interface MockItemSubItem {
 /**
  * FirestoreDocument for MockItem
  */
-export class MockItemSubItemDocument extends AbstractFirestoreDocument<MockItemSubItem, MockItemSubItemDocument> { }
+export class MockItemSubItemDocument extends AbstractFirestoreDocumentWithParent<MockItem, MockItemSubItem, MockItemSubItemDocument> { }
 
 /**
  * Firestore collection path name.
@@ -158,7 +158,7 @@ export function mockItemSubItemFirestoreCollection(firestoreContext: FirestoreCo
     return firestoreContext.firestoreCollectionWithParent({
       itemsPerPage: 50,
       collection: factory(parent),
-      makeDocument: (a, d) => new MockItemSubItemDocument(a, d),
+      makeDocument: (a, d) => new MockItemSubItemDocument(parent.documentRef, a, d),
       firestoreContext,
       parent
     });

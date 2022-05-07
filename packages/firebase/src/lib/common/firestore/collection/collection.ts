@@ -1,5 +1,4 @@
-import { WriteBatch, Transaction } from "../types";
-import { FirestoreDocument, FirestoreDocumentAccessor, FirestoreDocumentAccessorFactory, FirestoreDocumentAccessorFactoryFunction, FirestoreDocumentAccessorFactoryConfig, firestoreDocumentAccessorFactory, FirestoreDocumentAccessorForTransactionFactory, FirestoreDocumentAccessorForWriteBatchFactory, firestoreDocumentAccessorContextExtension } from "../accessor/document";
+import { FirestoreDocument, FirestoreDocumentAccessorFactory, FirestoreDocumentAccessorFactoryFunction, FirestoreDocumentAccessorFactoryConfig, firestoreDocumentAccessorFactory, FirestoreDocumentAccessorForTransactionFactory, FirestoreDocumentAccessorForWriteBatchFactory, firestoreDocumentAccessorContextExtension } from "../accessor/document";
 import { FirestoreItemPageIterationBaseConfig, FirestoreItemPageIterationFactory, firestoreItemPageIterationFactory, FirestoreItemPageIterationFactoryFunction } from "../query/iterator";
 import { CollectionReferenceRef, FirestoreContextReference } from "../reference";
 import { firestoreQueryFactory, FirestoreQueryFactory } from '../query/query';
@@ -39,7 +38,7 @@ export function makeFirestoreCollection<T, D extends FirestoreDocument<T>>(confi
   const queryFactory: FirestoreQueryFactory<T> = firestoreQueryFactory(config);
 
   const documentAccessorExtension = firestoreDocumentAccessorContextExtension({ documentAccessor, firestoreAccessorDriver });
-  const { queryDocument: documentQuery } = firestoreCollectionQueryFactory(queryFactory, documentAccessorExtension);
+  const { queryDocument } = firestoreCollectionQueryFactory(queryFactory, documentAccessorExtension);
   const { query } = queryFactory;
 
   return {
@@ -49,6 +48,6 @@ export function makeFirestoreCollection<T, D extends FirestoreDocument<T>>(confi
     ...documentAccessorExtension,
     firestoreIteration,
     query,
-    queryDocument: documentQuery
+    queryDocument
   };
 }
