@@ -14,8 +14,9 @@ export const profileSetUsername = onCallWithDemoNestContext(inAuthContext(async 
   const uid = params.uid ?? context.auth?.uid!;
 
   profileDocument = await profileFirestoreCollection.documentAccessor().loadDocumentForPath(uid);
+  const exists = await profileDocument.accessor.exists();
 
-  if (!profileDocument) {
+  if (!exists) {
     throw userHasNoProfileError(uid);
   }
 

@@ -20,11 +20,11 @@ export interface Guestbook {
   /**
    * Whether or not this guestbook and it's entries can still be edited.
    */
-  locked: boolean;
+  locked?: boolean;
   /**
    * Date the guestbook was locked at.
    */
-  lockedAt: Date;
+  lockedAt?: Date;
 }
 
 export type GuestbookWithId = DocumentDataWithId<Guestbook>;

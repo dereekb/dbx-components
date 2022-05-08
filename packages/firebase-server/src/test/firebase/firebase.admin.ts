@@ -6,11 +6,12 @@ import { AbstractJestTestContextFixture, cachedGetter, JestBuildTestsWithContext
 import { googleCloudFirestoreDrivers } from '../../lib/firestore/driver';
 import { GoogleCloudTestFirestoreInstance } from '../firestore/firestore';
 import { generateNewProjectId, isAdminEnvironmentInitialized } from './firebase';
-import { wrap } from 'firebase-functions-test/lib/main';
+import { wrap, WrappedFunction, WrappedScheduledFunction } from 'firebase-functions-test/lib/main';
 
 export interface FirebaseAdminTestConfig { }
 
 export type WrapCloudFunction = typeof wrap;
+export type WrappedCloudFunction<T> = WrappedScheduledFunction | WrappedFunction<T>;
 
 export interface FirebaseAdminTestContext {
   readonly app: admin.app.App;

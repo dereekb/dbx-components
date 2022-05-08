@@ -1,5 +1,5 @@
 import { FirebaseServerActionsContext } from "@dereekb/firebase-server";
-import { GuestbookDocument, GuestbookFirestoreCollections, UpdateGuestbookEntryParams, AsyncGuestbookEntryUpdateAction, GuestbookEntryDocument } from "@dereekb/demo-firebase";
+import { GuestbookFirestoreCollections, UpdateGuestbookEntryParams, AsyncGuestbookEntryUpdateAction, GuestbookEntryDocument } from "@dereekb/demo-firebase";
 
 /**
  * FirebaseServerActionsContextt required for GuestbookServerActions.
@@ -10,7 +10,7 @@ export interface GuestbookServerActionsContext extends FirebaseServerActionsCont
  * Server-only guestbook actions.
  */
 export abstract class GuestbookServerActions {
-  abstract updateGuestbookEntry(params: UpdateGuestbookEntryParams): AsyncGuestbookEntryUpdateAction<UpdateGuestbookEntryParams>;
+  abstract guestbookEntryUpdateEntry(params: UpdateGuestbookEntryParams): AsyncGuestbookEntryUpdateAction<UpdateGuestbookEntryParams>;
 }
 
 /**
@@ -18,12 +18,12 @@ export abstract class GuestbookServerActions {
  */
 export function guestbookServerActions(context: GuestbookServerActionsContext): GuestbookServerActions {
   return {
-    updateGuestbookEntry: updateGuestbookEntryFactory(context)
+    guestbookEntryUpdateEntry: guestbookEntryUpdateEntryFactory(context)
   };
 }
 
 // MARK: Actions
-export function updateGuestbookEntryFactory({ firebaseServerActionTransformFunctionFactory, guestbookFirestoreCollection, guestbookEntryCollectionFactory }: GuestbookServerActionsContext) {
+export function guestbookEntryUpdateEntryFactory({ firebaseServerActionTransformFunctionFactory, guestbookFirestoreCollection, guestbookEntryCollectionFactory }: GuestbookServerActionsContext) {
   return firebaseServerActionTransformFunctionFactory(UpdateGuestbookEntryParams, async (params) => {
     const { message, signed } = params;
 

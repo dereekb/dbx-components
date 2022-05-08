@@ -1,5 +1,6 @@
+import { Guestbook, GuestbookDocument } from '@dereekb/demo-firebase';
 import { DemoFirestoreCollections, ProfileDocument } from '@dereekb/demo-firebase';
-import { authorizedUserContextFactory, AuthorizedUserTestContextFixture, AuthorizedUserTestContextInstance, firebaseAdminFunctionNestContextFactory, FirebaseAdminFunctionNestTestContextFixture, FirebaseAdminFunctionNestTestContextInstance, FirebaseAdminFunctionTestContextInstance, firebaseAdminNestContextFactory, FirebaseAdminNestTestContextFixture, FirebaseAdminNestTestContextInstance, FirebaseAdminTestContextInstance, firebaseServerAppTokenProvider, initFirebaseAdminTestEnvironment, setupFirebaseAdminFunctionTestSingleton } from '@dereekb/firebase-server';
+import { authorizedUserContextFactory, AuthorizedUserTestContextFixture, AuthorizedUserTestContextInstance, firebaseAdminFunctionNestContextFactory, FirebaseAdminFunctionNestTestContextFixture, FirebaseAdminFunctionNestTestContextInstance, FirebaseAdminFunctionTestContextInstance, firebaseAdminNestContextFactory, FirebaseAdminNestTestContextFixture, FirebaseAdminNestTestContextInstance, FirebaseAdminTestContextInstance, firebaseServerAppTokenProvider, initFirebaseAdminTestEnvironment, modelTestContextFactory, ModelTestContextFixture, ModelTestContextInstance, setupFirebaseAdminFunctionTestSingleton } from '@dereekb/firebase-server';
 import { asGetter, JestBuildTestsWithContextFunction, JestTestContextFixture } from '@dereekb/util';
 import { Module } from '@nestjs/common';
 import { DemoApiAppModule } from '../app/app.module';
@@ -106,7 +107,6 @@ export interface DemoAuthorizedUserContextParams {
 }
 
 export const demoAuthorizedUserContextFactory = (params: DemoAuthorizedUserContextParams) => authorizedUserContextFactory<
-  // F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance,
   DemoApiFunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>,
   DemoApiFunctionContextFixture<FirebaseAdminFunctionTestContextInstance>,
   DemoApiAuthorizedUserTestContextInstance<FirebaseAdminFunctionTestContextInstance>,
@@ -125,3 +125,43 @@ export const demoAuthorizedUserContextFactory = (params: DemoAuthorizedUserConte
 
 export const demoAuthorizedUserContext = demoAuthorizedUserContextFactory({});
 export const demoAuthorizedDemoAdminContext = demoAuthorizedUserContextFactory({ demoUserLevel: 'admin' });
+
+// MARK: With Guestbook
+export interface DemoApiGuestbookTestContextParams {
+  name?: string;
+  active?: boolean;
+}
+
+export class DemoApiGuestbookTestContextFixture<
+  F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance,
+  > extends ModelTestContextFixture<Guestbook, GuestbookDocument, DemoApiFunctionContextFixtureInstance<F>, DemoApiFunctionContextFixture<F>, DemoApiGuestbookTestContextInstance<F>> { }
+
+export class DemoApiGuestbookTestContextInstance<
+  F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance,
+  > extends ModelTestContextInstance<Guestbook, GuestbookDocument, DemoApiFunctionContextFixtureInstance<F>> { }
+
+export const demoGuestbookContextFactory = () => modelTestContextFactory<
+  Guestbook, GuestbookDocument, DemoApiGuestbookTestContextParams,
+  DemoApiFunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>,
+  DemoApiFunctionContextFixture<FirebaseAdminFunctionTestContextInstance>,
+  DemoApiGuestbookTestContextInstance<FirebaseAdminFunctionTestContextInstance>,
+  DemoApiGuestbookTestContextFixture<FirebaseAdminFunctionTestContextInstance>
+>({
+  getCollection: (fi) => fi.demoFirestoreCollections.guestbookFirestoreCollection,
+  makeFixture: (f) => new DemoApiGuestbookTestContextFixture(f),
+  makeInstance: (delegate, ref, testInstance) => new DemoApiGuestbookTestContextInstance(delegate, ref, testInstance),
+  initDocument: async (instance, params) => {
+    const guestbook = instance.document;
+
+    await guestbook.accessor.set({
+      name: params.name ?? 'test',
+      active: params.active ?? true,
+      locked: false
+    });
+  }
+});
+
+export const demoGuestbookContext = demoGuestbookContextFactory();
+
+// MARK: Guestbook Entry
+// TODO
