@@ -1,7 +1,7 @@
 import { SubscriptionObject } from './../subscription';
 import { beginLoading, errorResult, LoadingState, successResult } from '@dereekb/rxjs';
 import { Maybe, readableError } from "@dereekb/util";
-import { filter, map, BehaviorSubject, Observable, of, first, shareReplay, switchMap } from "rxjs";
+import { filter, BehaviorSubject, first } from "rxjs";
 import { WorkInstance } from "./work.instance";
 
 const TEST_ERROR_CODE = 'test';
@@ -82,7 +82,7 @@ describe('WorkInstance', () => {
       });
     });
 
-    it('should be marked complete once the loading state has success.', (done) => {
+    it('should be marked complete if the loading state has success.', (done) => {
       workInstance.startWorkingWithLoadingStateObservable(loadingStateObs);
       loadingStateObs.next(successResult('test'));
 
@@ -92,7 +92,7 @@ describe('WorkInstance', () => {
       });
     });
 
-    it('should be marked complete once the loading state has error.', (done) => {
+    it('should be marked complete if the loading state has an error.', (done) => {
       workInstance.startWorkingWithLoadingStateObservable(loadingStateObs);
       loadingStateObs.next(errorResult(readableError('test', 'test')));
 
@@ -100,6 +100,20 @@ describe('WorkInstance', () => {
         expect(isComplete).toBe(true);
         done();
       });
+    });
+
+    it('should be marked complete if the loading state begins loading and then has success.', (done) => {
+      loadingStateObs.next(beginLoading());
+      workInstance.startWorkingWithLoadingStateObservable(loadingStateObs);
+
+      workInstance.isComplete$.pipe(filter(x => x), first()).subscribe((isComplete) => {
+        expect(isComplete).toBe(true);
+        done();
+      });
+
+      setTimeout(() => {
+        loadingStateObs.next(successResult('test'));
+      }, 10);
     });
 
   });

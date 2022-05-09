@@ -16,9 +16,9 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
 
     demoAuthorizedUserContext(f, (u) => {
 
-      demoGuestbookContext({ f }, (g) => {
-
-        describe('guestbook is published', () => {
+      demoGuestbookContext({ f, active: true }, (g) => {
+    
+        describe('guestbook is active', () => {
 
           it('should create a guestbook entry if it does not exist.', async () => {
 
@@ -51,6 +51,8 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
           });
 
         });
+
+        // todo: add other tests
 
       });
 

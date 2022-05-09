@@ -1,4 +1,4 @@
-import { FirebaseAuthUserIdentifier } from '../../lib/auth/auth';
+import { FirebaseAuthUserId } from '@dereekb/firebase';
 import { RemoveIndex, incrementingNumberFactory, mapGetter, AbstractChildJestTestContextFixture, asGetter, Factory, JestTestContextFixture, GetterOrValue, PromiseOrValue, useJestContextFixture } from "@dereekb/util";
 import { FirebaseAdminTestContext } from "./firebase.admin";
 import { CreateRequest } from 'firebase-admin/lib/auth/auth-config';
@@ -13,7 +13,7 @@ import { EventContext } from 'firebase-functions/lib/cloud-functions';
  * Testing context for a single user.
  */
 export interface AuthorizedUserTestContext {
-  readonly uid: FirebaseAuthUserIdentifier;
+  readonly uid: FirebaseAuthUserId;
   loadUserRecord(): Promise<UserRecord>;
   loadIdToken(): Promise<string>;
   loadDecodedIdToken(): Promise<DecodedIdToken>;
@@ -30,7 +30,7 @@ export class AuthorizedUserTestContextFixture<
   implements AuthorizedUserTestContext {
 
   // MARK: AuthorizedUserTestContext (Forwarded)
-  get uid(): FirebaseAuthUserIdentifier {
+  get uid(): FirebaseAuthUserId {
     return this.instance.uid;
   }
 
@@ -62,7 +62,7 @@ export class AuthorizedUserTestContextInstance<
   PI extends FirebaseAdminTestContext = FirebaseAdminTestContext
   > implements AuthorizedUserTestContext {
 
-  constructor(readonly uid: FirebaseAuthUserIdentifier, readonly testContext: PI) { }
+  constructor(readonly uid: FirebaseAuthUserId, readonly testContext: PI) { }
 
   loadUserRecord(): Promise<UserRecord> {
     return this.testContext.auth.getUser(this.uid);
@@ -119,7 +119,7 @@ export interface AuthorizedUserTestContextParams<
   /**
    * uid value/getter to use. If not provided, a random one will be generated.
    */
-  uid?: GetterOrValue<FirebaseAuthUserIdentifier>;
+  uid?: GetterOrValue<FirebaseAuthUserId>;
 
   /**
    * Additional user details to attach to the create request.
@@ -134,7 +134,7 @@ export interface AuthorizedUserTestContextParams<
   /**
    * Custom make instance function. If not defined, a AuthorizedUserTestContextInstance will be generated.
    */
-  makeInstance?: (uid: FirebaseAuthUserIdentifier, testInstance: PI, userRecord: UserRecord) => PromiseOrValue<I>;
+  makeInstance?: (uid: FirebaseAuthUserId, testInstance: PI, userRecord: UserRecord) => PromiseOrValue<I>;
 
   /**
    * Optional function to initialize the user for this instance.
@@ -221,7 +221,7 @@ export function authorizedUserContextFactory<
  * 
  * Has the format 'test-uid-<number>'
  */
-export const testUidFactory: Factory<FirebaseAuthUserIdentifier> = mapGetter(incrementingNumberFactory(), (i) => `test-uid-${i}`);
+export const testUidFactory: Factory<FirebaseAuthUserId> = mapGetter(incrementingNumberFactory(), (i) => `test-uid-${i}`);
 
 // MARK: Utility
 export type TestEncodedFirestoreToken = string;

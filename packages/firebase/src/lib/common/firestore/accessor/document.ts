@@ -79,6 +79,13 @@ export interface FirestoreDocumentAccessor<T, D extends FirestoreDocument<T> = F
    */
   loadDocumentFrom(document: FirestoreDocument<T>): D;
 
+  /**
+   * 
+   * @param path 
+   * @param pathSegments 
+   */
+  documentRefForPath(path: string, ...pathSegments: string[]): DocumentReference<T>;
+
 }
 
 /**
@@ -120,10 +127,14 @@ export function firestoreDocumentAccessorFactory<T, D extends FirestoreDocument<
 
     const dataAccessorFactory = databaseContext.accessorFactory;
 
-    const loadDocument = (ref: DocumentReference<T>): D => {
+    function loadDocument(ref: DocumentReference<T>) {
       const accessor = dataAccessorFactory.accessorFor(ref);
       return config.makeDocument(accessor, documentAccessor);
     };
+
+    function documentRefForPath(path: string, ...pathSegments: string[]): DocumentReference<T> {
+      return firestoreAccessorDriver.doc(collection, path, ...pathSegments);
+    }
 
     const documentAccessor: FirestoreDocumentAccessor<T, D> = {
       newDocument(): D {
@@ -135,13 +146,13 @@ export function firestoreDocumentAccessorFactory<T, D extends FirestoreDocument<
           throw new Error('Path was not provided to loadDocumentForPath(). Use newDocument() for generating an id.');
         }
 
-        const docRef = firestoreAccessorDriver.doc(collection, path, ...pathSegments);
-        return this.loadDocument(docRef);
+        return this.loadDocument(documentRefForPath(path, ...pathSegments));
       },
       loadDocumentFrom(document: FirestoreDocument<T>): D {
         return loadDocument(document.documentRef);
       },
       loadDocument,
+      documentRefForPath,
       firestoreAccessorDriver,
       databaseContext,
       collection

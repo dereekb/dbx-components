@@ -1,7 +1,8 @@
-import { loadingStateHasFinishedLoading, filterMaybe, tapLog } from '@dereekb/rxjs';
+import { loadingStateHasFinishedLoading, filterMaybe } from '@dereekb/rxjs';
 import { Maybe, Destroyable } from "@dereekb/util";
-import { filter, map, BehaviorSubject, Observable, of, first, shareReplay, switchMap } from "rxjs";
+import { filter, map, BehaviorSubject, Observable, of, first, shareReplay, switchMap, delay } from "rxjs";
 import { beginLoading, errorResult, LoadingState, loadingStateIsLoading, successResult } from "../loading";
+import { preventComplete } from '../rxjs';
 import { SubscriptionObject } from '../subscription';
 
 /**
@@ -71,10 +72,13 @@ export class WorkInstance<I = any, O = any> implements Destroyable {
    * @param loadingStateObs 
    */
   startWorkingWithLoadingStateObservable(loadingStateObs: Observable<Maybe<LoadingState<O>>>): void {
-    const obs = loadingStateObs.pipe(filterMaybe(), shareReplay(1));
+    const obs = preventComplete(loadingStateObs).pipe(filterMaybe(), shareReplay(1));
 
-    this._sub.subscription = obs.pipe(first()).subscribe((x) => {
-      this.startWorkingWithObservable((obs as Observable<LoadingState<O>>).pipe(
+    this._sub.subscription = obs.pipe(
+      delay(0), // delay to prevent an immediate start working, which can override the _sub.subscription value
+      first()
+    ).subscribe(() => {
+      this.startWorkingWithObservable(obs.pipe(
         filter(x => x && !loadingStateIsLoading(x)),  // don't return until it has finished loading.
         map(x => {
           if (x.error) {

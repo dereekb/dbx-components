@@ -72,7 +72,7 @@ export interface ModelTestContextFactoryParams<
   /**
    * Creates a ModelTestContextInstanceDelegate from the parent instance.
    */
-  getCollection: (parentInstance: PI) => FirestoreCollection<T, D>;
+  getCollection: (parentInstance: PI, config: C) => FirestoreCollection<T, D>;
 
   /**
    * Creates the custom fixture. If not defined, a ModelTestContextFixture is created.
@@ -128,7 +128,7 @@ export function modelTestContextFactory<
       buildTests,
       initInstance: async () => {
         const parentInstance = f.instance;
-        const collection = getCollection(parentInstance);
+        const collection = getCollection(parentInstance, params);
         const ref = await makeRef(collection, params, parentInstance);
         const instance: I = await makeInstance(collection, ref, parentInstance);
 

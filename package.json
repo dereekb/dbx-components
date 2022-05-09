@@ -117,7 +117,7 @@
     "eslint-config-prettier": "^8.4.0",
     "eslint-plugin-cypress": "^2.12.1",
     "firebase-functions-test": "^2.0.1",
-    "firebase-tools": "^10.8.0",
+    "firebase-tools": "10.4.2",
     "husky": "^7.0.4",
     "is-ci": "^3.0.1",
     "jest": "27.5.1",

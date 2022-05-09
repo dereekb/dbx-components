@@ -1,4 +1,4 @@
-import { Guestbook, GuestbookDocument } from '@dereekb/demo-firebase';
+import { Guestbook, GuestbookDocument, GuestbookEntry, GuestbookEntryDocument } from '@dereekb/demo-firebase';
 import { DemoFirestoreCollections, ProfileDocument } from '@dereekb/demo-firebase';
 import { authorizedUserContextFactory, AuthorizedUserTestContextFixture, AuthorizedUserTestContextInstance, firebaseAdminFunctionNestContextFactory, FirebaseAdminFunctionNestTestContextFixture, FirebaseAdminFunctionNestTestContextInstance, FirebaseAdminFunctionTestContextInstance, firebaseAdminNestContextFactory, FirebaseAdminNestTestContextFixture, FirebaseAdminNestTestContextInstance, FirebaseAdminTestContextInstance, firebaseServerAppTokenProvider, initFirebaseAdminTestEnvironment, modelTestContextFactory, ModelTestContextFixture, ModelTestContextInstance, setupFirebaseAdminFunctionTestSingleton } from '@dereekb/firebase-server';
 import { asGetter, JestBuildTestsWithContextFunction, JestTestContextFixture } from '@dereekb/util';
@@ -127,10 +127,7 @@ export const demoAuthorizedUserContext = demoAuthorizedUserContextFactory({});
 export const demoAuthorizedDemoAdminContext = demoAuthorizedUserContextFactory({ demoUserLevel: 'admin' });
 
 // MARK: With Guestbook
-export interface DemoApiGuestbookTestContextParams {
-  name?: string;
-  active?: boolean;
-}
+export interface DemoApiGuestbookTestContextParams extends Partial<Guestbook> { }
 
 export class DemoApiGuestbookTestContextFixture<
   F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance,
@@ -147,8 +144,8 @@ export const demoGuestbookContextFactory = () => modelTestContextFactory<
   DemoApiGuestbookTestContextInstance<FirebaseAdminFunctionTestContextInstance>,
   DemoApiGuestbookTestContextFixture<FirebaseAdminFunctionTestContextInstance>
 >({
-  getCollection: (fi) => fi.demoFirestoreCollections.guestbookFirestoreCollection,
   makeFixture: (f) => new DemoApiGuestbookTestContextFixture(f),
+  getCollection: (fi) => fi.demoFirestoreCollections.guestbookFirestoreCollection,
   makeInstance: (delegate, ref, testInstance) => new DemoApiGuestbookTestContextInstance(delegate, ref, testInstance),
   initDocument: async (instance, params) => {
     const guestbook = instance.document;
@@ -156,7 +153,8 @@ export const demoGuestbookContextFactory = () => modelTestContextFactory<
     await guestbook.accessor.set({
       name: params.name ?? 'test',
       active: params.active ?? true,
-      locked: false
+      locked: params.locked ?? false,
+      lockedAt: (params.lockedAt) ?? ((params.locked) ? new Date() : undefined)
     });
   }
 });
@@ -164,4 +162,46 @@ export const demoGuestbookContextFactory = () => modelTestContextFactory<
 export const demoGuestbookContext = demoGuestbookContextFactory();
 
 // MARK: Guestbook Entry
-// TODO
+export interface DemoApiGuestbookEntryTestContextParams extends Partial<GuestbookEntry> {
+  init?: boolean;
+  u: DemoApiAuthorizedUserTestContextFixture;
+  guestbook: DemoApiGuestbookTestContextFixture;
+}
+
+export class DemoApiGuestbookEntryTestContextFixture<
+  F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance,
+  > extends ModelTestContextFixture<GuestbookEntry, GuestbookEntryDocument, DemoApiFunctionContextFixtureInstance<F>, DemoApiFunctionContextFixture<F>, DemoApiGuestbookEntryTestContextInstance<F>> { }
+
+export class DemoApiGuestbookEntryTestContextInstance<
+  F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance,
+  > extends ModelTestContextInstance<GuestbookEntry, GuestbookEntryDocument, DemoApiFunctionContextFixtureInstance<F>> { }
+
+export const demoGuestbookEntryContextFactory = () => modelTestContextFactory<
+  GuestbookEntry, GuestbookEntryDocument, DemoApiGuestbookEntryTestContextParams,
+  DemoApiFunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>,
+  DemoApiFunctionContextFixture<FirebaseAdminFunctionTestContextInstance>,
+  DemoApiGuestbookEntryTestContextInstance<FirebaseAdminFunctionTestContextInstance>,
+  DemoApiGuestbookEntryTestContextFixture<FirebaseAdminFunctionTestContextInstance>
+>({
+  makeFixture: (f) => new DemoApiGuestbookEntryTestContextFixture(f),
+  getCollection: (fi, params) => fi.demoFirestoreCollections.guestbookEntryCollectionFactory(params.guestbook.document),
+  makeInstance: (delegate, ref, testInstance) => new DemoApiGuestbookEntryTestContextInstance(delegate, ref, testInstance),
+  makeRef: async (collection, params) => {
+    return collection.documentAccessor().documentRefForPath(params.u.uid);
+  },
+  initDocument: async (instance, params) => {
+    const guestbookEntry = instance.document;
+
+    if (params.init !== false) {
+      await guestbookEntry.accessor.set({
+        message: params.message ?? 'test',
+        signed: params.signed ?? 'test',
+        published: params.published ?? true,
+        createdAt: params.createdAt ?? new Date(),
+        updatedAt: params.updatedAt ?? new Date()
+      });
+    }
+  }
+});
+
+export const demoGuestbookEntryContext = demoGuestbookEntryContextFactory();

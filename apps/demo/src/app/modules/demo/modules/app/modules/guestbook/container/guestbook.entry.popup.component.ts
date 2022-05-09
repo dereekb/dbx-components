@@ -4,7 +4,6 @@ import { MatDialog } from '@angular/material/dialog';
 import { HandleActionFunction } from '@dereekb/dbx-core';
 import { DemoGuestbookEntryFormValue } from '../../../../shared/modules/guestbook/component/guestbook.entry.form.component';
 import { GuestbookEntryDocumentStore } from './../../../../shared/modules/guestbook/store/guestbook.entry.document.store';
-import { of } from 'rxjs';
 
 export interface DemoGuestbookEntryPopupComponentConfig {
   guestbookEntryDocumentStore: GuestbookEntryDocumentStore;
@@ -14,7 +13,7 @@ export interface DemoGuestbookEntryPopupComponentConfig {
   template: `
   <dbx-dialog-content>
     <p class="dbx-note">Enter your message for the guest book.</p>
-    <div dbxAction [dbxActionHandler]="handleFormAction">
+    <div dbxAction [dbxActionHandler]="handleUpdateEntry">
       <demo-guestbook-entry-form dbxActionForm></demo-guestbook-entry-form>
       <p></p>
       <dbx-button [raised]="true" [text]="(exists$ | async) ? 'Update Entry' : 'Create Entry'" dbxActionButton></dbx-button>
@@ -38,9 +37,8 @@ export class DemoGuestbookEntryPopupComponent extends AbstractDialogDirective<an
     });
   }
 
-  readonly handleFormAction: HandleActionFunction = (value: DemoGuestbookEntryFormValue) => {
-    console.log('save.');
-    return of(false);
+  readonly handleUpdateEntry: HandleActionFunction = (value: DemoGuestbookEntryFormValue, context) => {
+    context.startWorkingWithLoadingStateObservable(this.guestbookEntryDocumentStore.updateEntry(value));
   }
 
 }

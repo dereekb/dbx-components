@@ -1,8 +1,4 @@
-
-/**
- * Firebase User Identifier (UID)
- */
-export type FirebaseAuthUserId = string;
+import { FirebaseAuthUserId } from "../common/auth/auth";
 
 /**
  * The model is related to a user with the model's uid.

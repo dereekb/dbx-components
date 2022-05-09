@@ -78,9 +78,9 @@ export interface GuestbookEntry extends UserRelatedById {
    */
   createdAt: Date;
   /**
-   * Whether or not the entry has been published. This cannot be changed one published.
+   * Whether or not the entry has been published. This cannot be changed once published.
    */
-  published: boolean;
+  published?: boolean;
 }
 
 export interface GuestbookEntryRef extends DocumentReferenceRef<GuestbookEntry> { }
