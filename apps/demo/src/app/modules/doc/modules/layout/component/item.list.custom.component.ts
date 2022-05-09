@@ -20,7 +20,7 @@ export class DocCustomItemListComponent extends AbstractDbxListWrapperDirective<
 
   constructor() {
     super({
-      componentClass: DocCustomItemListViewComponent
+      componentClass: DocCustomItemListViewComponent,
     });
   }
 

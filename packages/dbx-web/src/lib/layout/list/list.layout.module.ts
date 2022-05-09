@@ -11,6 +11,7 @@ import { InfiniteScrollModule } from 'ngx-infinite-scroll';
 import { DbxSelectionValueListItemViewComponent, DbxSelectionValueListViewComponent } from './list.view.value.selection.component';
 import { DbxValueListItemViewComponent, DbxValueListViewComponent } from './list.view.value.component';
 import { DbxValueListItemModifierDirective } from './list.view.value.modifier.directive';
+import { DbxListItemDisableRippleModifierDirective } from './list.view.value.modifier.ripple.directive';
 
 @NgModule({
   imports: [
@@ -30,7 +31,8 @@ import { DbxValueListItemModifierDirective } from './list.view.value.modifier.di
     DbxValueListItemViewComponent,
     DbxSelectionValueListViewComponent,
     DbxSelectionValueListItemViewComponent,
-    DbxValueListItemModifierDirective
+    DbxValueListItemModifierDirective,
+    DbxListItemDisableRippleModifierDirective
   ],
   exports: [
     DbxListComponent,
@@ -39,7 +41,8 @@ import { DbxValueListItemModifierDirective } from './list.view.value.modifier.di
     DbxValueListItemViewComponent,
     DbxSelectionValueListViewComponent,
     DbxSelectionValueListItemViewComponent,
-    DbxValueListItemModifierDirective
+    DbxValueListItemModifierDirective,
+    DbxListItemDisableRippleModifierDirective
   ]
 })
 export class DbxListLayoutModule { }

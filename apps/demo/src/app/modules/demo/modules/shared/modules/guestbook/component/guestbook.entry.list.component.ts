@@ -37,12 +37,15 @@ export class DemoGuestbookEntryListViewComponent extends AbstractDbxSelectionLis
 @Component({
   template: `
     <div class="demo-guestbook-entry-list-item">
-      <p>{{ itemValue | json }}</p>
-      <p class="demo-guestbook-entry-item-message">"{{ message }}"</p>
-      <p class="demo-guestbook-entry-item-signed"><span class="signed-prefix">--</span>{{ signed }}</p>
-      <p class="demo-guestbook-entry-item-updated">{{ updatedAt | toJsDate | date:'medium' }}</p>
+      <p class="item-message">"{{ message }}"</p>
+      <p class="item-signed">
+        <span class="signed-prefix">--</span>
+        <span class="signed-by">{{ signed }}</span>
+        <span class="item-updated">{{ updatedAt | toJsDate | date:'medium' }}</span>
+      </p>
     </div>
-  `
+  `,
+  styleUrls: ['./guestbook.scss']
 })
 export class DemoGuestbookEntryListViewItemComponent extends AbstractDbxValueListViewItemComponent<GuestbookEntry> {
 

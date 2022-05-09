@@ -1,11 +1,11 @@
 import { ClickableAnchor, safeDetectChanges } from '@dereekb/dbx-core';
-import { CustomDocValue } from './../component/item.list.custom.component';
 import { listItemModifier, ListItemModifier, ListSelectionState } from '@dereekb/dbx-web';
+import { CustomDocValue } from './../component/item.list.custom.component';
 import { ListLoadingState, mapLoadingStateResults, successResult } from '@dereekb/rxjs';
 import { BehaviorSubject, map, switchMap, startWith, Observable, delay, of } from 'rxjs';
 import { ChangeDetectorRef, Component, OnInit, OnDestroy } from '@angular/core';
 import { DocValue, DocValueWithSelection } from '../component/item.list';
-import { Maybe, modifier, Modifier, range, takeFront } from '@dereekb/util';
+import { Maybe, range, takeFront } from '@dereekb/util';
 import { AnchorForValueFunction } from '@dereekb/dbx-web';
 
 @Component({
@@ -78,6 +78,7 @@ export class DocLayoutListComponent implements OnInit, OnDestroy {
   readonly count$ = this.state$.pipe(map(x => x.value?.length ?? 0));
 
   clickedModifiedAnchorItem?: CustomDocValue;
+
   readonly inputDbxListItemModifier: ListItemModifier<CustomDocValue> = listItemModifier('test', (item) => {
     item.anchor = {
       onClick: () => {
@@ -121,5 +122,7 @@ export class DocLayoutListComponent implements OnInit, OnDestroy {
   makeValues() {
     return range(this.numberToLoadPerUpdate).map(x => ({ icon: 'house', name: `${x}-${Math.random() * x}` }));
   }
+
+  disableAllRipples = () => true;
 
 }

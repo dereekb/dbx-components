@@ -73,7 +73,8 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
 
                 const params: UpdateGuestbookEntryParams = {
                   guestbook: g.documentId,
-                  message: newMessage
+                  message: newMessage,
+                  published: true
                 };
 
                 await u.callCloudFunction(guestbookEntryUpdateEntryCloudFn, params);
@@ -83,10 +84,10 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
 
                 data = (await userGuestbookEntry.snapshotData())!;
 
-
                 expect(data).toBeDefined();
                 expect(data?.message).toBe(newMessage);
                 expect(data?.signed).toBe(signed);
+                expect(data?.published).toBe(true);
                 expect(data?.createdAt).not.toBeFalsy();
                 expect(data?.updatedAt).not.toBeFalsy();
                 expect(isDate(data?.createdAt)).toBe(true);

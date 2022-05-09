@@ -100,26 +100,28 @@ $two-columns-right-padding-size: 6px;
 
 @mixin color($theme-config) {
 
-
   .dbx-two-column {
-    .left-column {
-      @include theming.if-small-screen($theme-config) {
+    @include theming.if-small-screen($theme-config) {
+      .left-column {
         width: 100% !important;
-
-        .right-shown & {
-          display: none !important;
-        }
       }
-    }
 
-    .right-column {
-      @include theming.if-small-screen($theme-config) {
+      .right-column {
         max-width: 100% !important;
         width: 100% !important;
         padding-left: 0 !important;
       }
     }
   }
+
+  .dbx-two-column.right-shown {
+    @include theming.if-small-screen($theme-config) {
+      .left-column {
+        display: none;
+      }
+    }
+  }
+
 }
 
 @mixin typography($typography-config) {}

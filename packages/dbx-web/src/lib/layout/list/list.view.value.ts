@@ -9,6 +9,7 @@ export interface DbxValueListItem<T> {
   itemValue: T;
   icon?: string;
   disabled?: boolean;
+  rippleDisabled?: boolean;
   selected?: boolean;
   anchor?: Maybe<ClickableAnchor>;
 }

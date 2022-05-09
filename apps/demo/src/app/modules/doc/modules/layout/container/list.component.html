@@ -38,6 +38,16 @@
             <button bottom mat-raised-button (click)="loadMore()">Load More</button>
           </doc-custom-item-list>
         </div>
+
+        <h4>Ripples</h4>
+        <p>The list view uses mat-nav-list internally, which displays a ripple on items that are clicked.</p>
+        <p>Ripples are disabled for items when a list has emitAllClicks=false configured on it or the items have no
+          anchor. Items that are disabled also do not have a ripple.</p>
+        <div style="height: 200px">
+          <doc-custom-item-list [state$]="state$"></doc-custom-item-list>
+        </div>
+        <p>The dbxListItemDisableRippleModifier can also be used to disable ripples on models.</p>
+
       </doc-feature-example>
       <doc-feature-example header="dbx-selection-list-view">
         <p>To simplify declaration of selection lists, you can use dbx-selection-list-view, which will inject your
@@ -92,6 +102,18 @@
         </div>
 
       </doc-feature-example>
+
+      <doc-feature-example header="dbxListItemDisableRippleModifier"
+        hint="Used to disable ripples conditionally on a per-item basis using a function.">
+
+        <div style="height: 200px">
+          <doc-custom-item-list [dbxListItemModifier] [dbxListItemDisableRippleModifier]="disableAllRipples"
+            [state$]="stateWithAnchors$" [dbxListItemModifier]="inputDbxListItemModifier">
+          </doc-custom-item-list>
+        </div>
+
+      </doc-feature-example>
+
     </doc-feature-layout>
   </dbx-content>
 </dbx-content-container>
