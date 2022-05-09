@@ -1,10 +1,10 @@
 import { asGetter, Getter, GetterOrValue } from "../getter/getter";
-import { filterKeyValueTuples } from "../object";
+import { filterKeyValueTuples, findPOJOKeys, KeyValueTypleValueFilter } from "../object/object";
 import { Maybe } from "../value/maybe";
-import { ApplyMapFunction, MapFunction } from "../value/map";
+import { ApplyMapFunctionWithOptions, MapFunction } from "../value/map";
 
 // MARK: Model
-export type ModelMapFunction<I extends object, O extends object> = ApplyMapFunction<Maybe<I>, O>;
+export type ModelMapFunction<I extends object, O extends object> = ApplyMapFunctionWithOptions<Maybe<I>, O, ModelConversionOptions<I, O>>;
 export type ModelFromFunction<V extends object, D extends object> = ModelMapFunction<D, V>;
 export type ModelToFunction<V extends object, D extends object> = ModelMapFunction<V, D>;
 
@@ -34,14 +34,38 @@ export function makeModelMapFunctions<V extends object, D extends object>(fields
 
 export type ModelConversionFieldTuple<I extends object> = [keyof I, ModelFieldMapFunction<any, any>];
 export type ModelConversionFieldValuesConfig<I extends object> = ModelConversionFieldTuple<I>[];
-export type ModelConversionFieldValuesFunction<I extends object, O extends object> = ApplyMapFunction<Maybe<I>, O>;
+
+export interface ModelConversionOptions<I extends object, O extends object> {
+  /**
+   * Fields to include.
+   */
+  fields?: (keyof I)[];
+  /**
+   * Whether or not to only convert fields that are defined. Fields with a null value are still converted.
+   */
+  definedOnly?: boolean;
+}
+
+export type ModelConversionFieldValuesFunction<I extends object, O extends object> = ApplyMapFunctionWithOptions<Maybe<I>, O, ModelConversionOptions<I, O>>;
 
 export function makeModelConversionFieldValuesFunction<I extends object, O extends object>(fields: ModelConversionFieldValuesConfig<I>): ModelConversionFieldValuesFunction<I, O> {
-  return (input: Maybe<I>, target: Maybe<Partial<O>>) => {
+  return (input: Maybe<I>, target?: Maybe<Partial<O>>, options?: Maybe<ModelConversionOptions<I, O>>) => {
     target = target ?? {} as Partial<O>;
 
     if (input) {
-      fields.forEach(([key, convert]) => target![key as unknown as keyof O] = convert(input[key]));
+      let targetFields = fields;
+
+      // if options are provided, filter down.
+      if (options) {
+        const fieldsToConvert = new Set(findPOJOKeys(input, {
+          keysFilter: options.fields,
+          valueFilter: (options.definedOnly === false) ? KeyValueTypleValueFilter.NONE : KeyValueTypleValueFilter.UNDEFINED
+        }));
+
+        targetFields = fields.filter(x => fieldsToConvert.has(x[0]));
+      }
+
+      targetFields.forEach(([key, convert]) => target![key as unknown as keyof O] = convert(input[key]));
     }
 
     return target as O;

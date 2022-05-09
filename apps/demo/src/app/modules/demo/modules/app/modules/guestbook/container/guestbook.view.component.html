@@ -6,7 +6,8 @@
         <h2>{{ name$ | async }}</h2>
         <div [ngSwitch]="guestbookEntry.exists$ | async">
           <div *ngSwitchCase="true">
-            <dbx-button [raised]="true" color="primary" text="Edit Entry" (buttonClick)="openEntry()"></dbx-button>
+            <p class="dbx-note">You have signed this guest book.</p>
+            <dbx-button [raised]="true" color="primary" text="Edit Your Entry" (buttonClick)="openEntry()"></dbx-button>
           </div>
           <div *ngSwitchCase="false">
             <p class="dbx-note">You have not created an entry in this guest book.</p>

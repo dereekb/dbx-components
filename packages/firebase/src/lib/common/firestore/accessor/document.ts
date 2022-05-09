@@ -1,7 +1,7 @@
 import { Observable } from 'rxjs';
 import { FirestoreAccessorDriverRef } from '../driver/accessor';
-import { DocumentReference, CollectionReference, Transaction, WriteBatch, DocumentSnapshot, SnapshotOptions } from '../types';
-import { dataFromSnapshotStream, FirestoreDocumentDataAccessor } from './accessor';
+import { DocumentReference, CollectionReference, Transaction, WriteBatch, DocumentSnapshot, SnapshotOptions, WriteResult } from '../types';
+import { createOrUpdateWithAccessor, dataFromSnapshotStream, FirestoreDocumentDataAccessor } from './accessor';
 import { CollectionReferenceRef, DocumentReferenceRef } from '../reference';
 import { FirestoreDocumentContext } from './context';
 
@@ -41,6 +41,10 @@ export abstract class AbstractFirestoreDocument<T,
 
   snapshotData(options?: SnapshotOptions): Promise<T | undefined> {
     return this.snapshot().then(x => x.data(options));
+  }
+
+  createOrUpdate(data: Partial<T>): Promise<WriteResult | void> {
+    return createOrUpdateWithAccessor(this.accessor)(data);
   }
 
 }

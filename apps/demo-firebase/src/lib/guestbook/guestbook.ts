@@ -93,7 +93,7 @@ export const guestbookEntryConverter = makeSnapshotConverterFunctions<GuestbookE
   fields: {
     message: firestoreString(),
     signed: firestoreString(),
-    updatedAt: firestoreDate(),
+    updatedAt: firestoreDate({ saveDefaultAsNow: true }),
     createdAt: firestoreDate({ saveDefaultAsNow: true }),
     published: firestoreBoolean({ defaultBeforeSave: false })
   }

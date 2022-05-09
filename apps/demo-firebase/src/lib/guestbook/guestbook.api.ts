@@ -1,7 +1,7 @@
 import { GuestbookEntry } from './guestbook';
 import { Expose } from "class-transformer";
 import { FirebaseFunctionMap, firebaseFunctionMapFactory, FirebaseFunctionMapFunction, FirebaseFunctionTypeConfigMap } from "@dereekb/firebase";
-import { IsNotEmpty, IsString, MaxLength } from "class-validator";
+import { IsOptional, IsNotEmpty, IsString, MaxLength } from "class-validator";
 import { ModelKey } from '@dereekb/util';
 
 export const GUESTBOOK_ENTRY_MESSAGE_MAX_LENGTH = 200;
@@ -19,16 +19,18 @@ export abstract class GuestbookEntryParams {
 export class UpdateGuestbookEntryParams extends GuestbookEntryParams {
 
   @Expose()
+  @IsOptional()
   @IsNotEmpty()
   @IsString()
   @MaxLength(GUESTBOOK_ENTRY_MESSAGE_MAX_LENGTH)
-  message!: string;
+  message?: string;
 
   @Expose()
+  @IsOptional()
   @IsNotEmpty()
   @IsString()
   @MaxLength(GUESTBOOK_ENTRY_SIGNED_MAX_LENGTH)
-  signed!: string;
+  signed?: string;
 
 }
 

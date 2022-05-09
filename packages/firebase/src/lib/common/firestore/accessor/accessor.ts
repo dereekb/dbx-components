@@ -1,5 +1,5 @@
 import { filterMaybe } from '@dereekb/rxjs';
-import { Maybe } from "@dereekb/util";
+import { filterUndefinedValues, Maybe } from "@dereekb/util";
 import { WriteResult, SnapshotOptions, DocumentReference, DocumentSnapshot, UpdateData, WithFieldValue, PartialWithFieldValue, SetOptions, Precondition } from "../types";
 import { map, Observable, OperatorFunction } from 'rxjs';
 import { DocumentReferenceRef } from '../reference';
@@ -61,6 +61,7 @@ export interface FirestoreDocumentDataAccessorFactory<T> {
 
 }
 
+// MARK: Utility
 /**
  * Maps data from the given snapshot stream.
  * 
@@ -82,4 +83,28 @@ export function dataFromSnapshotStream<T>(stream: Observable<DocumentSnapshot<T>
  */
 export function mapDataFromSnapshot<T>(options?: SnapshotOptions): OperatorFunction<DocumentSnapshot<T>, Maybe<T>> {
   return map((x) => x.data(options));
+}
+
+/**
+ * Creates or updates the target object using the input data.
+ * 
+ * First checks that the data exists before writing to the datastore.
+ * 
+ * If it does not exist, will call set without merge options in order to fully initialize the object's data.
+ * If it does exist, update is done on all defined values.
+ * 
+ * @param data 
+ */
+export type CreateOrUpdateWithAccessorFunction<T> = (data: Partial<T>) => Promise<WriteResult | void>;
+
+export function createOrUpdateWithAccessor<T>(accessor: FirestoreDocumentDataAccessor<T>): (data: Partial<T>) => Promise<WriteResult | void> {
+  return (data: Partial<T>) => {
+    return accessor.exists().then((exists) => {
+      if (exists) {
+        return accessor.update(filterUndefinedValues(data) as UpdateData<T>);
+      } else {
+        return accessor.set(data as WithFieldValue<T>);
+      }
+    });
+  };
 }

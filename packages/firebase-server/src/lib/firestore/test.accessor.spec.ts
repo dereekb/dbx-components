@@ -102,6 +102,30 @@ describe('FirestoreDocumentDataAccessor', () => {
           expect(data.test).toBe(true);
         });
 
+        it(`should merge in partial data when merge is true`, async () => {
+
+          const test = true;
+          const value = 'test';
+
+          // create object
+          await document.accessor.set({
+            test
+          });
+
+          // update it via set
+          await document.accessor.set({
+            value
+          }, {
+            merge: true
+          });
+
+          const snapshot = await document.accessor.get();
+          const data = snapshot.data()!;
+
+          expect(data.test).toBe(test);
+          expect(data.value).toBe(value);
+        });
+
       });
 
       describe('update()', () => {

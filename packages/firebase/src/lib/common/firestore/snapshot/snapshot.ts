@@ -1,5 +1,5 @@
-import { ModelFieldsConversionConfig, makeModelMapFunctions, Maybe, ApplyMapFunctionWithOptions } from "@dereekb/util";
-import { PartialWithFieldValue, DocumentData, SnapshotOptions, SetOptions, WithFieldValue, DocumentSnapshot, FirestoreDataConverter } from "../types";
+import { ModelFieldsConversionConfig, makeModelMapFunctions, Maybe, ApplyMapFunctionWithOptions, ModelConversionOptions } from "@dereekb/util";
+import { PartialWithFieldValue, DocumentData, SnapshotOptions, SetOptions, WithFieldValue, DocumentSnapshot, FirestoreDataConverter, SetOptionsMerge, SetOptionsMergeFields, asTopLevelFieldPaths } from "../types";
 
 // MARK: From
 export interface SnapshotConverterConfig<T extends object> {
@@ -18,13 +18,32 @@ export type SnapshotConverterToFunction<T extends object> = ApplyMapFunctionWith
 export function makeSnapshotConverterFunctions<T extends object>(config: SnapshotConverterConfig<T>): SnapshotConverterFunctions<T> {
   const { from: fromData, to: toData } = makeModelMapFunctions(config.fields);
 
-  const from: SnapshotConverterFromFunction<T> = (input: DocumentSnapshot, target?: Maybe<Partial<T>>, options?: SnapshotOptions) => {
+  const from: SnapshotConverterFromFunction<T> = (input: DocumentSnapshot, target?: Maybe<Partial<T>>, options?: Maybe<SnapshotOptions>) => {
     const data = input.data();
-    return fromData(data);
+    return fromData(data, target);
   };
 
-  const to: SnapshotConverterToFunction<T> = (input: T, target?: Maybe<Partial<DocumentData>>, options?: SetOptions) => {
-    return toData(input);
+  const to: SnapshotConverterToFunction<T> = (input: T, target?: Maybe<Partial<DocumentData>>, options?: Maybe<SetOptions>) => {
+    let toOptions: Maybe<ModelConversionOptions<T, object>>;
+
+    if (options) {
+      const mergeFields = (options as SetOptionsMergeFields).mergeFields;
+
+      if ((options as SetOptionsMerge).merge) {
+        toOptions = {
+          definedOnly: true
+        };
+      }
+
+      if (mergeFields) {
+        toOptions = {
+          ...toOptions,
+          fields: asTopLevelFieldPaths(mergeFields) as (keyof T)[]
+        };
+      }
+    }
+
+    return toData(input, target, toOptions);
   };
 
   return {

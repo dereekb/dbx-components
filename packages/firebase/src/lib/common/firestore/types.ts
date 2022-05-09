@@ -43,6 +43,23 @@ export interface FieldPath {
   isEqual(other: FieldPath): boolean;
 }
 
+export function asTopLevelFieldPaths(input: (string | FieldPath)[]): string[] {
+  return input.map(asTopLevelFieldPath);
+}
+
+export function asTopLevelFieldPath(input: (string | FieldPath)): string {
+  let path: string;
+
+  if (typeof input === 'string') {
+    path = input;
+  } else {
+    const fullPath = input.toString();
+    path = fullPath.split('.')[0];
+  }
+
+  return path;
+}
+
 export interface Timestamp {
   readonly seconds: number;
   readonly nanoseconds: number;
@@ -69,10 +86,14 @@ export interface DocumentSnapshot<T = DocumentData> {
   data(options?: SnapshotOptions): T | undefined;
 }
 
-export type SetOptions = {
+export type SetOptions = SetOptionsMerge | SetOptionsMergeFields;
+
+export interface SetOptionsMerge {
   readonly merge?: boolean | undefined;
-} | {
-  readonly mergeFields?: Array<string | FieldPath>;
+};
+
+export interface SetOptionsMergeFields {
+  readonly mergeFields?: Array<(string | FieldPath)>;
 };
 
 export interface SnapshotOptions {

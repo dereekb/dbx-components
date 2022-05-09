@@ -1,5 +1,5 @@
 import { AbstractControl, ValidatorFn } from "@angular/forms";
-import { FilterKeyValueTuples, allObjectsAreEqual, IsEqualFunction, KeyValueTypleValueFilter, ObjectMap, valuesFromPOJO } from "@dereekb/util";
+import { KeyValueTupleFilter, allObjectsAreEqual, IsEqualFunction, KeyValueTypleValueFilter, ObjectMap, valuesFromPOJO } from "@dereekb/util";
 
 export const FIELD_VALUES_ARE_EQUAL_VALIDATION_KEY = 'fieldValuesAreEqual';
 
@@ -15,7 +15,7 @@ export interface FieldValuesAreEqualValidatorConfig<T extends object = any> {
   /**
    * Full filter to use, if defined.
    */
-  valuesFilter?: FilterKeyValueTuples<T, any>;
+  valuesFilter?: KeyValueTupleFilter<T, any>;
 
   /**
    * Optional equivalence comparator.
@@ -45,7 +45,7 @@ export function fieldValuesAreEqualValidator<T extends object = any>(config: Fie
     message = 'Field values are not equal.'
   } = config;
 
-  const valuesFilter: FilterKeyValueTuples<T, any> = inputValuesFilter ?? {
+  const valuesFilter: KeyValueTupleFilter<T, any> = inputValuesFilter ?? {
     valueFilter: KeyValueTypleValueFilter.NONE, // keep all values. Null/undefined should be processed.
     keysFilter
   };

@@ -43,12 +43,14 @@ export function guestbookEntryUpdateEntryFactory({ firebaseServerActionTransform
         } else {
           const documentInTransaction = guestbookEntryCollectionFactory(parentGuestbook).documentAccessorForTransaction(transaction).loadDocument(documentRef);
 
-          // set the message and signed
-          await documentInTransaction.accessor.set({
+          const set = {
             message,
             signed,
             updatedAt: new Date() // update the updated at time
-          }, { merge: true });
+          };
+
+          // create or update the value
+          await documentInTransaction.createOrUpdate(set);
         }
       });
 

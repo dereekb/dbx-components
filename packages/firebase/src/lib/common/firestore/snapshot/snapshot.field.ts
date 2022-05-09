@@ -1,3 +1,4 @@
+import { toISODateString, toJsDate } from '@dereekb/date';
 import { MapFunction, ModelFieldConversionConfig, GetterOrValue } from '@dereekb/util';
 
 export type FirestoreDatastoreType = any;
@@ -38,16 +39,16 @@ export function firestoreUID(): ModelFieldConversionConfig<string, string> {
   return firestoreString({});
 }
 
-export interface FirestoreDateFieldConfig extends DefaultOnlyFirestoreFieldConfig<Date, Date> {
+export interface FirestoreDateFieldConfig extends DefaultOnlyFirestoreFieldConfig<Date, string> {
   saveDefaultAsNow?: boolean;
 }
 
 export function firestoreDate(config: FirestoreDateFieldConfig = {}) {
-  return firestoreField({
+  return firestoreField<Date, string>({
     default: config.default,
-    defaultBeforeSave: config.defaultBeforeSave ?? (config.saveDefaultAsNow ? () => new Date : null),
-    fromData: (input: Date) => input,
-    toData: (input: Date) => input
+    defaultBeforeSave: config.defaultBeforeSave ?? (config.saveDefaultAsNow ? () => toISODateString(new Date()) : null),
+    fromData: (input: string) => toJsDate(input),
+    toData: (input: Date) => toISODateString(input)
   });
 }
 

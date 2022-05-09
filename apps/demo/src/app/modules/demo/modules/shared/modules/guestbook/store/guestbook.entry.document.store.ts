@@ -1,9 +1,9 @@
 import { first, Observable, shareReplay, from, switchMap } from 'rxjs';
 import { Optional, Injectable } from "@angular/core";
+import { LoadingState, loadingStateFromObs } from '@dereekb/rxjs';
 import { AbstractDbxFirebaseDocumentWithParentStore } from "@dereekb/dbx-firebase";
 import { DemoFirestoreCollections, Guestbook, GuestbookDocument, GuestbookEntry, GuestbookEntryDocument, guestbookEntryUpdateKey, GuestbookFunctions, UpdateGuestbookEntryParams } from "@dereekb/demo-firebase";
 import { GuestbookDocumentStore } from "./guestbook.document.store";
-import { LoadingState, loadingStateFromObs } from '@dereekb/rxjs';
 
 @Injectable()
 export class GuestbookEntryDocumentStore extends AbstractDbxFirebaseDocumentWithParentStore<GuestbookEntry, Guestbook, GuestbookEntryDocument, GuestbookDocument> {

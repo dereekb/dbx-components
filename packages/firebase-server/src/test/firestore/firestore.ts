@@ -28,6 +28,8 @@ export class GoogleCloudTestFirestoreInstance extends TestFirestoreInstance {
 
 export class GoogleCloudTestFirestoreContextFixture extends TestFirestoreContextFixture<GoogleCloudTestFirestoreInstance> { }
 
+let COUNTER = 0;
+
 /**
  * A JestTestContextBuilderFunction for building firestore test context factories using @google-cloud/firestore. This means SERVER TESTING ONLY. For client testing, look at @dereekb/firestore.
  * 
@@ -48,7 +50,7 @@ export const googleCloudTestFirestoreBuilder = jestTestContextBuilder<GoogleClou
   setupInstance: async (config) => {
     const drivers = makeTestingFirestoreDrivers(googleCloudFirestoreDrivers());
 
-    const projectId = 'firebase-server-test-' + new Date().getTime();
+    const projectId = `firebase-server-test-${new Date().getTime()}-${(COUNTER++)}`;
     const firestore = new Firestore({
       projectId,
       host: config.host,

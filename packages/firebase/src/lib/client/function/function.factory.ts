@@ -1,5 +1,4 @@
-import { cachedGetter } from '@dereekb/util';
-import { ClassLikeType, Getter, mapObjectMap, Maybe } from '@dereekb/util';
+import { cachedGetter, ClassLikeType, Getter, mapObjectMap, Maybe } from '@dereekb/util';
 import { Functions, httpsCallable, HttpsCallableOptions } from "firebase/functions";
 import { FirebaseFunctionMap, FirebaseFunctionMapFunction, FirebaseFunctionTypeMap } from './function';
 
@@ -25,7 +24,7 @@ export function firebaseFunctionMapFactory<M extends FirebaseFunctionTypeMap>(co
       if (config) {
         httpCallableOptions = config.options;
       }
-      
+
       const fn: FirebaseFunctionMapFunction<M, K> = httpsCallable(functionsInstance, key as string, httpCallableOptions);
       return fn;
     };

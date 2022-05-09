@@ -165,7 +165,7 @@ export const demoGuestbookContext = demoGuestbookContextFactory();
 export interface DemoApiGuestbookEntryTestContextParams extends Partial<GuestbookEntry> {
   init?: boolean;
   u: DemoApiAuthorizedUserTestContextFixture;
-  guestbook: DemoApiGuestbookTestContextFixture;
+  g: DemoApiGuestbookTestContextFixture;
 }
 
 export class DemoApiGuestbookEntryTestContextFixture<
@@ -184,7 +184,7 @@ export const demoGuestbookEntryContextFactory = () => modelTestContextFactory<
   DemoApiGuestbookEntryTestContextFixture<FirebaseAdminFunctionTestContextInstance>
 >({
   makeFixture: (f) => new DemoApiGuestbookEntryTestContextFixture(f),
-  getCollection: (fi, params) => fi.demoFirestoreCollections.guestbookEntryCollectionFactory(params.guestbook.document),
+  getCollection: (fi, params) => fi.demoFirestoreCollections.guestbookEntryCollectionFactory(params.g.document),
   makeInstance: (delegate, ref, testInstance) => new DemoApiGuestbookEntryTestContextInstance(delegate, ref, testInstance),
   makeRef: async (collection, params) => {
     return collection.documentAccessor().documentRefForPath(params.u.uid);
