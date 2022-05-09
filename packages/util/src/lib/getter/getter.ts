@@ -1,3 +1,4 @@
+
 /**
  * Function that returns a value.
  */
@@ -11,12 +12,12 @@ export type Factory<T> = Getter<T>;
 /**
  * Function that returns a value with an optional single argument.
  */
-export type GetterWithInput<T, A> = (args?: A) => T;
+export type FactoryWithInput<T, A> = (args?: A) => T;
 
 /**
  * Function that returns a value with a single argument.
  */
-export type GetterWithRequiredInput<T, A> = (args: A) => T;
+export type FactoryWithRequiredInput<T, A> = (args: A) => T;
 
 /**
  * Either a Getter, or an instance of the item.
@@ -26,7 +27,7 @@ export type GetterOrValue<T> = T | Getter<T>;
 /**
  * Either a GetterWithInput, or a Getter.
  */
-export type GetterOrValueWithInput<T, A> = Getter<T> | GetterWithInput<T, A>;
+export type GetterOrValueWithInput<T, A> = Getter<T> | FactoryWithInput<T, A>;
 
 export type StringOrGetter = GetterOrValue<string>;
 

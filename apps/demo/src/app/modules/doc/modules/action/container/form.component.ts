@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
-import { HandleActionFunction, WorkHandlerContext } from '@dereekb/dbx-core';
-import { IsModifiedFunction, IsValidFunction } from '@dereekb/rxjs';
+import { HandleActionFunction } from '@dereekb/dbx-core';
+import { IsModifiedFunction, IsValidFunction, WorkInstance } from '@dereekb/rxjs';
 import { addDays, isSameMinute, isFriday } from 'date-fns';
 import { map, of, delay } from 'rxjs';
 import { DocActionFormExampleValue } from '../component/action.example.form.component';
@@ -29,7 +29,7 @@ export class DocActionFormComponent {
     return of(isFriday(value.date));
   }
 
-  readonly handleFormAction: HandleActionFunction = (filter: DocActionFormExampleValue, context: WorkHandlerContext) => {
+  readonly handleFormAction: HandleActionFunction = (filter: DocActionFormExampleValue, instance: WorkInstance) => {
     return of(true).pipe(delay(1000));
   }
 

@@ -1,5 +1,5 @@
 import { Component, Directive, Input, OnInit } from "@angular/core";
-import { HandleActionFunction, WorkHandlerContext } from "@dereekb/dbx-core";
+import { HandleActionFunction } from "@dereekb/dbx-core";
 import { Maybe } from "@dereekb/util";
 import { from } from "rxjs";
 import { DbxFirebaseAuthService } from "../service/firebase.auth.service";
@@ -64,7 +64,7 @@ export class DbxFirebaseLoginButtonComponent {
     return this.config?.buttonTextColor;
   }
 
-  readonly handleAction: HandleActionFunction = (value: any, context: WorkHandlerContext) => {
+  readonly handleAction: HandleActionFunction = (value: any) => {
     const loginPromise: Promise<void> = this.config!.handleLogin();
     return from(loginPromise);
   };

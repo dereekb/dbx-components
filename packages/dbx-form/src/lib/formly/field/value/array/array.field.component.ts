@@ -1,10 +1,10 @@
 import { CdkDragDrop } from '@angular/cdk/drag-drop';
 import { Component } from '@angular/core';
-import { GetterWithInput, getValueFromGetter, Maybe } from '@dereekb/util';
+import { FactoryWithInput, getValueFromGetter, Maybe } from '@dereekb/util';
 import { FieldArrayTypeConfig, FieldArrayType, FormlyFieldConfig } from '@ngx-formly/core';
 
 export interface DbxFormRepeatArrayConfig {
-  labelForField?: string | GetterWithInput<string, FormlyFieldConfig>;
+  labelForField?: string | FactoryWithInput<string, FormlyFieldConfig>;
   addText?: string;
   removeText?: string;
 }

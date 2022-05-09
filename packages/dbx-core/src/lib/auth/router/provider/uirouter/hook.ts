@@ -2,7 +2,7 @@ import { TransitionHookFn, Transition, HookResult, StateService, UIInjector, Tra
 import { catchError, map, first, firstValueFrom, Observable, of, switchMap } from 'rxjs';
 import { SegueRef } from './../../../../router/segue';
 import { DbxAuthService } from '../../../service/auth.service';
-import { GetterWithInput, GetterWithRequiredInput, getValueFromGetter, isGetter, Maybe } from '@dereekb/util';
+import { FactoryWithInput, FactoryWithRequiredInput, getValueFromGetter, isGetter, Maybe } from '@dereekb/util';
 import { Injector } from '@angular/core';
 
 /**
@@ -19,7 +19,7 @@ export interface AuthTransitionDecisionGetterInput {
   readonly authService: DbxAuthService;
 }
 
-export type AuthTransitionRedirectTargetGetter = GetterWithRequiredInput<Observable<Maybe<SegueRef>>, AuthTransitionDecisionGetterInput>;
+export type AuthTransitionRedirectTargetGetter = FactoryWithRequiredInput<Observable<Maybe<SegueRef>>, AuthTransitionDecisionGetterInput>;
 export type AuthTransitionRedirectTargetOrGetter = Maybe<SegueRef> | AuthTransitionRedirectTargetGetter;
 
 export interface AuthTransitionHookOptions {

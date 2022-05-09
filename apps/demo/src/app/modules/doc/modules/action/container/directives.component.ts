@@ -1,5 +1,5 @@
 import { Component, OnDestroy } from '@angular/core';
-import { HandleActionFunction, WorkHandlerContext } from '@dereekb/dbx-core';
+import { HandleActionFunction } from '@dereekb/dbx-core';
 import { of, delay, BehaviorSubject } from 'rxjs';
 
 @Component({
@@ -14,7 +14,7 @@ export class DocActionDirectivesComponent implements OnDestroy {
 
   constructor() { }
 
-  readonly handleAction: HandleActionFunction = (value: any, context: WorkHandlerContext) => {
+  readonly handleAction: HandleActionFunction = (value: any) => {
     return of(true).pipe(delay(1000));
   }
 

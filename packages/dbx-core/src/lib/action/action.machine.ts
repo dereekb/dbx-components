@@ -1,10 +1,10 @@
 import { DbxActionContextSourceReference } from './action.reference';
 import { delay, first } from 'rxjs/operators';
 import { ActionContextStoreSource } from './action.store.source';
-import { HandleActionFunction, handleWorkValueReadyFn, WorkHandlerContextSourceDelegate } from './action.handler';
+import { DbxActionWorkInstanceDelegate, HandleActionFunction } from './action.handler';
 import { DbxActionContextBaseSource } from './action.holder';
 import { Destroyable, Maybe } from '@dereekb/util';
-import { SubscriptionObject } from '@dereekb/rxjs';
+import { SubscriptionObject, workFactory } from '@dereekb/rxjs';
 
 /**
  * DbxActionContextMachine configuration.
@@ -40,10 +40,12 @@ export class DbxActionContextMachine<T = any, O = any> extends DbxActionContextB
 
     // Handle Value Ready
     this._handleValueReadySub.subscription = this.sourceInstance.valueReady$.subscribe((value) => {
-      handleWorkValueReadyFn({
-        handlerFunction: config.handleValueReady,
-        delegate: new WorkHandlerContextSourceDelegate<T, O>(this.sourceInstance)
-      })(value);
+      const doWork = workFactory({
+        work: config.handleValueReady,
+        delegate: new DbxActionWorkInstanceDelegate<T, O>(this.sourceInstance)
+      });
+
+      doWork(value);
     });
 
     // If this is a one-time use, then destroy it after the first success comes through.
