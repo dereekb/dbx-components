@@ -40,7 +40,10 @@ export interface FirestoreDocumentDataAccessor<T> extends DocumentReferenceRef<T
   set(data: PartialWithFieldValue<T>, options: SetOptions): Promise<WriteResult | void>;
   set(data: WithFieldValue<T>): Promise<WriteResult | void>;
   /**
-   * Updates the data in the database. If the document doesn't exist, it will fail.
+   * Directly updates the data in the database. If the document doesn't exist, it will fail.
+   * 
+   * NOTE: Update will skip any conversions and directly set the data.
+   * If you rely on the converter/conversion functionality, use set() with merge: true instead of update.
    * 
    * @param data 
    */
@@ -91,17 +94,18 @@ export function mapDataFromSnapshot<T>(options?: SnapshotOptions): OperatorFunct
  * First checks that the data exists before writing to the datastore.
  * 
  * If it does not exist, will call set without merge options in order to fully initialize the object's data.
- * If it does exist, update is done on all defined values.
+ * If it does exist, update is done using set + merge on all defined values.
  * 
  * @param data 
  */
-export type CreateOrUpdateWithAccessorFunction<T> = (data: Partial<T>) => Promise<WriteResult | void>;
+export type CreateOrUpdateWithAccessorSetFunction<T> = (data: Partial<T>) => Promise<WriteResult | void>;
 
-export function createOrUpdateWithAccessor<T>(accessor: FirestoreDocumentDataAccessor<T>): (data: Partial<T>) => Promise<WriteResult | void> {
+export function createOrUpdateWithAccessorSet<T>(accessor: FirestoreDocumentDataAccessor<T>): (data: Partial<T>) => Promise<WriteResult | void> {
   return (data: Partial<T>) => {
     return accessor.exists().then((exists) => {
       if (exists) {
-        return accessor.update(filterUndefinedValues(data) as UpdateData<T>);
+        const update = filterUndefinedValues(data);
+        return accessor.set(update, { merge: true });
       } else {
         return accessor.set(data as WithFieldValue<T>);
       }

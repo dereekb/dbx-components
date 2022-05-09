@@ -336,6 +336,8 @@ export function describeAccessorTests<T>(init: () => DescribeAccessorTests<T>) {
       }
     });
 
+    // todo: test that update does not call the converter when setting values.
+
   });
 
   describe('set()', () => {
@@ -362,6 +364,8 @@ export function describeAccessorTests<T>(init: () => DescribeAccessorTests<T>) {
       const snapshot = await c.accessor.get();
       expect(c.hasDataFromUpdate(snapshot.data())).toBe(true);
     });
+
+    // todo: test that set calls the converter when setting values.
 
   });
 

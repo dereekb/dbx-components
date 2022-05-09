@@ -1,3 +1,4 @@
+import { isValid } from 'date-fns';
 import { Pipe, PipeTransform } from '@angular/core';
 import { toJsDate } from '@dereekb/date';
 import { DateOrDateString, Maybe } from '@dereekb/util';
@@ -6,7 +7,17 @@ import { DateOrDateString, Maybe } from '@dereekb/util';
 export class ToJsDatePipe implements PipeTransform {
 
   public static toJsDate(input: Maybe<DateOrDateString>): Maybe<Date> {
-    return (input) ? toJsDate(input) : undefined;
+    let date: Maybe<Date>;
+    
+    if (input != null) {
+      date = toJsDate(input);
+
+      if (!isValid(date)) {
+        date = undefined;
+      }
+    }
+
+    return date;
   }
 
   transform(input: Maybe<DateOrDateString>): Maybe<Date> {

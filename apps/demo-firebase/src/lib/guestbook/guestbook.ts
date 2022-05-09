@@ -78,7 +78,7 @@ export interface GuestbookEntry extends UserRelatedById {
    */
   createdAt: Date;
   /**
-   * Whether or not the entry has been published. This cannot be changed once published.
+   * Whether or not the entry has been published. It can be unpublished at any time by the user.
    */
   published?: boolean;
 }

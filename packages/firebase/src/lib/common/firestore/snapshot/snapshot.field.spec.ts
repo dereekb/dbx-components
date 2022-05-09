@@ -1,4 +1,5 @@
 import { ISO8601DateString, makeModelFieldMapFunctions } from '@dereekb/util';
+import { isValid } from 'date-fns';
 import { firestoreDate, firestoreField } from './snapshot.field';
 
 describe('firestoreField()', () => {
@@ -68,9 +69,10 @@ describe('firestoreDate()', () => {
     const converted = dateField.from!.convert!(dateString);
     expect(converted).toBeDefined();
     expect(converted?.getTime()).toBe(value.getTime());
+    expect(isValid(converted)).toBe(true);
   });
 
-  it('should convert data from a date string to a .', () => {
+  it('should convert data from a date to a date string.', () => {
     const dateString = '2021-08-16T05:00:00.000Z';
     const value = new Date(dateString);
 

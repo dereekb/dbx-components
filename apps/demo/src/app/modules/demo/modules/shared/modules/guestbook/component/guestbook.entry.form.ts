@@ -1,10 +1,11 @@
-import { textAreaField, textField } from "@dereekb/dbx-form";
+import { textAreaField, textField, toggleField } from "@dereekb/dbx-form";
 import { GUESTBOOK_ENTRY_MESSAGE_MAX_LENGTH, GUESTBOOK_ENTRY_SIGNED_MAX_LENGTH } from "@dereekb/demo-firebase";
 
 export function guestbookEntryFields() {
   return [
     guestbookEntryMessageField(),
-    guestbookEntrySignedField()
+    guestbookEntrySignedField(),
+    guestbookEntryPublishedField()
   ];
 }
 
@@ -14,4 +15,8 @@ export function guestbookEntryMessageField() {
 
 export function guestbookEntrySignedField() {
   return textField({ key: 'signed', label: 'Signed', maxLength: GUESTBOOK_ENTRY_SIGNED_MAX_LENGTH, required: true });
+}
+
+export function guestbookEntryPublishedField() {
+  return toggleField({ key: 'published', label: 'Published' });
 }

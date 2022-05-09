@@ -175,6 +175,11 @@ export class AbstractDbxFirebaseDocumentStore<T, D extends FirestoreDocument<T> 
     shareReplay(1)
   );
 
+  readonly doesNotExist$: Observable<boolean> = this.exists$.pipe(
+    map(x => !x),
+    shareReplay(1)
+  );
+
   // MARK: State Changes
   /**
    * Sets the id of the document to load.

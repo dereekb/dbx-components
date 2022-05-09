@@ -2,6 +2,7 @@ import { guestbookEntryUpdateEntry } from './guestbookentry.update';
 import { GuestbookEntry, UpdateGuestbookEntryParams } from '@dereekb/demo-firebase';
 import { demoGuestbookEntryContext, DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserContext, demoGuestbookContext } from '../../../test/fixture';
 import { WrappedCloudFunction } from '@dereekb/firebase-server';
+import { isDate, isValid } from 'date-fns';
 
 demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
 
@@ -81,11 +82,17 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
                 expect(exists).toBe(true);
 
                 data = (await userGuestbookEntry.snapshotData())!;
+
+
                 expect(data).toBeDefined();
                 expect(data?.message).toBe(newMessage);
                 expect(data?.signed).toBe(signed);
                 expect(data?.createdAt).not.toBeFalsy();
                 expect(data?.updatedAt).not.toBeFalsy();
+                expect(isDate(data?.createdAt)).toBe(true);
+                expect(isDate(data?.updatedAt)).toBe(true);
+                expect(isValid(data?.createdAt)).toBe(true);
+                expect(isValid(data?.updatedAt)).toBe(true);
               });
 
             });
