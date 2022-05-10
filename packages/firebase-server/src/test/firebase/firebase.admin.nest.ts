@@ -1,5 +1,5 @@
 import { AbstractChildJestTestContextFixture, ArrayOrValue, asArray, ClassType, Getter, JestBuildTestsWithContextFunction, JestTestContextFactory, JestTestContextFixture, useJestContextFixture } from "@dereekb/util";
-import { AbstractFirebaseAdminTestContextInstanceChild, firebaseAdminTestContextFactory, FirebaseAdminTestContextInstance } from './firebase.admin';
+import { AbstractFirebaseAdminTestContextInstanceChild, FirebaseAdminCloudFunctionWrapper, firebaseAdminTestContextFactory, FirebaseAdminTestContextInstance, wrapCloudFunctionForTests, WrapCloudFunctionInput, WrappedCloudFunction } from './firebase.admin';
 import { Abstract, DynamicModule, INestApplicationContext, Provider, Type } from '@nestjs/common/interfaces';
 import { NestAppPromiseGetter } from "../../lib/nest/app";
 import { Test, TestingModule } from '@nestjs/testing';
@@ -10,6 +10,8 @@ export interface FirebaseAdminNestTestContext {
   readonly nestAppPromiseGetter: NestAppPromiseGetter;
   get<TInput = any, TResult = TInput>(typeOrToken: Type<TInput> | Abstract<TInput> | string | symbol, options?: { strict: boolean; }): TResult;
 }
+
+export type FirebaseAdminNestTestContextFixtureType<PI extends FirebaseAdminTestContextInstance> = FirebaseAdminNestTestContext & JestTestContextFixture<PI>;
 
 export class FirebaseAdminNestTestContextFixture<
   PI extends FirebaseAdminTestContextInstance = FirebaseAdminTestContextInstance,

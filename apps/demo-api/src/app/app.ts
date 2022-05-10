@@ -1,8 +1,9 @@
-import { guestbookEntryUpdateKey, profileSetUsernameKey } from '@dereekb/demo-firebase';
+import { updateProfileKey, updateGuestbookEntryKey, profileSetUsernameKey } from '@dereekb/demo-firebase';
 import { NestAppPromiseGetter, nestServerInstance } from '@dereekb/firebase-server';
 import { DemoApiAppModule } from './app.module';
 import { profileSetUsername, initUserOnCreate } from './function';
-import { guestbookEntryUpdateEntry } from './function/guestbook';
+import { updateGuestbookEntry } from './function/guestbook';
+import { updateProfile } from './function/profile/profile.update';
 
 export const {
   initNestServer
@@ -23,7 +24,8 @@ export function demoAppFunctions(nest: NestAppPromiseGetter) {
     // API Calls
     // Profile
     [profileSetUsernameKey]: profileSetUsername(nest),
+    [updateProfileKey]: updateProfile(nest),
     // Guestbook
-    [guestbookEntryUpdateKey]: guestbookEntryUpdateEntry(nest)
+    [updateGuestbookEntryKey]: updateGuestbookEntry(nest)
   };
 }

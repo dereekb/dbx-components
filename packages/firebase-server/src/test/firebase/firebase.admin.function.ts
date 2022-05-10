@@ -4,7 +4,7 @@ import { Firestore } from '@google-cloud/firestore';
 import { Auth } from 'firebase-admin/lib/auth/auth';
 import { FeaturesList } from 'firebase-functions-test/lib/features';
 import { TestFirestoreContext, TestFirestoreInstance } from '@dereekb/firebase';
-import { AbstractJestTestContextFixture, jestTestContextBuilder, JestTestContextFactory, Maybe } from "@dereekb/util";
+import { AbstractJestTestContextFixture, Getter, jestTestContextBuilder, JestTestContextFactory, JestTestContextFixture, Maybe } from "@dereekb/util";
 import { applyFirebaseGCloudTestProjectIdToFirebaseConfigEnv, getGCloudTestProjectId, isAdminEnvironmentInitialized, rollNewGCloudProjectEnvironmentVariable } from './firebase';
 import { FirebaseAdminTestContext, FirebaseAdminTestContextInstance, WrapCloudFunction } from './firebase.admin';
 
@@ -53,6 +53,8 @@ export interface FirebaseAdminFunctionTestConfig {
 }
 
 export interface FirebaseAdminFunctionTestContext extends FirebaseAdminTestContext { }
+
+export interface FullFirebaseAdminFunctionTestContext extends FirebaseAdminFunctionTestContext, JestTestContextFixture<FirebaseAdminFunctionTestContextInstance> { }
 
 export class FirebaseAdminFunctionTestContextFixture extends AbstractJestTestContextFixture<FirebaseAdminFunctionTestContextInstance> implements FirebaseAdminFunctionTestContext {
 

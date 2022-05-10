@@ -1,5 +1,5 @@
 import { FirebaseServerActionsContext } from "@dereekb/firebase-server";
-import { GuestbookFirestoreCollections, UpdateGuestbookEntryParams, AsyncGuestbookEntryUpdateAction, GuestbookEntryDocument } from "@dereekb/demo-firebase";
+import { GuestbookFirestoreCollections, UpdateGuestbookEntryParams, AsyncGuestbookEntryUpdateAction, GuestbookEntryDocument, GuestbookEntry } from "@dereekb/demo-firebase";
 
 /**
  * FirebaseServerActionsContextt required for GuestbookServerActions.
@@ -10,7 +10,7 @@ export interface GuestbookServerActionsContext extends FirebaseServerActionsCont
  * Server-only guestbook actions.
  */
 export abstract class GuestbookServerActions {
-  abstract guestbookEntryUpdateEntry(params: UpdateGuestbookEntryParams): AsyncGuestbookEntryUpdateAction<UpdateGuestbookEntryParams>;
+  abstract updateGuestbookEntry(params: UpdateGuestbookEntryParams): AsyncGuestbookEntryUpdateAction<UpdateGuestbookEntryParams>;
 }
 
 /**
@@ -18,14 +18,14 @@ export abstract class GuestbookServerActions {
  */
 export function guestbookServerActions(context: GuestbookServerActionsContext): GuestbookServerActions {
   return {
-    guestbookEntryUpdateEntry: guestbookEntryUpdateEntryFactory(context)
+    updateGuestbookEntry: guestbookEntryUpdateEntryFactory(context)
   };
 }
 
 // MARK: Actions
 export function guestbookEntryUpdateEntryFactory({ firebaseServerActionTransformFunctionFactory, guestbookFirestoreCollection, guestbookEntryCollectionFactory }: GuestbookServerActionsContext) {
   return firebaseServerActionTransformFunctionFactory(UpdateGuestbookEntryParams, async (params) => {
-    const { message, signed } = params;
+    const { message, signed, published } = params;
 
     return async (document: GuestbookEntryDocument) => {
       const documentRef = document.documentRef;
@@ -43,9 +43,10 @@ export function guestbookEntryUpdateEntryFactory({ firebaseServerActionTransform
         } else {
           const documentInTransaction = guestbookEntryCollectionFactory(parentGuestbook).documentAccessorForTransaction(transaction).loadDocument(documentRef);
 
-          const set = {
+          const set: Partial<GuestbookEntry> = {
             message,
             signed,
+            published,
             updatedAt: new Date() // update the updated at time
           };
 

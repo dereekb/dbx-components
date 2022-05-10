@@ -2,28 +2,38 @@ import * as admin from 'firebase-admin';
 import { Firestore } from '@google-cloud/firestore';
 import { Auth } from 'firebase-admin/lib/auth/auth';
 import { JestTestFirestoreContextFactory, makeTestingFirestoreDrivers, TestFirestoreContext, TestFirestoreContextFixture, TestFirestoreInstance } from '@dereekb/firebase';
-import { AbstractJestTestContextFixture, cachedGetter, JestBuildTestsWithContextFunction, jestTestContextBuilder, JestTestContextFactory, JestTestContextFixture, useJestContextFixture } from "@dereekb/util";
+import { AbstractJestTestContextFixture, cachedGetter, Getter, JestBuildTestsWithContextFunction, jestTestContextBuilder, JestTestContextFactory, JestTestContextFixture, useJestContextFixture } from "@dereekb/util";
 import { googleCloudFirestoreDrivers } from '../../lib/firestore/driver';
 import { GoogleCloudTestFirestoreInstance } from '../firestore/firestore';
+import { CloudFunction as CloudFunctionV1 } from 'firebase-functions';
 import { generateNewProjectId, isAdminEnvironmentInitialized } from './firebase';
 import { wrap, WrappedFunction, WrappedScheduledFunction } from 'firebase-functions-test/lib/main';
 
 export interface FirebaseAdminTestConfig { }
 
 export type WrapCloudFunction = typeof wrap;
+export type WrapCloudFunctionInput<T> = CloudFunctionV1<T>;
 export type WrappedCloudFunction<T> = WrappedScheduledFunction | WrappedFunction<T>;
 
-export interface FirebaseAdminTestContext {
-  readonly app: admin.app.App;
-  readonly auth: Auth;
-  readonly firestore: Firestore
-  readonly firestoreInstance: TestFirestoreInstance;
-  readonly firestoreContext: TestFirestoreContext;
+export interface FirebaseAdminCloudFunctionWrapper {
 
   /**
    * Wrap function if available. If not in the right context/supported then this will throw an exception.
    */
   get wrapCloudFunction(): WrapCloudFunction;
+
+}
+
+export function wrapCloudFunctionForTests<I, T extends WrapCloudFunctionInput<I> = WrapCloudFunctionInput<I>>(wrapper: FirebaseAdminCloudFunctionWrapper, getter: Getter<T>): Getter<WrappedCloudFunction<I>> {
+  return () => wrapper.wrapCloudFunction(getter());
+}
+
+export interface FirebaseAdminTestContext extends FirebaseAdminCloudFunctionWrapper {
+  readonly app: admin.app.App;
+  readonly auth: Auth;
+  readonly firestore: Firestore
+  readonly firestoreInstance: TestFirestoreInstance;
+  readonly firestoreContext: TestFirestoreContext;
 }
 
 export class FirebaseAdminTestContextFixture extends AbstractJestTestContextFixture<FirebaseAdminTestContextInstance> implements FirebaseAdminTestContext {

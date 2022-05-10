@@ -1,15 +1,10 @@
-import { Profile } from './profile';
 import { Expose } from "class-transformer";
 import { FirebaseFunctionMap, firebaseFunctionMapFactory, FirebaseFunctionMapFunction, FirebaseFunctionTypeConfigMap } from "@dereekb/firebase";
 import { IsNotEmpty, IsOptional, IsString, MaxLength } from "class-validator";
 
-export class SetProfileUsernameParams {
+export const PROFILE_BIO_MAX_LENGTH = 200;
 
-  @Expose()
-  @IsNotEmpty()
-  @IsString()
-  @MaxLength(20)
-  username!: string;
+export class ProfileParams {
 
   // MARK: Admin Only
   /**
@@ -22,30 +17,55 @@ export class SetProfileUsernameParams {
 
 }
 
+export class SetProfileUsernameParams extends ProfileParams {
+
+  @Expose()
+  @IsNotEmpty()
+  @IsString()
+  @MaxLength(20)
+  username!: string;
+
+}
+
+export class UpdateProfileParams extends ProfileParams {
+
+  @Expose()
+  @IsOptional()
+  @IsNotEmpty()
+  @IsString()
+  @MaxLength(PROFILE_BIO_MAX_LENGTH)
+  bio?: string;
+
+}
+
 /**
  * We set the key here to allow both the functions server and the type map/client access this shared key.
  */
 export const profileSetUsernameKey = 'profileSetUsername';
+export const updateProfileKey = 'updateProfile';
 
 /**
  * This is our FirebaseFunctionTypeMap for Profile. It defines all the functions that are available.
  */
 export type ProfileFunctionTypeMap = {
-  [profileSetUsernameKey]: [SetProfileUsernameParams, Profile]
+  [profileSetUsernameKey]: [SetProfileUsernameParams, void],
+  [updateProfileKey]: [UpdateProfileParams, void]
 }
 
 /**
  * This is the configuration map. It is 
  */
 export const profileFunctionTypeConfigMap: FirebaseFunctionTypeConfigMap<ProfileFunctionTypeMap> = {
-  [profileSetUsernameKey]: null
+  [profileSetUsernameKey]: null,
+  [updateProfileKey]: null
 }
 
 /**
  * Declared as an abstract class so we can inject it into our Angular app using this token.
  */
 export abstract class ProfileFunctions implements FirebaseFunctionMap<ProfileFunctionTypeMap> {
-  [profileSetUsernameKey]: FirebaseFunctionMapFunction<ProfileFunctionTypeMap, 'profileSetUsername'>;
+  [profileSetUsernameKey]: FirebaseFunctionMapFunction<ProfileFunctionTypeMap, "profileSetUsername">;
+  [updateProfileKey]: FirebaseFunctionMapFunction<ProfileFunctionTypeMap, "updateProfile">;
 }
 
 /**

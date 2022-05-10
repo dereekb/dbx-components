@@ -1,4 +1,3 @@
-import { GuestbookEntry } from './guestbook';
 import { Expose } from "class-transformer";
 import { FirebaseFunctionMap, firebaseFunctionMapFactory, FirebaseFunctionMapFunction, FirebaseFunctionTypeConfigMap } from "@dereekb/firebase";
 import { IsOptional, IsNotEmpty, IsString, MaxLength, IsBoolean } from "class-validator";
@@ -39,22 +38,22 @@ export class UpdateGuestbookEntryParams extends GuestbookEntryParams {
 
 }
 
-export const guestbookEntryUpdateKey = 'guestbookEntryUpdateEntry';
-export const guestbookEntryDeleteKey = 'guestbookEntryDeleteEntry';
+export const updateGuestbookEntryKey = 'updateGuestbookEntry';
+export const deleteGuestbookEntryKey = 'deleteGuestbookEntry';
 
 export type GuestbookFunctionTypeMap = {
-  [guestbookEntryUpdateKey]: [UpdateGuestbookEntryParams, GuestbookEntry]
-  [guestbookEntryDeleteKey]: [GuestbookEntryParams, GuestbookEntry]
+  [updateGuestbookEntryKey]: [UpdateGuestbookEntryParams, void]
+  [deleteGuestbookEntryKey]: [GuestbookEntryParams, void]
 }
 
 export const guestbookFunctionTypeConfigMap: FirebaseFunctionTypeConfigMap<GuestbookFunctionTypeMap> = {
-  [guestbookEntryUpdateKey]: null,
-  [guestbookEntryDeleteKey]: null
+  [updateGuestbookEntryKey]: null,
+  [deleteGuestbookEntryKey]: null
 }
 
 export abstract class GuestbookFunctions implements FirebaseFunctionMap<GuestbookFunctionTypeMap> {
-  [guestbookEntryUpdateKey]: FirebaseFunctionMapFunction<GuestbookFunctionTypeMap, 'guestbookEntryUpdateEntry'>;
-  [guestbookEntryDeleteKey]: FirebaseFunctionMapFunction<GuestbookFunctionTypeMap, 'guestbookEntryDeleteEntry'>;
+  [updateGuestbookEntryKey]: FirebaseFunctionMapFunction<GuestbookFunctionTypeMap, 'updateGuestbookEntry'>;
+  [deleteGuestbookEntryKey]: FirebaseFunctionMapFunction<GuestbookFunctionTypeMap, 'deleteGuestbookEntry'>;
 }
 
 export const guestbookFunctionMap = firebaseFunctionMapFactory(guestbookFunctionTypeConfigMap);

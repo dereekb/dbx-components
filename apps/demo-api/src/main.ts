@@ -12,5 +12,6 @@ export const api = functions.https.onRequest(server);
 export const {
   initUserOnCreate,
   profileSetUsername,
-  guestbookEntryUpdateEntry
+  updateProfile,
+  updateGuestbookEntry
 } = demoAppFunctions(nest);

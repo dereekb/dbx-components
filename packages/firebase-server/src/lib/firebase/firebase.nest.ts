@@ -1,5 +1,9 @@
 import * as admin from 'firebase-admin';
-import { FactoryProvider, InjectionToken, Module } from "@nestjs/common";
+import { FactoryProvider, InjectionToken, Module, ModuleMetadata, Provider } from "@nestjs/common";
+import { FirestoreContext } from '@dereekb/firebase';
+import { Firestore } from '@google-cloud/firestore';
+import { googleCloudFirestoreContextFactory } from '../firestore/firestore';
+import { ClassLikeType } from '@dereekb/util';
 
 // MARK: Tokens
 /**
@@ -37,3 +41,58 @@ export function firebaseServerAppTokenProvider(useFactory: () => admin.app.App):
   exports: [FIRESTORE_TOKEN]
 })
 export class FirebaseServerFirestoreModule { }
+
+/**
+ * Nest provider module for firebase that includes the FirebaseServerFirestoreModule and provides a value for FIRESTORE_CONTEXT_TOKEN using the googleCloudFirestoreContextFactory.
+ */
+@Module({
+  imports: [FirebaseServerFirestoreModule],
+  providers: [{
+    provide: FIRESTORE_CONTEXT_TOKEN,
+    useFactory: googleCloudFirestoreContextFactory,
+    inject: [FIRESTORE_TOKEN]
+  }],
+  exports: [FirebaseServerFirestoreModule, FIRESTORE_CONTEXT_TOKEN]
+})
+export class FirebaseServerFirestoreContextModule { }
+
+// MARK: AppFirestoreCollections
+export type ProvideAppFirestoreCollectionsFactory<T> = (context: FirestoreContext) => T;
+
+export interface ProvideAppFirestoreCollectionsConfig<T> {
+  provide: ClassLikeType<T>;
+  useFactory: ProvideAppFirestoreCollectionsFactory<T>;
+}
+
+/**
+ * Used to configure a Nestjs provider for a FirestoreCollections-type object that is initialized with a FirestoreContext.
+ * 
+ * @param type 
+ * @param useFactory 
+ * @returns 
+ */
+export function provideAppFirestoreCollections<T>({ provide, useFactory }: ProvideAppFirestoreCollectionsConfig<T>): [Provider<T>] {
+  return [{
+    provide,
+    useFactory,
+    inject: [FIRESTORE_CONTEXT_TOKEN]
+  }];
+}
+
+// MARK: app firestore module
+export interface ProvideAppModuleMetadataConfig<T> extends ProvideAppFirestoreCollectionsConfig<T>, Pick<ModuleMetadata, 'imports' | 'exports' | 'providers'> { }
+
+/**
+ * Convenience function used to generate ModuleMetadata for an app's Firestore related modules and an appFirestoreCollection
+ * 
+ * @param provide 
+ * @param useFactory 
+ * @returns 
+ */
+export function appFirestoreModuleMetadata<T>(config: ProvideAppModuleMetadataConfig<T>): ModuleMetadata {
+  return {
+    imports: [FirebaseServerFirestoreContextModule, ...(config.imports ?? [])],
+    exports: [FirebaseServerFirestoreContextModule, config.provide, ...(config.exports ?? [])],
+    providers: [...provideAppFirestoreCollections(config), ...(config.providers ?? [])]
+  };
+}

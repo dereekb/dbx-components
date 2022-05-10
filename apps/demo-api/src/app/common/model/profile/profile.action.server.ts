@@ -1,5 +1,5 @@
 import { FirebaseServerActionsContext } from "@dereekb/firebase-server";
-import { AsyncProfileUpdateAction, ProfileDocument, ProfileFirestoreCollections, profileWithUsername, SetProfileUsernameParams } from "@dereekb/demo-firebase";
+import { AsyncProfileUpdateAction, ProfileDocument, ProfileFirestoreCollections, profileWithUsername, SetProfileUsernameParams, UpdateProfileParams } from "@dereekb/demo-firebase";
 import { Maybe } from "@dereekb/util";
 
 /**
@@ -12,6 +12,7 @@ export interface ProfileServerActionsContext extends FirebaseServerActionsContex
  */
 export abstract class ProfileServerActions {
   abstract initProfileForUid(uid: string): Promise<ProfileDocument>;
+  abstract updateProfile(params: UpdateProfileParams): AsyncProfileUpdateAction<UpdateProfileParams>;
   abstract setProfileUsername(params: SetProfileUsernameParams): AsyncProfileUpdateAction<SetProfileUsernameParams>;
 }
 
@@ -21,6 +22,7 @@ export abstract class ProfileServerActions {
 export function profileServerActions(context: ProfileServerActionsContext): ProfileServerActions {
   return {
     initProfileForUid: initProfileForUidFactory(context),
+    updateProfile: updateProfileFactory(context),
     setProfileUsername: setProfileUsernameFactory(context)
   };
 }
@@ -84,7 +86,7 @@ export function setProfileUsernameFactory({ firebaseServerActionTransformFunctio
           const profilePrivateDataDocument = profilePrivateDataCollectionFactory(document).loadDocumentForTransaction(transaction);
 
           // update the username
-          await documentInTransaction.accessor.update({ username });
+          await documentInTransaction.accessor.set({ username }, { merge: true });
 
           // update the data on the accessor
           const profilePrivateData = profilePrivateDataDocument;
@@ -95,6 +97,24 @@ export function setProfileUsernameFactory({ firebaseServerActionTransformFunctio
         } else {
           throw new Error('This username is already taken.');
         }
+      });
+
+      return document;
+    };
+  });
+}
+
+
+export function updateProfileFactory({ firebaseServerActionTransformFunctionFactory, profileFirestoreCollection }: ProfileServerActionsContext) {
+  return firebaseServerActionTransformFunctionFactory(UpdateProfileParams, async (params) => {
+    const { bio } = params;
+
+    return async (document: ProfileDocument) => {
+      const documentRef = document.documentRef;
+
+      await profileFirestoreCollection.firestoreContext.runTransaction(async (transaction) => {
+        const profile = profileFirestoreCollection.documentAccessorForTransaction(transaction).loadDocument(documentRef);
+        profile.accessor.set({ bio }, { merge: true })
       });
 
       return document;

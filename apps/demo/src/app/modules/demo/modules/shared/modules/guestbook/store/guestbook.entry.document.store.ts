@@ -2,7 +2,7 @@ import { first, Observable, shareReplay, from, switchMap } from 'rxjs';
 import { Optional, Injectable } from "@angular/core";
 import { LoadingState, loadingStateFromObs } from '@dereekb/rxjs';
 import { AbstractDbxFirebaseDocumentWithParentStore } from "@dereekb/dbx-firebase";
-import { DemoFirestoreCollections, Guestbook, GuestbookDocument, GuestbookEntry, GuestbookEntryDocument, guestbookEntryUpdateKey, GuestbookFunctions, UpdateGuestbookEntryParams } from "@dereekb/demo-firebase";
+import { DemoFirestoreCollections, Guestbook, GuestbookDocument, GuestbookEntry, GuestbookEntryDocument, updateGuestbookEntryKey, GuestbookFunctions, UpdateGuestbookEntryParams } from "@dereekb/demo-firebase";
 import { GuestbookDocumentStore } from "./guestbook.document.store";
 
 @Injectable()
@@ -16,11 +16,11 @@ export class GuestbookEntryDocumentStore extends AbstractDbxFirebaseDocumentWith
     }
   }
 
-  updateEntry(params: Omit<UpdateGuestbookEntryParams, 'guestbook'>): Observable<LoadingState<GuestbookEntry>> {
+  updateEntry(params: Omit<UpdateGuestbookEntryParams, 'guestbook'>): Observable<LoadingState<void>> {
     return this.parent$.pipe(
       first(),
       switchMap((parent) =>
-        loadingStateFromObs(from(this.guestbookFunctions[guestbookEntryUpdateKey]({
+        loadingStateFromObs(from(this.guestbookFunctions[updateGuestbookEntryKey]({
           ...params,
           guestbook: parent.id
         })))

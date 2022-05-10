@@ -3,6 +3,7 @@ export * from './assertion';
 export * from './contact';
 export * from './error';
 export * from './filter';
+export * from './function';
 export * from './getter';
 export * from './iterable';
 export * from './map';

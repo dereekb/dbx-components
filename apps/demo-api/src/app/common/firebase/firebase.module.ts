@@ -1,8 +1,8 @@
 import { Module } from "@nestjs/common";
-import { AppFirestoreModule } from './firestore.module';
-import { AppActionModule } from './action.module';
+import { DemoApiFirestoreModule } from './firestore.module';
+import { DemoApiActionModule } from './action.module';
 
 @Module({
-  imports: [AppFirestoreModule, AppActionModule]
+  imports: [DemoApiFirestoreModule, DemoApiActionModule]
 })
 export class DemoApiFirebaseModule { }

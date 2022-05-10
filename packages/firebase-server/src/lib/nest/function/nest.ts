@@ -2,6 +2,7 @@ import { PromiseOrValue, Getter } from '@dereekb/util';
 import { INestApplicationContext } from '@nestjs/common';
 import * as functions from 'firebase-functions';
 import { EventContext, HttpsFunction, Runnable } from 'firebase-functions';
+import { RunnableHttpFunction } from '../../function/type';
 
 // MARK: Nest
 /**
@@ -16,6 +17,8 @@ export type NestApplicationPromiseGetter = Getter<Promise<INestApplicationContex
  */
 export type NestApplicationFunctionFactory<F> = (nestAppPromiseGetter: NestApplicationPromiseGetter) => F;
 
+export type NestApplicationRunnableHttpFunctionFactory<I> = NestApplicationFunctionFactory<RunnableHttpFunction<I>>;
+
 /**
  * Runnable function that is passed an INestApplicationContext in addition to the usual data/context provided by firebase.
  */
@@ -24,7 +27,7 @@ export type OnCallWithNestApplication<I = any, O = any> = (nest: INestApplicatio
 /**
  * Factory function for generating a NestApplicationFunctionFactory for a HttpsFunctions/Runnable firebase function.
  */
-export type OnCallWithNestApplicationFactory = <I, O>(fn: OnCallWithNestApplication<I, O>) => NestApplicationFunctionFactory<HttpsFunction & Runnable<I>>;
+export type OnCallWithNestApplicationFactory = <I, O>(fn: OnCallWithNestApplication<I, O>) => NestApplicationRunnableHttpFunctionFactory<I>;
 
 /**
  * Creates a factory for generating OnCallWithNestApplication functions.
@@ -46,7 +49,7 @@ export type OnCallWithNestContext<C, I = any, O = any> = (nestContext: C, data: 
 /**
  * Factory function for generating HttpsFunctions/Runnable firebase function that returns the value from the input OnCallWithNestContext function.
  */
-export type OnCallWithNestContextFactory<C> = <I, O>(fn: OnCallWithNestContext<C, I, O>) => NestApplicationFunctionFactory<HttpsFunction & Runnable<I>>;
+export type OnCallWithNestContextFactory<C> = <I, O>(fn: OnCallWithNestContext<C, I, O>) => NestApplicationRunnableHttpFunctionFactory<I>;
 
 /**
  * Getter for an INestApplicationContext promise. Nest should be initialized when the promise resolves.

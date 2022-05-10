@@ -1,10 +1,16 @@
-import { JestBuildTestsWithContextFunction, JestTestContextFactory, JestTestContextFixture } from "@dereekb/util";
+import { Getter, JestBuildTestsWithContextFunction, JestTestContextFactory, JestTestContextFixture, useJestContextFixture } from "@dereekb/util";
 import { firebaseAdminNestContextWithFixture, FirebaseAdminNestTestConfig, FirebaseAdminNestTestContext, FirebaseAdminNestTestContextFixture, FirebaseAdminNestTestContextInstance } from "./firebase.admin.nest";
 import { FirebaseAdminFunctionTestContextInstance, firebaseAdminFunctionTestContextFactory } from "./firebase.admin.function";
-import { WrapCloudFunction } from './firebase.admin';
+import { FirebaseAdminCloudFunctionWrapper, WrapCloudFunction, wrapCloudFunctionForTests, WrappedCloudFunction } from './firebase.admin';
+import { NestApplicationRunnableHttpFunctionFactory } from "../../lib/nest/function/nest";
+
+// MARK: Utility
+export function wrapCloudFunctionForNestTestsGetter<I>(wrapper: FirebaseAdminFunctionNestTestContext, fn: NestApplicationRunnableHttpFunctionFactory<I>): Getter<WrappedCloudFunction<I>> {
+  return wrapCloudFunctionForTests<I>(wrapper, () => fn(wrapper.nestAppPromiseGetter));
+}
 
 // MARK: FirebaseAdminFunction
-export interface FirebaseAdminFunctionNestTestContext extends FirebaseAdminNestTestContext {
+export interface FirebaseAdminFunctionNestTestContext extends FirebaseAdminNestTestContext, FirebaseAdminCloudFunctionWrapper {
   get wrapCloudFunction(): WrapCloudFunction;
 }
 
@@ -17,6 +23,14 @@ export class FirebaseAdminFunctionNestTestContextFixture<
   // MARK: FirebaseAdminTestContext (Forwarded)
   get wrapCloudFunction(): WrapCloudFunction {
     return this.parent.instance.wrapCloudFunction;
+  }
+
+  wrapCloudFunctionForNestTests<I>(fn: NestApplicationRunnableHttpFunctionFactory<I>): WrappedCloudFunction<I> {
+    return this.wrapCloudFunctionForNestTestsGetter(fn)();
+  }
+
+  wrapCloudFunctionForNestTestsGetter<I>(fn: NestApplicationRunnableHttpFunctionFactory<I>): Getter<WrappedCloudFunction<I>> {
+    return wrapCloudFunctionForNestTestsGetter(this, fn);
   }
 
 }

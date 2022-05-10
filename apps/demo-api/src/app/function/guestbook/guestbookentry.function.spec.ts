@@ -1,19 +1,12 @@
-import { guestbookEntryUpdateEntry } from './guestbookentry.update';
+import { updateGuestbookEntry } from './guestbookentry.update';
 import { GuestbookEntry, UpdateGuestbookEntryParams } from '@dereekb/demo-firebase';
 import { demoGuestbookEntryContext, DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserContext, demoGuestbookContext } from '../../../test/fixture';
-import { WrappedCloudFunction } from '@dereekb/firebase-server';
 import { isDate, isValid } from 'date-fns';
+import { describeCloudFunctionTest } from '@dereekb/firebase-server';
 
 demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
 
-  describe('guestbookEntryUpdateEntry', () => {
-
-    let guestbookEntryUpdateEntryCloudFn: WrappedCloudFunction<UpdateGuestbookEntryParams>;
-
-    beforeEach(() => {
-      const guestbookEntryUpdateEntryFn = guestbookEntryUpdateEntry(f.nestAppPromiseGetter);
-      guestbookEntryUpdateEntryCloudFn = f.wrapCloudFunction(guestbookEntryUpdateEntryFn);
-    });
+  describeCloudFunctionTest('updateGuestbookEntry', { f, fn: updateGuestbookEntry }, (updateGuestbookEntryCloudFn) => {
 
     demoAuthorizedUserContext(f, (u) => {
 
@@ -39,7 +32,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
               signed
             };
 
-            await u.callCloudFunction(guestbookEntryUpdateEntryCloudFn, params);
+            await u.callCloudFunction(updateGuestbookEntryCloudFn, params);
 
             exists = await userGuestbookEntry.accessor.exists();
             expect(exists).toBe(true);
@@ -77,7 +70,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
                   published: true
                 };
 
-                await u.callCloudFunction(guestbookEntryUpdateEntryCloudFn, params);
+                await u.callCloudFunction(updateGuestbookEntryCloudFn, params);
 
                 exists = await userGuestbookEntry.accessor.exists();
                 expect(exists).toBe(true);

@@ -12,6 +12,10 @@ export interface Profile extends UserRelatedById {
    */
   username: string;
   /**
+   * Profile biography
+   */
+  bio?: string;
+  /**
    * Last date the profile was updated at.
    */
   updatedAt: Date;
@@ -26,6 +30,7 @@ export const profileCollectionPath = 'profile';
 export const profileConverter = makeSnapshotConverterFunctions<Profile>({
   fields: {
     username: firestoreString({}),
+    bio: firestoreString({}),
     updatedAt: firestoreDate({ saveDefaultAsNow: true })
   }
 });
