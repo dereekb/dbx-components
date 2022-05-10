@@ -1,9 +1,22 @@
+import { Maybe } from "../value/maybe";
 import { Getter } from "./getter";
 
 /**
  * Getter that returns a cached value.
  */
-export type CachedGetter<T> = Getter<T>;
+export type CachedGetter<T> = Getter<T> & {
+  /**
+   * Sets the value in the cache.
+   * 
+   * @param value 
+   */
+  set(value: T): void;
+
+  /**
+   * Resets/clears the cache.
+   */
+  reset(): void;
+};
 
 /**
  * Creates a CachedGetter from the input Getter.
@@ -14,9 +27,9 @@ export type CachedGetter<T> = Getter<T>;
  * @returns 
  */
 export function cachedGetter<T>(getter: Getter<T>): CachedGetter<T> {
-  let loaded: { value: T };
+  let loaded: Maybe<{ value: T }>;
 
-  return () => {
+  const result = (() => {
     if (!loaded) {
       loaded = {
         value: getter()
@@ -24,5 +37,9 @@ export function cachedGetter<T>(getter: Getter<T>): CachedGetter<T> {
     }
 
     return loaded.value;
-  };
+  }) as CachedGetter<T>;
+
+  result.set = (value: T) => loaded = { value };
+  result.reset = () => loaded = undefined;
+  return result;
 }
