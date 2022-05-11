@@ -1,4 +1,4 @@
-import { AUTH_APP_USER_ROLE } from '@dereekb/dbx-core';
+import { AUTH_USER_ROLE } from '@dereekb/util';
 import { Component } from '@angular/core';
 
 @Component({
@@ -7,6 +7,6 @@ import { Component } from '@angular/core';
 export class DocAuthRoleComponent {
 
   readonly noRoles = [];
-  readonly userRole = [AUTH_APP_USER_ROLE];
+  readonly userRole = [AUTH_USER_ROLE];
 
 }

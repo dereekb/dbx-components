@@ -1,5 +1,5 @@
 import * as admin from 'firebase-admin';
-import { FactoryProvider, InjectionToken, Module, ModuleMetadata, Provider } from "@nestjs/common";
+import { InjectionToken, Module, ModuleMetadata, Provider } from "@nestjs/common";
 import { FirestoreContext } from '@dereekb/firebase';
 import { ClassLikeType } from '@dereekb/util';
 import { googleCloudFirestoreContextFactory } from '../firestore/firestore';
@@ -15,14 +15,6 @@ export const FIREBASE_FIRESTORE_TOKEN: InjectionToken = 'FIREBASE_FIRESTORE_TOKE
  * Token to access the root FirestoreContext for a server.
  */
 export const FIREBASE_FIRESTORE_CONTEXT_TOKEN: InjectionToken = 'FIREBASE_FIRESTORE_CONTEXT_TOKEN';
-
-// MARK: Firebase Admin Provider
-export function firebaseServerAppTokenProvider(useFactory: () => admin.app.App): FactoryProvider<any> {
-  return {
-    provide: FIREBASE_APP_TOKEN,
-    useFactory
-  };
-}
 
 /**
  * Nest provider module for Firebase that provides a firestore, etc. from the firestore token.

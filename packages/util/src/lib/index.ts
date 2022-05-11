@@ -1,5 +1,6 @@
 export * from './array';
 export * from './assertion';
+export * from './auth';
 export * from './contact';
 export * from './error';
 export * from './filter';

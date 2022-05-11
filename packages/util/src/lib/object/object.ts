@@ -35,13 +35,23 @@ export interface FilterFromPOJO<T extends object> {
 }
 
 /**
+ * Returns a copy of the input object with all null and undefined values filtered from it.
+ * 
+ * @param obj 
+ * @returns 
+ */
+export function filterNullAndUndefinedValues<T extends object = object>(obj: T) {
+  return filterUndefinedValues(obj, true);
+}
+
+/**
  * Returns a copy of the input object with all undefined values filtered from it.
  * 
  * @param obj 
  * @returns 
  */
-export function filterUndefinedValues<T extends object = object>(obj: T) {
-  return filterFromPOJO(obj, { copy: true });
+export function filterUndefinedValues<T extends object = object>(obj: T, filterNull = false) {
+  return filterFromPOJO(obj, { copy: true, filter: { valueFilter: (filterNull) ? KeyValueTypleValueFilter.NULL : KeyValueTypleValueFilter.UNDEFINED } });
 }
 
 /**

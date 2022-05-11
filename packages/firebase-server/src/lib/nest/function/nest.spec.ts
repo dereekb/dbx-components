@@ -2,7 +2,7 @@ import { UserRecord } from 'firebase-admin/lib/auth/user-record';
 import { Injectable, Module } from '@nestjs/common';
 import { initFirebaseServerAdminTestEnvironment } from '../../../test/firebase/firebase.admin.test.server';
 import { firebaseAdminFunctionNestContextFactory } from '../../../test/firebase/firebase.admin.nest.function';
-import { NestApplicationFunctionFactory, OnCallWithNestApplication, onCallWithNestApplicationFactory, onEventWithNestApplicationFactory, NestApplicationEventHandler, NestApplicationEventHandlerBuilder, OnEventWithNestApplicationBuilder } from './nest';
+import { NestApplicationFunctionFactory, OnCallWithNestApplication, onCallWithNestApplicationFactory, onEventWithNestApplicationFactory, NestApplicationEventHandler, OnEventWithNestApplicationBuilder } from './nest';
 import * as functions from 'firebase-functions';
 
 @Injectable()

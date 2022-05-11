@@ -1,7 +1,6 @@
 import { map, Observable } from 'rxjs';
-import { SetIncludesMode, ArrayOrValue, Maybe, setIncludesFunction } from '@dereekb/util';
+import { AuthRole, SetIncludesMode, ArrayOrValue, Maybe, setIncludesFunction } from '@dereekb/util';
 import { TransitionService, TransitionHookFn, Transition, HookMatchCriteria } from '@uirouter/core';
-import { AuthRole } from '../../../auth.role';
 import { DbxAuthService } from '../../../service/auth.service';
 import { AuthTransitionDecision, AuthTransitionHookOptions, AuthTransitionStateData, makeAuthTransitionHook } from './hook';
 

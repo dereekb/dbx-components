@@ -1,5 +1,5 @@
 import { createAction, props } from '@ngrx/store';
-import { AuthRole } from '../../auth.role';
+import { AuthRole } from '@dereekb/util';
 import { AuthUserIdentifier, AuthUserState } from '../../auth.user';
 
 /**

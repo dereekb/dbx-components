@@ -1,5 +1,4 @@
-import { AuthRole, AuthRoleSet } from '../auth.role';
-import { Maybe } from '@dereekb/util';
+import { AuthRole, AuthRoleSet, Maybe } from '@dereekb/util';
 import { onFalseToTrue, onTrueToFalse, setContainsAllValuesFrom } from '@dereekb/rxjs';
 import { map, Observable, OperatorFunction } from 'rxjs';
 

@@ -1,4 +1,5 @@
 import { AbstractFirebaseServerAuthContext, AbstractFirebaseServerAuthService, AbstractFirebaseServerAuthUserContext } from "@dereekb/firebase-server";
+import { AuthClaims, AuthRoleSet } from "@dereekb/util";
 import { CallableContextWithAuthData } from "packages/firebase-server/src/lib/function/context";
 
 export class DemoApiFirebaseServerAuthUserContext extends AbstractFirebaseServerAuthUserContext<DemoApiAuthService> {
@@ -19,8 +20,22 @@ export class DemoApiAuthService extends AbstractFirebaseServerAuthService<DemoAp
     return new DemoApiFirebaseServerAuthUserContext(this, uid);
   }
 
-  isAdmin(claims: object): boolean {
-    throw new Error("Method not implemented.");
+  readRoles(claims: AuthClaims): AuthRoleSet {
+    const roles = new Set<string>();
+
+    if (claims.a) {
+
+    }
+
+    return roles;
+  }
+
+  claimsForRoles(roles: AuthRoleSet): AuthClaims {
+    const claims: AuthClaims = {};
+
+
+
+    return claims;
   }
 
 }

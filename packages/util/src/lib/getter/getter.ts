@@ -27,7 +27,12 @@ export type GetterOrValue<T> = T | Getter<T>;
 /**
  * Either a GetterWithInput, or a Getter.
  */
-export type GetterOrValueWithInput<T, A> = Getter<T> | FactoryWithInput<T, A>;
+export type GetterOrFactoryWithInput<T, A> = Getter<T> | FactoryWithInput<T, A>;
+
+/**
+ * Either a GetterOrValue, or a FactoryWithInput.
+ */
+export type GetterOrValueWithInput<T extends string | number | object | symbol, A> = GetterOrValue<T> | FactoryWithInput<T, A>;
 
 export type StringOrGetter = GetterOrValue<string>;
 
@@ -50,8 +55,9 @@ export function isGetter<T = any>(value: any): value is Getter<T> {
 export function getValueFromGetter<T>(input: GetterOrValue<T>): T;
 export function getValueFromGetter<T>(this: any, input: GetterOrValue<T>): T;
 export function getValueFromGetter<T>(this: any, input: GetterOrValue<T>, inputArgs?: any): T;
-export function getValueFromGetter<T, A>(this: any, input: GetterOrValueWithInput<T, A>, args?: A): T;
-export function getValueFromGetter<T, A>(this: any, input: GetterOrValueWithInput<T, A>, args?: A): T {
+export function getValueFromGetter<T, A>(this: any, input: GetterOrFactoryWithInput<T, A>, args?: A): T;
+export function getValueFromGetter<T extends string | number | object | symbol, A>(this: any, input: GetterOrValueWithInput<T, A>, args?: A): T;
+export function getValueFromGetter<T, A>(this: any, input: any, args?: A): T {
   if (typeof input === 'function') {
     return input(args);
   } else {

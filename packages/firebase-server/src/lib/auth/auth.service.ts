@@ -1,10 +1,8 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
 import { FirebaseAuthUserId } from '@dereekb/firebase';
-import { cachedGetter, Maybe } from '@dereekb/util';
+import { filterUndefinedValues, AUTH_ADMIN_ROLE, AuthClaims, AuthRoleSet, cachedGetter, filterNullAndUndefinedValues, Maybe } from '@dereekb/util';
 import { assertIsContextWithAuthData, CallableContextWithAuthData } from '../function/context';
-import { FirebaseServerAuthCustomClaims } from './auth';
-import { filterUndefinedValues } from '@dereekb/util';
 
 export interface FirebaseServerAuthUserIdentifierContext {
 
@@ -29,14 +27,14 @@ export interface FirebaseServerAuthUserContext extends FirebaseServerAuthUserIde
    * 
    * @param claims 
    */
-  updateClaims(claims: FirebaseServerAuthCustomClaims): Promise<void>;
+  updateClaims(claims: AuthClaims): Promise<void>;
 
   /**
    * Sets the claims for a user. All previous claims are cleared.
    * 
    * @param claims 
    */
-  setClaims(claims: FirebaseServerAuthCustomClaims): Promise<void>;
+  setClaims(claims: AuthClaims): Promise<void>;
 
   /**
    * Clears all claims for the user.
@@ -57,20 +55,22 @@ export abstract class AbstractFirebaseServerAuthUserContext<S extends FirebaseSe
     return this._loadRecord();
   }
 
-  loadClaims(): Promise<Maybe<FirebaseServerAuthCustomClaims>> {
+  loadClaims(): Promise<Maybe<AuthClaims>> {
     return this.loadRecord().then(x => x.customClaims);
   }
 
-  async updateClaims(claims: FirebaseServerAuthCustomClaims): Promise<void> {
+  async updateClaims(claims: AuthClaims): Promise<void> {
     const currentClaims = await this.loadClaims();
 
-    let newClaims: FirebaseServerAuthCustomClaims;
+    let newClaims: AuthClaims;
 
     if (currentClaims) {
       newClaims = {
         ...claims,
         ...filterUndefinedValues(currentClaims)
       };
+
+      newClaims = filterNullAndUndefinedValues(newClaims);
     } else {
       newClaims = claims;
     }
@@ -78,7 +78,7 @@ export abstract class AbstractFirebaseServerAuthUserContext<S extends FirebaseSe
     return this.setClaims(newClaims);
   }
 
-  setClaims(claims: FirebaseServerAuthCustomClaims): Promise<void> {
+  setClaims(claims: AuthClaims): Promise<void> {
     return this.service.auth.setCustomUserClaims(this.uid, claims);
   }
 
@@ -106,11 +106,17 @@ export interface FirebaseServerAuthContext<U extends FirebaseServerAuthUserConte
    */
   readonly isAdmin: boolean;
 
+  /**
+   * The auth roles provided by the token.
+   */
+  readonly authRoles: AuthRoleSet;
+
 }
 
 export abstract class AbstractFirebaseServerAuthContext<C extends FirebaseServerAuthContext, U extends FirebaseServerAuthUserContext = FirebaseServerAuthUserContext, S extends FirebaseServerAuthService<U, C> = FirebaseServerAuthService<U, C>> implements FirebaseServerAuthContext {
 
   private readonly _isAdmin = cachedGetter(() => this.service.isAdmin(this.context.auth.token));
+  private readonly _authRoles = cachedGetter(() => this.service.readRoles(this.context.auth.token));
   private readonly _userContext = cachedGetter(() => this.service.userContext(this.context.auth.uid));
 
   constructor(readonly service: S, readonly context: CallableContextWithAuthData) { }
@@ -121,6 +127,10 @@ export abstract class AbstractFirebaseServerAuthContext<C extends FirebaseServer
 
   get isAdmin(): boolean {
     return this._isAdmin();
+  }
+
+  get authRoles(): AuthRoleSet {
+    return this._authRoles();
   }
 
   get token(): admin.auth.DecodedIdToken {
@@ -163,7 +173,23 @@ export abstract class FirebaseServerAuthService<U extends FirebaseServerAuthUser
   /**
    * Whether or not the input claims indicate admin priviledges.
    */
-  abstract isAdmin(claims: FirebaseServerAuthCustomClaims): boolean;
+  abstract isAdmin(claims: AuthClaims): boolean;
+
+  /**
+   * Reads the AuthRoleSet from the input claims.
+   * 
+   * @param claims 
+   */
+  abstract readRoles(claims: AuthClaims): AuthRoleSet;
+
+  /**
+   * Creates the claims that reflect the input roles.
+   * 
+   * The resultant claims value should include ALL claim values, with those that are unset to be null.
+   * 
+   * @param roles 
+   */
+  abstract claimsForRoles(roles: AuthRoleSet): AuthClaims;
 
 }
 
@@ -184,6 +210,12 @@ export abstract class AbstractFirebaseServerAuthService<U extends FirebaseServer
 
   abstract userContext(uid: FirebaseAuthUserId): U;
 
-  abstract isAdmin(claims: FirebaseServerAuthCustomClaims): boolean;
+  isAdmin(claims: AuthClaims): boolean {
+    return this.readRoles(claims).has(AUTH_ADMIN_ROLE);
+  }
+
+  abstract readRoles(claims: AuthClaims): AuthRoleSet;
+
+  abstract claimsForRoles(roles: AuthRoleSet): AuthClaims;
 
 }

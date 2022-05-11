@@ -1,5 +1,4 @@
-import { ArrayOrValue } from '@dereekb/util';
-import { AuthRole } from './auth.role';
+import { AuthRole, ArrayOrValue } from '@dereekb/util';
 import { BehaviorSubject } from 'rxjs';
 import { Directive, Input, TemplateRef, ViewContainerRef, OnDestroy } from '@angular/core';
 import { authRolesSetContainsAllRolesFrom, DbxAuthService } from './service';
