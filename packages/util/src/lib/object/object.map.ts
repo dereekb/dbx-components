@@ -1,8 +1,15 @@
 /**
- * An object with values of a specific type keyed to string values.
+ * An object with values of a specific type keyed by either string or number or symbols.
  */
 export type ObjectMap<T> = {
   [key: string | number | symbol]: T;
+}
+
+/**
+ * An object with values of a specific type keyed to string values.
+ */
+export type StringObjectMap<T> = {
+  [key: string]: T;
 }
 
 export type MappedObjectMap<M extends ObjectMap<any>, O> = {

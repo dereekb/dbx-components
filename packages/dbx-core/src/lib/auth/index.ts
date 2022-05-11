@@ -2,7 +2,6 @@ export * from './router';
 export * from './service';
 export * from './state'
 export * from './auth.user';
-export * from './auth.role';
 export * from './auth.module';
 export * from './auth.role.any.directive';
 export * from './auth.role.has.directive';

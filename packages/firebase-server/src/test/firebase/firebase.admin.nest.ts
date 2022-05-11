@@ -1,8 +1,9 @@
-import { AbstractChildJestTestContextFixture, ArrayOrValue, asArray, ClassType, Getter, JestBuildTestsWithContextFunction, JestTestContextFactory, JestTestContextFixture, useJestContextFixture } from "@dereekb/util";
+import { AbstractChildJestTestContextFixture, ArrayOrValue, asArray, asGetter, ClassType, Getter, JestBuildTestsWithContextFunction, JestTestContextFactory, JestTestContextFixture, useJestContextFixture } from "@dereekb/util";
 import { AbstractFirebaseAdminTestContextInstanceChild, FirebaseAdminCloudFunctionWrapper, firebaseAdminTestContextFactory, FirebaseAdminTestContextInstance, wrapCloudFunctionForTests, WrapCloudFunctionInput, WrappedCloudFunction } from './firebase.admin';
 import { Abstract, DynamicModule, INestApplicationContext, Provider, Type } from '@nestjs/common/interfaces';
 import { NestAppPromiseGetter } from "../../lib/nest/app";
 import { Test, TestingModule } from '@nestjs/testing';
+import { firebaseServerAppTokenProvider } from "../../lib/firebase/firebase.nest";
 
 // MARK: FirebaseAdminNestTestBuilder
 export interface FirebaseAdminNestTestContext {
@@ -69,6 +70,12 @@ export interface FirebaseAdminNestTestConfig<
    */
   nestModules: ArrayOrValue<ClassType>;
   /**
+   * Whether or not to inject the firebase server provider (firebaseServerAppTokenProvider()).
+   * 
+   * This makes FIREBASE_APP_TOKEN available globally and provides the app configured for this test.
+   */
+  injectFirebaseServerAppTokenProvider?: boolean;
+  /**
    * Optional providers to pass to the TestingModule initialization.
    */
   makeProviders?: (instance: PI) => Provider<any>[];
@@ -111,6 +118,7 @@ export function firebaseAdminNestContextWithFixture<
   const {
     nestModules,
     makeProviders = () => [],
+    injectFirebaseServerAppTokenProvider,
     makeFixture = (parent: PF) => new FirebaseAdminNestTestContextFixture<PI, PF, I>(parent) as C,
     makeInstance = (instance, nest) => new FirebaseAdminNestTestContextInstance<PI>(instance, nest) as I,
     initInstance
@@ -127,6 +135,11 @@ export function firebaseAdminNestContextWithFixture<
     initInstance: async () => {
       const imports = asArray(nestModules);
       const providers = makeProviders(f.instance) ?? [];
+
+      // Inject the firebaseServerAppTokenProvider
+      if (injectFirebaseServerAppTokenProvider) {
+        providers.push(firebaseServerAppTokenProvider(asGetter(f.instance.app)));
+      }
 
       const rootModule: DynamicModule = {
         module: FirebaseAdminNestRootModule,

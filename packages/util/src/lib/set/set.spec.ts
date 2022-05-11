@@ -1,4 +1,17 @@
-import { containsAnyValue, containsAnyValueFromSet, setContainsAllValues, setContainsAnyValue } from "./set";
+import { firstValueFromIterable } from "../iterable";
+import { asSet, containsAnyValue, containsAnyValueFromSet, setContainsAllValues, setContainsAnyValue } from "./set";
+
+describe('asSet', () => {
+
+  it('should turn a single string value into a set with that string', () => {
+    const value = 'test';
+    const result = asSet(value);
+
+    expect(result.size).toBe(1);
+    expect(firstValueFromIterable(result)).toBe(value);
+  });
+
+});
 
 describe('containsAnyValue', () => {
 

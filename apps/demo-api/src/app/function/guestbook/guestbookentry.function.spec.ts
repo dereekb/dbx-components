@@ -8,7 +8,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
 
   describeCloudFunctionTest('updateGuestbookEntry', { f, fn: updateGuestbookEntry }, (updateGuestbookEntryCloudFn) => {
 
-    demoAuthorizedUserContext(f, (u) => {
+    demoAuthorizedUserContext({ f }, (u) => {
 
       demoGuestbookContext({ f, active: true }, (g) => {
 

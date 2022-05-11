@@ -38,7 +38,7 @@ export class DemoApiContextFixtureInstance<F extends FirebaseAdminTestContextIns
 
 const _demoApiContextFactory = firebaseAdminNestContextFactory({
   nestModules: TestDemoApiAppModule,
-  makeProviders: (instance) => [firebaseServerAppTokenProvider(asGetter(instance.app))],
+  injectFirebaseServerAppTokenProvider: true,
   makeFixture: (parent) => new DemoApiContextFixture(parent),
   makeInstance: (instance, nest) => new DemoApiContextFixtureInstance<FirebaseAdminTestContextInstance>(instance, nest)
 });
@@ -65,7 +65,7 @@ export class DemoApiFunctionContextFixtureInstance<
 
 const _demoApiFunctionContextFactory = firebaseAdminFunctionNestContextFactory({
   nestModules: TestDemoApiAppModule,
-  makeProviders: (instance) => [firebaseServerAppTokenProvider(asGetter(instance.app))],
+  injectFirebaseServerAppTokenProvider: true,
   makeFixture: (parent) => new DemoApiFunctionContextFixture(parent),
   makeInstance: (instance, nest) => new DemoApiFunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>(instance, nest)
 });
@@ -102,11 +102,11 @@ export class DemoApiAuthorizedUserTestContextInstance<
 
 }
 
-export interface DemoAuthorizedUserContextParams {
+export interface DemoAuthorizedUserContextFactoryConfig {
   demoUserLevel?: 'admin' | 'user';
 }
 
-export const demoAuthorizedUserContextFactory = (params: DemoAuthorizedUserContextParams) => authorizedUserContextFactory<
+export const demoAuthorizedUserContextFactory = (params: DemoAuthorizedUserContextFactoryConfig) => authorizedUserContextFactory<
   DemoApiFunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>,
   DemoApiFunctionContextFixture<FirebaseAdminFunctionTestContextInstance>,
   DemoApiAuthorizedUserTestContextInstance<FirebaseAdminFunctionTestContextInstance>,

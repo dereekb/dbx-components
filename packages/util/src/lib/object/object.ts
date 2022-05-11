@@ -3,6 +3,10 @@ import { hasValueOrNotEmpty, Maybe } from "../value/maybe";
 import { filterMaybeValues } from '../array/array.value';
 import { invertFilter } from "../filter/filter";
 
+export function objectHasNoKeys(obj: object): obj is {} {
+  return (Object.keys(obj).length === 0);
+}
+
 export function objectHasKey<T, K extends keyof T = keyof T>(obj: T, key: K): boolean;
 export function objectHasKey<T>(obj: T, key: string): boolean;
 export function objectHasKey<T>(obj: T, key: string): boolean {

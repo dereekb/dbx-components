@@ -1,7 +1,7 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
 import { FirebaseAuthUserId } from '@dereekb/firebase';
-import { filterUndefinedValues, AUTH_ADMIN_ROLE, AuthClaims, AuthRoleSet, cachedGetter, filterNullAndUndefinedValues, Maybe } from '@dereekb/util';
+import { filterUndefinedValues, AUTH_ADMIN_ROLE, AuthClaims, AuthRoleSet, cachedGetter, filterNullAndUndefinedValues, Maybe, ArrayOrValue, AuthRole, forEachKeyValue, ObjectMap, AuthClaimsUpdate, asSet, KeyValueTypleValueFilter } from '@dereekb/util';
 import { assertIsContextWithAuthData, CallableContextWithAuthData } from '../function/context';
 
 export interface FirebaseServerAuthUserIdentifierContext {
@@ -21,20 +21,39 @@ export interface FirebaseServerAuthUserContext extends FirebaseServerAuthUserIde
   loadRecord(): Promise<admin.auth.UserRecord>;
 
   /**
+   * Loads the roles of the user.
+   */
+  loadRoles(): Promise<AuthRoleSet>;
+
+  /**
+   * Adds the given roles to the user.
+   * 
+   * @param roles 
+   */
+  addRoles(roles: ArrayOrValue<AuthRole>): Promise<void>;
+
+  /**
+   * Removes the given roles from the user.
+   * 
+   * @param roles 
+   */
+  removeRoles(roles: ArrayOrValue<AuthRole>): Promise<void>;
+
+  /**
    * Updates the claims for a user by merging existing claims in with the input.
    * 
    * All null values are cleared from the existing claims. Undefined values are ignored.
    * 
    * @param claims 
    */
-  updateClaims(claims: AuthClaims): Promise<void>;
+  updateClaims(claims: AuthClaimsUpdate): Promise<void>;
 
   /**
    * Sets the claims for a user. All previous claims are cleared.
    * 
    * @param claims 
    */
-  setClaims(claims: AuthClaims): Promise<void>;
+  setClaims(claims: AuthClaimsUpdate): Promise<void>;
 
   /**
    * Clears all claims for the user.
@@ -55,19 +74,48 @@ export abstract class AbstractFirebaseServerAuthUserContext<S extends FirebaseSe
     return this._loadRecord();
   }
 
-  loadClaims(): Promise<Maybe<AuthClaims>> {
-    return this.loadRecord().then(x => x.customClaims);
+  async loadRoles(): Promise<AuthRoleSet> {
+    const claims = await this.loadClaims();
+    return this.service.readRoles(claims);
   }
 
-  async updateClaims(claims: AuthClaims): Promise<void> {
+  async addRoles(roles: ArrayOrValue<AuthRole>): Promise<void> {
+    let claims = this._claimsForRolesChange(roles);
+    return this.updateClaims(claims);
+  }
+
+  async removeRoles(roles: ArrayOrValue<AuthRole>): Promise<void> {
+    const baseClaims = this._claimsForRolesChange(roles);
+    let claims: ObjectMap<null> = {};
+
+    forEachKeyValue(baseClaims, {
+      forEach: ([key]) => {
+        claims[key] = null;
+      },
+      filter: KeyValueTypleValueFilter.NONE // hit all values
+    });
+
+    return this.updateClaims(claims);
+  }
+
+  protected _claimsForRolesChange(roles: ArrayOrValue<AuthRole>) {
+    // filter null/undefined since the claims will contain null values for claims that are not related.
+    return filterNullAndUndefinedValues(this.service.claimsForRoles(asSet(roles)));
+  }
+
+  loadClaims(): Promise<AuthClaims> {
+    return this.loadRecord().then(x => x.customClaims ?? {});
+  }
+
+  async updateClaims(claims: AuthClaimsUpdate): Promise<void> {
     const currentClaims = await this.loadClaims();
 
-    let newClaims: AuthClaims;
+    let newClaims: AuthClaimsUpdate;
 
     if (currentClaims) {
       newClaims = {
-        ...claims,
-        ...filterUndefinedValues(currentClaims)
+        ...currentClaims,
+        ...filterUndefinedValues(claims, false)
       };
 
       newClaims = filterNullAndUndefinedValues(newClaims);
@@ -78,12 +126,14 @@ export abstract class AbstractFirebaseServerAuthUserContext<S extends FirebaseSe
     return this.setClaims(newClaims);
   }
 
-  setClaims(claims: AuthClaims): Promise<void> {
-    return this.service.auth.setCustomUserClaims(this.uid, claims);
+  clearClaims(): Promise<void> {
+    return this.setClaims(null as any);
   }
 
-  clearClaims(): Promise<void> {
-    return this.service.auth.setCustomUserClaims(this.uid, null);
+  setClaims(claims: AuthClaimsUpdate): Promise<void> {
+    return this.service.auth.setCustomUserClaims(this.uid, claims).then(() => {
+      this._loadRecord.reset(); // reset the cache
+    });
   }
 
 }
@@ -107,9 +157,19 @@ export interface FirebaseServerAuthContext<U extends FirebaseServerAuthUserConte
   readonly isAdmin: boolean;
 
   /**
-   * The auth roles provided by the token.
+   * The auth roles provided by the token in this context.
    */
   readonly authRoles: AuthRoleSet;
+
+  /**
+   * The token in the context.
+   */
+  readonly token: admin.auth.DecodedIdToken;
+
+  /**
+   * The claims in the context.
+   */
+  readonly claims: AuthClaims;
 
 }
 
@@ -134,6 +194,10 @@ export abstract class AbstractFirebaseServerAuthContext<C extends FirebaseServer
   }
 
   get token(): admin.auth.DecodedIdToken {
+    return this.context.auth.token;
+  }
+
+  get claims(): AuthClaims {
     return this.context.auth.token;
   }
 

@@ -22,7 +22,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
   describeCloudFunctionTest('profileSetUsername', { f, fn: profileSetUsername }, (profileSetUsernameCloudFn) => {
 
     // with our DemoApiFunctionContextFixture, we can easily create a new user for this test case.
-    demoAuthorizedUserContext(f, (u) => {
+    demoAuthorizedUserContext({ f }, (u) => {
 
       // jest it - test setting the username successfully.
       it('should set the profile username.', async () => {
@@ -44,7 +44,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
       });
 
       // second user
-      demoAuthorizedUserContext(f, (u2) => {
+      demoAuthorizedUserContext({ f }, (u2) => {
 
         it('should fail if the username is already taken.', async () => {
           const fn = f.wrapCloudFunction(profileSetUsername(f.nestAppPromiseGetter));
@@ -74,7 +74,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
   // describe tests for updateProfile
   describeCloudFunctionTest('updateProfile', { f, fn: updateProfile }, (updateProfileCloudFn) => {
 
-    demoAuthorizedUserContext(f, (u) => {
+    demoAuthorizedUserContext({ f }, (u) => {
 
       it(`should update the user's profile.`, async () => {
         const bio = 'test bio';

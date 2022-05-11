@@ -3,6 +3,19 @@ import { flattenArray } from "../array/array";
 import { IterableOrValue, useIterableOrValue } from '../iterable/iterable';
 import { symmetricDifference } from "extra-set";
 
+export function asSet<T>(values: IterableOrValue<T>): Set<T> {
+  let set: Set<T>;
+
+  if (typeof values === 'string') {
+    set = new Set([values]);
+  } else {
+    set = new Set();
+    addToSet(set, values);
+  }
+
+  return set;
+}
+
 export function addToSet<T>(set: Set<T>, values: Maybe<IterableOrValue<T>>) {
   useIterableOrValue(values, (x) => set.add(x));
 }

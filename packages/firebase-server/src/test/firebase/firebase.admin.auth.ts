@@ -111,7 +111,8 @@ export interface AuthorizedUserTestContextParams<
   PI extends FirebaseAdminTestContext = FirebaseAdminTestContext,
   PF extends JestTestContextFixture<PI> = JestTestContextFixture<PI>,
   I extends AuthorizedUserTestContextInstance<PI> = AuthorizedUserTestContextInstance<PI>,
-  F extends AuthorizedUserTestContextFixture<PI, PF, I> = AuthorizedUserTestContextFixture<PI, PF, I>
+  F extends AuthorizedUserTestContextFixture<PI, PF, I> = AuthorizedUserTestContextFixture<PI, PF, I>,
+  C extends AuthorizedUserTestContextFactoryParams<PI, PF> = AuthorizedUserTestContextFactoryParams<PI, PF>
   > {
 
   f: PF;
@@ -124,7 +125,7 @@ export interface AuthorizedUserTestContextParams<
   /**
    * Additional user details to attach to the create request.
    */
-  makeUserDetails?: (uid: string) => AuthorizedUserTestContextDetailsTemplate;
+  makeUserDetails?: (uid: FirebaseAuthUserId, params: C) => AuthorizedUserTestContextDetailsTemplate;
 
   /**
    * Creates the custom fixture. If not defined, a AuthorizedUserTestContextFixture is created.
@@ -134,12 +135,12 @@ export interface AuthorizedUserTestContextParams<
   /**
    * Custom make instance function. If not defined, a AuthorizedUserTestContextInstance will be generated.
    */
-  makeInstance?: (uid: FirebaseAuthUserId, testInstance: PI, userRecord: UserRecord) => PromiseOrValue<I>;
+  makeInstance?: (uid: FirebaseAuthUserId, testInstance: PI, params: C, userRecord: UserRecord) => PromiseOrValue<I>;
 
   /**
    * Optional function to initialize the user for this instance.
    */
-  initUser?: (instance: I) => Promise<void>;
+  initUser?: (instance: I, params: C) => Promise<void>;
 
 }
 
@@ -152,15 +153,26 @@ export function authorizedUserContext<
   I extends AuthorizedUserTestContextInstance<PI> = AuthorizedUserTestContextInstance<PI>,
   F extends AuthorizedUserTestContextFixture<PI, PF, I> = AuthorizedUserTestContextFixture<PI, PF, I>
 >(config: AuthorizedUserTestContextParams<PI, PF, I, F>, buildTests: (u: F) => void) {
-  authorizedUserContextFactory(config)(config.f, buildTests);
+  authorizedUserContextFactory(config)({ f: config.f }, buildTests);
 };
 
-export type AuthorizedUserTestContextFactoryParams<
+export type AuthorizedUserTestContextFactoryConfig<
   PI extends FirebaseAdminTestContext = FirebaseAdminTestContext,
   PF extends JestTestContextFixture<PI> = JestTestContextFixture<PI>,
   I extends AuthorizedUserTestContextInstance<PI> = AuthorizedUserTestContextInstance<PI>,
   F extends AuthorizedUserTestContextFixture<PI, PF, I> = AuthorizedUserTestContextFixture<PI, PF, I>
   > = Omit<AuthorizedUserTestContextParams<PI, PF, I, F>, 'f'>;
+
+export interface AuthorizedUserTestContextFactoryParams<
+  PI extends FirebaseAdminTestContext = FirebaseAdminTestContext,
+  PF extends JestTestContextFixture<PI> = JestTestContextFixture<PI>
+  > {
+
+  f: PF;
+
+  user?: CreateRequest;
+
+}
 
 /**
  * Creates a new Jest Context that has a random user for authorization for use in firebase server tests.
@@ -169,8 +181,9 @@ export function authorizedUserContextFactory<
   PI extends FirebaseAdminTestContext = FirebaseAdminTestContext,
   PF extends JestTestContextFixture<PI> = JestTestContextFixture<PI>,
   I extends AuthorizedUserTestContextInstance<PI> = AuthorizedUserTestContextInstance<PI>,
-  F extends AuthorizedUserTestContextFixture<PI, PF, I> = AuthorizedUserTestContextFixture<PI, PF, I>
->(config: AuthorizedUserTestContextFactoryParams<PI, PF, I, F>): (f: PF, buildTests: (u: F) => void) => void {
+  F extends AuthorizedUserTestContextFixture<PI, PF, I> = AuthorizedUserTestContextFixture<PI, PF, I>,
+  C extends AuthorizedUserTestContextFactoryParams<PI, PF> = AuthorizedUserTestContextFactoryParams<PI, PF>
+>(config: AuthorizedUserTestContextFactoryConfig<PI, PF, I, F>): (params: C, buildTests: (u: F) => void) => void {
   const {
     uid: uidGetter,
     makeInstance = (uid, testInstance) => new AuthorizedUserTestContextInstance(uid, testInstance) as I,
@@ -180,29 +193,32 @@ export function authorizedUserContextFactory<
   } = config;
   const makeUid = (uidGetter) ? asGetter(uidGetter) : testUidFactory;
 
-  return (f: PF, buildTests: (u: F) => void) => {
+  return (params: C, buildTests: (u: F) => void) => {
+    const { f, user: inputUser } = params;
+
     return useJestContextFixture<F, I>({
       fixture: makeFixture(f) as F,
       buildTests,
       initInstance: async () => {
-        const uid = makeUid();
-        const { details, claims } = makeUserDetails(uid);
+        const uid = inputUser?.uid || makeUid();
+        const { details, claims } = makeUserDetails(uid, params);
         const auth = f.instance.auth;
 
         const userRecord = await auth.createUser({
           uid,
           displayName: 'Test Person',
-          ...details
+          ...details,
+          ...inputUser
         });
 
         if (claims) {
           await auth.setCustomUserClaims(uid, claims);
         }
 
-        const instance: I = await makeInstance(uid, f.instance, userRecord);
+        const instance: I = await makeInstance(uid, f.instance, params, userRecord);
 
         if (initUser) {
-          await initUser(instance);
+          await initUser(instance, params);
         }
 
         return instance;

@@ -1,9 +1,9 @@
 import { filterMaybe, isNot } from '@dereekb/rxjs';
 import { Injectable, Optional } from "@angular/core";
-import { AuthUserState, AuthRoleSet, DbxAuthService, loggedOutObsFromIsLoggedIn, loggedInObsFromIsLoggedIn, AuthUserIdentifier, authUserIdentifier } from "@dereekb/dbx-core";
+import { AuthUserState, DbxAuthService, loggedOutObsFromIsLoggedIn, loggedInObsFromIsLoggedIn, AuthUserIdentifier, authUserIdentifier } from "@dereekb/dbx-core";
 import { Auth, authState, User, IdTokenResult, ParsedToken, GoogleAuthProvider, signInWithPopup, AuthProvider, PopupRedirectResolver, signInAnonymously, signInWithEmailAndPassword, UserCredential, FacebookAuthProvider, GithubAuthProvider, TwitterAuthProvider, createUserWithEmailAndPassword } from '@angular/fire/auth';
 import { Observable, timeout, startWith, distinctUntilChanged, shareReplay, map, switchMap } from "rxjs";
-import { Maybe } from "@dereekb/util";
+import { AuthRoleSet, Maybe } from "@dereekb/util";
 import { authUserStateFromFirebaseAuthService } from './firebase.auth.rxjs';
 import { AuthUserInfo, authUserInfoFromAuthUser } from '../auth';
 import { sendPasswordResetEmail } from 'firebase/auth';

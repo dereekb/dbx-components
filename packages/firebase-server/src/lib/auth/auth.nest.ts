@@ -27,9 +27,9 @@ export type ProvideFirestoreServerAuthServiceSimple<T extends FirebaseServerAuth
   useFactory: (auth: admin.auth.Auth) => T;
 };
 
-export type ProvideFirestoreServerAuthService<T extends FirebaseServerAuthService> = FactoryProvider<T> | ProvideFirestoreServerAuthServiceSimple<T>;
+export type ProvideFirebaseServerAuthService<T extends FirebaseServerAuthService> = FactoryProvider<T> | ProvideFirestoreServerAuthServiceSimple<T>;
 
-export function provideFirestoreServerAuthService<T extends FirebaseServerAuthService>(provider: ProvideFirestoreServerAuthService<T>): [ProvideFirestoreServerAuthService<T>, Provider<T>] {
+export function provideFirebaseServerAuthService<T extends FirebaseServerAuthService>(provider: ProvideFirebaseServerAuthService<T>): [ProvideFirebaseServerAuthService<T>, Provider<T>] {
   return [
     {
       ...provider,
@@ -43,8 +43,8 @@ export function provideFirestoreServerAuthService<T extends FirebaseServerAuthSe
 }
 
 // MARK: app firestore module
-export interface ProvideAppAuthModuleMetadataConfig<T extends FirebaseServerAuthService> extends Pick<ModuleMetadata, 'imports' | 'exports' | 'providers'> {
-  readonly serviceProvider: ProvideFirestoreServerAuthService<T>;
+export interface FirebaseServerAuthModuleMetadataConfig<T extends FirebaseServerAuthService> extends Pick<ModuleMetadata, 'imports' | 'exports' | 'providers'> {
+  readonly serviceProvider: ProvideFirebaseServerAuthService<T>;
 }
 
 /**
@@ -54,10 +54,10 @@ export interface ProvideAppAuthModuleMetadataConfig<T extends FirebaseServerAuth
  * @param useFactory 
  * @returns 
  */
-export function appAuthModuleMetadata<T extends FirebaseServerAuthService>(config: ProvideAppAuthModuleMetadataConfig<T>): ModuleMetadata {
+export function firebaseServerAuthModuleMetadata<T extends FirebaseServerAuthService>(config: FirebaseServerAuthModuleMetadataConfig<T>): ModuleMetadata {
   return {
     imports: [FirebaseServerAuthModule, ...(config.imports ?? [])],
     exports: [FirebaseServerAuthModule, config.serviceProvider.provide, ...(config.exports ?? [])],
-    providers: [...provideFirestoreServerAuthService(config.serviceProvider), ...(config.providers ?? [])]
+    providers: [...provideFirebaseServerAuthService(config.serviceProvider), ...(config.providers ?? [])]
   };
 }

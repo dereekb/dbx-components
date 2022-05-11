@@ -98,7 +98,7 @@ describe('authorizedUserContextFactory()', () => {
         }
       });
 
-      factory(f, (u) => {
+      factory({ f }, (u) => {
 
         it('should have added the custom claims.', async () => {
           const record = await u.instance.loadUserRecord();
@@ -111,7 +111,7 @@ describe('authorizedUserContextFactory()', () => {
 
         describe('nested factory call', () => {
 
-          factory(f, (u2) => {
+          factory({ f }, (u2) => {
 
             it('should have created a second account.', async () => {
               const uRecord = await u.instance.loadUserRecord();
@@ -123,17 +123,17 @@ describe('authorizedUserContextFactory()', () => {
 
             describe('second nested factory call', () => {
 
-              factory(f, (u3) => {
+              factory({ f }, (u3) => {
 
                 it('should have created a third account.', async () => {
                   const uRecord = await u.instance.loadUserRecord();
                   const u2Record = await u2.instance.loadUserRecord();
                   const u3Record = await u3.instance.loadUserRecord();
-    
+
                   expect(u3.uid).not.toBe(u2.uid);
                   expect(u3Record.uid).not.toBe(u2Record.uid);
                 });
-    
+
               });
 
             });
