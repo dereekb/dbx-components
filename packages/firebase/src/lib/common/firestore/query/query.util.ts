@@ -1,4 +1,4 @@
-import { DocumentReference, QueryDocumentSnapshot, QuerySnapshot } from './../types';
+import { DocumentReference, QuerySnapshot } from './../types';
 import { Observable } from "rxjs";
 
 // MARK: OnSnapshot

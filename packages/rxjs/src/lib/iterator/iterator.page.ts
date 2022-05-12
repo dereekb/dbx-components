@@ -125,6 +125,7 @@ export interface ItemPageIterationInstanceState<V> {
   n: number;
   current: Maybe<PageLoadingState<ItemPageIteratorResult<V>>>;
   latestFinished: Maybe<PageLoadingState<ItemPageIteratorResult<V>>>;
+  firstSuccessful: Maybe<PageLoadingState<ItemPageIteratorResult<V>>>;
   lastSuccessful: Maybe<PageLoadingState<ItemPageIteratorResult<V>>>;
 }
 
@@ -198,6 +199,7 @@ export class ItemPageIterationInstance<V, F, C extends ItemPageIterationConfig<F
         n,
         current: curr,
         latestFinished: acc.latestFinished,
+        firstSuccessful: acc.firstSuccessful,
         lastSuccessful: acc.lastSuccessful
       };
 
@@ -216,7 +218,7 @@ export class ItemPageIterationInstance<V, F, C extends ItemPageIterationConfig<F
     }, {
       n: -1,
       current: { page: FIRST_PAGE },  // Start with loading the first page
-      latestFinished: undefined, lastSuccessful: undefined
+      latestFinished: undefined, firstSuccessful: undefined, lastSuccessful: undefined
     }),
     shareReplay(1)
   );
@@ -292,6 +294,15 @@ export class ItemPageIterationInstance<V, F, C extends ItemPageIterationConfig<F
 
   private readonly _lastFinishedPageResult$: Observable<Maybe<ItemPageIteratorResult<V>>> = this._lastFinishedPageResultState$.pipe(map(x => x?.value));
   private readonly _lastFinishedPageResultItem$: Observable<Maybe<V>> = this._lastFinishedPageResult$.pipe(map(x => x?.value));
+
+  /**
+   * The first page results that has finished loading without an error.
+   */
+  readonly firstSuccessfulPageResults$: Observable<PageLoadingState<ItemPageIteratorResult<V>>> = this.state$.pipe(
+    map(x => x.firstSuccessful),
+    filterMaybe(),
+    shareReplay(1)
+  );
 
   /**
    * The latest page results that has finished loading without an error.

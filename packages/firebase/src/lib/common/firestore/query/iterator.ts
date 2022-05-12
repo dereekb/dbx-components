@@ -1,7 +1,7 @@
 import { PageLoadingState, ItemPageIterator, ItemPageIterationInstance, ItemPageIterationConfig, ItemPageIteratorDelegate, ItemPageIteratorRequest, ItemPageIteratorResult, MappedPageItemIterationInstance, ItemPageLimit } from '@dereekb/rxjs';
-import { QueryDocumentSnapshotArray, QuerySnapshot } from "../types";
+import { QueryDocumentSnapshotArray, QuerySnapshot, SnapshotListenOptions } from "../types";
 import { asArray, Maybe, lastValue, mergeIntoArray, ArrayOrValue } from '@dereekb/util';
-import { from, Observable, of, exhaustMap } from "rxjs";
+import { from, Observable, of, exhaustMap, map } from "rxjs";
 import { CollectionReferenceRef } from '../reference';
 import { FirestoreQueryDriverRef } from '../driver/query';
 import { FIRESTORE_LIMIT_QUERY_CONSTRAINT_TYPE, FirestoreQueryConstraint, limit, startAfter } from './constraint';
@@ -25,16 +25,32 @@ export interface FirestoreItemPageIterationConfig<T> extends FirestoreItemPageIt
 
 export interface FirestoreItemPageQueryResult<T> {
   /**
+   * Time the result was read at.
+   */
+  readonly time: Date;
+  /**
    * The relevant docs for this page result. This value will omit the cursor.
    */
-  docs: QueryDocumentSnapshotArray<T>;
+  readonly docs: QueryDocumentSnapshotArray<T>;
   /**
    * The raw snapshot returned from the query.
    */
-  snapshot: QuerySnapshot<T>;
+  readonly snapshot: QuerySnapshot<T>;
+  /**
+   * Reloads these results as a snapshot.
+   */
+  reload(): Promise<QuerySnapshot<T>>;
+  /**
+   * Streams these results.
+   */
+  stream(options?: FirestoreItemPageQueryResultStreamOptions<T>): Observable<QuerySnapshot<T>>;
 }
 
-export type FirestoreItemPageIteratorDelegate<T> = ItemPageIteratorDelegate<FirestoreItemPageQueryResult<T>, FirestoreItemPageIteratorFilter, FirestoreItemPageIterationConfig<T>>;
+export interface FirestoreItemPageQueryResultStreamOptions<T> {
+  options?: Maybe<SnapshotListenOptions>
+}
+
+export type FirestoreItemPageIteratorDelegate<T> = ItemPageIteratorDelegate<FirestoreItemPageQueryResult<T>, FirestoreItemPageIteratorFilter, FirestoreItemPageIterationConfig<T>>
 export type InternalFirestoreItemPageIterationInstance<T> = ItemPageIterationInstance<FirestoreItemPageQueryResult<T>, FirestoreItemPageIteratorFilter, FirestoreItemPageIterationConfig<T>>;
 
 export function filterDisallowedFirestoreItemPageIteratorInputContraints(constraints: FirestoreQueryConstraint[]): FirestoreQueryConstraint[] {
@@ -72,22 +88,28 @@ export function makeFirestoreItemPageIteratorDelegate<T>(): FirestoreItemPageIte
             }
 
             // Add Limit
-            const limitCount = filter?.limit ?? itemsPerPage + ((startAfterFilter) ? 1 : 0);
-            constraints.push(limit(limitCount));   // Add 1 for cursor, since results will start at our cursor.
+            const limitCount = filterLimit ?? itemsPerPage + ((startAfterFilter) ? 1 : 0);    // todo: may not be needed.
+            const limitConstraint = limit(limitCount);
+            const constraintsWithLimit = [...constraints, limitConstraint];
 
-            const batchQuery = driver.query<T>(collection, ...constraints);
+            // make query
+            const batchQuery = driver.query<T>(collection, ...constraintsWithLimit);
             const resultPromise: Promise<ItemPageIteratorResult<FirestoreItemPageQueryResult<T>>> = driver.getDocs(batchQuery).then((snapshot) => {
-              let docs = snapshot.docs;
-
-              // Remove the cursor document from the results.
-              if (cursorDocument && docs[0].id === cursorDocument.id) {
-                docs = docs.slice(1);
-              }
+              const time = new Date();
+              const docs = snapshot.docs;
 
               const result: ItemPageIteratorResult<FirestoreItemPageQueryResult<T>> = {
                 value: {
+                  time,
                   docs,
-                  snapshot
+                  snapshot,
+                  reload() {
+                    return driver.getDocs(batchQuery);
+                  },
+                  stream(options?: FirestoreItemPageQueryResultStreamOptions<T>) {
+                    // todo: consider allowing limit to be changed here to stream a subset. This will be useful for detecting collection changes.
+                    return driver.streamDocs(batchQuery, options?.options);
+                  }
                 },
                 end: snapshot.empty
               };

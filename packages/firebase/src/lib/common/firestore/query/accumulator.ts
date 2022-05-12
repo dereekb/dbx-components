@@ -30,7 +30,6 @@ export function firebaseQuerySnapshotAccumulator<O, T>(iteration: FirestoreItemP
 export function firebaseQueryItemAccumulator<T>(iteration: FirestoreItemPageIterationInstance<T>): FirebaseQueryItemAccumulator<T>;
 export function firebaseQueryItemAccumulator<U, T>(iteration: FirestoreItemPageIterationInstance<T>, mapItem?: MapFunction<DocumentDataWithId<T>, U>): MappedFirebaseQuerySnapshotAccumulator<U[], T>;
 export function firebaseQueryItemAccumulator<U, T>(iteration: FirestoreItemPageIterationInstance<T>, mapItem?: MapFunction<DocumentDataWithId<T>, U>): MappedFirebaseQuerySnapshotAccumulator<U[], T> {
-
   mapItem = mapItem ?? (((x: DocumentDataWithId<T>) => x) as unknown as MapFunction<DocumentDataWithId<T>, U>);
 
   const mapFn: ItemAccumulatorMapFunction<U[], QueryDocumentSnapshotArray<T>> = (x: QueryDocumentSnapshotArray<T>) => {

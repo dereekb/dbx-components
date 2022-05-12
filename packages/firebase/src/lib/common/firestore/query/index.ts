@@ -3,3 +3,4 @@ export * from './constraint';
 export * from './iterator';
 export * from './query';
 export * from './query.util';
+export * from './watcher';

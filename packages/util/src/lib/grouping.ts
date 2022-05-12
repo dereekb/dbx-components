@@ -12,8 +12,8 @@ export interface GroupingResult<T> {
   [key: string]: T[];
 }
 
-export type KeyedGroupingResult<T, O, K extends keyof O = keyof O> = {
-  [k in K]: T[];
+export type KeyedGroupingResult<T, O> = {
+  [K in keyof O]: T[];
 }
 
 export interface PairsGroupingResult<T> {
@@ -190,7 +190,7 @@ export function separateValues<T>(values: T[], checkInclusion: (x: T) => boolean
  * @param values 
  * @param groupKeyFn 
  */
-export function groupValues<T, R, K extends PrimativeKey & keyof R>(values: T[], groupKeyFn: ReadKeyFunction<T, K>): KeyedGroupingResult<T, R, K>;
+export function groupValues<T, R, K extends PrimativeKey & keyof R>(values: T[], groupKeyFn: ReadKeyFunction<T, K>): KeyedGroupingResult<T, R>;
 export function groupValues<T, K extends PrimativeKey = PrimativeKey>(values: T[], groupKeyFn: ReadKeyFunction<T, K>): GroupingResult<T>;
 export function groupValues<T, K extends PrimativeKey = PrimativeKey>(values: T[], groupKeyFn: ReadKeyFunction<T, K>): GroupingResult<T> {
   const map = makeValuesGroupMap<T, K>(values, groupKeyFn);

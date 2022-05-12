@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Observable, shareReplay, distinctUntilChanged, Subscription, exhaustMap, first, map, switchMap, tap } from 'rxjs';
-import { FirebaseQueryItemAccumulator, FirestoreCollection, FirestoreDocument, FirestoreItemPageIterationInstance, FirestoreQueryConstraint } from '@dereekb/firebase';
+import { FirebaseQueryItemAccumulator, FirestoreCollection, FirestoreDocument, FirestoreItemPageIterationInstance, FirestoreQueryConstraint, IterationQueryChangeWatcher } from '@dereekb/firebase';
 import { ObservableOrValue, cleanupDestroyable, PageListLoadingState, filterMaybe } from '@dereekb/rxjs';
 import { ArrayOrValue, Maybe } from '@dereekb/util';
 import { LockSetComponentStore } from '@dereekb/dbx-core';
@@ -15,7 +15,7 @@ export interface DbxFirebaseCollectionStore<T, D extends FirestoreDocument<T> = 
   setConstraints(observableOrValue: ObservableOrValue<Maybe<ArrayOrValue<FirestoreQueryConstraint<T>>>>): Subscription;
   next(observableOrValue: ObservableOrValue<void>): void;
   restart(observableOrValue: ObservableOrValue<void>): void;
-  
+
   readonly setFirestoreCollection: (() => void) | ((observableOrValue: ObservableOrValue<Maybe<FirestoreCollection<T, D>>>) => Subscription);
 }
 
@@ -102,6 +102,7 @@ export class AbstractDbxFirebaseCollectionStore<T, D extends FirestoreDocument<T
   );
 
   readonly firestoreIteration$: Observable<FirestoreItemPageIterationInstance<T>> = this.loader$.pipe(switchMap(x => x.firestoreIteration$));
+  readonly queryChangeWatcher$: Observable<IterationQueryChangeWatcher<T>> = this.loader$.pipe(switchMap(x => x.queryChangeWatcher$));
   readonly accumulator$: Observable<FirebaseQueryItemAccumulator<T>> = this.loader$.pipe(switchMap(x => x.accumulator$));
   readonly pageLoadingState$: Observable<PageListLoadingState<T>> = this.loader$.pipe(switchMap(x => x.pageLoadingState$));
 

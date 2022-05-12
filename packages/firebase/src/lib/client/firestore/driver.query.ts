@@ -1,10 +1,10 @@
 import { Observable } from 'rxjs';
-import { ArrayOrValue } from '@dereekb/util';
-import { DocumentSnapshot, getDocs, limit, query, QueryConstraint, startAt, Query as FirebaseFirestoreQuery, where, startAfter, orderBy, limitToLast, endBefore, endAt, onSnapshot, Transaction as FirebaseFirestoreTransaction } from "firebase/firestore";
+import { ArrayOrValue, Maybe } from '@dereekb/util';
+import { DocumentSnapshot, getDocs, limit, query, QueryConstraint, startAt, Query as FirebaseFirestoreQuery, where, startAfter, orderBy, limitToLast, endBefore, endAt, onSnapshot } from "firebase/firestore";
 import { FIRESTORE_LIMIT_QUERY_CONSTRAINT_TYPE, FIRESTORE_START_AFTER_QUERY_CONSTRAINT_TYPE, FIRESTORE_START_AT_QUERY_CONSTRAINT_TYPE, FIRESTORE_WHERE_QUERY_CONSTRAINT_TYPE, FIRESTORE_LIMIT_TO_LAST_QUERY_CONSTRAINT_TYPE, FIRESTORE_ORDER_BY_QUERY_CONSTRAINT_TYPE, FullFirestoreQueryConstraintHandlersMapping, FIRESTORE_OFFSET_QUERY_CONSTRAINT_TYPE, FIRESTORE_END_AT_QUERY_CONSTRAINT_TYPE, FIRESTORE_END_BEFORE_QUERY_CONSTRAINT_TYPE } from './../../common/firestore/query/constraint';
 import { makeFirestoreQueryConstraintFunctionsDriver } from '../../common/firestore/driver/query.handler';
 import { FirestoreQueryConstraintFunctionsDriver, FirestoreQueryDriver } from "../../common/firestore/driver/query";
-import { Query, QuerySnapshot, Transaction } from "../../common/firestore/types";
+import { Query, QuerySnapshot, SnapshotListenOptions, Transaction } from "../../common/firestore/types";
 import { streamFromOnSnapshot } from '../../common/firestore/query/query.util';
 
 export interface FirebaseFirestoreQueryBuilder<T = any> {
@@ -50,8 +50,8 @@ export function firebaseFirestoreQueryDriver(): FirestoreQueryDriver {
 
       return getDocs(query as FirebaseFirestoreQuery<T>);
     },
-    streamDocs<T>(query: Query<T>): Observable<QuerySnapshot<T>> {
-      return streamFromOnSnapshot((obs) => onSnapshot((query as FirebaseFirestoreQuery<T>), obs));
+    streamDocs<T>(query: Query<T>, options?: Maybe<SnapshotListenOptions>): Observable<QuerySnapshot<T>> {
+      return streamFromOnSnapshot((obs) => (options) ? onSnapshot((query as FirebaseFirestoreQuery<T>), options, obs) : onSnapshot((query as FirebaseFirestoreQuery<T>), obs));
     }
   };
 }

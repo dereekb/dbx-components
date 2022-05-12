@@ -100,6 +100,10 @@ export interface SnapshotOptions {
   readonly serverTimestamps?: 'estimate' | 'previous' | 'none';
 }
 
+export interface SnapshotListenOptions {
+  readonly includeMetadataChanges?: boolean;
+}
+
 // MARK: Converter
 /**
  * Mirrors the types/methods of FirestoreDataConverter.

@@ -1,7 +1,8 @@
-import { Transaction } from './../types';
+import { SnapshotListenOptions, Transaction } from './../types';
 import { Observable } from 'rxjs';
 import { Query, QuerySnapshot } from "../types";
 import { FirestoreQueryConstraint } from "../query/constraint";
+import { Maybe } from '@dereekb/util';
 
 export type FirestoreQueryDriverQueryFunction = <T>(query: Query<T>, ...queryConstraints: FirestoreQueryConstraint[]) => Query<T>;
 
@@ -23,7 +24,7 @@ export interface FirestoreQueryDriver extends FirestoreQueryConstraintFunctionsD
    * @param transaction
    */
   getDocs<T>(query: Query<T>, transaction?: Transaction): Promise<QuerySnapshot<T>>;
-  streamDocs<T>(query: Query<T>): Observable<QuerySnapshot<T>>;
+  streamDocs<T>(query: Query<T>, options?: Maybe<SnapshotListenOptions>): Observable<QuerySnapshot<T>>;
 }
 
 /**
