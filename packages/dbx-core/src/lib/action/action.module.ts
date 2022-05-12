@@ -4,7 +4,7 @@ import {
   DbxActionDirective, DbxActionContextMapDirective, DbxActionFromMapDirective, DbxActionMapSourceDirective,
   DbxActionMapWorkingDisableDirective, DbxActionSourceDirective, DbxActionHandlerDirective, DbxActionDisabledDirective, DbxActionEnforceModifiedDirective,
   DbxActionAutoTriggerDirective, dbxActionValueStreamDirective, DbxActionAutoModifyDirective, DbxActionValueDirective, DbxActionContextLoggerDirective,
-  DbxActionSuccessComponent, DbxActionSuccessDirective, DbxActionWorkingComponent
+  DbxActionHasSuccessDirective, DbxActionSuccessHandlerDirective, DbxActionWorkingComponent
 } from './directive';
 
 @NgModule({
@@ -15,13 +15,13 @@ import {
     DbxActionDirective, DbxActionContextMapDirective, DbxActionFromMapDirective, DbxActionMapSourceDirective,
     DbxActionMapWorkingDisableDirective, DbxActionSourceDirective, DbxActionHandlerDirective, DbxActionDisabledDirective, DbxActionEnforceModifiedDirective,
     DbxActionAutoTriggerDirective, dbxActionValueStreamDirective, DbxActionAutoModifyDirective, DbxActionValueDirective, DbxActionContextLoggerDirective,
-    DbxActionSuccessComponent, DbxActionSuccessDirective, DbxActionWorkingComponent,
+    DbxActionHasSuccessDirective, DbxActionSuccessHandlerDirective, DbxActionWorkingComponent,
   ],
   exports: [
     DbxActionDirective, DbxActionContextMapDirective, DbxActionFromMapDirective, DbxActionMapSourceDirective,
     DbxActionMapWorkingDisableDirective, DbxActionSourceDirective, DbxActionHandlerDirective, DbxActionDisabledDirective, DbxActionEnforceModifiedDirective,
     DbxActionAutoTriggerDirective, dbxActionValueStreamDirective, DbxActionAutoModifyDirective, DbxActionValueDirective, DbxActionContextLoggerDirective,
-    DbxActionSuccessComponent, DbxActionSuccessDirective, DbxActionWorkingComponent
+    DbxActionHasSuccessDirective, DbxActionSuccessHandlerDirective, DbxActionWorkingComponent
   ]
 })
 export class DbxCoreActionModule { }

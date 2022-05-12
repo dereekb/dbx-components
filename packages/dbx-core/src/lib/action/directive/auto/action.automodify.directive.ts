@@ -19,7 +19,7 @@ export class DbxActionAutoModifyDirective<T, O> extends AbstractSubscriptionDire
     return this._autoModifyEnabled.value;
   }
 
-  set autoModifyEnabled(autoModifyEnabled: Maybe<any>) {
+  set autoModifyEnabled(autoModifyEnabled: Maybe<boolean | ''>) {
     this._autoModifyEnabled.next(autoModifyEnabled !== false);
   }
 

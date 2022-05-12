@@ -15,14 +15,28 @@
 
     </doc-feature-example>
 
-    <doc-feature-example header="dbxActionSuccess" hint="Performs an action after the action reaches success.">
+    <doc-feature-example header="dbxActionSuccessHandler" hint="Performs an action after the action reaches success.">
 
       <p>dbxActionHandler takes in a HandleActionFunction, which can be used to return either an observable that
         completes the loading and sets the result value of that observable, or can used the passed context to manage the
         state better.</p>
       <dbx-action-example-tools dbxAction [dbxActionHandler]="handleAction" [dbxActionValue]="value$ | async"
-        [dbxActionSuccess]="onActionSuccess">
+        [dbxActionSuccessHandler]="onActionSuccess">
         <dbx-button dbxActionButton text="Action Button"></dbx-button>
+      </dbx-action-example-tools>
+
+      <p>Success value: {{ successValue | json }}</p>
+
+    </doc-feature-example>
+
+    <doc-feature-example header="dbxActionHasSuccess"
+      hint="Structural directive that shows template content when the action has success.">
+
+      <p>dbxActionHasSuccess can be used just like ngIf.</p>
+      <dbx-action-example-tools dbxAction [dbxActionHandler]="handleAction" [dbxActionValue]="value$ | async">
+        <dbx-button dbxActionButton text="Action Button"></dbx-button>
+        <p *dbxActionHasSuccess>Success!</p>
+        <p *dbxActionHasSuccess="3000">Success! (Dissapears after 3 seconds.)</p>
       </dbx-action-example-tools>
 
       <p>Success value: {{ successValue | json }}</p>

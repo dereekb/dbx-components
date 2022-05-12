@@ -87,7 +87,7 @@ describe('FormActionDirective', () => {
 
   });
 
-  // todo: test dbxActionFormDisabledWhileWorking
+  // todo: test formDisabledOnWorking
 
 });
 

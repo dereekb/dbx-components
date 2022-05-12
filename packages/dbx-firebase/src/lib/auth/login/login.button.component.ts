@@ -23,7 +23,7 @@ export interface DbxFirebaseLoginButtonConfig {
   selector: 'dbx-firebase-login-button',
   template: `
   <ng-container dbxAction [dbxActionHandler]="handleAction" dbxActionValue
-    [dbxActionSuccess]="onActionSuccess">
+    [dbxActionSuccessHandler]="onActionSuccess">
     <dbx-button dbxActionButton [customTextColor]="buttonTextColor" [customButtonColor]="buttonColor" [raised]="true">
       <div class="dbx-firebase-login-button-content">
         <span class="dbx-firebase-login-button-icon dbx-icon-spacer">
