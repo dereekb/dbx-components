@@ -404,8 +404,7 @@ export class AbstractDbxPickableItemFieldDirective<T> extends FieldType<Pickable
     );
   }
 
-  override ngOnInit(): void {
-    super.ngOnInit();
+  ngOnInit(): void {
     this._formControlObs.next(this.formControl);
 
     // Focus after finished loading for the first time.

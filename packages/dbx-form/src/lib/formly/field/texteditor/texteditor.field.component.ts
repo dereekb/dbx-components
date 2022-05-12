@@ -61,9 +61,7 @@ export class DbxTextEditorFieldComponent<T extends TextEditorComponentFieldConfi
     return this.to.description;
   }
 
-  override ngOnInit(): void {
-    super.ngOnInit();
-
+  ngOnInit(): void {
     this._editor = new Editor({});
 
     // Watch for value changes every second and update the pristine level.

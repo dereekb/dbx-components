@@ -289,8 +289,7 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, C extends Sear
     super();
   }
 
-  override ngOnInit(): void {
-    super.ngOnInit();
+  ngOnInit(): void {
     this._formControlObs.next(this.formControl);
 
     if (this.searchableField.textInputValidator) {

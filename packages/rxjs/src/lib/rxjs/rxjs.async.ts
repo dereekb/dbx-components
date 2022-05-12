@@ -55,14 +55,14 @@ export interface AsyncPusherConfig<T> {
  * @returns 
  */
 export function asyncPusher<T>(config: AsyncPusherConfig<T> = {}): AsyncPusher<T> {
-  const { throttle, cleanupObs, distinct = true, pipe: pipeObs } = config;
+  const { throttle = DEFAULT_ASYNC_PUSHER_THROTTLE, cleanupObs, distinct = true, pipe: pipeObs } = config;
 
   const _subject = new BehaviorSubject<T>(undefined as any);
   const _sub = new SubscriptionObject();
 
   let obs: Observable<T> = _subject.pipe(
     skipFirstMaybe(),
-    throttleTime(throttle ?? DEFAULT_ASYNC_PUSHER_THROTTLE, undefined, { leading: true, trailing: true })
+    throttleTime(throttle, undefined, { leading: false, trailing: true })
   ) as Observable<T>;
 
   if (distinct) {

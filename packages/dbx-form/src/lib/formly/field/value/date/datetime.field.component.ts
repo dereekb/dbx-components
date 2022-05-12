@@ -250,8 +250,7 @@ export class DbxDateTimeFieldComponent extends FieldType<DateTimeFormlyFieldConf
     super();
   }
 
-  override ngOnInit(): void {
-    super.ngOnInit();
+  ngOnInit(): void {
     this._formControlObs.next(this.formControl);
     this._config.next(this.dateTimeField.getConfigObs?.());
 

@@ -1,7 +1,7 @@
 import { FormlyFieldConfig } from "@ngx-formly/core";
 import { Validators, AbstractControl } from '@angular/forms';
 import { TextFieldConfig, textField } from "./text.field";
-import { LabeledFieldConfig, DescriptionFieldConfig, formlyField } from "../../field";
+import { LabeledFieldConfig, DescriptionFieldConfig } from "../../field";
 
 export const PHONE_LABEL_MAX_LENGTH = 100;
 
@@ -48,8 +48,6 @@ export function emailField(config: EmailFieldConfig = {}): FormlyFieldConfig {
 
   return emailFieldConfig;
 }
-
-
 
 export function cityField({ key = 'city', required = false }: Partial<TextFieldConfig> = {}): FormlyFieldConfig {
   return textField({
