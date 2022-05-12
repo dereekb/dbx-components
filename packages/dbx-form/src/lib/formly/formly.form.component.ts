@@ -6,7 +6,7 @@ import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
 import { DbxForm, DbxFormDisabledKey, DbxFormEvent, DbxFormState, DEFAULT_FORM_DISABLED_KEY, ProvideDbxMutableForm } from '../form/form';
 import { DbxFormlyContext, DbxFormlyContextDelegate, DbxFormlyInitialize } from './formly.context';
 import { cloneDeep } from 'lodash';
-import { scanCount, switchMapMaybeObs, SubscriptionObject } from '@dereekb/rxjs';
+import { scanCount, switchMapMaybeObs, SubscriptionObject, tapLog } from '@dereekb/rxjs';
 import { BooleanStringKeyArray, BooleanStringKeyArrayUtilityInstance, Maybe } from '@dereekb/util';
 
 
@@ -54,9 +54,9 @@ export class DbxFormlyFormComponent<T extends object> extends AbstractSubscripti
       startWith(0),
       distinctUntilChanged(),
       throttleTime(50, undefined, { leading: true, trailing: true }),
-      scanCount(),
-      // update on validation changes too.
-      switchMap(x => this.form.statusChanges.pipe(startWith(this.form.status), distinctUntilChanged()).pipe(map(_ => x))),
+      scanCount(-1),
+      // update on validation changes too. Does not count towards changes since last reset.
+      switchMap(changesSinceLastReset => this.form.statusChanges.pipe(startWith(this.form.status), distinctUntilChanged()).pipe(map(_ => changesSinceLastReset))),
       map((changesSinceLastResetCount: number) => ({
         changesSinceLastResetCount,
         isFormValid: this.form.status !== 'PENDING' && this.form.valid,
@@ -78,7 +78,7 @@ export class DbxFormlyFormComponent<T extends object> extends AbstractSubscripti
         isFormDisabled: false
       }),
       map(({ changesSinceLastResetCount, isFormValid, isFormDisabled }) => {
-        const isReset = changesSinceLastResetCount === 1;
+        const isReset = changesSinceLastResetCount <= 1;  // first emission after reset is the first value.
         const complete = isFormValid;
 
         const nextState: DbxFormEvent = {
@@ -92,6 +92,8 @@ export class DbxFormlyFormComponent<T extends object> extends AbstractSubscripti
           disabled: this.disabled,
           isDisabled: isFormDisabled
         };
+
+        // console.log('Change: ', nextState);
 
         return nextState;
       })
@@ -162,12 +164,17 @@ export class DbxFormlyFormComponent<T extends object> extends AbstractSubscripti
         this.form.markAsPristine();
       }
     }, 500);
+
+    // ping reset
+    this.resetForm();
   }
 
   resetForm(): void {
     if (this.options.resetModel) {
       this.options.resetModel();
     }
+
+    this._reset.next(new Date());
   }
 
   get isDisabled(): boolean {

@@ -1,6 +1,7 @@
 export * from './array';
 export * from './boolean';
 export * from './delta';
+export * from './factory';
 export * from './getter';
 export * from './lifecycle';
 export * from './loading';

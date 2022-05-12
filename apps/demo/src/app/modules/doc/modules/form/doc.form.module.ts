@@ -14,6 +14,7 @@ import { DocFormExampleChecklistFormComponent } from './component/checklist.exam
 import { DocFormExampleComponentFormComponent, DocFormExampleComponentFormTestViewAComponent, DocFormExampleComponentFormTestViewBComponent } from './component/component.example.form.component';
 import { DocFormExampleComponent } from './component/example.form.component';
 import { DocFormTemplateComponent } from './container/template.component';
+import { DocFormDirectiveComponent } from './container/directive.component';
 
 @NgModule({
   imports: [
@@ -36,6 +37,7 @@ import { DocFormTemplateComponent } from './container/template.component';
     DocFormValueComponent,
     DocFormSelectionComponent,
     DocFormComponentComponent,
+    DocFormDirectiveComponent,
     DocFormTextEditorComponent,
     DocFormTemplateComponent,
     DocFormWrapperComponent

@@ -4,6 +4,7 @@ import { FormlyFieldConfig } from "@ngx-formly/core";
 import { map, Observable } from "rxjs";
 
 @Component({
+  exportAs: 'exampleForm',
   template: `
   <div>
     <dbx-formly (dbxFormValueChange)="value = $event"></dbx-formly>

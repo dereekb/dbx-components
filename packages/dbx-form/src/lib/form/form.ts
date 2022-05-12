@@ -8,8 +8,17 @@ import { FormControlStatus } from '@angular/forms';
  * Current state of a DbxForm
  */
 export enum DbxFormState {
+  /**
+   * Form is not finished initializing.
+   */
   INITIALIZING = -1,
+  /**
+   * Form is initialized but has not yet used.
+   */
   RESET = 0,
+  /**
+   * Form has been used.
+   */
   USED = 1
 }
 

@@ -1,0 +1,48 @@
+<dbx-content-container>
+  <doc-feature-layout header="Form Directives">
+
+    <!-- Examples -->
+    <doc-feature-example header="dbxFormSource" hint="Used to pass data into a form.">
+
+      <p>By default the dbxFormSource will only set the input observable value when the form is in a reset state (occurs
+        when the form has new values).</p>
+      <p>Any changes to any form inputs will change the state and prevent dbxFormSource from applying any more values.
+      </p>
+      <doc-form-example-form #a="exampleForm" [dbxFormlyFields]="testFieldsA" [dbxFormSource]="data$">
+      </doc-form-example-form>
+      <p> Resetting the form will allow dbxFormSource apply the newest emitted value.</p>
+      <button mat-raised-button color="warn" (click)="a.resetForm()">Reset Form</button>
+
+      <h3>dbxFormSourceMode="always"</h3>
+      <p>In this mode the form will always update to match the latest data, regardless of form state.</p>
+      <doc-form-example-form [dbxFormlyFields]="testFieldsB" [dbxFormSource]="data$" dbxFormSourceMode="always">
+      </doc-form-example-form>
+
+    </doc-feature-example>
+
+    <doc-feature-example header="dbxFormLoadingSource" hint="Used to pass a loading state's success value into a form.">
+
+      <p>dbxFormLoadingSource behaves the same way as dbxFormSource, but only sets the value when the loading state has
+        finished loading.</p>
+      <p>If the loading state has an error, the form is set to an empty value.</p>
+      <doc-form-example-form #b="exampleForm" [dbxFormlyFields]="testFieldsC" [dbxFormLoadingSource]="loadingData$">
+      </doc-form-example-form>
+      <button mat-raised-button color="warn" (click)="a.resetForm()">Reset Form</button>
+
+    </doc-feature-example>
+
+    <doc-feature-example header="dbxFormValueChange" hint="Emits form value changed events.">
+
+      <p> If the form is complete, the value of the form is emitted, otherwise emits undefined.</p>
+      <doc-form-example-form [dbxFormlyFields]="testFieldsD" (dbxFormValueChange)="value = $event"
+        [dbxFormSource]="data$">
+      </doc-form-example-form>
+
+      <dbx-content-border>
+        <p>Changed: {{ value | json }}</p>
+      </dbx-content-border>
+
+    </doc-feature-example>
+
+  </doc-feature-layout>
+</dbx-content-container>

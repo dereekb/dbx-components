@@ -6,9 +6,9 @@ export const DOC_FORM_ROUTES = [{
   ref: 'doc.form.checklist'
 }, {
   icon: 'code',
-  title: 'Component',
-  detail: 'component form',
-  ref: 'doc.form.component'
+  title: 'Directives',
+  detail: 'form directives',
+  ref: 'doc.form.directive'
 }, {
   icon: 'keyboard',
   title: 'Value Fields',
@@ -34,6 +34,11 @@ export const DOC_FORM_ROUTES = [{
   title: 'Templates',
   detail: 'form field templates',
   ref: 'doc.form.template'
+}, {
+  icon: 'code',
+  title: 'Component',
+  detail: 'component form',
+  ref: 'doc.form.component'
 }];
 
 export const DOC_FORM_ROOT_ROUTE = {
