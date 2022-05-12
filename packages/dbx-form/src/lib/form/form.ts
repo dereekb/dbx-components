@@ -2,6 +2,7 @@ import { forwardRef, Provider, Type } from '@angular/core';
 import { Observable } from 'rxjs';
 import { LockSet } from '@dereekb/rxjs';
 import { BooleanStringKeyArray, Maybe } from '@dereekb/util';
+import { FormControlStatus } from '@angular/forms';
 
 /**
  * Current state of a DbxForm
@@ -26,6 +27,7 @@ export const DEFAULT_FORM_DISABLED_KEY = 'dbx_form_disabled';
 export interface DbxFormEvent {
   readonly isComplete: boolean;
   readonly state: DbxFormState;
+  readonly status: FormControlStatus;
   readonly pristine?: boolean;
   readonly untouched?: boolean;
   readonly lastResetAt?: Date;

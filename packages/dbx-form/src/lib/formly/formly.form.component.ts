@@ -1,7 +1,7 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { FormlyFieldConfig, FormlyFormOptions } from '@ngx-formly/core';
-import { distinctUntilChanged, map, throttleTime, startWith, BehaviorSubject, Observable, Subject, switchMap, shareReplay, of, scan } from 'rxjs';
+import { distinctUntilChanged, map, throttleTime, startWith, BehaviorSubject, Observable, Subject, switchMap, shareReplay, of, scan, filter, first, combineLatest } from 'rxjs';
 import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
 import { DbxForm, DbxFormDisabledKey, DbxFormEvent, DbxFormState, DEFAULT_FORM_DISABLED_KEY, ProvideDbxMutableForm } from '../form/form';
 import { DbxFormlyContext, DbxFormlyContextDelegate, DbxFormlyInitialize } from './formly.context';
@@ -35,7 +35,7 @@ export interface DbxFormlyFormState {
 export class DbxFormlyFormComponent<T extends object> extends AbstractSubscriptionDirective implements DbxForm, DbxFormlyContextDelegate<T>, OnInit, OnDestroy {
 
   private _fields = new BehaviorSubject<Maybe<Observable<FormlyFieldConfig[]>>>(undefined);
-  private _events = new BehaviorSubject<DbxFormEvent>({ isComplete: false, state: DbxFormState.INITIALIZING });
+  private _events = new BehaviorSubject<DbxFormEvent>({ isComplete: false, state: DbxFormState.INITIALIZING, status: 'PENDING' });
   private _disabled = new BehaviorSubject<BooleanStringKeyArray>(undefined);
 
   private _reset = new BehaviorSubject<Date>(new Date());
@@ -55,9 +55,11 @@ export class DbxFormlyFormComponent<T extends object> extends AbstractSubscripti
       distinctUntilChanged(),
       throttleTime(50, undefined, { leading: true, trailing: true }),
       scanCount(),
+      // update on validation changes too.
+      switchMap(x => this.form.statusChanges.pipe(startWith(this.form.status), distinctUntilChanged()).pipe(map(_ => x))),
       map((changesSinceLastResetCount: number) => ({
         changesSinceLastResetCount,
-        isFormValid: this.form.valid,
+        isFormValid: this.form.status !== 'PENDING' && this.form.valid,
         isFormDisabled: this.form.disabled
       })),
       scan((acc: DbxFormlyFormState, next: DbxFormlyFormState) => {
@@ -82,6 +84,7 @@ export class DbxFormlyFormComponent<T extends object> extends AbstractSubscripti
         const nextState: DbxFormEvent = {
           isComplete: complete,
           state: (isReset) ? DbxFormState.RESET : DbxFormState.USED,
+          status: this.form.status,
           untouched: this.form.untouched,
           pristine: this.form.pristine,
           changesCount: changesSinceLastResetCount,

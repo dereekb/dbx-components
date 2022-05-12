@@ -2,7 +2,7 @@ import { Provider } from '@angular/core';
 import { BehaviorSubject, Observable, of, switchMap, shareReplay, distinctUntilChanged } from 'rxjs';
 import { DbxForm, DbxFormDisabledKey, DbxFormEvent, DbxFormState, DbxMutableForm, DEFAULT_FORM_DISABLED_KEY, ProvideDbxMutableForm } from '../form/form';
 import { FormlyFieldConfig } from '@ngx-formly/core';
-import { LockSet, filterMaybe } from '@dereekb/rxjs';
+import { LockSet, filterMaybe, tapLog } from '@dereekb/rxjs';
 import { BooleanStringKeyArray, BooleanStringKeyArrayUtilityInstance, Maybe } from '@dereekb/util';
 
 export interface DbxFormlyInitialize<T> {
@@ -39,7 +39,7 @@ export class DbxFormlyContext<T = any> implements DbxForm<T> {
 
   readonly lockSet = new LockSet();
 
-  private static INITIAL_STATE = { isComplete: false, state: DbxFormState.INITIALIZING };
+  private static INITIAL_STATE: DbxFormEvent = { isComplete: false, state: DbxFormState.INITIALIZING, status: 'PENDING' };
 
   private _fields = new BehaviorSubject<Maybe<FormlyFieldConfig[]>>(undefined);
   private _initialValue = new BehaviorSubject<Maybe<Partial<T>>>(undefined);
