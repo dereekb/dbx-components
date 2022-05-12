@@ -1,4 +1,4 @@
-import { ClickableAnchor, ClickableAnchorLink, ClickableIconAnchorLink } from '@dereekb/dbx-core';
+import { ClickableAnchorLink } from '@dereekb/dbx-core';
 import { Component } from '@angular/core';
 import packageInfo from '../../../../../../../package.json';
 
@@ -24,15 +24,12 @@ export class LandingLayoutComponent {
     ref: 'demo'
   };
 
+  readonly circleciAnchor: ClickableAnchorLink = {
+    title: 'CircleCI',
+    url: 'https://circleci.com/gh/dereekb/dbx-components/tree/main'
+  };
+
   readonly packages: LandingItem[] = [{
-    name: '@dereekb/dbx-web',
-    description: 'Full set of components for Angular in the browser. Built on top of @angular/material.',
-    packages: [{
-      title: '@angular/material',
-      url: 'https://material.angular.io/',
-      target: '_blank'
-    }]
-  }, {
     name: '@dereekb/dbx-form',
     description: 'Forms extension for @dereekb/dbx-web to make composing and consuming form easy.',
     packages: [{
@@ -41,16 +38,36 @@ export class LandingLayoutComponent {
       target: '_blank'
     }]
   }, {
+    name: '@dereekb/dbx-web',
+    description: 'Full set of components for Angular in the browser. Built on top of @angular/material.',
+    packages: [{
+      title: '@angular/material',
+      url: 'https://material.angular.io/',
+      target: '_blank'
+    }]
+  }, {
     name: '@dereekb/dbx-core',
-    description: 'Set of directives and utilities for Angular.',
+    description: 'Set of directives and utilities for any Angular project.',
     packages: [{
       title: 'Angular',
       url: 'https://angular.io/',
       target: '_blank'
     }]
   }, {
+    name: '@dereekb/firebase-server',
+    description: 'Extension of @dereekb/firebase for firebase server projects. Provides patterns and tooling for using nestjs in Firebase.',
+    packages: [{
+      title: 'firebase',
+      url: 'https://firebase.google.com/',
+      target: '_blank'
+    }, {
+      title: 'nestjs',
+      url: 'https://nestjs.com/',
+      target: '_blank'
+    }]
+  }, {
     name: '@dereekb/firebase',
-    description: 'Set of firebase utilities for the firebase for the web.',
+    description: 'Set of firebase patterns for the firebase for the web.',
     packages: [{
       title: 'firebase',
       url: 'https://firebase.google.com/',
@@ -70,7 +87,7 @@ export class LandingLayoutComponent {
     }]
   }, {
     name: '@dereekb/rxjs',
-    description: 'Set of rxjs utilities, including loading states and iterators.',
+    description: 'Set of rxjs utilities, including filters, loading states, rxjs operators, and async iterators.',
     packages: [{
       title: 'rxjs',
       url: 'https://rxjs.dev/',
@@ -81,8 +98,20 @@ export class LandingLayoutComponent {
       target: '_blank'
     }]
   }, {
+    name: '@dereekb/model',
+    description: 'Utilities for dealing with models and extensions for the class-transformer and class-validator packages.',
+    packages: [{
+      title: 'class-transformer',
+      url: 'https://github.com/typestack/class-transformer',
+      target: '_blank'
+    }, {
+      title: 'class-validator',
+      url: 'https://github.com/typestack/class-validator',
+      target: '_blank'
+    }]
+  }, {
     name: '@dereekb/util',
-    description: 'Set of general utilities, consumed by other @dereekb packages.',
+    description: 'Set of general utilities, data models and patterns that are consumed by other @dereekb packages.',
     packages: []
   }, {
     name: '@dereekb/browser',

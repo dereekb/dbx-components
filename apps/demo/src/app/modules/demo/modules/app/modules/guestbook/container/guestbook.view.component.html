@@ -7,6 +7,7 @@
         <div [ngSwitch]="guestbookEntry.exists$ | async">
           <div *ngSwitchCase="true">
             <p class="dbx-note">You have signed this guest book.</p>
+            <p class="dbx-note" *ngIf="guestbookEntry.unpublished$ | async">Your entry is not public.</p>
             <dbx-button [raised]="true" color="primary" text="Edit Your Entry" (buttonClick)="openEntry()"></dbx-button>
           </div>
           <div *ngSwitchCase="false">

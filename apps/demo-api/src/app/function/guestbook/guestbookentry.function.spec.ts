@@ -10,7 +10,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
 
     demoAuthorizedUserContext({ f }, (u) => {
 
-      demoGuestbookContext({ f, active: true }, (g) => {
+      demoGuestbookContext({ f, published: true }, (g) => {
 
         describe('guestbook is active', () => {
 

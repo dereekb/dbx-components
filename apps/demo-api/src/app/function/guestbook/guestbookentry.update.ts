@@ -10,6 +10,5 @@ export const updateGuestbookEntry = onCallWithDemoNestContext(inAuthContext(asyn
   const { guestbook: guestbookId } = guestbookEntryUpdateEntry.params;
 
   const guestbookEntryDocument = guestbookEntryForUser(nest, guestbookId, uid);
-
   await guestbookEntryUpdateEntry(guestbookEntryDocument);
 }));

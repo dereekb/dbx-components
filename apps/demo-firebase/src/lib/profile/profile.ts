@@ -66,7 +66,7 @@ export interface ProfilePrivateDataRef extends DocumentReferenceRef<ProfilePriva
 
 export class ProfilePrivateDataDocument extends AbstractFirestoreDocument<ProfilePrivateData, ProfilePrivateDataDocument> { }
 
-export const profilePrivateDataCollectionPath = 'profilePrivateData';
+export const profileCollectionProfilePrivateDataCollectionPath = 'private';
 export const profilePrivateDataIdentifier = '0';
 
 export const profilePrivateDataConverter = makeSnapshotConverterFunctions<ProfilePrivateData>({
@@ -78,7 +78,7 @@ export const profilePrivateDataConverter = makeSnapshotConverterFunctions<Profil
 
 export function profilePrivateDataCollectionReferenceFactory(context: FirestoreContext): (profile: ProfileDocument) => CollectionReference<ProfilePrivateData> {
   return (profile: ProfileDocument) => {
-    return context.subcollection(profile.documentRef, profilePrivateDataCollectionPath).withConverter<ProfilePrivateData>(profilePrivateDataConverter);
+    return context.subcollection(profile.documentRef, profileCollectionProfilePrivateDataCollectionPath).withConverter<ProfilePrivateData>(profilePrivateDataConverter);
   };
 }
 

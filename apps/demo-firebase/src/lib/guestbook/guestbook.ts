@@ -12,7 +12,7 @@ export interface Guestbook {
    * 
    * If not active, this item is still considered locked.
    */
-  active: boolean;
+  published?: boolean;
   /**
    * Guestbook name
    */
@@ -37,7 +37,7 @@ export const guestbookCollectionPath = 'guestbook';
 
 export const guestbookConverter = makeSnapshotConverterFunctions<Guestbook>({
   fields: {
-    active: firestoreBoolean(),
+    published: firestoreBoolean(),
     name: firestoreString(),
     locked: firestoreBoolean({ default: false }),
     lockedAt: firestoreDate()
@@ -87,7 +87,7 @@ export interface GuestbookEntryRef extends DocumentReferenceRef<GuestbookEntry> 
 
 export class GuestbookEntryDocument extends AbstractFirestoreDocumentWithParent<Guestbook, GuestbookEntry, GuestbookEntryDocument> { }
 
-export const guestbookEntryCollectionPath = 'guestbookEntry';
+export const guestbookCollectionGuestbookEntryCollectionPath = 'entry';
 
 export const guestbookEntryConverter = makeSnapshotConverterFunctions<GuestbookEntry>({
   fields: {
@@ -101,7 +101,7 @@ export const guestbookEntryConverter = makeSnapshotConverterFunctions<GuestbookE
 
 export function guestbookEntryCollectionReferenceFactory(context: FirestoreContext): (guestbook: GuestbookDocument) => CollectionReference<GuestbookEntry> {
   return (guestbook: GuestbookDocument) => {
-    return context.subcollection(guestbook.documentRef, guestbookEntryCollectionPath).withConverter<GuestbookEntry>(guestbookEntryConverter);
+    return context.subcollection(guestbook.documentRef, guestbookCollectionGuestbookEntryCollectionPath).withConverter<GuestbookEntry>(guestbookEntryConverter);
   };
 }
 

@@ -152,7 +152,7 @@ export const demoGuestbookContextFactory = () => modelTestContextFactory<
 
     await guestbook.accessor.set({
       name: params.name ?? 'test',
-      active: params.active ?? true,
+      published: params.published ?? true,
       locked: params.locked ?? false,
       lockedAt: (params.lockedAt) ?? ((params.locked) ? new Date() : undefined)
     });

@@ -1,4 +1,4 @@
-import { first, Observable, shareReplay, from, switchMap } from 'rxjs';
+import { first, Observable, shareReplay, from, switchMap, map } from 'rxjs';
 import { Optional, Injectable } from "@angular/core";
 import { LoadingState, loadingStateFromObs } from '@dereekb/rxjs';
 import { AbstractDbxFirebaseDocumentWithParentStore } from "@dereekb/dbx-firebase";
