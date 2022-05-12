@@ -1,5 +1,5 @@
 import { FirestoreQueryConstraint, where } from "@dereekb/firebase";
 
-export function guestbookEntryWithUsername(username: string): FirestoreQueryConstraint {
-  return where('username', '==', username);
+export function publishedGuestbookEntries(published = true): FirestoreQueryConstraint {
+  return where('published', '==', published);
 }

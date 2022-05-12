@@ -1,6 +1,8 @@
 <dbx-sidenav [anchors]="navAnchors$ | async" dbxSetStyle="demo-app">
+  <dbx-sidenav-page [mobileOnly]="true" color="primary">
+    <ui-view></ui-view>
+  </dbx-sidenav-page>
   <div bottom>
     <dbx-anchor-list [anchors]="bottomNavAnchors$ | async"></dbx-anchor-list>
   </div>
-  <ui-view></ui-view>
 </dbx-sidenav>

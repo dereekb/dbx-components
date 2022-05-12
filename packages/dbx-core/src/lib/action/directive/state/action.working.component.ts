@@ -1,21 +1,36 @@
-import { Component } from '@angular/core';
+import { OnDestroy, Input, TemplateRef, ViewContainerRef, Directive } from '@angular/core';
+import { emitDelayObs } from '@dereekb/rxjs';
+import { Maybe } from '@dereekb/util';
+import { of, exhaustMap, shareReplay } from 'rxjs';
+import { AbstractIfDirective } from '../../../view/if.directive';
 import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
 
 /**
- * Displays the input content when working is set.
+ * Structural directive that displays the content when the store is working.
+ * 
+ * Can specify a period in milliseconds that shows how long to show up after working for a particular number of seconds.
  */
-@Component({
-  selector: 'dbx-action-working',
-  template: `
-    <ng-container *ngIf="show$ | async">
-      <ng-content></ng-content>
-    </ng-container>
-  `
+@Directive({
+  selector: '[dbxActionIsWorking]'
 })
-export class DbxActionWorkingComponent {
+export class DbxActionIsWorkingDirective extends AbstractIfDirective implements OnDestroy {
 
-  readonly show$ = this.source.isWorking$;
+  @Input('dbxActionIsWorking')
+  showAfter?: Maybe<number> | '';
 
-  constructor(public readonly source: DbxActionContextStoreSourceInstance) { }
+  readonly show$ = this.source.isWorking$.pipe(
+    exhaustMap((isWorking) => {
+      if (isWorking && this.showAfter) {
+        return emitDelayObs(false, true, this.showAfter || undefined);
+      } else {
+        return of(isWorking);
+      }
+    }),
+    shareReplay(1)
+  );
+
+  constructor(templateRef: TemplateRef<any>, viewContainer: ViewContainerRef, public readonly source: DbxActionContextStoreSourceInstance) {
+    super(templateRef, viewContainer);
+  }
 
 }

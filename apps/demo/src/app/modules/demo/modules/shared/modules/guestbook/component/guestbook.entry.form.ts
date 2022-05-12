@@ -18,5 +18,5 @@ export function guestbookEntrySignedField() {
 }
 
 export function guestbookEntryPublishedField() {
-  return toggleField({ key: 'published', label: 'Public', description: 'If the message shows up in the guest list or not.' });
+  return toggleField({ key: 'published', label: 'Public', description: 'If the message shows up in the guestbook publically or not.' });
 }

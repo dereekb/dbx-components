@@ -18,7 +18,7 @@ export interface DemoGuestbookEntryPopupComponentConfig {
     <div dbxAction dbxActionLogger dbxActionEnforceModified [dbxActionHandler]="handleUpdateEntry">
       <demo-guestbook-entry-form dbxActionForm [dbxFormSource]="data$" [dbxActionFormModified]="isFormModified"></demo-guestbook-entry-form>
       <p></p>
-      <dbx-button [raised]="true" [text]="(exists$ | async) ? 'Update Entry' : 'Create Entry'" dbxActionButton></dbx-button>
+      <dbx-button [raised]="true" [text]="(exists$ | async) ? 'Save Changes' : 'Create Guestbook Entry'" dbxActionButton></dbx-button>
       <dbx-error dbxActionError></dbx-error>
     </div>
   </dbx-dialog-content>

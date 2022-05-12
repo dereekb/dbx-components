@@ -3,6 +3,7 @@ import { FirebaseFunctionMap, firebaseFunctionMapFactory, FirebaseFunctionMapFun
 import { IsNotEmpty, IsOptional, IsString, MaxLength } from "class-validator";
 
 export const PROFILE_BIO_MAX_LENGTH = 200;
+export const PROFILE_USERNAME_MAX_LENGTH = 30;
 
 export class ProfileParams {
 
@@ -22,7 +23,7 @@ export class SetProfileUsernameParams extends ProfileParams {
   @Expose()
   @IsNotEmpty()
   @IsString()
-  @MaxLength(20)
+  @MaxLength(PROFILE_USERNAME_MAX_LENGTH)
   username!: string;
 
 }
