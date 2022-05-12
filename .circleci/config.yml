@@ -66,6 +66,9 @@ jobs:
           name: run dbx-core tests
           command: npx nx test dbx-core
       - run:
+          name: run dbx-analytics tests
+          command: npx nx test dbx-analytics
+      - run:
           name: run dbx-web tests
           command: npx nx test dbx-web
       - run:

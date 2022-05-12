@@ -1,5 +1,5 @@
 import { Maybe } from "../value/maybe";
-import { Getter } from "./getter";
+import { FactoryWithInput, Getter } from "./getter";
 
 /**
  * Getter that returns a cached value.
@@ -16,6 +16,22 @@ export type CachedGetter<T> = Getter<T> & {
    * Resets/clears the cache.
    */
   reset(): void;
+
+  /**
+   * Re-initializes the getter and reloads the value from the source.
+   */
+  init(): void;
+};
+
+export type CachedFactoryWithInput<T, A = any> = CachedGetter<T> & FactoryWithInput<T, A> & {
+
+  /**
+   * Re-initializes the cache using the factory function.
+   * 
+   * @param input 
+   */
+  init(input?: A): void;
+
 };
 
 /**
@@ -26,20 +42,28 @@ export type CachedGetter<T> = Getter<T> & {
  * @param getter 
  * @returns 
  */
-export function cachedGetter<T>(getter: Getter<T>): CachedGetter<T> {
+export function cachedGetter<T>(getter: Getter<T>): CachedFactoryWithInput<T>;
+export function cachedGetter<T, A = any>(factory: FactoryWithInput<T, A>): CachedFactoryWithInput<T, A>;
+export function cachedGetter<T, A = any>(factory: FactoryWithInput<T, A>): CachedFactoryWithInput<T, A> {
   let loaded: Maybe<{ value: T }>;
 
-  const result = (() => {
+  const init = (input?: A) => {
+    loaded = {
+      value: factory(input)
+    };
+  };
+
+  const result = ((input?: A) => {
     if (!loaded) {
-      loaded = {
-        value: getter()
-      };
+      init(input);
     }
 
-    return loaded.value;
-  }) as CachedGetter<T>;
+    return loaded!.value;
+  }) as CachedFactoryWithInput<T, A>;
 
   result.set = (value: T) => loaded = { value };
   result.reset = () => loaded = undefined;
+  result.init = init;
+
   return result;
 }

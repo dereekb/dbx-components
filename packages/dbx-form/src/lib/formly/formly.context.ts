@@ -35,7 +35,7 @@ export function ProvideFormlyContext(): Provider[] {
 /**
  * DbxForm Instance that registers a delegate and manages the state of that form/delegate.
  */
-export class DbxFormlyContext<T> implements DbxForm<T> {
+export class DbxFormlyContext<T = any> implements DbxForm<T> {
 
   readonly lockSet = new LockSet();
 

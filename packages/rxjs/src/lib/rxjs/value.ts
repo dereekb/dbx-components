@@ -45,8 +45,8 @@ export function filterMaybe<T>(): OperatorFunction<Maybe<T>, T> {
 /**
  * Skips all initial maybe values, and then returns all values after the first non-null/undefined value is returned.
  */
-export function skipFirstMaybe<T>(): MonoTypeOperatorFunction<Maybe<T>> {
-  return skipWhile((x: Maybe<T>) => (x == null));
+export function skipFirstMaybe<T>(): MonoTypeOperatorFunction<T> {
+  return skipWhile((x: T) => (x == null));
 }
 
 /**
