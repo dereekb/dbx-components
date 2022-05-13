@@ -58,10 +58,12 @@ export class DemoLayoutComponent {
 
   readonly userBottomNavAnchors: ClickableAnchorLinkTree[] = [{
     title: 'Notifications',
-    ref: 'demo.notification'
+    ref: 'demo.notification',
+    disabled: true
   }, {
     title: 'Settings',
-    ref: 'demo.setting'
+    ref: 'demo.setting',
+    disabled: true
   }, {
     title: 'Logout',
     onClick: () => this.dbxAuthService.logOut()    // todo: change to signout confirmation popup

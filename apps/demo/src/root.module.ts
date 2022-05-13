@@ -14,7 +14,7 @@ import { AuthTransitionHookOptions, DbxAppAuthStateModule, DbxAppContextStateMod
 import { FormlyModule } from '@ngx-formly/core';
 import { defaultValidationMessages } from '@dereekb/dbx-form';
 import { MAT_FORM_FIELD_DEFAULT_OPTIONS } from '@angular/material/form-field';
-import { RootFirebaseModule } from './firebase/root.firebase.module';
+import { RootFirebaseModule } from './root.firebase.module';
 import { DbxFirebaseLoginModule } from '@dereekb/dbx-firebase';
 import { StoreModule } from '@ngrx/store';
 import { EffectsModule } from '@ngrx/effects';
@@ -79,7 +79,7 @@ export function makeSegmentConfig(): DbxAnalyticsSegmentApiServiceConfig {
     AppSharedModule,
     DbxWebRootModule,
     DbxFirebaseLoginModule.forRoot({
-      enabledLoginMethods: true,
+      enabledLoginMethods: environment.firebase.enabledLoginMethods,
       tosUrl: '/tos/terms',
       privacyUrl: '/tos/privacy'
     }),

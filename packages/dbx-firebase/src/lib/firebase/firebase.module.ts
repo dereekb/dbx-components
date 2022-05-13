@@ -104,11 +104,11 @@ export const DBX_FIREBASE_OPTIONS_TOKEN = new InjectionToken('DbxFirebaseOptions
     }) as any)
   ]
 })
-export class DbxFirebaseDefaultProvidersModule {
+export class DbxFirebaseDefaultFirebaseProvidersModule {
 
-  static forRoot(firebaseOptions: FirebaseOptions): ModuleWithProviders<DbxFirebaseDefaultProvidersModule> {
+  static forRoot(firebaseOptions: FirebaseOptions): ModuleWithProviders<DbxFirebaseDefaultFirebaseProvidersModule> {
     return {
-      ngModule: DbxFirebaseDefaultProvidersModule,
+      ngModule: DbxFirebaseDefaultFirebaseProvidersModule,
       providers: [{
         provide: DBX_FIREBASE_OPTIONS_TOKEN,
         useValue: firebaseOptions

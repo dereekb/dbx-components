@@ -3,7 +3,8 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     match /profile/{profile} {
-      allow read: if resourceIsOwnedByAuthUserId();
+      allow read: if true;
+      allow list: if false;
     }
 
     match /guestbook/{guestbook} {

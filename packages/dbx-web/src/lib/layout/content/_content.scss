@@ -134,7 +134,19 @@ $content-container-padding-small-screen: theming.$padding-2;
   .dbx-content-container {
 
     @include theming.if-small-screen($theme-config) {
-      padding: 0 $content-container-padding-small-screen;
+
+      // reduce all paddings down.
+      &,
+      &.container-padding-min,
+      &.container-padding-small {
+        padding: 0 $content-container-padding-small-screen;
+      }
+
+      // no padding does not gain padding.
+      &.container-padding-none {
+        padding: 0;
+      }
+
     }
 
   }

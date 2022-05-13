@@ -21,6 +21,7 @@ export const base: DemoEnvironment = {
     segment: '0GAAlnvz7dqWk5N6t3Cw89Ep6N1G1MQM'
   },
   firebase: {
+    enabledLoginMethods: ['email', 'google', 'github'],
     apiKey: "AIzaSyBl5QlQNS-AGrGIuZRI4CDHHBzUovUDABM",
     authDomain: "dereekb-components.firebaseapp.com",
     databaseURL: "https://dereekb-components-default-rtdb.firebaseio.com",
