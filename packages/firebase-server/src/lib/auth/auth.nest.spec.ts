@@ -1,12 +1,10 @@
 import * as admin from 'firebase-admin';
 import { Module } from '@nestjs/common';
 import { firebaseServerAuthModuleMetadata } from './auth.nest';
-import { firebaseAdminFunctionNestContextFactory } from '../../test/firebase/firebase.admin.nest.function';
-import { initFirebaseServerAdminTestEnvironment } from '../../test/firebase/firebase.admin.test.server';
+import { authorizedUserContextFactory, firebaseAdminFunctionNestContextFactory, initFirebaseServerAdminTestEnvironment } from "@dereekb/firebase-server/test";
 import { AbstractFirebaseServerAuthContext, AbstractFirebaseServerAuthService, AbstractFirebaseServerAuthUserContext } from './auth.service';
 import { AuthClaims, authRoleClaimsService, AuthRoleSet, AUTH_ADMIN_ROLE, AUTH_ROLE_CLAIMS_DEFAULT_CLAIM_VALUE, objectHasNoKeys } from '@dereekb/util';
 import { CallableContextWithAuthData } from '../function/context';
-import { authorizedUserContextFactory } from '../../test/firebase/firebase.admin.auth';
 
 const TEST_CLAIMS_SERVICE_CONFIG = {
   'a': { roles: [AUTH_ADMIN_ROLE] }

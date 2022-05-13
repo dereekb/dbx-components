@@ -1,7 +1,8 @@
 import { DocumentSnapshot } from '@google-cloud/firestore';
 import { first } from 'rxjs';
-import { MockItem, MockItemDocument, MockItemFirestoreCollection, mockItemFirestoreCollection, FirestoreDocumentAccessor } from '@dereekb/firebase';
-import { adminTestWithMockItemCollection } from '../../test/firestore/firestore.fixture.admin';
+import { FirestoreDocumentAccessor } from '@dereekb/firebase';
+import { MockItem, MockItemDocument, MockItemFirestoreCollection, mockItemFirestoreCollection } from '@dereekb/firebase/test';
+import { adminTestWithMockItemCollection } from '@dereekb/firebase-server/test';
 
 describe('FirestoreDocumentDataAccessor', () => {
 
