@@ -2,6 +2,37 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [3.0.0](https://github.com/dereekb/dbx-components/compare/v2.1.0...v3.0.0) (2022-05-13)
+
+
+### Code Refactoring
+
+* renamed value to itemValue in dbxValueListItem ([3441129](https://github.com/dereekb/dbx-components/commit/34411292cf3400fe0aad8872b25d9eba7e4bd062))
+
+
+### Features
+
+* added dbxAppContextStateModule, dbxAppAuthRouterModule ([40fa1fe](https://github.com/dereekb/dbx-components/commit/40fa1fe9af7ce402e54aac665b9af3c191c9d321))
+* added dbxFirebaseCollectionStore ([9704c83](https://github.com/dereekb/dbx-components/commit/9704c83603079fe1c58c3961f64d8472ff90bf6d))
+* added dbxFirebaseDocumentStore ([43da785](https://github.com/dereekb/dbx-components/commit/43da785b1b271549f65273a56a0c333a0a23bb2e))
+* added dbxFirebaseFunctionsModule ([3d1bc69](https://github.com/dereekb/dbx-components/commit/3d1bc69552e0a3cede0261d4819ad35199a03fa3))
+* added dbxFirebaseModelLoaderModule ([15a8052](https://github.com/dereekb/dbx-components/commit/15a8052e057fa6e5691915ab81b5fe8b4afdfa95))
+* added dbxInjectionContext ([a6ac801](https://github.com/dereekb/dbx-components/commit/a6ac80106cd78371391c1a314364997bf974194c))
+* added dbxListItemDisableRippleModifier ([c89cc82](https://github.com/dereekb/dbx-components/commit/c89cc82b618ae3513c716d09c1e721b8c32e16c6))
+* added dbxListItemModifier, dbxListItemAnchorModifier ([a96ffa8](https://github.com/dereekb/dbx-components/commit/a96ffa8e87b49b4408c917b6480d139dc748d8e4))
+* added dbxProgressButtons ([004ada2](https://github.com/dereekb/dbx-components/commit/004ada21ecb9c92325e76222adf8fc6a0762cad4))
+* dbxSelectionListViewContent can render as dbxListViewContent ([df16297](https://github.com/dereekb/dbx-components/commit/df1629777ec02f3ac96fa0fbcbaa1d4565f7095c))
+
+
+### BREAKING CHANGES
+
+* renamed value to itemValue to better avoid issues when using DbxValueAsListItem values
+
+- Added DbxValueAsListItem type for those use cases
+* renamed dbxInjectedContent to dbxInjection, renamed related content
+
+
+
 # [2.1.0](https://github.com/dereekb/dbx-components/compare/v2.0.0...v2.1.0) (2022-03-17)
 
 

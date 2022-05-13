@@ -2,6 +2,36 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [3.0.0](https://github.com/dereekb/dbx-components/compare/v2.1.0...v3.0.0) (2022-05-13)
+
+
+### Bug Fixes
+
+* fixed createOrUpdateWithAccessor ([243d0d3](https://github.com/dereekb/dbx-components/commit/243d0d3dd83c49171b2f7bea68142c9155f3723d))
+
+
+### Features
+
+* added AsyncPusher ([8cb2052](https://github.com/dereekb/dbx-components/commit/8cb2052577e0901d2acafa3db724b94ab0035b0a))
+* added dbxAppContextState ([dfc17eb](https://github.com/dereekb/dbx-components/commit/dfc17ebfd5281dc0d35b9f5347a1f02d8739c171))
+* added dbxAppContextStateModule, dbxAppAuthRouterModule ([40fa1fe](https://github.com/dereekb/dbx-components/commit/40fa1fe9af7ce402e54aac665b9af3c191c9d321))
+* added dbxAuthService ([9422182](https://github.com/dereekb/dbx-components/commit/9422182a617d73b4889ce433aa246962739adaf2))
+* added dbxCoreAuthModule ([29ebf14](https://github.com/dereekb/dbx-components/commit/29ebf14bc2ce380a7dfafb7d35fd77dfb3d98ea0))
+* added dbxFirebaseCollectionChangeDirective ([93a38a2](https://github.com/dereekb/dbx-components/commit/93a38a2be5da3ab5d1bf7905467441fc8b2d563e))
+* added dbxFirebaseCollectionStore ([9704c83](https://github.com/dereekb/dbx-components/commit/9704c83603079fe1c58c3961f64d8472ff90bf6d))
+* added dbxFirebaseDocumentStore ([43da785](https://github.com/dereekb/dbx-components/commit/43da785b1b271549f65273a56a0c333a0a23bb2e))
+* added dbxFirebaseDocumentWithParentStore ([f055d81](https://github.com/dereekb/dbx-components/commit/f055d81aadc8df852640e7997368af73be05b654))
+* added dbxInjectionContext ([a6ac801](https://github.com/dereekb/dbx-components/commit/a6ac80106cd78371391c1a314364997bf974194c))
+* added dbxProgressButtons ([004ada2](https://github.com/dereekb/dbx-components/commit/004ada21ecb9c92325e76222adf8fc6a0762cad4))
+* firebaseServerAuthModule ([db9a4d3](https://github.com/dereekb/dbx-components/commit/db9a4d3d47fd15317186c7a034c25083ae395251))
+
+
+### BREAKING CHANGES
+
+* renamed dbxInjectedContent to dbxInjection, renamed related content
+
+
+
 # [2.1.0](https://github.com/dereekb/dbx-components/compare/v2.0.0...v2.1.0) (2022-03-17)
 
 

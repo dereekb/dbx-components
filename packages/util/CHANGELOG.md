@@ -2,6 +2,37 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [3.0.0](https://github.com/dereekb/dbx-components/compare/v2.1.0...v3.0.0) (2022-05-13)
+
+
+### Code Refactoring
+
+* renamed conversionFunction to mapFunction ([6aeba77](https://github.com/dereekb/dbx-components/commit/6aeba7721dfd2721d5fe41216a1b81117be80aff))
+
+
+### Features
+
+* added AsyncPusher ([8cb2052](https://github.com/dereekb/dbx-components/commit/8cb2052577e0901d2acafa3db724b94ab0035b0a))
+* added cleanup() ([1885463](https://github.com/dereekb/dbx-components/commit/18854634041fcdf613ea8f8b0640db9fb218bbce))
+* added dbxFirebaseDocumentStore ([43da785](https://github.com/dereekb/dbx-components/commit/43da785b1b271549f65273a56a0c333a0a23bb2e))
+* added dbxListItemModifier, dbxListItemAnchorModifier ([a96ffa8](https://github.com/dereekb/dbx-components/commit/a96ffa8e87b49b4408c917b6480d139dc748d8e4))
+* added isAllowed ([c2a70bf](https://github.com/dereekb/dbx-components/commit/c2a70bf8a6f4bc4ef8b870691b9899fed3cbafad))
+* added IterationQueryChangeWatcher ([f5b2474](https://github.com/dereekb/dbx-components/commit/f5b2474f9a2cf659cdebf19ba49055e5bd2f1c90))
+* added jestFunctionFixture ([1ea2d7d](https://github.com/dereekb/dbx-components/commit/1ea2d7d4c852449f34279eeedfadd2d69c1e7f2b))
+* added mapKeysIntersection utility functions ([f694f86](https://github.com/dereekb/dbx-components/commit/f694f86b87e646e00e446236bb1c94a28652aa70))
+* added modelConversionFunctions ([42050a8](https://github.com/dereekb/dbx-components/commit/42050a8c1561acad97e99d540834d9c1305ca897))
+* added modelConversionOptions to modelMapFunction ([2de30e0](https://github.com/dereekb/dbx-components/commit/2de30e07527bbaf27c51a8472054a35e73d2ae2b))
+* added setContainsAllValues ([737c1e7](https://github.com/dereekb/dbx-components/commit/737c1e750a9c656406043e2a69bdceaf941750b6))
+* added snapshotConverter, firestoreField ([e986026](https://github.com/dereekb/dbx-components/commit/e986026a4a4700c734fe1534778945df189c518d))
+* firebaseServerAuthModule ([db9a4d3](https://github.com/dereekb/dbx-components/commit/db9a4d3d47fd15317186c7a034c25083ae395251))
+
+
+### BREAKING CHANGES
+
+* renamed ConversionFunction (and related types) to MapFunction
+
+
+
 # [2.1.0](https://github.com/dereekb/dbx-components/compare/v2.0.0...v2.1.0) (2022-03-17)
 
 

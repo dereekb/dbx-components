@@ -111,9 +111,6 @@ jobs:
       - checkout
       - attach_workspace:
           at: ~/code
-      - run:
-          name: remove node_modules and reinstall dependencies
-          command: rm -rd node_modules && npm ci
       - add_ssh_keys:
           fingerprints:
             - "d9:53:28:55:d6:96:4e:1e:d1:53:5e:79:e4:80:7e:28"
@@ -122,7 +119,7 @@ jobs:
           command: git config user.email "ci@dereekb.com" && git config user.name "ci"
       - run:
           name: build release
-          command: npx nx run workspace:version
+          command: npx nx run --parallel=1 workspace:version
       - run:
           name: merge release into main and use the release commit message
           command: git checkout main && git merge release --squash -Xtheirs && git commit -m "$(git log release --pretty=%B | cat)"
