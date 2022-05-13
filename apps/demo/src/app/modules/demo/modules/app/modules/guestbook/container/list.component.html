@@ -1,7 +1,7 @@
 <dbx-two-column dbxTwoColumnContext [dbxTwoColumnSref]="guestbookListRef">
-  <dbx-two-block left>
+  <dbx-two-block left demoGuestbookCollection>
     <dbx-two-column-head top></dbx-two-column-head>
-    <demo-guestbook-list dbxFirebaseCollectionList demoGuestbookCollection [dbxListItemModifier]
+    <demo-guestbook-list dbxFirebaseCollectionList [dbxListItemModifier]
       [dbxListItemAnchorModifier]="makeGuestbookAnchor"></demo-guestbook-list>
   </dbx-two-block>
   <ui-view demoGuestbookDocument dbxFirebaseDocumentStoreRouteId right></ui-view>

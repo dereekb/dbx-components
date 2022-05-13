@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Observable, shareReplay, distinctUntilChanged, Subscription, exhaustMap, first, map, switchMap, tap } from 'rxjs';
-import { FirebaseQueryItemAccumulator, FirestoreCollection, FirestoreDocument, FirestoreItemPageIterationInstance, FirestoreQueryConstraint, IterationQueryChangeWatcher } from '@dereekb/firebase';
+import { FirebaseQueryItemAccumulator, FirestoreCollection, FirestoreDocument, FirestoreItemPageIterationInstance, FirestoreQueryConstraint, IterationQueryDocChangeWatcher } from '@dereekb/firebase';
 import { ObservableOrValue, cleanupDestroyable, PageListLoadingState, filterMaybe } from '@dereekb/rxjs';
 import { ArrayOrValue, Maybe } from '@dereekb/util';
 import { LockSetComponentStore } from '@dereekb/dbx-core';
@@ -9,6 +9,11 @@ import { DbxFirebaseCollectionLoaderInstance, dbxFirebaseCollectionLoaderInstanc
 export interface DbxFirebaseCollectionStore<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> extends DbxFirebaseCollectionLoaderInstanceData<T, D> {
   readonly firestoreCollection$: Observable<Maybe<FirestoreCollection<T, D>>>;
   readonly loader$: Observable<DbxFirebaseCollectionLoaderInstance<T, D>>;
+
+  readonly firestoreIteration$: Observable<FirestoreItemPageIterationInstance<T>>;
+  readonly queryChangeWatcher$: Observable<IterationQueryDocChangeWatcher<T>>;
+  readonly accumulator$: Observable<FirebaseQueryItemAccumulator<T>>;
+  readonly pageLoadingState$: Observable<PageListLoadingState<T>>;
 
   setMaxPages(observableOrValue: ObservableOrValue<Maybe<number>>): Subscription;
   setItemsPerPage(observableOrValue: ObservableOrValue<Maybe<number>>): Subscription;
@@ -102,7 +107,7 @@ export class AbstractDbxFirebaseCollectionStore<T, D extends FirestoreDocument<T
   );
 
   readonly firestoreIteration$: Observable<FirestoreItemPageIterationInstance<T>> = this.loader$.pipe(switchMap(x => x.firestoreIteration$));
-  readonly queryChangeWatcher$: Observable<IterationQueryChangeWatcher<T>> = this.loader$.pipe(switchMap(x => x.queryChangeWatcher$));
+  readonly queryChangeWatcher$: Observable<IterationQueryDocChangeWatcher<T>> = this.loader$.pipe(switchMap(x => x.queryChangeWatcher$));
   readonly accumulator$: Observable<FirebaseQueryItemAccumulator<T>> = this.loader$.pipe(switchMap(x => x.accumulator$));
   readonly pageLoadingState$: Observable<PageListLoadingState<T>> = this.loader$.pipe(switchMap(x => x.pageLoadingState$));
 

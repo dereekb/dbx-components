@@ -1,6 +1,6 @@
 import { PageListLoadingState, cleanupDestroyable, filterMaybe, useFirst, SubscriptionObject, accumulatorFlattenPageListLoadingState } from '@dereekb/rxjs';
 import { BehaviorSubject, combineLatest, map, shareReplay, distinctUntilChanged, Subject, throttleTime, switchMap, Observable, tap, startWith, NEVER } from 'rxjs';
-import { FirebaseQueryItemAccumulator, firebaseQueryItemAccumulator, FirestoreCollection, FirestoreDocument, FirestoreItemPageIterationInstance, FirestoreItemPageIteratorFilter, FirestoreQueryConstraint, IterationQueryChangeWatcher, iterationQueryChangeWatcher } from '@dereekb/firebase';
+import { FirebaseQueryItemAccumulator, firebaseQueryItemAccumulator, FirestoreCollection, FirestoreDocument, FirestoreItemPageIterationInstance, FirestoreItemPageIteratorFilter, FirestoreQueryConstraint, IterationQueryDocChangeWatcher, iterationQueryDocChangeWatcher } from '@dereekb/firebase';
 import { ArrayOrValue, Destroyable, Initialized, Maybe } from '@dereekb/util';
 import { DbxFirebaseCollectionLoader } from './collection.loader';
 
@@ -59,8 +59,9 @@ export class DbxFirebaseCollectionLoaderInstance<T, D extends FirestoreDocument<
     shareReplay(1)
   );
 
-  readonly queryChangeWatcher$: Observable<IterationQueryChangeWatcher<T>> = this.firestoreIteration$.pipe(
-    map(instance => iterationQueryChangeWatcher({ instance }))
+  readonly queryChangeWatcher$: Observable<IterationQueryDocChangeWatcher<T>> = this.firestoreIteration$.pipe(
+    map(instance => iterationQueryDocChangeWatcher({ instance })),
+    shareReplay(1)
   );
 
   readonly accumulator$: Observable<FirebaseQueryItemAccumulator<T>> = this.firestoreIteration$.pipe(

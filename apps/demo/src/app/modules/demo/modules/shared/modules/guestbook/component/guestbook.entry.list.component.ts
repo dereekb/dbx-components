@@ -50,7 +50,7 @@ export class DemoGuestbookEntryListViewComponent extends AbstractDbxSelectionLis
 export class DemoGuestbookEntryListViewItemComponent extends AbstractDbxValueListViewItemComponent<GuestbookEntry> {
 
   get updatedAt() {
-    return this.itemValue.updatedAt ?? new Date();
+    return this.itemValue.updatedAt;
   }
 
   get message() {

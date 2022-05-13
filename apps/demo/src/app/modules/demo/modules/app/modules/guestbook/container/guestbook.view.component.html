@@ -16,11 +16,11 @@
           </div>
         </div>
       </div>
-      <div class="guestbook-view-content">
+      <div class="guestbook-view-content" demoGuestbookEntryCollection dbxFirebaseCollectionChange="auto">
         <p></p>
         <mat-divider></mat-divider>
         <div>
-          <demo-guestbook-entry-list dbxFirebaseCollectionList demoGuestbookEntryCollection>
+          <demo-guestbook-entry-list dbxFirebaseCollectionList>
             <dbx-list-empty-content empty>
               <p>There are no entries yet in the guest book.</p>
             </dbx-list-empty-content>

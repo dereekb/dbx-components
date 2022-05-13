@@ -1,3 +1,4 @@
+import { tapLog } from '@dereekb/rxjs';
 import { filterMaybe } from '../rxjs';
 import { distinctUntilChanged, map, scan, startWith, catchError, skip, mergeMap, delay } from 'rxjs/operators';
 import { PageLoadingState, loadingStateHasError, loadingStateHasFinishedLoading, loadingStateIsLoading, successPageResult, mapLoadingStateResults, beginLoading } from "../loading";
@@ -210,6 +211,10 @@ export class ItemPageIterationInstance<V, F, C extends ItemPageIterationConfig<F
 
           if (!loadingStateHasError(curr)) {
             next.lastSuccessful = curr;
+
+            if (!next.firstSuccessful) {
+              next.firstSuccessful = curr;
+            }
           }
         }
       }

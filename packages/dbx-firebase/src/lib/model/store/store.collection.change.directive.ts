@@ -1,66 +1,74 @@
-import { Directive, forwardRef, Input, Provider, Type } from '@angular/core';
-import { FirestoreDocument, FirestoreQueryConstraint } from "@dereekb/firebase";
-import { Maybe, ArrayOrValue } from '@dereekb/util';
+import { tapLog } from '@dereekb/rxjs';
+import { shareReplay, startWith, Observable, switchMap, BehaviorSubject, distinctUntilChanged, combineLatest, map, filter, take } from 'rxjs';
+import { Directive, Input } from '@angular/core';
+import { FirestoreDocument, IterationQueryDocChangeWatcherChangeType, IterationQueryDocChangeWatcherEvent } from "@dereekb/firebase";
+import { Maybe } from '@dereekb/util';
 import { DbxFirebaseCollectionStore } from "./store.collection";
+import { DbxFirebaseCollectionStoreDirective } from './store.collection.directive';
+import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
 
 /**
- * Abstract directive that contains a DbxFirebaseCollectionStore and provides an interface for communicating with other directives.
+ * Refresh mode
  */
-@Directive()
-export abstract class DbxFirebaseCollectionStoreDirective<T, D extends FirestoreDocument<T> = FirestoreDocument<T>, S extends DbxFirebaseCollectionStore<T, D> = DbxFirebaseCollectionStore<T, D>> {
+export type DbxFirebaseCollectionChangeDirectiveMode = 'auto' | 'manual';
+export type DbxFirebaseCollectionChangeDirectiveEvent = Pick<IterationQueryDocChangeWatcherEvent<any>, 'time' | 'type'>;
 
-  constructor(readonly store: S) { }
+/**
+ * Used to watch query doc changes and respond to them accordingly.
+ */
+@Directive({
+  selector: '[dbxFirebaseCollectionChange]'
+})
+export class DbxFirebaseCollectionChangeDirective<T, D extends FirestoreDocument<T> = FirestoreDocument<T>, S extends DbxFirebaseCollectionStore<T, D> = DbxFirebaseCollectionStore<T, D>>
+  extends AbstractSubscriptionDirective {
 
-  readonly pageLoadingState$ = this.store.pageLoadingState$;
+  private _mode = new BehaviorSubject<DbxFirebaseCollectionChangeDirectiveMode>('manual');
+  readonly mode$ = this._mode.pipe(distinctUntilChanged());
 
-  // MARK: Inputs
-  @Input()
-  set maxPages(maxPages: Maybe<number>) {
-    this.store.setMaxPages(maxPages);
+  readonly event$: Observable<DbxFirebaseCollectionChangeDirectiveEvent> = this.dbxFirebaseCollectionStoreDirective.store.queryChangeWatcher$.pipe(
+    switchMap((x) => x.event$.pipe(
+      filter(x => x.type !== 'none'), // do not share 'none' events.
+      take(1),  // only need one event to mark as change is available.
+      startWith({
+        time: new Date(),
+        type: 'none' as IterationQueryDocChangeWatcherChangeType
+      }))),
+    shareReplay(1)
+  );
+
+  readonly hasChangeAvailable$: Observable<boolean> = this.event$.pipe(
+    map(x => x.type !== 'none'),
+    shareReplay(1)
+  );
+
+  constructor(readonly dbxFirebaseCollectionStoreDirective: DbxFirebaseCollectionStoreDirective<T, D, S>) {
+    super();
   }
 
-  @Input()
-  set itemsPerPage(itemsPerPage: Maybe<number>) {
-    this.store.setItemsPerPage(itemsPerPage);
+  ngOnInit(): void {
+    this.sub = combineLatest([this.mode$, this.hasChangeAvailable$]).pipe(
+      filter(([mode, hasChange]) => mode === 'auto' && hasChange)
+    ).subscribe(() => {
+      this.restart();
+    });
   }
 
-  @Input()
-  set constraints(constraints: Maybe<ArrayOrValue<FirestoreQueryConstraint>>) {
-    this.store.setConstraints(constraints);
+  override ngOnDestroy(): void {
+    super.ngOnDestroy();
+    this._mode.complete();
   }
 
-  next() {
-    this.store.next();
+  @Input('dbxFirebaseCollectionChange')
+  get mode(): DbxFirebaseCollectionChangeDirectiveMode {
+    return this._mode.value;
+  }
+
+  set mode(mode: Maybe<DbxFirebaseCollectionChangeDirectiveMode | ''>) {
+    this._mode.next(mode || 'manual');
   }
 
   restart() {
-    this.store.restart();
+    this.dbxFirebaseCollectionStoreDirective.store.restart();
   }
 
-  setConstraints(constraints: Maybe<ArrayOrValue<FirestoreQueryConstraint>>) {
-    this.store.setConstraints(constraints);
-  }
-
-}
-
-/**
- * Configures providers for a DbxFirebaseCollectionStoreDirective. 
- * 
- * Can optionally also provide the actual store type to include in the providers array so it is instantiated by Angular.
- * 
- * @param sourceType 
- */
-export function provideDbxFirebaseCollectionStoreDirective<S extends DbxFirebaseCollectionStoreDirective<any, any, any>>(sourceType: Type<S>): Provider[];
-export function provideDbxFirebaseCollectionStoreDirective<S extends DbxFirebaseCollectionStore<any, any>, C extends DbxFirebaseCollectionStoreDirective<any, any, S> = DbxFirebaseCollectionStoreDirective<any, any, S>>(sourceType: Type<C>, storeType: Type<S>): Provider[];
-export function provideDbxFirebaseCollectionStoreDirective<S extends DbxFirebaseCollectionStore<any, any>, C extends DbxFirebaseCollectionStoreDirective<any, any, S> = DbxFirebaseCollectionStoreDirective<any, any, S>>(sourceType: Type<C>, storeType?: Type<S>): Provider[] {
-  const providers: Provider[] = [{
-    provide: DbxFirebaseCollectionStoreDirective,
-    useExisting: forwardRef(() => sourceType)
-  }];
-
-  if (storeType) {
-    providers.push(storeType);
-  }
-
-  return providers;
 }

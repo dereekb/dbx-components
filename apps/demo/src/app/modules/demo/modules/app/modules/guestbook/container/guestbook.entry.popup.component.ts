@@ -2,8 +2,7 @@ import { Component } from '@angular/core';
 import { AbstractDialogDirective } from '@dereekb/dbx-web';
 import { MatDialog } from '@angular/material/dialog';
 import { HandleActionFunction } from '@dereekb/dbx-core';
-import { DemoGuestbookEntryFormValue } from '../../../../shared/modules/guestbook/component/guestbook.entry.form.component';
-import { GuestbookEntryDocumentStore } from './../../../../shared/modules/guestbook/store/guestbook.entry.document.store';
+import { DemoGuestbookEntryFormValue, GuestbookEntryDocumentStore } from './../../../../shared';
 import { IsModifiedFunction } from '@dereekb/rxjs';
 import { map, of, switchMap } from 'rxjs';
 
@@ -15,7 +14,7 @@ export interface DemoGuestbookEntryPopupComponentConfig {
   template: `
   <dbx-dialog-content>
     <p class="dbx-note">Enter your message for the guest book.</p>
-    <div dbxAction dbxActionLogger dbxActionEnforceModified [dbxActionHandler]="handleUpdateEntry">
+    <div dbxAction dbxActionEnforceModified [dbxActionHandler]="handleUpdateEntry">
       <demo-guestbook-entry-form dbxActionForm [dbxFormSource]="data$" [dbxActionFormModified]="isFormModified"></demo-guestbook-entry-form>
       <p></p>
       <dbx-button [raised]="true" [text]="(exists$ | async) ? 'Save Changes' : 'Create Guestbook Entry'" dbxActionButton></dbx-button>
