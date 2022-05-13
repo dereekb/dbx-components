@@ -1,5 +1,5 @@
 import { DocumentSnapshot } from '@firebase/firestore';
-import { MockItem, MockItemDocument, MockItemFirestoreCollection, mockItemFirestoreCollection, authorizedTestWithMockItemCollection } from "../../../test";
+import { MockItem, MockItemDocument, MockItemFirestoreCollection, mockItemFirestoreCollection, authorizedTestWithMockItemCollection } from "@dereekb/firebase/test";
 import { FirestoreDocumentAccessor } from '../../common';
 
 describe('FirestoreDocumentAccessor', () => {

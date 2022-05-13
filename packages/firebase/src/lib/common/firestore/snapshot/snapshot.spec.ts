@@ -1,5 +1,5 @@
 import { makeSnapshotConverterFunctions } from './snapshot';
-import { MockItem } from "../../../../test/common/firestore.mock.item";
+import { MockItem } from "@dereekb/firebase/test";
 import { firestoreBoolean } from './snapshot.field';
 
 describe('makeSnapshotConverterFunctions()', () => {

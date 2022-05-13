@@ -1,5 +1,5 @@
-import { describeFirestoreIterationTests } from "@dereekb/firebase";
-import { adminTestWithMockItemCollection } from "../../test/firestore/firestore.fixture.admin";
+import { describeFirestoreIterationTests } from "@dereekb/firebase/test";
+import { adminTestWithMockItemCollection } from "@dereekb/firebase-server/test";
 
 adminTestWithMockItemCollection((f) => {
   describeFirestoreIterationTests(f);
