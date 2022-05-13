@@ -75,7 +75,9 @@
     'padding-2': 6px,                 // initial padding-2
     'padding-3': 12px,                // initial padding-3
     'padding-4': 18px,                // initial padding-4
-    'padding-5': 24px                 // initial padding-5
+    'padding-5': 24px,                // initial padding-5
+    // layout
+    'two-column-left-width': 320px
   );
 
   @if ($input-dbx-theme-layout-config != null) {
@@ -119,4 +121,8 @@
 
 @function get-dbx-layout-padding($theme-config, $padding-level) {
   @return get-dbx-layout-config-var($theme-config, 'padding-'+ $padding-level);
+}
+
+@function get-dbx-two-column-left-width($theme-config) {
+  @return get-dbx-layout-config-var($theme-config, 'two-column-left-width');
 }

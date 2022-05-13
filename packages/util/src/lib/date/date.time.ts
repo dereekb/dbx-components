@@ -1,4 +1,4 @@
-import { Maybe } from "../value";
+import { Maybe } from "../value/maybe";
 
 /**
  * Represents a string for a time. This may be human-input, and

@@ -1,4 +1,4 @@
-import { areEqualObjectValues } from ".";
+import { areEqualPOJOValues } from "./object.equal";
 
 describe('areEqualObjectValues', () => {
 
@@ -6,21 +6,21 @@ describe('areEqualObjectValues', () => {
     const a = { a: 'a' };
     const b = { a: 'a' };
 
-    expect(areEqualObjectValues(a, b)).toBe(true);
+    expect(areEqualPOJOValues(a, b)).toBe(true);
   });
 
   it('should return false if both objects have the same properties but are not equal.', () => {
     const a = { a: 'a' };
     const b = { a: 'b' };
 
-    expect(areEqualObjectValues(a as any, b as any)).toBe(false);
+    expect(areEqualPOJOValues(a as any, b as any)).toBe(false);
   });
 
   it('should return false if both objects are not equal.', () => {
     const a = { a: 'a' };
     const b = { b: 'a' };
 
-    expect(areEqualObjectValues(a as any, b as any)).toBe(false);
+    expect(areEqualPOJOValues(a as any, b as any)).toBe(false);
   });
 
 });

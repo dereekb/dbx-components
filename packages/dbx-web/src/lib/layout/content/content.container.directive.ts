@@ -1,4 +1,4 @@
-import { Component, Input, Directive } from '@angular/core';
+import { Input, Directive } from '@angular/core';
 
 export type DbxContentContainerPadding = 'none' | 'min' | 'small' | 'normal';
 
@@ -17,9 +17,9 @@ export type DbxContentContainerWidth = 'small' | 'medium' | 'wide' | 'full';
 export class DbxContentContainerDirective {
 
   @Input()
-  grow = 'wide';
+  grow: DbxContentContainerWidth = 'wide';
 
   @Input()
-  padding = 'normal';
+  padding: DbxContentContainerPadding = 'normal';
 
 }

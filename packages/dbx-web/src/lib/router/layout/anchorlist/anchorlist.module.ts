@@ -4,7 +4,7 @@ import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTabsModule } from '@angular/material/tabs';
-import { DbxAnchorModule } from '../anchor/anchor.module';
+import { DbxRouterAnchorModule } from '../anchor/anchor.module';
 import { MatMenuModule } from '@angular/material/menu';
 import { DbxAnchorListComponent } from './anchorlist.component';
 
@@ -17,7 +17,7 @@ import { DbxAnchorListComponent } from './anchorlist.component';
     MatIconModule,
     MatListModule,
     MatMenuModule,
-    DbxAnchorModule,
+    DbxRouterAnchorModule,
   ],
   declarations: [
     DbxAnchorListComponent
@@ -26,4 +26,4 @@ import { DbxAnchorListComponent } from './anchorlist.component';
     DbxAnchorListComponent
   ]
 })
-export class DbxAnchorListModule { }
+export class DbxRouterAnchorListModule { }

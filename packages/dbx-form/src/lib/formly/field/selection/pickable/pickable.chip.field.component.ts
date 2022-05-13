@@ -12,9 +12,9 @@ export class DbxPickableChipListFieldComponent<T> extends AbstractDbxPickableIte
   itemClicked(item: PickableItemFieldItem<T>): void {
     if (!item.disabled && !this.isReadonlyOrDisabled) {
       if (item.selected) {
-        this.removeValue(item.value.value);
+        this.removeValue(item.itemValue.value);
       } else {
-        this.addValue(item.value.value);
+        this.addValue(item.itemValue.value);
       }
     }
   }

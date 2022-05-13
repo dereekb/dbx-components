@@ -1,4 +1,4 @@
-import { DbxAnchorModule } from '../../router';
+import { DbxRouterAnchorModule } from '../../router';
 import { MatButtonModule } from '@angular/material/button';
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
@@ -16,7 +16,7 @@ import { DbxSectionHeaderComponent } from './section.header.component';
 @NgModule({
   imports: [
     CommonModule,
-    DbxAnchorModule,
+    DbxRouterAnchorModule,
     MatButtonModule,
     MatRippleModule,
     MatIconModule

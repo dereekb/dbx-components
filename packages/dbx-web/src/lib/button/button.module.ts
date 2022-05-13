@@ -1,14 +1,14 @@
 import { NgModule } from '@angular/core';
-import { MatProgressButtonsModule } from 'mat-progress-buttons';
 import { DbxButtonComponent } from './button.component';
 import { DbxButtonSpacerDirective } from './button.spacer.component';
 import { CommonModule } from '@angular/common';
 import { DbxCoreButtonModule } from '@dereekb/dbx-core';
+import { DbxProgressButtonsModule } from './progress/button.progress.module';
 
 @NgModule({
   imports: [
     CommonModule,
-    MatProgressButtonsModule
+    DbxProgressButtonsModule
   ],
   declarations: [
     DbxButtonComponent,
@@ -16,9 +16,9 @@ import { DbxCoreButtonModule } from '@dereekb/dbx-core';
   ],
   exports: [
     DbxCoreButtonModule,
-    MatProgressButtonsModule,
+    DbxProgressButtonsModule,
     DbxButtonComponent,
     DbxButtonSpacerDirective
   ],
 })
-export class DbxButtonModule {}
+export class DbxButtonModule { }

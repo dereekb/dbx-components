@@ -1,4 +1,5 @@
 import { BaseError } from 'make-error';
+import { Maybe } from '../value/maybe';
 
 /**
  * A unique identifier for a specific error.
@@ -16,7 +17,14 @@ export interface CodedError {
  * An error with a human-readable message.
  */
 export interface ReadableError extends Partial<CodedError> {
-  message: string;
+  message?: Maybe<string>;
+}
+
+export function readableError(code: StringErrorCode, message?: string) {
+  return {
+    code,
+    message
+  };
 }
 
 export interface ReadableDataError<T = any> extends ReadableError {
@@ -26,7 +34,6 @@ export interface ReadableDataError<T = any> extends ReadableError {
 export interface ErrorWrapper {
   data: ReadableError | CodedError;
 }
-
 
 export type ErrorInput = ErrorWrapper | CodedError | ReadableError;
 

@@ -2,6 +2,40 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [3.0.0](https://github.com/dereekb/dbx-components/compare/v2.1.0...v3.0.0) (2022-05-13)
+
+
+### Bug Fixes
+
+* fixed dbxFormlyForm async validation issue ([afb3f96](https://github.com/dereekb/dbx-components/commit/afb3f964564b5b9795071b4f8fcfbaad9f37feec))
+
+
+### Code Refactoring
+
+* renamed value to itemValue in dbxValueListItem ([3441129](https://github.com/dereekb/dbx-components/commit/34411292cf3400fe0aad8872b25d9eba7e4bd062))
+
+
+### Features
+
+* added AsyncPusher ([8cb2052](https://github.com/dereekb/dbx-components/commit/8cb2052577e0901d2acafa3db724b94ab0035b0a))
+* added dbxFirebaseAuthModule ([3ab16df](https://github.com/dereekb/dbx-components/commit/3ab16dffc5dfcaf0d88755c4b8a8d6a3f8c82c19))
+* added dbxFirebaseLoginModule ([bf99f2d](https://github.com/dereekb/dbx-components/commit/bf99f2d947bedc2305e82e1d8cf0ecc6bb9a1f0f))
+* added dbxFormWorkingWrapperComponent ([fd32cd4](https://github.com/dereekb/dbx-components/commit/fd32cd4c2933e79c255f07f86fdc8fc3029b0858))
+* added dbxInjectionContext ([a6ac801](https://github.com/dereekb/dbx-components/commit/a6ac80106cd78371391c1a314364997bf974194c))
+* added modelConversionOptions to modelMapFunction ([2de30e0](https://github.com/dereekb/dbx-components/commit/2de30e07527bbaf27c51a8472054a35e73d2ae2b))
+* dbxSelectionListViewContent can render as dbxListViewContent ([df16297](https://github.com/dereekb/dbx-components/commit/df1629777ec02f3ac96fa0fbcbaa1d4565f7095c))
+* refactored dbxFormSource ([aad115d](https://github.com/dereekb/dbx-components/commit/aad115d9809ed765ddadc63c9f56ac2a4ab5ce5a))
+
+
+### BREAKING CHANGES
+
+* renamed value to itemValue to better avoid issues when using DbxValueAsListItem values
+
+- Added DbxValueAsListItem type for those use cases
+* renamed dbxInjectedContent to dbxInjection, renamed related content
+
+
+
 # [2.1.0](https://github.com/dereekb/dbx-components/compare/v2.0.0...v2.1.0) (2022-03-17)
 
 

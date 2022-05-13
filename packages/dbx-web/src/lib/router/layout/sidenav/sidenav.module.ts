@@ -8,8 +8,8 @@ import { UIRouterModule } from '@uirouter/angular';
 import { DbxSidenavComponent } from './sidenav.component';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatListModule } from '@angular/material/list';
-import { DbxAnchorModule } from '../anchor/anchor.module';
-import { DbxAnchorListModule } from '../anchorlist/anchorlist.module';
+import { DbxRouterAnchorModule } from '../anchor/anchor.module';
+import { DbxRouterAnchorListModule } from '../anchorlist/anchorlist.module';
 import { DbxSidenavPagebarComponent } from './sidenav.pagebar.component';
 import { DbxSidenavPageComponent } from './sidenav.page.component';
 import { DbxBarLayoutModule } from '../../../layout/bar/bar.layout.module';
@@ -21,8 +21,8 @@ import { DbxSidenavButtonComponent } from './sidenav.button.component';
   imports: [
     CommonModule,
     DbxBarLayoutModule,
-    DbxAnchorModule,
-    DbxAnchorListModule,
+    DbxRouterAnchorModule,
+    DbxRouterAnchorListModule,
     DbxButtonModule,
     DbxContentLayoutModule,
     MatToolbarModule,
@@ -46,4 +46,4 @@ import { DbxSidenavButtonComponent } from './sidenav.button.component';
     DbxSidenavPageComponent
   ]
 })
-export class DbxSidenavModule { }
+export class DbxRouterSidenavModule { }

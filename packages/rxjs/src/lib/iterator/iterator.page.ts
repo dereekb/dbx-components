@@ -1,10 +1,24 @@
+import { tapLog } from '@dereekb/rxjs';
 import { filterMaybe } from '../rxjs';
 import { distinctUntilChanged, map, scan, startWith, catchError, skip, mergeMap, delay } from 'rxjs/operators';
 import { PageLoadingState, loadingStateHasError, loadingStateHasFinishedLoading, loadingStateIsLoading, successPageResult, mapLoadingStateResults, beginLoading } from "../loading";
-import { FIRST_PAGE, Destroyable, Filter, filteredPage, getNextPageNumber, hasValueOrNotEmpty, Maybe, PageNumber, Page } from "@dereekb/util";
+import { FIRST_PAGE, Destroyable, Filter, filteredPage, getNextPageNumber, hasValueOrNotEmpty, Maybe, PageNumber, Page, isMaybeNot } from "@dereekb/util";
 import { BehaviorSubject, combineLatest, exhaustMap, filter, first, Observable, of, OperatorFunction, shareReplay } from "rxjs";
 import { ItemIteratorNextRequest, PageItemIteration } from './iteration';
 import { iterationHasNextAndCanLoadMore } from './iteration.next';
+
+export interface ItemPageLimit {
+
+  /**
+   * Maximum number of pages to load.
+   * 
+   * This value should be defined in most cases. 
+   * 
+   * If not defined, the will be no ending iteration.
+   */
+  maxPageLoadLimit?: Maybe<number>;
+
+}
 
 export interface ItemPageIteratorRequest<V, F, C extends ItemPageIterationConfig<F> = ItemPageIterationConfig<F>> extends Page {
   /**
@@ -57,7 +71,7 @@ export interface ItemPageIteratorDelegate<V, F, C extends ItemPageIterationConfi
   /**
    * Returns an observable of items given the input request.
    * 
-   * If the input goes out of bounds, the result should be 
+   * If the input goes out of bounds, the result should be an empty array.
    */
   loadItemsForPage: (request: ItemPageIteratorRequest<V, F, C>) => Observable<ItemPageIteratorResult<V>>;
 
@@ -67,7 +81,7 @@ interface InternalItemPageIteratorNext extends ItemIteratorNextRequest {
   n: number;
 }
 
-export interface ItemPageIterationConfig<F = any> extends Filter<F> { }
+export interface ItemPageIterationConfig<F = any> extends Filter<F>, ItemPageLimit { }
 
 // MARK: Iterator
 /**
@@ -80,10 +94,14 @@ export const DEFAULT_ITEM_PAGE_ITERATOR_MAX = 100;
  */
 export class ItemPageIterator<V, F, C extends ItemPageIterationConfig<F> = any> {
 
-  private _maxPageLoadLimit = DEFAULT_ITEM_PAGE_ITERATOR_MAX;
+  protected _maxPageLoadLimit: Maybe<number>;
 
   get maxPageLoadLimit() {
     return this._maxPageLoadLimit;
+  }
+
+  set maxPageLoadLimit(maxPageLoadLimit: Maybe<number>) {
+    this._maxPageLoadLimit = maxPageLoadLimit;
   }
 
   constructor(readonly delegate: ItemPageIteratorDelegate<V, F, C>) { }
@@ -108,6 +126,7 @@ export interface ItemPageIterationInstanceState<V> {
   n: number;
   current: Maybe<PageLoadingState<ItemPageIteratorResult<V>>>;
   latestFinished: Maybe<PageLoadingState<ItemPageIteratorResult<V>>>;
+  firstSuccessful: Maybe<PageLoadingState<ItemPageIteratorResult<V>>>;
   lastSuccessful: Maybe<PageLoadingState<ItemPageIteratorResult<V>>>;
 }
 
@@ -120,8 +139,7 @@ export class ItemPageIterationInstance<V, F, C extends ItemPageIterationConfig<F
    * Used for triggering loading of more content.
    */
   private readonly _next = new BehaviorSubject<InternalItemPageIteratorNext>({ n: 0 });
-
-  private readonly _maxPageLoadLimit = new BehaviorSubject(this.iterator.maxPageLoadLimit);
+  private readonly _maxPageLoadLimit = new BehaviorSubject<Maybe<number>>(this.config.maxPageLoadLimit ?? this.iterator.maxPageLoadLimit);
 
   constructor(readonly iterator: ItemPageIterator<V, F, C>, readonly config: C) { }
 
@@ -182,6 +200,7 @@ export class ItemPageIterationInstance<V, F, C extends ItemPageIterationConfig<F
         n,
         current: curr,
         latestFinished: acc.latestFinished,
+        firstSuccessful: acc.firstSuccessful,
         lastSuccessful: acc.lastSuccessful
       };
 
@@ -192,6 +211,10 @@ export class ItemPageIterationInstance<V, F, C extends ItemPageIterationConfig<F
 
           if (!loadingStateHasError(curr)) {
             next.lastSuccessful = curr;
+
+            if (!next.firstSuccessful) {
+              next.firstSuccessful = curr;
+            }
           }
         }
       }
@@ -200,7 +223,7 @@ export class ItemPageIterationInstance<V, F, C extends ItemPageIterationConfig<F
     }, {
       n: -1,
       current: { page: FIRST_PAGE },  // Start with loading the first page
-      latestFinished: undefined, lastSuccessful: undefined
+      latestFinished: undefined, firstSuccessful: undefined, lastSuccessful: undefined
     }),
     shareReplay(1)
   );
@@ -278,6 +301,15 @@ export class ItemPageIterationInstance<V, F, C extends ItemPageIterationConfig<F
   private readonly _lastFinishedPageResultItem$: Observable<Maybe<V>> = this._lastFinishedPageResult$.pipe(map(x => x?.value));
 
   /**
+   * The first page results that has finished loading without an error.
+   */
+  readonly firstSuccessfulPageResults$: Observable<PageLoadingState<ItemPageIteratorResult<V>>> = this.state$.pipe(
+    map(x => x.firstSuccessful),
+    filterMaybe(),
+    shareReplay(1)
+  );
+
+  /**
    * The latest page results that has finished loading without an error.
    */
   readonly latestSuccessfulPageResults$: Observable<PageLoadingState<ItemPageIteratorResult<V>>> = this.state$.pipe(
@@ -287,12 +319,13 @@ export class ItemPageIterationInstance<V, F, C extends ItemPageIterationConfig<F
   );
 
   // MARK: PageItemIteration
-  get maxPageLoadLimit() {
+  get maxPageLoadLimit(): Maybe<number> {
     return this._maxPageLoadLimit.value;
   }
 
-  set maxPageLoadLimit(maxPageLoadLimit: number) {
-    this._maxPageLoadLimit.next(Math.max(0, Math.ceil(maxPageLoadLimit)));
+  set maxPageLoadLimit(maxPageLoadLimit: Maybe<number>) {
+    const limit = isMaybeNot(maxPageLoadLimit) ? undefined : Math.max(0, Math.ceil(maxPageLoadLimit));
+    this._maxPageLoadLimit.next(limit);
   }
 
   nextPage(request: ItemIteratorNextRequest = {}): Promise<number> {
@@ -343,7 +376,7 @@ export class ItemPageIterationInstance<V, F, C extends ItemPageIterationConfig<F
    * Whether or not the successfulPageResultsCount has passed the maxPageLoadLimit
    */
   readonly canLoadMore$: Observable<boolean> = combineLatest([this._maxPageLoadLimit, this.numberOfPagesLoaded$.pipe(startWith(0))]).pipe(
-    map(([maxPageLoadLimit, numberOfPagesLoaded]) => numberOfPagesLoaded < maxPageLoadLimit),
+    map(([maxPageLoadLimit, numberOfPagesLoaded]) => isMaybeNot(maxPageLoadLimit) ? true : (numberOfPagesLoaded < maxPageLoadLimit)),
     distinctUntilChanged(),
     shareReplay(1)
   );

@@ -1,11 +1,14 @@
 import { Observable } from 'rxjs';
 import { ListLoadingState, ListLoadingStateContext } from "@dereekb/rxjs";
 import { EventEmitter, forwardRef, Provider, Type } from "@angular/core";
+import { Maybe } from '@dereekb/util';
+
+export type DbxListSelectionMode = 'select' | 'view';
 
 export interface ListSelectionStateItem<T> {
   disabled?: boolean;
   selected?: boolean;
-  value: T;
+  itemValue: T;
 }
 
 export interface ListSelectionState<T> {
@@ -20,6 +23,10 @@ export abstract class DbxListView<T, S extends ListLoadingState<T> = ListLoading
    * Current disabled state.
    */
   abstract readonly disabled$: Observable<boolean>;
+  /**
+   * (Optional) current selection mode.
+   */
+  abstract readonly selectionMode$?: Observable<Maybe<DbxListSelectionMode>>;
   /**
    * Values of the list view.
    */
@@ -44,6 +51,10 @@ export abstract class DbxListView<T, S extends ListLoadingState<T> = ListLoading
    * Sets the disabled state of the list view.
    */
   abstract setDisabled(disabled: boolean): void;
+  /**
+   * Sets the selection mode of the list view.
+   */
+  abstract setSelectionMode(selectionMode: Maybe<DbxListSelectionMode>): void;
 }
 
 export function ProvideDbxListView<V extends DbxListView<any>>(sourceType: Type<V>): Provider[] {

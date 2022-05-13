@@ -1,5 +1,5 @@
-import { removeModelsWithKey, removeModelsWithSameKey, ReadModelKeyFunction } from "../model";
-import { Maybe } from "../value";
+import { removeModelsWithKey, removeModelsWithSameKey, ReadModelKeyFunction } from "../model/model";
+import { Maybe } from "../value/maybe";
 
 export type BooleanStringKey = string;
 

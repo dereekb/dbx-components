@@ -1,4 +1,6 @@
-import { SegueRef } from "../../segue";
+import { ObservableOrValue } from "@dereekb/rxjs";
+import { Observable } from "rxjs";
+import { SegueRefOrSegueRefRouterLink, SegueRefRawSegueParams } from "../../segue";
 
 /**
  * Router service definition that can route the app and provide routing details.
@@ -6,18 +8,23 @@ import { SegueRef } from "../../segue";
 export abstract class DbxRouterService {
 
   /**
+   * Params of the current successfully loaded route.
+   */
+  abstract readonly params$: Observable<SegueRefRawSegueParams>;
+
+  /**
    * Navigates to the target SegueRef.
    * 
    * @param segueRef 
    */
-  abstract go(segueRef: SegueRef): Promise<boolean>;
+  abstract go(segueRef: ObservableOrValue<SegueRefOrSegueRefRouterLink>): Promise<boolean>;
 
   /**
    * Returns true if the input segue ref is considered active.
    * 
    * @param segueRef 
    */
-  abstract isActive(segueRef: SegueRef): boolean;
+  abstract isActive(segueRef: SegueRefOrSegueRefRouterLink): boolean;
 
   /**
    * Compares the two refs for precision for a certain route. 
@@ -28,6 +35,6 @@ export abstract class DbxRouterService {
    * @param a 
    * @param b 
    */
-  abstract comparePrecision(a: SegueRef, b: SegueRef): number;
+  abstract comparePrecision(a: SegueRefOrSegueRefRouterLink, b: SegueRefOrSegueRefRouterLink): number;
 
 }

@@ -1,0 +1,49 @@
+<dbx-content-container>
+  <doc-feature-layout header="dbx-form Action Directives" hint="Forms and Actions go hand-in-hand.">
+
+    <!-- Examples -->
+    <doc-feature-example header="dbxActionForm"
+      hint="This directive watches for triggered events and passes the data of the form to the action context. It also manages the isModified when the form has been updated, and manages a disabled state on the action when the form is not complete.">
+
+      <dbx-action-example-tools dbxAction [dbxActionHandler]="handleFormAction">
+        <p>The form's state is communicated to the action via dbxActionForm.</p>
+        <p>Name is required, which adds a disabledKey when the name is not presented.</p>
+        <doc-action-form-example-form dbxActionForm></doc-action-form-example-form>
+        <p>Cannot submit while name is required.</p>
+        <dbx-button dbxActionButton text="Submit"></dbx-button>
+      </dbx-action-example-tools>
+
+      <h4>dbxActionFormModified</h4>
+      <dbx-action-example-tools dbxAction [dbxActionHandler]="handleFormAction" dbxActionEnforceModified>
+        <p>Using the dbxActionFormModified input, we can pass a function that returns an observable to have more control
+          over whether or not the inital value was modified or not.</p>
+        <doc-action-form-example-form dbxActionForm [dbxFormSource]="defaultValue$"
+          [dbxActionFormModified]="isFormModified">
+        </doc-action-form-example-form>
+        <dbx-button dbxActionButton text="Submit"></dbx-button>
+      </dbx-action-example-tools>
+
+      <h4>dbxActionFormValidator</h4>
+      <dbx-action-example-tools dbxAction [dbxActionHandler]="handleFormAction" dbxActionEnforceModified>
+        <p>Using the dbxActionFormValidator input, we can pass a function that validates the input before passing it to
+          the action. If the value is not valid then the input is rejected.</p>
+        <p class="dbx-hint">This example validates the form's date only if the date is a Friday.</p>
+        <doc-action-form-example-form dbxActionForm [dbxFormSource]="defaultValue$"
+          [dbxActionFormValidator]="validateForm">
+        </doc-action-form-example-form>
+        <dbx-button dbxActionButton text="Submit"></dbx-button>
+      </dbx-action-example-tools>
+
+      <h4>formDisabledOnWorking</h4>
+      <dbx-action-example-tools dbxAction [dbxActionHandler]="handleFormAction" dbxActionEnforceModified>
+        <p>By default dbxActionForm will automatically lock the form while it is working. This behavior can be disabled
+          using the formDisabledOnWorking input.</p>
+        <doc-action-form-example-form dbxActionForm [dbxFormSource]="defaultValue$">
+        </doc-action-form-example-form>
+        <dbx-button dbxActionButton text="Submit"></dbx-button>
+      </dbx-action-example-tools>
+
+    </doc-feature-example>
+
+  </doc-feature-layout>
+</dbx-content-container>

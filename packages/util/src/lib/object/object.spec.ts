@@ -1,5 +1,4 @@
-import { KeyValueTypleValueFilter } from '..';
-import { filterFromPOJO, objectHasKey } from './object';
+import { allMaybeSoKeys, allKeyValueTuples, allNonUndefinedKeys, filterKeyValueTupleFunction, KeyValueTypleValueFilter, filterFromPOJO, objectHasKey } from './object';
 
 describe('filterFromPOJO()', () => {
 
@@ -71,6 +70,79 @@ describe('filterFromPOJO()', () => {
           expect(objectHasKey(result, 'z')).toBe(false);
         });
 
+      });
+
+    });
+
+  });
+
+});
+
+describe('allNonUndefinedKeys()', () => {
+
+  it('should return all the keys of values that are not undefined.', () => {
+    const object = {
+      a: 'test',
+      b: undefined,
+      c: null,
+      d: 0
+    };
+
+    const result = allNonUndefinedKeys(object);
+
+    expect(result).toBeDefined();
+    expect(result.length).toBe(3);
+    expect(result.findIndex(x => x === 'a')).not.toBe(-1);
+    expect(result.findIndex(x => x === 'b')).toBe(-1);
+    expect(result.findIndex(x => x === 'c')).not.toBe(-1);
+    expect(result.findIndex(x => x === 'd')).not.toBe(-1);
+  });
+
+});
+
+describe('allMaybeSoKeys()', () => {
+
+  it('should return all the keys of values that are not null or undefined.', () => {
+    const object = {
+      a: 'test',
+      b: undefined,
+      c: null,
+      d: 0
+    };
+
+    const result = allMaybeSoKeys(object);
+
+    expect(result).toBeDefined();
+    expect(result.length).toBe(2);
+    expect(result.findIndex(x => x === 'a')).not.toBe(-1);
+    expect(result.findIndex(x => x === 'b')).toBe(-1);
+    expect(result.findIndex(x => x === 'c')).toBe(-1);
+    expect(result.findIndex(x => x === 'd')).not.toBe(-1);
+  });
+
+});
+
+describe('filterKeyValueTuplesFn()', () => {
+
+  describe('config', () => {
+
+    describe('invertFilter', () => {
+
+      it('should not invert the filter if invertFilter is not defined.', () => {
+        const object = {
+          'a': 0,
+          'b': 1,
+          'c': undefined
+        };
+
+        const tuples = allKeyValueTuples(object);
+        const filter = filterKeyValueTupleFunction<typeof object>({
+          valueFilter: KeyValueTypleValueFilter.NONE
+        });
+
+        const result = tuples.filter(filter);
+
+        expect(result.length).toBe(3);
       });
 
     });

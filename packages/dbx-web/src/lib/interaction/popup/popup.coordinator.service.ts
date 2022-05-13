@@ -1,18 +1,24 @@
 import { DbxPopupKey, DbxPopupController } from './popup';
-import { Injectable } from '@angular/core';
+import { Injectable, OnDestroy } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 
 /**
  * Used for coordinating popups and closing/replacing existing ones when a new popup of the same name appears.
  */
-@Injectable()
-export class DbxPopupCoordinatorService {
+@Injectable({
+  providedIn: 'root'
+})
+export class DbxPopupCoordinatorService implements OnDestroy {
 
   private _popups = new BehaviorSubject<Map<DbxPopupKey, DbxPopupController>>(new Map());
 
   readonly popups$ = this._popups.asObservable();
 
   constructor() { }
+
+  ngOnDestroy(): void {
+    this._popups.complete();
+  }
 
   get popups(): Map<DbxPopupKey, DbxPopupController> {
     return this._popups.value;

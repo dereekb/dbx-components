@@ -8,9 +8,9 @@
     <ng-container *ngTemplateOutlet="content"></ng-container>
   </a>
   <!-- Router -->
-  <dbx-injected-content [config]="srefAnchorConfig" *ngSwitchCase="2">
+  <dbx-injection [config]="srefAnchorConfig" *ngSwitchCase="2">
     <!-- Injected in child. -->
-  </dbx-injected-content>
+  </dbx-injection>
   <!-- Href -->
   <a class="dbx-anchor-a dbx-anchor-href" [href]="url$ | async" [attr.target]="target$ | async"
     *ngSwitchCase="3">

@@ -250,8 +250,7 @@ export class DbxDateTimeFieldComponent extends FieldType<DateTimeFormlyFieldConf
     super();
   }
 
-  override ngOnInit(): void {
-    super.ngOnInit();
+  ngOnInit(): void {
     this._formControlObs.next(this.formControl);
     this._config.next(this.dateTimeField.getConfigObs?.());
 
@@ -316,9 +315,11 @@ export class DbxDateTimeFieldComponent extends FieldType<DateTimeFormlyFieldConf
 
   override ngOnDestroy(): void {
     super.ngOnDestroy();
+    this._fullDayControlObs.complete();
+    this._offset.complete();
     this._formControlObs.complete();
-    this._updateTime.complete();
     this._config.complete();
+    this._updateTime.complete();
     this._sub.destroy();
     this._valueSub.destroy();
   }

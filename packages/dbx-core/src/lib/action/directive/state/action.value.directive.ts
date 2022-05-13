@@ -1,5 +1,5 @@
 import { Directive, Host, Input, OnInit } from '@angular/core';
-import { getValueFromObjectOrGetter, Maybe, ObjectOrGetter } from '@dereekb/util';
+import { getValueFromGetter, Maybe, GetterOrValue } from '@dereekb/util';
 import { filterMaybe } from '@dereekb/rxjs';
 import { BehaviorSubject } from 'rxjs';
 import { shareReplay, switchMap, tap } from 'rxjs/operators';
@@ -9,23 +9,23 @@ import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
 /**
  * Directive that provides a default value when triggered.
  *
- * No value is required, allowing the directive to automatically call readyValue with undefined.
+ * No value is required, allowing the directive to automatically call readyValue.
  */
 @Directive({
   selector: '[dbxActionValue]',
 })
 export class DbxActionValueDirective<T, O> extends AbstractSubscriptionDirective implements OnInit {
 
-  private _valueOrFunction = new BehaviorSubject<Maybe<ObjectOrGetter<T>>>(undefined);
+  private _valueOrFunction = new BehaviorSubject<Maybe<GetterOrValue<T>>>(undefined);
   readonly valueOrFunction$ = this._valueOrFunction.pipe(filterMaybe(), shareReplay(1));
 
   @Input('dbxActionValue')
-  get valueOrFunction(): Maybe<ObjectOrGetter<T>> {
+  get valueOrFunction(): Maybe<GetterOrValue<T>> {
     return this._valueOrFunction.value;
   }
 
-  set valueOrFunction(valueOrFunction: Maybe<ObjectOrGetter<T>>) {
-    this._valueOrFunction.next(valueOrFunction || undefined);
+  set valueOrFunction(valueOrFunction: Maybe<GetterOrValue<T>>) {
+    this._valueOrFunction.next(valueOrFunction);
   }
 
   constructor(@Host() public readonly source: DbxActionContextStoreSourceInstance<T, O>) {
@@ -36,7 +36,7 @@ export class DbxActionValueDirective<T, O> extends AbstractSubscriptionDirective
     this.sub = this.valueOrFunction$.pipe(
       switchMap(valueOrFunction => this.source.triggered$.pipe(
         tap(() => {
-          const value: T = getValueFromObjectOrGetter(valueOrFunction);
+          const value: T = getValueFromGetter(valueOrFunction);
           this.source.readyValue(value);
         })
       ))

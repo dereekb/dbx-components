@@ -1,4 +1,4 @@
-import { DbxInjectedComponentConfig, ClickableAnchor } from '@dereekb/dbx-core';
+import { DbxInjectionComponentConfig, ClickableAnchor } from '@dereekb/dbx-core';
 import { Observable } from 'rxjs';
 import { SelectionDisplayValue, SelectionValue, SelectionValueHashFn } from '../selection';
 
@@ -18,11 +18,11 @@ export interface SearchableValueFieldDisplayValue<T, M = any> extends SelectionD
   /**
    * Display override configuration
    */
-  display?: Partial<DbxInjectedComponentConfig>;
+  display?: Partial<DbxInjectionComponentConfig>;
 }
 
 export interface ConfiguredSearchableValueFieldDisplayValue<T, M = any> extends Omit<SearchableValueFieldDisplayValue<T, M>, 'display'> {
-  display: DbxInjectedComponentConfig;
+  display: DbxInjectionComponentConfig;
 }
 
 /**

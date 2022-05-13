@@ -1,3 +1,4 @@
+import { PromiseOrValue } from '@dereekb/util';
 /**
  * A fixture instance that is generated new for each test run.
  */
@@ -16,6 +17,8 @@ export type JestTestContextFixtureClearInstanceFunction = () => void;
 
 /**
  * JestTestFixture with additional functions that the JestTestContextFactory sees for managing the instance.
+ * 
+ * The fixture is used as a refernce point for the Instance that is changed between each test.
  */
 export interface JestTestContextFixture<I> extends JestTestFixture<I> {
 
@@ -55,6 +58,17 @@ export abstract class AbstractJestTestContextFixture<I> implements JestTestConte
 
 }
 
+/**
+ * Abstract JestTestContextFixture instance with a parent.
+ */
+export abstract class AbstractChildJestTestContextFixture<I, P extends JestTestContextFixture<any>> extends AbstractJestTestContextFixture<I> {
+
+  constructor(readonly parent: P) {
+    super();
+  }
+
+}
+
 export type JestBuildTestsWithContextFunction<F> = (fixture: F) => void;
 
 /**
@@ -77,7 +91,7 @@ export interface JestTestContextBuilderConfig<I, F extends JestTestContextFixtur
   buildConfig: (config?: Partial<C>) => C;
 
   /**
-   * Builds a new fixture to use across all tests encapsulated tests.
+   * Builds a new fixture to use across all encapsulated tests.
    */
   buildFixture: (config: C) => F;
 
@@ -116,53 +130,82 @@ export function jestTestContextBuilder<I, F extends JestTestContextFixture<I>, C
 
     return (buildTests: JestBuildTestsWithContextFunction<F>) => {
       const fixture = builder.buildFixture(config);
-      let instance: I;
-      let clearInstance: JestTestContextFixtureClearInstanceFunction;
 
       // Before
       if (builder.beforeEach != null) {
         beforeEach(builder.beforeEach);
       }
 
-      // Create an instance
-      beforeEach(async () => {
-        try {
-          instance = await builder.setupInstance(config);
-          clearInstance = fixture.setInstance(instance);
-        } catch (e) {
-          console.error('Failed building a test instance due to an error in buildInstance(). Error: ', e);
-          clearInstance();
-          throw e;
-        }
+      useJestContextFixture({
+        fixture,
+        /**
+         * Build tests by passing the fixture to the testing functions.
+         * 
+         * This will inject all tests and sub Jest lifecycle items.
+         */
+        buildTests,
+        initInstance: () => builder.setupInstance(config),
+        destroyInstance: (instance) => builder.teardownInstance(instance, config)
       });
 
-      /**
-       * Build tests by passing the fixture to the testing functions.
-       * 
-       * This will inject all tests and sub Jest lifecycle items.
-       */
-      buildTests(fixture);
-
-      // Cleanup
-      afterEach(async () => {
-        clearInstance();
-
-        if (fixture.instance != null) {
-          console.warn('Expected instance to be set on fixture for cleanup but was set to something else.');
-        }
-
-        try {
-          await builder.teardownInstance(instance, config);
-          instance = undefined as any;
-        } catch (e) {
-          console.error('Failed due to error in destroyingInstance()');
-          throw e;
-        }
-      });
-
+      // After
       if (builder.afterEach != null) {
         afterEach(builder.afterEach);
       }
     }
   };
+}
+
+export interface UseJestContextFixture<C extends JestTestContextFixture<I>, I> {
+  readonly fixture: C;
+  readonly buildTests: JestBuildTestsWithContextFunction<C>;
+  initInstance(): PromiseOrValue<I>;
+  destroyInstance?(instance: I): PromiseOrValue<void>;
+}
+
+/**
+ * Creates a test context and jest configurations that will initialize an instance 
+ */
+export function useJestContextFixture<C extends JestTestContextFixture<I>, I>(config: UseJestContextFixture<C, I>): void {
+  const { buildTests, fixture, initInstance, destroyInstance } = config;
+
+  let clearInstance: JestTestContextFixtureClearInstanceFunction;
+  let instance: I;
+
+  // Create an instance
+  beforeEach(async () => {
+    try {
+      instance = await initInstance();
+      clearInstance = fixture.setInstance(instance);
+    } catch (e) {
+      console.error('Failed building a test instance due to an error in buildInstance(). Error: ', e);
+
+      if (clearInstance) {
+        clearInstance();
+      }
+
+      throw e;
+    }
+  });
+
+  // Cleanup
+  afterEach(async () => {
+    clearInstance();
+
+    if (fixture.instance != null) {
+      console.warn('Expected instance to be set on fixture for cleanup but was set to something else.');
+    }
+
+    if (destroyInstance) {
+      try {
+        await destroyInstance(instance);
+        instance = undefined as any;
+      } catch (e) {
+        console.error('Failed due to error in destroyInstance()');
+        throw e;
+      }
+    }
+  });
+
+  buildTests(fixture);
 }

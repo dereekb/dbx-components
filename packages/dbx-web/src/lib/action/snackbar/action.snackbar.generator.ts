@@ -1,5 +1,5 @@
 import { DbxActionContextSourceReference } from "@dereekb/dbx-core";
-import { Milliseconds, Maybe, ObjectOrGetter, getValueFromObjectOrGetter, Getter } from "@dereekb/util";
+import { Milliseconds, Maybe, GetterOrValue, getValueFromGetter, Getter } from "@dereekb/util";
 import { DbxActionSnackbarDisplayConfig, DbxActionSnackbarEvent } from "./action.snackbar";
 
 export interface DbxActionSnackbarGeneratorInput<O = any> {
@@ -17,10 +17,10 @@ export interface DbxActionSnackbarGeneratorUndoInputConfig {
 export type DbxActionSnackbarDisplayConfigGeneratorFunction<O = any> = (input: DbxActionSnackbarGeneratorInput<O>) => Maybe<DbxActionSnackbarDisplayConfig>;
 
 export interface DbxMakeActionSnackbarGeneratorConfiguration {
-  idle?: ObjectOrGetter<DbxMakeActionSnackbarGeneratorEventConfiguration>;
-  loading?: ObjectOrGetter<DbxMakeActionSnackbarGeneratorEventConfiguration>;
-  success?: ObjectOrGetter<DbxMakeActionSnackbarGeneratorEventConfiguration>;
-  error?: ObjectOrGetter<DbxMakeActionSnackbarGeneratorEventConfiguration>;
+  idle?: GetterOrValue<DbxMakeActionSnackbarGeneratorEventConfiguration>;
+  loading?: GetterOrValue<DbxMakeActionSnackbarGeneratorEventConfiguration>;
+  success?: GetterOrValue<DbxMakeActionSnackbarGeneratorEventConfiguration>;
+  error?: GetterOrValue<DbxMakeActionSnackbarGeneratorEventConfiguration>;
 }
 
 export interface DbxMakeActionSnackbarGeneratorEventConfiguration extends Omit<DbxActionSnackbarDisplayConfig, 'action'> {
@@ -40,8 +40,8 @@ export function makeDbxActionSnackbarDisplayConfigGeneratorFunction<O = any>(con
   return (input: DbxActionSnackbarGeneratorInput<O>) => {
     const { event, undo: undoInput } = input;
     const type = event.type;
-    const eventConfigObjectOrGetter = config[type];
-    const eventConfig = eventConfigObjectOrGetter && getValueFromObjectOrGetter(eventConfigObjectOrGetter);
+    const eventConfigGetterOrValue = config[type];
+    const eventConfig = eventConfigGetterOrValue && getValueFromGetter(eventConfigGetterOrValue);
 
     let result: Maybe<DbxActionSnackbarDisplayConfig>;
 
@@ -59,7 +59,7 @@ export function makeDbxActionSnackbarDisplayConfigGeneratorFunction<O = any>(con
         if (typeof undoInput === 'object') {
           reference = undoInput.getUndoAction();
         } else {
-          reference = getValueFromObjectOrGetter(undoInput);
+          reference = getValueFromGetter(undoInput);
         }
 
         if (!reference) {

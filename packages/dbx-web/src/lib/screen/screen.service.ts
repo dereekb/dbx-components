@@ -1,6 +1,6 @@
 import { Destroyable } from '@dereekb/util';
 import { MediaMatcher } from "@angular/cdk/layout";
-import { ObservableGetter, asObservable, initialize, tapFirst } from '@dereekb/rxjs';
+import { ObservableOrValue, asObservable, initialize, tapFirst } from '@dereekb/rxjs';
 import { Subject, map, shareReplay, distinctUntilChanged, throttleTime, Observable, combineLatest } from "rxjs";
 import { ScreenMediaWidthType, ScreenMediaHeightType, screenMediaWidthTypeIsActive } from "./screen";
 import { Injectable } from '@angular/core';
@@ -98,6 +98,7 @@ export class DbxScreenMediaService implements Destroyable {
     this._tabletQuery.onchange = null;
     this._largeQuery.onchange = null;
     this._updateWidth.complete();
+    this._updateHeight.complete();
   }
 
   /**
@@ -106,7 +107,7 @@ export class DbxScreenMediaService implements Destroyable {
    * @param inputBreakpoint 
    * @returns 
    */
-  isBreakpointActive(inputBreakpoint: ObservableGetter<ScreenMediaWidthType>): Observable<boolean> {
+  isBreakpointActive(inputBreakpoint: ObservableOrValue<ScreenMediaWidthType>): Observable<boolean> {
     return combineLatest([this.widthType$, asObservable(inputBreakpoint)]).pipe(
       map(([current, breakpoint]) => screenMediaWidthTypeIsActive(current, breakpoint)),
       distinctUntilChanged(),

@@ -1,5 +1,5 @@
 import { BehaviorSubject, switchMap, shareReplay, map, of } from 'rxjs';
-import { Component, Input } from '@angular/core';
+import { Component, Input, OnDestroy } from '@angular/core';
 import { DbxSidenavComponent, SideNavDisplayMode } from './sidenav.component';
 import { Maybe } from '@dereekb/util';
 import { DbxBarColor } from '../../../layout/bar/bar';
@@ -23,19 +23,23 @@ import { DbxBarColor } from '../../../layout/bar/bar';
     </div>
   `
 })
-export class DbxSidenavPageComponent {
+export class DbxSidenavPageComponent implements OnDestroy {
 
   @Input()
   color?: Maybe<DbxBarColor>;
 
   private _mobileOnly = new BehaviorSubject<boolean>(false);
 
-  constructor(readonly parent: DbxSidenavComponent) { }
-
   readonly hidePagebar$ = this._mobileOnly.pipe(
     switchMap((mobileOnly) => (mobileOnly) ? this.parent.mode$.pipe(map(x => x !== SideNavDisplayMode.MOBILE)) : of(true)),
     shareReplay(1)
   );
+
+  constructor(readonly parent: DbxSidenavComponent) { }
+
+  ngOnDestroy(): void {
+    this._mobileOnly.complete();
+  }
 
   @Input()
   get mobileOnly(): boolean {

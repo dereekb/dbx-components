@@ -1,4 +1,4 @@
-import { DbxInjectedComponentConfig, mergeDbxInjectedComponentConfigs } from '@dereekb/dbx-core';
+import { DbxInjectionComponentConfig, mergeDbxInjectionComponentConfigs } from '@dereekb/dbx-core';
 import { filterMaybe, SubscriptionObject, beginLoading, LoadingState, LoadingStateContextInstance, successResult } from '@dereekb/rxjs';
 import { ChangeDetectorRef, Directive, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { AbstractControl, FormControl, ValidatorFn } from '@angular/forms';
@@ -48,7 +48,7 @@ export interface SearchableValueFieldsFieldConfig<T> extends StringValueFieldsFi
   /**
    * Default injected config to use for display values.
    */
-  display?: Partial<DbxInjectedComponentConfig>;
+  display?: Partial<DbxInjectionComponentConfig>;
   /**
    * Used for building a display value given the input.
    */
@@ -92,7 +92,7 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, C extends Sear
   /**
    * Optional override set by the parent class for picking a default display for this directive.
    */
-  defaultDisplay?: DbxInjectedComponentConfig;
+  defaultDisplay?: DbxInjectionComponentConfig;
 
   @ViewChild('textInput')
   textInput!: ElementRef<HTMLInputElement>;
@@ -189,7 +189,7 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, C extends Sear
     return this.searchableField.anchorForValue;
   }
 
-  get display(): Maybe<Partial<DbxInjectedComponentConfig>> {
+  get display(): Maybe<Partial<DbxInjectionComponentConfig>> {
     return this.searchableField.display;
   }
 
@@ -240,7 +240,7 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, C extends Sear
 
           // Go get the display value.
           const displayValuesObs = this.displayForValue(needsDisplay.map(x => x[2]));
-          const defaultDisplay = mergeDbxInjectedComponentConfigs([this.defaultDisplay, this.display]);
+          const defaultDisplay = mergeDbxInjectionComponentConfigs([this.defaultDisplay, this.display]);
           const anchorForValue = this.useAnchor && this.anchorForValue;
 
           obs = displayValuesObs.pipe(
@@ -252,7 +252,7 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, C extends Sear
                 if (!x.display) {
                   x.display = defaultDisplay;
                 } else {
-                  x.display = mergeDbxInjectedComponentConfigs([defaultDisplay, x.display]);
+                  x.display = mergeDbxInjectionComponentConfigs([defaultDisplay, x.display]);
                 }
 
                 if (!x.anchor && anchorForValue) {
@@ -289,8 +289,7 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, C extends Sear
     super();
   }
 
-  override ngOnInit(): void {
-    super.ngOnInit();
+  ngOnInit(): void {
     this._formControlObs.next(this.formControl);
 
     if (this.searchableField.textInputValidator) {

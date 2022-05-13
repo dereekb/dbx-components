@@ -1,17 +1,10 @@
-import { StringErrorCode, ReadableError, ReadableDataError } from './error';
+import { Maybe } from '../value/maybe';
+import { ReadableError, ReadableDataError, StringErrorCode } from './error';
 
 /**
  * The expected error object returned from the server.
  */
-export interface ServerErrorResponseData {
-  /**
-   * Unique identifier of the error returned, if available.
-   */
-  code?: StringErrorCode;
-  /**
-   * User-readable message of the error returned.
-   */
-  message?: string;
+export interface ServerErrorResponseData extends ReadableError {
   /**
    * Additional keys/data returned in the error data.
    */
@@ -30,9 +23,9 @@ export interface ServerError<T = any> extends ReadableDataError<T> {
  */
 export class ServerErrorResponse<T extends ServerErrorResponseData = ServerErrorResponseData> implements ServerError<T> {
 
-  public readonly code?: string;
+  public readonly code?: StringErrorCode;
   public readonly status: number;
-  public readonly message: string;
+  public readonly message: Maybe<string>;
   public readonly data?: T;
 
   constructor({ code, status, data, message }: ServerError<T>) {

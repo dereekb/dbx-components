@@ -1,0 +1,6 @@
+@use '../auth/login/login';
+
+// Includes all theming config
+@mixin all-component-themes($theme-config) {
+  @include login.theme($theme-config);
+}

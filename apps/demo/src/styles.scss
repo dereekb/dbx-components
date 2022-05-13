@@ -1,0 +1,31 @@
+@use '@angular/material'as mat;
+@use 'dbx-web/src/index'as dbx;
+@use 'dbx-form/src/index' as dbx-form;
+@use 'dbx-firebase/src/index' as dbx-firebase;
+@use './style/style';
+
+$app-typography-config: mat.define-typography-config();
+
+@include mat.core($app-typography-config);
+@include dbx.core($app-typography-config);
+@include dbx-form.core($app-typography-config);
+@include dbx-firebase.core($app-typography-config);
+
+@include style.dark-doc-theme('.doc-app-dark');
+@include style.doc-theme('.doc-app');
+
+html,
+body {
+  background: black;
+  height: 100%;
+  overflow-x: hidden;
+}
+
+a {
+  color: inherit;
+}
+
+body {
+  margin: 0;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+}

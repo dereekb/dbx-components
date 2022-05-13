@@ -7,6 +7,7 @@ import { DbxFormSubsectionConfig } from './subsection.wrapper.component';
 import { DbxFormInfoConfig } from './info.wrapper.component';
 import { DbxFormExpandWrapperConfig } from './expandable.wrapper.component';
 import { DbxFlexSize } from '@dereekb/dbx-web';
+import { DbxFormWorkingWrapperConfig } from './working.wrapper.component';
 
 export const EXPANDABLE_WRAPPER_KEY = 'expandable';
 export const TOGGLE_WRAPPER_KEY = 'toggle';
@@ -15,6 +16,7 @@ export const SUBSECTION_WRAPPER_KEY = 'subsection';
 export const INFO_WRAPPER_KEY = 'info';
 export const FLEX_WRAPPER_KEY = 'flex';
 export const STYLE_WRAPPER_KEY = 'style';
+export const WORKING_WRAPPER_KEY = 'working';
 
 export function addWrapperToFormlyFieldConfig<T extends object>(fieldConfig: FormlyFieldConfig, wrapperKey: string, wrapperTemplateOptionsConfig: T): FormlyFieldConfig {
   fieldConfig.templateOptions = {
@@ -62,6 +64,12 @@ export function infoWrapper(fieldConfig: FormlyFieldConfig, infoWrapper: DbxForm
 export function styleWrapper(fieldConfig: FormlyFieldConfig, styleWrapper: DbxFormStyleWrapperConfig): FormlyFieldConfig {
   return addWrapperToFormlyFieldConfig(fieldConfig, STYLE_WRAPPER_KEY, {
     styleWrapper
+  });
+}
+
+export function workingWrapper(fieldConfig: FormlyFieldConfig, workingWrapper: DbxFormWorkingWrapperConfig): FormlyFieldConfig {
+  return addWrapperToFormlyFieldConfig(fieldConfig, WORKING_WRAPPER_KEY, {
+    workingWrapper
   });
 }
 

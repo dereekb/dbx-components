@@ -1,5 +1,5 @@
-import { filter, skipWhile, startWith, switchMap, timeout, MonoTypeOperatorFunction, Observable, of, OperatorFunction, map } from 'rxjs';
-import { ObjectOrGetter, getValueFromObjectOrGetter, Maybe } from '@dereekb/util';
+import { combineLatest, filter, skipWhile, startWith, switchMap, timeout, MonoTypeOperatorFunction, Observable, of, OperatorFunction, map, delay } from 'rxjs';
+import { GetterOrValue, getValueFromGetter, Maybe } from '@dereekb/util';
 
 // MARK: Types
 export type IsCheckFunction<T = any> = (value: T) => Observable<boolean>;
@@ -45,8 +45,8 @@ export function filterMaybe<T>(): OperatorFunction<Maybe<T>, T> {
 /**
  * Skips all initial maybe values, and then returns all values after the first non-null/undefined value is returned.
  */
-export function skipFirstMaybe<T>(): MonoTypeOperatorFunction<Maybe<T>> {
-  return skipWhile((x: Maybe<T>) => (x == null));
+export function skipFirstMaybe<T>(): MonoTypeOperatorFunction<T> {
+  return skipWhile((x: T) => (x == null));
 }
 
 /**
@@ -84,10 +84,50 @@ export function switchMapMaybeObs<T = any>(): OperatorFunction<Maybe<Observable<
 /**
  * Used to pass a default value incase an observable has not yet started emititng values.
  */
-export function timeoutStartWith<T>(defaultValue: ObjectOrGetter<T>): MonoTypeOperatorFunction<T> {
+export function timeoutStartWith<T>(defaultValue: GetterOrValue<T>): MonoTypeOperatorFunction<T> {
   return (source: Observable<T>) => {
     return source.pipe(
-      timeout({ first: 0, with: () => source.pipe(startWith(getValueFromObjectOrGetter(defaultValue))) })
+      timeout({ first: 0, with: () => source.pipe(startWith(getValueFromGetter(defaultValue))) })
     );
   };
+}
+
+/**
+ * Combines both combineLatest with map values to an other value.
+ * 
+ * @param combineObs 
+ * @param mapFn 
+ * @returns 
+ */
+export function combineLatestMapFrom<A, B, C>(combineObs: Observable<B>, mapFn: (a: A, b: B) => C): OperatorFunction<A, C> {
+  return (obs: Observable<A>) => combineLatest([obs, combineObs]).pipe(map(([a, b]) => mapFn(a, b)));
+}
+
+/**
+ * Creates an observable that emits a starting value, then a second value after a delay.
+ * 
+ * If the delay is not provided, or is falsy, then the second value is never emitted.
+ */
+export function emitDelayObs<T>(startWith: T, endWith: T, delayTime: Maybe<number>): Observable<T> {
+  let obs = of(startWith);
+
+  if (delayTime) {
+    obs = obs.pipe(emitAfterDelay(endWith, delayTime));
+  }
+
+  return obs;
+}
+
+/**
+ * Emits a value after a given delay after every new emission.
+ */
+export function emitAfterDelay<T>(value: T, delayTime: number): MonoTypeOperatorFunction<T> {
+  return (obs: Observable<T>) => obs.pipe(
+    switchMap((x) =>
+      of(value).pipe(
+        delay(delayTime),
+        startWith(x)
+      )
+    )
+  );
 }

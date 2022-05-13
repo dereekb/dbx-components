@@ -1,9 +1,9 @@
 import { skipFirstMaybe } from './value';
 import { Maybe } from '@dereekb/util';
-import { BehaviorSubject, Subject } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { BehaviorSubject, of, Subject, finalize, tap } from 'rxjs';
+import { preventComplete } from './rxjs';
 
-describe('skipFirstMaybe', () => {
+describe('skipFirstMaybe()', () => {
 
   it('should not skip a first non-maybe value', (done) => {
 
@@ -12,6 +12,7 @@ describe('skipFirstMaybe', () => {
 
     obs.subscribe((x) => {
       expect(x).toBe(1);
+      subject.complete();
       done();
     });
 
@@ -39,6 +40,36 @@ describe('skipFirstMaybe', () => {
     allowed = true;
 
     subject.next(1);
+  });
+
+});
+
+describe('preventComplete', () => {
+
+  it('should not emit complete until unsubscribed from.', (done) => {
+    let x = of(true);
+
+    const obs = preventComplete(x);
+
+    let setComplete = false;
+
+    const sub = obs.pipe(
+      finalize(() => {
+        // finalize will get called.
+        expect(setComplete).toBe(true);
+        done();
+      })
+    ).subscribe({
+      complete: () => {
+        fail();   // complete never gets called here, since we unsubscribe first.
+      }
+    });
+
+    // wait a timeout before marking complete
+    setTimeout(() => {
+      setComplete = true;
+      sub.unsubscribe();
+    });
   });
 
 });

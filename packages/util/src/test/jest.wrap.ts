@@ -72,7 +72,6 @@ export function wrapJestTestContextFactory<W, F, E = any>(config: JestWrapTestCo
             await config.teardownWrap!(wrap, effect);
           });
         }
-
       });
     };
   }
@@ -116,7 +115,7 @@ export function instanceWrapJestTestContextFactory<I, W extends AbstractWrappedF
       return effect;
     },
     teardownWrap: async (wrap: W, deleteInstanceEffect: JestTestContextFixtureClearInstanceFunction) => {
-      deleteInstanceEffect();
+      deleteInstanceEffect?.();
 
       if (config.teardownInstance) {
         await config.teardownInstance(wrap.instance);

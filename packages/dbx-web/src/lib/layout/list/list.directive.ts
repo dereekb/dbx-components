@@ -1,9 +1,10 @@
-import { ListLoadingState, filterMaybe, ObservableGetter, getter } from '@dereekb/rxjs';
+import { ListLoadingState, filterMaybe, ObservableOrValue, valueFromObservableOrValue } from '@dereekb/rxjs';
 import { Observable, BehaviorSubject, map, shareReplay } from 'rxjs';
 import { Output, EventEmitter, OnInit, OnDestroy, Directive, Input } from "@angular/core";
 import { DbxListConfig } from "./list.component";
-import { DbxListView, ListSelectionState } from "./list.view";
+import { DbxListSelectionMode, DbxListView, ListSelectionState } from "./list.view";
 import { Maybe } from '@dereekb/util';
+import { DbxListViewWrapper } from './list.wrapper';
 
 export const DEFAULT_STATIC_LIST_DIRECTIVE_TEMPLATE = `
 <dbx-list [config]="config">
@@ -15,7 +16,7 @@ export const DEFAULT_STATIC_LIST_DIRECTIVE_TEMPLATE = `
 
 // MARK: Wrapper
 export const DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE = `
-<dbx-list [state$]="state$" [config]="config$ | async" [disabled]="disabled">
+<dbx-list [state$]="state$" [config]="config$ | async" [disabled]="disabled" [selectionMode]="selectionMode">
   <ng-content top select="[top]"></ng-content>
   <ng-content bottom select="[bottom]"></ng-content>
   <ng-content empty select="[empty]"></ng-content>
@@ -25,17 +26,20 @@ export const DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE = `
 export interface DbxListWrapperConfig<T, V extends DbxListView<T> = DbxListView<T>> extends Omit<DbxListConfig<T, V>, 'onClick' | 'loadMore'> { }
 
 @Directive()
-export abstract class AbstractDbxListWrapperDirective<T, V extends DbxListView<T> = DbxListView<T>, C extends DbxListWrapperConfig<T, V> = DbxListWrapperConfig<T, V>, S extends ListLoadingState<T> = ListLoadingState<T>> implements OnInit, OnDestroy {
+export abstract class AbstractDbxListWrapperDirective<T, V extends DbxListView<T> = DbxListView<T>, C extends DbxListWrapperConfig<T, V> = DbxListWrapperConfig<T, V>, S extends ListLoadingState<T> = ListLoadingState<T>> implements OnInit, OnDestroy, DbxListViewWrapper<T, S> {
 
-  private readonly _init = new BehaviorSubject<Maybe<ObservableGetter<C>>>(undefined);
+  private readonly _init = new BehaviorSubject<Maybe<ObservableOrValue<C>>>(undefined);
   readonly config$ = this._init.pipe(
     filterMaybe(),
-    getter(),
+    valueFromObservableOrValue(),
     map((x: C) => this._buildListConfig(x)),
     shareReplay(1));
 
   @Input()
   disabled?: Maybe<boolean>;
+
+  @Input()
+  selectionMode?: Maybe<DbxListSelectionMode>;
 
   @Input()
   state$?: Maybe<Observable<S>>;
@@ -46,7 +50,7 @@ export abstract class AbstractDbxListWrapperDirective<T, V extends DbxListView<T
   @Output()
   loadMore = new EventEmitter<void>();
 
-  constructor(readonly initConfig: ObservableGetter<C>) { }
+  constructor(readonly initConfig: ObservableOrValue<C>) { }
 
   ngOnInit(): void {
     this._init.next(this.initConfig);

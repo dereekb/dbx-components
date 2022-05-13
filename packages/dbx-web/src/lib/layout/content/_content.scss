@@ -32,6 +32,10 @@ $content-container-padding-small-screen: theming.$padding-2;
     padding: $box-padding;
     margin-bottom: $box-bottom-margin;
     max-width: $box-max-width;
+
+    &.dbx-content-box-wide {
+      max-width: unset;
+    }
   }
 
   .dbx-app-page {
@@ -40,14 +44,20 @@ $content-container-padding-small-screen: theming.$padding-2;
   }
 
   .dbx-content,
-  .dbx-content-page {                   //dbx-content page always has page height
+  .dbx-content-page {
+    //dbx-content page always has page height
     @include theming.page-height();
   }
 
-  .dbx-content .dbx-content,            // if a child of another dbx-content, give it content height instead of page height.
+  .dbx-content .dbx-content,
+  // if a child of another dbx-content, give it content height instead of page height.
   .dbx-content-page .dbx-content,
   .dbx-content-without-content-navbar {
     @include theming.content-height();
+  }
+
+  .dbx-content.dbx-content-auto-height {
+    height: 100% !important;
   }
 
   .dbx-content-scroll-lock {
@@ -124,7 +134,19 @@ $content-container-padding-small-screen: theming.$padding-2;
   .dbx-content-container {
 
     @include theming.if-small-screen($theme-config) {
-      padding: 0 $content-container-padding-small-screen;
+
+      // reduce all paddings down.
+      &,
+      &.container-padding-min,
+      &.container-padding-small {
+        padding: 0 $content-container-padding-small-screen;
+      }
+
+      // no padding does not gain padding.
+      &.container-padding-none {
+        padding: 0;
+      }
+
     }
 
   }

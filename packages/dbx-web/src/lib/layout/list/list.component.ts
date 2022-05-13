@@ -1,9 +1,9 @@
 import { catchError, filter, exhaustMap, merge, map, Subject, switchMap, shareReplay, distinctUntilChanged, of, Observable, BehaviorSubject, first, startWith } from 'rxjs';
 import { Component, Input, EventEmitter, Output, OnDestroy, ElementRef, HostListener, ChangeDetectorRef, Directive } from '@angular/core';
-import { DbxInjectedComponentConfig, tapDetectChanges } from '@dereekb/dbx-core';
+import { DbxInjectionComponentConfig, tapDetectChanges } from '@dereekb/dbx-core';
 import { SubscriptionObject, ListLoadingStateContextInstance, ListLoadingState, filterMaybe, tapLog, loadingStateHasFinishedLoading, successResult, beginLoading } from '@dereekb/rxjs';
 import { Maybe, Milliseconds } from '@dereekb/util';
-import { DbxListView, ListSelectionState } from './list.view';
+import { DbxListSelectionMode, DbxListView, ListSelectionState } from './list.view';
 
 /**
  * Direction the scroll was triggered moving.
@@ -20,7 +20,7 @@ export type DbxListLoadMoreHandler = () => Observable<void> | void;
 /**
  * DbxListComponent configuration.
  */
-export interface DbxListConfig<T = any, V extends DbxListView<T> = DbxListView<T>> extends DbxInjectedComponentConfig<V> {
+export interface DbxListConfig<T = any, V extends DbxListView<T> = DbxListView<T>> extends DbxInjectionComponentConfig<V> {
 
   /**
    * Whether or not to hide the list content when it is an empty list.
@@ -57,6 +57,11 @@ export interface DbxListConfig<T = any, V extends DbxListView<T> = DbxListView<T
    */
   loadMore?: DbxListLoadMoreHandler;
 
+  /**
+   * Default selection list value. If not defined, will default to 'view'.
+   */
+  defaultSelectionMode?: Maybe<DbxListSelectionMode>;
+
 }
 
 /**
@@ -88,6 +93,7 @@ export class DbxListComponent<T = any, V extends DbxListView<T> = DbxListView<T>
 
   private _content!: DbxListInternalContentDirective;
   private _disabled = new BehaviorSubject<boolean>(false);
+  private _selectionMode = new BehaviorSubject<Maybe<DbxListSelectionMode>>(undefined);
 
   private _loadMoreTrigger = new Subject<void>();
   private _scrollTrigger = new Subject<DbxListScrollDirectionTrigger>();
@@ -96,11 +102,13 @@ export class DbxListComponent<T = any, V extends DbxListView<T> = DbxListView<T>
   private _loadMoreSub = new SubscriptionObject();
   private _onClickSub = new SubscriptionObject();
   private _disabledSub = new SubscriptionObject();
+  private _selectionModeSub = new SubscriptionObject();
   private _onSelectionChangeSub = new SubscriptionObject();
 
   readonly context = new ListLoadingStateContextInstance<T, S>({ showLoadingOnNoValue: false });
   readonly isEmpty$ = this.context.isEmpty$;
   readonly disabled$ = this._disabled.asObservable();
+  readonly selectionMode$ = this._selectionMode.asObservable();
 
   readonly hideOnEmpty$: Observable<boolean> = this._config.pipe(filterMaybe(), map(x => Boolean(x.hideOnEmpty)), distinctUntilChanged(), shareReplay(1));
   readonly invertedList$: Observable<boolean> = this._config.pipe(filterMaybe(), map(x => Boolean(x?.throttle)), distinctUntilChanged(), shareReplay(1));
@@ -116,13 +124,13 @@ export class DbxListComponent<T = any, V extends DbxListView<T> = DbxListView<T>
 
   readonly loadMore$ = merge(this.scrollLoadMoreTrigger$, this._loadMoreTrigger);
 
-  readonly injectedComponentConfig$: Observable<Maybe<DbxInjectedComponentConfig<V>>> = this._config.pipe(
+  readonly injectedComponentConfig$: Observable<Maybe<DbxInjectionComponentConfig<V>>> = this._config.pipe(
     distinctUntilChanged(),
     map((config) => {
-      let injectedComponentConfig: Maybe<DbxInjectedComponentConfig<V>>;
+      let injectedComponentConfig: Maybe<DbxInjectionComponentConfig<V>>;
 
       if (config) {
-        const { componentClass, init, onClick, onSelectionChange, loadMore } = config;
+        const { componentClass, init, onClick, onSelectionChange, loadMore, defaultSelectionMode = 'view' } = config;
 
         injectedComponentConfig = {
           componentClass: config.componentClass,
@@ -131,6 +139,7 @@ export class DbxListComponent<T = any, V extends DbxListView<T> = DbxListView<T>
 
             // Synchronize disabled
             this._disabledSub.subscription = this.disabled$.subscribe((disabled) => instance.setDisabled(disabled));
+            this._selectionModeSub.subscription = this.selectionMode$.subscribe((selectionMode) => instance.setSelectionMode(selectionMode ?? defaultSelectionMode));
 
             if (init) {
               init(instance);
@@ -209,6 +218,7 @@ export class DbxListComponent<T = any, V extends DbxListView<T> = DbxListView<T>
     this._loadMoreTrigger.complete();
     this._config.complete();
     this._disabled.complete();
+    this._selectionMode.complete();
 
     this._onClickSub.destroy();
     this._loadMoreSub.destroy();
@@ -239,6 +249,15 @@ export class DbxListComponent<T = any, V extends DbxListView<T> = DbxListView<T>
 
   set disabled(disabled: Maybe<boolean>) {
     this._disabled.next(disabled ?? false);
+  }
+
+  @Input()
+  get selectionMode(): Maybe<DbxListSelectionMode> {
+    return this._selectionMode.value;
+  }
+
+  set selectionMode(selectionMode: Maybe<DbxListSelectionMode>) {
+    this._selectionMode.next(selectionMode);
   }
 
   getScrollPositionRelativeToBottom(): number {

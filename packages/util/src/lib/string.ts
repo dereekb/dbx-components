@@ -1,5 +1,6 @@
-import { MapStringFn } from "./map";
-import { Maybe } from "./value";
+import { capitalCase } from "change-case";
+import { MapStringFn } from "./map/map";
+import { Maybe } from "./value/maybe";
 
 /**
  * Represents a string that is made up of comma-separated values.
@@ -37,4 +38,14 @@ export function addPlusPrefixToNumber(value?: Maybe<number>, prefix = '+'): stri
   } else {
     return undefined;
   }
+}
+
+/**
+ * Capitalizes the first letter of the input.
+ * 
+ * @param value 
+ * @returns 
+ */
+export function capitalizeFirstLetter(value: string): string {
+  return value.charAt(0).toUpperCase() + value.slice(1);
 }

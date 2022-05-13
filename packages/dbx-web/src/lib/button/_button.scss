@@ -6,8 +6,29 @@ $button-spacer-width: 6px;
 // MARK: Mixin
 @mixin core() {
 
+  .dbx-wide-button {
+    .dbx-button {
+      min-width: 120px;
+      max-width: 100%;
+    }
+  }
+
+  .dbx-grow-button {
+    width: 100%;
+
+    .dbx-button {
+      width: 100%;
+    }
+  }
+
   .dbx-button-spacer {
     padding-right: $button-spacer-width;
+  }
+
+  .dbx-spinner-custom.mat-progress-spinner.mat-accent circle,
+  .dbx-spinner-custom.mat-spinner.mat-accent circle {
+    // mat-spinners marked with dbx-spinner-custom should allow the stroke to be inherited.
+    stroke: unset !important;
   }
 
 }

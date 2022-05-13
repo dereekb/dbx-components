@@ -1,10 +1,26 @@
 @use '../../style/theming';
 
 // MARK: Variables
-
+$dialog-width: 400px;
+$max-dialog-width: 90vw;
 
 // MARK: Mixin
-@mixin core() {}
+@mixin core() {
+
+  .dbx-dialog-content {
+
+    &.normal-dialog-content {
+      width: $dialog-width;
+      min-width: $dialog-width;
+    }
+
+    &.wide-dialog-content {
+      width: $max-dialog-width;
+    }
+    
+  }
+
+}
 
 @mixin color($theme-config) {}
 

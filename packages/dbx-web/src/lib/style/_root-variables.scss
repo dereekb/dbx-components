@@ -24,6 +24,8 @@
     #{theming.$padding-4-var}: theming.get-dbx-layout-padding($theme-config, 4);
     #{theming.$padding-5-var}: theming.get-dbx-layout-padding($theme-config, 5);
 
+    #{theming.$two-column-left-width-var}: theming.get-dbx-two-column-left-width($theme-config);
+
     // root height
     &.dbx-style-root {
       display: block;

@@ -49,12 +49,12 @@ export class DbxActionFormDirective<T = any> implements OnInit, OnDestroy {
   }
 
   @Input()
-  get dbxActionFormDisabledWhileWorking() {
+  get formDisabledOnWorking() {
     return this._formDisabledWhileWorking.value;
   }
 
-  set dbxActionFormDisabledWhileWorking(dbxActionFormDisabledWhileWorking: boolean) {
-    this._formDisabledWhileWorking.next(Boolean(dbxActionFormDisabledWhileWorking ?? true));
+  set formDisabledOnWorking(formDisabledOnWorking: boolean) {
+    this._formDisabledWhileWorking.next(Boolean(formDisabledOnWorking ?? true));
   }
 
   ngOnInit(): void {

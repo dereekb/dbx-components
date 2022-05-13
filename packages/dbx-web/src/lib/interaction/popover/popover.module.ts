@@ -10,15 +10,14 @@ import { DbxPopoverService } from './popover.service';
 import { DbxPopoverContentComponent } from './popover.content.component';
 import { DbxPopoverComponent } from './popover.component';
 import { DbxPopoverControlsDirective } from './popover.controls.directive';
-import { DbxPopoverCoordinatorService } from './popover.coordinator.service';
 import { DbxPopoverHeaderComponent } from './popover.header.component';
 import { DbxPopoverScrollContentComponent } from './popover.scroll.content.component';
 import { DbxActionPopoverDirective } from './popover.action.directive';
 import { DbxKeypressModule } from '../../keypress';
-import { DbxAnchorModule } from '../../router';
+import { DbxRouterAnchorModule } from '../../router';
 import { DbxActionModule } from '../../action/action.module';
 import { DbxButtonModule } from '../../button/button.module';
-import { DbxInjectedComponentModule } from '@dereekb/dbx-core';
+import { DbxInjectionComponentModule } from '@dereekb/dbx-core';
 import { DbxStyleLayoutModule } from '../../layout/style/style.layout.module';
 
 @NgModule({
@@ -28,11 +27,11 @@ import { DbxStyleLayoutModule } from '../../layout/style/style.layout.module';
     MatButtonModule,
     MatDividerModule,
     DbxButtonModule,
-    DbxAnchorModule,
+    DbxRouterAnchorModule,
     DbxActionModule,
     DbxKeypressModule,
     DbxStyleLayoutModule,
-    DbxInjectedComponentModule,
+    DbxInjectionComponentModule,
     NgOverlayContainerModule,
     AngularResizeEventModule
   ],
@@ -56,15 +55,4 @@ import { DbxStyleLayoutModule } from '../../layout/style/style.layout.module';
     DbxPopoverService
   ]
 })
-export class DbxPopoverInteractionModule {
-
-  static forRoot(): ModuleWithProviders<DbxPopoverInteractionModule> {
-    return {
-      ngModule: DbxPopoverInteractionModule,
-      providers: [
-        DbxPopoverCoordinatorService
-      ]
-    };
-  }
-
-}
+export class DbxPopoverInteractionModule { }

@@ -1,6 +1,20 @@
-import { mergeIntoArray, range } from '@dereekb/util';
-import { containsAnyValue, containsAnyValueFromSet, setContainsAnyValue } from '..';
+import { mergeIntoArray, range, flattenArray, Maybe } from '@dereekb/util';
 import { takeLast } from './array';
+
+describe('flattenArray', () => {
+
+  it('should return all non-null/undefined values from first dimension, and all values from the second dimension.', () => {
+    const expected = [1, 2, null];
+    const array: Maybe<(number | null)[]>[] = [[expected[0]], null, undefined, [expected[1], null]];
+
+    const result = flattenArray(array);
+    expect(result.length).toBe(expected.length);
+    expect(result[0]).toBe(expected[0]);
+    expect(result[1]).toBe(expected[1]);
+    expect(result[2]).toBe(expected[2]);
+  });
+
+});
 
 describe('takeLast', () => {
 
@@ -105,68 +119,6 @@ describe('mergeIntoArray', () => {
     for (let i = 0; i < second.length; i += 1) {
       expect(result[i + 1 + second.length]).toBe(second[i]);
     }
-  });
-
-});
-
-describe('containsAnyValue', () => {
-
-  it('should return true if the array contains any value from the set.', () => {
-    const value = 'a';
-    const set = new Set([value]);
-
-    expect(set.has(value));
-    expect(containsAnyValue(set, [value])).toBe(true);
-  });
-
-  it('should return true if the array contains any value from the array.', () => {
-    const value = 'a';
-    const array = [value];
-
-    expect(array.indexOf(value) !== -1);
-    expect(containsAnyValue(array, [value])).toBe(true);
-  });
-
-  it('should return false if the array does not contain a value from the array.', () => {
-    const value = 'a';
-    const array = [value];
-    expect(containsAnyValue(array, [])).toBe(false);
-  });
-
-});
-
-describe('containsAnyValueFromSet', () => {
-
-  it('should return true if the array contains any value from the set.', () => {
-    const value = 'a';
-    const set = new Set([value]);
-
-    expect(set.has(value));
-    expect(containsAnyValueFromSet([value], set)).toBe(true);
-  });
-
-  it('should return false if the array does not contain a value from the set.', () => {
-    const value = 'a';
-    const set = new Set();
-    expect(containsAnyValueFromSet([value], set)).toBe(false);
-  });
-
-});
-
-describe('setContainsAnyValue', () => {
-
-  it('should return true if the set contains the value.', () => {
-    const value = 'a';
-    const set = new Set([value]);
-
-    expect(set.has(value));
-    expect(setContainsAnyValue(set, [value])).toBe(true);
-  });
-
-  it('should return false if the set does not contain the value.', () => {
-    const value = 'a';
-    const set = new Set();
-    expect(setContainsAnyValue(set, [value])).toBe(false);
   });
 
 });

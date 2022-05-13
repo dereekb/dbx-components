@@ -1,6 +1,7 @@
 import { Component } from "@angular/core";
-import { DbxInjectedComponentConfig } from "@dereekb/dbx-core";
-import { DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE, AbstractDbxSelectionListWrapperDirective, ProvideDbxListView, AbstractSelectionValueListViewDirective, AbstractDbxSelectionValueListViewItemComponent, ListSelectionState, mapItemValuesToValueListItemConfig } from "@dereekb/dbx-web";
+import { DbxInjectionComponentConfig } from "@dereekb/dbx-core";
+import { DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE, AbstractDbxSelectionListWrapperDirective, ProvideDbxListView, AbstractDbxSelectionListViewDirective, AbstractDbxValueListViewItemComponent, ListSelectionState, addConfigToValueListItems, DbxListSelectionMode } from "@dereekb/dbx-web";
+import { Maybe } from "@dereekb/util";
 import { map, shareReplay } from "rxjs";
 import { PickableValueFieldDisplayValue } from "./pickable";
 import { AbstractDbxPickableItemFieldDirective, PickableItemFieldItem } from "./pickable.field.directive";
@@ -15,7 +16,7 @@ export class DbxPickableListFieldComponent<T> extends AbstractDbxPickableItemFie
 
   onSelectionChange(event: unknown) {
     const items = (event as ListSelectionState<PickableValueFieldDisplayValue<T>>).items;
-    const values = items.map(x => x.value.value);
+    const values = items.map(x => x.itemValue.value);
     this.setValues(values);
   }
 
@@ -40,12 +41,12 @@ export class DbxPickableListFieldItemListComponent<T> extends AbstractDbxSelecti
  * NOTE: Values input are PickableItemFieldItem<T>, but output values are PickableValueFieldDisplayValue<T>.
  */
 @Component({
-  template: `<dbx-selection-list-view-content [multiple]="multiple" [items]="items$ | async"></dbx-selection-list-view-content>`,
+  template: `<dbx-selection-list-view-content [multiple]="multiple" [selectionMode]="selectionMode" [items]="items$ | async"></dbx-selection-list-view-content>`,
   providers: ProvideDbxListView(DbxPickableListFieldItemListViewComponent)
 })
-export class DbxPickableListFieldItemListViewComponent<T> extends AbstractSelectionValueListViewDirective<PickableItemFieldItem<T>> {
+export class DbxPickableListFieldItemListViewComponent<T> extends AbstractDbxSelectionListViewDirective<PickableItemFieldItem<T>> {
 
-  readonly config: DbxInjectedComponentConfig = {
+  readonly config: DbxInjectionComponentConfig = {
     componentClass: DbxPickableListFieldItemListViewItemComponent
   };
 
@@ -53,9 +54,19 @@ export class DbxPickableListFieldItemListViewComponent<T> extends AbstractSelect
     return this.dbxPickableListFieldComponent.multiSelect;
   }
 
+  get selectionMode(): Maybe<DbxListSelectionMode> {
+    let selectionMode: Maybe<DbxListSelectionMode> = 'select';
+
+    if (this.dbxPickableListFieldComponent.disabled && this.dbxPickableListFieldComponent.changeSelectionModeToViewOnDisabled) {
+      selectionMode = 'view';
+    }
+
+    return selectionMode;
+  }
+
   readonly items$ = this.values$.pipe(
     // NOTE: This causes the "value" to be a PickableValueFieldDisplayValue<T>, which means we emit PickableValueFieldDisplayValue<T> to DbxPickableListFieldComponent.
-    map(x => mapItemValuesToValueListItemConfig(this.config, x)),
+    map(x => addConfigToValueListItems(this.config, x)),
     shareReplay(1)
   );
 
@@ -70,10 +81,10 @@ export class DbxPickableListFieldItemListViewComponent<T> extends AbstractSelect
     <p>{{ label }}</p>
   `
 })
-export class DbxPickableListFieldItemListViewItemComponent<T> extends AbstractDbxSelectionValueListViewItemComponent<PickableValueFieldDisplayValue<T>> {
+export class DbxPickableListFieldItemListViewItemComponent<T> extends AbstractDbxValueListViewItemComponent<PickableValueFieldDisplayValue<T>> {
 
   get label(): string {
-    return this.value.label;
+    return this.itemValue.label;
   }
 
 }

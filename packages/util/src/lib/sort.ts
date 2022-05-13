@@ -1,8 +1,5 @@
 
-export enum SortingOrder {
-  ASCENDING = 'asc',
-  DESCENDING = 'desc'
-}
+export type SortingOrder = 'desc' | 'asc';
 
 export const SORT_VALUE_LESS_THAN: SortComparisonNumber = -1;
 export const SORT_VALUE_GREATER_THAN: SortComparisonNumber = 1;
@@ -53,6 +50,6 @@ export function reverseCompareFn<T>(compareFn: SortCompareFunction<T>): SortComp
  * 
  * The input comparison function must be in ascending order.
  */
-export function compareFnOrder<T>(ascendingCompareFn: AscendingSortCompareFunction<T>, order: SortingOrder = SortingOrder.ASCENDING): SortCompareFunction<T> {
-  return (order === SortingOrder.ASCENDING) ? ascendingCompareFn : reverseCompareFn(ascendingCompareFn);
+export function compareFnOrder<T>(ascendingCompareFn: AscendingSortCompareFunction<T>, order: SortingOrder = 'asc'): SortCompareFunction<T> {
+  return (order === 'asc') ? ascendingCompareFn : reverseCompareFn(ascendingCompareFn);
 }

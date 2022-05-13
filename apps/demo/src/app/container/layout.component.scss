@@ -1,0 +1,10 @@
+@use '@angular/material';
+@use '../../style/variables';
+
+.app-toolbar {
+  height: variables.$app-top-banner-height;
+  @include material.elevation(2);
+  position: relative;
+  z-index: 10;
+  overflow-x: auto;
+}

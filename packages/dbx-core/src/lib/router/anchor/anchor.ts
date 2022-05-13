@@ -4,7 +4,7 @@ import { expandFlattenTreeFunction, expandTreeFunction, ExpandTreeFunction, Flat
 import { Type, Provider, forwardRef } from '@angular/core';
 import { Observable } from 'rxjs';
 
-export interface ClickableAnchor extends ClickableFunction, ClickableUrl, SegueRef {
+export interface ClickableAnchor extends ClickableFunction, ClickableUrl, Partial<SegueRef> {
   disabled?: boolean;
 }
 
@@ -12,6 +12,11 @@ export interface ClickableAnchorLink extends ClickableAnchor {
   title: string;
   icon?: string;
 }
+
+/**
+ * ClickableAnchorLink that definitely has a SegueRef
+ */
+export type ClickableAnchorLinkSegueRef = ClickableAnchorLink & SegueRef;
 
 export interface ClickableIconAnchorLink extends Omit<ClickableAnchorLink, 'title'> {
   icon: string;

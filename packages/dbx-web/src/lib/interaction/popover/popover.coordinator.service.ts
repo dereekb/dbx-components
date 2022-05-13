@@ -1,15 +1,21 @@
 import { DbxPopoverKey, DbxPopoverController } from './popover';
-import { Injectable } from '@angular/core';
+import { Injectable, OnDestroy } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 
 /**
  * Used for coordinating popovers and closing/replacing existing ones when a new popover of the same name appears.
  */
-@Injectable()
-export class DbxPopoverCoordinatorService {
+@Injectable({
+  providedIn: 'root'
+})
+export class DbxPopoverCoordinatorService implements OnDestroy {
 
   private _popovers = new BehaviorSubject<Map<DbxPopoverKey, DbxPopoverController>>(new Map());
   readonly popovers$ = this._popovers.asObservable();
+
+  ngOnDestroy(): void {
+    this._popovers.complete();
+  }
 
   get popovers(): Map<DbxPopoverKey, DbxPopoverController> {
     return this._popovers.value;

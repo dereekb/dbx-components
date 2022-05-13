@@ -1,5 +1,5 @@
 import { Directive } from "@angular/core";
-import { DbxInjectedTemplateConfig } from "@dereekb/dbx-core";
+import { DbxInjectionTemplateConfig } from "@dereekb/dbx-core";
 import { Observable } from "rxjs";
 import { distinctUntilChanged, shareReplay, map, share } from "rxjs/operators";
 import { DbxAnchorComponent } from "./anchor.component";
@@ -18,7 +18,7 @@ export abstract class AbstractDbxSegueAnchorDirective {
 
   constructor(readonly parent: DbxAnchorComponent) { }
 
-  readonly template$: Observable<DbxInjectedTemplateConfig> = this.parent.templateRef$.pipe(
+  readonly template$: Observable<DbxInjectionTemplateConfig> = this.parent.templateRef$.pipe(
     distinctUntilChanged(),
     map(templateRef => ({
       templateRef

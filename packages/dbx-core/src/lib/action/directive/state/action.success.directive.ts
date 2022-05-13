@@ -1,54 +1,34 @@
-import { map, tap, shareReplay, switchMap } from 'rxjs/operators';
-import { filterMaybe } from '@dereekb/rxjs';
-import { BehaviorSubject } from 'rxjs';
-import { Directive, Host, Input, OnInit, OnDestroy } from '@angular/core';
+import { OnDestroy, Input, TemplateRef, ViewContainerRef, Directive } from '@angular/core';
+import { emitDelayObs } from '@dereekb/rxjs';
 import { Maybe } from '@dereekb/util';
-import { AbstractSubscriptionDirective } from '../../../subscription';
+import { of, exhaustMap, shareReplay } from 'rxjs';
+import { AbstractIfDirective } from '../../../view/if.directive';
 import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
 
 /**
- * Performs the action on success.
- */
-export type SuccessActionFunction<O> = (value: O) => void;
-
-/**
- * Directive that executes a function on ActionContextStore Success.
+ * Structural directive that displays the content when the store has a success value.
  */
 @Directive({
-  selector: '[dbxActionSuccess]',
+  selector: '[dbxActionHasSuccess]'
 })
-export class DbxActionSuccessDirective<T, O> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
+export class DbxActionHasSuccessDirective extends AbstractIfDirective implements OnDestroy {
 
-  private _successFunction = new BehaviorSubject<Maybe<SuccessActionFunction<O>>>(undefined);
-  readonly successFunction$ = this._successFunction.pipe(filterMaybe(), shareReplay(1));
+  @Input('dbxActionHasSuccess')
+  hideAfter?: Maybe<number> | '';
 
-  @Input('dbxActionSuccess')
-  get successFunction(): Maybe<SuccessActionFunction<O>> {
-    return this._successFunction.value;
-  }
+  readonly show$ = this.source.isSuccess$.pipe(
+    exhaustMap((success) => {
+      if (success) {
+        return emitDelayObs(true, false, this.hideAfter || undefined);
+      } else {
+        return of(false);
+      }
+    }),
+    shareReplay(1)
+  );
 
-  set successFunction(successFunction: Maybe<SuccessActionFunction<O>>) {
-    this._successFunction.next(successFunction);
-  }
-
-  constructor(@Host() public readonly source: DbxActionContextStoreSourceInstance) {
-    super();
-  }
-
-  ngOnInit(): void {
-    this.sub = this.successFunction$.pipe(
-      switchMap(successFunction => this.source.success$.pipe(
-        map(x => ([successFunction, x])),
-        tap(([successFn, result]) => {
-          successFn(result);
-        })
-      ))
-    ).subscribe();
-  }
-
-  override ngOnDestroy(): void {
-    super.ngOnDestroy();
-    this._successFunction.complete();
+  constructor(templateRef: TemplateRef<any>, viewContainer: ViewContainerRef, public readonly source: DbxActionContextStoreSourceInstance) {
+    super(templateRef, viewContainer);
   }
 
 }

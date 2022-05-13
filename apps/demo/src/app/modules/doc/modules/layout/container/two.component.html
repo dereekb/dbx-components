@@ -1,0 +1,43 @@
+<dbx-content-container>
+  <doc-feature-layout header="Two Column Layout" hint="A responsive left and right column of content.">
+
+    <!-- Examples -->
+    <doc-feature-example header="dbx-two-column"
+      hint="A two-columns view that shows one column full-width until the second column is enabled. On small screens only one column will be visible at a time, and the column will take up the entire width of the screen.">
+
+      <h4>Example With Headings</h4>
+      <p>This is a typical setup of a dbx-two-column.</p>
+      <!-- TODO: Add a router link that uses left/right using the router for the typical example. -->
+      <button mat-raised-button (click)="showRight = !showRight;">Toggle Right Side ({{ showRight }})</button>
+      <dbx-two-column dbxTwoColumnContext [showRight]="showRight" style="height: 400px">
+        <dbx-two-block left>
+          <dbx-two-column-head top>
+            <span>Left Head</span>
+          </dbx-two-column-head>
+          <div style="height: 100%; background: red;">
+            <span>Left</span>
+          </div>
+        </dbx-two-block>
+        <dbx-two-column-right right header="Right Side Header">
+          <div style="height: 100%; background: blue;">
+            <span>Right</span>
+          </div>
+        </dbx-two-column-right>
+      </dbx-two-column>
+
+      <h4>Without Headings</h4>
+      <p>The example above uses dbx-two-column-head and dbx-two-column-right respectively for the headers. This example
+        uses right and left content directly.</p>
+      <button mat-raised-button (click)="showRight = !showRight;">Toggle Right Side ({{ showRight }})</button>
+      <dbx-two-column dbxTwoColumnContext [showRight]="showRight" style="height: 400px">
+        <div left style="height: 100%; background: red;">
+          <span>Left</span>
+        </div>
+        <div right style="height: 100%; background: blue;">
+          <span>Right</span>
+        </div>
+      </dbx-two-column>
+
+    </doc-feature-example>
+  </doc-feature-layout>
+</dbx-content-container>

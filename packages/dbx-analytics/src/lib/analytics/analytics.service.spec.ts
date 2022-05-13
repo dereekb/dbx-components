@@ -38,6 +38,11 @@ describe('DbxAnalyticsService', () => {
     analyticsService = new DbxAnalyticsService(configuration);
   });
 
+  afterEach(() => {
+    userStream.complete();
+    analyticsService.destroy();
+  });
+
   it('#sendPageView() should send a page view event', (done) => {
 
     testListener.events.subscribe((event) => {

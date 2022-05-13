@@ -1,12 +1,12 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { FormlyFieldConfig, FormlyFormOptions } from '@ngx-formly/core';
-import { distinctUntilChanged, map, throttleTime, startWith, BehaviorSubject, Observable, Subject, switchMap, shareReplay, of, scan } from 'rxjs';
+import { distinctUntilChanged, map, throttleTime, startWith, BehaviorSubject, Observable, Subject, switchMap, shareReplay, of, scan, filter, first, combineLatest } from 'rxjs';
 import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
 import { DbxForm, DbxFormDisabledKey, DbxFormEvent, DbxFormState, DEFAULT_FORM_DISABLED_KEY, ProvideDbxMutableForm } from '../form/form';
 import { DbxFormlyContext, DbxFormlyContextDelegate, DbxFormlyInitialize } from './formly.context';
 import { cloneDeep } from 'lodash';
-import { scanCount, switchMapMaybeObs, SubscriptionObject } from '@dereekb/rxjs';
+import { scanCount, switchMapMaybeObs, SubscriptionObject, tapLog } from '@dereekb/rxjs';
 import { BooleanStringKeyArray, BooleanStringKeyArrayUtilityInstance, Maybe } from '@dereekb/util';
 
 
@@ -35,7 +35,7 @@ export interface DbxFormlyFormState {
 export class DbxFormlyFormComponent<T extends object> extends AbstractSubscriptionDirective implements DbxForm, DbxFormlyContextDelegate<T>, OnInit, OnDestroy {
 
   private _fields = new BehaviorSubject<Maybe<Observable<FormlyFieldConfig[]>>>(undefined);
-  private _events = new BehaviorSubject<DbxFormEvent>({ isComplete: false, state: DbxFormState.INITIALIZING });
+  private _events = new BehaviorSubject<DbxFormEvent>({ isComplete: false, state: DbxFormState.INITIALIZING, status: 'PENDING' });
   private _disabled = new BehaviorSubject<BooleanStringKeyArray>(undefined);
 
   private _reset = new BehaviorSubject<Date>(new Date());
@@ -54,10 +54,12 @@ export class DbxFormlyFormComponent<T extends object> extends AbstractSubscripti
       startWith(0),
       distinctUntilChanged(),
       throttleTime(50, undefined, { leading: true, trailing: true }),
-      scanCount(),
+      scanCount(-1),
+      // update on validation changes too. Does not count towards changes since last reset.
+      switchMap(changesSinceLastReset => this.form.statusChanges.pipe(startWith(this.form.status), distinctUntilChanged()).pipe(map(_ => changesSinceLastReset))),
       map((changesSinceLastResetCount: number) => ({
         changesSinceLastResetCount,
-        isFormValid: this.form.valid,
+        isFormValid: this.form.status !== 'PENDING' && this.form.valid,
         isFormDisabled: this.form.disabled
       })),
       scan((acc: DbxFormlyFormState, next: DbxFormlyFormState) => {
@@ -76,12 +78,13 @@ export class DbxFormlyFormComponent<T extends object> extends AbstractSubscripti
         isFormDisabled: false
       }),
       map(({ changesSinceLastResetCount, isFormValid, isFormDisabled }) => {
-        const isReset = changesSinceLastResetCount === 1;
+        const isReset = changesSinceLastResetCount <= 1;  // first emission after reset is the first value.
         const complete = isFormValid;
 
         const nextState: DbxFormEvent = {
           isComplete: complete,
           state: (isReset) ? DbxFormState.RESET : DbxFormState.USED,
+          status: this.form.status,
           untouched: this.form.untouched,
           pristine: this.form.pristine,
           changesCount: changesSinceLastResetCount,
@@ -89,6 +92,8 @@ export class DbxFormlyFormComponent<T extends object> extends AbstractSubscripti
           disabled: this.disabled,
           isDisabled: isFormDisabled
         };
+
+        // console.log('Change: ', nextState);
 
         return nextState;
       })
@@ -159,12 +164,17 @@ export class DbxFormlyFormComponent<T extends object> extends AbstractSubscripti
         this.form.markAsPristine();
       }
     }, 500);
+
+    // ping reset
+    this.resetForm();
   }
 
   resetForm(): void {
     if (this.options.resetModel) {
       this.options.resetModel();
     }
+
+    this._reset.next(new Date());
   }
 
   get isDisabled(): boolean {

@@ -1,6 +1,7 @@
 {
   "hosting": {
-    "public": "dist/packages/demo",
+    "site": "dereekb-components",
+    "public": "dist/apps/demo",
     "ignore": [
       "firebase.json",
       "**/.*",
@@ -19,8 +20,11 @@
     }]
   },
   "functions": {
-    "source": "dist/packages/demo-api",
+    "source": "dist/apps/demo-api",
     "runtime": "nodejs16",
+    "engines": {
+      "node": "16"
+    },
     "ignore": [
       "firebase.json",
       "**/.*",

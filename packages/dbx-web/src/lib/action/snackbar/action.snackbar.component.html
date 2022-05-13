@@ -9,7 +9,7 @@
       <dbx-spacer></dbx-spacer>
       <ng-container *ngIf="hasAction">
         <dbx-action [dbxActionValueStream]="value$" [dbxActionSource]="sourceInstance$ | async"
-          [dbxActionSuccess]="dismissAfterActionCompletes">
+          [dbxActionSuccessHandler]="dismissAfterActionCompletes">
           <dbx-button dbxActionButton color="warn" [text]="button"></dbx-button>
         </dbx-action>
         <dbx-button-spacer></dbx-button-spacer>

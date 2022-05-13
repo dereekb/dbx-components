@@ -3,7 +3,7 @@ import { BehaviorSubject, map, Observable, shareReplay } from 'rxjs';
 import { Component, Directive, Inject, InjectionToken, Input, OnDestroy } from '@angular/core';
 import { ConfiguredSearchableValueFieldDisplayValue } from './searchable';
 import { Maybe, mergeIntoArray } from '@dereekb/util';
-import { DbxInjectedComponentConfig } from '@dereekb/dbx-core';
+import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 
 export const DBX_SEARCHABLE_FIELD_COMPONENT_DATA_TOKEN = new InjectionToken('DbxSearchableField');
 
@@ -11,7 +11,7 @@ export const DBX_SEARCHABLE_FIELD_COMPONENT_DATA_TOKEN = new InjectionToken('Dbx
   selector: 'dbx-searchable-field-autocomplete-item',
   template: `
     <dbx-anchor [block]="true" [anchor]="anchor$ | async">
-      <dbx-injected-content [config]="config$ | async"></dbx-injected-content>
+      <dbx-injection [config]="config$ | async"></dbx-injection>
     </dbx-anchor>
   `
 })
@@ -20,8 +20,8 @@ export class DbxSearchableFieldAutocompleteItemComponent<T> implements OnDestroy
   private _displayValue = new BehaviorSubject<Maybe<ConfiguredSearchableValueFieldDisplayValue<T>>>(undefined);
   readonly displayValue$ = this._displayValue.pipe(filterMaybe(), shareReplay(1));
 
-  readonly config$: Observable<DbxInjectedComponentConfig> = this.displayValue$.pipe(map(x => {
-    const config: DbxInjectedComponentConfig = {
+  readonly config$: Observable<DbxInjectionComponentConfig> = this.displayValue$.pipe(map(x => {
+    const config: DbxInjectionComponentConfig = {
       ...x.display,
       providers: mergeIntoArray([{
         provide: DBX_SEARCHABLE_FIELD_COMPONENT_DATA_TOKEN,

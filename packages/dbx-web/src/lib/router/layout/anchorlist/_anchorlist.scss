@@ -3,6 +3,7 @@
 @use '../../../style/theming';
 
 // MARK: Variables
+$anchor-list-item-disabled-item-opacity: 25%;
 $active-root-item-left-padding: 2px;
 $active-child-item-left-padding: 5px;
 
@@ -13,6 +14,7 @@ $active-child-item-left-padding: 5px;
   $color-config: theming.get-color-config($theme-config);
   $background: map.get($color-config, 'background');
   $background-hover-color: theming.get-color-from-palette($background, 'hover');
+  $background-disabled-color: theming.get-color-from-palette($background, 'contrast');
 
   .dbx-anchor-list.mat-nav-list {
 
@@ -20,6 +22,11 @@ $active-child-item-left-padding: 5px;
     // items that are not active are muted
     .mat-list-item {
       opacity: 0.74;
+
+      &.mat-list-item-disabled {
+        opacity: $anchor-list-item-disabled-item-opacity;
+        background: transparent;
+      }
     }
 
     // active route as a parent

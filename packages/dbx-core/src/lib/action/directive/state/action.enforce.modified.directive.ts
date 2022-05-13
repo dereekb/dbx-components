@@ -1,4 +1,5 @@
 import { Directive, Host, Input, OnInit, OnDestroy } from '@angular/core';
+import { Maybe } from '@dereekb/util';
 import { BehaviorSubject, combineLatest, delay } from 'rxjs';
 import { AbstractSubscriptionDirective } from '../../../subscription';
 import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
@@ -32,13 +33,13 @@ export class DbxActionEnforceModifiedDirective extends AbstractSubscriptionDirec
     this.source.enable(APP_ACTION_ENFORCE_MODIFIED_DIRECTIVE_KEY);
   }
 
-  @Input('[dbxActionEnforceModified]')
+  @Input('dbxActionEnforceModified')
   get enabled(): boolean {
     return this._enabled.value;
   }
 
-  set enabled(enabled: boolean) {
-    this._enabled.next(enabled ?? true);
+  set enabled(enabled: Maybe<string | boolean>) {
+    this._enabled.next(Boolean(enabled) ?? true);
   }
 
 }

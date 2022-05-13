@@ -1,15 +1,16 @@
 import { filterMaybe } from '../rxjs/value';
-import { ObservableGetter } from '../rxjs/getter';
+import { ObservableOrValue } from '../rxjs/getter';
 import { FilterSourceInstance } from './filter.source';
 import { BehaviorSubject, Observable, switchMap, map, distinctUntilChanged, shareReplay, first } from 'rxjs';
 import { FilterSource, FilterSourceConnector } from './filter';
+import { Destroyable } from '@dereekb/util';
 
 export type FilterMapKey = string;
 
 /**
  * Class used to keep track of filters keyed by a specific string identifier.
  */
-export class FilterMap<F> {
+export class FilterMap<F> implements Destroyable {
 
   private readonly _map = new BehaviorSubject<Map<FilterMapKey, FilterMapItem<F>>>(new Map());
 
@@ -23,7 +24,7 @@ export class FilterMap<F> {
     );
   }
 
-  addDefaultFilterObs(key: FilterMapKey, obs: ObservableGetter<F>): void {
+  addDefaultFilterObs(key: FilterMapKey, obs: ObservableOrValue<F>): void {
     this._itemForKey(key).setDefaultFilterObs(obs);
   }
 
@@ -84,7 +85,7 @@ class FilterMapItem<F> {
 
   constructor(readonly dbxFilterMap: FilterMap<F>, readonly key: FilterMapKey) { }
 
-  setDefaultFilterObs(obs: ObservableGetter<F>): void {
+  setDefaultFilterObs(obs: ObservableOrValue<F>): void {
     this._source.setDefaultFilter(obs);
   }
 

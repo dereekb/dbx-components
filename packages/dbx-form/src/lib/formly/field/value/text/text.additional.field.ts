@@ -1,7 +1,7 @@
 import { FormlyFieldConfig } from "@ngx-formly/core";
 import { Validators, AbstractControl } from '@angular/forms';
 import { TextFieldConfig, textField } from "./text.field";
-import { LabeledFieldConfig, DescriptionFieldConfig, formlyField } from "../../field";
+import { LabeledFieldConfig, DescriptionFieldConfig } from "../../field";
 
 export const PHONE_LABEL_MAX_LENGTH = 100;
 
@@ -29,24 +29,24 @@ export interface EmailFieldConfig extends Partial<LabeledFieldConfig>, Descripti
   rows?: number;
 }
 
-export function emailField({ key = 'email', label = 'Email Address', placeholder = 'person@email.com', description = '', required = false, readonly = false }: EmailFieldConfig = {}): FormlyFieldConfig {
-  return formlyField({
+export function emailField(config: EmailFieldConfig = {}): FormlyFieldConfig {
+  const { key = 'email', label = 'Email Address', placeholder = 'you@example.com' } = config;
+  const emailFieldConfig = textField({
+    ...config,
     key,
-    type: 'input',
-    templateOptions: {
-      label,
-      placeholder,
-      description,
-      required,
-      readonly
-    },
-    validators: {
-      email: {
-        expression: (c: AbstractControl) => !Validators.email(c),
-        message: () => `Not a valid email address.`
-      }
-    },
+    label,
+    placeholder,
+    inputType: 'email'
   });
+
+  emailFieldConfig.validators = {
+    email: {
+      expression: (c: AbstractControl) => !Validators.email(c),
+      message: () => `Not a valid email address.`
+    }
+  };
+
+  return emailFieldConfig;
 }
 
 export function cityField({ key = 'city', required = false }: Partial<TextFieldConfig> = {}): FormlyFieldConfig {

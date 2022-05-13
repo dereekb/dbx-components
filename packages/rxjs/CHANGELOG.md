@@ -2,6 +2,40 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [3.0.0](https://github.com/dereekb/dbx-components/compare/v2.1.0...v3.0.0) (2022-05-13)
+
+
+### Bug Fixes
+
+* cleanup() now calls the destroy function on complete ([dc8f06b](https://github.com/dereekb/dbx-components/commit/dc8f06b7a5b9f62973356a967867400abb9049e3))
+* fixed issue with allSuccessfulStates$ in itemAccumulatorInstance ([0396ac5](https://github.com/dereekb/dbx-components/commit/0396ac58fec1a24b703da520063e09c36bbfbf0a))
+* itemAccumulatorInstance fix ([d67c9d1](https://github.com/dereekb/dbx-components/commit/d67c9d197934e0c4dee2070a2eea105a7114a56c))
+
+
+### Features
+
+* added AsyncPusher ([8cb2052](https://github.com/dereekb/dbx-components/commit/8cb2052577e0901d2acafa3db724b94ab0035b0a))
+* added cleanup() ([1885463](https://github.com/dereekb/dbx-components/commit/18854634041fcdf613ea8f8b0640db9fb218bbce))
+* added dbxFirebaseCollectionChangeDirective ([93a38a2](https://github.com/dereekb/dbx-components/commit/93a38a2be5da3ab5d1bf7905467441fc8b2d563e))
+* added dbxFirebaseCollectionStore ([9704c83](https://github.com/dereekb/dbx-components/commit/9704c83603079fe1c58c3961f64d8472ff90bf6d))
+* added dbxFirebaseDocumentStore ([43da785](https://github.com/dereekb/dbx-components/commit/43da785b1b271549f65273a56a0c333a0a23bb2e))
+* added dbxFirebaseDocumentWithParentStore ([f055d81](https://github.com/dereekb/dbx-components/commit/f055d81aadc8df852640e7997368af73be05b654))
+* added dbxFirebaseModelLoaderModule ([15a8052](https://github.com/dereekb/dbx-components/commit/15a8052e057fa6e5691915ab81b5fe8b4afdfa95))
+* added dbxFormWorkingWrapperComponent ([fd32cd4](https://github.com/dereekb/dbx-components/commit/fd32cd4c2933e79c255f07f86fdc8fc3029b0858))
+* added firebaseQueryItemAccumulator ([1e4e0f3](https://github.com/dereekb/dbx-components/commit/1e4e0f367a4bdc9dac7366ae9421e9ec48279b92))
+* added IterationQueryChangeWatcher ([f5b2474](https://github.com/dereekb/dbx-components/commit/f5b2474f9a2cf659cdebf19ba49055e5bd2f1c90))
+* added mapKeysIntersection utility functions ([f694f86](https://github.com/dereekb/dbx-components/commit/f694f86b87e646e00e446236bb1c94a28652aa70))
+* added onMatchDelta ([e36fb4c](https://github.com/dereekb/dbx-components/commit/e36fb4c47c82ef7a616b7d3b12888e370206a2e5))
+* added setContainsAllValues ([737c1e7](https://github.com/dereekb/dbx-components/commit/737c1e750a9c656406043e2a69bdceaf941750b6))
+* refactored dbxFormSource ([aad115d](https://github.com/dereekb/dbx-components/commit/aad115d9809ed765ddadc63c9f56ac2a4ab5ce5a))
+
+
+### BREAKING CHANGES
+
+* - renamed flattenIterationResultItemArray to flattenAccumulatorResultItemArray since the input is an accumulator and not an iteration
+
+
+
 # [2.1.0](https://github.com/dereekb/dbx-components/compare/v2.0.0...v2.1.0) (2022-03-17)
 
 

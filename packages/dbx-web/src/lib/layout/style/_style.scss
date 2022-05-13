@@ -22,7 +22,9 @@
     padding: 0 !important;
   }
 
-  @each $i, $padding in theming.$padding-map {
+  @each $i,
+  $padding in theming.$padding-map {
+
     .pad-#{$i},
     .padding-#{$i} {
       padding: $padding;
@@ -35,6 +37,15 @@
 
   .d-inline {
     display: inline;
+  }
+
+  .d-iflex {
+    display: inline-flex;
+  }
+
+  // force
+  .d-fiflex {
+    display: inline-flex !important;
   }
 
 }

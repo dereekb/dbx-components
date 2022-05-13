@@ -1,6 +1,5 @@
-import { exhaustMap, scan, shareReplay, startWith } from 'rxjs/operators';
-import { distinctUntilChanged, MonoTypeOperatorFunction, Observable, OperatorFunction } from "rxjs";
-import { Maybe, ArrayOrValue, mergeArrayOrValueIntoArray } from '@dereekb/util';
+import { exhaustMap, map, scan, shareReplay, startWith, distinctUntilChanged, MonoTypeOperatorFunction, Observable, OperatorFunction } from "rxjs";
+import { Maybe, ArrayOrValue, mergeArrayOrValueIntoArray, forEachWithArray, mergeArrayIntoArray } from '@dereekb/util';
 
 export function distinctUntilArrayLengthChanges<A>(getArray: (value: A) => any[]): MonoTypeOperatorFunction<A>;
 export function distinctUntilArrayLengthChanges<T>(): MonoTypeOperatorFunction<T[]>;
@@ -41,8 +40,18 @@ export function scanIntoArray<T>(config: { immutable?: boolean } = {}): Operator
 
 // MARK: ScanBuildArray
 export interface ScanBuildArrayConfig<T> {
+  /**
+   * 
+   */
   seed?: Maybe<T[]>;
+  /**
+   * 
+   */
   accumulatorObs: Observable<Maybe<T>>;
+  /**
+   * Whether or not to flatten array values that are input.
+   */
+  flattenArray?: boolean;
 };
 
 export type ScanBuildArrayConfigFn<S, T> = (seedState: S) => ScanBuildArrayConfig<T>;
@@ -60,19 +69,34 @@ export type ScanBuildArrayConfigFn<S, T> = (seedState: S) => ScanBuildArrayConfi
  */
 export function scanBuildArray<S, T>(init: ScanBuildArrayConfigFn<S, T>): OperatorFunction<S, T[]> {
   return exhaustMap((seedState: S) => {
-    const { seed = [], accumulatorObs } = init(seedState);
+    const { seed = [], accumulatorObs, flattenArray = false } = init(seedState);
 
     return accumulatorObs.pipe(
       startWith(undefined as any), // Start with to not wait for the accumulator to pass a value.
-      scan((acc: Maybe<T[]>, next: Maybe<ArrayOrValue<T>>) => {
+      scan((acc: T[], next: Maybe<ArrayOrValue<T>>) => {
+
         if (next != null) {
-          acc = mergeArrayOrValueIntoArray(acc!, next!);
+          if (flattenArray && Array.isArray(next)) {
+            mergeArrayIntoArray(acc, next);
+          } else {
+            acc.push(next as any);
+          }
         }
 
         return acc!;
-      }, seed!) as OperatorFunction<ArrayOrValue<T>, T[]>, 
+      }, seed ?? []) as OperatorFunction<ArrayOrValue<T>, T[]>,
       distinctUntilArrayLengthChanges(),
       shareReplay(1)
     );
   });
+}
+
+/**
+ * Convenience function with map to forEachWithArray
+ * 
+ * @param forEach 
+ * @returns 
+ */
+export function mapForEach<T>(forEach: Maybe<(value: T) => void>): OperatorFunction<T[], T[]> {
+  return (forEach) ? map(x => forEachWithArray(x, forEach)) : map(x => x);
 }

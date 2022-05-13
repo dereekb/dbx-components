@@ -1,0 +1,24 @@
+
+
+.demo-guestbook-entry-list-item {
+
+  .item-message {
+
+  }
+
+  .item-signed {
+    font-weight: bold;
+    
+    .signed-by {
+      opacity: 0.9;
+      font-size: 1.2em;
+      margin-right: 8px;
+    }
+
+    .item-updated {
+      opacity: 0.8;
+      font-size: 0.9em;
+    }
+  }
+
+}

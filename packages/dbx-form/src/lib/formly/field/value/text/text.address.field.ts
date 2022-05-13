@@ -3,7 +3,7 @@ import { textField } from './text.field';
 import { cityField, countryField, stateField, zipCodeField } from './text.additional.field';
 import { flexLayoutWrapper } from '../../wrapper/wrapper';
 import { FieldConfig } from '../../field';
-import { repeatArrayField } from '..';
+import { repeatArrayField } from '../array/array.field';
 
 export const ADDRESS_LINE_MAX_LENGTH = 100;
 

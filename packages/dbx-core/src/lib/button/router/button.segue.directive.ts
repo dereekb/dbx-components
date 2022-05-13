@@ -39,4 +39,9 @@ export class DbxButtonSegueDirective extends AbstractSubscriptionDirective imple
     ).subscribe();
   }
 
+  override ngOnDestroy(): void {
+    super.ngOnDestroy();
+    this._segueRef.complete();
+  }
+
 }

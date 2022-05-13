@@ -44,6 +44,11 @@ export class DbxFlexGroupDirective extends AbstractSubscriptionDirective impleme
     });
   }
 
+  override ngOnDestroy(): void {
+    super.ngOnDestroy();
+    this._breakpoint.complete();
+  }
+
   @Input()
   set breakpoint(breakpoint: Maybe<ScreenMediaWidthType>) {
     this._breakpoint.next(breakpoint ?? 'tablet');

@@ -2,9 +2,9 @@ import { Directive, Host, Input, OnDestroy, OnInit } from '@angular/core';
 import { map, shareReplay, switchMap, tap } from 'rxjs/operators';
 import { AbstractSubscriptionDirective } from '../../../subscription';
 import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
-import { HandleActionFunction, WorkHandlerContextSourceDelegate, handleWorkValueReadyFn } from '../../action.handler';
+import { DbxActionWorkInstanceDelegate, HandleActionFunction } from '../../action.handler';
 import { Maybe } from '@dereekb/util';
-import { filterMaybe } from '@dereekb/rxjs';
+import { filterMaybe, workFactory } from '@dereekb/rxjs';
 import { BehaviorSubject } from 'rxjs';
 
 
@@ -28,7 +28,7 @@ export class DbxActionHandlerDirective<T, O> extends AbstractSubscriptionDirecti
     this._handlerFunction.next(handlerFunction);
   }
 
-  private _delegate = new WorkHandlerContextSourceDelegate<T, O>(this.source);
+  private _delegate = new DbxActionWorkInstanceDelegate<T, O>(this.source);
 
   constructor(@Host() public readonly source: DbxActionContextStoreSourceInstance<T, O>) {
     super();
@@ -36,10 +36,9 @@ export class DbxActionHandlerDirective<T, O> extends AbstractSubscriptionDirecti
 
   ngOnInit(): void {
     this.sub = this.handlerFunction$.pipe(
-      switchMap(handlerFunction => this.source.valueReady$.pipe(
-        map((x: T) => ([handlerFunction, x] as [HandleActionFunction<T, O>, T])),
-        tap(([handlerFunction, value]) => {
-          const context = handleWorkValueReadyFn({ handlerFunction, delegate: this._delegate })(value);
+      switchMap(work => this.source.valueReady$.pipe(
+        tap((value) => {
+          const context = workFactory({ work, delegate: this._delegate })(value);
 
           if (context) {
 
@@ -54,6 +53,7 @@ export class DbxActionHandlerDirective<T, O> extends AbstractSubscriptionDirecti
   override ngOnDestroy(): void {
     this.source.lockSet.onNextUnlock(() => {
       super.ngOnDestroy();
+      this._handlerFunction.complete();
     });
   }
 

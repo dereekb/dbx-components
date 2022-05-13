@@ -21,8 +21,8 @@ export abstract class AbstractTransitionWatcherDirective extends AbstractTransit
     this._transitionSub.destroy();
   }
 
-  constructor(dbNgxRouterTransitionService: DbxRouterTransitionService, protected readonly ngZone: NgZone) {
-    super(dbNgxRouterTransitionService);
+  constructor(dbxRouterTransitionService: DbxRouterTransitionService, protected readonly ngZone: NgZone) {
+    super(dbxRouterTransitionService);
   }
 
   // MARK: Action

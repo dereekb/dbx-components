@@ -1,9 +1,9 @@
-import { Observable, combineLatest } from 'rxjs';
-import { Directive, Host, Input } from '@angular/core';
+import { Observable, BehaviorSubject } from 'rxjs';
+import { Directive, Host, Input, OnDestroy } from '@angular/core';
 import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
-import { DbxFormState, DbxMutableForm } from '../../form/form';
-import { LoadingState } from '@dereekb/rxjs';
-import { distinctUntilChanged, filter, first, map } from 'rxjs/operators';
+import { DbxMutableForm } from '../../form/form';
+import { LoadingState, loadingStateHasFinishedLoading } from '@dereekb/rxjs';
+import { DbxFormSourceDirectiveMode, dbxFormSourceObservable } from './form.input.directive';
 
 /**
  * Used with a FormComponent to set the value from a LoadingState when the value is available.
@@ -11,10 +11,21 @@ import { distinctUntilChanged, filter, first, map } from 'rxjs/operators';
 @Directive({
   selector: '[dbxFormLoadingSource]'
 })
-export class DbxFormLoadingSourceDirective<T extends object = any> extends AbstractSubscriptionDirective {
+export class DbxFormLoadingSourceDirective<T extends object = any> extends AbstractSubscriptionDirective implements OnDestroy {
+
+  private _mode = new BehaviorSubject<DbxFormSourceDirectiveMode>('reset');
 
   constructor(@Host() public readonly form: DbxMutableForm) {
     super();
+  }
+
+  @Input('dbxFormLoadingSourceMode')
+  get mode(): DbxFormSourceDirectiveMode {
+    return this._mode.value;
+  }
+
+  set mode(mode: DbxFormSourceDirectiveMode) {
+    this._mode.next(mode);
   }
 
   /**
@@ -25,30 +36,23 @@ export class DbxFormLoadingSourceDirective<T extends object = any> extends Abstr
     this._setObs(obs);
   }
 
-  private _setObs(obs: Observable<LoadingState<T>>): void {
+  private _setObs(inputObs: Observable<LoadingState<T>>): void {
     let subscription;
 
-    if (obs) {
-      subscription = combineLatest([
-        // Emit the first time initializing isn't there.
-        this.form.stream$.pipe(
-          filter((x) => x.state !== DbxFormState.INITIALIZING),
-          first()
-        ),
-        obs
-      ]).pipe(
-        map((x) => x[1]),
-        filter((x) => Boolean(x)),
-        distinctUntilChanged((x, y) => x.value === y.value),
-      ).subscribe((x) => {
-        if (!x.error && !x.loading) {
-          // console.log('Setting value: ', x.model);
+    if (inputObs) {
+      subscription = dbxFormSourceObservable(this.form, inputObs, this._mode).subscribe((x) => {
+        if (loadingStateHasFinishedLoading(x)) {
           this.form.setValue(x.value);
         }
       });
     }
 
     this.sub = subscription;
+  }
+
+  override ngOnDestroy(): void {
+    super.ngOnDestroy();
+    this._mode.complete();
   }
 
 }

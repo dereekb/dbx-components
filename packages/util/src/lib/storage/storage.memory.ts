@@ -1,4 +1,4 @@
-import { Maybe } from "../value"
+import { Maybe } from '../value/maybe';
 import { StorageObject } from "./storage.object"
 
 export class MemoryStorageInstance implements StorageObject {

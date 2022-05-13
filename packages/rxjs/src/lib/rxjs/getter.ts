@@ -4,14 +4,14 @@ import { Observable, OperatorFunction, switchMap, of, isObservable } from 'rxjs'
 /**
  * A value that is either the value or an observable that returns the value.
  */
-export type ObservableGetter<T> = T | Observable<T>;
+export type ObservableOrValue<T> = T | Observable<T>;
 
 /**
  * Wraps the input value as an observable, if it is not an observable.
  */
-export function asObservable<T>(valueOrObs: ObservableGetter<T>): Observable<T>;
-export function asObservable<T>(valueOrObs: Maybe<ObservableGetter<T>>): Observable<Maybe<T>>;
-export function asObservable<T>(valueOrObs: Maybe<ObservableGetter<T>>): Observable<Maybe<T>> {
+export function asObservable<T>(valueOrObs: ObservableOrValue<T>): Observable<T>;
+export function asObservable<T>(valueOrObs: Maybe<ObservableOrValue<T>>): Observable<Maybe<T>>;
+export function asObservable<T>(valueOrObs: Maybe<ObservableOrValue<T>>): Observable<Maybe<T>> {
   if (isObservable(valueOrObs)) {
     return valueOrObs;
   } else {
@@ -24,7 +24,7 @@ export function asObservable<T>(valueOrObs: Maybe<ObservableGetter<T>>): Observa
  * 
  * @returns 
  */
-export function getter<T>(): OperatorFunction<ObservableGetter<T>, T> {
+export function valueFromObservableOrValue<T>(): OperatorFunction<ObservableOrValue<T>, T> {
   return switchMap(x => {
     if (isObservable(x)) {
       return x;

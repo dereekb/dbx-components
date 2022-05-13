@@ -352,7 +352,7 @@ export function mapMultipleLoadingStateResults<T, X, L extends LoadingState<X>[]
   return result;
 }
 
-export type MapLoadingStateFn<A, B, L extends LoadingState<A> = LoadingState<A>, O extends LoadingState<B> = LoadingState<B>> = (input: L) => O;
+export type MapLoadingStateFn<A, B, L extends LoadingState<A> = LoadingState<A>, O extends LoadingState<B> = LoadingState<B>> = (input: L, value?: B) => O;
 export type MapLoadingStateValuesFn<A, B, L extends LoadingState<A> = LoadingState<A>> = (input: A, state: L) => B;
 
 export interface MapLoadingStateResultsConfiguration<A, B, L extends LoadingState<A> = LoadingState<A>, O extends LoadingState<B> = LoadingState<B>> {
@@ -381,8 +381,23 @@ export function mapLoadingStateResults<A, B, L extends Partial<PageLoadingState<
       value
     } as any;
   } else {
-    result = mapState(input);
+    result = mapState(input, value);
   }
 
   return result;
+}
+
+export type MapLoadingStateValueFunction<O, I, L extends LoadingState<I> = LoadingState<I>> = (state: L) => Maybe<O>;
+export type MapLoadingStateValueMapFunction<O, I, L extends LoadingState<I> = LoadingState<I>> = ((item: I) => Maybe<O>) | ((item: I, state: L) => Maybe<O>);
+
+export function mapLoadingStateValueFunction<O, I, L extends LoadingState<I> = LoadingState<I>>(mapFn: MapLoadingStateValueMapFunction<O, I, L>): MapLoadingStateValueFunction<O, I, L> {
+  return (state: L) => {
+    let result: Maybe<O>;
+
+    if (state.value != null) {
+      result = mapFn(state.value, state);
+    }
+
+    return result;
+  };
 }

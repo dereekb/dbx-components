@@ -7,17 +7,22 @@ import { Maybe } from '@dereekb/util';
 
 /**
  * Optional responsive component that wraps content on the right side and shows a navigation bar.
+ * 
+ * When rendered it will trigger the context to show left.
  */
 @Component({
-  selector: 'dbx-two-columns-right',
-  templateUrl: './two.column.right.component.html'
+  selector: 'dbx-two-column-right',
+  templateUrl: './two.column.right.component.html',
+  host: {
+    'class': "dbx-two-column-right d-block"
+  }
 })
-export class DbxTwoColumnsRightComponent implements AfterViewInit, OnDestroy {
-
-  private _showBack = new BehaviorSubject<boolean>(true);
+export class DbxTwoColumnRightComponent implements AfterViewInit, OnDestroy {
 
   @Input()
   header?: string;
+
+  private _showBack = new BehaviorSubject<boolean>(true);
 
   readonly ref$: Observable<Maybe<ClickableAnchor>> = this.twoColumnsContextStore.backRef$;
 
@@ -38,6 +43,7 @@ export class DbxTwoColumnsRightComponent implements AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this._showBack.complete();
     this.twoColumnsContextStore.setShowRight(false);
   }
 

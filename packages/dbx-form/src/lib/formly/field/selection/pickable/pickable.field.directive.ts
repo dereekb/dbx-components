@@ -1,4 +1,4 @@
-import { DbxInjectedComponentConfig } from "@dereekb/dbx-core";
+import { DbxInjectionComponentConfig } from "@dereekb/dbx-core";
 import { beginLoading, LoadingState, successResult, mapLoadingStateResults, filterMaybe, ListLoadingStateContextInstance, isListLoadingStateEmpty } from "@dereekb/rxjs";
 import { convertMaybeToArray, findUnique, makeValuesGroupMap, Maybe } from "@dereekb/util";
 import { Directive, OnDestroy, OnInit, ViewChild } from "@angular/core";
@@ -76,7 +76,11 @@ export interface PickableValueFieldsFieldConfig<T> {
   /**
    * Footer Display
    */
-  footerConfig?: DbxInjectedComponentConfig;
+  footerConfig?: DbxInjectionComponentConfig;
+  /**
+   * Changes the selection mode of the list to "view" mode on disabled, hiding the selection boxes.
+   */
+  changeSelectionModeToViewOnDisabled?: boolean;
 }
 
 export interface PickableValueFieldsFormlyFieldConfig<T> extends FormlyFieldConfig {
@@ -201,7 +205,7 @@ export class AbstractDbxPickableItemFieldDirective<T> extends FieldType<Pickable
   readonly items$: Observable<PickableItemFieldItem<T>[]> = combineLatest([this.filteredSearchResults$, this.values$]).pipe(
     map(([displayValues, values]) => {
       const selectedHashValuesSet = new Set(values.map(x => this.hashForValue(x)));
-      let items: PickableItemFieldItem<T>[] = displayValues.map((x) => ({ value: x, selected: selectedHashValuesSet.has(x._hash) }));
+      let items: PickableItemFieldItem<T>[] = displayValues.map((x) => ({ itemValue: x, selected: selectedHashValuesSet.has(x._hash) }));
 
       if (this.sortItems) {
         items = this.sortItems(items);
@@ -275,6 +279,10 @@ export class AbstractDbxPickableItemFieldDirective<T> extends FieldType<Pickable
     return (this.field.templateOptions?.attributes?.['autocomplete'] as any) ?? this.key as string;
   }
 
+  get changeSelectionModeToViewOnDisabled(): boolean {
+    return this.pickableField.changeSelectionModeToViewOnDisabled ?? false;
+  }
+
   get sortItems(): Maybe<PickableItemFieldItemSortFn<T>> {
     return this.pickableField.sortItems;
   }
@@ -333,7 +341,7 @@ export class AbstractDbxPickableItemFieldDirective<T> extends FieldType<Pickable
     return this._getValueOnFormControl(this.formControl.value) ?? [];
   }
 
-  get footerConfig(): Maybe<DbxInjectedComponentConfig> {
+  get footerConfig(): Maybe<DbxInjectionComponentConfig> {
     return this.pickableField.footerConfig;
   }
 
@@ -396,8 +404,7 @@ export class AbstractDbxPickableItemFieldDirective<T> extends FieldType<Pickable
     );
   }
 
-  override ngOnInit(): void {
-    super.ngOnInit();
+  ngOnInit(): void {
     this._formControlObs.next(this.formControl);
 
     // Focus after finished loading for the first time.

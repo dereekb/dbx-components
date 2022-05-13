@@ -11,8 +11,8 @@ import { FormlyModule } from '@ngx-formly/core';
 import { MatButtonModule } from '@angular/material/button';
 import { DbxPickableChipListFieldComponent } from './pickable.chip.field.component';
 import { DbxPickableListFieldComponent, DbxPickableListFieldItemListComponent, DbxPickableListFieldItemListViewComponent, DbxPickableListFieldItemListViewItemComponent } from './pickable.list.field.component';
-import { DbxDatePipeModule, DbxInjectedComponentModule } from '@dereekb/dbx-core';
-import { DbxAnchorModule, DbxTextModule, DbxLoadingModule, DbxButtonModule, DbxListLayoutModule } from '@dereekb/dbx-web';
+import { DbxDatePipeModule, DbxInjectionComponentModule } from '@dereekb/dbx-core';
+import { DbxRouterAnchorModule, DbxTextModule, DbxLoadingModule, DbxButtonModule, DbxListLayoutModule } from '@dereekb/dbx-web';
 
 @NgModule({
   imports: [
@@ -28,10 +28,10 @@ import { DbxAnchorModule, DbxTextModule, DbxLoadingModule, DbxButtonModule, DbxL
     MatAutocompleteModule,
     MatListModule,
     DbxDatePipeModule,
-    DbxAnchorModule,
+    DbxRouterAnchorModule,
     MatChipsModule,
     MatIconModule,
-    DbxInjectedComponentModule,
+    DbxInjectionComponentModule,
     DbxListLayoutModule,
     FormlyModule.forChild({
       types: [

@@ -18,8 +18,8 @@ export function maxValidationMessage(err: any, field: FieldTypeConfig) {
 }
 
 export const REQUIRED_VALIDATION_MESSAGE = { name: 'required', message: 'This field is required' };
-export const MIN_LENGTH_VALIDATION_MESSAGE = { name: 'minlength', message: minLengthValidationMessage } as ValidationMessageOption;
-export const MAX_LENGTH_VALIDATION_MESSAGE = { name: 'maxlength', message: maxLengthValidationMessage } as ValidationMessageOption;
+export const MIN_LENGTH_VALIDATION_MESSAGE = { name: 'minLength', message: minLengthValidationMessage } as ValidationMessageOption;
+export const MAX_LENGTH_VALIDATION_MESSAGE = { name: 'maxLength', message: maxLengthValidationMessage } as ValidationMessageOption;
 export const MIN_VALIDATION_MESSAGE = { name: 'min', message: minValidationMessage } as ValidationMessageOption;
 export const MAX_VALIDATION_MESSAGE = { name: 'max', message: maxValidationMessage } as ValidationMessageOption;
 export const INVALID_PHONE_NUMBER_MESSAGE = { name: 'validatePhoneNumber', message: 'This is not a valid phone number.' };

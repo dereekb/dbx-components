@@ -1,4 +1,4 @@
-import { Maybe } from "../value";
+import { Maybe } from "../value/maybe";
 
 // MARK: Types
 export type ArrayOrValue<T> = T | T[];
@@ -18,6 +18,8 @@ export function convertMaybeToArray<T>(arrayOrValue: Maybe<ArrayOrValue<T>>): T[
   }
 }
 
+export const asArray = convertMaybeToArray;
+
 /**
  * Converts the input value to an array containing itself, or returns itself if it is an array.
  * 
@@ -27,7 +29,6 @@ export function convertMaybeToArray<T>(arrayOrValue: Maybe<ArrayOrValue<T>>): T[
 export function convertToArray<T>(arrayOrValue: ArrayOrValue<T>): T[] {
   return Array.isArray(arrayOrValue) ? arrayOrValue : [arrayOrValue];
 }
-
 /**
  * Returns the first value from the array.
  */
@@ -61,8 +62,24 @@ export function concatArrays<T>(...arrays: (Maybe<T[]>)[]): T[] {
   return flattenArray(arrays.filter(x => Boolean(x)) as T[][]);
 }
 
-export function flattenArray<T>(array: T[][]): T[] {
-  return array.filter((x) => Boolean(x)).reduce((accumulator, value) => accumulator.concat([...value]), []);
+/**
+ * Flattens a two dimensional array into a single dimensional array. Any null/undefined values from the first dimension are filtered out.
+ * 
+ * @param array 
+ * @returns 
+ */
+export function flattenArray<T>(array: (Maybe<T[]>)[]): T[] {
+  return (array.filter((x) => Boolean(x)) as T[][]).reduce((accumulator: T[], value: T[]) => accumulator.concat(value), []);
+}
+
+/**
+ * Flattens an array of ArrayOrValue values into a single array.
+ * 
+ * @param array 
+ * @returns 
+ */
+export function flattenArrayOrValueArray<T>(array: ArrayOrValue<Maybe<T>>[]): T[] {
+  return flattenArray(array.map(x => (x) ? convertToArray(x) : undefined) as Maybe<T[]>[]);
 }
 
 export function copyArray<T>(input: Maybe<T[]>): T[] {
@@ -94,7 +111,7 @@ export function mergeArrays<T>(arrays: Maybe<T[]>[]): T[] {
  * @param arrays 
  * @returns 
  */
-export function mergeIntoArray<T>(target: Maybe<T[]>, ...arrays: Maybe<T[]>[]) {
+export function mergeIntoArray<T>(target: Maybe<T[]>, ...arrays: Maybe<T[]>[]): T[] {
   if (target == null) {
     target = [];
   }
@@ -177,4 +194,22 @@ export function pickOneRandomly<T>(values: T[]): T {
   const random = Math.random();
   const index = Math.round(random * (values.length - 1));
   return values[index];
+}
+
+/**
+ * Performs forEach with the input array and returns the array.
+ * 
+ * @param array 
+ * @param forEach 
+ * @returns 
+ */
+export function forEachWithArray<T>(array: Maybe<ArrayOrValue<T>>, forEach: (value: T) => void): T[] {
+  if (array) {
+    array = convertToArray(array);
+    array.forEach(forEach);
+  } else {
+    array = [];
+  }
+
+  return array;
 }

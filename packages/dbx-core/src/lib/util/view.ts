@@ -19,8 +19,26 @@ export function tapDetectChanges<T>(cdRef: ChangeDetectorRef, timeout = 0): Mono
  * @param cdRef 
  */
 export function safeDetectChanges(cdRef: ChangeDetectorRef): void {
+  safeUseCdRef(cdRef, () => cdRef.detectChanges());
+}
+
+/**
+ * Marks the ChangeDetectorRef for changes as long as the view has not been destroyed.
+ * 
+ * @param cdRef 
+ */
+export function safeMarkForCheck(cdRef: ChangeDetectorRef): void {
+  safeUseCdRef(cdRef, () => cdRef.markForCheck());
+}
+
+/**
+ * Triggers a detection change on the input view as long as the view has not been destroyed.
+ * 
+ * @param cdRef 
+ */
+export function safeUseCdRef(cdRef: ChangeDetectorRef, use: () => void): void {
   if (!(cdRef as ViewRef).destroyed) {
-    cdRef.detectChanges();
+    cdRef.markForCheck();
   }
 }
 

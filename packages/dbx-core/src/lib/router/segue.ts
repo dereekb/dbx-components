@@ -1,7 +1,7 @@
-import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { ArrayOrValue } from '@dereekb/util';
+import { map, Observable } from 'rxjs';
 
-export type SegueRefRouterLink = string | any[] | any;
+export type SegueRefRouterLink = string | ArrayOrValue<any>;
 
 export interface SegueRefRawSegueParams {
   [key: string]: any;
@@ -29,10 +29,31 @@ export interface SegueRefOptions<O = any> {
 export interface SegueRef<O = any> extends SegueRefOptions<O> {
 
   /**
-   * UI Sref reference value.
+   * Ref path value.
    */
-  ref?: SegueRefRouterLink;
+  ref: SegueRefRouterLink;
 
+}
+
+/**
+ * A SegueRef object or a different router link representation.
+ */
+export type SegueRefOrSegueRefRouterLink<O = any> = SegueRef<O> | SegueRefRouterLink;
+
+export function isSegueRef<O = any>(input: SegueRefOrSegueRefRouterLink<O>): input is SegueRef<O> {
+  return (typeof input === 'object') && input.ref != null;
+}
+
+export function asSegueRef<O = any>(input: SegueRefOrSegueRefRouterLink<O>): SegueRef<O> {
+  const type = typeof input;
+
+  if (type === 'string') {
+    return refStringToSegueRef(input);
+  } else if (isSegueRef(input)) {
+    return input;
+  } else {
+    return { ref: undefined };
+  }
 }
 
 export function refStringToSegueRef<O = any>(ref: string, options?: SegueRefOptions<O>): SegueRef<O> {

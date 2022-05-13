@@ -1,5 +1,5 @@
 import { TreeNode, TreeNodeWithoutChildren } from "./tree";
-import { Maybe } from "../value";
+import { Maybe } from "../value/maybe";
 
 // MARK: Expand
 

@@ -1,0 +1,33 @@
+<dbx-content-container>
+  <doc-feature-layout header="Role Directives" hint="">
+
+
+    <!-- Examples -->
+    <doc-feature-example header="dbxAuthHasRoles"
+      hint="Similar to ngIf, it is used to conditionally add content if the user has all of the given roles.">
+
+      <ng-container *dbxAuthHasRoles="noRoles">
+        <p>This requires no roles to view.</p>
+      </ng-container>
+
+      <ng-container *dbxAuthHasRoles="userRole">
+        <p>This requires the user role.</p>
+      </ng-container>
+
+    </doc-feature-example>
+
+    <doc-feature-example header="dbxAuthHasAnyRole"
+      hint="Similar to ngIf, it is used to conditionally add content if the user has any of the given roles.">
+
+      <ng-container *dbxAuthHasAnyRole="noRoles">
+        <p>This requires no roles to view.</p>
+      </ng-container>
+
+      <ng-container *dbxAuthHasAnyRole="userRole">
+        <p>This requires the user role.</p>
+      </ng-container>
+
+    </doc-feature-example>
+
+  </doc-feature-layout>
+</dbx-content-container>

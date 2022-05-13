@@ -3,5 +3,9 @@
   "dest": "../../dist/packages/dbx-firebase",
   "lib": {
     "entryFile": "src/index.ts"
-  }
+  },
+  "assets": [
+    "./src/**/*.scss",
+    "./src/assets/**/*"
+  ]
 }

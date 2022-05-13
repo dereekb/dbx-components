@@ -1,5 +1,5 @@
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
-import { DbxInjectedComponentConfig } from '@dereekb/dbx-core';
+import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { Component, OnInit } from '@angular/core';
 import { AbstractDialogDirective } from '../dialog/abstract.dialog.directive';
 import { DbxPromptConfirmConfig, DbxPromptConfirmTypes } from './prompt.confirm.component';
@@ -11,14 +11,14 @@ export const DEFAULT_DBX_PROMPT_CONFIRM_DIALOG_CONFIG = {
 };
 
 export interface DbxPromptConfirmDialogConfig extends DbxPromptConfirmConfig {
-  component?: DbxInjectedComponentConfig;
+  component?: DbxInjectionComponentConfig;
 }
 
 @Component({
   template: `
     <dbx-dialog-content>
       <dbx-prompt-confirm [config]="config" (confirm)="confirm()" (cancel)="cancel()">
-        <dbx-injected-content [config]="injectedConfig"></dbx-injected-content>
+        <dbx-injection [config]="injectionConfig"></dbx-injection>
       </dbx-prompt-confirm>
     </dbx-dialog-content>
   `
@@ -29,7 +29,7 @@ export class DbxPromptConfirmDialogComponent extends AbstractDialogDirective<boo
     return this.data;
   }
 
-  get injectedConfig(): Maybe<DbxInjectedComponentConfig> {
+  get injectionConfig(): Maybe<DbxInjectionComponentConfig> {
     return this.data.component;
   }
 

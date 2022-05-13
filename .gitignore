@@ -42,6 +42,7 @@ Thumbs.db
 .angular
 
 # firebase
+firebase-export-*
 .firebase/*
 .firebaserc
 firebase-debug.log

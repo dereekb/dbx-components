@@ -1,0 +1,32 @@
+<dbx-loading [linear]="true" [context]="context" #guestbookEntry="guestbookEntry" demoGuestbookEntryDocument
+  dbxFirebaseDocumentAuthId>
+  <dbx-content-container>
+    <dbx-two-block class="guestbook-view">
+      <div top class="guestbook-view-header">
+        <h2>{{ name$ | async }}</h2>
+        <div [ngSwitch]="guestbookEntry.exists$ | async">
+          <div *ngSwitchCase="true">
+            <p class="dbx-note">You have signed this guest book.</p>
+            <p class="dbx-note" *ngIf="guestbookEntry.unpublished$ | async">Your entry is not public.</p>
+            <dbx-button [raised]="true" color="primary" text="Edit Your Entry" (buttonClick)="openEntry()"></dbx-button>
+          </div>
+          <div *ngSwitchCase="false">
+            <p class="dbx-note">You have not created an entry in this guest book.</p>
+            <dbx-button [raised]="true" color="primary" text="Create Entry" (buttonClick)="openEntry()"></dbx-button>
+          </div>
+        </div>
+      </div>
+      <div class="guestbook-view-content" demoGuestbookEntryCollection dbxFirebaseCollectionChange="auto">
+        <p></p>
+        <mat-divider></mat-divider>
+        <div>
+          <demo-guestbook-entry-list dbxFirebaseCollectionList>
+            <dbx-list-empty-content empty>
+              <p>There are no entries yet in the guest book.</p>
+            </dbx-list-empty-content>
+          </demo-guestbook-entry-list>
+        </div>
+      </div>
+    </dbx-two-block>
+  </dbx-content-container>
+</dbx-loading>

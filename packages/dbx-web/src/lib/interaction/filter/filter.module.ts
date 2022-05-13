@@ -7,14 +7,14 @@ import { DbxFilterPopoverComponent } from './filter.popover.component';
 import { MatIconModule } from '@angular/material/icon';
 import { DbxFilterWrapperComponent } from './filter.wrapper.component';
 import { FlexLayoutModule } from '@angular/flex-layout';
-import { DbxCoreFilterModule, DbxInjectedComponentModule } from '@dereekb/dbx-core';
+import { DbxCoreFilterModule, DbxInjectionComponentModule } from '@dereekb/dbx-core';
 
 @NgModule({
   imports: [
     CommonModule,
     DbxPopoverInteractionModule,
     DbxCoreFilterModule,
-    DbxInjectedComponentModule,
+    DbxInjectionComponentModule,
     FlexLayoutModule,
     // Material
     MatIconModule,

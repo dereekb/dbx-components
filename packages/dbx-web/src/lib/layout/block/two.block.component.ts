@@ -1,4 +1,4 @@
-import { ElementRef, Component, ViewChild } from '@angular/core';
+import { ElementRef, Component, ViewChild, Input } from '@angular/core';
 import { ResizedEvent } from 'angular-resize-event';
 
 /**
@@ -11,7 +11,7 @@ import { ResizedEvent } from 'angular-resize-event';
 @Component({
   selector: 'dbx-two-block',
   template: `
-  <div #two class="dbx-two-block">
+  <div #two class="dbx-two-block-content">
     <div #top class="dbx-two-block-top" (resized)="onResized($event)">
       <ng-content select="[top]"></ng-content>
     </div>
@@ -19,9 +19,19 @@ import { ResizedEvent } from 'angular-resize-event';
       <ng-content></ng-content>
     </div>
   </div>
-  `
+  `,
+  host: {
+    'class': 'dbx-two-block d-block',
+    '[class]': '{ "dbx-two-block-fixed-top": fixedTop }'
+  }
 })
 export class DbxTwoBlocksComponent {
+
+  /**
+   * Whether or not the top bar should be fixed in place instead of scrolling with the bottom when content is too tall.
+   */
+  @Input()
+  fixedTop = true;
 
   @ViewChild('two', { read: ElementRef, static: true })
   twoElement!: ElementRef;
@@ -37,7 +47,7 @@ export class DbxTwoBlocksComponent {
   onResized(event: ResizedEvent): void {
     const height = event.newRect.height;
     const element: HTMLElement = this.twoElement!.nativeElement;
-    element.style.setProperty('--two-block-top-height', `${height}px`);
+    element.style.setProperty('--dbx-two-block-top-height', `${height}px`);
   }
 
 }

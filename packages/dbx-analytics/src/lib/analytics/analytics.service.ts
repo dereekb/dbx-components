@@ -230,6 +230,7 @@ export class DbxAnalyticsService implements DbxAnalyticsEventStreamService, DbxA
   }
 
   destroy() {
+    this._subject.complete();
     this._userSourceSub.destroy();
     this._loggerSub.destroy();
   }
