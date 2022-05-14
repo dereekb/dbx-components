@@ -929,6 +929,12 @@
             "lintFilePatterns": ["packages/firebase-server/**/*.ts"]
           }
         },
+        "test": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "command": "./exec-with-emulator.sh 'npx nx run-tests firebase-server'"
+          }
+        },
         "run-tests": {
           "executor": "@nrwl/jest:jest",
           "outputs": [
@@ -944,12 +950,6 @@
           "executor": "@nrwl/workspace:run-commands",
           "options": {
             "command": "./exec-with-emulator.sh 'npx nx run-tests firebase-server --watch'"
-          }
-        },
-        "test": {
-          "executor": "@nrwl/workspace:run-commands",
-          "options": {
-            "command": "./exec-with-emulator.sh 'npx nx run-tests firebase-server'"
           }
         },
         "publish-npmjs": {
@@ -985,19 +985,28 @@
             "assets": ["packages/firebase-server/test/*.md"]
           }
         },
+        "test": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "command": "./exec-with-emulator.sh 'npx nx run-tests firebase-server-test'"
+          }
+        },
+        "run-tests": {
+          "executor": "@nrwl/jest:jest",
+          "outputs": [
+            "coverage/packages/firebase-server/test",
+            "./.reports/jest/firebase-server-test.junit.xml"
+          ],
+          "options": {
+            "jestConfig": "packages/firebase-server/test/jest.config.ts",
+            "passWithNoTests": true
+          }
+        },
         "lint": {
           "executor": "@nrwl/linter:eslint",
           "outputs": ["{options.outputFile}"],
           "options": {
             "lintFilePatterns": ["packages/firebase-server/test/**/*.ts"]
-          }
-        },
-        "test": {
-          "executor": "@nrwl/jest:jest",
-          "outputs": ["coverage/packages/firebase-server/test"],
-          "options": {
-            "jestConfig": "packages/firebase-server/test/jest.config.ts",
-            "passWithNoTests": true
           }
         }
       },
@@ -1026,19 +1035,28 @@
             "assets": ["packages/firebase/test/*.md"]
           }
         },
+        "test": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "command": "./exec-with-emulator.sh 'npx nx run-tests firebase-test'"
+          }
+        },
+        "run-tests": {
+          "executor": "@nrwl/jest:jest",
+          "outputs": [
+            "coverage/packages/firebase/test",
+            "./.reports/jest/firebase-test.junit.xml"
+          ],
+          "options": {
+            "jestConfig": "packages/firebase/test/jest.config.ts",
+            "passWithNoTests": true
+          }
+        },
         "lint": {
           "executor": "@nrwl/linter:eslint",
           "outputs": ["{options.outputFile}"],
           "options": {
             "lintFilePatterns": ["packages/firebase/test/**/*.ts"]
-          }
-        },
-        "test": {
-          "executor": "@nrwl/jest:jest",
-          "outputs": ["coverage/packages/firebase/test"],
-          "options": {
-            "jestConfig": "packages/firebase/test/jest.config.ts",
-            "passWithNoTests": true
           }
         }
       },
@@ -1237,7 +1255,10 @@
         },
         "test": {
           "executor": "@nrwl/jest:jest",
-          "outputs": ["coverage/packages/util/test"],
+          "outputs": [
+            "coverage/packages/util/test",
+            "./.reports/jest/util-test.junit.xml"
+          ],
           "options": {
             "jestConfig": "packages/util/test/jest.config.ts",
             "passWithNoTests": true

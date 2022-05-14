@@ -1,6 +1,5 @@
 module.exports = {
   displayName: 'firebase',
-
   globals: {
     'ts-jest': {
       tsconfig: '<rootDir>/tsconfig.spec.json',

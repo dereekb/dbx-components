@@ -54,6 +54,9 @@ jobs:
           name: run util tests
           command: npx nx test util
       - run:
+          name: run util-test tests
+          command: npx nx test util-test
+      - run:
           name: run rxjs tests
           command: npx nx test rxjs
       - run:
@@ -90,8 +93,14 @@ jobs:
           name: run firebase tests
           command: npx firebase emulators:exec --only auth,firestore,storage 'npx nx run-tests firebase'
       - run:
+          name: run firebase-test tests
+          command: npx firebase emulators:exec --only auth,firestore,storage 'npx nx run-tests firebase-test'
+      - run:
           name: run firebase-server tests
           command: npx firebase emulators:exec --only auth,firestore,storage 'npx nx run-tests firebase-server'
+      - run:
+          name: run firebase-server-test tests
+          command: npx firebase emulators:exec --only auth,firestore,storage 'npx nx run-tests firebase-server-test'
       - run:
           name: run dbx-firebase tests
           command: npx firebase emulators:exec --only auth,firestore,storage 'npx nx run-tests dbx-firebase'

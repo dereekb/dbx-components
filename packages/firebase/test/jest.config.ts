@@ -1,3 +1,6 @@
+
+(global as any).testFolderRootPath = '<rootDir>/../../..';
+
 module.exports = {
   displayName: 'firebase-test',
   preset: '../../../jest.preset.ts',
