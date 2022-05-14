@@ -10,6 +10,7 @@ git pull origin develop
 git checkout origin/develop
 echo merging origin/main into develop
 git pull origin main
-git merge origin/main --no-commit -m "merge(release): merge ${$(git describe --abbrev=0)} release"
+git merge origin/main --no-commit -m "merge(release): merge $(git describe --abbrev=0) release"
+echo "don't forget to create a dev tag afterwards."
 
 # template for commit message: merge(release): merge 1.2.0 release

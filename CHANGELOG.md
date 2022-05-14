@@ -2,96 +2,14 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [4.0.1](https://github.com/dereekb/dbx-components/compare/v4.0.0-dev...v4.0.1) (2022-05-14)
+
+
+
 # [4.0.0](https://github.com/dereekb/dbx-components/compare/v3.0.0...v4.0.0) (2022-05-14)
 
-
-### Bug Fixes
-
-* cleanup() now calls the destroy function on complete ([dc8f06b](https://github.com/dereekb/dbx-components/commit/dc8f06b7a5b9f62973356a967867400abb9049e3))
-* dbx-web, dbx-form now export scss in package.json ([c7f7c14](https://github.com/dereekb/dbx-components/commit/c7f7c1485aedfe80243c78435d8b39ece60c3a60))
-* dbxDateTimeFieldComponent initial date fix ([1704052](https://github.com/dereekb/dbx-components/commit/1704052a31822dc880a03aaf52a4488f58305086))
-* firebase-tools dependency version bump ([2de0019](https://github.com/dereekb/dbx-components/commit/2de0019986b0d475d3f528f3611b891cbdf757ba))
-* fixed createOrUpdateWithAccessor ([243d0d3](https://github.com/dereekb/dbx-components/commit/243d0d3dd83c49171b2f7bea68142c9155f3723d))
-* fixed dbxFormlyForm async validation issue ([afb3f96](https://github.com/dereekb/dbx-components/commit/afb3f964564b5b9795071b4f8fcfbaad9f37feec))
-* fixed issue with allSuccessfulStates$ in itemAccumulatorInstance ([0396ac5](https://github.com/dereekb/dbx-components/commit/0396ac58fec1a24b703da520063e09c36bbfbf0a))
-* itemAccumulatorInstance fix ([d67c9d1](https://github.com/dereekb/dbx-components/commit/d67c9d197934e0c4dee2070a2eea105a7114a56c))
-* updated force-start-release.sh ([3b4da48](https://github.com/dereekb/dbx-components/commit/3b4da487bd58265b67e4ee6b1cda287e076a28a7))
-
-
 ### Code Refactoring
-
-* **dbx-analytics:** added prefixes to all analytics related classes ([5db960f](https://github.com/dereekb/dbx-components/commit/5db960f0409ff0380b937257b3c9ffc3e9d362d3))
-* renamed conversionFunction to mapFunction ([6aeba77](https://github.com/dereekb/dbx-components/commit/6aeba7721dfd2721d5fe41216a1b81117be80aff))
-* renamed value to itemValue in dbxValueListItem ([3441129](https://github.com/dereekb/dbx-components/commit/34411292cf3400fe0aad8872b25d9eba7e4bd062))
-
-
-### demo
-
-* added docs page for action context ([a8cbf38](https://github.com/dereekb/dbx-components/commit/a8cbf38c631c4c9f837df274192cbb76f861612c))
-
-
-### Features
-
-* added AsyncPusher ([8cb2052](https://github.com/dereekb/dbx-components/commit/8cb2052577e0901d2acafa3db724b94ab0035b0a))
-* added cleanup() ([1885463](https://github.com/dereekb/dbx-components/commit/18854634041fcdf613ea8f8b0640db9fb218bbce))
-* added dbxActionEnforceModified ([5a4c4b2](https://github.com/dereekb/dbx-components/commit/5a4c4b267f95eda02abccc0fb8a9ae6ab910f738))
-* added dbxActionFormDisabledWhileWorking to dbxActionForm ([4d6d67b](https://github.com/dereekb/dbx-components/commit/4d6d67b3b21b57baefa280ad3a72ac2b281e0a19))
-* added dbxActionLoadingContextDirective ([c20aa02](https://github.com/dereekb/dbx-components/commit/c20aa0283c6d248e623f32b2026077e854ada090))
-* added dbxAppContextState ([dfc17eb](https://github.com/dereekb/dbx-components/commit/dfc17ebfd5281dc0d35b9f5347a1f02d8739c171))
-* added dbxAppContextStateModule, dbxAppAuthRouterModule ([40fa1fe](https://github.com/dereekb/dbx-components/commit/40fa1fe9af7ce402e54aac665b9af3c191c9d321))
-* added dbxAuthService ([9422182](https://github.com/dereekb/dbx-components/commit/9422182a617d73b4889ce433aa246962739adaf2))
-* added dbxCoreAuthModule ([29ebf14](https://github.com/dereekb/dbx-components/commit/29ebf14bc2ce380a7dfafb7d35fd77dfb3d98ea0))
-* added dbxFirebaseAuthModule ([3ab16df](https://github.com/dereekb/dbx-components/commit/3ab16dffc5dfcaf0d88755c4b8a8d6a3f8c82c19))
-* added dbxFirebaseCollectionChangeDirective ([93a38a2](https://github.com/dereekb/dbx-components/commit/93a38a2be5da3ab5d1bf7905467441fc8b2d563e))
-* added dbxFirebaseCollectionStore ([9704c83](https://github.com/dereekb/dbx-components/commit/9704c83603079fe1c58c3961f64d8472ff90bf6d))
-* added dbxFirebaseCollectionWithParentStore ([b7045e7](https://github.com/dereekb/dbx-components/commit/b7045e7612326a8fee301a298654f221e3668ab0))
-* added dbxFirebaseDocumentStore ([43da785](https://github.com/dereekb/dbx-components/commit/43da785b1b271549f65273a56a0c333a0a23bb2e))
-* added dbxFirebaseDocumentWithParentStore ([f055d81](https://github.com/dereekb/dbx-components/commit/f055d81aadc8df852640e7997368af73be05b654))
-* added dbxFirebaseFunctionsModule ([3d1bc69](https://github.com/dereekb/dbx-components/commit/3d1bc69552e0a3cede0261d4819ad35199a03fa3))
-* added dbxFirebaseLoginModule ([bf99f2d](https://github.com/dereekb/dbx-components/commit/bf99f2d947bedc2305e82e1d8cf0ecc6bb9a1f0f))
-* added dbxFirebaseModelLoaderModule ([15a8052](https://github.com/dereekb/dbx-components/commit/15a8052e057fa6e5691915ab81b5fe8b4afdfa95))
-* added dbxFormWorkingWrapperComponent ([fd32cd4](https://github.com/dereekb/dbx-components/commit/fd32cd4c2933e79c255f07f86fdc8fc3029b0858))
-* added dbxInjectionContext ([a6ac801](https://github.com/dereekb/dbx-components/commit/a6ac80106cd78371391c1a314364997bf974194c))
-* added dbxListItemDisableRippleModifier ([c89cc82](https://github.com/dereekb/dbx-components/commit/c89cc82b618ae3513c716d09c1e721b8c32e16c6))
-* added dbxListItemModifier, dbxListItemAnchorModifier ([a96ffa8](https://github.com/dereekb/dbx-components/commit/a96ffa8e87b49b4408c917b6480d139dc748d8e4))
-* added dbxProgressButtons ([004ada2](https://github.com/dereekb/dbx-components/commit/004ada21ecb9c92325e76222adf8fc6a0762cad4))
-* added firebase emulator data importing/exporting for persistence ([8739ba5](https://github.com/dereekb/dbx-components/commit/8739ba5b84881ec1a51bd9034c97d072d17a1828))
-* added firebase-server ([676cf9e](https://github.com/dereekb/dbx-components/commit/676cf9e6c44aab5ca993b5a1a9c347c021b41a4a))
-* added firebaseQueryItemAccumulator ([1e4e0f3](https://github.com/dereekb/dbx-components/commit/1e4e0f367a4bdc9dac7366ae9421e9ec48279b92))
-* added isAllowed ([c2a70bf](https://github.com/dereekb/dbx-components/commit/c2a70bf8a6f4bc4ef8b870691b9899fed3cbafad))
-* added IterationQueryChangeWatcher ([f5b2474](https://github.com/dereekb/dbx-components/commit/f5b2474f9a2cf659cdebf19ba49055e5bd2f1c90))
-* added jestFunctionFixture ([1ea2d7d](https://github.com/dereekb/dbx-components/commit/1ea2d7d4c852449f34279eeedfadd2d69c1e7f2b))
-* added mapKeysIntersection utility functions ([f694f86](https://github.com/dereekb/dbx-components/commit/f694f86b87e646e00e446236bb1c94a28652aa70))
-* added modelConversionFunctions ([42050a8](https://github.com/dereekb/dbx-components/commit/42050a8c1561acad97e99d540834d9c1305ca897))
-* added modelConversionOptions to modelMapFunction ([2de30e0](https://github.com/dereekb/dbx-components/commit/2de30e07527bbaf27c51a8472054a35e73d2ae2b))
-* added modelTestContextFactory ([0a96442](https://github.com/dereekb/dbx-components/commit/0a9644252ffc670cb2e861a4c02ace6790eeae52))
-* added now to dbxDateTimeFieldComponent ([812e704](https://github.com/dereekb/dbx-components/commit/812e704b9bf44daa7441f236d6fe1e2c499ec7dd))
-* added onCallWithNestContext to firebase-server ([ad4fcf8](https://github.com/dereekb/dbx-components/commit/ad4fcf80e71e7b954197dd89924d31180c03c911))
-* added onMatchDelta ([e36fb4c](https://github.com/dereekb/dbx-components/commit/e36fb4c47c82ef7a616b7d3b12888e370206a2e5))
-* added setContainsAllValues ([737c1e7](https://github.com/dereekb/dbx-components/commit/737c1e750a9c656406043e2a69bdceaf941750b6))
-* added setContainsAnyValue() ([ea0ee9a](https://github.com/dereekb/dbx-components/commit/ea0ee9a76fc6b093b2608356179e9f633fc896be))
-* added snapshotConverter, firestoreField ([e986026](https://github.com/dereekb/dbx-components/commit/e986026a4a4700c734fe1534778945df189c518d))
-* added transformAndValidateObject ([1f66094](https://github.com/dereekb/dbx-components/commit/1f6609413b85ae1a2b851a70bc2190ff66c7b467))
-* date query builder ([9adfe56](https://github.com/dereekb/dbx-components/commit/9adfe56b15ae2ebd1e938ec33d971f410d7ec373))
-* dbxActionDialogDirective ([63fb871](https://github.com/dereekb/dbx-components/commit/63fb8717ea1213b602e34640ec1be81d6ca14098))
-* dbxActionPopoverDirective ([a808ac9](https://github.com/dereekb/dbx-components/commit/a808ac9a7b62841311d63df1d1ee55e57876f47f))
-* dbxSelectionListViewContent can render as dbxListViewContent ([df16297](https://github.com/dereekb/dbx-components/commit/df1629777ec02f3ac96fa0fbcbaa1d4565f7095c))
-* firebaseServerAuthModule ([db9a4d3](https://github.com/dereekb/dbx-components/commit/db9a4d3d47fd15317186c7a034c25083ae395251))
-* refactored dbxFormSource ([aad115d](https://github.com/dereekb/dbx-components/commit/aad115d9809ed765ddadc63c9f56ac2a4ab5ce5a))
-
-
-### BREAKING CHANGES
-
-* - renamed flattenIterationResultItemArray to flattenAccumulatorResultItemArray since the input is an accumulator and not an iteration
-* renamed value to itemValue to better avoid issues when using DbxValueAsListItem values
-
-- Added DbxValueAsListItem type for those use cases
-* renamed dbxInjectedContent to dbxInjection, renamed related content
-* renamed ConversionFunction (and related types) to MapFunction
-* Renamed DbxActionState SUCCESS state to RESOLVED
-* **dbx-analytics:** Added dbx prefix to all analytics items to keep consistency
-
-
+* break up test exports into individual projects. Now @dereekb/util also exports @dereekb/util/test, @dereekb/firebase exports @dereekb/firebase/test, and @dereekb/firebase-server exports @dereekb/firebase-server/test
 
 # [3.0.0](https://github.com/dereekb/dbx-components/compare/v2.1.0...v3.0.0) (2022-05-13)
 
