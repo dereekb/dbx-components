@@ -101,7 +101,7 @@ jobs:
       - save_cache:
           key: firebase-cache-
           paths:
-            - ~/.cache/firebase/emulators
+            - ~/.cache/firebase
       - store_test_results:
           path: ~/code/.reports/jest/
   # Performs release operations on the release branch.
@@ -121,14 +121,9 @@ jobs:
           name: build release
           command: npx nx run --parallel=1 workspace:version
       - run:
-          name: copy tag id
-          command: TAG_ID=$(git describe --abbrev=0)
-      - run:
-          name: merge release into main and use the release commit message
-          command: git checkout main && git merge release --squash -Xtheirs && git commit -m "$(git log release --pretty=%B | cat)"
-      - run:
-          name: move tag from release to main
-          command: git tag -f $TAG_ID
+          # CircleCI does not have a great way to pass variables between run steps, so we grab the tag name before swapping to main, and then tag after making the nest commit.
+          name: copy tag id, merge release into main and use the release commit message, move tag from release to main
+          command: TAG_ID=$(git describe --abbrev=0) && git checkout main && git merge release --squash -Xtheirs && git commit -m "$(git log release --pretty=%B | cat)" && git tag -f $TAG_ID
       - run:
           name: push main to origin
           command: git push --follow-tags origin main
