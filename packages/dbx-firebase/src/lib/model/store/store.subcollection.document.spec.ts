@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { MockItemSubItem, MockItemSubItemDocument, authorizedTestWithMockItemCollection, MockItem, MockItemDocument, MockItemFirestoreCollection, MockItemSubItemFirestoreCollectionFactory } from "@dereekb/firebase";
+import { MockItemSubItem, MockItemSubItemDocument, authorizedTestWithMockItemCollection, MockItem, MockItemDocument, MockItemFirestoreCollection, MockItemSubItemFirestoreCollectionFactory } from "@dereekb/firebase/test";
 import { SubscriptionObject } from "@dereekb/rxjs";
 import { first, of, timeout } from "rxjs";
 import { AbstractDbxFirebaseDocumentStore } from "./store.document";

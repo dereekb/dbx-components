@@ -1,4 +1,10 @@
 {
   "name": "@dereekb/firebase-server",
-  "version": "3.0.0"
+  "version": "3.0.0",
+  "exports": {
+    "./test": {
+      "main": "./test/index.js",
+      "types": "./test/index.d.ts"
+    }
+  }
 }

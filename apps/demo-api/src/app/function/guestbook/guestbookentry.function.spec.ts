@@ -2,7 +2,7 @@ import { updateGuestbookEntry } from './guestbookentry.update';
 import { GuestbookEntry, UpdateGuestbookEntryParams } from '@dereekb/demo-firebase';
 import { demoGuestbookEntryContext, DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserContext, demoGuestbookContext } from '../../../test/fixture';
 import { isDate, isValid } from 'date-fns';
-import { describeCloudFunctionTest } from '@dereekb/firebase-server';
+import { describeCloudFunctionTest } from '@dereekb/firebase-server/test';
 
 demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
 
