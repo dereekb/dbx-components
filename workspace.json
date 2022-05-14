@@ -1283,7 +1283,7 @@
             "baseBranch": "main",
             "tagPrefix": "v",
             "syncVersions": true,
-            "commitMessageFormat": "release(${projectName}): ${version} release"
+            "commitMessageFormat": "release(${projectName}): v${version} release"
           }
         },
         "deploy-firebase-rules": {
