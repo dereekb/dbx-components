@@ -134,8 +134,8 @@ jobs:
           name: copy tag id, merge release into main and use the release commit message, move tag from release to main
           command: TAG_ID=$(git describe --abbrev=0) && git checkout main && git merge release --squash -Xtheirs && git commit -m "$(git log release --pretty=%B | cat)" && git tag -f $TAG_ID
       - run:
-          name: push main to origin
-          command: git push --follow-tags origin main
+          name: push main to origin, push tag to origin
+          command: git push origin main && git push origin $(git describe --abbrev=0)
       - run:
           name: delete release branch
           command: git push origin --delete release
@@ -148,6 +148,9 @@ jobs:
       - run:
           name: deploy updated projects
           command: npx nx run-many --target=ci-deploy --all --parallel=false # deploy all projects
+      - run:
+          name: deploy updated rules
+          command: npx nx run workspace:ci-deploy-firebase-rules
   # Publishes content to npm. This should occur after running a release.
   publish-to-npm:
     <<: *defaults

@@ -624,7 +624,7 @@
             "projects": "self"
           }],
           "options": {
-            "command": "firebase deploy --only hosting"
+            "command": "npx firebase deploy --only hosting"
           }
         },
         "ci-deploy": {
@@ -634,7 +634,7 @@
             "projects": "self"
           }],
           "options": {
-            "command": "firebase deploy --only hosting --token \"$FIREBASE_TOKEN\""
+            "command": "npx firebase deploy --only hosting --token \"$FIREBASE_TOKEN\""
           }
         }
       },
@@ -681,7 +681,7 @@
         "run-emulators": {
           "executor": "@nrwl/workspace:run-commands",
           "options": {
-            "command": "firebase emulators:start --import=/root/data/emulators --export-on-exit"
+            "command": "npx firebase emulators:start --import=/root/data/emulators --export-on-exit"
           }
         },
         "watch-emulators": {
@@ -740,7 +740,7 @@
             "projects": "self"
           }],
           "options": {
-            "command": "firebase deploy --only functions"
+            "command": "npx firebase deploy --only functions"
           }
         },
         "ci-deploy": {
@@ -750,7 +750,7 @@
             "projects": "self"
           }],
           "options": {
-            "command": "firebase deploy --only functions --token \"$FIREBASE_TOKEN\""
+            "command": "npx firebase deploy --only functions --token \"$FIREBASE_TOKEN\""
           }
         }
       },
@@ -1285,8 +1285,22 @@
         "version": {
           "executor": "@jscutlery/semver:version",
           "options": {
+            "baseBranch": "main",
+            "tagPrefix": "v",
             "syncVersions": true,
             "commitMessageFormat": "release(${projectName}): ${version} release"
+          }
+        },
+        "deploy-firebase-rules": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "command": "npx firebase deploy --only firestore:rules,storage"
+          }
+        },
+        "ci-deploy-firebase-rules": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "command": "npx firebase deploy --only firestore:rules,storage --token \"$FIREBASE_TOKEN\""
           }
         }
       }
