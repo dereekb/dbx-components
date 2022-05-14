@@ -1297,6 +1297,18 @@
           "options": {
             "command": "npx firebase deploy --only firestore:rules,storage --token \"$FIREBASE_TOKEN\""
           }
+        },
+        "deploy-firebase-rules": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "command": "npx firebase deploy --only firestore:rules,storage"
+          }
+        },
+        "ci-deploy-firebase-rules": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "command": "npx firebase deploy --only firestore:rules,storage --token \"$FIREBASE_TOKEN\""
+          }
         }
       }
     }
