@@ -2,7 +2,7 @@ import { updateProfile } from './profile.update';
 import { profileSetUsername } from './profile.set.username';
 import { SetProfileUsernameParams, UpdateProfileParams } from '@dereekb/demo-firebase';
 import { DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserContext } from '../../../test/fixture';
-import { describeCloudFunctionTest } from '@dereekb/firebase-server';
+import { describeCloudFunctionTest } from '@dereekb/firebase-server/test';
 
 /**
  * NOTES:

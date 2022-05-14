@@ -1,5 +1,4 @@
-import { authorizedTestWithMockItemCollection } from "../../../test";
-import { describeFirestoreIterationTests } from "../../../test/common/test.iterator";
+import { authorizedTestWithMockItemCollection, describeFirestoreIterationTests } from "@dereekb/firebase/test";
 
 authorizedTestWithMockItemCollection((f) => {
   describeFirestoreIterationTests(f);

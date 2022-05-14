@@ -54,6 +54,9 @@ jobs:
           name: run util tests
           command: npx nx test util
       - run:
+          name: run util-test tests
+          command: npx nx test util-test
+      - run:
           name: run rxjs tests
           command: npx nx test rxjs
       - run:
@@ -90,8 +93,14 @@ jobs:
           name: run firebase tests
           command: npx firebase emulators:exec --only auth,firestore,storage 'npx nx run-tests firebase'
       - run:
+          name: run firebase-test tests
+          command: npx firebase emulators:exec --only auth,firestore,storage 'npx nx run-tests firebase-test'
+      - run:
           name: run firebase-server tests
           command: npx firebase emulators:exec --only auth,firestore,storage 'npx nx run-tests firebase-server'
+      - run:
+          name: run firebase-server-test tests
+          command: npx firebase emulators:exec --only auth,firestore,storage 'npx nx run-tests firebase-server-test'
       - run:
           name: run dbx-firebase tests
           command: npx firebase emulators:exec --only auth,firestore,storage 'npx nx run-tests dbx-firebase'
@@ -101,7 +110,7 @@ jobs:
       - save_cache:
           key: firebase-cache-
           paths:
-            - ~/.cache/firebase/emulators
+            - ~/.cache/firebase
       - store_test_results:
           path: ~/code/.reports/jest/
   # Performs release operations on the release branch.
@@ -121,11 +130,9 @@ jobs:
           name: build release
           command: npx nx run --parallel=1 workspace:version
       - run:
-          name: merge release into main and use the release commit message
-          command: git checkout main && git merge release --squash -Xtheirs && git commit -m "$(git log release --pretty=%B | cat)"
-      - run:
-          name: move tag from release to main
-          command: git tag -f $(git describe --abbrev=0)
+          # CircleCI does not have a great way to pass variables between run steps, so we grab the tag name before swapping to main, and then tag after making the nest commit.
+          name: copy tag id, merge release into main and use the release commit message, move tag from release to main
+          command: TAG_ID=$(git describe --abbrev=0) && git checkout main && git merge release --squash -Xtheirs && git commit -m "$(git log release --pretty=%B | cat)" && git tag -f $TAG_ID
       - run:
           name: push main to origin
           command: git push --follow-tags origin main

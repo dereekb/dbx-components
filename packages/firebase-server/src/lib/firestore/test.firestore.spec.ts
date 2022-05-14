@@ -1,7 +1,8 @@
 import { DocumentReference, Transaction, Firestore } from '@google-cloud/firestore';
-import { DocumentSnapshot, MockItem, mockItemCollectionReference, MockItemDocument, MockItemFirestoreCollection, mockItemFirestoreCollection, authorizedTestWithMockItemCollection, FirestoreDocumentContext, makeFirestoreCollection } from "@dereekb/firebase";
+import { DocumentSnapshot, makeFirestoreCollection } from '@dereekb/firebase';
+import { MockItem, mockItemCollectionReference, MockItemDocument, MockItemFirestoreCollection } from "@dereekb/firebase/test";
 import { Maybe } from '@dereekb/util';
-import { adminTestWithMockItemCollection } from '../../test/firestore/firestore.fixture.admin';
+import { adminTestWithMockItemCollection } from '@dereekb/firebase-server/test';
 import { googleCloudFirestoreDrivers } from './driver';
 
 describe('FirestoreCollection', () => {

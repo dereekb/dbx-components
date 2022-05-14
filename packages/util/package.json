@@ -1,5 +1,11 @@
 {
   "name": "@dereekb/util",
-  "version": "3.0.0",
-  "type": "commonjs"
+  "version": "4.0.0",
+  "type": "commonjs",
+  "exports": {
+    "./test": {
+      "main": "./test/index.js",
+      "types": "./test/index.d.ts"
+    }
+  }
 }
