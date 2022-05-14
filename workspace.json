@@ -352,6 +352,7 @@
           }
         }
       },
+      "implicitDependencies": ["!firebase-server-test", "!firebase-test"],
       "tags": []
     },
     "dbx-form": {
@@ -959,7 +960,7 @@
           }
         }
       },
-      "implicitDependencies": ["!firebase-server-test"],
+      "implicitDependencies": ["!firebase-server-test", "!firebase-test"],
       "tags": []
     },
     "firebase-server-test": {
@@ -1262,12 +1263,6 @@
           "options": {
             "jestConfig": "packages/util/test/jest.config.ts",
             "passWithNoTests": true
-          }
-        },
-        "publish-npmjs": {
-          "executor": "@nrwl/workspace:run-commands",
-          "options": {
-            "command": "cd ./dist/packages/util-test && npm publish"
           }
         }
       },
