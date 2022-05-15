@@ -60,7 +60,7 @@
     "ng-overlay-container": "^13.0.0",
     "ngx-editor": "^12.1.1",
     "ngx-infinite-scroll": "^13.0.2",
-    "ngx-mat-intl-tel-input": "^4.1.0",
+    "ngx-mat-intl-tel-input": "git+https://git@github.com/dereekb/ngx-mat-intl-tel-input#dbe3d1144979df12bdc133f92692ad643a2cdecc",
     "reflect-metadata": "^0.1.13",
     "rrule": "git+https://git@github.com/dereekb/rrule.git#17adf5708d6567b4d01a3a8afd106261421ea492",
     "rxfire": "^6.0.3",

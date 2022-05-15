@@ -711,6 +711,12 @@
             "lintFilePatterns": ["apps/demo-api/**/*.ts"]
           }
         },
+        "test": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "command": "./exec-with-emulator.sh 'npx nx run-tests demo-api'"
+          }
+        },
         "run-tests": {
           "executor": "@nrwl/jest:jest",
           "outputs": [
@@ -726,12 +732,6 @@
           "executor": "@nrwl/workspace:run-commands",
           "options": {
             "command": "./exec-with-emulator.sh 'npx nx run-tests demo-api --watch'"
-          }
-        },
-        "test": {
-          "executor": "@nrwl/workspace:run-commands",
-          "options": {
-            "command": "./exec-with-emulator.sh 'npx nx run-tests demo-api'"
           }
         },
         "deploy": {
@@ -783,7 +783,7 @@
         }
       },
       "tags": [],
-      "implicitDependencies": ["demo"]
+      "implicitDependencies": ["demo", "demo-api"]
     },
     "demo-firebase": {
       "root": "apps/demo-firebase",
@@ -1290,18 +1290,6 @@
             "tagPrefix": "v",
             "syncVersions": true,
             "commitMessageFormat": "release(${projectName}): v${version} release"
-          }
-        },
-        "deploy-firebase-rules": {
-          "executor": "@nrwl/workspace:run-commands",
-          "options": {
-            "command": "npx firebase deploy --only firestore:rules,storage"
-          }
-        },
-        "ci-deploy-firebase-rules": {
-          "executor": "@nrwl/workspace:run-commands",
-          "options": {
-            "command": "npx firebase deploy --only firestore:rules,storage --token \"$FIREBASE_TOKEN\""
           }
         },
         "deploy-firebase-rules": {

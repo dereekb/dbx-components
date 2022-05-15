@@ -1,14 +1,11 @@
-version: 2.1 # use CircleCI 2.1
-
-# YAML trick
+# Derived from https://github.com/dereekb/dbx-components/blob/main/.circleci/config.yml
+# SETUP REQUIRED - Visit all sections marked SETUP REQUIRED to finish up configuration. This requires changes on CircleCI's portal.
+version: 2.1
 defaults: &defaults
   working_directory: ~/code # "code" is our working directory
   resource_class: large
   docker:
     - image: cimg/node:16.14
-
-# https://circleci.com/blog/config-best-practices-dependency-caching/
-
 orbs:
   nx: nrwl/nx@1.1.3
 jobs:
@@ -16,26 +13,12 @@ jobs:
     <<: *defaults
     steps:
       - checkout
-      # look for existing cache and restore if found
-      # NOTE: With use of npm ci, the cache is ignored.
-      # - restore_cache:
-      #    keys:
-      #      - node-cache-a{{ checksum "package-lock.json" }}
-      #      - node-cache-a
-      # install dependencies
       - run:
           name: install dependencies
           command: npm ci
-      # clean node_modules
-      # - run: npx clean-modules --yes --exclude "**/firebase*/**" --exclude "**/@angular*/**" --exclude "**/@nestjs/**"
-      # save any changes to the cache
-      # - save_cache:
-      #    key: node-cache-a{{ checksum "package-lock.json" }}
-      #    paths:
-      #      - node_modules
       # initialize nx
       - nx/set-shas
-      # build content
+      # build
       - run: npx nx affected --base=$NX_BASE --target=build --parallel --max-parallel=2
       # persist builds to workspace
       - persist_to_workspace:
@@ -51,32 +34,8 @@ jobs:
       - attach_workspace:
           at: ~/code
       - run:
-          name: run util tests
-          command: npx nx test util
-      - run:
-          name: run util-test tests
-          command: npx nx test util-test
-      - run:
-          name: run rxjs tests
-          command: npx nx test rxjs
-      - run:
-          name: run model tests
-          command: npx nx test model
-      - run:
-          name: run date tests
-          command: npx nx test-timezones date
-      - run:
-          name: run dbx-core tests
-          command: npx nx test dbx-core
-      - run:
-          name: run dbx-analytics tests
-          command: npx nx test dbx-analytics
-      - run:
-          name: run dbx-web tests
-          command: npx nx test dbx-web
-      - run:
-          name: run dbx-form tests
-          command: npx nx test dbx-form
+          name: run ANGULAR_APP_NAME tests
+          command: npx nx test ANGULAR_APP_NAME
       - store_test_results:
           path: ~/code/.reports/jest/
   # Runs tests for the projects that require the firebase emulators.
@@ -86,27 +45,18 @@ jobs:
       - checkout
       - attach_workspace:
           at: ~/code
+      # install the emulator requirements
       - run: sudo apt-get update -y && sudo apt-get install -y curl openjdk-11-jre-headless
+      # restore the emulators cache
       - restore_cache:
           key: firebase-cache-
       - run:
-          name: run firebase tests
-          command: npx firebase emulators:exec --only auth,firestore,storage 'npx nx run-tests firebase'
+          name: run API_APP_NAME tests
+          command: npx firebase emulators:exec --only auth,firestore,storage 'npx nx run-tests API_APP_NAME'
       - run:
-          name: run firebase-test tests
-          command: npx firebase emulators:exec --only auth,firestore,storage 'npx nx run-tests firebase-test'
-      - run:
-          name: run firebase-server tests
-          command: npx firebase emulators:exec --only auth,firestore,storage 'npx nx run-tests firebase-server'
-      - run:
-          name: run firebase-server-test tests
-          command: npx firebase emulators:exec --only auth,firestore,storage 'npx nx run-tests firebase-server-test'
-      - run:
-          name: run dbx-firebase tests
-          command: npx firebase emulators:exec --only auth,firestore,storage 'npx nx run-tests dbx-firebase'
-      - run:
-          name: run demo-api tests
-          command: npx firebase emulators:exec --only auth,firestore,storage 'npx nx run-tests demo-api'
+          name: run E2E_APP_NAME tests
+          command: npx firebase emulators:exec --only auth,firestore,storage,functions 'npx nx run-tests E2E_APP_NAME'
+      # store the emulators cache
       - save_cache:
           key: firebase-cache-
           paths:
@@ -120,12 +70,14 @@ jobs:
       - checkout
       - attach_workspace:
           at: ~/code
+      # SETUP REQUIRED - Add an SSH key from GitHub to your project's CircleCI configuration. This is require to push changes to github
+      # https://circleci.com/docs/2.0/add-ssh-key/#adding-ssh-keys-to-a-job
       - add_ssh_keys:
           fingerprints:
-            - "d9:53:28:55:d6:96:4e:1e:d1:53:5e:79:e4:80:7e:28"
+            - "SET_THIS_VALUE_TO_BE_VALID"
       - run:
           name: setup git
-          command: git config user.email "ci@dereekb.com" && git config user.name "ci"
+          command: git config user.email "CI_GIT_USER_EMAIL" && git config user.name "CI_GIT_USER_NAME"
       - run:
           name: build release
           command: npx nx run --parallel=1 workspace:version
@@ -158,6 +110,7 @@ jobs:
       - checkout
       - attach_workspace:
           at: ~/code
+      # SETUP REQUIRED - Add your NPM token under the variable NPM_TOKEN on CircleCI for CircleCI to use.
       - run:
           name: configure npmrc / npm login
           command: echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > ~/.npmrc

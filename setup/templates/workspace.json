@@ -1,0 +1,34 @@
+{
+  "version": 2,
+  "projects": {
+    "ANGULAR_APP_NAME": "ANGULAR_APP_FOLDER",
+    "API_APP_NAME": "API_APP_FOLDER",
+    "E2E_APP_NAME": "E2E_APP_FOLDER",
+    "workspace": {
+      "root": ".",
+      "targets": {
+        "version": {
+          "executor": "@jscutlery/semver:version",
+          "options": {
+            "baseBranch": "main",
+            "tagPrefix": "v",
+            "syncVersions": true,
+            "commitMessageFormat": "release(${projectName}): v${version} release"
+          }
+        },
+        "deploy-firebase-rules": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "command": "npx firebase deploy --only firestore:rules,storage"
+          }
+        },
+        "ci-deploy-firebase-rules": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "command": "npx firebase deploy --only firestore:rules,storage --token \"$FIREBASE_TOKEN\""
+          }
+        }
+      }
+    }
+  }
+}

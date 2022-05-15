@@ -1,0 +1,122 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": "ANGULAR_APP_FOLDER/src",
+  "prefix": "ANGULAR_APP_NAME",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/workspace:run-commands",
+      "options": {
+        "command": "npx nx run ANGULAR_APP_NAME:build-base",
+        "color": true
+      }
+    },
+    "build-base": {
+      "executor": "@angular-devkit/build-angular:browser",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "ANGULAR_APP_DIST_FOLDER",
+        "index": "ANGULAR_APP_FOLDER/src/index.html",
+        "main": "ANGULAR_APP_FOLDER/src/main.ts",
+        "polyfills": "ANGULAR_APP_FOLDER/src/polyfills.ts",
+        "tsConfig": "ANGULAR_APP_FOLDER/tsconfig.app.json",
+        "inlineStyleLanguage": "scss",
+        "assets": [
+          "ANGULAR_APP_FOLDER/src/favicon.ico",
+          "ANGULAR_APP_FOLDER/src/assets",
+          "ANGULAR_APP_FOLDER/src/lib"
+        ],
+        "allowedCommonJsDependencies": ["validator", "date-fns-tz"],
+        "styles": ["ANGULAR_APP_FOLDER/src/styles.scss"],
+        "scripts": []
+      },
+      "configurations": {
+        "production": {
+          "budgets": [{
+              "type": "initial",
+              "maximumWarning": "2mb",
+              "maximumError": "3mb"
+            },
+            {
+              "type": "anyComponentStyle",
+              "maximumWarning": "20kb",
+              "maximumError": "40kb"
+            }
+          ],
+          "fileReplacements": [{
+            "replace": "ANGULAR_APP_FOLDER/src/environments/environment.ts",
+            "with": "ANGULAR_APP_FOLDER/src/environments/environment.prod.ts"
+          }],
+          "outputHashing": "all"
+        },
+        "development": {
+          "buildOptimizer": false,
+          "optimization": false,
+          "vendorChunk": true,
+          "extractLicenses": false,
+          "sourceMap": true,
+          "namedChunks": true
+        }
+      },
+      "defaultConfiguration": "production"
+    },
+    "serve": {
+      "executor": "@angular-devkit/build-angular:dev-server",
+      "configurations": {
+        "production": {
+          "browserTarget": "ANGULAR_APP_NAME:build:production",
+          "port": ANGULAR_APP_PORT
+        },
+        "development": {
+          "browserTarget": "ANGULAR_APP_NAME:build:development",
+          "port": ANGULAR_APP_PORT
+        }
+      },
+      "defaultConfiguration": "development"
+    },
+    "extract-i18n": {
+      "executor": "@angular-devkit/build-angular:extract-i18n",
+      "options": {
+        "browserTarget": "ANGULAR_APP_NAME:build"
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "lintFilePatterns": [
+          "ANGULAR_APP_FOLDER/src/**/*.ts",
+          "ANGULAR_APP_FOLDER/src/**/*.html"
+        ]
+      }
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": ["coverage/ANGULAR_APP_FOLDER"],
+      "options": {
+        "jestConfig": "ANGULAR_APP_FOLDER/jest.config.ts",
+        "passWithNoTests": true
+      }
+    },
+    "deploy": {
+      "executor": "@nrwl/workspace:run-commands",
+      "dependsOn": [{
+        "target": "build",
+        "projects": "self"
+      }],
+      "options": {
+        "command": "npx firebase deploy --only hosting"
+      }
+    },
+    "ci-deploy": {
+      "executor": "@nrwl/workspace:run-commands",
+      "dependsOn": [{
+        "target": "build",
+        "projects": "self"
+      }],
+      "options": {
+        "command": "npx firebase deploy --only hosting --token \"$FIREBASE_TOKEN\""
+      }
+    }
+  },
+  "tags": []
+}
