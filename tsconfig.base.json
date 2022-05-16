@@ -26,10 +26,12 @@
       "@dereekb/dbx-firebase": ["packages/dbx-firebase/src/index.ts"],
       "@dereekb/dbx-form": ["packages/dbx-form/src/index.ts"],
       "@dereekb/dbx-web": ["packages/dbx-web/src/index.ts"],
-      "@dereekb/demo-firebase": ["apps/demo-firebase/src/index.ts"],
+      "@dereekb/demo-firebase": ["components/demo-firebase/src/index.ts"],
       "@dereekb/firebase": ["packages/firebase/src/index.ts"],
       "@dereekb/firebase-server": ["packages/firebase-server/src/index.ts"],
-      "@dereekb/firebase-server/test": ["packages/firebase-server/test/src/index.ts"],
+      "@dereekb/firebase-server/test": [
+        "packages/firebase-server/test/src/index.ts"
+      ],
       "@dereekb/firebase/test": ["packages/firebase/test/src/index.ts"],
       "@dereekb/model": ["packages/model/src/index.ts"],
       "@dereekb/rxjs": ["packages/rxjs/src/index.ts"],

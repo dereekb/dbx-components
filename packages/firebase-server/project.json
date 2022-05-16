@@ -1,0 +1,69 @@
+{
+  "sourceRoot": "packages/firebase-server/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/workspace:run-commands",
+      "options": {
+        "commands": [
+          {
+            "command": "npx nx run firebase-server:build-base"
+          },
+          {
+            "command": "npx nx run firebase-server-test:build-base"
+          }
+        ],
+        "parallel": false
+      }
+    },
+    "build-base": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/packages/firebase-server",
+        "tsConfig": "packages/firebase-server/tsconfig.lib.json",
+        "packageJson": "packages/firebase-server/package.json",
+        "main": "packages/firebase-server/src/index.ts",
+        "assets": ["packages/firebase-server/*.md"]
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["packages/firebase-server/**/*.ts"]
+      }
+    },
+    "test": {
+      "executor": "@nrwl/workspace:run-commands",
+      "options": {
+        "command": "./exec-with-emulator.sh 'npx nx run-tests firebase-server'"
+      }
+    },
+    "run-tests": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": [
+        "coverage/packages/firebase-server",
+        "./.reports/jest/firebase-server.junit.xml"
+      ],
+      "options": {
+        "jestConfig": "packages/firebase-server/jest.config.ts",
+        "passWithNoTests": true
+      }
+    },
+    "watch": {
+      "executor": "@nrwl/workspace:run-commands",
+      "options": {
+        "command": "./exec-with-emulator.sh 'npx nx run-tests firebase-server --watch'"
+      }
+    },
+    "publish-npmjs": {
+      "executor": "@nrwl/workspace:run-commands",
+      "options": {
+        "command": "cd ./dist/packages/firebase-server && npm publish"
+      }
+    }
+  },
+  "implicitDependencies": ["!firebase-server-test", "!firebase-test"],
+  "tags": []
+}

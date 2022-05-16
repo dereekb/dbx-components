@@ -1,0 +1,124 @@
+{
+  "sourceRoot": "apps/demo-api/src",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/workspace:run-commands",
+      "options": {
+        "command": "npx nx run demo-api:build-base",
+        "color": true
+      }
+    },
+    "build-base": {
+      "executor": "@nrwl/node:webpack",
+      "outputs": ["{options.outputPath}"],
+      "dependsOn": [
+        {
+          "target": "build",
+          "projects": "dependencies"
+        }
+      ],
+      "options": {
+        "outputPath": "dist/apps/demo-api",
+        "main": "apps/demo-api/src/main.ts",
+        "tsConfig": "apps/demo-api/tsconfig.app.json",
+        "assets": ["apps/demo-api/src/assets"],
+        "generatePackageJson": true
+      },
+      "configurations": {
+        "production": {
+          "optimization": true,
+          "extractLicenses": true,
+          "inspect": false,
+          "fileReplacements": [
+            {
+              "replace": "apps/demo-api/src/environments/environment.ts",
+              "with": "apps/demo-api/src/environments/environment.prod.ts"
+            }
+          ]
+        }
+      }
+    },
+    "run-emulators": {
+      "executor": "@nrwl/workspace:run-commands",
+      "options": {
+        "command": "npx firebase emulators:start --import=/root/data/emulators --export-on-exit"
+      }
+    },
+    "watch-emulators": {
+      "executor": "@nrwl/workspace:run-commands",
+      "options": {
+        "command": "find dist/apps/demo-api | entr -rc -s 'echo \"starting emulators...\"; sleep 5; npx nx run-emulators demo-api'"
+      }
+    },
+    "serve": {
+      "executor": "@nrwl/workspace:run-commands",
+      "options": {
+        "commands": [
+          {
+            "command": "npx nx build-base demo-api --watch"
+          },
+          {
+            "command": "npx nx run demo-api:watch-emulators"
+          }
+        ],
+        "parallel": true
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["apps/demo-api/**/*.ts"]
+      }
+    },
+    "test": {
+      "executor": "@nrwl/workspace:run-commands",
+      "options": {
+        "command": "./exec-with-emulator.sh 'npx nx run-tests demo-api'"
+      }
+    },
+    "run-tests": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": [
+        "coverage/apps/demo-api",
+        "./.reports/jest/demo-api.junit.xml"
+      ],
+      "options": {
+        "jestConfig": "apps/demo-api/jest.config.ts",
+        "passWithNoTests": true
+      }
+    },
+    "watch": {
+      "executor": "@nrwl/workspace:run-commands",
+      "options": {
+        "command": "./exec-with-emulator.sh 'npx nx run-tests demo-api --watch'"
+      }
+    },
+    "deploy": {
+      "executor": "@nrwl/workspace:run-commands",
+      "dependsOn": [
+        {
+          "target": "build",
+          "projects": "self"
+        }
+      ],
+      "options": {
+        "command": "npx firebase deploy --only functions"
+      }
+    },
+    "ci-deploy": {
+      "executor": "@nrwl/workspace:run-commands",
+      "dependsOn": [
+        {
+          "target": "build",
+          "projects": "self"
+        }
+      ],
+      "options": {
+        "command": "npx firebase deploy --only functions --token \"$FIREBASE_TOKEN\""
+      }
+    }
+  },
+  "tags": []
+}

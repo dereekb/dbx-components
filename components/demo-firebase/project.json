@@ -1,0 +1,40 @@
+{
+  "root": "components/demo-firebase",
+  "sourceRoot": "components/demo-firebase/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/workspace:run-commands",
+      "options": {
+        "command": "npx nx run demo-firebase:build-base",
+        "color": true
+      }
+    },
+    "build-base": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/components/demo-firebase",
+        "main": "components/demo-firebase/src/index.ts",
+        "tsConfig": "components/demo-firebase/tsconfig.lib.json",
+        "assets": ["components/demo-firebase/*.md"]
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["components/demo-firebase/**/*.ts"]
+      }
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": ["coverage/components/demo-firebase"],
+      "options": {
+        "jestConfig": "components/demo-firebase/jest.config.ts",
+        "passWithNoTests": true
+      }
+    }
+  },
+  "tags": []
+}

@@ -1,0 +1,60 @@
+{
+  "sourceRoot": "packages/util/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/workspace:run-commands",
+      "options": {
+        "commands": [
+          {
+            "command": "npx nx run util:build-base"
+          },
+          {
+            "command": "npx nx run util-test:build-base"
+          }
+        ],
+        "parallel": false
+      }
+    },
+    "build-base": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "dependsOn": [
+        {
+          "target": "build",
+          "projects": "dependencies"
+        }
+      ],
+      "options": {
+        "outputPath": "dist/packages/util",
+        "tsConfig": "packages/util/tsconfig.lib.json",
+        "packageJson": "packages/util/package.json",
+        "main": "packages/util/src/index.ts",
+        "assets": ["packages/util/*.md"]
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["packages/util/**/*.ts"]
+      }
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": ["coverage/packages/util", "./.reports/jest/util.junit.xml"],
+      "options": {
+        "jestConfig": "packages/util/jest.config.ts",
+        "passWithNoTests": true
+      }
+    },
+    "publish-npmjs": {
+      "executor": "@nrwl/workspace:run-commands",
+      "options": {
+        "command": "cd ./dist/packages/util && npm publish"
+      }
+    }
+  },
+  "implicitDependencies": ["!util-test"],
+  "tags": []
+}
