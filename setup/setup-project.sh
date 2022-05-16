@@ -16,14 +16,25 @@ FIREBASE_PROJECT_ID=${1-'echo firebase project id is required.'}    # example: g
 NAME=$FIREBASE_PROJECT_ID
 PROJECT_NAME=$FIREBASE_PROJECT_ID
 
-ANGULAR_APP_NAME=$PROJECT_NAME
+# shared angular library 
+ANGULAR_COMPONENTS_NAME=$PROJECT_NAME
+ # shared firebase library 
+FIREBASE_COMPONENTS_NAME=$PROJECT_NAME-Firebase
+# app that is deployed
+ANGULAR_APP_NAME=$PROJECT_NAME-app
+# firebase functions app that is deployed
 API_APP_NAME=$PROJECT_NAME-api
+# E2E project (work in progress)
 E2E_APP_NAME=$PROJECT_NAME-e2e
 
 APPS_FOLDER=apps
 ANGULAR_APP_FOLDER=$APPS_FOLDER/$ANGULAR_APP_NAME
 API_APP_FOLDER=$APPS_FOLDER/$API_APP_NAME
 E2E_APP_FOLDER=$APPS_FOLDER/$E2E_APP_NAME
+
+COMPONENTS_FOLDER=components
+ANGULAR_COMPONENTS_FOLDER=$COMPONENTS_FOLDER/$ANGULAR_COMPONENTS_NAME
+FIREBASE_COMPONENTS_FOLDER=$COMPONENTS_FOLDER/$FIREBASE_COMPONENTS_NAME
 
 DIST_FOLDER=dist/apps
 ANGULAR_APP_DIST_FOLDER=$DIST_FOLDER/$ANGULAR_APP_NAME
@@ -134,6 +145,10 @@ npm i @dereekb/dbx-analytics @dereekb/dbx-web @dereekb/dbx-form @dereekb/firebas
 git add --all
 git commit -m "added @dereekb dependencies"
 
+# Init Component Libraries
+# Init Components App
+nx g @nrwl/angular:library --name=$ANGULAR_COMPONENTS_PACKAGE_NAME --buildable --publishable=false --directory=$PACKAGE_FOLDER
+
 # Docker
 # Create docker files
 echo "Copying Docker files from @dereekb/dbx-components"
@@ -242,6 +257,16 @@ rm $API_APP_FOLDER/project.json
 curl https://raw.githubusercontent.com/dereekb/dbx-components/develop/setup/templates/apps/api/project.json -o $API_APP_FOLDER/project.json.tmp
 sed -e "s:API_APP_DIST_FOLDER:$API_APP_DIST_FOLDER:g" -e "s:API_APP_FOLDER:$API_APP_FOLDER:g" -e "s:API_APP_NAME:$API_APP_NAME:g" $API_APP_FOLDER/project.json.tmp > $API_APP_FOLDER/project.json
 rm $API_APP_FOLDER/project.json.tmp
+
+rm $APP_COMPONENTS_FOLDER/project.json
+curl https://raw.githubusercontent.com/dereekb/dbx-components/develop/setup/templates/components/app/project.json -o $APP_COMPONENTS_FOLDER/project.json.tmp
+sed -e "s:APP_COMPONENTS_DIST_FOLDER:$APP_COMPONENTS_DIST_FOLDER:g" -e "s:APP_COMPONENTS_FOLDER:$APP_COMPONENTS_FOLDER:g" -e "s:APP_COMPONENTS_NAME:$APP_COMPONENTS_NAME:g" $APP_COMPONENTS_FOLDER/project.json.tmp > $APP_COMPONENTS_FOLDER/project.json
+rm $APP_COMPONENTS_FOLDER/project.json.tmp
+
+rm $FIREBASE_COMPONENTS_FOLDER/project.json
+curl https://raw.githubusercontent.com/dereekb/dbx-components/develop/setup/templates/components/firebase/project.json -o $FIREBASE_COMPONENTS_FOLDER/project.json.tmp
+sed -e "s:FIREBASE_COMPONENTS_DIST_FOLDER:$FIREBASE_COMPONENTS_DIST_FOLDER:g" -e "s:FIREBASE_COMPONENTS_FOLDER:$FIREBASE_COMPONENTS_FOLDER:g" -e "s:FIREBASE_COMPONENTS_NAME:$FIREBASE_COMPONENTS_NAME:g" $FIREBASE_COMPONENTS_FOLDER/project.json.tmp > $FIREBASE_COMPONENTS_FOLDER/project.json
+rm $FIREBASE_COMPONENTS_FOLDER/project.json.tmp
 
 git add --all
 git commit -m "added project configurations"

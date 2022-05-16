@@ -1,12 +1,12 @@
 {
-  "root": "components/demo-firebase",
-  "sourceRoot": "components/demo-firebase/src",
+  "root": "FIREBASE_COMPONENTS_FOLDER",
+  "sourceRoot": "FIREBASE_COMPONENTS_FOLDER/src",
   "projectType": "library",
   "targets": {
     "build": {
       "executor": "@nrwl/workspace:run-commands",
       "options": {
-        "command": "npx nx run demo-firebase:build-base",
+        "command": "npx nx run FIREBASE_COMPONENTS_NAME:build-base",
         "color": true
       }
     },
@@ -14,41 +14,41 @@
       "executor": "@nrwl/js:tsc",
       "outputs": ["{options.outputPath}"],
       "options": {
-        "outputPath": "dist/components/demo-firebase",
-        "main": "components/demo-firebase/src/index.ts",
-        "tsConfig": "components/demo-firebase/tsconfig.lib.json",
-        "assets": ["components/demo-firebase/*.md"]
+        "outputPath": "FIREBASE_COMPONENTS_DIST_FOLDER",
+        "main": "FIREBASE_COMPONENTS_FOLDER/src/index.ts",
+        "tsConfig": "FIREBASE_COMPONENTS_FOLDER/tsconfig.lib.json",
+        "assets": ["FIREBASE_COMPONENTS_FOLDER/*.md"]
       }
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "outputs": ["{options.outputFile}"],
       "options": {
-        "lintFilePatterns": ["components/demo-firebase/**/*.ts"]
+        "lintFilePatterns": ["FIREBASE_COMPONENTS_FOLDER/**/*.ts"]
       }
     },
     "test": {
       "executor": "@nrwl/jest:jest",
-      "outputs": ["coverage/components/demo-firebase"],
+      "outputs": ["coverage/FIREBASE_COMPONENTS_FOLDER"],
       "options": {
-        "jestConfig": "components/demo-firebase/jest.config.ts",
+        "jestConfig": "FIREBASE_COMPONENTS_FOLDER/jest.config.ts",
         "passWithNoTests": true
       }
     },
     "watch": {
       "executor": "@nrwl/workspace:run-commands",
       "options": {
-        "command": "./exec-with-emulator.sh 'npx nx run-tests demo-firebase --watch'"
+        "command": "./exec-with-emulator.sh 'npx nx run-tests FIREBASE_COMPONENTS_NAME --watch'"
       }
     },
     "run-tests": {
       "executor": "@nrwl/jest:jest",
       "outputs": [
-        "coverage/components/demo-firebase",
+        "coverage/FIREBASE_COMPONENTS_FOLDER",
         "./.reports/jest/firebase.junit.xml"
       ],
       "options": {
-        "jestConfig": "components/demo-firebase/jest.config.ts",
+        "jestConfig": "FIREBASE_COMPONENTS_FOLDER/jest.config.ts",
         "passWithNoTests": true
       }
     }

@@ -40,6 +40,18 @@
         "lintFilePatterns": ["packages/firebase/**/*.ts"]
       }
     },
+    "test": {
+      "executor": "@nrwl/workspace:run-commands",
+      "options": {
+        "command": "./exec-with-emulator.sh 'npx nx run-tests firebase'"
+      }
+    },
+    "watch": {
+      "executor": "@nrwl/workspace:run-commands",
+      "options": {
+        "command": "./exec-with-emulator.sh 'npx nx run-tests firebase --watch'"
+      }
+    },
     "run-tests": {
       "executor": "@nrwl/jest:jest",
       "outputs": [
@@ -49,18 +61,6 @@
       "options": {
         "jestConfig": "packages/firebase/jest.config.ts",
         "passWithNoTests": true
-      }
-    },
-    "watch": {
-      "executor": "@nrwl/workspace:run-commands",
-      "options": {
-        "command": "./exec-with-emulator.sh 'npx nx run-tests firebase --watch'"
-      }
-    },
-    "test": {
-      "executor": "@nrwl/workspace:run-commands",
-      "options": {
-        "command": "./exec-with-emulator.sh 'npx nx run-tests firebase'"
       }
     },
     "publish-npmjs": {
