@@ -1,0 +1,43 @@
+{
+  "projectType": "library",
+  "sourceRoot": "ANGULAR_COMPONENTS_FOLDER/src",
+  "prefix": "ANGULAR_APP_PREFIX",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/angular:package",
+      "outputs": ["ANGULAR_COMPONENTS_DIST_FOLDER"],
+      "options": {
+        "project": "ANGULAR_COMPONENTS_FOLDER/ng-package.json"
+      },
+      "configurations": {
+        "production": {
+          "tsConfig": "ANGULAR_COMPONENTS_FOLDER/tsconfig.lib.prod.json"
+        },
+        "development": {
+          "tsConfig": "ANGULAR_COMPONENTS_FOLDER/tsconfig.lib.json"
+        }
+      },
+      "defaultConfiguration": "production"
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": [
+        "coverage/ANGULAR_COMPONENTS_FOLDER"
+      ],
+      "options": {
+        "jestConfig": "ANGULAR_COMPONENTS_FOLDER/jest.config.ts",
+        "passWithNoTests": true
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "lintFilePatterns": [
+          "ANGULAR_COMPONENTS_FOLDER/**/*.ts",
+          "ANGULAR_COMPONENTS_FOLDER/**/*.html"
+        ]
+      }
+    }
+  },
+  "tags": []
+}

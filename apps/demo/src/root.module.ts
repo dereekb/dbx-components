@@ -1,16 +1,14 @@
-import { DbxAppAuthRouterModule } from './../../../packages/dbx-core/src/lib/auth/router/auth.router.module';
-import { DbxAppAuthRouterStateModule } from './../../../packages/dbx-core/src/lib/auth/router/state/auth.router.state.module';
 import { DbxAnalyticsModule, DbxAnalyticsService, DbxAnalyticsSegmentModule } from '@dereekb/dbx-analytics';
 import { Injector, NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { Category, StatesModule, UIRouter, UIRouterModule, UIView } from '@uirouter/angular';
-import { AppSharedModule } from '@/shared/app.shared.module';
+import { DemoSharedModule } from '@/shared/shared.module';
 import { environment } from './environments/environment';
 import { DbxScreenModule, DbxWebRootModule, DbxWebUIRouterModule, DEFAULT_SCREEN_MEDIA_SERVICE_CONFIG, DBX_STYLE_DEFAULT_CONFIG_TOKEN } from '@dereekb/dbx-web';
 import { DbxAnalyticsServiceConfiguration, DbxAnalyticsSegmentServiceListener, DbxAnalyticsSegmentApiService, DbxAnalyticsSegmentApiServiceConfig } from '@dereekb/dbx-analytics';
-import { AppModule } from './app/app.module';
-import { AuthTransitionHookOptions, DbxAppAuthStateModule, DbxAppContextStateModule, DbxCoreUIRouterSegueModule, DBX_KNOWN_APP_CONTEXT_STATES, enableHasAuthRoleHook, enableHasAuthStateHook, enableIsLoggedInHook } from '@dereekb/dbx-core';
+import { RootAppModule } from './app/app.module';
+import { DbxAppAuthRouterStateModule, DbxAppAuthRouterModule, AuthTransitionHookOptions, DbxAppAuthStateModule, DbxAppContextStateModule, DbxCoreUIRouterSegueModule, DBX_KNOWN_APP_CONTEXT_STATES, enableHasAuthRoleHook, enableHasAuthStateHook, enableIsLoggedInHook } from '@dereekb/dbx-core';
 import { FormlyModule } from '@ngx-formly/core';
 import { defaultValidationMessages } from '@dereekb/dbx-form';
 import { MAT_FORM_FIELD_DEFAULT_OPTIONS } from '@angular/material/form-field';
@@ -75,8 +73,8 @@ export function makeSegmentConfig(): DbxAnalyticsSegmentApiServiceConfig {
   imports: [
     BrowserModule,
     BrowserAnimationsModule,
-    AppModule,
-    AppSharedModule,
+    RootAppModule,
+    DemoSharedModule,
     DbxWebRootModule,
     DbxFirebaseLoginModule.forRoot({
       enabledLoginMethods: environment.firebase.enabledLoginMethods,
@@ -124,8 +122,8 @@ export function makeSegmentConfig(): DbxAnalyticsSegmentApiServiceConfig {
     }),
     UIRouterModule.forRoot({
       useHash: false,
-      initial: { state: 'app' },
-      otherwise: { state: 'app' },
+      initial: { state: 'root' },
+      otherwise: { state: 'root' },
       config: routerConfigFn
     }),
   ],

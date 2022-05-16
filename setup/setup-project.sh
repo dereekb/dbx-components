@@ -1,6 +1,7 @@
 #!/bin/bash
 ## Usage:
 # ./setup-project.sh my-firebase-project-id
+# The prefix is optional. It should be a single word.
 
 # Before running this script, you should have done the following and have the relevant information:
 # - Created a git repo (on github or other place)
@@ -10,11 +11,18 @@ CI_GIT_USER_EMAIL=ci@example.dereekb.com    # git email to use
 CI_GIT_USER_NAME=ci                         # git username to use in CI deployments
 
 # - Created a project on firebase. This step is required.
-FIREBASE_PROJECT_ID=${1-'echo firebase project id is required.'}    # example: gethapier
+FIREBASE_PROJECT_ID=${1?:'firebase project id is required.'}  # example: gethapier
+INPUT_CODE_PREFIX=${2:-app}                                   # example: gethapier
 
 # - Project Details
 NAME=$FIREBASE_PROJECT_ID
 PROJECT_NAME=$FIREBASE_PROJECT_ID
+ANGULAR_APP_PREFIX=$FIREBASE_PROJECT_ID
+
+# The app prefix is used in Angular and Nest classes as the prefix for classes/components
+APP_CODE_PREFIX="$(tr '[:lower:]' '[:upper:]' <<< ${INPUT_CODE_PREFIX:0:1})${INPUT_CODE_PREFIX:1}"
+APP_CODE_PREFIX_LOWER="$(tr '[:upper:]' '[:lower:]' <<< ${INPUT_CODE_PREFIX})"
+APP_CODE_PREFIX_UPPER="$(tr '[:lower:]' '[:upper:]' <<< ${INPUT_CODE_PREFIX})"
 
 # shared angular library 
 ANGULAR_COMPONENTS_NAME=$PROJECT_NAME-components
@@ -27,18 +35,18 @@ API_APP_NAME=$PROJECT_NAME-api
 # E2E project (work in progress)
 E2E_APP_NAME=$PROJECT_NAME-e2e
 
-APPS_FOLDER=apps
+APPS_FOLDER=apps  # don't change
 ANGULAR_APP_FOLDER=$APPS_FOLDER/$ANGULAR_APP_NAME
 API_APP_FOLDER=$APPS_FOLDER/$API_APP_NAME
 E2E_APP_FOLDER=$APPS_FOLDER/$E2E_APP_NAME
 
-COMPONENTS_FOLDER=packages  # do not change, packages is the default for nx for non-app packages
+COMPONENTS_FOLDER=packages
 ANGULAR_COMPONENTS_FOLDER=$COMPONENTS_FOLDER/$ANGULAR_COMPONENTS_NAME
 FIREBASE_COMPONENTS_FOLDER=$COMPONENTS_FOLDER/$FIREBASE_COMPONENTS_NAME
 
-DIST_FOLDER=dist/apps
-ANGULAR_APP_DIST_FOLDER=$DIST_FOLDER/$ANGULAR_APP_NAME
-API_DIST_FOLDER=$DIST_FOLDER/$API_APP_NAME
+APPS_DIST_FOLDER=dist/$APPS_FOLDER
+ANGULAR_APP_DIST_FOLDER=$APPS_DIST_FOLDER/$ANGULAR_APP_NAME
+API_DIST_FOLDER=$APPS_DIST_FOLDER/$API_APP_NAME
 FIREBASE_BASE_EMULATORS_PORT=9100
 FIREBASE_EMULATOR_UI_PORT=$FIREBASE_BASE_EMULATORS_PORT
 FIREBASE_EMULATOR_HOSTING_PORT=$(expr $FIREBASE_BASE_EMULATORS_PORT + 1)
@@ -91,8 +99,17 @@ if test -f "migration.json"; then   # migrate if it is available
   nx migrate --run-migrations
 fi
 
+npx --yes json -I -f nx.json -e "this.workspaceLayout = { appsDir: '$APPS_FOLDER', libsDir: '$COMPONENTS_FOLDER' }";
+
 git add --all
 git commit -m "updated nx to latest version"
+
+# Add Nest App - https://nx.dev/packages/nest
+npm install -D @nrwl/nest           # install the nest generator
+nx g @nrwl/nest:app $API_APP_NAME
+
+git add --all
+git commit -m "added nest app"
 
 # Add App Components
 nx g @nrwl/angular:library --name=$ANGULAR_COMPONENTS_NAME --buildable --publishable --importPath $ANGULAR_COMPONENTS_NAME --standaloneConfig=true --simpleModuleName=true
@@ -101,17 +118,11 @@ git add --all
 git commit -m "added angular components package"
 
 # Add Firebase Component
+npm install -D @nrwl/node
 nx g @nrwl/node:library --name=$FIREBASE_COMPONENTS_NAME --buildable --publishable --importPath $FIREBASE_COMPONENTS_NAME
 
 git add --all
 git commit -m "added firebase components package"
-
-# Init Nx App - https://nx.dev/packages/nest
-npm install -D @nrwl/nest                         # install the nest generator
-nx g @nrwl/nest:app $API_APP_NAME  # generate the app
-
-git add --all
-git commit -m "create $API_APP_NAME"
 
 # Init Firebase
 echo "Follow the instructions to init Firebase for this project."
@@ -258,8 +269,9 @@ git commit -m "added circleci configrations"
 # Apply Project Configurations
 echo "Applying Configuration to Projects"
 curl https://raw.githubusercontent.com/dereekb/dbx-components/develop/setup/templates/workspace.json -o ./workspace.json.tmp
-sed -e "s:ANGULAR_APP_FOLDER:$ANGULAR_APP_FOLDER:g" -e "s:API_APP_FOLDER:$API_APP_FOLDER:g" -e "s:E2E_APP_FOLDER:$E2E_APP_FOLDER:g" -e "s:FIREBASE_COMPONENTS_FOLDER:$FIREBASE_COMPONENTS_FOLDER:g" -e "s:ANGULAR_COMPONENTS_FOLDER:$ANGULAR_COMPONENTS_FOLDER:g" ./workspace.json.tmp > ./workspace.json
+sed -e "s:ANGULAR_APP_FOLDER:$ANGULAR_APP_FOLDER:g" -e "s:API_APP_FOLDER:$API_APP_FOLDER:g" -e "s:E2E_APP_FOLDER:$E2E_APP_FOLDER:g" -e "s:FIREBASE_COMPONENTS_FOLDER:$FIREBASE_COMPONENTS_FOLDER:g" -e "s:ANGULAR_COMPONENTS_FOLDER:$ANGULAR_COMPONENTS_FOLDER:g" -e "s:ANGULAR_APP_NAME:$ANGULAR_APP_NAME:g" -e "s:API_APP_NAME:$API_APP_NAME:g" -e "s:E2E_APP_NAME:$E2E_APP_NAME:g" -e "s:FIREBASE_COMPONENTS_NAME:$FIREBASE_COMPONENTS_NAME:g" -e "s:ANGULAR_COMPONENTS_NAME:$ANGULAR_COMPONENTS_NAME:g" ./workspace.json.tmp > ./workspace.json
 rm ./workspace.json.tmp
+rm ./angular.json
 
 curl https://raw.githubusercontent.com/dereekb/dbx-components/develop/setup/templates/project.json -o ./project.json
 
@@ -275,7 +287,7 @@ rm $API_APP_FOLDER/project.json.tmp
 
 rm $ANGULAR_COMPONENTS_FOLDER/project.json
 curl https://raw.githubusercontent.com/dereekb/dbx-components/develop/setup/templates/components/app/project.json -o $ANGULAR_COMPONENTS_FOLDER/project.json.tmp
-sed -e "s:ANGULAR_COMPONENTS_DIST_FOLDER:$ANGULAR_COMPONENTS_DIST_FOLDER:g" -e "s:ANGULAR_COMPONENTS_FOLDER:$ANGULAR_COMPONENTS_FOLDER:g" -e "s:ANGULAR_COMPONENTS_NAME:$ANGULAR_COMPONENTS_NAME:g" $ANGULAR_COMPONENTS_FOLDER/project.json.tmp > $ANGULAR_COMPONENTS_FOLDER/project.json
+sed -e "s:ANGULAR_COMPONENTS_DIST_FOLDER:$ANGULAR_COMPONENTS_DIST_FOLDER:g" -e "s:ANGULAR_COMPONENTS_FOLDER:$ANGULAR_COMPONENTS_FOLDER:g" -e "s:ANGULAR_APP_PREFIX:$ANGULAR_APP_PREFIX:g" $ANGULAR_COMPONENTS_FOLDER/project.json.tmp > $ANGULAR_COMPONENTS_FOLDER/project.json
 rm $ANGULAR_COMPONENTS_FOLDER/project.json.tmp
 
 rm $FIREBASE_COMPONENTS_FOLDER/project.json
@@ -289,4 +301,177 @@ git commit -m "added project configurations"
 # Apply Project Templates
 echo "Applying Templates to Projects"
 
-# TODO: ...
+download_ts_file () {
+  # downloads and replaces the placeholder content in the file with the content for the project
+  local $DOWNLOAD_PATH=$1
+  local $FILE_PATH=$2
+  local $FULL_FILE_PATH=$API_APP_FOLDER/$FILE_PATH
+  curl $DOWNLOAD_PATH/$FILE_PATH -o $FULL_FILE_PATH.tmp
+  sed -e "s:APP_CODE_PREFIX:$APP_CODE_PREFIX:g" -e "s:APP_CODE_PREFIX_UPPER:$APP_CODE_PREFIX_UPPER:g" -e "s:APP_CODE_PREFIX_LOWER:$APP_CODE_PREFIX_LOWER:g" -e "s:FIREBASE_COMPONENTS_NAME:$FIREBASE_COMPONENTS_NAME:g" $FULL_FILE_PATH.tmp > $FULL_FILE_PATH
+  rm $FULL_FILE_PATH.tmp
+}
+
+# Setup app components
+download_app_ts_file () {
+  local $FILE_PATH=$1
+  local $DOWNLOAD_PATH=https://raw.githubusercontent.com/dereekb/dbx-components/develop/setup/templates/components/firebase
+  download_ts_file "$DOWNLOAD_PATH" "$FILE_PATH"
+}
+
+rm -r $ANGULAR_COMPONENTS_FOLDER/src/lib
+mkdir $ANGULAR_COMPONENTS_FOLDER/src/lib
+
+git add --all
+git commit -m "setup app components"
+
+### Setup api components
+download_firebase_ts_file () {
+  local $FILE_PATH=$1
+  local $DOWNLOAD_PATH=https://raw.githubusercontent.com/dereekb/dbx-components/develop/setup/templates/components/firebase
+  download_ts_file "$DOWNLOAD_PATH" "$FILE_PATH"
+}
+
+## Lib Folder
+rm -r $FIREBASE_COMPONENTS_FOLDER/src/lib
+mkdir -p $FIREBASE_COMPONENTS_FOLDER/src/lib
+
+download_firebase_ts_file "src/lib/index.ts"
+download_firebase_ts_file "src/lib/collection.ts"
+download_firebase_ts_file "src/lib/functions.ts"
+
+# Example Folder
+mkdir $FIREBASE_COMPONENTS_FOLDER/src/lib/example
+download_firebase_ts_file "src/lib/example/example.action.ts"
+download_firebase_ts_file "src/lib/example/example.api.ts"
+download_firebase_ts_file "src/lib/example/example.query.ts"
+download_firebase_ts_file "src/lib/example/example.ts"
+download_firebase_ts_file "src/lib/example/index.ts"
+
+git add --all
+git commit -m "setup api components"
+
+# Setup Angular App
+download_angular_ts_file () {
+  local $FILE_PATH=$1
+  local $DOWNLOAD_PATH=https://raw.githubusercontent.com/dereekb/dbx-components/develop/setup/templates/apps/app
+  download_ts_file "$DOWNLOAD_PATH" "$FILE_PATH"
+}
+
+download_angular_ts_file "src/style.scss"
+download_angular_ts_file "src/main.ts"
+download_angular_ts_file "src/root.module.ts"
+download_angular_ts_file "src/root.firebase.module.ts"
+
+rm -r $ANGULAR_APP_FOLDER/src/style
+mkdir $ANGULAR_APP_FOLDER/src/style
+download_angular_ts_file "src/style/_app.scss"
+download_angular_ts_file "src/style/_style.scss"
+download_angular_ts_file "src/style/_variables.scss"
+
+rm -r $ANGULAR_APP_FOLDER/src/environments
+mkdir $ANGULAR_APP_FOLDER/src/environments
+download_angular_ts_file "src/environments/base.ts"
+download_angular_ts_file "src/environments/environment.prod.ts"
+download_angular_ts_file "src/environments/environment.ts"
+
+rm -r $ANGULAR_APP_FOLDER/src/app
+mkdir $ANGULAR_APP_FOLDER/src/app
+download_angular_ts_file "src/app/app.router.ts"
+download_angular_ts_file "src/app/app.module.ts"
+
+mkdir $ANGULAR_APP_FOLDER/src/app/components
+mkdir $ANGULAR_APP_FOLDER/src/app/container
+download_angular_ts_file "src/app/container/layout.component.html"
+download_angular_ts_file "src/app/container/layout.component.ts"
+
+mkdir $ANGULAR_APP_FOLDER/src/app/state
+download_angular_ts_file "src/app/state/app.state.ts"
+download_angular_ts_file "src/app/state/entity-metadata.ts"
+
+mkdir $ANGULAR_APP_FOLDER/src/app/modules
+mkdir $ANGULAR_APP_FOLDER/src/app/modules/shared
+download_angular_ts_file "src/app/modules/shared/app.shared.module.ts"
+
+mkdir $ANGULAR_APP_FOLDER/src/app/modules/app
+download_angular_ts_file "src/app/modules/app/app.module.ts"
+download_angular_ts_file "src/app/modules/app/app.router.ts"
+
+mkdir $ANGULAR_APP_FOLDER/src/app/modules/app/container
+download_angular_ts_file "src/app/modules/app/container/home.component.html"
+download_angular_ts_file "src/app/modules/app/container/home.component.ts"
+download_angular_ts_file "src/app/modules/app/container/layout.component.html"
+download_angular_ts_file "src/app/modules/app/container/layout.component.ts"
+
+mkdir $ANGULAR_APP_FOLDER/src/app/modules/landing
+download_angular_ts_file "src/app/modules/landing/landing.module.ts"
+download_angular_ts_file "src/app/modules/landing/landing.router.ts"
+
+mkdir $ANGULAR_APP_FOLDER/src/app/modules/landing/container
+download_angular_ts_file "src/app/modules/landing/container/layout.component.html"
+download_angular_ts_file "src/app/modules/landing/container/layout.component.ts"
+
+# add @/shared to the path
+npx --yes json -I -f tsconfig.base.json -e "this.compilerOptions.paths={...this.compilerOptions.paths, ...{ '@/shared/*': ['$ANGULAR_APP_FOLDER/src/app/modules/shared/*'] }};";
+
+git add --all
+git commit -m "setup app"
+
+### Setup NestJS API
+download_api_ts_file () {
+  local $FILE_PATH=$1
+  local $DOWNLOAD_PATH=https://raw.githubusercontent.com/dereekb/dbx-components/develop/setup/templates/apps/api
+  download_ts_file "$DOWNLOAD_PATH" "$FILE_PATH"
+}
+
+rm -r $API_APP_FOLDER/src/app
+mkdir $API_APP_FOLDER/src/app
+
+rm $API_APP_FOLDER/src/main.ts
+download_api_ts_file "src/main.ts"
+
+# Test Folder
+mkdir $API_APP_FOLDER/src/test
+download_api_ts_file "src/test/fixture.ts"
+
+# App Folder
+mkdir $API_APP_FOLDER/src/app
+download_api_ts_file "src/app/app.module.ts"
+download_api_ts_file "src/app/app.ts"
+
+## Common Folder
+mkdir $API_APP_FOLDER/src/app/common
+download_api_ts_file "src/app/common/index.ts"
+
+# Common Firebase Folder
+mkdir $API_APP_FOLDER/src/app/common/firebase
+download_api_ts_file "src/app/common/firebase/action.context.ts"
+download_api_ts_file "src/app/common/firebase/action.module.ts"
+download_api_ts_file "src/app/common/firebase/auth.module.ts"
+download_api_ts_file "src/app/common/firebase/auth.service.ts"
+download_api_ts_file "src/app/common/firebase/firebase.module.ts"
+download_api_ts_file "src/app/common/firebase/firestore.module.ts"
+download_api_ts_file "src/app/common/firebase/index.ts"
+
+# Common Model Folder
+mkdir $API_APP_FOLDER/src/app/common/model
+download_api_ts_file "src/app/common/model/model.module.ts"
+download_api_ts_file "src/app/common/model/index.ts"
+
+mkdir $API_APP_FOLDER/src/app/common/model/example
+download_api_ts_file "src/app/common/model/example/example.action.server.ts"
+download_api_ts_file "src/app/common/model/example/example.error.ts"
+download_api_ts_file "src/app/common/model/example/example.module.ts"
+download_api_ts_file "src/app/common/model/example/index.ts"
+
+## Function Folder
+mkdir $API_APP_FOLDER/src/app/function
+download_api_ts_file "src/app/function/index.ts"
+download_api_ts_file "src/app/function/function.ts"
+
+mkdir $API_APP_FOLDER/src/app/function/example
+download_api_ts_file "src/app/function/example/index.ts"
+download_api_ts_file "src/app/function/example/example.util.ts"
+download_api_ts_file "src/app/function/example/example.set.username.ts"
+
+git add --all
+git commit -m "setup api"

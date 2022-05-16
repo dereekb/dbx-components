@@ -1,7 +1,6 @@
 {
-  "root": "FIREBASE_COMPONENTS_FOLDER",
-  "sourceRoot": "FIREBASE_COMPONENTS_FOLDER/src",
   "projectType": "library",
+  "sourceRoot": "FIREBASE_COMPONENTS_FOLDER/src",
   "targets": {
     "build": {
       "executor": "@nrwl/workspace:run-commands",

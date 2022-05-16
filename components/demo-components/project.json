@@ -1,7 +1,7 @@
 {
   "projectType": "library",
   "sourceRoot": "components/demo-components/src",
-  "prefix": "dereekb",
+  "prefix": "demo",
   "targets": {
     "build": {
       "executor": "@nrwl/angular:package",

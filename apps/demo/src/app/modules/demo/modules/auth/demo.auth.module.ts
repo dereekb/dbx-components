@@ -1,7 +1,7 @@
 
 import { NgModule } from '@angular/core';
 import { UIRouterModule } from '@uirouter/angular';
-import { AppSharedModule } from '@/shared/app.shared.module';
+import { DemoSharedModule } from '@/shared/shared.module';
 import { DemoAuthAuthorizeComponent } from './container/authorize.component';
 import { DemoAuthLayoutComponent } from './container/layout.component';
 import { DemoAuthLoggedOutComponent } from './container/loggedout.component';
@@ -13,7 +13,7 @@ import { DbxFirebaseLoginModule } from '@dereekb/dbx-firebase';
 
 @NgModule({
   imports: [
-    AppSharedModule,
+    DemoSharedModule,
     DbxFirebaseLoginModule,
     UIRouterModule.forChild({
       states: DEMO_AUTH_STATES

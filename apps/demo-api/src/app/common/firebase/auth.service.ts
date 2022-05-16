@@ -1,6 +1,5 @@
-import { AbstractFirebaseServerAuthContext, AbstractFirebaseServerAuthService, AbstractFirebaseServerAuthUserContext } from "@dereekb/firebase-server";
+import { CallableContextWithAuthData, AbstractFirebaseServerAuthContext, AbstractFirebaseServerAuthService, AbstractFirebaseServerAuthUserContext } from "@dereekb/firebase-server";
 import { AuthClaims, AuthRoleSet } from "@dereekb/util";
-import { CallableContextWithAuthData } from "packages/firebase-server/src/lib/function/context";
 
 export class DemoApiFirebaseServerAuthUserContext extends AbstractFirebaseServerAuthUserContext<DemoApiAuthService> {
 

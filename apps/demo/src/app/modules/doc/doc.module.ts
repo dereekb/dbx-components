@@ -3,12 +3,12 @@ import { DocLayoutComponent } from './container/layout.component';
 import { NgModule } from '@angular/core';
 import { UIRouterModule } from '@uirouter/angular';
 import { STATES } from './doc.router';
-import { AppSharedModule } from '@/shared/app.shared.module';
+import { DemoSharedModule } from '@/shared/shared.module';
 import { DocSharedModule } from './modules/shared/doc.shared.module';
 
 @NgModule({
   imports: [
-    AppSharedModule,
+    DemoSharedModule,
     DocSharedModule,
     UIRouterModule.forChild({
       states: STATES

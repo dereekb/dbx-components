@@ -1,18 +1,18 @@
 import { AppLayoutComponent } from './container/layout.component';
 import { NgModule } from '@angular/core';
 import { UIRouterModule } from '@uirouter/angular';
-import { AppSharedModule } from '@/shared/app.shared.module';
+import { DemoSharedModule } from '@/shared/shared.module';
 import { STATES } from './app.router';
 import { CommonModule } from '@angular/common';
 
 @NgModule({
   imports: [
     CommonModule,
-    AppSharedModule,
+    DemoSharedModule,
     UIRouterModule.forChild({
       states: STATES
     })
   ],
   declarations: [AppLayoutComponent],
 })
-export class AppModule { }
+export class RootAppModule { }

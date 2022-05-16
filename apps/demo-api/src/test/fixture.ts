@@ -124,7 +124,7 @@ export const demoAuthorizedUserContextFactory = (params: DemoAuthorizedUserConte
 });
 
 export const demoAuthorizedUserContext = demoAuthorizedUserContextFactory({});
-export const demoAuthorizedDemoAdminContext = demoAuthorizedUserContextFactory({ demoUserLevel: 'admin' });
+export const demoAuthorizedUserAdminContext = demoAuthorizedUserContextFactory({ demoUserLevel: 'admin' });
 
 // MARK: With Guestbook
 export interface DemoApiGuestbookTestContextParams extends Partial<Guestbook> { }

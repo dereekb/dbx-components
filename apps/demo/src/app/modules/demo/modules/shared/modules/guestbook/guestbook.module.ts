@@ -1,5 +1,5 @@
 import { NgModule } from '@angular/core';
-import { AppSharedModule } from '@/shared/app.shared.module';
+import { DemoSharedModule } from '@/shared/shared.module';
 import { DemoGuestbookListComponent, DemoGuestbookListViewComponent, DemoGuestbookListViewItemComponent } from './component/guestbook.list.component';
 import { DemoGuestbookEntryListComponent, DemoGuestbookEntryListViewComponent, DemoGuestbookEntryListViewItemComponent } from './component/guestbook.entry.list.component';
 import { DemoGuestbookCollectionStoreDirective } from './store/guestbook.collection.store.directive';
@@ -10,7 +10,7 @@ import { DemoGuestbookEntryFormComponent } from './component/guestbook.entry.for
 
 @NgModule({
   imports: [
-    AppSharedModule
+    DemoSharedModule
   ],
   declarations: [
     // component

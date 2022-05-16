@@ -15,7 +15,7 @@ export const {
  * @param server 
  * @returns 
  */
-export function demoAppFunctions(nest: NestAppPromiseGetter) {
+export function allAppFunctions(nest: NestAppPromiseGetter) {
   return {
     // Events
     // Auth

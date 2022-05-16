@@ -6,4 +6,4 @@ import { ProfileModule } from "./profile/profile.module";
   imports: [ProfileModule, GuestbookModule],
   exports: [ProfileModule, GuestbookModule]
 })
-export class AppModelModule { }
+export class DemoApiModelModule { }

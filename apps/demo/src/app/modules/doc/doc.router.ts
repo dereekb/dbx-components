@@ -3,7 +3,7 @@ import { DocHomeComponent } from './container/home.component';
 import { DocLayoutComponent } from './container/layout.component';
 
 export const layoutState: Ng2StateDeclaration = {
-  parent: 'app',
+  parent: 'root',
   url: '/doc',
   name: 'doc',
   redirectTo: 'doc.home',

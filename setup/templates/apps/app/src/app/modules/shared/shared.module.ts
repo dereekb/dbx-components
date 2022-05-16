@@ -129,4 +129,4 @@ const DBX_MODULES = [
     UIRouterModule
   ]
 })
-export class AppSharedModule { }
+export class APP_CODE_PREFIXSharedModule { }

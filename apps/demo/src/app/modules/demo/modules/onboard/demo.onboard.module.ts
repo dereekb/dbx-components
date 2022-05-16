@@ -1,4 +1,4 @@
-import { AppSharedModule } from "@/shared/app.shared.module";
+import { DemoSharedModule } from "@/shared/shared.module";
 import { NgModule } from "@angular/core";
 import { UIRouterModule } from "@uirouter/angular";
 import { DemoOnboardLayoutComponent } from "./container/layout.component";
@@ -9,7 +9,7 @@ import { DEMO_ONBOARD_STATES } from "./demo.onboard.router";
 
 @NgModule({
   imports: [
-    AppSharedModule,
+    DemoSharedModule,
     UIRouterModule.forChild({
       states: DEMO_ONBOARD_STATES
     })
