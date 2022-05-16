@@ -10,6 +10,7 @@
     "dbx-web": "packages/dbx-web",
     "demo": "apps/demo",
     "demo-api": "apps/demo-api",
+    "demo-components": "components/demo-components",
     "demo-e2e": "apps/demo-e2e",
     "demo-firebase": "components/demo-firebase",
     "firebase": "packages/firebase",
@@ -20,6 +21,6 @@
     "rxjs": "packages/rxjs",
     "util": "packages/util",
     "util-test": "packages/util/test",
-    "workspace": "."
+    "workspace": ""
   }
 }

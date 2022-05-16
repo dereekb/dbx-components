@@ -1,0 +1,41 @@
+{
+  "projectType": "library",
+  "sourceRoot": "components/demo-components/src",
+  "prefix": "dereekb",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/angular:package",
+      "outputs": ["dist/components/demo-components"],
+      "options": {
+        "project": "components/demo-components/ng-package.json"
+      },
+      "configurations": {
+        "production": {
+          "tsConfig": "components/demo-components/tsconfig.lib.prod.json"
+        },
+        "development": {
+          "tsConfig": "components/demo-components/tsconfig.lib.json"
+        }
+      },
+      "defaultConfiguration": "production"
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": ["coverage/components/demo-components"],
+      "options": {
+        "jestConfig": "components/demo-components/jest.config.ts",
+        "passWithNoTests": true
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "lintFilePatterns": [
+          "components/demo-components/**/*.ts",
+          "components/demo-components/**/*.html"
+        ]
+      }
+    }
+  },
+  "tags": []
+}

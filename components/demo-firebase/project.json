@@ -1,5 +1,4 @@
 {
-  "root": "components/demo-firebase",
   "sourceRoot": "components/demo-firebase/src",
   "projectType": "library",
   "targets": {

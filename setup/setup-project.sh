@@ -17,9 +17,9 @@ NAME=$FIREBASE_PROJECT_ID
 PROJECT_NAME=$FIREBASE_PROJECT_ID
 
 # shared angular library 
-ANGULAR_COMPONENTS_NAME=$PROJECT_NAME
+ANGULAR_COMPONENTS_NAME=$PROJECT_NAME-components
  # shared firebase library 
-FIREBASE_COMPONENTS_NAME=$PROJECT_NAME-Firebase
+FIREBASE_COMPONENTS_NAME=$PROJECT_NAME-firebase
 # app that is deployed
 ANGULAR_APP_NAME=$PROJECT_NAME-app
 # firebase functions app that is deployed
@@ -32,7 +32,7 @@ ANGULAR_APP_FOLDER=$APPS_FOLDER/$ANGULAR_APP_NAME
 API_APP_FOLDER=$APPS_FOLDER/$API_APP_NAME
 E2E_APP_FOLDER=$APPS_FOLDER/$E2E_APP_NAME
 
-COMPONENTS_FOLDER=components
+COMPONENTS_FOLDER=packages  # do not change, packages is the default for nx for non-app packages
 ANGULAR_COMPONENTS_FOLDER=$COMPONENTS_FOLDER/$ANGULAR_COMPONENTS_NAME
 FIREBASE_COMPONENTS_FOLDER=$COMPONENTS_FOLDER/$FIREBASE_COMPONENTS_NAME
 
@@ -94,6 +94,18 @@ fi
 git add --all
 git commit -m "updated nx to latest version"
 
+# Add App Components
+nx g @nrwl/angular:library --name=$ANGULAR_COMPONENTS_NAME --buildable --publishable --importPath $ANGULAR_COMPONENTS_NAME --standaloneConfig=true --simpleModuleName=true
+
+git add --all
+git commit -m "added angular components package"
+
+# Add Firebase Component
+nx g @nrwl/node:library --name=$FIREBASE_COMPONENTS_NAME --buildable --publishable --importPath $FIREBASE_COMPONENTS_NAME
+
+git add --all
+git commit -m "added firebase components package"
+
 # Init Nx App - https://nx.dev/packages/nest
 npm install -D @nrwl/nest                         # install the nest generator
 nx g @nrwl/nest:app $API_APP_NAME  # generate the app
@@ -144,10 +156,6 @@ npm i @dereekb/dbx-analytics @dereekb/dbx-web @dereekb/dbx-form @dereekb/firebas
 
 git add --all
 git commit -m "added @dereekb dependencies"
-
-# Init Component Libraries
-# Init Components App
-nx g @nrwl/angular:library --name=$ANGULAR_COMPONENTS_PACKAGE_NAME --buildable --publishable=false --directory=$PACKAGE_FOLDER
 
 # Docker
 # Create docker files
@@ -227,6 +235,11 @@ curl https://raw.githubusercontent.com/dereekb/dbx-components/develop/setup/temp
 sed -e "s/APP_ID/$ANGULAR_APP_NAME/g" tmp/env.tmp > $ANGULAR_APP_FOLDER/.env
 sed -e "s/APP_ID/$API_APP_NAME/g" tmp/env.tmp > $API_APP_FOLDER/.env
 sed -e "s/APP_ID/$E2E_APP_NAME/g" tmp/env.tmp > $E2E_APP_FOLDER/.env
+sed -e "s/APP_ID/$ANGULAR_COMPONENTS_NAME/g" tmp/env.tmp > $ANGULAR_COMPONENTS_FOLDER/.env
+sed -e "s/APP_ID/$FIREBASE_COMPONENTS_NAME/g" tmp/env.tmp > $FIREBASE_COMPONENTS_FOLDER/.env
+
+# make build-base and run-tests cacheable in nx cloud
+npx --yes json -I -f nx.json -e "this.tasksRunnerOptions.default.options.cacheableOperations=Array.from(new Set([...this.tasksRunnerOptions.default.options.cacheableOperations, ...['build-base', 'run-tests']]));";
 
 git add --all
 git commit -m "added jest configurations"
@@ -245,8 +258,10 @@ git commit -m "added circleci configrations"
 # Apply Project Configurations
 echo "Applying Configuration to Projects"
 curl https://raw.githubusercontent.com/dereekb/dbx-components/develop/setup/templates/workspace.json -o ./workspace.json.tmp
-sed -e "s:ANGULAR_APP_FOLDER:$ANGULAR_APP_FOLDER:g" -e "s:API_APP_FOLDER:$API_APP_FOLDER:g" -e "s:E2E_APP_FOLDER:$E2E_APP_FOLDER:g" ./workspace.json.tmp > ./workspace.json
+sed -e "s:ANGULAR_APP_FOLDER:$ANGULAR_APP_FOLDER:g" -e "s:API_APP_FOLDER:$API_APP_FOLDER:g" -e "s:E2E_APP_FOLDER:$E2E_APP_FOLDER:g" -e "s:FIREBASE_COMPONENTS_FOLDER:$FIREBASE_COMPONENTS_FOLDER:g" -e "s:ANGULAR_COMPONENTS_FOLDER:$ANGULAR_COMPONENTS_FOLDER:g" ./workspace.json.tmp > ./workspace.json
 rm ./workspace.json.tmp
+
+curl https://raw.githubusercontent.com/dereekb/dbx-components/develop/setup/templates/project.json -o ./project.json
 
 rm $ANGULAR_APP_FOLDER/project.json
 curl https://raw.githubusercontent.com/dereekb/dbx-components/develop/setup/templates/apps/app/project.json -o $ANGULAR_APP_FOLDER/project.json.tmp
@@ -258,10 +273,10 @@ curl https://raw.githubusercontent.com/dereekb/dbx-components/develop/setup/temp
 sed -e "s:API_APP_DIST_FOLDER:$API_APP_DIST_FOLDER:g" -e "s:API_APP_FOLDER:$API_APP_FOLDER:g" -e "s:API_APP_NAME:$API_APP_NAME:g" $API_APP_FOLDER/project.json.tmp > $API_APP_FOLDER/project.json
 rm $API_APP_FOLDER/project.json.tmp
 
-rm $APP_COMPONENTS_FOLDER/project.json
-curl https://raw.githubusercontent.com/dereekb/dbx-components/develop/setup/templates/components/app/project.json -o $APP_COMPONENTS_FOLDER/project.json.tmp
-sed -e "s:APP_COMPONENTS_DIST_FOLDER:$APP_COMPONENTS_DIST_FOLDER:g" -e "s:APP_COMPONENTS_FOLDER:$APP_COMPONENTS_FOLDER:g" -e "s:APP_COMPONENTS_NAME:$APP_COMPONENTS_NAME:g" $APP_COMPONENTS_FOLDER/project.json.tmp > $APP_COMPONENTS_FOLDER/project.json
-rm $APP_COMPONENTS_FOLDER/project.json.tmp
+rm $ANGULAR_COMPONENTS_FOLDER/project.json
+curl https://raw.githubusercontent.com/dereekb/dbx-components/develop/setup/templates/components/app/project.json -o $ANGULAR_COMPONENTS_FOLDER/project.json.tmp
+sed -e "s:ANGULAR_COMPONENTS_DIST_FOLDER:$ANGULAR_COMPONENTS_DIST_FOLDER:g" -e "s:ANGULAR_COMPONENTS_FOLDER:$ANGULAR_COMPONENTS_FOLDER:g" -e "s:ANGULAR_COMPONENTS_NAME:$ANGULAR_COMPONENTS_NAME:g" $ANGULAR_COMPONENTS_FOLDER/project.json.tmp > $ANGULAR_COMPONENTS_FOLDER/project.json
+rm $ANGULAR_COMPONENTS_FOLDER/project.json.tmp
 
 rm $FIREBASE_COMPONENTS_FOLDER/project.json
 curl https://raw.githubusercontent.com/dereekb/dbx-components/develop/setup/templates/components/firebase/project.json -o $FIREBASE_COMPONENTS_FOLDER/project.json.tmp
