@@ -2,8 +2,7 @@ import { Component, OnDestroy, ViewChild } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { loadingStateContext } from '@dereekb/rxjs';
 import { map } from 'rxjs';
-import { GuestbookDocumentStore } from '../../../../shared/modules/guestbook/store/guestbook.document.store';
-import { GuestbookEntryDocumentStore } from '../../../../shared/modules/guestbook/store/guestbook.entry.document.store';
+import { GuestbookDocumentStore, GuestbookEntryDocumentStore } from '@dereekb/demo-components';
 import { DemoGuestbookEntryPopupComponent } from './guestbook.entry.popup.component';
 
 @Component({

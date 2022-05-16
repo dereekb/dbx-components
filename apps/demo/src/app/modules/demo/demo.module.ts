@@ -3,11 +3,11 @@ import { DemoLayoutComponent } from './container/layout.component';
 import { NgModule } from '@angular/core';
 import { UIRouterModule } from '@uirouter/angular';
 import { STATES } from './demo.router';
-import { DemoSharedModule } from '@/shared/shared.module';
+import { DemoRootSharedModule } from '@dereekb/demo-components';
 
 @NgModule({
   imports: [
-    DemoSharedModule,
+    DemoRootSharedModule,
     UIRouterModule.forChild({
       states: STATES
     })

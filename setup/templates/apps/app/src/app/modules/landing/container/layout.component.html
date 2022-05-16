@@ -1,11 +1,10 @@
-<div class="dbx-app-page landing-page dbx-background" dbxSetStyle="doc-app" suffixes="dark"
+<div class="dbx-app-page landing-page dbx-background" dbxSetStyle="app-theme" suffixes="dark"
   dbxAppContextState="landing">
   <div class="landing">
     <div class="hero dbx-primary-bg" fxLayout="column">
       <dbx-spacer></dbx-spacer>
       <dbx-content-container>
-        <h1 class="headline">DbxComponents</h1>
-        <p class="subheading-2">Components for Angular. Utilities in Typescript.</p>
+        <h1 class="headline">DbxComponents Template Project</h1>
         <div>
           <dbx-anchor [anchor]="docsAnchor">
             <button mat-flat-button>View Docs</button>
@@ -15,68 +14,6 @@
             <button mat-flat-button>View Demo</button>
           </dbx-anchor>
         </div>
-        <p></p>
-        <mat-divider></mat-divider>
-        <p></p>
-        <div>
-          <dbx-anchor [anchor]="circleciAnchor">
-            <img src="https://circleci.com/gh/dereekb/dbx-components/tree/develop.svg?style=shield" />
-            <dbx-button-spacer></dbx-button-spacer>
-            <div class="star-on-github-widget">
-              <a class="star-on-github" href="https://github.com/dereekb/dbx-components" rel="noopener" target="_blank"
-                aria-label="Star dereekb/dbx-components on GitHub"><svg viewBox="0 0 16 16" width="14" height="14"
-                  class="octicon octicon-mark-github" aria-hidden="true">
-                  <path fill-rule="evenodd"
-                    d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z">
-                  </path>
-                </svg>&nbsp;<span>Star</span></a>
-            </div>
-          </dbx-anchor>
-        </div>
-      </dbx-content-container>
-      <dbx-spacer></dbx-spacer>
-    </div>
-    <div class="features">
-      <dbx-content-container>
-        <h2>What's Available?</h2>
-        <p>This collection is a set of open-source Typescript repositories target several different libraries, such
-          as
-          RxJS, Angular, and other open-source projects. I use these components on my projects and wanted to share
-          them to help enable developers to build advanced products without reinventing the wheel.</p>
-        <p class="dbx-warn">The best way to learn this library for right now is to open up the demo project while
-          scrolling through the docs/demo.</p>
-        <h4>Packages List</h4>
-        <p>You can install the latest version of these projects from npm. Project versioning is synchronized across
-          all packages. The latest version is {{ latestVersion }}.</p>
-        <div>
-          <div class="package-list">
-            <div class="package-list-item" *ngFor="let package of packages">
-              <h4>{{ package.name }}</h4>
-              <p>{{ package.description }}</p>
-              <div *ngIf="package.packages" class="package-primary-package-list">
-                <p class="dbx-label">Primary Packages</p>
-                <ng-container *ngFor="let anchor of package.packages; let last = last;">
-                  <dbx-anchor [anchor]="anchor" class="package-primary-package-list-item">
-                    <dbx-anchor-content class="dbx-link d-fiflex" [anchor]="anchor"></dbx-anchor-content>
-                  </dbx-anchor>
-                  <span class="dbx-button-spacer" *ngIf="!last">,</span>
-                </ng-container>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div>
-          <p>Other tools this project uses:</p>
-          <div class="package-primary-package-list">
-            <ng-container *ngFor="let anchor of otherPackages; let last = last;">
-              <dbx-anchor [anchor]="anchor" class="package-primary-package-list-item">
-                <dbx-anchor-content class="dbx-link d-fiflex" [anchor]="anchor"></dbx-anchor-content>
-              </dbx-anchor>
-              <span class="dbx-button-spacer" *ngIf="!last">,</span>
-            </ng-container>
-          </div>
-        </div>
-      </dbx-content-container>
     </div>
   </div>
 </div>

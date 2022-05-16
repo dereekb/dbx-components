@@ -1,20 +1,20 @@
-import { DemoHomeComponent } from './container/home.component';
-import { DemoLayoutComponent } from './container/layout.component';
+import { AppHomeComponent } from './container/home.component';
+import { AppLayoutComponent } from './container/layout.component';
 import { NgModule } from '@angular/core';
 import { UIRouterModule } from '@uirouter/angular';
 import { STATES } from './app.router';
-import { DemoSharedModule } from '@/shared/shared.module';
+import { APP_CODE_PREFIXRootSharedModule } from 'ANGULAR_COMPONENTS_NAME';
 
 @NgModule({
   imports: [
-    DemoSharedModule,
+    APP_CODE_PREFIXRootSharedModule,
     UIRouterModule.forChild({
       states: STATES
     })
   ],
   declarations: [
-    DemoLayoutComponent,
-    DemoHomeComponent,
+    AppLayoutComponent,
+    AppHomeComponent,
   ],
 })
-export class DemoModule { }
+export class AppModule { }

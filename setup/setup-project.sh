@@ -29,7 +29,7 @@ ANGULAR_COMPONENTS_NAME=$PROJECT_NAME-components
  # shared firebase library 
 FIREBASE_COMPONENTS_NAME=$PROJECT_NAME-firebase
 # app that is deployed
-ANGULAR_APP_NAME=$PROJECT_NAME-app
+ANGULAR_APP_NAME=$PROJECT_NAME
 # firebase functions app that is deployed
 API_APP_NAME=$PROJECT_NAME-api
 # E2E project (work in progress)
@@ -227,7 +227,7 @@ git commit -m "added Docker files and other utility files"
 npm install -D @jscutlery/semver
 curl https://raw.githubusercontent.com/dereekb/dbx-components/main/.commitlintrc.json -o .commitlintrc.json
 
-mkdir -r .github/workflows
+mkdir -p ./.github/workflows
 curl https://raw.githubusercontent.com/dereekb/dbx-components/main/.github/workflows/commitlint.yml -o ./.github/workflows/commitlint.yml
 
 git add --all
@@ -303,32 +303,44 @@ echo "Applying Templates to Projects"
 
 download_ts_file () {
   # downloads and replaces the placeholder content in the file with the content for the project
-  local $DOWNLOAD_PATH=$1
-  local $FILE_PATH=$2
-  local $FULL_FILE_PATH=$API_APP_FOLDER/$FILE_PATH
+  local DOWNLOAD_PATH=$1
+  local TARGET_FOLDER=$2
+  local FILE_PATH=$3
+  local FULL_FILE_PATH=$TARGET_FOLDER/$FILE_PATH
   curl $DOWNLOAD_PATH/$FILE_PATH -o $FULL_FILE_PATH.tmp
-  sed -e "s:APP_CODE_PREFIX:$APP_CODE_PREFIX:g" -e "s:APP_CODE_PREFIX_UPPER:$APP_CODE_PREFIX_UPPER:g" -e "s:APP_CODE_PREFIX_LOWER:$APP_CODE_PREFIX_LOWER:g" -e "s:FIREBASE_COMPONENTS_NAME:$FIREBASE_COMPONENTS_NAME:g" $FULL_FILE_PATH.tmp > $FULL_FILE_PATH
+  sed -e "s:APP_CODE_PREFIX:$APP_CODE_PREFIX:g" -e "s:APP_CODE_PREFIX_UPPER:$APP_CODE_PREFIX_UPPER:g" -e "s:APP_CODE_PREFIX_LOWER:$APP_CODE_PREFIX_LOWER:g" -e "s:FIREBASE_COMPONENTS_NAME:$FIREBASE_COMPONENTS_NAME:g" -e "s:ANGULAR_COMPONENTS_NAME:$ANGULAR_COMPONENTS_NAME:g" $FULL_FILE_PATH.tmp > $FULL_FILE_PATH
   rm $FULL_FILE_PATH.tmp
 }
 
 # Setup app components
 download_app_ts_file () {
-  local $FILE_PATH=$1
-  local $DOWNLOAD_PATH=https://raw.githubusercontent.com/dereekb/dbx-components/develop/setup/templates/components/firebase
-  download_ts_file "$DOWNLOAD_PATH" "$FILE_PATH"
+  local FILE_PATH=$1
+  local TARGET_FOLDER=$ANGULAR_COMPONENTS_FOLDER
+  local DOWNLOAD_PATH=https://raw.githubusercontent.com/dereekb/dbx-components/develop/setup/templates/components/app
+  download_ts_file "$DOWNLOAD_PATH" "$TARGET_FOLDER" "$FILE_PATH"
 }
 
 rm -r $ANGULAR_COMPONENTS_FOLDER/src/lib
 mkdir $ANGULAR_COMPONENTS_FOLDER/src/lib
+download_app_ts_file "src/lib/index.ts"
+download_app_ts_file "src/lib/root.shared.module.ts"
+download_app_ts_file "src/lib/app.shared.module.ts"
+
+mkdir $ANGULAR_COMPONENTS_FOLDER/src/lib/modules
+download_app_ts_file "src/lib/modules/index.ts"
+
+mkdir $ANGULAR_COMPONENTS_FOLDER/src/lib/services
+download_app_ts_file "src/lib/services/index.ts"
 
 git add --all
 git commit -m "setup app components"
 
 ### Setup api components
 download_firebase_ts_file () {
-  local $FILE_PATH=$1
-  local $DOWNLOAD_PATH=https://raw.githubusercontent.com/dereekb/dbx-components/develop/setup/templates/components/firebase
-  download_ts_file "$DOWNLOAD_PATH" "$FILE_PATH"
+  local FILE_PATH=$1
+  local TARGET_FOLDER=$FIREBASE_COMPONENTS_FOLDER
+  local DOWNLOAD_PATH=https://raw.githubusercontent.com/dereekb/dbx-components/develop/setup/templates/components/firebase
+  download_ts_file "$DOWNLOAD_PATH" "$TARGET_FOLDER" "$FILE_PATH"
 }
 
 ## Lib Folder
@@ -352,9 +364,10 @@ git commit -m "setup api components"
 
 # Setup Angular App
 download_angular_ts_file () {
-  local $FILE_PATH=$1
-  local $DOWNLOAD_PATH=https://raw.githubusercontent.com/dereekb/dbx-components/develop/setup/templates/apps/app
-  download_ts_file "$DOWNLOAD_PATH" "$FILE_PATH"
+  local FILE_PATH=$1
+  local TARGET_FOLDER=$ANGULAR_APP_FOLDER
+  local DOWNLOAD_PATH=https://raw.githubusercontent.com/dereekb/dbx-components/develop/setup/templates/apps/app
+  download_ts_file "$DOWNLOAD_PATH" "$TARGET_FOLDER" "$FILE_PATH"
 }
 
 download_angular_ts_file "src/style.scss"
@@ -388,10 +401,6 @@ mkdir $ANGULAR_APP_FOLDER/src/app/state
 download_angular_ts_file "src/app/state/app.state.ts"
 download_angular_ts_file "src/app/state/entity-metadata.ts"
 
-mkdir $ANGULAR_APP_FOLDER/src/app/modules
-mkdir $ANGULAR_APP_FOLDER/src/app/modules/shared
-download_angular_ts_file "src/app/modules/shared/app.shared.module.ts"
-
 mkdir $ANGULAR_APP_FOLDER/src/app/modules/app
 download_angular_ts_file "src/app/modules/app/app.module.ts"
 download_angular_ts_file "src/app/modules/app/app.router.ts"
@@ -410,17 +419,15 @@ mkdir $ANGULAR_APP_FOLDER/src/app/modules/landing/container
 download_angular_ts_file "src/app/modules/landing/container/layout.component.html"
 download_angular_ts_file "src/app/modules/landing/container/layout.component.ts"
 
-# add @/shared to the path
-npx --yes json -I -f tsconfig.base.json -e "this.compilerOptions.paths={...this.compilerOptions.paths, ...{ '@/shared/*': ['$ANGULAR_APP_FOLDER/src/app/modules/shared/*'] }};";
-
 git add --all
 git commit -m "setup app"
 
 ### Setup NestJS API
 download_api_ts_file () {
-  local $FILE_PATH=$1
-  local $DOWNLOAD_PATH=https://raw.githubusercontent.com/dereekb/dbx-components/develop/setup/templates/apps/api
-  download_ts_file "$DOWNLOAD_PATH" "$FILE_PATH"
+  local FILE_PATH=$1
+  local TARGET_FOLDER=$API_APP_FOLDER
+  local DOWNLOAD_PATH=https://raw.githubusercontent.com/dereekb/dbx-components/develop/setup/templates/apps/api
+  download_ts_file "$DOWNLOAD_PATH" "$TARGET_FOLDER" "$FILE_PATH"
 }
 
 rm -r $API_APP_FOLDER/src/app

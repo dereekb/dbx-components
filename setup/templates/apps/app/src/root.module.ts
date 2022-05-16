@@ -3,7 +3,7 @@ import { Injector, NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { Category, StatesModule, UIRouter, UIRouterModule, UIView } from '@uirouter/angular';
-import { DemoSharedModule } from '@/shared/app.shared.module';
+import { APP_CODE_PREFIXRootSharedModule } from 'ANGULAR_COMPONENTS_NAME';
 import { environment } from './environments/environment';
 import { DbxScreenModule, DbxWebRootModule, DbxWebUIRouterModule, DEFAULT_SCREEN_MEDIA_SERVICE_CONFIG, DBX_STYLE_DEFAULT_CONFIG_TOKEN } from '@dereekb/dbx-web';
 import { DbxAnalyticsServiceConfiguration, DbxAnalyticsSegmentServiceListener, DbxAnalyticsSegmentApiService, DbxAnalyticsSegmentApiServiceConfig } from '@dereekb/dbx-analytics';
@@ -74,7 +74,7 @@ export function makeSegmentConfig(): DbxAnalyticsSegmentApiServiceConfig {
     BrowserModule,
     BrowserAnimationsModule,
     AppModule,
-    DemoSharedModule,
+    APP_CODE_PREFIXRootSharedModule,
     DbxWebRootModule,
     DbxFirebaseLoginModule.forRoot({
       enabledLoginMethods: environment.firebase.enabledLoginMethods,

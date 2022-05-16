@@ -1,12 +1,12 @@
 import { NgModule } from '@angular/core';
 import { UIRouterModule } from '@uirouter/angular';
 import { STATES } from './landing.router';
-import { DemoSharedModule } from '@/shared/shared.module';
+import { APP_CODE_PREFIXRootSharedModule } from 'ANGULAR_COMPONENTS_NAME';
 import { LandingLayoutComponent } from './container/layout.component';
 
 @NgModule({
   imports: [
-    DemoSharedModule,
+    APP_CODE_PREFIXRootSharedModule,
     UIRouterModule.forChild({
       states: STATES
     })

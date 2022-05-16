@@ -129,4 +129,4 @@ const DBX_MODULES = [
     UIRouterModule
   ]
 })
-export class DemoSharedModule { }   // todo: move to demo-components
+export class DemoRootSharedModule { }

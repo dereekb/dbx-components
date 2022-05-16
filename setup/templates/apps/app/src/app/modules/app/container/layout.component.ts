@@ -6,34 +6,29 @@ import { DbxFirebaseAuthService } from '@dereekb/dbx-firebase';
 
 @Component({
   templateUrl: './layout.component.html',
-  styleUrls: ['../demo.scss'],
   encapsulation: ViewEncapsulation.None
 })
 export class AppLayoutComponent {
 
   readonly everyoneAnchors = [{
     title: 'Public Home',
-    ref: 'demo.home',
+    ref: 'app.home',
     icon: 'home'
   }];
 
-  readonly adminAnchors = [{
-    title: 'Admin Home',
-    ref: 'demo.home',
-    icon: 'home'
-  }];
+  readonly adminAnchors = [];
 
   readonly userAnchors = [{
     title: 'App Home',
-    ref: 'demo.app.home',
+    ref: 'app.app.home',
     icon: 'home'
   }, {
     title: 'Guest Book',
-    ref: 'demo.app.guestbook.list',
+    ref: 'app.app.guestbook.list',
     icon: 'list'
   }, {
     title: 'Your Profile',
-    ref: 'demo.app.profile',
+    ref: 'app.app.profile',
     icon: 'person'
   }];
 
@@ -52,17 +47,17 @@ export class AppLayoutComponent {
 
   readonly noUserBottomAnchors: ClickableAnchorLink[] = [{
     title: 'Log In',
-    ref: 'demo.auth.login',
+    ref: 'app.auth.login',
     icon: 'login'
   }];
 
   readonly userBottomNavAnchors: ClickableAnchorLinkTree[] = [{
     title: 'Notifications',
-    ref: 'demo.notification',
+    ref: 'app.notification',
     disabled: true
   }, {
     title: 'Settings',
-    ref: 'demo.setting',
+    ref: 'app.setting',
     disabled: true
   }, {
     title: 'Logout',

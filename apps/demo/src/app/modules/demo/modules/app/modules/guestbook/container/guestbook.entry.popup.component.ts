@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { AbstractDialogDirective } from '@dereekb/dbx-web';
 import { MatDialog } from '@angular/material/dialog';
 import { HandleActionFunction } from '@dereekb/dbx-core';
-import { DemoGuestbookEntryFormValue, GuestbookEntryDocumentStore } from './../../../../shared';
+import { DemoGuestbookEntryFormValue, GuestbookEntryDocumentStore } from '@dereekb/demo-components';
 import { IsModifiedFunction } from '@dereekb/rxjs';
 import { map, of, switchMap } from 'rxjs';
 

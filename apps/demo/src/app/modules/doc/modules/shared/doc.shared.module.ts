@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { DemoSharedModule } from '@/shared/shared.module';
+import { DemoRootSharedModule } from '@dereekb/demo-components';
 import { DocFeatureLayoutComponent } from './component/feature.layout.component';
 import { DocFeatureExampleComponent } from './component/feature.example.component';
 import { DocFeatureCardListComponent } from './component/feature.card.list.component';
@@ -9,7 +9,7 @@ import { DocFeatureDerivedComponent } from './component/feature.derived.componen
 @NgModule({
   imports: [
     CommonModule,
-    DemoSharedModule
+    DemoRootSharedModule
   ],
   declarations: [
     DocFeatureDerivedComponent,
@@ -18,7 +18,7 @@ import { DocFeatureDerivedComponent } from './component/feature.derived.componen
     DocFeatureExampleComponent
   ],
   exports: [
-    DemoSharedModule,
+    DemoRootSharedModule,
     DocFeatureDerivedComponent,
     DocFeatureCardListComponent,
     DocFeatureLayoutComponent,
