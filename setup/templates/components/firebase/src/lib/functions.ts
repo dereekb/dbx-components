@@ -15,7 +15,7 @@ export abstract class APP_CODE_PREFIXFirebaseFunctionsGetter {
   abstract readonly exampleFunctions: FirebaseFunctionGetter<ExampleFunctions>;
 }
 
-export function makeDemoFirebaseFunctions(functions: Functions): APP_CODE_PREFIXFirebaseFunctionsGetter {
+export function makeAPP_CODE_PREFIXFirebaseFunctions(functions: Functions): APP_CODE_PREFIXFirebaseFunctionsGetter {
   const factory = lazyFirebaseFunctionsFactory<APP_CODE_PREFIXFirebaseFunctionsMap>(APP_CODE_PREFIX_UPPER_FIREBASE_FUNCTIONS_CONFIG);
   return factory(functions);
 }

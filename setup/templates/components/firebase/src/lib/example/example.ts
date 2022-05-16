@@ -20,9 +20,7 @@ export const exampleCollectionPath = 'example';
 
 export const exampleConverter = makeSnapshotConverterFunctions<Example>({
   fields: {
-    username: firestoreString({}),
-    bio: firestoreString({}),
-    updatedAt: firestoreDate({ saveDefaultAsNow: true })
+    username: firestoreString({})
   }
 });
 

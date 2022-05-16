@@ -3,7 +3,7 @@ import { authorizedUserContextFactory, AuthorizedUserTestContextFixture, Authori
 import { JestBuildTestsWithContextFunction, JestTestContextFixture } from '@dereekb/util/test';
 import { Module } from '@nestjs/common';
 import { APP_CODE_PREFIXApiAppModule } from '../app/app.module';
-import { initUserOnCreate } from '../app/function/auth/auth.function';
+import { initUserOnCreate } from '../app/function/auth/init.user.function';
 
 // MARK: APP_CODE_PREFIX Api Testing Fixture
 @Module({

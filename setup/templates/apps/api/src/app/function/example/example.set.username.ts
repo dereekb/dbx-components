@@ -8,8 +8,7 @@ import { exampleForUser } from './example.util';
 export const exampleSetUsername = onCallWithAPP_CODE_PREFIXNestContext(inAuthContext(async (nest, data: SetExampleUsernameParams, context) => {
   const setExampleUsername = await nest.exampleActions.setExampleUsername(data);
 
-  const params = setExampleUsername.params;
-  const uid = params.uid ?? context.auth?.uid!;
+  const uid = context.auth?.uid!;
 
   const exampleDocument: ExampleDocument = exampleForUser(nest, uid);
   const exists = await exampleDocument.accessor.exists();

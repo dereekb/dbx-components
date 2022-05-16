@@ -7,7 +7,7 @@ import { APP_CODE_PREFIXRootSharedModule } from 'ANGULAR_COMPONENTS_NAME';
 import { environment } from './environments/environment';
 import { DbxScreenModule, DbxWebRootModule, DbxWebUIRouterModule, DEFAULT_SCREEN_MEDIA_SERVICE_CONFIG, DBX_STYLE_DEFAULT_CONFIG_TOKEN } from '@dereekb/dbx-web';
 import { DbxAnalyticsServiceConfiguration, DbxAnalyticsSegmentServiceListener, DbxAnalyticsSegmentApiService, DbxAnalyticsSegmentApiServiceConfig } from '@dereekb/dbx-analytics';
-import { AppModule } from './app/app.module';
+import { RootAppModule } from './app/app.module';
 import { DbxAppAuthRouterStateModule, DbxAppAuthRouterModule, AuthTransitionHookOptions, DbxAppAuthStateModule, DbxAppContextStateModule, DbxCoreUIRouterSegueModule, DBX_KNOWN_APP_CONTEXT_STATES, enableHasAuthRoleHook, enableHasAuthStateHook, enableIsLoggedInHook } from '@dereekb/dbx-core';
 import { FormlyModule } from '@ngx-formly/core';
 import { defaultValidationMessages } from '@dereekb/dbx-form';
@@ -73,7 +73,7 @@ export function makeSegmentConfig(): DbxAnalyticsSegmentApiServiceConfig {
   imports: [
     BrowserModule,
     BrowserAnimationsModule,
-    AppModule,
+    RootAppModule,
     APP_CODE_PREFIXRootSharedModule,
     DbxWebRootModule,
     DbxFirebaseLoginModule.forRoot({

@@ -40,13 +40,18 @@ ANGULAR_APP_FOLDER=$APPS_FOLDER/$ANGULAR_APP_NAME
 API_APP_FOLDER=$APPS_FOLDER/$API_APP_NAME
 E2E_APP_FOLDER=$APPS_FOLDER/$E2E_APP_NAME
 
-COMPONENTS_FOLDER=packages
+COMPONENTS_FOLDER=components
 ANGULAR_COMPONENTS_FOLDER=$COMPONENTS_FOLDER/$ANGULAR_COMPONENTS_NAME
 FIREBASE_COMPONENTS_FOLDER=$COMPONENTS_FOLDER/$FIREBASE_COMPONENTS_NAME
 
 APPS_DIST_FOLDER=dist/$APPS_FOLDER
 ANGULAR_APP_DIST_FOLDER=$APPS_DIST_FOLDER/$ANGULAR_APP_NAME
-API_DIST_FOLDER=$APPS_DIST_FOLDER/$API_APP_NAME
+API_APP_DIST_FOLDER=$APPS_DIST_FOLDER/$API_APP_NAME
+
+COMPONENTS_DIST_FOLDER=dist/$COMPONENTS_FOLDER
+ANGULAR_COMPONENTS_DIST_FOLDER=$COMPONENTS_DIST_FOLDER/$ANGULAR_COMPONENTS_NAME
+FIREBASE_COMPONENTS_DIST_FOLDER=$COMPONENTS_DIST_FOLDER/$FIREBASE_COMPONENTS_NAME
+
 FIREBASE_BASE_EMULATORS_PORT=9100
 FIREBASE_EMULATOR_UI_PORT=$FIREBASE_BASE_EMULATORS_PORT
 FIREBASE_EMULATOR_HOSTING_PORT=$(expr $FIREBASE_BASE_EMULATORS_PORT + 1)
@@ -143,7 +148,7 @@ echo "Instructions: Firebase Functions - This configuration will be ignored."
 # remove the public folder. We will use the $ANGULAR_APP_DIST_FOLDER instead.
 rm -r public
 
-# remove the functions folder. We will use the $API_DIST_FOLDER instead.
+# remove the functions folder. We will use the $API_APP_DIST_FOLDER instead.
 rm -r functions
 
 # edit firebase.json to have the correct configuration.
@@ -152,7 +157,7 @@ rm -r functions
 npx --yes json -I -f firebase.json -e "this.hosting.site='$PROJECT_NAME'; this.hosting.public='$ANGULAR_APP_DIST_FOLDER'; this.hosting.ignore=['firebase.json', '**/.*', '**/node_modules/**']";
 
 # Functions
-npx --yes json -I -f firebase.json -e "this.functions={ source:'$API_DIST_FOLDER', runtime: 'nodejs16', engines: { node: '16' }, ignore: ['firebase.json', '**/.*', '**/node_modules/**'] }";
+npx --yes json -I -f firebase.json -e "this.functions={ source:'$API_APP_DIST_FOLDER', runtime: 'nodejs16', engines: { node: '16' }, ignore: ['firebase.json', '**/.*', '**/node_modules/**'] }";
 
 # Emulators
 npx --yes json -I -f firebase.json -e "this.emulators={ ui: { host: '$FIREBASE_LOCALHOST', enabled: true, port: $FIREBASE_EMULATOR_UI_PORT }, hosting: { host: '$FIREBASE_LOCALHOST', port: $FIREBASE_EMULATOR_HOSTING_PORT }, functions: { host: '$FIREBASE_LOCALHOST', port: $FIREBASE_EMULATOR_FUNCTIONS_PORT }, auth: { host: '$FIREBASE_LOCALHOST', port: $FIREBASE_EMULATOR_AUTH_PORT }, firestore: { host: '$FIREBASE_LOCALHOST', port: $FIREBASE_EMULATOR_FIRESTORE_PORT }, pubsub: { host: '$FIREBASE_LOCALHOST', port: $FIREBASE_EMULATOR_PUBSUB_PORT }, storage: { host: '$FIREBASE_LOCALHOST', port: $FIREBASE_EMULATOR_STORAGE_PORT } };";
@@ -277,7 +282,7 @@ curl https://raw.githubusercontent.com/dereekb/dbx-components/develop/setup/temp
 
 rm $ANGULAR_APP_FOLDER/project.json
 curl https://raw.githubusercontent.com/dereekb/dbx-components/develop/setup/templates/apps/app/project.json -o $ANGULAR_APP_FOLDER/project.json.tmp
-sed -e "s:ANGULAR_APP_DIST_FOLDER:$ANGULAR_APP_DIST_FOLDER:g" -e "s:ANGULAR_APP_FOLDER:$ANGULAR_APP_FOLDER:g" -e "s:ANGULAR_APP_NAME:$ANGULAR_APP_NAME:g" $ANGULAR_APP_FOLDER/project.json.tmp > $ANGULAR_APP_FOLDER/project.json
+sed -e "s:ANGULAR_APP_DIST_FOLDER:$ANGULAR_APP_DIST_FOLDER:g" -e "s:ANGULAR_APP_FOLDER:$ANGULAR_APP_FOLDER:g" -e "s:ANGULAR_APP_NAME:$ANGULAR_APP_NAME:g" -e "s:ANGULAR_APP_PORT:$ANGULAR_APP_PORT:g" $ANGULAR_APP_FOLDER/project.json.tmp > $ANGULAR_APP_FOLDER/project.json
 rm $ANGULAR_APP_FOLDER/project.json.tmp
 
 rm $API_APP_FOLDER/project.json
@@ -287,7 +292,7 @@ rm $API_APP_FOLDER/project.json.tmp
 
 rm $ANGULAR_COMPONENTS_FOLDER/project.json
 curl https://raw.githubusercontent.com/dereekb/dbx-components/develop/setup/templates/components/app/project.json -o $ANGULAR_COMPONENTS_FOLDER/project.json.tmp
-sed -e "s:ANGULAR_COMPONENTS_DIST_FOLDER:$ANGULAR_COMPONENTS_DIST_FOLDER:g" -e "s:ANGULAR_COMPONENTS_FOLDER:$ANGULAR_COMPONENTS_FOLDER:g" -e "s:ANGULAR_APP_PREFIX:$ANGULAR_APP_PREFIX:g" $ANGULAR_COMPONENTS_FOLDER/project.json.tmp > $ANGULAR_COMPONENTS_FOLDER/project.json
+sed -e "s:ANGULAR_COMPONENTS_DIST_FOLDER:$ANGULAR_COMPONENTS_DIST_FOLDER:g" -e "s:ANGULAR_COMPONENTS_FOLDER:$ANGULAR_COMPONENTS_FOLDER:g" -e "s:ANGULAR_APP_PREFIX:$ANGULAR_APP_PREFIX:g" -e "s:ANGULAR_COMPONENTS_NAME:$ANGULAR_COMPONENTS_NAME:g" $ANGULAR_COMPONENTS_FOLDER/project.json.tmp > $ANGULAR_COMPONENTS_FOLDER/project.json
 rm $ANGULAR_COMPONENTS_FOLDER/project.json.tmp
 
 rm $FIREBASE_COMPONENTS_FOLDER/project.json
@@ -308,17 +313,20 @@ download_ts_file () {
   local FILE_PATH=$3
   local FULL_FILE_PATH=$TARGET_FOLDER/$FILE_PATH
   curl $DOWNLOAD_PATH/$FILE_PATH -o $FULL_FILE_PATH.tmp
-  sed -e "s:APP_CODE_PREFIX:$APP_CODE_PREFIX:g" -e "s:APP_CODE_PREFIX_UPPER:$APP_CODE_PREFIX_UPPER:g" -e "s:APP_CODE_PREFIX_LOWER:$APP_CODE_PREFIX_LOWER:g" -e "s:FIREBASE_COMPONENTS_NAME:$FIREBASE_COMPONENTS_NAME:g" -e "s:ANGULAR_COMPONENTS_NAME:$ANGULAR_COMPONENTS_NAME:g" $FULL_FILE_PATH.tmp > $FULL_FILE_PATH
+  sed -e "s:APP_CODE_PREFIX_UPPER:$APP_CODE_PREFIX_UPPER:g" -e "s:APP_CODE_PREFIX_LOWER:$APP_CODE_PREFIX_LOWER:g" -e "s:APP_CODE_PREFIX:$APP_CODE_PREFIX:g" -e "s:FIREBASE_COMPONENTS_NAME:$FIREBASE_COMPONENTS_NAME:g" -e "s:ANGULAR_COMPONENTS_NAME:$ANGULAR_COMPONENTS_NAME:g" $FULL_FILE_PATH.tmp > $FULL_FILE_PATH
   rm $FULL_FILE_PATH.tmp
 }
 
-# Setup app components
+### Setup app components
 download_app_ts_file () {
   local FILE_PATH=$1
   local TARGET_FOLDER=$ANGULAR_COMPONENTS_FOLDER
   local DOWNLOAD_PATH=https://raw.githubusercontent.com/dereekb/dbx-components/develop/setup/templates/components/app
   download_ts_file "$DOWNLOAD_PATH" "$TARGET_FOLDER" "$FILE_PATH"
 }
+
+rm $ANGULAR_COMPONENTS_FOLDER/src/index.ts
+echo "export * from './lib'" > $ANGULAR_COMPONENTS_FOLDER/src/index.ts
 
 rm -r $ANGULAR_COMPONENTS_FOLDER/src/lib
 mkdir $ANGULAR_COMPONENTS_FOLDER/src/lib
@@ -347,6 +355,9 @@ download_firebase_ts_file () {
 rm -r $FIREBASE_COMPONENTS_FOLDER/src/lib
 mkdir -p $FIREBASE_COMPONENTS_FOLDER/src/lib
 
+rm $FIREBASE_COMPONENTS_FOLDER/src/index.ts
+echo "export * from './lib'" > $FIREBASE_COMPONENTS_FOLDER/src/index.ts
+
 download_firebase_ts_file "src/lib/index.ts"
 download_firebase_ts_file "src/lib/collection.ts"
 download_firebase_ts_file "src/lib/functions.ts"
@@ -362,7 +373,7 @@ download_firebase_ts_file "src/lib/example/index.ts"
 git add --all
 git commit -m "setup api components"
 
-# Setup Angular App
+### Setup Angular App
 download_angular_ts_file () {
   local FILE_PATH=$1
   local TARGET_FOLDER=$ANGULAR_APP_FOLDER
@@ -388,7 +399,7 @@ download_angular_ts_file "src/environments/environment.prod.ts"
 download_angular_ts_file "src/environments/environment.ts"
 
 rm -r $ANGULAR_APP_FOLDER/src/app
-mkdir $ANGULAR_APP_FOLDER/src/app
+mkdir -p $ANGULAR_APP_FOLDER/src/app
 download_angular_ts_file "src/app/app.router.ts"
 download_angular_ts_file "src/app/app.module.ts"
 
@@ -401,6 +412,7 @@ mkdir $ANGULAR_APP_FOLDER/src/app/state
 download_angular_ts_file "src/app/state/app.state.ts"
 download_angular_ts_file "src/app/state/entity-metadata.ts"
 
+mkdir $ANGULAR_APP_FOLDER/src/app/modules
 mkdir $ANGULAR_APP_FOLDER/src/app/modules/app
 download_angular_ts_file "src/app/modules/app/app.module.ts"
 download_angular_ts_file "src/app/modules/app/app.router.ts"
@@ -430,9 +442,6 @@ download_api_ts_file () {
   download_ts_file "$DOWNLOAD_PATH" "$TARGET_FOLDER" "$FILE_PATH"
 }
 
-rm -r $API_APP_FOLDER/src/app
-mkdir $API_APP_FOLDER/src/app
-
 rm $API_APP_FOLDER/src/main.ts
 download_api_ts_file "src/main.ts"
 
@@ -441,6 +450,7 @@ mkdir $API_APP_FOLDER/src/test
 download_api_ts_file "src/test/fixture.ts"
 
 # App Folder
+rm -r $API_APP_FOLDER/src/app
 mkdir $API_APP_FOLDER/src/app
 download_api_ts_file "src/app/app.module.ts"
 download_api_ts_file "src/app/app.ts"
@@ -474,6 +484,10 @@ download_api_ts_file "src/app/common/model/example/index.ts"
 mkdir $API_APP_FOLDER/src/app/function
 download_api_ts_file "src/app/function/index.ts"
 download_api_ts_file "src/app/function/function.ts"
+
+mkdir $API_APP_FOLDER/src/app/function/auth
+download_api_ts_file "src/app/function/auth/index.ts"
+download_api_ts_file "src/app/function/auth/init.user.function.ts"
 
 mkdir $API_APP_FOLDER/src/app/function/example
 download_api_ts_file "src/app/function/example/index.ts"

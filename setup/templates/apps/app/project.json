@@ -90,7 +90,10 @@
     },
     "test": {
       "executor": "@nrwl/jest:jest",
-      "outputs": ["coverage/ANGULAR_APP_FOLDER"],
+      "outputs": [
+        "coverage/ANGULAR_APP_FOLDER",
+        "./.reports/jest/ANGULAR_APP_NAME.junit.xml"
+      ],
       "options": {
         "jestConfig": "ANGULAR_APP_FOLDER/jest.config.ts",
         "passWithNoTests": true

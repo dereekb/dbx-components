@@ -44,7 +44,7 @@
       "executor": "@nrwl/jest:jest",
       "outputs": [
         "coverage/FIREBASE_COMPONENTS_FOLDER",
-        "./.reports/jest/firebase.junit.xml"
+        "./.reports/jest/FIREBASE_COMPONENTS_NAME.junit.xml"
       ],
       "options": {
         "jestConfig": "FIREBASE_COMPONENTS_FOLDER/jest.config.ts",
