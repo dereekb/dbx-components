@@ -132,7 +132,7 @@ jobs:
       - run:
           # CircleCI does not have a great way to pass variables between run steps, so we grab the tag name before swapping to main, and then move tag to the main branch after making the merge commit into main.
           name: copy tag id, merge release into main and use the release commit message, move tag from release to main
-          command: DEV_TAG_ID=$(git describe --abbrev=0 HEAD^) && TAG_ID=$(git describe --abbrev=0) && echo "merging new release ($TAG_ID) into main. Adding all commits since last dev tag ($DEV_TAG_ID)" && git checkout main && git merge release --squash -Xtheirs && git commit -m "$(git log $PREV_TAG_ID..release --pretty=%B | cat)" && git tag -f $TAG_ID
+          command: DEV_TAG_ID=$(git describe --abbrev=0 HEAD^) && TAG_ID=$(git describe --abbrev=0) && echo "merging new release ($TAG_ID) into main. Adding all commits since last dev tag ($DEV_TAG_ID)" && git checkout main && git merge release --squash -Xtheirs && git commit -m "$(git log $DEV_TAG_ID..release --pretty=%B | cat)" && git tag -f $TAG_ID
       - run:
           name: push main to origin, push new tag to origin
           command: git push origin main && git push origin $(git describe --abbrev=0 --tags)
