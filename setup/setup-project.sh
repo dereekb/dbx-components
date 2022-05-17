@@ -89,7 +89,7 @@ git checkout setup
 
 # remove decorate angular cli
 rm decorate-angular-cli.js
-npx --yes json -I -f package.json -e "this.scripts={ postinstall: 'ngcc --properties es2015 browser module main', prepare: 'husky install' };";
+npx --yes json -I -f package.json -e "this.scripts={ postinstall: 'ngcc --properties es2015 browser module main' };";
 
 # Commit the cloud initialization
 git add --all
@@ -232,6 +232,7 @@ curl https://raw.githubusercontent.com/dereekb/dbx-components/main/.commitlintrc
 
 mkdir .husky
 curl https://raw.githubusercontent.com/dereekb/dbx-components/main/.husky/commit-msg -o .husky/commit-msg
+npx --yes json -I -f package.json -e "this.scripts={ ...this.scripts, prepare: 'husky install' };";
 npm run prepare
 
 mkdir -p ./.github/workflows
@@ -249,7 +250,7 @@ curl https://raw.githubusercontent.com/dereekb/dbx-components/main/jest.setup.ts
 
 # add env files to ensure that jest CI tests export properly.
 mkdir tmp # TODO: Change from /develop to /main later.
-curl https://raw.githubusercontent.com/dereekb/dbx-components/develop/setup/templates/apps/.env -o tmp/env.tmp
+curl https://raw.githubusercontent.com/dereekb/dbx-components/main/setup/templates/apps/.env -o tmp/env.tmp
 sed -e "s/APP_ID/$ANGULAR_APP_NAME/g" tmp/env.tmp > $ANGULAR_APP_FOLDER/.env
 sed -e "s/APP_ID/$API_APP_NAME/g" tmp/env.tmp > $API_APP_FOLDER/.env
 sed -e "s/APP_ID/$E2E_APP_NAME/g" tmp/env.tmp > $E2E_APP_FOLDER/.env
@@ -266,7 +267,7 @@ git commit -m "added jest configurations"
 echo "Copying CircleCI Configurations."
 echo "BEFORE CIRCLECI USE - Please update configuration on CircleCI and in \".circleci/config.yml\""
 mkdir .circleci
-curl https://raw.githubusercontent.com/dereekb/dbx-components/develop/setup/templates/.circleci/config.yml -o .circleci/config.yml.tmp
+curl https://raw.githubusercontent.com/dereekb/dbx-components/main/setup/templates/.circleci/config.yml -o .circleci/config.yml.tmp
 sed -e "s/CI_GIT_USER_EMAIL/$CI_GIT_USER_EMAIL/g" -e "s/CI_GIT_USER_NAME/$CI_GIT_USER_NAME/g" -e "s/ANGULAR_APP_NAME/$ANGULAR_APP_NAME/g"  -e "s/API_APP_NAME/$API_APP_NAME/g" -e "s/E2E_APP_NAME/$E2E_APP_NAME/g" .circleci/config.yml.tmp > .circleci/config.yml
 rm .circleci/config.yml.tmp
 
@@ -275,30 +276,30 @@ git commit -m "added circleci configrations"
 
 # Apply Project Configurations
 echo "Applying Configuration to Projects"
-curl https://raw.githubusercontent.com/dereekb/dbx-components/develop/setup/templates/workspace.json -o ./workspace.json.tmp
+curl https://raw.githubusercontent.com/dereekb/dbx-components/main/setup/templates/workspace.json -o ./workspace.json.tmp
 sed -e "s:ANGULAR_APP_FOLDER:$ANGULAR_APP_FOLDER:g" -e "s:API_APP_FOLDER:$API_APP_FOLDER:g" -e "s:E2E_APP_FOLDER:$E2E_APP_FOLDER:g" -e "s:FIREBASE_COMPONENTS_FOLDER:$FIREBASE_COMPONENTS_FOLDER:g" -e "s:ANGULAR_COMPONENTS_FOLDER:$ANGULAR_COMPONENTS_FOLDER:g" -e "s:ANGULAR_APP_NAME:$ANGULAR_APP_NAME:g" -e "s:API_APP_NAME:$API_APP_NAME:g" -e "s:E2E_APP_NAME:$E2E_APP_NAME:g" -e "s:FIREBASE_COMPONENTS_NAME:$FIREBASE_COMPONENTS_NAME:g" -e "s:ANGULAR_COMPONENTS_NAME:$ANGULAR_COMPONENTS_NAME:g" ./workspace.json.tmp > ./workspace.json
 rm ./workspace.json.tmp
 rm ./angular.json
 
-curl https://raw.githubusercontent.com/dereekb/dbx-components/develop/setup/templates/project.json -o ./project.json
+curl https://raw.githubusercontent.com/dereekb/dbx-components/main/setup/templates/project.json -o ./project.json
 
 rm $ANGULAR_APP_FOLDER/project.json
-curl https://raw.githubusercontent.com/dereekb/dbx-components/develop/setup/templates/apps/app/project.json -o $ANGULAR_APP_FOLDER/project.json.tmp
+curl https://raw.githubusercontent.com/dereekb/dbx-components/main/setup/templates/apps/app/project.json -o $ANGULAR_APP_FOLDER/project.json.tmp
 sed -e "s:ANGULAR_APP_DIST_FOLDER:$ANGULAR_APP_DIST_FOLDER:g" -e "s:ANGULAR_APP_FOLDER:$ANGULAR_APP_FOLDER:g" -e "s:ANGULAR_APP_NAME:$ANGULAR_APP_NAME:g" -e "s:ANGULAR_APP_PORT:$ANGULAR_APP_PORT:g" $ANGULAR_APP_FOLDER/project.json.tmp > $ANGULAR_APP_FOLDER/project.json
 rm $ANGULAR_APP_FOLDER/project.json.tmp
 
 rm $API_APP_FOLDER/project.json
-curl https://raw.githubusercontent.com/dereekb/dbx-components/develop/setup/templates/apps/api/project.json -o $API_APP_FOLDER/project.json.tmp
+curl https://raw.githubusercontent.com/dereekb/dbx-components/main/setup/templates/apps/api/project.json -o $API_APP_FOLDER/project.json.tmp
 sed -e "s:API_APP_DIST_FOLDER:$API_APP_DIST_FOLDER:g" -e "s:API_APP_FOLDER:$API_APP_FOLDER:g" -e "s:API_APP_NAME:$API_APP_NAME:g" $API_APP_FOLDER/project.json.tmp > $API_APP_FOLDER/project.json
 rm $API_APP_FOLDER/project.json.tmp
 
 rm $ANGULAR_COMPONENTS_FOLDER/project.json
-curl https://raw.githubusercontent.com/dereekb/dbx-components/develop/setup/templates/components/app/project.json -o $ANGULAR_COMPONENTS_FOLDER/project.json.tmp
+curl https://raw.githubusercontent.com/dereekb/dbx-components/main/setup/templates/components/app/project.json -o $ANGULAR_COMPONENTS_FOLDER/project.json.tmp
 sed -e "s:ANGULAR_COMPONENTS_DIST_FOLDER:$ANGULAR_COMPONENTS_DIST_FOLDER:g" -e "s:ANGULAR_COMPONENTS_FOLDER:$ANGULAR_COMPONENTS_FOLDER:g" -e "s:ANGULAR_APP_PREFIX:$ANGULAR_APP_PREFIX:g" -e "s:ANGULAR_COMPONENTS_NAME:$ANGULAR_COMPONENTS_NAME:g" $ANGULAR_COMPONENTS_FOLDER/project.json.tmp > $ANGULAR_COMPONENTS_FOLDER/project.json
 rm $ANGULAR_COMPONENTS_FOLDER/project.json.tmp
 
 rm $FIREBASE_COMPONENTS_FOLDER/project.json
-curl https://raw.githubusercontent.com/dereekb/dbx-components/develop/setup/templates/components/firebase/project.json -o $FIREBASE_COMPONENTS_FOLDER/project.json.tmp
+curl https://raw.githubusercontent.com/dereekb/dbx-components/main/setup/templates/components/firebase/project.json -o $FIREBASE_COMPONENTS_FOLDER/project.json.tmp
 sed -e "s:FIREBASE_COMPONENTS_DIST_FOLDER:$FIREBASE_COMPONENTS_DIST_FOLDER:g" -e "s:FIREBASE_COMPONENTS_FOLDER:$FIREBASE_COMPONENTS_FOLDER:g" -e "s:FIREBASE_COMPONENTS_NAME:$FIREBASE_COMPONENTS_NAME:g" $FIREBASE_COMPONENTS_FOLDER/project.json.tmp > $FIREBASE_COMPONENTS_FOLDER/project.json
 rm $FIREBASE_COMPONENTS_FOLDER/project.json.tmp
 
@@ -326,7 +327,7 @@ download_ts_file () {
 download_app_ts_file () {
   local FILE_PATH=$1
   local TARGET_FOLDER=$ANGULAR_COMPONENTS_FOLDER
-  local DOWNLOAD_PATH=https://raw.githubusercontent.com/dereekb/dbx-components/develop/setup/templates/components/app
+  local DOWNLOAD_PATH=https://raw.githubusercontent.com/dereekb/dbx-components/main/setup/templates/components/app
   download_ts_file "$DOWNLOAD_PATH" "$TARGET_FOLDER" "$FILE_PATH"
 }
 
@@ -352,7 +353,7 @@ git commit -m "setup app components"
 download_firebase_ts_file () {
   local FILE_PATH=$1
   local TARGET_FOLDER=$FIREBASE_COMPONENTS_FOLDER
-  local DOWNLOAD_PATH=https://raw.githubusercontent.com/dereekb/dbx-components/develop/setup/templates/components/firebase
+  local DOWNLOAD_PATH=https://raw.githubusercontent.com/dereekb/dbx-components/main/setup/templates/components/firebase
   download_ts_file "$DOWNLOAD_PATH" "$TARGET_FOLDER" "$FILE_PATH"
 }
 
@@ -382,7 +383,7 @@ git commit -m "setup api components"
 download_angular_ts_file () {
   local FILE_PATH=$1
   local TARGET_FOLDER=$ANGULAR_APP_FOLDER
-  local DOWNLOAD_PATH=https://raw.githubusercontent.com/dereekb/dbx-components/develop/setup/templates/apps/app
+  local DOWNLOAD_PATH=https://raw.githubusercontent.com/dereekb/dbx-components/main/setup/templates/apps/app
   download_ts_file "$DOWNLOAD_PATH" "$TARGET_FOLDER" "$FILE_PATH"
 }
 
@@ -443,7 +444,7 @@ git commit -m "setup app"
 download_api_ts_file () {
   local FILE_PATH=$1
   local TARGET_FOLDER=$API_APP_FOLDER
-  local DOWNLOAD_PATH=https://raw.githubusercontent.com/dereekb/dbx-components/develop/setup/templates/apps/api
+  local DOWNLOAD_PATH=https://raw.githubusercontent.com/dereekb/dbx-components/main/setup/templates/apps/api
   download_ts_file "$DOWNLOAD_PATH" "$TARGET_FOLDER" "$FILE_PATH"
 }
 
