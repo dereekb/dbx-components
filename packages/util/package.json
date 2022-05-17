@@ -3,6 +3,11 @@
   "version": "4.0.1",
   "type": "commonjs",
   "exports": {
+    ".": {
+      "main": "./src/index.js",
+      "types": "./src/index.d.ts",
+      "default": "./src/index.js"
+    },
     "./test": {
       "main": "./test/index.js",
       "types": "./test/index.d.ts"
