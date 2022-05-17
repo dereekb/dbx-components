@@ -4,7 +4,7 @@ import { authorizedUserContextFactory, AuthorizedUserTestContextFixture, Authori
 import { JestBuildTestsWithContextFunction, JestTestContextFixture } from '@dereekb/util/test';
 import { Module } from '@nestjs/common';
 import { DemoApiAppModule } from '../app/app.module';
-import { initUserOnCreate } from '../app/function/auth/auth.function';
+import { initUserOnCreate } from '../app/function/auth/init.user.function';
 
 // MARK: Demo Api Testing Fixture
 @Module({

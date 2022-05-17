@@ -63,6 +63,13 @@
         "lintFilePatterns": ["API_APP_FOLDER/**/*.ts"]
       }
     },
+    "test": {
+      "executor": "@nrwl/workspace:run-commands",
+      "options": {
+        "command": "./exec-with-emulator.sh 'npx nx run-tests API_APP_NAME'",
+        "color": true
+      }
+    },
     "run-tests": {
       "executor": "@nrwl/jest:jest",
       "outputs": [

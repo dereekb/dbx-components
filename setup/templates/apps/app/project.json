@@ -25,7 +25,7 @@
           "ANGULAR_APP_FOLDER/src/assets",
           "ANGULAR_APP_FOLDER/src/lib"
         ],
-        "allowedCommonJsDependencies": ["validator", "date-fns-tz"],
+        "allowedCommonJsDependencies": ["validator", "date-fns-tz", "@dereekb/browser", "@dereekb/util", "@dereekb/rxjs", "@dereekb/date", "@dereekb/firebase"],
         "styles": ["ANGULAR_APP_FOLDER/src/styles.scss"],
         "scripts": []
       },
@@ -33,8 +33,8 @@
         "production": {
           "budgets": [{
               "type": "initial",
-              "maximumWarning": "2mb",
-              "maximumError": "3mb"
+              "maximumWarning": "4mb",
+              "maximumError": "6mb"
             },
             {
               "type": "anyComponentStyle",

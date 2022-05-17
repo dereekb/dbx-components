@@ -37,7 +37,8 @@
     "watch": {
       "executor": "@nrwl/workspace:run-commands",
       "options": {
-        "command": "./exec-with-emulator.sh 'npx nx run-tests FIREBASE_COMPONENTS_NAME --watch'"
+        "command": "./exec-with-emulator.sh 'npx nx run-tests FIREBASE_COMPONENTS_NAME --watch'",
+        "color": true
       }
     },
     "run-tests": {

@@ -13,6 +13,8 @@ CI_GIT_USER_NAME=ci                         # git username to use in CI deployme
 # - Created a project on firebase. This step is required.
 FIREBASE_PROJECT_ID=${1?:'firebase project id is required.'}  # example: gethapier
 INPUT_CODE_PREFIX=${2:-app}                                   # example: gethapier
+FIREBASE_BASE_EMULATORS_PORT=${3:-9100}                       # example: 9100
+PARENT_DIRECTORY=${4:-'../../'}                               # parent directory to create this project within. Defaults to relative to this script's space within dbx-components.
 
 # - Project Details
 NAME=$FIREBASE_PROJECT_ID
@@ -52,7 +54,6 @@ COMPONENTS_DIST_FOLDER=dist/$COMPONENTS_FOLDER
 ANGULAR_COMPONENTS_DIST_FOLDER=$COMPONENTS_DIST_FOLDER/$ANGULAR_COMPONENTS_NAME
 FIREBASE_COMPONENTS_DIST_FOLDER=$COMPONENTS_DIST_FOLDER/$FIREBASE_COMPONENTS_NAME
 
-FIREBASE_BASE_EMULATORS_PORT=9100
 FIREBASE_EMULATOR_UI_PORT=$FIREBASE_BASE_EMULATORS_PORT
 FIREBASE_EMULATOR_HOSTING_PORT=$(expr $FIREBASE_BASE_EMULATORS_PORT + 1)
 FIREBASE_EMULATOR_FUNCTIONS_PORT=$(expr $FIREBASE_BASE_EMULATORS_PORT + 2)
@@ -66,7 +67,6 @@ FIREBASE_EMULATOR_PORT_RANGE="$FIREBASE_EMULATOR_UI_PORT-$FIREBASE_EMULATOR_STOR
 ANGULAR_APP_PORT=$(expr $FIREBASE_BASE_EMULATORS_PORT + 10)
 
 # - Setup Details
-PARENT_DIRECTORY=../../    # assumes the current directory.
 
 # Log into Firebase
 echo "First log into Firebase if you're are not already logged in already."
@@ -89,7 +89,7 @@ git checkout setup
 
 # remove decorate angular cli
 rm decorate-angular-cli.js
-npx --yes json -I -f package.json -e "this.scripts.postinstall='ngcc --properties es2015 browser module main';";
+npx --yes json -I -f package.json -e "this.scripts={ postinstall: 'ngcc --properties es2015 browser module main', prepare: 'husky install' };";
 
 # Commit the cloud initialization
 git add --all
@@ -99,9 +99,9 @@ git commit -m "init nx-cloud"
 nx migrate latest
 npm install
 
-if test -f "migration.json"; then   # migrate if it is available
-  rm migrations.json                # remove migrations file
+if test -f "migrations.json"; then   # migrate if it is available
   nx migrate --run-migrations
+  rm migrations.json                 # remove migrations file
 fi
 
 npx --yes json -I -f nx.json -e "this.workspaceLayout = { appsDir: '$APPS_FOLDER', libsDir: '$COMPONENTS_FOLDER' }";
@@ -167,8 +167,6 @@ git commit -m "added firebase configuration"
 
 # Install npm dependencies
 npm i @dereekb/dbx-analytics @dereekb/dbx-web @dereekb/dbx-form @dereekb/firebase @dereekb/firebase-server @dereekb/dbx-firebase --force  # TODO: Remove force once possible.
-# npm i firebase firebase-admin firebase-functions                                    # main dependencies
-# npm i -D @firebase/rules-unit-testing firebase-functions-test firebase-tools        # dev dependencies
 
 git add --all
 git commit -m "added @dereekb dependencies"
@@ -181,7 +179,7 @@ sed "s/demo-api/$API_APP_NAME/g" Dockerfile.tmp > Dockerfile
 rm Dockerfile.tmp
 
 curl https://raw.githubusercontent.com/dereekb/dbx-components/main/docker-compose.yml -o docker-compose.yml.tmp
-sed -e "s/demo-api-server/$API_APP_NAME-server/g" -e "s/dereekb-components/$FIREBASE_PROJECT_ID/g" -e "s/9900-9906/$FIREBASE_EMULATOR_PORT_RANGE/g" docker-compose.yml.tmp > docker-componse.yml
+sed -e "s/demo-api-server/$API_APP_NAME-server/g" -e "s/dereekb-components/$FIREBASE_PROJECT_ID/g" -e "s/9900-9906/$FIREBASE_EMULATOR_PORT_RANGE/g" docker-compose.yml.tmp > docker-compose.yml
 rm docker-compose.yml.tmp
 
 # download .gitignore
@@ -231,6 +229,10 @@ git commit -m "added Docker files and other utility files"
 # add semver for semantic versioning and linting for commits
 npm install -D @jscutlery/semver
 curl https://raw.githubusercontent.com/dereekb/dbx-components/main/.commitlintrc.json -o .commitlintrc.json
+
+mkdir .husky
+curl https://raw.githubusercontent.com/dereekb/dbx-components/main/.husky/commit-msg -o .husky/commit-msg
+npm run prepare
 
 mkdir -p ./.github/workflows
 curl https://raw.githubusercontent.com/dereekb/dbx-components/main/.github/workflows/commitlint.yml -o ./.github/workflows/commitlint.yml
@@ -299,6 +301,9 @@ rm $FIREBASE_COMPONENTS_FOLDER/project.json
 curl https://raw.githubusercontent.com/dereekb/dbx-components/develop/setup/templates/components/firebase/project.json -o $FIREBASE_COMPONENTS_FOLDER/project.json.tmp
 sed -e "s:FIREBASE_COMPONENTS_DIST_FOLDER:$FIREBASE_COMPONENTS_DIST_FOLDER:g" -e "s:FIREBASE_COMPONENTS_FOLDER:$FIREBASE_COMPONENTS_FOLDER:g" -e "s:FIREBASE_COMPONENTS_NAME:$FIREBASE_COMPONENTS_NAME:g" $FIREBASE_COMPONENTS_FOLDER/project.json.tmp > $FIREBASE_COMPONENTS_FOLDER/project.json
 rm $FIREBASE_COMPONENTS_FOLDER/project.json.tmp
+
+# add settings to tsconfig.base.json
+npx --yes json -I -f tsconfig.base.json -e "this.compilerOptions={ ...this.compilerOptions, strict: true, allowSyntheticDefaultImports: true, resolveJsonModule: true }";
 
 git add --all
 git commit -m "added project configurations"
@@ -496,3 +501,10 @@ download_api_ts_file "src/app/function/example/example.set.username.ts"
 
 git add --all
 git commit -m "setup api"
+
+echo "Performing test build..."
+nx build $ANGULAR_APP_NAME
+nx build $API_APP_NAME
+
+echo "Completed $ANGULAR_APP_NAME project setup."
+echo "Project was created at \"$(pwd)\""

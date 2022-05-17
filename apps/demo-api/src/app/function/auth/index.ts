@@ -1,1 +1,1 @@
-export * from './auth.function';
+export * from './init.user.function';
