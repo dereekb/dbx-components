@@ -3,7 +3,7 @@ import { HandleActionFunction } from '@dereekb/dbx-core';
 import { DbxFirebaseAuthService } from '@dereekb/dbx-firebase';
 import { IsModifiedFunction, loadingStateContext } from '@dereekb/rxjs';
 import { first, map } from 'rxjs';
-import { DemoProfileFormValue, DemoProfileUsernameFormValue, ProfileDocumentStore } from '../../../../shared';
+import { DemoProfileFormValue, DemoProfileUsernameFormValue, ProfileDocumentStore } from '@dereekb/demo-components';
 
 @Component({
   templateUrl: './profile.component.html',
@@ -13,7 +13,7 @@ export class DemoProfileViewComponent implements OnInit, OnDestroy {
 
   readonly profileData$ = this.profileDocumentStore.data$;
   readonly username$ = this.profileData$.pipe(map(x => x.username));
-  
+
   readonly context = loadingStateContext({ obs: this.profileDocumentStore.dataLoadingState$ });
 
   constructor(readonly profileDocumentStore: ProfileDocumentStore, readonly auth: DbxFirebaseAuthService) { }

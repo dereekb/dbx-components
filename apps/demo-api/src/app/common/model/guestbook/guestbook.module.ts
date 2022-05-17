@@ -1,6 +1,5 @@
 import { Module } from "@nestjs/common";
-import { DemoFirebaseServerActionsContext } from "../../firebase/action.context";
-import { DemoApiActionModule } from "../../firebase/action.module";
+import { DemoFirebaseServerActionsContext, DemoApiActionModule } from "../../firebase";
 import { guestbookServerActions, GuestbookServerActions } from "./guestbook.action.server";
 
 export const guestbookServerActionsFactory = (context: DemoFirebaseServerActionsContext) => guestbookServerActions(context)

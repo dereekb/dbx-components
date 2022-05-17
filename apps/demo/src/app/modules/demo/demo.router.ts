@@ -1,11 +1,10 @@
-import { DemoOnboardModule } from './modules/onboard/demo.onboard.module';
 import { Ng2StateDeclaration } from '@uirouter/angular';
 import { DemoHomeComponent } from './container/home.component';
 import { DemoLayoutComponent } from './container/layout.component';
-import { HasAuthRoleStateData, HasAuthStateData, redirectBasedOnAuthUserState } from '@dereekb/dbx-core';
+import { HasAuthStateData, redirectBasedOnAuthUserState } from '@dereekb/dbx-core';
 
 export const layoutState: Ng2StateDeclaration = {
-  parent: 'app',
+  parent: 'root',
   url: '/demo',
   name: 'demo',
   redirectTo: 'demo.home',

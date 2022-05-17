@@ -3,7 +3,7 @@ import { DemoProfileLayoutComponent } from './container/layout.component';
 import { NgModule } from '@angular/core';
 import { UIRouterModule } from '@uirouter/angular';
 import { STATES } from './profile.router';
-import { DemoAppSharedModule } from '../../../shared/demo.app.shared.module';
+import { DemoAppSharedModule } from '@dereekb/demo-components';
 
 @NgModule({
   imports: [

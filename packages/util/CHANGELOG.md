@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [4.1.0](https://github.com/dereekb/dbx-components/compare/v4.0.1-dev...v4.1.0) (2022-05-17)
+
+
+### Bug Fixes
+
+* fixed package.json exports for util, firebase, and firebase-server ([04c1d9a](https://github.com/dereekb/dbx-components/commit/04c1d9ab56dd2805aac154f7bf139ebca7dc4fb9))
+
+
+
 ## [4.0.1](https://github.com/dereekb/dbx-components/compare/v4.0.0-dev...v4.0.1) (2022-05-14)
 
 

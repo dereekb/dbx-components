@@ -4,7 +4,7 @@ import { authorizedUserContextFactory, AuthorizedUserTestContextFixture, Authori
 import { JestBuildTestsWithContextFunction, JestTestContextFixture } from '@dereekb/util/test';
 import { Module } from '@nestjs/common';
 import { DemoApiAppModule } from '../app/app.module';
-import { initUserOnCreate } from '../app/function/auth/auth.function';
+import { initUserOnCreate } from '../app/function/auth/init.user.function';
 
 // MARK: Demo Api Testing Fixture
 @Module({
@@ -124,7 +124,7 @@ export const demoAuthorizedUserContextFactory = (params: DemoAuthorizedUserConte
 });
 
 export const demoAuthorizedUserContext = demoAuthorizedUserContextFactory({});
-export const demoAuthorizedDemoAdminContext = demoAuthorizedUserContextFactory({ demoUserLevel: 'admin' });
+export const demoAuthorizedUserAdminContext = demoAuthorizedUserContextFactory({ demoUserLevel: 'admin' });
 
 // MARK: With Guestbook
 export interface DemoApiGuestbookTestContextParams extends Partial<Guestbook> { }

@@ -18,7 +18,6 @@
     "strict": true,
     "baseUrl": ".",
     "paths": {
-      "@/shared/*": ["apps/demo/src/app/modules/shared/*"],
       "@dereekb/browser": ["packages/browser/src/index.ts"],
       "@dereekb/date": ["packages/date/src/index.ts"],
       "@dereekb/dbx-analytics": ["packages/dbx-analytics/src/index.ts"],
@@ -26,10 +25,13 @@
       "@dereekb/dbx-firebase": ["packages/dbx-firebase/src/index.ts"],
       "@dereekb/dbx-form": ["packages/dbx-form/src/index.ts"],
       "@dereekb/dbx-web": ["packages/dbx-web/src/index.ts"],
-      "@dereekb/demo-firebase": ["apps/demo-firebase/src/index.ts"],
+      "@dereekb/demo-components": ["components/demo-components/src/index.ts"],
+      "@dereekb/demo-firebase": ["components/demo-firebase/src/index.ts"],
       "@dereekb/firebase": ["packages/firebase/src/index.ts"],
       "@dereekb/firebase-server": ["packages/firebase-server/src/index.ts"],
-      "@dereekb/firebase-server/test": ["packages/firebase-server/test/src/index.ts"],
+      "@dereekb/firebase-server/test": [
+        "packages/firebase-server/test/src/index.ts"
+      ],
       "@dereekb/firebase/test": ["packages/firebase/test/src/index.ts"],
       "@dereekb/model": ["packages/model/src/index.ts"],
       "@dereekb/rxjs": ["packages/rxjs/src/index.ts"],
@@ -37,5 +39,5 @@
       "@dereekb/util/test": ["packages/util/test/src/index.ts"]
     }
   },
-  "exclude": ["node_modules", "tmp"]
+  "exclude": ["node_modules", "tmp", "setup"]
 }

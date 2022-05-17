@@ -11,7 +11,7 @@ export interface DemoEnvironment {
   analytics: {
     segment: string;
   },
-  firebase: DbxFirebaseOptions
+  firebase: DbxFirebaseOptions;
 }
 
 export const base: DemoEnvironment = {

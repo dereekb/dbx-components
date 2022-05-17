@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
 import {  DemoApiFirebaseModule } from './common/firebase';
-import { AppModelModule } from './common/model/model.module';
+import { DemoApiModelModule } from './common/model/model.module';
 
 @Module({
-  imports: [DemoApiFirebaseModule, AppModelModule],
-  exports: [AppModelModule]
+  imports: [DemoApiFirebaseModule, DemoApiModelModule],
+  exports: [DemoApiModelModule]
 })
 export class DemoApiAppModule { }

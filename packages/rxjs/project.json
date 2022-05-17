@@ -1,0 +1,52 @@
+{
+  "sourceRoot": "packages/rxjs/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/workspace:run-commands",
+      "options": {
+        "command": "npx nx run rxjs:build-base",
+        "color": true
+      }
+    },
+    "build-base": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "dependsOn": [
+        {
+          "target": "build",
+          "projects": "dependencies"
+        }
+      ],
+      "options": {
+        "outputPath": "dist/packages/rxjs",
+        "tsConfig": "packages/rxjs/tsconfig.lib.json",
+        "packageJson": "packages/rxjs/package.json",
+        "main": "packages/rxjs/src/index.ts",
+        "assets": ["packages/rxjs/*.md"]
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["packages/rxjs/**/*.ts"]
+      }
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": ["coverage/packages/rxjs", "./.reports/jest/rxjs.junit.xml"],
+      "options": {
+        "jestConfig": "packages/rxjs/jest.config.ts",
+        "passWithNoTests": true
+      }
+    },
+    "publish-npmjs": {
+      "executor": "@nrwl/workspace:run-commands",
+      "options": {
+        "command": "cd ./dist/packages/rxjs && npm publish"
+      }
+    }
+  },
+  "tags": []
+}

@@ -1,6 +1,6 @@
 import { OnDestroy, Component } from '@angular/core';
-import { loadingStateContext, tapLog } from '@dereekb/rxjs';
-import { GuestbookDocumentStore } from '../../../../shared';
+import { loadingStateContext } from '@dereekb/rxjs';
+import { GuestbookDocumentStore } from '@dereekb/demo-components';
 
 @Component({
   templateUrl: './list.right.component.html'

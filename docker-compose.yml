@@ -1,3 +1,4 @@
+# NOTE: Be careful updating this file, as it is used by the setup script.
 version: '3'
 services:
   demo-api-server:
@@ -10,11 +11,10 @@ services:
       - ./.firebase/config/:/root/.config:cached
       - ./.firebase/data/:/root/data
     ports:
-      - "9229:9229"
+      - "9229:9229"           # node-inspect debug port. Can be disabled if not being used.
       - "9900-9906:9900-9906" # expose for external/web consumption
     environment:
       # Credentials URL
-      # - GOOGLE_APPLICATION_CREDENTIALS=/code/service_account.json  # do not pass to the emulators. No need to share this info.
       - GCLOUD_PROJECT=dereekb-components
     command: bash
     tty: true

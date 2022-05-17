@@ -1,7 +1,7 @@
 import { AnchorForValueFunction } from '@dereekb/dbx-web';
 import { GuestbookWithId } from '@dereekb/demo-firebase';
 import { Component } from '@angular/core';
-import { DemoAppRouterService } from '../../../../shared/services/demo.app.router.service';
+import { DemoAppRouterService } from '../../../demo.app.router.service';
 
 @Component({
   templateUrl: './list.component.html'

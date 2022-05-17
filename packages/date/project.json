@@ -1,0 +1,90 @@
+{
+  "sourceRoot": "packages/date/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/workspace:run-commands",
+      "options": {
+        "command": "npx nx run date:build-base",
+        "color": true
+      }
+    },
+    "build-base": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "dependsOn": [
+        {
+          "target": "build",
+          "projects": "dependencies"
+        }
+      ],
+      "options": {
+        "outputPath": "dist/packages/date",
+        "tsConfig": "packages/date/tsconfig.lib.json",
+        "packageJson": "packages/date/package.json",
+        "main": "packages/date/src/index.ts",
+        "assets": ["packages/date/*.md"]
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["packages/date/**/*.ts"]
+      }
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": [
+        "coverage/packages/date",
+        "./.reports/jest/utc.date.junit.xml"
+      ],
+      "options": {
+        "jestConfig": "packages/date/jest.config.ts",
+        "passWithNoTests": true
+      }
+    },
+    "test-timezones": {
+      "outputs": [
+        "coverage/packages/date",
+        "./.reports/jest/utc.date.junit.xml",
+        "./.reports/jest/america-chicago.date.junit.xml",
+        "./.reports/jest/america-los_angeles.date.junit.xml",
+        "./.reports/jest/america-new_york.date.junit.xml",
+        "./.reports/jest/asia-tokyo.date.junit.xml",
+        "./.reports/jest/europe-dublic.date.junit.xml"
+      ],
+      "executor": "@nrwl/workspace:run-commands",
+      "options": {
+        "commands": [
+          {
+            "command": "TZ=America/New_York nx test date"
+          },
+          {
+            "command": "TZ=America/Chicago nx test date"
+          },
+          {
+            "command": "TZ=America/Los_Angeles nx test date"
+          },
+          {
+            "command": "TZ=Europe/Dublin nx test date"
+          },
+          {
+            "command": "TZ=Asia/Tokyo nx test date"
+          },
+          {
+            "command": "nx test date"
+          }
+        ],
+        "parallel": false
+      }
+    },
+    "publish-npmjs": {
+      "executor": "@nrwl/workspace:run-commands",
+      "options": {
+        "command": "cd ./dist/packages/date && npm publish"
+      }
+    }
+  },
+  "tags": []
+}
