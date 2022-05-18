@@ -1,0 +1,12 @@
+{
+  "name": "@dereekb/nestjs",
+  "version": "0.0.1",
+  "type": "commonjs",
+  "exports": {
+    ".": {
+      "main": "./src/index.js",
+      "types": "./src/index.d.ts",
+      "default": "./src/index.js"
+    }
+  }
+}

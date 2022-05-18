@@ -18,6 +18,7 @@
     "firebase-server-test": "packages/firebase-server/test",
     "firebase-test": "packages/firebase/test",
     "model": "packages/model",
+    "nestjs": "packages/nestjs",
     "rxjs": "packages/rxjs",
     "util": "packages/util",
     "util-test": "packages/util/test",
