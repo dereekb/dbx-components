@@ -7,6 +7,11 @@
       "main": "./src/index.js",
       "types": "./src/index.d.ts",
       "default": "./src/index.js"
+    },
+    "./stripe": {
+      "main": "./stripe/index.js",
+      "types": "./stripe/index.d.ts",
+      "default": "./stripe/index.js"
     }
   }
 }

@@ -1,5 +1,6 @@
 import { ClassType, Getter, asGetter, makeGetter, mergeArrayOrValueIntoArray } from '@dereekb/util';
-import { DynamicModule, INestApplication, INestApplicationContext, Provider } from '@nestjs/common';
+import { DynamicModule, INestApplication, INestApplicationContext, NestApplicationOptions, Provider, Type } from '@nestjs/common';
+import { ConfigureWebhookMiddlewareModule } from '@dereekb/nestjs';
 import { NestFactory } from '@nestjs/core';
 import { ExpressAdapter } from '@nestjs/platform-express';
 import * as express from 'express';
@@ -40,7 +41,15 @@ export interface NestServerInstanceConfig<T> {
   /**
    * Additional providers to provide globally.
    */
-  providers?: Provider<any>[];
+  readonly providers?: Provider<any>[];
+  /**
+   * Whether or not to configure webhook usage. This will configure routes to use 
+   */
+  readonly configureWebhooks?: boolean;
+  /**
+   * Additional nest application options.
+   */
+  readonly applicationOptions?: NestApplicationOptions;
 }
 
 export function nestServerInstance<T>(config: NestServerInstanceConfig<T>): NestServerInstance<T> {
@@ -60,17 +69,26 @@ export function nestServerInstance<T>(config: NestServerInstanceConfig<T>): Nest
           mergeArrayOrValueIntoArray(providers, additionalProviders);
         }
 
+        const imports: Type<any>[] = [moduleClass];
+
+        if (config.configureWebhooks) {
+          imports.push(ConfigureWebhookMiddlewareModule);
+        }
+
         const providersModule: DynamicModule = {
           module: FirebaseNestServerRootModule,
-          imports: [moduleClass],
+          imports,
           providers,
           exports: providers,
           global: true
         };
 
+        const options: NestApplicationOptions = {};
+
         const nestApp = await NestFactory.create(
           providersModule,
           new ExpressAdapter(expressInstance),
+          options
         );
 
         return nestApp.init();

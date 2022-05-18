@@ -52,10 +52,7 @@ jobs:
           at: ~/code
       - run:
           name: run util tests
-          command: npx nx test util
-      - run:
-          name: run util-test tests
-          command: npx nx test util-test
+          command: npx nx run-all-tests util
       - run:
           name: run rxjs tests
           command: npx nx test rxjs
@@ -77,6 +74,9 @@ jobs:
       - run:
           name: run dbx-form tests
           command: npx nx test dbx-form
+      - run:
+          name: run nestjs tests
+          command: npx nx run-all-tests nestjs
       - store_test_results:
           path: ~/code/.reports/jest/
   # Runs tests for the projects that require the firebase emulators.
@@ -91,16 +91,10 @@ jobs:
           key: firebase-cache-
       - run:
           name: run firebase tests
-          command: npx firebase emulators:exec --only auth,firestore,storage 'npx nx run-tests firebase'
-      - run:
-          name: run firebase-test tests
-          command: npx firebase emulators:exec --only auth,firestore,storage 'npx nx run-tests firebase-test'
+          command: npx firebase emulators:exec --only auth,firestore,storage 'npx nx run-all-tests firebase'
       - run:
           name: run firebase-server tests
-          command: npx firebase emulators:exec --only auth,firestore,storage 'npx nx run-tests firebase-server'
-      - run:
-          name: run firebase-server-test tests
-          command: npx firebase emulators:exec --only auth,firestore,storage 'npx nx run-tests firebase-server-test'
+          command: npx firebase emulators:exec --only auth,firestore,storage 'npx nx run-all-tests firebase-server'
       - run:
           name: run dbx-firebase tests
           command: npx firebase emulators:exec --only auth,firestore,storage 'npx nx run-tests dbx-firebase'

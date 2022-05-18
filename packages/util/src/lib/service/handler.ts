@@ -14,11 +14,8 @@ export type HandleResult = boolean;
  */
 export type HandlerFunction<T> = (value: T) => PromiseOrValue<HandleResult>;
 
-export interface HandlerAccessor<T, K extends PrimativeKey = string> {
-  /**
-   * Used to read a handler key from the input value.
-   */
-  readonly readKey: ReadKeyFunction<T, K>;
+export interface HandlerSetAccessor<T, K extends PrimativeKey = string> {
+
   /**
    * Adds a new handler function to the current handler.
    * 
@@ -26,14 +23,25 @@ export interface HandlerAccessor<T, K extends PrimativeKey = string> {
    * @param handle 
    */
   set(key: ArrayOrValue<K>, handle: HandlerFunction<T>): void;
+
+}
+
+export interface HandlerAccessor<T, K extends PrimativeKey = string> extends HandlerSetAccessor<T, K> {
+
   /**
-   * Convenience function for binding a function. Useful for classes.
+   * Used to read a handler key from the input value.
+   */
+  readonly readKey: ReadKeyFunction<T, K>;
+
+  /**
+   * Convenience function for binding a function. Useful for use within classes that pass their function and still need to be bound for when the function runs.
    * 
    * @param bindTo 
    * @param key 
    * @param handle 
    */
   bindSet(bindTo: any, key: ArrayOrValue<K>, handle: HandlerFunction<T>): void;
+
 }
 
 export type Handler<T, K extends PrimativeKey = string> = HandlerFunction<T> & HandlerAccessor<T, K>;

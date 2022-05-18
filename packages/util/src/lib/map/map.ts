@@ -1,3 +1,4 @@
+import { ArrayOrValue, asArray } from "../array";
 import { Maybe } from "../value";
 
 export type MapFn<A, B> = (value: A) => B;
@@ -16,4 +17,17 @@ export function combineMaps<K, T>(...maps: Maybe<Map<K, T>>[]): Map<K, T> {
   });
 
   return result;
+}
+
+/**
+ * Sets the value to all of the input keys.
+ * 
+ * @param map 
+ * @param key 
+ * @param value 
+ * @returns 
+ */
+export function setKeysOnMap<K, T>(map: Map<K, T>, key: ArrayOrValue<K>, value: T): Map<K, T> {
+  asArray(key).forEach((key) => map.set(key, value));
+  return map;
 }

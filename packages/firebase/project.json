@@ -40,16 +40,16 @@
         "lintFilePatterns": ["packages/firebase/**/*.ts"]
       }
     },
-    "test": {
-      "executor": "@nrwl/workspace:run-commands",
-      "options": {
-        "command": "./exec-with-emulator.sh 'npx nx run-tests firebase'"
-      }
-    },
     "watch": {
       "executor": "@nrwl/workspace:run-commands",
       "options": {
         "command": "./exec-with-emulator.sh 'npx nx run-tests firebase --watch'"
+      }
+    },
+    "test": {
+      "executor": "@nrwl/workspace:run-commands",
+      "options": {
+        "command": "./exec-with-emulator.sh 'npx nx run-tests firebase'"
       }
     },
     "run-tests": {
@@ -61,6 +61,20 @@
       "options": {
         "jestConfig": "packages/firebase/jest.config.ts",
         "passWithNoTests": true
+      }
+    },
+    "run-all-tests": {
+      "executor": "@nrwl/workspace:run-commands",
+      "options": {
+        "commands": [{
+          "description": "run firebase tests. Should be called within a Firebase emulator environment",
+          "command": "npx nx run-tests firebase"
+        }, {
+          "description": "run firebase-test tests",
+          "command": "npx nx run-tests firebase-test"
+        }],
+        "color": true,
+        "parallel": false
       }
     },
     "publish-npmjs": {
