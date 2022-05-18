@@ -5,31 +5,13 @@ import { JestTestFirestoreContextFactory, makeTestingFirestoreDrivers, TestFires
 import { AbstractJestTestContextFixture, JestBuildTestsWithContextFunction, jestTestContextBuilder, JestTestContextFactory, JestTestContextFixture, useJestContextFixture } from "@dereekb/util/test";
 import { googleCloudFirestoreDrivers } from '@dereekb/firebase-server';
 import { GoogleCloudTestFirestoreInstance } from '../firestore/firestore';
-import { CloudFunction as CloudFunctionV1 } from 'firebase-functions';
 import { generateNewProjectId, isAdminEnvironmentInitialized } from './firebase';
-import { wrap, WrappedFunction, WrappedScheduledFunction } from 'firebase-functions-test/lib/main';
-import { Getter, cachedGetter } from '@dereekb/util';
+import { cachedGetter } from '@dereekb/util';
+import { FirebaseAdminCloudFunctionWrapper, FirebaseAdminCloudFunctionWrapperSource } from './firebase.function';
 
 export interface FirebaseAdminTestConfig { }
 
-export type WrapCloudFunction = typeof wrap;
-export type WrapCloudFunctionInput<T> = CloudFunctionV1<T>;
-export type WrappedCloudFunction<T> = WrappedScheduledFunction | WrappedFunction<T>;
-
-export interface FirebaseAdminCloudFunctionWrapper {
-
-  /**
-   * Wrap function if available. If not in the right context/supported then this will throw an exception.
-   */
-  get wrapCloudFunction(): WrapCloudFunction;
-
-}
-
-export function wrapCloudFunctionForTests<I, T extends WrapCloudFunctionInput<I> = WrapCloudFunctionInput<I>>(wrapper: FirebaseAdminCloudFunctionWrapper, getter: Getter<T>): Getter<WrappedCloudFunction<I>> {
-  return () => wrapper.wrapCloudFunction(getter());
-}
-
-export interface FirebaseAdminTestContext extends FirebaseAdminCloudFunctionWrapper {
+export interface FirebaseAdminTestContext extends FirebaseAdminCloudFunctionWrapperSource {
   readonly app: admin.app.App;
   readonly auth: Auth;
   readonly firestore: Firestore
@@ -60,8 +42,8 @@ export class FirebaseAdminTestContextFixture extends AbstractJestTestContextFixt
     return this.instance.firestoreContext;
   }
 
-  get wrapCloudFunction(): WrapCloudFunction {
-    return this.instance.wrapCloudFunction;
+  get fnWrapper() {
+    return this.instance.fnWrapper;
   }
 
 }
@@ -92,10 +74,8 @@ export class FirebaseAdminTestContextInstance implements FirebaseAdminTestContex
     return this.firestoreInstance.context;
   }
 
-  get wrapCloudFunction(): WrapCloudFunction {
-    return () => {
-      throw new Error('wrapCloudFunction is unsupported by this type.');
-    };
+  get fnWrapper(): FirebaseAdminCloudFunctionWrapper {
+    throw new Error('wrapCloudFunction is unsupported by this type.');
   }
 
 }
@@ -125,8 +105,8 @@ export abstract class AbstractFirebaseAdminTestContextInstanceChild<F extends Fi
     return this.parent.firestoreContext;
   }
 
-  get wrapCloudFunction(): WrapCloudFunction {
-    return this.parent.wrapCloudFunction;
+  get fnWrapper(): FirebaseAdminCloudFunctionWrapper {
+    return this.parent.fnWrapper;
   }
 
 }

@@ -1,8 +1,10 @@
 import { UserRecord } from 'firebase-admin/lib/auth/user-record';
 import { Injectable, Module } from '@nestjs/common';
 import { initFirebaseServerAdminTestEnvironment, firebaseAdminFunctionNestContextFactory } from '@dereekb/firebase-server/test';
-import { NestApplicationFunctionFactory, OnCallWithNestApplication, onCallWithNestApplicationFactory, onEventWithNestApplicationFactory, NestApplicationEventHandler, OnEventWithNestApplicationBuilder } from './nest';
+import { OnCallWithNestApplication, onCallWithNestApplicationFactory } from './call';
+import { onEventWithNestApplicationFactory, NestApplicationEventHandler, OnEventWithNestApplicationBuilder } from './event';
 import * as functions from 'firebase-functions';
+import { NestApplicationFunctionFactory } from '../../nest.provider';
 
 @Injectable()
 export class TestInjectable { }
@@ -60,7 +62,7 @@ describe('nest function utilities', () => {
 
         // For our tests, we use the "firebase-functions-test" wrap function to wrap it once more into a function we can use.
         // We can now execute this test function against the emulators and in our test nest context.
-        const testFunction = f.wrapCloudFunction<typeof testData>(runnable);
+        const testFunction = f.fnWrapper.wrapV1CloudFunction<typeof testData>(runnable);
 
         // Now we test the wrapped function. This should call our handler.
         const result = await testFunction(testData);
@@ -109,7 +111,7 @@ describe('nest function utilities', () => {
         // For our tests, we use the "firebase-functions-test" wrap function to wrap our event into a function we can use.
         // We can now execute our event. This event does not execute automatically and is not magically subscribed.
         // Do not expect it to be listening for the events it is subscribed to. For those kinds of tests, look at headless E2E testing that uses the functions emulator.
-        const testEvent = f.wrapCloudFunction<typeof testData>(runnable);
+        const testEvent = f.fnWrapper.wrapV1CloudFunction<typeof testData>(runnable);
 
         const testData: UserRecord = {} as any;
         const result = await testEvent(testData);

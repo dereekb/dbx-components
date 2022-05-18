@@ -1,7 +1,7 @@
 import * as functions from 'firebase-functions';
-import { CallableContextWithAuthData, isContextWithAuthData } from "../../function/context";
-import { unauthenticatedContextHasNoUidError } from '../../function/error';
-import { OnCallWithNestContext } from "./nest";
+import { CallableContextWithAuthData, isContextWithAuthData } from "../../../function/context";
+import { unauthenticatedContextHasNoUidError } from '../../../function/error';
+import { OnCallWithNestContext } from "./call";
 
 export type OnCallWithAuthorizedNestContext<C, I = any, O = any> = (nestContext: C, data: I, context: CallableContextWithAuthData) => O;
 

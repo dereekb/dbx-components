@@ -1,5 +1,5 @@
 import "reflect-metadata";
-import * as functions from 'firebase-functions';
+import { onRequest } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
 import { allAppFunctions, initNestServer } from './app/app';
 
@@ -7,7 +7,7 @@ const app = admin.initializeApp();
 
 const { server, nest } = initNestServer(app);
 
-export const api = functions.https.onRequest(server);
+export const api = onRequest(server);
 
 export const {
   exampleSetUsername,

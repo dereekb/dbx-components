@@ -2,18 +2,16 @@ import { Getter } from "@dereekb/util";
 import { JestBuildTestsWithContextFunction, JestTestContextFactory, JestTestContextFixture } from '@dereekb/util/test';
 import { firebaseAdminNestContextWithFixture, FirebaseAdminNestTestConfig, FirebaseAdminNestTestContext, FirebaseAdminNestTestContextFixture, FirebaseAdminNestTestContextInstance } from "./firebase.admin.nest";
 import { FirebaseAdminFunctionTestContextInstance, firebaseAdminFunctionTestContextFactory } from "./firebase.admin.function";
-import { FirebaseAdminCloudFunctionWrapper, WrapCloudFunction, wrapCloudFunctionForTests, WrappedCloudFunction } from './firebase.admin';
 import { NestApplicationRunnableHttpFunctionFactory } from "@dereekb/firebase-server";
+import { FirebaseAdminCloudFunctionWrapper, FirebaseAdminCloudFunctionWrapperSource, wrapCloudFunctionV1ForTests, WrappedCloudFunctionV1 } from "./firebase.function";
 
 // MARK: Utility
-export function wrapCloudFunctionForNestTestsGetter<I>(wrapper: FirebaseAdminFunctionNestTestContext, fn: NestApplicationRunnableHttpFunctionFactory<I>): Getter<WrappedCloudFunction<I>> {
-  return wrapCloudFunctionForTests<I>(wrapper, () => fn(wrapper.nestAppPromiseGetter));
+export function wrapCloudFunctionForNestTestsGetter<I>(wrapper: FirebaseAdminFunctionNestTestContext, fn: NestApplicationRunnableHttpFunctionFactory<I>): Getter<WrappedCloudFunctionV1<I>> {
+  return wrapCloudFunctionV1ForTests<I>(wrapper.fnWrapper, () => fn(wrapper.nestAppPromiseGetter));
 }
 
 // MARK: FirebaseAdminFunction
-export interface FirebaseAdminFunctionNestTestContext extends FirebaseAdminNestTestContext, FirebaseAdminCloudFunctionWrapper {
-  get wrapCloudFunction(): WrapCloudFunction;
-}
+export interface FirebaseAdminFunctionNestTestContext extends FirebaseAdminNestTestContext, FirebaseAdminCloudFunctionWrapperSource { }
 
 export class FirebaseAdminFunctionNestTestContextFixture<
   PI extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance,
@@ -22,16 +20,17 @@ export class FirebaseAdminFunctionNestTestContextFixture<
   > extends FirebaseAdminNestTestContextFixture<PI, PF, I> implements FirebaseAdminFunctionNestTestContext {
 
   // MARK: FirebaseAdminTestContext (Forwarded)
-  get wrapCloudFunction(): WrapCloudFunction {
-    return this.parent.instance.wrapCloudFunction;
-  }
-
-  wrapCloudFunctionForNestTests<I>(fn: NestApplicationRunnableHttpFunctionFactory<I>): WrappedCloudFunction<I> {
+  wrapCloudFunctionForNestTests<I>(fn: NestApplicationRunnableHttpFunctionFactory<I>): WrappedCloudFunctionV1<I> {
     return this.wrapCloudFunctionForNestTestsGetter(fn)();
   }
 
-  wrapCloudFunctionForNestTestsGetter<I>(fn: NestApplicationRunnableHttpFunctionFactory<I>): Getter<WrappedCloudFunction<I>> {
+  wrapCloudFunctionForNestTestsGetter<I>(fn: NestApplicationRunnableHttpFunctionFactory<I>): Getter<WrappedCloudFunctionV1<I>> {
     return wrapCloudFunctionForNestTestsGetter(this, fn);
+  }
+
+  // MARK: FirebaseAdminCloudFunctionWrapperSource
+  get fnWrapper(): FirebaseAdminCloudFunctionWrapper {
+    return this.parent.instance.fnWrapper;
   }
 
 }
@@ -41,8 +40,8 @@ export class FirebaseAdminFunctionNestTestContextInstance<
   > extends FirebaseAdminNestTestContextInstance<PI> implements FirebaseAdminFunctionNestTestContext {
 
   // MARK: FirebaseAdminTestContext (Forwarded)
-  get wrapCloudFunction(): WrapCloudFunction {
-    return this.parent.wrapCloudFunction;
+  get fnWrapper(): FirebaseAdminCloudFunctionWrapper {
+    return this.parent.fnWrapper;
   }
 
 }

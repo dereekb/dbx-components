@@ -6,8 +6,9 @@ import { FeaturesList } from 'firebase-functions-test/lib/features';
 import { TestFirestoreContext, TestFirestoreInstance } from '@dereekb/firebase/test';
 import { AbstractJestTestContextFixture, jestTestContextBuilder, JestTestContextFactory, JestTestContextFixture } from "@dereekb/util/test";
 import { applyFirebaseGCloudTestProjectIdToFirebaseConfigEnv, getGCloudTestProjectId, isAdminEnvironmentInitialized, rollNewGCloudProjectEnvironmentVariable } from './firebase';
-import { FirebaseAdminTestContext, FirebaseAdminTestContextInstance, WrapCloudFunction } from './firebase.admin';
-import { Maybe } from '@dereekb/util';
+import { FirebaseAdminTestContext, FirebaseAdminTestContextInstance } from './firebase.admin';
+import { Maybe, cachedGetter } from '@dereekb/util';
+import { firebaseAdminCloudFunctionWrapper } from './firebase.function';
 
 // MARK: FirebaseAdminFunctionTestBuilder
 let functionsInitialized = false;
@@ -80,20 +81,22 @@ export class FirebaseAdminFunctionTestContextFixture extends AbstractJestTestCon
     return this.instance.firestoreContext;
   }
 
-  get wrapCloudFunction(): WrapCloudFunction {
-    return this.instance.wrapCloudFunction;
+  get fnWrapper() {
+    return this.instance.fnWrapper;
   }
 
 }
 
 export class FirebaseAdminFunctionTestContextInstance extends FirebaseAdminTestContextInstance implements FirebaseAdminFunctionTestContext {
 
+  private _fnWrapper = cachedGetter(() => firebaseAdminCloudFunctionWrapper(this.instance));
+
   constructor(readonly instance: FeaturesList, app: admin.app.App) {
     super(app);
   }
 
-  get wrapCloudFunction(): WrapCloudFunction {
-    return this.instance.wrap;
+  get fnWrapper() {
+    return this._fnWrapper();
   }
 
 }
