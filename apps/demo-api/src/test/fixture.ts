@@ -117,7 +117,6 @@ export const demoAuthorizedUserContextFactory = (params: DemoAuthorizedUserConte
   makeInstance: (uid, testInstance) => new DemoApiAuthorizedUserTestContextInstance(uid, testInstance),
   initUser: async (instance) => {
     const userRecord = await instance.loadUserRecord();
-
     const fn = instance.testContext.fnWrapper.wrapV1CloudFunction(initUserOnCreate(instance.nestAppPromiseGetter));
     await instance.callEventCloudFunction(fn, userRecord);
   }
