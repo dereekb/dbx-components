@@ -1,4 +1,4 @@
-import { Handler, makeHandler } from './handler';
+import { catchAllHandlerKey, Handler, makeHandler } from './handler';
 
 describe('handler()', () => {
 
@@ -21,7 +21,6 @@ describe('handler()', () => {
     describe('set', () => {
 
       it('should set the function on the handler for that key', () => {
-
         let wasUsed = false;
 
         const key = '1';
@@ -36,6 +35,25 @@ describe('handler()', () => {
         expect(wasUsed).toBe(false);
 
         const result = handler(value);
+        expect(result).toBe(true);
+        expect(wasUsed).toBe(true);
+      });
+
+      it('should set the catch all when using the catchall key', () => {
+        let wasUsed = false;
+
+        const otherValue = 10000;
+
+        const fn = (x: number) => {
+          wasUsed = true;
+          expect(x).toBe(otherValue);
+          return true;  // result
+        };
+
+        handler.set(catchAllHandlerKey(), fn);
+        expect(wasUsed).toBe(false);
+
+        const result = handler(otherValue);
         expect(result).toBe(true);
         expect(wasUsed).toBe(true);
       });

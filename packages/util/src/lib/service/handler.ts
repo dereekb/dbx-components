@@ -1,11 +1,19 @@
 import { PrimativeKey, ReadKeyFunction } from './../key';
 import { ArrayOrValue } from './../array/array';
-import { PromiseOrValue, setKeysOnMap } from '@dereekb/util';
+import { Maybe, PromiseOrValue, setKeysOnMap } from '@dereekb/util';
+
+/**
+ * Key used to signify 
+ */
+export const CATCH_ALL_HANDLE_RESULT_KEY = '__CATCH_ALL_HANDLE_RESULT_KEY__';
 
 /**
  * Whether or not the input value was handled.
  */
 export type HandleResult = boolean;
+
+export type HandlerCatchAllKey = typeof CATCH_ALL_HANDLE_RESULT_KEY;
+export type HandlerKey<K extends PrimativeKey = string> = K | HandlerCatchAllKey;
 
 /**
  * Used to perform a task on the input value.
@@ -22,7 +30,7 @@ export interface HandlerSetAccessor<T, K extends PrimativeKey = string> {
    * @param key 
    * @param handle 
    */
-  set(key: ArrayOrValue<K>, handle: HandlerFunction<T>): void;
+  set(key: ArrayOrValue<HandlerKey<K>>, handle: HandlerFunction<T>): void;
 
 }
 
@@ -40,7 +48,7 @@ export interface HandlerAccessor<T, K extends PrimativeKey = string> extends Han
    * @param key 
    * @param handle 
    */
-  bindSet(bindTo: any, key: ArrayOrValue<K>, handle: HandlerFunction<T>): void;
+  bindSet(bindTo: any, key: ArrayOrValue<HandlerKey<K>>, handle: HandlerFunction<T>): void;
 
 }
 
@@ -49,10 +57,15 @@ export type HandlerFactory<T, K extends PrimativeKey = string> = () => Handler<T
 
 export function handlerFactory<T, K extends PrimativeKey = string>(readKey: ReadKeyFunction<T, K>): HandlerFactory<T, K> {
   return () => {
+    let catchAll: Maybe<HandlerFunction<T>>;
     const map = new Map<K, HandlerFunction<T>>();
 
     const set = (key: ArrayOrValue<K>, handle: HandlerFunction<T>) => {
-      setKeysOnMap(map, key, handle);
+      if (key === CATCH_ALL_HANDLE_RESULT_KEY) {
+        catchAll = handle;
+      } else {
+        setKeysOnMap(map, key, handle);
+      }
     };
 
     const bindSet = (bindTo: any, key: ArrayOrValue<K>, handle: HandlerFunction<T>) => {
@@ -62,7 +75,7 @@ export function handlerFactory<T, K extends PrimativeKey = string>(readKey: Read
 
     const fn: Handler<T, K> = ((value: T) => {
       const key = readKey(value);
-      const handler = (key != null) ? map.get(key) : undefined;
+      const handler = ((key != null) ? map.get(key) : undefined) ?? catchAll;
       let handled: PromiseOrValue<boolean> = false;
 
       if (handler) {
@@ -82,4 +95,8 @@ export function handlerFactory<T, K extends PrimativeKey = string>(readKey: Read
 
 export function makeHandler<T, K extends PrimativeKey = string>(readKey: ReadKeyFunction<T, K>): Handler<T, K> {
   return handlerFactory(readKey)();
+}
+
+export function catchAllHandlerKey(): typeof CATCH_ALL_HANDLE_RESULT_KEY {
+  return CATCH_ALL_HANDLE_RESULT_KEY;
 }
