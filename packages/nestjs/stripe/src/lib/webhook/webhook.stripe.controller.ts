@@ -9,8 +9,8 @@ export class StripeWebhookController {
   constructor(private readonly stripeWebhookService: StripeWebhookService) { }
 
   @Post()
-  async handleStripeWebhook(@Req() req: Request, @RawBody() rawbody: RawBodyBuffer) {
-    await this.stripeWebhookService.updateForWebhook(req, rawbody);
+  async handleStripeWebhook(@Req() req: Request, @RawBody() rawBody: RawBodyBuffer) {
+    await this.stripeWebhookService.updateForWebhook(req, rawBody);
   }
 
 }

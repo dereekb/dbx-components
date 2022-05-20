@@ -1,5 +1,6 @@
 import { HandlerBindAccessor, HandlerMappedSetFunction, Handler, handlerFactory, handlerConfigurerFactory, handlerMappedSetFunctionFactory } from "@dereekb/util";
 import Stripe from "stripe";
+import '../stripe.type';
 
 export enum StripeWebhookEventType {
   CUSTOMER_SUBSCRIPTION_TRIAL_WILL_END = 'customer.subscription.trial_will_end',

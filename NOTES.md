@@ -186,3 +186,11 @@ A couple things are configured for the CI to enable reports to be output to `.re
 - All projects have a `.env` file that adds environment variables to tell jest-junit what to export the file as.
 
 These three items come together and enable jest-junit to do it's job, and circleci to capture our testing output.
+
+# Other General Notes
+## Firebase
+### Body Parsing
+By default, Firebase API calls have their body parsed by express. This occurs before it reaches our demo-api's onRequest express server. If you add in additional body parsers and handlers be sure to update the request appropriately.
+
+### Firebase Emulator Hot Reloading
+Firebase's emulators only support hot reloading of rules. To achieve hot reloading we use a combination of demo-api's `build-base` target along with the `entr` command, which watches for changes produced by `nx build-base demo-api`. Currently the emulators do not [shut down gracefully](https://github.com/firebase/firebase-tools/issues/3034) and/or communicate they have closed. We use the `./wait-for-ports.sh` script to shut these processes down within the docker container before attempting to restart the emulators. The script waits for about 5 seconds before hard-stopping the processes and waiting for the ports to be released. 

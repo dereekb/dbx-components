@@ -33,6 +33,8 @@ export class ConfigureWebhookMiddlewareModule extends AppModuleWithWebhooksEnabl
  * 
  * This is required for various webhooks that require the full body to properly parse content.
  * 
+ * Be sure to also set bodyParsing: false in the nest app options.
+ * 
  * @param consumer 
  */
 export function consumeWebhooksWithRawBodyMiddleware(consumer: MiddlewareConsumer) {

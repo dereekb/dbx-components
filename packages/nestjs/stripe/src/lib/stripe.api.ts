@@ -16,7 +16,7 @@ export class StripeApi {
   /**
    * Verifies the event and reads the stripe signature from a request.
    */
-  readStripeEventFromWebhookRequest(req: Request, rawbody: Buffer): Stripe.Event {
+  readStripeEventFromWebhookRequest(req: Request, rawBody: Buffer): Stripe.Event {
     const signature = req.get('stripe-signature');
 
     if (!signature) {
@@ -26,7 +26,7 @@ export class StripeApi {
     let event: Stripe.Event;
 
     try {
-      event = this.stripe.webhooks.constructEvent(rawbody, signature, this.config.stripe.webhookSecret);
+      event = this.stripe.webhooks.constructEvent(rawBody, signature, this.config.stripe.webhookSecret);
     } catch (e) {
       throw new BadRequestException(`stripe signature read error: ${(e as any)?.message}`);
     }

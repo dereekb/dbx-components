@@ -1,12 +1,11 @@
 import { ClassType, Getter, asGetter, makeGetter, mergeArrayOrValueIntoArray } from '@dereekb/util';
-import { DynamicModule, INestApplication, INestApplicationContext, NestApplicationOptions, Provider, Type } from '@nestjs/common';
-import { ConfigureWebhookMiddlewareModule } from '@dereekb/nestjs';
+import { DynamicModule, INestApplication, INestApplicationContext, Logger, NestApplicationOptions, Provider, Type } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { ExpressAdapter } from '@nestjs/platform-express';
 import * as express from 'express';
 import { firebaseServerAppTokenProvider } from '../firebase/firebase.nest';
 import * as admin from 'firebase-admin';
-
+import { ConfigureFirebaseWebhookMiddlewareModule } from './middleware/webhook';
 
 export interface NestServer {
   server: express.Express;
@@ -71,8 +70,11 @@ export function nestServerInstance<T>(config: NestServerInstanceConfig<T>): Nest
 
         const imports: Type<any>[] = [moduleClass];
 
+        // NOTE: https://cloud.google.com/functions/docs/writing/http#parsing_http_requests
+        const options: NestApplicationOptions = { bodyParser: false };  // firebase already parses the requests
+
         if (config.configureWebhooks) {
-          imports.push(ConfigureWebhookMiddlewareModule);
+          imports.push(ConfigureFirebaseWebhookMiddlewareModule);
         }
 
         const providersModule: DynamicModule = {
@@ -82,8 +84,6 @@ export function nestServerInstance<T>(config: NestServerInstanceConfig<T>): Nest
           exports: providers,
           global: true
         };
-
-        const options: NestApplicationOptions = {};
 
         const nestApp = await NestFactory.create(
           providersModule,
@@ -95,12 +95,8 @@ export function nestServerInstance<T>(config: NestServerInstanceConfig<T>): Nest
       };
 
       const nest: Promise<INestApplication> = createNestServer(server)
-        .then(v => {
-          console.log('Nest Ready');
-          return v;
-        })
         .catch(err => {
-          console.error('Nest broken', err);
+          console.error('Nest failed startup.', err);
           throw err;
         }) as Promise<INestApplication>;
 

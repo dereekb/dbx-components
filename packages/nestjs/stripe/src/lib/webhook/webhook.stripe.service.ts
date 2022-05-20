@@ -1,5 +1,5 @@
 import Stripe from 'stripe';
-import { Injectable } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import { Request } from 'express';
 import { stripeEventHandlerConfigurerFactory, stripeEventHandlerFactory } from './webhook.stripe';
 import { StripeApi } from '../stripe.api';
@@ -11,6 +11,8 @@ import { Handler } from '@dereekb/util';
 @Injectable()
 export class StripeWebhookService {
 
+  private readonly logger = new Logger('StripeWebhookService');
+
   readonly handler: Handler<Stripe.Event> = stripeEventHandlerFactory();
   readonly configure = stripeEventHandlerConfigurerFactory(this.handler);
 
@@ -18,8 +20,8 @@ export class StripeWebhookService {
     private readonly stripeApi: StripeApi
   ) { }
 
-  public async updateForWebhook(req: Request, rawbody: Buffer): Promise<any> {
-    const event = this.stripeApi.readStripeEventFromWebhookRequest(req, rawbody);
+  public async updateForWebhook(req: Request, rawBody: Buffer): Promise<any> {
+    const event = this.stripeApi.readStripeEventFromWebhookRequest(req, rawBody);
     return this.updateForStripeEvent(event);
   }
 
@@ -27,7 +29,7 @@ export class StripeWebhookService {
     let handled: boolean = await this.handler(event);
 
     if (!handled) {
-      console.log('Received unexpected/unhandled subscription event: ', event);
+      this.logger.warn('Received unexpected/unhandled stripe event: ', event);
     }
 
     return handled;
