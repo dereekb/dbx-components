@@ -20,6 +20,7 @@
     "model": "packages/model",
     "nestjs": "packages/nestjs",
     "nestjs-stripe": "packages/nestjs/stripe",
+    "nestjs-twilio": "packages/nestjs/twilio",
     "rxjs": "packages/rxjs",
     "util": "packages/util",
     "util-test": "packages/util/test",

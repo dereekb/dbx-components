@@ -7,6 +7,12 @@ Be sure to include the `--buildable` and `--publishable` flags if relevant.
 
 Example: `nx g @nrwl/node:library firebase --buildable --publishable --importPath @dereekb/firebase`
 
+### Creating a nested library
+For nested libraries, you can do the following:
+
+`nx g @nrwl/node:library nestjs/stripe --buildable --publishable --importPath @dereekb/nestjs/stripe`
+`nx g @nrwl/node:library nestjs/twilio --buildable --publishable --importPath @dereekb/nestjs/twilio`
+
 ## Creating an Angular Library
 
 Example: `nx generate @nrwl/angular:library --name=dbx-firebase --buildable --publishable --importPath @dereekb/dbx-firebase`
@@ -110,32 +116,6 @@ https://firebase.google.com/docs/functions/http-events
 
 Alternatively, if you do not want to use onRequest but want to use NestJS, you can use NestJS as a Standalone App (see next section).
 
-### Settings Up NestJS For Firebase Functions (Standalone App)
-You can alternatively use NestJS as a standalone app, and response to requests like this:
-
-```
-const bootstrap = async (expressInstance: Express) => {
-  const app = await NestFactory.create(AppModule, expressInstance);
-  await app.init();
-
-  return app;
-};
-
-const main = bootstrap(server);
-
-export const subscriptions = functions
-  .pubsub
-  .topic('cron-topic')
-  .onPublish((context, message) => main.then(app => {
-    return app.get(SubscribeService).initDailyCharges(context, message));
-  });
-```
-
-https://docs.nestjs.com/standalone-applications
-
-https://stackoverflow.com/questions/53307541/firebase-handle-cloud-events-within-nestjs-framework
-
-
 ### Configuring Firebase.json
 We just need to update the folder firebase pulls from to instead pull from the webapp's dist folder. Update `firebase.json` by changing the `functions` section's `source` value to be `dist/apps/demo-api`. Also add `runtime` and set it to `nodejs16`.
 
@@ -156,7 +136,7 @@ It should look like this:
 ### Emulators In Docker
 We use Docker to run the emulators within a Docker Container. This lets us not worry about the host system having Java and other dependencies installed.
 
-The emulators require having `service_account.json` available. Make sure you get a valid service account JSON key file and add it to the workspace.
+The emulators do not require having `service_account.json` available, but if one is available it will be used in the background.
 
 To run the emulators execute:
 

@@ -68,6 +68,7 @@
     "rxjs": "^7.0.0",
     "stripe": "^9.1.0",
     "tslib": "^2.0.0",
+    "twilio": "^3.77.1",
     "zone.js": "^0.11.5"
   },
   "resolutions": {

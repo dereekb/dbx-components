@@ -36,6 +36,7 @@
       "@dereekb/model": ["packages/model/src/index.ts"],
       "@dereekb/nestjs": ["packages/nestjs/src/index.ts"],
       "@dereekb/nestjs/stripe": ["packages/nestjs/stripe/src/index.ts"],
+      "@dereekb/nestjs/twilio": ["packages/nestjs/twilio/src/index.ts"],
       "@dereekb/rxjs": ["packages/rxjs/src/index.ts"],
       "@dereekb/util": ["packages/util/src/index.ts"],
       "@dereekb/util/test": ["packages/util/test/src/index.ts"]

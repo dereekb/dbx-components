@@ -12,6 +12,11 @@
       "main": "./stripe/index.js",
       "types": "./stripe/index.d.ts",
       "default": "./stripe/index.js"
+    },
+    "./twilio": {
+      "main": "./twilio/index.js",
+      "types": "./twilio/index.d.ts",
+      "default": "./twilio/index.js"
     }
   }
 }
