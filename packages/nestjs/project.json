@@ -23,7 +23,7 @@
         "tsConfig": "packages/nestjs/tsconfig.lib.json",
         "packageJson": "packages/nestjs/package.json",
         "main": "packages/nestjs/src/index.ts",
-        "assets": ["packages/nestjs/*.md"]
+        "assets": ["packages/nestjs/*.md", "LICENSE"]
       }
     },
     "publish": {

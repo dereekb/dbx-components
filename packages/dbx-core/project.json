@@ -6,7 +6,16 @@
     "build": {
       "executor": "@nrwl/workspace:run-commands",
       "options": {
-        "command": "npx nx run dbx-core:build-base:production",
+        "commands": [
+          {
+            "description": "build dbx-core production",
+            "command": "npx nx run dbx-core:build-base:production"
+          },
+          {
+            "description": "copy license",
+            "command": "echo 'copying dbx-core license' && cp LICENSE dist/packages/dbx-core"
+          }
+        ],
         "color": true
       }
     },

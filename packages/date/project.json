@@ -23,7 +23,7 @@
         "tsConfig": "packages/date/tsconfig.lib.json",
         "packageJson": "packages/date/package.json",
         "main": "packages/date/src/index.ts",
-        "assets": ["packages/date/*.md"]
+        "assets": ["packages/date/*.md", "LICENSE"]
       }
     },
     "lint": {
