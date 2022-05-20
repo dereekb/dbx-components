@@ -22,7 +22,7 @@ do
 
   if [[ $i -gt $KILL_AFTER ]]
   then
-    echo 'Preparing to forcefull kill ports...'
+    echo 'Preparing to forcefully kill ports...'
     kill -9 $(lsof -t -i:$PORTS_TO_KILL -sTCP:LISTEN)
     checkInUse
   fi

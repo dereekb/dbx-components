@@ -18,3 +18,9 @@ services:
       - GCLOUD_PROJECT=dereekb-components
     command: npx nx run demo-api:serve
     tty: true
+    networks:
+      - demo-api-network
+
+networks:
+  demo-api-network:
+    driver: bridge
