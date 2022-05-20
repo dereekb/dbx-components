@@ -9,7 +9,7 @@ export interface StripeServiceApiConfig {
 /**
  * Configuration for StripeService
  */
-export class StripeServiceConfig {
+export abstract class StripeServiceConfig {
 
   stripe!: StripeServiceApiConfig;
 
