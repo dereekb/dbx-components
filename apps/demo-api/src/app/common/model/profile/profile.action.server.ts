@@ -112,11 +112,8 @@ export function updateProfileFactory({ firebaseServerActionTransformFunctionFact
     return async (document: ProfileDocument) => {
       const documentRef = document.documentRef;
 
-      await profileFirestoreCollection.firestoreContext.runTransaction(async (transaction) => {
-        const profile = profileFirestoreCollection.documentAccessorForTransaction(transaction).loadDocument(documentRef);
-        profile.accessor.set({ bio }, { merge: true })
-      });
-
+      const profile = profileFirestoreCollection.documentAccessor().loadDocument(documentRef);
+      await profile.accessor.set({ bio }, { merge: true })
       return document;
     };
   });

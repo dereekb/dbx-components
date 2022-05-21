@@ -137,7 +137,15 @@ export interface CollectionReference<T = DocumentData> extends Query<T> {
 }
 
 // MARK: Batch
-export type WriteBatch = {};
+export interface WriteBatch {
+
+  /**
+   * Commits the changes.
+   */
+  commit(): Promise<WriteResult[] | void>;
+
+};
+
 export type Transaction = {};
 
 // MARK: Query

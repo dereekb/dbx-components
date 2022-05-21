@@ -46,11 +46,17 @@ describe('FirestoreCollection', () => {
       it('should create a new document accessor instance that uses the passed transaction context.', async () => {
         let ref: DocumentReference<MockItem>;
 
+        // The only reason we would do this type of function in a transaction is for a specific item that should not exist yet.
+        const specificIdentifier = 'test';
+
         await firestore.runTransaction(async (transaction: Transaction) => {
           const documentAccessor = firestoreCollection.documentAccessorForTransaction(transaction);
 
-          const document = documentAccessor.newDocument();
+          const document = documentAccessor.loadDocumentForPath(specificIdentifier);
           ref = document.documentRef as DocumentReference<MockItem>;
+
+          const exists = await document.accessor.exists();  // don't create if it exists
+          expect(exists).toBe(false);
 
           await document.accessor.set({ test: true });
         });
