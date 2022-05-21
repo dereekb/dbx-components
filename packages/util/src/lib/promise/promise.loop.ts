@@ -16,30 +16,28 @@ export function performTaskLoop<O>(config: PerformTaskLoopWithInitConfig<O>): Pr
 export function performTaskLoop<O>(config: PerformTaskLoopConfig<O>): Promise<O>;
 export function performTaskLoop<O>(config: PerformTaskLoopConfig<O>): Promise<Maybe<O>>;
 export function performTaskLoop(config: PerformTaskLoopConfig<void>): Promise<void>;
-export function performTaskLoop<O>(config: any): Promise<O> {
-  return new Promise<O>(async (resolve, reject) => {
-    try {
-      let startLoop = config.initValue == null || config.checkContinue(config.initValue, -1);
+export async function performTaskLoop<O>(config: PerformTaskLoopWithInitConfig<O> | PerformTaskLoopConfig<O>): Promise<O> {
+  let result: O;
+  const initValue = (config as PerformTaskLoopWithInitConfig<O>).initValue;
+  const startLoop = initValue == null || config.checkContinue(initValue, -1);
 
-      if (startLoop) {
-        let i = 0;
-        let prevValue: Maybe<O> = config.initValue;
-        let check: boolean;
+  if (startLoop) {
+    let i = 0;
+    let prevValue: Maybe<O> = initValue;
+    let check: boolean;
 
-        do {
-          prevValue = await config.next(i, prevValue);
-          i += 1;
-          check = config.checkContinue(prevValue, i);
-        } while (check);
+    do {
+      prevValue = await config.next(i, prevValue);
+      i += 1;
+      check = config.checkContinue(prevValue, i);
+    } while (check);
 
-        resolve(prevValue!);
-      } else {
-        resolve(config.initValue);
-      }
-    } catch (e) {
-      reject(e);
-    }
-  });
+    result = prevValue;
+  } else {
+    result = initValue;
+  }
+
+  return result;
 }
 
 // MARK: Loop Count
@@ -54,11 +52,11 @@ export interface PerformTaskCountLoopWithInitConfig<O> extends Omit<PerformTaskL
 export function performTaskCountLoop<O>(config: PerformTaskCountLoopWithInitConfig<O>): Promise<O>;
 export function performTaskCountLoop<O>(config: PerformTaskCountLoopConfig<O>): Promise<Maybe<O>>;
 export function performTaskCountLoop(config: PerformTaskCountLoopConfig<void>): Promise<void>;
-export function performTaskCountLoop<O>(config: any): Promise<O> {
+export function performTaskCountLoop<O>(config: PerformTaskCountLoopWithInitConfig<O> | PerformTaskCountLoopConfig<O>): Promise<O> {
   return performTaskLoop<O>({
     ...config,
     checkContinue: (_, i) => (i < config.count)
-  }) as any;
+  } as PerformTaskLoopConfig<O>);
 }
 
 // MARK: Loop Make

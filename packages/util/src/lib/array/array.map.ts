@@ -7,7 +7,7 @@ import { Maybe } from "../value/maybe";
 export function arrayToMap<T, V, K extends PrimativeKey = PrimativeKey>(values: T[], keyFn: ReadKeyFunction<T, K>, valueFn: (t: T) => V): Map<Maybe<K>, V>;
 export function arrayToMap<T, K extends PrimativeKey = PrimativeKey>(values: T[], keyFn: ReadKeyFunction<T, K>, valueFn: (t: T) => T): Map<Maybe<K>, T>;
 export function arrayToMap<T, K extends PrimativeKey = PrimativeKey>(values: T[], keyFn: ReadKeyFunction<T, K>): Map<Maybe<K>, T>;
-export function arrayToMap<T, V, K extends PrimativeKey = PrimativeKey>(values: T[], keyFn: ReadKeyFunction<T, K>, valueFn: (t: T) => V = ((t) => t as any as V)): Map<Maybe<K>, V> {
+export function arrayToMap<T, V, K extends PrimativeKey = PrimativeKey>(values: T[], keyFn: ReadKeyFunction<T, K>, valueFn: (t: T) => V = ((t) => t as unknown as V)): Map<Maybe<K>, V> {
   return new Map<Maybe<K>, V>(values.map(x => [keyFn(x), valueFn(x)]));
 }
 

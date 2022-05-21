@@ -1,4 +1,4 @@
-import { excludeValuesFromArray, uniqueCaseInsensitiveStrings } from "../array";
+import { uniqueCaseInsensitiveStrings } from "../array";
 import { EmailAddress } from "./email";
 
 export type EmailAddressDomain = string; // Domain name of an email address.

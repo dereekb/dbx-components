@@ -22,9 +22,9 @@ describe('isEqualContext', () => {
     });
 
     it('should return false for non-matching values.', () => {
-      const value: number = 0;
+      const value = 0;
 
-      const context = isEqualContext(value, isEqual);
+      const context = isEqualContext<number>(value, isEqual);
       const result = context(value + 10);
 
       expect(result).toBe(false);
@@ -56,9 +56,9 @@ describe('areEqualContext', () => {
     });
 
     it('should return false for non-matching values.', () => {
-      const value: number = 0;
+      const value = 0;
 
-      const context = areEqualContext(value, isEqual);
+      const context = areEqualContext<number>(value, isEqual);
       const result = context([value, value + 1, value + 2]);
 
       expect(result).toBe(false);
@@ -71,8 +71,8 @@ describe('areEqualContext', () => {
 describe('allObjectsAreEqual()', () => {
 
   it('should return true 0 objects are entered.', () => {
-    const isEqual = (a: any, b: any) => a === b;
-    const objects: any[] = [];
+    const isEqual = (a: unknown, b: unknown) => a === b;
+    const objects: unknown[] = [];
 
     const result = allObjectsAreEqual(objects, isEqual);
 
@@ -80,7 +80,7 @@ describe('allObjectsAreEqual()', () => {
   });
 
   it('should return true only 1 object is entered.', () => {
-    const isEqual = (a: any, b: any) => a === b;
+    const isEqual = (a: unknown, b: unknown) => a === b;
     const objects = [1];
 
     const result = allObjectsAreEqual(objects, isEqual);
@@ -89,7 +89,7 @@ describe('allObjectsAreEqual()', () => {
   });
 
   it('should return true if all objects are equal.', () => {
-    const isEqual = (a: any, b: any) => a === b;
+    const isEqual = (a: unknown, b: unknown) => a === b;
     const objects = [undefined, undefined, undefined];
 
     const result = allObjectsAreEqual(objects, isEqual);
@@ -98,7 +98,7 @@ describe('allObjectsAreEqual()', () => {
   });
 
   it('should return false if not all objects are equal.', () => {
-    const isEqual = (a: any, b: any) => a === b;
+    const isEqual = (a: unknown, b: unknown) => a === b;
     const objects = [undefined, 'test', undefined];
 
     const result = allObjectsAreEqual(objects, isEqual);

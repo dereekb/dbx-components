@@ -53,11 +53,11 @@ export function isGetter<T = any>(value: any): value is Getter<T> {
  * @returns 
  */
 export function getValueFromGetter<T>(input: GetterOrValue<T>): T;
-export function getValueFromGetter<T>(this: any, input: GetterOrValue<T>): T;
-export function getValueFromGetter<T>(this: any, input: GetterOrValue<T>, inputArgs?: any): T;
-export function getValueFromGetter<T, A>(this: any, input: GetterOrFactoryWithInput<T, A>, args?: A): T;
-export function getValueFromGetter<T extends string | number | object | symbol, A>(this: any, input: GetterOrValueWithInput<T, A>, args?: A): T;
-export function getValueFromGetter<T, A>(this: any, input: any, args?: A): T {
+export function getValueFromGetter<T>(this: unknown, input: GetterOrValue<T>): T;
+export function getValueFromGetter<T>(this: unknown, input: GetterOrValue<T>, inputArgs?: any): T;
+export function getValueFromGetter<T, A>(this: unknown, input: GetterOrFactoryWithInput<T, A>, args?: A): T;
+export function getValueFromGetter<T extends string | number | object | symbol, A>(this: unknown, input: GetterOrValueWithInput<T, A>, args?: A): T;
+export function getValueFromGetter<T, A>(this: unknown, input: any, args?: A): T {
   if (typeof input === 'function') {
     return input(args);
   } else {

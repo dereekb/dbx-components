@@ -10,7 +10,7 @@ export type IterableOrValue<T> = T | Iterable<T>;
  * @param values 
  * @returns 
  */
-export function isIterable<T = any>(values: any): values is Iterable<T> {
+export function isIterable<T = unknown>(values: any): values is Iterable<T> {
   if (values && values[Symbol.iterator]) {
     return true;
   } else {

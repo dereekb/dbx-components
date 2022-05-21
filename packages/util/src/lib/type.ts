@@ -1,14 +1,14 @@
 /**
  * Class typing, restricted to types that have a constructor via the new keyword.
  */
-export type ClassType<T = any> = {
-  new(...args: any[]): T;
+export type ClassType<T = unknown> = {
+  new(...args: unknown[]): T;
 };
 
 /**
  * Similar to ClassType, but allows for abstract classes.
  */
-export type ClassLikeType<T = any> = abstract new (...args: any[]) => T;
+export type ClassLikeType<T = unknown> = abstract new (...args: unknown[]) => T;
 
 /**
  * Special type used to defined other type definitions that state the defined type has every key of one type, but each key has a single/new value type.

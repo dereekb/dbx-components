@@ -29,14 +29,14 @@ export type AuthClaimValue = SimpleAuthClaimValue | object;
  * 
  * It is keyed by the claims key.
  */
-export type AuthClaims<T = any> = {
+export type AuthClaims<T = object> = {
   [K in keyof T]: AuthClaimValue;
 };
 
 /**
  * A claims update.
  */
-export type AuthClaimsUpdate<T = any> = {
+export type AuthClaimsUpdate<T = object> = {
   [K in keyof Partial<T>]: AuthClaimValue | ClearAuthClaimValue;
 };
 
@@ -89,18 +89,22 @@ export interface AuthRoleClaimsFactoryDefaults {
 
   /**
    * Default value to use for claims that have no value present.
+   * 
+   * If undefined, defaults to AUTH_ROLE_CLAIMS_DEFAULT_CLAIM_VALUE.
    */
-  claimValue?: any;
+  claimValue?: AuthClaimValue;
 
   /**
    * Default value for claims that are not defined.
+   * 
+   * If undefined, defaults to AUTH_ROLE_CLAIMS_DEFAULT_EMPTY_VALUE.
    */
-  emptyValue?: any;
+  emptyValue?: AuthClaimValue | ClearAuthClaimValue;
 
 }
 
-export type AuthRoleClaimsToRolesFunction<T extends AuthRoleClaimsFactoryConfig = any> = (roles: AuthRoleSet) => AuthClaims<T>;
-export type AuthRoleRolesToClaimsFunction<T extends AuthRoleClaimsFactoryConfig = any> = (claims: AuthClaims<T>) => AuthRoleSet;
+export type AuthRoleClaimsToRolesFunction<T extends AuthRoleClaimsFactoryConfig = AuthRoleClaimsFactoryConfig> = (roles: AuthRoleSet) => AuthClaimsUpdate<T>;
+export type AuthRoleRolesToClaimsFunction<T extends AuthRoleClaimsFactoryConfig = AuthRoleClaimsFactoryConfig> = (claims: AuthClaims<T> | AuthClaimsUpdate<T>) => AuthRoleSet;
 
 /**
  * Service used for converting claims to/from a roles set.
@@ -112,8 +116,8 @@ export interface AuthRoleClaimsService<T extends AuthRoleClaimsFactoryConfig = a
   readonly defaultEmptyValue: any;
 }
 
-export const AUTH_ROLE_CLAIMS_DEFAULT_EMPTY_VALUE = null;
 export const AUTH_ROLE_CLAIMS_DEFAULT_CLAIM_VALUE = 1;
+export const AUTH_ROLE_CLAIMS_DEFAULT_EMPTY_VALUE = null;
 
 interface AuthRoleClaimsServiceConfigMapEntry extends AuthRoleClaimsFactoryConfigEntryEncodeOptions {
   claimKey: AuthClaimKey;
@@ -128,8 +132,8 @@ interface AuthRoleClaimsServiceConfigMapEntry extends AuthRoleClaimsFactoryConfi
  */
 export function authRoleClaimsService<T extends AuthRoleClaimsFactoryConfig>(config: T, defaults: AuthRoleClaimsFactoryDefaults = {}): AuthRoleClaimsService<T> {
 
-  const defaultClaimValue = objectHasKey(defaults, 'claimValue') ? defaults?.claimValue : AUTH_ROLE_CLAIMS_DEFAULT_CLAIM_VALUE;
-  const defaultEmptyValue = objectHasKey(defaults, 'emptyValue') ? defaults?.emptyValue : AUTH_ROLE_CLAIMS_DEFAULT_EMPTY_VALUE;
+  const defaultClaimValue: AuthClaimValue = (objectHasKey(defaults, 'claimValue') ? defaults?.claimValue : AUTH_ROLE_CLAIMS_DEFAULT_CLAIM_VALUE) ?? AUTH_ROLE_CLAIMS_DEFAULT_CLAIM_VALUE;
+  const defaultEmptyValue: AuthClaimValue | ClearAuthClaimValue = (objectHasKey(defaults, 'emptyValue') ? defaults?.emptyValue : AUTH_ROLE_CLAIMS_DEFAULT_EMPTY_VALUE) ?? null;
 
   function isSimpleOptions(entry: AuthRoleClaimsFactoryConfigEntry): entry is AuthRoleClaimsFactoryConfigEntrySimpleOptions {
     return (entry as AuthRoleClaimsFactoryConfigEntrySimpleOptions).roles != null;
@@ -179,12 +183,12 @@ export function authRoleClaimsService<T extends AuthRoleClaimsFactoryConfig>(con
   const authRolesMap = new Map<AuthClaimKey, AuthRoleClaimsServiceConfigMapEntry>(tuples.map(x => [(x[0]).toLowerCase(), x[1]]));
 
   const toClaims = (roles: AuthRoleSet) => {
-    const claims: AuthClaims = {};
+    const claims = {} as AuthClaimsUpdate<T>;
 
     // iterate by each claim value to build the claims.
     tuples.forEach(([claimsKey, entry]) => {
-      let claimsValue = entry.encodeValueFromRoles(roles) ?? defaultEmptyValue;
-      claims[claimsKey] = claimsValue;
+      const claimsValue = entry.encodeValueFromRoles(roles) ?? defaultEmptyValue;
+      claims[claimsKey as keyof T] = claimsValue;
     });
 
     return claims;

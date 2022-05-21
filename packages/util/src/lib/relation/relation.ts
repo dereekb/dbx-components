@@ -267,7 +267,7 @@ export class ModelRelationUtility {
   }
 
   // MARK: Internal Utility
-  private static _assertMergeProvided(merge: MergeRelationObjectsFn<any>) {
+  private static _assertMergeProvided<T = unknown>(merge: MergeRelationObjectsFn<T>) {
     if (!merge) {
       throw new Error('Merge was not provided.');
     }

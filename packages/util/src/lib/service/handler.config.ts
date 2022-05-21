@@ -8,7 +8,7 @@ import { Handler, HandlerAccessor, HandlerFunction, HandlerSetAccessor } from ".
  */
 export interface HandlerBindAccessor<T, K extends PrimativeKey = string> extends HandlerSetAccessor<T, K> {
   readonly accessor: HandlerAccessor<T, K>;
-  readonly boundTo: any;
+  readonly boundTo: unknown;
 }
 
 /**
@@ -18,7 +18,7 @@ export interface HandlerBindAccessor<T, K extends PrimativeKey = string> extends
  * @param accessor 
  * @returns 
  */
-export function handlerBindAccessor<T, K extends PrimativeKey = string>(boundTo: any, accessor: HandlerAccessor<T, K>): HandlerBindAccessor<T, K> {
+export function handlerBindAccessor<T, K extends PrimativeKey = string>(boundTo: unknown, accessor: HandlerAccessor<T, K>): HandlerBindAccessor<T, K> {
   return {
     accessor,
     boundTo,
@@ -56,7 +56,7 @@ export function handlerMappedSetFunction<I, T, K extends PrimativeKey = string>(
   const handlerSet = handlerSetFunction(accessor, key);
   return (handlerFunction: HandlerFunction<I>) => {
     // set an intermediary function that calls the target function. We don't use an arrow function so we have access to the "this", if bound.
-    handlerSet(function (this: any, value: T) {
+    handlerSet(function (this: unknown, value: T) {
       const mapped = mapFn(value);  // fowards "this" to the next call.
       return handlerFunction.call(this, mapped);
     });
@@ -73,7 +73,7 @@ export function handlerMappedSetFunctionFactory<I, T, K extends PrimativeKey = s
 }
 
 export type HandlerConfigurerFunction<C extends HandlerBindAccessor<T, K>, T, K extends PrimativeKey = string> = (configurer: C) => void;
-export type HandlerConfigurer<C extends HandlerBindAccessor<T, K>, T, K extends PrimativeKey = string> = (bindTo: any, configure: HandlerConfigurerFunction<C, T, K>) => void;
+export type HandlerConfigurer<C extends HandlerBindAccessor<T, K>, T, K extends PrimativeKey = string> = (bindTo: unknown, configure: HandlerConfigurerFunction<C, T, K>) => void;
 export type HandlerConfigurerFactory<C extends HandlerBindAccessor<T, K>, T, K extends PrimativeKey = string> = (handler: Handler<T, K>) => HandlerConfigurer<C, T, K>;
 
 /**
@@ -85,7 +85,7 @@ export interface HandlerConfigurerFactoryConfig<C extends HandlerBindAccessor<T,
 
 export function handlerConfigurerFactory<C extends HandlerBindAccessor<T, K>, T, K extends PrimativeKey = string>(config: HandlerConfigurerFactoryConfig<C, T, K>): HandlerConfigurerFactory<C, T, K> {
   return (handler: Handler<T, K>) => {
-    return (bindTo: any, configure: HandlerConfigurerFunction<C, T, K>) => {
+    return (bindTo: unknown, configure: HandlerConfigurerFunction<C, T, K>) => {
       const accessor: HandlerBindAccessor<T, K> = handlerBindAccessor(bindTo, handler);
       const configurer: C = config.configurerForAccessor(accessor);
       configure(configurer);

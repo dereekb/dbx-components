@@ -39,7 +39,7 @@ describe('handler config', () => {
 
         const key = '1';
         const value = 1;
-        const fn = function (this: any, x: number) {
+        const fn = function (this: unknown, x: number) {
           expect(this).toBe(boundTo);
           expect(x).toBe(value);
           wasUsed = true;
@@ -96,7 +96,7 @@ describe('handler config', () => {
         let wasUsed = false;
         const inputValue = Number(key);
   
-        setFn(function (this: any, value: number) {
+        setFn(function (this: unknown, value: number) {
           expect(this).toBe(boundTo);
           expect(value).toBe(inputValue + 1);
           wasUsed = true;
@@ -154,7 +154,7 @@ describe('handler config', () => {
           let wasUsed = false;
 
           configurer(boundTo, (x) => {
-            const fn = function (this: any, x: number) {
+            const fn = function (this: unknown) {
               wasUsed = true;
               return true;  // result
             };

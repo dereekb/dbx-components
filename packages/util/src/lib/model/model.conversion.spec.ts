@@ -22,7 +22,7 @@ const defaultTestValue = true;
 
 describe('makeModelMapFunctions', () => {
 
-  const fields: ModelFieldsConversionConfig<TestConversionModel> = {
+  const fields: ModelFieldsConversionConfig<TestConversionModel, TestConversionDataModel> = {
     name: {},
     test: {
       from: {

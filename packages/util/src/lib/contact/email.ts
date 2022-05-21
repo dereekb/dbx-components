@@ -7,7 +7,7 @@ export interface NameEmailPair {
   email: EmailAddress;
 }
 
-export interface EmailParticipant extends NameEmailPair { }
+export type EmailParticipant = NameEmailPair;
 
 /**
  * Email participant string. Starts with the email, followed by the name if available.

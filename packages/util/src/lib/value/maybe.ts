@@ -7,7 +7,7 @@ export type MaybeNot = null | undefined;
 /**
  * A non-null/undefined value.
  */
-export type MaybeSo<T = any> = T extends MaybeNot ? never : T;
+export type MaybeSo<T = unknown> = T extends MaybeNot ? never : T;
 
 /**
  * A value that might exist, or be null/undefined instead.
@@ -21,7 +21,6 @@ export type Maybe<T> = T | MaybeNot;
  * @returns 
  */
 export function hasNonNullValue<T>(value: Maybe<T>): value is T;
-export function hasNonNullValue(value: any): boolean;
 export function hasNonNullValue(value: true): true;
 export function hasNonNullValue(value: false): true;
 export function hasNonNullValue(value: number): true;
@@ -42,14 +41,14 @@ export function hasNonNullValue<T>(value: Maybe<T>): boolean {
  * 
  * NaN has undefined behavior.
  */
-export function hasValueOrNotEmpty(value: any): boolean;
+export function hasValueOrNotEmpty<T>(value: T): boolean;     // todo consider adding typings for 
 export function hasValueOrNotEmpty(value: true): true;
 export function hasValueOrNotEmpty(value: false): true;
 export function hasValueOrNotEmpty(value: number): true;
 export function hasValueOrNotEmpty(value: ''): false;
 export function hasValueOrNotEmpty(value: null): false;
 export function hasValueOrNotEmpty(value: undefined): false;
-export function hasValueOrNotEmpty(value: any): boolean {
+export function hasValueOrNotEmpty(value: unknown): boolean {
   if (Array.isArray(value)) {
     return value.length > 0;
   } else {
@@ -58,22 +57,12 @@ export function hasValueOrNotEmpty(value: any): boolean {
 }
 
 /**
- * True if the input is MaybeNot and not false.
- * 
- * @param value 
- * @returns 
- */
-export function isMaybeNotAndNotFalse(value: any): boolean {
-  return value == null && value !== false;
-}
-
-/**
  * True if the input is MaybeNot.
  * 
  * @param value 
  * @returns 
  */
-export function isMaybeNot(value: any): value is MaybeNot {
+export function isMaybeNot(value: unknown): value is MaybeNot {
   return value == null;
 }
 
@@ -93,7 +82,7 @@ export function isMaybeSo<T>(value: Maybe<T>): value is MaybeSo<T> {
  * @param value 
  * @returns 
  */
-export function isMaybeNotOrTrue(value: any): value is MaybeNot | true {
+export function isMaybeNotOrTrue(value: unknown): value is MaybeNot | true {
   return value == null || value === true;
 }
 
@@ -103,7 +92,7 @@ export function isMaybeNotOrTrue(value: any): value is MaybeNot | true {
  * @param value 
  * @returns 
  */
-export function isDefinedAndNotFalse(value: any): boolean {
+export function isDefinedAndNotFalse(value: unknown): boolean {
   return value != null && value !== false;
 }
 

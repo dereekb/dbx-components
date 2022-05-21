@@ -34,7 +34,7 @@
       "executor": "@nrwl/linter:eslint",
       "outputs": ["{options.outputFile}"],
       "options": {
-        "lintFilePatterns": ["packages/util/**/*.ts"]
+        "lintFilePatterns": ["packages/util/src/**/*.ts"]
       }
     },
     "test": {

@@ -1,21 +1,21 @@
-import { existsInIterable, findInIterable, firstValueFromIterable, isIterable, IterableOrValue, takeValuesFromIterable } from './../iterable/iterable';
+import { existsInIterable, isIterable, IterableOrValue, takeValuesFromIterable } from './../iterable/iterable';
 
 /**
  * Function used for equivalence comparisons on an object.
  */
-export type IsEqualFunction<T = any> = (a: T, b: T) => boolean;
+export type IsEqualFunction<T = unknown> = (a: T, b: T) => boolean;
 
 /**
  * Used to check if the input object is considered equal to the current context.
  */
-export type IsEqualContext<T = any> = (x: T) => boolean;
+export type IsEqualContext<T = unknown> = (x: T) => boolean;
 
 /**
  * Similar to IsEqualContext, but supports an array of objects.
  * 
  * Used to check if the input object or array of objects are considered equal to the current context.
  */
-export type AreEqualContext<T = any> = (x: IterableOrValue<T>) => boolean;
+export type AreEqualContext<T = unknown> = (x: IterableOrValue<T>) => boolean;
 
 /**
  * Creates an IsEqualContext

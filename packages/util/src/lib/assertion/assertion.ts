@@ -1,4 +1,4 @@
-import { DescriptorAssertionOptions, MapDescriptorAssertionOptions } from "./assert";
+import { MapDescriptorAssertionOptions } from "./assert";
 import { AssertionIssue, ASSERTION_HANDLER } from "./assert.error";
 
 // MARK: Generic Assertions
@@ -33,7 +33,7 @@ export class PropertyDescriptorUtility {
     return this.makeSetPropertyDescriptorInterceptor<T>(({ target, propertyKey, setValue }) => {
       const map = options?.map || ((x) => x);
 
-      return function (this: any, value: T) {
+      return function (this: unknown, value: T) {
         if (assertValueFn(value)) {
           const mappedValue = map(value);
           setValue.call(this, mappedValue);

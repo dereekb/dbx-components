@@ -59,7 +59,7 @@ export function addModifiers<T>(modifiers: ArrayOrValue<Modifier<T>>, map?: Mayb
     map = new Map();
   }
 
-  forEachWithArray(modifiers, (modifier) => map!.set(modifier.key, modifier));
+  forEachWithArray(modifiers, (modifier) => (map as ModifierMap<T>).set(modifier.key, modifier));
 
   return map;
 }
@@ -72,7 +72,7 @@ export function addModifiers<T>(modifiers: ArrayOrValue<Modifier<T>>, map?: Mayb
  */
 export function removeModifiers<T>(modifiers: ArrayOrValue<Modifier<T>>, map: Maybe<ModifierMap<T>>): ModifierMap<T> {
   if (map) {
-    forEachWithArray(modifiers, (modifier) => map!.delete(modifier.key));
+    forEachWithArray(modifiers, (modifier) => (map as ModifierMap<T>).delete(modifier.key));
   } else {
     map = new Map();
   }

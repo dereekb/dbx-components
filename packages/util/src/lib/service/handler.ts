@@ -1,6 +1,6 @@
 import { PrimativeKey, ReadKeyFunction } from './../key';
 import { ArrayOrValue } from './../array/array';
-import { Maybe, PromiseOrValue, setKeysOnMap } from '@dereekb/util';
+import { Maybe, PromiseOrValue, setKeysOnMap, build } from '@dereekb/util';
 
 /**
  * Key used to signify 
@@ -48,7 +48,7 @@ export interface HandlerAccessor<T, K extends PrimativeKey = string> extends Han
    * @param key 
    * @param handle 
    */
-  bindSet(bindTo: any, key: ArrayOrValue<HandlerKey<K>>, handle: HandlerFunction<T>): void;
+  bindSet(bindTo: unknown, key: ArrayOrValue<HandlerKey<K>>, handle: HandlerFunction<T>): void;
 
 }
 
@@ -68,26 +68,29 @@ export function handlerFactory<T, K extends PrimativeKey = string>(readKey: Read
       }
     };
 
-    const bindSet = (bindTo: any, key: ArrayOrValue<K>, handle: HandlerFunction<T>) => {
+    const bindSet = (bindTo: unknown, key: ArrayOrValue<K>, handle: HandlerFunction<T>) => {
       const bindHandle = handle.bind(bindTo);
       set(key, bindHandle);
     };
 
-    const fn: Handler<T, K> = ((value: T) => {
-      const key = readKey(value);
-      const handler = ((key != null) ? map.get(key) : undefined) ?? catchAll;
-      let handled: PromiseOrValue<boolean> = false;
+    const fn = build<Handler<T, K>>({
+      base: ((value: T) => {
+        const key = readKey(value);
+        const handler = ((key != null) ? map.get(key) : undefined) ?? catchAll;
+        let handled: PromiseOrValue<boolean> = false;
 
-      if (handler) {
-        handled = handler(value);
+        if (handler) {
+          handled = handler(value);
+        }
+
+        return handled;
+      }) as Handler<T, K>,
+      build: (x) => {
+        x.readKey = readKey;
+        x.set = set;
+        x.bindSet = bindSet;
       }
-
-      return handled;
-    }) as any;
-
-    (fn as any).readKey = readKey;
-    fn.set = set;
-    fn.bindSet = bindSet;
+    });
 
     return fn;
   };

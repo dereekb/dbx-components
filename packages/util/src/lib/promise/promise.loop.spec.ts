@@ -8,7 +8,7 @@ describe('performTaskLoop()', () => {
 
     const result = await performTaskLoop<number>({
       initValue: -1,
-      checkContinue: (value: number, i) => value < maxIterations,
+      checkContinue: (value: number) => value < maxIterations,
       next: async (i) => i
     });
 
@@ -22,7 +22,7 @@ describe('performTaskLoop()', () => {
 
     const result = await performTaskLoop<number>({
       initValue,
-      checkContinue: (value, i) => false,
+      checkContinue: () => false,
       next: async (i) => i + 10000  // never called
     });
 
@@ -35,8 +35,8 @@ describe('performTaskLoop()', () => {
 
     try {
       await performTaskLoop<number>({
-        checkContinue: (value, i) => i < maxIterations,
-        next: async (i) => {
+        checkContinue: (_, i) => i < maxIterations,
+        next: async () => {
           throw new Error();
         }
       });
@@ -51,7 +51,7 @@ describe('performTaskLoop()', () => {
 
     try {
       await performTaskLoop<number>({
-        checkContinue: (value, i) => {
+        checkContinue: () => {
           throw new Error();
         },
         next: async (i) => i
@@ -73,7 +73,7 @@ describe('performTaskCountLoop()', () => {
 
     await performTaskCountLoop({
       count,
-      next: async (x) => i += 1
+      next: async () => i += 1
     });
 
     expect(i).toBe(count);
@@ -87,7 +87,7 @@ describe('performMakeLoop()', () => {
     const count = 3;
     const results = await performMakeLoop({
       count,
-      make: async (i: number) => 1
+      make: async () => 1
     });
 
     expect(results.length).toBe(3);

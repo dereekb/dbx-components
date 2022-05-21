@@ -1,4 +1,4 @@
-import { ModelFieldsConversionConfig, makeModelMapFunctions, Maybe, ApplyMapFunctionWithOptions, ModelConversionOptions } from "@dereekb/util";
+import { ModelFieldsConversionConfig, makeModelMapFunctions, Maybe, ApplyMapFunctionWithOptions, ModelConversionOptions, ModelDataType } from "@dereekb/util";
 import { PartialWithFieldValue, DocumentData, SnapshotOptions, SetOptions, WithFieldValue, DocumentSnapshot, FirestoreDataConverter, SetOptionsMerge, SetOptionsMergeFields, asTopLevelFieldPaths } from "../types";
 
 // MARK: From
@@ -20,7 +20,7 @@ export function makeSnapshotConverterFunctions<T extends object>(config: Snapsho
 
   const from: SnapshotConverterFromFunction<T> = (input: DocumentSnapshot, target?: Maybe<Partial<T>>) => {
     const data = input.data();
-    return fromData(data, target);
+    return fromData(data as Maybe<ModelDataType<T>>, target);
   };
 
   const to: SnapshotConverterToFunction<T> = (input: T, target?: Maybe<Partial<DocumentData>>, options?: Maybe<SetOptions>) => {
@@ -43,7 +43,7 @@ export function makeSnapshotConverterFunctions<T extends object>(config: Snapsho
       }
     }
 
-    return toData(input, target, toOptions);
+    return toData(input, target as Maybe<Partial<ModelDataType<T>>>, toOptions);
   };
 
   return {

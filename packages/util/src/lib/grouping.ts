@@ -174,7 +174,7 @@ export function makeKeyPairs<T, K extends string | number = string | number>(val
  * @returns 
  */
 export function separateValues<T>(values: T[], checkInclusion: (x: T) => boolean): SeparateResult<T> {
-  const result: KeyedGroupingResult<T, { in: any, out: any }> = groupValues(values, (x) => {
+  const result: KeyedGroupingResult<T, { in: unknown, out: unknown }> = groupValues(values, (x) => {
     return (checkInclusion(x)) ? 'in' : 'out';
   });
 
@@ -194,7 +194,7 @@ export function groupValues<T, R, K extends PrimativeKey & keyof R>(values: T[],
 export function groupValues<T, K extends PrimativeKey = PrimativeKey>(values: T[], groupKeyFn: ReadKeyFunction<T, K>): GroupingResult<T>;
 export function groupValues<T, K extends PrimativeKey = PrimativeKey>(values: T[], groupKeyFn: ReadKeyFunction<T, K>): GroupingResult<T> {
   const map = makeValuesGroupMap<T, K>(values, groupKeyFn);
-  return mapToObject(map as any);
+  return mapToObject(map as Map<PropertyKey, T[]>);
 }
 
 /**
