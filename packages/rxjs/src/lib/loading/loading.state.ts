@@ -28,8 +28,15 @@ export interface LoadingState<T = any> extends LoadingErrorPair {
 /**
  * Loading state with a value key.
  */
-export interface LoadingStateWithValue<T = any> extends LoadingState {
+export type LoadingStateWithValue<T = any> = LoadingState<T> & {
   value: Maybe<T>;
+}
+
+/**
+ * Loading state with a value key and a non-maybe value.
+ */
+export type LoadingStateWithMaybeSoValue<T = any> = LoadingState<T> & {
+  value: T;
 }
 
 /**

@@ -18,7 +18,7 @@ export type SnapshotConverterToFunction<T extends object> = ApplyMapFunctionWith
 export function makeSnapshotConverterFunctions<T extends object>(config: SnapshotConverterConfig<T>): SnapshotConverterFunctions<T> {
   const { from: fromData, to: toData } = makeModelMapFunctions(config.fields);
 
-  const from: SnapshotConverterFromFunction<T> = (input: DocumentSnapshot, target?: Maybe<Partial<T>>, options?: Maybe<SnapshotOptions>) => {
+  const from: SnapshotConverterFromFunction<T> = (input: DocumentSnapshot, target?: Maybe<Partial<T>>) => {
     const data = input.data();
     return fromData(data, target);
   };

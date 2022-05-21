@@ -49,7 +49,7 @@ export type FirebaseFunctionsConfigMap<M extends FirebaseFunctionsMap> = {
   [K in keyof M]: FirebaseFunctionsConfigMapEntry<M[K]>;
 }
 
-export type FirebaseFunctionsConfigMapEntry<M extends FirebaseFunctionTypeMap = any> = [ClassLikeType<any>, FirebaseFunctionMapFactory<M>];
+export type FirebaseFunctionsConfigMapEntry<M extends FirebaseFunctionTypeMap> = [ClassLikeType<any>, FirebaseFunctionMapFactory<M>];
 
 /**
  * Factory function for creating a FirebaseFunctionsMap for a given Functions instance.

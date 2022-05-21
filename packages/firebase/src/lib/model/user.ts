@@ -10,4 +10,4 @@ export interface UserRelated {
 /**
  * The model is related to a user by the model's own identifier.
  */
-export interface UserRelatedById { }
+export type UserRelatedById = object;

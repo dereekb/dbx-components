@@ -1,4 +1,4 @@
-import { ArrayOrValue, asArray, excludeValuesFromArray, mergeArrayOrValueIntoArray, mergeIntoArray, SeparateResult, separateValues } from '@dereekb/util';
+import { ArrayOrValue, asArray, mergeArrayOrValueIntoArray, SeparateResult, separateValues } from '@dereekb/util';
 import { SortingOrder, Maybe, ObjectMap } from '@dereekb/util';
 import { DocumentSnapshot, DocumentData, FieldPath } from '../types';
 

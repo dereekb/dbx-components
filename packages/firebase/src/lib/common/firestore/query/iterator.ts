@@ -1,7 +1,7 @@
 import { PageLoadingState, ItemPageIterator, ItemPageIterationInstance, ItemPageIterationConfig, ItemPageIteratorDelegate, ItemPageIteratorRequest, ItemPageIteratorResult, MappedPageItemIterationInstance, ItemPageLimit } from '@dereekb/rxjs';
 import { QueryDocumentSnapshotArray, QuerySnapshot, SnapshotListenOptions } from "../types";
 import { asArray, Maybe, lastValue, mergeIntoArray, ArrayOrValue } from '@dereekb/util';
-import { from, Observable, of, exhaustMap, map } from "rxjs";
+import { from, Observable, of, exhaustMap } from "rxjs";
 import { CollectionReferenceRef } from '../reference';
 import { FirestoreQueryDriverRef } from '../driver/query';
 import { FIRESTORE_LIMIT_QUERY_CONSTRAINT_TYPE, FirestoreQueryConstraint, limit, startAfter } from './constraint';
@@ -43,10 +43,10 @@ export interface FirestoreItemPageQueryResult<T> {
   /**
    * Streams these results.
    */
-  stream(options?: FirestoreItemPageQueryResultStreamOptions<T>): Observable<QuerySnapshot<T>>;
+  stream(options?: FirestoreItemPageQueryResultStreamOptions): Observable<QuerySnapshot<T>>;
 }
 
-export interface FirestoreItemPageQueryResultStreamOptions<T> {
+export interface FirestoreItemPageQueryResultStreamOptions {
   options?: Maybe<SnapshotListenOptions>
 }
 
@@ -106,7 +106,7 @@ export function makeFirestoreItemPageIteratorDelegate<T>(): FirestoreItemPageIte
                   reload() {
                     return driver.getDocs(batchQuery);
                   },
-                  stream(options?: FirestoreItemPageQueryResultStreamOptions<T>) {
+                  stream(options?: FirestoreItemPageQueryResultStreamOptions) {
                     // todo: consider allowing limit to be changed here to stream a subset. This will be useful for detecting collection changes.
                     return driver.streamDocs(batchQuery, options?.options);
                   }

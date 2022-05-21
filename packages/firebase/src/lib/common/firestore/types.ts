@@ -146,7 +146,7 @@ export interface WriteBatch {
 
 };
 
-export type Transaction = {};
+export type Transaction = object;
 
 // MARK: Query
 export interface Query<T = DocumentData> {
@@ -168,7 +168,7 @@ export interface QuerySnapshot<T = DocumentData> {
   readonly docs: Array<QueryDocumentSnapshot<T>>;
   readonly size: number;
   readonly empty: boolean;
-  forEach(callback: (result: QueryDocumentSnapshot<T>) => void, thisArg?: any): void;
+  forEach(callback: (result: QueryDocumentSnapshot<T>) => void, thisArg?: unknown): void;
   docChanges(): DocumentChange<T>[];
 }
 

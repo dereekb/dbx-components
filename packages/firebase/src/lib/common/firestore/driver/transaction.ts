@@ -3,8 +3,7 @@ import { Firestore, Transaction, ReadOnlyTransactionOptions, ReadWriteTransactio
 /**
  * Function that runs in a transaction context and returns a value.
  */
-export type TransactionFunction<T = any> = (transaction: Transaction) => Promise<T>;
-
+export type TransactionFunction<T = unknown> = (transaction: Transaction) => Promise<T>;
 
 /**
  * Factory for running transactions. Creates a new Transaction, runs it with the input TransactionFunction, and returns the result.

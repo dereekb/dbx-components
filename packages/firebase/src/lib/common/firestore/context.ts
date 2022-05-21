@@ -17,7 +17,7 @@ export interface FirestoreContext<F extends Firestore = Firestore> extends RunTr
   singleItemFirestoreCollection<T, PT, D extends FirestoreDocument<T> = FirestoreDocument<T>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>>(config: FirestoreContextSingleItemFirestoreCollectionConfig<T, PT, D, PD>): SingleItemFirestoreCollection<T, PT, D, PD>;
 }
 
-export interface FirestoreContextFirestoreCollectionConfig<T, D extends FirestoreDocument<T>> extends Omit<FirestoreCollectionConfig<T, D>, 'driverIdentifier' | 'driverType' | 'firestoreQueryDriver' | 'firestoreAccessorDriver'> { }
+export type FirestoreContextFirestoreCollectionConfig<T, D extends FirestoreDocument<T>> = Omit<FirestoreCollectionConfig<T, D>, 'driverIdentifier' | 'driverType' | 'firestoreQueryDriver' | 'firestoreAccessorDriver'>;
 export interface FirestoreContextFirestoreCollectionWithParentConfig<T, PT, D extends FirestoreDocument<T> = FirestoreDocument<T>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>> extends FirestoreContextFirestoreCollectionConfig<T, D> {
   readonly parent: PD;
 }
@@ -38,7 +38,7 @@ export type FirestoreContextFactory<F extends Firestore = Firestore> = (firestor
  */
 export function firestoreContextFactory<F extends Firestore = Firestore>(drivers: FirestoreDrivers): FirestoreContextFactory<F> {
   return (firestore: F) => {
-    const makeFirestoreCollectionConfig = <T, D extends FirestoreDocument<T>>(config: FirestoreContextFirestoreCollectionConfig<T, D> | FirestoreContextFirestoreCollectionWithParentConfig<T, any, D, any> | FirestoreContextSingleItemFirestoreCollectionConfig<T, any, D, any>) => ({
+    const makeFirestoreCollectionConfig = <T, PT, D extends FirestoreDocument<T> = FirestoreDocument<T>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>>(config: FirestoreContextFirestoreCollectionConfig<T, D> | FirestoreContextFirestoreCollectionWithParentConfig<T, PT, D, PD> | FirestoreContextSingleItemFirestoreCollectionConfig<T, PT, D, PD>) => ({
       ...config,
       firestoreContext: context,
       driverIdentifier: drivers.driverIdentifier,

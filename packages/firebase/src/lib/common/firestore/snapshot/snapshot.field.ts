@@ -1,18 +1,16 @@
 import { toISODateString, toJsDate } from '@dereekb/date';
 import { MapFunction, ModelFieldConversionConfig, GetterOrValue } from '@dereekb/util';
 
-export type FirestoreDatastoreType = any;
-
-export interface FirestoreFieldConfig<V, D = any> {
+export interface FirestoreFieldConfig<V, D = unknown> {
   default?: GetterOrValue<V>;
   defaultBeforeSave?: GetterOrValue<D | null>;
   fromData: MapFunction<D, V>;
   toData: MapFunction<V, D>;
 }
 
-export interface DefaultOnlyFirestoreFieldConfig<V, D = any> extends Pick<FirestoreFieldConfig<V, D>, 'default' | 'defaultBeforeSave'> { }
+export type DefaultOnlyFirestoreFieldConfig<V, D = unknown> = Pick<FirestoreFieldConfig<V, D>, 'default' | 'defaultBeforeSave'>;
 
-export function firestoreField<V, D = any>(config: FirestoreFieldConfig<V, D>): ModelFieldConversionConfig<V, D> {
+export function firestoreField<V, D = unknown>(config: FirestoreFieldConfig<V, D>): ModelFieldConversionConfig<V, D> {
   return {
     from: {
       default: config.default,
@@ -25,7 +23,7 @@ export function firestoreField<V, D = any>(config: FirestoreFieldConfig<V, D>): 
   }
 }
 
-export interface FirestoreStringFieldConfig extends DefaultOnlyFirestoreFieldConfig<string, string> { }
+export type FirestoreStringFieldConfig = DefaultOnlyFirestoreFieldConfig<string, string>;
 
 export function firestoreString(config: FirestoreStringFieldConfig = {}) {
   return firestoreField({
@@ -52,7 +50,7 @@ export function firestoreDate(config: FirestoreDateFieldConfig = {}) {
   });
 }
 
-export interface FirestoreBooleanFieldConfig extends DefaultOnlyFirestoreFieldConfig<boolean, boolean> { }
+export type FirestoreBooleanFieldConfig = DefaultOnlyFirestoreFieldConfig<boolean, boolean>;
 
 export function firestoreBoolean(config: FirestoreBooleanFieldConfig = {}) {
   return firestoreField({
@@ -62,7 +60,7 @@ export function firestoreBoolean(config: FirestoreBooleanFieldConfig = {}) {
   });
 }
 
-export interface FirestoreNumberFieldConfig extends DefaultOnlyFirestoreFieldConfig<number, number> { }
+export type FirestoreNumberFieldConfig = DefaultOnlyFirestoreFieldConfig<number, number>;
 
 export function firestoreNumber(config: FirestoreNumberFieldConfig = {}) {
   return firestoreField({

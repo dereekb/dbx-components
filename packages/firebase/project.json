@@ -37,7 +37,7 @@
       "executor": "@nrwl/linter:eslint",
       "outputs": ["{options.outputFile}"],
       "options": {
-        "lintFilePatterns": ["packages/firebase/**/*.ts"]
+        "lintFilePatterns": ["packages/firebase/src/**/*.ts"]
       }
     },
     "watch": {
