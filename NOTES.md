@@ -194,3 +194,6 @@ By default, Firebase API calls have their body parsed by express. This occurs be
 
 ### Firebase Emulator Hot Reloading
 Firebase's emulators only support hot reloading of rules. To achieve hot reloading we use a combination of demo-api's `build-base` target along with the `entr` command, which watches for changes produced by `nx build-base demo-api`. Currently the emulators do not [shut down gracefully](https://github.com/firebase/firebase-tools/issues/3034) and/or communicate they have closed. We use the `./wait-for-ports.sh` script to shut these processes down within the docker container before attempting to restart the emulators. The script waits for about 5 seconds before hard-stopping the processes and waiting for the ports to be released. 
+
+### Deploying Firebase Functions
+If you run into what looks like CORS issues, [check this issue comment out](https://github.com/firebase/firebase-js-sdk/issues/6182#issuecomment-1133525775). Most likely your cloud functions were deployed and are set to "authenticated only", which is incorrect.
