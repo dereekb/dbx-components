@@ -10,8 +10,8 @@ export type IterableOrValue<T> = T | Iterable<T>;
  * @param values 
  * @returns 
  */
-export function isIterable<T = unknown>(values: any): values is Iterable<T> {
-  if (values && values[Symbol.iterator]) {
+export function isIterable<T = unknown>(values: unknown): values is Iterable<T> {
+  if (values && (values as Iterable<T>)[Symbol.iterator]) {
     return true;
   } else {
     return false;
@@ -40,7 +40,7 @@ export function firstValueFromIterable<T>(values: Iterable<T>): Maybe<T> {
  * @returns 
  */
 export function takeValuesFromIterable<T>(values: Iterable<T>, count: number): T[] {
-  let result: T[] = [];
+  const result: T[] = [];
 
   for (const value of values) {
     if (result.length < count) {

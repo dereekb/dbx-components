@@ -23,7 +23,7 @@ export type CachedGetter<T> = Getter<T> & {
   init(): void;
 };
 
-export type CachedFactoryWithInput<T, A = any> = CachedGetter<T> & FactoryWithInput<T, A> & {
+export type CachedFactoryWithInput<T, A = unknown> = CachedGetter<T> & FactoryWithInput<T, A> & {
 
   /**
    * Re-initializes the cache using the factory function.
@@ -43,8 +43,8 @@ export type CachedFactoryWithInput<T, A = any> = CachedGetter<T> & FactoryWithIn
  * @returns 
  */
 export function cachedGetter<T>(getter: Getter<T>): CachedFactoryWithInput<T>;
-export function cachedGetter<T, A = any>(factory: FactoryWithInput<T, A>): CachedFactoryWithInput<T, A>;
-export function cachedGetter<T, A = any>(factory: FactoryWithInput<T, A>): CachedFactoryWithInput<T, A> {
+export function cachedGetter<T, A = unknown>(factory: FactoryWithInput<T, A>): CachedFactoryWithInput<T, A>;
+export function cachedGetter<T, A = unknown>(factory: FactoryWithInput<T, A>): CachedFactoryWithInput<T, A> {
   let loaded: Maybe<{ value: T }>;
 
   const init = (input?: A) => {
@@ -58,7 +58,7 @@ export function cachedGetter<T, A = any>(factory: FactoryWithInput<T, A>): Cache
       init(input);
     }
 
-    return loaded!.value;
+    return (loaded as { value: T }).value;
   }) as CachedFactoryWithInput<T, A>;
 
   result.set = (value: T) => loaded = { value };

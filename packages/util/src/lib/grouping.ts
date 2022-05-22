@@ -1,4 +1,4 @@
-import { FieldOfType, PrimativeKey, ReadKeyFunction } from "./key";
+import { PrimativeKey, ReadKeyFunction } from "./key";
 import { mapToObject } from "./object";
 import { Maybe } from "./value/maybe";
 
@@ -141,7 +141,7 @@ export function pairGroupValues<T, K extends PrimativeKey = PrimativeKey>(values
   const pairs: T[][] = [];
   const unpaired: T[] = [];
 
-  map.forEach((x: T[], key: Maybe<K>) => {
+  map.forEach((x: T[]) => {
     if (x.length === 1) {
       unpaired.push(x[0]);
     } else {
@@ -209,7 +209,7 @@ export function makeValuesGroupMap<T, K extends PrimativeKey = PrimativeKey>(val
 
   values.forEach((x) => {
     const key = groupKeyFn(x);
-    let array = map.get(key);
+    const array = map.get(key);
 
     if (array != null) {
       array.push(x);

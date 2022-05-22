@@ -32,7 +32,7 @@ export interface FilteredPageIterateFn<T> {
  * @param request 
  * @returns 
  */
-export function filteredPage<F = any>(page: number, request?: Filter<F>): FilteredPage<F> {
+export function filteredPage<F = unknown>(page: number, request?: Filter<F>): FilteredPage<F> {
   return {
     page,
     filter: (request?.filter) ? { ...request.filter } : undefined
@@ -57,7 +57,7 @@ export async function iterateFilteredPages<T, F>(inputPage: FilteredPage<F>, loa
     throw new Error('Neither use nor usePage was specified.');
   }
 
-  const useFn = iterFn.usePage ?? ((values: T[]) => iterate(values, iterFn.use!));
+  const useFn = iterFn.usePage ?? ((values: T[]) => iterate(values, (iterFn.use as IterateFn<T>)));
 
   while (hasMore) {
     const page = filteredPage(currentPage, inputPage);
@@ -79,14 +79,14 @@ export async function iterateFilteredPages<T, F>(inputPage: FilteredPage<F>, loa
  */
 export class FilteredPageUtility {
 
-  static page<F = any>(page: number, request?: FilteredPage<F>) {
+  static page<F = unknown>(page: number, request?: FilteredPage<F>) {
     return {
       page,
       filter: Object.assign({}, request?.filter)
     };
   }
 
-  static filter<F = any>(filter: F, request?: FilteredPage<F>) {
+  static filter<F = unknown>(filter: F, request?: FilteredPage<F>) {
     return {
       page: request?.page,
       filter: Object.assign({}, request?.filter, filter)

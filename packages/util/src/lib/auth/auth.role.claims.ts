@@ -109,11 +109,11 @@ export type AuthRoleRolesToClaimsFunction<T extends AuthRoleClaimsFactoryConfig 
 /**
  * Service used for converting claims to/from a roles set.
  */
-export interface AuthRoleClaimsService<T extends AuthRoleClaimsFactoryConfig = any> {
+export interface AuthRoleClaimsService<T extends AuthRoleClaimsFactoryConfig = AuthRoleClaimsFactoryConfig> {
   readonly toClaims: AuthRoleClaimsToRolesFunction<T>;
   readonly toRoles: AuthRoleRolesToClaimsFunction<T>;
-  readonly defaultClaimValue: any;
-  readonly defaultEmptyValue: any;
+  readonly defaultClaimValue: unknown;
+  readonly defaultEmptyValue: unknown;
 }
 
 export const AUTH_ROLE_CLAIMS_DEFAULT_CLAIM_VALUE = 1;
@@ -148,7 +148,7 @@ export function authRoleClaimsService<T extends AuthRoleClaimsFactoryConfig>(con
       const claimRoles = asArray(inputEntry.roles);
 
       // since checking uses equivalence, the objects will never match equivalence via the === properly.
-      // AuthRoleClaimsFactoryConfigEntryEncodeOptions is likely to be used for these cases anyways, but this will help avoid unexpected errors.
+      // AuthRoleClaimsFactoryConfigEntryEncodeOptions is likely to be used for these cases unknownways, but this will help avoid unexpected errors.
       if (typeof expectedValue === 'object') {
         throw new Error(`failed decoding claims. Expected value to be a string or number. Object isn't supported with simple claims.`);
       }
@@ -198,7 +198,7 @@ export function authRoleClaimsService<T extends AuthRoleClaimsFactoryConfig>(con
     const roles = new Set<string>();
 
     forEachKeyValue(claims, {
-      forEach: ([claimsKey, value]: [string, any]) => {
+      forEach: ([claimsKey, value]: [string, AuthClaimValue]) => {
         const entry = authRolesMap.get(claimsKey);
 
         if (entry != null) {

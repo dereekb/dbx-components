@@ -8,6 +8,7 @@ import { Maybe } from "./value/maybe";
  * 
  * I.E. 0,1,2
  */
+// eslint-disable-next-line
 export type CommaSeparatedString<T = unknown> = string;
 
 export function caseInsensitiveString(input: string): string;

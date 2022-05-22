@@ -1,13 +1,15 @@
-import { makeSnapshotConverterFunctions } from './snapshot';
-import { MockItem } from "@dereekb/firebase/test";
-import { firestoreBoolean } from './snapshot.field';
+import { snapshotConverterFunctions } from './snapshot';
+import { firestoreBoolean, firestoreString } from './snapshot.field';
+import { MockItem, MockItemData } from "@dereekb/firebase/test";
+import { modelFieldConversions } from '@dereekb/util';
 
 describe('makeSnapshotConverterFunctions()', () => {
 
   it('should create conversion functions for the input.', () => {
-    const result = makeSnapshotConverterFunctions<MockItem>({
+    const result = snapshotConverterFunctions({
       fields: {
-        test: firestoreBoolean({ default: false, defaultBeforeSave: false })
+        string: firestoreString({ default: '' }),
+        test: firestoreBoolean({ default: true })
       }
     });
 

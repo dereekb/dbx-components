@@ -1,5 +1,7 @@
 // A set of copied types from @google-cloud/firestore and firebase/firestore to allow cross-compatability.
 
+import { KeyValueTransformMap, OnlyStringKeys, StringKeyValueTransformMap } from '@dereekb/util';
+
 // MARK: Firestore
 // These types are provided to avoid us from using the "any".
 export type FirebaseFirestoreLikeFirestore = { type: string };
@@ -108,10 +110,10 @@ export interface SnapshotListenOptions {
 /**
  * Mirrors the types/methods of FirestoreDataConverter.
  */
-export interface FirestoreDataConverter<T> {
-  toFirestore(modelObject: WithFieldValue<T>): DocumentData;
-  toFirestore(modelObject: PartialWithFieldValue<T>, options: SetOptions): DocumentData;
-  fromFirestore(snapshot: QueryDocumentSnapshot<DocumentData>, options?: SnapshotOptions): T;
+export interface FirestoreDataConverter<T, O = DocumentData> {
+  toFirestore(modelObject: WithFieldValue<T>): O;
+  toFirestore(modelObject: PartialWithFieldValue<T>, options: SetOptions): O;
+  fromFirestore(snapshot: QueryDocumentSnapshot<O>, options?: SnapshotOptions): T;
 }
 
 // MARK: Document

@@ -1,4 +1,5 @@
-import { CollectionReference, AbstractFirestoreDocument, makeSnapshotConverterFunctions, firestoreString, firestoreDate, FirestoreCollection, UserRelatedById, DocumentReferenceRef, FirestoreContext, FirestoreCollectionWithParent, firestoreBoolean, DocumentDataWithId, AbstractFirestoreDocumentWithParent } from "@dereekb/firebase";
+import { CollectionReference, AbstractFirestoreDocument, snapshotConverterFunctions, firestoreString, firestoreDate, FirestoreCollection, UserRelatedById, DocumentReferenceRef, FirestoreContext, FirestoreCollectionWithParent, firestoreBoolean, DocumentDataWithId, AbstractFirestoreDocumentWithParent, optionalFirestoreDate } from "@dereekb/firebase";
+import { Maybe } from '@dereekb/util';
 
 export interface GuestbookFirestoreCollections {
   guestbookFirestoreCollection: GuestbookFirestoreCollection;
@@ -12,7 +13,7 @@ export interface Guestbook {
    * 
    * If not active, this item is still considered locked.
    */
-  published?: boolean;
+  published: boolean;
   /**
    * Guestbook name
    */
@@ -20,11 +21,11 @@ export interface Guestbook {
   /**
    * Whether or not this guestbook and it's entries can still be edited.
    */
-  locked?: boolean;
+  locked: boolean;
   /**
    * Date the guestbook was locked at.
    */
-  lockedAt?: Date;
+  lockedAt?: Maybe<Date>;
 }
 
 export type GuestbookWithId = DocumentDataWithId<Guestbook>;
@@ -35,12 +36,12 @@ export class GuestbookDocument extends AbstractFirestoreDocument<Guestbook, Gues
 
 export const guestbookCollectionPath = 'guestbook';
 
-export const guestbookConverter = makeSnapshotConverterFunctions<Guestbook>({
+export const guestbookConverter = snapshotConverterFunctions<Guestbook>({
   fields: {
-    published: firestoreBoolean(),
-    name: firestoreString(),
+    published: firestoreBoolean({ default: false }),
+    name: firestoreString({ default: '' }),
     locked: firestoreBoolean({ default: false }),
-    lockedAt: firestoreDate()
+    lockedAt: optionalFirestoreDate()
   }
 });
 
@@ -80,7 +81,7 @@ export interface GuestbookEntry extends UserRelatedById {
   /**
    * Whether or not the entry has been published. It can be unpublished at any time by the user.
    */
-  published?: boolean;
+  published: boolean;
 }
 
 export interface GuestbookEntryRef extends DocumentReferenceRef<GuestbookEntry> { }
@@ -89,13 +90,13 @@ export class GuestbookEntryDocument extends AbstractFirestoreDocumentWithParent<
 
 export const guestbookCollectionGuestbookEntryCollectionPath = 'entry';
 
-export const guestbookEntryConverter = makeSnapshotConverterFunctions<GuestbookEntry>({
+export const guestbookEntryConverter = snapshotConverterFunctions<GuestbookEntry>({
   fields: {
-    message: firestoreString(),
-    signed: firestoreString(),
+    message: firestoreString({ default: '' }),
+    signed: firestoreString({ default: '' }),
     updatedAt: firestoreDate({ saveDefaultAsNow: true }),
     createdAt: firestoreDate({ saveDefaultAsNow: true }),
-    published: firestoreBoolean({ defaultBeforeSave: false })
+    published: firestoreBoolean({ default: false, defaultBeforeSave: false })
   }
 });
 

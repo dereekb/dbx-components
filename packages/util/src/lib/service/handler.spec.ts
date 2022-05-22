@@ -68,7 +68,7 @@ describe('handler()', () => {
 
         const testThis = {};
         const key = '1';
-        const fn = function (this: unknown, x: number) {
+        const fn = function (this: unknown) {
           expect(this).toBe(testThis);
           wasUsed = true;
           return true;  // result

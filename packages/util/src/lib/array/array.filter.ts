@@ -88,7 +88,7 @@ export function applyBestFit<T>(input: T[], filter: (value: T) => boolean, compa
 
     expansion.forEach(({ i, item }) => {
       if (i !== bestPair.i) {
-        input[i] = updateNonBestFit(item!); // Update value on input.
+        input[i] = updateNonBestFit(item as T); // Update value on input.
       }
     });
   }

@@ -27,7 +27,7 @@ export function readableError(code: StringErrorCode, message?: string) {
   };
 }
 
-export interface ReadableDataError<T = any> extends ReadableError {
+export interface ReadableDataError<T = unknown> extends ReadableError {
   data?: T;
 }
 
@@ -53,13 +53,13 @@ export function convertToReadableError(inputError: ErrorInput | undefined): Code
       error = (inputError as ErrorWrapper).data as ReadableError;
     } else if (inputError instanceof BaseError) {
       error = {
-        code: (inputError as any).code || inputError.name,
+        code: inputError.name,
         message: inputError.message
       };
     } else {
       error = {
         code: 'ERROR',
-        message: (inputError as any).message || ''
+        message: (inputError as ReadableError).message || ''
       };
     }
   }

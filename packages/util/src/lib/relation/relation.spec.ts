@@ -19,7 +19,7 @@ function READ_RELATION_KEY<T extends RelationTag>(model: T): RelationModelType {
   return model.key;
 }
 
-function MERGE_RELATION_TAG(a: RelationTag, b: RelationTag): RelationTag {
+function MERGE_RELATION_TAG(a: RelationTag): RelationTag {
   return a; // a and b are the same.
 }
 

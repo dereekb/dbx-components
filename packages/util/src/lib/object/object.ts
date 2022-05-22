@@ -156,12 +156,12 @@ export function assignValuesToPOJO<T extends object = object>(target: T, obj: T,
  * @param filter 
  * @returns 
  */
-export function valuesFromPOJO<O = any, I extends object = object>(target: I, filter: FilterKeyValueTuplesInput<I> = KeyValueTypleValueFilter.UNDEFINED): O[] {
+export function valuesFromPOJO<O = unknown, I extends object = object>(target: I, filter: FilterKeyValueTuplesInput<I> = KeyValueTypleValueFilter.UNDEFINED): O[] {
   const values: O[] = [];
 
   forEachKeyValue<I>(target, {
     filter,
-    forEach: ([key, value]) => {
+    forEach: ([, value]) => {
       values.push(value as unknown as O);
     }
   });
@@ -249,7 +249,7 @@ export function filterKeyValueTupleFunction<T extends object = object, K extends
   }
 
   if (keysFilter) {
-    const filterByTypeFn = filterFn!;
+    const filterByTypeFn = filterFn as FilterKeyValueTupleFunction<T, K>;
     const keysSet = new Set(keysFilter);
     filterFn = (x, i) => filterByTypeFn(x, i) && keysSet.has(x[0]);
   }
@@ -269,9 +269,8 @@ export function objectIsEmpty<T extends object>(obj: Maybe<T>): boolean {
     if (keys.length > 0) {
       for (let i = 0; i < keys.length; i += 1) {
         const key = keys[i];
-        const value = (obj as any)[key];
-
-        const isEmpty = (typeof obj === 'object') ? objectIsEmpty(value) : !hasValueOrNotEmpty(value);
+        const value = (obj as T)[key as keyof T];
+        const isEmpty = (typeof obj === 'object') ? objectIsEmpty<object>(value as unknown as Maybe<object>) : !hasValueOrNotEmpty(value);
 
         if (!isEmpty) {
           return false;
@@ -290,7 +289,7 @@ export function objectIsEmpty<T extends object>(obj: Maybe<T>): boolean {
  * @param objects 
  */
 export function mergeObjects<T extends object>(objects: Maybe<Partial<T>>[], filter?: KeyValueTupleFilter<T>): Partial<T> {
-  let object: Partial<T> = {};
+  const object: Partial<T> = {};
   overrideInObject(object, { from: filterMaybeValues(objects), filter });
   return object;
 }

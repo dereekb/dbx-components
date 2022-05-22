@@ -8,13 +8,13 @@ export interface ServerErrorResponseData extends ReadableError {
   /**
    * Additional keys/data returned in the error data.
    */
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 /**
  * Human-readable server error with additional data and a status code.
  */
-export interface ServerError<T = any> extends ReadableDataError<T> {
+export interface ServerError<T = ServerErrorResponseData> extends ReadableDataError<T> {
   status: number;
 }
 

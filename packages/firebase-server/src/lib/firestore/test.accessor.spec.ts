@@ -50,7 +50,8 @@ describe('FirestoreDocumentDataAccessor', () => {
 
       beforeEach(async () => {
         await document.accessor.set({
-          test: false
+          test: false,
+          
         });
       });
 

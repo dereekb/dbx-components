@@ -54,7 +54,6 @@ export type MultiModelKeyMap<T> = Map<string, T>;
 
 export const readUniqueModelKey = (model: UniqueModel) => model.id;
 
-
 export abstract class AbstractUniqueModel {
   id?: ModelKey;
 
@@ -95,7 +94,7 @@ export function removeModelsWithSameKey<T>(input: T[], model: T, read: ReadModel
 
 export function removeModelsWithKey<T extends UniqueModel>(input: T[], key: Maybe<ModelKey>, read?: ReadModelKeyFunction<T>): T[];
 export function removeModelsWithKey<T>(input: T[], key: Maybe<ModelKey>, read: ReadModelKeyFunction<T>): T[];
-export function removeModelsWithKey(input: any[], key: Maybe<ModelKey>, read: ReadModelKeyFunction<any> = readUniqueModelKey as any): any[] {
+export function removeModelsWithKey<T>(input: T[], key: Maybe<ModelKey>, read: ReadModelKeyFunction<T> = readUniqueModelKey): T[] {
   return input.filter(x => read(x) !== key);
 }
 
@@ -149,9 +148,9 @@ export function requireModelKey<T extends UniqueModel>(input: ModelOrKey<T> | un
   return readModelKey(input);
 }
 
-export function readModelKey<T>(input: ModelOrKey<any> | undefined, params: ReadModelKeyParams<T>): Maybe<ModelKey>;
+export function readModelKey<T>(input: ModelOrKey<T> | undefined, params: ReadModelKeyParams<T>): Maybe<ModelKey>;
 export function readModelKey<T extends UniqueModel>(input: ModelOrKey<T> | undefined, params?: Partial<ReadModelKeyParams<T>>): Maybe<ModelKey>;
-export function readModelKey<T>(input: ModelOrKey<any> | undefined, { required = false, read = (x) => (x as any).id }: Partial<ReadModelKeyParams<T>> = {}): Maybe<ModelKey> {
+export function readModelKey<T>(input: ModelOrKey<T> | undefined, { required = false, read = (x) => (x as UniqueModel).id }: Partial<ReadModelKeyParams<T>> = {}): Maybe<ModelKey> {
   let key: Maybe<ModelKey>;
 
   switch (typeof input) {

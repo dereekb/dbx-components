@@ -3,7 +3,7 @@ export interface Filter<F> {
   filter?: F;
 }
 
-export interface OptionalFilter<F> extends Partial<Filter<F>> { }
+export type OptionalFilter<F> = Partial<Filter<F>>;
 
 export type FilterFunction<T = unknown> = ((value: T, index: number) => boolean);
 
