@@ -37,7 +37,9 @@ describe('dbxFilterMapDirective', () => {
 
 });
 
-export interface TestFilter { }
+export interface TestFilter { 
+  test?: boolean;
+}
 
 @Component({
   template: `

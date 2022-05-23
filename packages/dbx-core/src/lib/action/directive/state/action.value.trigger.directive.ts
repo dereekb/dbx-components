@@ -8,14 +8,14 @@ import { DbxActionValueOnTriggerFunction, DbxActionValueOnTriggerInstance } from
  * Abstract class for directives that may perform an action when trigger is called, and returns a value.
  */
 @Directive()
-export abstract class AbstractDbxActionValueOnTriggerDirective<T> {
+export abstract class AbstractDbxActionValueOnTriggerDirective<T> implements OnInit, OnDestroy {
 
   private readonly _instance: DbxActionValueOnTriggerInstance<T>;
 
   private _triggeredSub = new SubscriptionObject();
 
   constructor(
-    readonly source: DbxActionContextStoreSourceInstance<T, any>,
+    readonly source: DbxActionContextStoreSourceInstance<T, unknown>,
     valueGetter?: Maybe<DbxActionValueOnTriggerFunction<T>>
   ) {
     this._instance = new DbxActionValueOnTriggerInstance<T>({
@@ -60,7 +60,7 @@ export abstract class AbstractDbxActionValueOnTriggerDirective<T> {
 })
 export class DbxActionValueTriggerDirective<T = object> extends AbstractDbxActionValueOnTriggerDirective<T> implements OnInit, OnDestroy {
 
-  @Input('dbxActionValueOnTrigger')
+  @Input()
   set dbxActionValueOnTrigger(dbxActionValueTrigger: Maybe<DbxActionValueOnTriggerFunction<T>>) {
     this.valueGetter = dbxActionValueTrigger;
   }
@@ -72,7 +72,7 @@ export class DbxActionValueTriggerDirective<T = object> extends AbstractDbxActio
 
   constructor(
     readonly elementRef: ElementRef,
-    source: DbxActionContextStoreSourceInstance<T, any>
+    source: DbxActionContextStoreSourceInstance<T, unknown>
   ) {
     super(source);
   }

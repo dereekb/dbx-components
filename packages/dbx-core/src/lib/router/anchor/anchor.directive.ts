@@ -25,8 +25,6 @@ export class AbstractDbxAnchorDirective<T extends ClickableAnchor = ClickableAnc
     shareReplay(1)
   );
 
-  constructor() { }
-
   ngOnDestroy(): void {
     this._disabled.complete();
     this._anchor.complete();

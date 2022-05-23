@@ -2,7 +2,7 @@ import { TransitionHookFn, Transition, HookResult, StateService, UIInjector, Tra
 import { catchError, map, first, firstValueFrom, Observable, of, switchMap } from 'rxjs';
 import { SegueRef } from './../../../../router/segue';
 import { DbxAuthService } from '../../../service/auth.service';
-import { FactoryWithInput, FactoryWithRequiredInput, getValueFromGetter, isGetter, Maybe } from '@dereekb/util';
+import { FactoryWithRequiredInput, getValueFromGetter, isGetter, Maybe } from '@dereekb/util';
 import { Injector } from '@angular/core';
 
 /**

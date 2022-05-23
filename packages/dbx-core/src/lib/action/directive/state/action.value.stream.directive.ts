@@ -26,7 +26,7 @@ export class dbxActionValueStreamDirective<T, O> implements OnInit, OnDestroy {
   }
 
   @Input()
-  set dbxActionValueStreamIsNotEmpty(requireNonEmpty: any) {
+  set dbxActionValueStreamIsNotEmpty(requireNonEmpty: unknown) {
     if (isDefinedAndNotFalse(requireNonEmpty)) {
       this.dbxActionValueStreamModified = (value) => {
         return of(hasValueOrNotEmpty(value));
@@ -63,13 +63,13 @@ export class dbxActionValueStreamDirective<T, O> implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     // Update Modified value.
-    this._modifiedSub.subscription = this.modifiedValue$.subscribe(([isModified, value]) => {
+    this._modifiedSub.subscription = this.modifiedValue$.subscribe(([isModified]) => {
       this.source.setIsModified(isModified);
     });
 
     // Set the value on triggers.
     this._triggerSub.subscription = this.source.triggered$.pipe(
-      switchMap(_ => this.modifiedValue$)
+      switchMap(() => this.modifiedValue$)
     ).subscribe(([isModified, value]) => {
       if (isModified) {
         this.source.readyValue(value);

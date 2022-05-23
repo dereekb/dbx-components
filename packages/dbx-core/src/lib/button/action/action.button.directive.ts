@@ -1,5 +1,5 @@
 import { safeDetectChanges } from '../../util/view';
-import { Directive, Host, OnInit, OnDestroy, NgZone, ChangeDetectorRef } from '@angular/core';
+import { Directive, Host, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { DbxButton } from '../button';
 import { DbxActionContextStoreSourceInstance } from '../../action/action.store.source';
 import { DbxActionButtonTriggerDirective } from './action.button.trigger.directive';

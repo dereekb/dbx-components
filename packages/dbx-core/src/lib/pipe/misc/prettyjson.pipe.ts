@@ -4,7 +4,7 @@ import { Maybe } from '@dereekb/util';
 @Pipe({ name: 'prettyjson' })
 export class PrettyJsonPipe implements PipeTransform {
 
-  public static toPrettyJson(input: Maybe<any>, spacing: number = 2): Maybe<string> {
+  public static toPrettyJson(input: Maybe<unknown>, spacing: number = 2): Maybe<string> {
     let json: Maybe<string>;
 
     if (input) {
@@ -19,7 +19,7 @@ export class PrettyJsonPipe implements PipeTransform {
     return json;
   }
 
-  transform(input: Maybe<any>, spacing?: number): Maybe<string> {
+  transform(input: Maybe<unknown>, spacing?: number): Maybe<string> {
     return PrettyJsonPipe.toPrettyJson(input, spacing);
   }
 

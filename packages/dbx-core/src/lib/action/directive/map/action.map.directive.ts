@@ -24,13 +24,11 @@ export class DbxActionContextMapDirective implements ActionContextStoreSourceMap
 
   readonly areAnyWorking$ = this.checkAnyAre(x => x.isWorking$, false);
 
-  constructor() { }
-
   get map(): Map<ActionKey, ActionContextStoreSource> {
     return this._map.value;
   }
 
-  sourceForKey(key: ActionKey): ActionContextStoreSource<any, any> {
+  sourceForKey(key: ActionKey): ActionContextStoreSource<unknown, unknown> {
     return new DbxActionContextMapDirectiveSourceInstance(this, key);
   }
 

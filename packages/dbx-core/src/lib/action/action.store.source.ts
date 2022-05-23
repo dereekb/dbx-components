@@ -10,7 +10,7 @@ import { DbxActionDisabledKey, DbxActionState } from './action';
 /**
  * Source that provides a ActionContextStore observable.
  */
-export abstract class ActionContextStoreSource<T = any, O = any> {
+export abstract class ActionContextStoreSource<T = unknown, O = unknown> {
   /**
    * Observable referencing the ActionContextStore.
    *
@@ -22,7 +22,7 @@ export abstract class ActionContextStoreSource<T = any, O = any> {
 /**
  * Secondary source. Used by DbxActionContextComponent to find secondary sources.
  */
-export abstract class SecondaryActionContextStoreSource<T = any, O = any> extends ActionContextStoreSource<T, O> { }
+export abstract class SecondaryActionContextStoreSource<T = unknown, O = unknown> extends ActionContextStoreSource<T, O> { }
 
 export function actionContextStoreSourcePipe<T, O>(obs: Observable<Maybe<ActionContextStore<T, O>>>): Observable<ActionContextStore<T, O>> {
   return obs.pipe(filterMaybe());
@@ -30,7 +30,7 @@ export function actionContextStoreSourcePipe<T, O>(obs: Observable<Maybe<ActionC
 
 export type PipeActionStoreFunction<R, T, O> = (store: ActionContextStore<T, O>) => Observable<R>;
 
-export function pipeActionStore<R = any, T = any, O = any>(source: ActionContextStoreSource<T, O>, pipeFn: PipeActionStoreFunction<R, T, O>): Observable<R> {
+export function pipeActionStore<R = unknown, T = unknown, O = unknown>(source: ActionContextStoreSource<T, O>, pipeFn: PipeActionStoreFunction<R, T, O>): Observable<R> {
   return source.store$.pipe(
     switchMap(pipeFn)
   );
@@ -41,7 +41,7 @@ export type UseActionStoreFunction<T, O> = (store: ActionContextStore<T, O>) => 
 /**
  * Convenience function for subscribing to the input source once and using the provided store.
  */
-export function useActionStore<T = any, O = any>(source: ActionContextStoreSource<T, O>, useFn: UseActionStoreFunction<T, O>): Subscription {
+export function useActionStore<T = unknown, O = unknown>(source: ActionContextStoreSource<T, O>, useFn: UseActionStoreFunction<T, O>): Subscription {
   return source.store$.pipe(first()).subscribe(useFn);
 }
 
@@ -49,7 +49,7 @@ export function useActionStore<T = any, O = any>(source: ActionContextStoreSourc
  * Service that wraps a ActionContextStoreSource.
  */
 @Injectable()
-export class DbxActionContextStoreSourceInstance<T = any, O = any> implements ActionContextStoreSource, OnDestroy {
+export class DbxActionContextStoreSourceInstance<T = unknown, O = unknown> implements ActionContextStoreSource<T, O>, OnDestroy {
 
   readonly lockSet = new LockSet();
 

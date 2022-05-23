@@ -48,7 +48,7 @@ export type ErrorInput = ErrorWrapper | CodedError | ReadableError | ReadableDat
  * @param inputError 
  * @returns 
  */
-export function convertToReadableError(inputError: Maybe<ErrorInput>): Maybe<CodedError | ReadableError> {
+export function toReadableError(inputError: Maybe<ErrorInput>): Maybe<CodedError | ReadableError> {
   let error: Maybe<CodedError | ReadableError>;
 
   if (inputError) {

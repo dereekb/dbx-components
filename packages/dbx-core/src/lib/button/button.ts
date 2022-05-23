@@ -21,7 +21,7 @@ export abstract class DbxButton {
   abstract working: Maybe<boolean>;
   abstract icon?: Maybe<string>;
   abstract text?: Maybe<string>;
-  abstract readonly clicked$: Observable<any>;
+  abstract readonly clicked$: Observable<unknown>;
   abstract setButtonInterceptor(interceptor: DbxButtonInterceptor): void;
   abstract clickButton(): void;
 }

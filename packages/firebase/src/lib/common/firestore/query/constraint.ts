@@ -70,7 +70,7 @@ export function offset(offset: number): FirestoreQueryConstraint<OffsetQueryCons
 // MARK: Where
 export const FIRESTORE_WHERE_QUERY_CONSTRAINT_TYPE = 'where';
 
-export type WhereFilterOp = '<' | '<=' | '==' | '!=' | '>=' | '>' | 'array-contains' | 'in' | 'array-contains-unknown' | 'not-in';
+export type WhereFilterOp = '<' | '<=' | '==' | '!=' | '>=' | '>' | 'array-contains' | 'in' | 'not-in'; // 'array-contains-unknown' is not supported by firebase-server
 
 export interface WhereQueryConstraintData {
   fieldPath: string | FieldPath;
@@ -160,8 +160,13 @@ export function endBefore<T = DocumentData>(snapshot: DocumentSnapshot<T>): Fire
  */
 export type FirestoreQueryConstraintHandlerFunction<B, D = unknown> = (builder: B, data: D, constraint: FirestoreQueryConstraint<D>) => B;
 
-export type FirestoreQueryConstraintHandlerMap<B> = ObjectMap<Maybe<FirestoreQueryConstraintHandlerFunction<B>>>;
+export type FirestoreQueryConstraintHandlerMap<B> = {
+  [key: string]: Maybe<FirestoreQueryConstraintHandlerFunction<B, any>>
+};
 
+/**
+ * The full list of known firestore query constraints, and the data associated with it.
+ */
 export type FullFirestoreQueryConstraintDataMapping = {
   [FIRESTORE_LIMIT_QUERY_CONSTRAINT_TYPE]: LimitQueryConstraintData,
   [FIRESTORE_LIMIT_TO_LAST_QUERY_CONSTRAINT_TYPE]: LimitToLastQueryConstraintData,
@@ -176,11 +181,11 @@ export type FullFirestoreQueryConstraintDataMapping = {
 
 export type FullFirestoreQueryConstraintMapping = {
   [K in keyof FullFirestoreQueryConstraintDataMapping]: FirestoreQueryConstraint<FullFirestoreQueryConstraintDataMapping[K]>;
-}
+};
 
 export type FullFirestoreQueryConstraintHandlersMapping<B> = {
   [K in keyof FullFirestoreQueryConstraintMapping]: Maybe<FirestoreQueryConstraintHandlerFunction<B, FullFirestoreQueryConstraintDataMapping[K]>>;
-}
+};
 
 // MARK: Utils
 export function addOrReplaceLimitInConstraints(limit: number, addedLimitType: (typeof FIRESTORE_LIMIT_QUERY_CONSTRAINT_TYPE | typeof FIRESTORE_LIMIT_TO_LAST_QUERY_CONSTRAINT_TYPE) = FIRESTORE_LIMIT_QUERY_CONSTRAINT_TYPE): (constraints: FirestoreQueryConstraint[]) => FirestoreQueryConstraint[] {

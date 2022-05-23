@@ -37,6 +37,7 @@ describe('Action Button', () => {
       testComponent = fixture.componentInstance;
 
       directive = testComponent.directive;
+      expect(directive).toBeDefined();
 
       fixture.detectChanges();
     });
@@ -87,6 +88,7 @@ describe('Action Button', () => {
       testComponent = fixture.componentInstance;
 
       directive = testComponent.directive;
+      expect(directive).toBeDefined();
 
       fixture.detectChanges();
     });
@@ -126,8 +128,6 @@ class TestDbxActionButtonTriggerDirectiveComponent {
   @ViewChild(DbxButtonDirective, { static: true })
   button?: DbxButtonDirective;
 
-  constructor() { }
-
 }
 
 @Component({
@@ -147,7 +147,5 @@ class TestDbxActionButtonDirectiveComponent {
 
   @ViewChild(DbxButtonDirective, { static: true })
   button?: DbxButtonDirective;
-
-  constructor() { }
 
 }

@@ -19,7 +19,7 @@ export class DbxAuthHasAnyRoleDirective extends AbstractIfDirective implements O
   readonly show$ = this.dbxAuthService.authRoles$.pipe(authRolesSetContainsAnyRoleFrom(this.targetRoles$));
 
   constructor(
-    templateRef: TemplateRef<any>,
+    templateRef: TemplateRef<unknown>,
     viewContainer: ViewContainerRef,
     private dbxAuthService: DbxAuthService
   ) {

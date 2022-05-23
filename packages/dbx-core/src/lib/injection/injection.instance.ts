@@ -101,7 +101,7 @@ export class DbxInjectionInstance<T> implements Initialized, Destroyable {
     let injector: Injector | undefined;
     const parentInjector = inputInjector ?? this._injector;
 
-    if (Boolean(providers || data)) {
+    if (providers || data) {
       injector = Injector.create({
         parent: parentInjector,
         providers: mergeArrayOrValueIntoArray([{

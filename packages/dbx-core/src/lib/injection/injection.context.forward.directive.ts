@@ -13,7 +13,7 @@ export abstract class AbstractForwardDbxInjectionContextDirective implements Dbx
   constructor(@Host() readonly dbxInjectionContext: DbxInjectionContext) { }
 
   // MARK: DbxInjectionContext
-  showContext<T = any, O = any>(config: DbxInjectionContextConfig<T, any>): Promise<O> {
+  showContext<T = unknown, O = unknown>(config: DbxInjectionContextConfig<T, unknown>): Promise<O> {
     return this.dbxInjectionContext.showContext(config);
   }
 

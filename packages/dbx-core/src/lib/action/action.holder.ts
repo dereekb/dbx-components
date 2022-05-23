@@ -8,9 +8,9 @@ import { DbxActionDisabledKey } from './action';
 /**
  * Abstract class that can either use SecondaryActionContextStoreSource or create it's own.
  */
-export class DbxActionContextBaseSource<T = any, O = any> implements ActionContextStoreSource, Destroyable {
+export class DbxActionContextBaseSource<T = unknown, O = unknown> implements ActionContextStoreSource<T, O>, Destroyable {
 
-  private readonly _store?: ActionContextStore;
+  private readonly _store?: ActionContextStore<T, O>;
   private readonly _store$: Observable<ActionContextStore<T, O>>;
   private readonly _instance: DbxActionContextStoreSourceInstance<T, O>;
 
@@ -18,7 +18,7 @@ export class DbxActionContextBaseSource<T = any, O = any> implements ActionConte
   readonly triggered$: Observable<boolean>;
   readonly success$: Observable<Maybe<O>>;
 
-  constructor(readonly inputSource?: SecondaryActionContextStoreSource) {
+  constructor(readonly inputSource?: SecondaryActionContextStoreSource<T, O>) {
     if (this.inputSource) {
       this._store$ = this.inputSource.store$;
     } else {

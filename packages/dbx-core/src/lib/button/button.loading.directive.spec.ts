@@ -26,7 +26,7 @@ describe('DbxLoadingButton', () => {
   beforeEach(async () => {
     fixture = TestBed.createComponent(TestDbxLoadingButtonDirectiveComponent);
     testComponent = fixture.componentInstance;
-    button = testComponent.button!;
+    button = testComponent.button as DbxButtonDirective;
     fixture.detectChanges();
   });
 

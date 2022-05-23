@@ -16,7 +16,7 @@ export function redirectBasedOnAuthUserState(stateMap: ObjectMap<AuthTransitionR
       first(),
       switchMap((authUserState: AuthUserState) => {
         const getter = stateMap[authUserState];
-        let result: Observable<Maybe<SegueRef>>;
+        let result: Maybe<Observable<Maybe<SegueRef>>>;
 
         if (getter) {
           if (isGetter<AuthTransitionRedirectTarget>(getter)) {
@@ -26,11 +26,11 @@ export function redirectBasedOnAuthUserState(stateMap: ObjectMap<AuthTransitionR
           }
         }
 
-        if (!result!) {
+        if (!result) {
           result = of(undefined);
         }
 
-        return result;
+        return result as Observable<Maybe<SegueRef>>;
       })
     );
   };

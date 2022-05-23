@@ -14,10 +14,9 @@ export class DateFormatDistancePipe implements PipeTransform {
 
   transform(input: Maybe<DateOrDateString>, format: string, includeSeconds = false): Maybe<string> {
     if (input) {
-      const date = toJsDate(input)!;
+      const date = toJsDate(input);
 
       if (isValid(date)) {
-
         const dateString = formatDate(date, format, this.locale);
 
         const distance = formatDistanceToNow(date, {

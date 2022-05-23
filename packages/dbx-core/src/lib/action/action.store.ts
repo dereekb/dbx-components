@@ -43,7 +43,7 @@ export function actionContextHasNoErrorAndIsModifiedAndCanTrigger(state: ActionC
   return !state.error && actionContextIsModifiedAndCanTrigger(state);
 }
 
-export function loadingStateForActionContextState<O>(state: ActionContextState): LoadingState<O> {
+export function loadingStateForActionContextState<O = unknown>(state: ActionContextState<unknown, O>): LoadingState<O> {
   let loadingState: LoadingState<O>;
 
   switch (state.actionState) {
@@ -69,7 +69,7 @@ export function loadingStateTypeForActionContextState(state: ActionContextState)
   return loadingStateTypeForActionState(state.actionState);
 }
 
-export interface ActionContextState<T = any, O = any> {
+export interface ActionContextState<T = unknown, O = unknown> {
   actionState: DbxActionState;
   isModified: boolean;
   /**
@@ -100,12 +100,12 @@ const INITIAL_STATE: ActionContextState = {
 };
 
 @Injectable()
-export class ActionContextStore<T = any, O = any> extends ComponentStore<ActionContextState<T, O>> implements OnDestroy {
+export class ActionContextStore<T = unknown, O = unknown> extends ComponentStore<ActionContextState<T, O>> implements OnDestroy {
 
   readonly lockSet = new LockSet();
 
   constructor() {
-    super({ ...INITIAL_STATE });
+    super({ ...INITIAL_STATE } as ActionContextState<T, O>);
     this.lockSet.addLock('working', this.isWorking$);
   }
 
@@ -135,7 +135,7 @@ export class ActionContextStore<T = any, O = any> extends ComponentStore<ActionC
   /**
    * Pipes the readied value on ValueReady.
    */
-  readonly valueReady$: Observable<T> = this.afterDistinctActionState(DbxActionState.VALUE_READY, x => x.value!);
+  readonly valueReady$: Observable<T> = this.afterDistinctActionState(DbxActionState.VALUE_READY, x => x.value as T);
 
   /**
    * Pipes the error on the rejection state.
@@ -223,7 +223,7 @@ export class ActionContextStore<T = any, O = any> extends ComponentStore<ActionC
    */
   readonly disable = this.updater((state, key?: void | DbxActionDisabledKey) => ({
     ...state,
-    disabled: BooleanStringKeyArrayUtilityInstance.insert(state.disabled, ((key as any) ?? DEFAULT_ACTION_DISABLED_KEY))
+    disabled: BooleanStringKeyArrayUtilityInstance.insert(state.disabled, ((key as string) ?? DEFAULT_ACTION_DISABLED_KEY))
   }));
 
   /**
@@ -231,7 +231,7 @@ export class ActionContextStore<T = any, O = any> extends ComponentStore<ActionC
    */
   readonly enable = this.updater((state, key?: void | DbxActionDisabledKey) => ({
     ...state,
-    disabled: BooleanStringKeyArrayUtilityInstance.remove(state.disabled, ((key as any) ?? DEFAULT_ACTION_DISABLED_KEY))
+    disabled: BooleanStringKeyArrayUtilityInstance.remove(state.disabled, ((key as string) ?? DEFAULT_ACTION_DISABLED_KEY))
   }));
 
   /**
@@ -279,7 +279,7 @@ export class ActionContextStore<T = any, O = any> extends ComponentStore<ActionC
   /**
    * Completely resets the store.
    */
-  readonly reset = this.updater((state) => ({ ...INITIAL_STATE }));
+  readonly reset = this.updater(() => ({ ...INITIAL_STATE } as ActionContextState<T, O>));
 
   // MARK: Utility
   afterDistinctBoolean(fromState: (state: ActionContextState<T, O>) => boolean): Observable<boolean> {
@@ -302,7 +302,7 @@ export class ActionContextStore<T = any, O = any> extends ComponentStore<ActionC
     return this.state$.pipe(
       map((x) => ([x, x.actionState]) as [ActionContextState, DbxActionState]),
       distinctUntilChanged((a, b) => a?.[1] === b?.[1]),  // Filter out when the state remains the same.
-      map(x => x[0]),
+      map(x => x[0] as ActionContextState<T, O>),
       shareReplay(1)
     );
   }
@@ -311,7 +311,7 @@ export class ActionContextStore<T = any, O = any> extends ComponentStore<ActionC
     return this.state$.pipe(
       map((x) => ([x, loadingStateForActionContextState(x)]) as [ActionContextState, LoadingStateType]),
       distinctUntilChanged((a, b) => a?.[1] === b?.[1]),  // Filter out when the loading state remains the same.
-      map(x => x[0]),
+      map(x => x[0] as ActionContextState<T, O>),
       shareReplay(1)
     );
   }

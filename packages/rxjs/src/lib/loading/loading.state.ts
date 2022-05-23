@@ -1,5 +1,5 @@
 import { map, startWith, shareReplay, catchError, delay, first, distinctUntilChanged, combineLatest, Observable, of, MonoTypeOperatorFunction } from 'rxjs';
-import { Maybe, ReadableError, reduceBooleansWithAnd, reduceBooleansWithOr, ReadableDataError, Page, FilteredPage, PageNumber, objectHasKey, MapFunction, ErrorInput, convertToReadableError } from '@dereekb/util';
+import { Maybe, ReadableError, reduceBooleansWithAnd, reduceBooleansWithOr, ReadableDataError, Page, FilteredPage, PageNumber, objectHasKey, MapFunction, ErrorInput, toReadableError } from '@dereekb/util';
 
 /**
  * A value/error pair used in loading situations.
@@ -126,7 +126,7 @@ export function successPageResult<T>(page: PageNumber, value: T): PageLoadingSta
 }
 
 export function errorResult<T = unknown>(error?: Maybe<ErrorInput>): LoadingState<T> {
-  return { error: convertToReadableError(error), loading: false };
+  return { error: toReadableError(error), loading: false };
 }
 
 export function errorPageResult<T>(page: PageNumber, error?: Maybe<ReadableError | ReadableDataError>): PageLoadingState<T> {

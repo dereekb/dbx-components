@@ -21,11 +21,11 @@ export abstract class AbstractDbxInjectionDirective<T> implements OnInit, OnDest
     this._instance.destroy();
   }
 
-  setConfig(config: Maybe<DbxInjectionComponentConfig>) {
+  setConfig(config: Maybe<DbxInjectionComponentConfig<T>>) {
     this._instance.config = config;
   }
 
-  setTemplate(template: Maybe<DbxInjectionTemplateConfig>) {
+  setTemplate(template: Maybe<DbxInjectionTemplateConfig<T>>) {
     this._instance.template = template;
   }
 

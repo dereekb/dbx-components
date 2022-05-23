@@ -1,3 +1,4 @@
+import { filterMaybeValues } from '@dereekb/util';
 import { Observable } from 'rxjs';
 import { map, shareReplay } from 'rxjs/operators';
 import { StorageAccessor } from './storage.accessor';
@@ -44,7 +45,7 @@ export class StringStorageAccessor implements StorageAccessor<StoredDataString> 
 
   all(): Observable<StoredDataString[]> {
     return this.allKeys().pipe(
-      map(x => x.map(y => this._storage.getItem(y)!)),
+      map(x => filterMaybeValues(x.map(y => this._storage.getItem(y)))),
       shareReplay(1)
     );
   }

@@ -36,7 +36,7 @@ export class DbxActionAutoTriggerDirective<T, O> extends AbstractSubscriptionDir
     return this._triggerEnabled.value;
   }
 
-  set triggerEnabled(triggerEnabled: Maybe<boolean> | any) {
+  set triggerEnabled(triggerEnabled: Maybe<boolean> | '') {
     triggerEnabled = triggerEnabled !== false;  // Default to true
 
     if (this.triggerEnabled !== triggerEnabled) {
@@ -61,7 +61,7 @@ export class DbxActionAutoTriggerDirective<T, O> extends AbstractSubscriptionDir
    * Used in forms that are simple.
    */
   @Input()
-  set fastTrigger(fastTrigger: any) {
+  set fastTrigger(fastTrigger: Maybe<boolean> | '') {
     if (isDefinedAndNotFalse(fastTrigger)) {
       this.triggerDebounce = 200;
       this.triggerThrottle = 500;
@@ -74,7 +74,7 @@ export class DbxActionAutoTriggerDirective<T, O> extends AbstractSubscriptionDir
    * Used in forms that generally return a single value.
    */
   @Input()
-  set instantTrigger(instantTrigger: any) {
+  set instantTrigger(instantTrigger: Maybe<boolean> | '') {
     if (isDefinedAndNotFalse(instantTrigger)) {
       this.triggerDebounce = 10;
       this.triggerThrottle = 0;

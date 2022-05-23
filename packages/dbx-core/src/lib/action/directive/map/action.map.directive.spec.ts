@@ -41,6 +41,9 @@ describe('DbxActionContextMapDirective', () => {
     dbxActionMapSource = testComponent.dbxActionMapSource!;
     dbxActionFromMap = testComponent.dbxActionFromMap!;
 
+    expect(aActionComponent).toBeDefined();
+    expect(directive).toBeDefined();
+
     fixture.detectChanges();
   });
 

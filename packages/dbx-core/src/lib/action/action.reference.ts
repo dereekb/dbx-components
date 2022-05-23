@@ -6,7 +6,7 @@ import { DbxActionContextStoreSourceInstance } from "./action.store.source";
  * 
  * This is used in cases where the action is passed around and the context it is passed to needs to clean up.
  */
-export interface DbxActionContextSourceReference<T = any, O = any> extends Destroyable {
+export interface DbxActionContextSourceReference<T = unknown, O = unknown> extends Destroyable {
   readonly sourceInstance: DbxActionContextStoreSourceInstance<T, O>;
 }
 

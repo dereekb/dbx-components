@@ -1,5 +1,5 @@
 import { Observable, startWith } from 'rxjs';
-import { Directive, NgZone } from '@angular/core';
+import { Directive } from '@angular/core';
 import { DbxRouterTransitionService } from '../service/router.transition.service';
 import { successTransition } from './transition.rxjs';
 

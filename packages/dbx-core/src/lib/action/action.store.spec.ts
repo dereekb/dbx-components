@@ -3,7 +3,7 @@ import { of } from 'rxjs';
 import { first, timeoutWith } from 'rxjs/operators';
 import { ActionContextStore } from './action.store';
 import { containsStringAnyCase } from '@dereekb/util';
-import { isErrorLoadingState, isSuccessLoadingState, loadingStateHasError, loadingStateHasValue, loadingStateIsIdle, loadingStateIsLoading, LoadingStateType } from '@dereekb/rxjs';
+import { isErrorLoadingState, isSuccessLoadingState, loadingStateHasValue, loadingStateIsIdle, LoadingStateType } from '@dereekb/rxjs';
 
 describe('ActionContextStore', () => {
 
