@@ -1,7 +1,13 @@
+/*eslint @typescript-eslint/no-explicit-any:"off"*/
+// any is used with intent here. Proper typing with Window requires using the dynamic strings _windowKey and _callbackKey.
+
 import { Maybe } from '@dereekb/util';
 import { filterMaybe, tapFirst } from '@dereekb/rxjs';
 import { Observable, BehaviorSubject, switchMap, shareReplay, from, firstValueFrom } from 'rxjs';
-import { Inject, Injectable, OnDestroy, Optional } from '@angular/core';
+import { Inject, Injectable, OnDestroy } from '@angular/core';
+
+export type ServiceInWindow<T> = Record<string, Maybe<T>>;
+export type ServiceCallbackInWindow = Record<string, () => void>;
 
 /**
  * Used for loading services in the browser that are imported from other scripts, such as Facebook, Segment, Stripe, etc.
@@ -48,16 +54,16 @@ export abstract class AbstractAsyncWindowLoadedService<T> implements OnDestroy {
         }
 
         const tryLoad = () => {
-          const windowRef = (window as any);
+          const windowRef = window;
 
           // Loaded before the promise.
-          if (windowRef[this._windowKey]) {
+          if ((windowRef as unknown as ServiceInWindow<T>)[this._windowKey]) {
             // Not yet finished loading async. Intercept the function.
             // console.log('Window key.');
             return resolve(this.completeLoadingService());
-          } else if (this._callbackKey && windowRef[this._callbackKey]) {
+          } else if (this._callbackKey && (windowRef as unknown as ServiceCallbackInWindow)[this._callbackKey]) {
             // console.log('Callback key.');
-            windowRef[this._callbackKey] = () => resolve(this.completeLoadingService());
+            (windowRef as unknown as ServiceCallbackInWindow)[this._callbackKey] = () => resolve(this.completeLoadingService());
           } else if (loadTry < 10) {
             loadTry += 1;
             // console.log('Try reload...');
@@ -79,16 +85,16 @@ export abstract class AbstractAsyncWindowLoadedService<T> implements OnDestroy {
       this._loading.next(loadingPromise);
     }
 
-    return this._loading.value!;
+    return this._loading.value as Promise<T>;
   }
 
   protected _onLoadServiceFailure(): Promise<T> | void {
-
+    // todo override in parent if needed.
   }
 
   private async completeLoadingService(): Promise<T> {
     await this._prepareCompleteLoadingService();
-    const service: T = window[this._windowKey as any] as any;
+    const service: Maybe<T> = (window as unknown as ServiceInWindow<T>)[this._windowKey];
 
     if (!service) {
       throw new Error(`Service "${this._serviceName}" could not complete loading.`);
@@ -99,7 +105,7 @@ export abstract class AbstractAsyncWindowLoadedService<T> implements OnDestroy {
     return initializedService ?? service;
   }
 
-  protected _prepareCompleteLoadingService(): Promise<any> {
+  protected _prepareCompleteLoadingService(): Promise<unknown> {
     return Promise.resolve();
   }
 
