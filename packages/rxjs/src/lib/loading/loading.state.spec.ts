@@ -34,7 +34,8 @@ describe('errorResult()', () => {
   it('should return a loading state that has the error.', () => {
     const error = { message: '' };
     const state = errorResult(error);
-    expect(state.error).toBe(error);
+    expect(state.error).toBeDefined();
+    expect(state.error?._error).toBe(error);
   });
 
   it('should return a loading state that is not loading.', () => {

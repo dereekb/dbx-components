@@ -3,6 +3,7 @@ import { forEachKeyValue, objectHasKey } from "../object/object";
 import { objectToTuples } from '../object/object.map';
 import { ArrayOrValue, asArray } from '../array/array';
 import { addToSet, setContainsAllValues } from '../set';
+import { Maybe } from '../value/maybe';
 
 /**
  * Key in the claims.
@@ -36,9 +37,9 @@ export type AuthClaims<T = object> = {
 /**
  * A claims update.
  */
-export type AuthClaimsUpdate<T = object> = {
-  [K in keyof Partial<T>]: AuthClaimValue | ClearAuthClaimValue;
-};
+export type AuthClaimsUpdate<T = object> = Partial<{
+  [K in keyof T]: AuthClaimValue | ClearAuthClaimValue;
+}>;
 
 /**
  * Configuration for a claims key.

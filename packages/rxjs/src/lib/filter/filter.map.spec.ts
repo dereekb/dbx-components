@@ -50,7 +50,7 @@ describe('FilterMap', () => {
     });
 
     it('should not return a filter if a default filter obs that has no value is set for a key.', (done) => {
-      filterMap.addDefaultFilterObs(testKey, of({}));
+      filterMap.addDefaultFilterObs(testKey, undefined);
       filterMap.filterForKey(testKey).pipe(timeout({ first: 200, with: () => of(0) }), first()).subscribe((filter) => {
         expect(filter).toBe(0);
         done();

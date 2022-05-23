@@ -11,6 +11,11 @@ export type StringErrorCode = string;
  */
 export interface CodedError {
   code: StringErrorCode;
+
+  /**
+   * The original error, if available.
+   */
+   _error?: unknown;
 }
 
 /**
@@ -54,12 +59,14 @@ export function convertToReadableError(inputError: Maybe<ErrorInput>): Maybe<Cod
     } else if (inputError instanceof BaseError) {
       error = {
         code: inputError.name,
-        message: inputError.message
+        message: inputError.message,
+        _error: inputError
       };
     } else {
       error = {
         code: 'ERROR',
-        message: (inputError as ReadableError).message || ''
+        message: (inputError as ReadableError).message || '',
+        _error: inputError
       };
     }
   }

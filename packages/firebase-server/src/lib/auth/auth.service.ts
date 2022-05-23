@@ -40,6 +40,11 @@ export interface FirebaseServerAuthUserContext extends FirebaseServerAuthUserIde
   removeRoles(roles: ArrayOrValue<AuthRole>): Promise<void>;
 
   /**
+   * Loads the claims from the user.
+   */
+  loadClaims<T = unknown>(): Promise<AuthClaims<T>>;
+
+  /**
    * Updates the claims for a user by merging existing claims in with the input.
    * 
    * All null values are cleared from the existing claims. Undefined values are ignored.
@@ -103,8 +108,8 @@ export abstract class AbstractFirebaseServerAuthUserContext<S extends FirebaseSe
     return filterNullAndUndefinedValues(this.service.claimsForRoles(asSet(roles)));
   }
 
-  loadClaims(): Promise<AuthClaims> {
-    return this.loadRecord().then(x => x.customClaims ?? {});
+  loadClaims<T = unknown>(): Promise<AuthClaims<T>> {
+    return this.loadRecord().then(x => (x.customClaims ?? {}) as AuthClaims<T>);
   }
 
   async updateClaims(claims: AuthClaimsUpdate): Promise<void> {
@@ -253,7 +258,7 @@ export abstract class FirebaseServerAuthService<U extends FirebaseServerAuthUser
    * 
    * @param roles 
    */
-  abstract claimsForRoles(roles: AuthRoleSet): AuthClaims;
+  abstract claimsForRoles(roles: AuthRoleSet): AuthClaimsUpdate;
 
 }
 
@@ -280,6 +285,6 @@ export abstract class AbstractFirebaseServerAuthService<U extends FirebaseServer
 
   abstract readRoles(claims: AuthClaims): AuthRoleSet;
 
-  abstract claimsForRoles(roles: AuthRoleSet): AuthClaims;
+  abstract claimsForRoles(roles: AuthRoleSet): AuthClaimsUpdate;
 
 }
