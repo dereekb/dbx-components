@@ -36,8 +36,6 @@ describe('LockSet', () => {
   describe('isLocked$', () => {
 
     it('should not be locked if no observables are provided.', (done) => {
-      const key = 'test';
-
       sub.subscription = lockSet.isLocked$.pipe().subscribe((isLocked) => {
         expect(isLocked).toBe(false);
         done();

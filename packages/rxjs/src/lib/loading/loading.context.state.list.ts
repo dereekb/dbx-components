@@ -1,7 +1,6 @@
-import { loadingStateIsLoading } from '@dereekb/rxjs';
 import { LimitArrayConfig, hasNonNullValue, limitArray, Maybe } from '@dereekb/util';
 import { Observable, distinctUntilChanged, map, shareReplay } from 'rxjs';
-import { ListLoadingState } from './loading.state';
+import { loadingStateIsLoading, ListLoadingState } from './loading.state';
 import { AbstractLoadingEventForLoadingPairConfig, AbstractLoadingStateContext, AbstractLoadingStateContextInstance, AbstractLoadingStateEvent, LoadingStateContextInstanceInputConfig } from './loading.context.state';
 import { isListLoadingStateEmpty } from './loading.state.list';
 
@@ -9,9 +8,9 @@ export interface ListLoadingStateContextEvent<T> extends AbstractLoadingStateEve
   value?: Maybe<T[]>;
 }
 
-export interface LoadingEventForListLoadingStateConfig<S extends ListLoadingState<any> = ListLoadingState<any>> extends AbstractLoadingEventForLoadingPairConfig<S>, Partial<LimitArrayConfig> { }
+export interface LoadingEventForListLoadingStateConfig<S extends ListLoadingState<unknown> = ListLoadingState<unknown>> extends AbstractLoadingEventForLoadingPairConfig<S>, Partial<LimitArrayConfig> { }
 
-export interface ListLoadingStateContext<L = any, S extends ListLoadingState<L> = ListLoadingState<L>> extends AbstractLoadingStateContext<L[], S, ListLoadingStateContextEvent<L>> {
+export interface ListLoadingStateContext<L = unknown, S extends ListLoadingState<L> = ListLoadingState<L>> extends AbstractLoadingStateContext<L[], S, ListLoadingStateContextEvent<L>> {
   readonly list$: Observable<L[]>;
   readonly isEmpty$: Observable<boolean>;
 }
@@ -19,7 +18,7 @@ export interface ListLoadingStateContext<L = any, S extends ListLoadingState<L> 
 /**
  * LoadingContext implementation that uses a ListLoadingState observable.
  */
-export class ListLoadingStateContextInstance<L = any, S extends ListLoadingState<L> = ListLoadingState<L>> extends AbstractLoadingStateContextInstance<L[], S, ListLoadingStateContextEvent<L>, LoadingEventForListLoadingStateConfig<S>>  {
+export class ListLoadingStateContextInstance<L = unknown, S extends ListLoadingState<L> = ListLoadingState<L>> extends AbstractLoadingStateContextInstance<L[], S, ListLoadingStateContextEvent<L>, LoadingEventForListLoadingStateConfig<S>>  {
 
   /**
    * Returns the current values or an empty list.
@@ -61,6 +60,6 @@ export class ListLoadingStateContextInstance<L = any, S extends ListLoadingState
 
 }
 
-export function listLoadingStateContext<T = any, S extends ListLoadingState<T> = ListLoadingState<T>>(config: LoadingStateContextInstanceInputConfig<S, LoadingEventForListLoadingStateConfig<S>>): ListLoadingStateContextInstance<T, S> {
+export function listLoadingStateContext<T = unknown, S extends ListLoadingState<T> = ListLoadingState<T>>(config: LoadingStateContextInstanceInputConfig<S, LoadingEventForListLoadingStateConfig<S>>): ListLoadingStateContextInstance<T, S> {
   return new ListLoadingStateContextInstance(config);
 }

@@ -69,7 +69,7 @@ describe('FirestoreCollection', () => {
           expect(document.documentRef).toBeDefined();
           expect(document.accessor).toBeDefined();
 
-          await document.accessor.set({ test: true, string: '' });
+          await document.accessor.set({ test: true, value: '' });
         });
 
         expect(ref).toBeDefined();
@@ -94,7 +94,7 @@ describe('FirestoreCollection', () => {
         expect(document.documentRef).toBeDefined();
         expect(document.accessor).toBeDefined();
 
-        await document.accessor.set({ test: true, string: '' });
+        await document.accessor.set({ test: true, value: '' });
 
         expect(ref).toBeDefined();
 

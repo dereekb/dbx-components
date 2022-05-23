@@ -42,7 +42,7 @@ export type StringOrGetter = GetterOrValue<string>;
  * @param value 
  * @returns 
  */
-export function isGetter<T = unknown>(value: GetterOrValue<T>): value is Getter<T> {
+export function isGetter<T = unknown>(value: unknown): value is Getter<T> {
   return (typeof value === 'function');
 }
 

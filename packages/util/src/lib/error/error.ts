@@ -35,7 +35,7 @@ export interface ErrorWrapper {
   data: ReadableError | CodedError;
 }
 
-export type ErrorInput = ErrorWrapper | CodedError | ReadableError;
+export type ErrorInput = ErrorWrapper | CodedError | ReadableError | ReadableDataError;
 
 /**
  * Converts the input error content to a ReadableError or CodedError.
@@ -43,8 +43,8 @@ export type ErrorInput = ErrorWrapper | CodedError | ReadableError;
  * @param inputError 
  * @returns 
  */
-export function convertToReadableError(inputError: ErrorInput | undefined): CodedError | ReadableError | undefined {
-  let error: CodedError | ReadableError | undefined;
+export function convertToReadableError(inputError: Maybe<ErrorInput>): Maybe<CodedError | ReadableError> {
+  let error: Maybe<CodedError | ReadableError>;
 
   if (inputError) {
     if ((inputError as CodedError).code) {

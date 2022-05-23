@@ -1,5 +1,5 @@
 import { loadingStateHasFinishedLoading, filterMaybe } from '@dereekb/rxjs';
-import { Maybe, Destroyable } from "@dereekb/util";
+import { Maybe, Destroyable, ReadableError, ErrorInput } from "@dereekb/util";
 import { filter, map, BehaviorSubject, Observable, of, first, shareReplay, switchMap, delay } from "rxjs";
 import { beginLoading, errorResult, LoadingState, loadingStateIsLoading, successResult } from "../loading";
 import { preventComplete } from '../rxjs';
@@ -8,16 +8,16 @@ import { SubscriptionObject } from '../subscription';
 /**
  * Delegate for WorkInstance
  */
-export interface WorkInstanceDelegate<O = any> {
+export interface WorkInstanceDelegate<O = unknown> {
   startWorking(): void;
   success(result?: Maybe<O>): void;
-  reject(error?: Maybe<any>): void;
+  reject(error?: Maybe<unknown>): void;
 }
 
 /**
  * Instance that tracks doing an arbitrary piece of asynchronous work that has an input value and an output value.
  */
-export class WorkInstance<I = any, O = any> implements Destroyable {
+export class WorkInstance<I = unknown, O = unknown> implements Destroyable {
 
   private _done = false;
   private _doneActionBegan = false;
@@ -61,7 +61,7 @@ export class WorkInstance<I = any, O = any> implements Destroyable {
   }
 
   get result$(): Observable<LoadingState<O>> {
-    return (this._result) ? of(this._result) : this._isComplete$.pipe(filter(x => x === true), switchMap(_ => this.loadingState$));
+    return (this._result) ? of(this._result) : this._isComplete$.pipe(filter(x => x === true), switchMap(() => this.loadingState$));
   }
 
   /**
@@ -84,7 +84,7 @@ export class WorkInstance<I = any, O = any> implements Destroyable {
           if (x.error) {
             throw x.error;
           } else {
-            return x.value!;
+            return x.value as O;
           }
         })
       ));
@@ -100,7 +100,7 @@ export class WorkInstance<I = any, O = any> implements Destroyable {
       next: (workResult: O) => {
         this.success(workResult);
       },
-      error: (error: any) => {
+      error: (error: ReadableError) => {
         const message = error.message ?? error.code ?? undefined;
         this.reject((message) ? ({ message }) : undefined);
       }
@@ -126,7 +126,7 @@ export class WorkInstance<I = any, O = any> implements Destroyable {
   /**
    * Sets rejected on the work.
    */
-  reject(error?: any): void {
+  reject(error?: ErrorInput): void {
     this._setComplete(errorResult(error));
     this.delegate.reject(error);
   }

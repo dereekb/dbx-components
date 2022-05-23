@@ -39,7 +39,7 @@ describe('distinctUntilArrayLengthChanges()', () => {
     let emissions = 0;
 
     // First emission because of behavior subject.
-    const sub = obs.subscribe((x) => {
+    const sub = obs.subscribe(() => {
       emissions += 1;
     });
 
@@ -93,3 +93,5 @@ describe('distinctUntilArrayLengthChanges()', () => {
   });
 
 });
+
+// todo: add tests for scanBuildArray

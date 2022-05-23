@@ -1,9 +1,6 @@
 import { ArrayOrValue, asArray } from "../array";
 import { Maybe } from "../value";
 
-export type MapFn<A, B> = (value: A) => B;
-export type MapStringFn<T> = MapFn<string, T>;
-
 /**
  * 
  * @param maps 

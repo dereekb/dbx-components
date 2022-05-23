@@ -110,7 +110,7 @@ export class AbstractDbxFirebaseDocumentStore<T, D extends FirestoreDocument<T> 
   );
 
   readonly documentLoadingState$: Observable<LoadingState<D>> = this.currentDocument$.pipe(
-    map(x => (x) ? successResult(x) : beginLoading()),
+    map(x => (x) ? successResult(x) : beginLoading<D>()),
     shareReplay(1)
   );
 

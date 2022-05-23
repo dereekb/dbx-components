@@ -11,15 +11,15 @@ import { ErrorInput, convertToReadableError, ReadableError } from '@dereekb/util
 })
 export class DbxReadableErrorComponent {
 
-  private _error?: ReadableError;
+  private _error?: Maybe<ReadableError>;
 
   get error(): Maybe<ReadableError> {
     return this._error;
   }
 
   @Input()
-  set error(error: Maybe<ErrorInput | ReadableError>) {
-    this._error = convertToReadableError(error as any) as ReadableError;
+  set error(error: Maybe<ErrorInput>) {
+    this._error = convertToReadableError(error);
   }
 
   get message(): Maybe<string> {

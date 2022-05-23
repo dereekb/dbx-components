@@ -36,12 +36,13 @@ export const DEFAULT_LOCK_SET_TIME_LOCK_KEY = 'timelock';
 /**
  * Executes the input function when the lockSet is set unlocked, or the timeout is reached.
  */
-export function onLockSetNextUnlock({ lockSet, fn, timeout: timeoutTime = ms('50s'), delayTime }: OnLockSetUnlockedConfig): Subscription {
+export function onLockSetNextUnlock({ lockSet, fn, timeout: inputTimeout, delayTime }: OnLockSetUnlockedConfig): Subscription {
+  const timeoutTime = inputTimeout ?? ms('50s');
   return lockSet.isUnlocked$.pipe(
     filter((x) => x),
     delay(delayTime ?? 0),
     timeout({
-      first: timeoutTime!,
+      first: timeoutTime,
       with: () => of(false).pipe(
         tap(() => console.warn('LockSet time out. Potential issue detected.'))
       )
@@ -74,8 +75,6 @@ export class LockSet implements Destroyable {
   );
 
   readonly isUnlocked$ = this.isLocked$.pipe(map(x => !x));
-
-  constructor() { }
 
   private get locks(): Map<LockKey, Observable<boolean>> {
     return this._locks.value;
@@ -121,7 +120,7 @@ export class LockSet implements Destroyable {
       defaultIfEmpty<boolean, boolean>(false),  // empty observables count as unlocked.
     );
 
-    let removeLock: RemoveLockFunction = () => this._removeObsForKey(obs, key);
+    const removeLock: RemoveLockFunction = () => this._removeObsForKey(obs, key);
 
     this._locks.value.set(key, obs);
     this._locks.next(this._locks.value);
@@ -179,7 +178,7 @@ export class LockSet implements Destroyable {
   // Cleanup
   destroyOnNextUnlock(config?: OnLockSetUnlockedFunction | Omit<OnLockSetUnlockedConfig, 'lockSet'>, delayTime?: number): void {
     let fn: OnLockSetUnlockedFunction | undefined;
-    let mergeConfig: any;
+    let mergeConfig: Maybe<object>;
 
     if (config) {
       if (typeof config === 'function') {

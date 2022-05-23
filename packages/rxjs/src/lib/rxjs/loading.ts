@@ -7,6 +7,6 @@ import { Observable, startWith, distinctUntilChanged, shareReplay, map, Operator
  */
 export function isLoading<T>(): OperatorFunction<T, boolean> {
   return (source: Observable<T>) => {
-    return source.pipe(first(), map(_ => false), startWith(true), distinctUntilChanged(), shareReplay(1));
+    return source.pipe(first(), map(() => false), startWith(true), distinctUntilChanged(), shareReplay(1));
   };
 }

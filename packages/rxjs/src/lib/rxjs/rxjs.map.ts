@@ -6,9 +6,9 @@ import { combineLatest, Observable, of } from 'rxjs';
  * @param mapToObs 
  * @returns 
  */
-export function combineLatestFromMapValuesObsFn<T, O>(mapToObs: (value: T) => Observable<O>): (map: Map<any, T>) => Observable<O[]> {
+export function combineLatestFromMapValuesObsFn<T, O>(mapToObs: (value: T) => Observable<O>): (map: Map<unknown, T>) => Observable<O[]> {
   const combineArrayFn = combineLatestFromArrayObsFn(mapToObs);
-  return (latestMap: Map<any, T>) => {
+  return (latestMap: Map<unknown, T>) => {
     const mapValues = Array.from(latestMap).map(y => y[1]);
     return combineArrayFn(mapValues);
   };

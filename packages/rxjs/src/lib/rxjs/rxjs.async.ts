@@ -1,4 +1,4 @@
-import { CachedFactoryWithInput, cachedGetter, Destroyable } from '@dereekb/util';
+import { build, CachedFactoryWithInput, cachedGetter, Destroyable, Maybe } from '@dereekb/util';
 import { throttleTime, distinctUntilChanged, BehaviorSubject, Observable, Subject } from 'rxjs';
 import { SubscriptionObject } from '../subscription';
 import { skipFirstMaybe } from './value';
@@ -20,7 +20,7 @@ export type AsyncPusher<T> = ((value: T) => Observable<T>) & Destroyable & {
    * 
    * @param obs 
    */
-  watchForCleanup(obs: Observable<any>): void;
+  watchForCleanup(obs: Observable<unknown>): void;
 
   /**
    * The internal subject.
@@ -45,7 +45,7 @@ export interface AsyncPusherConfig<T> {
   /**
    * (Optional) Observable to watch for cleaunup.
    */
-  cleanupObs?: Observable<any>;
+  cleanupObs?: Observable<unknown>;
 }
 
 /**
@@ -57,13 +57,13 @@ export interface AsyncPusherConfig<T> {
 export function asyncPusher<T>(config: AsyncPusherConfig<T> = {}): AsyncPusher<T> {
   const { throttle = DEFAULT_ASYNC_PUSHER_THROTTLE, cleanupObs, distinct = true, pipe: pipeObs } = config;
 
-  const _subject = new BehaviorSubject<T>(undefined as any);
+  const _subject = new BehaviorSubject<Maybe<T>>(undefined);
   const _sub = new SubscriptionObject();
 
   let obs: Observable<T> = _subject.pipe(
     skipFirstMaybe(),
     throttleTime(throttle, undefined, { leading: false, trailing: true })
-  ) as Observable<T>;
+  ) as unknown as Observable<T>;
 
   if (distinct) {
     obs = obs.pipe(distinctUntilChanged());
@@ -73,25 +73,29 @@ export function asyncPusher<T>(config: AsyncPusherConfig<T> = {}): AsyncPusher<T
     obs = pipeObs(obs);
   }
 
-  const pusher: AsyncPusher<T> = ((value: T) => {
-    _subject.next(value);
-    return obs;
-  }) as AsyncPusher<T>;
+  const pusher: AsyncPusher<T> = build<AsyncPusher<T>>({
+    base: (((value: T) => {
+      _subject.next(value);
+      return obs;
+    }) as AsyncPusher<T>),
+    build: (x) => {
 
-  pusher.destroy = () => {
-    _subject.complete();
-    _sub.destroy();
-  };
+      x.destroy = () => {
+        _subject.complete();
+        _sub.destroy();
+      };
 
-  pusher.watchForCleanup = (obs: Observable<any>) => {
-    _sub.subscription = obs.subscribe({
-      complete: () => {
-        pusher.destroy();
-      }
-    });
-  };
+      x.watchForCleanup = (obs: Observable<unknown>) => {
+        _sub.subscription = obs.subscribe({
+          complete: () => {
+            pusher.destroy();
+          }
+        });
+      };
 
-  (pusher as any)._subject = _subject;
+      x._subject = _subject as Subject<T>;
+    }
+  });
 
   if (cleanupObs) {
     pusher.watchForCleanup(cleanupObs);
@@ -108,8 +112,8 @@ export function asyncPusher<T>(config: AsyncPusherConfig<T> = {}): AsyncPusher<T
  * @param config 
  * @returns 
  */
-export function asyncPusherCache<T>(config?: AsyncPusherConfig<T>): CachedFactoryWithInput<AsyncPusher<T>, Observable<any>> {
-  return cachedGetter((cleanupObs?: Observable<any>) => {
+export function asyncPusherCache<T>(config?: AsyncPusherConfig<T>): CachedFactoryWithInput<AsyncPusher<T>, Observable<unknown>> {
+  return cachedGetter((cleanupObs?: Observable<unknown>) => {
     const pusher = asyncPusher(config);
 
     if (cleanupObs) {

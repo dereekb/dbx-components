@@ -9,7 +9,7 @@ import { Maybe } from '@dereekb/util';
  */
 export type MappedPageItemIteration<
   O,
-  I = any,
+  I = unknown,
   M extends PageLoadingState<O> = PageLoadingState<O>,
   L extends PageLoadingState<I> = PageLoadingState<I>,
   N extends PageItemIteration<I, L> = PageItemIteration<I, L>,
@@ -21,7 +21,7 @@ export type MappedPageItemIteration<
  */
 export class MappedPageItemIterationInstance<
   O,
-  I = any,
+  I = unknown,
   M extends PageLoadingState<O> = PageLoadingState<O>,
   L extends PageLoadingState<I> = PageLoadingState<I>,
   N extends PageItemIteration<I, L> = PageItemIteration<I, L>
@@ -53,7 +53,7 @@ export class MappedPageItemIterationInstance<
  */
 export function mapPageItemIteration<
   O,
-  I = any,
+  I = unknown,
   M extends PageLoadingState<O> = PageLoadingState<O>,
   L extends PageLoadingState<I> = PageLoadingState<I>,
   N extends PageItemIteration<I, L> = PageItemIteration<I, L>

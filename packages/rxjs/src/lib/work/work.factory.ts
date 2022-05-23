@@ -1,5 +1,5 @@
 import { isObservable, Observable } from 'rxjs';
-import { FactoryWithRequiredInput, Maybe } from '@dereekb/util';
+import { ErrorInput, FactoryWithRequiredInput, Maybe } from '@dereekb/util';
 import { WorkInstance, WorkInstanceDelegate } from './work.instance';
 
 /**
@@ -10,17 +10,17 @@ export type WorkFactory<T, O> = FactoryWithRequiredInput<Maybe<WorkInstance<T, O
 /**
  * Performs the work. Can either return an observable that will use the handler, or can use the handler itself.
  */
-export type Work<T = any, O = any> = WorkUsingObservable<T, O> | WorkUsingContext<T, O>;
+export type Work<T = unknown, O = unknown> = WorkUsingObservable<T, O> | WorkUsingContext<T, O>;
 
 /**
  * Performs the work using the value and returns an observable.
  */
-export type WorkUsingObservable<T = any, O = any> = (value: T) => Observable<O>;
+export type WorkUsingObservable<T = unknown, O = unknown> = (value: T) => Observable<O>;
 
 /**
  * Performs the work that uses the context handler to handle the event.
  */
-export type WorkUsingContext<T = any, O = any> = (value: T, instance: WorkInstance<T, O>) => void;
+export type WorkUsingContext<T = unknown, O = unknown> = (value: T, instance: WorkInstance<T, O>) => void;
 
 /**
  * Config for workFactory().
@@ -40,9 +40,9 @@ export function workFactory<T, O>({ work, delegate }: WorkFactoryConfig<T, O>): 
 
     try {
       fnResult = work(value, handler);
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error('Work encountered an unexpected error.', e);
-      handler.reject(e);
+      handler.reject(e as ErrorInput);
       return;
     }
 

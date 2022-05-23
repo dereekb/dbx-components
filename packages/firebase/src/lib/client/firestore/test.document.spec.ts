@@ -31,7 +31,7 @@ describe('FirestoreDocumentAccessor', () => {
 
       it('should load a document.', async () => {
         const newDocument = documentAccessor.newDocument();
-        await newDocument.accessor.set({});
+        await newDocument.accessor.set({ test: true });
 
         const document = documentAccessor.loadDocument(newDocument.documentRef);
         expect(document).toBeDefined();
@@ -47,7 +47,7 @@ describe('FirestoreDocumentAccessor', () => {
 
       it('should load a document from another.', async () => {
         const newDocument = documentAccessor.newDocument();
-        await newDocument.accessor.set({});
+        await newDocument.accessor.set({ test: true });
 
         const document = documentAccessor.loadDocumentFrom(newDocument);
         expect(document).toBeDefined();

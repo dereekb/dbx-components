@@ -1,7 +1,7 @@
 import { SubscriptionObject } from '../subscription';
 import { startWith, map, Observable, shareReplay, skipWhile, distinctUntilChanged, filter } from 'rxjs';
-import { distinctUntilArrayLengthChanges, scanBuildArray, filterMaybe, scanIntoArray } from "../rxjs";
-import { lastValue, filterMaybeValues, Destroyable, Maybe } from "@dereekb/util";
+import { distinctUntilArrayLengthChanges, scanBuildArray, scanIntoArray } from "../rxjs";
+import { MapFunctionOutputPair, lastValue, Destroyable, mapFunctionOutputPair, isMaybeSo } from "@dereekb/util";
 import { ItemIteration, PageItemIteration } from "./iteration";
 import { LoadingState, loadingStateHasError, mapLoadingStateValueFunction, MapLoadingStateValueMapFunction } from '../loading';
 
@@ -10,12 +10,17 @@ export type ItemAccumulatorMapFunction<O, I> = MapLoadingStateValueMapFunction<O
 /**
  * An object that accumulates and exposes values from an ItemIteration.
  */
-export interface ItemAccumulator<O, I = any, N extends ItemIteration<I> = ItemIteration<I>> {
+export interface ItemAccumulator<O, I = unknown, N extends ItemIteration<I> = ItemIteration<I>> {
 
   /**
    * Iteration being accumulated.
    */
   readonly itemIteration: N;
+
+  /**
+   * Returns all items with their input pairs.
+   */
+  readonly allItemPairs$: Observable<ItemAccumulatorValuePair<O, I>[]>;
 
   /**
    * Returns all items loaded so far in the iteration in a single array.
@@ -32,7 +37,7 @@ export interface ItemAccumulator<O, I = any, N extends ItemIteration<I> = ItemIt
 /**
  * An object that accumulates and exposes values from a PageItemIteration.
  */
-export type PageItemAccumulator<O, I = any, N extends PageItemIteration<I> = PageItemIteration<I>> = ItemAccumulator<O, I, N>;
+export type PageItemAccumulator<O, I = unknown, N extends PageItemIteration<I> = PageItemIteration<I>> = ItemAccumulator<O, I, N>;
 
 /**
  * An accumulator with no mapping.
@@ -45,9 +50,14 @@ export type MonotypeItemAccumulator<I, N extends ItemIteration<I> = ItemIteratio
 export type MonotypePageItemAccumulator<I, N extends PageItemIteration<I> = PageItemIteration<I>> = ItemAccumulator<I, I, N>;
 
 /**
+ * Value of an item accumulator.
+ */
+export type ItemAccumulatorValuePair<O, I = unknown> = MapFunctionOutputPair<O, LoadingState<I>>;
+
+/**
  * ItemAccumulator implementation.
  */
-export class ItemAccumulatorInstance<O, I = any, N extends ItemIteration<I> = ItemIteration<I>> implements ItemAccumulator<O, I, N>, Destroyable {
+export class ItemAccumulatorInstance<O, I = unknown, N extends ItemIteration<I> = ItemIteration<I>> implements ItemAccumulator<O, I, N>, Destroyable {
 
   constructor(readonly itemIteration: N, readonly mapItemFunction: ItemAccumulatorMapFunction<O, I>) { }
 
@@ -76,9 +86,9 @@ export class ItemAccumulatorInstance<O, I = any, N extends ItemIteration<I> = It
   );
 
   // MARK: ItemAccumulator
-  readonly allItems$: Observable<O[]> = this.allSuccessfulStates$.pipe(
+  readonly allItemPairs$: Observable<ItemAccumulatorValuePair<O, I>[]> = this.allSuccessfulStates$.pipe(
     scanBuildArray((allSuccessfulStates) => {
-      const mapStateToItem = mapLoadingStateValueFunction(this.mapItemFunction);
+      const mapStateToItem = mapFunctionOutputPair(mapLoadingStateValueFunction(this.mapItemFunction));
 
       /* 
       Start with allSuccessfulPageResults$ since it contains all page results since the start of the iterator,
@@ -90,19 +100,24 @@ export class ItemAccumulatorInstance<O, I = any, N extends ItemIteration<I> = It
       */
       const allPageResultsUpToFirstSubscription = allSuccessfulStates;
       const firstLatestState = lastValue(allPageResultsUpToFirstSubscription);
-      const seed: O[] = filterMaybeValues(allPageResultsUpToFirstSubscription.map(mapStateToItem));
+      const seed = allPageResultsUpToFirstSubscription.map(mapStateToItem).filter(x => isMaybeSo(x.output)) as ItemAccumulatorValuePair<O, I>[];
 
-      const accumulatorObs: Observable<O> = this.latestSuccessfulState$.pipe(
+      const accumulatorObs = this.latestSuccessfulState$.pipe(
         skipWhile(x => x === firstLatestState),
         map(mapStateToItem),
-        filterMaybe()
-      );
+        filter(x => isMaybeSo(x.output))
+      ) as Observable<ItemAccumulatorValuePair<O, I>>;
 
       return {
         seed,
         accumulatorObs
       };
     }),
+    shareReplay(1)
+  );
+
+  readonly allItems$: Observable<O[]> = this.allItemPairs$.pipe(
+    map(x => x.map(y => y.output)),
     shareReplay(1)
   );
 
@@ -121,11 +136,11 @@ export class ItemAccumulatorInstance<O, I = any, N extends ItemIteration<I> = It
  * @param mapItem 
  * @returns 
  */
-export function itemAccumulator<I, N extends ItemIteration<I>>(itemIteration: N): ItemAccumulatorInstance<I, I, N>;
-export function itemAccumulator<O, I, N extends ItemIteration<I>>(itemIteration: N, mapItem?: ItemAccumulatorMapFunction<O, I>): ItemAccumulatorInstance<O, I, N>;
-export function itemAccumulator<O, I, N extends ItemIteration<I>>(itemIteration: N, mapItem?: ItemAccumulatorMapFunction<O, I>): ItemAccumulatorInstance<O, I, N> {
+export function itemAccumulator<I, N extends ItemIteration<I> = ItemIteration<I>>(itemIteration: N): ItemAccumulatorInstance<I, I, N>;
+export function itemAccumulator<O, I, N extends ItemIteration<I> = ItemIteration<I>>(itemIteration: N, mapItem?: ItemAccumulatorMapFunction<O, I>): ItemAccumulatorInstance<O, I, N>;
+export function itemAccumulator<O, I, N extends ItemIteration<I> = ItemIteration<I>>(itemIteration: N, mapItem?: ItemAccumulatorMapFunction<O, I>): ItemAccumulatorInstance<O, I, N> {
   if (!mapItem) {
-    mapItem = (a: any) => a;
+    mapItem = ((a: I) => a as unknown as O);
   }
 
   return new ItemAccumulatorInstance<O, I, N>(itemIteration, mapItem);

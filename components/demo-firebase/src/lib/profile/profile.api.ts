@@ -1,6 +1,7 @@
 import { Expose } from "class-transformer";
 import { FirebaseFunctionMap, firebaseFunctionMapFactory, FirebaseFunctionMapFunction, FirebaseFunctionTypeConfigMap } from "@dereekb/firebase";
 import { IsNotEmpty, IsOptional, IsString, MaxLength } from "class-validator";
+import { Maybe } from '@dereekb/util';
 
 export const PROFILE_BIO_MAX_LENGTH = 200;
 export const PROFILE_USERNAME_MAX_LENGTH = 30;
@@ -35,7 +36,7 @@ export class UpdateProfileParams extends ProfileParams {
   @IsNotEmpty()
   @IsString()
   @MaxLength(PROFILE_BIO_MAX_LENGTH)
-  bio?: string;
+  bio?: Maybe<string>;
 
 }
 

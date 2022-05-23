@@ -1,7 +1,6 @@
 import { Directive } from "@angular/core";
 import { DbxInjectionTemplateConfig } from "@dereekb/dbx-core";
-import { Observable } from "rxjs";
-import { distinctUntilChanged, shareReplay, map, share } from "rxjs/operators";
+import { Observable, distinctUntilChanged, shareReplay, map } from "rxjs";
 import { DbxAnchorComponent } from "./anchor.component";
 
 /**

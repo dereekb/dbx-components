@@ -21,6 +21,6 @@ export class DocInteractionTestFilterPopoverButtonComponent {
     initialFilterObs: this.filterSource.filter$
   };
 
-  constructor(readonly filterSourceConnector: FilterSourceConnector, readonly filterSource: FilterSource) { }
+  constructor(readonly filterSourceConnector: FilterSourceConnector, readonly filterSource: FilterSource<DocInteractionTestFilter>) { }
 
 }

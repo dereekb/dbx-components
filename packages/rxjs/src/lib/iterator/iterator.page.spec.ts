@@ -1,9 +1,7 @@
-import { PageNumber, range } from '@dereekb/util';
-import { skip } from 'rxjs/operators';
-import { FIRST_PAGE } from '@dereekb/util';
+import { FIRST_PAGE, PageNumber, range } from '@dereekb/util';
 import { ItemPageIterator, ItemPageIteratorDelegate, ItemPageIterationInstance, ItemPageIteratorRequest, ItemPageIteratorResult } from './iterator.page';
 import { loadingStateHasFinishedLoading, loadingStateIsLoading } from '../loading';
-import { delay, filter, first, of, Observable, tap } from 'rxjs';
+import { skip, delay, filter, first, of, Observable, tap } from 'rxjs';
 
 export interface TestPageIteratorFilter {
   end?: true;
@@ -330,7 +328,7 @@ describe('ItemPageIterator', () => {
     describe('first nextPage()', () => {
 
       it('should return page 0 if next page is called before any value is loaded.', async () => {
-        let page = await instance.nextPage();
+        const page = await instance.nextPage();
         expect(page).toBe(0);
       });
 

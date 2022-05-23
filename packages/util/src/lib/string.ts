@@ -1,5 +1,7 @@
-import { MapStringFn } from "./map/map";
+import { MapFunction } from './value/map';
 import { Maybe } from "./value/maybe";
+
+export type MapStringFunction<T> = MapFunction<string, T>;
 
 /**
  * Represents a string that is made up of comma-separated values.
@@ -19,8 +21,8 @@ export function caseInsensitiveString(input: Maybe<string>): Maybe<string> {
 }
 
 export function splitCommaSeparatedString(input: CommaSeparatedString<string>): string[];
-export function splitCommaSeparatedString<T = unknown>(input: CommaSeparatedString<T>, mapFn: MapStringFn<T>): T[];
-export function splitCommaSeparatedString<T = unknown>(input: CommaSeparatedString<T>, mapFn: MapStringFn<T> = (x) => x as unknown as T): T[] {
+export function splitCommaSeparatedString<T = unknown>(input: CommaSeparatedString<T>, mapFn: MapStringFunction<T>): T[];
+export function splitCommaSeparatedString<T = unknown>(input: CommaSeparatedString<T>, mapFn: MapStringFunction<T> = (x) => x as unknown as T): T[] {
   const splits = input.split(',');
   return splits.map(x => mapFn(x.trim()));
 }

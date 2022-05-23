@@ -2,17 +2,17 @@ import { combineLatest, filter, skipWhile, startWith, switchMap, timeout, MonoTy
 import { GetterOrValue, getValueFromGetter, Maybe } from '@dereekb/util';
 
 // MARK: Types
-export type IsCheckFunction<T = any> = (value: T) => Observable<boolean>;
+export type IsCheckFunction<T = unknown> = (value: T) => Observable<boolean>;
 
 /**
  * Function that validates the input value and returns an observable.
  */
-export type IsValidFunction<T = any> = IsCheckFunction<T>;
+export type IsValidFunction<T = unknown> = IsCheckFunction<T>;
 
 /**
  * Function that checks modification status of the input value and returns a value.
  */
-export type IsModifiedFunction<T = any> = IsCheckFunction<T>;
+export type IsModifiedFunction<T = unknown> = IsCheckFunction<T>;
 
 // MARK: IsCheck
 export function makeReturnIfIsFunction<T>(isCheckFunction: Maybe<IsModifiedFunction<T>>, defaultValueOnMaybe?: boolean): (value: Maybe<T>) => Observable<Maybe<T>> {
@@ -55,7 +55,7 @@ export function skipFirstMaybe<T>(): MonoTypeOperatorFunction<T> {
  * @param defaultValue 
  * @returns 
  */
-export function switchMapMaybeDefault<T = any>(defaultValue: Maybe<T> = undefined): OperatorFunction<Maybe<Observable<Maybe<T>>>, Maybe<T>> {
+export function switchMapMaybeDefault<T = unknown>(defaultValue: Maybe<T> = undefined): OperatorFunction<Maybe<Observable<Maybe<T>>>, Maybe<T>> {
   return switchMap((x: Maybe<Observable<Maybe<T>>>) => {
     if (x != null) {
       return x;
@@ -70,7 +70,7 @@ export function switchMapMaybeDefault<T = any>(defaultValue: Maybe<T> = undefine
  * 
  * @returns 
  */
-export function switchMapMaybeObs<T = any>(): OperatorFunction<Maybe<Observable<Maybe<T>>>, T> {
+export function switchMapMaybeObs<T = unknown>(): OperatorFunction<Maybe<Observable<Maybe<T>>>, T> {
   return (source: Observable<Maybe<Observable<Maybe<T>>>>) => {
     const subscriber: Observable<T> = source.pipe(
       filterMaybe(),

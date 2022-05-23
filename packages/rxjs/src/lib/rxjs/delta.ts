@@ -1,4 +1,4 @@
-import { filter, first, map, MonoTypeOperatorFunction, Observable, scan, skipUntil } from 'rxjs';
+import { filter, map, MonoTypeOperatorFunction, Observable, scan } from 'rxjs';
 
 /**
  * onDelta function configuration.
@@ -54,7 +54,7 @@ export function onMatchDelta<T>(config: OnMatchDeltaConfig<T>): MonoTypeOperator
 
   return (obs: Observable<T>) => {
     return obs.pipe(
-      scan((acc: OnMatchDeltaScan<T>, next: T, index: number) => {
+      scan((acc: OnMatchDeltaScan<T>, next: T) => {
         let emit: boolean = false;
         let fromMatch: boolean = acc.fromMatch;
         let value!: T;
@@ -97,7 +97,7 @@ export function onMatchDelta<T>(config: OnMatchDeltaConfig<T>): MonoTypeOperator
           value,
           fromMatch
         };
-      }, { emit: false, fromMatch: false, value: 0 as any }),
+      }, { emit: false, fromMatch: false, value: 0 as unknown as T }),
       filter(({ emit }) => Boolean(emit)),
       map(({ value }) => value)
     );

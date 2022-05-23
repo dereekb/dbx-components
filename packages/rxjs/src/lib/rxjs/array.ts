@@ -1,14 +1,11 @@
 import { exhaustMap, map, scan, shareReplay, startWith, distinctUntilChanged, MonoTypeOperatorFunction, Observable, OperatorFunction } from "rxjs";
-import { Maybe, ArrayOrValue, mergeArrayOrValueIntoArray, forEachWithArray, mergeArrayIntoArray } from '@dereekb/util';
+import { Maybe, ArrayOrValue, mergeArrayOrValueIntoArray, forEachWithArray, mergeArrayIntoArray, asArray } from '@dereekb/util';
 
-export function distinctUntilArrayLengthChanges<A>(getArray: (value: A) => any[]): MonoTypeOperatorFunction<A>;
+export function distinctUntilArrayLengthChanges<A>(getArray: (value: A) => unknown[]): MonoTypeOperatorFunction<A>;
 export function distinctUntilArrayLengthChanges<T>(): MonoTypeOperatorFunction<T[]>;
-export function distinctUntilArrayLengthChanges<A>(getArray?: (value: A) => any[]): MonoTypeOperatorFunction<A> {
-  if (!getArray) {
-    getArray = (value: A) => value as any as any[]
-  }
-
-  return distinctUntilChanged((a, b) => a === b, (x) => getArray!(x).length);
+export function distinctUntilArrayLengthChanges<A>(inputGetArray?: (value: A) => unknown[]): MonoTypeOperatorFunction<A> {
+  const getArray = inputGetArray ?? ((value: A) => asArray(value));
+  return distinctUntilChanged((a, b) => a === b, (x) => getArray(x).length);
 }
 
 export interface ScanIntoArrayConfig {
@@ -47,7 +44,7 @@ export interface ScanBuildArrayConfig<T> {
   /**
    * 
    */
-  accumulatorObs: Observable<Maybe<T>>;
+  accumulatorObs: Observable<Maybe<ArrayOrValue<T>>>;
   /**
    * Whether or not to flatten array values that are input.
    */
@@ -72,19 +69,19 @@ export function scanBuildArray<S, T>(init: ScanBuildArrayConfigFn<S, T>): Operat
     const { seed = [], accumulatorObs, flattenArray = false } = init(seedState);
 
     return accumulatorObs.pipe(
-      startWith(undefined as any), // Start with to not wait for the accumulator to pass a value.
-      scan((acc: T[], next: Maybe<ArrayOrValue<T>>) => {
+      startWith<Maybe<ArrayOrValue<T>>>(undefined), // Start with to not wait for the accumulator to pass a value.
+      scan<Maybe<ArrayOrValue<T>>, T[]>((acc: T[], next: Maybe<ArrayOrValue<T>>) => {
 
         if (next != null) {
           if (flattenArray && Array.isArray(next)) {
             mergeArrayIntoArray(acc, next);
           } else {
-            acc.push(next as any);
+            acc.push(next as T);
           }
         }
 
-        return acc!;
-      }, seed ?? []) as OperatorFunction<ArrayOrValue<T>, T[]>,
+        return acc;
+      }, seed ?? []),
       distinctUntilArrayLengthChanges(),
       shareReplay(1)
     );

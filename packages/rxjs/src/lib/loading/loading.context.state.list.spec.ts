@@ -1,6 +1,5 @@
-import { timeout, timeoutWith } from 'rxjs/operators';
 import { ListLoadingStateContextInstance, successResult } from '@dereekb/rxjs';
-import { first, of } from 'rxjs';
+import { timeout, first, of } from 'rxjs';
 
 describe(' ListLoadingStateContextInstance', () => {
 

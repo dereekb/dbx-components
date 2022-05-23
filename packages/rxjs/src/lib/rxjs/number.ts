@@ -1,14 +1,12 @@
 import { incrementingNumberFactory, IncrementingNumberFactoryConfig } from '@dereekb/util';
-import { Observable } from 'rxjs';
-import { OperatorFunction } from 'rxjs';
-import { scan } from 'rxjs/operators';
+import { scan, Observable, OperatorFunction } from 'rxjs';
 import { factoryTimer, FactoryTimerConfig } from './factory';
 
 /**
  * Similar to count(), but counts emissions as they occur using scan.
  */
-export function scanCount(startAt = 0): OperatorFunction<any, number> {
-  return scan((count, _) => count + 1, startAt);
+export function scanCount(startAt = 0): OperatorFunction<unknown, number> {
+  return scan((count) => count + 1, startAt);
 }
 
 

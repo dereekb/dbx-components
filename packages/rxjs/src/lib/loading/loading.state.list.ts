@@ -1,11 +1,11 @@
 import { filter, map, Observable, OperatorFunction } from 'rxjs';
 import { ListLoadingState, loadingStateIsLoading } from "./loading.state";
 
-export function listLoadingStateIsEmpty<T>(listLoadingState: ListLoadingState<T>): boolean {
+export function listLoadingStateIsEmpty<T = unknown>(listLoadingState: ListLoadingState<T>): boolean {
   return Boolean(listLoadingState.value && !(listLoadingState.value?.length > 0));
 }
 
-export function isListLoadingStateEmpty<T>(): OperatorFunction<ListLoadingState<T>, boolean> {
+export function isListLoadingStateEmpty<T = unknown>(): OperatorFunction<ListLoadingState<T>, boolean> {
   return (obs: Observable<ListLoadingState<T>>) => {
     return obs.pipe(
       filter(x => !loadingStateIsLoading(x)),

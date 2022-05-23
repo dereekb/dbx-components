@@ -1,9 +1,7 @@
 import { SubscriptionObject } from '@dereekb/rxjs';
 import { LoadingStateContextInstance } from './loading.context.state.value';
-import { loadingStateIsLoading, successResult } from '.';
-import { of } from 'rxjs';
-import { delay, filter, first, timeout, timeoutWith } from 'rxjs/operators';
-import { objectHasKey } from '@dereekb/util';
+import { loadingStateIsLoading, successResult } from './loading.state';
+import { delay, first, timeout, of } from 'rxjs';
 
 describe('LoadingStateContextInstance', () => {
 

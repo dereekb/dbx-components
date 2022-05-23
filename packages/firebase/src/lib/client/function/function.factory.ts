@@ -29,7 +29,7 @@ export function firebaseFunctionMapFactory<M extends FirebaseFunctionTypeMap>(co
       return fn;
     };
 
-    const result: FirebaseFunctionMap<M> = mapObjectMap<FirebaseFunctionTypeConfigMap<M>>(configMap, mapFn);
+    const result = mapObjectMap<FirebaseFunctionTypeConfigMap<M>>(configMap, mapFn) as FirebaseFunctionMap<M>;
     return result;
   };
 }

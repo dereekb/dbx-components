@@ -1,8 +1,7 @@
 import { ItemPageIterator, ItemPageIterationInstance } from './iterator.page';
 import { TestPageIteratorFilter, TEST_PAGE_ITERATOR_DELEGATE } from './iterator.page.spec';
-import { first } from 'rxjs/operators';
 import { mapItemIteration, MappedItemIterationInstance } from '@dereekb/rxjs';
-import { Observable, of } from 'rxjs';
+import { first } from 'rxjs';
 
 describe('iteration.mapped', () => {
 
@@ -21,10 +20,6 @@ describe('iteration.mapped', () => {
   describe('MappedItemIterationInstance', () => {
 
     let mappedInstance: MappedItemIterationInstance<string, number>;
-
-    const obs: Observable<true> = of(true);
-
-    
 
     beforeEach(() => {
       mappedInstance = mapItemIteration(instance, {

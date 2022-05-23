@@ -7,6 +7,17 @@
       "rules": {
         "no-unused-vars": "warn",
         "unused-imports/no-unused-imports": "error",
+        "no-restricted-imports": [
+          2,
+          {
+            "paths": [
+              {
+                "name": "rxjs/operators",
+                "message": "Use top level `rxjs` directly instead."
+              }
+            ]
+          }
+        ],
         "@nrwl/nx/enforce-module-boundaries": ["off",
           {
             "enforceBuildableLibDependency": true,

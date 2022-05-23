@@ -8,7 +8,7 @@ import { DbxPopoverService } from '../popover/popover.service';
 import { FilterSource, FilterSourceConnector, PresetFilterSource } from '@dereekb/rxjs';
 import { DbxPopoverKey } from '../popover/popover';
 
-export interface DbxFilterComponentParams<F = any> {
+export interface DbxFilterComponentParams<F = object> {
   /**
    * Custom filter component to initialize.
    */
@@ -27,7 +27,7 @@ export interface DbxFilterComponentParams<F = any> {
   initialFilterObs?: Observable<F>;
 }
 
-export interface DbxFilterPopoverComponentParams<F = any> extends DbxFilterComponentParams<F> {
+export interface DbxFilterPopoverComponentParams<F = object> extends DbxFilterComponentParams<F> {
   /**
    * Origin to add the popover to.
    */

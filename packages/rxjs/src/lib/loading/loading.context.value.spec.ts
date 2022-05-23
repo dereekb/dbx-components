@@ -1,5 +1,5 @@
-import { first } from 'rxjs/operators';
-import { ValuesLoadingContext } from '.';
+import { first } from 'rxjs';
+import { ValuesLoadingContext } from './loading.context.value';
 
 describe('ValuesLoadingContext', () => {
 

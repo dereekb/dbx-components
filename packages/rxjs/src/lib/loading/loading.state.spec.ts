@@ -1,4 +1,4 @@
-import { beginLoading, errorResult, loadingStateHasFinishedLoading, loadingStateIsLoading, mapLoadingStateResults, successResult } from '.';
+import { beginLoading, errorResult, loadingStateHasFinishedLoading, loadingStateIsLoading, mapLoadingStateResults, successResult } from './loading.state';
 
 describe('beginLoading()', () => {
 
@@ -153,7 +153,7 @@ describe('mapLoadingStateResults()', () => {
     const mappedValue = `MAPPED`;
 
     const result = mapLoadingStateResults(successResult(0), {
-      mapValue: (x) => mappedValue
+      mapValue: () => mappedValue
     });
 
     expect(result.value).toBe(mappedValue);

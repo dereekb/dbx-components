@@ -1,5 +1,5 @@
 import { DbxInjectionComponentConfig, mergeDbxInjectionComponentConfigs } from '@dereekb/dbx-core';
-import { filterMaybe, SubscriptionObject, beginLoading, LoadingState, LoadingStateContextInstance, successResult } from '@dereekb/rxjs';
+import { filterMaybe, SubscriptionObject, beginLoading, LoadingState, LoadingStateContextInstance, successResult, startWithBeginLoading } from '@dereekb/rxjs';
 import { ChangeDetectorRef, Directive, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { AbstractControl, FormControl, ValidatorFn } from '@angular/forms';
 import { FieldTypeConfig, FormlyFieldConfig } from '@ngx-formly/core';
@@ -110,11 +110,11 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, C extends Sear
     distinctUntilChanged()
   );
 
-  readonly searchResultsState$ = this.inputValueString$.pipe(
+  readonly searchResultsState$: Observable<LoadingState<ConfiguredSearchableValueFieldDisplayValue<T>[]>> = this.inputValueString$.pipe(
     switchMap((text) => ((text || this.searchOnEmptyText) ? this.search(text ?? '') : of([])).pipe(
       switchMap((x) => this.loadDisplayValuesForFieldValues(x)),
       // Return begin loading to setup the loading state.
-      startWith(beginLoading())
+      startWithBeginLoading()
     )),
     shareReplay(1)
   );
@@ -220,7 +220,7 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, C extends Sear
   loadDisplayValuesForFieldValues(values: SearchableValueFieldValue<T>[]): Observable<LoadingState<ConfiguredSearchableValueFieldDisplayValue<T>[]>> {
     return this.getDisplayValuesForFieldValues(values).pipe(
       map((displayValues: ConfiguredSearchableValueFieldDisplayValue<T>[]) => successResult(displayValues)),
-      startWith(beginLoading()),
+      startWithBeginLoading(),
       shareReplay(1)
     );
   }

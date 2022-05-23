@@ -1,5 +1,5 @@
 import { DbxInjectionComponentConfig } from "@dereekb/dbx-core";
-import { beginLoading, LoadingState, successResult, mapLoadingStateResults, filterMaybe, ListLoadingStateContextInstance, isListLoadingStateEmpty } from "@dereekb/rxjs";
+import { beginLoading, LoadingState, successResult, mapLoadingStateResults, filterMaybe, ListLoadingStateContextInstance, isListLoadingStateEmpty, startWithBeginLoading } from "@dereekb/rxjs";
 import { convertMaybeToArray, findUnique, makeValuesGroupMap, Maybe } from "@dereekb/util";
 import { Directive, OnDestroy, OnInit, ViewChild } from "@angular/core";
 import { FormControl, AbstractControl } from "@angular/forms";
@@ -121,7 +121,7 @@ export class AbstractDbxPickableItemFieldDirective<T> extends FieldType<Pickable
     first(),
     switchMap(() => this.loadValuesFn().pipe(
       switchMap((x) => this.loadDisplayValuesForFieldValues(x)),
-      startWith(beginLoading<PickableValueFieldDisplayValueWithHash<T>[]>()),
+      startWithBeginLoading(),
     )),
     shareReplay(1)
   );
@@ -190,7 +190,7 @@ export class AbstractDbxPickableItemFieldDirective<T> extends FieldType<Pickable
             return displayValues.filter(x => !x.isUnknown && valueHashSet.has(x._hash));
           }
         })),
-        startWith(beginLoading())
+        startWithBeginLoading()
       ))
     )),
     shareReplay(1)
@@ -216,11 +216,11 @@ export class AbstractDbxPickableItemFieldDirective<T> extends FieldType<Pickable
     shareReplay(1)
   );
 
-  readonly itemsLoadingState$: Observable<LoadingState> = this.loadResultsDisplayValues$.pipe(
+  readonly itemsLoadingState$: Observable<LoadingState<PickableItemFieldItem<T>[]>> = this.loadResultsDisplayValues$.pipe(
     switchMap(x => this.items$.pipe(
       first(),
       map(x => successResult(x)),
-      startWith(beginLoading()),
+      startWithBeginLoading(),
       shareReplay(1)
     ))
   );
@@ -230,9 +230,9 @@ export class AbstractDbxPickableItemFieldDirective<T> extends FieldType<Pickable
    */
   readonly context = new ListLoadingStateContextInstance({ obs: this.itemsLoadingState$, showLoadingOnNoValue: false });
 
-  readonly filterItemsLoadingState$: Observable<LoadingState> = this.items$.pipe(
+  readonly filterItemsLoadingState$: Observable<LoadingState<PickableItemFieldItem<T>[]>> = this.items$.pipe(
     map(x => successResult(x)),
-    startWith(beginLoading()),
+    startWithBeginLoading(),
     shareReplay(1)
   );
 
@@ -352,7 +352,7 @@ export class AbstractDbxPickableItemFieldDirective<T> extends FieldType<Pickable
   loadDisplayValuesForFieldValues(values: PickableValueFieldValue<T>[]): Observable<LoadingState<PickableValueFieldDisplayValueWithHash<T>[]>> {
     return this.getDisplayValuesForFieldValues(values).pipe(
       map((displayValues: PickableValueFieldDisplayValueWithHash<T>[]) => successResult(displayValues)),
-      startWith(beginLoading()),
+      startWithBeginLoading(),
       shareReplay(1)
     );
   }
