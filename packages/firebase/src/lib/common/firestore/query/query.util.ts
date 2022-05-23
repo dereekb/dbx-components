@@ -4,7 +4,7 @@ import { Observable } from "rxjs";
 // MARK: OnSnapshot
 export interface StreamDocsWithOnSnapshotFunctionParams<O> {
   next: (value?: O | undefined) => void,
-  error: (err?: any) => void,
+  error: (err?: unknown) => void,
   complete: () => void
 };
 

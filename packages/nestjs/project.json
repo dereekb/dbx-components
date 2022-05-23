@@ -40,7 +40,7 @@
       "executor": "@nrwl/linter:eslint",
       "outputs": ["{options.outputFile}"],
       "options": {
-        "lintFilePatterns": ["packages/nestjs/**/*.ts"]
+        "lintFilePatterns": ["packages/nestjs/src/**/*.ts"]
       }
     },
     "test": {

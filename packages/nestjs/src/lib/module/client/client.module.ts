@@ -7,7 +7,7 @@ import { ClientAppService } from "./client.service";
 export function clientAppConfigFactory(configService: ConfigService): ClientAppServiceConfig {
   const config: ClientAppServiceConfig = {
     client: {
-      clientWebAppUrl: configService.get<string>(CLIENT_WEB_APP_URL_ENV_VAR)!
+      clientWebAppUrl: configService.get<string>(CLIENT_WEB_APP_URL_ENV_VAR) as string
     }
   };
 

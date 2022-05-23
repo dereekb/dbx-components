@@ -2,7 +2,8 @@ import { groupValues, Building, build } from '@dereekb/util';
 import { toExpires } from '@dereekb/date';
 import { map, Observable, skip, switchMap, timer, shareReplay } from 'rxjs';
 import { DocumentChange, QuerySnapshot } from '../types';
-import { FirestoreItemPageIterationInstance } from "./iterator";
+import { FirestoreItemPageIterationInstance, FirestoreItemPageQueryResult } from "./iterator";
+import { ItemPageIteratorResult } from '@dereekb/rxjs';
 
 export const DEFAULT_QUERY_CHANGE_WATCHER_DELAY = 0;
 
@@ -47,7 +48,7 @@ export function iterationQueryDocChangeWatcher<T = unknown>(config: IterationQue
 
   const stream$ = instance.snapshotIteration.firstSuccessfulPageResults$.pipe(
     switchMap((first) => {
-      const { time, stream } = first.value!.value!;
+      const { time, stream } = (first.value as ItemPageIteratorResult<FirestoreItemPageQueryResult<T>>).value as FirestoreItemPageQueryResult<T>;
       const beginCheckingAt = toExpires(time, timeUntilActive);
 
       // don't start streaming until the given moment.

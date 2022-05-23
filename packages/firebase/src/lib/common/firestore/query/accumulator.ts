@@ -36,7 +36,7 @@ export function firebaseQueryItemAccumulator<U, T>(iteration: FirestoreItemPageI
     const result: U[] = x.map(y => {
       const data = y.data() as DocumentDataWithId<T>;
       data.id = y.id;
-      return mapItem!(data);
+      return (mapItem as MapFunction<DocumentDataWithId<T>, U>)(data);
     });
 
     return result;

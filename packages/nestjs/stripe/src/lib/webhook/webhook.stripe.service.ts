@@ -26,7 +26,7 @@ export class StripeWebhookService {
   }
 
   async updateForStripeEvent(event: Stripe.Event): Promise<boolean> {
-    let handled: boolean = await this.handler(event);
+    const handled: boolean = await this.handler(event);
 
     if (!handled) {
       this.logger.warn('Received unexpected/unhandled stripe event: ', event);

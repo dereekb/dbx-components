@@ -4,7 +4,7 @@ import * as bodyParser from 'body-parser';
 
 @Injectable()
 export class RawBodyMiddleware implements NestMiddleware {
-  use(req: Request, res: Response, next: () => any) {
+  use(req: Request, res: Response, next: () => unknown) {
     bodyParser.raw({ type: '*/*' })(req, res, next);
   }
 }

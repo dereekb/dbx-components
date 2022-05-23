@@ -28,7 +28,7 @@ export class DefaultFirestoreDocumentDataAccessor<T> implements FirestoreDocumen
     return setDoc(this.documentRef, data, options as SetOptions);
   }
 
-  update(data: UpdateData<T>): Promise<void> {
+  update(data: UpdateData<unknown>): Promise<void> {
     return updateDoc(this.documentRef, data);
   }
 

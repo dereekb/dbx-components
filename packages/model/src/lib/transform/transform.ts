@@ -1,4 +1,4 @@
-import { ClassType, isPromise } from "@dereekb/util";
+import { ClassType } from "@dereekb/util";
 import { ClassTransformOptions, plainToClass } from "class-transformer";
 import { validate, ValidationError, ValidationOptions } from "class-validator";
 
@@ -8,25 +8,25 @@ export interface TransformAndValidateObjectOutput<T, O> {
   result: O;
 };
 
-export type TransformAndValidateObjectFunction<T, O, I extends object = object, C = any> = (input: I, context?: C) => Promise<TransformAndValidateObjectOutput<T, O>>;
-export type TransformAndValidateObjectHandleValidate<O = any> = (validationErrors: ValidationError[]) => Promise<O>;
+export type TransformAndValidateObjectFunction<T, O, I extends object = object, C = unknown> = (input: I, context?: C) => Promise<TransformAndValidateObjectOutput<T, O>>;
+export type TransformAndValidateObjectHandleValidate<O = unknown> = (validationErrors: ValidationError[]) => Promise<O>;
 
 /**
  * transformAndValidateObject() configuration that also provides error handling.
  */
-export interface TransformAndValidateObject<T extends object, O, C = any> {
+export interface TransformAndValidateObject<T extends object, O, C = unknown> {
   readonly classType: ClassType<T>;
   readonly fn: (parsed: T) => Promise<O>;
   readonly handleValidationError: TransformAndValidateObjectHandleValidate<O>;
   readonly optionsForContext?: TransformAndValidateObjectResultContextOptionsFunction<C>;
 }
 
-export function transformAndValidateObject<T extends object, O, I extends object = object, C = any>(config: TransformAndValidateObject<T, O, C>): TransformAndValidateObjectFunction<T, O, I, C> {
+export function transformAndValidateObject<T extends object, O, I extends object = object, C = unknown>(config: TransformAndValidateObject<T, O, C>): TransformAndValidateObjectFunction<T, O, I, C> {
   const transformToResult = transformAndValidateObjectResult(config.classType, config.fn, config.optionsForContext);
   const { handleValidationError } = config;
 
   return (input: I, context?: C) => transformToResult(input, context).then(async (x) => {
-    let object = x.object;
+    const object = x.object;
     let result: O;
 
     if (x.success) {
@@ -47,14 +47,14 @@ export function transformAndValidateObject<T extends object, O, I extends object
  * Configuration for the transformAndValidateObject function from transformAndValidateObjectFactory().
  */
 export interface TransformAndValidateObjectFactoryDefaults<C> {
-  readonly handleValidationError: TransformAndValidateObjectHandleValidate<any>;
+  readonly handleValidationError: TransformAndValidateObjectHandleValidate<unknown>;
   readonly optionsForContext?: TransformAndValidateObjectResultContextOptionsFunction<C>;
 }
 
 /**
  * Factory for generating TransformAndValidateObjectFunction functions.
  */
-export type TransformAndValidateObjectFactory<C = any> = <T extends object, O, I extends object = object>(classType: ClassType<T>, fn: (parsed: T) => Promise<O>, handleValidationError?: TransformAndValidateObjectHandleValidate<O>) => TransformAndValidateObjectFunction<T, O, I, C>;
+export type TransformAndValidateObjectFactory<C = unknown> = <T extends object, O, I extends object = object>(classType: ClassType<T>, fn: (parsed: T) => Promise<O>, handleValidationError?: TransformAndValidateObjectHandleValidate<O>) => TransformAndValidateObjectFunction<T, O, I, C>;
 
 /**
  * Creates a new TransformAndValidateObjectFactory.
@@ -62,14 +62,14 @@ export type TransformAndValidateObjectFactory<C = any> = <T extends object, O, I
  * @param defaults 
  * @returns 
  */
-export function transformAndValidateObjectFactory<C = any>(defaults: TransformAndValidateObjectFactoryDefaults<C>): TransformAndValidateObjectFactory<C> {
+export function transformAndValidateObjectFactory<C = unknown>(defaults: TransformAndValidateObjectFactoryDefaults<C>): TransformAndValidateObjectFactory<C> {
   const { handleValidationError: defaultHandleValidationError, optionsForContext } = defaults;
 
-  return <T extends object, O, I extends object = object>(classType: ClassType<T>, fn: (parsed: T) => Promise<O>, handleValidationError?: TransformAndValidateObjectHandleValidate<any>) => {
+  return <T extends object, O, I extends object = object>(classType: ClassType<T>, fn: (parsed: T) => Promise<O>, handleValidationError?: TransformAndValidateObjectHandleValidate<O>) => {
     const config: TransformAndValidateObject<T, O, C> = {
       classType,
       fn,
-      handleValidationError: handleValidationError ?? defaultHandleValidationError,
+      handleValidationError: handleValidationError ?? (defaultHandleValidationError as TransformAndValidateObjectHandleValidate<O>),
       optionsForContext
     };
 
@@ -78,7 +78,7 @@ export function transformAndValidateObjectFactory<C = any>(defaults: TransformAn
 }
 
 // MARK: Transform And Validate Object Result
-export type TransformAndValidateObjectResultFunction<T, O, I extends object = object, C = any> = (input: I, context?: C) => Promise<TransformAndValidateObjectResultOutput<T, O>>;
+export type TransformAndValidateObjectResultFunction<T, O, I extends object = object, C = unknown> = (input: I, context?: C) => Promise<TransformAndValidateObjectResultOutput<T, O>>;
 
 export interface TransformAndValidateObjectResultTransformContextOptions {
   transform?: ClassTransformOptions;
@@ -107,7 +107,7 @@ export interface TransformAndValidateObjectErrorResultOutput<T> {
  * @param fn 
  * @returns 
  */
-export function transformAndValidateObjectResult<T extends object, O, I extends object = object, C = any>(classType: ClassType<T>, fn: (parsed: T) => Promise<O>, inputOptionsForContext?: TransformAndValidateObjectResultContextOptionsFunction<C>): TransformAndValidateObjectResultFunction<T, O, I, C> {
+export function transformAndValidateObjectResult<T extends object, O, I extends object = object, C = unknown>(classType: ClassType<T>, fn: (parsed: T) => Promise<O>, inputOptionsForContext?: TransformAndValidateObjectResultContextOptionsFunction<C>): TransformAndValidateObjectResultFunction<T, O, I, C> {
   const optionsForContext: TransformAndValidateObjectResultContextOptionsFunction<C> = inputOptionsForContext ?? (() => ({}));
   return async (input: I, context?: C) => {
     const { transform: transformOptions, validate: validateOptions } = optionsForContext(context);

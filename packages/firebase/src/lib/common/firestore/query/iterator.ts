@@ -180,10 +180,10 @@ export function firestoreItemPageIterationFactory<T>(baseConfig: FirestoreItemPa
   };
 }
 
-export const FIRESTORE_ITEM_PAGE_ITERATOR_DELEGATE: FirestoreItemPageIteratorDelegate<any> = makeFirestoreItemPageIteratorDelegate() as any;
-export const FIRESTORE_ITEM_PAGE_ITERATOR = new ItemPageIterator<FirestoreItemPageQueryResult<any>, FirestoreItemPageIteratorFilter, FirestoreItemPageIterationConfig<any>>(FIRESTORE_ITEM_PAGE_ITERATOR_DELEGATE);
+export const FIRESTORE_ITEM_PAGE_ITERATOR_DELEGATE: FirestoreItemPageIteratorDelegate<unknown> = makeFirestoreItemPageIteratorDelegate();
+export const FIRESTORE_ITEM_PAGE_ITERATOR = new ItemPageIterator<FirestoreItemPageQueryResult<unknown>, FirestoreItemPageIteratorFilter, FirestoreItemPageIterationConfig<unknown>>(FIRESTORE_ITEM_PAGE_ITERATOR_DELEGATE);
 
 export function firestoreItemPageIteration<T>(config: FirestoreItemPageIterationConfig<T>): FirestoreItemPageIterationInstance<T> {
-  const iterator: InternalFirestoreItemPageIterationInstance<T> = FIRESTORE_ITEM_PAGE_ITERATOR.instance(config);
+  const iterator: InternalFirestoreItemPageIterationInstance<T> = FIRESTORE_ITEM_PAGE_ITERATOR.instance(config) as InternalFirestoreItemPageIterationInstance<T>;
   return new FirestoreItemPageIterationInstance<T>(iterator);
 }

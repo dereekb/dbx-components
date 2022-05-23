@@ -4,7 +4,7 @@ import { Request } from "express";
 /**
  * Returns true if the request is from localhost:4200.
  */
-export const IsRequestFromLocalHost = createParamDecorator((data: any, context: ExecutionContext) => {
+export const IsRequestFromLocalHost = createParamDecorator((data: unknown, context: ExecutionContext) => {
   return isLocalhost(context);
 });
 

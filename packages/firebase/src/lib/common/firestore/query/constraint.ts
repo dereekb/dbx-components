@@ -7,7 +7,7 @@ export type FirestoreQueryConstraintType = string;
 /**
  * A constraint. Used by drivers to apply native firebase query constraints.
  */
-export interface FirestoreQueryConstraint<T = any> {
+export interface FirestoreQueryConstraint<T = unknown> {
   type: FirestoreQueryConstraintType;
   data: T;
 }
@@ -70,7 +70,7 @@ export function offset(offset: number): FirestoreQueryConstraint<OffsetQueryCons
 // MARK: Where
 export const FIRESTORE_WHERE_QUERY_CONSTRAINT_TYPE = 'where';
 
-export type WhereFilterOp = '<' | '<=' | '==' | '!=' | '>=' | '>' | 'array-contains' | 'in' | 'array-contains-any' | 'not-in';
+export type WhereFilterOp = '<' | '<=' | '==' | '!=' | '>=' | '>' | 'array-contains' | 'in' | 'array-contains-unknown' | 'not-in';
 
 export interface WhereQueryConstraintData {
   fieldPath: string | FieldPath;
@@ -80,8 +80,8 @@ export interface WhereQueryConstraintData {
 
 export function where<T>(fieldPath: keyof T, opStr: WhereFilterOp, value: unknown): FirestoreQueryConstraint<WhereQueryConstraintData>;
 export function where(fieldPath: string | FieldPath, opStr: WhereFilterOp, value: unknown): FirestoreQueryConstraint<WhereQueryConstraintData>
-export function where(fieldPath: any, opStr: WhereFilterOp, value: unknown): FirestoreQueryConstraint<WhereQueryConstraintData> {
-  return firestoreQueryConstraint(FIRESTORE_WHERE_QUERY_CONSTRAINT_TYPE, { fieldPath, opStr, value });
+export function where(fieldPath: unknown, opStr: WhereFilterOp, value: unknown): FirestoreQueryConstraint<WhereQueryConstraintData> {
+  return firestoreQueryConstraint(FIRESTORE_WHERE_QUERY_CONSTRAINT_TYPE, { fieldPath: (fieldPath as string), opStr, value });
 }
 
 // MARK: OrderBy
@@ -158,7 +158,7 @@ export function endBefore<T = DocumentData>(snapshot: DocumentSnapshot<T>): Fire
 /**
  * Updates the input builder with the passed constraint value.
  */
-export type FirestoreQueryConstraintHandlerFunction<B, D = any> = (builder: B, data: D, constraint: FirestoreQueryConstraint<D>) => B;
+export type FirestoreQueryConstraintHandlerFunction<B, D = unknown> = (builder: B, data: D, constraint: FirestoreQueryConstraint<D>) => B;
 
 export type FirestoreQueryConstraintHandlerMap<B> = ObjectMap<Maybe<FirestoreQueryConstraintHandlerFunction<B>>>;
 

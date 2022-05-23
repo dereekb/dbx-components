@@ -1,6 +1,5 @@
 // A set of copied types from @google-cloud/firestore and firebase/firestore to allow cross-compatability.
-
-import { KeyValueTransformMap, OnlyStringKeys, StringKeyValueTransformMap } from '@dereekb/util';
+/* eslint-disable */
 
 // MARK: Firestore
 // These types are provided to avoid us from using the "any".
