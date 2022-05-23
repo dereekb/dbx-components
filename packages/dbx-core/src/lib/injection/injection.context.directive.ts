@@ -1,9 +1,8 @@
-import { PromiseOrValue } from './../../../../util/src/lib/promise/promise';
 import { Directive, EmbeddedViewRef, Injector, Input, TemplateRef, ViewContainerRef, OnDestroy, OnInit } from '@angular/core';
 import { DbxInjectionContext, DbxInjectionContextConfig, ProvideDbxInjectionContext } from './injection.context';
 import { DbxInjectionInstance } from './injection.instance';
 import { DbxInjectionComponentConfig } from './injection';
-import { PromiseFullRef, makePromiseFullRef, Maybe } from '@dereekb/util';
+import { PromiseOrValue, PromiseFullRef, makePromiseFullRef, Maybe } from '@dereekb/util';
 
 /**
  * DbxInjectedViewContext implementation. Acts similar to *ngIf, but instead switches to a different view without destroying the original child view.

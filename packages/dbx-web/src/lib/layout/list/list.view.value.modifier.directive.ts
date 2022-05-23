@@ -24,8 +24,6 @@ export class DbxValueListItemModifierDirective<T, I extends DbxValueListItem<T> 
     shareReplay(1)
   );
 
-  constructor() { }
-
   ngOnDestroy(): void {
     this._modifiers.complete();
   }

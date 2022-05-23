@@ -100,7 +100,7 @@ export class DbxChecklistItemFieldComponent<T = any> extends FieldType<Checklist
 })
 export class DbxChecklistItemContentComponent<T = any> extends AbstractSubscriptionDirective {
 
-  config?: DbxInjectionComponentConfig;
+  config?: DbxInjectionComponentConfig<ChecklistItemFieldDisplayComponent<T>>;
 
   constructor(
     readonly checklistItemFieldComponent: DbxChecklistItemFieldComponent<T>,

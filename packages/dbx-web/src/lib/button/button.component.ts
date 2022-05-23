@@ -77,14 +77,16 @@ export class DbxButtonComponent extends AbstractDbxButtonDirective {
       fontIcon: this.icon
     } : undefined;
 
-    let customStyle = {} as any;
+    const customStyle = {} as {
+      [key: string]: string;
+    };
 
     if (this.customButtonColor) {
-      customStyle.background = this.customButtonColor;
+      customStyle['background'] = this.customButtonColor;
     }
 
     if (this.customTextColor) {
-      customStyle.color = this.customTextColor;
+      customStyle['color'] = this.customTextColor;
     }
 
     const customSpinnerColor: Maybe<string> = this.customSpinnerColor ?? this.customTextColor;

@@ -1,6 +1,6 @@
 import { TransitionHookFn, Transition, HookResult, StateService, UIInjector, TransitionOptions, RawParams } from '@uirouter/core';
 import { catchError, map, first, firstValueFrom, Observable, of, switchMap } from 'rxjs';
-import { SegueRef } from './../../../../router/segue';
+import { asSegueRefString, SegueRef } from './../../../../router/segue';
 import { DbxAuthService } from '../../../service/auth.service';
 import { FactoryWithRequiredInput, getValueFromGetter, isGetter, Maybe } from '@dereekb/util';
 import { Injector } from '@angular/core';
@@ -117,7 +117,7 @@ export function makeAuthTransitionHook(config: AuthTransitionHookConfig): Transi
             return redirectOut();
           }
         } else {
-          return of($state.target(decision.ref, decision.refParams as RawParams, decision.refOptions as TransitionOptions));
+          return of($state.target(asSegueRefString(decision.ref), decision.refParams as RawParams, decision.refOptions as TransitionOptions));
         }
       }),
       catchError((x) => {

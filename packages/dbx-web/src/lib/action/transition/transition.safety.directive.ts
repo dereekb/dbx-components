@@ -54,7 +54,7 @@ export class DbxActionTransitionSafetyDirective<T, O> implements OnInit, OnDestr
   ngOnInit(): void {
     this.stopWatchingTransition = this.transitionService.onStart({}, (transition: Transition) => {
       return this._handleOnBeforeTransition(transition);
-    }) as any;
+    }) as (() => void);
   }
 
   ngOnDestroy(): void {
@@ -73,7 +73,7 @@ export class DbxActionTransitionSafetyDirective<T, O> implements OnInit, OnDestr
         if (isModified) {
           return race([
             // Watch for success to occur. At that point, close everything.
-            this.source.success$.pipe(first(), map((x) => [true, undefined] as DbxActionTransitionSafetyRaceResult)),
+            this.source.success$.pipe(first(), map(() => [true, undefined] as DbxActionTransitionSafetyRaceResult)),
             this._handleIsModifiedState(transition).pipe(first(), map((x) => [undefined, x] as DbxActionTransitionSafetyRaceResult))
           ]).pipe(
             map(([saveSuccess, handleResult]: DbxActionTransitionSafetyRaceResult) => {

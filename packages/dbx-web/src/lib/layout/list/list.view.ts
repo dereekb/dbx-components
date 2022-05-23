@@ -57,7 +57,7 @@ export abstract class DbxListView<T, S extends ListLoadingState<T> = ListLoading
   abstract setSelectionMode(selectionMode: Maybe<DbxListSelectionMode>): void;
 }
 
-export function ProvideDbxListView<V extends DbxListView<any>>(sourceType: Type<V>): Provider[] {
+export function ProvideDbxListView<V extends DbxListView<unknown>>(sourceType: Type<V>): Provider[] {
   return [{
     provide: DbxListView,
     useExisting: forwardRef(() => sourceType)

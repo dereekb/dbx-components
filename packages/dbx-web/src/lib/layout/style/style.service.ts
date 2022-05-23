@@ -1,5 +1,5 @@
 import { Destroyable } from '@dereekb/util';
-import { switchMapMaybeObs, filterMaybe } from '@dereekb/rxjs';
+import { filterMaybe } from '@dereekb/rxjs';
 import { BehaviorSubject, Observable, combineLatest, distinctUntilChanged, map, switchMap, shareReplay } from 'rxjs';
 import { Inject, Injectable, InjectionToken, Optional } from '@angular/core';
 import { Maybe } from '@dereekb/util';
@@ -70,14 +70,14 @@ export class DbxStyleService implements Destroyable {
           }
         }
 
-        return style!;
+        return style;
       }),
       distinctUntilChanged()
     );
   }
 
   toggleDarkSuffix(dark?: Maybe<boolean>) {
-    let toggle: boolean = (dark != null) ? dark : this.suffix !== '-dark';
+    const toggle: boolean = (dark != null) ? dark : this.suffix !== '-dark';
 
     if (toggle) {
       this.suffix = '-dark';

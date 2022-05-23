@@ -5,7 +5,7 @@ import { DbxPopoverComponent } from './popover.component';
  * Abstract popover directive.
  */
 @Directive()
-export abstract class AbstractPopoverDirective<O = any, I = any, T = any> {
+export abstract class AbstractPopoverDirective<O = unknown, I = unknown, T = unknown> {
 
   constructor(public readonly popover: DbxPopoverComponent<O, I, T>) { }
 

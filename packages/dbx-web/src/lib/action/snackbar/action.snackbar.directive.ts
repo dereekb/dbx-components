@@ -3,7 +3,7 @@ import { AbstractSubscriptionDirective, DbxActionContextStoreSourceInstance } fr
 import { Maybe } from '@dereekb/util';
 import { DbxActionSnackbarDisplayConfig, DbxActionSnackbarEvent, DbxActionSnackbarType } from './action.snackbar';
 import { DbxActionSnackbarService } from './action.snackbar.service';
-import { DbxActionSnackbarDisplayConfigGeneratorFunction, DbxActionSnackbarGeneratorUndoInput } from './action.snackbar.generator';
+import { DbxActionSnackbarDisplayConfigGeneratorFunction, DbxActionSnackbarGeneratorInput, DbxActionSnackbarGeneratorUndoInput } from './action.snackbar.generator';
 import { LoadingState, LoadingStateType, loadingStateType } from '@dereekb/rxjs';
 
 /**
@@ -12,7 +12,7 @@ import { LoadingState, LoadingStateType, loadingStateType } from '@dereekb/rxjs'
 @Directive({
   selector: '[dbxActionSnackbar]'
 })
-export class DbxActionSnackbarDirective<T = any, O = any> extends AbstractSubscriptionDirective implements OnInit {
+export class DbxActionSnackbarDirective<T = unknown, O = unknown> extends AbstractSubscriptionDirective implements OnInit {
 
   private _snackbarFunction?: Maybe<DbxActionSnackbarDisplayConfigGeneratorFunction<O>>;
 
@@ -40,8 +40,8 @@ export class DbxActionSnackbarDirective<T = any, O = any> extends AbstractSubscr
   }
 
   ngOnInit(): void {
-    this.sub = this.source.pipeStore((store) => store.loadingState$).subscribe((loadingState: LoadingState) => {
-      const event: DbxActionSnackbarEvent = { value: loadingState.value, error: loadingState.error, type: loadingStateType(loadingState) };
+    this.sub = this.source.pipeStore((store) => store.loadingState$).subscribe((loadingState: LoadingState<O>) => {
+      const event: DbxActionSnackbarEvent<O> = { value: loadingState.value, error: loadingState.error, type: loadingStateType(loadingState) };
 
       const config = this.buildConfigurationForEvent(event);
 
@@ -51,8 +51,8 @@ export class DbxActionSnackbarDirective<T = any, O = any> extends AbstractSubscr
     });
   }
 
-  protected buildConfigurationForEvent(event: DbxActionSnackbarEvent): Maybe<DbxActionSnackbarDisplayConfig> {
-    const input = {
+  protected buildConfigurationForEvent(event: DbxActionSnackbarEvent<O>): Maybe<DbxActionSnackbarDisplayConfig> {
+    const input: DbxActionSnackbarGeneratorInput<O> = {
       event,
       undo: event.type === LoadingStateType.SUCCESS ? this.dbxActionSnackbarUndo : undefined  // only show undo on success.
     };

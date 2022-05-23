@@ -6,7 +6,7 @@ import { DbxSectionHeaderHType } from './section';
  * Component used to style a section's header.
  */
 @Component({
-  selector: '.dbx-section-header',
+  selector: 'dbx-section-header,.dbx-section-header',
   template: `
     <div class="dbx-section-header-content">
       <ng-container [ngSwitch]="showTitle && (h ?? 1)">

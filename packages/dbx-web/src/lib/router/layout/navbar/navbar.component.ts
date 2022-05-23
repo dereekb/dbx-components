@@ -49,7 +49,7 @@ export class DbxNavbarComponent extends AbstractTransitionDirective implements O
   readonly anchors$: Observable<NavAnchorLink[]> = combineLatest([this._anchors, this.initAndUpdateOnTransitionSuccess$]).pipe(
     map(([anchors]) => {
       const results = anchors.map((anchor) => {
-        let selected = this._dbxRouterService.isActive(anchor);
+        const selected = this._dbxRouterService.isActive(anchor);
 
         return {
           selected,

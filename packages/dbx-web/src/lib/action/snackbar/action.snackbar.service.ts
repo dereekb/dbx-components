@@ -15,7 +15,7 @@ export interface DbxActionSnackbarEventMakeConfig {
   [key: string]: DbxMakeActionSnackbarGeneratorConfiguration;
 }
 
-export interface DbxActionSnackbarServiceConfig<C = any> {
+export interface DbxActionSnackbarServiceConfig<C = unknown> {
   readonly componentClass: Type<C>;
   readonly snackbar?: Pick<MatSnackBarConfig, 'horizontalPosition' | 'verticalPosition'>;
   readonly defaultDuration?: Milliseconds;
@@ -49,7 +49,7 @@ export class DbxActionSnackbarService<C = DbxActionSnackbarComponent> {
 
     this.config = {
       ...inputConfig,
-      componentClass: inputConfig.componentClass ?? DbxActionSnackbarComponent as any,
+      componentClass: inputConfig.componentClass ?? DbxActionSnackbarComponent as unknown as Type<C>,
       defaultDuration: inputConfig.defaultDuration || DEFAULT_SNACKBAR_DIRECTIVE_DURATION,
       eventTypeConfigs: mergeObjects([DBX_ACTION_SNACKBAR_DEFAULTS, inputConfig.eventTypeConfigs]) as DbxActionSnackbarEventMakeConfig
     };

@@ -6,7 +6,7 @@ import { AnchorType, anchorTypeForAnchor } from '@dereekb/dbx-core';
 import { DbxListView } from './list.view';
 import { Maybe } from '@dereekb/util';
 
-export interface DbxValueListViewConfig<T, I extends DbxValueListItem<T> = DbxValueListItem<T>, V = any> extends AbstractDbxValueListViewConfig<T, I, V> {
+export interface DbxValueListViewConfig<T, I extends DbxValueListItem<T> = DbxValueListItem<T>, V = unknown> extends AbstractDbxValueListViewConfig<T, I, V> {
   emitAllClicks?: boolean;
 }
 
@@ -19,7 +19,7 @@ export interface DbxValueListViewConfig<T, I extends DbxValueListItem<T> = DbxVa
     <dbx-list-view-content [items]="items$ | async" [emitAllClicks]="emitAllClicks$ | async"></dbx-list-view-content>
   `
 })
-export class DbxValueListViewComponent<T, I extends DbxValueListItem<T> = DbxValueListItem<T>, V = any, C extends DbxValueListViewConfig<T, I, V> = DbxValueListViewConfig<T, I, V>> extends AbstractDbxValueListViewDirective<T, I, V, C> {
+export class DbxValueListViewComponent<T, I extends DbxValueListItem<T> = DbxValueListItem<T>, V = unknown, C extends DbxValueListViewConfig<T, I, V> = DbxValueListViewConfig<T, I, V>> extends AbstractDbxValueListViewDirective<T, I, V, C> {
 
   readonly emitAllClicks$ = this.config$.pipe(map(x => x.emitAllClicks), shareReplay(1));
 

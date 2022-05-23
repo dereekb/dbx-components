@@ -1,5 +1,5 @@
 
-import { Component, Input, Directive } from '@angular/core';
+import { Input, Directive } from '@angular/core';
 import { Maybe } from '@dereekb/util';
 import { DbxBarColor } from './bar';
 
@@ -7,7 +7,7 @@ import { DbxBarColor } from './bar';
  * Acts as a wrapper for content distributed along a bar.
  */
 @Directive({
-  selector: 'dbx-bar',
+  selector: 'dbx-bar,[dbxBar]',
   host: {
     'class': 'dbx-bar',
     '[class.dbx-primary-bg]': 'color === "primary"',

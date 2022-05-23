@@ -10,7 +10,7 @@ import { Maybe } from '@dereekb/util';
   state$?: Maybe<Observable<S>>;
 }
 
-export function ProvideDbxListViewWrapper<V extends DbxListViewWrapper<any>>(sourceType: Type<V>): Provider[] {
+export function ProvideDbxListViewWrapper<V extends DbxListViewWrapper<unknown>>(sourceType: Type<V>): Provider[] {
   return [{
     provide: DbxListViewWrapper,
     useExisting: forwardRef(() => sourceType)

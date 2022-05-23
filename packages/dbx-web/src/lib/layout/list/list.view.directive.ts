@@ -22,8 +22,6 @@ export abstract class AbstractDbxListViewDirective<T> implements DbxListView<T>,
   @Output()
   clickValue = new EventEmitter<T>();
 
-  constructor() { }
-
   @Input()
   set valueArray(values: Maybe<T[]>) {
     this.setValues(values ? of(values) : undefined);

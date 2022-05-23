@@ -1,6 +1,6 @@
 import { ScreenMediaWidthType } from '../../screen/screen';
 import { DbxScreenMediaService } from '../../screen/screen.service';
-import { Directive, ChangeDetectorRef, Input, OnInit } from '@angular/core';
+import { Directive, ChangeDetectorRef, Input, OnInit, OnDestroy } from '@angular/core';
 import { BehaviorSubject, map, shareReplay, distinctUntilChanged, delay } from 'rxjs';
 import { AbstractSubscriptionDirective, safeDetectChanges } from '@dereekb/dbx-core';
 import { Maybe } from '@dereekb/util';
@@ -16,7 +16,7 @@ import { Maybe } from '@dereekb/util';
     '[class.dbx-flex-group-relative]': 'relative'
   }
 })
-export class DbxFlexGroupDirective extends AbstractSubscriptionDirective implements OnInit {
+export class DbxFlexGroupDirective extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
 
   @Input()
   content = true;
@@ -24,7 +24,7 @@ export class DbxFlexGroupDirective extends AbstractSubscriptionDirective impleme
   @Input()
   relative = false;
 
-  private _small: boolean = false;
+  private _small = false;
 
   private _breakpoint = new BehaviorSubject<ScreenMediaWidthType>('tablet');
   readonly isSmallScreen$ = this._dbxScreenMediaService.isBreakpointActive(this._breakpoint).pipe(map(x => !x), distinctUntilChanged(), shareReplay(1));

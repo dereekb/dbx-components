@@ -1,5 +1,5 @@
 import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
-import { Component, ElementRef, Type, OnInit } from '@angular/core';
+import { Component, ElementRef, Type, OnInit, OnDestroy } from '@angular/core';
 import { NgPopoverRef } from 'ng-overlay-container';
 import { Observable, BehaviorSubject, map } from 'rxjs';
 import { AbstractPopoverDirective } from '../popover/abstract.popover.directive';
@@ -39,7 +39,7 @@ export const DEFAULT_FILTER_POPOVER_KEY = 'filter';
 @Component({
   templateUrl: './filter.popover.component.html'
 })
-export class DbxFilterPopoverComponent<F> extends AbstractPopoverDirective implements OnInit {
+export class DbxFilterPopoverComponent<F> extends AbstractPopoverDirective<unknown, DbxFilterComponentParams<F>> implements OnInit, OnDestroy {
 
   /**
    * Whether or not to display buttons to toggle between custom and preset filters.
@@ -49,15 +49,15 @@ export class DbxFilterPopoverComponent<F> extends AbstractPopoverDirective imple
   private _showPreset = new BehaviorSubject<boolean>(false);
   readonly showPreset$ = this._showPreset.asObservable();
 
-  readonly config$: Observable<DbxInjectionComponentConfig> = this._showPreset.pipe(
+  readonly config$: Observable<DbxInjectionComponentConfig<FilterSource<F>>> = this._showPreset.pipe(
     map((showPreset) => {
       const { connector, initialFilterObs, customFilterComponentClass, presetFilterComponentClass } = this.config;
       let componentClass: Type<FilterSource<F>>;
 
       if (showPreset) {
-        componentClass = presetFilterComponentClass!;
+        componentClass = presetFilterComponentClass as Type<PresetFilterSource<F>>;
       } else {
-        componentClass = customFilterComponentClass!;
+        componentClass = customFilterComponentClass as Type<FilterSource<F>>;
       }
 
       const config: DbxInjectionComponentConfig<FilterSource<F>> = {
@@ -89,16 +89,16 @@ export class DbxFilterPopoverComponent<F> extends AbstractPopoverDirective imple
     });
   }
 
-  constructor(popover: DbxPopoverComponent) {
+  constructor(popover: DbxPopoverComponent<unknown, DbxFilterComponentParams<F>>) {
     super(popover);
   }
 
   get config(): DbxFilterComponentParams<F> {
-    return this.popover.data;
+    return this.popover.data as DbxFilterComponentParams<F>;
   }
 
   ngOnInit(): void {
-    let showPreset: boolean = false;
+    let showPreset = false;
     const { customFilterComponentClass, presetFilterComponentClass } = this.config;
 
     if (customFilterComponentClass) {

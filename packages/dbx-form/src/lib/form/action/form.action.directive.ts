@@ -17,7 +17,7 @@ export const APP_ACTION_FORM_DISABLED_KEY = 'dbx_action_form';
 @Directive({
   selector: '[dbxActionForm]'
 })
-export class DbxActionFormDirective<T = any> implements OnInit, OnDestroy {
+export class DbxActionFormDirective<T = object> implements OnInit, OnDestroy {
 
   readonly lockSet = new LockSet();
 
@@ -40,7 +40,7 @@ export class DbxActionFormDirective<T = any> implements OnInit, OnDestroy {
   private _isCompleteSub = new SubscriptionObject();
   private _isWorkingSub = new SubscriptionObject();
 
-  constructor(@Host() public readonly form: DbxMutableForm, public readonly source: DbxActionContextStoreSourceInstance<object, any>) {
+  constructor(@Host() public readonly form: DbxMutableForm<T>, public readonly source: DbxActionContextStoreSourceInstance<T, any>) {
     if (form.lockSet) {
       this.lockSet.addChildLockSet(form.lockSet, 'form');
     }
@@ -67,7 +67,7 @@ export class DbxActionFormDirective<T = any> implements OnInit, OnDestroy {
           const { isComplete } = stream;
           const doNothing = {}; // nothing, form not complete
 
-          let obs: Observable<DbxActionValueOnTriggerResult>;
+          let obs: Observable<DbxActionValueOnTriggerResult<T>>;
 
           if (isComplete) {
             obs = this.form.getValue().pipe(
@@ -89,7 +89,7 @@ export class DbxActionFormDirective<T = any> implements OnInit, OnDestroy {
 
           return obs;
         })))
-    ).subscribe((result: DbxActionValueOnTriggerResult) => {
+    ).subscribe((result: DbxActionValueOnTriggerResult<T>) => {
       if (result.reject) {
         this.source.reject(result.reject);
       } else if (result.value != null) {

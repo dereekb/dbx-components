@@ -7,14 +7,14 @@ import { delay } from 'rxjs';
  * Used to retrieve the current app styling from the DbxStyleService.
  */
 @Directive({
-  selector: 'dbx-style, [dbx-style], .dbx-style',
+  selector: 'dbx-style, [dbxStyle], .dbx-style',
   host: {
     '[class]': 'style'
   }
 })
 export class DbxStyleDirective extends AbstractSubscriptionDirective {
 
-  style: string = '';
+  style = '';
 
   constructor(readonly styleService: DbxStyleService, private cdRef: ChangeDetectorRef) {
     super(styleService.style$.pipe(delay(0)).subscribe((style) => {

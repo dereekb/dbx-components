@@ -33,7 +33,7 @@ export class DbxSetStyleDirective extends AbstractSubscriptionDirective implemen
   );
 
   readonly outputStyle$ = this.styleService.getStyleWithConfig(this.config$);
-  outputStyle: string = '';
+  outputStyle = '';
 
   constructor(readonly styleService: DbxStyleService, readonly cdRef: ChangeDetectorRef) {
     super();

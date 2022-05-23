@@ -41,7 +41,7 @@ export class DbxLoadingProgressComponent {
   value?: number;
 
   @Input()
-  bufferValue: number = undefined!;
+  bufferValue: number = undefined as unknown as number; // mat-progress-bar typing prevents using undefined as a type
 
   @Input()
   get diameter(): number {
@@ -57,7 +57,7 @@ export class DbxLoadingProgressComponent {
   }
 
   get smode(): ProgressSpinnerMode {
-    return this.mode as any;
+    return this.mode as ProgressSpinnerMode;
   }
 
 }

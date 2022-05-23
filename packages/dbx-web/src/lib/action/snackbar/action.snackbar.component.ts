@@ -76,7 +76,7 @@ export class DbxActionSnackbarComponent extends AbstractSubscriptionDirective im
   ngOnInit(): void {
     // Subscribe and close if the duration is up and the action state is idle.
     this.sub = this._durationTimeout.pipe(
-      switchMap((x) => this.loadingStateType$),
+      switchMap(() => this.loadingStateType$),
       filter(x => x === LoadingStateType.IDLE)
     ).subscribe(() => {
       this.dismiss();

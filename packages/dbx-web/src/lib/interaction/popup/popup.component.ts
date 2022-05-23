@@ -1,4 +1,4 @@
-import { Component, ComponentFactoryResolver, NgZone, Type, ViewChild, ViewContainerRef, OnInit, OnDestroy, ComponentRef } from '@angular/core';
+import { Component, NgZone, Type, OnDestroy } from '@angular/core';
 import { NgPopoverRef } from 'ng-overlay-container';
 import { Maybe } from '@dereekb/util';
 import { CompactMode, CompactContextStore } from '../../layout';
@@ -48,17 +48,17 @@ export interface DbxPopupComponentConfig<O, I, T> {
     provide: CompactContextStore
   }]
 })
-export class DbxPopupComponent<O = any, I = any, T = any> extends AbstractTransitionWatcherDirective implements DbxPopupController<O, I>, OnDestroy {
+export class DbxPopupComponent<O = unknown, I = unknown, T = unknown> extends AbstractTransitionWatcherDirective implements DbxPopupController<O, I>, OnDestroy {
 
   private _position: PopupGlobalPositionStrategy;
 
   readonly contentConfig: DbxInjectionComponentConfig = {
     componentClass: this.config.componentClass,
-    init: this.config.init ? ((instance) => this.config.init!(instance, this)) : undefined
+    init: this.config.init ? ((instance) => (this.config as Required<DbxPopupComponentConfig<O, I, T>>).init(instance as T, this)) : undefined
   };
 
   private readonly closing = new Subject<void>();
-  readonly isClosing$ = this.closing.pipe(first(), map(x => true), startWith(false), shareReplay(1));
+  readonly isClosing$ = this.closing.pipe(first(), map(() => true), startWith(false), shareReplay(1));
   readonly closing$ = this.isClosing$.pipe(filter(x => x));
 
   private readonly _windowState = new BehaviorSubject<DbxPopupWindowState>(DbxPopupWindowState.NORMAL);

@@ -9,7 +9,7 @@ export type DbxActionSnackbarKnownType = 'none' | 'create' | 'save' | 'delete' |
 /**
  * ActionSnackbar event. Depending on the type, a value or error is also available.
  */
-export interface DbxActionSnackbarEvent<O = any> extends Omit<LoadingState<O>, 'loading'> {
+export interface DbxActionSnackbarEvent<O = unknown> extends Omit<LoadingState<O>, 'loading'> {
   type: LoadingStateType;
 }
 

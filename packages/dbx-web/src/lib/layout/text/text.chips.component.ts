@@ -1,7 +1,7 @@
 import { Component, Input } from '@angular/core';
 import { Maybe } from '@dereekb/util';
 
-export interface TextChip<T = any> {
+export interface TextChip<T = unknown> {
   text: string;
   tooltip?: string;
   color?: 'primary' | 'accent';
@@ -18,7 +18,7 @@ export interface TextChip<T = any> {
   </mat-chip-list>
   `
 })
-export class DbxTextChipsComponent<T = any> {
+export class DbxTextChipsComponent<T = unknown> {
 
   @Input()
   chips?: Maybe<TextChip<T>[]>;

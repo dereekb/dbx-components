@@ -6,7 +6,7 @@ import { AbstractTransitionWatcherDirective, DbxRouterTransitionService } from '
  * Abstract dialog component that closes when a transition is successful.
  */
 @Directive()
-export abstract class AbstractDialogDirective<R = any, D = any, T = any> extends AbstractTransitionWatcherDirective {
+export abstract class AbstractDialogDirective<R = unknown, D = unknown, T = unknown> extends AbstractTransitionWatcherDirective {
 
   constructor(
     @Optional() @Inject(MAT_DIALOG_DATA) readonly data: D,

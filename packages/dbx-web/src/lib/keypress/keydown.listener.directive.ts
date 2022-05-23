@@ -9,12 +9,12 @@ export class DbxWindowKeyDownListenerDirective implements OnDestroy {
   private _keysFilter?: Maybe<Set<string>>;
 
   @Input()
-  appWindowKeyDownEnabled: boolean = true;
+  appWindowKeyDownEnabled = true;
 
   @Output('dbxWindowKeyDownListener')
   keyPressed = new EventEmitter<KeyboardEvent>();
 
-  @Input('appWindowKeyDownFilter')
+  @Input()
   set appWindowKeyDownFilter(filterOnKeys: string[]) {
     let filter: Maybe<Set<string>>;
 

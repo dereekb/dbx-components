@@ -13,9 +13,7 @@ export class DbxPopupCoordinatorService implements OnDestroy {
   private _popups = new BehaviorSubject<Map<DbxPopupKey, DbxPopupController>>(new Map());
 
   readonly popups$ = this._popups.asObservable();
-
-  constructor() { }
-
+  
   ngOnDestroy(): void {
     this._popups.complete();
   }

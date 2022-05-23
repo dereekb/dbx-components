@@ -5,7 +5,7 @@ import { IsModifiedFunction } from '@dereekb/rxjs';
 import { Maybe } from '@dereekb/util';
 import { MatDialogRef } from '@angular/material/dialog';
 
-export type DbxActionDialogFunction<T = any> = () => MatDialogRef<any, Maybe<T>>;
+export type DbxActionDialogFunction<T = unknown> = () => MatDialogRef<unknown, Maybe<T>>;
 
 /**
  * Action directive that is used to trigger/display a dialog, then watches that dialog for a value.
@@ -14,7 +14,7 @@ export type DbxActionDialogFunction<T = any> = () => MatDialogRef<any, Maybe<T>>
   exportAs: 'dbxActionDialog',
   selector: '[dbxActionDialog]'
 })
-export class DbxActionDialogDirective<T = any> extends AbstractDbxActionValueOnTriggerDirective<T> implements OnInit, OnDestroy {
+export class DbxActionDialogDirective<T = unknown> extends AbstractDbxActionValueOnTriggerDirective<T> implements OnInit, OnDestroy {
 
   @Input('dbxActionDialog')
   fn?: DbxActionDialogFunction<T>;
@@ -26,7 +26,7 @@ export class DbxActionDialogDirective<T = any> extends AbstractDbxActionValueOnT
 
   constructor(
     readonly elementRef: ElementRef,
-    source: DbxActionContextStoreSourceInstance<T, any>
+    source: DbxActionContextStoreSourceInstance<T, unknown>
   ) {
     super(source, () => this._getDataFromDialog());
   }
@@ -35,7 +35,7 @@ export class DbxActionDialogDirective<T = any> extends AbstractDbxActionValueOnT
     return this._makeDialogRef().afterClosed().pipe(first());
   }
 
-  protected _makeDialogRef(): MatDialogRef<any, Maybe<T>> {
+  protected _makeDialogRef(): MatDialogRef<unknown, Maybe<T>> {
     if (!this.fn) {
       throw new Error('dbxActionDialog has no dialog function provided to it.');
     }

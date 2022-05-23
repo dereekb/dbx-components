@@ -8,7 +8,7 @@ export type DisableRippleForValueFunction<T> = (item: DbxValueListItem<T>) => bo
 
 export const DBX_LIST_ITEM_DISABLE_RIPPLE_LIST_ITEM_MODIFIER_KEY = 'disable_ripple_anchor';
 
-export const DBX_LIST_ITEM_DEFAULT_DISABLE_FUNCTION: DisableRippleForValueFunction<any> = <T>(item: DbxValueListItem<T>) => {
+export const DBX_LIST_ITEM_DEFAULT_DISABLE_FUNCTION: DisableRippleForValueFunction<unknown> = <T>(item: DbxValueListItem<T>) => {
   return item.rippleDisabled || !item.anchor || (!item.anchor.ref && !item.anchor.url && !item.anchor.onClick);
 };
 
@@ -21,9 +21,7 @@ export class DbxListItemDisableRippleModifierDirective<T> extends AbstractDbxVal
 
   readonly modifiers$: Observable<Maybe<ArrayOrValue<Modifier<DbxValueListItem<T>>>>> = this._disableRippleForItem.pipe(
     map((disableRippleForItem) => {
-      let modifiers: Maybe<Modifier<DbxValueListItem<T>>>;
-
-      modifiers = {
+      const modifiers: Modifier<DbxValueListItem<T>> = {
         key: DBX_LIST_ITEM_DISABLE_RIPPLE_LIST_ITEM_MODIFIER_KEY,
         modify: (x: DbxValueListItem<T>) => {
           if (disableRippleForItem(x)) {

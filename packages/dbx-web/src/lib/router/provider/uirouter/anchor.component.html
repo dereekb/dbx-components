@@ -1,4 +1,4 @@
-<a class="dbx-anchor-a dbx-anchor-sref" [attr.target]="target$ | async" [uiSref]="ref$ | async"
-  [uiParams]="refParams$ | async" [uiOptions]="refOptions$ | async" uiSrefActive="dbx-anchor-active" uiSrefActiveEq="dbx-anchor-active-eq">
+<a class="dbx-anchor-a dbx-anchor-sref" [attr.target]="target$ | async" [uiSref]="(uiRef$ | async) ?? ''"
+  [uiParams]="refParams$ | async" [uiOptions]="(uiOptions$ | async) ?? {}" uiSrefActive="dbx-anchor-active" uiSrefActiveEq="dbx-anchor-active-eq">
   <dbx-injection [template]="template$ | async"></dbx-injection>
 </a>

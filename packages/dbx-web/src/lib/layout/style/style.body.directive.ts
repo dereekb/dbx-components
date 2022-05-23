@@ -14,7 +14,7 @@ import { delay } from 'rxjs';
 })
 export class DbxStyleBodyDirective extends AbstractSubscriptionDirective {
 
-  private _currentStyle: string = '';
+  private _currentStyle = '';
 
   constructor(private renderer: Renderer2, readonly styleService: DbxStyleService, private cdRef: ChangeDetectorRef) {
     super(styleService.style$.pipe(delay(0)).subscribe((style) => {

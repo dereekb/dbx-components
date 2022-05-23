@@ -27,7 +27,7 @@ export class DbxTwoColumnRightComponent implements AfterViewInit, OnDestroy {
   readonly ref$: Observable<Maybe<ClickableAnchor>> = this.twoColumnsContextStore.backRef$;
 
   readonly showBack$: Observable<boolean> = combineLatest([
-    this._showBack, this.ref$.pipe(map((x) => !Boolean(x))) // TODO: Is this correct? Show back if ref is not defined?
+    this._showBack, this.ref$.pipe(map((x) => !x)) // TODO: Is this correct? Show back if ref is not defined?
   ]).pipe(
     map(([a, b]: [boolean, boolean]) => a && b)
   );

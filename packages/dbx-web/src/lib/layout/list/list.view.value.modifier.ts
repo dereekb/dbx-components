@@ -13,7 +13,7 @@ export abstract class DbxValueListItemModifier<T, I extends DbxValueListItem<T> 
 
 }
 
-export function ProvideDbxValueListViewModifier<V extends DbxValueListItemModifier<any>>(sourceType: Type<V>): Provider[] {
+export function ProvideDbxValueListViewModifier<V extends DbxValueListItemModifier<unknown>>(sourceType: Type<V>): Provider[] {
   return [{
     provide: DbxValueListItemModifier,
     useExisting: forwardRef(() => sourceType)

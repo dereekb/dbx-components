@@ -18,8 +18,8 @@ export class DbxTwoColumnFullLeftDirective implements OnInit, OnDestroy {
     return this._fullLeft.value;
   }
 
-  set fullLeft(fullLeft: boolean) {
-    if (fullLeft != null && (fullLeft as any) !== '') {
+  set fullLeft(fullLeft: boolean | '') {
+    if (fullLeft != null && (fullLeft !== '')) {
       this._fullLeft.next(fullLeft);
     }
   }

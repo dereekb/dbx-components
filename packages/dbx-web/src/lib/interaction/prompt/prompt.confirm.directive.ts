@@ -49,7 +49,7 @@ export abstract class AbstractPromptConfirmDirective implements DbxPromptConfirm
   selector: '[dbxPromptConfirm]',
   providers: ProvideDbxPromptConfirm(DbxPromptConfirmDirective)
 })
-export class DbxPromptConfirmDirective<T, O> extends AbstractPromptConfirmDirective {
+export class DbxPromptConfirmDirective extends AbstractPromptConfirmDirective {
 
   @Input('dbxPromptConfirm')
   override config?: DbxPromptConfirmConfig;
