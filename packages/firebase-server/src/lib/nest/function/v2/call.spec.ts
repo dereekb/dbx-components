@@ -53,6 +53,7 @@ describe('nest function utilities', () => {
         // Our actual handler function that is invoked by our applications.
         const handler: OnCallHandlerWithNestApplication<typeof testData, number> = (nest, event) => {
           expect(nest).toBeDefined();
+          expect(event).toBeDefined();
           retrievedNestApplication = true;
           return expectedValue;
         };

@@ -9,7 +9,7 @@ export type NestApplicationRunnableHttpFunctionFactory<I> = NestApplicationFunct
 /**
  * Runnable function that is passed an INestApplicationContext in addition to the usual data/context provided by firebase.
  */
-export type OnCallWithNestApplication<I = any, O = any> = (nest: INestApplicationContext, data: I, context: functions.https.CallableContext) => O;
+export type OnCallWithNestApplication<I = unknown, O = unknown> = (nest: INestApplicationContext, data: I, context: functions.https.CallableContext) => O;
 
 /**
  * Factory function for generating a NestApplicationFunctionFactory for a HttpsFunctions/Runnable firebase function.
@@ -31,7 +31,7 @@ export function onCallWithNestApplicationFactory(): OnCallWithNestApplicationFac
 /**
  * Runnable function that is passed an arbitrary nest context object in addition to the usual data/context provided by firebase.
  */
-export type OnCallWithNestContext<C, I = any, O = any> = (nestContext: C, data: I, context: functions.https.CallableContext) => O;
+export type OnCallWithNestContext<C, I = unknown, O = unknown> = (nestContext: C, data: I, context: functions.https.CallableContext) => O;
 
 /**
  * Factory function for generating HttpsFunctions/Runnable firebase function that returns the value from the input OnCallWithNestContext function.

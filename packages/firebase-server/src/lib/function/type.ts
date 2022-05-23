@@ -10,4 +10,4 @@ export type RunnableHttpFunction<I> = HttpsFunction & Runnable<I>;
 /**
  * Firebase Functions V2 - CallableFunction with output as an optional type.
  */
-export type CallableHttpFunction<I, O = any> = CallableFunction<I, PromiseOrValue<O>>;
+export type CallableHttpFunction<I, O = unknown> = CallableFunction<I, PromiseOrValue<O>>;

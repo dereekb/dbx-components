@@ -1,7 +1,7 @@
 import { DocumentSnapshot, Query as GoogleCloudQuery, Transaction as GoogleCloudTransaction } from "@google-cloud/firestore";
 import { Query, FIRESTORE_LIMIT_QUERY_CONSTRAINT_TYPE, FIRESTORE_START_AT_QUERY_CONSTRAINT_TYPE, FullFirestoreQueryConstraintHandlersMapping, makeFirestoreQueryConstraintFunctionsDriver, QuerySnapshot, FirestoreQueryConstraintFunctionsDriver, FirestoreQueryDriver, FIRESTORE_WHERE_QUERY_CONSTRAINT_TYPE, FIRESTORE_START_AFTER_QUERY_CONSTRAINT_TYPE, FIRESTORE_ORDER_BY_QUERY_CONSTRAINT_TYPE, FIRESTORE_OFFSET_QUERY_CONSTRAINT_TYPE, FIRESTORE_END_AT_QUERY_CONSTRAINT_TYPE, FIRESTORE_END_BEFORE_QUERY_CONSTRAINT_TYPE, FIRESTORE_LIMIT_TO_LAST_QUERY_CONSTRAINT_TYPE, streamFromOnSnapshot, Transaction } from "@dereekb/firebase";
 
-export type FirestoreServerQueryBuilder<T = any> = GoogleCloudQuery<T>;
+export type FirestoreServerQueryBuilder<T = unknown> = GoogleCloudQuery<T>;
 
 export const FIRESTORE_CLIENT_QUERY_CONSTRAINT_HANDLER_MAPPING: FullFirestoreQueryConstraintHandlersMapping<FirestoreServerQueryBuilder> = {
   [FIRESTORE_LIMIT_QUERY_CONSTRAINT_TYPE]: (builder, data) => builder.limit(data.limit),

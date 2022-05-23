@@ -48,6 +48,8 @@ describe('nest function utilities', () => {
         // Our actual handler function that is invoked by our applications.
         const handler: OnCallWithNestApplication<any, number> = (nest, data: typeof testData, context) => {
           expect(nest).toBeDefined();
+          expect(data).toBeDefined();
+          expect(context).toBeDefined();
           retrievedNestApplication = true;
           return expectedValue;
         };
@@ -88,8 +90,9 @@ describe('nest function utilities', () => {
         const factory = onEventWithNestApplicationFactory();
 
         // Our actual event handler function that is invoked by our application.
-        const handler: NestApplicationEventHandler<UserRecord> = (nest, data: UserRecord, context) => {
+        const handler: NestApplicationEventHandler<UserRecord, UserRecord> = (nest, data: UserRecord, context) => {
           expect(nest).toBeDefined();
+          expect(context).toBeDefined();
           retrievedNestApplication = true;
           return data;
         };
@@ -98,7 +101,7 @@ describe('nest function utilities', () => {
           Because different events are defined through different interfaces compared to onCall (which is directly defined as functions.https.onCall), 
           the OnEventWithNestApplicationBuilder type is used to return the CloudFunction result, and passes a builder which we can pass the handler to.
         */
-        const handlerBuilder: OnEventWithNestApplicationBuilder<UserRecord> = (withNest) => functions.auth.user().onCreate(withNest(handler));
+        const handlerBuilder: OnEventWithNestApplicationBuilder<UserRecord, UserRecord> = (withNest) => functions.auth.user().onCreate(withNest(handler));
 
         // Create our runnable factory.
         // This type will take in a NestApplicationPromiseGetter to build the final runnable.
@@ -117,6 +120,7 @@ describe('nest function utilities', () => {
         const result = await testEvent(testData);
 
         expect(result).toBe(testData);
+        expect(retrievedNestApplication).toBe(true);
       });
 
     });

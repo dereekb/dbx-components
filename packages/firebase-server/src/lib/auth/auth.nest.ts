@@ -34,7 +34,7 @@ export function provideFirebaseServerAuthService<T extends FirebaseServerAuthSer
   return [
     {
       ...provider,
-      inject: (provider as any).inject ?? [FIREBASE_AUTH_TOKEN]
+      inject: (provider as FactoryProvider<T>).inject ?? [FIREBASE_AUTH_TOKEN]
     },
     {
       provide: FirebaseServerAuthService,

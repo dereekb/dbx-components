@@ -73,14 +73,12 @@ describe('FirestoreCollection', () => {
 
       it('should create a new document accessor instance that uses the passed batch context.', async () => {
 
-        let ref: Maybe<DocumentReference<MockItem>>;
-
         const batch = firestore.batch();
         const result = firestoreCollection.documentAccessorForWriteBatch(batch);
         expect(result).toBeDefined();
 
         const document = result.newDocument();
-        ref = document.documentRef as DocumentReference<MockItem>;
+        const ref: Maybe<DocumentReference<MockItem>> = document.documentRef as DocumentReference<MockItem>;
 
         expect(document.documentRef).toBeDefined();
         expect(document.accessor).toBeDefined();

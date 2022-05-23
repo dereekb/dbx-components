@@ -7,12 +7,12 @@ import { MakeNestContext, NestApplicationFunctionFactory, NestApplicationPromise
 // NOTE: If you're looking for onRequest handling, that is usually handled by Nest and configured with the top-level onRequest by passing express. There is no factory method.
 
 // MARK: Nest
-export type NestApplicationCallableHttpFunctionFactory<I, O = any> = NestApplicationFunctionFactory<CallableHttpFunction<I, O>>;
+export type NestApplicationCallableHttpFunctionFactory<I, O = unknown> = NestApplicationFunctionFactory<CallableHttpFunction<I, O>>;
 
 /**
  * Runnable function that is passed an INestApplicationContext in addition to the usual data/context provided by firebase.
  */
-export type OnCallHandlerWithNestApplication<I = any, O = any> = (nest: INestApplicationContext, request: CallableRequest<I>) => O;
+export type OnCallHandlerWithNestApplication<I = unknown, O = unknown> = (nest: INestApplicationContext, request: CallableRequest<I>) => O;
 
 /**
  * Factory function for generating a NestApplicationFunctionFactory for a HttpsFunctions/Runnable firebase function.
@@ -34,7 +34,7 @@ export function onCallHandlerWithNestApplicationFactory(): OnCallHandlerWithNest
 /**
  * Runnable function that is passed an arbitrary nest context object in addition to the usual data/context provided by firebase.
  */
-export type OnCallHandlerWithNestContext<C, I = any, O = any> = (nestContext: C, request: CallableRequest<I>) => O;
+export type OnCallHandlerWithNestContext<C, I = unknown, O = unknown> = (nestContext: C, request: CallableRequest<I>) => O;
 
 /**
  * Factory function for generating HttpsFunctions/Runnable firebase function that returns the value from the input OnCallWithNestContext function.

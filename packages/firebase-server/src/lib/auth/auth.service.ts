@@ -1,7 +1,7 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
 import { FirebaseAuthUserId } from '@dereekb/firebase';
-import { filterUndefinedValues, AUTH_ADMIN_ROLE, AuthClaims, AuthRoleSet, cachedGetter, filterNullAndUndefinedValues, Maybe, ArrayOrValue, AuthRole, forEachKeyValue, ObjectMap, AuthClaimsUpdate, asSet, KeyValueTypleValueFilter } from '@dereekb/util';
+import { filterUndefinedValues, AUTH_ADMIN_ROLE, AuthClaims, AuthRoleSet, cachedGetter, filterNullAndUndefinedValues, ArrayOrValue, AuthRole, forEachKeyValue, ObjectMap, AuthClaimsUpdate, asSet, KeyValueTypleValueFilter } from '@dereekb/util';
 import { assertIsContextWithAuthData, CallableContextWithAuthData } from '../function/context';
 
 export interface FirebaseServerAuthUserIdentifierContext {
@@ -85,13 +85,13 @@ export abstract class AbstractFirebaseServerAuthUserContext<S extends FirebaseSe
   }
 
   async addRoles(roles: ArrayOrValue<AuthRole>): Promise<void> {
-    let claims = this._claimsForRolesChange(roles);
+    const claims = this._claimsForRolesChange(roles);
     return this.updateClaims(claims);
   }
 
   async removeRoles(roles: ArrayOrValue<AuthRole>): Promise<void> {
     const baseClaims = this._claimsForRolesChange(roles);
-    let claims: ObjectMap<null> = {};
+    const claims: ObjectMap<null> = {};
 
     forEachKeyValue(baseClaims, {
       forEach: ([key]) => {
@@ -132,10 +132,10 @@ export abstract class AbstractFirebaseServerAuthUserContext<S extends FirebaseSe
   }
 
   clearClaims(): Promise<void> {
-    return this.setClaims(null as any);
+    return this.setClaims(null);
   }
 
-  setClaims(claims: AuthClaimsUpdate): Promise<void> {
+  setClaims(claims: AuthClaimsUpdate | null): Promise<void> {
     return this.service.auth.setCustomUserClaims(this.uid, claims).then(() => {
       this._loadRecord.reset(); // reset the cache
     });

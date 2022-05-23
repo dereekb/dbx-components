@@ -52,6 +52,7 @@ describe('nest function utilities', () => {
         // Our actual event handler function that is invoked by our application.
         const handler: NestContextCloudEventHandler<TestAppNestContext, StorageEvent> = (nest, event) => {
           expect(nest).toBeDefined();
+          expect(event).toBeDefined();
           retrievedNestApplication = true;
           return expectedResult
         };
@@ -70,6 +71,7 @@ describe('nest function utilities', () => {
         const result = await testEvent(testData);
 
         expect(result.x).toBe(expectedResult.x);   // our test returns event. Just check that it ran and returned the value.
+        expect(retrievedNestApplication).toBe(true);
       });
 
     });

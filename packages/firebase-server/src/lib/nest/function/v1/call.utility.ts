@@ -3,7 +3,7 @@ import { CallableContextWithAuthData, isContextWithAuthData } from "../../../fun
 import { unauthenticatedContextHasNoUidError } from '../../../function/error';
 import { OnCallWithNestContext } from "./call";
 
-export type OnCallWithAuthorizedNestContext<C, I = any, O = any> = (nestContext: C, data: I, context: CallableContextWithAuthData) => O;
+export type OnCallWithAuthorizedNestContext<C, I = unknown, O = unknown> = (nestContext: C, data: I, context: CallableContextWithAuthData) => O;
 
 /**
  * Creates an OnCallWithNestContext wrapper that validates the input CallableContext to assert the context has auth data before entering the function.
