@@ -1,9 +1,9 @@
 import { guessCurrentTimezone } from '@dereekb/date';
-import { parse, differenceInMinutes, isValid, addHours, startOfDay, differenceInHours, millisecondsToHours } from 'date-fns';
-import { formatInTimeZone, getTimezoneOffset } from 'date-fns-tz';
+import { parse, differenceInMinutes, isValid, addHours, startOfDay } from 'date-fns';
+import { formatInTimeZone } from 'date-fns-tz';
 import { isLogicalDateStringCode, LogicalDateStringCode, Maybe, ReadableTimeString, TimeAM, TimezoneString, UTC_TIMEZONE_STRING, dateFromLogicalDate } from '@dereekb/util';
 import { LimitDateTimeConfig, LimitDateTimeInstance } from './date.time.limit';
-import { DateTimezoneConversionConfig, DateTimezoneUtcNormalInstance, isSameDateTimezoneConversionConfig, calculateAllConversions, systemNormalDateToBaseDate } from './date.timezone';
+import { DateTimezoneConversionConfig, DateTimezoneUtcNormalInstance, isSameDateTimezoneConversionConfig, systemNormalDateToBaseDate } from './date.timezone';
 
 export interface ParsedTimeString {
   /**
@@ -75,7 +75,7 @@ export class DateTimeUtilityInstance {
   }
 
   get timezone(): TimezoneString {
-    return this.normalInstance.config.timezone!;
+    return this.normalInstance.config.timezone as string;
   }
 
   getTimeAM(date = new Date(), timezone?: TimezoneString): TimeAM {
@@ -91,11 +91,11 @@ export class DateTimeUtilityInstance {
     const timestringResult = this._timeStringToDate(input, config);
 
     if (isValidDateFromTimestringResult(timestringResult)) {
-      const { result, raw, valid } = timestringResult;
+      const { result, raw } = timestringResult;
 
       // Use minutes since start of day. Since differenceInMinutes uses system time, we convert the raw to system time first.
       const inSystemTime = systemNormalDateToBaseDate(raw);
-      const minutesSinceStartOfDay = differenceInMinutes(inSystemTime!, startOfDay(inSystemTime!));
+      const minutesSinceStartOfDay = differenceInMinutes(inSystemTime, startOfDay(inSystemTime));
 
       return {
         utc: raw,
@@ -157,27 +157,27 @@ export class DateTimeUtilityInstance {
         }
       }
 
+      let removedPm = false;
+
+      function removeAmPm(inputString: string): string {
+        inputString = inputString.toLowerCase();
+        removedPm = inputString.indexOf('pm') !== -1;
+        inputString = inputString.replace(/am|pm/g, '');
+        return inputString;
+      }
+
+      function parseDateTimeFromNumber(inputString: string): Date {
+        const hour = inputString[0];
+        const minute = inputString[1] + inputString[2];
+        return parse(`${hour}:${minute}AM`, 'h:mma', relativeDate);
+      }
+
+      function parseDateTimeAsHmm(inputString: string): Date {
+        return parse(inputString, 'Hmm', relativeDate);
+      }
+
       if (!valid) {
         input = input.trim().replace(/\s+/g, '');
-
-        let removedPm = false;
-
-        function removeAmPm(inputString: string): string {
-          inputString = inputString.toLowerCase();
-          removedPm = inputString.indexOf('pm') !== -1;
-          inputString = inputString.replace(/\am|pm/g, '');
-          return inputString;
-        }
-
-        function parseDateTimeFromNumber(inputString: string): Date {
-          const hour = inputString[0];
-          const minute = inputString[1] + inputString[2];
-          return parse(`${hour}:${minute}AM`, 'h:mma', relativeDate);
-        }
-
-        function parseDateTimeAsHmm(inputString: string): Date {
-          return parse(inputString, 'Hmm', relativeDate);
-        }
 
         switch (input.length) {
           case 1:
@@ -244,8 +244,8 @@ export class DateTimeUtilityInstance {
     if (valid) {
 
       // The parsed DateTime will be in the system settings for that date in as a UTC time.
-      raw = relativeDateNormal.baseDateToSystemDate(systemParsedDateTime!);
-      result = relativeDateNormal.targetDateToSystemDate(systemParsedDateTime!);
+      raw = relativeDateNormal.baseDateToSystemDate(systemParsedDateTime as Date);
+      result = relativeDateNormal.targetDateToSystemDate(systemParsedDateTime as Date);
 
       // console.log('Raw: ', input, systemParsedDateTime, differenceInHours(raw, systemParsedDateTime!), raw, differenceInHours(raw, result), result, this.normalInstance.config);
     }

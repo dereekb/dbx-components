@@ -77,7 +77,7 @@ export function latestDate(dates: Maybe<Date>[]): Maybe<Date>;
 export function latestDate(dates: Maybe<Date>[], defaultDate: Date): Date;
 export function latestDate(dates: Maybe<Date>[], defaultDate: Maybe<Date> = undefined): Maybe<Date> {
   const filtered: Date[] = filterMaybeValues(dates);
-  return (filtered.length > 0) ? maxDate(filtered) : undefined;
+  return (filtered.length > 0) ? maxDate(filtered) : defaultDate;
 }
 
 /**

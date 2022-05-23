@@ -1,7 +1,7 @@
 import { TimezoneString, CommaSeparatedString, flattenArray, Maybe } from '@dereekb/util';
 import { format } from 'date-fns-tz';
 import { DateSet } from '../date';
-import { baseDateToTargetDate, DateTimezoneBaseDateConverter, DateTimezoneUtcNormalInstance } from '../date/date.timezone';
+import { DateTimezoneBaseDateConverter, DateTimezoneUtcNormalInstance } from '../date/date.timezone';
 
 /**
  * Denotes a single RRule rules string.
@@ -185,7 +185,7 @@ export class DateRRuleParseUtility {
       throw new Error(`Failed parsing input rfcDateString "${rfcDateString}"`);
     }
 
-    const [full, yearDate, yearS, monthS, dayS, time, hourS, minuteS, secondS] = parsed!;
+    const [/*full*/, /*yearDate*/, yearS, monthS, dayS, /*time*/, hourS, minuteS, secondS] = parsed;
     const [year, month, day, hour, minute, second] = [yearS, monthS, dayS, hourS, minuteS, secondS].map(x => (x) ? Number.parseInt(x, 10) : 0);
 
     const utcDate = new Date(Date.UTC(year, (month - 1), day, hour, minute, second));

@@ -22,7 +22,7 @@ describe('DateRRuleUtility', () => {
            */
           describe('mo,we,th at 11AM-12PM (1PM-2PM CST) 3 times', () => {
 
-            let rruleStringLineSet = ['DTSTART;TZID=America/Denver:20181101T190000;',
+            const rruleStringLineSet = ['DTSTART;TZID=America/Denver:20181101T190000;',
               'RRULE:FREQ=WEEKLY;BYDAY=MO,WE,TH;INTERVAL=1;COUNT=3'];
 
             const firstBaseDate = new Date(Date.UTC(2018, 10, 1, 19, 0, 0)); // what the parser will return from 
@@ -82,8 +82,8 @@ describe('DateRRuleUtility', () => {
 
             let calendarDate: CalendarDate;
             let rangeParams: DateRangeParams;
-            let timezone: string = 'America/Los_Angeles';
-            let rruleStringLineSet = [
+            const timezone: string = 'America/Los_Angeles';
+            const rruleStringLineSet = [
               'RRULE:FREQ=WEEKLY',
               'EXDATE;TZID=America/Los_Angeles:20210611T110000,20210611T110000'
             ];
@@ -139,7 +139,7 @@ describe('DateRRuleUtility', () => {
 
           let calendarDate: CalendarDate;
           let rangeParams: DateRangeParams;
-          let rruleStringLineSet = ['RRULE:FREQ=WEEKLY;BYDAY=MO'];
+          const rruleStringLineSet = ['RRULE:FREQ=WEEKLY;BYDAY=MO'];
 
           const numberOfWeeks = 2;
 
@@ -181,7 +181,7 @@ describe('DateRRuleUtility', () => {
 
           let calendarDate: CalendarDate;
           let rangeParams: DateRangeParams;
-          let rruleStringLineSet = ['RRULE:FREQ=DAILY;INTERVAL=2'];
+          const rruleStringLineSet = ['RRULE:FREQ=DAILY;INTERVAL=2'];
 
           const daysPeriod = 2;
           const numberOfDays = 8;
@@ -230,7 +230,7 @@ describe('DateRRuleUtility', () => {
 
       describe('mo,we,th at 11AM-12PM (1PM-2PM CST) 3 times', () => {
 
-        let rruleStringLineSet = ['DTSTART;TZID=America/Denver:20181101T190000;',
+        const rruleStringLineSet = ['DTSTART;TZID=America/Denver:20181101T190000;',
           'RRULE:FREQ=WEEKLY;BYDAY=MO,WE,TH;INTERVAL=1;COUNT=3'];
         let dateRRule: DateRRuleInstance;
 

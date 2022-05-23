@@ -8,7 +8,7 @@ describe('DateRRule', () => {
   const firstDate = new Date('2018-11-01T19:00:00.000Z');
   const lastDate = new Date('2018-11-07T19:00:00.000Z');
 
-  let rruleStringLineSet = ['DTSTART;TZID=America/Denver:20181101T190000;',
+  const rruleStringLineSet = ['DTSTART;TZID=America/Denver:20181101T190000;',
     'RRULE:FREQ=WEEKLY;BYDAY=MO,WE,TH;INTERVAL=1;COUNT=3'];
   let dateRRuleInstance: DateRRuleInstance;
   let dateRRule: DateRRule;
@@ -29,7 +29,7 @@ describe('DateRRule', () => {
     });
 
     describe('with forever', () => {
-
+      // todo
     });
 
   });
@@ -42,11 +42,11 @@ describe('DateRRule', () => {
     });
 
     describe('with minDate', () => {
-
+      // todo
     });
 
     describe('with forever', () => {
-
+      // todo
     });
 
   });
@@ -59,15 +59,13 @@ describe('DateRRule', () => {
     });
 
     describe('with filter', () => {
-
-      // TODO: ...
-
+      // todo
     });
 
     describe('with forever', () => {
 
       describe('with filter', () => {
-
+        // todo
       });
 
     });

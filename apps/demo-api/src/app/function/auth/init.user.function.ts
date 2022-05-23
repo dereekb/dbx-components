@@ -6,7 +6,7 @@ import { onEventWithDemoNestContext } from '../function';
  * Listens for users to be created and initializes them.
  */
 export const initUserOnCreate = onEventWithDemoNestContext<UserRecord>((withNest) =>
-  functions.auth.user().onCreate(withNest(async (nest, data: UserRecord, context) => {
+  functions.auth.user().onCreate(withNest(async (nest, data: UserRecord) => {
     const uid = data.uid;
 
     if (uid) {

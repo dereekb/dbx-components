@@ -146,11 +146,11 @@ export function makeDaysAndTimeFiltersFunction<R, F>(builder: DateQueryBuilder<R
 
     let daysFilter: Maybe<F>;
 
-    if (timezone) {
-      function tzDate(date: Maybe<Date>): Maybe<Date> {
-        return (date) ? utcToZonedTime(date, timezone!) : undefined;
-      }
+    function tzDate(date: Maybe<Date>): Maybe<Date> {
+      return (date) ? utcToZonedTime(date, timezone as string) : undefined;
+    }
 
+    if (timezone) {
       const tzDayStartsAtFilter = builder.makeRangeFilter(tzDate(startsGte), tzDate(startsLte));
       const tzDayEndsAtFilter = builder.makeRangeFilter(tzDate(endsGte), tzDate(endsLte));
       daysFilter = builder.makeFieldFilter({ startsAt: tzDayStartsAtFilter, endsAt: tzDayEndsAtFilter });

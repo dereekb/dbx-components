@@ -1,6 +1,7 @@
 import { Maybe } from '@dereekb/util';
 import { maxFutureDate } from '../date/date';
 import { RRule } from 'rrule';
+import { IterArgs } from 'rrule/dist/esm/src/iterresult';
 
 // TODO: Fix typings in RRule, or better yet, add the given types up to RRule.
 
@@ -44,10 +45,10 @@ export class DateRRule extends RRule {
  */
 abstract class BaseRRuleIter {
   readonly method = 'before';
-  readonly minDate: any;
-  readonly maxDate: any;
-  readonly _result: any;
-  readonly args: any;
+  readonly minDate: Date | null = undefined as unknown as Date;
+  readonly maxDate: Date | null = undefined as unknown as Date;
+  readonly _result: Date[] = undefined as unknown as Date[];
+  readonly args: Partial<IterArgs> = undefined as unknown as Partial<IterArgs>;
   public total: number = 0;
   protected _value: Date | null = null;
 
