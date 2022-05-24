@@ -32,6 +32,8 @@ describe('DbxFormLoadingPairSourceDirective', () => {
     directive = testComponent.directive;
     form = testComponent.form;
 
+    expect(directive).toBeDefined();
+
     fixture.detectChanges();
   });
 
@@ -73,7 +75,5 @@ class TestDbxActionFormDirectiveComponent {
 
   @ViewChild(DbxTestDbxFormComponent, { static: true })
   form!: DbxTestDbxFormComponent;
-
-  constructor() { }
 
 }

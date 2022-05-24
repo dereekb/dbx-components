@@ -1,4 +1,4 @@
-import { arrayToMap, separateValues } from '@dereekb/util';
+import { arrayToMap, Maybe, separateValues } from '@dereekb/util';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { Observable, of, switchMap } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -13,10 +13,10 @@ import { SearchableTextValueFieldsFieldConfig } from './searchable.text.field.co
  * @param param0 
  * @returns 
  */
-export function makeMetaFilterSearchableFieldValueDisplayFn<T = string | number, M = any>({ loadMetaForValues, makeDisplayForValues }: {
+export function makeMetaFilterSearchableFieldValueDisplayFn<T extends string | number = string | number, M = unknown>({ loadMetaForValues, makeDisplayForValues }: {
   loadMetaForValues: (values: SearchableValueFieldValue<T, M>[]) => Observable<SearchableValueFieldValue<T, M>[]>,
   makeDisplayForValues: (values: SearchableValueFieldValue<T, M>[]) => Observable<SearchableValueFieldDisplayValue<T, M>[]>
-}): SearchableValueFieldDisplayFn<T> {
+}): SearchableValueFieldDisplayFn<T, M> {
   return (values: SearchableValueFieldValue<T, M>[]) => {
     const { included: loaded, excluded: needLoading } = separateValues(values, (x) => Boolean(x.meta));
     let allValues: Observable<SearchableValueFieldValue<T, M>[]>;
@@ -25,13 +25,13 @@ export function makeMetaFilterSearchableFieldValueDisplayFn<T = string | number,
       const loadingResult = loadMetaForValues(needLoading);
       allValues = loadingResult.pipe(
         map((result) => {
-          const resultMap = arrayToMap(result, (x) => x.value as any);
+          const resultMap: Map<Maybe<T>, SearchableValueFieldValue<T, M>> = arrayToMap(result, (x) => x.value);
 
           const mergedWithLoad = needLoading.map((x) => {
             const id = x.value;
             const loadedItem = resultMap.get(id);
             const anchor = x.anchor ?? loadedItem?.anchor;
-            const meta = loadedItem?.meta;
+            const meta: M = loadedItem?.meta as M;
 
             return {
               ...x,
@@ -53,7 +53,7 @@ export function makeMetaFilterSearchableFieldValueDisplayFn<T = string | number,
 }
 
 // MARK: Chips
-export interface StringSearchableChipFieldConfig extends Omit<SearchableChipFieldConfig<string>, 'allowStringValues'> { }
+export type StringSearchableChipFieldConfig = Omit<SearchableChipFieldConfig<string>, 'allowStringValues'>
 
 export function searchableStringChipField(config: StringSearchableChipFieldConfig): FormlyFieldConfig {
   return searchableChipField({
@@ -62,7 +62,7 @@ export function searchableStringChipField(config: StringSearchableChipFieldConfi
   });
 }
 
-export interface SearchableChipFieldConfig<T = any> extends LabeledFieldConfig, DescriptionFieldConfig, SearchableChipValueFieldsFieldConfig<T> { }
+export interface SearchableChipFieldConfig<T = unknown> extends LabeledFieldConfig, DescriptionFieldConfig, SearchableChipValueFieldsFieldConfig<T> { }
 
 export function searchableChipField<T>(config: SearchableChipFieldConfig<T>): FormlyFieldConfig {
   const { key, placeholder } = config;
@@ -78,7 +78,7 @@ export function searchableChipField<T>(config: SearchableChipFieldConfig<T>): Fo
 }
 
 // MARK: Text
-export interface SearchableTextFieldConfig<T = any> extends LabeledFieldConfig, DescriptionFieldConfig, SearchableTextValueFieldsFieldConfig<T> { }
+export interface SearchableTextFieldConfig<T = unknown> extends LabeledFieldConfig, DescriptionFieldConfig, SearchableTextValueFieldsFieldConfig<T> { }
 
 export function searchableTextField<T>(config: SearchableTextFieldConfig<T>): FormlyFieldConfig {
   const { key } = config;

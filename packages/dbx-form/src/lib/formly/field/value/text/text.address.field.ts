@@ -37,7 +37,7 @@ export function addressFormlyFields(): FormlyFieldConfig[] {
   ];
 }
 
-export interface AddressFieldConfig extends FieldConfig { }
+export type AddressFieldConfig = FieldConfig
 
 export function addressField({ key = 'address', required = false }: Partial<AddressFieldConfig> = {}): FormlyFieldConfig {
   return {
@@ -59,6 +59,7 @@ export interface AddressListFieldConfig extends FieldConfig {
 export function addressListField({ key = 'addresses', required = false, maxAddresses = 6 }: Partial<AddressListFieldConfig> = {}): FormlyFieldConfig {
   return repeatArrayField({
     key,
+    required,
     label: 'Addresses',
     labelForField: 'Address',
     addText: 'Add Address',

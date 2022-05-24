@@ -1,16 +1,17 @@
 import { SubscriptionObject } from '@dereekb/rxjs';
-import { Component } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
 import { AbstractDbxSearchableValueFieldDirective, SearchableValueFieldsFieldConfig, SearchableValueFieldsFormlyFieldConfig } from './searchable.field.directive';
 import { map, shareReplay, skipWhile, distinctUntilChanged } from 'rxjs';
 import { tapDetectChanges } from '@dereekb/dbx-core';
+import { PrimativeKey } from '@dereekb/util';
 
-export interface SearchableTextValueFieldsFieldConfig<T> extends SearchableValueFieldsFieldConfig<T> {
+export interface SearchableTextValueFieldsFieldConfig<T, H extends PrimativeKey = PrimativeKey> extends SearchableValueFieldsFieldConfig<T, H> {
   showSelectedValue?: boolean;
 }
 
-export interface SearchableTextValueFieldsFormlyFieldConfig<T> extends SearchableValueFieldsFormlyFieldConfig<T> {
-  searchableField: SearchableTextValueFieldsFieldConfig<T>;
+export interface SearchableTextValueFieldsFormlyFieldConfig<T, H extends PrimativeKey = PrimativeKey> extends SearchableValueFieldsFormlyFieldConfig<T, H> {
+  searchableField: SearchableTextValueFieldsFieldConfig<T, H>;
 }
 
 /**
@@ -19,13 +20,13 @@ export interface SearchableTextValueFieldsFormlyFieldConfig<T> extends Searchabl
 @Component({
   templateUrl: 'searchable.text.field.component.html'
 })
-export class DbxSearchableTextFieldComponent<T> extends AbstractDbxSearchableValueFieldDirective<T, SearchableTextValueFieldsFormlyFieldConfig<T>> {
+export class DbxSearchableTextFieldComponent<T, H extends PrimativeKey = PrimativeKey> extends AbstractDbxSearchableValueFieldDirective<T, H, SearchableTextValueFieldsFormlyFieldConfig<T, H>> implements OnInit, OnDestroy {
 
   readonly selectedDisplayValue$ = this.displayValues$.pipe(map(x => x[0]), shareReplay(1), tapDetectChanges(this.cdRef));
   readonly hasValue$ = this.selectedDisplayValue$.pipe(map(x => Boolean(x)));
   readonly showSelectedDisplayValue$ = this.selectedDisplayValue$.pipe(map(x => this.showSelectedValue && Boolean(x)), distinctUntilChanged(), shareReplay(1), tapDetectChanges(this.cdRef));
 
-  override get searchableField(): SearchableTextValueFieldsFieldConfig<T> {
+  override get searchableField(): SearchableTextValueFieldsFieldConfig<T, H> {
     return this.field.searchableField;
   }
 
@@ -54,9 +55,8 @@ export class DbxSearchableTextFieldComponent<T> extends AbstractDbxSearchableVal
     this._clearInputSub.destroy();
   }
 
-  selected(event: any): void {
-    const e: MatAutocompleteSelectedEvent = event;
-    this.addWithDisplayValue(e.option.value);
+  selected(event: MatAutocompleteSelectedEvent): void {
+    this.addWithDisplayValue(event.option.value);
   }
 
 }

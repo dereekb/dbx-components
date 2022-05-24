@@ -11,7 +11,7 @@ import { FieldTypeConfig, FormlyFieldConfig } from '@ngx-formly/core';
 import { BehaviorSubject, Observable, combineLatest, Subject, merge, interval } from 'rxjs';
 import { MatDatepickerInputEvent } from '@angular/material/datepicker';
 import { addMinutes, isSameDay, isSameMinute, startOfDay } from 'date-fns';
-import { filterMaybe, skipFirstMaybe, SubscriptionObject, switchMapMaybeDefault, tapLog } from '@dereekb/rxjs';
+import { filterMaybe, skipFirstMaybe, SubscriptionObject, switchMapMaybeDefault } from '@dereekb/rxjs';
 
 export enum DbxDateTimeFieldTimeMode {
   /**
@@ -28,7 +28,7 @@ export enum DbxDateTimeFieldTimeMode {
   NONE = 'none'
 }
 
-export interface DateTimePickerConfiguration extends Omit<DateTimeMinuteConfig, 'date'> { }
+export type DateTimePickerConfiguration = Omit<DateTimeMinuteConfig, 'date'>
 
 export interface DbxDateTimeFieldConfig {
 
@@ -98,10 +98,10 @@ export class DbxDateTimeFieldComponent extends FieldType<DateTimeFormlyFieldConf
    */
   readonly displayValue$ = interval(10 * 1000).pipe(
     startWith(0),
-    map(_ => new Date().getMinutes()),
+    map(() => new Date().getMinutes()),
     distinctUntilChanged(),
-    tap((_) => this.cdRef.markForCheck()),
-    switchMap(_ => this.value$),
+    tap(() => this.cdRef.markForCheck()),
+    switchMap(() => this.value$),
     shareReplay(1)
   );
 
@@ -174,13 +174,13 @@ export class DbxDateTimeFieldComponent extends FieldType<DateTimeFormlyFieldConf
     this.value$.pipe(skipFirstMaybe())
   ).pipe(
     map((x: Maybe<Date>) => (x) ? startOfDay(x) : x),
-    distinctUntilChanged((a, b) => Boolean(a && b) && isSameDay(a!, b!)),
+    distinctUntilChanged((a, b) => a != null && b != null && isSameDay(a, b)),
     shareReplay(1)
   );
 
   readonly timeInput$: Observable<ReadableTimeString> = this._updateTime.pipe(
     debounceTime(5),
-    map(_ => this.timeInputCtrl.value),
+    map(() => this.timeInputCtrl.value),
     distinctUntilChanged()
   );
 
@@ -188,7 +188,7 @@ export class DbxDateTimeFieldComponent extends FieldType<DateTimeFormlyFieldConf
 
   readonly rawDateTime$: Observable<Maybe<Date>> = combineLatest([
     this.dateValue$,
-    this.timeInput$.pipe(startWith(null as any)),
+    this.timeInput$.pipe(startWith(null)),
     this.fullDay$
   ]).pipe(
     map(([date, timeString, fullDay]) => {
@@ -213,7 +213,7 @@ export class DbxDateTimeFieldComponent extends FieldType<DateTimeFormlyFieldConf
 
       return result;
     }),
-    distinctUntilChanged<Maybe<Date>>((a, b) => Boolean(a && b) && isSameMinute(a!, b!)),
+    distinctUntilChanged<Maybe<Date>>((a, b) => a != null && b != null && isSameMinute(a, b)),
     shareReplay(1)
   );
 
@@ -224,7 +224,7 @@ export class DbxDateTimeFieldComponent extends FieldType<DateTimeFormlyFieldConf
   ]).pipe(
     throttleTime(40, undefined, { leading: false, trailing: true }),
     distinctUntilChanged((current, next) => current[0] === next[0] && next[1] === 0),
-    tap(([_, stepsOffset]) => (stepsOffset) ? this._offset.next(0) : 0),
+    tap(([, stepsOffset]) => (stepsOffset) ? this._offset.next(0) : 0),
     map(([date, stepsOffset, config]) => {
 
       if (date != null) {
@@ -242,7 +242,7 @@ export class DbxDateTimeFieldComponent extends FieldType<DateTimeFormlyFieldConf
 
       return date;
     }),
-    distinctUntilChanged((a, b) => Boolean(a && b) && isSameMinute(a!, b!)),
+    distinctUntilChanged((a, b) => a != null && b != null && isSameMinute(a, b)),
     shareReplay(1)
   );
 
@@ -377,7 +377,7 @@ export class DbxDateTimeFieldComponent extends FieldType<DateTimeFormlyFieldConf
   }
 
   focusTime(): void {
-
+    // do nothing
   }
 
   focusOutTime(): void {

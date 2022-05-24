@@ -31,7 +31,7 @@ export function addWrapperToFormlyFieldConfig<T extends object>(fieldConfig: For
   };
 }
 
-export function expandWrapper(fieldConfig: FormlyFieldConfig, expandWrapper?: DbxFormExpandWrapperConfig): FormlyFieldConfig {
+export function expandWrapper<T extends object = object>(fieldConfig: FormlyFieldConfig, expandWrapper?: DbxFormExpandWrapperConfig<T>): FormlyFieldConfig {
   return addWrapperToFormlyFieldConfig(fieldConfig, EXPANDABLE_WRAPPER_KEY, {
     expandWrapper
   });
@@ -67,7 +67,7 @@ export function styleWrapper(fieldConfig: FormlyFieldConfig, styleWrapper: DbxFo
   });
 }
 
-export function workingWrapper(fieldConfig: FormlyFieldConfig, workingWrapper: DbxFormWorkingWrapperConfig): FormlyFieldConfig {
+export function workingWrapper(fieldConfig: FormlyFieldConfig, workingWrapper?: DbxFormWorkingWrapperConfig): FormlyFieldConfig {
   return addWrapperToFormlyFieldConfig(fieldConfig, WORKING_WRAPPER_KEY, {
     workingWrapper
   });

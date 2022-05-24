@@ -51,22 +51,22 @@ export class DbxTestDbxFormComponent<T = TestFormValue> extends AbstractAsyncFor
     this._fields.next(fields);
   }
 
-  setValidTextForTest(fixture: ComponentFixture<any>): string {
+  setValidTextForTest(fixture: ComponentFixture<unknown>): string {
     const text = 'valid';
     this.setTextForTest(text, fixture);
     return text;
   }
 
-  setInvalidTextForTest(fixture: ComponentFixture<any>): void {
+  setInvalidTextForTest(fixture: ComponentFixture<unknown>): void {
     this.setTextForTest(INVALID_TEST_STRING, fixture);
   }
 
-  setTextForTest(text: string, fixture: ComponentFixture<any>): void {
-    this.setValue({ text } as any);
+  setTextForTest(text: string, fixture: ComponentFixture<unknown>): void {
+    this.setValue({ text } as unknown as T);
     this.detectFormChanges(fixture);
   }
 
-  detectFormChanges(fixture: ComponentFixture<any>): void {
+  detectFormChanges(fixture: ComponentFixture<unknown>): void {
     // Detect the changes.
     fixture.detectChanges();
 

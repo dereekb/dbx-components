@@ -2,7 +2,7 @@ import { ClickableAnchor } from "@dereekb/dbx-core";
 import { Maybe } from "@dereekb/util";
 import { Observable } from "rxjs";
 
-export interface ChecklistItemDisplayContent<T = any> {
+export interface ChecklistItemDisplayContent<T = unknown> {
   /**
    * Label to display.
    */
@@ -34,8 +34,8 @@ export interface ChecklistItemDisplayContent<T = any> {
  * 
  * Content is injected.
  */
-export interface ChecklistItemFieldDisplayComponent<T = any> {
+export interface ChecklistItemFieldDisplayComponent<T = unknown> {
   displayContent?: ChecklistItemDisplayContent<T>;
 }
 
-export type ChecklistItemFieldDisplayContentObs<T = any> = Observable<ChecklistItemDisplayContent<T>>;
+export type ChecklistItemFieldDisplayContentObs<T = unknown> = Observable<ChecklistItemDisplayContent<T>>;

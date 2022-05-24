@@ -3,7 +3,7 @@ import { AbstractFormExpandableSectionWrapperDirective, AbstractFormExpandableSe
 
 export type DbxFormExpandWrapperButtonType = 'button' | 'text';
 
-export interface DbxFormExpandWrapperConfig<T = any> extends AbstractFormExpandableSectionConfig<T> {
+export interface DbxFormExpandWrapperConfig<T extends object = object> extends AbstractFormExpandableSectionConfig<T> {
   buttonType?: DbxFormExpandWrapperButtonType;
 }
 
@@ -22,8 +22,8 @@ export interface DbxFormExpandWrapperConfig<T = any> extends AbstractFormExpanda
   </ng-container>
   `
 })
-export class DbxFormExpandWrapperComponent
-  extends AbstractFormExpandableSectionWrapperDirective<DbxFormExpandWrapperConfig> {
+export class DbxFormExpandWrapperComponent<T extends object = object>
+  extends AbstractFormExpandableSectionWrapperDirective<T, DbxFormExpandWrapperConfig<T>> {
 
   get buttonType(): DbxFormExpandWrapperButtonType {
     return this.expandableSection?.buttonType ?? 'button';

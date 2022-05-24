@@ -40,7 +40,7 @@ export class DbxActionFormDirective<T = object> implements OnInit, OnDestroy {
   private _isCompleteSub = new SubscriptionObject();
   private _isWorkingSub = new SubscriptionObject();
 
-  constructor(@Host() public readonly form: DbxMutableForm<T>, public readonly source: DbxActionContextStoreSourceInstance<T, any>) {
+  constructor(@Host() public readonly form: DbxMutableForm<T>, public readonly source: DbxActionContextStoreSourceInstance<T, unknown>) {
     if (form.lockSet) {
       this.lockSet.addChildLockSet(form.lockSet, 'form');
     }
@@ -141,7 +141,7 @@ export class DbxActionFormDirective<T = object> implements OnInit, OnDestroy {
             )
           }));
       })
-    ).subscribe(({ valid, modified, value, event }) => {
+    ).subscribe(({ valid, modified /*, value, event */ }) => {
 
       // console.log('x: ', value, event, valid, modified);
 
@@ -173,8 +173,8 @@ export class DbxActionFormDirective<T = object> implements OnInit, OnDestroy {
   }
 
   protected preCheckReadyValue(value: T): Observable<boolean> {
-    let validatorObs: Observable<boolean> = (this.dbxActionFormValidator) ? this.dbxActionFormValidator(value) : of(true);
-    let modifiedObs: Observable<boolean> = (this.dbxActionFormModified) ? this.dbxActionFormModified(value) : of(true);
+    const validatorObs: Observable<boolean> = (this.dbxActionFormValidator) ? this.dbxActionFormValidator(value) : of(true);
+    const modifiedObs: Observable<boolean> = (this.dbxActionFormModified) ? this.dbxActionFormModified(value) : of(true);
 
     return combineLatest([
       validatorObs,

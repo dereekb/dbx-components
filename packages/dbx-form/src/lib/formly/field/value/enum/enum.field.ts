@@ -13,7 +13,7 @@ export interface StaticEnumFieldConfig<T> extends LabeledFieldConfig, Descriptio
   options: EnumValueFieldOption<T>[];
 }
 
-export function staticEnumField<T = any>({
+export function staticEnumField<T = unknown>({
   key, label = '', placeholder = '',
   description,
   multiple = false,

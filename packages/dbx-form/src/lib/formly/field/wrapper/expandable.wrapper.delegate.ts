@@ -1,12 +1,12 @@
 import { FormlyFieldConfig } from '@ngx-formly/material/form-field';
 import { Maybe, objectIsEmpty } from '@dereekb/util';
 import { FieldWrapper, FormlyTemplateOptions, FieldTypeConfig } from '@ngx-formly/core';
-import { map, mergeMap, shareReplay, startWith, switchMap, BehaviorSubject, of } from 'rxjs';
+import { map, shareReplay, startWith, switchMap, BehaviorSubject, of } from 'rxjs';
 import { Directive, OnDestroy, OnInit } from '@angular/core';
 import { AbstractControl } from '@angular/forms';
-import { filterMaybe, tapLog } from '@dereekb/rxjs';
+import { filterMaybe } from '@dereekb/rxjs';
 
-export interface AbstractFormExpandableSectionConfig<T = any> {
+export interface AbstractFormExpandableSectionConfig<T extends object = object> {
   expandLabel?: string;
   /**
    * Optional function to use for checking value existence.
@@ -14,19 +14,19 @@ export interface AbstractFormExpandableSectionConfig<T = any> {
   hasValueFn?: (value: T) => boolean;
 }
 
-export interface FormExpandableSectionWrapperTemplateOptions<S extends AbstractFormExpandableSectionConfig> extends FormlyTemplateOptions {
+export interface FormExpandableSectionWrapperTemplateOptions<T extends object = object, S extends AbstractFormExpandableSectionConfig<T> = AbstractFormExpandableSectionConfig<T>> extends FormlyTemplateOptions {
   expandWrapper?: S;
 }
 
-export interface FormExpandableSectionFormlyConfig<S> extends FormlyFieldConfig {
-  templateOptions?: FormExpandableSectionWrapperTemplateOptions<S> & FormlyTemplateOptions;
+export interface FormExpandableSectionFormlyConfig<T extends object = object, S extends AbstractFormExpandableSectionConfig<T> = AbstractFormExpandableSectionConfig<T>> extends FormlyFieldConfig {
+  templateOptions?: FormExpandableSectionWrapperTemplateOptions<T, S> & FormlyTemplateOptions;
 }
 
-export const DEFAULT_HAS_VALUE_FN = (x: Maybe<object>) => !objectIsEmpty(x);
+export const DEFAULT_HAS_VALUE_FN = (x: object) => !objectIsEmpty(x);
 
 @Directive()
-export class AbstractFormExpandableSectionWrapperDirective<S extends AbstractFormExpandableSectionConfig = AbstractFormExpandableSectionConfig>
-  extends FieldWrapper<FormExpandableSectionFormlyConfig<S> & FieldTypeConfig> implements OnInit, OnDestroy {
+export class AbstractFormExpandableSectionWrapperDirective<T extends object = object, S extends AbstractFormExpandableSectionConfig<T> = AbstractFormExpandableSectionConfig<T>>
+  extends FieldWrapper<FormExpandableSectionFormlyConfig<T, S> & FieldTypeConfig> implements OnInit, OnDestroy {
 
   protected _formControlObs = new BehaviorSubject<Maybe<AbstractControl>>(undefined);
   readonly formControl$ = this._formControlObs.pipe(filterMaybe());
@@ -57,8 +57,8 @@ export class AbstractFormExpandableSectionWrapperDirective<S extends AbstractFor
     return this.to.expandWrapper;
   }
 
-  get hasValueFn(): (value: any) => any {
-    return this.expandableSection?.hasValueFn ?? DEFAULT_HAS_VALUE_FN;
+  get hasValueFn(): (value: T) => boolean {
+    return this.expandableSection?.hasValueFn ?? DEFAULT_HAS_VALUE_FN as (value: T) => boolean;
   }
 
   get expandLabel(): Maybe<string> {

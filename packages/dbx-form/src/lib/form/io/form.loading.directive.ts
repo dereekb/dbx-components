@@ -11,11 +11,11 @@ import { DbxFormSourceDirectiveMode, dbxFormSourceObservable } from './form.inpu
 @Directive({
   selector: '[dbxFormLoadingSource]'
 })
-export class DbxFormLoadingSourceDirective<T extends object = any> extends AbstractSubscriptionDirective implements OnDestroy {
+export class DbxFormLoadingSourceDirective<T extends object = object> extends AbstractSubscriptionDirective implements OnDestroy {
 
   private _mode = new BehaviorSubject<DbxFormSourceDirectiveMode>('reset');
 
-  constructor(@Host() public readonly form: DbxMutableForm) {
+  constructor(@Host() public readonly form: DbxMutableForm<T>) {
     super();
   }
 

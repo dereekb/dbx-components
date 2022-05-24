@@ -13,7 +13,7 @@ import { DbxDefaultChecklistItemFieldDisplayComponent } from './checklist.item.f
 import { AbstractSubscriptionDirective, safeDetectChanges } from '@dereekb/dbx-core';
 import { Maybe } from '@dereekb/util';
 
-export interface DbxChecklistItemFieldConfig<T = any> {
+export interface DbxChecklistItemFieldConfig<T = unknown> {
   /**
    * Observable used to retrieve content to display for the item.
    */
@@ -24,14 +24,14 @@ export interface DbxChecklistItemFieldConfig<T = any> {
   componentClass?: Type<ChecklistItemFieldDisplayComponent<T>>;
 }
 
-export interface ChecklistItemFormlyFieldConfig<T = any> extends FormlyFieldConfig {
+export interface ChecklistItemFormlyFieldConfig<T = unknown> extends FormlyFieldConfig {
   checklistField: DbxChecklistItemFieldConfig<T>;
 }
 
 @Component({
   templateUrl: 'checklist.item.field.component.html'
 })
-export class DbxChecklistItemFieldComponent<T = any> extends FieldType<ChecklistItemFormlyFieldConfig<T> & FieldTypeConfig> implements OnInit, OnDestroy {
+export class DbxChecklistItemFieldComponent<T = unknown> extends FieldType<ChecklistItemFormlyFieldConfig<T> & FieldTypeConfig> implements OnInit, OnDestroy {
 
   private _displayContent = new BehaviorSubject<Maybe<ChecklistItemFieldDisplayContentObs<T>>>(undefined);
 
@@ -98,7 +98,7 @@ export class DbxChecklistItemFieldComponent<T = any> extends FieldType<Checklist
   selector: 'dbx-checklist-item-content-component',
   template: `<dbx-injection [config]="config"></dbx-injection>`
 })
-export class DbxChecklistItemContentComponent<T = any> extends AbstractSubscriptionDirective {
+export class DbxChecklistItemContentComponent<T = unknown> extends AbstractSubscriptionDirective implements OnInit {
 
   config?: DbxInjectionComponentConfig<ChecklistItemFieldDisplayComponent<T>>;
 

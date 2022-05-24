@@ -1,8 +1,8 @@
 import { DbxFormComponentFieldConfig, DbxFormComponentFormlyFieldConfig } from "./component.field.component";
 
-export interface ComponentFieldConfig<T = any> extends DbxFormComponentFieldConfig<T> { }
+export type ComponentFieldConfig<T = unknown> = DbxFormComponentFieldConfig<T>
 
-export function componentField<T>(config: ComponentFieldConfig<T>): DbxFormComponentFormlyFieldConfig {
+export function componentField<T = unknown>(config: ComponentFieldConfig<T>): DbxFormComponentFormlyFieldConfig<T> {
   return {
     type: 'component',
     componentField: config

@@ -44,7 +44,7 @@ export class DbxPickableListFieldItemListComponent<T> extends AbstractDbxSelecti
   template: `<dbx-selection-list-view-content [multiple]="multiple" [selectionMode]="selectionMode" [items]="items$ | async"></dbx-selection-list-view-content>`,
   providers: ProvideDbxListView(DbxPickableListFieldItemListViewComponent)
 })
-export class DbxPickableListFieldItemListViewComponent<T> extends AbstractDbxSelectionListViewDirective<any> {
+export class DbxPickableListFieldItemListViewComponent<T> extends AbstractDbxSelectionListViewDirective<any> {  // TODO: any belongs here for now, but item list typings need to be updated.
 
   readonly config: DbxInjectionComponentConfig = {
     componentClass: DbxPickableListFieldItemListViewItemComponent

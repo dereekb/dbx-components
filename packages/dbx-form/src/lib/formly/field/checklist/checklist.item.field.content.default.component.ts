@@ -13,10 +13,10 @@ import { ChecklistItemDisplayContent, ChecklistItemFieldDisplayComponent } from 
     </div>
   `
 })
-export class DbxDefaultChecklistItemFieldDisplayComponent implements ChecklistItemFieldDisplayComponent<any> {
+export class DbxDefaultChecklistItemFieldDisplayComponent<T = unknown> implements ChecklistItemFieldDisplayComponent<T> {
 
   @Input()
-  displayContent!: ChecklistItemDisplayContent<any>;
+  displayContent!: ChecklistItemDisplayContent<T>;
 
   get label() {
     return this.displayContent?.label;

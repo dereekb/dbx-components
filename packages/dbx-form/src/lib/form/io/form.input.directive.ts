@@ -18,7 +18,7 @@ export function dbxFormSourceObservable<T>(form: DbxMutableForm, inputObs: Obser
       // if mode is reset, then filter out changes until the form is reset again.
       filter((x) => ((mode === 'reset') ? (x.state === DbxFormState.RESET) : true)),
       first(),
-      map((_) => value)
+      map(() => value)
     )),
   );
 }
@@ -37,7 +37,7 @@ export type DbxFormSourceDirectiveMode = 'reset' | 'always';
 @Directive({
   selector: '[dbxFormSource]'
 })
-export class DbxFormSourceDirective<T extends object = any> extends AbstractSubscriptionDirective implements OnDestroy {
+export class DbxFormSourceDirective<T extends object = object> extends AbstractSubscriptionDirective implements OnDestroy {
 
   private _mode = new BehaviorSubject<DbxFormSourceDirectiveMode>('reset');
 

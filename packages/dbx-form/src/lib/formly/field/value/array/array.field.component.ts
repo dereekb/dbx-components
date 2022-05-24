@@ -93,7 +93,7 @@ export class DbxFormRepeatArrayTypeComponent extends FieldArrayType<DbxFormRepea
   }
 
   swapIndexes(currentIndex: number, targetIndex: number) {
-    const array: any[] = this.model;
+    const array: unknown[] = this.model;
     const targetValue = array[currentIndex];
 
     if (!targetValue) {
@@ -104,7 +104,7 @@ export class DbxFormRepeatArrayTypeComponent extends FieldArrayType<DbxFormRepea
     this.add(targetIndex, targetValue);
   }
 
-  drop(event: CdkDragDrop<any>) {
+  drop(event: CdkDragDrop<unknown>) {
     this.swapIndexes(event.previousIndex, event.currentIndex);
   }
 

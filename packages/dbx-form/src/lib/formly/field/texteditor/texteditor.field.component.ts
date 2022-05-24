@@ -10,7 +10,7 @@ import { debounceTime, filter } from 'rxjs/operators';
 import { SubscriptionObject } from '@dereekb/rxjs';
 import { Maybe } from '@dereekb/util';
 
-export interface TextEditorComponentFieldConfig extends FormlyFieldConfig { }
+export type TextEditorComponentFieldConfig = FormlyFieldConfig
 
 @Component({
   template: `
@@ -50,7 +50,7 @@ export class DbxTextEditorFieldComponent<T extends TextEditorComponentFieldConfi
   }
 
   get editor(): Editor {
-    return this._editor!;
+    return this._editor as Editor;
   }
 
   get label(): Maybe<string> {
@@ -67,7 +67,7 @@ export class DbxTextEditorFieldComponent<T extends TextEditorComponentFieldConfi
     // Watch for value changes every second and update the pristine level.
     this._sub.subscription = this.editor.valueChanges.pipe(
       debounceTime(100),
-      filter(_ => this.editor.view.hasFocus())
+      filter(() => this.editor.view.hasFocus())
     ).subscribe(() => {
       this.formControl.updateValueAndValidity();
       this.formControl.markAsDirty();

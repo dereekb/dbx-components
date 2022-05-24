@@ -3,19 +3,19 @@ import { KeyValueTupleFilter, allObjectsAreEqual, IsEqualFunction, KeyValueTyple
 
 export const FIELD_VALUES_ARE_EQUAL_VALIDATION_KEY = 'fieldValuesAreEqual';
 
-export interface FieldValuesAreEqualValidatorConfig<T extends object = any> {
+export interface FieldValuesAreEqualValidatorConfig<T extends object = object> {
 
   /**
    * Keys of the value to match on. 
    * 
    * If none are defined, then all fields from the control are matched.
    */
-  keysFilter?: string[];
+  keysFilter?: (keyof T)[];
 
   /**
    * Full filter to use, if defined.
    */
-  valuesFilter?: KeyValueTupleFilter<T, any>;
+  valuesFilter?: KeyValueTupleFilter<T>;
 
   /**
    * Optional equivalence comparator.
@@ -37,7 +37,7 @@ export interface FieldValuesAreEqualValidatorConfig<T extends object = any> {
  * @param config 
  * @returns 
  */
-export function fieldValuesAreEqualValidator<T extends object = any>(config: FieldValuesAreEqualValidatorConfig<T> = {}): ValidatorFn {
+export function fieldValuesAreEqualValidator<T extends object = object>(config: FieldValuesAreEqualValidatorConfig<T> = {}): ValidatorFn {
   const {
     keysFilter,
     valuesFilter: inputValuesFilter,
@@ -45,14 +45,14 @@ export function fieldValuesAreEqualValidator<T extends object = any>(config: Fie
     message = 'Field values are not equal.'
   } = config;
 
-  const valuesFilter: KeyValueTupleFilter<T, any> = inputValuesFilter ?? {
+  const valuesFilter: KeyValueTupleFilter<T, keyof T> = inputValuesFilter ?? {
     valueFilter: KeyValueTypleValueFilter.NONE, // keep all values. Null/undefined should be processed.
     keysFilter
   };
 
   return (control: AbstractControl) => {
     const object: ObjectMap<T> = control.value;
-    const values: T[] = valuesFromPOJO(object, valuesFilter);
+    const values: T[] = valuesFromPOJO(object as T, valuesFilter);
     const isValid = allObjectsAreEqual(values, isEqual);
 
     if (isValid) {

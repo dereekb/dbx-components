@@ -1,6 +1,6 @@
-import { Maybe } from "@dereekb/util";
+import { PrimativeKey, Maybe } from "@dereekb/util";
 
-export interface SelectionValue<T, M = any> {
+export interface SelectionValue<T, M = unknown> {
   /**
  * Value associated with this field.
  */
@@ -14,7 +14,7 @@ export interface SelectionValue<T, M = any> {
 /**
  * Displayed value.
  */
-export interface SelectionDisplayValue<T, M = any> extends SelectionValue<T, M> {
+export interface SelectionDisplayValue<T, M = unknown> extends SelectionValue<T, M> {
   label: string;
   sublabel?: string;
   /**
@@ -26,4 +26,4 @@ export interface SelectionDisplayValue<T, M = any> extends SelectionValue<T, M> 
 /**
  * Used to hash the value from the input pickable value.
  */
-export type SelectionValueHashFn<T> = (value: T) => any;
+export type SelectionValueHashFn<T, H extends PrimativeKey = PrimativeKey> = (value: T) => H;

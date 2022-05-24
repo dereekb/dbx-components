@@ -2,7 +2,7 @@ import { Provider } from '@angular/core';
 import { BehaviorSubject, Observable, of, switchMap, shareReplay, distinctUntilChanged } from 'rxjs';
 import { DbxForm, DbxFormDisabledKey, DbxFormEvent, DbxFormState, DbxMutableForm, DEFAULT_FORM_DISABLED_KEY, ProvideDbxMutableForm } from '../form/form';
 import { FormlyFieldConfig } from '@ngx-formly/core';
-import { LockSet, filterMaybe, tapLog } from '@dereekb/rxjs';
+import { LockSet, filterMaybe } from '@dereekb/rxjs';
 import { BooleanStringKeyArray, BooleanStringKeyArrayUtilityInstance, Maybe } from '@dereekb/util';
 
 export interface DbxFormlyInitialize<T> {
@@ -16,7 +16,7 @@ export interface DbxFormlyInitialize<T> {
  * 
  * This is usually the component or element that contains the form itself.
  */
-export interface DbxFormlyContextDelegate<T = any> extends Omit<DbxMutableForm<T>, 'lockSet'> {
+export interface DbxFormlyContextDelegate<T = unknown> extends Omit<DbxMutableForm<T>, 'lockSet'> {
   readonly stream$: Observable<DbxFormEvent>;
   init(initialize: DbxFormlyInitialize<T>): void;
 }
@@ -35,11 +35,11 @@ export function ProvideFormlyContext(): Provider[] {
 /**
  * DbxForm Instance that registers a delegate and manages the state of that form/delegate.
  */
-export class DbxFormlyContext<T = any> implements DbxForm<T> {
-
-  readonly lockSet = new LockSet();
+export class DbxFormlyContext<T = unknown> implements DbxForm<T> {
 
   private static INITIAL_STATE: DbxFormEvent = { isComplete: false, state: DbxFormState.INITIALIZING, status: 'PENDING' };
+
+  readonly lockSet = new LockSet();
 
   private _fields = new BehaviorSubject<Maybe<FormlyFieldConfig[]>>(undefined);
   private _initialValue = new BehaviorSubject<Maybe<Partial<T>>>(undefined);
@@ -49,8 +49,6 @@ export class DbxFormlyContext<T = any> implements DbxForm<T> {
   readonly fields$ = this._fields.pipe(filterMaybe());
   readonly disabled$ = this._disabled.pipe(filterMaybe());
   readonly stream$: Observable<DbxFormEvent> = this._delegate.pipe(distinctUntilChanged(), switchMap(x => (x) ? x.stream$ : of(DbxFormlyContext.INITIAL_STATE)), shareReplay(1));
-
-  constructor() { }
 
   destroy(): void {
     this.lockSet.destroyOnNextUnlock(() => {

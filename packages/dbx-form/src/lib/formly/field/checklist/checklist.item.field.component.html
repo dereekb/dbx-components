@@ -9,7 +9,7 @@
         <div class="dbx-checklist-item-content" matRipple [matRippleDisabled]="(rippleDisabled$ | async) ?? false">
           <dbx-checklist-item-content-component></dbx-checklist-item-content-component>
           <span class="spacer"></span>
-          <mat-icon *ngIf="!(rippleDisabled$ | async)">navigate_next</mat-icon>
+          <mat-icon *ngIf="(rippleDisabled$ | async) !== true">navigate_next</mat-icon>
         </div>
       </dbx-anchor>
     </div>

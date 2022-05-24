@@ -3,7 +3,7 @@ import { Maybe } from '@dereekb/util';
 import { Observable, of } from 'rxjs';
 import { LabeledFieldConfig, formlyField, templateOptionsForFieldConfig } from '../../field';
 import { PickableValueFieldDisplayValue } from './pickable';
-import { PickableItemFieldItem, PickableValueFieldsFieldConfig, PickableValueFieldsFormlyFieldConfig } from './pickable.field.directive';
+import { PickableItemFieldItem, PickableValueFieldsFieldConfig } from './pickable.field.directive';
 export { PickableItemFieldItem };
 
 export function filterPickableItemFieldValuesByLabel<T>(filterText: Maybe<string>, values: PickableValueFieldDisplayValue<T>[]): Observable<T[]> {
@@ -23,9 +23,9 @@ export function sortPickableItemsByLabel<T>(chips: PickableItemFieldItem<T>[]): 
   return chips.sort((a, b) => a.itemValue.label.localeCompare(b.itemValue.label));
 }
 
-export interface PickableItemFieldConfig<T = any> extends LabeledFieldConfig, PickableValueFieldsFieldConfig<T> { }
+export interface PickableItemFieldConfig<T = unknown> extends LabeledFieldConfig, PickableValueFieldsFieldConfig<T> { }
 
-export function pickableItemChipField<T = any>(config: PickableItemFieldConfig<T>): FormlyFieldConfig {
+export function pickableItemChipField<T = unknown>(config: PickableItemFieldConfig<T>): FormlyFieldConfig {
   const { key } = config;
   return formlyField({
     key,
@@ -37,7 +37,7 @@ export function pickableItemChipField<T = any>(config: PickableItemFieldConfig<T
   });
 }
 
-export function pickableItemListField<T = any>(config: PickableItemFieldConfig<T>): FormlyFieldConfig {
+export function pickableItemListField<T = unknown>(config: PickableItemFieldConfig<T>): FormlyFieldConfig {
   const { key } = config;
   return formlyField({
     key,
