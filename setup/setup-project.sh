@@ -17,12 +17,13 @@ FIREBASE_BASE_EMULATORS_PORT=${3:-9100}                       # example: 9100
 PARENT_DIRECTORY=${4:-'../../'}                               # parent directory to create this project within. Defaults to relative to this script's space within dbx-components.
 
 # - Other Configuration
-SOURCE_BRANCH=main     # develop or main
+SOURCE_BRANCH=develop     # develop or main
 
 # - Project Details
 NAME=$FIREBASE_PROJECT_ID
 PROJECT_NAME=$FIREBASE_PROJECT_ID
 ANGULAR_APP_PREFIX=$FIREBASE_PROJECT_ID
+DBX_COMPONENTS_VERSION=@^5.0.0
 
 # The app prefix is used in Angular and Nest classes as the prefix for classes/components
 APP_CODE_PREFIX="$(tr '[:lower:]' '[:upper:]' <<< ${INPUT_CODE_PREFIX:0:1})${INPUT_CODE_PREFIX:1}"
@@ -169,8 +170,8 @@ git add --all
 git commit --no-verify -m "checkpoint: added firebase configuration"
 
 # Install npm dependencies
-npm i @dereekb/dbx-analytics @dereekb/dbx-web @dereekb/dbx-form @dereekb/firebase @dereekb/firebase-server @dereekb/dbx-firebase --force  # TODO: Remove force once possible.
-npm i -D @ngrx/store-devtools @firebase/rules-unit-testing firebase-functions-test  # TODO: Figure out how to have the @dereekb dependencies also include these.
+npm install @dereekb/dbx-analytics$DBX_COMPONENTS_VERSION @dereekb/dbx-web$DBX_COMPONENTS_VERSION @dereekb/dbx-form$DBX_COMPONENTS_VERSION @dereekb/firebase$DBX_COMPONENTS_VERSION @dereekb/firebase-server$DBX_COMPONENTS_VERSION @dereekb/dbx-firebase$DBX_COMPONENTS_VERSION --force  # TODO: Remove force once possible.
+npm install -D firebase-tools @ngrx/store-devtools @firebase/rules-unit-testing firebase-functions-test@2.0.2  # TODO: Figure out how to have the @dereekb dependencies also include these.
 
 git add --all
 git commit --no-verify -m "checkpoint: added @dereekb dependencies"
@@ -227,6 +228,16 @@ sed -e "s/demo-api/$API_APP_NAME/g" test-$API_APP_NAME.sh.tmp > test-$API_APP_NA
 rm test-$API_APP_NAME.sh.tmp
 chmod +x test-$API_APP_NAME.sh
 
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/wait-for-ports.sh -o wait-for-ports.sh.tmp
+sed -e "s/demo/$ANGULAR_APP_NAME/g" wait-for-ports.sh.tmp > wait-for-ports.sh
+rm wait-for-ports.sh.tmp
+chmod +x wait-for-ports.sh
+
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/.env -o .env.tmp
+sed -e "s/9910/$ANGULAR_APP_PORT/g" .env.tmp > .env
+
+echo "SECRETS=" > .env.secret
+
 git add --all
 git commit --no-verify -m "checkpoint: added Docker files and other utility files"
 
@@ -252,6 +263,23 @@ rm jest.preset.js
 
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/jest.preset.ts -o jest.preset.ts
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/jest.setup.ts -o jest.setup.ts
+
+# update all jest.config.ts files to point to jest.preset.ts instead of jest.preset.js
+update_jest_config_file () {
+  local JEST_CONFIG_FOLDER_PATH=$1
+  local JEST_CONFIG_FILE_NAME=jest.config.ts
+  local JEST_CONFIG_FILE_PATH=$JEST_CONFIG_FOLDER_PATH/$JEST_CONFIG_FILE_NAME
+
+  cp $JEST_CONFIG_FILE_PATH $JEST_CONFIG_FILE_PATH.tmp
+  rm $JEST_CONFIG_FILE_PATH
+  sed -e "s:jest.preset.js:jest.preset.ts:g" $JEST_CONFIG_FILE_PATH.tmp > $JEST_CONFIG_FILE_PATH
+  rm $JEST_CONFIG_FILE_PATH.tmp
+}
+
+update_jest_config_file "$ANGULAR_APP_FOLDER"
+update_jest_config_file "$API_APP_FOLDER"
+update_jest_config_file "$ANGULAR_COMPONENTS_FOLDER"
+update_jest_config_file "$FIREBASE_COMPONENTS_FOLDER"
 
 # add env files to ensure that jest CI tests export properly.
 mkdir tmp # TODO: Change from /develop to /main later.
@@ -526,3 +554,13 @@ nx build $API_APP_NAME
 
 echo "Completed $ANGULAR_APP_NAME project setup."
 echo "Project was created at \"$(pwd)\""
+
+# Docker Checking
+echo "Performing docker cleaning and resetting...";
+
+# todo - check if docker is available.
+sh ./down.sh
+sh ./reset.sh
+
+echo "Performing tests..."
+sh ./test-all.sh

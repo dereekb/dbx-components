@@ -1,18 +1,18 @@
 /**
  * An object with values of a specific type keyed by either string or number or symbols.
  */
-export type ObjectMap<T> = {
-  [key: string | number | symbol]: T;
-}
+export type ObjectMap<T, K extends keyof any = string | number | symbol> = Record<K, T>;
 
 /**
  * An object with values of a specific type keyed to string values.
  */
 export type StringObjectMap<T> = {
   [key: string]: T;
+  [key: number]: never;
+  [key: symbol]: never;
 }
 
-export type MappedObjectMap<M extends ObjectMap<unknown>, O> = {
+export type MappedObjectMap<M extends object, O> = {
   [key in keyof M]: O;
 };
 
@@ -34,7 +34,7 @@ export function objectToMap<T>(object: ObjectMap<T>): Map<string, T> {
  */
 export function objectToTuples<T>(object: ObjectMap<T>): [string, T][] {
   const keys = Object.keys(object);
-  return keys.map(x => ([x, object[x]]));
+  return keys.map(x => ([x, (object[x])]));
 }
 
 /**

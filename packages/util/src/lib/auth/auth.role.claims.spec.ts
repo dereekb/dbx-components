@@ -1,13 +1,24 @@
-import { AUTH_USER_ROLE } from '@dereekb/util';
+import { AUTH_USER_ROLE, Maybe } from '@dereekb/util';
 import { containsAllValues, hasDifferentValues } from '../set';
 import { AuthRoleSet, AUTH_ADMIN_ROLE } from './auth.role';
-import { AuthClaimValue, AuthRoleClaimsService, authRoleClaimsService, AUTH_ROLE_CLAIMS_DEFAULT_CLAIM_VALUE, AUTH_ROLE_CLAIMS_DEFAULT_EMPTY_VALUE } from "./auth.role.claims";
+import { AuthClaimsObject, AuthRoleClaimsService, authRoleClaimsService, AUTH_ROLE_CLAIMS_DEFAULT_CLAIM_VALUE, AUTH_ROLE_CLAIMS_DEFAULT_EMPTY_VALUE } from "./auth.role.claims";
+
+
+type TestClaims = {
+  test: string;
+  u: number;
+  m: string;
+}
+
+type TestComplexClaims = {
+  type: number;
+}
 
 describe('authRoleClaimsFactory()', () => {
 
   describe('function', () => {
 
-    function testConversion(service: AuthRoleClaimsService, rolesSet: AuthRoleSet, name?: string) {
+    function testConversion<T extends AuthClaimsObject>(service: AuthRoleClaimsService<T>, rolesSet: AuthRoleSet, name?: string) {
 
       it(`should convert the the roles ${((name) ? `"${name}"` : '')} to claims claims and back.`, () => {
         const claims = service.toClaims(rolesSet);
@@ -26,7 +37,9 @@ describe('authRoleClaimsFactory()', () => {
       const nonExistentClaim = 'x';
 
       const claimsConfig = {
-        test: { roles: 'n' },
+        test: {
+          roles: 'n'
+        },
         u: {
           roles: AUTH_USER_ROLE,
           value: 10
@@ -36,7 +49,7 @@ describe('authRoleClaimsFactory()', () => {
         }
       };
 
-      const service = authRoleClaimsService(claimsConfig);
+      const service = authRoleClaimsService<TestClaims>(claimsConfig);
 
       testConversion(service, new Set([claimsConfig.u.roles, ...claimsConfig.m.roles, claimsConfig.test.roles]));
 
@@ -89,7 +102,7 @@ describe('authRoleClaimsFactory()', () => {
               return 2;
             }
           },
-          decodeRolesFromValue: (value: AuthClaimValue) => {
+          decodeRolesFromValue: (value: Maybe<number>) => {
             switch (value) {
               case 1:
                 return [AUTH_ADMIN_ROLE];
@@ -100,7 +113,7 @@ describe('authRoleClaimsFactory()', () => {
         }
       };
 
-      const service = authRoleClaimsService(claimsConfig);
+      const service = authRoleClaimsService<TestComplexClaims>(claimsConfig);
 
       testConversion(service, new Set([AUTH_ADMIN_ROLE]), 'admin');
       testConversion(service, new Set([AUTH_USER_ROLE]), 'user');

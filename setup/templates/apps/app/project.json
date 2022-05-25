@@ -63,11 +63,11 @@
       "executor": "@angular-devkit/build-angular:dev-server",
       "configurations": {
         "production": {
-          "browserTarget": "ANGULAR_APP_NAME:build:production",
+          "browserTarget": "ANGULAR_APP_NAME:build-base:production",
           "port": ANGULAR_APP_PORT
         },
         "development": {
-          "browserTarget": "ANGULAR_APP_NAME:build:development",
+          "browserTarget": "ANGULAR_APP_NAME:build-base:development",
           "port": ANGULAR_APP_PORT
         }
       },

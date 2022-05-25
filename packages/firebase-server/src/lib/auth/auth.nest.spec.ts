@@ -54,6 +54,11 @@ const firebaseAdminFunctionNestContext = firebaseAdminFunctionNestContextFactory
 
 const userContext = authorizedUserContextFactory({});
 
+type LoadClaimsTest = {
+  test?: number;
+  second?: number;
+}
+
 describe('firebase server auth', () => {
 
   initFirebaseServerAdminTestEnvironment();
@@ -135,13 +140,13 @@ describe('firebase server auth', () => {
                 test: 1
               };
 
-              let claims = await authUserContext.loadClaims<typeof data>();
+              let claims = await authUserContext.loadClaims<LoadClaimsTest>();
               expect(claims).toBeDefined();
               expect(objectHasNoKeys(claims)).toBe(true);
 
               await authUserContext.setClaims(data);
 
-              claims = await authUserContext.loadClaims<typeof data>();
+              claims = await authUserContext.loadClaims<LoadClaimsTest>();
               expect(claims).toBeDefined();
               expect(claims.test).toBe(1);
             });
@@ -151,16 +156,11 @@ describe('firebase server auth', () => {
           describe('updateClaims()', () => {
 
             it('should update the existing claims.', async () => {
-              const data = {
-                test: 1,
-                second: null
-              };
-
               await authUserContext.setClaims({
                 test: 1
               });
 
-              let claims = await authUserContext.loadClaims<typeof data>();
+              let claims = await authUserContext.loadClaims<LoadClaimsTest>();
               expect(claims).toBeDefined();
               expect(claims!.test).toBe(1);
               expect(claims!.second).not.toBe(2);
@@ -176,17 +176,12 @@ describe('firebase server auth', () => {
             });
 
             it('should remove any keys with null update values', async () => {
-              const data = {
-                test: 1,
-                second: null
-              };
-
               await authUserContext.setClaims({
                 test: 1,
                 second: 2
               });
 
-              let claims = await authUserContext.loadClaims<typeof data>();
+              let claims = await authUserContext.loadClaims<LoadClaimsTest>();
               expect(claims).toBeDefined();
               expect(claims!.test).toBe(1);
 
@@ -205,15 +200,11 @@ describe('firebase server auth', () => {
           describe('clearClaims()', () => {
 
             it('should clear the claims.', async () => {
-              const data = {
-                test: 1
-              };
-
               await authUserContext.setClaims({
                 test: 1
               });
 
-              let claims = await authUserContext.loadClaims<typeof data>();
+              let claims = await authUserContext.loadClaims<LoadClaimsTest>();
               expect(claims).toBeDefined();
               expect(claims!.test).toBe(1);
 

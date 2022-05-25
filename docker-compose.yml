@@ -20,7 +20,6 @@ services:
     tty: true
     networks:
       - demo-api-network
-
 networks:
   demo-api-network:
     driver: bridge

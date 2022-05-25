@@ -1,7 +1,7 @@
 import { snapshotConverterFunctions } from './snapshot';
 import { firestoreBoolean, firestoreString } from './snapshot.field';
 
-describe('makeSnapshotConverterFunctions()', () => {
+describe('snapshotConverterFunctions()', () => {
 
   it('should create conversion functions for the input.', () => {
     const result = snapshotConverterFunctions({
