@@ -22,7 +22,7 @@ const MAX_ERRORS_TO_THROTTLE_ON = 6;
 @Directive({
   selector: 'dbxActionAutoTrigger, [dbxActionAutoTrigger]',
 })
-export class DbxActionAutoTriggerDirective<T, O> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
+export class DbxActionAutoTriggerDirective<T = unknown, O = unknown> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
 
   private readonly _triggerEnabled = new BehaviorSubject<boolean>(true);
   private readonly _triggerLimit = new BehaviorSubject<number | undefined>(undefined);

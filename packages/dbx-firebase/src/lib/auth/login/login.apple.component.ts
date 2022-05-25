@@ -8,7 +8,7 @@ export class DbxFirebaseLoginAppleComponent extends AbstractConfiguredDbxFirebas
 
   readonly loginProvider = 'apple';
 
-  handleLogin(): Promise<any> {
+  handleLogin() {
     return this.dbxFirebaseAuthService.logInWithApple();
   }
 

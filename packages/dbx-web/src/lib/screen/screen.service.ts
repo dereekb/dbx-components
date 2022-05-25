@@ -81,9 +81,8 @@ export class DbxScreenMediaService implements Destroyable {
 
     this._tinyHeightQuery = this._media.matchMedia(`screen and (max-width:${largeScreenWidthMax}px)`);
 
-    const service = this;
-    const widthHandler: (ev: MediaQueryListEvent) => void = () => service._updateWidth.next();
-    const heightHandler: (ev: MediaQueryListEvent) => void = () => service._updateHeight.next();
+    const widthHandler: (ev: MediaQueryListEvent) => void = () => this._updateWidth.next();
+    const heightHandler: (ev: MediaQueryListEvent) => void = () => this._updateHeight.next();
 
     this._microQuery.onchange = widthHandler;
     this._smallQuery.onchange = widthHandler;

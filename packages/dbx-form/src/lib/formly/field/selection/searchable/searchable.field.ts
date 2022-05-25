@@ -1,4 +1,4 @@
-import { arrayToMap, Maybe, separateValues } from '@dereekb/util';
+import { arrayToMap, Maybe, PrimativeKey, separateValues } from '@dereekb/util';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { Observable, of, switchMap } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -53,18 +53,18 @@ export function makeMetaFilterSearchableFieldValueDisplayFn<T extends string | n
 }
 
 // MARK: Chips
-export type StringSearchableChipFieldConfig = Omit<SearchableChipFieldConfig<string>, 'allowStringValues'>
+export type StringSearchableChipFieldConfig<M = unknown> = Omit<SearchableChipFieldConfig<string, M>, 'allowStringValues'>
 
-export function searchableStringChipField(config: StringSearchableChipFieldConfig): FormlyFieldConfig {
+export function searchableStringChipField<M = unknown>(config: StringSearchableChipFieldConfig<M>): FormlyFieldConfig {
   return searchableChipField({
     ...config,
     allowStringValues: true
   });
 }
 
-export interface SearchableChipFieldConfig<T = unknown> extends LabeledFieldConfig, DescriptionFieldConfig, SearchableChipValueFieldsFieldConfig<T> { }
+export interface SearchableChipFieldConfig<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> extends LabeledFieldConfig, DescriptionFieldConfig, SearchableChipValueFieldsFieldConfig<T, M, H> { }
 
-export function searchableChipField<T>(config: SearchableChipFieldConfig<T>): FormlyFieldConfig {
+export function searchableChipField<T, M = unknown, H extends PrimativeKey = PrimativeKey>(config: SearchableChipFieldConfig<T, M, H>): FormlyFieldConfig {
   const { key, placeholder } = config;
   return formlyField({
     key,
@@ -78,9 +78,9 @@ export function searchableChipField<T>(config: SearchableChipFieldConfig<T>): Fo
 }
 
 // MARK: Text
-export interface SearchableTextFieldConfig<T = unknown> extends LabeledFieldConfig, DescriptionFieldConfig, SearchableTextValueFieldsFieldConfig<T> { }
+export interface SearchableTextFieldConfig<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> extends LabeledFieldConfig, DescriptionFieldConfig, SearchableTextValueFieldsFieldConfig<T, M, H> { }
 
-export function searchableTextField<T>(config: SearchableTextFieldConfig<T>): FormlyFieldConfig {
+export function searchableTextField<T, M = unknown, H extends PrimativeKey = PrimativeKey>(config: SearchableTextFieldConfig<T, M, H>): FormlyFieldConfig {
   const { key } = config;
   return formlyField({
     key,

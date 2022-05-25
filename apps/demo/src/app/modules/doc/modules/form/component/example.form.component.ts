@@ -1,5 +1,5 @@
 import { Component } from "@angular/core";
-import { ProvideFormlyContext, AbstractConfigAsyncFormlyFormDirective, componentField } from "@dereekb/dbx-form";
+import { ProvideFormlyContext, AbstractConfigAsyncFormlyFormDirective } from "@dereekb/dbx-form";
 import { FormlyFieldConfig } from "@ngx-formly/core";
 import { map, Observable } from "rxjs";
 

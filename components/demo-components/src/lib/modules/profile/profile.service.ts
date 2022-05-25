@@ -11,7 +11,7 @@ export class DemoProfileService {
   constructor(readonly collections: DemoFirestoreCollections) { }
 
   isUsernameAvailable(username: string): Observable<boolean> {
-    return this.profileWithUsername(username).pipe(map(x => !Boolean(x)));
+    return this.profileWithUsername(username).pipe(map(x => !x));
   }
 
   profileWithUsername(username: string): Observable<Maybe<ProfileDocument>> {

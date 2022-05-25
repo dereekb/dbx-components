@@ -4,7 +4,7 @@ import { GuestbookEntry } from "@dereekb/demo-firebase";
 import { FormlyFieldConfig } from "@ngx-formly/core";
 import { guestbookEntryFields } from "./guestbook.entry.form";
 
-export interface DemoGuestbookEntryFormValue extends Pick<GuestbookEntry, 'message' | 'signed' | 'published'> { }
+export type DemoGuestbookEntryFormValue = Pick<GuestbookEntry, 'message' | 'signed' | 'published'>
 
 @Component({
   template: `<dbx-formly></dbx-formly>`,

@@ -18,18 +18,18 @@ export interface DocInteractionPopupConfig {
   </dbx-popup-content>
   `
 })
-export class DocInteractionExamplePopupComponent extends AbstractPopupDirective implements OnInit, OnDestroy {
+export class DocInteractionExamplePopupComponent<O> extends AbstractPopupDirective<O, DocInteractionPopupConfig> implements OnInit, OnDestroy {
 
   @ViewChild(DocInteractionExamplePopupContentComponent, { static: true })
   content!: DocInteractionExamplePopupContentComponent;
 
   readonly header = "example";
 
-  get config() {
-    return this.popup.data;
+  get config(): DocInteractionPopupConfig {
+    return this.popup.data as DocInteractionPopupConfig;
   }
 
-  constructor(popup: DbxPopupComponent<DocInteractionPopupConfig>, private readonly popupService: DbxPopupService) {
+  constructor(popup: DbxPopupComponent<O, DocInteractionPopupConfig>, private readonly popupService: DbxPopupService) {
     super(popup);
   }
 

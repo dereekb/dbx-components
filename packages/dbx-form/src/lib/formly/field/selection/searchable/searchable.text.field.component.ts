@@ -6,12 +6,12 @@ import { map, shareReplay, skipWhile, distinctUntilChanged } from 'rxjs';
 import { tapDetectChanges } from '@dereekb/dbx-core';
 import { PrimativeKey } from '@dereekb/util';
 
-export interface SearchableTextValueFieldsFieldConfig<T, H extends PrimativeKey = PrimativeKey> extends SearchableValueFieldsFieldConfig<T, H> {
+export interface SearchableTextValueFieldsFieldConfig<T, M = unknown, H extends PrimativeKey = PrimativeKey> extends SearchableValueFieldsFieldConfig<T, M, H> {
   showSelectedValue?: boolean;
 }
 
-export interface SearchableTextValueFieldsFormlyFieldConfig<T, H extends PrimativeKey = PrimativeKey> extends SearchableValueFieldsFormlyFieldConfig<T, H> {
-  searchableField: SearchableTextValueFieldsFieldConfig<T, H>;
+export interface SearchableTextValueFieldsFormlyFieldConfig<T, M = unknown, H extends PrimativeKey = PrimativeKey> extends SearchableValueFieldsFormlyFieldConfig<T, M, H> {
+  searchableField: SearchableTextValueFieldsFieldConfig<T, M, H>;
 }
 
 /**
@@ -20,13 +20,13 @@ export interface SearchableTextValueFieldsFormlyFieldConfig<T, H extends Primati
 @Component({
   templateUrl: 'searchable.text.field.component.html'
 })
-export class DbxSearchableTextFieldComponent<T, H extends PrimativeKey = PrimativeKey> extends AbstractDbxSearchableValueFieldDirective<T, H, SearchableTextValueFieldsFormlyFieldConfig<T, H>> implements OnInit, OnDestroy {
+export class DbxSearchableTextFieldComponent<T, M = unknown, H extends PrimativeKey = PrimativeKey> extends AbstractDbxSearchableValueFieldDirective<T, M, H, SearchableTextValueFieldsFormlyFieldConfig<T, M, H>> implements OnInit, OnDestroy {
 
   readonly selectedDisplayValue$ = this.displayValues$.pipe(map(x => x[0]), shareReplay(1), tapDetectChanges(this.cdRef));
   readonly hasValue$ = this.selectedDisplayValue$.pipe(map(x => Boolean(x)));
   readonly showSelectedDisplayValue$ = this.selectedDisplayValue$.pipe(map(x => this.showSelectedValue && Boolean(x)), distinctUntilChanged(), shareReplay(1), tapDetectChanges(this.cdRef));
 
-  override get searchableField(): SearchableTextValueFieldsFieldConfig<T, H> {
+  override get searchableField(): SearchableTextValueFieldsFieldConfig<T, M, H> {
     return this.field.searchableField;
   }
 

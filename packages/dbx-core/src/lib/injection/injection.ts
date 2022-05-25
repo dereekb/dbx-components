@@ -47,7 +47,7 @@ export interface DbxInjectionTemplateConfig<T = unknown> {
  * @param configs 
  * @returns 
  */
-export function mergeDbxInjectionComponentConfigs(configs: Maybe<Partial<DbxInjectionComponentConfig>>[]): Partial<DbxInjectionComponentConfig> {
+export function mergeDbxInjectionComponentConfigs<T = unknown>(configs: Maybe<Partial<DbxInjectionComponentConfig<T>>>[]): Partial<DbxInjectionComponentConfig<T>> {
   const providers = mergeArrays(filterMaybeValues(configs).map(x => x.providers));
   const result = mergeObjects(configs);
   result.providers = providers;

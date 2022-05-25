@@ -23,7 +23,7 @@ export interface StringValueFieldsFieldConfig {
 
 export interface StringValueFieldsFormlyFieldConfig extends StringValueFieldsFieldConfig, FormlyFieldConfig { }
 
-export interface SearchableValueFieldsFieldConfig<T, H extends PrimativeKey = PrimativeKey> extends StringValueFieldsFieldConfig {
+export interface SearchableValueFieldsFieldConfig<T, M = unknown, H extends PrimativeKey = PrimativeKey> extends StringValueFieldsFieldConfig {
   /**
    * Whether or not to allow string values to be used directly, or if values can only be chosen from searching.
    */
@@ -41,7 +41,7 @@ export interface SearchableValueFieldsFieldConfig<T, H extends PrimativeKey = Pr
   /**
    * Performs a search.
    */
-  search: SearchableValueFieldStringSearchFn<T>;
+  search: SearchableValueFieldStringSearchFn<T, M>;
   /**
    * Whether or not to allow searches on empty text. Is false by default.
    */
@@ -53,7 +53,7 @@ export interface SearchableValueFieldsFieldConfig<T, H extends PrimativeKey = Pr
   /**
    * Used for building a display value given the input.
    */
-  displayForValue: SearchableValueFieldDisplayFn<T>;
+  displayForValue: SearchableValueFieldDisplayFn<T, M>;
   /**
    * Whether or not to use the anchor field on value elements.
    *
@@ -65,15 +65,15 @@ export interface SearchableValueFieldsFieldConfig<T, H extends PrimativeKey = Pr
    *
    * Only used when useAnchor is true.
    */
-  anchorForValue?: SearchableValueFieldAnchorFn<T>;
+  anchorForValue?: SearchableValueFieldAnchorFn<T, M>;
   /**
    * Whether or not to show "Clear" in the autcomplete list.
    */
   showClearValue?: boolean;
 }
 
-export interface SearchableValueFieldsFormlyFieldConfig<T, H extends PrimativeKey = PrimativeKey> extends FormlyFieldConfig {
-  searchableField: SearchableValueFieldsFieldConfig<T, H>;
+export interface SearchableValueFieldsFormlyFieldConfig<T, M = unknown, H extends PrimativeKey = PrimativeKey> extends FormlyFieldConfig {
+  searchableField: SearchableValueFieldsFieldConfig<T, M, H>;
 }
 
 /**
@@ -82,7 +82,7 @@ export interface SearchableValueFieldsFormlyFieldConfig<T, H extends PrimativeKe
  * Display values are cached for performance.
  */
 @Directive()
-export abstract class AbstractDbxSearchableValueFieldDirective<T, H extends PrimativeKey = PrimativeKey, C extends SearchableValueFieldsFormlyFieldConfig<T, H> = SearchableValueFieldsFormlyFieldConfig<T, H>>
+export abstract class AbstractDbxSearchableValueFieldDirective<T, M = unknown, H extends PrimativeKey = PrimativeKey, C extends SearchableValueFieldsFormlyFieldConfig<T, M, H> = SearchableValueFieldsFormlyFieldConfig<T, M, H>>
   extends FieldType<C & FieldTypeConfig> implements OnInit, OnDestroy {
 
   /**
@@ -103,7 +103,7 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, H extends Prim
   private _formControlObs = new BehaviorSubject<Maybe<AbstractControl>>(undefined);
   readonly formControl$ = this._formControlObs.pipe(filterMaybe());
 
-  private _displayHashMap = new BehaviorSubject<Map<H, ConfiguredSearchableValueFieldDisplayValue<T>>>(new Map());
+  private _displayHashMap = new BehaviorSubject<Map<H, ConfiguredSearchableValueFieldDisplayValue<T, M>>>(new Map());
 
   readonly inputValue$: Observable<string> = this.inputCtrl.valueChanges.pipe(startWith(this.inputCtrl.value));
   readonly inputValueString$: Observable<string> = this.inputValue$.pipe(
@@ -111,7 +111,7 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, H extends Prim
     distinctUntilChanged()
   );
 
-  readonly searchResultsState$: Observable<LoadingState<ConfiguredSearchableValueFieldDisplayValue<T>[]>> = this.inputValueString$.pipe(
+  readonly searchResultsState$: Observable<LoadingState<ConfiguredSearchableValueFieldDisplayValue<T, M>[]>> = this.inputValueString$.pipe(
     switchMap((text) => ((text || this.searchOnEmptyText) ? this.search(text ?? '') : of([])).pipe(
       switchMap((x) => this.loadDisplayValuesForFieldValues(x)),
       // Return begin loading to setup the loading state.
@@ -124,7 +124,7 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, H extends Prim
 
   readonly searchContext = new LoadingStateContextInstance({ obs: this.searchResultsState$, showLoadingOnNoValue: false });
 
-  readonly searchResults$: Observable<ConfiguredSearchableValueFieldDisplayValue<T>[]> = this.searchResultsState$.pipe(
+  readonly searchResults$: Observable<ConfiguredSearchableValueFieldDisplayValue<T, M>[]> = this.searchResultsState$.pipe(
     map(x => x?.value ?? []),
   );
 
@@ -140,13 +140,13 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, H extends Prim
     shareReplay(1)
   );
 
-  readonly displayValuesState$: Observable<LoadingState<ConfiguredSearchableValueFieldDisplayValue<T>[]>> = this.values$.pipe(
+  readonly displayValuesState$: Observable<LoadingState<ConfiguredSearchableValueFieldDisplayValue<T, M>[]>> = this.values$.pipe(
     distinctUntilChanged(),
     switchMap((values: T[]) => this.loadDisplayValuesForValues(values)),
     shareReplay(1)
   );
 
-  readonly displayValues$: Observable<ConfiguredSearchableValueFieldDisplayValue<T>[]> = this.displayValuesState$.pipe(
+  readonly displayValues$: Observable<ConfiguredSearchableValueFieldDisplayValue<T, M>[]> = this.displayValuesState$.pipe(
     map(x => x?.value ?? [])
   );
 
@@ -162,7 +162,7 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, H extends Prim
     return this.field.templateOptions?.readonly;
   }
 
-  get searchableField(): SearchableValueFieldsFieldConfig<T, H> {
+  get searchableField(): SearchableValueFieldsFieldConfig<T, M, H> {
     return this.field.searchableField;
   }
 
@@ -178,7 +178,7 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, H extends Prim
     return this.searchableField.hashForValue ?? ((x) => x as unknown as H);
   }
 
-  get displayForValue(): SearchableValueFieldDisplayFn<T> {
+  get displayForValue(): SearchableValueFieldDisplayFn<T, M> {
     return this.searchableField.displayForValue;
   }
 
@@ -186,7 +186,7 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, H extends Prim
     return this.searchableField.useAnchor;
   }
 
-  get anchorForValue(): Maybe<SearchableValueFieldAnchorFn<T>> {
+  get anchorForValue(): Maybe<SearchableValueFieldAnchorFn<T, M>> {
     return this.searchableField.anchorForValue;
   }
 
@@ -194,7 +194,7 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, H extends Prim
     return this.searchableField.display;
   }
 
-  get search(): SearchableValueFieldStringSearchFn<T> {
+  get search(): SearchableValueFieldStringSearchFn<T, M> {
     return this.searchableField.search;
   }
 
@@ -214,28 +214,28 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, H extends Prim
     return this.searchableField.showClearValue ?? true;
   }
 
-  loadDisplayValuesForValues(values: T[]): Observable<LoadingState<ConfiguredSearchableValueFieldDisplayValue<T>[]>> {
+  loadDisplayValuesForValues(values: T[]): Observable<LoadingState<ConfiguredSearchableValueFieldDisplayValue<T, M>[]>> {
     return this.loadDisplayValuesForFieldValues(values.map((value) => ({ value })));
   }
 
-  loadDisplayValuesForFieldValues(values: SearchableValueFieldValue<T>[]): Observable<LoadingState<ConfiguredSearchableValueFieldDisplayValue<T>[]>> {
+  loadDisplayValuesForFieldValues(values: SearchableValueFieldValue<T, M>[]): Observable<LoadingState<ConfiguredSearchableValueFieldDisplayValue<T, M>[]>> {
     return this.getDisplayValuesForFieldValues(values).pipe(
-      map((displayValues: ConfiguredSearchableValueFieldDisplayValue<T>[]) => successResult(displayValues)),
+      map((displayValues: ConfiguredSearchableValueFieldDisplayValue<T, M>[]) => successResult(displayValues)),
       startWithBeginLoading(),
       shareReplay(1)
     );
   }
 
-  getDisplayValuesForFieldValues(values: SearchableValueFieldValue<T>[]): Observable<ConfiguredSearchableValueFieldDisplayValue<T>[]> {
+  getDisplayValuesForFieldValues(values: SearchableValueFieldValue<T, M>[]): Observable<ConfiguredSearchableValueFieldDisplayValue<T, M>[]> {
     return this._displayHashMap.pipe(
       mergeMap((displayMap) => {
         const mappingResult = values
-          .map(x => [x, this.hashForValue(x.value)] as [SearchableValueFieldValue<T>, H])
-          .map(([x, hash], i) => [i, hash, x, displayMap.get(hash)] as [number, H, SearchableValueFieldValue<T>, ConfiguredSearchableValueFieldDisplayValue<T>]);
+          .map(x => [x, this.hashForValue(x.value)] as [SearchableValueFieldValue<T, M>, H])
+          .map(([x, hash], i) => [i, hash, x, displayMap.get(hash)] as [number, H, SearchableValueFieldValue<T, M>, ConfiguredSearchableValueFieldDisplayValue<T, M>]);
 
         const hasDisplay = mappingResult.filter(x => Boolean(x[3]));
         const needsDisplay = mappingResult.filter(x => !x[3]);
-        let obs: Observable<ConfiguredSearchableValueFieldDisplayValue<T>[]>;
+        let obs: Observable<ConfiguredSearchableValueFieldDisplayValue<T, M>[]>;
 
         if (needsDisplay.length > 0) {
 
@@ -262,7 +262,7 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, H extends Prim
               });
 
               // Create a map to re-join values later.
-              const displayResultsMapping: [ConfiguredSearchableValueFieldDisplayValue<T>, H][] = (displayResults as ConfiguredSearchableValueFieldDisplayValue<T>[]).map(x => [x, this.hashForValue(x.value)]);
+              const displayResultsMapping: [ConfiguredSearchableValueFieldDisplayValue<T, M>, H][] = (displayResults as ConfiguredSearchableValueFieldDisplayValue<T, M>[]).map(x => [x, this.hashForValue(x.value)]);
               const valueIndexHashMap = new Map(displayResultsMapping.map(([x, hash]) => [hash, x]));
 
               // Update displayMap. No need to push an update notification.

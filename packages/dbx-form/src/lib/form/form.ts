@@ -54,7 +54,7 @@ export interface DbxFormEvent {
 /**
  * Form that has an event stream, value, and state items.
  */
-export abstract class DbxForm<T = object> {
+export abstract class DbxForm<T = unknown> {
   abstract readonly stream$: Observable<DbxFormEvent>;
 
   /**
@@ -68,7 +68,7 @@ export abstract class DbxForm<T = object> {
   abstract getDisabled(): Observable<BooleanStringKeyArray>;
 }
 
-export abstract class DbxMutableForm<T = object> extends DbxForm<T> {
+export abstract class DbxMutableForm<T = unknown> extends DbxForm<T> {
   /**
    * LockSet for the form.
    */

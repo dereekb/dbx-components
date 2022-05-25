@@ -4,7 +4,7 @@ import { Profile } from "@dereekb/demo-firebase";
 import { FormlyFieldConfig } from "@ngx-formly/core";
 import { profileFields } from "./profile.form";
 
-export interface DemoProfileFormValue extends Pick<Profile, 'bio'> { }
+export type DemoProfileFormValue = Pick<Profile, 'bio'>
 
 @Component({
   template: `<dbx-formly></dbx-formly>`,

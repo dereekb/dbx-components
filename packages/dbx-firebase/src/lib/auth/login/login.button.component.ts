@@ -1,6 +1,5 @@
 import { Component, Directive, Input, OnInit } from "@angular/core";
 import { HandleActionFunction } from "@dereekb/dbx-core";
-import { Maybe } from "@dereekb/util";
 import { from } from "rxjs";
 import { DbxFirebaseAuthService } from "../service/firebase.auth.service";
 import { FirebaseLoginMethodType } from "./login";
@@ -13,7 +12,7 @@ export interface DbxFirebaseLoginButtonConfig {
   icon?: string;
   buttonColor?: string;
   buttonTextColor?: string;
-  handleLogin: () => Promise<void>;
+  handleLogin: () => Promise<unknown>;
 }
 
 /**
@@ -42,7 +41,7 @@ export interface DbxFirebaseLoginButtonConfig {
 export class DbxFirebaseLoginButtonComponent {
 
   @Input()
-  config: Maybe<DbxFirebaseLoginButtonConfig>;
+  config!: DbxFirebaseLoginButtonConfig;
 
   get iconUrl() {
     return this.config?.iconUrl;
@@ -64,12 +63,12 @@ export class DbxFirebaseLoginButtonComponent {
     return this.config?.buttonTextColor;
   }
 
-  readonly handleAction: HandleActionFunction = (value: any) => {
-    const loginPromise: Promise<void> = this.config!.handleLogin();
+  readonly handleAction: HandleActionFunction = () => {
+    const loginPromise = this.config.handleLogin();
     return from(loginPromise);
   };
 
-  onActionSuccess = (value: any) => {
+  onActionSuccess = () => {
     // todo: show checkmark on success?
   };
 
@@ -116,7 +115,7 @@ export abstract class AbstractConfiguredDbxFirebaseLoginButtonDirective implemen
     };
   }
 
-  abstract handleLogin(): Promise<any>;
+  abstract handleLogin(): Promise<unknown>;
 
   get providerConfig() {
     return this.dbxFirebaseAuthLoginService.getLoginProvider(this.loginProvider);

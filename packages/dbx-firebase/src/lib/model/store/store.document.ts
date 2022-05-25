@@ -26,8 +26,8 @@ export interface DbxFirebaseDocumentStore<T, D extends FirestoreDocument<T> = Fi
   readonly dataLoadingState$: Observable<LoadingState<DocumentDataWithId<T>>>;
   readonly exists$: Observable<boolean>;
 
-  setId: (observableOrValue: ObservableOrValue<string>) => Subscription;
-  setRef: (observableOrValue: ObservableOrValue<DocumentReference<T>>) => Subscription;
+  setId: (observableOrValue: ObservableOrValue<Maybe<string>>) => Subscription;
+  setRef: (observableOrValue: ObservableOrValue<Maybe<DocumentReference<T>>>) => Subscription;
 
   /**
    * Sets the firestore collection to retrieve document from.
@@ -130,7 +130,7 @@ export class AbstractDbxFirebaseDocumentStore<T, D extends FirestoreDocument<T> 
   );
 
   readonly snapshotLoadingState$: Observable<LoadingState<DocumentSnapshot<T>>> = this.currentDocument$.pipe(
-    switchMap(_ => loadingStateFromObs(this.snapshot$)),
+    switchMap(() => loadingStateFromObs(this.snapshot$)),
     shareReplay(1)
   );
 
@@ -184,12 +184,12 @@ export class AbstractDbxFirebaseDocumentStore<T, D extends FirestoreDocument<T> 
   /**
    * Sets the id of the document to load.
    */
-  readonly setId = this.updater((state, id: ModelKey) => (id) ? ({ ...state, id, ref: undefined }) : ({ ...state, id }));
+  readonly setId = this.updater((state, id: Maybe<ModelKey>) => (id) ? ({ ...state, id, ref: undefined }) : ({ ...state, id })) as ((observableOrValue: Maybe<string> | Observable<Maybe<string>>) => Subscription);
 
   /**
    * Sets the ref of the document to load.
    */
-  readonly setRef = this.updater((state, ref: DocumentReference<T>) => (ref) ? ({ ...state, id: undefined, ref }) : ({ ...state, ref }));
+  readonly setRef = this.updater((state, ref: Maybe<DocumentReference<T>>) => (ref) ? ({ ...state, id: undefined, ref }) : ({ ...state, ref })) as ((observableOrValue: Maybe<DocumentReference<T>> | Observable<Maybe<DocumentReference<T>>>) => Subscription);
 
   readonly setFirestoreCollection = this.updater((state, firestoreCollection: Maybe<FirestoreCollection<T, D>>) => ({ ...state, firestoreCollection }));
 

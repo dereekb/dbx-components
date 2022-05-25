@@ -1,4 +1,3 @@
-import { tapLog } from '@dereekb/rxjs';
 import { shareReplay } from 'rxjs/operators';
 import { Observable, distinctUntilChanged } from 'rxjs';
 import { OnDestroy } from '@angular/core';
@@ -6,7 +5,7 @@ import { BehaviorSubject, combineLatest, map } from 'rxjs';
 import { Directive, Host, Input, OnInit } from '@angular/core';
 import { DbxRouterService, AbstractSubscriptionDirective } from '@dereekb/dbx-core';
 import { DbxFirebaseDocumentStoreDirective } from './store.document.directive';
-import { ModelKey } from '@dereekb/util';
+import { Maybe, ModelKey } from '@dereekb/util';
 
 export const DBX_FIREBASE_ROUTER_SYNC_DEFAULT_ID_PARAM_KEY = 'id';
 
@@ -16,21 +15,21 @@ export const DBX_FIREBASE_ROUTER_SYNC_DEFAULT_ID_PARAM_KEY = 'id';
 @Directive({
   selector: '[dbxFirebaseDocumentStoreRouteId]'
 })
-export class DbxFirebaseDocumentStoreRouteIdDirective extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
+export class DbxFirebaseDocumentStoreRouteIdDirective<T = unknown> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
 
   private _idParamKey = new BehaviorSubject<string>(DBX_FIREBASE_ROUTER_SYNC_DEFAULT_ID_PARAM_KEY);
   readonly idParamKey$ = this._idParamKey.asObservable();
 
-  readonly idFromParams$: Observable<ModelKey> = combineLatest([this.idParamKey$, this.dbxRouterService.params$]).pipe(
+  readonly idFromParams$: Observable<Maybe<ModelKey>> = combineLatest([this.idParamKey$, this.dbxRouterService.params$]).pipe(
     map(([key, params]) => {
-      return params[key] ?? undefined;
+      return (params[key] as Maybe<string>) ?? undefined;
     }),
     distinctUntilChanged(),
     shareReplay(1)
   );
 
   constructor(
-    @Host() readonly dbxFirebaseDocumentStoreDirective: DbxFirebaseDocumentStoreDirective<any>,
+    @Host() readonly dbxFirebaseDocumentStoreDirective: DbxFirebaseDocumentStoreDirective<T>,
     readonly dbxRouterService: DbxRouterService) {
     super();
   }

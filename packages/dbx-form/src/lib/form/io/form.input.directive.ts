@@ -37,11 +37,11 @@ export type DbxFormSourceDirectiveMode = 'reset' | 'always';
 @Directive({
   selector: '[dbxFormSource]'
 })
-export class DbxFormSourceDirective<T extends object = object> extends AbstractSubscriptionDirective implements OnDestroy {
+export class DbxFormSourceDirective<T> extends AbstractSubscriptionDirective implements OnDestroy {
 
   private _mode = new BehaviorSubject<DbxFormSourceDirectiveMode>('reset');
 
-  constructor(@Host() public readonly form: DbxMutableForm) {
+  constructor(@Host() public readonly form: DbxMutableForm<T>) {
     super();
   }
 

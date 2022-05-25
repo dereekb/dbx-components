@@ -5,7 +5,7 @@ import { FormlyFieldConfig } from '@ngx-formly/core';
 import { filterPickableItemFieldValuesByLabel, pickableItemChipField, pickableItemListField, searchableChipField, searchableStringChipField, searchableTextField, SearchableValueFieldDisplayFn, SearchableValueFieldDisplayValue, SearchableValueFieldStringSearchFn, SearchableValueFieldValue } from '@dereekb/dbx-form';
 import { randomDelayWithRandomFunction } from '@dereekb/rxjs';
 import { makeRandomArrayFn, makeRandomFunction } from '@dereekb/util';
-import { DocFormExampleSelectionValueId, EXAMPLE_DISPLAY_FOR_SELECTION_VALUE, EXAMPLE_DISPLAY_FOR_SELECTION_VALUE_WITH_CUSTOM_DISPLAYS, EXAMPLE_SEARCH_FOR_SELECTION_VALUE, MAKE_EXAMPLE_SELECTION_VALUE, MAKE_RANDOM_SELECTION_VALUES } from '../component/selection.example';
+import { DocFormExampleSelectionValue, DocFormExampleSelectionValueId, EXAMPLE_DISPLAY_FOR_SELECTION_VALUE, EXAMPLE_DISPLAY_FOR_SELECTION_VALUE_WITH_CUSTOM_DISPLAYS, EXAMPLE_SEARCH_FOR_SELECTION_VALUE, MAKE_EXAMPLE_SELECTION_VALUE } from '../component/selection.example';
 import { DocFormExamplePrimarySearchableFieldDisplayComponent } from '../component/selection.example.view';
 
 export type TestStringSearchFunction = (text: string) => string[];
@@ -180,7 +180,7 @@ export class DocFormSelectionComponent implements OnDestroy {
       search: makeSearchForStringValue(this.searchFn$),
       displayForValue: DISPLAY_FOR_STRING_VALUE
     }),
-    searchableTextField<DocFormExampleSelectionValueId>({
+    searchableTextField<DocFormExampleSelectionValueId, DocFormExampleSelectionValue>({
       key: 'models',
       label: 'Search And Pick A Model',
       description: 'Search for models using a string and the default display presentation.',
@@ -189,7 +189,7 @@ export class DocFormSelectionComponent implements OnDestroy {
       search: EXAMPLE_SEARCH_FOR_SELECTION_VALUE(),
       displayForValue: EXAMPLE_DISPLAY_FOR_SELECTION_VALUE
     }),
-    searchableTextField<DocFormExampleSelectionValueId>({
+    searchableTextField<DocFormExampleSelectionValueId, DocFormExampleSelectionValue>({
       key: 'customDisplay',
       label: 'Search And Pick A Model (Custom Display)',
       description: 'Search for models using a string and custom display presentation set on the field.',
@@ -201,7 +201,7 @@ export class DocFormSelectionComponent implements OnDestroy {
         componentClass: DocFormExamplePrimarySearchableFieldDisplayComponent
       }
     }),
-    searchableTextField<DocFormExampleSelectionValueId>({
+    searchableTextField<DocFormExampleSelectionValueId, DocFormExampleSelectionValue>({
       key: 'customDisplayItems',
       label: 'Search And Pick A Model (Custom Display)',
       description: 'Search for models using a string and custom display presentation set per item.',

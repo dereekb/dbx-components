@@ -1,9 +1,9 @@
 import { DocInteractionTestFilter } from './filter';
-import { Component, Input } from '@angular/core';
+import { Component } from '@angular/core';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { AbstractSyncFormlyFormDirective, ProvideFormlyContext } from '@dereekb/dbx-form';
 
-export interface DocInteractionTestFilterFormValue extends DocInteractionTestFilter { }
+export type DocInteractionTestFilterFormValue = DocInteractionTestFilter
 
 @Component({
   template: `<dbx-formly></dbx-formly>`,

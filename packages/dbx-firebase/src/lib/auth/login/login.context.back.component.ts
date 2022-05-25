@@ -10,10 +10,10 @@ import { Component, EventEmitter, Output } from "@angular/core";
 export class DbxFirebaseLoginContextBackButtonComponent {
 
   @Output()
-  readonly onCancel = new EventEmitter<void>();
+  readonly cancelLogin = new EventEmitter<void>();
 
   readonly anchor: ClickableAnchor = {
-    onClick: () => this.onCancel.emit()
+    onClick: () => this.cancelLogin.emit()
   };
 
 }

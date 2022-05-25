@@ -11,7 +11,7 @@ export const DEFAULT_FIREBASE_AUTH_LOGIN_PROVIDERS_TOKEN = new InjectionToken('D
 export const DEFAULT_FIREBASE_AUTH_LOGIN_TERMS_COMPONENT_CLASS_TOKEN = new InjectionToken('DefaultDbxFirebaseAuthLoginTermsComponentClass');
 export const DEFAULT_FIREBASE_AUTH_LOGIN_PASSWORD_CONFIG_TOKEN = new InjectionToken('DefaultDbxFirebaseAuthLoginPasswordConfig');
 
-export interface DbxFirebaseAuthLoginProvider<D = any> {
+export interface DbxFirebaseAuthLoginProvider<D = unknown> {
   /**
    * Category for this login method.
    */
@@ -23,11 +23,11 @@ export interface DbxFirebaseAuthLoginProvider<D = any> {
   /**
    * Login/Registration class to use.
    */
-  readonly componentClass: Type<any>;
+  readonly componentClass: Type<unknown>;
   /**
    * Custom registration type to use instead. If false, registration is not allowd for this type.
    */
-  readonly registrationComponentClass?: Type<any> | false;
+  readonly registrationComponentClass?: Type<unknown> | false;
   /**
    * Custom data available to the components.
    * 
@@ -85,7 +85,7 @@ export class DbxFirebaseAuthLoginService {
   constructor(
     @Optional() @Inject(DEFAULT_FIREBASE_AUTH_LOGIN_PROVIDERS_TOKEN) defaultProviders: DbxFirebaseAuthLoginProvider[],
     @Optional() @Inject(DEFAULT_FIREBASE_AUTH_LOGIN_PASSWORD_CONFIG_TOKEN) passwordConfig: DbxFirebaseAuthLoginPasswordConfig,
-    @Optional() @Inject(DEFAULT_FIREBASE_AUTH_LOGIN_TERMS_COMPONENT_CLASS_TOKEN) readonly termsComponentClass: Type<any> = DbxFirebaseLoginTermsSimpleComponent
+    @Optional() @Inject(DEFAULT_FIREBASE_AUTH_LOGIN_TERMS_COMPONENT_CLASS_TOKEN) readonly termsComponentClass: Type<unknown> = DbxFirebaseLoginTermsSimpleComponent
   ) {
     if (defaultProviders) {
       defaultProviders.forEach((x) => this.register(x, false));

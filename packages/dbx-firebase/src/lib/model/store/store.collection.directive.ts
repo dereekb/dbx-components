@@ -7,7 +7,7 @@ import { DbxFirebaseCollectionStore } from "./store.collection";
  * Abstract directive that contains a DbxFirebaseCollectionStore and provides an interface for communicating with other directives.
  */
 @Directive()
-export abstract class DbxFirebaseCollectionStoreDirective<T, D extends FirestoreDocument<T> = FirestoreDocument<T>, S extends DbxFirebaseCollectionStore<T, D> = DbxFirebaseCollectionStore<T, D>> {
+export abstract class DbxFirebaseCollectionStoreDirective<T = unknown, D extends FirestoreDocument<T> = FirestoreDocument<T>, S extends DbxFirebaseCollectionStore<T, D> = DbxFirebaseCollectionStore<T, D>> {
 
   constructor(readonly store: S) { }
 
@@ -42,6 +42,9 @@ export abstract class DbxFirebaseCollectionStoreDirective<T, D extends Firestore
   }
 
 }
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// The use of any here does not degrade the type-safety; we want to simply match that the Store type S is used in the Directive type C to provide it.
 
 /**
  * Configures providers for a DbxFirebaseCollectionStoreDirective. 

@@ -73,7 +73,7 @@ describe('AbstractDbxFirebaseDocumentStore', () => {
 
       it('should not load anything if neither id nor ref are set.', (done) => {
 
-        let sub: SubscriptionObject = new SubscriptionObject();
+        const sub: SubscriptionObject = new SubscriptionObject();
 
         sub.subscription = store.document$.pipe(timeout({ first: 100, with: () => of(false) }), first()).subscribe((result) => {
           expect(result).toBe(false);

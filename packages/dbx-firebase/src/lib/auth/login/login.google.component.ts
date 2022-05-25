@@ -8,7 +8,7 @@ export class DbxFirebaseLoginGoogleComponent extends AbstractConfiguredDbxFireba
 
   readonly loginProvider = 'google';
 
-  handleLogin(): Promise<any> {
+  handleLogin() {
     return this.dbxFirebaseAuthService.logInWithGoogle();
   }
 

@@ -1,5 +1,5 @@
 import { ArrayOrValue, asArray, mergeArrayOrValueIntoArray, SeparateResult, separateValues } from '@dereekb/util';
-import { SortingOrder, Maybe, ObjectMap } from '@dereekb/util';
+import { SortingOrder, Maybe } from '@dereekb/util';
 import { DocumentSnapshot, DocumentData, FieldPath } from '../types';
 
 export type FirestoreQueryConstraintType = string;
@@ -12,14 +12,14 @@ export interface FirestoreQueryConstraint<T = unknown> {
   data: T;
 }
 
-export function firestoreQueryConstraint<T>(type: string, data: T): FirestoreQueryConstraint<T> {
+export function firestoreQueryConstraint<T = unknown>(type: string, data: T): FirestoreQueryConstraint<T> {
   return {
     type,
     data
   };
 }
 
-export function firestoreQueryConstraintFactory(type: string): <T>(data: T) => FirestoreQueryConstraint<T> {
+export function firestoreQueryConstraintFactory(type: string): <T = unknown>(data: T) => FirestoreQueryConstraint<T> {
   return <T>(data: T) => firestoreQueryConstraint(type, data);
 }
 

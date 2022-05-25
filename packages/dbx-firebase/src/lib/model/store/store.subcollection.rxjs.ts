@@ -14,7 +14,7 @@ export interface DbxFirebaseComponentStoreWithParentContextState<T, PT, D extend
 export type DbxFirebaseComponentStoreWithParentSetParentEffectFunction<PD> = (observableOrValue: ObservableOrValue<Maybe<PD>>) => Subscription;
 export type DbxFirebaseComponentStoreWithParentSetParentStoreEffectFunction<PT, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>> = (observableOrValue: ObservableOrValue<DbxFirebaseDocumentStore<PT, PD>>) => Subscription;
 
-export interface DbxFirebaseComponentStoreWithParent<T, PT, D extends FirestoreDocument<T> = FirestoreDocument<T>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>> extends LockSetComponentStore<any>, Pick<ComponentStore<DbxFirebaseComponentStoreWithParentContextState<T, PT, D, PD>>, 'effect'> {
+export interface DbxFirebaseComponentStoreWithParent<T, PT, D extends FirestoreDocument<T> = FirestoreDocument<T>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>> extends LockSetComponentStore<object>, Pick<ComponentStore<DbxFirebaseComponentStoreWithParentContextState<T, PT, D, PD>>, 'effect'> {
   readonly currentParent$: Observable<Maybe<PD>>;
   readonly parent$: Observable<PD>;
   readonly collectionFactory$: Observable<FirestoreCollectionWithParentFactory<T, PT, D, PD>>;

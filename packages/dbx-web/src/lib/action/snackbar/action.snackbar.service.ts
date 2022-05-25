@@ -61,7 +61,7 @@ export class DbxActionSnackbarService<C = DbxActionSnackbarComponent> {
    * @param config 
    * @returns 
    */
-  openSnackbar(config: DbxActionSnackbarDisplayConfig): MatSnackBarRef<C> {
+  openSnackbar<T = unknown, O = unknown>(config: DbxActionSnackbarDisplayConfig<T, O>): MatSnackBarRef<C> {
     const { snackbar: inputSnackbarConfig } = config;
     const { snackbar: defaultSnackbarConfig, defaultDuration } = this.config;
 
@@ -87,9 +87,9 @@ export class DbxActionSnackbarService<C = DbxActionSnackbarComponent> {
     return this.matSnackBar.openFromComponent(this.componentClass, matSnackbarConfig);
   }
 
-  generateDisplayConfig(type: Maybe<DbxActionSnackbarType>, input: DbxActionSnackbarGeneratorInput): Maybe<DbxActionSnackbarDisplayConfig> {
+  generateDisplayConfig<T = unknown, O = unknown>(type: Maybe<DbxActionSnackbarType>, input: DbxActionSnackbarGeneratorInput<T, O>): Maybe<DbxActionSnackbarDisplayConfig<T, O>> {
     const configForType = this.eventTypeConfigs[type ?? 'none'];
-    let result: Maybe<DbxActionSnackbarDisplayConfig>;
+    let result: Maybe<DbxActionSnackbarDisplayConfig<T, O>>;
 
     if (configForType) {
       result = makeDbxActionSnackbarDisplayConfigGeneratorFunction(configForType)(input);

@@ -2,7 +2,7 @@ import { Directive, Host, Input, OnDestroy, OnInit } from '@angular/core';
 import { map, shareReplay, switchMap, tap } from 'rxjs/operators';
 import { AbstractSubscriptionDirective } from '../../../subscription';
 import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
-import { DbxActionWorkInstanceDelegate, HandleActionFunction } from '../../action.handler';
+import { DbxActionWorkInstanceDelegate, HandleActionWithFunctionOrContext } from '../../action.handler';
 import { Maybe } from '@dereekb/util';
 import { filterMaybe, workFactory } from '@dereekb/rxjs';
 import { BehaviorSubject } from 'rxjs';
@@ -14,17 +14,17 @@ import { BehaviorSubject } from 'rxjs';
 @Directive({
   selector: '[dbxActionHandler]',
 })
-export class DbxActionHandlerDirective<T, O> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
+export class DbxActionHandlerDirective<T = unknown, O = unknown> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
 
-  private _handlerFunction = new BehaviorSubject<Maybe<HandleActionFunction<T, O>>>(undefined);
+  private _handlerFunction = new BehaviorSubject<Maybe<HandleActionWithFunctionOrContext<T, O>>>(undefined);
   readonly handlerFunction$ = this._handlerFunction.pipe(filterMaybe(), shareReplay(1));
 
   @Input('dbxActionHandler')
-  get handlerFunction(): Maybe<HandleActionFunction<T, O>> {
+  get handlerFunction(): Maybe<HandleActionWithFunctionOrContext<T, O>> {
     return this._handlerFunction.value;
   }
 
-  set handlerFunction(handlerFunction: Maybe<HandleActionFunction<T, O>>) {
+  set handlerFunction(handlerFunction: Maybe<HandleActionWithFunctionOrContext<T, O>>) {
     this._handlerFunction.next(handlerFunction);
   }
 

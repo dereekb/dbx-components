@@ -14,14 +14,14 @@ import { LoadingState, LoadingStateType, loadingStateType } from '@dereekb/rxjs'
 })
 export class DbxActionSnackbarDirective<T = unknown, O = unknown> extends AbstractSubscriptionDirective implements OnInit {
 
-  private _snackbarFunction?: Maybe<DbxActionSnackbarDisplayConfigGeneratorFunction<O>>;
+  private _snackbarFunction?: Maybe<DbxActionSnackbarDisplayConfigGeneratorFunction>;
 
   @Input('dbxActionSnackbar')
-  get snackbarFunction(): Maybe<DbxActionSnackbarDisplayConfigGeneratorFunction<O>> {
+  get snackbarFunction(): Maybe<DbxActionSnackbarDisplayConfigGeneratorFunction> {
     return this._snackbarFunction;
   }
 
-  set snackbarFunction(snackbarFunction: Maybe<'' | DbxActionSnackbarDisplayConfigGeneratorFunction<O>>) {
+  set snackbarFunction(snackbarFunction: Maybe<'' | DbxActionSnackbarDisplayConfigGeneratorFunction>) {
     if (snackbarFunction) {
       this._snackbarFunction = snackbarFunction;
     }
@@ -31,7 +31,7 @@ export class DbxActionSnackbarDirective<T = unknown, O = unknown> extends Abstra
   dbxActionSnackbarDefault?: Maybe<DbxActionSnackbarType>;
 
   @Input()
-  dbxActionSnackbarUndo?: DbxActionSnackbarGeneratorUndoInput;
+  dbxActionSnackbarUndo?: DbxActionSnackbarGeneratorUndoInput<T, O>;
 
   constructor(@Host() public readonly source: DbxActionContextStoreSourceInstance<T, O>,
     readonly dbxActionSnackbarService: DbxActionSnackbarService
@@ -51,8 +51,8 @@ export class DbxActionSnackbarDirective<T = unknown, O = unknown> extends Abstra
     });
   }
 
-  protected buildConfigurationForEvent(event: DbxActionSnackbarEvent<O>): Maybe<DbxActionSnackbarDisplayConfig> {
-    const input: DbxActionSnackbarGeneratorInput<O> = {
+  protected buildConfigurationForEvent(event: DbxActionSnackbarEvent<O>): Maybe<DbxActionSnackbarDisplayConfig<T, O>> {
+    const input: DbxActionSnackbarGeneratorInput<T, O> = {
       event,
       undo: event.type === LoadingStateType.SUCCESS ? this.dbxActionSnackbarUndo : undefined  // only show undo on success.
     };
@@ -60,7 +60,7 @@ export class DbxActionSnackbarDirective<T = unknown, O = unknown> extends Abstra
     return (this.snackbarFunction) ? this.snackbarFunction(input) : this.dbxActionSnackbarService.generateDisplayConfig(this.dbxActionSnackbarDefault, input);
   }
 
-  protected showSnackbarForConfiguration(config: DbxActionSnackbarDisplayConfig, event: DbxActionSnackbarEvent) {
+  protected showSnackbarForConfiguration(config: DbxActionSnackbarDisplayConfig<T, O>, event: DbxActionSnackbarEvent<O>) {
     this.dbxActionSnackbarService.openSnackbar(config);
   }
 

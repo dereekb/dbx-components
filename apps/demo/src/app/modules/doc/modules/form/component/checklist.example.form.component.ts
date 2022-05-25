@@ -5,7 +5,7 @@ import { FormlyFieldConfig } from '@ngx-formly/core';
 import { AbstractConfigAsyncFormlyFormDirective, ProvideFormlyContext } from '@dereekb/dbx-form';
 import { BooleanKeyValueTransformMap } from '@dereekb/util';
 
-export interface DocFormExampleChecklistFormValue extends BooleanKeyValueTransformMap<DocFormExampleChecklistValues> { }
+export type DocFormExampleChecklistFormValue = BooleanKeyValueTransformMap<DocFormExampleChecklistValues>
 
 @Component({
   template: `<dbx-formly></dbx-formly>`,

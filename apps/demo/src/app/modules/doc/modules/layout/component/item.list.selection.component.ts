@@ -26,7 +26,7 @@ export class DocSelectionItemListComponent extends AbstractDbxSelectionListWrapp
   template: DEFAULT_DBX_SELECTION_VALUE_LIST_DIRECTIVE_TEMPLATE,
   providers: ProvideDbxListView(DocSelectionItemListViewComponent)
 })
-export class DocSelectionItemListViewComponent extends AbstractDbxSelectionListViewDirective<DocValue> {
+export class DocSelectionItemListViewComponent extends AbstractDbxSelectionListViewDirective<any> { // todo: redo AbstractDbxListViewDirective typings
 
   readonly config: DbxSelectionValueListViewConfig<DocValueWithSelection> = {
     componentClass: DocSelectionItemListViewItemComponent,

@@ -21,7 +21,7 @@ import { DbxFirebaseOptions } from './options';
       const emulators = injector.get<DbxFirebaseParsedEmulatorsConfig>(DbxFirebaseParsedEmulatorsConfig, undefined);
 
       if (emulators?.useEmulators && emulators?.firestore) {
-        connectFirestoreEmulator(firestore, emulators.firestore.host!, emulators.firestore.port, {});
+        connectFirestoreEmulator(firestore, emulators.firestore.host, emulators.firestore.port, {});
       }
 
       enableIndexedDbPersistence(firestore);
@@ -43,7 +43,7 @@ export class DbxFirebaseDefaultFirestoreProviderModule { }
       const emulators = injector.get<DbxFirebaseParsedEmulatorsConfig>(DbxFirebaseParsedEmulatorsConfig, undefined);
 
       if (emulators?.useEmulators && emulators?.auth) {
-        connectAuthEmulator(auth, `http://${emulators.auth.host!}:${emulators.auth.port}`);
+        connectAuthEmulator(auth, `http://${emulators.auth.host}:${emulators.auth.port}`);
       }
 
       return auth;
@@ -63,7 +63,7 @@ export class DbxFirebaseDefaultAuthProviderModule { }
       const emulators = injector.get<DbxFirebaseParsedEmulatorsConfig>(DbxFirebaseParsedEmulatorsConfig, undefined);
 
       if (emulators?.useEmulators && emulators?.storage) {
-        connectStorageEmulator(storage, emulators.storage.host!, emulators.storage.port, {});
+        connectStorageEmulator(storage, emulators.storage.host, emulators.storage.port, {});
       }
 
       return storage;
@@ -86,7 +86,7 @@ export class DbxFirebaseDefaultStorageProviderModule { }
       const emulators = injector.get<DbxFirebaseParsedEmulatorsConfig>(DbxFirebaseParsedEmulatorsConfig, undefined);
 
       if (emulators?.useEmulators && emulators?.functions) {
-        connectFunctionsEmulator(functions, emulators.functions.host!, emulators.functions.port);
+        connectFunctionsEmulator(functions, emulators.functions.host, emulators.functions.port);
       }
 
       return functions;

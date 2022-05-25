@@ -8,16 +8,16 @@ import { COMMA, ENTER } from '@angular/cdk/keycodes';
 import { skipUntilTimeElapsedAfterLastEmission } from '@dereekb/date';
 import { PrimativeKey } from '@dereekb/util';
 
-export type SearchableChipValueFieldsFieldConfig<T, H extends PrimativeKey = PrimativeKey> = SearchableValueFieldsFieldConfig<T, H>;
+export type SearchableChipValueFieldsFieldConfig<T, M = unknown, H extends PrimativeKey = PrimativeKey> = SearchableValueFieldsFieldConfig<T, M, H>;
 
-export interface SearchableChipValueFieldsFormlyFieldConfig<T, H extends PrimativeKey = PrimativeKey> extends SearchableValueFieldsFormlyFieldConfig<T, H> {
-  searchableField: SearchableChipValueFieldsFieldConfig<T, H>;
+export interface SearchableChipValueFieldsFormlyFieldConfig<T, M = unknown, H extends PrimativeKey = PrimativeKey> extends SearchableValueFieldsFormlyFieldConfig<T, M, H> {
+  searchableField: SearchableChipValueFieldsFieldConfig<T, M, H>;
 }
 
 @Component({
   templateUrl: 'searchable.chip.field.component.html'
 })
-export class DbxSearchableChipFieldComponent<T, H extends PrimativeKey = PrimativeKey> extends AbstractDbxSearchableValueFieldDirective<T, H, SearchableChipValueFieldsFormlyFieldConfig<T, H>> implements OnInit, OnDestroy {
+export class DbxSearchableChipFieldComponent<T, M = unknown, H extends PrimativeKey = PrimativeKey> extends AbstractDbxSearchableValueFieldDirective<T, M, H, SearchableChipValueFieldsFormlyFieldConfig<T, M, H>> implements OnInit, OnDestroy {
 
   private _blur = new Subject<void>();
   private _blurSub = new SubscriptionObject();

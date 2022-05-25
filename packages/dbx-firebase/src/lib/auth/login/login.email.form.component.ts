@@ -5,7 +5,7 @@ import { FormlyFieldConfig } from "@ngx-formly/core";
 import { BehaviorSubject, map, Observable } from "rxjs";
 import { DbxFirebaseLoginMode } from "./login";
 
-export interface DbxFirebaseEmailFormValue extends DefaultUsernameLoginFieldsValue { }
+export type DbxFirebaseEmailFormValue = DefaultUsernameLoginFieldsValue
 
 export interface DbxFirebaseEmailFormConfig {
   loginMode: DbxFirebaseLoginMode;

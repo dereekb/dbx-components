@@ -12,7 +12,7 @@ import { DbxForm } from '../form';
 @Directive({
   selector: '[dbxFormValueChange]'
 })
-export class DbxFormValueChangesDirective<T extends object = object> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
+export class DbxFormValueChangesDirective<T> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
 
   @Output()
   readonly dbxFormValueChange = new EventEmitter<Maybe<T>>();

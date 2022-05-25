@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { AbstractDialogDirective } from '@dereekb/dbx-web';
 import { MatDialog } from '@angular/material/dialog';
-import { HandleActionFunction } from '@dereekb/dbx-core';
+import { HandleActionWithContext } from '@dereekb/dbx-core';
 import { DemoGuestbookEntryFormValue, GuestbookEntryDocumentStore } from '@dereekb/demo-components';
 import { IsModifiedFunction } from '@dereekb/rxjs';
 import { map, of, switchMap } from 'rxjs';
@@ -59,7 +59,7 @@ export class DemoGuestbookEntryPopupComponent extends AbstractDialogDirective<an
     );
   }
 
-  readonly handleUpdateEntry: HandleActionFunction = (value: DemoGuestbookEntryFormValue, context) => {
+  readonly handleUpdateEntry: HandleActionWithContext<DemoGuestbookEntryFormValue, void> = (value, context) => {
     context.startWorkingWithLoadingStateObservable(this.guestbookEntryDocumentStore.updateEntry(value));
   }
 

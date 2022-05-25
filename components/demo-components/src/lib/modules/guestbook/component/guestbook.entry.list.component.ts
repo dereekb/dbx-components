@@ -25,7 +25,7 @@ export class DemoGuestbookEntryListComponent extends AbstractDbxSelectionListWra
   template: DEFAULT_DBX_SELECTION_VALUE_LIST_DIRECTIVE_TEMPLATE,
   providers: ProvideDbxListView(DemoGuestbookEntryListViewComponent)
 })
-export class DemoGuestbookEntryListViewComponent extends AbstractDbxSelectionListViewDirective<GuestbookEntry> {
+export class DemoGuestbookEntryListViewComponent extends AbstractDbxSelectionListViewDirective<any> {    // todo: update list view typings
 
   readonly config: DbxSelectionValueListViewConfig<GuestbookEntryWithSelection> = {
     componentClass: DemoGuestbookEntryListViewItemComponent,

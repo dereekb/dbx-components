@@ -1,6 +1,6 @@
 import { Maybe, ReadableError } from '@dereekb/util';
 import { DbxActionContextStoreSourceInstance } from './action.store.source';
-import { Work, WorkInstanceDelegate } from '@dereekb/rxjs';
+import { WorkUsingContext, WorkUsingObservable, Work, WorkInstanceDelegate } from '@dereekb/rxjs';
 import { Observable } from 'rxjs';
 
 /**
@@ -24,4 +24,7 @@ export class DbxActionWorkInstanceDelegate<T = unknown, O = unknown> implements 
 
 }
 
-export type HandleActionFunction<T = unknown, O = unknown> = Work<T, O>;
+export type HandleActionWithFunctionOrContext<T = unknown, O = unknown> = HandleActionFunction<T, O> | HandleActionWithContext<T, O>;
+
+export type HandleActionFunction<T = unknown, O = unknown> = WorkUsingObservable<T, O>;
+export type HandleActionWithContext<T = unknown, O = unknown> = WorkUsingContext<T, O>;

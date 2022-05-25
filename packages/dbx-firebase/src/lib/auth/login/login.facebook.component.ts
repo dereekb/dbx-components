@@ -8,7 +8,7 @@ export class DbxFirebaseLoginFacebookComponent extends AbstractConfiguredDbxFire
 
   readonly loginProvider = 'facebook';
 
-  handleLogin(): Promise<any> {
+  handleLogin() {
     return this.dbxFirebaseAuthService.logInWithFacebook();
   }
 

@@ -2,19 +2,19 @@ import { DbxActionContextSourceReference } from "@dereekb/dbx-core";
 import { Milliseconds, Maybe, GetterOrValue, getValueFromGetter, Getter } from "@dereekb/util";
 import { DbxActionSnackbarDisplayConfig, DbxActionSnackbarEvent } from "./action.snackbar";
 
-export interface DbxActionSnackbarGeneratorInput<O = unknown> {
+export interface DbxActionSnackbarGeneratorInput<T = unknown, O = unknown> {
   event: DbxActionSnackbarEvent<O>;
-  undo?: Maybe<DbxActionSnackbarGeneratorUndoInput>;
+  undo?: Maybe<DbxActionSnackbarGeneratorUndoInput<T, O>>;
 }
 
-export type DbxActionSnackbarGeneratorUndoInput = DbxActionSnackbarGeneratorUndoInputConfig | Getter<DbxActionContextSourceReference>;
+export type DbxActionSnackbarGeneratorUndoInput<T = unknown, O = unknown> = Getter<DbxActionContextSourceReference<T, O>> | DbxActionSnackbarGeneratorUndoInputConfig<T, O>;
 
-export interface DbxActionSnackbarGeneratorUndoInputConfig {
+export interface DbxActionSnackbarGeneratorUndoInputConfig<T = unknown, O = unknown> {
   duration?: Milliseconds;
-  getUndoAction: Getter<DbxActionContextSourceReference>;
+  getUndoAction: Getter<DbxActionContextSourceReference<T, O>>;
 }
 
-export type DbxActionSnackbarDisplayConfigGeneratorFunction<O = unknown> = (input: DbxActionSnackbarGeneratorInput<O>) => Maybe<DbxActionSnackbarDisplayConfig>;
+export type DbxActionSnackbarDisplayConfigGeneratorFunction = <T = unknown, O = unknown>(input: DbxActionSnackbarGeneratorInput<T, O>) => Maybe<DbxActionSnackbarDisplayConfig<T, O>>;
 
 export interface DbxMakeActionSnackbarGeneratorConfiguration {
   idle?: GetterOrValue<DbxMakeActionSnackbarGeneratorEventConfiguration>;
@@ -36,14 +36,14 @@ export interface DbxMakeActionSnackbarGeneratorEventConfiguration extends Omit<D
  * @param config 
  * @returns 
  */
-export function makeDbxActionSnackbarDisplayConfigGeneratorFunction<O = unknown>(config: DbxMakeActionSnackbarGeneratorConfiguration): DbxActionSnackbarDisplayConfigGeneratorFunction<O> {
-  return (input: DbxActionSnackbarGeneratorInput<O>) => {
+export function makeDbxActionSnackbarDisplayConfigGeneratorFunction(config: DbxMakeActionSnackbarGeneratorConfiguration): DbxActionSnackbarDisplayConfigGeneratorFunction {
+  return <T = unknown, O = unknown>(input: DbxActionSnackbarGeneratorInput<T, O>) => {
     const { event, undo: undoInput } = input;
     const type = event.type;
     const eventConfigGetterOrValue = config[type];
     const eventConfig = eventConfigGetterOrValue && getValueFromGetter(eventConfigGetterOrValue);
 
-    let result: Maybe<DbxActionSnackbarDisplayConfig>;
+    let result: Maybe<DbxActionSnackbarDisplayConfig<T, O>>;
 
     if (eventConfig) {
       const { undoButtonText } = eventConfig;
@@ -54,7 +54,7 @@ export function makeDbxActionSnackbarDisplayConfigGeneratorFunction<O = unknown>
       };
 
       if (undoInput) {
-        let reference: DbxActionContextSourceReference;
+        let reference: DbxActionContextSourceReference<T, O>;
 
         if (typeof undoInput === 'object') {
           reference = undoInput.getUndoAction();

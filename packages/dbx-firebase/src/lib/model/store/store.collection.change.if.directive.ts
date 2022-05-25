@@ -42,7 +42,7 @@ export class DbxFirebaseCollectionHasChangeDirective extends AbstractIfDirective
     shareReplay(1)
   );
 
-  constructor(templateRef: TemplateRef<unknown>, viewContainer: ViewContainerRef, public readonly directive: DbxFirebaseCollectionChangeDirective<any>) {
+  constructor(templateRef: TemplateRef<unknown>, viewContainer: ViewContainerRef, public readonly directive: DbxFirebaseCollectionChangeDirective<unknown>) {
     super(templateRef, viewContainer);
   }
 

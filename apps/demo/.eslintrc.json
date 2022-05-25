@@ -1,8 +1,7 @@
 {
-  "extends": ["../../.eslintrc.json"],
+  "extends": ["../../.eslintrc.angular.json"],
   "ignorePatterns": ["!**/*"],
-  "overrides": [
-    {
+  "overrides": [{
       "files": ["*.ts"],
       "extends": [
         "plugin:@nrwl/nx/angular",
@@ -13,7 +12,7 @@
           "error",
           {
             "type": "attribute",
-            "prefix": "app",
+            "prefix": ["demo", "doc", "app"],
             "style": "camelCase"
           }
         ],
@@ -21,7 +20,7 @@
           "error",
           {
             "type": "element",
-            "prefix": "app",
+            "prefix": ["demo", "doc", "app"],
             "style": "kebab-case"
           }
         ]

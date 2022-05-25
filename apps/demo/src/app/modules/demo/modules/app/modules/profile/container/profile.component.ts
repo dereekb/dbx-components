@@ -1,5 +1,5 @@
 import { OnDestroy, OnInit, Component } from '@angular/core';
-import { HandleActionFunction } from '@dereekb/dbx-core';
+import { HandleActionWithContext } from '@dereekb/dbx-core';
 import { DbxFirebaseAuthService } from '@dereekb/dbx-firebase';
 import { IsModifiedFunction, loadingStateContext } from '@dereekb/rxjs';
 import { first, map } from 'rxjs';
@@ -50,11 +50,11 @@ export class DemoProfileViewComponent implements OnInit, OnDestroy {
     );
   }
 
-  handleChangeUsername: HandleActionFunction = (form: DemoProfileUsernameFormValue, context) => {
+  handleChangeUsername: HandleActionWithContext<DemoProfileUsernameFormValue> = (form, context) => {
     context.startWorkingWithLoadingStateObservable(this.profileDocumentStore.setProfileUsername(form));
   };
 
-  handleUpdateProfile: HandleActionFunction = (form: DemoProfileFormValue, context) => {
+  handleUpdateProfile: HandleActionWithContext<DemoProfileFormValue> = (form, context) => {
     context.startWorkingWithLoadingStateObservable(this.profileDocumentStore.updateProfile(form));
   };
 
