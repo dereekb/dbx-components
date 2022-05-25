@@ -71,7 +71,7 @@
     "publish-npmjs": {
       "executor": "@nrwl/workspace:run-commands",
       "options": {
-        "command": "cd ./dist/packages/nestjs && npm publish"
+        "command": "cd ./dist/packages/nestjs && npm publish --access public"
       }
     }
   },

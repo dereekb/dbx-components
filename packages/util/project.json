@@ -62,7 +62,7 @@
     "publish-npmjs": {
       "executor": "@nrwl/workspace:run-commands",
       "options": {
-        "command": "cd ./dist/packages/util && npm publish"
+        "command": "cd ./dist/packages/util && npm publish --access public"
       }
     }
   },

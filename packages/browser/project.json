@@ -43,7 +43,7 @@
     "publish-npmjs": {
       "executor": "@nrwl/workspace:run-commands",
       "options": {
-        "command": "cd ./dist/packages/browser && npm publish"
+        "command": "cd ./dist/packages/browser && npm publish --access public"
       }
     }
   },

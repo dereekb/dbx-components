@@ -89,7 +89,7 @@
     "publish-npmjs": {
       "executor": "@nrwl/workspace:run-commands",
       "options": {
-        "command": "cd ./dist/packages/dbx-firebase && npm publish"
+        "command": "cd ./dist/packages/dbx-firebase && npm publish --access public"
       }
     }
   },

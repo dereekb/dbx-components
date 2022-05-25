@@ -74,7 +74,7 @@
     "publish-npmjs": {
       "executor": "@nrwl/workspace:run-commands",
       "options": {
-        "command": "cd ./dist/packages/dbx-web && npm publish"
+        "command": "cd ./dist/packages/dbx-web && npm publish --access public"
       }
     }
   },

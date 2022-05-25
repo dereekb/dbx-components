@@ -80,7 +80,7 @@
     "publish-npmjs": {
       "executor": "@nrwl/workspace:run-commands",
       "options": {
-        "command": "cd ./dist/packages/firebase && npm publish"
+        "command": "cd ./dist/packages/firebase && npm publish --access public"
       }
     }
   },

@@ -2,6 +2,20 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [5.0.0](https://github.com/dereekb/dbx-components/compare/v4.1.0-dev...v5.0.0) (2022-05-25)
+
+
+### Bug Fixes
+
+* setup-project fixes ([5e174fd](https://github.com/dereekb/dbx-components/commit/5e174fd9b82b4769d5e2d0eac0fe334814a6d26a))
+
+
+### Features
+
+* added functionsRegionOrCustomDomain configuration ([e27df0d](https://github.com/dereekb/dbx-components/commit/e27df0dfd8ecf58b7e5f122189d4405f50a7f731))
+
+
+
 # [4.1.0](https://github.com/dereekb/dbx-components/compare/v4.0.1-dev...v4.1.0) (2022-05-17)
 
 
