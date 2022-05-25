@@ -3,7 +3,6 @@ import { forEachKeyValue, objectHasKey } from "../object/object";
 import { objectToTuples } from '../object/object.map';
 import { ArrayOrValue, asArray } from '../array/array';
 import { addToSet, setContainsAllValues } from '../set';
-import { Maybe } from '../value/maybe';
 
 /**
  * Key in the claims.

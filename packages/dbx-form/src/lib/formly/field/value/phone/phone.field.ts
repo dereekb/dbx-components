@@ -1,9 +1,8 @@
 import { DbxFormSectionConfig } from '../../wrapper/section.wrapper.component';
-import { sectionWrapper } from '../../wrapper/wrapper';
+import { sectionWrapper, flexLayoutWrapper } from '../../wrapper/wrapper';
 import { textField, TextFieldConfig } from '../text/text.field';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { LabeledFieldConfig, formlyField, templateOptionsForFieldConfig } from '../../field';
-import { flexLayoutWrapper } from '../../wrapper/wrapper';
 import { DbxInternationalPhoneFieldConfig } from './phone.field.component';
 import { repeatArrayField, RepeatArrayFieldConfig } from '../array/array.field';
 

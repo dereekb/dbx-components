@@ -1,7 +1,6 @@
 import { Directive, Input, Output, EventEmitter, OnDestroy, OnInit } from '@angular/core';
 import { Maybe } from '@dereekb/util';
-import { BehaviorSubject, of, Subject } from 'rxjs';
-import { filter, first, switchMap } from 'rxjs';
+import { BehaviorSubject, of, Subject, filter, first, switchMap } from 'rxjs';
 import { AbstractSubscriptionDirective } from '../subscription';
 import { DbxButton, DbxButtonInterceptor, provideDbxButton } from './button';
 

@@ -1,8 +1,6 @@
-import { filterMaybeValues } from '@dereekb/util';
-import { Observable } from 'rxjs';
-import { map, shareReplay } from 'rxjs';
+import { filterMaybeValues, StoredDataString, FullStorageObject, StorageObjectUtility, Maybe } from '@dereekb/util';
+import { Observable, map, shareReplay } from 'rxjs';
 import { StorageAccessor } from './storage.accessor';
-import { StoredDataString, FullStorageObject, StorageObjectUtility, Maybe } from '@dereekb/util';
 
 /**
  * Simple StorageAccessor implementation that wraps a FullStorageObject.

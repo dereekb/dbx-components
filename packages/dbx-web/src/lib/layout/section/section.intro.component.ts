@@ -1,5 +1,4 @@
-import { OnDestroy } from '@angular/core';
-import { Component, Input, EventEmitter, Output } from '@angular/core';
+import { OnDestroy, Component, Input, EventEmitter, Output } from '@angular/core';
 import { DbxSectionComponent } from './section.component';
 
 /**

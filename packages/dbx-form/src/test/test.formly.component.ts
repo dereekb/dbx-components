@@ -1,7 +1,6 @@
 import { BehaviorSubject, Observable } from 'rxjs';
-import { OnDestroy } from '@angular/core';
+import { OnDestroy, Component } from '@angular/core';
 import { ComponentFixture } from '@angular/core/testing';
-import { Component } from '@angular/core';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { AbstractAsyncFormlyFormDirective, formlyField, provideFormlyContext } from '../lib';
 import { AbstractControl } from '@angular/forms';

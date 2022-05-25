@@ -1,11 +1,12 @@
 {
   "root": true,
   "ignorePatterns": ["**/*"],
-  "plugins": ["@nrwl/nx", "unused-imports"],
+  "plugins": ["@nrwl/nx", "unused-imports", "import"],
   "overrides": [{
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
       "rules": {
         "no-unused-vars": "warn",
+        "import/no-duplicates": "error",
         "unused-imports/no-unused-imports": "error",
         "no-restricted-imports": [
           2,

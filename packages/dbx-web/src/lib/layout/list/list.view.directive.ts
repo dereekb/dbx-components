@@ -1,7 +1,6 @@
 import { ListLoadingStateContext, switchMapMaybeObs } from '@dereekb/rxjs';
-import { BehaviorSubject, Observable, of } from 'rxjs';
+import { BehaviorSubject, Observable, of, shareReplay } from 'rxjs';
 import { Directive, EventEmitter, Input, OnDestroy, Output } from '@angular/core';
-import { shareReplay } from 'rxjs';
 import { DbxListSelectionMode, DbxListView } from './list.view';
 import { Maybe } from '@dereekb/util';
 

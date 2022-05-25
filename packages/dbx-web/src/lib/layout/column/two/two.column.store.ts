@@ -1,7 +1,6 @@
 import { Injectable, OnDestroy, Provider } from '@angular/core';
 import { ComponentStore } from '@ngrx/component-store';
-import { Subject } from 'rxjs';
-import { distinct, map } from 'rxjs';
+import { Subject, distinct, map } from 'rxjs';
 import { SegueRef } from '@dereekb/dbx-core';
 import { isMaybeNot, Maybe } from '@dereekb/util';
 

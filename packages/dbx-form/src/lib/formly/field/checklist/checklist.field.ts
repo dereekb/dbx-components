@@ -1,6 +1,5 @@
-import { Observable, combineLatest } from 'rxjs';
+import { Observable, combineLatest, map, shareReplay } from 'rxjs';
 import { FormlyFieldConfig } from '@ngx-formly/core';
-import { map, shareReplay } from 'rxjs';
 import { ChecklistItemDisplayContent, ChecklistItemFieldDisplayContentObs } from './checklist.item';
 import { KeyValueTransformMap, addPlusPrefixToNumber, Maybe } from '@dereekb/util';
 import { checklistItemField, ChecklistItemFieldBuilderInput } from './checklist.item.field';

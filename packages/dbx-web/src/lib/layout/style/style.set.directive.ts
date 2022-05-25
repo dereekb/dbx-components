@@ -1,9 +1,7 @@
-import { splitCommaSeparatedStringToSet } from '@dereekb/util';
-import { Observable, distinctUntilChanged, map, shareReplay } from 'rxjs';
+import { splitCommaSeparatedStringToSet, Maybe } from '@dereekb/util';
+import { Observable, distinctUntilChanged, map, shareReplay, BehaviorSubject, delay, combineLatest } from 'rxjs';
 import { filterMaybe } from '@dereekb/rxjs';
-import { BehaviorSubject, delay, combineLatest } from 'rxjs';
 import { Directive, Input, OnDestroy, ChangeDetectorRef, OnInit } from '@angular/core';
-import { Maybe } from '@dereekb/util';
 import { DbxStyleConfig, DbxStyleService } from './style.service';
 import { AbstractSubscriptionDirective, safeDetectChanges } from '@dereekb/dbx-core';
 

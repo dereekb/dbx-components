@@ -1,8 +1,7 @@
 import { DbxButtonDirective, DbxButtonInterceptor } from '@dereekb/dbx-core';
 import { Directive, Host, OnInit } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { DbxPromptConfirm } from './prompt.confirm';
-import { map } from 'rxjs';
 
 /**
  * Directive that binds together a confirm dialog with the button.

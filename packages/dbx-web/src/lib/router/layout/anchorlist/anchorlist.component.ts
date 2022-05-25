@@ -1,6 +1,5 @@
-import { OnDestroy } from '@angular/core';
+import { OnDestroy, Input, Component } from '@angular/core';
 import { BehaviorSubject, map, shareReplay, distinctUntilChanged } from 'rxjs';
-import { Input, Component } from '@angular/core';
 import { ClickableAnchorLinkTree, expandClickableAnchorLinkTrees } from '@dereekb/dbx-core';
 import { Maybe } from '@dereekb/util';
 

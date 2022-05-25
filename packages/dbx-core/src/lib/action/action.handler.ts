@@ -1,6 +1,6 @@
 import { Maybe, ReadableError } from '@dereekb/util';
 import { DbxActionContextStoreSourceInstance } from './action.store.source';
-import { WorkUsingContext, WorkUsingObservable, Work, WorkInstanceDelegate } from '@dereekb/rxjs';
+import { WorkUsingContext, WorkUsingObservable, WorkInstanceDelegate } from '@dereekb/rxjs';
 import { Observable } from 'rxjs';
 
 /**

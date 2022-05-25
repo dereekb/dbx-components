@@ -1,8 +1,7 @@
 import { Injectable } from "@angular/core";
 import { DocumentReference } from "@dereekb/firebase";
 import { authorizedTestWithMockItemCollection, MockItem, MockItemDocument, MockItemFirestoreCollection } from "@dereekb/firebase/test";
-import { loadingStateIsLoading } from "@dereekb/rxjs";
-import { SubscriptionObject } from '@dereekb/rxjs';
+import { loadingStateIsLoading, SubscriptionObject } from "@dereekb/rxjs";
 import { first, of, timeout } from "rxjs";
 import { AbstractDbxFirebaseDocumentStore } from './store.document';
 

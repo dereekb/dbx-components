@@ -1,6 +1,5 @@
 import { Component, Input } from '@angular/core';
-import { Maybe } from '@dereekb/util';
-import { ErrorInput, toReadableError, ReadableError } from '@dereekb/util';
+import { Maybe, ErrorInput, toReadableError, ReadableError } from '@dereekb/util';
 
 /**
  * Basic error component.

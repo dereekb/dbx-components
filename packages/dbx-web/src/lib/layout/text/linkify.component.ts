@@ -1,6 +1,5 @@
 import { Component, Input, OnDestroy } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
-import { distinctUntilChanged, map, shareReplay } from 'rxjs';
+import { BehaviorSubject, distinctUntilChanged, map, shareReplay } from 'rxjs';
 import linkifyStr from 'linkify-string';
 import { DomSanitizer } from '@angular/platform-browser';
 

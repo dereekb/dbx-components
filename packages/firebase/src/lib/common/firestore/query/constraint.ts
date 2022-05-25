@@ -1,5 +1,4 @@
-import { ArrayOrValue, asArray, mergeArrayOrValueIntoArray, SeparateResult, separateValues } from '@dereekb/util';
-import { SortingOrder, Maybe } from '@dereekb/util';
+import { ArrayOrValue, asArray, mergeArrayOrValueIntoArray, SeparateResult, separateValues, SortingOrder, Maybe } from '@dereekb/util';
 import { DocumentSnapshot, DocumentData, FieldPath } from '../types';
 
 export type FirestoreQueryConstraintType = string;

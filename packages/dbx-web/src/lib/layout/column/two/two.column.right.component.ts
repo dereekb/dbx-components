@@ -1,6 +1,5 @@
 import { AfterViewInit, OnDestroy, Component, Inject, Input } from '@angular/core';
-import { BehaviorSubject, Observable, combineLatest } from 'rxjs';
-import { map } from 'rxjs';
+import { BehaviorSubject, Observable, combineLatest, map } from 'rxjs';
 import { ClickableAnchor } from '@dereekb/dbx-core';
 import { TwoColumnsContextStore } from './two.column.store';
 import { Maybe } from '@dereekb/util';

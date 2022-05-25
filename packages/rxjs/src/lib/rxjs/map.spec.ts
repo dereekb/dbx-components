@@ -1,6 +1,5 @@
-import { shareReplay, Subject } from 'rxjs';
+import { shareReplay, Subject, of } from 'rxjs';
 import { SubscriptionObject } from './../subscription';
-import { of } from 'rxjs';
 import { mapKeysIntersectionToArray } from './map';
 
 describe('mapKeysIntersectionToArray()', () => {

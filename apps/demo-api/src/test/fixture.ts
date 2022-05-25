@@ -1,5 +1,4 @@
-import { Guestbook, GuestbookDocument, GuestbookEntry, GuestbookEntryDocument } from '@dereekb/demo-firebase';
-import { DemoFirestoreCollections, ProfileDocument } from '@dereekb/demo-firebase';
+import { Guestbook, GuestbookDocument, GuestbookEntry, GuestbookEntryDocument, DemoFirestoreCollections, ProfileDocument } from '@dereekb/demo-firebase';
 import { authorizedUserContextFactory, AuthorizedUserTestContextFixture, AuthorizedUserTestContextInstance, firebaseAdminFunctionNestContextFactory, FirebaseAdminFunctionNestTestContextFixture, FirebaseAdminFunctionNestTestContextInstance, FirebaseAdminFunctionTestContextInstance, firebaseAdminNestContextFactory, FirebaseAdminNestTestContextFixture, FirebaseAdminNestTestContextInstance, FirebaseAdminTestContextInstance, initFirebaseAdminTestEnvironment, modelTestContextFactory, ModelTestContextFixture, ModelTestContextInstance, setupFirebaseAdminFunctionTestSingleton } from '@dereekb/firebase-server/test';
 import { JestBuildTestsWithContextFunction, JestTestContextFixture } from '@dereekb/util/test';
 import { Module } from '@nestjs/common';
@@ -126,7 +125,7 @@ export const demoAuthorizedUserContext = demoAuthorizedUserContextFactory({});
 export const demoAuthorizedUserAdminContext = demoAuthorizedUserContextFactory({ demoUserLevel: 'admin' });
 
 // MARK: With Guestbook
-export interface DemoApiGuestbookTestContextParams extends Partial<Guestbook> { }
+export type DemoApiGuestbookTestContextParams = Partial<Guestbook>
 
 export class DemoApiGuestbookTestContextFixture<
   F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance,

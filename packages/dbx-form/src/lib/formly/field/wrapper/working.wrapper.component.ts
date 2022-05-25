@@ -1,6 +1,5 @@
-import { OnInit, OnDestroy } from '@angular/core';
+import { OnInit, OnDestroy, Component } from '@angular/core';
 import { SimpleLoadingContext, SubscriptionObject } from '@dereekb/rxjs';
-import { Component } from '@angular/core';
 import { FieldWrapper, FormlyFieldConfig } from '@ngx-formly/core';
 
 /**

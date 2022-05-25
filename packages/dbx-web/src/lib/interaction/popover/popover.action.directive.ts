@@ -1,10 +1,9 @@
-import { first, Observable } from 'rxjs';
+import { first, Observable, map } from 'rxjs';
 import { Directive, OnInit, OnDestroy, Input, ElementRef } from '@angular/core';
 import { NgPopoverRef } from 'ng-overlay-container';
 import { DbxActionContextStoreSourceInstance, AbstractDbxActionValueOnTriggerDirective } from '@dereekb/dbx-core';
 import { IsModifiedFunction } from '@dereekb/rxjs';
 import { Maybe } from '@dereekb/util';
-import { map } from 'rxjs';
 
 export interface DbxActionPopoverFunctionParams {
   origin: ElementRef;

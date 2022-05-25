@@ -1,11 +1,10 @@
-import { DbxAnalyticsModule, DbxAnalyticsService, DbxAnalyticsSegmentModule } from '@dereekb/dbx-analytics';
+import { DbxAnalyticsModule, DbxAnalyticsService, DbxAnalyticsSegmentModule, DbxAnalyticsServiceConfiguration, DbxAnalyticsSegmentServiceListener, DbxAnalyticsSegmentApiService, DbxAnalyticsSegmentApiServiceConfig } from '@dereekb/dbx-analytics';
 import { Injector, NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { Category, StatesModule, UIRouter, UIRouterModule, UIView } from '@uirouter/angular';
 import { environment } from './environments/environment';
 import { DbxScreenModule, DbxWebRootModule, DbxWebUIRouterModule, DEFAULT_SCREEN_MEDIA_SERVICE_CONFIG, DBX_STYLE_DEFAULT_CONFIG_TOKEN } from '@dereekb/dbx-web';
-import { DbxAnalyticsServiceConfiguration, DbxAnalyticsSegmentServiceListener, DbxAnalyticsSegmentApiService, DbxAnalyticsSegmentApiServiceConfig } from '@dereekb/dbx-analytics';
 import { RootAppModule } from './app/app.module';
 import { DbxAppAuthRouterStateModule, DbxAppAuthRouterModule, AuthTransitionHookOptions, DbxAppAuthStateModule, DbxAppContextStateModule, DbxCoreUIRouterSegueModule, DBX_KNOWN_APP_CONTEXT_STATES, enableHasAuthRoleHook, enableHasAuthStateHook, enableIsLoggedInHook } from '@dereekb/dbx-core';
 import { FormlyModule } from '@ngx-formly/core';

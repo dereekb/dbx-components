@@ -1,12 +1,11 @@
 import { ClickableAnchor, safeDetectChanges } from '@dereekb/dbx-core';
-import { listItemModifier, ListItemModifier, ListSelectionState } from '@dereekb/dbx-web';
+import { listItemModifier, ListItemModifier, ListSelectionState, AnchorForValueFunction } from '@dereekb/dbx-web';
 import { CustomDocValue } from './../component/item.list.custom.component';
 import { ListLoadingState, mapLoadingStateResults, successResult } from '@dereekb/rxjs';
 import { BehaviorSubject, map, switchMap, startWith, Observable, delay, of } from 'rxjs';
 import { ChangeDetectorRef, Component, OnInit, OnDestroy } from '@angular/core';
 import { DocValue, DocValueWithSelection } from '../component/item.list';
 import { Maybe, range, takeFront } from '@dereekb/util';
-import { AnchorForValueFunction } from '@dereekb/dbx-web';
 
 @Component({
   templateUrl: './list.component.html'

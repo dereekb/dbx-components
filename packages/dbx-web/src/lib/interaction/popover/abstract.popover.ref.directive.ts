@@ -1,6 +1,5 @@
-import { OnDestroy } from '@angular/core';
+import { OnDestroy, Directive, EventEmitter, Output } from '@angular/core';
 import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
-import { Directive, EventEmitter, Output } from '@angular/core';
 import { NgPopoverCloseEvent, NgPopoverRef } from 'ng-overlay-container';
 
 /**

@@ -18,7 +18,7 @@ export class DemoApiStripeExampleService {
   }
 
   logHandledEvent(event: Stripe.Event): boolean {
-    let handled: boolean = true;
+    const handled: boolean = true;
 
     this.logger.log('Recieved stripe event successfully: ', event);
 

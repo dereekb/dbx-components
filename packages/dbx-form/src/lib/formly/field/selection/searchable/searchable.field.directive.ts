@@ -1,4 +1,4 @@
-import { ArrayOrValue } from '@dereekb/util';
+import { ArrayOrValue, Maybe, convertMaybeToArray, findUnique, lastValue, PrimativeKey } from '@dereekb/util';
 import { DbxInjectionComponentConfig, mergeDbxInjectionComponentConfigs } from '@dereekb/dbx-core';
 import { filterMaybe, SubscriptionObject, LoadingState, LoadingStateContextInstance, successResult, startWithBeginLoading } from '@dereekb/rxjs';
 import { ChangeDetectorRef, Directive, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
@@ -11,7 +11,6 @@ import {
   SearchableValueFieldDisplayFn, SearchableValueFieldDisplayValue, SearchableValueFieldValue, SearchableValueFieldAnchorFn, ConfiguredSearchableValueFieldDisplayValue
 } from './searchable';
 import { DbxDefaultSearchableFieldDisplayComponent } from './searchable.field.autocomplete.item.component';
-import { Maybe, convertMaybeToArray, findUnique, lastValue, PrimativeKey } from '@dereekb/util';
 import { camelCase } from 'change-case';
 
 export interface StringValueFieldsFieldConfig {

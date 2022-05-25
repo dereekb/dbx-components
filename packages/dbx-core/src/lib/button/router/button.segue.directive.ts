@@ -2,9 +2,8 @@ import { filterMaybe } from '@dereekb/rxjs';
 import { Directive, OnInit, OnDestroy, Input } from '@angular/core';
 import { Maybe } from '@dereekb/util';
 import { AbstractSubscriptionDirective } from '../../subscription';
-import { shareReplay, distinctUntilChanged, switchMap, tap } from 'rxjs';
+import { shareReplay, distinctUntilChanged, switchMap, tap, BehaviorSubject } from 'rxjs';
 import { DbxButton } from '../button';
-import { BehaviorSubject } from 'rxjs';
 import { SegueRef, DbxRouterService } from '../../router';
 
 // MARK: Button Directives

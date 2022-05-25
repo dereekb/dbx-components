@@ -1,6 +1,5 @@
-import { map, tap, shareReplay, switchMap } from 'rxjs';
+import { map, tap, shareReplay, switchMap, BehaviorSubject } from 'rxjs';
 import { filterMaybe } from '@dereekb/rxjs';
-import { BehaviorSubject } from 'rxjs';
 import { Directive, Host, Input, OnInit, OnDestroy } from '@angular/core';
 import { Maybe } from '@dereekb/util';
 import { AbstractSubscriptionDirective } from '../../../subscription';

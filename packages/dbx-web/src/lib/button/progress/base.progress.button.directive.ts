@@ -1,9 +1,8 @@
-import { ChangeDetectorRef, OnDestroy, OnInit, Optional } from '@angular/core';
+import { ChangeDetectorRef, OnDestroy, OnInit, Optional, Directive, Input, Output, HostListener, EventEmitter, Inject } from '@angular/core';
 import { AbstractSubscriptionDirective, safeMarkForCheck } from '@dereekb/dbx-core';
 import { Maybe } from '@dereekb/util';
 import { filterMaybe } from '@dereekb/rxjs';
 import { Observable, shareReplay, map, BehaviorSubject, combineLatest, first, distinctUntilChanged } from 'rxjs';
-import { Directive, Input, Output, HostListener, EventEmitter, Inject } from '@angular/core';
 import { DbxProgressButtonGlobalConfig, DbxProgressButtonOptions, DbxProgressButtonTargetedConfig, DBX_MAT_PROGRESS_BUTTON_GLOBAL_CONFIG } from './button.progress.config';
 
 @Directive()

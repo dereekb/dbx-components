@@ -1,8 +1,7 @@
-import { AuthRole, ArrayOrValue } from '@dereekb/util';
+import { AuthRole, ArrayOrValue, Maybe } from '@dereekb/util';
 import { BehaviorSubject } from 'rxjs';
 import { Directive, Input, TemplateRef, ViewContainerRef, OnDestroy } from '@angular/core';
 import { authRolesSetContainsAnyRoleFrom, DbxAuthService } from './service';
-import { Maybe } from '@dereekb/util';
 import { AbstractIfDirective } from '../view/if.directive';
 
 /**

@@ -1,8 +1,7 @@
-import { Destroyable } from '@dereekb/util';
+import { Destroyable, Maybe } from '@dereekb/util';
 import { filterMaybe } from '@dereekb/rxjs';
 import { BehaviorSubject, Observable, combineLatest, distinctUntilChanged, map, switchMap, shareReplay } from 'rxjs';
 import { Inject, Injectable, InjectionToken, Optional } from '@angular/core';
-import { Maybe } from '@dereekb/util';
 
 export const DBX_STYLE_DEFAULT_CONFIG_TOKEN = new InjectionToken('DbxStyleServiceDefaultConfig');
 

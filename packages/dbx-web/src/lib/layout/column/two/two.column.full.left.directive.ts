@@ -1,5 +1,4 @@
-import { OnInit } from '@angular/core';
-import { Directive, Input, OnDestroy } from '@angular/core';
+import { OnInit, Directive, Input, OnDestroy } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { TwoColumnsContextStore } from './two.column.store';
 

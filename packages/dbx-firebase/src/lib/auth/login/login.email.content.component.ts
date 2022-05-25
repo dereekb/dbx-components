@@ -2,11 +2,10 @@ import { DbxFirebaseEmailRecoveryFormValue } from './login.email.recovery.form.c
 import { HandleActionFunction, DBX_INJECTION_COMPONENT_DATA, ClickableAnchor } from '@dereekb/dbx-core'
 import { DbxFirebaseAuthService } from './../service/firebase.auth.service';
 import { firstValueFrom, from, tap, BehaviorSubject } from 'rxjs';
-import { Component, EventEmitter, OnDestroy } from "@angular/core";
+import { Component, EventEmitter, OnDestroy, Inject } from "@angular/core";
 import { DbxFirebaseLoginContext } from "./login.context";
 import { DbxFirebaseEmailFormValue, DbxFirebaseEmailFormConfig } from './login.email.form.component';
 import { DbxFirebaseLoginMode } from './login';
-import { Inject } from '@angular/core';
 import { firebaseAuthErrorToReadableError } from '../error';
 import { Maybe } from '@dereekb/util';
 

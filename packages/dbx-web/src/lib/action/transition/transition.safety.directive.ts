@@ -1,8 +1,7 @@
 import { Directive, OnInit, OnDestroy, Input, ViewContainerRef } from '@angular/core';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { HookResult, Transition, TransitionService } from '@uirouter/core';
-import { Observable, of, race } from 'rxjs';
-import { delay, first, map, mergeMap, tap } from 'rxjs';
+import { Observable, of, race, delay, first, map, mergeMap, tap } from 'rxjs';
 import { DbxActionContextStoreSourceInstance, canTriggerAction, isIdleActionState } from '@dereekb/dbx-core';
 import { DbxActionTransitionSafetyDialogResult, DbxActionUIRouterTransitionSafetyDialogComponent } from './transition.safety.dialog.component';
 

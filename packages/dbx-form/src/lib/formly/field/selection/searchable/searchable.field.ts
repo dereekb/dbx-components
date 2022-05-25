@@ -1,7 +1,6 @@
 import { arrayToMap, Maybe, PrimativeKey, separateValues } from '@dereekb/util';
 import { FormlyFieldConfig } from '@ngx-formly/core';
-import { Observable, of, switchMap } from 'rxjs';
-import { map } from 'rxjs';
+import { Observable, of, switchMap, map } from 'rxjs';
 import { LabeledFieldConfig, formlyField, templateOptionsForFieldConfig, DescriptionFieldConfig } from '../../field';
 import { SearchableValueFieldDisplayFn, SearchableValueFieldDisplayValue, SearchableValueFieldValue } from './searchable';
 import { SearchableChipValueFieldsFieldConfig } from './searchable.chip.field.component';

@@ -1,6 +1,5 @@
-import { Observable } from 'rxjs';
+import { Observable, filter } from 'rxjs';
 import { Component } from '@angular/core';
-import { filter } from 'rxjs';
 import { AbstractDbxSegueAnchorDirective } from '../../layout/anchor/anchor.segue.directive';
 import { TransitionOptions } from '@uirouter/core';
 

@@ -1,16 +1,13 @@
-import { ChangeDetectorRef } from '@angular/core';
-import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
-import { switchMapMaybeObs } from '@dereekb/rxjs';
-import { shareReplay, distinctUntilChanged, map } from 'rxjs';
-import { BehaviorSubject } from 'rxjs';
-import {
+import { ChangeDetectorRef ,
   Component, OnDestroy, OnInit, Type
 } from '@angular/core';
+import { DbxInjectionComponentConfig, AbstractSubscriptionDirective, safeDetectChanges } from '@dereekb/dbx-core';
+import { switchMapMaybeObs } from '@dereekb/rxjs';
+import { shareReplay, distinctUntilChanged, map, BehaviorSubject } from 'rxjs';
 import { ValidationErrors, FormGroup } from '@angular/forms';
 import { FieldType, FieldTypeConfig, FormlyFieldConfig } from '@ngx-formly/core';
 import { ChecklistItemFieldDisplayComponent, ChecklistItemFieldDisplayContentObs } from './checklist.item';
 import { DbxDefaultChecklistItemFieldDisplayComponent } from './checklist.item.field.content.default.component';
-import { AbstractSubscriptionDirective, safeDetectChanges } from '@dereekb/dbx-core';
 import { Maybe } from '@dereekb/util';
 
 export interface DbxChecklistItemFieldConfig<T = unknown> {

@@ -35,7 +35,7 @@ export function initProfileForUidFactory({ profileFirestoreCollection, profilePr
 
     // init within a transaction.
     const profile = await profileFirestoreCollection.firestoreContext.runTransaction(async (transaction) => {
-      let profile: Maybe<ProfileDocument> = profileFirestoreCollection.documentAccessorForTransaction(transaction).loadDocumentForPath(uid);
+      const profile: Maybe<ProfileDocument> = profileFirestoreCollection.documentAccessorForTransaction(transaction).loadDocumentForPath(uid);
 
       const exists = await profile.accessor.exists();
 

@@ -1,7 +1,6 @@
 import { Directive, Host, Input, OnInit, OnDestroy } from '@angular/core';
 import { Maybe } from '@dereekb/util';
-import { BehaviorSubject } from 'rxjs';
-import { distinctUntilChanged } from 'rxjs';
+import { BehaviorSubject, distinctUntilChanged } from 'rxjs';
 import { AbstractSubscriptionDirective } from '../../../subscription';
 import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
 
