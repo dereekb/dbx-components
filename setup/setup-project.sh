@@ -96,7 +96,7 @@ npx --yes json -I -f package.json -e "this.scripts={ postinstall: 'ngcc --proper
 
 # Commit the cloud initialization
 git add --all
-git commit -m "init nx-cloud"
+git commit --no-verify -m "checkpoint: init nx-cloud"
 
 # update nx to the latest version and commit
 nx migrate latest
@@ -110,27 +110,27 @@ fi
 npx --yes json -I -f nx.json -e "this.workspaceLayout = { appsDir: '$APPS_FOLDER', libsDir: '$COMPONENTS_FOLDER' }";
 
 git add --all
-git commit -m "updated nx to latest version"
+git commit --no-verify -m "checkpoint: updated nx to latest version"
 
 # Add Nest App - https://nx.dev/packages/nest
 npm install -D @nrwl/nest           # install the nest generator
 nx g @nrwl/nest:app $API_APP_NAME
 
 git add --all
-git commit -m "added nest app"
+git commit --no-verify -m "checkpoint: added nest app"
 
 # Add App Components
 nx g @nrwl/angular:library --name=$ANGULAR_COMPONENTS_NAME --buildable --publishable --importPath $ANGULAR_COMPONENTS_NAME --standaloneConfig=true --simpleModuleName=true
 
 git add --all
-git commit -m "added angular components package"
+git commit --no-verify -m "checkpoint: added angular components package"
 
 # Add Firebase Component
 npm install -D @nrwl/node
 nx g @nrwl/node:library --name=$FIREBASE_COMPONENTS_NAME --buildable --publishable --importPath $FIREBASE_COMPONENTS_NAME
 
 git add --all
-git commit -m "added firebase components package"
+git commit --no-verify -m "checkpoint: added firebase components package"
 
 # Init Firebase
 echo "Follow the instructions to init Firebase for this project."
@@ -166,14 +166,14 @@ npx --yes json -I -f firebase.json -e "this.functions={ source:'$API_APP_DIST_FO
 npx --yes json -I -f firebase.json -e "this.emulators={ ui: { host: '$FIREBASE_LOCALHOST', enabled: true, port: $FIREBASE_EMULATOR_UI_PORT }, hosting: { host: '$FIREBASE_LOCALHOST', port: $FIREBASE_EMULATOR_HOSTING_PORT }, functions: { host: '$FIREBASE_LOCALHOST', port: $FIREBASE_EMULATOR_FUNCTIONS_PORT }, auth: { host: '$FIREBASE_LOCALHOST', port: $FIREBASE_EMULATOR_AUTH_PORT }, firestore: { host: '$FIREBASE_LOCALHOST', port: $FIREBASE_EMULATOR_FIRESTORE_PORT }, pubsub: { host: '$FIREBASE_LOCALHOST', port: $FIREBASE_EMULATOR_PUBSUB_PORT }, storage: { host: '$FIREBASE_LOCALHOST', port: $FIREBASE_EMULATOR_STORAGE_PORT } };";
 
 git add --all
-git commit -m "added firebase configuration"
+git commit --no-verify -m "checkpoint: added firebase configuration"
 
 # Install npm dependencies
 npm i @dereekb/dbx-analytics @dereekb/dbx-web @dereekb/dbx-form @dereekb/firebase @dereekb/firebase-server @dereekb/dbx-firebase --force  # TODO: Remove force once possible.
 npm i -D @ngrx/store-devtools @firebase/rules-unit-testing firebase-functions-test  # TODO: Figure out how to have the @dereekb dependencies also include these.
 
 git add --all
-git commit -m "added @dereekb dependencies"
+git commit --no-verify -m "checkpoint: added @dereekb dependencies"
 
 # Docker
 # Create docker files
@@ -228,7 +228,7 @@ rm test-$API_APP_NAME.sh.tmp
 chmod +x test-$API_APP_NAME.sh
 
 git add --all
-git commit -m "added Docker files and other utility files"
+git commit --no-verify -m "checkpoint: added Docker files and other utility files"
 
 # add semver for semantic versioning and linting for commits
 npm install -D @jscutlery/semver husky
@@ -236,6 +236,7 @@ curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/.co
 
 mkdir .husky
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/.husky/commit-msg -o .husky/commit-msg
+chmod +x .husky/commit-msg  # make executable
 npx --yes json -I -f package.json -e "this.scripts={ ...this.scripts, prepare: 'husky install' };";
 npm run prepare
 
@@ -243,7 +244,7 @@ mkdir -p ./.github/workflows
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/.github/workflows/commitlint.yml -o ./.github/workflows/commitlint.yml
 
 git add --all
-git commit -m "added semver and commit linting"
+git commit --no-verify -m "checkpoint: added semver and commit linting"
 
 # add jest setup/configurations
 npm install -D jest-date jest-junit
@@ -265,7 +266,7 @@ sed -e "s/APP_ID/$FIREBASE_COMPONENTS_NAME/g" tmp/env.tmp > $FIREBASE_COMPONENTS
 npx --yes json -I -f nx.json -e "this.tasksRunnerOptions.default.options.cacheableOperations=Array.from(new Set([...this.tasksRunnerOptions.default.options.cacheableOperations, ...['build-base', 'run-tests']]));";
 
 git add --all
-git commit -m "added jest configurations"
+git commit --no-verify -m "checkpoint: added jest configurations"
 
 # Add CircleCI Config
 echo "Copying CircleCI Configurations."
@@ -276,7 +277,7 @@ sed -e "s/CI_GIT_USER_EMAIL/$CI_GIT_USER_EMAIL/g" -e "s/CI_GIT_USER_NAME/$CI_GIT
 rm .circleci/config.yml.tmp
 
 git add --all
-git commit -m "added circleci configrations"
+git commit --no-verify -m "checkpoint: added circleci configrations"
 
 # Apply Project Configurations
 echo "Applying Configuration to Projects"
@@ -311,7 +312,7 @@ rm $FIREBASE_COMPONENTS_FOLDER/project.json.tmp
 npx --yes json -I -f tsconfig.base.json -e "this.compilerOptions={ ...this.compilerOptions, strict: true, allowSyntheticDefaultImports: true, resolveJsonModule: true }";
 
 git add --all
-git commit -m "added project configurations"
+git commit --no-verify -m "checkpoint: added project configurations"
 
 # Apply Project Templates
 echo "Applying Templates to Projects"
@@ -351,7 +352,7 @@ mkdir $ANGULAR_COMPONENTS_FOLDER/src/lib/services
 download_app_ts_file "src/lib/services/index.ts"
 
 git add --all
-git commit -m "setup app components"
+git commit --no-verify -m "checkpoint: setup app components"
 
 ### Setup api components
 download_firebase_ts_file () {
@@ -381,7 +382,7 @@ download_firebase_ts_file "src/lib/example/example.ts"
 download_firebase_ts_file "src/lib/example/index.ts"
 
 git add --all
-git commit -m "setup api components"
+git commit --no-verify -m "checkpoint: setup api components"
 
 ### Setup Angular App
 download_angular_ts_file () {
@@ -454,7 +455,7 @@ download_angular_ts_file "src/app/modules/landing/container/layout.component.htm
 download_angular_ts_file "src/app/modules/landing/container/layout.component.ts"
 
 git add --all
-git commit -m "setup app"
+git commit --no-verify -m "checkpoint: setup app"
 
 ### Setup NestJS API
 download_api_ts_file () {
@@ -517,7 +518,7 @@ download_api_ts_file "src/app/function/example/example.util.ts"
 download_api_ts_file "src/app/function/example/example.set.username.ts"
 
 git add --all
-git commit -m "setup api"
+git commit --no-verify -m "checkpoint: setup api"
 
 echo "Performing test build..."
 nx build $ANGULAR_APP_NAME

@@ -2,7 +2,7 @@
   "name": "@dereekb/firebase-server",
   "version": "4.1.0",
   "devDependencies": {
-    "firebase-functions-test": "^2.0.0"
+    "firebase-functions-test": "2.0.2"
   },
   "exports": {
     ".": {

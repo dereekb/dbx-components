@@ -122,7 +122,7 @@
     "eslint-plugin-cypress": "^2.12.1",
     "eslint-plugin-import": "^2.26.0",
     "eslint-plugin-unused-imports": "^2.0.0",
-    "firebase-functions-test": "^2.0.2",
+    "firebase-functions-test": "2.0.2",
     "firebase-tools": "10.9.2",
     "husky": "^7.0.4",
     "is-ci": "^3.0.1",
