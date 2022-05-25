@@ -19,6 +19,10 @@
           {
             "description": "delete unnecessary src directory",
             "command": "echo 'cleaning up dbx-form scss files' && rm -r dist/packages/dbx-form/src"
+          },
+          {
+            "description": "copy license",
+            "command": "echo 'copying dbx-form license' && cp LICENSE dist/packages/dbx-form"
           }
         ],
         "parallel": false,
@@ -70,7 +74,7 @@
     "publish-npmjs": {
       "executor": "@nrwl/workspace:run-commands",
       "options": {
-        "command": "cd ./dist/packages/dbx-form && npm publish"
+        "command": "cd ./dist/packages/dbx-form && npm publish --access public"
       }
     }
   },

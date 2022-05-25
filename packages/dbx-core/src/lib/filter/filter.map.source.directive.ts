@@ -1,7 +1,7 @@
 import { FilterSource, FilterMapKey } from '@dereekb/rxjs';
 import { switchMap, first, Observable } from 'rxjs';
 import { Directive, Input } from '@angular/core';
-import { ProvideFilterSource } from './filter.content';
+import { provideFilterSource } from './filter.content';
 import { AbstractDbxFilterMapInstanceDirective } from './filter.map.instance.directive';
 import { Maybe } from '@dereekb/util';
 
@@ -12,7 +12,7 @@ import { Maybe } from '@dereekb/util';
   selector: '[dbxFilterMapSource]',
   exportAs: 'dbxFilterMapSource',
   providers: [
-    ...ProvideFilterSource(DbxFilterMapSourceDirective)
+    ...provideFilterSource(DbxFilterMapSourceDirective)
   ]
 })
 export class DbxFilterMapSourceDirective<F> extends AbstractDbxFilterMapInstanceDirective<F> implements FilterSource<F> {

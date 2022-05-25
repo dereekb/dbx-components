@@ -1,0 +1,79 @@
+{
+  "sourceRoot": "packages/nestjs/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/workspace:run-commands",
+      "options": {
+        "commands": [{
+            "command": "npx nx run nestjs:build-base"
+          },
+          {
+            "command": "npx nx run nestjs-stripe:build-base"
+          }
+        ],
+        "parallel": false
+      }
+    },
+    "build-base": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/packages/nestjs",
+        "tsConfig": "packages/nestjs/tsconfig.lib.json",
+        "packageJson": "packages/nestjs/package.json",
+        "main": "packages/nestjs/src/index.ts",
+        "assets": ["packages/nestjs/*.md", "LICENSE"]
+      }
+    },
+    "publish": {
+      "executor": "@nrwl/workspace:run-commands",
+      "options": {
+        "command": "node tools/scripts/publish.mjs nestjs {args.ver} {args.tag}"
+      },
+      "dependsOn": [{
+        "projects": "self",
+        "target": "build"
+      }]
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["packages/nestjs/src/**/*.ts"]
+      }
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": [
+        "coverage/packages/nestjs",
+        "./.reports/jest/nestjs.junit.xml"
+      ],
+      "options": {
+        "jestConfig": "packages/nestjs/jest.config.ts",
+        "passWithNoTests": true
+      }
+    },
+    "run-all-tests": {
+      "executor": "@nrwl/workspace:run-commands",
+      "options": {
+        "commands": [{
+          "description": "run nestjs tests",
+          "command": "npx nx test nestjs"
+        }, {
+          "description": "run nestjs-stripe tests",
+          "command": "npx nx test nestjs-stripe"
+        }],
+        "color": true,
+        "parallel": true
+      }
+    },
+    "publish-npmjs": {
+      "executor": "@nrwl/workspace:run-commands",
+      "options": {
+        "command": "cd ./dist/packages/nestjs && npm publish --access public"
+      }
+    }
+  },
+  "tags": []
+}

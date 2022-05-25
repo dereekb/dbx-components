@@ -4,7 +4,7 @@ import { DbxInjectionComponentConfig } from "./injection";
 /**
  * DbxInjectedViewContext showContext() configuration.
  */
-export interface DbxInjectionContextConfig<T = any, O = any> {
+export interface DbxInjectionContextConfig<T = unknown, O = unknown> {
   /**
    * Injected config.
    */
@@ -28,7 +28,7 @@ export abstract class DbxInjectionContext {
    * 
    * The original content is hidden instead of removed from the context to avoid destruction of children elements.
    */
-  abstract showContext<T = any, O = any>(config: DbxInjectionContextConfig<T>): Promise<O>;
+  abstract showContext<T = unknown, O = unknown>(config: DbxInjectionContextConfig<T>): Promise<O>;
 
   /**
    * Bails out of any current promise, if one is set.
@@ -42,7 +42,7 @@ export abstract class DbxInjectionContext {
 /**
  * Allows a directive to provide a formly context and form.
  */
-export function ProvideDbxInjectionContext<T extends DbxInjectionContext>(type: Type<T>): Provider[] {
+export function provideDbxInjectionContext<T extends DbxInjectionContext>(type: Type<T>): Provider[] {
   return [{
     provide: DbxInjectionContext,
     useExisting: type

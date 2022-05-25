@@ -1,6 +1,6 @@
 import { SimpleLoadingContext } from './loading.context.simple';
 
-export type LoadingContextCheckCompletionFunction = () => any[];
+export type LoadingContextCheckCompletionFunction = () => unknown[];
 
 export interface LoadingContextConfiguration {
   loading?: boolean;

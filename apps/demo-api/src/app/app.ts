@@ -7,7 +7,7 @@ import { updateProfile } from './function/profile/profile.update';
 
 export const {
   initNestServer
-} = nestServerInstance({ moduleClass: DemoApiAppModule });
+} = nestServerInstance({ moduleClass: DemoApiAppModule, configureWebhooks: true });
 
 /**
  * Builder for all functions in the app.

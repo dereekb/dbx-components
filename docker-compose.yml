@@ -12,9 +12,15 @@ services:
       - ./.firebase/data/:/root/data
     ports:
       - "9229:9229"           # node-inspect debug port. Can be disabled if not being used.
-      - "9900-9906:9900-9906" # expose for external/web consumption
+      - "9900-9906:9900-9906" # expose for browser access
     environment:
       # Credentials URL
       - GCLOUD_PROJECT=dereekb-components
-    command: bash
+    command: npx nx run demo-api:serve
     tty: true
+    networks:
+      - demo-api-network
+
+networks:
+  demo-api-network:
+    driver: bridge

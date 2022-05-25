@@ -1,6 +1,5 @@
 import { DbxWebUIRouterModule } from './../../provider/uirouter/uirouter.router.module';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-
 import { Component, Input, ViewChild } from '@angular/core';
 import { By, BrowserModule } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
@@ -9,7 +8,7 @@ import { DbxRouterAnchorModule } from './anchor.module';
 import { UIRouterModule } from '@uirouter/angular';
 import { APP_BASE_HREF } from '@angular/common';
 import { DbxAnchorComponent } from './anchor.component';
-import { delay, filter, first } from 'rxjs/operators';
+import { delay, filter, first } from 'rxjs';
 
 describe('AnchorComponent', () => {
 

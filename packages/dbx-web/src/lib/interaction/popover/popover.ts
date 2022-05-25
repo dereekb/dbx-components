@@ -3,7 +3,7 @@ import { Observable } from "rxjs";
 
 export type DbxPopoverKey = string;
 
-export abstract class DbxPopoverController<O = any, I = any> {
+export abstract class DbxPopoverController<O = unknown, I = unknown> {
   abstract readonly key: DbxPopoverKey;
   abstract readonly data?: Maybe<I>;
   abstract readonly closing$: Observable<boolean>;

@@ -1,7 +1,6 @@
 import { reduceBooleansWithOrFn } from '@dereekb/util';
 import { Directive, OnDestroy } from '@angular/core';
-import { BehaviorSubject, Observable, of } from 'rxjs';
-import { distinctUntilChanged, map, shareReplay, switchMap } from 'rxjs/operators';
+import { BehaviorSubject, Observable, of, distinctUntilChanged, map, shareReplay, switchMap } from 'rxjs';
 import { combineLatestFromMapValuesObsFn } from '@dereekb/rxjs';
 import { ActionContextStoreSource, actionContextStoreSourcePipe } from '../../action.store.source';
 import { ActionContextStore } from '../../action.store';
@@ -24,13 +23,11 @@ export class DbxActionContextMapDirective implements ActionContextStoreSourceMap
 
   readonly areAnyWorking$ = this.checkAnyAre(x => x.isWorking$, false);
 
-  constructor() { }
-
   get map(): Map<ActionKey, ActionContextStoreSource> {
     return this._map.value;
   }
 
-  sourceForKey(key: ActionKey): ActionContextStoreSource<any, any> {
+  sourceForKey(key: ActionKey): ActionContextStoreSource<unknown, unknown> {
     return new DbxActionContextMapDirectiveSourceInstance(this, key);
   }
 

@@ -2,6 +2,27 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [5.0.0](https://github.com/dereekb/dbx-components/compare/v4.1.0-dev...v5.0.0) (2022-05-25)
+
+
+### Code Refactoring
+
+* refactored @dereekb/firebase snapshot field ([c88d278](https://github.com/dereekb/dbx-components/commit/c88d2780d66f965a41ae299e013109f6860e9496))
+
+
+### Features
+
+* added firebase functions v2 nest context components ([e5ca892](https://github.com/dereekb/dbx-components/commit/e5ca89250c7b7cf99f75d8edb0fc16a4618cbc21))
+* added nginx docker configuration for webhooks ([9425016](https://github.com/dereekb/dbx-components/commit/9425016eb5d497144d88dccf2a715b795dcc47ae))
+* improved serve-server ([0e6fb18](https://github.com/dereekb/dbx-components/commit/0e6fb186add4dc003660d4501200de40ca911b20))
+
+
+### BREAKING CHANGES
+
+* refactored @dereekb/firebase SnapshotConverterFunction and related components and @dereekb/util model conversion components to have better type safety and inference
+
+
+
 # [4.1.0](https://github.com/dereekb/dbx-components/compare/v4.0.1-dev...v4.1.0) (2022-05-17)
 
 

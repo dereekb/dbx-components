@@ -1,5 +1,5 @@
 import { Maybe } from '@dereekb/util';
-import { combineLatest, Observable, of, MonoTypeOperatorFunction, skipWhile, startWith, BehaviorSubject, shareReplay, map, finalize } from 'rxjs';
+import { combineLatest, Observable, MonoTypeOperatorFunction, skipWhile, startWith, BehaviorSubject, shareReplay, map, finalize } from 'rxjs';
 
 /**
  * Merges both startWith and tapFirst to initialize a pipe.

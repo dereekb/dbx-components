@@ -12,7 +12,7 @@ export type StringObjectMap<T> = {
   [key: string]: T;
 }
 
-export type MappedObjectMap<M extends ObjectMap<any>, O> = {
+export type MappedObjectMap<M extends ObjectMap<unknown>, O> = {
   [key in keyof M]: O;
 };
 
@@ -42,10 +42,10 @@ export function objectToTuples<T>(object: ObjectMap<T>): [string, T][] {
  * 
  * @param object 
  */
-export function mapObjectMap<M extends ObjectMap<I>, I = any, O = any>(object: M, mapFn: <K extends keyof M>(value: M[K], key: K) => O): MappedObjectMap<M, O> {
+export function mapObjectMap<M extends ObjectMap<I>, I = unknown, O = unknown>(object: M, mapFn: <K extends keyof M>(value: M[K], key: K) => O): MappedObjectMap<M, O> {
   const mappedObject: MappedObjectMap<M, O> = {} as MappedObjectMap<M, O>;
 
-  const keys = Object.keys(object);
+  const keys = Object.keys(object) as (keyof M)[];
   keys.forEach(<K extends keyof M>(key: K) => {
     const value: M[K] = object[key];
     mappedObject[key] = mapFn(value, key);

@@ -4,11 +4,11 @@ import { firebaseServerActionsTransformContext, FirebaseServerActionsTransformCo
 /**
  * Context used for building FirebaseServerActions. It contains references to reusable factories.
  */
-export interface FirebaseServerActionsContext extends FirebaseServerActionsTransformContext { }
+export type FirebaseServerActionsContext = FirebaseServerActionsTransformContext
 
 export abstract class AbstractFirebaseServerActionsContext implements FirebaseServerActionsContext {
   abstract readonly firebaseServerActionTransformFactory: TransformAndValidateObjectFactory;
-  abstract readonly firebaseServerActionTransformFunctionFactory: TransformAndValidateFunctionResultFactory<any>;
+  abstract readonly firebaseServerActionTransformFunctionFactory: TransformAndValidateFunctionResultFactory<unknown>;
 }
 
 export function firebaseServerActionsContext(): FirebaseServerActionsContext {

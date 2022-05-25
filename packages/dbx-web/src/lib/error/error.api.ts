@@ -1,22 +1,27 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { ServerError, ServerErrorResponse, ServerErrorResponseData, UnauthorizedServerErrorResponse } from '@dereekb/util';
+import { ReadableError, ServerError, ServerErrorResponse, ServerErrorResponseData, UnauthorizedServerErrorResponse, build } from '@dereekb/util';
 
 /**
  * Converts the error response to a POJO.
  */
-export function convertToPOJOServerErrorResponse(httpError: HttpErrorResponse | any): ServerError {
+export function convertToPOJOServerErrorResponse(httpError: HttpErrorResponse | object): ServerError {
   const result: ServerErrorResponse | undefined = convertToServerErrorResponse(httpError);
-  const pojo: ServerErrorResponse = Object.assign({}, result);
+  const pojo: ServerErrorResponse = build({
+    base: Object.assign({}, result),
+    build: (x) => {
 
-  if (pojo.data) {
-    try {
-      const stringy = JSON.stringify(pojo.data);
-      (pojo as any).data = JSON.parse(stringy);
-    } catch (e) {
-      console.warn('convertToPOJOServerErrorResponse(): Non-serializable Error Data Detected. It is being removed.: ', pojo.data);
-      (pojo as any).data = undefined;
+      if (x.data) {
+        try {
+          const stringy = JSON.stringify(pojo.data);
+          x.data = JSON.parse(stringy);
+        } catch (e) {
+          console.warn('convertToPOJOServerErrorResponse(): Non-serializable Error Data Detected. It is being removed.: ', pojo.data);
+          x.data = undefined;
+        }
+      }
+
     }
-  }
+  });
 
   return pojo;
 }
@@ -27,7 +32,7 @@ export function convertToPOJOServerErrorResponse(httpError: HttpErrorResponse | 
  * @param error 
  * @returns 
  */
-export function convertToServerErrorResponse(error: HttpErrorResponse | any): ServerErrorResponse | undefined {
+export function convertToServerErrorResponse(error: HttpErrorResponse | object): ServerErrorResponse | undefined {
   let result: ServerErrorResponse | undefined;
 
   if (error instanceof HttpErrorResponse) {
@@ -45,7 +50,7 @@ export function convertToServerErrorResponse(error: HttpErrorResponse | any): Se
         break;
     }
   } else if (error) {
-    result = new ServerErrorResponse({ message: error.message, status: 0 });
+    result = new ServerErrorResponse({ message: (error as ReadableError).message, status: 0 });
   }
 
   return result;

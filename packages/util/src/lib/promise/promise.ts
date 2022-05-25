@@ -7,7 +7,7 @@ export function asPromise<T>(input: PromiseOrValue<T>): Promise<T> {
   return Promise.resolve(input);
 }
 
-export type PromiseTaskFn<T, K = any> = (value: T, tryNumber?: number) => Promise<K>;
+export type PromiseTaskFn<T, K = unknown> = (value: T, tryNumber?: number) => Promise<K>;
 
 export interface PerformTaskResult<O> {
   value: Maybe<O>;
@@ -20,7 +20,7 @@ export interface PerformTasksResult<T, K> {
   results: [T, K][];
 }
 
-export interface PerformTaskConfig<T = any> {
+export interface PerformTaskConfig<T = unknown> {
   throwError?: boolean;
   retriesAllowed?: number;
   retryWait?: number;
@@ -30,16 +30,16 @@ export interface PerformTaskConfig<T = any> {
   beforeRetry?: (value: T, tryNumber?: number) => void | Promise<void>;
 }
 
-export type ValueTaskConfig<T = any> = Omit<PerformTaskConfig<T>, 'throwError'>;
+export type ValueTaskConfig<T = unknown> = Omit<PerformTaskConfig<T>, 'throwError'>;
 
-export interface PerformTasksConfig<T = any> extends PerformTaskConfig<T> {
+export interface PerformTasksConfig<T = unknown> extends PerformTaskConfig<T> {
   /**
    * Whether or not tasks are performed sequentially or if tasks are all done in "parellel".
    */
   sequential?: boolean;
 }
 
-export type ValuesTaskConfig<T = any> = Omit<PerformTasksConfig<T>, 'throwError'>;
+export type ValuesTaskConfig<T = unknown> = Omit<PerformTasksConfig<T>, 'throwError'>;
 
 export class PromiseUtility {
 
@@ -64,7 +64,7 @@ export class PromiseUtility {
    * @param config 
    * @returns 
    */
-  static async runTasksForValues<T, K = any>(input: T[], taskFn: PromiseTaskFn<T, K>, config?: PerformTasksConfig<T>): Promise<K[]> {
+  static async runTasksForValues<T, K = unknown>(input: T[], taskFn: PromiseTaskFn<T, K>, config?: PerformTasksConfig<T>): Promise<K[]> {
     const results = await PromiseUtility.performTasks(input, taskFn, {
       ...config,
       throwError: true
@@ -79,7 +79,7 @@ export class PromiseUtility {
    * 
    * This is useful for retrying sections that may experience optimistic concurrency collisions.
    */
-  static async performTasks<T, K = any>(input: T[], taskFn: PromiseTaskFn<T, K>, config: PerformTasksConfig<T> = { throwError: true }): Promise<PerformTasksResult<T, K>> {
+  static async performTasks<T, K = unknown>(input: T[], taskFn: PromiseTaskFn<T, K>, config: PerformTasksConfig<T> = { throwError: true }): Promise<PerformTasksResult<T, K>> {
     let taskResults: [T, K, boolean][];
 
     if (config.sequential) {
@@ -116,13 +116,13 @@ export class PromiseUtility {
   }
 
   static async performTask<O>(taskFn: () => Promise<O>, config?: PerformTaskConfig<0>): Promise<PerformTaskResult<O>> {
-    const [_, value, success] = await PromiseUtility._performTask(0, () => taskFn(), config);
+    const [, value, success] = await PromiseUtility._performTask(0, () => taskFn(), config);
     return { value, success };
   }
 
   static async _performTask<I, O>(value: I, taskFn: PromiseTaskFn<I, O>, { throwError, retriesAllowed = 5, retryWait = 200, beforeRetry }: PerformTaskConfig<I> = { throwError: true }): Promise<[I, O, boolean]> {
 
-    async function tryTask(value: I, tryNumber: number): Promise<[O, true] | [Error | any, false]> {
+    async function tryTask(value: I, tryNumber: number): Promise<[O, true] | [Error | unknown, false]> {
       try {
         const result: O = await taskFn(value, tryNumber);
         return [result, true];
@@ -135,6 +135,16 @@ export class PromiseUtility {
       const result = await tryTask(value, tryNumber);
       const success = result[1];
 
+      async function doNextTry() {
+        const nextTryNumber = tryNumber + 1;
+
+        if (beforeRetry) {
+          await beforeRetry(value, nextTryNumber);
+        }
+
+        return iterateTask(value, tryNumber + 1);
+      };
+
       if (success) {
         return [value, ...result];
       }
@@ -142,23 +152,13 @@ export class PromiseUtility {
       const retriesRemaining = retriesAllowed - tryNumber;
 
       if (retriesRemaining > 0) {
-        async function doNextTry() {
-          const nextTryNumber = tryNumber + 1;
-
-          if (beforeRetry) {
-            await beforeRetry(value, nextTryNumber);
-          }
-
-          return iterateTask(value, tryNumber + 1);
-        };
-
         return (retryWait) ? waitForMs(retryWait).then(() => doNextTry()) : doNextTry();
       } else {
         // Error out.
         if (throwError) {
           throw result[0];
         } else {
-          return [value, undefined as any, false];
+          return [value, undefined as unknown as O, false];
         }
       }
     }

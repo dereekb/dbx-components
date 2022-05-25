@@ -1,7 +1,7 @@
 import { Directive } from '@angular/core';
 
 @Directive({
-  selector: 'dbx-spacer, [dbx-spacer]',
+  selector: 'dbx-spacer, [dbxSpacer]',
   host: {
     'class': 'dbx-spacer'
   }

@@ -1,3 +1,6 @@
+/*eslint @typescript-eslint/no-explicit-any:"off"*/
+// any is used with intent here, as the recursive AbstractFirestoreDocument requires its use to terminate.
+
 import { Observable } from 'rxjs';
 import { FirestoreAccessorDriverRef } from '../driver/accessor';
 import { DocumentReference, CollectionReference, Transaction, WriteBatch, DocumentSnapshot, SnapshotOptions, WriteResult } from '../types';

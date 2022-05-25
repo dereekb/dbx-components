@@ -1,4 +1,4 @@
-import { MapStringFn, Maybe, splitCommaSeparatedString } from "@dereekb/util";
+import { MapStringFunction, Maybe, splitCommaSeparatedString } from "@dereekb/util";
 import { TransformFnParams } from "class-transformer";
 
 // MARK: String
@@ -22,7 +22,7 @@ export function transformStringToBoolean(defaultValue?: boolean | undefined): (p
 }
 
 // MARK: Comma Separated Values
-export function transformCommaSeparatedValueToArray<T>(mapFn: MapStringFn<T>): (params: TransformFnParams) => Maybe<T[]> {
+export function transformCommaSeparatedValueToArray<T>(mapFn: MapStringFunction<T>): (params: TransformFnParams) => Maybe<T[]> {
   return (params: TransformFnParams) => {
     let result: Maybe<T[]>;
 

@@ -29,16 +29,16 @@ export type AuthClaimValue = SimpleAuthClaimValue | object;
  * 
  * It is keyed by the claims key.
  */
-export type AuthClaims<T = any> = {
+export type AuthClaims<T = object> = {
   [K in keyof T]: AuthClaimValue;
 };
 
 /**
  * A claims update.
  */
-export type AuthClaimsUpdate<T = any> = {
-  [K in keyof Partial<T>]: AuthClaimValue | ClearAuthClaimValue;
-};
+export type AuthClaimsUpdate<T = object> = Partial<{
+  [K in keyof T]: AuthClaimValue | ClearAuthClaimValue;
+}>;
 
 /**
  * Configuration for a claims key.
@@ -89,31 +89,35 @@ export interface AuthRoleClaimsFactoryDefaults {
 
   /**
    * Default value to use for claims that have no value present.
+   * 
+   * If undefined, defaults to AUTH_ROLE_CLAIMS_DEFAULT_CLAIM_VALUE.
    */
-  claimValue?: any;
+  claimValue?: AuthClaimValue;
 
   /**
    * Default value for claims that are not defined.
+   * 
+   * If undefined, defaults to AUTH_ROLE_CLAIMS_DEFAULT_EMPTY_VALUE.
    */
-  emptyValue?: any;
+  emptyValue?: AuthClaimValue | ClearAuthClaimValue;
 
 }
 
-export type AuthRoleClaimsToRolesFunction<T extends AuthRoleClaimsFactoryConfig = any> = (roles: AuthRoleSet) => AuthClaims<T>;
-export type AuthRoleRolesToClaimsFunction<T extends AuthRoleClaimsFactoryConfig = any> = (claims: AuthClaims<T>) => AuthRoleSet;
+export type AuthRoleClaimsToRolesFunction<T extends AuthRoleClaimsFactoryConfig = AuthRoleClaimsFactoryConfig> = (roles: AuthRoleSet) => AuthClaimsUpdate<T>;
+export type AuthRoleRolesToClaimsFunction<T extends AuthRoleClaimsFactoryConfig = AuthRoleClaimsFactoryConfig> = (claims: AuthClaims<T> | AuthClaimsUpdate<T>) => AuthRoleSet;
 
 /**
  * Service used for converting claims to/from a roles set.
  */
-export interface AuthRoleClaimsService<T extends AuthRoleClaimsFactoryConfig = any> {
+export interface AuthRoleClaimsService<T extends AuthRoleClaimsFactoryConfig = AuthRoleClaimsFactoryConfig> {
   readonly toClaims: AuthRoleClaimsToRolesFunction<T>;
   readonly toRoles: AuthRoleRolesToClaimsFunction<T>;
-  readonly defaultClaimValue: any;
-  readonly defaultEmptyValue: any;
+  readonly defaultClaimValue: unknown;
+  readonly defaultEmptyValue: unknown;
 }
 
-export const AUTH_ROLE_CLAIMS_DEFAULT_EMPTY_VALUE = null;
 export const AUTH_ROLE_CLAIMS_DEFAULT_CLAIM_VALUE = 1;
+export const AUTH_ROLE_CLAIMS_DEFAULT_EMPTY_VALUE = null;
 
 interface AuthRoleClaimsServiceConfigMapEntry extends AuthRoleClaimsFactoryConfigEntryEncodeOptions {
   claimKey: AuthClaimKey;
@@ -128,8 +132,8 @@ interface AuthRoleClaimsServiceConfigMapEntry extends AuthRoleClaimsFactoryConfi
  */
 export function authRoleClaimsService<T extends AuthRoleClaimsFactoryConfig>(config: T, defaults: AuthRoleClaimsFactoryDefaults = {}): AuthRoleClaimsService<T> {
 
-  const defaultClaimValue = objectHasKey(defaults, 'claimValue') ? defaults?.claimValue : AUTH_ROLE_CLAIMS_DEFAULT_CLAIM_VALUE;
-  const defaultEmptyValue = objectHasKey(defaults, 'emptyValue') ? defaults?.emptyValue : AUTH_ROLE_CLAIMS_DEFAULT_EMPTY_VALUE;
+  const defaultClaimValue: AuthClaimValue = (objectHasKey(defaults, 'claimValue') ? defaults?.claimValue : AUTH_ROLE_CLAIMS_DEFAULT_CLAIM_VALUE) ?? AUTH_ROLE_CLAIMS_DEFAULT_CLAIM_VALUE;
+  const defaultEmptyValue: AuthClaimValue | ClearAuthClaimValue = (objectHasKey(defaults, 'emptyValue') ? defaults?.emptyValue : AUTH_ROLE_CLAIMS_DEFAULT_EMPTY_VALUE) ?? null;
 
   function isSimpleOptions(entry: AuthRoleClaimsFactoryConfigEntry): entry is AuthRoleClaimsFactoryConfigEntrySimpleOptions {
     return (entry as AuthRoleClaimsFactoryConfigEntrySimpleOptions).roles != null;
@@ -144,7 +148,7 @@ export function authRoleClaimsService<T extends AuthRoleClaimsFactoryConfig>(con
       const claimRoles = asArray(inputEntry.roles);
 
       // since checking uses equivalence, the objects will never match equivalence via the === properly.
-      // AuthRoleClaimsFactoryConfigEntryEncodeOptions is likely to be used for these cases anyways, but this will help avoid unexpected errors.
+      // AuthRoleClaimsFactoryConfigEntryEncodeOptions is likely to be used for these cases unknownways, but this will help avoid unexpected errors.
       if (typeof expectedValue === 'object') {
         throw new Error(`failed decoding claims. Expected value to be a string or number. Object isn't supported with simple claims.`);
       }
@@ -179,12 +183,12 @@ export function authRoleClaimsService<T extends AuthRoleClaimsFactoryConfig>(con
   const authRolesMap = new Map<AuthClaimKey, AuthRoleClaimsServiceConfigMapEntry>(tuples.map(x => [(x[0]).toLowerCase(), x[1]]));
 
   const toClaims = (roles: AuthRoleSet) => {
-    const claims: AuthClaims = {};
+    const claims = {} as AuthClaimsUpdate<T>;
 
     // iterate by each claim value to build the claims.
     tuples.forEach(([claimsKey, entry]) => {
-      let claimsValue = entry.encodeValueFromRoles(roles) ?? defaultEmptyValue;
-      claims[claimsKey] = claimsValue;
+      const claimsValue = entry.encodeValueFromRoles(roles) ?? defaultEmptyValue;
+      claims[claimsKey as keyof T] = claimsValue;
     });
 
     return claims;
@@ -194,7 +198,7 @@ export function authRoleClaimsService<T extends AuthRoleClaimsFactoryConfig>(con
     const roles = new Set<string>();
 
     forEachKeyValue(claims, {
-      forEach: ([claimsKey, value]: [string, any]) => {
+      forEach: ([claimsKey, value]: [string, AuthClaimValue]) => {
         const entry = authRolesMap.get(claimsKey);
 
         if (entry != null) {

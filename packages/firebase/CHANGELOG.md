@@ -2,6 +2,25 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [5.0.0](https://github.com/dereekb/dbx-components/compare/v4.1.0-dev...v5.0.0) (2022-05-25)
+
+
+### Code Refactoring
+
+* refactored @dereekb/firebase snapshot field ([c88d278](https://github.com/dereekb/dbx-components/commit/c88d2780d66f965a41ae299e013109f6860e9496))
+
+
+### Features
+
+* added @dereekb/nestjs/stripe ([455f20e](https://github.com/dereekb/dbx-components/commit/455f20e4e6402b3d517e7857fb93ec82eb25817b))
+
+
+### BREAKING CHANGES
+
+* refactored @dereekb/firebase SnapshotConverterFunction and related components and @dereekb/util model conversion components to have better type safety and inference
+
+
+
 # [4.1.0](https://github.com/dereekb/dbx-components/compare/v4.0.1-dev...v4.1.0) (2022-05-17)
 
 

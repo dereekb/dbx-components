@@ -88,7 +88,10 @@ describe('DbxInjectionContextDirective', () => {
       beforeEach(async () => {
         fixture = TestBed.createComponent(type);
         testComponent = fixture.componentInstance;
-        directive = fixture.componentInstance.injectionContextDirective!;
+
+        expect(testComponent).toBeDefined();
+
+        directive = fixture.componentInstance.injectionContextDirective as DbxInjectionContextDirective<any>;
         fixture.detectChanges();
       });
 

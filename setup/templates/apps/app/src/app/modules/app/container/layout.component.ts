@@ -16,9 +16,9 @@ export class AppLayoutComponent {
     icon: 'home'
   }];
 
-  readonly adminAnchors = [];
+  readonly adminAnchors: ClickableAnchorLinkSegueRef[] = [];
 
-  readonly userAnchors = [{
+  readonly userAnchors: ClickableAnchorLinkSegueRef[] = [{
     title: 'App Home',
     ref: 'app.app.home',
     icon: 'home'

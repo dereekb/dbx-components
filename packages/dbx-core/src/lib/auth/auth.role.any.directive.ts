@@ -1,8 +1,7 @@
-import { AuthRole, ArrayOrValue } from '@dereekb/util';
+import { AuthRole, ArrayOrValue, Maybe } from '@dereekb/util';
 import { BehaviorSubject } from 'rxjs';
 import { Directive, Input, TemplateRef, ViewContainerRef, OnDestroy } from '@angular/core';
 import { authRolesSetContainsAnyRoleFrom, DbxAuthService } from './service';
-import { Maybe } from '@dereekb/util';
 import { AbstractIfDirective } from '../view/if.directive';
 
 /**
@@ -19,7 +18,7 @@ export class DbxAuthHasAnyRoleDirective extends AbstractIfDirective implements O
   readonly show$ = this.dbxAuthService.authRoles$.pipe(authRolesSetContainsAnyRoleFrom(this.targetRoles$));
 
   constructor(
-    templateRef: TemplateRef<any>,
+    templateRef: TemplateRef<unknown>,
     viewContainer: ViewContainerRef,
     private dbxAuthService: DbxAuthService
   ) {

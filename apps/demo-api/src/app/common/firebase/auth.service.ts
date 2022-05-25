@@ -22,17 +22,11 @@ export class DemoApiAuthService extends AbstractFirebaseServerAuthService<DemoAp
   readRoles(claims: AuthClaims): AuthRoleSet {
     const roles = new Set<string>();
 
-    if (claims.a) {
-
-    }
-
     return roles;
   }
 
   claimsForRoles(roles: AuthRoleSet): AuthClaims {
     const claims: AuthClaims = {};
-
-
 
     return claims;
   }

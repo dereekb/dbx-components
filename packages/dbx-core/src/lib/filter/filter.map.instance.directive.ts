@@ -1,7 +1,6 @@
-import { filterMaybe } from '@dereekb/rxjs';
+import { filterMaybe, FilterMapKey, FilterMap } from '@dereekb/rxjs';
 import { BehaviorSubject } from 'rxjs';
 import { Directive, OnDestroy } from '@angular/core';
-import { FilterMapKey, FilterMap } from '@dereekb/rxjs';
 import { Maybe } from '@dereekb/util';
 
 /**

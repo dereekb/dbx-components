@@ -1,4 +1,4 @@
-import { DocumentReference, DocumentSnapshot, getDoc, WriteBatch as FirebaseFirestoreWriteBatch } from "@firebase/firestore";
+import { DocumentReference, DocumentSnapshot, getDoc, WriteBatch as FirebaseFirestoreWriteBatch, UpdateData as FirestoreUpdateData } from "@firebase/firestore";
 import { from, Observable } from "rxjs";
 import { FirestoreDocumentContext, UpdateData, WithFieldValue, FirestoreDocumentContextType, FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, SetOptions } from "../../common/firestore";
 
@@ -32,8 +32,8 @@ export class WriteBatchFirestoreDocumentDataAccessor<T> implements FirestoreDocu
     return Promise.resolve();
   }
 
-  update(data: UpdateData<T>): Promise<void> {
-    this.batch.update(this.documentRef, data as any);
+  update(data: UpdateData<unknown>): Promise<void> {
+    this.batch.update(this.documentRef, data as FirestoreUpdateData<T>);
     return Promise.resolve();
   }
 

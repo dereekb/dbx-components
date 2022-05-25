@@ -1,5 +1,5 @@
 import { Component, ElementRef } from '@angular/core';
-import { DbxPopoverKey, AbstractPopoverDirective, DbxPopoverComponent, DbxPopoverService } from '@dereekb/dbx-web';
+import { DbxPopoverKey, AbstractPopoverDirective, DbxPopoverService } from '@dereekb/dbx-web';
 import { NgPopoverRef } from 'ng-overlay-container';
 
 export const DEFAULT_INTERACTION_POPOVER_COMPOSER_POPOVER_KEY = 'popover';

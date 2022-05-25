@@ -1,6 +1,5 @@
 import { skipFirstMaybe } from '@dereekb/rxjs';
-import { map, shareReplay, distinctUntilChanged } from 'rxjs/operators';
-import { BehaviorSubject, combineLatest, Observable, delay } from 'rxjs';
+import { map, shareReplay, distinctUntilChanged, BehaviorSubject, combineLatest, Observable, delay } from 'rxjs';
 import { Directive, Input, OnDestroy } from '@angular/core';
 import { Maybe } from '@dereekb/util';
 import { AnchorType, ClickableAnchor, anchorTypeForAnchor, DbxAnchor } from './anchor';
@@ -24,8 +23,6 @@ export class AbstractDbxAnchorDirective<T extends ClickableAnchor = ClickableAnc
     distinctUntilChanged(),
     shareReplay(1)
   );
-
-  constructor() { }
 
   ngOnDestroy(): void {
     this._disabled.complete();

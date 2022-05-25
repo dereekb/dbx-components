@@ -1,13 +1,13 @@
 import { Observable, map, shareReplay, distinctUntilChanged, of } from 'rxjs';
-import { Component, Input } from '@angular/core';
+import { Component, EventEmitter, Input } from '@angular/core';
 import { MatSelectionListChange } from '@angular/material/list';
-import { DbxListSelectionMode, DbxListView, ListSelectionStateItem } from './list.view';
+import { DbxListSelectionMode, DbxListView, ListSelectionState, ListSelectionStateItem } from './list.view';
 import { DbxValueListItem, AbstractDbxValueListViewConfig } from './list.view.value';
 import { AbstractDbxValueListViewDirective } from './list.view.value.directive';
 import { Maybe } from '@dereekb/util';
 import { DbxValueListItemViewComponent } from './list.view.value.component';
 
-export interface DbxSelectionValueListViewConfig<T, I extends DbxValueListItem<T> = DbxValueListItem<T>, V = any> extends AbstractDbxValueListViewConfig<T, I, V> {
+export interface DbxSelectionValueListViewConfig<T, I extends DbxValueListItem<T> = DbxValueListItem<T>, V = unknown> extends AbstractDbxValueListViewConfig<T, I, V> {
   multiple?: boolean;
 }
 
@@ -20,7 +20,7 @@ export interface DbxSelectionValueListViewConfig<T, I extends DbxValueListItem<T
     <dbx-selection-list-view-content [selectionMode]="selectionMode$ | async" [multiple]="multiple$ | async" [items]="items$ | async"></dbx-selection-list-view-content>
   `
 })
-export class DbxSelectionValueListViewComponent<T, I extends DbxValueListItem<T> = DbxValueListItem<T>, V = any> extends AbstractDbxValueListViewDirective<T, I, V, DbxSelectionValueListViewConfig<T, I, V>> {
+export class DbxSelectionValueListViewComponent<T, I extends DbxValueListItem<T> = DbxValueListItem<T>, V = unknown> extends AbstractDbxValueListViewDirective<T, I, V, DbxSelectionValueListViewConfig<T, I, V>> {
 
   readonly selectionMode$: Observable<DbxListSelectionMode> = (this.dbxListView.selectionMode$ ?? of('select' as DbxListSelectionMode))
     .pipe(map(x => x ?? 'select'), distinctUntilChanged());
@@ -75,7 +75,7 @@ export class DbxSelectionValueListItemViewComponent<T> extends DbxValueListItemV
       return ({ itemValue, selected, disabled });
     });
 
-    this.dbxListView.selectionChange!.next({
+    (this.dbxListView.selectionChange as EventEmitter<ListSelectionState<T>>).next({ // asserted in constructor
       items
     });
   }

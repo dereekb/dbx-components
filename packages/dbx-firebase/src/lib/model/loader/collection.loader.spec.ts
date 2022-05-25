@@ -56,7 +56,7 @@ describe('DbxFirebaseCollectionLoaderInstance', () => {
 
       it('firestoreIteration$ should not emit anything.', (done) => {
 
-        sub.subscription = instance.firestoreIteration$.pipe(map(x => false), timeout({ first: 200, with: () => of(true) }), first()).subscribe((x) => {
+        sub.subscription = instance.firestoreIteration$.pipe(map(() => false), timeout({ first: 200, with: () => of(true) }), first()).subscribe((x) => {
           expect(x).toBe(true);
           done();
         });
@@ -65,7 +65,7 @@ describe('DbxFirebaseCollectionLoaderInstance', () => {
 
       it('accumulator$ should not emit anything.', (done) => {
 
-        sub.subscription = instance.accumulator$.pipe(map(x => false), timeout({ first: 200, with: () => of(true) }), first()).subscribe((x) => {
+        sub.subscription = instance.accumulator$.pipe(map(() => false), timeout({ first: 200, with: () => of(true) }), first()).subscribe((x) => {
           expect(x).toBe(true);
           done();
         });

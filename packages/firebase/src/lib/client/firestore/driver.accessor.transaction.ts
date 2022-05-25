@@ -32,7 +32,7 @@ export class TransactionFirestoreDocumentDataAccessor<T> implements FirestoreDoc
     return Promise.resolve();
   }
 
-  update(data: UpdateData<T>): Promise<void> {
+  update(data: UpdateData<unknown>): Promise<void> {
     this.transaction.update(this.documentRef, data);
     return Promise.resolve();
   }

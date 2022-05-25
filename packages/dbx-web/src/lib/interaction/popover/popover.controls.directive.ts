@@ -5,7 +5,7 @@ import { DbxPopoverContentComponent } from './popover.content.component';
  * Popover Controls
  */
 @Directive({
-  selector: 'dbx-popover-controls,[dbx-popover-controls],.dbx-popover-controls',
+  selector: 'dbx-popover-controls,[dbxPopoverControls],.dbx-popover-controls',
   host: {
     'class': 'd-block dbx-popover-controls'
   }

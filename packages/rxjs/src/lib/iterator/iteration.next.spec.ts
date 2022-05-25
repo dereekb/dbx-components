@@ -1,7 +1,7 @@
 import { ItemPageIterator, ItemPageIterationInstance } from './iterator.page';
 import { TestPageIteratorFilter, TEST_PAGE_ITERATOR_DELEGATE } from './iterator.page.spec';
 import { iteratorNextPageUntilMaxPageLoadLimit, iteratorNextPageUntilPage } from './iteration.next';
-import { first } from 'rxjs/operators';
+import { first } from 'rxjs';
 
 describe('iteration.next', () => {
 

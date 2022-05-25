@@ -4,7 +4,7 @@ import { LabeledFieldConfig, formlyField, templateOptionsForFieldConfig, Descrip
 import { DbxDateTimeFieldConfig, DbxDateTimeFieldTimeMode, DateTimePickerConfiguration } from './datetime.field.component';
 
 export interface DateTimeFieldConfig extends LabeledFieldConfig, DescriptionFieldConfig, DbxDateTimeFieldConfig { }
-export interface TimeFieldConfig extends Omit<DateTimeFieldConfig, 'showDate'> { }
+export type TimeFieldConfig = Omit<DateTimeFieldConfig, 'showDate'>
 
 export const TAKE_NEXT_UPCOMING_TIME_CONFIG_OBS: () => Observable<DateTimePickerConfiguration> = () => of({
   takeNextUpcomingTime: true,

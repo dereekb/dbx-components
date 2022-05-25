@@ -9,14 +9,14 @@ export type DbxActionSnackbarKnownType = 'none' | 'create' | 'save' | 'delete' |
 /**
  * ActionSnackbar event. Depending on the type, a value or error is also available.
  */
-export interface DbxActionSnackbarEvent<O = any> extends Omit<LoadingState<O>, 'loading'> {
+export interface DbxActionSnackbarEvent<O = unknown> extends Omit<LoadingState<O>, 'loading'> {
   type: LoadingStateType;
 }
 
 /**
  * Configuration for the actual snackbar popup.
  */
-export interface DbxActionSnackbarDisplayConfig {
+export interface DbxActionSnackbarDisplayConfig<T = unknown, O = unknown> {
   /**
    * Text to be shown on the close button. If action is defined, this is ignored and the action text is used.
    */
@@ -28,7 +28,7 @@ export interface DbxActionSnackbarDisplayConfig {
   /**
    * Additional action that can occur.
    */
-  action?: DbxActionSnackbarActionConfig;
+  action?: DbxActionSnackbarActionConfig<T, O>;
   /**
    * MatSnackBar configuration
    */
@@ -38,7 +38,7 @@ export interface DbxActionSnackbarDisplayConfig {
 /**
  * Used for configuring an action on the snackbar component.
  */
-export interface DbxActionSnackbarActionConfig {
+export interface DbxActionSnackbarActionConfig<T = unknown, O = unknown> {
   /**
    * Action label to display on the button.
    */
@@ -48,7 +48,7 @@ export interface DbxActionSnackbarActionConfig {
    * 
    * The referred to action is used for triggering and lifecycle.
    */
-  reference: DbxActionContextSourceReference;
+  reference: DbxActionContextSourceReference<T, O>;
   /**
    * Duration to show the action.
    */

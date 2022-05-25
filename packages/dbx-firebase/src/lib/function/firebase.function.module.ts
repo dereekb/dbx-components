@@ -1,9 +1,9 @@
 import { ModuleWithProviders, NgModule, Provider } from "@angular/core";
 import { Functions } from "@angular/fire/functions";
-import { FirebaseFunctionsConfigMap, LazyFirebaseFunctions } from "@dereekb/firebase";
+import { FirebaseFunctionsConfigMap, FirebaseFunctionsMap, LazyFirebaseFunctions } from "@dereekb/firebase";
 import { ClassLikeType, forEachKeyValue } from "@dereekb/util";
 
-export interface DbxFirebaseFunctionsModuleConfig<T> {
+export interface DbxFirebaseFunctionsModuleConfig<T, M extends FirebaseFunctionsMap = FirebaseFunctionsMap> {
   functionsGetterToken: ClassLikeType<T>;
   functionsGetterFactory: (functions: Functions) => T;
   /**
@@ -11,7 +11,7 @@ export interface DbxFirebaseFunctionsModuleConfig<T> {
    * 
    * If provided, will inject all the types with factory functions so they can be injected into the app.
    */
-  functionsConfigMap?: FirebaseFunctionsConfigMap<any>;
+  functionsConfigMap?: FirebaseFunctionsConfigMap<M>;
 }
 
 /**
@@ -20,7 +20,7 @@ export interface DbxFirebaseFunctionsModuleConfig<T> {
 @NgModule()
 export class DbxFirebaseFunctionsModule {
 
-  static forRoot<T>(config: DbxFirebaseFunctionsModuleConfig<T>): ModuleWithProviders<DbxFirebaseFunctionsModule> {
+  static forRoot<T, M extends FirebaseFunctionsMap = FirebaseFunctionsMap>(config: DbxFirebaseFunctionsModuleConfig<T, M>): ModuleWithProviders<DbxFirebaseFunctionsModule> {
     const providers: Provider[] = [{
       provide: config.functionsGetterToken,
       useFactory: config.functionsGetterFactory,
@@ -34,7 +34,7 @@ export class DbxFirebaseFunctionsModule {
 
           providers.push({
             provide,
-            useFactory: (lazyFunctions: LazyFirebaseFunctions<any>) => {
+            useFactory: (lazyFunctions: LazyFirebaseFunctions<M>) => {
               const getter = lazyFunctions[key as string];
 
               if (!getter) {

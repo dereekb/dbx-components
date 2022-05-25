@@ -1,7 +1,7 @@
 import { anchorTypeForAnchor, ClickableAnchor, AnchorType } from '@dereekb/dbx-core';
 import { LOREM } from '../../shared/lorem';
 import { Component } from "@angular/core";
-import { AbstractDbxValueListViewItemComponent, DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE, DbxSelectionValueListViewConfig, ProvideDbxListView, AbstractDbxListWrapperDirective, AbstractDbxListViewDirective, DbxValueListViewConfig } from "@dereekb/dbx-web";
+import { AbstractDbxValueListViewItemComponent, DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE, provideDbxListView, AbstractDbxListWrapperDirective, AbstractDbxListViewDirective, DbxValueListViewConfig } from "@dereekb/dbx-web";
 import { of } from "rxjs";
 import { DocValue, DocValueWithSelection } from "./item.list";
 
@@ -28,7 +28,7 @@ export class DocCustomItemListComponent extends AbstractDbxListWrapperDirective<
 
 @Component({
   template: `<dbx-list-view [config]="config"></dbx-list-view>`,
-  providers: ProvideDbxListView(DocCustomItemListViewComponent)
+  providers: provideDbxListView(DocCustomItemListViewComponent)
 })
 export class DocCustomItemListViewComponent extends AbstractDbxListViewDirective<DocValue> {
 

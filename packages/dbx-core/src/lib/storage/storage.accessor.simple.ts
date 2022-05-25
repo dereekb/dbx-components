@@ -1,5 +1,4 @@
-import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { Observable, map } from 'rxjs';
 import { timeHasExpired, unixTimeNumberForNow } from '@dereekb/date';
 import { filterMaybeValuesFn, DataDoesNotExistError, DataIsExpiredError, ReadStoredData, StoredData, StoredDataStorageKey, StoredDataString, Maybe } from '@dereekb/util';
 import { StorageAccessor } from './storage.accessor';
@@ -55,7 +54,7 @@ export class WrapperSimpleStorageAccessorDelegate<T> implements SimpleStorageAcc
     return this._delegate.remove(key);
   }
 
-  clear(): Observable<{}> {
+  clear(): Observable<object> {
     return this._delegate.clear();
   }
 
@@ -92,6 +91,11 @@ export interface SimpleStorageAccessorConfig {
   readonly expiresIn?: number;
 }
 
+interface ConfiguredSimpleStorageAccessorConfig extends SimpleStorageAccessorConfig {
+  readonly prefixSplitter: string;
+  readonly fullPrefix: string;
+}
+
 /**
  * LimitedStorageAccessor implementation that uses a Delegate
  */
@@ -99,9 +103,7 @@ export class SimpleStorageAccessor<T> implements StorageAccessor<T> {
 
   static readonly PREFIX_SPLITTER = '::';
 
-  protected readonly _config: SimpleStorageAccessorConfig & {
-    fullPrefix: string;
-  };
+  protected readonly _config: ConfiguredSimpleStorageAccessorConfig;
 
   constructor(private readonly _delegate: SimpleStorageAccessorDelegate<T>, config: SimpleStorageAccessorConfig) {
     const prefix = config.prefix;
@@ -171,7 +173,7 @@ export class SimpleStorageAccessor<T> implements StorageAccessor<T> {
     );
   }
 
-  clear(): Observable<{}> {
+  clear(): Observable<object> {
     return this._delegate.clear();
   }
 
@@ -232,7 +234,7 @@ export class SimpleStorageAccessor<T> implements StorageAccessor<T> {
   }
 
   protected decodeStorageKey(storageKey: StoredDataStorageKey): string {
-    const split = storageKey.split(this._config.prefixSplitter!, 2);
+    const split = storageKey.split(this._config.prefixSplitter, 2);
     return split[1];
   }
 

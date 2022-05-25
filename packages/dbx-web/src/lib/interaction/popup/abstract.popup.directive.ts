@@ -5,7 +5,7 @@ import { DbxPopupComponent } from './popup.component';
  * Abstract popup directive.
  */
 @Directive()
-export abstract class AbstractPopupDirective<O = any, I = any, T = any> {
+export abstract class AbstractPopupDirective<O = unknown, I = unknown, T = unknown> {
 
   constructor(public readonly popup: DbxPopupComponent<O, I, T>) { }
 

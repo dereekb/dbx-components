@@ -1,5 +1,5 @@
 import { DbxActionContextSourceReference } from './action.reference';
-import { delay, first } from 'rxjs/operators';
+import { delay, first } from 'rxjs';
 import { ActionContextStoreSource } from './action.store.source';
 import { DbxActionWorkInstanceDelegate, HandleActionFunction } from './action.handler';
 import { DbxActionContextBaseSource } from './action.holder';
@@ -9,7 +9,7 @@ import { SubscriptionObject, workFactory } from '@dereekb/rxjs';
 /**
  * DbxActionContextMachine configuration.
  */
-export interface DbxActionContextMachineConfig<T = any, O = any> {
+export interface DbxActionContextMachineConfig<T = unknown, O = unknown> {
   /**
    * Whether or not the machine should clean itself up after being triggered once.
    */
@@ -29,7 +29,7 @@ export interface DbxActionContextMachineConfig<T = any, O = any> {
  * 
  * It can be configured to activate only once before cleaning itself up. It can be used directly as a DbxActionContextSourceReference in cases where it is created as a one-off action.
  */
-export class DbxActionContextMachine<T = any, O = any> extends DbxActionContextBaseSource<T, O> implements DbxActionContextSourceReference<T, O>, Destroyable {
+export class DbxActionContextMachine<T = unknown, O = unknown> extends DbxActionContextBaseSource<T, O> implements DbxActionContextSourceReference<T, O>, Destroyable {
 
   private _isShutdown = true;
   private _handleValueReadySub = new SubscriptionObject();

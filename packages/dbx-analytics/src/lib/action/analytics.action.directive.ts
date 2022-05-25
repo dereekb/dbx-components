@@ -1,7 +1,6 @@
 import { filterMaybe } from '@dereekb/rxjs';
-import { switchMap, tap, shareReplay } from 'rxjs/operators';
+import { switchMap, tap, shareReplay, BehaviorSubject, merge, Observable, of } from 'rxjs';
 import { Host, Directive, Input, OnInit, OnDestroy } from '@angular/core';
-import { BehaviorSubject, merge, Observable, of } from 'rxjs';
 import { DbxActionContextStoreSourceInstance, AbstractSubscriptionDirective } from '@dereekb/dbx-core';
 import { DbxAnalyticsService } from '../analytics/analytics.service';
 import { Maybe, ReadableError } from '@dereekb/util';
@@ -13,7 +12,7 @@ export enum DbxActionAnalyticsTriggerType {
   ERROR
 }
 
-export interface DbxActionAnalyticsConfig<T = any, O = any> {
+export interface DbxActionAnalyticsConfig<T = unknown, O = unknown> {
   onTriggered: (service: DbxAnalyticsService) => void;
   onReady: (service: DbxAnalyticsService, value: T) => void;
   onSuccess: (service: DbxAnalyticsService, value: Maybe<O>) => void;
@@ -26,22 +25,22 @@ export interface DbxActionAnalyticsConfig<T = any, O = any> {
 @Directive({
   selector: '[dbxActionAnalytics]',
 })
-export class DbxActionAnalyticsDirective<T> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
+export class DbxActionAnalyticsDirective<T, O> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
 
-  private _config = new BehaviorSubject<Maybe<DbxActionAnalyticsConfig>>(undefined);
+  private _config = new BehaviorSubject<Maybe<DbxActionAnalyticsConfig<T, O>>>(undefined);
   readonly config$ = this._config.pipe(filterMaybe(), shareReplay(1));
 
   @Input('dbxActionAnalytics')
-  get config(): Maybe<DbxActionAnalyticsConfig> {
+  get config(): Maybe<DbxActionAnalyticsConfig<T, O>> {
     return this._config.value;
   }
 
-  set config(config: Maybe<DbxActionAnalyticsConfig>) {
+  set config(config: Maybe<DbxActionAnalyticsConfig<T, O>>) {
     this._config.next(config);
   }
 
   constructor(
-    @Host() readonly source: DbxActionContextStoreSourceInstance,
+    @Host() readonly source: DbxActionContextStoreSourceInstance<T, O>,
     readonly analyticsService: DbxAnalyticsService
   ) {
     super();
@@ -50,7 +49,7 @@ export class DbxActionAnalyticsDirective<T> extends AbstractSubscriptionDirectiv
   ngOnInit(): void {
     this.sub = this.config$.pipe(
       switchMap(({ onTriggered, onReady, onSuccess, onError }) => {
-        const triggerObs: Observable<any>[] = [];
+        const triggerObs: Observable<unknown>[] = [];
 
         if (onTriggered) {
           triggerObs.push(this.source.triggered$.pipe(

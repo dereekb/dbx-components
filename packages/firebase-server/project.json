@@ -5,8 +5,7 @@
     "build": {
       "executor": "@nrwl/workspace:run-commands",
       "options": {
-        "commands": [
-          {
+        "commands": [{
             "command": "npx nx run firebase-server:build-base"
           },
           {
@@ -24,14 +23,14 @@
         "tsConfig": "packages/firebase-server/tsconfig.lib.json",
         "packageJson": "packages/firebase-server/package.json",
         "main": "packages/firebase-server/src/index.ts",
-        "assets": ["packages/firebase-server/*.md"]
+        "assets": ["packages/firebase-server/*.md", "LICENSE"]
       }
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "outputs": ["{options.outputFile}"],
       "options": {
-        "lintFilePatterns": ["packages/firebase-server/**/*.ts"]
+        "lintFilePatterns": ["packages/firebase-server/src/**/*.ts"]
       }
     },
     "test": {
@@ -51,6 +50,20 @@
         "passWithNoTests": true
       }
     },
+    "run-all-tests": {
+      "executor": "@nrwl/workspace:run-commands",
+      "options": {
+        "commands": [{
+          "description": "run firebase-server tests. Should be called within a Firebase emulator environment",
+          "command": "npx nx run-tests firebase-server"
+        }, {
+          "description": "run firebase-server-test tests",
+          "command": "npx nx run-tests firebase-server-test"
+        }],
+        "color": true,
+        "parallel": false
+      }
+    },
     "watch": {
       "executor": "@nrwl/workspace:run-commands",
       "options": {
@@ -60,7 +73,7 @@
     "publish-npmjs": {
       "executor": "@nrwl/workspace:run-commands",
       "options": {
-        "command": "cd ./dist/packages/firebase-server && npm publish"
+        "command": "cd ./dist/packages/firebase-server && npm publish --access public"
       }
     }
   },

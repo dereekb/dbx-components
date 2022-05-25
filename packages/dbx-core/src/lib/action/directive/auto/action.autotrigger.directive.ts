@@ -1,11 +1,7 @@
-import { Directive, Input, OnInit, OnDestroy } from '@angular/core';
+import { Directive, Input, OnInit, OnDestroy, Host } from '@angular/core';
 import { AbstractSubscriptionDirective } from '../../../subscription';
-import { debounce, distinctUntilChanged, exhaustMap, filter, first, map, mergeMap, shareReplay, switchMap, throttle } from 'rxjs/operators';
-import { EMPTY, interval, Subject, combineLatest } from 'rxjs';
-import { Observable } from 'rxjs';
+import { debounce, distinctUntilChanged, exhaustMap, filter, first, map, mergeMap, shareReplay, switchMap, throttle, EMPTY, interval, Subject, combineLatest, Observable, BehaviorSubject } from 'rxjs';
 import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
-import { Host } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
 import { isDefinedAndNotFalse, Maybe } from '@dereekb/util';
 
 const DEFAULT_DEBOUNCE_MS = 2 * 1000;
@@ -22,7 +18,7 @@ const MAX_ERRORS_TO_THROTTLE_ON = 6;
 @Directive({
   selector: 'dbxActionAutoTrigger, [dbxActionAutoTrigger]',
 })
-export class DbxActionAutoTriggerDirective<T, O> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
+export class DbxActionAutoTriggerDirective<T = unknown, O = unknown> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
 
   private readonly _triggerEnabled = new BehaviorSubject<boolean>(true);
   private readonly _triggerLimit = new BehaviorSubject<number | undefined>(undefined);
@@ -36,7 +32,7 @@ export class DbxActionAutoTriggerDirective<T, O> extends AbstractSubscriptionDir
     return this._triggerEnabled.value;
   }
 
-  set triggerEnabled(triggerEnabled: Maybe<boolean> | any) {
+  set triggerEnabled(triggerEnabled: Maybe<boolean> | '') {
     triggerEnabled = triggerEnabled !== false;  // Default to true
 
     if (this.triggerEnabled !== triggerEnabled) {
@@ -61,7 +57,7 @@ export class DbxActionAutoTriggerDirective<T, O> extends AbstractSubscriptionDir
    * Used in forms that are simple.
    */
   @Input()
-  set fastTrigger(fastTrigger: any) {
+  set fastTrigger(fastTrigger: Maybe<boolean> | '') {
     if (isDefinedAndNotFalse(fastTrigger)) {
       this.triggerDebounce = 200;
       this.triggerThrottle = 500;
@@ -74,7 +70,7 @@ export class DbxActionAutoTriggerDirective<T, O> extends AbstractSubscriptionDir
    * Used in forms that generally return a single value.
    */
   @Input()
-  set instantTrigger(instantTrigger: any) {
+  set instantTrigger(instantTrigger: Maybe<boolean> | '') {
     if (isDefinedAndNotFalse(instantTrigger)) {
       this.triggerDebounce = 10;
       this.triggerThrottle = 0;

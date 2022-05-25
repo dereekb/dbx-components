@@ -1,7 +1,7 @@
-import { AbstractControl, ValidatorFn } from '@angular/forms';
+import { AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 
-export function IsTruthy(): ValidatorFn {
-  return (control: AbstractControl): { [key: string]: any } => {
+export function isTruthy(): ValidatorFn {
+  return (control: AbstractControl): ValidationErrors | null => {
     const value: boolean | undefined = control.value;
 
     if (!value) {

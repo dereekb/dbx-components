@@ -23,7 +23,7 @@
         "tsConfig": "packages/model/tsconfig.lib.json",
         "packageJson": "packages/model/package.json",
         "main": "packages/model/src/index.ts",
-        "assets": ["packages/model/*.md"]
+        "assets": ["packages/model/*.md", "LICENSE"]
       }
     },
     "lint": {
@@ -44,7 +44,7 @@
     "publish-npmjs": {
       "executor": "@nrwl/workspace:run-commands",
       "options": {
-        "command": "cd ./dist/packages/model && npm publish"
+        "command": "cd ./dist/packages/model && npm publish --access public"
       }
     }
   },

@@ -56,7 +56,7 @@ export function makeMongoDBLikeDateQueryBuilder(config: MakeMongoDBLikeDateQuery
         endsAtFilter = (endsAt && fields.end) ? { [fields.end]: endsAt } : undefined;
       }
 
-      const filter: any = {
+      const filter = {
         ...startsAtFilter,
         ...endsAtFilter
       };

@@ -238,7 +238,7 @@ export function authorizedUserContextFactory<
  * 
  * Has the format 'test-uid-<number>'
  */
-export const testUidFactory: Factory<FirebaseAuthUserId> = mapGetter(incrementingNumberFactory(), (i) => `test-uid-${i}`);
+export const testUidFactory: Factory<FirebaseAuthUserId> = mapGetter(incrementingNumberFactory(), (i) => `test-uid-${i}+${new Date().toISOString()}`);
 
 // MARK: Utility
 export type TestEncodedFirestoreToken = string;

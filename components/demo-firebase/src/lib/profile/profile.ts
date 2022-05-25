@@ -1,4 +1,5 @@
-import { CollectionReference, AbstractFirestoreDocument, makeSnapshotConverterFunctions, firestoreString, firestoreDate, FirestoreCollection, UserRelatedById, DocumentReferenceRef, FirestoreContext, SingleItemFirestoreCollection } from "@dereekb/firebase";
+import { CollectionReference, AbstractFirestoreDocument, snapshotConverterFunctions, firestoreString, firestoreDate, FirestoreCollection, UserRelatedById, DocumentReferenceRef, FirestoreContext, SingleItemFirestoreCollection, optionalFirestoreString } from "@dereekb/firebase";
+import { Maybe } from '@dereekb/util';
 
 export interface ProfileFirestoreCollections {
   profileFirestoreCollection: ProfileFirestoreCollection;
@@ -14,7 +15,7 @@ export interface Profile extends UserRelatedById {
   /**
    * Profile biography
    */
-  bio?: string;
+  bio?: Maybe<string>;
   /**
    * Last date the profile was updated at.
    */
@@ -27,10 +28,10 @@ export class ProfileDocument extends AbstractFirestoreDocument<Profile, ProfileD
 
 export const profileCollectionPath = 'profile';
 
-export const profileConverter = makeSnapshotConverterFunctions<Profile>({
+export const profileConverter = snapshotConverterFunctions<Profile>({
   fields: {
-    username: firestoreString({}),
-    bio: firestoreString({}),
+    username: firestoreString({ default: '', defaultBeforeSave: null }),
+    bio: optionalFirestoreString(),
     updatedAt: firestoreDate({ saveDefaultAsNow: true })
   }
 });
@@ -69,7 +70,7 @@ export class ProfilePrivateDataDocument extends AbstractFirestoreDocument<Profil
 export const profileCollectionProfilePrivateDataCollectionPath = 'private';
 export const profilePrivateDataIdentifier = '0';
 
-export const profilePrivateDataConverter = makeSnapshotConverterFunctions<ProfilePrivateData>({
+export const profilePrivateDataConverter = snapshotConverterFunctions<ProfilePrivateData>({
   fields: {
     usernameSetAt: firestoreDate({ saveDefaultAsNow: false }),
     createdAt: firestoreDate({ saveDefaultAsNow: true })

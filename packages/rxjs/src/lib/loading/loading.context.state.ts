@@ -1,10 +1,10 @@
 import { Maybe, Destroyable } from '@dereekb/util';
-import { filterMaybe, timeoutStartWith, beginLoading, tapLog } from '@dereekb/rxjs';
 import { mergeMap, map, switchMap, shareReplay, distinctUntilChanged, BehaviorSubject, isObservable, Observable, of } from 'rxjs';
+import { filterMaybe, timeoutStartWith } from '../rxjs/value';
 import { LoadingContext, LoadingContextEvent } from './loading.context';
-import { LoadingState } from './loading.state';
+import { beginLoading, LoadingState } from './loading.state';
 
-export interface AbstractLoadingStateEvent<T = any> extends LoadingContextEvent {
+export interface AbstractLoadingStateEvent<T = unknown> extends LoadingContextEvent {
   value?: Maybe<T>;
 }
 
@@ -19,7 +19,7 @@ export interface AbstractLoadingEventForLoadingPairConfig<S extends LoadingState
   showLoadingOnNoValue?: boolean;
 }
 
-export interface AbstractLoadingStateContext<T = any, S extends LoadingState<T> = LoadingState<T>, E extends LoadingContextEvent = LoadingContextEvent> {
+export interface AbstractLoadingStateContext<T = unknown, S extends LoadingState<T> = LoadingState<T>, E extends LoadingContextEvent = LoadingContextEvent> {
   readonly stateObs$: Observable<Maybe<Observable<S>>>;
   readonly stateSubject$: Observable<Observable<S>>;
   readonly state$: Observable<S>;
@@ -32,7 +32,7 @@ export type LoadingStateContextInstanceInputConfig<S, C> = Observable<S> | C;
 /**
  * Abstract LoadingContext implementation using LoadingState.
  */
-export abstract class AbstractLoadingStateContextInstance<T = any, S extends LoadingState<T> = LoadingState<T>, E extends AbstractLoadingStateEvent<T> = AbstractLoadingStateEvent<T>, C extends AbstractLoadingEventForLoadingPairConfig<S> = AbstractLoadingEventForLoadingPairConfig<S>>
+export abstract class AbstractLoadingStateContextInstance<T = unknown, S extends LoadingState<T> = LoadingState<T>, E extends AbstractLoadingStateEvent<T> = AbstractLoadingStateEvent<T>, C extends AbstractLoadingEventForLoadingPairConfig<S> = AbstractLoadingEventForLoadingPairConfig<S>>
   implements AbstractLoadingStateContext<T, S, E>, LoadingContext, Destroyable {
 
   private _stateSubject$ = new BehaviorSubject<Maybe<Observable<S>>>(undefined);

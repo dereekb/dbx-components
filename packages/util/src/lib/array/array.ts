@@ -118,7 +118,7 @@ export function mergeIntoArray<T>(target: Maybe<T[]>, ...arrays: Maybe<T[]>[]): 
 
   arrays.forEach((array) => {
     if (array != null) {
-      mergeArrayIntoArray(target!, array);
+      mergeArrayIntoArray(target as T[], array);
     }
   });
 

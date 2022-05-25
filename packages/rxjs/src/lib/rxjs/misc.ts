@@ -1,5 +1,5 @@
 import { MakeRandomFunction, makeRandomFunction, RandomNumberFunction } from '@dereekb/util';
-import { MonoTypeOperatorFunction, tap, delay, delayWhen, of, timer, SchedulerLike, asyncScheduler } from 'rxjs';
+import { MonoTypeOperatorFunction, tap, delayWhen, timer, SchedulerLike, asyncScheduler } from 'rxjs';
 
 /**
  * Used to log a message to the console.
@@ -7,9 +7,9 @@ import { MonoTypeOperatorFunction, tap, delay, delayWhen, of, timer, SchedulerLi
  * @param messageOrFunction 
  * @returns 
  */
-export function tapLog<T = any>(message: string | number, consoleLogFn?: 'log' | 'warn' | 'error'): MonoTypeOperatorFunction<T>;
-export function tapLog<T = any>(messageFunction: (value: T) => any[], consoleLogFn?: 'log' | 'warn' | 'error'): MonoTypeOperatorFunction<T>;
-export function tapLog<T = any>(messageOrFunction: (string | number) | ((value: T) => any[]), consoleLogFn: 'log' | 'warn' | 'error' = 'log'): MonoTypeOperatorFunction<T> {
+export function tapLog<T = unknown>(message: string | number, consoleLogFn?: 'log' | 'warn' | 'error'): MonoTypeOperatorFunction<T>;
+export function tapLog<T = unknown>(messageFunction: (value: T) => unknown[], consoleLogFn?: 'log' | 'warn' | 'error'): MonoTypeOperatorFunction<T>;
+export function tapLog<T = unknown>(messageOrFunction: (string | number) | ((value: T) => unknown[]), consoleLogFn: 'log' | 'warn' | 'error' = 'log'): MonoTypeOperatorFunction<T> {
   let operator: MonoTypeOperatorFunction<T>;
 
   if (typeof messageOrFunction === 'function') {
@@ -27,11 +27,11 @@ export function tapLog<T = any>(messageOrFunction: (string | number) | ((value: 
  * @param maxOrArgs 
  * @returns 
  */
-export function randomDelay<T = any>(maxOrArgs: number | MakeRandomFunction): MonoTypeOperatorFunction<T> {
+export function randomDelay<T = unknown>(maxOrArgs: number | MakeRandomFunction): MonoTypeOperatorFunction<T> {
   const makeRandomDelay = makeRandomFunction(maxOrArgs);
   return randomDelayWithRandomFunction(makeRandomDelay);
 }
 
-export function randomDelayWithRandomFunction<T = any>(makeRandomDelay: RandomNumberFunction, scheduler: SchedulerLike = asyncScheduler): MonoTypeOperatorFunction<T> {
+export function randomDelayWithRandomFunction<T = unknown>(makeRandomDelay: RandomNumberFunction, scheduler: SchedulerLike = asyncScheduler): MonoTypeOperatorFunction<T> {
   return delayWhen(() =>  timer(makeRandomDelay(), scheduler));
 }

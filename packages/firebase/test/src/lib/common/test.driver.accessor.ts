@@ -1,6 +1,7 @@
+import { firstValueFrom } from 'rxjs';
 import { SubscriptionObject } from '@dereekb/rxjs';
 import { Transaction, DocumentReference, WriteBatch, FirestoreDocumentAccessor, makeDocuments, FirestoreDocumentDataAccessor, FirestoreContext, FirestoreDocument, RunTransaction } from '@dereekb/firebase';
-import { MockItemDocument, MockItem, MockItemPrivateDataDocument, MockItemPrivateDataFirestoreCollection, MockItemPrivateData, MockItemSubItem, MockItemSubItemDocument, MockItemSubItemFirestoreCollection } from "./firestore.mock.item";
+import { MockItemDocument, MockItem, MockItemPrivateDocument, MockItemPrivateFirestoreCollection, MockItemPrivate, MockItemSubItem, MockItemSubItemDocument, MockItemSubItemFirestoreCollection } from "./firestore.mock.item";
 import { MockItemCollectionFixture } from "./firestore.mock.item.fixture";
 
 /**
@@ -24,7 +25,8 @@ export function describeAccessorDriverTests(f: MockItemCollectionFixture) {
         init: (i) => {
           return {
             value: `${i}`,
-            test: true
+            test: true,
+            string: ''
           };
         }
       });
@@ -53,16 +55,16 @@ export function describeAccessorDriverTests(f: MockItemCollectionFixture) {
 
       describe('Subcollections', () => {
 
-        describe('singleItemFirestoreCollection (MockItemPrivateData)', () => {
+        describe('singleItemFirestoreCollection (MockItemPrivate)', () => {
 
-          let mockItemPrivateDataFirestoreCollection: MockItemPrivateDataFirestoreCollection;
-          let itemPrivateDataDocument: MockItemPrivateDataDocument;
-          let privateDataAccessor: FirestoreDocumentDataAccessor<MockItemPrivateData>;
+          let mockItemPrivateFirestoreCollection: MockItemPrivateFirestoreCollection;
+          let itemPrivateDataDocument: MockItemPrivateDocument;
+          let privateDataAccessor: FirestoreDocumentDataAccessor<MockItemPrivate>;
           let privateSub: SubscriptionObject;
 
           beforeEach(() => {
-            mockItemPrivateDataFirestoreCollection = f.instance.collections.mockItemPrivateData(itemDocument);
-            itemPrivateDataDocument = mockItemPrivateDataFirestoreCollection.loadDocument();
+            mockItemPrivateFirestoreCollection = f.instance.collections.mockItemPrivate(itemDocument);
+            itemPrivateDataDocument = mockItemPrivateFirestoreCollection.loadDocument();
             privateDataAccessor = itemPrivateDataDocument.accessor;
             privateSub = new SubscriptionObject();
           });
@@ -77,7 +79,7 @@ export function describeAccessorDriverTests(f: MockItemCollectionFixture) {
               let exists = await privateDataAccessor.exists();
               expect(exists).toBe(false);
 
-              await privateDataAccessor.set({});
+              await privateDataAccessor.set({ createdAt: new Date() });
 
               exists = await privateDataAccessor.exists();
               expect(exists).toBe(true);
@@ -88,19 +90,19 @@ export function describeAccessorDriverTests(f: MockItemCollectionFixture) {
           describe('with item', () => {
 
             beforeEach(async () => {
-              await privateDataAccessor.set({});
+              await privateDataAccessor.set({ createdAt: new Date() });
             });
 
             describe('accessor', () => {
               const TEST_COMMENTS = 'test';
 
-              describeAccessorTests<MockItemPrivateData>(() => ({
+              describeAccessorTests<MockItemPrivate>(() => ({
                 context: f.parent.context,
                 accessor: privateDataAccessor,
                 dataForUpdate: () => ({ comments: TEST_COMMENTS }),
                 hasDataFromUpdate: (data) => (data.comments === TEST_COMMENTS),
-                loadDocumentForTransaction: (transaction, ref) => mockItemPrivateDataFirestoreCollection.loadDocumentForTransaction(transaction),
-                loadDocumentForWriteBatch: (writeBatch, ref) => mockItemPrivateDataFirestoreCollection.loadDocumentForWriteBatch(writeBatch),
+                loadDocumentForTransaction: (transaction, ref) => mockItemPrivateFirestoreCollection.loadDocumentForTransaction(transaction),
+                loadDocumentForWriteBatch: (writeBatch, ref) => mockItemPrivateFirestoreCollection.loadDocumentForWriteBatch(writeBatch),
               }));
             });
 
@@ -245,18 +247,19 @@ export function describeAccessorTests<T>(init: () => DescribeAccessorTests<T>) {
         runTransaction = c.context.runTransaction;
       });
 
-      it('should not stream values (observable completes immediately)', (done) => {
-        runTransaction(async (transaction) => {
+      it('should return the first emitted value (observable completes immediately)', async () => {
+        await runTransaction(async (transaction) => {
           const transactionItemDocument = c.loadDocumentForTransaction(transaction, c.accessor.documentRef);
 
-          return new Promise<void>((resolve) => {
-            sub.subscription = transactionItemDocument.accessor.stream().subscribe({
-              complete: () => {
-                resolve();
-                done();
-              }
-            });
-          });
+          // load the value
+          const value = await firstValueFrom(transactionItemDocument.accessor.stream());
+
+          expect(value).toBeDefined();
+
+          // set to make the transaction valid
+          await transactionItemDocument.accessor.set({ value: 0 } as any, { merge: true });
+
+          return value;
         });
       });
 
@@ -264,15 +267,20 @@ export function describeAccessorTests<T>(init: () => DescribeAccessorTests<T>) {
 
     describe('in batch context', () => {
 
-      it('should not stream values (observable completes immediately)', (done) => {
+      it('should return the first emitted value (observable completes immediately)', async () => {
         let writeBatch: WriteBatch = c.context.batch();
         const batchItemDocument = c.loadDocumentForWriteBatch(writeBatch, c.accessor.documentRef);
 
-        sub.subscription = batchItemDocument.accessor.stream().subscribe({
-          complete: () => {
-            done();
-          }
-        });
+        // load the value
+        const value = await firstValueFrom(batchItemDocument.accessor.stream());
+
+        expect(value).toBeDefined();
+
+        // set to make the batch changes valid
+        await batchItemDocument.accessor.set({ value: 0 } as any, { merge: true });
+
+        // commit the changes
+        await writeBatch.commit();
       });
 
     });

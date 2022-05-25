@@ -9,7 +9,7 @@ export class DbxFirebaseRegisterEmailComponent extends AbstractConfiguredDbxFire
 
   readonly loginProvider = 'email';
 
-  handleLogin(): Promise<any> {
+  handleLogin() {
     return DbxFirebaseLoginEmailContentComponent.openEmailLoginContext(this.dbxFirebaseLoginContext, { loginMode: 'register', passwordConfig: this.dbxFirebaseAuthLoginService.getPasswordConfig() });
   }
 

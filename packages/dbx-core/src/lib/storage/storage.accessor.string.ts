@@ -1,7 +1,6 @@
-import { Observable } from 'rxjs';
-import { map, shareReplay } from 'rxjs/operators';
+import { filterMaybeValues, StoredDataString, FullStorageObject, StorageObjectUtility, Maybe } from '@dereekb/util';
+import { Observable, map, shareReplay } from 'rxjs';
 import { StorageAccessor } from './storage.accessor';
-import { StoredDataString, FullStorageObject, StorageObjectUtility, Maybe } from '@dereekb/util';
 
 /**
  * Simple StorageAccessor implementation that wraps a FullStorageObject.
@@ -44,7 +43,7 @@ export class StringStorageAccessor implements StorageAccessor<StoredDataString> 
 
   all(): Observable<StoredDataString[]> {
     return this.allKeys().pipe(
-      map(x => x.map(y => this._storage.getItem(y)!)),
+      map(x => filterMaybeValues(x.map(y => this._storage.getItem(y)))),
       shareReplay(1)
     );
   }

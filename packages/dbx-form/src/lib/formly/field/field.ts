@@ -1,4 +1,4 @@
-import { mergeObjects, objectMergeMatrix, filterFromPOJO } from '@dereekb/util';
+import { mergeObjects, filterFromPOJO } from '@dereekb/util';
 import { FormlyFieldConfig, FormlyTemplateOptions } from '@ngx-formly/core';
 
 export interface FieldConfig {
@@ -21,7 +21,7 @@ export interface LabeledFieldConfig extends FieldConfig {
   autocomplete?: string | DisableAutocompleteForField;
 }
 
-export interface DefaultValueFieldConfig<T = any> {
+export interface DefaultValueFieldConfig<T = unknown> {
   defaultValue?: T;
 }
 
@@ -49,7 +49,7 @@ export function formlyField<T extends FormlyFieldConfig = FormlyFieldConfig>(fie
   return fieldConfig;
 }
 
-export function templateOptionsForFieldConfig(fieldConfig: Partial<FieldConfig> & Partial<LabeledFieldConfig> & Partial<AttributesFieldConfig> & Partial<DescriptionFieldConfig>, override?: any) {
+export function templateOptionsForFieldConfig<O extends object = object>(fieldConfig: Partial<FieldConfig> & Partial<LabeledFieldConfig> & Partial<AttributesFieldConfig> & Partial<DescriptionFieldConfig>, override?: PartialPotentialFieldConfig & O) {
   const templateOptions = templateOptionsValueForFieldConfig(fieldConfig, override);
 
   return {
@@ -57,7 +57,7 @@ export function templateOptionsForFieldConfig(fieldConfig: Partial<FieldConfig> 
   };
 }
 
-export function templateOptionsValueForFieldConfig<T extends FormlyTemplateOptions>(fieldConfig: PartialPotentialFieldConfig, override?: PartialPotentialFieldConfig & unknown): Partial<T> {
+export function templateOptionsValueForFieldConfig<T extends FormlyTemplateOptions, O extends object = object>(fieldConfig: PartialPotentialFieldConfig, override?: PartialPotentialFieldConfig & O): Partial<T> {
   const { label, placeholder, required, readonly, description, autocomplete } = mergeObjects<PartialPotentialFieldConfig>([fieldConfig, override], { keysFilter: ['label', 'placeholder', 'required', 'readonly', 'description', 'autocomplete'] });
   const attributes = mergeObjects([fieldConfig.attributes, override?.attributes]);
 
@@ -79,7 +79,9 @@ export function templateOptionsValueForFieldConfig<T extends FormlyTemplateOptio
         ...disableFormlyFieldAutofillAttributes()
       }
     } else {
-      result.attributes!['autocomplete'] = autocomplete;
+      (result.attributes as {
+        [key: string]: string | number;
+      })['autocomplete'] = autocomplete;
     }
   }
 

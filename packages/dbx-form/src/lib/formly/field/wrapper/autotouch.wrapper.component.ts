@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { FieldTypeConfig, FieldWrapper } from '@ngx-formly/core';
-import { delay } from 'rxjs/operators';
+import { delay } from 'rxjs';
 
 
 /**

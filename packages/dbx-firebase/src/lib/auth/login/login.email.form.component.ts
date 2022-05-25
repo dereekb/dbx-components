@@ -1,11 +1,11 @@
 import { Component, Input, OnDestroy } from "@angular/core";
-import { TextPasswordFieldConfig, ProvideFormlyContext, AbstractAsyncFormlyFormDirective, usernamePasswordLoginFields, DefaultUsernameLoginFieldsValue } from "@dereekb/dbx-form";
+import { TextPasswordFieldConfig, provideFormlyContext, AbstractAsyncFormlyFormDirective, usernamePasswordLoginFields, DefaultUsernameLoginFieldsValue } from "@dereekb/dbx-form";
 import { Maybe } from "@dereekb/util";
 import { FormlyFieldConfig } from "@ngx-formly/core";
 import { BehaviorSubject, map, Observable } from "rxjs";
 import { DbxFirebaseLoginMode } from "./login";
 
-export interface DbxFirebaseEmailFormValue extends DefaultUsernameLoginFieldsValue { }
+export type DbxFirebaseEmailFormValue = DefaultUsernameLoginFieldsValue
 
 export interface DbxFirebaseEmailFormConfig {
   loginMode: DbxFirebaseLoginMode;
@@ -15,7 +15,7 @@ export interface DbxFirebaseEmailFormConfig {
 @Component({
   template: `<dbx-formly></dbx-formly>`,
   selector: 'dbx-firebase-email-form',
-  providers: [ProvideFormlyContext()]
+  providers: [provideFormlyContext()]
 })
 export class DbxFirebaseEmailFormComponent extends AbstractAsyncFormlyFormDirective<DbxFirebaseEmailFormValue> implements OnDestroy {
 

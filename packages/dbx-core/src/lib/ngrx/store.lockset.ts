@@ -1,7 +1,7 @@
 import { map, Observable } from 'rxjs';
 import { ComponentStore } from '@ngrx/component-store';
 import { Inject, Optional, Injectable, OnDestroy } from '@angular/core';
-import { LockSet, SubscriptionObject, ObservableOrValue, asObservable } from '@dereekb/rxjs';
+import { LockSet, ObservableOrValue, asObservable } from '@dereekb/rxjs';
 import { Maybe } from '@dereekb/util';
 
 export interface LockSetComponent {

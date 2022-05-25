@@ -1,5 +1,5 @@
 import { Component } from "@angular/core";
-import { ProvideFormlyContext, AbstractConfigAsyncFormlyFormDirective, componentField } from "@dereekb/dbx-form";
+import { provideFormlyContext, AbstractConfigAsyncFormlyFormDirective } from "@dereekb/dbx-form";
 import { FormlyFieldConfig } from "@ngx-formly/core";
 import { map, Observable } from "rxjs";
 
@@ -15,7 +15,7 @@ import { map, Observable } from "rxjs";
   </div>
   `,
   selector: 'doc-form-example-form',
-  providers: [ProvideFormlyContext()]
+  providers: [provideFormlyContext()]
 })
 export class DocFormExampleComponent extends AbstractConfigAsyncFormlyFormDirective<any, FormlyFieldConfig[]> {
 

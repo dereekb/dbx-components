@@ -3,12 +3,14 @@ import { Module } from '@nestjs/common';
 import { firebaseServerAuthModuleMetadata } from './auth.nest';
 import { authorizedUserContextFactory, firebaseAdminFunctionNestContextFactory, initFirebaseServerAdminTestEnvironment } from "@dereekb/firebase-server/test";
 import { AbstractFirebaseServerAuthContext, AbstractFirebaseServerAuthService, AbstractFirebaseServerAuthUserContext } from './auth.service';
-import { AuthClaims, authRoleClaimsService, AuthRoleSet, AUTH_ADMIN_ROLE, AUTH_ROLE_CLAIMS_DEFAULT_CLAIM_VALUE, objectHasNoKeys } from '@dereekb/util';
+import { AuthClaims, AuthClaimsUpdate, authRoleClaimsService, AuthRoleSet, AUTH_ADMIN_ROLE, AUTH_ROLE_CLAIMS_DEFAULT_CLAIM_VALUE, objectHasNoKeys } from '@dereekb/util';
 import { CallableContextWithAuthData } from '../function/context';
 
 const TEST_CLAIMS_SERVICE_CONFIG = {
   'a': { roles: [AUTH_ADMIN_ROLE] }
 };
+
+type TestAuthClaims = typeof TEST_CLAIMS_SERVICE_CONFIG;
 
 export class TestFirebaseServerAuthUserContext extends AbstractFirebaseServerAuthUserContext<TestAuthService> { }
 export class TestFirebaseServerAuthContext extends AbstractFirebaseServerAuthContext<TestFirebaseServerAuthContext, TestFirebaseServerAuthUserContext, TestAuthService>  { }
@@ -28,7 +30,7 @@ export class TestAuthService extends AbstractFirebaseServerAuthService<TestFireb
     return TestAuthService.TEST_CLAIMS_SERVICE.toRoles(claims);
   }
 
-  claimsForRoles(roles: AuthRoleSet): AuthClaims {
+  claimsForRoles(roles: AuthRoleSet): AuthClaimsUpdate<TestAuthClaims> {
     return TestAuthService.TEST_CLAIMS_SERVICE.toClaims(roles);
   }
 
@@ -129,17 +131,19 @@ describe('firebase server auth', () => {
           describe('loadClaims()', () => {
 
             it('should load claims for the user.', async () => {
-              let claims = await authUserContext.loadClaims();
+              const data = {
+                test: 1
+              };
+
+              let claims = await authUserContext.loadClaims<typeof data>();
               expect(claims).toBeDefined();
               expect(objectHasNoKeys(claims)).toBe(true);
 
-              await authUserContext.setClaims({
-                test: 1
-              });
+              await authUserContext.setClaims(data);
 
-              claims = await authUserContext.loadClaims();
+              claims = await authUserContext.loadClaims<typeof data>();
               expect(claims).toBeDefined();
-              expect(claims!.test).toBe(1);
+              expect(claims.test).toBe(1);
             });
 
           });
@@ -147,13 +151,19 @@ describe('firebase server auth', () => {
           describe('updateClaims()', () => {
 
             it('should update the existing claims.', async () => {
+              const data = {
+                test: 1,
+                second: null
+              };
+
               await authUserContext.setClaims({
                 test: 1
               });
 
-              let claims = await authUserContext.loadClaims();
+              let claims = await authUserContext.loadClaims<typeof data>();
               expect(claims).toBeDefined();
               expect(claims!.test).toBe(1);
+              expect(claims!.second).not.toBe(2);
 
               await authUserContext.updateClaims({
                 second: 2
@@ -166,12 +176,17 @@ describe('firebase server auth', () => {
             });
 
             it('should remove any keys with null update values', async () => {
+              const data = {
+                test: 1,
+                second: null
+              };
+
               await authUserContext.setClaims({
                 test: 1,
                 second: 2
               });
 
-              let claims = await authUserContext.loadClaims();
+              let claims = await authUserContext.loadClaims<typeof data>();
               expect(claims).toBeDefined();
               expect(claims!.test).toBe(1);
 
@@ -190,11 +205,15 @@ describe('firebase server auth', () => {
           describe('clearClaims()', () => {
 
             it('should clear the claims.', async () => {
+              const data = {
+                test: 1
+              };
+
               await authUserContext.setClaims({
                 test: 1
               });
 
-              let claims = await authUserContext.loadClaims();
+              let claims = await authUserContext.loadClaims<typeof data>();
               expect(claims).toBeDefined();
               expect(claims!.test).toBe(1);
 

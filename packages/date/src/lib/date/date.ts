@@ -37,6 +37,15 @@ export function latestMinute(time = new Date): Date {
   return startOfMinute(time);
 }
 
+/**
+ * Returns an ISO8601DateString for now.
+ * 
+ * @returns 
+ */
+export function nowISODateString(): ISO8601DateString {
+  return toISODateString(new Date());
+}
+
 export function toISODateString(input: DateOrDateString): ISO8601DateString {
   const date = toJsDate(input);
 
@@ -68,7 +77,7 @@ export function latestDate(dates: Maybe<Date>[]): Maybe<Date>;
 export function latestDate(dates: Maybe<Date>[], defaultDate: Date): Date;
 export function latestDate(dates: Maybe<Date>[], defaultDate: Maybe<Date> = undefined): Maybe<Date> {
   const filtered: Date[] = filterMaybeValues(dates);
-  return (filtered.length > 0) ? maxDate(filtered) : undefined;
+  return (filtered.length > 0) ? maxDate(filtered) : defaultDate;
 }
 
 /**

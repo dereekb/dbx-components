@@ -8,7 +8,7 @@ export class DbxFirebaseLoginAnonymousComponent extends AbstractConfiguredDbxFir
 
   readonly loginProvider = 'anonymous';
 
-  handleLogin(): Promise<any> {
+  handleLogin() {
     return this.dbxFirebaseAuthService.logInAsAnonymous();
   }
 

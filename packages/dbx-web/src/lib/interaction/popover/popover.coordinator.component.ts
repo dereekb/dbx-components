@@ -1,7 +1,7 @@
 import { DbxPopoverController } from './popover';
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { DbxPopoverCoordinatorService } from './popover.coordinator.service';
-import { delay, map, shareReplay } from 'rxjs/operators';
+import { delay, map, shareReplay } from 'rxjs';
 
 /**
  * Used for coordinating popovers and closing/replacing existing ones when a new popover of the same name appears.

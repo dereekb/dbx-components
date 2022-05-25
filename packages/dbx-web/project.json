@@ -19,6 +19,10 @@
           {
             "description": "delete unnecessary src directory",
             "command": "echo 'cleaning up dbx-web scss files' && rm -r dist/packages/dbx-web/src"
+          },
+          {
+            "description": "copy license",
+            "command": "echo 'copying dbx-web license' && cp LICENSE dist/packages/dbx-web"
           }
         ],
         "parallel": false,
@@ -70,7 +74,7 @@
     "publish-npmjs": {
       "executor": "@nrwl/workspace:run-commands",
       "options": {
-        "command": "cd ./dist/packages/dbx-web && npm publish"
+        "command": "cd ./dist/packages/dbx-web && npm publish --access public"
       }
     }
   },

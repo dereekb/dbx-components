@@ -22,6 +22,10 @@
           {
             "description": "delete unnecessary src directory",
             "command": "echo 'cleaning up dbx-firebase scss files' && rm -r dist/packages/dbx-firebase/src"
+          },
+          {
+            "description": "copy license",
+            "command": "echo 'copying dbx-firebase license' && cp LICENSE dist/packages/dbx-firebase"
           }
         ],
         "parallel": false,
@@ -85,7 +89,7 @@
     "publish-npmjs": {
       "executor": "@nrwl/workspace:run-commands",
       "options": {
-        "command": "cd ./dist/packages/dbx-firebase && npm publish"
+        "command": "cd ./dist/packages/dbx-firebase && npm publish --access public"
       }
     }
   },

@@ -3,7 +3,9 @@ export interface Filter<F> {
   filter?: F;
 }
 
-export interface OptionalFilter<F> extends Partial<Filter<F>> { }
+export type OptionalFilter<F> = Partial<Filter<F>>;
+
+export type FilterFunction<T = unknown> = ((value: T, index: number) => boolean);
 
 /**
  * Used to invert a filter function by returning the opposite of what it returns.
@@ -12,12 +14,12 @@ export interface OptionalFilter<F> extends Partial<Filter<F>> { }
  * @param invert whether or not to apply the inversion.
  * @returns 
  */
-export function invertFilter<F extends (((value: any, index: number) => boolean) | ((value: any) => boolean) | (() => boolean)) = () => boolean>(filterFn: F, invert = true): F {
+export function invertFilter<T = unknown, F extends FilterFunction<T> = FilterFunction<T>>(filterFn: F, invert = true): F {
   if (invert) {
-    return function () {
-      const result: boolean = (filterFn as any).apply(undefined, arguments);
+    return ((value: T, index: number) => {
+      const result: boolean = filterFn.call(null, value, index);
       return !result;
-    } as F;
+    }) as F;
   } else {
     return filterFn;
   }

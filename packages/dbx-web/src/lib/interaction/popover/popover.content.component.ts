@@ -1,8 +1,6 @@
-import { BehaviorSubject } from 'rxjs';
-import { OnDestroy } from '@angular/core';
-import { Component, Input } from '@angular/core';
+import { BehaviorSubject, throttleTime } from 'rxjs';
+import { OnDestroy, Component } from '@angular/core';
 import { ResizedEvent } from 'angular-resize-event';
-import { throttleTime } from 'rxjs/operators';
 
 /**
  * Popover content wrapper component.

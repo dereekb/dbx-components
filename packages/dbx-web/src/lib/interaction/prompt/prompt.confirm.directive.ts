@@ -2,7 +2,7 @@ import { Directive, Input } from '@angular/core';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { Maybe } from '@dereekb/util';
 import { Observable, from } from 'rxjs';
-import { DbxPromptConfirm, ProvideDbxPromptConfirm } from './prompt.confirm';
+import { DbxPromptConfirm, provideDbxPromptConfirm } from './prompt.confirm';
 import { DbxPromptConfirmConfig } from './prompt.confirm.component';
 import { DbxPromptConfirmDialogComponent } from './prompt.confirm.dialog.component';
 
@@ -47,9 +47,9 @@ export abstract class AbstractPromptConfirmDirective implements DbxPromptConfirm
  */
 @Directive({
   selector: '[dbxPromptConfirm]',
-  providers: ProvideDbxPromptConfirm(DbxPromptConfirmDirective)
+  providers: provideDbxPromptConfirm(DbxPromptConfirmDirective)
 })
-export class DbxPromptConfirmDirective<T, O> extends AbstractPromptConfirmDirective {
+export class DbxPromptConfirmDirective extends AbstractPromptConfirmDirective {
 
   @Input('dbxPromptConfirm')
   override config?: DbxPromptConfirmConfig;

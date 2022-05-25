@@ -1,9 +1,9 @@
 import { Component } from '@angular/core';
 import { Maybe } from '@dereekb/util';
 import { first, shareReplay, switchMap, Observable, of } from 'rxjs';
-import { AbstractFormExpandableSectionConfig, AbstractFormExpandableSectionWrapperDirective, FormExpandableSectionWrapperTemplateOptions } from './expandable.wrapper.delegate';
+import { AbstractFormExpandableSectionConfig, AbstractFormExpandableSectionWrapperDirective } from './expandable.wrapper.delegate';
 
-export interface DbxFormToggleWrapperConfig<T = any> extends AbstractFormExpandableSectionConfig<T> {
+export interface DbxFormToggleWrapperConfig<T extends object = object> extends AbstractFormExpandableSectionConfig<T> {
   toggleLabelObs?: (open: Maybe<boolean>) => Observable<string>;
 }
 
@@ -22,7 +22,7 @@ export interface DbxFormToggleWrapperConfig<T = any> extends AbstractFormExpanda
   </div>
   `
 })
-export class DbxFormToggleWrapperComponent extends AbstractFormExpandableSectionWrapperDirective<DbxFormToggleWrapperConfig> {
+export class DbxFormToggleWrapperComponent<T extends object = object> extends AbstractFormExpandableSectionWrapperDirective<T, DbxFormToggleWrapperConfig> {
 
   readonly slideLabel$ = this._toggleOpen.pipe(
     switchMap(x => {

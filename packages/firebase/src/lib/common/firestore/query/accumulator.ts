@@ -16,7 +16,7 @@ export type FirebaseQueryItemAccumulator<T> = MappedFirebaseQuerySnapshotAccumul
  * 
  * @param iteration 
  */
-export function firebaseQuerySnapshotAccumulator<O, T>(iteration: FirestoreItemPageIterationInstance<T>): FirebaseQuerySnapshotAccumulator<T>;
+export function firebaseQuerySnapshotAccumulator<T>(iteration: FirestoreItemPageIterationInstance<T>): FirebaseQuerySnapshotAccumulator<T>;
 export function firebaseQuerySnapshotAccumulator<O, T>(iteration: FirestoreItemPageIterationInstance<T>, mapSnapshots?: ItemAccumulatorMapFunction<O, QueryDocumentSnapshotArray<T>>): MappedFirebaseQuerySnapshotAccumulator<O, T>;
 export function firebaseQuerySnapshotAccumulator<O, T>(iteration: FirestoreItemPageIterationInstance<T>, mapSnapshots?: ItemAccumulatorMapFunction<O, QueryDocumentSnapshotArray<T>>): MappedFirebaseQuerySnapshotAccumulator<O, T> {
   return itemAccumulator<O, QueryDocumentSnapshotArray<T>, PageItemIteration<QueryDocumentSnapshotArray<T>>>(iteration, mapSnapshots);
@@ -36,7 +36,7 @@ export function firebaseQueryItemAccumulator<U, T>(iteration: FirestoreItemPageI
     const result: U[] = x.map(y => {
       const data = y.data() as DocumentDataWithId<T>;
       data.id = y.id;
-      return mapItem!(data);
+      return (mapItem as MapFunction<DocumentDataWithId<T>, U>)(data);
     });
 
     return result;

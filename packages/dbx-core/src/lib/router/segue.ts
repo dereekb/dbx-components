@@ -1,13 +1,13 @@
-import { ArrayOrValue } from '@dereekb/util';
+import { ArrayOrValue, hasValueOrNotEmpty, Maybe } from '@dereekb/util';
 import { map, Observable } from 'rxjs';
 
-export type SegueRefRouterLink = string | ArrayOrValue<any>;
+export type SegueRefRouterLink = string | ArrayOrValue<object>;
 
 export interface SegueRefRawSegueParams {
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
-export interface SegueRefOptions<O = any> {
+export interface SegueRefOptions<O = object> {
 
   /**
    * Raw parameters
@@ -26,7 +26,7 @@ export interface SegueRefOptions<O = any> {
 /**
  * Represents a segue ref
  */
-export interface SegueRef<O = any> extends SegueRefOptions<O> {
+export interface SegueRef<O = object> extends SegueRefOptions<O> {
 
   /**
    * Ref path value.
@@ -38,28 +38,42 @@ export interface SegueRef<O = any> extends SegueRefOptions<O> {
 /**
  * A SegueRef object or a different router link representation.
  */
-export type SegueRefOrSegueRefRouterLink<O = any> = SegueRef<O> | SegueRefRouterLink;
+export type SegueRefOrSegueRefRouterLink<O = object> = SegueRef<O> | SegueRefRouterLink;
 
-export function isSegueRef<O = any>(input: SegueRefOrSegueRefRouterLink<O>): input is SegueRef<O> {
-  return (typeof input === 'object') && input.ref != null;
+export function isSegueRef<O = object>(input: Maybe<SegueRefOrSegueRefRouterLink<O>>): input is SegueRef<O> {
+  return (typeof input === 'object') && hasValueOrNotEmpty((input as SegueRef).ref);
 }
 
-export function asSegueRef<O = any>(input: SegueRefOrSegueRefRouterLink<O>): SegueRef<O> {
+export function asSegueRef<O = object>(input: SegueRefOrSegueRefRouterLink<O>): SegueRef<O>;
+export function asSegueRef<O = object>(input: Maybe<SegueRefOrSegueRefRouterLink<O>>): Maybe<SegueRef<O>>;
+export function asSegueRef<O = object>(input: Maybe<SegueRefOrSegueRefRouterLink<O>>): Maybe<SegueRef<O>> {
   const type = typeof input;
 
   if (type === 'string') {
-    return refStringToSegueRef(input);
+    return refStringToSegueRef(input as string);
   } else if (isSegueRef(input)) {
-    return input;
+    return input as SegueRef<O>;
   } else {
-    return { ref: undefined };
+    return undefined;
   }
 }
 
-export function refStringToSegueRef<O = any>(ref: string, options?: SegueRefOptions<O>): SegueRef<O> {
+export function asSegueRefString<O = object>(input: SegueRefOrSegueRefRouterLink<O> | string): string;
+export function asSegueRefString<O = object>(input: Maybe<SegueRefOrSegueRefRouterLink<O> | string>): Maybe<string>;
+export function asSegueRefString<O = object>(input: Maybe<SegueRefOrSegueRefRouterLink<O> | string>): Maybe<string> {
+  if (typeof input === 'string') {
+    return input;
+  } else if (isSegueRef(input)) {
+    return input.ref as string;
+  } else {
+    throw new Error(`asSegueRefString() failed to convert the input to a string: ${input}`);
+  }
+}
+
+export function refStringToSegueRef<O = object>(ref: string, options?: SegueRefOptions<O>): SegueRef<O> {
   return { ...options, ref };
 }
 
-export function mapRefStringObsToSegueRefObs<O = any>(obs: Observable<string>, options?: SegueRefOptions<O>): Observable<SegueRef<O>> {
+export function mapRefStringObsToSegueRefObs<O = object>(obs: Observable<string>, options?: SegueRefOptions<O>): Observable<SegueRef<O>> {
   return obs.pipe(map(x => refStringToSegueRef(x, options)));
 }

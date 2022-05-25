@@ -1,5 +1,5 @@
 import { Functions } from "firebase/functions";
-import { FirebaseFunctionMap } from "./function";
+import { FirebaseFunctionMap, FirebaseFunctionMapFunction } from "./function";
 import { FirebaseFunctionGetter, firebaseFunctionMapFactory, FirebaseFunctionsConfigMap, FirebaseFunctionTypeConfigMap, lazyFirebaseFunctionsFactory } from "./function.factory";
 
 const functionFactoryTestModelFunctionA = 'a';
@@ -25,8 +25,10 @@ export const testFunctionTypeConfigMap: FirebaseFunctionTypeConfigMap<FunctionFa
 
 export type FunctionFactoryTestModelFunctionsMap = FirebaseFunctionMap<FunctionFactoryTestModelTypeMap>;
 
-// @ts-ignore
-export abstract class FunctionFactoryTestModelFunctions implements FirebaseFunctionMap<FunctionFactoryTestModelTypeMap> { }
+export abstract class FunctionFactoryTestModelFunctions implements FirebaseFunctionMap<FunctionFactoryTestModelTypeMap> {
+  [functionFactoryTestModelFunctionA]: FirebaseFunctionMapFunction<FunctionFactoryTestModelTypeMap, 'a'>;
+  [functionFactoryTestModelFunctionB]: FirebaseFunctionMapFunction<FunctionFactoryTestModelTypeMap, 'b'>;
+}
 
 export const functionFactoryTestModelMap = firebaseFunctionMapFactory(testFunctionTypeConfigMap);
 

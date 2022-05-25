@@ -1,5 +1,5 @@
 <dbx-loading [context]="context" [linear]="true"></dbx-loading>
-<div dbx-list-internal-content infinite-scroll [infiniteScrollDistance]="(scrollDistance$ | async) ?? DEFAULT_SCROLL_DISTANCE"
+<div dbxListInternalContent infinite-scroll [infiniteScrollDistance]="(scrollDistance$ | async) ?? DEFAULT_SCROLL_DISTANCE"
   [infiniteScrollUpDistance]="(scrollDistance$ | async) ?? DEFAULT_SCROLL_DISTANCE" [hide]="hideContent$ | async"
   [infiniteScrollThrottle]="(throttleScroll$ | async) ?? DEFAULT_THROTTLE_SCROLL" [scrollWindow]="false"
   (scrolled)="onScrollDown()" (scrolledUp)="onScrollUp()">

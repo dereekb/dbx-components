@@ -5,6 +5,10 @@
 /tmp
 /out-tsc
 
+# env
+# do not publish secrets
+.env.secret
+
 # dependencies
 /node_modules
 **/node_modules

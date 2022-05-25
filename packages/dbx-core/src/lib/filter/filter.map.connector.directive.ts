@@ -1,7 +1,7 @@
 import { first } from 'rxjs';
 import { Directive, Input } from '@angular/core';
 import { FilterSourceConnector, FilterSource, FilterMapKey } from '@dereekb/rxjs';
-import { ProvideFilterSource, ProvideFilterSourceConnector } from './filter.content';
+import { provideFilterSource, provideFilterSourceConnector } from './filter.content';
 import { DbxFilterMapSourceDirective } from './filter.map.source.directive';
 import { Maybe } from '@dereekb/util';
 
@@ -12,8 +12,8 @@ import { Maybe } from '@dereekb/util';
   selector: '[dbxFilterMapSourceConnector]',
   exportAs: 'dbxFilterMapSourceConnector',
   providers: [
-    ...ProvideFilterSource(DbxFilterMapSourceConnectorDirective),
-    ...ProvideFilterSourceConnector(DbxFilterMapSourceConnectorDirective)
+    ...provideFilterSource(DbxFilterMapSourceConnectorDirective),
+    ...provideFilterSourceConnector(DbxFilterMapSourceConnectorDirective)
   ]
 })
 export class DbxFilterMapSourceConnectorDirective<F> extends DbxFilterMapSourceDirective<F> implements FilterSourceConnector<F> {

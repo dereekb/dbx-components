@@ -22,7 +22,7 @@ export interface IndexSetPair<T> {
  * @returns 
  */
 export function findToIndexSet<T>(input: T[], filter: (value: T) => boolean): IndexSet {
-  let filterIndexes: number[] = [];
+  const filterIndexes: number[] = [];
 
   input.forEach((x, i) => {
     if (filter(x)) {

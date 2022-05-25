@@ -1,19 +1,16 @@
-import { ChangeDetectorRef } from '@angular/core';
-import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
-import { switchMapMaybeObs } from '@dereekb/rxjs';
-import { shareReplay, distinctUntilChanged, map } from 'rxjs/operators';
-import { BehaviorSubject } from 'rxjs';
-import {
+import { ChangeDetectorRef ,
   Component, OnDestroy, OnInit, Type
 } from '@angular/core';
+import { DbxInjectionComponentConfig, AbstractSubscriptionDirective, safeDetectChanges } from '@dereekb/dbx-core';
+import { switchMapMaybeObs } from '@dereekb/rxjs';
+import { shareReplay, distinctUntilChanged, map, BehaviorSubject } from 'rxjs';
 import { ValidationErrors, FormGroup } from '@angular/forms';
 import { FieldType, FieldTypeConfig, FormlyFieldConfig } from '@ngx-formly/core';
 import { ChecklistItemFieldDisplayComponent, ChecklistItemFieldDisplayContentObs } from './checklist.item';
 import { DbxDefaultChecklistItemFieldDisplayComponent } from './checklist.item.field.content.default.component';
-import { AbstractSubscriptionDirective, safeDetectChanges } from '@dereekb/dbx-core';
 import { Maybe } from '@dereekb/util';
 
-export interface DbxChecklistItemFieldConfig<T = any> {
+export interface DbxChecklistItemFieldConfig<T = unknown> {
   /**
    * Observable used to retrieve content to display for the item.
    */
@@ -24,14 +21,14 @@ export interface DbxChecklistItemFieldConfig<T = any> {
   componentClass?: Type<ChecklistItemFieldDisplayComponent<T>>;
 }
 
-export interface ChecklistItemFormlyFieldConfig<T = any> extends FormlyFieldConfig {
+export interface ChecklistItemFormlyFieldConfig<T = unknown> extends FormlyFieldConfig {
   checklistField: DbxChecklistItemFieldConfig<T>;
 }
 
 @Component({
   templateUrl: 'checklist.item.field.component.html'
 })
-export class DbxChecklistItemFieldComponent<T = any> extends FieldType<ChecklistItemFormlyFieldConfig<T> & FieldTypeConfig> implements OnInit, OnDestroy {
+export class DbxChecklistItemFieldComponent<T = unknown> extends FieldType<ChecklistItemFormlyFieldConfig<T> & FieldTypeConfig> implements OnInit, OnDestroy {
 
   private _displayContent = new BehaviorSubject<Maybe<ChecklistItemFieldDisplayContentObs<T>>>(undefined);
 
@@ -98,9 +95,9 @@ export class DbxChecklistItemFieldComponent<T = any> extends FieldType<Checklist
   selector: 'dbx-checklist-item-content-component',
   template: `<dbx-injection [config]="config"></dbx-injection>`
 })
-export class DbxChecklistItemContentComponent<T = any> extends AbstractSubscriptionDirective {
+export class DbxChecklistItemContentComponent<T = unknown> extends AbstractSubscriptionDirective implements OnInit {
 
-  config?: DbxInjectionComponentConfig;
+  config?: DbxInjectionComponentConfig<ChecklistItemFieldDisplayComponent<T>>;
 
   constructor(
     readonly checklistItemFieldComponent: DbxChecklistItemFieldComponent<T>,

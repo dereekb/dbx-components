@@ -3,7 +3,7 @@ import { ReadableError } from "@dereekb/util";
 export interface FirebaseAuthError {
   code: string;
   name: string;
-  customData: any;
+  customData: unknown;
 }
 
 export const FIREBASE_AUTH_USER_NOT_FOUND_ERROR = 'auth/user-not-found';

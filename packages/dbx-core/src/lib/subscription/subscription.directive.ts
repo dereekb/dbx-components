@@ -1,4 +1,4 @@
-import { OnDestroy, Directive, Inject } from '@angular/core';
+import { OnDestroy, Directive } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { SubscriptionObject, LockSet } from '@dereekb/rxjs';
 

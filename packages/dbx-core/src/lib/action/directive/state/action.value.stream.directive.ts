@@ -1,8 +1,6 @@
 import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
-import { switchMap, mergeMap, map, withLatestFrom, shareReplay } from 'rxjs/operators';
-import { Directive, Host, Input, OnInit } from '@angular/core';
-import { BehaviorSubject, Observable, of, EMPTY } from 'rxjs';
-import { OnDestroy } from '@angular/core';
+import { switchMap, mergeMap, map, withLatestFrom, shareReplay, BehaviorSubject, Observable, of, EMPTY } from 'rxjs';
+import { Directive, Host, Input, OnInit, OnDestroy } from '@angular/core';
 import { hasValueOrNotEmpty, Maybe, isDefinedAndNotFalse } from '@dereekb/util';
 import { IsModifiedFunction, SubscriptionObject } from '@dereekb/rxjs';
 
@@ -26,7 +24,7 @@ export class dbxActionValueStreamDirective<T, O> implements OnInit, OnDestroy {
   }
 
   @Input()
-  set dbxActionValueStreamIsNotEmpty(requireNonEmpty: any) {
+  set dbxActionValueStreamIsNotEmpty(requireNonEmpty: unknown) {
     if (isDefinedAndNotFalse(requireNonEmpty)) {
       this.dbxActionValueStreamModified = (value) => {
         return of(hasValueOrNotEmpty(value));
@@ -63,13 +61,13 @@ export class dbxActionValueStreamDirective<T, O> implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     // Update Modified value.
-    this._modifiedSub.subscription = this.modifiedValue$.subscribe(([isModified, value]) => {
+    this._modifiedSub.subscription = this.modifiedValue$.subscribe(([isModified]) => {
       this.source.setIsModified(isModified);
     });
 
     // Set the value on triggers.
     this._triggerSub.subscription = this.source.triggered$.pipe(
-      switchMap(_ => this.modifiedValue$)
+      switchMap(() => this.modifiedValue$)
     ).subscribe(([isModified, value]) => {
       if (isModified) {
         this.source.readyValue(value);

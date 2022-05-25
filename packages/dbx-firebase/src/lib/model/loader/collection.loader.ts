@@ -6,7 +6,7 @@ import { Observable } from "rxjs";
 /**
  * Abstract type that loads models from a configured collection.
  */
-export interface DbxFirebaseCollectionLoader<T = any> {
+export interface DbxFirebaseCollectionLoader<T = unknown> {
 
   readonly constraints$: Observable<Maybe<ArrayOrValue<FirestoreQueryConstraint>>>;
   readonly firestoreIteration$: Observable<FirestoreItemPageIterationInstance<T>>;

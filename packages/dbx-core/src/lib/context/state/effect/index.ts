@@ -1,6 +1,6 @@
 import { OnRunEffects, Actions, EffectNotification, ofType } from '@ngrx/effects';
 import { Store } from '@ngrx/store';
-import { Observable, exhaustMap, filter, takeUntil, tap } from 'rxjs';
+import { Observable, exhaustMap, filter, takeUntil } from 'rxjs';
 import { DbxAppContextState } from '../../context';
 import { onDbxAppContext } from '../';
 import { ArrayOrValue } from '@dereekb/util';
@@ -9,7 +9,7 @@ import { ArrayOrValue } from '@dereekb/util';
 /**
  * Abstract effects class that only runs/allows effects when the DbxAppContextState in the ngrx state matches input activeState value.
  */
-export abstract class AbstractOnDbxAppContextStateEffects<S = any> implements OnRunEffects {
+export abstract class AbstractOnDbxAppContextStateEffects<S = unknown> implements OnRunEffects {
 
   private _activeStatesSet: Set<DbxAppContextState>;
 

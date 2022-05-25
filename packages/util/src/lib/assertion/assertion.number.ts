@@ -1,4 +1,4 @@
-import { DescriptorAssertionOptions, MapDescriptorAssertionOptions } from "./assert";
+import { DescriptorAssertionOptions } from "./assert";
 import { PropertyDescriptorUtility } from "./assertion";
 
 // MARK: Numbers

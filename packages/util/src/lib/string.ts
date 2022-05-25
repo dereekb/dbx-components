@@ -1,24 +1,28 @@
-import { capitalCase } from "change-case";
-import { MapStringFn } from "./map/map";
+import { MapFunction } from './value/map';
 import { Maybe } from "./value/maybe";
+
+export type MapStringFunction<T> = MapFunction<string, T>;
 
 /**
  * Represents a string that is made up of comma-separated values.
  * 
+ * Optional generic typing exists for communicating what values are separated within the string.
+ * 
  * I.E. 0,1,2
  */
-export type CommaSeparatedString<T = any> = string;
+// eslint-disable-next-line
+export type CommaSeparatedString<T = unknown> = string;
 
 export function caseInsensitiveString(input: string): string;
 export function caseInsensitiveString(input: undefined): undefined;
 export function caseInsensitiveString(input: Maybe<string>): Maybe<string>;
-export function caseInsensitiveString(input: any): any {
+export function caseInsensitiveString(input: Maybe<string>): Maybe<string> {
   return input?.toLocaleLowerCase();
 }
 
 export function splitCommaSeparatedString(input: CommaSeparatedString<string>): string[];
-export function splitCommaSeparatedString<T = any>(input: CommaSeparatedString<T>, mapFn: MapStringFn<T>): T[];
-export function splitCommaSeparatedString<T = any>(input: CommaSeparatedString<T>, mapFn: MapStringFn<T> = (x) => x as any): T[] {
+export function splitCommaSeparatedString<T = unknown>(input: CommaSeparatedString<T>, mapFn: MapStringFunction<T>): T[];
+export function splitCommaSeparatedString<T = unknown>(input: CommaSeparatedString<T>, mapFn: MapStringFunction<T> = (x) => x as unknown as T): T[] {
   const splits = input.split(',');
   return splits.map(x => mapFn(x.trim()));
 }

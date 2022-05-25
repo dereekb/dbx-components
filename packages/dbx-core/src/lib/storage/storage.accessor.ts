@@ -15,7 +15,7 @@ export abstract class LimitedStorageAccessor<T> {
 
   abstract remove(key: string): Observable<void>;
 
-  abstract clear(): Observable<{}>;
+  abstract clear(): Observable<object>;
 
 }
 

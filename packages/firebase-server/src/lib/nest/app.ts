@@ -1,11 +1,11 @@
 import { ClassType, Getter, asGetter, makeGetter, mergeArrayOrValueIntoArray } from '@dereekb/util';
-import { DynamicModule, INestApplication, INestApplicationContext, Provider } from '@nestjs/common';
+import { DynamicModule, INestApplication, INestApplicationContext, NestApplicationOptions, Provider, Type } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { ExpressAdapter } from '@nestjs/platform-express';
 import * as express from 'express';
 import { firebaseServerAppTokenProvider } from '../firebase/firebase.nest';
 import * as admin from 'firebase-admin';
-
+import { ConfigureFirebaseWebhookMiddlewareModule } from './middleware/webhook';
 
 export interface NestServer {
   server: express.Express;
@@ -15,6 +15,10 @@ export interface NestServer {
 export type NestAppPromiseGetter = Getter<Promise<INestApplicationContext>>;
 
 export interface NestServerInstance<T> {
+  /**
+   * Root module class of the app.
+   */
+  readonly moduleClass: ClassType<T>;
   /**
    * Initializes and returns the Nest Server.
    * 
@@ -40,7 +44,15 @@ export interface NestServerInstanceConfig<T> {
   /**
    * Additional providers to provide globally.
    */
-  providers?: Provider<any>[];
+  readonly providers?: Provider<unknown>[];
+  /**
+   * Whether or not to configure webhook usage. This will configure routes to use 
+   */
+  readonly configureWebhooks?: boolean;
+  /**
+   * Additional nest application options.
+   */
+  readonly applicationOptions?: NestApplicationOptions;
 }
 
 export function nestServerInstance<T>(config: NestServerInstanceConfig<T>): NestServerInstance<T> {
@@ -60,9 +72,18 @@ export function nestServerInstance<T>(config: NestServerInstanceConfig<T>): Nest
           mergeArrayOrValueIntoArray(providers, additionalProviders);
         }
 
+        const imports: Type<unknown>[] = [moduleClass];
+
+        // NOTE: https://cloud.google.com/functions/docs/writing/http#parsing_http_requests
+        const options: NestApplicationOptions = { bodyParser: false };  // firebase already parses the requests
+
+        if (config.configureWebhooks) {
+          imports.push(ConfigureFirebaseWebhookMiddlewareModule);
+        }
+
         const providersModule: DynamicModule = {
           module: FirebaseNestServerRootModule,
-          imports: [moduleClass],
+          imports,
           providers,
           exports: providers,
           global: true
@@ -71,37 +92,34 @@ export function nestServerInstance<T>(config: NestServerInstanceConfig<T>): Nest
         const nestApp = await NestFactory.create(
           providersModule,
           new ExpressAdapter(expressInstance),
+          options
         );
 
         return nestApp.init();
       };
 
       const nest: Promise<INestApplication> = createNestServer(server)
-        .then(v => {
-          console.log('Nest Ready');
-          return v;
-        })
         .catch(err => {
-          console.error('Nest broken', err);
+          console.error('Nest failed startup.', err);
           throw err;
         }) as Promise<INestApplication>;
 
       nestServer = { server, nest: makeGetter(nest) };
       serversCache.set(appName, nestServer);
-    }
+    };
 
     return nestServer;
   };
 
   const removeNestServer = async (firebaseApp: admin.app.App): Promise<boolean> => {
     const appName = firebaseApp.name;
-    let nestServer = serversCache.get(appName);
+    const nestServer = serversCache.get(appName);
     let removed: Promise<boolean>;
 
     if (nestServer) {
       removed = nestServer.nest().then(x => {
         serversCache.delete(appName);
-        return x.close().then(x => true);
+        return x.close().then(() => true);
       });
     } else {
       removed = Promise.resolve(false);
@@ -111,6 +129,7 @@ export function nestServerInstance<T>(config: NestServerInstanceConfig<T>): Nest
   };
 
   return {
+    moduleClass,
     initNestServer,
     removeNestServer
   };

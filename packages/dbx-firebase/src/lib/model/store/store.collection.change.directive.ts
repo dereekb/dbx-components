@@ -1,6 +1,5 @@
-import { tapLog } from '@dereekb/rxjs';
 import { shareReplay, startWith, Observable, switchMap, BehaviorSubject, distinctUntilChanged, combineLatest, map, filter, take } from 'rxjs';
-import { Directive, Input } from '@angular/core';
+import { Directive, Input, OnDestroy, OnInit } from '@angular/core';
 import { FirestoreDocument, IterationQueryDocChangeWatcherChangeType, IterationQueryDocChangeWatcherEvent } from "@dereekb/firebase";
 import { Maybe } from '@dereekb/util';
 import { DbxFirebaseCollectionStore } from "./store.collection";
@@ -11,7 +10,7 @@ import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
  * Refresh mode
  */
 export type DbxFirebaseCollectionChangeDirectiveMode = 'auto' | 'manual';
-export type DbxFirebaseCollectionChangeDirectiveEvent = Pick<IterationQueryDocChangeWatcherEvent<any>, 'time' | 'type'>;
+export type DbxFirebaseCollectionChangeDirectiveEvent = Pick<IterationQueryDocChangeWatcherEvent<unknown>, 'time' | 'type'>;
 
 /**
  * Used to watch query doc changes and respond to them accordingly.
@@ -19,8 +18,8 @@ export type DbxFirebaseCollectionChangeDirectiveEvent = Pick<IterationQueryDocCh
 @Directive({
   selector: '[dbxFirebaseCollectionChange]'
 })
-export class DbxFirebaseCollectionChangeDirective<T, D extends FirestoreDocument<T> = FirestoreDocument<T>, S extends DbxFirebaseCollectionStore<T, D> = DbxFirebaseCollectionStore<T, D>>
-  extends AbstractSubscriptionDirective {
+export class DbxFirebaseCollectionChangeDirective<T = unknown, D extends FirestoreDocument<T> = FirestoreDocument<T>, S extends DbxFirebaseCollectionStore<T, D> = DbxFirebaseCollectionStore<T, D>>
+  extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
 
   private _mode = new BehaviorSubject<DbxFirebaseCollectionChangeDirectiveMode>('manual');
   readonly mode$ = this._mode.pipe(distinctUntilChanged());

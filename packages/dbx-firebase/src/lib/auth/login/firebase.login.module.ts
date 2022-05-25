@@ -32,7 +32,7 @@ import { DbxFirebaseLoginTermsConfig } from './login.terms';
 
 export abstract class DbxFirebaseLoginModuleRootConfig extends DbxFirebaseLoginTermsConfig {
   abstract readonly enabledLoginMethods: FirebaseLoginMethodType[] | true;
-  abstract readonly termsComponentClass?: Type<any>;
+  abstract readonly termsComponentClass?: Type<unknown>;
   abstract readonly passwordConfig?: DbxFirebaseAuthLoginPasswordConfig;
 }
 

@@ -1,7 +1,7 @@
 import { Maybe, TimezoneString } from '@dereekb/util';
 import { RRule, Options } from 'rrule';
 import { CalendarDate, DateSet, DateRange, DateRangeParams, makeDateRange, maxFutureDate, durationSpanToDateRange } from '../date';
-import { BaseDateAsUTC, calculateAllConversions, DateTimezoneUtcNormalInstance } from '../date/date.timezone';
+import { BaseDateAsUTC, DateTimezoneUtcNormalInstance } from '../date/date.timezone';
 import { DateRRule } from './date.rrule.extension';
 import { DateRRuleParseUtility, RRuleLines, RRuleStringLineSet, RRuleStringSetSeparation } from './date.rrule.parse';
 
@@ -115,7 +115,7 @@ export class DateRRuleInstance {
       throw new Error('Missing rruleLines or rruleStringLineSet input.');
     }
 
-    const rruleStringLineSet = params.rruleStringLineSet ?? DateRRuleParseUtility.toRRuleStringSet(params.rruleLines!);
+    const rruleStringLineSet = params.rruleStringLineSet ?? DateRRuleParseUtility.toRRuleStringSet(params.rruleLines as string);
     const rruleOptions = DateRRuleUtility.toRRuleOptions(rruleStringLineSet);
     const exclude = rruleOptions.exdates.addAll(params.options.exclude?.valuesArray());
     const rrule = new DateRRule(rruleOptions.options);
@@ -167,7 +167,7 @@ export class DateRRuleInstance {
   }
 
   get timezone(): TimezoneString {
-    return this.normalInstance.config.timezone!;
+    return this.normalInstance.config.timezone as string;
   }
 
   nextRecurrenceDate(from: Date = new Date()): Maybe<Date> {
@@ -187,7 +187,7 @@ export class DateRRuleInstance {
     let between: Maybe<DateRange>;
 
     if (options.range || options.rangeParams) {
-      between = options.range ?? makeDateRange(options.rangeParams!);
+      between = options.range ?? makeDateRange(options.rangeParams as DateRangeParams);
       between.start = this.normalInstance.baseDateToTargetDate(between.start);
       between.end = this.normalInstance.baseDateToTargetDate(between.end);
     }
@@ -203,7 +203,7 @@ export class DateRRuleInstance {
       startsAtDates = this.rrule.all();
     }
 
-    const referenceDate: CalendarDate = this.options.date!;
+    const referenceDate: CalendarDate = this.options.date as CalendarDate;
     const allDates = startsAtDates.map(startsAt => ({ ...referenceDate, startsAt })); // Inherit calendar time, etc.
     let dates: CalendarDate[] = allDates;
 
@@ -254,10 +254,10 @@ export class DateRRuleInstance {
       if (options.until) {
         end = this.rrule.before(options.until, true);
       } else {
-        end = this.rrule.last()!;
+        end = this.rrule.last() as Date;
       }
 
-      const referenceDate = this.options.date!;
+      const referenceDate = this.options.date as CalendarDate;
       const finalRecurrenceDateRange = durationSpanToDateRange({
         ...referenceDate,
         startsAt: end
@@ -308,7 +308,7 @@ export class DateRRuleUtility {
       throw new Error('Rrules be defined for expansion.');
     }
 
-    const dateRrule = options.instance ?? DateRRuleInstance.make(options.instanceFrom!);
+    const dateRrule = options.instance ?? DateRRuleInstance.make(options.instanceFrom as MakeDateRRuleInstance);
     return dateRrule.expand(options);
   }
 

@@ -1,4 +1,5 @@
 // A set of copied types from @google-cloud/firestore and firebase/firestore to allow cross-compatability.
+/* eslint-disable */
 
 // MARK: Firestore
 // These types are provided to avoid us from using the "any".
@@ -108,10 +109,10 @@ export interface SnapshotListenOptions {
 /**
  * Mirrors the types/methods of FirestoreDataConverter.
  */
-export interface FirestoreDataConverter<T> {
-  toFirestore(modelObject: WithFieldValue<T>): DocumentData;
-  toFirestore(modelObject: PartialWithFieldValue<T>, options: SetOptions): DocumentData;
-  fromFirestore(snapshot: QueryDocumentSnapshot<DocumentData>, options?: SnapshotOptions): T;
+export interface FirestoreDataConverter<T, O = DocumentData> {
+  toFirestore(modelObject: WithFieldValue<T>): O;
+  toFirestore(modelObject: PartialWithFieldValue<T>, options: SetOptions): O;
+  fromFirestore(snapshot: QueryDocumentSnapshot<O>, options?: SnapshotOptions): T;
 }
 
 // MARK: Document
@@ -137,8 +138,16 @@ export interface CollectionReference<T = DocumentData> extends Query<T> {
 }
 
 // MARK: Batch
-export type WriteBatch = {};
-export type Transaction = {};
+export interface WriteBatch {
+
+  /**
+   * Commits the changes.
+   */
+  commit(): Promise<WriteResult[] | void>;
+
+};
+
+export type Transaction = object;
 
 // MARK: Query
 export interface Query<T = DocumentData> {
@@ -160,7 +169,7 @@ export interface QuerySnapshot<T = DocumentData> {
   readonly docs: Array<QueryDocumentSnapshot<T>>;
   readonly size: number;
   readonly empty: boolean;
-  forEach(callback: (result: QueryDocumentSnapshot<T>) => void, thisArg?: any): void;
+  forEach(callback: (result: QueryDocumentSnapshot<T>) => void, thisArg?: unknown): void;
   docChanges(): DocumentChange<T>[];
 }
 

@@ -17,7 +17,7 @@ export interface DbxFirebaseCollectionStore<T, D extends FirestoreDocument<T> = 
 
   setMaxPages(observableOrValue: ObservableOrValue<Maybe<number>>): Subscription;
   setItemsPerPage(observableOrValue: ObservableOrValue<Maybe<number>>): Subscription;
-  setConstraints(observableOrValue: ObservableOrValue<Maybe<ArrayOrValue<FirestoreQueryConstraint<T>>>>): Subscription;
+  setConstraints(observableOrValue: ObservableOrValue<Maybe<ArrayOrValue<FirestoreQueryConstraint>>>): Subscription;
   next(observableOrValue: ObservableOrValue<void>): void;
   restart(observableOrValue: ObservableOrValue<void>): void;
 
@@ -28,7 +28,7 @@ export interface DbxFirebaseCollectionStoreContextState<T, D extends FirestoreDo
   readonly firestoreCollection?: Maybe<FirestoreCollection<T, D>>;
   readonly maxPages?: Maybe<number>;
   readonly itemsPerPage?: Maybe<number>;
-  readonly constraints?: Maybe<ArrayOrValue<FirestoreQueryConstraint<T>>>;
+  readonly constraints?: Maybe<ArrayOrValue<FirestoreQueryConstraint>>;
 }
 
 /**
@@ -54,7 +54,7 @@ export class AbstractDbxFirebaseCollectionStore<T, D extends FirestoreDocument<T
     );
   });
 
-  readonly setConstraints = this.effect((input: Observable<Maybe<ArrayOrValue<FirestoreQueryConstraint<T>>>>) => {
+  readonly setConstraints = this.effect((input: Observable<Maybe<ArrayOrValue<FirestoreQueryConstraint>>>) => {
     return input.pipe(
       switchMap((constraints) => this.loader$.pipe(
         tap((x) => x.setConstraints(constraints))

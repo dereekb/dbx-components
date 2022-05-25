@@ -10,7 +10,7 @@ import { DbxValueListItemModifier } from "./list.view.value.modifier";
  * Abstract list directive that takes in items and a AbstractDbxValueItemListViewConfig configuration.
  */
 @Directive()
-export abstract class AbstractDbxValueListViewDirective<T, I extends DbxValueListItem<T> = DbxValueListItem<T>, V = any, C extends AbstractDbxValueListViewConfig<T, I, V> = AbstractDbxValueListViewConfig<T, I, V>> implements DbxValueListView<T, I>, OnDestroy {
+export abstract class AbstractDbxValueListViewDirective<T, I extends DbxValueListItem<T> = DbxValueListItem<T>, V = unknown, C extends AbstractDbxValueListViewConfig<T, I, V> = AbstractDbxValueListViewConfig<T, I, V>> implements DbxValueListView<T, I>, OnDestroy {
 
   private _config = new BehaviorSubject<Maybe<C>>(undefined);
   readonly config$ = this._config.pipe(filterMaybe(), distinctUntilChanged());
@@ -19,7 +19,7 @@ export abstract class AbstractDbxValueListViewDirective<T, I extends DbxValueLis
     this.dbxValueListViewModifier.modifiers$.pipe(map(maybeModifierMapToFunction)) : of(undefined);
 
   readonly items$: Observable<DbxValueListItemConfig<T, I>[]> = combineLatest([this.config$, this.dbxListView.values$, this.modifyFn$]).pipe(
-    switchMap(([listViewConfig, values, modifyFn]) => mapValuesToValuesListItemConfigObs<T, I>(listViewConfig, values).pipe(mapForEach(modifyFn)) as Observable<DbxValueListItemConfig<T, I>[]>),
+    switchMap(([listViewConfig, values, modifyFn]) => mapValuesToValuesListItemConfigObs<T, I, V>(listViewConfig, values).pipe(mapForEach(modifyFn)) as Observable<DbxValueListItemConfig<T, I>[]>),
     shareReplay(1)
   );
 

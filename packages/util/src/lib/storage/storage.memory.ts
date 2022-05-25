@@ -1,3 +1,4 @@
+import { objectHasKey } from '../object/object';
 import { Maybe } from '../value/maybe';
 import { StorageObject } from "./storage.object"
 
@@ -15,7 +16,7 @@ export class MemoryStorageInstance implements StorageObject {
   }
 
   hasKey(key: string): boolean {
-    return this._storage.hasOwnProperty(key);
+    return objectHasKey(this._storage, key);
   }
 
   getItem(key: string): Maybe<string> {

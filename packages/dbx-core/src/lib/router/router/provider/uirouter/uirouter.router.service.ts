@@ -1,10 +1,9 @@
 import { Subject, BehaviorSubject } from 'rxjs';
 import { DbxRouterService, DbxRouterTransitionService } from '../../service';
-import { asSegueRef, SegueRef, SegueRefOrSegueRefRouterLink, SegueRefRawSegueParams } from "../../../segue";
+import { asSegueRef, asSegueRefString, SegueRefOrSegueRefRouterLink, SegueRefRawSegueParams } from "../../../segue";
 import { StateService, UIRouterGlobals, TransitionOptions, TransitionService } from '@uirouter/core';
 import { Injectable, OnDestroy } from "@angular/core";
 import { DbxRouterTransitionEvent, DbxRouterTransitionEventType } from '../../transition/transition';
-import { Maybe } from '@dereekb/util';
 
 /**
  * UIRouter implementation of DbxRouterService and DbxRouterTransitionService.
@@ -30,11 +29,11 @@ export class DbxUIRouterService implements DbxRouterService, DbxRouterTransition
 
     this.transitionService.onStart({}, () => {
       emitTransition(DbxRouterTransitionEventType.START);
-    }) as any;
+    });
 
     this.transitionService.onSuccess({}, () => {
       emitTransition(DbxRouterTransitionEventType.SUCCESS);
-    }) as any;
+    });
 
   }
 
@@ -49,12 +48,13 @@ export class DbxUIRouterService implements DbxRouterService, DbxRouterTransition
   go(input: SegueRefOrSegueRefRouterLink<TransitionOptions>): Promise<boolean> {
     const segueRef = asSegueRef(input);
     const params = { ...this.uiRouterGlobals.current.params, ...segueRef.refParams };
-    return this.state.go(segueRef.ref, params, segueRef.refOptions).then(_ => true).catch(_ => false);
+    return this.state.go(segueRef.ref as string, params, segueRef.refOptions).then(() => true).catch(() => false);
   }
 
   isActive(input: SegueRefOrSegueRefRouterLink): boolean {
     const segueRef = asSegueRef(input);
-    const { ref, refParams } = segueRef;
+    const ref = segueRef.ref as string;
+    const refParams = segueRef.refParams;
 
     const targetRef = (ref.startsWith('.') ? `^${ref}` : ref);
     const active = this.state.includes(targetRef, refParams);
@@ -62,20 +62,12 @@ export class DbxUIRouterService implements DbxRouterService, DbxRouterTransition
   }
 
   comparePrecision(aInput: SegueRefOrSegueRefRouterLink, bInput: SegueRefOrSegueRefRouterLink): number {
-    const aRef = readSegueRefString(aInput);
-    const bRef = readSegueRefString(bInput);
+    const aRef = asSegueRefString(aInput);
+    const bRef = asSegueRefString(bInput);
 
     const aLength = aRef.length;
     const bLength = bRef.length;
     return (aLength > bLength) ? 1 : (aLength === bLength) ? 0 : -1;
   }
 
-}
-
-export function readSegueRefString(input: SegueRefOrSegueRefRouterLink | string): string {
-  if (typeof input === 'string') {
-    return input;
-  } else {
-    return input?.ref ?? '';
-  }
 }

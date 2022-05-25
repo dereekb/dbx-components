@@ -1,30 +1,39 @@
+/*eslint @typescript-eslint/no-explicit-any:"off"*/
+// any is used with intent here, as there isn't enough typing information available when going from a parent of fields to the types of each child.
+
 import { asGetter, Getter, GetterOrValue } from "../getter/getter";
 import { filterKeyValueTuples, findPOJOKeys, KeyValueTypleValueFilter } from "../object/object";
-import { Maybe } from "../value/maybe";
+import { isMaybeSo, Maybe, MaybeSo } from "../value/maybe";
 import { ApplyMapFunctionWithOptions, MapFunction } from "../value/map";
+import { MergeReplace, ReplaceType } from '../type';
+import { mapObjectMap } from '../object';
+import { XOR } from 'ts-essentials';
+import { Building } from '../value/build';
 
 // MARK: Model
-export type ModelMapFunction<I extends object, O extends object> = ApplyMapFunctionWithOptions<Maybe<I>, O, ModelConversionOptions<I, O>>;
-export type ModelFromFunction<V extends object, D extends object> = ModelMapFunction<D, V>;
-export type ModelToFunction<V extends object, D extends object> = ModelMapFunction<V, D>;
+/**
+ * Type used to declare a sister-type to the generic object.
+ */
+export type MappedModelData<I extends object, R extends object> = MergeReplace<I, R>;
+export type TypedMappedModelData<I extends object, O extends object, X = any> = ReplaceType<I, O, X>;
+
+export type ModelMapFunction<I extends object, O extends object> = ApplyMapFunctionWithOptions<Maybe<I>, O, ModelConversionOptions<I>>;
+export type ModelMapFromFunction<V extends object, D extends object> = ModelMapFunction<D, V>;
+export type ModelMapToFunction<V extends object, D extends object> = ModelMapFunction<V, D>;
 
 export interface ModelMapFunctions<V extends object, D extends object> {
-  from: ModelFromFunction<V, D>;
-  to: ModelToFunction<V, D>;
+  from: ModelMapFromFunction<V, D>;
+  to: ModelMapToFunction<V, D>;
 }
 
-export type ModelFieldsConversionConfig<I extends object> = {
-  [K in keyof I]: ModelFieldConversionConfig;
-}
-
-export function makeModelMapFunctions<V extends object, D extends object>(fields: ModelFieldsConversionConfig<V>): ModelMapFunctions<V, D> {
+export function makeModelMapFunctions<V extends object, D extends object>(fields: ModelFieldConversions<V, D>): ModelMapFunctions<V, D> {
   const keys = filterKeyValueTuples(fields);
-  const conversionsByKey: [keyof V, ModelFieldMapFunctions][] = keys.map(([key, field]) => [key, makeModelFieldMapFunctions(field)]);
-  const fromConversions: [keyof D, ModelFieldMapFunction][] = conversionsByKey.map(([key, configs]) => ([key as any as keyof D, configs.from]));
+  const conversionsByKey: [keyof V, ModelFieldMapFunctions][] = keys.map(([key, field]) => [key, field]) as ([keyof V, ModelFieldMapFunctions][]);
+  const fromConversions: [keyof D, ModelFieldMapFunction][] = conversionsByKey.map(([key, configs]) => ([key as unknown as keyof D, configs.from]));
   const toConversions: [keyof V, ModelFieldMapFunction][] = conversionsByKey.map(([key, configs]) => ([key, configs.to]));
 
-  const from: ModelFromFunction<V, D> = makeModelConversionFieldValuesFunction<D, V>(fromConversions);
-  const to: ModelToFunction<V, D> = makeModelConversionFieldValuesFunction<V, D>(toConversions);
+  const from = makeModelConversionFieldValuesFunction<D, V>(fromConversions) as ModelMapFromFunction<V, D>;
+  const to = makeModelConversionFieldValuesFunction<V, D>(toConversions) as ModelMapToFunction<V, D>;
 
   return {
     from,
@@ -32,10 +41,10 @@ export function makeModelMapFunctions<V extends object, D extends object>(fields
   };
 }
 
-export type ModelConversionFieldTuple<I extends object> = [keyof I, ModelFieldMapFunction<any, any>];
+export type ModelConversionFieldTuple<I extends object> = [keyof I, ModelFieldMapFunction<unknown, unknown>];
 export type ModelConversionFieldValuesConfig<I extends object> = ModelConversionFieldTuple<I>[];
 
-export interface ModelConversionOptions<I extends object, O extends object> {
+export interface ModelConversionOptions<I extends object> {
   /**
    * Fields to include.
    */
@@ -46,26 +55,26 @@ export interface ModelConversionOptions<I extends object, O extends object> {
   definedOnly?: boolean;
 }
 
-export type ModelConversionFieldValuesFunction<I extends object, O extends object> = ApplyMapFunctionWithOptions<Maybe<I>, O, ModelConversionOptions<I, O>>;
+export type ModelConversionFieldValuesFunction<I extends object, O extends object> = ApplyMapFunctionWithOptions<Maybe<I>, O, ModelConversionOptions<I>>;
 
 export function makeModelConversionFieldValuesFunction<I extends object, O extends object>(fields: ModelConversionFieldValuesConfig<I>): ModelConversionFieldValuesFunction<I, O> {
-  return (input: Maybe<I>, target?: Maybe<Partial<O>>, options?: Maybe<ModelConversionOptions<I, O>>) => {
-    target = target ?? {} as Partial<O>;
+  return (input: Maybe<I>, inputTarget?: Maybe<Partial<O>>, options?: Maybe<ModelConversionOptions<I>>) => {
+    const target = (inputTarget ?? {}) as Building<TypedMappedModelData<I, O>>;
 
     if (input) {
-      let targetFields = fields;
+      let targetFields: ModelConversionFieldValuesConfig<I> = fields;
 
       // if options are provided, filter down.
       if (options) {
-        const fieldsToConvert = new Set(findPOJOKeys(input, {
+        const fieldsToMap = new Set(findPOJOKeys(input, {
           keysFilter: options.fields,
           valueFilter: (options.definedOnly === false) ? KeyValueTypleValueFilter.NONE : KeyValueTypleValueFilter.UNDEFINED
         }));
 
-        targetFields = fields.filter(x => fieldsToConvert.has(x[0]));
+        targetFields = fields.filter(x => fieldsToMap.has(x[0]));
       }
 
-      targetFields.forEach(([key, convert]) => target![key as unknown as keyof O] = convert(input[key]));
+      targetFields.forEach(([key, convert]) => target[key] = convert(input[key]) as any);
     }
 
     return target as O;
@@ -73,68 +82,103 @@ export function makeModelConversionFieldValuesFunction<I extends object, O exten
 }
 
 // MARK: Fields
-export interface ModelFieldConversionConfig<V = any, D = any> {
-  from?: ModelFieldFromConfig<V, D>;
-  to?: ModelFieldToConfig<V, D>;
+/**
+ * An object map containing a ModelFieldMapFunctions entry for each key (required and optional) from the generic object.
+ */
+export type ModelFieldConversions<V extends object, D extends object> = Required<{
+  [K in keyof V]: ModelFieldMapFunctions<V[K], TypedMappedModelData<V, D>[K]>;
+}>;
+
+/**
+ * An object map containing a ModelFieldMapFunctionsConfig for each key (required and optional) from the generic object.
+ */
+export type ModelFieldConversionsConfig<V extends object, D extends object> = Required<{
+  [K in keyof V]: ModelFieldMapFunctionsConfig<V[K], TypedMappedModelData<V, D>[K]>;
+}>;
+
+export function modelFieldConversions<V extends object, D extends object>(config: ModelFieldConversionsConfig<V, D>): ModelFieldConversions<V, D> {
+  return mapObjectMap(config, (x) => modelFieldMapFunctions(x) as any);
 }
 
-export interface ModelFieldConvertConfig<I, O> {
-
-  /**
-   * Default value to use if the input value is null/undefined.
-   */
-  default?: GetterOrValue<O>;
-
-  /**
-   * Whether or not to pass through maybe values to the convert function. Must be explicitly set.
-   * 
-   * If a default value is provided, this option is ignored.
-   */
-  convertMaybe?: boolean;
-
-  /**
-   * Conversion from I to O.
-   */
-  convert?: MapFunction<I, O>;
-
+export type ModelFieldMapFunctions<I = unknown, O = unknown> = {
+  from: ModelFieldMapFromFunction<I, O>;
+  to: ModelFieldMapToFunction<I, O>;
 }
 
-export interface ModelFieldFromConfig<V = any, D = any> extends ModelFieldConvertConfig<D, V> { }
-export interface ModelFieldToConfig<V = any, D = any> extends ModelFieldConvertConfig<V, D> { }
-
-export type ModelFieldMapFunction<I = any, O = any> = MapFunction<Maybe<I>, O>;
-export type ModelFieldFromFunction<V, D> = ModelFieldMapFunction<D, V>;
-export type ModelFieldToFunction<V, D> = ModelFieldMapFunction<V, D>;
-
-export interface ModelFieldMapFunctions<V = any, D = any> {
-  from: ModelFieldFromFunction<V, D>;
-  to: ModelFieldToFunction<V, D>;
+export type ModelFieldMapFunctionsConfig<I = unknown, O = unknown> = {
+  from: ModelFieldMapFromConfig<I, O>;
+  to: ModelFieldMapToConfig<I, O>;
 }
 
-export function makeModelFieldMapFunction<I, O>(inputConfig: Maybe<ModelFieldConvertConfig<I, O>>): ModelFieldMapFunction<I, O> {
-  const config = inputConfig ?? {};
-  const { convertMaybe, convert = (x: I) => x as any, default: defaultValue } = config;
-  const getDefaultValue: Getter<Maybe<O>> = asGetter(defaultValue);
+export function modelFieldMapFunctions<I = unknown, O = unknown>(config: ModelFieldMapFunctionsConfig<I, O>): ModelFieldMapFunctions<I, O> {
+  return {
+    from: modelFieldMapFunction(config.from),
+    to: modelFieldMapFunction(config.to),
+  };
+}
+
+// MARK: Field
+/**
+ * ModelFieldMapFunction configuration that can convert a MaybeValue to the target value.
+ */
+export type ModelFieldMapMaybeTooConfig<I, O> = {
+  convertMaybe: ModelFieldMapConvertMaybeFunction<I, O>;
+}
+
+export type ModelFieldMapMaybeWithDefaultValueConfig<I, O> = {
+  defaultInput: GetterOrValue<I>;
+  convert: ModelFieldMapConvertFunction<I, O>;
+}
+
+export type ModelFieldMapMaybeWithDefaultDataConfig<I, O> = {
+  convert: ModelFieldMapConvertFunction<I, O>;
+  default: GetterOrValue<O>;
+}
+
+export type ModelFieldMapConvertMaybeFunction<I, O> = MapFunction<Maybe<I>, O>;
+export type ModelFieldMapConvertFunction<I, O> = MapFunction<MaybeSo<I>, O>;
+
+/**
+ * ModelFieldMapFunction configuration that handles the MaybeNot case with undefined.
+ */
+export type ModelFieldMapMaybeWithDefaultConfig<I, O> = ModelFieldMapMaybeWithDefaultValueConfig<I, O> | ModelFieldMapMaybeWithDefaultDataConfig<I, O>;
+
+/**
+ * Configuration is either a ModelFieldMapMaybeTooConfig or a ModelFieldMapMaybeWithDefaultConfig
+ */
+export type ModelFieldMapConfig<I, O> = XOR<ModelFieldMapMaybeTooConfig<I, O>, ModelFieldMapMaybeWithDefaultConfig<I, O>>;
+
+export type ModelFieldMapFromConfig<I = unknown, O = unknown> = ModelFieldMapConfig<O, I>;
+export type ModelFieldMapToConfig<I = unknown, O = unknown> = ModelFieldMapConfig<I, O>;
+
+export type ModelFieldMapFunction<I = unknown, O = unknown> = MapFunction<Maybe<I>, O>;
+export type ModelFieldMapFromFunction<I, O> = ModelFieldMapFunction<O, I>;
+export type ModelFieldMapToFunction<I, O> = ModelFieldMapFunction<I, O>;
+
+/**
+ * Creates a ModelFieldMapFunction.
+ * 
+ * @param config 
+ * @returns 
+ */
+export function modelFieldMapFunction<I, O>(config: ModelFieldMapConfig<I, O>): ModelFieldMapFunction<I, O> {
+  const convert = (config as ModelFieldMapMaybeWithDefaultConfig<I, O>).convert;
+  const convertMaybe = (config as ModelFieldMapMaybeTooConfig<I, O>).convertMaybe;
+  const defaultOutput = (config as ModelFieldMapMaybeWithDefaultDataConfig<I, O>).default;
+  const defaultInput = (config as ModelFieldMapMaybeWithDefaultValueConfig<I, O>).defaultInput;
+
+  const getDefaultOutput: Getter<O> = asGetter(defaultOutput);
+  const getDefaultInput: Getter<I> = asGetter(defaultInput);
 
   return (input: Maybe<I>) => {
-    if (input == null) {
-      if (convertMaybe) {
-        return convert(input as any);
-      } else {
-        return getDefaultValue();
-      }
-    } else {
+    if (isMaybeSo(input)) {
       return convert(input);
+    } else {
+      if (convertMaybe) {
+        return convertMaybe(input ?? getDefaultInput());
+      } else {
+        return getDefaultOutput();
+      }
     }
-  }
-}
-
-export const makeModelFieldFromFunction = makeModelFieldMapFunction;
-export const makeModelFieldToFunction = makeModelFieldMapFunction;
-
-export function makeModelFieldMapFunctions<V = any, D = any>(config: ModelFieldConversionConfig<V, D>): ModelFieldMapFunctions<V, D> {
-  return {
-    from: makeModelFieldMapFunction(config.from),
-    to: makeModelFieldMapFunction(config.to),
   }
 }

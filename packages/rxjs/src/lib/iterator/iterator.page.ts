@@ -1,9 +1,7 @@
-import { tapLog } from '@dereekb/rxjs';
 import { filterMaybe } from '../rxjs';
-import { distinctUntilChanged, map, scan, startWith, catchError, skip, mergeMap, delay } from 'rxjs/operators';
-import { PageLoadingState, loadingStateHasError, loadingStateHasFinishedLoading, loadingStateIsLoading, successPageResult, mapLoadingStateResults, beginLoading } from "../loading";
+import { PageLoadingState, loadingStateHasError, loadingStateHasFinishedLoading, loadingStateIsLoading, successPageResult, mapLoadingStateResults, startWithBeginLoading } from "../loading";
 import { FIRST_PAGE, Destroyable, Filter, filteredPage, getNextPageNumber, hasValueOrNotEmpty, Maybe, PageNumber, Page, isMaybeNot } from "@dereekb/util";
-import { BehaviorSubject, combineLatest, exhaustMap, filter, first, Observable, of, OperatorFunction, shareReplay } from "rxjs";
+import { distinctUntilChanged, map, scan, startWith, catchError, skip, mergeMap, delay, BehaviorSubject, combineLatest, exhaustMap, filter, first, Observable, of, OperatorFunction, shareReplay } from "rxjs";
 import { ItemIteratorNextRequest, PageItemIteration } from './iteration';
 import { iterationHasNextAndCanLoadMore } from './iteration.next';
 
@@ -81,7 +79,7 @@ interface InternalItemPageIteratorNext extends ItemIteratorNextRequest {
   n: number;
 }
 
-export interface ItemPageIterationConfig<F = any> extends Filter<F>, ItemPageLimit { }
+export interface ItemPageIterationConfig<F = unknown> extends Filter<F>, ItemPageLimit { }
 
 // MARK: Iterator
 /**
@@ -92,7 +90,7 @@ export const DEFAULT_ITEM_PAGE_ITERATOR_MAX = 100;
 /**
  * Used for generating new iterations.
  */
-export class ItemPageIterator<V, F, C extends ItemPageIterationConfig<F> = any> {
+export class ItemPageIterator<V, F, C extends ItemPageIterationConfig<F> = ItemPageIterationConfig<F>> {
 
   protected _maxPageLoadLimit: Maybe<number>;
 
@@ -181,7 +179,7 @@ export class ItemPageIterationInstance<V, F, C extends ItemPageIterationConfig<F
                   return successPageResult(nextPageNumber, result);
                 }
               }),
-              startWith(beginLoading<ItemPageIteratorResult<V>>(page) as PageLoadingState<ItemPageIteratorResult<V>>),
+              startWithBeginLoading(page),
               shareReplay(1)
             );
 
@@ -196,7 +194,7 @@ export class ItemPageIterationInstance<V, F, C extends ItemPageIterationConfig<F
     scan((acc: ItemPageIterationInstanceState<V>, x: { n: number, state: Maybe<PageLoadingState<ItemPageIteratorResult<V>>> }) => {
       const { n, state: curr } = x;
 
-      let next = {
+      const next = {
         n,
         current: curr,
         latestFinished: acc.latestFinished,
@@ -273,13 +271,13 @@ export class ItemPageIterationInstance<V, F, C extends ItemPageIterationConfig<F
    * Will emit every time the latest page has finished loading.
    */
   readonly hasReachedEndResult$: Observable<boolean> = this.latestPageResultState$.pipe(
-    map(x => isItemPageIteratorResultEndResult(x.value!)),
+    map(x => isItemPageIteratorResultEndResult(x.value as ItemPageIteratorResult<V>)),
     startWith(false),  // Has not reached the end
     shareReplay(1)
   );
 
   private readonly _currentPageResultState$: Observable<Maybe<PageLoadingState<ItemPageIteratorResult<V>>>> = this.currentPageResultState$.pipe(
-    startWith(undefined as any),
+    startWith(undefined),
     shareReplay(1)
   );
 
@@ -293,7 +291,7 @@ export class ItemPageIterationInstance<V, F, C extends ItemPageIterationConfig<F
   );
 
   private readonly _lastFinishedPageResultState$: Observable<Maybe<PageLoadingState<ItemPageIteratorResult<V>>>> = this.latestPageResultState$.pipe(
-    startWith(undefined as any),
+    startWith(undefined),
     shareReplay(1)
   );
 
@@ -437,7 +435,7 @@ export function isItemPageIteratorResultEndResult<V>(result: ItemPageIteratorRes
   }
 }
 
-function itemPageIteratorShouldLoadNextPage<V = any>(
+function itemPageIteratorShouldLoadNextPage<V = unknown>(
   request: ItemIteratorNextRequest,
   hasNextAndCanLoadMore: boolean,
   prevResult: Maybe<PageLoadingState<ItemPageIteratorResult<V>>>): boolean {
@@ -446,8 +444,8 @@ function itemPageIteratorShouldLoadNextPage<V = any>(
     Boolean(request.page == null || (nextIteratorPageNumber(prevResult) === request.page));   // Must match the page, if provided
 }
 
-function nextIteratorPageNumber(prevResult: Maybe<PageLoadingState<ItemPageIteratorResult<any>>>): number {
-  return loadingStateHasError(prevResult) ? prevResult!.page : getNextPageNumber(prevResult);
+function nextIteratorPageNumber(prevResult: Maybe<PageLoadingState<ItemPageIteratorResult<unknown>>>): number {
+  return loadingStateHasError(prevResult) ? (prevResult as PageLoadingState<unknown>).page : getNextPageNumber(prevResult);
 }
 
 function mapItemPageLoadingStateFromResultPageLoadingState<V>(): OperatorFunction<PageLoadingState<ItemPageIteratorResult<V>>, PageLoadingState<V>> {

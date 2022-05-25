@@ -8,7 +8,7 @@ import { ItemIteration, ItemIteratorNextRequest } from "./iteration";
  */
 export interface MappedItemIteration<
   O,
-  I = any,
+  I = unknown,
   M extends LoadingState<O> = LoadingState<O>,
   L extends LoadingState<I> = LoadingState<I>,
   N extends ItemIteration<I, L> = ItemIteration<I, L>,
@@ -38,7 +38,7 @@ export interface MappedItemIterationInstanceMapConfig<
 
 export class MappedItemIterationInstance<
   O,
-  I = any,
+  I = unknown,
   M extends LoadingState<O> = LoadingState<O>,
   L extends LoadingState<I> = LoadingState<I>,
   N extends ItemIteration<I, L> = ItemIteration<I, L>
@@ -80,7 +80,7 @@ export class MappedItemIterationInstance<
  */
 export function mapItemIteration<
   O,
-  I = any,
+  I = unknown,
   M extends LoadingState<O> = LoadingState<O>,
   L extends LoadingState<I> = LoadingState<I>,
   N extends ItemIteration<I, L> = ItemIteration<I, L>

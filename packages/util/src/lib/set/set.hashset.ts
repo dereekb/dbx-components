@@ -53,8 +53,8 @@ export class HashSet<K extends PrimativeKey, T> implements Set<T> {
     return this._map.has(key);
   }
 
-  forEach(callbackfn: (value: T, value2: T, set: Set<T>) => void, thisArg?: any): void {
-    return this._map.forEach((value, key) => {
+  forEach(callbackfn: (value: T, value2: T, set: Set<T>) => void, thisArg?: unknown): void {
+    return this._map.forEach((value) => {
       callbackfn.apply(thisArg, [value, value, this]);
     });
   }

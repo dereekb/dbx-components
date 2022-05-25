@@ -26,7 +26,7 @@ export interface DbxProgressButtonOptions {
   disabled?: boolean;
   icon?: DbxProgressButtonIcon;
   type?: string;
-  customStyle?: { [key: string]: any; };
+  customStyle?: { [key: string]: string; };
   customClass?: string;
   /**
    * Custom spinner color. Overrides the normal spinner color if provided.

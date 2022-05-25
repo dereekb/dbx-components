@@ -7,12 +7,12 @@ import { FirestoreQueryConstraintFunctionsDriver, FirestoreQueryDriver } from ".
 import { Query, QuerySnapshot, SnapshotListenOptions, Transaction } from "../../common/firestore/types";
 import { streamFromOnSnapshot } from '../../common/firestore/query/query.util';
 
-export interface FirebaseFirestoreQueryBuilder<T = any> {
-  query: Query<T>;
+export interface FirebaseFirestoreQueryBuilder {
+  query: Query;
   constraints: QueryConstraint[];
 }
 
-export function addConstraintToBuilder<T>(builder: FirebaseFirestoreQueryBuilder<T>, constraint: ArrayOrValue<QueryConstraint>): FirebaseFirestoreQueryBuilder<T> {
+export function addConstraintToBuilder(builder: FirebaseFirestoreQueryBuilder, constraint: ArrayOrValue<QueryConstraint>): FirebaseFirestoreQueryBuilder {
   return {
     query: builder.query,
     constraints: builder.constraints.concat(constraint)
@@ -35,7 +35,7 @@ export function firebaseFirestoreQueryConstraintFunctionsDriver(): FirestoreQuer
   return makeFirestoreQueryConstraintFunctionsDriver({
     mapping: FIRESTORE_CLIENT_QUERY_CONSTRAINT_HANDLER_MAPPING,
     init: <T>(query: Query<T>) => ({ query, constraints: [] }),
-    build: <T>({ query: initialQuery, constraints }: FirebaseFirestoreQueryBuilder<T>) => query(initialQuery as FirebaseFirestoreQuery<T>, ...constraints)
+    build: <T>({ query: initialQuery, constraints }: FirebaseFirestoreQueryBuilder) => query(initialQuery as FirebaseFirestoreQuery<T>, ...constraints)
   });
 }
 

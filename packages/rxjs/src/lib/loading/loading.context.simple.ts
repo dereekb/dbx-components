@@ -1,3 +1,4 @@
+import { Maybe, ReadableError } from '@dereekb/util';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { LoadingContext, LoadingContextEvent } from './loading.context';
 
@@ -7,7 +8,7 @@ import { LoadingContext, LoadingContextEvent } from './loading.context';
 export class SimpleLoadingContext implements LoadingContext {
 
   private _subject: BehaviorSubject<LoadingContextEvent>;
-  private _error: any;
+  private _error: Maybe<ReadableError>;
 
   constructor(loading = true) {
     this._subject = new BehaviorSubject<LoadingContextEvent>({ loading });
@@ -39,7 +40,7 @@ export class SimpleLoadingContext implements LoadingContext {
     });
   }
 
-  public setError(error: any, loading: boolean = false): void {
+  public setError(error: ReadableError, loading: boolean = false): void {
     this._subject.next({
       loading,
       error

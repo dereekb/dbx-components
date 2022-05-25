@@ -1,4 +1,3 @@
-import { ClickableAnchor } from '@dereekb/dbx-core';
 import { Component, Input } from '@angular/core';
 
 @Component({

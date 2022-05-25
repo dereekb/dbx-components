@@ -36,9 +36,9 @@ export function safeMarkForCheck(cdRef: ChangeDetectorRef): void {
  * 
  * @param cdRef 
  */
-export function safeUseCdRef(cdRef: ChangeDetectorRef, use: () => void): void {
+export function safeUseCdRef(cdRef: ChangeDetectorRef, use: (cdRef: ChangeDetectorRef) => void): void {
   if (!(cdRef as ViewRef).destroyed) {
-    cdRef.markForCheck();
+    use(cdRef);
   }
 }
 

@@ -4,7 +4,7 @@ import { Observable } from "rxjs";
 import { DbxValueListItem } from "./list.view.value";
 
 // MARK: ValueListView
-export abstract class DbxValueListItemModifier<T, I extends DbxValueListItem<T> = DbxValueListItem<T>> {
+export abstract class DbxValueListItemModifier<T = unknown, I extends DbxValueListItem<T> = DbxValueListItem<T>> {
 
   readonly abstract modifiers$: Observable<ModifierMap<I>>;
 
@@ -13,7 +13,7 @@ export abstract class DbxValueListItemModifier<T, I extends DbxValueListItem<T> 
 
 }
 
-export function ProvideDbxValueListViewModifier<V extends DbxValueListItemModifier<any>>(sourceType: Type<V>): Provider[] {
+export function provideDbxValueListViewModifier<V extends DbxValueListItemModifier>(sourceType: Type<V>): Provider[] {
   return [{
     provide: DbxValueListItemModifier,
     useExisting: forwardRef(() => sourceType)

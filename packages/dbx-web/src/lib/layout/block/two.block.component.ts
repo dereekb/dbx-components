@@ -46,7 +46,7 @@ export class DbxTwoBlocksComponent {
 
   onResized(event: ResizedEvent): void {
     const height = event.newRect.height;
-    const element: HTMLElement = this.twoElement!.nativeElement;
+    const element: HTMLElement = this.twoElement.nativeElement;
     element.style.setProperty('--dbx-two-block-top-height', `${height}px`);
   }
 

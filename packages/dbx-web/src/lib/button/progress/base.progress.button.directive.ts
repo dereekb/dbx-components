@@ -1,15 +1,14 @@
-import { ChangeDetectorRef, OnDestroy, OnInit, Optional } from '@angular/core';
+import { ChangeDetectorRef, OnDestroy, OnInit, Optional, Directive, Input, Output, HostListener, EventEmitter, Inject } from '@angular/core';
 import { AbstractSubscriptionDirective, safeMarkForCheck } from '@dereekb/dbx-core';
 import { Maybe } from '@dereekb/util';
 import { filterMaybe } from '@dereekb/rxjs';
 import { Observable, shareReplay, map, BehaviorSubject, combineLatest, first, distinctUntilChanged } from 'rxjs';
-import { Directive, Input, Output, HostListener, EventEmitter, Inject } from '@angular/core';
 import { DbxProgressButtonGlobalConfig, DbxProgressButtonOptions, DbxProgressButtonTargetedConfig, DBX_MAT_PROGRESS_BUTTON_GLOBAL_CONFIG } from './button.progress.config';
 
 @Directive()
 export abstract class AbstractProgressButtonDirective extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
 
-  private _computedOptions: DbxProgressButtonOptions = undefined!;
+  private _computedOptions: Maybe<DbxProgressButtonOptions> = undefined;
 
   private _working = new BehaviorSubject<boolean>(false);
   private _disabled = new BehaviorSubject<boolean>(false);
@@ -72,16 +71,16 @@ export abstract class AbstractProgressButtonDirective extends AbstractSubscripti
     });
   }
 
-  get options(): DbxProgressButtonOptions {
-    return this._computedOptions;
-  }
-
   get customSpinnerStyle() {
-    const customSpinnerColor = this._computedOptions.customSpinnerColor;
+    const customSpinnerColor = (this._computedOptions as DbxProgressButtonOptions).customSpinnerColor;
     return (customSpinnerColor) ? { stroke: customSpinnerColor } : undefined;
   }
 
   @Input()
+  get options(): DbxProgressButtonOptions {
+    return this._computedOptions as DbxProgressButtonOptions;
+  }
+
   set options(options: DbxProgressButtonOptions) {
     this._options.next(options);
   }

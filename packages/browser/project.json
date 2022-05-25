@@ -22,7 +22,7 @@
         "outputPath": "dist/packages/browser",
         "main": "packages/browser/src/index.ts",
         "tsConfig": "packages/browser/tsconfig.lib.json",
-        "assets": ["packages/browser/*.md"]
+        "assets": ["packages/browser/*.md", "LICENSE"]
       }
     },
     "lint": {
@@ -43,7 +43,7 @@
     "publish-npmjs": {
       "executor": "@nrwl/workspace:run-commands",
       "options": {
-        "command": "cd ./dist/packages/browser && npm publish"
+        "command": "cd ./dist/packages/browser && npm publish --access public"
       }
     }
   },

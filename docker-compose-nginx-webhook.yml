@@ -1,0 +1,27 @@
+version: '3'
+services:
+  demo-api-webhook-server:
+    image: nginx:1.21
+    ports:
+      - "8443:8443"
+    volumes:
+      - type: bind
+        source: ./docker/nginx/certs
+        target: /etc/nginx/certs
+        read_only: true
+      - type: bind
+        source: ./docker/nginx/snippets
+        target: /etc/nginx/snippets
+        read_only: true
+      - type: bind
+        source: ./docker/nginx/webhook-nginx.conf
+        target: /etc/nginx/nginx.conf
+        read_only: true
+      - type: bind
+        source: ./tmp/nginx/webhook/nginx
+        target: /var/log/nginx
+    networks:
+      - demo-api-network
+networks:
+  demo-api-network:
+    driver: bridge

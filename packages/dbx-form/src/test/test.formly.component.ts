@@ -1,9 +1,8 @@
 import { BehaviorSubject, Observable } from 'rxjs';
-import { OnDestroy } from '@angular/core';
+import { OnDestroy, Component } from '@angular/core';
 import { ComponentFixture } from '@angular/core/testing';
-import { Component } from '@angular/core';
 import { FormlyFieldConfig } from '@ngx-formly/core';
-import { AbstractAsyncFormlyFormDirective, formlyField, ProvideFormlyContext } from '../lib';
+import { AbstractAsyncFormlyFormDirective, formlyField, provideFormlyContext } from '../lib';
 import { AbstractControl } from '@angular/forms';
 
 export interface TestFormValue {
@@ -31,7 +30,7 @@ export function testTextField(): FormlyFieldConfig {
 @Component({
   template: `<dbx-formly></dbx-formly>`,
   selector: 'dbx-test-dbx-form',
-  providers: [ProvideFormlyContext()]
+  providers: [provideFormlyContext()]
 })
 export class DbxTestDbxFormComponent<T = TestFormValue> extends AbstractAsyncFormlyFormDirective<T> implements OnDestroy {
 
@@ -51,22 +50,22 @@ export class DbxTestDbxFormComponent<T = TestFormValue> extends AbstractAsyncFor
     this._fields.next(fields);
   }
 
-  setValidTextForTest(fixture: ComponentFixture<any>): string {
+  setValidTextForTest(fixture: ComponentFixture<unknown>): string {
     const text = 'valid';
     this.setTextForTest(text, fixture);
     return text;
   }
 
-  setInvalidTextForTest(fixture: ComponentFixture<any>): void {
+  setInvalidTextForTest(fixture: ComponentFixture<unknown>): void {
     this.setTextForTest(INVALID_TEST_STRING, fixture);
   }
 
-  setTextForTest(text: string, fixture: ComponentFixture<any>): void {
-    this.setValue({ text } as any);
+  setTextForTest(text: string, fixture: ComponentFixture<unknown>): void {
+    this.setValue({ text } as unknown as T);
     this.detectFormChanges(fixture);
   }
 
-  detectFormChanges(fixture: ComponentFixture<any>): void {
+  detectFormChanges(fixture: ComponentFixture<unknown>): void {
     // Detect the changes.
     fixture.detectChanges();
 

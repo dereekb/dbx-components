@@ -1,4 +1,4 @@
-import { hoursToMilliseconds, minutesToMilliseconds, addMilliseconds, millisecondsToHours } from 'date-fns';
+import { hoursToMilliseconds, minutesToMilliseconds, addMilliseconds } from 'date-fns';
 import { Milliseconds } from '@dereekb/util';
 import { DateTimezoneUtcNormalInstance, getCurrentSystemOffsetInMs } from './date.timezone';
 import MockDate from 'mockdate';
@@ -23,6 +23,9 @@ describe('DateTimezoneUtcNormalInstance', () => {
 
   beforeEach(() => {
     systemTimezoneOffset = getCurrentSystemOffsetInMs(new Date());
+
+    // note: this isn't currently used.
+    expect(systemTimezoneOffset).toBeDefined();
   });
 
   describe('scenarios', () => {
@@ -40,6 +43,10 @@ describe('DateTimezoneUtcNormalInstance', () => {
 
         systemUtcDifference = getCurrentSystemOffsetInMs(utcBaseDate);
         systemTargetDifference = systemUtcDifference;
+
+        // note: these aren't currently used.
+        expect(systemUtcDifference).toBeDefined();
+        expect(systemTargetDifference).toBeDefined();
       });
 
       it('conversion from base to target should be 0.', () => {

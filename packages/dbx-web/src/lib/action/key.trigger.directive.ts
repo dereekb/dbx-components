@@ -12,7 +12,7 @@ const DEFAULT_ACTION_KEY_TRIGGER = 'enter';
 @Directive({
   selector: '[dbxActionKeyTrigger]',
 })
-export class DbxActionKeyTriggerDirective<T = any, O = any> {
+export class DbxActionKeyTriggerDirective<T = unknown, O = unknown> {
 
   @Input('dbxActionKeyTrigger')
   inputKey: Maybe<string>;

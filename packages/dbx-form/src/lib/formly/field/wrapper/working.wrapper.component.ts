@@ -1,9 +1,11 @@
-import { OnInit, OnDestroy } from '@angular/core';
+import { OnInit, OnDestroy, Component } from '@angular/core';
 import { SimpleLoadingContext, SubscriptionObject } from '@dereekb/rxjs';
-import { Component } from '@angular/core';
 import { FieldWrapper, FormlyFieldConfig } from '@ngx-formly/core';
 
-export interface DbxFormWorkingWrapperConfig { }
+/**
+ * No configurable value for now.
+ */
+export type DbxFormWorkingWrapperConfig = object;
 
 export interface DbxFormWorkingWrapperFormlyConfig extends FormlyFieldConfig {
   styleWrapper: DbxFormWorkingWrapperConfig;

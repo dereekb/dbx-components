@@ -17,13 +17,13 @@ export class DemoLayoutComponent {
     icon: 'home'
   }];
 
-  readonly adminAnchors = [{
+  readonly adminAnchors: ClickableAnchorLinkSegueRef[] = [{
     title: 'Admin Home',
     ref: 'demo.home',
     icon: 'home'
   }];
 
-  readonly userAnchors = [{
+  readonly userAnchors: ClickableAnchorLinkSegueRef[] = [{
     title: 'App Home',
     ref: 'demo.app.home',
     icon: 'home'

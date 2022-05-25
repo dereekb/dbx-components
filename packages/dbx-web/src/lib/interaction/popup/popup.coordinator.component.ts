@@ -1,7 +1,7 @@
 import { DbxPopupController } from './popup';
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { DbxPopupCoordinatorService } from './popup.coordinator.service';
-import { delay, map, shareReplay } from 'rxjs/operators';
+import { delay, map, shareReplay } from 'rxjs';
 
 /**
  * Used for coordinating popups and closing/replacing existing ones when a new popup of the same name appears.

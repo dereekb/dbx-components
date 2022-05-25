@@ -1,6 +1,6 @@
 import { INestApplicationContext } from '@nestjs/common';
 import { DemoFirestoreCollections } from '@dereekb/demo-firebase';
-import { AbstractNestContext, onCallWithNestApplicationFactory, onCallWithNestContextFactory, onEventWithNestApplicationFactory, onEventWithNestContextFactory } from '@dereekb/firebase-server';
+import { AbstractNestContext, onCallWithNestApplicationFactory, onCallWithNestContextFactory, taskQueueFunctionHandlerWithNestContextFactory, cloudEventHandlerWithNestContextFactory, blockingFunctionHandlerWithNestContextFactory, onEventWithNestContextFactory } from '@dereekb/firebase-server';
 import { ProfileServerActions, GuestbookServerActions, DemoApiAuthService } from '../common';
 
 export class DemoApiNestContext extends AbstractNestContext {
@@ -26,5 +26,7 @@ export class DemoApiNestContext extends AbstractNestContext {
 export const mapDemoApiNestContext = (nest: INestApplicationContext) => new DemoApiNestContext(nest);
 export const onCallWithDemoNest = onCallWithNestApplicationFactory();
 export const onCallWithDemoNestContext = onCallWithNestContextFactory(onCallWithDemoNest, mapDemoApiNestContext);
-export const onEventWithDemoNest = onEventWithNestApplicationFactory();
 export const onEventWithDemoNestContext = onEventWithNestContextFactory(mapDemoApiNestContext);
+export const cloudEventWithDemoNestContext = cloudEventHandlerWithNestContextFactory(mapDemoApiNestContext);
+export const blockingEventWithDemoNestContext = blockingFunctionHandlerWithNestContextFactory(mapDemoApiNestContext);
+export const taskqueueEventWithDemoNestContext = taskQueueFunctionHandlerWithNestContextFactory(mapDemoApiNestContext);

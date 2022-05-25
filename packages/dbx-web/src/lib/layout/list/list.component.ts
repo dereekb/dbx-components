@@ -1,7 +1,7 @@
-import { catchError, filter, exhaustMap, merge, map, Subject, switchMap, shareReplay, distinctUntilChanged, of, Observable, BehaviorSubject, first, startWith } from 'rxjs';
+import { catchError, filter, exhaustMap, merge, map, Subject, switchMap, shareReplay, distinctUntilChanged, of, Observable, BehaviorSubject, first } from 'rxjs';
 import { Component, Input, EventEmitter, Output, OnDestroy, ElementRef, HostListener, ChangeDetectorRef, Directive } from '@angular/core';
 import { DbxInjectionComponentConfig, tapDetectChanges } from '@dereekb/dbx-core';
-import { SubscriptionObject, ListLoadingStateContextInstance, ListLoadingState, filterMaybe, tapLog, loadingStateHasFinishedLoading, successResult, beginLoading } from '@dereekb/rxjs';
+import { SubscriptionObject, ListLoadingStateContextInstance, ListLoadingState, filterMaybe, loadingStateHasFinishedLoading, startWithBeginLoading } from '@dereekb/rxjs';
 import { Maybe, Milliseconds } from '@dereekb/util';
 import { DbxListSelectionMode, DbxListView, ListSelectionState } from './list.view';
 
@@ -20,7 +20,7 @@ export type DbxListLoadMoreHandler = () => Observable<void> | void;
 /**
  * DbxListComponent configuration.
  */
-export interface DbxListConfig<T = any, V extends DbxListView<T> = DbxListView<T>> extends DbxInjectionComponentConfig<V> {
+export interface DbxListConfig<T = unknown, V extends DbxListView<T> = DbxListView<T>> extends DbxInjectionComponentConfig<V> {
 
   /**
    * Whether or not to hide the list content when it is an empty list.
@@ -77,7 +77,7 @@ export interface DbxListConfig<T = any, V extends DbxListView<T> = DbxListView<T
     '[class.dbx-list-padded]': 'padded'
   }
 })
-export class DbxListComponent<T = any, V extends DbxListView<T> = DbxListView<T>, S extends ListLoadingState<T> = ListLoadingState<T>> implements OnDestroy {
+export class DbxListComponent<T = unknown, V extends DbxListView<T> = DbxListView<T>, S extends ListLoadingState<T> = ListLoadingState<T>> implements OnDestroy {
 
   readonly DEFAULT_SCROLL_DISTANCE = 1.5;
   readonly DEFAULT_THROTTLE_SCROLL = 50;
@@ -86,12 +86,12 @@ export class DbxListComponent<T = any, V extends DbxListView<T> = DbxListView<T>
    * Whether or not to add bottom padding to the list content.
    */
   @Input()
-  padded: boolean = true;
+  padded = true;
 
   @Output()
   contentScrolled = new EventEmitter<number>();
 
-  private _content!: DbxListInternalContentDirective;
+  private _content: Maybe<DbxListInternalContentDirective>;
   private _disabled = new BehaviorSubject<boolean>(false);
   private _selectionMode = new BehaviorSubject<Maybe<DbxListSelectionMode>>(undefined);
 
@@ -194,7 +194,7 @@ export class DbxListComponent<T = any, V extends DbxListView<T> = DbxListView<T>
     switchMap(() => this.context.state$.pipe(
       filter((x) => loadingStateHasFinishedLoading(x)),
       first(),
-      startWith(beginLoading())
+      startWithBeginLoading()
     )),
     switchMap((state) => {
       if (state?.loading) {
@@ -213,7 +213,7 @@ export class DbxListComponent<T = any, V extends DbxListView<T> = DbxListView<T>
   constructor(readonly cdRef: ChangeDetectorRef) { }
 
   ngOnDestroy(): void {
-    delete (this as any)._content;  // remove parent-child relation.
+    delete this._content;  // remove parent-child relation.
     this._scrollTrigger.complete();
     this._loadMoreTrigger.complete();
     this._config.complete();
@@ -275,7 +275,9 @@ export class DbxListComponent<T = any, V extends DbxListView<T> = DbxListView<T>
   jumpToBottom(): void {
     try {
       this.nativeElement.scrollTop = this.nativeElement.scrollHeight;
-    } catch (err) { }
+    } catch (err) {
+      // do nothing.
+    }
   }
 
   jumpToPositionRelativeToBottom(pos: number): void {
@@ -283,7 +285,9 @@ export class DbxListComponent<T = any, V extends DbxListView<T> = DbxListView<T>
       const element = this.nativeElement;
       const { scrollHeight, clientHeight } = element;
       element.scrollTop = scrollHeight - (clientHeight + pos);
-    } catch (err) { }
+    } catch (err) {
+      // do nothing.
+    }
   }
 
   onScrollDown(): void {
@@ -300,11 +304,11 @@ export class DbxListComponent<T = any, V extends DbxListView<T> = DbxListView<T>
 
   // MARK: Internal
   get nativeElement() {
-    return this._content.elementRef.nativeElement;
+    return this.__content.elementRef.nativeElement;
   }
 
   get __content(): DbxListInternalContentDirective {
-    return this._content;
+    return this._content as DbxListInternalContentDirective;
   }
 
   set __content(content: DbxListInternalContentDirective) {
@@ -321,7 +325,7 @@ export class DbxListComponent<T = any, V extends DbxListView<T> = DbxListView<T>
  * Used internally by DbxListComponent
  */
 @Directive({
-  selector: '[dbx-list-internal-content]',
+  selector: '[dbxListInternalContent]',
   host: {
     'class': 'd-block dbx-list-content',
     '[class.dbx-list-content-hidden]': 'hide'
@@ -330,15 +334,15 @@ export class DbxListComponent<T = any, V extends DbxListView<T> = DbxListView<T>
 export class DbxListInternalContentDirective {
 
   @Input()
-  hide: Maybe<Boolean> = false;
+  hide: Maybe<boolean> = false;
 
   constructor(private readonly parent: DbxListComponent, readonly elementRef: ElementRef) {
     this.parent.__content = this;
   }
 
   @HostListener('scroll', ['$event'])
-  onScrollEvent($event: any): void {
-    const position = $event.target.scrollTop;
+  onScrollEvent($event: Event): void {
+    const position = ($event.target as Element).scrollTop;
     this.parent.contentScrolled.emit(position);
   }
 

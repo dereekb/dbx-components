@@ -1,3 +1,6 @@
+/*eslint @typescript-eslint/no-explicit-any:"off"*/
+// any is used with intent here, as the recursive TreeNode value requires its use to terminate.
+
 import { TreeNode, TreeNodeWithoutChildren } from "./tree";
 import { Maybe } from "../value/maybe";
 

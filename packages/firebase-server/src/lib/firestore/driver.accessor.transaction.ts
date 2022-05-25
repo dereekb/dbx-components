@@ -1,4 +1,4 @@
-import { DocumentReference, DocumentSnapshot, Transaction as GoogleCloudTransaction, SetOptions, UpdateData as GoogleCloudUpdateData } from "@google-cloud/firestore";
+import { DocumentReference, DocumentSnapshot, Transaction as GoogleCloudTransaction, SetOptions } from "@google-cloud/firestore";
 import { from, Observable } from "rxjs";
 import { WithFieldValue, UpdateData, FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, FirestoreDocumentContext, FirestoreDocumentContextType, FirestoreDocumentUpdateParams } from "@dereekb/firebase";
 
@@ -28,12 +28,12 @@ export class TransactionFirestoreDocumentDataAccessor<T> implements FirestoreDoc
   }
 
   set(data: WithFieldValue<T>, options?: SetOptions): Promise<void> {
-    this.transaction.set(this.documentRef, data as any, options as SetOptions);
+    this.transaction.set(this.documentRef, data as Partial<T>, options as SetOptions);
     return Promise.resolve();
   }
 
   update(data: UpdateData<T>, params?: FirestoreDocumentUpdateParams): Promise<void> {
-    this.transaction.update(this.documentRef, data as any, params?.precondition ?? {});
+    this.transaction.update(this.documentRef, data as Partial<T>, params?.precondition ?? {});
     return Promise.resolve();
   }
 

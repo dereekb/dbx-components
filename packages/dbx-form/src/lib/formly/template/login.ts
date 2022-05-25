@@ -7,7 +7,7 @@ import { capitalizeFirstLetter, Maybe } from '@dereekb/util';
 /**
  * Convenience interface for the password parameters configuration for a TextPasswordField.
  */
-export interface TextPasswordFieldPasswordParameters extends Partial<Pick<TextFieldConfig, 'maxLength' | 'minLength' | 'pattern'>> { };
+export type TextPasswordFieldPasswordParameters = Partial<Pick<TextFieldConfig, 'maxLength' | 'minLength' | 'pattern'>>;
 
 /**
  * textPasswordField() configuration.
@@ -59,7 +59,7 @@ export function textPasswordWithVerifyFieldGroup(config: TextPasswordWithVerifyF
     key: verifyPasswordFieldKey
   });
 
-  const validators: any = {
+  const validators = {
     validation: [{
       errorPath: verifyPasswordFieldKey,
       expression: fieldValuesAreEqualValidator({ keysFilter: [passwordFieldConfig.key, verifyPasswordField.key] as string[], message: 'The passwords do not match.' })
@@ -106,7 +106,7 @@ export interface DefaultUsernameLoginFieldsValue {
 export function usernamePasswordLoginFields({ username, password, verifyPassword }: UsernameLoginFieldsConfig): FormlyFieldConfig[] {
   let usernameField: FormlyFieldConfig;
   let usernameFieldConfig: UsernameLoginFieldUsernameConfig = username as UsernameLoginFieldUsernameConfig;
-  const defaultUsernameFieldConfig: any = { key: 'username', required: true };
+  const defaultUsernameFieldConfig = { key: 'username', required: true };
 
   if (typeof username === 'string') {
     if (username === 'email') {

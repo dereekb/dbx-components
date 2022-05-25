@@ -1,7 +1,5 @@
-import { shareReplay, Subject } from 'rxjs';
+import { shareReplay, Subject, of } from 'rxjs';
 import { SubscriptionObject } from './../subscription';
-import { BehaviorSubject, of } from 'rxjs';
-import { cleanup } from './lifecycle';
 import { mapKeysIntersectionToArray } from './map';
 
 describe('mapKeysIntersectionToArray()', () => {
@@ -18,7 +16,7 @@ describe('mapKeysIntersectionToArray()', () => {
 
   it('should merge the arrays if both values are present.', (done) => {
 
-    let subject = new Subject<string[]>();
+    const subject = new Subject<string[]>();
 
     const numbersA = [1, 2, 3];
     const numbersB = [4, 5, 6];

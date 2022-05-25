@@ -54,7 +54,7 @@ export interface DbxFormEvent {
 /**
  * Form that has an event stream, value, and state items.
  */
-export abstract class DbxForm<T = any> {
+export abstract class DbxForm<T = unknown> {
   abstract readonly stream$: Observable<DbxFormEvent>;
 
   /**
@@ -68,7 +68,7 @@ export abstract class DbxForm<T = any> {
   abstract getDisabled(): Observable<BooleanStringKeyArray>;
 }
 
-export abstract class DbxMutableForm<T = any> extends DbxForm<T> {
+export abstract class DbxMutableForm<T = unknown> extends DbxForm<T> {
   /**
    * LockSet for the form.
    */
@@ -99,13 +99,13 @@ export abstract class DbxMutableForm<T = any> extends DbxForm<T> {
   abstract forceFormUpdate(): void;
 }
 
-export function ProvideDbxForm<S extends DbxForm>(sourceType: Type<S>): Provider[] {
+export function provideDbxForm<S extends DbxForm>(sourceType: Type<S>): Provider[] {
   return [{ provide: DbxForm, useExisting: forwardRef(() => sourceType) }];
 }
 
-export function ProvideDbxMutableForm<S extends DbxMutableForm>(sourceType: Type<S>): Provider[] {
+export function provideDbxMutableForm<S extends DbxMutableForm>(sourceType: Type<S>): Provider[] {
   return [
-    ...ProvideDbxForm(sourceType),
+    ...provideDbxForm(sourceType),
     { provide: DbxMutableForm, useExisting: forwardRef(() => sourceType) }
   ];
 }

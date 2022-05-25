@@ -8,7 +8,7 @@ export class DbxFirebaseLoginMicrosoftComponent extends AbstractConfiguredDbxFir
 
   readonly loginProvider = 'microsoft';
 
-  handleLogin(): Promise<any> {
+  handleLogin() {
     return this.dbxFirebaseAuthService.logInWithMicrosoft();
   }
 

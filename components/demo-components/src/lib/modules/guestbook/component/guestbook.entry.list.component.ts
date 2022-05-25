@@ -1,6 +1,6 @@
 import { GuestbookEntry } from '@dereekb/demo-firebase';
 import { Component } from "@angular/core";
-import { AbstractDbxSelectionListWrapperDirective, AbstractDbxValueListViewItemComponent, AbstractDbxSelectionListViewDirective, DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE, DbxSelectionValueListViewConfig, ProvideDbxListView, DEFAULT_DBX_SELECTION_VALUE_LIST_DIRECTIVE_TEMPLATE, DbxValueAsListItem, ProvideDbxListViewWrapper } from "@dereekb/dbx-web";
+import { AbstractDbxSelectionListWrapperDirective, AbstractDbxValueListViewItemComponent, AbstractDbxSelectionListViewDirective, DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE, DbxSelectionValueListViewConfig, provideDbxListView, DEFAULT_DBX_SELECTION_VALUE_LIST_DIRECTIVE_TEMPLATE, DbxValueAsListItem, provideDbxListViewWrapper } from "@dereekb/dbx-web";
 import { of } from "rxjs";
 
 export type GuestbookEntryWithSelection = DbxValueAsListItem<GuestbookEntry>;
@@ -8,7 +8,7 @@ export type GuestbookEntryWithSelection = DbxValueAsListItem<GuestbookEntry>;
 @Component({
   selector: 'demo-guestbook-entry-list',
   template: DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE,
-  providers: ProvideDbxListViewWrapper(DemoGuestbookEntryListComponent)
+  providers: provideDbxListViewWrapper(DemoGuestbookEntryListComponent)
 })
 export class DemoGuestbookEntryListComponent extends AbstractDbxSelectionListWrapperDirective<GuestbookEntry> {
 
@@ -23,7 +23,7 @@ export class DemoGuestbookEntryListComponent extends AbstractDbxSelectionListWra
 
 @Component({
   template: DEFAULT_DBX_SELECTION_VALUE_LIST_DIRECTIVE_TEMPLATE,
-  providers: ProvideDbxListView(DemoGuestbookEntryListViewComponent)
+  providers: provideDbxListView(DemoGuestbookEntryListViewComponent)
 })
 export class DemoGuestbookEntryListViewComponent extends AbstractDbxSelectionListViewDirective<GuestbookEntry> {
 

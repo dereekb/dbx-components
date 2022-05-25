@@ -91,7 +91,7 @@ export abstract class DbxAnchor<T extends ClickableAnchor = ClickableAnchor> {
   abstract type$: Observable<AnchorType>;
 }
 
-export function ProvideDbxAnchor<S extends DbxAnchor>(sourceType: Type<S>): Provider[] {
+export function provideDbxAnchor<S extends DbxAnchor>(sourceType: Type<S>): Provider[] {
   return [{
     provide: DbxAnchor,
     useExisting: forwardRef(() => sourceType)

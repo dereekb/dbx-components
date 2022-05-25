@@ -1,5 +1,5 @@
 import { addMilliseconds } from 'date-fns';
-import { isConsideredUtcTimezoneString, isSameNonNullValue, Maybe, Milliseconds, TimezoneString, UTC_TIMEZONE_STRING } from '@dereekb/util';
+import { MapFunction, isConsideredUtcTimezoneString, isSameNonNullValue, Maybe, Milliseconds, TimezoneString, UTC_TIMEZONE_STRING } from '@dereekb/util';
 import { getTimezoneOffset } from 'date-fns-tz';
 import { minutesToMs } from './date';
 
@@ -110,9 +110,13 @@ export interface DateTimezoneBaseDateConverter {
   systemDateToBaseDate(date: Date): Date;
 }
 
-export function calculateAllConversions(date: Date, converter: DateTimezoneBaseDateConverter, map: (time: Milliseconds) => number = (x) => x): any {
+export type DateTimezoneConversionMap = {
+  [key: string]: number;
+}
+
+export function calculateAllConversions(date: Date, converter: DateTimezoneBaseDateConverter, map: (time: Milliseconds) => number = (x) => x): DateTimezoneConversionMap {
   const options: DateTimezoneConversionTarget[] = ['target', 'base', 'system'];
-  const conversions: any = {};
+  const conversions: DateTimezoneConversionMap = {};
 
   options.forEach((from) => {
     options.forEach((to) => {
@@ -124,6 +128,8 @@ export function calculateAllConversions(date: Date, converter: DateTimezoneBaseD
 
   return conversions;
 }
+
+type GetOffsetForDateFunction = MapFunction<Date, number>;
 
 /**
  * Used for converting Dates to/from a UTC "base date" to a "normal date".
@@ -152,30 +158,31 @@ export class DateTimezoneUtcNormalInstance implements DateTimezoneBaseDateConver
 
     this.config = config;
 
-    let getOffsetInMsFn: Maybe<(date: Date) => number>;
+    let getOffsetInMsFn: Maybe<GetOffsetForDateFunction>;
 
     if (config.useSystemTimezone === true) {
       // Configure below
       getOffsetInMsFn = getCurrentSystemOffsetInMs;
     } else if (config.timezoneOffset != null) {
-      getOffsetInMsFn = () => this.config.timezoneOffset!;
+      getOffsetInMsFn = () => this.config.timezoneOffset as number;
     } else if (config.timezone) {
-      getOffsetInMsFn = (date) => getTimezoneOffset(this.config.timezone!, date);
+      getOffsetInMsFn = (date) => getTimezoneOffset(this.config.timezone as string, date);
     }
 
     const hasConversion = Boolean(getOffsetInMsFn);
 
-    if (hasConversion) {
-      function calculateOffset(date: Date, fn = getOffsetInMsFn!) {
-        const offset = fn(date);
-        return offset;
-      }
+    function calculateOffset(date: Date, fn = getOffsetInMsFn as GetOffsetForDateFunction) {
+      const offset = fn(date);
+      return offset;
+    }
 
-      function calculateSystemNormalDifference(date: Date) {
-        const normalOffset = calculateOffset(date);
-        const systemOffset = getCurrentSystemOffsetInMs(date);
-        return -normalOffset + systemOffset;
-      }
+    function calculateSystemNormalDifference(date: Date) {
+      const normalOffset = calculateOffset(date);
+      const systemOffset = getCurrentSystemOffsetInMs(date);
+      return -normalOffset + systemOffset;
+    }
+
+    if (hasConversion) {
 
       this._getOffset = function getCurrentOffset(x: Date, from: DateTimezoneConversionTarget, to: DateTimezoneConversionTarget): number {
         if (from === to) {
@@ -203,9 +210,11 @@ export class DateTimezoneUtcNormalInstance implements DateTimezoneBaseDateConver
             case 'system-base':
               offset = -getCurrentSystemOffsetInMs(x);
               break;
+            default:
+              throw new Error(`unexpected offset target "${ target }"`);
           }
 
-          return offset!;
+          return offset;
         }
       };
     } else {

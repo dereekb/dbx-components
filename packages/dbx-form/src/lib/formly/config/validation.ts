@@ -1,19 +1,19 @@
 import { FieldTypeConfig } from '@ngx-formly/core';
 import { ValidationMessageOption } from '@ngx-formly/core/lib/models';
 
-export function minLengthValidationMessage(err: any, field: FieldTypeConfig) {
+export function minLengthValidationMessage(err: unknown, field: FieldTypeConfig) {
   return `Should have atleast ${field.templateOptions.minLength} characters`;
 }
 
-export function maxLengthValidationMessage(err: any, field: FieldTypeConfig) {
+export function maxLengthValidationMessage(err: unknown, field: FieldTypeConfig) {
   return `This value should be less than ${field.templateOptions.maxLength} characters`;
 }
 
-export function minValidationMessage(err: any, field: FieldTypeConfig) {
+export function minValidationMessage(err: unknown, field: FieldTypeConfig) {
   return `This value should be more than ${field.templateOptions.min}`;
 }
 
-export function maxValidationMessage(err: any, field: FieldTypeConfig) {
+export function maxValidationMessage(err: unknown, field: FieldTypeConfig) {
   return `This value should be less than ${field.templateOptions.max}`;
 }
 

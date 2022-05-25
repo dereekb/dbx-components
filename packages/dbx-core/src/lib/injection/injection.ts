@@ -3,7 +3,7 @@ import { filterMaybeValues, Maybe, mergeArrays, mergeObjects } from "@dereekb/ut
 
 export const DBX_INJECTION_COMPONENT_DATA = new InjectionToken('DbxInjectionComponentConfigData');
 
-export interface DbxInjectionComponentConfig<T = any> {
+export interface DbxInjectionComponentConfig<T = unknown> {
   /**
    * Type of Component to initialize.
    */
@@ -25,12 +25,12 @@ export interface DbxInjectionComponentConfig<T = any> {
    */
   init?: (instance: T) => void;
   /**
-   * Any optional data to inject into the component.
+   * unknown optional data to inject into the component.
    */
-  data?: any;
+  data?: unknown;
 }
 
-export interface DbxInjectionTemplateConfig<T = any> {
+export interface DbxInjectionTemplateConfig<T = unknown> {
   /**
    * Template ref to display.
    */
@@ -47,7 +47,7 @@ export interface DbxInjectionTemplateConfig<T = any> {
  * @param configs 
  * @returns 
  */
-export function mergeDbxInjectionComponentConfigs(configs: Maybe<Partial<DbxInjectionComponentConfig>>[]): Partial<DbxInjectionComponentConfig> {
+export function mergeDbxInjectionComponentConfigs<T = unknown>(configs: Maybe<Partial<DbxInjectionComponentConfig<T>>>[]): Partial<DbxInjectionComponentConfig<T>> {
   const providers = mergeArrays(filterMaybeValues(configs).map(x => x.providers));
   const result = mergeObjects(configs);
   result.providers = providers;

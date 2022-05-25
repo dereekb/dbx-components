@@ -1,7 +1,6 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { convertToPOJOServerErrorResponse } from './error.api';
-import { of, OperatorFunction } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { catchError, MonoTypeOperatorFunction, of } from 'rxjs';
 import { ActionCreator, TypedAction } from '@ngrx/store/src/models';
 import { ServerError } from '@dereekb/util';
 
@@ -12,7 +11,7 @@ export interface ServerErrorParams {
 /**
  * Converts the error response to ServerErrorParams.
  */
-export function convertServerErrorParams(httpError: HttpErrorResponse | any): ServerErrorParams {
+export function convertServerErrorParams(httpError: HttpErrorResponse | object): ServerErrorParams {
   const error: ServerError = convertToPOJOServerErrorResponse(httpError);
   return { error };
 }
@@ -22,8 +21,12 @@ export function convertServerErrorParams(httpError: HttpErrorResponse | any): Se
  */
 export function catchErrorServerParams<E extends ServerErrorParams, T extends string>(
   action: ActionCreator<T, (props: E) => E & TypedAction<T>>,
-  mapError: (error: ServerErrorParams) => E = (error) => error as E
-):
-  OperatorFunction<HttpErrorResponse | any, E & TypedAction<T>> {
-  return catchError((error: HttpErrorResponse) => of(action(mapError(convertServerErrorParams(error)))));
+  mapError: (error: ServerErrorParams) => E = ((error) => error as E)
+): MonoTypeOperatorFunction<E & TypedAction<T>> {
+  return catchError((error: HttpErrorResponse | object) => {
+    const serverErrorParams = convertServerErrorParams(error);
+    const mappedError: E = mapError(serverErrorParams);
+    const act = action(mappedError);
+    return of(act);
+  });
 }

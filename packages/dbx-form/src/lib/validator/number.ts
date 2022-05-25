@@ -1,26 +1,27 @@
-import { AbstractControl, ValidatorFn } from '@angular/forms';
+import { AbstractControl, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
 
-export function IsInRange(min: number = Number.MIN_SAFE_INTEGER, max: number = Number.MAX_SAFE_INTEGER): ValidatorFn {
-    return (control: AbstractControl): { [key: string]: any } => {
-        const numberString: string | undefined = control.value;
+/**
+ * Merges the use of the min and max validator.
+ * 
+ * @param min 
+ * @param max 
+ * @returns 
+ */
+export function isInRange(min: number = Number.MIN_SAFE_INTEGER, max: number = Number.MAX_SAFE_INTEGER): ValidatorFn {
+    const minFn = Validators.min(min);
+    const maxFn = Validators.max(max);
 
-        const errors: any = {};
+    return (control: AbstractControl): ValidationErrors | null => {
+        const minError = minFn(control);
+        const maxError = maxFn(control);
 
-        if (numberString) {
-            const value = Number(numberString);
+        let errors: ValidationErrors | null = null;
 
-            if (!isNaN(value)) {
-                const bigEnough = value >= min;
-                const smallEnough = value <= max;
-
-                if (!bigEnough) {
-                    errors.min = value;
-                }
-
-                if (!smallEnough) {
-                    errors.max = value;
-                }
-            }
+        if (minError || maxError) {
+            errors = {
+                ...minError,
+                ...maxError
+            };
         }
 
         return errors;

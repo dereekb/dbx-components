@@ -12,7 +12,7 @@ VOLUME ["/code"]
 
 # Install Java for the Emulators
 # Install entr for file watching, as the 
-RUN apt-get update -y && apt-get install -y curl openjdk-11-jre-headless entr
+RUN apt-get update -y && apt-get install -y curl openjdk-11-jre-headless entr lsof
 
 # Copy package.json and package-lock.json to code
 COPY ./package.json .
@@ -23,4 +23,4 @@ COPY ./package-lock.json .
 RUN npm ci
 
 # Run serve by default
-CMD ["npx nx serve demo-api"]
+CMD ["npx nx run demo-api:serve"]

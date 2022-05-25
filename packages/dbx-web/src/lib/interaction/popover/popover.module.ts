@@ -3,7 +3,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { CommonModule } from '@angular/common';
 import { AngularResizeEventModule } from 'angular-resize-event';
 import { MatDividerModule } from '@angular/material/divider';
-import { ModuleWithProviders, NgModule } from '@angular/core';
+import { NgModule } from '@angular/core';
 import { NgOverlayContainerModule } from 'ng-overlay-container';
 import { DbxPopoverCoordinatorComponent } from './popover.coordinator.component';
 import { DbxPopoverService } from './popover.service';

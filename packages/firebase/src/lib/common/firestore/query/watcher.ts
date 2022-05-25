@@ -1,12 +1,13 @@
-import { groupValues } from '@dereekb/util';
+import { groupValues, Building, build } from '@dereekb/util';
 import { toExpires } from '@dereekb/date';
 import { map, Observable, skip, switchMap, timer, shareReplay } from 'rxjs';
 import { DocumentChange, QuerySnapshot } from '../types';
-import { FirestoreItemPageIterationInstance } from "./iterator";
+import { FirestoreItemPageIterationInstance, FirestoreItemPageQueryResult } from "./iterator";
+import { ItemPageIteratorResult } from '@dereekb/rxjs';
 
 export const DEFAULT_QUERY_CHANGE_WATCHER_DELAY = 0;
 
-export interface IterationQueryDocChangeWatcherConfig<T = any> {
+export interface IterationQueryDocChangeWatcherConfig<T = unknown> {
   readonly instance: FirestoreItemPageIterationInstance<T>;
   readonly delay?: number;
 }
@@ -14,7 +15,7 @@ export interface IterationQueryDocChangeWatcherConfig<T = any> {
 /**
  * Interface for watching query result changes events.
  */
-export interface IterationQueryDocChangeWatcher<T = any> {
+export interface IterationQueryDocChangeWatcher<T = unknown> {
 
   /**
    * Streams all subsequent query changes.
@@ -28,13 +29,13 @@ export interface IterationQueryDocChangeWatcher<T = any> {
 
 }
 
-export interface IterationQueryDocChangeWatcherEvent<T = any> extends IterationQueryDocChangeWatcherChangeGroup<T> {
+export interface IterationQueryDocChangeWatcherEvent<T = unknown> extends IterationQueryDocChangeWatcherChangeGroup<T> {
   readonly time: Date;
   readonly changes: DocumentChange<T>[];
   readonly type: IterationQueryDocChangeWatcherChangeType;
 }
 
-export interface IterationQueryDocChangeWatcherChangeGroup<T = any> {
+export interface IterationQueryDocChangeWatcherChangeGroup<T = unknown> {
   readonly added: DocumentChange<T>[];
   readonly removed: DocumentChange<T>[];
   readonly modified: DocumentChange<T>[];
@@ -42,12 +43,12 @@ export interface IterationQueryDocChangeWatcherChangeGroup<T = any> {
 
 export type IterationQueryDocChangeWatcherChangeType = 'addedAndRemoved' | 'added' | 'removed' | 'modified' | 'none';
 
-export function iterationQueryDocChangeWatcher<T = any>(config: IterationQueryDocChangeWatcherConfig<T>): IterationQueryDocChangeWatcher<T> {
+export function iterationQueryDocChangeWatcher<T = unknown>(config: IterationQueryDocChangeWatcherConfig<T>): IterationQueryDocChangeWatcher<T> {
   const { instance, delay: timeUntilActive = DEFAULT_QUERY_CHANGE_WATCHER_DELAY } = config;
 
   const stream$ = instance.snapshotIteration.firstSuccessfulPageResults$.pipe(
     switchMap((first) => {
-      const { time, stream } = first.value!.value!;
+      const { time, stream } = (first.value as ItemPageIteratorResult<FirestoreItemPageQueryResult<T>>).value as FirestoreItemPageQueryResult<T>;
       const beginCheckingAt = toExpires(time, timeUntilActive);
 
       // don't start streaming until the given moment.
@@ -62,15 +63,19 @@ export function iterationQueryDocChangeWatcher<T = any>(config: IterationQueryDo
     map(event => {
       const changes = event.docChanges();
 
-      const results: any = groupValues(changes, (x) => x.type);
-      results.time = new Date();
-      results.changes = changes;
-      results.added = results.added ?? [];
-      results.removed = results.removed ?? [];
-      results.modified = results.modified ?? [];
-      results.type = iterationQueryDocChangeWatcherChangeTypeForGroup(results);
+      const results = build({
+        base: groupValues(changes, (x) => x.type) as Building<IterationQueryDocChangeWatcherEvent<T>>,
+        build: (x) => {
+          x.time = new Date();
+          x.changes = changes;
+          x.added = x.added ?? [];
+          x.removed = x.removed ?? [];
+          x.modified = x.modified ?? [];
+          x.type = iterationQueryDocChangeWatcherChangeTypeForGroup(x as IterationQueryDocChangeWatcherEvent<T>);
+        }
+      });
 
-      return results as IterationQueryDocChangeWatcherEvent<T>;
+      return results;
     }),
     shareReplay(1)
   );
@@ -81,7 +86,7 @@ export function iterationQueryDocChangeWatcher<T = any>(config: IterationQueryDo
   };
 }
 
-export function iterationQueryDocChangeWatcherChangeTypeForGroup<T = any>(group: IterationQueryDocChangeWatcherChangeGroup<T>): IterationQueryDocChangeWatcherChangeType {
+export function iterationQueryDocChangeWatcherChangeTypeForGroup<T = unknown>(group: IterationQueryDocChangeWatcherChangeGroup<T>): IterationQueryDocChangeWatcherChangeType {
   const hasAdded = group.added.length > 0;
   const hasRemoved = group.removed.length > 0;
   let type: IterationQueryDocChangeWatcherChangeType;

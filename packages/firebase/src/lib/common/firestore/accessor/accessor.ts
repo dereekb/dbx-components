@@ -1,6 +1,6 @@
 import { filterMaybe } from '@dereekb/rxjs';
 import { filterUndefinedValues, Maybe } from "@dereekb/util";
-import { WriteResult, SnapshotOptions, DocumentReference, DocumentSnapshot, UpdateData, WithFieldValue, PartialWithFieldValue, SetOptions, Precondition } from "../types";
+import { WriteResult, SnapshotOptions, DocumentReference, DocumentSnapshot, UpdateData, WithFieldValue, PartialWithFieldValue, SetOptions, Precondition, DocumentData } from "../types";
 import { map, Observable, OperatorFunction } from 'rxjs';
 import { DocumentReferenceRef } from '../reference';
 
@@ -15,7 +15,7 @@ export interface FirestoreDocumentUpdateParams {
 /**
  * Firestore database accessor instance used to retrieve and make changes to items in the database.
  */
-export interface FirestoreDocumentDataAccessor<T> extends DocumentReferenceRef<T> {
+export interface FirestoreDocumentDataAccessor<T, D = DocumentData> extends DocumentReferenceRef<T> {
   /**
    * Returns a database stream of DocumentSnapshots.
    */
@@ -40,27 +40,28 @@ export interface FirestoreDocumentDataAccessor<T> extends DocumentReferenceRef<T
   set(data: PartialWithFieldValue<T>, options: SetOptions): Promise<WriteResult | void>;
   set(data: WithFieldValue<T>): Promise<WriteResult | void>;
   /**
-   * Directly updates the data in the database. If the document doesn't exist, it will fail.
+   * Directly updates the data in the database, skipping any conversions, etc.
    * 
-   * NOTE: Update will skip any conversions and directly set the data.
-   * If you rely on the converter/conversion functionality, use set() with merge: true instead of update.
+   * If the document doesn't exist, it will fail.
+   * 
+   * NOTE: If you rely on the converter/conversion functionality, use set() with merge: true instead of update.
    * 
    * @param data 
    */
-  update(data: UpdateData<T>, params?: FirestoreDocumentUpdateParams): Promise<WriteResult | void>;
+  update(data: UpdateData<D>, params?: FirestoreDocumentUpdateParams): Promise<WriteResult | void>;
 }
 
 /**
  * Contextual interface used for making a FirestoreDocumentModifier for a specific document.
  */
-export interface FirestoreDocumentDataAccessorFactory<T> {
+export interface FirestoreDocumentDataAccessorFactory<T, D = DocumentData> {
 
   /**
    * Creates a new FirestoreDocumentDataAccessor for the input ref.
    * 
    * @param ref
    */
-  accessorFor(ref: DocumentReference<T>): FirestoreDocumentDataAccessor<T>;
+  accessorFor(ref: DocumentReference<T>): FirestoreDocumentDataAccessor<T, D>;
 
 }
 

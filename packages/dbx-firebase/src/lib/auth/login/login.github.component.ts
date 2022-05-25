@@ -8,7 +8,7 @@ export class DbxFirebaseLoginGitHubComponent extends AbstractConfiguredDbxFireba
 
   readonly loginProvider = 'github';
 
-  handleLogin(): Promise<any> {
+  handleLogin() {
     return this.dbxFirebaseAuthService.logInWithGithub();
   }
 

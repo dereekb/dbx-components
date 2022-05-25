@@ -21,12 +21,12 @@ export abstract class DbxButton {
   abstract working: Maybe<boolean>;
   abstract icon?: Maybe<string>;
   abstract text?: Maybe<string>;
-  abstract readonly clicked$: Observable<any>;
+  abstract readonly clicked$: Observable<unknown>;
   abstract setButtonInterceptor(interceptor: DbxButtonInterceptor): void;
   abstract clickButton(): void;
 }
 
-export function ProvideDbxButton<S extends DbxButton>(sourceType: Type<S>): Provider[] {
+export function provideDbxButton<S extends DbxButton>(sourceType: Type<S>): Provider[] {
   return [{
     provide: DbxButton,
     useExisting: forwardRef(() => sourceType)

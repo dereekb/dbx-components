@@ -1,7 +1,6 @@
 import { ListLoadingStateContext, switchMapMaybeObs } from '@dereekb/rxjs';
-import { BehaviorSubject, Observable, of } from 'rxjs';
+import { BehaviorSubject, Observable, of, shareReplay } from 'rxjs';
 import { Directive, EventEmitter, Input, OnDestroy, Output } from '@angular/core';
-import { shareReplay } from 'rxjs/operators';
 import { DbxListSelectionMode, DbxListView } from './list.view';
 import { Maybe } from '@dereekb/util';
 
@@ -21,8 +20,6 @@ export abstract class AbstractDbxListViewDirective<T> implements DbxListView<T>,
 
   @Output()
   clickValue = new EventEmitter<T>();
-
-  constructor() { }
 
   @Input()
   set valueArray(values: Maybe<T[]>) {

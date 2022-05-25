@@ -8,7 +8,7 @@ export interface DbxFirebaseCollectionLoaderInstanceInitConfig<T, D extends Fire
   collection?: Maybe<FirestoreCollection<T, D>>,
   maxPages?: Maybe<number>;
   itemsPerPage?: Maybe<number>;
-  constraints?: Maybe<ArrayOrValue<FirestoreQueryConstraint<T>>>;
+  constraints?: Maybe<ArrayOrValue<FirestoreQueryConstraint>>;
 }
 
 export interface DbxFirebaseCollectionLoaderInstanceData<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> {
@@ -20,13 +20,13 @@ export interface DbxFirebaseCollectionLoaderInstanceData<T, D extends FirestoreD
 /**
  * DbxFirebaseModelLoader implementation within an instance.
  */
-export class DbxFirebaseCollectionLoaderInstance<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> implements DbxFirebaseCollectionLoader<T>, DbxFirebaseCollectionLoaderInstanceData<T, D>, Initialized, Destroyable {
+export class DbxFirebaseCollectionLoaderInstance<T = unknown, D extends FirestoreDocument<T> = FirestoreDocument<T>> implements DbxFirebaseCollectionLoader<T>, DbxFirebaseCollectionLoaderInstanceData<T, D>, Initialized, Destroyable {
 
   protected readonly _collection = new BehaviorSubject<Maybe<FirestoreCollection<T, D>>>(this._initConfig?.collection);
 
   protected readonly _maxPages = new BehaviorSubject<Maybe<number>>(this._initConfig?.maxPages);
   protected readonly _itemsPerPage = new BehaviorSubject<Maybe<number>>(this._initConfig?.itemsPerPage);
-  protected readonly _constraints = new BehaviorSubject<Maybe<ArrayOrValue<FirestoreQueryConstraint<T>>>>(this._initConfig?.constraints);
+  protected readonly _constraints = new BehaviorSubject<Maybe<ArrayOrValue<FirestoreQueryConstraint>>>(this._initConfig?.constraints);
   protected readonly _restart = new Subject<void>();
 
   private readonly _maxPagesSub = new SubscriptionObject();

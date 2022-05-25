@@ -1,9 +1,9 @@
-import { MapStringFn } from "@dereekb/util";
+import { MapStringFunction } from "@dereekb/util";
 import { Transform } from "class-transformer";
 import { transformCommaSeparatedValueToArray, transformCommaSeparatedStringValueToArray, transformCommaSeparatedNumberValueToArray, transformStringToBoolean } from "./type";
 
 // MARK: Transform Annotations
-export function TransformCommaSeparatedValueToArray<T>(mapFn: MapStringFn<T>) {
+export function TransformCommaSeparatedValueToArray<T>(mapFn: MapStringFunction<T>) {
   return Transform(transformCommaSeparatedValueToArray(mapFn));
 }
 

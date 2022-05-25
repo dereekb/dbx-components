@@ -9,7 +9,7 @@ import { AbstractFilterPopoverButtonDirective } from './filter.popover.button.di
     </button>
   `
 })
-export class DbxFilterPopoverButtonComponent<F = any> extends AbstractFilterPopoverButtonDirective<F> {
+export class DbxFilterPopoverButtonComponent<F = object> extends AbstractFilterPopoverButtonDirective<F> {
 
   @ViewChild('button', { read: ElementRef, static: false })
   buttonElement!: ElementRef;

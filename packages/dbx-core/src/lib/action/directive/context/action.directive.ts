@@ -1,5 +1,5 @@
 import { Directive, Optional, OnDestroy, Host } from '@angular/core';
-import { ProvideActionStoreSource, SecondaryActionContextStoreSource } from '../../action.store.source';
+import { provideActionStoreSource, SecondaryActionContextStoreSource } from '../../action.store.source';
 import { DbxActionContextBaseSource } from '../../action.holder';
 
 /**
@@ -8,11 +8,11 @@ import { DbxActionContextBaseSource } from '../../action.holder';
 @Directive({
   selector: 'dbx-action,[dbxAction],dbx-action-context,[dbxActionContext]',
   exportAs: 'action,dbxAction',
-  providers: ProvideActionStoreSource(DbxActionDirective)
+  providers: provideActionStoreSource(DbxActionDirective)
 })
-export class DbxActionDirective<T = any, O = any> extends DbxActionContextBaseSource implements OnDestroy {
+export class DbxActionDirective<T = unknown, O = unknown> extends DbxActionContextBaseSource<T, O> implements OnDestroy {
 
-  constructor(@Optional() @Host() inputSource: SecondaryActionContextStoreSource) {
+  constructor(@Optional() @Host() inputSource: SecondaryActionContextStoreSource<T, O>) {
     super(inputSource);
   }
 

@@ -2,7 +2,7 @@ import { lastValue, flattenArray } from '@dereekb/util';
 import { filterMaybe, scanBuildArray } from '../rxjs';
 import { combineLatest, map, Observable, shareReplay, skipWhile } from 'rxjs';
 import { mapLoadingStateResults, mapLoadingStateValueFunction, PageListLoadingState } from '../loading';
-import { ItemAccumulator, PageItemAccumulator } from './iteration.accumulator';
+import { ItemAccumulator, ItemAccumulatorValuePair, PageItemAccumulator } from './iteration.accumulator';
 
 /**
  * Used for ItemAccumulators that have an array of results returned per page instead of a single item.
@@ -10,15 +10,17 @@ import { ItemAccumulator, PageItemAccumulator } from './iteration.accumulator';
  * @param accumulator 
  * @returns 
  */
-export function flattenAccumulatorResultItemArray<T>(accumulator: ItemAccumulator<T[]>): Observable<T[]> {
-  return accumulator.allItems$.pipe(
-    scanBuildArray((allItems: T[][]) => {
-      const seed = flattenArray(allItems);
-      const latestItem = lastValue(allItems);
+export function flattenAccumulatorResultItemArray<T, I = unknown>(accumulator: ItemAccumulator<T[], I>): Observable<T[]> {
+  return accumulator.allItemPairs$.pipe(
+    scanBuildArray<ItemAccumulatorValuePair<T[], I>[], T>((allItems: ItemAccumulatorValuePair<T[], I>[]) => {
+      const pairs: ItemAccumulatorValuePair<T[], I>[] = allItems;
+      const firstLatestItemPair = lastValue(allItems);
+      const skipValue = firstLatestItemPair?.input;
+      const seed: T[] = flattenArray(pairs.map(x => x.output));
 
       const mapStateToItem = mapLoadingStateValueFunction(accumulator.mapItemFunction);
       const accumulatorObs: Observable<T[]> = accumulator.itemIteration.latestState$.pipe(
-        skipWhile(x => x.value === latestItem),
+        skipWhile(x => x.value === skipValue),
         map(mapStateToItem),
         filterMaybe()
       );
@@ -27,7 +29,7 @@ export function flattenAccumulatorResultItemArray<T>(accumulator: ItemAccumulato
         seed,
         accumulatorObs,
         flattenArray: true
-      } as any;
+      };
     })
   );
 }
@@ -35,7 +37,7 @@ export function flattenAccumulatorResultItemArray<T>(accumulator: ItemAccumulato
 /**
  * A PageListLoadingState that captures all the values that have been loaded so far, flattens them as an array, and the current loading state of currentPageResult$.
  */
-export function accumulatorFlattenPageListLoadingState<T>(accumulator: PageItemAccumulator<T[]>): Observable<PageListLoadingState<T>> {
+export function accumulatorFlattenPageListLoadingState<T, I = unknown>(accumulator: PageItemAccumulator<T[], I>): Observable<PageListLoadingState<T>> {
   return combineLatest([accumulator.itemIteration.currentState$, flattenAccumulatorResultItemArray(accumulator)]).pipe(
     map(([state, values]) => mapLoadingStateResults(state, {
       mapValue: () => values
@@ -47,7 +49,7 @@ export function accumulatorFlattenPageListLoadingState<T>(accumulator: PageItemA
 /**
  * A PageListLoadingState that captures all the values that have been loaded so far, and the current loading state of currentPageResult$.
  */
-export function accumulatorCurrentPageListLoadingState<V>(accumulator: PageItemAccumulator<V>): Observable<PageListLoadingState<V>> {
+export function accumulatorCurrentPageListLoadingState<V, I = unknown>(accumulator: PageItemAccumulator<V, I>): Observable<PageListLoadingState<V>> {
   return combineLatest([accumulator.itemIteration.currentState$, accumulator.allItems$]).pipe(
     map(([state, values]) => mapLoadingStateResults(state, {
       mapValue: () => values

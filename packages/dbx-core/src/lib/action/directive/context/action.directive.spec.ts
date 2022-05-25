@@ -102,6 +102,7 @@ describe('DbxActionDirective', () => {
 
         directive.sourceInstance.success$.pipe(first()).subscribe((successValue) => {
           expect(successValue).toBe(SUCCESS_VALUE);
+          expect(triggered).toBe(true);
           done();
         });
 
@@ -134,7 +135,5 @@ class TestActionContextDirectiveComponent {
 
   @Input()
   handlerFunction?: HandleActionFunction<number, number>;
-
-  constructor() { }
 
 }

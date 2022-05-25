@@ -1,7 +1,4 @@
-import { skipFirstMaybe } from './value';
-import { Maybe } from '@dereekb/util';
-import { BehaviorSubject, Subject } from 'rxjs';
-import { first, tap } from 'rxjs/operators';
+import { first, Subject } from 'rxjs';
 import { SubscriptionObject } from '../subscription';
 import { onFalseToTrue, onTrueToFalse } from './boolean';
 

@@ -1,9 +1,10 @@
+import { PrimativeKey } from '@dereekb/util';
 import { DbxInjectionComponentConfig, ClickableAnchor } from '@dereekb/dbx-core';
 import { Observable } from 'rxjs';
 import { SelectionDisplayValue, SelectionValue, SelectionValueHashFn } from '../selection';
 
 
-export interface SearchableValueFieldValue<T, M = any> extends SelectionValue<T, M> {
+export interface SearchableValueFieldValue<T, M = unknown> extends SelectionValue<T, M> {
 
   /**
    * Optional anchor metadata on the field.
@@ -14,34 +15,34 @@ export interface SearchableValueFieldValue<T, M = any> extends SelectionValue<T,
 /**
  * Displayed value.
  */
-export interface SearchableValueFieldDisplayValue<T, M = any> extends SelectionDisplayValue<T, M>, SearchableValueFieldValue<T, M> {
+export interface SearchableValueFieldDisplayValue<T, M = unknown> extends SelectionDisplayValue<T, M>, SearchableValueFieldValue<T, M> {
   /**
    * Display override configuration
    */
   display?: Partial<DbxInjectionComponentConfig>;
 }
 
-export interface ConfiguredSearchableValueFieldDisplayValue<T, M = any> extends Omit<SearchableValueFieldDisplayValue<T, M>, 'display'> {
+export interface ConfiguredSearchableValueFieldDisplayValue<T, M = unknown> extends Omit<SearchableValueFieldDisplayValue<T, M>, 'display'> {
   display: DbxInjectionComponentConfig;
 }
 
 /**
  * SearchableValueField function for searching values.
  */
-export type SearchableValueFieldStringSearchFn<T> = (search: string) => Observable<SearchableValueFieldValue<T>[]>;
+export type SearchableValueFieldStringSearchFn<T, M = unknown> = (search: string) => Observable<SearchableValueFieldValue<T, M>[]>;
 
 /**
- * SearchableValueField function that allows the values a chance to go through another observable for any changes.
+ * SearchableValueField function that allows the values a chance to go through another observable for unknown changes.
  *
  * An example usage is passing an email address, then getting back metadata that can be used to show the values.
  *
  * The value itself should not change. All other fields on the value may change, however.
  */
-export type SearchableValueFieldDisplayFn<T> = (values: SearchableValueFieldValue<T>[]) => Observable<SearchableValueFieldDisplayValue<T>[]>;
+export type SearchableValueFieldDisplayFn<T, M = unknown> = (values: SearchableValueFieldValue<T, M>[]) => Observable<SearchableValueFieldDisplayValue<T, M>[]>;
 
 /**
  * SearchableValueField function for setting anchor values on a field value.
  */
-export type SearchableValueFieldAnchorFn<T> = (value: SearchableValueFieldValue<T>) => ClickableAnchor;
+export type SearchableValueFieldAnchorFn<T, M = unknown> = (value: SearchableValueFieldValue<T, M>) => ClickableAnchor;
 
-export type SearchableValueFieldHashFn<T> = SelectionValueHashFn<T>;
+export type SearchableValueFieldHashFn<T, H extends PrimativeKey = PrimativeKey> = SelectionValueHashFn<T, H>;

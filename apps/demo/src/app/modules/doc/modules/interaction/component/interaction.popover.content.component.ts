@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output, OnDestroy } from '@angular/core';
+import { Component, EventEmitter, Output, OnDestroy } from '@angular/core';
 
 @Component({
   selector: 'dbx-interaction-example-popover-content',

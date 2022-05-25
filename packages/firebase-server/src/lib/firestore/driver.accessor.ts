@@ -1,4 +1,4 @@
-import { FirestoreAccessorDriver, CollectionReference, Firestore, TransactionFunction, DocumentReference } from "@dereekb/firebase";
+import { FirestoreAccessorDriver, CollectionReference, Firestore, TransactionFunction, DocumentReference, TransactionFirestoreDocumentContextFactory, WriteBatchFirestoreDocumentContextFactory } from "@dereekb/firebase";
 import { batch } from "@dereekb/util";
 import { CollectionReference as GoogleCloudCollectionReference, DocumentReference as GoogleCloudDocumentReference, Firestore as GoogleCloudFirestore } from "@google-cloud/firestore";
 import { writeBatchDocumentContext } from "./driver.accessor.batch";
@@ -53,7 +53,7 @@ export function firestoreClientAccessorDriver(): FirestoreAccessorDriver {
     transactionFactoryForFirestore: (firestore) => async <T>(fn: TransactionFunction<T>) => await (firestore as GoogleCloudFirestore).runTransaction(fn),
     writeBatchFactoryForFirestore: (firestore) => () => (firestore as GoogleCloudFirestore).batch(),
     defaultContextFactory: defaultFirestoreDocumentContext,
-    transactionContextFactory: transactionDocumentContext as any,
-    writeBatchContextFactory: writeBatchDocumentContext as any
+    transactionContextFactory: transactionDocumentContext as TransactionFirestoreDocumentContextFactory,
+    writeBatchContextFactory: writeBatchDocumentContext as unknown as WriteBatchFirestoreDocumentContextFactory
   };
 }

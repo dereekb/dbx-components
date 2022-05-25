@@ -2,8 +2,7 @@ import { skipFirstMaybe } from '@dereekb/rxjs';
 import { Input, Component, TemplateRef, ViewChild, OnDestroy } from '@angular/core';
 import { AbstractDbxAnchorDirective, DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { Maybe } from '@dereekb/util';
-import { BehaviorSubject } from 'rxjs';
-import { map, distinctUntilChanged, shareReplay } from 'rxjs/operators';
+import { map, distinctUntilChanged, shareReplay, BehaviorSubject } from 'rxjs';
 import { DbxRouterWebProviderConfig } from '../../provider/router.provider.config';
 
 /**
@@ -19,18 +18,18 @@ import { DbxRouterWebProviderConfig } from '../../provider/router.provider.confi
 })
 export class DbxAnchorComponent extends AbstractDbxAnchorDirective implements OnDestroy {
 
-  private _templateRef = new BehaviorSubject<Maybe<TemplateRef<any>>>(undefined);
+  private _templateRef = new BehaviorSubject<Maybe<TemplateRef<unknown>>>(undefined);
   readonly templateRef$ = this._templateRef.pipe(skipFirstMaybe(), shareReplay(1));
 
   @Input()
   public block?: boolean;
 
   @ViewChild('content', { read: TemplateRef })
-  get templateRef(): Maybe<TemplateRef<any>> {
+  get templateRef(): Maybe<TemplateRef<unknown>> {
     return this._templateRef.value;
   }
 
-  set templateRef(templateRef: Maybe<TemplateRef<any>>) {
+  set templateRef(templateRef: Maybe<TemplateRef<unknown>>) {
     this._templateRef.next(templateRef);
   }
 

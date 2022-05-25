@@ -1,5 +1,4 @@
-import { ArrayOrValue, asArray, excludeValuesFromArray, mergeArrayOrValueIntoArray, mergeIntoArray, SeparateResult, separateValues } from '@dereekb/util';
-import { SortingOrder, Maybe, ObjectMap } from '@dereekb/util';
+import { ArrayOrValue, asArray, mergeArrayOrValueIntoArray, SeparateResult, separateValues, SortingOrder, Maybe } from '@dereekb/util';
 import { DocumentSnapshot, DocumentData, FieldPath } from '../types';
 
 export type FirestoreQueryConstraintType = string;
@@ -7,19 +6,19 @@ export type FirestoreQueryConstraintType = string;
 /**
  * A constraint. Used by drivers to apply native firebase query constraints.
  */
-export interface FirestoreQueryConstraint<T = any> {
+export interface FirestoreQueryConstraint<T = unknown> {
   type: FirestoreQueryConstraintType;
   data: T;
 }
 
-export function firestoreQueryConstraint<T>(type: string, data: T): FirestoreQueryConstraint<T> {
+export function firestoreQueryConstraint<T = unknown>(type: string, data: T): FirestoreQueryConstraint<T> {
   return {
     type,
     data
   };
 }
 
-export function firestoreQueryConstraintFactory(type: string): <T>(data: T) => FirestoreQueryConstraint<T> {
+export function firestoreQueryConstraintFactory(type: string): <T = unknown>(data: T) => FirestoreQueryConstraint<T> {
   return <T>(data: T) => firestoreQueryConstraint(type, data);
 }
 
@@ -70,7 +69,7 @@ export function offset(offset: number): FirestoreQueryConstraint<OffsetQueryCons
 // MARK: Where
 export const FIRESTORE_WHERE_QUERY_CONSTRAINT_TYPE = 'where';
 
-export type WhereFilterOp = '<' | '<=' | '==' | '!=' | '>=' | '>' | 'array-contains' | 'in' | 'array-contains-any' | 'not-in';
+export type WhereFilterOp = '<' | '<=' | '==' | '!=' | '>=' | '>' | 'array-contains' | 'in' | 'not-in'; // 'array-contains-unknown' is not supported by firebase-server
 
 export interface WhereQueryConstraintData {
   fieldPath: string | FieldPath;
@@ -80,8 +79,8 @@ export interface WhereQueryConstraintData {
 
 export function where<T>(fieldPath: keyof T, opStr: WhereFilterOp, value: unknown): FirestoreQueryConstraint<WhereQueryConstraintData>;
 export function where(fieldPath: string | FieldPath, opStr: WhereFilterOp, value: unknown): FirestoreQueryConstraint<WhereQueryConstraintData>
-export function where(fieldPath: any, opStr: WhereFilterOp, value: unknown): FirestoreQueryConstraint<WhereQueryConstraintData> {
-  return firestoreQueryConstraint(FIRESTORE_WHERE_QUERY_CONSTRAINT_TYPE, { fieldPath, opStr, value });
+export function where(fieldPath: unknown, opStr: WhereFilterOp, value: unknown): FirestoreQueryConstraint<WhereQueryConstraintData> {
+  return firestoreQueryConstraint(FIRESTORE_WHERE_QUERY_CONSTRAINT_TYPE, { fieldPath: (fieldPath as string), opStr, value });
 }
 
 // MARK: OrderBy
@@ -158,10 +157,15 @@ export function endBefore<T = DocumentData>(snapshot: DocumentSnapshot<T>): Fire
 /**
  * Updates the input builder with the passed constraint value.
  */
-export type FirestoreQueryConstraintHandlerFunction<B, D = any> = (builder: B, data: D, constraint: FirestoreQueryConstraint<D>) => B;
+export type FirestoreQueryConstraintHandlerFunction<B, D = unknown> = (builder: B, data: D, constraint: FirestoreQueryConstraint<D>) => B;
 
-export type FirestoreQueryConstraintHandlerMap<B> = ObjectMap<Maybe<FirestoreQueryConstraintHandlerFunction<B>>>;
+export type FirestoreQueryConstraintHandlerMap<B> = {
+  [key: string]: Maybe<FirestoreQueryConstraintHandlerFunction<B, any>>
+};
 
+/**
+ * The full list of known firestore query constraints, and the data associated with it.
+ */
 export type FullFirestoreQueryConstraintDataMapping = {
   [FIRESTORE_LIMIT_QUERY_CONSTRAINT_TYPE]: LimitQueryConstraintData,
   [FIRESTORE_LIMIT_TO_LAST_QUERY_CONSTRAINT_TYPE]: LimitToLastQueryConstraintData,
@@ -176,11 +180,11 @@ export type FullFirestoreQueryConstraintDataMapping = {
 
 export type FullFirestoreQueryConstraintMapping = {
   [K in keyof FullFirestoreQueryConstraintDataMapping]: FirestoreQueryConstraint<FullFirestoreQueryConstraintDataMapping[K]>;
-}
+};
 
 export type FullFirestoreQueryConstraintHandlersMapping<B> = {
   [K in keyof FullFirestoreQueryConstraintMapping]: Maybe<FirestoreQueryConstraintHandlerFunction<B, FullFirestoreQueryConstraintDataMapping[K]>>;
-}
+};
 
 // MARK: Utils
 export function addOrReplaceLimitInConstraints(limit: number, addedLimitType: (typeof FIRESTORE_LIMIT_QUERY_CONSTRAINT_TYPE | typeof FIRESTORE_LIMIT_TO_LAST_QUERY_CONSTRAINT_TYPE) = FIRESTORE_LIMIT_QUERY_CONSTRAINT_TYPE): (constraints: FirestoreQueryConstraint[]) => FirestoreQueryConstraint[] {

@@ -1,5 +1,5 @@
 import { Directive } from '@angular/core';
-import { ProvideFilterSource } from './filter.content';
+import { provideFilterSource } from './filter.content';
 import { AbstractFilterSourceDirective } from './filter.abstract.source.directive';
 
 /**
@@ -7,6 +7,6 @@ import { AbstractFilterSourceDirective } from './filter.abstract.source.directiv
  */
 @Directive({
   selector: '[dbxFilterSource]',
-  providers: ProvideFilterSource(DbxFilterSourceDirective)
+  providers: provideFilterSource(DbxFilterSourceDirective)
 })
 export class DbxFilterSourceDirective<F> extends AbstractFilterSourceDirective<F> { }

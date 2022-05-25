@@ -1,19 +1,36 @@
-import { Maybe } from '@dereekb/util';
-import { makeSnapshotConverterFunctions, firestoreDate, firestoreBoolean, firestoreString, CollectionReference, FirestoreCollection, FirestoreContext, AbstractFirestoreDocument, firestoreNumber, SingleItemFirestoreCollection, FirestoreCollectionWithParent, AbstractFirestoreDocumentWithParent } from '@dereekb/firebase';
+import { Maybe, modelFieldConversions } from '@dereekb/util';
+import { CollectionReference, FirestoreCollection, FirestoreContext, AbstractFirestoreDocument, SingleItemFirestoreCollection, FirestoreCollectionWithParent, AbstractFirestoreDocumentWithParent, firestoreString, firestoreBoolean, ExpectedFirestoreModelData, optionalFirestoreString, firestoreDate, optionalFirestoreNumber, snapshotConverterFunctions, FirestoreModelData } from '@dereekb/firebase';
 
 // MARK: Mock Item
 /**
- * Data for a test item in our firestore collection.
+ * Converted data for a test item in our firestore collection.
  */
 export interface MockItem {
-  test?: boolean;
+
   value?: Maybe<string>;
+
+  /**
+   * The test value is alway present.
+   */
+  test: boolean;
+
 }
 
-/**
- * FirestoreDocument for MockItem
- */
 export class MockItemDocument extends AbstractFirestoreDocument<MockItem, MockItemDocument> { }
+
+/**
+ * MockItem as it is stored into the database.
+ * 
+ * Test is optional.
+ */
+export type MockItemData = FirestoreModelData<MockItem, {
+
+  /**
+   * The test value may not be defined in the database.
+   */
+  test?: Maybe<boolean>;
+
+}>;
 
 /**
  * Firestore collection path name.
@@ -23,10 +40,10 @@ export const mockItemCollectionPath = 'test';
 /**
  * Used to build a FirestoreDataConverter. Fields are configured via configuration. See the SnapshotConverterFunctions for more info.
  */
-export const mockItemConverter = makeSnapshotConverterFunctions<MockItem>({
+export const mockItemConverter = snapshotConverterFunctions<MockItem, MockItemData>({
   fields: {
-    test: firestoreBoolean({ default: false, defaultBeforeSave: false }),
-    value: firestoreString()
+    value: optionalFirestoreString(),
+    test: firestoreBoolean({ default: true })
   }
 });
 
@@ -51,36 +68,38 @@ export function mockItemFirestoreCollection(firestoreContext: FirestoreContext):
   });
 }
 
-// MARK: MockItemPrivateData
+// MARK: MockItemPrivate
 /**
  * Private data for each MockItem.
  * 
  * There is only a single private data item per each MockItem.
  */
-export interface MockItemPrivateData {
-  comments?: string;
-  createdAt?: Date
+export interface MockItemPrivate {
+  comments?: Maybe<string>;
+  createdAt: Date;
 }
 
 /**
  * FirestoreDocument for MockItem
  */
-export class MockItemPrivateDataDocument extends AbstractFirestoreDocument<MockItemPrivateData, MockItemPrivateDataDocument> { }
+export class MockItemPrivateDocument extends AbstractFirestoreDocument<MockItemPrivate, MockItemPrivateDocument> { }
+
+export type MockItemPrivateData = FirestoreModelData<MockItemPrivate, {}>;
 
 /**
  * Firestore collection path name.
  */
-export const mockItemPrivateDataCollectionPath = 'private';
-export const mockItemPrivateDataIdentifier = '0';
+export const mockItemPrivateCollectionPath = 'private';
+export const mockItemPrivateIdentifier = '0';
 
 /**
  * Used to build a FirestoreDataConverter. Fields are configured via configuration. See the SnapshotConverterFunctions for more info.
  */
-export const mockItemPrivateDataConverter = makeSnapshotConverterFunctions<MockItemPrivateData>({
-  fields: {
-    comments: firestoreString(),
+export const mockItemPrivateConverter = snapshotConverterFunctions({
+  fieldConversions: modelFieldConversions<MockItemPrivate, MockItemPrivateData>({
+    comments: optionalFirestoreString(),
     createdAt: firestoreDate({ saveDefaultAsNow: true })
-  }
+  })
 });
 
 /**
@@ -89,26 +108,26 @@ export const mockItemPrivateDataConverter = makeSnapshotConverterFunctions<MockI
  * @param firestore 
  * @returns 
  */
-export function mockItemPrivateDataCollectionReferenceFactory(context: FirestoreContext): (parent: MockItemDocument) => CollectionReference<MockItemPrivateData> {
+export function mockItemPrivateCollectionReferenceFactory(context: FirestoreContext): (parent: MockItemDocument) => CollectionReference<MockItemPrivate> {
   return (parent: MockItemDocument) => {
-    return context.subcollection(parent.documentRef, mockItemPrivateDataCollectionPath).withConverter<MockItemPrivateData>(mockItemPrivateDataConverter);
+    return context.subcollection(parent.documentRef, mockItemPrivateCollectionPath).withConverter<MockItemPrivate>(mockItemPrivateConverter);
   };
 }
 
-export type MockItemPrivateDataFirestoreCollection = SingleItemFirestoreCollection<MockItemPrivateData, MockItem, MockItemPrivateDataDocument>;
-export type MockItemPrivateDataFirestoreCollectionFactory = (parent: MockItemDocument) => MockItemPrivateDataFirestoreCollection;
+export type MockItemPrivateFirestoreCollection = SingleItemFirestoreCollection<MockItemPrivate, MockItem, MockItemPrivateDocument>;
+export type MockItemPrivateFirestoreCollectionFactory = (parent: MockItemDocument) => MockItemPrivateFirestoreCollection;
 
-export function mockItemPrivateDataFirestoreCollection(firestoreContext: FirestoreContext): MockItemPrivateDataFirestoreCollectionFactory {
-  const factory = mockItemPrivateDataCollectionReferenceFactory(firestoreContext);
+export function mockItemPrivateFirestoreCollection(firestoreContext: FirestoreContext): MockItemPrivateFirestoreCollectionFactory {
+  const factory = mockItemPrivateCollectionReferenceFactory(firestoreContext);
 
   return (parent: MockItemDocument) => {
     return firestoreContext.singleItemFirestoreCollection({
       itemsPerPage: 50,
       collection: factory(parent),
-      makeDocument: (a, d) => new MockItemPrivateDataDocument(a, d),
+      makeDocument: (a, d) => new MockItemPrivateDocument(a, d),
       firestoreContext,
       parent,
-      singleItemIdentifier: mockItemPrivateDataIdentifier
+      singleItemIdentifier: mockItemPrivateIdentifier
     });
   };
 }
@@ -128,6 +147,8 @@ export interface MockItemSubItem {
  */
 export class MockItemSubItemDocument extends AbstractFirestoreDocumentWithParent<MockItem, MockItemSubItem, MockItemSubItemDocument> { }
 
+export type MockItemSubItemData = ExpectedFirestoreModelData<MockItemSubItem>;
+
 /**
  * Firestore collection path name.
  */
@@ -136,9 +157,9 @@ export const mockItemSubItemCollectionPath = 'sub';
 /**
  * Used to build a FirestoreDataConverter. Fields are configured via configuration. See the SnapshotConverterFunctions for more info.
  */
-export const mockItemSubItemConverter = makeSnapshotConverterFunctions<MockItemSubItem>({
+export const mockItemSubItemConverter = snapshotConverterFunctions<MockItemSubItem, MockItemSubItemData>({
   fields: {
-    value: firestoreNumber()
+    value: optionalFirestoreNumber()
   }
 });
 
@@ -168,14 +189,14 @@ export function mockItemSubItemFirestoreCollection(firestoreContext: FirestoreCo
 // MARK: Collection
 export abstract class MockItemCollections {
   abstract readonly mockItem: MockItemFirestoreCollection;
-  abstract readonly mockItemPrivateData: MockItemPrivateDataFirestoreCollectionFactory;
+  abstract readonly mockItemPrivate: MockItemPrivateFirestoreCollectionFactory;
   abstract readonly mockItemSubItem: MockItemSubItemFirestoreCollectionFactory;
 }
 
 export function makeMockItemCollections(firestoreContext: FirestoreContext): MockItemCollections {
   return {
     mockItem: mockItemFirestoreCollection(firestoreContext),
-    mockItemPrivateData: mockItemPrivateDataFirestoreCollection(firestoreContext),
+    mockItemPrivate: mockItemPrivateFirestoreCollection(firestoreContext),
     mockItemSubItem: mockItemSubItemFirestoreCollection(firestoreContext)
   };
 }

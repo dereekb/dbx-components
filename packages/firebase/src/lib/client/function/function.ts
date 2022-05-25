@@ -7,12 +7,12 @@ export type FirebaseFunctionKey = string;
 /**
  * Typings tuple for a FirebaseFunction. Denotes the expected input and output values.
  */
-export type FirebaseFunctionType<I = any, O = any> = [I, O];
+export type FirebaseFunctionType<I = unknown, O = unknown> = [I, O];
 
 /**
  * An asynchronous function that calls a function on the Firebase server.
  */
-export type FirebaseFunction<I = any, O = any> = (input: I) => Promise<O>;
+export type FirebaseFunction<I = unknown, O = unknown> = (input: I) => Promise<O>;
 
 /**
  * Type with keys corresponding to functions on the corresponding server for a client.

@@ -1,10 +1,9 @@
 import { filterMaybe } from '@dereekb/rxjs';
 import { Directive, Input, OnDestroy } from '@angular/core';
 import { Maybe } from '@dereekb/util';
-import { BehaviorSubject } from 'rxjs';
-import { switchMap } from 'rxjs/operators';
+import { BehaviorSubject, switchMap } from 'rxjs';
 import { ActionKey } from './action.map';
-import { ProvideSecondaryActionStoreSource, SecondaryActionContextStoreSource } from '../../action.store.source';
+import { provideSecondaryActionStoreSource, SecondaryActionContextStoreSource } from '../../action.store.source';
 import { DbxActionContextMapDirective } from './action.map.directive';
 
 /**
@@ -12,7 +11,7 @@ import { DbxActionContextMapDirective } from './action.map.directive';
  */
 @Directive({
   selector: '[dbxActionFromMap]',
-  providers: ProvideSecondaryActionStoreSource(DbxActionFromMapDirective)
+  providers: provideSecondaryActionStoreSource(DbxActionFromMapDirective)
 })
 export class DbxActionFromMapDirective implements SecondaryActionContextStoreSource, OnDestroy {
 

@@ -29,7 +29,7 @@ export class DbxActionIsWorkingDirective extends AbstractIfDirective implements 
     shareReplay(1)
   );
 
-  constructor(templateRef: TemplateRef<any>, viewContainer: ViewContainerRef, public readonly source: DbxActionContextStoreSourceInstance) {
+  constructor(templateRef: TemplateRef<unknown>, viewContainer: ViewContainerRef, public readonly source: DbxActionContextStoreSourceInstance) {
     super(templateRef, viewContainer);
   }
 

@@ -15,12 +15,13 @@ describe('DateRRuleParseUtility', () => {
 
       describe('separateRRuleStringSetValues()', () => {
 
-        let rruleStringLineSet = [
+        const rruleStringLineSet = [
           yearlyRepeatingRule
         ];
 
         it('should parse the date', () => {
           const results = DateRRuleParseUtility.separateRRuleStringSetValues(rruleStringLineSet);
+          expect(results).toBeDefined();
 
           // todo
 
@@ -50,7 +51,7 @@ describe('DateRRuleParseUtility', () => {
 
       describe('rrule with EXDATE', () => {
 
-        let rruleStringLineSet = [
+        const rruleStringLineSet = [
           'RRULE:FREQ=WEEKLY',
           exdateLineA
         ];

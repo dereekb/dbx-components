@@ -1,8 +1,7 @@
 import { Component } from "@angular/core";
-import { ProvideFormlyContext, AbstractSyncFormlyFormDirective, DbxFormlyContext } from "@dereekb/dbx-form";
+import { provideFormlyContext, AbstractSyncFormlyFormDirective, DbxFormlyContext } from "@dereekb/dbx-form";
 import { FormlyFieldConfig } from "@ngx-formly/core";
 import { DemoProfileService } from "../profile.service";
-import { ProfileCollectionStore } from "../store/profile.collection.store";
 import { profileUsernameFields } from "./profile.form";
 
 export interface DemoProfileUsernameFormValue {
@@ -12,7 +11,7 @@ export interface DemoProfileUsernameFormValue {
 @Component({
   template: `<dbx-formly></dbx-formly>`,
   selector: 'demo-profile-username-form',
-  providers: [ProvideFormlyContext()]
+  providers: [provideFormlyContext()]
 })
 export class DemoProfileUsernameFormComponent extends AbstractSyncFormlyFormDirective<DemoProfileUsernameFormValue> {
 
@@ -22,7 +21,7 @@ export class DemoProfileUsernameFormComponent extends AbstractSyncFormlyFormDire
     }
   });
 
-  constructor(context: DbxFormlyContext, readonly profileService: DemoProfileService) {
+  constructor(context: DbxFormlyContext<DemoProfileUsernameFormValue>, readonly profileService: DemoProfileService) {
     super(context);
   }
 

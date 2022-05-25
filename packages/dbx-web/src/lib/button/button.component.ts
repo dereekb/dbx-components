@@ -1,6 +1,6 @@
 import { Component, Input } from '@angular/core';
 import { ThemePalette } from '@angular/material/core';
-import { ProvideDbxButton, AbstractDbxButtonDirective } from '@dereekb/dbx-core';
+import { provideDbxButton, AbstractDbxButtonDirective } from '@dereekb/dbx-core';
 import { Maybe } from '@dereekb/util';
 import { DbxProgressButtonOptions } from './progress/button.progress.config';
 
@@ -20,7 +20,7 @@ export enum DbxButtonDisplayType {
       <ng-content></ng-content>
     </dbx-spinner-button>
   `,
-  providers: ProvideDbxButton(DbxButtonComponent)
+  providers: provideDbxButton(DbxButtonComponent)
 })
 export class DbxButtonComponent extends AbstractDbxButtonDirective {
 
@@ -77,14 +77,16 @@ export class DbxButtonComponent extends AbstractDbxButtonDirective {
       fontIcon: this.icon
     } : undefined;
 
-    let customStyle = {} as any;
+    const customStyle = {} as {
+      [key: string]: string;
+    };
 
     if (this.customButtonColor) {
-      customStyle.background = this.customButtonColor;
+      customStyle['background'] = this.customButtonColor;
     }
 
     if (this.customTextColor) {
-      customStyle.color = this.customTextColor;
+      customStyle['color'] = this.customTextColor;
     }
 
     const customSpinnerColor: Maybe<string> = this.customSpinnerColor ?? this.customTextColor;

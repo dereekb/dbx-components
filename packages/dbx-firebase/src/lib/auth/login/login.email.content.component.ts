@@ -2,11 +2,10 @@ import { DbxFirebaseEmailRecoveryFormValue } from './login.email.recovery.form.c
 import { HandleActionFunction, DBX_INJECTION_COMPONENT_DATA, ClickableAnchor } from '@dereekb/dbx-core'
 import { DbxFirebaseAuthService } from './../service/firebase.auth.service';
 import { firstValueFrom, from, tap, BehaviorSubject } from 'rxjs';
-import { Component, EventEmitter, OnDestroy } from "@angular/core";
+import { Component, EventEmitter, OnDestroy, Inject } from "@angular/core";
 import { DbxFirebaseLoginContext } from "./login.context";
 import { DbxFirebaseEmailFormValue, DbxFirebaseEmailFormConfig } from './login.email.form.component';
 import { DbxFirebaseLoginMode } from './login';
-import { Inject } from '@angular/core';
 import { firebaseAuthErrorToReadableError } from '../error';
 import { Maybe } from '@dereekb/util';
 
@@ -42,10 +41,6 @@ export class DbxFirebaseLoginEmailContentComponent implements OnDestroy {
 
   constructor(readonly dbxFirebaseAuthService: DbxFirebaseAuthService, @Inject(DBX_INJECTION_COMPONENT_DATA) readonly config: DbxFirebaseLoginEmailContentComponentConfig) { }
 
-  ngOnDestroy(): void {
-    this._emailMode.complete();
-  }
-
   static openEmailLoginContext(dbxFirebaseLoginContext: DbxFirebaseLoginContext, config: DbxFirebaseLoginEmailContentComponentConfig): Promise<boolean> {
     return dbxFirebaseLoginContext.showContext({
       config: {
@@ -54,6 +49,10 @@ export class DbxFirebaseLoginEmailContentComponent implements OnDestroy {
       },
       use: (instance) => firstValueFrom(instance.doneOrCancelled)
     });
+  }
+
+  ngOnDestroy(): void {
+    this._emailMode.complete();
   }
 
   get loginMode() {
@@ -72,7 +71,7 @@ export class DbxFirebaseLoginEmailContentComponent implements OnDestroy {
     return this.config.loginMode === 'register' ? 'Register' : 'Log In';
   }
 
-  readonly handleLoginAction: HandleActionFunction = (value: DbxFirebaseEmailFormValue) => {
+  readonly handleLoginAction: HandleActionFunction<DbxFirebaseEmailFormValue> = (value: DbxFirebaseEmailFormValue) => {
     this.emailFormValue = value;
     this.recoveryFormValue = { email: value.username };    // cache value for recovery
 
@@ -98,22 +97,22 @@ export class DbxFirebaseLoginEmailContentComponent implements OnDestroy {
     this._emailMode.next('recover');
   }
 
-  readonly handleRecoveryAction: HandleActionFunction = (value: DbxFirebaseEmailRecoveryFormValue) => {
+  readonly handleRecoveryAction: HandleActionFunction<DbxFirebaseEmailRecoveryFormValue> = (value) => {
     this.recoveryFormValue = value;
     this.emailFormValue = { username: value.email, password: '' };
 
-    let result = this.dbxFirebaseAuthService.sendPasswordResetEmail(value.email);
+    const result = this.dbxFirebaseAuthService.sendPasswordResetEmail(value.email);
 
     return from(result).pipe(
       tap(() => {
         this.onRecoveringSuccess();
       })
     );
-  }
+  };
 
   // MARK: Recovering
   onRecoveringSuccess() {
-
+    // optionally override in parent
   }
 
   // MARK: Cancel

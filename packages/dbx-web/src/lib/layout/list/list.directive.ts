@@ -23,7 +23,7 @@ export const DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE = `
 </dbx-list>
 `;
 
-export interface DbxListWrapperConfig<T, V extends DbxListView<T> = DbxListView<T>> extends Omit<DbxListConfig<T, V>, 'onClick' | 'loadMore'> { }
+export type DbxListWrapperConfig<T, V extends DbxListView<T> = DbxListView<T>> = Omit<DbxListConfig<T, V>, 'onClick' | 'loadMore'>
 
 @Directive()
 export abstract class AbstractDbxListWrapperDirective<T, V extends DbxListView<T> = DbxListView<T>, C extends DbxListWrapperConfig<T, V> = DbxListWrapperConfig<T, V>, S extends ListLoadingState<T> = ListLoadingState<T>> implements OnInit, OnDestroy, DbxListViewWrapper<T, S> {
@@ -73,10 +73,10 @@ export abstract class AbstractDbxListWrapperDirective<T, V extends DbxListView<T
 }
 
 // MARK: Selection Wrapper
-export interface DbxSelectionListWrapperConfig<T, V extends DbxListView<T> = DbxListView<T>> extends Omit<DbxListWrapperConfig<T, V>, 'onSelectionChange'> { }
+export type DbxSelectionListWrapperConfig<T, V extends DbxListView<T> = DbxListView<T>> = Omit<DbxListWrapperConfig<T, V>, 'onSelectionChange'>
 
 @Directive()
-export abstract class AbstractDbxSelectionListWrapperDirective<T, V extends DbxListView<T> = DbxListView<T>, C extends DbxSelectionListWrapperConfig<T, V> = DbxSelectionListWrapperConfig<T, V>, S extends ListLoadingState<T> = ListLoadingState<T>> extends AbstractDbxListWrapperDirective<T, V, C, S> {
+export abstract class AbstractDbxSelectionListWrapperDirective<T, V extends DbxListView<T> = DbxListView<T>, C extends DbxSelectionListWrapperConfig<T, V> = DbxSelectionListWrapperConfig<T, V>, S extends ListLoadingState<T> = ListLoadingState<T>> extends AbstractDbxListWrapperDirective<T, V, C, S> implements OnDestroy {
 
   @Output()
   selectionChange = new EventEmitter<ListSelectionState<T>>();

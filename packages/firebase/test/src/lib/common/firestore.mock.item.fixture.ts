@@ -15,8 +15,8 @@ export class MockItemCollectionFixtureInstance {
     return this.collections.mockItem;
   }
 
-  get mockItemPrivateDataCollection() {
-    return this.collections.mockItemPrivateData;
+  get mockItemPrivateCollection() {
+    return this.collections.mockItemPrivate;
   }
 
   get mockItemSubItemCollection() {

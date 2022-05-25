@@ -1,48 +1,57 @@
+import { build } from './../value/build';
 import { countPOJOKeys, KeyValueTypleValueFilter } from '../object';
-import { makeModelFieldMapFunction, makeModelMapFunctions, ModelFieldFromConfig, ModelFieldsConversionConfig } from './model.conversion';
+import { modelFieldMapFunction, makeModelMapFunctions, modelFieldConversions } from './model.conversion';
+import { copyField } from './model.conversion.field';
 
 interface TestConversionModel {
   name: string;
   number: number;
+  date: Date;
   test?: boolean;
 }
 
 interface TestConversionDataModel {
   name: string;
   number: string;
+  date?: number;
   test?: boolean;
 }
 
+const defaultTestValue: boolean = true;
 const defaultTestModel: TestConversionModel = {
   name: 'test',
-  number: 1
+  number: 1,
+  date: new Date()
 };
 
-const defaultTestValue = true;
+const fields = modelFieldConversions<TestConversionModel, TestConversionDataModel>({
+  name: copyField(''),
+  test: copyField<boolean | undefined>(defaultTestValue),
+  date: {
+    from: {
+      convert: (x: number) => new Date(x),
+      default: () => new Date()
+    },
+    to: {
+      defaultInput: () => new Date(),
+      convert: (x: Date) => x.getTime()
+    }
+  },
+  number: {
+    from: {
+      convert: (x: string) => Number(x),
+      default: 0
+    },
+    to: {
+      convert: (x: number) => String(x),
+      default: '0'
+    }
+  }
+});
+
+const mapFunctions = makeModelMapFunctions<TestConversionModel, TestConversionDataModel>(fields);
 
 describe('makeModelMapFunctions', () => {
-
-  const fields: ModelFieldsConversionConfig<TestConversionModel> = {
-    name: {},
-    test: {
-      from: {
-        default: defaultTestValue
-      },
-      to: {
-        default: defaultTestValue
-      }
-    },
-    number: {
-      from: {
-        convert: (x: string) => Number(x)
-      },
-      to: {
-        convert: (x: number) => String(x)
-      }
-    }
-  };
-
-  const mapFunctions = makeModelMapFunctions<TestConversionModel, TestConversionDataModel>(fields);
 
   describe('functions', () => {
 
@@ -101,11 +110,13 @@ describe('makeModelMapFunctions', () => {
 
         it('should only convert defined values.', () => {
 
-          const testModel = {
-            ...defaultTestModel
-          };
-
-          delete (testModel as any).number;
+          const testModel = build<typeof defaultTestModel>({
+            base: ({ ...defaultTestModel }),
+            build: (x) => {
+              delete x.number;
+              delete x.date;
+            }
+          });
 
           const result = mapFunctions.to(testModel, undefined, {
             definedOnly: true
@@ -128,22 +139,22 @@ describe('makeModelMapFunctions', () => {
 
 });
 
-describe('makeModelFieldMapFunction()', () => {
+describe('modelFieldMapFunction()', () => {
 
   describe('function', () => {
 
     it('should return the default value if convertMaybe is false/undefined and null/undefined is input.', () => {
-      const defaultValue = 1;
-      const fn = makeModelFieldMapFunction({ default: defaultValue });
+      const defaultOutput = 1;
+      const fn = modelFieldMapFunction<number, number>({ default: defaultOutput, convert: (x) => x });
 
       const result = fn(undefined);
 
-      expect(result).toBe(defaultValue);
+      expect(result).toBe(defaultOutput);
     });
 
-    it('should call convert if convertMaybe is true and null/undefined is input.', () => {
+    it('should call convertMaybe if null/undefined is input.', () => {
       const convertResultValue = 1;
-      const fn = makeModelFieldMapFunction({ convert: () => convertResultValue, convertMaybe: true });
+      const fn = modelFieldMapFunction<number, number>({ convertMaybe: () => convertResultValue });
 
       const result = fn(undefined);
 
@@ -152,7 +163,7 @@ describe('makeModelFieldMapFunction()', () => {
 
     it('should convert the value if a non-null value is passed in.', () => {
       const convertResultValue = 1;
-      const fn = makeModelFieldMapFunction({ convert: () => convertResultValue, convertMaybe: true });
+      const fn = modelFieldMapFunction<number, number>({ convert: () => convertResultValue, defaultInput: 0 });
 
       const result = fn(100);
 

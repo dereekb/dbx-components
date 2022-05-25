@@ -4,6 +4,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Component, Input, Type, ViewChild, OnDestroy } from '@angular/core';
 import { By, BrowserModule } from '@angular/platform-browser';
 import { DbxInjectionComponentModule } from './injection.component.module';
+import { Maybe } from '@dereekb/util';
 
 const CUSTOM_CONTENT_ID = 'custom-content';
 const CUSTOM_CONTENT = 'Custom Content';
@@ -27,10 +28,10 @@ class TestInjectionComponentContent implements OnDestroy {
 abstract class TestInjectionComponent<T = any> {
 
   @Input()
-  config?: DbxInjectionComponentConfig;
+  config?: DbxInjectionComponentConfig<TestInjectionComponentContent>;
 
   @Input()
-  template?: DbxInjectionTemplateConfig;
+  template?: DbxInjectionTemplateConfig<TestInjectionComponentContent>;
 
   @ViewChild(DbxInjectionComponent, { static: true })
   injectedComponent?: DbxInjectionComponent<T>;
@@ -75,7 +76,7 @@ describe('DbxInjectionComponent', () => {
 
     describe(`selector "${selector}"`, () => {
 
-      let testComponent: TestInjectionComponent;
+      let testComponent: TestInjectionComponent<TestInjectionComponentContent>;
       let fixture: ComponentFixture<TestInjectionComponent>;
 
       beforeEach(async () => {
@@ -106,7 +107,7 @@ describe('DbxInjectionComponent', () => {
 
 
         it('should show destroy the content when config is cleared.', () => {
-          let instance: TestInjectionComponentContent;
+          let instance: Maybe<TestInjectionComponentContent>;
 
           testComponent.config = {
             componentClass: TestInjectionComponentContent,
@@ -117,8 +118,8 @@ describe('DbxInjectionComponent', () => {
 
           fixture.detectChanges();
 
-          expect(instance!).toBeDefined();
-          expect(instance!.destroyed).toBe(false);
+          expect(instance).toBeDefined();
+          expect((instance as TestInjectionComponentContent).destroyed).toBe(false);
 
           // clear the item
           testComponent.config = undefined;
@@ -126,7 +127,7 @@ describe('DbxInjectionComponent', () => {
           fixture.detectChanges();
 
           // check is destroyed
-          expect(instance!.destroyed).toBe(true);
+          expect((instance as TestInjectionComponentContent).destroyed).toBe(true);
 
         });
 

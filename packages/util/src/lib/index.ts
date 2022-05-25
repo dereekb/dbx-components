@@ -12,6 +12,7 @@ export * from './model';
 export * from './misc';
 export * from './promise';
 export * from './relation';
+export * from './service';
 export * from './set';
 export * from './storage';
 export * from './tree';

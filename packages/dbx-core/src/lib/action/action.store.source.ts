@@ -1,8 +1,6 @@
-import { first, switchMap } from 'rxjs/operators';
-import { Observable, Subscription } from 'rxjs';
-import { forwardRef, Injectable, Provider, Type } from '@angular/core';
+import { first, switchMap, Observable, Subscription } from 'rxjs';
+import { forwardRef, Injectable, Provider, Type, OnDestroy } from '@angular/core';
 import { LockSet, filterMaybe, LoadingState, LoadingStateType } from '@dereekb/rxjs';
-import { OnDestroy } from '@angular/core';
 import { Maybe, ReadableError } from '@dereekb/util';
 import { ActionContextState, ActionContextStore } from './action.store';
 import { DbxActionDisabledKey, DbxActionState } from './action';
@@ -10,7 +8,7 @@ import { DbxActionDisabledKey, DbxActionState } from './action';
 /**
  * Source that provides a ActionContextStore observable.
  */
-export abstract class ActionContextStoreSource<T = any, O = any> {
+export abstract class ActionContextStoreSource<T = unknown, O = unknown> {
   /**
    * Observable referencing the ActionContextStore.
    *
@@ -22,7 +20,7 @@ export abstract class ActionContextStoreSource<T = any, O = any> {
 /**
  * Secondary source. Used by DbxActionContextComponent to find secondary sources.
  */
-export abstract class SecondaryActionContextStoreSource<T = any, O = any> extends ActionContextStoreSource<T, O> { }
+export abstract class SecondaryActionContextStoreSource<T = unknown, O = unknown> extends ActionContextStoreSource<T, O> { }
 
 export function actionContextStoreSourcePipe<T, O>(obs: Observable<Maybe<ActionContextStore<T, O>>>): Observable<ActionContextStore<T, O>> {
   return obs.pipe(filterMaybe());
@@ -30,7 +28,7 @@ export function actionContextStoreSourcePipe<T, O>(obs: Observable<Maybe<ActionC
 
 export type PipeActionStoreFunction<R, T, O> = (store: ActionContextStore<T, O>) => Observable<R>;
 
-export function pipeActionStore<R = any, T = any, O = any>(source: ActionContextStoreSource<T, O>, pipeFn: PipeActionStoreFunction<R, T, O>): Observable<R> {
+export function pipeActionStore<R = unknown, T = unknown, O = unknown>(source: ActionContextStoreSource<T, O>, pipeFn: PipeActionStoreFunction<R, T, O>): Observable<R> {
   return source.store$.pipe(
     switchMap(pipeFn)
   );
@@ -41,7 +39,7 @@ export type UseActionStoreFunction<T, O> = (store: ActionContextStore<T, O>) => 
 /**
  * Convenience function for subscribing to the input source once and using the provided store.
  */
-export function useActionStore<T = any, O = any>(source: ActionContextStoreSource<T, O>, useFn: UseActionStoreFunction<T, O>): Subscription {
+export function useActionStore<T = unknown, O = unknown>(source: ActionContextStoreSource<T, O>, useFn: UseActionStoreFunction<T, O>): Subscription {
   return source.store$.pipe(first()).subscribe(useFn);
 }
 
@@ -49,7 +47,7 @@ export function useActionStore<T = any, O = any>(source: ActionContextStoreSourc
  * Service that wraps a ActionContextStoreSource.
  */
 @Injectable()
-export class DbxActionContextStoreSourceInstance<T = any, O = any> implements ActionContextStoreSource, OnDestroy {
+export class DbxActionContextStoreSourceInstance<T = unknown, O = unknown> implements ActionContextStoreSource<T, O>, OnDestroy {
 
   readonly lockSet = new LockSet();
 
@@ -193,7 +191,7 @@ export const actionContextStoreSourceInstanceFactory = (source: ActionContextSto
 /**
  * Provides an ActionContextStoreSource, as well as an DbxActionContextStoreSourceInstance.
  */
-export function ProvideActionStoreSource<S>(sourceType: Type<S>): Provider[] {
+export function provideActionStoreSource<S extends ActionContextStoreSource>(sourceType: Type<S>): Provider[] {
   return [{
     provide: ActionContextStoreSource,
     useExisting: forwardRef(() => sourceType)
@@ -205,11 +203,11 @@ export function ProvideActionStoreSource<S>(sourceType: Type<S>): Provider[] {
   }];
 }
 
-export function ProvideSecondaryActionStoreSource<S>(sourceType: Type<S>): Provider[] {
+export function provideSecondaryActionStoreSource<S extends SecondaryActionContextStoreSource>(sourceType: Type<S>): Provider[] {
   return [{
     provide: SecondaryActionContextStoreSource,
     useExisting: forwardRef(() => sourceType)
   },
-  ...ProvideActionStoreSource(sourceType)
+  ...provideActionStoreSource(sourceType)
   ];
 }

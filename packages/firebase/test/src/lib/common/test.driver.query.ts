@@ -1,5 +1,5 @@
 import { SubscriptionObject } from "@dereekb/rxjs";
-import { filter, first, from } from "rxjs";
+import { filter, first, from, skip } from "rxjs";
 import { limit, orderBy, startAfter, startAt, where, limitToLast, endAt, endBefore, makeDocuments, FirestoreQueryFactoryFunction } from "@dereekb/firebase";
 import { MockItemDocument, MockItem } from "./firestore.mock.item";
 import { MockItemCollectionFixture } from "./firestore.mock.item.fixture";
@@ -48,9 +48,19 @@ export function describeQueryDriverTests(f: MockItemCollectionFixture) {
         it('should emit when the query results update (an item is added).', (done) => {
           const itemsToAdd = 1;
 
+          let addCompleted = false;
+          let addSeen = false;
+
+          function tryComplete() {
+            if (addSeen && addCompleted) {
+              done();
+            }
+          }
+
           sub.subscription = query().streamDocs().pipe(filter(x => x.docs.length > items.length)).subscribe((results) => {
+            addSeen = true;
             expect(results.docs.length).toBe(items.length + itemsToAdd);
-            done();
+            tryComplete();
           });
 
           // add one item
@@ -62,6 +72,9 @@ export function describeQueryDriverTests(f: MockItemCollectionFixture) {
                 test: true
               };
             }
+          }).then(() => {
+            addCompleted = true;
+            tryComplete();
           });
 
         });
@@ -69,13 +82,31 @@ export function describeQueryDriverTests(f: MockItemCollectionFixture) {
         it('should emit when the query results update (an item is removed).', (done) => {
           const itemsToRemove = 1;
 
-          sub.subscription = query().streamDocs().pipe(filter(x => x.docs.length < items.length)).subscribe((results) => {
+          let deleteCompleted = false;
+          let deleteSeen = false;
+
+          function tryComplete() {
+            if (deleteSeen && deleteCompleted) {
+              done();
+            }
+          }
+
+          sub.subscription = query().streamDocs().pipe(skip(1)).subscribe((results) => {
+            deleteSeen = true;
             expect(results.docs.length).toBe(items.length - itemsToRemove);
-            done();
+            tryComplete();
           });
 
-          // remove one item
-          items[0].accessor.delete();
+          items[0].accessor.exists().then((exists) => {
+            expect(exists).toBe(true);
+
+            // remove one item
+            return items[0].accessor.delete().then(() => {
+              deleteCompleted = true;
+              tryComplete();
+            });
+          })
+
         });
 
       });

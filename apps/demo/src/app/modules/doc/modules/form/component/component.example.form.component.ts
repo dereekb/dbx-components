@@ -1,9 +1,8 @@
 import { LOREM } from './../../shared/lorem';
-import { Type, InjectionToken, Inject } from '@angular/core';
+import { Type, InjectionToken, Inject, Component } from '@angular/core';
 import { Observable, map } from 'rxjs';
-import { Component } from '@angular/core';
 import { FormlyFieldConfig } from '@ngx-formly/core';
-import { AbstractConfigAsyncFormlyFormDirective, componentField, ProvideFormlyContext } from '@dereekb/dbx-form';
+import { AbstractConfigAsyncFormlyFormDirective, componentField, provideFormlyContext } from '@dereekb/dbx-form';
 
 export const DOC_FORM_EXAMPLE_COMPONENT_DATA_TOKEN = new InjectionToken('DOC_FORM_EXAMPLE_COMPONENT_DATA_TOKEN');
 
@@ -16,7 +15,7 @@ export interface DocFormExampleComponentFormConfig {
 @Component({
   template: `<dbx-formly></dbx-formly>`,
   selector: 'dbx-form-example-component-form',
-  providers: [ProvideFormlyContext()]
+  providers: [provideFormlyContext()]
 })
 export class DocFormExampleComponentFormComponent extends AbstractConfigAsyncFormlyFormDirective<DocFormExampleComponentFormValue, DocFormExampleComponentFormConfig> {
 

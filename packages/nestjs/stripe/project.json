@@ -1,0 +1,40 @@
+{
+  "sourceRoot": "packages/nestjs/stripe/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/workspace:run-commands",
+      "options": {
+        "command": "npx nx run nestjs-stripe:build-base",
+        "color": true
+      }
+    },
+    "build-base": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/packages/nestjs/stripe",
+        "tsConfig": "packages/nestjs/stripe/tsconfig.lib.json",
+        "packageJson": "packages/nestjs/stripe/package.json",
+        "main": "packages/nestjs/stripe/src/index.ts",
+        "assets": ["packages/nestjs/stripe/*.md", "LICENSE"]
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["packages/nestjs/stripe/**/*.ts"]
+      }
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": ["coverage/packages/nestjs/stripe"],
+      "options": {
+        "jestConfig": "packages/nestjs/stripe/jest.config.ts",
+        "passWithNoTests": true
+      }
+    }
+  },
+  "tags": []
+}

@@ -49,6 +49,9 @@ describe('FirestoreCollection', () => {
 
       it('should create a new document accessor instance that uses the passed transaction context.', async () => {
 
+        // The only reason we would do this type of function in a transaction is for a specific item that should not exist yet.
+        const specificIdentifier = 'test';
+
         let ref: Maybe<DocumentReference<MockItem>>;
 
         await runTransaction(firestore, async (transaction: Transaction) => {
@@ -57,13 +60,16 @@ describe('FirestoreCollection', () => {
           const result = firestoreCollection.documentAccessor(context);
           expect(result).toBeDefined();
 
-          const document = result.newDocument();
+          const document = result.loadDocumentForPath(specificIdentifier);
           ref = document.documentRef as DocumentReference<MockItem>;
+
+          const exists = await document.accessor.exists();
+          expect(exists).toBe(false);
 
           expect(document.documentRef).toBeDefined();
           expect(document.accessor).toBeDefined();
 
-          await document.accessor.set({ test: true });
+          await document.accessor.set({ test: true, value: '' });
         });
 
         expect(ref).toBeDefined();
@@ -76,8 +82,6 @@ describe('FirestoreCollection', () => {
 
       it('should create a new document accessor instance that uses the passed batch context.', async () => {
 
-        let ref: Maybe<DocumentReference<MockItem>>;
-
         const batch = writeBatch(firestore);
         const context: FirestoreDocumentContext<MockItem> = writeBatchDocumentContext(batch);
 
@@ -85,12 +89,12 @@ describe('FirestoreCollection', () => {
         expect(result).toBeDefined();
 
         const document = result.newDocument();
-        ref = document.documentRef as DocumentReference<MockItem>;
+        const ref: Maybe<DocumentReference<MockItem>> = document.documentRef as DocumentReference<MockItem>;
 
         expect(document.documentRef).toBeDefined();
         expect(document.accessor).toBeDefined();
 
-        await document.accessor.set({ test: true });
+        await document.accessor.set({ test: true, value: '' });
 
         expect(ref).toBeDefined();
 

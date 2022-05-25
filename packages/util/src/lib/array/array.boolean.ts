@@ -13,7 +13,7 @@ export type BooleanStringKeyArray = BooleanKeyArray<BooleanStringKey>;
  *
  * Having any values in the array is considered "true".
  */
-export type BooleanKeyArray<T = any> = Maybe<T[]>;
+export type BooleanKeyArray<T = string> = Maybe<T[]>;
 
 export function readBooleanKeySafetyWrap<T>(readKey: ReadModelKeyFunction<T>): ReadModelKeyFunction<T> {
   return (value: T) => {

@@ -1,10 +1,9 @@
-import { Observable } from 'rxjs';
+import { Observable, BehaviorSubject, combineLatest, map, shareReplay, distinctUntilChanged } from 'rxjs';
 import { ScreenMediaWidthType } from './../../../screen/screen';
 import { DbxScreenMediaService } from '../../../screen/screen.service';
 import { applyBestFit, Maybe } from '@dereekb/util';
 import { Input, Component, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { ClickableAnchorLinkSegueRef, DbxRouterService, DbxRouterTransitionService, AbstractTransitionDirective, tapDetectChanges } from '@dereekb/dbx-core';
-import { BehaviorSubject, combineLatest, map, shareReplay, distinctUntilChanged } from 'rxjs';
 import { HorizontalConnectionPos } from '@angular/cdk/overlay';
 
 interface NavAnchorLink {
@@ -49,7 +48,7 @@ export class DbxNavbarComponent extends AbstractTransitionDirective implements O
   readonly anchors$: Observable<NavAnchorLink[]> = combineLatest([this._anchors, this.initAndUpdateOnTransitionSuccess$]).pipe(
     map(([anchors]) => {
       const results = anchors.map((anchor) => {
-        let selected = this._dbxRouterService.isActive(anchor);
+        const selected = this._dbxRouterService.isActive(anchor);
 
         return {
           selected,

@@ -1,6 +1,5 @@
 import { Component, Input } from '@angular/core';
-import { Maybe } from '@dereekb/util';
-import { ErrorInput, convertToReadableError, ReadableError } from '@dereekb/util';
+import { Maybe, ErrorInput, toReadableError, ReadableError } from '@dereekb/util';
 
 /**
  * Basic error component.
@@ -11,15 +10,15 @@ import { ErrorInput, convertToReadableError, ReadableError } from '@dereekb/util
 })
 export class DbxReadableErrorComponent {
 
-  private _error?: ReadableError;
+  private _error?: Maybe<ReadableError>;
 
   get error(): Maybe<ReadableError> {
     return this._error;
   }
 
   @Input()
-  set error(error: Maybe<ErrorInput | ReadableError>) {
-    this._error = convertToReadableError(error as any) as ReadableError;
+  set error(error: Maybe<ErrorInput>) {
+    this._error = toReadableError(error);
   }
 
   get message(): Maybe<string> {

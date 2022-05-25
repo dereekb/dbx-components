@@ -1,6 +1,6 @@
 module.exports = {
   displayName: 'demo-api',
-
+  maxWorkers: 2,
   setupFilesAfterEnv: ['<rootDir>/test-setup.ts'],
   globals: {
     'ts-jest': {

@@ -23,7 +23,7 @@
         "tsConfig": "packages/date/tsconfig.lib.json",
         "packageJson": "packages/date/package.json",
         "main": "packages/date/src/index.ts",
-        "assets": ["packages/date/*.md"]
+        "assets": ["packages/date/*.md", "LICENSE"]
       }
     },
     "lint": {
@@ -82,7 +82,7 @@
     "publish-npmjs": {
       "executor": "@nrwl/workspace:run-commands",
       "options": {
-        "command": "cd ./dist/packages/date && npm publish"
+        "command": "cd ./dist/packages/date && npm publish --access public"
       }
     }
   },

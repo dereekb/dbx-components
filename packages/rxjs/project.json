@@ -23,7 +23,7 @@
         "tsConfig": "packages/rxjs/tsconfig.lib.json",
         "packageJson": "packages/rxjs/package.json",
         "main": "packages/rxjs/src/index.ts",
-        "assets": ["packages/rxjs/*.md"]
+        "assets": ["packages/rxjs/*.md", "LICENSE"]
       }
     },
     "lint": {
@@ -44,7 +44,7 @@
     "publish-npmjs": {
       "executor": "@nrwl/workspace:run-commands",
       "options": {
-        "command": "cd ./dist/packages/rxjs && npm publish"
+        "command": "cd ./dist/packages/rxjs && npm publish --access public"
       }
     }
   },

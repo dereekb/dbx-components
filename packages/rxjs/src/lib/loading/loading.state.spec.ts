@@ -1,4 +1,4 @@
-import { beginLoading, errorResult, loadingStateHasFinishedLoading, loadingStateIsLoading, mapLoadingStateResults, successResult } from '.';
+import { beginLoading, errorResult, loadingStateHasFinishedLoading, loadingStateIsLoading, mapLoadingStateResults, successResult } from './loading.state';
 
 describe('beginLoading()', () => {
 
@@ -34,7 +34,8 @@ describe('errorResult()', () => {
   it('should return a loading state that has the error.', () => {
     const error = { message: '' };
     const state = errorResult(error);
-    expect(state.error).toBe(error);
+    expect(state.error).toBeDefined();
+    expect(state.error?._error).toBe(error);
   });
 
   it('should return a loading state that is not loading.', () => {
@@ -153,7 +154,7 @@ describe('mapLoadingStateResults()', () => {
     const mappedValue = `MAPPED`;
 
     const result = mapLoadingStateResults(successResult(0), {
-      mapValue: (x) => mappedValue
+      mapValue: () => mappedValue
     });
 
     expect(result.value).toBe(mappedValue);

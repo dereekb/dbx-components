@@ -1,7 +1,9 @@
 import { first, of, timeout } from 'rxjs';
 import { FilterSourceInstance } from './filter.source';
 
-interface TestFilter { }
+interface TestFilter {
+  test?: boolean;
+}
 
 describe('FilterSourceInstance', () => {
 
@@ -26,6 +28,7 @@ describe('FilterSourceInstance', () => {
 
   });
 
+  /*
   describe('initialFilter$', () => {
 
   });
@@ -33,5 +36,6 @@ describe('FilterSourceInstance', () => {
   describe('filter$', () => {
 
   });
+  */
 
 });

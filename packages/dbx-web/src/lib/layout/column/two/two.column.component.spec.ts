@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Component } from '@angular/core';
 import { DbxTwoColumnLayoutModule } from './two.column.module';
-import { ProvideTwoColumnsContext } from './two.column.store';
+import { provideTwoColumnsContext } from './two.column.store';
 
 
 describe('DbxTwoColumnComponent', () => {
@@ -39,6 +39,6 @@ describe('DbxTwoColumnComponent', () => {
       </div>
     </dbx-two-column>
   `,
-  providers: ProvideTwoColumnsContext()
+  providers: provideTwoColumnsContext()
 })
 class TwoColumnsTestComponent { }

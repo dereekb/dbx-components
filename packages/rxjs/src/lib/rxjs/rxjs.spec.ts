@@ -26,7 +26,7 @@ describe('skipFirstMaybe()', () => {
     let count = 0;
 
     const subject = new Subject<Maybe<1>>();
-    const obs = subject.pipe(tap(_ => count++), skipFirstMaybe());
+    const obs = subject.pipe(tap(() => count++), skipFirstMaybe());
 
     obs.subscribe(() => {
       expect(count).toBe(3);
@@ -47,7 +47,7 @@ describe('skipFirstMaybe()', () => {
 describe('preventComplete', () => {
 
   it('should not emit complete until unsubscribed from.', (done) => {
-    let x = of(true);
+    const x = of(true);
 
     const obs = preventComplete(x);
 

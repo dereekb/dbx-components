@@ -2,6 +2,7 @@ import * as admin from 'firebase-admin';
 import { FactoryProvider, InjectionToken, Module, ModuleMetadata, Provider } from "@nestjs/common";
 import { FIREBASE_APP_TOKEN } from '../firebase/firebase.nest';
 import { FirebaseServerAuthService } from './auth.service';
+import { AdditionalModuleMetadata, mergeModuleMetadata } from '@dereekb/nestjs';
 
 // MARK: Tokens
 /**
@@ -33,7 +34,7 @@ export function provideFirebaseServerAuthService<T extends FirebaseServerAuthSer
   return [
     {
       ...provider,
-      inject: (provider as any).inject ?? [FIREBASE_AUTH_TOKEN]
+      inject: (provider as FactoryProvider<T>).inject ?? [FIREBASE_AUTH_TOKEN]
     },
     {
       provide: FirebaseServerAuthService,
@@ -43,7 +44,7 @@ export function provideFirebaseServerAuthService<T extends FirebaseServerAuthSer
 }
 
 // MARK: app firestore module
-export interface FirebaseServerAuthModuleMetadataConfig<T extends FirebaseServerAuthService> extends Pick<ModuleMetadata, 'imports' | 'exports' | 'providers'> {
+export interface FirebaseServerAuthModuleMetadataConfig<T extends FirebaseServerAuthService> extends AdditionalModuleMetadata {
   readonly serviceProvider: ProvideFirebaseServerAuthService<T>;
 }
 
@@ -55,9 +56,9 @@ export interface FirebaseServerAuthModuleMetadataConfig<T extends FirebaseServer
  * @returns 
  */
 export function firebaseServerAuthModuleMetadata<T extends FirebaseServerAuthService>(config: FirebaseServerAuthModuleMetadataConfig<T>): ModuleMetadata {
-  return {
-    imports: [FirebaseServerAuthModule, ...(config.imports ?? [])],
-    exports: [FirebaseServerAuthModule, config.serviceProvider.provide, ...(config.exports ?? [])],
-    providers: [...provideFirebaseServerAuthService(config.serviceProvider), ...(config.providers ?? [])]
-  };
+  return mergeModuleMetadata({
+    imports: [FirebaseServerAuthModule],
+    exports: [FirebaseServerAuthModule, config.serviceProvider.provide],
+    providers: provideFirebaseServerAuthService(config.serviceProvider)
+  }, config);
 }

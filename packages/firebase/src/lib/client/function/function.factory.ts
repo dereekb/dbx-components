@@ -29,7 +29,7 @@ export function firebaseFunctionMapFactory<M extends FirebaseFunctionTypeMap>(co
       return fn;
     };
 
-    const result: FirebaseFunctionMap<M> = mapObjectMap<FirebaseFunctionTypeConfigMap<M>>(configMap, mapFn);
+    const result = mapObjectMap<FirebaseFunctionTypeConfigMap<M>>(configMap, mapFn) as FirebaseFunctionMap<M>;
     return result;
   };
 }
@@ -49,7 +49,7 @@ export type FirebaseFunctionsConfigMap<M extends FirebaseFunctionsMap> = {
   [K in keyof M]: FirebaseFunctionsConfigMapEntry<M[K]>;
 }
 
-export type FirebaseFunctionsConfigMapEntry<M extends FirebaseFunctionTypeMap = any> = [ClassLikeType<any>, FirebaseFunctionMapFactory<M>];
+export type FirebaseFunctionsConfigMapEntry<M extends FirebaseFunctionTypeMap> = [ClassLikeType, FirebaseFunctionMapFactory<M>];
 
 /**
  * Factory function for creating a FirebaseFunctionsMap for a given Functions instance.
@@ -70,7 +70,7 @@ export function lazyFirebaseFunctionsFactory<M extends FirebaseFunctionsMap, C e
       const type = config[0];
       const factory: FirebaseFunctionMapFactory<M[K]> = config[1];
       const getter = cachedGetter(() => factory(functions)) as unknown as FirebaseFunctionGetter<C[K]>;
-      getter._type = type;
+      getter._type = type as ClassLikeType<C[K]>;
       getter._key = key as string;
       return getter;
     };

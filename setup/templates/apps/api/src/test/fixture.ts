@@ -112,7 +112,7 @@ export const APP_CODE_PREFIX_LOWERAuthorizedUserContextFactory = (params: APP_CO
   makeInstance: (uid, testInstance) => new APP_CODE_PREFIXApiAuthorizedUserTestContextInstance(uid, testInstance),
   initUser: async (instance) => {
     const userRecord = await instance.loadUserRecord();
-    const fn = instance.testContext.wrapCloudFunction(initUserOnCreate(instance.nestAppPromiseGetter));
+    const fn = instance.testContext.fnWrapper.wrapV1CloudFunction(initUserOnCreate(instance.nestAppPromiseGetter));
     await instance.callEventCloudFunction(fn, userRecord);
   }
 });

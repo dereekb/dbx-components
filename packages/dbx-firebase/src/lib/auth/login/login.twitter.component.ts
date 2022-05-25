@@ -8,7 +8,7 @@ export class DbxFirebaseLoginTwitterComponent extends AbstractConfiguredDbxFireb
 
   readonly loginProvider = 'twitter';
 
-  handleLogin(): Promise<any> {
+  handleLogin() {
     return this.dbxFirebaseAuthService.logInWithTwitter();
   }
 

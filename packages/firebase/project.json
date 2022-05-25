@@ -30,26 +30,26 @@
         "tsConfig": "packages/firebase/tsconfig.lib.json",
         "packageJson": "packages/firebase/package.json",
         "main": "packages/firebase/src/index.ts",
-        "assets": ["packages/firebase/*.md"]
+        "assets": ["packages/firebase/*.md", "LICENSE"]
       }
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "outputs": ["{options.outputFile}"],
       "options": {
-        "lintFilePatterns": ["packages/firebase/**/*.ts"]
-      }
-    },
-    "test": {
-      "executor": "@nrwl/workspace:run-commands",
-      "options": {
-        "command": "./exec-with-emulator.sh 'npx nx run-tests firebase'"
+        "lintFilePatterns": ["packages/firebase/src/**/*.ts"]
       }
     },
     "watch": {
       "executor": "@nrwl/workspace:run-commands",
       "options": {
         "command": "./exec-with-emulator.sh 'npx nx run-tests firebase --watch'"
+      }
+    },
+    "test": {
+      "executor": "@nrwl/workspace:run-commands",
+      "options": {
+        "command": "./exec-with-emulator.sh 'npx nx run-tests firebase'"
       }
     },
     "run-tests": {
@@ -63,10 +63,24 @@
         "passWithNoTests": true
       }
     },
+    "run-all-tests": {
+      "executor": "@nrwl/workspace:run-commands",
+      "options": {
+        "commands": [{
+          "description": "run firebase tests. Should be called within a Firebase emulator environment",
+          "command": "npx nx run-tests firebase"
+        }, {
+          "description": "run firebase-test tests",
+          "command": "npx nx run-tests firebase-test"
+        }],
+        "color": true,
+        "parallel": false
+      }
+    },
     "publish-npmjs": {
       "executor": "@nrwl/workspace:run-commands",
       "options": {
-        "command": "cd ./dist/packages/firebase && npm publish"
+        "command": "cd ./dist/packages/firebase && npm publish --access public"
       }
     }
   },

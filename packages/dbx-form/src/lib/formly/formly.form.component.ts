@@ -1,12 +1,12 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { FormlyFieldConfig, FormlyFormOptions } from '@ngx-formly/core';
-import { distinctUntilChanged, map, throttleTime, startWith, BehaviorSubject, Observable, Subject, switchMap, shareReplay, of, scan, filter, first, combineLatest } from 'rxjs';
+import { distinctUntilChanged, map, throttleTime, startWith, BehaviorSubject, Observable, Subject, switchMap, shareReplay, of, scan } from 'rxjs';
 import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
-import { DbxForm, DbxFormDisabledKey, DbxFormEvent, DbxFormState, DEFAULT_FORM_DISABLED_KEY, ProvideDbxMutableForm } from '../form/form';
+import { DbxForm, DbxFormDisabledKey, DbxFormEvent, DbxFormState, DEFAULT_FORM_DISABLED_KEY, provideDbxMutableForm } from '../form/form';
 import { DbxFormlyContext, DbxFormlyContextDelegate, DbxFormlyInitialize } from './formly.context';
 import { cloneDeep } from 'lodash';
-import { scanCount, switchMapMaybeObs, SubscriptionObject, tapLog } from '@dereekb/rxjs';
+import { scanCount, switchMapMaybeObs, SubscriptionObject } from '@dereekb/rxjs';
 import { BooleanStringKeyArray, BooleanStringKeyArrayUtilityInstance, Maybe } from '@dereekb/util';
 
 
@@ -27,12 +27,12 @@ export interface DbxFormlyFormState {
       <formly-form [form]="form" [fields]="(fields$ | async) ?? []" [model]="model"></formly-form>
     </form>
   `,
-  providers: ProvideDbxMutableForm(DbxFormlyFormComponent),
+  providers: provideDbxMutableForm(DbxFormlyFormComponent),
   host: {
     'class': 'dbx-formly'
   }
 })
-export class DbxFormlyFormComponent<T extends object> extends AbstractSubscriptionDirective implements DbxForm, DbxFormlyContextDelegate<T>, OnInit, OnDestroy {
+export class DbxFormlyFormComponent<T> extends AbstractSubscriptionDirective implements DbxForm, DbxFormlyContextDelegate<T>, OnInit, OnDestroy {
 
   private _fields = new BehaviorSubject<Maybe<Observable<FormlyFieldConfig[]>>>(undefined);
   private _events = new BehaviorSubject<DbxFormEvent>({ isComplete: false, state: DbxFormState.INITIALIZING, status: 'PENDING' });
@@ -44,7 +44,7 @@ export class DbxFormlyFormComponent<T extends object> extends AbstractSubscripti
   private _disabledSub = new SubscriptionObject();
 
   form = new FormGroup({});
-  model: any = {};
+  model: T = {} as T;
   options: FormlyFormOptions = {};
 
   readonly fields$ = this._fields.pipe(switchMapMaybeObs(), distinctUntilChanged(), shareReplay(1));
@@ -56,7 +56,7 @@ export class DbxFormlyFormComponent<T extends object> extends AbstractSubscripti
       throttleTime(50, undefined, { leading: true, trailing: true }),
       scanCount(-1),
       // update on validation changes too. Does not count towards changes since last reset.
-      switchMap(changesSinceLastReset => this.form.statusChanges.pipe(startWith(this.form.status), distinctUntilChanged()).pipe(map(_ => changesSinceLastReset))),
+      switchMap(changesSinceLastReset => this.form.statusChanges.pipe(startWith(this.form.status), distinctUntilChanged()).pipe(map(() => changesSinceLastReset))),
       map((changesSinceLastResetCount: number) => ({
         changesSinceLastResetCount,
         isFormValid: this.form.status !== 'PENDING' && this.form.valid,

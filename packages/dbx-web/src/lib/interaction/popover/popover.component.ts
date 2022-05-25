@@ -1,9 +1,8 @@
 import { Component, NgZone, Type, OnInit, OnDestroy, ElementRef } from '@angular/core';
 import { NgOverlayContainerConfiguration, NgPopoverRef } from 'ng-overlay-container';
 import { AbstractTransitionWatcherDirective, DbxRouterTransitionService, DbxInjectionComponentConfig } from '@dereekb/dbx-core';
-import { Subject } from 'rxjs';
+import { Subject, filter, first, map, shareReplay, startWith } from 'rxjs';
 import { PopoverPositionStrategy } from './popover.position.strategy';
-import { filter, first, map, shareReplay, startWith } from 'rxjs/operators';
 import { Overlay } from '@angular/cdk/overlay';
 import { LockSet } from '@dereekb/rxjs';
 import { CompactContextStore, CompactMode } from '../../layout';
@@ -55,8 +54,8 @@ export interface FullDbxPopoverComponentConfig<O, I, T> extends DbxPopoverCompon
  */
 @Component({
   template: `
-  <dbx-popover-coordinator (dbxWindowKeyDownListener)="handleKeydown($event)" [appWindowKeyDownFilter]="triggerCloseKeys">
-    <div dbx-style class="dbx-popover-component" dbx-injection [config]="contentConfig"></div>
+  <dbx-popover-coordinator (dbxWindowKeyDownListener)="handleKeydown()" [appWindowKeyDownFilter]="triggerCloseKeys">
+    <div dbxStyle class="dbx-popover-component" dbx-injection [config]="contentConfig"></div>
   </dbx-popover-coordinator>
   `,
   providers: [{
@@ -66,13 +65,13 @@ export interface FullDbxPopoverComponentConfig<O, I, T> extends DbxPopoverCompon
     provide: CompactContextStore
   }]
 })
-export class DbxPopoverComponent<O = any, I = any, T = any> extends AbstractTransitionWatcherDirective implements DbxPopoverController<O, I>, OnInit, OnDestroy {
+export class DbxPopoverComponent<O = unknown, I = unknown, T = unknown> extends AbstractTransitionWatcherDirective implements DbxPopoverController<O, I>, OnInit, OnDestroy {
 
   readonly lockSet = new LockSet();
 
   readonly contentConfig: DbxInjectionComponentConfig = {
     componentClass: this.config.componentClass,
-    init: this.config.init ? ((instance) => this.config.init!(instance, this)) : undefined
+    init: this.config.init ? ((instance) => (this.config as Required<FullDbxPopoverComponentConfig<O, I, T>>).init(instance as T, this)) : undefined
   };
 
   private _startedClosing = false;
@@ -80,7 +79,7 @@ export class DbxPopoverComponent<O = any, I = any, T = any> extends AbstractTran
 
   private _triggerCloseKeys: string[] = [];
 
-  readonly isClosing$ = this._closing.pipe(first(), map(x => true), startWith(false), shareReplay(1));
+  readonly isClosing$ = this._closing.pipe(first(), map(() => true), startWith(false), shareReplay(1));
   readonly closing$ = this.isClosing$.pipe(filter(x => x));
 
   getClosingValueFn?: (value?: I) => Promise<O>;
@@ -103,7 +102,8 @@ export class DbxPopoverComponent<O = any, I = any, T = any> extends AbstractTran
       }
     };
 
-    const overlay = (popoverRef as any)._overlay as Overlay;
+    // eslint-disable-next-line
+    const overlay = (popoverRef as any)._overlay as Overlay; // overlay is not publically accessible
     const elementRef = this.config.origin;
     const configuration = this.config.configuration;
 
@@ -168,7 +168,7 @@ export class DbxPopoverComponent<O = any, I = any, T = any> extends AbstractTran
   }
 
   // Keypresses
-  handleKeydown(key: KeyboardEvent) {
+  handleKeydown() {
     this.close();
   }
 

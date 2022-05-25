@@ -1,6 +1,6 @@
 import { BehaviorSubject, delay, of, tap } from 'rxjs';
 import { DocActionFormExampleValue } from './../component/action.example.form.component';
-import { Component, Input, OnDestroy } from '@angular/core';
+import { Component, OnDestroy } from '@angular/core';
 import { HandleActionFunction } from '@dereekb/dbx-core';
 import ms from 'ms';
 import { Maybe } from '@dereekb/util';

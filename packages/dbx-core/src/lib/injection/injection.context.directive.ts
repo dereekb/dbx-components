@@ -1,19 +1,19 @@
-import { Directive, EmbeddedViewRef, Injector, Input, TemplateRef, ViewContainerRef } from '@angular/core';
-import { DbxInjectionContext, DbxInjectionContextConfig, ProvideDbxInjectionContext } from './injection.context';
+import { Directive, EmbeddedViewRef, Injector, Input, TemplateRef, ViewContainerRef, OnDestroy, OnInit } from '@angular/core';
+import { DbxInjectionContext, DbxInjectionContextConfig, provideDbxInjectionContext } from './injection.context';
 import { DbxInjectionInstance } from './injection.instance';
 import { DbxInjectionComponentConfig } from './injection';
-import { PromiseFullRef, makePromiseFullRef, Maybe } from '@dereekb/util';
+import { PromiseOrValue, PromiseFullRef, makePromiseFullRef, Maybe } from '@dereekb/util';
 
 /**
  * DbxInjectedViewContext implementation. Acts similar to *ngIf, but instead switches to a different view without destroying the original child view.
  */
 @Directive({
   selector: '[dbxInjectionContext]',
-  providers: ProvideDbxInjectionContext(DbxInjectionContextDirective)
+  providers: provideDbxInjectionContext(DbxInjectionContextDirective)
 })
-export class DbxInjectionContextDirective<O = any> implements DbxInjectionContext {
+export class DbxInjectionContextDirective<O = unknown> implements DbxInjectionContext, OnInit, OnDestroy {
 
-  private _currentPromise: Maybe<PromiseFullRef<any>>;
+  private _currentPromise: Maybe<PromiseFullRef<unknown>>;
   private _instance = new DbxInjectionInstance(this._injector);
   private _embeddedView!: EmbeddedViewRef<O>;
   private _isDetached = false;
@@ -25,7 +25,7 @@ export class DbxInjectionContextDirective<O = any> implements DbxInjectionContex
   ) { }
 
   @Input()
-  set config(config: Maybe<DbxInjectionComponentConfig<any>>) {
+  set config(config: Maybe<DbxInjectionComponentConfig<unknown>>) {
     let reattach = false;
 
     if (config) {
@@ -72,10 +72,10 @@ export class DbxInjectionContextDirective<O = any> implements DbxInjectionContex
     // clear the current context before showing something new.
     this.resetContext();
 
-    let promiseRef: PromiseFullRef<O>;
+    let promiseRef: Maybe<PromiseFullRef<O>>;
 
-    let result: O;
-    let error: any;
+    let result: Maybe<O>;
+    let error: unknown;
 
     // wait for the promise to resolve and use to finish using that instance.
     try {
@@ -90,17 +90,17 @@ export class DbxInjectionContextDirective<O = any> implements DbxInjectionContex
             }
 
             try {
-              resolve(config.use(instance));
+              resolve(config.use(instance) as PromiseOrValue<O>);
             } catch (e) {
               reject(e);
             }
           }
         };
 
-        this.config = injectionConfig as any;
+        this.config = injectionConfig as DbxInjectionComponentConfig<unknown>;
       });
 
-      this._currentPromise = promiseRef;
+      this._currentPromise = promiseRef as PromiseFullRef<unknown>;
 
       // await the promise
       await promiseRef.promise;
@@ -109,7 +109,7 @@ export class DbxInjectionContextDirective<O = any> implements DbxInjectionContex
     }
 
     // if we're still using the same promiseRef
-    if (promiseRef! && promiseRef! === this._currentPromise) {
+    if (promiseRef && promiseRef === this._currentPromise) {
       // clear the config to reshow the view
       this.config = undefined;
 
@@ -120,7 +120,7 @@ export class DbxInjectionContextDirective<O = any> implements DbxInjectionContex
     if (error != null) {
       return Promise.reject(error);
     } else {
-      return result!;
+      return result as O;
     }
   }
 

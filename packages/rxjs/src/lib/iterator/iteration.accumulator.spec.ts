@@ -139,7 +139,7 @@ describe('ItemPageIterator', () => {
                   expect(Array.isArray(value[value.length - 1])).toBe(true);
                   done();
                 });
-    
+
               });
             });
 
@@ -169,11 +169,10 @@ describe('ItemPageIterator', () => {
       });
 
       describe('with mapping', () => {
-
-        let mappedAccumulator: ItemAccumulatorInstance<string>;
+        let mappedAccumulator: ItemAccumulatorInstance<string, number>;
 
         beforeEach(() => {
-          mappedAccumulator = itemAccumulator(instance, (x: number) => `+${x}`);
+          mappedAccumulator = itemAccumulator<string, number>(instance, (x: number) => `+${x}`);
         })
 
         afterEach(() => {

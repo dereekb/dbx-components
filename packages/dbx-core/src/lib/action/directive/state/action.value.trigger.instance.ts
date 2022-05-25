@@ -1,6 +1,6 @@
+import { toReadableError, Destroyable, Initialized, Maybe, ReadableError } from '@dereekb/util';
 import { switchMap, map, catchError, of, BehaviorSubject } from 'rxjs';
 import { ObservableOrValue, SubscriptionObject, IsModifiedFunction, asObservable, returnIfIs, filterMaybe } from '@dereekb/rxjs';
-import { Destroyable, Initialized, Maybe } from '@dereekb/util';
 import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
 
 /**
@@ -8,16 +8,16 @@ import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
  */
 export type DbxActionValueOnTriggerFunction<T> = () => ObservableOrValue<Maybe<T>>;
 
-export interface DbxActionValueOnTriggerResult<T = any> {
+export interface DbxActionValueOnTriggerResult<T = unknown> {
   value?: Maybe<T>;
-  reject?: any;
+  reject?: Maybe<ReadableError>;
 }
 
 /**
  * DbxActionValueOnTriggerInstance configuration.
  */
 export interface DbxActionValueOnTriggerInstanceConfig<T> {
-  readonly source: DbxActionContextStoreSourceInstance<T, any>,
+  readonly source: DbxActionContextStoreSourceInstance<T, unknown>,
   readonly valueGetter?: Maybe<DbxActionValueOnTriggerFunction<T>>;
   readonly isModifiedFunction?: Maybe<IsModifiedFunction<T>>;
 }
@@ -30,7 +30,7 @@ export class DbxActionValueOnTriggerInstance<T> implements Initialized, Destroya
   private _valueGetter = new BehaviorSubject<Maybe<DbxActionValueOnTriggerFunction<T>>>(undefined);
   readonly valueGetter$ = this._valueGetter.pipe(filterMaybe());
 
-  readonly source: DbxActionContextStoreSourceInstance<T, any>;
+  readonly source: DbxActionContextStoreSourceInstance<T, unknown>;
 
   isModifiedFunction?: Maybe<IsModifiedFunction<T>>;
 
@@ -57,8 +57,8 @@ export class DbxActionValueOnTriggerInstance<T> implements Initialized, Destroya
         .pipe(
           // If the value is not null/undefined and is considered modified, then pass the value.
           switchMap((value) => returnIfIs(this.isModifiedFunction, value, false).pipe(map((value) => ({ value })))),
-          // Catch any errors and pass them to reject.
-          catchError((reject) => of({ reject }))
+          // Catch unknown errors and pass them to reject.
+          catchError((reject) => of({ reject: toReadableError(reject) }))
         )
       )
     ).subscribe((result: DbxActionValueOnTriggerResult<T>) => {

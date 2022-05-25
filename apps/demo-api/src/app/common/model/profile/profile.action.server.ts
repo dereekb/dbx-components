@@ -1,6 +1,6 @@
 import { FirebaseServerActionsContext } from "@dereekb/firebase-server";
 import { AsyncProfileUpdateAction, ProfileDocument, ProfileFirestoreCollections, profileWithUsername, SetProfileUsernameParams, UpdateProfileParams } from "@dereekb/demo-firebase";
-import { Maybe } from "@dereekb/util";
+import { containsStringAnyCase, Maybe } from "@dereekb/util";
 
 /**
  * FirebaseServerActionsContextt required for ProfileServerActions.
@@ -35,7 +35,7 @@ export function initProfileForUidFactory({ profileFirestoreCollection, profilePr
 
     // init within a transaction.
     const profile = await profileFirestoreCollection.firestoreContext.runTransaction(async (transaction) => {
-      let profile: Maybe<ProfileDocument> = profileFirestoreCollection.documentAccessorForTransaction(transaction).loadDocumentForPath(uid);
+      const profile: Maybe<ProfileDocument> = profileFirestoreCollection.documentAccessorForTransaction(transaction).loadDocumentForPath(uid);
 
       const exists = await profile.accessor.exists();
 
@@ -72,7 +72,8 @@ export function setProfileUsernameFactory({ firebaseServerActionTransformFunctio
   const { query: queryProfile } = profileFirestoreCollection;
 
   return firebaseServerActionTransformFunctionFactory(SetProfileUsernameParams, async (params) => {
-    const { username } = params;
+    const { username: inputUsername } = params;
+    const username = inputUsername.toLowerCase();
 
     return async (document: ProfileDocument) => {
       const documentRef = document.documentRef;
@@ -81,11 +82,27 @@ export function setProfileUsernameFactory({ firebaseServerActionTransformFunctio
       await profileFirestoreCollection.firestoreContext.runTransaction(async (transaction) => {
         const docs = await queryProfile(profileWithUsername(username)).getDocs(transaction);
 
-        if (docs.empty) {
-          const documentInTransaction = profileFirestoreCollection.documentAccessorForTransaction(transaction).loadDocument(documentRef);
-          const profilePrivateDataDocument = profilePrivateDataCollectionFactory(document).loadDocumentForTransaction(transaction);
+        if (!docs.empty) {
 
-          // update the username
+          const usernames = docs.docs.map((x) => {
+            const { username: docUsername } = x.data();
+            return docUsername;
+          });
+
+          if (containsStringAnyCase(usernames, username)) {
+            throw new Error('This username is already taken.');
+          }
+        }
+
+        const documentInTransaction = profileFirestoreCollection.documentAccessorForTransaction(transaction).loadDocument(documentRef);
+        const profilePrivateDataDocument = profilePrivateDataCollectionFactory(document).loadDocumentForTransaction(transaction);
+
+        // update the username
+        const snapshot = await documentInTransaction.snapshotData();
+
+        // TODO: Can also check if the user is banned or not, etc.
+
+        if (snapshot?.username !== username) {
           await documentInTransaction.accessor.set({ username }, { merge: true });
 
           // update the data on the accessor
@@ -93,9 +110,6 @@ export function setProfileUsernameFactory({ firebaseServerActionTransformFunctio
           await profilePrivateData.accessor.set({
             usernameSetAt: new Date()
           }, { merge: true });
-
-        } else {
-          throw new Error('This username is already taken.');
         }
       });
 
@@ -112,11 +126,8 @@ export function updateProfileFactory({ firebaseServerActionTransformFunctionFact
     return async (document: ProfileDocument) => {
       const documentRef = document.documentRef;
 
-      await profileFirestoreCollection.firestoreContext.runTransaction(async (transaction) => {
-        const profile = profileFirestoreCollection.documentAccessorForTransaction(transaction).loadDocument(documentRef);
-        profile.accessor.set({ bio }, { merge: true })
-      });
-
+      const profile = profileFirestoreCollection.documentAccessor().loadDocument(documentRef);
+      await profile.accessor.set({ bio }, { merge: true })
       return document;
     };
   });

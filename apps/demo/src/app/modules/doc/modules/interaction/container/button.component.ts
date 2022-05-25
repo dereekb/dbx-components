@@ -6,7 +6,7 @@ import { DbxProgressButtonOptions } from '@dereekb/dbx-web';
 })
 export class DocInteractionButtonComponent {
 
-  testClicked: string = '';
+  testClicked = '';
 
   onTestClick() {
     this.testClicked = `Clicked! ${new Date().getTime()}`;

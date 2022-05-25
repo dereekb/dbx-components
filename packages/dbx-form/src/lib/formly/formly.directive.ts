@@ -92,7 +92,7 @@ export abstract class AbstractAsyncFormlyFormDirective<T> extends AbstractFormly
 }
 
 @Directive()
-export abstract class AbstractConfigAsyncFormlyFormDirective<T, C> extends AbstractAsyncFormlyFormDirective<T> {
+export abstract class AbstractConfigAsyncFormlyFormDirective<T, C> extends AbstractAsyncFormlyFormDirective<T> implements OnInit, OnDestroy {
 
   private readonly _config = new BehaviorSubject<Maybe<C>>(undefined);
   readonly config$ = this._config.pipe(filterMaybe(), shareReplay(1));

@@ -12,7 +12,7 @@
       <button mat-button>Demo</button>
     </dbx-anchor>
     <span class="spacer"></span>
-    <dbx-anchor [anchor]="emulator">
+    <dbx-anchor [anchor]="emulator" *ngIf="showEmulatorButton">
       <button mat-flat-button color="accent">Emulator Enabled</button>
     </dbx-anchor>
     <span class="spacer"></span>

@@ -1,6 +1,6 @@
 import { timeHasExpired } from '@dereekb/date';
 import { Milliseconds, DateOrUnixDateTimeNumber } from "@dereekb/util";
-import { filter, map, MonoTypeOperatorFunction, Observable, OperatorFunction, skipUntil, skipWhile, switchMap, takeWhile } from "rxjs";
+import { filter, map, MonoTypeOperatorFunction, Observable, OperatorFunction, skipWhile, switchMap, takeWhile } from "rxjs";
 import { hasExpired, toExpires, Expires } from "./expires";
 
 /**
@@ -10,7 +10,7 @@ import { hasExpired, toExpires, Expires } from "./expires";
  * @returns 
  */
 export function toExpiration<T>(expiresIn: number): OperatorFunction<T, Expires> {
-  return map(_ => toExpires(new Date(), expiresIn));
+  return map(() => toExpires(new Date(), expiresIn));
 }
 
 /**
@@ -37,12 +37,12 @@ export function skipAfterExpiration(expiresIn?: number): MonoTypeOperatorFunctio
 /**
  * Skips emissions until time since the last emission from the watch observable has elapsed.
  */
-export function skipUntilTimeElapsedAfterLastEmission<T>(watch: Observable<any>, takeFor: Milliseconds): MonoTypeOperatorFunction<T> {
+export function skipUntilTimeElapsedAfterLastEmission<T>(watch: Observable<unknown>, takeFor: Milliseconds): MonoTypeOperatorFunction<T> {
   return (observable: Observable<T>) => {
     return watch.pipe(
       switchMap(() => {
         const expires = toExpires(new Date(), takeFor);
-        return observable.pipe(takeWhile(_ => !hasExpired(expires)));
+        return observable.pipe(takeWhile(() => !hasExpired(expires)));
       })
     );
   };
@@ -51,12 +51,12 @@ export function skipUntilTimeElapsedAfterLastEmission<T>(watch: Observable<any>,
 /**
  * Takes emissions until time since the last emission from the watch observable has elapsed.
  */
-export function takeAfterTimeElapsedSinceLastEmission<T>(watch: Observable<any>, skipFor: Milliseconds): MonoTypeOperatorFunction<T> {
+export function takeAfterTimeElapsedSinceLastEmission<T>(watch: Observable<unknown>, skipFor: Milliseconds): MonoTypeOperatorFunction<T> {
   return (observable: Observable<T>) => {
     return watch.pipe(
       switchMap(() => {
         const expires = toExpires(new Date(), skipFor);
-        return observable.pipe(skipWhile(_ => !hasExpired(expires)));
+        return observable.pipe(skipWhile(() => !hasExpired(expires)));
       })
     );
   };

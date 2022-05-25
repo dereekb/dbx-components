@@ -12,7 +12,7 @@ export interface MakeArray<T> {
  * @returns 
  */
 export function makeArray<T>({ count, make }: MakeArray<T>): T[] {
-  let array: T[] = [];
+  const array: T[] = [];
 
   for (let i = 0; i < count; i += 1) {
     array.push(make(i));

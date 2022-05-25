@@ -1,8 +1,7 @@
 import { Injectable } from "@angular/core";
 import { DocumentReference } from "@dereekb/firebase";
 import { authorizedTestWithMockItemCollection, MockItem, MockItemDocument, MockItemFirestoreCollection } from "@dereekb/firebase/test";
-import { loadingStateIsLoading } from "@dereekb/rxjs";
-import { SubscriptionObject } from '@dereekb/rxjs';
+import { loadingStateIsLoading, SubscriptionObject } from "@dereekb/rxjs";
 import { first, of, timeout } from "rxjs";
 import { AbstractDbxFirebaseDocumentStore } from './store.document';
 
@@ -73,7 +72,7 @@ describe('AbstractDbxFirebaseDocumentStore', () => {
 
       it('should not load anything if neither id nor ref are set.', (done) => {
 
-        let sub: SubscriptionObject = new SubscriptionObject();
+        const sub: SubscriptionObject = new SubscriptionObject();
 
         sub.subscription = store.document$.pipe(timeout({ first: 100, with: () => of(false) }), first()).subscribe((result) => {
           expect(result).toBe(false);

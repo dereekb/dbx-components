@@ -1,9 +1,11 @@
 import { FieldOfType } from "../key";
 import { hasValueOrNotEmpty, Maybe } from "../value/maybe";
 import { filterMaybeValues } from '../array/array.value';
-import { invertFilter } from "../filter/filter";
+import { FilterFunction, invertFilter } from "../filter/filter";
 
-export function objectHasNoKeys(obj: object): obj is {} {
+export type EmptyObject = Record<string, never>;
+
+export function objectHasNoKeys(obj: object): obj is EmptyObject {
   return (Object.keys(obj).length === 0);
 }
 
@@ -13,8 +15,8 @@ export function objectHasKey<T>(obj: T, key: string): boolean {
   return Object.prototype.hasOwnProperty.call(obj, key);
 }
 
-export function applyToMultipleFields<T extends object>(value: any, fields: FieldOfType<T>[]): Partial<T> {
-  const result: any = {};
+export function applyToMultipleFields<T extends object, X = unknown>(value: X, fields: FieldOfType<T>[]): Partial<{ [K in keyof T]: X }> {
+  const result = {} as { [K in keyof T]: X };
 
   fields.forEach((field) => {
     result[field] = value;
@@ -23,8 +25,8 @@ export function applyToMultipleFields<T extends object>(value: any, fields: Fiel
   return result;
 }
 
-export function mapToObject<T, K extends PropertyKey>(map: Map<K, T>): { [key: string]: T } {
-  const object = {} as any;
+export function mapToObject<T, K extends PropertyKey>(map: Map<K, T>): { [key: PropertyKey]: T } {
+  const object = {} as { [key: PropertyKey]: T };
 
   map.forEach((x: T, key: K) => {
     object[key] = x;
@@ -64,11 +66,11 @@ export function filterUndefinedValues<T extends object = object>(obj: T, filterN
  * @param obj 
  * @returns 
  */
-export function allNonUndefinedKeys<T extends object = Object>(obj: T): (keyof T)[] {
+export function allNonUndefinedKeys<T extends object = object>(obj: T): (keyof T)[] {
   return findPOJOKeys(obj, { valueFilter: KeyValueTypleValueFilter.UNDEFINED });
 }
 
-export function allMaybeSoKeys<T extends object = Object>(obj: T): (keyof T)[] {
+export function allMaybeSoKeys<T extends object = object>(obj: T): (keyof T)[] {
   return findPOJOKeys(obj, { valueFilter: KeyValueTypleValueFilter.NULL });
 }
 
@@ -129,7 +131,7 @@ export function filterFromPOJO<T extends object = object>(obj: T, { copy = false
       invertFilter: !filter.invertFilter
     },
     forEach: ([key]) => {
-      delete (obj as any)[key];
+      delete obj[key];
     }
   });
 
@@ -154,12 +156,12 @@ export function assignValuesToPOJO<T extends object = object>(target: T, obj: T,
  * @param filter 
  * @returns 
  */
-export function valuesFromPOJO<O = any, I extends object = object>(target: I, filter: FilterKeyValueTuplesInput<I> = KeyValueTypleValueFilter.UNDEFINED): O[] {
+export function valuesFromPOJO<O = unknown, I extends object = object>(target: I, filter: FilterKeyValueTuplesInput<I> = KeyValueTypleValueFilter.UNDEFINED): O[] {
   const values: O[] = [];
 
   forEachKeyValue<I>(target, {
     filter,
-    forEach: ([key, value]) => {
+    forEach: ([, value]) => {
       values.push(value as unknown as O);
     }
   });
@@ -222,24 +224,23 @@ export interface KeyValueTupleFilter<T extends object = object, K extends keyof 
 }
 
 export type FilterKeyValueTuplesInput<T extends object = object, K extends keyof T = keyof T> = KeyValueTypleValueFilter | KeyValueTupleFilter<T, K>;
-
-export type FilterKeyValueTupleFunction<T extends object = object, K extends keyof T = keyof T> = (tuples: KeyValueTuple<T, K>) => boolean;
+export type FilterKeyValueTupleFunction<T extends object = object, K extends keyof T = keyof T> = FilterFunction<KeyValueTuple<T, K>>;
 
 export function filterKeyValueTupleFunction<T extends object = object, K extends keyof T = keyof T>(input: FilterKeyValueTuplesInput<T, K>): FilterKeyValueTupleFunction<T, K> {
   const filter = (typeof input === 'object') ? input as KeyValueTupleFilter<T, K> : { valueFilter: input };
   const { valueFilter: type, invertFilter: inverseFilter = false, keysFilter }: KeyValueTupleFilter<T, K> = filter;
 
-  let filterFn: (tuples: KeyValueTuple<T, K>) => boolean;
+  let filterFn: FilterKeyValueTupleFunction<T, K>;
 
   switch (type) {
     case KeyValueTypleValueFilter.UNDEFINED:
-      filterFn = ([_, x]) => x !== undefined;
+      filterFn = ([, x]) => x !== undefined;
       break;
     case KeyValueTypleValueFilter.NULL:
-      filterFn = ([_, x]) => x != null;
+      filterFn = ([, x]) => x != null;
       break;
     case KeyValueTypleValueFilter.FALSY:
-      filterFn = ([_, x]) => Boolean(x);
+      filterFn = ([, x]) => Boolean(x);
       break;
     case KeyValueTypleValueFilter.NONE:
     default:
@@ -248,12 +249,12 @@ export function filterKeyValueTupleFunction<T extends object = object, K extends
   }
 
   if (keysFilter) {
-    const filterByTypeFn = filterFn!;
+    const filterByTypeFn = filterFn as FilterKeyValueTupleFunction<T, K>;
     const keysSet = new Set(keysFilter);
-    filterFn = (x) => filterByTypeFn(x) && keysSet.has(x[0]);
+    filterFn = (x, i) => filterByTypeFn(x, i) && keysSet.has(x[0]);
   }
 
-  return invertFilter(filterFn!, inverseFilter);
+  return invertFilter<KeyValueTuple<T, K>, FilterKeyValueTupleFunction<T, K>>(filterFn, inverseFilter);
 }
 
 /**
@@ -268,9 +269,8 @@ export function objectIsEmpty<T extends object>(obj: Maybe<T>): boolean {
     if (keys.length > 0) {
       for (let i = 0; i < keys.length; i += 1) {
         const key = keys[i];
-        const value = (obj as any)[key];
-
-        const isEmpty = (typeof obj === 'object') ? objectIsEmpty(value) : !hasValueOrNotEmpty(value);
+        const value = (obj as T)[key as keyof T];
+        const isEmpty = (typeof obj === 'object') ? objectIsEmpty<object>(value as unknown as Maybe<object>) : !hasValueOrNotEmpty(value);
 
         if (!isEmpty) {
           return false;
@@ -289,7 +289,7 @@ export function objectIsEmpty<T extends object>(obj: Maybe<T>): boolean {
  * @param objects 
  */
 export function mergeObjects<T extends object>(objects: Maybe<Partial<T>>[], filter?: KeyValueTupleFilter<T>): Partial<T> {
-  let object: Partial<T> = {};
+  const object: Partial<T> = {};
   overrideInObject(object, { from: filterMaybeValues(objects), filter });
   return object;
 }

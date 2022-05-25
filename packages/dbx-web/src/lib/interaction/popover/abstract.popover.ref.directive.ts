@@ -1,13 +1,12 @@
-import { OnDestroy } from '@angular/core';
+import { OnDestroy, Directive, EventEmitter, Output } from '@angular/core';
 import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
-import { Directive, EventEmitter, Output } from '@angular/core';
 import { NgPopoverCloseEvent, NgPopoverRef } from 'ng-overlay-container';
 
 /**
  * Abstract class for showing and handling a popover ref.
  */
 @Directive()
-export abstract class AbstractPopoverRefDirective<T = any, R = any> extends AbstractSubscriptionDirective {
+export abstract class AbstractPopoverRefDirective<T = unknown, R = unknown> extends AbstractSubscriptionDirective {
 
   private _popoverRef?: NgPopoverRef<T, R>;
 
@@ -29,11 +28,11 @@ export abstract class AbstractPopoverRefDirective<T = any, R = any> extends Abst
   protected abstract _makePopoverRef(): NgPopoverRef<T, R>;
 
   protected _afterOpened(popoverRef: NgPopoverRef<T, R>): void {
-    // Do nothing.
+    // Do nothing. Override in parent type
   }
 
   protected _afterClosed(value: NgPopoverCloseEvent<R>): void {
-    // Do nothing.
+    // Do nothing. Override in parent type
   }
 
 }
@@ -42,7 +41,7 @@ export abstract class AbstractPopoverRefDirective<T = any, R = any> extends Abst
  * {@link AbstractPopoverRefDirective} extension that includes open/closed events.
  */
 @Directive()
-export abstract class AbstractPopoverRefWithEventsDirective<T = any, R = any> extends AbstractPopoverRefDirective<T, R> implements OnDestroy {
+export abstract class AbstractPopoverRefWithEventsDirective<T = unknown, R = unknown> extends AbstractPopoverRefDirective<T, R> implements OnDestroy {
 
   @Output()
   readonly popoverOpened = new EventEmitter<NgPopoverRef<T, R>>();

@@ -1,6 +1,5 @@
 import { Component } from '@angular/core';
 import { DbxFirebaseAuthLoginService, DbxFirebaseAuthService } from '@dereekb/dbx-firebase';
-import { map } from 'rxjs';
 
 @Component({
   templateUrl: './firebase.component.html'

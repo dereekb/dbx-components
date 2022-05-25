@@ -16,6 +16,9 @@ INPUT_CODE_PREFIX=${2:-app}                                   # example: gethapi
 FIREBASE_BASE_EMULATORS_PORT=${3:-9100}                       # example: 9100
 PARENT_DIRECTORY=${4:-'../../'}                               # parent directory to create this project within. Defaults to relative to this script's space within dbx-components.
 
+# - Other Configuration
+SOURCE_BRANCH=main     # develop or main
+
 # - Project Details
 NAME=$FIREBASE_PROJECT_ID
 PROJECT_NAME=$FIREBASE_PROJECT_ID
@@ -93,7 +96,7 @@ npx --yes json -I -f package.json -e "this.scripts={ postinstall: 'ngcc --proper
 
 # Commit the cloud initialization
 git add --all
-git commit -m "init nx-cloud"
+git commit --no-verify -m "checkpoint: init nx-cloud"
 
 # update nx to the latest version and commit
 nx migrate latest
@@ -107,27 +110,27 @@ fi
 npx --yes json -I -f nx.json -e "this.workspaceLayout = { appsDir: '$APPS_FOLDER', libsDir: '$COMPONENTS_FOLDER' }";
 
 git add --all
-git commit -m "updated nx to latest version"
+git commit --no-verify -m "checkpoint: updated nx to latest version"
 
 # Add Nest App - https://nx.dev/packages/nest
 npm install -D @nrwl/nest           # install the nest generator
 nx g @nrwl/nest:app $API_APP_NAME
 
 git add --all
-git commit -m "added nest app"
+git commit --no-verify -m "checkpoint: added nest app"
 
 # Add App Components
 nx g @nrwl/angular:library --name=$ANGULAR_COMPONENTS_NAME --buildable --publishable --importPath $ANGULAR_COMPONENTS_NAME --standaloneConfig=true --simpleModuleName=true
 
 git add --all
-git commit -m "added angular components package"
+git commit --no-verify -m "checkpoint: added angular components package"
 
 # Add Firebase Component
 npm install -D @nrwl/node
 nx g @nrwl/node:library --name=$FIREBASE_COMPONENTS_NAME --buildable --publishable --importPath $FIREBASE_COMPONENTS_NAME
 
 git add --all
-git commit -m "added firebase components package"
+git commit --no-verify -m "checkpoint: added firebase components package"
 
 # Init Firebase
 echo "Follow the instructions to init Firebase for this project."
@@ -163,94 +166,96 @@ npx --yes json -I -f firebase.json -e "this.functions={ source:'$API_APP_DIST_FO
 npx --yes json -I -f firebase.json -e "this.emulators={ ui: { host: '$FIREBASE_LOCALHOST', enabled: true, port: $FIREBASE_EMULATOR_UI_PORT }, hosting: { host: '$FIREBASE_LOCALHOST', port: $FIREBASE_EMULATOR_HOSTING_PORT }, functions: { host: '$FIREBASE_LOCALHOST', port: $FIREBASE_EMULATOR_FUNCTIONS_PORT }, auth: { host: '$FIREBASE_LOCALHOST', port: $FIREBASE_EMULATOR_AUTH_PORT }, firestore: { host: '$FIREBASE_LOCALHOST', port: $FIREBASE_EMULATOR_FIRESTORE_PORT }, pubsub: { host: '$FIREBASE_LOCALHOST', port: $FIREBASE_EMULATOR_PUBSUB_PORT }, storage: { host: '$FIREBASE_LOCALHOST', port: $FIREBASE_EMULATOR_STORAGE_PORT } };";
 
 git add --all
-git commit -m "added firebase configuration"
+git commit --no-verify -m "checkpoint: added firebase configuration"
 
 # Install npm dependencies
 npm i @dereekb/dbx-analytics @dereekb/dbx-web @dereekb/dbx-form @dereekb/firebase @dereekb/firebase-server @dereekb/dbx-firebase --force  # TODO: Remove force once possible.
+npm i -D @ngrx/store-devtools @firebase/rules-unit-testing firebase-functions-test  # TODO: Figure out how to have the @dereekb dependencies also include these.
 
 git add --all
-git commit -m "added @dereekb dependencies"
+git commit --no-verify -m "checkpoint: added @dereekb dependencies"
 
 # Docker
 # Create docker files
 echo "Copying Docker files from @dereekb/dbx-components"
-curl https://raw.githubusercontent.com/dereekb/dbx-components/main/Dockerfile -o Dockerfile.tmp
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/Dockerfile -o Dockerfile.tmp
 sed "s/demo-api/$API_APP_NAME/g" Dockerfile.tmp > Dockerfile
 rm Dockerfile.tmp
 
-curl https://raw.githubusercontent.com/dereekb/dbx-components/main/docker-compose.yml -o docker-compose.yml.tmp
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/docker-compose.yml -o docker-compose.yml.tmp
 sed -e "s/demo-api-server/$API_APP_NAME-server/g" -e "s/dereekb-components/$FIREBASE_PROJECT_ID/g" -e "s/9900-9906/$FIREBASE_EMULATOR_PORT_RANGE/g" docker-compose.yml.tmp > docker-compose.yml
 rm docker-compose.yml.tmp
 
 # download .gitignore
-curl https://raw.githubusercontent.com/dereekb/dbx-components/main/.gitignore -o .gitignore
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/.gitignore -o .gitignore
 
 # download additional utility scripts
-curl https://raw.githubusercontent.com/dereekb/dbx-components/main/exec-with-emulator.sh -o exec-with-emulator.sh.tmp
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/exec-with-emulator.sh -o exec-with-emulator.sh.tmp
 sed -e "s/demo-api-server/$API_APP_NAME-server/g" -e "s/demo-api/$API_APP_NAME/g" exec-with-emulator.sh.tmp > exec-with-emulator.sh
 rm exec-with-emulator.sh.tmp
 chmod +x exec-with-emulator.sh
 
-curl https://raw.githubusercontent.com/dereekb/dbx-components/main/reset-emulator-data.sh -o reset-emulator-data.sh
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/reset-emulator-data.sh -o reset-emulator-data.sh
 chmod +x reset-emulator-data.sh
 
-curl https://raw.githubusercontent.com/dereekb/dbx-components/main/reset.sh -o reset.sh
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/reset.sh -o reset.sh
 chmod +x reset.sh
 
-curl https://raw.githubusercontent.com/dereekb/dbx-components/main/down.sh -o down.sh
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/down.sh -o down.sh
 chmod +x down.sh
 
-curl https://raw.githubusercontent.com/dereekb/dbx-components/main/test-all.sh -o test-all.sh
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/test-all.sh -o test-all.sh
 chmod +x test-all.sh
 
-curl https://raw.githubusercontent.com/dereekb/dbx-components/main/run-server.sh -o run-server.sh.tmp
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/run-server.sh -o run-server.sh.tmp
 sed -e "s/demo-api-server/$API_APP_NAME-server/g" -e "s/demo-api/$API_APP_NAME/g" run-server.sh.tmp > run-server.sh
 rm run-server.sh.tmp
 chmod +x run-server.sh
 
-curl https://raw.githubusercontent.com/dereekb/dbx-components/main/serve-server.sh -o serve-server.sh.tmp
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/serve-server.sh -o serve-server.sh.tmp
 sed -e "s/demo-api-server/$API_APP_NAME-server/g" -e "s/demo-api/$API_APP_NAME/g" serve-server.sh.tmp > serve-server.sh
 rm serve-server.sh.tmp
 chmod +x serve-server.sh
 
-curl https://raw.githubusercontent.com/dereekb/dbx-components/main/serve-web.sh -o serve-web.sh.tmp
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/serve-web.sh -o serve-web.sh.tmp
 sed -e "s/demo/$ANGULAR_APP_NAME/g" serve-web.sh.tmp > serve-web.sh
 rm serve-web.sh.tmp
 chmod +x serve-web.sh
 
-curl https://raw.githubusercontent.com/dereekb/dbx-components/main/test-demo-api.sh -o test-$API_APP_NAME.sh.tmp
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/test-demo-api.sh -o test-$API_APP_NAME.sh.tmp
 sed -e "s/demo-api/$API_APP_NAME/g" test-$API_APP_NAME.sh.tmp > test-$API_APP_NAME.sh
 rm test-$API_APP_NAME.sh.tmp
 chmod +x test-$API_APP_NAME.sh
 
 git add --all
-git commit -m "added Docker files and other utility files"
+git commit --no-verify -m "checkpoint: added Docker files and other utility files"
 
 # add semver for semantic versioning and linting for commits
-npm install -D @jscutlery/semver
-curl https://raw.githubusercontent.com/dereekb/dbx-components/main/.commitlintrc.json -o .commitlintrc.json
+npm install -D @jscutlery/semver husky
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/.commitlintrc.json -o .commitlintrc.json
 
 mkdir .husky
-curl https://raw.githubusercontent.com/dereekb/dbx-components/main/.husky/commit-msg -o .husky/commit-msg
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/.husky/commit-msg -o .husky/commit-msg
+chmod +x .husky/commit-msg  # make executable
 npx --yes json -I -f package.json -e "this.scripts={ ...this.scripts, prepare: 'husky install' };";
 npm run prepare
 
 mkdir -p ./.github/workflows
-curl https://raw.githubusercontent.com/dereekb/dbx-components/main/.github/workflows/commitlint.yml -o ./.github/workflows/commitlint.yml
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/.github/workflows/commitlint.yml -o ./.github/workflows/commitlint.yml
 
 git add --all
-git commit -m "added semver and commit linting"
+git commit --no-verify -m "checkpoint: added semver and commit linting"
 
 # add jest setup/configurations
 npm install -D jest-date jest-junit
 rm jest.preset.js
 
-curl https://raw.githubusercontent.com/dereekb/dbx-components/main/jest.preset.ts -o jest.preset.ts
-curl https://raw.githubusercontent.com/dereekb/dbx-components/main/jest.setup.ts -o jest.setup.ts
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/jest.preset.ts -o jest.preset.ts
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/jest.setup.ts -o jest.setup.ts
 
 # add env files to ensure that jest CI tests export properly.
 mkdir tmp # TODO: Change from /develop to /main later.
-curl https://raw.githubusercontent.com/dereekb/dbx-components/main/setup/templates/apps/.env -o tmp/env.tmp
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/setup/templates/apps/.env -o tmp/env.tmp
 sed -e "s/APP_ID/$ANGULAR_APP_NAME/g" tmp/env.tmp > $ANGULAR_APP_FOLDER/.env
 sed -e "s/APP_ID/$API_APP_NAME/g" tmp/env.tmp > $API_APP_FOLDER/.env
 sed -e "s/APP_ID/$E2E_APP_NAME/g" tmp/env.tmp > $E2E_APP_FOLDER/.env
@@ -261,45 +266,45 @@ sed -e "s/APP_ID/$FIREBASE_COMPONENTS_NAME/g" tmp/env.tmp > $FIREBASE_COMPONENTS
 npx --yes json -I -f nx.json -e "this.tasksRunnerOptions.default.options.cacheableOperations=Array.from(new Set([...this.tasksRunnerOptions.default.options.cacheableOperations, ...['build-base', 'run-tests']]));";
 
 git add --all
-git commit -m "added jest configurations"
+git commit --no-verify -m "checkpoint: added jest configurations"
 
 # Add CircleCI Config
 echo "Copying CircleCI Configurations."
 echo "BEFORE CIRCLECI USE - Please update configuration on CircleCI and in \".circleci/config.yml\""
 mkdir .circleci
-curl https://raw.githubusercontent.com/dereekb/dbx-components/main/setup/templates/.circleci/config.yml -o .circleci/config.yml.tmp
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/setup/templates/.circleci/config.yml -o .circleci/config.yml.tmp
 sed -e "s/CI_GIT_USER_EMAIL/$CI_GIT_USER_EMAIL/g" -e "s/CI_GIT_USER_NAME/$CI_GIT_USER_NAME/g" -e "s/ANGULAR_APP_NAME/$ANGULAR_APP_NAME/g"  -e "s/API_APP_NAME/$API_APP_NAME/g" -e "s/E2E_APP_NAME/$E2E_APP_NAME/g" .circleci/config.yml.tmp > .circleci/config.yml
 rm .circleci/config.yml.tmp
 
 git add --all
-git commit -m "added circleci configrations"
+git commit --no-verify -m "checkpoint: added circleci configrations"
 
 # Apply Project Configurations
 echo "Applying Configuration to Projects"
-curl https://raw.githubusercontent.com/dereekb/dbx-components/main/setup/templates/workspace.json -o ./workspace.json.tmp
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/setup/templates/workspace.json -o ./workspace.json.tmp
 sed -e "s:ANGULAR_APP_FOLDER:$ANGULAR_APP_FOLDER:g" -e "s:API_APP_FOLDER:$API_APP_FOLDER:g" -e "s:E2E_APP_FOLDER:$E2E_APP_FOLDER:g" -e "s:FIREBASE_COMPONENTS_FOLDER:$FIREBASE_COMPONENTS_FOLDER:g" -e "s:ANGULAR_COMPONENTS_FOLDER:$ANGULAR_COMPONENTS_FOLDER:g" -e "s:ANGULAR_APP_NAME:$ANGULAR_APP_NAME:g" -e "s:API_APP_NAME:$API_APP_NAME:g" -e "s:E2E_APP_NAME:$E2E_APP_NAME:g" -e "s:FIREBASE_COMPONENTS_NAME:$FIREBASE_COMPONENTS_NAME:g" -e "s:ANGULAR_COMPONENTS_NAME:$ANGULAR_COMPONENTS_NAME:g" ./workspace.json.tmp > ./workspace.json
 rm ./workspace.json.tmp
 rm ./angular.json
 
-curl https://raw.githubusercontent.com/dereekb/dbx-components/main/setup/templates/project.json -o ./project.json
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/setup/templates/project.json -o ./project.json
 
 rm $ANGULAR_APP_FOLDER/project.json
-curl https://raw.githubusercontent.com/dereekb/dbx-components/main/setup/templates/apps/app/project.json -o $ANGULAR_APP_FOLDER/project.json.tmp
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/setup/templates/apps/app/project.json -o $ANGULAR_APP_FOLDER/project.json.tmp
 sed -e "s:ANGULAR_APP_DIST_FOLDER:$ANGULAR_APP_DIST_FOLDER:g" -e "s:ANGULAR_APP_FOLDER:$ANGULAR_APP_FOLDER:g" -e "s:ANGULAR_APP_NAME:$ANGULAR_APP_NAME:g" -e "s:ANGULAR_APP_PORT:$ANGULAR_APP_PORT:g" $ANGULAR_APP_FOLDER/project.json.tmp > $ANGULAR_APP_FOLDER/project.json
 rm $ANGULAR_APP_FOLDER/project.json.tmp
 
 rm $API_APP_FOLDER/project.json
-curl https://raw.githubusercontent.com/dereekb/dbx-components/main/setup/templates/apps/api/project.json -o $API_APP_FOLDER/project.json.tmp
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/setup/templates/apps/api/project.json -o $API_APP_FOLDER/project.json.tmp
 sed -e "s:API_APP_DIST_FOLDER:$API_APP_DIST_FOLDER:g" -e "s:API_APP_FOLDER:$API_APP_FOLDER:g" -e "s:API_APP_NAME:$API_APP_NAME:g" $API_APP_FOLDER/project.json.tmp > $API_APP_FOLDER/project.json
 rm $API_APP_FOLDER/project.json.tmp
 
 rm $ANGULAR_COMPONENTS_FOLDER/project.json
-curl https://raw.githubusercontent.com/dereekb/dbx-components/main/setup/templates/components/app/project.json -o $ANGULAR_COMPONENTS_FOLDER/project.json.tmp
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/setup/templates/components/app/project.json -o $ANGULAR_COMPONENTS_FOLDER/project.json.tmp
 sed -e "s:ANGULAR_COMPONENTS_DIST_FOLDER:$ANGULAR_COMPONENTS_DIST_FOLDER:g" -e "s:ANGULAR_COMPONENTS_FOLDER:$ANGULAR_COMPONENTS_FOLDER:g" -e "s:ANGULAR_APP_PREFIX:$ANGULAR_APP_PREFIX:g" -e "s:ANGULAR_COMPONENTS_NAME:$ANGULAR_COMPONENTS_NAME:g" $ANGULAR_COMPONENTS_FOLDER/project.json.tmp > $ANGULAR_COMPONENTS_FOLDER/project.json
 rm $ANGULAR_COMPONENTS_FOLDER/project.json.tmp
 
 rm $FIREBASE_COMPONENTS_FOLDER/project.json
-curl https://raw.githubusercontent.com/dereekb/dbx-components/main/setup/templates/components/firebase/project.json -o $FIREBASE_COMPONENTS_FOLDER/project.json.tmp
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/setup/templates/components/firebase/project.json -o $FIREBASE_COMPONENTS_FOLDER/project.json.tmp
 sed -e "s:FIREBASE_COMPONENTS_DIST_FOLDER:$FIREBASE_COMPONENTS_DIST_FOLDER:g" -e "s:FIREBASE_COMPONENTS_FOLDER:$FIREBASE_COMPONENTS_FOLDER:g" -e "s:FIREBASE_COMPONENTS_NAME:$FIREBASE_COMPONENTS_NAME:g" $FIREBASE_COMPONENTS_FOLDER/project.json.tmp > $FIREBASE_COMPONENTS_FOLDER/project.json
 rm $FIREBASE_COMPONENTS_FOLDER/project.json.tmp
 
@@ -307,7 +312,7 @@ rm $FIREBASE_COMPONENTS_FOLDER/project.json.tmp
 npx --yes json -I -f tsconfig.base.json -e "this.compilerOptions={ ...this.compilerOptions, strict: true, allowSyntheticDefaultImports: true, resolveJsonModule: true }";
 
 git add --all
-git commit -m "added project configurations"
+git commit --no-verify -m "checkpoint: added project configurations"
 
 # Apply Project Templates
 echo "Applying Templates to Projects"
@@ -327,7 +332,7 @@ download_ts_file () {
 download_app_ts_file () {
   local FILE_PATH=$1
   local TARGET_FOLDER=$ANGULAR_COMPONENTS_FOLDER
-  local DOWNLOAD_PATH=https://raw.githubusercontent.com/dereekb/dbx-components/main/setup/templates/components/app
+  local DOWNLOAD_PATH=https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/setup/templates/components/app
   download_ts_file "$DOWNLOAD_PATH" "$TARGET_FOLDER" "$FILE_PATH"
 }
 
@@ -347,13 +352,13 @@ mkdir $ANGULAR_COMPONENTS_FOLDER/src/lib/services
 download_app_ts_file "src/lib/services/index.ts"
 
 git add --all
-git commit -m "setup app components"
+git commit --no-verify -m "checkpoint: setup app components"
 
 ### Setup api components
 download_firebase_ts_file () {
   local FILE_PATH=$1
   local TARGET_FOLDER=$FIREBASE_COMPONENTS_FOLDER
-  local DOWNLOAD_PATH=https://raw.githubusercontent.com/dereekb/dbx-components/main/setup/templates/components/firebase
+  local DOWNLOAD_PATH=https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/setup/templates/components/firebase
   download_ts_file "$DOWNLOAD_PATH" "$TARGET_FOLDER" "$FILE_PATH"
 }
 
@@ -377,13 +382,13 @@ download_firebase_ts_file "src/lib/example/example.ts"
 download_firebase_ts_file "src/lib/example/index.ts"
 
 git add --all
-git commit -m "setup api components"
+git commit --no-verify -m "checkpoint: setup api components"
 
 ### Setup Angular App
 download_angular_ts_file () {
   local FILE_PATH=$1
   local TARGET_FOLDER=$ANGULAR_APP_FOLDER
-  local DOWNLOAD_PATH=https://raw.githubusercontent.com/dereekb/dbx-components/main/setup/templates/apps/app
+  local DOWNLOAD_PATH=https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/setup/templates/apps/app
   download_ts_file "$DOWNLOAD_PATH" "$TARGET_FOLDER" "$FILE_PATH"
 }
 
@@ -391,6 +396,18 @@ download_angular_ts_file "src/style.scss"
 download_angular_ts_file "src/main.ts"
 download_angular_ts_file "src/root.module.ts"
 download_angular_ts_file "src/root.firebase.module.ts"
+
+# lib
+mkdir $ANGULAR_APP_FOLDER/src/lib
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/apps/demo/src/lib/segment.js -o $ANGULAR_APP_FOLDER/src/lib/segment.js
+
+# assets
+mkdir -p $ANGULAR_APP_FOLDER/src/assets/brand
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/apps/demo/src/assets/brand/icon.png -o $ANGULAR_APP_FOLDER/src/assets/brand/icon.png
+
+# index.html
+rm $ANGULAR_APP_FOLDER/src/index.html
+download_angular_ts_file "src/index.html"
 
 rm -r $ANGULAR_APP_FOLDER/src/style
 mkdir $ANGULAR_APP_FOLDER/src/style
@@ -438,13 +455,13 @@ download_angular_ts_file "src/app/modules/landing/container/layout.component.htm
 download_angular_ts_file "src/app/modules/landing/container/layout.component.ts"
 
 git add --all
-git commit -m "setup app"
+git commit --no-verify -m "checkpoint: setup app"
 
 ### Setup NestJS API
 download_api_ts_file () {
   local FILE_PATH=$1
   local TARGET_FOLDER=$API_APP_FOLDER
-  local DOWNLOAD_PATH=https://raw.githubusercontent.com/dereekb/dbx-components/main/setup/templates/apps/api
+  local DOWNLOAD_PATH=https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/setup/templates/apps/api
   download_ts_file "$DOWNLOAD_PATH" "$TARGET_FOLDER" "$FILE_PATH"
 }
 
@@ -501,7 +518,7 @@ download_api_ts_file "src/app/function/example/example.util.ts"
 download_api_ts_file "src/app/function/example/example.set.username.ts"
 
 git add --all
-git commit -m "setup api"
+git commit --no-verify -m "checkpoint: setup api"
 
 echo "Performing test build..."
 nx build $ANGULAR_APP_NAME

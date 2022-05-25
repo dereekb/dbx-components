@@ -1,7 +1,5 @@
-import { startWith } from 'rxjs';
-import { OnDestroy } from '@angular/core';
-import { distinctUntilChanged, shareReplay, combineLatest, map, BehaviorSubject } from 'rxjs';
-import { Component, Input, ViewChild, ElementRef } from '@angular/core';
+import { startWith, distinctUntilChanged, shareReplay, combineLatest, map, BehaviorSubject } from 'rxjs';
+import { OnDestroy, Component, Input, ViewChild, ElementRef } from '@angular/core';
 import { ThemePalette } from '@angular/material/core';
 import { ProgressBarMode } from '@angular/material/progress-bar';
 import { ErrorInput, Maybe } from '@dereekb/util';

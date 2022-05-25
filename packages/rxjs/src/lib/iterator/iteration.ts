@@ -15,7 +15,7 @@ export interface ItemIteratorNextRequest {
   retry?: boolean;
 }
 
-export interface ItemIteration<V = any, L extends LoadingState<V> = LoadingState<V>> extends Destroyable {
+export interface ItemIteration<V = unknown, L extends LoadingState<V> = LoadingState<V>> extends Destroyable {
 
   readonly hasNext$: Observable<boolean>;
   readonly canLoadMore$: Observable<boolean>;
@@ -40,7 +40,7 @@ export interface ItemIteration<V = any, L extends LoadingState<V> = LoadingState
 /**
  * An ItemIteration that has pages.
  */
-export interface PageItemIteration<V = any, L extends PageLoadingState<V> = PageLoadingState<V>> extends ItemIteration<V, L> {
+export interface PageItemIteration<V = unknown, L extends PageLoadingState<V> = PageLoadingState<V>> extends ItemIteration<V, L> {
 
   /**
    * The maximum number of pages allowed to be loaded.
@@ -49,7 +49,7 @@ export interface PageItemIteration<V = any, L extends PageLoadingState<V> = Page
    * 
    * If this value is unset, there is no limit to the number of pages that can be loaded.
    * 
-   * For most cases you should always have a maxPageLoadLimit set to avoid iterating too many unused items.
+   * For most cases you should always have a maxPageLoadLimit set to avoid iterating too munknown unused items.
    */
   maxPageLoadLimit: Maybe<PageNumber>;
 

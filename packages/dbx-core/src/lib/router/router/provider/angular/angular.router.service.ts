@@ -1,9 +1,9 @@
 import { Observable } from 'rxjs';
 import { filterMaybe } from '@dereekb/rxjs';
 import { DbxRouterService, DbxRouterTransitionService } from '../../service';
-import { asSegueRef, SegueRef, SegueRefOrSegueRefRouterLink, SegueRefRawSegueParams } from "../../../segue";
+import { asSegueRef, SegueRefOrSegueRefRouterLink, SegueRefRawSegueParams } from "../../../segue";
 import { DbxRouterTransitionEvent, DbxRouterTransitionEventType } from "../../transition/transition";
-import { ActivatedRoute, NavigationBehaviorOptions, NavigationEnd, NavigationExtras, NavigationStart, Router } from '@angular/router';
+import { ActivatedRoute, NavigationBehaviorOptions, NavigationEnd, NavigationExtras, NavigationStart, Router, UrlTree } from '@angular/router';
 import { Injectable } from "@angular/core";
 import { isArray } from "class-validator";
 import { map } from "rxjs/operators";
@@ -40,15 +40,15 @@ export class DbxAngularRouterService implements DbxRouterService, DbxRouterTrans
 
   go(input: SegueRefOrSegueRefRouterLink<NavigationExtras | NavigationBehaviorOptions>): Promise<boolean> {
     const segueRef = asSegueRef(input);
-    let ref = segueRef.ref;
+    const ref = segueRef.ref;
 
     if (isArray(ref)) {
-      return this.router.navigate(ref, {
+      return this.router.navigate(ref as unknown[], {
         ...segueRef.refOptions,
         queryParams: segueRef.refParams
       })
     } else {
-      return this.router.navigateByUrl(ref, {
+      return this.router.navigateByUrl(ref as string | UrlTree, {
         ...segueRef.refOptions
       });
     }

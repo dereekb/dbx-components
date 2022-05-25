@@ -1,6 +1,4 @@
-import { ChangeDetectorRef, OnDestroy } from '@angular/core';
-import { ChangeDetectionStrategy, OnInit } from '@angular/core';
-import { Component, Inject, Input } from '@angular/core';
+import { ChangeDetectorRef, OnDestroy, ChangeDetectionStrategy, OnInit, Component, Inject, Input } from '@angular/core';
 import { AbstractSubscriptionDirective, safeMarkForCheck } from '@dereekb/dbx-core';
 import { Observable, BehaviorSubject, combineLatest } from 'rxjs';
 import { TwoColumnsContextStore } from './two.column.store';

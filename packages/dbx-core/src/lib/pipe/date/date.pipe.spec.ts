@@ -26,6 +26,7 @@ describe('Date Pipe Test Component', () => {
   });
 
   it('should load', () => {
+    expect(testComponent).toBeDefined();
     expect(true);
   });
 
