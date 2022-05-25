@@ -99,13 +99,13 @@ export abstract class DbxMutableForm<T = unknown> extends DbxForm<T> {
   abstract forceFormUpdate(): void;
 }
 
-export function ProvideDbxForm<S extends DbxForm>(sourceType: Type<S>): Provider[] {
+export function provideDbxForm<S extends DbxForm>(sourceType: Type<S>): Provider[] {
   return [{ provide: DbxForm, useExisting: forwardRef(() => sourceType) }];
 }
 
-export function ProvideDbxMutableForm<S extends DbxMutableForm>(sourceType: Type<S>): Provider[] {
+export function provideDbxMutableForm<S extends DbxMutableForm>(sourceType: Type<S>): Provider[] {
   return [
-    ...ProvideDbxForm(sourceType),
+    ...provideDbxForm(sourceType),
     { provide: DbxMutableForm, useExisting: forwardRef(() => sourceType) }
   ];
 }

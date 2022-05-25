@@ -42,7 +42,7 @@ export abstract class DbxInjectionContext {
 /**
  * Allows a directive to provide a formly context and form.
  */
-export function ProvideDbxInjectionContext<T extends DbxInjectionContext>(type: Type<T>): Provider[] {
+export function provideDbxInjectionContext<T extends DbxInjectionContext>(type: Type<T>): Provider[] {
   return [{
     provide: DbxInjectionContext,
     useExisting: type

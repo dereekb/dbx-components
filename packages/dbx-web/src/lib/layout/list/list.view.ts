@@ -57,7 +57,8 @@ export abstract class DbxListView<T, S extends ListLoadingState<T> = ListLoading
   abstract setSelectionMode(selectionMode: Maybe<DbxListSelectionMode>): void;
 }
 
-export function ProvideDbxListView<V extends DbxListView<unknown>>(sourceType: Type<V>): Provider[] {
+// eslint-disable-next-line
+export function provideDbxListView<V extends DbxListView<any>>(sourceType: Type<V>): Provider[] {   // typings are not relevant for providers
   return [{
     provide: DbxListView,
     useExisting: forwardRef(() => sourceType)

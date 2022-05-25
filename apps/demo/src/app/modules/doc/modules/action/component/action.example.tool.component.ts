@@ -1,14 +1,14 @@
 import { filterMaybe } from '@dereekb/rxjs';
 import { BehaviorSubject, shareReplay, switchMap } from 'rxjs';
 import { Component, Input, OnDestroy, Optional, Host } from '@angular/core';
-import { ProvideFormlyContext } from '@dereekb/dbx-form';
+import { provideFormlyContext } from '@dereekb/dbx-form';
 import { DbxActionContextStoreSourceInstance, DbxActionDirective } from '@dereekb/dbx-core';
 import { Maybe } from '@dereekb/util';
 
 @Component({
   templateUrl: './action.example.tool.component.html',
   selector: 'dbx-action-example-tools',
-  providers: [ProvideFormlyContext()]
+  providers: [provideFormlyContext()]
 })
 export class DocActionExampleToolsComponent implements OnDestroy {
 

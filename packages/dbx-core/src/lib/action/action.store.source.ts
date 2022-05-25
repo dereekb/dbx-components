@@ -193,7 +193,7 @@ export const actionContextStoreSourceInstanceFactory = (source: ActionContextSto
 /**
  * Provides an ActionContextStoreSource, as well as an DbxActionContextStoreSourceInstance.
  */
-export function ProvideActionStoreSource<S>(sourceType: Type<S>): Provider[] {
+export function provideActionStoreSource<S extends ActionContextStoreSource>(sourceType: Type<S>): Provider[] {
   return [{
     provide: ActionContextStoreSource,
     useExisting: forwardRef(() => sourceType)
@@ -205,11 +205,11 @@ export function ProvideActionStoreSource<S>(sourceType: Type<S>): Provider[] {
   }];
 }
 
-export function ProvideSecondaryActionStoreSource<S>(sourceType: Type<S>): Provider[] {
+export function provideSecondaryActionStoreSource<S extends SecondaryActionContextStoreSource>(sourceType: Type<S>): Provider[] {
   return [{
     provide: SecondaryActionContextStoreSource,
     useExisting: forwardRef(() => sourceType)
   },
-  ...ProvideActionStoreSource(sourceType)
+  ...provideActionStoreSource(sourceType)
   ];
 }

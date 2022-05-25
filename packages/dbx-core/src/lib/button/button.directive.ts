@@ -3,7 +3,7 @@ import { Maybe } from '@dereekb/util';
 import { BehaviorSubject, of, Subject } from 'rxjs';
 import { filter, first, switchMap } from 'rxjs/operators';
 import { AbstractSubscriptionDirective } from '../subscription';
-import { DbxButton, DbxButtonInterceptor, ProvideDbxButton } from './button';
+import { DbxButton, DbxButtonInterceptor, provideDbxButton } from './button';
 
 /**
  * Abstract button component.
@@ -115,6 +115,6 @@ export abstract class AbstractDbxButtonDirective extends AbstractSubscriptionDir
 @Directive({
   selector: '[dbxButton]',
   exportAs: 'dbxButton',
-  providers: ProvideDbxButton(DbxButtonDirective)
+  providers: provideDbxButton(DbxButtonDirective)
 })
 export class DbxButtonDirective extends AbstractDbxButtonDirective { }

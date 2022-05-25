@@ -1,6 +1,6 @@
 import { Provider } from '@angular/core';
 import { BehaviorSubject, Observable, of, switchMap, shareReplay, distinctUntilChanged } from 'rxjs';
-import { DbxForm, DbxFormDisabledKey, DbxFormEvent, DbxFormState, DbxMutableForm, DEFAULT_FORM_DISABLED_KEY, ProvideDbxMutableForm } from '../form/form';
+import { DbxForm, DbxFormDisabledKey, DbxFormEvent, DbxFormState, DbxMutableForm, DEFAULT_FORM_DISABLED_KEY, provideDbxMutableForm } from '../form/form';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { LockSet, filterMaybe } from '@dereekb/rxjs';
 import { BooleanStringKeyArray, BooleanStringKeyArrayUtilityInstance, Maybe } from '@dereekb/util';
@@ -24,12 +24,12 @@ export interface DbxFormlyContextDelegate<T = unknown> extends Omit<DbxMutableFo
 /**
  * Allows a directive to provide a formly context and form.
  */
-export function ProvideFormlyContext(): Provider[] {
+export function provideFormlyContext(): Provider[] {
   return [{
     provide: DbxFormlyContext,
     useClass: DbxFormlyContext
   },
-  ...ProvideDbxMutableForm(DbxFormlyContext)];
+  ...provideDbxMutableForm(DbxFormlyContext)];
 }
 
 /**

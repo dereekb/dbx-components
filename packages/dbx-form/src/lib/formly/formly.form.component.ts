@@ -3,7 +3,7 @@ import { FormGroup } from '@angular/forms';
 import { FormlyFieldConfig, FormlyFormOptions } from '@ngx-formly/core';
 import { distinctUntilChanged, map, throttleTime, startWith, BehaviorSubject, Observable, Subject, switchMap, shareReplay, of, scan } from 'rxjs';
 import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
-import { DbxForm, DbxFormDisabledKey, DbxFormEvent, DbxFormState, DEFAULT_FORM_DISABLED_KEY, ProvideDbxMutableForm } from '../form/form';
+import { DbxForm, DbxFormDisabledKey, DbxFormEvent, DbxFormState, DEFAULT_FORM_DISABLED_KEY, provideDbxMutableForm } from '../form/form';
 import { DbxFormlyContext, DbxFormlyContextDelegate, DbxFormlyInitialize } from './formly.context';
 import { cloneDeep } from 'lodash';
 import { scanCount, switchMapMaybeObs, SubscriptionObject } from '@dereekb/rxjs';
@@ -27,7 +27,7 @@ export interface DbxFormlyFormState {
       <formly-form [form]="form" [fields]="(fields$ | async) ?? []" [model]="model"></formly-form>
     </form>
   `,
-  providers: ProvideDbxMutableForm(DbxFormlyFormComponent),
+  providers: provideDbxMutableForm(DbxFormlyFormComponent),
   host: {
     'class': 'dbx-formly'
   }

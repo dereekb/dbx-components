@@ -1,6 +1,6 @@
 import { Component } from "@angular/core";
 import { DbxInjectionComponentConfig } from "@dereekb/dbx-core";
-import { DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE, AbstractDbxSelectionListWrapperDirective, ProvideDbxListView, AbstractDbxSelectionListViewDirective, AbstractDbxValueListViewItemComponent, ListSelectionState, addConfigToValueListItems, DbxListSelectionMode } from "@dereekb/dbx-web";
+import { DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE, AbstractDbxSelectionListWrapperDirective, provideDbxListView, AbstractDbxSelectionListViewDirective, AbstractDbxValueListViewItemComponent, ListSelectionState, addConfigToValueListItems, DbxListSelectionMode } from "@dereekb/dbx-web";
 import { Maybe } from "@dereekb/util";
 import { map, shareReplay } from "rxjs";
 import { PickableValueFieldDisplayValue } from "./pickable";
@@ -42,7 +42,7 @@ export class DbxPickableListFieldItemListComponent<T> extends AbstractDbxSelecti
  */
 @Component({
   template: `<dbx-selection-list-view-content [multiple]="multiple" [selectionMode]="selectionMode" [items]="items$ | async"></dbx-selection-list-view-content>`,
-  providers: ProvideDbxListView(DbxPickableListFieldItemListViewComponent)
+  providers: provideDbxListView(DbxPickableListFieldItemListViewComponent)
 })
 export class DbxPickableListFieldItemListViewComponent<T> extends AbstractDbxSelectionListViewDirective<any> {  // TODO: any belongs here for now, but item list typings need to be updated.
 

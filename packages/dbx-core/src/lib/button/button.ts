@@ -26,7 +26,7 @@ export abstract class DbxButton {
   abstract clickButton(): void;
 }
 
-export function ProvideDbxButton<S extends DbxButton>(sourceType: Type<S>): Provider[] {
+export function provideDbxButton<S extends DbxButton>(sourceType: Type<S>): Provider[] {
   return [{
     provide: DbxButton,
     useExisting: forwardRef(() => sourceType)

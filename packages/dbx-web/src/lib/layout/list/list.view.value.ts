@@ -69,7 +69,7 @@ export abstract class DbxValueListView<T, I extends DbxValueListItem<T> = DbxVal
   readonly abstract items$: Observable<I[]>;
 }
 
-export function ProvideDbxValueListView<V extends DbxValueListView<unknown>>(sourceType: Type<V>): Provider[] {
+export function provideDbxValueListView<V extends DbxValueListView<unknown>>(sourceType: Type<V>): Provider[] {
   return [{
     provide: DbxValueListView,
     useExisting: forwardRef(() => sourceType)

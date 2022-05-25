@@ -1,5 +1,5 @@
 import { Component } from "@angular/core";
-import { ProvideFormlyContext, AbstractSyncFormlyFormDirective, nameField, dateTimeField } from "@dereekb/dbx-form";
+import { provideFormlyContext, AbstractSyncFormlyFormDirective, nameField, dateTimeField } from "@dereekb/dbx-form";
 import { FormlyFieldConfig } from "@ngx-formly/core";
 
 export interface DocActionFormExampleValue {
@@ -10,7 +10,7 @@ export interface DocActionFormExampleValue {
 @Component({
   template: `<dbx-formly></dbx-formly>`,
   selector: 'doc-action-form-example-form',
-  providers: [ProvideFormlyContext()]
+  providers: [provideFormlyContext()]
 })
 export class DocActionFormExampleFormComponent extends AbstractSyncFormlyFormDirective<DocActionFormExampleValue> {
 

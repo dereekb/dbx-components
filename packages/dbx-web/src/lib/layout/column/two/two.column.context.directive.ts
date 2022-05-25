@@ -2,14 +2,14 @@ import { Input, OnDestroy } from '@angular/core';
 import { Directive, OnInit } from '@angular/core';
 import { Maybe } from '@dereekb/util';
 import { BehaviorSubject } from 'rxjs';
-import { ProvideTwoColumnsContext, TwoColumnsContextStore } from './two.column.store';
+import { provideTwoColumnsContext, TwoColumnsContextStore } from './two.column.store';
 
 /**
  * Provides a dbxTwoColumnContextStore
  */
 @Directive({
   selector: '[dbxTwoColumnContext]',
-  providers: ProvideTwoColumnsContext()
+  providers: provideTwoColumnsContext()
 })
 export class DbxTwoColumnContextDirective implements OnInit, OnDestroy {
 

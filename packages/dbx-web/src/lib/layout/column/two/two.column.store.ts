@@ -98,7 +98,7 @@ export class TwoColumnsContextStore extends ComponentStore<TwoColumnsState> impl
 
 }
 
-export function ProvideTwoColumnsContext(): Provider[] {
+export function provideTwoColumnsContext(): Provider[] {
   return [{
     provide: TwoColumnsContextStore,
     useClass: TwoColumnsContextStore

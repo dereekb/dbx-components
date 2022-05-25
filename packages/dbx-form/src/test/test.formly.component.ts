@@ -3,7 +3,7 @@ import { OnDestroy } from '@angular/core';
 import { ComponentFixture } from '@angular/core/testing';
 import { Component } from '@angular/core';
 import { FormlyFieldConfig } from '@ngx-formly/core';
-import { AbstractAsyncFormlyFormDirective, formlyField, ProvideFormlyContext } from '../lib';
+import { AbstractAsyncFormlyFormDirective, formlyField, provideFormlyContext } from '../lib';
 import { AbstractControl } from '@angular/forms';
 
 export interface TestFormValue {
@@ -31,7 +31,7 @@ export function testTextField(): FormlyFieldConfig {
 @Component({
   template: `<dbx-formly></dbx-formly>`,
   selector: 'dbx-test-dbx-form',
-  providers: [ProvideFormlyContext()]
+  providers: [provideFormlyContext()]
 })
 export class DbxTestDbxFormComponent<T = TestFormValue> extends AbstractAsyncFormlyFormDirective<T> implements OnDestroy {
 

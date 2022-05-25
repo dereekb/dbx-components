@@ -4,7 +4,7 @@ import { DbxValueListItem, DBX_VALUE_LIST_VIEW_ITEM } from "./list.view.value";
 @Directive()
 export abstract class AbstractDbxValueListViewItemComponent<T, I extends DbxValueListItem<T> = DbxValueListItem<T>> {
 
-  get itemValue() {
+  get itemValue(): T {
     return this.item.itemValue;
   }
 

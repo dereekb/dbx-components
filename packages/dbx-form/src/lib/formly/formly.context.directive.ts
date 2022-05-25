@@ -1,7 +1,7 @@
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { BehaviorSubject } from 'rxjs';
 import { Directive, OnDestroy, Input } from '@angular/core';
-import { ProvideFormlyContext } from './formly.context';
+import { provideFormlyContext } from './formly.context';
 import { AbstractAsyncFormlyFormDirective } from './formly.directive';
 import { Maybe } from '@dereekb/util';
 
@@ -10,7 +10,7 @@ import { Maybe } from '@dereekb/util';
  */
 @Directive({
   selector: '[dbxFormlyFields]',
-  providers: ProvideFormlyContext()
+  providers: provideFormlyContext()
 })
 export class DbxFormlyFieldsContextDirective<T = unknown> extends AbstractAsyncFormlyFormDirective<T> implements OnDestroy {
 

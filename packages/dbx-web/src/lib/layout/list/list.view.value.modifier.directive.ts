@@ -3,14 +3,14 @@ import { Directive, Input, OnDestroy, OnInit } from "@angular/core";
 import { DbxValueListItem } from "./list.view.value";
 import { addModifiers, ArrayOrValue, combineMaps, Maybe, Modifier, ModifierMap, removeModifiers } from '@dereekb/util';
 import { SubscriptionObject } from '@dereekb/rxjs';
-import { DbxValueListItemModifier, ProvideDbxValueListViewModifier } from './list.view.value.modifier';
+import { DbxValueListItemModifier, provideDbxValueListViewModifier } from './list.view.value.modifier';
 
 /**
  * DbxValueListViewModifier implementation
  */
 @Directive({
   'selector': '[dbxListItemModifier]',
-  providers: ProvideDbxValueListViewModifier(DbxValueListItemModifierDirective)
+  providers: provideDbxValueListViewModifier(DbxValueListItemModifierDirective)
 })
 export class DbxValueListItemModifierDirective<T, I extends DbxValueListItem<T> = DbxValueListItem<T>> implements DbxValueListItemModifier<T, I>, OnDestroy {
 

@@ -1,6 +1,6 @@
 import { Directive } from '@angular/core';
 import { AbstractFilterSourceConnectorDirective } from './filter.abstract.connector.directive';
-import { ProvideFilterSource, ProvideFilterSourceConnector } from './filter.content';
+import { provideFilterSource, provideFilterSourceConnector } from './filter.content';
 
 /**
  * Used as a FilterSource and FilterSourceConnector.
@@ -8,8 +8,8 @@ import { ProvideFilterSource, ProvideFilterSourceConnector } from './filter.cont
 @Directive({
   selector: '[dbxFilterSourceConnector]',
   providers: [
-    ...ProvideFilterSource(DbxFilterSourceConnectorDirective),
-    ...ProvideFilterSourceConnector(DbxFilterSourceConnectorDirective)
+    ...provideFilterSource(DbxFilterSourceConnectorDirective),
+    ...provideFilterSourceConnector(DbxFilterSourceConnectorDirective)
   ]
 })
-export class DbxFilterSourceConnectorDirective<F> extends AbstractFilterSourceConnectorDirective<F> { }
+export class DbxFilterSourceConnectorDirective<F = unknown> extends AbstractFilterSourceConnectorDirective<F> { }

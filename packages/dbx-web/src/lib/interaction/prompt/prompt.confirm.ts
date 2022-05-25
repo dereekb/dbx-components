@@ -6,7 +6,7 @@ export abstract class DbxPromptConfirm {
   abstract showDialog(): Observable<Maybe<boolean>>;
 }
 
-export function ProvideDbxPromptConfirm<S>(sourceType: Type<S>): Provider[] {
+export function provideDbxPromptConfirm<S extends DbxPromptConfirm>(sourceType: Type<S>): Provider[] {
   return [{
     provide: DbxPromptConfirm,
     useExisting: forwardRef(() => sourceType)

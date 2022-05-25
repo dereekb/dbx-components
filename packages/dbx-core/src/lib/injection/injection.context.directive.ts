@@ -1,5 +1,5 @@
 import { Directive, EmbeddedViewRef, Injector, Input, TemplateRef, ViewContainerRef, OnDestroy, OnInit } from '@angular/core';
-import { DbxInjectionContext, DbxInjectionContextConfig, ProvideDbxInjectionContext } from './injection.context';
+import { DbxInjectionContext, DbxInjectionContextConfig, provideDbxInjectionContext } from './injection.context';
 import { DbxInjectionInstance } from './injection.instance';
 import { DbxInjectionComponentConfig } from './injection';
 import { PromiseOrValue, PromiseFullRef, makePromiseFullRef, Maybe } from '@dereekb/util';
@@ -9,7 +9,7 @@ import { PromiseOrValue, PromiseFullRef, makePromiseFullRef, Maybe } from '@dere
  */
 @Directive({
   selector: '[dbxInjectionContext]',
-  providers: ProvideDbxInjectionContext(DbxInjectionContextDirective)
+  providers: provideDbxInjectionContext(DbxInjectionContextDirective)
 })
 export class DbxInjectionContextDirective<O = unknown> implements DbxInjectionContext, OnInit, OnDestroy {
 
