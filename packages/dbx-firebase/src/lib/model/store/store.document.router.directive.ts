@@ -1,4 +1,4 @@
-import { shareReplay } from 'rxjs/operators';
+import { shareReplay } from 'rxjs';
 import { Observable, distinctUntilChanged } from 'rxjs';
 import { OnDestroy } from '@angular/core';
 import { BehaviorSubject, combineLatest, map } from 'rxjs';

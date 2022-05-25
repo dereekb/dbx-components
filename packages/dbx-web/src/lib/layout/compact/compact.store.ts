@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { ComponentStore } from '@ngrx/component-store';
-import { map } from 'rxjs/operators';
+import { map } from 'rxjs';
 import { CompactMode, compactModeFromInput } from './compact';
 
 export interface CompactContextState {

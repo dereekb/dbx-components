@@ -4,7 +4,7 @@ import { distinctUntilChanged, Observable, shareReplay, BehaviorSubject, switchM
 import { Component, Inject, OnDestroy, AfterViewInit } from '@angular/core';
 import { MatSnackBarRef, MAT_SNACK_BAR_DATA } from '@angular/material/snack-bar';
 import { Maybe } from '@dereekb/util';
-import { filter, map } from 'rxjs/operators';
+import { filter, map } from 'rxjs';
 import { DbxActionSnackbarDisplayConfig, DbxActionSnackbarActionConfig } from './action.snackbar';
 import { DbxActionContextSourceReference, AbstractSubscriptionDirective } from '@dereekb/dbx-core';
 import ms from 'ms';

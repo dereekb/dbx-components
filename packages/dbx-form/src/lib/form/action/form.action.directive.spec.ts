@@ -3,7 +3,7 @@ import { Component, ViewChild } from '@angular/core';
 import { DbxActionDirective, DbxCoreActionModule } from '@dereekb/dbx-core';
 import { DbxActionFormDirective } from './form.action.directive';
 import { DbxTestDbxFormComponent, FORM_TEST_PROVIDERS } from '../../../test';
-import { first } from 'rxjs/operators';
+import { first } from 'rxjs';
 
 describe('FormActionDirective', () => {
 

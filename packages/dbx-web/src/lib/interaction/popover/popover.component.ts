@@ -3,7 +3,7 @@ import { NgOverlayContainerConfiguration, NgPopoverRef } from 'ng-overlay-contai
 import { AbstractTransitionWatcherDirective, DbxRouterTransitionService, DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { Subject } from 'rxjs';
 import { PopoverPositionStrategy } from './popover.position.strategy';
-import { filter, first, map, shareReplay, startWith } from 'rxjs/operators';
+import { filter, first, map, shareReplay, startWith } from 'rxjs';
 import { Overlay } from '@angular/cdk/overlay';
 import { LockSet } from '@dereekb/rxjs';
 import { CompactContextStore, CompactMode } from '../../layout';

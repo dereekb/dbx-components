@@ -1,6 +1,6 @@
 import { Directive, Input, OnInit, OnDestroy } from '@angular/core';
 import { AbstractSubscriptionDirective } from '../../../subscription';
-import { debounce, distinctUntilChanged, exhaustMap, filter, first, map, mergeMap, shareReplay, switchMap, throttle } from 'rxjs/operators';
+import { debounce, distinctUntilChanged, exhaustMap, filter, first, map, mergeMap, shareReplay, switchMap, throttle } from 'rxjs';
 import { EMPTY, interval, Subject, combineLatest } from 'rxjs';
 import { Observable } from 'rxjs';
 import { DbxActionContextStoreSourceInstance } from '../../action.store.source';

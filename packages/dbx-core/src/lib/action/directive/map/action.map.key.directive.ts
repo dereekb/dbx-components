@@ -2,7 +2,7 @@ import { filterMaybe } from '@dereekb/rxjs';
 import { Directive, Input, OnDestroy } from '@angular/core';
 import { Maybe } from '@dereekb/util';
 import { BehaviorSubject } from 'rxjs';
-import { switchMap } from 'rxjs/operators';
+import { switchMap } from 'rxjs';
 import { ActionKey } from './action.map';
 import { provideSecondaryActionStoreSource, SecondaryActionContextStoreSource } from '../../action.store.source';
 import { DbxActionContextMapDirective } from './action.map.directive';

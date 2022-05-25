@@ -1,5 +1,5 @@
 import { skipFirstMaybe } from '@dereekb/rxjs';
-import { map, shareReplay, distinctUntilChanged } from 'rxjs/operators';
+import { map, shareReplay, distinctUntilChanged } from 'rxjs';
 import { BehaviorSubject, combineLatest, Observable, delay } from 'rxjs';
 import { Directive, Input, OnDestroy } from '@angular/core';
 import { Maybe } from '@dereekb/util';

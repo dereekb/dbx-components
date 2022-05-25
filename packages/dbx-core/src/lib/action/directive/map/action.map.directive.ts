@@ -1,7 +1,7 @@
 import { reduceBooleansWithOrFn } from '@dereekb/util';
 import { Directive, OnDestroy } from '@angular/core';
 import { BehaviorSubject, Observable, of } from 'rxjs';
-import { distinctUntilChanged, map, shareReplay, switchMap } from 'rxjs/operators';
+import { distinctUntilChanged, map, shareReplay, switchMap } from 'rxjs';
 import { combineLatestFromMapValuesObsFn } from '@dereekb/rxjs';
 import { ActionContextStoreSource, actionContextStoreSourcePipe } from '../../action.store.source';
 import { ActionContextStore } from '../../action.store';

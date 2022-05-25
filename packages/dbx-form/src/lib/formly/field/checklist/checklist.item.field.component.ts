@@ -1,7 +1,7 @@
 import { ChangeDetectorRef } from '@angular/core';
 import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { switchMapMaybeObs } from '@dereekb/rxjs';
-import { shareReplay, distinctUntilChanged, map } from 'rxjs/operators';
+import { shareReplay, distinctUntilChanged, map } from 'rxjs';
 import { BehaviorSubject } from 'rxjs';
 import {
   Component, OnDestroy, OnInit, Type

@@ -58,7 +58,7 @@ export abstract class DbxListView<T, S extends ListLoadingState<T> = ListLoading
 }
 
 // eslint-disable-next-line
-export function provideDbxListView<V extends DbxListView<any>>(sourceType: Type<V>): Provider[] {   // typings are not relevant for providers
+export function provideDbxListView<V extends DbxListView<any>>(sourceType: Type<V>): Provider[] {   // use of any here is allowed as typings are not relevant for providers
   return [{
     provide: DbxListView,
     useExisting: forwardRef(() => sourceType)

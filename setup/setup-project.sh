@@ -178,51 +178,51 @@ git commit -m "added @dereekb dependencies"
 # Docker
 # Create docker files
 echo "Copying Docker files from @dereekb/dbx-components"
-curl https://raw.githubusercontent.com/dereekb/dbx-components/main/Dockerfile -o Dockerfile.tmp
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/Dockerfile -o Dockerfile.tmp
 sed "s/demo-api/$API_APP_NAME/g" Dockerfile.tmp > Dockerfile
 rm Dockerfile.tmp
 
-curl https://raw.githubusercontent.com/dereekb/dbx-components/main/docker-compose.yml -o docker-compose.yml.tmp
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/docker-compose.yml -o docker-compose.yml.tmp
 sed -e "s/demo-api-server/$API_APP_NAME-server/g" -e "s/dereekb-components/$FIREBASE_PROJECT_ID/g" -e "s/9900-9906/$FIREBASE_EMULATOR_PORT_RANGE/g" docker-compose.yml.tmp > docker-compose.yml
 rm docker-compose.yml.tmp
 
 # download .gitignore
-curl https://raw.githubusercontent.com/dereekb/dbx-components/main/.gitignore -o .gitignore
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/.gitignore -o .gitignore
 
 # download additional utility scripts
-curl https://raw.githubusercontent.com/dereekb/dbx-components/main/exec-with-emulator.sh -o exec-with-emulator.sh.tmp
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/exec-with-emulator.sh -o exec-with-emulator.sh.tmp
 sed -e "s/demo-api-server/$API_APP_NAME-server/g" -e "s/demo-api/$API_APP_NAME/g" exec-with-emulator.sh.tmp > exec-with-emulator.sh
 rm exec-with-emulator.sh.tmp
 chmod +x exec-with-emulator.sh
 
-curl https://raw.githubusercontent.com/dereekb/dbx-components/main/reset-emulator-data.sh -o reset-emulator-data.sh
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/reset-emulator-data.sh -o reset-emulator-data.sh
 chmod +x reset-emulator-data.sh
 
-curl https://raw.githubusercontent.com/dereekb/dbx-components/main/reset.sh -o reset.sh
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/reset.sh -o reset.sh
 chmod +x reset.sh
 
-curl https://raw.githubusercontent.com/dereekb/dbx-components/main/down.sh -o down.sh
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/down.sh -o down.sh
 chmod +x down.sh
 
-curl https://raw.githubusercontent.com/dereekb/dbx-components/main/test-all.sh -o test-all.sh
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/test-all.sh -o test-all.sh
 chmod +x test-all.sh
 
-curl https://raw.githubusercontent.com/dereekb/dbx-components/main/run-server.sh -o run-server.sh.tmp
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/run-server.sh -o run-server.sh.tmp
 sed -e "s/demo-api-server/$API_APP_NAME-server/g" -e "s/demo-api/$API_APP_NAME/g" run-server.sh.tmp > run-server.sh
 rm run-server.sh.tmp
 chmod +x run-server.sh
 
-curl https://raw.githubusercontent.com/dereekb/dbx-components/main/serve-server.sh -o serve-server.sh.tmp
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/serve-server.sh -o serve-server.sh.tmp
 sed -e "s/demo-api-server/$API_APP_NAME-server/g" -e "s/demo-api/$API_APP_NAME/g" serve-server.sh.tmp > serve-server.sh
 rm serve-server.sh.tmp
 chmod +x serve-server.sh
 
-curl https://raw.githubusercontent.com/dereekb/dbx-components/main/serve-web.sh -o serve-web.sh.tmp
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/serve-web.sh -o serve-web.sh.tmp
 sed -e "s/demo/$ANGULAR_APP_NAME/g" serve-web.sh.tmp > serve-web.sh
 rm serve-web.sh.tmp
 chmod +x serve-web.sh
 
-curl https://raw.githubusercontent.com/dereekb/dbx-components/main/test-demo-api.sh -o test-$API_APP_NAME.sh.tmp
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/test-demo-api.sh -o test-$API_APP_NAME.sh.tmp
 sed -e "s/demo-api/$API_APP_NAME/g" test-$API_APP_NAME.sh.tmp > test-$API_APP_NAME.sh
 rm test-$API_APP_NAME.sh.tmp
 chmod +x test-$API_APP_NAME.sh
@@ -232,15 +232,15 @@ git commit -m "added Docker files and other utility files"
 
 # add semver for semantic versioning and linting for commits
 npm install -D @jscutlery/semver husky
-curl https://raw.githubusercontent.com/dereekb/dbx-components/main/.commitlintrc.json -o .commitlintrc.json
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/.commitlintrc.json -o .commitlintrc.json
 
 mkdir .husky
-curl https://raw.githubusercontent.com/dereekb/dbx-components/main/.husky/commit-msg -o .husky/commit-msg
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/.husky/commit-msg -o .husky/commit-msg
 npx --yes json -I -f package.json -e "this.scripts={ ...this.scripts, prepare: 'husky install' };";
 npm run prepare
 
 mkdir -p ./.github/workflows
-curl https://raw.githubusercontent.com/dereekb/dbx-components/main/.github/workflows/commitlint.yml -o ./.github/workflows/commitlint.yml
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/.github/workflows/commitlint.yml -o ./.github/workflows/commitlint.yml
 
 git add --all
 git commit -m "added semver and commit linting"
@@ -249,8 +249,8 @@ git commit -m "added semver and commit linting"
 npm install -D jest-date jest-junit
 rm jest.preset.js
 
-curl https://raw.githubusercontent.com/dereekb/dbx-components/main/jest.preset.ts -o jest.preset.ts
-curl https://raw.githubusercontent.com/dereekb/dbx-components/main/jest.setup.ts -o jest.setup.ts
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/jest.preset.ts -o jest.preset.ts
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/jest.setup.ts -o jest.setup.ts
 
 # add env files to ensure that jest CI tests export properly.
 mkdir tmp # TODO: Change from /develop to /main later.
@@ -395,6 +395,18 @@ download_angular_ts_file "src/style.scss"
 download_angular_ts_file "src/main.ts"
 download_angular_ts_file "src/root.module.ts"
 download_angular_ts_file "src/root.firebase.module.ts"
+
+# lib
+mkdir $ANGULAR_APP_FOLDER/src/lib
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/apps/demo/src/lib/segment.js -o $ANGULAR_APP_FOLDER/src/lib/segment.js
+
+# assets
+mkdir -p $ANGULAR_APP_FOLDER/src/assets/brand
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/apps/demo/src/assets/brand/icon.png -o $ANGULAR_APP_FOLDER/src/assets/brand/icon.png
+
+# index.html
+rm $ANGULAR_APP_FOLDER/src/index.html
+download_angular_ts_file "src/index.html"
 
 rm -r $ANGULAR_APP_FOLDER/src/style
 mkdir $ANGULAR_APP_FOLDER/src/style

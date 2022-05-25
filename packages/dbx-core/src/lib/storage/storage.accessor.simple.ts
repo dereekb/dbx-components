@@ -1,5 +1,5 @@
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { map } from 'rxjs';
 import { timeHasExpired, unixTimeNumberForNow } from '@dereekb/date';
 import { filterMaybeValuesFn, DataDoesNotExistError, DataIsExpiredError, ReadStoredData, StoredData, StoredDataStorageKey, StoredDataString, Maybe } from '@dereekb/util';
 import { StorageAccessor } from './storage.accessor';

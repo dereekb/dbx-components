@@ -4,7 +4,7 @@ import { Maybe } from '@dereekb/util';
 import { CompactMode, CompactContextStore } from '../../layout';
 import { BehaviorSubject, Subject } from 'rxjs';
 import { PopupGlobalPositionStrategy, PopupPosition, PopupPositionOffset } from './popup.position.strategy';
-import { filter, first, map, shareReplay, startWith } from 'rxjs/operators';
+import { filter, first, map, shareReplay, startWith } from 'rxjs';
 import { AbstractTransitionWatcherDirective, DbxInjectionComponentConfig, DbxRouterTransitionService } from '@dereekb/dbx-core';
 import { DbxPopupController, DbxPopupKey, DbxPopupWindowState } from './popup';
 

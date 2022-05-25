@@ -1,7 +1,7 @@
 import { Maybe } from '@dereekb/util';
 import { isBoolean } from 'class-validator';
 import { Observable, of } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { map } from 'rxjs';
 
 export enum CompactMode {
   FULL = 'full',

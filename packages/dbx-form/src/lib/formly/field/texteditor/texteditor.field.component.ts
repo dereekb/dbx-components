@@ -6,7 +6,7 @@ import {
 import { FieldTypeConfig, FormlyFieldConfig } from '@ngx-formly/core';
 import { FieldType } from '@ngx-formly/material';
 import { Editor } from 'ngx-editor';
-import { debounceTime, filter } from 'rxjs/operators';
+import { debounceTime, filter } from 'rxjs';
 import { SubscriptionObject } from '@dereekb/rxjs';
 import { Maybe } from '@dereekb/util';
 

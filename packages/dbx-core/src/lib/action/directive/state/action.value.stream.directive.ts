@@ -1,5 +1,5 @@
 import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
-import { switchMap, mergeMap, map, withLatestFrom, shareReplay } from 'rxjs/operators';
+import { switchMap, mergeMap, map, withLatestFrom, shareReplay } from 'rxjs';
 import { Directive, Host, Input, OnInit } from '@angular/core';
 import { BehaviorSubject, Observable, of, EMPTY } from 'rxjs';
 import { OnDestroy } from '@angular/core';

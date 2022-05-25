@@ -1,5 +1,5 @@
 import { DbxActionContextSourceReference } from './action.reference';
-import { delay, first } from 'rxjs/operators';
+import { delay, first } from 'rxjs';
 import { ActionContextStoreSource } from './action.store.source';
 import { DbxActionWorkInstanceDelegate, HandleActionFunction } from './action.handler';
 import { DbxActionContextBaseSource } from './action.holder';

@@ -10,6 +10,10 @@ export class DbxAnalyticsSegmentApiServiceConfig {
   constructor(public writeKey: string) { }
 }
 
+/**
+ * When the Segment library finishes loading, it is invoked.
+ */
+type SegmentAnalyticsInvoked = SegmentAnalytics.AnalyticsJS & { invoked?: boolean };
 
 /**
  * Segment API Service used for waiting/retrieving the segment API from window when initialized.
@@ -33,7 +37,7 @@ export class DbxAnalyticsSegmentApiService extends AbstractAsyncWindowLoadedServ
   protected override _prepareCompleteLoadingService(): Promise<void> {
     return poll({
       // poll until analytics.invoked is true.
-      check: () => Boolean((window.analytics as any)?.invoked),
+      check: () => Boolean((window.analytics as SegmentAnalyticsInvoked).invoked),
       timesToGiveup: 100
     });
   }

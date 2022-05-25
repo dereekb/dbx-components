@@ -1,4 +1,4 @@
-import { first, switchMap } from 'rxjs/operators';
+import { first, switchMap } from 'rxjs';
 import { Observable, Subscription } from 'rxjs';
 import { forwardRef, Injectable, Provider, Type } from '@angular/core';
 import { LockSet, filterMaybe, LoadingState, LoadingStateType } from '@dereekb/rxjs';

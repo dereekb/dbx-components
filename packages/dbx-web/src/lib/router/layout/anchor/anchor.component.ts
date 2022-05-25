@@ -2,8 +2,7 @@ import { skipFirstMaybe } from '@dereekb/rxjs';
 import { Input, Component, TemplateRef, ViewChild, OnDestroy } from '@angular/core';
 import { AbstractDbxAnchorDirective, DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { Maybe } from '@dereekb/util';
-import { BehaviorSubject } from 'rxjs';
-import { map, distinctUntilChanged, shareReplay } from 'rxjs/operators';
+import { map, distinctUntilChanged, shareReplay, BehaviorSubject } from 'rxjs';
 import { DbxRouterWebProviderConfig } from '../../provider/router.provider.config';
 
 /**
