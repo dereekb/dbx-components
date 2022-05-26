@@ -9,23 +9,8 @@ import { DbxAnchorLinkComponent } from './anchor.link.component';
 import { DbxAnchorContentComponent } from './anchor.content.component';
 
 @NgModule({
-  imports: [
-    CommonModule,
-    MatIconModule,
-    MatButtonModule,
-    DbxInjectionComponentModule
-  ],
-  declarations: [
-    DbxAnchorComponent,
-    DbxAnchorIconComponent,
-    DbxAnchorLinkComponent,
-    DbxAnchorContentComponent
-  ],
-  exports: [
-    DbxAnchorComponent,
-    DbxAnchorIconComponent,
-    DbxAnchorLinkComponent,
-    DbxAnchorContentComponent
-  ]
+  imports: [CommonModule, MatIconModule, MatButtonModule, DbxInjectionComponentModule],
+  declarations: [DbxAnchorComponent, DbxAnchorIconComponent, DbxAnchorLinkComponent, DbxAnchorContentComponent],
+  exports: [DbxAnchorComponent, DbxAnchorIconComponent, DbxAnchorLinkComponent, DbxAnchorContentComponent]
 })
-export class DbxRouterAnchorModule { }
+export class DbxRouterAnchorModule {}

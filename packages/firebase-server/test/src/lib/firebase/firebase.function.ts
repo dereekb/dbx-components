@@ -4,7 +4,7 @@ import { wrap, WrappedFunction, WrappedScheduledFunction, WrappedV2Function } fr
 import { Getter } from '@dereekb/util';
 import { FeaturesList } from 'firebase-functions-test/lib/features';
 
-export type WrapCloudFunctionV1 = <T>(cloudFunction: CloudFunctionV1<T>) => (WrappedScheduledFunction | WrappedFunction<T>);
+export type WrapCloudFunctionV1 = <T>(cloudFunction: CloudFunctionV1<T>) => WrappedScheduledFunction | WrappedFunction<T>;
 export type WrapCloudFunctionV2 = <T extends CloudEvent<unknown>>(cloudFunction: CloudFunctionV2<T>) => WrappedV2Function<T>;
 
 export type WrapCloudFunctionV1Input<T> = CloudFunctionV1<T>;

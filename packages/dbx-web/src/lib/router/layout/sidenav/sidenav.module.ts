@@ -18,32 +18,8 @@ import { DbxContentLayoutModule } from './../../../layout/content/content.layout
 import { DbxSidenavButtonComponent } from './sidenav.button.component';
 
 @NgModule({
-  imports: [
-    CommonModule,
-    DbxBarLayoutModule,
-    DbxRouterAnchorModule,
-    DbxRouterAnchorListModule,
-    DbxButtonModule,
-    DbxContentLayoutModule,
-    MatToolbarModule,
-    MatButtonModule,
-    MatIconModule,
-    MatSidenavModule,
-    MatListModule,
-    MatDividerModule,
-    UIRouterModule
-  ],
-  declarations: [
-    DbxSidenavComponent,
-    DbxSidenavButtonComponent,
-    DbxSidenavPagebarComponent,
-    DbxSidenavPageComponent
-  ],
-  exports: [
-    DbxSidenavComponent,
-    DbxSidenavButtonComponent,
-    DbxSidenavPagebarComponent,
-    DbxSidenavPageComponent
-  ]
+  imports: [CommonModule, DbxBarLayoutModule, DbxRouterAnchorModule, DbxRouterAnchorListModule, DbxButtonModule, DbxContentLayoutModule, MatToolbarModule, MatButtonModule, MatIconModule, MatSidenavModule, MatListModule, MatDividerModule, UIRouterModule],
+  declarations: [DbxSidenavComponent, DbxSidenavButtonComponent, DbxSidenavPagebarComponent, DbxSidenavPageComponent],
+  exports: [DbxSidenavComponent, DbxSidenavButtonComponent, DbxSidenavPagebarComponent, DbxSidenavPageComponent]
 })
-export class DbxRouterSidenavModule { }
+export class DbxRouterSidenavModule {}

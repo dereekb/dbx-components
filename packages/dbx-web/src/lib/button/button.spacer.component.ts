@@ -9,4 +9,4 @@ import { Directive } from '@angular/core';
     class: 'dbx-button-spacer d-inline'
   }
 })
-export class DbxButtonSpacerDirective { }
+export class DbxButtonSpacerDirective {}

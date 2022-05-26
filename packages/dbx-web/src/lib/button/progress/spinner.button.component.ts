@@ -8,7 +8,6 @@ import { AbstractProgressButtonDirective } from './base.progress.button.directiv
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxSpinnerButtonComponent extends AbstractProgressButtonDirective {
-
   @ViewChild('button', { static: true, read: ElementRef })
   readonly buttonRef!: ElementRef<HTMLElement>;
 
@@ -36,5 +35,4 @@ export class DbxSpinnerButtonComponent extends AbstractProgressButtonDirective {
 
     return size;
   }
-
 }

@@ -2,7 +2,6 @@ import { first } from 'rxjs';
 import { ValuesLoadingContext } from './loading.context.value';
 
 describe('ValuesLoadingContext', () => {
-
   let context: ValuesLoadingContext;
 
   afterEach(() => {
@@ -26,5 +25,4 @@ describe('ValuesLoadingContext', () => {
       done();
     });
   });
-
 });

@@ -6,17 +6,15 @@ import { Directive, Input } from '@angular/core';
 @Directive({
   selector: 'dbx-content-box, [dbxContentBox]',
   host: {
-    'class': 'd-block dbx-content-box',
+    class: 'd-block dbx-content-box',
     '[class.dbx-content-elevate]': 'elevated',
     '[class.dbx-content-box-wide]': 'wide'
   }
 })
 export class DbxContentBoxDirective {
-
   @Input()
   elevated = true;
 
   @Input()
   wide = true;
-
 }

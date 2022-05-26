@@ -7,7 +7,7 @@ export const PRELOAD_SEGMENT_TOKEN = new InjectionToken<string>('DbxAnalyticsSeg
 export class DbxAnalyticsSegmentApiServiceConfig {
   logging = true;
   active = true;
-  constructor(public writeKey: string) { }
+  constructor(public writeKey: string) {}
 }
 
 /**
@@ -22,7 +22,6 @@ type SegmentAnalyticsInvoked = SegmentAnalytics.AnalyticsJS & { invoked?: boolea
  */
 @Injectable()
 export class DbxAnalyticsSegmentApiService extends AbstractAsyncWindowLoadedService<SegmentAnalytics.AnalyticsJS> {
-
   static readonly SEGMENT_API_WINDOW_KEY = 'analytics';
   static readonly SEGMENT_READY_KEY = 'SegmentReady';
 
@@ -58,7 +57,5 @@ export class DbxAnalyticsSegmentApiService extends AbstractAsyncWindowLoadedServ
         reject(e);
       }
     });
-
   }
-
 }

@@ -1,13 +1,12 @@
 import { SubscriptionObject } from './../subscription';
 import { beginLoading, errorResult, LoadingState, successResult } from '@dereekb/rxjs';
-import { Maybe, readableError } from "@dereekb/util";
-import { filter, BehaviorSubject, first } from "rxjs";
-import { WorkInstance } from "./work.instance";
+import { Maybe, readableError } from '@dereekb/util';
+import { filter, BehaviorSubject, first } from 'rxjs';
+import { WorkInstance } from './work.instance';
 
 const TEST_ERROR_CODE = 'test';
 
 describe('WorkInstance', () => {
-
   let sub: SubscriptionObject;
   let workInstance: WorkInstance<number, string>;
 
@@ -26,7 +25,6 @@ describe('WorkInstance', () => {
   });
 
   describe('before starting work', () => {
-
     it('hasStarted should return false', () => {
       expect(workInstance.hasStarted).toBe(false);
     });
@@ -36,7 +34,6 @@ describe('WorkInstance', () => {
     });
 
     describe('destroy()', () => {
-
       beforeEach(() => {
         workInstance.destroy();
       });
@@ -48,9 +45,7 @@ describe('WorkInstance', () => {
       it('isComplete should return true', () => {
         expect(workInstance.isComplete).toBe(true);
       });
-
     });
-
   });
 
   describe('startWorkingWithLoadingStateObservable()', () => {
@@ -61,7 +56,7 @@ describe('WorkInstance', () => {
     });
 
     afterEach(() => {
-      loadingStateObs.next(beginLoading());   // pass to prevent 
+      loadingStateObs.next(beginLoading()); // pass to prevent
       loadingStateObs.complete();
     });
 
@@ -76,50 +71,68 @@ describe('WorkInstance', () => {
 
       loadingStateObs.next(beginLoading());
 
-      workInstance.hasStarted$.pipe(filter(x => x), first()).subscribe((hasStarted) => {
-        expect(hasStarted).toBe(true);
-        done();
-      });
+      workInstance.hasStarted$
+        .pipe(
+          filter((x) => x),
+          first()
+        )
+        .subscribe((hasStarted) => {
+          expect(hasStarted).toBe(true);
+          done();
+        });
     });
 
     it('should be marked complete if the loading state has success.', (done) => {
       workInstance.startWorkingWithLoadingStateObservable(loadingStateObs);
       loadingStateObs.next(successResult('test'));
 
-      workInstance.isComplete$.pipe(filter(x => x), first()).subscribe((isComplete) => {
-        expect(isComplete).toBe(true);
-        done();
-      });
+      workInstance.isComplete$
+        .pipe(
+          filter((x) => x),
+          first()
+        )
+        .subscribe((isComplete) => {
+          expect(isComplete).toBe(true);
+          done();
+        });
     });
 
     it('should be marked complete if the loading state has an error.', (done) => {
       workInstance.startWorkingWithLoadingStateObservable(loadingStateObs);
       loadingStateObs.next(errorResult(readableError('test', 'test')));
 
-      workInstance.isComplete$.pipe(filter(x => x), first()).subscribe((isComplete) => {
-        expect(isComplete).toBe(true);
-        done();
-      });
+      workInstance.isComplete$
+        .pipe(
+          filter((x) => x),
+          first()
+        )
+        .subscribe((isComplete) => {
+          expect(isComplete).toBe(true);
+          done();
+        });
     });
 
     it('should be marked complete if the loading state begins loading and then has success.', (done) => {
       loadingStateObs.next(beginLoading());
       workInstance.startWorkingWithLoadingStateObservable(loadingStateObs);
 
-      workInstance.isComplete$.pipe(filter(x => x), first()).subscribe((isComplete) => {
-        expect(isComplete).toBe(true);
-        done();
-      });
+      workInstance.isComplete$
+        .pipe(
+          filter((x) => x),
+          first()
+        )
+        .subscribe((isComplete) => {
+          expect(isComplete).toBe(true);
+          done();
+        });
 
       setTimeout(() => {
         loadingStateObs.next(successResult('test'));
       }, 10);
     });
-
   });
 
   describe('after starting work', () => {
-
     beforeEach(() => {
       workInstance.startWorking();
     });
@@ -133,7 +146,6 @@ describe('WorkInstance', () => {
     });
 
     describe('after success', () => {
-
       beforeEach(() => {
         workInstance.success();
       });
@@ -141,11 +153,9 @@ describe('WorkInstance', () => {
       it('isComplete should return true', () => {
         expect(workInstance.isComplete).toBe(true);
       });
-
     });
 
     describe('after error', () => {
-
       beforeEach(() => {
         workInstance.reject(readableError(TEST_ERROR_CODE));
       });
@@ -153,9 +163,6 @@ describe('WorkInstance', () => {
       it('isComplete should return true', () => {
         expect(workInstance.isComplete).toBe(true);
       });
-
     });
-
   });
-
 });

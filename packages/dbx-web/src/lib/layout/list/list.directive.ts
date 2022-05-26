@@ -1,8 +1,8 @@
 import { ListLoadingState, filterMaybe, ObservableOrValue, valueFromObservableOrValue } from '@dereekb/rxjs';
 import { Observable, BehaviorSubject, map, shareReplay } from 'rxjs';
-import { Output, EventEmitter, OnInit, OnDestroy, Directive, Input } from "@angular/core";
-import { DbxListConfig } from "./list.component";
-import { DbxListSelectionMode, DbxListView, ListSelectionState } from "./list.view";
+import { Output, EventEmitter, OnInit, OnDestroy, Directive, Input } from '@angular/core';
+import { DbxListConfig } from './list.component';
+import { DbxListSelectionMode, DbxListView, ListSelectionState } from './list.view';
 import { Maybe } from '@dereekb/util';
 import { DbxListViewWrapper } from './list.wrapper';
 
@@ -23,17 +23,17 @@ export const DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE = `
 </dbx-list>
 `;
 
-export type DbxListWrapperConfig<T, V extends DbxListView<T> = DbxListView<T>> = Omit<DbxListConfig<T, V>, 'onClick' | 'loadMore'>
+export type DbxListWrapperConfig<T, V extends DbxListView<T> = DbxListView<T>> = Omit<DbxListConfig<T, V>, 'onClick' | 'loadMore'>;
 
 @Directive()
 export abstract class AbstractDbxListWrapperDirective<T, V extends DbxListView<T> = DbxListView<T>, C extends DbxListWrapperConfig<T, V> = DbxListWrapperConfig<T, V>, S extends ListLoadingState<T> = ListLoadingState<T>> implements OnInit, OnDestroy, DbxListViewWrapper<T, S> {
-
   private readonly _init = new BehaviorSubject<Maybe<ObservableOrValue<C>>>(undefined);
   readonly config$ = this._init.pipe(
     filterMaybe(),
     valueFromObservableOrValue(),
     map((x: C) => this._buildListConfig(x)),
-    shareReplay(1));
+    shareReplay(1)
+  );
 
   @Input()
   disabled?: Maybe<boolean>;
@@ -50,7 +50,7 @@ export abstract class AbstractDbxListWrapperDirective<T, V extends DbxListView<T
   @Output()
   loadMore = new EventEmitter<void>();
 
-  constructor(readonly initConfig: ObservableOrValue<C>) { }
+  constructor(readonly initConfig: ObservableOrValue<C>) {}
 
   ngOnInit(): void {
     this._init.next(this.initConfig);
@@ -69,15 +69,13 @@ export abstract class AbstractDbxListWrapperDirective<T, V extends DbxListView<T
       loadMore: () => this.loadMore.emit()
     };
   }
-
 }
 
 // MARK: Selection Wrapper
-export type DbxSelectionListWrapperConfig<T, V extends DbxListView<T> = DbxListView<T>> = Omit<DbxListWrapperConfig<T, V>, 'onSelectionChange'>
+export type DbxSelectionListWrapperConfig<T, V extends DbxListView<T> = DbxListView<T>> = Omit<DbxListWrapperConfig<T, V>, 'onSelectionChange'>;
 
 @Directive()
 export abstract class AbstractDbxSelectionListWrapperDirective<T, V extends DbxListView<T> = DbxListView<T>, C extends DbxSelectionListWrapperConfig<T, V> = DbxSelectionListWrapperConfig<T, V>, S extends ListLoadingState<T> = ListLoadingState<T>> extends AbstractDbxListWrapperDirective<T, V, C, S> implements OnDestroy {
-
   @Output()
   selectionChange = new EventEmitter<ListSelectionState<T>>();
 
@@ -90,5 +88,4 @@ export abstract class AbstractDbxSelectionListWrapperDirective<T, V extends DbxL
     result.onSelectionChange = (x) => this.selectionChange.next(x);
     return result;
   }
-
 }

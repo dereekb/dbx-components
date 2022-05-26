@@ -1,9 +1,8 @@
-import { Maybe } from "@dereekb/util";
-
+import { Maybe } from '@dereekb/util';
 
 /**
  * An application user state.
- * 
+ *
  * Generic states that define the current state of the user:
  * - none: the user is not logged in
  * - anon: the user is logged in as an anonymous account
@@ -25,13 +24,12 @@ export const NO_AUTH_USER_IDENTIFIER = '0';
  */
 export type NoAuthUserIdentifier = typeof NO_AUTH_USER_IDENTIFIER;
 
-
 /**
  * Creates an AuthUserIdentifier from the input. If the input is undefined, returns the NoAuthUserIdentifier.
- * 
- * @param inputId 
- * @returns 
+ *
+ * @param inputId
+ * @returns
  */
 export function authUserIdentifier(inputId: Maybe<AuthUserIdentifier>): AuthUserIdentifier {
-  return (inputId) ? inputId : NO_AUTH_USER_IDENTIFIER;
+  return inputId ? inputId : NO_AUTH_USER_IDENTIFIER;
 }

@@ -9,4 +9,4 @@ import { AbstractFilterSourceDirective } from './filter.abstract.source.directiv
   selector: '[dbxFilterSource]',
   providers: provideFilterSource(DbxFilterSourceDirective)
 })
-export class DbxFilterSourceDirective<F> extends AbstractFilterSourceDirective<F> { }
+export class DbxFilterSourceDirective<F> extends AbstractFilterSourceDirective<F> {}

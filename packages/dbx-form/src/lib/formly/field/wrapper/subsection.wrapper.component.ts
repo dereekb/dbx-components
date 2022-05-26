@@ -17,13 +17,12 @@ export interface DbxFormSubsectionFormlyConfig extends FormlyFieldConfig {
 
 @Component({
   template: `
-  <dbx-subsection [header]="header" [hint]="hint">
-    <ng-container #fieldComponent></ng-container>
-  </dbx-subsection>
+    <dbx-subsection [header]="header" [hint]="hint">
+      <ng-container #fieldComponent></ng-container>
+    </dbx-subsection>
   `
 })
 export class DbxFormSubsectionWrapperComponent extends FieldWrapper<DbxFormSubsectionFormlyConfig & FieldTypeConfig> {
-
   get header(): Maybe<string> {
     return this.to.subsectionWrapper?.header;
   }
@@ -31,5 +30,4 @@ export class DbxFormSubsectionWrapperComponent extends FieldWrapper<DbxFormSubse
   get hint(): Maybe<string> {
     return this.to.subsectionWrapper?.hint;
   }
-
 }

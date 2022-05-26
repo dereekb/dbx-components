@@ -3,7 +3,6 @@ import { Maybe } from '@dereekb/util';
 
 @Pipe({ name: 'prettyjson' })
 export class PrettyJsonPipe implements PipeTransform {
-
   public static toPrettyJson(input: Maybe<unknown>, spacing: number = 2): Maybe<string> {
     let json: Maybe<string>;
 
@@ -12,7 +11,7 @@ export class PrettyJsonPipe implements PipeTransform {
         json = JSON.stringify(input, null, spacing);
       } catch (e) {
         console.error('prettyjson pipe failed parsing input: ', input);
-        json = 'ERROR'
+        json = 'ERROR';
       }
     }
 
@@ -22,5 +21,4 @@ export class PrettyJsonPipe implements PipeTransform {
   transform(input: Maybe<unknown>, spacing?: number): Maybe<string> {
     return PrettyJsonPipe.toPrettyJson(input, spacing);
   }
-
 }

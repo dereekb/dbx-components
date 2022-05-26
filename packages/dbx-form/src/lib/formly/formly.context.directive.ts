@@ -13,7 +13,6 @@ import { Maybe } from '@dereekb/util';
   providers: provideFormlyContext()
 })
 export class DbxFormlyFieldsContextDirective<T = unknown> extends AbstractAsyncFormlyFormDirective<T> implements OnDestroy {
-
   private _fields = new BehaviorSubject<Maybe<FormlyFieldConfig[]>>(undefined);
   readonly fields$ = this._fields.asObservable();
 
@@ -26,9 +25,8 @@ export class DbxFormlyFieldsContextDirective<T = unknown> extends AbstractAsyncF
     this._fields.next(fields);
   }
 
-  override  ngOnDestroy(): void {
+  override ngOnDestroy(): void {
     super.ngOnDestroy();
     this._fields.complete();
   }
-
 }

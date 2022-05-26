@@ -14,21 +14,23 @@ export type ServiceCallbackInWindow = Record<string, () => void>;
  */
 @Injectable()
 export abstract class AbstractAsyncWindowLoadedService<T> implements OnDestroy {
-
   private _loading = new BehaviorSubject<Maybe<Promise<T>>>(undefined);
 
-  readonly loading$: Observable<Promise<T>> = this._loading.pipe(tapFirst(() => this.loadService()), filterMaybe(), shareReplay(1));
-  readonly service$: Observable<T> = this.loading$.pipe(switchMap(x => from(x)), shareReplay(1));
+  readonly loading$: Observable<Promise<T>> = this._loading.pipe(
+    tapFirst(() => this.loadService()),
+    filterMaybe(),
+    shareReplay(1)
+  );
+  readonly service$: Observable<T> = this.loading$.pipe(
+    switchMap((x) => from(x)),
+    shareReplay(1)
+  );
 
   /**
    * @param _windowKey Key that is attached to the window for the object that is the service when finished loading.
    * @param _callbackKey Optional key attached to window that is a function that is executed when the setup is complete.
    */
-  constructor(
-    @Inject(null) private _windowKey: string,
-    @Inject(null) private _callbackKey?: string,
-    @Inject(null) private _serviceName: string = _windowKey,
-    @Inject(null) preload: boolean = true) {
+  constructor(@Inject(null) private _windowKey: string, @Inject(null) private _callbackKey?: string, @Inject(null) private _serviceName: string = _windowKey, @Inject(null) preload: boolean = true) {
     if (preload) {
       // Begin loading the service immediately.
       setTimeout(() => this.loadService().catch());
@@ -51,7 +53,7 @@ export abstract class AbstractAsyncWindowLoadedService<T> implements OnDestroy {
 
         const rejectWithError = () => {
           reject(new Error(`Service "${this._serviceName}" failed loading with windowKey "${this._windowKey}"`));
-        }
+        };
 
         const tryLoad = () => {
           const windowRef = window;
@@ -72,7 +74,7 @@ export abstract class AbstractAsyncWindowLoadedService<T> implements OnDestroy {
             const retry = this._onLoadServiceFailure();
 
             if (retry) {
-              retry.then(x => resolve(x)).catch(() => rejectWithError());
+              retry.then((x) => resolve(x)).catch(() => rejectWithError());
             } else {
               rejectWithError();
             }
@@ -112,5 +114,4 @@ export abstract class AbstractAsyncWindowLoadedService<T> implements OnDestroy {
   protected _initService(service: T): Promise<T | void> {
     return Promise.resolve(service);
   }
-
 }

@@ -23,7 +23,6 @@ export interface FormSectionFormlyConfig extends FormlyFieldConfig {
   `
 })
 export class DbxFormSectionWrapperComponent extends FieldWrapper<FormSectionFormlyConfig & FieldTypeConfig> {
-
   get header(): Maybe<string> {
     return this.to.sectionWrapper?.header;
   }
@@ -31,5 +30,4 @@ export class DbxFormSectionWrapperComponent extends FieldWrapper<FormSectionForm
   get hint(): Maybe<string> {
     return this.to.sectionWrapper?.hint;
   }
-
 }

@@ -1,4 +1,4 @@
-import { FirestoreQueryConstraint, where } from "@dereekb/firebase";
+import { FirestoreQueryConstraint, where } from '@dereekb/firebase';
 
 export function publishedGuestbook(published = true): FirestoreQueryConstraint {
   return where('published', '==', published);

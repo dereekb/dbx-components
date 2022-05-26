@@ -1,8 +1,8 @@
 import { shareReplay, startWith, Observable, switchMap, BehaviorSubject, distinctUntilChanged, combineLatest, map, filter, take } from 'rxjs';
 import { Directive, Input, OnDestroy, OnInit } from '@angular/core';
-import { FirestoreDocument, IterationQueryDocChangeWatcherChangeType, IterationQueryDocChangeWatcherEvent } from "@dereekb/firebase";
+import { FirestoreDocument, IterationQueryDocChangeWatcherChangeType, IterationQueryDocChangeWatcherEvent } from '@dereekb/firebase';
 import { Maybe } from '@dereekb/util';
-import { DbxFirebaseCollectionStore } from "./store.collection";
+import { DbxFirebaseCollectionStore } from './store.collection';
 import { DbxFirebaseCollectionStoreDirective } from './store.collection.directive';
 import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
 
@@ -18,25 +18,26 @@ export type DbxFirebaseCollectionChangeDirectiveEvent = Pick<IterationQueryDocCh
 @Directive({
   selector: '[dbxFirebaseCollectionChange]'
 })
-export class DbxFirebaseCollectionChangeDirective<T = unknown, D extends FirestoreDocument<T> = FirestoreDocument<T>, S extends DbxFirebaseCollectionStore<T, D> = DbxFirebaseCollectionStore<T, D>>
-  extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
-
+export class DbxFirebaseCollectionChangeDirective<T = unknown, D extends FirestoreDocument<T> = FirestoreDocument<T>, S extends DbxFirebaseCollectionStore<T, D> = DbxFirebaseCollectionStore<T, D>> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
   private _mode = new BehaviorSubject<DbxFirebaseCollectionChangeDirectiveMode>('manual');
   readonly mode$ = this._mode.pipe(distinctUntilChanged());
 
   readonly event$: Observable<DbxFirebaseCollectionChangeDirectiveEvent> = this.dbxFirebaseCollectionStoreDirective.store.queryChangeWatcher$.pipe(
-    switchMap((x) => x.event$.pipe(
-      filter(x => x.type !== 'none'), // do not share 'none' events.
-      take(1),  // only need one event to mark as change is available.
-      startWith({
-        time: new Date(),
-        type: 'none' as IterationQueryDocChangeWatcherChangeType
-      }))),
+    switchMap((x) =>
+      x.event$.pipe(
+        filter((x) => x.type !== 'none'), // do not share 'none' events.
+        take(1), // only need one event to mark as change is available.
+        startWith({
+          time: new Date(),
+          type: 'none' as IterationQueryDocChangeWatcherChangeType
+        })
+      )
+    ),
     shareReplay(1)
   );
 
   readonly hasChangeAvailable$: Observable<boolean> = this.event$.pipe(
-    map(x => x.type !== 'none'),
+    map((x) => x.type !== 'none'),
     shareReplay(1)
   );
 
@@ -45,11 +46,11 @@ export class DbxFirebaseCollectionChangeDirective<T = unknown, D extends Firesto
   }
 
   ngOnInit(): void {
-    this.sub = combineLatest([this.mode$, this.hasChangeAvailable$]).pipe(
-      filter(([mode, hasChange]) => mode === 'auto' && hasChange)
-    ).subscribe(() => {
-      this.restart();
-    });
+    this.sub = combineLatest([this.mode$, this.hasChangeAvailable$])
+      .pipe(filter(([mode, hasChange]) => mode === 'auto' && hasChange))
+      .subscribe(() => {
+        this.restart();
+      });
   }
 
   override ngOnDestroy(): void {
@@ -69,5 +70,4 @@ export class DbxFirebaseCollectionChangeDirective<T = unknown, D extends Firesto
   restart() {
     this.dbxFirebaseCollectionStoreDirective.store.restart();
   }
-
 }

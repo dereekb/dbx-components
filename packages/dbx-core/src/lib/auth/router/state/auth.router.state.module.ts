@@ -9,22 +9,20 @@ export interface DbxAppAuthRouterStateModuleConfig {
 }
 
 @NgModule({
-  imports: [
-    EffectsModule.forFeature([DbxAppAuthRouterEffects])
-  ],
+  imports: [EffectsModule.forFeature([DbxAppAuthRouterEffects])],
   declarations: [],
   exports: []
 })
 export class DbxAppAuthRouterStateModule {
-
   static forRoot(config: DbxAppAuthRouterStateModuleConfig): ModuleWithProviders<DbxAppAuthRouterStateModule> {
     return {
       ngModule: DbxAppAuthRouterStateModule,
-      providers: [{
-        provide: DBX_APP_AUTH_ROUTER_EFFECTS_TOKEN,
-        useValue: config.activeRoutesToApplyEffects
-      }]
+      providers: [
+        {
+          provide: DBX_APP_AUTH_ROUTER_EFFECTS_TOKEN,
+          useValue: config.activeRoutesToApplyEffects
+        }
+      ]
     };
   }
-
 }

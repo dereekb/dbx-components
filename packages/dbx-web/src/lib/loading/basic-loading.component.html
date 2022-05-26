@@ -14,8 +14,7 @@
 </ng-container>
 
 <ng-template #loadingTemplate>
-  <dbx-loading-progress *ngIf="hasNoCustomLoading$ | async" [mode]="mode" [color]="color" [text]="text"
-    [linear]="linear" [diameter]="diameter"></dbx-loading-progress>
+  <dbx-loading-progress *ngIf="hasNoCustomLoading$ | async" [mode]="mode" [color]="color" [text]="text" [linear]="linear" [diameter]="diameter"></dbx-loading-progress>
   <div #customLoading>
     <ng-content select="[loading]"></ng-content>
   </div>

@@ -6,4 +6,4 @@ import { DocInteractionTestFilter } from './filter';
   selector: 'doc-interaction-test-filter-preset-filter',
   templateUrl: './filter.preset.component.html'
 })
-export class DocInteractionTestFilterPresetFilterComponent extends AbstractActionFilterSourceDirective<DocInteractionTestFilter> { }
+export class DocInteractionTestFilterPresetFilterComponent extends AbstractActionFilterSourceDirective<DocInteractionTestFilter> {}

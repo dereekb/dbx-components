@@ -1,32 +1,26 @@
-import { Injectable } from "@angular/core";
-import { MockItemSubItem, MockItemSubItemDocument, authorizedTestWithMockItemCollection, MockItem, MockItemDocument, MockItemFirestoreCollection, MockItemSubItemFirestoreCollectionFactory } from "@dereekb/firebase/test";
-import { SubscriptionObject } from "@dereekb/rxjs";
-import { filter, first, of, timeout } from "rxjs";
-import { AbstractDbxFirebaseDocumentStore } from "./store.document";
+import { Injectable } from '@angular/core';
+import { MockItemSubItem, MockItemSubItemDocument, authorizedTestWithMockItemCollection, MockItem, MockItemDocument, MockItemFirestoreCollection, MockItemSubItemFirestoreCollectionFactory } from '@dereekb/firebase/test';
+import { SubscriptionObject } from '@dereekb/rxjs';
+import { filter, first, of, timeout } from 'rxjs';
+import { AbstractDbxFirebaseDocumentStore } from './store.document';
 import { AbstractDbxFirebaseCollectionWithParentStore } from './store.subcollection';
 
 @Injectable()
 export class TestDbxFirebaseDocumentStore extends AbstractDbxFirebaseDocumentStore<MockItem, MockItemDocument> {
-
   constructor(firestoreCollection: MockItemFirestoreCollection) {
-    super({ firestoreCollection })
+    super({ firestoreCollection });
   }
-
 }
 
 @Injectable()
 export class TestDbxFirebaseCollectionWithParentStore extends AbstractDbxFirebaseCollectionWithParentStore<MockItemSubItem, MockItem, MockItemSubItemDocument, MockItemDocument> {
-
   constructor(collectionFactory: MockItemSubItemFirestoreCollectionFactory) {
     super({ collectionFactory });
   }
-
 }
 
 describe('AbstractDbxFirebaseCollectionWithParentStore', () => {
-
   authorizedTestWithMockItemCollection((f) => {
-
     let sub: SubscriptionObject;
     let parentStore: TestDbxFirebaseDocumentStore;
     let store: TestDbxFirebaseCollectionWithParentStore;
@@ -45,7 +39,6 @@ describe('AbstractDbxFirebaseCollectionWithParentStore', () => {
     });
 
     describe('with parent store', () => {
-
       beforeEach(() => {
         store.setParentStore(parentStore);
       });
@@ -58,7 +51,6 @@ describe('AbstractDbxFirebaseCollectionWithParentStore', () => {
       });
 
       describe('with parent loaded', () => {
-
         beforeEach(() => {
           parentStore.setId('test');
         });
@@ -69,15 +61,11 @@ describe('AbstractDbxFirebaseCollectionWithParentStore', () => {
             done();
           });
         });
-
       });
-
     });
 
     describe('loader$', () => {
-
       describe('with parent loaded', () => {
-
         beforeEach(() => {
           parentStore.setId('test');
         });
@@ -86,13 +74,11 @@ describe('AbstractDbxFirebaseCollectionWithParentStore', () => {
           store.loader$.pipe(first()).subscribe((initialLoader) => {
             store.setParentStore(parentStore);
 
-            sub.subscription = store.loader$.pipe(filter(x => x !== initialLoader)).subscribe((loader) => {
+            sub.subscription = store.loader$.pipe(filter((x) => x !== initialLoader)).subscribe((loader) => {
               expect(loader).toBeDefined();
               done();
             });
-
           });
-
         });
 
         it('should change when the loaded parent changes.', (done) => {
@@ -101,19 +87,13 @@ describe('AbstractDbxFirebaseCollectionWithParentStore', () => {
           store.loader$.pipe(first()).subscribe((initialLoader) => {
             parentStore.setId('secondtest');
 
-            sub.subscription = store.loader$.pipe(filter(x => x !== initialLoader)).subscribe((loader) => {
+            sub.subscription = store.loader$.pipe(filter((x) => x !== initialLoader)).subscribe((loader) => {
               expect(loader).toBeDefined();
               done();
             });
-
           });
-
         });
-
       });
-
     });
-
   });
-
 });

@@ -5,7 +5,6 @@ import { ToJsDatePipe } from './tojsdate.pipe';
 
 @Pipe({ name: 'dateDistance', pure: false })
 export class DateDistancePipe implements PipeTransform {
-
   transform(input: Maybe<DateOrDateString>, inputTo?: Maybe<Date>, unavailable: string = 'Not Available'): string {
     if (input) {
       const to = inputTo ?? new Date();
@@ -33,5 +32,4 @@ export class DateDistancePipe implements PipeTransform {
       return unavailable;
     }
   }
-
 }

@@ -1,5 +1,5 @@
 import { ValidationError } from 'class-validator';
-import { toTransformAndValidateFunctionResultFactory, TransformAndValidateFunctionResultFactory, transformAndValidateObjectFactory, TransformAndValidateObjectFactory } from "@dereekb/model";
+import { toTransformAndValidateFunctionResultFactory, TransformAndValidateFunctionResultFactory, transformAndValidateObjectFactory, TransformAndValidateObjectFactory } from '@dereekb/model';
 import { HttpException, ValidationPipe } from '@nestjs/common';
 import { https } from 'firebase-functions';
 

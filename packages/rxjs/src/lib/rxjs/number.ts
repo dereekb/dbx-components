@@ -9,17 +9,16 @@ export function scanCount(startAt = 0): OperatorFunction<unknown, number> {
   return scan((count) => count + 1, startAt);
 }
 
-
 /**
  * incrementingNumberTimer() configuration
  */
-export interface IncrementingTimerConfig extends Omit<FactoryTimerConfig<number>, 'factory'>, IncrementingNumberFactoryConfig { }
+export interface IncrementingTimerConfig extends Omit<FactoryTimerConfig<number>, 'factory'>, IncrementingNumberFactoryConfig {}
 
 /**
  * Creates a factoryTimer for incrementing numbers.
- * 
- * @param config 
- * @returns 
+ *
+ * @param config
+ * @returns
  */
 export function incrementingNumberTimer(config: IncrementingTimerConfig = {}): Observable<number> {
   return factoryTimer({

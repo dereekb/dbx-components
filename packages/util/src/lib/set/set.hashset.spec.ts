@@ -1,17 +1,14 @@
-import { HashSet } from "./set.hashset";
-
+import { HashSet } from './set.hashset';
 
 describe('HashSet', () => {
-
   describe('with dates', () => {
-
     let hashSet: HashSet<number, Date>;
 
     beforeEach(() => {
       hashSet = new HashSet<number, Date>({
         readKey: (x) => x?.getTime()
       });
-    })
+    });
 
     it('should keep only unique dates.', () => {
       hashSet.add(new Date(0));
@@ -30,7 +27,5 @@ describe('HashSet', () => {
       hashSet.delete(new Date(0));
       expect(hashSet.size).toBe(0);
     });
-
   });
-
 });

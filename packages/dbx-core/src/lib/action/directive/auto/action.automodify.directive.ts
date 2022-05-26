@@ -5,10 +5,9 @@ import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
 import { Maybe } from '@dereekb/util';
 
 @Directive({
-  selector: '[dbxActionAutoModify]',
+  selector: '[dbxActionAutoModify]'
 })
 export class DbxActionAutoModifyDirective<T, O> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
-
   private readonly _autoModifyEnabled = new BehaviorSubject<boolean>(true);
 
   @Input('dbxActionAutoModify')
@@ -27,7 +26,7 @@ export class DbxActionAutoModifyDirective<T, O> extends AbstractSubscriptionDire
   ngOnInit(): void {
     const obs = combineLatest([
       this._autoModifyEnabled.pipe(distinctUntilChanged()), // Don't change unless specified otherwise.
-      this.source.isModified$.pipe(filter(x => !x)) // Only when not modified send a value.
+      this.source.isModified$.pipe(filter((x) => !x)) // Only when not modified send a value.
     ]);
 
     this.sub = obs.subscribe(([autoModifyEnabled, isModified]) => {
@@ -43,5 +42,4 @@ export class DbxActionAutoModifyDirective<T, O> extends AbstractSubscriptionDire
       this._autoModifyEnabled.complete();
     });
   }
-
 }

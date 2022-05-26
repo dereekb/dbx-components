@@ -7,7 +7,6 @@ import { itemAccumulator, ItemAccumulatorInstance } from './iteration.accumulato
 import { TestPageIteratorFilter, TEST_PAGE_ARRAY_ITERATOR_DELEGATE, TEST_PAGE_ITERATOR_DELEGATE } from './iterator.page.spec';
 
 describe('ItemPageIterator', () => {
-
   let iterator: ItemPageIterator<number, TestPageIteratorFilter>;
 
   beforeEach(() => {
@@ -15,7 +14,6 @@ describe('ItemPageIterator', () => {
   });
 
   describe('ItemAccumulatorInstance', () => {
-
     let instance: ItemPageIterationInstance<number, TestPageIteratorFilter>;
     let accumulator: ItemAccumulatorInstance<number, number>;
 
@@ -36,33 +34,27 @@ describe('ItemPageIterator', () => {
     });
 
     describe('successfulLoadCount$', () => {
-
       it('should return 1 after the first result has been loaded.', (done) => {
-
-        instance.currentPageResultState$.pipe(
-          filter(x => loadingStateHasFinishedLoading(x)),
-          first()
-        ).subscribe(() => {
-
-          accumulator.successfulLoadCount$.pipe(
+        instance.currentPageResultState$
+          .pipe(
+            filter((x) => loadingStateHasFinishedLoading(x)),
             first()
-          ).subscribe((count) => {
-            expect(count).toBe(1);
-            done();
+          )
+          .subscribe(() => {
+            accumulator.successfulLoadCount$.pipe(first()).subscribe((count) => {
+              expect(count).toBe(1);
+              done();
+            });
           });
-        });
-
       });
-
     });
 
     describe('allItems$', () => {
-
       let sub: SubscriptionObject;
 
       beforeEach(() => {
         sub = new SubscriptionObject();
-      })
+      });
 
       afterEach(() => {
         sub.destroy();
@@ -95,19 +87,23 @@ describe('ItemPageIterator', () => {
         });
 
         it('should accumulate the array values to a 2 dimensional array.', (done) => {
-          arrayAccumulator.allItems$.pipe(filter((x) => x.length > 0), first()).subscribe((value) => {
-            expect(Array.isArray(value)).toBe(true);
-            expect(Array.isArray(value[0])).toBe(true);
+          arrayAccumulator.allItems$
+            .pipe(
+              filter((x) => x.length > 0),
+              first()
+            )
+            .subscribe((value) => {
+              expect(Array.isArray(value)).toBe(true);
+              expect(Array.isArray(value[0])).toBe(true);
 
-            done();
-          });
+              done();
+            });
         });
 
         it('should accumulate the multiple array values to a 2 dimensional array.', (done) => {
           const pagesToLoad = 2;
 
           iteratorNextPageUntilPage(arrayInstance, pagesToLoad).then(() => {
-
             arrayAccumulator.allItems$.pipe(first()).subscribe((value) => {
               expect(value.length).toBe(pagesToLoad);
               expect(Array.isArray(value)).toBe(true);
@@ -115,16 +111,13 @@ describe('ItemPageIterator', () => {
 
               done();
             });
-
           });
-
         });
 
         it('should accumulate the multiple array values to a 2 dimensional array and any subsequent values too.', (done) => {
           const pagesToLoad = 2;
 
           iteratorNextPageUntilPage(arrayInstance, pagesToLoad).then(() => {
-
             arrayAccumulator.allItems$.pipe(first()).subscribe((value) => {
               expect(value.length).toBe(pagesToLoad);
               expect(Array.isArray(value)).toBe(true);
@@ -132,25 +125,19 @@ describe('ItemPageIterator', () => {
               expect(Array.isArray(value[1])).toBe(true);
 
               iteratorNextPageUntilPage(arrayInstance, pagesToLoad + 1).then(() => {
-
                 arrayAccumulator.allItems$.pipe(first()).subscribe((value) => {
                   expect(value.length).toBe(pagesToLoad + 1);
                   expect(Array.isArray(value)).toBe(true);
                   expect(Array.isArray(value[value.length - 1])).toBe(true);
                   done();
                 });
-
               });
             });
-
           });
-
         });
-
       });
 
       describe('with error and no successes', () => {
-
         beforeEach(() => {
           initInstanceWithFilter({
             resultError: new Error('test error')
@@ -163,9 +150,7 @@ describe('ItemPageIterator', () => {
             expect(items.length).toBe(0);
             done();
           });
-
         });
-
       });
 
       describe('with mapping', () => {
@@ -173,30 +158,25 @@ describe('ItemPageIterator', () => {
 
         beforeEach(() => {
           mappedAccumulator = itemAccumulator<string, number>(instance, (x: number) => `+${x}`);
-        })
+        });
 
         afterEach(() => {
           mappedAccumulator.destroy();
         });
 
         it('should map the items', (done) => {
-
-          sub.subscription = mappedAccumulator.allItems$.pipe(filter(x => x.length > 0)).subscribe((items) => {
+          sub.subscription = mappedAccumulator.allItems$.pipe(filter((x) => x.length > 0)).subscribe((items) => {
             expect(items).toBeDefined();
             expect(typeof items[0]).toBe('string');
             done();
           });
-
         });
-
       });
 
       it('should return all items after being subscribed to a few pages in.', (done) => {
-
         const pagesToLoad = 5;
 
         iteratorNextPageUntilPage(instance, pagesToLoad).then(() => {
-
           sub.subscription = instance.numberOfPagesLoaded$.subscribe((pagesLoaded) => {
             expect(pagesLoaded).toBe(pagesToLoad);
 
@@ -207,14 +187,11 @@ describe('ItemPageIterator', () => {
               instance.destroy();
               done();
             });
-          })
-
+          });
         });
-
       });
 
       it('should emit an empty array before the first state has come through.', (done) => {
-
         initInstanceWithFilter({
           delayTime: 500
         });
@@ -232,21 +209,21 @@ describe('ItemPageIterator', () => {
             done();
           }
         });
-
       });
 
       it('should accumulate values as pages are loaded.', (done) => {
-
         let emissions = 0;
         let latestAllItems: number[];
 
         // Should trigger first page to be loaded.
-        sub.subscription = accumulator.allItems$.pipe(
-          skip(1)   // skip the first empty emission
-        ).subscribe((allItems) => {
-          emissions += 1;
-          latestAllItems = allItems;
-        });
+        sub.subscription = accumulator.allItems$
+          .pipe(
+            skip(1) // skip the first empty emission
+          )
+          .subscribe((allItems) => {
+            emissions += 1;
+            latestAllItems = allItems;
+          });
 
         const page = 1;
 
@@ -256,11 +233,7 @@ describe('ItemPageIterator', () => {
           expect(latestAllItems.length).toBe(page);
           done();
         });
-
       });
-
     });
-
   });
-
 });

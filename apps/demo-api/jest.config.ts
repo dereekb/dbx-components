@@ -4,14 +4,14 @@ module.exports = {
   setupFilesAfterEnv: ['<rootDir>/test-setup.ts'],
   globals: {
     'ts-jest': {
-      tsconfig: '<rootDir>/tsconfig.spec.json',
-    },
+      tsconfig: '<rootDir>/tsconfig.spec.json'
+    }
   },
   testEnvironment: 'node',
   transform: {
-    '^.+\\.[tj]s$': 'ts-jest',
+    '^.+\\.[tj]s$': 'ts-jest'
   },
   moduleFileExtensions: ['ts', 'js', 'html'],
   coverageDirectory: '../../coverage/apps/demo-api',
-  preset: '../../jest.preset.ts',
+  preset: '../../jest.preset.ts'
 };

@@ -4,7 +4,6 @@ import { roundDateTimeDownToSteps, StepRoundDateTimeDown } from './date.round';
 import { LimitDateTimeConfig, LimitDateTimeInstance } from './date.time.limit';
 
 export interface DateTimeMinuteConfig extends LimitDateTimeConfig {
-
   date?: Date;
 
   /**
@@ -16,7 +15,6 @@ export interface DateTimeMinuteConfig extends LimitDateTimeConfig {
    * Additional behavior
    */
   behavior?: {
-
     /**
      * Whether or not to set the date to the min if the steps go above it.
      */
@@ -26,16 +24,13 @@ export interface DateTimeMinuteConfig extends LimitDateTimeConfig {
      * Whether or not to set the date to the max if the steps go above it.
      */
     capToMaxLimit?: boolean;
-
   };
-
 }
 
 /**
  * Current state of the date in the instance.
  */
 export interface DateTimeMinuteDateStatus {
-
   /**
    * If the date is at the minimum value.
    */
@@ -60,7 +55,6 @@ export interface DateTimeMinuteDateStatus {
    * If the date is in the past.
    */
   inPast: boolean;
-
 }
 
 export interface RoundDateTimeMinute extends StepRoundDateTimeDown {
@@ -73,7 +67,6 @@ export interface RoundDateTimeMinute extends StepRoundDateTimeDown {
  * Can step the date forward/backwards, and validate
  */
 export class DateTimeMinuteInstance {
-
   private _date: Date;
   private _step: Minutes;
   private _limit: LimitDateTimeInstance;
@@ -185,5 +178,4 @@ export class DateTimeMinuteInstance {
 
     return date;
   }
-
 }

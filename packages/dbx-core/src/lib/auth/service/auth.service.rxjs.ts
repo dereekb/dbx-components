@@ -4,21 +4,27 @@ import { map, Observable, OperatorFunction } from 'rxjs';
 
 /**
  * Convenience operator that emits events when the input observable goes from false to true.
- * 
- * @param isLoggedInObs 
- * @returns 
+ *
+ * @param isLoggedInObs
+ * @returns
  */
 export function loggedInObsFromIsLoggedIn(isLoggedInObs: Observable<boolean>): Observable<void> {
-  return isLoggedInObs.pipe(onFalseToTrue(), map(() => undefined));
+  return isLoggedInObs.pipe(
+    onFalseToTrue(),
+    map(() => undefined)
+  );
 }
 /**
  * Convenience operator that emits events when the input observable goes from true to false.
- * 
- * @param isLoggedInObs 
- * @returns 
+ *
+ * @param isLoggedInObs
+ * @returns
  */
 export function loggedOutObsFromIsLoggedIn(isLoggedInObs: Observable<boolean>): Observable<void> {
-  return isLoggedInObs.pipe(onTrueToFalse(), map(() => undefined));
+  return isLoggedInObs.pipe(
+    onTrueToFalse(),
+    map(() => undefined)
+  );
 }
 
 export function authRolesSetContainsAllRolesFrom(roles: Observable<Maybe<Iterable<AuthRole>>>): OperatorFunction<AuthRoleSet, boolean> {

@@ -24,7 +24,6 @@ export type AuthTransitionRedirectTargetGetter = FactoryWithRequiredInput<AuthTr
 export type AuthTransitionRedirectTargetOrGetter = Maybe<SegueRef> | AuthTransitionRedirectTargetGetter;
 
 export interface AuthTransitionHookOptions {
-
   /**
    * The state to redirect the user to when their auth fails.
    */
@@ -34,25 +33,20 @@ export interface AuthTransitionHookOptions {
    * The state to redirect the user to. Defaults to defaultRedirectTarget.
    */
   errorRedirectTarget?: string;
-
 }
 
 export interface AuthTransitionHookConfig extends AuthTransitionHookOptions {
-
   /**
    * Creates the decision observable for the transition that decides whether or not to redirect or continue.
    */
   makeDecisionsObs: (transition: Transition, authService: DbxAuthService, injector: UIInjector) => Observable<AuthTransitionDecision>;
-
 }
 
 export interface AuthTransitionStateData {
-
   /**
-   * Optional getter/decision maker when a role needs to be 
+   * Optional getter/decision maker when a role needs to be
    */
   redirectTo?: AuthTransitionRedirectTargetOrGetter;
-
 }
 
 /**

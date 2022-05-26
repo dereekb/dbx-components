@@ -7,7 +7,6 @@ import { FormlyFieldConfig } from '@ngx-formly/core';
   templateUrl: './wrapper.component.html'
 })
 export class DocFormWrapperComponent {
-
   readonly expandableField: FormlyFieldConfig[] = [
     nameField(),
     expandWrapper(nameField(), {
@@ -16,9 +15,7 @@ export class DocFormWrapperComponent {
     })
   ];
 
-  readonly toggleField: FormlyFieldConfig[] = [
-    toggleWrapper(nameField())
-  ];
+  readonly toggleField: FormlyFieldConfig[] = [toggleWrapper(nameField())];
 
   readonly sectionField: FormlyFieldConfig[] = [
     sectionWrapper(nameField(), {
@@ -42,33 +39,23 @@ export class DocFormWrapperComponent {
     })
   ];
 
-  readonly flexField: FormlyFieldConfig[] = [
-    flexLayoutWrapper([
-      cityField(),
-      stateField()
-    ])
-  ];
+  readonly flexField: FormlyFieldConfig[] = [flexLayoutWrapper([cityField(), stateField()])];
 
   readonly flexThreeField: FormlyFieldConfig[] = [
-    flexLayoutWrapper([{
-      field: cityField(),
-      size: 4
-    },
-    stateField(),
-    zipCodeField()
-    ], { breakpoint: 'small', size: 1 })
+    flexLayoutWrapper(
+      [
+        {
+          field: cityField(),
+          size: 4
+        },
+        stateField(),
+        zipCodeField()
+      ],
+      { breakpoint: 'small', size: 1 }
+    )
   ];
 
-  readonly flexFiveField: FormlyFieldConfig[] = [
-    flexLayoutWrapper([
-      nameField(),
-      cityField(),
-      stateField(),
-      zipCodeField(),
-      countryField(),
-    ], { breakpoint: 'large', size: 1, relative: true })
-  ];
+  readonly flexFiveField: FormlyFieldConfig[] = [flexLayoutWrapper([nameField(), cityField(), stateField(), zipCodeField(), countryField()], { breakpoint: 'large', size: 1, relative: true })];
 
-  constructor(readonly matDialog: MatDialog) { }
-
+  constructor(readonly matDialog: MatDialog) {}
 }

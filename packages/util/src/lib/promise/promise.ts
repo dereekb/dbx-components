@@ -1,5 +1,5 @@
-import { Maybe } from "../value/maybe";
-import { waitForMs } from "./wait";
+import { Maybe } from '../value/maybe';
+import { waitForMs } from './wait';
 
 export type PromiseOrValue<T> = Promise<T> | T;
 
@@ -42,7 +42,6 @@ export interface PerformTasksConfig<T = unknown> extends PerformTaskConfig<T> {
 export type ValuesTaskConfig<T = unknown> = Omit<PerformTasksConfig<T>, 'throwError'>;
 
 export class PromiseUtility {
-
   // MARK: Run
   /**
    * Runs the task using the input config, and returns the value. Is always configured to throw the error if it fails.
@@ -58,11 +57,11 @@ export class PromiseUtility {
 
   /**
    * Returns the task for each input value, and returns the values. Is always configured to throw the error if it fails.
-   * 
-   * @param input 
-   * @param taskFn 
-   * @param config 
-   * @returns 
+   *
+   * @param input
+   * @param taskFn
+   * @param config
+   * @returns
    */
   static async runTasksForValues<T, K = unknown>(input: T[], taskFn: PromiseTaskFn<T, K>, config?: PerformTasksConfig<T>): Promise<K[]> {
     const results = await PromiseUtility.performTasks(input, taskFn, {
@@ -70,13 +69,13 @@ export class PromiseUtility {
       throwError: true
     });
 
-    return results.results.map(x => x[1]);
+    return results.results.map((x) => x[1]);
   }
 
   // MARK: Perform
   /**
    * Performs the input tasks, and will retry tasks if they fail, up to a certain point.
-   * 
+   *
    * This is useful for retrying sections that may experience optimistic concurrency collisions.
    */
   static async performTasks<T, K = unknown>(input: T[], taskFn: PromiseTaskFn<T, K>, config: PerformTasksConfig<T> = { throwError: true }): Promise<PerformTasksResult<T, K>> {
@@ -121,7 +120,6 @@ export class PromiseUtility {
   }
 
   static async _performTask<I, O>(value: I, taskFn: PromiseTaskFn<I, O>, { throwError, retriesAllowed = 5, retryWait = 200, beforeRetry }: PerformTaskConfig<I> = { throwError: true }): Promise<[I, O, boolean]> {
-
     async function tryTask(value: I, tryNumber: number): Promise<[O, true] | [Error | unknown, false]> {
       try {
         const result: O = await taskFn(value, tryNumber);
@@ -143,7 +141,7 @@ export class PromiseUtility {
         }
 
         return iterateTask(value, tryNumber + 1);
-      };
+      }
 
       if (success) {
         return [value, ...result];
@@ -152,7 +150,7 @@ export class PromiseUtility {
       const retriesRemaining = retriesAllowed - tryNumber;
 
       if (retriesRemaining > 0) {
-        return (retryWait) ? waitForMs(retryWait).then(() => doNextTry()) : doNextTry();
+        return retryWait ? waitForMs(retryWait).then(() => doNextTry()) : doNextTry();
       } else {
         // Error out.
         if (throwError) {
@@ -165,5 +163,4 @@ export class PromiseUtility {
 
     return iterateTask(value, 0);
   }
-
 }

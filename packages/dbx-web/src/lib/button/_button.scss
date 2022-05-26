@@ -5,7 +5,6 @@ $button-spacer-width: 6px;
 
 // MARK: Mixin
 @mixin core() {
-
   .dbx-wide-button {
     .dbx-button {
       min-width: 120px;
@@ -30,12 +29,13 @@ $button-spacer-width: 6px;
     // mat-spinners marked with dbx-spinner-custom should allow the stroke to be inherited.
     stroke: unset !important;
   }
-
 }
 
-@mixin color($theme-config) {}
+@mixin color($theme-config) {
+}
 
-@mixin typography($typography-config) {}
+@mixin typography($typography-config) {
+}
 
 @mixin theme($theme-config) {
   @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-button') {

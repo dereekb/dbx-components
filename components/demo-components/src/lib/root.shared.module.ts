@@ -50,10 +50,7 @@ import { DbxButtonModule, DbxInteractionModule, DbxRouterLayoutModule, DbxLayout
 import { DbxFormExtensionModule } from '@dereekb/dbx-form';
 import { DbxAppContextStateModule, DbxCoreAuthModule, DbxPipesModule } from '@dereekb/dbx-core';
 
-
-const ANGULAR_MODULES = [
-  CommonModule
-];
+const ANGULAR_MODULES = [CommonModule];
 
 const ANGULAR_MATERIAL_MODULES = [
   A11yModule,
@@ -105,20 +102,7 @@ const ANGULAR_MATERIAL_MODULES = [
   FlexLayoutModule
 ];
 
-const DBX_MODULES = [
-  DbxReadableErrorModule,
-  DbxCoreAuthModule,
-  DbxActionModule,
-  DbxButtonModule,
-  DbxLoadingModule,
-  DbxInteractionModule,
-  DbxRouterLayoutModule,
-  DbxLayoutModule,
-  DbxFormExtensionModule,
-  DbxActionSnackbarModule,
-  DbxPipesModule,
-  DbxAppContextStateModule
-];
+const DBX_MODULES = [DbxReadableErrorModule, DbxCoreAuthModule, DbxActionModule, DbxButtonModule, DbxLoadingModule, DbxInteractionModule, DbxRouterLayoutModule, DbxLayoutModule, DbxFormExtensionModule, DbxActionSnackbarModule, DbxPipesModule, DbxAppContextStateModule];
 
 @NgModule({
   exports: [
@@ -129,4 +113,4 @@ const DBX_MODULES = [
     UIRouterModule
   ]
 })
-export class DemoRootSharedModule { }
+export class DemoRootSharedModule {}

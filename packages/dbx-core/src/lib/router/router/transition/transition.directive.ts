@@ -8,10 +8,8 @@ import { successTransition } from './transition.rxjs';
  */
 @Directive()
 export abstract class AbstractTransitionDirective {
-
   readonly transitionSuccess$ = successTransition(this.dbxRouterTransitionService.transitions$);
   readonly initAndUpdateOnTransitionSuccess$: Observable<void> = this.transitionSuccess$.pipe(startWith(undefined)) as Observable<void>;
 
-  constructor(protected readonly dbxRouterTransitionService: DbxRouterTransitionService) { }
-
+  constructor(protected readonly dbxRouterTransitionService: DbxRouterTransitionService) {}
 }

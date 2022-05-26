@@ -6,12 +6,6 @@ import { DbxPopoverInteractionModule } from './popover/popover.module';
 import { DbxFilterInteractionModule } from './filter/filter.module';
 
 @NgModule({
-  exports: [
-    DbxDialogInteractionModule,
-    DbxFilterInteractionModule,
-    DbxPromptModule,
-    DbxPopoverInteractionModule,
-    DbxPopupInteractionModule
-  ],
+  exports: [DbxDialogInteractionModule, DbxFilterInteractionModule, DbxPromptModule, DbxPopoverInteractionModule, DbxPopupInteractionModule]
 })
-export class DbxInteractionModule { }
+export class DbxInteractionModule {}

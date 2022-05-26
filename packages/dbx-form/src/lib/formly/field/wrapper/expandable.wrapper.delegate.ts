@@ -25,9 +25,7 @@ export interface FormExpandableSectionFormlyConfig<T extends object = object, S 
 export const DEFAULT_HAS_VALUE_FN = (x: object) => !objectIsEmpty(x);
 
 @Directive()
-export class AbstractFormExpandableSectionWrapperDirective<T extends object = object, S extends AbstractFormExpandableSectionConfig<T> = AbstractFormExpandableSectionConfig<T>>
-  extends FieldWrapper<FormExpandableSectionFormlyConfig<T, S> & FieldTypeConfig> implements OnInit, OnDestroy {
-
+export class AbstractFormExpandableSectionWrapperDirective<T extends object = object, S extends AbstractFormExpandableSectionConfig<T> = AbstractFormExpandableSectionConfig<T>> extends FieldWrapper<FormExpandableSectionFormlyConfig<T, S> & FieldTypeConfig> implements OnInit, OnDestroy {
   protected _formControlObs = new BehaviorSubject<Maybe<AbstractControl>>(undefined);
   readonly formControl$ = this._formControlObs.pipe(filterMaybe());
 
@@ -45,12 +43,15 @@ export class AbstractFormExpandableSectionWrapperDirective<T extends object = ob
   );
 
   readonly hasValue$ = this.formControl$.pipe(
-    switchMap((x) => x.valueChanges.pipe(startWith(x.value),
-      map((value) => {
-        return this.hasValueFn(value);
-      }),
-      shareReplay(1),
-    ))
+    switchMap((x) =>
+      x.valueChanges.pipe(
+        startWith(x.value),
+        map((value) => {
+          return this.hasValueFn(value);
+        }),
+        shareReplay(1)
+      )
+    )
   );
 
   get expandableSection(): Maybe<S> {
@@ -58,7 +59,7 @@ export class AbstractFormExpandableSectionWrapperDirective<T extends object = ob
   }
 
   get hasValueFn(): (value: T) => boolean {
-    return this.expandableSection?.hasValueFn ?? DEFAULT_HAS_VALUE_FN as (value: T) => boolean;
+    return this.expandableSection?.hasValueFn ?? (DEFAULT_HAS_VALUE_FN as (value: T) => boolean);
   }
 
   get expandLabel(): Maybe<string> {
@@ -68,7 +69,7 @@ export class AbstractFormExpandableSectionWrapperDirective<T extends object = ob
       const firstFieldGroup = this.field.fieldGroup?.[0];
 
       if (firstFieldGroup) {
-        label = firstFieldGroup.templateOptions?.label ?? firstFieldGroup.key as string;
+        label = firstFieldGroup.templateOptions?.label ?? (firstFieldGroup.key as string);
       }
     }
 
@@ -87,5 +88,4 @@ export class AbstractFormExpandableSectionWrapperDirective<T extends object = ob
     this._toggleOpen.complete();
     this._formControlObs.complete();
   }
-
 }

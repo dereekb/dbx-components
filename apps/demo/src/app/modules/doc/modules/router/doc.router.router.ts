@@ -15,31 +15,25 @@ export const layoutState: Ng2StateDeclaration = {
 export const homeState: Ng2StateDeclaration = {
   url: '/home',
   name: 'doc.router.home',
-  component: DocRouterHomeComponent,
+  component: DocRouterHomeComponent
 };
 
 export const docRouterAnchorState: Ng2StateDeclaration = {
   url: '/anchor',
   name: 'doc.router.anchor',
-  component: DocRouterAnchorComponent,
+  component: DocRouterAnchorComponent
 };
 
 export const docRouterAnchorListState: Ng2StateDeclaration = {
   url: '/anchorlist',
   name: 'doc.router.anchorlist',
-  component: DocRouterAnchorListComponent,
+  component: DocRouterAnchorListComponent
 };
 
 export const docRouterNavbarState: Ng2StateDeclaration = {
   url: '/navbar',
   name: 'doc.router.navbar',
-  component: DocRouterNavbarComponent,
+  component: DocRouterNavbarComponent
 };
 
-export const STATES: Ng2StateDeclaration[] = [
-  layoutState,
-  homeState,
-  docRouterAnchorState,
-  docRouterAnchorListState,
-  docRouterNavbarState
-];
+export const STATES: Ng2StateDeclaration[] = [layoutState, homeState, docRouterAnchorState, docRouterAnchorListState, docRouterNavbarState];

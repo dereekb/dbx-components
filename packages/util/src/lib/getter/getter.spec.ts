@@ -1,9 +1,7 @@
 import { getValueFromGetter, GetterOrValueWithInput } from './getter';
 
 describe('getValueFromGetter()', () => {
-
   describe('GetterOrValueWithInput', () => {
-
     it('should return the value', () => {
       const x: GetterOrValueWithInput<number, number> = 0;
       const result = getValueFromGetter(x);
@@ -23,7 +21,5 @@ describe('getValueFromGetter()', () => {
       const result = getValueFromGetter(getter, value);
       expect(result).toBe(value);
     });
-
   });
-
 });

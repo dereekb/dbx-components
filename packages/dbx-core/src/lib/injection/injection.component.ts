@@ -8,10 +8,11 @@ import { Maybe } from '@dereekb/util';
  */
 @Component({
   selector: 'dbx-injection, [dbxInjection], [dbx-injection]',
-  template: `<ng-template #content></ng-template>`
+  template: `
+    <ng-template #content></ng-template>
+  `
 })
 export class DbxInjectionComponent<T> extends AbstractDbxInjectionDirective<T> {
-
   @Input()
   set config(config: Maybe<DbxInjectionComponentConfig<T>>) {
     this.setConfig(config);
@@ -26,5 +27,4 @@ export class DbxInjectionComponent<T> extends AbstractDbxInjectionDirective<T> {
   set content(content: Maybe<ViewContainerRef>) {
     this.setContent(content);
   }
-
 }

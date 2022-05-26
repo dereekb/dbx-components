@@ -1,8 +1,8 @@
 import { Destroyable } from '@dereekb/util';
-import { MediaMatcher } from "@angular/cdk/layout";
+import { MediaMatcher } from '@angular/cdk/layout';
 import { ObservableOrValue, asObservable, initialize } from '@dereekb/rxjs';
-import { Subject, map, shareReplay, distinctUntilChanged, throttleTime, Observable, combineLatest } from "rxjs";
-import { ScreenMediaWidthType, ScreenMediaHeightType, screenMediaWidthTypeIsActive } from "./screen";
+import { Subject, map, shareReplay, distinctUntilChanged, throttleTime, Observable, combineLatest } from 'rxjs';
+import { ScreenMediaWidthType, ScreenMediaHeightType, screenMediaWidthTypeIsActive } from './screen';
 import { Injectable } from '@angular/core';
 
 /**
@@ -37,14 +37,13 @@ export const DEFAULT_SCREEN_MEDIA_SERVICE_CONFIG: DbxScreenMediaServiceConfig = 
   tabletScreenWidthMax: 786,
   largeScreenWidthMax: 1280,
   tinyScreenHeightMax: 280
-}
+};
 
 /**
  * Service that emits the current view type based on the configuration.
  */
 @Injectable()
 export class DbxScreenMediaService implements Destroyable {
-
   private _microQuery: MediaQueryList;
   private _smallQuery: MediaQueryList;
   private _tabletQuery: MediaQueryList;
@@ -102,9 +101,9 @@ export class DbxScreenMediaService implements Destroyable {
 
   /**
    * Returns an observable that detects whether or no the current width is greater or equal to the given breakpoint.
-   * 
-   * @param inputBreakpoint 
-   * @returns 
+   *
+   * @param inputBreakpoint
+   * @returns
    */
   isBreakpointActive(inputBreakpoint: ObservableOrValue<ScreenMediaWidthType>): Observable<boolean> {
     return combineLatest([this.widthType$, asObservable(inputBreakpoint)]).pipe(
@@ -139,5 +138,4 @@ export class DbxScreenMediaService implements Destroyable {
       return 'normal';
     }
   }
-
 }

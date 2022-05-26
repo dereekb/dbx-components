@@ -1,4 +1,3 @@
-
 (global as any).testFolderRootPath = '<rootDir>/../../..';
 
 module.exports = {
@@ -6,13 +5,13 @@ module.exports = {
   preset: '../../../jest.preset.ts',
   globals: {
     'ts-jest': {
-      tsconfig: '<rootDir>/tsconfig.spec.json',
-    },
+      tsconfig: '<rootDir>/tsconfig.spec.json'
+    }
   },
   testEnvironment: 'node',
   transform: {
-    '^.+\\.[tj]sx?$': 'ts-jest',
+    '^.+\\.[tj]sx?$': 'ts-jest'
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
-  coverageDirectory: '../../../coverage/packages/util/test',
+  coverageDirectory: '../../../coverage/packages/util/test'
 };

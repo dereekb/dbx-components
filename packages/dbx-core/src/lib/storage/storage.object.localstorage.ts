@@ -4,8 +4,7 @@ import { FullStorageObject, Maybe, StorageObject, StorageObjectUtility, StoredDa
  * StorageObject using LocalStorage.
  */
 export class FullLocalStorageObject implements FullStorageObject {
-
-  constructor(private _localStorage: StorageObject) { }
+  constructor(private _localStorage: StorageObject) {}
 
   get isPersistant(): boolean {
     return true;
@@ -47,8 +46,7 @@ export class FullLocalStorageObject implements FullStorageObject {
 
   removeAll(): string[] {
     const keys = StorageObjectUtility.allKeysFromStorageObject(this);
-    keys.forEach(x => this.removeItem(x));
+    keys.forEach((x) => this.removeItem(x));
     return keys;
   }
-
 }

@@ -1,6 +1,5 @@
 import { Configurable } from '../type';
 
-
 export interface PromiseFullRef<O = unknown> {
   readonly promise: Promise<O>;
   readonly resolve: (value: O | PromiseLike<O>) => void;
@@ -23,7 +22,7 @@ export function makePromiseFullRef<O>(executor: PromiseExecutor<O>): PromiseFull
     executor(resolve, reject);
   });
 
-  ref.number = PROMISE_REF_NUMBER += 1;  // added for debugging
+  ref.number = PROMISE_REF_NUMBER += 1; // added for debugging
 
   return ref;
 }

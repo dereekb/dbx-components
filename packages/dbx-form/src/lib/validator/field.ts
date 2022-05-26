@@ -1,13 +1,12 @@
-import { AbstractControl, ValidatorFn } from "@angular/forms";
-import { KeyValueTupleFilter, allObjectsAreEqual, IsEqualFunction, KeyValueTypleValueFilter, ObjectMap, valuesFromPOJO } from "@dereekb/util";
+import { AbstractControl, ValidatorFn } from '@angular/forms';
+import { KeyValueTupleFilter, allObjectsAreEqual, IsEqualFunction, KeyValueTypleValueFilter, ObjectMap, valuesFromPOJO } from '@dereekb/util';
 
 export const FIELD_VALUES_ARE_EQUAL_VALIDATION_KEY = 'fieldValuesAreEqual';
 
 export interface FieldValuesAreEqualValidatorConfig<T extends object = object> {
-
   /**
-   * Keys of the value to match on. 
-   * 
+   * Keys of the value to match on.
+   *
    * If none are defined, then all fields from the control are matched.
    */
   keysFilter?: (keyof T)[];
@@ -26,24 +25,18 @@ export interface FieldValuesAreEqualValidatorConfig<T extends object = object> {
    * Custom message for this validator.
    */
   message?: string;
-
 }
 
 /**
- * Validator for validating all values within an object. 
- * 
+ * Validator for validating all values within an object.
+ *
  * This is useful for validating a control group where two or more values are expected to be the same, such as a password and a password verification field.
- * 
- * @param config 
- * @returns 
+ *
+ * @param config
+ * @returns
  */
 export function fieldValuesAreEqualValidator<T extends object = object>(config: FieldValuesAreEqualValidatorConfig<T> = {}): ValidatorFn {
-  const {
-    keysFilter,
-    valuesFilter: inputValuesFilter,
-    isEqual = ((a, b) => a === b),
-    message = 'Field values are not equal.'
-  } = config;
+  const { keysFilter, valuesFilter: inputValuesFilter, isEqual = (a, b) => a === b, message = 'Field values are not equal.' } = config;
 
   const valuesFilter: KeyValueTupleFilter<T, keyof T> = inputValuesFilter ?? {
     valueFilter: KeyValueTypleValueFilter.NONE, // keep all values. Null/undefined should be processed.

@@ -11,19 +11,19 @@ export function filterPickableItemFieldValuesByLabel<T>(filterText: Maybe<string
 
   if (filterText) {
     const searchString = filterText.toLocaleLowerCase();
-    filteredValues = values.filter(x => x.label.toLocaleLowerCase().indexOf(searchString) !== -1);
+    filteredValues = values.filter((x) => x.label.toLocaleLowerCase().indexOf(searchString) !== -1);
   } else {
     filteredValues = values;
   }
 
-  return of(filteredValues.map(x => x.value));
+  return of(filteredValues.map((x) => x.value));
 }
 
 export function sortPickableItemsByLabel<T>(chips: PickableItemFieldItem<T>[]): PickableItemFieldItem<T>[] {
   return chips.sort((a, b) => a.itemValue.label.localeCompare(b.itemValue.label));
 }
 
-export interface PickableItemFieldConfig<T = unknown> extends LabeledFieldConfig, PickableValueFieldsFieldConfig<T> { }
+export interface PickableItemFieldConfig<T = unknown> extends LabeledFieldConfig, PickableValueFieldsFieldConfig<T> {}
 
 export function pickableItemChipField<T = unknown>(config: PickableItemFieldConfig<T>): FormlyFieldConfig {
   const { key } = config;

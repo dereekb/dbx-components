@@ -1,7 +1,7 @@
-import { FormlyFieldConfig } from "@ngx-formly/core";
+import { FormlyFieldConfig } from '@ngx-formly/core';
 import { Validators, AbstractControl } from '@angular/forms';
-import { TextFieldConfig, textField } from "./text.field";
-import { LabeledFieldConfig, DescriptionFieldConfig } from "../../field";
+import { TextFieldConfig, textField } from './text.field';
+import { LabeledFieldConfig, DescriptionFieldConfig } from '../../field';
 
 export const PHONE_LABEL_MAX_LENGTH = 100;
 

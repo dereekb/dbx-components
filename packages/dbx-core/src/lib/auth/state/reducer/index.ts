@@ -1,9 +1,4 @@
-import {
-  Action,
-  combineReducers,
-  createFeatureSelector,
-  createSelector,
-} from '@ngrx/store';
+import { Action, combineReducers, createFeatureSelector, createSelector } from '@ngrx/store';
 
 import * as fromDbxAppAuthUserState from './user.reducer';
 
@@ -35,14 +30,9 @@ export function reducers(state: DbxAppAuthFeatureState | undefined, action: Acti
 /**
  * Selects the DbxAppAuthFeatureState feature context.
  */
-export const selectAppAuthFeature = createFeatureSelector<DbxAppAuthFeatureState>(
-  featureKey
-);
+export const selectAppAuthFeature = createFeatureSelector<DbxAppAuthFeatureState>(featureKey);
 
 /**
  * Selector to retrieve the state value from our DbxAppContextStateData in our DbxAppContextFeatureState.
  */
-export const selectDbxAppAuthUser = createSelector(
-  selectAppAuthFeature,
-  (featureState: DbxAppAuthFeatureState) => featureState[fromDbxAppAuthUserState.dbxAppAuthUserFeatureKey]
-);
+export const selectDbxAppAuthUser = createSelector(selectAppAuthFeature, (featureState: DbxAppAuthFeatureState) => featureState[fromDbxAppAuthUserState.dbxAppAuthUserFeatureKey]);

@@ -21,11 +21,15 @@ export interface DbxSelectionValueListViewConfig<T, I extends DbxValueListItem<T
   `
 })
 export class DbxSelectionValueListViewComponent<T, I extends DbxValueListItem<T> = DbxValueListItem<T>, V = unknown> extends AbstractDbxValueListViewDirective<T, I, V, DbxSelectionValueListViewConfig<T, I, V>> {
-
-  readonly selectionMode$: Observable<DbxListSelectionMode> = (this.dbxListView.selectionMode$ ?? of('select' as DbxListSelectionMode))
-    .pipe(map(x => x ?? 'select'), distinctUntilChanged());
-  readonly multiple$ = this.config$.pipe(map(x => x.multiple ?? true), distinctUntilChanged(), shareReplay(1));
-
+  readonly selectionMode$: Observable<DbxListSelectionMode> = (this.dbxListView.selectionMode$ ?? of('select' as DbxListSelectionMode)).pipe(
+    map((x) => x ?? 'select'),
+    distinctUntilChanged()
+  );
+  readonly multiple$ = this.config$.pipe(
+    map((x) => x.multiple ?? true),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
 }
 
 /**
@@ -49,11 +53,10 @@ export class DbxSelectionValueListViewComponent<T, I extends DbxValueListItem<T>
     </ng-container>
   `,
   host: {
-    'class': 'dbx-list-view dbx-selection-list-view'
+    class: 'dbx-list-view dbx-selection-list-view'
   }
 })
 export class DbxSelectionValueListItemViewComponent<T> extends DbxValueListItemViewComponent<T> {
-
   @Input()
   multiple?: Maybe<boolean>;
 
@@ -70,14 +73,14 @@ export class DbxSelectionValueListItemViewComponent<T> extends DbxValueListItemV
 
   matSelectionChanged(selection: MatSelectionListChange): void {
     const options = selection.source.selectedOptions.selected;
-    const items: ListSelectionStateItem<T>[] = options.map(x => {
+    const items: ListSelectionStateItem<T>[] = options.map((x) => {
       const { value: itemValue, selected, disabled } = x;
-      return ({ itemValue, selected, disabled });
+      return { itemValue, selected, disabled };
     });
 
-    (this.dbxListView.selectionChange as EventEmitter<ListSelectionState<T>>).next({ // asserted in constructor
+    (this.dbxListView.selectionChange as EventEmitter<ListSelectionState<T>>).next({
+      // asserted in constructor
       items
     });
   }
-
 }

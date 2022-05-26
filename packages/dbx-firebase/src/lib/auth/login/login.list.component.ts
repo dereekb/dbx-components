@@ -1,7 +1,7 @@
 import { Observable, BehaviorSubject, map, shareReplay, combineLatest } from 'rxjs';
 import { DbxFirebaseAuthLoginProvider, DbxFirebaseAuthLoginService } from './login.service';
 import { DbxFirebaseLoginMode, FirebaseLoginMethodType, FirebaseLoginMethodCategory } from './login';
-import { Component, Input, OnDestroy } from "@angular/core";
+import { Component, Input, OnDestroy } from '@angular/core';
 import { containsStringAnyCase, Maybe, ArrayOrValue, excludeValuesFromArray, asArray } from '@dereekb/util';
 import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 
@@ -11,16 +11,15 @@ import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 @Component({
   selector: 'dbx-firebase-login-list',
   template: `
-    <div class="dbx-firebase-login-item" *ngFor="let config of (providerInjectionConfigs$ | async)">
+    <div class="dbx-firebase-login-item" *ngFor="let config of providerInjectionConfigs$ | async">
       <dbx-injection [config]="config"></dbx-injection>
     </div>
-`,
+  `,
   host: {
-    'class': 'dbx-firebase-login-list'
+    class: 'dbx-firebase-login-list'
   }
 })
 export class DbxFirebaseLoginListComponent implements OnDestroy {
-
   private _loginMode = new BehaviorSubject<DbxFirebaseLoginMode>('login');
   private _inputProviderCategories = new BehaviorSubject<Maybe<ArrayOrValue<FirebaseLoginMethodCategory>>>(undefined);
   private _omitProviderTypes = new BehaviorSubject<Maybe<ArrayOrValue<FirebaseLoginMethodType>>>(undefined);
@@ -28,8 +27,8 @@ export class DbxFirebaseLoginListComponent implements OnDestroy {
 
   readonly providerTypes$: Observable<string[]> = combineLatest([this._inputProviderTypes, this._omitProviderTypes]).pipe(
     map(([providerTypes, omitProviderTypes]) => {
-      const baseTypes = (providerTypes) ? asArray(providerTypes) : this.dbxFirebaseAuthLoginService.getEnabledTypes();
-      const types = (omitProviderTypes) ? excludeValuesFromArray(baseTypes, asArray(omitProviderTypes)) : baseTypes;
+      const baseTypes = providerTypes ? asArray(providerTypes) : this.dbxFirebaseAuthLoginService.getEnabledTypes();
+      const types = omitProviderTypes ? excludeValuesFromArray(baseTypes, asArray(omitProviderTypes)) : baseTypes;
       return types;
     }),
     shareReplay(1)
@@ -42,24 +41,21 @@ export class DbxFirebaseLoginListComponent implements OnDestroy {
 
       if (providerCategories.length) {
         const categories = new Set(providerCategories);
-        providers = providers.filter(x => containsStringAnyCase(categories, x.category ?? ''));
+        providers = providers.filter((x) => containsStringAnyCase(categories, x.category ?? ''));
       }
 
       return providers;
     })
   );
 
-
   readonly providerInjectionConfigs$: Observable<DbxInjectionComponentConfig[]> = combineLatest([this._loginMode, this.providers$]).pipe(
     map(([mode, providers]: [DbxFirebaseLoginMode, DbxFirebaseAuthLoginProvider[]]) => {
-      const mapFn = (mode === 'register') ?
-        ((x: DbxFirebaseAuthLoginProvider) => ({ componentClass: x.registrationComponentClass ?? x.componentClass }) as DbxInjectionComponentConfig) :
-        ((x: DbxFirebaseAuthLoginProvider) => ({ componentClass: x.componentClass }) as DbxInjectionComponentConfig);
+      const mapFn = mode === 'register' ? (x: DbxFirebaseAuthLoginProvider) => ({ componentClass: x.registrationComponentClass ?? x.componentClass } as DbxInjectionComponentConfig) : (x: DbxFirebaseAuthLoginProvider) => ({ componentClass: x.componentClass } as DbxInjectionComponentConfig);
       return providers.map(mapFn);
     })
   );
 
-  constructor(readonly dbxFirebaseAuthLoginService: DbxFirebaseAuthLoginService) { }
+  constructor(readonly dbxFirebaseAuthLoginService: DbxFirebaseAuthLoginService) {}
 
   ngOnDestroy(): void {
     this._loginMode.complete();
@@ -87,5 +83,4 @@ export class DbxFirebaseLoginListComponent implements OnDestroy {
   set providerCategories(providerCategories: Maybe<ArrayOrValue<FirebaseLoginMethodCategory>>) {
     this._inputProviderCategories.next(providerCategories);
   }
-
 }

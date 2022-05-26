@@ -1,9 +1,8 @@
 import { objectHasKey } from '../object/object';
 import { Maybe } from '../value/maybe';
-import { StorageObject } from "./storage.object"
+import { StorageObject } from './storage.object';
 
 export class MemoryStorageInstance implements StorageObject {
-
   private _length = 0;
   private _storage: { [key: string]: string } = {};
 
@@ -37,7 +36,7 @@ export class MemoryStorageInstance implements StorageObject {
 
   removeItem(key: string): void {
     if (this.hasKey(key)) {
-      delete this._storage[key];  // Remove the property
+      delete this._storage[key]; // Remove the property
       this._length = this._length - 1;
     }
   }
@@ -46,7 +45,6 @@ export class MemoryStorageInstance implements StorageObject {
     this._storage = {};
     this._length = 0;
   }
-
 }
 
 export const SHARED_MEMORY_STORAGE = new MemoryStorageInstance();

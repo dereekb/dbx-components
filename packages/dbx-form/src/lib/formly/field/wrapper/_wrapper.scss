@@ -6,7 +6,6 @@ $form-flex-section-group-item-padding: $form-flex-section-group-padding * 2;
 
 // MARK: Mixin
 @mixin core() {
-
   .dbx-form-expand-wrapper-button {
     text-decoration: underline;
     margin-right: 8px;
@@ -16,12 +15,13 @@ $form-flex-section-group-item-padding: $form-flex-section-group-padding * 2;
   .dbx-form-toggle-wrapper-toggle {
     margin-bottom: 6px;
   }
-
 }
 
-@mixin color($theme-config) {}
+@mixin color($theme-config) {
+}
 
-@mixin typography($typography-config) {}
+@mixin typography($typography-config) {
+}
 
 @mixin theme($theme-config) {
   @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-form-field-wrapper') {

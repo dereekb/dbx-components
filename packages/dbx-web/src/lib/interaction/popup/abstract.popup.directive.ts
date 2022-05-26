@@ -6,11 +6,9 @@ import { DbxPopupComponent } from './popup.component';
  */
 @Directive()
 export abstract class AbstractPopupDirective<O = unknown, I = unknown, T = unknown> {
-
-  constructor(public readonly popup: DbxPopupComponent<O, I, T>) { }
+  constructor(public readonly popup: DbxPopupComponent<O, I, T>) {}
 
   closePopup(): void {
     this.popup.close();
   }
-
 }

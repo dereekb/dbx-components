@@ -5,7 +5,8 @@
     "build": {
       "executor": "@nrwl/workspace:run-commands",
       "options": {
-        "commands": [{
+        "commands": [
+          {
             "command": "npx nx run firebase-server:build-base"
           },
           {
@@ -41,10 +42,7 @@
     },
     "run-tests": {
       "executor": "@nrwl/jest:jest",
-      "outputs": [
-        "coverage/packages/firebase-server",
-        "./.reports/jest/firebase-server.junit.xml"
-      ],
+      "outputs": ["coverage/packages/firebase-server", "./.reports/jest/firebase-server.junit.xml"],
       "options": {
         "jestConfig": "packages/firebase-server/jest.config.ts",
         "passWithNoTests": true
@@ -53,13 +51,16 @@
     "run-all-tests": {
       "executor": "@nrwl/workspace:run-commands",
       "options": {
-        "commands": [{
-          "description": "run firebase-server tests. Should be called within a Firebase emulator environment",
-          "command": "npx nx run-tests firebase-server"
-        }, {
-          "description": "run firebase-server-test tests",
-          "command": "npx nx run-tests firebase-server-test"
-        }],
+        "commands": [
+          {
+            "description": "run firebase-server tests. Should be called within a Firebase emulator environment",
+            "command": "npx nx run-tests firebase-server"
+          },
+          {
+            "description": "run firebase-server-test tests",
+            "command": "npx nx run-tests firebase-server-test"
+          }
+        ],
         "color": true,
         "parallel": false
       }

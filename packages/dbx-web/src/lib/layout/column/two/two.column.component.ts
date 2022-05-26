@@ -3,7 +3,6 @@ import { AbstractSubscriptionDirective, safeMarkForCheck } from '@dereekb/dbx-co
 import { Observable, BehaviorSubject, combineLatest } from 'rxjs';
 import { TwoColumnsContextStore } from './two.column.store';
 
-
 export interface DbxTwoColumnViewState {
   showRight: boolean;
   showFullLeft: boolean;
@@ -23,13 +22,12 @@ export interface DbxTwoColumnViewState {
   templateUrl: './two.column.component.html',
   exportAs: 'columns',
   host: {
-    "class": "dbx-two-column",
-    "[class]": "{ 'right-shown': v.showRight, 'full-left': v.fullLeft, 'two-column-reverse-sizing': v.reverseSizing, 'dbx-section-page-two': v.inSectionPage }"
+    class: 'dbx-two-column',
+    '[class]': "{ 'right-shown': v.showRight, 'full-left': v.fullLeft, 'two-column-reverse-sizing': v.reverseSizing, 'dbx-section-page-two': v.inSectionPage }"
   },
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxTwoColumnComponent extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
-
   private _view: DbxTwoColumnViewState = { showRight: false, showFullLeft: true, reverseSizing: false, inSectionPage: false };
 
   private _reverseSizing = new BehaviorSubject<boolean>(false);
@@ -45,17 +43,16 @@ export class DbxTwoColumnComponent extends AbstractSubscriptionDirective impleme
   }
 
   ngOnInit(): void {
-    this.sub = combineLatest([this.showRight$, this.showFullLeft$, this._reverseSizing, this._inSectionPage])
-      .subscribe(([showRight, showFullLeft, reverseSizing, inSectionPage]: [boolean, boolean, boolean, boolean]) => {
-        this._view = {
-          showRight,
-          showFullLeft,
-          reverseSizing,
-          inSectionPage
-        };
+    this.sub = combineLatest([this.showRight$, this.showFullLeft$, this._reverseSizing, this._inSectionPage]).subscribe(([showRight, showFullLeft, reverseSizing, inSectionPage]: [boolean, boolean, boolean, boolean]) => {
+      this._view = {
+        showRight,
+        showFullLeft,
+        reverseSizing,
+        inSectionPage
+      };
 
-        safeMarkForCheck(this.cdRef);
-      });
+      safeMarkForCheck(this.cdRef);
+    });
   }
 
   override ngOnDestroy(): void {
@@ -77,5 +74,4 @@ export class DbxTwoColumnComponent extends AbstractSubscriptionDirective impleme
   set inSectionPage(inSectionPage: boolean) {
     this._inSectionPage.next(inSectionPage);
   }
-
 }

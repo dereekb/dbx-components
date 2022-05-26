@@ -3,7 +3,6 @@ import { DbxScreenMediaService, DbxScreenMediaServiceConfig, DEFAULT_SCREEN_MEDI
 
 @NgModule()
 export class DbxScreenModule {
-
   static forRoot(config: DbxScreenMediaServiceConfig = DEFAULT_SCREEN_MEDIA_SERVICE_CONFIG): ModuleWithProviders<DbxScreenModule> {
     return {
       ngModule: DbxScreenModule,
@@ -16,5 +15,4 @@ export class DbxScreenModule {
       ]
     };
   }
-
 }

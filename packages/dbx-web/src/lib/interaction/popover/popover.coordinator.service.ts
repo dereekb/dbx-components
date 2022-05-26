@@ -9,7 +9,6 @@ import { BehaviorSubject } from 'rxjs';
   providedIn: 'root'
 })
 export class DbxPopoverCoordinatorService implements OnDestroy {
-
   private _popovers = new BehaviorSubject<Map<DbxPopoverKey, DbxPopoverController>>(new Map());
   readonly popovers$ = this._popovers.asObservable();
 
@@ -43,5 +42,4 @@ export class DbxPopoverCoordinatorService implements OnDestroy {
       }
     }
   }
-
 }

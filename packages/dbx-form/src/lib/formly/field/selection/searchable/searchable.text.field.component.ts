@@ -21,17 +21,25 @@ export interface SearchableTextValueFieldsFormlyFieldConfig<T, M = unknown, H ex
   templateUrl: 'searchable.text.field.component.html'
 })
 export class DbxSearchableTextFieldComponent<T, M = unknown, H extends PrimativeKey = PrimativeKey> extends AbstractDbxSearchableValueFieldDirective<T, M, H, SearchableTextValueFieldsFormlyFieldConfig<T, M, H>> implements OnInit, OnDestroy {
-
-  readonly selectedDisplayValue$ = this.displayValues$.pipe(map(x => x[0]), shareReplay(1), tapDetectChanges(this.cdRef));
-  readonly hasValue$ = this.selectedDisplayValue$.pipe(map(x => Boolean(x)));
-  readonly showSelectedDisplayValue$ = this.selectedDisplayValue$.pipe(map(x => this.showSelectedValue && Boolean(x)), distinctUntilChanged(), shareReplay(1), tapDetectChanges(this.cdRef));
+  readonly selectedDisplayValue$ = this.displayValues$.pipe(
+    map((x) => x[0]),
+    shareReplay(1),
+    tapDetectChanges(this.cdRef)
+  );
+  readonly hasValue$ = this.selectedDisplayValue$.pipe(map((x) => Boolean(x)));
+  readonly showSelectedDisplayValue$ = this.selectedDisplayValue$.pipe(
+    map((x) => this.showSelectedValue && Boolean(x)),
+    distinctUntilChanged(),
+    shareReplay(1),
+    tapDetectChanges(this.cdRef)
+  );
 
   override get searchableField(): SearchableTextValueFieldsFieldConfig<T, M, H> {
     return this.field.searchableField;
   }
 
   get showSelectedValue() {
-    return this.searchableField.showSelectedValue ?? !this.allowStringValues;    // Show the selected value only if string values are allowed.
+    return this.searchableField.showSelectedValue ?? !this.allowStringValues; // Show the selected value only if string values are allowed.
   }
 
   override readonly multiSelect = false;
@@ -41,13 +49,11 @@ export class DbxSearchableTextFieldComponent<T, M = unknown, H extends Primative
   override ngOnInit(): void {
     super.ngOnInit();
 
-    this._clearInputSub.subscription = this.inputValue$.pipe(
-      skipWhile((x) => !x)
-    ).subscribe((x) => {
+    this._clearInputSub.subscription = this.inputValue$.pipe(skipWhile((x) => !x)).subscribe((x) => {
       if (!x) {
         // this.clearValues();
       }
-    })
+    });
   }
 
   override ngOnDestroy(): void {
@@ -58,5 +64,4 @@ export class DbxSearchableTextFieldComponent<T, M = unknown, H extends Primative
   selected(event: MatAutocompleteSelectedEvent): void {
     this.addWithDisplayValue(event.option.value);
   }
-
 }

@@ -8,7 +8,6 @@ import { AbstractTransitionDirective } from './transition.directive';
  */
 @Directive()
 export abstract class AbstractTransitionWatcherDirective extends AbstractTransitionDirective implements OnInit, OnDestroy {
-
   private _transitionSub = new SubscriptionObject();
 
   ngOnInit(): void {
@@ -31,5 +30,4 @@ export abstract class AbstractTransitionWatcherDirective extends AbstractTransit
   }
 
   protected abstract updateForSuccessfulTransition(): void;
-
 }

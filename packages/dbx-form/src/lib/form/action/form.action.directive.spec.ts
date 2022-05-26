@@ -6,17 +6,10 @@ import { DbxTestDbxFormComponent, FORM_TEST_PROVIDERS } from '../../../test';
 import { first } from 'rxjs';
 
 describe('FormActionDirective', () => {
-
   beforeEach(async () => {
     TestBed.configureTestingModule({
-      imports: [
-        ...FORM_TEST_PROVIDERS,
-        DbxCoreActionModule
-      ],
-      declarations: [
-        TestDbxActionFormDirectiveComponent,
-        DbxTestDbxFormComponent
-      ]
+      imports: [...FORM_TEST_PROVIDERS, DbxCoreActionModule],
+      declarations: [TestDbxActionFormDirectiveComponent, DbxTestDbxFormComponent]
     }).compileComponents();
   });
 
@@ -38,14 +31,13 @@ describe('FormActionDirective', () => {
 
   afterEach(() => {
     fixture.destroy();
-  })
+  });
 
   it('should be created', () => {
     expect(testComponent.formDirective).toBeDefined();
   });
 
   describe('when form valid', () => {
-
     beforeEach((done) => {
       form.setTextForTest('text value', fixture);
 
@@ -63,11 +55,9 @@ describe('FormActionDirective', () => {
         done();
       });
     });
-
   });
 
   describe('when form is invalid', () => {
-
     beforeEach(() => {
       form.setInvalidTextForTest(fixture);
 
@@ -84,11 +74,9 @@ describe('FormActionDirective', () => {
         done();
       });
     });
-
   });
 
   // todo: test formDisabledOnWorking
-
 });
 
 @Component({
@@ -99,7 +87,6 @@ describe('FormActionDirective', () => {
   `
 })
 class TestDbxActionFormDirectiveComponent {
-
   @ViewChild(DbxActionDirective, { static: true })
   directive!: DbxActionDirective<number, number>;
 
@@ -108,5 +95,4 @@ class TestDbxActionFormDirectiveComponent {
 
   @ViewChild(DbxTestDbxFormComponent, { static: true })
   form!: DbxTestDbxFormComponent;
-
 }

@@ -8,17 +8,8 @@ import { DbxFlagPromptComponent } from './flag.prompt.component';
  * Module for block components.
  */
 @NgModule({
-  imports: [
-    CommonModule,
-    MatToolbarModule
-  ],
-  declarations: [
-    DbxFlagComponent,
-    DbxFlagPromptComponent
-  ],
-  exports: [
-    DbxFlagComponent,
-    DbxFlagPromptComponent
-  ]
+  imports: [CommonModule, MatToolbarModule],
+  declarations: [DbxFlagComponent, DbxFlagPromptComponent],
+  exports: [DbxFlagComponent, DbxFlagPromptComponent]
 })
-export class DbxFlagLayoutModule { }
+export class DbxFlagLayoutModule {}

@@ -7,24 +7,23 @@ import { DbxSectionComponent } from './section.component';
 @Component({
   selector: 'dbx-intro-action-section',
   template: `
-  <div class="dbx-intro-action-section" [ngSwitch]="showIntro">
-    <div *ngSwitchCase="true" class="dbx-intro-action-section-intro">
-      <p>{{ hint }}</p>
-      <div>
-        <ng-content select="[info]"></ng-content>
+    <div class="dbx-intro-action-section" [ngSwitch]="showIntro">
+      <div *ngSwitchCase="true" class="dbx-intro-action-section-intro">
+        <p>{{ hint }}</p>
+        <div>
+          <ng-content select="[info]"></ng-content>
+        </div>
+        <div>
+          <button mat-raised-button color="accent" (click)="actionClicked()">{{ action }}</button>
+        </div>
       </div>
-      <div>
-        <button mat-raised-button color="accent" (click)="actionClicked()">{{ action }}</button>
-      </div>
+      <ng-container *ngSwitchCase="false">
+        <ng-content></ng-content>
+      </ng-container>
     </div>
-    <ng-container *ngSwitchCase="false">
-      <ng-content></ng-content>
-    </ng-container>
-  </div>
   `
 })
 export class DbxIntroActionSectionComponent extends DbxSectionComponent implements OnDestroy {
-
   @Output()
   showAction = new EventEmitter<void>();
 
@@ -41,5 +40,4 @@ export class DbxIntroActionSectionComponent extends DbxSectionComponent implemen
   actionClicked() {
     this.showAction.next();
   }
-
 }

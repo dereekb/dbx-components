@@ -1,4 +1,4 @@
-import { ReadableError } from "@dereekb/util";
+import { ReadableError } from '@dereekb/util';
 
 export interface FirebaseAuthError {
   code: string;

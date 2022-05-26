@@ -1,10 +1,21 @@
 import { Observable } from 'rxjs';
 import { ArrayOrValue, Maybe } from '@dereekb/util';
-import { DocumentSnapshot, getDocs, limit, query, QueryConstraint, startAt, Query as FirebaseFirestoreQuery, where, startAfter, orderBy, limitToLast, endBefore, endAt, onSnapshot } from "firebase/firestore";
-import { FIRESTORE_LIMIT_QUERY_CONSTRAINT_TYPE, FIRESTORE_START_AFTER_QUERY_CONSTRAINT_TYPE, FIRESTORE_START_AT_QUERY_CONSTRAINT_TYPE, FIRESTORE_WHERE_QUERY_CONSTRAINT_TYPE, FIRESTORE_LIMIT_TO_LAST_QUERY_CONSTRAINT_TYPE, FIRESTORE_ORDER_BY_QUERY_CONSTRAINT_TYPE, FullFirestoreQueryConstraintHandlersMapping, FIRESTORE_OFFSET_QUERY_CONSTRAINT_TYPE, FIRESTORE_END_AT_QUERY_CONSTRAINT_TYPE, FIRESTORE_END_BEFORE_QUERY_CONSTRAINT_TYPE } from './../../common/firestore/query/constraint';
+import { DocumentSnapshot, getDocs, limit, query, QueryConstraint, startAt, Query as FirebaseFirestoreQuery, where, startAfter, orderBy, limitToLast, endBefore, endAt, onSnapshot } from 'firebase/firestore';
+import {
+  FIRESTORE_LIMIT_QUERY_CONSTRAINT_TYPE,
+  FIRESTORE_START_AFTER_QUERY_CONSTRAINT_TYPE,
+  FIRESTORE_START_AT_QUERY_CONSTRAINT_TYPE,
+  FIRESTORE_WHERE_QUERY_CONSTRAINT_TYPE,
+  FIRESTORE_LIMIT_TO_LAST_QUERY_CONSTRAINT_TYPE,
+  FIRESTORE_ORDER_BY_QUERY_CONSTRAINT_TYPE,
+  FullFirestoreQueryConstraintHandlersMapping,
+  FIRESTORE_OFFSET_QUERY_CONSTRAINT_TYPE,
+  FIRESTORE_END_AT_QUERY_CONSTRAINT_TYPE,
+  FIRESTORE_END_BEFORE_QUERY_CONSTRAINT_TYPE
+} from './../../common/firestore/query/constraint';
 import { makeFirestoreQueryConstraintFunctionsDriver } from '../../common/firestore/driver/query.handler';
-import { FirestoreQueryConstraintFunctionsDriver, FirestoreQueryDriver } from "../../common/firestore/driver/query";
-import { Query, QuerySnapshot, SnapshotListenOptions, Transaction } from "../../common/firestore/types";
+import { FirestoreQueryConstraintFunctionsDriver, FirestoreQueryDriver } from '../../common/firestore/driver/query';
+import { Query, QuerySnapshot, SnapshotListenOptions, Transaction } from '../../common/firestore/types';
 import { streamFromOnSnapshot } from '../../common/firestore/query/query.util';
 
 export interface FirebaseFirestoreQueryBuilder {
@@ -28,7 +39,7 @@ export const FIRESTORE_CLIENT_QUERY_CONSTRAINT_HANDLER_MAPPING: FullFirestoreQue
   [FIRESTORE_START_AT_QUERY_CONSTRAINT_TYPE]: (builder, data) => addConstraintToBuilder(builder, startAt(data.snapshot as DocumentSnapshot)),
   [FIRESTORE_START_AFTER_QUERY_CONSTRAINT_TYPE]: (builder, data) => addConstraintToBuilder(builder, startAfter(data.snapshot as DocumentSnapshot)),
   [FIRESTORE_END_AT_QUERY_CONSTRAINT_TYPE]: (builder, data) => addConstraintToBuilder(builder, endAt(data.snapshot as DocumentSnapshot)),
-  [FIRESTORE_END_BEFORE_QUERY_CONSTRAINT_TYPE]: (builder, data) => addConstraintToBuilder(builder, endBefore(data.snapshot as DocumentSnapshot)),
+  [FIRESTORE_END_BEFORE_QUERY_CONSTRAINT_TYPE]: (builder, data) => addConstraintToBuilder(builder, endBefore(data.snapshot as DocumentSnapshot))
 };
 
 export function firebaseFirestoreQueryConstraintFunctionsDriver(): FirestoreQueryConstraintFunctionsDriver {
@@ -51,7 +62,7 @@ export function firebaseFirestoreQueryDriver(): FirestoreQueryDriver {
       return getDocs(query as FirebaseFirestoreQuery<T>);
     },
     streamDocs<T>(query: Query<T>, options?: Maybe<SnapshotListenOptions>): Observable<QuerySnapshot<T>> {
-      return streamFromOnSnapshot((obs) => (options) ? onSnapshot((query as FirebaseFirestoreQuery<T>), options, obs) : onSnapshot((query as FirebaseFirestoreQuery<T>), obs));
+      return streamFromOnSnapshot((obs) => (options ? onSnapshot(query as FirebaseFirestoreQuery<T>, options, obs) : onSnapshot(query as FirebaseFirestoreQuery<T>, obs)));
     }
   };
 }

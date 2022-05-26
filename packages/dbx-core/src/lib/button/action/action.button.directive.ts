@@ -12,7 +12,6 @@ import { SubscriptionObject } from '@dereekb/rxjs';
   selector: '[dbxActionButton]'
 })
 export class DbxActionButtonDirective extends DbxActionButtonTriggerDirective implements OnInit, OnDestroy {
-
   private _workingSub = new SubscriptionObject();
   private _disabledSub = new SubscriptionObject();
 
@@ -39,5 +38,4 @@ export class DbxActionButtonDirective extends DbxActionButtonTriggerDirective im
     this._workingSub.destroy();
     this._disabledSub.destroy();
   }
-
 }

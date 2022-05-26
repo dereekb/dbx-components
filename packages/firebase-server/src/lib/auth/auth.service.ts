@@ -1,20 +1,17 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
 import { FirebaseAuthUserId } from '@dereekb/firebase';
-import { filterUndefinedValues, AUTH_ADMIN_ROLE, AuthClaims, AuthRoleSet, cachedGetter, filterNullAndUndefinedValues, ArrayOrValue, AuthRole, forEachKeyValue, ObjectMap, AuthClaimsUpdate, asSet, KeyValueTypleValueFilter } from '@dereekb/util';
+import { filterUndefinedValues, AUTH_ADMIN_ROLE, AuthClaims, AuthRoleSet, cachedGetter, filterNullAndUndefinedValues, ArrayOrValue, AuthRole, forEachKeyValue, ObjectMap, AuthClaimsUpdate, asSet, KeyValueTypleValueFilter, AuthClaimsObject } from '@dereekb/util';
 import { assertIsContextWithAuthData, CallableContextWithAuthData } from '../function/context';
 
 export interface FirebaseServerAuthUserIdentifierContext {
-
   /**
    * UID of the user for this context.
    */
   readonly uid: FirebaseAuthUserId;
-
 }
 
 export interface FirebaseServerAuthUserContext extends FirebaseServerAuthUserIdentifierContext {
-
   /**
    * Loads the record of the user.
    */
@@ -27,53 +24,51 @@ export interface FirebaseServerAuthUserContext extends FirebaseServerAuthUserIde
 
   /**
    * Adds the given roles to the user.
-   * 
-   * @param roles 
+   *
+   * @param roles
    */
   addRoles(roles: ArrayOrValue<AuthRole>): Promise<void>;
 
   /**
    * Removes the given roles from the user.
-   * 
-   * @param roles 
+   *
+   * @param roles
    */
   removeRoles(roles: ArrayOrValue<AuthRole>): Promise<void>;
 
   /**
    * Loads the claims from the user.
    */
-  loadClaims<T = unknown>(): Promise<AuthClaims<T>>;
+  loadClaims<T extends AuthClaimsObject = AuthClaimsObject>(): Promise<AuthClaims<T>>;
 
   /**
    * Updates the claims for a user by merging existing claims in with the input.
-   * 
+   *
    * All null values are cleared from the existing claims. Undefined values are ignored.
-   * 
-   * @param claims 
+   *
+   * @param claims
    */
   updateClaims(claims: AuthClaimsUpdate): Promise<void>;
 
   /**
    * Sets the claims for a user. All previous claims are cleared.
-   * 
-   * @param claims 
+   *
+   * @param claims
    */
   setClaims(claims: AuthClaimsUpdate): Promise<void>;
 
   /**
    * Clears all claims for the user.
-   * 
-   * @param claims 
+   *
+   * @param claims
    */
   clearClaims(): Promise<void>;
-
 }
 
 export abstract class AbstractFirebaseServerAuthUserContext<S extends FirebaseServerAuthService> implements FirebaseServerAuthUserContext {
-
   private readonly _loadRecord = cachedGetter(() => this.service.auth.getUser(this.uid));
 
-  constructor(readonly service: S, readonly uid: FirebaseAuthUserId) { }
+  constructor(readonly service: S, readonly uid: FirebaseAuthUserId) {}
 
   loadRecord(): Promise<admin.auth.UserRecord> {
     return this._loadRecord();
@@ -108,8 +103,8 @@ export abstract class AbstractFirebaseServerAuthUserContext<S extends FirebaseSe
     return filterNullAndUndefinedValues(this.service.claimsForRoles(asSet(roles)));
   }
 
-  loadClaims<T = unknown>(): Promise<AuthClaims<T>> {
-    return this.loadRecord().then(x => (x.customClaims ?? {}) as AuthClaims<T>);
+  loadClaims<T extends AuthClaimsObject = AuthClaimsObject>(): Promise<AuthClaims<T>> {
+    return this.loadRecord().then((x) => (x.customClaims ?? {}) as AuthClaims<T>);
   }
 
   async updateClaims(claims: AuthClaimsUpdate): Promise<void> {
@@ -140,12 +135,10 @@ export abstract class AbstractFirebaseServerAuthUserContext<S extends FirebaseSe
       this._loadRecord.reset(); // reset the cache
     });
   }
-
 }
 
 // MARK: FirebaseServerAuthContext
 export interface FirebaseServerAuthContext<U extends FirebaseServerAuthUserContext = FirebaseServerAuthUserContext> extends FirebaseServerAuthUserIdentifierContext {
-
   /**
    * The wrapped context.
    */
@@ -175,16 +168,14 @@ export interface FirebaseServerAuthContext<U extends FirebaseServerAuthUserConte
    * The claims in the context.
    */
   readonly claims: AuthClaims;
-
 }
 
 export abstract class AbstractFirebaseServerAuthContext<C extends FirebaseServerAuthContext, U extends FirebaseServerAuthUserContext = FirebaseServerAuthUserContext, S extends FirebaseServerAuthService<U, C> = FirebaseServerAuthService<U, C>> implements FirebaseServerAuthContext {
-
-  private readonly _isAdmin = cachedGetter(() => this.service.isAdmin(this.context.auth.token));
-  private readonly _authRoles = cachedGetter(() => this.service.readRoles(this.context.auth.token));
+  private readonly _isAdmin = cachedGetter(() => this.service.isAdmin(this.claims));
+  private readonly _authRoles = cachedGetter(() => this.service.readRoles(this.claims));
   private readonly _userContext = cachedGetter(() => this.service.userContext(this.context.auth.uid));
 
-  constructor(readonly service: S, readonly context: CallableContextWithAuthData) { }
+  constructor(readonly service: S, readonly context: CallableContextWithAuthData) {}
 
   get userContext() {
     return this._userContext();
@@ -203,14 +194,13 @@ export abstract class AbstractFirebaseServerAuthContext<C extends FirebaseServer
   }
 
   get claims(): AuthClaims {
-    return this.context.auth.token;
+    return this.context.auth.token as unknown as AuthClaims;
   }
 
   // MARK: FirebaseServerAuthUserContext
   get uid(): string {
     return this.userContext.uid;
   }
-
 }
 
 // MARK: Service
@@ -218,24 +208,23 @@ export abstract class AbstractFirebaseServerAuthContext<C extends FirebaseServer
  * FirebaseServer auth service that provides accessors to auth-related components.
  */
 export abstract class FirebaseServerAuthService<U extends FirebaseServerAuthUserContext = FirebaseServerAuthUserContext, C extends FirebaseServerAuthContext = FirebaseServerAuthContext> {
-
   abstract readonly auth: admin.auth.Auth;
 
   /**
    * Creates a context with the input CallableContext. This creation also asserts that a uid is available to the request.
-   * 
+   *
    * If the input context is not a CallableContextWithAuthData, an exception is thrown.
-   * 
-   * @param context 
+   *
+   * @param context
    */
   abstract context(context: functions.https.CallableContext): C;
 
   /**
    * Creates a FirebaseServerAuthUserContext instance for the input uid.
-   * 
+   *
    * The user's existence is not checked.
-   * 
-   * @param uid 
+   *
+   * @param uid
    */
   abstract userContext(uid: FirebaseAuthUserId): U;
 
@@ -246,32 +235,30 @@ export abstract class FirebaseServerAuthService<U extends FirebaseServerAuthUser
 
   /**
    * Reads the AuthRoleSet from the input claims.
-   * 
-   * @param claims 
+   *
+   * @param claims
    */
   abstract readRoles(claims: AuthClaims): AuthRoleSet;
 
   /**
    * Creates the claims that reflect the input roles.
-   * 
+   *
    * The resultant claims value should include ALL claim values, with those that are unset to be null.
-   * 
-   * @param roles 
+   *
+   * @param roles
    */
   abstract claimsForRoles(roles: AuthRoleSet): AuthClaimsUpdate;
-
 }
 
 /**
  * Abstract FirebaseServerAuthService implementation.
  */
 export abstract class AbstractFirebaseServerAuthService<U extends FirebaseServerAuthUserContext = FirebaseServerAuthUserContext, C extends FirebaseServerAuthContext<U> = FirebaseServerAuthContext<U>> implements FirebaseServerAuthService<U, C> {
-
-  constructor(readonly auth: admin.auth.Auth) { }
+  constructor(readonly auth: admin.auth.Auth) {}
 
   context(context: functions.https.CallableContext): C {
     assertIsContextWithAuthData(context);
-    context.auth.token
+    context.auth.token;
     return this._context(context);
   }
 
@@ -286,5 +273,4 @@ export abstract class AbstractFirebaseServerAuthService<U extends FirebaseServer
   abstract readRoles(claims: AuthClaims): AuthRoleSet;
 
   abstract claimsForRoles(roles: AuthRoleSet): AuthClaimsUpdate;
-
 }

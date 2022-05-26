@@ -8,7 +8,6 @@ export interface PopupPositionOffset {
 }
 
 export class PopupGlobalPositionStrategy extends GlobalPositionStrategy {
-
   private _position!: PopupPosition;
   private _offset: PopupPositionOffset = {};
 
@@ -54,5 +53,4 @@ export class PopupGlobalPositionStrategy extends GlobalPositionStrategy {
     this.left();
     this.right();
   }
-
 }

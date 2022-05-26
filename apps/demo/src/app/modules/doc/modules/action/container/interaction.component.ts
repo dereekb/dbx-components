@@ -10,17 +10,13 @@ import { DocActionExampleDialogComponent } from '../component/action.example.dia
   templateUrl: './interaction.component.html'
 })
 export class DocActionInteractionComponent implements OnDestroy {
-
   successValue: any;
   undoValue: any;
 
   private _value = new BehaviorSubject<{ test: number }>({ test: 0 });
   readonly value$ = this._value.asObservable();
 
-  constructor(
-    readonly dbxPopoverService: DbxPopoverService,
-    readonly matDialog: MatDialog,
-    readonly cdRef: ChangeDetectorRef) { }
+  constructor(readonly dbxPopoverService: DbxPopoverService, readonly matDialog: MatDialog, readonly cdRef: ChangeDetectorRef) {}
 
   ngOnDestroy(): void {
     this._value.complete();
@@ -28,7 +24,7 @@ export class DocActionInteractionComponent implements OnDestroy {
 
   readonly handleAction: HandleActionFunction = () => {
     return of(true).pipe(delay(1000));
-  }
+  };
 
   onActionSuccess = (value: any) => {
     this.successValue = value;
@@ -43,21 +39,23 @@ export class DocActionInteractionComponent implements OnDestroy {
       oneTimeUse: true,
       handleValueReady: (value: any) => {
         safeDetectChanges(this.cdRef);
-        return of(0).pipe(delay(1000), tap(() => {
-          this.undoValue = value;
-        }));
+        return of(0).pipe(
+          delay(1000),
+          tap(() => {
+            this.undoValue = value;
+          })
+        );
       }
     });
 
     return instance;
-  }
+  };
 
   handleOpenPopover: DbxActionPopoverFunction = ({ origin }) => {
     return DocActionExamplePopoverComponent.openPopover(this.dbxPopoverService, { origin });
-  }
+  };
 
   handleOpenDialog: DbxActionDialogFunction = () => {
     return DocActionExampleDialogComponent.openDialog(this.matDialog);
-  }
-
+  };
 }

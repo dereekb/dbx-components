@@ -1,5 +1,5 @@
 import { first, switchMap, map, Observable, of, catchError } from 'rxjs';
-import { AbstractControl, AsyncValidatorFn } from "@angular/forms";
+import { AbstractControl, AsyncValidatorFn } from '@angular/forms';
 import { asyncPusherCache } from '@dereekb/rxjs';
 
 export const FIELD_VALUE_IS_AVAILABLE_VALIDATION_KEY = 'fieldValueIsAvailable';
@@ -8,7 +8,6 @@ export const FIELD_VALUE_IS_AVAILABLE_ERROR_VALIDATION_KEY = 'fieldValueIsAvaila
 export type FieldValueIsAvailableValidatorFunction<T> = (value: T) => Observable<boolean>;
 
 export interface FieldValueIsAvailableValidatorConfig<T> {
-
   /**
    * How long to wait in between value changes.
    */
@@ -16,8 +15,8 @@ export interface FieldValueIsAvailableValidatorConfig<T> {
 
   /**
    * Returns an observable that checks whether or not the value is currently available.
-   * 
-   * @param value 
+   *
+   * @param value
    */
   readonly checkValueIsAvailable: FieldValueIsAvailableValidatorFunction<T>;
 
@@ -25,42 +24,40 @@ export interface FieldValueIsAvailableValidatorConfig<T> {
    * Custom message for this validator.
    */
   message?: string;
-
 }
 
 /**
- * Validator for validating all values within an object. 
- * 
+ * Validator for validating all values within an object.
+ *
  * This is useful for validating a control group where two or more values are expected to be the same, such as a password and a password verification field.
- * 
- * @param config 
- * @returns 
+ *
+ * @param config
+ * @returns
  */
 export function fieldValueIsAvailableValidator<T>(config: FieldValueIsAvailableValidatorConfig<T>): AsyncValidatorFn {
-  const {
-    throttle = 400,
-    checkValueIsAvailable,
-    message = 'This value is not available.'
-  } = config;
+  const { throttle = 400, checkValueIsAvailable, message = 'This value is not available.' } = config;
 
   const pusher = asyncPusherCache<T>({
     throttle
   });
 
-  return (control: AbstractControl) => pusher(control.valueChanges)(control.value as T).pipe(
-    switchMap((x) => checkValueIsAvailable(x)),
-    map((isAvailable) => {
-      if (isAvailable) {
-        return null;
-      } else {
-        return {
-          [FIELD_VALUE_IS_AVAILABLE_VALIDATION_KEY]: { message }
-        };
-      }
-    }),
-    catchError(() => of({
-      [FIELD_VALUE_IS_AVAILABLE_ERROR_VALIDATION_KEY]: { message: 'An error occured.' }
-    })),
-    first()
-  );
+  return (control: AbstractControl) =>
+    pusher(control.valueChanges)(control.value as T).pipe(
+      switchMap((x) => checkValueIsAvailable(x)),
+      map((isAvailable) => {
+        if (isAvailable) {
+          return null;
+        } else {
+          return {
+            [FIELD_VALUE_IS_AVAILABLE_VALIDATION_KEY]: { message }
+          };
+        }
+      }),
+      catchError(() =>
+        of({
+          [FIELD_VALUE_IS_AVAILABLE_ERROR_VALIDATION_KEY]: { message: 'An error occured.' }
+        })
+      ),
+      first()
+    );
 }

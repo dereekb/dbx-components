@@ -21,15 +21,14 @@ import { DbxPopupController, DbxPopupWindowState } from './popup';
     <dbx-button [flat]="true" icon="close" color="warn" (buttonClick)="closeClicked()"></dbx-button>
   `,
   host: {
-    'class': 'dbx-popup-control-buttons'
+    class: 'dbx-popup-control-buttons'
   }
 })
 export class DbxPopupControlButtonsComponent {
+  readonly isMinimized$ = this.appPopupController.windowState$.pipe(map((x) => x === DbxPopupWindowState.MINIMIZED));
+  readonly isFullscreen$ = this.appPopupController.windowState$.pipe(map((x) => x === DbxPopupWindowState.FULLSCREEN));
 
-  readonly isMinimized$ = this.appPopupController.windowState$.pipe(map(x => x === DbxPopupWindowState.MINIMIZED));
-  readonly isFullscreen$ = this.appPopupController.windowState$.pipe(map(x => x === DbxPopupWindowState.FULLSCREEN));
-
-  constructor(private appPopupController: DbxPopupController) { }
+  constructor(private appPopupController: DbxPopupController) {}
 
   minimizeClicked(): void {
     this.appPopupController.minimize();
@@ -50,5 +49,4 @@ export class DbxPopupControlButtonsComponent {
   closeClicked(): void {
     this.appPopupController.close();
   }
-
 }

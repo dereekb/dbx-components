@@ -5,7 +5,8 @@
     "build": {
       "executor": "@nrwl/workspace:run-commands",
       "options": {
-        "commands": [{
+        "commands": [
+          {
             "command": "npx nx run nestjs:build-base"
           },
           {
@@ -31,10 +32,12 @@
       "options": {
         "command": "node tools/scripts/publish.mjs nestjs {args.ver} {args.tag}"
       },
-      "dependsOn": [{
-        "projects": "self",
-        "target": "build"
-      }]
+      "dependsOn": [
+        {
+          "projects": "self",
+          "target": "build"
+        }
+      ]
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",
@@ -45,10 +48,7 @@
     },
     "test": {
       "executor": "@nrwl/jest:jest",
-      "outputs": [
-        "coverage/packages/nestjs",
-        "./.reports/jest/nestjs.junit.xml"
-      ],
+      "outputs": ["coverage/packages/nestjs", "./.reports/jest/nestjs.junit.xml"],
       "options": {
         "jestConfig": "packages/nestjs/jest.config.ts",
         "passWithNoTests": true
@@ -57,13 +57,16 @@
     "run-all-tests": {
       "executor": "@nrwl/workspace:run-commands",
       "options": {
-        "commands": [{
-          "description": "run nestjs tests",
-          "command": "npx nx test nestjs"
-        }, {
-          "description": "run nestjs-stripe tests",
-          "command": "npx nx test nestjs-stripe"
-        }],
+        "commands": [
+          {
+            "description": "run nestjs tests",
+            "command": "npx nx test nestjs"
+          },
+          {
+            "description": "run nestjs-stripe tests",
+            "command": "npx nx test nestjs-stripe"
+          }
+        ],
         "color": true,
         "parallel": true
       }

@@ -9,11 +9,10 @@ import { BehaviorSubject } from 'rxjs';
   providedIn: 'root'
 })
 export class DbxPopupCoordinatorService implements OnDestroy {
-
   private _popups = new BehaviorSubject<Map<DbxPopupKey, DbxPopupController>>(new Map());
 
   readonly popups$ = this._popups.asObservable();
-  
+
   ngOnDestroy(): void {
     this._popups.complete();
   }
@@ -44,5 +43,4 @@ export class DbxPopupCoordinatorService implements OnDestroy {
       }
     }
   }
-
 }

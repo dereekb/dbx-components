@@ -13,7 +13,6 @@ $dbx-sidenav-nav-bottom-padding: 24px;
 
 // MARK: Mixin
 @mixin core() {
-
   .dbx-sidenav {
     height: 100%;
 
@@ -53,7 +52,7 @@ $dbx-sidenav-nav-bottom-padding: 24px;
     }
 
     .mat-sidenav .mat-drawer-inner-container {
-      overflow-y: scroll !important
+      overflow-y: scroll !important;
     }
 
     .dbx-sidenav-nav {
@@ -65,7 +64,6 @@ $dbx-sidenav-nav-bottom-padding: 24px;
     .mat-nav-list.dbx-anchor-list {
       padding-top: 0;
     }
-
   }
 
   .dbx-sidenav-page {
@@ -77,7 +75,6 @@ $dbx-sidenav-nav-bottom-padding: 24px;
       overflow: auto;
     }
   }
-
 }
 
 @mixin color($theme-config) {
@@ -110,7 +107,6 @@ $dbx-sidenav-nav-bottom-padding: 24px;
         }
 
         .dbx-anchor-active-eq {
-
           .mat-list-item {
             border-left: $active-border-left-width solid $active-icon-color;
 
@@ -171,7 +167,8 @@ $dbx-sidenav-nav-bottom-padding: 24px;
     */
 }
 
-@mixin typography($typography-config) {}
+@mixin typography($typography-config) {
+}
 
 @mixin theme($theme-config) {
   @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-router-sidenav') {

@@ -2,7 +2,6 @@ import { ListLoadingStateContextInstance, successResult } from '@dereekb/rxjs';
 import { timeout, first, of } from 'rxjs';
 
 describe(' ListLoadingStateContextInstance', () => {
-
   let context: ListLoadingStateContextInstance;
 
   beforeEach(() => {
@@ -14,7 +13,6 @@ describe(' ListLoadingStateContextInstance', () => {
   });
 
   describe('isEmpty$', () => {
-
     it('should not emit until a value has been passed.', (done) => {
       context.isEmpty$.pipe(first(), timeout({ first: 200, with: () => of(0) })).subscribe((isEmpty) => {
         expect(isEmpty).toBe(0);
@@ -39,7 +37,5 @@ describe(' ListLoadingStateContextInstance', () => {
         done();
       });
     });
-
   });
-
 });

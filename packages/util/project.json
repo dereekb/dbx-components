@@ -5,7 +5,8 @@
     "build": {
       "executor": "@nrwl/workspace:run-commands",
       "options": {
-        "commands": [{
+        "commands": [
+          {
             "command": "npx nx run util:build-base"
           },
           {
@@ -18,10 +19,12 @@
     "build-base": {
       "executor": "@nrwl/js:tsc",
       "outputs": ["{options.outputPath}"],
-      "dependsOn": [{
-        "target": "build",
-        "projects": "dependencies"
-      }],
+      "dependsOn": [
+        {
+          "target": "build",
+          "projects": "dependencies"
+        }
+      ],
       "options": {
         "outputPath": "dist/packages/util",
         "tsConfig": "packages/util/tsconfig.lib.json",
@@ -48,13 +51,16 @@
     "run-all-tests": {
       "executor": "@nrwl/workspace:run-commands",
       "options": {
-        "commands": [{
-          "description": "run util tests",
-          "command": "npx nx test util"
-        }, {
-          "description": "run util-test tests",
-          "command": "npx nx test util-test"
-        }],
+        "commands": [
+          {
+            "description": "run util tests",
+            "command": "npx nx test util"
+          },
+          {
+            "description": "run util-test tests",
+            "command": "npx nx test util-test"
+          }
+        ],
         "color": true,
         "parallel": true
       }

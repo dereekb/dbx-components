@@ -1,7 +1,7 @@
 import { TextFieldConfig, textField } from '../field/value/text/text.field';
 import { EmailFieldConfig, emailField } from '../field/value/text/text.additional.field';
 import { fieldValuesAreEqualValidator } from '../../validator/field';
-import { FormlyFieldConfig } from "@ngx-formly/core";
+import { FormlyFieldConfig } from '@ngx-formly/core';
 import { capitalizeFirstLetter, Maybe } from '@dereekb/util';
 
 /**
@@ -12,13 +12,13 @@ export type TextPasswordFieldPasswordParameters = Partial<Pick<TextFieldConfig, 
 /**
  * textPasswordField() configuration.
  */
-export interface TextPasswordFieldConfig extends Omit<TextFieldConfig, 'inputType' | 'key'>, Partial<Pick<TextFieldConfig, 'key'>> { }
+export interface TextPasswordFieldConfig extends Omit<TextFieldConfig, 'inputType' | 'key'>, Partial<Pick<TextFieldConfig, 'key'>> {}
 
 /**
  * Configured simple text password field.
- * 
- * @param config 
- * @returns 
+ *
+ * @param config
+ * @returns
  */
 export function textPasswordField(config?: TextPasswordFieldConfig): FormlyFieldConfig {
   return textField({
@@ -32,8 +32,8 @@ export function textPasswordField(config?: TextPasswordFieldConfig): FormlyField
 
 /**
  * Configured verify field for a password.
- * @param config 
- * @returns 
+ * @param config
+ * @returns
  */
 export function textVerifyPasswordField(config?: TextPasswordFieldConfig): FormlyFieldConfig {
   return textPasswordField({
@@ -55,15 +55,17 @@ export function textPasswordWithVerifyFieldGroup(config: TextPasswordWithVerifyF
   const verifyPasswordField = textVerifyPasswordField({
     ...config.password,
     ...config.verifyPassword,
-    label: (config.verifyPassword?.label) ?? `Verify ${passwordFieldConfig.templateOptions?.label}`,
+    label: config.verifyPassword?.label ?? `Verify ${passwordFieldConfig.templateOptions?.label}`,
     key: verifyPasswordFieldKey
   });
 
   const validators = {
-    validation: [{
-      errorPath: verifyPasswordFieldKey,
-      expression: fieldValuesAreEqualValidator({ keysFilter: [passwordFieldConfig.key, verifyPasswordField.key] as string[], message: 'The passwords do not match.' })
-    }]
+    validation: [
+      {
+        errorPath: verifyPasswordFieldKey,
+        expression: fieldValuesAreEqualValidator({ keysFilter: [passwordFieldConfig.key, verifyPasswordField.key] as string[], message: 'The passwords do not match.' })
+      }
+    ]
   };
 
   const groupFieldConfig: FormlyFieldConfig = {
@@ -77,7 +79,7 @@ export function textPasswordWithVerifyFieldGroup(config: TextPasswordWithVerifyF
 export interface UsernameLoginFieldUsernameConfig {
   email?: Omit<EmailFieldConfig, 'key'>;
   username?: Omit<TextFieldConfig, 'key'>;
-};
+}
 
 /**
  * usernamePasswordLoginFields() configuration.
@@ -99,9 +101,9 @@ export interface DefaultUsernameLoginFieldsValue {
 
 /**
  * Template for login field that takes in a username and password.
- * 
- * @param param0 
- * @returns 
+ *
+ * @param param0
+ * @returns
  */
 export function usernamePasswordLoginFields({ username, password, verifyPassword }: UsernameLoginFieldsConfig): FormlyFieldConfig[] {
   let usernameField: FormlyFieldConfig;
@@ -126,10 +128,7 @@ export function usernamePasswordLoginFields({ username, password, verifyPassword
     usernameField = textField({ ...usernameFieldConfig.username, ...defaultUsernameFieldConfig });
   }
 
-  const passwordField = (verifyPassword) ? (textPasswordWithVerifyFieldGroup({ password, verifyPassword: (verifyPassword === true) ? undefined : verifyPassword })) : textPasswordField(password);
+  const passwordField = verifyPassword ? textPasswordWithVerifyFieldGroup({ password, verifyPassword: verifyPassword === true ? undefined : verifyPassword }) : textPasswordField(password);
 
-  return [
-    usernameField,
-    passwordField
-  ];
+  return [usernameField, passwordField];
 }

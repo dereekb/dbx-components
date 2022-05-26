@@ -11,13 +11,10 @@ import { Maybe } from '@dereekb/util';
 @Directive({
   selector: '[dbxFilterMapSource]',
   exportAs: 'dbxFilterMapSource',
-  providers: [
-    ...provideFilterSource(DbxFilterMapSourceDirective)
-  ]
+  providers: [...provideFilterSource(DbxFilterMapSourceDirective)]
 })
 export class DbxFilterMapSourceDirective<F> extends AbstractDbxFilterMapInstanceDirective<F> implements FilterSource<F> {
-
-  readonly filter$: Observable<F> = this.instance$.pipe(switchMap(x => x.filter$));
+  readonly filter$: Observable<F> = this.instance$.pipe(switchMap((x) => x.filter$));
 
   @Input('dbxFilterMapSource')
   get key(): Maybe<FilterMapKey> {
@@ -31,5 +28,4 @@ export class DbxFilterMapSourceDirective<F> extends AbstractDbxFilterMapInstance
   initWithFilter?(filterObs: Observable<F>): void {
     this.instance$.pipe(first()).subscribe((x) => x.initWithFilter(filterObs));
   }
-
 }

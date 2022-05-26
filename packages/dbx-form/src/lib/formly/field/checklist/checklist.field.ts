@@ -25,16 +25,15 @@ export interface ChecklistItemFieldDataSetItem<D, T extends ChecklistType<D>> {
  * Used for building a set of configurations for a data-type object that has as second object that is used as a checklist.
  */
 export class ChecklistItemFieldDataSetBuilder<D extends object, C extends ChecklistType<D> = ChecklistType<D>> {
-
   private _fields = new Map<ChecklistItemFieldDataSetFieldKey<C>, ChecklistItemFieldDataSetItem<D, ChecklistType<D>>>();
 
   readonly dataObs$ = this.dataObs;
 
-  constructor(readonly dataObs: Observable<D>) { }
+  constructor(readonly dataObs: Observable<D>) {}
 
   /**
    * Merges the input config with existing configuration.
-   * 
+   *
    * The displayContentObs, if provided, will merge with the existing observable and the two objects merged.
    */
   merge<T>(key: ChecklistItemFieldDataSetFieldKey<D>, config: Partial<ChecklistItemFieldBuilderInput<T>>) {
@@ -46,10 +45,7 @@ export class ChecklistItemFieldDataSetBuilder<D extends object, C extends Checkl
     } as any;
 
     if (currentField.displayContentObs && config.displayContentObs) {
-      mergedConfig.displayContentObs = combineLatest([
-        currentField.displayContentObs,
-        config.displayContentObs
-      ]).pipe(
+      mergedConfig.displayContentObs = combineLatest([currentField.displayContentObs, config.displayContentObs]).pipe(
         map(([a, b]) => {
           const result = {
             ...a,
@@ -146,5 +142,4 @@ export class ChecklistItemFieldDataSetBuilder<D extends object, C extends Checkl
 
     return this.contentWithValueFromData(key, (value: T) => ({ label: sanitizeLabel(labelFn(value)) }));
   }
-
 }

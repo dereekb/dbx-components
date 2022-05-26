@@ -1,8 +1,4 @@
-import {
-  ActionReducer,
-  createReducer,
-  MetaReducer
-} from '@ngrx/store';
+import { ActionReducer, createReducer, MetaReducer } from '@ngrx/store';
 import { environment } from '../../environments/environment';
 
 // tslint:disable-next-line: no-empty-interface
@@ -12,9 +8,7 @@ export interface State {
 
 export const initialState: State = {};
 
-export const ROOT_REDUCER = createReducer(
-  initialState
-);
+export const ROOT_REDUCER = createReducer(initialState);
 
 // console.log all actions
 export function logger(reducer: ActionReducer<State>): ActionReducer<State> {
@@ -34,6 +28,4 @@ export function logger(reducer: ActionReducer<State>): ActionReducer<State> {
  * the root meta-reducer. To add more meta-reducers, provide an array of meta-reducers
  * that will be composed to form the root meta-reducer.
  */
-export const metaReducers: MetaReducer<State>[] = !environment.production
-  ? [logger]
-  : [];
+export const metaReducers: MetaReducer<State>[] = !environment.production ? [logger] : [];

@@ -8,22 +8,9 @@ import { DbxRouterAnchorModule } from '../anchor/anchor.module';
 import { MatMenuModule } from '@angular/material/menu';
 import { DbxAnchorListComponent } from './anchorlist.component';
 
-
 @NgModule({
-  imports: [
-    CommonModule,
-    MatTabsModule,
-    MatButtonModule,
-    MatIconModule,
-    MatListModule,
-    MatMenuModule,
-    DbxRouterAnchorModule,
-  ],
-  declarations: [
-    DbxAnchorListComponent
-  ],
-  exports: [
-    DbxAnchorListComponent
-  ]
+  imports: [CommonModule, MatTabsModule, MatButtonModule, MatIconModule, MatListModule, MatMenuModule, DbxRouterAnchorModule],
+  declarations: [DbxAnchorListComponent],
+  exports: [DbxAnchorListComponent]
 })
-export class DbxRouterAnchorListModule { }
+export class DbxRouterAnchorListModule {}

@@ -15,21 +15,6 @@ import { DbxStyleLayoutModule } from './style/style.layout.module';
 import { DbxFlexLayoutModule } from './flex/flex.layout.module';
 
 @NgModule({
-  exports: [
-    DbxBarLayoutModule,
-    DbxBlockLayoutModule,
-    DbxCardBoxLayoutModule,
-    DbxColumnLayoutModule,
-    DbxCompactLayoutModule,
-    DbxContentLayoutModule,
-    DbxFlagLayoutModule,
-    DbxFlexLayoutModule,
-    DbxItemLayoutModule,
-    DbxListLayoutModule,
-    DbxSectionLayoutModule,
-    DbxStepLayoutModule,
-    DbxStyleLayoutModule,
-    DbxTextModule
-  ],
+  exports: [DbxBarLayoutModule, DbxBlockLayoutModule, DbxCardBoxLayoutModule, DbxColumnLayoutModule, DbxCompactLayoutModule, DbxContentLayoutModule, DbxFlagLayoutModule, DbxFlexLayoutModule, DbxItemLayoutModule, DbxListLayoutModule, DbxSectionLayoutModule, DbxStepLayoutModule, DbxStyleLayoutModule, DbxTextModule]
 })
-export class DbxLayoutModule { }
+export class DbxLayoutModule {}

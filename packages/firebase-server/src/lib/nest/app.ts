@@ -21,20 +21,20 @@ export interface NestServerInstance<T> {
   readonly moduleClass: ClassType<T>;
   /**
    * Initializes and returns the Nest Server.
-   * 
+   *
    * If already initialized the server will not be initialized again.
    */
   initNestServer(firebaseApp: admin.app.App): NestServer;
 
   /**
    * Terminates the nest server for the input app.
-   * 
-   * @param firebaseApp 
+   *
+   * @param firebaseApp
    */
   removeNestServer(firebaseApp: admin.app.App): Promise<boolean>;
 }
 
-export class FirebaseNestServerRootModule { }
+export class FirebaseNestServerRootModule {}
 
 export interface NestServerInstanceConfig<T> {
   /**
@@ -46,7 +46,7 @@ export interface NestServerInstanceConfig<T> {
    */
   readonly providers?: Provider<unknown>[];
   /**
-   * Whether or not to configure webhook usage. This will configure routes to use 
+   * Whether or not to configure webhook usage. This will configure routes to use
    */
   readonly configureWebhooks?: boolean;
   /**
@@ -75,7 +75,7 @@ export function nestServerInstance<T>(config: NestServerInstanceConfig<T>): Nest
         const imports: Type<unknown>[] = [moduleClass];
 
         // NOTE: https://cloud.google.com/functions/docs/writing/http#parsing_http_requests
-        const options: NestApplicationOptions = { bodyParser: false };  // firebase already parses the requests
+        const options: NestApplicationOptions = { bodyParser: false }; // firebase already parses the requests
 
         if (config.configureWebhooks) {
           imports.push(ConfigureFirebaseWebhookMiddlewareModule);
@@ -89,24 +89,19 @@ export function nestServerInstance<T>(config: NestServerInstanceConfig<T>): Nest
           global: true
         };
 
-        const nestApp = await NestFactory.create(
-          providersModule,
-          new ExpressAdapter(expressInstance),
-          options
-        );
+        const nestApp = await NestFactory.create(providersModule, new ExpressAdapter(expressInstance), options);
 
         return nestApp.init();
       };
 
-      const nest: Promise<INestApplication> = createNestServer(server)
-        .catch(err => {
-          console.error('Nest failed startup.', err);
-          throw err;
-        }) as Promise<INestApplication>;
+      const nest: Promise<INestApplication> = createNestServer(server).catch((err) => {
+        console.error('Nest failed startup.', err);
+        throw err;
+      }) as Promise<INestApplication>;
 
       nestServer = { server, nest: makeGetter(nest) };
       serversCache.set(appName, nestServer);
-    };
+    }
 
     return nestServer;
   };
@@ -117,7 +112,7 @@ export function nestServerInstance<T>(config: NestServerInstanceConfig<T>): Nest
     let removed: Promise<boolean>;
 
     if (nestServer) {
-      removed = nestServer.nest().then(x => {
+      removed = nestServer.nest().then((x) => {
         serversCache.delete(appName);
         return x.close().then(() => true);
       });

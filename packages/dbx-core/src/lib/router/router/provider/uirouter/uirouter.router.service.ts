@@ -1,8 +1,8 @@
 import { Subject, BehaviorSubject } from 'rxjs';
 import { DbxRouterService, DbxRouterTransitionService } from '../../service';
-import { asSegueRef, asSegueRefString, SegueRefOrSegueRefRouterLink, SegueRefRawSegueParams } from "../../../segue";
+import { asSegueRef, asSegueRefString, SegueRefOrSegueRefRouterLink, SegueRefRawSegueParams } from '../../../segue';
 import { StateService, UIRouterGlobals, TransitionOptions, TransitionService } from '@uirouter/core';
-import { Injectable, OnDestroy } from "@angular/core";
+import { Injectable, OnDestroy } from '@angular/core';
 import { DbxRouterTransitionEvent, DbxRouterTransitionEventType } from '../../transition/transition';
 
 /**
@@ -10,7 +10,6 @@ import { DbxRouterTransitionEvent, DbxRouterTransitionEventType } from '../../tr
  */
 @Injectable()
 export class DbxUIRouterService implements DbxRouterService, DbxRouterTransitionService, OnDestroy {
-
   private readonly _params = new BehaviorSubject<SegueRefRawSegueParams>(this.uiRouterGlobals.params);
   readonly params$ = this._params.asObservable();
 
@@ -18,14 +17,13 @@ export class DbxUIRouterService implements DbxRouterService, DbxRouterTransition
   readonly transitions$ = this._transitions.asObservable();
 
   constructor(readonly state: StateService, readonly transitionService: TransitionService, readonly uiRouterGlobals: UIRouterGlobals) {
-
     const emitTransition = (type: DbxRouterTransitionEventType) => {
       this._transitions.next({
         type
       });
 
       this._params.next(this.uiRouterGlobals.params);
-    }
+    };
 
     this.transitionService.onStart({}, () => {
       emitTransition(DbxRouterTransitionEventType.START);
@@ -34,7 +32,6 @@ export class DbxUIRouterService implements DbxRouterService, DbxRouterTransition
     this.transitionService.onSuccess({}, () => {
       emitTransition(DbxRouterTransitionEventType.SUCCESS);
     });
-
   }
 
   ngOnDestroy(): void {
@@ -48,7 +45,10 @@ export class DbxUIRouterService implements DbxRouterService, DbxRouterTransition
   go(input: SegueRefOrSegueRefRouterLink<TransitionOptions>): Promise<boolean> {
     const segueRef = asSegueRef(input);
     const params = { ...this.uiRouterGlobals.current.params, ...segueRef.refParams };
-    return this.state.go(segueRef.ref as string, params, segueRef.refOptions).then(() => true).catch(() => false);
+    return this.state
+      .go(segueRef.ref as string, params, segueRef.refOptions)
+      .then(() => true)
+      .catch(() => false);
   }
 
   isActive(input: SegueRefOrSegueRefRouterLink): boolean {
@@ -56,7 +56,7 @@ export class DbxUIRouterService implements DbxRouterService, DbxRouterTransition
     const ref = segueRef.ref as string;
     const refParams = segueRef.refParams;
 
-    const targetRef = (ref.startsWith('.') ? `^${ref}` : ref);
+    const targetRef = ref.startsWith('.') ? `^${ref}` : ref;
     const active = this.state.includes(targetRef, refParams);
     return active;
   }
@@ -67,7 +67,6 @@ export class DbxUIRouterService implements DbxRouterService, DbxRouterTransition
 
     const aLength = aRef.length;
     const bLength = bRef.length;
-    return (aLength > bLength) ? 1 : (aLength === bLength) ? 0 : -1;
+    return aLength > bLength ? 1 : aLength === bLength ? 0 : -1;
   }
-
 }

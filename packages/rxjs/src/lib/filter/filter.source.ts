@@ -9,7 +9,6 @@ import { Destroyable, Maybe } from '@dereekb/util';
  * A basic FilterSource implementation.
  */
 export class FilterSourceInstance<F> implements FilterSource<F>, Destroyable {
-
   private _filter = new BehaviorSubject<Maybe<F>>(undefined);
   private _initialFilter = new BehaviorSubject<Maybe<Observable<F>>>(undefined);
   private _defaultFilter = new BehaviorSubject<Maybe<Observable<Maybe<F>>>>(undefined);
@@ -26,8 +25,8 @@ export class FilterSourceInstance<F> implements FilterSource<F>, Destroyable {
    * filter$ uses the latest value from any filter.
    */
   readonly filter$: Observable<F> = this._filter.pipe(
-    switchMap(x => (x != null) ? of(x) : this.initialFilter$),
-    filterMaybe(),  // Only provided non-maybe filter values.
+    switchMap((x) => (x != null ? of(x) : this.initialFilter$)),
+    filterMaybe(), // Only provided non-maybe filter values.
     distinctUntilObjectValuesChanged(),
     shareReplay(1)
   );
@@ -59,5 +58,4 @@ export class FilterSourceInstance<F> implements FilterSource<F>, Destroyable {
     this._initialFilter.complete();
     this._defaultFilter.complete();
   }
-
 }

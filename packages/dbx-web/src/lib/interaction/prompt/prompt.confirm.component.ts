@@ -28,7 +28,6 @@ export interface DbxPromptConfirmConfig {
   templateUrl: './prompt.confirm.component.html'
 })
 export class DbxPromptConfirmComponent {
-
   private _config: DbxPromptConfirmConfig = {};
 
   @Output()
@@ -53,5 +52,4 @@ export class DbxPromptConfirmComponent {
   onCancel(): void {
     this.cancel.emit();
   }
-
 }

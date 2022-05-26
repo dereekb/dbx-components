@@ -8,7 +8,7 @@ export type NestApplicationPromiseGetter = Getter<Promise<INestApplicationContex
 
 /**
  * Generates a function from the passed NestApplicationPromiseGetter/context.
- * 
+ *
  * This pattern is available to allow generating similar content for differenting contexts, such as production and testing.
  */
 export type NestApplicationFunctionFactory<F> = (nestAppPromiseGetter: NestApplicationPromiseGetter) => F;
@@ -22,5 +22,5 @@ export type MakeNestContext<C> = (nest: INestApplicationContext) => C;
  * Abstract class that wraps an INestApplicationContext value.
  */
 export abstract class AbstractNestContext {
-  constructor(readonly nest: INestApplicationContext) { }
+  constructor(readonly nest: INestApplicationContext) {}
 }

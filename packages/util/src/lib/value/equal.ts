@@ -12,17 +12,17 @@ export type IsEqualContext<T = unknown> = (x: T) => boolean;
 
 /**
  * Similar to IsEqualContext, but supports an array of objects.
- * 
+ *
  * Used to check if the input object or array of objects are considered equal to the current context.
  */
 export type AreEqualContext<T = unknown> = (x: IterableOrValue<T>) => boolean;
 
 /**
  * Creates an IsEqualContext
- * 
- * @param contextValue 
- * @param fn 
- * @returns 
+ *
+ * @param contextValue
+ * @param fn
+ * @returns
  */
 export function isEqualContext<T>(contextValue: T, fn: IsEqualFunction<T>): IsEqualContext<T> {
   return (value) => {
@@ -32,10 +32,10 @@ export function isEqualContext<T>(contextValue: T, fn: IsEqualFunction<T>): IsEq
 
 /**
  * Creates an AreEqualContext
- * 
- * @param contextValue 
- * @param fn 
- * @returns 
+ *
+ * @param contextValue
+ * @param fn
+ * @returns
  */
 export function areEqualContext<T>(contextValue: T, fn: IsEqualFunction<T>): AreEqualContext<T> {
   const isEqual = isEqualContext(contextValue, fn);
@@ -55,17 +55,17 @@ export function areEqualContext<T>(contextValue: T, fn: IsEqualFunction<T>): Are
 
 /**
  * Returns true if all input values are equal.
- * 
+ *
  * Arrays that are empty or have one value will return true by default.
- * 
- * @param values 
- * @param fn 
- * @returns 
+ *
+ * @param values
+ * @param fn
+ * @returns
  */
 export function allObjectsAreEqual<T>(values: IterableOrValue<T>, fn: IsEqualFunction<T>): boolean {
   if (isIterable(values)) {
     const firstValues = takeValuesFromIterable(values, 2);
-    return (firstValues.length > 1) ? areEqualContext(firstValues[0], fn)(values) : true;
+    return firstValues.length > 1 ? areEqualContext(firstValues[0], fn)(values) : true;
   }
 
   return true;

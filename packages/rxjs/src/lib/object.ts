@@ -1,5 +1,5 @@
-import { areEqualPOJOValues } from "@dereekb/util";
-import { distinctUntilChanged, filter, mergeMap, isObservable, MonoTypeOperatorFunction, Observable } from "rxjs";
+import { areEqualPOJOValues } from '@dereekb/util';
+import { distinctUntilChanged, filter, mergeMap, isObservable, MonoTypeOperatorFunction, Observable } from 'rxjs';
 
 /**
  * Equivalent to distinctUntilChanged() using isEqualObject()
@@ -16,9 +16,9 @@ export function filterIfObjectValuesUnchanged<F>(obs: Observable<F>): MonoTypeOp
 export function filterIfObjectValuesUnchanged<F>(input: F | Observable<F>): MonoTypeOperatorFunction<F> {
   if (isObservable(input)) {
     return mergeMap<F, Observable<F>>((inputFilter) => {
-      return input.pipe(filterIfObjectValuesUnchanged(inputFilter))
+      return input.pipe(filterIfObjectValuesUnchanged(inputFilter));
     });
   } else {
-    return filter((inputObject) => !areEqualPOJOValues(input, inputObject))
+    return filter((inputObject) => !areEqualPOJOValues(input, inputObject));
   }
 }

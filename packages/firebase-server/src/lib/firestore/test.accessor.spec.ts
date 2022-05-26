@@ -5,9 +5,7 @@ import { MockItem, MockItemDocument, MockItemFirestoreCollection, mockItemFirest
 import { adminTestWithMockItemCollection } from '@dereekb/firebase-server/test';
 
 describe('FirestoreDocumentDataAccessor', () => {
-
   adminTestWithMockItemCollection((f) => {
-
     let firestoreCollection: MockItemFirestoreCollection;
     let documentAccessor: FirestoreDocumentAccessor<MockItem, MockItemDocument>;
     let document: MockItemDocument;
@@ -19,80 +17,73 @@ describe('FirestoreDocumentDataAccessor', () => {
     });
 
     describe('get()', () => {
-
       it('should return a document snapshot even if the item does not exist.', async () => {
         const document = documentAccessor.newDocument();
         expect(document).toBeDefined();
 
-        const snapshot = await document.accessor.get() as DocumentSnapshot<MockItem>;
+        const snapshot = (await document.accessor.get()) as DocumentSnapshot<MockItem>;
         expect(snapshot).toBeDefined();
         expect(snapshot.exists).toBe(false);
       });
-
     });
 
     describe('stream()', () => {
-
       it('should return a document snapshot even if the item does not exist.', (done) => {
         const document = documentAccessor.newDocument();
         expect(document).toBeDefined();
 
-        document.accessor.stream().pipe(first()).subscribe((snapshot) => {
-          expect(snapshot).toBeDefined();
-          expect((snapshot as DocumentSnapshot<MockItem>).exists).toBe(false);
-          done();
-        });
+        document.accessor
+          .stream()
+          .pipe(first())
+          .subscribe((snapshot) => {
+            expect(snapshot).toBeDefined();
+            expect((snapshot as DocumentSnapshot<MockItem>).exists).toBe(false);
+            done();
+          });
       });
-
     });
 
     describe('after creation', () => {
-
       beforeEach(async () => {
         await document.accessor.set({
-          test: false,
-          
+          test: false
         });
       });
 
       describe('stream()', () => {
-
         it('should return the document snapshot.', (done) => {
-          document.accessor.stream().pipe(first()).subscribe((snapshot) => {
-            expect(snapshot).toBeDefined();
-            expect((snapshot as DocumentSnapshot<MockItem>).exists).toBe(true);
-            done();
-          });
+          document.accessor
+            .stream()
+            .pipe(first())
+            .subscribe((snapshot) => {
+              expect(snapshot).toBeDefined();
+              expect((snapshot as DocumentSnapshot<MockItem>).exists).toBe(true);
+              done();
+            });
         });
-
       });
 
       describe('get()', () => {
-
         it('should return the document snapshot.', async () => {
           const snapshot = await document.accessor.get();
           expect(snapshot).toBeDefined();
           expect((snapshot as DocumentSnapshot<MockItem>).exists).toBe(true);
         });
-
       });
 
       describe('delete()', () => {
-
         it(`should delete the document.`, async () => {
-          let snapshot = await document.accessor.get() as DocumentSnapshot<MockItem>;
+          let snapshot = (await document.accessor.get()) as DocumentSnapshot<MockItem>;
           expect(snapshot.exists).toBe(true);
 
           await document.accessor.delete();
 
-          snapshot = await document.accessor.get() as DocumentSnapshot<MockItem>;
+          snapshot = (await document.accessor.get()) as DocumentSnapshot<MockItem>;
           expect(snapshot.exists).toBe(false);
         });
-
       });
 
       describe('set()', () => {
-
         it(`should set the document's data.`, async () => {
           await document.accessor.set({
             test: true
@@ -105,7 +96,6 @@ describe('FirestoreDocumentDataAccessor', () => {
         });
 
         it(`should merge in partial data when merge is true`, async () => {
-
           const test = true;
           const value = 'test';
 
@@ -115,11 +105,14 @@ describe('FirestoreDocumentDataAccessor', () => {
           });
 
           // update it via set
-          await document.accessor.set({
-            value
-          }, {
-            merge: true
-          });
+          await document.accessor.set(
+            {
+              value
+            },
+            {
+              merge: true
+            }
+          );
 
           const snapshot = await document.accessor.get();
           const data = snapshot.data()!;
@@ -127,11 +120,9 @@ describe('FirestoreDocumentDataAccessor', () => {
           expect(data.test).toBe(test);
           expect(data.value).toBe(value);
         });
-
       });
 
       describe('update()', () => {
-
         it(`should update the document's data.`, async () => {
           const value = 'test';
 
@@ -145,11 +136,7 @@ describe('FirestoreDocumentDataAccessor', () => {
           expect(data.test).toBe(false);
           expect(data.value).toBe(value);
         });
-
       });
-
     });
-
   });
-
 });

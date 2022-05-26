@@ -2,10 +2,8 @@
 
 // MARK: Variables
 
-
 // MARK: Mixin
 @mixin core() {
-
   .dbx-anchor a {
     color: inherit;
     text-decoration: none;
@@ -16,7 +14,7 @@
 
       .dbx-anchor-a {
         display: block;
-        width: 100%
+        width: 100%;
       }
     }
   }
@@ -27,7 +25,7 @@
   }
 
   .dbx-link-spacer:before {
-    content: "|";
+    content: '|';
     margin: 0 8px;
   }
 
@@ -35,13 +33,15 @@
     display: flex;
     align-items: center;
   }
-
 }
 
-@mixin color($theme-config) {}
+@mixin color($theme-config) {
+}
 
-@mixin typography($typography-config) {}
+@mixin typography($typography-config) {
+}
 
 @mixin theme($theme-config) {
-  @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-router-anchor') {}
+  @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-router-anchor') {
+  }
 }

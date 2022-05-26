@@ -9,7 +9,6 @@ import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
   selector: '[dbxActionLogger],[dbxActionContextLogger]'
 })
 export class DbxActionContextLoggerDirective extends AbstractSubscriptionDirective implements OnInit {
-
   constructor(@Host() public readonly source: DbxActionContextStoreSourceInstance) {
     super();
   }
@@ -19,5 +18,4 @@ export class DbxActionContextLoggerDirective extends AbstractSubscriptionDirecti
       console.log('State: ', state);
     });
   }
-
 }

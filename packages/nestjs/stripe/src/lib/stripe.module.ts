@@ -19,12 +19,10 @@ export function stripeServiceConfigFactory(configService: ConfigService): Stripe
 
   StripeServiceConfig.assertValidConfig(config);
   return config;
-};
+}
 
 @Module({
-  imports: [
-    ConfigModule
-  ],
+  imports: [ConfigModule],
   providers: [
     {
       provide: StripeServiceConfig,
@@ -33,6 +31,6 @@ export function stripeServiceConfigFactory(configService: ConfigService): Stripe
     },
     StripeApi
   ],
-  exports: [StripeApi],
+  exports: [StripeApi]
 })
-export class StripeModule { }
+export class StripeModule {}

@@ -9,21 +9,8 @@ import { DbxActionSnackbarComponent } from './action.snackbar.component';
 import { DbxStyleLayoutModule } from '../../layout/style/style.layout.module';
 
 @NgModule({
-  imports: [
-    CommonModule,
-    DbxStyleLayoutModule,
-    DbxCoreActionModule,
-    DbxPromptModule,
-    DbxButtonModule,
-    DbxReadableErrorModule
-  ],
-  declarations: [
-    DbxActionSnackbarComponent,
-    DbxActionSnackbarDirective
-  ],
-  exports: [
-    DbxActionSnackbarComponent,
-    DbxActionSnackbarDirective
-  ]
+  imports: [CommonModule, DbxStyleLayoutModule, DbxCoreActionModule, DbxPromptModule, DbxButtonModule, DbxReadableErrorModule],
+  declarations: [DbxActionSnackbarComponent, DbxActionSnackbarDirective],
+  exports: [DbxActionSnackbarComponent, DbxActionSnackbarDirective]
 })
-export class DbxActionSnackbarModule { }
+export class DbxActionSnackbarModule {}

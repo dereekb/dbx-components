@@ -6,9 +6,9 @@ import { ItemAccumulator, ItemAccumulatorValuePair, PageItemAccumulator } from '
 
 /**
  * Used for ItemAccumulators that have an array of results returned per page instead of a single item.
- * 
- * @param accumulator 
- * @returns 
+ *
+ * @param accumulator
+ * @returns
  */
 export function flattenAccumulatorResultItemArray<T, I = unknown>(accumulator: ItemAccumulator<T[], I>): Observable<T[]> {
   return accumulator.allItemPairs$.pipe(
@@ -16,11 +16,11 @@ export function flattenAccumulatorResultItemArray<T, I = unknown>(accumulator: I
       const pairs: ItemAccumulatorValuePair<T[], I>[] = allItems;
       const firstLatestItemPair = lastValue(allItems);
       const skipValue = firstLatestItemPair?.input;
-      const seed: T[] = flattenArray(pairs.map(x => x.output));
+      const seed: T[] = flattenArray(pairs.map((x) => x.output));
 
       const mapStateToItem = mapLoadingStateValueFunction(accumulator.mapItemFunction);
       const accumulatorObs: Observable<T[]> = accumulator.itemIteration.latestState$.pipe(
-        skipWhile(x => x.value === skipValue),
+        skipWhile((x) => x.value === skipValue),
         map(mapStateToItem),
         filterMaybe()
       );
@@ -39,9 +39,12 @@ export function flattenAccumulatorResultItemArray<T, I = unknown>(accumulator: I
  */
 export function accumulatorFlattenPageListLoadingState<T, I = unknown>(accumulator: PageItemAccumulator<T[], I>): Observable<PageListLoadingState<T>> {
   return combineLatest([accumulator.itemIteration.currentState$, flattenAccumulatorResultItemArray(accumulator)]).pipe(
-    map(([state, values]) => mapLoadingStateResults(state, {
-      mapValue: () => values
-    }) as PageListLoadingState<T>),
+    map(
+      ([state, values]) =>
+        mapLoadingStateResults(state, {
+          mapValue: () => values
+        }) as PageListLoadingState<T>
+    ),
     shareReplay(1)
   );
 }
@@ -51,9 +54,12 @@ export function accumulatorFlattenPageListLoadingState<T, I = unknown>(accumulat
  */
 export function accumulatorCurrentPageListLoadingState<V, I = unknown>(accumulator: PageItemAccumulator<V, I>): Observable<PageListLoadingState<V>> {
   return combineLatest([accumulator.itemIteration.currentState$, accumulator.allItems$]).pipe(
-    map(([state, values]) => mapLoadingStateResults(state, {
-      mapValue: () => values
-    }) as PageListLoadingState<V>),
+    map(
+      ([state, values]) =>
+        mapLoadingStateResults(state, {
+          mapValue: () => values
+        }) as PageListLoadingState<V>
+    ),
     shareReplay(1)
   );
 }

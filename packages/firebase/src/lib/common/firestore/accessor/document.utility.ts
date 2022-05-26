@@ -10,7 +10,7 @@ export interface MakeDocumentsParams<T, D extends FirestoreDocument<T> = Firesto
   count: number;
   /**
    * Initializes the input document with the returned data.
-   * 
+   *
    * This function may also optionally perform tasks with the passed document and return null/undefined.
    */
   init: (i: number, document: D) => Maybe<T> | Promise<Maybe<T>>;
@@ -18,10 +18,10 @@ export interface MakeDocumentsParams<T, D extends FirestoreDocument<T> = Firesto
 
 /**
  * Makes a number of new documents.
- * 
- * @param documentAccessor 
- * @param make 
- * @returns 
+ *
+ * @param documentAccessor
+ * @param make
+ * @returns
  */
 export function makeDocuments<T, D extends FirestoreDocument<T>>(documentAccessor: FirestoreDocumentAccessor<T, D>, make: MakeDocumentsParams<T, D>): Promise<D[]> {
   return performMakeLoop({
@@ -44,17 +44,16 @@ export function getDocumentSnapshots<T, D extends FirestoreDocument<T>>(document
 }
 
 export function loadDocumentsForSnapshots<T, D extends FirestoreDocument<T>>(accessor: FirestoreDocumentAccessor<T, D>, snapshots: QuerySnapshot<T>): D[] {
-  return snapshots.docs.map(x => accessor.loadDocument(x.ref));
+  return snapshots.docs.map((x) => accessor.loadDocument(x.ref));
 }
 
 export function loadDocumentsForDocumentReferences<T, D extends FirestoreDocument<T>>(accessor: FirestoreDocumentAccessor<T, D>, refs: DocumentReference<T>[]): D[] {
-  return refs.map(x => accessor.loadDocument(x));
+  return refs.map((x) => accessor.loadDocument(x));
 }
 
 export function loadDocumentsForValues<I, T, D extends FirestoreDocument<T>>(accessor: FirestoreDocumentAccessor<T, D>, values: I[], getRef: (value: I) => DocumentReference<T>): D[] {
-  return values.map(x => accessor.loadDocument(getRef(x)));
+  return values.map((x) => accessor.loadDocument(getRef(x)));
 }
-
 
 /**
  * Used for loading documents for the input references.
@@ -63,28 +62,28 @@ export type FirestoreDocumentLoader<T, D extends FirestoreDocument<T>> = (refere
 
 /**
  * Used to make a FirestoreDocumentLoader.
- * 
- * @param accessorContext 
- * @returns 
+ *
+ * @param accessorContext
+ * @returns
  */
 export function firestoreDocumentLoader<T, D extends FirestoreDocument<T>>(accessorContext: FirestoreDocumentAccessorContextExtension<T, D>): FirestoreDocumentLoader<T, D> {
   return (references: DocumentReference<T>[], transaction?: Transaction) => {
-    const accessor = (transaction) ? accessorContext.documentAccessorForTransaction(transaction) : accessorContext.documentAccessor();
+    const accessor = transaction ? accessorContext.documentAccessorForTransaction(transaction) : accessorContext.documentAccessor();
     return loadDocumentsForDocumentReferences(accessor, references);
-  }
+  };
 }
 
 /**
  * Creates a DocumentDataWithId from the input DocumentSnapshot. If the data does not exist, returns undefined.
- * 
- * @param snapshot 
- * @returns 
+ *
+ * @param snapshot
+ * @returns
  */
 export function documentDataWithId<T>(snapshot: DocumentSnapshot<T>): Maybe<DocumentDataWithId<T>> {
   const data = snapshot.data() as DocumentDataWithId<T>;
 
   if (data) {
-    data.id = snapshot.id;    // attach the id to data
+    data.id = snapshot.id; // attach the id to data
   }
 
   return data;

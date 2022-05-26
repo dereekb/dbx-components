@@ -1,4 +1,4 @@
-import { excludeValuesFromArray } from "../array";
+import { excludeValuesFromArray } from '../array';
 
 export type EmailAddress = string;
 
@@ -28,12 +28,12 @@ export function convertEmailParticipantStringToParticipant(participantString: Em
   };
 }
 
-export function coerceToEmailParticipants({ participants = [], emails = [] }: { participants?: EmailParticipant[], emails?: EmailAddress[] }): EmailParticipant[] {
+export function coerceToEmailParticipants({ participants = [], emails = [] }: { participants?: EmailParticipant[]; emails?: EmailAddress[] }): EmailParticipant[] {
   if (!emails?.length) {
     return participants;
   } else {
-    const participantEmails = participants?.map(x => x.email) ?? [];
+    const participantEmails = participants?.map((x) => x.email) ?? [];
     const emailsWithoutParticipants = excludeValuesFromArray(emails, participantEmails);
-    return participants.concat(emailsWithoutParticipants.map(email => ({ email })));
+    return participants.concat(emailsWithoutParticipants.map((email) => ({ email })));
   }
 }

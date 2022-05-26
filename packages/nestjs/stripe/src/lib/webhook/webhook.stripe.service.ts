@@ -1,5 +1,5 @@
 import Stripe from 'stripe';
-import { Injectable, Logger } from "@nestjs/common";
+import { Injectable, Logger } from '@nestjs/common';
 import { Request } from 'express';
 import { stripeEventHandlerConfigurerFactory, stripeEventHandlerFactory } from './webhook.stripe';
 import { StripeApi } from '../stripe.api';
@@ -10,15 +10,12 @@ import { Handler } from '@dereekb/util';
  */
 @Injectable()
 export class StripeWebhookService {
-
   private readonly logger = new Logger('StripeWebhookService');
 
   readonly handler: Handler<Stripe.Event> = stripeEventHandlerFactory();
   readonly configure = stripeEventHandlerConfigurerFactory(this.handler);
 
-  constructor(
-    private readonly stripeApi: StripeApi
-  ) { }
+  constructor(private readonly stripeApi: StripeApi) {}
 
   public async updateForWebhook(req: Request, rawBody: Buffer): Promise<any> {
     const event = this.stripeApi.readStripeEventFromWebhookRequest(req, rawBody);
@@ -34,5 +31,4 @@ export class StripeWebhookService {
 
     return handled;
   }
-
 }

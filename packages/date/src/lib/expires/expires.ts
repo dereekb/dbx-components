@@ -14,7 +14,7 @@ export interface Expires {
 
 /**
  * Returns true if any of the input items have expired.
- * 
+ *
  * If the list is empty, returns false.
  */
 export function atleastOneNotExpired(expires: Maybe<Expires>[]): boolean {
@@ -48,10 +48,10 @@ export function anyHaveExpired(expires: Maybe<Expires>[], expireIfEmpty = true):
 
 /**
  * Convenience function for checking if the input time has expired.
- * 
- * @param timeNumber 
- * @param expiresIn 
- * @returns 
+ *
+ * @param timeNumber
+ * @param expiresIn
+ * @returns
  */
 export function timeHasExpired(time: Maybe<DateOrUnixDateTimeNumber>, expiresIn?: number): boolean {
   return hasExpired(toExpires(time, expiresIn));
@@ -90,4 +90,3 @@ export function hasExpired(expires: Maybe<Expires>): boolean {
 export function getExpiration(expires: Maybe<Expires>): Date {
   return expires?.expiresAt ?? addMinutes(new Date(), -1);
 }
-

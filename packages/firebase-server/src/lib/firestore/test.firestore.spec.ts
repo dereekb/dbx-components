@@ -1,14 +1,12 @@
 import { DocumentReference, Transaction, Firestore } from '@google-cloud/firestore';
 import { DocumentSnapshot, makeFirestoreCollection } from '@dereekb/firebase';
-import { MockItem, mockItemCollectionReference, MockItemDocument, MockItemFirestoreCollection } from "@dereekb/firebase/test";
+import { MockItem, mockItemCollectionReference, MockItemDocument, MockItemFirestoreCollection } from '@dereekb/firebase/test';
 import { Maybe } from '@dereekb/util';
 import { adminTestWithMockItemCollection } from '@dereekb/firebase-server/test';
 import { googleCloudFirestoreDrivers } from './driver';
 
 describe('FirestoreCollection', () => {
-
   adminTestWithMockItemCollection((f) => {
-
     let firestore: Firestore;
     let firestoreCollection: MockItemFirestoreCollection;
 
@@ -18,7 +16,6 @@ describe('FirestoreCollection', () => {
     });
 
     describe('makeFirestoreCollection()', () => {
-
       it('should create a new collection.', () => {
         const itemsPerPage = 50;
 
@@ -33,11 +30,9 @@ describe('FirestoreCollection', () => {
         expect(firestoreCollection).toBeDefined();
         expect(firestoreCollection.config.itemsPerPage).toBe(itemsPerPage);
       });
-
     });
 
     describe('documentAccessor()', () => {
-
       it('should create a new document accessor instance when no context is passed.', () => {
         const result = firestoreCollection.documentAccessor();
         expect(result).toBeDefined();
@@ -55,7 +50,7 @@ describe('FirestoreCollection', () => {
           const document = documentAccessor.loadDocumentForPath(specificIdentifier);
           ref = document.documentRef as DocumentReference<MockItem>;
 
-          const exists = await document.accessor.exists();  // don't create if it exists
+          const exists = await document.accessor.exists(); // don't create if it exists
           expect(exists).toBe(false);
 
           await document.accessor.set({ test: true });
@@ -64,7 +59,7 @@ describe('FirestoreCollection', () => {
         expect(ref!).toBeDefined();
 
         const loadedDoc = firestoreCollection.documentAccessor().loadDocument(ref!);
-        const loadedData: DocumentSnapshot<MockItem> = await loadedDoc.accessor.get() as DocumentSnapshot<MockItem>;
+        const loadedData: DocumentSnapshot<MockItem> = (await loadedDoc.accessor.get()) as DocumentSnapshot<MockItem>;
 
         expect(loadedData).toBeDefined();
         expect(loadedData.data()).toBeDefined();
@@ -72,7 +67,6 @@ describe('FirestoreCollection', () => {
       });
 
       it('should create a new document accessor instance that uses the passed batch context.', async () => {
-
         const batch = firestore.batch();
         const result = firestoreCollection.documentAccessorForWriteBatch(batch);
         expect(result).toBeDefined();
@@ -95,11 +89,7 @@ describe('FirestoreCollection', () => {
 
         exists = await document.accessor.exists();
         expect(exists).toBe(true);
-
       });
-
     });
-
   });
-
 });

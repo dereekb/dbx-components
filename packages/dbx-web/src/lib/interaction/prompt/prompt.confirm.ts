@@ -7,9 +7,10 @@ export abstract class DbxPromptConfirm {
 }
 
 export function provideDbxPromptConfirm<S extends DbxPromptConfirm>(sourceType: Type<S>): Provider[] {
-  return [{
-    provide: DbxPromptConfirm,
-    useExisting: forwardRef(() => sourceType)
-  }];
+  return [
+    {
+      provide: DbxPromptConfirm,
+      useExisting: forwardRef(() => sourceType)
+    }
+  ];
 }
-

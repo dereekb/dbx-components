@@ -7,7 +7,6 @@ import { DbxProgressButtonGlobalConfig, DbxProgressButtonOptions, DbxProgressBut
 
 @Directive()
 export abstract class AbstractProgressButtonDirective extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
-
   private _computedOptions: Maybe<DbxProgressButtonOptions> = undefined;
 
   private _working = new BehaviorSubject<boolean>(false);
@@ -16,9 +15,7 @@ export abstract class AbstractProgressButtonDirective extends AbstractSubscripti
   private _buttonId = new BehaviorSubject<Maybe<string>>(undefined);
   private _options = new BehaviorSubject<Maybe<DbxProgressButtonOptions>>(undefined);
 
-  readonly globalOptions$: Observable<Maybe<DbxProgressButtonOptions>> = this._buttonId.pipe(
-    map((buttonId: Maybe<string>) => (buttonId) ? this.globalConfig.find((config: DbxProgressButtonTargetedConfig) => config.id === buttonId) : undefined)
-  );
+  readonly globalOptions$: Observable<Maybe<DbxProgressButtonOptions>> = this._buttonId.pipe(map((buttonId: Maybe<string>) => (buttonId ? this.globalConfig.find((config: DbxProgressButtonTargetedConfig) => config.id === buttonId) : undefined)));
 
   readonly options$: Observable<DbxProgressButtonOptions> = combineLatest([this._options, this.globalOptions$, this._working, this._disabled]).pipe(
     map(([options, globalConfig, working, disabled]) => {
@@ -73,7 +70,7 @@ export abstract class AbstractProgressButtonDirective extends AbstractSubscripti
 
   get customSpinnerStyle() {
     const customSpinnerColor = (this._computedOptions as DbxProgressButtonOptions).customSpinnerColor;
-    return (customSpinnerColor) ? { stroke: customSpinnerColor } : undefined;
+    return customSpinnerColor ? { stroke: customSpinnerColor } : undefined;
   }
 
   @Input()
@@ -107,5 +104,4 @@ export abstract class AbstractProgressButtonDirective extends AbstractSubscripti
   set disabled(disabled: boolean) {
     this._disabled.next(disabled);
   }
-
 }

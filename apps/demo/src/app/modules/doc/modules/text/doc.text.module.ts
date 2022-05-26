@@ -11,8 +11,6 @@ import { DocSharedModule } from '../shared/doc.shared.module';
       states: STATES
     })
   ],
-  declarations: [
-    DocTextLayoutComponent
-  ],
+  declarations: [DocTextLayoutComponent]
 })
-export class DocTextModule { }
+export class DocTextModule {}

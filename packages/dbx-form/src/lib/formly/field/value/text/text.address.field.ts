@@ -25,19 +25,27 @@ export function addressFormlyFields(): FormlyFieldConfig[] {
       autocomplete: 'address-line2',
       maxLength: ADDRESS_LINE_MAX_LENGTH
     }),
-    flexLayoutWrapper([{
-      field: cityField({})
-    }, {
-      field: stateField({})
-    }, {
-      field: zipCodeField({})
-    }, {
-      field: countryField({})
-    }], { size: 1, relative: true })
+    flexLayoutWrapper(
+      [
+        {
+          field: cityField({})
+        },
+        {
+          field: stateField({})
+        },
+        {
+          field: zipCodeField({})
+        },
+        {
+          field: countryField({})
+        }
+      ],
+      { size: 1, relative: true }
+    )
   ];
 }
 
-export type AddressFieldConfig = FieldConfig
+export type AddressFieldConfig = FieldConfig;
 
 export function addressField({ key = 'address', required = false }: Partial<AddressFieldConfig> = {}): FormlyFieldConfig {
   return {

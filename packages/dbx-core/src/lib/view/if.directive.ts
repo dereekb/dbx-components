@@ -1,22 +1,18 @@
-import { Directive, OnInit, TemplateRef, ViewContainerRef } from "@angular/core";
-import { distinctUntilChanged, Observable } from "rxjs";
-import { AbstractSubscriptionDirective } from "../subscription";
+import { Directive, OnInit, TemplateRef, ViewContainerRef } from '@angular/core';
+import { distinctUntilChanged, Observable } from 'rxjs';
+import { AbstractSubscriptionDirective } from '../subscription';
 
 /**
  * Abstract directive class that watches a show$ observable and behaves like *ngIf.
  */
 @Directive()
 export abstract class AbstractIfDirective extends AbstractSubscriptionDirective implements OnInit {
-
   /**
    * Observable that is watched for showing/hiding.
    */
-  readonly abstract show$: Observable<boolean>;
+  abstract readonly show$: Observable<boolean>;
 
-  constructor(
-    private templateRef: TemplateRef<unknown>,
-    private viewContainer: ViewContainerRef
-  ) {
+  constructor(private templateRef: TemplateRef<unknown>, private viewContainer: ViewContainerRef) {
     super();
   }
 
@@ -29,5 +25,4 @@ export abstract class AbstractIfDirective extends AbstractSubscriptionDirective 
       }
     });
   }
-
 }

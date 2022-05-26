@@ -10,10 +10,7 @@ import { MatInputModule } from '@angular/material/input';
 import { FormlyModule } from '@ngx-formly/core';
 import { DbxSearchableChipFieldComponent } from './searchable.chip.field.component';
 import { MatButtonModule } from '@angular/material/button';
-import {
-  DbxDefaultSearchableFieldDisplayComponent,
-  DbxSearchableFieldAutocompleteItemComponent
-} from './searchable.field.autocomplete.item.component';
+import { DbxDefaultSearchableFieldDisplayComponent, DbxSearchableFieldAutocompleteItemComponent } from './searchable.field.autocomplete.item.component';
 import { DbxSearchableTextFieldComponent } from './searchable.text.field.component';
 import { DbxDatePipeModule, DbxInjectionComponentModule } from '@dereekb/dbx-core';
 import { DbxRouterAnchorModule, DbxTextModule, DbxLoadingModule, DbxButtonModule } from '@dereekb/dbx-web';
@@ -39,19 +36,11 @@ import { DbxRouterAnchorModule, DbxTextModule, DbxLoadingModule, DbxButtonModule
     FormlyModule.forChild({
       types: [
         { name: 'searchablechipfield', component: DbxSearchableChipFieldComponent, wrappers: ['form-field'] },
-        { name: 'searchabletextfield', component: DbxSearchableTextFieldComponent, wrappers: ['form-field'] },
+        { name: 'searchabletextfield', component: DbxSearchableTextFieldComponent, wrappers: ['form-field'] }
       ]
     })
   ],
-  declarations: [
-    DbxSearchableChipFieldComponent,
-    DbxSearchableTextFieldComponent,
-    DbxSearchableFieldAutocompleteItemComponent,
-    DbxDefaultSearchableFieldDisplayComponent
-  ],
-  exports: [
-    DbxSearchableChipFieldComponent,
-    DbxSearchableTextFieldComponent
-  ]
+  declarations: [DbxSearchableChipFieldComponent, DbxSearchableTextFieldComponent, DbxSearchableFieldAutocompleteItemComponent, DbxDefaultSearchableFieldDisplayComponent],
+  exports: [DbxSearchableChipFieldComponent, DbxSearchableTextFieldComponent]
 })
-export class DbxFormFormlySearchableFieldModule { }
+export class DbxFormFormlySearchableFieldModule {}

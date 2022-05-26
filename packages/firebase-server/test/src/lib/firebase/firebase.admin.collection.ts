@@ -1,7 +1,7 @@
 import { FirestoreCollection, FirestoreDocument, DocumentReference } from '@dereekb/firebase';
 import { ModelKey, PromiseOrValue } from '@dereekb/util';
-import { JestTestContextFixture, useJestContextFixture, AbstractChildJestTestContextFixture } from "@dereekb/util/test";
-import { FirebaseAdminTestContext } from "./firebase.admin";
+import { JestTestContextFixture, useJestContextFixture, AbstractChildJestTestContextFixture } from '@dereekb/util/test';
+import { FirebaseAdminTestContext } from './firebase.admin';
 
 /**
  * Testing context for a single model.
@@ -12,15 +12,7 @@ export interface ModelTestContext<T, D extends FirestoreDocument<T> = FirestoreD
   get document(): D;
 }
 
-export class ModelTestContextFixture<
-  T, D extends FirestoreDocument<T> = FirestoreDocument<T>,
-  PI extends FirebaseAdminTestContext = FirebaseAdminTestContext,
-  PF extends JestTestContextFixture<PI> = JestTestContextFixture<PI>,
-  I extends ModelTestContextInstance<T, D, PI> = ModelTestContextInstance<T, D, PI>
-  >
-  extends AbstractChildJestTestContextFixture<I, PF>
-  implements ModelTestContext<T, D> {
-
+export class ModelTestContextFixture<T, D extends FirestoreDocument<T> = FirestoreDocument<T>, PI extends FirebaseAdminTestContext = FirebaseAdminTestContext, PF extends JestTestContextFixture<PI> = JestTestContextFixture<PI>, I extends ModelTestContextInstance<T, D, PI> = ModelTestContextInstance<T, D, PI>> extends AbstractChildJestTestContextFixture<I, PF> implements ModelTestContext<T, D> {
   // MARK: ModelTestContext (Forwarded)
   get documentId(): ModelKey {
     return this.instance.documentId;
@@ -33,15 +25,10 @@ export class ModelTestContextFixture<
   get document(): D {
     return this.instance.document;
   }
-
 }
 
-export class ModelTestContextInstance<
-  T, D extends FirestoreDocument<T> = FirestoreDocument<T>,
-  PI extends FirebaseAdminTestContext = FirebaseAdminTestContext
-  > implements ModelTestContext<T, D> {
-
-  constructor(readonly collection: FirestoreCollection<T, D>, readonly ref: DocumentReference<T>, readonly testContext: PI) { }
+export class ModelTestContextInstance<T, D extends FirestoreDocument<T> = FirestoreDocument<T>, PI extends FirebaseAdminTestContext = FirebaseAdminTestContext> implements ModelTestContext<T, D> {
+  constructor(readonly collection: FirestoreCollection<T, D>, readonly ref: DocumentReference<T>, readonly testContext: PI) {}
 
   get documentId(): ModelKey {
     return this.ref.id;
@@ -54,22 +41,20 @@ export class ModelTestContextInstance<
   get document(): D {
     return this.collection.documentAccessor().loadDocument(this.ref);
   }
-
 }
-
 
 /**
  * authorizedUserContext/authorizedUserContextFactory parameters.
  */
 export interface ModelTestContextFactoryParams<
-  T, D extends FirestoreDocument<T> = FirestoreDocument<T>,
+  T,
+  D extends FirestoreDocument<T> = FirestoreDocument<T>,
   C = any,
   PI extends FirebaseAdminTestContext = FirebaseAdminTestContext,
   PF extends JestTestContextFixture<PI> = JestTestContextFixture<PI>,
   I extends ModelTestContextInstance<T, D, PI> = ModelTestContextInstance<T, D, PI>,
   F extends ModelTestContextFixture<T, D, PI, PF, I> = ModelTestContextFixture<T, D, PI, PF, I>
-  > {
-
+> {
   /**
    * Creates a ModelTestContextInstanceDelegate from the parent instance.
    */
@@ -94,33 +79,23 @@ export interface ModelTestContextFactoryParams<
    * Optional function to initialize the document for this instance.
    */
   initDocument?: (instance: I, config: C) => Promise<void>;
-
 }
 
-export type ModelTestContextParams<
-  C = any,
-  PI extends FirebaseAdminTestContext = FirebaseAdminTestContext,
-  PF extends JestTestContextFixture<PI> = JestTestContextFixture<PI>
-  > = { f: PF } & C;
+export type ModelTestContextParams<C = any, PI extends FirebaseAdminTestContext = FirebaseAdminTestContext, PF extends JestTestContextFixture<PI> = JestTestContextFixture<PI>> = { f: PF } & C;
 
 /**
  * Creates a new Jest Context that has a random user for authorization for use in firebase server tests.
  */
 export function modelTestContextFactory<
-  T, D extends FirestoreDocument<T> = FirestoreDocument<T>,
+  T,
+  D extends FirestoreDocument<T> = FirestoreDocument<T>,
   C = any,
   PI extends FirebaseAdminTestContext = FirebaseAdminTestContext,
   PF extends JestTestContextFixture<PI> = JestTestContextFixture<PI>,
   I extends ModelTestContextInstance<T, D, PI> = ModelTestContextInstance<T, D, PI>,
   F extends ModelTestContextFixture<T, D, PI, PF, I> = ModelTestContextFixture<T, D, PI, PF, I>
 >(config: ModelTestContextFactoryParams<T, D, C, PI, PF, I, F>): (params: ModelTestContextParams<C, PI, PF>, buildTests: (u: F) => void) => void {
-  const {
-    getCollection,
-    makeRef = (collection) => collection.documentAccessor().newDocument().documentRef,
-    makeInstance = (collection, ref, testInstance) => new ModelTestContextInstance(collection, ref, testInstance) as I,
-    makeFixture = (f: PF) => new ModelTestContextFixture<T, D, PI, PF, I>(f),
-    initDocument
-  } = config;
+  const { getCollection, makeRef = (collection) => collection.documentAccessor().newDocument().documentRef, makeInstance = (collection, ref, testInstance) => new ModelTestContextInstance(collection, ref, testInstance) as I, makeFixture = (f: PF) => new ModelTestContextFixture<T, D, PI, PF, I>(f), initDocument } = config;
 
   return (params: ModelTestContextParams<C, PI, PF>, buildTests: (u: F) => void) => {
     const { f } = params;
@@ -140,5 +115,5 @@ export function modelTestContextFactory<
         return instance;
       }
     });
-  }
-};
+  };
+}

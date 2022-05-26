@@ -10,9 +10,8 @@ $login-button-icon-size: 18px;
 
 // MARK: Mixin
 @mixin core() {
-
   .dbx-firebase-login-button-container {
-    margin-bottom: 6px;    
+    margin-bottom: 6px;
   }
 
   .dbx-firebase-login-terms {
@@ -49,12 +48,13 @@ $login-button-icon-size: 18px;
   .dbx-firebase-login-email-forgot-prompt {
     margin-bottom: 18px;
   }
-
 }
 
-@mixin color($theme-config) {}
+@mixin color($theme-config) {
+}
 
-@mixin typography($typography-config) {}
+@mixin typography($typography-config) {
+}
 
 @mixin theme($theme-config) {
   @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-firebase-login') {

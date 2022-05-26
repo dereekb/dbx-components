@@ -4,10 +4,6 @@ import { DbxFormFormlyFieldModule } from './formly/field/form.field.module';
 import { DbxFormModule } from './form/form.module';
 
 @NgModule({
-  exports: [
-    DbxFormModule,
-    DbxFormlyModule,
-    DbxFormFormlyFieldModule
-  ]
+  exports: [DbxFormModule, DbxFormlyModule, DbxFormFormlyFieldModule]
 })
-export class DbxFormExtensionModule { }
+export class DbxFormExtensionModule {}

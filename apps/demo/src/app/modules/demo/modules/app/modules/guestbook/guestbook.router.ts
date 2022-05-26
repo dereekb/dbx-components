@@ -21,8 +21,4 @@ export const guestbookListRightState: Ng2StateDeclaration = {
   component: DemoGuestbookListPageRightComponent
 };
 
-export const STATES: Ng2StateDeclaration[] = [
-  layoutState,
-  guestbookListState,
-  guestbookListRightState
-];
+export const STATES: Ng2StateDeclaration[] = [layoutState, guestbookListState, guestbookListRightState];

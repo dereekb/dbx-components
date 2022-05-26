@@ -5,12 +5,11 @@ import { DateOrDateString, Maybe } from '@dereekb/util';
 
 @Pipe({ name: 'toJsDate' })
 export class ToJsDatePipe implements PipeTransform {
-
   public static toJsDate(input: DateOrDateString): Date;
   public static toJsDate(input: Maybe<DateOrDateString>): Maybe<Date>;
   public static toJsDate(input: Maybe<DateOrDateString>): Maybe<Date> {
     let date: Maybe<Date>;
-    
+
     if (input != null) {
       date = toJsDate(input);
 
@@ -25,5 +24,4 @@ export class ToJsDatePipe implements PipeTransform {
   transform(input: Maybe<DateOrDateString>): Maybe<Date> {
     return ToJsDatePipe.toJsDate(input);
   }
-
 }

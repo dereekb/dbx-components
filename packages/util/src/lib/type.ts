@@ -4,7 +4,7 @@ import { Merge, PickProperties, StrictOmit, Writable } from 'ts-essentials';
  * Class typing, restricted to types that have a constructor via the new keyword.
  */
 export type ClassType<T = unknown> = {
-  new(...args: unknown[]): T;
+  new (...args: unknown[]): T;
 };
 
 /**
@@ -44,18 +44,18 @@ export type Replace<T, R> = StrictOmit<MergeReplace<T, R>, Exclude<keyof R, keyo
  * Similar to Replace, but all types that were not replaced are set to the third type (default unknown).
  */
 export type ReplaceType<I extends object, O extends object, X = unknown> = {
-  [K in keyof I]: (K extends keyof O ? O[K] : X);
-}
+  [K in keyof I]: K extends keyof O ? O[K] : X;
+};
 
 export type OnlyStringKeys<T> = PickProperties<T, 'string'>;
 
 export type RemoveIndex<T> = {
-  [K in keyof T as string extends K ? never : number extends K ? never : K]: T[K];  // if key is not a string or a number
+  [K in keyof T as string extends K ? never : number extends K ? never : K]: T[K]; // if key is not a string or a number
 };
 
 /**
  * Custom typing used to only retain known keys on types that have a [key: string] in their type.
- * 
+ *
  * https://stackoverflow.com/questions/51954558/how-can-i-remove-a-wider-type-from-a-union-type-without-removing-its-subtypes-in/51955852#51955852
  */
 export type KnownKeys<T> = keyof RemoveIndex<T>;

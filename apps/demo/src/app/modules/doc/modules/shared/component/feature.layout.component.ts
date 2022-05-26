@@ -6,4 +6,4 @@ import { Component } from '@angular/core';
   templateUrl: './feature.layout.component.html',
   styleUrls: ['./feature.layout.component.scss']
 })
-export class DocFeatureLayoutComponent extends DbxSectionComponent { }
+export class DocFeatureLayoutComponent extends DbxSectionComponent {}

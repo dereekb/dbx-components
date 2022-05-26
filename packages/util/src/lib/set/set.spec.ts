@@ -1,8 +1,7 @@
-import { firstValueFromIterable } from "../iterable";
-import { asSet, containsAnyValue, containsAnyValueFromSet, setContainsAllValues, setContainsAnyValue } from "./set";
+import { firstValueFromIterable } from '../iterable';
+import { asSet, containsAnyValue, containsAnyValueFromSet, setContainsAllValues, setContainsAnyValue } from './set';
 
 describe('asSet', () => {
-
   it('should turn a single string value into a set with that string', () => {
     const value = 'test';
     const result = asSet(value);
@@ -10,11 +9,9 @@ describe('asSet', () => {
     expect(result.size).toBe(1);
     expect(firstValueFromIterable(result)).toBe(value);
   });
-
 });
 
 describe('containsAnyValue', () => {
-
   it('should return true if the array contains any value from the set.', () => {
     const value = 'a';
     const set = new Set([value]);
@@ -36,11 +33,9 @@ describe('containsAnyValue', () => {
     const array = [value];
     expect(containsAnyValue(array, [])).toBe(false);
   });
-
 });
 
 describe('containsAnyValueFromSet', () => {
-
   it('should return true if the array contains any value from the set.', () => {
     const value = 'a';
     const set = new Set([value]);
@@ -54,11 +49,9 @@ describe('containsAnyValueFromSet', () => {
     const set = new Set();
     expect(containsAnyValueFromSet([value], set)).toBe(false);
   });
-
 });
 
 describe('setContainsAnyValue', () => {
-
   it('should return true if the set contains the value.', () => {
     const value = 'a';
     const set = new Set([value]);
@@ -72,11 +65,9 @@ describe('setContainsAnyValue', () => {
     const set = new Set();
     expect(setContainsAnyValue(set, [value])).toBe(false);
   });
-
 });
 
 describe('setContainsAllValues', () => {
-
   it('should return true if the set contains all values from the input array.', () => {
     const array = ['a', 'b'];
     const set = new Set([...array, 'c']);
@@ -94,5 +85,4 @@ describe('setContainsAllValues', () => {
     const result = setContainsAllValues(set, array);
     expect(result).toBe(false);
   });
-
 });

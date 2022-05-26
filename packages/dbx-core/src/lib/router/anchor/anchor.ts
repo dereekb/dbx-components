@@ -37,9 +37,9 @@ export const flattenExpandedClickableAnchorLinkTreeToLinks: FlattenTreeFunction<
 
 /**
  * Fully expands the given parent link and flattens the tree to a single parent link.
- * 
- * @param link 
- * @returns 
+ *
+ * @param link
+ * @returns
  */
 export function expandClickableAnchorLinkTree(link: ClickableAnchorLinkTree): ExpandedClickableAnchorLinkTree[] {
   return flattenExpandedClickableAnchorLinkTree(expandClickableAnchorLinkTreeNode(link));
@@ -53,7 +53,7 @@ export const expandClickableAnchorLinkTrees = expandFlattenTreeFunction<Clickabl
 export enum AnchorType {
   /**
    * When the anchor has no specific content but is not disabled.
-   * 
+   *
    * Is a passthrough for the content.
    */
   PLAIN = 0,
@@ -92,8 +92,10 @@ export abstract class DbxAnchor<T extends ClickableAnchor = ClickableAnchor> {
 }
 
 export function provideDbxAnchor<S extends DbxAnchor>(sourceType: Type<S>): Provider[] {
-  return [{
-    provide: DbxAnchor,
-    useExisting: forwardRef(() => sourceType)
-  }];
+  return [
+    {
+      provide: DbxAnchor,
+      useExisting: forwardRef(() => sourceType)
+    }
+  ];
 }

@@ -18,52 +18,43 @@ export const layoutState: Ng2StateDeclaration = {
 export const homeState: Ng2StateDeclaration = {
   url: '/home',
   name: 'doc.interaction.home',
-  component: DocInteractionHomeComponent,
+  component: DocInteractionHomeComponent
 };
 
 export const docInteractionButtonState: Ng2StateDeclaration = {
   url: '/button',
   name: 'doc.interaction.button',
-  component: DocInteractionButtonComponent,
+  component: DocInteractionButtonComponent
 };
 
 export const docInteractionDialogState: Ng2StateDeclaration = {
   url: '/dialog',
   name: 'doc.interaction.dialog',
-  component: DocInteractionDialogComponent,
+  component: DocInteractionDialogComponent
 };
 
 export const docInteractionFilterState: Ng2StateDeclaration = {
   url: '/filter',
   name: 'doc.interaction.filter',
-  component: DocInteractionFilterComponent,
+  component: DocInteractionFilterComponent
 };
 
 export const docInteractionPromptState: Ng2StateDeclaration = {
   url: '/prompt',
   name: 'doc.interaction.prompt',
-  component: DocInteractionPromptComponent,
+  component: DocInteractionPromptComponent
 };
 
 export const docInteractionPopupState: Ng2StateDeclaration = {
   url: '/popup',
   name: 'doc.interaction.popup',
-  component: DocInteractionPopupComponent,
+  component: DocInteractionPopupComponent
 };
 
 export const docInteractionPopoverState: Ng2StateDeclaration = {
   url: '/popover',
   name: 'doc.interaction.popover',
-  component: DocInteractionPopoverComponent,
+  component: DocInteractionPopoverComponent
 };
 
-export const STATES: Ng2StateDeclaration[] = [
-  layoutState,
-  homeState,
-  docInteractionButtonState,
-  docInteractionDialogState,
-  docInteractionFilterState,
-  docInteractionPromptState,
-  docInteractionPopupState,
-  docInteractionPopoverState
-];
+export const STATES: Ng2StateDeclaration[] = [layoutState, homeState, docInteractionButtonState, docInteractionDialogState, docInteractionFilterState, docInteractionPromptState, docInteractionPopupState, docInteractionPopoverState];

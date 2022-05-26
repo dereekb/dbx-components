@@ -1,4 +1,4 @@
-import { Maybe, MaybeNot } from "@dereekb/util";
+import { Maybe, MaybeNot } from '@dereekb/util';
 
 export function filterMaybeValues<T>(values: Maybe<Maybe<T>[]>): T[] {
   if (values) {
@@ -14,20 +14,20 @@ export function filterMaybeValuesFn<T>(value: Maybe<T>): value is T {
 
 /**
  * Checks whether or not all values are MaybeNot values.
- * 
- * @param values 
- * @returns 
+ *
+ * @param values
+ * @returns
  */
 export function allValuesAreMaybeNot<T>(values: Maybe<T>[]): values is MaybeNot[] {
-  return values.findIndex(x => x != null) === -1;
+  return values.findIndex((x) => x != null) === -1;
 }
 
 /**
  * Checks whether or not all values are non-MaybeNot values.
- * 
- * @param values 
- * @returns 
+ *
+ * @param values
+ * @returns
  */
 export function allValuesAreNotMaybe<T>(values: Maybe<T>[]): values is T[] {
-  return values.findIndex(x => x == null) === -1;
+  return values.findIndex((x) => x == null) === -1;
 }

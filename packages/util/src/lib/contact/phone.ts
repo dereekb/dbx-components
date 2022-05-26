@@ -1,4 +1,3 @@
-
 /**
  * Phone number string input. No format specified.
  */

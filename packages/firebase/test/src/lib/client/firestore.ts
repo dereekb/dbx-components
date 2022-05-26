@@ -1,14 +1,7 @@
 import { makeTestingFirestoreDrivers, TestFirestoreContext, TestingFirestoreDrivers } from '../common/firestore';
 import { Maybe } from '@dereekb/util';
-import { jestTestContextBuilder } from "@dereekb/util/test";
-import {
-  TestEnvironmentConfig,
-  initializeTestEnvironment,
-  RulesTestEnvironment,
-  RulesTestContext,
-  TokenOptions,
-  EmulatorConfig,
-} from "@firebase/rules-unit-testing";
+import { jestTestContextBuilder } from '@dereekb/util/test';
+import { TestEnvironmentConfig, initializeTestEnvironment, RulesTestEnvironment, RulesTestContext, TokenOptions, EmulatorConfig } from '@firebase/rules-unit-testing';
 import { TestFirestoreContextFixture, TestFirestoreInstance } from '../common/firestore.mock';
 import { firebaseFirestoreClientDrivers, firestoreContextFactory } from '@dereekb/firebase';
 import { setLogLevel } from 'firebase/firestore';
@@ -49,20 +42,18 @@ export function makeRulesTestFirestoreContext(drivers: TestingFirestoreDrivers, 
 }
 
 export class RulesUnitTestTestFirestoreInstance extends TestFirestoreInstance {
-
   constructor(drivers: TestingFirestoreDrivers, readonly rulesTestEnvironment: RulesTestEnvironment, readonly rulesTestContext: RulesTestContext) {
     super(makeRulesTestFirestoreContext(drivers, rulesTestEnvironment, rulesTestContext));
   }
 
   // TODO: Add storage
-
 }
 
-export class RulesUnitTestFirebaseTestingContextFixture extends TestFirestoreContextFixture<RulesUnitTestTestFirestoreInstance> { }
+export class RulesUnitTestFirebaseTestingContextFixture extends TestFirestoreContextFixture<RulesUnitTestTestFirestoreInstance> {}
 
 /**
  * A JestTestContextBuilderFunction for building firebase test context factories using @firebase/firebase and @firebase/rules-unit-testing. This means CLIENT TESTING ONLY. For server testing, look at @dereekb/firestore-server.
- * 
+ *
  * This can be used to easily build a testing context that sets up RulesTestEnvironment for tests that sets itself up and tears itself down.
  */
 export const firestoreTestBuilder = jestTestContextBuilder<RulesUnitTestTestFirestoreInstance, RulesUnitTestFirebaseTestingContextFixture, RulesUnitTestingConfig>({
@@ -76,7 +67,6 @@ export const firestoreTestBuilder = jestTestContextBuilder<RulesUnitTestTestFire
   },
   buildFixture: () => new RulesUnitTestFirebaseTestingContextFixture(),
   setupInstance: async (config) => {
-
     const drivers = makeTestingFirestoreDrivers(firebaseFirestoreClientDrivers());
     let testEnvironment = config.testEnvironment;
 
@@ -84,7 +74,7 @@ export const firestoreTestBuilder = jestTestContextBuilder<RulesUnitTestTestFire
       const pathsMap = drivers.firestoreAccessorDriver.initWithCollectionNames(config.testEnvironment.collectionNames);
       testEnvironment = {
         ...testEnvironment,
-        firestore: rewriteEmulatorConfigRulesForFuzzedCollectionNames(testEnvironment.firestore, pathsMap),
+        firestore: rewriteEmulatorConfigRulesForFuzzedCollectionNames(testEnvironment.firestore, pathsMap)
       };
     }
 
@@ -97,7 +87,7 @@ export const firestoreTestBuilder = jestTestContextBuilder<RulesUnitTestTestFire
       await instance.clearFirestore();
     }
 
-    await instance.rulesTestEnvironment.cleanup();  // Cleanup
+    await instance.rulesTestEnvironment.cleanup(); // Cleanup
   }
 });
 
@@ -115,7 +105,6 @@ function rulesTestContextForConfig(rulesTestEnv: RulesTestEnvironment, testingRu
 }
 
 function rewriteEmulatorConfigRulesForFuzzedCollectionNames(config: EmulatorConfig | undefined, fuzzedCollectionNamesMap: Map<string, string>): EmulatorConfig | undefined {
-
   if (config && config.rules) {
     config = {
       ...config,
@@ -127,7 +116,6 @@ function rewriteEmulatorConfigRulesForFuzzedCollectionNames(config: EmulatorConf
 }
 
 function rewriteRulesForFuzzedCollectionNames(rules: string | undefined, fuzzedCollectionNamesMap: Map<string, string>): string | undefined {
-
   // TODO: rewrite the rules using regex matching/replacement.
 
   return rules;

@@ -8,10 +8,9 @@ import { DbxInjectionInstance as DbxInjectionInstance } from './injection.instan
  */
 @Directive()
 export abstract class AbstractDbxInjectionDirective<T> implements OnInit, OnDestroy {
-
   private _instance = new DbxInjectionInstance<T>(this._injector);
 
-  constructor(private readonly _injector: Injector) { }
+  constructor(private readonly _injector: Injector) {}
 
   ngOnInit(): void {
     this._instance.init();
@@ -32,5 +31,4 @@ export abstract class AbstractDbxInjectionDirective<T> implements OnInit, OnDest
   setContent(content: Maybe<ViewContainerRef>) {
     this._instance.content = content;
   }
-
 }

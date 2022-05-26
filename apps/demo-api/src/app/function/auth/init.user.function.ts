@@ -6,11 +6,13 @@ import { onEventWithDemoNestContext } from '../function';
  * Listens for users to be created and initializes them.
  */
 export const initUserOnCreate = onEventWithDemoNestContext<UserRecord>((withNest) =>
-  functions.auth.user().onCreate(withNest(async (nest, data: UserRecord) => {
-    const uid = data.uid;
+  functions.auth.user().onCreate(
+    withNest(async (nest, data: UserRecord) => {
+      const uid = data.uid;
 
-    if (uid) {
-      await nest.profileActions.initProfileForUid(uid);
-    }
-  }))
+      if (uid) {
+        await nest.profileActions.initProfileForUid(uid);
+      }
+    })
+  )
 );

@@ -13,7 +13,6 @@ export const APP_ACTION_ENFORCE_MODIFIED_DIRECTIVE_KEY = 'dbx_action_enforce_mod
   selector: '[dbxActionEnforceModified]'
 })
 export class DbxActionEnforceModifiedDirective extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
-
   private _enabled = new BehaviorSubject<boolean>(true);
 
   constructor(@Host() public readonly source: DbxActionContextStoreSourceInstance) {
@@ -21,10 +20,12 @@ export class DbxActionEnforceModifiedDirective extends AbstractSubscriptionDirec
   }
 
   ngOnInit(): void {
-    this.sub = combineLatest([this.source.isModified$, this._enabled]).pipe(delay(0)).subscribe(([modified, enableDirective]) => {
-      const disable = enableDirective && !modified;
-      this.source.disable(APP_ACTION_ENFORCE_MODIFIED_DIRECTIVE_KEY, disable);
-    });
+    this.sub = combineLatest([this.source.isModified$, this._enabled])
+      .pipe(delay(0))
+      .subscribe(([modified, enableDirective]) => {
+        const disable = enableDirective && !modified;
+        this.source.disable(APP_ACTION_ENFORCE_MODIFIED_DIRECTIVE_KEY, disable);
+      });
   }
 
   override ngOnDestroy(): void {
@@ -41,5 +42,4 @@ export class DbxActionEnforceModifiedDirective extends AbstractSubscriptionDirec
   set enabled(enabled: Maybe<string | boolean>) {
     this._enabled.next(Boolean(enabled) ?? true);
   }
-
 }

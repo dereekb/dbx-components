@@ -6,31 +6,30 @@ import { CollectionReference, FirestoreCollection, FirestoreContext, AbstractFir
  * Converted data for a test item in our firestore collection.
  */
 export interface MockItem {
-
   value?: Maybe<string>;
 
   /**
    * The test value is alway present.
    */
   test: boolean;
-
 }
 
-export class MockItemDocument extends AbstractFirestoreDocument<MockItem, MockItemDocument> { }
+export class MockItemDocument extends AbstractFirestoreDocument<MockItem, MockItemDocument> {}
 
 /**
  * MockItem as it is stored into the database.
- * 
+ *
  * Test is optional.
  */
-export type MockItemData = FirestoreModelData<MockItem, {
-
-  /**
-   * The test value may not be defined in the database.
-   */
-  test?: Maybe<boolean>;
-
-}>;
+export type MockItemData = FirestoreModelData<
+  MockItem,
+  {
+    /**
+     * The test value may not be defined in the database.
+     */
+    test?: Maybe<boolean>;
+  }
+>;
 
 /**
  * Firestore collection path name.
@@ -49,9 +48,9 @@ export const mockItemConverter = snapshotConverterFunctions<MockItem, MockItemDa
 
 /**
  * Used to build a mockItemCollection from a firestore instance with a converter setup.
- * 
- * @param firestore 
- * @returns 
+ *
+ * @param firestore
+ * @returns
  */
 export function mockItemCollectionReference(context: FirestoreContext): CollectionReference<MockItem> {
   return context.collection(mockItemCollectionPath).withConverter<MockItem>(mockItemConverter);
@@ -71,7 +70,7 @@ export function mockItemFirestoreCollection(firestoreContext: FirestoreContext):
 // MARK: MockItemPrivate
 /**
  * Private data for each MockItem.
- * 
+ *
  * There is only a single private data item per each MockItem.
  */
 export interface MockItemPrivate {
@@ -82,7 +81,7 @@ export interface MockItemPrivate {
 /**
  * FirestoreDocument for MockItem
  */
-export class MockItemPrivateDocument extends AbstractFirestoreDocument<MockItemPrivate, MockItemPrivateDocument> { }
+export class MockItemPrivateDocument extends AbstractFirestoreDocument<MockItemPrivate, MockItemPrivateDocument> {}
 
 export type MockItemPrivateData = FirestoreModelData<MockItemPrivate, {}>;
 
@@ -104,9 +103,9 @@ export const mockItemPrivateConverter = snapshotConverterFunctions({
 
 /**
  * Used to build a mockItemCollection from a firestore instance with a converter setup.
- * 
- * @param firestore 
- * @returns 
+ *
+ * @param firestore
+ * @returns
  */
 export function mockItemPrivateCollectionReferenceFactory(context: FirestoreContext): (parent: MockItemDocument) => CollectionReference<MockItemPrivate> {
   return (parent: MockItemDocument) => {
@@ -135,7 +134,7 @@ export function mockItemPrivateFirestoreCollection(firestoreContext: FirestoreCo
 // MARK: MockItemSubItem
 /**
  * Data for a sub item in our firestore collection.
- * 
+ *
  * There may be an unlimited number of MockItemSubItems for a MockItem.
  */
 export interface MockItemSubItem {
@@ -145,7 +144,7 @@ export interface MockItemSubItem {
 /**
  * FirestoreDocument for MockItem
  */
-export class MockItemSubItemDocument extends AbstractFirestoreDocumentWithParent<MockItem, MockItemSubItem, MockItemSubItemDocument> { }
+export class MockItemSubItemDocument extends AbstractFirestoreDocumentWithParent<MockItem, MockItemSubItem, MockItemSubItemDocument> {}
 
 export type MockItemSubItemData = ExpectedFirestoreModelData<MockItemSubItem>;
 

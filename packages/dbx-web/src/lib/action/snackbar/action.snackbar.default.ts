@@ -1,7 +1,7 @@
 import { DbxActionSnackbarEventMakeConfig } from './action.snackbar.service';
 
 export const DBX_ACTION_SNACKBAR_DEFAULTS: DbxActionSnackbarEventMakeConfig = {
-  'create': {
+  create: {
     loading: {
       message: 'Creating...'
     },
@@ -14,7 +14,7 @@ export const DBX_ACTION_SNACKBAR_DEFAULTS: DbxActionSnackbarEventMakeConfig = {
       message: 'Create Failed'
     }
   },
-  'save': {
+  save: {
     loading: {
       message: 'Saving...'
     },
@@ -27,7 +27,7 @@ export const DBX_ACTION_SNACKBAR_DEFAULTS: DbxActionSnackbarEventMakeConfig = {
       message: 'Save Failed'
     }
   },
-  'merge': {
+  merge: {
     loading: {
       message: 'Merging...'
     },
@@ -40,7 +40,7 @@ export const DBX_ACTION_SNACKBAR_DEFAULTS: DbxActionSnackbarEventMakeConfig = {
       message: 'Merge Failed'
     }
   },
-  'delete': {
+  delete: {
     loading: {
       message: 'Deleting...'
     },
@@ -53,7 +53,7 @@ export const DBX_ACTION_SNACKBAR_DEFAULTS: DbxActionSnackbarEventMakeConfig = {
       message: 'Delete Failed'
     }
   },
-  'cancel': {
+  cancel: {
     loading: {
       message: 'Cancelling...'
     },
@@ -66,7 +66,7 @@ export const DBX_ACTION_SNACKBAR_DEFAULTS: DbxActionSnackbarEventMakeConfig = {
       message: 'Cancel Failed'
     }
   },
-  'restore': {
+  restore: {
     loading: {
       message: 'Restoring...'
     },
@@ -79,7 +79,7 @@ export const DBX_ACTION_SNACKBAR_DEFAULTS: DbxActionSnackbarEventMakeConfig = {
       message: 'Restore Failed'
     }
   },
-  'refresh': {
+  refresh: {
     loading: {
       message: 'Refreshing...'
     },
@@ -92,7 +92,7 @@ export const DBX_ACTION_SNACKBAR_DEFAULTS: DbxActionSnackbarEventMakeConfig = {
       message: 'Refresh Failed'
     }
   },
-  'do': {
+  do: {
     loading: {
       message: 'Doing...'
     },

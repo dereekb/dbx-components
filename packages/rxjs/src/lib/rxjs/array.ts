@@ -1,11 +1,14 @@
-import { exhaustMap, map, scan, shareReplay, startWith, distinctUntilChanged, MonoTypeOperatorFunction, Observable, OperatorFunction } from "rxjs";
+import { exhaustMap, map, scan, shareReplay, startWith, distinctUntilChanged, MonoTypeOperatorFunction, Observable, OperatorFunction } from 'rxjs';
 import { Maybe, ArrayOrValue, mergeArrayOrValueIntoArray, forEachWithArray, mergeArrayIntoArray, asArray } from '@dereekb/util';
 
 export function distinctUntilArrayLengthChanges<A>(getArray: (value: A) => unknown[]): MonoTypeOperatorFunction<A>;
 export function distinctUntilArrayLengthChanges<T>(): MonoTypeOperatorFunction<T[]>;
 export function distinctUntilArrayLengthChanges<A>(inputGetArray?: (value: A) => unknown[]): MonoTypeOperatorFunction<A> {
   const getArray = inputGetArray ?? ((value: A) => asArray(value));
-  return distinctUntilChanged((a, b) => a === b, (x) => getArray(x).length);
+  return distinctUntilChanged(
+    (a, b) => a === b,
+    (x) => getArray(x).length
+  );
 }
 
 export interface ScanIntoArrayConfig {
@@ -14,7 +17,7 @@ export interface ScanIntoArrayConfig {
 
 /**
  * Scans values from the observable into an array.
- * 
+ *
  * Can configure whether or not the accumulator array is immutable or not.
  */
 export function scanIntoArray<T>(config?: ScanIntoArrayConfig): OperatorFunction<Maybe<ArrayOrValue<T>>, T[]>;
@@ -38,31 +41,31 @@ export function scanIntoArray<T>(config: { immutable?: boolean } = {}): Operator
 // MARK: ScanBuildArray
 export interface ScanBuildArrayConfig<T> {
   /**
-   * 
+   *
    */
   seed?: Maybe<T[]>;
   /**
-   * 
+   *
    */
   accumulatorObs: Observable<Maybe<ArrayOrValue<T>>>;
   /**
    * Whether or not to flatten array values that are input.
    */
   flattenArray?: boolean;
-};
+}
 
 export type ScanBuildArrayConfigFn<S, T> = (seedState: S) => ScanBuildArrayConfig<T>;
 
 /**
  * Used to lazy build an array from two observables.
- * 
- * The piped observable is for retrieving the seed value, and the accumulatorObs observable is used for 
+ *
+ * The piped observable is for retrieving the seed value, and the accumulatorObs observable is used for
  * retrieving values going forward.
- * 
+ *
  * This is useful in cases where values are very large.
- * 
- * @param param0 
- * @returns 
+ *
+ * @param param0
+ * @returns
  */
 export function scanBuildArray<S, T>(init: ScanBuildArrayConfigFn<S, T>): OperatorFunction<S, T[]> {
   return exhaustMap((seedState: S) => {
@@ -71,7 +74,6 @@ export function scanBuildArray<S, T>(init: ScanBuildArrayConfigFn<S, T>): Operat
     return accumulatorObs.pipe(
       startWith<Maybe<ArrayOrValue<T>>>(undefined), // Start with to not wait for the accumulator to pass a value.
       scan<Maybe<ArrayOrValue<T>>, T[]>((acc: T[], next: Maybe<ArrayOrValue<T>>) => {
-
         if (next != null) {
           if (flattenArray && Array.isArray(next)) {
             mergeArrayIntoArray(acc, next);
@@ -90,10 +92,10 @@ export function scanBuildArray<S, T>(init: ScanBuildArrayConfigFn<S, T>): Operat
 
 /**
  * Convenience function with map to forEachWithArray
- * 
- * @param forEach 
- * @returns 
+ *
+ * @param forEach
+ * @returns
  */
 export function mapForEach<T>(forEach: Maybe<(value: T) => void>): OperatorFunction<T[], T[]> {
-  return (forEach) ? map(x => forEachWithArray(x, forEach)) : map(x => x);
+  return forEach ? map((x) => forEachWithArray(x, forEach)) : map((x) => x);
 }

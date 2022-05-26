@@ -1,4 +1,3 @@
-
 import { NgModule } from '@angular/core';
 import { UIRouterModule } from '@uirouter/angular';
 import { DemoRootSharedModule } from '@dereekb/demo-components';
@@ -28,6 +27,6 @@ import { DbxFirebaseLoginModule } from '@dereekb/dbx-firebase';
     DemoAuthLoginComponent,
     DemoAuthLoggedOutComponent,
     DemoAuthLoginViewComponent
-  ],
+  ]
 })
-export class DemoAuthModule { }
+export class DemoAuthModule {}

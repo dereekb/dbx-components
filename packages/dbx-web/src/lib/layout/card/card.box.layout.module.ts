@@ -5,17 +5,8 @@ import { NgModule } from '@angular/core';
 import { DbxCardBoxComponent } from './card.box.component';
 
 @NgModule({
-  imports: [
-    CommonModule,
-    MatIconModule
-  ],
-  declarations: [
-    DbxCardBoxComponent,
-    DbxCardBoxContainerComponent
-  ],
-  exports: [
-    DbxCardBoxComponent,
-    DbxCardBoxContainerComponent
-  ]
+  imports: [CommonModule, MatIconModule],
+  declarations: [DbxCardBoxComponent, DbxCardBoxContainerComponent],
+  exports: [DbxCardBoxComponent, DbxCardBoxContainerComponent]
 })
-export class DbxCardBoxLayoutModule { }
+export class DbxCardBoxLayoutModule {}

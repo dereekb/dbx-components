@@ -1,4 +1,3 @@
-
 /**
  * Initialize FIREBASE_CONFIG for tests to prevent a warning for firebase not being initialized.
  */

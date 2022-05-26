@@ -1,5 +1,5 @@
 import { FirebaseLoginMethodCategory, FirebaseLoginMethodType } from './login';
-import { Component, Input } from "@angular/core";
+import { Component, Input } from '@angular/core';
 import { ArrayOrValue, Maybe } from '@dereekb/util';
 
 /**
@@ -7,10 +7,11 @@ import { ArrayOrValue, Maybe } from '@dereekb/util';
  */
 @Component({
   selector: 'dbx-firebase-register',
-  template: `<dbx-firebase-login loginMode="register" [providerTypes]="providerTypes" [omitProviderTypes]="omitProviderTypes" [providerCategories]="providerCategories"></dbx-firebase-login>`
+  template: `
+    <dbx-firebase-login loginMode="register" [providerTypes]="providerTypes" [omitProviderTypes]="omitProviderTypes" [providerCategories]="providerCategories"></dbx-firebase-login>
+  `
 })
 export class DbxFirebaseRegisterComponent {
-
   @Input()
   providerTypes: Maybe<ArrayOrValue<FirebaseLoginMethodType>>;
 
@@ -19,5 +20,4 @@ export class DbxFirebaseRegisterComponent {
 
   @Input()
   providerCategories: Maybe<ArrayOrValue<FirebaseLoginMethodCategory>>;
-
 }

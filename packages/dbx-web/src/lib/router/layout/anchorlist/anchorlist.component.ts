@@ -11,10 +11,13 @@ import { Maybe } from '@dereekb/util';
   templateUrl: './anchorlist.component.html'
 })
 export class DbxAnchorListComponent implements OnDestroy {
-
   private _anchors = new BehaviorSubject<ClickableAnchorLinkTree[]>([]);
 
-  readonly expandedAnchors$ = this._anchors.pipe(distinctUntilChanged(), map(x => expandClickableAnchorLinkTrees(x)), shareReplay(1));
+  readonly expandedAnchors$ = this._anchors.pipe(
+    distinctUntilChanged(),
+    map((x) => expandClickableAnchorLinkTrees(x)),
+    shareReplay(1)
+  );
 
   @Input()
   set anchors(anchors: Maybe<ClickableAnchorLinkTree[]>) {
@@ -24,5 +27,4 @@ export class DbxAnchorListComponent implements OnDestroy {
   ngOnDestroy(): void {
     this._anchors.complete();
   }
-
 }

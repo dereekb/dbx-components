@@ -13,6 +13,6 @@ import { CommonModule } from '@angular/common';
       states: STATES
     })
   ],
-  declarations: [AppLayoutComponent],
+  declarations: [AppLayoutComponent]
 })
-export class RootAppModule { }
+export class RootAppModule {}

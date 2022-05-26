@@ -4,7 +4,6 @@ import { AbstractNestContext, onCallWithNestApplicationFactory, onCallWithNestCo
 import { ProfileServerActions, GuestbookServerActions, DemoApiAuthService } from '../common';
 
 export class DemoApiNestContext extends AbstractNestContext {
-
   get authService(): DemoApiAuthService {
     return this.nest.get(DemoApiAuthService);
   }
@@ -20,7 +19,6 @@ export class DemoApiNestContext extends AbstractNestContext {
   get guestbookActions(): GuestbookServerActions {
     return this.nest.get(GuestbookServerActions);
   }
-
 }
 
 export const mapDemoApiNestContext = (nest: INestApplicationContext) => new DemoApiNestContext(nest);

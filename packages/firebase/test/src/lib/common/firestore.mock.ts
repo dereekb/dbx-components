@@ -1,26 +1,22 @@
-import { AbstractJestTestContextFixture, JestTestContextFactory } from "@dereekb/util/test";
-import { Firestore } from'@dereekb/firebase';
-import { TestFirestoreContext } from "./firestore";
+import { AbstractJestTestContextFixture, JestTestContextFactory } from '@dereekb/util/test';
+import { Firestore } from '@dereekb/firebase';
+import { TestFirestoreContext } from './firestore';
 
 export class TestFirestoreInstance {
-
-  constructor(readonly context: TestFirestoreContext) { }
+  constructor(readonly context: TestFirestoreContext) {}
 
   get firestore(): Firestore {
     return this.context.firestore;
   }
 
   async clearFirestore(): Promise<void> {
-
     // return this.context.clearFirestore();
   }
 
   // TODO: Add storage
-
 }
 
 export class TestFirestoreContextFixture<F extends TestFirestoreInstance = TestFirestoreInstance> extends AbstractJestTestContextFixture<F> {
-
   get firestore(): Firestore {
     return this.instance.firestore;
   }
@@ -28,7 +24,6 @@ export class TestFirestoreContextFixture<F extends TestFirestoreInstance = TestF
   get context(): TestFirestoreContext {
     return this.instance.context;
   }
-
 }
 
 export type JestTestFirestoreContextFactory = JestTestContextFactory<TestFirestoreContextFixture>;

@@ -5,10 +5,8 @@
 
 // MARK: Variables
 
-
 // MARK: Mixin
 @mixin core() {
-
   .dbx-texteditor-field-compact {
     .dbx-texteditor-field-input {
       min-height: 120px;
@@ -21,7 +19,6 @@
     max-height: 400px;
     overflow: auto;
   }
-
 }
 
 @mixin color($theme-config) {
@@ -35,7 +32,6 @@
   $text-color: theming.get-color-from-palette($foreground, 'text');
 
   .dbx-texteditor-field {
-
     .NgxEditor {
       background: transparent;
       color: $text-color;
@@ -62,7 +58,7 @@
     }
 
     .NgxEditor__Popup,
-    .NgxEditor__Dropdown.NgxEditor__Dropdown--Selected, 
+    .NgxEditor__Dropdown.NgxEditor__Dropdown--Selected,
     .NgxEditor__Dropdown.NgxEditor__Dropdown--Open,
     .NgxEditor__Dropdown .NgxEditor__Dropdown--DropdownMenu,
     .NgxEditor__Popup--FormGroup input {
@@ -73,12 +69,11 @@
     .NgxEditor__Dropdown.NgxEditor__Dropdown--Selected .NgxEditor__Dropdown--Text {
       color: $text-color;
     }
-
   }
-
 }
 
-@mixin typography($typography-config) {}
+@mixin typography($typography-config) {
+}
 
 @mixin theme($theme-config) {
   @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-form-field-texteditor') {

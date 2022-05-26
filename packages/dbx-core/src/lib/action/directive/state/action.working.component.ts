@@ -7,14 +7,13 @@ import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
 
 /**
  * Structural directive that displays the content when the store is working.
- * 
+ *
  * Can specify a period in milliseconds that shows how long to show up after working for a particular number of seconds.
  */
 @Directive({
   selector: '[dbxActionIsWorking]'
 })
 export class DbxActionIsWorkingDirective extends AbstractIfDirective implements OnDestroy {
-
   @Input('dbxActionIsWorking')
   showAfter?: Maybe<number> | '';
 
@@ -32,5 +31,4 @@ export class DbxActionIsWorkingDirective extends AbstractIfDirective implements 
   constructor(templateRef: TemplateRef<unknown>, viewContainer: ViewContainerRef, public readonly source: DbxActionContextStoreSourceInstance) {
     super(templateRef, viewContainer);
   }
-
 }

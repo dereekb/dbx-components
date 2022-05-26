@@ -6,7 +6,5 @@ import { DbxFirebaseLoginMode } from '@dereekb/dbx-firebase';
   templateUrl: './login.view.component.html'
 })
 export class DemoAuthLoginViewComponent {
-
   mode: DbxFirebaseLoginMode = 'login';
-
 }

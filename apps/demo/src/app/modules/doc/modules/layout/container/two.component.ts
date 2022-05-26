@@ -4,7 +4,5 @@ import { Component } from '@angular/core';
   templateUrl: './two.component.html'
 })
 export class DocLayoutTwoColumnsComponent {
-
   showRight = true;
-
 }

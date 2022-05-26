@@ -1,10 +1,7 @@
 import { LogicalDateStringCode, dateFromLogicalDate, Maybe, ReadableTimeString } from '@dereekb/util';
 import { DateTimeMinuteConfig, DateTimeMinuteInstance, guessCurrentTimezone, readableTimeStringToDate, toLocalReadableTimeString, toReadableTimeString, utcDayForDate } from '@dereekb/date';
 import { switchMap, shareReplay, map, startWith, tap, first, distinctUntilChanged, debounceTime, throttleTime, BehaviorSubject, Observable, combineLatest, Subject, merge, interval } from 'rxjs';
-import {
-  ChangeDetectorRef,
-  Component, OnDestroy, OnInit
-} from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { AbstractControl, FormControl, Validators, FormGroup } from '@angular/forms';
 import { FieldType } from '@ngx-formly/material';
 import { FieldTypeConfig, FormlyFieldConfig } from '@ngx-formly/core';
@@ -27,10 +24,9 @@ export enum DbxDateTimeFieldTimeMode {
   NONE = 'none'
 }
 
-export type DateTimePickerConfiguration = Omit<DateTimeMinuteConfig, 'date'>
+export type DateTimePickerConfiguration = Omit<DateTimeMinuteConfig, 'date'>;
 
 export interface DbxDateTimeFieldConfig {
-
   /**
    * Whether or not the date is hidden, and automatically uses today/input date.
    */
@@ -38,7 +34,7 @@ export interface DbxDateTimeFieldConfig {
 
   /**
    * Whether or not the time can be added/removed optionally.
-   * 
+   *
    * This is ignored if timeOnly is specified.
    */
   timeMode?: DbxDateTimeFieldTimeMode;
@@ -61,7 +57,6 @@ export interface DbxDateTimeFieldConfig {
    * Used for returning the configuration observable.
    */
   getConfigObs?: () => Observable<DateTimePickerConfiguration>;
-
 }
 
 export interface DateTimeFormlyFieldConfig extends FormlyFieldConfig {
@@ -72,7 +67,6 @@ export interface DateTimeFormlyFieldConfig extends FormlyFieldConfig {
   templateUrl: 'datetime.field.component.html'
 })
 export class DbxDateTimeFieldComponent extends FieldType<DateTimeFormlyFieldConfig & FieldTypeConfig> implements OnInit, OnDestroy {
-
   private _sub = new SubscriptionObject();
   private _valueSub = new SubscriptionObject();
 
@@ -87,7 +81,7 @@ export class DbxDateTimeFieldComponent extends FieldType<DateTimeFormlyFieldConf
   private _updateTime = new Subject<void>();
 
   readonly value$ = this.formControl$.pipe(
-    switchMap(control => control.valueChanges.pipe(startWith(control.value))),
+    switchMap((control) => control.valueChanges.pipe(startWith(control.value))),
     distinctUntilChanged((a, b) => isSameMinute(a, b)),
     shareReplay(1)
   );
@@ -118,9 +112,7 @@ export class DbxDateTimeFieldComponent extends FieldType<DateTimeFormlyFieldConf
   });
 
   readonly timeInputCtrl = new FormControl('', {
-    validators: [
-      Validators.pattern(/^(now)$|^([0-9]|(0[0-9])|(1[0-9])|(2[0-3]))(:)?([0-5][0-9])?(\s)?([apAP][Mm])?(\\s)*$/)
-    ]
+    validators: [Validators.pattern(/^(now)$|^([0-9]|(0[0-9])|(1[0-9])|(2[0-3]))(:)?([0-5][0-9])?(\s)?([apAP][Mm])?(\\s)*$/)]
   });
 
   private _config = new BehaviorSubject<Maybe<Observable<DateTimePickerConfiguration>>>(undefined);
@@ -142,37 +134,26 @@ export class DbxDateTimeFieldComponent extends FieldType<DateTimeFormlyFieldConf
   }
 
   get timeMode(): DbxDateTimeFieldTimeMode {
-    return (this.timeOnly) ? DbxDateTimeFieldTimeMode.REQUIRED : (this.dateTimeField.timeMode ?? DbxDateTimeFieldTimeMode.REQUIRED);
+    return this.timeOnly ? DbxDateTimeFieldTimeMode.REQUIRED : this.dateTimeField.timeMode ?? DbxDateTimeFieldTimeMode.REQUIRED;
   }
 
   get description(): Maybe<string> {
     return this.field.templateOptions?.description;
   }
 
-  readonly fullDay$: Observable<boolean> = this.fullDayControl$.pipe(
-    switchMap(control => control.valueChanges.pipe(startWith(control.value)))
-  );
+  readonly fullDay$: Observable<boolean> = this.fullDayControl$.pipe(switchMap((control) => control.valueChanges.pipe(startWith(control.value))));
 
-  readonly showTimeInput$: Observable<boolean> = this.fullDay$.pipe(
-    map(x => !x && this.timeMode !== DbxDateTimeFieldTimeMode.NONE)
-  );
+  readonly showTimeInput$: Observable<boolean> = this.fullDay$.pipe(map((x) => !x && this.timeMode !== DbxDateTimeFieldTimeMode.NONE));
 
   readonly showAddTime$ = this.showTimeInput$.pipe(
-    map(x => !x && this.timeMode === DbxDateTimeFieldTimeMode.OPTIONAL),
+    map((x) => !x && this.timeMode === DbxDateTimeFieldTimeMode.OPTIONAL),
     shareReplay(1)
   );
 
-  readonly date$ = this.dateInputCtrl.valueChanges.pipe(
-    startWith(this.dateInputCtrl.value),
-    filterMaybe(),
-    shareReplay(1)
-  );
+  readonly date$ = this.dateInputCtrl.valueChanges.pipe(startWith(this.dateInputCtrl.value), filterMaybe(), shareReplay(1));
 
-  readonly dateValue$ = merge(
-    this.date$,
-    this.value$.pipe(skipFirstMaybe())
-  ).pipe(
-    map((x: Maybe<Date>) => (x) ? startOfDay(x) : x),
+  readonly dateValue$ = merge(this.date$, this.value$.pipe(skipFirstMaybe())).pipe(
+    map((x: Maybe<Date>) => (x ? startOfDay(x) : x)),
     distinctUntilChanged((a, b) => a != null && b != null && isSameDay(a, b)),
     shareReplay(1)
   );
@@ -185,11 +166,7 @@ export class DbxDateTimeFieldComponent extends FieldType<DateTimeFormlyFieldConf
 
   readonly config$ = this._config.pipe(switchMapMaybeDefault(), shareReplay(1));
 
-  readonly rawDateTime$: Observable<Maybe<Date>> = combineLatest([
-    this.dateValue$,
-    this.timeInput$.pipe(startWith(null)),
-    this.fullDay$
-  ]).pipe(
+  readonly rawDateTime$: Observable<Maybe<Date>> = combineLatest([this.dateValue$, this.timeInput$.pipe(startWith(null)), this.fullDay$]).pipe(
     map(([date, timeString, fullDay]) => {
       let result: Maybe<Date>;
 
@@ -201,10 +178,11 @@ export class DbxDateTimeFieldComponent extends FieldType<DateTimeFormlyFieldConf
             result = startOfDay(date);
           }
         } else if (timeString) {
-          result = readableTimeStringToDate(timeString, {
-            date,
-            useSystemTimezone: true
-          }) ?? date;
+          result =
+            readableTimeStringToDate(timeString, {
+              date,
+              useSystemTimezone: true
+            }) ?? date;
         } else {
           result = date;
         }
@@ -216,16 +194,11 @@ export class DbxDateTimeFieldComponent extends FieldType<DateTimeFormlyFieldConf
     shareReplay(1)
   );
 
-  readonly timeOutput$: Observable<Maybe<Date>> = combineLatest([
-    this.rawDateTime$,
-    this._offset,
-    this.config$.pipe(distinctUntilChanged()),
-  ]).pipe(
+  readonly timeOutput$: Observable<Maybe<Date>> = combineLatest([this.rawDateTime$, this._offset, this.config$.pipe(distinctUntilChanged())]).pipe(
     throttleTime(40, undefined, { leading: false, trailing: true }),
     distinctUntilChanged((current, next) => current[0] === next[0] && next[1] === 0),
-    tap(([, stepsOffset]) => (stepsOffset) ? this._offset.next(0) : 0),
+    tap(([, stepsOffset]) => (stepsOffset ? this._offset.next(0) : 0)),
     map(([date, stepsOffset, config]) => {
-
       if (date != null) {
         const instance = new DateTimeMinuteInstance({
           date,
@@ -260,7 +233,6 @@ export class DbxDateTimeFieldComponent extends FieldType<DateTimeFormlyFieldConf
     });
 
     this._valueSub.subscription = this.timeString$.subscribe((x) => {
-
       // Skip events where the timeInput value is cleared.
       if (!this.timeInputCtrl.value && x === '12:00AM') {
         return;
@@ -370,7 +342,7 @@ export class DbxDateTimeFieldComponent extends FieldType<DateTimeFormlyFieldConf
     }
 
     if (direction !== 0) {
-      this._offset.next(this._offset.value + (offset * direction));
+      this._offset.next(this._offset.value + offset * direction);
       this._updateTime.next();
     }
   }
@@ -396,5 +368,4 @@ export class DbxDateTimeFieldComponent extends FieldType<DateTimeFormlyFieldConf
       x.setValue(fullDay);
     });
   }
-
 }

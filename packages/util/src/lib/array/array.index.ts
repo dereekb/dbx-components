@@ -1,8 +1,8 @@
-import { Maybe } from "../value/maybe";
+import { Maybe } from '../value/maybe';
 
 /**
  * A set of number corresponding to items in an array.
- * 
+ *
  * This is useful for cases where you need the items in their index in the array.
  */
 export type IndexSet = number[];
@@ -16,10 +16,10 @@ export interface IndexSetPair<T> {
 
 /**
  * Runs a filter on an array and returns an IndexSet for values that match.
- * 
- * @param input 
- * @param filter 
- * @returns 
+ *
+ * @param input
+ * @param filter
+ * @returns
  */
 export function findToIndexSet<T>(input: T[], filter: (value: T) => boolean): IndexSet {
   const filterIndexes: number[] = [];
@@ -28,21 +28,20 @@ export function findToIndexSet<T>(input: T[], filter: (value: T) => boolean): In
     if (filter(x)) {
       filterIndexes.push(i);
     }
-  })
+  });
 
   return filterIndexes;
 }
 
-
 export function expandIndexSet<T>(input: T[], indexSet: IndexSet): IndexSetPairSet<T> {
-  return indexSet.map(i => ({ i, item: input[i] }));
+  return indexSet.map((i) => ({ i, item: input[i] }));
 }
 
 /**
  * Finds the best item in the input array using the compare function, and returns an IndexSetPair value.
- * 
+ *
  * @param input
- * @param compare 
+ * @param compare
  */
 export function findBest<T>(input: T[], compare: (a: T, b: T) => number): IndexSetPair<T> {
   let bestIndex = 0;
@@ -65,10 +64,10 @@ export function findBest<T>(input: T[], compare: (a: T, b: T) => number): IndexS
 
 /**
  * Finds the best item in the input IndexSetPairSet, and returns it.
- * 
- * @param input 
- * @param compare 
- * @returns 
+ *
+ * @param input
+ * @param compare
+ * @returns
  */
 export function findBestIndexSetPair<T>(input: IndexSetPairSet<T>, compare: (a: T, b: T) => number): IndexSetPair<T> {
   let best = input[0];

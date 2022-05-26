@@ -24,7 +24,6 @@ export interface DbxFlexWrapperWrapperConfig extends FormlyFieldConfig {
   `
 })
 export class DbxFormFlexWrapperComponent extends FieldWrapper<DbxFlexWrapperWrapperConfig> {
-
   get flexWrapper(): Maybe<DbxFlexWrapperConfig> {
     return this.to.flexWrapper;
   }
@@ -36,5 +35,4 @@ export class DbxFormFlexWrapperComponent extends FieldWrapper<DbxFlexWrapperWrap
   get relative() {
     return this.flexWrapper?.relative ?? false;
   }
-
 }

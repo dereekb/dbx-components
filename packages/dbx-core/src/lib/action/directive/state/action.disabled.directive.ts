@@ -13,7 +13,6 @@ export const APP_ACTION_DISABLED_DIRECTIVE_KEY = 'dbx_action_disabled';
   selector: '[dbxActionDisabled]'
 })
 export class DbxActionDisabledDirective<T, O> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
-
   private _disabled = new BehaviorSubject<boolean>(false);
   readonly disabled$ = this._disabled.pipe(distinctUntilChanged());
 
@@ -42,5 +41,4 @@ export class DbxActionDisabledDirective<T, O> extends AbstractSubscriptionDirect
     const disable = disabled !== false;
     this._disabled.next(disable);
   }
-
 }

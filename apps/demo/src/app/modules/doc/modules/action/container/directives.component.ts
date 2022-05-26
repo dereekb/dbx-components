@@ -6,17 +6,16 @@ import { of, delay, BehaviorSubject } from 'rxjs';
   templateUrl: './directives.component.html'
 })
 export class DocActionDirectivesComponent implements OnDestroy {
-
   successValue: any;
 
   private _value = new BehaviorSubject<{ test: number }>({ test: 0 });
   readonly value$ = this._value.asObservable();
 
-  constructor() { }
+  constructor() {}
 
   readonly handleAction: HandleActionFunction = (value: any) => {
     return of(true).pipe(delay(1000));
-  }
+  };
 
   ngOnDestroy(): void {
     this._value.complete();
@@ -29,5 +28,4 @@ export class DocActionDirectivesComponent implements OnDestroy {
   resetValue() {
     this._value.next({ test: this._value.value.test + 1 });
   }
-
 }

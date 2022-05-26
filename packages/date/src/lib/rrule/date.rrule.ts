@@ -11,7 +11,6 @@ import { DateRRuleParseUtility, RRuleLines, RRuleStringLineSet, RRuleStringSetSe
 export type RRuleBaseDateAsUTC = BaseDateAsUTC;
 
 export interface DateRRuleExpansionOptions {
-
   /**
    * Start/End Dates to get the range between.
    */
@@ -21,11 +20,9 @@ export interface DateRRuleExpansionOptions {
    * Optional DateRangeParams to derive the start/end from.
    */
   rangeParams?: DateRangeParams;
-
 }
 
 export interface MakeDateRRuleInstance {
-
   /**
    * Lines string to build an RRule from.
    */
@@ -43,7 +40,6 @@ export interface MakeDateRRuleInstance {
 }
 
 export interface DateRRuleStaticExpansionOptions extends DateRRuleExpansionOptions {
-
   /**
    * DateRRuleInstanceInstance to use for expansion.
    */
@@ -53,7 +49,6 @@ export interface DateRRuleStaticExpansionOptions extends DateRRuleExpansionOptio
    * DateRRuleInstance to build.
    */
   instanceFrom?: MakeDateRRuleInstance;
-
 }
 
 export interface DateRRuleExpansion {
@@ -82,7 +77,6 @@ export interface DateRRuleInstanceOptions {
 }
 
 export interface RecurrenceDateRange extends DateRange {
-
   /**
    * True if the recurrence never ends.
    */
@@ -90,11 +84,10 @@ export interface RecurrenceDateRange extends DateRange {
 
   /**
    * Date the final recurrence will end at, based on the duration of the event.
-   * 
+   *
    * If forever, this date is undefined.
    */
   finalRecurrenceEndsAt?: Maybe<Date>;
-
 }
 
 export interface ForeverRecurrenceDateRange extends RecurrenceDateRange {
@@ -103,7 +96,6 @@ export interface ForeverRecurrenceDateRange extends RecurrenceDateRange {
 }
 
 export class DateRRuleInstance {
-
   readonly rrule: DateRRule;
   readonly normalInstance: DateTimezoneUtcNormalInstance;
 
@@ -126,7 +118,6 @@ export class DateRRuleInstance {
   }
 
   constructor(rrule: RRule, readonly options: DateRRuleInstanceOptions) {
-
     const tzid = rrule.origOptions.tzid;
     let dtstart = rrule.origOptions.dtstart;
 
@@ -173,15 +164,15 @@ export class DateRRuleInstance {
   nextRecurrenceDate(from: Date = new Date()): Maybe<Date> {
     const baseFrom = this.normalInstance.baseDateToTargetDate(from);
     const rawNext = this.rrule.next(baseFrom);
-    const next = (rawNext) ? this.normalInstance.targetDateToBaseDate(rawNext) : undefined;
+    const next = rawNext ? this.normalInstance.targetDateToBaseDate(rawNext) : undefined;
     return next;
   }
 
   /**
    * Expands the input DateRRuleExpansionOptions to a DateRRuleExpansion.
-   * 
-   * @param options 
-   * @returns 
+   *
+   * @param options
+   * @returns
    */
   expand(options: DateRRuleExpansionOptions): DateRRuleExpansion {
     let between: Maybe<DateRange>;
@@ -195,7 +186,7 @@ export class DateRRuleInstance {
     let startsAtDates: Date[];
 
     if (between) {
-      // This finds all 
+      // This finds all
       startsAtDates = this.rrule.between(between.start, between.end, true);
     } else if (this.hasForeverRange()) {
       throw new Error('Rule expands infinitely. Specify a range.');
@@ -204,7 +195,7 @@ export class DateRRuleInstance {
     }
 
     const referenceDate: CalendarDate = this.options.date as CalendarDate;
-    const allDates = startsAtDates.map(startsAt => ({ ...referenceDate, startsAt })); // Inherit calendar time, etc.
+    const allDates = startsAtDates.map((startsAt) => ({ ...referenceDate, startsAt })); // Inherit calendar time, etc.
     let dates: CalendarDate[] = allDates;
 
     // Fix Dates w/ Timezones
@@ -216,7 +207,7 @@ export class DateRRuleInstance {
     const exclude = this.options.exclude;
 
     if (exclude) {
-      dates = dates.filter(x => !exclude.has(x.startsAt));
+      dates = dates.filter((x) => !exclude.has(x.startsAt));
     }
 
     return {
@@ -250,7 +241,6 @@ export class DateRRuleInstance {
       end = maxFutureDate();
       finalRecurrenceEndsAt = undefined;
     } else {
-
       if (options.until) {
         end = this.rrule.before(options.until, true);
       } else {
@@ -268,7 +258,7 @@ export class DateRRuleInstance {
 
     // Fix Dates w/ timezone.
     if (this.normalInstance.hasConversion) {
-      const [startF, endF] = [start, end].filter(x => Boolean(x)).map(x => this.normalInstance.baseDateToTargetDate(x));
+      const [startF, endF] = [start, end].filter((x) => Boolean(x)).map((x) => this.normalInstance.baseDateToTargetDate(x));
       start = startF;
       end = endF;
     }
@@ -286,20 +276,16 @@ export class DateRRuleInstance {
     const forever = !options.count && !options.until;
     return forever;
   }
-
 }
 
 export interface RRuleOptions extends RRuleStringSetSeparation {
-
   /**
    * Options for an RRule instance
    */
   options: Partial<Options>;
-
 }
 
 export class DateRRuleUtility {
-
   /**
    * Creates the expansion item results based on the input.
    */
@@ -327,5 +313,4 @@ export class DateRRuleUtility {
       options: ruleOptions
     };
   }
-
 }

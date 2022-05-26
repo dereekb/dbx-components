@@ -10,7 +10,6 @@ import { SegueRefOrSegueRefRouterLink, asSegueRef } from '../segue';
  */
 @Directive()
 export class AbstractDbxAnchorDirective<T extends ClickableAnchor = ClickableAnchor> implements DbxAnchor, OnDestroy {
-
   private _disabled = new BehaviorSubject<Maybe<boolean>>(false);
   private _anchor = new BehaviorSubject<Maybe<T>>(undefined);
 
@@ -54,5 +53,4 @@ export class AbstractDbxAnchorDirective<T extends ClickableAnchor = ClickableAnc
   public set disabled(disabled: Maybe<boolean>) {
     this._disabled.next(disabled);
   }
-
 }

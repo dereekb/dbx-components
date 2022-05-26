@@ -12,7 +12,7 @@ export type DbxListScrollDirectionTrigger = 'up' | 'down';
 
 /**
  * Used to trigger the loading of additional items.
- * 
+ *
  * If an observable is returned it is used to throttle the loading of more items until it returns.
  */
 export type DbxListLoadMoreHandler = () => Observable<void> | void;
@@ -21,7 +21,6 @@ export type DbxListLoadMoreHandler = () => Observable<void> | void;
  * DbxListComponent configuration.
  */
 export interface DbxListConfig<T = unknown, V extends DbxListView<T> = DbxListView<T>> extends DbxInjectionComponentConfig<V> {
-
   /**
    * Whether or not to hide the list content when it is an empty list.
    */
@@ -61,24 +60,22 @@ export interface DbxListConfig<T = unknown, V extends DbxListView<T> = DbxListVi
    * Default selection list value. If not defined, will default to 'view'.
    */
   defaultSelectionMode?: Maybe<DbxListSelectionMode>;
-
 }
 
 /**
  * Used to display a potentially infinitely scrollable list of content.
- * 
+ *
  * This component is generally wrapped by another component that provides this one configuration.
  */
 @Component({
   selector: 'dbx-list',
   templateUrl: './list.component.html',
   host: {
-    'class': 'd-block dbx-list',
+    class: 'd-block dbx-list',
     '[class.dbx-list-padded]': 'padded'
   }
 })
 export class DbxListComponent<T = unknown, V extends DbxListView<T> = DbxListView<T>, S extends ListLoadingState<T> = ListLoadingState<T>> implements OnDestroy {
-
   readonly DEFAULT_SCROLL_DISTANCE = 1.5;
   readonly DEFAULT_THROTTLE_SCROLL = 50;
 
@@ -110,15 +107,33 @@ export class DbxListComponent<T = unknown, V extends DbxListView<T> = DbxListVie
   readonly disabled$ = this._disabled.asObservable();
   readonly selectionMode$ = this._selectionMode.asObservable();
 
-  readonly hideOnEmpty$: Observable<boolean> = this._config.pipe(filterMaybe(), map(x => Boolean(x.hideOnEmpty)), distinctUntilChanged(), shareReplay(1));
-  readonly invertedList$: Observable<boolean> = this._config.pipe(filterMaybe(), map(x => Boolean(x?.throttle)), distinctUntilChanged(), shareReplay(1));
-  readonly throttleScroll$: Observable<number> = this._config.pipe(map(x => (x?.throttle) ?? this.DEFAULT_THROTTLE_SCROLL), distinctUntilChanged(), shareReplay(1));
-  readonly scrollDistance$: Observable<number> = this._config.pipe(map(x => (x?.scrollDistance) ?? this.DEFAULT_SCROLL_DISTANCE), distinctUntilChanged(), shareReplay(1));
+  readonly hideOnEmpty$: Observable<boolean> = this._config.pipe(
+    filterMaybe(),
+    map((x) => Boolean(x.hideOnEmpty)),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+  readonly invertedList$: Observable<boolean> = this._config.pipe(
+    filterMaybe(),
+    map((x) => Boolean(x?.throttle)),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+  readonly throttleScroll$: Observable<number> = this._config.pipe(
+    map((x) => x?.throttle ?? this.DEFAULT_THROTTLE_SCROLL),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+  readonly scrollDistance$: Observable<number> = this._config.pipe(
+    map((x) => x?.scrollDistance ?? this.DEFAULT_SCROLL_DISTANCE),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
 
   readonly scrollLoadMoreTrigger$ = this._config.pipe(
     switchMap((config) => {
       const loadNextDirection = config?.invertedList ? 'up' : 'down';
-      return this._scrollTrigger.pipe(filter(x => x === loadNextDirection));
+      return this._scrollTrigger.pipe(filter((x) => x === loadNextDirection));
     })
   );
 
@@ -136,7 +151,6 @@ export class DbxListComponent<T = unknown, V extends DbxListView<T> = DbxListVie
           componentClass: config.componentClass,
           injector: config.injector,
           init: (instance: V) => {
-
             // Synchronize disabled
             this._disabledSub.subscription = this.disabled$.subscribe((disabled) => instance.setDisabled(disabled));
             this._selectionModeSub.subscription = this.selectionMode$.subscribe((selectionMode) => instance.setSelectionMode(selectionMode ?? defaultSelectionMode));
@@ -148,21 +162,23 @@ export class DbxListComponent<T = unknown, V extends DbxListView<T> = DbxListVie
             instance.setListContext(this.context);
 
             if (loadMore) {
-              this._loadMoreSub.subscription = this.loadMore$.pipe(
-                // Throttle additional loading calls using exhaustMap until observable returns, if one is returned.
-                exhaustMap(() => {
-                  const result = loadMore();
-                  let obs: Observable<void>;
+              this._loadMoreSub.subscription = this.loadMore$
+                .pipe(
+                  // Throttle additional loading calls using exhaustMap until observable returns, if one is returned.
+                  exhaustMap(() => {
+                    const result = loadMore();
+                    let obs: Observable<void>;
 
-                  if (result) {
-                    obs = result.pipe(catchError(() => of()));
-                  } else {
-                    obs = of();
-                  }
+                    if (result) {
+                      obs = result.pipe(catchError(() => of()));
+                    } else {
+                      obs = of();
+                    }
 
-                  return obs;
-                })
-              ).subscribe();
+                    return obs;
+                  })
+                )
+                .subscribe();
             }
 
             if (onClick) {
@@ -191,17 +207,19 @@ export class DbxListComponent<T = unknown, V extends DbxListView<T> = DbxListVie
   );
 
   readonly hideContent$: Observable<boolean> = this.context.stateChange$.pipe(
-    switchMap(() => this.context.state$.pipe(
-      filter((x) => loadingStateHasFinishedLoading(x)),
-      first(),
-      startWithBeginLoading()
-    )),
+    switchMap(() =>
+      this.context.state$.pipe(
+        filter((x) => loadingStateHasFinishedLoading(x)),
+        first(),
+        startWithBeginLoading()
+      )
+    ),
     switchMap((state) => {
       if (state?.loading) {
         return of(true);
       } else {
         return this.hideOnEmpty$.pipe(
-          switchMap((hide) => (hide === false) ? of(false) : this.isEmpty$),
+          switchMap((hide) => (hide === false ? of(false) : this.isEmpty$)),
           distinctUntilChanged(),
           tapDetectChanges(this.cdRef),
           shareReplay(1)
@@ -210,10 +228,10 @@ export class DbxListComponent<T = unknown, V extends DbxListView<T> = DbxListVie
     })
   );
 
-  constructor(readonly cdRef: ChangeDetectorRef) { }
+  constructor(readonly cdRef: ChangeDetectorRef) {}
 
   ngOnDestroy(): void {
-    delete this._content;  // remove parent-child relation.
+    delete this._content; // remove parent-child relation.
     this._scrollTrigger.complete();
     this._loadMoreTrigger.complete();
     this._config.complete();
@@ -318,7 +336,6 @@ export class DbxListComponent<T = unknown, V extends DbxListView<T> = DbxListVie
       throw new Error('Attempted to set __content in list outside of initialization.');
     }
   }
-
 }
 
 /**
@@ -327,12 +344,11 @@ export class DbxListComponent<T = unknown, V extends DbxListView<T> = DbxListVie
 @Directive({
   selector: '[dbxListInternalContent]',
   host: {
-    'class': 'd-block dbx-list-content',
+    class: 'd-block dbx-list-content',
     '[class.dbx-list-content-hidden]': 'hide'
   }
 })
 export class DbxListInternalContentDirective {
-
   @Input()
   hide: Maybe<boolean> = false;
 
@@ -345,5 +361,4 @@ export class DbxListInternalContentDirective {
     const position = ($event.target as Element).scrollTop;
     this.parent.contentScrolled.emit(position);
   }
-
 }

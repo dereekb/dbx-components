@@ -8,17 +8,8 @@ import { DbxFormFormlyDateFieldModule } from './date/date.field.module';
 import { DbxFormFormlyTextFieldModule } from './text/text.field.module';
 
 @NgModule({
-  imports: [
-    CommonModule
-  ],
+  imports: [CommonModule],
   declarations: [],
-  exports: [
-    DbxFormFormlyArrayFieldModule,
-    DbxFormFormlyBooleanFieldModule,
-    DbxFormFormlyDateFieldModule,
-    DbxFormFormlyEnumFieldModule,
-    DbxFormFormlyPhoneFieldModule,
-    DbxFormFormlyTextFieldModule
-  ]
+  exports: [DbxFormFormlyArrayFieldModule, DbxFormFormlyBooleanFieldModule, DbxFormFormlyDateFieldModule, DbxFormFormlyEnumFieldModule, DbxFormFormlyPhoneFieldModule, DbxFormFormlyTextFieldModule]
 })
-export class DbxFormFormlyValueModule { }
+export class DbxFormFormlyValueModule {}

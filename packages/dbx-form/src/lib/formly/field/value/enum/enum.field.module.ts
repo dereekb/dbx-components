@@ -5,4 +5,4 @@ import { NgModule } from '@angular/core';
   declarations: [],
   exports: []
 })
-export class DbxFormFormlyEnumFieldModule { }
+export class DbxFormFormlyEnumFieldModule {}

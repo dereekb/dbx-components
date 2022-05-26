@@ -9,7 +9,6 @@ import { Maybe, ErrorInput, toReadableError, ReadableError } from '@dereekb/util
   templateUrl: './error.component.html'
 })
 export class DbxReadableErrorComponent {
-
   private _error?: Maybe<ReadableError>;
 
   get error(): Maybe<ReadableError> {
@@ -24,5 +23,4 @@ export class DbxReadableErrorComponent {
   get message(): Maybe<string> {
     return this._error?.message;
   }
-
 }

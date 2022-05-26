@@ -1,4 +1,3 @@
-
 /**
  * Key that corresponds with a function on the server.
  */
@@ -19,14 +18,14 @@ export type FirebaseFunction<I = unknown, O = unknown> = (input: I) => Promise<O
  */
 export type FirebaseFunctionTypeMap = {
   [key: FirebaseFunctionKey]: FirebaseFunctionType;
-}
+};
 
 /**
  * A FirebaseFunction map. Its types are relative to a FirebaseFunctionTypeMap.
  */
 export type FirebaseFunctionMap<M extends FirebaseFunctionTypeMap> = {
   [K in keyof M]: FirebaseFunctionMapFunction<M, K>;
-}
+};
 
 /**
  * Typings for a function within a FirebaseFunctionMap.

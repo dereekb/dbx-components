@@ -9,16 +9,11 @@ export interface PopoverPositionStrategyConfig {
 }
 
 export class PopoverPositionStrategy {
-
   static make(overlay: Overlay, elementRef: ElementRef, config: NgOverlayContainerConfiguration): FlexibleConnectedPositionStrategy {
-
-    const [originX, origin2ndX, origin3rdX]: HorizontalConnectionPos[] =
-      config.originX === 'end' ? ['end', 'start', 'center'] :
-        config.originX === 'start' ? ['start', 'end', 'center'] : ['center', 'start', 'end'];
+    const [originX, origin2ndX, origin3rdX]: HorizontalConnectionPos[] = config.originX === 'end' ? ['end', 'start', 'center'] : config.originX === 'start' ? ['start', 'end', 'center'] : ['center', 'start', 'end'];
 
     const overlayX = originX;
-    const [overlayY, overlayFallbackY]: VerticalConnectionPos[] =
-      config.overlayY === 'bottom' ? ['bottom', 'top'] : ['top', 'bottom'];
+    const [overlayY, overlayFallbackY]: VerticalConnectionPos[] = config.overlayY === 'bottom' ? ['bottom', 'top'] : ['top', 'bottom'];
 
     const [originY, originFallbackY] = [overlayFallbackY, overlayY];
     const { offsetX = 0, offsetY = 0 } = config;
@@ -33,46 +28,45 @@ export class PopoverPositionStrategy {
           originY,
           overlayX,
           overlayY,
-          offsetY,
+          offsetY
         },
         {
           originX: origin2ndX,
           originY,
           overlayX: origin2ndX,
           overlayY,
-          offsetY,
+          offsetY
         },
         {
           originX,
           originY: originFallbackY,
           overlayX,
           overlayY: overlayFallbackY,
-          offsetY: -offsetY,
+          offsetY: -offsetY
         },
         {
           originX: origin2ndX,
           originY: originFallbackY,
           overlayX: origin2ndX,
           overlayY: overlayFallbackY,
-          offsetY: -offsetY,
+          offsetY: -offsetY
         },
         {
           originX: origin3rdX,
           originY,
           overlayX: origin3rdX,
           overlayY,
-          offsetY,
+          offsetY
         },
         {
           originX: origin3rdX,
           originY: originFallbackY,
           overlayX: origin3rdX,
           overlayY: overlayFallbackY,
-          offsetY: -offsetY,
-        },
+          offsetY: -offsetY
+        }
       ])
       .withDefaultOffsetX(offsetX)
       .withDefaultOffsetY(offsetY);
   }
-
 }

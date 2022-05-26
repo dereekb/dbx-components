@@ -1,4 +1,4 @@
-import { CollectionReference, AbstractFirestoreDocument, snapshotConverterFunctions, firestoreString, firestoreDate, FirestoreCollection, UserRelatedById, DocumentReferenceRef, FirestoreContext, FirestoreCollectionWithParent, firestoreBoolean, DocumentDataWithId, AbstractFirestoreDocumentWithParent, optionalFirestoreDate } from "@dereekb/firebase";
+import { CollectionReference, AbstractFirestoreDocument, snapshotConverterFunctions, firestoreString, firestoreDate, FirestoreCollection, UserRelatedById, DocumentReferenceRef, FirestoreContext, FirestoreCollectionWithParent, firestoreBoolean, DocumentDataWithId, AbstractFirestoreDocumentWithParent, optionalFirestoreDate } from '@dereekb/firebase';
 import { Maybe } from '@dereekb/util';
 
 export interface GuestbookFirestoreCollections {
@@ -10,7 +10,7 @@ export interface GuestbookFirestoreCollections {
 export interface Guestbook {
   /**
    * Whether or not this guestbook should show up in the list.
-   * 
+   *
    * If not active, this item is still considered locked.
    */
   published: boolean;
@@ -30,9 +30,9 @@ export interface Guestbook {
 
 export type GuestbookWithId = DocumentDataWithId<Guestbook>;
 
-export interface GuestbookRef extends DocumentReferenceRef<Guestbook> { }
+export interface GuestbookRef extends DocumentReferenceRef<Guestbook> {}
 
-export class GuestbookDocument extends AbstractFirestoreDocument<Guestbook, GuestbookDocument> { }
+export class GuestbookDocument extends AbstractFirestoreDocument<Guestbook, GuestbookDocument> {}
 
 export const guestbookCollectionPath = 'guestbook';
 
@@ -84,9 +84,9 @@ export interface GuestbookEntry extends UserRelatedById {
   published: boolean;
 }
 
-export interface GuestbookEntryRef extends DocumentReferenceRef<GuestbookEntry> { }
+export interface GuestbookEntryRef extends DocumentReferenceRef<GuestbookEntry> {}
 
-export class GuestbookEntryDocument extends AbstractFirestoreDocumentWithParent<Guestbook, GuestbookEntry, GuestbookEntryDocument> { }
+export class GuestbookEntryDocument extends AbstractFirestoreDocumentWithParent<Guestbook, GuestbookEntry, GuestbookEntryDocument> {}
 
 export const guestbookCollectionGuestbookEntryCollectionPath = 'entry';
 
@@ -120,5 +120,5 @@ export function guestbookEntryFirestoreCollectionFactory(firestoreContext: Fires
       firestoreContext,
       parent
     });
-  }
+  };
 }

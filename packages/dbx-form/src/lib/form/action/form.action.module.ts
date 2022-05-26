@@ -4,15 +4,8 @@ import { CommonModule } from '@angular/common';
 import { DbxActionFormDirective } from './form.action.directive';
 
 @NgModule({
-  imports: [
-    CommonModule,
-    MatDialogModule
-  ],
-  declarations: [
-    DbxActionFormDirective
-  ],
-  exports: [
-    DbxActionFormDirective
-  ]
+  imports: [CommonModule, MatDialogModule],
+  declarations: [DbxActionFormDirective],
+  exports: [DbxActionFormDirective]
 })
-export class DbxFormActionModule { }
+export class DbxFormActionModule {}

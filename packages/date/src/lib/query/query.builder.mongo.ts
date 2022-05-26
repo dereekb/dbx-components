@@ -34,8 +34,8 @@ export function makeMongoDBLikeDateQueryBuilder(config: MakeMongoDBLikeDateQuery
 
       if (gte || lte) {
         result = {
-          ...(gte) ? { '$gte': gte } : undefined,
-          ...(lte) ? { '$lte': lte } : undefined
+          ...(gte ? { $gte: gte } : undefined),
+          ...(lte ? { $lte: lte } : undefined)
         };
       }
 
@@ -46,14 +46,13 @@ export function makeMongoDBLikeDateQueryBuilder(config: MakeMongoDBLikeDateQuery
       let endsAtFilter;
 
       if (fields.singleFieldForStartAndEnd) {
-
-        // A single field that manages start/end will start and end at the same instant (end = start) 
+        // A single field that manages start/end will start and end at the same instant (end = start)
         // so we merge the gte/lte values.
         const merged: MongoDBLikeDateRangeFilter = mergeMongoDBLikeRangeFilters(startsAt, endsAt);
-        startsAtFilter = (merged) ? { [fields.start]: merged } : undefined;
+        startsAtFilter = merged ? { [fields.start]: merged } : undefined;
       } else {
-        startsAtFilter = (startsAt) ? { [fields.start]: startsAt } : undefined;
-        endsAtFilter = (endsAt && fields.end) ? { [fields.end]: endsAt } : undefined;
+        startsAtFilter = startsAt ? { [fields.start]: startsAt } : undefined;
+        endsAtFilter = endsAt && fields.end ? { [fields.end]: endsAt } : undefined;
       }
 
       const filter = {
@@ -63,5 +62,5 @@ export function makeMongoDBLikeDateQueryBuilder(config: MakeMongoDBLikeDateQuery
 
       return filter;
     }
-  }
+  };
 }

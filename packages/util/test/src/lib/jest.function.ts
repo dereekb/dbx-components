@@ -1,4 +1,4 @@
-import { forwardFunction, Getter } from "@dereekb/util";
+import { forwardFunction, Getter } from '@dereekb/util';
 
 export interface UseJestFunctionFixture<I extends (...args: any[]) => O, O = any> {
   fn: Getter<I>;

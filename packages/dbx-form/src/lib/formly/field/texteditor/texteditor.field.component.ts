@@ -1,8 +1,6 @@
 import { FormGroup } from '@angular/forms';
 import { CompactContextStore, mapCompactModeObs } from '@dereekb/dbx-web';
-import {
-  Component, OnDestroy, OnInit, Optional
-} from '@angular/core';
+import { Component, OnDestroy, OnInit, Optional } from '@angular/core';
 import { FieldTypeConfig, FormlyFieldConfig } from '@ngx-formly/core';
 import { FieldType } from '@ngx-formly/material';
 import { Editor } from 'ngx-editor';
@@ -10,7 +8,7 @@ import { debounceTime, filter } from 'rxjs';
 import { SubscriptionObject } from '@dereekb/rxjs';
 import { Maybe } from '@dereekb/util';
 
-export type TextEditorComponentFieldConfig = FormlyFieldConfig
+export type TextEditorComponentFieldConfig = FormlyFieldConfig;
 
 @Component({
   template: `
@@ -29,7 +27,6 @@ export type TextEditorComponentFieldConfig = FormlyFieldConfig
   `
 })
 export class DbxTextEditorFieldComponent<T extends TextEditorComponentFieldConfig = TextEditorComponentFieldConfig> extends FieldType<T & FieldTypeConfig> implements OnInit, OnDestroy {
-
   private _editor?: Editor;
   private _sub = new SubscriptionObject();
 
@@ -65,13 +62,15 @@ export class DbxTextEditorFieldComponent<T extends TextEditorComponentFieldConfi
     this._editor = new Editor({});
 
     // Watch for value changes every second and update the pristine level.
-    this._sub.subscription = this.editor.valueChanges.pipe(
-      debounceTime(100),
-      filter(() => this.editor.view.hasFocus())
-    ).subscribe(() => {
-      this.formControl.updateValueAndValidity();
-      this.formControl.markAsDirty();
-    });
+    this._sub.subscription = this.editor.valueChanges
+      .pipe(
+        debounceTime(100),
+        filter(() => this.editor.view.hasFocus())
+      )
+      .subscribe(() => {
+        this.formControl.updateValueAndValidity();
+        this.formControl.markAsDirty();
+      });
   }
 
   override ngOnDestroy(): void {
@@ -83,5 +82,4 @@ export class DbxTextEditorFieldComponent<T extends TextEditorComponentFieldConfi
     }
     this._sub.destroy();
   }
-
 }

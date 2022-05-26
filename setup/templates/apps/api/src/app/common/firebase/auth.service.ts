@@ -1,5 +1,12 @@
 import { CallableContextWithAuthData, AbstractFirebaseServerAuthContext, AbstractFirebaseServerAuthService, AbstractFirebaseServerAuthUserContext } from "@dereekb/firebase-server";
-import { AuthClaims, AuthRoleSet } from "@dereekb/util";
+import { AuthClaims, AuthClaimsUpdate, AuthRoleSet, AuthRoleClaimsFactoryConfig, authRoleClaimsService, AUTH_ADMIN_ROLE } from "@dereekb/util";
+
+export type APP_CODE_PREFIXApiAuthClaims = {
+  /**
+   * Admin role
+   */
+  a?: number;
+}
 
 export class APP_CODE_PREFIXApiFirebaseServerAuthUserContext extends AbstractFirebaseServerAuthUserContext<APP_CODE_PREFIXApiAuthService> {
 
@@ -11,6 +18,14 @@ export class APP_CODE_PREFIXApiFirebaseServerAuthContext extends AbstractFirebas
 
 export class APP_CODE_PREFIXApiAuthService extends AbstractFirebaseServerAuthService<APP_CODE_PREFIXApiFirebaseServerAuthUserContext, APP_CODE_PREFIXApiFirebaseServerAuthContext> {
 
+  static readonly APP_CODE_PREFIX_UPPER_API_CLAIMS_CONFIG: AuthRoleClaimsFactoryConfig<APP_CODE_PREFIXApiAuthClaims> = {
+    a: {
+      roles: AUTH_ADMIN_ROLE
+    }
+  };
+
+  static readonly APP_CODE_PREFIX_UPPER_API_CLAIMS_SERVICE = authRoleClaimsService(APP_CODE_PREFIXApiAuthService.APP_CODE_PREFIX_UPPER_API_CLAIMS_CONFIG);
+
   protected _context(context: CallableContextWithAuthData): APP_CODE_PREFIXApiFirebaseServerAuthContext {
     return new APP_CODE_PREFIXApiFirebaseServerAuthContext(this, context);
   }
@@ -20,21 +35,11 @@ export class APP_CODE_PREFIXApiAuthService extends AbstractFirebaseServerAuthSer
   }
 
   readRoles(claims: AuthClaims): AuthRoleSet {
-    const roles = new Set<string>();
-
-    if (claims.a) {
-
-    }
-
-    return roles;
+    return APP_CODE_PREFIXApiAuthService.APP_CODE_PREFIX_UPPER_API_CLAIMS_SERVICE.toRoles(claims);
   }
 
-  claimsForRoles(roles: AuthRoleSet): AuthClaims {
-    const claims: AuthClaims = {};
-
-
-
-    return claims;
+  claimsForRoles(roles: AuthRoleSet): AuthClaimsUpdate {
+    return APP_CODE_PREFIXApiAuthService.APP_CODE_PREFIX_UPPER_API_CLAIMS_SERVICE.toClaims(roles);
   }
 
 }

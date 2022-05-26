@@ -1,18 +1,18 @@
-import { OperatorFunction, identity, MonoTypeOperatorFunction, map } from "rxjs";
-import { onMatchDelta } from "./delta";
+import { OperatorFunction, identity, MonoTypeOperatorFunction, map } from 'rxjs';
+import { onMatchDelta } from './delta';
 
 /**
  * Returns the pipe if usePipe is true, otherwise returns the identity.
  */
 export function pipeIf<A>(usePipe: boolean, pipe: OperatorFunction<A, A>): OperatorFunction<A, A> {
-  return (usePipe) ? pipe : identity;
+  return usePipe ? pipe : identity;
 }
 
 /**
  * Maps the opposite value of the input boolean.
  */
 export function isNot(): MonoTypeOperatorFunction<boolean> {
-  return map(x => !x);
+  return map((x) => !x);
 }
 
 /**

@@ -6,16 +6,11 @@ import { DbxRouterWebProviderConfig } from '../router.provider.config';
 import { DbxInjectionComponentModule } from '@dereekb/dbx-core';
 
 @NgModule({
-  imports: [
-    CommonModule,
-    UIRouterModule,
-    DbxInjectionComponentModule
-  ],
+  imports: [CommonModule, UIRouterModule, DbxInjectionComponentModule],
   declarations: [DbxAngularRouterSegueAnchorComponent],
   exports: [DbxAngularRouterSegueAnchorComponent]
 })
 export class DbxWebAngularRouterModule {
-
   static forRoot(): ModuleWithProviders<DbxWebAngularRouterModule> {
     return {
       ngModule: DbxWebAngularRouterModule,
@@ -31,5 +26,4 @@ export class DbxWebAngularRouterModule {
       ]
     };
   }
-
 }

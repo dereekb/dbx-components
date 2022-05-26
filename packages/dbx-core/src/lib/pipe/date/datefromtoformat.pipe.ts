@@ -9,7 +9,6 @@ import { formatToTimeString, toJsDate } from '@dereekb/date';
  */
 @Pipe({ name: 'dateFromPlusTo' })
 export class DateFromToTimePipe implements PipeTransform {
-
   static formatFromTo(input: Maybe<DateOrDateString>, format: string, minutes: number, locale: string): Maybe<string> {
     if (input) {
       const date = toJsDate(input);
@@ -21,10 +20,9 @@ export class DateFromToTimePipe implements PipeTransform {
     return undefined;
   }
 
-  constructor(@Inject(LOCALE_ID) private locale: string) { }
+  constructor(@Inject(LOCALE_ID) private locale: string) {}
 
   transform(input: Maybe<DateOrDateString>, format: string, minutes: number): Maybe<string> {
     return DateFromToTimePipe.formatFromTo(input, format, minutes, this.locale);
   }
-
 }

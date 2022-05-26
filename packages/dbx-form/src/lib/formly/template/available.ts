@@ -11,12 +11,14 @@ export function textIsAvailableField(config: TextAvailableFieldConfig): FormlyFi
   const field = textField(config);
 
   field.asyncValidators = {
-    validation: [{
-      expression: fieldValueIsAvailableValidator({
-        ...config,
-        message: config?.isNotAvailableErrorMessage
-      }),
-    }]
+    validation: [
+      {
+        expression: fieldValueIsAvailableValidator({
+          ...config,
+          message: config?.isNotAvailableErrorMessage
+        })
+      }
+    ]
   };
 
   return workingWrapper(field, {});

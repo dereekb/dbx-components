@@ -13,16 +13,16 @@ import { delay } from 'rxjs';
   }
 })
 export class DbxStyleBodyDirective extends AbstractSubscriptionDirective {
-
   private _currentStyle = '';
 
   constructor(private renderer: Renderer2, readonly styleService: DbxStyleService, private cdRef: ChangeDetectorRef) {
-    super(styleService.style$.pipe(delay(0)).subscribe((style) => {
-      this._currentStyle && this.renderer.removeClass(document.body, this._currentStyle);
-      style && this.renderer.addClass(document.body, style);
-      this._currentStyle = style;
-      safeDetectChanges(this.cdRef);
-    }));
+    super(
+      styleService.style$.pipe(delay(0)).subscribe((style) => {
+        this._currentStyle && this.renderer.removeClass(document.body, this._currentStyle);
+        style && this.renderer.addClass(document.body, style);
+        this._currentStyle = style;
+        safeDetectChanges(this.cdRef);
+      })
+    );
   }
-
 }

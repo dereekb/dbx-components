@@ -10,11 +10,9 @@ import { FilterMap } from '@dereekb/rxjs';
   providers: [FilterMap]
 })
 export class DbxFilterMapDirective<F> implements OnDestroy {
-
-  constructor(readonly filterMap: FilterMap<F>) { }
+  constructor(readonly filterMap: FilterMap<F>) {}
 
   ngOnDestroy(): void {
     this.filterMap.destroy();
   }
-
 }

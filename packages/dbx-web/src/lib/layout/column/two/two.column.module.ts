@@ -13,30 +13,8 @@ import { DbxTwoColumnFullLeftDirective } from './two.column.full.left.directive'
 import { DbxTwoColumnContextDirective } from './two.column.context.directive';
 
 @NgModule({
-  imports: [
-    CommonModule,
-    MatIconModule,
-    MatButtonModule,
-    DbxRouterAnchorModule,
-    DbxContentLayoutModule
-  ],
-  declarations: [
-    DbxTwoColumnComponent,
-    DbxTwoColumnRightComponent,
-    DbxTwoColumnColumnHeadComponent,
-    DbxTwoColumnSrefDirective,
-    DbxTwoColumnBackDirective,
-    DbxTwoColumnFullLeftDirective,
-    DbxTwoColumnContextDirective
-  ],
-  exports: [
-    DbxTwoColumnComponent,
-    DbxTwoColumnRightComponent,
-    DbxTwoColumnColumnHeadComponent,
-    DbxTwoColumnSrefDirective,
-    DbxTwoColumnBackDirective,
-    DbxTwoColumnFullLeftDirective,
-    DbxTwoColumnContextDirective
-  ],
+  imports: [CommonModule, MatIconModule, MatButtonModule, DbxRouterAnchorModule, DbxContentLayoutModule],
+  declarations: [DbxTwoColumnComponent, DbxTwoColumnRightComponent, DbxTwoColumnColumnHeadComponent, DbxTwoColumnSrefDirective, DbxTwoColumnBackDirective, DbxTwoColumnFullLeftDirective, DbxTwoColumnContextDirective],
+  exports: [DbxTwoColumnComponent, DbxTwoColumnRightComponent, DbxTwoColumnColumnHeadComponent, DbxTwoColumnSrefDirective, DbxTwoColumnBackDirective, DbxTwoColumnFullLeftDirective, DbxTwoColumnContextDirective]
 })
-export class DbxTwoColumnLayoutModule { }
+export class DbxTwoColumnLayoutModule {}

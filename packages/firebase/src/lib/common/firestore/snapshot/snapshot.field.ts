@@ -10,11 +10,11 @@ export interface BaseFirestoreFieldConfig<V, D = unknown> {
 
 export interface FirestoreFieldConfigWithDefault<V, D = unknown> extends BaseFirestoreFieldConfig<V, D> {
   default: GetterOrValue<V>;
-};
+}
 
 export interface FirestoreFieldConfigWithDefaultData<V, D = unknown> extends BaseFirestoreFieldConfig<V, D> {
   defaultData: GetterOrValue<D>;
-};
+}
 
 export type FirestoreFieldConfig<V, D = unknown> = FirestoreFieldConfigWithDefault<V, D> | FirestoreFieldConfigWithDefaultData<V, D>;
 
@@ -26,15 +26,17 @@ export type FirestoreModelFieldMapFunctionsConfig<V, D> = ModelFieldMapFunctions
 
 export function firestoreField<V, D = unknown>(config: FirestoreFieldConfig<V, D>): FirestoreModelFieldMapFunctionsConfig<V, D> {
   return {
-    from: ((config as FirestoreFieldConfigWithDefault<V, D>).default) ? {
-      default: (config as FirestoreFieldConfigWithDefault<V, D>).default,
-      convert: config.fromData
-    } : {
-      defaultInput: (config as FirestoreFieldConfigWithDefaultData<V, D>).defaultData,
-      convert: config.fromData
-    },
+    from: (config as FirestoreFieldConfigWithDefault<V, D>).default
+      ? {
+          default: (config as FirestoreFieldConfigWithDefault<V, D>).default,
+          convert: config.fromData
+        }
+      : {
+          defaultInput: (config as FirestoreFieldConfigWithDefaultData<V, D>).defaultData,
+          convert: config.fromData
+        },
     to: {
-      default: config.defaultBeforeSave ?? FIRESTORE_EMPTY_VALUE,  // always store the default empty value as the default
+      default: config.defaultBeforeSave ?? FIRESTORE_EMPTY_VALUE, // always store the default empty value as the default
       convert: config.toData
     }
   } as FirestoreModelFieldMapFunctionsConfig<V, D>;
@@ -43,7 +45,7 @@ export function firestoreField<V, D = unknown>(config: FirestoreFieldConfig<V, D
 export const FIRESTORE_PASSTHROUGH_FIELD = firestoreField<unknown, unknown>({
   default: null,
   fromData: passThrough,
-  toData: passThrough,
+  toData: passThrough
 });
 
 export function firestorePassThroughField<T>(): ModelFieldMapFunctionsConfig<T, T> {
@@ -64,7 +66,7 @@ export function firestoreString(config: FirestoreStringConfig) {
     default: '',
     ...config,
     fromData: passThrough,
-    toData: passThrough,
+    toData: passThrough
   });
 }
 
@@ -84,7 +86,7 @@ export function optionalFirestoreUID() {
 
 export type FirestoreDateFieldConfig = DefaultMapConfiguredFirestoreFieldConfig<Date, string> & {
   saveDefaultAsNow?: boolean;
-}
+};
 
 export function firestoreDate(config: FirestoreDateFieldConfig = {}) {
   return firestoreField<Date, string>({
@@ -109,7 +111,7 @@ export function firestoreBoolean(config: FirestoreBooleanFieldConfig) {
   return firestoreField<boolean, boolean>({
     default: config.default,
     fromData: passThrough,
-    toData: passThrough,
+    toData: passThrough
   });
 }
 
@@ -123,7 +125,7 @@ export function firestoreNumber(config: FirestoreNumberFieldConfig) {
   return firestoreField<number, number>({
     default: config.default,
     fromData: passThrough,
-    toData: passThrough,
+    toData: passThrough
   });
 }
 

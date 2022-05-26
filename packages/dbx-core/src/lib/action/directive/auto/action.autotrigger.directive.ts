@@ -16,10 +16,9 @@ const MAX_ERRORS_TO_THROTTLE_ON = 6;
  * Directive that automatically triggers the action periodically when it is in a modified state.
  */
 @Directive({
-  selector: 'dbxActionAutoTrigger, [dbxActionAutoTrigger]',
+  selector: 'dbxActionAutoTrigger, [dbxActionAutoTrigger]'
 })
 export class DbxActionAutoTriggerDirective<T = unknown, O = unknown> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
-
   private readonly _triggerEnabled = new BehaviorSubject<boolean>(true);
   private readonly _triggerLimit = new BehaviorSubject<number | undefined>(undefined);
   private readonly _trigger = new Subject<number>();
@@ -33,7 +32,7 @@ export class DbxActionAutoTriggerDirective<T = unknown, O = unknown> extends Abs
   }
 
   set triggerEnabled(triggerEnabled: Maybe<boolean> | '') {
-    triggerEnabled = triggerEnabled !== false;  // Default to true
+    triggerEnabled = triggerEnabled !== false; // Default to true
 
     if (this.triggerEnabled !== triggerEnabled) {
       this._triggerEnabled.next(triggerEnabled);
@@ -95,15 +94,19 @@ export class DbxActionAutoTriggerDirective<T = unknown, O = unknown> extends Abs
     filter(() => this.isEnabled),
     filter((x) => x),
     debounce(() => interval(this.triggerDebounce)),
-    throttle(() => this._errorCount$.pipe(
-      first(),
-      exhaustMap((count) => interval(this.triggerThrottle + (Math.min(count, this.maxErrorsForThrottle) * this.triggerErrorThrottle)))
-    ), { leading: true, trailing: true }),
+    throttle(
+      () =>
+        this._errorCount$.pipe(
+          first(),
+          exhaustMap((count) => interval(this.triggerThrottle + Math.min(count, this.maxErrorsForThrottle) * this.triggerErrorThrottle))
+        ),
+      { leading: true, trailing: true }
+    ),
     // Check again for the "trailing" piece.
     filter(() => this.isEnabled),
     mergeMap(() => this.source.isModifiedAndCanTrigger$.pipe(first())),
     filter((x) => x),
-    map(() => this._triggerCount += 1),
+    map(() => (this._triggerCount += 1)),
     shareReplay(1)
   );
 
@@ -120,16 +123,15 @@ export class DbxActionAutoTriggerDirective<T = unknown, O = unknown> extends Abs
     })
   );
 
-  private readonly _isTriggerLimited$: Observable<[number, boolean]> =
-    combineLatest([this.triggerCount$, this._triggerLimit]).pipe(
-      map(([triggerCount, limit]) => [triggerCount, ((limit) ? (triggerCount > limit) : false)] as [number, boolean]),
-      shareReplay(1)
-    );
+  private readonly _isTriggerLimited$: Observable<[number, boolean]> = combineLatest([this.triggerCount$, this._triggerLimit]).pipe(
+    map(([triggerCount, limit]) => [triggerCount, limit ? triggerCount > limit : false] as [number, boolean]),
+    shareReplay(1)
+  );
 
-  readonly isTriggerLimited$ = this._isTriggerLimited$.pipe(map(x => x[1]));
+  readonly isTriggerLimited$ = this._isTriggerLimited$.pipe(map((x) => x[1]));
   readonly trigger$: Observable<void> = this._isTriggerLimited$.pipe(
-    filter(x => !x[1]),
-    distinctUntilChanged((a, b) => a[0] === b[0]),    // Only trigger when the count changes.
+    filter((x) => !x[1]),
+    distinctUntilChanged((a, b) => a[0] === b[0]), // Only trigger when the count changes.
     map(() => undefined as void)
   );
 
@@ -155,5 +157,4 @@ export class DbxActionAutoTriggerDirective<T = unknown, O = unknown> extends Abs
       this._triggerLimit.complete();
     });
   }
-
 }

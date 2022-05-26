@@ -3,26 +3,38 @@
 # ./setup-project.sh my-firebase-project-id
 # The prefix is optional. It should be a single word.
 
+# There are several environment variables that can be set:
+# - DBX_SETUP_PROJECT_MANUAL                  # whether or not to wait for user input for manual parts. if not y, then these pieces will be handled differently.
+# - DBX_SETUP_PROJECT_BRANCH                  # branch to pull content from
+# - DBX_SETUP_PROJECT_COMPONENTS_VERSION      # dbx-components version to install
+# - DBX_SETUP_PROJECT_IS_CI_TEST              # whether or not this is being performed as a CI test
+
 # Before running this script, you should have done the following and have the relevant information:
 # - Created a git repo (on github or other place)
 # If not provided, the origin will not be set.
 GIT_REPO_ORIGIN=                            # example: git@github.com:dereekb/gethapier.git
-CI_GIT_USER_EMAIL=ci@example.dereekb.com    # git email to use
+CI_GIT_USER_EMAIL=ci@example.dereekb.com    # git email to use in CI deployments
 CI_GIT_USER_NAME=ci                         # git username to use in CI deployments
 
 # - Created a project on firebase. This step is required.
 FIREBASE_PROJECT_ID=${1?:'firebase project id is required.'}  # example: gethapier
-INPUT_CODE_PREFIX=${2:-app}                                   # example: gethapier
+INPUT_CODE_PREFIX=${2:-app}                                   # example: gethapier  #single-word prefix used in code
 FIREBASE_BASE_EMULATORS_PORT=${3:-9100}                       # example: 9100
 PARENT_DIRECTORY=${4:-'../../'}                               # parent directory to create this project within. Defaults to relative to this script's space within dbx-components.
 
+# Whether or not to perform manual setup
+MANUAL_SETUP=${DBX_SETUP_PROJECT_MANUAL:-"y"}         # y/n
+IS_CI_TEST=${DBX_SETUP_PROJECT_IS_CI_TEST:-"n"}       # y/n
+IS_NOT_CI_TEST=true
+
 # - Other Configuration
-SOURCE_BRANCH=main     # develop or main
+SOURCE_BRANCH=${DBX_SETUP_PROJECT_BRANCH:-"main"}     # develop or main
 
 # - Project Details
 NAME=$FIREBASE_PROJECT_ID
 PROJECT_NAME=$FIREBASE_PROJECT_ID
 ANGULAR_APP_PREFIX=$FIREBASE_PROJECT_ID
+DBX_COMPONENTS_VERSION=${DBX_SETUP_PROJECT_COMPONENTS_VERSION:-"@^5.0.0"}
 
 # The app prefix is used in Angular and Nest classes as the prefix for classes/components
 APP_CODE_PREFIX="$(tr '[:lower:]' '[:upper:]' <<< ${INPUT_CODE_PREFIX:0:1})${INPUT_CODE_PREFIX:1}"
@@ -39,6 +51,9 @@ ANGULAR_APP_NAME=$PROJECT_NAME
 API_APP_NAME=$PROJECT_NAME-api
 # E2E project (work in progress)
 E2E_APP_NAME=$PROJECT_NAME-e2e
+# docker container name
+DOCKER_CONTAINER_APP_NAME=$API_APP_NAME-server
+DOCKER_CONTAINER_NETWORK_NAME=$API_APP_NAME-network
 
 APPS_FOLDER=apps  # don't change
 ANGULAR_APP_FOLDER=$APPS_FOLDER/$ANGULAR_APP_NAME
@@ -71,16 +86,23 @@ ANGULAR_APP_PORT=$(expr $FIREBASE_BASE_EMULATORS_PORT + 10)
 
 # - Setup Details
 
-# Log into Firebase
-echo "First log into Firebase if you're are not already logged in already."
-firebase login
+if [[ "$IS_CI_TEST" =~ ^([yY][eE][sS]|[yY]|[tT])$ ]];
+then
+  # Mark IS_NOT_CI_TEST as false and skip the login
+  echo "Looks like this is being run as a CI test (DBX_SETUP_PROJECT_IS_CI_TEST=y)"
+  IS_NOT_CI_TEST=false
+else
+  # Log into Firebase
+  echo "First log into Firebase if you're are not already logged in already."
+  npx firebase login
+fi
 
 ## Setup NX Project
 cd $PARENT_DIRECTORY
 
 # Create NX Workspace
 echo "Creating new dbx-components project in folder \"$NAME\" with project name \"$PROJECT_NAME\"..."
-npx --yes create-nx-workspace --interactive=false --style=scss --preset=angular --name=$NAME --appName=$PROJECT_NAME --packageManager=npm --nxCloud=true
+npx --yes create-nx-workspace --interactive=false --style=scss --preset=angular --name=$NAME --appName=$PROJECT_NAME --packageManager=npm --nxCloud=$IS_NOT_CI_TEST
 
 # Enter Folder
 echo "Entering new project folder, \"$NAME\""
@@ -99,11 +121,11 @@ git add --all
 git commit --no-verify -m "checkpoint: init nx-cloud"
 
 # update nx to the latest version and commit
-nx migrate latest
+npx -y nx migrate latest
 npm install
 
 if test -f "migrations.json"; then   # migrate if it is available
-  nx migrate --run-migrations
+  npx -y nx migrate --run-migrations
   rm migrations.json                 # remove migrations file
 fi
 
@@ -114,39 +136,57 @@ git commit --no-verify -m "checkpoint: updated nx to latest version"
 
 # Add Nest App - https://nx.dev/packages/nest
 npm install -D @nrwl/nest           # install the nest generator
-nx g @nrwl/nest:app $API_APP_NAME
+npx -y nx g @nrwl/nest:app $API_APP_NAME
 
 git add --all
 git commit --no-verify -m "checkpoint: added nest app"
 
 # Add App Components
-nx g @nrwl/angular:library --name=$ANGULAR_COMPONENTS_NAME --buildable --publishable --importPath $ANGULAR_COMPONENTS_NAME --standaloneConfig=true --simpleModuleName=true
+npx -y nx g @nrwl/angular:library --name=$ANGULAR_COMPONENTS_NAME --buildable --publishable --importPath $ANGULAR_COMPONENTS_NAME --standaloneConfig=true --simpleModuleName=true
 
 git add --all
 git commit --no-verify -m "checkpoint: added angular components package"
 
 # Add Firebase Component
 npm install -D @nrwl/node
-nx g @nrwl/node:library --name=$FIREBASE_COMPONENTS_NAME --buildable --publishable --importPath $FIREBASE_COMPONENTS_NAME
+npx -y nx g @nrwl/node:library --name=$FIREBASE_COMPONENTS_NAME --buildable --publishable --importPath $FIREBASE_COMPONENTS_NAME
 
 git add --all
 git commit --no-verify -m "checkpoint: added firebase components package"
 
 # Init Firebase
-echo "Follow the instructions to init Firebase for this project."
-echo "Instructions: Follow the prompt and log into the existing project you described above."
-echo "Instructions: Setting up Firebase Storage - Hit Enter to keep default name."
-firebase init storage
+if [[ "$MANUAL_SETUP" =~ ^([yY][eE][sS]|[yY])$ ]] 
+then
+  # manual configuration asks only for the name. Other commands are performed automatically using the firebase command
+  echo "Follow the instructions to init Firebase for this project."
+  echo "Instructions: Follow the prompt and log into the existing project you described above."
+  echo "Instructions: Setting up Firebase Storage - Hit Enter to keep default name."
+  firebase init storage
 
-echo "Instructions: Firebase Firestore - Keep the rules and indexes the default name."
-echo "NOTE: If the project has configuration already, it will pull the current configuration down from Firebase."
-(sleep 1; echo; sleep 1; echo;) | firebase init firestore
+  echo "Instructions: Firebase Firestore - Keep the rules and indexes the default name."
+  echo "NOTE: If the project has configuration already, it will pull the current configuration down from Firebase."
+  (sleep 1; echo; sleep 1; echo;) | firebase init firestore
 
-echo "Instructions: Firebase Hosting - Setup single page application. Do not setup github actions."
-(sleep 2; echo; sleep 1; echo 'y'; sleep 1; echo 'N'; sleep 1; echo 'n') | firebase init hosting
+  echo "Instructions: Firebase Hosting - Setup single page application. Do not setup github actions."
+  (sleep 2; echo; sleep 1; echo 'y'; sleep 1; echo 'N'; sleep 1; echo 'n') | firebase init hosting
 
-echo "Instructions: Firebase Functions - This configuration will be ignored."
-(sleep 1; echo; sleep 1; echo 'N'; sleep 1; echo 'N';) | firebase init functions
+  echo "Instructions: Firebase Functions - This configuration will be ignored."
+  (sleep 1; echo; sleep 1; echo 'N'; sleep 1; echo 'N';) | firebase init functions
+else
+  # automatic configuration. This should typically only be used for CI/testing, as using the firebase CLI can pull existing content in after logging in.
+  echo "Initializing firebase automatically using project name..."
+  curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/setup/templates/firebase.json -o firebase.json.tmp
+  sed -e "s:FIREBASE_PROJECT_ID:$FIREBASE_PROJECT_ID:g" -e "s:ANGULAR_APP_DIST_FOLDER:$ANGULAR_APP_DIST_FOLDER:g" -e "s:API_APP_DIST_FOLDER:$API_APP_DIST_FOLDER:g" firebase.json.tmp > firebase.json
+  rm firebase.json.tmp
+
+  curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/setup/templates/.firebaserc -o .firebaserc.tmp
+  sed -e "s:FIREBASE_PROJECT_ID:$FIREBASE_PROJECT_ID:g" .firebaserc.tmp > .firebaserc
+  rm .firebaserc.tmp
+
+  curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/setup/templates/firestore.indexes.json -o firestore.indexes.json
+  curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/setup/templates/firestore.rules -o firestore.rules
+  curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/setup/templates/storage.rules -o storage.rules
+fi
 
 # remove the public folder. We will use the $ANGULAR_APP_DIST_FOLDER instead.
 rm -r public
@@ -157,7 +197,7 @@ rm -r functions
 # edit firebase.json to have the correct configuration.
 
 # Hosting
-npx --yes json -I -f firebase.json -e "this.hosting.site='$PROJECT_NAME'; this.hosting.public='$ANGULAR_APP_DIST_FOLDER'; this.hosting.ignore=['firebase.json', '**/.*', '**/node_modules/**']";
+npx --yes json -I -f firebase.json -e "this.hosting={ ...this.hosting, site: '$PROJECT_NAME', public: '$ANGULAR_APP_DIST_FOLDER', ignore: ['firebase.json', '**/.*', '**/node_modules/**'], rewrites: [{ source: '**', destination: '/index.html' }] }";
 
 # Functions
 npx --yes json -I -f firebase.json -e "this.functions={ source:'$API_APP_DIST_FOLDER', runtime: 'nodejs16', engines: { node: '16' }, ignore: ['firebase.json', '**/.*', '**/node_modules/**'] }";
@@ -169,8 +209,8 @@ git add --all
 git commit --no-verify -m "checkpoint: added firebase configuration"
 
 # Install npm dependencies
-npm i @dereekb/dbx-analytics @dereekb/dbx-web @dereekb/dbx-form @dereekb/firebase @dereekb/firebase-server @dereekb/dbx-firebase --force  # TODO: Remove force once possible.
-npm i -D @ngrx/store-devtools @firebase/rules-unit-testing firebase-functions-test  # TODO: Figure out how to have the @dereekb dependencies also include these.
+npm install @dereekb/dbx-analytics$DBX_COMPONENTS_VERSION @dereekb/dbx-web$DBX_COMPONENTS_VERSION @dereekb/dbx-form$DBX_COMPONENTS_VERSION @dereekb/firebase$DBX_COMPONENTS_VERSION @dereekb/firebase-server$DBX_COMPONENTS_VERSION @dereekb/dbx-firebase$DBX_COMPONENTS_VERSION --force  # TODO: Remove force once possible.
+npm install -D firebase-tools @ngrx/store-devtools @firebase/rules-unit-testing firebase-functions-test@2.0.2  # TODO: Figure out how to have the @dereekb dependencies also include these.
 
 git add --all
 git commit --no-verify -m "checkpoint: added @dereekb dependencies"
@@ -183,7 +223,7 @@ sed "s/demo-api/$API_APP_NAME/g" Dockerfile.tmp > Dockerfile
 rm Dockerfile.tmp
 
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/docker-compose.yml -o docker-compose.yml.tmp
-sed -e "s/demo-api-server/$API_APP_NAME-server/g" -e "s/dereekb-components/$FIREBASE_PROJECT_ID/g" -e "s/9900-9906/$FIREBASE_EMULATOR_PORT_RANGE/g" docker-compose.yml.tmp > docker-compose.yml
+sed -e "s/demo-api-server/$DOCKER_CONTAINER_APP_NAME/g" -e "s/demo-api-network/$DOCKER_CONTAINER_NETWORK_NAME/g" -e "s/dereekb-components/$FIREBASE_PROJECT_ID/g" -e "s/9900-9906/$FIREBASE_EMULATOR_PORT_RANGE/g" docker-compose.yml.tmp > docker-compose.yml
 rm docker-compose.yml.tmp
 
 # download .gitignore
@@ -191,7 +231,7 @@ curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/.gi
 
 # download additional utility scripts
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/exec-with-emulator.sh -o exec-with-emulator.sh.tmp
-sed -e "s/demo-api-server/$API_APP_NAME-server/g" -e "s/demo-api/$API_APP_NAME/g" exec-with-emulator.sh.tmp > exec-with-emulator.sh
+sed -e "s/demo-api-server/$DOCKER_CONTAINER_APP_NAME/g" -e "s/demo-api/$API_APP_NAME/g" exec-with-emulator.sh.tmp > exec-with-emulator.sh
 rm exec-with-emulator.sh.tmp
 chmod +x exec-with-emulator.sh
 
@@ -208,12 +248,12 @@ curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/tes
 chmod +x test-all.sh
 
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/run-server.sh -o run-server.sh.tmp
-sed -e "s/demo-api-server/$API_APP_NAME-server/g" -e "s/demo-api/$API_APP_NAME/g" run-server.sh.tmp > run-server.sh
+sed -e "s/demo-api-server/$DOCKER_CONTAINER_APP_NAME/g" -e "s/demo-api/$API_APP_NAME/g" run-server.sh.tmp > run-server.sh
 rm run-server.sh.tmp
 chmod +x run-server.sh
 
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/serve-server.sh -o serve-server.sh.tmp
-sed -e "s/demo-api-server/$API_APP_NAME-server/g" -e "s/demo-api/$API_APP_NAME/g" serve-server.sh.tmp > serve-server.sh
+sed -e "s/demo-api-server/$DOCKER_CONTAINER_APP_NAME/g" -e "s/demo-api/$API_APP_NAME/g" serve-server.sh.tmp > serve-server.sh
 rm serve-server.sh.tmp
 chmod +x serve-server.sh
 
@@ -227,11 +267,22 @@ sed -e "s/demo-api/$API_APP_NAME/g" test-$API_APP_NAME.sh.tmp > test-$API_APP_NA
 rm test-$API_APP_NAME.sh.tmp
 chmod +x test-$API_APP_NAME.sh
 
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/wait-for-ports.sh -o wait-for-ports.sh.tmp
+sed -e "s/demo/$ANGULAR_APP_NAME/g" wait-for-ports.sh.tmp > wait-for-ports.sh
+rm wait-for-ports.sh.tmp
+chmod +x wait-for-ports.sh
+
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/.env -o .env.tmp
+sed -e "s/9910/$ANGULAR_APP_PORT/g" .env.tmp > .env
+rm .env.tmp
+
+echo "SECRETS=" > .env.secret
+
 git add --all
 git commit --no-verify -m "checkpoint: added Docker files and other utility files"
 
-# add semver for semantic versioning and linting for commits
-npm install -D @jscutlery/semver husky
+# add semver for semantic versioning, husky for pre-commit hooks, and pretty-quick for running prettier
+npm install -D @jscutlery/semver husky pretty-quick
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/.commitlintrc.json -o .commitlintrc.json
 
 mkdir .husky
@@ -241,7 +292,12 @@ npx --yes json -I -f package.json -e "this.scripts={ ...this.scripts, prepare: '
 npm run prepare
 
 mkdir -p ./.github/workflows
-curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/.github/workflows/commitlint.yml -o ./.github/workflows/commitlint.yml
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/.github/workflows/commitlint.yml -o .github/workflows/commitlint.yml
+
+# add prettier configs
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/.prettieringnore -o .prettieringnore
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/.prettierrc -o .prettierrc
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/.husky/prettier -o .husky/prettier
 
 git add --all
 git commit --no-verify -m "checkpoint: added semver and commit linting"
@@ -252,6 +308,23 @@ rm jest.preset.js
 
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/jest.preset.ts -o jest.preset.ts
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/jest.setup.ts -o jest.setup.ts
+
+# update all jest.config.ts files to point to jest.preset.ts instead of jest.preset.js
+update_jest_config_file () {
+  local JEST_CONFIG_FOLDER_PATH=$1
+  local JEST_CONFIG_FILE_NAME=jest.config.ts
+  local JEST_CONFIG_FILE_PATH=$JEST_CONFIG_FOLDER_PATH/$JEST_CONFIG_FILE_NAME
+
+  cp $JEST_CONFIG_FILE_PATH $JEST_CONFIG_FILE_PATH.tmp
+  rm $JEST_CONFIG_FILE_PATH
+  sed -e "s:jest.preset.js:jest.preset.ts:g" $JEST_CONFIG_FILE_PATH.tmp > $JEST_CONFIG_FILE_PATH
+  rm $JEST_CONFIG_FILE_PATH.tmp
+}
+
+update_jest_config_file "$ANGULAR_APP_FOLDER"
+update_jest_config_file "$API_APP_FOLDER"
+update_jest_config_file "$ANGULAR_COMPONENTS_FOLDER"
+update_jest_config_file "$FIREBASE_COMPONENTS_FOLDER"
 
 # add env files to ensure that jest CI tests export properly.
 mkdir tmp # TODO: Change from /develop to /main later.
@@ -520,9 +593,26 @@ download_api_ts_file "src/app/function/example/example.set.username.ts"
 git add --all
 git commit --no-verify -m "checkpoint: setup api"
 
-echo "Performing test build..."
-nx build $ANGULAR_APP_NAME
-nx build $API_APP_NAME
+# Final checks
+if [[ "$IS_CI_TEST" =~ ^([yY][eE][sS]|[yY]|[tT])$ ]];
+then
+  # do not do anything in CI, as the environment is different. CI will perform other tasks.
+  echo "Finished setup in CI."
+else
+  echo "Performing test build..."
+  npx -y nx build $ANGULAR_APP_NAME
+  npx -y nx build $API_APP_NAME
 
-echo "Completed $ANGULAR_APP_NAME project setup."
-echo "Project was created at \"$(pwd)\""
+  echo "Completed $ANGULAR_APP_NAME project setup."
+  echo "Project was created at \"$(pwd)\""
+
+  # Docker Checking
+  echo "Performing docker cleaning and resetting...";
+
+  # todo - check if docker is available.
+  sh ./down.sh
+  sh ./reset.sh
+
+  echo "Performing tests..."
+  sh ./test-all.sh
+fi

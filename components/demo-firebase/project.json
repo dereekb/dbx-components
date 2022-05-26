@@ -42,10 +42,7 @@
     },
     "run-tests": {
       "executor": "@nrwl/jest:jest",
-      "outputs": [
-        "coverage/components/demo-firebase",
-        "./.reports/jest/firebase.junit.xml"
-      ],
+      "outputs": ["coverage/components/demo-firebase", "./.reports/jest/firebase.junit.xml"],
       "options": {
         "jestConfig": "components/demo-firebase/jest.config.ts",
         "passWithNoTests": true

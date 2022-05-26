@@ -1,11 +1,7 @@
 <dbx-content-container>
-  <doc-feature-layout header="Firebase Login Directives"
-    hint="The dbx-firebase library offers pre-made components for logging in. They are configured via global variables in the DbxFirebaseLoginModule.">
-
+  <doc-feature-layout header="Firebase Login Directives" hint="The dbx-firebase library offers pre-made components for logging in. They are configured via global variables in the DbxFirebaseLoginModule.">
     <!-- Examples -->
-    <doc-feature-example header="dbx-firebase-login"
-      hint="Component that displays all the login options for an app. Has an optional input to show only specific providers.">
-
+    <doc-feature-example header="dbx-firebase-login" hint="Component that displays all the login options for an app. Has an optional input to show only specific providers.">
       <dbx-content-border>
         <h4>Auth User</h4>
         <p class="prettyjson">{{ authUserInfo$ | async | prettyjson }}</p>
@@ -27,12 +23,9 @@
         <dbx-firebase-login></dbx-firebase-login>
         <dbx-firebase-login-terms></dbx-firebase-login-terms>
       </dbx-content-container>
-
     </doc-feature-example>
 
-    <doc-feature-example header="dbx-firebase-register"
-      hint="Component that displays all the login options for an app in registration mode. Has an optional input to show only specific providers.">
-
+    <doc-feature-example header="dbx-firebase-register" hint="Component that displays all the login options for an app in registration mode. Has an optional input to show only specific providers.">
       <dbx-content-border>
         <h4>Auth User</h4>
         <p class="prettyjson">{{ authUserInfo$ | async | prettyjson }}</p>
@@ -49,8 +42,6 @@
         <dbx-firebase-register></dbx-firebase-register>
         <dbx-firebase-login-terms></dbx-firebase-login-terms>
       </dbx-content-container>
-
     </doc-feature-example>
-
   </doc-feature-layout>
 </dbx-content-container>

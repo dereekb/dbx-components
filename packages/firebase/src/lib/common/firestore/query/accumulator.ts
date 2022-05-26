@@ -1,7 +1,7 @@
-import { itemAccumulator, ItemAccumulatorInstance, ItemAccumulatorMapFunction, PageItemIteration } from "@dereekb/rxjs";
-import { MapFunction } from "@dereekb/util";
-import { DocumentDataWithId, QueryDocumentSnapshotArray } from "../types";
-import { FirestoreItemPageIterationInstance } from "./iterator";
+import { itemAccumulator, ItemAccumulatorInstance, ItemAccumulatorMapFunction, PageItemIteration } from '@dereekb/rxjs';
+import { MapFunction } from '@dereekb/util';
+import { DocumentDataWithId, QueryDocumentSnapshotArray } from '../types';
+import { FirestoreItemPageIterationInstance } from './iterator';
 
 export type MappedFirebaseQuerySnapshotAccumulator<O, T> = ItemAccumulatorInstance<O, QueryDocumentSnapshotArray<T>, PageItemIteration<QueryDocumentSnapshotArray<T>>>;
 export type FirebaseQuerySnapshotAccumulator<T> = MappedFirebaseQuerySnapshotAccumulator<QueryDocumentSnapshotArray<T>, T>;
@@ -13,8 +13,8 @@ export type FirebaseQueryItemAccumulator<T> = MappedFirebaseQuerySnapshotAccumul
 
 /**
  * Wrapper for itemAccumulator that has typings for a FirestoreItemPageIterationInstance. Can optionally map the snapshots to another type.
- * 
- * @param iteration 
+ *
+ * @param iteration
  */
 export function firebaseQuerySnapshotAccumulator<T>(iteration: FirestoreItemPageIterationInstance<T>): FirebaseQuerySnapshotAccumulator<T>;
 export function firebaseQuerySnapshotAccumulator<O, T>(iteration: FirestoreItemPageIterationInstance<T>, mapSnapshots?: ItemAccumulatorMapFunction<O, QueryDocumentSnapshotArray<T>>): MappedFirebaseQuerySnapshotAccumulator<O, T>;
@@ -24,8 +24,8 @@ export function firebaseQuerySnapshotAccumulator<O, T>(iteration: FirestoreItemP
 
 /**
  * Convenience function for creating a FirebaseQueryItemAccumulator
- * 
- * @param iteration 
+ *
+ * @param iteration
  */
 export function firebaseQueryItemAccumulator<T>(iteration: FirestoreItemPageIterationInstance<T>): FirebaseQueryItemAccumulator<T>;
 export function firebaseQueryItemAccumulator<U, T>(iteration: FirestoreItemPageIterationInstance<T>, mapItem?: MapFunction<DocumentDataWithId<T>, U>): MappedFirebaseQuerySnapshotAccumulator<U[], T>;
@@ -33,7 +33,7 @@ export function firebaseQueryItemAccumulator<U, T>(iteration: FirestoreItemPageI
   mapItem = mapItem ?? (((x: DocumentDataWithId<T>) => x) as unknown as MapFunction<DocumentDataWithId<T>, U>);
 
   const mapFn: ItemAccumulatorMapFunction<U[], QueryDocumentSnapshotArray<T>> = (x: QueryDocumentSnapshotArray<T>) => {
-    const result: U[] = x.map(y => {
+    const result: U[] = x.map((y) => {
       const data = y.data() as DocumentDataWithId<T>;
       data.id = y.id;
       return (mapItem as MapFunction<DocumentDataWithId<T>, U>)(data);

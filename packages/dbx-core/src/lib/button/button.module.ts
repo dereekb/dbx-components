@@ -6,19 +6,7 @@ import { DbxButtonSegueDirective } from './router/button.segue.directive';
 
 @NgModule({
   imports: [],
-  declarations: [
-    DbxButtonDirective,
-    DbxLoadingButtonDirective,
-    DbxActionButtonTriggerDirective,
-    DbxActionButtonDirective,
-    DbxButtonSegueDirective
-  ],
-  exports: [
-    DbxButtonDirective,
-    DbxLoadingButtonDirective,
-    DbxActionButtonTriggerDirective,
-    DbxActionButtonDirective,
-    DbxButtonSegueDirective
-  ],
+  declarations: [DbxButtonDirective, DbxLoadingButtonDirective, DbxActionButtonTriggerDirective, DbxActionButtonDirective, DbxButtonSegueDirective],
+  exports: [DbxButtonDirective, DbxLoadingButtonDirective, DbxActionButtonTriggerDirective, DbxActionButtonDirective, DbxButtonSegueDirective]
 })
-export class DbxCoreButtonModule { }
+export class DbxCoreButtonModule {}

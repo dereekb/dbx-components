@@ -1,7 +1,7 @@
 <mat-nav-list class="dbx-anchor-list">
-  <ng-container *ngFor="let expanded of expandedAnchors$ | async; let last = last;">
+  <ng-container *ngFor="let expanded of expandedAnchors$ | async; let last = last">
     <span dbx-anchor [anchor]="expanded.value">
-      <a mat-list-item [disabled]="expanded.value.disabled" [ngClass]="(expanded.depth) ? 'dbx-anchor-list-child' : 'dbx-anchor-list-root'">
+      <a mat-list-item [disabled]="expanded.value.disabled" [ngClass]="expanded.depth ? 'dbx-anchor-list-child' : 'dbx-anchor-list-root'">
         <mat-icon mat-list-icon *ngIf="expanded.value.icon">{{ expanded.value.icon }}</mat-icon>
         <!-- TODO: Add an icon from a letter if anchor.icon is unavailable. -->
         <div mat-line>{{ expanded.value.title }}</div>

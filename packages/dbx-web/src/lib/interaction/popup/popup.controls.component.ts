@@ -11,12 +11,10 @@ import { Component, Input } from '@angular/core';
     <dbx-popup-control-buttons></dbx-popup-control-buttons>
   `,
   host: {
-    'class': 'dbx-popup-controls'
+    class: 'dbx-popup-controls'
   }
 })
 export class DbxPopupControlsComponent {
-
   @Input()
   header?: string;
-
 }

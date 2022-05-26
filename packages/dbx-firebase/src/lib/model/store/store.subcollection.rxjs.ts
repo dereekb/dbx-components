@@ -1,10 +1,10 @@
 import { LockSetComponentStore } from '@dereekb/dbx-core';
-import { FirestoreCollection, FirestoreCollectionWithParentFactory, FirestoreDocument } from "@dereekb/firebase";
-import { cleanup, ObservableOrValue } from "@dereekb/rxjs";
-import { Maybe } from "@dereekb/util";
-import { ComponentStore } from "@ngrx/component-store";
-import { map, Observable, Subscription, NEVER, switchMap, tap } from "rxjs";
-import { DbxFirebaseDocumentStore } from "./store.document";
+import { FirestoreCollection, FirestoreCollectionWithParentFactory, FirestoreDocument } from '@dereekb/firebase';
+import { cleanup, ObservableOrValue } from '@dereekb/rxjs';
+import { Maybe } from '@dereekb/util';
+import { ComponentStore } from '@ngrx/component-store';
+import { map, Observable, Subscription, NEVER, switchMap, tap } from 'rxjs';
+import { DbxFirebaseDocumentStore } from './store.document';
 
 export interface DbxFirebaseComponentStoreWithParentContextState<T, PT, D extends FirestoreDocument<T> = FirestoreDocument<T>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>> {
   readonly parent?: Maybe<PD>;
@@ -23,8 +23,7 @@ export interface DbxFirebaseComponentStoreWithParent<T, PT, D extends FirestoreD
   readonly setFirestoreCollection: (() => void) | ((observableOrValue: ObservableOrValue<Maybe<FirestoreCollection<T, D>>>) => Subscription);
 }
 
-export function setParentStoreEffect<T, PT, D extends FirestoreDocument<T> = FirestoreDocument<T>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>>
-  (store: DbxFirebaseComponentStoreWithParent<T, PT, D, PD>): DbxFirebaseComponentStoreWithParentSetParentStoreEffectFunction<PT, PD> {
+export function setParentStoreEffect<T, PT, D extends FirestoreDocument<T> = FirestoreDocument<T>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>>(store: DbxFirebaseComponentStoreWithParent<T, PT, D, PD>): DbxFirebaseComponentStoreWithParentSetParentStoreEffectFunction<PT, PD> {
   return store.effect((input: Observable<Maybe<DbxFirebaseDocumentStore<PT, PD>>>) => {
     return input.pipe(
       map((parentStore) => {
@@ -50,8 +49,7 @@ export function setParentStoreEffect<T, PT, D extends FirestoreDocument<T> = Fir
   });
 }
 
-export function setParentEffect<T, PT, D extends FirestoreDocument<T> = FirestoreDocument<T>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>>
-  (store: DbxFirebaseComponentStoreWithParent<T, PT, D, PD>): DbxFirebaseComponentStoreWithParentSetParentEffectFunction<PD> {
+export function setParentEffect<T, PT, D extends FirestoreDocument<T> = FirestoreDocument<T>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>>(store: DbxFirebaseComponentStoreWithParent<T, PT, D, PD>): DbxFirebaseComponentStoreWithParentSetParentEffectFunction<PD> {
   return store.effect((input: Observable<Maybe<PD>>) => {
     return input.pipe(
       switchMap((parent) => {

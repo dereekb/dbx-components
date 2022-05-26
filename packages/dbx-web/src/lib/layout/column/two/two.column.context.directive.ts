@@ -11,10 +11,9 @@ import { provideTwoColumnsContext, TwoColumnsContextStore } from './two.column.s
   providers: provideTwoColumnsContext()
 })
 export class DbxTwoColumnContextDirective implements OnInit, OnDestroy {
-
   private _showRight = new BehaviorSubject<Maybe<boolean>>(undefined);
 
-  constructor(readonly twoColumnsContextStore: TwoColumnsContextStore) { }
+  constructor(readonly twoColumnsContextStore: TwoColumnsContextStore) {}
 
   ngOnInit(): void {
     this.twoColumnsContextStore.setShowRight(this._showRight);
@@ -28,5 +27,4 @@ export class DbxTwoColumnContextDirective implements OnInit, OnDestroy {
   set showRight(showRight: Maybe<boolean>) {
     this._showRight.next(showRight);
   }
-
 }

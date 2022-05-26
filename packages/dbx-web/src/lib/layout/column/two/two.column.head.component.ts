@@ -6,17 +6,15 @@ import { Component, Input } from '@angular/core';
 @Component({
   selector: 'dbx-two-column-head',
   template: `
-    <div class="dbx-two-column-head" [ngClass]="{ 'block': block, 'full': full }">
+    <div class="dbx-two-column-head" [ngClass]="{ block: block, full: full }">
       <ng-content></ng-content>
     </div>
   `
 })
 export class DbxTwoColumnColumnHeadComponent {
-
   @Input()
   block?: boolean;
 
   @Input()
   full?: boolean;
-
 }

@@ -11,15 +11,14 @@ export type FilterMapKey = string;
  * Class used to keep track of filters keyed by a specific string identifier.
  */
 export class FilterMap<F> implements Destroyable {
-
   private readonly _map = new BehaviorSubject<Map<FilterMapKey, FilterMapItem<F>>>(new Map());
 
   filterForKey(key: FilterMapKey): Observable<F> {
     return this._map.pipe(
-      map(x => x.get(key)),
+      map((x) => x.get(key)),
       filterMaybe(),
-      first(),  // take first since the item never changes.
-      switchMap(x => x.filter$),
+      first(), // take first since the item never changes.
+      switchMap((x) => x.filter$),
       filterMaybe()
     );
   }
@@ -37,7 +36,11 @@ export class FilterMap<F> implements Destroyable {
   }
 
   instanceObsForKeyObs(keyObs: Observable<FilterMapKey>): Observable<FilterMapKeyInstance<F>> {
-    return keyObs.pipe(distinctUntilChanged(), map(x => this.makeInstance(x)), shareReplay(1));
+    return keyObs.pipe(
+      distinctUntilChanged(),
+      map((x) => this.makeInstance(x)),
+      shareReplay(1)
+    );
   }
 
   // MARK: Internal
@@ -58,14 +61,12 @@ export class FilterMap<F> implements Destroyable {
     this._map.value.forEach((x) => x.destroy());
     this._map.complete();
   }
-
 }
 
 export class FilterMapKeyInstance<F> implements FilterSourceConnector<F>, FilterSource<F> {
-
   readonly filter$ = this.dbxFilterMap.filterForKey(this.key);
 
-  constructor(readonly dbxFilterMap: FilterMap<F>, readonly key: FilterMapKey) { }
+  constructor(readonly dbxFilterMap: FilterMap<F>, readonly key: FilterMapKey) {}
 
   initWithFilter(filterObs: Observable<F>): void {
     this.dbxFilterMap.addDefaultFilterObs(this.key, filterObs);
@@ -74,23 +75,20 @@ export class FilterMapKeyInstance<F> implements FilterSourceConnector<F>, Filter
   connectWithSource(filterSource: FilterSource<F>): void {
     this.dbxFilterMap.addFilterObs(this.key, filterSource.filter$);
   }
-
 }
 
 class FilterMapItem<F> {
-
   private _source = new FilterSourceInstance<F>();
 
   readonly filter$ = this._source.initialFilter$;
 
-  constructor(readonly dbxFilterMap: FilterMap<F>, readonly key: FilterMapKey) { }
+  constructor(readonly dbxFilterMap: FilterMap<F>, readonly key: FilterMapKey) {}
 
   setDefaultFilterObs(obs: Maybe<ObservableOrValue<F>>): void {
     this._source.setDefaultFilter(obs);
   }
 
   setFilterObs(obs: Observable<F>): void {
-
     /**
      * MapItem uses the behavior of the DefaultFilterSource to provide a default filter value.
      */
@@ -100,5 +98,4 @@ class FilterMapItem<F> {
   destroy() {
     this._source.destroy();
   }
-
 }

@@ -17,4 +17,4 @@ import { DbxPagebarComponent } from '../../../layout/bar/pagebar.component';
     </dbx-pagebar>
   `
 })
-export class DbxSidenavPagebarComponent extends DbxPagebarComponent { }
+export class DbxSidenavPagebarComponent extends DbxPagebarComponent {}

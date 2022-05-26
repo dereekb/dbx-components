@@ -11,13 +11,9 @@ import { Maybe } from '@dereekb/util';
 @Directive({
   selector: '[dbxFilterMapSourceConnector]',
   exportAs: 'dbxFilterMapSourceConnector',
-  providers: [
-    ...provideFilterSource(DbxFilterMapSourceConnectorDirective),
-    ...provideFilterSourceConnector(DbxFilterMapSourceConnectorDirective)
-  ]
+  providers: [...provideFilterSource(DbxFilterMapSourceConnectorDirective), ...provideFilterSourceConnector(DbxFilterMapSourceConnectorDirective)]
 })
 export class DbxFilterMapSourceConnectorDirective<F> extends DbxFilterMapSourceDirective<F> implements FilterSourceConnector<F> {
-
   @Input('dbxFilterMapSourceConnector')
   override get key(): Maybe<FilterMapKey> {
     return this._key.value;
@@ -31,5 +27,4 @@ export class DbxFilterMapSourceConnectorDirective<F> extends DbxFilterMapSourceD
   connectWithSource(filterSource: FilterSource<F>): void {
     this.instance$.pipe(first()).subscribe((x) => x.connectWithSource(filterSource));
   }
-
 }

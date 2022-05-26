@@ -1,7 +1,6 @@
-import { allObjectsAreEqual, areEqualContext, isEqualContext } from "./equal";
+import { allObjectsAreEqual, areEqualContext, isEqualContext } from './equal';
 
 describe('isEqualContext', () => {
-
   const isEqual = (a: number, b: number) => a === b;
 
   it('should create a function.', () => {
@@ -11,7 +10,6 @@ describe('isEqualContext', () => {
   });
 
   describe('function', () => {
-
     it('should return true for matching values.', () => {
       const value = 0;
 
@@ -29,13 +27,10 @@ describe('isEqualContext', () => {
 
       expect(result).toBe(false);
     });
-
   });
-
 });
 
 describe('areEqualContext', () => {
-
   const isEqual = (a: number, b: number) => a === b;
 
   it('should create a function.', () => {
@@ -45,7 +40,6 @@ describe('areEqualContext', () => {
   });
 
   describe('function', () => {
-
     it('should return true for matching values.', () => {
       const value = 0;
 
@@ -63,13 +57,10 @@ describe('areEqualContext', () => {
 
       expect(result).toBe(false);
     });
-
   });
-
 });
 
 describe('allObjectsAreEqual()', () => {
-
   it('should return true 0 objects are entered.', () => {
     const isEqual = (a: unknown, b: unknown) => a === b;
     const objects: unknown[] = [];
@@ -105,5 +96,4 @@ describe('allObjectsAreEqual()', () => {
 
     expect(result).toBe(false);
   });
-
 });

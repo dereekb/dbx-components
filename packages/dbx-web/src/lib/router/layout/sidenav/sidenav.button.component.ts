@@ -8,20 +8,18 @@ import { DbxSidenavComponent, SideNavDisplayMode } from './sidenav.component';
 @Component({
   selector: 'dbx-sidenav-button',
   template: `
-  <button class="dbx-sidenav-button" mat-icon-button *ngIf="showMenuButton$ | async" (click)="toggleNav()" aria-label="open sidenav button">
-    <mat-icon>view_sidebar</mat-icon>
-  </button>
+    <button class="dbx-sidenav-button" mat-icon-button *ngIf="showMenuButton$ | async" (click)="toggleNav()" aria-label="open sidenav button">
+      <mat-icon>view_sidebar</mat-icon>
+    </button>
   `
 })
 export class DbxSidenavButtonComponent {
-
   readonly mode$ = this.parent.mode$;
-  readonly showMenuButton$ = this.mode$.pipe(map(x => x === SideNavDisplayMode.MOBILE));
+  readonly showMenuButton$ = this.mode$.pipe(map((x) => x === SideNavDisplayMode.MOBILE));
 
-  constructor(readonly parent: DbxSidenavComponent) { }
+  constructor(readonly parent: DbxSidenavComponent) {}
 
   toggleNav() {
     this.parent.toggleNav();
   }
-
 }

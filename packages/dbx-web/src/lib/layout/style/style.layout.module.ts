@@ -6,20 +6,8 @@ import { DbxSpacerDirective } from './spacer.directive';
 import { DbxStyleBodyDirective } from './style.body.directive';
 
 @NgModule({
-  imports: [
-    CommonModule
-  ],
-  declarations: [
-    DbxSpacerDirective,
-    DbxStyleDirective,
-    DbxSetStyleDirective,
-    DbxStyleBodyDirective
-  ],
-  exports: [
-    DbxSpacerDirective,
-    DbxStyleDirective,
-    DbxSetStyleDirective,
-    DbxStyleBodyDirective
-  ]
+  imports: [CommonModule],
+  declarations: [DbxSpacerDirective, DbxStyleDirective, DbxSetStyleDirective, DbxStyleBodyDirective],
+  exports: [DbxSpacerDirective, DbxStyleDirective, DbxSetStyleDirective, DbxStyleBodyDirective]
 })
-export class DbxStyleLayoutModule { }
+export class DbxStyleLayoutModule {}

@@ -1,4 +1,4 @@
-import { filterMaybeValues } from "./array";
+import { filterMaybeValues } from './array';
 
 export type HashSalt = string;
 
@@ -10,12 +10,12 @@ export function decodeHashedValues(hashedValues: string[], decodeValues: string[
 }
 
 export function makeHashDecodeMap(decodeValues: string[], hashFn: (value: string) => string): HashDecodeMap {
-  const keyValuePairs = decodeValues.map(x => [hashFn(x), x] as [string, string]);
+  const keyValuePairs = decodeValues.map((x) => [hashFn(x), x] as [string, string]);
   const map: HashDecodeMap = new Map(keyValuePairs);
   return map;
 }
 
 export function decodeHashedValuesWithDecodeMap(hashedValues: string[], decodeMap: HashDecodeMap): string[] {
-  const values = hashedValues.map(x => decodeMap.get(x));
+  const values = hashedValues.map((x) => decodeMap.get(x));
   return filterMaybeValues(values);
 }

@@ -1,12 +1,12 @@
-import { FieldOfType } from "../key";
-import { hasValueOrNotEmpty, Maybe } from "../value/maybe";
+import { FieldOfType } from '../key';
+import { hasValueOrNotEmpty, Maybe } from '../value/maybe';
 import { filterMaybeValues } from '../array/array.value';
-import { FilterFunction, invertFilter } from "../filter/filter";
+import { FilterFunction, invertFilter } from '../filter/filter';
 
 export type EmptyObject = Record<string, never>;
 
 export function objectHasNoKeys(obj: object): obj is EmptyObject {
-  return (Object.keys(obj).length === 0);
+  return Object.keys(obj).length === 0;
 }
 
 export function objectHasKey<T, K extends keyof T = keyof T>(obj: T, key: K): boolean;
@@ -42,9 +42,9 @@ export interface FilterFromPOJO<T extends object> {
 
 /**
  * Returns a copy of the input object with all null and undefined values filtered from it.
- * 
- * @param obj 
- * @returns 
+ *
+ * @param obj
+ * @returns
  */
 export function filterNullAndUndefinedValues<T extends object = object>(obj: T) {
   return filterUndefinedValues(obj, true);
@@ -52,19 +52,19 @@ export function filterNullAndUndefinedValues<T extends object = object>(obj: T) 
 
 /**
  * Returns a copy of the input object with all undefined values filtered from it.
- * 
- * @param obj 
- * @returns 
+ *
+ * @param obj
+ * @returns
  */
 export function filterUndefinedValues<T extends object = object>(obj: T, filterNull = false) {
-  return filterFromPOJO(obj, { copy: true, filter: { valueFilter: (filterNull) ? KeyValueTypleValueFilter.NULL : KeyValueTypleValueFilter.UNDEFINED } });
+  return filterFromPOJO(obj, { copy: true, filter: { valueFilter: filterNull ? KeyValueTypleValueFilter.NULL : KeyValueTypleValueFilter.UNDEFINED } });
 }
 
 /**
  * Returns all keys that are not associated with an undefined value.
- * 
- * @param obj 
- * @returns 
+ *
+ * @param obj
+ * @returns
  */
 export function allNonUndefinedKeys<T extends object = object>(obj: T): (keyof T)[] {
   return findPOJOKeys(obj, { valueFilter: KeyValueTypleValueFilter.UNDEFINED });
@@ -76,10 +76,10 @@ export function allMaybeSoKeys<T extends object = object>(obj: T): (keyof T)[] {
 
 /**
  * Finds keys from the POJO that meet the filter.
- * 
- * @param obj 
- * @param filter 
- * @returns 
+ *
+ * @param obj
+ * @param filter
+ * @returns
  */
 export function findPOJOKeys<T extends object = object>(obj: T, filter: FilterKeyValueTuplesInput<T>): (keyof T)[] {
   const keys: (keyof T)[] = [];
@@ -96,17 +96,17 @@ export function findPOJOKeys<T extends object = object>(obj: T, filter: FilterKe
 
 /**
  * Finds and counts the number of keys from the POJO that meet the filter.
- * 
- * @param obj 
- * @param filter 
- * @returns 
+ *
+ * @param obj
+ * @param filter
+ * @returns
  */
 export function countPOJOKeys<T extends object = object>(obj: T, filter: FilterKeyValueTuplesInput<T> = KeyValueTypleValueFilter.UNDEFINED): number {
   let count = 0;
 
   forEachKeyValue<T>(obj, {
     filter,
-    forEach: () => count += 1
+    forEach: () => (count += 1)
   });
 
   return count;
@@ -114,7 +114,7 @@ export function countPOJOKeys<T extends object = object>(obj: T, filter: FilterK
 
 /**
  * Removes values, per the the filter config, from the input object.
- * 
+ *
  * @param obj POJO to remove undefined values from.
  * @param copy Whether or not to return a copy of the input object. Default is true.
  */
@@ -151,10 +151,10 @@ export function assignValuesToPOJO<T extends object = object>(target: T, obj: T,
 
 /**
  * Reads all values from the pojo based on the filter and puts them into an array.
- * 
- * @param target 
- * @param filter 
- * @returns 
+ *
+ * @param target
+ * @param filter
+ * @returns
  */
 export function valuesFromPOJO<O = unknown, I extends object = object>(target: I, filter: FilterKeyValueTuplesInput<I> = KeyValueTypleValueFilter.UNDEFINED): O[] {
   const values: O[] = [];
@@ -227,7 +227,7 @@ export type FilterKeyValueTuplesInput<T extends object = object, K extends keyof
 export type FilterKeyValueTupleFunction<T extends object = object, K extends keyof T = keyof T> = FilterFunction<KeyValueTuple<T, K>>;
 
 export function filterKeyValueTupleFunction<T extends object = object, K extends keyof T = keyof T>(input: FilterKeyValueTuplesInput<T, K>): FilterKeyValueTupleFunction<T, K> {
-  const filter = (typeof input === 'object') ? input as KeyValueTupleFilter<T, K> : { valueFilter: input };
+  const filter = typeof input === 'object' ? (input as KeyValueTupleFilter<T, K>) : { valueFilter: input };
   const { valueFilter: type, invertFilter: inverseFilter = false, keysFilter }: KeyValueTupleFilter<T, K> = filter;
 
   let filterFn: FilterKeyValueTupleFunction<T, K>;
@@ -259,8 +259,8 @@ export function filterKeyValueTupleFunction<T extends object = object, K extends
 
 /**
  * Recursively function that returns true if the input is not an object or if every key on the object is empty.
- * 
- * @param obj 
+ *
+ * @param obj
  */
 export function objectIsEmpty<T extends object>(obj: Maybe<T>): boolean {
   if (obj != null && typeof obj === 'object') {
@@ -270,14 +270,13 @@ export function objectIsEmpty<T extends object>(obj: Maybe<T>): boolean {
       for (let i = 0; i < keys.length; i += 1) {
         const key = keys[i];
         const value = (obj as T)[key as keyof T];
-        const isEmpty = (typeof obj === 'object') ? objectIsEmpty<object>(value as unknown as Maybe<object>) : !hasValueOrNotEmpty(value);
+        const isEmpty = typeof obj === 'object' ? objectIsEmpty<object>(value as unknown as Maybe<object>) : !hasValueOrNotEmpty(value);
 
         if (!isEmpty) {
           return false;
         }
       }
     }
-
   }
 
   return true;
@@ -285,8 +284,8 @@ export function objectIsEmpty<T extends object>(obj: Maybe<T>): boolean {
 
 /**
  * Merges all input objects into one. The order of overrides is kept, so the right-most item in the array will have priority over all objects before it.
- * 
- * @param objects 
+ *
+ * @param objects
  */
 export function mergeObjects<T extends object>(objects: Maybe<Partial<T>>[], filter?: KeyValueTupleFilter<T>): Partial<T> {
   const object: Partial<T> = {};
@@ -296,14 +295,14 @@ export function mergeObjects<T extends object>(objects: Maybe<Partial<T>>[], fil
 
 /**
  * Assigns all undefined valeus from one or more objects into the target object.
- * 
- * @param object 
+ *
+ * @param object
  */
-export function overrideInObject<T extends object>(target: Partial<T>, { from, filter }: { from: Partial<T>[], filter?: KeyValueTupleFilter<T> }): Partial<T> {
-  from.forEach(((x) => {
+export function overrideInObject<T extends object>(target: Partial<T>, { from, filter }: { from: Partial<T>[]; filter?: KeyValueTupleFilter<T> }): Partial<T> {
+  from.forEach((x) => {
     const relevantValues = filterFromPOJO({ ...x } as T, { filter, copy: false });
     Object.assign(target, relevantValues);
-  }));
+  });
 
   return target;
 }

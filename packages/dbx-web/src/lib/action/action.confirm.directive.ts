@@ -25,7 +25,6 @@ export interface DbxActionConfirmConfig<T> extends DbxPromptConfirmConfig {
   selector: '[dbxActionConfirm]'
 })
 export class DbxActionConfirmDirective<T, O> extends AbstractPromptConfirmDirective implements OnInit, OnDestroy {
-
   @Input('dbxActionConfirm')
   override config?: DbxActionConfirmConfig<T>;
 
@@ -54,5 +53,4 @@ export class DbxActionConfirmDirective<T, O> extends AbstractPromptConfirmDirect
 
     return result;
   }
-
 }

@@ -7,7 +7,6 @@ import { NgPopoverCloseEvent, NgPopoverRef } from 'ng-overlay-container';
  */
 @Directive()
 export abstract class AbstractPopoverRefDirective<T = unknown, R = unknown> extends AbstractSubscriptionDirective {
-
   private _popoverRef?: NgPopoverRef<T, R>;
 
   showPopover(): void {
@@ -34,7 +33,6 @@ export abstract class AbstractPopoverRefDirective<T = unknown, R = unknown> exte
   protected _afterClosed(value: NgPopoverCloseEvent<R>): void {
     // Do nothing. Override in parent type
   }
-
 }
 
 /**
@@ -42,7 +40,6 @@ export abstract class AbstractPopoverRefDirective<T = unknown, R = unknown> exte
  */
 @Directive()
 export abstract class AbstractPopoverRefWithEventsDirective<T = unknown, R = unknown> extends AbstractPopoverRefDirective<T, R> implements OnDestroy {
-
   @Output()
   readonly popoverOpened = new EventEmitter<NgPopoverRef<T, R>>();
 
@@ -62,5 +59,4 @@ export abstract class AbstractPopoverRefWithEventsDirective<T = unknown, R = unk
   protected override _afterClosed(event: NgPopoverCloseEvent<R>): void {
     this.popoverClosed.next(event);
   }
-
 }

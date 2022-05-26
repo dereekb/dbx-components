@@ -8,25 +8,7 @@ import { DateFormatDistancePipe } from './dateformatdistance.pipe';
 import { DateDistancePipe } from './datedistance.pipe';
 
 @NgModule({
-  exports: [
-    DateFromToTimePipe,
-    DateFormatDistancePipe,
-    MinutesStringPipe,
-    TimeDistanceCountdownPipe,
-    TimeDistancePipe,
-    DateDistancePipe,
-    ToJsDatePipe,
-    ToMinutesPipe
-  ],
-  declarations: [
-    DateFromToTimePipe,
-    DateFormatDistancePipe,
-    MinutesStringPipe,
-    TimeDistanceCountdownPipe,
-    TimeDistancePipe,
-    DateDistancePipe,
-    ToJsDatePipe,
-    ToMinutesPipe
-  ]
+  exports: [DateFromToTimePipe, DateFormatDistancePipe, MinutesStringPipe, TimeDistanceCountdownPipe, TimeDistancePipe, DateDistancePipe, ToJsDatePipe, ToMinutesPipe],
+  declarations: [DateFromToTimePipe, DateFormatDistancePipe, MinutesStringPipe, TimeDistanceCountdownPipe, TimeDistancePipe, DateDistancePipe, ToJsDatePipe, ToMinutesPipe]
 })
-export class DbxDatePipeModule { }
+export class DbxDatePipeModule {}

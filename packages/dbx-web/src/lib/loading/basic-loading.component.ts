@@ -24,7 +24,6 @@ export enum LoadingComponentState {
   templateUrl: './basic-loading.component.html'
 })
 export class DbxBasicLoadingComponent implements OnDestroy {
-
   private _loading = new BehaviorSubject<Maybe<boolean>>(undefined);
   private _show = new BehaviorSubject<boolean>(true);
   private _error = new BehaviorSubject<Maybe<ErrorInput>>(undefined);
@@ -38,7 +37,8 @@ export class DbxBasicLoadingComponent implements OnDestroy {
 
       if (error) {
         state = LoadingComponentState.ERROR;
-      } else if (loading == null) { // If loading has not yet been defined and no error has occured, we're waiting for some input on loading or error.
+      } else if (loading == null) {
+        // If loading has not yet been defined and no error has occured, we're waiting for some input on loading or error.
         state = LoadingComponentState.NONE;
       } else if (loading || !show) {
         state = LoadingComponentState.LOADING;
@@ -55,8 +55,8 @@ export class DbxBasicLoadingComponent implements OnDestroy {
 
   readonly error$ = this._error.asObservable();
 
-  readonly hasNoCustomError$ = this._customErrorContent.pipe(map(x => !checkNgContentWrapperHasContent(x)));
-  readonly hasNoCustomLoading$ = this._customLoadingContent.pipe(map(x => !checkNgContentWrapperHasContent(x)));
+  readonly hasNoCustomError$ = this._customErrorContent.pipe(map((x) => !checkNgContentWrapperHasContent(x)));
+  readonly hasNoCustomLoading$ = this._customLoadingContent.pipe(map((x) => !checkNgContentWrapperHasContent(x)));
 
   @Input()
   diameter?: Maybe<number>;
@@ -121,5 +121,4 @@ export class DbxBasicLoadingComponent implements OnDestroy {
       this._customLoadingContent.next(customLoadingContent);
     }, 0);
   }
-
 }

@@ -5,7 +5,6 @@ import { takeWhile, map, Observable, timer } from 'rxjs';
  * factoryTimer() configuration
  */
 export interface FactoryTimerConfig<T> {
-
   /**
    * How long to wait before the first emission.
    */
@@ -25,16 +24,15 @@ export interface FactoryTimerConfig<T> {
    * Factory for values.
    */
   factory: FactoryWithInput<T, number>;
-
 }
 
 export const DEFAULT_FACTORY_TIMER_INTERVAL = 1000;
 
 /**
  * Creates an observable that uses timer internally and maps values from the factory result.
- * 
- * @param config 
- * @returns 
+ *
+ * @param config
+ * @returns
  */
 export function factoryTimer<T>(config: FactoryTimerConfig<T>): Observable<T> {
   const { wait = 0, interval = DEFAULT_FACTORY_TIMER_INTERVAL, limit, factory } = config;

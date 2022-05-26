@@ -9,7 +9,6 @@ import { DbxReadableErrorComponent } from './error.component';
   selector: '[dbxActionError]'
 })
 export class DbxActionErrorDirective extends AbstractSubscriptionDirective implements OnInit {
-
   constructor(@Host() public readonly error: DbxReadableErrorComponent, public readonly source: DbxActionContextStoreSourceInstance) {
     super();
   }
@@ -19,5 +18,4 @@ export class DbxActionErrorDirective extends AbstractSubscriptionDirective imple
       this.error.error = error;
     });
   }
-
 }

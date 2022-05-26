@@ -5,7 +5,5 @@ import { DOC_ROUTER_ROUTES } from '../doc.router';
   templateUrl: './navbar.component.html'
 })
 export class DocRouterNavbarComponent {
-
   anchors = DOC_ROUTER_ROUTES;
-
 }

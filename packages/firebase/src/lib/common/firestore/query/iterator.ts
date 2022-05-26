@@ -1,7 +1,7 @@
 import { PageLoadingState, ItemPageIterator, ItemPageIterationInstance, ItemPageIterationConfig, ItemPageIteratorDelegate, ItemPageIteratorRequest, ItemPageIteratorResult, MappedPageItemIterationInstance, ItemPageLimit } from '@dereekb/rxjs';
-import { QueryDocumentSnapshotArray, QuerySnapshot, SnapshotListenOptions } from "../types";
+import { QueryDocumentSnapshotArray, QuerySnapshot, SnapshotListenOptions } from '../types';
 import { asArray, Maybe, lastValue, mergeIntoArray, ArrayOrValue } from '@dereekb/util';
-import { from, Observable, of, exhaustMap } from "rxjs";
+import { from, Observable, of, exhaustMap } from 'rxjs';
 import { CollectionReferenceRef } from '../reference';
 import { FirestoreQueryDriverRef } from '../driver/query';
 import { FIRESTORE_LIMIT_QUERY_CONSTRAINT_TYPE, FirestoreQueryConstraint, limit, startAfter } from './constraint';
@@ -21,7 +21,7 @@ export interface FirestoreItemPageIterationBaseConfig<T> extends CollectionRefer
   itemsPerPage: number;
 }
 
-export interface FirestoreItemPageIterationConfig<T> extends FirestoreItemPageIterationBaseConfig<T>, ItemPageIterationConfig<FirestoreItemPageIteratorFilter> { }
+export interface FirestoreItemPageIterationConfig<T> extends FirestoreItemPageIterationBaseConfig<T>, ItemPageIterationConfig<FirestoreItemPageIteratorFilter> {}
 
 export interface FirestoreItemPageQueryResult<T> {
   /**
@@ -47,29 +47,30 @@ export interface FirestoreItemPageQueryResult<T> {
 }
 
 export interface FirestoreItemPageQueryResultStreamOptions {
-  options?: Maybe<SnapshotListenOptions>
+  options?: Maybe<SnapshotListenOptions>;
 }
 
-export type FirestoreItemPageIteratorDelegate<T> = ItemPageIteratorDelegate<FirestoreItemPageQueryResult<T>, FirestoreItemPageIteratorFilter, FirestoreItemPageIterationConfig<T>>
+export type FirestoreItemPageIteratorDelegate<T> = ItemPageIteratorDelegate<FirestoreItemPageQueryResult<T>, FirestoreItemPageIteratorFilter, FirestoreItemPageIterationConfig<T>>;
 export type InternalFirestoreItemPageIterationInstance<T> = ItemPageIterationInstance<FirestoreItemPageQueryResult<T>, FirestoreItemPageIteratorFilter, FirestoreItemPageIterationConfig<T>>;
 
 export function filterDisallowedFirestoreItemPageIteratorInputContraints(constraints: FirestoreQueryConstraint[]): FirestoreQueryConstraint[] {
   const isIllegal = new Set([FIRESTORE_LIMIT_QUERY_CONSTRAINT_TYPE]);
-  return constraints.filter(x => !isIllegal.has(x.type));
+  return constraints.filter((x) => !isIllegal.has(x.type));
 }
 
 export function makeFirestoreItemPageIteratorDelegate<T>(): FirestoreItemPageIteratorDelegate<T> {
   return {
     loadItemsForPage: (request: ItemPageIteratorRequest<FirestoreItemPageQueryResult<T>, FirestoreItemPageIteratorFilter, FirestoreItemPageIterationConfig<T>>): Observable<ItemPageIteratorResult<FirestoreItemPageQueryResult<T>>> => {
       const { page, iteratorConfig } = request;
-      const prevQueryResult$: Observable<Maybe<FirestoreItemPageQueryResult<T>>> = (page > 0) ? request.lastItem$ : of(undefined);
+      const prevQueryResult$: Observable<Maybe<FirestoreItemPageQueryResult<T>>> = page > 0 ? request.lastItem$ : of(undefined);
 
       const { collection, itemsPerPage, filter, firestoreQueryDriver: driver } = iteratorConfig;
       const { limit: filterLimit, constraints: filterConstraints } = filter ?? {};
 
       return prevQueryResult$.pipe(
         exhaustMap((prevResult) => {
-          if (prevResult?.snapshot.empty === true) {  // TODO: Shouldn't happen. Remove this later.
+          if (prevResult?.snapshot.empty === true) {
+            // TODO: Shouldn't happen. Remove this later.
             return of<ItemPageIteratorResult<FirestoreItemPageQueryResult<T>>>({ end: true });
           } else {
             const constraints: FirestoreQueryConstraint[] = [];
@@ -80,15 +81,15 @@ export function makeFirestoreItemPageIteratorDelegate<T>(): FirestoreItemPageIte
             }
 
             // Add cursor
-            const cursorDocument = (prevResult) ? lastValue(prevResult.docs) : undefined;
-            const startAfterFilter = (cursorDocument) ? startAfter(cursorDocument) : undefined;
+            const cursorDocument = prevResult ? lastValue(prevResult.docs) : undefined;
+            const startAfterFilter = cursorDocument ? startAfter(cursorDocument) : undefined;
 
             if (startAfterFilter) {
               constraints.push(startAfterFilter);
             }
 
             // Add Limit
-            const limitCount = filterLimit ?? itemsPerPage + ((startAfterFilter) ? 1 : 0);    // todo: may not be needed.
+            const limitCount = filterLimit ?? itemsPerPage + (startAfterFilter ? 1 : 0); // todo: may not be needed.
             const limitConstraint = limit(limitCount);
             const constraintsWithLimit = [...constraints, limitConstraint];
 
@@ -122,17 +123,10 @@ export function makeFirestoreItemPageIteratorDelegate<T>(): FirestoreItemPageIte
         })
       );
     }
-  }
+  };
 }
 
-export class FirestoreItemPageIterationInstance<T> extends MappedPageItemIterationInstance<
-  QueryDocumentSnapshotArray<T>,
-  FirestoreItemPageQueryResult<T>,
-  PageLoadingState<QueryDocumentSnapshotArray<T>>,
-  PageLoadingState<FirestoreItemPageQueryResult<T>>,
-  InternalFirestoreItemPageIterationInstance<T>
-> {
-
+export class FirestoreItemPageIterationInstance<T> extends MappedPageItemIterationInstance<QueryDocumentSnapshotArray<T>, FirestoreItemPageQueryResult<T>, PageLoadingState<QueryDocumentSnapshotArray<T>>, PageLoadingState<FirestoreItemPageQueryResult<T>>, InternalFirestoreItemPageIterationInstance<T>> {
   constructor(snapshotIteration: InternalFirestoreItemPageIterationInstance<T>) {
     super(snapshotIteration, {
       forwardDestroy: true,
@@ -143,7 +137,6 @@ export class FirestoreItemPageIterationInstance<T> extends MappedPageItemIterati
   get snapshotIteration(): InternalFirestoreItemPageIterationInstance<T> {
     return this.itemIterator;
   }
-
 }
 
 // MARK: Iterator
@@ -162,8 +155,8 @@ export type FirestoreItemPageIterationFactoryFunction<T> = (filter?: FirestoreIt
 
 /**
  * Creates a new factory function that can build FirestoreItemPageIterationInstance values from just the input filter.
- * 
- * @param baseConfig 
+ *
+ * @param baseConfig
  * @returns FirestoreItemPageIterationInstance
  */
 export function firestoreItemPageIterationFactory<T>(baseConfig: FirestoreItemPageIterationBaseConfig<T>): FirestoreItemPageIterationFactoryFunction<T> {

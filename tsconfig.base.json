@@ -29,9 +29,7 @@
       "@dereekb/demo-firebase": ["components/demo-firebase/src/index.ts"],
       "@dereekb/firebase": ["packages/firebase/src/index.ts"],
       "@dereekb/firebase-server": ["packages/firebase-server/src/index.ts"],
-      "@dereekb/firebase-server/test": [
-        "packages/firebase-server/test/src/index.ts"
-      ],
+      "@dereekb/firebase-server/test": ["packages/firebase-server/test/src/index.ts"],
       "@dereekb/firebase/test": ["packages/firebase/test/src/index.ts"],
       "@dereekb/model": ["packages/model/src/index.ts"],
       "@dereekb/nestjs": ["packages/nestjs/src/index.ts"],

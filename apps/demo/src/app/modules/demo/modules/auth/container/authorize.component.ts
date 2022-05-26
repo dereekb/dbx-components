@@ -5,7 +5,5 @@ import { SimpleLoadingContext } from '@dereekb/rxjs';
   templateUrl: './authorize.component.html'
 })
 export class DemoAuthAuthorizeComponent {
-
   readonly context = new SimpleLoadingContext(true);
-
 }

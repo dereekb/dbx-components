@@ -6,14 +6,12 @@ interface TestCopyModel {
 }
 
 describe('makeCopyModelFieldFunction()', () => {
-
   const testModel: TestCopyModel = {
     name: 'test',
     test: true
   };
 
   describe('function', () => {
-
     it('should copy the configured field if it is defined in the object.', () => {
       const fn = makeCopyModelFieldFunction<TestCopyModel>('name');
 
@@ -41,7 +39,5 @@ describe('makeCopyModelFieldFunction()', () => {
 
       expect(target.name).toBe(defaultValue);
     });
-
   });
-
 });

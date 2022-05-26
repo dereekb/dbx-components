@@ -4,7 +4,5 @@
   "lib": {
     "entryFile": "src/index.ts"
   },
-  "assets": [
-    "./src/**/*.scss"
-  ]
+  "assets": ["./src/**/*.scss"]
 }

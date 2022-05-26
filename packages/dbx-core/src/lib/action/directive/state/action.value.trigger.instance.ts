@@ -17,7 +17,7 @@ export interface DbxActionValueOnTriggerResult<T = unknown> {
  * DbxActionValueOnTriggerInstance configuration.
  */
 export interface DbxActionValueOnTriggerInstanceConfig<T> {
-  readonly source: DbxActionContextStoreSourceInstance<T, unknown>,
+  readonly source: DbxActionContextStoreSourceInstance<T, unknown>;
   readonly valueGetter?: Maybe<DbxActionValueOnTriggerFunction<T>>;
   readonly isModifiedFunction?: Maybe<IsModifiedFunction<T>>;
 }
@@ -26,7 +26,6 @@ export interface DbxActionValueOnTriggerInstanceConfig<T> {
  * Utility class that handles trigger events to retrieve a value.
  */
 export class DbxActionValueOnTriggerInstance<T> implements Initialized, Destroyable {
-
   private _valueGetter = new BehaviorSubject<Maybe<DbxActionValueOnTriggerFunction<T>>>(undefined);
   readonly valueGetter$ = this._valueGetter.pipe(filterMaybe());
 
@@ -50,24 +49,25 @@ export class DbxActionValueOnTriggerInstance<T> implements Initialized, Destroya
   }
 
   init(): void {
-
     // Ready the value after the source is triggered. Do modified check one last time.
-    this._triggeredSub.subscription = this.source.triggered$.pipe(
-      switchMap(() => this.valueGetter$.pipe(switchMap((valueGetter) => asObservable(valueGetter())))
-        .pipe(
-          // If the value is not null/undefined and is considered modified, then pass the value.
-          switchMap((value) => returnIfIs(this.isModifiedFunction, value, false).pipe(map((value) => ({ value })))),
-          // Catch unknown errors and pass them to reject.
-          catchError((reject) => of({ reject: toReadableError(reject) }))
+    this._triggeredSub.subscription = this.source.triggered$
+      .pipe(
+        switchMap(() =>
+          this.valueGetter$.pipe(switchMap((valueGetter) => asObservable(valueGetter()))).pipe(
+            // If the value is not null/undefined and is considered modified, then pass the value.
+            switchMap((value) => returnIfIs(this.isModifiedFunction, value, false).pipe(map((value) => ({ value })))),
+            // Catch unknown errors and pass them to reject.
+            catchError((reject) => of({ reject: toReadableError(reject) }))
+          )
         )
       )
-    ).subscribe((result: DbxActionValueOnTriggerResult<T>) => {
-      if (result.value != null) {
-        this.source.readyValue(result.value);
-      } else {
-        this.source.reject(result.reject);
-      }
-    });
+      .subscribe((result: DbxActionValueOnTriggerResult<T>) => {
+        if (result.value != null) {
+          this.source.readyValue(result.value);
+        } else {
+          this.source.reject(result.reject);
+        }
+      });
   }
 
   destroy(): void {
@@ -76,5 +76,4 @@ export class DbxActionValueOnTriggerInstance<T> implements Initialized, Destroya
       this._valueGetter.complete();
     });
   }
-
 }

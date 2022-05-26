@@ -5,7 +5,7 @@
       cursor: not-allowed;
     }
     & ::ng-deep .mat-button-wrapper {
-      display:flex;
+      display: flex;
       align-items: center;
       justify-content: center;
     }
@@ -15,22 +15,22 @@
     .spinner {
       position: absolute;
       // top: 25%;
-      opacity:0;
-      transition: opacity .3s ease-in-out;
+      opacity: 0;
+      transition: opacity 0.3s ease-in-out;
       &.working {
         opacity: 1;
       }
     }
     .button-text {
       opacity: 1;
-      transition: opacity .3s ease-in-out;
+      transition: opacity 0.3s ease-in-out;
       &.working {
         opacity: 0;
       }
     }
     mat-icon.mat-button-icon {
       padding-right: 5px;
-      transition: opacity .3s ease-in-out;
+      transition: opacity 0.3s ease-in-out;
       &.is-mat-icon {
         font-size: 18px;
         position: relative;

@@ -8,7 +8,6 @@ import { PageItemIteration } from './iteration';
 import { loadingStateHasFinishedLoading } from '../loading';
 
 describe('iteration.rxjs', () => {
-
   let iterator: ItemPageIterator<number[], TestPageIteratorFilter>;
   let iteration: ItemPageIterationInstance<number[], TestPageIteratorFilter>;
   let accumulator: ItemAccumulatorInstance<number[], number[], PageItemIteration<number[]>>;
@@ -25,18 +24,22 @@ describe('iteration.rxjs', () => {
   });
 
   describe('flattenAccumulatorResultItemArray()', () => {
-
     it(`should aggregate the array of results into a single array as it loads.`, (done) => {
       const obs = flattenAccumulatorResultItemArray(accumulator);
 
-      obs.pipe(filter(x => x.length >= TEST_PAGE_ARRAY_ITERATOR_PAGE_SIZE), first()).subscribe((values) => {
-        expect(Array.isArray(values)).toBe(true);
-        expect(Array.isArray(values[0])).toBe(false);
+      obs
+        .pipe(
+          filter((x) => x.length >= TEST_PAGE_ARRAY_ITERATOR_PAGE_SIZE),
+          first()
+        )
+        .subscribe((values) => {
+          expect(Array.isArray(values)).toBe(true);
+          expect(Array.isArray(values[0])).toBe(false);
 
-        if (values.length >= TEST_PAGE_ARRAY_ITERATOR_PAGE_SIZE) {
-          done();
-        }
-      });
+          if (values.length >= TEST_PAGE_ARRAY_ITERATOR_PAGE_SIZE) {
+            done();
+          }
+        });
 
       iteration.nextPage();
     });
@@ -53,17 +56,14 @@ describe('iteration.rxjs', () => {
           expect(values.length).toBe(testPagesToLoad * TEST_PAGE_ARRAY_ITERATOR_PAGE_SIZE);
           done();
         });
-
       });
-
     });
 
     describe('with mapping', () => {
-
       let accumulatorWithMapping: ItemAccumulatorInstance<string[], number[], PageItemIteration<number[]>>;
 
       beforeEach(() => {
-        accumulatorWithMapping = itemAccumulator(iteration, (x: number[]) => x.map(y => String(y)));
+        accumulatorWithMapping = itemAccumulator(iteration, (x: number[]) => x.map((y) => String(y)));
       });
 
       afterEach(() => {
@@ -83,17 +83,12 @@ describe('iteration.rxjs', () => {
             expect(typeof values[0]).toBe('string');
             done();
           });
-
         });
-
       });
-
     });
-
   });
 
   describe('accumulatorFlattenPageListLoadingState', () => {
-
     it(`should aggregate the array of results into a single array as the value of the loading state.`, (done) => {
       const testPagesToLoad = 10;
 
@@ -102,17 +97,18 @@ describe('iteration.rxjs', () => {
 
         const obs = accumulatorFlattenPageListLoadingState(accumulator);
 
-        obs.pipe(filter(x => loadingStateHasFinishedLoading(x)), first()).subscribe((state) => {
-          expect(loadingStateHasFinishedLoading(state)).toBe(true);
-          expect(state.value).toBeDefined();
-          expect(Array.isArray(state.value)).toBe(true);
-          done();
-        });
-
+        obs
+          .pipe(
+            filter((x) => loadingStateHasFinishedLoading(x)),
+            first()
+          )
+          .subscribe((state) => {
+            expect(loadingStateHasFinishedLoading(state)).toBe(true);
+            expect(state.value).toBeDefined();
+            expect(Array.isArray(state.value)).toBe(true);
+            done();
+          });
       });
-
     });
-
   });
-
 });

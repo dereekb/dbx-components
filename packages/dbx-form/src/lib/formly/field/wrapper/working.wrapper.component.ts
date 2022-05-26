@@ -13,7 +13,7 @@ export interface DbxFormWorkingWrapperFormlyConfig extends FormlyFieldConfig {
 
 /**
  * Adds a loading bar to help signify asynchronos work is occuring.
- * 
+ *
  * By default shows loading during asynchronous validation of a field (FormControl status is "PENDING")
  */
 @Component({
@@ -25,7 +25,6 @@ export interface DbxFormWorkingWrapperFormlyConfig extends FormlyFieldConfig {
   `
 })
 export class DbxFormWorkingWrapperComponent extends FieldWrapper<DbxFormWorkingWrapperFormlyConfig> implements OnInit, OnDestroy {
-
   readonly sub = new SubscriptionObject();
   readonly workingContext = new SimpleLoadingContext(false);
 
@@ -39,5 +38,4 @@ export class DbxFormWorkingWrapperComponent extends FieldWrapper<DbxFormWorkingW
     this.workingContext.destroy();
     this.sub.destroy();
   }
-
 }

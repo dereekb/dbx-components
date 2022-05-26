@@ -13,13 +13,7 @@ export interface StaticEnumFieldConfig<T> extends LabeledFieldConfig, Descriptio
   options: EnumValueFieldOption<T>[];
 }
 
-export function staticEnumField<T = unknown>({
-  key, label = '', placeholder = '',
-  description,
-  multiple = false,
-  required = false,
-  options
-}: StaticEnumFieldConfig<T>): FormlyFieldConfig {
+export function staticEnumField<T = unknown>({ key, label = '', placeholder = '', description, multiple = false, required = false, options }: StaticEnumFieldConfig<T>): FormlyFieldConfig {
   const fieldConfig: FormlyFieldConfig = formlyField({
     key,
     type: 'select',
@@ -31,7 +25,7 @@ export function staticEnumField<T = unknown>({
       multiple,
       selectAllOption: 'Select All',
       options
-    },
+    }
   });
 
   return fieldConfig;

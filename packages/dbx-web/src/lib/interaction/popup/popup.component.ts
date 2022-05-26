@@ -36,40 +36,43 @@ export interface DbxPopupComponentConfig<O, I, T> {
  */
 @Component({
   template: `
-  <dbx-popup-coordinator>
-    <div class="dbx-popup-component" dbx-injection [config]="contentConfig"></div>
-  </dbx-popup-coordinator>
+    <dbx-popup-coordinator>
+      <div class="dbx-popup-component" dbx-injection [config]="contentConfig"></div>
+    </dbx-popup-coordinator>
   `,
-  providers: [{
-    provide: DbxPopupController,
-    useExisting: DbxPopupComponent
-  }, {
-    provide: CompactContextStore
-  }]
+  providers: [
+    {
+      provide: DbxPopupController,
+      useExisting: DbxPopupComponent
+    },
+    {
+      provide: CompactContextStore
+    }
+  ]
 })
 export class DbxPopupComponent<O = unknown, I = unknown, T = unknown> extends AbstractTransitionWatcherDirective implements DbxPopupController<O, I>, OnDestroy {
-
   private _position: PopupGlobalPositionStrategy;
 
   readonly contentConfig: DbxInjectionComponentConfig = {
     componentClass: this.config.componentClass,
-    init: this.config.init ? ((instance) => (this.config as Required<DbxPopupComponentConfig<O, I, T>>).init(instance as T, this)) : undefined
+    init: this.config.init ? (instance) => (this.config as Required<DbxPopupComponentConfig<O, I, T>>).init(instance as T, this) : undefined
   };
 
   private readonly closing = new Subject<void>();
-  readonly isClosing$ = this.closing.pipe(first(), map(() => true), startWith(false), shareReplay(1));
-  readonly closing$ = this.isClosing$.pipe(filter(x => x));
+  readonly isClosing$ = this.closing.pipe(
+    first(),
+    map(() => true),
+    startWith(false),
+    shareReplay(1)
+  );
+  readonly closing$ = this.isClosing$.pipe(filter((x) => x));
 
   private readonly _windowState = new BehaviorSubject<DbxPopupWindowState>(DbxPopupWindowState.NORMAL);
   readonly windowState$ = this._windowState.asObservable();
 
   getClosingValueFn?: (value?: I) => Promise<O>;
 
-  constructor(
-    private popoverRef: NgPopoverRef<DbxPopupComponentConfig<O, I, T>, O>,
-    private compactContextState: CompactContextStore,
-    dbxRouterTransitionService: DbxRouterTransitionService,
-    ngZone: NgZone) {
+  constructor(private popoverRef: NgPopoverRef<DbxPopupComponentConfig<O, I, T>, O>, private compactContextState: CompactContextStore, dbxRouterTransitionService: DbxRouterTransitionService, ngZone: NgZone) {
     super(dbxRouterTransitionService, ngZone);
 
     this.compactContextState.setMode(CompactMode.COMPACT);
@@ -106,11 +109,14 @@ export class DbxPopupComponent<O = unknown, I = unknown, T = unknown> extends Ab
     this.closing.next();
 
     if (this.getClosingValueFn) {
-      this.getClosingValueFn().then((x) => {
-        this.return(x);
-      }, () => {
-        this.return();
-      });
+      this.getClosingValueFn().then(
+        (x) => {
+          this.return(x);
+        },
+        () => {
+          this.return();
+        }
+      );
     } else {
       this.return();
     }
@@ -141,5 +147,4 @@ export class DbxPopupComponent<O = unknown, I = unknown, T = unknown> extends Ab
     this.popoverRef.overlay.updatePosition();
     this._windowState.next(DbxPopupWindowState.FULLSCREEN);
   }
-
 }

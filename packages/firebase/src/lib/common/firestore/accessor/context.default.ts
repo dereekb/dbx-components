@@ -1,4 +1,4 @@
-import { FirestoreDocumentContext, FirestoreDocumentContextType } from "./context";
+import { FirestoreDocumentContext, FirestoreDocumentContextType } from './context';
 
 export type DefaultFirestoreDocumentContextFactory = <T>() => FirestoreDocumentContext<T>;
 

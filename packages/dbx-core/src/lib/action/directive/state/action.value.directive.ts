@@ -11,10 +11,9 @@ import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
  * No value is required, allowing the directive to automatically call readyValue.
  */
 @Directive({
-  selector: '[dbxActionValue]',
+  selector: '[dbxActionValue]'
 })
 export class DbxActionValueDirective<T, O> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
-
   private _valueOrFunction = new BehaviorSubject<Maybe<GetterOrValue<T>>>(undefined);
   readonly valueOrFunction$ = this._valueOrFunction.pipe(filterMaybe(), shareReplay(1));
 
@@ -32,14 +31,18 @@ export class DbxActionValueDirective<T, O> extends AbstractSubscriptionDirective
   }
 
   ngOnInit(): void {
-    this.sub = this.valueOrFunction$.pipe(
-      switchMap(valueOrFunction => this.source.triggered$.pipe(
-        tap(() => {
-          const value: T = getValueFromGetter(valueOrFunction);
-          this.source.readyValue(value);
-        })
-      ))
-    ).subscribe();
+    this.sub = this.valueOrFunction$
+      .pipe(
+        switchMap((valueOrFunction) =>
+          this.source.triggered$.pipe(
+            tap(() => {
+              const value: T = getValueFromGetter(valueOrFunction);
+              this.source.readyValue(value);
+            })
+          )
+        )
+      )
+      .subscribe();
   }
 
   override ngOnDestroy(): void {
@@ -48,5 +51,4 @@ export class DbxActionValueDirective<T, O> extends AbstractSubscriptionDirective
       this._valueOrFunction.complete();
     });
   }
-
 }

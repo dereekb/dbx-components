@@ -12,12 +12,10 @@ import { ThemePalette } from '@angular/material/core';
         <ng-content></ng-content>
       </mat-toolbar>
     </div>
-  `,
+  `
   // TODO: styleUrls: ['./container.scss']
 })
 export class DbxFlagComponent {
-
   @Input()
   color: ThemePalette = 'accent';
-
 }

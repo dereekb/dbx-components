@@ -6,14 +6,8 @@ import { DbxCompactDirective } from './compact.directive';
  * Module for block components.
  */
 @NgModule({
-  imports: [
-    CommonModule
-  ],
-  declarations: [
-    DbxCompactDirective
-  ],
-  exports: [
-    DbxCompactDirective
-  ]
+  imports: [CommonModule],
+  declarations: [DbxCompactDirective],
+  exports: [DbxCompactDirective]
 })
-export class DbxCompactLayoutModule { }
+export class DbxCompactLayoutModule {}

@@ -53,9 +53,7 @@ export function analyticsServiceConfigurationFactory(segmentApi: DbxAnalyticsSeg
   const config: DbxAnalyticsServiceConfiguration = {
     isProduction: environment.production,
     logEvents: environment.testing,
-    listeners: [
-      segmentListener
-    ]
+    listeners: [segmentListener]
   };
 
   return config;
@@ -110,11 +108,11 @@ export function makeSegmentConfig(): DbxAnalyticsSegmentApiServiceConfig {
         strictStateSerializability: true,
         strictActionSerializability: true,
         strictActionWithinNgZone: true,
-        strictActionTypeUniqueness: true,
-      },
+        strictActionTypeUniqueness: true
+      }
     }),
     EffectsModule.forRoot(),
-    (!environment.production ? StoreDevtoolsModule.instrument({ maxAge: 25, logOnly: environment.production }) : []),
+    !environment.production ? StoreDevtoolsModule.instrument({ maxAge: 25, logOnly: environment.production }) : [],
     // other modules
     FormlyModule.forRoot({
       validationMessages: defaultValidationMessages()
@@ -124,23 +122,27 @@ export function makeSegmentConfig(): DbxAnalyticsSegmentApiServiceConfig {
       initial: { state: 'root' },
       otherwise: { state: 'root' },
       config: routerConfigFn
-    }),
+    })
   ],
-  providers: [{
-    provide: DbxAnalyticsSegmentApiServiceConfig,
-    useFactory: makeSegmentConfig
-  }, {
-    provide: DBX_STYLE_DEFAULT_CONFIG_TOKEN,
-    useValue: {
-      style: 'doc-app',
-      suffixes: new Set(['dark'])
+  providers: [
+    {
+      provide: DbxAnalyticsSegmentApiServiceConfig,
+      useFactory: makeSegmentConfig
+    },
+    {
+      provide: DBX_STYLE_DEFAULT_CONFIG_TOKEN,
+      useValue: {
+        style: 'doc-app',
+        suffixes: new Set(['dark'])
+      }
+    },
+    {
+      provide: MAT_FORM_FIELD_DEFAULT_OPTIONS,
+      useValue: {
+        floatLabel: 'always'
+      }
     }
-  }, {
-    provide: MAT_FORM_FIELD_DEFAULT_OPTIONS,
-    useValue: {
-      floatLabel: 'always'
-    }
-  }],
+  ],
   bootstrap: [UIView]
 })
-export class RootModule { }
+export class RootModule {}

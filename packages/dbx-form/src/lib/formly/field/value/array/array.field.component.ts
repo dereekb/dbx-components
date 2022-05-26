@@ -19,17 +19,20 @@ export interface DbxFormRepeatArrayFormlyConfig extends FieldArrayTypeConfig {
       <dbx-subsection [header]="label">
         <!-- Fields -->
         <div class="dbx-form-repeat-array-fields" cdkDropList (cdkDropListDropped)="drop($event)">
-            <div class="dbx-form-repeat-array-field" cdkDrag cdkDragLockAxis="y" *ngFor="let field of field.fieldGroup; let i = index; let last = last;">
-              <div class="example-custom-placeholder" *cdkDragPlaceholder></div>
-              <dbx-bar>
-                <button cdkDragHandle mat-flat-button><mat-icon>drag_handle</mat-icon></button>
-                <dbx-button-spacer></dbx-button-spacer>
-                <h4><span class="repeat-array-number">{{ i + 1 }}</span><span>{{ labelForItem(field) }}</span></h4>
-                <span class="dbx-spacer"></span>
-                <button mat-flat-button color="warn" (click)="remove(i)">{{ removeText }}</button>
-              </dbx-bar>
-              <formly-field class="dbx-form-repeat-array-field-content" [field]="field"></formly-field>
-            </div>
+          <div class="dbx-form-repeat-array-field" cdkDrag cdkDragLockAxis="y" *ngFor="let field of field.fieldGroup; let i = index; let last = last">
+            <div class="example-custom-placeholder" *cdkDragPlaceholder></div>
+            <dbx-bar>
+              <button cdkDragHandle mat-flat-button><mat-icon>drag_handle</mat-icon></button>
+              <dbx-button-spacer></dbx-button-spacer>
+              <h4>
+                <span class="repeat-array-number">{{ i + 1 }}</span>
+                <span>{{ labelForItem(field) }}</span>
+              </h4>
+              <span class="dbx-spacer"></span>
+              <button mat-flat-button color="warn" (click)="remove(i)">{{ removeText }}</button>
+            </dbx-bar>
+            <formly-field class="dbx-form-repeat-array-field-content" [field]="field"></formly-field>
+          </div>
         </div>
         <!-- Add Button -->
         <div class="dbx-form-repeat-array-footer">
@@ -39,14 +42,13 @@ export interface DbxFormRepeatArrayFormlyConfig extends FieldArrayTypeConfig {
     </div>
   `
 })
-export class DbxFormRepeatArrayTypeComponent extends FieldArrayType<DbxFormRepeatArrayFormlyConfig>{
-
+export class DbxFormRepeatArrayTypeComponent extends FieldArrayType<DbxFormRepeatArrayFormlyConfig> {
   get repeatArrayField(): DbxFormRepeatArrayConfig {
     return this.field.repeatArrayField;
   }
 
   get label(): string {
-    return this.field.templateOptions.label ?? this.field.key as string;
+    return this.field.templateOptions.label ?? (this.field.key as string);
   }
 
   get addText(): string {
@@ -71,14 +73,14 @@ export class DbxFormRepeatArrayTypeComponent extends FieldArrayType<DbxFormRepea
     if (max == null) {
       return true;
     } else {
-      return (this.count < max);
+      return this.count < max;
     }
   }
 
   /**
    * Moves the target index up one value.
-   * 
-   * @param index 
+   *
+   * @param index
    */
   moveUp(index: number) {
     if (index === 0) {
@@ -111,5 +113,4 @@ export class DbxFormRepeatArrayTypeComponent extends FieldArrayType<DbxFormRepea
   labelForItem(field: FormlyFieldConfig): string {
     return getValueFromGetter(this.repeatArrayField.labelForField ?? '', field);
   }
-
 }

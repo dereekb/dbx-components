@@ -5,7 +5,6 @@ import { StripeServiceConfig } from './stripe.config';
 
 @Injectable()
 export class StripeApi {
-
   public readonly stripe: Stripe;
 
   constructor(@Inject(StripeServiceConfig) public readonly config: StripeServiceConfig) {
@@ -33,5 +32,4 @@ export class StripeApi {
 
     return event;
   }
-
 }

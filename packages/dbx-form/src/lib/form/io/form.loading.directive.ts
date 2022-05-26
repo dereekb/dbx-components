@@ -12,7 +12,6 @@ import { DbxFormSourceDirectiveMode, dbxFormSourceObservable } from './form.inpu
   selector: '[dbxFormLoadingSource]'
 })
 export class DbxFormLoadingSourceDirective<T extends object = object> extends AbstractSubscriptionDirective implements OnDestroy {
-
   private _mode = new BehaviorSubject<DbxFormSourceDirectiveMode>('reset');
 
   constructor(@Host() public readonly form: DbxMutableForm<T>) {
@@ -54,5 +53,4 @@ export class DbxFormLoadingSourceDirective<T extends object = object> extends Ab
     super.ngOnDestroy();
     this._mode.complete();
   }
-
 }

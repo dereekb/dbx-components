@@ -1,5 +1,5 @@
-import { Transaction } from "../types";
-import { FirestoreDocumentContext, FirestoreDocumentContextType } from "./context";
+import { Transaction } from '../types';
+import { FirestoreDocumentContext, FirestoreDocumentContextType } from './context';
 
 export type TransactionFirestoreDocumentContextFactory = <T>(transaction: Transaction) => TransactionFirestoreDocumentContext<T>;
 

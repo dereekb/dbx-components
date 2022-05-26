@@ -1,6 +1,6 @@
 import { objectToMap } from '@dereekb/util';
 import { Query } from '../types';
-import { FirestoreQueryConstraint, FirestoreQueryConstraintHandlerMap } from "../query/constraint";
+import { FirestoreQueryConstraint, FirestoreQueryConstraintHandlerMap } from '../query/constraint';
 import { FirestoreQueryConstraintFunctionsDriver, FirestoreQueryDriverQueryFunction } from './query';
 
 export interface MakeFirestoreQueryConstraintFunctionsDriver<B> {
@@ -23,7 +23,7 @@ export function makeFirestoreQueryConstraintFunctionsDriver<B>(config: MakeFires
         throw new Error(`The current driver does not support the query constraint with type "${x.type}".`);
       }
 
-      builder = handler(builder, x.data, x,);
+      builder = handler(builder, x.data, x);
     });
 
     return build(builder);

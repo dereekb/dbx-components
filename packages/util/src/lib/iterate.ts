@@ -1,4 +1,3 @@
-
 export type IterateFn<T> = (value: T) => void | Promise<void>;
 export type IteratePageFn<T> = (values: T[]) => void | Promise<void>;
 

@@ -11,13 +11,12 @@ import { Maybe } from '@dereekb/util';
     <dbx-anchor [anchor]="anchor">
       <ng-content></ng-content>
     </dbx-anchor>
-    `,
+  `,
   host: {
-    'class': 'd-inline dbx-link'
+    class: 'd-inline dbx-link'
   }
 })
 export class DbxAnchorLinkComponent {
-
   @Input()
   anchor?: ClickableAnchor;
 
@@ -38,5 +37,4 @@ export class DbxAnchorLinkComponent {
       };
     }
   }
-
 }

@@ -10,7 +10,7 @@ import { Component } from '@angular/core';
     </dbx-content-container>
   `,
   host: {
-    'class': 'd-block dbx-prompt-page'
+    class: 'd-block dbx-prompt-page'
   }
 })
-export class DbxPromptPageComponent { }
+export class DbxPromptPageComponent {}

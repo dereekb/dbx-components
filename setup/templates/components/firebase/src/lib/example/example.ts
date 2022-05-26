@@ -1,4 +1,4 @@
-import { CollectionReference, AbstractFirestoreDocument, makeSnapshotConverterFunctions, firestoreString, firestoreDate, FirestoreCollection, UserRelatedById, DocumentReferenceRef, FirestoreContext } from "@dereekb/firebase";
+import { CollectionReference, AbstractFirestoreDocument,snapshotConverterFunctions, firestoreString, FirestoreCollection, UserRelatedById, DocumentReferenceRef, FirestoreContext } from "@dereekb/firebase";
 
 export interface ExampleFirestoreCollections {
   exampleFirestoreCollection: ExampleFirestoreCollection;
@@ -18,7 +18,7 @@ export class ExampleDocument extends AbstractFirestoreDocument<Example, ExampleD
 
 export const exampleCollectionPath = 'example';
 
-export const exampleConverter = makeSnapshotConverterFunctions<Example>({
+export const exampleConverter = snapshotConverterFunctions<Example>({
   fields: {
     username: firestoreString({})
   }

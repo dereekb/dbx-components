@@ -11,7 +11,6 @@ export const DEFAULT_DBX_SELECTION_VALUE_LIST_DIRECTIVE_TEMPLATE = '<dbx-selecti
  */
 @Directive()
 export abstract class AbstractDbxSelectionListViewDirective<T> extends AbstractDbxListViewDirective<T> {
-
   @Output()
   selectionChange = new EventEmitter<ListSelectionState<T>>();
 
@@ -21,12 +20,11 @@ export abstract class AbstractDbxSelectionListViewDirective<T> extends AbstractD
 
   matSelectionChanged(selection: MatSelectionListChange): void {
     const options = selection.source.selectedOptions.selected;
-    const items: ListSelectionStateItem<T>[] = options.map(x => {
+    const items: ListSelectionStateItem<T>[] = options.map((x) => {
       const { value: itemValue, selected, disabled } = x;
-      return ({ itemValue, selected, disabled });
+      return { itemValue, selected, disabled };
     });
 
     this.selectionChanged({ items });
   }
-
 }

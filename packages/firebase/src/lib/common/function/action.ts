@@ -1,4 +1,4 @@
-import { TransformAndValidateFunctionResult } from "@dereekb/model";
+import { TransformAndValidateFunctionResult } from '@dereekb/model';
 
 // export type FirebaseFunctionUpdateAction<T> = (document: T) => Promise<T>;
 // export type AsyncFirebaseFunctionUpdateAction<T> = Promise<FirebaseFunctionUpdateAction<T>>;

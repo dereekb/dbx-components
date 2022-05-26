@@ -1,15 +1,14 @@
 import { Directive, forwardRef, Input, Provider, Type } from '@angular/core';
-import { DocumentReference, FirestoreDocument } from "@dereekb/firebase";
+import { DocumentReference, FirestoreDocument } from '@dereekb/firebase';
 import { ModelKey } from '@dereekb/util';
-import { DbxFirebaseDocumentStore } from "./store.document";
+import { DbxFirebaseDocumentStore } from './store.document';
 
 /**
  * Abstract directive that contains a DbxFirebaseDocumentStore and provides an interface for communicating with other directives.
  */
 @Directive()
 export abstract class DbxFirebaseDocumentStoreDirective<T = unknown, D extends FirestoreDocument<T> = FirestoreDocument<T>, S extends DbxFirebaseDocumentStore<T, D> = DbxFirebaseDocumentStore<T, D>> {
-
-  constructor(readonly store: S) { }
+  constructor(readonly store: S) {}
 
   readonly exists$ = this.store.exists$;
 
@@ -35,26 +34,27 @@ export abstract class DbxFirebaseDocumentStoreDirective<T = unknown, D extends F
   set ref(ref: DocumentReference<T>) {
     this.store.setRef(ref);
   }
-
 }
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // The use of any here does not degrade the type-safety; we want to simply match that the Store type S is used in the Directive type C to provide it.
 
 /**
- * Configures providers for a DbxFirebaseDocumentStoreDirective. 
- * 
+ * Configures providers for a DbxFirebaseDocumentStoreDirective.
+ *
  * Can optionally also provide the actual store type to include in the providers array so it is instantiated by Angular.
- * 
- * @param sourceType 
+ *
+ * @param sourceType
  */
 export function provideDbxFirebaseDocumentStoreDirective<S extends DbxFirebaseDocumentStoreDirective<any, any, any>>(sourceType: Type<S>): Provider[];
 export function provideDbxFirebaseDocumentStoreDirective<S extends DbxFirebaseDocumentStore<any, any>, C extends DbxFirebaseDocumentStoreDirective<any, any, S> = DbxFirebaseDocumentStoreDirective<any, any, S>>(sourceType: Type<C>, storeType: Type<S>): Provider[];
 export function provideDbxFirebaseDocumentStoreDirective<S extends DbxFirebaseDocumentStore<any, any>, C extends DbxFirebaseDocumentStoreDirective<any, any, S> = DbxFirebaseDocumentStoreDirective<any, any, S>>(sourceType: Type<C>, storeType?: Type<S>): Provider[] {
-  const providers: Provider[] = [{
-    provide: DbxFirebaseDocumentStoreDirective,
-    useExisting: forwardRef(() => sourceType)
-  }];
+  const providers: Provider[] = [
+    {
+      provide: DbxFirebaseDocumentStoreDirective,
+      useExisting: forwardRef(() => sourceType)
+    }
+  ];
 
   if (storeType) {
     providers.push(storeType);

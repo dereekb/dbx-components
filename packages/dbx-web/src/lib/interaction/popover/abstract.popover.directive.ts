@@ -6,8 +6,7 @@ import { DbxPopoverComponent } from './popover.component';
  */
 @Directive()
 export abstract class AbstractPopoverDirective<O = unknown, I = unknown, T = unknown> {
-
-  constructor(public readonly popover: DbxPopoverComponent<O, I, T>) { }
+  constructor(public readonly popover: DbxPopoverComponent<O, I, T>) {}
 
   close(): void {
     this.popover.close();
@@ -16,5 +15,4 @@ export abstract class AbstractPopoverDirective<O = unknown, I = unknown, T = unk
   returnAndClose(value: O): void {
     this.popover.return(value);
   }
-
 }

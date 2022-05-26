@@ -24,7 +24,6 @@ export interface DbxPromptConfirmDialogConfig extends DbxPromptConfirmConfig {
   `
 })
 export class DbxPromptConfirmDialogComponent extends AbstractDialogDirective<boolean, DbxPromptConfirmDialogConfig> implements OnInit {
-
   get config(): DbxPromptConfirmDialogConfig {
     return this.data;
   }
@@ -47,5 +46,4 @@ export class DbxPromptConfirmDialogComponent extends AbstractDialogDirective<boo
   cancel(): void {
     this.close(false);
   }
-
 }

@@ -12,7 +12,7 @@ export interface DocFormExampleSelectionValue {
 }
 
 export function MAKE_EXAMPLE_SELECTION_VALUE(id?: string) {
-  const value = (id) ? Number(id) : Math.ceil(Math.random() * 1000000000);
+  const value = id ? Number(id) : Math.ceil(Math.random() * 1000000000);
 
   return {
     id: String(value),
@@ -23,25 +23,25 @@ export function MAKE_EXAMPLE_SELECTION_VALUE(id?: string) {
 export const MAKE_RANDOM_SELECTION_VALUES = makeRandomArrayFn({ random: { min: 12, max: 25 }, make: () => MAKE_EXAMPLE_SELECTION_VALUE() });
 
 export function EXAMPLE_SEARCH_FOR_SELECTION_VALUE(): SearchableValueFieldStringSearchFn<DocFormExampleSelectionValueId, any> {
-  const makeRandomDelay = makeRandomFunction(200);  // use to show the loading bar.
+  const makeRandomDelay = makeRandomFunction(200); // use to show the loading bar.
 
   return (search: string = '') => {
     if (search.length > 3) {
-      const result: SearchableValueFieldValue<DocFormExampleSelectionValueId>[] = MAKE_RANDOM_SELECTION_VALUES().map(x => ({ meta: x, value: x.id }));
+      const result: SearchableValueFieldValue<DocFormExampleSelectionValueId>[] = MAKE_RANDOM_SELECTION_VALUES().map((x) => ({ meta: x, value: x.id }));
       return of(result).pipe(randomDelayWithRandomFunction(makeRandomDelay));
     } else {
       return of([]).pipe(randomDelayWithRandomFunction(makeRandomDelay));
     }
-  }
+  };
 }
 
 export const EXAMPLE_DISPLAY_FOR_SELECTION_VALUE: SearchableValueFieldDisplayFn<DocFormExampleSelectionValueId, DocFormExampleSelectionValue> = makeMetaFilterSearchableFieldValueDisplayFn<DocFormExampleSelectionValueId, DocFormExampleSelectionValue>({
   loadMetaForValues: (values) => {
-    const valuesWithMeta = values.map(x => ({ ...x, meta: MAKE_EXAMPLE_SELECTION_VALUE(x.value) }));
+    const valuesWithMeta = values.map((x) => ({ ...x, meta: MAKE_EXAMPLE_SELECTION_VALUE(x.value) }));
     return of(valuesWithMeta);
   },
   makeDisplayForValues: (values) => {
-    const displayValues: SearchableValueFieldDisplayValue<DocFormExampleSelectionValueId, DocFormExampleSelectionValue>[] = values.map(x => ({ ...x, label: `Product: ${x.meta!.value}` }));
+    const displayValues: SearchableValueFieldDisplayValue<DocFormExampleSelectionValueId, DocFormExampleSelectionValue>[] = values.map((x) => ({ ...x, label: `Product: ${x.meta!.value}` }));
     const obs: Observable<SearchableValueFieldDisplayValue<DocFormExampleSelectionValueId, DocFormExampleSelectionValue>[]> = of(displayValues);
     return obs;
   }
@@ -49,21 +49,22 @@ export const EXAMPLE_DISPLAY_FOR_SELECTION_VALUE: SearchableValueFieldDisplayFn<
 
 /**
  * Extends EXAMPLE_DISPLAY_FOR_SELECTION_VALUE by setting a custom display to each.
- * 
- * @param values 
- * @returns 
+ *
+ * @param values
+ * @returns
  */
 export const EXAMPLE_DISPLAY_FOR_SELECTION_VALUE_WITH_CUSTOM_DISPLAYS: SearchableValueFieldDisplayFn<DocFormExampleSelectionValueId, DocFormExampleSelectionValue> = (values) => {
   const possibleComponents = [DocFormExamplePrimarySearchableFieldDisplayComponent, DocFormExampleWarnSearchableFieldDisplayComponent, DocFormExampleAccentSearchableFieldDisplayComponent];
 
-  return EXAMPLE_DISPLAY_FOR_SELECTION_VALUE(values).pipe(map(displayValues => {
+  return EXAMPLE_DISPLAY_FOR_SELECTION_VALUE(values).pipe(
+    map((displayValues) => {
+      displayValues.forEach((x) => {
+        x.display = {
+          componentClass: pickOneRandomly(possibleComponents)
+        };
+      });
 
-    displayValues.forEach((x) => {
-      x.display = {
-        componentClass: pickOneRandomly(possibleComponents)
-      }
+      return displayValues;
     })
-
-    return displayValues;
-  }));
-}
+  );
+};

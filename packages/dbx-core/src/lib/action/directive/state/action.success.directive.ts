@@ -12,7 +12,6 @@ import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
   selector: '[dbxActionHasSuccess]'
 })
 export class DbxActionHasSuccessDirective extends AbstractIfDirective implements OnDestroy {
-
   @Input('dbxActionHasSuccess')
   hideAfter?: Maybe<number> | '';
 
@@ -30,5 +29,4 @@ export class DbxActionHasSuccessDirective extends AbstractIfDirective implements
   constructor(templateRef: TemplateRef<unknown>, viewContainer: ViewContainerRef, public readonly source: DbxActionContextStoreSourceInstance) {
     super(templateRef, viewContainer);
   }
-
 }

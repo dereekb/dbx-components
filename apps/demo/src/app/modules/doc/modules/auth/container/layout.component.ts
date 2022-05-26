@@ -5,10 +5,10 @@ import { ClickableAnchorLinkSegueRef } from '@dereekb/dbx-core';
   templateUrl: './layout.component.html'
 })
 export class DocAuthLayoutComponent {
-
-  readonly navAnchors: ClickableAnchorLinkSegueRef[] = [{
-    title: 'Auth Components',
-    ref: 'doc.auth'
-  }];
-
+  readonly navAnchors: ClickableAnchorLinkSegueRef[] = [
+    {
+      title: 'Auth Components',
+      ref: 'doc.auth'
+    }
+  ];
 }

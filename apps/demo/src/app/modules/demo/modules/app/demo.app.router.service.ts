@@ -5,8 +5,7 @@ import { SegueRef } from '@dereekb/dbx-core';
   providedIn: 'root'
 })
 export class DemoAppRouterService {
-
-  constructor() { }
+  constructor() {}
 
   guestbookListRef(): SegueRef {
     return {
@@ -20,5 +19,4 @@ export class DemoAppRouterService {
       refParams: { id }
     };
   }
-
 }

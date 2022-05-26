@@ -38,17 +38,17 @@ export const DEFAULT_LOCK_SET_TIME_LOCK_KEY = 'timelock';
  */
 export function onLockSetNextUnlock({ lockSet, fn, timeout: inputTimeout, delayTime }: OnLockSetUnlockedConfig): Subscription {
   const timeoutTime = inputTimeout ?? ms('50s');
-  return lockSet.isUnlocked$.pipe(
-    filter((x) => x),
-    delay(delayTime ?? 0),
-    timeout({
-      first: timeoutTime,
-      with: () => of(false).pipe(
-        tap(() => console.warn('LockSet time out. Potential issue detected.'))
-      )
-    }),
-    first()
-  ).subscribe(fn);
+  return lockSet.isUnlocked$
+    .pipe(
+      filter((x) => x),
+      delay(delayTime ?? 0),
+      timeout({
+        first: timeoutTime,
+        with: () => of(false).pipe(tap(() => console.warn('LockSet time out. Potential issue detected.')))
+      }),
+      first()
+    )
+    .subscribe(fn);
 }
 
 /**
@@ -57,7 +57,6 @@ export function onLockSetNextUnlock({ lockSet, fn, timeout: inputTimeout, delayT
  * Added Observables do not need to be strictly removed; empty observables are counted as unlocked.
  */
 export class LockSet implements Destroyable {
-
   private static LOCK_SET_CHILD_INDEX_STEPPER = 0;
 
   private _locks = new BehaviorSubject<Map<LockKey, Observable<boolean>>>(new Map());
@@ -74,7 +73,7 @@ export class LockSet implements Destroyable {
     shareReplay(1)
   );
 
-  readonly isUnlocked$ = this.isLocked$.pipe(map(x => !x));
+  readonly isUnlocked$ = this.isLocked$.pipe(map((x) => !x));
 
   private get locks(): Map<LockKey, Observable<boolean>> {
     return this._locks.value;
@@ -89,7 +88,7 @@ export class LockSet implements Destroyable {
       lockedConfig = config as SetLockedConfig;
     } else {
       lockedConfig = {
-        locked: config as boolean ?? true,
+        locked: (config as boolean) ?? true,
         duration
       };
     }
@@ -117,7 +116,7 @@ export class LockSet implements Destroyable {
 
   addLock(key: LockKey, obs: Observable<boolean>): RemoveLockFunction {
     obs = obs.pipe(
-      defaultIfEmpty<boolean, boolean>(false),  // empty observables count as unlocked.
+      defaultIfEmpty<boolean, boolean>(false) // empty observables count as unlocked.
     );
 
     const removeLock: RemoveLockFunction = () => this._removeObsForKey(obs, key);
@@ -143,29 +142,30 @@ export class LockSet implements Destroyable {
   }
 
   onNextUnlock(config: OnLockSetUnlockedFunction | Omit<OnLockSetUnlockedConfig, 'lockSet'>, delayTime?: number): Subscription {
-
     return onLockSetNextUnlock({
       lockSet: this,
       delayTime,
-      ...((typeof config === 'function') ? { fn: config } : config)
+      ...(typeof config === 'function' ? { fn: config } : config)
     });
   }
 
   setParentLockSet(parent: ObservableOrValue<Maybe<LockSet>>): void {
-    this._parentSub.subscription = preventComplete(asObservable(parent)).pipe(
-      map((parentLockSet) => {
-        let removeFn: Maybe<RemoveLockFunction>;
+    this._parentSub.subscription = preventComplete(asObservable(parent))
+      .pipe(
+        map((parentLockSet) => {
+          let removeFn: Maybe<RemoveLockFunction>;
 
-        if (parentLockSet) {
-          removeFn = parentLockSet.addChildLockSet(this);
-        }
+          if (parentLockSet) {
+            removeFn = parentLockSet.addChildLockSet(this);
+          }
 
-        return removeFn;
-      }),
-      cleanup((removeLockSet) => {
-        removeLockSet?.();
-      })
-    ).subscribe();
+          return removeFn;
+        }),
+        cleanup((removeLockSet) => {
+          removeLockSet?.();
+        })
+      )
+      .subscribe();
   }
 
   /**
@@ -203,5 +203,4 @@ export class LockSet implements Destroyable {
     this._locks.complete();
     this._parentSub.destroy();
   }
-
 }

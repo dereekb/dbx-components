@@ -1,4 +1,4 @@
-import { Maybe } from "../value/maybe";
+import { Maybe } from '../value/maybe';
 
 export interface PerformTaskLoopConfig<O> {
   next: (i: number, prev: Maybe<O>) => Promise<O>;
@@ -55,13 +55,13 @@ export function performTaskCountLoop(config: PerformTaskCountLoopConfig<void>): 
 export function performTaskCountLoop<O>(config: PerformTaskCountLoopWithInitConfig<O> | PerformTaskCountLoopConfig<O>): Promise<O> {
   return performTaskLoop<O>({
     ...config,
-    checkContinue: (_, i) => (i < config.count)
+    checkContinue: (_, i) => i < config.count
   } as PerformTaskLoopConfig<O>);
 }
 
 // MARK: Loop Make
 export interface PerformMakeLoopConfig<O> {
-  make: (i: number, made: O[]) => Promise<O>,
+  make: (i: number, made: O[]) => Promise<O>;
   count: number;
 }
 

@@ -1,4 +1,3 @@
-
 export function reduceNumbersWithMax(array: number[], emptyArrayValue?: number): number | undefined {
   return reduceNumbersWithMaxFn(emptyArrayValue)(array);
 }
@@ -23,7 +22,7 @@ export function reduceNumbersWithAddFn(emptyArrayValue = 0): (array: number[]) =
   return reduceNumbersFn((a, b) => a + b, emptyArrayValue);
 }
 
-export function reduceNumbers(reduceFn: ((a: number, b: number) => number), array: number[], emptyArrayValue?: number): number | undefined {
+export function reduceNumbers(reduceFn: (a: number, b: number) => number, array: number[], emptyArrayValue?: number): number | undefined {
   if (array.length === 0) {
     return emptyArrayValue;
   } else {
@@ -31,22 +30,22 @@ export function reduceNumbers(reduceFn: ((a: number, b: number) => number), arra
   }
 }
 
-export function reduceNumbersFn(reduceFn: ((a: number, b: number) => number)): (array: number[]) => number | undefined;
-export function reduceNumbersFn<D extends number>(reduceFn: ((a: number, b: number) => number), emptyArrayValue?: D): (array: number[]) => number | D;
-export function reduceNumbersFn<D extends number>(reduceFn: ((a: number, b: number) => number), emptyArrayValue?: D): (array: number[]) => number | D | undefined {
+export function reduceNumbersFn(reduceFn: (a: number, b: number) => number): (array: number[]) => number | undefined;
+export function reduceNumbersFn<D extends number>(reduceFn: (a: number, b: number) => number, emptyArrayValue?: D): (array: number[]) => number | D;
+export function reduceNumbersFn<D extends number>(reduceFn: (a: number, b: number) => number, emptyArrayValue?: D): (array: number[]) => number | D | undefined {
   const rFn = (array: number[]) => array.reduce(reduceFn);
-  return (array: number[]) => (array.length) ? rFn(array) : emptyArrayValue;
+  return (array: number[]) => (array.length ? rFn(array) : emptyArrayValue);
 }
 
 /**
  * Generates an array containing the range of numbers specified.
- * 
+ *
  * The end value is not included.
- * 
- * @param param0 
- * @returns 
+ *
+ * @param param0
+ * @returns
  */
-export function range(input: number | { start?: number, end: number }): number[] {
+export function range(input: number | { start?: number; end: number }): number[] {
   const range = [];
 
   let start: number;

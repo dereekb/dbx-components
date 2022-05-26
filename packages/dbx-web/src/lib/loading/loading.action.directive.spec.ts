@@ -12,21 +12,20 @@ import { filter, first } from 'rxjs';
 export function waitForState(state: LoadingComponentState): (component: DbxBasicLoadingComponent) => (checkFn: () => void) => void {
   return (component: DbxBasicLoadingComponent) => {
     return (checkFn: () => void) => {
-      component.state$.pipe(
-        filter(x => x === state), first()
-      ).subscribe(checkFn);
+      component.state$
+        .pipe(
+          filter((x) => x === state),
+          first()
+        )
+        .subscribe(checkFn);
     };
   };
 }
 
 describe('DbxActionLoadingContextDirective', () => {
-
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [
-        DbxLoadingModule,
-        DbxActionModule
-      ],
+      imports: [DbxLoadingModule, DbxActionModule],
       declarations: [LoadingComponent]
     }).compileComponents();
   });
@@ -71,7 +70,6 @@ describe('DbxActionLoadingContextDirective', () => {
     });
 
     describe('and error/rejection', () => {
-
       beforeEach(async () => {
         dbxActionContextStoreSourceInstance.reject({
           code: 'Test',
@@ -96,11 +94,9 @@ describe('DbxActionLoadingContextDirective', () => {
           done();
         });
       });
-
     });
 
     describe('and working', () => {
-
       beforeEach(() => {
         dbxActionContextStoreSourceInstance.startWorking();
         fixture.detectChanges();
@@ -113,11 +109,8 @@ describe('DbxActionLoadingContextDirective', () => {
           done();
         });
       });
-
     });
-
   });
-
 });
 
 const TEST_CONTENT = 'Content';
@@ -134,12 +127,10 @@ const TEST_CONTENT = 'Content';
   `
 })
 class LoadingComponent {
-
   public show?: boolean;
 
   public text?: string;
 
   @ViewChild(DbxActionDirective, { static: true })
   dbxActionDirective?: DbxActionDirective;
-
 }

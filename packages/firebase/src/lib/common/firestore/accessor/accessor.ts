@@ -1,6 +1,6 @@
 import { filterMaybe } from '@dereekb/rxjs';
-import { filterUndefinedValues, Maybe } from "@dereekb/util";
-import { WriteResult, SnapshotOptions, DocumentReference, DocumentSnapshot, UpdateData, WithFieldValue, PartialWithFieldValue, SetOptions, Precondition, DocumentData } from "../types";
+import { filterUndefinedValues, Maybe } from '@dereekb/util';
+import { WriteResult, SnapshotOptions, DocumentReference, DocumentSnapshot, UpdateData, WithFieldValue, PartialWithFieldValue, SetOptions, Precondition, DocumentData } from '../types';
 import { map, Observable, OperatorFunction } from 'rxjs';
 import { DocumentReferenceRef } from '../reference';
 
@@ -34,19 +34,19 @@ export interface FirestoreDocumentDataAccessor<T, D = DocumentData> extends Docu
   delete(params?: FirestoreDocumentDeleteParams): Promise<WriteResult | void>;
   /**
    * Sets the data in the database. Can additionally pass options to configure merging of fields.
-   * 
-   * @param data 
+   *
+   * @param data
    */
   set(data: PartialWithFieldValue<T>, options: SetOptions): Promise<WriteResult | void>;
   set(data: WithFieldValue<T>): Promise<WriteResult | void>;
   /**
    * Directly updates the data in the database, skipping any conversions, etc.
-   * 
+   *
    * If the document doesn't exist, it will fail.
-   * 
+   *
    * NOTE: If you rely on the converter/conversion functionality, use set() with merge: true instead of update.
-   * 
-   * @param data 
+   *
+   * @param data
    */
   update(data: UpdateData<D>, params?: FirestoreDocumentUpdateParams): Promise<WriteResult | void>;
 }
@@ -55,25 +55,23 @@ export interface FirestoreDocumentDataAccessor<T, D = DocumentData> extends Docu
  * Contextual interface used for making a FirestoreDocumentModifier for a specific document.
  */
 export interface FirestoreDocumentDataAccessorFactory<T, D = DocumentData> {
-
   /**
    * Creates a new FirestoreDocumentDataAccessor for the input ref.
-   * 
+   *
    * @param ref
    */
   accessorFor(ref: DocumentReference<T>): FirestoreDocumentDataAccessor<T, D>;
-
 }
 
 // MARK: Utility
 /**
  * Maps data from the given snapshot stream.
- * 
+ *
  * Maybe values are filtered from the stream until data is provided.
- * 
- * @param stream 
- * @param options 
- * @returns 
+ *
+ * @param stream
+ * @param options
+ * @returns
  */
 export function dataFromSnapshotStream<T>(stream: Observable<DocumentSnapshot<T>>, options?: SnapshotOptions): Observable<T> {
   return stream.pipe(mapDataFromSnapshot(options), filterMaybe());
@@ -81,9 +79,9 @@ export function dataFromSnapshotStream<T>(stream: Observable<DocumentSnapshot<T>
 
 /**
  * OperatorFunction to map data from the snapshot.
- * 
- * @param options 
- * @returns 
+ *
+ * @param options
+ * @returns
  */
 export function mapDataFromSnapshot<T>(options?: SnapshotOptions): OperatorFunction<DocumentSnapshot<T>, Maybe<T>> {
   return map((x) => x.data(options));
@@ -91,13 +89,13 @@ export function mapDataFromSnapshot<T>(options?: SnapshotOptions): OperatorFunct
 
 /**
  * Creates or updates the target object using the input data.
- * 
+ *
  * First checks that the data exists before writing to the datastore.
- * 
+ *
  * If it does not exist, will call set without merge options in order to fully initialize the object's data.
  * If it does exist, update is done using set + merge on all defined values.
- * 
- * @param data 
+ *
+ * @param data
  */
 export type CreateOrUpdateWithAccessorSetFunction<T> = (data: Partial<T>) => Promise<WriteResult | void>;
 

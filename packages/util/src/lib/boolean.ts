@@ -1,4 +1,3 @@
-
 export function reduceBooleansWithAnd(array: boolean[], emptyArrayValue?: boolean): boolean {
   return reduceBooleansWithAndFn(emptyArrayValue)(array);
 }
@@ -15,11 +14,11 @@ export function reduceBooleansWithOrFn(emptyArrayValue?: boolean): (array: boole
   return reduceBooleansFn((a, b) => a || b, emptyArrayValue);
 }
 
-export function reduceBooleansFn(reduceFn: ((a: boolean, b: boolean) => boolean), emptyArrayValue?: boolean): (array: boolean[]) => boolean {
+export function reduceBooleansFn(reduceFn: (a: boolean, b: boolean) => boolean, emptyArrayValue?: boolean): (array: boolean[]) => boolean {
   const rFn = (array: boolean[]) => Boolean(array.reduce(reduceFn));
 
   if (emptyArrayValue != null) {
-    return (array: boolean[]) => (array.length) ? rFn(array) : emptyArrayValue;
+    return (array: boolean[]) => (array.length ? rFn(array) : emptyArrayValue);
   } else {
     return rFn;
   }

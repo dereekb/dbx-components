@@ -1,4 +1,4 @@
-import { Maybe } from "../value/maybe";
+import { Maybe } from '../value/maybe';
 
 /**
  * A valid ISO8601 formatted date string.
@@ -7,7 +7,7 @@ export type ISO8601DateString = string;
 
 /**
  * A full ISO8601 date string that is in UTC.
- * 
+ *
  * I.E. 2020-04-30T00:00:00.000Z
  */
 export type ISO8601DateStringUTCFull = string;
@@ -21,9 +21,9 @@ export const UTC_TIMEZONE_STRING = 'UTC';
 
 /**
  * Whether or not the input timezone string is considered UTC.
- * 
- * @param timezone 
- * @returns 
+ *
+ * @param timezone
+ * @returns
  */
 export function isConsideredUtcTimezoneString(timezone: Maybe<TimezoneString>): boolean;
 export function isConsideredUtcTimezoneString(timezone: TimezoneString): boolean;
@@ -31,7 +31,7 @@ export function isConsideredUtcTimezoneString(timezone: 'UTC'): true;
 export function isConsideredUtcTimezoneString(timezone: null): true;
 export function isConsideredUtcTimezoneString(timezone: undefined): true;
 export function isConsideredUtcTimezoneString(timezone: Maybe<TimezoneString>): boolean {
-  return (timezone == null || timezone === UTC_TIMEZONE_STRING);
+  return timezone == null || timezone === UTC_TIMEZONE_STRING;
 }
 
 /**
@@ -41,7 +41,7 @@ export type DateOrDateString = Date | ISO8601DateString;
 
 /**
  * A full date string Formatted as ISO8601.
- * 
+ *
  * I.E. 1921-06-23
  */
 export type ISO8601DayString = string; // '1921-06-23'

@@ -11,25 +11,25 @@ import { DocFormExamplePrimarySearchableFieldDisplayComponent } from '../compone
 export type TestStringSearchFunction = (text: string) => string[];
 
 export function makeSearchForStringValue(obs: Observable<TestStringSearchFunction>): SearchableValueFieldStringSearchFn<string> {
-  const makeRandomDelay = makeRandomFunction(1000);  // use to show the loading bar.
+  const makeRandomDelay = makeRandomFunction(1000); // use to show the loading bar.
 
   return (search: string) => {
     return obs.pipe(
       randomDelayWithRandomFunction(makeRandomDelay),
       map((searchFn) => {
         const stringResults = searchFn(search);
-        const result: SearchableValueFieldValue<string>[] = stringResults.map(value => ({ value }));
+        const result: SearchableValueFieldValue<string>[] = stringResults.map((value) => ({ value }));
         return result;
       })
     );
-  }
+  };
 }
 
 export const DISPLAY_FOR_STRING_VALUE: SearchableValueFieldDisplayFn<string> = (values: SearchableValueFieldValue<string>[]) => {
-  const displayValues: SearchableValueFieldDisplayValue<string>[] = values.map(x => ({ ...x, label: x.value, sublabel: 'item' }));
+  const displayValues: SearchableValueFieldDisplayValue<string>[] = values.map((x) => ({ ...x, label: x.value, sublabel: 'item' }));
   const obs: Observable<SearchableValueFieldDisplayValue<string>[]> = of(displayValues);
   return obs;
-}
+};
 
 export const MAKE_RANDOM_STRING_VALUES = makeRandomArrayFn({ random: { min: 40, max: 40 }, make: () => ({ value: String(MAKE_EXAMPLE_SELECTION_VALUE().value) }) });
 
@@ -37,8 +37,7 @@ export const MAKE_RANDOM_STRING_VALUES = makeRandomArrayFn({ random: { min: 40, 
   templateUrl: './selection.component.html'
 })
 export class DocFormSelectionComponent implements OnDestroy {
-
-  private _searchStrings = new BehaviorSubject<TestStringSearchFunction>((search) => ['A', 'B', 'C', 'D'].map(x => `${search} ${x}`.trim()));
+  private _searchStrings = new BehaviorSubject<TestStringSearchFunction>((search) => ['A', 'B', 'C', 'D'].map((x) => `${search} ${x}`.trim()));
   readonly searchFn$ = this._searchStrings.asObservable();
 
   readonly pickableItemChipFields: FormlyFieldConfig[] = [
@@ -228,11 +227,10 @@ export class DocFormSelectionComponent implements OnDestroy {
       anchorForValue: (fieldValue) => {
         return {
           onClick: () => {
-            this.valueClicked = `Default anchor click: ${fieldValue.value}`,
-              safeDetectChanges(this.cdRef);
+            (this.valueClicked = `Default anchor click: ${fieldValue.value}`), safeDetectChanges(this.cdRef);
           }
-        }
-      },
+        };
+      }
     }),
     searchableTextField({
       key: 'anchor2',
@@ -241,23 +239,24 @@ export class DocFormSelectionComponent implements OnDestroy {
       allowStringValues: false,
       searchOnEmptyText: true,
       showSelectedValue: false,
-      search: (search: string) => of([{ value: 'a' }, { value: 'b' }, { value: 'c' }].map(x => ({
-        ...x,
-        anchor: {
-          onClick: () => {
-            this.valueClicked = `Per item value: ${x.value}`,
-              safeDetectChanges(this.cdRef);
-          }
-        }
-      }))),
+      search: (search: string) =>
+        of(
+          [{ value: 'a' }, { value: 'b' }, { value: 'c' }].map((x) => ({
+            ...x,
+            anchor: {
+              onClick: () => {
+                (this.valueClicked = `Per item value: ${x.value}`), safeDetectChanges(this.cdRef);
+              }
+            }
+          }))
+        ),
       displayForValue: DISPLAY_FOR_STRING_VALUE
     })
   ];
 
-  constructor(readonly cdRef: ChangeDetectorRef) { }
+  constructor(readonly cdRef: ChangeDetectorRef) {}
 
   ngOnDestroy(): void {
     this._searchStrings.complete();
   }
-
 }

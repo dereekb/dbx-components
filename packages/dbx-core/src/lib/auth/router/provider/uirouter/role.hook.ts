@@ -12,7 +12,6 @@ export interface HasAuthRoleHookConfig {
  * UIRouter State data with configuration for the hasAuthRoleHook.
  */
 export interface HasAuthRoleStateData extends AuthTransitionStateData {
-
   /**
    * Auth roles marked for this state
    */
@@ -22,17 +21,15 @@ export interface HasAuthRoleStateData extends AuthTransitionStateData {
    * How to use the above auth roles. This defaults to 'all' by default.
    */
   authRolesMode?: SetIncludesMode;
-
 }
 
 /**
  * This hook redirects to the configured default state when a user:
- * 
+ *
  * - does not have an allowed state
  * - has a disallowed state
  */
 export function enableHasAuthRoleHook(transitionService: TransitionService, config: HasAuthRoleHookConfig): void {
-
   // Matches if the destination state's data property has a truthy 'isSecure' property
   const isSecureCriteria: HookMatchCriteria = {
     entering: (state) => {
@@ -50,9 +47,7 @@ export function enableHasAuthRoleHook(transitionService: TransitionService, conf
       const requiredRoles = new Set<AuthRole>(data.authRoles);
       const setIncludes = setIncludesFunction(requiredRoles, data.authRolesMode);
 
-      return authService.authUserState$.pipe(
-        map(x => setIncludes(x))
-      );
+      return authService.authUserState$.pipe(map((x) => setIncludes(x)));
     }
   });
 

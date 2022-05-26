@@ -12,13 +12,12 @@ import { DbxPromptConfirmDialogComponent } from './prompt.confirm.dialog.compone
  */
 @Directive()
 export abstract class AbstractPromptConfirmDirective implements DbxPromptConfirm {
-
   config?: DbxPromptConfirmConfig;
 
   private _dialogRef?: MatDialogRef<DbxPromptConfirmDialogComponent, boolean>;
   private _dialogPromise?: Promise<boolean>;
 
-  constructor(protected readonly matDialog: MatDialog) { }
+  constructor(protected readonly matDialog: MatDialog) {}
 
   showDialog(): Observable<boolean> {
     if (!this._dialogPromise) {
@@ -38,7 +37,6 @@ export abstract class AbstractPromptConfirmDirective implements DbxPromptConfirm
   protected _handleDialogResult(result: boolean): boolean {
     return result;
   }
-
 }
 
 // MARK: Directive
@@ -50,12 +48,10 @@ export abstract class AbstractPromptConfirmDirective implements DbxPromptConfirm
   providers: provideDbxPromptConfirm(DbxPromptConfirmDirective)
 })
 export class DbxPromptConfirmDirective extends AbstractPromptConfirmDirective {
-
   @Input('dbxPromptConfirm')
   override config?: DbxPromptConfirmConfig;
 
   constructor(dialog: MatDialog) {
     super(dialog);
   }
-
 }

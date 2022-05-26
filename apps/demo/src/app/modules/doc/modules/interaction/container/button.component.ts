@@ -5,7 +5,6 @@ import { DbxProgressButtonOptions } from '@dereekb/dbx-web';
   templateUrl: './button.component.html'
 })
 export class DocInteractionButtonComponent {
-
   testClicked = '';
 
   onTestClick() {
@@ -33,8 +32,8 @@ export class DocInteractionButtonComponent {
     disabled: false,
     customClass: 'some-other-class',
     buttonIcon: {
-      fontIcon: 'favorite',
-    },
+      fontIcon: 'favorite'
+    }
   };
 
   demoButton2: DbxProgressButtonOptions = {
@@ -46,7 +45,7 @@ export class DocInteractionButtonComponent {
     stroked: false,
     mode: 'indeterminate',
     value: 0,
-    disabled: false,
+    disabled: false
   };
 
   spinnerButtonOptions: DbxProgressButtonOptions = {
@@ -62,8 +61,8 @@ export class DocInteractionButtonComponent {
     mode: 'indeterminate',
     customClass: 'some-class',
     buttonIcon: {
-      fontIcon: 'favorite',
-    },
+      fontIcon: 'favorite'
+    }
   };
 
   spinnerButtonOptions1: DbxProgressButtonOptions = {
@@ -76,7 +75,7 @@ export class DocInteractionButtonComponent {
     spinnerColor: 'accent',
     fullWidth: false,
     disabled: false,
-    mode: 'indeterminate',
+    mode: 'indeterminate'
   };
 
   spinnerButtonOptions2: DbxProgressButtonOptions = {
@@ -89,7 +88,7 @@ export class DocInteractionButtonComponent {
     spinnerColor: 'primary',
     fullWidth: false,
     disabled: false,
-    mode: 'indeterminate',
+    mode: 'indeterminate'
   };
 
   spinnerButtonOptions3: DbxProgressButtonOptions = {
@@ -103,7 +102,7 @@ export class DocInteractionButtonComponent {
     spinnerColor: 'accent',
     fullWidth: false,
     disabled: false,
-    mode: 'indeterminate',
+    mode: 'indeterminate'
   };
 
   spinnerButtonOptions4: DbxProgressButtonOptions = {
@@ -121,8 +120,8 @@ export class DocInteractionButtonComponent {
     mode: 'indeterminate',
     icon: {
       fontIcon: 'settings',
-      inline: true,
-    },
+      inline: true
+    }
   };
 
   spinnerButtonOptions5: DbxProgressButtonOptions = {
@@ -132,14 +131,14 @@ export class DocInteractionButtonComponent {
   };
 
   barButtonOptions: DbxProgressButtonOptions = {
-    text: 'Stroked Button',
+    text: 'Stroked Button'
   };
 
   barButtonOptionsActiveState = false;
 
   barButtonOptions1: DbxProgressButtonOptions = {
     ...this.demoButton2,
-    text: 'Raised Button',
+    text: 'Raised Button'
   };
 
   barButtonOptions2: DbxProgressButtonOptions = {
@@ -151,7 +150,7 @@ export class DocInteractionButtonComponent {
     stroked: false,
     mode: 'indeterminate',
     value: 0,
-    disabled: false,
+    disabled: false
   };
 
   barButtonOptions3: DbxProgressButtonOptions = {
@@ -164,7 +163,7 @@ export class DocInteractionButtonComponent {
     flat: true,
     mode: 'indeterminate',
     value: 0,
-    disabled: false,
+    disabled: false
   };
 
   clickSpin1 = this.activateAndDeactivate('spinnerButtonOptions');
@@ -184,5 +183,4 @@ export class DocInteractionButtonComponent {
   clickBar2 = this.activateAndDeactivate('barButtonOptions1');
   clickBar3 = this.activateAndDeactivate('barButtonOptions2');
   clickBar4 = this.activateAndDeactivate('barButtonOptions3');
-
 }

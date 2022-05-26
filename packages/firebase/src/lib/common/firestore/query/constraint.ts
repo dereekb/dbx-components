@@ -31,9 +31,9 @@ export interface LimitQueryConstraintData {
 
 /**
  * Limits the maximum number of documents to return.
- * 
- * @param limit 
- * @returns 
+ *
+ * @param limit
+ * @returns
  */
 export function limit(limit: number): FirestoreQueryConstraint<LimitQueryConstraintData> {
   return firestoreQueryConstraint(FIRESTORE_LIMIT_QUERY_CONSTRAINT_TYPE, { limit });
@@ -48,7 +48,7 @@ export interface LimitToLastQueryConstraintData {
 
 /**
  * Returns the last matching documents in the query, up to the limit.
- * 
+ *
  * Does not work with queries with streamed results.
  */
 export function limitToLast(limit: number): FirestoreQueryConstraint<LimitToLastQueryConstraintData> {
@@ -78,9 +78,9 @@ export interface WhereQueryConstraintData {
 }
 
 export function where<T>(fieldPath: keyof T, opStr: WhereFilterOp, value: unknown): FirestoreQueryConstraint<WhereQueryConstraintData>;
-export function where(fieldPath: string | FieldPath, opStr: WhereFilterOp, value: unknown): FirestoreQueryConstraint<WhereQueryConstraintData>
+export function where(fieldPath: string | FieldPath, opStr: WhereFilterOp, value: unknown): FirestoreQueryConstraint<WhereQueryConstraintData>;
 export function where(fieldPath: unknown, opStr: WhereFilterOp, value: unknown): FirestoreQueryConstraint<WhereQueryConstraintData> {
-  return firestoreQueryConstraint(FIRESTORE_WHERE_QUERY_CONSTRAINT_TYPE, { fieldPath: (fieldPath as string), opStr, value });
+  return firestoreQueryConstraint(FIRESTORE_WHERE_QUERY_CONSTRAINT_TYPE, { fieldPath: fieldPath as string, opStr, value });
 }
 
 // MARK: OrderBy
@@ -108,7 +108,6 @@ export function startAt<T = DocumentData>(snapshot: DocumentSnapshot<T>): Firest
   return firestoreQueryConstraint(FIRESTORE_START_AT_QUERY_CONSTRAINT_TYPE, { snapshot });
 }
 
-
 // MARK: Start After
 export const FIRESTORE_START_AFTER_QUERY_CONSTRAINT_TYPE = 'start_after';
 
@@ -128,14 +127,13 @@ export interface EndAtQueryConstraintData<T = DocumentData> {
 }
 
 /**
- * 
- * @param snapshot 
- * @returns 
+ *
+ * @param snapshot
+ * @returns
  */
 export function endAt<T = DocumentData>(snapshot: DocumentSnapshot<T>): FirestoreQueryConstraint<EndAtQueryConstraintData<T>> {
   return firestoreQueryConstraint(FIRESTORE_END_AT_QUERY_CONSTRAINT_TYPE, { snapshot });
 }
-
 
 // MARK: End Before
 export const FIRESTORE_END_BEFORE_QUERY_CONSTRAINT_TYPE = 'end_before';
@@ -145,9 +143,9 @@ export interface EndBeforeQueryConstraintData<T = DocumentData> {
 }
 
 /**
- * 
- * @param snapshot 
- * @returns 
+ *
+ * @param snapshot
+ * @returns
  */
 export function endBefore<T = DocumentData>(snapshot: DocumentSnapshot<T>): FirestoreQueryConstraint<EndBeforeQueryConstraintData<T>> {
   return firestoreQueryConstraint(FIRESTORE_END_BEFORE_QUERY_CONSTRAINT_TYPE, { snapshot });
@@ -160,22 +158,22 @@ export function endBefore<T = DocumentData>(snapshot: DocumentSnapshot<T>): Fire
 export type FirestoreQueryConstraintHandlerFunction<B, D = unknown> = (builder: B, data: D, constraint: FirestoreQueryConstraint<D>) => B;
 
 export type FirestoreQueryConstraintHandlerMap<B> = {
-  [key: string]: Maybe<FirestoreQueryConstraintHandlerFunction<B, any>>
+  [key: string]: Maybe<FirestoreQueryConstraintHandlerFunction<B, any>>;
 };
 
 /**
  * The full list of known firestore query constraints, and the data associated with it.
  */
 export type FullFirestoreQueryConstraintDataMapping = {
-  [FIRESTORE_LIMIT_QUERY_CONSTRAINT_TYPE]: LimitQueryConstraintData,
-  [FIRESTORE_LIMIT_TO_LAST_QUERY_CONSTRAINT_TYPE]: LimitToLastQueryConstraintData,
-  [FIRESTORE_WHERE_QUERY_CONSTRAINT_TYPE]: WhereQueryConstraintData,
-  [FIRESTORE_OFFSET_QUERY_CONSTRAINT_TYPE]: OffsetQueryConstraintData,
-  [FIRESTORE_ORDER_BY_QUERY_CONSTRAINT_TYPE]: OrderByQueryConstraintData,
-  [FIRESTORE_START_AT_QUERY_CONSTRAINT_TYPE]: StartAtQueryConstraintData,
-  [FIRESTORE_START_AFTER_QUERY_CONSTRAINT_TYPE]: StartAfterQueryConstraintData,
-  [FIRESTORE_END_AT_QUERY_CONSTRAINT_TYPE]: EndAtQueryConstraintData,
-  [FIRESTORE_END_BEFORE_QUERY_CONSTRAINT_TYPE]: EndBeforeQueryConstraintData
+  [FIRESTORE_LIMIT_QUERY_CONSTRAINT_TYPE]: LimitQueryConstraintData;
+  [FIRESTORE_LIMIT_TO_LAST_QUERY_CONSTRAINT_TYPE]: LimitToLastQueryConstraintData;
+  [FIRESTORE_WHERE_QUERY_CONSTRAINT_TYPE]: WhereQueryConstraintData;
+  [FIRESTORE_OFFSET_QUERY_CONSTRAINT_TYPE]: OffsetQueryConstraintData;
+  [FIRESTORE_ORDER_BY_QUERY_CONSTRAINT_TYPE]: OrderByQueryConstraintData;
+  [FIRESTORE_START_AT_QUERY_CONSTRAINT_TYPE]: StartAtQueryConstraintData;
+  [FIRESTORE_START_AFTER_QUERY_CONSTRAINT_TYPE]: StartAfterQueryConstraintData;
+  [FIRESTORE_END_AT_QUERY_CONSTRAINT_TYPE]: EndAtQueryConstraintData;
+  [FIRESTORE_END_BEFORE_QUERY_CONSTRAINT_TYPE]: EndBeforeQueryConstraintData;
 };
 
 export type FullFirestoreQueryConstraintMapping = {
@@ -187,23 +185,26 @@ export type FullFirestoreQueryConstraintHandlersMapping<B> = {
 };
 
 // MARK: Utils
-export function addOrReplaceLimitInConstraints(limit: number, addedLimitType: (typeof FIRESTORE_LIMIT_QUERY_CONSTRAINT_TYPE | typeof FIRESTORE_LIMIT_TO_LAST_QUERY_CONSTRAINT_TYPE) = FIRESTORE_LIMIT_QUERY_CONSTRAINT_TYPE): (constraints: FirestoreQueryConstraint[]) => FirestoreQueryConstraint[] {
-  const replace = replaceConstraints((constraints) => {
-    let type: FirestoreQueryConstraintType;
+export function addOrReplaceLimitInConstraints(limit: number, addedLimitType: typeof FIRESTORE_LIMIT_QUERY_CONSTRAINT_TYPE | typeof FIRESTORE_LIMIT_TO_LAST_QUERY_CONSTRAINT_TYPE = FIRESTORE_LIMIT_QUERY_CONSTRAINT_TYPE): (constraints: FirestoreQueryConstraint[]) => FirestoreQueryConstraint[] {
+  const replace = replaceConstraints(
+    (constraints) => {
+      let type: FirestoreQueryConstraintType;
 
-    if (constraints.length) {
-      type = constraints[0].type;
-    } else {
-      type = addedLimitType;
-    }
+      if (constraints.length) {
+        type = constraints[0].type;
+      } else {
+        type = addedLimitType;
+      }
 
-    return {
-      type,
-      data: {
-        limit
-      } as LimitQueryConstraintData | LimitToLastQueryConstraintData
-    };
-  }, [FIRESTORE_LIMIT_QUERY_CONSTRAINT_TYPE, FIRESTORE_LIMIT_TO_LAST_QUERY_CONSTRAINT_TYPE]);
+      return {
+        type,
+        data: {
+          limit
+        } as LimitQueryConstraintData | LimitToLastQueryConstraintData
+      };
+    },
+    [FIRESTORE_LIMIT_QUERY_CONSTRAINT_TYPE, FIRESTORE_LIMIT_TO_LAST_QUERY_CONSTRAINT_TYPE]
+  );
 
   return replace;
 }
@@ -212,7 +213,7 @@ export type FirestoreQueryConstraintMapFunction = (constraints: FirestoreQueryCo
 
 export function filterConstraintsOfType(...types: FirestoreQueryConstraintType[]): FirestoreQueryConstraintMapFunction {
   const typesToFilterOut = new Set(types);
-  return (constraints) => constraints.filter(x => !typesToFilterOut.has(x.type));
+  return (constraints) => constraints.filter((x) => !typesToFilterOut.has(x.type));
 }
 
 export function replaceConstraints(replaceFn: (constraints: FirestoreQueryConstraint[]) => Maybe<ArrayOrValue<FirestoreQueryConstraint>>, types: FirestoreQueryConstraintType[]): (constraints: FirestoreQueryConstraint[]) => FirestoreQueryConstraint[] {
@@ -221,7 +222,7 @@ export function replaceConstraints(replaceFn: (constraints: FirestoreQueryConstr
   return (constraints) => {
     const separated = separateFn(constraints);
     const replacements = asArray(replaceFn(separated.excluded));
-    return (replacements) ? mergeArrayOrValueIntoArray(separated.included, replacements) : separated.included;
+    return replacements ? mergeArrayOrValueIntoArray(separated.included, replacements) : separated.included;
   };
 }
 

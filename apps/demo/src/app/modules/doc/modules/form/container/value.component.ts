@@ -6,20 +6,9 @@ import { addressField, addressListField, cityField, countryField, emailField, ph
   templateUrl: './value.component.html'
 })
 export class DocFormValueComponent {
+  readonly textFields: FormlyFieldConfig[] = [textField({ key: 'test', label: 'Text Field', placeholder: 'Placeholder', required: true, minLength: 4, maxLength: 15 }), nameField(), emailField(), cityField(), stateField(), countryField(), zipCodeField()];
 
-  readonly textFields: FormlyFieldConfig[] = [
-    textField({ key: 'test', label: 'Text Field', placeholder: 'Placeholder', required: true, minLength: 4, maxLength: 15 }),
-    nameField(),
-    emailField(),
-    cityField(),
-    stateField(),
-    countryField(),
-    zipCodeField()
-  ];
-
-  readonly textAreaField: FormlyFieldConfig[] = [
-    textAreaField({ key: 'test', label: 'Text Area Field', placeholder: 'Placeholder', required: true })
-  ];
+  readonly textAreaField: FormlyFieldConfig[] = [textAreaField({ key: 'test', label: 'Text Area Field', placeholder: 'Placeholder', required: true })];
 
   readonly dateTimeFields: FormlyFieldConfig[] = [
     dateTimeField({ key: 'date', required: true, description: 'This is the default date field that requires the user pick a date and time.' }),
@@ -28,10 +17,7 @@ export class DocFormValueComponent {
     dateTimeField({ key: 'timeOnly', timeOnly: true, description: 'This date field is for picking a time only.' })
   ];
 
-  readonly addressFields: FormlyFieldConfig[] = [
-    addressField(),
-    addressListField()
-  ];
+  readonly addressFields: FormlyFieldConfig[] = [addressField(), addressListField()];
 
   readonly toggleField: FormlyFieldConfig[] = [
     toggleField({
@@ -53,12 +39,7 @@ export class DocFormValueComponent {
       label: 'Test Field',
       addText: 'Add Test Field',
       removeText: 'Remove Test Field',
-      repeatFieldGroup: [
-        nameField(),
-        emailField(),
-        phoneAndLabelSectionField(),
-        addressListField()
-      ]
+      repeatFieldGroup: [nameField(), emailField(), phoneAndLabelSectionField(), addressListField()]
     })
   ];
 
@@ -74,8 +55,5 @@ export class DocFormValueComponent {
     })
   ];
 
-  readonly phoneListField: FormlyFieldConfig[] = [
-    phoneListField()
-  ];
-
+  readonly phoneListField: FormlyFieldConfig[] = [phoneListField()];
 }

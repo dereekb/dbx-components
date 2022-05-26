@@ -8,8 +8,7 @@
       <span>{{ message }}</span>
       <dbx-spacer></dbx-spacer>
       <ng-container *ngIf="hasAction">
-        <dbx-action [dbxActionValueStream]="value$" [dbxActionSource]="sourceInstance$ | async"
-          [dbxActionSuccessHandler]="dismissAfterActionCompletes">
+        <dbx-action [dbxActionValueStream]="value$" [dbxActionSource]="sourceInstance$ | async" [dbxActionSuccessHandler]="dismissAfterActionCompletes">
           <dbx-button dbxActionButton color="warn" [text]="button"></dbx-button>
         </dbx-action>
         <dbx-button-spacer></dbx-button-spacer>

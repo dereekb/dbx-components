@@ -10,7 +10,6 @@ import { ArrayOrValue } from '@dereekb/util';
  * Abstract effects class that only runs/allows effects when the DbxAppContextState in the ngrx state matches input activeState value.
  */
 export abstract class AbstractOnDbxAppContextStateEffects<S = unknown> implements OnRunEffects {
-
   private _activeStatesSet: Set<DbxAppContextState>;
 
   constructor(
@@ -32,9 +31,9 @@ export abstract class AbstractOnDbxAppContextStateEffects<S = unknown> implement
 
   /**
    * Configures all actions of the sub-class to only activate when the DbxAppContextState in App
-   * 
-   * @param resolvedEffects$ 
-   * @returns 
+   *
+   * @param resolvedEffects$
+   * @returns
    */
   ngrxOnRunEffects(resolvedEffects$: Observable<EffectNotification>): Observable<EffectNotification> {
     return this.actions$.pipe(
@@ -47,12 +46,11 @@ export abstract class AbstractOnDbxAppContextStateEffects<S = unknown> implement
           takeUntil(
             this.actions$.pipe(
               ofType(onDbxAppContext.DbxAppContextActions.setState),
-              filter(({ state }) => !this._activeStatesSet.has(state)),
+              filter(({ state }) => !this._activeStatesSet.has(state))
             )
           )
         )
       )
     );
   }
-
 }

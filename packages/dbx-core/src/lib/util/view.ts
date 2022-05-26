@@ -1,13 +1,13 @@
 import { MonoTypeOperatorFunction, tap } from 'rxjs';
-import { ChangeDetectorRef, ViewRef, ElementRef } from "@angular/core";
-import { Maybe } from "@dereekb/util";
+import { ChangeDetectorRef, ViewRef, ElementRef } from '@angular/core';
+import { Maybe } from '@dereekb/util';
 
 /**
  * Convenience function used within observables for views that need to detect changes after a value changes.
- * 
- * @param cdRef 
- * @param timeout 
- * @returns 
+ *
+ * @param cdRef
+ * @param timeout
+ * @returns
  */
 export function tapDetectChanges<T>(cdRef: ChangeDetectorRef, timeout = 0): MonoTypeOperatorFunction<T> {
   return tap(() => setTimeout(() => safeDetectChanges(cdRef), timeout));
@@ -15,8 +15,8 @@ export function tapDetectChanges<T>(cdRef: ChangeDetectorRef, timeout = 0): Mono
 
 /**
  * Triggers a detection change on the input view as long as the view has not been destroyed.
- * 
- * @param cdRef 
+ *
+ * @param cdRef
  */
 export function safeDetectChanges(cdRef: ChangeDetectorRef): void {
   safeUseCdRef(cdRef, () => cdRef.detectChanges());
@@ -24,8 +24,8 @@ export function safeDetectChanges(cdRef: ChangeDetectorRef): void {
 
 /**
  * Marks the ChangeDetectorRef for changes as long as the view has not been destroyed.
- * 
- * @param cdRef 
+ *
+ * @param cdRef
  */
 export function safeMarkForCheck(cdRef: ChangeDetectorRef): void {
   safeUseCdRef(cdRef, () => cdRef.markForCheck());
@@ -33,8 +33,8 @@ export function safeMarkForCheck(cdRef: ChangeDetectorRef): void {
 
 /**
  * Triggers a detection change on the input view as long as the view has not been destroyed.
- * 
- * @param cdRef 
+ *
+ * @param cdRef
  */
 export function safeUseCdRef(cdRef: ChangeDetectorRef, use: (cdRef: ChangeDetectorRef) => void): void {
   if (!(cdRef as ViewRef).destroyed) {

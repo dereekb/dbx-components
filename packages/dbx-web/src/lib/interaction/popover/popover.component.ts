@@ -30,7 +30,7 @@ export interface DbxPopoverComponentConfig<O, I, T> {
   closeOnTransition?: boolean;
   /**
    * Whether or not to dismiss when the escape button is pressed.
-   * 
+   *
    * False by default.
    */
   closeOnEscape?: boolean;
@@ -54,24 +54,26 @@ export interface FullDbxPopoverComponentConfig<O, I, T> extends DbxPopoverCompon
  */
 @Component({
   template: `
-  <dbx-popover-coordinator (dbxWindowKeyDownListener)="handleKeydown()" [appWindowKeyDownFilter]="triggerCloseKeys">
-    <div dbxStyle class="dbx-popover-component" dbx-injection [config]="contentConfig"></div>
-  </dbx-popover-coordinator>
+    <dbx-popover-coordinator (dbxWindowKeyDownListener)="handleKeydown()" [appWindowKeyDownFilter]="triggerCloseKeys">
+      <div dbxStyle class="dbx-popover-component" dbx-injection [config]="contentConfig"></div>
+    </dbx-popover-coordinator>
   `,
-  providers: [{
-    provide: DbxPopoverController,
-    useExisting: DbxPopoverComponent
-  }, {
-    provide: CompactContextStore
-  }]
+  providers: [
+    {
+      provide: DbxPopoverController,
+      useExisting: DbxPopoverComponent
+    },
+    {
+      provide: CompactContextStore
+    }
+  ]
 })
 export class DbxPopoverComponent<O = unknown, I = unknown, T = unknown> extends AbstractTransitionWatcherDirective implements DbxPopoverController<O, I>, OnInit, OnDestroy {
-
   readonly lockSet = new LockSet();
 
   readonly contentConfig: DbxInjectionComponentConfig = {
     componentClass: this.config.componentClass,
-    init: this.config.init ? ((instance) => (this.config as Required<FullDbxPopoverComponentConfig<O, I, T>>).init(instance as T, this)) : undefined
+    init: this.config.init ? (instance) => (this.config as Required<FullDbxPopoverComponentConfig<O, I, T>>).init(instance as T, this) : undefined
   };
 
   private _startedClosing = false;
@@ -79,16 +81,17 @@ export class DbxPopoverComponent<O = unknown, I = unknown, T = unknown> extends 
 
   private _triggerCloseKeys: string[] = [];
 
-  readonly isClosing$ = this._closing.pipe(first(), map(() => true), startWith(false), shareReplay(1));
-  readonly closing$ = this.isClosing$.pipe(filter(x => x));
+  readonly isClosing$ = this._closing.pipe(
+    first(),
+    map(() => true),
+    startWith(false),
+    shareReplay(1)
+  );
+  readonly closing$ = this.isClosing$.pipe(filter((x) => x));
 
   getClosingValueFn?: (value?: I) => Promise<O>;
 
-  constructor(
-    private popoverRef: NgPopoverRef<FullDbxPopoverComponentConfig<O, I, T>, O>,
-    private compactContextState: CompactContextStore,
-    dbxRouterTransitionService: DbxRouterTransitionService,
-    ngZone: NgZone) {
+  constructor(private popoverRef: NgPopoverRef<FullDbxPopoverComponentConfig<O, I, T>, O>, private compactContextState: CompactContextStore, dbxRouterTransitionService: DbxRouterTransitionService, ngZone: NgZone) {
     super(dbxRouterTransitionService, ngZone);
 
     // Override Close to properly signal to listeners when a close is occuring.
@@ -152,11 +155,14 @@ export class DbxPopoverComponent<O = unknown, I = unknown, T = unknown> extends 
   // Popover Controls
   public close(): void {
     if (!this._startedClosing && this.getClosingValueFn) {
-      this.getClosingValueFn().then((x) => {
-        this.return(x);
-      }, () => {
-        this.return();
-      });
+      this.getClosingValueFn().then(
+        (x) => {
+          this.return(x);
+        },
+        () => {
+          this.return();
+        }
+      );
     } else {
       this.return();
     }
@@ -171,5 +177,4 @@ export class DbxPopoverComponent<O = unknown, I = unknown, T = unknown> extends 
   handleKeydown() {
     this.close();
   }
-
 }

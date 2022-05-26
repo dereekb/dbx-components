@@ -5,7 +5,6 @@ export interface ClientAppConfig {
 }
 
 export abstract class ClientAppServiceConfig {
-
   client!: ClientAppConfig;
 
   static assertValidConfig(config: ClientAppServiceConfig) {
@@ -13,5 +12,4 @@ export abstract class ClientAppServiceConfig {
       throw new Error('No client app url specified.');
     }
   }
-
 }

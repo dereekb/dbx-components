@@ -7,15 +7,17 @@ import * as functions from 'firebase-functions';
 import { NestApplicationFunctionFactory } from '../../nest.provider';
 
 @Injectable()
-export class TestInjectable { }
+export class TestInjectable {}
 
 @Module({
-  providers: [{
-    provide: TestInjectable,
-    useFactory: () => new TestInjectable()
-  }]
+  providers: [
+    {
+      provide: TestInjectable,
+      useFactory: () => new TestInjectable()
+    }
+  ]
 })
-export class TestAppModule { }
+export class TestAppModule {}
 
 /**
  * Test context factory that will automatically instantiate TestAppModule for each test, and make it available.
@@ -23,13 +25,10 @@ export class TestAppModule { }
 export const firebaseAdminFunctionNestContext = firebaseAdminFunctionNestContextFactory({ nestModules: TestAppModule });
 
 describe('nest function utilities', () => {
-
   initFirebaseServerAdminTestEnvironment();
 
   firebaseAdminFunctionNestContext((f) => {
-
     describe('onCallWithNestApplicationFactory()', () => {
-
       it('should create a factory.', () => {
         const factory = onCallWithNestApplicationFactory();
         expect(typeof factory).toBe('function');
@@ -43,7 +42,7 @@ describe('nest function utilities', () => {
         const factory = onCallWithNestApplicationFactory();
 
         let retrievedNestApplication = false; // use as a flag for our tests.
-        const testData = { test: true };  // use as the test data to be passed to our handler.
+        const testData = { test: true }; // use as the test data to be passed to our handler.
 
         // Our actual handler function that is invoked by our applications.
         const handler: OnCallWithNestApplication<any, number> = (nest, data: typeof testData, context) => {
@@ -72,11 +71,9 @@ describe('nest function utilities', () => {
         expect(result).toBe(expectedValue);
         expect(retrievedNestApplication).toBe(true);
       });
-
     });
 
     describe('onEventWithNestApplicationFactory()', () => {
-
       it('should create a factory.', () => {
         const factory = onEventWithNestApplicationFactory();
         expect(typeof factory).toBe('function');
@@ -122,9 +119,6 @@ describe('nest function utilities', () => {
         expect(result).toBe(testData);
         expect(retrievedNestApplication).toBe(true);
       });
-
     });
-
   });
-
 });

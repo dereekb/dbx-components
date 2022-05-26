@@ -1,14 +1,14 @@
 import { first, Observable, of, switchMap } from 'rxjs';
-import { getValueFromGetter, isGetter, Maybe, ObjectMap } from "@dereekb/util";
-import { AuthTransitionDecisionGetterInput, AuthTransitionRedirectTarget, AuthTransitionRedirectTargetGetter, AuthTransitionRedirectTargetOrGetter } from "./hook";
+import { getValueFromGetter, isGetter, Maybe, ObjectMap } from '@dereekb/util';
+import { AuthTransitionDecisionGetterInput, AuthTransitionRedirectTarget, AuthTransitionRedirectTargetGetter, AuthTransitionRedirectTargetOrGetter } from './hook';
 import { SegueRef } from '../../../../router/segue';
 import { AuthUserState } from '../../../auth.user';
 
 /**
  * Creates a AuthTransitionRedirectTargetGetter that can redirect values based on the current authUserState.
- * 
- * @param stateMap 
- * @returns 
+ *
+ * @param stateMap
+ * @returns
  */
 export function redirectBasedOnAuthUserState(stateMap: ObjectMap<AuthTransitionRedirectTargetOrGetter>): AuthTransitionRedirectTargetGetter {
   return (input: AuthTransitionDecisionGetterInput) => {

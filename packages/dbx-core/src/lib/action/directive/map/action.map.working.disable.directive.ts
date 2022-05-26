@@ -14,7 +14,6 @@ export const DEFAULT_ACTION_MAP_WORKING_DISABLED_KEY = 'action_map_working_disab
   selector: '[dbxActionMapWorkingDisable]'
 })
 export class DbxActionMapWorkingDisableDirective extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
-
   @Input('dbxActionMapWorkingDisable')
   disabledKey: Maybe<DbxActionDisabledKey>;
 
@@ -32,5 +31,4 @@ export class DbxActionMapWorkingDisableDirective extends AbstractSubscriptionDir
     super.ngOnDestroy();
     this.source.enable(this.disabledKey || DEFAULT_ACTION_MAP_WORKING_DISABLED_KEY);
   }
-
 }

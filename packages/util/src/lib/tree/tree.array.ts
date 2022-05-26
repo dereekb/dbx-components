@@ -1,8 +1,8 @@
 /*eslint @typescript-eslint/no-explicit-any:"off"*/
 // any is used with intent here, as the recursive TreeNode value requires its use to terminate.
 
-import { TreeNode } from "./tree";
-import { ExpandTreeFunction, expandTrees } from "./tree.expand";
+import { TreeNode } from './tree';
+import { ExpandTreeFunction, expandTrees } from './tree.expand';
 import { FlattenTreeFunction, flattenTrees } from './tree.flatten';
 
 /**
@@ -12,13 +12,13 @@ export type ExpandFlattenTreeFunction<T, V> = (values: T[]) => V[];
 
 /**
  * Creates an ExpandFlattenTree function.
- * 
- * @param expand 
- * @param flatten 
- * @returns 
+ *
+ * @param expand
+ * @param flatten
+ * @returns
  */
 export function expandFlattenTreeFunction<T, V, N extends TreeNode<T, N> = TreeNode<T, any>>(expand: ExpandTreeFunction<T, N>, flatten: FlattenTreeFunction<N, V>): ExpandFlattenTreeFunction<T, V> {
   return (values: T[]) => {
     return flattenTrees(expandTrees(values, expand), flatten);
-  }
+  };
 }

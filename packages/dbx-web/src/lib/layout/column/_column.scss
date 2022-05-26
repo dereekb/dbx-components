@@ -8,7 +8,6 @@ $two-columns-right-padding-size: 6px;
 
 // MARK: Mixin
 @mixin core() {
-
   .dbx-two-column {
     height: 100%;
     max-width: 100%;
@@ -42,7 +41,6 @@ $two-columns-right-padding-size: 6px;
         }
       }
     }
-
 
     .right-column {
       flex: 1 1 auto;
@@ -93,13 +91,10 @@ $two-columns-right-padding-size: 6px;
     .side-spacer {
       padding-left: $two-columns-right-padding-size;
     }
-
   }
-
 }
 
 @mixin color($theme-config) {
-
   .dbx-two-column {
     @include theming.if-small-screen($theme-config) {
       .left-column {
@@ -121,10 +116,10 @@ $two-columns-right-padding-size: 6px;
       }
     }
   }
-
 }
 
-@mixin typography($typography-config) {}
+@mixin typography($typography-config) {
+}
 
 @mixin theme($theme-config) {
   @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-layout-column') {

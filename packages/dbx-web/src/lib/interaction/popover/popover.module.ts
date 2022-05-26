@@ -21,38 +21,9 @@ import { DbxInjectionComponentModule } from '@dereekb/dbx-core';
 import { DbxStyleLayoutModule } from '../../layout/style/style.layout.module';
 
 @NgModule({
-  imports: [
-    CommonModule,
-    MatIconModule,
-    MatButtonModule,
-    MatDividerModule,
-    DbxButtonModule,
-    DbxRouterAnchorModule,
-    DbxActionModule,
-    DbxKeypressModule,
-    DbxStyleLayoutModule,
-    DbxInjectionComponentModule,
-    NgOverlayContainerModule,
-    AngularResizeEventModule
-  ],
-  declarations: [
-    DbxActionPopoverDirective,
-    DbxPopoverComponent,
-    DbxPopoverCoordinatorComponent,
-    DbxPopoverContentComponent,
-    DbxPopoverControlsDirective,
-    DbxPopoverHeaderComponent,
-    DbxPopoverScrollContentComponent
-  ],
-  exports: [
-    DbxActionPopoverDirective,
-    DbxPopoverContentComponent,
-    DbxPopoverControlsDirective,
-    DbxPopoverHeaderComponent,
-    DbxPopoverScrollContentComponent
-  ],
-  providers: [
-    DbxPopoverService
-  ]
+  imports: [CommonModule, MatIconModule, MatButtonModule, MatDividerModule, DbxButtonModule, DbxRouterAnchorModule, DbxActionModule, DbxKeypressModule, DbxStyleLayoutModule, DbxInjectionComponentModule, NgOverlayContainerModule, AngularResizeEventModule],
+  declarations: [DbxActionPopoverDirective, DbxPopoverComponent, DbxPopoverCoordinatorComponent, DbxPopoverContentComponent, DbxPopoverControlsDirective, DbxPopoverHeaderComponent, DbxPopoverScrollContentComponent],
+  exports: [DbxActionPopoverDirective, DbxPopoverContentComponent, DbxPopoverControlsDirective, DbxPopoverHeaderComponent, DbxPopoverScrollContentComponent],
+  providers: [DbxPopoverService]
 })
-export class DbxPopoverInteractionModule { }
+export class DbxPopoverInteractionModule {}

@@ -1,7 +1,6 @@
 import { catchAllHandlerKey, Handler, makeHandler } from './handler';
 
 describe('handler()', () => {
-
   let handler: Handler<number, string>;
 
   it('should create a new handler.', () => {
@@ -13,13 +12,11 @@ describe('handler()', () => {
   });
 
   describe('function', () => {
-
     beforeEach(() => {
       handler = makeHandler((x: number) => String(x));
     });
 
     describe('set', () => {
-
       it('should set the function on the handler for that key', () => {
         let wasUsed = false;
 
@@ -28,7 +25,7 @@ describe('handler()', () => {
         const fn = (x: number) => {
           wasUsed = true;
           expect(x).toBe(value);
-          return true;  // result
+          return true; // result
         };
 
         handler.set(key, fn);
@@ -47,7 +44,7 @@ describe('handler()', () => {
         const fn = (x: number) => {
           wasUsed = true;
           expect(x).toBe(otherValue);
-          return true;  // result
+          return true; // result
         };
 
         handler.set(catchAllHandlerKey(), fn);
@@ -57,13 +54,10 @@ describe('handler()', () => {
         expect(result).toBe(true);
         expect(wasUsed).toBe(true);
       });
-
     });
 
     describe('bindSet', () => {
-
       it('should set the function on the handler for that key and use the bound value', () => {
-
         let wasUsed = false;
 
         const testThis = {};
@@ -71,7 +65,7 @@ describe('handler()', () => {
         const fn = function (this: unknown) {
           expect(this).toBe(testThis);
           wasUsed = true;
-          return true;  // result
+          return true; // result
         };
 
         handler.bindSet(testThis, key, fn);
@@ -83,9 +77,6 @@ describe('handler()', () => {
         expect(result).toBe(true);
         expect(wasUsed).toBe(true);
       });
-
     });
-
   });
-
 });

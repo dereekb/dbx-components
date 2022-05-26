@@ -18,13 +18,9 @@ export interface SimpleStorageAccessorConverter<T> {
 /**
  * SimpleStorageAccessor delegate.
  */
-export interface SimpleStorageAccessorDelegate<T> extends SimpleStorageAccessorConverter<T>, StorageAccessor<StoredDataString> {
-
-
-}
+export interface SimpleStorageAccessorDelegate<T> extends SimpleStorageAccessorConverter<T>, StorageAccessor<StoredDataString> {}
 
 export class StringifySimpleStorageAccessorConverter<T> implements SimpleStorageAccessorConverter<T> {
-
   stringifyValue(value: T): StoredDataString {
     return JSON.stringify(value);
   }
@@ -32,15 +28,10 @@ export class StringifySimpleStorageAccessorConverter<T> implements SimpleStorage
   parseValue(data: StoredDataString): T {
     return JSON.parse(data);
   }
-
 }
 
 export class WrapperSimpleStorageAccessorDelegate<T> implements SimpleStorageAccessorDelegate<T> {
-
-  constructor(
-    private _delegate: StorageAccessor<StoredDataString>,
-    private _converter: SimpleStorageAccessorConverter<T>
-  ) { }
+  constructor(private _delegate: StorageAccessor<StoredDataString>, private _converter: SimpleStorageAccessorConverter<T>) {}
 
   get(key: string): Observable<Maybe<StoredDataString>> {
     return this._delegate.get(key);
@@ -73,7 +64,6 @@ export class WrapperSimpleStorageAccessorDelegate<T> implements SimpleStorageAcc
   parseValue(data: StoredDataString): T {
     return this._converter.parseValue(data);
   }
-
 }
 
 export interface SimpleStorageAccessorConfig {
@@ -100,7 +90,6 @@ interface ConfiguredSimpleStorageAccessorConfig extends SimpleStorageAccessorCon
  * LimitedStorageAccessor implementation that uses a Delegate
  */
 export class SimpleStorageAccessor<T> implements StorageAccessor<T> {
-
   static readonly PREFIX_SPLITTER = '::';
 
   protected readonly _config: ConfiguredSimpleStorageAccessorConfig;
@@ -154,23 +143,23 @@ export class SimpleStorageAccessor<T> implements StorageAccessor<T> {
   all(): Observable<T[]> {
     return this._delegate.all(this._config.fullPrefix).pipe(
       map((allStoredData) => {
-        return allStoredData.map((storedData) => {
-          const readStoredData = this.readStoredData(storedData);
+        return allStoredData
+          .map((storedData) => {
+            const readStoredData = this.readStoredData(storedData);
 
-          if (!readStoredData.expired) {
-            return readStoredData.convertedData;
-          } else {
-            return null;
-          }
-        }).filter(filterMaybeValuesFn)
+            if (!readStoredData.expired) {
+              return readStoredData.convertedData;
+            } else {
+              return null;
+            }
+          })
+          .filter(filterMaybeValuesFn);
       })
     );
   }
 
   allKeys(): Observable<string[]> {
-    return this._delegate.allKeys(this._config.fullPrefix).pipe(
-      map((keys) => keys.map(x => this.decodeStorageKey(x)))
-    );
+    return this._delegate.allKeys(this._config.fullPrefix).pipe(map((keys) => keys.map((x) => this.decodeStorageKey(x))));
   }
 
   clear(): Observable<object> {
@@ -241,5 +230,4 @@ export class SimpleStorageAccessor<T> implements StorageAccessor<T> {
   protected stringifyValue(value: T): string {
     return this._delegate.stringifyValue(value);
   }
-
 }

@@ -4,7 +4,6 @@ import { cleanup } from './lifecycle';
 import { makePromiseFullRef, PromiseFullRef } from '@dereekb/util';
 
 describe('cleanup()', () => {
-
   let sub: SubscriptionObject;
 
   beforeEach(() => {
@@ -22,10 +21,12 @@ describe('cleanup()', () => {
 
     const subject = new BehaviorSubject<number>(initialValue);
 
-    const obs = subject.pipe(cleanup((x) => {
-      expect(x).toBe(initialValue);
-      destroyed = true;
-    }));
+    const obs = subject.pipe(
+      cleanup((x) => {
+        expect(x).toBe(initialValue);
+        destroyed = true;
+      })
+    );
 
     sub.subscription = obs.subscribe();
 
@@ -47,10 +48,12 @@ describe('cleanup()', () => {
 
     const subject = new BehaviorSubject<number>(initialValue);
 
-    const obs = subject.pipe(cleanup((x) => {
-      expect(x).toBe(initialValue);
-      destroyed = true;
-    }));
+    const obs = subject.pipe(
+      cleanup((x) => {
+        expect(x).toBe(initialValue);
+        destroyed = true;
+      })
+    );
 
     sub.subscription = obs.subscribe();
 
@@ -76,15 +79,16 @@ describe('cleanup()', () => {
     const subject = new BehaviorSubject<number>(initialValue);
     let promiseRef: PromiseFullRef;
 
-    const obs = subject.pipe(cleanup(() => {
+    const obs = subject.pipe(
+      cleanup(() => {
+        // this promise will not resolve until we call resolve externally.
+        promiseRef = makePromiseFullRef(() => 0);
 
-      // this promise will not resolve until we call resolve externally.
-      promiseRef = makePromiseFullRef(() => 0);
-
-      return promiseRef.promise.then(() => {
-        destroyed = true;
-      });
-    }, wait));
+        return promiseRef.promise.then(() => {
+          destroyed = true;
+        });
+      }, wait)
+    );
 
     // subscribe
     sub.subscription = obs.subscribe((x) => {
@@ -98,7 +102,6 @@ describe('cleanup()', () => {
     subject.next(secondValue);
 
     setTimeout(() => {
-
       // still should not be destroyed since we have not resolved. Should not have recieved secondValue either
       expect(destroyed).toBe(false);
 
@@ -109,5 +112,4 @@ describe('cleanup()', () => {
       done();
     });
   });
-
 });

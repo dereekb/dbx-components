@@ -15,13 +15,11 @@ import { DbxSectionHeaderComponent } from './section.header.component';
     </div>
   `,
   host: {
-    'class': 'd-block, dbx-section',
+    class: 'd-block, dbx-section',
     '[class]': `(elevated) ? 'dbx-section-elevated' : ''`
   }
 })
 export class DbxSectionComponent extends DbxSectionHeaderComponent {
-
   @Input()
   elevated = false;
-
 }

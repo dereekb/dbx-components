@@ -39,7 +39,7 @@ export function textAreaField(config: TextAreaFieldConfig): FormlyFieldConfig {
     ...templateOptionsForFieldConfig(config, {
       rows,
       minLength,
-      maxLength,
+      maxLength
     })
   });
 }

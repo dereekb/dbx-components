@@ -13,26 +13,8 @@ import { DbxLoadingModule } from '../loading';
 import { DbxActionProgressComponent } from './action.progress.component';
 
 @NgModule({
-  imports: [
-    CommonModule,
-    DbxCoreActionModule,
-    DbxButtonModule,
-    DbxLoadingModule,
-    MatSnackBarModule,
-    MatDialogModule,
-    MatButtonModule,
-    DbxPromptModule,
-  ],
-  declarations: [
-    DbxActionKeyTriggerDirective,
-    DbxActionConfirmDirective,
-    DbxActionProgressComponent,
-  ],
-  exports: [
-    DbxCoreActionModule,
-    DbxActionKeyTriggerDirective,
-    DbxActionConfirmDirective,
-    DbxActionProgressComponent,
-  ]
+  imports: [CommonModule, DbxCoreActionModule, DbxButtonModule, DbxLoadingModule, MatSnackBarModule, MatDialogModule, MatButtonModule, DbxPromptModule],
+  declarations: [DbxActionKeyTriggerDirective, DbxActionConfirmDirective, DbxActionProgressComponent],
+  exports: [DbxCoreActionModule, DbxActionKeyTriggerDirective, DbxActionConfirmDirective, DbxActionProgressComponent]
 })
-export class DbxActionModule { }
+export class DbxActionModule {}

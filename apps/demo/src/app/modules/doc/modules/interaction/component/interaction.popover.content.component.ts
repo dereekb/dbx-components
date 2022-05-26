@@ -3,15 +3,14 @@ import { Component, EventEmitter, Output, OnDestroy } from '@angular/core';
 @Component({
   selector: 'dbx-interaction-example-popover-content',
   template: `
-  <div>
-    <p>Popover Content</p>
-    <button mat-raised-button (click)="returnNumberValue()">Return Value</button>
-    <button mat-raised-button color="warn" (click)="closeWithoutValue()">Close</button>
-  </div>
+    <div>
+      <p>Popover Content</p>
+      <button mat-raised-button (click)="returnNumberValue()">Return Value</button>
+      <button mat-raised-button color="warn" (click)="closeWithoutValue()">Close</button>
+    </div>
   `
 })
 export class DocInteractionExamplePopoverContentComponent implements OnDestroy {
-
   @Output()
   readonly return = new EventEmitter<number>();
 
@@ -30,5 +29,4 @@ export class DocInteractionExamplePopoverContentComponent implements OnDestroy {
   closeWithoutValue() {
     this.close.next();
   }
-
 }

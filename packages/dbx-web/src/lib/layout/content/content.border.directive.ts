@@ -6,7 +6,7 @@ import { Directive } from '@angular/core';
 @Directive({
   selector: 'dbx-content-border,[dbxContentBorder]',
   host: {
-    'class': 'd-block dbx-content-border'
+    class: 'd-block dbx-content-border'
   }
 })
-export class DbxContentBorderDirective { }
+export class DbxContentBorderDirective {}

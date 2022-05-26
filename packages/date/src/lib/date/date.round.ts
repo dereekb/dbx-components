@@ -1,5 +1,5 @@
-import { roundNumberUpToStep } from "@dereekb/util";
-import { set, getMinutes, addHours } from "date-fns";
+import { roundNumberUpToStep } from '@dereekb/util';
+import { set, getMinutes, addHours } from 'date-fns';
 
 export interface RoundTimeDown {
   roundDownToDay?: boolean;
@@ -50,7 +50,6 @@ export function roundDateTimeDown(date: Date, round: RoundTimeDown): Date {
  * Rounds the current number of minutes on the date to the nearest step.
  */
 export function roundToMinuteSteps(date: Date, step: number): Date {
-
   // Only steps of 1 or more are allowed.
   if (step <= 1) {
     return date;
@@ -60,7 +59,8 @@ export function roundToMinuteSteps(date: Date, step: number): Date {
   const roundedValue = roundNumberUpToStep(minute, step);
 
   if (roundedValue !== minute) {
-    if (roundedValue === 60) {  // Round the hour up.
+    if (roundedValue === 60) {
+      // Round the hour up.
       date = addHours(set(date, { minutes: 0 }), 1);
     } else {
       date = set(date, { minutes: roundedValue });

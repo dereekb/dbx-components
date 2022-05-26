@@ -6,7 +6,6 @@ import { PRELOAD_SEGMENT_TOKEN, DbxAnalyticsSegmentApiService } from './segment.
   imports: []
 })
 export class DbxAnalyticsSegmentModule {
-
   static forRoot(preloadService?: boolean): ModuleWithProviders<DbxAnalyticsSegmentModule> {
     return {
       ngModule: DbxAnalyticsSegmentModule,
@@ -19,5 +18,4 @@ export class DbxAnalyticsSegmentModule {
       ]
     };
   }
-
 }

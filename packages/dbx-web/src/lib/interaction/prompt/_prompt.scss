@@ -6,10 +6,9 @@ $dbx-popup-controls-height: 33px;
 
 // MARK: Mixin
 @mixin core() {
-
   .dbx-prompt-page {
     .dbx-prompt-page-content-wrap {
-      padding-top: calc(theming.$app-height * .2)
+      padding-top: calc(theming.$app-height * 0.2);
     }
   }
 
@@ -21,14 +20,14 @@ $dbx-popup-controls-height: 33px;
     &.elevated {
       @include theming.elevation(2);
     }
-
   }
-
 }
 
-@mixin color($theme-config) {}
+@mixin color($theme-config) {
+}
 
-@mixin typography($typography-config) {}
+@mixin typography($typography-config) {
+}
 
 @mixin theme($theme-config) {
   @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-interaction-prompt') {

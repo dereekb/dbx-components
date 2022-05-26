@@ -6,9 +6,7 @@ $max-dialog-width: 90vw;
 
 // MARK: Mixin
 @mixin core() {
-
   .dbx-dialog-content {
-
     &.normal-dialog-content {
       width: $dialog-width;
       min-width: $dialog-width;
@@ -17,14 +15,14 @@ $max-dialog-width: 90vw;
     &.wide-dialog-content {
       width: $max-dialog-width;
     }
-    
   }
-
 }
 
-@mixin color($theme-config) {}
+@mixin color($theme-config) {
+}
 
-@mixin typography($typography-config) {}
+@mixin typography($typography-config) {
+}
 
 @mixin theme($theme-config) {
   @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-interaction-dialog') {

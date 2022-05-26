@@ -7,10 +7,8 @@ import { DemoAppRouterService } from '../../../demo.app.router.service';
   templateUrl: './list.component.html'
 })
 export class DemoGuestbookListPageComponent {
-
   readonly guestbookListRef = this.demoAppRouterService.guestbookListRef();
   readonly makeGuestbookAnchor: AnchorForValueFunction<GuestbookWithId> = (doc) => this.demoAppRouterService.guestbookRef(doc.id);
 
-  constructor(readonly demoAppRouterService: DemoAppRouterService) { }
-
+  constructor(readonly demoAppRouterService: DemoAppRouterService) {}
 }

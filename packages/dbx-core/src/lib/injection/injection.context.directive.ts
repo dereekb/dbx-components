@@ -12,17 +12,12 @@ import { PromiseOrValue, PromiseFullRef, makePromiseFullRef, Maybe } from '@dere
   providers: provideDbxInjectionContext(DbxInjectionContextDirective)
 })
 export class DbxInjectionContextDirective<O = unknown> implements DbxInjectionContext, OnInit, OnDestroy {
-
   private _currentPromise: Maybe<PromiseFullRef<unknown>>;
   private _instance = new DbxInjectionInstance(this._injector);
   private _embeddedView!: EmbeddedViewRef<O>;
   private _isDetached = false;
 
-  constructor(
-    private readonly _injector: Injector,
-    private readonly _templateRef: TemplateRef<O>,
-    private readonly _viewContainer: ViewContainerRef
-  ) { }
+  constructor(private readonly _injector: Injector, private readonly _templateRef: TemplateRef<O>, private readonly _viewContainer: ViewContainerRef) {}
 
   @Input()
   set config(config: Maybe<DbxInjectionComponentConfig<unknown>>) {
@@ -30,7 +25,6 @@ export class DbxInjectionContextDirective<O = unknown> implements DbxInjectionCo
 
     if (config) {
       if (!this._isDetached) {
-
         // detach the original view before setting config.
         this._viewContainer.detach();
         this._isDetached = true;
@@ -68,7 +62,6 @@ export class DbxInjectionContextDirective<O = unknown> implements DbxInjectionCo
   }
 
   async showContext<T, O>(config: DbxInjectionContextConfig<T>): Promise<O> {
-
     // clear the current context before showing something new.
     this.resetContext();
 
@@ -83,7 +76,6 @@ export class DbxInjectionContextDirective<O = unknown> implements DbxInjectionCo
         const injectionConfig: DbxInjectionComponentConfig<T> = {
           ...config.config,
           init: async (instance: T) => {
-
             // init if available in the base config.
             if (config.config.init) {
               config.config.init(instance);
@@ -144,5 +136,4 @@ export class DbxInjectionContextDirective<O = unknown> implements DbxInjectionCo
 
     return clearedValue;
   }
-
 }

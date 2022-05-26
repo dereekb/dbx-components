@@ -5,7 +5,6 @@ $dbx-checklist-item-spacing: 8px;
 
 // MARK: Mixin
 @mixin core() {
-
   .dbx-checklist-item {
     @include theming.elevation(1);
     margin-bottom: 8px;
@@ -36,28 +35,25 @@ $dbx-checklist-item-spacing: 8px;
       padding-left: $dbx-checklist-item-spacing;
       border-left: 1px solid black;
     }
-
   }
-
 }
 
-@mixin color($theme-config) {}
+@mixin color($theme-config) {
+}
 
 @mixin typography($typography-config) {
-
   .dbx-default-checklist-item-field {
-
     .item-label {
       font-size: 1.35em;
       line-height: 1.35em;
     }
 
-    .item-sublabel {}
+    .item-sublabel {
+    }
 
-    .item-description {}
-
+    .item-description {
+    }
   }
-
 }
 
 @mixin theme($theme-config) {

@@ -13,7 +13,6 @@ export const DBX_FIREBASE_ROUTER_SYNC_DEFAULT_ID_PARAM_KEY = 'id';
   selector: '[dbxFirebaseDocumentStoreRouteId]'
 })
 export class DbxFirebaseDocumentStoreRouteIdDirective<T = unknown> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
-
   private _idParamKey = new BehaviorSubject<string>(DBX_FIREBASE_ROUTER_SYNC_DEFAULT_ID_PARAM_KEY);
   readonly idParamKey$ = this._idParamKey.asObservable();
 
@@ -25,9 +24,7 @@ export class DbxFirebaseDocumentStoreRouteIdDirective<T = unknown> extends Abstr
     shareReplay(1)
   );
 
-  constructor(
-    @Host() readonly dbxFirebaseDocumentStoreDirective: DbxFirebaseDocumentStoreDirective<T>,
-    readonly dbxRouterService: DbxRouterService) {
+  constructor(@Host() readonly dbxFirebaseDocumentStoreDirective: DbxFirebaseDocumentStoreDirective<T>, readonly dbxRouterService: DbxRouterService) {
     super();
   }
 
@@ -47,7 +44,6 @@ export class DbxFirebaseDocumentStoreRouteIdDirective<T = unknown> extends Abstr
   }
 
   set idParam(idParam: string) {
-    this._idParamKey.next(idParam || DBX_FIREBASE_ROUTER_SYNC_DEFAULT_ID_PARAM_KEY)
+    this._idParamKey.next(idParam || DBX_FIREBASE_ROUTER_SYNC_DEFAULT_ID_PARAM_KEY);
   }
-
 }

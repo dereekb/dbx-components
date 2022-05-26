@@ -1,19 +1,18 @@
-import { DocumentReference, DocumentSnapshot, UpdateData, WithFieldValue, getDoc, deleteDoc, setDoc, updateDoc } from "@firebase/firestore";
-import { fromRef } from "rxfire/firestore";
-import { Observable } from "rxjs";
-import { FirestoreDocumentContext, FirestoreDocumentContextType, FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, SetOptions } from "../../common/firestore";
+import { DocumentReference, DocumentSnapshot, UpdateData, WithFieldValue, getDoc, deleteDoc, setDoc, updateDoc } from '@firebase/firestore';
+import { fromRef } from 'rxfire/firestore';
+import { Observable } from 'rxjs';
+import { FirestoreDocumentContext, FirestoreDocumentContextType, FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, SetOptions } from '../../common/firestore';
 
 // MARK: Accessor
 export class DefaultFirestoreDocumentDataAccessor<T> implements FirestoreDocumentDataAccessor<T> {
-
-  constructor(readonly documentRef: DocumentReference<T>) { }
+  constructor(readonly documentRef: DocumentReference<T>) {}
 
   stream(): Observable<DocumentSnapshot<T>> {
     return fromRef(this.documentRef);
   }
 
   exists(): Promise<boolean> {
-    return this.get().then(x => x.exists());
+    return this.get().then((x) => x.exists());
   }
 
   get(): Promise<DocumentSnapshot<T>> {
@@ -31,7 +30,6 @@ export class DefaultFirestoreDocumentDataAccessor<T> implements FirestoreDocumen
   update(data: UpdateData<unknown>): Promise<void> {
     return updateDoc(this.documentRef, data);
   }
-
 }
 
 export function defaultFirestoreAccessorFactory<T>(): FirestoreDocumentDataAccessorFactory<T> {
@@ -45,5 +43,5 @@ export function defaultFirestoreDocumentContext<T>(): FirestoreDocumentContext<T
   return {
     contextType: FirestoreDocumentContextType.NONE,
     accessorFactory: defaultFirestoreAccessorFactory<T>()
-  }
+  };
 }

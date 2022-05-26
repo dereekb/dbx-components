@@ -26,14 +26,10 @@ import { FormlyMatFormFieldModule } from '@ngx-formly/material/form-field';
     FlexLayoutModule,
     FormlyMatFormFieldModule,
     FormlyModule.forChild({
-      types: [
-        { name: 'intphone', component: DbxPhoneFieldComponent, wrappers: ['form-field'] }
-      ]
+      types: [{ name: 'intphone', component: DbxPhoneFieldComponent, wrappers: ['form-field'] }]
     })
   ],
-  declarations: [
-    DbxPhoneFieldComponent
-  ],
+  declarations: [DbxPhoneFieldComponent],
   exports: []
 })
-export class DbxFormFormlyPhoneFieldModule { }
+export class DbxFormFormlyPhoneFieldModule {}

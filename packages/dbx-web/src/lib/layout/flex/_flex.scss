@@ -6,7 +6,6 @@ $dbx-flex-group-columns-count: 6;
 
 // MARK: Mixin
 @mixin core() {
-
   .dbx-flex {
     display: flex;
   }
@@ -22,7 +21,7 @@ $dbx-flex-group-columns-count: 6;
     margin: 0 #{-$dbx-flex-group-padding} #{-$dbx-flex-group-padding} 0;
     // padding: 0 $dbx-flex-group-padding $dbx-flex-group-padding 0;
 
-    >* {
+    > * {
       box-sizing: border-box;
       padding: 0 $dbx-flex-group-padding $dbx-flex-group-padding 0;
     }
@@ -35,10 +34,9 @@ $dbx-flex-group-columns-count: 6;
         max-width: calc((100% * (#{$i}/#{$dbx-flex-group-columns-count})));
       }
     }
-
   }
 
-  .dbx-flex-group-relative>.dbx-flex-group,
+  .dbx-flex-group-relative > .dbx-flex-group,
   .dbx-flex-group.dbx-flex-group-relative {
     @for $i from 1 through 6 {
       .dbx-flex-#{$i} {
@@ -47,7 +45,7 @@ $dbx-flex-group-columns-count: 6;
     }
   }
 
-  .dbx-flex-group-small>.dbx-flex-group,
+  .dbx-flex-group-small > .dbx-flex-group,
   .dbx-flex-group.dbx-flex-group-small {
     @for $i from 1 through 5 {
       .dbx-flex-#{$i} {
@@ -57,12 +55,13 @@ $dbx-flex-group-columns-count: 6;
       }
     }
   }
-
 }
 
-@mixin color($theme-config) {}
+@mixin color($theme-config) {
+}
 
-@mixin typography($typography-config) {}
+@mixin typography($typography-config) {
+}
 
 @mixin theme($theme-config) {
   @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-layout-flex') {

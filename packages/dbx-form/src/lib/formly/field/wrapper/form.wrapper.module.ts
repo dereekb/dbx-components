@@ -41,17 +41,7 @@ import { DbxFormWorkingWrapperComponent } from './working.wrapper.component';
       ]
     })
   ],
-  declarations: [
-    AutoTouchFieldWrapperComponent,
-    DbxFormSectionWrapperComponent,
-    DbxFormSubsectionWrapperComponent,
-    DbxFormInfoWrapperComponent,
-    DbxFormExpandWrapperComponent,
-    DbxFormToggleWrapperComponent,
-    DbxFormFlexWrapperComponent,
-    DbxFormStyleWrapperComponent,
-    DbxFormWorkingWrapperComponent
-  ],
+  declarations: [AutoTouchFieldWrapperComponent, DbxFormSectionWrapperComponent, DbxFormSubsectionWrapperComponent, DbxFormInfoWrapperComponent, DbxFormExpandWrapperComponent, DbxFormToggleWrapperComponent, DbxFormFlexWrapperComponent, DbxFormStyleWrapperComponent, DbxFormWorkingWrapperComponent],
   exports: []
 })
-export class DbxFormFormlyWrapperModule { }
+export class DbxFormFormlyWrapperModule {}

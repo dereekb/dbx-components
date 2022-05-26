@@ -5,4 +5,4 @@ import { NgModule } from '@angular/core';
   declarations: [],
   exports: []
 })
-export class DbxFormFormlyBooleanFieldModule { }
+export class DbxFormFormlyBooleanFieldModule {}

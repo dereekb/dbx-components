@@ -1,5 +1,5 @@
 import { DbxFirebaseLoginMode, FirebaseLoginMethodCategory, FirebaseLoginMethodType } from './login';
-import { Component, Input } from "@angular/core";
+import { Component, Input } from '@angular/core';
 import { ArrayOrValue, Maybe } from '@dereekb/util';
 
 /**
@@ -13,12 +13,11 @@ import { ArrayOrValue, Maybe } from '@dereekb/util';
     </ng-container>
   `,
   host: {
-    'class': 'd-block dbx-firebase-login',
+    class: 'd-block dbx-firebase-login',
     '[class]': '{ "dbx-firebase-register": loginMode === "register" }'
   }
 })
 export class DbxFirebaseLoginComponent {
-
   @Input()
   loginMode: DbxFirebaseLoginMode = 'login';
 
@@ -30,5 +29,4 @@ export class DbxFirebaseLoginComponent {
 
   @Input()
   providerCategories: Maybe<ArrayOrValue<FirebaseLoginMethodCategory>>;
-
 }

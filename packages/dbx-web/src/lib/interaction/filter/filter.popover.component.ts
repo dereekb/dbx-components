@@ -40,7 +40,6 @@ export const DEFAULT_FILTER_POPOVER_KEY = 'filter';
   templateUrl: './filter.popover.component.html'
 })
 export class DbxFilterPopoverComponent<F> extends AbstractPopoverDirective<unknown, DbxFilterComponentParams<F>> implements OnInit, OnDestroy {
-
   /**
    * Whether or not to display buttons to toggle between custom and preset filters.
    */
@@ -69,7 +68,7 @@ export class DbxFilterPopoverComponent<F> extends AbstractPopoverDirective<unkno
             filterSource.initWithFilter(initialFilterObs);
           }
         }
-      }
+      };
 
       return config;
     })
@@ -127,5 +126,4 @@ export class DbxFilterPopoverComponent<F> extends AbstractPopoverDirective<unkno
   showCustom() {
     this._showPreset.next(false);
   }
-
 }

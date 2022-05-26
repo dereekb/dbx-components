@@ -1,20 +1,16 @@
 <dbx-content-container>
   <doc-feature-layout header="Two Block Layout" hint='Vertical Layout component that has a "top" and a "bottom".'>
-
     <!-- Examples -->
-    <doc-feature-example header="dbx-two-block"
-      hint='dbx-two-block is similar to a flex layout set in "row" presentation, but sets a property value to force the second block to have a height equal to the top minus the bottom. The two block updates the height variable whenever the dbx-two-block is resized.'>
-
+    <doc-feature-example header="dbx-two-block" hint='dbx-two-block is similar to a flex layout set in "row" presentation, but sets a property value to force the second block to have a height equal to the top minus the bottom. The two block updates the height variable whenever the dbx-two-block is resized.'>
       <h4>400px height block</h4>
       <dbx-two-block style="height: 400px">
-        <div top style="height: 88px; background: rgb(249, 150, 150);">
+        <div top style="height: 88px; background: rgb(249, 150, 150)">
           <span>Top (88px)</span>
         </div>
-        <div style="height: 100%; background: rgb(144, 221, 143);">
+        <div style="height: 100%; background: rgb(144, 221, 143)">
           <span>Bottom (Remainder)</span>
         </div>
       </dbx-two-block>
-
     </doc-feature-example>
   </doc-feature-layout>
 </dbx-content-container>

@@ -1,4 +1,4 @@
-import { DbxValueAsListItem } from "@dereekb/dbx-web";
+import { DbxValueAsListItem } from '@dereekb/dbx-web';
 
 export interface DocValue {
   name: string;

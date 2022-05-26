@@ -1,11 +1,11 @@
 import { DbxActionSnackbarComponent } from './action.snackbar.component';
 import { DBX_ACTION_SNACKBAR_DEFAULTS } from './action.snackbar.default';
-import { Inject, Injectable, InjectionToken, Optional, Type } from "@angular/core";
-import { MatSnackBar, MatSnackBarConfig, MatSnackBarRef } from "@angular/material/snack-bar";
-import { Milliseconds, Maybe, mergeObjects } from "@dereekb/util";
-import { DbxActionSnackbarDisplayConfig, DbxActionSnackbarType } from "./action.snackbar";
-import { DbxActionSnackbarGeneratorInput, DbxMakeActionSnackbarGeneratorConfiguration, makeDbxActionSnackbarDisplayConfigGeneratorFunction } from "./action.snackbar.generator";
-import ms from "ms";
+import { Inject, Injectable, InjectionToken, Optional, Type } from '@angular/core';
+import { MatSnackBar, MatSnackBarConfig, MatSnackBarRef } from '@angular/material/snack-bar';
+import { Milliseconds, Maybe, mergeObjects } from '@dereekb/util';
+import { DbxActionSnackbarDisplayConfig, DbxActionSnackbarType } from './action.snackbar';
+import { DbxActionSnackbarGeneratorInput, DbxMakeActionSnackbarGeneratorConfiguration, makeDbxActionSnackbarDisplayConfigGeneratorFunction } from './action.snackbar.generator';
+import ms from 'ms';
 
 export const DBX_ACTION_SNACKBAR_SERVICE_CONFIG = new InjectionToken('DbxActionSnackbarServiceConfig');
 
@@ -30,7 +30,6 @@ export interface DbxActionSnackbarServiceConfig<C = unknown> {
   providedIn: 'root'
 })
 export class DbxActionSnackbarService<C = DbxActionSnackbarComponent> {
-
   readonly config: DbxActionSnackbarServiceConfig<C>;
 
   get componentClass(): Type<C> {
@@ -41,15 +40,12 @@ export class DbxActionSnackbarService<C = DbxActionSnackbarComponent> {
     return this.config.eventTypeConfigs;
   }
 
-  constructor(
-    readonly matSnackBar: MatSnackBar,
-    @Optional() @Inject(DBX_ACTION_SNACKBAR_SERVICE_CONFIG) inputConfig: Partial<DbxActionSnackbarServiceConfig<C>>) {
-
+  constructor(readonly matSnackBar: MatSnackBar, @Optional() @Inject(DBX_ACTION_SNACKBAR_SERVICE_CONFIG) inputConfig: Partial<DbxActionSnackbarServiceConfig<C>>) {
     inputConfig = inputConfig ?? {};
 
     this.config = {
       ...inputConfig,
-      componentClass: inputConfig.componentClass ?? DbxActionSnackbarComponent as unknown as Type<C>,
+      componentClass: inputConfig.componentClass ?? (DbxActionSnackbarComponent as unknown as Type<C>),
       defaultDuration: inputConfig.defaultDuration || DEFAULT_SNACKBAR_DIRECTIVE_DURATION,
       eventTypeConfigs: mergeObjects([DBX_ACTION_SNACKBAR_DEFAULTS, inputConfig.eventTypeConfigs]) as DbxActionSnackbarEventMakeConfig
     };
@@ -57,9 +53,9 @@ export class DbxActionSnackbarService<C = DbxActionSnackbarComponent> {
 
   /**
    * Opens a new snackbar given the input configuration.
-   * 
-   * @param config 
-   * @returns 
+   *
+   * @param config
+   * @returns
    */
   openSnackbar<T = unknown, O = unknown>(config: DbxActionSnackbarDisplayConfig<T, O>): MatSnackBarRef<C> {
     const { snackbar: inputSnackbarConfig } = config;
@@ -78,7 +74,7 @@ export class DbxActionSnackbarService<C = DbxActionSnackbarComponent> {
       config.action = {
         ...config.action,
         duration
-      }
+      };
     } else {
       // The snackbar does not close here. The duration is passed to the component and it will close it.
       matSnackbarConfig.duration = duration;
@@ -97,5 +93,4 @@ export class DbxActionSnackbarService<C = DbxActionSnackbarComponent> {
 
     return result;
   }
-
 }

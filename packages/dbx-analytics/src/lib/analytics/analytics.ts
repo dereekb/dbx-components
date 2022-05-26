@@ -1,4 +1,4 @@
-import { Maybe, PrimativeKey } from "@dereekb/util";
+import { Maybe, PrimativeKey } from '@dereekb/util';
 
 export type DbxAnalyticsEventName = string;
 export type DbxAnalyticsUserId = string;

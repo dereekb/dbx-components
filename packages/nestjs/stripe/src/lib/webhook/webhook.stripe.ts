@@ -1,5 +1,5 @@
-import { HandlerBindAccessor, HandlerMappedSetFunction, Handler, handlerFactory, handlerConfigurerFactory, handlerMappedSetFunctionFactory } from "@dereekb/util";
-import Stripe from "stripe";
+import { HandlerBindAccessor, HandlerMappedSetFunction, Handler, handlerFactory, handlerConfigurerFactory, handlerMappedSetFunctionFactory } from '@dereekb/util';
+import Stripe from 'stripe';
 import '../stripe.type';
 
 export enum StripeWebhookEventType {
@@ -35,9 +35,9 @@ export interface StripeWebhookEvent<T = any> {
 
 /**
  * Creates a StripeWebhookEvent and treats the data as the input type.
- * 
- * @param event 
- * @returns 
+ *
+ * @param event
+ * @returns
  */
 export function stripeWebhookEvent<T>(event: Stripe.Event): StripeWebhookEvent<T> {
   return {

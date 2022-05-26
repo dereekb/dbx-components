@@ -16,31 +16,9 @@ import { DbxButtonModule } from '../../button/button.module';
 import { DbxStyleLayoutModule } from '../../layout/style/style.layout.module';
 
 @NgModule({
-  imports: [
-    CommonModule,
-    MatIconModule,
-    MatButtonModule,
-    DbxButtonModule,
-    DbxRouterAnchorModule,
-    DbxActionModule,
-    DbxStyleLayoutModule,
-    DbxInjectionComponentModule,
-    NgOverlayContainerModule,
-  ],
-  declarations: [
-    DbxPopupComponent,
-    DbxPopupCoordinatorComponent,
-    DbxPopupContentComponent,
-    DbxPopupControlsComponent,
-    DbxPopupControlButtonsComponent
-  ],
-  exports: [
-    DbxPopupContentComponent,
-    DbxPopupControlsComponent,
-    DbxPopupControlButtonsComponent
-  ],
-  providers: [
-    DbxPopupService
-  ]
+  imports: [CommonModule, MatIconModule, MatButtonModule, DbxButtonModule, DbxRouterAnchorModule, DbxActionModule, DbxStyleLayoutModule, DbxInjectionComponentModule, NgOverlayContainerModule],
+  declarations: [DbxPopupComponent, DbxPopupCoordinatorComponent, DbxPopupContentComponent, DbxPopupControlsComponent, DbxPopupControlButtonsComponent],
+  exports: [DbxPopupContentComponent, DbxPopupControlsComponent, DbxPopupControlButtonsComponent],
+  providers: [DbxPopupService]
 })
 export class DbxPopupInteractionModule {}

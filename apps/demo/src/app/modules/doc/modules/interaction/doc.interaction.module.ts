@@ -51,4 +51,4 @@ import { DocInteractionButtonComponent } from './container/button.component';
     DocInteractionPromptComponent
   ]
 })
-export class DocInteractionModule { }
+export class DocInteractionModule {}

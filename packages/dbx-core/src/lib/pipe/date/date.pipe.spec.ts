@@ -5,13 +5,9 @@ import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { DbxDatePipeModule } from './date.pipe.module';
 
 describe('Date Pipe Test Component', () => {
-
   beforeEach(async () => {
     TestBed.configureTestingModule({
-      imports: [
-        DbxDatePipeModule,
-        NoopAnimationsModule
-      ],
+      imports: [DbxDatePipeModule, NoopAnimationsModule],
       declarations: [DatePipesTestComponent]
     }).compileComponents();
   });
@@ -29,13 +25,12 @@ describe('Date Pipe Test Component', () => {
     expect(testComponent).toBeDefined();
     expect(true);
   });
-
 });
 
 @Component({
   template: `
     <div>
-      <p>{{ date | dateFromPlusTo:'h:mm a':10 }}</p>
+      <p>{{ date | dateFromPlusTo: 'h:mm a':10 }}</p>
       <p>{{ date | dateFormatDistance }}</p>
       <p>{{ 500 | minutesString }}</p>
       <p>{{ date | timeDistance }}</p>
@@ -45,7 +40,5 @@ describe('Date Pipe Test Component', () => {
   `
 })
 class DatePipesTestComponent {
-
   public date = new Date();
-
 }

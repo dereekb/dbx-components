@@ -15,34 +15,36 @@ export const DBX_APP_AUTH_ROUTER_EFFECTS_TOKEN = new InjectionToken('DbxAppAuthR
 
 /**
  * Set of ngrx effects that handle navigation in the app when the auth changes in certain ways.
- * 
+ *
  * Is configurable via the DBX_APP_AUTH_ROUTER_EFFECTS_TOKEN to choose which states this effect is active or not. By default is equal to DBX_KNOWN_APP_CONTEXT_STATES.
  */
 @Injectable()
 export class DbxAppAuthRouterEffects extends AbstractOnDbxAppContextStateEffects<fromDbxAppAuth.State> {
-
-  constructor(
-    @Inject(DBX_APP_AUTH_ROUTER_EFFECTS_TOKEN) @Optional() activeStates: Maybe<ArrayOrValue<DbxAppContextState>>,
-    actions$: Actions,
-    store: Store<fromDbxAppAuth.State>,
-    readonly dbxAppAuthRouterService: DbxAppAuthRouterService) {
+  constructor(@Inject(DBX_APP_AUTH_ROUTER_EFFECTS_TOKEN) @Optional() activeStates: Maybe<ArrayOrValue<DbxAppContextState>>, actions$: Actions, store: Store<fromDbxAppAuth.State>, readonly dbxAppAuthRouterService: DbxAppAuthRouterService) {
     super(activeStates ?? DBX_KNOWN_APP_CONTEXT_STATES, actions$, store);
   }
 
   /**
    * Effect to redirect to the login when logout occurs.
    */
-  readonly redirectToLoginOnLogout = createEffect(() => this.actions$.pipe(
-    ofType(onDbxAppAuth.DbxAppAuthActions.loggedOut),
-    exhaustMap(() => this.dbxAppAuthRouterService.goToLogin())
-  ), { dispatch: false });
+  readonly redirectToLoginOnLogout = createEffect(
+    () =>
+      this.actions$.pipe(
+        ofType(onDbxAppAuth.DbxAppAuthActions.loggedOut),
+        exhaustMap(() => this.dbxAppAuthRouterService.goToLogin())
+      ),
+    { dispatch: false }
+  );
 
   /**
    * Effect to redirect to the app when login occurs.
    */
-  readonly redirectToOnboardOnLogIn = createEffect(() => this.actions$.pipe(
-    ofType(onDbxAppAuth.DbxAppAuthActions.loggedIn),
-    exhaustMap(() => this.dbxAppAuthRouterService.goToApp())
-  ), { dispatch: false });
-
+  readonly redirectToOnboardOnLogIn = createEffect(
+    () =>
+      this.actions$.pipe(
+        ofType(onDbxAppAuth.DbxAppAuthActions.loggedIn),
+        exhaustMap(() => this.dbxAppAuthRouterService.goToApp())
+      ),
+    { dispatch: false }
+  );
 }

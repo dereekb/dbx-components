@@ -6,7 +6,7 @@ import { LabeledFieldConfig, formlyField, templateOptionsForFieldConfig } from '
 import { DbxInternationalPhoneFieldConfig } from './phone.field.component';
 import { repeatArrayField, RepeatArrayFieldConfig } from '../array/array.field';
 
-export interface InternationalPhoneFieldConfig extends LabeledFieldConfig, DbxInternationalPhoneFieldConfig { }
+export interface InternationalPhoneFieldConfig extends LabeledFieldConfig, DbxInternationalPhoneFieldConfig {}
 
 export function phoneField(config: Partial<InternationalPhoneFieldConfig> = {}): FormlyFieldConfig {
   const { key = 'phone', preferredCountries, onlyCountries } = config;
@@ -29,26 +29,29 @@ export interface WrappedPhoneAndLabelFieldConfig {
 }
 
 /**
- * Puts a phone and 
- * @param param0 
- * @returns 
+ * Puts a phone and
+ * @param param0
+ * @returns
  */
 export function wrappedPhoneAndLabelField({ phoneField: phone, labelField: label }: WrappedPhoneAndLabelFieldConfig = {}): FormlyFieldConfig {
-  return flexLayoutWrapper([
-    {
-      field: phoneField(phone),
-      size: 2
-    },
-    {
-      field: textField({
-        key: 'label',
-        label: 'Label',
-        autocomplete: 'phone-label',
-        ...label
-      }),
-      size: 4
-    }
-  ], { relative: true });
+  return flexLayoutWrapper(
+    [
+      {
+        field: phoneField(phone),
+        size: 2
+      },
+      {
+        field: textField({
+          key: 'label',
+          label: 'Label',
+          autocomplete: 'phone-label',
+          ...label
+        }),
+        size: 4
+      }
+    ],
+    { relative: true }
+  );
 }
 
 export interface PhoneAndLabelFieldSectionConfig extends DbxFormSectionConfig, WrappedPhoneAndLabelFieldConfig {
@@ -56,13 +59,16 @@ export interface PhoneAndLabelFieldSectionConfig extends DbxFormSectionConfig, W
 }
 
 export function phoneAndLabelSectionField({ key, header = 'Phone Number', hint, phoneField, labelField }: PhoneAndLabelFieldSectionConfig = {}): FormlyFieldConfig {
-  return sectionWrapper({
-    key,
-    fieldGroup: [wrappedPhoneAndLabelField({ phoneField, labelField })]
-  }, {
-    header,
-    hint
-  })
+  return sectionWrapper(
+    {
+      key,
+      fieldGroup: [wrappedPhoneAndLabelField({ phoneField, labelField })]
+    },
+    {
+      header,
+      hint
+    }
+  );
 }
 
 export interface PhoneListFieldConfig extends Omit<RepeatArrayFieldConfig, 'repeatFieldGroup'> {
@@ -81,4 +87,4 @@ export function phoneListField(repeatConfig: Partial<PhoneListFieldConfig> = {})
     removeText,
     repeatFieldGroup: repeatFieldGroup ?? [wrappedPhoneAndLabelField(phoneAndLabel)]
   });
-};
+}

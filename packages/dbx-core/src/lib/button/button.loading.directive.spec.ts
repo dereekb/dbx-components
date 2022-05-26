@@ -7,15 +7,10 @@ import { DbxLoadingButtonDirective } from './button.loading.directive';
 import { SimpleLoadingContext } from '@dereekb/rxjs';
 
 describe('DbxLoadingButton', () => {
-
   beforeEach(async () => {
     TestBed.configureTestingModule({
-      imports: [
-        DbxCoreButtonModule
-      ],
-      declarations: [
-        TestDbxLoadingButtonDirectiveComponent,
-      ]
+      imports: [DbxCoreButtonModule],
+      declarations: [TestDbxLoadingButtonDirectiveComponent]
     }).compileComponents();
   });
 
@@ -41,13 +36,12 @@ describe('DbxLoadingButton', () => {
   it('should set the button to working when loading is true.', (done) => {
     testComponent.context.setLoading(true);
 
-    testComponent.context.stream$.pipe(filter((x => Boolean(x.loading)))).subscribe((x) => {
+    testComponent.context.stream$.pipe(filter((x) => Boolean(x.loading))).subscribe((x) => {
       expect(x.loading).toBe(true);
       expect(button.working).toBe(true);
       done();
     });
   });
-
 });
 
 @Component({
@@ -58,7 +52,6 @@ describe('DbxLoadingButton', () => {
   `
 })
 class TestDbxLoadingButtonDirectiveComponent {
-
   context = new SimpleLoadingContext(false);
 
   @ViewChild(DbxLoadingButtonDirective, { static: true })
@@ -66,5 +59,4 @@ class TestDbxLoadingButtonDirectiveComponent {
 
   @ViewChild(DbxButtonDirective, { static: true })
   button?: DbxButtonDirective;
-
 }

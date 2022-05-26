@@ -1,5 +1,5 @@
-import { PrimativeKey, ReadKeyFunction } from "../key";
-import { Maybe } from "../value/maybe";
+import { PrimativeKey, ReadKeyFunction } from '../key';
+import { Maybe } from '../value/maybe';
 
 export interface HashSetConfig<K extends PrimativeKey, T> {
   readKey: ReadKeyFunction<T, K>;
@@ -7,16 +7,15 @@ export interface HashSetConfig<K extends PrimativeKey, T> {
 
 /**
  * Set that is implemented internally using a Map, and input values have their keys read.
- * 
+ *
  * Useful for cases, such as Date, that are unique by a value, but not self.
  */
 export class HashSet<K extends PrimativeKey, T> implements Set<T> {
-
   private _map = new Map<Maybe<K>, T>();
 
   constructor(readonly config: HashSetConfig<K, T>, values?: T[]) {
     if (values) {
-      values.forEach(x => this.add(x));
+      values.forEach((x) => this.add(x));
     }
   }
 
@@ -29,7 +28,7 @@ export class HashSet<K extends PrimativeKey, T> implements Set<T> {
   }
 
   addAll(values: Maybe<T[]>): this {
-    values?.forEach(x => this.add(x));
+    values?.forEach((x) => this.add(x));
     return this;
   }
 
@@ -61,7 +60,7 @@ export class HashSet<K extends PrimativeKey, T> implements Set<T> {
 
   entries(): IterableIterator<[T, T]> {
     const result = this.valuesArray();
-    return result.map(x => [x, x] as [T, T]).values();
+    return result.map((x) => [x, x] as [T, T]).values();
   }
 
   keys(): IterableIterator<T> {
@@ -79,5 +78,4 @@ export class HashSet<K extends PrimativeKey, T> implements Set<T> {
   get [Symbol.toStringTag](): string {
     return this.valuesArray.toString();
   }
-
 }

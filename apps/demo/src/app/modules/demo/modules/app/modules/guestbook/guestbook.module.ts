@@ -15,12 +15,6 @@ import { DemoGuestbookEntryPopupComponent } from './container/guestbook.entry.po
       states: STATES
     })
   ],
-  declarations: [
-    DemoGuestbookEntryPopupComponent,
-    DemoGuestbookViewComponent,
-    DemoGuestbookLayoutComponent,
-    DemoGuestbookListPageComponent,
-    DemoGuestbookListPageRightComponent
-  ],
+  declarations: [DemoGuestbookEntryPopupComponent, DemoGuestbookViewComponent, DemoGuestbookLayoutComponent, DemoGuestbookListPageComponent, DemoGuestbookListPageRightComponent]
 })
-export class DemoGuestbookModule { }
+export class DemoGuestbookModule {}

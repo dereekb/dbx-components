@@ -1,4 +1,3 @@
-
 import { Input, Directive } from '@angular/core';
 import { DbxFlexSize } from './flex';
 
@@ -12,8 +11,6 @@ import { DbxFlexSize } from './flex';
   }
 })
 export class DbxFlexSizeDirective {
-
   @Input('dbxFlexSize')
   size: DbxFlexSize = 1;
-
 }

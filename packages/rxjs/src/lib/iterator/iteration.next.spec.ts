@@ -4,7 +4,6 @@ import { iteratorNextPageUntilMaxPageLoadLimit, iteratorNextPageUntilPage } from
 import { first } from 'rxjs';
 
 describe('iteration.next', () => {
-
   let iterator: ItemPageIterator<number, TestPageIteratorFilter>;
   let instance: ItemPageIterationInstance<number, TestPageIteratorFilter>;
 
@@ -18,7 +17,6 @@ describe('iteration.next', () => {
   });
 
   describe('nextUntilPage()', () => {
-
     it('should call next up until the given page is reached.', (done) => {
       const targetPagesToLoad = 10;
 
@@ -30,11 +28,9 @@ describe('iteration.next', () => {
           done();
         });
       });
-
     });
 
     it(`should call next up until the iterator's limit is reached, even if target page is after.`, (done) => {
-
       const testMaxPagesToLoad = 5;
       const targetPage = 10;
       instance.maxPageLoadLimit = testMaxPagesToLoad;
@@ -46,13 +42,10 @@ describe('iteration.next', () => {
           expect(page).toBe(instance.maxPageLoadLimit);
           done();
         });
-
       });
-
     });
 
     describe('with error', () => {
-
       beforeEach(() => {
         instance = iterator.instance({
           filter: {
@@ -64,22 +57,20 @@ describe('iteration.next', () => {
       it('should return with the error.', (done) => {
         const targetPage = 10;
 
-        iteratorNextPageUntilPage(instance, targetPage).then(() => {
-          done('should not have returned successfully.');
-        }).catch((error) => {
-          expect(error).toBeDefined();
-          done();
-        });
+        iteratorNextPageUntilPage(instance, targetPage)
+          .then(() => {
+            done('should not have returned successfully.');
+          })
+          .catch((error) => {
+            expect(error).toBeDefined();
+            done();
+          });
       });
-
     });
-
   });
 
   describe('iteratorNextPageUntilLimit()', () => {
-
     it(`should call next up until the iterator's limit is reached.`, (done) => {
-
       const testMaxPagesToLoad = 15;
       instance.maxPageLoadLimit = testMaxPagesToLoad;
 
@@ -90,11 +81,7 @@ describe('iteration.next', () => {
           expect(page).toBe(instance.maxPageLoadLimit);
           done();
         });
-
       });
-
     });
-
   });
-
 });

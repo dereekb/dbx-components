@@ -7,4 +7,4 @@ import { AbstractProgressButtonDirective } from './base.progress.button.directiv
   styleUrls: ['./bar.button.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class DbxBarButtonComponent extends AbstractProgressButtonDirective { }
+export class DbxBarButtonComponent extends AbstractProgressButtonDirective {}

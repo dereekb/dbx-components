@@ -1,18 +1,16 @@
 import { firstValueFrom } from 'rxjs';
 import { SubscriptionObject } from '@dereekb/rxjs';
 import { Transaction, DocumentReference, WriteBatch, FirestoreDocumentAccessor, makeDocuments, FirestoreDocumentDataAccessor, FirestoreContext, FirestoreDocument, RunTransaction } from '@dereekb/firebase';
-import { MockItemDocument, MockItem, MockItemPrivateDocument, MockItemPrivateFirestoreCollection, MockItemPrivate, MockItemSubItem, MockItemSubItemDocument, MockItemSubItemFirestoreCollection } from "./firestore.mock.item";
-import { MockItemCollectionFixture } from "./firestore.mock.item.fixture";
+import { MockItemDocument, MockItem, MockItemPrivateDocument, MockItemPrivateFirestoreCollection, MockItemPrivate, MockItemSubItem, MockItemSubItemDocument, MockItemSubItemFirestoreCollection } from './firestore.mock.item';
+import { MockItemCollectionFixture } from './firestore.mock.item.fixture';
 
 /**
  * Describes accessor driver tests, using a MockItemCollectionFixture.
- * 
- * @param f 
+ *
+ * @param f
  */
 export function describeAccessorDriverTests(f: MockItemCollectionFixture) {
-
   describe('FirestoreAccessorDriver', () => {
-
     const testDocumentCount = 5;
 
     let firestoreDocumentAccessor: FirestoreDocumentAccessor<MockItem, MockItemDocument>;
@@ -33,7 +31,6 @@ export function describeAccessorDriverTests(f: MockItemCollectionFixture) {
     });
 
     describe('MockItem', () => {
-
       let itemDocument: MockItemDocument;
       let accessor: FirestoreDocumentDataAccessor<MockItem>;
 
@@ -47,16 +44,14 @@ export function describeAccessorDriverTests(f: MockItemCollectionFixture) {
           context: f.parent.context,
           accessor,
           dataForUpdate: () => ({ test: false }),
-          hasDataFromUpdate: (data) => (data.test === false),
+          hasDataFromUpdate: (data) => data.test === false,
           loadDocumentForTransaction: (transaction, ref) => f.instance.firestoreCollection.documentAccessorForTransaction(transaction).loadDocument(ref!),
-          loadDocumentForWriteBatch: (writeBatch, ref) => f.instance.firestoreCollection.documentAccessorForWriteBatch(writeBatch).loadDocument(ref!),
+          loadDocumentForWriteBatch: (writeBatch, ref) => f.instance.firestoreCollection.documentAccessorForWriteBatch(writeBatch).loadDocument(ref!)
         }));
       });
 
       describe('Subcollections', () => {
-
         describe('singleItemFirestoreCollection (MockItemPrivate)', () => {
-
           let mockItemPrivateFirestoreCollection: MockItemPrivateFirestoreCollection;
           let itemPrivateDataDocument: MockItemPrivateDocument;
           let privateDataAccessor: FirestoreDocumentDataAccessor<MockItemPrivate>;
@@ -74,7 +69,6 @@ export function describeAccessorDriverTests(f: MockItemCollectionFixture) {
           });
 
           describe('set()', () => {
-
             it('should create the item', async () => {
               let exists = await privateDataAccessor.exists();
               expect(exists).toBe(false);
@@ -84,11 +78,9 @@ export function describeAccessorDriverTests(f: MockItemCollectionFixture) {
               exists = await privateDataAccessor.exists();
               expect(exists).toBe(true);
             });
-
           });
 
           describe('with item', () => {
-
             beforeEach(async () => {
               await privateDataAccessor.set({ createdAt: new Date() });
             });
@@ -100,18 +92,15 @@ export function describeAccessorDriverTests(f: MockItemCollectionFixture) {
                 context: f.parent.context,
                 accessor: privateDataAccessor,
                 dataForUpdate: () => ({ comments: TEST_COMMENTS }),
-                hasDataFromUpdate: (data) => (data.comments === TEST_COMMENTS),
+                hasDataFromUpdate: (data) => data.comments === TEST_COMMENTS,
                 loadDocumentForTransaction: (transaction, ref) => mockItemPrivateFirestoreCollection.loadDocumentForTransaction(transaction),
-                loadDocumentForWriteBatch: (writeBatch, ref) => mockItemPrivateFirestoreCollection.loadDocumentForWriteBatch(writeBatch),
+                loadDocumentForWriteBatch: (writeBatch, ref) => mockItemPrivateFirestoreCollection.loadDocumentForWriteBatch(writeBatch)
               }));
             });
-
           });
-
         });
 
         describe('singleItemFirestoreCollection (MockItemSubItem)', () => {
-
           let mockItemSubItemFirestoreCollection: MockItemSubItemFirestoreCollection;
           let subItemAccessor: FirestoreDocumentAccessor<MockItemSubItem, MockItemSubItemDocument>;
 
@@ -121,7 +110,6 @@ export function describeAccessorDriverTests(f: MockItemCollectionFixture) {
           });
 
           describe('with item', () => {
-
             let subItemDocument: MockItemSubItemDocument;
 
             beforeEach(async () => {
@@ -136,59 +124,44 @@ export function describeAccessorDriverTests(f: MockItemCollectionFixture) {
                 context: f.parent.context,
                 accessor: subItemDocument.accessor,
                 dataForUpdate: () => ({ value: TEST_VALUE }),
-                hasDataFromUpdate: (data) => (data.value === TEST_VALUE),
+                hasDataFromUpdate: (data) => data.value === TEST_VALUE,
                 loadDocumentForTransaction: (transaction, ref) => mockItemSubItemFirestoreCollection.documentAccessorForTransaction(transaction).loadDocument(ref!),
-                loadDocumentForWriteBatch: (writeBatch, ref) => mockItemSubItemFirestoreCollection.documentAccessorForWriteBatch(writeBatch).loadDocument(ref!),
+                loadDocumentForWriteBatch: (writeBatch, ref) => mockItemSubItemFirestoreCollection.documentAccessorForWriteBatch(writeBatch).loadDocument(ref!)
               }));
             });
-
           });
-
         });
-
       });
-
     });
 
     describe('documentAccessor()', () => {
-
       describe('loadDocumentForPath()', () => {
-
         it('should return a document at the given path.', () => {
           const document = firestoreDocumentAccessor.loadDocumentForPath('path');
           expect(document).toBeDefined();
         });
 
         it('should throw an exception if the path is empty.', () => {
-
           try {
             firestoreDocumentAccessor.loadDocumentForPath('');
             fail();
           } catch (e) {
             expect(e).toBeDefined();
           }
-
         });
 
         it('should throw an exception if the path is undefined.', () => {
-
           try {
             firestoreDocumentAccessor.loadDocumentForPath(undefined as any);
             fail();
           } catch (e) {
             expect(e).toBeDefined();
           }
-
         });
-
       });
-
     });
-
   });
-
 }
-
 
 export interface DescribeAccessorTests<T> {
   context: FirestoreContext;
@@ -200,7 +173,6 @@ export interface DescribeAccessorTests<T> {
 }
 
 export function describeAccessorTests<T>(init: () => DescribeAccessorTests<T>) {
-
   let c: DescribeAccessorTests<T>;
   let sub: SubscriptionObject;
 
@@ -214,7 +186,6 @@ export function describeAccessorTests<T>(init: () => DescribeAccessorTests<T>) {
   });
 
   describe('stream()', () => {
-
     it('should return a snapshot stream', async () => {
       const result = await c.accessor.stream();
       expect(result).toBeDefined();
@@ -240,7 +211,6 @@ export function describeAccessorTests<T>(init: () => DescribeAccessorTests<T>) {
     });
 
     describe('in transition context', () => {
-
       let runTransaction: RunTransaction;
 
       beforeEach(() => {
@@ -262,11 +232,9 @@ export function describeAccessorTests<T>(init: () => DescribeAccessorTests<T>) {
           return value;
         });
       });
-
     });
 
     describe('in batch context', () => {
-
       it('should return the first emitted value (observable completes immediately)', async () => {
         let writeBatch: WriteBatch = c.context.batch();
         const batchItemDocument = c.loadDocumentForWriteBatch(writeBatch, c.accessor.documentRef);
@@ -282,23 +250,18 @@ export function describeAccessorTests<T>(init: () => DescribeAccessorTests<T>) {
         // commit the changes
         await writeBatch.commit();
       });
-
     });
-
   });
 
   describe('get()', () => {
-
     it('should return a snapshot', async () => {
       const result = await c.accessor.get();
       expect(result).toBeDefined();
       expect(result.id).toBeDefined();
     });
-
   });
 
   describe('exists()', () => {
-
     it('should return true if the document exists', async () => {
       const exists = await c.accessor.exists();
       expect(exists).toBe(true);
@@ -309,11 +272,9 @@ export function describeAccessorTests<T>(init: () => DescribeAccessorTests<T>) {
       const exists = await c.accessor.exists();
       expect(exists).toBe(false);
     });
-
   });
 
   describe('update()', () => {
-
     it('should update the data if the document exists.', async () => {
       const data = c.dataForUpdate();
       await c.accessor.update(data);
@@ -340,11 +301,9 @@ export function describeAccessorTests<T>(init: () => DescribeAccessorTests<T>) {
     });
 
     // todo: test that update does not call the converter when setting values.
-
   });
 
   describe('set()', () => {
-
     it('should create the object if it does not exist.', async () => {
       await c.accessor.delete();
 
@@ -369,11 +328,9 @@ export function describeAccessorTests<T>(init: () => DescribeAccessorTests<T>) {
     });
 
     // todo: test that set calls the converter when setting values.
-
   });
 
   describe('delete()', () => {
-
     it('should delete the document.', async () => {
       await c.accessor.delete();
 
@@ -383,7 +340,5 @@ export function describeAccessorTests<T>(init: () => DescribeAccessorTests<T>) {
       const exists = await c.accessor.exists();
       expect(exists).toBe(false);
     });
-
   });
-
 }

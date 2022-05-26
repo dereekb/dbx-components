@@ -20,7 +20,7 @@ export abstract class ActionContextStoreSource<T = unknown, O = unknown> {
 /**
  * Secondary source. Used by DbxActionContextComponent to find secondary sources.
  */
-export abstract class SecondaryActionContextStoreSource<T = unknown, O = unknown> extends ActionContextStoreSource<T, O> { }
+export abstract class SecondaryActionContextStoreSource<T = unknown, O = unknown> extends ActionContextStoreSource<T, O> {}
 
 export function actionContextStoreSourcePipe<T, O>(obs: Observable<Maybe<ActionContextStore<T, O>>>): Observable<ActionContextStore<T, O>> {
   return obs.pipe(filterMaybe());
@@ -29,9 +29,7 @@ export function actionContextStoreSourcePipe<T, O>(obs: Observable<Maybe<ActionC
 export type PipeActionStoreFunction<R, T, O> = (store: ActionContextStore<T, O>) => Observable<R>;
 
 export function pipeActionStore<R = unknown, T = unknown, O = unknown>(source: ActionContextStoreSource<T, O>, pipeFn: PipeActionStoreFunction<R, T, O>): Observable<R> {
-  return source.store$.pipe(
-    switchMap(pipeFn)
-  );
+  return source.store$.pipe(switchMap(pipeFn));
 }
 
 export type UseActionStoreFunction<T, O> = (store: ActionContextStore<T, O>) => void;
@@ -48,7 +46,6 @@ export function useActionStore<T = unknown, O = unknown>(source: ActionContextSt
  */
 @Injectable()
 export class DbxActionContextStoreSourceInstance<T = unknown, O = unknown> implements ActionContextStoreSource<T, O>, OnDestroy {
-
   readonly lockSet = new LockSet();
 
   constructor(readonly source: ActionContextStoreSource<T, O>) {
@@ -75,75 +72,75 @@ export class DbxActionContextStoreSourceInstance<T = unknown, O = unknown> imple
   }
 
   get state$(): Observable<ActionContextState<T, O>> {
-    return this.pipeStore(x => x.state$);
+    return this.pipeStore((x) => x.state$);
   }
 
   get triggered$(): Observable<boolean> {
-    return this.pipeStore(x => x.triggered$);
+    return this.pipeStore((x) => x.triggered$);
   }
 
   get valueReady$(): Observable<T> {
-    return this.pipeStore(x => x.valueReady$);
+    return this.pipeStore((x) => x.valueReady$);
   }
 
   get success$(): Observable<Maybe<O>> {
-    return this.pipeStore(x => x.success$);
+    return this.pipeStore((x) => x.success$);
   }
 
   get error$(): Observable<Maybe<ReadableError>> {
-    return this.pipeStore(x => x.error$);
+    return this.pipeStore((x) => x.error$);
   }
 
   get rejected$(): Observable<Maybe<ReadableError>> {
-    return this.pipeStore(x => x.rejected$);
+    return this.pipeStore((x) => x.rejected$);
   }
 
   get isModified$(): Observable<boolean> {
-    return this.pipeStore(x => x.isModified$);
+    return this.pipeStore((x) => x.isModified$);
   }
 
   get canTrigger$(): Observable<boolean> {
-    return this.pipeStore(x => x.canTrigger$);
+    return this.pipeStore((x) => x.canTrigger$);
   }
 
   get isModifiedAndCanTriggerUpdates$(): Observable<boolean> {
-    return this.pipeStore(x => x.isModifiedAndCanTriggerUpdates$);
+    return this.pipeStore((x) => x.isModifiedAndCanTriggerUpdates$);
   }
 
   get isModifiedAndCanTrigger$(): Observable<boolean> {
-    return this.pipeStore(x => x.isModifiedAndCanTrigger$);
+    return this.pipeStore((x) => x.isModifiedAndCanTrigger$);
   }
 
   get actionState$(): Observable<DbxActionState> {
-    return this.pipeStore(x => x.actionState$);
+    return this.pipeStore((x) => x.actionState$);
   }
 
   get loadingState$(): Observable<LoadingState<O>> {
-    return this.pipeStore(x => x.loadingState$);
+    return this.pipeStore((x) => x.loadingState$);
   }
 
   get loadingStateType$(): Observable<LoadingStateType> {
-    return this.pipeStore(x => x.loadingStateType$);
+    return this.pipeStore((x) => x.loadingStateType$);
   }
 
   get isWorking$(): Observable<boolean> {
-    return this.pipeStore(x => x.isWorking$);
+    return this.pipeStore((x) => x.isWorking$);
   }
 
   get isSuccess$(): Observable<boolean> {
-    return this.pipeStore(x => x.isSuccess$);
+    return this.pipeStore((x) => x.isSuccess$);
   }
 
   get disabledKeys$(): Observable<string[]> {
-    return this.pipeStore(x => x.disabledKeys$);
+    return this.pipeStore((x) => x.disabledKeys$);
   }
 
   get isDisabled$(): Observable<boolean> {
-    return this.pipeStore(x => x.isDisabled$);
+    return this.pipeStore((x) => x.isDisabled$);
   }
 
   get errorCountSinceLastSuccess$(): Observable<number> {
-    return this.pipeStore(x => x.errorCountSinceLastSuccess$);
+    return this.pipeStore((x) => x.errorCountSinceLastSuccess$);
   }
 
   public enable(key?: DbxActionDisabledKey, enable = true): void {
@@ -151,7 +148,7 @@ export class DbxActionContextStoreSourceInstance<T = unknown, O = unknown> imple
   }
 
   public disable(key?: DbxActionDisabledKey, disable = true): void {
-    this.useStore((x) => (disable) ? x.disable(key) : x.enable(key));
+    this.useStore((x) => (disable ? x.disable(key) : x.enable(key)));
   }
 
   public setIsModified(isModified?: boolean | Observable<boolean> | Observable<void>): void {
@@ -181,7 +178,6 @@ export class DbxActionContextStoreSourceInstance<T = unknown, O = unknown> imple
   public reset(): void {
     this.useStore((x) => x.reset());
   }
-
 }
 
 export const actionContextStoreSourceInstanceFactory = (source: ActionContextStoreSource) => {
@@ -192,22 +188,25 @@ export const actionContextStoreSourceInstanceFactory = (source: ActionContextSto
  * Provides an ActionContextStoreSource, as well as an DbxActionContextStoreSourceInstance.
  */
 export function provideActionStoreSource<S extends ActionContextStoreSource>(sourceType: Type<S>): Provider[] {
-  return [{
-    provide: ActionContextStoreSource,
-    useExisting: forwardRef(() => sourceType)
-  },
-  {
-    provide: DbxActionContextStoreSourceInstance,
-    useFactory: actionContextStoreSourceInstanceFactory,
-    deps: [ActionContextStoreSource]
-  }];
+  return [
+    {
+      provide: ActionContextStoreSource,
+      useExisting: forwardRef(() => sourceType)
+    },
+    {
+      provide: DbxActionContextStoreSourceInstance,
+      useFactory: actionContextStoreSourceInstanceFactory,
+      deps: [ActionContextStoreSource]
+    }
+  ];
 }
 
 export function provideSecondaryActionStoreSource<S extends SecondaryActionContextStoreSource>(sourceType: Type<S>): Provider[] {
-  return [{
-    provide: SecondaryActionContextStoreSource,
-    useExisting: forwardRef(() => sourceType)
-  },
-  ...provideActionStoreSource(sourceType)
+  return [
+    {
+      provide: SecondaryActionContextStoreSource,
+      useExisting: forwardRef(() => sourceType)
+    },
+    ...provideActionStoreSource(sourceType)
   ];
 }

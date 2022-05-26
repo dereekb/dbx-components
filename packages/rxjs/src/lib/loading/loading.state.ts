@@ -29,14 +29,14 @@ export interface LoadingState<T = unknown> extends LoadingErrorPair {
  */
 export type LoadingStateWithValue<T = unknown> = LoadingState<T> & {
   value: Maybe<T>;
-}
+};
 
 /**
  * Loading state with a value key and a non-maybe value.
  */
 export type LoadingStateWithMaybeSoValue<T = unknown> = LoadingState<T> & {
   value: T;
-}
+};
 
 /**
  * Convenience identifier for a LoadingState that returns a list.
@@ -46,22 +46,22 @@ export type ListLoadingState<T> = LoadingState<T[]>;
 /**
  * LoadingState with a Page.
  */
-export interface PageLoadingState<T> extends LoadingState<T>, Page { }
+export interface PageLoadingState<T> extends LoadingState<T>, Page {}
 
 /**
  * PageLoadingState with a filter.
  */
-export interface FilteredPageLoadingState<T, F> extends PageLoadingState<T>, FilteredPage<F> { }
+export interface FilteredPageLoadingState<T, F> extends PageLoadingState<T>, FilteredPage<F> {}
 
 /**
  * LoadingPageState that has an array of the value
  */
-export type PageListLoadingState<T> = PageLoadingState<T[]>
+export type PageListLoadingState<T> = PageLoadingState<T[]>;
 
 /**
  * PageListLoadingState with a Filter.
  */
-export type FilteredPageListLoadingState<T, F> = FilteredPageLoadingState<T[], F>
+export type FilteredPageListLoadingState<T, F> = FilteredPageLoadingState<T[], F>;
 
 // MARK: Utility
 /**
@@ -88,9 +88,9 @@ export enum LoadingStateType {
 
 /**
  * Returns the LoadingStateType for the input LoadingState
- * 
- * @param loadingState 
- * @returns 
+ *
+ * @param loadingState
+ * @returns
  */
 export function loadingStateType(loadingState: LoadingState): LoadingStateType {
   if (loadingState.loading) {
@@ -114,7 +114,7 @@ export function idleLoadingState<T>(): LoadingState<T> {
 export function beginLoading<T = unknown>(): LoadingState<T>;
 export function beginLoading<T = unknown>(state?: Partial<PageLoadingState<T>>): PageLoadingState<T>;
 export function beginLoading<T = unknown>(state?: Partial<LoadingState<T>>): LoadingState<T> {
-  return (state) ? { ...state, loading: true } : { loading: true };
+  return state ? { ...state, loading: true } : { loading: true };
 }
 
 export function successResult<T>(value: T): LoadingStateWithValue<T> {
@@ -195,9 +195,9 @@ export function loadingStateHasFinishedLoading(state: Maybe<LoadingState>): bool
 
 /**
  * Whether or not the input loading state has a non-null value.
- * 
- * @param state 
- * @returns 
+ *
+ * @param state
+ * @returns
  */
 export function loadingStateHasValue(state: Maybe<LoadingState>): boolean {
   if (state) {
@@ -209,9 +209,9 @@ export function loadingStateHasValue(state: Maybe<LoadingState>): boolean {
 
 /**
  * Whether or not the input loading state has an error defined.
- * 
- * @param state 
- * @returns 
+ *
+ * @param state
+ * @returns
  */
 export function loadingStateHasError(state: Maybe<LoadingState>): boolean {
   if (state) {
@@ -223,10 +223,10 @@ export function loadingStateHasError(state: Maybe<LoadingState>): boolean {
 
 /**
  * Merges startWith() with beginLoading().
- * 
+ *
  * Preferred over using both individually, as typing information can get lost.
- * 
- * @returns 
+ *
+ * @returns
  */
 export function startWithBeginLoading<L extends LoadingState<T>, T = unknown>(): MonoTypeOperatorFunction<L>;
 export function startWithBeginLoading<L extends LoadingState<T>, T = unknown>(state?: Partial<LoadingState<T>>): MonoTypeOperatorFunction<L>;
@@ -247,7 +247,7 @@ export function loadingStateFromObs<T>(obs: Observable<T>, firstOnly?: boolean):
     map((value) => ({ loading: false, value, error: undefined })),
     catchError((error) => of({ loading: false, error })),
     delay(50),
-    startWith(({ loading: true })),
+    startWith({ loading: true })
   );
 }
 
@@ -257,12 +257,11 @@ export function loadingStateFromObs<T>(obs: Observable<T>, firstOnly?: boolean):
 export function combineLoadingStates<A, B>(obsA: Observable<LoadingState<A>>, obsB: Observable<LoadingState<B>>): Observable<LoadingState<A & B>>;
 export function combineLoadingStates<A extends object, B extends object, C>(obsA: Observable<LoadingState<A>>, obsB: Observable<LoadingState<B>>, mergeFn?: (a: A, b: B) => C): Observable<LoadingState<C>>;
 export function combineLoadingStates<A extends object, B extends object, C>(obsA: Observable<LoadingState<A>>, obsB: Observable<LoadingState<B>>, inputMergeFn?: (a: A, b: B) => C): Observable<LoadingState<C>> {
-  return combineLatest([obsA, obsB])
-    .pipe(
-      distinctUntilChanged((x, y) => x?.[0] === y?.[0] && x?.[1] === y?.[1]), // Prevent remerging the same values!
-      map(([a, b]) => mergeLoadingStates(a, b, (inputMergeFn as (a: A, b: B) => C))),
-      shareReplay(1)  // Share the result.
-    );
+  return combineLatest([obsA, obsB]).pipe(
+    distinctUntilChanged((x, y) => x?.[0] === y?.[0] && x?.[1] === y?.[1]), // Prevent remerging the same values!
+    map(([a, b]) => mergeLoadingStates(a, b, inputMergeFn as (a: A, b: B) => C)),
+    shareReplay(1) // Share the result.
+  );
 }
 
 /**
@@ -282,11 +281,11 @@ export function mergeLoadingStates<A extends object, B extends object, C>(a: Loa
   if (error) {
     result = {
       // Evaluate both for the loading state.
-      loading: (a?.error) ? a.loading : false || (b?.error) ? b.loading : false,
+      loading: a?.error ? a.loading : false || b?.error ? b.loading : false,
       error
     };
   } else {
-    const loading = (!a || !b) || (a?.loading ?? b?.loading);
+    const loading = !a || !b || (a?.loading ?? b?.loading);
     if (loading) {
       result = {
         loading: true
@@ -344,17 +343,15 @@ export interface MapMultipleLoadingStateResultsConfiguration<T, X, L extends Loa
   mapState?: (input: L) => R;
 }
 
-export function mapMultipleLoadingStateResults<T, X, L extends LoadingState<X>[], R extends LoadingState<T>>(
-  input: L, config: MapMultipleLoadingStateResultsConfiguration<T, X, L, R>
-): Maybe<R> {
+export function mapMultipleLoadingStateResults<T, X, L extends LoadingState<X>[], R extends LoadingState<T>>(input: L, config: MapMultipleLoadingStateResultsConfiguration<T, X, L, R>): Maybe<R> {
   const { mapValues, mapState } = config;
   const loading = unknownLoadingStatesIsLoading(input);
-  const error = input.map(x => x?.error).filter(x => Boolean(x))[0];
+  const error = input.map((x) => x?.error).filter((x) => Boolean(x))[0];
   let result: Maybe<R>;
 
   if (!error && !loading) {
     if (mapValues) {
-      const value: T = mapValues(input.map(x => x.value) as X[]);
+      const value: T = mapValues(input.map((x) => x.value) as X[]);
       result = {
         loading,
         value,
@@ -381,9 +378,7 @@ export interface MapLoadingStateResultsConfiguration<A, B, L extends LoadingStat
 export function mapLoadingStateResults<A, B, L extends LoadingState<A> = LoadingState<A>, O extends LoadingState<B> = LoadingState<B>>(input: L, config: MapLoadingStateResultsConfiguration<A, B, L, O>): O;
 export function mapLoadingStateResults<A, B, L extends PageLoadingState<A> = PageLoadingState<A>, O extends PageLoadingState<B> = PageLoadingState<B>>(input: L, config: MapLoadingStateResultsConfiguration<A, B, L, O>): O;
 export function mapLoadingStateResults<A, B, L extends Partial<PageLoadingState<A>> = Partial<PageLoadingState<A>>, O extends Partial<PageLoadingState<B>> = Partial<PageLoadingState<B>>>(input: L, config: MapLoadingStateResultsConfiguration<A, B, L, O>): O;
-export function mapLoadingStateResults<A, B, L extends Partial<PageLoadingState<A>> = Partial<PageLoadingState<A>>, O extends Partial<PageLoadingState<B>> = Partial<PageLoadingState<B>>>(
-  input: L, config: MapLoadingStateResultsConfiguration<A, B, L, O>
-): O {
+export function mapLoadingStateResults<A, B, L extends Partial<PageLoadingState<A>> = Partial<PageLoadingState<A>>, O extends Partial<PageLoadingState<B>> = Partial<PageLoadingState<B>>>(input: L, config: MapLoadingStateResultsConfiguration<A, B, L, O>): O {
   const { mapValue, mapState } = config;
   const inputValue = input?.value;
   let value: B;

@@ -8,24 +8,23 @@ import { asObservable, ObservableOrValue } from '@dereekb/rxjs';
 export function dbxFormSourceObservable<T>(form: DbxMutableForm, inputObs: ObservableOrValue<T>, mode$: Observable<DbxFormSourceDirectiveMode>): Observable<T> {
   const observable = asObservable(inputObs);
 
-  return combineLatest([
-    observable.pipe(distinctUntilChanged()),
-    mode$.pipe(distinctUntilChanged())
-  ]).pipe(
-    switchMap(([value, mode]) => form.stream$.pipe(
-      // wait for the form to finish initializing.
-      filter((x) => x.state !== DbxFormState.INITIALIZING),
-      // if mode is reset, then filter out changes until the form is reset again.
-      filter((x) => ((mode === 'reset') ? (x.state === DbxFormState.RESET) : true)),
-      first(),
-      map(() => value)
-    )),
+  return combineLatest([observable.pipe(distinctUntilChanged()), mode$.pipe(distinctUntilChanged())]).pipe(
+    switchMap(([value, mode]) =>
+      form.stream$.pipe(
+        // wait for the form to finish initializing.
+        filter((x) => x.state !== DbxFormState.INITIALIZING),
+        // if mode is reset, then filter out changes until the form is reset again.
+        filter((x) => (mode === 'reset' ? x.state === DbxFormState.RESET : true)),
+        first(),
+        map(() => value)
+      )
+    )
   );
 }
 
 /**
  * DbxFormSourceDirective modes that define when to copy data from the source.
- * 
+ *
  * - reset: only copy data when the form is reset.
  * - always: always copy data when the data observable emits a value.
  */
@@ -38,7 +37,6 @@ export type DbxFormSourceDirectiveMode = 'reset' | 'always';
   selector: '[dbxFormSource]'
 })
 export class DbxFormSourceDirective<T> extends AbstractSubscriptionDirective implements OnDestroy {
-
   private _mode = new BehaviorSubject<DbxFormSourceDirectiveMode>('reset');
 
   constructor(@Host() public readonly form: DbxMutableForm<T>) {
@@ -75,5 +73,4 @@ export class DbxFormSourceDirective<T> extends AbstractSubscriptionDirective imp
     super.ngOnDestroy();
     this._mode.complete();
   }
-
 }

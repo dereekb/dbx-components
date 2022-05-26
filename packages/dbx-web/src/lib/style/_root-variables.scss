@@ -6,7 +6,6 @@
   $initial-bottom-banner-height: theming.get-dbx-layout-bottom-banner-height($theme-config);
 
   #{$root-selector} {
-
     // variables
     #{theming.$top-banner-height-var}: $initial-top-banner-height;
     #{theming.$bottom-banner-height-var}: $initial-bottom-banner-height;
@@ -33,5 +32,4 @@
       overflow: hidden;
     }
   }
-
 }

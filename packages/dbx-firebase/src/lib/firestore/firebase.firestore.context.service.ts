@@ -9,7 +9,5 @@ import { DBX_FIRESTORE_CONTEXT_TOKEN } from './firebase.firestore';
   providedIn: 'root'
 })
 export class DbxFirestoreContextService {
-
-  constructor(@Inject(DBX_FIRESTORE_CONTEXT_TOKEN) readonly firestoreContext: FirestoreContext) { }
-
+  constructor(@Inject(DBX_FIRESTORE_CONTEXT_TOKEN) readonly firestoreContext: FirestoreContext) {}
 }

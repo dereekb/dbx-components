@@ -8,16 +8,8 @@ import { AngularResizeEventModule } from 'angular-resize-event';
  * Module for block components.
  */
 @NgModule({
-  imports: [
-    CommonModule,
-    DbxRouterAnchorModule,
-    AngularResizeEventModule
-  ],
-  declarations: [
-    DbxTwoBlocksComponent
-  ],
-  exports: [
-    DbxTwoBlocksComponent
-  ]
+  imports: [CommonModule, DbxRouterAnchorModule, AngularResizeEventModule],
+  declarations: [DbxTwoBlocksComponent],
+  exports: [DbxTwoBlocksComponent]
 })
-export class DbxBlockLayoutModule { }
+export class DbxBlockLayoutModule {}

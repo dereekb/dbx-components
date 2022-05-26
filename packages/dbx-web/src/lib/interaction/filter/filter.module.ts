@@ -20,15 +20,7 @@ import { DbxCoreFilterModule, DbxInjectionComponentModule } from '@dereekb/dbx-c
     MatIconModule,
     MatButtonModule
   ],
-  declarations: [
-    DbxFilterPopoverComponent,
-    DbxFilterPopoverButtonComponent,
-    DbxFilterWrapperComponent,
-  ],
-  exports: [
-    DbxCoreFilterModule,
-    DbxFilterPopoverButtonComponent,
-    DbxFilterWrapperComponent,
-  ]
+  declarations: [DbxFilterPopoverComponent, DbxFilterPopoverButtonComponent, DbxFilterWrapperComponent],
+  exports: [DbxCoreFilterModule, DbxFilterPopoverButtonComponent, DbxFilterWrapperComponent]
 })
-export class DbxFilterInteractionModule { }
+export class DbxFilterInteractionModule {}

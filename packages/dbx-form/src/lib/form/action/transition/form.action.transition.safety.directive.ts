@@ -7,24 +7,17 @@ import { DbxActionFormDirective } from '../form.action.directive';
 
 /**
  * Extension of DbxActionTransitionSafetyDirective that forces the form to update first.
- * 
+ *
  * NOTE: Only works with UIRouter
  */
 @Directive({
-  selector: '[dbxActionFormSafety]',
+  selector: '[dbxActionFormSafety]'
 })
 export class DbxActionFormSafetyDirective<T, O> extends DbxActionTransitionSafetyDirective<T, O> {
-
   @Input('dbxActionFormSafety')
   override inputSafetyType?: DbxActionTransitionSafetyType;
 
-  constructor(
-    @Host() public readonly dbxActionForm: DbxActionFormDirective<T>,
-    source: DbxActionContextStoreSourceInstance<T, O>,
-    transitionService: TransitionService,
-    viewContainerRef: ViewContainerRef,
-    dialog: MatDialog
-  ) {
+  constructor(@Host() public readonly dbxActionForm: DbxActionFormDirective<T>, source: DbxActionContextStoreSourceInstance<T, O>, transitionService: TransitionService, viewContainerRef: ViewContainerRef, dialog: MatDialog) {
     super(source, transitionService, viewContainerRef, dialog);
   }
 
@@ -32,5 +25,4 @@ export class DbxActionFormSafetyDirective<T, O> extends DbxActionTransitionSafet
     this.dbxActionForm.form.forceFormUpdate();
     return super._handleOnBeforeTransition(transition);
   }
-
 }

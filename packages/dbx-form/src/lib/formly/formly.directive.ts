@@ -11,7 +11,6 @@ import { DbxFormDisabledKey } from '../form/form';
  */
 @Directive()
 export abstract class AbstractFormlyFormDirective<T> implements OnDestroy {
-
   @Input()
   get disabled(): boolean {
     return this.context.isDisabled();
@@ -21,7 +20,7 @@ export abstract class AbstractFormlyFormDirective<T> implements OnDestroy {
     this.context.setDisabled(undefined, disabled);
   }
 
-  constructor(public readonly context: DbxFormlyContext<T>) { }
+  constructor(public readonly context: DbxFormlyContext<T>) {}
 
   ngOnDestroy(): void {
     this.context.destroy();
@@ -47,22 +46,18 @@ export abstract class AbstractFormlyFormDirective<T> implements OnDestroy {
   setDisabled(key?: DbxFormDisabledKey, disabled?: boolean): void {
     this.context.setDisabled(key, disabled);
   }
-
 }
-
 
 /**
  * Abstract component for wrapping a form.
  */
 @Directive()
 export abstract class AbstractSyncFormlyFormDirective<T> extends AbstractFormlyFormDirective<T> implements OnInit, OnDestroy {
-
   abstract fields: FormlyFieldConfig[];
 
   ngOnInit(): void {
     this.context.fields = this.fields;
   }
-
 }
 
 /**
@@ -70,7 +65,6 @@ export abstract class AbstractSyncFormlyFormDirective<T> extends AbstractFormlyF
  */
 @Directive()
 export abstract class AbstractAsyncFormlyFormDirective<T> extends AbstractFormlyFormDirective<T> implements OnInit, OnDestroy {
-
   /**
    * Used to provide fields to the context.
    */
@@ -84,16 +78,14 @@ export abstract class AbstractAsyncFormlyFormDirective<T> extends AbstractFormly
     });
   }
 
-  override  ngOnDestroy(): void {
+  override ngOnDestroy(): void {
     super.ngOnDestroy();
     this._fieldsSub.destroy();
   }
-
 }
 
 @Directive()
 export abstract class AbstractConfigAsyncFormlyFormDirective<T, C> extends AbstractAsyncFormlyFormDirective<T> implements OnInit, OnDestroy {
-
   private readonly _config = new BehaviorSubject<Maybe<C>>(undefined);
   readonly config$ = this._config.pipe(filterMaybe(), shareReplay(1));
 
@@ -110,5 +102,4 @@ export abstract class AbstractConfigAsyncFormlyFormDirective<T, C> extends Abstr
     super.ngOnDestroy();
     this._config.complete();
   }
-
 }

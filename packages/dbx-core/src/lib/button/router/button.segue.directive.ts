@@ -11,7 +11,6 @@ import { SegueRef, DbxRouterService } from '../../router';
   selector: '[dbxButtonSegue]'
 })
 export class DbxButtonSegueDirective extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
-
   private _segueRef = new BehaviorSubject<Maybe<SegueRef>>(undefined);
   readonly segueRef$ = this._segueRef.pipe(filterMaybe(), distinctUntilChanged(), shareReplay(1));
 
@@ -29,18 +28,21 @@ export class DbxButtonSegueDirective extends AbstractSubscriptionDirective imple
   }
 
   ngOnInit(): void {
-    this.sub = this.segueRef$.pipe(
-      switchMap(segueRef => this.dbxButton.clicked$.pipe(
-        tap(() => {
-          this.dbxRouterService.go(segueRef);
-        })
-      ))
-    ).subscribe();
+    this.sub = this.segueRef$
+      .pipe(
+        switchMap((segueRef) =>
+          this.dbxButton.clicked$.pipe(
+            tap(() => {
+              this.dbxRouterService.go(segueRef);
+            })
+          )
+        )
+      )
+      .subscribe();
   }
 
   override ngOnDestroy(): void {
     super.ngOnDestroy();
     this._segueRef.complete();
   }
-
 }

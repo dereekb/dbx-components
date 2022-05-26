@@ -15,8 +15,7 @@ export interface StorageAccessorFactoryConfig<T> extends SimpleStorageAccessorCo
  */
 @Injectable()
 export class SimpleStorageAccessorFactory {
-
-  constructor(@Inject(DEFAULT_STORAGE_OBJECT_TOKEN) readonly storageObject: FullStorageObject) { }
+  constructor(@Inject(DEFAULT_STORAGE_OBJECT_TOKEN) readonly storageObject: FullStorageObject) {}
 
   createStorageAccessor<T>(config: StorageAccessorFactoryConfig<T>): SimpleStorageAccessor<T> {
     const storage = config.storage ?? new StringStorageAccessor(this.storageObject);
@@ -29,5 +28,4 @@ export class SimpleStorageAccessorFactory {
 
     return new SimpleStorageAccessor<T>(delegate, accessorConfig);
   }
-
 }

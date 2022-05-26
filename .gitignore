@@ -48,7 +48,6 @@ Thumbs.db
 # firebase
 firebase-export-*
 .firebase/*
-.firebaserc
 firebase-debug.log
 
 npm-debug.log*

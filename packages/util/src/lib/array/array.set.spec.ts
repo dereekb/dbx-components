@@ -1,7 +1,6 @@
 import { keepValuesFromArray } from './array.set';
 
 describe('keepValuesFromArray', () => {
-
   it('should keep values from the array.', () => {
     const array = ['a', 'b', 'c'];
     const keep = ['a'];
@@ -13,5 +12,4 @@ describe('keepValuesFromArray', () => {
     expect(result).not.toContain(array[1]);
     expect(result).not.toContain(array[2]);
   });
-
 });

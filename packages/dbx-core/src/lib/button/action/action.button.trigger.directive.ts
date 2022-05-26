@@ -10,7 +10,6 @@ import { DbxActionContextStoreSourceInstance } from '../../action/action.store.s
   selector: '[dbxActionButtonTrigger]'
 })
 export class DbxActionButtonTriggerDirective extends AbstractSubscriptionDirective implements OnInit {
-
   constructor(@Host() public readonly button: DbxButton, public readonly source: DbxActionContextStoreSourceInstance) {
     super();
   }
@@ -24,5 +23,4 @@ export class DbxActionButtonTriggerDirective extends AbstractSubscriptionDirecti
   protected _buttonClicked(): void {
     this.source.trigger();
   }
-
 }

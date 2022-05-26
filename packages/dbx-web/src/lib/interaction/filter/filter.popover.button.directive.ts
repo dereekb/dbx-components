@@ -4,11 +4,10 @@ import { DbxPopoverService } from '../popover/popover.service';
 import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
 import { DbxFilterPopoverComponent, DbxFilterComponentParams } from './filter.popover.component';
 
-export type DbxFilterButtonConfig<F> = DbxFilterComponentParams<F>
+export type DbxFilterButtonConfig<F> = DbxFilterComponentParams<F>;
 
 @Directive()
 export abstract class AbstractFilterPopoverButtonDirective<F> extends AbstractSubscriptionDirective {
-
   @Input()
   config?: DbxFilterButtonConfig<F>;
 
@@ -40,5 +39,4 @@ export abstract class AbstractFilterPopoverButtonDirective<F> extends AbstractSu
       this._popoverRef = undefined;
     });
   }
-
 }

@@ -4,7 +4,6 @@ import { ErrorInput } from '@dereekb/util';
 import { DbxReadableErrorModule } from './error.module';
 
 describe('ReadableErrorComponent', () => {
-
   beforeEach(async () => {
     TestBed.configureTestingModule({
       imports: [DbxReadableErrorModule],
@@ -13,12 +12,10 @@ describe('ReadableErrorComponent', () => {
   });
 
   it('should render', () => {
-
     // TODO
 
     expect(true).toBe(true);
-  })
-
+  });
 });
 
 @Component({
@@ -27,7 +24,5 @@ describe('ReadableErrorComponent', () => {
   `
 })
 class ErrorComponent {
-
   error?: ErrorInput;
-
 }

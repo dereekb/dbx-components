@@ -1,18 +1,20 @@
-@use "sass:map";
+@use 'sass:map';
 @use './variables';
 
 // theme
 @function define-dbx-form-theme-config($theme-config, $input-dbx-form-theme-config: null) {
-
   @if ($input-dbx-form-theme-config == null) {
     $input-dbx-form-theme-config: ();
   }
-  
+
   $dbx-form-theme-config: ();
 
-  @return map.merge($theme-config, (
-    'dbx-form': $dbx-form-theme-config
-  ));
+  @return map.merge(
+    $theme-config,
+    (
+      'dbx-form': $dbx-form-theme-config
+    )
+  );
 }
 
 @function get-dbx-form-theme-config($theme-config) {

@@ -17,9 +17,9 @@ export interface IncrementingNumberFactoryConfig {
 
 /**
  * Creates a factory that returns increasing numbers.
- * 
- * @param config 
- * @returns 
+ *
+ * @param config
+ * @returns
  */
 export function incrementingNumberFactory(config: IncrementingNumberFactoryConfig = {}): Factory<number> {
   const { startAt: initial, increaseBy: inputIncreaseBy } = config;

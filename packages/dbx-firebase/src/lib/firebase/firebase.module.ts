@@ -30,7 +30,7 @@ import { DbxFirebaseOptions } from './options';
     }) as any)
   ]
 })
-export class DbxFirebaseDefaultFirestoreProviderModule { }
+export class DbxFirebaseDefaultFirestoreProviderModule {}
 
 /**
  * Default firebase auth provider module.
@@ -50,7 +50,7 @@ export class DbxFirebaseDefaultFirestoreProviderModule { }
     }) as any)
   ]
 })
-export class DbxFirebaseDefaultAuthProviderModule { }
+export class DbxFirebaseDefaultAuthProviderModule {}
 
 /**
  * Default firebase storage provider module.
@@ -70,7 +70,7 @@ export class DbxFirebaseDefaultAuthProviderModule { }
     }) as any)
   ]
 })
-export class DbxFirebaseDefaultStorageProviderModule { }
+export class DbxFirebaseDefaultStorageProviderModule {}
 
 /**
  * Default firebase functions provider module.
@@ -93,7 +93,7 @@ export class DbxFirebaseDefaultStorageProviderModule { }
     }) as any)
   ]
 })
-export class DbxFirebaseDefaultFunctionsProviderModule { }
+export class DbxFirebaseDefaultFunctionsProviderModule {}
 
 export const DBX_FIREBASE_OPTIONS_TOKEN = new InjectionToken('DbxFirebaseOptions');
 
@@ -113,15 +113,15 @@ export const DBX_FIREBASE_OPTIONS_TOKEN = new InjectionToken('DbxFirebaseOptions
   ]
 })
 export class DbxFirebaseDefaultFirebaseProvidersModule {
-
   static forRoot(firebaseOptions: FirebaseOptions): ModuleWithProviders<DbxFirebaseDefaultFirebaseProvidersModule> {
     return {
       ngModule: DbxFirebaseDefaultFirebaseProvidersModule,
-      providers: [{
-        provide: DBX_FIREBASE_OPTIONS_TOKEN,
-        useValue: firebaseOptions
-      }]
+      providers: [
+        {
+          provide: DBX_FIREBASE_OPTIONS_TOKEN,
+          useValue: firebaseOptions
+        }
+      ]
     };
   }
-
 }

@@ -1,5 +1,5 @@
-import { MapDescriptorAssertionOptions } from "./assert";
-import { AssertionIssue, ASSERTION_HANDLER } from "./assert.error";
+import { MapDescriptorAssertionOptions } from './assert';
+import { AssertionIssue, ASSERTION_HANDLER } from './assert.error';
 
 // MARK: Generic Assertions
 type SetAccessorFunction<T> = (value: T) => void;
@@ -18,12 +18,10 @@ export interface SetValueInterceptorFunctionInput<T> {
   setValue: (value: T) => void;
 }
 
-export type SetValueInterceptorFunctionFactory<T> = (input: SetValueInterceptorFunctionInput<T>) => ((value: T) => void);
+export type SetValueInterceptorFunctionFactory<T> = (input: SetValueInterceptorFunctionInput<T>) => (value: T) => void;
 
 export class PropertyDescriptorUtility {
-
   static makePropertyDescriptorAssertion<T>(assertValueFn: AccessorValueAssertion<T>, options?: MapDescriptorAssertionOptions<T>, defaultOptions?: MapDescriptorAssertionOptions<T>) {
-
     // Build options
     options = {
       ...defaultOptions,
@@ -61,5 +59,4 @@ export class PropertyDescriptorUtility {
     };
     return interceptor;
   }
-
 }

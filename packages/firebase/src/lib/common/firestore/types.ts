@@ -4,7 +4,7 @@
 // MARK: Firestore
 // These types are provided to avoid us from using the "any".
 export type FirebaseFirestoreLikeFirestore = { type: string };
-export type GoogleCloudLikeFirestore = { terminate(): Promise<void>; };
+export type GoogleCloudLikeFirestore = { terminate(): Promise<void> };
 
 /**
  * Cast to the local type's firestore if direct access is needed. In most cases, direct access to this type is unncessary.
@@ -18,27 +18,15 @@ export interface FieldValue {
   isEqual(other: FieldValue): boolean;
 }
 
-export type PartialWithFieldValue<T> =
-  | Partial<T>
-  | (T extends Primitive
-    ? T
-    : T extends {}
-    ? { [K in keyof T]?: PartialWithFieldValue<T[K]> | FieldValue }
-    : never);
+export type PartialWithFieldValue<T> = Partial<T> | (T extends Primitive ? T : T extends {} ? { [K in keyof T]?: PartialWithFieldValue<T[K]> | FieldValue } : never);
 
-export type WithFieldValue<T> =
-  | T
-  | (T extends Primitive
-    ? T
-    : T extends {}
-    ? { [K in keyof T]: WithFieldValue<T[K]> | FieldValue }
-    : never);
+export type WithFieldValue<T> = T | (T extends Primitive ? T : T extends {} ? { [K in keyof T]: WithFieldValue<T[K]> | FieldValue } : never);
 
 export type UnionToIntersection<U> = (U extends unknown ? (k: U) => void : never) extends (k: infer I) => void ? I : never;
 export type AddPrefixToKeys<Prefix extends string, T extends Record<string, unknown>> = { [K in keyof T & string as `${Prefix}.${K}`]+?: T[K] };
 export type ChildUpdateFields<K extends string, V> = V extends Record<string, unknown> ? AddPrefixToKeys<K, UpdateData<V>> : never;
-export type NestedUpdateFields<T extends Record<string, unknown>> = UnionToIntersection<{ [K in keyof T & string]: ChildUpdateFields<K, T[K]>; }[keyof T & string]>;
-export type UpdateData<T> = T extends Primitive ? T : T extends {} ? { [K in keyof T]?: UpdateData<T[K]> | FieldValue; } & NestedUpdateFields<T> : Partial<T>;
+export type NestedUpdateFields<T extends Record<string, unknown>> = UnionToIntersection<{ [K in keyof T & string]: ChildUpdateFields<K, T[K]> }[keyof T & string]>;
+export type UpdateData<T> = T extends Primitive ? T : T extends {} ? { [K in keyof T]?: UpdateData<T[K]> | FieldValue } & NestedUpdateFields<T> : Partial<T>;
 
 export interface FieldPath {
   isEqual(other: FieldPath): boolean;
@@ -48,7 +36,7 @@ export function asTopLevelFieldPaths(input: (string | FieldPath)[]): string[] {
   return input.map(asTopLevelFieldPath);
 }
 
-export function asTopLevelFieldPath(input: (string | FieldPath)): string {
+export function asTopLevelFieldPath(input: string | FieldPath): string {
   let path: string;
 
   if (typeof input === 'string') {
@@ -91,11 +79,11 @@ export type SetOptions = SetOptionsMerge | SetOptionsMergeFields;
 
 export interface SetOptionsMerge {
   readonly merge?: boolean | undefined;
-};
+}
 
 export interface SetOptionsMergeFields {
-  readonly mergeFields?: Array<(string | FieldPath)>;
-};
+  readonly mergeFields?: Array<string | FieldPath>;
+}
 
 export interface SnapshotOptions {
   readonly serverTimestamps?: 'estimate' | 'previous' | 'none';
@@ -139,13 +127,11 @@ export interface CollectionReference<T = DocumentData> extends Query<T> {
 
 // MARK: Batch
 export interface WriteBatch {
-
   /**
    * Commits the changes.
    */
   commit(): Promise<WriteResult[] | void>;
-
-};
+}
 
 export type Transaction = object;
 

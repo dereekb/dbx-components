@@ -15,35 +15,8 @@ import { DbxTextChipsComponent } from './text.chips.component';
 import { DbxWarnComponent } from './warn.component';
 
 @NgModule({
-  imports: [
-    CommonModule,
-    MatChipsModule,
-    MatTooltipModule,
-    MatIconModule
-  ],
-  declarations: [
-    DbxNoteComponent,
-    DbxNoticeComponent,
-    DbxSuccessComponent,
-    DbxWarnComponent,
-    DbxHintComponent,
-    DbxLabelComponent,
-    DbxLinkifyComponent,
-    DbxOkComponent,
-    DbxTextChipsComponent,
-    DbxIconSpacerDirective
-  ],
-  exports: [
-    DbxNoteComponent,
-    DbxNoticeComponent,
-    DbxSuccessComponent,
-    DbxWarnComponent,
-    DbxHintComponent,
-    DbxLabelComponent,
-    DbxLinkifyComponent,
-    DbxOkComponent,
-    DbxTextChipsComponent,
-    DbxIconSpacerDirective
-  ],
+  imports: [CommonModule, MatChipsModule, MatTooltipModule, MatIconModule],
+  declarations: [DbxNoteComponent, DbxNoticeComponent, DbxSuccessComponent, DbxWarnComponent, DbxHintComponent, DbxLabelComponent, DbxLinkifyComponent, DbxOkComponent, DbxTextChipsComponent, DbxIconSpacerDirective],
+  exports: [DbxNoteComponent, DbxNoticeComponent, DbxSuccessComponent, DbxWarnComponent, DbxHintComponent, DbxLabelComponent, DbxLinkifyComponent, DbxOkComponent, DbxTextChipsComponent, DbxIconSpacerDirective]
 })
-export class DbxTextModule { }
+export class DbxTextModule {}

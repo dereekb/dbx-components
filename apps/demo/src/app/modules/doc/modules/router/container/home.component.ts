@@ -6,11 +6,9 @@ import { Component } from '@angular/core';
   templateUrl: './home.component.html'
 })
 export class DocRouterHomeComponent {
-
   cards: DocFeatureCard[] = DOC_ROUTER_ROUTES.map((anchor) => ({
     title: anchor.title,
     detail: anchor.detail,
     anchor
   }));
-
 }

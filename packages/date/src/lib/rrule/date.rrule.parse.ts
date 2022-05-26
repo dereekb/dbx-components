@@ -15,7 +15,7 @@ export type RRulePropertyType = string;
 
 /**
  * Set of RRuleParams, separated by a ";".
- * 
+ *
  * The first value in this set is the Type of RRule.
  */
 export type RRuleRawParamSetString = string;
@@ -82,7 +82,6 @@ export type RFC5545DateString = string;
 export type RFC5545DateTimeString = string;
 
 export interface RRuleStringSetSeparation {
-
   /**
    * All of the original input.
    */
@@ -97,7 +96,6 @@ export interface RRuleStringSetSeparation {
    * Exdate values. Relative to UTC.
    */
   exdates: DateSet;
-
 }
 
 /**
@@ -117,9 +115,7 @@ export interface RRuleExdateAttribute {
 export const RRuleStringSplitter = ':';
 
 export class DateRRuleParseUtility {
-
   static separateRRuleStringSetValues(input: RRuleStringLineSet): RRuleStringSetSeparation {
-
     const basic: RRuleStringLineSet = [];
     const exdateRules: RRuleStringLineSet = [];
 
@@ -134,9 +130,13 @@ export class DateRRuleParseUtility {
     let exdates = new DateSet();
 
     if (exdateRules.length) {
-      exdates = new DateSet(flattenArray(exdateRules.map((date) => {
-        return DateRRuleParseUtility.parseExdateAttributeFromLine(date).dates;
-      })));
+      exdates = new DateSet(
+        flattenArray(
+          exdateRules.map((date) => {
+            return DateRRuleParseUtility.parseExdateAttributeFromLine(date).dates;
+          })
+        )
+      );
     }
 
     return {
@@ -154,11 +154,11 @@ export class DateRRuleParseUtility {
   }
 
   static parseExdateAttributeFromProperty(property: RRuleProperty): RRuleExdateAttribute {
-    const timezone: Maybe<TimezoneString> = property.params.find(x => x.key === 'TZID')?.value;
+    const timezone: Maybe<TimezoneString> = property.params.find((x) => x.key === 'TZID')?.value;
     const rawDates: (RFC5545DateString | RFC5545DateTimeString)[] = property.values.split(',');
 
     const conversion = new DateTimezoneUtcNormalInstance({ timezone });
-    const dates = rawDates.map(x => DateRRuleParseUtility.parseDateTimeString(x, conversion));
+    const dates = rawDates.map((x) => DateRRuleParseUtility.parseDateTimeString(x, conversion));
     return {
       timezone,
       dates
@@ -176,7 +176,7 @@ export class DateRRuleParseUtility {
    */
   static parseDateTimeString(rfcDateString: RFC5545DateString | RFC5545DateTimeString, converter: Maybe<DateTimezoneBaseDateConverter>): Date {
     const RFC5545_DATE_TIME_FORMAT = /^((\d{4})(\d{2})(\d{2}))(T(\d{2})(\d{2})(\d{2})Z?)?$/;
-    const isDateString = (rfcDateString.length === 6);
+    const isDateString = rfcDateString.length === 6;
     const isUTCDate = isDateString || rfcDateString.endsWith('Z');
 
     const parsed = RFC5545_DATE_TIME_FORMAT.exec(rfcDateString);
@@ -185,14 +185,13 @@ export class DateRRuleParseUtility {
       throw new Error(`Failed parsing input rfcDateString "${rfcDateString}"`);
     }
 
-    const [/*full*/, /*yearDate*/, yearS, monthS, dayS, /*time*/, hourS, minuteS, secondS] = parsed;
-    const [year, month, day, hour, minute, second] = [yearS, monthS, dayS, hourS, minuteS, secondS].map(x => (x) ? Number.parseInt(x, 10) : 0);
+    const [, , /*full*/ /*yearDate*/ yearS, monthS, dayS /*time*/, , hourS, minuteS, secondS] = parsed;
+    const [year, month, day, hour, minute, second] = [yearS, monthS, dayS, hourS, minuteS, secondS].map((x) => (x ? Number.parseInt(x, 10) : 0));
 
-    const utcDate = new Date(Date.UTC(year, (month - 1), day, hour, minute, second));
+    const utcDate = new Date(Date.UTC(year, month - 1, day, hour, minute, second));
     let date: Date = utcDate;
 
     if (!isUTCDate) {
-
       // Date was parsed as a base/UTC value by rrule, so convert it to the real date.
       if (converter) {
         date = converter.baseDateToTargetDate(date);
@@ -264,5 +263,4 @@ export class DateRRuleParseUtility {
       throw new Error(`Expected type ${type} but got ${property.type}`);
     }
   }
-
 }

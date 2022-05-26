@@ -8,7 +8,6 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
   templateUrl: './filter.wrapper.component.html'
 })
 export class DbxFilterWrapperComponent {
-
   @Input()
   modified?: boolean;
 
@@ -25,5 +24,4 @@ export class DbxFilterWrapperComponent {
   resetClicked(): void {
     this.resetFilter.emit();
   }
-
 }

@@ -5,7 +5,6 @@ import { DbxUIRouterService } from './uirouter.router.service';
 
 @NgModule({})
 export class DbxCoreUIRouterSegueModule {
-
   static forRoot(): ModuleWithProviders<DbxCoreUIRouterSegueModule> {
     return {
       ngModule: DbxCoreUIRouterSegueModule,
@@ -22,5 +21,4 @@ export class DbxCoreUIRouterSegueModule {
       ]
     };
   }
-
 }

@@ -1,11 +1,11 @@
-import { isPromise } from "./is";
-import { PromiseOrValue } from "./promise";
+import { isPromise } from './is';
+import { PromiseOrValue } from './promise';
 
 /**
  * Performs a mapping function on the input PromiseOrValue value.
- * 
- * @param input 
- * @param mapFn 
+ *
+ * @param input
+ * @param mapFn
  */
 export function mapPromiseOrValue<I, O>(input: Promise<I>, mapFn: (input: I) => O): Promise<O>;
 export function mapPromiseOrValue<I, O>(input: I, mapFn: (input: I) => O): O;

@@ -7,4 +7,4 @@ import { DemoApiModelModule } from './common/model/model.module';
   imports: [DemoApiFirebaseModule, DemoApiModelModule, DemoApiApiModule],
   exports: [DemoApiModelModule]
 })
-export class DemoApiAppModule { }
+export class DemoApiAppModule {}

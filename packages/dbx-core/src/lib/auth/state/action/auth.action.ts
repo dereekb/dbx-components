@@ -13,4 +13,4 @@ export const loggedOut = createAction('[App/Auth] Auth Logged Out');
 /**
  * Action to log the user out.
  */
- export const logout = createAction('[App/Auth] Auth Logout');
+export const logout = createAction('[App/Auth] Auth Logout');

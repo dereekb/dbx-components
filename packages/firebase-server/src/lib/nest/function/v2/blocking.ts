@@ -15,10 +15,10 @@ export type BlockingFunctionHandlerWithNestContextFactory<C> = <E, O = unknown>(
 
 /**
  * Creates a BlockingFunctionHandlerWithNestContextFactory.
- * 
- * @param appFactory 
- * @param makeNestContext 
- * @returns 
+ *
+ * @param appFactory
+ * @param makeNestContext
+ * @returns
  */
 export function blockingFunctionHandlerWithNestContextFactory<C>(makeNestContext: MakeNestContext<C>): BlockingFunctionHandlerWithNestContextFactory<C> {
   return <E, O>(fn: BlockingFunctionHandlerWithNestContextBuilder<C, E, O>) => {

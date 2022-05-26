@@ -8,7 +8,7 @@ export interface LoadingStateContextEvent<T = unknown> extends LoadingContextEve
   value?: Maybe<T>;
 }
 
-export type LoadingEventForLoadingPairConfig<S extends LoadingState = LoadingState> = AbstractLoadingEventForLoadingPairConfig<S>
+export type LoadingEventForLoadingPairConfig<S extends LoadingState = LoadingState> = AbstractLoadingEventForLoadingPairConfig<S>;
 
 export interface LoadingStateContext<L = unknown, S extends LoadingState<L> = LoadingState<L>> extends AbstractLoadingStateContext<L, S, LoadingStateContextEvent<L>> {
   readonly list$: Observable<L[]>;
@@ -20,9 +20,15 @@ export interface LoadingStateContext<L = unknown, S extends LoadingState<L> = Lo
  * LoadingContext implementation for a LoadingState.
  */
 export class LoadingStateContextInstance<T = unknown, S extends LoadingState<T> = LoadingState<T>> extends AbstractLoadingStateContextInstance<T, S, LoadingStateContextEvent<T>, LoadingEventForLoadingPairConfig<S>> {
-
-  readonly value$: Observable<Maybe<T>> = this.stream$.pipe(map(x => x.value), shareReplay(1));
-  readonly valueAfterLoaded$: Observable<Maybe<T>> = this.stream$.pipe(filter(x => !x.loading), map(x => x.value), shareReplay(1));
+  readonly value$: Observable<Maybe<T>> = this.stream$.pipe(
+    map((x) => x.value),
+    shareReplay(1)
+  );
+  readonly valueAfterLoaded$: Observable<Maybe<T>> = this.stream$.pipe(
+    filter((x) => !x.loading),
+    map((x) => x.value),
+    shareReplay(1)
+  );
 
   protected loadingEventForLoadingPair(pair: S, { showLoadingOnNoValue }: LoadingEventForLoadingPairConfig = {}): LoadingStateContextEvent<T> {
     let loading: boolean = false;
@@ -44,7 +50,6 @@ export class LoadingStateContextInstance<T = unknown, S extends LoadingState<T> 
       value
     };
   }
-
 }
 
 export function loadingStateContext<T = unknown, S extends LoadingState<T> = LoadingState<T>>(config: LoadingStateContextInstanceInputConfig<S, LoadingEventForLoadingPairConfig<S>>): LoadingStateContextInstance<T, S> {

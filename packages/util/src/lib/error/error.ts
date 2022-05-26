@@ -15,7 +15,7 @@ export interface CodedError {
   /**
    * The original error, if available.
    */
-   _error?: unknown;
+  _error?: unknown;
 }
 
 /**
@@ -44,9 +44,9 @@ export type ErrorInput = ErrorWrapper | CodedError | ReadableError | ReadableDat
 
 /**
  * Converts the input error content to a ReadableError or CodedError.
- * 
- * @param inputError 
- * @returns 
+ *
+ * @param inputError
+ * @returns
  */
 export function toReadableError(inputError: Maybe<ErrorInput>): Maybe<CodedError | ReadableError> {
   let error: Maybe<CodedError | ReadableError>;

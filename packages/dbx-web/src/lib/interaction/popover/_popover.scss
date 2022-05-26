@@ -7,7 +7,6 @@ $dbx-popover-header-height: 48px;
 
 // MARK: Mixin
 @mixin core() {
-
   .dbx-popover-content,
   .dbx-popover-component {
     height: 100%;
@@ -72,12 +71,10 @@ $dbx-popover-header-height: 48px;
     &.popover-has-controls-and-header {
       @include fillPopoverContentHeight(1, 1);
     }
-
   }
 }
 
 @mixin color($theme-config) {
-
   .dbx-popover-header {
     .dbx-popover-header-content {
       @include theming.if-small-screen($theme-config) {
@@ -85,10 +82,10 @@ $dbx-popover-header-height: 48px;
       }
     }
   }
-
 }
 
-@mixin typography($typography-config) {}
+@mixin typography($typography-config) {
+}
 
 @mixin theme($theme-config) {
   @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-interaction-popover') {

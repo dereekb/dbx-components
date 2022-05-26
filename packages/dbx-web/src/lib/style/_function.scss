@@ -1,4 +1,3 @@
-
 @function vh($from100: 100) {
   @return calc(var(--vh100) * ($from100 / 100));
 }

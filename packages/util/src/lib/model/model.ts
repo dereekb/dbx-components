@@ -40,7 +40,7 @@ export interface ModelKeyNamePair extends Pick<ModelKeyTypePair, 'key'> {
   name?: string;
 }
 
-export interface ModelKeyTypeNamePair extends ModelKeyNamePair, ModelKeyTypePair { }
+export interface ModelKeyTypeNamePair extends ModelKeyNamePair, ModelKeyTypePair {}
 
 export interface ReadModelKeyParams<T> {
   required?: boolean;
@@ -62,7 +62,6 @@ export abstract class AbstractUniqueModel {
       this.id = template.id;
     }
   }
-
 }
 
 export function uniqueKeys(keys: ModelKey[]): ModelKey[] {
@@ -78,7 +77,7 @@ export function uniqueModels<T>(models: T[], readKey: ReadModelKeyFunction<T> = 
 export function readModelKeysFromObjects<T extends UniqueModel>(input: T[], required?: boolean, read?: ReadModelKeyFunction<T>): Maybe<ModelKey>[];
 export function readModelKeysFromObjects<T extends UniqueModel>(input: T[], required: true, read?: ReadModelKeyFunction<T>): ModelKey[];
 export function readModelKeysFromObjects<T extends UniqueModel>(input: T[], required?: boolean, read?: ReadModelKeyFunction<T>): Maybe<ModelKey>[] {
-  return input.map(x => readModelKeyFromObject(x, required, read));
+  return input.map((x) => readModelKeyFromObject(x, required, read));
 }
 
 export function symmetricDifferenceWithModels<T extends UniqueModel>(a: ModelOrKey<T>[], b: ModelOrKey<T>[], required?: boolean, read?: ReadModelKeyFunction<T>): Maybe<ModelKey>[] {
@@ -95,7 +94,7 @@ export function removeModelsWithSameKey<T>(input: T[], model: T, read: ReadModel
 export function removeModelsWithKey<T extends UniqueModel>(input: T[], key: Maybe<ModelKey>, read?: ReadModelKeyFunction<T>): T[];
 export function removeModelsWithKey<T>(input: T[], key: Maybe<ModelKey>, read: ReadModelKeyFunction<T>): T[];
 export function removeModelsWithKey<T>(input: T[], key: Maybe<ModelKey>, read: ReadModelKeyFunction<T> = readUniqueModelKey): T[] {
-  return input.filter(x => read(x) !== key);
+  return input.filter((x) => read(x) !== key);
 }
 
 export function makeModelMap<T extends UniqueModel>(input: T[], read?: ReadModelKeyFunction<T>): Map<Maybe<ModelKey>, T>;
@@ -124,14 +123,14 @@ export function makeMultiModelKeyMap<T>(input: T[], read: ReadRelationKeysFuncti
   return map;
 }
 
-export function useModelOrKey<O, T extends UniqueModel>(input: ModelOrKey<T>, { useModel, useKey, required = false }: { useModel?: (model: T) => O, useKey: (key: Maybe<ModelKey>) => O, required?: boolean }): Maybe<O> {
+export function useModelOrKey<O, T extends UniqueModel>(input: ModelOrKey<T>, { useModel, useKey, required = false }: { useModel?: (model: T) => O; useKey: (key: Maybe<ModelKey>) => O; required?: boolean }): Maybe<O> {
   let result: Maybe<O>;
 
   if (input != null) {
     if (isModelKey(input)) {
       result = useKey(input);
     } else {
-      result = (useModel) ? useModel(input) : useKey(readModelKey(input));
+      result = useModel ? useModel(input) : useKey(readModelKey(input));
     }
   } else if (required) {
     throwKeyIsRequired();
@@ -141,7 +140,7 @@ export function useModelOrKey<O, T extends UniqueModel>(input: ModelOrKey<T>, { 
 }
 
 export function readModelKeys<T extends UniqueModel>(input: (ModelOrKey<T> | undefined)[], required?: boolean, read?: ReadModelKeyFunction<T>): Maybe<ModelKey>[] {
-  return input.map(x => readModelKey(x, { required, read }));
+  return input.map((x) => readModelKey(x, { required, read }));
 }
 
 export function requireModelKey<T extends UniqueModel>(input: ModelOrKey<T> | undefined): Maybe<ModelKey> {

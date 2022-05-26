@@ -9,8 +9,7 @@ import { toJsDate } from '@dereekb/date';
  */
 @Pipe({ name: 'dateFormatDistance', pure: false })
 export class DateFormatDistancePipe implements PipeTransform {
-
-  constructor(@Inject(LOCALE_ID) private locale: string) { }
+  constructor(@Inject(LOCALE_ID) private locale: string) {}
 
   transform(input: Maybe<DateOrDateString>, format: string, includeSeconds = false): Maybe<string> {
     if (input) {
@@ -30,5 +29,4 @@ export class DateFormatDistancePipe implements PipeTransform {
 
     return undefined;
   }
-
 }

@@ -2,15 +2,10 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { DbxTestDbxFormComponent, FORM_TEST_PROVIDERS } from '../../test';
 
 describe('DbxInputFormControlComponent', () => {
-
   beforeEach(async () => {
     TestBed.configureTestingModule({
-      imports: [
-        ...FORM_TEST_PROVIDERS
-      ],
-      declarations: [
-        DbxTestDbxFormComponent
-      ]
+      imports: [...FORM_TEST_PROVIDERS],
+      declarations: [DbxTestDbxFormComponent]
     }).compileComponents();
   });
 
@@ -28,5 +23,4 @@ describe('DbxInputFormControlComponent', () => {
   });
 
   // TODO: Test disabled
-
 });

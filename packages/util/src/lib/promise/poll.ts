@@ -21,7 +21,7 @@ export interface PollConfig {
  */
 export function poll({ check, wait = 250, timesToGiveup = Number.MAX_SAFE_INTEGER }: PollConfig): Promise<void> {
   return performTaskLoop({
-    next: (i) => (i > 0) ? waitForMs(wait) : Promise.resolve(),
+    next: (i) => (i > 0 ? waitForMs(wait) : Promise.resolve()),
     checkContinue: (_, i) => !check() && timesToGiveup > i
   });
 }

@@ -6,7 +6,6 @@ import { LOREM } from '../../shared';
   templateUrl: './anchor.component.html'
 })
 export class DocRouterAnchorComponent {
-
   lorem = LOREM;
 
   link: ClickableAnchorLink = {
@@ -34,12 +33,10 @@ export class DocRouterAnchorComponent {
   fun: ClickableAnchor = {
     onClick: () => {
       if (this.lorem === LOREM) {
-        this.lorem = 'Click did something!'
+        this.lorem = 'Click did something!';
       } else {
         this.lorem = LOREM;
       }
     }
   };
-
-
 }

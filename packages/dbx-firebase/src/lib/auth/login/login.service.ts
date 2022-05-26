@@ -1,8 +1,8 @@
-import { mapIterable, addToSet, removeFromSet, Maybe, ArrayOrValue, filterMaybeValues } from "@dereekb/util";
-import { Inject, Injectable, InjectionToken, Optional, Type } from "@angular/core";
-import { FirebaseLoginMethodCategory, FirebaseLoginMethodType, KnownFirebaseLoginMethodType } from "./login";
-import { DbxFirebaseLoginTermsSimpleComponent } from "./login.terms.simple.component";
-import { DbxFirebaseAuthLoginPasswordConfig, DEFAULT_FIREBASE_AUTH_LOGIN_PASSWORD_CONFIG } from "./login.password";
+import { mapIterable, addToSet, removeFromSet, Maybe, ArrayOrValue, filterMaybeValues } from '@dereekb/util';
+import { Inject, Injectable, InjectionToken, Optional, Type } from '@angular/core';
+import { FirebaseLoginMethodCategory, FirebaseLoginMethodType, KnownFirebaseLoginMethodType } from './login';
+import { DbxFirebaseLoginTermsSimpleComponent } from './login.terms.simple.component';
+import { DbxFirebaseAuthLoginPasswordConfig, DEFAULT_FIREBASE_AUTH_LOGIN_PASSWORD_CONFIG } from './login.password';
 
 /**
  * Default providers to inject.
@@ -30,7 +30,7 @@ export interface DbxFirebaseAuthLoginProvider<D = unknown> {
   readonly registrationComponentClass?: Type<unknown> | false;
   /**
    * Custom data available to the components.
-   * 
+   *
    * Components are responsible for knowing the typing information of this data.
    */
   readonly componentData?: D;
@@ -68,14 +68,13 @@ export interface DbxFirebaseAuthLoginProviderAssets {
 
 /**
  * Service used for registering components used for logging in.
- * 
+ *
  * Default providers can be configured by the DEFAULT_FIREBASE_AUTH_LOGIN_PROVIDERS_TOKEN injectable value.
  */
 @Injectable({
-  providedIn: 'root',
+  providedIn: 'root'
 })
 export class DbxFirebaseAuthLoginService {
-
   private _enableAll = false;
   private _passwordConfig: DbxFirebaseAuthLoginPasswordConfig;
   private _providers = new Map<FirebaseLoginMethodType, DbxFirebaseAuthLoginProvider>();
@@ -96,9 +95,9 @@ export class DbxFirebaseAuthLoginService {
 
   /**
    * Used to register a provider. If a provider is already registered, this will override it by default.
-   * 
-   * @param provider 
-   * @param override 
+   *
+   * @param provider
+   * @param override
    */
   register(provider: DbxFirebaseAuthLoginProvider, override: boolean = true): boolean {
     if (override || !this._providers.has(provider.loginMethodType)) {
@@ -115,9 +114,9 @@ export class DbxFirebaseAuthLoginService {
 
   /**
    * Updates the assets for a provider type.
-   * 
+   *
    * @param type
-   * @param assets 
+   * @param assets
    */
   updateAssetsForProvider(type: FirebaseLoginMethodType, assets: Partial<DbxFirebaseAuthLoginProviderAssets>): void {
     const current = this._assets.get(type);
@@ -143,8 +142,8 @@ export class DbxFirebaseAuthLoginService {
 
   /**
    * Enables all of the specified types.
-   * 
-   * @param types 
+   *
+   * @param types
    */
   enable(types: ArrayOrValue<FirebaseLoginMethodType>): void {
     addToSet(this._enabled, types);
@@ -160,7 +159,7 @@ export class DbxFirebaseAuthLoginService {
   }
 
   getEnabledTypes(): FirebaseLoginMethodType[] {
-    return (this._enableAll) ? this.getRegisteredTypes() : Array.from(this._enabled);
+    return this._enableAll ? this.getRegisteredTypes() : Array.from(this._enabled);
   }
 
   getLoginProvider(type: FirebaseLoginMethodType): Maybe<DbxFirebaseAuthLoginProvider> {
@@ -176,7 +175,7 @@ export class DbxFirebaseAuthLoginService {
   }
 
   getRegisterProviders(types: Iterable<FirebaseLoginMethodType>): DbxFirebaseAuthLoginProvider[] {
-    return filterMaybeValues(mapIterable(types ?? [], (x) => this._providers.get(x))).filter(x => x.registrationComponentClass !== false);
+    return filterMaybeValues(mapIterable(types ?? [], (x) => this._providers.get(x))).filter((x) => x.registrationComponentClass !== false);
   }
 
   getProviderAssets(type: FirebaseLoginMethodType): Maybe<DbxFirebaseAuthLoginProviderAssets> {
@@ -190,5 +189,4 @@ export class DbxFirebaseAuthLoginService {
   setPasswordConfig(passwordConfig: DbxFirebaseAuthLoginPasswordConfig) {
     this._passwordConfig = passwordConfig;
   }
-
 }

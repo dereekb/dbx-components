@@ -1,4 +1,4 @@
-import { Component } from "@angular/core";
+import { Component } from '@angular/core';
 
 @Component({
   selector: 'dbx-action-progress',
@@ -6,4 +6,4 @@ import { Component } from "@angular/core";
     <dbx-loading-progress *dbxActionIsWorking [linear]="true"></dbx-loading-progress>
   `
 })
-export class DbxActionProgressComponent { }
+export class DbxActionProgressComponent {}

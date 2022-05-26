@@ -13,8 +13,6 @@ export interface DocFeatureCard {
   styleUrls: ['./feature.card.list.component.scss']
 })
 export class DocFeatureCardListComponent {
-
   @Input()
   cards: DocFeatureCard[] = [];
-
 }

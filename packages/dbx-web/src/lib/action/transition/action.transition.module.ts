@@ -9,23 +9,12 @@ import { DbxReadableErrorModule } from '../../error';
 
 /**
  * Provides the DbxActionUIRouterTransitionSafetyDirective.
- * 
+ *
  * NOTE: Only works with UIRouter
  */
 @NgModule({
-  imports: [
-    CommonModule,
-    DbxCoreActionModule,
-    DbxPromptModule,
-    DbxButtonModule,
-    DbxReadableErrorModule
-  ],
-  declarations: [
-    DbxActionUIRouterTransitionSafetyDirective,
-    DbxActionUIRouterTransitionSafetyDialogComponent
-  ],
-  exports: [
-    DbxActionUIRouterTransitionSafetyDirective
-  ]
+  imports: [CommonModule, DbxCoreActionModule, DbxPromptModule, DbxButtonModule, DbxReadableErrorModule],
+  declarations: [DbxActionUIRouterTransitionSafetyDirective, DbxActionUIRouterTransitionSafetyDialogComponent],
+  exports: [DbxActionUIRouterTransitionSafetyDirective]
 })
-export class DbxActionUIRouterTransitionModule { }
+export class DbxActionUIRouterTransitionModule {}

@@ -9,7 +9,6 @@ import { Maybe } from '@dereekb/util';
  */
 @Directive()
 export abstract class AbstractDbxListViewDirective<T> implements DbxListView<T>, OnDestroy {
-
   private readonly _disabled = new BehaviorSubject<boolean>(false);
   private readonly _selectionMode = new BehaviorSubject<Maybe<DbxListSelectionMode>>(undefined);
   private readonly _values$ = new BehaviorSubject<Maybe<Observable<T[]>>>(undefined);
@@ -56,5 +55,4 @@ export abstract class AbstractDbxListViewDirective<T> implements DbxListView<T>,
   setSelectionMode(selectionMode: Maybe<DbxListSelectionMode>): void {
     this._selectionMode.next(selectionMode);
   }
-
 }

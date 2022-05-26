@@ -4,13 +4,8 @@ import { DbxFormFormlyPickableFieldModule } from './pickable/pickable.field.modu
 import { DbxFormFormlySearchableFieldModule } from './searchable/searchable.field.module';
 
 @NgModule({
-  imports: [
-    CommonModule
-  ],
+  imports: [CommonModule],
   declarations: [],
-  exports: [
-    DbxFormFormlyPickableFieldModule,
-    DbxFormFormlySearchableFieldModule
-  ]
+  exports: [DbxFormFormlyPickableFieldModule, DbxFormFormlySearchableFieldModule]
 })
-export class DbxFormFormlySelectionModule { }
+export class DbxFormFormlySelectionModule {}

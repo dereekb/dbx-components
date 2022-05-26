@@ -1,7 +1,7 @@
 import { Maybe } from '../value/maybe';
-import { flattenArray } from "../array/array";
+import { flattenArray } from '../array/array';
 import { IterableOrValue, useIterableOrValue } from '../iterable/iterable';
-import { symmetricDifference } from "extra-set";
+import { symmetricDifference } from 'extra-set';
 
 export function asSet<T>(values: IterableOrValue<T>): Set<T> {
   let set: Set<T>;
@@ -49,7 +49,7 @@ export function excludeValuesFromSet<T>(values: T[], set: Set<T>): T[] {
 }
 
 export function filterValuesFromSet<T>(values: T[], set: Set<T>, exclude = false): T[] {
-  const filterFn = (exclude) ? ((x: T) => !set.has(x)) : ((x: T) => set.has(x));
+  const filterFn = exclude ? (x: T) => !set.has(x) : (x: T) => set.has(x);
   return values.filter(filterFn);
 }
 
@@ -67,10 +67,10 @@ export type SetIncludesFunction<T> = (valuesToFind: Iterable<T>) => boolean;
 
 /**
  * Creates a SetIncludesFunction using the input valuesSet and optional mode. By default the mode defaults to 'all'.
- * 
- * @param valuesSet 
- * @param valuesToFind 
- * @param mode 
+ *
+ * @param valuesSet
+ * @param valuesToFind
+ * @param mode
  */
 export function setIncludesFunction<T>(valuesSet: Set<T>, mode: SetIncludesMode = 'all'): SetIncludesFunction<T> {
   let fn: (set: Set<T>, values: Iterable<T>) => boolean;
@@ -97,15 +97,15 @@ export function containsAnyValueFromSet<T>(values: Iterable<T>, valuesToFind: Se
 }
 
 export function setContainsAnyValue<T>(valuesSet: Set<T>, valuesToFind: Iterable<T>): boolean {
-  return (valuesSet) ? Array.from(valuesToFind).findIndex((x) => valuesSet.has(x)) !== -1 : false;
+  return valuesSet ? Array.from(valuesToFind).findIndex((x) => valuesSet.has(x)) !== -1 : false;
 }
 
 /**
  * Returns true if values contains all values in valuesToFind.
- * 
- * @param values 
- * @param valuesToFind 
- * @returns 
+ *
+ * @param values
+ * @param valuesToFind
+ * @returns
  */
 export function containsAllValues<T>(values: Iterable<T>, valuesToFind: Iterable<T>): boolean {
   const set = new Set(values);
@@ -114,12 +114,12 @@ export function containsAllValues<T>(values: Iterable<T>, valuesToFind: Iterable
 
 /**
  * Returns true if valuesSet contains all values in valuesToFind.
- * 
- * @param valuesSet 
- * @param valuesToFind 
- * @param returnOnEmptyValuesSet 
- * @returns 
+ *
+ * @param valuesSet
+ * @param valuesToFind
+ * @param returnOnEmptyValuesSet
+ * @returns
  */
 export function setContainsAllValues<T>(valuesSet: Set<T>, valuesToFind: Iterable<T>): boolean {
-  return (valuesSet) ? Array.from(valuesToFind).findIndex((x) => !valuesSet.has(x)) == -1 : false;
+  return valuesSet ? Array.from(valuesToFind).findIndex((x) => !valuesSet.has(x)) == -1 : false;
 }

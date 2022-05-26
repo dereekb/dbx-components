@@ -6,20 +6,20 @@ import { CloudEventHandlerWithNestContextBuilder, cloudEventHandlerWithNestConte
 import { MakeNestContext } from '../../nest.provider';
 
 @Injectable()
-class TestInjectable { }
+class TestInjectable {}
 
 @Module({
-  providers: [{
-    provide: TestInjectable,
-    useFactory: () => new TestInjectable()
-  }]
+  providers: [
+    {
+      provide: TestInjectable,
+      useFactory: () => new TestInjectable()
+    }
+  ]
 })
-class TestAppModule { }
+class TestAppModule {}
 
 class TestAppNestContext {
-
-  constructor(readonly nest: INestApplicationContext) { }
-
+  constructor(readonly nest: INestApplicationContext) {}
 }
 
 /**
@@ -30,13 +30,10 @@ const firebaseAdminFunctionNestContext = firebaseAdminFunctionNestContextFactory
 const makeNestContext: MakeNestContext<TestAppNestContext> = (nest) => new TestAppNestContext(nest);
 
 describe('nest function utilities', () => {
-
   initFirebaseServerAdminTestEnvironment();
 
   firebaseAdminFunctionNestContext((f) => {
-
     describe('cloudEventHandlerWithNestContextFactory()', () => {
-
       it('should create a factory.', () => {
         const factory = cloudEventHandlerWithNestContextFactory(makeNestContext);
         expect(typeof factory).toBe('function');
@@ -54,7 +51,7 @@ describe('nest function utilities', () => {
           expect(nest).toBeDefined();
           expect(event).toBeDefined();
           retrievedNestApplication = true;
-          return expectedResult
+          return expectedResult;
         };
 
         const handlerBuilder: CloudEventHandlerWithNestContextBuilder<TestAppNestContext, StorageEvent> = (withNest) => storage.onObjectFinalized(withNest(handler));
@@ -70,12 +67,9 @@ describe('nest function utilities', () => {
         const testData: StorageEvent = { x: 1 } as any;
         const result = await testEvent(testData);
 
-        expect(result.x).toBe(expectedResult.x);   // our test returns event. Just check that it ran and returned the value.
+        expect(result.x).toBe(expectedResult.x); // our test returns event. Just check that it ran and returned the value.
         expect(retrievedNestApplication).toBe(true);
       });
-
     });
-
   });
-
 });

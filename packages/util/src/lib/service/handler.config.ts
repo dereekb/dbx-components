@@ -1,7 +1,7 @@
 import { MapFunction } from '../value/map';
-import { ArrayOrValue } from "../array/array";
-import { PrimativeKey } from "../key";
-import { Handler, HandlerAccessor, HandlerFunction, HandlerSetAccessor } from "./handler";
+import { ArrayOrValue } from '../array/array';
+import { PrimativeKey } from '../key';
+import { Handler, HandlerAccessor, HandlerFunction, HandlerSetAccessor } from './handler';
 
 /**
  * Wraps a HandlerAccessor and the item it is bound to in order to be a HandlerSetAccessor.
@@ -13,10 +13,10 @@ export interface HandlerBindAccessor<T, K extends PrimativeKey = string> extends
 
 /**
  * Creates a HandlerBindAccessor<T, K> for the input values.
- * 
- * @param bindTo 
- * @param accessor 
- * @returns 
+ *
+ * @param bindTo
+ * @param accessor
+ * @returns
  */
 export function handlerBindAccessor<T, K extends PrimativeKey = string>(boundTo: unknown, accessor: HandlerAccessor<T, K>): HandlerBindAccessor<T, K> {
   return {
@@ -35,10 +35,10 @@ export type HandlerSetFunction<T> = (handlerFunction: HandlerFunction<T>) => voi
 
 /**
  * Creates a HandlerSetFunction.
- * 
- * @param accessor 
- * @param key 
- * @returns 
+ *
+ * @param accessor
+ * @param key
+ * @returns
  */
 export function handlerSetFunction<T, K extends PrimativeKey = string>(accessor: HandlerSetAccessor<T, K>, key: ArrayOrValue<K>): HandlerSetFunction<T> {
   const fn = (handlerFunction: HandlerFunction<T>) => {
@@ -57,14 +57,14 @@ export function handlerMappedSetFunction<I, T, K extends PrimativeKey = string>(
   return (handlerFunction: HandlerFunction<I>) => {
     // set an intermediary function that calls the target function. We don't use an arrow function so we have access to the "this", if bound.
     handlerSet(function (this: unknown, value: T) {
-      const mapped = mapFn(value);  // fowards "this" to the next call.
+      const mapped = mapFn(value); // fowards "this" to the next call.
       return handlerFunction.call(this, mapped);
     });
   };
 }
 
 /**
- * Factory for a HandlerMappedSetFunction<I>. 
+ * Factory for a HandlerMappedSetFunction<I>.
  */
 export type HandlerMappedSetFunctionFactory<I, K extends PrimativeKey = string> = (key: ArrayOrValue<K>) => HandlerMappedSetFunction<I>;
 

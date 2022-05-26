@@ -26,18 +26,10 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
     DbxInjectionComponentModule,
     DbxFormFormlyWrapperModule,
     FormlyModule.forChild({
-      types: [
-        { name: 'checklistitem', component: DbxChecklistItemFieldComponent }
-      ]
+      types: [{ name: 'checklistitem', component: DbxChecklistItemFieldComponent }]
     })
   ],
-  declarations: [
-    DbxChecklistItemFieldComponent,
-    DbxChecklistItemContentComponent,
-    DbxDefaultChecklistItemFieldDisplayComponent
-  ],
-  exports: [
-    DbxFormFormlyWrapperModule
-  ]
+  declarations: [DbxChecklistItemFieldComponent, DbxChecklistItemContentComponent, DbxDefaultChecklistItemFieldDisplayComponent],
+  exports: [DbxFormFormlyWrapperModule]
 })
-export class DbxFormFormlyChecklistItemFieldModule { }
+export class DbxFormFormlyChecklistItemFieldModule {}

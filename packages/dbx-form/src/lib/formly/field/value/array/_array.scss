@@ -4,10 +4,8 @@
 
 // MARK: Variables
 
-
 // MARK: Mixin
 @mixin core() {
-
   .example-custom-placeholder {
     background: #ccc;
     border: dotted 3px #999;
@@ -17,7 +15,6 @@
 
   .dbx-form-repeat-array {
     .dbx-form-repeat-array-field {
-
       @include theming.elevation(1);
 
       h4 {
@@ -39,7 +36,6 @@
       }
     }
   }
-
 }
 
 @mixin color($theme-config) {
@@ -52,10 +48,10 @@
     background: $form-repeat-array-field-bg;
     border: 4px solid $form-repeat-array-field-bg;
   }
-
 }
 
-@mixin typography($typography-config) {}
+@mixin typography($typography-config) {
+}
 
 @mixin theme($theme-config) {
   @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-form-field-value-array') {

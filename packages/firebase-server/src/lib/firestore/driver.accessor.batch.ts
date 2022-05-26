@@ -1,21 +1,20 @@
-import { DocumentReference, WriteBatch as GoogleCloudWriteBatch, DocumentSnapshot } from "@google-cloud/firestore";
-import { from, Observable } from "rxjs";
-import { WithFieldValue, FirestoreDocumentContext, FirestoreDocumentContextType, FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, FirestoreDocumentDeleteParams, FirestoreDocumentUpdateParams, UpdateData } from "@dereekb/firebase";
+import { DocumentReference, WriteBatch as GoogleCloudWriteBatch, DocumentSnapshot } from '@google-cloud/firestore';
+import { from, Observable } from 'rxjs';
+import { WithFieldValue, FirestoreDocumentContext, FirestoreDocumentContextType, FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, FirestoreDocumentDeleteParams, FirestoreDocumentUpdateParams, UpdateData } from '@dereekb/firebase';
 
 // MARK: Accessor
 /**
  * FirestoreDocumentDataAccessor implementation for a batch.
  */
 export class WriteBatchFirestoreDocumentDataAccessor<T> implements FirestoreDocumentDataAccessor<T> {
-
-  constructor(readonly batch: GoogleCloudWriteBatch, readonly documentRef: DocumentReference<T>) { }
+  constructor(readonly batch: GoogleCloudWriteBatch, readonly documentRef: DocumentReference<T>) {}
 
   stream(): Observable<DocumentSnapshot<T>> {
-    return from(this.get());  // todo
+    return from(this.get()); // todo
   }
 
   exists(): Promise<boolean> {
-    return this.get().then(x => x.exists);
+    return this.get().then((x) => x.exists);
   }
 
   get(): Promise<DocumentSnapshot<T>> {
@@ -38,14 +37,13 @@ export class WriteBatchFirestoreDocumentDataAccessor<T> implements FirestoreDocu
     this.batch.update(this.documentRef, data as FirebaseFirestore.UpdateData, params?.precondition);
     return Promise.resolve();
   }
-
 }
 
 /**
  * Creates a new FirestoreDocumentDataAccessorFactory for a Batch.
- * 
- * @param batch 
- * @returns 
+ *
+ * @param batch
+ * @returns
  */
 export function writeBatchAccessorFactory<T>(writeBatch: GoogleCloudWriteBatch): FirestoreDocumentDataAccessorFactory<T> {
   return {
@@ -55,12 +53,10 @@ export function writeBatchAccessorFactory<T>(writeBatch: GoogleCloudWriteBatch):
 
 // MARK: Context
 export class WriteBatchFirestoreDocumentContext<T> implements FirestoreDocumentContext<T> {
-
   readonly contextType = FirestoreDocumentContextType.BATCH;
   readonly accessorFactory = writeBatchAccessorFactory<T>(this.batch);
 
-  constructor(readonly batch: GoogleCloudWriteBatch) { }
-
+  constructor(readonly batch: GoogleCloudWriteBatch) {}
 }
 
 export function writeBatchDocumentContext<T>(batch: GoogleCloudWriteBatch): WriteBatchFirestoreDocumentContext<T> {
