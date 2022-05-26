@@ -10,18 +10,9 @@ import { BrowserModule } from '@angular/platform-browser';
 import { DbxScreenModule } from '../../../screen';
 
 describe('NavbarComponent', () => {
-
   beforeEach(async () => {
     TestBed.configureTestingModule({
-      imports: [
-        BrowserModule,
-        NoopAnimationsModule,
-        DbxRouterNavbarModule,
-        DbxScreenModule.forRoot(),
-        DbxCoreUIRouterSegueModule.forRoot(),
-        DbxWebUIRouterModule.forRoot(),
-        UIRouterModule.forRoot()
-      ],
+      imports: [BrowserModule, NoopAnimationsModule, DbxRouterNavbarModule, DbxScreenModule.forRoot(), DbxCoreUIRouterSegueModule.forRoot(), DbxWebUIRouterModule.forRoot(), UIRouterModule.forRoot()],
       declarations: [TestViewComponent],
       providers: [{ provide: APP_BASE_HREF, useValue: '/' }]
     }).compileComponents();
@@ -37,24 +28,22 @@ describe('NavbarComponent', () => {
   });
 
   describe('with anchors', () => {
-
     beforeEach(async () => {
-      testComponent.anchors = [{
-        title: 'Test'
-      }];
+      testComponent.anchors = [
+        {
+          title: 'Test'
+        }
+      ];
 
       fixture.detectChanges();
     });
 
     it('should render', () => {
-      
       // TODO
 
       expect(true).toBe(true);
     });
-
   });
-
 });
 
 @Component({
@@ -63,8 +52,6 @@ describe('NavbarComponent', () => {
   `
 })
 class TestViewComponent {
-
   @Input()
   public anchors?: ClickableAnchorLink[];
-
 }

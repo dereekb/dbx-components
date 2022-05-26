@@ -8,9 +8,9 @@ import { minutesToMs } from './date';
  *
  * We use this "weird" date when transforming an instance (11AM in Los Angeles) into a UTC date that says the same thing,
  * 11AM UTC.
- * 
+ *
  * BaseDateAsUTC lets us simplify time changes and printing time strings by removing the concept of timezones, as we can now assume 2AM is always "2AM".
- * 
+ *
  * When using base dates, we can target any timezone after performing date conversions without worrying about things such as daylight savings, etc.
  */
 export type BaseDateAsUTC = Date;
@@ -22,28 +22,27 @@ export interface DateTimezoneConversionConfig {
   timezone?: TimezoneString;
 
   /**
-   * Whether or not to use the system timezone/offset. 
-   * 
+   * Whether or not to use the system timezone/offset.
+   *
    * This will convert between UTC and the current system's timezone.
    */
   useSystemTimezone?: boolean;
 
   /**
    * Custom timezone offset (in ms) between the "normal" and the base date.
-   * 
+   *
    * Examples:
    * - UTC-6 is negative 6 hours, in milliseconds.
    */
   timezoneOffset?: Milliseconds;
-
 }
 
 /**
  * Returns true if both inputs are considered equivalent.
- * 
- * @param a 
- * @param b 
- * @returns 
+ *
+ * @param a
+ * @param b
+ * @returns
  */
 export function isSameDateTimezoneConversionConfig(a: DateTimezoneConversionConfig, b: DateTimezoneConversionConfig) {
   let isSame = false;
@@ -59,11 +58,11 @@ export function isSameDateTimezoneConversionConfig(a: DateTimezoneConversionConf
 
 /**
  * Returns the current offset in milliseconds.
- * 
+ *
  * The offset corresponds positively with the UTC offset, so UTC-6 is negative 6 hours, in milliseconds.
- * 
+ *
  * @param date Date is required to get the correct offset for the given date.
- * @returns 
+ * @returns
  */
 export function getCurrentSystemOffsetInMs(date: Date): number {
   return -minutesToMs(date.getTimezoneOffset());
@@ -76,32 +75,32 @@ export type DateTimezoneOffsetFunction = (date: Date, from: DateTimezoneConversi
 export interface DateTimezoneBaseDateConverter {
   getCurrentOffset: DateTimezoneOffsetFunction;
   /**
-   * Converts the given date into a date relative to the UTC's date by 
+   * Converts the given date into a date relative to the UTC's date by
    * adding the timezone offset for the current timezone.
-   * 
+   *
    * This is generally used for cases where you are dealing with conversational strings, such as "2AM today". By using the base UTC date,
    * as 2PM we can get "2PM" in UTC, then convert back using baseDateToTargetDate avoid timezone conversion issues and other headaches.
-   * 
+   *
    * For example, if it is 2PM in the input time, the resulting time will be 2PM UTC.
    * - Input: 2021-08-16T14:00:00.000-06:00
    * - Output: 2021-08-16T14:00:00.000Z
-   * 
-   * @param date 
-   * @param addOffset 
+   *
+   * @param date
+   * @param addOffset
    */
   targetDateToBaseDate(date: Date): Date;
   /**
    * Converts the given date into a date relative to the system's date.
-   * 
-   * This is available for cases where the system uses Date's internal functionality (and therefore the system's timezone), 
+   *
+   * This is available for cases where the system uses Date's internal functionality (and therefore the system's timezone),
    * and conversions need to be done to/from the system time to the target timezone.
-   * 
+   *
    * For example, if it is 2PM in the input time, the resulting time will be 2PM in the current system time.
    * - Input: 2021-08-16T14:00:00.000-06:00
    * - Output: 2021-08-16T14:00:00.000+02:00
-   * 
-   * @param date 
-   * @param addOffset 
+   *
+   * @param date
+   * @param addOffset
    */
   targetDateToSystemDate(date: Date): Date;
   baseDateToTargetDate(date: Date): Date;
@@ -112,7 +111,7 @@ export interface DateTimezoneBaseDateConverter {
 
 export type DateTimezoneConversionMap = {
   [key: string]: number;
-}
+};
 
 export function calculateAllConversions(date: Date, converter: DateTimezoneBaseDateConverter, map: (time: Milliseconds) => number = (x) => x): DateTimezoneConversionMap {
   const options: DateTimezoneConversionTarget[] = ['target', 'base', 'system'];
@@ -123,8 +122,8 @@ export function calculateAllConversions(date: Date, converter: DateTimezoneBaseD
       if (from !== to) {
         conversions[`${from}-${to}`] = map(converter.getCurrentOffset(date, from, to));
       }
-    })
-  })
+    });
+  });
 
   return conversions;
 }
@@ -133,11 +132,10 @@ type GetOffsetForDateFunction = MapFunction<Date, number>;
 
 /**
  * Used for converting Dates to/from a UTC "base date" to a "normal date".
- * 
+ *
  * This can generally be used for converting from/to the target offset as well.
  */
 export class DateTimezoneUtcNormalInstance implements DateTimezoneBaseDateConverter {
-
   readonly config: DateTimezoneConversionConfig;
 
   readonly hasConversion: boolean;
@@ -183,7 +181,6 @@ export class DateTimezoneUtcNormalInstance implements DateTimezoneBaseDateConver
     }
 
     if (hasConversion) {
-
       this._getOffset = function getCurrentOffset(x: Date, from: DateTimezoneConversionTarget, to: DateTimezoneConversionTarget): number {
         if (from === to) {
           return 0;
@@ -211,14 +208,14 @@ export class DateTimezoneUtcNormalInstance implements DateTimezoneBaseDateConver
               offset = -getCurrentSystemOffsetInMs(x);
               break;
             default:
-              throw new Error(`unexpected offset target "${ target }"`);
+              throw new Error(`unexpected offset target "${target}"`);
           }
 
           return offset;
         }
       };
     } else {
-      this._getOffset = () => 0
+      this._getOffset = () => 0;
     }
 
     this.hasConversion = hasConversion;
@@ -256,7 +253,6 @@ export class DateTimezoneUtcNormalInstance implements DateTimezoneBaseDateConver
   systemDateToTargetDate(date: Date): Date {
     return this._computeOffsetDate(date, 'system', 'target');
   }
-
 }
 
 export function baseDateToTargetDate(date: Date, timezone: Maybe<TimezoneString>): Date {

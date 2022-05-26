@@ -31,12 +31,12 @@ import { DbxSectionHeaderHType } from './section';
     </div>
     <p *ngIf="hint" class="dbx-section-hint dbx-hint">{{ hint }}</p>
     <ng-template #headerContentTitleTemplate>
-        <mat-icon *ngIf="icon">{{icon}}</mat-icon><span class="title-text">{{ header }}</span>
+      <mat-icon *ngIf="icon">{{ icon }}</mat-icon>
+      <span class="title-text">{{ header }}</span>
     </ng-template>
   `
 })
 export class DbxSectionHeaderComponent {
-
   @Input()
   h?: Maybe<DbxSectionHeaderHType>;
 
@@ -52,5 +52,4 @@ export class DbxSectionHeaderComponent {
   get showTitle() {
     return Boolean(this.header || this.icon);
   }
-
 }

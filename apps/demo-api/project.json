@@ -12,10 +12,12 @@
     "build-base": {
       "executor": "@nrwl/node:webpack",
       "outputs": ["{options.outputPath}"],
-      "dependsOn": [{
-        "target": "build",
-        "projects": "dependencies"
-      }],
+      "dependsOn": [
+        {
+          "target": "build",
+          "projects": "dependencies"
+        }
+      ],
       "options": {
         "outputPath": "dist/apps/demo-api",
         "main": "apps/demo-api/src/main.ts",
@@ -28,10 +30,12 @@
           "optimization": true,
           "extractLicenses": true,
           "inspect": false,
-          "fileReplacements": [{
-            "replace": "apps/demo-api/src/environments/environment.ts",
-            "with": "apps/demo-api/src/environments/environment.prod.ts"
-          }]
+          "fileReplacements": [
+            {
+              "replace": "apps/demo-api/src/environments/environment.ts",
+              "with": "apps/demo-api/src/environments/environment.prod.ts"
+            }
+          ]
         }
       }
     },
@@ -50,7 +54,8 @@
     "serve": {
       "executor": "@nrwl/workspace:run-commands",
       "options": {
-        "commands": [{
+        "commands": [
+          {
             "command": "npx nx build-base demo-api --watch"
           },
           {
@@ -75,10 +80,7 @@
     },
     "run-tests": {
       "executor": "@nrwl/jest:jest",
-      "outputs": [
-        "coverage/apps/demo-api",
-        "./.reports/jest/demo-api.junit.xml"
-      ],
+      "outputs": ["coverage/apps/demo-api", "./.reports/jest/demo-api.junit.xml"],
       "options": {
         "jestConfig": "apps/demo-api/jest.config.ts",
         "passWithNoTests": true
@@ -92,20 +94,24 @@
     },
     "deploy": {
       "executor": "@nrwl/workspace:run-commands",
-      "dependsOn": [{
-        "target": "build",
-        "projects": "self"
-      }],
+      "dependsOn": [
+        {
+          "target": "build",
+          "projects": "self"
+        }
+      ],
       "options": {
         "command": "npx firebase deploy --only functions"
       }
     },
     "ci-deploy": {
       "executor": "@nrwl/workspace:run-commands",
-      "dependsOn": [{
-        "target": "build",
-        "projects": "self"
-      }],
+      "dependsOn": [
+        {
+          "target": "build",
+          "projects": "self"
+        }
+      ],
       "options": {
         "command": "npx firebase deploy --only functions --token \"$FIREBASE_TOKEN\""
       }

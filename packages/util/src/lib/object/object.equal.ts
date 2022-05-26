@@ -1,4 +1,4 @@
-import { isEqual } from "lodash";
+import { isEqual } from 'lodash';
 
 /**
  * Performs a deep comparison to check if all values on the input filters are equal.

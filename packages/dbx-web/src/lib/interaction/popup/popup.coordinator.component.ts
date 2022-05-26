@@ -9,17 +9,19 @@ import { delay, map, shareReplay } from 'rxjs';
 @Component({
   selector: 'dbx-popup-coordinator',
   template: `
-  <ng-container *ngIf="show$ | async">
-    <ng-content></ng-content>
-  </ng-container>
+    <ng-container *ngIf="show$ | async">
+      <ng-content></ng-content>
+    </ng-container>
   `
 })
 export class DbxPopupCoordinatorComponent implements OnInit, OnDestroy {
-
-  readonly isPopupForKey$ = this.service.popups$.pipe(map(x => x.get(this.popup.key) === this.popup), shareReplay(1));
+  readonly isPopupForKey$ = this.service.popups$.pipe(
+    map((x) => x.get(this.popup.key) === this.popup),
+    shareReplay(1)
+  );
   readonly show$ = this.isPopupForKey$.pipe(delay(0));
 
-  constructor(private readonly service: DbxPopupCoordinatorService, private readonly popup: DbxPopupController) { }
+  constructor(private readonly service: DbxPopupCoordinatorService, private readonly popup: DbxPopupController) {}
 
   ngOnInit(): void {
     this.service.addPopup(this.popup);
@@ -28,5 +30,4 @@ export class DbxPopupCoordinatorComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.service.removePopup(this.popup.key, this.popup);
   }
-
 }

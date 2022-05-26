@@ -1,4 +1,4 @@
-import { Maybe } from "../value/maybe";
+import { Maybe } from '../value/maybe';
 
 // MARK: Types
 export type ArrayOrValue<T> = T | T[];
@@ -6,9 +6,9 @@ export type ArrayOrValue<T> = T | T[];
 // MARK: Functions
 /**
  * Converts the input value to an array containing itself, or returns itself if it is an array.
- * 
- * @param arrayOrValue 
- * @returns 
+ *
+ * @param arrayOrValue
+ * @returns
  */
 export function convertMaybeToArray<T>(arrayOrValue: Maybe<ArrayOrValue<T>>): T[] {
   if (arrayOrValue != null) {
@@ -22,9 +22,9 @@ export const asArray = convertMaybeToArray;
 
 /**
  * Converts the input value to an array containing itself, or returns itself if it is an array.
- * 
- * @param arrayOrValue 
- * @returns 
+ *
+ * @param arrayOrValue
+ * @returns
  */
 export function convertToArray<T>(arrayOrValue: ArrayOrValue<T>): T[] {
   return Array.isArray(arrayOrValue) ? arrayOrValue : [arrayOrValue];
@@ -58,32 +58,32 @@ export function valueAtIndex<T>(input: ArrayOrValue<T>, index: number): T {
 /**
  * Concatinates the input arrays and filters out falsy values.
  */
-export function concatArrays<T>(...arrays: (Maybe<T[]>)[]): T[] {
-  return flattenArray(arrays.filter(x => Boolean(x)) as T[][]);
+export function concatArrays<T>(...arrays: Maybe<T[]>[]): T[] {
+  return flattenArray(arrays.filter((x) => Boolean(x)) as T[][]);
 }
 
 /**
  * Flattens a two dimensional array into a single dimensional array. Any null/undefined values from the first dimension are filtered out.
- * 
- * @param array 
- * @returns 
+ *
+ * @param array
+ * @returns
  */
-export function flattenArray<T>(array: (Maybe<T[]>)[]): T[] {
+export function flattenArray<T>(array: Maybe<T[]>[]): T[] {
   return (array.filter((x) => Boolean(x)) as T[][]).reduce((accumulator: T[], value: T[]) => accumulator.concat(value), []);
 }
 
 /**
  * Flattens an array of ArrayOrValue values into a single array.
- * 
- * @param array 
- * @returns 
+ *
+ * @param array
+ * @returns
  */
 export function flattenArrayOrValueArray<T>(array: ArrayOrValue<Maybe<T>>[]): T[] {
-  return flattenArray(array.map(x => (x) ? convertToArray(x) : undefined) as Maybe<T[]>[]);
+  return flattenArray(array.map((x) => (x ? convertToArray(x) : undefined)) as Maybe<T[]>[]);
 }
 
 export function copyArray<T>(input: Maybe<T[]>): T[] {
-  return (input != null) ? Array.from(input) : [] as T[];
+  return input != null ? Array.from(input) : ([] as T[]);
 }
 
 export function pushElementOntoArray<T>(target: T[], element: T, times: number): T[] {
@@ -96,9 +96,9 @@ export function pushElementOntoArray<T>(target: T[], element: T, times: number):
 
 /**
  * Merges all input arrays into a single array.
- * 
- * @param arrays 
- * @returns 
+ *
+ * @param arrays
+ * @returns
  */
 export function mergeArrays<T>(arrays: Maybe<T[]>[]): T[] {
   return mergeIntoArray([], ...arrays);
@@ -106,10 +106,10 @@ export function mergeArrays<T>(arrays: Maybe<T[]>[]): T[] {
 
 /**
  * Merges the input arrays into the target.
- * 
- * @param target 
- * @param arrays 
- * @returns 
+ *
+ * @param target
+ * @param arrays
+ * @returns
  */
 export function mergeIntoArray<T>(target: Maybe<T[]>, ...arrays: Maybe<T[]>[]): T[] {
   if (target == null) {
@@ -136,11 +136,11 @@ export function mergeArrayOrValueIntoArray<T>(target: T[], value: ArrayOrValue<T
 
 /**
  * Merges all the values from the second array into the first using push.
- * 
+ *
  * This is preferable in cases where immutability is not required.
- * 
- * @param target 
- * @param array 
+ *
+ * @param target
+ * @param array
  */
 export function mergeArrayIntoArray<T>(target: T[], array: T[]): T[] {
   Array.prototype.push.apply(target, array);
@@ -149,10 +149,10 @@ export function mergeArrayIntoArray<T>(target: T[], array: T[]): T[] {
 
 /**
  * Copies/takes the elements from the front of the array up to the max.
- * 
- * @param values 
- * @param maxToTake 
- * @returns 
+ *
+ * @param values
+ * @param maxToTake
+ * @returns
  */
 export function takeFront<T>(values: T[], maxToTake: number): T[] {
   return values.slice(0, maxToTake);
@@ -160,7 +160,7 @@ export function takeFront<T>(values: T[], maxToTake: number): T[] {
 
 /**
  * Copies/takes as many elements as possible from the end.
- * 
+ *
  * @param values Values to take from.
  * @param maxToTake Max number of values to take from the end of the input array.
  * @param keepFromFront Number of values to retain in the front of the array. These are not taken.
@@ -187,8 +187,8 @@ export function takeLast<T>(values: T[], maxToTake: number, keepFromFront: numbe
 
 /**
  * Picks an item randomly from the input array. If the array is empty, returns undefined.
- * 
- * @param values 
+ *
+ * @param values
  */
 export function pickOneRandomly<T>(values: T[]): T {
   const random = Math.random();
@@ -198,10 +198,10 @@ export function pickOneRandomly<T>(values: T[]): T {
 
 /**
  * Performs forEach with the input array and returns the array.
- * 
- * @param array 
- * @param forEach 
- * @returns 
+ *
+ * @param array
+ * @param forEach
+ * @returns
  */
 export function forEachWithArray<T>(array: Maybe<ArrayOrValue<T>>, forEach: (value: T) => void): T[] {
   if (array) {

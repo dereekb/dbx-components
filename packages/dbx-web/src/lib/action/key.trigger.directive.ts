@@ -10,14 +10,13 @@ const DEFAULT_ACTION_KEY_TRIGGER = 'enter';
  * Events/Keys to respond to should be lowercase.
  */
 @Directive({
-  selector: '[dbxActionKeyTrigger]',
+  selector: '[dbxActionKeyTrigger]'
 })
 export class DbxActionKeyTriggerDirective<T = unknown, O = unknown> {
-
   @Input('dbxActionKeyTrigger')
   inputKey: Maybe<string>;
 
-  constructor(@Host() public readonly source: DbxActionContextStoreSourceInstance<T, O>) { }
+  constructor(@Host() public readonly source: DbxActionContextStoreSourceInstance<T, O>) {}
 
   get key(): string {
     return this.inputKey || DEFAULT_ACTION_KEY_TRIGGER;
@@ -29,5 +28,4 @@ export class DbxActionKeyTriggerDirective<T = unknown, O = unknown> {
       this.source.trigger();
     }
   }
-
 }

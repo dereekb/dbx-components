@@ -1,9 +1,7 @@
 import { Maybe, MaybeMap, MaybeNot } from './maybe';
 
 describe('MaybeMap', () => {
-
   it('should compile', () => {
-
     const a: MaybeMap<{
       aOnly: boolean;
       test: boolean;
@@ -16,7 +14,5 @@ describe('MaybeMap', () => {
     };
 
     expect(a).toBeDefined();
-
   });
-
 });

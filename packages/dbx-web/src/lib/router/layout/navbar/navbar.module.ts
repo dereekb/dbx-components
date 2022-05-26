@@ -7,21 +7,9 @@ import { DbxRouterAnchorModule } from '../anchor/anchor.module';
 import { MatMenuModule } from '@angular/material/menu';
 import { DbxNavbarComponent } from './navbar.component';
 
-
 @NgModule({
-  imports: [
-    CommonModule,
-    MatTabsModule,
-    MatButtonModule,
-    MatIconModule,
-    MatMenuModule,
-    DbxRouterAnchorModule,
-  ],
-  declarations: [
-    DbxNavbarComponent
-  ],
-  exports: [
-    DbxNavbarComponent
-  ]
+  imports: [CommonModule, MatTabsModule, MatButtonModule, MatIconModule, MatMenuModule, DbxRouterAnchorModule],
+  declarations: [DbxNavbarComponent],
+  exports: [DbxNavbarComponent]
 })
-export class DbxRouterNavbarModule { }
+export class DbxRouterNavbarModule {}

@@ -10,8 +10,6 @@ import { TransitionOptions } from '@uirouter/core';
   templateUrl: './anchor.component.html'
 })
 export class DbxUIRouterSegueAnchorComponent extends AbstractDbxSegueAnchorDirective {
-
-  readonly uiRef$ = this.ref$.pipe(filter(x => typeof x === 'string')) as Observable<string | null>;
+  readonly uiRef$ = this.ref$.pipe(filter((x) => typeof x === 'string')) as Observable<string | null>;
   readonly uiOptions$ = this.refOptions$ as Observable<TransitionOptions | null>;
-
 }

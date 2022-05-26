@@ -8,7 +8,6 @@ import { DocFormExampleChecklistFormValue } from '../component/checklist.example
   templateUrl: './checklist.component.html'
 })
 export class DocFormChecklistComponent {
-
   value?: DocFormExampleChecklistFormValue;
 
   readonly data$: Observable<DocFormExampleChecklistValues> = of({
@@ -22,10 +21,9 @@ export class DocFormChecklistComponent {
     itemA: true
   });
 
-  readonly dataLoadingState$ = this.dataChecklist$.pipe(map(x => successResult(x)));
+  readonly dataLoadingState$ = this.dataChecklist$.pipe(map((x) => successResult(x)));
 
   readonly config: DocFormExampleChecklistFieldsConfig = {
     dataObs: this.data$
   };
-
 }

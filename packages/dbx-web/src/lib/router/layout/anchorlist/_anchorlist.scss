@@ -8,7 +8,8 @@ $active-root-item-left-padding: 2px;
 $active-child-item-left-padding: 5px;
 
 // MARK: Mixin
-@mixin core() {}
+@mixin core() {
+}
 
 @mixin color($theme-config) {
   $color-config: theming.get-color-config($theme-config);
@@ -17,7 +18,6 @@ $active-child-item-left-padding: 5px;
   $background-disabled-color: theming.get-color-from-palette($background, 'contrast');
 
   .dbx-anchor-list.mat-nav-list {
-
     // MARK: Muting
     // items that are not active are muted
     .mat-list-item {
@@ -40,7 +40,7 @@ $active-child-item-left-padding: 5px;
     .dbx-anchor-active-eq {
       .mat-list-item {
         opacity: 1;
-        background: color.scale($color:$background-hover-color, $alpha: 25%);
+        background: color.scale($color: $background-hover-color, $alpha: 25%);
       }
     }
 
@@ -54,15 +54,11 @@ $active-child-item-left-padding: 5px;
     .dbx-anchor-list-child {
       background: color.scale($background-hover-color, $alpha: 10%);
     }
-
   }
-
 }
 
 @mixin typography($typography-config) {
-
   .dbx-anchor-list.mat-nav-list {
-
     .mat-list-item .mat-list-icon {
       font-size: 28px;
       width: 28px;
@@ -81,9 +77,7 @@ $active-child-item-left-padding: 5px;
         padding: $active-child-item-left-padding;
       }
     }
-
   }
-
 }
 
 @mixin theme($theme-config) {

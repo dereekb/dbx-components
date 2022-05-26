@@ -14,9 +14,6 @@ import { DocSharedModule } from './modules/shared/doc.shared.module';
       states: STATES
     })
   ],
-  declarations: [
-    DocHomeComponent,
-    DocLayoutComponent
-  ],
+  declarations: [DocHomeComponent, DocLayoutComponent]
 })
-export class DocModule { }
+export class DocModule {}

@@ -8,17 +8,8 @@ import { DbxActionDialogDirective } from './dialog.action.directive';
  * Module for block components.
  */
 @NgModule({
-  imports: [
-    CommonModule,
-    DbxStyleLayoutModule
-  ],
-  declarations: [
-    DbxDialogContentDirective,
-    DbxActionDialogDirective
-  ],
-  exports: [
-    DbxDialogContentDirective,
-    DbxActionDialogDirective
-  ]
+  imports: [CommonModule, DbxStyleLayoutModule],
+  declarations: [DbxDialogContentDirective, DbxActionDialogDirective],
+  exports: [DbxDialogContentDirective, DbxActionDialogDirective]
 })
-export class DbxDialogInteractionModule { }
+export class DbxDialogInteractionModule {}

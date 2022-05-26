@@ -22,7 +22,6 @@ export interface ServerError<T = ServerErrorResponseData> extends ReadableDataEr
  * Base server-error class.
  */
 export class ServerErrorResponse<T extends ServerErrorResponseData = ServerErrorResponseData> implements ServerError<T> {
-
   public readonly code?: StringErrorCode;
   public readonly status: number;
   public readonly message: Maybe<string>;
@@ -34,13 +33,10 @@ export class ServerErrorResponse<T extends ServerErrorResponseData = ServerError
     this.status = status;
     this.data = data;
   }
-
 }
 
 export class UnauthorizedServerErrorResponse extends ServerErrorResponse {
-
   constructor({ code, data, message }: Partial<ServerError>) {
     super({ status: 401, message: message ?? 'Unauthorized', data, code });
   }
-
 }

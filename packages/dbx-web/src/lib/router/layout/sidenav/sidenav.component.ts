@@ -28,7 +28,6 @@ export interface DbxSidenavSidebarState {
   templateUrl: './sidenav.component.html'
 })
 export class DbxSidenavComponent extends AbstractTransitionWatcherDirective implements OnInit, OnDestroy {
-
   @Input()
   anchors?: Maybe<ClickableAnchorLinkTree[]>;
 
@@ -60,7 +59,7 @@ export class DbxSidenavComponent extends AbstractTransitionWatcherDirective impl
   );
 
   readonly disableBackdrop$: Observable<boolean> = this.mode$.pipe(
-    map(x => x !== SideNavDisplayMode.MOBILE),
+    map((x) => x !== SideNavDisplayMode.MOBILE),
     distinctUntilChanged(),
     shareReplay(1)
   );
@@ -97,15 +96,16 @@ export class DbxSidenavComponent extends AbstractTransitionWatcherDirective impl
     shareReplay(1)
   );
 
-  readonly drawer$: Observable<MatDrawerMode> = this.state$.pipe(map(x => x.drawer), distinctUntilChanged(), shareReplay(1));
+  readonly drawer$: Observable<MatDrawerMode> = this.state$.pipe(
+    map((x) => x.drawer),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
 
   private _watcherSub = new SubscriptionObject();
   private _stateSub = new SubscriptionObject();
 
-  constructor(
-    dbxRouterTransitionService: DbxRouterTransitionService,
-    ngZone: NgZone,
-    private _screenMediaService: DbxScreenMediaService) {
+  constructor(dbxRouterTransitionService: DbxRouterTransitionService, ngZone: NgZone, private _screenMediaService: DbxScreenMediaService) {
     super(dbxRouterTransitionService, ngZone);
   }
 
@@ -166,5 +166,4 @@ export class DbxSidenavComponent extends AbstractTransitionWatcherDirective impl
       });
     });
   }
-
 }

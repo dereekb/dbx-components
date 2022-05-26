@@ -12,17 +12,16 @@ export const DEFAULT_LOADING_PROGRESS_DIAMETER = 96;
 @Component({
   selector: 'dbx-loading-progress',
   template: `
-  <div class="loading-progress-view">
-    <ng-container [ngSwitch]="linear">
-      <mat-progress-bar *ngSwitchCase="true" [mode]="bmode" [color]="color" [bufferValue]="bufferValue" [value]="value" style="margin: auto;"></mat-progress-bar>
-      <mat-progress-spinner *ngSwitchDefault [diameter]="diameter || 96" [mode]="smode" [color]="color" [value]="value" style="margin: auto;"></mat-progress-spinner>
-    </ng-container>
-    <div *ngIf="text" class="hint">{{ text }}</div>
-  </div>
+    <div class="loading-progress-view">
+      <ng-container [ngSwitch]="linear">
+        <mat-progress-bar *ngSwitchCase="true" [mode]="bmode" [color]="color" [bufferValue]="bufferValue" [value]="value" style="margin: auto;"></mat-progress-bar>
+        <mat-progress-spinner *ngSwitchDefault [diameter]="diameter || 96" [mode]="smode" [color]="color" [value]="value" style="margin: auto;"></mat-progress-spinner>
+      </ng-container>
+      <div *ngIf="text" class="hint">{{ text }}</div>
+    </div>
   `
 })
 export class DbxLoadingProgressComponent {
-
   private _diameter: number = DEFAULT_LOADING_PROGRESS_DIAMETER;
 
   @Input()
@@ -59,5 +58,4 @@ export class DbxLoadingProgressComponent {
   get smode(): ProgressSpinnerMode {
     return this.mode as ProgressSpinnerMode;
   }
-
 }

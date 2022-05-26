@@ -3,7 +3,7 @@ import { Component, ViewChild } from '@angular/core';
 import { DbxLoadingModule } from './loading.module';
 import { By } from '@angular/platform-browser';
 import { DbxLoadingProgressComponent } from './loading-progress.component';
-import { ErrorInput } from '@dereekb/util'
+import { ErrorInput } from '@dereekb/util';
 import { LoadingComponentState, DbxBasicLoadingComponent } from './basic-loading.component';
 import { DbxReadableErrorComponent } from '../error/error.component';
 import { filter, first } from 'rxjs';
@@ -11,15 +11,17 @@ import { filter, first } from 'rxjs';
 export function waitForState(state: LoadingComponentState): (component: DbxBasicLoadingComponent) => (checkFn: () => void) => void {
   return (component: DbxBasicLoadingComponent) => {
     return (checkFn: () => void) => {
-      component.state$.pipe(
-        filter(x => x === state), first()
-      ).subscribe(checkFn);
+      component.state$
+        .pipe(
+          filter((x) => x === state),
+          first()
+        )
+        .subscribe(checkFn);
     };
   };
 }
 
 describe('DbxBasicLoadingComponent', () => {
-
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [DbxLoadingModule],
@@ -28,7 +30,6 @@ describe('DbxBasicLoadingComponent', () => {
   });
 
   describe('with content', () => {
-
     let fixture: ComponentFixture<BasicLoadingWithContentComponent>;
     let component: BasicLoadingWithContentComponent;
 
@@ -63,7 +64,6 @@ describe('DbxBasicLoadingComponent', () => {
     });
 
     describe('and loading', () => {
-
       beforeEach(async () => {
         component.loading = true;
         fixture.detectChanges();
@@ -79,29 +79,37 @@ describe('DbxBasicLoadingComponent', () => {
 
       it('should display the loading progress view.', (done) => {
         waitForComponentToBeLoading(() => {
-          fixture.componentInstance.component?.hasNoCustomLoading$.pipe(filter(x => x), first()).subscribe((hasNoCustomLoading) => {
-            expect(hasNoCustomLoading).toBe(true);
-            const loadingProgressQueryResult = fixture.debugElement.query(By.directive(DbxLoadingProgressComponent));
-            expect(loadingProgressQueryResult).not.toBeNull();
-            done();
-          });
+          fixture.componentInstance.component?.hasNoCustomLoading$
+            .pipe(
+              filter((x) => x),
+              first()
+            )
+            .subscribe((hasNoCustomLoading) => {
+              expect(hasNoCustomLoading).toBe(true);
+              const loadingProgressQueryResult = fixture.debugElement.query(By.directive(DbxLoadingProgressComponent));
+              expect(loadingProgressQueryResult).not.toBeNull();
+              done();
+            });
         });
       });
 
       it('should not detect custom loading content (that does not exist).', (done) => {
         waitForComponentToBeLoading(() => {
           fixture.detectChanges();
-          fixture.componentInstance.component?.hasNoCustomLoading$.pipe(filter(x => x), first()).subscribe((hasNoCustomLoading) => {
-            expect(hasNoCustomLoading).toBe(true);
-            done();
-          });
+          fixture.componentInstance.component?.hasNoCustomLoading$
+            .pipe(
+              filter((x) => x),
+              first()
+            )
+            .subscribe((hasNoCustomLoading) => {
+              expect(hasNoCustomLoading).toBe(true);
+              done();
+            });
         });
       });
-
     });
 
     describe('and error', () => {
-
       beforeEach(() => {
         component.error = {
           code: 'Test',
@@ -130,15 +138,18 @@ describe('DbxBasicLoadingComponent', () => {
       it('should not detect custom error content (that does not exist).', (done) => {
         waitForComponentToHaveError(() => {
           fixture.detectChanges();
-          fixture.componentInstance.component?.hasNoCustomError$.pipe(filter(x => x), first()).subscribe((hasNoCustomError) => {
-            expect(hasNoCustomError).toBe(true);
-            done();
-          });
+          fixture.componentInstance.component?.hasNoCustomError$
+            .pipe(
+              filter((x) => x),
+              first()
+            )
+            .subscribe((hasNoCustomError) => {
+              expect(hasNoCustomError).toBe(true);
+              done();
+            });
         });
       });
-
     });
-
   });
 
   describe('with custom error', () => {
@@ -175,13 +186,17 @@ describe('DbxBasicLoadingComponent', () => {
 
     it('should detect the custom error content.', (done) => {
       waitForComponentToHaveError(() => {
-        fixture.componentInstance.component?.hasNoCustomError$.pipe(filter(x => !x), first()).subscribe((hasNoCustomError) => {
-          expect(hasNoCustomError).toBe(false);
-          done();
-        });
+        fixture.componentInstance.component?.hasNoCustomError$
+          .pipe(
+            filter((x) => !x),
+            first()
+          )
+          .subscribe((hasNoCustomError) => {
+            expect(hasNoCustomError).toBe(false);
+            done();
+          });
       });
     });
-
   });
 
   describe('with custom loading', () => {
@@ -214,15 +229,18 @@ describe('DbxBasicLoadingComponent', () => {
     it('should detect the custom loading content.', (done) => {
       waitForComponentToBeLoading(() => {
         fixture.detectChanges();
-        fixture.componentInstance.component?.hasNoCustomLoading$.pipe(filter(x => !x), first()).subscribe((hasNoCustomLoading) => {
-          expect(hasNoCustomLoading).toBe(false);
-          done();
-        });
+        fixture.componentInstance.component?.hasNoCustomLoading$
+          .pipe(
+            filter((x) => !x),
+            first()
+          )
+          .subscribe((hasNoCustomLoading) => {
+            expect(hasNoCustomLoading).toBe(false);
+            done();
+          });
       });
     });
-
   });
-
 });
 
 const TEST_CONTENT = 'Content';
@@ -239,14 +257,12 @@ const CUSTOM_ERROR_CONTENT = 'Error.';
   `
 })
 class BasicLoadingWithContentComponent {
-
   public loading = true;
 
   public error?: ErrorInput;
 
   @ViewChild(DbxBasicLoadingComponent, { static: true })
   public readonly component?: DbxBasicLoadingComponent;
-
 }
 
 @Component({
@@ -259,12 +275,10 @@ class BasicLoadingWithContentComponent {
   `
 })
 class BasicLoadingWithCustomErrorComponent {
-
   public error?: ErrorInput;
 
   @ViewChild(DbxBasicLoadingComponent, { static: true })
   public readonly component?: DbxBasicLoadingComponent;
-
 }
 
 @Component({
@@ -278,10 +292,8 @@ class BasicLoadingWithCustomErrorComponent {
   `
 })
 class BasicLoadingWithCustomLoadingComponent {
-
   public loading = true;
 
   @ViewChild(DbxBasicLoadingComponent, { static: true })
   public readonly component?: DbxBasicLoadingComponent;
-
 }

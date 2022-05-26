@@ -16,6 +16,6 @@ import { DEMO_APP_STATES } from './demo.app.router';
     // components
     DemoAppLayoutComponent,
     DemoAppHomeComponent
-  ],
+  ]
 })
-export class DemoAppModule { }
+export class DemoAppModule {}

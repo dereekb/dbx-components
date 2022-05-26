@@ -37,10 +37,7 @@
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {
-        "lintFilePatterns": [
-          "components/demo-components/**/*.ts",
-          "components/demo-components/**/*.html"
-        ]
+        "lintFilePatterns": ["components/demo-components/**/*.ts", "components/demo-components/**/*.html"]
       }
     }
   },

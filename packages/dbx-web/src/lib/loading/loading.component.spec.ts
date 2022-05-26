@@ -11,20 +11,20 @@ import { filter, first } from 'rxjs';
 export function waitForState(state: LoadingComponentState): (component: DbxBasicLoadingComponent) => (checkFn: () => void) => void {
   return (component: DbxBasicLoadingComponent) => {
     return (checkFn: () => void) => {
-      component.state$.pipe(
-        filter(x => x === state), first()
-      ).subscribe(checkFn);
+      component.state$
+        .pipe(
+          filter((x) => x === state),
+          first()
+        )
+        .subscribe(checkFn);
     };
   };
 }
 
 describe('DbxLoadingComponent', () => {
-
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [
-        DbxLoadingModule
-      ],
+      imports: [DbxLoadingModule],
       declarations: [TestLoadingComponent]
     }).compileComponents();
   });
@@ -65,7 +65,6 @@ describe('DbxLoadingComponent', () => {
     });
 
     describe('and error', () => {
-
       beforeEach(async () => {
         component.context.setError({
           code: 'Test',
@@ -90,11 +89,9 @@ describe('DbxLoadingComponent', () => {
           done();
         });
       });
-
     });
 
     describe('and loading', () => {
-
       beforeEach(() => {
         component.context.setLoading(true);
         fixture.detectChanges();
@@ -107,11 +104,8 @@ describe('DbxLoadingComponent', () => {
           done();
         });
       });
-
     });
-
   });
-
 });
 
 const TEST_CONTENT = 'Content';
@@ -126,11 +120,9 @@ const TEST_CONTENT = 'Content';
   `
 })
 class TestLoadingComponent {
-
   public show?: boolean;
 
   public text?: string;
 
   public context = new ValuesLoadingContext();
-
 }

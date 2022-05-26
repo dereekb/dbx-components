@@ -32,14 +32,15 @@ export type LoadingStateContextInstanceInputConfig<S, C> = Observable<S> | C;
 /**
  * Abstract LoadingContext implementation using LoadingState.
  */
-export abstract class AbstractLoadingStateContextInstance<T = unknown, S extends LoadingState<T> = LoadingState<T>, E extends AbstractLoadingStateEvent<T> = AbstractLoadingStateEvent<T>, C extends AbstractLoadingEventForLoadingPairConfig<S> = AbstractLoadingEventForLoadingPairConfig<S>>
-  implements AbstractLoadingStateContext<T, S, E>, LoadingContext, Destroyable {
-
+export abstract class AbstractLoadingStateContextInstance<T = unknown, S extends LoadingState<T> = LoadingState<T>, E extends AbstractLoadingStateEvent<T> = AbstractLoadingStateEvent<T>, C extends AbstractLoadingEventForLoadingPairConfig<S> = AbstractLoadingEventForLoadingPairConfig<S>> implements AbstractLoadingStateContext<T, S, E>, LoadingContext, Destroyable {
   private _stateSubject$ = new BehaviorSubject<Maybe<Observable<S>>>(undefined);
   private _config: C;
 
   readonly stateSubject$ = this._stateSubject$.pipe(filterMaybe(), distinctUntilChanged(), shareReplay(1));
-  readonly state$ = this.stateSubject$.pipe(switchMap(x => x), shareReplay(1));
+  readonly state$ = this.stateSubject$.pipe(
+    switchMap((x) => x),
+    shareReplay(1)
+  );
   readonly stateObs$: Observable<Maybe<Observable<S>>> = this._stateSubject$.asObservable();
 
   readonly stream$: Observable<E> = this._stateSubject$.pipe(
@@ -64,7 +65,10 @@ export abstract class AbstractLoadingStateContextInstance<T = unknown, S extends
    * Emits when the input state has changed.
    */
   readonly stateChange$: Observable<void> = this._stateSubject$.pipe(map(() => undefined));
-  readonly loading$: Observable<boolean> = this.stream$.pipe(map(x => x.loading), shareReplay(1));
+  readonly loading$: Observable<boolean> = this.stream$.pipe(
+    map((x) => x.loading),
+    shareReplay(1)
+  );
 
   constructor(config?: LoadingStateContextInstanceInputConfig<S, C>) {
     if (isObservable(config)) {
@@ -72,9 +76,11 @@ export abstract class AbstractLoadingStateContextInstance<T = unknown, S extends
         obs: config
       } as C;
     } else {
-      this._config = config ?? {
-        showLoadingOnNoValue: false
-      } as C;
+      this._config =
+        config ??
+        ({
+          showLoadingOnNoValue: false
+        } as C);
     }
 
     if (this._config.obs) {
@@ -91,5 +97,4 @@ export abstract class AbstractLoadingStateContextInstance<T = unknown, S extends
   destroy(): void {
     this._stateSubject$.complete();
   }
-
 }

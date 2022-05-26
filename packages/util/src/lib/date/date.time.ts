@@ -1,4 +1,4 @@
-import { Maybe } from "../value/maybe";
+import { Maybe } from '../value/maybe';
 
 /**
  * Represents a string for a time. This may be human-input, and
@@ -29,8 +29,8 @@ export type LogicalDate = Date | LogicalDateStringCode;
 
 /**
  * Returns a Date value from the input LogicalDate.
- * 
- * @param logicalDate 
+ *
+ * @param logicalDate
  */
 export function dateFromLogicalDate(logicalDate: Maybe<LogicalDate>): Maybe<Date>;
 export function dateFromLogicalDate(logicalDate: LogicalDate): Date;

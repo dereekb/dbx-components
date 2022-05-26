@@ -5,7 +5,6 @@ import { FullLocalStorageObject } from './storage.object.localstorage';
  * FullStorageObject implementation that uses a localstorage that entirely resides in memory.
  */
 export class MemoryStorageObject extends FullLocalStorageObject {
-
   get isLastingStorage(): boolean {
     return false;
   }
@@ -17,5 +16,4 @@ export class MemoryStorageObject extends FullLocalStorageObject {
   constructor() {
     super(SHARED_MEMORY_STORAGE);
   }
-
 }

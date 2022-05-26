@@ -1,4 +1,4 @@
-@use "sass:map";
+@use 'sass:map';
 @use './config';
 @use './variables';
 
@@ -53,8 +53,7 @@
 @mixin app-height($additionalOffset: 0) {
   @if $additionalOffset !=0 {
     height: calc(variables.$app-height - #{$additionalOffset});
-  }
-  @else {
+  } @else {
     height: variables.$app-height;
   }
 }
@@ -65,8 +64,7 @@
 @mixin page-height($additionalOffset: 0) {
   @if $additionalOffset !=0 {
     height: calc(variables.$page-height - #{$additionalOffset});
-  }
-  @else {
+  } @else {
     height: variables.$page-height;
   }
 }
@@ -77,8 +75,7 @@
 @mixin content-height($additionalOffset: 0) {
   @if $additionalOffset !=0 {
     height: calc(variables.$content-height - #{$additionalOffset});
-  }
-  @else {
+  } @else {
     height: variables.$content-height;
   }
 }

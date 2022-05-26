@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { FieldType } from '@ngx-formly/material';   // extend FieldType from Material, not core!
+import { FieldType } from '@ngx-formly/material'; // extend FieldType from Material, not core!
 import { FieldTypeConfig, FormlyFieldConfig } from '@ngx-formly/core';
 
 export interface DbxInternationalPhoneFieldConfig {
@@ -17,7 +17,6 @@ export const DEFAULT_PREFERRED_COUNTRIES = ['us'];
   templateUrl: 'phone.field.component.html'
 })
 export class DbxPhoneFieldComponent extends FieldType<InternationalPhoneFormlyFieldConfig & FieldTypeConfig> {
-
   get phoneField(): DbxInternationalPhoneFieldConfig {
     return this.field.phoneField;
   }
@@ -29,5 +28,4 @@ export class DbxPhoneFieldComponent extends FieldType<InternationalPhoneFormlyFi
   get onlyCountries(): string[] {
     return this.phoneField.onlyCountries ?? [];
   }
-
 }

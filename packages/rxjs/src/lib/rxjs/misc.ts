@@ -3,9 +3,9 @@ import { MonoTypeOperatorFunction, tap, delayWhen, timer, SchedulerLike, asyncSc
 
 /**
  * Used to log a message to the console.
- * 
- * @param messageOrFunction 
- * @returns 
+ *
+ * @param messageOrFunction
+ * @returns
  */
 export function tapLog<T = unknown>(message: string | number, consoleLogFn?: 'log' | 'warn' | 'error'): MonoTypeOperatorFunction<T>;
 export function tapLog<T = unknown>(messageFunction: (value: T) => unknown[], consoleLogFn?: 'log' | 'warn' | 'error'): MonoTypeOperatorFunction<T>;
@@ -23,9 +23,9 @@ export function tapLog<T = unknown>(messageOrFunction: (string | number) | ((val
 
 /**
  * Used to make a random delay for each observable value.
- * 
- * @param maxOrArgs 
- * @returns 
+ *
+ * @param maxOrArgs
+ * @returns
  */
 export function randomDelay<T = unknown>(maxOrArgs: number | MakeRandomFunction): MonoTypeOperatorFunction<T> {
   const makeRandomDelay = makeRandomFunction(maxOrArgs);
@@ -33,5 +33,5 @@ export function randomDelay<T = unknown>(maxOrArgs: number | MakeRandomFunction)
 }
 
 export function randomDelayWithRandomFunction<T = unknown>(makeRandomDelay: RandomNumberFunction, scheduler: SchedulerLike = asyncScheduler): MonoTypeOperatorFunction<T> {
-  return delayWhen(() =>  timer(makeRandomDelay(), scheduler));
+  return delayWhen(() => timer(makeRandomDelay(), scheduler));
 }

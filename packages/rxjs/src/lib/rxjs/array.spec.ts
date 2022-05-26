@@ -2,9 +2,7 @@ import { distinctUntilArrayLengthChanges } from './array';
 import { BehaviorSubject } from 'rxjs';
 
 describe('distinctUntilArrayLengthChanges()', () => {
-
   it('should not emit values while the length does not change.', (done) => {
-
     const value: [] = [];
 
     const subject = new BehaviorSubject<[]>(value);
@@ -30,7 +28,6 @@ describe('distinctUntilArrayLengthChanges()', () => {
   });
 
   it('should emit values if the same array is pushed and the length changes.', (done) => {
-
     const value: number[] = [];
 
     const subject = new BehaviorSubject<number[]>(value);
@@ -52,20 +49,19 @@ describe('distinctUntilArrayLengthChanges()', () => {
 
     value.push(1);
 
-    expect(emissions).toBe(1);  // No change until subject is pushed
+    expect(emissions).toBe(1); // No change until subject is pushed
 
     subject.next(value);
 
-    expect(emissions).toBe(2);  // No change until subject is pushed
+    expect(emissions).toBe(2); // No change until subject is pushed
 
     sub.unsubscribe();
     done();
   });
 
   it('should use the mapping function to return the target array.', (done) => {
-
     const value: {
-      x: number[]
+      x: number[];
     } = {
       x: []
     };
@@ -91,7 +87,6 @@ describe('distinctUntilArrayLengthChanges()', () => {
 
     done();
   });
-
 });
 
 // todo: add tests for scanBuildArray

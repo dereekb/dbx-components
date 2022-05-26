@@ -1,6 +1,6 @@
-import { ClickableAnchor } from "@dereekb/dbx-core";
-import { Maybe } from "@dereekb/util";
-import { Observable } from "rxjs";
+import { ClickableAnchor } from '@dereekb/dbx-core';
+import { Maybe } from '@dereekb/util';
+import { Observable } from 'rxjs';
 
 export interface ChecklistItemDisplayContent<T = unknown> {
   /**
@@ -12,8 +12,8 @@ export interface ChecklistItemDisplayContent<T = unknown> {
    */
   sublabel?: Maybe<string>;
   /**
-  * Hint/description to display.
-  */
+   * Hint/description to display.
+   */
   description?: Maybe<string>;
   /**
    * Whether or not to display the ripple. Is true by default if the anchor is present.
@@ -31,7 +31,7 @@ export interface ChecklistItemDisplayContent<T = unknown> {
 
 /**
  * Component used for rendering checklist content.
- * 
+ *
  * Content is injected.
  */
 export interface ChecklistItemFieldDisplayComponent<T = unknown> {

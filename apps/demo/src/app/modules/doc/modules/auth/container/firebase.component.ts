@@ -5,13 +5,11 @@ import { DbxFirebaseAuthLoginService, DbxFirebaseAuthService } from '@dereekb/db
   templateUrl: './firebase.component.html'
 })
 export class DocAuthFirebaseComponent {
-
   readonly authUserInfo$ = this.dbxFirebaseAuthService.currentAuthUserInfo$;
 
-  constructor(readonly dbxFirebaseAuthLoginService: DbxFirebaseAuthLoginService, readonly dbxFirebaseAuthService: DbxFirebaseAuthService) { }
+  constructor(readonly dbxFirebaseAuthLoginService: DbxFirebaseAuthLoginService, readonly dbxFirebaseAuthService: DbxFirebaseAuthService) {}
 
   logOut() {
     this.dbxFirebaseAuthService.logOut();
   }
-
 }

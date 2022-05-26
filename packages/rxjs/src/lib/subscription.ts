@@ -5,7 +5,6 @@ import { ArrayOrValue, convertToArray, Destroyable } from '@dereekb/util';
  * Destroyable object that wraps a subscription.
  */
 export class SubscriptionObject implements Destroyable {
-
   private _subscription?: Subscription;
 
   constructor(sub?: Subscription) {
@@ -37,7 +36,6 @@ export class SubscriptionObject implements Destroyable {
   public destroy() {
     this.unsub();
   }
-
 }
 
 /**
@@ -46,7 +44,6 @@ export class SubscriptionObject implements Destroyable {
  * NOTE: In some cases it might be better to use RXJS's merge(...[]) and subscribe to a single item.
  */
 export class MultiSubscriptionObject implements Destroyable {
-
   private _subscriptions?: Subscription[];
 
   constructor(subs?: ArrayOrValue<Subscription>) {
@@ -70,7 +67,7 @@ export class MultiSubscriptionObject implements Destroyable {
 
   public unsub() {
     if (this._subscriptions) {
-      this._subscriptions.forEach(x => x.unsubscribe());
+      this._subscriptions.forEach((x) => x.unsubscribe());
       delete this._subscriptions;
     }
   }
@@ -78,5 +75,4 @@ export class MultiSubscriptionObject implements Destroyable {
   public destroy() {
     this.unsub();
   }
-
 }

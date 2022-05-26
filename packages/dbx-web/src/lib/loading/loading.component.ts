@@ -16,24 +16,21 @@ export interface DbxLoadingComponentState {
 @Component({
   selector: 'dbx-loading',
   template: `
-  <dbx-basic-loading [show]="show" [color]="color" [text]="text" [mode]="mode" [linear]="linear" [diameter]="diameter" [error]="error$ | async" [loading]="loading$ | async">
-    <ng-content loading select="[loading]"></ng-content>
-    <ng-content></ng-content>
-    <ng-content error select="[error]"></ng-content>
-    <ng-content errorAction select="[errorAction]"></ng-content>
-  </dbx-basic-loading>
+    <dbx-basic-loading [show]="show" [color]="color" [text]="text" [mode]="mode" [linear]="linear" [diameter]="diameter" [error]="error$ | async" [loading]="loading$ | async">
+      <ng-content loading select="[loading]"></ng-content>
+      <ng-content></ng-content>
+      <ng-content error select="[error]"></ng-content>
+      <ng-content errorAction select="[errorAction]"></ng-content>
+    </dbx-basic-loading>
   `
 })
 export class DbxLoadingComponent implements OnDestroy {
-
   private _context = new BehaviorSubject<Maybe<LoadingContext>>(undefined);
 
   private _inputLoading = new BehaviorSubject<Maybe<boolean>>(true);
   private _inputError = new BehaviorSubject<Maybe<ErrorInput>>(undefined);
 
-  readonly state$: Observable<DbxLoadingComponentState> = combineLatest([this._inputLoading, this._inputError, this._context.pipe(
-    switchMap(x => (x != null) ? x.stream$ : of(undefined))
-  )]).pipe(
+  readonly state$: Observable<DbxLoadingComponentState> = combineLatest([this._inputLoading, this._inputError, this._context.pipe(switchMap((x) => (x != null ? x.stream$ : of(undefined))))]).pipe(
     map(([inputLoading, inputError, loadingState]) => {
       if (loadingState) {
         return loadingState as DbxLoadingComponentState;
@@ -48,8 +45,16 @@ export class DbxLoadingComponent implements OnDestroy {
     shareReplay(1)
   );
 
-  readonly loading$ = this.state$.pipe(map(x => x.loading), distinctUntilChanged(), shareReplay(1));
-  readonly error$ = this.state$.pipe(map(x => x.error), distinctUntilChanged(), shareReplay(1));
+  readonly loading$ = this.state$.pipe(
+    map((x) => x.loading),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+  readonly error$ = this.state$.pipe(
+    map((x) => x.error),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
 
   @Input()
   show?: Maybe<boolean>;
@@ -101,5 +106,4 @@ export class DbxLoadingComponent implements OnDestroy {
   set error(error: Maybe<ErrorInput>) {
     this._inputError.next(error);
   }
-
 }

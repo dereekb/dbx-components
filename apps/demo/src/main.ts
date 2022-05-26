@@ -15,7 +15,7 @@ if (environment.production) {
 }
 
 watchWindowAndUpdateVh100StyleProperty();
-  
+
 platformBrowserDynamic()
   .bootstrapModule(RootModule)
   .catch((err) => console.error(err));

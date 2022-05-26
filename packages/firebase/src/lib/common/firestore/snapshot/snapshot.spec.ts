@@ -2,7 +2,6 @@ import { snapshotConverterFunctions } from './snapshot';
 import { firestoreBoolean, firestoreString } from './snapshot.field';
 
 describe('snapshotConverterFunctions()', () => {
-
   it('should create conversion functions for the input.', () => {
     const result = snapshotConverterFunctions({
       fields: {
@@ -18,9 +17,6 @@ describe('snapshotConverterFunctions()', () => {
   });
 
   describe('function', () => {
-
     // todo:
-
   });
-
 });

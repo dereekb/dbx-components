@@ -100,7 +100,6 @@ const INITIAL_STATE: ActionContextState = {
 
 @Injectable()
 export class ActionContextStore<T = unknown, O = unknown> extends ComponentStore<ActionContextState<T, O>> implements OnDestroy {
-
   readonly lockSet = new LockSet();
 
   constructor() {
@@ -109,12 +108,19 @@ export class ActionContextStore<T = unknown, O = unknown> extends ComponentStore
   }
 
   // MARK: Accessors
-  readonly actionState$ = this.state$.pipe(map(x => isDisabledActionContextState(x) ? DbxActionState.DISABLED : x.actionState), shareReplay(1));
+  readonly actionState$ = this.state$.pipe(
+    map((x) => (isDisabledActionContextState(x) ? DbxActionState.DISABLED : x.actionState)),
+    shareReplay(1)
+  );
 
   /**
    * Returns the current disabled reasons/keys.
    */
-  readonly disabledKeys$ = this.state$.pipe(map(x => [...x.disabled ?? []]), distinctUntilChanged(), shareReplay(1));
+  readonly disabledKeys$ = this.state$.pipe(
+    map((x) => [...(x.disabled ?? [])]),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
 
   /**
    * Maps the current state to true or not when the action state changes to/from disabled.
@@ -124,7 +130,7 @@ export class ActionContextStore<T = unknown, O = unknown> extends ComponentStore
   /**
    * Pipes when idle but modified.
    */
-  readonly isModified$ = this.afterDistinctBoolean(x => x.isModified);
+  readonly isModified$ = this.afterDistinctBoolean((x) => x.isModified);
 
   /**
    * Pipes true when triggered.
@@ -134,12 +140,12 @@ export class ActionContextStore<T = unknown, O = unknown> extends ComponentStore
   /**
    * Pipes the readied value on ValueReady.
    */
-  readonly valueReady$: Observable<T> = this.afterDistinctActionState(DbxActionState.VALUE_READY, x => x.value as T);
+  readonly valueReady$: Observable<T> = this.afterDistinctActionState(DbxActionState.VALUE_READY, (x) => x.value as T);
 
   /**
    * Pipes the error on the rejection state.
    */
-  readonly rejected$ = this.afterDistinctActionState(DbxActionState.REJECTED, x => x.error);
+  readonly rejected$ = this.afterDistinctActionState(DbxActionState.REJECTED, (x) => x.error);
 
   /**
    * Pipes the result when the ActionState becomes working.
@@ -149,32 +155,43 @@ export class ActionContextStore<T = unknown, O = unknown> extends ComponentStore
   /**
    * Whether or not it is currently in a working state.
    */
-  readonly isWorking$ = this.afterDistinctBoolean(x => isWorkingActionState(x.actionState));
+  readonly isWorking$ = this.afterDistinctBoolean((x) => isWorkingActionState(x.actionState));
 
   /**
    * Pipes the current error.
    */
-  readonly error$ = this.state$.pipe(map(x => x.error), distinctUntilChanged(), shareReplay(1));
+  readonly error$ = this.state$.pipe(
+    map((x) => x.error),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
 
   /**
    * Pipes the result when the ActionState becomes success.
    */
-  readonly success$ = this.afterDistinctActionState(DbxActionState.RESOLVED, x => x.result);
+  readonly success$ = this.afterDistinctActionState(DbxActionState.RESOLVED, (x) => x.result);
 
   /**
    * Whether or not it is currently in a success state.
    */
-  readonly isSuccess$ = this.afterDistinctBoolean(x => x.actionState === DbxActionState.RESOLVED);
+  readonly isSuccess$ = this.afterDistinctBoolean((x) => x.actionState === DbxActionState.RESOLVED);
 
   /**
    * Returns a loading state based on the current state.
    */
-  readonly loadingState$ = this.afterDistinctLoadingStateTypeChange().pipe(map(x => loadingStateForActionContextState<O>(x)), shareReplay(1));
+  readonly loadingState$ = this.afterDistinctLoadingStateTypeChange().pipe(
+    map((x) => loadingStateForActionContextState<O>(x)),
+    shareReplay(1)
+  );
 
   /**
    * Returns the current LoadingStateType based on the current state.
    */
-  readonly loadingStateType$ = this.state$.pipe(map(x => loadingStateTypeForActionContextState(x)), distinctUntilChanged(), shareReplay(1));
+  readonly loadingStateType$ = this.state$.pipe(
+    map((x) => loadingStateTypeForActionContextState(x)),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
 
   /**
    * Number of errors since last success.
@@ -189,31 +206,24 @@ export class ActionContextStore<T = unknown, O = unknown> extends ComponentStore
   /**
    * Whether or not the state can be triggered.
    */
-  readonly canTrigger$ = this.state$.pipe(
-    map(canTriggerAction),
-    distinctUntilChanged(),
-    shareReplay(1)
-  );
+  readonly canTrigger$ = this.state$.pipe(map(canTriggerAction), distinctUntilChanged(), shareReplay(1));
 
   /**
    * Pipe that maps whether or not this is modified and can be triggered.
    *
    * Updates every state update instead of when the value changes.
    */
-  readonly isModifiedAndCanTriggerUpdates$ = this.state$.pipe(
-    map((x) => actionContextIsModifiedAndCanTrigger(x), shareReplay(1))
-  );
+  readonly isModifiedAndCanTriggerUpdates$ = this.state$.pipe(map((x) => actionContextIsModifiedAndCanTrigger(x), shareReplay(1)));
 
   /**
    * Whether or not it can be triggered and modified.
    */
-  readonly isModifiedAndCanTrigger$ = this.isModifiedAndCanTriggerUpdates$.pipe(
-    distinctUntilChanged()
-  );
+  readonly isModifiedAndCanTrigger$ = this.isModifiedAndCanTriggerUpdates$.pipe(distinctUntilChanged());
 
   readonly hasNoErrorAndIsModifiedAndCanTrigger$ = this.state$.pipe(
     map((x) => actionContextHasNoErrorAndIsModifiedAndCanTrigger(x)),
-    distinctUntilChanged(), shareReplay(1)
+    distinctUntilChanged(),
+    shareReplay(1)
   );
 
   // MARK: State Changes
@@ -222,7 +232,7 @@ export class ActionContextStore<T = unknown, O = unknown> extends ComponentStore
    */
   readonly disable = this.updater((state, key?: void | DbxActionDisabledKey) => ({
     ...state,
-    disabled: BooleanStringKeyArrayUtilityInstance.insert(state.disabled, ((key as string) ?? DEFAULT_ACTION_DISABLED_KEY))
+    disabled: BooleanStringKeyArrayUtilityInstance.insert(state.disabled, (key as string) ?? DEFAULT_ACTION_DISABLED_KEY)
   }));
 
   /**
@@ -230,7 +240,7 @@ export class ActionContextStore<T = unknown, O = unknown> extends ComponentStore
    */
   readonly enable = this.updater((state, key?: void | DbxActionDisabledKey) => ({
     ...state,
-    disabled: BooleanStringKeyArrayUtilityInstance.remove(state.disabled, ((key as string) ?? DEFAULT_ACTION_DISABLED_KEY))
+    disabled: BooleanStringKeyArrayUtilityInstance.remove(state.disabled, (key as string) ?? DEFAULT_ACTION_DISABLED_KEY)
   }));
 
   /**
@@ -238,7 +248,7 @@ export class ActionContextStore<T = unknown, O = unknown> extends ComponentStore
    */
   readonly setIsModified = this.updater((state, isModified: void | boolean) => ({
     ...state,
-    actionState: (state.actionState === DbxActionState.RESOLVED) ? DbxActionState.IDLE : state.actionState,  // Set to idle from success.
+    actionState: state.actionState === DbxActionState.RESOLVED ? DbxActionState.IDLE : state.actionState, // Set to idle from success.
     isModified: (isModified as boolean) ?? true
   }));
 
@@ -247,16 +257,12 @@ export class ActionContextStore<T = unknown, O = unknown> extends ComponentStore
    *
    * Will not fire if the action is disabled.
    */
-  readonly trigger = this.updater((state) => canTriggerAction(state)
-    ? ({ isModified: state.isModified, actionState: DbxActionState.TRIGGERED, error: state.error, value: undefined })
-    : state);
+  readonly trigger = this.updater((state) => (canTriggerAction(state) ? { isModified: state.isModified, actionState: DbxActionState.TRIGGERED, error: state.error, value: undefined } : state));
 
   /**
    * Updates the value, setting value ready. The current result is cleared.
    */
-  readonly readyValue = this.updater((state, value: T) => canReadyValue(state)
-    ? ({ ...state, actionState: DbxActionState.VALUE_READY, value, result: undefined })
-    : state);
+  readonly readyValue = this.updater((state, value: T) => (canReadyValue(state) ? { ...state, actionState: DbxActionState.VALUE_READY, value, result: undefined } : state));
 
   /**
    * Notifys the context that the action is in progress.
@@ -266,7 +272,13 @@ export class ActionContextStore<T = unknown, O = unknown> extends ComponentStore
   /**
    * Triggers rejection of the action. The value is cleared.
    */
-  readonly reject = this.updater((state, error?: Maybe<ReadableError>) => ({ isModified: state.isModified, actionState: DbxActionState.REJECTED, error, errorCount: (state.errorCount ?? 0) + 1, disabled: state.disabled }));
+  readonly reject = this.updater((state, error?: Maybe<ReadableError>) => ({
+    isModified: state.isModified,
+    actionState: DbxActionState.REJECTED,
+    error,
+    errorCount: (state.errorCount ?? 0) + 1,
+    disabled: state.disabled
+  }));
 
   /**
    * Updates the state to success, and optionally sets a result.
@@ -283,7 +295,7 @@ export class ActionContextStore<T = unknown, O = unknown> extends ComponentStore
   // MARK: Utility
   afterDistinctBoolean(fromState: (state: ActionContextState<T, O>) => boolean): Observable<boolean> {
     return this.state$.pipe(
-      map(x => fromState(x)),
+      map((x) => fromState(x)),
       distinctUntilChanged(),
       shareReplay(1)
     );
@@ -291,26 +303,26 @@ export class ActionContextStore<T = unknown, O = unknown> extends ComponentStore
 
   afterDistinctActionState<X>(actionState: DbxActionState, fromState: (state: ActionContextState<T, O>) => X): Observable<X> {
     return this.afterDistinctActionStateChange().pipe(
-      filter((x) => x.actionState === actionState),  // Only pipe when the new action state matches.
-      map(x => fromState(x)),
+      filter((x) => x.actionState === actionState), // Only pipe when the new action state matches.
+      map((x) => fromState(x)),
       shareReplay(1)
     );
   }
 
   afterDistinctActionStateChange(): Observable<ActionContextState<T, O>> {
     return this.state$.pipe(
-      map((x) => ([x, x.actionState]) as [ActionContextState, DbxActionState]),
-      distinctUntilChanged((a, b) => a?.[1] === b?.[1]),  // Filter out when the state remains the same.
-      map(x => x[0] as ActionContextState<T, O>),
+      map((x) => [x, x.actionState] as [ActionContextState, DbxActionState]),
+      distinctUntilChanged((a, b) => a?.[1] === b?.[1]), // Filter out when the state remains the same.
+      map((x) => x[0] as ActionContextState<T, O>),
       shareReplay(1)
     );
   }
 
   afterDistinctLoadingStateTypeChange(): Observable<ActionContextState<T, O>> {
     return this.state$.pipe(
-      map((x) => ([x, loadingStateForActionContextState(x)]) as [ActionContextState, LoadingStateType]),
-      distinctUntilChanged((a, b) => a?.[1] === b?.[1]),  // Filter out when the loading state remains the same.
-      map(x => x[0] as ActionContextState<T, O>),
+      map((x) => [x, loadingStateForActionContextState(x)] as [ActionContextState, LoadingStateType]),
+      distinctUntilChanged((a, b) => a?.[1] === b?.[1]), // Filter out when the loading state remains the same.
+      map((x) => x[0] as ActionContextState<T, O>),
       shareReplay(1)
     );
   }
@@ -322,5 +334,4 @@ export class ActionContextStore<T = unknown, O = unknown> extends ComponentStore
       super.ngOnDestroy();
     }, 2000);
   }
-
 }

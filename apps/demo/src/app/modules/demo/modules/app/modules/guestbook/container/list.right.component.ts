@@ -6,13 +6,11 @@ import { GuestbookDocumentStore } from '@dereekb/demo-components';
   templateUrl: './list.right.component.html'
 })
 export class DemoGuestbookListPageRightComponent implements OnDestroy {
-
   readonly context = loadingStateContext({ obs: this.guestbookStore.dataLoadingState$ });
 
-  constructor(readonly guestbookStore: GuestbookDocumentStore) { }
+  constructor(readonly guestbookStore: GuestbookDocumentStore) {}
 
   ngOnDestroy(): void {
     this.context.destroy();
   }
-
 }

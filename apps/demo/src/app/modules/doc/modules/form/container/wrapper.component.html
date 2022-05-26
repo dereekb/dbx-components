@@ -1,14 +1,11 @@
 <dbx-content-container>
   <doc-feature-layout header="" hint="">
-
     <!-- Examples -->
-    <doc-feature-example header="expandableWrapper()"
-      hint="Wraps a field with content that can be expanded to reveal optional fields.">
+    <doc-feature-example header="expandableWrapper()" hint="Wraps a field with content that can be expanded to reveal optional fields.">
       <doc-form-example-form [config]="expandableField"></doc-form-example-form>
     </doc-feature-example>
 
-    <doc-feature-example header="toggleWrapper()"
-      hint="Wraps a field and adds a slider that can be toggled to hide or reveal fields.">
+    <doc-feature-example header="toggleWrapper()" hint="Wraps a field and adds a slider that can be toggled to hide or reveal fields.">
       <doc-form-example-form [dbxFormlyFields]="toggleField"></doc-form-example-form>
     </doc-feature-example>
 
@@ -24,14 +21,12 @@
       <doc-form-example-form [dbxFormlyFields]="infoField"></doc-form-example-form>
     </doc-feature-example>
 
-    <doc-feature-example header="flexWrapper()"
-      hint="Wraps one or more fields to be displayed with flex layout. The flex layout can be configured per item. A screen width breakpoints can also be set to control if/when to collapse each item to full width.">
+    <doc-feature-example header="flexWrapper()" hint="Wraps one or more fields to be displayed with flex layout. The flex layout can be configured per item. A screen width breakpoints can also be set to control if/when to collapse each item to full width.">
       <doc-form-example-form [dbxFormlyFields]="flexField"></doc-form-example-form>
       <h4>3 Per Row - Retain size down to small width</h4>
       <doc-form-example-form [dbxFormlyFields]="flexThreeField"></doc-form-example-form>
       <h4>5 Per Row - Retain size down to large width - with relative enabled to expand content</h4>
       <doc-form-example-form [dbxFormlyFields]="flexFiveField"></doc-form-example-form>
     </doc-feature-example>
-
   </doc-feature-layout>
 </dbx-content-container>

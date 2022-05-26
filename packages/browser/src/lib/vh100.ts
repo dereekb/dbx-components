@@ -7,8 +7,8 @@ export function refreshVh100Function(cssVariableName = DEFAULT_VH100_VARIABLE_NA
   return () => {
     const doc = document.documentElement;
     doc.style.setProperty(cssProperty, `${window.innerHeight}px`);
-  }
-};
+  };
+}
 
 /**
  * Adds window event listeners to populate the css variable `vh100`, or another input variable name, with the current window height.
@@ -19,5 +19,4 @@ export function watchWindowAndUpdateVh100StyleProperty(cssVariableName?: string)
   window.addEventListener('resize', refreshPropertyValue);
   window.addEventListener('orientationchange', refreshPropertyValue);
   refreshPropertyValue();
-  
 }

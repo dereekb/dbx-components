@@ -1,7 +1,7 @@
 import { DemoApiFirestoreModule } from './firestore.module';
-import { DemoFirestoreCollections } from "@dereekb/demo-firebase";
+import { DemoFirestoreCollections } from '@dereekb/demo-firebase';
 import { firebaseServerActionsContext } from '@dereekb/firebase-server';
-import { Module } from "@nestjs/common";
+import { Module } from '@nestjs/common';
 import { DemoFirebaseServerActionsContext } from './action.context';
 
 const demoFirebaseServerActionsContextFactory = (collections: DemoFirestoreCollections): DemoFirebaseServerActionsContext => {
@@ -9,15 +9,17 @@ const demoFirebaseServerActionsContextFactory = (collections: DemoFirestoreColle
     ...collections,
     ...firebaseServerActionsContext()
   };
-}
+};
 
 @Module({
   imports: [DemoApiFirestoreModule],
-  providers: [{
-    provide: DemoFirebaseServerActionsContext,
-    useFactory: demoFirebaseServerActionsContextFactory,
-    inject: [DemoFirestoreCollections]
-  }],
+  providers: [
+    {
+      provide: DemoFirebaseServerActionsContext,
+      useFactory: demoFirebaseServerActionsContextFactory,
+      inject: [DemoFirestoreCollections]
+    }
+  ],
   exports: [DemoFirebaseServerActionsContext]
 })
-export class DemoApiActionModule { }
+export class DemoApiActionModule {}

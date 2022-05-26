@@ -7,7 +7,6 @@ import { DOC_ROUTER_ROOT_ROUTE } from '../doc.router';
   templateUrl: './anchorlist.component.html'
 })
 export class DocRouterAnchorListComponent {
-
   anchors: ClickableAnchorLinkTree[] = [
     DOC_LAYOUT_ROOT_ROUTE,
     DOC_ROUTER_ROOT_ROUTE,
@@ -40,5 +39,4 @@ export class DocRouterAnchorListComponent {
       ]
     }
   ];
-
 }

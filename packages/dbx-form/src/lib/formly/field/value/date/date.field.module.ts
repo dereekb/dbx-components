@@ -33,16 +33,10 @@ import { DbxFormFormlyWrapperModule } from '../../wrapper/form.wrapper.module';
     MatIconModule,
     FlexLayoutModule,
     FormlyModule.forChild({
-      types: [
-        { name: 'datetime', component: DbxDateTimeFieldComponent, wrappers: ['style', 'form-field'] }
-      ]
+      types: [{ name: 'datetime', component: DbxDateTimeFieldComponent, wrappers: ['style', 'form-field'] }]
     })
   ],
-  declarations: [
-    DbxDateTimeFieldComponent
-  ],
-  exports: [
-    DbxFormFormlyWrapperModule
-  ]
+  declarations: [DbxDateTimeFieldComponent],
+  exports: [DbxFormFormlyWrapperModule]
 })
-export class DbxFormFormlyDateFieldModule { }
+export class DbxFormFormlyDateFieldModule {}

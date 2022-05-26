@@ -4,14 +4,8 @@ import { DbxAppContextStateDirective } from './context.directive';
 import { fromDbxAppContext } from './state';
 
 @NgModule({
-  imports: [
-    StoreModule.forFeature(fromDbxAppContext.featureKey, fromDbxAppContext.reducers)
-  ],
-  declarations: [
-    DbxAppContextStateDirective
-  ],
-  exports: [
-    DbxAppContextStateDirective
-  ]
+  imports: [StoreModule.forFeature(fromDbxAppContext.featureKey, fromDbxAppContext.reducers)],
+  declarations: [DbxAppContextStateDirective],
+  exports: [DbxAppContextStateDirective]
 })
-export class DbxAppContextStateModule { }
+export class DbxAppContextStateModule {}

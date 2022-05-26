@@ -1,6 +1,6 @@
-import { Type } from "class-transformer";
-import { IsEnum, IsOptional, IsDate, IsNumber } from "class-validator";
-import { addDays, addHours, endOfDay, endOfMonth, endOfWeek, isPast, startOfDay, startOfMinute, startOfMonth, startOfWeek } from "date-fns";
+import { Type } from 'class-transformer';
+import { IsEnum, IsOptional, IsDate, IsNumber } from 'class-validator';
+import { addDays, addHours, endOfDay, endOfMonth, endOfWeek, isPast, startOfDay, startOfMinute, startOfMonth, startOfWeek } from 'date-fns';
 
 /**
  * Represents a start and end date.
@@ -49,23 +49,23 @@ export enum DateRangeType {
   WEEKS_RADIUS = 'weeks_radius',
   /**
    * Plus/minus 20 hours from the current day.
-   * 
+   *
    * @deprecated design not relevant anymore
    */
   WITHIN_DAY = 'within_day',
   /**
    * Plus/minus 4 days from the current day.
-   * 
+   *
    * @deprecated design not relevant anymore
    */
   WITHIN_WEEK = 'within_week',
   /**
    * Plus/minus 16 days from the current day.
-   * 
+   *
    * @deprecated design not relevant anymore
    */
   WITHIN_MONTH = 'within_month'
-};
+}
 
 export enum DateRangeState {
   /**
@@ -86,7 +86,6 @@ export enum DateRangeState {
  * Params for building a date range.
  */
 export class DateRangeParams {
-
   /**
    * Type of range.
    */
@@ -112,15 +111,14 @@ export class DateRangeParams {
       this.distance = template.distance;
     }
   }
-
 }
 
 /**
  * Creates a DateRange from the input DateRangeParams
- * 
- * @param param0 
- * @param roundToMinute 
- * @returns 
+ *
+ * @param param0
+ * @param roundToMinute
+ * @returns
  */
 export function makeDateRange({ type, date = new Date(), distance }: DateRangeParams, roundToMinute = false): DateRange {
   let start: Date;
@@ -204,15 +202,16 @@ export function makeDateRange({ type, date = new Date(), distance }: DateRangePa
   }
 
   return {
-    start, end
+    start,
+    end
   };
 }
 
 /**
  * Returns the DateRangeState from the input DateRange.
- * 
- * @param param0 
- * @returns 
+ *
+ * @param param0
+ * @returns
  */
 export function dateRangeState({ start, end }: DateRange): DateRangeState {
   if (isPast(end)) {

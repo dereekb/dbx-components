@@ -1,4 +1,4 @@
-import { CollectionReference, AbstractFirestoreDocument, snapshotConverterFunctions, firestoreString, firestoreDate, FirestoreCollection, UserRelatedById, DocumentReferenceRef, FirestoreContext, SingleItemFirestoreCollection, optionalFirestoreString } from "@dereekb/firebase";
+import { CollectionReference, AbstractFirestoreDocument, snapshotConverterFunctions, firestoreString, firestoreDate, FirestoreCollection, UserRelatedById, DocumentReferenceRef, FirestoreContext, SingleItemFirestoreCollection, optionalFirestoreString } from '@dereekb/firebase';
 import { Maybe } from '@dereekb/util';
 
 export interface ProfileFirestoreCollections {
@@ -22,9 +22,9 @@ export interface Profile extends UserRelatedById {
   updatedAt: Date;
 }
 
-export interface ProfileRef extends DocumentReferenceRef<Profile> { }
+export interface ProfileRef extends DocumentReferenceRef<Profile> {}
 
-export class ProfileDocument extends AbstractFirestoreDocument<Profile, ProfileDocument> { }
+export class ProfileDocument extends AbstractFirestoreDocument<Profile, ProfileDocument> {}
 
 export const profileCollectionPath = 'profile';
 
@@ -63,9 +63,9 @@ export interface ProfilePrivateData {
   createdAt: Date;
 }
 
-export interface ProfilePrivateDataRef extends DocumentReferenceRef<ProfilePrivateData> { }
+export interface ProfilePrivateDataRef extends DocumentReferenceRef<ProfilePrivateData> {}
 
-export class ProfilePrivateDataDocument extends AbstractFirestoreDocument<ProfilePrivateData, ProfilePrivateDataDocument> { }
+export class ProfilePrivateDataDocument extends AbstractFirestoreDocument<ProfilePrivateData, ProfilePrivateDataDocument> {}
 
 export const profileCollectionProfilePrivateDataCollectionPath = 'private';
 export const profilePrivateDataIdentifier = '0';
@@ -98,5 +98,5 @@ export function profilePrivateDataFirestoreCollectionFactory(firestoreContext: F
       parent,
       singleItemIdentifier: profilePrivateDataIdentifier
     });
-  }
+  };
 }

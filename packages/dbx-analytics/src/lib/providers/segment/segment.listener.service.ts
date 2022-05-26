@@ -9,7 +9,6 @@ import { DbxAnalyticsSegmentApiService } from './segment.service';
  */
 @Injectable()
 export class DbxAnalyticsSegmentServiceListener extends AbstractDbxAnalyticsServiceListener {
-
   constructor(private _segmentApi: DbxAnalyticsSegmentApiService) {
     super();
 
@@ -23,16 +22,15 @@ export class DbxAnalyticsSegmentServiceListener extends AbstractDbxAnalyticsServ
   }
 
   protected _initializeServiceSubscription() {
-    return combineLatest([this._segmentApi.service$, this.analyticsEvents$]).subscribe(
-      ([segment, streamEvent]: [SegmentAnalytics.AnalyticsJS, DbxAnalyticsStreamEvent]) => {
-        if (this._segmentApi.config.logging) {
-          console.log('Segment Listener Logging Event: ', streamEvent);
-        }
+    return combineLatest([this._segmentApi.service$, this.analyticsEvents$]).subscribe(([segment, streamEvent]: [SegmentAnalytics.AnalyticsJS, DbxAnalyticsStreamEvent]) => {
+      if (this._segmentApi.config.logging) {
+        console.log('Segment Listener Logging Event: ', streamEvent);
+      }
 
-        if (this._segmentApi.config.active) {
-          this.handleStreamEvent(segment, streamEvent);
-        }
-      });
+      if (this._segmentApi.config.active) {
+        this.handleStreamEvent(segment, streamEvent);
+      }
+    });
   }
 
   protected handleStreamEvent(api: SegmentAnalytics.AnalyticsJS, streamEvent: DbxAnalyticsStreamEvent): void {
@@ -65,34 +63,45 @@ export class DbxAnalyticsSegmentServiceListener extends AbstractDbxAnalyticsServ
     const eventName = name || event?.name;
 
     if (eventName) {
-      const value = event?.value
+      const value = event?.value;
       const data = event?.data;
 
-      api.track(eventName, {
-        ...(value != null) ? {
-          value
-        } : undefined,
-        ...data
-      }, {}, () => {
-        if (this._segmentApi.config.logging) {
-          console.log('Segment track success.');
+      api.track(
+        eventName,
+        {
+          ...(value != null
+            ? {
+                value
+              }
+            : undefined),
+          ...data
+        },
+        {},
+        () => {
+          if (this._segmentApi.config.logging) {
+            console.log('Segment track success.');
+          }
         }
-      });
+      );
     }
   }
 
   private changeUser(api: SegmentAnalytics.AnalyticsJS, user: Maybe<DbxAnalyticsUser>): void {
     if (user) {
-      api.identify(user.user, {
-        ...user.properties
-      }, {}, () => {
-        if (this._segmentApi.config.logging) {
-          console.log('Segment identify success.');
+      api.identify(
+        user.user,
+        {
+          ...user.properties
+        },
+        {},
+        () => {
+          if (this._segmentApi.config.logging) {
+            console.log('Segment identify success.');
+          }
         }
-      });
+      );
     } else {
       api.reset();
     }
   }
-
 }

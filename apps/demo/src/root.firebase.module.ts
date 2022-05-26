@@ -19,9 +19,9 @@ import { DemoFirebaseFunctionsGetter, DemoFirestoreCollections, DEMO_FIREBASE_FU
       functionsConfigMap: DEMO_FIREBASE_FUNCTIONS_CONFIG
     }),
     DbxFirebaseAuthModule.forRoot({
-      delegateFactory: undefined  // todo
+      delegateFactory: undefined // todo
     })
   ],
   providers: []
 })
-export class RootFirebaseModule { }
+export class RootFirebaseModule {}

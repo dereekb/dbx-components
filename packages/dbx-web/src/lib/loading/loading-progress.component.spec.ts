@@ -3,7 +3,6 @@ import { Component } from '@angular/core';
 import { DbxLoadingModule } from './loading.module';
 
 describe('DbxLoadingProgress', () => {
-
   beforeEach(async () => {
     TestBed.configureTestingModule({
       imports: [DbxLoadingModule],
@@ -12,7 +11,6 @@ describe('DbxLoadingProgress', () => {
   });
 
   describe('with spinner', () => {
-
     let fixture: ComponentFixture<LoadingProgressSpinnerComponent>;
     let component: LoadingProgressSpinnerComponent;
 
@@ -25,11 +23,9 @@ describe('DbxLoadingProgress', () => {
     it('should create', () => {
       expect(component).toBeTruthy();
     });
-
   });
 
   describe('with linear', () => {
-
     let fixture: ComponentFixture<LoadingProgressLinearComponent>;
     let component: LoadingProgressLinearComponent;
 
@@ -42,9 +38,7 @@ describe('DbxLoadingProgress', () => {
     it('should create', () => {
       expect(component).toBeTruthy();
     });
-
   });
-
 });
 
 @Component({
@@ -53,9 +47,7 @@ describe('DbxLoadingProgress', () => {
   `
 })
 class LoadingProgressSpinnerComponent {
-
   text?: string;
-
 }
 
 @Component({
@@ -64,7 +56,5 @@ class LoadingProgressSpinnerComponent {
   `
 })
 class LoadingProgressLinearComponent {
-
   text?: string;
-
 }

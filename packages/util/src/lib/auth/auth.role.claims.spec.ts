@@ -1,26 +1,22 @@
 import { AUTH_USER_ROLE, Maybe } from '@dereekb/util';
 import { containsAllValues, hasDifferentValues } from '../set';
 import { AuthRoleSet, AUTH_ADMIN_ROLE } from './auth.role';
-import { AuthClaimsObject, AuthRoleClaimsService, authRoleClaimsService, AUTH_ROLE_CLAIMS_DEFAULT_CLAIM_VALUE, AUTH_ROLE_CLAIMS_DEFAULT_EMPTY_VALUE } from "./auth.role.claims";
-
+import { AuthClaimsObject, AuthRoleClaimsService, authRoleClaimsService, AUTH_ROLE_CLAIMS_DEFAULT_CLAIM_VALUE, AUTH_ROLE_CLAIMS_DEFAULT_EMPTY_VALUE } from './auth.role.claims';
 
 type TestClaims = {
   test: string;
   u: number;
   m: string;
-}
+};
 
 type TestComplexClaims = {
   type: number;
-}
+};
 
 describe('authRoleClaimsFactory()', () => {
-
   describe('function', () => {
-
     function testConversion<T extends AuthClaimsObject>(service: AuthRoleClaimsService<T>, rolesSet: AuthRoleSet, name?: string) {
-
-      it(`should convert the the roles ${((name) ? `"${name}"` : '')} to claims claims and back.`, () => {
+      it(`should convert the the roles ${name ? `"${name}"` : ''} to claims claims and back.`, () => {
         const claims = service.toClaims(rolesSet);
 
         expect(claims).toBeDefined();
@@ -29,11 +25,9 @@ describe('authRoleClaimsFactory()', () => {
         expect(hasDifferentValues(roles, rolesSet)).toBe(false);
         expect(containsAllValues(roles, rolesSet)).toBe(true);
       });
-
     }
 
     describe('simple claims', () => {
-
       const nonExistentClaim = 'x';
 
       const claimsConfig = {
@@ -64,7 +58,6 @@ describe('authRoleClaimsFactory()', () => {
       });
 
       it(`should apply the default value for every key in the config that doesn't exist in the roles set.`, () => {
-
         const emptyValue = 100;
         const service = authRoleClaimsService(claimsConfig, {
           emptyValue
@@ -87,11 +80,9 @@ describe('authRoleClaimsFactory()', () => {
         expect(Object.keys(result).length).toBe(3);
         expect(result.m).toBe(AUTH_ROLE_CLAIMS_DEFAULT_EMPTY_VALUE);
       });
-
     });
 
     describe('encode/decoded claims', () => {
-
       // Encodes the user's role type in the "type" claims key.
       const claimsConfig = {
         type: {
@@ -125,9 +116,6 @@ describe('authRoleClaimsFactory()', () => {
         expect(Object.keys(result).length).toBe(1);
         expect(result.type).toBe(AUTH_ROLE_CLAIMS_DEFAULT_EMPTY_VALUE);
       });
-
     });
-
   });
-
 });

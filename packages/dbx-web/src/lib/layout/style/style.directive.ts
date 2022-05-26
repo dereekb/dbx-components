@@ -13,14 +13,14 @@ import { delay } from 'rxjs';
   }
 })
 export class DbxStyleDirective extends AbstractSubscriptionDirective {
-
   style = '';
 
   constructor(readonly styleService: DbxStyleService, private cdRef: ChangeDetectorRef) {
-    super(styleService.style$.pipe(delay(0)).subscribe((style) => {
-      this.style = style;
-      safeDetectChanges(this.cdRef);
-    }));
+    super(
+      styleService.style$.pipe(delay(0)).subscribe((style) => {
+        this.style = style;
+        safeDetectChanges(this.cdRef);
+      })
+    );
   }
-
 }

@@ -1,8 +1,8 @@
 import { FirestoreDocument } from './accessor/document';
-import { makeFirestoreCollection, FirestoreCollection, FirestoreCollectionConfig, FirestoreCollectionWithParent, FirestoreCollectionWithParentConfig, makeFirestoreCollectionWithParent, SingleItemFirestoreCollection, makeSingleItemFirestoreCollection, SingleItemFirestoreCollectionConfig } from "./collection";
+import { makeFirestoreCollection, FirestoreCollection, FirestoreCollectionConfig, FirestoreCollectionWithParent, FirestoreCollectionWithParentConfig, makeFirestoreCollectionWithParent, SingleItemFirestoreCollection, makeSingleItemFirestoreCollection, SingleItemFirestoreCollectionConfig } from './collection';
 import { FirestoreDrivers } from './driver/driver';
 import { WriteBatchFactoryReference, RunTransactionFactoryReference } from './driver';
-import { DocumentReference, CollectionReference, DocumentData, Firestore } from "./types";
+import { DocumentReference, CollectionReference, DocumentData, Firestore } from './types';
 
 /**
  * A @dereekb/firestore FirestoreContext. Wraps the main Firestore context and the drivers, as well as utility/convenience functions.
@@ -32,9 +32,9 @@ export type FirestoreContextFactory<F extends Firestore = Firestore> = (firestor
 
 /**
  * Creates a new FirestoreContextFactory given the input FirestoreDrivers.
- * 
- * @param drivers 
- * @returns 
+ *
+ * @param drivers
+ * @returns
  */
 export function firestoreContextFactory<F extends Firestore = Firestore>(drivers: FirestoreDrivers): FirestoreContextFactory<F> {
   return (firestore: F) => {

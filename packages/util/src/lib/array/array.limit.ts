@@ -1,10 +1,10 @@
-import { takeFront, takeLast } from "../array";
-import { Maybe } from "../value/maybe";
+import { takeFront, takeLast } from '../array';
+import { Maybe } from '../value/maybe';
 
 export interface LimitArrayConfig {
   /**
- * Number of items in the list to limit in the result.
- */
+   * Number of items in the list to limit in the result.
+   */
   limit: number;
   /**
    * If true the limit will be pulled from the end instead of the front of the array.

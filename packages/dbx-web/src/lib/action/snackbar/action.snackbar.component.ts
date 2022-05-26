@@ -14,14 +14,24 @@ import ms from 'ms';
   templateUrl: './action.snackbar.component.html'
 })
 export class DbxActionSnackbarComponent extends AbstractSubscriptionDirective implements OnInit, AfterViewInit, OnDestroy {
-
   private _durationTimeout = new Subject<void>();
   private _actionRef = new BehaviorSubject<Maybe<DbxActionContextSourceReference>>(undefined);
 
-  readonly value$ = of(0);  // value passed to the action.
-  readonly sourceInstance$ = this._actionRef.pipe(filterMaybe(), map(x => x?.sourceInstance));
-  readonly complete$ = this.sourceInstance$.pipe(switchMap(x => x.isSuccess$), startWith(false), shareReplay(1));
-  readonly loadingStateType$ = this.sourceInstance$.pipe(switchMap(x => x.loadingStateType$), startWith(LoadingStateType.IDLE), shareReplay(1));
+  readonly value$ = of(0); // value passed to the action.
+  readonly sourceInstance$ = this._actionRef.pipe(
+    filterMaybe(),
+    map((x) => x?.sourceInstance)
+  );
+  readonly complete$ = this.sourceInstance$.pipe(
+    switchMap((x) => x.isSuccess$),
+    startWith(false),
+    shareReplay(1)
+  );
+  readonly loadingStateType$ = this.sourceInstance$.pipe(
+    switchMap((x) => x.loadingStateType$),
+    startWith(LoadingStateType.IDLE),
+    shareReplay(1)
+  );
   readonly snackbarStatusClass$: Observable<string> = this.loadingStateType$.pipe(
     map((x) => {
       let classes = 'dbx-action-snackbar-';
@@ -62,10 +72,7 @@ export class DbxActionSnackbarComponent extends AbstractSubscriptionDirective im
     return this.data.action;
   }
 
-  constructor(
-    readonly snackbar: MatSnackBarRef<DbxActionSnackbarComponent>,
-    @Inject(MAT_SNACK_BAR_DATA) readonly data: DbxActionSnackbarDisplayConfig
-  ) {
+  constructor(readonly snackbar: MatSnackBarRef<DbxActionSnackbarComponent>, @Inject(MAT_SNACK_BAR_DATA) readonly data: DbxActionSnackbarDisplayConfig) {
     super();
     this.button = this.data.action?.button ?? this.data.button;
     this._actionRef.next(this.data.action?.reference);
@@ -73,12 +80,14 @@ export class DbxActionSnackbarComponent extends AbstractSubscriptionDirective im
 
   ngOnInit(): void {
     // Subscribe and close if the duration is up and the action state is idle.
-    this.sub = this._durationTimeout.pipe(
-      switchMap(() => this.loadingStateType$),
-      filter(x => x === LoadingStateType.IDLE)
-    ).subscribe(() => {
-      this.dismiss();
-    });
+    this.sub = this._durationTimeout
+      .pipe(
+        switchMap(() => this.loadingStateType$),
+        filter((x) => x === LoadingStateType.IDLE)
+      )
+      .subscribe(() => {
+        this.dismiss();
+      });
   }
 
   override ngOnDestroy(): void {
@@ -99,10 +108,9 @@ export class DbxActionSnackbarComponent extends AbstractSubscriptionDirective im
 
   dismissAfterActionCompletes = (): void => {
     this.snackbar._dismissAfter(ms('3s'));
-  }
+  };
 
   dismiss = (): void => {
     this.snackbar.dismiss();
-  }
-
+  };
 }

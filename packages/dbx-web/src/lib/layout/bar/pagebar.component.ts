@@ -7,8 +7,6 @@ import { DbxBarColor } from './bar';
   templateUrl: './pagebar.component.html'
 })
 export class DbxPagebarComponent {
-
   @Input()
   color?: Maybe<DbxBarColor>;
-
 }

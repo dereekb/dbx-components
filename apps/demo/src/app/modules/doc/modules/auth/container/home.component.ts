@@ -6,11 +6,9 @@ import { Component } from '@angular/core';
   templateUrl: './home.component.html'
 })
 export class DocAuthHomeComponent {
-
   cards: DocFeatureCard[] = DOC_AUTH_ROUTES.map((anchor) => ({
     title: anchor.title,
     detail: anchor.detail,
     anchor
   }));
-
 }

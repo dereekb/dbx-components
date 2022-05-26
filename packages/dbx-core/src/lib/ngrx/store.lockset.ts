@@ -11,7 +11,7 @@ export interface LockSetComponent {
 export interface LockSetComponentStoreConfig {
   parent?: Maybe<Observable<LockSetComponent>>;
   locks?: {
-    [key: string]: Observable<boolean>
+    [key: string]: Observable<boolean>;
   };
 }
 
@@ -20,7 +20,6 @@ export interface LockSetComponentStoreConfig {
  */
 @Injectable()
 export abstract class LockSetComponentStore<S extends object> extends ComponentStore<S> implements OnDestroy {
-
   readonly lockSet = new LockSet();
 
   protected lockSetDestroyDelayMs = 2000;
@@ -49,7 +48,7 @@ export abstract class LockSetComponentStore<S extends object> extends ComponentS
   }
 
   setParentLockSet(obs: ObservableOrValue<Maybe<LockSetComponent>>): void {
-    this.lockSet.setParentLockSet(asObservable(obs).pipe(map(x => x?.lockSet)));
+    this.lockSet.setParentLockSet(asObservable(obs).pipe(map((x) => x?.lockSet)));
   }
 
   addLock(key: string, obs: Observable<boolean>): void {
@@ -58,14 +57,16 @@ export abstract class LockSetComponentStore<S extends object> extends ComponentS
 
   // MARK: Cleanup
   override ngOnDestroy(): void {
-
     // Wait for any actions to complete before destroying.
-    this.lockSet.destroyOnNextUnlock({
-      fn: () => {
-        this._destroyNow();
+    this.lockSet.destroyOnNextUnlock(
+      {
+        fn: () => {
+          this._destroyNow();
+        },
+        timeout: this.lockSetDestroyTimeoutMs
       },
-      timeout: this.lockSetDestroyTimeoutMs,
-    }, this.lockSetDestroyDelayMs);
+      this.lockSetDestroyDelayMs
+    );
   }
 
   /**
@@ -74,5 +75,4 @@ export abstract class LockSetComponentStore<S extends object> extends ComponentS
   _destroyNow() {
     this.lockSet.destroy();
   }
-
 }

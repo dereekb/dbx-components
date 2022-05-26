@@ -18,14 +18,10 @@ import { DbxTextEditorFieldComponent } from './texteditor.field.component';
     MatFormFieldModule,
     MatInputModule,
     FormlyModule.forChild({
-      types: [
-        { name: 'texteditor', component: DbxTextEditorFieldComponent }
-      ]
+      types: [{ name: 'texteditor', component: DbxTextEditorFieldComponent }]
     })
   ],
-  declarations: [
-    DbxTextEditorFieldComponent
-  ],
+  declarations: [DbxTextEditorFieldComponent],
   exports: []
 })
-export class DbxFormFormlyTextEditorFieldModule { }
+export class DbxFormFormlyTextEditorFieldModule {}

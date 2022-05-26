@@ -9,9 +9,7 @@ import { DemoGuestbookEntryFormComponent } from './component/guestbook.entry.for
 import { DemoRootSharedModule } from '../../root.shared.module';
 
 @NgModule({
-  imports: [
-    DemoRootSharedModule
-  ],
+  imports: [DemoRootSharedModule],
   declarations: [
     // component
     DemoGuestbookEntryFormComponent,
@@ -25,16 +23,8 @@ import { DemoRootSharedModule } from '../../root.shared.module';
     DemoGuestbookCollectionStoreDirective,
     DemoGuestbookDocumentStoreDirective,
     DemoGuestbookEntryCollectionStoreDirective,
-    DemoGuestbookEntryDocumentStoreDirective,
-  ],
-  exports: [
-    DemoGuestbookEntryFormComponent,
-    DemoGuestbookListComponent,
-    DemoGuestbookEntryListComponent,
-    DemoGuestbookCollectionStoreDirective,
-    DemoGuestbookDocumentStoreDirective,
-    DemoGuestbookEntryCollectionStoreDirective,
     DemoGuestbookEntryDocumentStoreDirective
-  ]
+  ],
+  exports: [DemoGuestbookEntryFormComponent, DemoGuestbookListComponent, DemoGuestbookEntryListComponent, DemoGuestbookCollectionStoreDirective, DemoGuestbookDocumentStoreDirective, DemoGuestbookEntryCollectionStoreDirective, DemoGuestbookEntryDocumentStoreDirective]
 })
-export class DemoSharedGuestbookModule { }
+export class DemoSharedGuestbookModule {}

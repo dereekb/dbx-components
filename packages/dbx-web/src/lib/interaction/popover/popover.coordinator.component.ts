@@ -9,18 +9,20 @@ import { delay, map, shareReplay } from 'rxjs';
 @Component({
   selector: 'dbx-popover-coordinator',
   template: `
-  <ng-container *ngIf="show$ | async">
-    <ng-content></ng-content>
-  </ng-container>
-  `,
+    <ng-container *ngIf="show$ | async">
+      <ng-content></ng-content>
+    </ng-container>
+  `
   // TODO: styleUrls: ['./popover.scss']
 })
 export class DbxPopoverCoordinatorComponent implements OnInit, OnDestroy {
-
-  readonly isPopoverForKey$ = this.service.popovers$.pipe(map(x => x.get(this.popover.key) === this.popover), shareReplay(1));
+  readonly isPopoverForKey$ = this.service.popovers$.pipe(
+    map((x) => x.get(this.popover.key) === this.popover),
+    shareReplay(1)
+  );
   readonly show$ = this.isPopoverForKey$.pipe(delay(0));
 
-  constructor(private readonly service: DbxPopoverCoordinatorService, private readonly popover: DbxPopoverController) { }
+  constructor(private readonly service: DbxPopoverCoordinatorService, private readonly popover: DbxPopoverController) {}
 
   ngOnInit(): void {
     this.service.addPopover(this.popover);
@@ -29,5 +31,4 @@ export class DbxPopoverCoordinatorComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.service.removePopover(this.popover.key, this.popover);
   }
-
 }

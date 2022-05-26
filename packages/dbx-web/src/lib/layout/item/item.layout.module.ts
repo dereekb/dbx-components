@@ -4,15 +4,8 @@ import { NgModule } from '@angular/core';
 import { DbxIconItemComponent } from './item.icon.component';
 
 @NgModule({
-  imports: [
-    CommonModule,
-    MatIconModule
-  ],
-  declarations: [
-    DbxIconItemComponent
-  ],
-  exports: [
-    DbxIconItemComponent
-  ]
+  imports: [CommonModule, MatIconModule],
+  declarations: [DbxIconItemComponent],
+  exports: [DbxIconItemComponent]
 })
-export class DbxItemLayoutModule { }
+export class DbxItemLayoutModule {}

@@ -1,4 +1,4 @@
-import { Maybe } from "../value/maybe";
+import { Maybe } from '../value/maybe';
 
 /**
  * Page value used when no list items have been loaded.
@@ -21,14 +21,12 @@ export type PageNumber = number;
  * Represents a page number.
  */
 export interface Page {
-
   /**
    * Current page number.
-   * 
+   *
    * // TODO: Rename to pageNumber
    */
   page: PageNumber;
-
 }
 
 // MARK: Utility
@@ -37,7 +35,7 @@ export function getPageNumber(page: Maybe<Page>): number {
 }
 
 export function getNextPageNumber(page: Maybe<Page>): number {
-  return (getPageNumber(page) + 1);
+  return getPageNumber(page) + 1;
 }
 
 export function isFinalPage(page: Maybe<Page>): boolean {

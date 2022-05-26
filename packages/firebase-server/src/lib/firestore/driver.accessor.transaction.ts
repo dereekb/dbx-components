@@ -1,21 +1,20 @@
-import { DocumentReference, DocumentSnapshot, Transaction as GoogleCloudTransaction, SetOptions } from "@google-cloud/firestore";
-import { from, Observable } from "rxjs";
-import { WithFieldValue, UpdateData, FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, FirestoreDocumentContext, FirestoreDocumentContextType, FirestoreDocumentUpdateParams } from "@dereekb/firebase";
+import { DocumentReference, DocumentSnapshot, Transaction as GoogleCloudTransaction, SetOptions } from '@google-cloud/firestore';
+import { from, Observable } from 'rxjs';
+import { WithFieldValue, UpdateData, FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, FirestoreDocumentContext, FirestoreDocumentContextType, FirestoreDocumentUpdateParams } from '@dereekb/firebase';
 
 // MARK: Accessor
 /**
  * FirestoreDocumentDataAccessor implementation for a transaction.
  */
 export class TransactionFirestoreDocumentDataAccessor<T> implements FirestoreDocumentDataAccessor<T> {
-
-  constructor(readonly transaction: GoogleCloudTransaction, readonly documentRef: DocumentReference<T>) { }
+  constructor(readonly transaction: GoogleCloudTransaction, readonly documentRef: DocumentReference<T>) {}
 
   stream(): Observable<DocumentSnapshot<T>> {
     return from(this.get());
   }
 
   exists(): Promise<boolean> {
-    return this.get().then(x => x.exists);
+    return this.get().then((x) => x.exists);
   }
 
   get(): Promise<DocumentSnapshot<T>> {
@@ -36,14 +35,13 @@ export class TransactionFirestoreDocumentDataAccessor<T> implements FirestoreDoc
     this.transaction.update(this.documentRef, data as Partial<T>, params?.precondition ?? {});
     return Promise.resolve();
   }
-
 }
 
 /**
  * Creates a new FirestoreDocumentDataAccessorFactory for a Transaction.
- * 
- * @param transaction 
- * @returns 
+ *
+ * @param transaction
+ * @returns
  */
 export function transactionAccessorFactory<T>(transaction: GoogleCloudTransaction): FirestoreDocumentDataAccessorFactory<T> {
   return {
@@ -53,12 +51,10 @@ export function transactionAccessorFactory<T>(transaction: GoogleCloudTransactio
 
 // MARK: Context
 export class TransactionFirestoreDocumentContext<T> implements FirestoreDocumentContext<T> {
-
   readonly contextType = FirestoreDocumentContextType.TRANSACTION;
   readonly accessorFactory = transactionAccessorFactory<T>(this.transaction);
 
-  constructor(readonly transaction: GoogleCloudTransaction) { }
-
+  constructor(readonly transaction: GoogleCloudTransaction) {}
 }
 
 export function transactionDocumentContext<T>(transaction: GoogleCloudTransaction): TransactionFirestoreDocumentContext<T> {

@@ -1,8 +1,8 @@
-import { Maybe, TimezoneString } from "@dereekb/util";
-import { addSeconds } from "date-fns";
-import { utcToZonedTime } from "date-fns-tz";
-import { DateRangeType, makeDateRange } from "../date/date.range";
-import { DateDayTimezoneHintFilter, DateItemOccuringFilter, DateItemQueryStartsEndsFilter, DateItemRangeFilter } from "./query.filter";
+import { Maybe, TimezoneString } from '@dereekb/util';
+import { addSeconds } from 'date-fns';
+import { utcToZonedTime } from 'date-fns-tz';
+import { DateRangeType, makeDateRange } from '../date/date.range';
+import { DateDayTimezoneHintFilter, DateItemOccuringFilter, DateItemQueryStartsEndsFilter, DateItemRangeFilter } from './query.filter';
 
 export interface DaysAndTimeFilter<F> {
   /**
@@ -16,7 +16,6 @@ export interface DaysAndTimeFilter<F> {
 }
 
 export interface RawDateQuery extends DateDayTimezoneHintFilter {
-
   timezone?: Maybe<TimezoneString>;
 
   startsLte?: Maybe<Date>;
@@ -25,19 +24,18 @@ export interface RawDateQuery extends DateDayTimezoneHintFilter {
   endsGte?: Maybe<Date>;
 
   /**
-   * Implied Range to filter on. 
-   * 
+   * Implied Range to filter on.
+   *
    * We want to include all recurring items that start before the end, AND end after the start.
-   * 
+   *
    * rStart or rEnd may not be defined if no start or end are defined.
    */
   rStart?: Maybe<Date>;
   rEnd?: Maybe<Date>;
-
 }
 
 /**
- * 
+ *
  */
 export interface DateQueryBuilder<R, F> {
   /**
@@ -54,7 +52,7 @@ export type MakeRangeFilterFunction<R> = (gte: Maybe<Date>, lte: Maybe<Date>) =>
 
 /**
  * A single field that manages start/end will start and end at the same instant (end = start), so we merge the gte/lte values.
- * 
+ *
  * The "start" should be the startsAt start range first, and then the endsAt start range if provided.
  * The "ends" should be equal to the endsAt end range first, and then the startsAt end range if provided.
  */
@@ -85,7 +83,7 @@ export function makeDateQueryForDateItemRangeFilter(find: DateItemRangeFilter): 
   result.timezone = find.timezone;
 
   // Apply the timezone to the date range if provided.
-  const range = (find.timezone) ? { ...find.range, date: utcToZonedTime(find.range.date, find.timezone) } : find.range;
+  const range = find.timezone ? { ...find.range, date: utcToZonedTime(find.range.date, find.timezone) } : find.range;
   const dateRange = makeDateRange(range);
 
   switch (range.type) {
@@ -147,7 +145,7 @@ export function makeDaysAndTimeFiltersFunction<R, F>(builder: DateQueryBuilder<R
     let daysFilter: Maybe<F>;
 
     function tzDate(date: Maybe<Date>): Maybe<Date> {
-      return (date) ? utcToZonedTime(date, timezone as string) : undefined;
+      return date ? utcToZonedTime(date, timezone as string) : undefined;
     }
 
     if (timezone) {
@@ -160,5 +158,5 @@ export function makeDaysAndTimeFiltersFunction<R, F>(builder: DateQueryBuilder<R
       timeFilter,
       daysFilter
     };
-  }
+  };
 }

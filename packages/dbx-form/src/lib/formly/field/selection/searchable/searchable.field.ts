@@ -8,13 +8,16 @@ import { SearchableTextValueFieldsFieldConfig } from './searchable.text.field.co
 
 /**
  * Used to create a SearchableValueFieldDisplayFn function that will retrieve the metadata for items that are missing their metadata so they can be displayed properly.
- * 
- * @param param0 
- * @returns 
+ *
+ * @param param0
+ * @returns
  */
-export function makeMetaFilterSearchableFieldValueDisplayFn<T extends string | number = string | number, M = unknown>({ loadMetaForValues, makeDisplayForValues }: {
-  loadMetaForValues: (values: SearchableValueFieldValue<T, M>[]) => Observable<SearchableValueFieldValue<T, M>[]>,
-  makeDisplayForValues: (values: SearchableValueFieldValue<T, M>[]) => Observable<SearchableValueFieldDisplayValue<T, M>[]>
+export function makeMetaFilterSearchableFieldValueDisplayFn<T extends string | number = string | number, M = unknown>({
+  loadMetaForValues,
+  makeDisplayForValues
+}: {
+  loadMetaForValues: (values: SearchableValueFieldValue<T, M>[]) => Observable<SearchableValueFieldValue<T, M>[]>;
+  makeDisplayForValues: (values: SearchableValueFieldValue<T, M>[]) => Observable<SearchableValueFieldDisplayValue<T, M>[]>;
 }): SearchableValueFieldDisplayFn<T, M> {
   return (values: SearchableValueFieldValue<T, M>[]) => {
     const { included: loaded, excluded: needLoading } = separateValues(values, (x) => Boolean(x.meta));
@@ -26,18 +29,20 @@ export function makeMetaFilterSearchableFieldValueDisplayFn<T extends string | n
         map((result) => {
           const resultMap: Map<Maybe<T>, SearchableValueFieldValue<T, M>> = arrayToMap(result, (x) => x.value);
 
-          const mergedWithLoad = needLoading.map((x) => {
-            const id = x.value;
-            const loadedItem = resultMap.get(id);
-            const anchor = x.anchor ?? loadedItem?.anchor;
-            const meta: M = loadedItem?.meta as M;
+          const mergedWithLoad = needLoading
+            .map((x) => {
+              const id = x.value;
+              const loadedItem = resultMap.get(id);
+              const anchor = x.anchor ?? loadedItem?.anchor;
+              const meta: M = loadedItem?.meta as M;
 
-            return {
-              ...x,
-              anchor,
-              meta
-            };
-          }).filter(x => !x.meta);
+              return {
+                ...x,
+                anchor,
+                meta
+              };
+            })
+            .filter((x) => !x.meta);
 
           return mergedWithLoad;
         }),
@@ -52,7 +57,7 @@ export function makeMetaFilterSearchableFieldValueDisplayFn<T extends string | n
 }
 
 // MARK: Chips
-export type StringSearchableChipFieldConfig<M = unknown> = Omit<SearchableChipFieldConfig<string, M>, 'allowStringValues'>
+export type StringSearchableChipFieldConfig<M = unknown> = Omit<SearchableChipFieldConfig<string, M>, 'allowStringValues'>;
 
 export function searchableStringChipField<M = unknown>(config: StringSearchableChipFieldConfig<M>): FormlyFieldConfig {
   return searchableChipField({
@@ -61,7 +66,7 @@ export function searchableStringChipField<M = unknown>(config: StringSearchableC
   });
 }
 
-export interface SearchableChipFieldConfig<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> extends LabeledFieldConfig, DescriptionFieldConfig, SearchableChipValueFieldsFieldConfig<T, M, H> { }
+export interface SearchableChipFieldConfig<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> extends LabeledFieldConfig, DescriptionFieldConfig, SearchableChipValueFieldsFieldConfig<T, M, H> {}
 
 export function searchableChipField<T, M = unknown, H extends PrimativeKey = PrimativeKey>(config: SearchableChipFieldConfig<T, M, H>): FormlyFieldConfig {
   const { key, placeholder } = config;
@@ -77,7 +82,7 @@ export function searchableChipField<T, M = unknown, H extends PrimativeKey = Pri
 }
 
 // MARK: Text
-export interface SearchableTextFieldConfig<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> extends LabeledFieldConfig, DescriptionFieldConfig, SearchableTextValueFieldsFieldConfig<T, M, H> { }
+export interface SearchableTextFieldConfig<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> extends LabeledFieldConfig, DescriptionFieldConfig, SearchableTextValueFieldsFieldConfig<T, M, H> {}
 
 export function searchableTextField<T, M = unknown, H extends PrimativeKey = PrimativeKey>(config: SearchableTextFieldConfig<T, M, H>): FormlyFieldConfig {
   const { key } = config;

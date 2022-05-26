@@ -6,16 +6,10 @@ import { DbxFormLoadingSourceDirective } from './form.loading.directive';
 import { DbxTestDbxFormComponent, FORM_TEST_PROVIDERS } from '../../../test';
 
 describe('DbxFormLoadingPairSourceDirective', () => {
-
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [
-        ...FORM_TEST_PROVIDERS,
-      ],
-      declarations: [
-        TestDbxActionFormDirectiveComponent,
-        DbxTestDbxFormComponent
-      ]
+      imports: [...FORM_TEST_PROVIDERS],
+      declarations: [TestDbxActionFormDirectiveComponent, DbxTestDbxFormComponent]
     }).compileComponents();
   });
 
@@ -50,13 +44,15 @@ describe('DbxFormLoadingPairSourceDirective', () => {
     testComponent.source = of(successResult({ text: TEST_VALUE, invalidField: 0 }));
     form.detectFormChanges(fixture);
 
-    form.getValue().pipe(first()).subscribe((value) => {
-      expect(value.text).toBe(TEST_VALUE);
-      expect((value as any).invalidField).toBeUndefined();
-      done();
-    });
+    form
+      .getValue()
+      .pipe(first())
+      .subscribe((value) => {
+        expect(value.text).toBe(TEST_VALUE);
+        expect((value as any).invalidField).toBeUndefined();
+        done();
+      });
   });
-
 });
 
 @Component({
@@ -67,7 +63,6 @@ describe('DbxFormLoadingPairSourceDirective', () => {
   `
 })
 class TestDbxActionFormDirectiveComponent {
-
   source?: Observable<LoadingState<{ text: string }>>;
 
   @ViewChild(DbxFormLoadingSourceDirective, { static: true })
@@ -75,5 +70,4 @@ class TestDbxActionFormDirectiveComponent {
 
   @ViewChild(DbxTestDbxFormComponent, { static: true })
   form!: DbxTestDbxFormComponent;
-
 }

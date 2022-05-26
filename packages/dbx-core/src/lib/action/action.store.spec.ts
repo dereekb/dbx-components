@@ -4,7 +4,6 @@ import { containsStringAnyCase } from '@dereekb/util';
 import { isErrorLoadingState, isSuccessLoadingState, loadingStateHasValue, loadingStateIsIdle, LoadingStateType } from '@dereekb/rxjs';
 
 describe('ActionContextStore', () => {
-
   let contextStore: ActionContextStore;
 
   beforeEach(() => {
@@ -16,7 +15,6 @@ describe('ActionContextStore', () => {
   });
 
   describe('trigger()', () => {
-
     it('should set state to triggered on trigger()', (done) => {
       contextStore.trigger();
 
@@ -24,13 +22,10 @@ describe('ActionContextStore', () => {
         expect(x).toBe(true);
         done();
       });
-
     });
-
   });
 
   describe('readyValue()', () => {
-
     const READY_VALUE = 1;
     const TIMEOUT_VALUE = 'timeout';
 
@@ -60,11 +55,9 @@ describe('ActionContextStore', () => {
         });
       });
     });
-
   });
 
   describe('with disabled keys', () => {
-
     const disableKeyA = 'a';
     const disableKeyB = 'b';
     const allKeys = [disableKeyA, disableKeyB];
@@ -72,7 +65,7 @@ describe('ActionContextStore', () => {
     beforeEach(() => {
       contextStore.disable(disableKeyA);
       contextStore.disable(disableKeyB);
-    })
+    });
 
     it('should retain the disabled keys if resolve() is called', () => {
       contextStore.resolve('a');
@@ -93,11 +86,9 @@ describe('ActionContextStore', () => {
         expect(containsStringAnyCase(keys, disableKeyB)).toBe(true);
       });
     });
-
   });
 
   describe('loadingState', () => {
-
     it('should be an idle loading state after a reset.', () => {
       contextStore.reset();
 
@@ -108,7 +99,6 @@ describe('ActionContextStore', () => {
       contextStore.loadingStateType$.pipe(first()).subscribe((x) => {
         expect(x).toBe(LoadingStateType.IDLE);
       });
-
     });
 
     it('should be a success loading state after resolving..', () => {
@@ -124,7 +114,6 @@ describe('ActionContextStore', () => {
       contextStore.loadingStateType$.pipe(first()).subscribe((x) => {
         expect(x).toBe(LoadingStateType.SUCCESS);
       });
-
     });
 
     it('should be an error loading state after rejecting.', () => {
@@ -137,11 +126,8 @@ describe('ActionContextStore', () => {
       contextStore.loadingStateType$.pipe(first()).subscribe((x) => {
         expect(x).toBe(LoadingStateType.ERROR);
       });
-
     });
-
   });
 
   // TODO: Add other tests.
-
 });

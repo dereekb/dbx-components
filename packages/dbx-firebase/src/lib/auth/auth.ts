@@ -1,6 +1,6 @@
-import { User, UserInfo } from "firebase/auth";
+import { User, UserInfo } from 'firebase/auth';
 
-export type AuthUserInfo = Omit<UserInfo, 'providerId'>
+export type AuthUserInfo = Omit<UserInfo, 'providerId'>;
 
 export function authUserInfoFromAuthUser(user: User): AuthUserInfo {
   return {

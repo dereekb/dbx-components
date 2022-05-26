@@ -12,13 +12,12 @@ import { DbxBarColor } from './bar';
       <mat-icon class="button-spacer" *ngIf="icon">{{ icon }}</mat-icon>
       <span *ngIf="text">{{ text }}</span>
     </dbx-bar>
-    `,
+  `,
   host: {
-    'class': 'dbx-bar-header dbx-hint'
+    class: 'dbx-bar-header dbx-hint'
   }
 })
 export class DbxBarHeaderComponent {
-
   @Input()
   text?: Maybe<string>;
 
@@ -27,5 +26,4 @@ export class DbxBarHeaderComponent {
 
   @Input()
   color?: Maybe<DbxBarColor>;
-
 }

@@ -7,8 +7,7 @@ import { Observable } from 'rxjs';
  * WorkInstanceDelegate implementation using an DbxActionContextStoreSourceInstance.
  */
 export class DbxActionWorkInstanceDelegate<T = unknown, O = unknown> implements WorkInstanceDelegate<O> {
-
-  constructor(readonly source: DbxActionContextStoreSourceInstance<T, O>) { }
+  constructor(readonly source: DbxActionContextStoreSourceInstance<T, O>) {}
 
   startWorking(): void {
     this.source.startWorking();
@@ -21,7 +20,6 @@ export class DbxActionWorkInstanceDelegate<T = unknown, O = unknown> implements 
   reject(error: Maybe<ReadableError | Observable<ReadableError>>): void {
     this.source.reject(error);
   }
-
 }
 
 export type HandleActionWithFunctionOrContext<T = unknown, O = unknown> = HandleActionFunction<T, O> | HandleActionWithContext<T, O>;

@@ -6,11 +6,5 @@
     "types": ["jest", "node"]
   },
   "files": ["src/test-setup.ts"],
-  "include": [
-    "**/*.test.ts",
-    "**/*.spec.ts",
-    "**/*.d.ts",
-    "src/test/firebase.context.ts",
-    "jest.config.ts"
-  ]
+  "include": ["**/*.test.ts", "**/*.spec.ts", "**/*.d.ts", "src/test/firebase.context.ts", "jest.config.ts"]
 }

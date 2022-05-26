@@ -8,7 +8,6 @@ export interface SegueRefRawSegueParams {
 }
 
 export interface SegueRefOptions<O = object> {
-
   /**
    * Raw parameters
    */
@@ -16,23 +15,20 @@ export interface SegueRefOptions<O = object> {
 
   /**
    * Custom Transition Options.
-   * 
+   *
    * For UIRouter, this is TransitionOptions.
    */
   refOptions?: O;
-
 }
 
 /**
  * Represents a segue ref
  */
 export interface SegueRef<O = object> extends SegueRefOptions<O> {
-
   /**
    * Ref path value.
    */
   ref: SegueRefRouterLink;
-
 }
 
 /**
@@ -41,7 +37,7 @@ export interface SegueRef<O = object> extends SegueRefOptions<O> {
 export type SegueRefOrSegueRefRouterLink<O = object> = SegueRef<O> | SegueRefRouterLink;
 
 export function isSegueRef<O = object>(input: Maybe<SegueRefOrSegueRefRouterLink<O>>): input is SegueRef<O> {
-  return (typeof input === 'object') && hasValueOrNotEmpty((input as SegueRef).ref);
+  return typeof input === 'object' && hasValueOrNotEmpty((input as SegueRef).ref);
 }
 
 export function asSegueRef<O = object>(input: SegueRefOrSegueRefRouterLink<O>): SegueRef<O>;
@@ -75,5 +71,5 @@ export function refStringToSegueRef<O = object>(ref: string, options?: SegueRefO
 }
 
 export function mapRefStringObsToSegueRefObs<O = object>(obs: Observable<string>, options?: SegueRefOptions<O>): Observable<SegueRef<O>> {
-  return obs.pipe(map(x => refStringToSegueRef(x, options)));
+  return obs.pipe(map((x) => refStringToSegueRef(x, options)));
 }

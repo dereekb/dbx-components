@@ -1,7 +1,7 @@
-@use "sass:map";
+@use 'sass:map';
 
 // variable names
-$vh100-var: --vh100;                                        // variable to use for 100vh.
+$vh100-var: --vh100; // variable to use for 100vh.
 
 $top-banner-height-var: --dbx-top-banner-height;
 $bottom-banner-height-var: --dbx-bottom-banner-height;
@@ -44,6 +44,13 @@ $padding-3: var($padding-3-var);
 $padding-4: var($padding-4-var);
 $padding-5: var($padding-5-var);
 
-$padding-map: (0: $padding-0, 1: $padding-1, 2: $padding-2, 3: $padding-3, 4: $padding-4, 5: $padding-5);
+$padding-map: (
+  0: $padding-0,
+  1: $padding-1,
+  2: $padding-2,
+  3: $padding-3,
+  4: $padding-4,
+  5: $padding-5
+);
 
 $two-column-left-width: var($two-column-left-width-var);

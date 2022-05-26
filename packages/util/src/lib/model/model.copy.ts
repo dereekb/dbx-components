@@ -5,15 +5,13 @@ export type CopySelectModelFieldsConfig<T = unknown> = Partial<CopyModelFieldsCo
 
 export type CopyModelFieldsConfig<T = unknown> = {
   [K in keyof T]: Maybe<CopyModelFieldConfig>;
-}
+};
 
 export interface CopyModelFieldConfig<V = unknown> {
-
   /**
    * Default value if not presented. If default is not defined and there is no value, the key will be ignored entirely.
    */
   default?: V;
-
 }
 
 /**

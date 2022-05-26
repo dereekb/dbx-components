@@ -1,4 +1,3 @@
-
 // MARK: Window Location Utiltiies
 
 /**
@@ -13,7 +12,7 @@ export function makeWindowPath(path: string): string {
 }
 
 export function getBaseWindowUrl(): string {
-  const port = (window.location.port) ? (':' + window.location.port) : '';
+  const port = window.location.port ? ':' + window.location.port : '';
   return `${window.location.protocol}//${window.location.hostname}${port}`;
 }
 

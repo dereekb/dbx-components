@@ -1,10 +1,8 @@
-import { makeTestBuilder, TestJestTestContextFixture } from "./jest.spec";
-import { JestTestWrappedContextFactoryBuilder, wrapJestTestContextFactory } from "./jest.wrap";
+import { makeTestBuilder, TestJestTestContextFixture } from './jest.spec';
+import { JestTestWrappedContextFactoryBuilder, wrapJestTestContextFactory } from './jest.wrap';
 
 export class WrappedTestJestTestContextFixture {
-
-  constructor(readonly fixture: TestJestTestContextFixture) { }
-
+  constructor(readonly fixture: TestJestTestContextFixture) {}
 }
 
 export interface WrappedTestConfigureWrapperExampleConfig {
@@ -17,7 +15,6 @@ export function configureWrapperExample(config?: WrappedTestConfigureWrapperExam
   return wrapJestTestContextFactory<WrappedTestJestTestContextFixture, TestJestTestContextFixture, number>({
     wrapFixture: (fixture) => new WrappedTestJestTestContextFixture(fixture),
     setupWrap: async (fixture: WrappedTestJestTestContextFixture) => {
-
       // Do nothing, but we could use the config here to initialize our new fixture for the tests it will be used it.
       config?.onSetup?.();
 
@@ -25,16 +22,13 @@ export function configureWrapperExample(config?: WrappedTestConfigureWrapperExam
       return 0;
     },
     teardownWrap: async (fixture: WrappedTestJestTestContextFixture, effect: number) => {
-
       // Same here
       config?.onTeardown?.(effect);
-
     }
   });
 }
 
 describe('wrapJestTestContextFactory()', () => {
-
   const testBuilder = makeTestBuilder();
 
   function makeWrapper() {
@@ -51,7 +45,6 @@ describe('wrapJestTestContextFactory()', () => {
   });
 
   describe('wrapper', () => {
-
     let wasSetup = false;
 
     const wrapper = configureWrapperExample({
@@ -65,38 +58,28 @@ describe('wrapJestTestContextFactory()', () => {
     });
 
     it('should wrap a factory', () => {
-      const factory = wrapper(testBuilder())
+      const factory = wrapper(testBuilder());
 
       expect(factory).toBeDefined();
       expect(typeof factory).toBe('function');
     });
 
     describe('wrapped factory', () => {
-
       const wrappedFactory = wrapper(testBuilder());
 
       describe('with tests executed within test context', () => {
-
         wrappedFactory(() => {
-
           it('should execute our setup wrap', () => {
             expect(wasSetup).toBe(true);
           });
-
         });
-
       });
 
       describe('with tests executed outside test context', () => {
-
         it('should not execute our setup wrap', () => {
           expect(wasSetup).toBe(false);
         });
-
       });
-
     });
-
   });
-
 });

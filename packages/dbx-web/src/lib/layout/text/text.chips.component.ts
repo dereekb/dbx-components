@@ -11,16 +11,14 @@ export interface TextChip<T = unknown> {
 @Component({
   selector: 'dbx-text-chips',
   template: `
-  <mat-chip-list *ngIf="chips" [multiple]="false">
-    <mat-chip *ngFor="let chip of chips" selected [color]="chip.color" [matTooltip]="chip.tooltip!" matTooltipPosition="above">
-      {{chip.text}}
-    </mat-chip>
-  </mat-chip-list>
+    <mat-chip-list *ngIf="chips" [multiple]="false">
+      <mat-chip *ngFor="let chip of chips" selected [color]="chip.color" [matTooltip]="chip.tooltip!" matTooltipPosition="above">
+        {{ chip.text }}
+      </mat-chip>
+    </mat-chip-list>
   `
 })
 export class DbxTextChipsComponent<T = unknown> {
-
   @Input()
   chips?: Maybe<TextChip<T>[]>;
-
 }

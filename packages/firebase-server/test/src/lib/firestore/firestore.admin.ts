@@ -4,8 +4,8 @@ import { GoogleCloudTestFirestoreContextFixture, googleCloudTestFirestoreBuilder
 export type GoogleFirebaseFirestoreTestContextFactory = JestTestContextFactory<GoogleCloudTestFirestoreContextFixture>;
 
 /**
- * Default firestore admin factory. 
- * 
+ * Default firestore admin factory.
+ *
  * Host of localhost, port 9904
  */
 export const adminFirestoreFactory: GoogleFirebaseFirestoreTestContextFactory = googleCloudTestFirestoreBuilder({

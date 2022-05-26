@@ -7,7 +7,6 @@ import { SubscriptionObject, LockSet } from '@dereekb/rxjs';
  */
 @Directive()
 export abstract class AbstractSubscriptionDirective implements OnDestroy {
-
   private _subscriptionObject = new SubscriptionObject();
 
   constructor(subscription?: Subscription) {
@@ -21,16 +20,13 @@ export abstract class AbstractSubscriptionDirective implements OnDestroy {
   protected set sub(subscription: Subscription | undefined) {
     this._subscriptionObject.subscription = subscription;
   }
-
 }
-
 
 /**
  * AbstractSubscriptionDirective extension that prevents the OnDestroy from occuring until the lockset is unlocked.
  */
 @Directive()
 export abstract class AbstractLockSetSubscriptionDirective extends AbstractSubscriptionDirective implements OnDestroy {
-
   readonly lockSet = new LockSet();
 
   override ngOnDestroy(): void {
@@ -40,5 +36,4 @@ export abstract class AbstractLockSetSubscriptionDirective extends AbstractSubsc
   protected onLockSetDestroy(): void {
     super.ngOnDestroy();
   }
-
 }

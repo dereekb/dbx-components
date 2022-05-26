@@ -20,9 +20,10 @@ export interface DbxValueListViewConfig<T, I extends DbxValueListItem<T> = DbxVa
   `
 })
 export class DbxValueListViewComponent<T, I extends DbxValueListItem<T> = DbxValueListItem<T>, V = unknown, C extends DbxValueListViewConfig<T, I, V> = DbxValueListViewConfig<T, I, V>> extends AbstractDbxValueListViewDirective<T, I, V, C> {
-
-  readonly emitAllClicks$ = this.config$.pipe(map(x => x.emitAllClicks), shareReplay(1));
-
+  readonly emitAllClicks$ = this.config$.pipe(
+    map((x) => x.emitAllClicks),
+    shareReplay(1)
+  );
 }
 
 /**
@@ -41,11 +42,10 @@ export class DbxValueListViewComponent<T, I extends DbxValueListItem<T> = DbxVal
     </mat-nav-list>
   `,
   host: {
-    'class': 'dbx-list-view'
+    class: 'dbx-list-view'
   }
 })
 export class DbxValueListItemViewComponent<T, I extends DbxValueListItem<T> = DbxValueListItem<T>> {
-
   @Input()
   emitAllClicks?: Maybe<boolean>;
 
@@ -54,13 +54,11 @@ export class DbxValueListItemViewComponent<T, I extends DbxValueListItem<T> = Db
 
   readonly disabled$ = this.dbxListView.disabled$;
 
-  constructor(readonly dbxListView: DbxListView<T>) { }
+  constructor(readonly dbxListView: DbxListView<T>) {}
 
   onClickItem(item: I) {
-
     // do not emit clicks for disabled items.
     if (!item.disabled) {
-
       if (this.emitAllClicks || !item.anchor || anchorTypeForAnchor(item.anchor) === AnchorType.PLAIN) {
         // only emit clicks for items with no anchor, or plain anchors.
         this.onClickValue(item.itemValue);
@@ -71,5 +69,4 @@ export class DbxValueListItemViewComponent<T, I extends DbxValueListItem<T> = Db
   onClickValue(value: T) {
     this.dbxListView.clickValue?.next(value);
   }
-
 }

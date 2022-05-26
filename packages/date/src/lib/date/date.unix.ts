@@ -1,5 +1,5 @@
-import { MaybeNot, Maybe, DateOrUnixDateTimeNumber, UnixDateTimeNumber } from "@dereekb/util";
-import { isDate } from "date-fns";
+import { MaybeNot, Maybe, DateOrUnixDateTimeNumber, UnixDateTimeNumber } from '@dereekb/util';
+import { isDate } from 'date-fns';
 
 export function unixTimeNumberFromDateOrTimeNumber(input: Maybe<DateOrUnixDateTimeNumber>): Maybe<UnixDateTimeNumber> {
   if (input == null) {
@@ -22,7 +22,7 @@ export function dateFromDateOrTimeNumber(input: Maybe<DateOrUnixDateTimeNumber>)
 }
 
 export function unixTimeNumberToDate(dateTimeNumber: Maybe<UnixDateTimeNumber>): Maybe<Date> {
-  return (dateTimeNumber != null) ? new Date(dateTimeNumber * 1000) : dateTimeNumber as null | undefined;
+  return dateTimeNumber != null ? new Date(dateTimeNumber * 1000) : (dateTimeNumber as null | undefined);
 }
 
 export function unixTimeNumberForNow(): UnixDateTimeNumber {
@@ -32,5 +32,5 @@ export function unixTimeNumberForNow(): UnixDateTimeNumber {
 export function unixTimeNumberFromDate(date: Date): UnixDateTimeNumber;
 export function unixTimeNumberFromDate(date: MaybeNot): MaybeNot;
 export function unixTimeNumberFromDate(date: Maybe<Date>): Maybe<UnixDateTimeNumber> {
-  return (date != null) ? Math.ceil(date.getTime() / 1000) : date as null | undefined;
+  return date != null ? Math.ceil(date.getTime() / 1000) : (date as null | undefined);
 }

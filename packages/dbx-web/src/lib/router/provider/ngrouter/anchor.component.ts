@@ -7,4 +7,4 @@ import { AbstractDbxSegueAnchorDirective } from '../../layout/anchor/anchor.segu
 @Component({
   templateUrl: './anchor.component.html'
 })
-export class DbxAngularRouterSegueAnchorComponent extends AbstractDbxSegueAnchorDirective { }
+export class DbxAngularRouterSegueAnchorComponent extends AbstractDbxSegueAnchorDirective {}

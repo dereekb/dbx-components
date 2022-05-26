@@ -10,10 +10,9 @@ import { DbxLoadingComponent } from './loading.component';
   selector: '[dbxActionLoadingContext]'
 })
 export class DbxActionLoadingContextDirective implements OnInit, OnDestroy {
-
   private _context = new LoadingStateContextInstance({ obs: this.source.loadingState$ });
 
-  constructor(@Host() readonly loadingComponent: DbxLoadingComponent, readonly source: DbxActionContextStoreSourceInstance) { }
+  constructor(@Host() readonly loadingComponent: DbxLoadingComponent, readonly source: DbxActionContextStoreSourceInstance) {}
 
   get context() {
     return this._context;
@@ -26,5 +25,4 @@ export class DbxActionLoadingContextDirective implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this._context.destroy();
   }
-
 }

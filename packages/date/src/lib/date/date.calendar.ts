@@ -22,7 +22,6 @@ export enum CalendarDateType {
  * Represents a date on a calendar.
  */
 export class CalendarDate extends DateDurationSpan {
-
   /**
    * The type of event date.
    */
@@ -33,11 +32,9 @@ export class CalendarDate extends DateDurationSpan {
     super(template);
     this.type = template.type;
   }
-
 }
 
 export class CalendarDateUtility {
-
   static calendarDateForDay(day: ISO8601DayString, days?: number): CalendarDate {
     return {
       type: CalendarDateType.DAYS,
@@ -52,5 +49,4 @@ export class CalendarDateUtility {
       ...dateDurationSpan
     };
   }
-
 }

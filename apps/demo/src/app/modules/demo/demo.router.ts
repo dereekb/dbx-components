@@ -8,13 +8,13 @@ export const layoutState: Ng2StateDeclaration = {
   url: '/demo',
   name: 'demo',
   redirectTo: 'demo.home',
-  component: DemoLayoutComponent,
+  component: DemoLayoutComponent
 };
 
 export const homeState: Ng2StateDeclaration = {
   url: '/home',
   name: 'demo.home',
-  component: DemoHomeComponent,
+  component: DemoHomeComponent
 };
 
 export const loginState: Ng2StateDeclaration = {
@@ -26,12 +26,12 @@ export const loginState: Ng2StateDeclaration = {
 export const demoAuthFutureState: Ng2StateDeclaration = {
   name: 'demo.auth.**',
   url: '/auth',
-  loadChildren: () => import('./modules/auth/demo.auth.module').then(m => m.DemoAuthModule),
+  loadChildren: () => import('./modules/auth/demo.auth.module').then((m) => m.DemoAuthModule),
   data: {
-    authStates: 'none',  // User who aren't logged in.
+    authStates: 'none', // User who aren't logged in.
     redirectTo: redirectBasedOnAuthUserState({
-      'new': { ref: 'demo.onboard' },
-      'user': { ref: 'demo.app' }
+      new: { ref: 'demo.onboard' },
+      user: { ref: 'demo.app' }
     })
   } as HasAuthStateData
 };
@@ -39,11 +39,11 @@ export const demoAuthFutureState: Ng2StateDeclaration = {
 export const demoOnboardFutureState: Ng2StateDeclaration = {
   name: 'demo.onboard.**',
   url: '/onboard',
-  loadChildren: () => import('./modules/onboard/demo.onboard.module').then(m => m.DemoOnboardModule),
+  loadChildren: () => import('./modules/onboard/demo.onboard.module').then((m) => m.DemoOnboardModule),
   data: {
-    authStates: 'new',  // New users only
+    authStates: 'new', // New users only
     redirectTo: redirectBasedOnAuthUserState({
-      'user': { ref: 'demo.app' }
+      user: { ref: 'demo.app' }
     })
   } as HasAuthStateData
 };
@@ -51,23 +51,16 @@ export const demoOnboardFutureState: Ng2StateDeclaration = {
 export const demoAppFutureState: Ng2StateDeclaration = {
   name: 'demo.app.**',
   url: '/app',
-  loadChildren: () => import('./modules/app/demo.app.module').then(m => m.DemoAppModule),
+  loadChildren: () => import('./modules/app/demo.app.module').then((m) => m.DemoAppModule),
   data: {
-    authStates: 'user',  // Onboarded users only.
+    authStates: 'user', // Onboarded users only.
     redirectTo: redirectBasedOnAuthUserState({
       // other states default to demo.auth, per configuration in the root module.
-      'new': { ref: 'demo.onboard' }
+      new: { ref: 'demo.onboard' }
     })
   } as HasAuthStateData
 };
 
 // TODO: Add public state that also allows anonymous viewers. Anonymous users still must sign the ToS. Their signature updates their Token.
 
-export const STATES: Ng2StateDeclaration[] = [
-  layoutState,
-  homeState,
-  loginState,
-  demoOnboardFutureState,
-  demoAuthFutureState,
-  demoAppFutureState
-];
+export const STATES: Ng2StateDeclaration[] = [layoutState, homeState, loginState, demoOnboardFutureState, demoAuthFutureState, demoAppFutureState];

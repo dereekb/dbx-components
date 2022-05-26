@@ -1,7 +1,7 @@
-import { ChecklistItemDisplayContent, ChecklistItemFieldDataSetBuilder, ChecklistType, ChecklistItemFieldBuilderInput, flexLayoutWrapper } from "@dereekb/dbx-form";
-import { KeyValueTransformMap } from "@dereekb/util";
-import { FormlyFieldConfig } from "@ngx-formly/core";
-import { Observable } from "rxjs";
+import { ChecklistItemDisplayContent, ChecklistItemFieldDataSetBuilder, ChecklistType, ChecklistItemFieldBuilderInput, flexLayoutWrapper } from '@dereekb/dbx-form';
+import { KeyValueTransformMap } from '@dereekb/util';
+import { FormlyFieldConfig } from '@ngx-formly/core';
+import { Observable } from 'rxjs';
 
 export interface DocFormExampleChecklistValues {
   itemA: string;
@@ -27,17 +27,29 @@ export interface DocFormExampleChecklistFieldsConfig {
 export function docFormExampleChecklistFields({ dataObs, display }: DocFormExampleChecklistFieldsConfig): FormlyFieldConfig[] {
   const b: DocFormExampleChecklistItemFieldDataSetBuilder = new ChecklistItemFieldDataSetBuilder(dataObs);
 
-  b.showValueField('itemA', {
-    label: 'itemA Label'
-  }, (x: string) => x);
+  b.showValueField(
+    'itemA',
+    {
+      label: 'itemA Label'
+    },
+    (x: string) => x
+  );
 
-  b.showValueField('itemB', {
-    label: 'itemB Label'
-  }, (x: string) => x);
+  b.showValueField(
+    'itemB',
+    {
+      label: 'itemB Label'
+    },
+    (x: string) => x
+  );
 
-  b.showValueField('itemC', {
-    label: 'itemC Label'
-  }, (x: string) => x);
+  b.showValueField(
+    'itemC',
+    {
+      label: 'itemC Label'
+    },
+    (x: string) => x
+  );
 
   b.showValueFieldArrayCount('itemArray', {
     label: 'itemArray Label'
@@ -59,14 +71,17 @@ export function docFormExampleChecklistFields({ dataObs, display }: DocFormExamp
   return b.build();
 }
 
-export function docFormExampleChecklistFieldsSection({ key = undefined, config }: { key?: string, config: DocFormExampleChecklistFieldsConfig }): FormlyFieldConfig {
-  const fields = docFormExampleChecklistFields(config).map(field => ({ field }));
+export function docFormExampleChecklistFieldsSection({ key = undefined, config }: { key?: string; config: DocFormExampleChecklistFieldsConfig }): FormlyFieldConfig {
+  const fields = docFormExampleChecklistFields(config).map((field) => ({ field }));
 
   return {
     key,
-    fieldGroup: [flexLayoutWrapper(fields, {  // example also makes use of flexLayoutWrapper to wrap items around.
-      breakpoint: 'full',
-      size: 3
-    })]
+    fieldGroup: [
+      flexLayoutWrapper(fields, {
+        // example also makes use of flexLayoutWrapper to wrap items around.
+        breakpoint: 'full',
+        size: 3
+      })
+    ]
   };
 }

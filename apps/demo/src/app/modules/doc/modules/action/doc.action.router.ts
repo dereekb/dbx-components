@@ -17,7 +17,7 @@ export const layoutState: Ng2StateDeclaration = {
 export const homeState: Ng2StateDeclaration = {
   url: '/home',
   name: 'doc.action.home',
-  component: DocActionHomeComponent,
+  component: DocActionHomeComponent
 };
 
 export const docActionContextState: Ng2StateDeclaration = {
@@ -50,12 +50,4 @@ export const docActionMapState: Ng2StateDeclaration = {
   component: DocActionMapComponent
 };
 
-export const STATES: Ng2StateDeclaration[] = [
-  layoutState,
-  homeState,
-  docActionContextState,
-  docActionDirectivesState,
-  docActionInteractionState,
-  docActionFormState,
-  docActionMapState
-];
+export const STATES: Ng2StateDeclaration[] = [layoutState, homeState, docActionContextState, docActionDirectivesState, docActionInteractionState, docActionFormState, docActionMapState];

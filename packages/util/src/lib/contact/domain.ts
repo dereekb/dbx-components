@@ -1,5 +1,5 @@
-import { uniqueCaseInsensitiveStrings } from "../array";
-import { EmailAddress } from "./email";
+import { uniqueCaseInsensitiveStrings } from '../array';
+import { EmailAddress } from './email';
 
 export type EmailAddressDomain = string; // Domain name of an email address.
 
@@ -15,13 +15,13 @@ export function readDomainFromEmailAddress(address: EmailAddress): EmailAddressD
 
 /**
  * Reads a domain from the input that can be formatted as
- * 
- * - A url: www.test.com, 
+ *
+ * - A url: www.test.com,
  * - A url with the protocol (://): https://www.test.com
  * - An email address: test@test.com
  * - A domain: test.com
- * 
- * @param urlLikeInput 
+ *
+ * @param urlLikeInput
  * @returns The domain
  */
 export function readDomainFromUrlOrEmailAddress(urlLikeInput: string | EmailAddress | EmailAddressDomain): EmailAddressDomain {

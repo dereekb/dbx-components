@@ -4,15 +4,8 @@ import { DbxTwoColumnLayoutModule } from '../two';
 import { DbxOneColumnComponent } from './one.column.component';
 
 @NgModule({
-  imports: [
-    CommonModule,
-    DbxTwoColumnLayoutModule
-  ],
-  declarations: [
-    DbxOneColumnComponent
-  ],
-  exports: [
-    DbxOneColumnComponent
-  ],
+  imports: [CommonModule, DbxTwoColumnLayoutModule],
+  declarations: [DbxOneColumnComponent],
+  exports: [DbxOneColumnComponent]
 })
-export class DbxOneColumnLayoutModule { }
+export class DbxOneColumnLayoutModule {}

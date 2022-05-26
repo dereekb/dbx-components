@@ -1,21 +1,15 @@
 <dbx-section-page header="Profile">
   <dbx-loading [linear]="true" [context]="context">
     <dbx-content-box [wide]="true">
-      <dbx-section dbxAction dbxActionEnforceModified [dbxActionHandler]="handleChangeUsername"
-        header="Username ({{ username$ | async }})" hint="Change your profile username.">
-        <demo-profile-username-form dbxActionForm [dbxFormSource]="profileData$"
-          [dbxActionFormModified]="isUsernameModified">
-        </demo-profile-username-form>
+      <dbx-section dbxAction dbxActionEnforceModified [dbxActionHandler]="handleChangeUsername" header="Username ({{ username$ | async }})" hint="Change your profile username.">
+        <demo-profile-username-form dbxActionForm [dbxFormSource]="profileData$" [dbxActionFormModified]="isUsernameModified"></demo-profile-username-form>
         <dbx-button dbxActionButton text="Change Username"></dbx-button>
         <dbx-error dbxActionError></dbx-error>
       </dbx-section>
     </dbx-content-box>
     <dbx-content-box [wide]="true">
-      <dbx-section header="Information" dbxAction dbxActionAutoTrigger fastTrigger dbxActionEnforceModified
-        [dbxActionHandler]="handleUpdateProfile" hint="Change your profile information.">
-        <demo-profile-form [formDisabledOnWorking]="false" dbxActionForm [dbxFormSource]="profileData$"
-          [dbxActionFormModified]="isProfileModified">
-        </demo-profile-form>
+      <dbx-section header="Information" dbxAction dbxActionAutoTrigger fastTrigger dbxActionEnforceModified [dbxActionHandler]="handleUpdateProfile" hint="Change your profile information.">
+        <demo-profile-form [formDisabledOnWorking]="false" dbxActionForm [dbxFormSource]="profileData$" [dbxActionFormModified]="isProfileModified"></demo-profile-form>
         <dbx-error dbxActionError></dbx-error>
         <dbx-action-progress></dbx-action-progress>
         <dbx-success *dbxActionHasSuccess="3000" dbxActionSuccess>Saved Changes</dbx-success>

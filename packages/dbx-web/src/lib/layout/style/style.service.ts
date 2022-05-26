@@ -23,7 +23,6 @@ export interface DbxStyleConfig {
   providedIn: 'root'
 })
 export class DbxStyleService implements Destroyable {
-
   private _defaultConfig = new BehaviorSubject<Maybe<DbxStyleConfig>>(undefined);
   private _config = new BehaviorSubject<Maybe<Observable<DbxStyleConfig>>>(undefined);
   private _suffix = new BehaviorSubject<Maybe<string>>(undefined);
@@ -62,7 +61,7 @@ export class DbxStyleService implements Destroyable {
         let style = config.style;
 
         if (suffix != null && config.suffixes) {
-          const sanitizedSuffix = ((suffix[0] === '-') ? suffix?.slice(1) : suffix);
+          const sanitizedSuffix = suffix[0] === '-' ? suffix?.slice(1) : suffix;
 
           if (config.suffixes.has(sanitizedSuffix)) {
             style = `${style}-${sanitizedSuffix}`;
@@ -76,7 +75,7 @@ export class DbxStyleService implements Destroyable {
   }
 
   toggleDarkSuffix(dark?: Maybe<boolean>) {
-    const toggle: boolean = (dark != null) ? dark : this.suffix !== '-dark';
+    const toggle: boolean = dark != null ? dark : this.suffix !== '-dark';
 
     if (toggle) {
       this.suffix = '-dark';
@@ -98,5 +97,4 @@ export class DbxStyleService implements Destroyable {
     this._config.complete();
     this._suffix.complete();
   }
-
 }

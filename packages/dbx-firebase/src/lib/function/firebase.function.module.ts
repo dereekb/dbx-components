@@ -1,14 +1,14 @@
-import { ModuleWithProviders, NgModule, Provider } from "@angular/core";
-import { Functions } from "@angular/fire/functions";
-import { FirebaseFunctionsConfigMap, FirebaseFunctionsMap, LazyFirebaseFunctions } from "@dereekb/firebase";
-import { ClassLikeType, forEachKeyValue } from "@dereekb/util";
+import { ModuleWithProviders, NgModule, Provider } from '@angular/core';
+import { Functions } from '@angular/fire/functions';
+import { FirebaseFunctionsConfigMap, FirebaseFunctionsMap, LazyFirebaseFunctions } from '@dereekb/firebase';
+import { ClassLikeType, forEachKeyValue } from '@dereekb/util';
 
 export interface DbxFirebaseFunctionsModuleConfig<T, M extends FirebaseFunctionsMap = FirebaseFunctionsMap> {
   functionsGetterToken: ClassLikeType<T>;
   functionsGetterFactory: (functions: Functions) => T;
   /**
-   * Optional functions config map to provide. 
-   * 
+   * Optional functions config map to provide.
+   *
    * If provided, will inject all the types with factory functions so they can be injected into the app.
    */
   functionsConfigMap?: FirebaseFunctionsConfigMap<M>;
@@ -19,13 +19,14 @@ export interface DbxFirebaseFunctionsModuleConfig<T, M extends FirebaseFunctions
  */
 @NgModule()
 export class DbxFirebaseFunctionsModule {
-
   static forRoot<T, M extends FirebaseFunctionsMap = FirebaseFunctionsMap>(config: DbxFirebaseFunctionsModuleConfig<T, M>): ModuleWithProviders<DbxFirebaseFunctionsModule> {
-    const providers: Provider[] = [{
-      provide: config.functionsGetterToken,
-      useFactory: config.functionsGetterFactory,
-      deps: [Functions]
-    }];
+    const providers: Provider[] = [
+      {
+        provide: config.functionsGetterToken,
+        useFactory: config.functionsGetterFactory,
+        deps: [Functions]
+      }
+    ];
 
     if (config.functionsConfigMap) {
       forEachKeyValue(config.functionsConfigMap, {
@@ -44,7 +45,7 @@ export class DbxFirebaseFunctionsModule {
               }
             },
             deps: [config.functionsGetterToken]
-          })
+          });
         }
       });
     }
@@ -54,5 +55,4 @@ export class DbxFirebaseFunctionsModule {
       providers
     };
   }
-
 }

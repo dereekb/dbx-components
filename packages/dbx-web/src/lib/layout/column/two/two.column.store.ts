@@ -23,7 +23,6 @@ const INITIAL_STATE: TwoColumnsState = {
 
 @Injectable()
 export class TwoColumnsContextStore extends ComponentStore<TwoColumnsState> implements OnDestroy {
-
   private readonly _back = new Subject<void>();
 
   constructor() {
@@ -54,7 +53,10 @@ export class TwoColumnsContextStore extends ComponentStore<TwoColumnsState> impl
   /**
    * Pipes the current backRef value.
    */
-  readonly backRef$ = this.state$.pipe(map((x) => x.backRef), distinct());
+  readonly backRef$ = this.state$.pipe(
+    map((x) => x.backRef),
+    distinct()
+  );
 
   /**
    * Emits back events.
@@ -70,12 +72,12 @@ export class TwoColumnsContextStore extends ComponentStore<TwoColumnsState> impl
   /**
    * Changes the state to show right or not.
    */
-  readonly setShowRight = this.updater((state, showRight: Maybe<boolean>) => isMaybeNot(showRight) ? state : ({ ...state, showRight }));
+  readonly setShowRight = this.updater((state, showRight: Maybe<boolean>) => (isMaybeNot(showRight) ? state : { ...state, showRight }));
 
   /**
    * Sets the full left. If undefined is passed, no change occurs.
    */
-  readonly setFullLeft = this.updater((state, fullLeft: Maybe<boolean>) => isMaybeNot(fullLeft) ? state : ({ ...state, fullLeft }));
+  readonly setFullLeft = this.updater((state, fullLeft: Maybe<boolean>) => (isMaybeNot(fullLeft) ? state : { ...state, fullLeft }));
 
   /**
    * Sets the new back ref.
@@ -94,12 +96,13 @@ export class TwoColumnsContextStore extends ComponentStore<TwoColumnsState> impl
     super.ngOnDestroy();
     this._back.complete();
   }
-
 }
 
 export function provideTwoColumnsContext(): Provider[] {
-  return [{
-    provide: TwoColumnsContextStore,
-    useClass: TwoColumnsContextStore
-  }];
+  return [
+    {
+      provide: TwoColumnsContextStore,
+      useClass: TwoColumnsContextStore
+    }
+  ];
 }

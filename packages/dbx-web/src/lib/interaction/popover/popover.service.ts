@@ -14,7 +14,6 @@ export interface DbxPopoverConfig<O, I, T> extends DbxPopoverComponentConfig<O, 
  */
 @Injectable()
 export class DbxPopoverService {
-
   private _overlayContainerService: NgOverlayContainerService;
 
   constructor(private _overlay: Overlay, private _injector: Injector) {
@@ -22,7 +21,7 @@ export class DbxPopoverService {
   }
 
   open<O, I, T>(config: DbxPopoverConfig<O, I, T>): NgPopoverRef<DbxPopoverComponentConfig<O, I, T>, O> {
-    const service = (config.injector) ? new NgOverlayContainerService(this._overlay, config.injector) : this._overlayContainerService;
+    const service = config.injector ? new NgOverlayContainerService(this._overlay, config.injector) : this._overlayContainerService;
 
     const configuration: NgOverlayContainerConfiguration = {
       panelClass: 'dbx-popover-container',
@@ -46,5 +45,4 @@ export class DbxPopoverService {
       configuration
     });
   }
-
 }

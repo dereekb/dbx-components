@@ -5,11 +5,8 @@ import { StoreModule } from '@ngrx/store';
 import { DbxAppAuthEffects } from './state/effect/auth.effect';
 
 @NgModule({
-  imports: [
-    StoreModule.forFeature(fromDbxAppAuth.featureKey, fromDbxAppAuth.reducers),
-    EffectsModule.forFeature([DbxAppAuthEffects])
-  ],
+  imports: [StoreModule.forFeature(fromDbxAppAuth.featureKey, fromDbxAppAuth.reducers), EffectsModule.forFeature([DbxAppAuthEffects])],
   declarations: [],
   exports: []
 })
-export class DbxAppAuthStateModule { }
+export class DbxAppAuthStateModule {}

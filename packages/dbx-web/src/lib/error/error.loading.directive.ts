@@ -12,7 +12,6 @@ import { DbxReadableErrorComponent } from './error.component';
   selector: '[dbxLoadingError]'
 })
 export class DbxLoadingErrorDirective extends AbstractSubscriptionDirective {
-
   constructor(@Host() public readonly error: DbxReadableErrorComponent) {
     super();
   }
@@ -32,5 +31,4 @@ export class DbxLoadingErrorDirective extends AbstractSubscriptionDirective {
 
     this.sub = subscription;
   }
-
 }

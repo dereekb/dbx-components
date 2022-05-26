@@ -1,4 +1,4 @@
-import { makeRandomFunction, MakeRandomFunctionInput, RandomNumberFunction } from "../number/random";
+import { makeRandomFunction, MakeRandomFunctionInput, RandomNumberFunction } from '../number/random';
 
 export interface MakeArray<T> {
   count: number;
@@ -7,9 +7,9 @@ export interface MakeArray<T> {
 
 /**
  * Makes an array of values of a certain length using a generator function.
- * 
- * @param param0 
- * @returns 
+ *
+ * @param param0
+ * @returns
  */
 export function makeArray<T>({ count, make }: MakeArray<T>): T[] {
   const array: T[] = [];
@@ -27,11 +27,11 @@ export interface MakeArrayRandom<T> extends Omit<MakeArray<T>, 'count'> {
 
 /**
  * Makes a function that generates arrays of a random length of a specific type.
- * 
- * @param config 
- * @returns 
+ *
+ * @param config
+ * @returns
  */
 export function makeRandomArrayFn<T>(config: MakeArrayRandom<T>): () => T[] {
-  const randomFn = (typeof config.random === 'function') ? config.random : makeRandomFunction(config.random);
+  const randomFn = typeof config.random === 'function' ? config.random : makeRandomFunction(config.random);
   return () => makeArray({ count: Math.abs(randomFn()), make: config.make });
 }

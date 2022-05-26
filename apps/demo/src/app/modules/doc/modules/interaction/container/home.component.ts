@@ -6,11 +6,9 @@ import { Component } from '@angular/core';
   templateUrl: './home.component.html'
 })
 export class DocInteractionHomeComponent {
-
   cards: DocFeatureCard[] = DOC_INTERACTION_ROUTES.map((anchor) => ({
     title: anchor.title,
     detail: anchor.detail,
     anchor
   }));
-
 }

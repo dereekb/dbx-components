@@ -1,9 +1,9 @@
 import { FirestoreDocumentAccessorContextExtension } from './../accessor/document';
-import { ArrayOrValue, Maybe } from "@dereekb/util";
-import { FirestoreDocument } from "../accessor/document";
-import { documentReferencesFromSnapshot, FirestoreExecutableQuery, FirestoreQueryFactory } from "../query";
-import { FirestoreQueryConstraint } from "../query/constraint";
-import { Transaction } from "../types";
+import { ArrayOrValue, Maybe } from '@dereekb/util';
+import { FirestoreDocument } from '../accessor/document';
+import { documentReferencesFromSnapshot, FirestoreExecutableQuery, FirestoreQueryFactory } from '../query';
+import { FirestoreQueryConstraint } from '../query/constraint';
+import { Transaction } from '../types';
 import { map, Observable } from 'rxjs';
 import { firestoreDocumentLoader } from '../accessor';
 
@@ -23,8 +23,8 @@ export interface FirestoreCollectionExecutableDocumentQuery<T, D extends Firesto
   streamDocs(): Observable<D[]>;
   /**
    * Extend this query by adding additional filters.
-   * 
-   * @param queryConstraints 
+   *
+   * @param queryConstraints
    */
   filter(...queryConstraints: ArrayOrValue<FirestoreQueryConstraint>[]): FirestoreCollectionExecutableDocumentQuery<T, D>;
 }
@@ -46,10 +46,10 @@ export function firestoreCollectionQueryFactory<T, D extends FirestoreDocument<T
       baseQuery,
       getFirstDoc: async (transaction?: Transaction) => {
         const result = await baseQuery.getFirstDoc(transaction);
-        return (result) ? documentLoader([result.ref])[0] : undefined;
+        return result ? documentLoader([result.ref])[0] : undefined;
       },
-      getDocs: (transaction?: Transaction) => baseQuery.getDocs(transaction).then(x => documentLoader(documentReferencesFromSnapshot(x))),
-      streamDocs: () => baseQuery.streamDocs().pipe(map(x => documentLoader(documentReferencesFromSnapshot(x)))),
+      getDocs: (transaction?: Transaction) => baseQuery.getDocs(transaction).then((x) => documentLoader(documentReferencesFromSnapshot(x))),
+      streamDocs: () => baseQuery.streamDocs().pipe(map((x) => documentLoader(documentReferencesFromSnapshot(x)))),
       filter: (...queryConstraints: ArrayOrValue<FirestoreQueryConstraint>[]) => wrapQuery(baseQuery.filter(...queryConstraints))
     };
   };

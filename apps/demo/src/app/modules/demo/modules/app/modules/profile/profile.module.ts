@@ -12,9 +12,6 @@ import { DemoAppSharedModule } from '@dereekb/demo-components';
       states: STATES
     })
   ],
-  declarations: [
-    DemoProfileLayoutComponent,
-    DemoProfileViewComponent
-  ],
+  declarations: [DemoProfileLayoutComponent, DemoProfileViewComponent]
 })
-export class DemoProfileModule { }
+export class DemoProfileModule {}

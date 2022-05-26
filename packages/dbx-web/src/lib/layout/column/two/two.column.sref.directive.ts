@@ -9,13 +9,11 @@ import { TwoColumnsContextStore } from './two.column.store';
   selector: '[dbxTwoColumnSref]'
 })
 export class DbxTwoColumnSrefDirective {
-
-  constructor(private readonly _twoColumnsContextStore: TwoColumnsContextStore) { }
+  constructor(private readonly _twoColumnsContextStore: TwoColumnsContextStore) {}
 
   @Input('dbxTwoColumnSref')
   public set ref(ref: SegueRefOrSegueRefRouterLink) {
     const segueRef = asSegueRef(ref);
     this._twoColumnsContextStore.setBackRef(segueRef);
   }
-
 }

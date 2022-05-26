@@ -1,10 +1,10 @@
-import { FirebaseServerActionsContext } from "@dereekb/firebase-server";
-import { GuestbookFirestoreCollections, UpdateGuestbookEntryParams, AsyncGuestbookEntryUpdateAction, GuestbookEntryDocument, GuestbookEntry } from "@dereekb/demo-firebase";
+import { FirebaseServerActionsContext } from '@dereekb/firebase-server';
+import { GuestbookFirestoreCollections, UpdateGuestbookEntryParams, AsyncGuestbookEntryUpdateAction, GuestbookEntryDocument, GuestbookEntry } from '@dereekb/demo-firebase';
 
 /**
  * FirebaseServerActionsContextt required for GuestbookServerActions.
  */
-export interface GuestbookServerActionsContext extends FirebaseServerActionsContext, GuestbookFirestoreCollections { }
+export interface GuestbookServerActionsContext extends FirebaseServerActionsContext, GuestbookFirestoreCollections {}
 
 /**
  * Server-only guestbook actions.

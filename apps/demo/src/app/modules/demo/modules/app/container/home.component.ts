@@ -3,4 +3,4 @@ import { Component } from '@angular/core';
 @Component({
   templateUrl: './home.component.html'
 })
-export class DemoAppHomeComponent { }
+export class DemoAppHomeComponent {}

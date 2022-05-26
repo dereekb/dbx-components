@@ -15,7 +15,6 @@ export type DbxActionDialogFunction<T = unknown> = () => MatDialogRef<unknown, M
   selector: '[dbxActionDialog]'
 })
 export class DbxActionDialogDirective<T = unknown> extends AbstractDbxActionValueOnTriggerDirective<T> implements OnInit, OnDestroy {
-
   @Input('dbxActionDialog')
   fn?: DbxActionDialogFunction<T>;
 
@@ -24,10 +23,7 @@ export class DbxActionDialogDirective<T = unknown> extends AbstractDbxActionValu
     this.isModifiedFunction = isModifiedFunction;
   }
 
-  constructor(
-    readonly elementRef: ElementRef,
-    source: DbxActionContextStoreSourceInstance<T, unknown>
-  ) {
+  constructor(readonly elementRef: ElementRef, source: DbxActionContextStoreSourceInstance<T, unknown>) {
     super(source, () => this._getDataFromDialog());
   }
 
@@ -42,5 +38,4 @@ export class DbxActionDialogDirective<T = unknown> extends AbstractDbxActionValu
 
     return this.fn();
   }
-
 }

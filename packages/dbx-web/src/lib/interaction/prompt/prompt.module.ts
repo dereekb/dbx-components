@@ -17,33 +17,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { DbxDialogInteractionModule } from '../dialog/dialog.module';
 
 @NgModule({
-  imports: [
-    CommonModule,
-    MatDialogModule,
-    MatButtonModule,
-    DbxTextModule,
-    DbxButtonModule,
-    DbxInjectionComponentModule,
-    DbxDialogInteractionModule,
-    DbxSectionLayoutModule,
-    DbxContentLayoutModule
-  ],
-  declarations: [
-    DbxPromptComponent,
-    DbxPromptBoxComponent,
-    DbxPromptPageComponent,
-    DbxPromptConfirmComponent,
-    DbxPromptConfirmButtonDirective,
-    DbxPromptConfirmDialogComponent,
-    DbxPromptConfirmDirective,
-  ],
-  exports: [
-    DbxPromptComponent,
-    DbxPromptBoxComponent,
-    DbxPromptPageComponent,
-    DbxPromptConfirmComponent,
-    DbxPromptConfirmButtonDirective,
-    DbxPromptConfirmDirective,
-  ],
+  imports: [CommonModule, MatDialogModule, MatButtonModule, DbxTextModule, DbxButtonModule, DbxInjectionComponentModule, DbxDialogInteractionModule, DbxSectionLayoutModule, DbxContentLayoutModule],
+  declarations: [DbxPromptComponent, DbxPromptBoxComponent, DbxPromptPageComponent, DbxPromptConfirmComponent, DbxPromptConfirmButtonDirective, DbxPromptConfirmDialogComponent, DbxPromptConfirmDirective],
+  exports: [DbxPromptComponent, DbxPromptBoxComponent, DbxPromptPageComponent, DbxPromptConfirmComponent, DbxPromptConfirmButtonDirective, DbxPromptConfirmDirective]
 })
-export class DbxPromptModule { }
+export class DbxPromptModule {}

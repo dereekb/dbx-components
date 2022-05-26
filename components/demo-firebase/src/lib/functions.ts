@@ -10,11 +10,11 @@ import { profileFunctionMap, ProfileFunctions } from './profile';
 export type DemoFirebaseFunctionsMap = {
   guestbookFunctions: GuestbookFunctionTypeMap;
   profileFunctions: ProfileFunctionTypeMap;
-}
+};
 
 /**
  * LazyFirebaseFunctionsConfig for the DemoFirebaseFunctionsMap.
- * 
+ *
  * The typings are enforced by the functions map.
  */
 export const DEMO_FIREBASE_FUNCTIONS_CONFIG: FirebaseFunctionsConfigMap<DemoFirebaseFunctionsMap> = {
@@ -24,7 +24,7 @@ export const DEMO_FIREBASE_FUNCTIONS_CONFIG: FirebaseFunctionsConfigMap<DemoFire
 
 /**
  * The LazyFirebaseFunctions result type. It is an abstract class to allow for dependency injection.
- * 
+ *
  * The typings are enforced by the functions map.
  */
 export abstract class DemoFirebaseFunctionsGetter {

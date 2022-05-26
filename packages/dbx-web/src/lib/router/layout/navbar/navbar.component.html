@@ -6,7 +6,7 @@
     </button>
     <mat-menu #menu>
       <dbx-anchor *ngFor="let x of anchors$ | async" [anchor]="x.anchor">
-        <button mat-menu-item [ngClass]="(x.selected) ? 'active' : ''">{{ x.anchor.title }}</button>
+        <button mat-menu-item [ngClass]="x.selected ? 'active' : ''">{{ x.anchor.title }}</button>
       </dbx-anchor>
     </mat-menu>
   </ng-container>

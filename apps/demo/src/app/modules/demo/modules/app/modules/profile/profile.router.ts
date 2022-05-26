@@ -15,7 +15,4 @@ export const profileViewState: Ng2StateDeclaration = {
   component: DemoProfileViewComponent
 };
 
-export const STATES: Ng2StateDeclaration[] = [
-  layoutState,
-  profileViewState
-];
+export const STATES: Ng2StateDeclaration[] = [layoutState, profileViewState];

@@ -5,10 +5,8 @@
 
 // MARK: Variables
 
-
 // MARK: Mixin
 @mixin core() {
-
   .dbx-form-phone-field,
   .mat-form-field {
     width: 100%;
@@ -26,7 +24,6 @@
   .dbx-form-phone-field .ngx-mat-tel-input-container input:not(.country-search) {
     padding: 0 6px 0 110px;
   }
-
 }
 
 @mixin color($theme-config) {
@@ -41,7 +38,8 @@
   }
 }
 
-@mixin typography($typography-config) {}
+@mixin typography($typography-config) {
+}
 
 @mixin theme($theme-config) {
   @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-form-field-value-phone') {

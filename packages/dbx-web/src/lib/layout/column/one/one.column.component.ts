@@ -18,12 +18,10 @@ import { TwoColumnsContextStore } from '../two';
   providers: [TwoColumnsContextStore]
 })
 export class DbxOneColumnComponent {
-
   constructor(@Inject(TwoColumnsContextStore) public readonly twoColumnsContextStore: TwoColumnsContextStore) {
     twoColumnsContextStore.setFullLeft(true);
   }
 
   @Input()
   inSectionPage = true;
-
 }

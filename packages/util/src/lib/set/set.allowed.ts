@@ -1,5 +1,5 @@
 import { ArrayOrValue, asArray } from './../array/array';
-import { Maybe } from "../value/maybe";
+import { Maybe } from '../value/maybe';
 import { setContainsAnyValue } from './set';
 
 /**
@@ -18,10 +18,10 @@ export interface AllowedSet<T> {
 
 /**
  * Determines whether the input values are "allowed" for the given AllowedSet.
- * 
- * @param input 
- * @param allowedSet 
- * @returns 
+ *
+ * @param input
+ * @param allowedSet
+ * @returns
  */
 export function isAllowed<T>(input: ArrayOrValue<T>, allowedSet: AllowedSet<T>): boolean {
   const { allowed, disallowed } = allowedSet;

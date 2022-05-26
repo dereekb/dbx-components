@@ -4,20 +4,20 @@ import { OnCallHandlerWithNestApplication, onCallHandlerWithNestApplicationFacto
 import { MakeNestContext, NestApplicationFunctionFactory } from '../../nest.provider';
 
 @Injectable()
-export class TestInjectable { }
+export class TestInjectable {}
 
 @Module({
-  providers: [{
-    provide: TestInjectable,
-    useFactory: () => new TestInjectable()
-  }]
+  providers: [
+    {
+      provide: TestInjectable,
+      useFactory: () => new TestInjectable()
+    }
+  ]
 })
-export class TestAppModule { }
+export class TestAppModule {}
 
 export class TestAppNestContext {
-
-  constructor(readonly nest: INestApplicationContext) { }
-
+  constructor(readonly nest: INestApplicationContext) {}
 }
 
 /**
@@ -28,13 +28,10 @@ export const firebaseAdminFunctionNestContext = firebaseAdminFunctionNestContext
 export const makeNestContext: MakeNestContext<TestAppNestContext> = (nest) => new TestAppNestContext(nest);
 
 describe('nest function utilities', () => {
-
   initFirebaseServerAdminTestEnvironment();
 
   firebaseAdminFunctionNestContext((f) => {
-
     describe('onCallWithNestApplicationFactory()', () => {
-
       it('should create a factory.', () => {
         const factory = onCallHandlerWithNestApplicationFactory();
         expect(typeof factory).toBe('function');
@@ -48,7 +45,7 @@ describe('nest function utilities', () => {
         const factory = onCallHandlerWithNestApplicationFactory();
 
         let retrievedNestApplication = false; // use as a flag for our tests.
-        const testData = { test: true };  // use as the test data to be passed to our handler.
+        const testData = { test: true }; // use as the test data to be passed to our handler.
 
         // Our actual handler function that is invoked by our applications.
         const handler: OnCallHandlerWithNestApplication<typeof testData, number> = (nest, event) => {
@@ -76,9 +73,6 @@ describe('nest function utilities', () => {
         expect(result).toBe(expectedValue);
         expect(retrievedNestApplication).toBe(true);
       });
-
     });
-
   });
-
 });

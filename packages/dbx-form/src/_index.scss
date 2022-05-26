@@ -1,15 +1,14 @@
-@use '@angular/material'as mat;
+@use '@angular/material' as mat;
 @use './lib/style/all-theme' as dbx-form-theme;
 
 // Structural
-@forward './lib/style/core'show core;
+@forward './lib/style/core' show core;
 
 // Config
-@forward './lib/style/config'show define-dbx-form-theme-config,
-get-dbx-form-theme-config;
+@forward './lib/style/config' show define-dbx-form-theme-config, get-dbx-form-theme-config;
 
 // Theme bundles
-@forward './lib/style/all-theme'show all-component-themes;
+@forward './lib/style/all-theme' show all-component-themes;
 
 // Create Theme
 @mixin theme($root-selector, $theme-config) {

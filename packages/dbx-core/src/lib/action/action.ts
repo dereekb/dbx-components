@@ -1,4 +1,4 @@
-import { LoadingStateType } from "@dereekb/rxjs";
+import { LoadingStateType } from '@dereekb/rxjs';
 
 /**
  * Used by ActionContextState to denote what state the action is in.

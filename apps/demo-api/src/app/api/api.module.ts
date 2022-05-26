@@ -5,4 +5,4 @@ import { DemoApiStripeModule } from './stripe/stripe.module';
   imports: [DemoApiStripeModule],
   exports: []
 })
-export class DemoApiApiModule { }
+export class DemoApiApiModule {}

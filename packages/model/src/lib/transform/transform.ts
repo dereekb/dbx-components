@@ -1,12 +1,12 @@
-import { ClassType } from "@dereekb/util";
-import { ClassTransformOptions, plainToClass } from "class-transformer";
-import { validate, ValidationError, ValidationOptions } from "class-validator";
+import { ClassType } from '@dereekb/util';
+import { ClassTransformOptions, plainToClass } from 'class-transformer';
+import { validate, ValidationError, ValidationOptions } from 'class-validator';
 
 // MARK: Transform and Validate Object
 export interface TransformAndValidateObjectOutput<T, O> {
   object: T;
   result: O;
-};
+}
 
 export type TransformAndValidateObjectFunction<T, O, I extends object = object, C = unknown> = (input: I, context?: C) => Promise<TransformAndValidateObjectOutput<T, O>>;
 export type TransformAndValidateObjectHandleValidate<O = unknown> = (validationErrors: ValidationError[]) => Promise<O>;
@@ -25,21 +25,22 @@ export function transformAndValidateObject<T extends object, O, I extends object
   const transformToResult = transformAndValidateObjectResult(config.classType, config.fn, config.optionsForContext);
   const { handleValidationError } = config;
 
-  return (input: I, context?: C) => transformToResult(input, context).then(async (x) => {
-    const object = x.object;
-    let result: O;
+  return (input: I, context?: C) =>
+    transformToResult(input, context).then(async (x) => {
+      const object = x.object;
+      let result: O;
 
-    if (x.success) {
-      result = x.result;
-    } else {
-      result = await handleValidationError(x.validationErrors);
-    }
+      if (x.success) {
+        result = x.result;
+      } else {
+        result = await handleValidationError(x.validationErrors);
+      }
 
-    return {
-      object,
-      result
-    };
-  });
+      return {
+        object,
+        result
+      };
+    });
 }
 
 // MARK: Transform and Validate Factory
@@ -58,9 +59,9 @@ export type TransformAndValidateObjectFactory<C = unknown> = <T extends object, 
 
 /**
  * Creates a new TransformAndValidateObjectFactory.
- * 
- * @param defaults 
- * @returns 
+ *
+ * @param defaults
+ * @returns
  */
 export function transformAndValidateObjectFactory<C = unknown>(defaults: TransformAndValidateObjectFactoryDefaults<C>): TransformAndValidateObjectFactory<C> {
   const { handleValidationError: defaultHandleValidationError, optionsForContext } = defaults;
@@ -102,10 +103,10 @@ export interface TransformAndValidateObjectErrorResultOutput<T> {
 
 /**
  * Factory function that wraps the input class type and handler function to first transform the input object to a the given class, and then validate it.
- * 
- * @param classType 
- * @param fn 
- * @returns 
+ *
+ * @param classType
+ * @param fn
+ * @returns
  */
 export function transformAndValidateObjectResult<T extends object, O, I extends object = object, C = unknown>(classType: ClassType<T>, fn: (parsed: T) => Promise<O>, inputOptionsForContext?: TransformAndValidateObjectResultContextOptionsFunction<C>): TransformAndValidateObjectResultFunction<T, O, I, C> {
   const optionsForContext: TransformAndValidateObjectResultContextOptionsFunction<C> = inputOptionsForContext ?? (() => ({}));
@@ -115,7 +116,7 @@ export function transformAndValidateObjectResult<T extends object, O, I extends 
     const object: T = plainToClass(classType, input, {
       ...transformOptions,
       // Note: Each variable on the target class must be marked with the @Expose() annotation.
-      excludeExtraneousValues: true,
+      excludeExtraneousValues: true
     });
 
     const validationErrors: ValidationError[] = await validate(object, validateOptions);

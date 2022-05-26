@@ -15,7 +15,7 @@ export const authState: Ng2StateDeclaration = {
 export const authLoginState: Ng2StateDeclaration = {
   name: 'demo.auth.login',
   url: '/login',
-  component: DemoAuthLoginComponent,
+  component: DemoAuthLoginComponent
 };
 
 export const authLoginErrorState: Ng2StateDeclaration = {
@@ -36,10 +36,4 @@ export const authLoginAuthorizeState: Ng2StateDeclaration = {
   component: DemoAuthAuthorizeComponent
 };
 
-export const DEMO_AUTH_STATES: Ng2StateDeclaration[] = [
-  authState,
-  authLoginState,
-  authLoginErrorState,
-  authLoggedOutState,
-  authLoginAuthorizeState,
-];
+export const DEMO_AUTH_STATES: Ng2StateDeclaration[] = [authState, authLoginState, authLoginErrorState, authLoggedOutState, authLoginAuthorizeState];

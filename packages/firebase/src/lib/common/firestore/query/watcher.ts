@@ -2,7 +2,7 @@ import { groupValues, Building, build } from '@dereekb/util';
 import { toExpires } from '@dereekb/date';
 import { map, Observable, skip, switchMap, timer, shareReplay } from 'rxjs';
 import { DocumentChange, QuerySnapshot } from '../types';
-import { FirestoreItemPageIterationInstance, FirestoreItemPageQueryResult } from "./iterator";
+import { FirestoreItemPageIterationInstance, FirestoreItemPageQueryResult } from './iterator';
 import { ItemPageIteratorResult } from '@dereekb/rxjs';
 
 export const DEFAULT_QUERY_CHANGE_WATCHER_DELAY = 0;
@@ -16,7 +16,6 @@ export interface IterationQueryDocChangeWatcherConfig<T = unknown> {
  * Interface for watching query result changes events.
  */
 export interface IterationQueryDocChangeWatcher<T = unknown> {
-
   /**
    * Streams all subsequent query changes.
    */
@@ -26,7 +25,6 @@ export interface IterationQueryDocChangeWatcher<T = unknown> {
    * Event stream
    */
   readonly event$: Observable<IterationQueryDocChangeWatcherEvent<T>>;
-
 }
 
 export interface IterationQueryDocChangeWatcherEvent<T = unknown> extends IterationQueryDocChangeWatcherChangeGroup<T> {
@@ -52,15 +50,19 @@ export function iterationQueryDocChangeWatcher<T = unknown>(config: IterationQue
       const beginCheckingAt = toExpires(time, timeUntilActive);
 
       // don't start streaming until the given moment.
-      return timer(beginCheckingAt.expiresAt ?? new Date()).pipe(switchMap(() => stream().pipe(
-        skip(1)  // skip the first value, as it should be equivalent to the query results given.
-      )));
+      return timer(beginCheckingAt.expiresAt ?? new Date()).pipe(
+        switchMap(() =>
+          stream().pipe(
+            skip(1) // skip the first value, as it should be equivalent to the query results given.
+          )
+        )
+      );
     }),
     shareReplay(1)
   );
 
   const event$ = stream$.pipe(
-    map(event => {
+    map((event) => {
       const changes = event.docChanges();
 
       const results = build({

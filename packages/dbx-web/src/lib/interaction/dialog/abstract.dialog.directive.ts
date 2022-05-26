@@ -7,12 +7,7 @@ import { AbstractTransitionWatcherDirective, DbxRouterTransitionService } from '
  */
 @Directive()
 export abstract class AbstractDialogDirective<R = unknown, D = unknown, T = unknown> extends AbstractTransitionWatcherDirective {
-
-  constructor(
-    @Optional() @Inject(MAT_DIALOG_DATA) readonly data: D,
-    @Inject(MatDialogRef) readonly dialogRef: MatDialogRef<T, R>,
-    dbxRouterTransitionService: DbxRouterTransitionService,
-    ngZone: NgZone) {
+  constructor(@Optional() @Inject(MAT_DIALOG_DATA) readonly data: D, @Inject(MatDialogRef) readonly dialogRef: MatDialogRef<T, R>, dbxRouterTransitionService: DbxRouterTransitionService, ngZone: NgZone) {
     super(dbxRouterTransitionService, ngZone);
   }
 
@@ -27,5 +22,4 @@ export abstract class AbstractDialogDirective<R = unknown, D = unknown, T = unkn
   close(value?: R) {
     this.dialogRef.close(value);
   }
-
 }

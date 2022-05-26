@@ -28,10 +28,7 @@
     },
     "run-tests": {
       "executor": "@nrwl/jest:jest",
-      "outputs": [
-        "coverage/packages/firebase/test",
-        "./.reports/jest/firebase-test.junit.xml"
-      ],
+      "outputs": ["coverage/packages/firebase/test", "./.reports/jest/firebase-test.junit.xml"],
       "options": {
         "jestConfig": "packages/firebase/test/jest.config.ts",
         "passWithNoTests": true

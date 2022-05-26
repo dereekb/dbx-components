@@ -11,24 +11,8 @@ import { DbxContentPageDirective } from './content.page.directive';
  * Module for container-type components.
  */
 @NgModule({
-  imports: [
-    CommonModule
-  ],
-  declarations: [
-    DbxContentDirective,
-    DbxContentContainerDirective,
-    DbxContentBorderDirective,
-    DbxContentElevateDirective,
-    DbxContentBoxDirective,
-    DbxContentPageDirective
-  ],
-  exports: [
-    DbxContentDirective,
-    DbxContentContainerDirective,
-    DbxContentBorderDirective,
-    DbxContentElevateDirective,
-    DbxContentBoxDirective,
-    DbxContentPageDirective
-  ]
+  imports: [CommonModule],
+  declarations: [DbxContentDirective, DbxContentContainerDirective, DbxContentBorderDirective, DbxContentElevateDirective, DbxContentBoxDirective, DbxContentPageDirective],
+  exports: [DbxContentDirective, DbxContentContainerDirective, DbxContentBorderDirective, DbxContentElevateDirective, DbxContentBoxDirective, DbxContentPageDirective]
 })
-export class DbxContentLayoutModule { }
+export class DbxContentLayoutModule {}

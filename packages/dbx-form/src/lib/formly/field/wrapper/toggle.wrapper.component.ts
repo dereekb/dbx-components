@@ -12,20 +12,19 @@ export interface DbxFormToggleWrapperConfig<T extends object = object> extends A
  */
 @Component({
   template: `
-  <div class="dbx-form-toggle-wrapper" [ngSwitch]="show$ | async">
-    <div class="dbx-form-toggle-wrapper-toggle">
-      <mat-slide-toggle [checked]="show$ | async" (toggleChange)="onToggleChange()">{{ slideLabel$ | async }}</mat-slide-toggle>
+    <div class="dbx-form-toggle-wrapper" [ngSwitch]="show$ | async">
+      <div class="dbx-form-toggle-wrapper-toggle">
+        <mat-slide-toggle [checked]="show$ | async" (toggleChange)="onToggleChange()">{{ slideLabel$ | async }}</mat-slide-toggle>
+      </div>
+      <ng-container *ngSwitchCase="true">
+        <ng-container #fieldComponent></ng-container>
+      </ng-container>
     </div>
-    <ng-container *ngSwitchCase="true">
-      <ng-container #fieldComponent></ng-container>
-    </ng-container>
-  </div>
   `
 })
 export class DbxFormToggleWrapperComponent<T extends object = object> extends AbstractFormExpandableSectionWrapperDirective<T, DbxFormToggleWrapperConfig> {
-
   readonly slideLabel$ = this._toggleOpen.pipe(
-    switchMap(x => {
+    switchMap((x) => {
       if (this.expandableSection?.toggleLabelObs) {
         return this.expandableSection?.toggleLabelObs(x);
       } else {
@@ -40,5 +39,4 @@ export class DbxFormToggleWrapperComponent<T extends object = object> extends Ab
       this._toggleOpen.next(!show);
     });
   }
-
 }

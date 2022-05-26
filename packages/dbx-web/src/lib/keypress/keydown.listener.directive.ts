@@ -5,7 +5,6 @@ import { Maybe } from '@dereekb/util';
   selector: '[dbxWindowKeyDownListener]'
 })
 export class DbxWindowKeyDownListenerDirective implements OnDestroy {
-
   private _keysFilter?: Maybe<Set<string>>;
 
   @Input()
@@ -37,5 +36,4 @@ export class DbxWindowKeyDownListenerDirective implements OnDestroy {
       }
     }
   }
-
 }

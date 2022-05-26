@@ -22,7 +22,6 @@ export enum DbxFormState {
   USED = 1
 }
 
-
 /**
  * Unique key for disabling/enabling.
  */
@@ -76,8 +75,8 @@ export abstract class DbxMutableForm<T = unknown> extends DbxForm<T> {
 
   /**
    * Sets the initial value of the form, and resets the form.
-   * 
-   * @param value 
+   *
+   * @param value
    */
   abstract setValue(value: Maybe<Partial<T>>): void;
 
@@ -88,8 +87,8 @@ export abstract class DbxMutableForm<T = unknown> extends DbxForm<T> {
 
   /**
    * Disables the form
-   * 
-   * @param disabled 
+   *
+   * @param disabled
    */
   abstract setDisabled(key?: DbxFormDisabledKey, disabled?: boolean): void;
 
@@ -104,8 +103,5 @@ export function provideDbxForm<S extends DbxForm>(sourceType: Type<S>): Provider
 }
 
 export function provideDbxMutableForm<S extends DbxMutableForm>(sourceType: Type<S>): Provider[] {
-  return [
-    ...provideDbxForm(sourceType),
-    { provide: DbxMutableForm, useExisting: forwardRef(() => sourceType) }
-  ];
+  return [...provideDbxForm(sourceType), { provide: DbxMutableForm, useExisting: forwardRef(() => sourceType) }];
 }

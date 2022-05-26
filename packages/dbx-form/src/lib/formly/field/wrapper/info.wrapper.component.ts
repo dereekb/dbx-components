@@ -20,8 +20,7 @@ export interface DbxFormInfoWrapperConfig extends FormlyFieldConfig {
         <ng-container #fieldComponent></ng-container>
       </div>
       <div class="dbx-form-info-wrapper-info" fxFlex="noshrink" fxLayout="column" fxLayoutAlign="center center">
-        <button mat-icon-button [attr.aria-label]="'show info button for ' + (to.label || 'section')"
-          (click)="onInfoClick()">
+        <button mat-icon-button [attr.aria-label]="'show info button for ' + (to.label || 'section')" (click)="onInfoClick()">
           <mat-icon>info</mat-icon>
         </button>
       </div>
@@ -29,7 +28,6 @@ export interface DbxFormInfoWrapperConfig extends FormlyFieldConfig {
   `
 })
 export class DbxFormInfoWrapperComponent extends FieldWrapper<DbxFormInfoWrapperConfig> {
-
   get infoWrapper(): DbxFormInfoConfig {
     return this.to.infoWrapper;
   }
@@ -37,5 +35,4 @@ export class DbxFormInfoWrapperComponent extends FieldWrapper<DbxFormInfoWrapper
   onInfoClick(): void {
     this.infoWrapper.onInfoClick();
   }
-
 }

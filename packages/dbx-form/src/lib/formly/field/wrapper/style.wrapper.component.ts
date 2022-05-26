@@ -20,7 +20,6 @@ export interface DbxFormStyleWrapperFormlyConfig extends FormlyFieldConfig {
   `
 })
 export class DbxFormStyleWrapperComponent extends FieldWrapper<DbxFormStyleWrapperFormlyConfig> implements OnInit, OnDestroy {
-
   private _style = new BehaviorSubject<Maybe<Observable<string>>>(undefined);
   readonly style$ = this._style.pipe(switchMapMaybeDefault(''), shareReplay(1));
 
@@ -39,5 +38,4 @@ export class DbxFormStyleWrapperComponent extends FieldWrapper<DbxFormStyleWrapp
   ngOnDestroy(): void {
     this._style.complete();
   }
-
 }

@@ -9,16 +9,10 @@ import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
 import { HandleActionFunction } from '../../action.handler';
 
 describe('DbxActionDirective', () => {
-
   beforeEach(async () => {
     TestBed.configureTestingModule({
-      imports: [
-        DbxCoreActionModule,
-        NoopAnimationsModule
-      ],
-      declarations: [
-        TestActionContextDirectiveComponent
-      ]
+      imports: [DbxCoreActionModule, NoopAnimationsModule],
+      declarations: [TestActionContextDirectiveComponent]
     }).compileComponents();
   });
 
@@ -35,19 +29,17 @@ describe('DbxActionDirective', () => {
 
     directive = testComponent.directive!;
     handlerDirective = testComponent.handlerDirective!;
-    handlerDirective.handlerFunction = (() => of(0));
+    handlerDirective.handlerFunction = () => of(0);
 
     fixture.detectChanges();
   });
 
   describe('dbxActionContext', () => {
-
     it('should be created', () => {
       expect(directive).toBeDefined();
     });
 
     describe('DbxActionContextStoreSourceInstance', () => {
-
       let instance: DbxActionContextStoreSourceInstance<number, number>;
 
       beforeEach(() => {
@@ -61,7 +53,6 @@ describe('DbxActionDirective', () => {
           expect(x).toBe(true);
           done();
         });
-
       });
 
       it('should set value ready on valueReady() if already triggered', (done) => {
@@ -74,28 +65,22 @@ describe('DbxActionDirective', () => {
           expect(x).toBe(READY_VALUE);
           done();
         });
-
       });
-
-
     });
-
   });
 
   describe('dbxActionHandler', () => {
-
     it('should be created', () => {
       expect(handlerDirective).toBeDefined();
     });
 
     describe('handler function', () => {
-
       it('should use the handler function on action', (done) => {
         let triggered = false;
         const READY_VALUE = 0;
         const SUCCESS_VALUE = 123;
 
-        handlerDirective.handlerFunction = () => of(SUCCESS_VALUE).pipe(tap(() => triggered = true));
+        handlerDirective.handlerFunction = () => of(SUCCESS_VALUE).pipe(tap(() => (triggered = true)));
 
         directive.sourceInstance.trigger();
         directive.sourceInstance.readyValue(READY_VALUE);
@@ -105,19 +90,13 @@ describe('DbxActionDirective', () => {
           expect(triggered).toBe(true);
           done();
         });
-
       });
 
       describe('with observable return', () => {
-
         // TODO
-
       });
-
     });
-
   });
-
 });
 
 @Component({
@@ -126,7 +105,6 @@ describe('DbxActionDirective', () => {
   `
 })
 class TestActionContextDirectiveComponent {
-
   @ViewChild(DbxActionDirective, { static: true })
   directive?: DbxActionDirective<number, number>;
 
@@ -135,5 +113,4 @@ class TestActionContextDirectiveComponent {
 
   @Input()
   handlerFunction?: HandleActionFunction<number, number>;
-
 }

@@ -12,9 +12,11 @@ import { provideSecondaryActionStoreSource, SecondaryActionContextStoreSource, A
   providers: provideSecondaryActionStoreSource(DbxActionSourceDirective)
 })
 export class DbxActionSourceDirective implements SecondaryActionContextStoreSource, OnDestroy {
-
   private _source = new BehaviorSubject<Maybe<ActionContextStoreSource>>(undefined);
-  readonly store$ = this._source.pipe(filterMaybe(), switchMap((x) => actionContextStoreSourcePipe(x.store$)));
+  readonly store$ = this._source.pipe(
+    filterMaybe(),
+    switchMap((x) => actionContextStoreSourcePipe(x.store$))
+  );
 
   ngOnDestroy(): void {
     this._source.complete();
@@ -32,5 +34,4 @@ export class DbxActionSourceDirective implements SecondaryActionContextStoreSour
 
     this._source.next(source);
   }
-
 }

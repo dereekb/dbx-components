@@ -3,7 +3,6 @@ import { SubscriptionObject } from './../subscription';
 import { mapKeysIntersectionToArray } from './map';
 
 describe('mapKeysIntersectionToArray()', () => {
-
   let sub: SubscriptionObject;
 
   beforeEach(() => {
@@ -15,19 +14,15 @@ describe('mapKeysIntersectionToArray()', () => {
   });
 
   it('should merge the arrays if both values are present.', (done) => {
-
     const subject = new Subject<string[]>();
 
     const numbersA = [1, 2, 3];
     const numbersB = [4, 5, 6];
 
     const obs = of({
-      'a': numbersA,
-      'b': numbersB,
-    }).pipe(
-      mapKeysIntersectionToArray(subject),
-      shareReplay(1)
-    );
+      a: numbersA,
+      b: numbersB
+    }).pipe(mapKeysIntersectionToArray(subject), shareReplay(1));
 
     sub.subscription = obs.subscribe({
       next: (value) => {
@@ -47,5 +42,4 @@ describe('mapKeysIntersectionToArray()', () => {
 
     subject.next(['a', 'b']);
   });
-
 });

@@ -1,7 +1,7 @@
 import { Guestbook } from '@dereekb/demo-firebase';
-import { Component } from "@angular/core";
-import { AbstractDbxSelectionListWrapperDirective, AbstractDbxValueListViewItemComponent, AbstractDbxSelectionListViewDirective, DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE, DbxSelectionValueListViewConfig, provideDbxListView, DEFAULT_DBX_SELECTION_VALUE_LIST_DIRECTIVE_TEMPLATE, DbxValueAsListItem, provideDbxListViewWrapper } from "@dereekb/dbx-web";
-import { of } from "rxjs";
+import { Component } from '@angular/core';
+import { AbstractDbxSelectionListWrapperDirective, AbstractDbxValueListViewItemComponent, AbstractDbxSelectionListViewDirective, DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE, DbxSelectionValueListViewConfig, provideDbxListView, DEFAULT_DBX_SELECTION_VALUE_LIST_DIRECTIVE_TEMPLATE, DbxValueAsListItem, provideDbxListViewWrapper } from '@dereekb/dbx-web';
+import { of } from 'rxjs';
 
 export type GuestbookWithSelection = DbxValueAsListItem<Guestbook>;
 
@@ -11,14 +11,12 @@ export type GuestbookWithSelection = DbxValueAsListItem<Guestbook>;
   providers: provideDbxListViewWrapper(DemoGuestbookListComponent)
 })
 export class DemoGuestbookListComponent extends AbstractDbxSelectionListWrapperDirective<Guestbook> {
-
   constructor() {
     super({
       componentClass: DemoGuestbookListViewComponent,
-      defaultSelectionMode: 'view',
+      defaultSelectionMode: 'view'
     });
   }
-
 }
 
 @Component({
@@ -26,12 +24,10 @@ export class DemoGuestbookListComponent extends AbstractDbxSelectionListWrapperD
   providers: provideDbxListView(DemoGuestbookListViewComponent)
 })
 export class DemoGuestbookListViewComponent extends AbstractDbxSelectionListViewDirective<Guestbook> {
-
   readonly config: DbxSelectionValueListViewConfig<GuestbookWithSelection> = {
     componentClass: DemoGuestbookListViewItemComponent,
     mapValuesToItemValues: (x) => of(x.map((y) => ({ ...y, icon: y.icon, itemValue: y })))
   };
-
 }
 
 @Component({
@@ -42,9 +38,7 @@ export class DemoGuestbookListViewComponent extends AbstractDbxSelectionListView
   `
 })
 export class DemoGuestbookListViewItemComponent extends AbstractDbxValueListViewItemComponent<Guestbook> {
-
   get name() {
     return this.itemValue.name;
   }
-
 }

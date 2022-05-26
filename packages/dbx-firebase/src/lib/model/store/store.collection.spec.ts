@@ -1,19 +1,15 @@
-import { authorizedTestWithMockItemCollection, MockItem, MockItemDocument, MockItemFirestoreCollection } from "@dereekb/firebase/test";
-import { first } from "rxjs";
+import { authorizedTestWithMockItemCollection, MockItem, MockItemDocument, MockItemFirestoreCollection } from '@dereekb/firebase/test';
+import { first } from 'rxjs';
 import { AbstractDbxFirebaseCollectionStore } from './store.collection';
 
 export class TestDbxFirebaseCollectionStore extends AbstractDbxFirebaseCollectionStore<MockItem, MockItemDocument> {
-
   constructor(firestoreCollection: MockItemFirestoreCollection) {
-    super({ firestoreCollection })
+    super({ firestoreCollection });
   }
-
 }
 
 describe('AbstractDbxFirebaseCollectionStore', () => {
-
   authorizedTestWithMockItemCollection((f) => {
-
     let store: TestDbxFirebaseCollectionStore;
 
     beforeEach(() => {
@@ -26,18 +22,12 @@ describe('AbstractDbxFirebaseCollectionStore', () => {
     });
 
     describe('loader$', () => {
-
       it('should return the loader.', (done) => {
-
         store.loader$.pipe(first()).subscribe((loader) => {
           expect(loader).toBeDefined();
           done();
         });
-
       });
-
     });
-
   });
-
 });

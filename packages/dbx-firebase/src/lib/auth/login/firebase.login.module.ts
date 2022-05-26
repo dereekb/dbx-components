@@ -43,58 +43,64 @@ export function defaultFirebaseAuthLoginProvidersFactory(): DbxFirebaseAuthLogin
 
   // NOTE: Colors are from https://brandcolors.net/
 
-  return [{
-    category: DEFAULT_FIREBASE_LOGIN_METHOD_CATEGORY,
-    loginMethodType: 'email' as KnownFirebaseLoginMethodType,
-    componentClass: DbxFirebaseLoginEmailComponent,
-    registrationComponentClass: DbxFirebaseRegisterEmailComponent,
-    assets: {
-      logoUrl: `${baseFirebaseJSUrl}/mail.svg`,
-      loginText: 'Continue with Email',
-      backgroundColor: '#ea4335', // gmail red color
-      textColor: '#FFF'
-    }
-  }, {
-    category: OAUTH_FIREBASE_LOGIN_METHOD_CATEGORY,
-    loginMethodType: 'google' as KnownFirebaseLoginMethodType,
-    componentClass: DbxFirebaseLoginGoogleComponent,
-    assets: {
-      logoUrl: `${baseFirebaseJSUrl}/google.svg`,
-      loginText: 'Continue with Google',
-      backgroundColor: '#FFF',
-      textColor: '#757575'
-    }
-  }, {
-    category: OAUTH_FIREBASE_LOGIN_METHOD_CATEGORY,
-    loginMethodType: 'facebook' as KnownFirebaseLoginMethodType,
-    componentClass: DbxFirebaseLoginFacebookComponent,
-    assets: {
-      logoUrl: `${baseFirebaseJSUrl}/facebook.svg`,
-      loginText: 'Continue with Facebook',
-      backgroundColor: '#4267B2',
-      textColor: '#FFF'
-    }
-  }, {
-    category: OAUTH_FIREBASE_LOGIN_METHOD_CATEGORY,
-    loginMethodType: 'twitter' as KnownFirebaseLoginMethodType,
-    componentClass: DbxFirebaseLoginTwitterComponent,
-    assets: {
-      logoUrl: `${baseFirebaseJSUrl}/twitter.svg`,
-      loginText: 'Continue with Twitter',
-      backgroundColor: '#1da1f2',
-      textColor: '#FFF'
-    }
-  }, {
-    category: OAUTH_FIREBASE_LOGIN_METHOD_CATEGORY,
-    loginMethodType: 'github' as KnownFirebaseLoginMethodType,
-    componentClass: DbxFirebaseLoginGitHubComponent,
-    assets: {
-      logoUrl: `${baseFirebaseJSUrl}/github.svg`,
-      loginText: 'Continue with Github',
-      backgroundColor: '#333',
-      textColor: '#FFF'
-    }
-  }, /*{
+  return [
+    {
+      category: DEFAULT_FIREBASE_LOGIN_METHOD_CATEGORY,
+      loginMethodType: 'email' as KnownFirebaseLoginMethodType,
+      componentClass: DbxFirebaseLoginEmailComponent,
+      registrationComponentClass: DbxFirebaseRegisterEmailComponent,
+      assets: {
+        logoUrl: `${baseFirebaseJSUrl}/mail.svg`,
+        loginText: 'Continue with Email',
+        backgroundColor: '#ea4335', // gmail red color
+        textColor: '#FFF'
+      }
+    },
+    {
+      category: OAUTH_FIREBASE_LOGIN_METHOD_CATEGORY,
+      loginMethodType: 'google' as KnownFirebaseLoginMethodType,
+      componentClass: DbxFirebaseLoginGoogleComponent,
+      assets: {
+        logoUrl: `${baseFirebaseJSUrl}/google.svg`,
+        loginText: 'Continue with Google',
+        backgroundColor: '#FFF',
+        textColor: '#757575'
+      }
+    },
+    {
+      category: OAUTH_FIREBASE_LOGIN_METHOD_CATEGORY,
+      loginMethodType: 'facebook' as KnownFirebaseLoginMethodType,
+      componentClass: DbxFirebaseLoginFacebookComponent,
+      assets: {
+        logoUrl: `${baseFirebaseJSUrl}/facebook.svg`,
+        loginText: 'Continue with Facebook',
+        backgroundColor: '#4267B2',
+        textColor: '#FFF'
+      }
+    },
+    {
+      category: OAUTH_FIREBASE_LOGIN_METHOD_CATEGORY,
+      loginMethodType: 'twitter' as KnownFirebaseLoginMethodType,
+      componentClass: DbxFirebaseLoginTwitterComponent,
+      assets: {
+        logoUrl: `${baseFirebaseJSUrl}/twitter.svg`,
+        loginText: 'Continue with Twitter',
+        backgroundColor: '#1da1f2',
+        textColor: '#FFF'
+      }
+    },
+    {
+      category: OAUTH_FIREBASE_LOGIN_METHOD_CATEGORY,
+      loginMethodType: 'github' as KnownFirebaseLoginMethodType,
+      componentClass: DbxFirebaseLoginGitHubComponent,
+      assets: {
+        logoUrl: `${baseFirebaseJSUrl}/github.svg`,
+        loginText: 'Continue with Github',
+        backgroundColor: '#333',
+        textColor: '#FFF'
+      }
+    },
+    /*{
     category: OAUTH_FIREBASE_LOGIN_METHOD_CATEGORY,
     loginMethodType: 'apple' as KnownFirebaseLoginMethodType,
     componentClass: DbxFirebaseLoginGitHubComponent,
@@ -115,37 +121,24 @@ export function defaultFirebaseAuthLoginProvidersFactory(): DbxFirebaseAuthLogin
       textColor: '#FFF'
     }
   },*/ {
-    category: DEFAULT_FIREBASE_LOGIN_METHOD_CATEGORY,
-    loginMethodType: 'anonymous' as KnownFirebaseLoginMethodType,
-    componentClass: DbxFirebaseLoginAnonymousComponent,
-    assets: {
-      loginIcon: 'account_circle',
-      loginText: 'Continue as Guest',
-      backgroundColor: '#000',
-      textColor: '#FFF'
+      category: DEFAULT_FIREBASE_LOGIN_METHOD_CATEGORY,
+      loginMethodType: 'anonymous' as KnownFirebaseLoginMethodType,
+      componentClass: DbxFirebaseLoginAnonymousComponent,
+      assets: {
+        loginIcon: 'account_circle',
+        loginText: 'Continue as Guest',
+        backgroundColor: '#000',
+        textColor: '#FFF'
+      }
     }
-  }];
+  ];
 }
 
 /**
  * Contains components related to logging in.
  */
 @NgModule({
-  imports: [
-    CommonModule,
-    MatIconModule,
-    MatButtonModule,
-    DbxRouterAnchorModule,
-    DbxFormIoModule,
-    DbxFormModule,
-    DbxFormlyModule,
-    DbxFormActionModule,
-    DbxFormFormlyTextFieldModule,
-    DbxReadableErrorModule,
-    DbxActionModule,
-    DbxButtonModule,
-    DbxInjectionComponentModule
-  ],
+  imports: [CommonModule, MatIconModule, MatButtonModule, DbxRouterAnchorModule, DbxFormIoModule, DbxFormModule, DbxFormlyModule, DbxFormActionModule, DbxFormFormlyTextFieldModule, DbxReadableErrorModule, DbxActionModule, DbxButtonModule, DbxInjectionComponentModule],
   declarations: [
     DbxFirebaseLoginComponent,
     DbxFirebaseLoginContextDirective,
@@ -195,7 +188,6 @@ export function defaultFirebaseAuthLoginProvidersFactory(): DbxFirebaseAuthLogin
   providers: []
 })
 export class DbxFirebaseLoginModule {
-
   constructor(config: DbxFirebaseLoginModuleRootConfig, dbxFirebaseAuthLoginService: DbxFirebaseAuthLoginService) {
     if (config.enabledLoginMethods === true) {
       dbxFirebaseAuthLoginService.setEnableAll();
@@ -207,23 +199,28 @@ export class DbxFirebaseLoginModule {
   static forRoot(config: DbxFirebaseLoginModuleRootConfig): ModuleWithProviders<DbxFirebaseLoginModule> {
     return {
       ngModule: DbxFirebaseLoginModule,
-      providers: [{
-        provide: DEFAULT_FIREBASE_AUTH_LOGIN_PROVIDERS_TOKEN,
-        useFactory: defaultFirebaseAuthLoginProvidersFactory
-      }, {
-        provide: DEFAULT_FIREBASE_AUTH_LOGIN_TERMS_COMPONENT_CLASS_TOKEN,
-        useValue: config.termsComponentClass
-      }, {
-        provide: DEFAULT_FIREBASE_AUTH_LOGIN_PASSWORD_CONFIG_TOKEN,
-        useValue: config.passwordConfig
-      }, {
-        provide: DbxFirebaseLoginModuleRootConfig,
-        useValue: config
-      }, {
-        provide: DbxFirebaseLoginTermsConfig,
-        useValue: config
-      }]
+      providers: [
+        {
+          provide: DEFAULT_FIREBASE_AUTH_LOGIN_PROVIDERS_TOKEN,
+          useFactory: defaultFirebaseAuthLoginProvidersFactory
+        },
+        {
+          provide: DEFAULT_FIREBASE_AUTH_LOGIN_TERMS_COMPONENT_CLASS_TOKEN,
+          useValue: config.termsComponentClass
+        },
+        {
+          provide: DEFAULT_FIREBASE_AUTH_LOGIN_PASSWORD_CONFIG_TOKEN,
+          useValue: config.passwordConfig
+        },
+        {
+          provide: DbxFirebaseLoginModuleRootConfig,
+          useValue: config
+        },
+        {
+          provide: DbxFirebaseLoginTermsConfig,
+          useValue: config
+        }
+      ]
     };
   }
-
 }

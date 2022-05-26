@@ -1,6 +1,6 @@
 import { Observable } from 'rxjs';
-import { ListLoadingState, ListLoadingStateContext } from "@dereekb/rxjs";
-import { EventEmitter, forwardRef, Provider, Type } from "@angular/core";
+import { ListLoadingState, ListLoadingStateContext } from '@dereekb/rxjs';
+import { EventEmitter, forwardRef, Provider, Type } from '@angular/core';
 import { Maybe } from '@dereekb/util';
 
 export type DbxListSelectionMode = 'select' | 'view';
@@ -33,13 +33,13 @@ export abstract class DbxListView<T, S extends ListLoadingState<T> = ListLoading
   abstract readonly values$: Observable<T[]>;
   /**
    * (Optional) clicked event emitter.
-   * 
+   *
    * If available, the DbxList will subscribe to it automatically.
    */
   abstract clickValue?: EventEmitter<T>;
   /**
    * (Optional) selection changed event emitter.
-   * 
+   *
    * If available, the DbxList will subscribe to it automatically.
    */
   abstract selectionChange?: EventEmitter<ListSelectionState<T>>;
@@ -58,9 +58,12 @@ export abstract class DbxListView<T, S extends ListLoadingState<T> = ListLoading
 }
 
 // eslint-disable-next-line
-export function provideDbxListView<V extends DbxListView<any>>(sourceType: Type<V>): Provider[] {   // use of any here is allowed as typings are not relevant for providers
-  return [{
-    provide: DbxListView,
-    useExisting: forwardRef(() => sourceType)
-  }];
+export function provideDbxListView<V extends DbxListView<any>>(sourceType: Type<V>): Provider[] {
+  // use of any here is allowed as typings are not relevant for providers
+  return [
+    {
+      provide: DbxListView,
+      useExisting: forwardRef(() => sourceType)
+    }
+  ];
 }

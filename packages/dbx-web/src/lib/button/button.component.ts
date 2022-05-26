@@ -23,7 +23,6 @@ export enum DbxButtonDisplayType {
   providers: provideDbxButton(DbxButtonComponent)
 })
 export class DbxButtonComponent extends AbstractDbxButtonDirective {
-
   @Input()
   type?: DbxButtonDisplayType;
 
@@ -73,9 +72,11 @@ export class DbxButtonComponent extends AbstractDbxButtonDirective {
   public customSpinnerColor: Maybe<string>;
 
   public get btnOptions(): DbxProgressButtonOptions {
-    const buttonIcon = (this.icon) ? {
-      fontIcon: this.icon
-    } : undefined;
+    const buttonIcon = this.icon
+      ? {
+          fontIcon: this.icon
+        }
+      : undefined;
 
     const customStyle = {} as {
       [key: string]: string;
@@ -97,7 +98,7 @@ export class DbxButtonComponent extends AbstractDbxButtonDirective {
       active: this.working,
       buttonIcon,
       customStyle,
-      customClass: 'dbx-button ' + ((buttonIcon && !this.text) ? 'dbx-button-no-text' : ''),
+      customClass: 'dbx-button ' + (buttonIcon && !this.text ? 'dbx-button-no-text' : ''),
       // buttonIcon: icon,
       text: this.text ?? '',
       buttonColor: this.color,
@@ -106,10 +107,9 @@ export class DbxButtonComponent extends AbstractDbxButtonDirective {
       stroked: this.stroked,
       flat: this.flat,
       mode: 'indeterminate',
-      spinnerColor: (this.color === 'primary') ? 'accent' : 'primary',
+      spinnerColor: this.color === 'primary' ? 'accent' : 'primary',
       customSpinnerColor,
       disabled
     };
   }
-
 }

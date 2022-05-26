@@ -1,4 +1,4 @@
-import { Page } from "./page";
+import { Page } from './page';
 
 // MARK: PageCalculator
 export interface PageCalculatorConfig {
@@ -11,7 +11,6 @@ export interface PageCalculatorConfig {
  * Page calcuaktion context for calculating the amount to skip/etc.
  */
 export class PageCalculator {
-
   public readonly pageSize: number;
   public readonly limitKey: string;
   public readonly skipKey: string;
@@ -49,6 +48,4 @@ export class PageCalculator {
   calcSkip(page: number = 0) {
     return (page ?? 0) * this.pageSize;
   }
-
 }
-

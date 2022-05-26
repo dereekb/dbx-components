@@ -5,17 +5,11 @@ import { isDate, isValid } from 'date-fns';
 import { describeCloudFunctionTest } from '@dereekb/firebase-server/test';
 
 demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
-
   describeCloudFunctionTest('updateGuestbookEntry', { f, fn: updateGuestbookEntry }, (updateGuestbookEntryCloudFn) => {
-
     demoAuthorizedUserContext({ f }, (u) => {
-
       demoGuestbookContext({ f, published: true }, (g) => {
-
         describe('guestbook is active', () => {
-
           it('should create a guestbook entry if it does not exist.', async () => {
-
             const uid = u.uid;
             const entryCollection = f.instance.demoFirestoreCollections.guestbookEntryCollectionFactory(g.document);
             const userGuestbookEntry = entryCollection.documentAccessor().loadDocumentForPath(uid);
@@ -46,11 +40,8 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
           });
 
           describe('guestbook entry exists', () => {
-
             demoGuestbookEntryContext({ f, u, g }, (ge) => {
-
               it('should update guestbook entry.', async () => {
-
                 const userGuestbookEntry = ge.document;
 
                 let exists = await userGuestbookEntry.accessor.exists();
@@ -88,19 +79,12 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
                 expect(isValid(data?.createdAt)).toBe(true);
                 expect(isValid(data?.updatedAt)).toBe(true);
               });
-
             });
-
           });
-
         });
 
         // todo: add other tests
-
       });
-
     });
-
   });
-
 });

@@ -12,7 +12,6 @@ import { DbxButton } from './button';
   selector: '[dbxLoadingButton]'
 })
 export class DbxLoadingButtonDirective extends AbstractSubscriptionDirective {
-
   constructor(@Host() public readonly button: DbxButton, readonly ngZone: NgZone) {
     super();
   }
@@ -26,11 +25,10 @@ export class DbxLoadingButtonDirective extends AbstractSubscriptionDirective {
 
     if (context) {
       subscription = context.stream$.subscribe((x) => {
-        this.ngZone.run(() => this.button.working = x.loading);
+        this.ngZone.run(() => (this.button.working = x.loading));
       });
     }
 
     this.sub = subscription;
   }
-
 }

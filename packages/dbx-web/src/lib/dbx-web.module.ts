@@ -4,20 +4,16 @@ import { DbxButtonModule } from './button';
 import { DbxActionModule } from './action';
 
 @NgModule({
-  exports: [
-    DbxButtonModule,
-    DbxActionModule,
-    DbxLoadingModule
-  ],
+  exports: [DbxButtonModule, DbxActionModule, DbxLoadingModule]
 })
-export class DbxWebModule { }
+export class DbxWebModule {}
 
 /**
  * Should only be imported once in the root app.
- * 
+ *
  * Pre-configures the following modules:
  */
 @NgModule({
   imports: []
 })
-export class DbxWebRootModule { }
+export class DbxWebRootModule {}

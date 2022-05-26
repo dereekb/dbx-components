@@ -10,16 +10,14 @@ export type DbxContentContainerWidth = 'small' | 'medium' | 'wide' | 'full';
 @Directive({
   selector: 'dbx-content-container,[dbxContentContainer],.dbx-content-container',
   host: {
-    'class': 'd-block dbx-content-container',
+    class: 'd-block dbx-content-container',
     '[class]': `"container-" + grow + " container-padding-" + padding`
   }
 })
 export class DbxContentContainerDirective {
-
   @Input()
   grow: DbxContentContainerWidth = 'wide';
 
   @Input()
   padding: DbxContentContainerPadding = 'normal';
-
 }

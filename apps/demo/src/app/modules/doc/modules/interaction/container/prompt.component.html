@@ -1,17 +1,14 @@
 <dbx-content-container>
-  <doc-feature-layout header="Prompt"
-    hint="A prompt is a view that takes control of the screen and returns a value when closed.">
-
+  <doc-feature-layout header="Prompt" hint="A prompt is a view that takes control of the screen and returns a value when closed.">
     <!-- Examples -->
-    <doc-feature-example header="dbx-prompt-confirm-dialog"
-      hint="A pre-configured prompt that can be used to confirm something from the user.">
+    <doc-feature-example header="dbx-prompt-confirm-dialog" hint="A pre-configured prompt that can be used to confirm something from the user.">
       <button mat-raised-button (click)="openExamplePrompt()">Open Prompt</button>
       <p>Result: {{ result }}</p>
     </doc-feature-example>
 
     <doc-feature-example header="dbx-prompt" hint="A pre-styled prompt layout.">
       <dbx-content-border>
-        <dbx-prompt header='Setup Required' prompt='Your account has not yet been setup.'>
+        <dbx-prompt header="Setup Required" prompt="Your account has not yet been setup.">
           <a mat-raised-button>Setup</a>
         </dbx-prompt>
       </dbx-content-border>
@@ -20,7 +17,7 @@
     <doc-feature-example header="dbx-prompt-box" hint="A pre-styled box for prompt content.">
       <dbx-content-border>
         <dbx-prompt-box>
-          <dbx-prompt header='Setup Required' prompt='Your account has not yet been setup.'>
+          <dbx-prompt header="Setup Required" prompt="Your account has not yet been setup.">
             <a mat-raised-button>Setup</a>
           </dbx-prompt>
         </dbx-prompt-box>
@@ -30,7 +27,7 @@
     <doc-feature-example header="dbx-prompt-page" hint="A pre-configured page that prompts the user to do something.">
       <dbx-content-border>
         <dbx-prompt-page>
-          <dbx-prompt header='Setup Required' prompt='Your account has not yet been setup.'>
+          <dbx-prompt header="Setup Required" prompt="Your account has not yet been setup.">
             <a mat-raised-button>Setup</a>
           </dbx-prompt>
         </dbx-prompt-page>

@@ -6,7 +6,6 @@ import { FormlyFieldConfig } from '@ngx-formly/core';
   templateUrl: './template.component.html'
 })
 export class DocFormTemplateComponent {
-
   readonly usernamePasswordLoginField: FormlyFieldConfig[] = usernamePasswordLoginFields({
     username: 'email'
   });
@@ -16,6 +15,5 @@ export class DocFormTemplateComponent {
     verifyPassword: true
   });
 
-  readonly invalidVerifyContent = { username: 'test@test.com', password: 'verify', verifyPassword: 'other' }
-
+  readonly invalidVerifyContent = { username: 'test@test.com', password: 'verify', verifyPassword: 'other' };
 }

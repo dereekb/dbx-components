@@ -6,20 +6,16 @@ const rootPath = global.testFolderRootPath ?? '<rootDir>/../..';
 
 module.exports = {
   ...nxPreset,
-  setupFilesAfterEnv: [
-    ...(nxPreset.setupFilesAfterEnv ?? []),
-    'jest-date',
-    `${rootPath}/jest.setup.ts`,
-  ],
+  setupFilesAfterEnv: [...(nxPreset.setupFilesAfterEnv ?? []), 'jest-date', `${rootPath}/jest.setup.ts`],
   reporters: isCI
     ? [
-      'default',
-      [
-        'jest-junit',
-        {
-          outputDirectory: `${rootPath}/.reports/jest`,
-        },
-      ],
-    ]
-    : ['default'],
+        'default',
+        [
+          'jest-junit',
+          {
+            outputDirectory: `${rootPath}/.reports/jest`
+          }
+        ]
+      ]
+    : ['default']
 };

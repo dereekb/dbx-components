@@ -17,7 +17,6 @@ import { Maybe } from '@dereekb/util';
   }
 })
 export class DbxFlexGroupDirective extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
-
   @Input()
   content = true;
 
@@ -27,7 +26,11 @@ export class DbxFlexGroupDirective extends AbstractSubscriptionDirective impleme
   private _small = false;
 
   private _breakpoint = new BehaviorSubject<ScreenMediaWidthType>('tablet');
-  readonly isSmallScreen$ = this._dbxScreenMediaService.isBreakpointActive(this._breakpoint).pipe(map(x => !x), distinctUntilChanged(), shareReplay(1));
+  readonly isSmallScreen$ = this._dbxScreenMediaService.isBreakpointActive(this._breakpoint).pipe(
+    map((x) => !x),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
 
   get small(): boolean {
     return this._small;
@@ -53,5 +56,4 @@ export class DbxFlexGroupDirective extends AbstractSubscriptionDirective impleme
   set breakpoint(breakpoint: Maybe<ScreenMediaWidthType>) {
     this._breakpoint.next(breakpoint ?? 'tablet');
   }
-
 }

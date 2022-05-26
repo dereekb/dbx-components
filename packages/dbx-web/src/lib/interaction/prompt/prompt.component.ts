@@ -16,11 +16,9 @@ import { Maybe } from '@dereekb/util';
   `
 })
 export class DbxPromptComponent {
-
   @Input()
   header?: Maybe<string>;
 
   @Input()
   prompt?: Maybe<string>;
-
 }

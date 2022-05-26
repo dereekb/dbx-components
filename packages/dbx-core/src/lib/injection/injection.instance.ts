@@ -8,7 +8,6 @@ import { SubscriptionObject, filterMaybe, skipFirstMaybe } from '@dereekb/rxjs';
  * Instance used by components to inject content based on the configuration into the view.
  */
 export class DbxInjectionInstance<T> implements Initialized, Destroyable {
-
   private _subscriptionObject = new SubscriptionObject();
 
   private _config = new BehaviorSubject<Maybe<DbxInjectionComponentConfig<T>>>(undefined);
@@ -53,10 +52,9 @@ export class DbxInjectionInstance<T> implements Initialized, Destroyable {
     this._componentRef.next(componentRef);
   }
 
-  constructor(private readonly _injector: Injector) { }
+  constructor(private readonly _injector: Injector) {}
 
   init(): void {
-
     // Wait until the first of either of the two inputs comes in as not defined, and then emit.
     // We filter the first maybe here between the two items.
     const configTemplateObs = combineLatest([this.config$, this.template$]).pipe(
@@ -103,10 +101,15 @@ export class DbxInjectionInstance<T> implements Initialized, Destroyable {
     if (providers || data) {
       injector = Injector.create({
         parent: parentInjector,
-        providers: mergeArrayOrValueIntoArray([{
-          provide: DBX_INJECTION_COMPONENT_DATA,
-          useValue: data
-        }], providers ?? [])
+        providers: mergeArrayOrValueIntoArray(
+          [
+            {
+              provide: DBX_INJECTION_COMPONENT_DATA,
+              useValue: data
+            }
+          ],
+          providers ?? []
+        )
       });
     }
 
@@ -130,9 +133,8 @@ export class DbxInjectionInstance<T> implements Initialized, Destroyable {
       content.createEmbeddedView(templateRef);
 
       // TODO: Figure out if these items need to be destroyed or not when this item is destroyed. If so, we need a reference to destroy.
-
     } else if (viewRef) {
-      content.insert(viewRef)
+      content.insert(viewRef);
     }
   }
 
@@ -142,5 +144,4 @@ export class DbxInjectionInstance<T> implements Initialized, Destroyable {
       this.componentRef = undefined;
     }
   }
-
 }

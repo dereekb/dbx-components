@@ -81,7 +81,7 @@ export interface DbxFlexLayoutWrapperGroupFieldConfig {
   size?: DbxFlexSize;
 }
 
-export interface DbxFlexLayoutWrapperGroupFieldConfigDefaults extends DbxFlexWrapperConfig, Omit<DbxFlexLayoutWrapperGroupFieldConfig, 'field'> { }
+export interface DbxFlexLayoutWrapperGroupFieldConfigDefaults extends DbxFlexWrapperConfig, Omit<DbxFlexLayoutWrapperGroupFieldConfig, 'field'> {}
 
 export function checkIsFieldFlexLayoutGroupFieldConfig(input: FormlyFieldConfig | DbxFlexLayoutWrapperGroupFieldConfig): input is DbxFlexLayoutWrapperGroupFieldConfig {
   if ((input as DbxFlexLayoutWrapperGroupFieldConfig).field != null) {
@@ -103,9 +103,11 @@ export function flexLayoutWrapper(fieldConfigs: (FormlyFieldConfig | DbxFlexLayo
       }
     },
     fieldGroup: fieldConfigs.map((inputConfig) => {
-      const fieldConfig: DbxFlexLayoutWrapperGroupFieldConfig = checkIsFieldFlexLayoutGroupFieldConfig(inputConfig) ? inputConfig : {
-        field: inputConfig
-      };
+      const fieldConfig: DbxFlexLayoutWrapperGroupFieldConfig = checkIsFieldFlexLayoutGroupFieldConfig(inputConfig)
+        ? inputConfig
+        : {
+            field: inputConfig
+          };
 
       const { field, size = defaultSize } = fieldConfig;
       const className = `dbx-flex-${size}`;

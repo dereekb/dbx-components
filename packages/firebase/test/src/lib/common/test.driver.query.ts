@@ -1,20 +1,17 @@
-import { SubscriptionObject } from "@dereekb/rxjs";
-import { filter, first, from, skip } from "rxjs";
-import { limit, orderBy, startAfter, startAt, where, limitToLast, endAt, endBefore, makeDocuments, FirestoreQueryFactoryFunction } from "@dereekb/firebase";
-import { MockItemDocument, MockItem } from "./firestore.mock.item";
-import { MockItemCollectionFixture } from "./firestore.mock.item.fixture";
+import { SubscriptionObject } from '@dereekb/rxjs';
+import { filter, first, from, skip } from 'rxjs';
+import { limit, orderBy, startAfter, startAt, where, limitToLast, endAt, endBefore, makeDocuments, FirestoreQueryFactoryFunction } from '@dereekb/firebase';
+import { MockItemDocument, MockItem } from './firestore.mock.item';
+import { MockItemCollectionFixture } from './firestore.mock.item.fixture';
 
 /**
  * Describes query driver tests, using a MockItemCollectionFixture.
- * 
- * @param f 
+ *
+ * @param f
  */
 export function describeQueryDriverTests(f: MockItemCollectionFixture) {
-
   describe('FirestoreQueryDriver', () => {
-
     describe('query', () => {
-
       const testDocumentCount = 5;
 
       let query: FirestoreQueryFactoryFunction<MockItem>;
@@ -34,7 +31,6 @@ export function describeQueryDriverTests(f: MockItemCollectionFixture) {
       });
 
       describe('streamDocs()', () => {
-
         let sub: SubscriptionObject;
 
         beforeEach(() => {
@@ -57,11 +53,14 @@ export function describeQueryDriverTests(f: MockItemCollectionFixture) {
             }
           }
 
-          sub.subscription = query().streamDocs().pipe(filter(x => x.docs.length > items.length)).subscribe((results) => {
-            addSeen = true;
-            expect(results.docs.length).toBe(items.length + itemsToAdd);
-            tryComplete();
-          });
+          sub.subscription = query()
+            .streamDocs()
+            .pipe(filter((x) => x.docs.length > items.length))
+            .subscribe((results) => {
+              addSeen = true;
+              expect(results.docs.length).toBe(items.length + itemsToAdd);
+              tryComplete();
+            });
 
           // add one item
           makeDocuments(f.instance.firestoreCollection.documentAccessor(), {
@@ -76,7 +75,6 @@ export function describeQueryDriverTests(f: MockItemCollectionFixture) {
             addCompleted = true;
             tryComplete();
           });
-
         });
 
         it('should emit when the query results update (an item is removed).', (done) => {
@@ -91,11 +89,14 @@ export function describeQueryDriverTests(f: MockItemCollectionFixture) {
             }
           }
 
-          sub.subscription = query().streamDocs().pipe(skip(1)).subscribe((results) => {
-            deleteSeen = true;
-            expect(results.docs.length).toBe(items.length - itemsToRemove);
-            tryComplete();
-          });
+          sub.subscription = query()
+            .streamDocs()
+            .pipe(skip(1))
+            .subscribe((results) => {
+              deleteSeen = true;
+              expect(results.docs.length).toBe(items.length - itemsToRemove);
+              tryComplete();
+            });
 
           items[0].accessor.exists().then((exists) => {
             expect(exists).toBe(true);
@@ -105,16 +106,12 @@ export function describeQueryDriverTests(f: MockItemCollectionFixture) {
               deleteCompleted = true;
               tryComplete();
             });
-          })
-
+          });
         });
-
       });
 
       describe('constraint', () => {
-
         describe('limit', () => {
-
           it('should limit the number of items returned.', async () => {
             const limitCount = 2;
 
@@ -129,16 +126,16 @@ export function describeQueryDriverTests(f: MockItemCollectionFixture) {
             const limitCount = 2;
             const resultObs = query(limit(limitCount)).streamDocs();
 
-            from(resultObs).pipe(first()).subscribe((results) => {
-              expect(results.docs.length).toBe(limitCount);
-              done();
-            });
+            from(resultObs)
+              .pipe(first())
+              .subscribe((results) => {
+                expect(results.docs.length).toBe(limitCount);
+                done();
+              });
           });
-
         });
 
         describe('limitToLast', () => {
-
           it('should limit the number of items returned.', async () => {
             const limitCount = 2;
 
@@ -176,16 +173,16 @@ export function describeQueryDriverTests(f: MockItemCollectionFixture) {
             const limitCount = 2;
             const resultObs = query(orderBy('value'), limitToLast(limitCount)).streamDocs();
 
-            from(resultObs).pipe(first()).subscribe((results) => {
-              expect(results.docs.length).toBe(limitCount);
-              done();
-            });
+            from(resultObs)
+              .pipe(first())
+              .subscribe((results) => {
+                expect(results.docs.length).toBe(limitCount);
+                done();
+              });
           });
-
         });
 
         describe('orderBy', () => {
-
           it('should return values sorted in ascending order.', async () => {
             const results = await query(orderBy('value', 'asc')).getDocs();
             expect(results.docs[0].data().value).toBe('0');
@@ -195,11 +192,9 @@ export function describeQueryDriverTests(f: MockItemCollectionFixture) {
             const results = await query(orderBy('value', 'desc')).getDocs();
             expect(results.docs[0].data().value).toBe(`${items.length - 1}`);
           });
-
         });
 
         describe('where', () => {
-
           it('should return the documents matching the query.', async () => {
             const value = '0';
 
@@ -207,11 +202,9 @@ export function describeQueryDriverTests(f: MockItemCollectionFixture) {
             expect(result.docs.length).toBe(1);
             expect(result.docs[0].data().value).toBe(value);
           });
-
         });
 
         describe('startAt', () => {
-
           it('should return values starting from the specified startAt point.', async () => {
             const limitCount = 2;
 
@@ -223,11 +216,9 @@ export function describeQueryDriverTests(f: MockItemCollectionFixture) {
             expect(second.docs.length).toBe(limitCount);
             expect(second.docs[0].id).toBe(first.docs[1].id);
           });
-
         });
 
         describe('startAfter', () => {
-
           it('should return values starting after the specified startAt point.', async () => {
             const limitCount = 3;
 
@@ -242,11 +233,9 @@ export function describeQueryDriverTests(f: MockItemCollectionFixture) {
             expect(second.docs.length).toBe(limitCount);
             expect(second.docs[0].id).toBe(expectedFirstDoc.id);
           });
-
         });
 
         describe('endAt', () => {
-
           it('should return values ending with the specified endAt point (inclusive).', async () => {
             const limitCount = 2;
 
@@ -258,11 +247,9 @@ export function describeQueryDriverTests(f: MockItemCollectionFixture) {
             expect(second.docs.length).toBe(limitCount - 1);
             expect(second.docs[0].id).toBe(first.docs[0].id);
           });
-
         });
 
         describe('endBefore', () => {
-
           it('should return values ending with the specified endBefore point (exclusive).', async () => {
             const limitCount = 2;
 
@@ -274,13 +261,8 @@ export function describeQueryDriverTests(f: MockItemCollectionFixture) {
             expect(second.docs.length).toBe(limitCount - 1);
             expect(second.docs[0].id).toBe(first.docs[0].id);
           });
-
         });
-
       });
-
     });
-
   });
-
 }

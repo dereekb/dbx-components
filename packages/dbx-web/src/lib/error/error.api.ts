@@ -9,7 +9,6 @@ export function convertToPOJOServerErrorResponse(httpError: HttpErrorResponse | 
   const pojo: ServerErrorResponse = build({
     base: Object.assign({}, result),
     build: (x) => {
-
       if (x.data) {
         try {
           const stringy = JSON.stringify(pojo.data);
@@ -19,7 +18,6 @@ export function convertToPOJOServerErrorResponse(httpError: HttpErrorResponse | 
           x.data = undefined;
         }
       }
-
     }
   });
 
@@ -28,15 +26,15 @@ export function convertToPOJOServerErrorResponse(httpError: HttpErrorResponse | 
 
 /**
  * Converts an HTTP Error Response to a ServerErrorResponse type.
- * 
- * @param error 
- * @returns 
+ *
+ * @param error
+ * @returns
  */
 export function convertToServerErrorResponse(error: HttpErrorResponse | object): ServerErrorResponse | undefined {
   let result: ServerErrorResponse | undefined;
 
   if (error instanceof HttpErrorResponse) {
-    const { status, error: data }: { status: number, error: ServerErrorResponseData } = error;
+    const { status, error: data }: { status: number; error: ServerErrorResponseData } = error;
 
     const code = data.code;
     const message = data.message ?? error.statusText;

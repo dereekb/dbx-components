@@ -6,7 +6,6 @@ import { LoadingContext, LoadingContextEvent } from './loading.context';
  * Simple LoadingContext implementation
  */
 export class SimpleLoadingContext implements LoadingContext {
-
   private _subject: BehaviorSubject<LoadingContextEvent>;
   private _error: Maybe<ReadableError>;
 
@@ -46,5 +45,4 @@ export class SimpleLoadingContext implements LoadingContext {
       error
     });
   }
-
 }

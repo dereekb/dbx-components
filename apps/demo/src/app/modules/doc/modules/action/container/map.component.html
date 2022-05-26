@@ -1,37 +1,31 @@
 <dbx-content-container>
   <doc-feature-layout header="Action Map" hint="Connect and reference actions via the action map using a key.">
-
     <!-- Examples -->
-    <doc-feature-example header="dbxActionContextMap"
-      hint="The action map is used to reference actions that may be in different parts of the component dependency graph. It can also be used optionally to prevent multiple actions from occuring at once.">
-
+    <doc-feature-example header="dbxActionContextMap" hint="The action map is used to reference actions that may be in different parts of the component dependency graph. It can also be used optionally to prevent multiple actions from occuring at once.">
       <div dbxActionContextMap>
-
         <!-- Actions -->
         <p>The first action in the example is the save action.</p>
-        <dbx-action-example-tools #saveAction="action" dbxAction dbxActionMapSource="save"
-          [dbxActionHandler]="handleSaveDraft" [dbxActionDisabled]="!(saveAction.isModified$ | async)" dbxActionSnackbar
-          snackbarDefault="save" dbxActionMapWorkingDisable>
+        <dbx-action-example-tools #saveAction="action" dbxAction dbxActionMapSource="save" [dbxActionHandler]="handleSaveDraft" [dbxActionDisabled]="!(saveAction.isModified$ | async)" dbxActionSnackbar snackbarDefault="save" dbxActionMapWorkingDisable>
           <doc-action-form-example-form dbxActionForm [dbxFormSource]="value$"></doc-action-form-example-form>
-          <dbx-button dbxActionFromMap="save" icon="save" text="Save Changes" dbxActionButton>
-          </dbx-button>
+          <dbx-button dbxActionFromMap="save" icon="save" text="Save Changes" dbxActionButton></dbx-button>
         </dbx-action-example-tools>
 
-        <p>The second action in the example is the send action. It is disabled when the save action is working via the
-          <b>dbxActionMapWorkingDisable</b> directive.</p>
-        <dbx-action-example-tools dbxAction dbxActionMapSource="send" [dbxActionHandler]="handleSendDraft"
-          dbxActionValue dbxActionSnackbar snackbarDefault="send" [dbxActionDisabled]="(saveAction.isModified$ | async)"
-          dbxActionMapWorkingDisable>
-        </dbx-action-example-tools>
+        <p>
+          The second action in the example is the send action. It is disabled when the save action is working via the
+          <b>dbxActionMapWorkingDisable</b>
+          directive.
+        </p>
+        <dbx-action-example-tools dbxAction dbxActionMapSource="send" [dbxActionHandler]="handleSendDraft" dbxActionValue dbxActionSnackbar snackbarDefault="send" [dbxActionDisabled]="saveAction.isModified$ | async" dbxActionMapWorkingDisable></dbx-action-example-tools>
 
-        <p>This button is linked to the send action via the <b>dbxActionFromMap</b> directive.</p>
+        <p>
+          This button is linked to the send action via the
+          <b>dbxActionFromMap</b>
+          directive.
+        </p>
         <div>
-          <dbx-button dbxActionButton dbxActionFromMap="send" icon="send" text="Send Now" dbxActionButton>
-          </dbx-button>
+          <dbx-button dbxActionButton dbxActionFromMap="send" icon="send" text="Send Now" dbxActionButton></dbx-button>
         </div>
-
       </div>
-
     </doc-feature-example>
   </doc-feature-layout>
 </dbx-content-container>

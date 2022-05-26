@@ -17,7 +17,6 @@ import { DbxRouterWebProviderConfig } from '../../provider/router.provider.confi
   }
 })
 export class DbxAnchorComponent extends AbstractDbxAnchorDirective implements OnDestroy {
-
   private _templateRef = new BehaviorSubject<Maybe<TemplateRef<unknown>>>(undefined);
   readonly templateRef$ = this._templateRef.pipe(skipFirstMaybe(), shareReplay(1));
 
@@ -33,8 +32,16 @@ export class DbxAnchorComponent extends AbstractDbxAnchorDirective implements On
     this._templateRef.next(templateRef);
   }
 
-  readonly url$ = this.anchor$.pipe(map(x => x?.url), distinctUntilChanged(), shareReplay(1));
-  readonly target$ = this.anchor$.pipe(map(x => x?.target), distinctUntilChanged(), shareReplay(1));
+  readonly url$ = this.anchor$.pipe(
+    map((x) => x?.url),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+  readonly target$ = this.anchor$.pipe(
+    map((x) => x?.target),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
 
   constructor(private readonly dbNgxRouterWebProviderConfig: DbxRouterWebProviderConfig) {
     super();
@@ -52,5 +59,4 @@ export class DbxAnchorComponent extends AbstractDbxAnchorDirective implements On
   clickAnchor(event?: Maybe<MouseEvent>): void {
     this.anchor?.onClick?.(event);
   }
-
 }

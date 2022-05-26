@@ -9,7 +9,7 @@ import { Component } from '@angular/core';
     <div class="dbx-list-empty-content">
       <ng-content></ng-content>
     </div>
-  `,
+  `
   // TODO: styleUrls: ['./container.scss']
 })
-export class DbxListEmptyContentComponent { }
+export class DbxListEmptyContentComponent {}

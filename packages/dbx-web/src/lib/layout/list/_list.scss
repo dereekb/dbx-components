@@ -2,10 +2,8 @@
 
 // MARK: Variables
 
-
 // MARK: Mixin
 @mixin core() {
-
   .dbx-list {
     overflow: hidden;
     height: 100%;
@@ -27,7 +25,6 @@
     &.dbx-list-content-hidden {
       display: none;
     }
-
   }
 
   .dbx-list-content-box {
@@ -35,7 +32,6 @@
   }
 
   .dbx-list-view {
-
     .mat-list-base .dbx-list-view-item.mat-list-item {
       height: unset;
 
@@ -46,15 +42,15 @@
           min-height: 56px;
         }
       }
-
     }
   }
-
 }
 
-@mixin color($theme-config) {}
+@mixin color($theme-config) {
+}
 
-@mixin typography($typography-config) {}
+@mixin typography($typography-config) {
+}
 
 @mixin theme($theme-config) {
   @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-layout-list') {

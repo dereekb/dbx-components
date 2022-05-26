@@ -6,13 +6,11 @@ import { textEditorField } from '@dereekb/dbx-form';
   templateUrl: './texteditor.component.html'
 })
 export class DocFormTextEditorComponent {
-
   readonly textEditorField: FormlyFieldConfig[] = [
     textEditorField({
       key: 'editor',
       label: 'Text Editor',
       description: 'This is a text editor.'
     })
-  ]
-
+  ];
 }

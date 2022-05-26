@@ -7,18 +7,17 @@ import { AbstractSubscriptionDirective, safeDetectChanges } from '@dereekb/dbx-c
 
 /**
  * Used to denote which app style to use for all children below this.
- * 
+ *
  * Will update the parent DbxStyleService.
  */
 @Directive({
   selector: '[dbxSetStyle]',
   host: {
-    'class': 'dbx-style-root',
+    class: 'dbx-style-root',
     '[class]': 'outputStyle'
   }
 })
 export class DbxSetStyleDirective extends AbstractSubscriptionDirective implements OnDestroy, OnInit {
-
   private _suffixes = new BehaviorSubject<Maybe<string>>(undefined);
   private _style = new BehaviorSubject<Maybe<string>>(undefined);
 
@@ -68,5 +67,4 @@ export class DbxSetStyleDirective extends AbstractSubscriptionDirective implemen
   set suffixes(suffixes: Maybe<string>) {
     this._suffixes.next(suffixes);
   }
-
 }

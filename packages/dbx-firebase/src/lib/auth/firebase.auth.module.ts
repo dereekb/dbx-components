@@ -8,9 +8,7 @@ export interface DbxFirebaseAuthModuleConfig {
 
 @NgModule({})
 export class DbxFirebaseAuthModule {
-
   static forRoot(config: DbxFirebaseAuthModuleConfig): ModuleWithProviders<DbxFirebaseAuthModule> {
-
     const providers: Provider[] = [
       DbxFirebaseAuthService,
       {
@@ -24,7 +22,7 @@ export class DbxFirebaseAuthModule {
         provide: DbxFirebaseAuthServiceDelegate,
         useFactory: config.delegateFactory,
         deps: [Injector]
-      })
+      });
     }
 
     return {
@@ -32,5 +30,4 @@ export class DbxFirebaseAuthModule {
       providers
     };
   }
-
 }

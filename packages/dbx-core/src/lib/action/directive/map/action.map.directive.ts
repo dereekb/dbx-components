@@ -14,14 +14,13 @@ import { ActionContextStoreSourceMap, ActionKey } from './action.map';
 @Directive({
   selector: '[dbxActionContextMap]',
   exportAs: 'actionMap',
-  providers: [],
+  providers: []
 })
 export class DbxActionContextMapDirective implements ActionContextStoreSourceMap, OnDestroy {
-
   private readonly _map = new BehaviorSubject<Map<ActionKey, ActionContextStoreSource>>(new Map());
   readonly map$ = this._map.asObservable();
 
-  readonly areAnyWorking$ = this.checkAnyAre(x => x.isWorking$, false);
+  readonly areAnyWorking$ = this.checkAnyAre((x) => x.isWorking$, false);
 
   get map(): Map<ActionKey, ActionContextStoreSource> {
     return this._map.value;
@@ -66,15 +65,18 @@ export class DbxActionContextMapDirective implements ActionContextStoreSourceMap
   fromAllSources<O>(mapFn: (input: ActionContextStore) => Observable<O>): Observable<O[]> {
     return this.map$.pipe(switchMap(combineLatestFromMapValuesObsFn((x) => x.store$.pipe(switchMap(mapFn)))));
   }
-
 }
 
 export class DbxActionContextMapDirectiveSourceInstance implements ActionContextStoreSource {
-
-  readonly _source$ = this.parent.map$.pipe(map(x => x.get(this.key)), distinctUntilChanged());
-  readonly _store$ = this._source$.pipe(switchMap((x) => x?.store$ ?? of(undefined)), shareReplay(1));
+  readonly _source$ = this.parent.map$.pipe(
+    map((x) => x.get(this.key)),
+    distinctUntilChanged()
+  );
+  readonly _store$ = this._source$.pipe(
+    switchMap((x) => x?.store$ ?? of(undefined)),
+    shareReplay(1)
+  );
   readonly store$ = actionContextStoreSourcePipe(this._store$);
 
-  constructor(private readonly parent: DbxActionContextMapDirective, readonly key: ActionKey) { }
-
+  constructor(private readonly parent: DbxActionContextMapDirective, readonly key: ActionKey) {}
 }

@@ -5,11 +5,9 @@
 
 // Sections
 @mixin core() {
-
   .cdk-overlay-pane .mat-menu-panel {
     max-width: 90vw;
   }
-
 }
 
 @mixin color($theme-config) {
@@ -18,7 +16,10 @@
   $foreground: map.get($color-config, 'foreground');
   $cdk-background-color: theming.get-color-from-palette($background, 'background');
   $cdk-text-color: theming.get-color-from-palette($foreground, 'text');
-  $cdk-border-color: color.adjust($color: $cdk-text-color, $alpha: -0.90);
+  $cdk-border-color: color.adjust(
+    $color: $cdk-text-color,
+    $alpha: -0.9
+  );
 
   .ng-overlay-container {
     color: $cdk-text-color;
@@ -26,10 +27,10 @@
     @include theming.elevation(8);
     border: 1px solid $cdk-border-color;
   }
-
 }
 
-@mixin typography($typography-config) {}
+@mixin typography($typography-config) {
+}
 
 @mixin theme($theme-config) {
   @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-interaction-style') {

@@ -2,7 +2,7 @@ let adminEnvironmentInitialized = false;
 
 /**
  * Host url:port combo.
- * 
+ *
  * I.E. localhost:8080
  */
 export type FirebaseAdminTestEnvironmentHost = string;
@@ -44,9 +44,9 @@ export function getGCloudTestProjectId() {
 
 /**
  * Applies the current GCLOUD_PROJECT to FIREBASE_CONFIG.
- * 
- * This is done as some external testing libraries (firebase-functions-test) will overwrite but we want to enforce using our project id 
- * so that each component can also 
+ *
+ * This is done as some external testing libraries (firebase-functions-test) will overwrite but we want to enforce using our project id
+ * so that each component can also
  */
 export function applyFirebaseGCloudTestProjectIdToFirebaseConfigEnv() {
   // firebase-functions-test overwrites this each time.
@@ -63,7 +63,7 @@ export function applyFirebaseGCloudTestProjectIdToFirebaseConfigEnv() {
   config.projectId = testProjectId;
 
   process.env.FIREBASE_CONFIG = JSON.stringify(config);
-  process.env.GCLOUD_PROJECT = testProjectId;  // re-apply to GCLOUD_PROJECT too
+  process.env.GCLOUD_PROJECT = testProjectId; // re-apply to GCLOUD_PROJECT too
 
   return testProjectId;
 }
@@ -72,7 +72,6 @@ export function applyFirebaseGCloudTestProjectIdToFirebaseConfigEnv() {
  * Should be called before calling/using adminFirebaseTestBuilder(). This should only be called once.
  */
 export function initFirebaseAdminTestEnvironment(config: FirebaseAdminTestEnvironmentConfig) {
-
   function crashForEmulator(emulator: string) {
     throw new Error(`Emulator for ${emulator} was not set null or to a host. Crashing to prevent contamination.`);
   }

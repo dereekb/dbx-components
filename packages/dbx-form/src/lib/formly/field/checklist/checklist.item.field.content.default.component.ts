@@ -1,6 +1,4 @@
-import {
-  Component, Input
-} from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { ChecklistItemDisplayContent, ChecklistItemFieldDisplayComponent } from './checklist.item';
 
 // MARK: Default
@@ -14,7 +12,6 @@ import { ChecklistItemDisplayContent, ChecklistItemFieldDisplayComponent } from 
   `
 })
 export class DbxDefaultChecklistItemFieldDisplayComponent<T = unknown> implements ChecklistItemFieldDisplayComponent<T> {
-
   @Input()
   displayContent!: ChecklistItemDisplayContent<T>;
 
@@ -29,5 +26,4 @@ export class DbxDefaultChecklistItemFieldDisplayComponent<T = unknown> implement
   get description() {
     return this.displayContent?.description;
   }
-
 }

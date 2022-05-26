@@ -7,15 +7,15 @@ import { DbxAppAuthRoutes } from './auth.router';
   exports: []
 })
 export class DbxAppAuthRouterModule {
-
   static forRoot(dbxAppAuthRoutes: DbxAppAuthRoutes): ModuleWithProviders<DbxAppAuthRouterModule> {
     return {
       ngModule: DbxAppAuthRouterModule,
-      providers: [{
-        provide: DbxAppAuthRoutes,
-        useValue: dbxAppAuthRoutes
-      }]
+      providers: [
+        {
+          provide: DbxAppAuthRoutes,
+          useValue: dbxAppAuthRoutes
+        }
+      ]
     };
   }
-
 }

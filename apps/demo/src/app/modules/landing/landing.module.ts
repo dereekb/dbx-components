@@ -11,8 +11,6 @@ import { LandingLayoutComponent } from './container/layout.component';
       states: STATES
     })
   ],
-  declarations: [
-    LandingLayoutComponent
-  ],
+  declarations: [LandingLayoutComponent]
 })
-export class LandingModule { }
+export class LandingModule {}

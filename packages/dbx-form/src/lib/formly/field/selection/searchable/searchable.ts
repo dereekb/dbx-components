@@ -3,9 +3,7 @@ import { DbxInjectionComponentConfig, ClickableAnchor } from '@dereekb/dbx-core'
 import { Observable } from 'rxjs';
 import { SelectionDisplayValue, SelectionValue, SelectionValueHashFn } from '../selection';
 
-
 export interface SearchableValueFieldValue<T, M = unknown> extends SelectionValue<T, M> {
-
   /**
    * Optional anchor metadata on the field.
    */

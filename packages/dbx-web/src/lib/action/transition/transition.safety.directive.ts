@@ -7,7 +7,7 @@ import { DbxActionTransitionSafetyDialogResult, DbxActionUIRouterTransitionSafet
 
 /**
  * How to handle transitions.
- * 
+ *
  * Values:
  * - none: Nothing occurs.
  * - dialog: Always show a dialog and act based on the result.
@@ -21,26 +21,20 @@ type DbxActionTransitionSafetyRaceResult = [boolean | undefined, HookResult | un
  * Context used for preventing a transition from occuring if the action is not complete or is in a modified state.
  *
  * This can be configured to auto-trigger and wait, or show a dialog and wait for the user's feedback before doing anything.
- * 
+ *
  * NOTE: This dialog only works for uirouter.
  */
 @Directive({
-  selector: '[dbxActionTransitionSafety]',
+  selector: '[dbxActionTransitionSafety]'
 })
 export class DbxActionTransitionSafetyDirective<T, O> implements OnInit, OnDestroy {
-
   @Input('dbxActionTransitionSafety')
   inputSafetyType?: DbxActionTransitionSafetyType;
 
   private _dialogRef?: MatDialogRef<DbxActionUIRouterTransitionSafetyDialogComponent, DbxActionTransitionSafetyDialogResult>;
   private stopWatchingTransition?: () => void;
 
-  constructor(
-    public readonly source: DbxActionContextStoreSourceInstance<T, O>,
-    protected readonly transitionService: TransitionService,
-    protected readonly viewContainerRef: ViewContainerRef,
-    protected readonly dialog: MatDialog
-  ) { }
+  constructor(public readonly source: DbxActionContextStoreSourceInstance<T, O>, protected readonly transitionService: TransitionService, protected readonly viewContainerRef: ViewContainerRef, protected readonly dialog: MatDialog) {}
 
   get safetyType(): DbxActionTransitionSafetyType {
     return this.inputSafetyType ?? 'dialog';
@@ -53,7 +47,7 @@ export class DbxActionTransitionSafetyDirective<T, O> implements OnInit, OnDestr
   ngOnInit(): void {
     this.stopWatchingTransition = this.transitionService.onStart({}, (transition: Transition) => {
       return this._handleOnBeforeTransition(transition);
-    }) as (() => void);
+    }) as () => void;
   }
 
   ngOnDestroy(): void {
@@ -66,30 +60,39 @@ export class DbxActionTransitionSafetyDirective<T, O> implements OnInit, OnDestr
   }
 
   protected _handleOnBeforeTransition(transition: Transition): HookResult {
-    return this.source.isModified$.pipe(
-      first(),
-      mergeMap((isModified) => {
-        if (isModified) {
-          return race([
-            // Watch for success to occur. At that point, close everything.
-            this.source.success$.pipe(first(), map(() => [true, undefined] as DbxActionTransitionSafetyRaceResult)),
-            this._handleIsModifiedState(transition).pipe(first(), map((x) => [undefined, x] as DbxActionTransitionSafetyRaceResult))
-          ]).pipe(
-            map(([saveSuccess, handleResult]: DbxActionTransitionSafetyRaceResult) => {
-              if (saveSuccess) {
-                return true;
-              } else {
-                return handleResult;
-              }
-            }),
-            tap(() => this._closeDialog()), // Close dialog if it is still open.
-            delay(10) // Delay to allow dialog to close before transition.
-          );
-        } else {
-          return of(true);
-        }
-      })
-    ).toPromise().then(x => x); // Resolve/Flatten potential promise result.
+    return this.source.isModified$
+      .pipe(
+        first(),
+        mergeMap((isModified) => {
+          if (isModified) {
+            return race([
+              // Watch for success to occur. At that point, close everything.
+              this.source.success$.pipe(
+                first(),
+                map(() => [true, undefined] as DbxActionTransitionSafetyRaceResult)
+              ),
+              this._handleIsModifiedState(transition).pipe(
+                first(),
+                map((x) => [undefined, x] as DbxActionTransitionSafetyRaceResult)
+              )
+            ]).pipe(
+              map(([saveSuccess, handleResult]: DbxActionTransitionSafetyRaceResult) => {
+                if (saveSuccess) {
+                  return true;
+                } else {
+                  return handleResult;
+                }
+              }),
+              tap(() => this._closeDialog()), // Close dialog if it is still open.
+              delay(10) // Delay to allow dialog to close before transition.
+            );
+          } else {
+            return of(true);
+          }
+        })
+      )
+      .toPromise()
+      .then((x) => x); // Resolve/Flatten potential promise result.
   }
 
   protected _handleIsModifiedState(transition: Transition): Observable<HookResult> {
@@ -115,25 +118,27 @@ export class DbxActionTransitionSafetyDirective<T, O> implements OnInit, OnDestr
   }
 
   private _autoTrigger(transition: Transition): Observable<HookResult> {
-    return this.source.pipeStore((store) => store.state$.pipe(
-      delay(20),  // Prevent racing with auto-trigger.
-      first(),
-      mergeMap((state) => {
-        if (isIdleActionState(state.actionState)) {
-          // If we're in an idle state, get ready to trigger it.
-          if (canTriggerAction(state)) {
-            store.trigger();  // Try and trigger it.
+    return this.source.pipeStore((store) =>
+      store.state$.pipe(
+        delay(20), // Prevent racing with auto-trigger.
+        first(),
+        mergeMap((state) => {
+          if (isIdleActionState(state.actionState)) {
+            // If we're in an idle state, get ready to trigger it.
+            if (canTriggerAction(state)) {
+              store.trigger(); // Try and trigger it.
+            }
           }
-        }
 
-        // Watch for errors. If an error occurs, show the dialog.
-        // Success will cause the race in _handleOnBeforeTransition() to trigger and close everything.
-        return store.rejected$.pipe(
-          first(),
-          mergeMap(() => this._showDialog(transition))
-        );
-      })
-    ));
+          // Watch for errors. If an error occurs, show the dialog.
+          // Success will cause the race in _handleOnBeforeTransition() to trigger and close everything.
+          return store.rejected$.pipe(
+            first(),
+            mergeMap(() => this._showDialog(transition))
+          );
+        })
+      )
+    );
   }
 
   private _showDialog(transition: Transition): Observable<HookResult> {
@@ -170,5 +175,4 @@ export class DbxActionTransitionSafetyDirective<T, O> implements OnInit, OnDestr
 
     this._dialogRef = undefined;
   }
-
 }

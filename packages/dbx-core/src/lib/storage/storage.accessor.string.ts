@@ -6,8 +6,7 @@ import { StorageAccessor } from './storage.accessor';
  * Simple StorageAccessor implementation that wraps a FullStorageObject.
  */
 export class StringStorageAccessor implements StorageAccessor<StoredDataString> {
-
-  constructor(private readonly _storage: FullStorageObject) { }
+  constructor(private readonly _storage: FullStorageObject) {}
 
   get(key: string): Observable<Maybe<StoredDataString>> {
     return new Observable((x) => {
@@ -43,7 +42,7 @@ export class StringStorageAccessor implements StorageAccessor<StoredDataString> 
 
   all(): Observable<StoredDataString[]> {
     return this.allKeys().pipe(
-      map(x => filterMaybeValues(x.map(y => this._storage.getItem(y)))),
+      map((x) => filterMaybeValues(x.map((y) => this._storage.getItem(y)))),
       shareReplay(1)
     );
   }
@@ -55,5 +54,4 @@ export class StringStorageAccessor implements StorageAccessor<StoredDataString> 
       x.complete();
     });
   }
-
 }

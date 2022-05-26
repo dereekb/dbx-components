@@ -1,10 +1,9 @@
-import { Minutes } from "@dereekb/util";
-import { Expose, Type } from "class-transformer";
-import { addMinutes } from "date-fns";
-import { DateRange, dateRangeState, DateRangeState } from "./date.range";
+import { Minutes } from '@dereekb/util';
+import { Expose, Type } from 'class-transformer';
+import { addMinutes } from 'date-fns';
+import { DateRange, dateRangeState, DateRangeState } from './date.range';
 
 export class DateDurationSpan {
-
   @Expose()
   @Type(() => Date)
   startsAt: Date;
@@ -16,7 +15,6 @@ export class DateDurationSpan {
     this.startsAt = template.startsAt;
     this.duration = template.duration;
   }
-
 }
 
 export function durationSpanToDateRange(span: DateDurationSpan): DateRange {

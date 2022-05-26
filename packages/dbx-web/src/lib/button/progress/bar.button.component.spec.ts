@@ -10,12 +10,8 @@ describe('DbxBarButtonComponent', () => {
   beforeEach(
     waitForAsync(() => {
       TestBed.configureTestingModule({
-        imports: [
-          DbxProgressButtonsModule.forRoot([{ active: true, text: 'test' }]),
-        ],
-        providers: [
-          { provide: DBX_MAT_PROGRESS_BUTTON_GLOBAL_CONFIG, useValue: { active: true, text: 'test' } },
-        ],
+        imports: [DbxProgressButtonsModule.forRoot([{ active: true, text: 'test' }])],
+        providers: [{ provide: DBX_MAT_PROGRESS_BUTTON_GLOBAL_CONFIG, useValue: { active: true, text: 'test' } }]
       }).compileComponents();
     })
   );
@@ -28,7 +24,7 @@ describe('DbxBarButtonComponent', () => {
       active: false,
       buttonColor: 'primary',
       text: 'test button',
-      disabled: false,
+      disabled: false
     };
     fixture.detectChanges();
   });
@@ -72,5 +68,4 @@ describe('DbxBarButtonComponent', () => {
     expect(spy).not.toHaveBeenCalled();
   });
   */
-
 });

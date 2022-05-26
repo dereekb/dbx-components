@@ -12,19 +12,16 @@ export interface IsLoggedInHookConfig {
  * UIRouter State data with configuration for the hasAuthRoleHook.
  */
 export interface IsLoggedInStateData {
-
   /**
    * Whether or not the user needs to be logged in for this state.
    */
   requiredLogIn: boolean;
-
 }
 
 /**
  * This hook redirects to the configured default state when a user is not logged in for configured states.
  */
 export function enableIsLoggedInHook(transitionService: TransitionService, config: IsLoggedInHookConfig): void {
-
   // Matches if the destination state's data property has a truthy 'isSecure' property
   const isSecureCriteria: HookMatchCriteria = {
     entering: (state) => {

@@ -11,10 +11,9 @@ import { ActionKey } from './action.map';
   selector: '[dbxActionMapSource]'
 })
 export class DbxActionMapSourceDirective implements OnDestroy {
-
   private _key: Maybe<ActionKey>;
 
-  constructor(@Host() public readonly source: ActionContextStoreSource, private readonly _map: DbxActionContextMapDirective) { }
+  constructor(@Host() public readonly source: ActionContextStoreSource, private readonly _map: DbxActionContextMapDirective) {}
 
   ngOnDestroy(): void {
     this._removeFromToStore();
@@ -41,5 +40,4 @@ export class DbxActionMapSourceDirective implements OnDestroy {
       this._map.removeStore(this._key);
     }
   }
-
 }

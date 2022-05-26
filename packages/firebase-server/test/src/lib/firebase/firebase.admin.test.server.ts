@@ -1,5 +1,5 @@
-import { MockItemFirestoreCollection, mockItemFirestoreCollection, TestFirestoreContextFixture, TestFirestoreInstance } from "@dereekb/firebase/test";
-import { initFirebaseAdminTestEnvironment } from "./firebase";
+import { MockItemFirestoreCollection, mockItemFirestoreCollection, TestFirestoreContextFixture, TestFirestoreInstance } from '@dereekb/firebase/test';
+import { initFirebaseAdminTestEnvironment } from './firebase';
 
 export function initFirebaseServerAdminTestEnvironment() {
   initFirebaseAdminTestEnvironment({
@@ -8,11 +8,10 @@ export function initFirebaseServerAdminTestEnvironment() {
       firestore: '0.0.0.0:9904',
       storage: '0.0.0.0:9906'
     }
-  })
+  });
 }
 
 export function describeFirestoreTest(s: TestFirestoreContextFixture<TestFirestoreInstance>) {
-
   let collection: MockItemFirestoreCollection;
 
   beforeEach(() => {
@@ -20,7 +19,6 @@ export function describeFirestoreTest(s: TestFirestoreContextFixture<TestFiresto
   });
 
   describe('firestore', () => {
-
     it('should interact with the firestore.', async () => {
       const document = collection.documentAccessor().newDocument();
 
@@ -39,7 +37,5 @@ export function describeFirestoreTest(s: TestFirestoreContextFixture<TestFiresto
 
       expect(data).toBeDefined();
     });
-
   });
-
 }

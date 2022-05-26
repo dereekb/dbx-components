@@ -5,18 +5,8 @@ import { DbxFormSourceDirective } from './form.input.directive';
 import { DbxFormLoadingSourceDirective } from './form.loading.directive';
 
 @NgModule({
-  imports: [
-    CommonModule
-  ],
-  declarations: [
-    DbxFormSourceDirective,
-    DbxFormValueChangesDirective,
-    DbxFormLoadingSourceDirective
-  ],
-  exports: [
-    DbxFormSourceDirective,
-    DbxFormValueChangesDirective,
-    DbxFormLoadingSourceDirective
-  ]
+  imports: [CommonModule],
+  declarations: [DbxFormSourceDirective, DbxFormValueChangesDirective, DbxFormLoadingSourceDirective],
+  exports: [DbxFormSourceDirective, DbxFormValueChangesDirective, DbxFormLoadingSourceDirective]
 })
-export class DbxFormIoModule { }
+export class DbxFormIoModule {}

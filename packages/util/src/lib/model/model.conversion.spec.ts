@@ -52,48 +52,35 @@ const fields = modelFieldConversions<TestConversionModel, TestConversionDataMode
 const mapFunctions = makeModelMapFunctions<TestConversionModel, TestConversionDataModel>(fields);
 
 describe('makeModelMapFunctions', () => {
-
   describe('functions', () => {
-
     describe('to', () => {
-
       it('should convert the value to the data model.', () => {
-
         const result = mapFunctions.to(defaultTestModel);
 
         expect(result.name).toBe(defaultTestModel.name);
         expect(result.number).toBe(String(defaultTestModel.number));
         expect(result.test).toBe(defaultTestValue);
-
       });
 
       // todo: add target
-
     });
 
     describe('from', () => {
-
       it('should convert the value from the data model.', () => {
-
         const dataModel = mapFunctions.to(defaultTestModel);
         const result = mapFunctions.from(dataModel);
 
         expect(result.name).toBe(defaultTestModel.name);
         expect(result.number).toBe(defaultTestModel.number);
         expect(result.test).toBe(defaultTestValue);
-
       });
 
       // todo: add target
-
     });
 
     describe('with options', () => {
-
       describe('fields', () => {
-
         it('should filter on the fields', () => {
-
           const result = mapFunctions.to(defaultTestModel, undefined, {
             fields: ['name']
           });
@@ -101,17 +88,13 @@ describe('makeModelMapFunctions', () => {
           expect(result.name).toBe(defaultTestModel.name);
           expect(result.number).toBe(undefined);
           expect(result.test).toBe(undefined);
-
         });
-
       });
 
       describe('definedOnly', () => {
-
         it('should only convert defined values.', () => {
-
           const testModel = build<typeof defaultTestModel>({
-            base: ({ ...defaultTestModel }),
+            base: { ...defaultTestModel },
             build: (x) => {
               delete x.number;
               delete x.date;
@@ -128,21 +111,14 @@ describe('makeModelMapFunctions', () => {
           expect(result.name).toBe(defaultTestModel.name);
           expect(result.number).toBe(undefined);
           expect(result.test).toBe(undefined);
-
         });
-
       });
-
     });
-
   });
-
 });
 
 describe('modelFieldMapFunction()', () => {
-
   describe('function', () => {
-
     it('should return the default value if convertMaybe is false/undefined and null/undefined is input.', () => {
       const defaultOutput = 1;
       const fn = modelFieldMapFunction<number, number>({ default: defaultOutput, convert: (x) => x });
@@ -169,7 +145,5 @@ describe('modelFieldMapFunction()', () => {
 
       expect(result).toBe(convertResultValue);
     });
-
   });
-
 });

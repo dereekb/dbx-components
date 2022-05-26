@@ -12,15 +12,13 @@ import { ThemePalette } from '@angular/material/core';
       <span class="dbx-flag-spacer"></span>
       <ng-content></ng-content>
     </dbx-flag>
-  `,
+  `
   // TODO: styleUrls: ['./container.scss']
 })
 export class DbxFlagPromptComponent {
-
   @Input()
   color: ThemePalette = 'accent';
 
   @Input()
   text?: string;
-
 }

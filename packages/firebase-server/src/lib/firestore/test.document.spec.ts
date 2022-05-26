@@ -4,9 +4,7 @@ import { adminTestWithMockItemCollection } from '@dereekb/firebase-server/test';
 import { FirestoreDocumentAccessor } from '@dereekb/firebase';
 
 describe('FirestoreDocumentAccessor', () => {
-
   adminTestWithMockItemCollection((f) => {
-
     let firestoreCollection: MockItemFirestoreCollection;
     let documentAccessor: FirestoreDocumentAccessor<MockItem, MockItemDocument>;
 
@@ -16,20 +14,17 @@ describe('FirestoreDocumentAccessor', () => {
     });
 
     describe('newDocument()', () => {
-
       it('should create a new document.', async () => {
         const document = documentAccessor.newDocument();
         expect(document).toBeDefined();
 
-        const snapshot = await document.accessor.get() as DocumentSnapshot<MockItem>;
+        const snapshot = (await document.accessor.get()) as DocumentSnapshot<MockItem>;
         expect(snapshot).toBeDefined();
         expect(snapshot.exists).toBe(false);
       });
-
     });
 
     describe('loadDocument()', () => {
-
       it('should load a document.', async () => {
         const newDocument = documentAccessor.newDocument();
         await newDocument.accessor.set({ test: true });
@@ -37,15 +32,13 @@ describe('FirestoreDocumentAccessor', () => {
         const document = documentAccessor.loadDocument(newDocument.documentRef);
         expect(document).toBeDefined();
 
-        const snapshot = await document.accessor.get() as DocumentSnapshot<MockItem>;
+        const snapshot = (await document.accessor.get()) as DocumentSnapshot<MockItem>;
         expect(snapshot).toBeDefined();
         expect(snapshot.exists).toBe(true);
       });
-
     });
 
     describe('loadDocumentFrom()', () => {
-
       it('should load a document from another.', async () => {
         const newDocument = documentAccessor.newDocument();
         await newDocument.accessor.set({ test: true });
@@ -53,13 +46,10 @@ describe('FirestoreDocumentAccessor', () => {
         const document = documentAccessor.loadDocumentFrom(newDocument);
         expect(document).toBeDefined();
 
-        const snapshot = await document.accessor.get() as DocumentSnapshot<MockItem>;
+        const snapshot = (await document.accessor.get()) as DocumentSnapshot<MockItem>;
         expect(snapshot).toBeDefined();
         expect(snapshot.exists).toBe(true);
       });
-
     });
-
   });
-
 });

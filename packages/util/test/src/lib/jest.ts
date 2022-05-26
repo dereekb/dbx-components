@@ -7,7 +7,7 @@ export type JestTestFixtureInstance<I> = I;
 
 /**
  * The test fixture is used as a singleton across tests used in a single context.
- * 
+ *
  * This allows us to define tests while referencing the instance.
  */
 export interface JestTestFixture<I> {
@@ -18,27 +18,24 @@ export type JestTestContextFixtureClearInstanceFunction = () => void;
 
 /**
  * JestTestFixture with additional functions that the JestTestContextFactory sees for managing the instance.
- * 
+ *
  * The fixture is used as a refernce point for the Instance that is changed between each test.
  */
 export interface JestTestContextFixture<I> extends JestTestFixture<I> {
-
   /**
    * Sets the instance before the tests run, and returns a function to clean the instance later.
-   * 
+   *
    * If called again before the instance is finished being used, this should thrown an exception.
-   * 
-   * @param instance 
+   *
+   * @param instance
    */
   setInstance(instance: I): JestTestContextFixtureClearInstanceFunction;
-
 }
 
 /**
  * Abstract JestTestContextFixture instance.
  */
 export abstract class AbstractJestTestContextFixture<I> implements JestTestContextFixture<I> {
-
   private _instance?: I;
 
   get instance(): I {
@@ -56,25 +53,22 @@ export abstract class AbstractJestTestContextFixture<I> implements JestTestConte
       delete this._instance;
     };
   }
-
 }
 
 /**
  * Abstract JestTestContextFixture instance with a parent.
  */
 export abstract class AbstractChildJestTestContextFixture<I, P extends JestTestContextFixture<any>> extends AbstractJestTestContextFixture<I> {
-
   constructor(readonly parent: P) {
     super();
   }
-
 }
 
 export type JestBuildTestsWithContextFunction<F> = (fixture: F) => void;
 
 /**
  * Used for Jest tests to execute a number of tests using the fixture.
- * 
+ *
  * The fixture is automatically setup and torn down each test per the configuration with a clean fixture instance.
  */
 export type JestTestContextFactory<F> = (buildTests: JestBuildTestsWithContextFunction<F>) => void;
@@ -85,7 +79,6 @@ export type JestTestContextFactory<F> = (buildTests: JestBuildTestsWithContextFu
 export type JestTestContextBuilderFunction<I, F extends JestTestContextFixture<I>, C> = (config?: Partial<C>) => JestTestContextFactory<F>;
 
 export interface JestTestContextBuilderConfig<I, F extends JestTestContextFixture<I>, C> {
-
   /**
    * Builds a config given the optional, partial input config. This is used across all tests.
    */
@@ -103,7 +96,7 @@ export interface JestTestContextBuilderConfig<I, F extends JestTestContextFixtur
 
   /**
    * Use for building an instance.
-   * 
+   *
    * When the promise resolves it should be ready to be used by the test being executed.
    */
   setupInstance: (config: C) => Promise<I>;
@@ -121,8 +114,8 @@ export interface JestTestContextBuilderConfig<I, F extends JestTestContextFixtur
 
 /**
  * Creates a JestTestContextBuilderFunction given the input builder.
- * 
- * @param builder 
+ *
+ * @param builder
  * @returns
  */
 export function jestTestContextBuilder<I, F extends JestTestContextFixture<I>, C>(builder: JestTestContextBuilderConfig<I, F, C>): JestTestContextBuilderFunction<I, F, C> {
@@ -141,7 +134,7 @@ export function jestTestContextBuilder<I, F extends JestTestContextFixture<I>, C
         fixture,
         /**
          * Build tests by passing the fixture to the testing functions.
-         * 
+         *
          * This will inject all tests and sub Jest lifecycle items.
          */
         buildTests,
@@ -153,7 +146,7 @@ export function jestTestContextBuilder<I, F extends JestTestContextFixture<I>, C
       if (builder.afterEach != null) {
         afterEach(builder.afterEach);
       }
-    }
+    };
   };
 }
 
@@ -165,7 +158,7 @@ export interface UseJestContextFixture<C extends JestTestContextFixture<I>, I> {
 }
 
 /**
- * Creates a test context and jest configurations that will initialize an instance 
+ * Creates a test context and jest configurations that will initialize an instance
  */
 export function useJestContextFixture<C extends JestTestContextFixture<I>, I>(config: UseJestContextFixture<C, I>): void {
   const { buildTests, fixture, initInstance, destroyInstance } = config;

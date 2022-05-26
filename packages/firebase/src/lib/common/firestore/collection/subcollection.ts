@@ -1,4 +1,4 @@
-import { FirestoreDocument } from "../accessor/document";
+import { FirestoreDocument } from '../accessor/document';
 import { FirestoreCollection, FirestoreCollectionConfig, makeFirestoreCollection } from './collection';
 
 // MARK: Subcollection
@@ -6,7 +6,6 @@ import { FirestoreCollection, FirestoreCollectionConfig, makeFirestoreCollection
  * Used for collections that are a subcollection of a document.
  */
 export interface FirestoreCollectionWithParentConfig<T, PT, D extends FirestoreDocument<T> = FirestoreDocument<T>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>> extends FirestoreCollectionConfig<T, D> {
-
   /**
    * The parent document.
    */

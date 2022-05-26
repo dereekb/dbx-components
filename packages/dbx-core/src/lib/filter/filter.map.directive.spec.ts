@@ -6,15 +6,10 @@ import { DbxFilterMapDirective } from './filter.map.directive';
 import { DbxCoreFilterModule } from './filter.module';
 
 describe('dbxFilterMapDirective', () => {
-
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [
-        DbxCoreFilterModule
-      ],
-      declarations: [
-        TestDbxFilterMapDirectiveComponent,
-      ]
+      imports: [DbxCoreFilterModule],
+      declarations: [TestDbxFilterMapDirectiveComponent]
     }).compileComponents();
   });
 
@@ -29,28 +24,26 @@ describe('dbxFilterMapDirective', () => {
 
   afterEach(() => {
     fixture.destroy();
-  })
+  });
 
   it('should be created', () => {
     expect(testComponent.filterMap).toBeDefined();
   });
-
 });
 
-export interface TestFilter { 
+export interface TestFilter {
   test?: boolean;
 }
 
 @Component({
   template: `
-  <ng-container #map dbxFilterMap>
-    <ng-container #connector dbxFilterMapSourceConnector="a"></ng-container>
-    <ng-container #source dbxFilterMapSource="a"></ng-container>
-  </ng-container>
+    <ng-container #map dbxFilterMap>
+      <ng-container #connector dbxFilterMapSourceConnector="a"></ng-container>
+      <ng-container #source dbxFilterMapSource="a"></ng-container>
+    </ng-container>
   `
 })
 class TestDbxFilterMapDirectiveComponent {
-
   @ViewChild(DbxFilterMapDirective, { static: true })
   filterMap!: DbxFilterMapDirective<TestFilter>;
 
@@ -59,5 +52,4 @@ class TestDbxFilterMapDirectiveComponent {
 
   @ViewChild(DbxFilterMapSourceDirective, { static: true })
   filterMapSourcer!: DbxFilterMapDirective<TestFilter>;
-
 }

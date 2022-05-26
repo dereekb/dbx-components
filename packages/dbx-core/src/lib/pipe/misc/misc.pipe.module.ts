@@ -2,11 +2,7 @@ import { NgModule } from '@angular/core';
 import { PrettyJsonPipe } from './prettyjson.pipe';
 
 @NgModule({
-  exports: [
-    PrettyJsonPipe
-  ],
-  declarations: [
-    PrettyJsonPipe
-  ]
+  exports: [PrettyJsonPipe],
+  declarations: [PrettyJsonPipe]
 })
-export class DbxMiscPipeModule { }
+export class DbxMiscPipeModule {}

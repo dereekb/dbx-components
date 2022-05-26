@@ -1,15 +1,12 @@
 <div class="dbx-searchable-field">
   <!-- View -->
   <mat-chip-list [selectable]="!readonly" [required]="required" [disabled]="readonly" #chipList>
-    <mat-chip *ngFor="let displayValue of displayValues$ | async" [removable]="true"
-      (removed)="removeWithDisplayValue(displayValue)">
+    <mat-chip *ngFor="let displayValue of displayValues$ | async" [removable]="true" (removed)="removeWithDisplayValue(displayValue)">
       <span class="dbx-chip-label">{{ displayValue.label }}</span>
       <span class="dbx-chip-sublabel" *ngIf="displayValue.sublabel">{{ displayValue.sublabel }}</span>
       <mat-icon *ngIf="!readonly" matChipRemove>cancel</mat-icon>
     </mat-chip>
-    <input #textInput [name]="name" [placeholder]="placeholder" [formControl]="inputCtrl" [matAutocomplete]="auto"
-      autocomplete="{{ autocomplete }}" [matAutocompleteDisabled]="readonly" [matChipInputFor]="chipList" (keydown)="tabPressedOnInput($event)"
-      [matChipInputSeparatorKeyCodes]="separatorKeysCodes" (matChipInputTokenEnd)="addChip($event)" (blur)="onBlur()">
+    <input #textInput [name]="name" [placeholder]="placeholder" [formControl]="inputCtrl" [matAutocomplete]="auto" autocomplete="{{ autocomplete }}" [matAutocompleteDisabled]="readonly" [matChipInputFor]="chipList" (keydown)="tabPressedOnInput($event)" [matChipInputSeparatorKeyCodes]="separatorKeysCodes" (matChipInputTokenEnd)="addChip($event)" (blur)="onBlur()" />
   </mat-chip-list>
   <div class="searchable-field-form-loading">
     <dbx-loading [linear]="true" [context]="searchContext"></dbx-loading>
@@ -17,10 +14,8 @@
 </div>
 
 <!-- Autocomplete -->
-<mat-autocomplete class="dbx-searchable-text-field-autocomplete" #auto="matAutocomplete"
-  (optionSelected)="selected($event)">
-  <mat-option *ngFor="let displayValue of (searchResults$ | async)" [value]="displayValue">
-    <dbx-searchable-field-autocomplete-item [displayValue]="displayValue">
-    </dbx-searchable-field-autocomplete-item>
+<mat-autocomplete class="dbx-searchable-text-field-autocomplete" #auto="matAutocomplete" (optionSelected)="selected($event)">
+  <mat-option *ngFor="let displayValue of searchResults$ | async" [value]="displayValue">
+    <dbx-searchable-field-autocomplete-item [displayValue]="displayValue"></dbx-searchable-field-autocomplete-item>
   </mat-option>
 </mat-autocomplete>

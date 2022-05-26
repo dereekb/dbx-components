@@ -9,7 +9,6 @@ import { cloneDeep } from 'lodash';
 import { scanCount, switchMapMaybeObs, SubscriptionObject } from '@dereekb/rxjs';
 import { BooleanStringKeyArray, BooleanStringKeyArrayUtilityInstance, Maybe } from '@dereekb/util';
 
-
 export interface DbxFormlyFormState {
   changesSinceLastResetCount: number;
   isFormValid: boolean;
@@ -29,11 +28,10 @@ export interface DbxFormlyFormState {
   `,
   providers: provideDbxMutableForm(DbxFormlyFormComponent),
   host: {
-    'class': 'dbx-formly'
+    class: 'dbx-formly'
   }
 })
 export class DbxFormlyFormComponent<T> extends AbstractSubscriptionDirective implements DbxForm, DbxFormlyContextDelegate<T>, OnInit, OnDestroy {
-
   private _fields = new BehaviorSubject<Maybe<Observable<FormlyFieldConfig[]>>>(undefined);
   private _events = new BehaviorSubject<DbxFormEvent>({ isComplete: false, state: DbxFormState.INITIALIZING, status: 'PENDING' });
   private _disabled = new BehaviorSubject<BooleanStringKeyArray>(undefined);
@@ -50,54 +48,59 @@ export class DbxFormlyFormComponent<T> extends AbstractSubscriptionDirective imp
   readonly fields$ = this._fields.pipe(switchMapMaybeObs(), distinctUntilChanged(), shareReplay(1));
 
   readonly stream$: Observable<DbxFormEvent> = this._reset.pipe(
-    switchMap((lastResetAt) => this.form.valueChanges.pipe(
-      startWith(0),
-      distinctUntilChanged(),
-      throttleTime(50, undefined, { leading: true, trailing: true }),
-      scanCount(-1),
-      // update on validation changes too. Does not count towards changes since last reset.
-      switchMap(changesSinceLastReset => this.form.statusChanges.pipe(startWith(this.form.status), distinctUntilChanged()).pipe(map(() => changesSinceLastReset))),
-      map((changesSinceLastResetCount: number) => ({
-        changesSinceLastResetCount,
-        isFormValid: this.form.status !== 'PENDING' && this.form.valid,
-        isFormDisabled: this.form.disabled
-      })),
-      scan((acc: DbxFormlyFormState, next: DbxFormlyFormState) => {
-        // Pass forward valid if next was a disabled change/check, which changes angular form's isValid value.
-        // If it was valid prior, then it should be valid now, unless we just reset, in which case it might not be valid.
-        const valid = next.isFormValid || (next.isFormDisabled && acc.isFormValid && acc.changesSinceLastResetCount > 0);
+    switchMap((lastResetAt) =>
+      this.form.valueChanges.pipe(
+        startWith(0),
+        distinctUntilChanged(),
+        throttleTime(50, undefined, { leading: true, trailing: true }),
+        scanCount(-1),
+        // update on validation changes too. Does not count towards changes since last reset.
+        switchMap((changesSinceLastReset) => this.form.statusChanges.pipe(startWith(this.form.status), distinctUntilChanged()).pipe(map(() => changesSinceLastReset))),
+        map((changesSinceLastResetCount: number) => ({
+          changesSinceLastResetCount,
+          isFormValid: this.form.status !== 'PENDING' && this.form.valid,
+          isFormDisabled: this.form.disabled
+        })),
+        scan(
+          (acc: DbxFormlyFormState, next: DbxFormlyFormState) => {
+            // Pass forward valid if next was a disabled change/check, which changes angular form's isValid value.
+            // If it was valid prior, then it should be valid now, unless we just reset, in which case it might not be valid.
+            const valid = next.isFormValid || (next.isFormDisabled && acc.isFormValid && acc.changesSinceLastResetCount > 0);
 
-        return {
-          changesSinceLastResetCount: next.changesSinceLastResetCount,
-          isFormValid: valid,
-          isFormDisabled: next.isFormDisabled
-        };
-      }, {
-        changesSinceLastResetCount: 0,
-        isFormValid: false,
-        isFormDisabled: false
-      }),
-      map(({ changesSinceLastResetCount, isFormValid, isFormDisabled }) => {
-        const isReset = changesSinceLastResetCount <= 1;  // first emission after reset is the first value.
-        const complete = isFormValid;
+            return {
+              changesSinceLastResetCount: next.changesSinceLastResetCount,
+              isFormValid: valid,
+              isFormDisabled: next.isFormDisabled
+            };
+          },
+          {
+            changesSinceLastResetCount: 0,
+            isFormValid: false,
+            isFormDisabled: false
+          }
+        ),
+        map(({ changesSinceLastResetCount, isFormValid, isFormDisabled }) => {
+          const isReset = changesSinceLastResetCount <= 1; // first emission after reset is the first value.
+          const complete = isFormValid;
 
-        const nextState: DbxFormEvent = {
-          isComplete: complete,
-          state: (isReset) ? DbxFormState.RESET : DbxFormState.USED,
-          status: this.form.status,
-          untouched: this.form.untouched,
-          pristine: this.form.pristine,
-          changesCount: changesSinceLastResetCount,
-          lastResetAt,
-          disabled: this.disabled,
-          isDisabled: isFormDisabled
-        };
+          const nextState: DbxFormEvent = {
+            isComplete: complete,
+            state: isReset ? DbxFormState.RESET : DbxFormState.USED,
+            status: this.form.status,
+            untouched: this.form.untouched,
+            pristine: this.form.pristine,
+            changesCount: changesSinceLastResetCount,
+            lastResetAt,
+            disabled: this.disabled,
+            isDisabled: isFormDisabled
+          };
 
-        // console.log('Change: ', nextState);
+          // console.log('Change: ', nextState);
 
-        return nextState;
-      })
-    )),
+          return nextState;
+        })
+      )
+    ),
     shareReplay(1)
   );
 
@@ -190,12 +193,11 @@ export class DbxFormlyFormComponent<T> extends AbstractSubscriptionDirective imp
   }
 
   setDisabled(key?: DbxFormDisabledKey, disabled = true): void {
-    this._disabled.next(BooleanStringKeyArrayUtilityInstance.set(this.disabled, key ?? DEFAULT_FORM_DISABLED_KEY, disabled))
+    this._disabled.next(BooleanStringKeyArrayUtilityInstance.set(this.disabled, key ?? DEFAULT_FORM_DISABLED_KEY, disabled));
   }
 
   // MARK: Update
   forceFormUpdate(): void {
     this._forceUpdate.next();
   }
-
 }

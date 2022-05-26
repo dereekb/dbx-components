@@ -8,31 +8,34 @@ import { DomSanitizer } from '@angular/platform-browser';
  */
 @Component({
   selector: 'dbx-linkify',
-  template: `<span class="dbx-linkify" [innerHTML]="linkifiedBody$ | async"></span>`
+  template: `
+    <span class="dbx-linkify" [innerHTML]="linkifiedBody$ | async"></span>
+  `
 })
 export class DbxLinkifyComponent implements OnDestroy {
-
   private _text = new BehaviorSubject<string>('');
 
   readonly linkifiedText$ = this._text.pipe(
     distinctUntilChanged(),
-    map(x => linkifyStr(x, {
-      defaultProtocol: 'https',
-      target: {
-        url: '_blank'
-      }
-    })),
+    map((x) =>
+      linkifyStr(x, {
+        defaultProtocol: 'https',
+        target: {
+          url: '_blank'
+        }
+      })
+    ),
     shareReplay(1)
   );
 
   readonly linkifiedBody$ = this.linkifiedText$.pipe(
-    map(x => {
+    map((x) => {
       return this.sanitizer.bypassSecurityTrustHtml(x);
     }),
     shareReplay(1)
   );
 
-  constructor(private readonly sanitizer: DomSanitizer) { }
+  constructor(private readonly sanitizer: DomSanitizer) {}
 
   ngOnDestroy(): void {
     this._text.complete();
@@ -46,5 +49,4 @@ export class DbxLinkifyComponent implements OnDestroy {
   set text(text: string) {
     this._text.next(text);
   }
-
 }

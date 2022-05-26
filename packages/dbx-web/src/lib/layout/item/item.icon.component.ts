@@ -6,25 +6,23 @@ import { Component, Input } from '@angular/core';
 @Component({
   selector: 'dbx-icon-item',
   template: `
-  <div class="dbx-icon-item">
-    <div class="left">
-      <mat-icon>{{ icon }}</mat-icon>
-    </div>
-    <div class="right">
-      <h3 *ngIf="header" class="dbx-icon-item-header">{{ header }}</h3>
-      <div class="right-content">
-        <ng-content></ng-content>
+    <div class="dbx-icon-item">
+      <div class="left">
+        <mat-icon>{{ icon }}</mat-icon>
+      </div>
+      <div class="right">
+        <h3 *ngIf="header" class="dbx-icon-item-header">{{ header }}</h3>
+        <div class="right-content">
+          <ng-content></ng-content>
+        </div>
       </div>
     </div>
-  </div>
   `
 })
 export class DbxIconItemComponent {
-
   @Input()
   icon?: string;
 
   @Input()
   header?: string;
-
 }

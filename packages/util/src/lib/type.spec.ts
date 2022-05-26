@@ -7,14 +7,11 @@ type TYPE_A = {
 
 type TYPE_B = {
   test: string;
-  notInA: boolean
+  notInA: boolean;
 };
 
-
 describe('MergeReplace', () => {
-
   it('should compile', () => {
-
     const replaced: MergeReplace<TYPE_A, TYPE_B> = {
       aOnly: true,
       test: 'replaced',
@@ -23,13 +20,10 @@ describe('MergeReplace', () => {
 
     expect(replaced).toBeDefined();
   });
-
 });
 
 describe('Replace', () => {
-
   it('should compile', () => {
-
     const replaced: Replace<TYPE_A, TYPE_B> = {
       aOnly: true,
       test: 'replaced'
@@ -37,13 +31,10 @@ describe('Replace', () => {
 
     expect(replaced).toBeDefined();
   });
-
 });
 
 describe('ReplaceType', () => {
-
   it('should compile', () => {
-
     const replaced: ReplaceType<TYPE_A, TYPE_B> = {
       aOnly: 'any value',
       test: 'replaced'
@@ -51,5 +42,4 @@ describe('ReplaceType', () => {
 
     expect(replaced).toBeDefined();
   });
-
 });

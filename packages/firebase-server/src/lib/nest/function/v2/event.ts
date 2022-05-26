@@ -16,10 +16,10 @@ export type CloudEventHandlerWithNestContextFactory<C> = <E extends CloudEvent<u
 
 /**
  * Creates a CloudEventHandlerWithNestContextFactory.
- * 
- * @param appFactory 
- * @param makeNestContext 
- * @returns 
+ *
+ * @param appFactory
+ * @param makeNestContext
+ * @returns
  */
 export function cloudEventHandlerWithNestContextFactory<C>(makeNestContext: MakeNestContext<C>): CloudEventHandlerWithNestContextFactory<C> {
   return <E extends CloudEvent<unknown>, O = unknown>(fn: CloudEventHandlerWithNestContextBuilder<C, E, O>) => {

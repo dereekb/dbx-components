@@ -6,11 +6,9 @@ import { DocInteractionExampleDialogComponent } from '../component/interaction.d
   templateUrl: './dialog.component.html'
 })
 export class DocInteractionDialogComponent {
-
-  constructor(readonly matDialog: MatDialog) { }
+  constructor(readonly matDialog: MatDialog) {}
 
   openDialog() {
     this.matDialog.open(DocInteractionExampleDialogComponent);
   }
-
 }

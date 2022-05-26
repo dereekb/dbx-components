@@ -1,7 +1,6 @@
-import { authorizedTestWithMockItemCollection, changeFirestoreLogLevelBeforeAndAfterTests, describeAccessorDriverTests, describeQueryDriverTests } from "@dereekb/firebase/test";
+import { authorizedTestWithMockItemCollection, changeFirestoreLogLevelBeforeAndAfterTests, describeAccessorDriverTests, describeQueryDriverTests } from '@dereekb/firebase/test';
 
 describe('firestore client', () => {
-
   authorizedTestWithMockItemCollection((f) => {
     changeFirestoreLogLevelBeforeAndAfterTests();
     describeAccessorDriverTests(f);
@@ -10,5 +9,4 @@ describe('firestore client', () => {
   authorizedTestWithMockItemCollection((f) => {
     describeQueryDriverTests(f);
   });
-
 });

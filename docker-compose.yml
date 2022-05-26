@@ -11,8 +11,8 @@ services:
       - ./.firebase/config/:/root/.config:cached
       - ./.firebase/data/:/root/data
     ports:
-      - "9229:9229"           # node-inspect debug port. Can be disabled if not being used.
-      - "9900-9906:9900-9906" # expose for browser access
+      - '9229:9229' # node-inspect debug port. Can be disabled if not being used.
+      - '9900-9906:9900-9906' # expose for browser access
     environment:
       # Credentials URL
       - GCLOUD_PROJECT=dereekb-components

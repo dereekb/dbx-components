@@ -6,23 +6,21 @@ export const DEFAULT_INTERACTION_POPUP_COMPOSER_POPUP_KEY = 'popup';
 
 @Component({
   template: `
-  <dbx-dialog-content>
-    <p>Pick a value.</p>
-    <div>
-      <button mat-raised-button (click)="close(100)">100</button>
-      <dbx-button-spacer></dbx-button-spacer>
-      <button mat-raised-button (click)="close(1000)">1000</button>
-      <dbx-button-spacer></dbx-button-spacer>
-      <button mat-raised-button (click)="close()">Cancel</button>
-    </div>
-  </dbx-dialog-content>
+    <dbx-dialog-content>
+      <p>Pick a value.</p>
+      <div>
+        <button mat-raised-button (click)="close(100)">100</button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <button mat-raised-button (click)="close(1000)">1000</button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <button mat-raised-button (click)="close()">Cancel</button>
+      </div>
+    </dbx-dialog-content>
   `
 })
 export class DocActionExampleDialogComponent extends AbstractDialogDirective {
-
   static openDialog(matDialog: MatDialog): MatDialogRef<DocActionExampleDialogComponent, boolean> {
     const dialogRef = matDialog.open(DocActionExampleDialogComponent, {});
     return dialogRef;
   }
-
 }

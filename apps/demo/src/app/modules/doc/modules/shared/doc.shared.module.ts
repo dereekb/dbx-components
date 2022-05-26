@@ -7,22 +7,8 @@ import { DocFeatureCardListComponent } from './component/feature.card.list.compo
 import { DocFeatureDerivedComponent } from './component/feature.derived.component';
 
 @NgModule({
-  imports: [
-    CommonModule,
-    DemoRootSharedModule
-  ],
-  declarations: [
-    DocFeatureDerivedComponent,
-    DocFeatureCardListComponent,
-    DocFeatureLayoutComponent,
-    DocFeatureExampleComponent
-  ],
-  exports: [
-    DemoRootSharedModule,
-    DocFeatureDerivedComponent,
-    DocFeatureCardListComponent,
-    DocFeatureLayoutComponent,
-    DocFeatureExampleComponent
-  ]
+  imports: [CommonModule, DemoRootSharedModule],
+  declarations: [DocFeatureDerivedComponent, DocFeatureCardListComponent, DocFeatureLayoutComponent, DocFeatureExampleComponent],
+  exports: [DemoRootSharedModule, DocFeatureDerivedComponent, DocFeatureCardListComponent, DocFeatureLayoutComponent, DocFeatureExampleComponent]
 })
-export class DocSharedModule { }
+export class DocSharedModule {}

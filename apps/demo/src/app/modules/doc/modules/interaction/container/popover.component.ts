@@ -9,7 +9,6 @@ import { first } from 'rxjs';
   templateUrl: './popover.component.html'
 })
 export class DocInteractionPopoverComponent {
-
   result?: NgPopoverCloseEvent<number>;
 
   @ViewChild('popoverOrigin', { read: ElementRef })
@@ -18,7 +17,7 @@ export class DocInteractionPopoverComponent {
   @ViewChild('buttonPopoverOrigin', { read: ElementRef })
   buttonPopoverOrigin!: ElementRef;
 
-  constructor(readonly popoverService: DbxPopoverService, readonly cdRef: ChangeDetectorRef) { }
+  constructor(readonly popoverService: DbxPopoverService, readonly cdRef: ChangeDetectorRef) {}
 
   ngAfterViewInit(): void {
     setTimeout(() => this.openExamplePopover(), 100);
@@ -29,12 +28,17 @@ export class DocInteractionPopoverComponent {
   }
 
   openExamplePopover(key?: string, origin = this.popoverOrigin) {
-    DocInteractionExamplePopoverComponent.openPopover(this.popoverService, {
-      origin
-    }, key).afterClosed$.pipe(first()).subscribe((x) => {
-      this.result = x;
-      safeDetectChanges(this.cdRef);
-    });
+    DocInteractionExamplePopoverComponent.openPopover(
+      this.popoverService,
+      {
+        origin
+      },
+      key
+    )
+      .afterClosed$.pipe(first())
+      .subscribe((x) => {
+        this.result = x;
+        safeDetectChanges(this.cdRef);
+      });
   }
-
 }

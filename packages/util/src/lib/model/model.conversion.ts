@@ -1,10 +1,10 @@
 /*eslint @typescript-eslint/no-explicit-any:"off"*/
 // any is used with intent here, as there isn't enough typing information available when going from a parent of fields to the types of each child.
 
-import { asGetter, Getter, GetterOrValue } from "../getter/getter";
-import { filterKeyValueTuples, findPOJOKeys, KeyValueTypleValueFilter } from "../object/object";
-import { isMaybeSo, Maybe, MaybeSo } from "../value/maybe";
-import { ApplyMapFunctionWithOptions, MapFunction } from "../value/map";
+import { asGetter, Getter, GetterOrValue } from '../getter/getter';
+import { filterKeyValueTuples, findPOJOKeys, KeyValueTypleValueFilter } from '../object/object';
+import { isMaybeSo, Maybe, MaybeSo } from '../value/maybe';
+import { ApplyMapFunctionWithOptions, MapFunction } from '../value/map';
 import { MergeReplace, ReplaceType } from '../type';
 import { mapObjectMap } from '../object';
 import { XOR } from 'ts-essentials';
@@ -28,9 +28,9 @@ export interface ModelMapFunctions<V extends object, D extends object> {
 
 export function makeModelMapFunctions<V extends object, D extends object>(fields: ModelFieldConversions<V, D>): ModelMapFunctions<V, D> {
   const keys = filterKeyValueTuples(fields);
-  const conversionsByKey: [keyof V, ModelFieldMapFunctions][] = keys.map(([key, field]) => [key, field]) as ([keyof V, ModelFieldMapFunctions][]);
-  const fromConversions: [keyof D, ModelFieldMapFunction][] = conversionsByKey.map(([key, configs]) => ([key as unknown as keyof D, configs.from]));
-  const toConversions: [keyof V, ModelFieldMapFunction][] = conversionsByKey.map(([key, configs]) => ([key, configs.to]));
+  const conversionsByKey: [keyof V, ModelFieldMapFunctions][] = keys.map(([key, field]) => [key, field]) as [keyof V, ModelFieldMapFunctions][];
+  const fromConversions: [keyof D, ModelFieldMapFunction][] = conversionsByKey.map(([key, configs]) => [key as unknown as keyof D, configs.from]);
+  const toConversions: [keyof V, ModelFieldMapFunction][] = conversionsByKey.map(([key, configs]) => [key, configs.to]);
 
   const from = makeModelConversionFieldValuesFunction<D, V>(fromConversions) as ModelMapFromFunction<V, D>;
   const to = makeModelConversionFieldValuesFunction<V, D>(toConversions) as ModelMapToFunction<V, D>;
@@ -66,19 +66,21 @@ export function makeModelConversionFieldValuesFunction<I extends object, O exten
 
       // if options are provided, filter down.
       if (options) {
-        const fieldsToMap = new Set(findPOJOKeys(input, {
-          keysFilter: options.fields,
-          valueFilter: (options.definedOnly === false) ? KeyValueTypleValueFilter.NONE : KeyValueTypleValueFilter.UNDEFINED
-        }));
+        const fieldsToMap = new Set(
+          findPOJOKeys(input, {
+            keysFilter: options.fields,
+            valueFilter: options.definedOnly === false ? KeyValueTypleValueFilter.NONE : KeyValueTypleValueFilter.UNDEFINED
+          })
+        );
 
-        targetFields = fields.filter(x => fieldsToMap.has(x[0]));
+        targetFields = fields.filter((x) => fieldsToMap.has(x[0]));
       }
 
-      targetFields.forEach(([key, convert]) => target[key] = convert(input[key]) as any);
+      targetFields.forEach(([key, convert]) => (target[key] = convert(input[key]) as any));
     }
 
     return target as O;
-  }
+  };
 }
 
 // MARK: Fields
@@ -103,17 +105,17 @@ export function modelFieldConversions<V extends object, D extends object>(config
 export type ModelFieldMapFunctions<I = unknown, O = unknown> = {
   from: ModelFieldMapFromFunction<I, O>;
   to: ModelFieldMapToFunction<I, O>;
-}
+};
 
 export type ModelFieldMapFunctionsConfig<I = unknown, O = unknown> = {
   from: ModelFieldMapFromConfig<I, O>;
   to: ModelFieldMapToConfig<I, O>;
-}
+};
 
 export function modelFieldMapFunctions<I = unknown, O = unknown>(config: ModelFieldMapFunctionsConfig<I, O>): ModelFieldMapFunctions<I, O> {
   return {
     from: modelFieldMapFunction(config.from),
-    to: modelFieldMapFunction(config.to),
+    to: modelFieldMapFunction(config.to)
   };
 }
 
@@ -123,17 +125,17 @@ export function modelFieldMapFunctions<I = unknown, O = unknown>(config: ModelFi
  */
 export type ModelFieldMapMaybeTooConfig<I, O> = {
   convertMaybe: ModelFieldMapConvertMaybeFunction<I, O>;
-}
+};
 
 export type ModelFieldMapMaybeWithDefaultValueConfig<I, O> = {
   defaultInput: GetterOrValue<I>;
   convert: ModelFieldMapConvertFunction<I, O>;
-}
+};
 
 export type ModelFieldMapMaybeWithDefaultDataConfig<I, O> = {
   convert: ModelFieldMapConvertFunction<I, O>;
   default: GetterOrValue<O>;
-}
+};
 
 export type ModelFieldMapConvertMaybeFunction<I, O> = MapFunction<Maybe<I>, O>;
 export type ModelFieldMapConvertFunction<I, O> = MapFunction<MaybeSo<I>, O>;
@@ -157,9 +159,9 @@ export type ModelFieldMapToFunction<I, O> = ModelFieldMapFunction<I, O>;
 
 /**
  * Creates a ModelFieldMapFunction.
- * 
- * @param config 
- * @returns 
+ *
+ * @param config
+ * @returns
  */
 export function modelFieldMapFunction<I, O>(config: ModelFieldMapConfig<I, O>): ModelFieldMapFunction<I, O> {
   const convert = (config as ModelFieldMapMaybeWithDefaultConfig<I, O>).convert;
@@ -180,5 +182,5 @@ export function modelFieldMapFunction<I, O>(config: ModelFieldMapConfig<I, O>): 
         return getDefaultOutput();
       }
     }
-  }
+  };
 }

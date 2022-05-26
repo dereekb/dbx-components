@@ -11,22 +11,21 @@ import { Maybe } from '@dereekb/util';
   providers: [provideFormlyContext()]
 })
 export class DocActionExampleToolsComponent implements OnDestroy {
-
   private _source = new BehaviorSubject<Maybe<DbxActionContextStoreSourceInstance>>(this.hostSourceInstance);
   readonly source$ = this._source.pipe(filterMaybe(), shareReplay(1));
 
-  readonly state$ = this.source$.pipe(switchMap(x => x.actionState$));
-  readonly isModified$ = this.source$.pipe(switchMap(x => x.isModified$));
-  readonly canTrigger$ = this.source$.pipe(switchMap(x => x.canTrigger$));
-  readonly isModifiedAndCanTrigger$ = this.source$.pipe(switchMap(x => x.isModifiedAndCanTrigger$));
-  readonly errorCountSinceLastSuccess$ = this.source$.pipe(switchMap(x => x.errorCountSinceLastSuccess$));
-  readonly valueReady$ = this.source$.pipe(switchMap(x => x.valueReady$));
-  readonly success$ = this.source$.pipe(switchMap(x => x.success$));
-  readonly error$ = this.source$.pipe(switchMap(x => x.error$));
-  readonly disabledKeys$ = this.source$.pipe(switchMap(x => x.disabledKeys$));
-  readonly isDisabled$ = this.source$.pipe(switchMap(x => x.isDisabled$));
+  readonly state$ = this.source$.pipe(switchMap((x) => x.actionState$));
+  readonly isModified$ = this.source$.pipe(switchMap((x) => x.isModified$));
+  readonly canTrigger$ = this.source$.pipe(switchMap((x) => x.canTrigger$));
+  readonly isModifiedAndCanTrigger$ = this.source$.pipe(switchMap((x) => x.isModifiedAndCanTrigger$));
+  readonly errorCountSinceLastSuccess$ = this.source$.pipe(switchMap((x) => x.errorCountSinceLastSuccess$));
+  readonly valueReady$ = this.source$.pipe(switchMap((x) => x.valueReady$));
+  readonly success$ = this.source$.pipe(switchMap((x) => x.success$));
+  readonly error$ = this.source$.pipe(switchMap((x) => x.error$));
+  readonly disabledKeys$ = this.source$.pipe(switchMap((x) => x.disabledKeys$));
+  readonly isDisabled$ = this.source$.pipe(switchMap((x) => x.isDisabled$));
 
-  constructor(@Optional() @Host() readonly hostSourceInstance: DbxActionContextStoreSourceInstance) { }
+  constructor(@Optional() @Host() readonly hostSourceInstance: DbxActionContextStoreSourceInstance) {}
 
   ngOnDestroy(): void {
     this._source.complete();
@@ -41,5 +40,4 @@ export class DocActionExampleToolsComponent implements OnDestroy {
   set source(source: DbxActionContextStoreSourceInstance) {
     this._source.next(source);
   }
-
 }

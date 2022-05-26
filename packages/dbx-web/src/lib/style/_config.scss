@@ -1,17 +1,18 @@
-@use "sass:map";
+@use 'sass:map';
 @use './variables';
 
 // convenience
 @function quick-define-dbx-config-via-banners($top-banner: 0px, $bottom-banner: 0px) {
-  @return ('layout': (
-    'top-banner-height': $top-banner,
-    'bottom-banner-height': $bottom-banner,
-  ));
+  @return (
+    'layout': (
+      'top-banner-height': $top-banner,
+      'bottom-banner-height': $bottom-banner
+    )
+  );
 }
 
 // theme
 @function define-dbx-theme-config($theme-config, $input-dbx-theme-config: null) {
-
   @if ($input-dbx-theme-config == null) {
     $input-dbx-theme-config: ();
   }
@@ -27,9 +28,12 @@
     'layout': $dbx-layout
   );
 
-  @return map.merge($theme-config, (
-    'dbx': $dbx-theme-config
-  ));
+  @return map.merge(
+    $theme-config,
+    (
+      'dbx': $dbx-theme-config
+    )
+  );
 }
 
 @function get-dbx-theme-config($theme-config) {
@@ -39,11 +43,15 @@
 // screen
 @function define-dbx-screen-config($input-dbx-theme-screen-config: null) {
   $dbx-screen-config: (
-    'mobile': 360px,        // 0-360px
-    'small': 520px,         //361-520px
-    'medium': 768px,        //521-768px
-    'large': 1280px,        //769-1280px
-    'tiny-vertical': 280px  //0-280px
+    'mobile': 360px,
+    // 0-360px
+    'small': 520px,
+    //361-520px
+    'medium': 768px,
+    //521-768px
+    'large': 1280px,
+    //769-1280px
+    'tiny-vertical': 280px //0-280px
   );
 
   @if ($input-dbx-theme-screen-config != null) {
@@ -64,18 +72,28 @@
     'top-banner-height': 0px,
     'bottom-banner-height': 0px,
     // navbars
-    'page-navbar-height': 42px,     // initial main navbar height
-    'content-navbar-height': 54px,  // initial content navbar height
+    'page-navbar-height': 42px,
+    // initial main navbar height
+    'content-navbar-height': 54px,
+    // initial content navbar height
     // content
-    'box-max-width': 600px,         // initial max width of box content, such as popups.
-    'content-max-width': 1200px,    // initial max width of restricted-width content
+    'box-max-width': 600px,
+    // initial max width of box content, such as popups.
+    'content-max-width': 1200px,
+    // initial max width of restricted-width content
     // padding
-    'padding-0': 0px,                 // initial padding-0
-    'padding-1': 2px,                 // initial padding-1
-    'padding-2': 6px,                 // initial padding-2
-    'padding-3': 12px,                // initial padding-3
-    'padding-4': 18px,                // initial padding-4
-    'padding-5': 24px,                // initial padding-5
+    'padding-0': 0px,
+    // initial padding-0
+    'padding-1': 2px,
+    // initial padding-1
+    'padding-2': 6px,
+    // initial padding-2
+    'padding-3': 12px,
+    // initial padding-3
+    'padding-4': 18px,
+    // initial padding-4
+    'padding-5': 24px,
+    // initial padding-5
     // layout
     'two-column-left-width': 320px
   );
@@ -120,7 +138,7 @@
 }
 
 @function get-dbx-layout-padding($theme-config, $padding-level) {
-  @return get-dbx-layout-config-var($theme-config, 'padding-'+ $padding-level);
+  @return get-dbx-layout-config-var($theme-config, 'padding-' + $padding-level);
 }
 
 @function get-dbx-two-column-left-width($theme-config) {

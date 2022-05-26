@@ -8,16 +8,14 @@ import { Maybe } from '@dereekb/util';
  */
 @Directive()
 export abstract class AbstractDbxFilterMapInstanceDirective<F> implements OnDestroy {
-
   protected _key = new BehaviorSubject<Maybe<FilterMapKey>>(undefined);
   readonly key$ = this._key.pipe(filterMaybe());
 
   readonly instance$ = this.dbxFilterMap.instanceObsForKeyObs(this.key$);
 
-  constructor(readonly dbxFilterMap: FilterMap<F>) { }
+  constructor(readonly dbxFilterMap: FilterMap<F>) {}
 
   ngOnDestroy(): void {
     this._key.complete();
   }
-
 }

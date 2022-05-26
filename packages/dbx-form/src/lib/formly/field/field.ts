@@ -27,8 +27,8 @@ export interface DefaultValueFieldConfig<T = unknown> {
 
 export interface AttributesFieldConfig {
   attributes?: {
-    [key: string]: string | number
-  }
+    [key: string]: string | number;
+  };
 }
 
 export interface DescriptionFieldConfig {
@@ -58,7 +58,9 @@ export function templateOptionsForFieldConfig<O extends object = object>(fieldCo
 }
 
 export function templateOptionsValueForFieldConfig<T extends FormlyTemplateOptions, O extends object = object>(fieldConfig: PartialPotentialFieldConfig, override?: PartialPotentialFieldConfig & O): Partial<T> {
-  const { label, placeholder, required, readonly, description, autocomplete } = mergeObjects<PartialPotentialFieldConfig>([fieldConfig, override], { keysFilter: ['label', 'placeholder', 'required', 'readonly', 'description', 'autocomplete'] });
+  const { label, placeholder, required, readonly, description, autocomplete } = mergeObjects<PartialPotentialFieldConfig>([fieldConfig, override], {
+    keysFilter: ['label', 'placeholder', 'required', 'readonly', 'description', 'autocomplete']
+  });
   const attributes = mergeObjects([fieldConfig.attributes, override?.attributes]);
 
   const result = filterFromPOJO({
@@ -77,11 +79,13 @@ export function templateOptionsValueForFieldConfig<T extends FormlyTemplateOptio
       result.attributes = {
         ...result.attributes,
         ...disableFormlyFieldAutofillAttributes()
-      }
+      };
     } else {
-      (result.attributes as {
-        [key: string]: string | number;
-      })['autocomplete'] = autocomplete;
+      (
+        result.attributes as {
+          [key: string]: string | number;
+        }
+      )['autocomplete'] = autocomplete;
     }
   }
 
@@ -91,7 +95,7 @@ export function templateOptionsValueForFieldConfig<T extends FormlyTemplateOptio
 /**
  * Returns configuration for a formlyField that will disable autofill/autocomplete for a field.
  */
-export function disableFormlyFieldAutofillAttributes(): { name: string, autocomplete: string } {
+export function disableFormlyFieldAutofillAttributes(): { name: string; autocomplete: string } {
   // https://stackoverflow.com/questions/15738259/disabling-chrome-autofill
   return {
     name: 'password',

@@ -8,16 +8,15 @@ import { ResizedEvent } from 'angular-resize-event';
 @Component({
   selector: 'dbx-popover-content',
   template: `
-  <div class="d-block dbx-popover-content" (resized)="onResized($event)" [style.--popoverh]="height$ | async">
-    <ng-content select="[controls]"></ng-content>
-    <div class="dbx-popover-content-container">
-      <ng-content></ng-content>
+    <div class="d-block dbx-popover-content" (resized)="onResized($event)" [style.--popoverh]="height$ | async">
+      <ng-content select="[controls]"></ng-content>
+      <div class="dbx-popover-content-container">
+        <ng-content></ng-content>
+      </div>
     </div>
-  </div>
-`
+  `
 })
 export class DbxPopoverContentComponent implements OnDestroy {
-
   private readonly _height = new BehaviorSubject<string>('');
   readonly height$ = this._height.asObservable().pipe(throttleTime(100, undefined, { leading: true, trailing: true }));
 
@@ -31,5 +30,4 @@ export class DbxPopoverContentComponent implements OnDestroy {
   ngOnDestroy(): void {
     this._height.complete();
   }
-
 }

@@ -8,17 +8,8 @@ import { DbxFormFormlyWrapperModule } from './wrapper/form.wrapper.module';
 import { DbxFormFormlyValueModule } from './value/value.module';
 
 @NgModule({
-  imports: [
-    CommonModule
-  ],
+  imports: [CommonModule],
   declarations: [],
-  exports: [
-    DbxFormFormlyChecklistItemFieldModule,
-    DbxFormFormlyComponentFieldModule,
-    DbxFormFormlySelectionModule,
-    DbxFormFormlyTextEditorFieldModule,
-    DbxFormFormlyValueModule,
-    DbxFormFormlyWrapperModule
-  ]
+  exports: [DbxFormFormlyChecklistItemFieldModule, DbxFormFormlyComponentFieldModule, DbxFormFormlySelectionModule, DbxFormFormlyTextEditorFieldModule, DbxFormFormlyValueModule, DbxFormFormlyWrapperModule]
 })
-export class DbxFormFormlyFieldModule { }
+export class DbxFormFormlyFieldModule {}

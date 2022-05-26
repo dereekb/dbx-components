@@ -36,7 +36,7 @@ export type FilterWithoutPreset<F extends FilterPreset> = Omit<F, 'preset'>;
 /**
  * A FilterSource that has a filter with a FilterPreset potentially available.
  */
-export abstract class PresetFilterSource<F extends FilterPreset> extends FilterSource<F> { }
+export abstract class PresetFilterSource<F extends FilterPreset> extends FilterSource<F> {}
 
 /**
  * A FilterSourceConnector connects with a Source for a function.

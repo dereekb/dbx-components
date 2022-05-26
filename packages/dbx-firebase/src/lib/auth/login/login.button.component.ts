@@ -1,9 +1,9 @@
-import { Component, Directive, Input, OnInit } from "@angular/core";
-import { HandleActionFunction } from "@dereekb/dbx-core";
-import { from } from "rxjs";
-import { DbxFirebaseAuthService } from "../service/firebase.auth.service";
-import { FirebaseLoginMethodType } from "./login";
-import { DbxFirebaseAuthLoginService } from "./login.service";
+import { Component, Directive, Input, OnInit } from '@angular/core';
+import { HandleActionFunction } from '@dereekb/dbx-core';
+import { from } from 'rxjs';
+import { DbxFirebaseAuthService } from '../service/firebase.auth.service';
+import { FirebaseLoginMethodType } from './login';
+import { DbxFirebaseAuthLoginService } from './login.service';
 import { DbxFirebaseLoginContext } from './login.context';
 
 export interface DbxFirebaseLoginButtonConfig {
@@ -21,25 +21,23 @@ export interface DbxFirebaseLoginButtonConfig {
 @Component({
   selector: 'dbx-firebase-login-button',
   template: `
-  <ng-container dbxAction [dbxActionHandler]="handleAction" dbxActionValue
-    [dbxActionSuccessHandler]="onActionSuccess">
-    <dbx-button dbxActionButton [customTextColor]="buttonTextColor" [customButtonColor]="buttonColor" [raised]="true">
-      <div class="dbx-firebase-login-button-content">
-        <span class="dbx-firebase-login-button-icon dbx-icon-spacer">
-          <img *ngIf="iconUrl" [src]="iconUrl"/>
-          <mat-icon *ngIf="icon">{{icon}}</mat-icon>
-        </span>
-        <span class="dbx-firebase-login-button-text">{{ text }}</span>
-      </div>
-    </dbx-button>
-  </ng-container>
+    <ng-container dbxAction [dbxActionHandler]="handleAction" dbxActionValue [dbxActionSuccessHandler]="onActionSuccess">
+      <dbx-button dbxActionButton [customTextColor]="buttonTextColor" [customButtonColor]="buttonColor" [raised]="true">
+        <div class="dbx-firebase-login-button-content">
+          <span class="dbx-firebase-login-button-icon dbx-icon-spacer">
+            <img *ngIf="iconUrl" [src]="iconUrl" />
+            <mat-icon *ngIf="icon">{{ icon }}</mat-icon>
+          </span>
+          <span class="dbx-firebase-login-button-text">{{ text }}</span>
+        </div>
+      </dbx-button>
+    </ng-container>
   `,
   host: {
-    'class': 'dbx-firebase-login-button'
+    class: 'dbx-firebase-login-button'
   }
 })
 export class DbxFirebaseLoginButtonComponent {
-
   @Input()
   config!: DbxFirebaseLoginButtonConfig;
 
@@ -71,18 +69,17 @@ export class DbxFirebaseLoginButtonComponent {
   onActionSuccess = () => {
     // todo: show checkmark on success?
   };
-
 }
 
 @Component({
   selector: 'dbx-firebase-login-button-container',
   template: `
-  <div class="dbx-firebase-login-button-container">
-    <ng-content></ng-content>
-  </div>
+    <div class="dbx-firebase-login-button-container">
+      <ng-content></ng-content>
+    </div>
   `
 })
-export class DbxFirebaseLoginButtonContainerComponent { }
+export class DbxFirebaseLoginButtonContainerComponent {}
 
 export const DEFAULT_CONFIGURED_DBX_FIREBASE_LOGIN_BUTTON_TEMPLATE = `
   <dbx-firebase-login-button-container>
@@ -92,15 +89,11 @@ export const DEFAULT_CONFIGURED_DBX_FIREBASE_LOGIN_BUTTON_TEMPLATE = `
 
 @Directive()
 export abstract class AbstractConfiguredDbxFirebaseLoginButtonDirective implements OnInit {
-
   private _config!: DbxFirebaseLoginButtonConfig;
 
   abstract readonly loginProvider: FirebaseLoginMethodType;
 
-  constructor(
-    readonly dbxFirebaseAuthService: DbxFirebaseAuthService,
-    readonly dbxFirebaseAuthLoginService: DbxFirebaseAuthLoginService,
-    readonly dbxFirebaseLoginContext: DbxFirebaseLoginContext) { }
+  constructor(readonly dbxFirebaseAuthService: DbxFirebaseAuthService, readonly dbxFirebaseAuthLoginService: DbxFirebaseAuthLoginService, readonly dbxFirebaseLoginContext: DbxFirebaseLoginContext) {}
 
   ngOnInit(): void {
     const assets = this.assetConfig;
@@ -128,5 +121,4 @@ export abstract class AbstractConfiguredDbxFirebaseLoginButtonDirective implemen
   get config() {
     return this._config;
   }
-
 }

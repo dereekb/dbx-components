@@ -6,9 +6,9 @@ import { Component } from '@angular/core';
 @Component({
   selector: 'dbx-card-box-container',
   template: `
-  <div class="dbx-card-box-container">
-    <ng-content></ng-content>
-  </div>
+    <div class="dbx-card-box-container">
+      <ng-content></ng-content>
+    </div>
   `
 })
-export class DbxCardBoxContainerComponent { }
+export class DbxCardBoxContainerComponent {}

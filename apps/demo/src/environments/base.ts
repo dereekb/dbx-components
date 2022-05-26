@@ -2,7 +2,7 @@
 // `ng build` replaces `environment.ts` with `environment.prod.ts`.
 // The list of file replacements can be found in `angular.json`.
 
-import { DbxFirebaseOptions } from "@dereekb/dbx-firebase";
+import { DbxFirebaseOptions } from '@dereekb/dbx-firebase';
 import firebaseInfo from '../../../../firebase.json';
 
 export interface DemoEnvironment {
@@ -10,7 +10,7 @@ export interface DemoEnvironment {
   testing: boolean;
   analytics: {
     segment: string;
-  },
+  };
   firebase: DbxFirebaseOptions;
 }
 
@@ -22,14 +22,14 @@ export const base: DemoEnvironment = {
   },
   firebase: {
     enabledLoginMethods: ['email', 'google', 'github'],
-    apiKey: "AIzaSyBl5QlQNS-AGrGIuZRI4CDHHBzUovUDABM",
-    authDomain: "dereekb-components.firebaseapp.com",
-    databaseURL: "https://dereekb-components-default-rtdb.firebaseio.com",
-    projectId: "dereekb-components",
-    storageBucket: "dereekb-components.appspot.com",
-    messagingSenderId: "124286307516",
-    appId: "1:124286307516:web:eb5a7cf891a6fd1b1ed4b9",
-    measurementId: "G-516GZEXT2Z",
+    apiKey: 'AIzaSyBl5QlQNS-AGrGIuZRI4CDHHBzUovUDABM',
+    authDomain: 'dereekb-components.firebaseapp.com',
+    databaseURL: 'https://dereekb-components-default-rtdb.firebaseio.com',
+    projectId: 'dereekb-components',
+    storageBucket: 'dereekb-components.appspot.com',
+    messagingSenderId: '124286307516',
+    appId: '1:124286307516:web:eb5a7cf891a6fd1b1ed4b9',
+    measurementId: 'G-516GZEXT2Z',
     emulators: {
       ...firebaseInfo.emulators,
       useEmulators: true,

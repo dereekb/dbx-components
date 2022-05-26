@@ -9,7 +9,6 @@ import { Maybe } from '@dereekb/util';
   templateUrl: './map.component.html'
 })
 export class DocActionMapComponent implements OnDestroy {
-
   private _value = new BehaviorSubject<Maybe<DocActionFormExampleValue>>({
     name: 'test',
     date: new Date()
@@ -18,7 +17,7 @@ export class DocActionMapComponent implements OnDestroy {
   readonly value$ = this._value.asObservable();
   readonly saveThrottleTime = ms('2s');
 
-  constructor() { }
+  constructor() {}
 
   ngOnDestroy(): void {
     this._value.complete();
@@ -31,12 +30,9 @@ export class DocActionMapComponent implements OnDestroy {
         this._value.next(value);
       })
     );
-  }
+  };
 
   handleSendDraft: HandleActionFunction<DocActionFormExampleValue, any> = (value: DocActionFormExampleValue) => {
-    return of(value).pipe(
-      delay(ms('1s'))
-    );
-  }
-
+    return of(value).pipe(delay(ms('1s')));
+  };
 }

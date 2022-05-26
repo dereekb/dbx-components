@@ -10,19 +10,18 @@ import { DemoProfileFormValue, DemoProfileUsernameFormValue, ProfileDocumentStor
   providers: [ProfileDocumentStore]
 })
 export class DemoProfileViewComponent implements OnInit, OnDestroy {
-
   readonly profileData$ = this.profileDocumentStore.data$;
-  readonly username$ = this.profileData$.pipe(map(x => x.username));
+  readonly username$ = this.profileData$.pipe(map((x) => x.username));
 
   readonly context = loadingStateContext({ obs: this.profileDocumentStore.dataLoadingState$ });
 
-  constructor(readonly profileDocumentStore: ProfileDocumentStore, readonly auth: DbxFirebaseAuthService) { }
+  constructor(readonly profileDocumentStore: ProfileDocumentStore, readonly auth: DbxFirebaseAuthService) {}
 
   ngOnInit(): void {
     this.profileDocumentStore.setId(this.auth.userIdentifier$);
   }
 
-  ngOnDestroy(): void { }
+  ngOnDestroy(): void {}
 
   readonly isUsernameModified: IsModifiedFunction<DemoProfileUsernameFormValue> = (value) => {
     return this.profileDocumentStore.currentData$.pipe(
@@ -35,20 +34,20 @@ export class DemoProfileViewComponent implements OnInit, OnDestroy {
       }),
       first()
     );
-  }
+  };
 
   readonly isProfileModified: IsModifiedFunction<DemoProfileFormValue> = (value) => {
     return this.profileDocumentStore.currentData$.pipe(
       map((profileData) => {
         if (profileData) {
-          return profileData.bio !== value.bio
+          return profileData.bio !== value.bio;
         } else {
           return true;
         }
       }),
       first()
     );
-  }
+  };
 
   handleChangeUsername: HandleActionWithContext<DemoProfileUsernameFormValue> = (form, context) => {
     context.startWorkingWithLoadingStateObservable(this.profileDocumentStore.setProfileUsername(form));
@@ -57,5 +56,4 @@ export class DemoProfileViewComponent implements OnInit, OnDestroy {
   handleUpdateProfile: HandleActionWithContext<DemoProfileFormValue> = (form, context) => {
     context.startWorkingWithLoadingStateObservable(this.profileDocumentStore.updateProfile(form));
   };
-
 }

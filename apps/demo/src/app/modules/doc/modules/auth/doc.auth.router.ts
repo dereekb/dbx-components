@@ -14,7 +14,7 @@ export const layoutState: Ng2StateDeclaration = {
 export const homeState: Ng2StateDeclaration = {
   url: '/home',
   name: 'doc.auth.home',
-  component: DocAuthHomeComponent,
+  component: DocAuthHomeComponent
 };
 
 export const docAuthRoleState: Ng2StateDeclaration = {
@@ -29,9 +29,4 @@ export const docAuthFirebaseState: Ng2StateDeclaration = {
   component: DocAuthFirebaseComponent
 };
 
-export const STATES: Ng2StateDeclaration[] = [
-  layoutState,
-  homeState,
-  docAuthRoleState,
-  docAuthFirebaseState
-];
+export const STATES: Ng2StateDeclaration[] = [layoutState, homeState, docAuthRoleState, docAuthFirebaseState];

@@ -1,4 +1,4 @@
-import { ArrayOrValue, convertToArray, flattenArray } from "../array";
+import { ArrayOrValue, convertToArray, flattenArray } from '../array';
 
 /**
  * Convenience function for objectMergeMatrix that returns a flat array.
@@ -16,7 +16,7 @@ export function objectMergeMatrix<A extends object = object, B extends object = 
     const bNorm = convertToArray(b);
 
     const results: (Partial<A> & Partial<B>)[][] = aNorm.map((a) => {
-      return bNorm.map(b => ({ ...a, ...b }));
+      return bNorm.map((b) => ({ ...a, ...b }));
     });
 
     return results;

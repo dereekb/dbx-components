@@ -1,7 +1,7 @@
-import { Injectable } from "@angular/core";
-import { goWithRouter } from "../../router";
-import { DbxRouterService } from "../../router/router/service/router.service";
-import { DbxAppAuthRoutes } from "./auth.router";
+import { Injectable } from '@angular/core';
+import { goWithRouter } from '../../router';
+import { DbxRouterService } from '../../router/router/service/router.service';
+import { DbxAppAuthRoutes } from './auth.router';
 
 /**
  * Helper service for navigating to important auth-related routes.
@@ -10,8 +10,7 @@ import { DbxAppAuthRoutes } from "./auth.router";
   providedIn: 'root'
 })
 export class DbxAppAuthRouterService {
-
-  constructor(readonly dbxRouterService: DbxRouterService, readonly dbxAppAuthRoutes: DbxAppAuthRoutes) { }
+  constructor(readonly dbxRouterService: DbxRouterService, readonly dbxAppAuthRoutes: DbxAppAuthRoutes) {}
 
   get hasOnboardingState(): boolean {
     return Boolean(this.dbxAppAuthRoutes.onboardRef);
@@ -20,8 +19,8 @@ export class DbxAppAuthRouterService {
   // MARK: Navigate
   /**
    * Navigates to the login state.
-   * 
-   * @returns 
+   *
+   * @returns
    */
   goToLogin() {
     return goWithRouter(this.dbxRouterService)(this.dbxAppAuthRoutes.loginRef);
@@ -29,8 +28,8 @@ export class DbxAppAuthRouterService {
 
   /**
    * Navigates to the logged out state, if it exists, otherwise navigates to the login state.
-   * 
-   * @returns 
+   *
+   * @returns
    */
   goToLoggedOut() {
     return goWithRouter(this.dbxRouterService)(this.dbxAppAuthRoutes.loggedOutRef ?? this.dbxAppAuthRoutes.loginRef);
@@ -38,8 +37,8 @@ export class DbxAppAuthRouterService {
 
   /**
    * Navigates to the onboarding state if it is available, otherwise navigates to the app.
-   * 
-   * @returns 
+   *
+   * @returns
    */
   goToOnboarding(): Promise<boolean> {
     return goWithRouter(this.dbxRouterService)(this.dbxAppAuthRoutes.onboardRef ?? this.dbxAppAuthRoutes.appRef);
@@ -47,11 +46,10 @@ export class DbxAppAuthRouterService {
 
   /**
    * Navigates to the app state.
-   * 
-   * @returns 
+   *
+   * @returns
    */
   goToApp() {
     return goWithRouter(this.dbxRouterService)(this.dbxAppAuthRoutes.appRef);
   }
-
 }

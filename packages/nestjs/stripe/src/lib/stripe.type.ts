@@ -1,4 +1,3 @@
-
 // https://github.com/stripe/stripe-node/issues/758#issuecomment-672185830
 // Declare this typing to access types within the Stripe module.
 declare module 'stripe' {

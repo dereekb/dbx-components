@@ -4,9 +4,7 @@ import { loadingStateIsLoading, successResult } from './loading.state';
 import { delay, first, timeout, of } from 'rxjs';
 
 describe('LoadingStateContextInstance', () => {
-
   describe('context', () => {
-
     let context: LoadingStateContextInstance;
 
     beforeEach(() => {
@@ -18,33 +16,26 @@ describe('LoadingStateContextInstance', () => {
     });
 
     describe('no state observable.', () => {
-
       it('should return a loading state stream.', (done) => {
-
         context.stream$.pipe(first()).subscribe({
           next: ({ loading }) => {
             expect(loading).toBe(true);
           },
           complete: done
         });
-
       });
 
       it('loading$ should return true.', (done) => {
-
         context.loading$.pipe(first()).subscribe({
           next: (loading) => {
             expect(loading).toBe(true);
           },
           complete: done
         });
-
       });
-
     });
 
     describe('long loading state', () => {
-
       const value = 'value';
       let sub: SubscriptionObject;
 
@@ -58,34 +49,25 @@ describe('LoadingStateContextInstance', () => {
       });
 
       it('loading$ should return true without waiting for the delay.', (done) => {
-
         sub.subscription = context.loading$.pipe(timeout({ first: 100 }), first()).subscribe({
           next: (loading) => {
             expect(loading).toBe(true);
           },
           complete: done
         });
-
       });
 
       it('valueAfterLoaded$ should wait for the delay.', (done) => {
-
-        sub.subscription = context.valueAfterLoaded$.pipe(
-          timeout({ first: 100, with: () => of(value) }),
-          first()
-        ).subscribe({
+        sub.subscription = context.valueAfterLoaded$.pipe(timeout({ first: 100, with: () => of(value) }), first()).subscribe({
           next: (result) => {
             expect(result).toBe(value);
           },
           complete: done
         });
-
       });
-
     });
 
     describe('finished state', () => {
-
       const value = 'value';
 
       beforeEach(() => {
@@ -93,37 +75,28 @@ describe('LoadingStateContextInstance', () => {
       });
 
       it('loading$ should return false.', (done) => {
-
         context.loading$.pipe(first()).subscribe({
           next: (loading) => {
             expect(loading).toBe(false);
           },
           complete: done
         });
-
       });
 
       it('value$ should return false.', (done) => {
-
         context.value$.pipe(first()).subscribe({
           next: (result) => {
             expect(result).toBe(value);
           },
           complete: done
         });
-
       });
-
     });
-
   });
 
   describe('config', () => {
-
     describe('showLoadingOnNoModel', () => {
-
       describe('=true', () => {
-
         it(`loading should be true if the result's value is undefined but loading is false.`, (done) => {
           const value = undefined;
           const state = successResult(value);
@@ -138,13 +111,10 @@ describe('LoadingStateContextInstance', () => {
             },
             complete: done
           });
-
         });
-
       });
 
       describe('=false', () => {
-
         it(`loading should be false if the result's value is undefined but loading is false.`, (done) => {
           const value = undefined;
           const state = successResult(value);
@@ -160,13 +130,8 @@ describe('LoadingStateContextInstance', () => {
             },
             complete: done
           });
-
         });
-
       });
-
     });
-
   });
-
 });

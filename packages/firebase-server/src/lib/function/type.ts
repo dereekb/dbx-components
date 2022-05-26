@@ -1,6 +1,6 @@
 import { PromiseOrValue } from '@dereekb/util';
 import { Runnable, HttpsFunction } from 'firebase-functions/v1';
-import { CallableFunction } from "firebase-functions/v2/https";
+import { CallableFunction } from 'firebase-functions/v2/https';
 
 /**
  * Firebase Functions V1 - Union of firebase-functions HttpsFunction and Runnable.

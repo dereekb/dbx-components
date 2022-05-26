@@ -1,20 +1,20 @@
-import { DbxInjectionComponentConfig } from "@dereekb/dbx-core";
-import { LoadingState, successResult, mapLoadingStateResults, filterMaybe, ListLoadingStateContextInstance, isListLoadingStateEmpty, startWithBeginLoading } from "@dereekb/rxjs";
-import { PrimativeKey, convertMaybeToArray, findUnique, makeValuesGroupMap, Maybe, ArrayOrValue } from "@dereekb/util";
-import { Directive, OnDestroy, OnInit, ViewChild } from "@angular/core";
-import { FormControl, AbstractControl } from "@angular/forms";
-import { MatInput } from "@angular/material/input";
-import { FieldTypeConfig, FormlyFieldConfig } from "@ngx-formly/core";
-import { FieldType } from "@ngx-formly/material";
-import { BehaviorSubject, combineLatest, Observable, of, filter, map, debounceTime, distinctUntilChanged, switchMap, startWith, shareReplay, mergeMap, first, delay } from "rxjs";
-import { PickableValueFieldDisplayFn, PickableValueFieldDisplayValue, PickableValueFieldFilterFn, PickableValueFieldHashFn, PickableValueFieldLoadValuesFn, PickableValueFieldValue } from "./pickable";
-import { DbxValueListItem } from "@dereekb/dbx-web";
-import { camelCase } from "change-case";
+import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
+import { LoadingState, successResult, mapLoadingStateResults, filterMaybe, ListLoadingStateContextInstance, isListLoadingStateEmpty, startWithBeginLoading } from '@dereekb/rxjs';
+import { PrimativeKey, convertMaybeToArray, findUnique, makeValuesGroupMap, Maybe, ArrayOrValue } from '@dereekb/util';
+import { Directive, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { FormControl, AbstractControl } from '@angular/forms';
+import { MatInput } from '@angular/material/input';
+import { FieldTypeConfig, FormlyFieldConfig } from '@ngx-formly/core';
+import { FieldType } from '@ngx-formly/material';
+import { BehaviorSubject, combineLatest, Observable, of, filter, map, debounceTime, distinctUntilChanged, switchMap, startWith, shareReplay, mergeMap, first, delay } from 'rxjs';
+import { PickableValueFieldDisplayFn, PickableValueFieldDisplayValue, PickableValueFieldFilterFn, PickableValueFieldHashFn, PickableValueFieldLoadValuesFn, PickableValueFieldValue } from './pickable';
+import { DbxValueListItem } from '@dereekb/dbx-web';
+import { camelCase } from 'change-case';
 
 /**
  * Wraps the selected state with the items.
  */
-export type PickableItemFieldItem<T, M = unknown> = DbxValueListItem<PickableValueFieldDisplayValue<T, M>>
+export type PickableItemFieldItem<T, M = unknown> = DbxValueListItem<PickableValueFieldDisplayValue<T, M>>;
 
 export type PickableItemFieldItemSortFn<T, M = unknown> = (items: PickableItemFieldItem<T, M>[]) => PickableItemFieldItem<T, M>[];
 
@@ -39,7 +39,7 @@ export interface PickableValueFieldsFieldConfig<T, M = unknown, H extends Primat
   filterValues?: PickableValueFieldFilterFn<T, M>;
   /**
    * Used for sorting the items before they are displayed.
-   * 
+   *
    * Should only be used to sort values.
    */
   sortItems?: PickableItemFieldItemSortFn<T, M>;
@@ -57,7 +57,7 @@ export interface PickableValueFieldsFieldConfig<T, M = unknown, H extends Primat
   showTextFilter?: boolean;
   /**
    * Whether or not to skip the filter function when the input is empty.
-   * 
+   *
    * True by default.
    */
   skipFilterFnOnEmpty?: boolean;
@@ -99,7 +99,6 @@ export interface PickableValueFieldDisplayValueWithHash<T, M = unknown, H extend
  */
 @Directive()
 export class AbstractDbxPickableItemFieldDirective<T, M = unknown, H extends PrimativeKey = PrimativeKey> extends FieldType<PickableValueFieldsFormlyFieldConfig<T, M, H> & FieldTypeConfig> implements OnInit, OnDestroy {
-
   @ViewChild('filterMatInput', { static: true })
   filterMatInput!: MatInput;
 
@@ -111,100 +110,95 @@ export class AbstractDbxPickableItemFieldDirective<T, M = unknown, H extends Pri
   private _displayHashMap = new BehaviorSubject<Map<H, PickableValueFieldDisplayValue<T, M>>>(new Map());
 
   readonly filterInputValue$: Observable<Maybe<string>> = this.inputCtrl.valueChanges.pipe(startWith(undefined));
-  readonly filterInputValueString$: Observable<Maybe<string>> = this.filterInputValue$.pipe(
-    debounceTime(200),
-    distinctUntilChanged(),
-    shareReplay(1)
-  );
+  readonly filterInputValueString$: Observable<Maybe<string>> = this.filterInputValue$.pipe(debounceTime(200), distinctUntilChanged(), shareReplay(1));
 
   readonly loadResultsDisplayValuesState$: Observable<LoadingState<PickableValueFieldDisplayValueWithHash<T, M, H>[]>> = this.formControl$.pipe(
     first(),
-    switchMap(() => this.loadValuesFn().pipe(
-      switchMap((x) => this.loadDisplayValuesForFieldValues(x)),
-      startWithBeginLoading(),
-    )),
+    switchMap(() =>
+      this.loadValuesFn().pipe(
+        switchMap((x) => this.loadDisplayValuesForFieldValues(x)),
+        startWithBeginLoading()
+      )
+    ),
     shareReplay(1)
   );
 
-  readonly _formControlValue: Observable<T | T[]> = this.formControl$.pipe(
-    switchMap(control => control.valueChanges.pipe(
-      startWith(control.value),
-      shareReplay(1)
-    ))
-  );
+  readonly _formControlValue: Observable<T | T[]> = this.formControl$.pipe(switchMap((control) => control.valueChanges.pipe(startWith(control.value), shareReplay(1))));
 
-  readonly loadResultsDisplayValues$: Observable<PickableValueFieldDisplayValueWithHash<T, M, H>[]> = this.loadResultsDisplayValuesState$.pipe(
-    map(x => x?.value ?? [])
-  );
+  readonly loadResultsDisplayValues$: Observable<PickableValueFieldDisplayValueWithHash<T, M, H>[]> = this.loadResultsDisplayValuesState$.pipe(map((x) => x?.value ?? []));
 
   /**
    * Current values in the form control.
    */
-  readonly values$: Observable<T[]> = this._formControlValue.pipe(
-    map(convertMaybeToArray),
-    shareReplay(1)
-  );
+  readonly values$: Observable<T[]> = this._formControlValue.pipe(map(convertMaybeToArray), shareReplay(1));
 
   /**
    * Current values with their display value.
    */
-  readonly displayValuesState$: Observable<LoadingState<PickableValueFieldDisplayValueWithHash<T, M, H>[]>> =
-    combineLatest([this.loadResultsDisplayValues$, this.values$]).pipe(
-      switchMap(([displayValues, currentValues]) => {
-        const displayValuesMap = makeValuesGroupMap(displayValues, (x) => this.hashForValue(x.value));
-        const valuesNotInDisplayMap: T[] = [];
+  readonly displayValuesState$: Observable<LoadingState<PickableValueFieldDisplayValueWithHash<T, M, H>[]>> = combineLatest([this.loadResultsDisplayValues$, this.values$]).pipe(
+    switchMap(([displayValues, currentValues]) => {
+      const displayValuesMap = makeValuesGroupMap(displayValues, (x) => this.hashForValue(x.value));
+      const valuesNotInDisplayMap: T[] = [];
 
-        currentValues.forEach((x) => {
-          const key = this.hashForValue(x);
-          const displayValue: Maybe<PickableValueFieldDisplayValueWithHash<T, M, H>> = displayValuesMap.get(key)?.[0];
+      currentValues.forEach((x) => {
+        const key = this.hashForValue(x);
+        const displayValue: Maybe<PickableValueFieldDisplayValueWithHash<T, M, H>> = displayValuesMap.get(key)?.[0];
 
-          if (!displayValue) {
-            valuesNotInDisplayMap.push(x);
-          }
-        });
-
-        if (valuesNotInDisplayMap.length) {
-          return this.loadDisplayValuesForValues(valuesNotInDisplayMap).pipe(
-            map(x => mapLoadingStateResults(x, {
-              mapValue: (loadedValues: PickableValueFieldDisplayValueWithHash<T, M, H>[]) => {
-                loadedValues.forEach(x => x.isUnknown = x.isUnknown ?? true); // Assign unknown flag.
-                return ([...displayValues, ...loadedValues]);
-              }
-            }))
-          );
-        } else {
-          return of(successResult(displayValues));
+        if (!displayValue) {
+          valuesNotInDisplayMap.push(x);
         }
-      })
-    );
+      });
+
+      if (valuesNotInDisplayMap.length) {
+        return this.loadDisplayValuesForValues(valuesNotInDisplayMap).pipe(
+          map((x) =>
+            mapLoadingStateResults(x, {
+              mapValue: (loadedValues: PickableValueFieldDisplayValueWithHash<T, M, H>[]) => {
+                loadedValues.forEach((x) => (x.isUnknown = x.isUnknown ?? true)); // Assign unknown flag.
+                return [...displayValues, ...loadedValues];
+              }
+            })
+          )
+        );
+      } else {
+        return of(successResult(displayValues));
+      }
+    })
+  );
 
   /**
    * Results to be displayed if filtered.
    */
   readonly filteredSearchResultsState$: Observable<LoadingState<PickableValueFieldDisplayValueWithHash<T, M, H>[]>> = this.loadResultsDisplayValues$.pipe(
-    switchMap((values) => this.filterInputValueString$.pipe(
-      switchMap(text => combineLatest([this._filterValues(text, values), this.displayValuesState$]).pipe(
-        map(([values, displayState]) => mapLoadingStateResults(displayState, {
-          mapValue: (displayValues: PickableValueFieldDisplayValueWithHash<T, M, H>[]) => {
-            const valueHashSet = new Set(values.map(x => this.hashForValue(x)));
-            return displayValues.filter(x => !x.isUnknown && valueHashSet.has(x._hash));
-          }
-        })),
-        startWithBeginLoading()
-      ))
-    )),
+    switchMap((values) =>
+      this.filterInputValueString$.pipe(
+        switchMap((text) =>
+          combineLatest([this._filterValues(text, values), this.displayValuesState$]).pipe(
+            map(([values, displayState]) =>
+              mapLoadingStateResults(displayState, {
+                mapValue: (displayValues: PickableValueFieldDisplayValueWithHash<T, M, H>[]) => {
+                  const valueHashSet = new Set(values.map((x) => this.hashForValue(x)));
+                  return displayValues.filter((x) => !x.isUnknown && valueHashSet.has(x._hash));
+                }
+              })
+            ),
+            startWithBeginLoading()
+          )
+        )
+      )
+    ),
     shareReplay(1)
   );
 
   readonly filteredSearchResults$: Observable<PickableValueFieldDisplayValueWithHash<T, M, H>[]> = this.filteredSearchResultsState$.pipe(
-    map(x => x?.value),
+    map((x) => x?.value),
     filterMaybe(),
     shareReplay(1)
   );
 
   readonly items$: Observable<PickableItemFieldItem<T, M>[]> = combineLatest([this.filteredSearchResults$, this.values$]).pipe(
     map(([displayValues, values]) => {
-      const selectedHashValuesSet = new Set(values.map(x => this.hashForValue(x)));
+      const selectedHashValuesSet = new Set(values.map((x) => this.hashForValue(x)));
       let items: PickableItemFieldItem<T, M>[] = displayValues.map((x) => ({ itemValue: x, selected: selectedHashValuesSet.has(x._hash) }));
 
       if (this.sortItems) {
@@ -217,12 +211,14 @@ export class AbstractDbxPickableItemFieldDirective<T, M = unknown, H extends Pri
   );
 
   readonly itemsLoadingState$: Observable<LoadingState<PickableItemFieldItem<T>[]>> = this.loadResultsDisplayValues$.pipe(
-    switchMap(() => this.items$.pipe(
-      first(),
-      map(x => successResult(x)),
-      startWithBeginLoading(),
-      shareReplay(1)
-    ))
+    switchMap(() =>
+      this.items$.pipe(
+        first(),
+        map((x) => successResult(x)),
+        startWithBeginLoading(),
+        shareReplay(1)
+      )
+    )
   );
 
   /**
@@ -231,7 +227,7 @@ export class AbstractDbxPickableItemFieldDirective<T, M = unknown, H extends Pri
   readonly context = new ListLoadingStateContextInstance({ obs: this.itemsLoadingState$, showLoadingOnNoValue: false });
 
   readonly filterItemsLoadingState$: Observable<LoadingState<PickableItemFieldItem<T>[]>> = this.items$.pipe(
-    map(x => successResult(x)),
+    map((x) => successResult(x)),
     startWithBeginLoading(),
     shareReplay(1)
   );
@@ -268,7 +264,7 @@ export class AbstractDbxPickableItemFieldDirective<T, M = unknown, H extends Pri
   }
 
   get name(): string {
-    return this.field.name ?? (camelCase(this.label ?? this.key as string));
+    return this.field.name ?? camelCase(this.label ?? (this.key as string));
   }
 
   get label(): Maybe<string> {
@@ -276,7 +272,7 @@ export class AbstractDbxPickableItemFieldDirective<T, M = unknown, H extends Pri
   }
 
   get autocomplete(): string {
-    return ((this.field.templateOptions?.attributes?.['autocomplete']) ?? this.key) as string;
+    return (this.field.templateOptions?.attributes?.['autocomplete'] ?? this.key) as string;
   }
 
   get changeSelectionModeToViewOnDisabled(): boolean {
@@ -300,7 +296,7 @@ export class AbstractDbxPickableItemFieldDirective<T, M = unknown, H extends Pri
   }
 
   get filterValuesFn(): PickableValueFieldFilterFn<T, M> {
-    return this.pickableField.filterValues ?? ((_, x) => of(x.map(y => y.value)));
+    return this.pickableField.filterValues ?? ((_, x) => of(x.map((y) => y.value)));
   }
 
   get skipFilterFnOnEmpty(): boolean {
@@ -317,7 +313,7 @@ export class AbstractDbxPickableItemFieldDirective<T, M = unknown, H extends Pri
         if (filterText) {
           result = this.filterValuesFn(filterText, values);
         } else {
-          result = of(values.map(x => x.value));
+          result = of(values.map((x) => x.value));
         }
 
         return result;
@@ -360,45 +356,40 @@ export class AbstractDbxPickableItemFieldDirective<T, M = unknown, H extends Pri
   getDisplayValuesForFieldValues(values: PickableValueFieldValue<T, M>[]): Observable<PickableValueFieldDisplayValueWithHash<T, M, H>[]> {
     return this._displayHashMap.pipe(
       mergeMap((displayMap) => {
-        const mappingResult = values
-          .map(x => [x, this.hashForValue(x.value)] as [PickableValueFieldValue<T, M>, H])
-          .map(([x, hash], i) => [i, hash, x, displayMap.get(hash)] as [number, H, PickableValueFieldValue<T, M>, PickableValueFieldDisplayValueWithHash<T, M, H>]);
+        const mappingResult = values.map((x) => [x, this.hashForValue(x.value)] as [PickableValueFieldValue<T, M>, H]).map(([x, hash], i) => [i, hash, x, displayMap.get(hash)] as [number, H, PickableValueFieldValue<T, M>, PickableValueFieldDisplayValueWithHash<T, M, H>]);
 
-        const hasDisplay = mappingResult.filter(x => Boolean(x[3]));
-        const needsDisplay = mappingResult.filter(x => !x[3]);
+        const hasDisplay = mappingResult.filter((x) => Boolean(x[3]));
+        const needsDisplay = mappingResult.filter((x) => !x[3]);
 
         if (needsDisplay.length > 0) {
-
           // Go get the display value.
-          const displayValuesObs = this.displayForValue(needsDisplay.map(x => x[2]));
+          const displayValuesObs = this.displayForValue(needsDisplay.map((x) => x[2]));
 
           return displayValuesObs.pipe(
             first(),
             map((displayResults) => {
-
               const displayResultsWithHash: PickableValueFieldDisplayValueWithHash<T, M, H>[] = displayResults.map((x) => {
                 (x as PickableValueFieldDisplayValueWithHash<T, M, H>)._hash = this.hashForValue(x.value);
-                return (x as PickableValueFieldDisplayValueWithHash<T, M, H>);
+                return x as PickableValueFieldDisplayValueWithHash<T, M, H>;
               });
 
               // Create a map to re-join values later.
-              const displayResultsMapping: [PickableValueFieldDisplayValueWithHash<T, M, H>, H][] = displayResultsWithHash.map(x => [x, x._hash]);
+              const displayResultsMapping: [PickableValueFieldDisplayValueWithHash<T, M, H>, H][] = displayResultsWithHash.map((x) => [x, x._hash]);
               const valueIndexHashMap = new Map(displayResultsMapping.map(([x, hash]) => [hash, x]));
 
               // Update displayMap. No need to push an update notification.
               displayResultsMapping.forEach(([x, hash]) => displayMap.set(hash, x));
 
               // Zip values back together.
-              const newDisplayValues = mappingResult.map(x => x[3] ?? valueIndexHashMap.get(x[1]));
+              const newDisplayValues = mappingResult.map((x) => x[3] ?? valueIndexHashMap.get(x[1]));
 
               // Return display values.
               return newDisplayValues;
             })
           );
         } else {
-
           // If all display values are hashed return that.
-          return of(hasDisplay.map(x => x[3])) as Observable<PickableValueFieldDisplayValueWithHash<T, M, H>[]>;
+          return of(hasDisplay.map((x) => x[3])) as Observable<PickableValueFieldDisplayValueWithHash<T, M, H>[]>;
         }
       })
     );
@@ -408,13 +399,15 @@ export class AbstractDbxPickableItemFieldDirective<T, M = unknown, H extends Pri
     this._formControlObs.next(this.formControl);
 
     // Focus after finished loading for the first time.
-    this.context.loading$.pipe(
-      delay(10),
-      filter(x => x),
-      first(),
-    ).subscribe(() => {
-      this.filterMatInput?.focus();
-    })
+    this.context.loading$
+      .pipe(
+        delay(10),
+        filter((x) => x),
+        first()
+      )
+      .subscribe(() => {
+        this.filterMatInput?.focus();
+      });
   }
 
   override ngOnDestroy(): void {
@@ -425,7 +418,7 @@ export class AbstractDbxPickableItemFieldDirective<T, M = unknown, H extends Pri
   }
 
   protected _getValueOnFormControl(valueOnFormControl: ArrayOrValue<T>): T[] {
-    const value: T[] = (valueOnFormControl != null) ? ([] as T[]).concat(valueOnFormControl) : [];  // Always return an array.
+    const value: T[] = valueOnFormControl != null ? ([] as T[]).concat(valueOnFormControl) : []; // Always return an array.
     return value;
   }
 
@@ -435,19 +428,18 @@ export class AbstractDbxPickableItemFieldDirective<T, M = unknown, H extends Pri
 
   removeValue(value: T): void {
     const hashToFilter = this.hashForValue(value);
-    const values = this.values.filter(x => this.hashForValue(x) !== hashToFilter);
+    const values = this.values.filter((x) => this.hashForValue(x) !== hashToFilter);
     this.setValues(values);
   }
 
   setValues(values: T[]): void {
-
     // Use to filter non-unique values.
     if (this.hashForValue) {
       values = findUnique(values, this.hashForValue);
     }
 
     if (!this.multiSelect) {
-      values = [values[0]].filter(x => x != null);
+      values = [values[0]].filter((x) => x != null);
     }
 
     this._setValueOnFormControl(values);
@@ -458,12 +450,11 @@ export class AbstractDbxPickableItemFieldDirective<T, M = unknown, H extends Pri
     let newValue: T | T[] = values;
 
     if (!this.asArrayValue) {
-      newValue = [values[0]].filter(x => x != null)[0];
+      newValue = [values[0]].filter((x) => x != null)[0];
     }
 
     this.formControl.setValue(newValue);
     this.formControl.markAsTouched();
     this.formControl.markAsDirty();
   }
-
 }

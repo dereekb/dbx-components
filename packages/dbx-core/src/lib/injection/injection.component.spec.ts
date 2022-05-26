@@ -15,18 +15,15 @@ const CUSTOM_CONTENT = 'Custom Content';
   `
 })
 class TestInjectionComponentContent implements OnDestroy {
-
   destroyed = false;
 
   ngOnDestroy(): void {
     this.destroyed = true;
   }
-
 }
 
 @Component({})
 abstract class TestInjectionComponent<T = any> {
-
   @Input()
   config?: DbxInjectionComponentConfig<TestInjectionComponentContent>;
 
@@ -35,7 +32,6 @@ abstract class TestInjectionComponent<T = any> {
 
   @ViewChild(DbxInjectionComponent, { static: true })
   injectedComponent?: DbxInjectionComponent<T>;
-
 }
 
 @Component({
@@ -43,28 +39,20 @@ abstract class TestInjectionComponent<T = any> {
     <div dbxInjection [config]="config" [template]="template"></div>
   `
 })
-class TestInjectionComponentWithElement<T = any> extends TestInjectionComponent<T> { }
+class TestInjectionComponentWithElement<T = any> extends TestInjectionComponent<T> {}
 
 @Component({
   template: `
     <dbx-injection [config]="config" [template]="template"></dbx-injection>
   `
 })
-class TestInjectionComponentWithAttribute<T = any> extends TestInjectionComponent<T> { }
+class TestInjectionComponentWithAttribute<T = any> extends TestInjectionComponent<T> {}
 
 describe('DbxInjectionComponent', () => {
-
   beforeEach(async () => {
     TestBed.configureTestingModule({
-      imports: [
-        BrowserModule,
-        DbxInjectionComponentModule
-      ],
-      declarations: [
-        TestInjectionComponentContent,
-        TestInjectionComponentWithElement,
-        TestInjectionComponentWithAttribute,
-      ],
+      imports: [BrowserModule, DbxInjectionComponentModule],
+      declarations: [TestInjectionComponentContent, TestInjectionComponentWithElement, TestInjectionComponentWithAttribute],
       providers: []
     }).compileComponents();
   });
@@ -73,9 +61,7 @@ describe('DbxInjectionComponent', () => {
   buildTestsWithComponentClass(TestInjectionComponentWithAttribute, 'attribute');
 
   function buildTestsWithComponentClass<C extends TestInjectionComponent>(type: Type<C>, selector: string): void {
-
     describe(`selector "${selector}"`, () => {
-
       let testComponent: TestInjectionComponent<TestInjectionComponentContent>;
       let fixture: ComponentFixture<TestInjectionComponent>;
 
@@ -86,7 +72,6 @@ describe('DbxInjectionComponent', () => {
       });
 
       describe('with config', () => {
-
         beforeEach(async () => {
           testComponent.config = {
             componentClass: TestInjectionComponentContent
@@ -104,7 +89,6 @@ describe('DbxInjectionComponent', () => {
           expect(anchorElement).not.toBeNull();
           expect(anchorElement.textContent).toBe(CUSTOM_CONTENT);
         });
-
 
         it('should show destroy the content when config is cleared.', () => {
           let instance: Maybe<TestInjectionComponentContent>;
@@ -128,17 +112,12 @@ describe('DbxInjectionComponent', () => {
 
           // check is destroyed
           expect((instance as TestInjectionComponentContent).destroyed).toBe(true);
-
         });
 
         // todo: test injecting data.
 
         // todo: test with template view being defaulted to when config isn't available.
-
       });
-
     });
-
   }
-
 });

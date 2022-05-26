@@ -6,15 +6,13 @@ import { DbxActionWorkInstanceDelegate, HandleActionWithFunctionOrContext } from
 import { Maybe } from '@dereekb/util';
 import { filterMaybe, workFactory } from '@dereekb/rxjs';
 
-
 /**
  * Context used for defining a function that performs an action using the input function on ValueReady.
  */
 @Directive({
-  selector: '[dbxActionHandler]',
+  selector: '[dbxActionHandler]'
 })
 export class DbxActionHandlerDirective<T = unknown, O = unknown> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
-
   private _handlerFunction = new BehaviorSubject<Maybe<HandleActionWithFunctionOrContext<T, O>>>(undefined);
   readonly handlerFunction$ = this._handlerFunction.pipe(filterMaybe(), shareReplay(1));
 
@@ -34,19 +32,22 @@ export class DbxActionHandlerDirective<T = unknown, O = unknown> extends Abstrac
   }
 
   ngOnInit(): void {
-    this.sub = this.handlerFunction$.pipe(
-      switchMap(work => this.source.valueReady$.pipe(
-        tap((value) => {
-          const context = workFactory({ work, delegate: this._delegate })(value);
+    this.sub = this.handlerFunction$
+      .pipe(
+        switchMap((work) =>
+          this.source.valueReady$.pipe(
+            tap((value) => {
+              const context = workFactory({ work, delegate: this._delegate })(value);
 
-          if (context) {
-
-            // Add the action to the lockSet for the source to prevent it from being destroyed until the action completes.
-            this.source.lockSet.addLock('dbxActionHandler', context.isComplete$.pipe(map(x => !x)));
-          }
-        })
-      ))
-    ).subscribe();
+              if (context) {
+                // Add the action to the lockSet for the source to prevent it from being destroyed until the action completes.
+                this.source.lockSet.addLock('dbxActionHandler', context.isComplete$.pipe(map((x) => !x)));
+              }
+            })
+          )
+        )
+      )
+      .subscribe();
   }
 
   override ngOnDestroy(): void {
@@ -55,5 +56,4 @@ export class DbxActionHandlerDirective<T = unknown, O = unknown> extends Abstrac
       this._handlerFunction.complete();
     });
   }
-
 }

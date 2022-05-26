@@ -11,7 +11,6 @@ import { DbxActionContextBaseSource } from '../../action.holder';
   providers: provideActionStoreSource(DbxActionDirective)
 })
 export class DbxActionDirective<T = unknown, O = unknown> extends DbxActionContextBaseSource<T, O> implements OnDestroy {
-
   constructor(@Optional() @Host() inputSource: SecondaryActionContextStoreSource<T, O>) {
     super(inputSource);
   }
@@ -21,5 +20,4 @@ export class DbxActionDirective<T = unknown, O = unknown> extends DbxActionConte
       this.destroy();
     });
   }
-
 }

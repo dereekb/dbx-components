@@ -4,10 +4,6 @@ import { DbxFormActionTransitionModule } from './action/transition/form.action.t
 import { NgModule } from '@angular/core';
 
 @NgModule({
-  exports: [
-    DbxFormActionTransitionModule,
-    DbxFormActionModule,
-    DbxFormIoModule
-  ]
+  exports: [DbxFormActionTransitionModule, DbxFormActionModule, DbxFormIoModule]
 })
-export class DbxFormModule { }
+export class DbxFormModule {}

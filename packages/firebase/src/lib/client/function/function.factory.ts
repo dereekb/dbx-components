@@ -1,5 +1,5 @@
 import { cachedGetter, ClassLikeType, Getter, mapObjectMap, Maybe } from '@dereekb/util';
-import { Functions, httpsCallable, HttpsCallableOptions } from "firebase/functions";
+import { Functions, httpsCallable, HttpsCallableOptions } from 'firebase/functions';
 import { FirebaseFunctionMap, FirebaseFunctionMapFunction, FirebaseFunctionTypeMap } from './function';
 
 // MARK: Functions Factory
@@ -9,7 +9,7 @@ export interface FirebaseFunctionTypeConfig {
 
 export type FirebaseFunctionTypeConfigMap<M extends FirebaseFunctionTypeMap> = {
   [K in keyof M]: Maybe<FirebaseFunctionTypeConfig>;
-}
+};
 
 /**
  * Used for building a FirebaseFunctionMap<M> for a specific Functions instance.
@@ -36,18 +36,18 @@ export function firebaseFunctionMapFactory<M extends FirebaseFunctionTypeMap>(co
 
 // MARK: Lazy Functions Accessor
 export type FirebaseFunctionMapKey = string;
-export type FirebaseFunctionGetter<T> = Getter<T> & { _type: ClassLikeType<T>, _key: FirebaseFunctionMapKey };
+export type FirebaseFunctionGetter<T> = Getter<T> & { _type: ClassLikeType<T>; _key: FirebaseFunctionMapKey };
 
 /**
  * Map of all firebase functions in the app.
  */
 export type FirebaseFunctionsMap = {
   [key: FirebaseFunctionMapKey]: FirebaseFunctionTypeMap;
-}
+};
 
 export type FirebaseFunctionsConfigMap<M extends FirebaseFunctionsMap> = {
   [K in keyof M]: FirebaseFunctionsConfigMapEntry<M[K]>;
-}
+};
 
 export type FirebaseFunctionsConfigMapEntry<M extends FirebaseFunctionTypeMap> = [ClassLikeType, FirebaseFunctionMapFactory<M>];
 
@@ -61,11 +61,10 @@ export type LazyFirebaseFunctionsFactory<M extends FirebaseFunctionsMap> = (func
  */
 export type LazyFirebaseFunctions<M extends FirebaseFunctionsMap> = {
   [K in keyof M]: FirebaseFunctionGetter<FirebaseFunctionMap<M[K]>>;
-}
+};
 
 export function lazyFirebaseFunctionsFactory<M extends FirebaseFunctionsMap, C extends FirebaseFunctionsConfigMap<M> = FirebaseFunctionsConfigMap<M>>(configMap: C): LazyFirebaseFunctionsFactory<M> {
   return (functions: Functions) => {
-
     const mapFn = <K extends keyof M>(config: FirebaseFunctionsConfigMapEntry<M[K]>, key: K) => {
       const type = config[0];
       const factory: FirebaseFunctionMapFactory<M[K]> = config[1];

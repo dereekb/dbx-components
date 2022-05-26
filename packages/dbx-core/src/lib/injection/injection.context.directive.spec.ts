@@ -19,13 +19,11 @@ const CUSTOM_CONTENT = 'Custom Content';
   `
 })
 class TestInjectionContent implements OnDestroy {
-
   destroyed = false;
 
   ngOnDestroy(): void {
     this.destroyed = true;
   }
-
 }
 
 @Component({
@@ -35,13 +33,11 @@ class TestInjectionContent implements OnDestroy {
   `
 })
 class TestExistingInjectionContent implements OnDestroy {
-
   destroyed = false;
 
   ngOnDestroy(): void {
     this.destroyed = true;
   }
-
 }
 
 @Component({
@@ -52,25 +48,15 @@ class TestExistingInjectionContent implements OnDestroy {
   `
 })
 class TestInjectionContextDirective<T = any> {
-
   @ViewChild(DbxInjectionContextDirective, { static: true })
   injectionContextDirective?: DbxInjectionContextDirective<T>;
-
 }
 
 describe('DbxInjectionContextDirective', () => {
-
   beforeEach(async () => {
     TestBed.configureTestingModule({
-      imports: [
-        BrowserModule,
-        DbxInjectionComponentModule
-      ],
-      declarations: [
-        TestInjectionContent,
-        TestExistingInjectionContent,
-        TestInjectionContextDirective
-      ],
+      imports: [BrowserModule, DbxInjectionComponentModule],
+      declarations: [TestInjectionContent, TestExistingInjectionContent, TestInjectionContextDirective],
       providers: []
     }).compileComponents();
   });
@@ -78,9 +64,7 @@ describe('DbxInjectionContextDirective', () => {
   buildTestsWithClass(TestInjectionContextDirective, 'element');
 
   function buildTestsWithClass<C extends TestInjectionContextDirective>(type: Type<C>, selector: string): void {
-
     describe(`selector "${selector}"`, () => {
-
       let testComponent: TestInjectionContextDirective;
       let fixture: ComponentFixture<TestInjectionContextDirective>;
       let directive: DbxInjectionContextDirective;
@@ -126,7 +110,6 @@ describe('DbxInjectionContextDirective', () => {
       });
 
       describe('config input', () => {
-
         it('should show the config-injected content.', () => {
           directive.config = {
             componentClass: TestInjectionContent
@@ -149,155 +132,153 @@ describe('DbxInjectionContextDirective', () => {
 
           assetExistingContentVisible();
         });
-
       });
 
       describe('showContext()', () => {
-
         it('should show the config-injected content.', (done) => {
+          directive
+            .showContext({
+              config: {
+                componentClass: TestInjectionContent
+              },
+              use: (instance) => {
+                expect(instance).toBeDefined();
 
-          directive.showContext({
-            config: {
-              componentClass: TestInjectionContent
-            },
-            use: (instance) => {
-              expect(instance).toBeDefined();
+                fixture.detectChanges();
+                assetCustomContentVisible();
 
-              fixture.detectChanges();
-              assetCustomContentVisible();
-
-              return waitForMs(200);
-            }
-          }).then(() => {
-            done();
-          });
-
+                return waitForMs(200);
+              }
+            })
+            .then(() => {
+              done();
+            });
         });
 
         it('should show the config-injected content then back to the normal content when done.', (done) => {
-
           assetExistingContentVisible();
 
-          directive.showContext({
-            config: {
-              componentClass: TestInjectionContent
-            },
-            use: (instance) => {
-              expect(instance).toBeDefined();
+          directive
+            .showContext({
+              config: {
+                componentClass: TestInjectionContent
+              },
+              use: (instance) => {
+                expect(instance).toBeDefined();
 
+                fixture.detectChanges();
+
+                assetCustomContentVisible();
+
+                return waitForMs(200);
+              }
+            })
+            .then(() => {
               fixture.detectChanges();
 
-              assetCustomContentVisible();
+              assetExistingContentVisible();
 
-              return waitForMs(200);
-            }
-          }).then(() => {
-
-            fixture.detectChanges();
-
-            assetExistingContentVisible();
-
-            done();
-          });
-
+              done();
+            });
         });
 
         it('should forward any error thrown in "use()".', (done) => {
-
-          directive.showContext({
-            config: {
-              componentClass: TestInjectionContent
-            },
-            use: () => {
-              throw new Error();  // throw an error
-            }
-          }).then(() => {
-            fail('should have returned an error.');
-          }, (e) => {
-            expect(e).toBeDefined();
-            done();
-          });
-
+          directive
+            .showContext({
+              config: {
+                componentClass: TestInjectionContent
+              },
+              use: () => {
+                throw new Error(); // throw an error
+              }
+            })
+            .then(
+              () => {
+                fail('should have returned an error.');
+              },
+              (e) => {
+                expect(e).toBeDefined();
+                done();
+              }
+            );
         });
-
       });
 
       describe('resetContext()', () => {
-
         it('should reset the context immediately without use() returning.', (done) => {
-
-          directive.showContext({
-            config: {
-              componentClass: TestInjectionContent
-            },
-            use: () => waitForMs(2000)
-          }).then(() => {
-            fail('should have returned an error.');
-          }, (e) => {
-            expect(e).toBeDefined();
-
-            // check the existing content is back.
-            assetExistingContentVisible();
-
-            done();
-          });
-
-          fixture.detectChanges();
-
-          directive.resetContext();
-
-        });
-
-        it('should not delete existing content if called without a context.', () => {
-
-          directive.resetContext();
-
-          fixture.detectChanges();
-
-          directive.resetContext();
-
-          fixture.detectChanges();
-
-          assetExistingContentVisible();
-
-        });
-
-        it('reset, show, reset, show, reset, show.', (done) => {
-
-          function showContext(i = 0) {
-            assetExistingContentVisible();
-
-            directive.showContext({
+          directive
+            .showContext({
               config: {
                 componentClass: TestInjectionContent
               },
               use: () => waitForMs(2000)
-            }).then(() => {
-              fail('should have returned an error.');
-            }, (e) => {
-              expect(e).toBeDefined();
+            })
+            .then(
+              () => {
+                fail('should have returned an error.');
+              },
+              (e) => {
+                expect(e).toBeDefined();
 
-              // check the existing content is back.
-              assetExistingContentVisible();
+                // check the existing content is back.
+                assetExistingContentVisible();
 
-              if (i < 3) {
-                showContext(i + 1);
-              } else {
                 done();
               }
-            });
+            );
+
+          fixture.detectChanges();
+
+          directive.resetContext();
+        });
+
+        it('should not delete existing content if called without a context.', () => {
+          directive.resetContext();
+
+          fixture.detectChanges();
+
+          directive.resetContext();
+
+          fixture.detectChanges();
+
+          assetExistingContentVisible();
+        });
+
+        it('reset, show, reset, show, reset, show.', (done) => {
+          function showContext(i = 0) {
+            assetExistingContentVisible();
+
+            directive
+              .showContext({
+                config: {
+                  componentClass: TestInjectionContent
+                },
+                use: () => waitForMs(2000)
+              })
+              .then(
+                () => {
+                  fail('should have returned an error.');
+                },
+                (e) => {
+                  expect(e).toBeDefined();
+
+                  // check the existing content is back.
+                  assetExistingContentVisible();
+
+                  if (i < 3) {
+                    showContext(i + 1);
+                  } else {
+                    done();
+                  }
+                }
+              );
 
             directive.resetContext();
           }
 
           setTimeout(() => showContext());
-
         });
-
       });
-
     });
-
   }
-
 });

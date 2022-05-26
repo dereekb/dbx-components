@@ -3,7 +3,6 @@ import { SubscriptionObject } from '../subscription';
 import { onFalseToTrue, onTrueToFalse } from './boolean';
 
 describe('boolean operators', () => {
-
   let subject: Subject<boolean>;
   let sub: SubscriptionObject;
 
@@ -18,16 +17,11 @@ describe('boolean operators', () => {
   });
 
   describe('onTrueToFalse', () => {
-
     const from = true;
     const to = false;
 
     it('should emit when "true" becomes "false"', (done) => {
-
-      sub.subscription = subject.pipe(
-        onTrueToFalse(),
-        first()
-      ).subscribe((value) => {
+      sub.subscription = subject.pipe(onTrueToFalse(), first()).subscribe((value) => {
         expect(value).toBe(to);
         done();
       });
@@ -35,20 +29,14 @@ describe('boolean operators', () => {
       subject.next(from);
       subject.next(to);
     });
-
   });
 
   describe('onFalseToTrue', () => {
-
     const from = false;
     const to = true;
 
     it('should emit when "false" becomes "true"', (done) => {
-
-      sub.subscription = subject.pipe(
-        onFalseToTrue(),
-        first()
-      ).subscribe((value) => {
+      sub.subscription = subject.pipe(onFalseToTrue(), first()).subscribe((value) => {
         expect(value).toBe(to);
         done();
       });
@@ -56,7 +44,5 @@ describe('boolean operators', () => {
       subject.next(from);
       subject.next(to);
     });
-
   });
-
-})
+});

@@ -3,7 +3,7 @@ services:
   demo-api-webhook-server:
     image: nginx:1.21
     ports:
-      - "8443:8443"
+      - '8443:8443'
     volumes:
       - type: bind
         source: ./docker/nginx/certs

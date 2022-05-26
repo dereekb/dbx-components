@@ -4,6 +4,6 @@ export * from './two.column.context.directive';
 export * from './two.column.full.left.directive';
 export * from './two.column.head.component';
 export * from './two.column.module';
-export * from './two.column.right.component'
+export * from './two.column.right.component';
 export * from './two.column.sref.directive';
 export * from './two.column.store';

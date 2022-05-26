@@ -8,10 +8,9 @@ import { IsModifiedFunction, SubscriptionObject } from '@dereekb/rxjs';
  * Directive that watches a value observable for changes and sets the new value and modified states as necessary.
  */
 @Directive({
-  selector: '[dbxActionValueStream]',
+  selector: '[dbxActionValueStream]'
 })
 export class dbxActionValueStreamDirective<T, O> implements OnInit, OnDestroy {
-
   private _valueObs = new BehaviorSubject<Observable<T>>(EMPTY);
   private _isModifiedFn = new BehaviorSubject<Maybe<IsModifiedFunction<T>>>(undefined);
 
@@ -38,26 +37,26 @@ export class dbxActionValueStreamDirective<T, O> implements OnInit, OnDestroy {
   }
 
   readonly modifiedValue$ = this._valueObs.pipe(
-    switchMap((obs) => obs.pipe(
-      withLatestFrom(this._isModifiedFn),
-      mergeMap(([value, dbxActionValueStreamModified]) => {
-        let result: Observable<[boolean, T]>;
+    switchMap((obs) =>
+      obs.pipe(
+        withLatestFrom(this._isModifiedFn),
+        mergeMap(([value, dbxActionValueStreamModified]) => {
+          let result: Observable<[boolean, T]>;
 
-        if (dbxActionValueStreamModified) {
-          result = dbxActionValueStreamModified(value).pipe(
-            map((isModified) => [isModified, value] as [boolean, T])
-          );
-        } else {
-          result = of([true, value]);
-        }
+          if (dbxActionValueStreamModified) {
+            result = dbxActionValueStreamModified(value).pipe(map((isModified) => [isModified, value] as [boolean, T]));
+          } else {
+            result = of([true, value]);
+          }
 
-        return result;
-      }),
-      shareReplay(1)
-    ))
+          return result;
+        }),
+        shareReplay(1)
+      )
+    )
   );
 
-  constructor(@Host() public readonly source: DbxActionContextStoreSourceInstance<T, O>) { }
+  constructor(@Host() public readonly source: DbxActionContextStoreSourceInstance<T, O>) {}
 
   ngOnInit(): void {
     // Update Modified value.
@@ -66,9 +65,7 @@ export class dbxActionValueStreamDirective<T, O> implements OnInit, OnDestroy {
     });
 
     // Set the value on triggers.
-    this._triggerSub.subscription = this.source.triggered$.pipe(
-      switchMap(() => this.modifiedValue$)
-    ).subscribe(([isModified, value]) => {
+    this._triggerSub.subscription = this.source.triggered$.pipe(switchMap(() => this.modifiedValue$)).subscribe(([isModified, value]) => {
       if (isModified) {
         this.source.readyValue(value);
       }
@@ -83,5 +80,4 @@ export class dbxActionValueStreamDirective<T, O> implements OnInit, OnDestroy {
       this._triggerSub.destroy();
     });
   }
-
 }

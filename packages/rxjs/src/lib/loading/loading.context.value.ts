@@ -11,7 +11,6 @@ export interface LoadingContextConfiguration {
  * Utility object for maintaining a loading stream$. Is triggered into loading, then can be triggered again to see if elements have all completed loading or not.
  */
 export class ValuesLoadingContext extends SimpleLoadingContext {
-
   private _checkDone?: LoadingContextCheckCompletionFunction;
 
   constructor({ checkDone, loading = true }: LoadingContextConfiguration = {}) {
@@ -31,8 +30,8 @@ export class ValuesLoadingContext extends SimpleLoadingContext {
         let loading = true;
 
         if (checkArray.length > 0) {
-          const checkResult = checkArray.filter((x) => x === undefined);  // If any are undefined, still loading.
-          loading = (checkResult.length > 0);
+          const checkResult = checkArray.filter((x) => x === undefined); // If any are undefined, still loading.
+          loading = checkResult.length > 0;
         }
 
         this.setLoading(loading);
@@ -41,5 +40,4 @@ export class ValuesLoadingContext extends SimpleLoadingContext {
       }
     }
   }
-
 }

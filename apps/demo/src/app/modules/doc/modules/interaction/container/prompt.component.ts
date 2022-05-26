@@ -7,19 +7,20 @@ import { first } from 'rxjs';
   templateUrl: './prompt.component.html'
 })
 export class DocInteractionPromptComponent {
-
   result?: boolean;
 
-  constructor(readonly matDialog: MatDialog) { }
+  constructor(readonly matDialog: MatDialog) {}
 
   ngAfterViewInit(): void {
     setTimeout(() => this.openExamplePrompt(), 100);
   }
 
   openExamplePrompt() {
-    DbxPromptConfirmDialogComponent.openDialog(this.matDialog).afterClosed().pipe(first()).subscribe((x) => {
-      this.result = x;
-    });
+    DbxPromptConfirmDialogComponent.openDialog(this.matDialog)
+      .afterClosed()
+      .pipe(first())
+      .subscribe((x) => {
+        this.result = x;
+      });
   }
-
 }

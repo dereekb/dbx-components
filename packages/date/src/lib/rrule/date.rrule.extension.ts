@@ -8,11 +8,10 @@ import { IterArgs } from 'rrule/dist/esm/src/iterresult';
 export const DEFAULT_LAST_ITER_RESULT_MAX_ITERATIONS_ALLOWED = 10000;
 
 export class DateRRule extends RRule {
-
   /**
    * Returns the last occurence that occurs in the rule chain.
-   * 
-   * @returns 
+   *
+   * @returns
    */
   last(): Maybe<Date> {
     return this._iter(new LastIterResult());
@@ -20,8 +19,8 @@ export class DateRRule extends RRule {
 
   /**
    * Returns the next recurrence that occurs on/after the input date.
-   * 
-   * @returns 
+   *
+   * @returns
    */
   next(minDate: Date): Maybe<Date> {
     return this._iter(new NextIterResult(minDate));
@@ -29,15 +28,14 @@ export class DateRRule extends RRule {
 
   /**
    * Returns any recurrence between the input min and max dates, if specified.
-   * 
-   * @param minDate 
-   * @param maxDate 
-   * @returns 
+   *
+   * @param minDate
+   * @param maxDate
+   * @returns
    */
-  any(filter: { minDate?: Maybe<Date>, maxDate?: Maybe<Date> } = {}): boolean {
+  any(filter: { minDate?: Maybe<Date>; maxDate?: Maybe<Date> } = {}): boolean {
     return this._iter(new AnyIterResult(filter)) != null;
   }
-
 }
 
 /**
@@ -55,14 +53,12 @@ abstract class BaseRRuleIter {
   getValue(): Date | null {
     return this._value;
   }
-
 }
 
 /**
  * Used by DateRRule to find the last result.
  */
 export class LastIterResult extends BaseRRuleIter {
-
   override readonly maxDate = maxFutureDate();
 
   constructor(readonly maxIterationsAllowed: number = DEFAULT_LAST_ITER_RESULT_MAX_ITERATIONS_ALLOWED) {
@@ -91,11 +87,9 @@ export class LastIterResult extends BaseRRuleIter {
   clone() {
     return new LastIterResult(this.maxIterationsAllowed);
   }
-
 }
 
 export class NextIterResult extends BaseRRuleIter {
-
   override readonly maxDate = this.minDate;
 
   constructor(override readonly minDate: Date, readonly maxIterationsAllowed: number = DEFAULT_LAST_ITER_RESULT_MAX_ITERATIONS_ALLOWED) {
@@ -123,15 +117,13 @@ export class NextIterResult extends BaseRRuleIter {
   clone() {
     return new NextIterResult(this.minDate, this.maxIterationsAllowed);
   }
-
 }
 
 export class AnyIterResult extends BaseRRuleIter {
-
   override readonly minDate: Date | null = null;
   override readonly maxDate: Date | null = null;
 
-  constructor(filter?: { minDate?: Maybe<Date>, maxDate?: Maybe<Date> }, readonly maxIterationsAllowed: number = DEFAULT_LAST_ITER_RESULT_MAX_ITERATIONS_ALLOWED) {
+  constructor(filter?: { minDate?: Maybe<Date>; maxDate?: Maybe<Date> }, readonly maxIterationsAllowed: number = DEFAULT_LAST_ITER_RESULT_MAX_ITERATIONS_ALLOWED) {
     super();
     if (filter) {
       this.minDate = filter.minDate ?? null;
@@ -141,13 +133,13 @@ export class AnyIterResult extends BaseRRuleIter {
 
   accept(date: Date): boolean {
     ++this.total;
-    const tooEarly = this.minDate != null && (this.minDate > date);
+    const tooEarly = this.minDate != null && this.minDate > date;
 
     if (tooEarly) {
       const maxIterationReached = this.total >= this.maxIterationsAllowed;
       return !maxIterationReached;
     } else {
-      const tooLate = this.maxDate != null && (this.maxDate < date);
+      const tooLate = this.maxDate != null && this.maxDate < date;
 
       if (tooLate) {
         return true;
@@ -166,5 +158,4 @@ export class AnyIterResult extends BaseRRuleIter {
   clone() {
     return new AnyIterResult({ minDate: this.minDate, maxDate: this.maxDate });
   }
-
 }

@@ -6,12 +6,7 @@ import { DOC_HOME_ROUTE, DOC_ROUTES } from '../doc';
   templateUrl: './layout.component.html'
 })
 export class DocLayoutComponent {
-
   readonly home: ClickableAnchorLink = DOC_HOME_ROUTE;
 
-  readonly navAnchors: ClickableAnchorLinkTree[] = [
-    this.home,
-    ...DOC_ROUTES
-  ];
-
+  readonly navAnchors: ClickableAnchorLinkTree[] = [this.home, ...DOC_ROUTES];
 }

@@ -11,17 +11,12 @@ import { AbstractIfDirective } from '../view/if.directive';
   selector: '[dbxAuthHasAnyRole]'
 })
 export class DbxAuthHasAnyRoleDirective extends AbstractIfDirective implements OnDestroy {
-
   private _targetRoles = new BehaviorSubject<Maybe<ArrayOrValue<AuthRole>>>(undefined);
   readonly targetRoles$ = this._targetRoles.asObservable();
 
   readonly show$ = this.dbxAuthService.authRoles$.pipe(authRolesSetContainsAnyRoleFrom(this.targetRoles$));
 
-  constructor(
-    templateRef: TemplateRef<unknown>,
-    viewContainer: ViewContainerRef,
-    private dbxAuthService: DbxAuthService
-  ) {
+  constructor(templateRef: TemplateRef<unknown>, viewContainer: ViewContainerRef, private dbxAuthService: DbxAuthService) {
     super(templateRef, viewContainer);
   }
 
@@ -33,5 +28,4 @@ export class DbxAuthHasAnyRoleDirective extends AbstractIfDirective implements O
   set targetRoles(roles: Maybe<ArrayOrValue<AuthRole>>) {
     this._targetRoles.next(roles);
   }
-
 }

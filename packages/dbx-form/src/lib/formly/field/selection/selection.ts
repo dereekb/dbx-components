@@ -1,9 +1,9 @@
-import { PrimativeKey, Maybe } from "@dereekb/util";
+import { PrimativeKey, Maybe } from '@dereekb/util';
 
 export interface SelectionValue<T, M = unknown> {
   /**
- * Value associated with this field.
- */
+   * Value associated with this field.
+   */
   value: T;
   /**
    * Optional metadata on the field.

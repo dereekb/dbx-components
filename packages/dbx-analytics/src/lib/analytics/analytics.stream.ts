@@ -1,8 +1,7 @@
-import { Maybe } from "@dereekb/util";
-import { DbxAnalyticsUser, DbxUserAnalyticsEvent, DbxAnalyticsUserId } from "./analytics";
+import { Maybe } from '@dereekb/util';
+import { DbxAnalyticsUser, DbxUserAnalyticsEvent, DbxAnalyticsUserId } from './analytics';
 
 export enum DbxAnalyticsStreamEventType {
-
   PageView,
   UserChange,
 
@@ -14,7 +13,6 @@ export enum DbxAnalyticsStreamEventType {
 
   // Events
   Event
-
 }
 
 export interface DbxAnalyticsStreamEvent {

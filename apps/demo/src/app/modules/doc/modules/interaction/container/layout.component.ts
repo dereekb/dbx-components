@@ -5,10 +5,10 @@ import { ClickableAnchorLinkSegueRef } from '@dereekb/dbx-core';
   templateUrl: './layout.component.html'
 })
 export class DocInteractionLayoutComponent {
-
-  readonly navAnchors: ClickableAnchorLinkSegueRef[] = [{
-    title: 'Interaction Components',
-    ref: 'doc.interaction'
-  }];
-
+  readonly navAnchors: ClickableAnchorLinkSegueRef[] = [
+    {
+      title: 'Interaction Components',
+      ref: 'doc.interaction'
+    }
+  ];
 }

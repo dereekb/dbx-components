@@ -35,19 +35,12 @@ import { DbxRouterAnchorModule, DbxTextModule, DbxLoadingModule, DbxButtonModule
     DbxListLayoutModule,
     FormlyModule.forChild({
       types: [
-
         { name: 'pickablechipfield', component: DbxPickableChipListFieldComponent, wrappers: ['form-field'] },
-        { name: 'pickablelistfield', component: DbxPickableListFieldComponent, wrappers: ['form-field'] },
+        { name: 'pickablelistfield', component: DbxPickableListFieldComponent, wrappers: ['form-field'] }
       ]
     })
   ],
-  declarations: [
-    DbxPickableChipListFieldComponent,
-    DbxPickableListFieldComponent,
-    DbxPickableListFieldItemListComponent,
-    DbxPickableListFieldItemListViewComponent,
-    DbxPickableListFieldItemListViewItemComponent
-  ],
+  declarations: [DbxPickableChipListFieldComponent, DbxPickableListFieldComponent, DbxPickableListFieldItemListComponent, DbxPickableListFieldItemListViewComponent, DbxPickableListFieldItemListViewItemComponent],
   exports: []
 })
-export class DbxFormFormlyPickableFieldModule { }
+export class DbxFormFormlyPickableFieldModule {}

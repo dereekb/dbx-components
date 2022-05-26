@@ -23,14 +23,10 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
     DbxBarLayoutModule,
     DbxButtonModule,
     FormlyModule.forChild({
-      types: [
-        { name: 'repeatarray', component: DbxFormRepeatArrayTypeComponent }
-      ]
+      types: [{ name: 'repeatarray', component: DbxFormRepeatArrayTypeComponent }]
     })
   ],
-  declarations: [
-    DbxFormRepeatArrayTypeComponent
-  ],
+  declarations: [DbxFormRepeatArrayTypeComponent],
   exports: []
 })
-export class DbxFormFormlyArrayFieldModule { }
+export class DbxFormFormlyArrayFieldModule {}

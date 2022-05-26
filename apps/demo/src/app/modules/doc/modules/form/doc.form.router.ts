@@ -20,7 +20,7 @@ export const layoutState: Ng2StateDeclaration = {
 export const homeState: Ng2StateDeclaration = {
   url: '/home',
   name: 'doc.form.home',
-  component: DocFormHomeComponent,
+  component: DocFormHomeComponent
 };
 
 export const docFormValueState: Ng2StateDeclaration = {
@@ -32,37 +32,37 @@ export const docFormValueState: Ng2StateDeclaration = {
 export const docFormChecklistState: Ng2StateDeclaration = {
   url: '/checklist',
   name: 'doc.form.checklist',
-  component: DocFormChecklistComponent,
+  component: DocFormChecklistComponent
 };
 
 export const docFormComponentState: Ng2StateDeclaration = {
   url: '/component',
   name: 'doc.form.component',
-  component: DocFormComponentComponent,
+  component: DocFormComponentComponent
 };
 
 export const docFormSelectionState: Ng2StateDeclaration = {
   url: '/selection',
   name: 'doc.form.selection',
-  component: DocFormSelectionComponent,
+  component: DocFormSelectionComponent
 };
 
 export const docFormTextEditorState: Ng2StateDeclaration = {
   url: '/texteditor',
   name: 'doc.form.texteditor',
-  component: DocFormTextEditorComponent,
+  component: DocFormTextEditorComponent
 };
 
 export const docFormWrapperState: Ng2StateDeclaration = {
   url: '/wrapper',
   name: 'doc.form.wrapper',
-  component: DocFormWrapperComponent,
+  component: DocFormWrapperComponent
 };
 
 export const docFormDirectiveState: Ng2StateDeclaration = {
   url: '/directive',
   name: 'doc.form.directive',
-  component: DocFormDirectiveComponent,
+  component: DocFormDirectiveComponent
 };
 
 export const docFormTemplateState: Ng2StateDeclaration = {
@@ -71,15 +71,4 @@ export const docFormTemplateState: Ng2StateDeclaration = {
   component: DocFormTemplateComponent
 };
 
-export const STATES: Ng2StateDeclaration[] = [
-  layoutState,
-  homeState,
-  docFormValueState,
-  docFormChecklistState,
-  docFormComponentState,
-  docFormSelectionState,
-  docFormTextEditorState,
-  docFormWrapperState,
-  docFormDirectiveState,
-  docFormTemplateState
-];
+export const STATES: Ng2StateDeclaration[] = [layoutState, homeState, docFormValueState, docFormChecklistState, docFormComponentState, docFormSelectionState, docFormTextEditorState, docFormWrapperState, docFormDirectiveState, docFormTemplateState];

@@ -8,7 +8,6 @@ import { Maybe } from '@dereekb/util';
  */
 @Directive()
 export abstract class AbstractFilterSourceDirective<F> implements FilterSource<F>, OnInit, OnDestroy {
-
   protected _defaultFilterSource = new FilterSourceInstance<F>();
 
   readonly filter$: Observable<F> = this._defaultFilterSource.filter$;
@@ -37,5 +36,4 @@ export abstract class AbstractFilterSourceDirective<F> implements FilterSource<F
   protected makeDefaultFilter(): ObservableOrValue<Maybe<F>> {
     return of(undefined);
   }
-
 }

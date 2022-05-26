@@ -1,6 +1,6 @@
-import { DbxFormComponentFieldConfig, DbxFormComponentFormlyFieldConfig } from "./component.field.component";
+import { DbxFormComponentFieldConfig, DbxFormComponentFormlyFieldConfig } from './component.field.component';
 
-export type ComponentFieldConfig<T = unknown> = DbxFormComponentFieldConfig<T>
+export type ComponentFieldConfig<T = unknown> = DbxFormComponentFieldConfig<T>;
 
 export function componentField<T = unknown>(config: ComponentFieldConfig<T>): DbxFormComponentFormlyFieldConfig<T> {
   return {

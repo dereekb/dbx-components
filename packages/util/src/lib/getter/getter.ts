@@ -1,4 +1,3 @@
-
 /**
  * Function that returns a value.
  */
@@ -38,19 +37,19 @@ export type StringOrGetter = GetterOrValue<string>;
 
 /**
  * Returns true if the input object looks like a Getter (is a function).
- * 
- * @param value 
- * @returns 
+ *
+ * @param value
+ * @returns
  */
 export function isGetter<T = unknown>(value: unknown): value is Getter<T> {
-  return (typeof value === 'function');
+  return typeof value === 'function';
 }
 
 /**
  * If the input is a function, it is executed. Otherwise, the value is returned.
- * 
- * @param input 
- * @returns 
+ *
+ * @param input
+ * @returns
  */
 export function getValueFromGetter<T>(input: GetterOrValue<T>): T;
 export function getValueFromGetter<T>(this: unknown, input: GetterOrValue<T>): T;
@@ -67,9 +66,9 @@ export function getValueFromGetter<T, A>(this: unknown, input: unknown, args?: A
 
 /**
  * Returns the input as a getter.
- * 
- * @param input 
- * @returns 
+ *
+ * @param input
+ * @returns
  */
 export function asGetter<T>(input: GetterOrValue<T>): Getter<T> {
   if (typeof input === 'function') {
@@ -81,9 +80,9 @@ export function asGetter<T>(input: GetterOrValue<T>): Getter<T> {
 
 /**
  * Wraps the input and returns a Getter for that value.
- * 
- * @param input 
- * @returns 
+ *
+ * @param input
+ * @returns
  */
 export function makeGetter<T>(input: T): Getter<T> {
   return () => input;

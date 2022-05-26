@@ -6,7 +6,6 @@ $two-block-top-height-var: --dbx-two-block-top-height;
 
 // MARK: Mixin
 @mixin core() {
-
   .dbx-two-block.dbx-two-block-fixed-top {
     height: 100%;
   }
@@ -19,12 +18,13 @@ $two-block-top-height-var: --dbx-two-block-top-height;
       height: calc(100% - var($two-block-top-height-var));
     }
   }
-
 }
 
-@mixin color($theme-config) {}
+@mixin color($theme-config) {
+}
 
-@mixin typography($typography-config) {}
+@mixin typography($typography-config) {
+}
 
 @mixin theme($theme-config) {
   @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-layout-block') {

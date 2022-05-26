@@ -13,7 +13,7 @@ export interface DbxFormlyInitialize<T> {
 
 /**
  * DbxFormlyContext delegate.
- * 
+ *
  * This is usually the component or element that contains the form itself.
  */
 export interface DbxFormlyContextDelegate<T = unknown> extends Omit<DbxMutableForm<T>, 'lockSet'> {
@@ -25,18 +25,19 @@ export interface DbxFormlyContextDelegate<T = unknown> extends Omit<DbxMutableFo
  * Allows a directive to provide a formly context and form.
  */
 export function provideFormlyContext(): Provider[] {
-  return [{
-    provide: DbxFormlyContext,
-    useClass: DbxFormlyContext
-  },
-  ...provideDbxMutableForm(DbxFormlyContext)];
+  return [
+    {
+      provide: DbxFormlyContext,
+      useClass: DbxFormlyContext
+    },
+    ...provideDbxMutableForm(DbxFormlyContext)
+  ];
 }
 
 /**
  * DbxForm Instance that registers a delegate and manages the state of that form/delegate.
  */
 export class DbxFormlyContext<T = unknown> implements DbxForm<T> {
-
   private static INITIAL_STATE: DbxFormEvent = { isComplete: false, state: DbxFormState.INITIALIZING, status: 'PENDING' };
 
   readonly lockSet = new LockSet();
@@ -48,7 +49,11 @@ export class DbxFormlyContext<T = unknown> implements DbxForm<T> {
 
   readonly fields$ = this._fields.pipe(filterMaybe());
   readonly disabled$ = this._disabled.pipe(filterMaybe());
-  readonly stream$: Observable<DbxFormEvent> = this._delegate.pipe(distinctUntilChanged(), switchMap(x => (x) ? x.stream$ : of(DbxFormlyContext.INITIAL_STATE)), shareReplay(1));
+  readonly stream$: Observable<DbxFormEvent> = this._delegate.pipe(
+    distinctUntilChanged(),
+    switchMap((x) => (x ? x.stream$ : of(DbxFormlyContext.INITIAL_STATE))),
+    shareReplay(1)
+  );
 
   destroy(): void {
     this.lockSet.destroyOnNextUnlock(() => {
@@ -61,7 +66,6 @@ export class DbxFormlyContext<T = unknown> implements DbxForm<T> {
 
   setDelegate(delegate?: DbxFormlyContextDelegate<T>): void {
     if (delegate !== this._delegate.value) {
-
       if (delegate != null) {
         delegate.init({
           fields: this.fields$,
@@ -90,7 +94,11 @@ export class DbxFormlyContext<T = unknown> implements DbxForm<T> {
 
   // MARK: FormComponent
   getValue(): Observable<T> {
-    return this._delegate.pipe(filterMaybe(), switchMap(x => x.getValue()), shareReplay(1));
+    return this._delegate.pipe(
+      filterMaybe(),
+      switchMap((x) => x.getValue()),
+      shareReplay(1)
+    );
   }
 
   setValue(value: Partial<T>): void {
@@ -132,5 +140,4 @@ export class DbxFormlyContext<T = unknown> implements DbxForm<T> {
       this._delegate.value.forceFormUpdate();
     }
   }
-
 }

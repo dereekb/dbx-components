@@ -1,12 +1,12 @@
-import { arrayToMap, findUnique } from "../array";
-import { makeKeyPairs, makeValuesGroupMap, restoreOrderWithValues, separateValues } from "../grouping";
-import { Maybe } from "../value/maybe";
+import { arrayToMap, findUnique } from '../array';
+import { makeKeyPairs, makeValuesGroupMap, restoreOrderWithValues, separateValues } from '../grouping';
+import { Maybe } from '../value/maybe';
 
 export enum RelationChange {
   /**
-   * Adds a model to the relation. If the model already exists in 
+   * Adds a model to the relation. If the model already exists in
    * the relation, the new one is used.
-   * 
+   *
    * Use INSERT to merge the two values together.
    */
   ADD = 'add',
@@ -16,8 +16,8 @@ export enum RelationChange {
   SET = 'set',
   /**
    * Variation of SET that performs REMOVE on the collection, and then follows it up with INSERT.
-   * 
-   * This can allow the modification function to behave selectively with the items targeted for removal. 
+   *
+   * This can allow the modification function to behave selectively with the items targeted for removal.
    */
   REMOVE_AND_INSERT = 'remove_and_insert',
   /**
@@ -33,7 +33,7 @@ export enum RelationChange {
    * Updates an existing relation, if it exists, or creates a new one.
    */
   INSERT = 'insert'
-};
+}
 
 export type RelationString = string;
 export type RelationObject = RelationString | object;
@@ -62,7 +62,7 @@ export interface UpdateRelationConfig<T> {
   shouldRemove?: (x: T) => boolean;
   /**
    * Whether or not the item should be considered when performing a change.
-   * 
+   *
    * For instance, existing items that are passed to this function and it returns false are unable to be changed,
    * and new/target items that are passed to this function and it returns false are ignored.
    */
@@ -75,11 +75,10 @@ export interface UpdateMiltiTypeRelationConfig<T> extends UpdateRelationConfig<T
 
 /**
  * Utility class for modifying a collection of relational objects.
- * 
+ *
  * For instance, a string collection of keys.
  */
 export class ModelRelationUtility {
-
   static modifyStringCollection(current: RelationString[], change: RelationChange, mods: RelationString[]): RelationString[] {
     return ModelRelationUtility.modifyCollection(current, change, mods, { readKey: (x) => x, merge: (a, b) => b });
   }
@@ -95,7 +94,6 @@ export class ModelRelationUtility {
 
       const modifiedResults = this._modifyCollectionWithoutMask(currentModify, change, modModify, config);
 
-
       return this._mergeMaskResults(current, currentRetain, modifiedResults, readKey);
     } else {
       return this._modifyCollectionWithoutMask(current, change, mods, config);
@@ -104,7 +102,7 @@ export class ModelRelationUtility {
 
   /**
    * The mask results are merged together.
-   * 
+   *
    * Order from the "current" is retained. Anything in currentRetain overrides modifiedResults.
    */
   private static _mergeMaskResults<T extends RelationObject>(current: T[], currentRetain: T[], modifiedResults: T[], readKey: ReadRelationKeyFn<T>) {
@@ -117,9 +115,14 @@ export class ModelRelationUtility {
     const readType = (config as UpdateMiltiTypeRelationConfig<T>).readType;
 
     function remove(rCurrent = current, rMods = mods) {
-      return ModelRelationUtility._modifyCollection(rCurrent, rMods, (x: T[], y: T[]) => {
-        return ModelRelationUtility.removeFromCollection(x, y, readKey, shouldRemove);
-      }, readType);
+      return ModelRelationUtility._modifyCollection(
+        rCurrent,
+        rMods,
+        (x: T[], y: T[]) => {
+          return ModelRelationUtility.removeFromCollection(x, y, readKey, shouldRemove);
+        },
+        readType
+      );
     }
 
     function performAdd() {
@@ -182,7 +185,7 @@ export class ModelRelationUtility {
 
       // Only modify if they've got changes for their type.
       if (mods.length === 0) {
-        return values;  // No mods, no change to those types.
+        return values; // No mods, no change to those types.
       } else {
         return modifyCollection(values, mods);
       }
@@ -231,7 +234,7 @@ export class ModelRelationUtility {
 
   static addToCollection<T extends RelationObject>(current: T[], add: T[], readKey: ReadRelationKeyFn<T>): T[] {
     current = current ?? [];
-    return (add?.length) ? ModelRelationUtility.removeDuplicates([...add, ...current], readKey) : current;  // Will keep any "added" before any existing ones.
+    return add?.length ? ModelRelationUtility.removeDuplicates([...add, ...current], readKey) : current; // Will keep any "added" before any existing ones.
   }
 
   static removeFromCollection<T extends RelationObject>(current: T[], remove: T[], readKey: ReadRelationKeyFn<T>, shouldRemove?: (x: T) => boolean): T[] {
@@ -245,13 +248,13 @@ export class ModelRelationUtility {
           const removalTarget = map.get(key);
 
           if (removalTarget && shouldRemove(removalTarget)) {
-            map.delete(key);  // Remove from the map.
+            map.delete(key); // Remove from the map.
           }
         });
 
-        return currentKeyPairs.filter(x => map.has(x[0])).map(x => x[1]); // Retain order, remove from map.
+        return currentKeyPairs.filter((x) => map.has(x[0])).map((x) => x[1]); // Retain order, remove from map.
       } else {
-        return ModelRelationUtility.removeKeysFromCollection(current, remove.map(readKey), readKey)
+        return ModelRelationUtility.removeKeysFromCollection(current, remove.map(readKey), readKey);
       }
     } else {
       return [];
@@ -272,5 +275,4 @@ export class ModelRelationUtility {
       throw new Error('Merge was not provided.');
     }
   }
-
 }

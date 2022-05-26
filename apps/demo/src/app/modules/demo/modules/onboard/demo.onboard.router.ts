@@ -22,8 +22,4 @@ export const onboardUserState: Ng2StateDeclaration = {
   component: DemoOnboardUserComponent
 };
 
-export const DEMO_ONBOARD_STATES: Ng2StateDeclaration[] = [
-  onboardState,
-  onboardTosState,
-  onboardUserState
-];
+export const DEMO_ONBOARD_STATES: Ng2StateDeclaration[] = [onboardState, onboardTosState, onboardUserState];

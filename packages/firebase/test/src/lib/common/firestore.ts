@@ -9,9 +9,9 @@ export interface TestingFirestoreAccessorDriver extends FirestoreAccessorDriver 
   getFuzzedCollectionsNameMap(): Map<string, string>;
   /**
    * Initializes fuzzed path names for the input collections. Returns the result of getFuzzedCollectionsNameMap().
-   * 
+   *
    * This initialization step is useful for the client, where the rules file needs to be updated to reflect the collection names properly in order to ensure rules are correct.
-   * @param collectionPaths 
+   * @param collectionPaths
    */
   initWithCollectionNames(collectionPaths: string[]): Map<string, string>;
 }
@@ -27,7 +27,7 @@ export function makeTestingFirestoreAccesorDriver(driver: FirestoreAccessorDrive
 
     if (!fuzzedPath) {
       const random = Math.ceil(Math.random() * 9999) % 9999;
-      fuzzedPath = `${time}_${random}_${path}_${fuzzerKey += 1}`;
+      fuzzedPath = `${time}_${random}_${path}_${(fuzzerKey += 1)}`;
       fuzzedMap.set(path, fuzzedPath);
     }
 
@@ -64,9 +64,9 @@ export interface TestingFirestoreDrivers extends FirestoreDrivers {
 
 /**
  * Extends the input drivers to generate new drivers for a testing environment.
- * 
- * @param drivers 
- * @returns 
+ *
+ * @param drivers
+ * @returns
  */
 export function makeTestingFirestoreDrivers(drivers: FirestoreDrivers): TestingFirestoreDrivers {
   return {

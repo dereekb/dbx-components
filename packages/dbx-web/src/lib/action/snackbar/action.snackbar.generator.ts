@@ -1,6 +1,6 @@
-import { DbxActionContextSourceReference } from "@dereekb/dbx-core";
-import { Milliseconds, Maybe, GetterOrValue, getValueFromGetter, Getter } from "@dereekb/util";
-import { DbxActionSnackbarDisplayConfig, DbxActionSnackbarEvent } from "./action.snackbar";
+import { DbxActionContextSourceReference } from '@dereekb/dbx-core';
+import { Milliseconds, Maybe, GetterOrValue, getValueFromGetter, Getter } from '@dereekb/util';
+import { DbxActionSnackbarDisplayConfig, DbxActionSnackbarEvent } from './action.snackbar';
 
 export interface DbxActionSnackbarGeneratorInput<T = unknown, O = unknown> {
   event: DbxActionSnackbarEvent<O>;
@@ -32,9 +32,9 @@ export interface DbxMakeActionSnackbarGeneratorEventConfiguration extends Omit<D
 
 /**
  * Creates a DbxActionSnackbarDisplayConfigGeneratorFunction from the input config.
- * 
- * @param config 
- * @returns 
+ *
+ * @param config
+ * @returns
  */
 export function makeDbxActionSnackbarDisplayConfigGeneratorFunction(config: DbxMakeActionSnackbarGeneratorConfiguration): DbxActionSnackbarDisplayConfigGeneratorFunction {
   return <T = unknown, O = unknown>(input: DbxActionSnackbarGeneratorInput<T, O>) => {

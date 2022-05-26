@@ -10,7 +10,6 @@ export interface StripeServiceApiConfig {
  * Configuration for StripeService
  */
 export abstract class StripeServiceConfig {
-
   stripe!: StripeServiceApiConfig;
 
   static assertValidConfig(config: StripeServiceConfig) {
@@ -20,5 +19,4 @@ export abstract class StripeServiceConfig {
       throw new Error('No stripe webhook secret specified.');
     }
   }
-
 }

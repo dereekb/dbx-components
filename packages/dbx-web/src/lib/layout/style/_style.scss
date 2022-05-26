@@ -4,7 +4,6 @@
 
 // Sections
 @mixin core() {
-
   .dbx-spacer,
   .spacer {
     flex: 1 1 auto;
@@ -22,9 +21,7 @@
     padding: 0 !important;
   }
 
-  @each $i,
-  $padding in theming.$padding-map {
-
+  @each $i, $padding in theming.$padding-map {
     .pad-#{$i},
     .padding-#{$i} {
       padding: $padding;
@@ -47,7 +44,6 @@
   .d-fiflex {
     display: inline-flex !important;
   }
-
 }
 
 @mixin color($theme-config) {
@@ -91,10 +87,10 @@
     background: $warn-color;
     color: $warn-color-contrast;
   }
-
 }
 
-@mixin typography($typography-config) {}
+@mixin typography($typography-config) {
+}
 
 @mixin theme($theme-config) {
   @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-layout-style') {

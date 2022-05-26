@@ -1,5 +1,5 @@
-import { Maybe } from "@dereekb/util";
-import { Observable } from "rxjs";
+import { Maybe } from '@dereekb/util';
+import { Observable } from 'rxjs';
 
 export type DbxPopoverKey = string;
 

@@ -1,4 +1,4 @@
-import { FilterPreset, FilterWithoutPreset } from "./filter";
+import { FilterPreset, FilterWithoutPreset } from './filter';
 import { map, OperatorFunction } from 'rxjs';
 
 export type MapFilterWithPresetFn<F extends FilterPreset> = (filter: F) => FilterWithoutPreset<F>;
@@ -12,7 +12,7 @@ export function makeMapFilterWithPresetFn<F extends FilterPreset>(fn: MapFilterW
     } else {
       return filter;
     }
-  }
+  };
 }
 
 export function mapFilterWithPreset<F extends FilterPreset>(fn: MapFilterWithPresetFn<F>): OperatorFunction<F, FilterWithoutPreset<F>> {

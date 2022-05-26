@@ -23,6 +23,6 @@ import { DbxFirebaseLoginModule } from '@dereekb/dbx-firebase';
     DocAuthHomeComponent,
     DocAuthRoleComponent,
     DocAuthFirebaseComponent
-  ],
+  ]
 })
-export class DocAuthModule { }
+export class DocAuthModule {}

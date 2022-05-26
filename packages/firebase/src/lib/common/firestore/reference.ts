@@ -1,5 +1,5 @@
-import { FirestoreContext } from "./context";
-import { CollectionReference, DocumentReference, Firestore } from "./types";
+import { FirestoreContext } from './context';
+import { CollectionReference, DocumentReference, Firestore } from './types';
 
 /**
  * Contains a reference to a CollectionReference.

@@ -1,9 +1,9 @@
-import { flattenArray } from "./array";
-import { unique, findUnique } from "./array.unique";
-import { ReadKeyFunction } from "../key";
-import { caseInsensitiveString } from "../string";
-import { containsAllValues, containsAnyValue, hasDifferentValues } from "../set/set";
-import { mapIterable } from "../iterable/iterable.map";
+import { flattenArray } from './array';
+import { unique, findUnique } from './array.unique';
+import { ReadKeyFunction } from '../key';
+import { caseInsensitiveString } from '../string';
+import { containsAllValues, containsAnyValue, hasDifferentValues } from '../set/set';
+import { mapIterable } from '../iterable/iterable.map';
 
 export function hasDifferentStringsNoCase(a: string[], b: string[]): boolean {
   return hasDifferentValues(a.map(caseInsensitiveString), b.map(caseInsensitiveString));
@@ -39,5 +39,5 @@ export function containsAnyStringAnyCase(values: Iterable<string>, valuesToFind:
 
 export function containsAllStringsAnyCase(values: Iterable<string>, valuesToFind: Iterable<string>): boolean {
   const valuesToFindArray = toCaseInsensitiveStringArray(valuesToFind);
-  return (valuesToFindArray.length) ? containsAllValues(toCaseInsensitiveStringArray(values), valuesToFindArray) : true;
+  return valuesToFindArray.length ? containsAllValues(toCaseInsensitiveStringArray(values), valuesToFindArray) : true;
 }

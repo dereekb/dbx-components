@@ -2,10 +2,8 @@
 
 // MARK: Variables
 
-
 // MARK: Mixin
 @mixin core() {
-
   .dbx-searchable-text-field-value {
     width: 100%;
   }
@@ -20,7 +18,6 @@
   }
 
   .dbx-searchable-text-field-has-value.dbx-searchable-text-field-show-value {
-
     .dbx-searchable-text-field-value {
       margin-bottom: -6px;
     }
@@ -36,12 +33,13 @@
     opacity: unset;
     height: unset;
   }
-
 }
 
-@mixin color($theme-config) {}
+@mixin color($theme-config) {
+}
 
-@mixin typography($typography-config) {}
+@mixin typography($typography-config) {
+}
 
 @mixin theme($theme-config) {
   @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-form-field-selection-searchable') {

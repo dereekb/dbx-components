@@ -1,10 +1,10 @@
 @use 'node_modules/@angular/material/core/theming/palette';
-@use '@angular/material'as mat;
+@use '@angular/material' as mat;
 @use 'dbx-web/src/index' as dbx;
 @use 'dbx-form/src/index' as dbx-form;
 @use './variables';
 
-$opmore-navy: #1C3454;
+$opmore-navy: #1c3454;
 $opmore-pink: #ec4565;
 $opmore-white: #fff;
 
@@ -36,7 +36,7 @@ $opmore-blue: (
     A100: $dark-primary-text,
     A200: $light-primary-text,
     A400: $light-primary-text,
-    A700: $light-primary-text,
+    A700: $light-primary-text
   )
 );
 
@@ -65,7 +65,7 @@ $opmore-pink: (
     A100: $dark-primary-text,
     A200: $light-primary-text,
     A400: $light-primary-text,
-    A700: $light-primary-text,
+    A700: $light-primary-text
   )
 );
 
@@ -73,7 +73,17 @@ $opmore-pink: (
 $doc-primary: mat.define-palette($opmore-blue);
 $doc-accent: mat.define-palette($opmore-pink);
 $doc-warn: mat.define-palette(mat.$red-palette);
-$doc-mat-theme: mat.define-light-theme((color: (primary: $doc-primary, accent: $doc-accent, warn: $doc-warn), density: null, typography: null));    // NOTE: setting density and typography to null is important!
+$doc-mat-theme: mat.define-light-theme(
+  (
+    color: (
+      primary: $doc-primary,
+      accent: $doc-accent,
+      warn: $doc-warn
+    ),
+    density: null,
+    typography: null
+  )
+); // NOTE: setting density and typography to null is important!
 $doc-dbx-theme-with-banner-config: dbx.quick-define-dbx-config-via-banners(variables.$app-top-banner-height);
 $doc-theme: dbx.define-dbx-theme-config($doc-mat-theme, $doc-dbx-theme-with-banner-config);
 $doc-form-theme: dbx-form.define-dbx-form-theme-config($doc-theme);
@@ -86,7 +96,17 @@ This mixin creates the doc-theme components and elements for @angular/material a
   @include dbx-form.theme($root-selector, $doc-form-theme);
 }
 
-$dark-doc-mat-theme: mat.define-dark-theme((color: (primary: $doc-primary, accent: $doc-accent, warn: $doc-warn), density: null, typography: null));    // NOTE: setting density and typography to null is important!
+$dark-doc-mat-theme: mat.define-dark-theme(
+  (
+    color: (
+      primary: $doc-primary,
+      accent: $doc-accent,
+      warn: $doc-warn
+    ),
+    density: null,
+    typography: null
+  )
+); // NOTE: setting density and typography to null is important!
 $dark-doc-theme: dbx.define-dbx-theme-config($dark-doc-mat-theme, $doc-dbx-theme-with-banner-config);
 $dark-doc-form-theme: dbx-form.define-dbx-form-theme-config($dark-doc-theme);
 

@@ -9,14 +9,12 @@ export interface CompactContextState {
 
 @Injectable()
 export class CompactContextStore extends ComponentStore<CompactContextState> {
-
   constructor() {
     super({ mode: CompactMode.FULL });
   }
 
   // MARK: Accessors
-  readonly mode$ = this.state$.pipe(map(x => x.mode));
+  readonly mode$ = this.state$.pipe(map((x) => x.mode));
 
   readonly setMode = this.updater((state, mode: CompactMode | boolean) => ({ mode: compactModeFromInput(mode) }));
-
 }

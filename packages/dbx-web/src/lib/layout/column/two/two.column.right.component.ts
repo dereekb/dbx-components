@@ -6,18 +6,17 @@ import { Maybe } from '@dereekb/util';
 
 /**
  * Optional responsive component that wraps content on the right side and shows a navigation bar.
- * 
+ *
  * When rendered it will trigger the context to show left.
  */
 @Component({
   selector: 'dbx-two-column-right',
   templateUrl: './two.column.right.component.html',
   host: {
-    'class': "dbx-two-column-right d-block"
+    class: 'dbx-two-column-right d-block'
   }
 })
 export class DbxTwoColumnRightComponent implements AfterViewInit, OnDestroy {
-
   @Input()
   header?: string;
 
@@ -26,14 +25,11 @@ export class DbxTwoColumnRightComponent implements AfterViewInit, OnDestroy {
   readonly ref$: Observable<Maybe<ClickableAnchor>> = this.twoColumnsContextStore.backRef$;
 
   readonly showBack$: Observable<boolean> = combineLatest([
-    this._showBack, this.ref$.pipe(map((x) => !x)) // TODO: Is this correct? Show back if ref is not defined?
-  ]).pipe(
-    map(([a, b]: [boolean, boolean]) => a && b)
-  );
+    this._showBack,
+    this.ref$.pipe(map((x) => !x)) // TODO: Is this correct? Show back if ref is not defined?
+  ]).pipe(map(([a, b]: [boolean, boolean]) => a && b));
 
-  constructor(
-    @Inject(TwoColumnsContextStore) private readonly twoColumnsContextStore: TwoColumnsContextStore
-  ) { }
+  constructor(@Inject(TwoColumnsContextStore) private readonly twoColumnsContextStore: TwoColumnsContextStore) {}
 
   ngAfterViewInit(): void {
     setTimeout(() => {
@@ -58,5 +54,4 @@ export class DbxTwoColumnRightComponent implements AfterViewInit, OnDestroy {
   public backClicked(): void {
     this.twoColumnsContextStore.back();
   }
-
 }

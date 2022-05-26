@@ -10,20 +10,8 @@ import { DbxPagebarComponent } from './pagebar.component';
  * Module for block components.
  */
 @NgModule({
-  imports: [
-    CommonModule,
-    MatToolbarModule,
-    MatIconModule
-  ],
-  declarations: [
-    DbxBarDirective,
-    DbxBarHeaderComponent,
-    DbxPagebarComponent
-  ],
-  exports: [
-    DbxBarDirective,
-    DbxBarHeaderComponent,
-    DbxPagebarComponent
-  ]
+  imports: [CommonModule, MatToolbarModule, MatIconModule],
+  declarations: [DbxBarDirective, DbxBarHeaderComponent, DbxPagebarComponent],
+  exports: [DbxBarDirective, DbxBarHeaderComponent, DbxPagebarComponent]
 })
-export class DbxBarLayoutModule { }
+export class DbxBarLayoutModule {}

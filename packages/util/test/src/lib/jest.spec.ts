@@ -1,14 +1,14 @@
-import { AbstractJestTestContextFixture, jestTestContextBuilder, JestTestContextBuilderFunction } from "./jest";
+import { AbstractJestTestContextFixture, jestTestContextBuilder, JestTestContextBuilderFunction } from './jest';
 
 export interface TestConfig {
   a: string;
 }
 
 export class TestInstance {
-  constructor(readonly config?: TestConfig) { }
+  constructor(readonly config?: TestConfig) {}
 }
 
-export class TestJestTestContextFixture extends AbstractJestTestContextFixture<TestInstance> { }
+export class TestJestTestContextFixture extends AbstractJestTestContextFixture<TestInstance> {}
 
 export function makeTestBuilder() {
   return jestTestContextBuilder<TestInstance, TestJestTestContextFixture, TestConfig>({
@@ -20,9 +20,7 @@ export function makeTestBuilder() {
 }
 
 describe('jestTestContextBuilder', () => {
-
   it('should return a builder function', () => {
-
     const testBuilder = makeTestBuilder();
 
     expect(testBuilder).toBeDefined();
@@ -30,7 +28,6 @@ describe('jestTestContextBuilder', () => {
   });
 
   describe('JestTestContextBuilderFunction', () => {
-
     const testBuilder: JestTestContextBuilderFunction<TestInstance, TestJestTestContextFixture, TestConfig> = makeTestBuilder();
 
     it('should create a new test context with no config provided.', () => {
@@ -41,13 +38,11 @@ describe('jestTestContextBuilder', () => {
     });
 
     describe('using test builder', () => {
-
       const testA = 'test';
 
       testBuilder({
         a: testA
       })((f) => {
-
         it('should be configured with the input configuration.', () => {
           expect(f.instance.config!.a).toBe(testA);
         });
@@ -56,11 +51,7 @@ describe('jestTestContextBuilder', () => {
           expect(f.instance).toBeDefined();
           expect(f.instance instanceof TestInstance).toBe(true);
         });
-
       });
-
     });
-
-  })
-
+  });
 });

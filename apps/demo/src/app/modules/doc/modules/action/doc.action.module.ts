@@ -35,6 +35,6 @@ import { DocActionExampleDialogComponent } from './component/action.example.dial
     DocActionFormComponent,
     DocActionDirectivesComponent,
     DocActionMapComponent
-  ],
+  ]
 })
-export class DocActionModule { }
+export class DocActionModule {}

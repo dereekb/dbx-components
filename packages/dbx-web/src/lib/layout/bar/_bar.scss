@@ -9,7 +9,6 @@ $bar-vertical-padding: theming.$padding-1;
 
 // MARK: Mixin
 @mixin core() {
-
   .dbx-banner {
     @include theming.elevation(3);
   }
@@ -33,7 +32,6 @@ $bar-vertical-padding: theming.$padding-1;
       display: none;
     }
   }
-
 }
 
 @mixin color($theme-config) {
@@ -54,15 +52,12 @@ $bar-vertical-padding: theming.$padding-1;
     background: $dbx-bar-bg-color;
     color: $dbx-bar-color;
   }
-
 }
 
 @mixin typography($typography-config) {
-
   .dbx-bar {
     font-size: theming.font-size($typography-config, 'caption');
   }
-
 }
 
 @mixin theme($theme-config) {

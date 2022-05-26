@@ -42,7 +42,7 @@ export interface DateFromTimestringResult {
   result?: Maybe<Date>;
   /**
    * Whether or not the value was parsed.
-   * 
+   *
    * If not value, raw and result may be undefined.
    */
   valid: boolean;
@@ -62,12 +62,11 @@ export function isValidDateFromTimestringResult(result: ValidDateFromTimestringR
  * A utility instance.
  */
 export class DateTimeUtilityInstance {
-
   readonly normalInstance: DateTimezoneUtcNormalInstance;
 
   /**
    * The default timezone all inputs should be handled with.
-   * 
+   *
    * If the timezone is not defined, it defaults to UTC.
    */
   constructor(timezone?: Maybe<TimezoneString>) {
@@ -110,10 +109,10 @@ export class DateTimeUtilityInstance {
 
   /**
    * Returns a timestring parsed relative to the input config.
-   * 
-   * @param input 
-   * @param config 
-   * @returns 
+   *
+   * @param input
+   * @param config
+   * @returns
    */
   timeStringToDate(input: ReadableTimeString | LogicalDateStringCode, config?: ParseTimeString): Maybe<Date> {
     const { result, valid } = this._timeStringToDate(input, config);
@@ -138,13 +137,12 @@ export class DateTimeUtilityInstance {
     let valid = false;
 
     function parseTimeString() {
-
       const formats = [
-        'h:mma',  // 1:20AM
+        'h:mma', // 1:20AM
         'h:mm a', // 1:20 AM
-        'h a',    // 1 AM
-        'ha',     // 1AM
-        'h:mm'    // 1:20
+        'h a', // 1 AM
+        'ha', // 1AM
+        'h:mm' // 1:20
       ];
 
       // tslint:disable-next-line: prefer-for-of
@@ -153,7 +151,7 @@ export class DateTimeUtilityInstance {
 
         if (isValid(systemParsedDateTime)) {
           valid = true;
-          break;  // Use time.
+          break; // Use time.
         }
       }
 
@@ -242,7 +240,6 @@ export class DateTimeUtilityInstance {
     let result: Maybe<Date>;
 
     if (valid) {
-
       // The parsed DateTime will be in the system settings for that date in as a UTC time.
       raw = relativeDateNormal.baseDateToSystemDate(systemParsedDateTime as Date);
       result = relativeDateNormal.targetDateToSystemDate(systemParsedDateTime as Date);
@@ -271,7 +268,6 @@ export class DateTimeUtilityInstance {
 
     return instance;
   }
-
 }
 
 export function dateTimeInstanceUtc(): DateTimeUtilityInstance {
@@ -296,12 +292,12 @@ export function toReadableTimeString(date: Date, timezone?: Maybe<TimezoneString
 
 /**
  * Parses the input string relative to the timezone in the configuration.
- * 
+ *
  * If no conversion timezone is provided, then it is parsed relative to UTC.
- * 
- * @param input 
- * @param config 
- * @returns 
+ *
+ * @param input
+ * @param config
+ * @returns
  */
 export function parseReadableTimeString(input: ReadableTimeString, config?: ParseTimeString): Maybe<ParsedTimeString> {
   return dateTimeInstance(config?.timezone).parseTimeString(input, config);

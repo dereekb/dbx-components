@@ -2,11 +2,10 @@ import { Component, Input } from '@angular/core';
 
 @Component({
   selector: 'dbx-step',
-  templateUrl: './step.component.html',
+  templateUrl: './step.component.html'
   // TODO: styleUrls: ['./step.scss']
 })
 export class DbxStepComponent {
-
   @Input()
   done?: boolean;
 
@@ -18,5 +17,4 @@ export class DbxStepComponent {
 
   @Input()
   hint?: string;
-
 }

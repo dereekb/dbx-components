@@ -10,17 +10,22 @@
     </ng-container>
     <div class="add-time-button-wrapper" *ngIf="showAddTime$ | async">
       <button mat-button class="add-time-button" ngClass.lt-sm="add-time-button-full" (click)="addTime()">
-        <mat-icon>timer</mat-icon> Add Time
+        <mat-icon>timer</mat-icon>
+        Add Time
       </button>
     </div>
   </div>
   <div class="dbx-datetime-row dbx-datetime-hint-row" fxFlex="100">
     <div class="dbx-hint" [ngSwitch]="fullDay$ | async">
-      <small *ngSwitchCase="true"><b class="dbx-ok">All Day</b> {{ dateValue$ | async | date:'fullDate' }}
-        ({{ dateValue$ | async | dateDistance }})</small>
+      <small *ngSwitchCase="true">
+        <b class="dbx-ok">All Day</b>
+        {{ dateValue$ | async | date: 'fullDate' }} ({{ dateValue$ | async | dateDistance }})
+      </small>
       <small *ngSwitchCase="false">
-        <ng-container *ngIf="value$ | async"><b class="dbx-ok">At</b> {{ displayValue$ | async | date:'medium' }}
-          ({{ displayValue$ | async | timeDistance }})</ng-container>
+        <ng-container *ngIf="value$ | async">
+          <b class="dbx-ok">At</b>
+          {{ displayValue$ | async | date: 'medium' }} ({{ displayValue$ | async | timeDistance }})
+        </ng-container>
       </small>
     </div>
   </div>
@@ -33,8 +38,7 @@
   </button>
   <mat-form-field class="dbx-datetime-row-field">
     <mat-label>Date</mat-label>
-    <input #dateInput matInput [formControl]="dateInputCtrl" [matDatepicker]="picker" (dateChange)="datePicked($event)"
-      [value]="dateValue$ | async">
+    <input #dateInput matInput [formControl]="dateInputCtrl" [matDatepicker]="picker" (dateChange)="datePicked($event)" [value]="dateValue$ | async" />
     <mat-datepicker #picker></mat-datepicker>
   </mat-form-field>
 </ng-template>
@@ -78,7 +82,6 @@
   </mat-menu>
   <mat-form-field class="dbx-datetime-row-field">
     <mat-label>Time</mat-label>
-    <input #timeInput matInput [formControl]="timeInputCtrl" (focus)="focusTime()" (focusout)="focusOutTime()"
-      (keydown)="keydownOnInput($event)">
+    <input #timeInput matInput [formControl]="timeInputCtrl" (focus)="focusTime()" (focusout)="focusOutTime()" (keydown)="keydownOnInput($event)" />
   </mat-form-field>
 </ng-template>

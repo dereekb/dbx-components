@@ -8,16 +8,10 @@ import { DbxActionContextMapDirective } from './action.map.directive';
 import { DbxActionMapSourceDirective } from './action.map.source.directive';
 
 describe('DbxActionContextMapDirective', () => {
-
   beforeEach(async () => {
     TestBed.configureTestingModule({
-      imports: [
-        DbxCoreActionModule,
-        NoopAnimationsModule
-      ],
-      declarations: [
-        TestDbxActionContextMapDirectiveComponent
-      ]
+      imports: [DbxCoreActionModule, NoopAnimationsModule],
+      declarations: [TestDbxActionContextMapDirectiveComponent]
     }).compileComponents();
   });
 
@@ -49,28 +43,23 @@ describe('DbxActionContextMapDirective', () => {
 
   afterEach(() => {
     fixture.destroy();
-  })
+  });
 
   describe('DbxActionMapSourceDirective', () => {
-
     it('should be defined.', () => {
       expect(dbxActionMapSource).toBeDefined();
     });
 
     describe('actionB', () => {
-
       it('should have the input source equal to the directive.', () => {
         expect(dbxActionFromMap).toBeDefined();
         expect(bActionComponent.inputSource).toBeDefined();
         expect(bActionComponent.inputSource).toBe(dbxActionFromMap);
       });
-
     });
-
   });
 
   describe('DbxActionFromMapDirective', () => {
-
     it('should have a key', () => {
       expect(dbxActionFromMap.key).toBeDefined();
     });
@@ -81,9 +70,7 @@ describe('DbxActionContextMapDirective', () => {
         done();
       });
     });
-
   });
-
 });
 
 @Component({
@@ -99,7 +86,6 @@ describe('DbxActionContextMapDirective', () => {
   `
 })
 class TestDbxActionContextMapDirectiveComponent {
-
   @Input()
   key = 'test';
 
@@ -117,5 +103,4 @@ class TestDbxActionContextMapDirectiveComponent {
 
   @ViewChild('b', { static: true, read: DbxActionDirective })
   bAction?: DbxActionDirective<number, number>;
-
 }

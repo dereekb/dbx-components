@@ -6,27 +6,23 @@ import { describeCloudFunctionTest } from '@dereekb/firebase-server/test';
 
 /**
  * NOTES:
- * 
+ *
  * These tests demonstrate testing with @dereekb/firestore-server's test components.
- * 
+ *
  * We can easily generate and nest contexts that go with our jest directives.
  */
 
 // Our test requires functions, so we use a DemoApiFunctionContextFixture.
 // Every test is done within its own context; the firestore/auth/etc. is empty between each test since under the hood our test app name changes.
 demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
-
   // describeCloudFunctionTest wraps a jest describe along with the following:
   // - Build our profileSetUsername function using our testing context instances's Nest App for each test, and the profileSetUsername factory.
   // - wrap the function to make it a usable function and exposed as profileSetUsernameCloudFn
   describeCloudFunctionTest('profileSetUsername', { f, fn: profileSetUsername }, (profileSetUsernameCloudFn) => {
-
     // with our DemoApiFunctionContextFixture, we can easily create a new user for this test case.
     demoAuthorizedUserContext({ f }, (u) => {
-
       // jest it - test setting the username successfully.
       it('should set the profile username.', async () => {
-
         const username = 'username';
         const params: SetProfileUsernameParams = {
           username
@@ -45,7 +41,6 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
 
       // second user
       demoAuthorizedUserContext({ f }, (u2) => {
-
         it('should fail if the username is already taken.', async () => {
           const fn = f.fnWrapper.wrapV1CloudFunction(profileSetUsername(f.nestAppPromiseGetter));
 
@@ -64,18 +59,13 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
             expect(e).toBeDefined();
           }
         });
-
       });
-
     });
-
   });
 
   // describe tests for updateProfile
   describeCloudFunctionTest('updateProfile', { f, fn: updateProfile }, (updateProfileCloudFn) => {
-
     demoAuthorizedUserContext({ f }, (u) => {
-
       it(`should update the user's profile.`, async () => {
         const bio = 'test bio';
         const params: UpdateProfileParams = {
@@ -87,9 +77,6 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
         const profileData = await u.instance.loadUserProfile().snapshotData();
         expect(profileData?.bio).toBe(bio);
       });
-
     });
-
   });
-
 });

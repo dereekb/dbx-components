@@ -19,7 +19,6 @@ export type DbxActionPopoverFunction<T = unknown> = (params: DbxActionPopoverFun
   selector: '[dbxActionPopover]'
 })
 export class DbxActionPopoverDirective<T = unknown> extends AbstractDbxActionValueOnTriggerDirective<T> implements OnInit, OnDestroy {
-
   @Input('dbxActionPopover')
   fn?: DbxActionPopoverFunction<T>;
 
@@ -28,15 +27,15 @@ export class DbxActionPopoverDirective<T = unknown> extends AbstractDbxActionVal
     this.isModifiedFunction = isModifiedFunction;
   }
 
-  constructor(
-    readonly elementRef: ElementRef,
-    source: DbxActionContextStoreSourceInstance<T, unknown>
-  ) {
+  constructor(readonly elementRef: ElementRef, source: DbxActionContextStoreSourceInstance<T, unknown>) {
     super(source, () => this._getDataFromPopover());
   }
 
   protected _getDataFromPopover(): Observable<Maybe<T>> {
-    return this._makePopoverRef().afterClosed$.pipe(first(), map(x => x.data));
+    return this._makePopoverRef().afterClosed$.pipe(
+      first(),
+      map((x) => x.data)
+    );
   }
 
   protected _makePopoverRef(): NgPopoverRef<unknown, Maybe<T>> {
@@ -50,5 +49,4 @@ export class DbxActionPopoverDirective<T = unknown> extends AbstractDbxActionVal
       origin
     });
   }
-
 }

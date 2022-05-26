@@ -4,7 +4,6 @@ import { mapItemIteration, MappedItemIterationInstance } from '@dereekb/rxjs';
 import { first } from 'rxjs';
 
 describe('iteration.mapped', () => {
-
   let iterator: ItemPageIterator<number, TestPageIteratorFilter>;
   let instance: ItemPageIterationInstance<number, TestPageIteratorFilter>;
 
@@ -18,7 +17,6 @@ describe('iteration.mapped', () => {
   });
 
   describe('MappedItemIterationInstance', () => {
-
     let mappedInstance: MappedItemIterationInstance<string, number>;
 
     beforeEach(() => {
@@ -28,16 +26,12 @@ describe('iteration.mapped', () => {
     });
 
     describe('latestState$', () => {
-
       it('should returned the latest state with the mapped value', (done) => {
         mappedInstance.latestState$.pipe(first()).subscribe((x) => {
           expect(typeof x.value).toBe('string');
           done();
         });
       });
-
     });
-
   });
-
 });

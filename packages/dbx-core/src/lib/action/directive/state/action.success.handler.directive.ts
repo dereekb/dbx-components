@@ -14,10 +14,9 @@ export type DbxActionSuccessHandlerFunction<O> = (value: O) => void;
  * Directive that executes a function on ActionContextStore Success.
  */
 @Directive({
-  selector: '[dbxActionSuccessHandler]',
+  selector: '[dbxActionSuccessHandler]'
 })
 export class DbxActionSuccessHandlerDirective<T, O> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
-
   private _successFunction = new BehaviorSubject<Maybe<DbxActionSuccessHandlerFunction<O>>>(undefined);
   readonly successFunction$ = this._successFunction.pipe(filterMaybe(), shareReplay(1));
 
@@ -35,19 +34,22 @@ export class DbxActionSuccessHandlerDirective<T, O> extends AbstractSubscription
   }
 
   ngOnInit(): void {
-    this.sub = this.successFunction$.pipe(
-      switchMap(successFunction => this.source.success$.pipe(
-        map(x => ([successFunction, x] as [DbxActionSuccessHandlerFunction<O>, O])),
-        tap(([successFn, result]) => {
-          successFn(result);
-        })
-      ))
-    ).subscribe();
+    this.sub = this.successFunction$
+      .pipe(
+        switchMap((successFunction) =>
+          this.source.success$.pipe(
+            map((x) => [successFunction, x] as [DbxActionSuccessHandlerFunction<O>, O]),
+            tap(([successFn, result]) => {
+              successFn(result);
+            })
+          )
+        )
+      )
+      .subscribe();
   }
 
   override ngOnDestroy(): void {
     super.ngOnDestroy();
     this._successFunction.complete();
   }
-
 }

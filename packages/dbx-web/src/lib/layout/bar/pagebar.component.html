@@ -1,4 +1,4 @@
-<mat-toolbar class="dbx-pagebar" [ngClass]="(color) ? ('dbx-bar-' + color) : ''">
+<mat-toolbar class="dbx-pagebar" [ngClass]="color ? 'dbx-bar-' + color : ''">
   <ng-content select="[left]"></ng-content>
   <span class="spacer"></span>
   <ng-content select="[right]"></ng-content>

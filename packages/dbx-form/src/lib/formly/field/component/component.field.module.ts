@@ -9,16 +9,10 @@ import { DbxFormComponentFieldComponent } from './component.field.component';
     CommonModule,
     DbxInjectionComponentModule,
     FormlyModule.forChild({
-      types: [
-        { name: 'component', component: DbxFormComponentFieldComponent }
-      ]
+      types: [{ name: 'component', component: DbxFormComponentFieldComponent }]
     })
   ],
-  declarations: [
-    DbxFormComponentFieldComponent
-  ],
-  exports: [
-    DbxFormComponentFieldComponent
-  ]
+  declarations: [DbxFormComponentFieldComponent],
+  exports: [DbxFormComponentFieldComponent]
 })
-export class DbxFormFormlyComponentFieldModule { }
+export class DbxFormFormlyComponentFieldModule {}

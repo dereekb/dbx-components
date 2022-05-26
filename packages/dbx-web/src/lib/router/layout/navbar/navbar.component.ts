@@ -22,11 +22,10 @@ export type NavbarMode = 'bar' | 'button';
   templateUrl: './navbar.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
-    'class': 'dbx-navbar'
+    class: 'dbx-navbar'
   }
 })
 export class DbxNavbarComponent extends AbstractTransitionDirective implements OnDestroy {
-
   @Input()
   navAlign: HorizontalConnectionPos = 'center';
 
@@ -38,7 +37,7 @@ export class DbxNavbarComponent extends AbstractTransitionDirective implements O
 
   readonly mode$ = combineLatest([this._inputMode, this.isBreakpointActive$]).pipe(
     map(([inputMode, breakpointActive]) => {
-      return (breakpointActive) ? (inputMode ?? 'bar') : 'button';
+      return breakpointActive ? inputMode ?? 'bar' : 'button';
     }),
     distinctUntilChanged(),
     tapDetectChanges(this.cdRef),
@@ -56,18 +55,18 @@ export class DbxNavbarComponent extends AbstractTransitionDirective implements O
         };
       });
 
-      return applyBestFit(results, (x) => x.selected, (a, b) => this._dbxRouterService.comparePrecision(a.anchor, b.anchor), (loser) => ({ ...loser, selected: false }));
+      return applyBestFit(
+        results,
+        (x) => x.selected,
+        (a, b) => this._dbxRouterService.comparePrecision(a.anchor, b.anchor),
+        (loser) => ({ ...loser, selected: false })
+      );
     }),
     tapDetectChanges(this.cdRef),
     shareReplay(1)
   );
 
-  constructor(
-    dbxRouterTransitionService: DbxRouterTransitionService,
-    private cdRef: ChangeDetectorRef,
-    private readonly _dbxScreenMediaService: DbxScreenMediaService,
-    private readonly _dbxRouterService: DbxRouterService
-  ) {
+  constructor(dbxRouterTransitionService: DbxRouterTransitionService, private cdRef: ChangeDetectorRef, private readonly _dbxScreenMediaService: DbxScreenMediaService, private readonly _dbxRouterService: DbxRouterService) {
     super(dbxRouterTransitionService);
   }
 
@@ -92,5 +91,4 @@ export class DbxNavbarComponent extends AbstractTransitionDirective implements O
   public set breakpoint(breakpoint: ScreenMediaWidthType) {
     this._breakpoint.next(breakpoint);
   }
-
 }

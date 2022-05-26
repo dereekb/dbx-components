@@ -15,12 +15,6 @@ import { STATES } from './doc.router.router';
       states: STATES
     })
   ],
-  declarations: [
-    DocRouterLayoutComponent,
-    DocRouterHomeComponent,
-    DocRouterAnchorComponent,
-    DocRouterAnchorListComponent,
-    DocRouterNavbarComponent
-  ],
+  declarations: [DocRouterLayoutComponent, DocRouterHomeComponent, DocRouterAnchorComponent, DocRouterAnchorListComponent, DocRouterNavbarComponent]
 })
-export class DocRouterModule { }
+export class DocRouterModule {}

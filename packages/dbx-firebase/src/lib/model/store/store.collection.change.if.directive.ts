@@ -9,14 +9,13 @@ export type DbxFirebaseCollectionHasChangeDirectiveMode = 'all' | IterationQuery
 
 /**
  * Structural directive that displays the content when the target change is detected.
- * 
+ *
  * Can specify which changes to appear on.
  */
 @Directive({
   selector: '[dbxFirebaseCollectionHasChange]'
 })
 export class DbxFirebaseCollectionHasChangeDirective extends AbstractIfDirective implements OnDestroy {
-
   private _mode = new BehaviorSubject<DbxFirebaseCollectionHasChangeDirectiveMode>('addedAndRemoved');
 
   readonly show$: Observable<boolean> = combineLatest([this._mode, this.directive.event$]).pipe(
@@ -59,5 +58,4 @@ export class DbxFirebaseCollectionHasChangeDirective extends AbstractIfDirective
     super.ngOnDestroy();
     this._mode.complete();
   }
-
 }

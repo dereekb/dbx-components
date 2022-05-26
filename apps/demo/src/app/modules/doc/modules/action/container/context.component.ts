@@ -5,7 +5,6 @@ import { Component } from '@angular/core';
   templateUrl: './context.component.html'
 })
 export class DocActionContextComponent {
-
   beginWorking(action: DbxActionDirective) {
     action.sourceInstance.startWorking();
   }
@@ -20,5 +19,4 @@ export class DocActionContextComponent {
       });
     }
   }
-
 }

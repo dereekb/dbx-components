@@ -53,10 +53,7 @@
     },
     "test": {
       "executor": "@nrwl/jest:jest",
-      "outputs": [
-        "coverage/packages/dbx-web",
-        "./.reports/jest/dbx-web.junit.xml"
-      ],
+      "outputs": ["coverage/packages/dbx-web", "./.reports/jest/dbx-web.junit.xml"],
       "options": {
         "jestConfig": "packages/dbx-web/jest.config.ts",
         "passWithNoTests": true
@@ -65,10 +62,7 @@
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "options": {
-        "lintFilePatterns": [
-          "packages/dbx-web/src/**/*.ts",
-          "packages/dbx-web/src/**/*.html"
-        ]
+        "lintFilePatterns": ["packages/dbx-web/src/**/*.ts", "packages/dbx-web/src/**/*.html"]
       }
     },
     "publish-npmjs": {

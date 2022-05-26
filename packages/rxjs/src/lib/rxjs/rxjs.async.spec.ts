@@ -3,7 +3,6 @@ import { SubscriptionObject } from '../subscription';
 import { asyncPusher, AsyncPusher, asyncPusherCache } from './rxjs.async';
 
 describe('async pusher', () => {
-
   let pusher: AsyncPusher<number>;
   let sub: SubscriptionObject;
 
@@ -20,7 +19,6 @@ describe('async pusher', () => {
   });
 
   describe('asyncPusher()', () => {
-
     it('should create an AsyncPusher', () => {
       pusher = asyncPusher();
 
@@ -30,9 +28,7 @@ describe('async pusher', () => {
       expect(pusher.watchForCleanup).toBeDefined();
     });
 
-
     describe('function', () => {
-
       it('should return an observable that emits the value.', (done) => {
         const pusher = asyncPusher<number>();
 
@@ -41,11 +37,9 @@ describe('async pusher', () => {
           expect(value).toBe(10);
           done();
         });
-
       });
 
       it('should return an observable that throttles values.', (done) => {
-
         const pusher = asyncPusher<number>();
 
         const obs = pusher(10);
@@ -60,11 +54,9 @@ describe('async pusher', () => {
           expect(value).toBe(expectedValue);
           done();
         });
-
       });
 
       describe('watchForCleanup()', () => {
-
         it('should call destroy when the input observable completes.', (done) => {
           const pusher = asyncPusher<number>();
 
@@ -78,15 +70,11 @@ describe('async pusher', () => {
             }
           });
         });
-
       });
-
     });
-
   });
 
   describe('asyncPusherCache()', () => {
-
     it('should create a cache that contains the AsyncPusher', () => {
       const cache = asyncPusherCache<number>();
       pusher = cache();
@@ -111,7 +99,5 @@ describe('async pusher', () => {
         }
       });
     });
-
   });
-
 });

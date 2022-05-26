@@ -9,7 +9,6 @@ import { DocActionFormExampleValue } from '../component/action.example.form.comp
   templateUrl: './form.component.html'
 })
 export class DocActionFormComponent {
-
   readonly defaultValue: DocActionFormExampleValue = {
     name: 'test',
     date: addDays(new Date(), 2)
@@ -22,15 +21,15 @@ export class DocActionFormComponent {
       map((defaultValue) => {
         const isModified = Boolean(value.name !== defaultValue.name) || !isSameMinute(value.date, defaultValue.date);
         return isModified;
-      }));
-  }
+      })
+    );
+  };
 
   readonly validateForm: IsValidFunction<DocActionFormExampleValue> = (value: DocActionFormExampleValue) => {
     return of(isFriday(value.date));
-  }
+  };
 
   readonly handleFormAction: HandleActionFunction<DocActionFormExampleValue> = () => {
     return of(true).pipe(delay(1000));
-  }
-
+  };
 }

@@ -9,14 +9,16 @@ import { DbxAnchorComponent } from './anchor.component';
  */
 @Component({
   selector: 'dbx-anchor-content',
-  template: `<mat-icon class="dbx-icon-spacer" *ngIf="icon$ | async">{{ icon$ | async }}</mat-icon><span *ngIf="title$ | async">{{ title$ | async }}</span>`,
+  template: `
+    <mat-icon class="dbx-icon-spacer" *ngIf="icon$ | async">{{ icon$ | async }}</mat-icon>
+    <span *ngIf="title$ | async">{{ title$ | async }}</span>
+  `,
   host: {
-    'class': 'dbx-anchor-content'
+    class: 'dbx-anchor-content'
   }
 })
 export class DbxAnchorContentComponent implements OnDestroy {
-
-  private readonly _parentAnchor: Observable<Maybe<ClickableAnchor | ClickableAnchorLink>> = (this.parent) ? this.parent.anchor$ : of(undefined);
+  private readonly _parentAnchor: Observable<Maybe<ClickableAnchor | ClickableAnchorLink>> = this.parent ? this.parent.anchor$ : of(undefined);
   private _inputAnchor = new BehaviorSubject<Maybe<Partial<ClickableAnchorLink>>>(undefined);
 
   readonly anchor$: Observable<Maybe<Partial<ClickableAnchorLink>>> = combineLatest([this._inputAnchor, this._parentAnchor]).pipe(
@@ -24,18 +26,17 @@ export class DbxAnchorContentComponent implements OnDestroy {
     shareReplay(1)
   );
 
-  readonly icon$ = this.anchor$.pipe(map(x => x?.icon));
-  readonly title$ = this.anchor$.pipe(map(x => x?.title));
+  readonly icon$ = this.anchor$.pipe(map((x) => x?.icon));
+  readonly title$ = this.anchor$.pipe(map((x) => x?.title));
 
   @Input()
   set anchor(anchor: Maybe<Partial<ClickableAnchorLink>>) {
     this._inputAnchor.next(anchor);
   }
 
-  constructor(@Optional() readonly parent?: DbxAnchorComponent) { }
+  constructor(@Optional() readonly parent?: DbxAnchorComponent) {}
 
   ngOnDestroy(): void {
     this._inputAnchor.complete();
   }
-
 }

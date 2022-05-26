@@ -26,11 +26,10 @@ export interface DbxActionContextMachineConfig<T = unknown, O = unknown> {
 
 /**
  * Configurable machine that handles components of the ActionContextStore lifecycle.
- * 
+ *
  * It can be configured to activate only once before cleaning itself up. It can be used directly as a DbxActionContextSourceReference in cases where it is created as a one-off action.
  */
 export class DbxActionContextMachine<T = unknown, O = unknown> extends DbxActionContextBaseSource<T, O> implements DbxActionContextSourceReference<T, O>, Destroyable {
-
   private _isShutdown = true;
   private _handleValueReadySub = new SubscriptionObject();
   private _successSub = new SubscriptionObject();
@@ -70,5 +69,4 @@ export class DbxActionContextMachine<T = unknown, O = unknown> extends DbxAction
   get isShutdown(): boolean {
     return this._isShutdown;
   }
-
 }

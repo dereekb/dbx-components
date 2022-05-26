@@ -6,12 +6,6 @@ import { DbxRouterNavbarModule } from './navbar/navbar.module';
 import { DbxRouterSidenavModule } from './sidenav/sidenav.module';
 
 @NgModule({
-  exports: [
-    DbxRouterAnchorModule,
-    DbxRouterAnchorListModule,
-    DbxRouterListModule,
-    DbxRouterNavbarModule,
-    DbxRouterSidenavModule
-  ]
+  exports: [DbxRouterAnchorModule, DbxRouterAnchorListModule, DbxRouterListModule, DbxRouterNavbarModule, DbxRouterSidenavModule]
 })
-export class DbxRouterLayoutModule { }
+export class DbxRouterLayoutModule {}

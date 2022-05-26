@@ -9,7 +9,6 @@ import { TwoColumnsContextStore } from './two.column.store';
   selector: '[dbxTwoColumnBack]'
 })
 export class DbxTwoColumnBackDirective extends AbstractSubscriptionDirective implements OnInit {
-
   @Output('dbxTwoColumnBack')
   public back = new EventEmitter();
 
@@ -24,5 +23,4 @@ export class DbxTwoColumnBackDirective extends AbstractSubscriptionDirective imp
   public backClicked(): void {
     this.twoColumnsContextStore.back();
   }
-
 }

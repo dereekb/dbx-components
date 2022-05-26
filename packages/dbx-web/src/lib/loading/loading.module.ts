@@ -9,25 +9,8 @@ import { DbxReadableErrorModule } from '../error';
 import { DbxActionLoadingContextDirective } from './loading.action.directive';
 
 @NgModule({
-  imports: [
-    CommonModule,
-    DbxReadableErrorModule,
-    MatProgressSpinnerModule,
-    MatProgressBarModule
-  ],
-  declarations: [
-    DbxLoadingComponent,
-    DbxBasicLoadingComponent,
-    DbxLoadingProgressComponent,
-    DbxActionLoadingContextDirective
-  ],
-  exports: [
-    DbxLoadingComponent,
-    DbxBasicLoadingComponent,
-    DbxLoadingProgressComponent,
-    MatProgressSpinnerModule,
-    MatProgressBarModule,
-    DbxActionLoadingContextDirective
-  ]
+  imports: [CommonModule, DbxReadableErrorModule, MatProgressSpinnerModule, MatProgressBarModule],
+  declarations: [DbxLoadingComponent, DbxBasicLoadingComponent, DbxLoadingProgressComponent, DbxActionLoadingContextDirective],
+  exports: [DbxLoadingComponent, DbxBasicLoadingComponent, DbxLoadingProgressComponent, MatProgressSpinnerModule, MatProgressBarModule, DbxActionLoadingContextDirective]
 })
-export class DbxLoadingModule { }
+export class DbxLoadingModule {}

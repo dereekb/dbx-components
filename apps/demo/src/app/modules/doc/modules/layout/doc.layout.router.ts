@@ -19,13 +19,13 @@ export const layoutState: Ng2StateDeclaration = {
 export const homeState: Ng2StateDeclaration = {
   url: '/home',
   name: 'doc.layout.home',
-  component: DocLayoutHomeComponent,
+  component: DocLayoutHomeComponent
 };
 
 export const docLayoutBarState: Ng2StateDeclaration = {
   url: '/bar',
   name: 'doc.layout.bar',
-  component: DocLayoutBarComponent,
+  component: DocLayoutBarComponent
 };
 
 export const docLayoutContentState: Ng2StateDeclaration = {
@@ -43,13 +43,13 @@ export const docLayoutFlexState: Ng2StateDeclaration = {
 export const docLayoutSectionState: Ng2StateDeclaration = {
   url: '/section',
   name: 'doc.layout.section',
-  component: DocLayoutSectionComponent,
+  component: DocLayoutSectionComponent
 };
 
 export const docLayoutListState: Ng2StateDeclaration = {
   url: '/list',
   name: 'doc.layout.list',
-  component: DocLayoutListComponent,
+  component: DocLayoutListComponent
 };
 
 export const docLayoutTwoBlockState: Ng2StateDeclaration = {
@@ -64,14 +64,4 @@ export const docLayoutTwoState: Ng2StateDeclaration = {
   component: DocLayoutTwoColumnsComponent
 };
 
-export const STATES: Ng2StateDeclaration[] = [
-  layoutState,
-  homeState,
-  docLayoutBarState,
-  docLayoutContentState,
-  docLayoutFlexState,
-  docLayoutSectionState,
-  docLayoutListState,
-  docLayoutTwoBlockState,
-  docLayoutTwoState
-];
+export const STATES: Ng2StateDeclaration[] = [layoutState, homeState, docLayoutBarState, docLayoutContentState, docLayoutFlexState, docLayoutSectionState, docLayoutListState, docLayoutTwoBlockState, docLayoutTwoState];

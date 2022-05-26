@@ -18,7 +18,6 @@ export interface SearchableChipValueFieldsFormlyFieldConfig<T, M = unknown, H ex
   templateUrl: 'searchable.chip.field.component.html'
 })
 export class DbxSearchableChipFieldComponent<T, M = unknown, H extends PrimativeKey = PrimativeKey> extends AbstractDbxSearchableValueFieldDirective<T, M, H, SearchableChipValueFieldsFormlyFieldConfig<T, M, H>> implements OnInit, OnDestroy {
-
   private _blur = new Subject<void>();
   private _blurSub = new SubscriptionObject();
 
@@ -63,5 +62,4 @@ export class DbxSearchableChipFieldComponent<T, M = unknown, H extends Primative
   onBlur(): void {
     this._blur.next();
   }
-
 }

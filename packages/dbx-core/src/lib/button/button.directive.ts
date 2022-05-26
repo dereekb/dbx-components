@@ -9,7 +9,6 @@ import { DbxButton, DbxButtonInterceptor, provideDbxButton } from './button';
  */
 @Directive()
 export abstract class AbstractDbxButtonDirective extends AbstractSubscriptionDirective implements DbxButton, OnInit, OnDestroy {
-
   private _disabled = new BehaviorSubject<boolean>(false);
   private _working = new BehaviorSubject<boolean>(false);
 
@@ -56,22 +55,24 @@ export abstract class AbstractDbxButtonDirective extends AbstractSubscriptionDir
   protected _buttonInterceptor = new BehaviorSubject<Maybe<DbxButtonInterceptor>>(undefined);
 
   ngOnInit(): void {
-    this.sub = this._buttonClick.pipe(
-      switchMap(() => this._buttonInterceptor.pipe(
-        switchMap((x) => {
-          if (x) {
-            return x.interceptButtonClick().pipe(
-              first()
-            );
-          } else {
-            return of(true);
-          }
-        }),
-        filter((x) => Boolean(x)) // Ignore false values.
-      ))
-    ).subscribe(() => {
-      this._forceButtonClicked();
-    });
+    this.sub = this._buttonClick
+      .pipe(
+        switchMap(() =>
+          this._buttonInterceptor.pipe(
+            switchMap((x) => {
+              if (x) {
+                return x.interceptButtonClick().pipe(first());
+              } else {
+                return of(true);
+              }
+            }),
+            filter((x) => Boolean(x)) // Ignore false values.
+          )
+        )
+      )
+      .subscribe(() => {
+        this._forceButtonClicked();
+      });
   }
 
   override ngOnDestroy(): void {
@@ -104,7 +105,6 @@ export abstract class AbstractDbxButtonDirective extends AbstractSubscriptionDir
   protected _forceButtonClicked(): void {
     this.buttonClick.emit();
   }
-
 }
 
 // MARK: Implementation
@@ -116,4 +116,4 @@ export abstract class AbstractDbxButtonDirective extends AbstractSubscriptionDir
   exportAs: 'dbxButton',
   providers: provideDbxButton(DbxButtonDirective)
 })
-export class DbxButtonDirective extends AbstractDbxButtonDirective { }
+export class DbxButtonDirective extends AbstractDbxButtonDirective {}

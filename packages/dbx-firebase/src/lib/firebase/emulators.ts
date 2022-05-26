@@ -1,4 +1,3 @@
-
 export interface DbxFirebaseEmulatorConfig {
   /**
    * Port to target.

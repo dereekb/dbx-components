@@ -16,23 +16,29 @@ export const DBX_SEARCHABLE_FIELD_COMPONENT_DATA_TOKEN = new InjectionToken('Dbx
   `
 })
 export class DbxSearchableFieldAutocompleteItemComponent<T> implements OnDestroy {
-
   private _displayValue = new BehaviorSubject<Maybe<ConfiguredSearchableValueFieldDisplayValue<T>>>(undefined);
   readonly displayValue$ = this._displayValue.pipe(filterMaybe(), shareReplay(1));
 
-  readonly config$: Observable<DbxInjectionComponentConfig> = this.displayValue$.pipe(map(x => {
-    const config: DbxInjectionComponentConfig = {
-      ...x.display,
-      providers: mergeIntoArray([{
-        provide: DBX_SEARCHABLE_FIELD_COMPONENT_DATA_TOKEN,
-        useValue: x
-      }], x.display.providers)
-    };
+  readonly config$: Observable<DbxInjectionComponentConfig> = this.displayValue$.pipe(
+    map((x) => {
+      const config: DbxInjectionComponentConfig = {
+        ...x.display,
+        providers: mergeIntoArray(
+          [
+            {
+              provide: DBX_SEARCHABLE_FIELD_COMPONENT_DATA_TOKEN,
+              useValue: x
+            }
+          ],
+          x.display.providers
+        )
+      };
 
-    return config;
-  }));
+      return config;
+    })
+  );
 
-  readonly anchor$ = this.displayValue$.pipe(map(x => x.anchor));
+  readonly anchor$ = this.displayValue$.pipe(map((x) => x.anchor));
 
   @Input()
   set displayValue(displayValue: ConfiguredSearchableValueFieldDisplayValue<T>) {
@@ -42,24 +48,21 @@ export class DbxSearchableFieldAutocompleteItemComponent<T> implements OnDestroy
   ngOnDestroy(): void {
     this._displayValue.complete();
   }
-
 }
 
 // MARK: Default
 @Directive()
 export abstract class AbstractDbxSearchableFieldDisplayDirective<T> {
-
-  constructor(@Inject(DBX_SEARCHABLE_FIELD_COMPONENT_DATA_TOKEN) readonly displayValue: ConfiguredSearchableValueFieldDisplayValue<T>) { }
-
+  constructor(@Inject(DBX_SEARCHABLE_FIELD_COMPONENT_DATA_TOKEN) readonly displayValue: ConfiguredSearchableValueFieldDisplayValue<T>) {}
 }
 
 @Component({
   selector: 'dbx-default-searchable-field-display',
   template: `
-  <div class="dbx-default-searchable-field-display">
-    <span class="dbx-chip-label">{{ displayValue.label }}</span>
-    <span class="dbx-chip-sublabel" *ngIf="displayValue.sublabel">({{ displayValue.sublabel }})</span>
-  </div>
+    <div class="dbx-default-searchable-field-display">
+      <span class="dbx-chip-label">{{ displayValue.label }}</span>
+      <span class="dbx-chip-sublabel" *ngIf="displayValue.sublabel">({{ displayValue.sublabel }})</span>
+    </div>
   `
 })
-export class DbxDefaultSearchableFieldDisplayComponent<T> extends AbstractDbxSearchableFieldDisplayDirective<T>{ }
+export class DbxDefaultSearchableFieldDisplayComponent<T> extends AbstractDbxSearchableFieldDisplayDirective<T> {}

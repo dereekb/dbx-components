@@ -29,10 +29,7 @@
     },
     "test": {
       "executor": "@nrwl/jest:jest",
-      "outputs": [
-        "coverage/packages/util/test",
-        "./.reports/jest/util-test.junit.xml"
-      ],
+      "outputs": ["coverage/packages/util/test", "./.reports/jest/util-test.junit.xml"],
       "options": {
         "jestConfig": "packages/util/test/jest.config.ts",
         "passWithNoTests": true

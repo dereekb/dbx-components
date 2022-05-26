@@ -1,6 +1,4 @@
-import {
-  isDate, max as maxDate, parseISO, addDays, isPast, isAfter as isAfterDate, set as setDateValues, isValid, startOfMinute
-} from 'date-fns';
+import { isDate, max as maxDate, parseISO, addDays, isPast, isAfter as isAfterDate, set as setDateValues, isValid, startOfMinute } from 'date-fns';
 import { DateOrDateString, filterMaybeValues, ISO8601DateString, Maybe, Minutes, MINUTES_IN_DAY, MS_IN_HOUR, MS_IN_MINUTE, Seconds } from '@dereekb/util';
 
 export const MAX_FUTURE_DATE = new Date(Date.UTC(9999, 0));
@@ -33,14 +31,14 @@ export function isMaxFutureDate(date: Date): boolean {
   return MAX_FUTURE_DATE.getTime() === date.getTime();
 }
 
-export function latestMinute(time = new Date): Date {
+export function latestMinute(time = new Date()): Date {
   return startOfMinute(time);
 }
 
 /**
  * Returns an ISO8601DateString for now.
- * 
- * @returns 
+ *
+ * @returns
  */
 export function nowISODateString(): ISO8601DateString {
   return toISODateString(new Date());
@@ -62,12 +60,12 @@ export function guessCurrentTimezone(): string {
 
 /**
  * Converts the input DateOrDateString to a Date value.
- * 
- * @param input 
- * @returns 
+ *
+ * @param input
+ * @returns
  */
 export function toJsDate(input: DateOrDateString): Date {
-  return (isDate(input) ? input as Date : parseISO(input as string));
+  return isDate(input) ? (input as Date) : parseISO(input as string);
 }
 
 /**
@@ -77,7 +75,7 @@ export function latestDate(dates: Maybe<Date>[]): Maybe<Date>;
 export function latestDate(dates: Maybe<Date>[], defaultDate: Date): Date;
 export function latestDate(dates: Maybe<Date>[], defaultDate: Maybe<Date> = undefined): Maybe<Date> {
   const filtered: Date[] = filterMaybeValues(dates);
-  return (filtered.length > 0) ? maxDate(filtered) : defaultDate;
+  return filtered.length > 0 ? maxDate(filtered) : defaultDate;
 }
 
 /**
@@ -86,7 +84,7 @@ export function latestDate(dates: Maybe<Date>[], defaultDate: Maybe<Date> = unde
 export function isAfter(a: Maybe<Date>, b: Maybe<Date>): Maybe<boolean>;
 export function isAfter(a: Maybe<Date>, b: Maybe<Date>, defaultValue: boolean): boolean;
 export function isAfter(a: Maybe<Date>, b: Maybe<Date>, defaultValue: Maybe<boolean> = undefined): Maybe<boolean> {
-  return (a && b) ? isAfterDate(a, b) : defaultValue;
+  return a && b ? isAfterDate(a, b) : defaultValue;
 }
 
 // MARK: Unix Date/Time
@@ -101,9 +99,9 @@ export function utcDayForDate(date: Date): Date {
 
 /**
  * Takes the next occuring time of the input date's hours/minutes.
- * 
+ *
  * For example, if it is currently 9PM:
- * - if 10PM on any day is passed then 9PM the next day will be returned. 
+ * - if 10PM on any day is passed then 9PM the next day will be returned.
  * - if 11PM on any day is passed, 11PM today will be returned.
  */
 export function takeNextUpcomingTime(date: Date, removeSeconds?: boolean): Date {
@@ -129,20 +127,24 @@ export function copyHoursAndMinutesFromDateToToday(date: Date, removeSeconds?: b
 
 /**
  * Creates a new date and copies the hours/minutes from the input.
- * 
+ *
  * Also rounds the seconds and milliseconds.
  */
-export function copyHoursAndMinutesToToday({ hours, minutes, removeSeconds = true }: { hours: number, minutes?: number, removeSeconds?: boolean }): Date {
+export function copyHoursAndMinutesToToday({ hours, minutes, removeSeconds = true }: { hours: number; minutes?: number; removeSeconds?: boolean }): Date {
   return setDateValues(new Date(), {
     hours,
-    ...(minutes != null) ? {
-      minutes
-    } : undefined,
+    ...(minutes != null
+      ? {
+          minutes
+        }
+      : undefined),
     // Remove Seconds/Milliseconds
-    ...(removeSeconds) ? {
-      seconds: 0,
-      milliseconds: 0
-    } : undefined
+    ...(removeSeconds
+      ? {
+          seconds: 0,
+          milliseconds: 0
+        }
+      : undefined)
   });
 }
 

@@ -5,6 +5,8 @@ import { Component } from '@angular/core';
  */
 @Component({
   selector: 'dbx-form-spacer',
-  template: `<div class="dbx-form-spacer"></div>`,
+  template: `
+    <div class="dbx-form-spacer"></div>
+  `
 })
-export class DbxFormSpacerComponent { }
+export class DbxFormSpacerComponent {}

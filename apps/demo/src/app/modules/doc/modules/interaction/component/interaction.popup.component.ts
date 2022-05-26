@@ -12,18 +12,17 @@ export interface DocInteractionPopupConfig {
 
 @Component({
   template: `
-  <dbx-popup-content>
-    <dbx-popup-controls [header]="header" controls></dbx-popup-controls>
-    <dbx-interaction-example-popup-content (shouldClose)="closePopup()" [reopen]="reopen"></dbx-interaction-example-popup-content>
-  </dbx-popup-content>
+    <dbx-popup-content>
+      <dbx-popup-controls [header]="header" controls></dbx-popup-controls>
+      <dbx-interaction-example-popup-content (shouldClose)="closePopup()" [reopen]="reopen"></dbx-interaction-example-popup-content>
+    </dbx-popup-content>
   `
 })
 export class DocInteractionExamplePopupComponent<O> extends AbstractPopupDirective<O, DocInteractionPopupConfig> implements OnInit, OnDestroy {
-
   @ViewChild(DocInteractionExamplePopupContentComponent, { static: true })
   content!: DocInteractionExamplePopupContentComponent;
 
-  readonly header = "example";
+  readonly header = 'example';
 
   get config(): DocInteractionPopupConfig {
     return this.popup.data as DocInteractionPopupConfig;
@@ -45,14 +44,9 @@ export class DocInteractionExamplePopupComponent<O> extends AbstractPopupDirecti
 
   reopen = () => {
     DocInteractionExamplePopupComponent.openPopup(this.popupService, this.config, this.popup.key);
-  }
+  };
 
-  ngOnInit(): void {
+  ngOnInit(): void {}
 
-  }
-
-  ngOnDestroy(): void {
-
-  }
-
+  ngOnDestroy(): void {}
 }

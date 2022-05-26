@@ -1,5 +1,5 @@
-import { ArrayOrValue, forEachWithArray } from "../array";
-import { Maybe } from "./maybe";
+import { ArrayOrValue, forEachWithArray } from '../array';
+import { Maybe } from './maybe';
 
 /**
  * Modifier key
@@ -15,25 +15,23 @@ export type ModifierFunction<T> = (input: T) => void;
  * A modifier that has a key and modify function.
  */
 export interface Modifier<T> {
-
   /**
    * Modifier key.
    */
   readonly key: ModifierKey;
 
   /**
-   * 
+   *
    */
   readonly modify: ModifierFunction<T>;
-
 }
 
 /**
  * Creates a new modifier
- * 
- * @param key 
- * @param modify 
- * @returns 
+ *
+ * @param key
+ * @param modify
+ * @returns
  */
 export function modifier<T>(key: string, modify: ModifierFunction<T>): Modifier<T> {
   return {
@@ -49,10 +47,10 @@ export type ModifierMap<T> = Map<ModifierKey, Modifier<T>>;
 
 /**
  * Adds a modifier to the modifier map and returns the map.
- * 
- * @param modifier 
- * @param map 
- * @returns 
+ *
+ * @param modifier
+ * @param map
+ * @returns
  */
 export function addModifiers<T>(modifiers: ArrayOrValue<Modifier<T>>, map?: Maybe<ModifierMap<T>>): ModifierMap<T> {
   if (!map) {
@@ -66,9 +64,9 @@ export function addModifiers<T>(modifiers: ArrayOrValue<Modifier<T>>, map?: Mayb
 
 /**
  * Removes a modifier from the modifier map and returns the map.
- * 
- * @param modifier 
- * @param map 
+ *
+ * @param modifier
+ * @param map
  */
 export function removeModifiers<T>(modifiers: ArrayOrValue<Modifier<T>>, map: Maybe<ModifierMap<T>>): ModifierMap<T> {
   if (map) {
@@ -80,17 +78,15 @@ export function removeModifiers<T>(modifiers: ArrayOrValue<Modifier<T>>, map: Ma
   return map;
 }
 
-
 export function modifierMapToFunction<T>(map: Maybe<ModifierMap<T>>): ModifierFunction<T> {
   return maybeModifierMapToFunction(map) ?? (() => undefined);
 }
 
-
 /**
  * Converts a ModifierMap to a ModifierFunction if the map is input or has functions. Otherwise returns undefined.
- * 
- * @param map 
- * @returns 
+ *
+ * @param map
+ * @returns
  */
 export function maybeModifierMapToFunction<T>(map: Maybe<ModifierMap<T>>): Maybe<ModifierFunction<T>> {
   const fns: ModifierFunction<T>[] = [];

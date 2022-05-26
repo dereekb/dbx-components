@@ -5,8 +5,6 @@ import { Component } from '@angular/core';
   templateUrl: './role.component.html'
 })
 export class DocAuthRoleComponent {
-
   readonly noRoles = [];
   readonly userRole = [AUTH_USER_ROLE];
-
 }

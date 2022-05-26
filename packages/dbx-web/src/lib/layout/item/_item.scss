@@ -2,13 +2,15 @@
 
 // MARK: Variables
 
-
 // MARK: Mixin
-@mixin core() {}
+@mixin core() {
+}
 
-@mixin color($theme-config) {}
+@mixin color($theme-config) {
+}
 
-@mixin typography($typography-config) {}
+@mixin typography($typography-config) {
+}
 
 @mixin theme($theme-config) {
   @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-layout-item') {

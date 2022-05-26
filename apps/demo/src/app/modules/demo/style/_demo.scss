@@ -1,6 +1,6 @@
 @use 'node_modules/@angular/material/core/theming/palette';
-@use '@angular/material'as mat;
-@use 'dbx-web/src/index'as dbx;
+@use '@angular/material' as mat;
+@use 'dbx-web/src/index' as dbx;
 @use 'dbx-form/src/index' as dbx-form;
 @use '../../../../style/variables';
 
@@ -8,7 +8,17 @@
 $demo-primary: mat.define-palette(mat.$deep-purple-palette);
 $demo-accent: mat.define-palette(mat.$blue-palette);
 $demo-warn: mat.define-palette(mat.$red-palette);
-$demo-mat-theme: mat.define-light-theme((color: (primary: $demo-primary, accent: $demo-accent, warn: $demo-warn), density: null, typography: null));
+$demo-mat-theme: mat.define-light-theme(
+  (
+    color: (
+      primary: $demo-primary,
+      accent: $demo-accent,
+      warn: $demo-warn
+    ),
+    density: null,
+    typography: null
+  )
+);
 $demo-dbx-theme-with-banner-config: dbx.quick-define-dbx-config-via-banners(variables.$app-top-banner-height);
 $demo-theme: dbx.define-dbx-theme-config($demo-mat-theme, $demo-dbx-theme-with-banner-config);
 

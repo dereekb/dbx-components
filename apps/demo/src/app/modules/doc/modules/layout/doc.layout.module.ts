@@ -44,4 +44,4 @@ import { DocLayoutTwoColumnsComponent } from './container/two.component';
     DocLayoutTwoBlockComponent
   ]
 })
-export class DocLayoutModule { }
+export class DocLayoutModule {}

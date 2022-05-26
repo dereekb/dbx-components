@@ -1,4 +1,4 @@
-import { TreeNode } from "./tree";
+import { TreeNode } from './tree';
 
 // MARK: Flatten
 /**
@@ -15,18 +15,18 @@ export function flattenTree<N extends TreeNode<unknown> = TreeNode<unknown>>(tre
 
 /**
  * Traverses the tree and pushes the nodes into the input array.
- * 
- * @param tree 
- * @param array 
- * @returns 
+ *
+ * @param tree
+ * @param array
+ * @returns
  */
 export function flattenTreeToArray<N extends TreeNode<unknown> = TreeNode<unknown>>(tree: N, array: N[]): N[] {
   return flattenTreeToArrayFunction<N>()(tree, array);
 }
 
 export function flattenTreeToArrayFunction<N extends TreeNode<unknown>>(): FlattenTreeFunction<N, N>;
-export function flattenTreeToArrayFunction<N extends TreeNode<unknown, N>, V>(mapNodeFn?: ((node: N) => V)): FlattenTreeFunction<N, V>;
-export function flattenTreeToArrayFunction<N extends TreeNode<unknown, N>, V>(mapNodeFn?: ((node: N) => V)): FlattenTreeFunction<N, V> {
+export function flattenTreeToArrayFunction<N extends TreeNode<unknown, N>, V>(mapNodeFn?: (node: N) => V): FlattenTreeFunction<N, V>;
+export function flattenTreeToArrayFunction<N extends TreeNode<unknown, N>, V>(mapNodeFn?: (node: N) => V): FlattenTreeFunction<N, V> {
   const mapNode: (node: N) => V = mapNodeFn ?? ((x) => x as unknown as V);
 
   const flattenFn = (tree: N, array: V[] = []) => {
@@ -44,10 +44,10 @@ export function flattenTreeToArrayFunction<N extends TreeNode<unknown, N>, V>(ma
 
 /**
  * Convenience function for flattening multiple trees with a flatten function.
- * 
- * @param trees 
- * @param flattenFn 
- * @returns 
+ *
+ * @param trees
+ * @param flattenFn
+ * @returns
  */
 export function flattenTrees<N extends TreeNode<unknown, N>, V>(trees: N[], flattenFn: FlattenTreeFunction<N, V>): V[] {
   const array: V[] = [];

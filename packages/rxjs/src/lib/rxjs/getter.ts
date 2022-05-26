@@ -21,11 +21,11 @@ export function asObservable<T>(valueOrObs: Maybe<ObservableOrValue<T>>): Observ
 
 /**
  * Switch map for an ObservableGetter that pipes through the value.
- * 
- * @returns 
+ *
+ * @returns
  */
 export function valueFromObservableOrValue<T>(): OperatorFunction<ObservableOrValue<T>, T> {
-  return switchMap(x => {
+  return switchMap((x) => {
     if (isObservable(x)) {
       return x;
     } else {

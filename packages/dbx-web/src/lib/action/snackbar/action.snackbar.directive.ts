@@ -13,7 +13,6 @@ import { LoadingState, LoadingStateType, loadingStateType } from '@dereekb/rxjs'
   selector: '[dbxActionSnackbar]'
 })
 export class DbxActionSnackbarDirective<T = unknown, O = unknown> extends AbstractSubscriptionDirective implements OnInit {
-
   private _snackbarFunction?: Maybe<DbxActionSnackbarDisplayConfigGeneratorFunction>;
 
   @Input('dbxActionSnackbar')
@@ -33,35 +32,34 @@ export class DbxActionSnackbarDirective<T = unknown, O = unknown> extends Abstra
   @Input()
   dbxActionSnackbarUndo?: DbxActionSnackbarGeneratorUndoInput<T, O>;
 
-  constructor(@Host() public readonly source: DbxActionContextStoreSourceInstance<T, O>,
-    readonly dbxActionSnackbarService: DbxActionSnackbarService
-  ) {
+  constructor(@Host() public readonly source: DbxActionContextStoreSourceInstance<T, O>, readonly dbxActionSnackbarService: DbxActionSnackbarService) {
     super();
   }
 
   ngOnInit(): void {
-    this.sub = this.source.pipeStore((store) => store.loadingState$).subscribe((loadingState: LoadingState<O>) => {
-      const event: DbxActionSnackbarEvent<O> = { value: loadingState.value, error: loadingState.error, type: loadingStateType(loadingState) };
+    this.sub = this.source
+      .pipeStore((store) => store.loadingState$)
+      .subscribe((loadingState: LoadingState<O>) => {
+        const event: DbxActionSnackbarEvent<O> = { value: loadingState.value, error: loadingState.error, type: loadingStateType(loadingState) };
 
-      const config = this.buildConfigurationForEvent(event);
+        const config = this.buildConfigurationForEvent(event);
 
-      if (config) {
-        this.showSnackbarForConfiguration(config, event);
-      }
-    });
+        if (config) {
+          this.showSnackbarForConfiguration(config, event);
+        }
+      });
   }
 
   protected buildConfigurationForEvent(event: DbxActionSnackbarEvent<O>): Maybe<DbxActionSnackbarDisplayConfig<T, O>> {
     const input: DbxActionSnackbarGeneratorInput<T, O> = {
       event,
-      undo: event.type === LoadingStateType.SUCCESS ? this.dbxActionSnackbarUndo : undefined  // only show undo on success.
+      undo: event.type === LoadingStateType.SUCCESS ? this.dbxActionSnackbarUndo : undefined // only show undo on success.
     };
 
-    return (this.snackbarFunction) ? this.snackbarFunction(input) : this.dbxActionSnackbarService.generateDisplayConfig(this.dbxActionSnackbarDefault, input);
+    return this.snackbarFunction ? this.snackbarFunction(input) : this.dbxActionSnackbarService.generateDisplayConfig(this.dbxActionSnackbarDefault, input);
   }
 
   protected showSnackbarForConfiguration(config: DbxActionSnackbarDisplayConfig<T, O>, event: DbxActionSnackbarEvent<O>) {
     this.dbxActionSnackbarService.openSnackbar(config);
   }
-
 }

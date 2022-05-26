@@ -10,16 +10,15 @@ import { DemoGuestbookEntryPopupComponent } from './guestbook.entry.popup.compon
   templateUrl: './guestbook.view.component.html'
 })
 export class DemoGuestbookViewComponent implements OnDestroy {
-
   @ViewChild(GuestbookEntryDocumentStore)
   readonly documentStore!: GuestbookEntryDocumentStore;
 
   readonly context = loadingStateContext({ obs: this.guestbookStore.dataLoadingState$ });
   readonly data$ = this.guestbookStore.data$;
 
-  readonly name$ = this.data$.pipe(map(x => x?.name));
+  readonly name$ = this.data$.pipe(map((x) => x?.name));
 
-  constructor(readonly guestbookStore: GuestbookDocumentStore, readonly matDialog: MatDialog) { }
+  constructor(readonly guestbookStore: GuestbookDocumentStore, readonly matDialog: MatDialog) {}
 
   ngOnDestroy(): void {
     this.context.destroy();
@@ -30,5 +29,4 @@ export class DemoGuestbookViewComponent implements OnDestroy {
       guestbookEntryDocumentStore: this.documentStore
     });
   }
-
 }

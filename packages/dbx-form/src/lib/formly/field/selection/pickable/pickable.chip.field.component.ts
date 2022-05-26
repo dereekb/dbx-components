@@ -1,5 +1,5 @@
-import { Component } from "@angular/core";
-import { AbstractDbxPickableItemFieldDirective, PickableItemFieldItem } from "./pickable.field.directive";
+import { Component } from '@angular/core';
+import { AbstractDbxPickableItemFieldDirective, PickableItemFieldItem } from './pickable.field.directive';
 
 /**
  * Used for picking pre-set values using chips as the presentation.
@@ -8,7 +8,6 @@ import { AbstractDbxPickableItemFieldDirective, PickableItemFieldItem } from "./
   templateUrl: 'pickable.chip.field.component.html'
 })
 export class DbxPickableChipListFieldComponent<T> extends AbstractDbxPickableItemFieldDirective<T> {
-
   itemClicked(item: PickableItemFieldItem<T>): void {
     if (!item.disabled && !this.isReadonlyOrDisabled) {
       if (item.selected) {
@@ -18,5 +17,4 @@ export class DbxPickableChipListFieldComponent<T> extends AbstractDbxPickableIte
       }
     }
   }
-
 }

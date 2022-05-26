@@ -14,35 +14,8 @@ import { DbxValueListItemModifierDirective } from './list.view.value.modifier.di
 import { DbxListItemDisableRippleModifierDirective } from './list.view.value.modifier.ripple.directive';
 
 @NgModule({
-  imports: [
-    CommonModule,
-    DbxLoadingModule,
-    DbxRouterAnchorModule,
-    InfiniteScrollModule,
-    DbxInjectionComponentModule,
-    MatListModule,
-    MatIconModule
-  ],
-  declarations: [
-    DbxListComponent,
-    DbxListInternalContentDirective,
-    DbxListEmptyContentComponent,
-    DbxValueListViewComponent,
-    DbxValueListItemViewComponent,
-    DbxSelectionValueListViewComponent,
-    DbxSelectionValueListItemViewComponent,
-    DbxValueListItemModifierDirective,
-    DbxListItemDisableRippleModifierDirective
-  ],
-  exports: [
-    DbxListComponent,
-    DbxListEmptyContentComponent,
-    DbxValueListViewComponent,
-    DbxValueListItemViewComponent,
-    DbxSelectionValueListViewComponent,
-    DbxSelectionValueListItemViewComponent,
-    DbxValueListItemModifierDirective,
-    DbxListItemDisableRippleModifierDirective
-  ]
+  imports: [CommonModule, DbxLoadingModule, DbxRouterAnchorModule, InfiniteScrollModule, DbxInjectionComponentModule, MatListModule, MatIconModule],
+  declarations: [DbxListComponent, DbxListInternalContentDirective, DbxListEmptyContentComponent, DbxValueListViewComponent, DbxValueListItemViewComponent, DbxSelectionValueListViewComponent, DbxSelectionValueListItemViewComponent, DbxValueListItemModifierDirective, DbxListItemDisableRippleModifierDirective],
+  exports: [DbxListComponent, DbxListEmptyContentComponent, DbxValueListViewComponent, DbxValueListItemViewComponent, DbxSelectionValueListViewComponent, DbxSelectionValueListItemViewComponent, DbxValueListItemModifierDirective, DbxListItemDisableRippleModifierDirective]
 })
-export class DbxListLayoutModule { }
+export class DbxListLayoutModule {}

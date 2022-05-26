@@ -1,11 +1,11 @@
-import { setContainsAllValues } from "../set/set";
-import { Maybe } from "../value/maybe";
+import { setContainsAllValues } from '../set/set';
+import { Maybe } from '../value/maybe';
 
 /**
  * An application role.
- * 
+ *
  * Is used in the client to decide which content a user can view.
- * 
+ *
  * Roles should always be lowercase.
  */
 export type AuthRole = string;
@@ -26,5 +26,5 @@ export const AUTH_ADMIN_ROLE = 'admin';
 export const AUTH_USER_ROLE = 'user';
 
 export function authRolesSetHasRoles(authRolesSet: AuthRoleSet, roles: Maybe<Iterable<AuthRole>>) {
-  return setContainsAllValues(authRolesSet, roles ?? [])
+  return setContainsAllValues(authRolesSet, roles ?? []);
 }

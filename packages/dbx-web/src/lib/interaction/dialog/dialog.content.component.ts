@@ -8,13 +8,11 @@ export type DbxDialogContentContainerWidth = 'normal' | 'wide';
 @Directive({
   selector: 'dbx-dialog-content,[dbxDialogContent].dbx-dialog-content',
   host: {
-    'class': 'dbx-dialog-content',
+    class: 'dbx-dialog-content',
     '[class]': `width + '-dialog-content'`
   }
 })
 export class DbxDialogContentDirective {
-
   @Input()
-  width = 'normal'
-
+  width = 'normal';
 }

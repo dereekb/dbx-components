@@ -1,6 +1,4 @@
-import { ChangeDetectorRef ,
-  Component, OnDestroy, OnInit, Type
-} from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit, Type } from '@angular/core';
 import { DbxInjectionComponentConfig, AbstractSubscriptionDirective, safeDetectChanges } from '@dereekb/dbx-core';
 import { switchMapMaybeObs } from '@dereekb/rxjs';
 import { shareReplay, distinctUntilChanged, map, BehaviorSubject } from 'rxjs';
@@ -29,22 +27,17 @@ export interface ChecklistItemFormlyFieldConfig<T = unknown> extends FormlyField
   templateUrl: 'checklist.item.field.component.html'
 })
 export class DbxChecklistItemFieldComponent<T = unknown> extends FieldType<ChecklistItemFormlyFieldConfig<T> & FieldTypeConfig> implements OnInit, OnDestroy {
-
   private _displayContent = new BehaviorSubject<Maybe<ChecklistItemFieldDisplayContentObs<T>>>(undefined);
 
-  readonly displayContent$ = this._displayContent.pipe(
-    switchMapMaybeObs(),
-    distinctUntilChanged(),
-    shareReplay(1)
-  );
+  readonly displayContent$ = this._displayContent.pipe(switchMapMaybeObs(), distinctUntilChanged(), shareReplay(1));
 
   readonly anchor$ = this.displayContent$.pipe(
-    map(x => x.anchor),
+    map((x) => x.anchor),
     shareReplay(1)
   );
 
   readonly rippleDisabled$ = this.displayContent$.pipe(
-    map(x => x.ripple === false || (x.ripple !== true && !x.anchor)),
+    map((x) => x.ripple === false || (x.ripple !== true && !x.anchor)),
     distinctUntilChanged(),
     shareReplay(1)
   );
@@ -88,21 +81,18 @@ export class DbxChecklistItemFieldComponent<T = unknown> extends FieldType<Check
   ngOnDestroy() {
     this._displayContent.complete();
   }
-
 }
 
 @Component({
   selector: 'dbx-checklist-item-content-component',
-  template: `<dbx-injection [config]="config"></dbx-injection>`
+  template: `
+    <dbx-injection [config]="config"></dbx-injection>
+  `
 })
 export class DbxChecklistItemContentComponent<T = unknown> extends AbstractSubscriptionDirective implements OnInit {
-
   config?: DbxInjectionComponentConfig<ChecklistItemFieldDisplayComponent<T>>;
 
-  constructor(
-    readonly checklistItemFieldComponent: DbxChecklistItemFieldComponent<T>,
-    readonly cdRef: ChangeDetectorRef
-  ) {
+  constructor(readonly checklistItemFieldComponent: DbxChecklistItemFieldComponent<T>, readonly cdRef: ChangeDetectorRef) {
     super();
   }
 
@@ -117,5 +107,4 @@ export class DbxChecklistItemContentComponent<T = unknown> extends AbstractSubsc
       }
     };
   }
-
 }

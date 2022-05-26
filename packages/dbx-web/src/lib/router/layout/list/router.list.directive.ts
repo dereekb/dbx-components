@@ -1,9 +1,9 @@
-import { Directive, Input, OnDestroy } from "@angular/core";
-import { ClickableAnchor } from "@dereekb/dbx-core";
-import { ArrayOrValue, Maybe, Modifier } from "@dereekb/util";
-import { BehaviorSubject, map, Observable } from "rxjs";
-import { DbxValueListItem } from "../../../layout/list/list.view.value";
-import { AbstractDbxValueListItemModifierDirective } from "../../../layout/list/list.view.value.modifier.directive";
+import { Directive, Input, OnDestroy } from '@angular/core';
+import { ClickableAnchor } from '@dereekb/dbx-core';
+import { ArrayOrValue, Maybe, Modifier } from '@dereekb/util';
+import { BehaviorSubject, map, Observable } from 'rxjs';
+import { DbxValueListItem } from '../../../layout/list/list.view.value';
+import { AbstractDbxValueListItemModifierDirective } from '../../../layout/list/list.view.value.modifier.directive';
 
 export type AnchorForValueFunction<T> = (value: T, item: DbxValueListItem<T>) => Maybe<ClickableAnchor>;
 
@@ -13,7 +13,6 @@ export const DBX_ROUTER_VALUE_LIST_ITEM_MODIFIER_KEY = 'router_anchor';
   selector: '[dbxListItemAnchorModifier]'
 })
 export class DbxListItemAnchorModifierDirective<T> extends AbstractDbxValueListItemModifierDirective<T> implements OnDestroy {
-
   private _anchorForItem = new BehaviorSubject<Maybe<AnchorForValueFunction<T>>>(undefined);
 
   readonly modifiers$: Observable<Maybe<ArrayOrValue<Modifier<DbxValueListItem<T>>>>> = this._anchorForItem.pipe(
@@ -42,5 +41,4 @@ export class DbxListItemAnchorModifierDirective<T> extends AbstractDbxValueListI
   set anchorForItem(anchorForItem: Maybe<AnchorForValueFunction<T>>) {
     this._anchorForItem.next(anchorForItem);
   }
-
 }

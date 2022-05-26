@@ -1,5 +1,5 @@
-import { MapStringFunction, Maybe, splitCommaSeparatedString } from "@dereekb/util";
-import { TransformFnParams } from "class-transformer";
+import { MapStringFunction, Maybe, splitCommaSeparatedString } from '@dereekb/util';
+import { TransformFnParams } from 'class-transformer';
 
 // MARK: String
 export function transformStringToBoolean(defaultValue?: boolean | undefined): (params: TransformFnParams) => Maybe<boolean> {
@@ -18,7 +18,7 @@ export function transformStringToBoolean(defaultValue?: boolean | undefined): (p
     } else {
       return defaultValue;
     }
-  }
+  };
 }
 
 // MARK: Comma Separated Values
@@ -35,7 +35,7 @@ export function transformCommaSeparatedValueToArray<T>(mapFn: MapStringFunction<
     }
 
     return result;
-  }
+  };
 }
 
 export const transformCommaSeparatedNumberValueToArray = transformCommaSeparatedValueToArray((x) => Number(x));

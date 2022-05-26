@@ -3,9 +3,7 @@ import { Component } from '@angular/core';
 import { DbxTwoColumnLayoutModule } from './two.column.module';
 import { provideTwoColumnsContext } from './two.column.store';
 
-
 describe('DbxTwoColumnComponent', () => {
-
   beforeEach(async () => {
     TestBed.configureTestingModule({
       imports: [DbxTwoColumnLayoutModule],
@@ -25,7 +23,6 @@ describe('DbxTwoColumnComponent', () => {
   it('should create', () => {
     expect(component).toBeTruthy();
   });
-
 });
 
 @Component({
@@ -41,4 +38,4 @@ describe('DbxTwoColumnComponent', () => {
   `,
   providers: provideTwoColumnsContext()
 })
-class TwoColumnsTestComponent { }
+class TwoColumnsTestComponent {}

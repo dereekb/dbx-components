@@ -7,12 +7,11 @@ import { Maybe } from '@dereekb/util';
  */
 @NgModule()
 export class DbxFirebaseEmulatorModule {
-
   static forRoot(config: DbxFirebaseEmulatorsConfig): ModuleWithProviders<DbxFirebaseEmulatorModule> {
     const defaultHost = config.host ?? 'localhost';
 
     function emulatorConfig(emulator: Maybe<DbxFirebaseEmulatorConfig>): Required<DbxFirebaseEmulatorConfig> | undefined {
-      return (emulator) ? { host: emulator.host ?? defaultHost, port: emulator.port } : undefined;
+      return emulator ? { host: emulator.host ?? defaultHost, port: emulator.port } : undefined;
     }
 
     const finalConfig: DbxFirebaseParsedEmulatorsConfig = {
@@ -26,11 +25,12 @@ export class DbxFirebaseEmulatorModule {
 
     return {
       ngModule: DbxFirebaseEmulatorModule,
-      providers: [{
-        provide: DbxFirebaseParsedEmulatorsConfig,
-        useValue: finalConfig
-      }]
+      providers: [
+        {
+          provide: DbxFirebaseParsedEmulatorsConfig,
+          useValue: finalConfig
+        }
+      ]
     };
   }
-
 }

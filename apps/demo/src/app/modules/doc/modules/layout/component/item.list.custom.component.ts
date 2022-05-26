@@ -1,9 +1,9 @@
 import { anchorTypeForAnchor, ClickableAnchor, AnchorType } from '@dereekb/dbx-core';
 import { LOREM } from '../../shared/lorem';
-import { Component } from "@angular/core";
-import { AbstractDbxValueListViewItemComponent, DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE, provideDbxListView, AbstractDbxListWrapperDirective, AbstractDbxListViewDirective, DbxValueListViewConfig } from "@dereekb/dbx-web";
-import { of } from "rxjs";
-import { DocValue, DocValueWithSelection } from "./item.list";
+import { Component } from '@angular/core';
+import { AbstractDbxValueListViewItemComponent, DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE, provideDbxListView, AbstractDbxListWrapperDirective, AbstractDbxListViewDirective, DbxValueListViewConfig } from '@dereekb/dbx-web';
+import { of } from 'rxjs';
+import { DocValue, DocValueWithSelection } from './item.list';
 
 export interface CustomDocValue extends DocValue {
   anchor?: ClickableAnchor;
@@ -17,26 +17,24 @@ export interface CustomDocValue extends DocValue {
   template: DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE
 })
 export class DocCustomItemListComponent extends AbstractDbxListWrapperDirective<DocValue> {
-
   constructor() {
     super({
-      componentClass: DocCustomItemListViewComponent,
+      componentClass: DocCustomItemListViewComponent
     });
   }
-
 }
 
 @Component({
-  template: `<dbx-list-view [config]="config"></dbx-list-view>`,
+  template: `
+    <dbx-list-view [config]="config"></dbx-list-view>
+  `,
   providers: provideDbxListView(DocCustomItemListViewComponent)
 })
 export class DocCustomItemListViewComponent extends AbstractDbxListViewDirective<DocValue> {
-
   readonly config: DbxValueListViewConfig<DocValueWithSelection> = {
     componentClass: DocCustomItemListViewItemComponent,
     mapValuesToItemValues: (x) => of(x.map((y) => ({ ...y, icon: y.icon, itemValue: y })))
   };
-
 }
 
 @Component({
@@ -48,7 +46,6 @@ export class DocCustomItemListViewComponent extends AbstractDbxListViewDirective
   `
 })
 export class DocCustomItemListViewItemComponent extends AbstractDbxValueListViewItemComponent<DocValue> {
-
   readonly lorem = LOREM;
 
   get anchorType() {
@@ -58,5 +55,4 @@ export class DocCustomItemListViewItemComponent extends AbstractDbxValueListView
   get name() {
     return this.itemValue.name;
   }
-
 }

@@ -1,18 +1,20 @@
-@use "sass:map";
+@use 'sass:map';
 @use './variables';
 
 // theme
 @function define-dbx-firebase-theme-config($theme-config, $input-dbx-firebase-theme-config: null) {
-
   @if ($input-dbx-firebase-theme-config == null) {
     $input-dbx-firebase-theme-config: ();
   }
-  
+
   $dbx-firebase-theme-config: ();
 
-  @return map.merge($theme-config, (
-    'dbx-firebase': $dbx-firebase-theme-config
-  ));
+  @return map.merge(
+    $theme-config,
+    (
+      'dbx-firebase': $dbx-firebase-theme-config
+    )
+  );
 }
 
 @function get-dbx-firebase-theme-config($theme-config) {

@@ -5,16 +5,10 @@ import { timeOnlyField } from '../../..';
 import { first } from 'rxjs';
 
 describe('DbxDateTimeFieldComponent', () => {
-
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [
-        ...FORM_TEST_PROVIDERS,
-      ],
-      declarations: [
-        TestDbxActionFormDirectiveComponent,
-        DbxTestDbxFormComponent
-      ]
+      imports: [...FORM_TEST_PROVIDERS],
+      declarations: [TestDbxActionFormDirectiveComponent, DbxTestDbxFormComponent]
     }).compileComponents();
   });
 
@@ -35,7 +29,6 @@ describe('DbxDateTimeFieldComponent', () => {
   });
 
   describe('time only mode', () => {
-
     const fieldKey = 'date';
     const date = new Date();
 
@@ -45,7 +38,6 @@ describe('DbxDateTimeFieldComponent', () => {
     });
 
     describe('set time', () => {
-
       beforeEach(() => {
         form.setValue({
           date
@@ -55,18 +47,16 @@ describe('DbxDateTimeFieldComponent', () => {
       });
 
       it('should have set the time properly.', (done) => {
-
-        form.getValue().pipe(first()).subscribe(({ date: dateValue }) => {
-          expect(dateValue).toBeSameMinuteAs(date);
-          done();
-        });
-
+        form
+          .getValue()
+          .pipe(first())
+          .subscribe(({ date: dateValue }) => {
+            expect(dateValue).toBeSameMinuteAs(date);
+            done();
+          });
       });
-
     });
-
   });
-
 });
 
 @Component({
@@ -77,8 +67,6 @@ describe('DbxDateTimeFieldComponent', () => {
   `
 })
 class TestDbxActionFormDirectiveComponent {
-
   @ViewChild(DbxTestDbxFormComponent, { static: true })
   form!: DbxTestDbxFormComponent<{ date: Date }>;
-
 }

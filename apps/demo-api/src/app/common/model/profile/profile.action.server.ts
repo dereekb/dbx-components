@@ -1,11 +1,11 @@
-import { FirebaseServerActionsContext } from "@dereekb/firebase-server";
-import { AsyncProfileUpdateAction, ProfileDocument, ProfileFirestoreCollections, profileWithUsername, SetProfileUsernameParams, UpdateProfileParams } from "@dereekb/demo-firebase";
-import { containsStringAnyCase, Maybe } from "@dereekb/util";
+import { FirebaseServerActionsContext } from '@dereekb/firebase-server';
+import { AsyncProfileUpdateAction, ProfileDocument, ProfileFirestoreCollections, profileWithUsername, SetProfileUsernameParams, UpdateProfileParams } from '@dereekb/demo-firebase';
+import { containsStringAnyCase, Maybe } from '@dereekb/util';
 
 /**
  * FirebaseServerActionsContextt required for ProfileServerActions.
  */
-export interface ProfileServerActionsContext extends FirebaseServerActionsContext, ProfileFirestoreCollections { }
+export interface ProfileServerActionsContext extends FirebaseServerActionsContext, ProfileFirestoreCollections {}
 
 /**
  * Server-only profile actions.
@@ -32,7 +32,6 @@ export function initProfileForUidFactory({ profileFirestoreCollection, profilePr
   const { query: queryProfile } = profileFirestoreCollection;
 
   return async (uid: string) => {
-
     // init within a transaction.
     const profile = await profileFirestoreCollection.firestoreContext.runTransaction(async (transaction) => {
       const profile: Maybe<ProfileDocument> = profileFirestoreCollection.documentAccessorForTransaction(transaction).loadDocumentForPath(uid);
@@ -44,7 +43,7 @@ export function initProfileForUidFactory({ profileFirestoreCollection, profilePr
         const docs = await queryProfile(profileWithUsername(username)).getDocs(transaction);
 
         if (!docs.empty) {
-          username = `${uid}-1`;  // "-" isn't allowed in usernames by users, so this name should be safe.
+          username = `${uid}-1`; // "-" isn't allowed in usernames by users, so this name should be safe.
         }
 
         // create the profile
@@ -83,7 +82,6 @@ export function setProfileUsernameFactory({ firebaseServerActionTransformFunctio
         const docs = await queryProfile(profileWithUsername(username)).getDocs(transaction);
 
         if (!docs.empty) {
-
           const usernames = docs.docs.map((x) => {
             const { username: docUsername } = x.data();
             return docUsername;
@@ -107,9 +105,12 @@ export function setProfileUsernameFactory({ firebaseServerActionTransformFunctio
 
           // update the data on the accessor
           const profilePrivateData = profilePrivateDataDocument;
-          await profilePrivateData.accessor.set({
-            usernameSetAt: new Date()
-          }, { merge: true });
+          await profilePrivateData.accessor.set(
+            {
+              usernameSetAt: new Date()
+            },
+            { merge: true }
+          );
         }
       });
 
@@ -117,7 +118,6 @@ export function setProfileUsernameFactory({ firebaseServerActionTransformFunctio
     };
   });
 }
-
 
 export function updateProfileFactory({ firebaseServerActionTransformFunctionFactory, profileFirestoreCollection }: ProfileServerActionsContext) {
   return firebaseServerActionTransformFunctionFactory(UpdateProfileParams, async (params) => {
@@ -127,7 +127,7 @@ export function updateProfileFactory({ firebaseServerActionTransformFunctionFact
       const documentRef = document.documentRef;
 
       const profile = profileFirestoreCollection.documentAccessor().loadDocument(documentRef);
-      await profile.accessor.set({ bio }, { merge: true })
+      await profile.accessor.set({ bio }, { merge: true });
       return document;
     };
   });

@@ -5,7 +5,5 @@ import { LOREM } from '../../shared';
   templateUrl: './section.component.html'
 })
 export class DocLayoutSectionComponent {
-  
   lorem = LOREM;
-
 }

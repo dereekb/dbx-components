@@ -1,8 +1,8 @@
 import { Observable } from 'rxjs';
-import { ArrayOrValue, flattenArrayOrValueArray, Maybe } from "@dereekb/util";
-import { CollectionReferenceRef } from "../reference";
-import { Query, QueryDocumentSnapshot, QuerySnapshot, Transaction } from "../types";
-import { addOrReplaceLimitInConstraints, FirestoreQueryConstraint } from "./constraint";
+import { ArrayOrValue, flattenArrayOrValueArray, Maybe } from '@dereekb/util';
+import { CollectionReferenceRef } from '../reference';
+import { Query, QueryDocumentSnapshot, QuerySnapshot, Transaction } from '../types';
+import { addOrReplaceLimitInConstraints, FirestoreQueryConstraint } from './constraint';
 import { FirestoreQueryDriverRef } from '../driver/query';
 
 export interface FirestoreExecutableQueryGetDocsContext {
@@ -28,8 +28,8 @@ export interface FirestoreExecutableQuery<T> {
   streamDocs(): Observable<QuerySnapshot<T>>;
   /**
    * Extend this query by adding additional filters.
-   * 
-   * @param queryConstraints 
+   *
+   * @param queryConstraints
    */
   filter(...queryConstraints: ArrayOrValue<FirestoreQueryConstraint>[]): FirestoreExecutableQuery<T>;
 }
@@ -43,13 +43,13 @@ export interface FirestoreQueryFactory<T> {
   readonly query: FirestoreQueryFactoryFunction<T>;
 }
 
-export interface FirestoreQueryConfig<T> extends FirestoreQueryDriverRef, CollectionReferenceRef<T> { }
+export interface FirestoreQueryConfig<T> extends FirestoreQueryDriverRef, CollectionReferenceRef<T> {}
 
 /**
  * Creates a FirestoreCollectionQuery.
- * 
- * @param config 
- * @returns 
+ *
+ * @param config
+ * @returns
  */
 export function firestoreQueryFactory<T>(config: FirestoreQueryConfig<T>): FirestoreQueryFactory<T> {
   const { collection, firestoreQueryDriver: driver } = config;

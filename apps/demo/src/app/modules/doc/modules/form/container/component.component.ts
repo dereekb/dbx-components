@@ -5,7 +5,6 @@ import { Component } from '@angular/core';
   templateUrl: './component.component.html'
 })
 export class DocFormComponentComponent {
-
   config: DocFormExampleComponentFormConfig = {
     componentClass: DocFormExampleComponentFormTestViewAComponent
   };
@@ -21,5 +20,4 @@ export class DocFormComponentComponent {
       componentClass: DocFormExampleComponentFormTestViewBComponent
     };
   }
-
 }

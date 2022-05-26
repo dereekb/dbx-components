@@ -12,21 +12,18 @@ export interface DbxFormExpandWrapperConfig<T extends object = object> extends A
  */
 @Component({
   template: `
-  <ng-container [ngSwitch]="show$ | async">
-    <ng-container *ngSwitchCase="true">
-      <ng-container #fieldComponent></ng-container>
+    <ng-container [ngSwitch]="show$ | async">
+      <ng-container *ngSwitchCase="true">
+        <ng-container #fieldComponent></ng-container>
+      </ng-container>
+      <ng-container *ngSwitchCase="false">
+        <span class="dbx-form-expandable-section-button" (click)="open()">{{ expandLabel }}</span>
+      </ng-container>
     </ng-container>
-    <ng-container *ngSwitchCase="false">
-      <span class="dbx-form-expandable-section-button" (click)="open()">{{ expandLabel }}</span>
-    </ng-container>
-  </ng-container>
   `
 })
-export class DbxFormExpandWrapperComponent<T extends object = object>
-  extends AbstractFormExpandableSectionWrapperDirective<T, DbxFormExpandWrapperConfig<T>> {
-
+export class DbxFormExpandWrapperComponent<T extends object = object> extends AbstractFormExpandableSectionWrapperDirective<T, DbxFormExpandWrapperConfig<T>> {
   get buttonType(): DbxFormExpandWrapperButtonType {
     return this.expandableSection?.buttonType ?? 'button';
   }
-
 }

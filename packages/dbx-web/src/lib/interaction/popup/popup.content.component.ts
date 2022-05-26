@@ -14,13 +14,11 @@ import { DbxPopupController, DbxPopupWindowState } from './popup';
     </div>
   `,
   host: {
-    'class': 'dbx-popup-content'
+    class: 'dbx-popup-content'
   }
 })
 export class DbxPopupContentComponent {
+  readonly showContent$ = this.appPopupController.windowState$.pipe(map((x) => x !== DbxPopupWindowState.MINIMIZED));
 
-  readonly showContent$ = this.appPopupController.windowState$.pipe(map(x => x !== DbxPopupWindowState.MINIMIZED));
-
-  constructor(private appPopupController: DbxPopupController) { }
-
+  constructor(private appPopupController: DbxPopupController) {}
 }

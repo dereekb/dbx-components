@@ -4,35 +4,24 @@ import { DateRRuleInstance, DateRRuleUtility } from './date.rrule';
 import { RRuleStringLineSet } from './date.rrule.parse';
 
 describe('DateRRuleUtility', () => {
-
   describe('DateRRuleInstance', () => {
-
     describe('expand()', () => {
-
       describe('timezone shifting', () => {
-
         describe('(Denver to Los Angeles Time)', () => {
-
           /**
            * This example is from:
-           * 
+           *
            * https://github.com/jakubroztocil/rrule/tree/286422ddff0700f1beb2e65cebff3421cc698aac#important-use-utc-dates
-           * 
+           *
            * It show's RRule's weirdness when converting to timezones that aren't timezones.
            */
           describe('mo,we,th at 11AM-12PM (1PM-2PM CST) 3 times', () => {
+            const rruleStringLineSet = ['DTSTART;TZID=America/Denver:20181101T190000;', 'RRULE:FREQ=WEEKLY;BYDAY=MO,WE,TH;INTERVAL=1;COUNT=3'];
 
-            const rruleStringLineSet = ['DTSTART;TZID=America/Denver:20181101T190000;',
-              'RRULE:FREQ=WEEKLY;BYDAY=MO,WE,TH;INTERVAL=1;COUNT=3'];
+            const firstBaseDate = new Date(Date.UTC(2018, 10, 1, 19, 0, 0)); // what the parser will return from
+            const expectedFirstDate = targetDateToBaseDate(firstBaseDate, 'America/Denver'); // 2018-11-02T01:00:00.000Z
 
-            const firstBaseDate = new Date(Date.UTC(2018, 10, 1, 19, 0, 0)); // what the parser will return from 
-            const expectedFirstDate = targetDateToBaseDate(firstBaseDate, 'America/Denver');  // 2018-11-02T01:00:00.000Z
-
-            const expectedExpandResults = [
-              expectedFirstDate,
-              addDays(expectedFirstDate, 4),
-              addDays(expectedFirstDate, 6)
-            ];
+            const expectedExpandResults = [expectedFirstDate, addDays(expectedFirstDate, 4), addDays(expectedFirstDate, 6)];
 
             it('should build the proper dates', () => {
               const results = DateRRuleUtility.expand({
@@ -50,7 +39,6 @@ describe('DateRRuleUtility', () => {
             });
 
             describe('with range', () => {
-
               it('it should return only the first date if start and end date equals first date', () => {
                 const results = DateRRuleUtility.expand({
                   range: {
@@ -69,24 +57,16 @@ describe('DateRRuleUtility', () => {
                 expect(results.dates.length).toBe(expectedResults.length);
                 expect(results.dates[0].startsAt).toBeSameSecondAs(expectedExpandResults[0]);
               });
-
             });
-
           });
-
         });
 
         describe('(Los Angeles Time to Central Time)', () => {
-
           describe('every week at 11AM-12PM in America/Los_Angeles, (1PM-2PM CST)', () => {
-
             let calendarDate: CalendarDate;
             let rangeParams: DateRangeParams;
             const timezone: string = 'America/Los_Angeles';
-            const rruleStringLineSet = [
-              'RRULE:FREQ=WEEKLY',
-              'EXDATE;TZID=America/Los_Angeles:20210611T110000,20210611T110000'
-            ];
+            const rruleStringLineSet = ['RRULE:FREQ=WEEKLY', 'EXDATE;TZID=America/Los_Angeles:20210611T110000,20210611T110000'];
 
             beforeEach(() => {
               calendarDate = CalendarDateUtility.calendarDateForDateDurationSpan({
@@ -114,11 +94,7 @@ describe('DateRRuleUtility', () => {
                 rangeParams
               });
 
-              const expectedResults = [
-                '2021-07-02T18:00:00.000Z', '2021-07-09T18:00:00.000Z',
-                '2021-07-16T18:00:00.000Z', '2021-07-23T18:00:00.000Z',
-                '2021-07-30T18:00:00.000Z'
-              ].map(x => new Date(x));
+              const expectedResults = ['2021-07-02T18:00:00.000Z', '2021-07-09T18:00:00.000Z', '2021-07-16T18:00:00.000Z', '2021-07-23T18:00:00.000Z', '2021-07-30T18:00:00.000Z'].map((x) => new Date(x));
 
               expect(results.dates.length).toBe(expectedResults.length);
 
@@ -126,17 +102,12 @@ describe('DateRRuleUtility', () => {
                 expect(results.dates[i].startsAt).toBeSameSecondAs(expectedResults[i]);
               }
             });
-
           });
-
         });
-
       });
 
       describe('full day', () => {
-
         describe('every monday', () => {
-
           let calendarDate: CalendarDate;
           let rangeParams: DateRangeParams;
           const rruleStringLineSet = ['RRULE:FREQ=WEEKLY;BYDAY=MO'];
@@ -151,7 +122,7 @@ describe('DateRRuleUtility', () => {
               type: DateRangeType.WEEKS_RANGE,
               date: calendarDate.startsAt,
               distance: numberOfWeeks
-            }
+            };
           });
 
           it('should expand to the new two mondays', () => {
@@ -170,15 +141,11 @@ describe('DateRRuleUtility', () => {
             expect(results.dates[1].startsAt).toBeSameMinuteAs(addDays(calendarDate.startsAt, 7));
             expect(results.dates[2].startsAt).toBeSameMinuteAs(addDays(calendarDate.startsAt, 14));
           });
-
         });
-
       });
 
       describe('hour event', () => {
-
         describe('every two days', () => {
-
           let calendarDate: CalendarDate;
           let rangeParams: DateRangeParams;
           const rruleStringLineSet = ['RRULE:FREQ=DAILY;INTERVAL=2'];
@@ -211,7 +178,7 @@ describe('DateRRuleUtility', () => {
               rangeParams
             });
 
-            const expectedDays = (numberOfDays / daysPeriod) + 1;
+            const expectedDays = numberOfDays / daysPeriod + 1;
 
             expect(results.dates.length).toBe(expectedDays);
 
@@ -219,23 +186,17 @@ describe('DateRRuleUtility', () => {
               expect(results.dates[i].startsAt).toBeSameMinuteAs(addDays(calendarDate.startsAt, i * 2));
             }
           });
-
         });
-
       });
-
     });
 
     describe('next()', () => {
-
       describe('mo,we,th at 11AM-12PM (1PM-2PM CST) 3 times', () => {
-
-        const rruleStringLineSet = ['DTSTART;TZID=America/Denver:20181101T190000;',
-          'RRULE:FREQ=WEEKLY;BYDAY=MO,WE,TH;INTERVAL=1;COUNT=3'];
+        const rruleStringLineSet = ['DTSTART;TZID=America/Denver:20181101T190000;', 'RRULE:FREQ=WEEKLY;BYDAY=MO,WE,TH;INTERVAL=1;COUNT=3'];
         let dateRRule: DateRRuleInstance;
 
-        const firstBaseDate = new Date(Date.UTC(2018, 10, 1, 19, 0, 0)); // what the parser will return from 
-        const expectedFirstDate = targetDateToBaseDate(firstBaseDate, 'America/Denver');  // 2018-11-02T01:00:00.000Z
+        const firstBaseDate = new Date(Date.UTC(2018, 10, 1, 19, 0, 0)); // what the parser will return from
+        const expectedFirstDate = targetDateToBaseDate(firstBaseDate, 'America/Denver'); // 2018-11-02T01:00:00.000Z
 
         beforeEach(async () => {
           dateRRule = DateRRuleUtility.makeInstance({
@@ -259,20 +220,15 @@ describe('DateRRuleUtility', () => {
           const next = dateRRule.nextRecurrenceDate(currentDate);
           expect(next).toBeSameSecondAs(nextDate);
         });
-
       });
-
     });
 
     describe('getRecurrenceDateRange()', () => {
-
       let calendarDate: CalendarDate;
       let rruleStringLineSet: RRuleStringLineSet;
 
       describe('forever', () => {
-
         describe('every two days', () => {
-
           beforeEach(() => {
             rruleStringLineSet = ['RRULE:FREQ=DAILY;INTERVAL=2'];
             calendarDate = CalendarDateUtility.calendarDateForDateDurationSpan({
@@ -295,15 +251,11 @@ describe('DateRRuleUtility', () => {
             expect(range.end).toBeSameSecondAs(maxFutureDate());
             expect(range.finalRecurrenceEndsAt).not.toBeDefined();
           });
-
         });
-
       });
 
       describe('until', () => {
-
         describe('first day of every month until April 1st 2022', () => {
-
           beforeEach(() => {
             rruleStringLineSet = ['FREQ=MONTHLY;BYMONTHDAY=1;INTERVAL=1;UNTIL=20220420T050000Z'];
             calendarDate = CalendarDateUtility.calendarDateForDateDurationSpan({
@@ -326,15 +278,11 @@ describe('DateRRuleUtility', () => {
             expect(range.end).toBeSameSecondAs(new Date('2022-04-01T00:00:00.000Z'));
             expect(range.finalRecurrenceEndsAt).toBeDefined();
           });
-
         });
-
       });
 
       describe('count', () => {
-
         describe('second day of january, 10 times', () => {
-
           beforeEach(() => {
             rruleStringLineSet = ['FREQ=YEARLY;BYMONTH=1;BYMONTHDAY=2;COUNT=10'];
             calendarDate = CalendarDateUtility.calendarDateForDateDurationSpan({
@@ -357,13 +305,8 @@ describe('DateRRuleUtility', () => {
             expect(range.end).toBeSameSecondAs(new Date('2030-01-02T00:00:00.000Z'));
             expect(range.finalRecurrenceEndsAt).toBeDefined();
           });
-
         });
-
       });
-
     });
-
   });
-
 });

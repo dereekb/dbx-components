@@ -9,7 +9,6 @@ import { DbxActionDisabledKey } from './action';
  * Abstract class that can either use SecondaryActionContextStoreSource or create it's own.
  */
 export class DbxActionContextBaseSource<T = unknown, O = unknown> implements ActionContextStoreSource<T, O>, Destroyable {
-
   private readonly _store?: ActionContextStore<T, O>;
   private readonly _store$: Observable<ActionContextStore<T, O>>;
   private readonly _instance: DbxActionContextStoreSourceInstance<T, O>;
@@ -77,5 +76,4 @@ export class DbxActionContextBaseSource<T = unknown, O = unknown> implements Act
   public setIsModified(isModified?: boolean): void {
     this._instance.setIsModified(isModified);
   }
-
 }

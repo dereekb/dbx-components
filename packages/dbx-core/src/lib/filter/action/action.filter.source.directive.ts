@@ -9,7 +9,6 @@ import { DbxActionContextStoreSourceInstance } from '../../action/action.store.s
  */
 @Directive()
 export abstract class AbstractActionFilterSourceDirective<F> extends AbstractFilterSourceDirective<F> {
-
   @ViewChild(DbxActionContextStoreSourceInstance, { static: true, read: DbxActionContextStoreSourceInstance })
   readonly filterAction!: DbxActionContextStoreSourceInstance;
 
@@ -24,6 +23,5 @@ export abstract class AbstractActionFilterSourceDirective<F> extends AbstractFil
   setFilterAction: HandleActionFunction<F> = (filter: F) => {
     this.setFilter(filter);
     return of(true);
-  }
-
+  };
 }

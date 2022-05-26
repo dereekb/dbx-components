@@ -10,7 +10,6 @@ import { AbstractFilterPopoverButtonDirective } from './filter.popover.button.di
   `
 })
 export class DbxFilterPopoverButtonComponent<F = object> extends AbstractFilterPopoverButtonDirective<F> {
-
   @ViewChild('button', { read: ElementRef, static: false })
   buttonElement!: ElementRef;
 
@@ -18,5 +17,4 @@ export class DbxFilterPopoverButtonComponent<F = object> extends AbstractFilterP
     const origin = this.buttonElement.nativeElement;
     this.showFilterPopoverAtOrigin(origin);
   }
-
 }

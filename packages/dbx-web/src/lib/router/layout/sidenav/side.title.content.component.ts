@@ -9,4 +9,4 @@ import { Component } from '@angular/core';
   `,
   styleUrls: ['./side.scss']
 })
-export class AppSideNavBarTitleContentComponent { }
+export class AppSideNavBarTitleContentComponent {}

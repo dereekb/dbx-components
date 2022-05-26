@@ -1,8 +1,8 @@
-import { Module } from "@nestjs/common";
-import { ConfigModule, ConfigService } from "@nestjs/config";
-import { CLIENT_WEB_APP_URL_ENV_VAR } from "./client";
-import { ClientAppServiceConfig } from "./client.config";
-import { ClientAppService } from "./client.service";
+import { Module } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { CLIENT_WEB_APP_URL_ENV_VAR } from './client';
+import { ClientAppServiceConfig } from './client.config';
+import { ClientAppService } from './client.service';
 
 export function clientAppConfigFactory(configService: ConfigService): ClientAppServiceConfig {
   const config: ClientAppServiceConfig = {
@@ -13,12 +13,10 @@ export function clientAppConfigFactory(configService: ConfigService): ClientAppS
 
   ClientAppServiceConfig.assertValidConfig(config);
   return config;
-};
+}
 
 @Module({
-  imports: [
-    ConfigModule
-  ],
+  imports: [ConfigModule],
   providers: [
     {
       provide: ClientAppServiceConfig,
@@ -26,6 +24,6 @@ export function clientAppConfigFactory(configService: ConfigService): ClientAppS
       useFactory: clientAppConfigFactory
     }
   ],
-  exports: [ClientAppService],
+  exports: [ClientAppService]
 })
-export class ClientAppModule { }
+export class ClientAppModule {}

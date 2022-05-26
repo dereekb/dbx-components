@@ -1,7 +1,6 @@
 import { isPromise } from '@dereekb/util';
 
 describe('isPromise()', () => {
-
   it('should return true if a promise.', () => {
     let close: () => void;
 
@@ -18,5 +17,4 @@ describe('isPromise()', () => {
     expect(isPromise({})).toBe(false);
     expect(isPromise('not')).toBe(false);
   });
-
 });

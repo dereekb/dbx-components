@@ -1,6 +1,6 @@
-import { ClassType, mapPromiseOrValue, PromiseOrValue } from "@dereekb/util";
-import { TransformAndValidateObjectFactory, transformAndValidateObjectFactory, TransformAndValidateObjectFactoryDefaults, TransformAndValidateObjectHandleValidate, TransformAndValidateObjectOutput } from "./transform";
-import { TransformAndValidateResultFunction } from "./transform.result";
+import { ClassType, mapPromiseOrValue, PromiseOrValue } from '@dereekb/util';
+import { TransformAndValidateObjectFactory, transformAndValidateObjectFactory, TransformAndValidateObjectFactoryDefaults, TransformAndValidateObjectHandleValidate, TransformAndValidateObjectOutput } from './transform';
+import { TransformAndValidateResultFunction } from './transform.result';
 
 // MARK: Transform and Validate Function Result
 

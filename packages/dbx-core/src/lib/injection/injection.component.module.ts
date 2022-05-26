@@ -4,16 +4,8 @@ import { DbxInjectionComponent } from './injection.component';
 import { DbxInjectionContextDirective } from './injection.context.directive';
 
 @NgModule({
-  imports: [
-    CommonModule
-  ],
-  declarations: [
-    DbxInjectionComponent,
-    DbxInjectionContextDirective
-  ],
-  exports: [
-    DbxInjectionComponent,
-    DbxInjectionContextDirective
-  ],
+  imports: [CommonModule],
+  declarations: [DbxInjectionComponent, DbxInjectionContextDirective],
+  exports: [DbxInjectionComponent, DbxInjectionContextDirective]
 })
-export class DbxInjectionComponentModule { }
+export class DbxInjectionComponentModule {}

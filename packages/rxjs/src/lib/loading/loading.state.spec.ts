@@ -1,16 +1,13 @@
 import { beginLoading, errorResult, loadingStateHasFinishedLoading, loadingStateIsLoading, mapLoadingStateResults, successResult } from './loading.state';
 
 describe('beginLoading()', () => {
-
   it('should return a loading state that is loading.', () => {
     const state = beginLoading();
     expect(loadingStateIsLoading(state)).toBe(true);
   });
-
 });
 
 describe('successResult()', () => {
-
   it('should return a loading state that has the value.', () => {
     const value = {};
     const state = successResult(value);
@@ -26,11 +23,9 @@ describe('successResult()', () => {
     const state = successResult(undefined);
     expect(loadingStateIsLoading(state)).toBe(false);
   });
-
 });
 
 describe('errorResult()', () => {
-
   it('should return a loading state that has the error.', () => {
     const error = { message: '' };
     const state = errorResult(error);
@@ -47,11 +42,9 @@ describe('errorResult()', () => {
     const state = errorResult(undefined);
     expect(loadingStateIsLoading(state)).toBe(false);
   });
-
 });
 
 describe('loadingStateIsLoading()', () => {
-
   it('should return true if a loading state has loading = true.', () => {
     const result = loadingStateIsLoading({ loading: true });
     expect(result).toBe(true);
@@ -96,11 +89,9 @@ describe('loadingStateIsLoading()', () => {
     const result = loadingStateIsLoading({ loading: undefined, error: undefined });
     expect(result).toBe(true);
   });
-
 });
 
 describe('loadingStateHasFinishedLoading()', () => {
-
   it('should return false if a loading state has loading = true.', () => {
     const result = loadingStateHasFinishedLoading({ loading: true });
     expect(result).toBe(false);
@@ -145,11 +136,9 @@ describe('loadingStateHasFinishedLoading()', () => {
     const result = loadingStateHasFinishedLoading({ loading: undefined, error: undefined });
     expect(result).toBe(false);
   });
-
 });
 
 describe('mapLoadingStateResults()', () => {
-
   it('should map the value of 0 and other non-null falsy values', () => {
     const mappedValue = `MAPPED`;
 
@@ -159,5 +148,4 @@ describe('mapLoadingStateResults()', () => {
 
     expect(result.value).toBe(mappedValue);
   });
-
 });

@@ -2,9 +2,11 @@ import { Component } from '@angular/core';
 
 @Component({
   selector: 'dbx-label',
-  template: `<ng-content></ng-content>`,
+  template: `
+    <ng-content></ng-content>
+  `,
   host: {
-    'class': 'dbx-label'
+    class: 'dbx-label'
   }
 })
-export class DbxLabelComponent { }
+export class DbxLabelComponent {}

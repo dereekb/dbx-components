@@ -4,7 +4,7 @@ import { Firestore } from '@google-cloud/firestore';
 import { Auth } from 'firebase-admin/lib/auth/auth';
 import { FeaturesList } from 'firebase-functions-test/lib/features';
 import { TestFirestoreContext, TestFirestoreInstance } from '@dereekb/firebase/test';
-import { AbstractJestTestContextFixture, jestTestContextBuilder, JestTestContextFactory, JestTestContextFixture } from "@dereekb/util/test";
+import { AbstractJestTestContextFixture, jestTestContextBuilder, JestTestContextFactory, JestTestContextFixture } from '@dereekb/util/test';
 import { applyFirebaseGCloudTestProjectIdToFirebaseConfigEnv, getGCloudTestProjectId, isAdminEnvironmentInitialized, rollNewGCloudProjectEnvironmentVariable } from './firebase';
 import { FirebaseAdminTestContext, FirebaseAdminTestContextInstance } from './firebase.admin';
 import { Maybe, cachedGetter } from '@dereekb/util';
@@ -24,7 +24,7 @@ export function setupFirebaseAdminFunctionTestSingleton(reroll = false) {
   }
 
   if (firebaseFunctionsTestInstance) {
-    firebaseFunctionsTestInstance.cleanup();  // destroy the old instance if it is up.
+    firebaseFunctionsTestInstance.cleanup(); // destroy the old instance if it is up.
   }
 
   firebaseFunctionsTestInstance = functions();
@@ -46,20 +46,19 @@ export function rerollFirebaseAdminFunctionTestSingleton() {
 export interface FirebaseAdminFunctionTestConfig {
   /**
    * Whether or not the use the functions singleton. Is true by default. Requires that setupFirebaseAdminFunctionTestSingleton() be called.
-   * 
+   *
    * If false, your tests may need to be run in serial rather than parallel to avoid cross-test contamination.
-   * 
+   *
    * @deprecated Is false by default to allow a new app to be defined each time. Usage of the singleton does not make sense. Remove later, and require that tests be run in serial if jest isn't behaving.
    */
   useFunctionSingletonContext: boolean;
 }
 
-export interface FirebaseAdminFunctionTestContext extends FirebaseAdminTestContext { }
+export interface FirebaseAdminFunctionTestContext extends FirebaseAdminTestContext {}
 
-export interface FullFirebaseAdminFunctionTestContext extends FirebaseAdminFunctionTestContext, JestTestContextFixture<FirebaseAdminFunctionTestContextInstance> { }
+export interface FullFirebaseAdminFunctionTestContext extends FirebaseAdminFunctionTestContext, JestTestContextFixture<FirebaseAdminFunctionTestContextInstance> {}
 
 export class FirebaseAdminFunctionTestContextFixture extends AbstractJestTestContextFixture<FirebaseAdminFunctionTestContextInstance> implements FirebaseAdminFunctionTestContext {
-
   // MARK: FirebaseAdminTestContext (Forwarded)
   get app(): admin.app.App {
     return this.instance.app;
@@ -84,11 +83,9 @@ export class FirebaseAdminFunctionTestContextFixture extends AbstractJestTestCon
   get fnWrapper() {
     return this.instance.fnWrapper;
   }
-
 }
 
 export class FirebaseAdminFunctionTestContextInstance extends FirebaseAdminTestContextInstance implements FirebaseAdminFunctionTestContext {
-
   private _fnWrapper = cachedGetter(() => firebaseAdminCloudFunctionWrapper(this.instance));
 
   constructor(readonly instance: FeaturesList, app: admin.app.App) {
@@ -98,7 +95,6 @@ export class FirebaseAdminFunctionTestContextInstance extends FirebaseAdminTestC
   get fnWrapper() {
     return this._fnWrapper();
   }
-
 }
 
 export let DEFAULT_FIREBASE_ADMIN_FUNCTION_TEST_USE_FUNCTION_SINGLETON_CONTEXT = false;
@@ -109,7 +105,7 @@ export function setDefaultFirebaseAdminFunctionTestUseFunctionSingleton(use: boo
 
 /**
  * A JestTestContextBuilderFunction for building firebase test context factories using firebase-admin.
- * 
+ *
  * This can be used to easily build a testing context that sets up RulesTestEnvironment for tests that sets itself up and tears itself down.
  */
 export const firebaseAdminFunctionTestBuilder = jestTestContextBuilder<FirebaseAdminTestContextInstance, FirebaseAdminFunctionTestContextFixture, FirebaseAdminFunctionTestConfig>({
@@ -123,7 +119,6 @@ export const firebaseAdminFunctionTestBuilder = jestTestContextBuilder<FirebaseA
   },
   buildFixture: () => new FirebaseAdminFunctionTestContextFixture(),
   setupInstance: async (config) => {
-
     if (!isAdminEnvironmentInitialized()) {
       throw new Error('initFirebaseAdminTestEnvironment() (in @dereekb/firebase-server package) was not called before using adminFirebaseTestBuilder().');
     }
@@ -146,9 +141,7 @@ export const firebaseAdminFunctionTestBuilder = jestTestContextBuilder<FirebaseA
       try {
         await instance.app.delete(); // will be called in cleanup
         firebaseFunctionsTestInstance!.cleanup();
-      } catch (e) {
-
-      }
+      } catch (e) {}
 
       firebaseFunctionsTestInstance = undefined;
     }

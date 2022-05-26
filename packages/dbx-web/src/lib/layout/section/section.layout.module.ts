@@ -14,26 +14,8 @@ import { DbxSectionHeaderComponent } from './section.header.component';
  * Module for container-type components.
  */
 @NgModule({
-  imports: [
-    CommonModule,
-    DbxRouterAnchorModule,
-    MatButtonModule,
-    MatRippleModule,
-    MatIconModule
-  ],
-  declarations: [
-    DbxSectionHeaderComponent,
-    DbxSectionPageComponent,
-    DbxSectionComponent,
-    DbxSubSectionComponent,
-    DbxIntroActionSectionComponent
-  ],
-  exports: [
-    DbxSectionHeaderComponent,
-    DbxSectionPageComponent,
-    DbxSectionComponent,
-    DbxSubSectionComponent,
-    DbxIntroActionSectionComponent
-  ]
+  imports: [CommonModule, DbxRouterAnchorModule, MatButtonModule, MatRippleModule, MatIconModule],
+  declarations: [DbxSectionHeaderComponent, DbxSectionPageComponent, DbxSectionComponent, DbxSubSectionComponent, DbxIntroActionSectionComponent],
+  exports: [DbxSectionHeaderComponent, DbxSectionPageComponent, DbxSectionComponent, DbxSubSectionComponent, DbxIntroActionSectionComponent]
 })
-export class DbxSectionLayoutModule { }
+export class DbxSectionLayoutModule {}

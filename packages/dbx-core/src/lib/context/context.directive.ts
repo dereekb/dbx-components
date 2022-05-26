@@ -1,11 +1,10 @@
 import { filterMaybe } from '@dereekb/rxjs';
 import { BehaviorSubject } from 'rxjs';
-import { Directive, Input, OnDestroy, OnInit } from "@angular/core";
-import { DbxAppContextService } from "./context.service";
+import { Directive, Input, OnDestroy, OnInit } from '@angular/core';
+import { DbxAppContextService } from './context.service';
 import { AbstractSubscriptionDirective } from '../subscription';
 import { DbxAppContextState } from './context';
 import { Maybe } from '@dereekb/util';
-
 
 /**
  * Used to set the DbxAppContextState for an app to the input state using the DbxAppContextService.
@@ -14,7 +13,6 @@ import { Maybe } from '@dereekb/util';
   selector: '[dbxAppContextState]'
 })
 export class DbxAppContextStateDirective extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
-
   private _state = new BehaviorSubject<Maybe<DbxAppContextState>>(undefined);
 
   constructor(readonly dbxAppContextStateService: DbxAppContextService) {
@@ -36,5 +34,4 @@ export class DbxAppContextStateDirective extends AbstractSubscriptionDirective i
   set state(state: Maybe<DbxAppContextState>) {
     this._state.next(state);
   }
-
 }

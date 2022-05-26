@@ -1,23 +1,19 @@
-import { Injectable } from "@angular/core";
-import { DocumentReference } from "@dereekb/firebase";
-import { authorizedTestWithMockItemCollection, MockItem, MockItemDocument, MockItemFirestoreCollection } from "@dereekb/firebase/test";
-import { loadingStateIsLoading, SubscriptionObject } from "@dereekb/rxjs";
-import { first, of, timeout } from "rxjs";
+import { Injectable } from '@angular/core';
+import { DocumentReference } from '@dereekb/firebase';
+import { authorizedTestWithMockItemCollection, MockItem, MockItemDocument, MockItemFirestoreCollection } from '@dereekb/firebase/test';
+import { loadingStateIsLoading, SubscriptionObject } from '@dereekb/rxjs';
+import { first, of, timeout } from 'rxjs';
 import { AbstractDbxFirebaseDocumentStore } from './store.document';
 
 @Injectable()
 export class TestDbxFirebaseDocumentStore extends AbstractDbxFirebaseDocumentStore<MockItem, MockItemDocument> {
-
   constructor(firestoreCollection: MockItemFirestoreCollection) {
-    super({ firestoreCollection })
+    super({ firestoreCollection });
   }
-
 }
 
 describe('AbstractDbxFirebaseDocumentStore', () => {
-
   authorizedTestWithMockItemCollection((f) => {
-
     let sub: SubscriptionObject;
     let store: TestDbxFirebaseDocumentStore;
 
@@ -33,9 +29,7 @@ describe('AbstractDbxFirebaseDocumentStore', () => {
     });
 
     describe('loading a document', () => {
-
       describe('setId', () => {
-
         it('should load the document with the input id.', (done) => {
           const id = 'test';
 
@@ -46,11 +40,9 @@ describe('AbstractDbxFirebaseDocumentStore', () => {
             done();
           });
         });
-
       });
 
       describe('setRef', () => {
-
         let ref: DocumentReference<MockItem>;
 
         beforeEach(() => {
@@ -67,11 +59,9 @@ describe('AbstractDbxFirebaseDocumentStore', () => {
             done();
           });
         });
-
       });
 
       it('should not load anything if neither id nor ref are set.', (done) => {
-
         const sub: SubscriptionObject = new SubscriptionObject();
 
         sub.subscription = store.document$.pipe(timeout({ first: 100, with: () => of(false) }), first()).subscribe((result) => {
@@ -79,45 +69,34 @@ describe('AbstractDbxFirebaseDocumentStore', () => {
           sub.destroy();
           store.ngOnDestroy();
 
-          store.state$.pipe()
+          store.state$.pipe();
           done();
         });
-
       });
-
     });
 
     describe('reading the document', () => {
-
       describe('before loading the document', () => {
-
         it('documentLoadingState$ should be loading.', (done) => {
-
           sub.subscription = store.documentLoadingState$.pipe(first()).subscribe((x) => {
             expect(loadingStateIsLoading(x)).toBe(true);
             done();
           });
-
         });
 
         it('snapshotLoadingState$ should be loading.', (done) => {
-
           sub.subscription = store.snapshotLoadingState$.pipe(first()).subscribe((x) => {
             expect(loadingStateIsLoading(x)).toBe(true);
             done();
           });
-
         });
 
         it('dataLoadingState$ should be loading.', (done) => {
-
           sub.subscription = store.dataLoadingState$.pipe(first()).subscribe((x) => {
             expect(loadingStateIsLoading(x)).toBe(true);
             done();
           });
-
         });
-
       });
 
       // TODO: The jest environment must be set to node for the firebase components to work, but setting the environment to jest causes issues with ngzone somehow.
@@ -214,9 +193,6 @@ describe('AbstractDbxFirebaseDocumentStore', () => {
     });
 
     */
-
     });
-
   });
-
 });

@@ -5,4 +5,4 @@ import { Component } from '@angular/core';
   selector: 'dbx-banner',
   templateUrl: './banner.component.html'
 })
-export class DbxBannerComponent { }
+export class DbxBannerComponent {}

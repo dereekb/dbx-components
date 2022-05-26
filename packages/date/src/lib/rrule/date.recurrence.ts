@@ -14,10 +14,9 @@ export interface RecurrenceModel {
  */
 @Exclude()
 export class ModelRecurrenceInfo implements DateRange {
-
   /**
    * Timezone the rule is a part of.
-   * 
+   *
    * Required for RRules that have timezone-sensitive implementations.
    */
   @Expose()
@@ -54,11 +53,9 @@ export class ModelRecurrenceInfo implements DateRange {
     this.end = template.end;
     this.forever = template.forever;
   }
-
 }
 
 export interface ModelRecurrenceStart {
-
   /**
    * Lines/set of rules to follow.
    */
@@ -73,14 +70,12 @@ export interface ModelRecurrenceStart {
    * Timezone the recurrence should follow.
    */
   timezone?: TimezoneString;
-
 }
 
 /**
  * Used for expanding a ModelRecurrenceUpdate into ModelRecurrenceInfo.
  */
 export class ModelRecurrenceInfoUtility {
-
   /**
    * Creates a ModelRecurrenceInfo instance from the input ModelRecurrenceStart.
    */
@@ -119,5 +114,4 @@ export class ModelRecurrenceInfoUtility {
       }
     });
   }
-
 }

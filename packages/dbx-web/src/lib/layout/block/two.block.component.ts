@@ -11,22 +11,21 @@ import { ResizedEvent } from 'angular-resize-event';
 @Component({
   selector: 'dbx-two-block',
   template: `
-  <div #two class="dbx-two-block-content">
-    <div #top class="dbx-two-block-top" (resized)="onResized($event)">
-      <ng-content select="[top]"></ng-content>
+    <div #two class="dbx-two-block-content">
+      <div #top class="dbx-two-block-top" (resized)="onResized($event)">
+        <ng-content select="[top]"></ng-content>
+      </div>
+      <div #bottom class="dbx-two-block-bottom">
+        <ng-content></ng-content>
+      </div>
     </div>
-    <div #bottom class="dbx-two-block-bottom">
-      <ng-content></ng-content>
-    </div>
-  </div>
   `,
   host: {
-    'class': 'dbx-two-block d-block',
+    class: 'dbx-two-block d-block',
     '[class]': '{ "dbx-two-block-fixed-top": fixedTop }'
   }
 })
 export class DbxTwoBlocksComponent {
-
   /**
    * Whether or not the top bar should be fixed in place instead of scrolling with the bottom when content is too tall.
    */
@@ -49,5 +48,4 @@ export class DbxTwoBlocksComponent {
     const element: HTMLElement = this.twoElement.nativeElement;
     element.style.setProperty('--dbx-two-block-top-height', `${height}px`);
   }
-
 }

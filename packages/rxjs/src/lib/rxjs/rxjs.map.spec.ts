@@ -3,7 +3,6 @@ import { combineLatestFromArrayObsFn, combineLatestFromMapValuesObsFn } from './
 import { SubscriptionObject } from '../subscription';
 
 describe('rxjs.map', () => {
-
   let sub: SubscriptionObject;
 
   beforeEach(() => {
@@ -15,11 +14,8 @@ describe('rxjs.map', () => {
   });
 
   describe('combineLatestFromMapValuesObsFn()', () => {
-
     describe('function', () => {
-
       it('should combine the latests values of the map', (done) => {
-
         const obsForMap = combineLatestFromMapValuesObsFn((value: number) => of(String(value)));
 
         const map = new Map<string, number>();
@@ -36,17 +32,12 @@ describe('rxjs.map', () => {
           expect(values[2]).toBe('3');
           done();
         });
-
-      })
-
+      });
     });
-
   });
 
   describe('combineLatestFromArrayObsFn()', () => {
-
     it('should combine the latest value from all the passed observables into a single value.', (done) => {
-
       const mapToObs = (value: number) => of(String(value));
 
       const obsForValues = combineLatestFromArrayObsFn(mapToObs);
@@ -60,7 +51,5 @@ describe('rxjs.map', () => {
         done();
       });
     });
-
   });
-
-})
+});

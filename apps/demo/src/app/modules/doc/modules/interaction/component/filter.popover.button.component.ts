@@ -1,4 +1,3 @@
-
 import { FilterSource, FilterSourceConnector } from '@dereekb/rxjs';
 import { DbxFilterButtonConfig } from '@dereekb/dbx-web';
 import { Component } from '@angular/core';
@@ -13,7 +12,6 @@ import { DocInteractionTestFilter } from './filter';
   `
 })
 export class DocInteractionTestFilterPopoverButtonComponent {
-
   readonly config: DbxFilterButtonConfig<DocInteractionTestFilter> = {
     customFilterComponentClass: DocInteractionTestFilterCustomFilterComponent,
     presetFilterComponentClass: DocInteractionTestFilterPresetFilterComponent,
@@ -21,6 +19,5 @@ export class DocInteractionTestFilterPopoverButtonComponent {
     initialFilterObs: this.filterSource.filter$
   };
 
-  constructor(readonly filterSourceConnector: FilterSourceConnector, readonly filterSource: FilterSource<DocInteractionTestFilter>) { }
-
+  constructor(readonly filterSourceConnector: FilterSourceConnector, readonly filterSource: FilterSource<DocInteractionTestFilter>) {}
 }

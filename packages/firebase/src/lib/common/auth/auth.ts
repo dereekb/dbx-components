@@ -1,4 +1,3 @@
-
 /**
  * Firebase User Identifier (UID)
  */

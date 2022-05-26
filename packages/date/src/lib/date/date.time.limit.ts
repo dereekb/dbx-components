@@ -1,9 +1,8 @@
-import { Minutes, Hours, Days, LogicalDate, DATE_NOW_VALUE, Maybe } from "@dereekb/util";
-import { addMinutes, isBefore, min as minDate, max as maxDate } from "date-fns";
-import { daysToMinutes, isAfter, roundDownToMinute, takeNextUpcomingTime } from "./date";
+import { Minutes, Hours, Days, LogicalDate, DATE_NOW_VALUE, Maybe } from '@dereekb/util';
+import { addMinutes, isBefore, min as minDate, max as maxDate } from 'date-fns';
+import { daysToMinutes, isAfter, roundDownToMinute, takeNextUpcomingTime } from './date';
 
 export interface LimitDateTimeConfig {
-
   /**
    * The relative instant to use when deriving limits.
    */
@@ -23,7 +22,6 @@ export interface LimitDateTimeConfig {
    * Limits to use for this configuration.
    */
   limits?: {
-
     /**
      * The minimum date allowed.
      */
@@ -51,18 +49,15 @@ export interface LimitDateTimeConfig {
       minutes?: Minutes;
       hours?: Hours;
       days?: Days;
-    }
-
+    };
   };
-
 }
 
 /**
  * Used for deriving a limit for the current instant in time.
  */
 export class LimitDateTimeInstance {
-
-  constructor(readonly config: LimitDateTimeConfig = {}) { }
+  constructor(readonly config: LimitDateTimeConfig = {}) {}
 
   get instant(): LogicalDate {
     return this.config.instant || 'now';
@@ -154,5 +149,4 @@ export class LimitDateTimeInstance {
 
     return result;
   }
-
 }

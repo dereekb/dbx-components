@@ -6,18 +6,20 @@ import { DbxPopupService, PopupPosition } from '@dereekb/dbx-web';
   templateUrl: './popup.component.html'
 })
 export class DocInteractionPopupComponent implements AfterViewInit {
-
-  constructor(readonly popupService: DbxPopupService) { }
+  constructor(readonly popupService: DbxPopupService) {}
 
   ngAfterViewInit(): void {
     setTimeout(() => this.openExamplePopup(), 100);
   }
 
   openExamplePopup(key?: string, position?: PopupPosition) {
-    DocInteractionExamplePopupComponent.openPopup(this.popupService, {
-      isDraggable: true,
-      position
-    }, key);
+    DocInteractionExamplePopupComponent.openPopup(
+      this.popupService,
+      {
+        isDraggable: true,
+        position
+      },
+      key
+    );
   }
-
 }

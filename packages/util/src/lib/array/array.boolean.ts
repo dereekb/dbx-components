@@ -1,5 +1,5 @@
-import { removeModelsWithKey, removeModelsWithSameKey, ReadModelKeyFunction } from "../model/model";
-import { Maybe } from "../value/maybe";
+import { removeModelsWithKey, removeModelsWithSameKey, ReadModelKeyFunction } from '../model/model';
+import { Maybe } from '../value/maybe';
 
 export type BooleanStringKey = string;
 
@@ -36,20 +36,19 @@ export function isTrueBooleanKeyArray(value: BooleanKeyArray): boolean {
 }
 
 export function insertIntoBooleanKeyArray<T>(array: BooleanKeyArray<T>, value: T, readKey: ReadModelKeyFunction<T>): BooleanKeyArray<T> {
-  return (array) ? [...removeModelsWithSameKey(array, value, readBooleanKeySafetyWrap(readKey)), value] : [value];
+  return array ? [...removeModelsWithSameKey(array, value, readBooleanKeySafetyWrap(readKey)), value] : [value];
 }
 
 export function removeFromBooleanKeyArray<T>(array: BooleanKeyArray<T>, value: T, readKey: ReadModelKeyFunction<T>): BooleanKeyArray<T> {
-  return (array) ? removeModelsWithSameKey(array, value, readBooleanKeySafetyWrap(readKey)) : array;
+  return array ? removeModelsWithSameKey(array, value, readBooleanKeySafetyWrap(readKey)) : array;
 }
 
 export function removeByKeyFromBooleanKeyArray<T>(array: BooleanKeyArray<T>, key: string, readKey: ReadModelKeyFunction<T>): BooleanKeyArray<T> {
-  return (array) ? removeModelsWithKey(array, key, readBooleanKeySafetyWrap(readKey)) : array;
+  return array ? removeModelsWithKey(array, key, readBooleanKeySafetyWrap(readKey)) : array;
 }
 
 export class BooleanKeyArrayUtilityInstance<T> {
-
-  constructor(readonly readKey: ReadModelKeyFunction<T>) { }
+  constructor(readonly readKey: ReadModelKeyFunction<T>) {}
 
   isFalse(value: BooleanKeyArray): boolean {
     return isFalseBooleanKeyArray(value);
@@ -82,7 +81,6 @@ export class BooleanKeyArrayUtilityInstance<T> {
   removeByKey(array: BooleanKeyArray<T>, key: string): BooleanKeyArray<T> {
     return removeByKeyFromBooleanKeyArray(array, key, this.readKey);
   }
-
 }
 
-export const BooleanStringKeyArrayUtilityInstance = new BooleanKeyArrayUtilityInstance<BooleanStringKey>(x => (x) ? x : undefined);
+export const BooleanStringKeyArrayUtilityInstance = new BooleanKeyArrayUtilityInstance<BooleanStringKey>((x) => (x ? x : undefined));

@@ -7,18 +7,20 @@ import { DbxPopoverContentComponent } from './popover.content.component';
 @Component({
   selector: 'dbx-popover-header',
   template: `
-  <div class="dbx-popover-header">
-    <div class="dbx-popover-header-content">
-      <h3><mat-icon *ngIf="icon" class="dbx-icon-spacer">{{ icon }}</mat-icon> {{ header }}</h3>
-      <span class="spacer"></span>
-      <ng-content></ng-content>
+    <div class="dbx-popover-header">
+      <div class="dbx-popover-header-content">
+        <h3>
+          <mat-icon *ngIf="icon" class="dbx-icon-spacer">{{ icon }}</mat-icon>
+          {{ header }}
+        </h3>
+        <span class="spacer"></span>
+        <ng-content></ng-content>
+      </div>
     </div>
-  </div>
-  <mat-divider></mat-divider>
+    <mat-divider></mat-divider>
   `
 })
 export class DbxPopoverHeaderComponent {
-
   @Input()
   header?: string;
 
@@ -30,5 +32,4 @@ export class DbxPopoverHeaderComponent {
       appPopoverContentComponent.hasHeader = true;
     }
   }
-
 }

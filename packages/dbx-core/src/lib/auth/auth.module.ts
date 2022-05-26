@@ -4,13 +4,7 @@ import { DbxAuthHasRolesDirective } from './auth.role.has.directive';
 
 @NgModule({
   imports: [],
-  declarations: [
-    DbxAuthHasRolesDirective,
-    DbxAuthHasAnyRoleDirective
-  ],
-  exports: [
-    DbxAuthHasRolesDirective,
-    DbxAuthHasAnyRoleDirective
-  ]
+  declarations: [DbxAuthHasRolesDirective, DbxAuthHasAnyRoleDirective],
+  exports: [DbxAuthHasRolesDirective, DbxAuthHasAnyRoleDirective]
 })
-export class DbxCoreAuthModule { }
+export class DbxCoreAuthModule {}

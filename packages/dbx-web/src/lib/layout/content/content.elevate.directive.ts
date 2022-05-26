@@ -6,7 +6,7 @@ import { Directive } from '@angular/core';
 @Directive({
   selector: 'dbx-content-elevate,[dbxContentElevate]',
   host: {
-    'class': 'd-block dbx-content-elevate'
+    class: 'd-block dbx-content-elevate'
   }
 })
-export class DbxContentElevateDirective { }
+export class DbxContentElevateDirective {}

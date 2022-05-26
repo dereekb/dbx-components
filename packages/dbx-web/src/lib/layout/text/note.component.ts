@@ -2,9 +2,11 @@ import { Component } from '@angular/core';
 
 @Component({
   selector: 'dbx-note',
-  template: `<ng-content></ng-content>`,
+  template: `
+    <ng-content></ng-content>
+  `,
   host: {
-    'class': 'dbx-note'
+    class: 'dbx-note'
   }
 })
-export class DbxNoteComponent { }
+export class DbxNoteComponent {}

@@ -1,5 +1,5 @@
-import { ClassType } from "@dereekb/util";
-import { transformAndValidateObjectFactory, TransformAndValidateObjectFactoryDefaults, TransformAndValidateObjectHandleValidate } from "./transform";
+import { ClassType } from '@dereekb/util';
+import { transformAndValidateObjectFactory, TransformAndValidateObjectFactoryDefaults, TransformAndValidateObjectHandleValidate } from './transform';
 
 // MARK: Transform and Validate Result
 /**

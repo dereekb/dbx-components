@@ -3,12 +3,8 @@ import { NgModule } from '@angular/core';
 import { DbxFormFormlyWrapperModule } from '../../wrapper/form.wrapper.module';
 
 @NgModule({
-  imports: [
-    FormlyMaterialModule
-  ],
+  imports: [FormlyMaterialModule],
   declarations: [],
-  exports: [
-    DbxFormFormlyWrapperModule
-  ]
+  exports: [DbxFormFormlyWrapperModule]
 })
-export class DbxFormFormlyTextFieldModule { }
+export class DbxFormFormlyTextFieldModule {}

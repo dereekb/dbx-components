@@ -23,7 +23,6 @@ export enum DbxActionTransitionSafetyDialogResult {
   `
 })
 export class DbxActionUIRouterTransitionSafetyDialogComponent extends AbstractDialogDirective implements OnInit {
-
   config: DbxPromptConfirmConfig = {
     type: DbxPromptConfirmTypes.NORMAL,
     title: 'Unsaved Changes',
@@ -39,5 +38,4 @@ export class DbxActionUIRouterTransitionSafetyDialogComponent extends AbstractDi
   cancel(): void {
     this.dialogRef.close(DbxActionTransitionSafetyDialogResult.DISCARD);
   }
-
 }

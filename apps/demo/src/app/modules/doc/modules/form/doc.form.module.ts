@@ -41,6 +41,6 @@ import { DocFormDirectiveComponent } from './container/directive.component';
     DocFormTextEditorComponent,
     DocFormTemplateComponent,
     DocFormWrapperComponent
-  ],
+  ]
 })
-export class DocFormModule { }
+export class DocFormModule {}

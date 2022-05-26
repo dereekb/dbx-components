@@ -1,16 +1,13 @@
-import { FirestoreDocument, FirestoreSingleDocumentAccessor, firestoreSingleDocumentAccessor } from "../accessor/document";
+import { FirestoreDocument, FirestoreSingleDocumentAccessor, firestoreSingleDocumentAccessor } from '../accessor/document';
 import { FirestoreCollectionWithParent, FirestoreCollectionWithParentConfig, makeFirestoreCollectionWithParent } from './subcollection';
 
 // MARK: Single-Item Subcollection
 export interface SingleItemFirestoreCollectionConfig<T, PT, D extends FirestoreDocument<T> = FirestoreDocument<T>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>> extends FirestoreCollectionWithParentConfig<T, PT, D, PD> {
-
   /**
    * Identifier of the single item.
    */
   readonly singleItemIdentifier: string;
-
 }
-
 
 export interface SingleItemFirestoreCollection<T, PT, D extends FirestoreDocument<T> = FirestoreDocument<T>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>> extends FirestoreSingleDocumentAccessor<T, D> {
   readonly collection: FirestoreCollectionWithParent<T, PT, D, PD>;

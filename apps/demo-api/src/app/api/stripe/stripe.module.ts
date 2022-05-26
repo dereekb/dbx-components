@@ -7,4 +7,4 @@ import { DemoApiStripeExampleService } from './demo.stripe.handler';
   providers: [DemoApiStripeExampleService],
   exports: []
 })
-export class DemoApiStripeModule { }
+export class DemoApiStripeModule {}

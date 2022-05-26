@@ -5,7 +5,7 @@ import { ArrayOrValue, Destroyable, Initialized, Maybe } from '@dereekb/util';
 import { DbxFirebaseCollectionLoader } from './collection.loader';
 
 export interface DbxFirebaseCollectionLoaderInstanceInitConfig<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> {
-  collection?: Maybe<FirestoreCollection<T, D>>,
+  collection?: Maybe<FirestoreCollection<T, D>>;
   maxPages?: Maybe<number>;
   itemsPerPage?: Maybe<number>;
   constraints?: Maybe<ArrayOrValue<FirestoreQueryConstraint>>;
@@ -21,7 +21,6 @@ export interface DbxFirebaseCollectionLoaderInstanceData<T, D extends FirestoreD
  * DbxFirebaseModelLoader implementation within an instance.
  */
 export class DbxFirebaseCollectionLoaderInstance<T = unknown, D extends FirestoreDocument<T> = FirestoreDocument<T>> implements DbxFirebaseCollectionLoader<T>, DbxFirebaseCollectionLoaderInstanceData<T, D>, Initialized, Destroyable {
-
   protected readonly _collection = new BehaviorSubject<Maybe<FirestoreCollection<T, D>>>(this._initConfig?.collection);
 
   protected readonly _maxPages = new BehaviorSubject<Maybe<number>>(this._initConfig?.maxPages);
@@ -34,11 +33,8 @@ export class DbxFirebaseCollectionLoaderInstance<T = unknown, D extends Firestor
   readonly collection$ = this._collection.pipe(distinctUntilChanged());
   readonly constraints$ = this._constraints.pipe(distinctUntilChanged());
 
-  readonly iteratorFilter$: Observable<FirestoreItemPageIteratorFilter> = combineLatest([
-    this._itemsPerPage.pipe(distinctUntilChanged()),
-    this.constraints$
-  ]).pipe(
-    map(([limit, constraints]) => ({ limit, constraints, maxPageLoadLimit: this.maxPages }) as FirestoreItemPageIteratorFilter),
+  readonly iteratorFilter$: Observable<FirestoreItemPageIteratorFilter> = combineLatest([this._itemsPerPage.pipe(distinctUntilChanged()), this.constraints$]).pipe(
+    map(([limit, constraints]) => ({ limit, constraints, maxPageLoadLimit: this.maxPages } as FirestoreItemPageIteratorFilter)),
     shareReplay(1)
   );
 
@@ -46,7 +42,7 @@ export class DbxFirebaseCollectionLoaderInstance<T = unknown, D extends Firestor
     switchMap((collection) => {
       if (collection) {
         return combineLatest([this.iteratorFilter$, this._restart.pipe(startWith(undefined))]).pipe(
-          throttleTime(100, undefined, { trailing: true }),  // prevent rapid changes and executing filters too quickly.
+          throttleTime(100, undefined, { trailing: true }), // prevent rapid changes and executing filters too quickly.
           map(([iteratorFilter]) => collection.firestoreIteration(iteratorFilter)),
           cleanupDestroyable(), // cleanup the iteration
           shareReplay(1)
@@ -60,35 +56,38 @@ export class DbxFirebaseCollectionLoaderInstance<T = unknown, D extends Firestor
   );
 
   readonly queryChangeWatcher$: Observable<IterationQueryDocChangeWatcher<T>> = this.firestoreIteration$.pipe(
-    map(instance => iterationQueryDocChangeWatcher({ instance })),
+    map((instance) => iterationQueryDocChangeWatcher({ instance })),
     shareReplay(1)
   );
 
   readonly accumulator$: Observable<FirebaseQueryItemAccumulator<T>> = this.firestoreIteration$.pipe(
-    map(x => firebaseQueryItemAccumulator<T>(x)),
+    map((x) => firebaseQueryItemAccumulator<T>(x)),
     cleanupDestroyable(),
     shareReplay(1)
   );
 
   readonly pageLoadingState$: Observable<PageListLoadingState<T>> = this.accumulator$.pipe(
-    switchMap(x => accumulatorFlattenPageListLoadingState(x) as Observable<PageListLoadingState<T>>),
+    switchMap((x) => accumulatorFlattenPageListLoadingState(x) as Observable<PageListLoadingState<T>>),
     shareReplay(1)
   );
 
-  constructor(private readonly _initConfig?: DbxFirebaseCollectionLoaderInstanceInitConfig<T, D>) { }
+  constructor(private readonly _initConfig?: DbxFirebaseCollectionLoaderInstanceInitConfig<T, D>) {}
 
   init(): void {
-
     // When max pages changes, update the iteration's max page limit.
-    this._maxPagesSub.subscription = this._maxPages.pipe(
-      distinctUntilChanged(),
-      filterMaybe(),  // do not pass null/undefined values
-      switchMap((maxPageLoadLimit) => this.firestoreIteration$.pipe(
-        tap((iteration) => {
-          iteration.maxPageLoadLimit = maxPageLoadLimit;
-        })
-      ))
-    ).subscribe();
+    this._maxPagesSub.subscription = this._maxPages
+      .pipe(
+        distinctUntilChanged(),
+        filterMaybe(), // do not pass null/undefined values
+        switchMap((maxPageLoadLimit) =>
+          this.firestoreIteration$.pipe(
+            tap((iteration) => {
+              iteration.maxPageLoadLimit = maxPageLoadLimit;
+            })
+          )
+        )
+      )
+      .subscribe();
   }
 
   destroy(): void {
@@ -153,7 +152,6 @@ export class DbxFirebaseCollectionLoaderInstance<T = unknown, D extends Firestor
   setCollection(firestoreCollection: Maybe<FirestoreCollection<T, D>>) {
     this.collection = firestoreCollection;
   }
-
 }
 
 export function dbxFirebaseCollectionLoaderInstance<T, D extends FirestoreDocument<T> = FirestoreDocument<T>>(config: DbxFirebaseCollectionLoaderInstanceInitConfig<T, D>): DbxFirebaseCollectionLoaderInstance<T, D> {

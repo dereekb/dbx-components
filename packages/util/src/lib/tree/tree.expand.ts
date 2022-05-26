@@ -1,8 +1,8 @@
 /*eslint @typescript-eslint/no-explicit-any:"off"*/
 // any is used with intent here, as the recursive TreeNode value requires its use to terminate.
 
-import { TreeNode, TreeNodeWithoutChildren } from "./tree";
-import { Maybe } from "../value/maybe";
+import { TreeNode, TreeNodeWithoutChildren } from './tree';
+import { Maybe } from '../value/maybe';
 
 // MARK: Expand
 
@@ -12,10 +12,10 @@ import { Maybe } from "../value/maybe";
 export interface ExpandTree<T> {
   /**
    * Returns child values from the value, if they exist.
-   * @param value 
+   * @param value
    */
   getChildren(value: T): Maybe<T[]>;
-};
+}
 
 /**
  * Extended ExpandTree configuration with custom node building.
@@ -34,8 +34,8 @@ export type ExpandTreeFunction<T, N extends TreeNode<T, N> = TreeNode<T, any>> =
 
 /**
  * Creates an ExpandTreeFunction from the input configuration.
- * 
- * @param config 
+ *
+ * @param config
  */
 export function expandTreeFunction<T>(config: ExpandTree<T>): ExpandTreeFunction<T, TreeNode<T>>;
 export function expandTreeFunction<T, N extends TreeNode<T, N>>(config: ExpandTreeWithNodeBuilder<T, N>): ExpandTreeFunction<T, N>;
@@ -43,7 +43,7 @@ export function expandTreeFunction<T, N extends TreeNode<T, N> = TreeNode<T, any
   const makeNode: (node: TreeNode<T>) => N = (config as any).makeNode ?? ((node) => node as N);
 
   const expandFn = (value: T, parent?: N): N => {
-    const depth = (parent) ? parent.depth + 1 : 0;
+    const depth = parent ? parent.depth + 1 : 0;
     const treeNode: TreeNodeWithoutChildren<T, N> = {
       depth,
       parent,
@@ -52,7 +52,7 @@ export function expandTreeFunction<T, N extends TreeNode<T, N> = TreeNode<T, any
 
     const node: N = makeNode(treeNode);
     const childrenValues: Maybe<T[]> = config.getChildren(value);
-    node.children = (childrenValues) ? childrenValues.map(x => expandFn(x, node)) : undefined;
+    node.children = childrenValues ? childrenValues.map((x) => expandFn(x, node)) : undefined;
     return node;
   };
 
@@ -61,11 +61,11 @@ export function expandTreeFunction<T, N extends TreeNode<T, N> = TreeNode<T, any
 
 /**
  * Convenience function for expanding multiple values into trees then merging them together into a single array.
- * 
- * @param values 
- * @param expandFn 
- * @returns 
+ *
+ * @param values
+ * @param expandFn
+ * @returns
  */
- export function expandTrees<T, N extends TreeNode<T, N>>(values: T[], expandFn: ExpandTreeFunction<T, N>): N[] {
+export function expandTrees<T, N extends TreeNode<T, N>>(values: T[], expandFn: ExpandTreeFunction<T, N>): N[] {
   return values.map(expandFn);
 }

@@ -5,18 +5,8 @@ import { DemoProfileFormComponent } from './component/profile.form.component';
 import { DemoRootSharedModule } from '../../root.shared.module';
 
 @NgModule({
-  imports: [
-    DemoRootSharedModule
-  ],
-  declarations: [
-    DemoProfileFormComponent,
-    DemoProfileUsernameFormComponent,
-    DemoProfileDocumentStoreDirective
-  ],
-  exports: [
-    DemoProfileFormComponent,
-    DemoProfileUsernameFormComponent,
-    DemoProfileDocumentStoreDirective
-  ]
+  imports: [DemoRootSharedModule],
+  declarations: [DemoProfileFormComponent, DemoProfileUsernameFormComponent, DemoProfileDocumentStoreDirective],
+  exports: [DemoProfileFormComponent, DemoProfileUsernameFormComponent, DemoProfileDocumentStoreDirective]
 })
-export class DemoSharedProfileModule { }
+export class DemoSharedProfileModule {}

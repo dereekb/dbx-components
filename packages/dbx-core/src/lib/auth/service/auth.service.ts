@@ -6,19 +6,18 @@ import { AuthUserIdentifier, AuthUserState } from '../auth.user';
  * Client auth service used to retrieve info about the current state of client authentication and client roles they may have.
  */
 export abstract class DbxAuthService {
-
   /**
-   * Whether or not the user is logged in. 
-   * 
+   * Whether or not the user is logged in.
+   *
    * This will only emit once the authentication has been determined, preventing issues with premature decision making.
-   * 
+   *
    * A user is considered logged in even if there is an anonymous user. For more detailed info, consider using authUserState$.
    */
   abstract readonly isLoggedIn$: Observable<boolean>;
 
   /**
    * Whether or not the user has finished onboarding.
-   * 
+   *
    * This will only emit once the onboarding status has been determined, preventing issues with premature decision making.
    */
   abstract readonly isOnboarded$: Observable<boolean>;
@@ -52,5 +51,4 @@ export abstract class DbxAuthService {
    * Performs the logout action.
    */
   abstract logOut(): Promise<void>;
-
 }

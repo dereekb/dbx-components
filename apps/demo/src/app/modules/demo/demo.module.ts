@@ -12,9 +12,6 @@ import { DemoRootSharedModule } from '@dereekb/demo-components';
       states: STATES
     })
   ],
-  declarations: [
-    DemoLayoutComponent,
-    DemoHomeComponent,
-  ],
+  declarations: [DemoLayoutComponent, DemoHomeComponent]
 })
-export class DemoModule { }
+export class DemoModule {}
