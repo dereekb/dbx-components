@@ -2,3 +2,15 @@
 
 /dist
 /coverage
+/.angular
+/.circleci
+/.config
+/.firebase
+/.github
+/.husky
+/.reports
+/.vscode
+/art
+/docker
+/setup
+/tools
