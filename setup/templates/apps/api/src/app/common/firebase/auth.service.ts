@@ -5,7 +5,7 @@ export type APP_CODE_PREFIXApiAuthClaims = {
   /**
    * Admin role
    */
-  a?: boolean;
+  a?: number;
 }
 
 export class APP_CODE_PREFIXApiFirebaseServerAuthUserContext extends AbstractFirebaseServerAuthUserContext<APP_CODE_PREFIXApiAuthService> {
