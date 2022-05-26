@@ -215,6 +215,7 @@ workflows:
             - build
             - test-with-node
             - test-with-node-firebase
+            - test-setup-script
           filters:
             branches:
               only: release
