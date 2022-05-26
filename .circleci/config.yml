@@ -122,7 +122,7 @@ jobs:
           command: git config --global user.email "ci@dereekb.com" && git config --global user.name "ci"
       - run:
           name: "Setup env vars for setup script"
-          command: echo -e 'export DBX_SETUP_PROJECT_IS_CI_TEST="y"\nDBX_SETUP_PROJECT="$CIRCLE_BRANCH"\nDBX_SETUP_PROJECT_MANUAL="n"' >> $BASH_ENV
+          command: echo -e 'export DBX_SETUP_PROJECT_IS_CI_TEST="y"\nDBX_SETUP_PROJECT_BRANCH="$CIRCLE_BRANCH"\nDBX_SETUP_PROJECT_MANUAL="n"' >> $BASH_ENV
       - run:
           name: Create output folder for setup-project.sh testing
           command: mkdir ~/setup-test
@@ -156,9 +156,13 @@ jobs:
           name: build release
           command: npx nx run --parallel=1 workspace:version
       - run:
-          # CircleCI does not have a great way to pass variables between run steps, so we grab the tag name before swapping to main, and then move tag to the main branch after making the merge commit into main.
-          name: copy tag id, merge release into main and use the release commit message, move tag from release to main
-          command: DEV_TAG_ID=$(git describe --abbrev=0 HEAD^) && TAG_ID=$(git describe --abbrev=0) && echo "merging new release ($TAG_ID) into main. Adding all commits since last dev tag ($DEV_TAG_ID)" && git checkout main && git merge release --squash -Xtheirs && git commit -m "$(git log $DEV_TAG_ID..release --pretty=%B | cat)" && git tag -f $TAG_ID
+          # we grab the relevant tag names before swapping to main
+          name: "setup env vars for git changes"
+          command: echo -e "export DEV_TAG_ID=$(git describe --abbrev=0 HEAD^)\nTAG_ID=$(git describe --abbrev=0)" >> $BASH_ENV
+      - run:
+          # copy the commit message before we swap branches, or it will include unrelated changes. Move tag to the main branch after making the merge commit into main
+          name: merge release into main and use the release commit message, move tag from release to main
+          command: COMMIT_MESSAGE=$(git log $DEV_TAG_ID..release --pretty=%B | cat) && echo "merging new release ($TAG_ID) into main. Adding all commits since last dev tag ($DEV_TAG_ID)" && git checkout main && git merge release --squash -Xtheirs && git commit --no-verify -m "$COMMIT_MESSAGE" && git tag -f $TAG_ID
       - run:
           name: push main to origin, push new tag to origin
           command: git push origin main && git push origin $(git describe --abbrev=0 --tags)

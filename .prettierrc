@@ -3,12 +3,12 @@
   "bracketSameLine": true,
   "singleQuote": true,
   "bracketSpacing": true,
-  "trailingComma": false,
+  "trailingComma": "none",
   "quoteProps": "as-needed",
   "semi": true,
-  "tabs": false,
+  "useTabs": false,
   "tabWidth": 2,
   "htmlWhitespaceSensitivity": "ignore",
   "endOfLine": "lf",
-  "singleAttributePerLine": false
+  "printWidth": 200
 }

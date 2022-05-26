@@ -28,7 +28,7 @@ IS_CI_TEST=${DBX_SETUP_PROJECT_IS_CI_TEST:-"n"}       # y/n
 IS_NOT_CI_TEST=true
 
 # - Other Configuration
-SOURCE_BRANCH=${DBX_SETUP_PROJECT_BRANCH:-"develop"}     # develop or main
+SOURCE_BRANCH=${DBX_SETUP_PROJECT_BRANCH:-"main"}     # develop or main
 
 # - Project Details
 NAME=$FIREBASE_PROJECT_ID
@@ -280,8 +280,8 @@ echo "SECRETS=" > .env.secret
 git add --all
 git commit --no-verify -m "checkpoint: added Docker files and other utility files"
 
-# add semver for semantic versioning and linting for commits
-npm install -D @jscutlery/semver husky
+# add semver for semantic versioning, husky for pre-commit hooks, and pretty-quick for running prettier
+npm install -D @jscutlery/semver husky pretty-quick
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/.commitlintrc.json -o .commitlintrc.json
 
 mkdir .husky
@@ -291,7 +291,12 @@ npx --yes json -I -f package.json -e "this.scripts={ ...this.scripts, prepare: '
 npm run prepare
 
 mkdir -p ./.github/workflows
-curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/.github/workflows/commitlint.yml -o ./.github/workflows/commitlint.yml
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/.github/workflows/commitlint.yml -o .github/workflows/commitlint.yml
+
+# add prettier configs
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/.prettieringnore -o .prettieringnore
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/.prettierrc -o .prettierrc
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/.husky/prettier -o .husky/prettier
 
 git add --all
 git commit --no-verify -m "checkpoint: added semver and commit linting"
