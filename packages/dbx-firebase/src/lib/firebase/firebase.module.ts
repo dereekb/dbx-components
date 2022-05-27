@@ -8,7 +8,10 @@ import { provideFirestore, getFirestore, connectFirestoreEmulator, enableIndexed
 import { provideAuth, getAuth, connectAuthEmulator } from '@angular/fire/auth';
 import { AppCheck, provideAppCheck } from '@angular/fire/app-check';
 import { DbxFirebaseParsedEmulatorsConfig } from './emulators';
-import { DbxFirebaseOptions } from './options';
+import { DbxFirebaseOptions, DBX_FIREBASE_OPTIONS_TOKEN } from './options';
+import { HTTP_INTERCEPTORS } from '@angular/common/http';
+import { enableAppCheckDebugTokenGeneration } from '../auth/appcheck';
+import { DbxFirebaseAppCheckHttpInterceptor } from '../auth/appcheck/appcheck.interceptor';
 
 // TODO: remove "as any" typescript casting - https://github.com/angular/angularfire/issues/3086
 
@@ -36,6 +39,8 @@ export class DbxFirebaseDefaultFirestoreProviderModule { }
 
 /**
  * Default firebase app check provider module.
+ * 
+ * Also configures the DbxFirebaseAppCheckHttpInterceptor with HTTP_INTERCEPTORS in order for appCheck to be appended to requests to the api.
  */
 @NgModule({
   imports: [
@@ -44,15 +49,22 @@ export class DbxFirebaseDefaultFirestoreProviderModule { }
       const firebaseOptions = injector.get<DbxFirebaseOptions>(DBX_FIREBASE_OPTIONS_TOKEN);
       const appCheckOptions = firebaseOptions.appCheck;
       const appCheckKnowinglyDisabled = appCheckOptions?.disabled === true || firebaseOptions.emulators?.useEmulators === true;
-
       let appCheck: AppCheck;
 
       if (appCheckOptions && !appCheckKnowinglyDisabled) {
+
+        // enable the debug tokens if not using emulators and allowDebugTokens is set true
+        if (firebaseOptions.emulators?.useEmulators !== true && appCheckOptions.allowDebugTokens) {
+          enableAppCheckDebugTokenGeneration(true);
+        }
+
         // Only enabled outside of app-check environments. The emulators will not use appcheck.
         appCheck = initializeAppCheck(firebaseApp, {
           provider: new ReCaptchaV3Provider(appCheckOptions.reCaptchaV3),
           isTokenAutoRefreshEnabled: appCheckOptions.isTokenAutoRefreshEnabled ?? true
         });
+
+        console.debug('Enabled AppCheck.');
       } else {
         appCheck = undefined as unknown as AppCheck;
 
@@ -63,6 +75,13 @@ export class DbxFirebaseDefaultFirestoreProviderModule { }
 
       return appCheck;
     }) as any)
+  ],
+  providers: [
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: DbxFirebaseAppCheckHttpInterceptor,
+      multi: true
+    }
   ]
 })
 export class DbxFirebaseDefaultAppCheckProviderModule { }
@@ -129,8 +148,6 @@ export class DbxFirebaseDefaultStorageProviderModule { }
   ]
 })
 export class DbxFirebaseDefaultFunctionsProviderModule { }
-
-export const DBX_FIREBASE_OPTIONS_TOKEN = new InjectionToken('DbxFirebaseOptions');
 
 /**
  * Default provider module.
