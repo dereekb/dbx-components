@@ -64,10 +64,12 @@
       "configurations": {
         "production": {
           "browserTarget": "ANGULAR_APP_NAME:build-base:production",
+          "proxyConfig": "apps/ANGULAR_APP_NAME/proxy.conf.prod.json",
           "port": ANGULAR_APP_PORT
         },
         "development": {
           "browserTarget": "ANGULAR_APP_NAME:build-base:development",
+          "proxyConfig": "apps/ANGULAR_APP_NAME/proxy.conf.dev.json",
           "port": ANGULAR_APP_PORT
         }
       },

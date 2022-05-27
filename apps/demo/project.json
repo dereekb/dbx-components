@@ -81,10 +81,12 @@
       "configurations": {
         "production": {
           "browserTarget": "demo:build-base:production",
+          "proxyConfig": "apps/demo/proxy.conf.prod.json",
           "port": 9010
         },
         "development": {
           "browserTarget": "demo:build-base:development",
+          "proxyConfig": "apps/demo/proxy.conf.dev.json",
           "port": 9010
         }
       },

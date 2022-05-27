@@ -197,7 +197,7 @@ rm -r functions
 # edit firebase.json to have the correct configuration.
 
 # Hosting
-npx --yes json -I -f firebase.json -e "this.hosting={ ...this.hosting, site: '$PROJECT_NAME', public: '$ANGULAR_APP_DIST_FOLDER', ignore: ['firebase.json', '**/.*', '**/node_modules/**'], rewrites: [{ source: '**', destination: '/index.html' }] }";
+npx --yes json -I -f firebase.json -e "this.hosting={ ...this.hosting, site: '$PROJECT_NAME', public: '$ANGULAR_APP_DIST_FOLDER', ignore: ['firebase.json', '**/.*', '**/node_modules/**'], rewrites: [{ source: '/api/**', function: 'api' }, { source: '**', destination: '/index.html' }] }";
 
 # Functions
 npx --yes json -I -f firebase.json -e "this.functions={ source:'$API_APP_DIST_FOLDER', runtime: 'nodejs16', engines: { node: '16' }, ignore: ['firebase.json', '**/.*', '**/node_modules/**'] }";
@@ -327,7 +327,7 @@ update_jest_config_file "$ANGULAR_COMPONENTS_FOLDER"
 update_jest_config_file "$FIREBASE_COMPONENTS_FOLDER"
 
 # add env files to ensure that jest CI tests export properly.
-mkdir tmp # TODO: Change from /develop to /main later.
+mkdir tmp
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/setup/templates/apps/.env -o tmp/env.tmp
 sed -e "s/APP_ID/$ANGULAR_APP_NAME/g" tmp/env.tmp > $ANGULAR_APP_FOLDER/.env
 sed -e "s/APP_ID/$API_APP_NAME/g" tmp/env.tmp > $API_APP_FOLDER/.env
@@ -469,6 +469,15 @@ download_angular_ts_file "src/style.scss"
 download_angular_ts_file "src/main.ts"
 download_angular_ts_file "src/root.module.ts"
 download_angular_ts_file "src/root.firebase.module.ts"
+
+# proxy.conf.dev.json
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/apps/demo/src/proxy.conf.dev.json -o $ANGULAR_APP_FOLDER/src/proxy.conf.dev.json.tmp
+sed -e "s/9902/$FIREBASE_EMULATOR_AUTH_PORT/g" $ANGULAR_APP_FOLDER/src/proxy.conf.dev.json.tmp > $ANGULAR_APP_FOLDER/src/proxy.conf.dev.json
+rm $ANGULAR_APP_FOLDER/src/proxy.conf.dev.json.tmp
+
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/apps/demo/src/proxy.conf.prod.json -o $ANGULAR_APP_FOLDER/src/proxy.conf.prod.json.tmp
+sed -e "s-components.dereekb.com-example.dereekb.com-g" $ANGULAR_APP_FOLDER/src/proxy.conf.prod.json.tmp > $ANGULAR_APP_FOLDER/src/proxy.conf.prod.json
+rm $ANGULAR_APP_FOLDER/src/proxy.conf.prod.json.tmp
 
 # lib
 mkdir $ANGULAR_APP_FOLDER/src/lib
