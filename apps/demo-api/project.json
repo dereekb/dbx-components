@@ -39,13 +39,13 @@
     "run-emulators": {
       "executor": "@nrwl/workspace:run-commands",
       "options": {
-        "command": "npx env-cmd -f .env.secret --use-shell 'npx firebase emulators:start --import=/root/data/emulators --export-on-exit'"
+        "command": "npx env-cmd -f .env.secret --use-shell 'npx firebase --project=default emulators:start --import=/root/data/emulators --export-on-exit'"
       }
     },
     "watch-emulators": {
       "executor": "@nrwl/workspace:run-commands",
       "options": {
-        "command": "find dist/apps/demo-api | entr -rp -s './wait-for-ports.sh && npx env-cmd -f .env.secret --use-shell npx firebase emulators:start --import=/root/data/emulators --export-on-exit'"
+        "command": "find dist/apps/demo-api | entr -rp -s './wait-for-ports.sh && npx env-cmd -f .env.secret --use-shell npx firebase --project=default emulators:start --import=/root/data/emulators --export-on-exit'"
       }
     },
     "serve": {
@@ -110,7 +110,7 @@
             "command": "npx nx make-env demo-api"
           },
           {
-            "command": "npx firebase deploy --only functions --project=prod --token \"$FIREBASE_TOKEN\""
+            "command": "npx firebase --project=prod deploy --only functions --token \"$FIREBASE_TOKEN\""
           }
         ],
         "parallel": false

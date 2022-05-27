@@ -108,7 +108,7 @@
         "projects": "self"
       }],
       "options": {
-        "command": "npx firebase deploy --only hosting"
+        "command": "npx firebase --project=default deploy --only hosting"
       }
     },
     "ci-deploy": {
@@ -118,7 +118,7 @@
         "projects": "self"
       }],
       "options": {
-        "command": "npx firebase deploy --only hosting --token \"$FIREBASE_TOKEN\""
+        "command": "npx firebase --project=default deploy --only hosting --token \"$FIREBASE_TOKEN\""
       }
     }
   },
