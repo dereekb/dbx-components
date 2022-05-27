@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [5.0.1](https://github.com/dereekb/dbx-components/compare/v5.0.0-dev...v5.0.1) (2022-05-26)
+
+
+### Bug Fixes
+
+* setup-project fixes ([d700370](https://github.com/dereekb/dbx-components/commit/d700370301483b64cf561ab3fe9b0492c697cd45))
+
+
+
 # [5.0.0](https://github.com/dereekb/dbx-components/compare/v4.1.0-dev...v5.0.0) (2022-05-25)
 
 
