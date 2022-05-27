@@ -172,6 +172,10 @@ then
 
   echo "Instructions: Firebase Functions - This configuration will be ignored."
   (sleep 1; echo; sleep 1; echo 'N'; sleep 1; echo 'N';) | firebase init functions
+
+  echo "Adding alias prod to default"
+  npx --yes json -I -f .firebaserc -e "this.projects = { ...this.projects, prod: this.projects.default }";
+  
 else
   # automatic configuration. This should typically only be used for CI/testing, as using the firebase CLI can pull existing content in after logging in.
   echo "Initializing firebase automatically using project name..."
@@ -210,7 +214,7 @@ git commit --no-verify -m "checkpoint: added firebase configuration"
 
 # Install npm dependencies
 npm install @dereekb/dbx-analytics$DBX_COMPONENTS_VERSION @dereekb/dbx-web$DBX_COMPONENTS_VERSION @dereekb/dbx-form$DBX_COMPONENTS_VERSION @dereekb/firebase$DBX_COMPONENTS_VERSION @dereekb/firebase-server$DBX_COMPONENTS_VERSION @dereekb/dbx-firebase$DBX_COMPONENTS_VERSION --force  # TODO: Remove force once possible.
-npm install -D firebase-tools @ngrx/store-devtools @firebase/rules-unit-testing firebase-functions-test@2.0.2  # TODO: Figure out how to have the @dereekb dependencies also include these.
+npm install -D firebase-tools @ngrx/store-devtools @firebase/rules-unit-testing firebase-functions-test@2.0.2 envfile
 
 git add --all
 git commit --no-verify -m "checkpoint: added @dereekb dependencies"
@@ -348,6 +352,9 @@ mkdir .circleci
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/setup/templates/.circleci/config.yml -o .circleci/config.yml.tmp
 sed -e "s/CI_GIT_USER_EMAIL/$CI_GIT_USER_EMAIL/g" -e "s/CI_GIT_USER_NAME/$CI_GIT_USER_NAME/g" -e "s/ANGULAR_APP_NAME/$ANGULAR_APP_NAME/g"  -e "s/API_APP_NAME/$API_APP_NAME/g" -e "s/E2E_APP_NAME/$E2E_APP_NAME/g" .circleci/config.yml.tmp > .circleci/config.yml
 rm .circleci/config.yml.tmp
+
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/make-env.js -o make-env.js
+echo "PUBLIC_PROD_VARIABLES_HERE" > ".env.prod"
 
 git add --all
 git commit --no-verify -m "checkpoint: added circleci configrations"

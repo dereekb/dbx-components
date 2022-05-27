@@ -1,5 +1,6 @@
 {
   "projects": {
-    "default": "FIREBASE_PROJECT_ID"
+    "default": "FIREBASE_PROJECT_ID",
+    "prod": "FIREBASE_PROJECT_ID"
   }
 }

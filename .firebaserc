@@ -1,5 +1,6 @@
 {
   "projects": {
-    "default": "dereekb-components"
+    "default": "dereekb-components",
+    "prod": "dereekb-components"
   }
 }

@@ -22,7 +22,8 @@
       "configurations": {
         "production": {
           "optimization": true,
-          "extractLicenses": true,
+          "extractLicenses": false,
+          "sourceMap": false,
           "inspect": false,
           "fileReplacements": [{
             "replace": "API_APP_FOLDER/src/environments/environment.ts",
@@ -87,14 +88,10 @@
         "command": "./exec-with-emulator.sh 'npx nx run-tests API_APP_NAME --watch'"
       }
     },
-    "deploy": {
+    "make-env": {
       "executor": "@nrwl/workspace:run-commands",
-      "dependsOn": [{
-        "target": "build",
-        "projects": "self"
-      }],
       "options": {
-        "command": "npx firebase deploy --only functions"
+        "command": "node ./make-env.js > API_APP_DIST_FOLDER/.env && cp .env.prod API_APP_DIST_FOLDER/.env.prod"
       }
     },
     "ci-deploy": {
@@ -104,7 +101,16 @@
         "projects": "self"
       }],
       "options": {
-        "command": "npx firebase deploy --only functions --token \"$FIREBASE_TOKEN\""
+        "commands": [{
+            "command": "npx nx run API_APP_NAME:build-base:production"
+          }, {
+            "command": "npx nx make-env API_APP_NAME"
+          },
+          {
+            "command": "npx firebase deploy --only functions --project=prod --token \"$FIREBASE_TOKEN\""
+          }
+        ],
+        "parallel": false
       }
     }
   },

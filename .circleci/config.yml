@@ -176,6 +176,7 @@ jobs:
       - attach_workspace:
           at: ~/code
       - run:
+          # NOTE: this uses make-env.js to produce a .env file that is uploaded. Ensure CircleCI has all required variables before release.
           name: deploy updated projects
           command: npx nx run-many --target=ci-deploy --all --parallel=false # deploy all projects
       - run:

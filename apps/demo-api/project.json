@@ -12,12 +12,10 @@
     "build-base": {
       "executor": "@nrwl/node:webpack",
       "outputs": ["{options.outputPath}"],
-      "dependsOn": [
-        {
-          "target": "build",
-          "projects": "dependencies"
-        }
-      ],
+      "dependsOn": [{
+        "target": "build",
+        "projects": "dependencies"
+      }],
       "options": {
         "outputPath": "dist/apps/demo-api",
         "main": "apps/demo-api/src/main.ts",
@@ -28,14 +26,13 @@
       "configurations": {
         "production": {
           "optimization": true,
-          "extractLicenses": true,
+          "extractLicenses": false,
+          "sourceMap": false,
           "inspect": false,
-          "fileReplacements": [
-            {
-              "replace": "apps/demo-api/src/environments/environment.ts",
-              "with": "apps/demo-api/src/environments/environment.prod.ts"
-            }
-          ]
+          "fileReplacements": [{
+            "replace": "apps/demo-api/src/environments/environment.ts",
+            "with": "apps/demo-api/src/environments/environment.prod.ts"
+          }]
         }
       }
     },
@@ -54,8 +51,7 @@
     "serve": {
       "executor": "@nrwl/workspace:run-commands",
       "options": {
-        "commands": [
-          {
+        "commands": [{
             "command": "npx nx build-base demo-api --watch"
           },
           {
@@ -80,7 +76,10 @@
     },
     "run-tests": {
       "executor": "@nrwl/jest:jest",
-      "outputs": ["coverage/apps/demo-api", "./.reports/jest/demo-api.junit.xml"],
+      "outputs": [
+        "coverage/apps/demo-api",
+        "./.reports/jest/demo-api.junit.xml"
+      ],
       "options": {
         "jestConfig": "apps/demo-api/jest.config.ts",
         "passWithNoTests": true
@@ -92,28 +91,29 @@
         "command": "./exec-with-emulator.sh 'npx nx run-tests demo-api --watch'"
       }
     },
-    "deploy": {
+    "make-env": {
       "executor": "@nrwl/workspace:run-commands",
-      "dependsOn": [
-        {
-          "target": "build",
-          "projects": "self"
-        }
-      ],
       "options": {
-        "command": "npx firebase deploy --only functions"
+        "command": "node ./make-env.js > dist/apps/demo-api/.env && cp .env.prod dist/apps/demo-api/.env.prod"
       }
     },
     "ci-deploy": {
       "executor": "@nrwl/workspace:run-commands",
-      "dependsOn": [
-        {
-          "target": "build",
-          "projects": "self"
-        }
-      ],
+      "dependsOn": [{
+        "target": "build",
+        "projects": "self"
+      }],
       "options": {
-        "command": "npx firebase deploy --only functions --token \"$FIREBASE_TOKEN\""
+        "commands": [{
+            "command": "npx nx run demo-api:build-base:production"
+          }, {
+            "command": "npx nx make-env demo-api"
+          },
+          {
+            "command": "npx firebase deploy --only functions --project=prod --token \"$FIREBASE_TOKEN\""
+          }
+        ],
+        "parallel": false
       }
     }
   },
