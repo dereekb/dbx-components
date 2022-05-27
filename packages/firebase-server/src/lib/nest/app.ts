@@ -6,6 +6,7 @@ import * as express from 'express';
 import { firebaseServerAppTokenProvider } from '../firebase/firebase.nest';
 import * as admin from 'firebase-admin';
 import { ConfigureFirebaseWebhookMiddlewareModule } from './middleware/webhook';
+import { ConfigureFirebaseAppCheckMiddlewareModule } from './middleware/appcheck.module';
 
 export interface NestServer {
   server: express.Express;
@@ -34,7 +35,7 @@ export interface NestServerInstance<T> {
   removeNestServer(firebaseApp: admin.app.App): Promise<boolean>;
 }
 
-export class FirebaseNestServerRootModule {}
+export class FirebaseNestServerRootModule { }
 
 export interface NestServerInstanceConfig<T> {
   /**
@@ -49,6 +50,10 @@ export interface NestServerInstanceConfig<T> {
    * Whether or not to configure webhook usage. This will configure routes to use
    */
   readonly configureWebhooks?: boolean;
+  /**
+   * Whether or not to verify with app check. Is true by default.
+   */
+  readonly appCheckEnabled?: boolean;
   /**
    * Additional nest application options.
    */
@@ -79,6 +84,10 @@ export function nestServerInstance<T>(config: NestServerInstanceConfig<T>): Nest
 
         if (config.configureWebhooks) {
           imports.push(ConfigureFirebaseWebhookMiddlewareModule);
+        }
+
+        if (config.appCheckEnabled != false) {
+          imports.push(ConfigureFirebaseAppCheckMiddlewareModule);
         }
 
         const providersModule: DynamicModule = {
