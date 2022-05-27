@@ -1,9 +1,14 @@
 import { FirebaseOptions } from 'firebase/app';
 import { DbxFirebaseLoginModuleRootConfig } from '../auth/login/firebase.login.module';
+import { DbxFirebaseAppCheckConfig } from './appcheck';
 import { DbxFirebaseEmulatorsConfig } from './emulators';
 
 export interface DbxFirebaseOptions extends FirebaseOptions, Pick<DbxFirebaseLoginModuleRootConfig, 'enabledLoginMethods'> {
   emulators: DbxFirebaseEmulatorsConfig;
+  /**
+   * Firebase AppCheck handling
+   */
+  appCheck?: DbxFirebaseAppCheckConfig;
   /**
    * Passed to the Functions initialization to set the domain to use when sending requests.
    */

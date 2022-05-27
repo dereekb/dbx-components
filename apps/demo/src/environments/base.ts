@@ -34,6 +34,9 @@ export const base: DemoEnvironment = {
       ...firebaseInfo.emulators,
       useEmulators: true,
       host: '0.0.0.0'
+    },
+    appCheck: {
+      reCaptchaV3: '6LfojyAgAAAAADvgGBkWUbRJy-4660ZgkLFOtMvS'
     }
   }
 };

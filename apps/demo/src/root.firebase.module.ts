@@ -1,5 +1,5 @@
 import { FirestoreContext } from '@dereekb/firebase';
-import { DbxFirebaseFirestoreCollectionModule, DbxFirebaseEmulatorModule, DbxFirebaseDefaultFirebaseProvidersModule, DbxFirebaseAuthModule, DbxFirebaseFunctionsModule } from '@dereekb/dbx-firebase';
+import { DbxFirebaseFirestoreCollectionModule, DbxFirebaseEmulatorModule, DbxFirebaseDefaultFirebaseProvidersModule, DbxFirebaseAuthModule, DbxFirebaseFunctionsModule, DbxFirebaseDefaultAppCheckProviderModule } from '@dereekb/dbx-firebase';
 import { NgModule } from '@angular/core';
 import { environment } from './environments/environment';
 import { DemoFirebaseFunctionsGetter, DemoFirestoreCollections, DEMO_FIREBASE_FUNCTIONS_CONFIG, makeDemoFirebaseFunctions, makeDemoFirestoreCollections } from '@dereekb/demo-firebase';
