@@ -52,10 +52,10 @@ jobs:
           key: firebase-cache-
       - run:
           name: run API_APP_NAME tests
-          command: npx firebase emulators:exec --only auth,firestore,storage 'npx nx run-tests API_APP_NAME'
+          command: npx firebase --project=default emulators:exec --only auth,firestore,storage 'npx nx run-tests API_APP_NAME'
       - run:
           name: run E2E_APP_NAME tests
-          command: npx firebase emulators:exec --only auth,firestore,storage,functions 'npx nx run-tests E2E_APP_NAME'
+          command: npx firebase --project=default emulators:exec --only auth,firestore,storage,functions 'npx nx run-tests E2E_APP_NAME'
       # store the emulators cache
       - save_cache:
           key: firebase-cache-

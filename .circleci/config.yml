@@ -91,16 +91,16 @@ jobs:
           key: firebase-cache-
       - run:
           name: run firebase tests
-          command: npx firebase emulators:exec --only auth,firestore,storage 'npx nx run-all-tests firebase'
+          command: npx firebase --project=default emulators:exec --only auth,firestore,storage 'npx nx run-all-tests firebase'
       - run:
           name: run firebase-server tests
-          command: npx firebase emulators:exec --only auth,firestore,storage 'npx nx run-all-tests firebase-server'
+          command: npx firebase --project=default emulators:exec --only auth,firestore,storage 'npx nx run-all-tests firebase-server'
       - run:
           name: run dbx-firebase tests
-          command: npx firebase emulators:exec --only auth,firestore,storage 'npx nx run-tests dbx-firebase'
+          command: npx firebase --project=default emulators:exec --only auth,firestore,storage 'npx nx run-tests dbx-firebase'
       - run:
           name: run demo-api tests
-          command: npx firebase emulators:exec --only auth,firestore,storage 'npx nx run-tests demo-api'
+          command: npx firebase --project=default emulators:exec --only auth,firestore,storage 'npx nx run-tests demo-api'
       - save_cache:
           key: firebase-cache-
           paths:
@@ -137,7 +137,7 @@ jobs:
           command: cd ~/setup-test/myproject && npx -y nx build myproject && npx -y nx build myproject-api
       - run:
           name: Run tests
-          command: cd ~/setup-test/myproject && npx nx test myproject-components && npx nx test myproject-firebase && npx nx test myproject && npx firebase emulators:exec --only auth,firestore,storage 'npx nx run-tests myproject-api'
+          command: cd ~/setup-test/myproject && npx nx test myproject-components && npx nx test myproject-firebase && npx nx test myproject && npx firebase --project=default emulators:exec --only auth,firestore,storage 'npx nx run-tests myproject-api'
     # todo: add checks, etc.
   # Performs release operations on the release branch.
   run-release-and-push-to-main:
@@ -176,6 +176,7 @@ jobs:
       - attach_workspace:
           at: ~/code
       - run:
+          # NOTE: this uses make-env.js to produce a .env file that is uploaded. Ensure CircleCI has all required variables before release.
           name: deploy updated projects
           command: npx nx run-many --target=ci-deploy --all --parallel=false # deploy all projects
       - run:

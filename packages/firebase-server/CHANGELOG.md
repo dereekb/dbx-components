@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [5.1.0](https://github.com/dereekb/dbx-components/compare/v5.0.1-dev...v5.1.0) (2022-05-27)
+
+
+### Features
+
+* added FirebaseAppCheckMiddleware ([25ddc4e](https://github.com/dereekb/dbx-components/commit/25ddc4e7ae18d6ef96c38ed529c71313884b7544))
+
+
+
 ## [5.0.1](https://github.com/dereekb/dbx-components/compare/v5.0.0-dev...v5.0.1) (2022-05-26)
 
 

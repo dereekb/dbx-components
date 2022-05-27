@@ -15,7 +15,7 @@ echo "Waiting for ports $PORTS_TO_KILL to be available."
 
 while [[ ! -z "$IN_USE" ]]
 do
-  echo "Ports still in use: $IN_USE. Waiting for ports to close...";
+  echo "Ports still in use. Waiting for ports to close... PIDs: $IN_USE";
   sleep 2;
   i=$(( $i + 1 ))
   checkInUse

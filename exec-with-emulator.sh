@@ -9,4 +9,4 @@ USE_PORTS_ARG=--service-ports
 echo "service ports are being used"
 fi
 
-docker compose run --rm $USE_PORTS_ARG demo-api-server npx firebase emulators:exec --only auth,firestore,storage "$RUN_COMMAND"
+docker compose run --rm $USE_PORTS_ARG demo-api-server npx firebase --project=default emulators:exec --only auth,firestore,storage "$RUN_COMMAND"

@@ -1,12 +1,17 @@
 import { ModuleWithProviders, NgModule, Injector, InjectionToken } from '@angular/core';
 import { FirebaseOptions, initializeApp } from 'firebase/app';
+import { initializeAppCheck, ReCaptchaV3Provider } from 'firebase/app-check';
 import { FirebaseApp, provideFirebaseApp } from '@angular/fire/app';
 import { provideStorage, getStorage, connectStorageEmulator } from '@angular/fire/storage';
 import { provideFunctions, getFunctions, connectFunctionsEmulator } from '@angular/fire/functions';
 import { provideFirestore, getFirestore, connectFirestoreEmulator, enableIndexedDbPersistence } from '@angular/fire/firestore';
 import { provideAuth, getAuth, connectAuthEmulator } from '@angular/fire/auth';
+import { AppCheck, provideAppCheck } from '@angular/fire/app-check';
 import { DbxFirebaseParsedEmulatorsConfig } from './emulators';
-import { DbxFirebaseOptions } from './options';
+import { DbxFirebaseOptions, DBX_FIREBASE_OPTIONS_TOKEN } from './options';
+import { HTTP_INTERCEPTORS } from '@angular/common/http';
+import { enableAppCheckDebugTokenGeneration } from '../auth/appcheck';
+import { DbxFirebaseAppCheckHttpInterceptor } from '../auth/appcheck/appcheck.interceptor';
 
 // TODO: remove "as any" typescript casting - https://github.com/angular/angularfire/issues/3086
 
@@ -30,7 +35,56 @@ import { DbxFirebaseOptions } from './options';
     }) as any)
   ]
 })
-export class DbxFirebaseDefaultFirestoreProviderModule {}
+export class DbxFirebaseDefaultFirestoreProviderModule { }
+
+/**
+ * Default firebase app check provider module.
+ * 
+ * Also configures the DbxFirebaseAppCheckHttpInterceptor with HTTP_INTERCEPTORS in order for appCheck to be appended to requests to the api.
+ */
+@NgModule({
+  imports: [
+    provideAppCheck(((injector: Injector) => {
+      const firebaseApp = injector.get(FirebaseApp);
+      const firebaseOptions = injector.get<DbxFirebaseOptions>(DBX_FIREBASE_OPTIONS_TOKEN);
+      const appCheckOptions = firebaseOptions.appCheck;
+      const appCheckKnowinglyDisabled = appCheckOptions?.disabled === true || firebaseOptions.emulators?.useEmulators === true;
+      let appCheck: AppCheck;
+
+      if (appCheckOptions && !appCheckKnowinglyDisabled) {
+
+        // enable the debug tokens if not using emulators and allowDebugTokens is set true
+        if (firebaseOptions.emulators?.useEmulators !== true && appCheckOptions.allowDebugTokens) {
+          enableAppCheckDebugTokenGeneration(true);
+        }
+
+        // Only enabled outside of app-check environments. The emulators will not use appcheck.
+        appCheck = initializeAppCheck(firebaseApp, {
+          provider: new ReCaptchaV3Provider(appCheckOptions.reCaptchaV3),
+          isTokenAutoRefreshEnabled: appCheckOptions.isTokenAutoRefreshEnabled ?? true
+        });
+
+        console.debug('Enabled AppCheck.');
+      } else {
+        appCheck = undefined as unknown as AppCheck;
+
+        if (!appCheckKnowinglyDisabled) {
+          console.error('dbx-firebase: No appcheck configuration for the app, and not specifically disabled in config either.');
+        }
+      }
+
+      return appCheck;
+    }) as any)
+  ],
+  providers: [
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: DbxFirebaseAppCheckHttpInterceptor,
+      multi: true
+    }
+  ]
+})
+export class DbxFirebaseDefaultAppCheckProviderModule { }
 
 /**
  * Default firebase auth provider module.
@@ -50,7 +104,7 @@ export class DbxFirebaseDefaultFirestoreProviderModule {}
     }) as any)
   ]
 })
-export class DbxFirebaseDefaultAuthProviderModule {}
+export class DbxFirebaseDefaultAuthProviderModule { }
 
 /**
  * Default firebase storage provider module.
@@ -70,7 +124,7 @@ export class DbxFirebaseDefaultAuthProviderModule {}
     }) as any)
   ]
 })
-export class DbxFirebaseDefaultStorageProviderModule {}
+export class DbxFirebaseDefaultStorageProviderModule { }
 
 /**
  * Default firebase functions provider module.
@@ -93,9 +147,7 @@ export class DbxFirebaseDefaultStorageProviderModule {}
     }) as any)
   ]
 })
-export class DbxFirebaseDefaultFunctionsProviderModule {}
-
-export const DBX_FIREBASE_OPTIONS_TOKEN = new InjectionToken('DbxFirebaseOptions');
+export class DbxFirebaseDefaultFunctionsProviderModule { }
 
 /**
  * Default provider module.
@@ -106,6 +158,7 @@ export const DBX_FIREBASE_OPTIONS_TOKEN = new InjectionToken('DbxFirebaseOptions
       const firebaseOptions = injector.get<DbxFirebaseOptions>(DBX_FIREBASE_OPTIONS_TOKEN);
       return initializeApp(firebaseOptions);
     }) as any),
+    DbxFirebaseDefaultAppCheckProviderModule,
     DbxFirebaseDefaultFirestoreProviderModule,
     DbxFirebaseDefaultAuthProviderModule,
     DbxFirebaseDefaultStorageProviderModule,
@@ -113,6 +166,7 @@ export const DBX_FIREBASE_OPTIONS_TOKEN = new InjectionToken('DbxFirebaseOptions
   ]
 })
 export class DbxFirebaseDefaultFirebaseProvidersModule {
+
   static forRoot(firebaseOptions: FirebaseOptions): ModuleWithProviders<DbxFirebaseDefaultFirebaseProvidersModule> {
     return {
       ngModule: DbxFirebaseDefaultFirebaseProvidersModule,
@@ -124,4 +178,5 @@ export class DbxFirebaseDefaultFirebaseProvidersModule {
       ]
     };
   }
+
 }

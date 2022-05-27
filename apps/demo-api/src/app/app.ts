@@ -5,7 +5,10 @@ import { profileSetUsername, initUserOnCreate } from './function';
 import { updateGuestbookEntry } from './function/guestbook';
 import { updateProfile } from './function/profile/profile.update';
 
-export const { initNestServer } = nestServerInstance({ moduleClass: DemoApiAppModule, configureWebhooks: true });
+export const { initNestServer } = nestServerInstance({
+  moduleClass: DemoApiAppModule,
+  configureWebhooks: true
+});
 
 /**
  * Builder for all functions in the app.

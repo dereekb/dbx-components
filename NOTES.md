@@ -196,4 +196,16 @@ By default, Firebase API calls have their body parsed by express. This occurs be
 Firebase's emulators only support hot reloading of rules. To achieve hot reloading we use a combination of demo-api's `build-base` target along with the `entr` command, which watches for changes produced by `nx build-base demo-api`. Currently the emulators do not [shut down gracefully](https://github.com/firebase/firebase-tools/issues/3034) and/or communicate they have closed. We use the `./wait-for-ports.sh` script to shut these processes down within the docker container before attempting to restart the emulators. The script waits for about 5 seconds before hard-stopping the processes and waiting for the ports to be released. 
 
 ### Deploying Firebase Functions
+
+#### .env
+The CI is responsible for deployments. It will generate a .env file directly into demo-api, but also copy .env.prod over from the root. This .env.prod contains all of our public environment variables, while the generated one contains the private variables.
+
+These are deployed to cloud functions. Note that anyone with access to your Google Cloud Console can read the runtime variables.
+
+#### CORS Issue
 If you run into what looks like CORS issues, [check this issue comment out](https://github.com/firebase/firebase-js-sdk/issues/6182#issuecomment-1133525775). Most likely your cloud functions were deployed and are set to "authenticated only", which is incorrect.
+
+### Firebase App Check
+The dbx-components library has AppCheck enabled, so you will only be able to run the app against the emulators.
+
+You can read more about AppCheck configuration [here](https://firebase.google.com/docs/app-check/web/recaptcha-provider).

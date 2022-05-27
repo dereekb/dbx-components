@@ -81,10 +81,12 @@
       "configurations": {
         "production": {
           "browserTarget": "demo:build-base:production",
+          "proxyConfig": "apps/demo/proxy.conf.prod.json",
           "port": 9010
         },
         "development": {
           "browserTarget": "demo:build-base:development",
+          "proxyConfig": "apps/demo/proxy.conf.dev.json",
           "port": 9010
         }
       },
@@ -119,7 +121,7 @@
         }
       ],
       "options": {
-        "command": "npx firebase deploy --only hosting"
+        "command": "npx firebase --project=default deploy --only hosting"
       }
     },
     "ci-deploy": {
@@ -131,7 +133,7 @@
         }
       ],
       "options": {
-        "command": "npx firebase deploy --only hosting --token \"$FIREBASE_TOKEN\""
+        "command": "npx firebase --project=default deploy --only hosting --token \"$FIREBASE_TOKEN\""
       }
     }
   },

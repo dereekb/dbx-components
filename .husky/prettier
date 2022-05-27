@@ -1,7 +1,5 @@
 #!/bin/sh
-# https://prettier.io/docs/en/precommit.html
-
-. "$(dirname "$0")/_/husky.sh"
+. "$(dirname "$0")/_/husky.sh"  # https://prettier.io/docs/en/precommit.html
 
 # run prettier formatter on staged changes
 npx pretty-quick --staged
