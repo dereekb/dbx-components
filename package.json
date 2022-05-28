@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/dbx-components",
-  "version": "5.0.1",
+  "version": "5.1.0",
   "license": "MIT",
   "scripts": {
     "postinstall": "ngcc --properties es2015 browser module main",

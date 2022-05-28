@@ -2,6 +2,24 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [5.1.0](https://github.com/dereekb/dbx-components/compare/v5.0.1-dev...v5.1.0) (2022-05-27)
+
+
+### Bug Fixes
+
+* added project context to all firebase cli calls ([9b7fd20](https://github.com/dereekb/dbx-components/commit/9b7fd202f12ca303e171657b1d74ec7f4f6c0105))
+
+
+### Features
+
+* added api proxying and rewrite configuration ([0117dae](https://github.com/dereekb/dbx-components/commit/0117dae50b12a79fa14b4b0219583b2491800bfe))
+* added dbxFirebaseAppCheckHttpInterceptor ([96fb516](https://github.com/dereekb/dbx-components/commit/96fb5160a8131d4b13e434bcb3e93819122e1d6f))
+* added firebase appCheck support to client ([e9377d1](https://github.com/dereekb/dbx-components/commit/e9377d16faa12a9d45f7a34fda97946b9bf008bd))
+* added FirebaseAppCheckMiddleware ([25ddc4e](https://github.com/dereekb/dbx-components/commit/25ddc4e7ae18d6ef96c38ed529c71313884b7544))
+* updated .env deployment to demo-api ([d88ea62](https://github.com/dereekb/dbx-components/commit/d88ea620c9593e0073f323f4536bcccd2de01e2f))
+
+
+
 ## [5.0.1](https://github.com/dereekb/dbx-components/compare/v5.0.0-dev...v5.0.1) (2022-05-26)
 
 

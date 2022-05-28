@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [5.1.0](https://github.com/dereekb/dbx-components/compare/v5.0.1-dev...v5.1.0) (2022-05-27)
+
+
+### Features
+
+* added dbxFirebaseAppCheckHttpInterceptor ([96fb516](https://github.com/dereekb/dbx-components/commit/96fb5160a8131d4b13e434bcb3e93819122e1d6f))
+
+
+
 ## [5.0.1](https://github.com/dereekb/dbx-components/compare/v5.0.0-dev...v5.0.1) (2022-05-26)
 
 
