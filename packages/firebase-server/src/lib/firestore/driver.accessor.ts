@@ -1,6 +1,6 @@
 import { FirestoreAccessorDriver, CollectionReference, Firestore, TransactionFunction, DocumentReference, TransactionFirestoreDocumentContextFactory, WriteBatchFirestoreDocumentContextFactory } from '@dereekb/firebase';
 import { batch } from '@dereekb/util';
-import { CollectionReference as GoogleCloudCollectionReference, DocumentReference as GoogleCloudDocumentReference, Firestore as GoogleCloudFirestore } from '@google-cloud/firestore';
+import { CollectionGroup, CollectionReference as GoogleCloudCollectionReference, DocumentReference as GoogleCloudDocumentReference, Firestore as GoogleCloudFirestore } from '@google-cloud/firestore';
 import { writeBatchDocumentContext } from './driver.accessor.batch';
 import { defaultFirestoreDocumentContext } from './driver.accessor.default';
 import { transactionDocumentContext } from './driver.accessor.transaction';
@@ -53,6 +53,7 @@ export function docRefForPath<T>(start: DocRefForPathInput, path?: string, pathS
 export function firestoreClientAccessorDriver(): FirestoreAccessorDriver {
   return {
     doc: <T>(collection: CollectionReference<T>, path?: string, ...pathSegments: string[]) => docRefForPath(collection as GoogleCloudCollectionReference, path, pathSegments) as DocumentReference<T>,
+    collectionGroup: <T>(firestore: Firestore, collectionId: string) => (firestore as GoogleCloudFirestore).collectionGroup(collectionId) as CollectionGroup<T>,
     collection: <T>(firestore: Firestore, path: string, ...pathSegments: string[]) => collectionRefForPath(firestore as GoogleCloudFirestore, path, pathSegments) as CollectionReference<T>,
     subcollection: <T>(document: DocumentReference, path: string, ...pathSegments: string[]) => collectionRefForPath(document as GoogleCloudDocumentReference, path, pathSegments) as CollectionReference<T>,
     transactionFactoryForFirestore:

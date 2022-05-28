@@ -1,5 +1,5 @@
 import { Maybe, modelFieldConversions } from '@dereekb/util';
-import { CollectionReference, FirestoreCollection, FirestoreContext, AbstractFirestoreDocument, SingleItemFirestoreCollection, FirestoreCollectionWithParent, AbstractFirestoreDocumentWithParent, firestoreString, firestoreBoolean, ExpectedFirestoreModelData, optionalFirestoreString, firestoreDate, optionalFirestoreNumber, snapshotConverterFunctions, FirestoreModelData } from '@dereekb/firebase';
+import { CollectionReference, FirestoreCollection, FirestoreContext, AbstractFirestoreDocument, SingleItemFirestoreCollection, FirestoreCollectionWithParent, AbstractFirestoreDocumentWithParent, firestoreString, firestoreBoolean, ExpectedFirestoreModelData, optionalFirestoreString, firestoreDate, optionalFirestoreNumber, snapshotConverterFunctions, FirestoreModelData, CollectionGroup, FirestoreCollectionGroup } from '@dereekb/firebase';
 
 // MARK: Mock Item
 /**
@@ -185,17 +185,34 @@ export function mockItemSubItemFirestoreCollection(firestoreContext: FirestoreCo
   };
 }
 
+export function mockItemSubItemCollectionReference(context: FirestoreContext): CollectionGroup<MockItemSubItem> {
+  return context.collectionGroup(mockItemSubItemCollectionPath).withConverter<MockItemSubItem>(mockItemSubItemConverter);
+}
+
+export type MockItemSubItemFirestoreCollectionGroup = FirestoreCollectionGroup<MockItemSubItem, MockItemSubItemDocument>;
+
+export function mockItemSubItemFirestoreCollectionGroup(firestoreContext: FirestoreContext): MockItemSubItemFirestoreCollectionGroup {
+  return firestoreContext.firestoreCollectionGroup({
+    itemsPerPage: 50,
+    queryLike: mockItemSubItemCollectionReference(firestoreContext),
+    makeDocument: (accessor, documentAccessor) => new MockItemSubItemDocument(undefined, accessor, documentAccessor),
+    firestoreContext
+  });
+}
+
 // MARK: Collection
 export abstract class MockItemCollections {
   abstract readonly mockItem: MockItemFirestoreCollection;
   abstract readonly mockItemPrivate: MockItemPrivateFirestoreCollectionFactory;
   abstract readonly mockItemSubItem: MockItemSubItemFirestoreCollectionFactory;
+  abstract readonly mockItemSubItemGroup: MockItemSubItemFirestoreCollectionGroup;
 }
 
 export function makeMockItemCollections(firestoreContext: FirestoreContext): MockItemCollections {
   return {
     mockItem: mockItemFirestoreCollection(firestoreContext),
     mockItemPrivate: mockItemPrivateFirestoreCollection(firestoreContext),
-    mockItemSubItem: mockItemSubItemFirestoreCollection(firestoreContext)
+    mockItemSubItem: mockItemSubItemFirestoreCollection(firestoreContext),
+    mockItemSubItemGroup: mockItemSubItemFirestoreCollectionGroup(firestoreContext)
   };
 }

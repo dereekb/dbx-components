@@ -7,6 +7,7 @@ import { DocumentReference, CollectionReference, Transaction, WriteBatch, Docume
 import { createOrUpdateWithAccessorSet, dataFromSnapshotStream, FirestoreDocumentDataAccessor } from './accessor';
 import { CollectionReferenceRef, DocumentReferenceRef } from '../reference';
 import { FirestoreDocumentContext } from './context';
+import { build, Maybe } from '@dereekb/util';
 
 export interface FirestoreDocument<T, A extends FirestoreDocumentDataAccessor<T> = FirestoreDocumentDataAccessor<T>> extends DocumentReferenceRef<T>, CollectionReferenceRef<T> {
   readonly accessor: A;
@@ -16,11 +17,11 @@ export interface FirestoreDocument<T, A extends FirestoreDocumentDataAccessor<T>
 /**
  * Abstract FirestoreDocument implementation that extends a FirestoreDocumentDataAccessor.
  */
-export abstract class AbstractFirestoreDocument<T, D extends AbstractFirestoreDocument<T, any, any>, A extends FirestoreDocumentDataAccessor<T> = FirestoreDocumentDataAccessor<T>> implements FirestoreDocument<T, A>, FirestoreDocumentAccessorRef<T, D>, CollectionReferenceRef<T> {
+export abstract class AbstractFirestoreDocument<T, D extends AbstractFirestoreDocument<T, any, any>, A extends FirestoreDocumentDataAccessor<T> = FirestoreDocumentDataAccessor<T>> implements FirestoreDocument<T, A>, LimitedFirestoreDocumentAccessorRef<T, D>, CollectionReferenceRef<T> {
   readonly stream$ = this.accessor.stream();
   readonly data$: Observable<T> = dataFromSnapshotStream(this.stream$);
 
-  constructor(readonly accessor: A, readonly documentAccessor: FirestoreDocumentAccessor<T, D>) {}
+  constructor(readonly accessor: A, readonly documentAccessor: LimitedFirestoreDocumentAccessor<T, D>) {}
 
   get id(): string {
     return this.documentRef.id;
@@ -31,7 +32,8 @@ export abstract class AbstractFirestoreDocument<T, D extends AbstractFirestoreDo
   }
 
   get collection(): CollectionReference<T> {
-    return this.documentAccessor.collection;
+    // TODO: Only works if the documentRef has access to the parent ref
+    return this.accessor.documentRef.parent as CollectionReference<T>;
   }
 
   snapshot(): Promise<DocumentSnapshot<T>> {
@@ -47,11 +49,31 @@ export abstract class AbstractFirestoreDocument<T, D extends AbstractFirestoreDo
   }
 }
 
-export interface FirestoreDocumentAccessorRef<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> {
-  readonly documentAccessor: FirestoreDocumentAccessor<T, D>;
+export interface LimitedFirestoreDocumentAccessorRef<T, D extends FirestoreDocument<T> = FirestoreDocument<T>, A extends LimitedFirestoreDocumentAccessor<T, D> = LimitedFirestoreDocumentAccessor<T, D>> {
+  readonly documentAccessor: A;
 }
 
-export interface FirestoreDocumentAccessor<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> extends CollectionReferenceRef<T>, FirestoreAccessorDriverRef {
+export type FirestoreDocumentAccessorRef<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> = LimitedFirestoreDocumentAccessorRef<T, D, FirestoreDocumentAccessor<T, D>>;
+
+export interface LimitedFirestoreDocumentAccessor<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> extends FirestoreAccessorDriverRef {
+  readonly databaseContext: FirestoreDocumentContext<T>;
+
+  /**
+   * Loads a document from the datastore.
+   *
+   * @param ref
+   */
+  loadDocument(ref: DocumentReference<T>): D;
+
+  /**
+   * Loads a document from an existing FirestoreDocument
+   *
+   * @param document
+   */
+  loadDocumentFrom(document: FirestoreDocument<T>): D;
+}
+
+export interface FirestoreDocumentAccessor<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> extends LimitedFirestoreDocumentAccessor<T, D>, CollectionReferenceRef<T>, FirestoreAccessorDriverRef {
   readonly databaseContext: FirestoreDocumentContext<T>;
 
   /**
@@ -67,20 +89,6 @@ export interface FirestoreDocumentAccessor<T, D extends FirestoreDocument<T> = F
   loadDocumentForPath(path: string, ...pathSegments: string[]): D;
 
   /**
-   * Loads a document from the datastore.
-   *
-   * @param ref
-   */
-  loadDocument(ref: DocumentReference<T>): D;
-
-  /**
-   * Loads a document from an existing FirestoreDocument
-   *
-   * @param document
-   */
-  loadDocumentFrom(document: FirestoreDocument<T>): D;
-
-  /**
    *
    * @param path
    * @param pathSegments
@@ -91,25 +99,67 @@ export interface FirestoreDocumentAccessor<T, D extends FirestoreDocument<T> = F
 /**
  * Used to generate a FirestoreDocument from an input FirestoreDocumentDataAccessor instance.
  */
-export type FirestoreDocumentFactoryFunction<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> = (accessor: FirestoreDocumentDataAccessor<T>, documentAccessor: FirestoreDocumentAccessor<T, D>) => D;
+export type FirestoreDocumentFactoryFunction<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> = (accessor: FirestoreDocumentDataAccessor<T>, documentAccessor: LimitedFirestoreDocumentAccessor<T, D>) => D;
 
-// MARK: FirestoreDocumentAccessor
+// MARK: LimitedFirestoreDocumentAccessor
 /**
  * Factory function used for creating a FirestoreDocumentAccessor.
  */
-export type FirestoreDocumentAccessorFactoryFunction<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> = (context?: FirestoreDocumentContext<T>) => FirestoreDocumentAccessor<T, D>;
+export type LimitedFirestoreDocumentAccessorFactoryFunction<T, D extends FirestoreDocument<T> = FirestoreDocument<T>, A extends LimitedFirestoreDocumentAccessor<T, D> = LimitedFirestoreDocumentAccessor<T, D>> = (context?: FirestoreDocumentContext<T>) => A;
 
 /**
  * Factory type used for creating a FirestoreDocumentAccessor.
  */
-export interface FirestoreDocumentAccessorFactory<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> {
+export interface LimitedFirestoreDocumentAccessorFactory<T, D extends FirestoreDocument<T> = FirestoreDocument<T>, A extends LimitedFirestoreDocumentAccessor<T, D> = LimitedFirestoreDocumentAccessor<T, D>> {
   /**
    * Creates a new FirestoreDocumentAccessor using the given context.
    *
    * @param context Optional context to retrieve items from.
    */
-  readonly documentAccessor: FirestoreDocumentAccessorFactoryFunction<T, D>;
+  readonly documentAccessor: LimitedFirestoreDocumentAccessorFactoryFunction<T, D, A>;
 }
+
+/**
+ * FirestoreDocumentAccessor configuration.
+ */
+export interface LimitedFirestoreDocumentAccessorFactoryConfig<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> extends FirestoreAccessorDriverRef {
+  readonly makeDocument: FirestoreDocumentFactoryFunction<T, D>;
+}
+
+export function limitedFirestoreDocumentAccessorFactory<T, D extends FirestoreDocument<T> = FirestoreDocument<T>>(config: LimitedFirestoreDocumentAccessorFactoryConfig<T, D>): LimitedFirestoreDocumentAccessorFactoryFunction<T, D> {
+  const { firestoreAccessorDriver } = config;
+  return (context?: FirestoreDocumentContext<T>) => {
+    const databaseContext: FirestoreDocumentContext<T> = context ?? config.firestoreAccessorDriver.defaultContextFactory();
+    const dataAccessorFactory = databaseContext.accessorFactory;
+
+    function loadDocument(ref: DocumentReference<T>) {
+      const accessor = dataAccessorFactory.accessorFor(ref);
+      return config.makeDocument(accessor, documentAccessor);
+    }
+
+    const documentAccessor: LimitedFirestoreDocumentAccessor<T, D> = {
+      loadDocumentFrom(document: FirestoreDocument<T>): D {
+        return loadDocument(document.documentRef);
+      },
+      loadDocument,
+      firestoreAccessorDriver,
+      databaseContext
+    };
+
+    return documentAccessor;
+  };
+}
+
+// MARK: FirestoreDocumentAccessor
+/**
+ * Factory function used for creating a FirestoreDocumentAccessor.
+ */
+export type FirestoreDocumentAccessorFactoryFunction<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> = LimitedFirestoreDocumentAccessorFactoryFunction<T, D, FirestoreDocumentAccessor<T, D>>;
+
+/**
+ * Factory type used for creating a FirestoreDocumentAccessor.
+ */
+export type FirestoreDocumentAccessorFactory<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> = LimitedFirestoreDocumentAccessorFactory<T, D, FirestoreDocumentAccessor<T, D>>;
 
 /**
  * FirestoreDocumentAccessor configuration.
@@ -120,74 +170,76 @@ export interface FirestoreDocumentAccessorFactoryConfig<T, D extends FirestoreDo
 
 export function firestoreDocumentAccessorFactory<T, D extends FirestoreDocument<T> = FirestoreDocument<T>>(config: FirestoreDocumentAccessorFactoryConfig<T, D>): FirestoreDocumentAccessorFactoryFunction<T, D> {
   const { firestoreAccessorDriver, collection } = config;
+  const limitedFirestoreDocumentAccessor = limitedFirestoreDocumentAccessorFactory(config);
+
+  function documentRefForPath(path: string, ...pathSegments: string[]): DocumentReference<T> {
+    return firestoreAccessorDriver.doc(collection, path, ...pathSegments);
+  }
+
   return (context?: FirestoreDocumentContext<T>) => {
-    const databaseContext: FirestoreDocumentContext<T> = context ?? config.firestoreAccessorDriver.defaultContextFactory();
+    const documentAccessor: FirestoreDocumentAccessor<T, D> = build<FirestoreDocumentAccessor<T, D>>({
+      base: limitedFirestoreDocumentAccessor(context),
+      build: (x) => {
+        x.collection = collection;
 
-    const dataAccessorFactory = databaseContext.accessorFactory;
+        x.newDocument = (): D => {
+          const newDocRef = firestoreAccessorDriver.doc(collection);
+          return documentAccessor.loadDocument(newDocRef);
+        };
 
-    function loadDocument(ref: DocumentReference<T>) {
-      const accessor = dataAccessorFactory.accessorFor(ref);
-      return config.makeDocument(accessor, documentAccessor);
-    }
+        x.documentRefForPath = documentRefForPath;
 
-    function documentRefForPath(path: string, ...pathSegments: string[]): DocumentReference<T> {
-      return firestoreAccessorDriver.doc(collection, path, ...pathSegments);
-    }
+        x.loadDocumentForPath = (path: string, ...pathSegments: string[]): D => {
+          if (!path) {
+            throw new Error('Path was not provided to loadDocumentForPath(). Use newDocument() for generating an id.');
+          }
 
-    const documentAccessor: FirestoreDocumentAccessor<T, D> = {
-      newDocument(): D {
-        const newDocRef = firestoreAccessorDriver.doc(collection);
-        return this.loadDocument(newDocRef);
-      },
-      loadDocumentForPath(path: string, ...pathSegments: string[]): D {
-        if (!path) {
-          throw new Error('Path was not provided to loadDocumentForPath(). Use newDocument() for generating an id.');
-        }
-
-        return this.loadDocument(documentRefForPath(path, ...pathSegments));
-      },
-      loadDocumentFrom(document: FirestoreDocument<T>): D {
-        return loadDocument(document.documentRef);
-      },
-      loadDocument,
-      documentRefForPath,
-      firestoreAccessorDriver,
-      databaseContext,
-      collection
-    };
+          return documentAccessor.loadDocument(documentRefForPath(path, ...pathSegments));
+        };
+      }
+    });
 
     return documentAccessor;
   };
 }
 
 // MARK: Extension
-export interface FirestoreDocumentAccessorForTransactionFactory<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> {
+export interface LimitedFirestoreDocumentAccessorForTransactionFactory<T, D extends FirestoreDocument<T> = FirestoreDocument<T>, A extends LimitedFirestoreDocumentAccessor<T, D> = LimitedFirestoreDocumentAccessor<T, D>> {
   /**
    * Creates a new FirestoreDocumentAccessor for a Transaction.
    */
-  documentAccessorForTransaction(transaction: Transaction): FirestoreDocumentAccessor<T, D>;
+  documentAccessorForTransaction(transaction: Transaction): A;
 }
+export type FirestoreDocumentAccessorForTransactionFactory<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> = LimitedFirestoreDocumentAccessorForTransactionFactory<T, D, FirestoreDocumentAccessor<T, D>>;
 
-export interface FirestoreDocumentAccessorForWriteBatchFactory<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> {
+export interface LimitedFirestoreDocumentAccessorForWriteBatchFactory<T, D extends FirestoreDocument<T> = FirestoreDocument<T>, A extends LimitedFirestoreDocumentAccessor<T, D> = LimitedFirestoreDocumentAccessor<T, D>> {
   /**
    * Creates a new FirestoreDocumentAccessor for a WriteBatch.
    */
-  documentAccessorForWriteBatch(writeBatch: WriteBatch): FirestoreDocumentAccessor<T, D>;
+  documentAccessorForWriteBatch(writeBatch: WriteBatch): A;
+}
+export type FirestoreDocumentAccessorForWriteBatchFactory<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> = LimitedFirestoreDocumentAccessorForWriteBatchFactory<T, D, FirestoreDocumentAccessor<T, D>>;
+
+export interface LimitedFirestoreDocumentAccessorContextExtensionConfig<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> extends FirestoreAccessorDriverRef {
+  readonly documentAccessor: LimitedFirestoreDocumentAccessorFactoryFunction<T, D>;
 }
 
-export interface FirestoreDocumentAccessorContextExtensionConfig<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> extends FirestoreAccessorDriverRef {
+export interface FirestoreDocumentAccessorContextExtensionConfig<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> extends LimitedFirestoreDocumentAccessorContextExtensionConfig<T, D> {
   readonly documentAccessor: FirestoreDocumentAccessorFactoryFunction<T, D>;
 }
 
+export interface LimitedFirestoreDocumentAccessorContextExtension<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> extends LimitedFirestoreDocumentAccessorFactory<T, D>, LimitedFirestoreDocumentAccessorForTransactionFactory<T, D>, LimitedFirestoreDocumentAccessorForWriteBatchFactory<T, D> {}
 export interface FirestoreDocumentAccessorContextExtension<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> extends FirestoreDocumentAccessorFactory<T, D>, FirestoreDocumentAccessorForTransactionFactory<T, D>, FirestoreDocumentAccessorForWriteBatchFactory<T, D> {}
 
-export function firestoreDocumentAccessorContextExtension<T, D extends FirestoreDocument<T> = FirestoreDocument<T>>({ documentAccessor, firestoreAccessorDriver }: FirestoreDocumentAccessorContextExtensionConfig<T, D>): FirestoreDocumentAccessorContextExtension<T, D> {
+export function firestoreDocumentAccessorContextExtension<T, D extends FirestoreDocument<T> = FirestoreDocument<T>>({ documentAccessor, firestoreAccessorDriver }: FirestoreDocumentAccessorContextExtensionConfig<T, D>): FirestoreDocumentAccessorContextExtension<T, D>;
+export function firestoreDocumentAccessorContextExtension<T, D extends FirestoreDocument<T> = FirestoreDocument<T>>({ documentAccessor, firestoreAccessorDriver }: LimitedFirestoreDocumentAccessorContextExtensionConfig<T, D>): LimitedFirestoreDocumentAccessorContextExtension<T, D>;
+export function firestoreDocumentAccessorContextExtension<T, D extends FirestoreDocument<T> = FirestoreDocument<T>>({ documentAccessor, firestoreAccessorDriver }: FirestoreDocumentAccessorContextExtensionConfig<T, D> | LimitedFirestoreDocumentAccessorContextExtensionConfig<T, D>) {
   return {
     documentAccessor,
-    documentAccessorForTransaction(transaction: Transaction): FirestoreDocumentAccessor<T, D> {
+    documentAccessorForTransaction(transaction: Transaction) {
       return documentAccessor(firestoreAccessorDriver.transactionContextFactory(transaction));
     },
-    documentAccessorForWriteBatch(writeBatch: WriteBatch): FirestoreDocumentAccessor<T, D> {
+    documentAccessorForWriteBatch(writeBatch: WriteBatch) {
       return documentAccessor(firestoreAccessorDriver.writeBatchContextFactory(writeBatch));
     }
   };
@@ -199,8 +251,15 @@ export interface FirestoreDocumentWithParent<P, T, A extends FirestoreDocumentDa
 }
 
 export abstract class AbstractFirestoreDocumentWithParent<P, T, D extends AbstractFirestoreDocument<T, any, any>, A extends FirestoreDocumentDataAccessor<T> = FirestoreDocumentDataAccessor<T>> extends AbstractFirestoreDocument<T, D, A> implements FirestoreDocumentWithParent<P, T, A> {
-  constructor(readonly parent: DocumentReference<P>, accessor: A, documentAccessor: FirestoreDocumentAccessor<T, D>) {
+  private _parent: DocumentReference<P>;
+
+  get parent() {
+    return this._parent;
+  }
+
+  constructor(parent: Maybe<DocumentReference<P>>, accessor: A, documentAccessor: LimitedFirestoreDocumentAccessor<T, D>) {
     super(accessor, documentAccessor);
+    this._parent = parent ?? ((accessor.documentRef.parent as CollectionReference<T>).parent as DocumentReference<P>);
   }
 }
 

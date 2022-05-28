@@ -1,7 +1,10 @@
-import { PromiseUtility } from '@dereekb/util';
-import { Firestore, FirestoreAccessorDriver, FirestoreContext, FirestoreDrivers } from '@dereekb/firebase';
+import { Maybe, PromiseUtility } from '@dereekb/util';
+import { DocumentReference, Firestore, FirestoreAccessorDriver, FirestoreContext, FirestoreDrivers } from '@dereekb/firebase';
 
 // MARK: Test Accessor
+/**
+ * Used to override/extend a FirestoreAccessorDriver to provide better isolation between tests.
+ */
 export interface TestingFirestoreAccessorDriver extends FirestoreAccessorDriver {
   /**
    * Gets the fuzzed path names map.
@@ -20,10 +23,10 @@ export function makeTestingFirestoreAccesorDriver(driver: FirestoreAccessorDrive
   let fuzzerKey = 0;
   const time = new Date().getTime();
   const fuzzedMap = new Map<string, string>();
-  const collection = driver.collection;
+  const { collection, subcollection, collectionGroup } = driver;
 
-  const fuzzedCollectionName = (path: string) => {
-    let fuzzedPath: string = fuzzedMap.get(path)!;
+  const fuzzedPathForPath = (path: string) => {
+    let fuzzedPath: Maybe<string> = fuzzedMap.get(path);
 
     if (!fuzzedPath) {
       const random = Math.ceil(Math.random() * 9999) % 9999;
@@ -35,21 +38,34 @@ export function makeTestingFirestoreAccesorDriver(driver: FirestoreAccessorDrive
   };
 
   const fuzzedCollection = <T>(f: Firestore, path: string) => {
-    const fuzzedPath = fuzzedCollectionName(path);
+    const fuzzedPath = fuzzedPathForPath(path);
     return collection<T>(f, fuzzedPath);
   };
 
+  const fuzzedSubcollection = <T>(document: DocumentReference, path: string, ...pathSegments: string[]) => {
+    const fuzzedPath = fuzzedPathForPath(path);
+    const fuzzedPathSegments = pathSegments.map((x) => fuzzedPathForPath(x));
+    return subcollection<T>(document, fuzzedPath, ...fuzzedPathSegments);
+  };
+
+  const fuzzedCollectionGroup = <T>(f: Firestore, collectionId: string) => {
+    const fuzzedPath = fuzzedPathForPath(collectionId);
+    return collectionGroup<T>(f, fuzzedPath);
+  };
+
   const initWithCollectionNames = (collectionPaths: string[]) => {
-    collectionPaths.forEach((x) => fuzzedCollectionName(x));
+    collectionPaths.forEach((x) => fuzzedPathForPath(x));
     return fuzzedMap;
   };
 
-  const injectedDriver = {
+  const injectedDriver: TestingFirestoreAccessorDriver = {
     ...driver,
     collection: fuzzedCollection,
+    collectionGroup: fuzzedCollectionGroup,
+    subcollection: fuzzedSubcollection,
     getFuzzedCollectionsNameMap: () => fuzzedMap,
     initWithCollectionNames
-  } as any;
+  };
 
   return injectedDriver;
 }

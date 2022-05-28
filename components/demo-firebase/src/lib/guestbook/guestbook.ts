@@ -1,4 +1,22 @@
-import { CollectionReference, AbstractFirestoreDocument, snapshotConverterFunctions, firestoreString, firestoreDate, FirestoreCollection, UserRelatedById, DocumentReferenceRef, FirestoreContext, FirestoreCollectionWithParent, firestoreBoolean, DocumentDataWithId, AbstractFirestoreDocumentWithParent, optionalFirestoreDate } from '@dereekb/firebase';
+import {
+  CollectionReference,
+  AbstractFirestoreDocument,
+  snapshotConverterFunctions,
+  firestoreString,
+  firestoreDate,
+  FirestoreCollection,
+  UserRelatedById,
+  DocumentReferenceRef,
+  FirestoreContext,
+  FirestoreCollectionWithParent,
+  firestoreBoolean,
+  DocumentDataWithId,
+  AbstractFirestoreDocumentWithParent,
+  optionalFirestoreDate,
+  DocumentReference,
+  FirestoreCollectionGroup,
+  CollectionGroup
+} from '@dereekb/firebase';
 import { Maybe } from '@dereekb/util';
 
 export interface GuestbookFirestoreCollections {
@@ -121,4 +139,19 @@ export function guestbookEntryFirestoreCollectionFactory(firestoreContext: Fires
       parent
     });
   };
+}
+
+export function guestbookEntryCollectionReference(context: FirestoreContext): CollectionGroup<GuestbookEntry> {
+  return context.collectionGroup(guestbookCollectionGuestbookEntryCollectionPath).withConverter<GuestbookEntry>(guestbookEntryConverter);
+}
+
+export type GuestbookEntryFirestoreCollectionGroup = FirestoreCollectionGroup<GuestbookEntry, GuestbookEntryDocument>;
+
+export function guestbookEntryFirestoreCollectionGroup(firestoreContext: FirestoreContext): GuestbookEntryFirestoreCollectionGroup {
+  return firestoreContext.firestoreCollectionGroup({
+    itemsPerPage: 50,
+    queryLike: guestbookEntryCollectionReference(firestoreContext),
+    makeDocument: (accessor, documentAccessor) => new GuestbookEntryDocument(undefined, accessor, documentAccessor),
+    firestoreContext
+  });
 }

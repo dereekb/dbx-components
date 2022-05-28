@@ -2,9 +2,9 @@ import { PageLoadingState, ItemPageIterator, ItemPageIterationInstance, ItemPage
 import { QueryDocumentSnapshotArray, QuerySnapshot, SnapshotListenOptions } from '../types';
 import { asArray, Maybe, lastValue, mergeIntoArray, ArrayOrValue } from '@dereekb/util';
 import { from, Observable, of, exhaustMap } from 'rxjs';
-import { CollectionReferenceRef } from '../reference';
 import { FirestoreQueryDriverRef } from '../driver/query';
 import { FIRESTORE_LIMIT_QUERY_CONSTRAINT_TYPE, FirestoreQueryConstraint, limit, startAfter } from './constraint';
+import { QueryLikeReferenceRef } from '../reference';
 
 export interface FirestoreItemPageIteratorFilter extends ItemPageLimit {
   /**
@@ -17,7 +17,7 @@ export interface FirestoreItemPageIteratorFilter extends ItemPageLimit {
   constraints?: Maybe<ArrayOrValue<FirestoreQueryConstraint>>;
 }
 
-export interface FirestoreItemPageIterationBaseConfig<T> extends CollectionReferenceRef<T>, FirestoreQueryDriverRef, ItemPageLimit {
+export interface FirestoreItemPageIterationBaseConfig<T> extends QueryLikeReferenceRef<T>, FirestoreQueryDriverRef, ItemPageLimit {
   itemsPerPage: number;
 }
 
@@ -64,7 +64,7 @@ export function makeFirestoreItemPageIteratorDelegate<T>(): FirestoreItemPageIte
       const { page, iteratorConfig } = request;
       const prevQueryResult$: Observable<Maybe<FirestoreItemPageQueryResult<T>>> = page > 0 ? request.lastItem$ : of(undefined);
 
-      const { collection, itemsPerPage, filter, firestoreQueryDriver: driver } = iteratorConfig;
+      const { queryLike, itemsPerPage, filter, firestoreQueryDriver: driver } = iteratorConfig;
       const { limit: filterLimit, constraints: filterConstraints } = filter ?? {};
 
       return prevQueryResult$.pipe(
@@ -94,7 +94,7 @@ export function makeFirestoreItemPageIteratorDelegate<T>(): FirestoreItemPageIte
             const constraintsWithLimit = [...constraints, limitConstraint];
 
             // make query
-            const batchQuery = driver.query<T>(collection, ...constraintsWithLimit);
+            const batchQuery = driver.query<T>(queryLike, ...constraintsWithLimit);
             const resultPromise: Promise<ItemPageIteratorResult<FirestoreItemPageQueryResult<T>>> = driver.getDocs(batchQuery).then((snapshot) => {
               const time = new Date();
               const docs = snapshot.docs;
@@ -162,7 +162,7 @@ export type FirestoreItemPageIterationFactoryFunction<T> = (filter?: FirestoreIt
 export function firestoreItemPageIterationFactory<T>(baseConfig: FirestoreItemPageIterationBaseConfig<T>): FirestoreItemPageIterationFactoryFunction<T> {
   return (filter?: FirestoreItemPageIteratorFilter) => {
     const result: FirestoreItemPageIterationInstance<T> = firestoreItemPageIteration<T>({
-      collection: baseConfig.collection,
+      queryLike: baseConfig.queryLike,
       itemsPerPage: baseConfig.itemsPerPage,
       firestoreQueryDriver: baseConfig.firestoreQueryDriver,
       maxPageLoadLimit: filter?.maxPageLoadLimit ?? baseConfig.maxPageLoadLimit,

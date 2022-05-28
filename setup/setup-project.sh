@@ -287,7 +287,6 @@ git commit --no-verify -m "checkpoint: added Docker files and other utility file
 
 # add semver for semantic versioning, husky for pre-commit hooks, and pretty-quick for running prettier
 npm install -D @jscutlery/semver husky pretty-quick @commitlint/cli @commitlint/config-angular
-
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/.commitlintrc.json -o .commitlintrc.json
 
 mkdir .husky
