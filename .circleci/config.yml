@@ -169,6 +169,7 @@ jobs:
       - run:
           name: delete release branch
           command: git push origin --delete release
+  # Deploys rules and configured projects to Firebase.
   deploy-to-firebase:
     <<: *defaults
     steps:
