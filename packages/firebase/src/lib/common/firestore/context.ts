@@ -44,9 +44,7 @@ export type FirestoreContextFactory<F extends Firestore = Firestore> = (firestor
  */
 export function firestoreContextFactory<F extends Firestore = Firestore>(drivers: FirestoreDrivers): FirestoreContextFactory<F> {
   return (firestore: F) => {
-    const makeFirestoreCollectionConfig = <T, PT, D extends FirestoreDocument<T> = FirestoreDocument<T>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>>(
-      config: FirestoreContextFirestoreCollectionConfig<T, D> | FirestoreContextFirestoreCollectionGroupConfig<T, D> | FirestoreContextFirestoreCollectionWithParentConfig<T, PT, D, PD> | FirestoreContextSingleItemFirestoreCollectionConfig<T, PT, D, PD>
-    ) => ({
+    const makeFirestoreCollectionConfig = <T, PT, D extends FirestoreDocument<T> = FirestoreDocument<T>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>>(config: FirestoreContextFirestoreCollectionConfig<T, D> | FirestoreContextFirestoreCollectionGroupConfig<T, D> | FirestoreContextFirestoreCollectionWithParentConfig<T, PT, D, PD> | FirestoreContextSingleItemFirestoreCollectionConfig<T, PT, D, PD>) => ({
       ...config,
       queryLike: (config as FirestoreContextFirestoreCollectionConfig<T, D>).collection ?? (config as FirestoreContextFirestoreCollectionGroupConfig<T, D>).queryLike,
       firestoreContext: context,

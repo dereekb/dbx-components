@@ -12,13 +12,7 @@ import { SearchableTextValueFieldsFieldConfig } from './searchable.text.field.co
  * @param param0
  * @returns
  */
-export function makeMetaFilterSearchableFieldValueDisplayFn<T extends string | number = string | number, M = unknown>({
-  loadMetaForValues,
-  makeDisplayForValues
-}: {
-  loadMetaForValues: (values: SearchableValueFieldValue<T, M>[]) => Observable<SearchableValueFieldValue<T, M>[]>;
-  makeDisplayForValues: (values: SearchableValueFieldValue<T, M>[]) => Observable<SearchableValueFieldDisplayValue<T, M>[]>;
-}): SearchableValueFieldDisplayFn<T, M> {
+export function makeMetaFilterSearchableFieldValueDisplayFn<T extends string | number = string | number, M = unknown>({ loadMetaForValues, makeDisplayForValues }: { loadMetaForValues: (values: SearchableValueFieldValue<T, M>[]) => Observable<SearchableValueFieldValue<T, M>[]>; makeDisplayForValues: (values: SearchableValueFieldValue<T, M>[]) => Observable<SearchableValueFieldDisplayValue<T, M>[]> }): SearchableValueFieldDisplayFn<T, M> {
   return (values: SearchableValueFieldValue<T, M>[]) => {
     const { included: loaded, excluded: needLoading } = separateValues(values, (x) => Boolean(x.meta));
     let allValues: Observable<SearchableValueFieldValue<T, M>[]>;

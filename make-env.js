@@ -6,14 +6,11 @@
  * node make-env.js
  */
 const fs = require('fs');
-const {
-  parse,
-  stringify
-} = require('envfile');
+const { parse, stringify } = require('envfile');
 
 // NOTE: If run within nx, remember that nx adds all variables within .env to the environment and, thus, process.env.
 // Variables that are within bash take prority.
-const templateFilePath = '.env';  
+const templateFilePath = '.env';
 const templateEnv = fs.readFileSync(templateFilePath).toString();
 const template = parse(templateEnv);
 

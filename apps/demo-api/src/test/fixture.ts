@@ -131,15 +131,7 @@ export class DemoApiGuestbookTestContextFixture<F extends FirebaseAdminFunctionT
 export class DemoApiGuestbookTestContextInstance<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextInstance<Guestbook, GuestbookDocument, DemoApiFunctionContextFixtureInstance<F>> {}
 
 export const demoGuestbookContextFactory = () =>
-  modelTestContextFactory<
-    Guestbook,
-    GuestbookDocument,
-    DemoApiGuestbookTestContextParams,
-    DemoApiFunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>,
-    DemoApiFunctionContextFixture<FirebaseAdminFunctionTestContextInstance>,
-    DemoApiGuestbookTestContextInstance<FirebaseAdminFunctionTestContextInstance>,
-    DemoApiGuestbookTestContextFixture<FirebaseAdminFunctionTestContextInstance>
-  >({
+  modelTestContextFactory<Guestbook, GuestbookDocument, DemoApiGuestbookTestContextParams, DemoApiFunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiFunctionContextFixture<FirebaseAdminFunctionTestContextInstance>, DemoApiGuestbookTestContextInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiGuestbookTestContextFixture<FirebaseAdminFunctionTestContextInstance>>({
     makeFixture: (f) => new DemoApiGuestbookTestContextFixture(f),
     getCollection: (fi) => fi.demoFirestoreCollections.guestbookFirestoreCollection,
     makeInstance: (delegate, ref, testInstance) => new DemoApiGuestbookTestContextInstance(delegate, ref, testInstance),
@@ -169,15 +161,7 @@ export class DemoApiGuestbookEntryTestContextFixture<F extends FirebaseAdminFunc
 export class DemoApiGuestbookEntryTestContextInstance<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextInstance<GuestbookEntry, GuestbookEntryDocument, DemoApiFunctionContextFixtureInstance<F>> {}
 
 export const demoGuestbookEntryContextFactory = () =>
-  modelTestContextFactory<
-    GuestbookEntry,
-    GuestbookEntryDocument,
-    DemoApiGuestbookEntryTestContextParams,
-    DemoApiFunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>,
-    DemoApiFunctionContextFixture<FirebaseAdminFunctionTestContextInstance>,
-    DemoApiGuestbookEntryTestContextInstance<FirebaseAdminFunctionTestContextInstance>,
-    DemoApiGuestbookEntryTestContextFixture<FirebaseAdminFunctionTestContextInstance>
-  >({
+  modelTestContextFactory<GuestbookEntry, GuestbookEntryDocument, DemoApiGuestbookEntryTestContextParams, DemoApiFunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiFunctionContextFixture<FirebaseAdminFunctionTestContextInstance>, DemoApiGuestbookEntryTestContextInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiGuestbookEntryTestContextFixture<FirebaseAdminFunctionTestContextInstance>>({
     makeFixture: (f) => new DemoApiGuestbookEntryTestContextFixture(f),
     getCollection: (fi, params) => fi.demoFirestoreCollections.guestbookEntryCollectionFactory(params.g.document),
     makeInstance: (delegate, ref, testInstance) => new DemoApiGuestbookEntryTestContextInstance(delegate, ref, testInstance),

@@ -35,7 +35,7 @@ export interface NestServerInstance<T> {
   removeNestServer(firebaseApp: admin.app.App): Promise<boolean>;
 }
 
-export class FirebaseNestServerRootModule { }
+export class FirebaseNestServerRootModule {}
 
 export interface NestServerInstanceConfig<T> {
   /**

@@ -8,12 +8,11 @@ import { DEFAULT_BASE_WEBHOOK_PATH } from '@dereekb/nestjs';
 
 /**
  * Middleware that verifies the X-Firebase-AppCheck header using admin.
- * 
+ *
  * It ignores all webhook paths by default.
  */
 @Injectable()
 export class FirebaseAppCheckMiddleware implements NestMiddleware {
-
   private readonly logger = new Logger('FirebaseAppCheckMiddleware');
 
   static isIgnoredRequest(req: Request): boolean {
@@ -40,16 +39,15 @@ export class FirebaseAppCheckMiddleware implements NestMiddleware {
 
     next(error);
   }
-
 }
 
 /**
  * Verifies the AppCheck parameter. If it fails, a value is returned.
- * 
- * @param req 
- * @param res 
- * @param next 
- * @returns 
+ *
+ * @param req
+ * @param res
+ * @param next
+ * @returns
  */
 export async function verifyAppCheckInRequest(req: Request): Promise<Maybe<Error>> {
   const appCheckToken = req.header('X-Firebase-AppCheck');
@@ -58,7 +56,6 @@ export async function verifyAppCheckInRequest(req: Request): Promise<Maybe<Error
   if (!appCheckToken) {
     error = new ForbiddenException();
   } else {
-
     // verify the token
     try {
       await admin.appCheck().verifyToken(appCheckToken);

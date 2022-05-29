@@ -1,22 +1,4 @@
-import {
-  CollectionReference,
-  AbstractFirestoreDocument,
-  snapshotConverterFunctions,
-  firestoreString,
-  firestoreDate,
-  FirestoreCollection,
-  UserRelatedById,
-  DocumentReferenceRef,
-  FirestoreContext,
-  FirestoreCollectionWithParent,
-  firestoreBoolean,
-  DocumentDataWithId,
-  AbstractFirestoreDocumentWithParent,
-  optionalFirestoreDate,
-  DocumentReference,
-  FirestoreCollectionGroup,
-  CollectionGroup
-} from '@dereekb/firebase';
+import { CollectionReference, AbstractFirestoreDocument, snapshotConverterFunctions, firestoreString, firestoreDate, FirestoreCollection, UserRelatedById, DocumentReferenceRef, FirestoreContext, FirestoreCollectionWithParent, firestoreBoolean, DocumentDataWithId, AbstractFirestoreDocumentWithParent, optionalFirestoreDate, DocumentReference, FirestoreCollectionGroup, CollectionGroup } from '@dereekb/firebase';
 import { Maybe } from '@dereekb/util';
 
 export interface GuestbookFirestoreCollections {
