@@ -1,26 +1,46 @@
 import { filterMaybe } from '@dereekb/rxjs';
 import { Injectable } from '@angular/core';
-import { Observable, shareReplay, distinctUntilChanged, map } from 'rxjs';
-import { FirestoreDocument, FirestoreCollectionWithParentFactory } from '@dereekb/firebase';
+import { Observable, shareReplay, distinctUntilChanged, map, NEVER, switchMap, tap, Subscription } from 'rxjs';
+import { FirestoreDocument, FirestoreCollectionWithParentFactory, FirestoreCollection } from '@dereekb/firebase';
 import { Maybe } from '@dereekb/util';
 import { AbstractDbxFirebaseDocumentStore, DbxFirebaseDocumentStore, DbxFirebaseDocumentStoreContextState } from './store.document';
-import { DbxFirebaseComponentStoreWithParentSetParentEffectFunction, setParentEffect, DbxFirebaseComponentStoreWithParentSetParentStoreEffectFunction, setParentStoreEffect, DbxFirebaseComponentStoreWithParent, DbxFirebaseComponentStoreWithParentContextState } from './store.subcollection.rxjs';
-
-export interface DbxFirebaseDocumentWithParentStore<T, PT, D extends FirestoreDocument<T> = FirestoreDocument<T>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>> extends DbxFirebaseDocumentStore<T, D>, DbxFirebaseComponentStoreWithParent<T, PT, D, PD> {}
+import { DbxFirebaseComponentStoreWithParentSetParentStoreEffectFunction, setParentStoreEffect, DbxFirebaseComponentStoreWithParent, DbxFirebaseComponentStoreWithParentContextState, DbxFirebaseComponentStoreWithParentSetParentEffectFunction } from './store.subcollection.rxjs';
 
 export interface DbxFirebaseDocumentWithParentStoreContextState<T, PT, D extends FirestoreDocument<T> = FirestoreDocument<T>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>> extends DbxFirebaseDocumentStoreContextState<T, D>, DbxFirebaseComponentStoreWithParentContextState<T, PT, D, PD> {}
+
+export interface DbxFirebaseDocumentWithParentStore<T, PT, D extends FirestoreDocument<T> = FirestoreDocument<T>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>> extends DbxFirebaseDocumentStore<T, D>, DbxFirebaseComponentStoreWithParent<T, PT, D, PD, FirestoreCollection<T, D>> {}
 
 /**
  * Abstract DbxFirebaseDocumentStore that has a parent document from which is derives it's FiresbaseCollection from.
  */
 @Injectable()
-export class AbstractDbxFirebaseDocumentWithParentStore<T, PT, D extends FirestoreDocument<T> = FirestoreDocument<T>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>, C extends DbxFirebaseDocumentWithParentStoreContextState<T, PT, D, PD> = DbxFirebaseDocumentWithParentStoreContextState<T, PT, D, PD>>
-  extends AbstractDbxFirebaseDocumentStore<T, D, C>
-  implements DbxFirebaseDocumentWithParentStore<T, PT, D, PD>
-{
+export class AbstractDbxFirebaseDocumentWithParentStore<T, PT, D extends FirestoreDocument<T> = FirestoreDocument<T>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>, C extends DbxFirebaseDocumentWithParentStoreContextState<T, PT, D, PD> = DbxFirebaseDocumentWithParentStoreContextState<T, PT, D, PD>> extends AbstractDbxFirebaseDocumentStore<T, D, C> implements DbxFirebaseDocumentWithParentStore<T, PT, D, PD> {
   // MARK: Effects
-  readonly setParent: DbxFirebaseComponentStoreWithParentSetParentEffectFunction<PD> = setParentEffect(this);
   readonly setParentStore: DbxFirebaseComponentStoreWithParentSetParentStoreEffectFunction<PT, PD> = setParentStoreEffect(this);
+  readonly setParent: DbxFirebaseComponentStoreWithParentSetParentEffectFunction<PD> = this.effect((input: Observable<Maybe<PD>>) => {
+    return input.pipe(
+      switchMap((parent) => {
+        this._setParentDocument(parent);
+
+        if (parent) {
+          return this.collectionFactory$.pipe(
+            tap((collectionFactory) => {
+              const collection = collectionFactory(parent);
+              this.setFirestoreCollection(collection);
+            })
+          );
+        } else {
+          // clear the current collection
+          this.setFirestoreCollection(undefined);
+
+          // do nothing until a parent is returned.
+          return NEVER;
+        }
+      })
+    );
+  });
+
+  readonly _setParent = this.setParent;
 
   // MARK: Accessors
   readonly currentParent$: Observable<Maybe<PD>> = this.state$.pipe(

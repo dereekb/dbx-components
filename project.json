@@ -7,6 +7,12 @@
         "command": "./start-release.sh"
       }
     },
+    "prettier": {
+      "executor": "@nrwl/workspace:run-commands",
+      "options": {
+        "command": "./start-release.sh"
+      }
+    },
     "version": {
       "executor": "@jscutlery/semver:version",
       "options": {

@@ -38,7 +38,7 @@ export function describeQueryDriverTests(f: MockItemCollectionFixture) {
       let allSubItems: MockItemSubItemDocument[];
 
       beforeEach(async () => {
-        querySubItems = f.instance.mockItemSubItemGroup.query;
+        querySubItems = f.instance.mockItemSubItemCollectionGroup.query;
         parentA = items[0];
 
         const results = await Promise.all(
@@ -157,9 +157,8 @@ export function describeQueryDriverTests(f: MockItemCollectionFixture) {
     });
 
     describe('query', () => {
-
       let query: FirestoreQueryFactoryFunction<MockItem>;
-  
+
       beforeEach(async () => {
         query = f.instance.firestoreCollection.query;
       });

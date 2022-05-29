@@ -22,7 +22,7 @@ export class MockItemCollectionFixtureInstance {
     return this.collections.mockItemSubItem;
   }
 
-  get mockItemSubItemGroup() {
+  get mockItemSubItemCollectionGroup() {
     return this.collections.mockItemSubItemGroup;
   }
 

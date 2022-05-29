@@ -301,7 +301,7 @@ curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/.gi
 # add prettier configs
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/.prettieringnore -o .prettieringnore
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/.prettierrc -o .prettierrc
-curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/.husky/prettier -o .husky/prettier
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/.husky/pre-commit -o .husky/pre-commit
 
 git add --all
 git commit --no-verify -m "checkpoint: added semver and commit linting"

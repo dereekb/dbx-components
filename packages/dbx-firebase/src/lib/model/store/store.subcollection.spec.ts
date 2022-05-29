@@ -64,6 +64,28 @@ describe('AbstractDbxFirebaseCollectionWithParentStore', () => {
       });
     });
 
+    describe('with collection group', () => {
+      beforeEach(() => {
+        store.setCollectionGroup(f.instance.mockItemSubItemCollectionGroup);
+        store.setSourceMode('group');
+      });
+
+      it('should not load while a collection group is not set.', (done) => {
+        store.setCollectionGroup(undefined);
+        sub.subscription = store.firestoreIteration$.pipe(timeout({ first: 500, with: () => of(false) }), first()).subscribe((result) => {
+          expect(result).toBe(false);
+          done();
+        });
+      });
+
+      it('should provide a firestoreIteration$', (done) => {
+        sub.subscription = store.firestoreIteration$.pipe(first()).subscribe((result) => {
+          expect(result).toBeDefined();
+          done();
+        });
+      });
+    });
+
     describe('loader$', () => {
       describe('with parent loaded', () => {
         beforeEach(() => {

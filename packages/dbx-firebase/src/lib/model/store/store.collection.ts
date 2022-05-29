@@ -1,13 +1,13 @@
 import { Injectable } from '@angular/core';
 import { Observable, shareReplay, distinctUntilChanged, Subscription, exhaustMap, first, map, switchMap, tap } from 'rxjs';
-import { FirebaseQueryItemAccumulator, FirestoreCollection, FirestoreDocument, FirestoreItemPageIterationInstance, FirestoreQueryConstraint, IterationQueryDocChangeWatcher } from '@dereekb/firebase';
+import { FirebaseQueryItemAccumulator, FirestoreCollectionLike, FirestoreDocument, FirestoreItemPageIterationInstance, FirestoreQueryConstraint, IterationQueryDocChangeWatcher } from '@dereekb/firebase';
 import { ObservableOrValue, cleanupDestroyable, PageListLoadingState, filterMaybe } from '@dereekb/rxjs';
 import { ArrayOrValue, Maybe } from '@dereekb/util';
 import { LockSetComponentStore } from '@dereekb/dbx-core';
 import { DbxFirebaseCollectionLoaderInstance, dbxFirebaseCollectionLoaderInstance, DbxFirebaseCollectionLoaderInstanceData } from '../loader/collection.loader.instance';
 
 export interface DbxFirebaseCollectionStore<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> extends DbxFirebaseCollectionLoaderInstanceData<T, D> {
-  readonly firestoreCollection$: Observable<Maybe<FirestoreCollection<T, D>>>;
+  readonly firestoreCollection$: Observable<Maybe<FirestoreCollectionLike<T, D>>>;
   readonly loader$: Observable<DbxFirebaseCollectionLoaderInstance<T, D>>;
 
   readonly firestoreIteration$: Observable<FirestoreItemPageIterationInstance<T>>;
@@ -21,11 +21,11 @@ export interface DbxFirebaseCollectionStore<T, D extends FirestoreDocument<T> = 
   next(observableOrValue: ObservableOrValue<void>): void;
   restart(observableOrValue: ObservableOrValue<void>): void;
 
-  readonly setFirestoreCollection: (() => void) | ((observableOrValue: ObservableOrValue<Maybe<FirestoreCollection<T, D>>>) => Subscription);
+  readonly setFirestoreCollection: (() => void) | ((observableOrValue: ObservableOrValue<Maybe<FirestoreCollectionLike<T, D>>>) => Subscription);
 }
 
 export interface DbxFirebaseCollectionStoreContextState<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> {
-  readonly firestoreCollection?: Maybe<FirestoreCollection<T, D>>;
+  readonly firestoreCollection?: Maybe<FirestoreCollectionLike<T, D>>;
   readonly maxPages?: Maybe<number>;
   readonly itemsPerPage?: Maybe<number>;
   readonly constraints?: Maybe<ArrayOrValue<FirestoreQueryConstraint>>;
@@ -72,13 +72,13 @@ export class AbstractDbxFirebaseCollectionStore<T, D extends FirestoreDocument<T
   });
 
   // MARK: Accessors
-  readonly currentFirestoreCollection$: Observable<Maybe<FirestoreCollection<T, D>>> = this.state$.pipe(
+  readonly currentFirestoreCollection$: Observable<Maybe<FirestoreCollectionLike<T, D>>> = this.state$.pipe(
     map((x) => x.firestoreCollection),
     distinctUntilChanged(),
     shareReplay(1)
   );
 
-  readonly firestoreCollection$: Observable<FirestoreCollection<T, D>> = this.currentFirestoreCollection$.pipe(filterMaybe());
+  readonly firestoreCollection$: Observable<FirestoreCollectionLike<T, D>> = this.currentFirestoreCollection$.pipe(filterMaybe());
 
   readonly loader$: Observable<DbxFirebaseCollectionLoaderInstance<T, D>> = this.currentFirestoreCollection$.pipe(
     switchMap((collection) =>
@@ -104,5 +104,5 @@ export class AbstractDbxFirebaseCollectionStore<T, D extends FirestoreDocument<T
   readonly accumulator$: Observable<FirebaseQueryItemAccumulator<T>> = this.loader$.pipe(switchMap((x) => x.accumulator$));
   readonly pageLoadingState$: Observable<PageListLoadingState<T>> = this.loader$.pipe(switchMap((x) => x.pageLoadingState$));
 
-  readonly setFirestoreCollection = this.updater((state, firestoreCollection: FirestoreCollection<T, D> | null | undefined) => ({ ...state, firestoreCollection }));
+  readonly setFirestoreCollection = this.updater((state, firestoreCollection: FirestoreCollectionLike<T, D> | null | undefined) => ({ ...state, firestoreCollection }));
 }

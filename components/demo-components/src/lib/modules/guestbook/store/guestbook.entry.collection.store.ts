@@ -6,7 +6,7 @@ import { GuestbookDocumentStore } from './guestbook.document.store';
 @Injectable()
 export class GuestbookEntryCollectionStore extends AbstractDbxFirebaseCollectionWithParentStore<GuestbookEntry, Guestbook, GuestbookEntryDocument, GuestbookDocument> {
   constructor(collections: DemoFirestoreCollections, @Optional() parent: GuestbookDocumentStore) {
-    super({ collectionFactory: collections.guestbookEntryCollectionFactory });
+    super({ collectionFactory: collections.guestbookEntryCollectionFactory, collectionGroup: collections.guestbookEntryCollectionGroup });
     this.setConstraints(publishedGuestbookEntry()); // todo: replace with filter
 
     if (parent) {
