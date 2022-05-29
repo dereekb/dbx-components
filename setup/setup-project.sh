@@ -472,7 +472,7 @@ download_angular_ts_file () {
   download_ts_file "$DOWNLOAD_PATH" "$TARGET_FOLDER" "$FILE_PATH"
 }
 
-download_angular_ts_file "src/style.scss"
+download_angular_ts_file "src/styles.scss"
 download_angular_ts_file "src/main.ts"
 download_angular_ts_file "src/root.module.ts"
 download_angular_ts_file "src/root.firebase.module.ts"
