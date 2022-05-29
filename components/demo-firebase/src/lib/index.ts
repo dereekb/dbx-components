@@ -1,4 +1,4 @@
-export * from './guestbook';
-export * from './profile';
+export * from './auth';
+export * from './models';
 export * from './collection';
 export * from './functions';

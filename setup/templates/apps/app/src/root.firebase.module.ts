@@ -1,8 +1,15 @@
 import { FirestoreContext } from '@dereekb/firebase';
-import { DbxFirebaseFirestoreCollectionModule, DbxFirebaseEmulatorModule, DbxFirebaseDefaultFirebaseProvidersModule, DbxFirebaseAuthModule, DbxFirebaseFunctionsModule } from '@dereekb/dbx-firebase';
+import { DbxFirebaseFirestoreCollectionModule, DbxFirebaseEmulatorModule, DbxFirebaseDefaultFirebaseProvidersModule, DbxFirebaseAuthModule, DbxFirebaseFunctionsModule, defaultDbxFirebaseAuthServiceDelegateWithClaimsService, DbxFirebaseAuthServiceDelegate } from '@dereekb/dbx-firebase';
 import { NgModule } from '@angular/core';
 import { environment } from './environments/environment';
-import { APP_CODE_PREFIXFirebaseFunctionsGetter, APP_CODE_PREFIXFirestoreCollections, APP_CODE_PREFIX_UPPER_FIREBASE_FUNCTIONS_CONFIG, makeAPP_CODE_PREFIXFirebaseFunctions, makeAPP_CODE_PREFIXFirestoreCollections } from 'FIREBASE_COMPONENTS_NAME';
+import { APP_CODE_PREFIXFirebaseFunctionsGetter, APP_CODE_PREFIXFirestoreCollections, APP_CODE_PREFIX_UPPER_FIREBASE_FUNCTIONS_CONFIG, makeAPP_CODE_PREFIXFirebaseFunctions, makeAPP_CODE_PREFIXFirestoreCollections, APP_CODE_PREFIX_UPPER_AUTH_CLAIMS_SERVICE } from 'FIREBASE_COMPONENTS_NAME';
+
+export function APP_CODE_PREFIX_LOWERAuthDelegateFactory(): DbxFirebaseAuthServiceDelegate {
+  return defaultDbxFirebaseAuthServiceDelegateWithClaimsService({
+    claimsService: APP_CODE_PREFIX_UPPER_AUTH_CLAIMS_SERVICE,
+    addAuthUserStateToRoles: true
+  });
+}
 
 @NgModule({
   imports: [
@@ -19,7 +26,7 @@ import { APP_CODE_PREFIXFirebaseFunctionsGetter, APP_CODE_PREFIXFirestoreCollect
       functionsConfigMap: APP_CODE_PREFIX_UPPER_FIREBASE_FUNCTIONS_CONFIG
     }),
     DbxFirebaseAuthModule.forRoot({
-      delegateFactory: undefined  // todo
+      delegateFactory: APP_CODE_PREFIX_LOWERAuthDelegateFactory
     })
   ],
   providers: []

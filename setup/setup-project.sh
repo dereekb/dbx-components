@@ -453,13 +453,19 @@ download_firebase_ts_file "src/lib/index.ts"
 download_firebase_ts_file "src/lib/collection.ts"
 download_firebase_ts_file "src/lib/functions.ts"
 
-# Example Folder
-mkdir $FIREBASE_COMPONENTS_FOLDER/src/lib/example
-download_firebase_ts_file "src/lib/example/example.action.ts"
-download_firebase_ts_file "src/lib/example/example.api.ts"
-download_firebase_ts_file "src/lib/example/example.query.ts"
-download_firebase_ts_file "src/lib/example/example.ts"
-download_firebase_ts_file "src/lib/example/index.ts"
+# Auth Folder
+mkdir $FIREBASE_COMPONENTS_FOLDER/src/lib/auth
+download_firebase_ts_file "src/lib/auth/claims.ts"
+download_firebase_ts_file "src/lib/auth/index.ts"
+
+# Model/Example Folder
+mkdir $FIREBASE_COMPONENTS_FOLDER/src/lib/models
+mkdir $FIREBASE_COMPONENTS_FOLDER/src/lib/models/example
+download_firebase_ts_file "src/lib/models/example/example.action.ts"
+download_firebase_ts_file "src/lib/models/example/example.api.ts"
+download_firebase_ts_file "src/lib/models/example/example.query.ts"
+download_firebase_ts_file "src/lib/models/example/example.ts"
+download_firebase_ts_file "src/lib/models/example/index.ts"
 
 git add --all
 git commit --no-verify -m "checkpoint: setup api components"

@@ -1,8 +1,15 @@
 import { FirestoreContext } from '@dereekb/firebase';
-import { DbxFirebaseFirestoreCollectionModule, DbxFirebaseEmulatorModule, DbxFirebaseDefaultFirebaseProvidersModule, DbxFirebaseAuthModule, DbxFirebaseFunctionsModule, DbxFirebaseDefaultAppCheckProviderModule } from '@dereekb/dbx-firebase';
+import { DbxFirebaseFirestoreCollectionModule, DbxFirebaseEmulatorModule, DbxFirebaseDefaultFirebaseProvidersModule, DbxFirebaseAuthModule, DbxFirebaseFunctionsModule, defaultDbxFirebaseAuthServiceDelegateWithClaimsService, DbxFirebaseAuthServiceDelegate } from '@dereekb/dbx-firebase';
 import { NgModule } from '@angular/core';
 import { environment } from './environments/environment';
-import { DemoFirebaseFunctionsGetter, DemoFirestoreCollections, DEMO_FIREBASE_FUNCTIONS_CONFIG, makeDemoFirebaseFunctions, makeDemoFirestoreCollections } from '@dereekb/demo-firebase';
+import { DemoFirebaseFunctionsGetter, DemoFirestoreCollections, DEMO_AUTH_CLAIMS_SERVICE, DEMO_FIREBASE_FUNCTIONS_CONFIG, makeDemoFirebaseFunctions, makeDemoFirestoreCollections } from '@dereekb/demo-firebase';
+
+export function demoAuthDelegateFactory(): DbxFirebaseAuthServiceDelegate {
+  return defaultDbxFirebaseAuthServiceDelegateWithClaimsService({
+    claimsService: DEMO_AUTH_CLAIMS_SERVICE,
+    addAuthUserStateToRoles: true
+  });
+}
 
 @NgModule({
   imports: [
@@ -19,7 +26,7 @@ import { DemoFirebaseFunctionsGetter, DemoFirestoreCollections, DEMO_FIREBASE_FU
       functionsConfigMap: DEMO_FIREBASE_FUNCTIONS_CONFIG
     }),
     DbxFirebaseAuthModule.forRoot({
-      delegateFactory: undefined // todo
+      delegateFactory: demoAuthDelegateFactory
     })
   ],
   providers: []

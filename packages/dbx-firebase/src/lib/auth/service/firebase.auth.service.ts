@@ -4,10 +4,11 @@ import { AuthUserState, DbxAuthService, loggedOutObsFromIsLoggedIn, loggedInObsF
 import { Auth, authState, User, IdTokenResult, ParsedToken, GoogleAuthProvider, signInWithPopup, AuthProvider, PopupRedirectResolver, signInAnonymously, signInWithEmailAndPassword, UserCredential, FacebookAuthProvider, GithubAuthProvider, TwitterAuthProvider, createUserWithEmailAndPassword } from '@angular/fire/auth';
 import { Observable, timeout, startWith, distinctUntilChanged, shareReplay, map, switchMap } from 'rxjs';
 import { AuthRoleSet, Maybe } from '@dereekb/util';
-import { authUserStateFromFirebaseAuthService } from './firebase.auth.rxjs';
 import { AuthUserInfo, authUserInfoFromAuthUser } from '../auth';
 import { sendPasswordResetEmail } from 'firebase/auth';
+import { authUserStateFromFirebaseAuthService } from './firebase.auth.rxjs';
 
+// MARK: Delegate
 export abstract class DbxFirebaseAuthServiceDelegate {
   abstract authUserStateObs(dbxFirebaseAuthService: DbxFirebaseAuthService): Observable<AuthUserState>;
   abstract authRolesObs(dbxFirebaseAuthService: DbxFirebaseAuthService): Observable<AuthRoleSet>;
@@ -26,6 +27,7 @@ export const DEFAULT_DBX_FIREBASE_AUTH_SERVICE_DELEGATE: DbxFirebaseAuthServiceD
   }
 };
 
+// MARK: Service
 @Injectable()
 export class DbxFirebaseAuthService implements DbxAuthService {
   private readonly _authState$: Observable<Maybe<User>> = authState(this.firebaseAuth);
