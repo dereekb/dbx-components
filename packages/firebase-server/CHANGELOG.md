@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [5.2.0](https://github.com/dereekb/dbx-components/compare/v5.1.0-dev...v5.2.0) (2022-05-29)
+
+
+### Features
+
+* added firestore collection group support ([3b4c4cf](https://github.com/dereekb/dbx-components/commit/3b4c4cfa1dd860604c347ade69acdc2fea1063f8))
+
+
+
 # [5.1.0](https://github.com/dereekb/dbx-components/compare/v5.0.1-dev...v5.1.0) (2022-05-27)
 
 
