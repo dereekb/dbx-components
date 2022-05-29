@@ -2,6 +2,17 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [5.2.1](https://github.com/dereekb/dbx-components/compare/v5.2.0-dev...v5.2.1) (2022-05-29)
+
+
+### Bug Fixes
+
+* removed angular directives from abstractAsyncWindowLoadedService ([4ab7a74](https://github.com/dereekb/dbx-components/commit/4ab7a740ed1c50965e832f64edc5ce4ee6a60faa))
+* setup project template replacement fixes ([fbe36cf](https://github.com/dereekb/dbx-components/commit/fbe36cf89882fcab5bbe77678f72d4e9e4499502))
+* setup-project proxy config path fix ([db6c986](https://github.com/dereekb/dbx-components/commit/db6c986065d9852ecd69483a251047fdc87314e7))
+
+
+
 # [5.2.0](https://github.com/dereekb/dbx-components/compare/v5.1.0-dev...v5.2.0) (2022-05-29)
 
 

@@ -272,7 +272,7 @@ rm test-$API_APP_NAME.sh.tmp
 chmod +x test-$API_APP_NAME.sh
 
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/wait-for-ports.sh -o wait-for-ports.sh.tmp
-sed -e "s/demo/$ANGULAR_APP_NAME/g" wait-for-ports.sh.tmp > wait-for-ports.sh
+sed -e "s/9100-9106/$FIREBASE_EMULATOR_PORT_RANGE/g" wait-for-ports.sh.tmp > wait-for-ports.sh
 rm wait-for-ports.sh.tmp
 chmod +x wait-for-ports.sh
 
@@ -404,7 +404,7 @@ download_ts_file () {
   local FILE_PATH=$3
   local FULL_FILE_PATH=$TARGET_FOLDER/$FILE_PATH
   curl $DOWNLOAD_PATH/$FILE_PATH -o $FULL_FILE_PATH.tmp
-  sed -e "s:APP_CODE_PREFIX_UPPER:$APP_CODE_PREFIX_UPPER:g" -e "s:APP_CODE_PREFIX_LOWER:$APP_CODE_PREFIX_LOWER:g" -e "s:APP_CODE_PREFIX:$APP_CODE_PREFIX:g" -e "s:FIREBASE_COMPONENTS_NAME:$FIREBASE_COMPONENTS_NAME:g" -e "s:ANGULAR_COMPONENTS_NAME:$ANGULAR_COMPONENTS_NAME:g" $FULL_FILE_PATH.tmp > $FULL_FILE_PATH
+  sed -e "s:APP_CODE_PREFIX_UPPER:$APP_CODE_PREFIX_UPPER:g" -e "s:APP_CODE_PREFIX_LOWER:$APP_CODE_PREFIX_LOWER:g" -e "s:APP_CODE_PREFIX:$APP_CODE_PREFIX:g" -e "s:FIREBASE_COMPONENTS_NAME:$FIREBASE_COMPONENTS_NAME:g" -e "s:ANGULAR_COMPONENTS_NAME:$ANGULAR_COMPONENTS_NAME:g" -e "s:ANGULAR_APP_NAME:$ANGULAR_APP_NAME:g" $FULL_FILE_PATH.tmp > $FULL_FILE_PATH
   rm $FULL_FILE_PATH.tmp
 }
 
@@ -478,13 +478,13 @@ download_angular_ts_file "src/root.module.ts"
 download_angular_ts_file "src/root.firebase.module.ts"
 
 # proxy.conf.dev.json
-curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/apps/demo/src/proxy.conf.dev.json -o $ANGULAR_APP_FOLDER/src/proxy.conf.dev.json.tmp
-sed -e "s/9902/$FIREBASE_EMULATOR_AUTH_PORT/g" $ANGULAR_APP_FOLDER/src/proxy.conf.dev.json.tmp > $ANGULAR_APP_FOLDER/src/proxy.conf.dev.json
-rm $ANGULAR_APP_FOLDER/src/proxy.conf.dev.json.tmp
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/apps/demo/proxy.conf.dev.json -o $ANGULAR_APP_FOLDER/proxy.conf.dev.json.tmp
+sed -e "s/9902/$FIREBASE_EMULATOR_AUTH_PORT/g" $ANGULAR_APP_FOLDER/proxy.conf.dev.json.tmp > $ANGULAR_APP_FOLDER/proxy.conf.dev.json
+rm $ANGULAR_APP_FOLDER/proxy.conf.dev.json.tmp
 
-curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/apps/demo/src/proxy.conf.prod.json -o $ANGULAR_APP_FOLDER/src/proxy.conf.prod.json.tmp
-sed -e "s-components.dereekb.com-example.dereekb.com-g" $ANGULAR_APP_FOLDER/src/proxy.conf.prod.json.tmp > $ANGULAR_APP_FOLDER/src/proxy.conf.prod.json
-rm $ANGULAR_APP_FOLDER/src/proxy.conf.prod.json.tmp
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/apps/demo/proxy.conf.prod.json -o $ANGULAR_APP_FOLDER/proxy.conf.prod.json.tmp
+sed -e "s-components.dereekb.com-example.dereekb.com-g" $ANGULAR_APP_FOLDER/proxy.conf.prod.json.tmp > $ANGULAR_APP_FOLDER/proxy.conf.prod.json
+rm $ANGULAR_APP_FOLDER/proxy.conf.prod.json.tmp
 
 # lib
 mkdir $ANGULAR_APP_FOLDER/src/lib
