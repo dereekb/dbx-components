@@ -4,7 +4,7 @@ export type DemoApiAuthClaims = {
   /**
    * Admin role
    */
-  a?: number;
+  a?: 1;
 };
 
 export const DEMO_AUTH_CLAIMS_SERVICE = authRoleClaimsService<DemoApiAuthClaims>({

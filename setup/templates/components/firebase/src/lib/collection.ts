@@ -1,5 +1,5 @@
 import { FirestoreContext } from '@dereekb/firebase';
-import { exampleFirestoreCollection, ExampleFirestoreCollection, ExampleFirestoreCollections } from './example/example';
+import { exampleFirestoreCollection, ExampleFirestoreCollection, ExampleFirestoreCollections } from './models';
 
 export abstract class APP_CODE_PREFIXFirestoreCollections implements ExampleFirestoreCollections {
   abstract readonly exampleFirestoreCollection: ExampleFirestoreCollection;

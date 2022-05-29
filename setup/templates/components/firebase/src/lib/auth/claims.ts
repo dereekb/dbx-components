@@ -4,7 +4,7 @@ export type APP_CODE_PREFIXApiAuthClaims = {
   /**
    * Admin role
    */
-  a?: number;
+  a?: 1;
 }
 
 export const APP_CODE_PREFIX_UPPER_AUTH_CLAIMS_SERVICE = authRoleClaimsService<APP_CODE_PREFIXApiAuthClaims>({

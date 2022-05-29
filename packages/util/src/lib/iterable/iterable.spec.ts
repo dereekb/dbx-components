@@ -13,6 +13,18 @@ describe('isIterable()', () => {
   it('should return true for a map.', () => {
     expect(isIterable(new Map())).toBe(true);
   });
+
+  it('should return false for a string.', () => {
+    expect(isIterable('test')).toBe(false);
+  });
+
+  it('should return true for a string if treatStringAsIterable = false', () => {
+    expect(isIterable('test', true)).toBe(true);
+  });
+
+  it('should return false for a number.', () => {
+    expect(isIterable('test')).toBe(false);
+  });
 });
 
 describe('useIterableOrValue()', () => {
@@ -42,5 +54,18 @@ describe('useIterableOrValue()', () => {
     let used = false;
     useIterableOrValue([], () => (used = true));
     expect(used).toBe(false);
+  });
+
+  it('should use a string as a value', () => {
+    let count = 0;
+    useIterableOrValue('test', () => (count += 1));
+    expect(count).toBe(1);
+  });
+
+  it('should use a string as an iterable if useStringAsIterable=true', () => {
+    let count = 0;
+    const value = 'test';
+    useIterableOrValue(value, () => (count += 1), true);
+    expect(count).toBe(value.length);
   });
 });
