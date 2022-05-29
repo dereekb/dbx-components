@@ -1,10 +1,8 @@
 /*eslint @typescript-eslint/no-explicit-any:"off"*/
 // any is used with intent here. Proper typing with Window requires using the dynamic strings _windowKey and _callbackKey.
-
-import { Maybe } from '@dereekb/util';
+import { Maybe, Destroyable } from '@dereekb/util';
 import { filterMaybe, tapFirst } from '@dereekb/rxjs';
 import { Observable, BehaviorSubject, switchMap, shareReplay, from, firstValueFrom } from 'rxjs';
-import { Inject, Injectable, OnDestroy } from '@angular/core';
 
 export type ServiceInWindow<T> = Record<string, Maybe<T>>;
 export type ServiceCallbackInWindow = Record<string, () => void>;
@@ -12,8 +10,7 @@ export type ServiceCallbackInWindow = Record<string, () => void>;
 /**
  * Used for loading services in the browser that are imported from other scripts, such as Facebook, Segment, Stripe, etc.
  */
-@Injectable()
-export abstract class AbstractAsyncWindowLoadedService<T> implements OnDestroy {
+export abstract class AbstractAsyncWindowLoadedService<T> implements Destroyable {
   private _loading = new BehaviorSubject<Maybe<Promise<T>>>(undefined);
 
   readonly loading$: Observable<Promise<T>> = this._loading.pipe(
@@ -21,6 +18,7 @@ export abstract class AbstractAsyncWindowLoadedService<T> implements OnDestroy {
     filterMaybe(),
     shareReplay(1)
   );
+
   readonly service$: Observable<T> = this.loading$.pipe(
     switchMap((x) => from(x)),
     shareReplay(1)
@@ -30,14 +28,14 @@ export abstract class AbstractAsyncWindowLoadedService<T> implements OnDestroy {
    * @param _windowKey Key that is attached to the window for the object that is the service when finished loading.
    * @param _callbackKey Optional key attached to window that is a function that is executed when the setup is complete.
    */
-  constructor(@Inject(null) private _windowKey: string, @Inject(null) private _callbackKey?: string, @Inject(null) private _serviceName: string = _windowKey, @Inject(null) preload: boolean = true) {
+  constructor(private _windowKey: string, private _callbackKey?: string, private _serviceName: string = _windowKey, preload: boolean = true) {
     if (preload) {
       // Begin loading the service immediately.
       setTimeout(() => this.loadService().catch());
     }
   }
 
-  ngOnDestroy(): void {
+  destroy(): void {
     this._loading.complete();
   }
 
