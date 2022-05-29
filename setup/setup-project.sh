@@ -478,13 +478,13 @@ download_angular_ts_file "src/root.module.ts"
 download_angular_ts_file "src/root.firebase.module.ts"
 
 # proxy.conf.dev.json
-curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/apps/demo/src/proxy.conf.dev.json -o $ANGULAR_APP_FOLDER/src/proxy.conf.dev.json.tmp
-sed -e "s/9902/$FIREBASE_EMULATOR_AUTH_PORT/g" $ANGULAR_APP_FOLDER/src/proxy.conf.dev.json.tmp > $ANGULAR_APP_FOLDER/src/proxy.conf.dev.json
-rm $ANGULAR_APP_FOLDER/src/proxy.conf.dev.json.tmp
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/apps/demo/proxy.conf.dev.json -o $ANGULAR_APP_FOLDER/proxy.conf.dev.json.tmp
+sed -e "s/9902/$FIREBASE_EMULATOR_AUTH_PORT/g" $ANGULAR_APP_FOLDER/proxy.conf.dev.json.tmp > $ANGULAR_APP_FOLDER/proxy.conf.dev.json
+rm $ANGULAR_APP_FOLDER/proxy.conf.dev.json.tmp
 
-curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/apps/demo/src/proxy.conf.prod.json -o $ANGULAR_APP_FOLDER/src/proxy.conf.prod.json.tmp
-sed -e "s-components.dereekb.com-example.dereekb.com-g" $ANGULAR_APP_FOLDER/src/proxy.conf.prod.json.tmp > $ANGULAR_APP_FOLDER/src/proxy.conf.prod.json
-rm $ANGULAR_APP_FOLDER/src/proxy.conf.prod.json.tmp
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/apps/demo/proxy.conf.prod.json -o $ANGULAR_APP_FOLDER/proxy.conf.prod.json.tmp
+sed -e "s-components.dereekb.com-example.dereekb.com-g" $ANGULAR_APP_FOLDER/proxy.conf.prod.json.tmp > $ANGULAR_APP_FOLDER/proxy.conf.prod.json
+rm $ANGULAR_APP_FOLDER/proxy.conf.prod.json.tmp
 
 # lib
 mkdir $ANGULAR_APP_FOLDER/src/lib
