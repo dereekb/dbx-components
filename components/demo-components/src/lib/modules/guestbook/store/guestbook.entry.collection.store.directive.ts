@@ -1,13 +1,13 @@
 import { Directive } from '@angular/core';
-import { DbxFirebaseCollectionStoreDirective, provideDbxFirebaseCollectionStoreDirective } from '@dereekb/dbx-firebase';
-import { GuestbookEntry, GuestbookEntryDocument } from '@dereekb/demo-firebase';
+import { DbxFirebaseCollectionWithParentStoreDirective, provideDbxFirebaseCollectionWithParentStoreDirective } from '@dereekb/dbx-firebase';
+import { Guestbook, GuestbookDocument, GuestbookEntry, GuestbookEntryDocument } from '@dereekb/demo-firebase';
 import { GuestbookEntryCollectionStore } from './guestbook.entry.collection.store';
 
 @Directive({
   selector: '[demoGuestbookEntryCollection]',
-  providers: provideDbxFirebaseCollectionStoreDirective(DemoGuestbookEntryCollectionStoreDirective, GuestbookEntryCollectionStore)
+  providers: provideDbxFirebaseCollectionWithParentStoreDirective(DemoGuestbookEntryCollectionStoreDirective, GuestbookEntryCollectionStore)
 })
-export class DemoGuestbookEntryCollectionStoreDirective extends DbxFirebaseCollectionStoreDirective<GuestbookEntry, GuestbookEntryDocument, GuestbookEntryCollectionStore> {
+export class DemoGuestbookEntryCollectionStoreDirective extends DbxFirebaseCollectionWithParentStoreDirective<GuestbookEntry, Guestbook, GuestbookEntryDocument, GuestbookDocument, GuestbookEntryCollectionStore> {
   constructor(store: GuestbookEntryCollectionStore) {
     super(store);
   }

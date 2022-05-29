@@ -1,17 +1,4 @@
-<button
-  #button
-  mat-button
-  [type]="options.type"
-  [color]="options.buttonColor"
-  [class.working]="options.working"
-  [class.fullWidth]="options.fullWidth"
-  [class.mat-raised-button]="options.raised"
-  [class.mat-stroked-button]="options.stroked"
-  [class.mat-flat-button]="options.flat"
-  [class.mat-fab]="options.fab"
-  [ngClass]="options.customClass!"
-  [ngStyle]="options.customStyle!"
-  [disabled]="options.working || options.disabled">
+<button #button mat-button [type]="options.type" [color]="options.buttonColor" [class.working]="options.working" [class.fullWidth]="options.fullWidth" [class.mat-raised-button]="options.raised" [class.mat-stroked-button]="options.stroked" [class.mat-flat-button]="options.flat" [class.mat-fab]="options.fab" [ngClass]="options.customClass!" [ngStyle]="options.customStyle!" [disabled]="options.working || options.disabled">
   <ng-container *ngIf="options.buttonIcon">
     <mat-icon class="mat-button-icon" [class.is-mat-icon]="!options.buttonIcon.fontSet" [class.working]="options.working && !options.disabled" [ngClass]="options.buttonIcon.customClass!" [fontSet]="options.buttonIcon.fontSet!" [fontIcon]="options.buttonIcon.fontIcon!" [color]="options.buttonIcon.color!" [svgIcon]="options.buttonIcon.svgIcon!" [inline]="options.buttonIcon.inline!">
       {{ options.buttonIcon.fontSet ? '' : options.buttonIcon.fontIcon }}

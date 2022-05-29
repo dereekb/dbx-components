@@ -1,16 +1,8 @@
 import { urlWithoutParameters } from '@dereekb/util';
 import { DBX_FIREBASE_OPTIONS_TOKEN, DbxFirebaseOptions } from '../../firebase/options';
-import {
-  HttpInterceptor, HttpRequest, HttpHandler, HttpEvent
-} from '@angular/common/http';
+import { HttpInterceptor, HttpRequest, HttpHandler, HttpEvent } from '@angular/common/http';
 import { getToken } from 'firebase/app-check';
-import {
-  Observable,
-  switchMap,
-  first,
-  map,
-  from,
-} from 'rxjs';
+import { Observable, switchMap, first, map, from } from 'rxjs';
 import { Inject, Injectable } from '@angular/core';
 import { AppCheck } from '@angular/fire/app-check';
 
@@ -24,21 +16,17 @@ interface EnabledAppCheckRoute {
  */
 @Injectable()
 export class DbxFirebaseAppCheckHttpInterceptor implements HttpInterceptor {
-
   private _isEnabled: boolean;
   private _appCheckRoutes: EnabledAppCheckRoute[];
 
-  constructor(
-    @Inject(DBX_FIREBASE_OPTIONS_TOKEN) private dbxFirebaseOptions: DbxFirebaseOptions,
-    private appCheck: AppCheck
-  ) {
+  constructor(@Inject(DBX_FIREBASE_OPTIONS_TOKEN) private dbxFirebaseOptions: DbxFirebaseOptions, private appCheck: AppCheck) {
     let routes: EnabledAppCheckRoute[] = [];
 
     if (appCheck != null) {
       routes = (this.dbxFirebaseOptions.appCheck?.appCheckRoutes ?? ['/api/*']).map((route) => {
         const wildcardIndex = route.indexOf('*');
-        const isWildcard = (wildcardIndex === route.length - 1);
-        const match = (isWildcard) ? route.substring(0, wildcardIndex) : route;
+        const isWildcard = wildcardIndex === route.length - 1;
+        const match = isWildcard ? route.substring(0, wildcardIndex) : route;
 
         return {
           isWildcard,
@@ -51,11 +39,7 @@ export class DbxFirebaseAppCheckHttpInterceptor implements HttpInterceptor {
     this._isEnabled = routes.length > 0;
   }
 
-  intercept(
-    req: HttpRequest<unknown>,
-    next: HttpHandler
-  ): Observable<HttpEvent<unknown>> {
-
+  intercept(req: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
     let obs: Observable<HttpEvent<unknown>>;
 
     if (this._isEnabled) {
@@ -64,20 +48,20 @@ export class DbxFirebaseAppCheckHttpInterceptor implements HttpInterceptor {
           let nextEvent: Observable<HttpEvent<unknown>>;
 
           if (isMatch) {
-            nextEvent = from(getToken(this.appCheck).then((appCheckTokenResponse) => {
-              const token = appCheckTokenResponse.token;
-              let nextRequest: HttpRequest<unknown> = req;
+            nextEvent = from(
+              getToken(this.appCheck).then((appCheckTokenResponse) => {
+                const token = appCheckTokenResponse.token;
+                let nextRequest: HttpRequest<unknown> = req;
 
-              if (token) {
-                nextRequest = req.clone({
-                  headers: req.headers.set('X-Firebase-AppCheck', token)
-                });
-              }
+                if (token) {
+                  nextRequest = req.clone({
+                    headers: req.headers.set('X-Firebase-AppCheck', token)
+                  });
+                }
 
-              return nextRequest;
-            })).pipe(
-              switchMap((nextRequest) => next.handle(nextRequest))
-            );
+                return nextRequest;
+              })
+            ).pipe(switchMap((nextRequest) => next.handle(nextRequest)));
           } else {
             nextEvent = next.handle(req);
           }
@@ -105,8 +89,7 @@ export class DbxFirebaseAppCheckHttpInterceptor implements HttpInterceptor {
 
     return from(this._appCheckRoutes).pipe(
       first((route) => isEnabledRouteMatch(route), false),
-      map(x => Boolean(x))
+      map((x) => Boolean(x))
     );
   }
-
 }

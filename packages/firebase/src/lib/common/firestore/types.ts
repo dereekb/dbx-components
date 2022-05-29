@@ -125,6 +125,13 @@ export interface CollectionReference<T = DocumentData> extends Query<T> {
   withConverter(converter: null): CollectionReference<DocumentData>;
 }
 
+// MARK: CollectionGroup
+export interface CollectionGroup<T = DocumentData> extends Query<T> {
+  readonly type?: 'query';
+  withConverter<U>(converter: FirestoreDataConverter<U>): CollectionGroup<U>;
+  withConverter(converter: null): CollectionGroup<DocumentData>;
+}
+
 // MARK: Batch
 export interface WriteBatch {
   /**

@@ -10,4 +10,5 @@ export * from './store.document.directive';
 export * from './store.document.router.directive';
 export * from './store.subcollection';
 export * from './store.subcollection.document';
+export * from './store.subcollection.directive';
 export * from './store.subcollection.rxjs';

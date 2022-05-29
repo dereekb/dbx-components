@@ -14,11 +14,9 @@ export const DEFAULT_WEBHOOK_MIDDLEWARE_ROUTE_INFO: RouteInfo = {
  * Convenience class that configures a nestjs module (typically the root app module) to apply the proper middleware for handling webhooks.
  */
 export abstract class AppModuleWithWebhooksEnabled implements NestModule {
-
   public configure(consumer: MiddlewareConsumer): void {
     consumeWebhooksWithRawBodyMiddleware(consumer);
   }
-
 }
 
 /**
@@ -26,14 +24,12 @@ export abstract class AppModuleWithWebhooksEnabled implements NestModule {
  */
 @Module({})
 export class ConfigureWebhookMiddlewareModule extends AppModuleWithWebhooksEnabled {
-
   private readonly logger = new Logger('ConfigureWebhookMiddlewareModule');
 
   public configure(consumer: MiddlewareConsumer): void {
     super.configure(consumer);
     this.logger.debug('Configured webhook routes with proper middleware.');
   }
-
 }
 
 /**
@@ -48,9 +44,5 @@ export class ConfigureWebhookMiddlewareModule extends AppModuleWithWebhooksEnabl
 export function consumeWebhooksWithRawBodyMiddleware(consumer: MiddlewareConsumer) {
   // Configure the app to not parse the body for our webhook routes.
   // https://stackoverflow.com/questions/54346465/access-raw-body-of-stripe-webhook-in-nest-js
-  consumer
-    .apply(RawBodyMiddleware)
-    .forRoutes(DEFAULT_WEBHOOK_MIDDLEWARE_ROUTE_INFO)
-    .apply(JsonBodyMiddleware)
-    .forRoutes('*');
+  consumer.apply(RawBodyMiddleware).forRoutes(DEFAULT_WEBHOOK_MIDDLEWARE_ROUTE_INFO).apply(JsonBodyMiddleware).forRoutes('*');
 }

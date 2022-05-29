@@ -1,7 +1,6 @@
 import { urlWithoutParameters } from './url';
 
 describe('urlWithoutParameters()', () => {
-
   const testUrl = 'https://test.com:1234';
 
   it('should remove query parameters from a url', () => {
@@ -21,5 +20,4 @@ describe('urlWithoutParameters()', () => {
     const result = urlWithoutParameters(url);
     expect(result).toBe(testUrl);
   });
-
 });

@@ -1,6 +1,6 @@
 import { Observable } from 'rxjs';
 import { ArrayOrValue, flattenArrayOrValueArray, Maybe } from '@dereekb/util';
-import { CollectionReferenceRef } from '../reference';
+import { QueryLikeReferenceRef } from '../reference';
 import { Query, QueryDocumentSnapshot, QuerySnapshot, Transaction } from '../types';
 import { addOrReplaceLimitInConstraints, FirestoreQueryConstraint } from './constraint';
 import { FirestoreQueryDriverRef } from '../driver/query';
@@ -43,7 +43,7 @@ export interface FirestoreQueryFactory<T> {
   readonly query: FirestoreQueryFactoryFunction<T>;
 }
 
-export interface FirestoreQueryConfig<T> extends FirestoreQueryDriverRef, CollectionReferenceRef<T> {}
+export interface FirestoreQueryConfig<T> extends FirestoreQueryDriverRef, QueryLikeReferenceRef<T> {}
 
 /**
  * Creates a FirestoreCollectionQuery.
@@ -52,7 +52,7 @@ export interface FirestoreQueryConfig<T> extends FirestoreQueryDriverRef, Collec
  * @returns
  */
 export function firestoreQueryFactory<T>(config: FirestoreQueryConfig<T>): FirestoreQueryFactory<T> {
-  const { collection, firestoreQueryDriver: driver } = config;
+  const { queryLike, firestoreQueryDriver: driver } = config;
   const { getDocs, streamDocs, query: makeQuery } = driver;
 
   const extendQuery = (inputQuery: Query<T>, queryConstraints: ArrayOrValue<FirestoreQueryConstraint>[]) => {
@@ -74,6 +74,6 @@ export function firestoreQueryFactory<T>(config: FirestoreQueryConfig<T>): Fires
   };
 
   return {
-    query: (...queryConstraints: ArrayOrValue<FirestoreQueryConstraint>[]) => extendQuery(collection, queryConstraints)
+    query: (...queryConstraints: ArrayOrValue<FirestoreQueryConstraint>[]) => extendQuery(queryLike, queryConstraints)
   };
 }

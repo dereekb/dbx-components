@@ -1,10 +1,8 @@
-
-
 /**
  * Removes any query parameters and hashbang parameters from the input url.
- * 
- * @param url 
- * @returns 
+ *
+ * @param url
+ * @returns
  */
 export function urlWithoutParameters(url: string): string {
   const queryOpenPosition = url.indexOf('?');

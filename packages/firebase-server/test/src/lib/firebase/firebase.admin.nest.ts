@@ -80,12 +80,7 @@ export interface FirebaseAdminNestTestConfig<PI extends FirebaseAdminTestContext
   initInstance?: (instance: I) => Promise<void>;
 }
 
-export type FirebaseAdminNestTestContextFactory<
-  PI extends FirebaseAdminTestContextInstance = FirebaseAdminTestContextInstance,
-  PF extends JestTestContextFixture<PI> = JestTestContextFixture<PI>,
-  I extends FirebaseAdminNestTestContextInstance<PI> = FirebaseAdminNestTestContextInstance<PI>,
-  C extends FirebaseAdminNestTestContextFixture<PI, PF, I> = FirebaseAdminNestTestContextFixture<PI, PF, I>
-> = JestTestContextFactory<C>;
+export type FirebaseAdminNestTestContextFactory<PI extends FirebaseAdminTestContextInstance = FirebaseAdminTestContextInstance, PF extends JestTestContextFixture<PI> = JestTestContextFixture<PI>, I extends FirebaseAdminNestTestContextInstance<PI> = FirebaseAdminNestTestContextInstance<PI>, C extends FirebaseAdminNestTestContextFixture<PI, PF, I> = FirebaseAdminNestTestContextFixture<PI, PF, I>> = JestTestContextFactory<C>;
 
 export function firebaseAdminNestContextFixture<PI extends FirebaseAdminTestContextInstance = FirebaseAdminTestContextInstance, PF extends JestTestContextFixture<PI> = JestTestContextFixture<PI>, I extends FirebaseAdminNestTestContextInstance<PI> = FirebaseAdminNestTestContextInstance<PI>, C extends FirebaseAdminNestTestContextFixture<PI, PF, I> = FirebaseAdminNestTestContextFixture<PI, PF, I>>(
   config: FirebaseAdminNestTestConfig<PI, PF, I, C>,
@@ -98,12 +93,11 @@ export function firebaseAdminNestContextFixture<PI extends FirebaseAdminTestCont
 
 export class FirebaseAdminNestRootModule {}
 
-export function firebaseAdminNestContextWithFixture<
-  PI extends FirebaseAdminTestContextInstance = FirebaseAdminTestContextInstance,
-  PF extends JestTestContextFixture<PI> = JestTestContextFixture<PI>,
-  I extends FirebaseAdminNestTestContextInstance<PI> = FirebaseAdminNestTestContextInstance<PI>,
-  C extends FirebaseAdminNestTestContextFixture<PI, PF, I> = FirebaseAdminNestTestContextFixture<PI, PF, I>
->(config: FirebaseAdminNestTestConfig<PI, PF, I, C>, f: PF, buildTests: JestBuildTestsWithContextFunction<C>) {
+export function firebaseAdminNestContextWithFixture<PI extends FirebaseAdminTestContextInstance = FirebaseAdminTestContextInstance, PF extends JestTestContextFixture<PI> = JestTestContextFixture<PI>, I extends FirebaseAdminNestTestContextInstance<PI> = FirebaseAdminNestTestContextInstance<PI>, C extends FirebaseAdminNestTestContextFixture<PI, PF, I> = FirebaseAdminNestTestContextFixture<PI, PF, I>>(
+  config: FirebaseAdminNestTestConfig<PI, PF, I, C>,
+  f: PF,
+  buildTests: JestBuildTestsWithContextFunction<C>
+) {
   const { nestModules, makeProviders = () => [], injectFirebaseServerAppTokenProvider, makeFixture = (parent: PF) => new FirebaseAdminNestTestContextFixture<PI, PF, I>(parent) as C, makeInstance = (instance, nest) => new FirebaseAdminNestTestContextInstance<PI>(instance, nest) as I, initInstance } = config;
 
   useJestContextFixture({
@@ -149,8 +143,6 @@ export function firebaseAdminNestContextWithFixture<
   });
 }
 
-export function firebaseAdminNestContextFactory<I extends FirebaseAdminNestTestContextInstance<FirebaseAdminTestContextInstance> = FirebaseAdminNestTestContextInstance<FirebaseAdminTestContextInstance>>(
-  config: FirebaseAdminNestTestConfig<FirebaseAdminTestContextInstance, JestTestContextFixture<FirebaseAdminTestContextInstance>, I>
-): FirebaseAdminNestTestContextFactory<FirebaseAdminTestContextInstance, JestTestContextFixture<FirebaseAdminTestContextInstance>, I> {
+export function firebaseAdminNestContextFactory<I extends FirebaseAdminNestTestContextInstance<FirebaseAdminTestContextInstance> = FirebaseAdminNestTestContextInstance<FirebaseAdminTestContextInstance>>(config: FirebaseAdminNestTestConfig<FirebaseAdminTestContextInstance, JestTestContextFixture<FirebaseAdminTestContextInstance>, I>): FirebaseAdminNestTestContextFactory<FirebaseAdminTestContextInstance, JestTestContextFixture<FirebaseAdminTestContextInstance>, I> {
   return firebaseAdminNestContextFixture<FirebaseAdminTestContextInstance, JestTestContextFixture<FirebaseAdminTestContextInstance>, I>(config, firebaseAdminTestContextFactory);
 }

@@ -10,5 +10,5 @@
   "tabWidth": 2,
   "htmlWhitespaceSensitivity": "ignore",
   "endOfLine": "lf",
-  "printWidth": 400
+  "printWidth": 500
 }

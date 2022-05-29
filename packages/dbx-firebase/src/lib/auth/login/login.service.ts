@@ -81,11 +81,7 @@ export class DbxFirebaseAuthLoginService {
   private _assets = new Map<FirebaseLoginMethodType, DbxFirebaseAuthLoginProviderAssets>();
   private _enabled = new Set<FirebaseLoginMethodType>();
 
-  constructor(
-    @Optional() @Inject(DEFAULT_FIREBASE_AUTH_LOGIN_PROVIDERS_TOKEN) defaultProviders: DbxFirebaseAuthLoginProvider[],
-    @Optional() @Inject(DEFAULT_FIREBASE_AUTH_LOGIN_PASSWORD_CONFIG_TOKEN) passwordConfig: DbxFirebaseAuthLoginPasswordConfig,
-    @Optional() @Inject(DEFAULT_FIREBASE_AUTH_LOGIN_TERMS_COMPONENT_CLASS_TOKEN) readonly termsComponentClass: Type<unknown> = DbxFirebaseLoginTermsSimpleComponent
-  ) {
+  constructor(@Optional() @Inject(DEFAULT_FIREBASE_AUTH_LOGIN_PROVIDERS_TOKEN) defaultProviders: DbxFirebaseAuthLoginProvider[], @Optional() @Inject(DEFAULT_FIREBASE_AUTH_LOGIN_PASSWORD_CONFIG_TOKEN) passwordConfig: DbxFirebaseAuthLoginPasswordConfig, @Optional() @Inject(DEFAULT_FIREBASE_AUTH_LOGIN_TERMS_COMPONENT_CLASS_TOKEN) readonly termsComponentClass: Type<unknown> = DbxFirebaseLoginTermsSimpleComponent) {
     if (defaultProviders) {
       defaultProviders.forEach((x) => this.register(x, false));
     }

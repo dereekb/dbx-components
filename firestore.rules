@@ -20,6 +20,17 @@ service cloud.firestore {
       }
     }
 
+    // collection group example
+    // https://firebase.google.com/docs/firestore/security/rules-query#collection_group_queries_and_security_rules
+    match /{path=**}/entry/{entry} {
+
+      // Can read any entry that is owned or published.
+      allow get: if resourceIsPublished() || resourceIsOwnedByAuthUserId();
+
+      // Can only query if the guestbook entry is published.
+      allow list: if resourceIsPublished();
+    }
+
     function resourceIsPublished() {
       return (resource.data.published != false);
     }

@@ -35,11 +35,11 @@ import { DbxFirebaseAppCheckHttpInterceptor } from '../auth/appcheck/appcheck.in
     }) as any)
   ]
 })
-export class DbxFirebaseDefaultFirestoreProviderModule { }
+export class DbxFirebaseDefaultFirestoreProviderModule {}
 
 /**
  * Default firebase app check provider module.
- * 
+ *
  * Also configures the DbxFirebaseAppCheckHttpInterceptor with HTTP_INTERCEPTORS in order for appCheck to be appended to requests to the api.
  */
 @NgModule({
@@ -52,7 +52,6 @@ export class DbxFirebaseDefaultFirestoreProviderModule { }
       let appCheck: AppCheck;
 
       if (appCheckOptions && !appCheckKnowinglyDisabled) {
-
         // enable the debug tokens if not using emulators and allowDebugTokens is set true
         if (firebaseOptions.emulators?.useEmulators !== true && appCheckOptions.allowDebugTokens) {
           enableAppCheckDebugTokenGeneration(true);
@@ -84,7 +83,7 @@ export class DbxFirebaseDefaultFirestoreProviderModule { }
     }
   ]
 })
-export class DbxFirebaseDefaultAppCheckProviderModule { }
+export class DbxFirebaseDefaultAppCheckProviderModule {}
 
 /**
  * Default firebase auth provider module.
@@ -104,7 +103,7 @@ export class DbxFirebaseDefaultAppCheckProviderModule { }
     }) as any)
   ]
 })
-export class DbxFirebaseDefaultAuthProviderModule { }
+export class DbxFirebaseDefaultAuthProviderModule {}
 
 /**
  * Default firebase storage provider module.
@@ -124,7 +123,7 @@ export class DbxFirebaseDefaultAuthProviderModule { }
     }) as any)
   ]
 })
-export class DbxFirebaseDefaultStorageProviderModule { }
+export class DbxFirebaseDefaultStorageProviderModule {}
 
 /**
  * Default firebase functions provider module.
@@ -147,7 +146,7 @@ export class DbxFirebaseDefaultStorageProviderModule { }
     }) as any)
   ]
 })
-export class DbxFirebaseDefaultFunctionsProviderModule { }
+export class DbxFirebaseDefaultFunctionsProviderModule {}
 
 /**
  * Default provider module.
@@ -166,7 +165,6 @@ export class DbxFirebaseDefaultFunctionsProviderModule { }
   ]
 })
 export class DbxFirebaseDefaultFirebaseProvidersModule {
-
   static forRoot(firebaseOptions: FirebaseOptions): ModuleWithProviders<DbxFirebaseDefaultFirebaseProvidersModule> {
     return {
       ngModule: DbxFirebaseDefaultFirebaseProvidersModule,
@@ -178,5 +176,4 @@ export class DbxFirebaseDefaultFirebaseProvidersModule {
       ]
     };
   }
-
 }

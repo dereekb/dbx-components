@@ -158,7 +158,7 @@ jobs:
       - run:
           # we grab the relevant tag names before swapping to main
           name: "setup env vars for git changes"
-          command: echo -e "export DEV_TAG_ID=$(git describe --abbrev=0 HEAD^)\nTAG_ID=$(git describe --abbrev=0)" >> $BASH_ENV
+          command: echo -e "export DEV_TAG_ID=$(git describe --tags --abbrev=0 HEAD^)\nTAG_ID=$(git describe --tags --abbrev=0)" >> $BASH_ENV
       - run:
           # copy the commit message before we swap branches, or it will include unrelated changes. Move tag to the main branch after making the merge commit into main
           name: merge release into main and use the release commit message, move tag from release to main
@@ -169,6 +169,7 @@ jobs:
       - run:
           name: delete release branch
           command: git push origin --delete release
+  # Deploys rules and configured projects to Firebase.
   deploy-to-firebase:
     <<: *defaults
     steps:

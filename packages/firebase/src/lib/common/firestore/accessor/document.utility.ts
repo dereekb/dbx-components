@@ -1,6 +1,6 @@
 import { makeArray, Maybe, performMakeLoop, PromiseUtility } from '@dereekb/util';
 import { DocumentDataWithId, DocumentReference, DocumentSnapshot, QuerySnapshot, Transaction } from '../types';
-import { FirestoreDocument, FirestoreDocumentAccessor, FirestoreDocumentAccessorContextExtension } from './document';
+import { FirestoreDocument, FirestoreDocumentAccessor, LimitedFirestoreDocumentAccessor, LimitedFirestoreDocumentAccessorContextExtension } from './document';
 
 export function newDocuments<T, D extends FirestoreDocument<T>>(documentAccessor: FirestoreDocumentAccessor<T, D>, count: number): D[] {
   return makeArray({ count, make: () => documentAccessor.newDocument() });
@@ -43,15 +43,15 @@ export function getDocumentSnapshots<T, D extends FirestoreDocument<T>>(document
   return PromiseUtility.runTasksForValues(documents, (x) => x.accessor.get());
 }
 
-export function loadDocumentsForSnapshots<T, D extends FirestoreDocument<T>>(accessor: FirestoreDocumentAccessor<T, D>, snapshots: QuerySnapshot<T>): D[] {
+export function loadDocumentsForSnapshots<T, D extends FirestoreDocument<T>>(accessor: LimitedFirestoreDocumentAccessor<T, D>, snapshots: QuerySnapshot<T>): D[] {
   return snapshots.docs.map((x) => accessor.loadDocument(x.ref));
 }
 
-export function loadDocumentsForDocumentReferences<T, D extends FirestoreDocument<T>>(accessor: FirestoreDocumentAccessor<T, D>, refs: DocumentReference<T>[]): D[] {
+export function loadDocumentsForDocumentReferences<T, D extends FirestoreDocument<T>>(accessor: LimitedFirestoreDocumentAccessor<T, D>, refs: DocumentReference<T>[]): D[] {
   return refs.map((x) => accessor.loadDocument(x));
 }
 
-export function loadDocumentsForValues<I, T, D extends FirestoreDocument<T>>(accessor: FirestoreDocumentAccessor<T, D>, values: I[], getRef: (value: I) => DocumentReference<T>): D[] {
+export function loadDocumentsForValues<I, T, D extends FirestoreDocument<T>>(accessor: LimitedFirestoreDocumentAccessor<T, D>, values: I[], getRef: (value: I) => DocumentReference<T>): D[] {
   return values.map((x) => accessor.loadDocument(getRef(x)));
 }
 
@@ -66,7 +66,7 @@ export type FirestoreDocumentLoader<T, D extends FirestoreDocument<T>> = (refere
  * @param accessorContext
  * @returns
  */
-export function firestoreDocumentLoader<T, D extends FirestoreDocument<T>>(accessorContext: FirestoreDocumentAccessorContextExtension<T, D>): FirestoreDocumentLoader<T, D> {
+export function firestoreDocumentLoader<T, D extends FirestoreDocument<T>>(accessorContext: LimitedFirestoreDocumentAccessorContextExtension<T, D>): FirestoreDocumentLoader<T, D> {
   return (references: DocumentReference<T>[], transaction?: Transaction) => {
     const accessor = transaction ? accessorContext.documentAccessorForTransaction(transaction) : accessorContext.documentAccessor();
     return loadDocumentsForDocumentReferences(accessor, references);

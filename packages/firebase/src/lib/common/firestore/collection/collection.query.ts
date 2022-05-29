@@ -1,4 +1,4 @@
-import { FirestoreDocumentAccessorContextExtension } from './../accessor/document';
+import { FirestoreDocumentAccessorContextExtension, LimitedFirestoreDocumentAccessorContextExtension } from './../accessor/document';
 import { ArrayOrValue, Maybe } from '@dereekb/util';
 import { FirestoreDocument } from '../accessor/document';
 import { documentReferencesFromSnapshot, FirestoreExecutableQuery, FirestoreQueryFactory } from '../query';
@@ -38,7 +38,7 @@ export interface FirestoreCollectionQueryFactory<T, D extends FirestoreDocument<
   readonly queryDocument: FirestoreCollectionQueryFactoryFunction<T, D>;
 }
 
-export function firestoreCollectionQueryFactory<T, D extends FirestoreDocument<T>>(queryFactory: FirestoreQueryFactory<T>, accessorContext: FirestoreDocumentAccessorContextExtension<T, D>): FirestoreCollectionQueryFactory<T, D> {
+export function firestoreCollectionQueryFactory<T, D extends FirestoreDocument<T>>(queryFactory: FirestoreQueryFactory<T>, accessorContext: LimitedFirestoreDocumentAccessorContextExtension<T, D>): FirestoreCollectionQueryFactory<T, D> {
   const documentLoader = firestoreDocumentLoader(accessorContext);
 
   const wrapQuery: (baseQuery: FirestoreExecutableQuery<T>) => FirestoreCollectionExecutableDocumentQuery<T, D> = (baseQuery: FirestoreExecutableQuery<T>) => {

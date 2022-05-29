@@ -13,10 +13,7 @@ export function wrapCloudFunctionForNestTestsGetter<I>(wrapper: FirebaseAdminFun
 // MARK: FirebaseAdminFunction
 export interface FirebaseAdminFunctionNestTestContext extends FirebaseAdminNestTestContext, FirebaseAdminCloudFunctionWrapperSource {}
 
-export class FirebaseAdminFunctionNestTestContextFixture<PI extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance, PF extends JestTestContextFixture<PI> = JestTestContextFixture<PI>, I extends FirebaseAdminFunctionNestTestContextInstance<PI> = FirebaseAdminFunctionNestTestContextInstance<PI>>
-  extends FirebaseAdminNestTestContextFixture<PI, PF, I>
-  implements FirebaseAdminFunctionNestTestContext
-{
+export class FirebaseAdminFunctionNestTestContextFixture<PI extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance, PF extends JestTestContextFixture<PI> = JestTestContextFixture<PI>, I extends FirebaseAdminFunctionNestTestContextInstance<PI> = FirebaseAdminFunctionNestTestContextInstance<PI>> extends FirebaseAdminNestTestContextFixture<PI, PF, I> implements FirebaseAdminFunctionNestTestContext {
   // MARK: FirebaseAdminTestContext (Forwarded)
   wrapCloudFunctionForNestTests<I>(fn: NestApplicationRunnableHttpFunctionFactory<I>): WrappedCloudFunctionV1<I> {
     return this.wrapCloudFunctionForNestTestsGetter(fn)();
@@ -39,26 +36,15 @@ export class FirebaseAdminFunctionNestTestContextInstance<PI extends FirebaseAdm
   }
 }
 
-export interface FirebaseAdminFunctionNestTestConfig<
-  PI extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance,
-  PF extends JestTestContextFixture<PI> = JestTestContextFixture<PI>,
-  I extends FirebaseAdminFunctionNestTestContextInstance<PI> = FirebaseAdminFunctionNestTestContextInstance<PI>,
-  C extends FirebaseAdminFunctionNestTestContextFixture<PI, PF, I> = FirebaseAdminFunctionNestTestContextFixture<PI, PF, I>
-> extends FirebaseAdminNestTestConfig<PI, PF, I, C> {}
+export interface FirebaseAdminFunctionNestTestConfig<PI extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance, PF extends JestTestContextFixture<PI> = JestTestContextFixture<PI>, I extends FirebaseAdminFunctionNestTestContextInstance<PI> = FirebaseAdminFunctionNestTestContextInstance<PI>, C extends FirebaseAdminFunctionNestTestContextFixture<PI, PF, I> = FirebaseAdminFunctionNestTestContextFixture<PI, PF, I>>
+  extends FirebaseAdminNestTestConfig<PI, PF, I, C> {}
 
-export type FirebaseAdminFunctionNestTestContextFactory<
-  PI extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance,
-  PF extends JestTestContextFixture<PI> = JestTestContextFixture<PI>,
-  I extends FirebaseAdminFunctionNestTestContextInstance<PI> = FirebaseAdminFunctionNestTestContextInstance<PI>,
-  C extends FirebaseAdminFunctionNestTestContextFixture<PI, PF, I> = FirebaseAdminFunctionNestTestContextFixture<PI, PF, I>
-> = JestTestContextFactory<C>;
+export type FirebaseAdminFunctionNestTestContextFactory<PI extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance, PF extends JestTestContextFixture<PI> = JestTestContextFixture<PI>, I extends FirebaseAdminFunctionNestTestContextInstance<PI> = FirebaseAdminFunctionNestTestContextInstance<PI>, C extends FirebaseAdminFunctionNestTestContextFixture<PI, PF, I> = FirebaseAdminFunctionNestTestContextFixture<PI, PF, I>> = JestTestContextFactory<C>;
 
-export function firebaseAdminFunctionNestContextFixture<
-  PI extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance,
-  PF extends JestTestContextFixture<PI> = JestTestContextFixture<PI>,
-  I extends FirebaseAdminFunctionNestTestContextInstance<PI> = FirebaseAdminFunctionNestTestContextInstance<PI>,
-  C extends FirebaseAdminFunctionNestTestContextFixture<PI, PF, I> = FirebaseAdminFunctionNestTestContextFixture<PI, PF, I>
->(config: FirebaseAdminFunctionNestTestConfig<PI, PF, I, C>, factory: JestTestContextFactory<PF>): FirebaseAdminFunctionNestTestContextFactory<PI, PF, I, C> {
+export function firebaseAdminFunctionNestContextFixture<PI extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance, PF extends JestTestContextFixture<PI> = JestTestContextFixture<PI>, I extends FirebaseAdminFunctionNestTestContextInstance<PI> = FirebaseAdminFunctionNestTestContextInstance<PI>, C extends FirebaseAdminFunctionNestTestContextFixture<PI, PF, I> = FirebaseAdminFunctionNestTestContextFixture<PI, PF, I>>(
+  config: FirebaseAdminFunctionNestTestConfig<PI, PF, I, C>,
+  factory: JestTestContextFactory<PF>
+): FirebaseAdminFunctionNestTestContextFactory<PI, PF, I, C> {
   return (buildTests: JestBuildTestsWithContextFunction<C>) => {
     factory((f) => firebaseAdminFunctionNestContextWithFixture<PI, PF, I, C>(config, f, buildTests));
   };
@@ -66,12 +52,11 @@ export function firebaseAdminFunctionNestContextFixture<
 
 export class FirebaseAdminFunctionNestRootModule {}
 
-export function firebaseAdminFunctionNestContextWithFixture<
-  PI extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance,
-  PF extends JestTestContextFixture<PI> = JestTestContextFixture<PI>,
-  I extends FirebaseAdminFunctionNestTestContextInstance<PI> = FirebaseAdminFunctionNestTestContextInstance<PI>,
-  C extends FirebaseAdminFunctionNestTestContextFixture<PI, PF, I> = FirebaseAdminFunctionNestTestContextFixture<PI, PF, I>
->(config: FirebaseAdminFunctionNestTestConfig<PI, PF, I, C>, f: PF, buildTests: JestBuildTestsWithContextFunction<C>) {
+export function firebaseAdminFunctionNestContextWithFixture<PI extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance, PF extends JestTestContextFixture<PI> = JestTestContextFixture<PI>, I extends FirebaseAdminFunctionNestTestContextInstance<PI> = FirebaseAdminFunctionNestTestContextInstance<PI>, C extends FirebaseAdminFunctionNestTestContextFixture<PI, PF, I> = FirebaseAdminFunctionNestTestContextFixture<PI, PF, I>>(
+  config: FirebaseAdminFunctionNestTestConfig<PI, PF, I, C>,
+  f: PF,
+  buildTests: JestBuildTestsWithContextFunction<C>
+) {
   const mergedConfig: FirebaseAdminFunctionNestTestConfig<PI, PF, I, C> = {
     makeFixture: (parent) => new FirebaseAdminFunctionNestTestContextFixture(parent) as C,
     makeInstance: (instance, nest) => new FirebaseAdminFunctionNestTestContextInstance<PI>(instance, nest) as I,

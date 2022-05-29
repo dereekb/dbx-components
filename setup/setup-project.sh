@@ -286,7 +286,7 @@ git add --all
 git commit --no-verify -m "checkpoint: added Docker files and other utility files"
 
 # add semver for semantic versioning, husky for pre-commit hooks, and pretty-quick for running prettier
-npm install -D @jscutlery/semver husky pretty-quick
+npm install -D @jscutlery/semver husky pretty-quick @commitlint/cli @commitlint/config-angular
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/.commitlintrc.json -o .commitlintrc.json
 
 mkdir .husky
@@ -301,7 +301,7 @@ curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/.gi
 # add prettier configs
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/.prettieringnore -o .prettieringnore
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/.prettierrc -o .prettierrc
-curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/.husky/prettier -o .husky/prettier
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/.husky/pre-commit -o .husky/pre-commit
 
 git add --all
 git commit --no-verify -m "checkpoint: added semver and commit linting"
@@ -632,3 +632,8 @@ else
   echo "Performing tests..."
   sh ./test-all.sh
 fi
+
+# Start On Orphan Branch
+# https://stackoverflow.com/questions/1657017/how-to-squash-all-git-commits-into-one
+echo "Squashing all commits into a single orphan"
+git reset $(git commit-tree HEAD^{tree} -m "started dbx-components project")

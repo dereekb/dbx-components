@@ -1,7 +1,7 @@
 import { Firestore, runTransaction } from '@firebase/firestore';
-import { doc, collection, writeBatch, Transaction } from 'firebase/firestore';
+import { doc, collection, writeBatch, Transaction, collectionGroup } from 'firebase/firestore';
 import { FirestoreAccessorDriver } from '../../common/firestore/driver/accessor';
-import { FirestoreAccessorDriverCollectionRefFunction, FirestoreAccessorDriverDocumentRefFunction, FirestoreAccessorDriverSubcollectionRefFunction, TransactionFunction } from '../../common/firestore/driver';
+import { FirestoreAccessorDriverCollectionGroupFunction, FirestoreAccessorDriverCollectionRefFunction, FirestoreAccessorDriverDocumentRefFunction, FirestoreAccessorDriverSubcollectionRefFunction, TransactionFunction } from '../../common/firestore/driver';
 import { writeBatchDocumentContext } from './driver.accessor.batch';
 import { defaultFirestoreDocumentContext } from './driver.accessor.default';
 import { transactionDocumentContext } from './driver.accessor.transaction';
@@ -11,6 +11,7 @@ import { WriteBatchFirestoreDocumentContextFactory } from '../../common/firestor
 export function firestoreClientAccessorDriver(): FirestoreAccessorDriver {
   return {
     doc: doc as unknown as FirestoreAccessorDriverDocumentRefFunction,
+    collectionGroup: collectionGroup as unknown as FirestoreAccessorDriverCollectionGroupFunction,
     collection: collection as unknown as FirestoreAccessorDriverCollectionRefFunction,
     subcollection: collection as unknown as FirestoreAccessorDriverSubcollectionRefFunction,
     transactionFactoryForFirestore:
