@@ -1,8 +1,9 @@
 import { SubscriptionObject } from '@dereekb/rxjs';
 import { filter, first, from, skip } from 'rxjs';
-import { limit, orderBy, startAfter, startAt, where, limitToLast, endAt, endBefore, makeDocuments, FirestoreQueryFactoryFunction } from '@dereekb/firebase';
-import { MockItemDocument, MockItem, MockItemSubItemDocument, MockItemSubItem } from './firestore.mock.item';
+import { limit, orderBy, startAfter, startAt, where, limitToLast, endAt, endBefore, makeDocuments, FirestoreQueryFactoryFunction, startAtValue, endAtValue, orderByDocumentId } from '@dereekb/firebase';
+import { MockItemDocument, MockItem, MockItemSubItemDocument, MockItemSubItem, MockItemDeepSubItemDocument, MockItemDeepSubItem } from './firestore.mock.item';
 import { MockItemCollectionFixture } from './firestore.mock.item.fixture';
+import { allChildMockItemDeepSubItemsWithinMockItem } from './firestore.mock.item.query';
 
 /**
  * Describes query driver tests, using a MockItemCollectionFixture.
@@ -27,7 +28,7 @@ export function describeQueryDriverTests(f: MockItemCollectionFixture) {
       });
     });
 
-    describe('collection group', () => {
+    describe('nested items', () => {
       const subItemCountPerItem = 2;
       const totalSubItemsCount = subItemCountPerItem * testDocumentCount;
 
@@ -57,98 +58,145 @@ export function describeQueryDriverTests(f: MockItemCollectionFixture) {
         allSubItems = results.flat();
       });
 
-      describe('query', () => {
-        it('should return sub items', async () => {
-          const result = await querySubItems().getDocs();
-          expect(result.docs.length).toBe(totalSubItemsCount);
+      describe('sub sub item', () => {
+        const deepSubItemCountPerItem = 1;
+        const totalDeepSubItemsCount = deepSubItemCountPerItem * totalSubItemsCount;
+        const totalDeepSubItemsPerMockItem = subItemCountPerItem * deepSubItemCountPerItem;
+
+        let deepSubItemParentA: MockItemSubItemDocument;
+
+        let queryDeepSubItems: FirestoreQueryFactoryFunction<MockItemDeepSubItem>;
+
+        let allDeepSubItems: MockItemDeepSubItemDocument[];
+
+        beforeEach(async () => {
+          queryDeepSubItems = f.instance.mockItemDeepSubItemCollectionGroup.query;
+          deepSubItemParentA = allSubItems[0];
+
+          const results = await Promise.all(
+            allSubItems.map((parent: MockItemSubItemDocument) =>
+              makeDocuments(f.instance.mockItemDeepSubItemCollection(parent).documentAccessor(), {
+                count: deepSubItemCountPerItem,
+                init: (i) => {
+                  return {
+                    value: i
+                  };
+                }
+              })
+            )
+          );
+
+          allDeepSubItems = results.flat();
         });
 
-        describe('constraints', () => {
-          describe('where', () => {
-            it('should return the documents matching the query.', async () => {
-              const value = 0;
-
-              const result = await querySubItems(where('value', '==', value)).getDocs();
-              expect(result.docs.length).toBe(testDocumentCount);
-              expect(result.docs[0].data().value).toBe(value);
-            });
-          });
+        // tests querying for all nested items under a parent
+        it('querying for only items belonging to mock item parentA', async () => {
+          const result = await queryDeepSubItems(allChildMockItemDeepSubItemsWithinMockItem(parentA.documentRef)).getDocs();
+          expect(result.docs.length).toBe(totalDeepSubItemsPerMockItem);
+          result.docs.forEach((x) => expect(x.ref.parent?.parent?.parent?.parent?.path).toBe(parentA.documentRef.path));
         });
+      });
 
-        describe('streamDocs()', () => {
-          let sub: SubscriptionObject;
-
-          beforeEach(() => {
-            sub = new SubscriptionObject();
-          });
-
-          afterEach(() => {
-            sub.destroy();
-          });
-
-          it('should emit when the query results update (an item is added).', (done) => {
-            const itemsToAdd = 1;
-
-            let addCompleted = false;
-            let addSeen = false;
-
-            function tryComplete() {
-              if (addSeen && addCompleted) {
-                done();
-              }
-            }
-
-            sub.subscription = querySubItems()
-              .streamDocs()
-              .pipe(filter((x) => x.docs.length > allSubItems.length))
-              .subscribe((results) => {
-                addSeen = true;
-                expect(results.docs.length).toBe(allSubItems.length + itemsToAdd);
-                tryComplete();
-              });
-
-            // add one item
-            makeDocuments(f.instance.mockItemSubItemCollection(parentA).documentAccessor(), {
-              count: itemsToAdd,
-              init: (i) => {
-                return {
-                  value: i
-                };
-              }
-            }).then(() => {
-              addCompleted = true;
-              tryComplete();
+      describe('sub item', () => {
+        describe('collection group', () => {
+          describe('query', () => {
+            it('should return sub items', async () => {
+              const result = await querySubItems().getDocs();
+              expect(result.docs.length).toBe(totalSubItemsCount);
             });
-          });
 
-          it('should emit when the query results update (an item is removed).', (done) => {
-            const itemsToRemove = 1;
+            describe('constraints', () => {
+              describe('where', () => {
+                it('should return the documents matching the query.', async () => {
+                  const value = 0;
 
-            let deleteCompleted = false;
-            let deleteSeen = false;
+                  const result = await querySubItems(where('value', '==', value)).getDocs();
+                  expect(result.docs.length).toBe(testDocumentCount);
+                  expect(result.docs[0].data().value).toBe(value);
 
-            function tryComplete() {
-              if (deleteSeen && deleteCompleted) {
-                done();
-              }
-            }
+                  const ref = result.docs[0].ref;
+                  expect(ref).toBeDefined();
+                  expect(ref.parent).toBeDefined();
+                });
+              });
+            });
 
-            sub.subscription = querySubItems()
-              .streamDocs()
-              .pipe(filter((x) => x.docs.length < allSubItems.length))
-              .subscribe((results) => {
-                deleteSeen = true;
-                expect(results.docs.length).toBe(allSubItems.length - itemsToRemove);
-                tryComplete();
+            describe('streamDocs()', () => {
+              let sub: SubscriptionObject;
+
+              beforeEach(() => {
+                sub = new SubscriptionObject();
               });
 
-            allSubItems[0].accessor.exists().then((exists) => {
-              expect(exists).toBe(true);
+              afterEach(() => {
+                sub.destroy();
+              });
 
-              // remove one item
-              return allSubItems[0].accessor.delete().then(() => {
-                deleteCompleted = true;
-                tryComplete();
+              it('should emit when the query results update (an item is added).', (done) => {
+                const itemsToAdd = 1;
+
+                let addCompleted = false;
+                let addSeen = false;
+
+                function tryComplete() {
+                  if (addSeen && addCompleted) {
+                    done();
+                  }
+                }
+
+                sub.subscription = querySubItems()
+                  .streamDocs()
+                  .pipe(filter((x) => x.docs.length > allSubItems.length))
+                  .subscribe((results) => {
+                    addSeen = true;
+                    expect(results.docs.length).toBe(allSubItems.length + itemsToAdd);
+                    tryComplete();
+                  });
+
+                // add one item
+                makeDocuments(f.instance.mockItemSubItemCollection(parentA).documentAccessor(), {
+                  count: itemsToAdd,
+                  init: (i) => {
+                    return {
+                      value: i
+                    };
+                  }
+                }).then(() => {
+                  addCompleted = true;
+                  tryComplete();
+                });
+              });
+
+              it('should emit when the query results update (an item is removed).', (done) => {
+                const itemsToRemove = 1;
+
+                let deleteCompleted = false;
+                let deleteSeen = false;
+
+                function tryComplete() {
+                  if (deleteSeen && deleteCompleted) {
+                    done();
+                  }
+                }
+
+                sub.subscription = querySubItems()
+                  .streamDocs()
+                  .pipe(filter((x) => x.docs.length < allSubItems.length))
+                  .subscribe((results) => {
+                    deleteSeen = true;
+                    expect(results.docs.length).toBe(allSubItems.length - itemsToRemove);
+                    tryComplete();
+                  });
+
+                allSubItems[0].accessor.exists().then((exists) => {
+                  expect(exists).toBe(true);
+
+                  // remove one item
+                  return allSubItems[0].accessor.delete().then(() => {
+                    deleteCompleted = true;
+                    tryComplete();
+                  });
+                });
               });
             });
           });
@@ -338,7 +386,7 @@ export function describeQueryDriverTests(f: MockItemCollectionFixture) {
         });
 
         describe('startAt', () => {
-          it('should return values starting from the specified startAt point.', async () => {
+          it('should return values starting from the specified startAt document.', async () => {
             const limitCount = 2;
 
             const firstQuery = query(limit(limitCount));
@@ -348,6 +396,24 @@ export function describeQueryDriverTests(f: MockItemCollectionFixture) {
             const second = await firstQuery.filter(startAt(first.docs[1])).getDocs();
             expect(second.docs.length).toBe(limitCount);
             expect(second.docs[0].id).toBe(first.docs[1].id);
+          });
+        });
+
+        describe('startAtValue', () => {
+          it('should return values starting from the specified startAt path.', async () => {
+            const limitCount = testDocumentCount;
+
+            const firstQuery = query(orderBy<MockItem>('value'), limit(limitCount));
+            const first = await firstQuery.getDocs();
+            expect(first.docs.length).toBe(limitCount);
+
+            const indexToStartAt = 3;
+            const docToStartAt = first.docs[indexToStartAt];
+            const docToStartAtValue = docToStartAt.data().value;
+
+            const second = await firstQuery.filter(startAtValue(docToStartAtValue)).getDocs();
+            expect(second.docs.length).toBe(limitCount - indexToStartAt);
+            expect(second.docs[0].id).toBe(docToStartAt.id);
           });
         });
 
@@ -379,6 +445,24 @@ export function describeQueryDriverTests(f: MockItemCollectionFixture) {
             const second = await firstQuery.filter(endAt(first.docs[0])).getDocs();
             expect(second.docs.length).toBe(limitCount - 1);
             expect(second.docs[0].id).toBe(first.docs[0].id);
+          });
+        });
+
+        describe('endAtValue', () => {
+          it('should return values starting from the specified startAt path.', async () => {
+            const limitCount = testDocumentCount;
+
+            const firstQuery = query(orderBy<MockItem>('value'), limit(limitCount));
+            const first = await firstQuery.getDocs();
+            expect(first.docs.length).toBe(limitCount);
+
+            const indexToEndAt = 2;
+            const docToEndAt = first.docs[indexToEndAt];
+            const docToEndAtValue = docToEndAt.data().value;
+
+            const second = await firstQuery.filter(endAtValue(docToEndAtValue)).getDocs();
+            expect(second.docs.length).toBe(indexToEndAt + 1);
+            expect(second.docs[second.docs.length - 1].id).toBe(docToEndAt.id);
           });
         });
 

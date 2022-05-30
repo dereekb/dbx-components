@@ -1,4 +1,5 @@
-import { ArrayOrValue, asArray, mergeArrayOrValueIntoArray, SeparateResult, separateValues, SortingOrder, Maybe } from '@dereekb/util';
+import { FieldPathOrStringPath, FieldPathOrStringPathOf } from './../types';
+import { ArrayOrValue, asArray, mergeArrayOrValueIntoArray, SeparateResult, separateValues, SortingOrder, Maybe, StringKeyPropertyKeys } from '@dereekb/util';
 import { DocumentSnapshot, DocumentData, FieldPath } from '../types';
 
 export type FirestoreQueryConstraintType = string;
@@ -89,12 +90,23 @@ export const FIRESTORE_ORDER_BY_QUERY_CONSTRAINT_TYPE = 'order_by';
 export type OrderByDirection = SortingOrder;
 
 export interface OrderByQueryConstraintData {
-  fieldPath: string | FieldPath;
+  fieldPath: FieldPathOrStringPath;
   directionStr?: OrderByDirection;
 }
 
-export function orderBy(fieldPath: string | FieldPath, directionStr?: OrderByDirection): FirestoreQueryConstraint<OrderByQueryConstraintData> {
-  return firestoreQueryConstraint(FIRESTORE_ORDER_BY_QUERY_CONSTRAINT_TYPE, { fieldPath, directionStr });
+export function orderBy<T>(fieldPath: StringKeyPropertyKeys<T>, directionStr?: OrderByDirection): FirestoreQueryConstraint<OrderByQueryConstraintData>;
+export function orderBy(fieldPath: FieldPathOrStringPath, directionStr?: OrderByDirection): FirestoreQueryConstraint<OrderByQueryConstraintData>;
+export function orderBy<T = object>(fieldPath: FieldPathOrStringPathOf<T> | FieldPathOrStringPath, directionStr?: OrderByDirection): FirestoreQueryConstraint<OrderByQueryConstraintData> {
+  return firestoreQueryConstraint(FIRESTORE_ORDER_BY_QUERY_CONSTRAINT_TYPE, { fieldPath: fieldPath as FieldPathOrStringPath, directionStr });
+}
+
+// MARK: OrderBy
+export const FIRESTORE_ORDER_BY_DOCUMENT_ID_QUERY_CONSTRAINT_TYPE = 'order_by_doc_id';
+
+export type OrderByDocumentIdQueryConstraintData = Pick<OrderByQueryConstraintData, 'directionStr'>;
+
+export function orderByDocumentId(directionStr?: OrderByDirection): FirestoreQueryConstraint<OrderByDocumentIdQueryConstraintData> {
+  return firestoreQueryConstraint(FIRESTORE_ORDER_BY_DOCUMENT_ID_QUERY_CONSTRAINT_TYPE, { directionStr });
 }
 
 // MARK: Start At
@@ -106,6 +118,17 @@ export interface StartAtQueryConstraintData<T = DocumentData> {
 
 export function startAt<T = DocumentData>(snapshot: DocumentSnapshot<T>): FirestoreQueryConstraint<StartAtQueryConstraintData<T>> {
   return firestoreQueryConstraint(FIRESTORE_START_AT_QUERY_CONSTRAINT_TYPE, { snapshot });
+}
+
+// MARK: Start At Value
+export const FIRESTORE_START_AT_VALUE_QUERY_CONSTRAINT_TYPE = 'start_at_path';
+
+export interface StartAtValueQueryConstraintData {
+  fieldValues: unknown[];
+}
+
+export function startAtValue(...fieldValues: unknown[]): FirestoreQueryConstraint<StartAtValueQueryConstraintData> {
+  return firestoreQueryConstraint(FIRESTORE_START_AT_VALUE_QUERY_CONSTRAINT_TYPE, { fieldValues });
 }
 
 // MARK: Start After
@@ -124,6 +147,17 @@ export const FIRESTORE_END_AT_QUERY_CONSTRAINT_TYPE = 'end_at';
 
 export interface EndAtQueryConstraintData<T = DocumentData> {
   snapshot: DocumentSnapshot<T>;
+}
+
+// MARK: End At Value
+export const FIRESTORE_END_AT_VALUE_QUERY_CONSTRAINT_TYPE = 'end_at_path';
+
+export interface EndAtValueQueryConstraintData {
+  fieldValues: unknown[];
+}
+
+export function endAtValue(...fieldValues: unknown[]): FirestoreQueryConstraint<EndAtValueQueryConstraintData> {
+  return firestoreQueryConstraint(FIRESTORE_END_AT_VALUE_QUERY_CONSTRAINT_TYPE, { fieldValues });
 }
 
 /**
@@ -170,9 +204,12 @@ export type FullFirestoreQueryConstraintDataMapping = {
   [FIRESTORE_WHERE_QUERY_CONSTRAINT_TYPE]: WhereQueryConstraintData;
   [FIRESTORE_OFFSET_QUERY_CONSTRAINT_TYPE]: OffsetQueryConstraintData;
   [FIRESTORE_ORDER_BY_QUERY_CONSTRAINT_TYPE]: OrderByQueryConstraintData;
+  [FIRESTORE_ORDER_BY_DOCUMENT_ID_QUERY_CONSTRAINT_TYPE]: OrderByDocumentIdQueryConstraintData;
   [FIRESTORE_START_AT_QUERY_CONSTRAINT_TYPE]: StartAtQueryConstraintData;
+  [FIRESTORE_START_AT_VALUE_QUERY_CONSTRAINT_TYPE]: StartAtValueQueryConstraintData;
   [FIRESTORE_START_AFTER_QUERY_CONSTRAINT_TYPE]: StartAfterQueryConstraintData;
   [FIRESTORE_END_AT_QUERY_CONSTRAINT_TYPE]: EndAtQueryConstraintData;
+  [FIRESTORE_END_AT_VALUE_QUERY_CONSTRAINT_TYPE]: EndAtValueQueryConstraintData;
   [FIRESTORE_END_BEFORE_QUERY_CONSTRAINT_TYPE]: EndBeforeQueryConstraintData;
 };
 

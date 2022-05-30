@@ -1,4 +1,4 @@
-import { Merge, PickProperties, StrictOmit, Writable } from 'ts-essentials';
+import { Merge, NonNever, PickProperties, StrictOmit, Writable } from 'ts-essentials';
 
 /**
  * Class typing, restricted to types that have a constructor via the new keyword.
@@ -59,6 +59,18 @@ export type RemoveIndex<T> = {
  * https://stackoverflow.com/questions/51954558/how-can-i-remove-a-wider-type-from-a-union-type-without-removing-its-subtypes-in/51955852#51955852
  */
 export type KnownKeys<T> = keyof RemoveIndex<T>;
+
+/**
+ * Returns only properties that have string keys.
+ */
+export type StringKeyProperties<T> = NonNever<{
+  [K in keyof T]: K extends string ? T[K] : never;
+}>;
+
+/**
+ * Returns the name of all keys that are strings.
+ */
+export type StringKeyPropertyKeys<T> = keyof StringKeyProperties<T>;
 
 /**
  * Makes a readonly type able to be configured. Useful for configurating readonly types before they are used.

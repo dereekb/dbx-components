@@ -26,6 +26,14 @@ export class MockItemCollectionFixtureInstance {
     return this.collections.mockItemSubItemGroup;
   }
 
+  get mockItemDeepSubItemCollection() {
+    return this.collections.mockItemDeepSubItem;
+  }
+
+  get mockItemDeepSubItemCollectionGroup() {
+    return this.collections.mockItemDeepSubItemGroup;
+  }
+
   constructor(readonly fixture: MockItemCollectionFixture) {}
 }
 

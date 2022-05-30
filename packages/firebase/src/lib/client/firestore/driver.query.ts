@@ -1,11 +1,25 @@
 import { Observable } from 'rxjs';
 import { ArrayOrValue, Maybe } from '@dereekb/util';
-import { DocumentSnapshot, getDocs, limit, query, QueryConstraint, startAt, Query as FirebaseFirestoreQuery, where, startAfter, orderBy, limitToLast, endBefore, endAt, onSnapshot } from 'firebase/firestore';
-import { FIRESTORE_LIMIT_QUERY_CONSTRAINT_TYPE, FIRESTORE_START_AFTER_QUERY_CONSTRAINT_TYPE, FIRESTORE_START_AT_QUERY_CONSTRAINT_TYPE, FIRESTORE_WHERE_QUERY_CONSTRAINT_TYPE, FIRESTORE_LIMIT_TO_LAST_QUERY_CONSTRAINT_TYPE, FIRESTORE_ORDER_BY_QUERY_CONSTRAINT_TYPE, FullFirestoreQueryConstraintHandlersMapping, FIRESTORE_OFFSET_QUERY_CONSTRAINT_TYPE, FIRESTORE_END_AT_QUERY_CONSTRAINT_TYPE, FIRESTORE_END_BEFORE_QUERY_CONSTRAINT_TYPE } from './../../common/firestore/query/constraint';
+import { DocumentSnapshot, getDocs, limit, query, QueryConstraint, startAt, Query as FirebaseFirestoreQuery, where, startAfter, orderBy, limitToLast, endBefore, endAt, onSnapshot, documentId } from 'firebase/firestore';
+import {
+  FIRESTORE_LIMIT_QUERY_CONSTRAINT_TYPE,
+  FIRESTORE_START_AFTER_QUERY_CONSTRAINT_TYPE,
+  FIRESTORE_START_AT_QUERY_CONSTRAINT_TYPE,
+  FIRESTORE_WHERE_QUERY_CONSTRAINT_TYPE,
+  FIRESTORE_LIMIT_TO_LAST_QUERY_CONSTRAINT_TYPE,
+  FIRESTORE_ORDER_BY_QUERY_CONSTRAINT_TYPE,
+  FullFirestoreQueryConstraintHandlersMapping,
+  FIRESTORE_OFFSET_QUERY_CONSTRAINT_TYPE,
+  FIRESTORE_END_AT_QUERY_CONSTRAINT_TYPE,
+  FIRESTORE_END_BEFORE_QUERY_CONSTRAINT_TYPE,
+  FIRESTORE_ORDER_BY_DOCUMENT_ID_QUERY_CONSTRAINT_TYPE,
+  FIRESTORE_START_AT_VALUE_QUERY_CONSTRAINT_TYPE,
+  FIRESTORE_END_AT_VALUE_QUERY_CONSTRAINT_TYPE
+} from './../../common/firestore/query/constraint';
 import { makeFirestoreQueryConstraintFunctionsDriver } from '../../common/firestore/driver/query.handler';
 import { FirestoreQueryConstraintFunctionsDriver, FirestoreQueryDriver } from '../../common/firestore/driver/query';
 import { Query, QuerySnapshot, SnapshotListenOptions, Transaction } from '../../common/firestore/types';
-import { streamFromOnSnapshot } from '../../common/firestore/query/query.util';
+import { StreamDocsWithOnSnapshotFunctionParams, streamFromOnSnapshot } from '../../common/firestore/query/query.util';
 
 export interface FirebaseFirestoreQueryBuilder {
   query: Query;
@@ -23,11 +37,14 @@ export const FIRESTORE_CLIENT_QUERY_CONSTRAINT_HANDLER_MAPPING: FullFirestoreQue
   [FIRESTORE_LIMIT_QUERY_CONSTRAINT_TYPE]: (builder, data) => addConstraintToBuilder(builder, limit(data.limit)),
   [FIRESTORE_LIMIT_TO_LAST_QUERY_CONSTRAINT_TYPE]: (builder, data) => addConstraintToBuilder(builder, limitToLast(data.limit)),
   [FIRESTORE_ORDER_BY_QUERY_CONSTRAINT_TYPE]: (builder, data) => addConstraintToBuilder(builder, orderBy(data.fieldPath, data.directionStr)),
+  [FIRESTORE_ORDER_BY_DOCUMENT_ID_QUERY_CONSTRAINT_TYPE]: (builder, data) => addConstraintToBuilder(builder, orderBy(documentId(), data.directionStr)),
   [FIRESTORE_WHERE_QUERY_CONSTRAINT_TYPE]: (builder, data) => addConstraintToBuilder(builder, where(data.fieldPath, data.opStr, data.value)),
   [FIRESTORE_OFFSET_QUERY_CONSTRAINT_TYPE]: undefined,
   [FIRESTORE_START_AT_QUERY_CONSTRAINT_TYPE]: (builder, data) => addConstraintToBuilder(builder, startAt(data.snapshot as DocumentSnapshot)),
+  [FIRESTORE_START_AT_VALUE_QUERY_CONSTRAINT_TYPE]: (builder, data) => addConstraintToBuilder(builder, startAt(...data.fieldValues)),
   [FIRESTORE_START_AFTER_QUERY_CONSTRAINT_TYPE]: (builder, data) => addConstraintToBuilder(builder, startAfter(data.snapshot as DocumentSnapshot)),
   [FIRESTORE_END_AT_QUERY_CONSTRAINT_TYPE]: (builder, data) => addConstraintToBuilder(builder, endAt(data.snapshot as DocumentSnapshot)),
+  [FIRESTORE_END_AT_VALUE_QUERY_CONSTRAINT_TYPE]: (builder, data) => addConstraintToBuilder(builder, endAt(...data.fieldValues)),
   [FIRESTORE_END_BEFORE_QUERY_CONSTRAINT_TYPE]: (builder, data) => addConstraintToBuilder(builder, endBefore(data.snapshot as DocumentSnapshot))
 };
 
@@ -35,7 +52,8 @@ export function firebaseFirestoreQueryConstraintFunctionsDriver(): FirestoreQuer
   return makeFirestoreQueryConstraintFunctionsDriver({
     mapping: FIRESTORE_CLIENT_QUERY_CONSTRAINT_HANDLER_MAPPING,
     init: <T>(query: Query<T>) => ({ query, constraints: [] }),
-    build: <T>({ query: initialQuery, constraints }: FirebaseFirestoreQueryBuilder) => query(initialQuery as FirebaseFirestoreQuery<T>, ...constraints)
+    build: <T>({ query: initialQuery, constraints }: FirebaseFirestoreQueryBuilder) => query(initialQuery as FirebaseFirestoreQuery<T>, ...constraints),
+    documentIdFieldPath: () => documentId()
   });
 }
 

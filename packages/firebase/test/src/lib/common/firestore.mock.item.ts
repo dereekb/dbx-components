@@ -1,6 +1,27 @@
 import { Maybe, modelFieldConversions } from '@dereekb/util';
 import { CollectionReference, FirestoreCollection, FirestoreContext, AbstractFirestoreDocument, SingleItemFirestoreCollection, FirestoreCollectionWithParent, AbstractFirestoreDocumentWithParent, firestoreString, firestoreBoolean, ExpectedFirestoreModelData, optionalFirestoreString, firestoreDate, optionalFirestoreNumber, snapshotConverterFunctions, FirestoreModelData, CollectionGroup, FirestoreCollectionGroup } from '@dereekb/firebase';
 
+// MARK: Collection
+export abstract class MockItemCollections {
+  abstract readonly mockItem: MockItemFirestoreCollection;
+  abstract readonly mockItemPrivate: MockItemPrivateFirestoreCollectionFactory;
+  abstract readonly mockItemSubItem: MockItemSubItemFirestoreCollectionFactory;
+  abstract readonly mockItemSubItemGroup: MockItemSubItemFirestoreCollectionGroup;
+  abstract readonly mockItemDeepSubItem: MockItemDeepSubItemFirestoreCollectionFactory;
+  abstract readonly mockItemDeepSubItemGroup: MockItemDeepSubItemFirestoreCollectionGroup;
+}
+
+export function makeMockItemCollections(firestoreContext: FirestoreContext): MockItemCollections {
+  return {
+    mockItem: mockItemFirestoreCollection(firestoreContext),
+    mockItemPrivate: mockItemPrivateFirestoreCollection(firestoreContext),
+    mockItemSubItem: mockItemSubItemFirestoreCollection(firestoreContext),
+    mockItemSubItemGroup: mockItemSubItemFirestoreCollectionGroup(firestoreContext),
+    mockItemDeepSubItem: mockItemDeepSubItemFirestoreCollection(firestoreContext),
+    mockItemDeepSubItemGroup: mockItemDeepSubItemFirestoreCollectionGroup(firestoreContext)
+  };
+}
+
 // MARK: Mock Item
 /**
  * Converted data for a test item in our firestore collection.
@@ -200,19 +221,72 @@ export function mockItemSubItemFirestoreCollectionGroup(firestoreContext: Firest
   });
 }
 
-// MARK: Collection
-export abstract class MockItemCollections {
-  abstract readonly mockItem: MockItemFirestoreCollection;
-  abstract readonly mockItemPrivate: MockItemPrivateFirestoreCollectionFactory;
-  abstract readonly mockItemSubItem: MockItemSubItemFirestoreCollectionFactory;
-  abstract readonly mockItemSubItemGroup: MockItemSubItemFirestoreCollectionGroup;
+// MARK: Sub-Sub Item
+
+/**
+ * Data for a sub item in our firestore collection.
+ *
+ * There may be an unlimited number of MockItemDeepSubItems for a MockSubItem.
+ */
+export interface MockItemDeepSubItem {
+  value?: Maybe<number>;
 }
 
-export function makeMockItemCollections(firestoreContext: FirestoreContext): MockItemCollections {
-  return {
-    mockItem: mockItemFirestoreCollection(firestoreContext),
-    mockItemPrivate: mockItemPrivateFirestoreCollection(firestoreContext),
-    mockItemSubItem: mockItemSubItemFirestoreCollection(firestoreContext),
-    mockItemSubItemGroup: mockItemSubItemFirestoreCollectionGroup(firestoreContext)
+/**
+ * FirestoreDocument for MockSubItem
+ */
+export class MockItemDeepSubItemDocument extends AbstractFirestoreDocumentWithParent<MockItemSubItem, MockItemDeepSubItem, MockItemDeepSubItemDocument> {}
+
+export type MockItemDeepSubItemData = ExpectedFirestoreModelData<MockItemDeepSubItem>;
+
+/**
+ * Firestore collection path name.
+ */
+export const mockItemDeepSubItemCollectionPath = 'deepsub';
+
+/**
+ * Used to build a FirestoreDataConverter. Fields are configured via configuration. See the SnapshotConverterFunctions for more info.
+ */
+export const mockItemDeepSubItemConverter = snapshotConverterFunctions<MockItemDeepSubItem, MockItemDeepSubItemData>({
+  fields: {
+    value: optionalFirestoreNumber()
+  }
+});
+
+export function mockItemDeepSubItemCollectionReferenceFactory(context: FirestoreContext): (parent: MockItemSubItemDocument) => CollectionReference<MockItemDeepSubItem> {
+  return (parent: MockItemSubItemDocument) => {
+    return context.subcollection(parent.documentRef, mockItemDeepSubItemCollectionPath).withConverter<MockItemDeepSubItem>(mockItemDeepSubItemConverter);
   };
+}
+
+export type MockItemDeepSubItemFirestoreCollection = FirestoreCollectionWithParent<MockItemDeepSubItem, MockItemSubItem, MockItemDeepSubItemDocument, MockItemSubItemDocument>;
+export type MockItemDeepSubItemFirestoreCollectionFactory = (parent: MockItemSubItemDocument) => MockItemDeepSubItemFirestoreCollection;
+
+export function mockItemDeepSubItemFirestoreCollection(firestoreContext: FirestoreContext): MockItemDeepSubItemFirestoreCollectionFactory {
+  const factory = mockItemDeepSubItemCollectionReferenceFactory(firestoreContext);
+
+  return (parent: MockItemSubItemDocument) => {
+    return firestoreContext.firestoreCollectionWithParent({
+      itemsPerPage: 50,
+      collection: factory(parent),
+      makeDocument: (a, d) => new MockItemDeepSubItemDocument(parent.documentRef, a, d),
+      firestoreContext,
+      parent
+    });
+  };
+}
+
+export function mockItemDeepSubItemCollectionReference(context: FirestoreContext): CollectionGroup<MockItemDeepSubItem> {
+  return context.collectionGroup(mockItemDeepSubItemCollectionPath).withConverter<MockItemDeepSubItem>(mockItemDeepSubItemConverter);
+}
+
+export type MockItemDeepSubItemFirestoreCollectionGroup = FirestoreCollectionGroup<MockItemDeepSubItem, MockItemDeepSubItemDocument>;
+
+export function mockItemDeepSubItemFirestoreCollectionGroup(firestoreContext: FirestoreContext): MockItemDeepSubItemFirestoreCollectionGroup {
+  return firestoreContext.firestoreCollectionGroup({
+    itemsPerPage: 50,
+    queryLike: mockItemDeepSubItemCollectionReference(firestoreContext),
+    makeDocument: (accessor, documentAccessor) => new MockItemDeepSubItemDocument(undefined, accessor, documentAccessor),
+    firestoreContext
+  });
 }

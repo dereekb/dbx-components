@@ -1,6 +1,8 @@
 // A set of copied types from @google-cloud/firestore and firebase/firestore to allow cross-compatability.
 /* eslint-disable */
 
+import { StringKeyPropertyKeys } from '@dereekb/util';
+
 // MARK: Firestore
 // These types are provided to avoid us from using the "any".
 export type FirebaseFirestoreLikeFirestore = { type: string };
@@ -31,6 +33,9 @@ export type UpdateData<T> = T extends Primitive ? T : T extends {} ? { [K in key
 export interface FieldPath {
   isEqual(other: FieldPath): boolean;
 }
+
+export type FieldPathOrStringPath = string | FieldPath;
+export type FieldPathOrStringPathOf<T = object> = StringKeyPropertyKeys<T> | FieldPath;
 
 export function asTopLevelFieldPaths(input: (string | FieldPath)[]): string[] {
   return input.map(asTopLevelFieldPath);
@@ -116,13 +121,13 @@ export interface DocumentReference<T = DocumentData> {
 }
 
 // MARK: Collection
-export interface CollectionReference<T = DocumentData> extends Query<T> {
+export interface CollectionReference<T = DocumentData, P = DocumentData> extends Query<T> {
   readonly type?: 'collection';
   readonly id: string;
   readonly path: string;
-  readonly parent: DocumentReference<DocumentData> | null;
-  withConverter<U>(converter: FirestoreDataConverter<U>): CollectionReference<U>;
-  withConverter(converter: null): CollectionReference<DocumentData>;
+  readonly parent: DocumentReference<P> | null;
+  withConverter<U, P = DocumentData>(converter: FirestoreDataConverter<U>): CollectionReference<U, P>;
+  withConverter<P = DocumentData>(converter: null): CollectionReference<DocumentData, P>;
 }
 
 // MARK: CollectionGroup
