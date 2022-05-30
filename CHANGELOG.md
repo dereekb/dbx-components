@@ -2,6 +2,22 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [5.3.0](https://github.com/dereekb/dbx-components/compare/v5.2.1-dev...v5.3.0) (2022-05-30)
+
+
+### Bug Fixes
+
+* fixed dbxActionEnforceModifiedDirective ([f889b87](https://github.com/dereekb/dbx-components/commit/f889b87463443024c718786e866ad9c9414a3662))
+* isIterable and useIterableOrValue treat string as a value ([388d6f0](https://github.com/dereekb/dbx-components/commit/388d6f022cf2937a9883df6a549167340243ac0e))
+* setup project scss fix ([9bfb6fd](https://github.com/dereekb/dbx-components/commit/9bfb6fde0443a946804d469b1e916c96f6201136))
+
+
+### Features
+
+* added authRolesObsWithClaimsService ([10055ae](https://github.com/dereekb/dbx-components/commit/10055ae9f4260211b291419134ba637e9f902893))
+
+
+
 ## [5.2.1](https://github.com/dereekb/dbx-components/compare/v5.2.0-dev...v5.2.1) (2022-05-29)
 
 

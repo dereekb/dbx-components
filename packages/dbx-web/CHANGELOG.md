@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [5.3.0](https://github.com/dereekb/dbx-components/compare/v5.2.1-dev...v5.3.0) (2022-05-30)
+
+
+### Bug Fixes
+
+* fixed dbxActionEnforceModifiedDirective ([f889b87](https://github.com/dereekb/dbx-components/commit/f889b87463443024c718786e866ad9c9414a3662))
+
+
+
 ## [5.2.1](https://github.com/dereekb/dbx-components/compare/v5.2.0-dev...v5.2.1) (2022-05-29)
 
 
