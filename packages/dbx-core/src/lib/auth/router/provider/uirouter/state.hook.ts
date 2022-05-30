@@ -52,9 +52,9 @@ export function enableHasAuthStateHook(transitionService: TransitionService, con
       const targetState = transition.targetState();
       const data: HasAuthStateData = targetState.state().data;
       const config = toHasAuthStateObjectConfig(data.authStates);
-      const parsed: ParsedHasAuthStateConfig = toParsedHasAuthStateConfig(config);
+      const allowedStates: ParsedHasAuthStateConfig = toParsedHasAuthStateConfig(config);
 
-      return authService.authUserState$.pipe(map((x) => isAllowed(x, parsed)));
+      return authService.authUserState$.pipe(map((x) => isAllowed(x, allowedStates)));
     }
   });
 

@@ -1,5 +1,5 @@
 import { map, Observable } from 'rxjs';
-import { AuthRole, SetIncludesMode, ArrayOrValue, Maybe, setIncludesFunction } from '@dereekb/util';
+import { AuthRole, SetIncludesMode, ArrayOrValue, Maybe, setIncludesFunction, containsAllValues, setIncludes } from '@dereekb/util';
 import { TransitionService, TransitionHookFn, Transition, HookMatchCriteria } from '@uirouter/core';
 import { DbxAuthService } from '../../../service/auth.service';
 import { AuthTransitionDecision, AuthTransitionHookOptions, AuthTransitionStateData, makeAuthTransitionHook } from './hook';
@@ -45,9 +45,7 @@ export function enableHasAuthRoleHook(transitionService: TransitionService, conf
       const targetState = transition.targetState();
       const data: HasAuthRoleStateData = targetState.state().data;
       const requiredRoles = new Set<AuthRole>(data.authRoles);
-      const setIncludes = setIncludesFunction(requiredRoles, data.authRolesMode);
-
-      return authService.authUserState$.pipe(map((x) => setIncludes(x)));
+      return authService.authRoles$.pipe(map((x) => setIncludes(x, requiredRoles, data.authRolesMode)));
     }
   });
 

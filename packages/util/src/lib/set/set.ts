@@ -69,10 +69,11 @@ export function filterValuesFromSet<T>(values: T[], set: Set<T>, exclude = false
 
 /**
  * Set inclusion comparison type.
- * - all: All values must be included
- * - any: Any value is included
+ * - all: The set must include all values from values (set is a subset of values)
+ * - all_reverse: All values must be included in the set (values is a subset of set)
+ * - any: Any value from values is in the set
  */
-export type SetIncludesMode = 'all' | 'any';
+export type SetIncludesMode = 'all' | 'all_reverse' | 'any';
 
 /**
  * Contextual function that checks whether or not the input values are included.
@@ -96,6 +97,18 @@ export function setIncludesFunction<T>(valuesSet: Set<T>, mode: SetIncludesMode 
   }
 
   return (valuesToFind) => fn(valuesSet, valuesToFind);
+}
+
+/**
+ * Convenience function for calling setIncludesFunction() and passing the result a value, checking for includion.
+ *
+ * @param valuesSet
+ * @param valuesToFind
+ * @param mode
+ * @returns
+ */
+export function setIncludes<T>(valuesSet: Set<T>, valuesToFind: Iterable<T>, mode?: SetIncludesMode): boolean {
+  return setIncludesFunction(valuesSet, mode)(valuesToFind);
 }
 
 /**

@@ -80,7 +80,7 @@ describe('setContainsAllValues', () => {
     const array = ['a', 'b'];
     const set = new Set([...array]);
 
-    array.push('c');
+    array.push('c'); // add c
 
     const result = setContainsAllValues(set, array);
     expect(result).toBe(false);

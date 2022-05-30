@@ -1,4 +1,3 @@
-import { tapLog } from '@dereekb/rxjs';
 import { addToSetCopy, AuthClaims, AuthClaimsObject, AuthRoleClaimsService, AuthRoleSet } from '@dereekb/util';
 import { map, Observable, switchMap } from 'rxjs';
 import { DbxFirebaseAuthService, DbxFirebaseAuthServiceDelegate, DEFAULT_DBX_FIREBASE_AUTH_SERVICE_DELEGATE } from './firebase.auth.service';
@@ -15,17 +14,10 @@ export function authRolesObsWithClaimsService<T extends AuthClaimsObject>(config
   const { addAuthUserStateToRoles: addAuthUserState, claimsService } = config;
 
   return (dbxFirebaseAuthService: DbxFirebaseAuthService): Observable<AuthRoleSet> => {
-    let obs = dbxFirebaseAuthService.idTokenResult$.pipe(
-      tapLog('a'),
-      map((x) => claimsService.toRoles(x.claims as AuthClaims<T>))
-    );
+    let obs = dbxFirebaseAuthService.idTokenResult$.pipe(map((x) => claimsService.toRoles(x.claims as AuthClaims<T>)));
 
     if (addAuthUserState) {
-      obs = obs.pipe(
-        tapLog('b'),
-        switchMap((authRoleSet: AuthRoleSet) => dbxFirebaseAuthService.authUserState$.pipe(map((userState) => addToSetCopy(authRoleSet, [userState])))),
-        tapLog('c')
-      );
+      obs = obs.pipe(switchMap((authRoleSet: AuthRoleSet) => dbxFirebaseAuthService.authUserState$.pipe(map((userState) => addToSetCopy(authRoleSet, [userState])))));
     }
 
     return obs;
