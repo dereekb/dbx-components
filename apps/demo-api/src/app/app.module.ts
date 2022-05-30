@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { DemoApiApiModule } from './api/api.module';
-import { DemoApiFirebaseModule } from './common/firebase';
-import { DemoApiModelModule } from './common/model/model.module';
+import { DemoApiFirebaseModule, DemoApiModelModule } from './common';
 
 @Module({
   imports: [DemoApiFirebaseModule, DemoApiModelModule, DemoApiApiModule],

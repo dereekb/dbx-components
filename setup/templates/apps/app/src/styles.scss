@@ -1,7 +1,7 @@
 @use '@angular/material'as mat;
-@use 'dbx-web/src/index'as dbx;
-@use 'dbx-form/src/index' as dbx-form;
-@use 'dbx-firebase/src/index' as dbx-firebase;
+@use '@dereekb/dbx-web'as dbx;
+@use '@dereekb/dbx-form' as dbx-form;
+@use '@dereekb/dbx-firebase' as dbx-firebase;
 @use './style/style';
 
 $app-typography-config: mat.define-typography-config();

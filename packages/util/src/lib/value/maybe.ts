@@ -65,6 +65,35 @@ export function hasValueOrNotEmpty(value: unknown): boolean {
 }
 
 /**
+ * Returns true if the input value is a non-empty string or is true.
+ *
+ * @param value
+ * @returns
+ */
+export function isStringOrTrue(value: ''): false;
+export function isStringOrTrue(value: false): false;
+export function isStringOrTrue(value: null): false;
+export function isStringOrTrue(value: undefined): false;
+export function isStringOrTrue(value: Maybe<string | boolean>): boolean;
+export function isStringOrTrue(value: Maybe<string | boolean>): boolean {
+  return Boolean(value || value !== '');
+}
+
+/**
+ * Returns true if the input is not MaybeNot and not an empty string.
+ *
+ * @param value
+ * @returns
+ */
+export function isNotNullOrEmptyString<T>(value: ''): false;
+export function isNotNullOrEmptyString<T>(value: null): false;
+export function isNotNullOrEmptyString<T>(value: undefined): false;
+export function isNotNullOrEmptyString<T>(value: Maybe<MaybeNot | '' | T>): value is MaybeSo<T>;
+export function isNotNullOrEmptyString<T>(value: Maybe<MaybeNot | '' | T>): value is MaybeSo<T> {
+  return value != null && value !== '';
+}
+
+/**
  * True if the input is MaybeNot.
  *
  * @param value

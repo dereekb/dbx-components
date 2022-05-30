@@ -1,2 +1,2 @@
 export * from './firebase';
-export * from './model';
+export * from './models';

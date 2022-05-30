@@ -453,13 +453,21 @@ download_firebase_ts_file "src/lib/index.ts"
 download_firebase_ts_file "src/lib/collection.ts"
 download_firebase_ts_file "src/lib/functions.ts"
 
-# Example Folder
-mkdir $FIREBASE_COMPONENTS_FOLDER/src/lib/example
-download_firebase_ts_file "src/lib/example/example.action.ts"
-download_firebase_ts_file "src/lib/example/example.api.ts"
-download_firebase_ts_file "src/lib/example/example.query.ts"
-download_firebase_ts_file "src/lib/example/example.ts"
-download_firebase_ts_file "src/lib/example/index.ts"
+# Auth Folder
+mkdir $FIREBASE_COMPONENTS_FOLDER/src/lib/auth
+download_firebase_ts_file "src/lib/auth/claims.ts"
+download_firebase_ts_file "src/lib/auth/index.ts"
+
+# Model/Example Folder
+mkdir $FIREBASE_COMPONENTS_FOLDER/src/lib/models
+download_firebase_ts_file "src/lib/models/index.ts"
+
+mkdir $FIREBASE_COMPONENTS_FOLDER/src/lib/models/example
+download_firebase_ts_file "src/lib/models/example/example.action.ts"
+download_firebase_ts_file "src/lib/models/example/example.api.ts"
+download_firebase_ts_file "src/lib/models/example/example.query.ts"
+download_firebase_ts_file "src/lib/models/example/example.ts"
+download_firebase_ts_file "src/lib/models/example/index.ts"
 
 git add --all
 git commit --no-verify -m "checkpoint: setup api components"
@@ -472,7 +480,7 @@ download_angular_ts_file () {
   download_ts_file "$DOWNLOAD_PATH" "$TARGET_FOLDER" "$FILE_PATH"
 }
 
-download_angular_ts_file "src/style.scss"
+download_angular_ts_file "src/styles.scss"
 download_angular_ts_file "src/main.ts"
 download_angular_ts_file "src/root.module.ts"
 download_angular_ts_file "src/root.firebase.module.ts"
@@ -582,15 +590,15 @@ download_api_ts_file "src/app/common/firebase/firestore.module.ts"
 download_api_ts_file "src/app/common/firebase/index.ts"
 
 # Common Model Folder
-mkdir $API_APP_FOLDER/src/app/common/model
-download_api_ts_file "src/app/common/model/model.module.ts"
-download_api_ts_file "src/app/common/model/index.ts"
+mkdir $API_APP_FOLDER/src/app/common/models
+download_api_ts_file "src/app/common/models/model.module.ts"
+download_api_ts_file "src/app/common/models/index.ts"
 
-mkdir $API_APP_FOLDER/src/app/common/model/example
-download_api_ts_file "src/app/common/model/example/example.action.server.ts"
-download_api_ts_file "src/app/common/model/example/example.error.ts"
-download_api_ts_file "src/app/common/model/example/example.module.ts"
-download_api_ts_file "src/app/common/model/example/index.ts"
+mkdir $API_APP_FOLDER/src/app/common/models/example
+download_api_ts_file "src/app/common/models/example/example.action.server.ts"
+download_api_ts_file "src/app/common/models/example/example.error.ts"
+download_api_ts_file "src/app/common/models/example/example.module.ts"
+download_api_ts_file "src/app/common/models/example/index.ts"
 
 ## Function Folder
 mkdir $API_APP_FOLDER/src/app/function

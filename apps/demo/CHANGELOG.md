@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [5.3.0](https://github.com/dereekb/dbx-components/compare/v5.2.1-dev...v5.3.0) (2022-05-30)
+
+
+### Features
+
+* added authRolesObsWithClaimsService ([10055ae](https://github.com/dereekb/dbx-components/commit/10055ae9f4260211b291419134ba637e9f902893))
+
+
+
 ## [5.2.1](https://github.com/dereekb/dbx-components/compare/v5.2.0-dev...v5.2.1) (2022-05-29)
 
 

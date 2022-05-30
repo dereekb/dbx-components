@@ -38,7 +38,6 @@ export class DbxActionDisabledDirective<T, O> extends AbstractSubscriptionDirect
   }
 
   set disabled(disabled: Maybe<boolean | ''>) {
-    const disable = disabled !== false;
-    this._disabled.next(disable);
+    this._disabled.next(disabled !== false);
   }
 }

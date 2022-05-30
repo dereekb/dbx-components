@@ -1,7 +1,7 @@
 import { INestApplicationContext } from '@nestjs/common';
 import { APP_CODE_PREFIXFirestoreCollections } from "FIREBASE_COMPONENTS_NAME";
 import { AbstractNestContext, onCallWithNestApplicationFactory, onCallWithNestContextFactory, onEventWithNestApplicationFactory, onEventWithNestContextFactory } from '@dereekb/firebase-server';
-import { ExampleServerActions } from '../common/model/example/example.action.server';
+import { ExampleServerActions } from '../common/models/example/example.action.server';
 import { APP_CODE_PREFIXApiAuthService } from '../common/firebase/auth.service';
 
 export class APP_CODE_PREFIXApiNestContext extends AbstractNestContext {

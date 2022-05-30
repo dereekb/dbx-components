@@ -1,17 +1,25 @@
 import { Maybe } from '../value/maybe';
 
 // MARK: Types
+/**
+ * An Iterable or a value.
+ *
+ * Note that strings are a valid Iterable, allowing iteration over characters.
+ */
 export type IterableOrValue<T> = T | Iterable<T>;
 
 // MARK: Functions
 /**
  * Returns true if the input is an Iterable.
  *
+ * Can specify whether or not to treat string values as iterable values. Is false by default.
+ *
  * @param values
+ * @param treatStringAsIterable
  * @returns
  */
-export function isIterable<T = unknown>(values: unknown): values is Iterable<T> {
-  if (values && (values as Iterable<T>)[Symbol.iterator]) {
+export function isIterable<T = unknown>(values: unknown, treatStringAsIterable = false): values is Iterable<T> {
+  if (values && (values as Iterable<T>)[Symbol.iterator] && (treatStringAsIterable || typeof values !== 'string')) {
     return true;
   } else {
     return false;
@@ -71,9 +79,9 @@ export function forEachInIterable<T>(values: Iterable<T>, fn: (value: T) => void
  * @param values
  * @param fn
  */
-export function useIterableOrValue<T>(values: Maybe<IterableOrValue<T>>, fn: (value: T) => void): void {
+export function useIterableOrValue<T>(values: Maybe<IterableOrValue<T>>, fn: (value: T) => void, treatStringAsIterable = false): void {
   if (values != null) {
-    if (isIterable(values)) {
+    if (isIterable(values, treatStringAsIterable)) {
       forEachInIterable(values, fn);
     } else {
       fn(values);
