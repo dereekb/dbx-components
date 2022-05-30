@@ -6,6 +6,8 @@ import { MockItemCollectionFixture } from './firestore.mock.item.fixture';
 import { mockItemWithValue } from './firestore.mock.item.query';
 import { arrayContainsDuplicateValue } from '@dereekb/util';
 
+jest.setTimeout(9000);
+
 /**
  * Describes accessor driver tests, using a MockItemCollectionFixture.
  *
