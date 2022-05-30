@@ -73,7 +73,7 @@ export function filterValuesFromSet<T>(values: T[], set: Set<T>, exclude = false
  * - all_reverse: All values must be included in the set (values is a subset of set)
  * - any: Any value from values is in the set
  */
-export type SetIncludesMode = 'all' | 'all_reverse' | 'any';
+export type SetIncludesMode = 'all' | 'any';
 
 /**
  * Contextual function that checks whether or not the input values are included.
