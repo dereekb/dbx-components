@@ -1,7 +1,7 @@
 import { first, Observable, of, switchMap } from 'rxjs';
 import { getValueFromGetter, isGetter, Maybe, ObjectMap } from '@dereekb/util';
 import { AuthTransitionDecisionGetterInput, AuthTransitionRedirectTarget, AuthTransitionRedirectTargetGetter, AuthTransitionRedirectTargetOrGetter } from './hook';
-import { SegueRef } from '../../../../router/segue';
+import { SegueRefOrSegueRefRouterLink } from '../../../../router/segue';
 import { AuthUserState } from '../../../auth.user';
 
 /**
@@ -16,13 +16,13 @@ export function redirectBasedOnAuthUserState(stateMap: ObjectMap<AuthTransitionR
       first(),
       switchMap((authUserState: AuthUserState) => {
         const getter = stateMap[authUserState];
-        let result: Maybe<Observable<Maybe<SegueRef>>>;
+        let result: Maybe<Observable<Maybe<SegueRefOrSegueRefRouterLink>>>;
 
         if (getter) {
           if (isGetter<AuthTransitionRedirectTarget>(getter)) {
             result = getValueFromGetter(getter, input);
           } else {
-            result = of(getter as Maybe<SegueRef>);
+            result = of(getter);
           }
         }
 
@@ -30,7 +30,7 @@ export function redirectBasedOnAuthUserState(stateMap: ObjectMap<AuthTransitionR
           result = of(undefined);
         }
 
-        return result as Observable<Maybe<SegueRef>>;
+        return result;
       })
     );
   };

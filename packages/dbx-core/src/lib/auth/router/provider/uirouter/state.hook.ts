@@ -3,7 +3,7 @@ import { AllowedSet, isAllowed, maybeSet, ArrayOrValue, Maybe } from '@dereekb/u
 import { TransitionService, TransitionHookFn, Transition, HookMatchCriteria } from '@uirouter/core';
 import { AuthUserState } from '../../../auth.user';
 import { DbxAuthService } from '../../../service/auth.service';
-import { AuthTransitionDecision, AuthTransitionHookOptions, makeAuthTransitionHook } from './hook';
+import { AuthTransitionDecision, AuthTransitionHookOptions, AuthTransitionStateData, makeAuthTransitionHook } from './hook';
 
 export interface HasAuthStateHookConfig {
   options: AuthTransitionHookOptions;
@@ -23,7 +23,7 @@ export interface HasAuthStateObjectConfig {
   disallowedStates?: ArrayOrValue<AuthUserState>;
 }
 
-export interface HasAuthStateData {
+export interface HasAuthStateData extends AuthTransitionStateData {
   /**
    * Configuration for the hasAuthStateHook.
    */
