@@ -1,5 +1,5 @@
 import { Directive, Host, Input, OnInit, OnDestroy } from '@angular/core';
-import { Maybe } from '@dereekb/util';
+import { isSameNonNullValue, isStringOrTrue, Maybe } from '@dereekb/util';
 import { BehaviorSubject, combineLatest, delay } from 'rxjs';
 import { AbstractSubscriptionDirective } from '../../../subscription';
 import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
@@ -39,7 +39,7 @@ export class DbxActionEnforceModifiedDirective extends AbstractSubscriptionDirec
     return this._enabled.value;
   }
 
-  set enabled(enabled: Maybe<string | boolean>) {
-    this._enabled.next(Boolean(enabled) ?? true);
+  set enabled(enabled: Maybe<boolean | ''>) {
+    this._enabled.next(enabled !== false);
   }
 }

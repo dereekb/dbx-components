@@ -1,4 +1,5 @@
 import { OnInit, Directive, Input, OnDestroy } from '@angular/core';
+import { isNotNullOrEmptyString, Maybe } from '@dereekb/util';
 import { BehaviorSubject } from 'rxjs';
 import { TwoColumnsContextStore } from './two.column.store';
 
@@ -16,9 +17,10 @@ export class DbxTwoColumnFullLeftDirective implements OnInit, OnDestroy {
     return this._fullLeft.value;
   }
 
-  set fullLeft(fullLeft: boolean | '') {
-    if (fullLeft != null && fullLeft !== '') {
-      this._fullLeft.next(fullLeft);
+  set fullLeft(fullLeft: Maybe<boolean | ''>) {
+    if (isNotNullOrEmptyString(fullLeft)) {
+      // only respond to boolean values
+      this._fullLeft.next(Boolean(fullLeft));
     }
   }
 
