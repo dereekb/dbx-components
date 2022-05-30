@@ -1,5 +1,24 @@
+import { setIncludes } from '@dereekb/util';
 import { firstValueFromIterable } from '../iterable';
 import { asSet, containsAnyValue, containsAnyValueFromSet, setContainsAllValues, setContainsAnyValue } from './set';
+
+describe('setIncludes', () => {
+  describe('mode=all', () => {
+    it('should return true if the set includes all the values', () => {
+      const values = ['a'];
+      const set = new Set([...values, 'b', 'c']);
+      const result = setIncludes(set, values, 'all');
+      expect(result).toBe(true);
+    });
+
+    it('should return true if the set includes the string value', () => {
+      const values = 'alongname';
+      const set = new Set([values, 'b', 'c']);
+      const result = setIncludes(set, values, 'all');
+      expect(result).toBe(true);
+    });
+  });
+});
 
 describe('asSet', () => {
   it('should turn a single string value into a set with that string', () => {

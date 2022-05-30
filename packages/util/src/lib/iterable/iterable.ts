@@ -9,6 +9,18 @@ import { Maybe } from '../value/maybe';
 export type IterableOrValue<T> = T | Iterable<T>;
 
 // MARK: Functions
+export function asIterable<T = unknown>(values: IterableOrValue<T>, treatStringAsIterable?: boolean): Iterable<T> {
+  let iterable: Iterable<T>;
+
+  if (isIterable(values, treatStringAsIterable)) {
+    iterable = values;
+  } else {
+    iterable = [values];
+  }
+
+  return iterable;
+}
+
 /**
  * Returns true if the input is an Iterable.
  *

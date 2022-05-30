@@ -1,6 +1,6 @@
 import { Maybe } from '../value/maybe';
 import { flattenArray } from '../array/array';
-import { IterableOrValue, useIterableOrValue } from '../iterable/iterable';
+import { asIterable, isIterable, IterableOrValue, useIterableOrValue } from '../iterable/iterable';
 import { symmetricDifference } from 'extra-set';
 
 export function asSet<T>(values: IterableOrValue<T>): Set<T> {
@@ -115,7 +115,7 @@ export function setIncludes<T>(valuesSet: Set<T>, valuesToFind: Iterable<T>, mod
  * Returns true if the input array contains any value from the second array.
  */
 export function containsAnyValue<T>(values: Iterable<T>, valuesToFind: Iterable<T>): boolean {
-  const set = new Set(valuesToFind);
+  const set = new Set(asIterable(valuesToFind, false));
   return containsAnyValueFromSet(values, set);
 }
 
@@ -124,7 +124,7 @@ export function containsAnyValueFromSet<T>(values: Iterable<T>, valuesToFind: Se
 }
 
 export function setContainsAnyValue<T>(valuesSet: Set<T>, valuesToFind: Iterable<T>): boolean {
-  return valuesSet ? Array.from(valuesToFind).findIndex((x) => valuesSet.has(x)) !== -1 : false;
+  return valuesSet ? Array.from(asIterable(valuesToFind)).findIndex((x) => valuesSet.has(x)) !== -1 : false;
 }
 
 /**
@@ -148,5 +148,5 @@ export function containsAllValues<T>(values: Iterable<T>, valuesToFind: Iterable
  * @returns
  */
 export function setContainsAllValues<T>(valuesSet: Set<T>, valuesToFind: Iterable<T>): boolean {
-  return valuesSet ? Array.from(valuesToFind).findIndex((x) => !valuesSet.has(x)) == -1 : false;
+  return valuesSet ? Array.from(asIterable(valuesToFind)).findIndex((x) => !valuesSet.has(x)) == -1 : false;
 }
