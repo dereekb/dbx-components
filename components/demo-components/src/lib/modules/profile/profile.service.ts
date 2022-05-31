@@ -14,6 +14,6 @@ export class DemoProfileService {
   }
 
   profileWithUsername(username: string): Observable<Maybe<ProfileDocument>> {
-    return of(username).pipe(switchMap((x) => this.collections.profileFirestoreCollection.queryDocument(profileWithUsername(x)).getFirstDoc()));
+    return of(username).pipe(switchMap((x) => this.collections.profileCollection.queryDocument(profileWithUsername(x)).getFirstDoc()));
   }
 }

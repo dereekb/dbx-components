@@ -5,6 +5,6 @@ import { DemoFirestoreCollections, Guestbook, GuestbookDocument } from '@dereekb
 @Injectable()
 export class GuestbookDocumentStore extends AbstractDbxFirebaseDocumentStore<Guestbook, GuestbookDocument> {
   constructor(collections: DemoFirestoreCollections) {
-    super({ firestoreCollection: collections.guestbookFirestoreCollection });
+    super({ firestoreCollection: collections.guestbookCollection });
   }
 }

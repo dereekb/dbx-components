@@ -1,9 +1,11 @@
 import { CollectionReference, AbstractFirestoreDocument, snapshotConverterFunctions, firestoreString, firestoreDate, FirestoreCollection, UserRelatedById, DocumentReferenceRef, FirestoreContext, FirestoreCollectionWithParent, firestoreBoolean, DocumentDataWithId, AbstractFirestoreDocumentWithParent, optionalFirestoreDate, DocumentReference, FirestoreCollectionGroup, CollectionGroup } from '@dereekb/firebase';
+import { GrantedReadRole } from '@dereekb/model';
 import { Maybe } from '@dereekb/util';
 
 export interface GuestbookFirestoreCollections {
-  guestbookFirestoreCollection: GuestbookFirestoreCollection;
+  guestbookCollection: GuestbookFirestoreCollection;
   guestbookEntryCollectionFactory: GuestbookEntryFirestoreCollectionFactory;
+  guestbookEntryCollectionGroup: GuestbookEntryFirestoreCollectionGroup;
 }
 
 // MARK: Guestbook
@@ -27,6 +29,8 @@ export interface Guestbook {
    */
   lockedAt?: Maybe<Date>;
 }
+
+export type GuestbookRoles = 'admin' | GrantedReadRole;
 
 export type GuestbookWithId = DocumentDataWithId<Guestbook>;
 
@@ -83,6 +87,8 @@ export interface GuestbookEntry extends UserRelatedById {
    */
   published: boolean;
 }
+
+export type GuestbookEntryRoles = 'owner' | GrantedReadRole;
 
 export interface GuestbookEntryRef extends DocumentReferenceRef<GuestbookEntry> {}
 

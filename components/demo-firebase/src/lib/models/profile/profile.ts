@@ -1,8 +1,9 @@
 import { CollectionReference, AbstractFirestoreDocument, snapshotConverterFunctions, firestoreString, firestoreDate, FirestoreCollection, UserRelatedById, DocumentReferenceRef, FirestoreContext, SingleItemFirestoreCollection, optionalFirestoreString } from '@dereekb/firebase';
+import { GrantedReadRole } from '@dereekb/model';
 import { Maybe } from '@dereekb/util';
 
 export interface ProfileFirestoreCollections {
-  profileFirestoreCollection: ProfileFirestoreCollection;
+  profileCollection: ProfileFirestoreCollection;
   profilePrivateDataCollectionFactory: ProfilePrivateDataFirestoreCollectionFactory;
 }
 
@@ -21,6 +22,8 @@ export interface Profile extends UserRelatedById {
    */
   updatedAt: Date;
 }
+
+export type ProfileRoles = 'owner' | GrantedReadRole;
 
 export interface ProfileRef extends DocumentReferenceRef<Profile> {}
 

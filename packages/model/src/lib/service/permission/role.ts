@@ -14,23 +14,35 @@ export type GrantedReadRole = typeof GRANTED_READ_ROLE_KEY;
 
 export type KnownGrantedRole = GrantedReadRole;
 
-export const GRANTED_FULL_ACCESS_ROLE_KEY = '__FULL__';
+export const FULL_ACCESS_ROLE_KEY = '__FULL__';
 
 /**
  * Communicates that the current context has full access to a model.
  */
-export type GrantedFullAccessGrantedRole = typeof GRANTED_FULL_ACCESS_ROLE_KEY;
+export type GrantedFullAccessGrantedRole = typeof FULL_ACCESS_ROLE_KEY;
 
-export const NO_ACCESS_ROLES_MAP_KEY = '__EMPTY__';
-export type NoAccessGrantedRole = typeof NO_ACCESS_ROLES_MAP_KEY;
+export const NO_ACCESS_ROLE_KEY = '__EMPTY__';
+export type NoAccessGrantedRole = typeof NO_ACCESS_ROLE_KEY;
 
 export type NoAccessRolesMap = {
-  [NO_ACCESS_ROLES_MAP_KEY]: true;
+  [NO_ACCESS_ROLE_KEY]: true;
 };
 
+export function noAccessRolesMap(): NoAccessRolesMap {
+  return {
+    [NO_ACCESS_ROLE_KEY]: true
+  };
+}
+
 export type FullAccessRolesMap = {
-  [GRANTED_FULL_ACCESS_ROLE_KEY]: true;
+  [FULL_ACCESS_ROLE_KEY]: true;
 };
+
+export function fullAccessRolesMap(): FullAccessRolesMap {
+  return {
+    [FULL_ACCESS_ROLE_KEY]: true
+  };
+}
 
 export type GrantedRoleMap<T extends GrantedRole = string> = NoAccessRolesMap | FullAccessRolesMap | GrantedRoleKeysMap<T>;
 
@@ -68,7 +80,7 @@ export class GrantedRoleMapReaderInstance<T extends GrantedRole = string> implem
   constructor(private readonly _map: GrantedRoleMap<T>) {}
 
   hasNoAccess(): boolean {
-    return (this._map as NoAccessRolesMap)[NO_ACCESS_ROLES_MAP_KEY];
+    return (this._map as NoAccessRolesMap)[NO_ACCESS_ROLE_KEY];
   }
 
   hasRole(role: T): boolean {
@@ -76,7 +88,7 @@ export class GrantedRoleMapReaderInstance<T extends GrantedRole = string> implem
   }
 
   hasRoles(setIncludes: SetIncludesMode, inputRoles: ArrayOrValue<T>): boolean {
-    if ((this._map as FullAccessRolesMap)[GRANTED_FULL_ACCESS_ROLE_KEY]) {
+    if ((this._map as FullAccessRolesMap)[FULL_ACCESS_ROLE_KEY]) {
       return true;
     } else {
       return this.containsRoles(setIncludes, inputRoles);

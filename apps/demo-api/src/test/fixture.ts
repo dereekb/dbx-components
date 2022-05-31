@@ -100,7 +100,7 @@ export class DemoApiAuthorizedUserTestContextInstance<F extends FirebaseAdminFun
   }
 
   loadUserProfile(): ProfileDocument {
-    return this.nest.get(DemoFirestoreCollections).profileFirestoreCollection.documentAccessor().loadDocumentForPath(this.uid);
+    return this.nest.get(DemoFirestoreCollections).profileCollection.documentAccessor().loadDocumentForPath(this.uid);
   }
 }
 
@@ -133,7 +133,7 @@ export class DemoApiGuestbookTestContextInstance<F extends FirebaseAdminFunction
 export const demoGuestbookContextFactory = () =>
   modelTestContextFactory<Guestbook, GuestbookDocument, DemoApiGuestbookTestContextParams, DemoApiFunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiFunctionContextFixture<FirebaseAdminFunctionTestContextInstance>, DemoApiGuestbookTestContextInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiGuestbookTestContextFixture<FirebaseAdminFunctionTestContextInstance>>({
     makeFixture: (f) => new DemoApiGuestbookTestContextFixture(f),
-    getCollection: (fi) => fi.demoFirestoreCollections.guestbookFirestoreCollection,
+    getCollection: (fi) => fi.demoFirestoreCollections.guestbookCollection,
     makeInstance: (delegate, ref, testInstance) => new DemoApiGuestbookTestContextInstance(delegate, ref, testInstance),
     initDocument: async (instance, params) => {
       const guestbook = instance.document;

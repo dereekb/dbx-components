@@ -5,6 +5,6 @@ import { DemoFirestoreCollections, Profile, ProfileDocument } from '@dereekb/dem
 @Injectable()
 export class ProfileCollectionStore extends AbstractDbxFirebaseCollectionStore<Profile, ProfileDocument> {
   constructor(collections: DemoFirestoreCollections) {
-    super({ firestoreCollection: collections.profileFirestoreCollection });
+    super({ firestoreCollection: collections.profileCollection });
   }
 }

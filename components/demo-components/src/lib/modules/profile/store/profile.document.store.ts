@@ -7,7 +7,7 @@ import { from, Observable } from 'rxjs';
 @Injectable()
 export class ProfileDocumentStore extends AbstractDbxFirebaseDocumentStore<Profile, ProfileDocument> {
   constructor(readonly profileFunctions: ProfileFunctions, collections: DemoFirestoreCollections) {
-    super({ firestoreCollection: collections.profileFirestoreCollection });
+    super({ firestoreCollection: collections.profileCollection });
   }
 
   setProfileUsername(params: SetProfileUsernameParams): Observable<LoadingState<void>> {
