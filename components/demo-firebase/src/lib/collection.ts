@@ -1,5 +1,20 @@
 import { FirestoreContext } from '@dereekb/firebase';
-import { guestbookEntryFirestoreCollectionFactory, GuestbookEntryFirestoreCollectionFactory, guestbookEntryFirestoreCollectionGroup, GuestbookEntryFirestoreCollectionGroup, guestbookFirestoreCollection, GuestbookFirestoreCollection, GuestbookFirestoreCollections, profileFirestoreCollection, ProfileFirestoreCollection, ProfileFirestoreCollections, profilePrivateDataFirestoreCollectionFactory, ProfilePrivateDataFirestoreCollectionFactory } from './models';
+import {
+  guestbookEntryFirestoreCollectionFactory,
+  GuestbookEntryFirestoreCollectionFactory,
+  guestbookEntryFirestoreCollectionGroup,
+  GuestbookEntryFirestoreCollectionGroup,
+  guestbookFirestoreCollection,
+  GuestbookFirestoreCollection,
+  GuestbookFirestoreCollections,
+  profileFirestoreCollection,
+  ProfileFirestoreCollection,
+  ProfileFirestoreCollections,
+  profilePrivateDataFirestoreCollectionFactory,
+  ProfilePrivateDataFirestoreCollectionFactory,
+  profilePrivateDataFirestoreCollectionGroup,
+  ProfilePrivateDataFirestoreCollectionGroup
+} from './models';
 
 export abstract class DemoFirestoreCollections implements ProfileFirestoreCollections, GuestbookFirestoreCollections {
   abstract readonly guestbookCollection: GuestbookFirestoreCollection;
@@ -7,6 +22,7 @@ export abstract class DemoFirestoreCollections implements ProfileFirestoreCollec
   abstract readonly guestbookEntryCollectionFactory: GuestbookEntryFirestoreCollectionFactory;
   abstract readonly profileCollection: ProfileFirestoreCollection;
   abstract readonly profilePrivateDataCollectionFactory: ProfilePrivateDataFirestoreCollectionFactory;
+  abstract readonly profilePrivateDataCollectionGroup: ProfilePrivateDataFirestoreCollectionGroup;
 }
 
 export function makeDemoFirestoreCollections(firestoreContext: FirestoreContext): DemoFirestoreCollections {
@@ -15,6 +31,7 @@ export function makeDemoFirestoreCollections(firestoreContext: FirestoreContext)
     guestbookEntryCollectionGroup: guestbookEntryFirestoreCollectionGroup(firestoreContext),
     guestbookEntryCollectionFactory: guestbookEntryFirestoreCollectionFactory(firestoreContext),
     profileCollection: profileFirestoreCollection(firestoreContext),
-    profilePrivateDataCollectionFactory: profilePrivateDataFirestoreCollectionFactory(firestoreContext)
+    profilePrivateDataCollectionFactory: profilePrivateDataFirestoreCollectionFactory(firestoreContext),
+    profilePrivateDataCollectionGroup: profilePrivateDataFirestoreCollectionGroup(firestoreContext)
   };
 }

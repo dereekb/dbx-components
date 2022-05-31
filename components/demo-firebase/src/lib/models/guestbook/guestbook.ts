@@ -8,6 +8,8 @@ export interface GuestbookFirestoreCollections {
   guestbookEntryCollectionGroup: GuestbookEntryFirestoreCollectionGroup;
 }
 
+export type GuestbookTypes = typeof guestbookCollectionPath | typeof guestbookCollectionGuestbookEntryCollectionPath;
+
 // MARK: Guestbook
 export interface Guestbook {
   /**
@@ -94,7 +96,7 @@ export interface GuestbookEntryRef extends DocumentReferenceRef<GuestbookEntry> 
 
 export class GuestbookEntryDocument extends AbstractFirestoreDocumentWithParent<Guestbook, GuestbookEntry, GuestbookEntryDocument> {}
 
-export const guestbookCollectionGuestbookEntryCollectionPath = 'entry';
+export const guestbookCollectionGuestbookEntryCollectionPath = 'guestbookentry';
 
 export const guestbookEntryConverter = snapshotConverterFunctions<GuestbookEntry>({
   fields: {

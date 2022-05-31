@@ -1,9 +1,10 @@
-import { asGetter, forEachKeyValue, Getter, GetterOrValue, ModelTypeString } from '@dereekb/util';
+import { asGetter, Getter, GetterOrValue } from '../getter/getter';
+import { forEachKeyValue } from '../object/object';
 
 /**
  * Registry used to load model services when requested.
  */
-export interface ModelServiceRegistry<S, T extends ModelTypeString = ModelTypeString> {
+export interface TypedServiceRegistry<S, T extends string = string> {
   /**
    * Returns the service for the type. If a service is not registered, will throw an exception.
    *
@@ -13,9 +14,9 @@ export interface ModelServiceRegistry<S, T extends ModelTypeString = ModelTypeSt
 }
 
 /**
- * ModelServiceRegistry implementation.
+ * TypedServiceRegistry implementation.
  */
-export class ModelServiceRegistryInstance<S, T extends ModelTypeString = ModelTypeString> implements ModelServiceRegistry<S, T> {
+export class TypedServiceRegistryInstance<S, T extends string = string> implements TypedServiceRegistry<S, T> {
   private _map = new Map<T, Getter<S>>();
 
   registerServiceForType(type: T, service: GetterOrValue<S>): void {
@@ -35,18 +36,18 @@ export class ModelServiceRegistryInstance<S, T extends ModelTypeString = ModelTy
   }
 }
 
-export interface ModelServiceRegistrySetupConfig<S, T extends ModelTypeString = ModelTypeString> {
+export interface TypedServiceRegistrySetupConfig<S, T extends string = string> {
   services: {
     [K in T]: S;
   };
 }
 
 /**
- * Creates a new ModelServiceRegistryInstance and registers the input types.
+ * Creates a new TypedServiceRegistryInstance and registers the input types.
  * @returns
  */
-export function modelServiceRegistry<S, T extends ModelTypeString = ModelTypeString>(config: ModelServiceRegistrySetupConfig<S, T>): ModelServiceRegistryInstance<S, T> {
-  const instance = new ModelServiceRegistryInstance<S, T>();
+export function typedServiceRegistry<S, T extends string = string>(config: TypedServiceRegistrySetupConfig<S, T>): TypedServiceRegistryInstance<S, T> {
+  const instance = new TypedServiceRegistryInstance<S, T>();
 
   forEachKeyValue(config.services, {
     forEach: ([key, service]) => {

@@ -1,4 +1,5 @@
 import { PromiseOrValue, Maybe, ModelKey, ModelTypeString } from '@dereekb/util';
+import { ModelLoader } from '../loader/model.loader';
 import { contextGrantedModelRoles, ContextGrantedModelRoles, emptyContextGrantedModelRoles } from './permission';
 import { GrantedRoleMap } from './role';
 
@@ -35,8 +36,10 @@ export interface KeyOnlyModelPermissionService<T, C, R extends string = string, 
  * Abstract ModelPermissionService implementation.
  */
 export abstract class AbstractModelPermissionService<T, C, R extends string = string, O = T> implements ModelPermissionService<T, C, R, O> {
+  constructor(readonly modelLoader: ModelLoader<C, T>) {}
+
   async rolesMapForKeyContext(key: string, context: C): Promise<ContextGrantedModelRoles<O, C, R>> {
-    const model = await this.loadModelForKey(key, context);
+    const model = await this.modelLoader.loadModelForKey(key, context);
     let result: ContextGrantedModelRoles<O, C, R>;
 
     if (model != null) {
@@ -63,8 +66,6 @@ export abstract class AbstractModelPermissionService<T, C, R extends string = st
   }
 
   protected abstract outputForModel(model: T, context: C): PromiseOrValue<Maybe<O>>;
-
-  protected abstract loadModelForKey(key: ModelKey, context: C): PromiseOrValue<Maybe<T>>;
 
   protected abstract rolesMapForModel(output: O, context: C, model: T): PromiseOrValue<GrantedRoleMap<R>>;
 }

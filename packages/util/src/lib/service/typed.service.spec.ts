@@ -1,5 +1,5 @@
 import { asGetter } from '@dereekb/util';
-import { modelServiceRegistry } from './model.service';
+import { typedServiceRegistry } from './typed.service';
 
 const typeA = 'typeA';
 const typeB = 'typeB';
@@ -8,12 +8,12 @@ type TEST_TYPES = typeof typeA | typeof typeB;
 
 type TestService = {};
 
-describe('modelServiceRegistry()', () => {
+describe('typedServiceRegistry()', () => {
   it('should create a ModelServiceRegistryInstance with the types registered.', () => {
     const typeAService = {};
     const typeBService = {};
 
-    const result = modelServiceRegistry<TestService, TEST_TYPES>({
+    const result = typedServiceRegistry<TestService, TEST_TYPES>({
       services: {
         typeA: typeAService,
         typeB: asGetter(typeBService)
