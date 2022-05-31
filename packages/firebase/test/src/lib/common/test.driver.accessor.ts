@@ -1,7 +1,7 @@
 import { firstValueFrom } from 'rxjs';
 import { SubscriptionObject } from '@dereekb/rxjs';
-import { Transaction, DocumentReference, WriteBatch, FirestoreDocumentAccessor, makeDocuments, FirestoreDocumentDataAccessor, FirestoreContext, FirestoreDocument, RunTransaction } from '@dereekb/firebase';
-import { MockItemDocument, MockItem, MockItemPrivateDocument, MockItemPrivateFirestoreCollection, MockItemPrivate, MockItemSubItem, MockItemSubItemDocument, MockItemSubItemFirestoreCollection } from './firestore.mock.item';
+import { Transaction, DocumentReference, WriteBatch, FirestoreDocumentAccessor, makeDocuments, FirestoreDocumentDataAccessor, FirestoreContext, FirestoreDocument, RunTransaction, LimitedFirestoreDocumentAccessor } from '@dereekb/firebase';
+import { MockItemDocument, MockItem, MockItemPrivateDocument, MockItemPrivateFirestoreCollection, MockItemPrivate, MockItemSubItem, MockItemSubItemDocument, MockItemSubItemFirestoreCollection, MockItemSubItemFirestoreCollectionGroup } from './firestore.mock.item';
 import { MockItemCollectionFixture } from './firestore.mock.item.fixture';
 
 /**
@@ -100,34 +100,57 @@ export function describeAccessorDriverTests(f: MockItemCollectionFixture) {
           });
         });
 
-        describe('singleItemFirestoreCollection (MockItemSubItem)', () => {
-          let mockItemSubItemFirestoreCollection: MockItemSubItemFirestoreCollection;
-          let subItemAccessor: FirestoreDocumentAccessor<MockItemSubItem, MockItemSubItemDocument>;
+        describe('MockItemSubItem', () => {
+          let subItemDocument: MockItemSubItemDocument;
 
-          beforeEach(() => {
-            mockItemSubItemFirestoreCollection = f.instance.collections.mockItemSubItem(itemDocument);
-            subItemAccessor = mockItemSubItemFirestoreCollection.documentAccessor();
+          beforeEach(async () => {
+            subItemDocument = f.instance.collections.mockItemSubItem(itemDocument).documentAccessor().newDocument();
+            await subItemDocument.accessor.set({ value: 0 });
           });
 
-          describe('with item', () => {
-            let subItemDocument: MockItemSubItemDocument;
+          describe('firestoreCollectionWithParent (MockItemSubItem)', () => {
+            let mockItemSubItemFirestoreCollection: MockItemSubItemFirestoreCollection;
 
-            beforeEach(async () => {
-              subItemDocument = subItemAccessor.newDocument();
-              await subItemDocument.accessor.set({ value: 0 });
+            beforeEach(() => {
+              mockItemSubItemFirestoreCollection = f.instance.collections.mockItemSubItem(itemDocument);
             });
 
-            describe('accessor', () => {
-              const TEST_VALUE = 1234;
+            describe('with item', () => {
+              describe('accessor', () => {
+                const TEST_VALUE = 1234;
 
-              describeAccessorTests<MockItemSubItem>(() => ({
-                context: f.parent.context,
-                accessor: subItemDocument.accessor,
-                dataForUpdate: () => ({ value: TEST_VALUE }),
-                hasDataFromUpdate: (data) => data.value === TEST_VALUE,
-                loadDocumentForTransaction: (transaction, ref) => mockItemSubItemFirestoreCollection.documentAccessorForTransaction(transaction).loadDocument(ref!),
-                loadDocumentForWriteBatch: (writeBatch, ref) => mockItemSubItemFirestoreCollection.documentAccessorForWriteBatch(writeBatch).loadDocument(ref!)
-              }));
+                describeAccessorTests<MockItemSubItem>(() => ({
+                  context: f.parent.context,
+                  accessor: subItemDocument.accessor,
+                  dataForUpdate: () => ({ value: TEST_VALUE }),
+                  hasDataFromUpdate: (data) => data.value === TEST_VALUE,
+                  loadDocumentForTransaction: (transaction, ref) => mockItemSubItemFirestoreCollection.documentAccessorForTransaction(transaction).loadDocument(ref!),
+                  loadDocumentForWriteBatch: (writeBatch, ref) => mockItemSubItemFirestoreCollection.documentAccessorForWriteBatch(writeBatch).loadDocument(ref!)
+                }));
+              });
+            });
+          });
+
+          describe('firestoreCollectionGroup (MockItemSubItem)', () => {
+            let mockItemSubItemFirestoreCollectionGroup: MockItemSubItemFirestoreCollectionGroup;
+
+            beforeEach(() => {
+              mockItemSubItemFirestoreCollectionGroup = f.instance.collections.mockItemSubItemGroup;
+            });
+
+            describe('with item', () => {
+              describe('accessor', () => {
+                const TEST_VALUE = 1234;
+
+                describeAccessorTests<MockItemSubItem>(() => ({
+                  context: f.parent.context,
+                  accessor: subItemDocument.accessor,
+                  dataForUpdate: () => ({ value: TEST_VALUE }),
+                  hasDataFromUpdate: (data) => data.value === TEST_VALUE,
+                  loadDocumentForTransaction: (transaction, ref) => mockItemSubItemFirestoreCollectionGroup.documentAccessorForTransaction(transaction).loadDocument(ref!),
+                  loadDocumentForWriteBatch: (writeBatch, ref) => mockItemSubItemFirestoreCollectionGroup.documentAccessorForWriteBatch(writeBatch).loadDocument(ref!)
+                }));
+              });
             });
           });
         });
@@ -135,6 +158,42 @@ export function describeAccessorDriverTests(f: MockItemCollectionFixture) {
     });
 
     describe('documentAccessor()', () => {
+      describe('loadDocumentForKey()', () => {
+        it('should load an existing document from the path.', async () => {
+          const document = firestoreDocumentAccessor.loadDocumentForKey(items[0].documentRef.path);
+          const exists = await document.accessor.exists();
+
+          expect(exists).toBe(true);
+        });
+
+        it('should throw an exception if the path is invalid (points to collection)', () => {
+          try {
+            firestoreDocumentAccessor.loadDocumentForKey('path');
+            fail();
+          } catch (e) {
+            expect(e).toBeDefined();
+          }
+        });
+
+        it('should throw an exception if the path is empty.', () => {
+          try {
+            firestoreDocumentAccessor.loadDocumentForKey('');
+            fail();
+          } catch (e) {
+            expect(e).toBeDefined();
+          }
+        });
+
+        it('should throw an exception if the path is undefined.', () => {
+          try {
+            firestoreDocumentAccessor.loadDocumentForKey(undefined as any);
+            fail();
+          } catch (e) {
+            expect(e).toBeDefined();
+          }
+        });
+      });
+
       describe('loadDocumentForPath()', () => {
         it('should return a document at the given path.', () => {
           const document = firestoreDocumentAccessor.loadDocumentForPath('path');

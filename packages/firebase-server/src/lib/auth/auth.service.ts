@@ -258,7 +258,6 @@ export abstract class AbstractFirebaseServerAuthService<U extends FirebaseServer
 
   context(context: functions.https.CallableContext): C {
     assertIsContextWithAuthData(context);
-    context.auth.token;
     return this._context(context);
   }
 

@@ -9,12 +9,14 @@ export type FirestoreAccessorDriverCollectionGroupFunction = <T = DocumentData>(
 export type FirestoreAccessorDriverCollectionRefFunction = <T = DocumentData>(firestore: Firestore, path: string, ...pathSegments: string[]) => CollectionReference<T>;
 export type FirestoreAccessorDriverSubcollectionRefFunction = <T = DocumentData>(document: DocumentReference, path: string, ...pathSegments: string[]) => CollectionReference<T>;
 export type FirestoreAccessorDriverDocumentRefFunction = <T = DocumentData>(collection: CollectionReference<T>, path?: string, ...pathSegments: string[]) => DocumentReference<T>;
+export type FirestoreAccessorDriverFullPathDocumentRefFunction = <T = DocumentData>(firestore: Firestore, fullPath: string) => DocumentReference<T>;
 
 /**
  * A driver to use for query functionality.
  */
 export interface FirestoreAccessorDriver extends FirestoreTransactionFactoryDriver, FirestoreWriteBatchFactoryDriver {
   readonly doc: FirestoreAccessorDriverDocumentRefFunction;
+  readonly docAtPath: FirestoreAccessorDriverFullPathDocumentRefFunction;
   readonly collectionGroup: FirestoreAccessorDriverCollectionGroupFunction;
   readonly collection: FirestoreAccessorDriverCollectionRefFunction;
   readonly subcollection: FirestoreAccessorDriverSubcollectionRefFunction;

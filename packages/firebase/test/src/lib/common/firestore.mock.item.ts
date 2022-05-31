@@ -199,7 +199,7 @@ export function mockItemSubItemFirestoreCollection(firestoreContext: FirestoreCo
     return firestoreContext.firestoreCollectionWithParent({
       itemsPerPage: 50,
       collection: factory(parent),
-      makeDocument: (a, d) => new MockItemSubItemDocument(parent.documentRef, a, d),
+      makeDocument: (a, d) => new MockItemSubItemDocument(a, d),
       firestoreContext,
       parent
     });
@@ -216,7 +216,7 @@ export function mockItemSubItemFirestoreCollectionGroup(firestoreContext: Firest
   return firestoreContext.firestoreCollectionGroup({
     itemsPerPage: 50,
     queryLike: mockItemSubItemCollectionReference(firestoreContext),
-    makeDocument: (accessor, documentAccessor) => new MockItemSubItemDocument(undefined, accessor, documentAccessor),
+    makeDocument: (accessor, documentAccessor) => new MockItemSubItemDocument(accessor, documentAccessor),
     firestoreContext
   });
 }
@@ -269,7 +269,7 @@ export function mockItemDeepSubItemFirestoreCollection(firestoreContext: Firesto
     return firestoreContext.firestoreCollectionWithParent({
       itemsPerPage: 50,
       collection: factory(parent),
-      makeDocument: (a, d) => new MockItemDeepSubItemDocument(parent.documentRef, a, d),
+      makeDocument: (a, d) => new MockItemDeepSubItemDocument(a, d),
       firestoreContext,
       parent
     });
@@ -286,7 +286,7 @@ export function mockItemDeepSubItemFirestoreCollectionGroup(firestoreContext: Fi
   return firestoreContext.firestoreCollectionGroup({
     itemsPerPage: 50,
     queryLike: mockItemDeepSubItemCollectionReference(firestoreContext),
-    makeDocument: (accessor, documentAccessor) => new MockItemDeepSubItemDocument(undefined, accessor, documentAccessor),
+    makeDocument: (accessor, documentAccessor) => new MockItemDeepSubItemDocument(accessor, documentAccessor),
     firestoreContext
   });
 }

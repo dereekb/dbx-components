@@ -19,5 +19,6 @@ export function allChildDocumentsUnderParent<P>(parentRef: DocumentReference<P>)
  */
 export function allChildDocumentsUnderParentPath(parentPath: string): FirestoreQueryConstraint[] {
   // https://medium.com/firebase-developers/how-to-query-collections-in-firestore-under-a-certain-path-6a0d686cebd2
-  return [orderByDocumentId(), startAtValue(parentPath), endAtValue(parentPath + '\uf8ff')];
+  // https://medium.com/firelayer/save-money-on-the-list-query-in-firestore-26ef9bee5474 for restricting
+  return [orderByDocumentId(), startAtValue(parentPath), endAtValue(parentPath + '\u0000')];
 }
