@@ -16,7 +16,7 @@ export interface ExampleRef extends DocumentReferenceRef<Example> { }
 
 export class ExampleDocument extends AbstractFirestoreDocument<Example, ExampleDocument> { }
 
-export const exampleCollectionPath = 'example';
+export const exampleCollectionName = 'example';
 
 export const exampleConverter = snapshotConverterFunctions<Example>({
   fields: {
@@ -25,7 +25,7 @@ export const exampleConverter = snapshotConverterFunctions<Example>({
 });
 
 export function exampleCollectionReference(context: FirestoreContext): CollectionReference<Example> {
-  return context.collection(exampleCollectionPath).withConverter<Example>(exampleConverter);
+  return context.collection(exampleCollectionName).withConverter<Example>(exampleConverter);
 }
 
 export type ExampleFirestoreCollection = FirestoreCollection<Example, ExampleDocument>;

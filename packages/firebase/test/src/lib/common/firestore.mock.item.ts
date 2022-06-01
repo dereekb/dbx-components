@@ -3,9 +3,14 @@ import { CollectionReference, FirestoreCollection, FirestoreContext, AbstractFir
 import { GrantedReadRole } from '@dereekb/model';
 
 // MARK: Collection
-export type MockItemTypes = typeof mockItemCollectionPath | typeof mockItemPrivateCollectionPath | typeof mockItemSubItemCollectionPath | typeof mockItemDeepSubItemCollectionPath;
+export type MockItemTypes = typeof mockItemCollectionName | typeof mockItemPrivateCollectionName | typeof mockItemSubItemCollectionName | typeof mockItemDeepSubItemCollectionName;
 
 // MARK: Mock Item
+/**
+ * Firestore collection path name.
+ */
+export const mockItemCollectionName = 'mockitem';
+
 /**
  * Converted data for a test item in our firestore collection.
  */
@@ -20,7 +25,11 @@ export interface MockItem {
 
 export type MockItemRoles = GrantedReadRole | 'admin';
 
-export class MockItemDocument extends AbstractFirestoreDocument<MockItem, MockItemDocument> {}
+export class MockItemDocument extends AbstractFirestoreDocument<MockItem, MockItemDocument> {
+  get modelType() {
+    return mockItemCollectionName;
+  }
+}
 
 /**
  * MockItem as it is stored into the database.
@@ -36,11 +45,6 @@ export type MockItemData = FirestoreModelData<
     test?: Maybe<boolean>;
   }
 >;
-
-/**
- * Firestore collection path name.
- */
-export const mockItemCollectionPath = 'mockitem';
 
 /**
  * Used to build a FirestoreDataConverter. Fields are configured via configuration. See the SnapshotConverterFunctions for more info.
@@ -59,7 +63,7 @@ export const mockItemConverter = snapshotConverterFunctions<MockItem, MockItemDa
  * @returns
  */
 export function mockItemCollectionReference(context: FirestoreContext): CollectionReference<MockItem> {
-  return context.collection(mockItemCollectionPath).withConverter<MockItem>(mockItemConverter);
+  return context.collection(mockItemCollectionName).withConverter<MockItem>(mockItemConverter);
 }
 
 export type MockItemFirestoreCollection = FirestoreCollection<MockItem, MockItemDocument>;
@@ -89,14 +93,18 @@ export type MockItemPrivateRoles = GrantedReadRole | 'admin';
 /**
  * FirestoreDocument for MockItem
  */
-export class MockItemPrivateDocument extends AbstractFirestoreDocument<MockItemPrivate, MockItemPrivateDocument> {}
+export class MockItemPrivateDocument extends AbstractFirestoreDocument<MockItemPrivate, MockItemPrivateDocument> {
+  get modelType() {
+    return mockItemPrivateCollectionName;
+  }
+}
 
 export type MockItemPrivateData = FirestoreModelData<MockItemPrivate, {}>;
 
 /**
  * Firestore collection path name.
  */
-export const mockItemPrivateCollectionPath = 'mockitemprivate';
+export const mockItemPrivateCollectionName = 'mockitemprivate';
 export const mockItemPrivateIdentifier = '0';
 
 /**
@@ -117,7 +125,7 @@ export const mockItemPrivateConverter = snapshotConverterFunctions({
  */
 export function mockItemPrivateCollectionReferenceFactory(context: FirestoreContext): (parent: MockItemDocument) => CollectionReference<MockItemPrivate> {
   return (parent: MockItemDocument) => {
-    return context.subcollection(parent.documentRef, mockItemPrivateCollectionPath).withConverter<MockItemPrivate>(mockItemPrivateConverter);
+    return context.subcollection(parent.documentRef, mockItemPrivateCollectionName).withConverter<MockItemPrivate>(mockItemPrivateConverter);
   };
 }
 
@@ -140,7 +148,7 @@ export function mockItemPrivateFirestoreCollection(firestoreContext: FirestoreCo
 }
 
 export function mockItemPrivateCollectionReference(context: FirestoreContext): CollectionGroup<MockItemPrivate> {
-  return context.collectionGroup(mockItemPrivateCollectionPath).withConverter<MockItemPrivate>(mockItemPrivateConverter);
+  return context.collectionGroup(mockItemPrivateCollectionName).withConverter<MockItemPrivate>(mockItemPrivateConverter);
 }
 
 export type MockItemPrivateFirestoreCollectionGroup = FirestoreCollectionGroup<MockItemPrivate, MockItemPrivateDocument>;
@@ -156,6 +164,11 @@ export function mockItemPrivateFirestoreCollectionGroup(firestoreContext: Firest
 
 // MARK: MockItemSubItem
 /**
+ * Firestore collection path name.
+ */
+export const mockItemSubItemCollectionName = 'mockitemsub';
+
+/**
  * Data for a sub item in our firestore collection.
  *
  * There may be an unlimited number of MockItemSubItems for a MockItem.
@@ -169,14 +182,13 @@ export type MockItemSubItemRoles = GrantedReadRole | 'admin';
 /**
  * FirestoreDocument for MockItem
  */
-export class MockItemSubItemDocument extends AbstractFirestoreDocumentWithParent<MockItem, MockItemSubItem, MockItemSubItemDocument> {}
+export class MockItemSubItemDocument extends AbstractFirestoreDocumentWithParent<MockItem, MockItemSubItem, MockItemSubItemDocument> {
+  get modelType() {
+    return mockItemSubItemCollectionName;
+  }
+}
 
 export type MockItemSubItemData = ExpectedFirestoreModelData<MockItemSubItem>;
-
-/**
- * Firestore collection path name.
- */
-export const mockItemSubItemCollectionPath = 'mockitemsub';
 
 /**
  * Used to build a FirestoreDataConverter. Fields are configured via configuration. See the SnapshotConverterFunctions for more info.
@@ -189,7 +201,7 @@ export const mockItemSubItemConverter = snapshotConverterFunctions<MockItemSubIt
 
 export function mockItemSubItemCollectionReferenceFactory(context: FirestoreContext): (parent: MockItemDocument) => CollectionReference<MockItemSubItem> {
   return (parent: MockItemDocument) => {
-    return context.subcollection(parent.documentRef, mockItemSubItemCollectionPath).withConverter<MockItemSubItem>(mockItemSubItemConverter);
+    return context.subcollection(parent.documentRef, mockItemSubItemCollectionName).withConverter<MockItemSubItem>(mockItemSubItemConverter);
   };
 }
 
@@ -211,7 +223,7 @@ export function mockItemSubItemFirestoreCollection(firestoreContext: FirestoreCo
 }
 
 export function mockItemSubItemCollectionReference(context: FirestoreContext): CollectionGroup<MockItemSubItem> {
-  return context.collectionGroup(mockItemSubItemCollectionPath).withConverter<MockItemSubItem>(mockItemSubItemConverter);
+  return context.collectionGroup(mockItemSubItemCollectionName).withConverter<MockItemSubItem>(mockItemSubItemConverter);
 }
 
 export type MockItemSubItemFirestoreCollectionGroup = FirestoreCollectionGroup<MockItemSubItem, MockItemSubItemDocument>;
@@ -227,6 +239,11 @@ export function mockItemSubItemFirestoreCollectionGroup(firestoreContext: Firest
 
 // MARK: Sub-Sub Item
 /**
+ * Firestore collection path name.
+ */
+export const mockItemDeepSubItemCollectionName = 'mockitemdeepsub';
+
+/**
  * Data for a sub item in our firestore collection.
  *
  * There may be an unlimited number of MockItemDeepSubItems for a MockSubItem.
@@ -240,14 +257,13 @@ export type MockItemDeepSubItemRoles = GrantedReadRole | 'admin';
 /**
  * FirestoreDocument for MockSubItem
  */
-export class MockItemDeepSubItemDocument extends AbstractFirestoreDocumentWithParent<MockItemSubItem, MockItemDeepSubItem, MockItemDeepSubItemDocument> {}
+export class MockItemDeepSubItemDocument extends AbstractFirestoreDocumentWithParent<MockItemSubItem, MockItemDeepSubItem, MockItemDeepSubItemDocument> {
+  get modelType() {
+    return mockItemDeepSubItemCollectionName;
+  }
+}
 
 export type MockItemDeepSubItemData = ExpectedFirestoreModelData<MockItemDeepSubItem>;
-
-/**
- * Firestore collection path name.
- */
-export const mockItemDeepSubItemCollectionPath = 'mockitemdeepsub';
 
 /**
  * Used to build a FirestoreDataConverter. Fields are configured via configuration. See the SnapshotConverterFunctions for more info.
@@ -260,7 +276,7 @@ export const mockItemDeepSubItemConverter = snapshotConverterFunctions<MockItemD
 
 export function mockItemDeepSubItemCollectionReferenceFactory(context: FirestoreContext): (parent: MockItemSubItemDocument) => CollectionReference<MockItemDeepSubItem> {
   return (parent: MockItemSubItemDocument) => {
-    return context.subcollection(parent.documentRef, mockItemDeepSubItemCollectionPath).withConverter<MockItemDeepSubItem>(mockItemDeepSubItemConverter);
+    return context.subcollection(parent.documentRef, mockItemDeepSubItemCollectionName).withConverter<MockItemDeepSubItem>(mockItemDeepSubItemConverter);
   };
 }
 
@@ -282,7 +298,7 @@ export function mockItemDeepSubItemFirestoreCollection(firestoreContext: Firesto
 }
 
 export function mockItemDeepSubItemCollectionReference(context: FirestoreContext): CollectionGroup<MockItemDeepSubItem> {
-  return context.collectionGroup(mockItemDeepSubItemCollectionPath).withConverter<MockItemDeepSubItem>(mockItemDeepSubItemConverter);
+  return context.collectionGroup(mockItemDeepSubItemCollectionName).withConverter<MockItemDeepSubItem>(mockItemDeepSubItemConverter);
 }
 
 export type MockItemDeepSubItemFirestoreCollectionGroup = FirestoreCollectionGroup<MockItemDeepSubItem, MockItemDeepSubItemDocument>;

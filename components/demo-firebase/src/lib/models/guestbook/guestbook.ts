@@ -8,9 +8,11 @@ export interface GuestbookFirestoreCollections {
   guestbookEntryCollectionGroup: GuestbookEntryFirestoreCollectionGroup;
 }
 
-export type GuestbookTypes = typeof guestbookCollectionPath | typeof guestbookCollectionGuestbookEntryCollectionPath;
+export type GuestbookTypes = typeof guestbookCollectionName | typeof guestbookCollectionGuestbookEntryCollectionName;
 
 // MARK: Guestbook
+export const guestbookCollectionName = 'guestbook';
+
 export interface Guestbook {
   /**
    * Whether or not this guestbook should show up in the list.
@@ -38,9 +40,11 @@ export type GuestbookWithId = DocumentDataWithId<Guestbook>;
 
 export interface GuestbookRef extends DocumentReferenceRef<Guestbook> {}
 
-export class GuestbookDocument extends AbstractFirestoreDocument<Guestbook, GuestbookDocument> {}
-
-export const guestbookCollectionPath = 'guestbook';
+export class GuestbookDocument extends AbstractFirestoreDocument<Guestbook, GuestbookDocument> {
+  get modelType() {
+    return guestbookCollectionName;
+  }
+}
 
 export const guestbookConverter = snapshotConverterFunctions<Guestbook>({
   fields: {
@@ -52,7 +56,7 @@ export const guestbookConverter = snapshotConverterFunctions<Guestbook>({
 });
 
 export function guestbookCollectionReference(context: FirestoreContext): CollectionReference<Guestbook> {
-  return context.collection(guestbookCollectionPath).withConverter<Guestbook>(guestbookConverter);
+  return context.collection(guestbookCollectionName).withConverter<Guestbook>(guestbookConverter);
 }
 
 export type GuestbookFirestoreCollection = FirestoreCollection<Guestbook, GuestbookDocument>;
@@ -67,6 +71,8 @@ export function guestbookFirestoreCollection(firestoreContext: FirestoreContext)
 }
 
 // MARK: Guestbook Entry
+export const guestbookCollectionGuestbookEntryCollectionName = 'guestbookentry';
+
 export interface GuestbookEntry extends UserRelatedById {
   /**
    * Guestbook message.
@@ -94,9 +100,11 @@ export type GuestbookEntryRoles = 'owner' | GrantedReadRole;
 
 export interface GuestbookEntryRef extends DocumentReferenceRef<GuestbookEntry> {}
 
-export class GuestbookEntryDocument extends AbstractFirestoreDocumentWithParent<Guestbook, GuestbookEntry, GuestbookEntryDocument> {}
-
-export const guestbookCollectionGuestbookEntryCollectionPath = 'guestbookentry';
+export class GuestbookEntryDocument extends AbstractFirestoreDocumentWithParent<Guestbook, GuestbookEntry, GuestbookEntryDocument> {
+  get modelType() {
+    return guestbookCollectionGuestbookEntryCollectionName;
+  }
+}
 
 export const guestbookEntryConverter = snapshotConverterFunctions<GuestbookEntry>({
   fields: {
@@ -110,7 +118,7 @@ export const guestbookEntryConverter = snapshotConverterFunctions<GuestbookEntry
 
 export function guestbookEntryCollectionReferenceFactory(context: FirestoreContext): (guestbook: GuestbookDocument) => CollectionReference<GuestbookEntry> {
   return (guestbook: GuestbookDocument) => {
-    return context.subcollection(guestbook.documentRef, guestbookCollectionGuestbookEntryCollectionPath).withConverter<GuestbookEntry>(guestbookEntryConverter);
+    return context.subcollection(guestbook.documentRef, guestbookCollectionGuestbookEntryCollectionName).withConverter<GuestbookEntry>(guestbookEntryConverter);
   };
 }
 
@@ -132,7 +140,7 @@ export function guestbookEntryFirestoreCollectionFactory(firestoreContext: Fires
 }
 
 export function guestbookEntryCollectionReference(context: FirestoreContext): CollectionGroup<GuestbookEntry> {
-  return context.collectionGroup(guestbookCollectionGuestbookEntryCollectionPath).withConverter<GuestbookEntry>(guestbookEntryConverter);
+  return context.collectionGroup(guestbookCollectionGuestbookEntryCollectionName).withConverter<GuestbookEntry>(guestbookEntryConverter);
 }
 
 export type GuestbookEntryFirestoreCollectionGroup = FirestoreCollectionGroup<GuestbookEntry, GuestbookEntryDocument>;

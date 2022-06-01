@@ -18,7 +18,16 @@ import { FirestoreItemPageIterationBaseConfig, FirestoreItemPageIterationFactory
 import { firestoreQueryFactory, FirestoreQueryFactory } from '../query/query';
 import { FirestoreDrivers } from '../driver/driver';
 import { FirestoreCollectionQueryFactory, firestoreCollectionQueryFactory } from './collection.query';
-import { build, Building } from '@dereekb/util';
+import { Building, ModelTypeString } from '@dereekb/util';
+
+/**
+ * An all-lowercase collection name that also acts as a model type.
+ *
+ * This is the part of the path that says what the collection is.
+ *
+ * Each collection name in the app should be unique, as usage of CollectionGroups would cause collections with the same name to be returned.
+ */
+export type FirestoreCollectionName = ModelTypeString;
 
 // MARK: FirestoreCollectionLike
 /**

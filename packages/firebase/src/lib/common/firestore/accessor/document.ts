@@ -7,11 +7,15 @@ import { DocumentReference, CollectionReference, Transaction, WriteBatch, Docume
 import { createOrUpdateWithAccessorSet, dataFromSnapshotStream, FirestoreDocumentDataAccessor } from './accessor';
 import { CollectionReferenceRef, DocumentReferenceRef, FirestoreContextReference } from '../reference';
 import { FirestoreDocumentContext } from './context';
-import { build, Maybe, ModelKey } from '@dereekb/util';
+import { build, ModelKey, ModelTypeString } from '@dereekb/util';
 
 export interface FirestoreDocument<T, A extends FirestoreDocumentDataAccessor<T> = FirestoreDocumentDataAccessor<T>> extends DocumentReferenceRef<T>, CollectionReferenceRef<T> {
   readonly accessor: A;
   readonly id: string;
+  /**
+   * Returns the model type/collection name for this document.
+   */
+  readonly modelType: string;
 }
 
 /**
@@ -22,6 +26,8 @@ export abstract class AbstractFirestoreDocument<T, D extends AbstractFirestoreDo
   readonly data$: Observable<T> = dataFromSnapshotStream(this.stream$);
 
   constructor(readonly accessor: A, readonly documentAccessor: LimitedFirestoreDocumentAccessor<T, D>) {}
+
+  abstract get modelType(): ModelTypeString;
 
   get id(): string {
     return this.documentRef.id;
