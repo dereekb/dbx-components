@@ -1,9 +1,10 @@
 import { INestApplicationContext } from '@nestjs/common';
-import { DemoFirestoreCollections } from '@dereekb/demo-firebase';
-import { AbstractNestContext, onCallWithNestApplicationFactory, onCallWithNestContextFactory, taskQueueFunctionHandlerWithNestContextFactory, cloudEventHandlerWithNestContextFactory, blockingFunctionHandlerWithNestContextFactory, onEventWithNestContextFactory } from '@dereekb/firebase-server';
+import { DemoFirebaseContextAppContext, demoFirebaseModelServices, DemoFirestoreCollections } from '@dereekb/demo-firebase';
+import { onCallWithNestApplicationFactory, onCallWithNestContextFactory, taskQueueFunctionHandlerWithNestContextFactory, cloudEventHandlerWithNestContextFactory, blockingFunctionHandlerWithNestContextFactory, onEventWithNestContextFactory, AbstractFirebaseNestContext } from '@dereekb/firebase-server';
 import { ProfileServerActions, GuestbookServerActions, DemoApiAuthService } from '../common';
+import { FirebaseModelsService } from '@dereekb/firebase';
 
-export class DemoApiNestContext extends AbstractNestContext {
+export class DemoApiNestContext extends AbstractFirebaseNestContext<DemoFirebaseContextAppContext, typeof demoFirebaseModelServices> {
   get authService(): DemoApiAuthService {
     return this.nest.get(DemoApiAuthService);
   }
@@ -18,6 +19,14 @@ export class DemoApiNestContext extends AbstractNestContext {
 
   get guestbookActions(): GuestbookServerActions {
     return this.nest.get(GuestbookServerActions);
+  }
+
+  get modelsService() {
+    return demoFirebaseModelServices;
+  }
+
+  get app(): DemoFirestoreCollections {
+    return this.demoFirestoreCollections;
   }
 }
 

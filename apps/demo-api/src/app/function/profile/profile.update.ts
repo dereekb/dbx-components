@@ -8,8 +8,8 @@ export const updateProfile = onCallWithDemoNestContext(
     const updateProfile = await nest.profileActions.updateProfile(data);
 
     const uid = updateProfile.params.uid ?? context.auth.uid;
-
     const profileDocument: ProfileDocument = profileForUser(nest, uid);
+
     await updateProfile(profileDocument);
   })
 );

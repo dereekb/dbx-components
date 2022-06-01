@@ -1,6 +1,6 @@
 import { DEMO_AUTH_CLAIMS_SERVICE } from '@dereekb/demo-firebase';
 import { CallableContextWithAuthData, AbstractFirebaseServerAuthContext, AbstractFirebaseServerAuthService, AbstractFirebaseServerAuthUserContext } from '@dereekb/firebase-server';
-import { AuthClaims, AuthClaimsUpdate, AuthRoleSet, AUTH_ADMIN_ROLE, AuthRoleClaimsFactoryConfig, authRoleClaimsService } from '@dereekb/util';
+import { AuthClaims, AuthClaimsUpdate, AuthRoleSet } from '@dereekb/util';
 
 export class DemoApiFirebaseServerAuthUserContext extends AbstractFirebaseServerAuthUserContext<DemoApiAuthService> {}
 

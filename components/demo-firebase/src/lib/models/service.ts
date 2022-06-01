@@ -73,7 +73,9 @@ export const profilePrivateDataFirebaseModelServiceFactory = firebaseModelServic
 // MARK: Services
 export type DemoFirebaseModelTypes = GuestbookTypes | ProfileTypes;
 
-export type DemoFirebaseBaseContext = FirebaseAppModelContext<DemoFirestoreCollections>;
+export type DemoFirebaseContextAppContext = DemoFirestoreCollections;
+
+export type DemoFirebaseBaseContext = FirebaseAppModelContext<DemoFirebaseContextAppContext>;
 
 export const DEMO_FIREBASE_MODEL_SERVICE_FACTORIES = {
   guestbook: guestbookFirebaseModelServiceFactory,

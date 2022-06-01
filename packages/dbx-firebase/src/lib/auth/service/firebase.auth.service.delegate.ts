@@ -30,6 +30,7 @@ export function defaultDbxFirebaseAuthServiceDelegateWithClaimsService<T extends
   return {
     authUserStateObs: DEFAULT_DBX_FIREBASE_AUTH_SERVICE_DELEGATE.authUserStateObs,
     authRolesObs: authRolesObsWithClaimsService(config),
-    isOnboarded: DEFAULT_DBX_FIREBASE_AUTH_SERVICE_DELEGATE.isOnboarded
+    isOnboarded: DEFAULT_DBX_FIREBASE_AUTH_SERVICE_DELEGATE.isOnboarded,
+    authRoleClaimsService: config.claimsService as unknown as AuthRoleClaimsService<AuthClaimsObject>
   };
 }

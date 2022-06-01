@@ -1,8 +1,9 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
-import { FirebaseAuthUserId } from '@dereekb/firebase';
-import { filterUndefinedValues, AUTH_ADMIN_ROLE, AuthClaims, AuthRoleSet, cachedGetter, filterNullAndUndefinedValues, ArrayOrValue, AuthRole, forEachKeyValue, ObjectMap, AuthClaimsUpdate, asSet, KeyValueTypleValueFilter, AuthClaimsObject } from '@dereekb/util';
+import { FirebaseAuthContextInfo, FirebaseAuthUserId } from '@dereekb/firebase';
+import { filterUndefinedValues, AUTH_ADMIN_ROLE, AuthClaims, AuthRoleSet, cachedGetter, filterNullAndUndefinedValues, ArrayOrValue, AuthRole, forEachKeyValue, ObjectMap, AuthClaimsUpdate, asSet, KeyValueTypleValueFilter, AuthClaimsObject, Maybe } from '@dereekb/util';
 import { assertIsContextWithAuthData, CallableContextWithAuthData } from '../function/context';
+import { AuthDataRef, firebaseAuthTokenFromDecodedIdToken } from './auth.context';
 
 export interface FirebaseServerAuthUserIdentifierContext {
   /**
@@ -230,8 +231,17 @@ export abstract class FirebaseServerAuthService<U extends FirebaseServerAuthUser
 
   /**
    * Whether or not the input claims indicate admin priviledges.
+   *
+   * @param claims
    */
   abstract isAdmin(claims: AuthClaims): boolean;
+
+  /**
+   * Whether or not the input roles indicate admin priviledges.
+   *
+   * @param roles
+   */
+  abstract isAdminInRoles(roles: AuthRoleSet): boolean;
 
   /**
    * Reads the AuthRoleSet from the input claims.
@@ -248,6 +258,13 @@ export abstract class FirebaseServerAuthService<U extends FirebaseServerAuthUser
    * @param roles
    */
   abstract claimsForRoles(roles: AuthRoleSet): AuthClaimsUpdate;
+
+  /**
+   * Builds a FirebaseAuthContextInfo for the input auth data context.
+   *
+   * @param context
+   */
+  abstract authContextInfo(context: AuthDataRef): Maybe<FirebaseAuthContextInfo>;
 }
 
 /**
@@ -266,10 +283,33 @@ export abstract class AbstractFirebaseServerAuthService<U extends FirebaseServer
   abstract userContext(uid: FirebaseAuthUserId): U;
 
   isAdmin(claims: AuthClaims): boolean {
-    return this.readRoles(claims).has(AUTH_ADMIN_ROLE);
+    return this.isAdminInRoles(this.readRoles(claims));
+  }
+
+  isAdminInRoles(roles: AuthRoleSet): boolean {
+    return roles.has(AUTH_ADMIN_ROLE);
   }
 
   abstract readRoles(claims: AuthClaims): AuthRoleSet;
 
   abstract claimsForRoles(roles: AuthRoleSet): AuthClaimsUpdate;
+
+  authContextInfo(context: AuthDataRef): Maybe<FirebaseAuthContextInfo> {
+    const { auth } = context;
+    let result: Maybe<FirebaseAuthContextInfo>;
+
+    if (auth) {
+      const _roles = cachedGetter(() => this.readRoles(auth.token as unknown as AuthClaims));
+
+      result = {
+        uid: auth.uid,
+        isAdmin: () => this.isAdminInRoles(_roles()),
+        loadClaims: () => Promise.resolve(auth.token as unknown as AuthClaims),
+        loadAuthRoles: () => Promise.resolve(_roles()),
+        token: firebaseAuthTokenFromDecodedIdToken(auth.token)
+      };
+    }
+
+    return result;
+  }
 }

@@ -1,11 +1,11 @@
-import { AuthClaims, AuthRoleSet, PromiseOrValue } from '@dereekb/util';
+import { AuthClaims, AuthRoleSet, Maybe } from '@dereekb/util';
 import { FirebaseAuthToken } from './auth';
 
 /**
  * Provides a context containing FirebaseAuthContextInfo
  */
 export interface FirebaseAuthContext {
-  readonly auth?: FirebaseAuthContextInfo;
+  readonly auth?: Maybe<FirebaseAuthContextInfo>;
 }
 
 /**
