@@ -1,5 +1,5 @@
 import { Maybe } from '../value/maybe';
-import { ReadableError, ReadableDataError, StringErrorCode } from './error';
+import { ReadableError, ReadableDataError, StringErrorCode, CodedError } from './error';
 
 /**
  * The expected error object returned from the server.
@@ -16,6 +16,15 @@ export interface ServerErrorResponseData extends ReadableError {
  */
 export interface ServerError<T = ServerErrorResponseData> extends ReadableDataError<T> {
   status: number;
+}
+
+export interface ServerErrorMakeConfig<T> extends ServerError<T>, Partial<CodedError> {}
+
+export function serverError<T>(config: ServerErrorMakeConfig<T>): ServerError<T> {
+  return {
+    ...config,
+    data: config.data
+  };
 }
 
 /**

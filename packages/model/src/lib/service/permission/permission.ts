@@ -1,5 +1,5 @@
 import { Maybe } from '@dereekb/util';
-import { fullAccessRolesMap, GrantedRoleMap, noAccessRolesMap } from './role';
+import { fullAccessRoleMap, GrantedRoleMap, noAccessRoleMap } from './role';
 
 /**
  * Object that contains granted roles, a model, and the context the roles were granted in.
@@ -7,21 +7,21 @@ import { fullAccessRolesMap, GrantedRoleMap, noAccessRolesMap } from './role';
 export interface ContextGrantedModelRoles<O, C = unknown, R extends string = string> {
   readonly data: Maybe<O>;
   readonly context: C;
-  readonly roles: GrantedRoleMap<R>;
+  readonly roleMap: GrantedRoleMap<R>;
 }
 
 export function noAccessContextGrantedModelRoles<O, C = unknown, R extends string = string>(context: C, data?: Maybe<O>): ContextGrantedModelRoles<O, C, R> {
-  return contextGrantedModelRoles(context, data, noAccessRolesMap());
+  return contextGrantedModelRoles(context, data, noAccessRoleMap());
 }
 
 export function fullAccessGrantedModelRoles<O, C = unknown, R extends string = string>(context: C, data?: Maybe<O>): ContextGrantedModelRoles<O, C, R> {
-  return contextGrantedModelRoles(context, data, fullAccessRolesMap());
+  return contextGrantedModelRoles(context, data, fullAccessRoleMap());
 }
 
 export function contextGrantedModelRoles<O, C = unknown, R extends string = string>(context: C, data: Maybe<O>, roles: GrantedRoleMap<R>): ContextGrantedModelRoles<O, C, R> {
   return {
     data,
     context,
-    roles
+    roleMap: roles
   };
 }

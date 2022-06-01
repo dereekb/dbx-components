@@ -17,7 +17,7 @@ export interface ModelOnlyModelPermissionService<C, T, R extends string = string
    * @param model
    * @param context
    */
-  rolesMapForModelContext(model: T, context: C): Promise<ContextGrantedModelRoles<O, C, R>>;
+  roleMapForModelContext(model: T, context: C): Promise<ContextGrantedModelRoles<O, C, R>>;
 }
 
 /**
@@ -29,7 +29,7 @@ export interface KeyOnlyModelPermissionService<C, T, R extends string = string, 
    * @param model
    * @param context
    */
-  rolesMapForKeyContext(key: ModelKey, context: C): Promise<ContextGrantedModelRoles<O, C, R>>;
+  roleMapForKeyContext(key: ModelKey, context: C): Promise<ContextGrantedModelRoles<O, C, R>>;
 }
 
 /**
@@ -38,12 +38,12 @@ export interface KeyOnlyModelPermissionService<C, T, R extends string = string, 
 export abstract class AbstractModelPermissionService<C, T, R extends string = string, O = T> implements ModelPermissionService<C, T, R, O> {
   constructor(readonly modelLoader: ModelLoader<C, T>) {}
 
-  async rolesMapForKeyContext(key: string, context: C): Promise<ContextGrantedModelRoles<O, C, R>> {
+  async roleMapForKeyContext(key: string, context: C): Promise<ContextGrantedModelRoles<O, C, R>> {
     const model = await this.modelLoader.loadModelForKey(key, context);
     let result: ContextGrantedModelRoles<O, C, R>;
 
     if (model != null) {
-      result = await this.rolesMapForModelContext(model, context);
+      result = await this.roleMapForModelContext(model, context);
     } else {
       result = noAccessContextGrantedModelRoles<O, C, R>(context);
     }
@@ -51,12 +51,12 @@ export abstract class AbstractModelPermissionService<C, T, R extends string = st
     return result;
   }
 
-  async rolesMapForModelContext(model: T, context: C): Promise<ContextGrantedModelRoles<O, C, R>> {
+  async roleMapForModelContext(model: T, context: C): Promise<ContextGrantedModelRoles<O, C, R>> {
     const output: Maybe<O> = await this.outputForModel(model, context);
     let result: ContextGrantedModelRoles<O, C, R>;
 
     if (output != null && this.isUsableOutputForRoles(output, context)) {
-      result = await this.getRolesMapForOutput(output, context, model);
+      result = await this.getRoleMapForOutput(output, context, model);
     } else {
       result = noAccessContextGrantedModelRoles<O, C, R>(context, output);
     }
@@ -64,9 +64,9 @@ export abstract class AbstractModelPermissionService<C, T, R extends string = st
     return result;
   }
 
-  protected async getRolesMapForOutput(output: O, context: C, model: T): Promise<ContextGrantedModelRoles<O, C, R>> {
-    const rolesMap = await this.rolesMapForModel(output, context, model);
-    return contextGrantedModelRoles<O, C, R>(context, output, rolesMap);
+  protected async getRoleMapForOutput(output: O, context: C, model: T): Promise<ContextGrantedModelRoles<O, C, R>> {
+    const roleMap = await this.roleMapForModel(output, context, model);
+    return contextGrantedModelRoles<O, C, R>(context, output, roleMap);
   }
 
   protected abstract outputForModel(model: T, context: C): PromiseOrValue<Maybe<O>>;
@@ -75,7 +75,7 @@ export abstract class AbstractModelPermissionService<C, T, R extends string = st
     return true; // can override in parent functions to further filter roles.
   }
 
-  protected abstract rolesMapForModel(output: O, context: C, model: T): PromiseOrValue<GrantedRoleMap<R>>;
+  protected abstract roleMapForModel(output: O, context: C, model: T): PromiseOrValue<GrantedRoleMap<R>>;
 }
 
 /**
@@ -95,7 +95,7 @@ export interface InContextModelOnlyModelPermissionService<C, T, R extends string
    * @param model
    * @param context
    */
-  rolesMapForModel(model: T): Promise<ContextGrantedModelRoles<O, C, R>>;
+  roleMapForModel(model: T): Promise<ContextGrantedModelRoles<O, C, R>>;
 }
 
 /**
@@ -107,7 +107,7 @@ export interface InContextKeyOnlyModelPermissionService<C, T, R extends string =
    * @param model
    * @param context
    */
-  rolesMapForKey(key: ModelKey): Promise<ContextGrantedModelRoles<O, C, R>>;
+  roleMapForKey(key: ModelKey): Promise<ContextGrantedModelRoles<O, C, R>>;
 }
 
 /**
@@ -121,11 +121,12 @@ export interface InContextModelPermissionService<C, T, R extends string = string
  */
 export interface InModelContextModelOnlyModelPermissionService<C, T, R extends string = string, O = T> {
   /**
-   * Returns roles for the model given the input context.
+   * Computes and returns roles for the model given the input context.
+   *
    * @param model
    * @param context
    */
-  rolesMap(): Promise<ContextGrantedModelRoles<O, C, R>>;
+  roleMap(): Promise<ContextGrantedModelRoles<O, C, R>>;
 }
 
 export interface InModelContextModelPermissionService<C, T, R extends string = string, O = T> extends InModelContextModelOnlyModelPermissionService<C, T, R, O> {}

@@ -6,18 +6,18 @@ const SECOND_ROLE = 'second';
 type TestRoles = KnownGrantedRole | typeof FIRST_ROLE | typeof SECOND_ROLE;
 
 describe('grantedRoleMapReader()', () => {
-  const rolesMap: GrantedRoleMap<TestRoles> = {
+  const roleMap: GrantedRoleMap<TestRoles> = {
     read: true,
     first: true
   };
 
   it('should create a reader for the input.', () => {
-    const result = grantedRoleMapReader(rolesMap);
+    const result = grantedRoleMapReader(roleMap);
     expect(result).toBeDefined();
   });
 
   describe('reader', () => {
-    const reader = grantedRoleMapReader(rolesMap);
+    const reader = grantedRoleMapReader(roleMap);
 
     describe('hasRole', () => {
       it('should return true if the role is granted.', () => {

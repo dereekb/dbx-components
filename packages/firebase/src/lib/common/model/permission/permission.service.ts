@@ -3,18 +3,12 @@ import { AbstractModelPermissionService, fullAccessGrantedModelRoles, GrantedRol
 import { Maybe, PromiseOrValue } from '@dereekb/util';
 import { FirebaseModelLoader, InModelContextFirebaseModelLoader } from '../model/model.loader';
 import { FirebaseModelContext } from '../context';
-
-export interface FirebasePermissionServiceModel<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> {
-  readonly document: D;
-  readonly snapshot: DocumentSnapshot<T>;
-  readonly exists: boolean;
-  readonly data: Maybe<T>;
-}
+import { FirebasePermissionServiceModel } from './permission';
 
 export type FirebaseModelPermissionService<C extends FirebaseModelContext, T, D extends FirestoreDocument<T> = FirestoreDocument<T>, R extends string = string> = ModelPermissionService<C, D, R, FirebasePermissionServiceModel<T, D>>;
 
 export interface FirebasePermissionServiceInstanceDelegate<C extends FirebaseModelContext, T, D extends FirestoreDocument<T> = FirestoreDocument<T>, R extends string = string> extends FirebaseModelLoader<C, T, D> {
-  rolesMapForModel(output: FirebasePermissionServiceModel<T, D>, context: C, model: D): PromiseOrValue<GrantedRoleMap<R>>;
+  roleMapForModel(output: FirebasePermissionServiceModel<T, D>, context: C, model: D): PromiseOrValue<GrantedRoleMap<R>>;
 }
 
 /**
@@ -25,8 +19,8 @@ export class FirebaseModelPermissionServiceInstance<C extends FirebaseModelConte
     super(delegate);
   }
 
-  rolesMapForModel(output: FirebasePermissionServiceModel<T, D>, context: C, model: D): PromiseOrValue<GrantedRoleMap<R>> {
-    return this.delegate.rolesMapForModel(output, context, model);
+  roleMapForModel(output: FirebasePermissionServiceModel<T, D>, context: C, model: D): PromiseOrValue<GrantedRoleMap<R>> {
+    return this.delegate.roleMapForModel(output, context, model);
   }
 
   protected async outputForModel(document: D): Promise<Maybe<FirebasePermissionServiceModel<T, D>>> {
@@ -37,11 +31,11 @@ export class FirebaseModelPermissionServiceInstance<C extends FirebaseModelConte
     return model;
   }
 
-  protected override async getRolesMapForOutput(output: FirebasePermissionServiceModel<T, D>, context: C, model: D) {
+  protected override async getRoleMapForOutput(output: FirebasePermissionServiceModel<T, D>, context: C, model: D) {
     if (context.adminGetsAllowAllRoles && context.auth?.isAdmin?.()) {
       return fullAccessGrantedModelRoles(context, output);
     } else {
-      return super.getRolesMapForOutput(output, context, model);
+      return super.getRoleMapForOutput(output, context, model);
     }
   }
 
@@ -55,7 +49,7 @@ export function firebaseModelPermissionService<C extends FirebaseModelContext, T
 }
 
 // MARK: InContext
-export type InContextFirebaseModelPermissionService<C extends FirebaseModelContext, T, D extends FirestoreDocument<T> = FirestoreDocument<T>, R extends string = string> = InContextModelPermissionService<C, D, R, FirebasePermissionServiceModel<T, D>>;
+export type InContextFirebaseModelPermissionService<C, T, D extends FirestoreDocument<T> = FirestoreDocument<T>, R extends string = string> = InContextModelPermissionService<C, D, R, FirebasePermissionServiceModel<T, D>>;
 
 // MARK: InModelContext
-export type InModelContextFirebaseModelPermissionService<C extends FirebaseModelContext, T, D extends FirestoreDocument<T> = FirestoreDocument<T>, R extends string = string> = InModelContextModelPermissionService<C, D, R, FirebasePermissionServiceModel<T, D>> & InModelContextFirebaseModelLoader<T, D>;
+export type InModelContextFirebaseModelPermissionService<C, T, D extends FirestoreDocument<T> = FirestoreDocument<T>, R extends string = string> = InModelContextModelPermissionService<C, D, R, FirebasePermissionServiceModel<T, D>> & InModelContextFirebaseModelLoader<T, D>;

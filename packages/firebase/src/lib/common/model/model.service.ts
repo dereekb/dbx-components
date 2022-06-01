@@ -1,11 +1,12 @@
-import { ContextGrantedModelRoles, GrantedRole } from '@dereekb/model';
+import { GrantedRole } from '@dereekb/model';
 import { Getter, cachedGetter, build } from '@dereekb/util';
-import { FirestoreDocument } from '../../firestore/accessor/document';
-import { FirestoreCollectionName } from '../../firestore/collection/collection';
-import { FirebaseModelCollectionLoader, firebaseModelLoader, FirebaseModelLoader, InContextFirebaseModelLoader } from '../model/model.loader';
-import { InContextFirebaseModelPermissionService, FirebasePermissionContext, firebaseModelPermissionService, FirebaseModelPermissionService, FirebasePermissionServiceInstanceDelegate, InModelContextFirebaseModelPermissionService, FirebasePermissionServiceModel } from '../permission';
+import { FirestoreDocument } from '../firestore/accessor/document';
+import { FirestoreCollectionName } from '../firestore/collection/collection';
+import { FirebaseModelCollectionLoader, firebaseModelLoader, FirebaseModelLoader, InContextFirebaseModelLoader } from './model/model.loader';
+import { InContextFirebaseModelPermissionService, FirebasePermissionContext, firebaseModelPermissionService, FirebaseModelPermissionService, FirebasePermissionServiceInstanceDelegate, InModelContextFirebaseModelPermissionService, FirebasePermissionErrorContext } from './permission';
+import { ContextGrantedModelRolesReader, contextGrantedModelRolesReader } from './permission/permission.service.role';
 
-export type FirebaseModelServiceContext = FirebasePermissionContext;
+export type FirebaseModelServiceContext = FirebasePermissionContext & FirebasePermissionErrorContext;
 
 export interface FirebaseModelService<C extends FirebaseModelServiceContext, T, D extends FirestoreDocument<T> = FirestoreDocument<T>, R extends GrantedRole = GrantedRole> extends FirebaseModelPermissionService<C, T, D, R>, FirebaseModelLoader<C, T, D> {}
 export type FirebaseModelServiceGetter<C extends FirebaseModelServiceContext, T, D extends FirestoreDocument<T> = FirestoreDocument<T>, R extends GrantedRole = GrantedRole> = Getter<FirebaseModelService<C, T, D, R>>;
@@ -16,15 +17,15 @@ export function firebaseModelService<C extends FirebaseModelServiceContext, T, D
   const permissionServiceDelegate = build<FirebasePermissionServiceInstanceDelegate<C, T, D, R>>({
     base: firebaseModelLoader(config.getFirestoreCollection),
     build: (x) => {
-      x.rolesMapForModel = config.rolesMapForModel;
+      x.roleMapForModel = config.roleMapForModel;
     }
   });
 
   const permissionService = firebaseModelPermissionService(permissionServiceDelegate);
 
   const service: FirebaseModelService<C, T, D, R> = {
-    rolesMapForModelContext: (model, context) => permissionService.rolesMapForModelContext(model, context),
-    rolesMapForKeyContext: (key, context) => permissionService.rolesMapForKeyContext(key, context),
+    roleMapForModelContext: (model, context) => permissionService.roleMapForModelContext(model, context),
+    roleMapForKeyContext: (key, context) => permissionService.roleMapForKeyContext(key, context),
     loadModelForKey: permissionServiceDelegate.loadModelForKey
   };
 
@@ -38,11 +39,13 @@ export function firebaseModelServiceFactory<C extends FirebaseModelServiceContex
 }
 
 // MARK: InContext
-export type InModelContextFirebaseModelServiceFactory<C, T, D extends FirestoreDocument<T> = FirestoreDocument<T>, R extends GrantedRole = GrantedRole> = (model: D) => InModelContextFirebaseModelService<C, T, D, R>;
 export type LimitedInContextFirebaseModelService<C, T, D extends FirestoreDocument<T> = FirestoreDocument<T>, R extends GrantedRole = GrantedRole> = InContextFirebaseModelPermissionService<C, T, D, R> & InContextFirebaseModelLoader<T, D>;
+export type InModelContextFirebaseModelServiceFactory<C, T, D extends FirestoreDocument<T> = FirestoreDocument<T>, R extends GrantedRole = GrantedRole> = (model: D) => InModelContextFirebaseModelService<C, T, D, R>;
+export type InModelContextFirebaseModelService<C, T, D extends FirestoreDocument<T> = FirestoreDocument<T>, R extends GrantedRole = GrantedRole> = InModelContextFirebaseModelPermissionService<C, T, D, R> & {
+  roleReader: () => Promise<ContextGrantedModelRolesReader<C, T, D, R>>;
+};
 export type InContextFirebaseModelService<C, T, D extends FirestoreDocument<T> = FirestoreDocument<T>, R extends GrantedRole = GrantedRole> = InModelContextFirebaseModelServiceFactory<C, T, D, R> & LimitedInContextFirebaseModelService<C, T, D, R>;
 export type InContextFirebaseModelServiceFactory<C, T, D extends FirestoreDocument<T> = FirestoreDocument<T>, R extends GrantedRole = GrantedRole> = (context: C) => InContextFirebaseModelService<C, T, D, R>;
-export interface InModelContextFirebaseModelService<C, T, D extends FirestoreDocument<T> = FirestoreDocument<T>, R extends GrantedRole = GrantedRole> extends InModelContextFirebaseModelPermissionService<C, T, D, R> {}
 
 export function inContextFirebaseModelServiceFactory<C, T, D extends FirestoreDocument<T> = FirestoreDocument<T>, R extends GrantedRole = GrantedRole>(factory: FirebaseModelServiceGetter<C, T, D, R>): InContextFirebaseModelServiceFactory<C, T, D, R> {
   return (context: C) => {
@@ -51,7 +54,8 @@ export function inContextFirebaseModelServiceFactory<C, T, D extends FirestoreDo
     const base: InModelContextFirebaseModelServiceFactory<C, T, D, R> = (model: D) => {
       const inModelContextService: InModelContextFirebaseModelService<C, T, D, R> = {
         model,
-        rolesMap: () => service.rolesMapForModel(model)
+        roleMap: () => service.roleMapForModel(model),
+        roleReader: () => contextGrantedModelRolesReader(inModelContextService)
       };
 
       return inModelContextService;
@@ -60,8 +64,8 @@ export function inContextFirebaseModelServiceFactory<C, T, D extends FirestoreDo
     const service = build<InContextFirebaseModelService<C, T, D, R>>({
       base: base as InContextFirebaseModelService<C, T, D, R>,
       build: (x) => {
-        x.rolesMapForModel = (model) => firebaseModelService.rolesMapForModelContext(model, context);
-        x.rolesMapForKey = (key) => firebaseModelService.rolesMapForKeyContext(key, context);
+        x.roleMapForModel = (model) => firebaseModelService.roleMapForModelContext(model, context);
+        x.roleMapForKey = (key) => firebaseModelService.roleMapForKeyContext(key, context);
         x.loadModelForKey = (key) => firebaseModelService.loadModelForKey(key, context);
       }
     });
@@ -140,7 +144,7 @@ export function inModelContextFirebaseModelsServiceFactory<Z extends InContextFi
     firebaseModelsService(model.modelType as K)
 
       const inModelContextService: InModelContextFirebaseModelService<C, T, D, R> = {
-        rolesMap: () => typeService.rolesMapForModel(model)
+        roleMap: () => typeService.roleMapForModel(model)
       };
 
       return inModelContextService;

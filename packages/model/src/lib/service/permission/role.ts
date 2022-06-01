@@ -24,35 +24,35 @@ export type GrantedFullAccessGrantedRole = typeof FULL_ACCESS_ROLE_KEY;
 export const NO_ACCESS_ROLE_KEY = '__EMPTY__';
 export type NoAccessGrantedRole = typeof NO_ACCESS_ROLE_KEY;
 
-export type NoAccessRolesMap = {
+export type NoAccessRoleMap = {
   [NO_ACCESS_ROLE_KEY]: true;
 };
 
-export function noAccessRolesMap(): NoAccessRolesMap {
+export function noAccessRoleMap(): NoAccessRoleMap {
   return {
     [NO_ACCESS_ROLE_KEY]: true
   };
 }
 
-export function isNoAccessRolesMap<T extends string = string>(input: GrantedRoleMap<T> | NoAccessRolesMap): input is NoAccessRolesMap {
-  return (input as NoAccessRolesMap)[NO_ACCESS_ROLE_KEY] === true;
+export function isNoAccessRoleMap<T extends string = string>(input: GrantedRoleMap<T> | NoAccessRoleMap): input is NoAccessRoleMap {
+  return (input as NoAccessRoleMap)[NO_ACCESS_ROLE_KEY] === true;
 }
 
-export type FullAccessRolesMap = {
+export type FullAccessRoleMap = {
   [FULL_ACCESS_ROLE_KEY]: true;
 };
 
-export function fullAccessRolesMap(): FullAccessRolesMap {
+export function fullAccessRoleMap(): FullAccessRoleMap {
   return {
     [FULL_ACCESS_ROLE_KEY]: true
   };
 }
 
-export function isFullAccessRolesMap<T extends string = string>(input: GrantedRoleMap<T> | FullAccessRolesMap): input is FullAccessRolesMap {
-  return (input as FullAccessRolesMap)[FULL_ACCESS_ROLE_KEY] === true;
+export function isFullAccessRoleMap<T extends string = string>(input: GrantedRoleMap<T> | FullAccessRoleMap): input is FullAccessRoleMap {
+  return (input as FullAccessRoleMap)[FULL_ACCESS_ROLE_KEY] === true;
 }
 
-export type GrantedRoleMap<T extends GrantedRole = string> = NoAccessRolesMap | FullAccessRolesMap | GrantedRoleKeysMap<T>;
+export type GrantedRoleMap<T extends GrantedRole = string> = NoAccessRoleMap | FullAccessRoleMap | GrantedRoleKeysMap<T>;
 
 export type GrantedRoleKeysMap<T extends GrantedRole = string> = {
   [key in T]?: Maybe<boolean>;
@@ -88,7 +88,7 @@ export class GrantedRoleMapReaderInstance<T extends GrantedRole = string> implem
   constructor(private readonly _map: GrantedRoleMap<T>) {}
 
   hasNoAccess(): boolean {
-    return (this._map as NoAccessRolesMap)[NO_ACCESS_ROLE_KEY];
+    return (this._map as NoAccessRoleMap)[NO_ACCESS_ROLE_KEY];
   }
 
   hasRole(role: T): boolean {
@@ -96,7 +96,7 @@ export class GrantedRoleMapReaderInstance<T extends GrantedRole = string> implem
   }
 
   hasRoles(setIncludes: SetIncludesMode, inputRoles: ArrayOrValue<T>): boolean {
-    if ((this._map as FullAccessRolesMap)[FULL_ACCESS_ROLE_KEY]) {
+    if ((this._map as FullAccessRoleMap)[FULL_ACCESS_ROLE_KEY]) {
       return true;
     } else {
       return this.containsRoles(setIncludes, inputRoles);

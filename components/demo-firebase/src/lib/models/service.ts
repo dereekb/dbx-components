@@ -1,5 +1,5 @@
 import { FirebaseAppModelContext, firebaseModelServiceFactory, firebaseModelsService, FirebasePermissionServiceModel, FirestoreContext } from '@dereekb/firebase';
-import { GrantedRoleMap, noAccessRolesMap } from '@dereekb/model';
+import { GrantedRoleMap, noAccessRoleMap } from '@dereekb/model';
 import { PromiseOrValue } from '@dereekb/util';
 import { GuestbookTypes, GuestbookFirestoreCollections, Guestbook, GuestbookDocument, GuestbookEntry, GuestbookEntryDocument, GuestbookEntryFirestoreCollectionFactory, GuestbookEntryFirestoreCollectionGroup, GuestbookEntryRoles, GuestbookFirestoreCollection, GuestbookRoles, guestbookEntryFirestoreCollectionFactory, guestbookEntryFirestoreCollectionGroup, guestbookFirestoreCollection } from './guestbook';
 import { ProfileTypes, Profile, ProfileDocument, ProfileFirestoreCollection, ProfileFirestoreCollections, ProfilePrivateData, ProfilePrivateDataDocument, ProfilePrivateDataFirestoreCollectionFactory, ProfilePrivateDataFirestoreCollectionGroup, ProfilePrivateDataRoles, ProfileRoles, profileFirestoreCollection, profilePrivateDataFirestoreCollectionFactory, profilePrivateDataFirestoreCollectionGroup } from './profile';
@@ -26,8 +26,8 @@ export function makeDemoFirestoreCollections(firestoreContext: FirestoreContext)
 
 // MARK: Guestbook
 export const guestbookFirebaseModelServiceFactory = firebaseModelServiceFactory<DemoFirebaseContext, Guestbook, GuestbookDocument, GuestbookRoles>({
-  rolesMapForModel: function (output: FirebasePermissionServiceModel<Guestbook, GuestbookDocument>, context: DemoFirebaseContext, model: GuestbookDocument): PromiseOrValue<GrantedRoleMap<GuestbookRoles>> {
-    let roles: GrantedRoleMap<GuestbookRoles> = noAccessRolesMap();
+  roleMapForModel: function (output: FirebasePermissionServiceModel<Guestbook, GuestbookDocument>, context: DemoFirebaseContext, model: GuestbookDocument): PromiseOrValue<GrantedRoleMap<GuestbookRoles>> {
+    let roles: GrantedRoleMap<GuestbookRoles> = noAccessRoleMap();
 
     // todo: ...
 
@@ -37,8 +37,8 @@ export const guestbookFirebaseModelServiceFactory = firebaseModelServiceFactory<
 });
 
 export const guestbookEntryFirebaseModelServiceFactory = firebaseModelServiceFactory<DemoFirebaseContext, GuestbookEntry, GuestbookEntryDocument, GuestbookEntryRoles>({
-  rolesMapForModel: function (output: FirebasePermissionServiceModel<GuestbookEntry, GuestbookEntryDocument>, context: DemoFirebaseContext, model: GuestbookEntryDocument): PromiseOrValue<GrantedRoleMap<GuestbookEntryRoles>> {
-    let roles: GrantedRoleMap<GuestbookEntryRoles> = noAccessRolesMap();
+  roleMapForModel: function (output: FirebasePermissionServiceModel<GuestbookEntry, GuestbookEntryDocument>, context: DemoFirebaseContext, model: GuestbookEntryDocument): PromiseOrValue<GrantedRoleMap<GuestbookEntryRoles>> {
+    let roles: GrantedRoleMap<GuestbookEntryRoles> = noAccessRoleMap();
 
     // todo: ...
 
@@ -49,8 +49,8 @@ export const guestbookEntryFirebaseModelServiceFactory = firebaseModelServiceFac
 
 // MARK: Profile
 export const profileFirebaseModelServiceFactory = firebaseModelServiceFactory<DemoFirebaseContext, Profile, ProfileDocument, ProfileRoles>({
-  rolesMapForModel: function (output: FirebasePermissionServiceModel<Profile, ProfileDocument>, context: DemoFirebaseContext, model: ProfileDocument): PromiseOrValue<GrantedRoleMap<ProfileRoles>> {
-    let roles: GrantedRoleMap<ProfileRoles> = noAccessRolesMap();
+  roleMapForModel: function (output: FirebasePermissionServiceModel<Profile, ProfileDocument>, context: DemoFirebaseContext, model: ProfileDocument): PromiseOrValue<GrantedRoleMap<ProfileRoles>> {
+    let roles: GrantedRoleMap<ProfileRoles> = noAccessRoleMap();
 
     // todo: ...
 
@@ -60,8 +60,8 @@ export const profileFirebaseModelServiceFactory = firebaseModelServiceFactory<De
 });
 
 export const profilePrivateDataFirebaseModelServiceFactory = firebaseModelServiceFactory<DemoFirebaseContext, ProfilePrivateData, ProfilePrivateDataDocument, ProfilePrivateDataRoles>({
-  rolesMapForModel: function (output: FirebasePermissionServiceModel<ProfilePrivateData, ProfilePrivateDataDocument>, context: DemoFirebaseContext, model: ProfilePrivateDataDocument): PromiseOrValue<GrantedRoleMap<ProfilePrivateDataRoles>> {
-    let roles: GrantedRoleMap<ProfilePrivateDataRoles> = noAccessRolesMap();
+  roleMapForModel: function (output: FirebasePermissionServiceModel<ProfilePrivateData, ProfilePrivateDataDocument>, context: DemoFirebaseContext, model: ProfilePrivateDataDocument): PromiseOrValue<GrantedRoleMap<ProfilePrivateDataRoles>> {
+    let roles: GrantedRoleMap<ProfilePrivateDataRoles> = noAccessRoleMap();
 
     // todo: ...
 

@@ -1,8 +1,9 @@
 import { FirebaseAppModelContext, FirebaseModelsService, InContextFirebaseModelsService, inContextFirebaseModelsServiceFactory } from '@dereekb/firebase';
 import { build, BuildFunction, Getter } from '@dereekb/util';
-import { INestApplicationContext } from '@nestjs/common';
+import { ForbiddenException, INestApplicationContext } from '@nestjs/common';
 import { AuthDataRef } from '../auth';
 import { FirebaseServerAuthService } from '../auth/auth.service';
+import { makeNestFirebaseForbiddenPermissionError } from './model/permission.error';
 
 /**
  * Getter for an INestApplicationContext promise. Nest should be initialized when the promise resolves.
@@ -41,9 +42,10 @@ export abstract class AbstractFirebaseNestContext<C, Y extends FirebaseModelsSer
    * @returns
    */
   modelContext(auth: AuthDataRef, buildFn?: BuildFunction<FirebaseAppModelContext<C>>): FirebaseAppModelContext<C> {
-    const base = {
+    const base: FirebaseAppModelContext<C> = {
       auth: this.authService.authContextInfo(auth),
-      app: this.app
+      app: this.app,
+      makePermissionError: makeNestFirebaseForbiddenPermissionError
     };
 
     return buildFn

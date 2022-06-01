@@ -2,7 +2,6 @@ import { INestApplicationContext } from '@nestjs/common';
 import { DemoFirebaseContextAppContext, demoFirebaseModelServices, DemoFirestoreCollections } from '@dereekb/demo-firebase';
 import { onCallWithNestApplicationFactory, onCallWithNestContextFactory, taskQueueFunctionHandlerWithNestContextFactory, cloudEventHandlerWithNestContextFactory, blockingFunctionHandlerWithNestContextFactory, onEventWithNestContextFactory, AbstractFirebaseNestContext } from '@dereekb/firebase-server';
 import { ProfileServerActions, GuestbookServerActions, DemoApiAuthService } from '../common';
-import { FirebaseModelsService } from '@dereekb/firebase';
 
 export class DemoApiNestContext extends AbstractFirebaseNestContext<DemoFirebaseContextAppContext, typeof demoFirebaseModelServices> {
   get authService(): DemoApiAuthService {

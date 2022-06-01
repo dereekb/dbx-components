@@ -5,6 +5,8 @@ export interface ExampleFirestoreCollections {
 }
 
 // MARK: Example
+export const exampleCollectionName = 'example';
+
 export interface Example extends UserRelatedById {
   /**
    * Unique username.
@@ -14,9 +16,11 @@ export interface Example extends UserRelatedById {
 
 export interface ExampleRef extends DocumentReferenceRef<Example> { }
 
-export class ExampleDocument extends AbstractFirestoreDocument<Example, ExampleDocument> { }
-
-export const exampleCollectionName = 'example';
+export class ExampleDocument extends AbstractFirestoreDocument<Example, ExampleDocument> {
+  get modelType() {
+    return exampleCollectionName;
+  }
+}
 
 export const exampleConverter = snapshotConverterFunctions<Example>({
   fields: {

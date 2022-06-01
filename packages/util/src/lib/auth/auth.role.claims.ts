@@ -183,7 +183,7 @@ export function authRoleClaimsService<T extends AuthClaimsObject>(config: AuthRo
     return [x[0], entry as AuthRoleClaimsServiceConfigMapEntry];
   });
 
-  const authRolesMap = new Map<AuthClaimKey, AuthRoleClaimsServiceConfigMapEntry>(tuples.map((x) => [x[0].toLowerCase(), x[1]]));
+  const authRoleMap = new Map<AuthClaimKey, AuthRoleClaimsServiceConfigMapEntry>(tuples.map((x) => [x[0].toLowerCase(), x[1]]));
 
   const toClaims = (roles: AuthRoleSet) => {
     const claims = {} as AuthClaimsUpdate<T>;
@@ -202,7 +202,7 @@ export function authRoleClaimsService<T extends AuthClaimsObject>(config: AuthRo
 
     forEachKeyValue(claims, {
       forEach: ([claimsKey, value]) => {
-        const entry = authRolesMap.get(claimsKey as string);
+        const entry = authRoleMap.get(claimsKey as string);
 
         if (entry != null) {
           const decodedRoles = entry.decodeRolesFromValue(value);
