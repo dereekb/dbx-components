@@ -3,7 +3,7 @@ import { GrantedRoleMap, isFullAccessRolesMap, isNoAccessRolesMap } from '@deree
 import { Building } from '@dereekb/util';
 import { makeDocuments } from '../../firestore';
 import { FirestoreDocumentAccessor } from '../../firestore/accessor/document';
-import { firebaseModelsService } from './model.service';
+import { firebaseModelsService, inContextFirebaseModelsServiceFactory, InModelContextFirebaseModelServiceFactory } from './model.service';
 
 describe('firebaseModelsService', () => {
   describe('with mockFirebaseModelServices', () => {
@@ -15,31 +15,68 @@ describe('firebaseModelsService', () => {
   });
 
   testWithMockItemFixture()(authorizedFirestoreFactory)((f: MockItemCollectionFixture) => {
-    describe('service', () => {
-      let context: MockFirebaseContext;
-      let firestoreDocumentAccessor: FirestoreDocumentAccessor<MockItem, MockItemDocument>;
-      let item: MockItemDocument;
+    let context: MockFirebaseContext;
+    let firestoreDocumentAccessor: FirestoreDocumentAccessor<MockItem, MockItemDocument>;
+    let item: MockItemDocument;
 
-      beforeEach(async () => {
-        context = {
-          app: f.instance.collections
-        };
+    beforeEach(async () => {
+      context = {
+        app: f.instance.collections
+      };
 
-        firestoreDocumentAccessor = f.instance.firestoreCollection.documentAccessor();
-        const items = await makeDocuments(f.instance.firestoreCollection.documentAccessor(), {
-          count: 1,
-          init: (i) => {
-            return {
-              value: `${i}`,
-              test: true,
-              string: ''
-            };
-          }
-        });
-
-        item = items[0];
+      firestoreDocumentAccessor = f.instance.firestoreCollection.documentAccessor();
+      const items = await makeDocuments(f.instance.firestoreCollection.documentAccessor(), {
+        count: 1,
+        init: (i) => {
+          return {
+            value: `${i}`,
+            test: true,
+            string: ''
+          };
+        }
       });
 
+      item = items[0];
+    });
+
+    describe('inContextFirebaseModelsServiceFactory', () => {
+      it('should create an InContextFirebaseModelsServiceFactory', () => {
+        const x = inContextFirebaseModelsServiceFactory(mockFirebaseModelServices);
+        expect(x).toBeDefined();
+        expect(typeof x === 'function').toBe(true);
+      });
+
+      describe('InModelContextFirebaseModelServiceFactory', () => {
+        it('should create an InModelContextFirebaseModelsServiceFactory', () => {
+          const inContextFactory = inContextFirebaseModelsServiceFactory(mockFirebaseModelServices);
+          const inContext = inContextFactory(context)('mockitem');
+          const inModelContextFactory = inContext(item);
+
+          expect(inModelContextFactory).toBeDefined();
+          expect(typeof inModelContextFactory === 'object').toBe(true);
+        });
+
+        describe('service', () => {
+          let inModelContextFactory: InModelContextFirebaseModelServiceFactory<MockFirebaseContext, MockItem, MockItemDocument, MockItemRoles>;
+
+          beforeEach(() => {
+            const inContextFactory = inContextFirebaseModelsServiceFactory(mockFirebaseModelServices);
+            const inContext = inContextFactory(context)('mockitem');
+            inModelContextFactory = inContext;
+          });
+
+          describe('rolesMap', () => {
+            it('should return the roles map for that model.', async () => {
+              const inModelContext = inModelContextFactory(item);
+              const rolesMap = await inModelContext.rolesMap();
+              expect(rolesMap).toBeDefined();
+            });
+          });
+        });
+      });
+    });
+
+    describe('service', () => {
       it('should create an InContextFirebaseModelService', async () => {
         const context: MockFirebaseContext = {
           app: f.instance.collections

@@ -33,7 +33,14 @@ export abstract class AbstractFirebaseNestContext<C, Y extends FirebaseModelsSer
   abstract get modelsService(): Y;
   abstract get app(): C;
 
-  firebaseModelContext(auth: AuthDataRef, buildFn?: BuildFunction<FirebaseAppModelContext<C>>): FirebaseAppModelContext<C> {
+  /**
+   * Creates a FirebaseAppModelContext instance.
+   *
+   * @param auth
+   * @param buildFn
+   * @returns
+   */
+  modelContext(auth: AuthDataRef, buildFn?: BuildFunction<FirebaseAppModelContext<C>>): FirebaseAppModelContext<C> {
     const base = {
       auth: this.authService.authContextInfo(auth),
       app: this.app
@@ -47,8 +54,15 @@ export abstract class AbstractFirebaseNestContext<C, Y extends FirebaseModelsSer
       : base;
   }
 
-  firebaseModelsService(auth: AuthDataRef, buildFn?: BuildFunction<FirebaseAppModelContext<C>>): InContextFirebaseModelsService<Y> {
-    const firebaseModelContext = this.firebaseModelContext(auth, buildFn);
+  /**
+   * Creates a InContextFirebaseModelsService given the input context and parameters.
+   *
+   * @param auth
+   * @param buildFn
+   * @returns
+   */
+  service(auth: AuthDataRef, buildFn?: BuildFunction<FirebaseAppModelContext<C>>): InContextFirebaseModelsService<Y> {
+    const firebaseModelContext = this.modelContext(auth, buildFn);
     return inContextFirebaseModelsServiceFactory(this.modelsService)(firebaseModelContext) as InContextFirebaseModelsService<Y>;
   }
 }

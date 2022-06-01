@@ -49,3 +49,8 @@ export interface InContextFirebaseModelLoader<T, D extends FirestoreDocument<T>>
  * Type used to convert a FirebaseModelLoader into an InContextFirebaseModelLoader
  */
 export type AsInContextFirebaseModelLoader<X> = X extends FirebaseModelLoader<infer C, infer T, infer D> ? InContextFirebaseModelLoader<T, D> : never;
+
+// MARK: InModelContext
+export interface InModelContextFirebaseModelLoader<T, D extends FirestoreDocument<T>> {
+  readonly model: D;
+}

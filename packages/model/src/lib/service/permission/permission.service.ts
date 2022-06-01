@@ -114,3 +114,18 @@ export interface InContextKeyOnlyModelPermissionService<C, T, R extends string =
  * ModelsPermissionService that has a context.
  */
 export interface InContextModelPermissionService<C, T, R extends string = string, O = T> extends InContextModelOnlyModelPermissionService<C, T, R, O>, InContextKeyOnlyModelPermissionService<C, T, R, O> {}
+
+// MARK: InModelContext
+/**
+ * Used for retrieving permissions from the in-context model.
+ */
+export interface InModelContextModelOnlyModelPermissionService<C, T, R extends string = string, O = T> {
+  /**
+   * Returns roles for the model given the input context.
+   * @param model
+   * @param context
+   */
+  rolesMap(): Promise<ContextGrantedModelRoles<O, C, R>>;
+}
+
+export interface InModelContextModelPermissionService<C, T, R extends string = string, O = T> extends InModelContextModelOnlyModelPermissionService<C, T, R, O> {}

@@ -1,7 +1,7 @@
 import { DocumentSnapshot, FirestoreDocument } from './../../firestore';
-import { AbstractModelPermissionService, fullAccessGrantedModelRoles, GrantedRoleMap, InContextModelPermissionService, ModelPermissionService } from '@dereekb/model';
+import { AbstractModelPermissionService, fullAccessGrantedModelRoles, GrantedRoleMap, InContextModelPermissionService, InModelContextModelPermissionService, ModelPermissionService } from '@dereekb/model';
 import { Maybe, PromiseOrValue } from '@dereekb/util';
-import { FirebaseModelLoader } from '../model/model.loader';
+import { FirebaseModelLoader, InModelContextFirebaseModelLoader } from '../model/model.loader';
 import { FirebaseModelContext } from '../context';
 
 export interface FirebasePermissionServiceModel<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> {
@@ -56,3 +56,6 @@ export function firebaseModelPermissionService<C extends FirebaseModelContext, T
 
 // MARK: InContext
 export type InContextFirebaseModelPermissionService<C extends FirebaseModelContext, T, D extends FirestoreDocument<T> = FirestoreDocument<T>, R extends string = string> = InContextModelPermissionService<C, D, R, FirebasePermissionServiceModel<T, D>>;
+
+// MARK: InModelContext
+export type InModelContextFirebaseModelPermissionService<C extends FirebaseModelContext, T, D extends FirestoreDocument<T> = FirestoreDocument<T>, R extends string = string> = InModelContextModelPermissionService<C, D, R, FirebasePermissionServiceModel<T, D>> & InModelContextFirebaseModelLoader<T, D>;
