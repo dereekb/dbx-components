@@ -11,27 +11,27 @@ export class MockItemCollectionFixtureInstance {
     return this.firestoreCollection.collection;
   }
   get firestoreCollection(): MockItemFirestoreCollection {
-    return this.collections.mockItem;
+    return this.collections.mockItemCollection;
   }
 
   get mockItemPrivateCollection() {
-    return this.collections.mockItemPrivate;
+    return this.collections.mockItemPrivateCollectionFactory;
   }
 
   get mockItemSubItemCollection() {
-    return this.collections.mockItemSubItem;
+    return this.collections.mockItemSubItemCollectionFactory;
   }
 
   get mockItemSubItemCollectionGroup() {
-    return this.collections.mockItemSubItemGroup;
+    return this.collections.mockItemSubItemCollectionGroup;
   }
 
   get mockItemDeepSubItemCollection() {
-    return this.collections.mockItemDeepSubItem;
+    return this.collections.mockItemDeepSubItemCollectionFactory;
   }
 
   get mockItemDeepSubItemCollectionGroup() {
-    return this.collections.mockItemDeepSubItemGroup;
+    return this.collections.mockItemDeepSubItemCollectionGroup;
   }
 
   constructor(readonly fixture: MockItemCollectionFixture) {}

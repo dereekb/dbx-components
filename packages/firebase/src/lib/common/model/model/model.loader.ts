@@ -1,5 +1,5 @@
 import { FirebaseTransactionContext, FirestoreCollectionLike, FirestoreDocument, LimitedFirestoreDocumentAccessor } from '../../firestore';
-import { ModelLoader } from '@dereekb/model';
+import { InContextModelLoader, ModelLoader } from '@dereekb/model';
 import { ModelKey } from '@dereekb/util';
 
 export type FirebaseModelLoaderContext = FirebaseTransactionContext;
@@ -39,3 +39,13 @@ export function firebaseModelLoader<C extends FirebaseModelLoaderContext, T, D e
     }
   };
 }
+
+// MARK: In Context
+export interface InContextFirebaseModelLoader<T, D extends FirestoreDocument<T>> extends InContextModelLoader<D> {
+  loadModelForKey(key: ModelKey): D;
+}
+
+/**
+ * Type used to convert a FirebaseModelLoader into an InContextFirebaseModelLoader
+ */
+export type AsInContextFirebaseModelLoader<X> = X extends FirebaseModelLoader<infer C, infer T, infer D> ? InContextFirebaseModelLoader<T, D> : never;

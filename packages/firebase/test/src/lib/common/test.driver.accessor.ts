@@ -58,7 +58,7 @@ export function describeAccessorDriverTests(f: MockItemCollectionFixture) {
           let privateSub: SubscriptionObject;
 
           beforeEach(() => {
-            mockItemPrivateFirestoreCollection = f.instance.collections.mockItemPrivate(itemDocument);
+            mockItemPrivateFirestoreCollection = f.instance.collections.mockItemPrivateCollectionFactory(itemDocument);
             itemPrivateDataDocument = mockItemPrivateFirestoreCollection.loadDocument();
             privateDataAccessor = itemPrivateDataDocument.accessor;
             privateSub = new SubscriptionObject();
@@ -104,7 +104,7 @@ export function describeAccessorDriverTests(f: MockItemCollectionFixture) {
           let subItemDocument: MockItemSubItemDocument;
 
           beforeEach(async () => {
-            subItemDocument = f.instance.collections.mockItemSubItem(itemDocument).documentAccessor().newDocument();
+            subItemDocument = f.instance.collections.mockItemSubItemCollectionFactory(itemDocument).documentAccessor().newDocument();
             await subItemDocument.accessor.set({ value: 0 });
           });
 
@@ -112,7 +112,7 @@ export function describeAccessorDriverTests(f: MockItemCollectionFixture) {
             let mockItemSubItemFirestoreCollection: MockItemSubItemFirestoreCollection;
 
             beforeEach(() => {
-              mockItemSubItemFirestoreCollection = f.instance.collections.mockItemSubItem(itemDocument);
+              mockItemSubItemFirestoreCollection = f.instance.collections.mockItemSubItemCollectionFactory(itemDocument);
             });
 
             describe('with item', () => {
@@ -135,7 +135,7 @@ export function describeAccessorDriverTests(f: MockItemCollectionFixture) {
             let mockItemSubItemFirestoreCollectionGroup: MockItemSubItemFirestoreCollectionGroup;
 
             beforeEach(() => {
-              mockItemSubItemFirestoreCollectionGroup = f.instance.collections.mockItemSubItemGroup;
+              mockItemSubItemFirestoreCollectionGroup = f.instance.collections.mockItemSubItemCollectionGroup;
             });
 
             describe('with item', () => {

@@ -1,5 +1,5 @@
 import { Guestbook, GuestbookDocument, GuestbookEntry, GuestbookEntryDocument, GuestbookEntryRoles, GuestbookFirestoreCollections, GuestbookRoles } from './guestbook';
-import { FirebaseAppModelContext, FirebasePermissionServiceModel, FirebaseModelServiceConfig, firebaseModelServiceFactory } from '@dereekb/firebase';
+import { FirebaseAppModelContext, FirebasePermissionServiceModel, firebaseModelServiceFactory } from '@dereekb/firebase';
 import { GrantedRoleMap, noAccessRolesMap } from '@dereekb/model';
 import { PromiseOrValue } from '@dereekb/util';
 

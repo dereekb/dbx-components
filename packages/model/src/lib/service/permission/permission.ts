@@ -10,15 +10,15 @@ export interface ContextGrantedModelRoles<O, C = unknown, R extends string = str
   readonly roles: GrantedRoleMap<R>;
 }
 
-export function emptyContextGrantedModelRoles<O, C = unknown, R extends string = string>(context: C): ContextGrantedModelRoles<O, C, R> {
+export function emptyContextGrantedModelRoles<O, C = unknown, R extends string = string>(context: C, data?: Maybe<O>): ContextGrantedModelRoles<O, C, R> {
   return {
-    data: undefined,
+    data,
     context,
     roles: noAccessRolesMap()
   };
 }
 
-export function contextGrantedModelRoles<O, C = unknown, R extends string = string>(data: Maybe<O>, context: C, roles: GrantedRoleMap<R>): ContextGrantedModelRoles<O, C, R> {
+export function contextGrantedModelRoles<O, C = unknown, R extends string = string>(context: C, data: Maybe<O>, roles: GrantedRoleMap<R>): ContextGrantedModelRoles<O, C, R> {
   return {
     data,
     context,

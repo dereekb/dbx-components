@@ -6,12 +6,12 @@ import { GrantedRoleMap } from './role';
 /**
  * Full model permission service that can read permissions for models by key or for an input model.
  */
-export interface ModelPermissionService<T, C, R extends string = string, O = T> extends ModelOnlyModelPermissionService<T, C, R, O>, KeyOnlyModelPermissionService<T, C, R, O> {}
+export interface ModelPermissionService<C, T, R extends string = string, O = T> extends ModelOnlyModelPermissionService<C, T, R, O>, KeyOnlyModelPermissionService<C, T, R, O> {}
 
 /**
  * Used for retrieving permissions for a specific model.
  */
-export interface ModelOnlyModelPermissionService<T, C, R extends string = string, O = T> {
+export interface ModelOnlyModelPermissionService<C, T, R extends string = string, O = T> {
   /**
    * Returns roles for the model given the input context.
    * @param model
@@ -23,7 +23,7 @@ export interface ModelOnlyModelPermissionService<T, C, R extends string = string
 /**
  * Used for retrieving permissions for a specific model by their key.
  */
-export interface KeyOnlyModelPermissionService<T, C, R extends string = string, O = T> {
+export interface KeyOnlyModelPermissionService<C, T, R extends string = string, O = T> {
   /**
    * Returns roles for the model given the input context.
    * @param model
@@ -35,7 +35,7 @@ export interface KeyOnlyModelPermissionService<T, C, R extends string = string, 
 /**
  * Abstract ModelPermissionService implementation.
  */
-export abstract class AbstractModelPermissionService<T, C, R extends string = string, O = T> implements ModelPermissionService<T, C, R, O> {
+export abstract class AbstractModelPermissionService<C, T, R extends string = string, O = T> implements ModelPermissionService<C, T, R, O> {
   constructor(readonly modelLoader: ModelLoader<C, T>) {}
 
   async rolesMapForKeyContext(key: string, context: C): Promise<ContextGrantedModelRoles<O, C, R>> {
@@ -52,20 +52,24 @@ export abstract class AbstractModelPermissionService<T, C, R extends string = st
   }
 
   async rolesMapForModelContext(model: T, context: C): Promise<ContextGrantedModelRoles<O, C, R>> {
-    const output = await this.outputForModel(model, context);
+    const output: Maybe<O> = await this.outputForModel(model, context);
     let result: ContextGrantedModelRoles<O, C, R>;
 
-    if (output != null) {
+    if (output != null && this.isUsableOutputForRoles(output, context)) {
       const rolesMap = await this.rolesMapForModel(output, context, model);
-      result = contextGrantedModelRoles<O, C, R>(output, context, rolesMap);
+      result = contextGrantedModelRoles<O, C, R>(context, output, rolesMap);
     } else {
-      result = emptyContextGrantedModelRoles<O, C, R>(context);
+      result = emptyContextGrantedModelRoles<O, C, R>(context, output);
     }
 
     return result;
   }
 
   protected abstract outputForModel(model: T, context: C): PromiseOrValue<Maybe<O>>;
+
+  protected isUsableOutputForRoles(output: O, context: C) {
+    return true; // can override in parent functions to further filter roles.
+  }
 
   protected abstract rolesMapForModel(output: O, context: C, model: T): PromiseOrValue<GrantedRoleMap<R>>;
 }
@@ -74,5 +78,35 @@ export abstract class AbstractModelPermissionService<T, C, R extends string = st
  * Used to retrieve a ModelPermissionService for a specific type.
  */
 export interface ModelsPermissionService<C> {
-  modelPermissions<T, R extends string = string, O = T>(type: ModelTypeString): ModelPermissionService<T, C, R, O>;
+  modelPermissions<T, R extends string = string, O = T>(type: ModelTypeString): ModelPermissionService<C, T, R, O>;
 }
+
+// MARK: InContext
+/**
+ * Used for retrieving permissions for a specific model.
+ */
+export interface InContextModelOnlyModelPermissionService<C, T, R extends string = string, O = T> {
+  /**
+   * Returns roles for the model given the input context.
+   * @param model
+   * @param context
+   */
+  rolesMapForModel(model: T): Promise<ContextGrantedModelRoles<O, C, R>>;
+}
+
+/**
+ * Used for retrieving permissions for a specific model by their key.
+ */
+export interface InContextKeyOnlyModelPermissionService<C, T, R extends string = string, O = T> {
+  /**
+   * Returns roles for the model given the input context.
+   * @param model
+   * @param context
+   */
+  rolesMapForKey(key: ModelKey): Promise<ContextGrantedModelRoles<O, C, R>>;
+}
+
+/**
+ * ModelsPermissionService that has a context.
+ */
+export interface InContextModelPermissionService<C, T, R extends string = string, O = T> extends InContextModelOnlyModelPermissionService<C, T, R, O>, InContextKeyOnlyModelPermissionService<C, T, R, O> {}

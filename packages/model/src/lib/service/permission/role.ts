@@ -34,6 +34,10 @@ export function noAccessRolesMap(): NoAccessRolesMap {
   };
 }
 
+export function isNoAccessRolesMap<T extends string = string>(input: GrantedRoleMap<T> | NoAccessRolesMap): input is NoAccessRolesMap {
+  return (input as NoAccessRolesMap)[NO_ACCESS_ROLE_KEY] === true;
+}
+
 export type FullAccessRolesMap = {
   [FULL_ACCESS_ROLE_KEY]: true;
 };
@@ -42,6 +46,10 @@ export function fullAccessRolesMap(): FullAccessRolesMap {
   return {
     [FULL_ACCESS_ROLE_KEY]: true
   };
+}
+
+export function isFullAccessRolesMap<T extends string = string>(input: GrantedRoleMap<T> | FullAccessRolesMap): input is FullAccessRolesMap {
+  return (input as FullAccessRolesMap)[FULL_ACCESS_ROLE_KEY] === true;
 }
 
 export type GrantedRoleMap<T extends GrantedRole = string> = NoAccessRolesMap | FullAccessRolesMap | GrantedRoleKeysMap<T>;
