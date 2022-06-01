@@ -58,16 +58,38 @@ export type FirebaseModelsServiceFactory<C extends FirebaseModelServiceContext, 
   [K in T]: FirebaseModelServiceGetter<C, any>;
 };
 
-export type FirebaseModelsService<X extends FirebaseModelsServiceFactory<C>, C extends FirebaseModelServiceContext> = {
-  service<K extends keyof X>(type: K, context: C): X[K] extends FirebaseModelServiceGetter<C, infer T, infer D, infer R> ? InContextFirebaseModelService<C, T, D, R> : never;
-};
+/**
+ * Function that returns a configured service corresponding with the requested function, and for that context.
+ */
+export type FirebaseModelsService<X extends FirebaseModelsServiceFactory<C>, C extends FirebaseModelServiceContext> = <K extends keyof X>(type: K, context: C) => X[K] extends FirebaseModelServiceGetter<C, infer T, infer D, infer R> ? InContextFirebaseModelService<C, T, D, R> : never;
 
+/**
+ * Creates a new FirebaseModelsService.
+ *
+ * When a context is passed, it is extended and the services are available in the context too as a services function.
+ *
+ * This allows the services function to reference itself in usage. You do this by creating another type that extends the context. Example:
+ *
+ * export type DemoFirebaseBaseContext = FirebaseAppModelContext<DemoFirestoreCollections>;
+ * ...
+ * export const demoFirebaseModelServices = firebaseModelsService<typeof DEMO_FIREBASE_MODEL_SERVICE_FACTORIES, DemoFirebaseBaseContext, DemoFirebaseModelTypes>(DEMO_FIREBASE_MODEL_SERVICE_FACTORIES);
+ * export type DemoFirebaseContext = DemoFirebaseBaseContext & { service: typeof demoFirebaseModelServices };
+ *
+ * @param services
+ * @returns
+ */
 export function firebaseModelsService<X extends FirebaseModelsServiceFactory<C, T>, C extends FirebaseModelServiceContext, T extends string = string>(services: X): FirebaseModelsService<X, C> {
-  return {
-    service: <K extends keyof X>(type: K, context: C) => {
-      const firebaseModelService = services[type] as FirebaseModelServiceGetter<C, unknown>;
-      const service = inContextFirebaseModelService(firebaseModelService)(context);
-      return service as any;
-    }
+  const firebaseModelsService = <K extends keyof X>(type: K, context: C) => {
+    const firebaseModelService = services[type] as FirebaseModelServiceGetter<C, unknown>;
+
+    const contextWithService = {
+      ...context,
+      service: firebaseModelsService
+    };
+
+    const service = inContextFirebaseModelService(firebaseModelService)(contextWithService);
+    return service as any;
   };
+
+  return firebaseModelsService;
 }

@@ -1,6 +1,6 @@
 import { PromiseOrValue, Maybe, ModelKey, ModelTypeString } from '@dereekb/util';
 import { ModelLoader } from '../loader/model.loader';
-import { contextGrantedModelRoles, ContextGrantedModelRoles, emptyContextGrantedModelRoles } from './permission';
+import { contextGrantedModelRoles, ContextGrantedModelRoles, noAccessContextGrantedModelRoles } from './permission';
 import { GrantedRoleMap } from './role';
 
 /**
@@ -45,7 +45,7 @@ export abstract class AbstractModelPermissionService<C, T, R extends string = st
     if (model != null) {
       result = await this.rolesMapForModelContext(model, context);
     } else {
-      result = emptyContextGrantedModelRoles<O, C, R>(context);
+      result = noAccessContextGrantedModelRoles<O, C, R>(context);
     }
 
     return result;
@@ -56,13 +56,17 @@ export abstract class AbstractModelPermissionService<C, T, R extends string = st
     let result: ContextGrantedModelRoles<O, C, R>;
 
     if (output != null && this.isUsableOutputForRoles(output, context)) {
-      const rolesMap = await this.rolesMapForModel(output, context, model);
-      result = contextGrantedModelRoles<O, C, R>(context, output, rolesMap);
+      result = await this.getRolesMapForOutput(output, context, model);
     } else {
-      result = emptyContextGrantedModelRoles<O, C, R>(context, output);
+      result = noAccessContextGrantedModelRoles<O, C, R>(context, output);
     }
 
     return result;
+  }
+
+  protected async getRolesMapForOutput(output: O, context: C, model: T): Promise<ContextGrantedModelRoles<O, C, R>> {
+    const rolesMap = await this.rolesMapForModel(output, context, model);
+    return contextGrantedModelRoles<O, C, R>(context, output, rolesMap);
   }
 
   protected abstract outputForModel(model: T, context: C): PromiseOrValue<Maybe<O>>;

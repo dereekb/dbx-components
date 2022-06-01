@@ -1,44 +1,88 @@
-import { MockItem, MockItemCollections, MockItemDeepSubItem, MockItemDeepSubItemDocument, MockItemDeepSubItemRoles, MockItemDocument, MockItemPrivate, MockItemPrivateDocument, MockItemPrivateRoles, MockItemRoles, MockItemSubItem, MockItemSubItemDocument, MockItemSubItemRoles, MockItemTypes } from './firestore.mock.item';
-import { FirebaseAppModelContext, FirebasePermissionServiceModel, firebaseModelServiceFactory, firebaseModelsService } from '@dereekb/firebase';
+import {
+  MockItem,
+  MockItemDeepSubItem,
+  MockItemDeepSubItemDocument,
+  mockItemDeepSubItemFirestoreCollection,
+  MockItemDeepSubItemFirestoreCollectionFactory,
+  MockItemDeepSubItemFirestoreCollectionGroup,
+  mockItemDeepSubItemFirestoreCollectionGroup,
+  MockItemDeepSubItemRoles,
+  MockItemDocument,
+  MockItemFirestoreCollection,
+  mockItemFirestoreCollection,
+  MockItemPrivate,
+  MockItemPrivateDocument,
+  mockItemPrivateFirestoreCollection,
+  MockItemPrivateFirestoreCollectionFactory,
+  MockItemPrivateFirestoreCollectionGroup,
+  mockItemPrivateFirestoreCollectionGroup,
+  MockItemPrivateRoles,
+  MockItemRoles,
+  MockItemSubItem,
+  MockItemSubItemDocument,
+  mockItemSubItemFirestoreCollection,
+  MockItemSubItemFirestoreCollectionFactory,
+  MockItemSubItemFirestoreCollectionGroup,
+  mockItemSubItemFirestoreCollectionGroup,
+  MockItemSubItemRoles,
+  MockItemTypes
+} from './firestore.mock.item';
+import { FirebaseAppModelContext, FirebasePermissionServiceModel, firebaseModelServiceFactory, firebaseModelsService, FirestoreContext } from '@dereekb/firebase';
 import { fullAccessRolesMap, GrantedRoleMap } from '@dereekb/model';
 import { PromiseOrValue } from '@dereekb/util';
 
-// MARK: Models
-export type MockItemFirebaseContext = FirebaseAppModelContext<MockItemCollections> & {
-  /**
-   * Configured in the context and in mockItem role map functions to return this value if provided.
-   */
-  rolesToReturn?: GrantedRoleMap<any>;
-};
+// MARK: Collections
+export abstract class MockItemCollections {
+  abstract readonly mockItemCollection: MockItemFirestoreCollection;
+  abstract readonly mockItemPrivateCollectionFactory: MockItemPrivateFirestoreCollectionFactory;
+  abstract readonly mockItemPrivateCollectionGroup: MockItemPrivateFirestoreCollectionGroup;
+  abstract readonly mockItemSubItemCollectionFactory: MockItemSubItemFirestoreCollectionFactory;
+  abstract readonly mockItemSubItemCollectionGroup: MockItemSubItemFirestoreCollectionGroup;
+  abstract readonly mockItemDeepSubItemCollectionFactory: MockItemDeepSubItemFirestoreCollectionFactory;
+  abstract readonly mockItemDeepSubItemCollectionGroup: MockItemDeepSubItemFirestoreCollectionGroup;
+}
 
-export const mockItemFirebaseModelServiceFactory = firebaseModelServiceFactory<MockItemFirebaseContext, MockItem, MockItemDocument, MockItemRoles>({
-  rolesMapForModel: function (output: FirebasePermissionServiceModel<MockItem, MockItemDocument>, context: MockItemFirebaseContext, model: MockItemDocument): PromiseOrValue<GrantedRoleMap<MockItemRoles>> {
-    let roles: GrantedRoleMap<MockItemRoles> = context.rolesToReturn ?? fullAccessRolesMap();
+export function makeMockItemCollections(firestoreContext: FirestoreContext): MockItemCollections {
+  return {
+    mockItemCollection: mockItemFirestoreCollection(firestoreContext),
+    mockItemPrivateCollectionFactory: mockItemPrivateFirestoreCollection(firestoreContext),
+    mockItemPrivateCollectionGroup: mockItemPrivateFirestoreCollectionGroup(firestoreContext),
+    mockItemSubItemCollectionFactory: mockItemSubItemFirestoreCollection(firestoreContext),
+    mockItemSubItemCollectionGroup: mockItemSubItemFirestoreCollectionGroup(firestoreContext),
+    mockItemDeepSubItemCollectionFactory: mockItemDeepSubItemFirestoreCollection(firestoreContext),
+    mockItemDeepSubItemCollectionGroup: mockItemDeepSubItemFirestoreCollectionGroup(firestoreContext)
+  };
+}
+
+// MARK: Models
+export const mockItemFirebaseModelServiceFactory = firebaseModelServiceFactory<MockFirebaseContext, MockItem, MockItemDocument, MockItemRoles>({
+  rolesMapForModel: function (output: FirebasePermissionServiceModel<MockItem, MockItemDocument>, context: MockFirebaseContext, model: MockItemDocument): PromiseOrValue<GrantedRoleMap<MockItemRoles>> {
+    let roles: GrantedRoleMap<MockItemRoles> = context.rolesToReturn ?? { read: true };
 
     return roles;
   },
   getFirestoreCollection: (c) => c.app.mockItemCollection
 });
 
-export const mockItemPrivateFirebaseModelServiceFactory = firebaseModelServiceFactory<MockItemFirebaseContext, MockItemPrivate, MockItemPrivateDocument, MockItemPrivateRoles>({
-  rolesMapForModel: function (output: FirebasePermissionServiceModel<MockItemPrivate, MockItemPrivateDocument>, context: MockItemFirebaseContext, model: MockItemPrivateDocument): PromiseOrValue<GrantedRoleMap<MockItemPrivateRoles>> {
-    let roles: GrantedRoleMap<MockItemPrivateRoles> = context.rolesToReturn ?? fullAccessRolesMap();
+export const mockItemPrivateFirebaseModelServiceFactory = firebaseModelServiceFactory<MockFirebaseContext, MockItemPrivate, MockItemPrivateDocument, MockItemPrivateRoles>({
+  rolesMapForModel: function (output: FirebasePermissionServiceModel<MockItemPrivate, MockItemPrivateDocument>, context: MockFirebaseContext, model: MockItemPrivateDocument): PromiseOrValue<GrantedRoleMap<MockItemPrivateRoles>> {
+    let roles: GrantedRoleMap<MockItemPrivateRoles> = context.rolesToReturn ?? { read: true };
     return roles;
   },
   getFirestoreCollection: (c) => c.app.mockItemPrivateCollectionGroup
 });
 
-export const mockItemSubItemFirebaseModelServiceFactory = firebaseModelServiceFactory<MockItemFirebaseContext, MockItemSubItem, MockItemSubItemDocument, MockItemSubItemRoles>({
-  rolesMapForModel: function (output: FirebasePermissionServiceModel<MockItemSubItem, MockItemSubItemDocument>, context: MockItemFirebaseContext, model: MockItemSubItemDocument): PromiseOrValue<GrantedRoleMap<MockItemSubItemRoles>> {
-    let roles: GrantedRoleMap<MockItemSubItemRoles> = context.rolesToReturn ?? fullAccessRolesMap();
+export const mockItemSubItemFirebaseModelServiceFactory = firebaseModelServiceFactory<MockFirebaseContext, MockItemSubItem, MockItemSubItemDocument, MockItemSubItemRoles>({
+  rolesMapForModel: function (output: FirebasePermissionServiceModel<MockItemSubItem, MockItemSubItemDocument>, context: MockFirebaseContext, model: MockItemSubItemDocument): PromiseOrValue<GrantedRoleMap<MockItemSubItemRoles>> {
+    let roles: GrantedRoleMap<MockItemSubItemRoles> = context.rolesToReturn ?? { read: true };
     return roles;
   },
   getFirestoreCollection: (c) => c.app.mockItemSubItemCollectionGroup
 });
 
-export const mockItemDeepSubItemFirebaseModelServiceFactory = firebaseModelServiceFactory<MockItemFirebaseContext, MockItemDeepSubItem, MockItemDeepSubItemDocument, MockItemDeepSubItemRoles>({
-  rolesMapForModel: function (output: FirebasePermissionServiceModel<MockItemDeepSubItem, MockItemDeepSubItemDocument>, context: MockItemFirebaseContext, model: MockItemDeepSubItemDocument): PromiseOrValue<GrantedRoleMap<MockItemDeepSubItemRoles>> {
-    let roles: GrantedRoleMap<MockItemDeepSubItemRoles> = context.rolesToReturn ?? fullAccessRolesMap();
+export const mockItemDeepSubItemFirebaseModelServiceFactory = firebaseModelServiceFactory<MockFirebaseContext, MockItemDeepSubItem, MockItemDeepSubItemDocument, MockItemDeepSubItemRoles>({
+  rolesMapForModel: function (output: FirebasePermissionServiceModel<MockItemDeepSubItem, MockItemDeepSubItemDocument>, context: MockFirebaseContext, model: MockItemDeepSubItemDocument): PromiseOrValue<GrantedRoleMap<MockItemDeepSubItemRoles>> {
+    let roles: GrantedRoleMap<MockItemDeepSubItemRoles> = context.rolesToReturn ?? { read: true };
     return roles;
   },
   getFirestoreCollection: (c) => c.app.mockItemDeepSubItemCollectionGroup
@@ -47,7 +91,12 @@ export const mockItemDeepSubItemFirebaseModelServiceFactory = firebaseModelServi
 // MARK: Model Service
 export type MockModelTypes = MockItemTypes;
 
-export type MockFirebaseContext = MockItemFirebaseContext;
+export type MockFirebaseBaseContext = FirebaseAppModelContext<MockItemCollections> & {
+  /**
+   * Configured in the context and in mockItem role map functions to return this value if provided.
+   */
+  rolesToReturn?: GrantedRoleMap<any>;
+};
 
 export const MOCK_FIREBASE_MODEL_SERVICE_FACTORIES = {
   mockitem: mockItemFirebaseModelServiceFactory,
@@ -57,3 +106,5 @@ export const MOCK_FIREBASE_MODEL_SERVICE_FACTORIES = {
 };
 
 export const mockFirebaseModelServices = firebaseModelsService<typeof MOCK_FIREBASE_MODEL_SERVICE_FACTORIES, MockFirebaseContext, MockModelTypes>(MOCK_FIREBASE_MODEL_SERVICE_FACTORIES);
+
+export type MockFirebaseContext = MockFirebaseBaseContext & { service?: typeof mockFirebaseModelServices };

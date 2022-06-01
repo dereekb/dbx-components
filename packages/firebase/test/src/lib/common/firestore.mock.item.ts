@@ -3,28 +3,6 @@ import { CollectionReference, FirestoreCollection, FirestoreContext, AbstractFir
 import { GrantedReadRole } from '@dereekb/model';
 
 // MARK: Collection
-export abstract class MockItemCollections {
-  abstract readonly mockItemCollection: MockItemFirestoreCollection;
-  abstract readonly mockItemPrivateCollectionFactory: MockItemPrivateFirestoreCollectionFactory;
-  abstract readonly mockItemPrivateCollectionGroup: MockItemPrivateFirestoreCollectionGroup;
-  abstract readonly mockItemSubItemCollectionFactory: MockItemSubItemFirestoreCollectionFactory;
-  abstract readonly mockItemSubItemCollectionGroup: MockItemSubItemFirestoreCollectionGroup;
-  abstract readonly mockItemDeepSubItemCollectionFactory: MockItemDeepSubItemFirestoreCollectionFactory;
-  abstract readonly mockItemDeepSubItemCollectionGroup: MockItemDeepSubItemFirestoreCollectionGroup;
-}
-
-export function makeMockItemCollections(firestoreContext: FirestoreContext): MockItemCollections {
-  return {
-    mockItemCollection: mockItemFirestoreCollection(firestoreContext),
-    mockItemPrivateCollectionFactory: mockItemPrivateFirestoreCollection(firestoreContext),
-    mockItemPrivateCollectionGroup: mockItemPrivateFirestoreCollectionGroup(firestoreContext),
-    mockItemSubItemCollectionFactory: mockItemSubItemFirestoreCollection(firestoreContext),
-    mockItemSubItemCollectionGroup: mockItemSubItemFirestoreCollectionGroup(firestoreContext),
-    mockItemDeepSubItemCollectionFactory: mockItemDeepSubItemFirestoreCollection(firestoreContext),
-    mockItemDeepSubItemCollectionGroup: mockItemDeepSubItemFirestoreCollectionGroup(firestoreContext)
-  };
-}
-
 export type MockItemTypes = typeof mockItemCollectionPath | typeof mockItemPrivateCollectionPath | typeof mockItemSubItemCollectionPath | typeof mockItemDeepSubItemCollectionPath;
 
 // MARK: Mock Item

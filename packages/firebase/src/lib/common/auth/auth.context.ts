@@ -18,6 +18,11 @@ export interface FirebaseAuthContextInfo {
   readonly uid: string;
 
   /**
+   * Returns true if the user is considered a system admin.
+   */
+  isAdmin?(): boolean;
+
+  /**
    * Retrieves the claims in the context.
    */
   loadClaims(): Promise<AuthClaims>;
