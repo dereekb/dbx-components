@@ -1,1 +1,1 @@
-export * from './update.function';
+export * from './crud.functions';

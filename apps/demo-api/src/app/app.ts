@@ -1,6 +1,7 @@
-import { demoUpdateModel } from './function/model/update.function';
+import { demoDeleteModel, demoUpdateModel } from './function/model/crud.functions';
 import { profileSetUsernameKey } from '@dereekb/demo-firebase';
-import { NestAppPromiseGetter, nestServerInstance, UPDATE_MODEL_APP_FUNCTION_KEY } from '@dereekb/firebase-server';
+import { NestAppPromiseGetter, nestServerInstance } from '@dereekb/firebase-server';
+import { UPDATE_MODEL_APP_FUNCTION_KEY, DELETE_MODEL_APP_FUNCTION_KEY } from '@dereekb/firebase';
 import { DemoApiAppModule } from './app.module';
 import { profileSetUsername, initUserOnCreate } from './function';
 
@@ -22,6 +23,7 @@ export function allAppFunctions(nest: NestAppPromiseGetter) {
     initUserOnCreate: initUserOnCreate(nest),
     // Model
     [UPDATE_MODEL_APP_FUNCTION_KEY]: demoUpdateModel(nest),
+    [DELETE_MODEL_APP_FUNCTION_KEY]: demoDeleteModel(nest),
     // ---
     // API Calls
     // Profile

@@ -1,4 +1,4 @@
-import { demoUpdateModel } from '../model/update.function';
+import { demoUpdateModel } from '../model/crud.functions';
 import { profileSetUsername } from './profile.set.username';
 import { profileIdentity, SetProfileUsernameParams, UpdateProfileParams } from '@dereekb/demo-firebase';
 import { DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserContext } from '../../../test/fixture';

@@ -14,8 +14,8 @@ export function exampleServerActions(context: ExampleServerActionsContext): Exam
 }
 
 // MARK: Actions
-export function setExampleUsernameFactory({ firebaseServerActionTransformFunctionFactory, exampleFirestoreCollection }: ExampleServerActionsContext) {
-  const { query: queryExample } = exampleFirestoreCollection;
+export function setExampleUsernameFactory({ firebaseServerActionTransformFunctionFactory, exampleCollection }: ExampleServerActionsContext) {
+  const { query: queryExample } = exampleCollection;
 
   return firebaseServerActionTransformFunctionFactory(SetExampleUsernameParams, async (params) => {
     const { username } = params;
@@ -24,11 +24,11 @@ export function setExampleUsernameFactory({ firebaseServerActionTransformFunctio
       const documentRef = document.documentRef;
 
       // perform the change in a transaction
-      await exampleFirestoreCollection.firestoreContext.runTransaction(async (transaction) => {
+      await exampleCollection.firestoreContext.runTransaction(async (transaction) => {
         const docs = await queryExample(exampleWithUsername(username)).getDocs(transaction);
 
         if (docs.empty) {
-          const documentInTransaction = exampleFirestoreCollection.documentAccessorForTransaction(transaction).loadDocument(documentRef);
+          const documentInTransaction = exampleCollection.documentAccessorForTransaction(transaction).loadDocument(documentRef);
 
           // update the username
           await documentInTransaction.accessor.set({ username }, { merge: true });

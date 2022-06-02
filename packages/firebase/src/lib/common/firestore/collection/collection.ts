@@ -66,21 +66,31 @@ export function firestoreModelIdentity<M extends FirestoreModelName>(modelName: 
 /**
  * Reference to a FirestoreCollectionName
  */
+export interface FirestoreModelNameRef<M extends FirestoreModelName = FirestoreModelName> {
+  /**
+   * Returns the FirestoreModelName for this context.
+   */
+  readonly modelType: M;
+}
+
+/**
+ * Reference to a FirestoreCollectionName
+ */
 export interface FirestoreCollectionNameRef {
   /**
    * Returns the FirestoreCollectionName for this context.
    */
-  readonly modelType: FirestoreCollectionName;
+  readonly collectionName: FirestoreCollectionName;
 }
 
 /**
  * Reference to a FirestoreModelIdentity
  */
-export interface FirestoreModelIdentityRef {
+export interface FirestoreModelIdentityRef<M extends FirestoreModelName = FirestoreModelName> {
   /**
    * Returns the FirestoreModelIdentity for this context.
    */
-  readonly modelIdentity: FirestoreModelIdentity;
+  readonly modelIdentity: FirestoreModelIdentity<M>;
 }
 
 // MARK: FirestoreCollectionLike

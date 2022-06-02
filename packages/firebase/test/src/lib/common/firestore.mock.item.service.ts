@@ -91,7 +91,9 @@ export const mockItemDeepSubItemFirebaseModelServiceFactory = firebaseModelServi
 // MARK: Model Service
 export type MockModelTypes = MockItemTypes;
 
-export type MockFirebaseBaseContext = FirebaseAppModelContext<MockItemCollections> & {
+export type MockFirebaseContextAppContext = MockItemCollections;
+
+export type MockFirebaseBaseContext = FirebaseAppModelContext<MockFirebaseContextAppContext> & {
   /**
    * Configured in the context and in mockItem role map functions to return this value if provided.
    */
@@ -99,10 +101,10 @@ export type MockFirebaseBaseContext = FirebaseAppModelContext<MockItemCollection
 };
 
 export const MOCK_FIREBASE_MODEL_SERVICE_FACTORIES = {
-  mockitem: mockItemFirebaseModelServiceFactory,
-  mockitemprivate: mockItemPrivateFirebaseModelServiceFactory,
-  mockitemsub: mockItemSubItemFirebaseModelServiceFactory,
-  mockitemdeepsub: mockItemDeepSubItemFirebaseModelServiceFactory
+  mockItem: mockItemFirebaseModelServiceFactory,
+  mockItemPrivate: mockItemPrivateFirebaseModelServiceFactory,
+  mockItemSub: mockItemSubItemFirebaseModelServiceFactory,
+  mockItemDeepSub: mockItemDeepSubItemFirebaseModelServiceFactory
 };
 
 export const mockFirebaseModelServices = firebaseModelsService<typeof MOCK_FIREBASE_MODEL_SERVICE_FACTORIES, MockFirebaseContext, MockModelTypes>(MOCK_FIREBASE_MODEL_SERVICE_FACTORIES);

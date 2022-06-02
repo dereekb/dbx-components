@@ -1,3 +1,4 @@
+import { FirestoreModelName } from './../collection/collection';
 /*eslint @typescript-eslint/no-explicit-any:"off"*/
 // any is used with intent here, as the recursive AbstractFirestoreDocument requires its use to terminate.
 
@@ -7,10 +8,10 @@ import { DocumentReference, CollectionReference, Transaction, WriteBatch, Docume
 import { createOrUpdateWithAccessorSet, dataFromSnapshotStream, FirestoreDocumentDataAccessor } from './accessor';
 import { CollectionReferenceRef, DocumentReferenceRef, FirestoreContextReference } from '../reference';
 import { FirestoreDocumentContext } from './context';
-import { build, ModelKey, ModelTypeString } from '@dereekb/util';
-import { FirestoreCollectionNameRef, FirestoreModelIdentity, FirestoreModelIdentityRef } from '../collection/collection';
+import { build, ModelKey } from '@dereekb/util';
+import { FirestoreModelNameRef, FirestoreModelIdentity, FirestoreModelIdentityRef } from '../collection/collection';
 
-export interface FirestoreDocument<T, A extends FirestoreDocumentDataAccessor<T> = FirestoreDocumentDataAccessor<T>> extends DocumentReferenceRef<T>, CollectionReferenceRef<T>, FirestoreModelIdentityRef, FirestoreCollectionNameRef {
+export interface FirestoreDocument<T, A extends FirestoreDocumentDataAccessor<T> = FirestoreDocumentDataAccessor<T>, M extends FirestoreModelName = FirestoreModelName> extends DocumentReferenceRef<T>, CollectionReferenceRef<T>, FirestoreModelIdentityRef<M>, FirestoreModelNameRef<M> {
   readonly accessor: A;
   readonly id: string;
 }
@@ -18,16 +19,16 @@ export interface FirestoreDocument<T, A extends FirestoreDocumentDataAccessor<T>
 /**
  * Abstract FirestoreDocument implementation that extends a FirestoreDocumentDataAccessor.
  */
-export abstract class AbstractFirestoreDocument<T, D extends AbstractFirestoreDocument<T, any, any>, A extends FirestoreDocumentDataAccessor<T> = FirestoreDocumentDataAccessor<T>> implements FirestoreDocument<T, A>, LimitedFirestoreDocumentAccessorRef<T, D>, CollectionReferenceRef<T> {
+export abstract class AbstractFirestoreDocument<T, D extends AbstractFirestoreDocument<T, any, any>, A extends FirestoreDocumentDataAccessor<T> = FirestoreDocumentDataAccessor<T>, M extends FirestoreModelName = FirestoreModelName> implements FirestoreDocument<T, A>, LimitedFirestoreDocumentAccessorRef<T, D>, CollectionReferenceRef<T> {
   readonly stream$ = this.accessor.stream();
   readonly data$: Observable<T> = dataFromSnapshotStream(this.stream$);
 
   constructor(readonly accessor: A, readonly documentAccessor: LimitedFirestoreDocumentAccessor<T, D>) {}
 
-  abstract get modelIdentity(): FirestoreModelIdentity;
+  abstract get modelIdentity(): FirestoreModelIdentity<M>;
 
-  get modelType(): ModelTypeString {
-    return this.modelIdentity.collection;
+  get modelType(): M {
+    return this.modelIdentity.model;
   }
 
   get id(): string {

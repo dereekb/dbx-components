@@ -49,7 +49,7 @@ describe('firebaseModelsService', () => {
       describe('InModelContextFirebaseModelServiceFactory', () => {
         it('should create an InModelContextFirebaseModelsServiceFactory', () => {
           const inContextFactory = inContextFirebaseModelsServiceFactory(mockFirebaseModelServices);
-          const inContext = inContextFactory(context)('mockitem');
+          const inContext = inContextFactory(context)('mockItem');
           const inModelContextFactory = inContext(item);
 
           expect(inModelContextFactory).toBeDefined();
@@ -61,7 +61,7 @@ describe('firebaseModelsService', () => {
 
           beforeEach(() => {
             const inContextFactory = inContextFirebaseModelsServiceFactory(mockFirebaseModelServices);
-            const inContext = inContextFactory(context)('mockitem');
+            const inContext = inContextFactory(context)('mockItem');
             inModelContextFactory = inContext;
           });
 
@@ -82,7 +82,7 @@ describe('firebaseModelsService', () => {
           app: f.instance.collections
         };
 
-        const result = mockFirebaseModelServices('mockitem', context);
+        const result = mockFirebaseModelServices('mockItem', context);
         expect(result).toBeDefined();
         expect(result.roleMapForKey).toBeDefined();
         expect(result.roleMapForModel).toBeDefined();
@@ -92,7 +92,7 @@ describe('firebaseModelsService', () => {
       describe('InContextFirebaseModelLoader', () => {
         describe('loadModelForKey()', () => {
           it('should return a document for the input key', async () => {
-            const result = await mockFirebaseModelServices('mockitem', context).loadModelForKey(item.documentRef.path);
+            const result = await mockFirebaseModelServices('mockItem', context).loadModelForKey(item.documentRef.path);
             expect(result).toBeDefined();
             expect(result.documentRef.path).toBe(item.documentRef.path);
           });
@@ -108,7 +108,7 @@ describe('firebaseModelsService', () => {
 
             context.rolesToReturn = testRoles; // configured to be returned
 
-            const result = await mockFirebaseModelServices('mockitem', context).roleMapForKey(item.documentRef.path);
+            const result = await mockFirebaseModelServices('mockItem', context).roleMapForKey(item.documentRef.path);
             expect(result).toBeDefined();
             expect(result.context).toBeDefined();
             expect(result.data).toBeDefined();
@@ -122,7 +122,7 @@ describe('firebaseModelsService', () => {
           it('should return empty roles if the model does not exist.', async () => {
             await item.accessor.delete();
 
-            const result = await mockFirebaseModelServices('mockitem', context).roleMapForKey(item.documentRef.path);
+            const result = await mockFirebaseModelServices('mockItem', context).roleMapForKey(item.documentRef.path);
             expect(result).toBeDefined();
             expect(result.context).toBeDefined();
             expect(result.data).toBeDefined();
@@ -141,7 +141,7 @@ describe('firebaseModelsService', () => {
 
             context.rolesToReturn = testRoles; // configured to be returned
 
-            const result = await mockFirebaseModelServices('mockitem', context).roleMapForModel(item);
+            const result = await mockFirebaseModelServices('mockItem', context).roleMapForModel(item);
             expect(result).toBeDefined();
             expect(result.context).toBeDefined();
             expect(result.data).toBeDefined();
@@ -151,7 +151,7 @@ describe('firebaseModelsService', () => {
           it('should return empty roles if the model does not exist.', async () => {
             await item.accessor.delete();
 
-            const result = await mockFirebaseModelServices('mockitem', context).roleMapForModel(item);
+            const result = await mockFirebaseModelServices('mockItem', context).roleMapForModel(item);
             expect(result).toBeDefined();
             expect(result.context).toBeDefined();
             expect(result.data).toBeDefined();
@@ -170,7 +170,7 @@ describe('firebaseModelsService', () => {
                 isAdmin: () => true
               } as any;
 
-              const result = await mockFirebaseModelServices('mockitem', context).roleMapForModel(item);
+              const result = await mockFirebaseModelServices('mockItem', context).roleMapForModel(item);
               expect(isFullAccessRoleMap(result.roleMap)).toBe(true);
             });
 
@@ -180,7 +180,7 @@ describe('firebaseModelsService', () => {
                 isAdmin: () => false
               } as any;
 
-              const result = await mockFirebaseModelServices('mockitem', context).roleMapForModel(item);
+              const result = await mockFirebaseModelServices('mockItem', context).roleMapForModel(item);
               expect(isFullAccessRoleMap(result.roleMap)).toBe(false);
             });
           });

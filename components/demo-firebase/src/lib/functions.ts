@@ -32,5 +32,5 @@ export abstract class DemoFirebaseFunctionsGetter {
 
 export function makeDemoFirebaseFunctions(functions: Functions): DemoFirebaseFunctionsGetter {
   const factory = lazyFirebaseFunctionsFactory<DemoFirebaseFunctionsMap>(DEMO_FIREBASE_FUNCTIONS_CONFIG);
-  return factory(functions);
+  return factory(functions) as DemoFirebaseFunctionsGetter;
 }

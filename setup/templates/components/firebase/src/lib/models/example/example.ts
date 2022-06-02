@@ -1,14 +1,14 @@
 import { GrantedReadRole } from '@dereekb/model';
-import { CollectionReference, AbstractFirestoreDocument,snapshotConverterFunctions, firestoreString, FirestoreCollection, UserRelatedById, DocumentReferenceRef, FirestoreContext } from "@dereekb/firebase";
+import { firestoreModelIdentity, CollectionReference, AbstractFirestoreDocument,snapshotConverterFunctions, firestoreString, FirestoreCollection, UserRelatedById, DocumentReferenceRef, FirestoreContext } from "@dereekb/firebase";
 
 export interface ExampleFirestoreCollections {
-  exampleFirestoreCollection: ExampleFirestoreCollection;
+  exampleCollection: ExampleFirestoreCollection;
 }
 
-export type ExampleTypes = typeof exampleCollectionName;
+export type ExampleTypes = typeof exampleIdentity;
 
 // MARK: Example
-export const exampleCollectionName = 'example';
+export const exampleIdentity = firestoreModelIdentity('example');
 
 export interface Example extends UserRelatedById {
   /**
@@ -22,8 +22,8 @@ export interface ExampleRef extends DocumentReferenceRef<Example> { }
 export type ExampleRoles = GrantedReadRole;
 
 export class ExampleDocument extends AbstractFirestoreDocument<Example, ExampleDocument> {
-  get modelType() {
-    return exampleCollectionName;
+  get modelIdentity() {
+    return exampleIdentity;
   }
 }
 
@@ -34,7 +34,7 @@ export const exampleConverter = snapshotConverterFunctions<Example>({
 });
 
 export function exampleCollectionReference(context: FirestoreContext): CollectionReference<Example> {
-  return context.collection(exampleCollectionName).withConverter<Example>(exampleConverter);
+  return context.collection(exampleIdentity.collection).withConverter<Example>(exampleConverter);
 }
 
 export type ExampleFirestoreCollection = FirestoreCollection<Example, ExampleDocument>;

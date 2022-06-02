@@ -1,8 +1,7 @@
 import { Expose } from 'class-transformer';
-import { FirebaseFunctionMapFunction, FirebaseFunctionTypeConfigMap, ModelFirebaseCrudFunctionConfig, ModelFirebaseCrudFunctionConfigMap, ModelFirebaseFunctionMap, modelFirebaseFunctionMapFactory, UpdateModelFirebaseFunction } from '@dereekb/firebase';
+import { FirebaseFunctionMapFunction, FirebaseFunctionTypeConfigMap, ModelFirebaseCrudFunction, ModelFirebaseCrudFunctionConfigMap, ModelFirebaseFunctionMap, modelFirebaseFunctionMapFactory } from '@dereekb/firebase';
 import { IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
 import { Maybe } from '@dereekb/util';
-import { ProfileTypes } from './profile';
 
 export const PROFILE_BIO_MAX_LENGTH = 200;
 export const PROFILE_USERNAME_MAX_LENGTH = 30;
@@ -47,6 +46,10 @@ export type ProfileFunctionTypeMap = {
   [profileSetUsernameKey]: [SetProfileUsernameParams, void];
 };
 
+export const profileFunctionTypeConfigMap: FirebaseFunctionTypeConfigMap<ProfileFunctionTypeMap> = {
+  [profileSetUsernameKey]: null
+};
+
 export type ProfileModelCrudFunctionsConfig = {
   profile: {
     update: UpdateProfileParams;
@@ -56,15 +59,7 @@ export type ProfileModelCrudFunctionsConfig = {
 };
 
 export const profileModelCrudFunctionsConfig: ModelFirebaseCrudFunctionConfigMap<ProfileModelCrudFunctionsConfig> = {
-  profile: {
-    update: null,
-    delete: null
-  },
-  profilePrivate: null
-};
-
-export const profileFunctionTypeConfigMap: FirebaseFunctionTypeConfigMap<ProfileFunctionTypeMap> = {
-  [profileSetUsernameKey]: null
+  profile: ['update', 'delete']
 };
 
 /**
@@ -75,7 +70,10 @@ export const profileFunctionMap = modelFirebaseFunctionMapFactory(profileFunctio
 /**
  * Declared as an abstract class so we can inject it into our Angular app using this token.
  */
-export abstract class ProfileFunctions implements ModelFirebaseFunctionMap<ProfileFunctionTypeMap, ProfileModelCrudFunctionsConfig, ProfileTypes> {
+export abstract class ProfileFunctions implements ModelFirebaseFunctionMap<ProfileFunctionTypeMap, ProfileModelCrudFunctionsConfig> {
   abstract [profileSetUsernameKey]: FirebaseFunctionMapFunction<ProfileFunctionTypeMap, 'profileSetUsername'>;
-  abstract;
+  abstract profile: {
+    updateProfile: ModelFirebaseCrudFunction<UpdateProfileParams>;
+    deleteProfile: ModelFirebaseCrudFunction<UpdateProfileParams>;
+  };
 }

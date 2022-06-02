@@ -1,3 +1,4 @@
 export * from './auth';
-export * from './function';
 export * from './example';
+export * from './model';
+export * from './function';

@@ -1,5 +1,5 @@
 import { serverError } from '@dereekb/util';
-import { FirestoreCollectionName, FirestoreModelIdentity, FirestoreModelNames, OnCallUpdateModelParams } from '@dereekb/firebase';
+import { FirestoreModelName, FirestoreModelIdentity, FirestoreModelNames, OnCallUpdateModelParams } from '@dereekb/firebase';
 import { badRequestError } from '../../function';
 import { CallableContextWithAuthData } from '../../function/context';
 import { OnCallWithAuthorizedNestContext } from '../function/v1/call.utility';
@@ -18,7 +18,7 @@ export type OnCallUpdateModelMap<C, T extends FirestoreModelIdentity = Firestore
  */
 export function onCallUpdateModel<C>(map: OnCallUpdateModelMap<C>): OnCallWithAuthorizedNestContext<C, OnCallUpdateModelParams, unknown> {
   return <I>(nest: C, requestData: OnCallUpdateModelParams<I>, context: CallableContextWithAuthData) => {
-    const modelType = requestData?.modelType as string;
+    const modelType = requestData?.modelType;
     const updateFn = map[modelType];
 
     if (updateFn) {
@@ -29,7 +29,7 @@ export function onCallUpdateModel<C>(map: OnCallUpdateModelMap<C>): OnCallWithAu
   };
 }
 
-export function updateModelUnknownModelTypeError(modelType: FirestoreCollectionName) {
+export function updateModelUnknownModelTypeError(modelType: FirestoreModelName) {
   return badRequestError(
     serverError({
       status: 400,

@@ -610,7 +610,7 @@ download_api_ts_file "src/app/function/function.ts"
 
 mkdir $API_APP_FOLDER/src/app/function/model
 download_api_ts_file "src/app/function/model/index.ts"
-download_api_ts_file "src/app/function/model/update.function.ts"
+download_api_ts_file "src/app/function/model/crud.functions.ts"
 
 mkdir $API_APP_FOLDER/src/app/function/auth
 download_api_ts_file "src/app/function/auth/index.ts"

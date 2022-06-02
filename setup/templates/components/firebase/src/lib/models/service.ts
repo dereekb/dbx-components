@@ -4,12 +4,12 @@ import { PromiseOrValue } from '@dereekb/util';
 import { Example, ExampleDocument, ExampleRoles, ExampleTypes, exampleFirestoreCollection, ExampleFirestoreCollection, ExampleFirestoreCollections } from './example';
 
 export abstract class APP_CODE_PREFIXFirestoreCollections implements ExampleFirestoreCollections {
-  abstract readonly exampleFirestoreCollection: ExampleFirestoreCollection;
+  abstract readonly exampleCollection: ExampleFirestoreCollection;
 }
 
 export function makeAPP_CODE_PREFIXFirestoreCollections(firestoreContext: FirestoreContext): APP_CODE_PREFIXFirestoreCollections {
   return {
-    exampleFirestoreCollection: exampleFirestoreCollection(firestoreContext)
+    exampleCollection: exampleFirestoreCollection(firestoreContext)
   };
 }
 

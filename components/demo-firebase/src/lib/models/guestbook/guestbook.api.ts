@@ -1,5 +1,5 @@
 import { Expose } from 'class-transformer';
-import { FirebaseFunctionMap, firebaseFunctionMapFactory, FirebaseFunctionMapFunction, FirebaseFunctionTypeConfigMap } from '@dereekb/firebase';
+import { FirebaseFunctionMap, firebaseFunctionMapFactory, FirebaseFunctionMapFunction, FirebaseFunctionTypeConfigMap, ModelFirebaseCrudFunction, ModelFirebaseCrudFunctionConfigMap, ModelFirebaseFunctionMap, modelFirebaseFunctionMapFactory } from '@dereekb/firebase';
 import { IsOptional, IsNotEmpty, IsString, MaxLength, IsBoolean } from 'class-validator';
 import { ModelKey } from '@dereekb/util';
 
@@ -34,18 +34,24 @@ export class UpdateGuestbookEntryParams extends GuestbookEntryParams {
   published?: boolean;
 }
 
-export const deleteGuestbookEntryKey = 'deleteGuestbookEntry';
+export type GuestbookFunctionTypeMap = {};
 
-export type GuestbookFunctionTypeMap = {
-  [deleteGuestbookEntryKey]: [GuestbookEntryParams, void];
+export const guestbookFunctionTypeConfigMap: FirebaseFunctionTypeConfigMap<GuestbookFunctionTypeMap> = {};
+
+export type GuestbookModelCrudFunctionsConfig = {
+  guestbook: null;
+  guestbookEntry: {
+    update: UpdateGuestbookEntryParams;
+    delete: GuestbookEntryParams;
+  };
 };
 
-export const guestbookFunctionTypeConfigMap: FirebaseFunctionTypeConfigMap<GuestbookFunctionTypeMap> = {
-  [deleteGuestbookEntryKey]: null
+export const guestbookModelCrudFunctionsConfig: ModelFirebaseCrudFunctionConfigMap<GuestbookModelCrudFunctionsConfig> = {
+  guestbookEntry: ['update', 'delete']
 };
 
-export abstract class GuestbookFunctions implements FirebaseFunctionMap<GuestbookFunctionTypeMap> {
-  [deleteGuestbookEntryKey]: FirebaseFunctionMapFunction<GuestbookFunctionTypeMap, 'deleteGuestbookEntry'>;
+export const guestbookFunctionMap = modelFirebaseFunctionMapFactory(guestbookFunctionTypeConfigMap, guestbookModelCrudFunctionsConfig);
+
+export abstract class GuestbookFunctions implements ModelFirebaseFunctionMap<GuestbookFunctionTypeMap, GuestbookModelCrudFunctionsConfig> {
+  abstract guestbookEntry: { updateGuestbookEntry: ModelFirebaseCrudFunction<UpdateGuestbookEntryParams>; deleteGuestbookEntry: ModelFirebaseCrudFunction<GuestbookEntryParams> };
 }
-
-export const guestbookFunctionMap = firebaseFunctionMapFactory(guestbookFunctionTypeConfigMap);

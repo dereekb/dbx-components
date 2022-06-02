@@ -2,6 +2,7 @@
 /* eslint-disable */
 
 import { StringKeyPropertyKeys } from '@dereekb/util';
+import { UnionToIntersection } from 'ts-essentials';
 
 // MARK: Firestore
 // These types are provided to avoid us from using the "any".
@@ -24,7 +25,6 @@ export type PartialWithFieldValue<T> = Partial<T> | (T extends Primitive ? T : T
 
 export type WithFieldValue<T> = T | (T extends Primitive ? T : T extends {} ? { [K in keyof T]: WithFieldValue<T[K]> | FieldValue } : never);
 
-export type UnionToIntersection<U> = (U extends unknown ? (k: U) => void : never) extends (k: infer I) => void ? I : never;
 export type AddPrefixToKeys<Prefix extends string, T extends Record<string, unknown>> = { [K in keyof T & string as `${Prefix}.${K}`]+?: T[K] };
 export type ChildUpdateFields<K extends string, V> = V extends Record<string, unknown> ? AddPrefixToKeys<K, UpdateData<V>> : never;
 export type NestedUpdateFields<T extends Record<string, unknown>> = UnionToIntersection<{ [K in keyof T & string]: ChildUpdateFields<K, T[K]> }[keyof T & string]>;

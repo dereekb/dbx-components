@@ -1,4 +1,4 @@
-import { demoUpdateModel } from '../model/update.function';
+import { demoUpdateModel } from '../model/crud.functions';
 import { GuestbookEntry, guestbookEntryIdentity, UpdateGuestbookEntryParams } from '@dereekb/demo-firebase';
 import { demoGuestbookEntryContext, DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserContext, demoGuestbookContext } from '../../../test/fixture';
 import { isDate, isValid } from 'date-fns';

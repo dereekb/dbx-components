@@ -15,6 +15,6 @@ export class ProfileDocumentStore extends AbstractDbxFirebaseDocumentStore<Profi
   }
 
   updateProfile(params: UpdateProfileParams): Observable<LoadingState<void>> {
-    return loadingStateFromObs(from(this.profileFunctions.updateProfile(params)));
+    return loadingStateFromObs(from(this.profileFunctions.profile.updateProfile(params)));
   }
 }
