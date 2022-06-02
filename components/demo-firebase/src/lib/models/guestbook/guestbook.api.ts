@@ -34,21 +34,17 @@ export class UpdateGuestbookEntryParams extends GuestbookEntryParams {
   published?: boolean;
 }
 
-export const updateGuestbookEntryKey = 'updateGuestbookEntry';
 export const deleteGuestbookEntryKey = 'deleteGuestbookEntry';
 
 export type GuestbookFunctionTypeMap = {
-  [updateGuestbookEntryKey]: [UpdateGuestbookEntryParams, void];
   [deleteGuestbookEntryKey]: [GuestbookEntryParams, void];
 };
 
 export const guestbookFunctionTypeConfigMap: FirebaseFunctionTypeConfigMap<GuestbookFunctionTypeMap> = {
-  [updateGuestbookEntryKey]: null,
   [deleteGuestbookEntryKey]: null
 };
 
 export abstract class GuestbookFunctions implements FirebaseFunctionMap<GuestbookFunctionTypeMap> {
-  [updateGuestbookEntryKey]: FirebaseFunctionMapFunction<GuestbookFunctionTypeMap, 'updateGuestbookEntry'>;
   [deleteGuestbookEntryKey]: FirebaseFunctionMapFunction<GuestbookFunctionTypeMap, 'deleteGuestbookEntry'>;
 }
 

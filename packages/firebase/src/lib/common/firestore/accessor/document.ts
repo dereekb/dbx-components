@@ -8,14 +8,11 @@ import { createOrUpdateWithAccessorSet, dataFromSnapshotStream, FirestoreDocumen
 import { CollectionReferenceRef, DocumentReferenceRef, FirestoreContextReference } from '../reference';
 import { FirestoreDocumentContext } from './context';
 import { build, ModelKey, ModelTypeString } from '@dereekb/util';
+import { FirestoreCollectionNameRef, FirestoreModelIdentity, FirestoreModelIdentityRef } from '../collection/collection';
 
-export interface FirestoreDocument<T, A extends FirestoreDocumentDataAccessor<T> = FirestoreDocumentDataAccessor<T>> extends DocumentReferenceRef<T>, CollectionReferenceRef<T> {
+export interface FirestoreDocument<T, A extends FirestoreDocumentDataAccessor<T> = FirestoreDocumentDataAccessor<T>> extends DocumentReferenceRef<T>, CollectionReferenceRef<T>, FirestoreModelIdentityRef, FirestoreCollectionNameRef {
   readonly accessor: A;
   readonly id: string;
-  /**
-   * Returns the model type/collection name for this document.
-   */
-  readonly modelType: string;
 }
 
 /**
@@ -27,7 +24,11 @@ export abstract class AbstractFirestoreDocument<T, D extends AbstractFirestoreDo
 
   constructor(readonly accessor: A, readonly documentAccessor: LimitedFirestoreDocumentAccessor<T, D>) {}
 
-  abstract get modelType(): ModelTypeString;
+  abstract get modelIdentity(): FirestoreModelIdentity;
+
+  get modelType(): ModelTypeString {
+    return this.modelIdentity.collection;
+  }
 
   get id(): string {
     return this.documentRef.id;

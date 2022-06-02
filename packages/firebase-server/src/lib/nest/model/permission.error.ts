@@ -1,9 +1,10 @@
 import { FirebaseContextGrantedModelRoles, FirebasePermissionErrorContext, FirebasePermissionErrorContextErrorFunction } from '@dereekb/firebase';
-import { serverError } from '@dereekb/util';
-import { ForbiddenException } from '@nestjs/common';
+import { ArrayOrValue, serverError } from '@dereekb/util';
+import { GrantedRole } from '@dereekb/model';
+import { forbiddenError } from '../../function/error';
 
-export const makeNestFirebaseForbiddenPermissionError: FirebasePermissionErrorContextErrorFunction = (firebaseContextGrantedModelRoles: FirebaseContextGrantedModelRoles<FirebasePermissionErrorContext, unknown>, role?: string) => {
-  return new ForbiddenException(
+export const nestFirebaseForbiddenPermissionError: FirebasePermissionErrorContextErrorFunction = (firebaseContextGrantedModelRoles: FirebaseContextGrantedModelRoles<FirebasePermissionErrorContext, unknown>, roles?: ArrayOrValue<GrantedRole>) => {
+  return forbiddenError(
     serverError({
       status: 403,
       code: 'PERMISSION_ERROR',
@@ -11,7 +12,7 @@ export const makeNestFirebaseForbiddenPermissionError: FirebasePermissionErrorCo
       data: {
         id: firebaseContextGrantedModelRoles.data?.document.id,
         type: firebaseContextGrantedModelRoles.data?.document.modelType,
-        role
+        roles
       }
     })
   );

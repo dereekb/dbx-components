@@ -1,6 +1,6 @@
 import { INestApplicationContext } from '@nestjs/common';
-import { DemoFirebaseContextAppContext, demoFirebaseModelServices, DemoFirestoreCollections } from '@dereekb/demo-firebase';
-import { onCallWithNestApplicationFactory, onCallWithNestContextFactory, taskQueueFunctionHandlerWithNestContextFactory, cloudEventHandlerWithNestContextFactory, blockingFunctionHandlerWithNestContextFactory, onEventWithNestContextFactory, AbstractFirebaseNestContext } from '@dereekb/firebase-server';
+import { DemoFirebaseContextAppContext, demoFirebaseModelServices, DemoFirebaseModelTypes, DemoFirestoreCollections } from '@dereekb/demo-firebase';
+import { onCallWithNestApplicationFactory, onCallWithNestContextFactory, taskQueueFunctionHandlerWithNestContextFactory, cloudEventHandlerWithNestContextFactory, blockingFunctionHandlerWithNestContextFactory, onEventWithNestContextFactory, AbstractFirebaseNestContext, OnCallUpdateModelFunction, OnCallUpdateModelParams, OnCallUpdateModelMap } from '@dereekb/firebase-server';
 import { ProfileServerActions, GuestbookServerActions, DemoApiAuthService } from '../common';
 
 export class DemoApiNestContext extends AbstractFirebaseNestContext<DemoFirebaseContextAppContext, typeof demoFirebaseModelServices> {
@@ -36,3 +36,7 @@ export const onEventWithDemoNestContext = onEventWithNestContextFactory(mapDemoA
 export const cloudEventWithDemoNestContext = cloudEventHandlerWithNestContextFactory(mapDemoApiNestContext);
 export const blockingEventWithDemoNestContext = blockingFunctionHandlerWithNestContextFactory(mapDemoApiNestContext);
 export const taskqueueEventWithDemoNestContext = taskQueueFunctionHandlerWithNestContextFactory(mapDemoApiNestContext);
+
+// MARK: Functions
+export type DemoUpdateModelfunction<I, O = void> = OnCallUpdateModelFunction<DemoApiNestContext, I, O>;
+export type DemoOnCallUpdateModelMap = OnCallUpdateModelMap<DemoApiNestContext, DemoFirebaseModelTypes>;

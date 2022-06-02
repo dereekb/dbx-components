@@ -1,4 +1,4 @@
-import { CollectionReference, AbstractFirestoreDocument, snapshotConverterFunctions, firestoreString, firestoreDate, FirestoreCollection, UserRelatedById, DocumentReferenceRef, FirestoreContext, FirestoreCollectionWithParent, firestoreBoolean, DocumentDataWithId, AbstractFirestoreDocumentWithParent, optionalFirestoreDate, DocumentReference, FirestoreCollectionGroup, CollectionGroup } from '@dereekb/firebase';
+import { CollectionReference, AbstractFirestoreDocument, snapshotConverterFunctions, firestoreString, firestoreDate, FirestoreCollection, UserRelatedById, DocumentReferenceRef, FirestoreContext, FirestoreCollectionWithParent, firestoreBoolean, DocumentDataWithId, AbstractFirestoreDocumentWithParent, optionalFirestoreDate, DocumentReference, FirestoreCollectionGroup, CollectionGroup, firestoreModelIdentity } from '@dereekb/firebase';
 import { GrantedReadRole } from '@dereekb/model';
 import { Maybe } from '@dereekb/util';
 
@@ -8,10 +8,10 @@ export interface GuestbookFirestoreCollections {
   guestbookEntryCollectionGroup: GuestbookEntryFirestoreCollectionGroup;
 }
 
-export type GuestbookTypes = typeof guestbookCollectionName | typeof guestbookCollectionGuestbookEntryCollectionName;
+export type GuestbookTypes = typeof guestbookIdentity | typeof guestbookEntryIdentity;
 
 // MARK: Guestbook
-export const guestbookCollectionName = 'guestbook';
+export const guestbookIdentity = firestoreModelIdentity('guestbook');
 
 export interface Guestbook {
   /**
@@ -41,8 +41,8 @@ export type GuestbookWithId = DocumentDataWithId<Guestbook>;
 export interface GuestbookRef extends DocumentReferenceRef<Guestbook> {}
 
 export class GuestbookDocument extends AbstractFirestoreDocument<Guestbook, GuestbookDocument> {
-  get modelType() {
-    return guestbookCollectionName;
+  get modelIdentity() {
+    return guestbookIdentity;
   }
 }
 
@@ -56,7 +56,7 @@ export const guestbookConverter = snapshotConverterFunctions<Guestbook>({
 });
 
 export function guestbookCollectionReference(context: FirestoreContext): CollectionReference<Guestbook> {
-  return context.collection(guestbookCollectionName).withConverter<Guestbook>(guestbookConverter);
+  return context.collection(guestbookIdentity.collection).withConverter<Guestbook>(guestbookConverter);
 }
 
 export type GuestbookFirestoreCollection = FirestoreCollection<Guestbook, GuestbookDocument>;
@@ -71,7 +71,7 @@ export function guestbookFirestoreCollection(firestoreContext: FirestoreContext)
 }
 
 // MARK: Guestbook Entry
-export const guestbookCollectionGuestbookEntryCollectionName = 'guestbookentry';
+export const guestbookEntryIdentity = firestoreModelIdentity('guestbookEntry');
 
 export interface GuestbookEntry extends UserRelatedById {
   /**
@@ -101,8 +101,8 @@ export type GuestbookEntryRoles = 'owner' | GrantedReadRole;
 export interface GuestbookEntryRef extends DocumentReferenceRef<GuestbookEntry> {}
 
 export class GuestbookEntryDocument extends AbstractFirestoreDocumentWithParent<Guestbook, GuestbookEntry, GuestbookEntryDocument> {
-  get modelType() {
-    return guestbookCollectionGuestbookEntryCollectionName;
+  get modelIdentity() {
+    return guestbookEntryIdentity;
   }
 }
 
@@ -118,7 +118,7 @@ export const guestbookEntryConverter = snapshotConverterFunctions<GuestbookEntry
 
 export function guestbookEntryCollectionReferenceFactory(context: FirestoreContext): (guestbook: GuestbookDocument) => CollectionReference<GuestbookEntry> {
   return (guestbook: GuestbookDocument) => {
-    return context.subcollection(guestbook.documentRef, guestbookCollectionGuestbookEntryCollectionName).withConverter<GuestbookEntry>(guestbookEntryConverter);
+    return context.subcollection(guestbook.documentRef, guestbookEntryIdentity.collection).withConverter<GuestbookEntry>(guestbookEntryConverter);
   };
 }
 
@@ -140,7 +140,7 @@ export function guestbookEntryFirestoreCollectionFactory(firestoreContext: Fires
 }
 
 export function guestbookEntryCollectionReference(context: FirestoreContext): CollectionGroup<GuestbookEntry> {
-  return context.collectionGroup(guestbookCollectionGuestbookEntryCollectionName).withConverter<GuestbookEntry>(guestbookEntryConverter);
+  return context.collectionGroup(guestbookEntryIdentity.collection).withConverter<GuestbookEntry>(guestbookEntryConverter);
 }
 
 export type GuestbookEntryFirestoreCollectionGroup = FirestoreCollectionGroup<GuestbookEntry, GuestbookEntryDocument>;

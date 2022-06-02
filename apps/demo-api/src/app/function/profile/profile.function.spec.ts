@@ -1,6 +1,6 @@
-import { updateProfile } from './profile.update';
+import { demoUpdateModel } from '../model/update.function';
 import { profileSetUsername } from './profile.set.username';
-import { SetProfileUsernameParams, UpdateProfileParams } from '@dereekb/demo-firebase';
+import { profileIdentity, SetProfileUsernameParams, UpdateProfileParams } from '@dereekb/demo-firebase';
 import { DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserContext } from '../../../test/fixture';
 import { describeCloudFunctionTest } from '@dereekb/firebase-server/test';
 
@@ -64,15 +64,18 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
   });
 
   // describe tests for updateProfile
-  describeCloudFunctionTest('updateProfile', { f, fn: updateProfile }, (updateProfileCloudFn) => {
+  describeCloudFunctionTest('updateProfile', { f, fn: demoUpdateModel }, (updateProfileCloudFn) => {
     demoAuthorizedUserContext({ f }, (u) => {
       it(`should update the user's profile.`, async () => {
         const bio = 'test bio';
-        const params: UpdateProfileParams = {
+        const data: UpdateProfileParams = {
           bio
         };
 
-        await u.callCloudFunction(updateProfileCloudFn, params);
+        await u.callCloudFunction(updateProfileCloudFn, {
+          modelType: profileIdentity.model,
+          data
+        });
 
         const profileData = await u.instance.loadUserProfile().snapshotData();
         expect(profileData?.bio).toBe(bio);

@@ -608,6 +608,10 @@ mkdir $API_APP_FOLDER/src/app/function
 download_api_ts_file "src/app/function/index.ts"
 download_api_ts_file "src/app/function/function.ts"
 
+mkdir $API_APP_FOLDER/src/app/function/model
+download_api_ts_file "src/app/function/model/index.ts"
+download_api_ts_file "src/app/function/model/update.function.ts"
+
 mkdir $API_APP_FOLDER/src/app/function/auth
 download_api_ts_file "src/app/function/auth/index.ts"
 download_api_ts_file "src/app/function/auth/init.user.function.ts"

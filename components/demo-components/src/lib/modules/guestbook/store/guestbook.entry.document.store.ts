@@ -21,7 +21,7 @@ export class GuestbookEntryDocumentStore extends AbstractDbxFirebaseDocumentWith
       switchMap((parent) =>
         loadingStateFromObs(
           from(
-            this.guestbookFunctions[updateGuestbookEntryKey]({
+            this.guestbookFunctions.updateGuestbookEntry({
               ...params,
               guestbook: parent.id
             })

@@ -9,6 +9,8 @@ export interface ContextGrantedModelRolesReader<C extends FirebasePermissionErro
   readonly roleMap: GrantedRoleMap<R>;
   readonly contextGrantedModelRoles: FirebaseContextGrantedModelRoles<C, T, D, R>;
   assertHasRole(role: R): void;
+  assertHasRoles(setIncludes: SetIncludesMode, roles: ArrayOrValue<R>): void;
+  assertContainsRoles(setIncludes: SetIncludesMode, roles: ArrayOrValue<R>): void;
   throwPermissionError(role?: R): never;
 }
 
@@ -45,7 +47,19 @@ export class ContextGrantedModelRolesReaderInstance<C extends FirebasePermission
     }
   }
 
-  throwPermissionError(role?: R): never {
+  assertHasRoles(setIncludes: SetIncludesMode, roles: ArrayOrValue<R>): void {
+    if (!this.hasRoles(setIncludes, roles)) {
+      this.throwPermissionError(roles);
+    }
+  }
+
+  assertContainsRoles(setIncludes: SetIncludesMode, roles: ArrayOrValue<R>): void {
+    if (!this.containsRoles(setIncludes, roles)) {
+      this.throwPermissionError(roles);
+    }
+  }
+
+  throwPermissionError(role?: ArrayOrValue<R>): never {
     const error = this.contextGrantedModelRoles.context.makePermissionError?.(this.contextGrantedModelRoles, role) ?? new Error(contextGrantedModelRolesReaderPermissionErrorMessage(this.contextGrantedModelRoles, role));
     throw error;
   }
@@ -65,11 +79,11 @@ export function contextGrantedModelRolesReader<C extends FirebasePermissionError
  * @param role
  * @returns
  */
-export function contextGrantedModelRolesReaderPermissionErrorMessage(contextGrantedModelRoles: FirebaseContextGrantedModelRoles<FirebasePermissionErrorContext, unknown>, role?: string) {
+export function contextGrantedModelRolesReaderPermissionErrorMessage(contextGrantedModelRoles: FirebaseContextGrantedModelRoles<FirebasePermissionErrorContext, unknown>, roles?: ArrayOrValue<GrantedRole>) {
   let message = `Permissions Error ("${contextGrantedModelRoles.data?.document.modelType}":"${contextGrantedModelRoles.data?.document.id}")`;
 
-  if (role) {
-    message = `${message}: required role "${role}"`;
+  if (roles && roles?.length) {
+    message = `${message}: required role(s) "${roles}"`;
   }
 
   return message;

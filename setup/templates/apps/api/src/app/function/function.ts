@@ -1,6 +1,6 @@
 import { INestApplicationContext } from '@nestjs/common';
-import { APP_CODE_PREFIXFirebaseContextAppContext, APP_CODE_PREFIX_LOWERFirebaseModelServices, APP_CODE_PREFIXFirestoreCollections  } from "FIREBASE_COMPONENTS_NAME";
-import { AbstractFirebaseNestContext, onCallWithNestApplicationFactory, onCallWithNestContextFactory, onEventWithNestApplicationFactory, onEventWithNestContextFactory } from '@dereekb/firebase-server';
+import { APP_CODE_PREFIXFirebaseContextAppContext, APP_CODE_PREFIX_LOWERFirebaseModelServices, APP_CODE_PREFIXFirebaseModelTypes, APP_CODE_PREFIXFirestoreCollections } from "FIREBASE_COMPONENTS_NAME";
+import { onCallWithNestApplicationFactory, onCallWithNestContextFactory, onEventWithNestContextFactory, AbstractFirebaseNestContext, OnCallUpdateModelFunction, OnCallUpdateModelMap } from '@dereekb/firebase-server';
 import { ExampleServerActions } from '../common/models/example/example.action.server';
 import { APP_CODE_PREFIXApiAuthService } from '../common/firebase/auth.service';
 
@@ -33,3 +33,7 @@ export const onCallWithAPP_CODE_PREFIXNest = onCallWithNestApplicationFactory();
 export const onCallWithAPP_CODE_PREFIXNestContext = onCallWithNestContextFactory(onCallWithAPP_CODE_PREFIXNest, mapAPP_CODE_PREFIXApiNestContext);
 export const onEventWithAPP_CODE_PREFIXNest = onEventWithNestApplicationFactory();
 export const onEventWithAPP_CODE_PREFIXNestContext = onEventWithNestContextFactory(mapAPP_CODE_PREFIXApiNestContext);
+
+// MARK: Functions
+export type APP_CODE_PREFIXUpdateModelfunction<I, O = void> = OnCallUpdateModelFunction<APP_CODE_PREFIXApiNestContext, I, O>;
+export type APP_CODE_PREFIXOnCallUpdateModelMap = OnCallUpdateModelMap<APP_CODE_PREFIXApiNestContext, APP_CODE_PREFIXFirebaseModelTypes>;

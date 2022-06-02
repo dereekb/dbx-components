@@ -79,9 +79,9 @@ export type DemoFirebaseBaseContext = FirebaseAppModelContext<DemoFirebaseContex
 
 export const DEMO_FIREBASE_MODEL_SERVICE_FACTORIES = {
   guestbook: guestbookFirebaseModelServiceFactory,
-  guestbookentry: guestbookEntryFirebaseModelServiceFactory,
+  guestbookEntry: guestbookEntryFirebaseModelServiceFactory,
   profile: profileFirebaseModelServiceFactory,
-  profileprivate: profilePrivateDataFirebaseModelServiceFactory
+  profilePrivate: profilePrivateDataFirebaseModelServiceFactory
 };
 
 export const demoFirebaseModelServices = firebaseModelsService<typeof DEMO_FIREBASE_MODEL_SERVICE_FACTORIES, DemoFirebaseBaseContext, DemoFirebaseModelTypes>(DEMO_FIREBASE_MODEL_SERVICE_FACTORIES);
