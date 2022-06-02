@@ -1,8 +1,11 @@
+import { GrantedReadRole } from '@dereekb/model';
 import { CollectionReference, AbstractFirestoreDocument,snapshotConverterFunctions, firestoreString, FirestoreCollection, UserRelatedById, DocumentReferenceRef, FirestoreContext } from "@dereekb/firebase";
 
 export interface ExampleFirestoreCollections {
   exampleFirestoreCollection: ExampleFirestoreCollection;
 }
+
+export type ExampleTypes = typeof exampleCollectionName;
 
 // MARK: Example
 export const exampleCollectionName = 'example';
@@ -15,6 +18,8 @@ export interface Example extends UserRelatedById {
 }
 
 export interface ExampleRef extends DocumentReferenceRef<Example> { }
+
+export type ExampleRoles = GrantedReadRole;
 
 export class ExampleDocument extends AbstractFirestoreDocument<Example, ExampleDocument> {
   get modelType() {

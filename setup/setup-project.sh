@@ -453,7 +453,6 @@ rm $FIREBASE_COMPONENTS_FOLDER/src/index.ts
 echo "export * from './lib'" > $FIREBASE_COMPONENTS_FOLDER/src/index.ts
 
 download_firebase_ts_file "src/lib/index.ts"
-download_firebase_ts_file "src/lib/collection.ts"
 download_firebase_ts_file "src/lib/functions.ts"
 
 # Auth Folder
@@ -464,6 +463,7 @@ download_firebase_ts_file "src/lib/auth/index.ts"
 # Model/Example Folder
 mkdir $FIREBASE_COMPONENTS_FOLDER/src/lib/models
 download_firebase_ts_file "src/lib/models/index.ts"
+download_firebase_ts_file "src/lib/models/service.ts"
 
 mkdir $FIREBASE_COMPONENTS_FOLDER/src/lib/models/example
 download_firebase_ts_file "src/lib/models/example/example.action.ts"
