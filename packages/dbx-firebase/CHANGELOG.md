@@ -2,6 +2,20 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [6.0.0](https://github.com/dereekb/dbx-components/compare/v5.3.0-dev...v6.0.0) (2022-06-03)
+
+
+### Bug Fixes
+
+* hasAuthRoleHook fix ([e4749ba](https://github.com/dereekb/dbx-components/commit/e4749bae9a657d7cdc82974d129211392261aa3c))
+
+
+### Features
+
+* added AbstractFirebaseNestContext ([2f8e1a2](https://github.com/dereekb/dbx-components/commit/2f8e1a2127ffcfb23a428d6b46192633d8bf725f))
+
+
+
 # [5.3.0](https://github.com/dereekb/dbx-components/compare/v5.2.1-dev...v5.3.0) (2022-05-30)
 
 

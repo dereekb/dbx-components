@@ -2,6 +2,26 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [6.0.0](https://github.com/dereekb/dbx-components/compare/v5.3.0-dev...v6.0.0) (2022-06-03)
+
+
+### Bug Fixes
+
+* added asIterable to handle strings ([9d5b785](https://github.com/dereekb/dbx-components/commit/9d5b7854b6ce4f3c08b4b36fa75419fb97e8d548))
+* hasAuthRoleHook fix ([e4749ba](https://github.com/dereekb/dbx-components/commit/e4749bae9a657d7cdc82974d129211392261aa3c))
+
+
+### Features
+
+* added ContextGrantedModelRolesReader ([6fba1cc](https://github.com/dereekb/dbx-components/commit/6fba1cc637beeff55523df599eb88391352f9f58))
+* added FirebaseModelService ([3876575](https://github.com/dereekb/dbx-components/commit/387657559a86908eee57326b655c63a0a836c239))
+* added firebaseModelsService ([7432e55](https://github.com/dereekb/dbx-components/commit/7432e55111cec66a239856ecb2db6adfc9e9780d))
+* added grantedRoleMapReader ([11d2f17](https://github.com/dereekb/dbx-components/commit/11d2f1786f06024dfbbbfd9ac00e48791cbc0521))
+* added OnCallDeleteModel ([358189d](https://github.com/dereekb/dbx-components/commit/358189d6db6ef7d8db93d6dd881d29cc724dd083))
+* added orderByDocumentId, startAtValue, endAtValue constraints ([c846fee](https://github.com/dereekb/dbx-components/commit/c846feef6c26a3818bb006a807b6e931b7b14eaf))
+
+
+
 # [5.3.0](https://github.com/dereekb/dbx-components/compare/v5.2.1-dev...v5.3.0) (2022-05-30)
 
 

@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [6.0.0](https://github.com/dereekb/dbx-components/compare/v5.3.0-dev...v6.0.0) (2022-06-03)
+
+
+### Features
+
+* added OnCallUpdateModel ([3b60a06](https://github.com/dereekb/dbx-components/commit/3b60a06d48ec6a96940f44939e24e5c1f4879aa9))
+
+
+
 # [5.3.0](https://github.com/dereekb/dbx-components/compare/v5.2.1-dev...v5.3.0) (2022-05-30)
 
 

@@ -2,6 +2,16 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [6.0.0](https://github.com/dereekb/dbx-components/compare/v5.3.0-dev...v6.0.0) (2022-06-03)
+
+
+### Bug Fixes
+
+* hasAuthRoleHook fix ([e4749ba](https://github.com/dereekb/dbx-components/commit/e4749bae9a657d7cdc82974d129211392261aa3c))
+* hasAuthStateData interface fix ([8ea59e3](https://github.com/dereekb/dbx-components/commit/8ea59e3cba1e0407e6e1ed7b2dd4176a68c2fa09))
+
+
+
 # [5.3.0](https://github.com/dereekb/dbx-components/compare/v5.2.1-dev...v5.3.0) (2022-05-30)
 
 

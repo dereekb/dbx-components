@@ -2,6 +2,25 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [6.0.0](https://github.com/dereekb/dbx-components/compare/v5.3.0-dev...v6.0.0) (2022-06-03)
+
+
+### Features
+
+* added ContextGrantedModelRolesReader ([6fba1cc](https://github.com/dereekb/dbx-components/commit/6fba1cc637beeff55523df599eb88391352f9f58))
+* added firebaseModelsService ([7432e55](https://github.com/dereekb/dbx-components/commit/7432e55111cec66a239856ecb2db6adfc9e9780d))
+* added loadDocumentForKey to LimitedFirestoreDocumentAccessor ([96958b8](https://github.com/dereekb/dbx-components/commit/96958b89df62dc38136ac2dfcd2ce7c139b6099e))
+* added modelType to FirestoreDocument ([deecb5d](https://github.com/dereekb/dbx-components/commit/deecb5df415ed9d99412c336ba65f4da572bbe44))
+* added OnCallDeleteModel ([358189d](https://github.com/dereekb/dbx-components/commit/358189d6db6ef7d8db93d6dd881d29cc724dd083))
+* added orderByDocumentId, startAtValue, endAtValue constraints ([c846fee](https://github.com/dereekb/dbx-components/commit/c846feef6c26a3818bb006a807b6e931b7b14eaf))
+
+
+### BREAKING CHANGES
+
+* model type is now required on FirestoreDocument models
+
+
+
 # [5.3.0](https://github.com/dereekb/dbx-components/compare/v5.2.1-dev...v5.3.0) (2022-05-30)
 
 
