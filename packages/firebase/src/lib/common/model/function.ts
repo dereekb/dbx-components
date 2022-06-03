@@ -1,6 +1,6 @@
-import { ModelKey, ArrayOrValue, asArray } from '@dereekb/util';
+import { ArrayOrValue, asArray } from '@dereekb/util';
 import { DocumentReferenceRef } from '../firestore/reference';
-import { FirestoreModelNameRef } from '../firestore/collection/collection';
+import { FirestoreModelKey, FirestoreModelNameRef } from '../firestore/collection/collection';
 
 export interface OnCallTypedModelParams<T = unknown> extends FirestoreModelNameRef {
   data: T;
@@ -29,16 +29,16 @@ export type OnCallDeleteModelParams<T = unknown> = OnCallTypedModelParams<T>;
 // MARK: Result
 export interface OnCallCreateModelResult {
   /**
-   * Keys/Paths of the created object(s)
+   * Key(s)/Paths of the created object(s)
    */
-  modelKeys: ModelKey[];
+  modelKeys: ArrayOrValue<FirestoreModelKey>;
 }
 
 export function onCallCreateModelResultWithDocs(result: ArrayOrValue<DocumentReferenceRef<unknown>>): OnCallCreateModelResult {
   return onCallCreateModelResult(asArray(result).map((x) => x.documentRef.path));
 }
 
-export function onCallCreateModelResult(modelKeys: ArrayOrValue<ModelKey>): OnCallCreateModelResult {
+export function onCallCreateModelResult(modelKeys: ArrayOrValue<FirestoreModelKey>): OnCallCreateModelResult {
   return {
     modelKeys: asArray(modelKeys)
   };

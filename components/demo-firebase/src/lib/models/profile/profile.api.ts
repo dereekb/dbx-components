@@ -8,14 +8,13 @@ export const PROFILE_BIO_MAX_LENGTH = 200;
 export const PROFILE_USERNAME_MAX_LENGTH = 30;
 
 export class ProfileParams {
-  // MARK: Admin Only
   /**
    * Sets the target profile/user. If not defined, assumes the current user's profile.
    */
   @Expose()
   @IsString()
   @IsOptional()
-  uid?: string;
+  key?: string;
 }
 
 export class SetProfileUsernameParams extends ProfileParams {

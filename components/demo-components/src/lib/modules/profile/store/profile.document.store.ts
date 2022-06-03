@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import { AbstractDbxFirebaseDocumentStore } from '@dereekb/dbx-firebase';
-import { UpdateProfileParams, DemoFirestoreCollections, Profile, ProfileDocument, ProfileFunctions, SetProfileUsernameParams, profileSetUsernameKey } from '@dereekb/demo-firebase';
+import { AbstractDbxFirebaseDocumentStore, firebaseDocumentStoreUpdateFunction } from '@dereekb/dbx-firebase';
+import { DemoFirestoreCollections, Profile, ProfileDocument, ProfileFunctions, SetProfileUsernameParams, profileSetUsernameKey } from '@dereekb/demo-firebase';
 import { LoadingState, loadingStateFromObs } from '@dereekb/rxjs';
 import { from, Observable } from 'rxjs';
 
@@ -14,7 +14,5 @@ export class ProfileDocumentStore extends AbstractDbxFirebaseDocumentStore<Profi
     return loadingStateFromObs(from(this.profileFunctions[profileSetUsernameKey](params)));
   }
 
-  updateProfile(params: UpdateProfileParams): Observable<LoadingState<void>> {
-    return loadingStateFromObs(from(this.profileFunctions.profile.updateProfile(params)));
-  }
+  readonly updateProfile = firebaseDocumentStoreUpdateFunction(this, this.profileFunctions.profile.updateProfile);
 }
