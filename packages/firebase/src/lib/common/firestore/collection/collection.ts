@@ -18,7 +18,80 @@ import { FirestoreItemPageIterationBaseConfig, FirestoreItemPageIterationFactory
 import { firestoreQueryFactory, FirestoreQueryFactory } from '../query/query';
 import { FirestoreDrivers } from '../driver/driver';
 import { FirestoreCollectionQueryFactory, firestoreCollectionQueryFactory } from './collection.query';
-import { build, Building } from '@dereekb/util';
+import { Building, ModelTypeString } from '@dereekb/util';
+
+/**
+ * The camelCase model name.
+ */
+export type FirestoreModelName = ModelTypeString;
+
+/**
+ * An all lowercase name that references a collection. Is usually the lowercase version of the FirestoreModelName.
+ *
+ * This is the part of the path that says what the collection is.
+ *
+ * Each collection name in the app should be unique, as usage of CollectionGroups would cause collections with the same name to be returned.
+ */
+export type FirestoreCollectionName = string;
+
+/**
+ * FirestoreCollectionName derived from a FirestoreModelName
+ */
+export type FirestoreModelCollectionName<M extends FirestoreModelName> = `${Lowercase<M>}`;
+
+/**
+ * A firestore model's identity
+ */
+export type FirestoreModelIdentity<M extends FirestoreModelName = FirestoreModelName> = {
+  readonly model: M;
+  readonly collection: FirestoreModelCollectionName<M>;
+};
+
+export type FirestoreCollectionNames<I extends FirestoreModelIdentity> = I extends FirestoreModelIdentity<infer M> ? FirestoreModelCollectionName<M> : never;
+export type FirestoreModelNames<I extends FirestoreModelIdentity> = I extends FirestoreModelIdentity<infer M> ? M : never;
+
+/**
+ * Creates a FirestoreModelIdentity value.
+ *
+ * @param modelName
+ * @returns
+ */
+export function firestoreModelIdentity<M extends FirestoreModelName>(modelName: M): FirestoreModelIdentity<M> {
+  return {
+    collection: modelName.toLowerCase() as FirestoreModelCollectionName<M>,
+    model: modelName
+  };
+}
+
+/**
+ * Reference to a FirestoreCollectionName
+ */
+export interface FirestoreModelNameRef<M extends FirestoreModelName = FirestoreModelName> {
+  /**
+   * Returns the FirestoreModelName for this context.
+   */
+  readonly modelType: M;
+}
+
+/**
+ * Reference to a FirestoreCollectionName
+ */
+export interface FirestoreCollectionNameRef {
+  /**
+   * Returns the FirestoreCollectionName for this context.
+   */
+  readonly collectionName: FirestoreCollectionName;
+}
+
+/**
+ * Reference to a FirestoreModelIdentity
+ */
+export interface FirestoreModelIdentityRef<M extends FirestoreModelName = FirestoreModelName> {
+  /**
+   * Returns the FirestoreModelIdentity for this context.
+   */
+  readonly modelIdentity: FirestoreModelIdentity<M>;
+}
 
 // MARK: FirestoreCollectionLike
 /**

@@ -1,5 +1,5 @@
 import { Directive, Host, Input, OnInit, OnDestroy } from '@angular/core';
-import { isSameNonNullValue, isStringOrTrue, Maybe } from '@dereekb/util';
+import { Maybe } from '@dereekb/util';
 import { BehaviorSubject, combineLatest, delay } from 'rxjs';
 import { AbstractSubscriptionDirective } from '../../../subscription';
 import { DbxActionContextStoreSourceInstance } from '../../action.store.source';

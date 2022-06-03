@@ -59,7 +59,7 @@ export function applyFirebaseGCloudTestProjectIdToFirebaseConfigEnv() {
     throw new Error('No test project id was available in the environment. Did you call initFirebaseAdminTestEnvironment() first?');
   }
 
-  let config: any = JSON.parse(process.env.FIREBASE_CONFIG ?? '{}');
+  const config: any = JSON.parse(process.env.FIREBASE_CONFIG ?? '{}');
   config.projectId = testProjectId;
 
   process.env.FIREBASE_CONFIG = JSON.stringify(config);

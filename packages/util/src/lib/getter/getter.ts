@@ -11,7 +11,7 @@ export type Factory<T> = Getter<T>;
 /**
  * Function that returns a value with an optional single argument.
  */
-export type FactoryWithInput<T, A> = (args?: A) => T;
+export type FactoryWithInput<O, I> = (args?: I) => O;
 
 /**
  * Function that returns a value with a single argument.

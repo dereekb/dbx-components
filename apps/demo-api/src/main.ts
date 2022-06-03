@@ -9,4 +9,4 @@ const { server, nest } = initNestServer(app);
 
 export const api = onRequest(server);
 
-export const { initUserOnCreate, profileSetUsername, updateProfile, updateGuestbookEntry } = allAppFunctions(nest);
+export const { initUserOnCreate, profileSetUsername, updateModel, deleteModel } = allAppFunctions(nest);

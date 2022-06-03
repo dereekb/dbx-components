@@ -11,4 +11,6 @@ export const api = onRequest(server);
 
 export const {
   exampleSetUsername,
+  updateModel, 
+  deleteModel 
 } = allAppFunctions(nest);

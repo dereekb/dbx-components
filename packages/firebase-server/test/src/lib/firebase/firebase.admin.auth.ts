@@ -10,6 +10,9 @@ import { decode as decodeJwt } from 'jsonwebtoken';
 import { CallableContextOptions, ContextOptions, WrappedFunction, WrappedScheduledFunction } from 'firebase-functions-test/lib/main';
 import { EventContext } from 'firebase-functions/lib/cloud-functions';
 
+export type CallCloudFunction<I = any> = WrappedScheduledFunction | WrappedFunction<I>;
+export type CallCloudFunctionParams<F> = F extends WrappedFunction<infer I> ? I : unknown;
+
 /**
  * Testing context for a single user.
  */
@@ -19,7 +22,7 @@ export interface AuthorizedUserTestContext {
   loadIdToken(): Promise<string>;
   loadDecodedIdToken(): Promise<DecodedIdToken>;
   makeContextOptions(): Promise<ContextOptions>;
-  callCloudFunction<O = any, I = any>(fn: WrappedScheduledFunction | WrappedFunction<I>, params: any): Promise<O>;
+  callCloudFunction<F extends CallCloudFunction, O = unknown>(fn: F, params: CallCloudFunctionParams<F>): Promise<O>;
 }
 
 export class AuthorizedUserTestContextFixture<PI extends FirebaseAdminTestContext = FirebaseAdminTestContext, PF extends JestTestContextFixture<PI> = JestTestContextFixture<PI>, I extends AuthorizedUserTestContextInstance<PI> = AuthorizedUserTestContextInstance<PI>> extends AbstractChildJestTestContextFixture<I, PF> implements AuthorizedUserTestContext {
@@ -44,12 +47,12 @@ export class AuthorizedUserTestContextFixture<PI extends FirebaseAdminTestContex
     return this.instance.makeContextOptions();
   }
 
-  callCloudFunction<O = any, I = any>(fn: WrappedScheduledFunction | WrappedFunction<I>, params: any): Promise<O> {
+  callCloudFunction<F extends CallCloudFunction, O = unknown>(fn: F, params: CallCloudFunctionParams<F>): Promise<O> {
     return this.instance.callCloudFunction(fn, params);
   }
 }
 
-export interface CallEventFunctionEventContext extends Partial<Omit<EventContext, 'auth'>> {}
+export type CallEventFunctionEventContext = Partial<Omit<EventContext, 'auth'>>;
 
 export class AuthorizedUserTestContextInstance<PI extends FirebaseAdminTestContext = FirebaseAdminTestContext> implements AuthorizedUserTestContext {
   constructor(readonly uid: FirebaseAuthUserId, readonly testContext: PI) {}
@@ -70,12 +73,12 @@ export class AuthorizedUserTestContextInstance<PI extends FirebaseAdminTestConte
     return this.loadUserRecord().then((record) => createTestFunctionContextOptions(this.testContext.auth, record));
   }
 
-  callCloudFunction<O = any, I = any>(fn: WrappedScheduledFunction | WrappedFunction<I>, params: any): Promise<O> {
-    return this.makeContextOptions().then((options) => fn(params, options));
+  callCloudFunction<F extends CallCloudFunction, O = unknown>(fn: F, params: CallCloudFunctionParams<F>): Promise<O> {
+    return this.makeContextOptions().then((options) => (fn as WrappedFunction<unknown>)(params, options));
   }
 
-  callEventCloudFunction<O = any, I = any>(fn: WrappedScheduledFunction | WrappedFunction<I>, params: any, contextOptions?: CallEventFunctionEventContext): Promise<O> {
-    return this.makeContextOptions().then((options) => fn(params, contextOptions ? { ...contextOptions, ...options } : options));
+  callEventCloudFunction<F extends WrappedFunction<any>, O = unknown>(fn: F, params: CallCloudFunctionParams<F>, contextOptions?: CallEventFunctionEventContext): Promise<O> {
+    return this.makeContextOptions().then((options) => (fn as WrappedFunction<unknown>)(params, contextOptions ? { ...contextOptions, ...options } : options));
   }
 }
 
@@ -254,7 +257,6 @@ export function decodeEncodedCreateCustomTokenResult(token: TestEncodedFirestore
   };
 
   delete decodedToken.claims; // remove the "claims" item if it exists.
-
   return decodedToken;
 }
 

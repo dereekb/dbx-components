@@ -206,6 +206,9 @@ npx --yes json -I -f firebase.json -e "this.hosting={ ...this.hosting, site: '$P
 # Functions
 npx --yes json -I -f firebase.json -e "this.functions={ source:'$API_APP_DIST_FOLDER', runtime: 'nodejs16', engines: { node: '16' }, ignore: ['firebase.json', '**/.*', '**/node_modules/**'] }";
 
+# Functions
+npx --yes json -I -f firebase.json -e "this.firestore={ rules: 'firestore.rules', indexes: 'firestore.indexes.json' }";
+
 # Emulators
 npx --yes json -I -f firebase.json -e "this.emulators={ ui: { host: '$FIREBASE_LOCALHOST', enabled: true, port: $FIREBASE_EMULATOR_UI_PORT }, hosting: { host: '$FIREBASE_LOCALHOST', port: $FIREBASE_EMULATOR_HOSTING_PORT }, functions: { host: '$FIREBASE_LOCALHOST', port: $FIREBASE_EMULATOR_FUNCTIONS_PORT }, auth: { host: '$FIREBASE_LOCALHOST', port: $FIREBASE_EMULATOR_AUTH_PORT }, firestore: { host: '$FIREBASE_LOCALHOST', port: $FIREBASE_EMULATOR_FIRESTORE_PORT }, pubsub: { host: '$FIREBASE_LOCALHOST', port: $FIREBASE_EMULATOR_PUBSUB_PORT }, storage: { host: '$FIREBASE_LOCALHOST', port: $FIREBASE_EMULATOR_STORAGE_PORT } };";
 
@@ -450,7 +453,6 @@ rm $FIREBASE_COMPONENTS_FOLDER/src/index.ts
 echo "export * from './lib'" > $FIREBASE_COMPONENTS_FOLDER/src/index.ts
 
 download_firebase_ts_file "src/lib/index.ts"
-download_firebase_ts_file "src/lib/collection.ts"
 download_firebase_ts_file "src/lib/functions.ts"
 
 # Auth Folder
@@ -461,6 +463,7 @@ download_firebase_ts_file "src/lib/auth/index.ts"
 # Model/Example Folder
 mkdir $FIREBASE_COMPONENTS_FOLDER/src/lib/models
 download_firebase_ts_file "src/lib/models/index.ts"
+download_firebase_ts_file "src/lib/models/service.ts"
 
 mkdir $FIREBASE_COMPONENTS_FOLDER/src/lib/models/example
 download_firebase_ts_file "src/lib/models/example/example.action.ts"
@@ -604,6 +607,10 @@ download_api_ts_file "src/app/common/models/example/index.ts"
 mkdir $API_APP_FOLDER/src/app/function
 download_api_ts_file "src/app/function/index.ts"
 download_api_ts_file "src/app/function/function.ts"
+
+mkdir $API_APP_FOLDER/src/app/function/model
+download_api_ts_file "src/app/function/model/index.ts"
+download_api_ts_file "src/app/function/model/crud.functions.ts"
 
 mkdir $API_APP_FOLDER/src/app/function/auth
 download_api_ts_file "src/app/function/auth/index.ts"

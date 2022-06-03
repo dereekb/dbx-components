@@ -28,7 +28,7 @@ export function profileServerActions(context: ProfileServerActionsContext): Prof
 }
 
 // MARK: Actions
-export function initProfileForUidFactory({ profileFirestoreCollection, profilePrivateDataCollectionFactory }: ProfileServerActionsContext) {
+export function initProfileForUidFactory({ profileCollection: profileFirestoreCollection, profilePrivateDataCollectionFactory }: ProfileServerActionsContext) {
   const { query: queryProfile } = profileFirestoreCollection;
 
   return async (uid: string) => {
@@ -67,7 +67,7 @@ export function initProfileForUidFactory({ profileFirestoreCollection, profilePr
   };
 }
 
-export function setProfileUsernameFactory({ firebaseServerActionTransformFunctionFactory, profileFirestoreCollection, profilePrivateDataCollectionFactory }: ProfileServerActionsContext) {
+export function setProfileUsernameFactory({ firebaseServerActionTransformFunctionFactory, profileCollection: profileFirestoreCollection, profilePrivateDataCollectionFactory }: ProfileServerActionsContext) {
   const { query: queryProfile } = profileFirestoreCollection;
 
   return firebaseServerActionTransformFunctionFactory(SetProfileUsernameParams, async (params) => {
@@ -119,7 +119,7 @@ export function setProfileUsernameFactory({ firebaseServerActionTransformFunctio
   });
 }
 
-export function updateProfileFactory({ firebaseServerActionTransformFunctionFactory, profileFirestoreCollection }: ProfileServerActionsContext) {
+export function updateProfileFactory({ firebaseServerActionTransformFunctionFactory, profileCollection: profileFirestoreCollection }: ProfileServerActionsContext) {
   return firebaseServerActionTransformFunctionFactory(UpdateProfileParams, async (params) => {
     const { bio } = params;
 

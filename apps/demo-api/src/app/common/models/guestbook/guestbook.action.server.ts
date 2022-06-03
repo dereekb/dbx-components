@@ -23,7 +23,7 @@ export function guestbookServerActions(context: GuestbookServerActionsContext): 
 }
 
 // MARK: Actions
-export function guestbookEntryUpdateEntryFactory({ firebaseServerActionTransformFunctionFactory, guestbookFirestoreCollection, guestbookEntryCollectionFactory }: GuestbookServerActionsContext) {
+export function guestbookEntryUpdateEntryFactory({ firebaseServerActionTransformFunctionFactory, guestbookCollection: guestbookFirestoreCollection, guestbookEntryCollectionFactory }: GuestbookServerActionsContext) {
   return firebaseServerActionTransformFunctionFactory(UpdateGuestbookEntryParams, async (params) => {
     const { message, signed, published } = params;
 

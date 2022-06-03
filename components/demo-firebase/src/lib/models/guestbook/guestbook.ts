@@ -1,12 +1,18 @@
-import { CollectionReference, AbstractFirestoreDocument, snapshotConverterFunctions, firestoreString, firestoreDate, FirestoreCollection, UserRelatedById, DocumentReferenceRef, FirestoreContext, FirestoreCollectionWithParent, firestoreBoolean, DocumentDataWithId, AbstractFirestoreDocumentWithParent, optionalFirestoreDate, DocumentReference, FirestoreCollectionGroup, CollectionGroup } from '@dereekb/firebase';
+import { CollectionReference, AbstractFirestoreDocument, snapshotConverterFunctions, firestoreString, firestoreDate, FirestoreCollection, UserRelatedById, DocumentReferenceRef, FirestoreContext, FirestoreCollectionWithParent, firestoreBoolean, DocumentDataWithId, AbstractFirestoreDocumentWithParent, optionalFirestoreDate, FirestoreCollectionGroup, CollectionGroup, firestoreModelIdentity } from '@dereekb/firebase';
+import { GrantedReadRole } from '@dereekb/model';
 import { Maybe } from '@dereekb/util';
 
 export interface GuestbookFirestoreCollections {
-  guestbookFirestoreCollection: GuestbookFirestoreCollection;
+  guestbookCollection: GuestbookFirestoreCollection;
   guestbookEntryCollectionFactory: GuestbookEntryFirestoreCollectionFactory;
+  guestbookEntryCollectionGroup: GuestbookEntryFirestoreCollectionGroup;
 }
 
+export type GuestbookTypes = typeof guestbookIdentity | typeof guestbookEntryIdentity;
+
 // MARK: Guestbook
+export const guestbookIdentity = firestoreModelIdentity('guestbook');
+
 export interface Guestbook {
   /**
    * Whether or not this guestbook should show up in the list.
@@ -28,13 +34,17 @@ export interface Guestbook {
   lockedAt?: Maybe<Date>;
 }
 
+export type GuestbookRoles = 'admin' | GrantedReadRole;
+
 export type GuestbookWithId = DocumentDataWithId<Guestbook>;
 
-export interface GuestbookRef extends DocumentReferenceRef<Guestbook> {}
+export type GuestbookRef = DocumentReferenceRef<Guestbook>;
 
-export class GuestbookDocument extends AbstractFirestoreDocument<Guestbook, GuestbookDocument> {}
-
-export const guestbookCollectionPath = 'guestbook';
+export class GuestbookDocument extends AbstractFirestoreDocument<Guestbook, GuestbookDocument> {
+  get modelIdentity() {
+    return guestbookIdentity;
+  }
+}
 
 export const guestbookConverter = snapshotConverterFunctions<Guestbook>({
   fields: {
@@ -46,7 +56,7 @@ export const guestbookConverter = snapshotConverterFunctions<Guestbook>({
 });
 
 export function guestbookCollectionReference(context: FirestoreContext): CollectionReference<Guestbook> {
-  return context.collection(guestbookCollectionPath).withConverter<Guestbook>(guestbookConverter);
+  return context.collection(guestbookIdentity.collection).withConverter<Guestbook>(guestbookConverter);
 }
 
 export type GuestbookFirestoreCollection = FirestoreCollection<Guestbook, GuestbookDocument>;
@@ -61,6 +71,8 @@ export function guestbookFirestoreCollection(firestoreContext: FirestoreContext)
 }
 
 // MARK: Guestbook Entry
+export const guestbookEntryIdentity = firestoreModelIdentity('guestbookEntry');
+
 export interface GuestbookEntry extends UserRelatedById {
   /**
    * Guestbook message.
@@ -84,11 +96,15 @@ export interface GuestbookEntry extends UserRelatedById {
   published: boolean;
 }
 
-export interface GuestbookEntryRef extends DocumentReferenceRef<GuestbookEntry> {}
+export type GuestbookEntryRoles = 'owner' | GrantedReadRole;
 
-export class GuestbookEntryDocument extends AbstractFirestoreDocumentWithParent<Guestbook, GuestbookEntry, GuestbookEntryDocument> {}
+export type GuestbookEntryRef = DocumentReferenceRef<GuestbookEntry>;
 
-export const guestbookCollectionGuestbookEntryCollectionPath = 'entry';
+export class GuestbookEntryDocument extends AbstractFirestoreDocumentWithParent<Guestbook, GuestbookEntry, GuestbookEntryDocument> {
+  get modelIdentity() {
+    return guestbookEntryIdentity;
+  }
+}
 
 export const guestbookEntryConverter = snapshotConverterFunctions<GuestbookEntry>({
   fields: {
@@ -102,7 +118,7 @@ export const guestbookEntryConverter = snapshotConverterFunctions<GuestbookEntry
 
 export function guestbookEntryCollectionReferenceFactory(context: FirestoreContext): (guestbook: GuestbookDocument) => CollectionReference<GuestbookEntry> {
   return (guestbook: GuestbookDocument) => {
-    return context.subcollection(guestbook.documentRef, guestbookCollectionGuestbookEntryCollectionPath).withConverter<GuestbookEntry>(guestbookEntryConverter);
+    return context.subcollection(guestbook.documentRef, guestbookEntryIdentity.collection).withConverter<GuestbookEntry>(guestbookEntryConverter);
   };
 }
 
@@ -116,7 +132,7 @@ export function guestbookEntryFirestoreCollectionFactory(firestoreContext: Fires
     return firestoreContext.firestoreCollectionWithParent({
       itemsPerPage: 50,
       collection: factory(parent),
-      makeDocument: (accessor, documentAccessor) => new GuestbookEntryDocument(parent.documentRef, accessor, documentAccessor),
+      makeDocument: (accessor, documentAccessor) => new GuestbookEntryDocument(accessor, documentAccessor),
       firestoreContext,
       parent
     });
@@ -124,7 +140,7 @@ export function guestbookEntryFirestoreCollectionFactory(firestoreContext: Fires
 }
 
 export function guestbookEntryCollectionReference(context: FirestoreContext): CollectionGroup<GuestbookEntry> {
-  return context.collectionGroup(guestbookCollectionGuestbookEntryCollectionPath).withConverter<GuestbookEntry>(guestbookEntryConverter);
+  return context.collectionGroup(guestbookEntryIdentity.collection).withConverter<GuestbookEntry>(guestbookEntryConverter);
 }
 
 export type GuestbookEntryFirestoreCollectionGroup = FirestoreCollectionGroup<GuestbookEntry, GuestbookEntryDocument>;
@@ -133,7 +149,7 @@ export function guestbookEntryFirestoreCollectionGroup(firestoreContext: Firesto
   return firestoreContext.firestoreCollectionGroup({
     itemsPerPage: 50,
     queryLike: guestbookEntryCollectionReference(firestoreContext),
-    makeDocument: (accessor, documentAccessor) => new GuestbookEntryDocument(undefined, accessor, documentAccessor),
+    makeDocument: (accessor, documentAccessor) => new GuestbookEntryDocument(accessor, documentAccessor),
     firestoreContext
   });
 }

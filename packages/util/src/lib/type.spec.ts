@@ -1,4 +1,5 @@
-import { MergeReplace, Replace, ReplaceType } from './type';
+import { StringKeyPropertyKeys } from '@dereekb/util';
+import { MergeReplace, Replace, ReplaceType, StringKeyProperties } from './type';
 
 type TYPE_A = {
   aOnly: boolean;
@@ -8,6 +9,11 @@ type TYPE_A = {
 type TYPE_B = {
   test: string;
   notInA: boolean;
+};
+
+type TYPE_C = {
+  test: string;
+  200: number;
 };
 
 describe('MergeReplace', () => {
@@ -40,6 +46,23 @@ describe('ReplaceType', () => {
       test: 'replaced'
     };
 
+    expect(replaced).toBeDefined();
+  });
+});
+
+describe('StringKeyProperties', () => {
+  it('should compile', () => {
+    const replaced: StringKeyProperties<TYPE_C> = {
+      test: 'replaced'
+    };
+
+    expect(replaced).toBeDefined();
+  });
+});
+
+describe('StringKeyPropertyKeys', () => {
+  it('should compile', () => {
+    const replaced: StringKeyPropertyKeys<TYPE_C> = 'test';
     expect(replaced).toBeDefined();
   });
 });

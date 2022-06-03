@@ -1,3 +1,4 @@
+import { ServerError } from '@dereekb/util';
 import Stripe from 'stripe';
 import { Request } from 'express';
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
@@ -27,7 +28,7 @@ export class StripeApi {
     try {
       event = this.stripe.webhooks.constructEvent(rawBody, signature, this.config.stripe.webhookSecret);
     } catch (e) {
-      throw new BadRequestException(`stripe signature read error: ${(e as any)?.message}`);
+      throw new BadRequestException(`stripe signature read error: ${(e as ServerError)?.message}`);
     }
 
     return event;

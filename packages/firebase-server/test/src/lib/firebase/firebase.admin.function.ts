@@ -54,7 +54,7 @@ export interface FirebaseAdminFunctionTestConfig {
   useFunctionSingletonContext: boolean;
 }
 
-export interface FirebaseAdminFunctionTestContext extends FirebaseAdminTestContext {}
+export type FirebaseAdminFunctionTestContext = FirebaseAdminTestContext;
 
 export interface FullFirebaseAdminFunctionTestContext extends FirebaseAdminFunctionTestContext, JestTestContextFixture<FirebaseAdminFunctionTestContextInstance> {}
 

@@ -1,5 +1,5 @@
 import { Expose } from 'class-transformer';
-import { FirebaseFunctionMap, firebaseFunctionMapFactory, FirebaseFunctionMapFunction, FirebaseFunctionTypeConfigMap } from '@dereekb/firebase';
+import { FirebaseFunctionMapFunction, FirebaseFunctionTypeConfigMap, ModelFirebaseCrudFunction, ModelFirebaseCrudFunctionConfigMap, ModelFirebaseFunctionMap, modelFirebaseFunctionMapFactory } from '@dereekb/firebase';
 import { IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
 import { Maybe } from '@dereekb/util';
 
@@ -38,33 +38,42 @@ export class UpdateProfileParams extends ProfileParams {
  * We set the key here to allow both the functions server and the type map/client access this shared key.
  */
 export const profileSetUsernameKey = 'profileSetUsername';
-export const updateProfileKey = 'updateProfile';
 
 /**
  * This is our FirebaseFunctionTypeMap for Profile. It defines all the functions that are available.
  */
 export type ProfileFunctionTypeMap = {
   [profileSetUsernameKey]: [SetProfileUsernameParams, void];
-  [updateProfileKey]: [UpdateProfileParams, void];
 };
 
-/**
- * This is the configuration map. It is
- */
 export const profileFunctionTypeConfigMap: FirebaseFunctionTypeConfigMap<ProfileFunctionTypeMap> = {
-  [profileSetUsernameKey]: null,
-  [updateProfileKey]: null
+  [profileSetUsernameKey]: null
 };
 
-/**
- * Declared as an abstract class so we can inject it into our Angular app using this token.
- */
-export abstract class ProfileFunctions implements FirebaseFunctionMap<ProfileFunctionTypeMap> {
-  [profileSetUsernameKey]: FirebaseFunctionMapFunction<ProfileFunctionTypeMap, 'profileSetUsername'>;
-  [updateProfileKey]: FirebaseFunctionMapFunction<ProfileFunctionTypeMap, 'updateProfile'>;
-}
+export type ProfileModelCrudFunctionsConfig = {
+  profile: {
+    update: UpdateProfileParams;
+    delete: UpdateProfileParams;
+  };
+  profilePrivate: null;
+};
+
+export const profileModelCrudFunctionsConfig: ModelFirebaseCrudFunctionConfigMap<ProfileModelCrudFunctionsConfig> = {
+  profile: ['update', 'delete']
+};
 
 /**
  * Used to generate our ProfileFunctionMap for a Functions instance.
  */
-export const profileFunctionMap = firebaseFunctionMapFactory(profileFunctionTypeConfigMap);
+export const profileFunctionMap = modelFirebaseFunctionMapFactory(profileFunctionTypeConfigMap, profileModelCrudFunctionsConfig);
+
+/**
+ * Declared as an abstract class so we can inject it into our Angular app using this token.
+ */
+export abstract class ProfileFunctions implements ModelFirebaseFunctionMap<ProfileFunctionTypeMap, ProfileModelCrudFunctionsConfig> {
+  abstract [profileSetUsernameKey]: FirebaseFunctionMapFunction<ProfileFunctionTypeMap, 'profileSetUsername'>;
+  abstract profile: {
+    updateProfile: ModelFirebaseCrudFunction<UpdateProfileParams>;
+    deleteProfile: ModelFirebaseCrudFunction<UpdateProfileParams>;
+  };
+}

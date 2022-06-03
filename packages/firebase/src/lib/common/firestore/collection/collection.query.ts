@@ -1,4 +1,4 @@
-import { FirestoreDocumentAccessorContextExtension, LimitedFirestoreDocumentAccessorContextExtension } from './../accessor/document';
+import { LimitedFirestoreDocumentAccessorContextExtension } from './../accessor/document';
 import { ArrayOrValue, Maybe } from '@dereekb/util';
 import { FirestoreDocument } from '../accessor/document';
 import { documentReferencesFromSnapshot, FirestoreExecutableQuery, FirestoreQueryFactory } from '../query';

@@ -2,6 +2,19 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [6.0.0](https://github.com/dereekb/dbx-components/compare/v5.3.0-dev...v6.0.0) (2022-06-03)
+
+
+### Features
+
+* added AbstractFirebaseNestContext ([2f8e1a2](https://github.com/dereekb/dbx-components/commit/2f8e1a2127ffcfb23a428d6b46192633d8bf725f))
+* added ContextGrantedModelRolesReader ([6fba1cc](https://github.com/dereekb/dbx-components/commit/6fba1cc637beeff55523df599eb88391352f9f58))
+* added FirebaseModelsPermissionService ([9d75de4](https://github.com/dereekb/dbx-components/commit/9d75de4052dcfb15ef680d30f476ef494d8328a9))
+* added OnCallDeleteModel ([358189d](https://github.com/dereekb/dbx-components/commit/358189d6db6ef7d8db93d6dd881d29cc724dd083))
+* added OnCallUpdateModel ([3b60a06](https://github.com/dereekb/dbx-components/commit/3b60a06d48ec6a96940f44939e24e5c1f4879aa9))
+
+
+
 # [5.3.0](https://github.com/dereekb/dbx-components/compare/v5.2.1-dev...v5.3.0) (2022-05-30)
 
 

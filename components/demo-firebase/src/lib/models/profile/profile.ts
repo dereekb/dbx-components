@@ -1,12 +1,18 @@
-import { CollectionReference, AbstractFirestoreDocument, snapshotConverterFunctions, firestoreString, firestoreDate, FirestoreCollection, UserRelatedById, DocumentReferenceRef, FirestoreContext, SingleItemFirestoreCollection, optionalFirestoreString } from '@dereekb/firebase';
+import { firestoreModelIdentity, CollectionReference, AbstractFirestoreDocument, snapshotConverterFunctions, firestoreString, firestoreDate, FirestoreCollection, UserRelatedById, DocumentReferenceRef, FirestoreContext, SingleItemFirestoreCollection, optionalFirestoreString, CollectionGroup, FirestoreCollectionGroup } from '@dereekb/firebase';
+import { GrantedReadRole } from '@dereekb/model';
 import { Maybe } from '@dereekb/util';
 
 export interface ProfileFirestoreCollections {
-  profileFirestoreCollection: ProfileFirestoreCollection;
+  profileCollection: ProfileFirestoreCollection;
   profilePrivateDataCollectionFactory: ProfilePrivateDataFirestoreCollectionFactory;
+  profilePrivateDataCollectionGroup: ProfilePrivateDataFirestoreCollectionGroup;
 }
 
+export type ProfileTypes = typeof profileIdentity | typeof profilePrivateDataIdentity;
+
 // MARK: Profile
+export const profileIdentity = firestoreModelIdentity('profile');
+
 export interface Profile extends UserRelatedById {
   /**
    * Unique username.
@@ -22,11 +28,15 @@ export interface Profile extends UserRelatedById {
   updatedAt: Date;
 }
 
-export interface ProfileRef extends DocumentReferenceRef<Profile> {}
+export type ProfileRoles = 'owner' | GrantedReadRole;
 
-export class ProfileDocument extends AbstractFirestoreDocument<Profile, ProfileDocument> {}
+export type ProfileRef = DocumentReferenceRef<Profile>;
 
-export const profileCollectionPath = 'profile';
+export class ProfileDocument extends AbstractFirestoreDocument<Profile, ProfileDocument> {
+  get modelIdentity() {
+    return profileIdentity;
+  }
+}
 
 export const profileConverter = snapshotConverterFunctions<Profile>({
   fields: {
@@ -37,7 +47,7 @@ export const profileConverter = snapshotConverterFunctions<Profile>({
 });
 
 export function profileCollectionReference(context: FirestoreContext): CollectionReference<Profile> {
-  return context.collection(profileCollectionPath).withConverter<Profile>(profileConverter);
+  return context.collection(profileIdentity.collection).withConverter<Profile>(profileConverter);
 }
 
 export type ProfileFirestoreCollection = FirestoreCollection<Profile, ProfileDocument>;
@@ -52,6 +62,8 @@ export function profileFirestoreCollection(firestoreContext: FirestoreContext): 
 }
 
 // MARK: Profile Private Data
+export const profilePrivateDataIdentity = firestoreModelIdentity('profilePrivate');
+
 export interface ProfilePrivateData {
   /**
    * Date the username was set at.
@@ -63,11 +75,16 @@ export interface ProfilePrivateData {
   createdAt: Date;
 }
 
-export interface ProfilePrivateDataRef extends DocumentReferenceRef<ProfilePrivateData> {}
+export type ProfilePrivateDataRef = DocumentReferenceRef<ProfilePrivateData>;
 
-export class ProfilePrivateDataDocument extends AbstractFirestoreDocument<ProfilePrivateData, ProfilePrivateDataDocument> {}
+export type ProfilePrivateDataRoles = 'owner' | GrantedReadRole;
 
-export const profileCollectionProfilePrivateDataCollectionPath = 'private';
+export class ProfilePrivateDataDocument extends AbstractFirestoreDocument<ProfilePrivateData, ProfilePrivateDataDocument> {
+  get modelIdentity() {
+    return profilePrivateDataIdentity;
+  }
+}
+
 export const profilePrivateDataIdentifier = '0';
 
 export const profilePrivateDataConverter = snapshotConverterFunctions<ProfilePrivateData>({
@@ -79,7 +96,7 @@ export const profilePrivateDataConverter = snapshotConverterFunctions<ProfilePri
 
 export function profilePrivateDataCollectionReferenceFactory(context: FirestoreContext): (profile: ProfileDocument) => CollectionReference<ProfilePrivateData> {
   return (profile: ProfileDocument) => {
-    return context.subcollection(profile.documentRef, profileCollectionProfilePrivateDataCollectionPath).withConverter<ProfilePrivateData>(profilePrivateDataConverter);
+    return context.subcollection(profile.documentRef, profilePrivateDataIdentity.collection).withConverter<ProfilePrivateData>(profilePrivateDataConverter);
   };
 }
 
@@ -99,4 +116,19 @@ export function profilePrivateDataFirestoreCollectionFactory(firestoreContext: F
       singleItemIdentifier: profilePrivateDataIdentifier
     });
   };
+}
+
+export function profilePrivateDataCollectionReference(context: FirestoreContext): CollectionGroup<ProfilePrivateData> {
+  return context.collectionGroup(profilePrivateDataIdentity.collection).withConverter<ProfilePrivateData>(profilePrivateDataConverter);
+}
+
+export type ProfilePrivateDataFirestoreCollectionGroup = FirestoreCollectionGroup<ProfilePrivateData, ProfilePrivateDataDocument>;
+
+export function profilePrivateDataFirestoreCollectionGroup(firestoreContext: FirestoreContext): ProfilePrivateDataFirestoreCollectionGroup {
+  return firestoreContext.firestoreCollectionGroup({
+    itemsPerPage: 50,
+    queryLike: profilePrivateDataCollectionReference(firestoreContext),
+    makeDocument: (accessor, documentAccessor) => new ProfilePrivateDataDocument(accessor, documentAccessor),
+    firestoreContext
+  });
 }

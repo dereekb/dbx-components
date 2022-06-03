@@ -1,6 +1,6 @@
 import { TransitionHookFn, Transition, HookResult, StateService, UIInjector, TransitionOptions, RawParams } from '@uirouter/core';
 import { catchError, map, first, firstValueFrom, Observable, of, switchMap } from 'rxjs';
-import { asSegueRefString, SegueRef } from './../../../../router/segue';
+import { asSegueRef, asSegueRefString, SegueRefOrSegueRefRouterLink } from './../../../../router/segue';
 import { DbxAuthService } from '../../../service/auth.service';
 import { FactoryWithRequiredInput, getValueFromGetter, isGetter, Maybe } from '@dereekb/util';
 import { Injector } from '@angular/core';
@@ -11,7 +11,7 @@ import { Injector } from '@angular/core';
  * - false: redirect to the login page.
  * - StateOrName: redirect to the target page instead.
  */
-export type AuthTransitionDecision = true | false | SegueRef;
+export type AuthTransitionDecision = true | false | SegueRefOrSegueRefRouterLink;
 
 export interface AuthTransitionDecisionGetterInput {
   readonly transition: Transition;
@@ -19,9 +19,9 @@ export interface AuthTransitionDecisionGetterInput {
   readonly authService: DbxAuthService;
 }
 
-export type AuthTransitionRedirectTarget = Observable<Maybe<SegueRef>>;
+export type AuthTransitionRedirectTarget = Observable<Maybe<SegueRefOrSegueRefRouterLink>>;
 export type AuthTransitionRedirectTargetGetter = FactoryWithRequiredInput<AuthTransitionRedirectTarget, AuthTransitionDecisionGetterInput>;
-export type AuthTransitionRedirectTargetOrGetter = Maybe<SegueRef> | AuthTransitionRedirectTargetGetter;
+export type AuthTransitionRedirectTargetOrGetter = Maybe<SegueRefOrSegueRefRouterLink> | AuthTransitionRedirectTargetGetter;
 
 export interface AuthTransitionHookOptions {
   /**
@@ -69,16 +69,18 @@ export function makeAuthTransitionHook(config: AuthTransitionHookConfig): Transi
       let redirectToObs: Observable<HookResult>;
 
       if (redirectTo) {
-        let resultObs: Observable<Maybe<SegueRef>>;
+        let resultObs: Observable<Maybe<SegueRefOrSegueRefRouterLink>>;
 
         if (isGetter<AuthTransitionRedirectTarget>(redirectTo)) {
           resultObs = getValueFromGetter(redirectTo, { authService, injector, transition } as AuthTransitionDecisionGetterInput);
         } else {
-          resultObs = of(redirectTo as SegueRef);
+          resultObs = of(redirectTo as SegueRefOrSegueRefRouterLink);
         }
 
         redirectToObs = resultObs.pipe(
-          map((stateRef: Maybe<SegueRef>) => {
+          map((inputStateRef: Maybe<SegueRefOrSegueRefRouterLink>) => {
+            const stateRef = asSegueRef(inputStateRef);
+
             let redirectTarget;
             let redirectParams;
 
@@ -111,7 +113,8 @@ export function makeAuthTransitionHook(config: AuthTransitionHookConfig): Transi
             return redirectOut();
           }
         } else {
-          return of($state.target(asSegueRefString(decision.ref), decision.refParams as RawParams, decision.refOptions as TransitionOptions));
+          const segueRef = asSegueRef(decision);
+          return of($state.target(asSegueRefString(segueRef.ref), segueRef.refParams as RawParams, segueRef.refOptions as TransitionOptions));
         }
       }),
       catchError((x) => {

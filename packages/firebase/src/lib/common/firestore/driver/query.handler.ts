@@ -3,14 +3,14 @@ import { Query } from '../types';
 import { FirestoreQueryConstraint, FirestoreQueryConstraintHandlerMap } from '../query/constraint';
 import { FirestoreQueryConstraintFunctionsDriver, FirestoreQueryDriverQueryFunction } from './query';
 
-export interface MakeFirestoreQueryConstraintFunctionsDriver<B> {
+export interface MakeFirestoreQueryConstraintFunctionsDriver<B> extends Omit<FirestoreQueryConstraintFunctionsDriver, 'query' | 'availableConstraintTypes'> {
   mapping: FirestoreQueryConstraintHandlerMap<B>;
   init: <T>(query: Query<T>) => B;
   build: <T>(builder: B) => Query<T>;
 }
 
 export function makeFirestoreQueryConstraintFunctionsDriver<B>(config: MakeFirestoreQueryConstraintFunctionsDriver<B>): FirestoreQueryConstraintFunctionsDriver {
-  const { mapping, init, build } = config;
+  const { mapping, init, build, documentIdFieldPath } = config;
   const constraintsMap = objectToMap(mapping);
   const availableConstraintTypes: Set<string> = new Set(constraintsMap.keys());
   const query: FirestoreQueryDriverQueryFunction = <T>(query: Query<T>, ...queryConstraints: FirestoreQueryConstraint[]) => {
@@ -31,6 +31,7 @@ export function makeFirestoreQueryConstraintFunctionsDriver<B>(config: MakeFires
 
   return {
     availableConstraintTypes,
-    query
+    query,
+    documentIdFieldPath
   };
 }

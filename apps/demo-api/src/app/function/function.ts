@@ -1,9 +1,9 @@
 import { INestApplicationContext } from '@nestjs/common';
-import { DemoFirestoreCollections } from '@dereekb/demo-firebase';
-import { AbstractNestContext, onCallWithNestApplicationFactory, onCallWithNestContextFactory, taskQueueFunctionHandlerWithNestContextFactory, cloudEventHandlerWithNestContextFactory, blockingFunctionHandlerWithNestContextFactory, onEventWithNestContextFactory } from '@dereekb/firebase-server';
+import { DemoFirebaseContextAppContext, demoFirebaseModelServices, DemoFirebaseModelTypes, DemoFirestoreCollections } from '@dereekb/demo-firebase';
+import { onCallWithNestApplicationFactory, onCallWithNestContextFactory, taskQueueFunctionHandlerWithNestContextFactory, cloudEventHandlerWithNestContextFactory, blockingFunctionHandlerWithNestContextFactory, onEventWithNestContextFactory, AbstractFirebaseNestContext, OnCallUpdateModelFunction, OnCallUpdateModelMap, OnCallDeleteModelMap, OnCallDeleteModelFunction } from '@dereekb/firebase-server';
 import { ProfileServerActions, GuestbookServerActions, DemoApiAuthService } from '../common';
 
-export class DemoApiNestContext extends AbstractNestContext {
+export class DemoApiNestContext extends AbstractFirebaseNestContext<DemoFirebaseContextAppContext, typeof demoFirebaseModelServices> {
   get authService(): DemoApiAuthService {
     return this.nest.get(DemoApiAuthService);
   }
@@ -19,6 +19,14 @@ export class DemoApiNestContext extends AbstractNestContext {
   get guestbookActions(): GuestbookServerActions {
     return this.nest.get(GuestbookServerActions);
   }
+
+  get modelsService() {
+    return demoFirebaseModelServices;
+  }
+
+  get app(): DemoFirestoreCollections {
+    return this.demoFirestoreCollections;
+  }
 }
 
 export const mapDemoApiNestContext = (nest: INestApplicationContext) => new DemoApiNestContext(nest);
@@ -28,3 +36,10 @@ export const onEventWithDemoNestContext = onEventWithNestContextFactory(mapDemoA
 export const cloudEventWithDemoNestContext = cloudEventHandlerWithNestContextFactory(mapDemoApiNestContext);
 export const blockingEventWithDemoNestContext = blockingFunctionHandlerWithNestContextFactory(mapDemoApiNestContext);
 export const taskqueueEventWithDemoNestContext = taskQueueFunctionHandlerWithNestContextFactory(mapDemoApiNestContext);
+
+// MARK: CRUD Functions
+export type DemoUpdateModelfunction<I, O = void> = OnCallUpdateModelFunction<DemoApiNestContext, I, O>;
+export type DemoOnCallUpdateModelMap = OnCallUpdateModelMap<DemoApiNestContext, DemoFirebaseModelTypes>;
+
+export type DemoDeleteModelfunction<I, O = void> = OnCallDeleteModelFunction<DemoApiNestContext, I, O>;
+export type DemoOnCallDeleteModelMap = OnCallDeleteModelMap<DemoApiNestContext, DemoFirebaseModelTypes>;

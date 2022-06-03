@@ -22,7 +22,7 @@ export enum StripeWebhookEventType {
 /**
  * A parsed Stripe.Event that contains the relevant data and the original event.
  */
-export interface StripeWebhookEvent<T = any> {
+export interface StripeWebhookEvent<T> {
   /**
    * The event
    */
@@ -81,6 +81,7 @@ export interface StripeEventHandlerConfigurer extends HandlerBindAccessor<Stripe
 
 export const stripeEventHandlerConfigurerFactory = handlerConfigurerFactory<StripeEventHandlerConfigurer, Stripe.Event>({
   configurerForAccessor: (accessor: HandlerBindAccessor<Stripe.Event>) => {
+    // eslint-disable-next-line
     const fnWithKey = handlerMappedSetFunctionFactory<StripeWebhookEvent<any>, any>(accessor, stripeWebhookEvent);
 
     const configurer: StripeEventHandlerConfigurer = {

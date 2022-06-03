@@ -23,7 +23,7 @@ export interface DemoGuestbookEntryPopupComponentConfig {
     </dbx-dialog-content>
   `
 })
-export class DemoGuestbookEntryPopupComponent extends AbstractDialogDirective<any, DemoGuestbookEntryPopupComponentConfig> {
+export class DemoGuestbookEntryPopupComponent extends AbstractDialogDirective<unknown, DemoGuestbookEntryPopupComponentConfig> {
   get guestbookEntryDocumentStore(): GuestbookEntryDocumentStore {
     return this.data.guestbookEntryDocumentStore;
   }

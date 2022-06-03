@@ -9,8 +9,8 @@ export const STRIPE_DEFAULT_API_VERSION: stripe.Stripe.LatestApiVersion = '2020-
 export function stripeServiceConfigFactory(configService: ConfigService): StripeServiceConfig {
   const config: StripeServiceConfig = {
     stripe: {
-      secret: configService.get<string>('STRIPE_SECRET')!,
-      webhookSecret: configService.get<string>('STRIPE_WEBHOOK_SECRET')!,
+      secret: configService.get<string>('STRIPE_SECRET') as string,
+      webhookSecret: configService.get<string>('STRIPE_WEBHOOK_SECRET') as string,
       config: {
         apiVersion: STRIPE_DEFAULT_API_VERSION
       }

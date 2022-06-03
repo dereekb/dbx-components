@@ -14,9 +14,9 @@ export interface TestingFirestoreAccessorDriver extends FirestoreAccessorDriver 
    * Initializes fuzzed path names for the input collections. Returns the result of getFuzzedCollectionsNameMap().
    *
    * This initialization step is useful for the client, where the rules file needs to be updated to reflect the collection names properly in order to ensure rules are correct.
-   * @param collectionPaths
+   * @param collectionNames
    */
-  initWithCollectionNames(collectionPaths: string[]): Map<string, string>;
+  initWithCollectionNames(collectionNames: string[]): Map<string, string>;
 }
 
 export function makeTestingFirestoreAccesorDriver(driver: FirestoreAccessorDriver): TestingFirestoreAccessorDriver {
@@ -53,8 +53,8 @@ export function makeTestingFirestoreAccesorDriver(driver: FirestoreAccessorDrive
     return collectionGroup<T>(f, fuzzedPath);
   };
 
-  const initWithCollectionNames = (collectionPaths: string[]) => {
-    collectionPaths.forEach((x) => fuzzedPathForPath(x));
+  const initWithCollectionNames = (collectionNames: string[]) => {
+    collectionNames.forEach((x) => fuzzedPathForPath(x));
     return fuzzedMap;
   };
 
@@ -100,7 +100,7 @@ export interface TestingFirestoreContextExtension {
 export type TestFirestoreContext<C = FirestoreContext> = C & TestingFirestoreContextExtension;
 
 // MARK: Cleanup
-export type ClearTestFirestoreCollectionFunction = (collectionName: string, realCollectionPath: string) => Promise<void>;
+export type ClearTestFirestoreCollectionFunction = (collectionName: string, realCollectionName: string) => Promise<void>;
 
 export async function clearTestFirestoreContextCollections(context: TestFirestoreContext, clearCollection: ClearTestFirestoreCollectionFunction): Promise<void> {
   const names = context.drivers.firestoreAccessorDriver.getFuzzedCollectionsNameMap();

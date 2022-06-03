@@ -2,17 +2,19 @@ import { filterMaybe, isNot } from '@dereekb/rxjs';
 import { Injectable, Optional } from '@angular/core';
 import { AuthUserState, DbxAuthService, loggedOutObsFromIsLoggedIn, loggedInObsFromIsLoggedIn, AuthUserIdentifier, authUserIdentifier } from '@dereekb/dbx-core';
 import { Auth, authState, User, IdTokenResult, ParsedToken, GoogleAuthProvider, signInWithPopup, AuthProvider, PopupRedirectResolver, signInAnonymously, signInWithEmailAndPassword, UserCredential, FacebookAuthProvider, GithubAuthProvider, TwitterAuthProvider, createUserWithEmailAndPassword } from '@angular/fire/auth';
-import { Observable, timeout, startWith, distinctUntilChanged, shareReplay, map, switchMap } from 'rxjs';
-import { AuthRoleSet, Maybe } from '@dereekb/util';
-import { AuthUserInfo, authUserInfoFromAuthUser } from '../auth';
+import { Observable, timeout, startWith, distinctUntilChanged, shareReplay, map, switchMap, firstValueFrom } from 'rxjs';
+import { AuthClaims, AuthClaimsObject, AuthRoleClaimsService, AuthRoleSet, cachedGetter, Maybe } from '@dereekb/util';
+import { AuthUserInfo, authUserInfoFromAuthUser, firebaseAuthTokenFromUser } from '../auth';
 import { sendPasswordResetEmail } from 'firebase/auth';
 import { authUserStateFromFirebaseAuthService } from './firebase.auth.rxjs';
+import { FirebaseAuthContextInfo, FirebaseAuthToken } from '@dereekb/firebase';
 
 // MARK: Delegate
 export abstract class DbxFirebaseAuthServiceDelegate {
   abstract authUserStateObs(dbxFirebaseAuthService: DbxFirebaseAuthService): Observable<AuthUserState>;
   abstract authRolesObs(dbxFirebaseAuthService: DbxFirebaseAuthService): Observable<AuthRoleSet>;
   abstract isOnboarded(dbxFirebaseAuthService: DbxFirebaseAuthService): Observable<boolean>;
+  abstract authRoleClaimsService?: Maybe<AuthRoleClaimsService<AuthClaimsObject>>;
 }
 
 export const DEFAULT_DBX_FIREBASE_AUTH_SERVICE_DELEGATE: DbxFirebaseAuthServiceDelegate = {
@@ -73,11 +75,31 @@ export class DbxFirebaseAuthService implements DbxAuthService {
   readonly authRoles$: Observable<AuthRoleSet>;
   readonly isOnboarded$: Observable<boolean>;
 
+  private _authRoleClaimsService?: Maybe<AuthRoleClaimsService<AuthClaimsObject>>;
+
   constructor(readonly firebaseAuth: Auth, @Optional() delegate: DbxFirebaseAuthServiceDelegate) {
     delegate = delegate ?? DEFAULT_DBX_FIREBASE_AUTH_SERVICE_DELEGATE;
     this.authUserState$ = delegate.authUserStateObs(this).pipe(distinctUntilChanged(), shareReplay(1));
     this.authRoles$ = delegate.authRolesObs(this);
     this.isOnboarded$ = delegate.isOnboarded(this);
+    this._authRoleClaimsService = delegate.authRoleClaimsService;
+  }
+
+  rolesForClaims<T extends AuthClaimsObject = AuthClaimsObject>(claims: AuthClaims<T>): AuthRoleSet {
+    let result: AuthRoleSet;
+
+    if (this._authRoleClaimsService) {
+      return this._authRoleClaimsService.toRoles(claims);
+    } else {
+      console.warn('DbxFirebaseAuthService: rolesForClaims called with no authRoleClaimsService provided. An empty set is returned.');
+      result = new Set();
+    }
+
+    return result;
+  }
+
+  getAuthContextInfo(): Promise<Maybe<DbxFirebaseAuthContextInfo>> {
+    return firstValueFrom(this.authUser$).then((user) => (user ? new DbxFirebaseAuthContextInfo(this, user) : undefined));
   }
 
   logInWithGoogle(): Promise<UserCredential> {
@@ -132,5 +154,30 @@ export class DbxFirebaseAuthService implements DbxAuthService {
 
   logOut(): Promise<void> {
     return this.firebaseAuth.signOut();
+  }
+}
+
+/**
+ * FirebaseAuthContextInfo implementation from DbxFirebaseAuthService.
+ */
+export class DbxFirebaseAuthContextInfo implements FirebaseAuthContextInfo {
+  private _token = cachedGetter(() => firebaseAuthTokenFromUser(this.user));
+
+  constructor(readonly service: DbxFirebaseAuthService, readonly user: User) {}
+
+  get uid() {
+    return this.user.uid;
+  }
+
+  loadClaims(): Promise<AuthClaims<AuthClaimsObject>> {
+    return this.user.getIdTokenResult().then((x) => x.claims as AuthClaimsObject);
+  }
+
+  loadAuthRoles(): Promise<AuthRoleSet> {
+    return this.loadClaims().then((x) => this.service.rolesForClaims(x));
+  }
+
+  get token(): FirebaseAuthToken {
+    return this._token();
   }
 }

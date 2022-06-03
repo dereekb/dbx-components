@@ -17,7 +17,7 @@ export class StripeWebhookService {
 
   constructor(private readonly stripeApi: StripeApi) {}
 
-  public async updateForWebhook(req: Request, rawBody: Buffer): Promise<any> {
+  public async updateForWebhook(req: Request, rawBody: Buffer): Promise<boolean> {
     const event = this.stripeApi.readStripeEventFromWebhookRequest(req, rawBody);
     return this.updateForStripeEvent(event);
   }
