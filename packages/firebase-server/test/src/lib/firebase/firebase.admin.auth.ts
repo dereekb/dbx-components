@@ -52,7 +52,7 @@ export class AuthorizedUserTestContextFixture<PI extends FirebaseAdminTestContex
   }
 }
 
-export interface CallEventFunctionEventContext extends Partial<Omit<EventContext, 'auth'>> {}
+export type CallEventFunctionEventContext = Partial<Omit<EventContext, 'auth'>>;
 
 export class AuthorizedUserTestContextInstance<PI extends FirebaseAdminTestContext = FirebaseAdminTestContext> implements AuthorizedUserTestContext {
   constructor(readonly uid: FirebaseAuthUserId, readonly testContext: PI) {}

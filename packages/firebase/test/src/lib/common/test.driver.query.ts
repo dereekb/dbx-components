@@ -1,6 +1,6 @@
 import { SubscriptionObject } from '@dereekb/rxjs';
 import { filter, first, from, skip } from 'rxjs';
-import { limit, orderBy, startAfter, startAt, where, limitToLast, endAt, endBefore, makeDocuments, FirestoreQueryFactoryFunction, startAtValue, endAtValue, orderByDocumentId } from '@dereekb/firebase';
+import { limit, orderBy, startAfter, startAt, where, limitToLast, endAt, endBefore, makeDocuments, FirestoreQueryFactoryFunction, startAtValue, endAtValue } from '@dereekb/firebase';
 import { MockItemDocument, MockItem, MockItemSubItemDocument, MockItemSubItem, MockItemDeepSubItemDocument, MockItemDeepSubItem } from './firestore.mock.item';
 import { MockItemCollectionFixture } from './firestore.mock.item.fixture';
 import { allChildMockItemDeepSubItemsWithinMockItem } from './firestore.mock.item.query';

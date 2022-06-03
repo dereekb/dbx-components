@@ -1,4 +1,4 @@
-import { ModuleWithProviders, NgModule, Injector, InjectionToken } from '@angular/core';
+import { ModuleWithProviders, NgModule, Injector } from '@angular/core';
 import { FirebaseOptions, initializeApp } from 'firebase/app';
 import { initializeAppCheck, ReCaptchaV3Provider } from 'firebase/app-check';
 import { FirebaseApp, provideFirebaseApp } from '@angular/fire/app';
@@ -63,7 +63,7 @@ export class DbxFirebaseDefaultFirestoreProviderModule {}
           isTokenAutoRefreshEnabled: appCheckOptions.isTokenAutoRefreshEnabled ?? true
         });
 
-        console.debug('Enabled AppCheck.');
+        console.log('Enabled AppCheck.');
       } else {
         appCheck = undefined as unknown as AppCheck;
 

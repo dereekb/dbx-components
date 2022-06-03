@@ -1,4 +1,4 @@
-import { DocumentSnapshot, FirestoreDocument } from './../../firestore';
+import { FirestoreDocument } from './../../firestore';
 import { AbstractModelPermissionService, fullAccessGrantedModelRoles, GrantedRoleMap, InContextModelPermissionService, InModelContextModelPermissionService, ModelPermissionService } from '@dereekb/model';
 import { Maybe, PromiseOrValue } from '@dereekb/util';
 import { FirebaseModelLoader, InModelContextFirebaseModelLoader } from '../model/model.loader';

@@ -129,4 +129,4 @@ export interface InModelContextModelOnlyModelPermissionService<C, T, R extends s
   roleMap(): Promise<ContextGrantedModelRoles<O, C, R>>;
 }
 
-export interface InModelContextModelPermissionService<C, T, R extends string = string, O = T> extends InModelContextModelOnlyModelPermissionService<C, T, R, O> {}
+export type InModelContextModelPermissionService<C, T, R extends string = string, O = T> = InModelContextModelOnlyModelPermissionService<C, T, R, O>;

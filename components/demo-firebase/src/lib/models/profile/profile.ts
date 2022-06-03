@@ -1,4 +1,4 @@
-import { firestoreModelIdentity, CollectionReference, AbstractFirestoreDocument, snapshotConverterFunctions, firestoreString, firestoreDate, FirestoreCollection, UserRelatedById, DocumentReferenceRef, FirestoreContext, SingleItemFirestoreCollection, optionalFirestoreString, CollectionGroup, FirestoreCollectionGroup, FirestoreCollectionNames } from '@dereekb/firebase';
+import { firestoreModelIdentity, CollectionReference, AbstractFirestoreDocument, snapshotConverterFunctions, firestoreString, firestoreDate, FirestoreCollection, UserRelatedById, DocumentReferenceRef, FirestoreContext, SingleItemFirestoreCollection, optionalFirestoreString, CollectionGroup, FirestoreCollectionGroup } from '@dereekb/firebase';
 import { GrantedReadRole } from '@dereekb/model';
 import { Maybe } from '@dereekb/util';
 
@@ -30,7 +30,7 @@ export interface Profile extends UserRelatedById {
 
 export type ProfileRoles = 'owner' | GrantedReadRole;
 
-export interface ProfileRef extends DocumentReferenceRef<Profile> {}
+export type ProfileRef = DocumentReferenceRef<Profile>;
 
 export class ProfileDocument extends AbstractFirestoreDocument<Profile, ProfileDocument> {
   get modelIdentity() {
@@ -75,7 +75,7 @@ export interface ProfilePrivateData {
   createdAt: Date;
 }
 
-export interface ProfilePrivateDataRef extends DocumentReferenceRef<ProfilePrivateData> {}
+export type ProfilePrivateDataRef = DocumentReferenceRef<ProfilePrivateData>;
 
 export type ProfilePrivateDataRoles = 'owner' | GrantedReadRole;
 

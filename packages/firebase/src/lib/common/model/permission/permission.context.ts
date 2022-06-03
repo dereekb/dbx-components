@@ -3,7 +3,7 @@ import { ArrayOrValue } from '@dereekb/util';
 import { FirebaseTransactionContext } from '../../firestore/reference';
 import { FirebaseContextGrantedModelRoles } from './permission';
 
-export interface FirebasePermissionContext extends FirebaseTransactionContext {}
+export type FirebasePermissionContext = FirebaseTransactionContext;
 
 export type FirebasePermissionErrorContextErrorFunction = (firebaseContextGrantedModelRoles: FirebaseContextGrantedModelRoles<FirebasePermissionErrorContext, unknown>, role?: ArrayOrValue<GrantedRole>) => Error;
 

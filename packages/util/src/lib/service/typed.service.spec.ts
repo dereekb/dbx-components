@@ -6,7 +6,7 @@ const typeB = 'typeB';
 
 type TEST_TYPES = typeof typeA | typeof typeB;
 
-type TestService = {};
+type TestService = object;
 
 describe('typedServiceRegistry()', () => {
   it('should create a ModelServiceRegistryInstance with the types registered.', () => {

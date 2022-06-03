@@ -1,6 +1,6 @@
 import { TransitionHookFn, Transition, HookResult, StateService, UIInjector, TransitionOptions, RawParams } from '@uirouter/core';
 import { catchError, map, first, firstValueFrom, Observable, of, switchMap } from 'rxjs';
-import { asSegueRef, asSegueRefString, SegueRef, SegueRefOrSegueRefRouterLink } from './../../../../router/segue';
+import { asSegueRef, asSegueRefString, SegueRefOrSegueRefRouterLink } from './../../../../router/segue';
 import { DbxAuthService } from '../../../service/auth.service';
 import { FactoryWithRequiredInput, getValueFromGetter, isGetter, Maybe } from '@dereekb/util';
 import { Injector } from '@angular/core';

@@ -1,6 +1,6 @@
-import { APP_CODE_PREFIX_LOWERUpdateModel, APP_CODE_PREFIX_LOWERDeleteModel } from './function/model/update.function';
+import { APP_CODE_PREFIX_LOWERUpdateModel, APP_CODE_PREFIX_LOWERDeleteModel } from './function/model/crud.functions';
 import { exampleSetUsernameKey } from 'FIREBASE_COMPONENTS_NAME';
-import { NestAppPromiseGetter, nestServerInstance, UPDATE_MODEL_APP_FUNCTION_KEY } from '@dereekb/firebase-server';
+import { NestAppPromiseGetter, nestServerInstance } from '@dereekb/firebase-server';
 import { UPDATE_MODEL_APP_FUNCTION_KEY, DELETE_MODEL_APP_FUNCTION_KEY } from '@dereekb/firebase';
 import { APP_CODE_PREFIXApiAppModule } from './app.module';
 import { exampleSetUsername } from './function';

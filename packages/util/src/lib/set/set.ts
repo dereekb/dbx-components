@@ -1,6 +1,6 @@
 import { Maybe } from '../value/maybe';
 import { flattenArray } from '../array/array';
-import { asIterable, isIterable, IterableOrValue, useIterableOrValue } from '../iterable/iterable';
+import { asIterable, IterableOrValue, useIterableOrValue } from '../iterable/iterable';
 import { symmetricDifference } from 'extra-set';
 
 export function asSet<T>(values: IterableOrValue<T>): Set<T> {

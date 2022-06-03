@@ -1,6 +1,6 @@
 import { FirebaseAppModelContext, FirebaseModelsService, InContextFirebaseModelsService, inContextFirebaseModelsServiceFactory } from '@dereekb/firebase';
 import { build, BuildFunction, Getter } from '@dereekb/util';
-import { ForbiddenException, INestApplicationContext } from '@nestjs/common';
+import { INestApplicationContext } from '@nestjs/common';
 import { AuthDataRef } from '../auth';
 import { FirebaseServerAuthService } from '../auth/auth.service';
 import { nestFirebaseForbiddenPermissionError } from './model/permission.error';

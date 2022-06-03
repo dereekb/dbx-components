@@ -1,7 +1,7 @@
 import { GrantedRole } from '@dereekb/model';
 import { Getter, cachedGetter, build } from '@dereekb/util';
 import { FirestoreDocument } from '../firestore/accessor/document';
-import { FirestoreCollectionName, FirestoreModelIdentity, FirestoreModelNames } from '../firestore/collection/collection';
+import { FirestoreModelIdentity, FirestoreModelNames } from '../firestore/collection/collection';
 import { FirebaseModelCollectionLoader, firebaseModelLoader, FirebaseModelLoader, InContextFirebaseModelLoader } from './model/model.loader';
 import { InContextFirebaseModelPermissionService, FirebasePermissionContext, firebaseModelPermissionService, FirebaseModelPermissionService, FirebasePermissionServiceInstanceDelegate, InModelContextFirebaseModelPermissionService, FirebasePermissionErrorContext } from './permission';
 import { ContextGrantedModelRolesReader, contextGrantedModelRolesReader } from './permission/permission.service.role';

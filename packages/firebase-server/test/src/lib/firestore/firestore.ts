@@ -9,7 +9,7 @@ export interface GoogleCloudTestFirestoreConfig {
   port: number;
 }
 
-export interface GoogleCloudTestFirestoreContext extends TestFirestoreContext {}
+export type GoogleCloudTestFirestoreContext = TestFirestoreContext;
 
 export function makeGoogleFirestoreContext(drivers: TestingFirestoreDrivers, firestore: Firestore): TestFirestoreContext {
   const context = firestoreContextFactory(drivers)(firestore) as GoogleCloudTestFirestoreContext;

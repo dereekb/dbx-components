@@ -24,7 +24,7 @@ export function authRolesObsWithClaimsService<T extends AuthClaimsObject>(config
   };
 }
 
-export interface DefaultDbxFirebaseAuthServiceDelegateWithClaimsServiceConfig<T extends AuthClaimsObject> extends AuthRolesObsWithClaimsServiceConfig<T> {}
+export type DefaultDbxFirebaseAuthServiceDelegateWithClaimsServiceConfig<T extends AuthClaimsObject> = AuthRolesObsWithClaimsServiceConfig<T>;
 
 export function defaultDbxFirebaseAuthServiceDelegateWithClaimsService<T extends AuthClaimsObject>(config: DefaultDbxFirebaseAuthServiceDelegateWithClaimsServiceConfig<T>): DbxFirebaseAuthServiceDelegate {
   return {

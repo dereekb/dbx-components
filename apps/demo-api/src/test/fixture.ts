@@ -19,8 +19,6 @@ import {
 } from '@dereekb/firebase-server/test';
 import { JestBuildTestsWithContextFunction, JestTestContextFixture } from '@dereekb/util/test';
 import { Module } from '@nestjs/common';
-import { UserRecord } from 'firebase-admin/lib/auth/user-record';
-import { WrappedFunction } from 'firebase-functions-test/lib/main';
 import { DemoApiAppModule } from '../app/app.module';
 import { initUserOnCreate } from '../app/function/auth/init.user.function';
 

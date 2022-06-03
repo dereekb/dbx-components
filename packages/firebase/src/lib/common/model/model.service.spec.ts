@@ -102,7 +102,7 @@ describe('firebaseModelsService', () => {
       describe('InContextFirebaseModelPermissionService', () => {
         describe('roleMapForKey()', () => {
           it('should return roles if the model exists.', async () => {
-            let testRoles: GrantedRoleMap<MockItemRoles> = {
+            const testRoles: GrantedRoleMap<MockItemRoles> = {
               read: true
             };
 
@@ -135,7 +135,7 @@ describe('firebaseModelsService', () => {
 
         describe('roleMapForModel()', () => {
           it('should return roles if the model exists.', async () => {
-            let testRoles: GrantedRoleMap<MockItemRoles> = {
+            const testRoles: GrantedRoleMap<MockItemRoles> = {
               read: true
             };
 

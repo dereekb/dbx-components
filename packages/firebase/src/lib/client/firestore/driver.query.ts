@@ -19,7 +19,7 @@ import {
 import { makeFirestoreQueryConstraintFunctionsDriver } from '../../common/firestore/driver/query.handler';
 import { FirestoreQueryConstraintFunctionsDriver, FirestoreQueryDriver } from '../../common/firestore/driver/query';
 import { Query, QuerySnapshot, SnapshotListenOptions, Transaction } from '../../common/firestore/types';
-import { StreamDocsWithOnSnapshotFunctionParams, streamFromOnSnapshot } from '../../common/firestore/query/query.util';
+import { streamFromOnSnapshot } from '../../common/firestore/query/query.util';
 
 export interface FirebaseFirestoreQueryBuilder {
   query: Query;

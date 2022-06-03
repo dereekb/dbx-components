@@ -1,6 +1,6 @@
 import { firstValueFrom } from 'rxjs';
 import { SubscriptionObject } from '@dereekb/rxjs';
-import { Transaction, DocumentReference, WriteBatch, FirestoreDocumentAccessor, makeDocuments, FirestoreDocumentDataAccessor, FirestoreContext, FirestoreDocument, RunTransaction, LimitedFirestoreDocumentAccessor } from '@dereekb/firebase';
+import { Transaction, DocumentReference, WriteBatch, FirestoreDocumentAccessor, makeDocuments, FirestoreDocumentDataAccessor, FirestoreContext, FirestoreDocument, RunTransaction } from '@dereekb/firebase';
 import { MockItemDocument, MockItem, MockItemPrivateDocument, MockItemPrivateFirestoreCollection, MockItemPrivate, MockItemSubItem, MockItemSubItemDocument, MockItemSubItemFirestoreCollection, MockItemSubItemFirestoreCollectionGroup } from './firestore.mock.item';
 import { MockItemCollectionFixture } from './firestore.mock.item.fixture';
 
@@ -295,7 +295,7 @@ export function describeAccessorTests<T>(init: () => DescribeAccessorTests<T>) {
 
     describe('in batch context', () => {
       it('should return the first emitted value (observable completes immediately)', async () => {
-        let writeBatch: WriteBatch = c.context.batch();
+        const writeBatch: WriteBatch = c.context.batch();
         const batchItemDocument = c.loadDocumentForWriteBatch(writeBatch, c.accessor.documentRef);
 
         // load the value

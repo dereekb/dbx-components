@@ -1,4 +1,4 @@
-import { CollectionReference, AbstractFirestoreDocument, snapshotConverterFunctions, firestoreString, firestoreDate, FirestoreCollection, UserRelatedById, DocumentReferenceRef, FirestoreContext, FirestoreCollectionWithParent, firestoreBoolean, DocumentDataWithId, AbstractFirestoreDocumentWithParent, optionalFirestoreDate, DocumentReference, FirestoreCollectionGroup, CollectionGroup, firestoreModelIdentity } from '@dereekb/firebase';
+import { CollectionReference, AbstractFirestoreDocument, snapshotConverterFunctions, firestoreString, firestoreDate, FirestoreCollection, UserRelatedById, DocumentReferenceRef, FirestoreContext, FirestoreCollectionWithParent, firestoreBoolean, DocumentDataWithId, AbstractFirestoreDocumentWithParent, optionalFirestoreDate, FirestoreCollectionGroup, CollectionGroup, firestoreModelIdentity } from '@dereekb/firebase';
 import { GrantedReadRole } from '@dereekb/model';
 import { Maybe } from '@dereekb/util';
 
@@ -38,7 +38,7 @@ export type GuestbookRoles = 'admin' | GrantedReadRole;
 
 export type GuestbookWithId = DocumentDataWithId<Guestbook>;
 
-export interface GuestbookRef extends DocumentReferenceRef<Guestbook> {}
+export type GuestbookRef = DocumentReferenceRef<Guestbook>;
 
 export class GuestbookDocument extends AbstractFirestoreDocument<Guestbook, GuestbookDocument> {
   get modelIdentity() {
@@ -98,7 +98,7 @@ export interface GuestbookEntry extends UserRelatedById {
 
 export type GuestbookEntryRoles = 'owner' | GrantedReadRole;
 
-export interface GuestbookEntryRef extends DocumentReferenceRef<GuestbookEntry> {}
+export type GuestbookEntryRef = DocumentReferenceRef<GuestbookEntry>;
 
 export class GuestbookEntryDocument extends AbstractFirestoreDocumentWithParent<Guestbook, GuestbookEntry, GuestbookEntryDocument> {
   get modelIdentity() {

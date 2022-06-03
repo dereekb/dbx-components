@@ -124,7 +124,7 @@ export class GrantedRoleMapReaderInstance<T extends GrantedRole = string> implem
   }
 
   containsEachRole(roles: GrantedRole[]): boolean {
-    for (let role of roles) {
+    for (const role of roles) {
       if (!(this._map as GrantedRoleKeysMap)[role]) {
         return false;
       }

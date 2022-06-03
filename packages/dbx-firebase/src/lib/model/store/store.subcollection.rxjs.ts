@@ -1,9 +1,9 @@
 import { LockSetComponentStore } from '@dereekb/dbx-core';
-import { FirestoreCollectionGroup, FirestoreCollectionLike, FirestoreCollectionWithParentFactory, FirestoreDocument } from '@dereekb/firebase';
+import { FirestoreCollectionLike, FirestoreCollectionWithParentFactory, FirestoreDocument } from '@dereekb/firebase';
 import { cleanup, ObservableOrValue } from '@dereekb/rxjs';
 import { Maybe } from '@dereekb/util';
 import { ComponentStore } from '@ngrx/component-store';
-import { map, NEVER, Observable, Subscription, switchMap, tap } from 'rxjs';
+import { map, Observable, Subscription } from 'rxjs';
 import { DbxFirebaseDocumentStore } from './store.document';
 
 export interface DbxFirebaseComponentStoreWithParentContextState<T, PT, D extends FirestoreDocument<T> = FirestoreDocument<T>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>> {
