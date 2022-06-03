@@ -1,19 +1,45 @@
+import { ModelKey, ArrayOrValue, asArray } from '@dereekb/util';
+import { DocumentReferenceRef } from '../firestore/reference';
 import { FirestoreModelNameRef } from '../firestore/collection/collection';
+
+export interface OnCallTypedModelParams<T = unknown> extends FirestoreModelNameRef {
+  data: T;
+}
+
+/**
+ * Key used on the front-end and backend that refers to a specific function for creating models.
+ */
+export const CREATE_MODEL_APP_FUNCTION_KEY = 'createModel';
+
+export type OnCallCreateModelParams<T = unknown> = OnCallTypedModelParams<T>;
 
 /**
  * Key used on the front-end and backend that refers to a specific function for updating models.
  */
 export const UPDATE_MODEL_APP_FUNCTION_KEY = 'updateModel';
 
-export interface OnCallUpdateModelParams<T = unknown> extends FirestoreModelNameRef {
-  data: T;
-}
-
+export type OnCallUpdateModelParams<T = unknown> = OnCallTypedModelParams<T>;
 /**
- * Key used on the front-end and backend that refers to aspecific function for deleting models.
+ * Key used on the front-end and backend that refers to a specific function for deleting models.
  */
 export const DELETE_MODEL_APP_FUNCTION_KEY = 'deleteModel';
 
-export interface OnCallDeleteModelParams<T = unknown> extends FirestoreModelNameRef {
-  data: T;
+export type OnCallDeleteModelParams<T = unknown> = OnCallTypedModelParams<T>;
+
+// MARK: Result
+export interface OnCallCreateModelResult {
+  /**
+   * Keys/Paths of the created object(s)
+   */
+  modelKeys: ModelKey[];
+}
+
+export function onCallCreateModelResultWithDocs(result: ArrayOrValue<DocumentReferenceRef<unknown>>): OnCallCreateModelResult {
+  return onCallCreateModelResult(asArray(result).map((x) => x.documentRef.path));
+}
+
+export function onCallCreateModelResult(modelKeys: ArrayOrValue<ModelKey>): OnCallCreateModelResult {
+  return {
+    modelKeys: asArray(modelKeys)
+  };
 }

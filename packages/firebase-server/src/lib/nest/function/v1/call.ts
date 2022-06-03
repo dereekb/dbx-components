@@ -2,6 +2,7 @@ import * as functions from 'firebase-functions';
 import { INestApplicationContext } from '@nestjs/common';
 import { RunnableHttpFunction } from '../../../function/type';
 import { MakeNestContext, NestApplicationFunctionFactory, NestApplicationPromiseGetter } from '../../nest.provider';
+import { PromiseOrValue } from '@dereekb/util';
 
 // MARK: Nest
 export type NestApplicationRunnableHttpFunctionFactory<I> = NestApplicationFunctionFactory<RunnableHttpFunction<I>>;
@@ -9,7 +10,7 @@ export type NestApplicationRunnableHttpFunctionFactory<I> = NestApplicationFunct
 /**
  * Runnable function that is passed an INestApplicationContext in addition to the usual data/context provided by firebase.
  */
-export type OnCallWithNestApplication<I = unknown, O = unknown> = (nest: INestApplicationContext, data: I, context: functions.https.CallableContext) => O;
+export type OnCallWithNestApplication<I = unknown, O = unknown> = (nest: INestApplicationContext, data: I, context: functions.https.CallableContext) => PromiseOrValue<O>;
 
 /**
  * Factory function for generating a NestApplicationFunctionFactory for a HttpsFunctions/Runnable firebase function.
@@ -31,7 +32,7 @@ export function onCallWithNestApplicationFactory(): OnCallWithNestApplicationFac
 /**
  * Runnable function that is passed an arbitrary nest context object in addition to the usual data/context provided by firebase.
  */
-export type OnCallWithNestContext<C, I = unknown, O = unknown> = (nestContext: C, data: I, context: functions.https.CallableContext) => O;
+export type OnCallWithNestContext<C, I = unknown, O = unknown> = (nestContext: C, data: I, context: functions.https.CallableContext) => PromiseOrValue<O>;
 
 /**
  * Factory function for generating HttpsFunctions/Runnable firebase function that returns the value from the input OnCallWithNestContext function.

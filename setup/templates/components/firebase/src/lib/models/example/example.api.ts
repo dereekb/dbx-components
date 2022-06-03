@@ -1,3 +1,4 @@
+import { ExampleTypes } from './example';
 import { Expose } from "class-transformer";
 import { ModelFirebaseFunctionMap, modelFirebaseFunctionMapFactory, FirebaseFunctionMapFunction, FirebaseFunctionTypeConfigMap, ModelFirebaseCrudFunctionConfigMap } from "@dereekb/firebase";
 import { IsNotEmpty, IsOptional, IsString, MaxLength } from "class-validator";
@@ -27,7 +28,7 @@ export const exampleFunctionTypeConfigMap: FirebaseFunctionTypeConfigMap<Example
 
 export type ExampleModelCrudFunctionsConfig = {};
 
-export const exampleModelCrudFunctionsConfig: ModelFirebaseCrudFunctionConfigMap<ExampleModelCrudFunctionsConfig> = {};
+export const exampleModelCrudFunctionsConfig: ModelFirebaseCrudFunctionConfigMap<ExampleModelCrudFunctionsConfig, ExampleTypes> = {};
 
 export const exampleFunctionMap = modelFirebaseFunctionMapFactory(exampleFunctionTypeConfigMap, exampleModelCrudFunctionsConfig);
 

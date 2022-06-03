@@ -3,6 +3,7 @@ import { build, BuildFunction, Getter } from '@dereekb/util';
 import { INestApplicationContext } from '@nestjs/common';
 import { AuthDataRef } from '../auth';
 import { FirebaseServerAuthService } from '../auth/auth.service';
+import { FirebaseServerActionsContext } from './function/context';
 import { nestFirebaseForbiddenPermissionError } from './model/permission.error';
 
 /**
@@ -30,6 +31,7 @@ export abstract class AbstractNestContext {
 }
 
 export abstract class AbstractFirebaseNestContext<C, Y extends FirebaseModelsService<any, any>> extends AbstractNestContext {
+  abstract get actionContext(): FirebaseServerActionsContext;
   abstract get authService(): FirebaseServerAuthService;
   abstract get modelsService(): Y;
   abstract get app(): C;

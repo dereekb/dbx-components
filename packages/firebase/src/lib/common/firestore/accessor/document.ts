@@ -51,6 +51,12 @@ export abstract class AbstractFirestoreDocument<T, D extends AbstractFirestoreDo
     return this.snapshot().then((x) => x.data(options));
   }
 
+  /**
+   * Creates or updates the existing model using the accessor's set functionality.
+   *
+   * @param data
+   * @returns
+   */
   createOrUpdate(data: Partial<T>): Promise<WriteResult | void> {
     return createOrUpdateWithAccessorSet(this.accessor)(data);
   }

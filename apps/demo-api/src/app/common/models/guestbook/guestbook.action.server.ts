@@ -1,5 +1,5 @@
 import { FirebaseServerActionsContext } from '@dereekb/firebase-server';
-import { GuestbookFirestoreCollections, UpdateGuestbookEntryParams, AsyncGuestbookEntryUpdateAction, GuestbookEntryDocument, GuestbookEntry } from '@dereekb/demo-firebase';
+import { GuestbookFirestoreCollections, UpdateGuestbookEntryParams, AsyncGuestbookEntryUpdateAction, GuestbookEntryDocument, GuestbookEntry, CreateGuestbookParams, AsyncGuestbookCreateAction, GuestbookDocument } from '@dereekb/demo-firebase';
 
 /**
  * FirebaseServerActionsContextt required for GuestbookServerActions.
@@ -10,6 +10,7 @@ export interface GuestbookServerActionsContext extends FirebaseServerActionsCont
  * Server-only guestbook actions.
  */
 export abstract class GuestbookServerActions {
+  abstract createGuestbook(params: CreateGuestbookParams): AsyncGuestbookCreateAction<CreateGuestbookParams>;
   abstract updateGuestbookEntry(params: UpdateGuestbookEntryParams): AsyncGuestbookEntryUpdateAction<UpdateGuestbookEntryParams>;
 }
 
@@ -18,12 +19,28 @@ export abstract class GuestbookServerActions {
  */
 export function guestbookServerActions(context: GuestbookServerActionsContext): GuestbookServerActions {
   return {
+    createGuestbook: guestbookCreateGuestbookFactory(context),
     updateGuestbookEntry: guestbookEntryUpdateEntryFactory(context)
   };
 }
 
 // MARK: Actions
-export function guestbookEntryUpdateEntryFactory({ firebaseServerActionTransformFunctionFactory, guestbookCollection: guestbookFirestoreCollection, guestbookEntryCollectionFactory }: GuestbookServerActionsContext) {
+export function guestbookCreateGuestbookFactory({ firebaseServerActionTransformFunctionFactory, guestbookCollection }: GuestbookServerActionsContext) {
+  return firebaseServerActionTransformFunctionFactory(CreateGuestbookParams, async (params) => {
+    const guestbookAccessor = guestbookCollection.documentAccessor();
+    const { name } = params;
+
+    return async () => {
+      const document: GuestbookDocument = guestbookAccessor.newDocument();
+
+      await document.createOrUpdate({ name });
+
+      return document;
+    };
+  });
+}
+
+export function guestbookEntryUpdateEntryFactory({ firebaseServerActionTransformFunctionFactory, guestbookCollection, guestbookEntryCollectionFactory }: GuestbookServerActionsContext) {
   return firebaseServerActionTransformFunctionFactory(UpdateGuestbookEntryParams, async (params) => {
     const { message, signed, published } = params;
 
@@ -31,8 +48,8 @@ export function guestbookEntryUpdateEntryFactory({ firebaseServerActionTransform
       const documentRef = document.documentRef;
 
       // perform the change in a transaction
-      await guestbookFirestoreCollection.firestoreContext.runTransaction(async (transaction) => {
-        const parentGuestbook = guestbookFirestoreCollection.documentAccessorForTransaction(transaction).loadDocument(document.parent);
+      await guestbookCollection.firestoreContext.runTransaction(async (transaction) => {
+        const parentGuestbook = guestbookCollection.documentAccessorForTransaction(transaction).loadDocument(document.parent);
         const guestbookSnapshot = await parentGuestbook.snapshot();
         const guestbookData = guestbookSnapshot.data();
 

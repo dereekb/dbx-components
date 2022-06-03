@@ -1,7 +1,7 @@
-import { APP_CODE_PREFIX_LOWERUpdateModel, APP_CODE_PREFIX_LOWERDeleteModel } from './function/model/crud.functions';
+import { APP_CODE_PREFIX_LOWERCreateModel, APP_CODE_PREFIX_LOWERUpdateModel, APP_CODE_PREFIX_LOWERDeleteModel } from './function/model/crud.functions';
 import { exampleSetUsernameKey } from 'FIREBASE_COMPONENTS_NAME';
 import { NestAppPromiseGetter, nestServerInstance } from '@dereekb/firebase-server';
-import { UPDATE_MODEL_APP_FUNCTION_KEY, DELETE_MODEL_APP_FUNCTION_KEY } from '@dereekb/firebase';
+import { CREATE_MODEL_APP_FUNCTION_KEY, UPDATE_MODEL_APP_FUNCTION_KEY, DELETE_MODEL_APP_FUNCTION_KEY } from '@dereekb/firebase';
 import { APP_CODE_PREFIXApiAppModule } from './app.module';
 import { exampleSetUsername } from './function';
 
@@ -15,6 +15,7 @@ export function allAppFunctions(nest: NestAppPromiseGetter) {
     // ---
     // Auth
     // Model
+    [CREATE_MODEL_APP_FUNCTION_KEY]: APP_CODE_PREFIX_LOWERCreateModel(nest),
     [UPDATE_MODEL_APP_FUNCTION_KEY]: APP_CODE_PREFIX_LOWERUpdateModel(nest),
     [DELETE_MODEL_APP_FUNCTION_KEY]: APP_CODE_PREFIX_LOWERDeleteModel(nest),
     // API Calls

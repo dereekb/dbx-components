@@ -1,9 +1,14 @@
 import { INestApplicationContext } from '@nestjs/common';
 import { DemoFirebaseContextAppContext, demoFirebaseModelServices, DemoFirebaseModelTypes, DemoFirestoreCollections } from '@dereekb/demo-firebase';
-import { onCallWithNestApplicationFactory, onCallWithNestContextFactory, taskQueueFunctionHandlerWithNestContextFactory, cloudEventHandlerWithNestContextFactory, blockingFunctionHandlerWithNestContextFactory, onEventWithNestContextFactory, AbstractFirebaseNestContext, OnCallUpdateModelFunction, OnCallUpdateModelMap, OnCallDeleteModelMap, OnCallDeleteModelFunction } from '@dereekb/firebase-server';
-import { ProfileServerActions, GuestbookServerActions, DemoApiAuthService } from '../common';
+import { onCallWithNestApplicationFactory, onCallWithNestContextFactory, taskQueueFunctionHandlerWithNestContextFactory, cloudEventHandlerWithNestContextFactory, blockingFunctionHandlerWithNestContextFactory, onEventWithNestContextFactory, AbstractFirebaseNestContext, OnCallUpdateModelFunction, OnCallUpdateModelMap, OnCallDeleteModelMap, OnCallDeleteModelFunction, OnCallCreateModelFunction, OnCallCreateModelMap } from '@dereekb/firebase-server';
+import { OnCallCreateModelResult } from '@dereekb/firebase';
+import { ProfileServerActions, GuestbookServerActions, DemoApiAuthService, DemoFirebaseServerActionsContext } from '../common';
 
 export class DemoApiNestContext extends AbstractFirebaseNestContext<DemoFirebaseContextAppContext, typeof demoFirebaseModelServices> {
+  get actionContext(): DemoFirebaseServerActionsContext {
+    return this.nest.get(DemoFirebaseServerActionsContext);
+  }
+
   get authService(): DemoApiAuthService {
     return this.nest.get(DemoApiAuthService);
   }
@@ -38,6 +43,9 @@ export const blockingEventWithDemoNestContext = blockingFunctionHandlerWithNestC
 export const taskqueueEventWithDemoNestContext = taskQueueFunctionHandlerWithNestContextFactory(mapDemoApiNestContext);
 
 // MARK: CRUD Functions
+export type DemoCreateModelfunction<I, O extends OnCallCreateModelResult = OnCallCreateModelResult> = OnCallCreateModelFunction<DemoApiNestContext, I, O>;
+export type DemoOnCallCreateModelMap = OnCallCreateModelMap<DemoApiNestContext, DemoFirebaseModelTypes>;
+
 export type DemoUpdateModelfunction<I, O = void> = OnCallUpdateModelFunction<DemoApiNestContext, I, O>;
 export type DemoOnCallUpdateModelMap = OnCallUpdateModelMap<DemoApiNestContext, DemoFirebaseModelTypes>;
 

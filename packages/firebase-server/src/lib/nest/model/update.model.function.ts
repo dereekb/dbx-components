@@ -1,10 +1,11 @@
-import { serverError } from '@dereekb/util';
+import { PromiseOrValue, serverError } from '@dereekb/util';
 import { FirestoreModelName, FirestoreModelIdentity, FirestoreModelNames, OnCallUpdateModelParams } from '@dereekb/firebase';
 import { badRequestError } from '../../function';
 import { CallableContextWithAuthData } from '../../function/context';
 import { OnCallWithAuthorizedNestContext } from '../function/v1/call.utility';
 
-export type OnCallUpdateModelFunction<C, I = unknown, O = void> = (nest: C, requestData: I, context: CallableContextWithAuthData) => O;
+// MARK: Function
+export type OnCallUpdateModelFunction<C, I = unknown, O = void> = (nest: C, requestData: I, context: CallableContextWithAuthData) => PromiseOrValue<O>;
 
 export type OnCallUpdateModelMap<C, T extends FirestoreModelIdentity = FirestoreModelIdentity> = {
   [K in FirestoreModelNames<T>]?: OnCallUpdateModelFunction<C, any, any>;
