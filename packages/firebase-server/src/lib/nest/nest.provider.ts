@@ -1,4 +1,4 @@
-import { FirebaseAppModelContext, FirebaseModelsService, InContextFirebaseModelsService, inContextFirebaseModelsServiceFactory } from '@dereekb/firebase';
+import { FirebaseAppModelContext, FirebaseModelServiceContext, FirebaseModelsService, FirebaseModelsServiceSelectionResultRolesReader, FirebaseModelsServiceTypes, InContextFirebaseModelsService, inContextFirebaseModelsServiceFactory, UseFirebaseModelsServiceSelection, UseFirebaseModelsServiceSelectionUseFunction, useFirebaseModelsService } from '@dereekb/firebase';
 import { build, BuildFunction, Getter } from '@dereekb/util';
 import { INestApplicationContext } from '@nestjs/common';
 import { AuthDataRef } from '../auth';
@@ -30,11 +30,11 @@ export abstract class AbstractNestContext {
   constructor(readonly nest: INestApplicationContext) {}
 }
 
-export abstract class AbstractFirebaseNestContext<C, Y extends FirebaseModelsService<any, any>> extends AbstractNestContext {
+export abstract class AbstractFirebaseNestContext<A, Y extends FirebaseModelsService<any, FirebaseAppModelContext<A>>> extends AbstractNestContext {
   abstract get actionContext(): FirebaseServerActionsContext;
   abstract get authService(): FirebaseServerAuthService;
-  abstract get modelsService(): Y;
-  abstract get app(): C;
+  abstract get firebaseModelsService(): Y;
+  abstract get app(): A;
 
   /**
    * Creates a FirebaseAppModelContext instance.
@@ -43,8 +43,8 @@ export abstract class AbstractFirebaseNestContext<C, Y extends FirebaseModelsSer
    * @param buildFn
    * @returns
    */
-  modelContext(auth: AuthDataRef, buildFn?: BuildFunction<FirebaseAppModelContext<C>>): FirebaseAppModelContext<C> {
-    const base: FirebaseAppModelContext<C> = {
+  makeModelContext(auth: AuthDataRef, buildFn?: BuildFunction<FirebaseAppModelContext<A>>): FirebaseAppModelContext<A> {
+    const base: FirebaseAppModelContext<A> = {
       auth: this.authService.authContextInfo(auth),
       app: this.app,
       makePermissionError: nestFirebaseForbiddenPermissionError
@@ -61,12 +61,36 @@ export abstract class AbstractFirebaseNestContext<C, Y extends FirebaseModelsSer
   /**
    * Creates a InContextFirebaseModelsService given the input context and parameters.
    *
-   * @param auth
+   * @param context
    * @param buildFn
    * @returns
    */
-  service(auth: AuthDataRef, buildFn?: BuildFunction<FirebaseAppModelContext<C>>): InContextFirebaseModelsService<Y> {
-    const firebaseModelContext = this.modelContext(auth, buildFn);
-    return inContextFirebaseModelsServiceFactory(this.modelsService)(firebaseModelContext) as InContextFirebaseModelsService<Y>;
+  model(context: AuthDataRef, buildFn?: BuildFunction<FirebaseAppModelContext<A>>): InContextFirebaseModelsService<Y> {
+    const firebaseModelContext = this.makeModelContext(context, buildFn);
+    return inContextFirebaseModelsServiceFactory(this.firebaseModelsService)(firebaseModelContext) as InContextFirebaseModelsService<Y>;
+  }
+
+  async useModel<T extends FirebaseModelsServiceTypes<Y>, O>(type: T, select: UseModelInput<FirebaseAppModelContext<A>, Y, T, O>): Promise<O>;
+  async useModel<T extends FirebaseModelsServiceTypes<Y>>(type: T, select: UseModelInputForRolesReader<FirebaseAppModelContext<A>, Y, T>): Promise<FirebaseModelsServiceSelectionResultRolesReader<Y, T>>;
+  async useModel<T extends FirebaseModelsServiceTypes<Y>, O>(type: T, select: UseModelInput<FirebaseAppModelContext<A>, Y, T, O> | UseModelInputForRolesReader<FirebaseAppModelContext<A>, Y, T>): Promise<any> {
+    const appModelContext: FirebaseAppModelContext<A> = this.makeModelContext(select.context, select.buildFn);
+    const usePromise = useFirebaseModelsService(this.firebaseModelsService, type, {
+      context: appModelContext,
+      key: select.key,
+      roles: select.roles,
+      rolesSetIncludes: select.rolesSetIncludes
+    } as UseFirebaseModelsServiceSelection<Y, T>);
+
+    const use: UseFirebaseModelsServiceSelectionUseFunction<Y, T, O> = (select as UseModelInput<FirebaseAppModelContext<A>, Y, T, O>).use ?? ((x) => x as unknown as O);
+    return usePromise(use);
   }
 }
+
+export type UseModelInputForRolesReader<C extends FirebaseModelServiceContext, Y extends FirebaseModelsService<any, C>, T extends FirebaseModelsServiceTypes<Y>> = Omit<UseFirebaseModelsServiceSelection<Y, T>, 'type' | 'context'> & {
+  context: AuthDataRef;
+  buildFn?: BuildFunction<C>;
+};
+
+export type UseModelInput<C extends FirebaseModelServiceContext, Y extends FirebaseModelsService<any, C>, T extends FirebaseModelsServiceTypes<Y>, O> = UseModelInputForRolesReader<C, Y, T> & {
+  use: UseFirebaseModelsServiceSelectionUseFunction<Y, T, O>;
+};

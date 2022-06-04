@@ -25,7 +25,7 @@ export class DemoApiNestContext extends AbstractFirebaseNestContext<DemoFirebase
     return this.nest.get(GuestbookServerActions);
   }
 
-  get modelsService() {
+  get firebaseModelsService() {
     return demoFirebaseModelServices;
   }
 
