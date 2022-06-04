@@ -7,7 +7,8 @@ import { onEventWithDemoNestContext } from '../function';
  */
 export const initUserOnCreate = onEventWithDemoNestContext<UserRecord>((withNest) =>
   functions.auth.user().onCreate(
-    withNest(async (nest, data: UserRecord) => {
+    withNest(async (request) => {
+      const { nest, auth, data } = request;
       const uid = data.uid;
 
       if (uid) {

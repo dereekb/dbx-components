@@ -1,10 +1,11 @@
 import { UserRecord } from 'firebase-admin/lib/auth/user-record';
 import { Injectable, Module } from '@nestjs/common';
 import { initFirebaseServerAdminTestEnvironment, firebaseAdminFunctionNestContextFactory } from '@dereekb/firebase-server/test';
-import { OnCallWithNestApplication, onCallWithNestApplicationFactory } from './call';
+import { onCallWithNestApplicationFactory } from './call';
 import { onEventWithNestApplicationFactory, NestApplicationEventHandler, OnEventWithNestApplicationBuilder } from './event';
 import * as functions from 'firebase-functions';
 import { NestApplicationFunctionFactory } from '../../nest.provider';
+import { OnCallWithNestApplication } from '../call';
 
 @Injectable()
 export class TestInjectable {}
@@ -45,10 +46,10 @@ describe('nest function utilities', () => {
         const testData = { test: true }; // use as the test data to be passed to our handler.
 
         // Our actual handler function that is invoked by our applications.
-        const handler: OnCallWithNestApplication<any, number> = (nest, data: typeof testData, context) => {
-          expect(nest).toBeDefined();
-          expect(data).toBeDefined();
-          expect(context).toBeDefined();
+        const handler: OnCallWithNestApplication<any, number> = (request) => {
+          expect(request).toBeDefined();
+          expect(request.nestApplication).toBeDefined();
+          expect(request.data).toBeDefined();
           retrievedNestApplication = true;
           return expectedValue;
         };
@@ -87,11 +88,11 @@ describe('nest function utilities', () => {
         const factory = onEventWithNestApplicationFactory();
 
         // Our actual event handler function that is invoked by our application.
-        const handler: NestApplicationEventHandler<UserRecord, UserRecord> = (nest, data: UserRecord, context) => {
-          expect(nest).toBeDefined();
-          expect(context).toBeDefined();
+        const handler: NestApplicationEventHandler<UserRecord, UserRecord> = (request) => {
+          expect(request.nestApplication).toBeDefined();
+          expect(request).toBeDefined();
           retrievedNestApplication = true;
-          return data;
+          return request.data;
         };
 
         /*

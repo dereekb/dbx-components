@@ -2,20 +2,17 @@ import { ProfileDocument, SetProfileUsernameParams } from '@dereekb/demo-firebas
 import { inAuthContext } from '@dereekb/firebase-server';
 import { onCallWithDemoNestContext } from '../function';
 import { userHasNoProfileError } from '../../common';
-import { profileForUser } from './profile.util';
+import { profileForUserRequest } from './profile.util';
 
-export const profileSetUsername = onCallWithDemoNestContext(
-  inAuthContext(async (nest, data: SetProfileUsernameParams, context) => {
+export const profileSetUsername = onCallWithDemoNestContext<SetProfileUsernameParams>(
+  inAuthContext(async (request) => {
+    const { nest, auth, data } = request;
     const setProfileUsername = await nest.profileActions.setProfileUsername(data);
-
-    const params = setProfileUsername.params;
-    const uid = params.uid ?? context.auth?.uid!;
-
-    const profileDocument: ProfileDocument = profileForUser(nest, uid);
+    const profileDocument: ProfileDocument = await profileForUserRequest(request);
     const exists = await profileDocument.accessor.exists();
 
     if (!exists) {
-      throw userHasNoProfileError(uid);
+      throw userHasNoProfileError(auth.uid);
     }
 
     await setProfileUsername(profileDocument);

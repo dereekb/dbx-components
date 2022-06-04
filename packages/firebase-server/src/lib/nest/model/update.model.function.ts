@@ -1,14 +1,14 @@
 import { PromiseOrValue, serverError } from '@dereekb/util';
 import { FirestoreModelName, FirestoreModelIdentity, FirestoreModelNames, OnCallUpdateModelParams } from '@dereekb/firebase';
 import { badRequestError } from '../../function';
-import { CallableContextWithAuthData } from '../../function/context';
-import { OnCallWithAuthorizedNestContext } from '../function/v1/call.utility';
+import { OnCallWithAuthorizedNestContext } from '../function/call';
+import { NestContextCallableRequestWithAuth } from '../function/nest';
 
 // MARK: Function
-export type OnCallUpdateModelFunction<C, I = unknown, O = void> = (nest: C, requestData: I, context: CallableContextWithAuthData) => PromiseOrValue<O>;
+export type OnCallUpdateModelFunction<N, I = unknown, O = void> = (request: NestContextCallableRequestWithAuth<N, I>) => PromiseOrValue<O>;
 
-export type OnCallUpdateModelMap<C, T extends FirestoreModelIdentity = FirestoreModelIdentity> = {
-  [K in FirestoreModelNames<T>]?: OnCallUpdateModelFunction<C, any, any>;
+export type OnCallUpdateModelMap<N, T extends FirestoreModelIdentity = FirestoreModelIdentity> = {
+  [K in FirestoreModelNames<T>]?: OnCallUpdateModelFunction<N, any, any>;
 };
 
 /**
@@ -17,13 +17,16 @@ export type OnCallUpdateModelMap<C, T extends FirestoreModelIdentity = Firestore
  * @param map
  * @returns
  */
-export function onCallUpdateModel<C>(map: OnCallUpdateModelMap<C>): OnCallWithAuthorizedNestContext<C, OnCallUpdateModelParams, unknown> {
-  return <I>(nest: C, requestData: OnCallUpdateModelParams<I>, context: CallableContextWithAuthData) => {
-    const modelType = requestData?.modelType;
+export function onCallUpdateModel<N>(map: OnCallUpdateModelMap<N>): OnCallWithAuthorizedNestContext<N, OnCallUpdateModelParams, unknown> {
+  return (request) => {
+    const modelType = request.data?.modelType;
     const updateFn = map[modelType];
 
     if (updateFn) {
-      return updateFn(nest, requestData.data, context);
+      return updateFn({
+        ...request,
+        data: request.data.data
+      });
     } else {
       throw updateModelUnknownModelTypeError(modelType);
     }

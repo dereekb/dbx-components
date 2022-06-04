@@ -1,14 +1,14 @@
 import { PromiseOrValue, serverError } from '@dereekb/util';
 import { FirestoreModelName, FirestoreModelIdentity, FirestoreModelNames, OnCallDeleteModelParams } from '@dereekb/firebase';
 import { badRequestError } from '../../function';
-import { CallableContextWithAuthData } from '../../function/context';
-import { OnCallWithAuthorizedNestContext } from '../function/v1/call.utility';
+import { NestContextCallableRequestWithAuth } from '../function/nest';
+import { OnCallWithAuthorizedNestContext } from '../function/call';
 
 // MARK: Function
-export type OnCallDeleteModelFunction<C, I = unknown, O = void> = (nest: C, requestData: I, context: CallableContextWithAuthData) => PromiseOrValue<O>;
+export type OnCallDeleteModelFunction<N, I = unknown, O = void> = (request: NestContextCallableRequestWithAuth<N, I>) => PromiseOrValue<O>;
 
-export type OnCallDeleteModelMap<C, T extends FirestoreModelIdentity = FirestoreModelIdentity> = {
-  [K in FirestoreModelNames<T>]?: OnCallDeleteModelFunction<C, any, any>;
+export type OnCallDeleteModelMap<N, T extends FirestoreModelIdentity = FirestoreModelIdentity> = {
+  [K in FirestoreModelNames<T>]?: OnCallDeleteModelFunction<N, any, any>;
 };
 
 /**
@@ -17,13 +17,16 @@ export type OnCallDeleteModelMap<C, T extends FirestoreModelIdentity = Firestore
  * @param map
  * @returns
  */
-export function onCallDeleteModel<C>(map: OnCallDeleteModelMap<C>): OnCallWithAuthorizedNestContext<C, OnCallDeleteModelParams, unknown> {
-  return <I>(nest: C, requestData: OnCallDeleteModelParams<I>, context: CallableContextWithAuthData) => {
-    const modelType = requestData?.modelType;
+export function onCallDeleteModel<N>(map: OnCallDeleteModelMap<N>): OnCallWithAuthorizedNestContext<N, OnCallDeleteModelParams, unknown> {
+  return (request) => {
+    const modelType = request.data?.modelType;
     const deleteFn = map[modelType];
 
     if (deleteFn) {
-      return deleteFn(nest, requestData.data, context);
+      return deleteFn({
+        ...request,
+        data: request.data.data
+      });
     } else {
       throw deleteModelUnknownModelTypeError(modelType);
     }

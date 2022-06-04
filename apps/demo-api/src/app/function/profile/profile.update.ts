@@ -1,30 +1,10 @@
 import { ProfileDocument, UpdateProfileParams } from '@dereekb/demo-firebase';
 import { DemoUpdateModelfunction } from '../function';
-import { profileForUser } from './profile.util';
+import { profileForUserRequest } from './profile.util';
 
-export const updateProfile: DemoUpdateModelfunction<UpdateProfileParams> = async (nest, data, context) => {
+export const updateProfile: DemoUpdateModelfunction<UpdateProfileParams> = async (request) => {
+  const { nest, auth, data } = request;
   const updateProfile = await nest.profileActions.updateProfile(data);
-
-  const uid = context.auth.uid;
-  let profileDocument: ProfileDocument;
-
-  if (updateProfile.params.key != null) {
-    profileDocument = await nest.useModel('profile', {
-      context,
-      key: updateProfile.params.key,
-      roles: 'read',
-      use: (x) => x.document
-    });
-
-    // Alternative way using model() chain
-    /*
-    profileDocument = await nest.model(context)('profile')(updateProfile.params.key)('read')((x) => {
-      return x.document;
-    });
-    */
-  } else {
-    profileDocument = profileForUser(nest, uid);
-  }
-
+  const profileDocument: ProfileDocument = await profileForUserRequest(request);
   await updateProfile(profileDocument);
 };

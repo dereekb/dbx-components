@@ -1,14 +1,14 @@
 import { PromiseOrValue, serverError } from '@dereekb/util';
 import { FirestoreModelName, FirestoreModelIdentity, FirestoreModelNames, OnCallCreateModelParams, OnCallCreateModelResult } from '@dereekb/firebase';
 import { badRequestError } from '../../function';
-import { CallableContextWithAuthData } from '../../function/context';
-import { OnCallWithAuthorizedNestContext } from '../function/v1/call.utility';
+import { OnCallWithAuthorizedNestContext } from '../function/call';
+import { NestContextCallableRequestWithAuth } from '../function/nest';
 
 // MARK: Function
-export type OnCallCreateModelFunction<C, I = unknown, O extends OnCallCreateModelResult = OnCallCreateModelResult> = (nest: C, requestData: I, context: CallableContextWithAuthData) => PromiseOrValue<O>;
+export type OnCallCreateModelFunction<N, I = unknown, O extends OnCallCreateModelResult = OnCallCreateModelResult> = (request: NestContextCallableRequestWithAuth<N, I>) => PromiseOrValue<O>;
 
-export type OnCallCreateModelMap<C, T extends FirestoreModelIdentity = FirestoreModelIdentity> = {
-  [K in FirestoreModelNames<T>]?: OnCallCreateModelFunction<C, any, OnCallCreateModelResult>;
+export type OnCallCreateModelMap<N, T extends FirestoreModelIdentity = FirestoreModelIdentity> = {
+  [K in FirestoreModelNames<T>]?: OnCallCreateModelFunction<N, any, OnCallCreateModelResult>;
 };
 
 /**
@@ -17,13 +17,16 @@ export type OnCallCreateModelMap<C, T extends FirestoreModelIdentity = Firestore
  * @param map
  * @returns
  */
-export function onCallCreateModel<C>(map: OnCallCreateModelMap<C>): OnCallWithAuthorizedNestContext<C, OnCallCreateModelParams, OnCallCreateModelResult> {
-  return <I>(nest: C, requestData: OnCallCreateModelParams<I>, context: CallableContextWithAuthData) => {
-    const modelType = requestData?.modelType;
+export function onCallCreateModel<N>(map: OnCallCreateModelMap<N>): OnCallWithAuthorizedNestContext<N, OnCallCreateModelParams, OnCallCreateModelResult> {
+  return (request) => {
+    const modelType = request.data?.modelType;
     const createFn = map[modelType];
 
     if (createFn) {
-      return createFn(nest, requestData.data, context);
+      return createFn({
+        ...request,
+        data: request.data.data
+      });
     } else {
       throw createModelUnknownModelTypeError(modelType);
     }

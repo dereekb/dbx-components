@@ -22,7 +22,7 @@ export class APP_CODE_PREFIXApiNestContext extends AbstractFirebaseNestContext<A
     return this.nest.get(ExampleServerActions);
   }
 
-  get modelsService() {
+  get firebaseModelsService() {
     return APP_CODE_PREFIX_LOWERFirebaseModelServices;
   }
 

@@ -73,9 +73,9 @@ export abstract class AbstractFirebaseNestContext<A, Y extends FirebaseModelsSer
   async useModel<T extends FirebaseModelsServiceTypes<Y>, O>(type: T, select: UseModelInput<FirebaseAppModelContext<A>, Y, T, O>): Promise<O>;
   async useModel<T extends FirebaseModelsServiceTypes<Y>>(type: T, select: UseModelInputForRolesReader<FirebaseAppModelContext<A>, Y, T>): Promise<FirebaseModelsServiceSelectionResultRolesReader<Y, T>>;
   async useModel<T extends FirebaseModelsServiceTypes<Y>, O>(type: T, select: UseModelInput<FirebaseAppModelContext<A>, Y, T, O> | UseModelInputForRolesReader<FirebaseAppModelContext<A>, Y, T>): Promise<any> {
-    const appModelContext: FirebaseAppModelContext<A> = this.makeModelContext(select.context, select.buildFn);
+    const context: FirebaseAppModelContext<A> = this.makeModelContext(select.request, select.buildFn);
     const usePromise = useFirebaseModelsService(this.firebaseModelsService, type, {
-      context: appModelContext,
+      context,
       key: select.key,
       roles: select.roles,
       rolesSetIncludes: select.rolesSetIncludes
@@ -87,7 +87,7 @@ export abstract class AbstractFirebaseNestContext<A, Y extends FirebaseModelsSer
 }
 
 export type UseModelInputForRolesReader<C extends FirebaseModelServiceContext, Y extends FirebaseModelsService<any, C>, T extends FirebaseModelsServiceTypes<Y>> = Omit<UseFirebaseModelsServiceSelection<Y, T>, 'type' | 'context'> & {
-  context: AuthDataRef;
+  request: AuthDataRef;
   buildFn?: BuildFunction<C>;
 };
 

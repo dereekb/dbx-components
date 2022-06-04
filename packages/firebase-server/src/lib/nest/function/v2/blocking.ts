@@ -1,17 +1,22 @@
 import { PromiseOrValue } from '@dereekb/util';
 import { BlockingFunction } from 'firebase-functions';
 import { MakeNestContext, NestApplicationFunctionFactory, NestApplicationPromiseGetter } from '../../nest.provider';
+import { NestContextRequest } from '../nest';
+
+export type BlockingFunctionNestContextRequest<N, E extends object> = NestContextRequest<N, E>;
+
+// MARK: From Firebase/Cloud Event
+export type BlockingFunctionHandler<E extends object, O = unknown> = (event: E) => PromiseOrValue<O>;
 
 // MARK: Blocking Function
-export type BlockingFunctionHandler<E, O = unknown> = (event: E) => PromiseOrValue<O>;
-export type NestContextBlockingFunctionHandler<C, E, O = unknown> = (nest: C, event: E) => PromiseOrValue<O>;
-export type NestContextBlockingFunctionHandlerBuilder<C, E, O = unknown> = (handler: NestContextBlockingFunctionHandler<C, E, O>) => BlockingFunctionHandler<E, O>;
-export type BlockingFunctionHandlerWithNestContextBuilder<C, E, O = unknown> = (nest: NestContextBlockingFunctionHandlerBuilder<C, E, O>) => BlockingFunction;
+export type NestContextBlockingFunctionHandler<N, E extends object, O = unknown> = (request: BlockingFunctionNestContextRequest<N, E>) => PromiseOrValue<O>;
+export type NestContextBlockingFunctionHandlerBuilder<N, E extends object, O = unknown> = (handler: NestContextBlockingFunctionHandler<N, E, O>) => BlockingFunctionHandler<E, O>;
+export type BlockingFunctionHandlerWithNestContextBuilder<N, E extends object, O = unknown> = (nest: NestContextBlockingFunctionHandlerBuilder<N, E, O>) => BlockingFunction;
 
 /**
  * Factory function for generating a firebase BlockingFunction for a specific event.
  */
-export type BlockingFunctionHandlerWithNestContextFactory<C> = <E, O = unknown>(fn: BlockingFunctionHandlerWithNestContextBuilder<C, E, O>) => NestApplicationFunctionFactory<BlockingFunction>;
+export type BlockingFunctionHandlerWithNestContextFactory<N> = <E extends object, O = unknown>(fn: BlockingFunctionHandlerWithNestContextBuilder<N, E, O>) => NestApplicationFunctionFactory<BlockingFunction>;
 
 /**
  * Creates a BlockingFunctionHandlerWithNestContextFactory.
@@ -20,11 +25,17 @@ export type BlockingFunctionHandlerWithNestContextFactory<C> = <E, O = unknown>(
  * @param makeNestContext
  * @returns
  */
-export function blockingFunctionHandlerWithNestContextFactory<C>(makeNestContext: MakeNestContext<C>): BlockingFunctionHandlerWithNestContextFactory<C> {
-  return <E, O>(fn: BlockingFunctionHandlerWithNestContextBuilder<C, E, O>) => {
+export function blockingFunctionHandlerWithNestContextFactory<N>(makeNestContext: MakeNestContext<N>): BlockingFunctionHandlerWithNestContextFactory<N> {
+  return <E extends object, O>(fn: BlockingFunctionHandlerWithNestContextBuilder<N, E, O>) => {
     return (nestAppPromiseGetter: NestApplicationPromiseGetter) => {
-      const handlerBuilder: NestContextBlockingFunctionHandlerBuilder<C, E, O> = (handler: NestContextBlockingFunctionHandler<C, E, O>) => {
-        const fnHandler: BlockingFunctionHandler<E, O> = (event: E) => nestAppPromiseGetter().then((nest) => handler(makeNestContext(nest), event));
+      const handlerBuilder: NestContextBlockingFunctionHandlerBuilder<N, E, O> = (handler: NestContextBlockingFunctionHandler<N, E, O>) => {
+        const fnHandler: BlockingFunctionHandler<E, O> = (event: E) =>
+          nestAppPromiseGetter().then((nestApplication) =>
+            handler({
+              ...event,
+              nest: makeNestContext(nestApplication)
+            })
+          );
         return fnHandler;
       };
 

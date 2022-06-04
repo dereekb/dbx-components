@@ -1,10 +1,12 @@
 import { CloudFunction as CloudFunctionV1 } from 'firebase-functions';
 import { CloudFunction as CloudFunctionV2, CloudEvent } from 'firebase-functions/v2';
-import { wrap, WrappedFunction, WrappedScheduledFunction, WrappedV2Function } from 'firebase-functions-test/lib/main';
-import { Getter } from '@dereekb/util';
+import { CallableContextOptions, wrap, WrappedFunction, WrappedScheduledFunction, WrappedV2Function } from 'firebase-functions-test/lib/main';
+import { Getter, PromiseOrValue } from '@dereekb/util';
 import { FeaturesList } from 'firebase-functions-test/lib/features';
 
 export type WrapCloudFunctionV1 = <T>(cloudFunction: CloudFunctionV1<T>) => WrappedScheduledFunction | WrappedFunction<T>;
+export type WrappedV2CallableRequestDataOnly<T> = (data: T, options: CallableContextOptions) => PromiseOrValue<any>;
+export type WrapCallableRequestV2 = <T>(cloudFunction: CloudFunctionV1<T>) => WrappedV2CallableRequestDataOnly<T>;
 export type WrapCloudFunctionV2 = <T extends CloudEvent<unknown>>(cloudFunction: CloudFunctionV2<T>) => WrappedV2Function<T>;
 
 export type WrapCloudFunctionV1Input<T> = CloudFunctionV1<T>;
@@ -21,6 +23,7 @@ export interface FirebaseAdminCloudFunctionWrapperSource {
 
 export interface FirebaseAdminCloudFunctionWrapper {
   readonly wrapV1CloudFunction: WrapCloudFunctionV1;
+  readonly wrapV2CallableRequest: WrapCallableRequestV2;
   readonly wrapV2CloudFunction: WrapCloudFunctionV2;
   readonly wrapBlockingFunction: WrapBlockingFunction;
 }
@@ -32,6 +35,15 @@ export function firebaseAdminCloudFunctionWrapper(instance: FeaturesList): Fireb
     },
     wrapV2CloudFunction(x) {
       return instance.wrap(x);
+    },
+    wrapV2CallableRequest(x) {
+      const wrappedCloudFunction = this.wrapV1CloudFunction(x);
+
+      return (data, context) =>
+        wrappedCloudFunction({
+          ...context,
+          data
+        } as any);
     },
     wrapBlockingFunction() {
       throw new Error('Not supported yet.');
