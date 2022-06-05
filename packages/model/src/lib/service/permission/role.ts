@@ -5,14 +5,25 @@ import { ArrayOrValue, asArray, Maybe, SetIncludesMode } from '@dereekb/util';
  */
 export type GrantedRole = string;
 
-export const GRANTED_READ_ROLE_KEY = 'read';
-
 /**
  * Communicates that the current context has read access to a model.
  */
 export type GrantedReadRole = typeof GRANTED_READ_ROLE_KEY;
+export const GRANTED_READ_ROLE_KEY = 'read';
 
-export type KnownGrantedRole = GrantedReadRole;
+/**
+ * Communicates that the current context has update access to a model.
+ */
+export type GrantedUpdateRole = typeof GRANTED_UPDATE_ROLE_KEY;
+export const GRANTED_UPDATE_ROLE_KEY = 'update';
+
+/**
+ * Communicates that the current context has delete access to a model.
+ */
+export type GrantedDeleteRole = typeof GRANTED_DELETE_ROLE_KEY;
+export const GRANTED_DELETE_ROLE_KEY = 'delete';
+
+export type GrantedCrudRoles = GrantedReadRole | GrantedUpdateRole | GrantedDeleteRole;
 
 export const FULL_ACCESS_ROLE_KEY = '__FULL__';
 

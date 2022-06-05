@@ -247,7 +247,8 @@ export function loadingStateFromObs<T>(obs: Observable<T>, firstOnly?: boolean):
     map((value) => ({ loading: false, value, error: undefined })),
     catchError((error) => of({ loading: false, error })),
     delay(50),
-    startWith({ loading: true })
+    startWith({ loading: true }),
+    shareReplay(1)
   );
 }
 

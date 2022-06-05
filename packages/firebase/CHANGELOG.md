@@ -2,6 +2,17 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [7.0.0](https://github.com/dereekb/dbx-components/compare/v6.0.0-dev...v7.0.0) (2022-06-05)
+
+
+### Features
+
+* added FirestoreDocumentStore crud functions ([7786a40](https://github.com/dereekb/dbx-components/commit/7786a40f6033c2a1d5161805cde283dca7323db5))
+* added onCallCreateModel ([84f7e72](https://github.com/dereekb/dbx-components/commit/84f7e72af20c1d0071feec3e46bae406d7fd5a26))
+* added useModel to AbstractFirebaseNestContext ([29c1940](https://github.com/dereekb/dbx-components/commit/29c19402bff78d743d28ef88093757844f8ee5f7))
+
+
+
 # [6.0.0](https://github.com/dereekb/dbx-components/compare/v5.3.0-dev...v6.0.0) (2022-06-03)
 
 

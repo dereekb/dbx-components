@@ -1,6 +1,5 @@
-import { FirebaseTransactionContext, FirestoreCollectionLike, FirestoreDocument, LimitedFirestoreDocumentAccessor } from '../../firestore';
+import { FirebaseTransactionContext, FirestoreCollectionLike, FirestoreDocument, FirestoreModelKey, LimitedFirestoreDocumentAccessor } from '../../firestore';
 import { InContextModelLoader, ModelLoader } from '@dereekb/model';
-import { ModelKey } from '@dereekb/util';
 
 export type FirebaseModelLoaderContext = FirebaseTransactionContext;
 
@@ -19,12 +18,12 @@ export interface FirebaseModelLoader<C extends FirebaseModelLoaderContext, T, D 
    * @param key
    * @param context
    */
-  loadModelForKey(key: ModelKey, context: C): D;
+  loadModelForKey(key: FirestoreModelKey, context: C): D;
 }
 
 export function firebaseModelLoader<C extends FirebaseModelLoaderContext, T, D extends FirestoreDocument<T>>(getFirestoreCollection: FirebaseModelGetFirestoreCollectionFunction<C, T, D>): FirebaseModelLoader<C, T, D> {
   return {
-    loadModelForKey(key: ModelKey, context: C): D {
+    loadModelForKey(key: FirestoreModelKey, context: C): D {
       const firestoreCollection = getFirestoreCollection(context);
       let documentAccessor: LimitedFirestoreDocumentAccessor<T, D>;
 
@@ -42,7 +41,7 @@ export function firebaseModelLoader<C extends FirebaseModelLoaderContext, T, D e
 
 // MARK: In Context
 export interface InContextFirebaseModelLoader<T, D extends FirestoreDocument<T>> extends InContextModelLoader<D> {
-  loadModelForKey(key: ModelKey): D;
+  loadModelForKey(key: FirestoreModelKey): D;
 }
 
 /**

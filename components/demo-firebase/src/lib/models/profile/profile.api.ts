@@ -2,19 +2,19 @@ import { Expose } from 'class-transformer';
 import { FirebaseFunctionMapFunction, FirebaseFunctionTypeConfigMap, ModelFirebaseCrudFunction, ModelFirebaseCrudFunctionConfigMap, ModelFirebaseFunctionMap, modelFirebaseFunctionMapFactory } from '@dereekb/firebase';
 import { IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
 import { Maybe } from '@dereekb/util';
+import { ProfileTypes } from './profile';
 
 export const PROFILE_BIO_MAX_LENGTH = 200;
 export const PROFILE_USERNAME_MAX_LENGTH = 30;
 
 export class ProfileParams {
-  // MARK: Admin Only
   /**
    * Sets the target profile/user. If not defined, assumes the current user's profile.
    */
   @Expose()
   @IsString()
   @IsOptional()
-  uid?: string;
+  key?: string;
 }
 
 export class SetProfileUsernameParams extends ProfileParams {
@@ -58,7 +58,7 @@ export type ProfileModelCrudFunctionsConfig = {
   profilePrivate: null;
 };
 
-export const profileModelCrudFunctionsConfig: ModelFirebaseCrudFunctionConfigMap<ProfileModelCrudFunctionsConfig> = {
+export const profileModelCrudFunctionsConfig: ModelFirebaseCrudFunctionConfigMap<ProfileModelCrudFunctionsConfig, ProfileTypes> = {
   profile: ['update', 'delete']
 };
 

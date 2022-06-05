@@ -1,10 +1,14 @@
 import { INestApplicationContext } from '@nestjs/common';
 import { APP_CODE_PREFIXFirebaseContextAppContext, APP_CODE_PREFIX_LOWERFirebaseModelServices, APP_CODE_PREFIXFirebaseModelTypes, APP_CODE_PREFIXFirestoreCollections } from "FIREBASE_COMPONENTS_NAME";
-import { onCallWithNestApplicationFactory, onCallWithNestContextFactory, taskQueueFunctionHandlerWithNestContextFactory, cloudEventHandlerWithNestContextFactory, blockingFunctionHandlerWithNestContextFactory, onEventWithNestContextFactory, AbstractFirebaseNestContext, OnCallUpdateModelFunction, OnCallUpdateModelMap, OnCallDeleteModelMap, OnCallDeleteModelFunction } from '@dereekb/firebase-server';
-import { ExampleServerActions } from '../common/models/example/example.action.server';
-import { APP_CODE_PREFIXApiAuthService } from '../common/firebase/auth.service';
+import { onCallWithNestApplicationFactory, onCallWithNestContextFactory, taskQueueFunctionHandlerWithNestContextFactory, cloudEventHandlerWithNestContextFactory, blockingFunctionHandlerWithNestContextFactory, onEventWithNestContextFactory, AbstractFirebaseNestContext, OnCallCreateModelFunction, OnCallCreateModelMap, OnCallUpdateModelFunction, OnCallUpdateModelMap, OnCallDeleteModelMap, OnCallDeleteModelFunction } from '@dereekb/firebase-server';
+import { OnCallCreateModelResult } from '@dereekb/firebase';
+import { APP_CODE_PREFIXFirebaseServerActionsContext, ExampleServerActions, APP_CODE_PREFIXApiAuthService } from '../common';
 
 export class APP_CODE_PREFIXApiNestContext extends AbstractFirebaseNestContext<APP_CODE_PREFIXFirebaseContextAppContext, typeof APP_CODE_PREFIX_LOWERFirebaseModelServices> {
+
+  get actionContext(): APP_CODE_PREFIXFirebaseServerActionsContext {
+    return this.nest.get(APP_CODE_PREFIXFirebaseServerActionsContext);
+  }
 
   get authService(): APP_CODE_PREFIXApiAuthService {
     return this.nest.get(APP_CODE_PREFIXApiAuthService);
@@ -18,7 +22,7 @@ export class APP_CODE_PREFIXApiNestContext extends AbstractFirebaseNestContext<A
     return this.nest.get(ExampleServerActions);
   }
 
-  get modelsService() {
+  get firebaseModelsService() {
     return APP_CODE_PREFIX_LOWERFirebaseModelServices;
   }
 
@@ -37,6 +41,9 @@ export const blockingEventWithAPP_CODE_PREFIXNestContext = blockingFunctionHandl
 export const taskqueueEventWithAPP_CODE_PREFIXNestContext = taskQueueFunctionHandlerWithNestContextFactory(mapAPP_CODE_PREFIXApiNestContext);
 
 // MARK: CRUD Functions
+export type APP_CODE_PREFIXCreateModelfunction<I, O extends OnCallCreateModelResult = OnCallCreateModelResult> = OnCallCreateModelFunction<APP_CODE_PREFIXApiNestContext, I, O>;
+export type APP_CODE_PREFIXOnCallCreateModelMap = OnCallCreateModelMap<APP_CODE_PREFIXApiNestContext, APP_CODE_PREFIXFirebaseModelTypes>;
+
 export type APP_CODE_PREFIXUpdateModelfunction<I, O = void> = OnCallUpdateModelFunction<APP_CODE_PREFIXApiNestContext, I, O>;
 export type APP_CODE_PREFIXOnCallUpdateModelMap = OnCallUpdateModelMap<APP_CODE_PREFIXApiNestContext, APP_CODE_PREFIXFirebaseModelTypes>;
 

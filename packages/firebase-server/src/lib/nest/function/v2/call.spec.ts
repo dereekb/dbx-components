@@ -1,7 +1,8 @@
 import { INestApplicationContext, Injectable, Module } from '@nestjs/common';
 import { initFirebaseServerAdminTestEnvironment, firebaseAdminFunctionNestContextFactory } from '@dereekb/firebase-server/test';
-import { OnCallHandlerWithNestApplication, onCallHandlerWithNestApplicationFactory } from './call';
+import { onCallHandlerWithNestApplicationFactory } from './call';
 import { MakeNestContext, NestApplicationFunctionFactory } from '../../nest.provider';
+import { OnCallWithNestApplication } from '../call';
 
 @Injectable()
 export class TestInjectable {}
@@ -48,9 +49,10 @@ describe('nest function utilities', () => {
         const testData = { test: true }; // use as the test data to be passed to our handler.
 
         // Our actual handler function that is invoked by our applications.
-        const handler: OnCallHandlerWithNestApplication<typeof testData, number> = (nest, event) => {
-          expect(nest).toBeDefined();
-          expect(event).toBeDefined();
+        const handler: OnCallWithNestApplication<typeof testData, number> = (request) => {
+          expect(request.nestApplication).toBeDefined();
+          expect(request.data).toBeDefined();
+          expect(request).toBeDefined();
           retrievedNestApplication = true;
           return expectedValue;
         };
@@ -65,10 +67,12 @@ describe('nest function utilities', () => {
 
         // For our tests, we use the "firebase-functions-test" wrap function to wrap it once more into a function we can use.
         // We can now execute this test function against the emulators and in our test nest context.
-        const testFunction = f.fnWrapper.wrapV1CloudFunction<typeof testData>(runnable); // TODO: Update with a specific wrapOnCall when firebase functions v2 interfaces improve
+        const testFunction = f.fnWrapper.wrapV2CallableRequest<typeof testData>(runnable); // TODO: Update with a specific wrapOnCall when firebase functions v2 interfaces improve
 
         // Now we test the wrapped function. This should call our handler.
-        const result = await testFunction(testData);
+        const result = await testFunction(testData, {
+          auth: null
+        });
 
         expect(result).toBe(expectedValue);
         expect(retrievedNestApplication).toBe(true);

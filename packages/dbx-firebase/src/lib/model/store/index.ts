@@ -5,6 +5,7 @@ export * from './store.collection.change.if.directive';
 export * from './store.collection.directive';
 export * from './store.collection.list.directive';
 export * from './store.document';
+export * from './store.document.crud';
 export * from './store.document.auth.directive';
 export * from './store.document.directive';
 export * from './store.document.router.directive';

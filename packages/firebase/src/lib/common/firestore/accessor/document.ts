@@ -1,4 +1,4 @@
-import { FirestoreModelName } from './../collection/collection';
+import { FirestoreModelId, FirestoreModelIdRef, FirestoreModelKey, FirestoreModelKeyRef, FirestoreModelName } from './../collection/collection';
 /*eslint @typescript-eslint/no-explicit-any:"off"*/
 // any is used with intent here, as the recursive AbstractFirestoreDocument requires its use to terminate.
 
@@ -8,10 +8,10 @@ import { DocumentReference, CollectionReference, Transaction, WriteBatch, Docume
 import { createOrUpdateWithAccessorSet, dataFromSnapshotStream, FirestoreDocumentDataAccessor } from './accessor';
 import { CollectionReferenceRef, DocumentReferenceRef, FirestoreContextReference } from '../reference';
 import { FirestoreDocumentContext } from './context';
-import { build, ModelKey } from '@dereekb/util';
+import { build } from '@dereekb/util';
 import { FirestoreModelNameRef, FirestoreModelIdentity, FirestoreModelIdentityRef } from '../collection/collection';
 
-export interface FirestoreDocument<T, A extends FirestoreDocumentDataAccessor<T> = FirestoreDocumentDataAccessor<T>, M extends FirestoreModelName = FirestoreModelName> extends DocumentReferenceRef<T>, CollectionReferenceRef<T>, FirestoreModelIdentityRef<M>, FirestoreModelNameRef<M> {
+export interface FirestoreDocument<T, A extends FirestoreDocumentDataAccessor<T> = FirestoreDocumentDataAccessor<T>, M extends FirestoreModelName = FirestoreModelName> extends DocumentReferenceRef<T>, CollectionReferenceRef<T>, FirestoreModelIdentityRef<M>, FirestoreModelNameRef<M>, FirestoreModelKeyRef, FirestoreModelIdRef {
   readonly accessor: A;
   readonly id: string;
 }
@@ -31,8 +31,12 @@ export abstract class AbstractFirestoreDocument<T, D extends AbstractFirestoreDo
     return this.modelIdentity.model;
   }
 
-  get id(): string {
+  get id(): FirestoreModelId {
     return this.documentRef.id;
+  }
+
+  get key(): FirestoreModelKey {
+    return this.documentRef.path;
   }
 
   get documentRef(): DocumentReference<T> {
@@ -51,6 +55,12 @@ export abstract class AbstractFirestoreDocument<T, D extends AbstractFirestoreDo
     return this.snapshot().then((x) => x.data(options));
   }
 
+  /**
+   * Creates or updates the existing model using the accessor's set functionality.
+   *
+   * @param data
+   * @returns
+   */
   createOrUpdate(data: Partial<T>): Promise<WriteResult | void> {
     return createOrUpdateWithAccessorSet(this.accessor)(data);
   }
@@ -84,14 +94,14 @@ export interface LimitedFirestoreDocumentAccessor<T, D extends FirestoreDocument
    *
    * @param ref
    */
-  loadDocumentForKey(fullPath: ModelKey): D;
+  loadDocumentForKey(fullPath: FirestoreModelKey): D;
 
   /**
    * Creates a document ref with a key/full path.
    *
    * @param ref
    */
-  documentRefForKey(fullPath: ModelKey): DocumentReference<T>;
+  documentRefForKey(fullPath: FirestoreModelKey): DocumentReference<T>;
 }
 
 export interface FirestoreDocumentAccessor<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> extends LimitedFirestoreDocumentAccessor<T, D>, CollectionReferenceRef<T>, FirestoreAccessorDriverRef {
@@ -160,11 +170,11 @@ export function limitedFirestoreDocumentAccessorFactory<T, D extends FirestoreDo
       return config.makeDocument(accessor, documentAccessor);
     }
 
-    function documentRefForKey(fullPath: ModelKey): DocumentReference<T> {
+    function documentRefForKey(fullPath: FirestoreModelKey): DocumentReference<T> {
       return firestoreAccessorDriver.docAtPath(firestoreContext.firestore, fullPath);
     }
 
-    function loadDocumentForKey(fullPath: ModelKey): D {
+    function loadDocumentForKey(fullPath: FirestoreModelKey): D {
       const ref = documentRefForKey(fullPath);
       return loadDocument(ref);
     }

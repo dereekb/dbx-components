@@ -5,3 +5,4 @@ export * from './promise';
 export * from './promise.loop';
 export * from './promise.ref';
 export * from './wait';
+export * from './use';

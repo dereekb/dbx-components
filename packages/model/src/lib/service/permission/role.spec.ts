@@ -1,9 +1,9 @@
-import { GrantedRoleMap, grantedRoleMapReader, KnownGrantedRole } from './role';
+import { GrantedReadRole, GrantedRoleMap, grantedRoleMapReader } from './role';
 
 const FIRST_ROLE = 'first';
 const SECOND_ROLE = 'second';
 
-type TestRoles = KnownGrantedRole | typeof FIRST_ROLE | typeof SECOND_ROLE;
+type TestRoles = GrantedReadRole | typeof FIRST_ROLE | typeof SECOND_ROLE;
 
 describe('grantedRoleMapReader()', () => {
   const roleMap: GrantedRoleMap<TestRoles> = {

@@ -1,9 +1,10 @@
 import { MockFirebaseContext, authorizedFirestoreFactory, MockItemCollectionFixture, testWithMockItemFixture, MOCK_FIREBASE_MODEL_SERVICE_FACTORIES, mockFirebaseModelServices, MockItem, MockItemDocument, MockItemRoles } from '@dereekb/firebase/test';
 import { GrantedRoleMap, isFullAccessRoleMap, isNoAccessRoleMap } from '@dereekb/model';
-import { Building } from '@dereekb/util';
+import { ArrayOrValue, Building, UsePromiseFunction } from '@dereekb/util';
 import { makeDocuments } from '../firestore';
 import { FirestoreDocumentAccessor } from '../firestore/accessor/document';
-import { firebaseModelsService, inContextFirebaseModelsServiceFactory, InModelContextFirebaseModelServiceFactory } from './model.service';
+import { firebaseModelsService, inContextFirebaseModelsServiceFactory, InModelContextFirebaseModelServiceFactory, selectFromFirebaseModelsService, useFirebaseModelsService } from './model.service';
+import { ContextGrantedModelRolesReader } from './permission/permission.service.role';
 
 describe('firebaseModelsService', () => {
   describe('with mockFirebaseModelServices', () => {
@@ -39,6 +40,128 @@ describe('firebaseModelsService', () => {
       item = items[0];
     });
 
+    describe('selection', () => {
+      describe('selectFromFirebaseModelsService()', () => {
+        it('should return an InModelContextFirebaseModelService instance with the specified model.', () => {
+          const result = selectFromFirebaseModelsService(mockFirebaseModelServices, 'mockItem', {
+            context,
+            key: item.key
+          });
+
+          expect(typeof result).toBe('function');
+          expect(result).toBeDefined();
+          expect(result.requireRole).toBeDefined();
+          expect(result.requireUse).toBeDefined();
+          expect(result.use).toBeDefined();
+          expect(result.roleMap).toBeDefined();
+          expect(result.roleReader).toBeDefined();
+          expect(result.model).toBeDefined();
+          expect(result.model.key).toBe(item.key);
+        });
+      });
+
+      describe('useFirebaseModelsService()', () => {
+        it('should create a function that uses the target model.', () => {
+          const useFn = useFirebaseModelsService(mockFirebaseModelServices, 'mockItem', {
+            context,
+            key: item.key
+          });
+
+          expect(useFn).toBeDefined();
+          expect(typeof useFn).toBe('function');
+        });
+
+        describe('function', () => {
+          let useFn: UsePromiseFunction<ContextGrantedModelRolesReader<MockFirebaseContext, MockItem, MockItemDocument, MockItemRoles>>;
+
+          function setUseFnWithContext(partialContext: Partial<MockFirebaseContext>, roles: ArrayOrValue<MockItemRoles> = 'read') {
+            useFn = useFirebaseModelsService(mockFirebaseModelServices, 'mockItem', {
+              context: {
+                ...context,
+                ...partialContext
+              },
+              key: item.key,
+              roles
+            });
+          }
+
+          beforeEach(() => {
+            useFn = useFirebaseModelsService(mockFirebaseModelServices, 'mockItem', {
+              context,
+              key: item.key
+            });
+          });
+
+          it('should use the model.', async () => {
+            let used = false;
+
+            const value = 0;
+            const result = await useFn((x) => {
+              expect(x.data).toBeDefined();
+              expect(x.document).toBeDefined();
+              expect(x.snapshot).toBeDefined();
+
+              used = true;
+
+              return value;
+            });
+
+            expect(used).toBe(true);
+            expect(result).toBe(value);
+          });
+
+          describe('with roles', () => {
+            const readRoleKey = 'read';
+
+            it('should use the model if the context is granted the expected roles.', async () => {
+              setUseFnWithContext({
+                rolesToReturn: {
+                  [readRoleKey]: true
+                }
+              });
+
+              let used = false;
+
+              const value = 0;
+              const result = await useFn((x) => {
+                expect(x.hasRole(readRoleKey)).toBe(true);
+                used = true;
+                return value;
+              });
+
+              expect(used).toBe(true);
+              expect(result).toBe(value);
+            });
+
+            it('should throw an exception if the model is not granted the expected roles.', async () => {
+              setUseFnWithContext({
+                rolesToReturn: {
+                  [readRoleKey]: false // not allowed to read
+                }
+              });
+
+              let used = false;
+
+              const value = 0;
+
+              try {
+                await useFn((x) => {
+                  expect(x.hasRole(readRoleKey)).toBe(true);
+                  used = true;
+                  return value;
+                });
+                fail(new Error('should have not been used.'));
+              } catch (e) {
+                expect(e).toBeDefined();
+              }
+
+              expect(used).toBe(false);
+            });
+          });
+        });
+      });
+    });
+
     describe('inContextFirebaseModelsServiceFactory', () => {
       it('should create an InContextFirebaseModelsServiceFactory', () => {
         const x = inContextFirebaseModelsServiceFactory(mockFirebaseModelServices);
@@ -53,7 +176,7 @@ describe('firebaseModelsService', () => {
           const inModelContextFactory = inContext(item);
 
           expect(inModelContextFactory).toBeDefined();
-          expect(typeof inModelContextFactory === 'object').toBe(true);
+          expect(typeof inModelContextFactory).toBe('function');
         });
 
         describe('service', () => {

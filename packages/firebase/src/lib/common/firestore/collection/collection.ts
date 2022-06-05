@@ -18,7 +18,7 @@ import { FirestoreItemPageIterationBaseConfig, FirestoreItemPageIterationFactory
 import { firestoreQueryFactory, FirestoreQueryFactory } from '../query/query';
 import { FirestoreDrivers } from '../driver/driver';
 import { FirestoreCollectionQueryFactory, firestoreCollectionQueryFactory } from './collection.query';
-import { Building, ModelTypeString } from '@dereekb/util';
+import { Building, ModelKey, ModelTypeString } from '@dereekb/util';
 
 /**
  * The camelCase model name.
@@ -91,6 +91,47 @@ export interface FirestoreModelIdentityRef<M extends FirestoreModelName = Firest
    * Returns the FirestoreModelIdentity for this context.
    */
   readonly modelIdentity: FirestoreModelIdentity<M>;
+}
+
+// MARK: Path
+/**
+ * The model's id within a collection.
+ *
+ * Different from the FirestoreModelKey, which is the full path in the databse.
+ *
+ * Example:
+ *
+ * 12345
+ */
+export type FirestoreModelId = string;
+
+/**
+ * Reference to a FirestoreModelId
+ */
+export interface FirestoreModelIdRef {
+  /**
+   * Returns the FirestoreModelId for this context.
+   */
+  readonly id: FirestoreModelId;
+}
+
+/**
+ * The full path for a model in the Firestore database.
+ *
+ * Example:
+ *
+ * collection/12345/subcollection/67890
+ */
+export type FirestoreModelKey = ModelKey;
+
+/**
+ * Reference to a FirestoreModelKey
+ */
+export interface FirestoreModelKeyRef {
+  /**
+   * Returns the FirestoreModelKey for this context.
+   */
+  readonly key: FirestoreModelKey;
 }
 
 // MARK: FirestoreCollectionLike

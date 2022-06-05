@@ -3,14 +3,14 @@ import { GrantedRole, GrantedRoleMap, grantedRoleMapReader, GrantedRoleMapReader
 import { InModelContextFirebaseModelPermissionService } from './permission.service';
 import { SetIncludesMode, ArrayOrValue } from '@dereekb/util';
 import { FirebasePermissionErrorContext } from './permission.context';
-import { FirebaseContextGrantedModelRoles } from './permission';
+import { FirebaseContextGrantedModelRoles, FirebasePermissionServiceModel } from './permission';
 
-export interface ContextGrantedModelRolesReader<C extends FirebasePermissionErrorContext, T, D extends FirestoreDocument<T> = FirestoreDocument<T>, R extends GrantedRole = GrantedRole> extends GrantedRoleMapReader<R> {
+export interface ContextGrantedModelRolesReader<C extends FirebasePermissionErrorContext, T, D extends FirestoreDocument<T> = FirestoreDocument<T>, R extends GrantedRole = GrantedRole> extends GrantedRoleMapReader<R>, FirebasePermissionServiceModel<T, D> {
   readonly roleMap: GrantedRoleMap<R>;
   readonly contextGrantedModelRoles: FirebaseContextGrantedModelRoles<C, T, D, R>;
-  assertHasRole(role: R): void;
-  assertHasRoles(setIncludes: SetIncludesMode, roles: ArrayOrValue<R>): void;
-  assertContainsRoles(setIncludes: SetIncludesMode, roles: ArrayOrValue<R>): void;
+  assertHasRole(role: R): this;
+  assertHasRoles(setIncludes: SetIncludesMode, roles: ArrayOrValue<R>): this;
+  assertContainsRoles(setIncludes: SetIncludesMode, roles: ArrayOrValue<R>): this;
   throwPermissionError(role?: R): never;
 }
 
@@ -19,6 +19,26 @@ export class ContextGrantedModelRolesReaderInstance<C extends FirebasePermission
 
   constructor(readonly contextGrantedModelRoles: FirebaseContextGrantedModelRoles<C, T, D, R>) {
     this._roleReader = grantedRoleMapReader(contextGrantedModelRoles.roleMap);
+  }
+
+  get permissionServiceModel(): FirebasePermissionServiceModel<T, D> {
+    return this.contextGrantedModelRoles.data as FirebasePermissionServiceModel<T, D>;
+  }
+
+  get data() {
+    return this.permissionServiceModel.data;
+  }
+
+  get document() {
+    return this.permissionServiceModel.document;
+  }
+
+  get snapshot() {
+    return this.permissionServiceModel.snapshot;
+  }
+
+  get exists() {
+    return this.permissionServiceModel.exists;
   }
 
   get roleMap() {
@@ -41,22 +61,28 @@ export class ContextGrantedModelRolesReaderInstance<C extends FirebasePermission
     return this._roleReader.containsRoles(setIncludes, roles);
   }
 
-  assertHasRole(role: R): void {
+  assertHasRole(role: R): this {
     if (!this.hasRole(role)) {
       this.throwPermissionError(role);
     }
+
+    return this;
   }
 
-  assertHasRoles(setIncludes: SetIncludesMode, roles: ArrayOrValue<R>): void {
+  assertHasRoles(setIncludes: SetIncludesMode, roles: ArrayOrValue<R>): this {
     if (!this.hasRoles(setIncludes, roles)) {
       this.throwPermissionError(roles);
     }
+
+    return this;
   }
 
-  assertContainsRoles(setIncludes: SetIncludesMode, roles: ArrayOrValue<R>): void {
+  assertContainsRoles(setIncludes: SetIncludesMode, roles: ArrayOrValue<R>): this {
     if (!this.containsRoles(setIncludes, roles)) {
       this.throwPermissionError(roles);
     }
+
+    return this;
   }
 
   throwPermissionError(role?: ArrayOrValue<R>): never {

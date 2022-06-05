@@ -1,5 +1,5 @@
-import { Maybe } from '@dereekb/util';
-import { combineLatest, Observable, MonoTypeOperatorFunction, skipWhile, startWith, BehaviorSubject, shareReplay, map, finalize } from 'rxjs';
+import { Getter, Maybe } from '@dereekb/util';
+import { combineLatest, Observable, MonoTypeOperatorFunction, skipWhile, startWith, BehaviorSubject, shareReplay, map, finalize, of, mergeMap, from } from 'rxjs';
 
 /**
  * Merges both startWith and tapFirst to initialize a pipe.
@@ -52,5 +52,20 @@ export function preventComplete<T>(obs: Observable<T>): Observable<T> {
     finalize(() => {
       complete.complete();
     })
+  );
+}
+
+/**
+ * Similar to from, but uses a Getter to keeps the Observable cold until it is subscribed to, then calls the promise.
+ *
+ * The promise is shared, so it can be called at max a
+ *
+ * @param getter
+ * @returns
+ */
+export function lazyFrom<T>(getter: Getter<Promise<T>>): Observable<T> {
+  return of(undefined).pipe(
+    mergeMap(() => from(getter())),
+    shareReplay(1)
   );
 }
