@@ -8,13 +8,17 @@ export interface BaseFirestoreFieldConfig<V, D = unknown> {
   defaultBeforeSave?: GetterOrValue<D | null>;
 }
 
-export interface FirestoreFieldConfigWithDefault<V, D = unknown> extends BaseFirestoreFieldConfig<V, D> {
+export interface FirestoreFieldDefault<V> {
   default: GetterOrValue<V>;
 }
 
-export interface FirestoreFieldConfigWithDefaultData<V, D = unknown> extends BaseFirestoreFieldConfig<V, D> {
+export interface FirestoreFieldDefaultData<D = unknown> {
   defaultData: GetterOrValue<D>;
 }
+
+export interface FirestoreFieldConfigWithDefault<V, D = unknown> extends BaseFirestoreFieldConfig<V, D>, FirestoreFieldDefault<V> {}
+
+export interface FirestoreFieldConfigWithDefaultData<V, D = unknown> extends BaseFirestoreFieldConfig<V, D>, FirestoreFieldDefaultData<D> {}
 
 export type FirestoreFieldConfig<V, D = unknown> = FirestoreFieldConfigWithDefault<V, D> | FirestoreFieldConfigWithDefaultData<V, D>;
 
@@ -131,4 +135,18 @@ export function firestoreNumber(config: FirestoreNumberFieldConfig) {
 
 export function optionalFirestoreNumber() {
   return firestorePassThroughField<Maybe<number>>();
+}
+
+export type FirestoreArrayFieldConfig<T> = DefaultMapConfiguredFirestoreFieldConfig<T[], T[]> & Partial<FirestoreFieldConfigWithDefault<T[]>>;
+
+export function firestoreArray<T>(config: FirestoreArrayFieldConfig<T>) {
+  return firestoreField<T[], T[]>({
+    default: config.default ?? [],
+    fromData: passThrough,
+    toData: passThrough
+  });
+}
+
+export function optionalFirestoreArray<T>() {
+  return firestorePassThroughField<Maybe<T[]>>();
 }
