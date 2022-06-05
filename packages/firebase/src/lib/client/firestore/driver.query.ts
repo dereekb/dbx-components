@@ -14,7 +14,8 @@ import {
   FIRESTORE_END_BEFORE_QUERY_CONSTRAINT_TYPE,
   FIRESTORE_ORDER_BY_DOCUMENT_ID_QUERY_CONSTRAINT_TYPE,
   FIRESTORE_START_AT_VALUE_QUERY_CONSTRAINT_TYPE,
-  FIRESTORE_END_AT_VALUE_QUERY_CONSTRAINT_TYPE
+  FIRESTORE_END_AT_VALUE_QUERY_CONSTRAINT_TYPE,
+  FIRESTORE_WHERE_DOCUMENT_ID_QUERY_CONSTRAINT_TYPE
 } from './../../common/firestore/query/constraint';
 import { makeFirestoreQueryConstraintFunctionsDriver } from '../../common/firestore/driver/query.handler';
 import { FirestoreQueryConstraintFunctionsDriver, FirestoreQueryDriver } from '../../common/firestore/driver/query';
@@ -39,6 +40,7 @@ export const FIRESTORE_CLIENT_QUERY_CONSTRAINT_HANDLER_MAPPING: FullFirestoreQue
   [FIRESTORE_ORDER_BY_QUERY_CONSTRAINT_TYPE]: (builder, data) => addConstraintToBuilder(builder, orderBy(data.fieldPath, data.directionStr)),
   [FIRESTORE_ORDER_BY_DOCUMENT_ID_QUERY_CONSTRAINT_TYPE]: (builder, data) => addConstraintToBuilder(builder, orderBy(documentId(), data.directionStr)),
   [FIRESTORE_WHERE_QUERY_CONSTRAINT_TYPE]: (builder, data) => addConstraintToBuilder(builder, where(data.fieldPath, data.opStr, data.value)),
+  [FIRESTORE_WHERE_DOCUMENT_ID_QUERY_CONSTRAINT_TYPE]: (builder, data) => addConstraintToBuilder(builder, where(documentId(), data.opStr, data.value)),
   [FIRESTORE_OFFSET_QUERY_CONSTRAINT_TYPE]: undefined,
   [FIRESTORE_START_AT_QUERY_CONSTRAINT_TYPE]: (builder, data) => addConstraintToBuilder(builder, startAt(data.snapshot as DocumentSnapshot)),
   [FIRESTORE_START_AT_VALUE_QUERY_CONSTRAINT_TYPE]: (builder, data) => addConstraintToBuilder(builder, startAt(...data.fieldValues)),

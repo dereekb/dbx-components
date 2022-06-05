@@ -1,6 +1,6 @@
 import { SubscriptionObject } from '@dereekb/rxjs';
 import { filter, first, from, skip } from 'rxjs';
-import { limit, orderBy, startAfter, startAt, where, limitToLast, endAt, endBefore, makeDocuments, FirestoreQueryFactoryFunction, startAtValue, endAtValue } from '@dereekb/firebase';
+import { limit, orderBy, startAfter, startAt, where, limitToLast, endAt, endBefore, makeDocuments, FirestoreQueryFactoryFunction, startAtValue, endAtValue, whereDocumentId } from '@dereekb/firebase';
 import { MockItemDocument, MockItem, MockItemSubItemDocument, MockItemSubItem, MockItemDeepSubItemDocument, MockItemDeepSubItem } from './firestore.mock.item';
 import { MockItemCollectionFixture } from './firestore.mock.item.fixture';
 import { allChildMockItemDeepSubItemsWithinMockItem } from './firestore.mock.item.query';
@@ -382,6 +382,16 @@ export function describeQueryDriverTests(f: MockItemCollectionFixture) {
             const result = await query(where('value', '==', value)).getDocs();
             expect(result.docs.length).toBe(1);
             expect(result.docs[0].data().value).toBe(value);
+          });
+        });
+
+        describe('whereDocumentId', () => {
+          it('should return the documents matching the query.', async () => {
+            const targetId = items[0].id;
+
+            const result = await query(whereDocumentId('==', targetId)).getDocs();
+            expect(result.docs.length).toBe(1);
+            expect(result.docs[0].id).toBe(targetId);
           });
         });
 

@@ -84,6 +84,15 @@ export function where(fieldPath: unknown, opStr: WhereFilterOp, value: unknown):
   return firestoreQueryConstraint(FIRESTORE_WHERE_QUERY_CONSTRAINT_TYPE, { fieldPath: fieldPath as string, opStr, value });
 }
 
+// MARK: WhereDocumentId
+export const FIRESTORE_WHERE_DOCUMENT_ID_QUERY_CONSTRAINT_TYPE = 'where_doc_id';
+
+export interface WhereDocumentIdQueryConstraintData extends Omit<WhereQueryConstraintData, 'fieldPath'> {}
+
+export function whereDocumentId(opStr: WhereFilterOp, value: unknown): FirestoreQueryConstraint<WhereDocumentIdQueryConstraintData> {
+  return firestoreQueryConstraint(FIRESTORE_WHERE_DOCUMENT_ID_QUERY_CONSTRAINT_TYPE, { opStr, value });
+}
+
 // MARK: OrderBy
 export const FIRESTORE_ORDER_BY_QUERY_CONSTRAINT_TYPE = 'order_by';
 
@@ -100,7 +109,7 @@ export function orderBy<T = object>(fieldPath: FieldPathOrStringPathOf<T> | Fiel
   return firestoreQueryConstraint(FIRESTORE_ORDER_BY_QUERY_CONSTRAINT_TYPE, { fieldPath: fieldPath as FieldPathOrStringPath, directionStr });
 }
 
-// MARK: OrderBy
+// MARK: OrderByDocumentId
 export const FIRESTORE_ORDER_BY_DOCUMENT_ID_QUERY_CONSTRAINT_TYPE = 'order_by_doc_id';
 
 export type OrderByDocumentIdQueryConstraintData = Pick<OrderByQueryConstraintData, 'directionStr'>;
@@ -202,6 +211,7 @@ export type FullFirestoreQueryConstraintDataMapping = {
   [FIRESTORE_LIMIT_QUERY_CONSTRAINT_TYPE]: LimitQueryConstraintData;
   [FIRESTORE_LIMIT_TO_LAST_QUERY_CONSTRAINT_TYPE]: LimitToLastQueryConstraintData;
   [FIRESTORE_WHERE_QUERY_CONSTRAINT_TYPE]: WhereQueryConstraintData;
+  [FIRESTORE_WHERE_DOCUMENT_ID_QUERY_CONSTRAINT_TYPE]: WhereDocumentIdQueryConstraintData;
   [FIRESTORE_OFFSET_QUERY_CONSTRAINT_TYPE]: OffsetQueryConstraintData;
   [FIRESTORE_ORDER_BY_QUERY_CONSTRAINT_TYPE]: OrderByQueryConstraintData;
   [FIRESTORE_ORDER_BY_DOCUMENT_ID_QUERY_CONSTRAINT_TYPE]: OrderByDocumentIdQueryConstraintData;
