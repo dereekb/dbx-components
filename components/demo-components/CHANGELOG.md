@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [7.0.0](https://github.com/dereekb/dbx-components/compare/v6.0.0-dev...v7.0.0) (2022-06-05)
+
+
+### Features
+
+* added FirestoreDocumentStore crud functions ([7786a40](https://github.com/dereekb/dbx-components/commit/7786a40f6033c2a1d5161805cde283dca7323db5))
+
+
+
 # [6.0.0](https://github.com/dereekb/dbx-components/compare/v5.3.0-dev...v6.0.0) (2022-06-03)
 
 
