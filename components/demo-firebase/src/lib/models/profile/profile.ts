@@ -30,8 +30,6 @@ export interface Profile extends UserRelatedById {
 
 export type ProfileRoles = 'owner' | GrantedReadRole;
 
-export type ProfileRef = DocumentReferenceRef<Profile>;
-
 export class ProfileDocument extends AbstractFirestoreDocument<Profile, ProfileDocument> {
   get modelIdentity() {
     return profileIdentity;
@@ -74,8 +72,6 @@ export interface ProfilePrivateData {
    */
   createdAt: Date;
 }
-
-export type ProfilePrivateDataRef = DocumentReferenceRef<ProfilePrivateData>;
 
 export type ProfilePrivateDataRoles = 'owner' | GrantedReadRole;
 
