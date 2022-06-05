@@ -194,24 +194,24 @@ export function describeAccessorDriverTests(f: MockItemCollectionFixture) {
         });
       });
 
-      describe('loadDocumentForPath()', () => {
-        it('should return a document at the given path.', () => {
-          const document = firestoreDocumentAccessor.loadDocumentForPath('path');
+      describe('loadDocumentForId()', () => {
+        it('should return a document with the given id.', () => {
+          const document = firestoreDocumentAccessor.loadDocumentForId('id');
           expect(document).toBeDefined();
         });
 
-        it('should throw an exception if the path is empty.', () => {
+        it('should throw an exception if the id is empty.', () => {
           try {
-            firestoreDocumentAccessor.loadDocumentForPath('');
+            firestoreDocumentAccessor.loadDocumentForId('');
             fail();
           } catch (e) {
             expect(e).toBeDefined();
           }
         });
 
-        it('should throw an exception if the path is undefined.', () => {
+        it('should throw an exception if the id is undefined.', () => {
           try {
-            firestoreDocumentAccessor.loadDocumentForPath(undefined as any);
+            firestoreDocumentAccessor.loadDocumentForId(undefined as any);
             fail();
           } catch (e) {
             expect(e).toBeDefined();

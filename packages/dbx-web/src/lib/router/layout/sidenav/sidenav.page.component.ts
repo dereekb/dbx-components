@@ -30,7 +30,7 @@ export class DbxSidenavPageComponent implements OnDestroy {
   private _mobileOnly = new BehaviorSubject<boolean>(false);
 
   readonly hidePagebar$ = this._mobileOnly.pipe(
-    switchMap((mobileOnly) => (mobileOnly ? this.parent.mode$.pipe(map((x) => x !== SideNavDisplayMode.MOBILE)) : of(true))),
+    switchMap((mobileOnly) => (mobileOnly ? this.parent.mode$.pipe(map((x) => x !== SideNavDisplayMode.MOBILE)) : of(false))),
     shareReplay(1)
   );
 

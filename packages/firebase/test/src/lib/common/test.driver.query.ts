@@ -119,6 +119,37 @@ export function describeQueryDriverTests(f: MockItemCollectionFixture) {
                   expect(ref.parent).toBeDefined();
                 });
               });
+
+              describe('whereDocumentId', () => {
+                it('should fail to query on collection groups.', async () => {
+                  // https://stackoverflow.com/questions/56149601/firestore-collection-group-query-on-documentid
+
+                  const targetId = 'targetid';
+
+                  /*
+                  const results = await Promise.all(
+                    allSubItems.map((parent: MockItemSubItemDocument) =>
+                      makeDocuments(f.instance.mockItemDeepSubItemCollection(parent).documentAccessor(), {
+                        count: 1,
+                        newDocument: (x) => x.loadDocumentForId(targetId),
+                        init: (i) => {
+                          return {
+                            value: i
+                          };
+                        }
+                      })
+                    )
+                  );
+                  */
+
+                  try {
+                    await querySubItems(whereDocumentId('==', targetId)).getDocs();
+                    fail('should have failed.');
+                  } catch (e) {
+                    expect(e).toBeDefined();
+                  }
+                });
+              });
             });
 
             describe('streamDocs()', () => {

@@ -117,7 +117,7 @@ export interface FirestoreDocumentAccessor<T, D extends FirestoreDocument<T> = F
    *
    * @param ref
    */
-  loadDocumentForPath(path: string, ...pathSegments: string[]): D;
+  loadDocumentForId(id: FirestoreModelId): D;
 
   /**
    * Creates a document ref relative to the current context and given the input path.
@@ -125,7 +125,24 @@ export interface FirestoreDocumentAccessor<T, D extends FirestoreDocument<T> = F
    * @param path
    * @param pathSegments
    */
-  documentRefForPath(path: string, ...pathSegments: string[]): DocumentReference<T>;
+  documentRefForId(id: FirestoreModelId): DocumentReference<T>;
+
+  /**
+   * Loads a document from the datastore with the given id/path.
+   *
+   * @deprecated use loadDocumentForId instead. Will be removed in the future.
+   * @param ref
+   */
+  loadDocumentForPath(id: FirestoreModelId): D;
+
+  /**
+   * Creates a document ref relative to the current context and given the input path.
+   *
+   * @deprecated use documentRefForId instead. Will be removed in the future.
+   * @param path
+   * @param pathSegments
+   */
+  documentRefForPath(id: FirestoreModelId): DocumentReference<T>;
 }
 
 /**
@@ -216,7 +233,7 @@ export function firestoreDocumentAccessorFactory<T, D extends FirestoreDocument<
   const { firestoreAccessorDriver, collection } = config;
   const limitedFirestoreDocumentAccessor = limitedFirestoreDocumentAccessorFactory(config);
 
-  function documentRefForPath(path: string, ...pathSegments: string[]): DocumentReference<T> {
+  function documentRefForId(path: string, ...pathSegments: string[]): DocumentReference<T> {
     return firestoreAccessorDriver.doc(collection, path, ...pathSegments);
   }
 
@@ -231,15 +248,19 @@ export function firestoreDocumentAccessorFactory<T, D extends FirestoreDocument<
           return documentAccessor.loadDocument(newDocRef);
         };
 
-        x.documentRefForPath = documentRefForPath;
+        x.documentRefForId = documentRefForId;
 
-        x.loadDocumentForPath = (path: string, ...pathSegments: string[]): D => {
+        x.loadDocumentForId = (path: string, ...pathSegments: string[]): D => {
           if (!path) {
-            throw new Error('Path was not provided to loadDocumentForPath(). Use newDocument() for generating an id.');
+            throw new Error('Path was not provided to loadDocumentForId(). Use newDocument() for generating an id.');
           }
 
-          return documentAccessor.loadDocument(documentRefForPath(path, ...pathSegments));
+          return documentAccessor.loadDocument(documentRefForId(path, ...pathSegments));
         };
+
+        // TODO: Remove later
+        x.documentRefForPath = x.documentRefForId;
+        x.loadDocumentForPath = x.loadDocumentForId;
       }
     });
 
@@ -321,13 +342,13 @@ export function firestoreSingleDocumentAccessor<T, D extends FirestoreDocument<T
 
   return {
     loadDocument(): D {
-      return accessors.documentAccessor().loadDocumentForPath(identifier);
+      return accessors.documentAccessor().loadDocumentForId(identifier);
     },
     loadDocumentForTransaction(transaction: Transaction): D {
-      return accessors.documentAccessorForTransaction(transaction).loadDocumentForPath(identifier);
+      return accessors.documentAccessorForTransaction(transaction).loadDocumentForId(identifier);
     },
     loadDocumentForWriteBatch(writeBatch: WriteBatch): D {
-      return accessors.documentAccessorForWriteBatch(writeBatch).loadDocumentForPath(identifier);
+      return accessors.documentAccessorForWriteBatch(writeBatch).loadDocumentForId(identifier);
     }
   };
 }

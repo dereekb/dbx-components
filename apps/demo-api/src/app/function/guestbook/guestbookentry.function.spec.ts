@@ -12,7 +12,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
           it('should create a guestbook entry if it does not exist.', async () => {
             const uid = u.uid;
             const entryCollection = f.instance.demoFirestoreCollections.guestbookEntryCollectionFactory(g.document);
-            const userGuestbookEntry = entryCollection.documentAccessor().loadDocumentForPath(uid);
+            const userGuestbookEntry = entryCollection.documentAccessor().loadDocumentForId(uid);
 
             let exists = await userGuestbookEntry.accessor.exists();
             expect(exists).toBe(false);
