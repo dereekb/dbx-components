@@ -1,4 +1,4 @@
-import { UnixDateTimeNumber } from '@dereekb/util';
+import { UnixDateTimeNumber } from '../date/date';
 
 export type StoredDataString = string;
 export type StoredDataStorageKey = string;
