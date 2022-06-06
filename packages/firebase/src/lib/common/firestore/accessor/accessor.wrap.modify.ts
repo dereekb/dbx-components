@@ -40,7 +40,7 @@ export interface ModifyBeforeSetConfig<T extends object> {
  */
 export class ModifyBeforeSetFirestoreDocumentDataAccessorWrapper<T extends object, D = DocumentData> extends AbstractFirestoreDocumentDataAccessorWrapper<T, D> {
   readonly modifier: ModifierFunction<ModifyBeforeSetFistoreDataAccessorInput<T>>;
-  readonly set: FirestoreDocumentDataAccessorSetFunction<T>;
+  override readonly set: FirestoreDocumentDataAccessorSetFunction<T>;
 
   constructor(accessor: FirestoreDocumentDataAccessor<T, D>, readonly config: ModifyBeforeSetConfig<T>) {
     super(accessor);

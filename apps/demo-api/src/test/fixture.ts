@@ -173,6 +173,7 @@ export const demoGuestbookEntryContextFactory = () =>
 
       if (params.init !== false) {
         await guestbookEntry.accessor.set({
+          uid: '',
           message: params.message ?? 'test',
           signed: params.signed ?? 'test',
           published: params.published ?? true,

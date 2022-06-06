@@ -1,5 +1,5 @@
 import { nowISODateString, toISODateString, toJsDate } from '@dereekb/date';
-import { ModelFieldMapFunctionsConfig, GetterOrValue, Maybe, ModelFieldMapConvertFunction, passThrough, unique, PrimativeKey, ReadKeyFunction, makeFindUniqueFunction, ModelFieldMapFunctionsWithDefaultsConfig, filterMaybeValues, MaybeSo } from '@dereekb/util';
+import { ModelFieldMapFunctionsConfig, GetterOrValue, Maybe, ModelFieldMapConvertFunction, passThrough, unique, PrimativeKey, ReadKeyFunction, makeFindUniqueFunction, ModelFieldMapFunctionsWithDefaultsConfig, filterMaybeValues, MaybeSo, FindUniqueFunction, findUnique, findUniqueCaseInsensitiveStrings, FindUniqueStringsTransformConfig, findUniqueTransform, MapFunction } from '@dereekb/util';
 import { FIRESTORE_EMPTY_VALUE } from './snapshot';
 
 export interface BaseFirestoreFieldConfig<V, D = unknown> {
@@ -149,4 +149,79 @@ export function firestoreArray<T>(config: FirestoreArrayFieldConfig<T>) {
 
 export function optionalFirestoreArray<T>() {
   return firestorePassThroughField<Maybe<T[]>>();
+}
+
+export type FirestoreUniqueArrayFieldConfig<T> = FirestoreArrayFieldConfig<T> & {
+  readonly findUnique: FindUniqueFunction<T>;
+};
+
+export function firestoreUniqueArray<T>(config: FirestoreUniqueArrayFieldConfig<T>) {
+  const { findUnique } = config;
+  return firestoreField<T[], T[]>({
+    default: config.default ?? [],
+    fromData: findUnique,
+    toData: findUnique
+  });
+}
+
+export type FirestoreUniqueKeyedArrayFieldConfig<T, K extends PrimativeKey = PrimativeKey> = FirestoreArrayFieldConfig<T> & {
+  readonly readKey: ReadKeyFunction<T, K>;
+};
+
+export function firestoreUniqueKeyedArray<T, K extends PrimativeKey = PrimativeKey>(config: FirestoreUniqueKeyedArrayFieldConfig<T, K>) {
+  return firestoreUniqueArray({
+    ...config,
+    findUnique: makeFindUniqueFunction<T, K>(config.readKey)
+  });
+}
+
+export type FirestoreUniqueStringArrayFieldConfig = Omit<FirestoreUniqueArrayFieldConfig<string>, 'findUnique'> & FindUniqueStringsTransformConfig;
+
+export function firestoreUniqueStringArray(config: FirestoreUniqueStringArrayFieldConfig) {
+  const findUnique = findUniqueTransform(config);
+  return firestoreUniqueArray({
+    ...config,
+    findUnique
+  });
+}
+
+export type FirestoreEncodedArrayFieldConfig<T, E extends string | number> = DefaultMapConfiguredFirestoreFieldConfig<T[], E[]> & {
+  readonly convert: {
+    fromData: MapFunction<E, T>;
+    toData: MapFunction<T, E>;
+  };
+};
+
+/**
+ * A Firestore array that encodes values to either string or number values using another FirestoreModelField config for encoding/decoding.
+ *
+ * @param config
+ * @returns
+ */
+export function firestoreEncodedArray<T, E extends string | number>(config: FirestoreEncodedArrayFieldConfig<T, E>) {
+  const { fromData, toData } = config.convert;
+  return firestoreField<T[], E[]>({
+    default: config.default ?? [],
+    fromData: (input: E[]) => (input as MaybeSo<E>[]).map(fromData),
+    toData: (input: T[]) => filterMaybeValues((input as MaybeSo<T>[]).map(toData))
+  });
+}
+
+// MARK: Deprecated
+export type FirestoreSetFieldConfig<T extends string | number> = DefaultMapConfiguredFirestoreFieldConfig<Set<T>, T[]>;
+
+/**
+ * Do not use.
+ *
+ * @deprecated should retrieve/store the data as a POJO array and not use class types like this.
+ *
+ * @param config
+ * @returns
+ */
+export function firestoreSet<T extends string | number>(config: FirestoreSetFieldConfig<T>) {
+  return firestoreField<Set<T>, T[]>({
+    default: config.default ?? (() => new Set()),
+    fromData: (data) => new Set(data),
+    toData: (set) => Array.from(set)
+  });
 }

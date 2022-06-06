@@ -26,7 +26,7 @@ export abstract class AppModuleWithWebhooksEnabled implements NestModule {
 export class ConfigureWebhookMiddlewareModule extends AppModuleWithWebhooksEnabled {
   private readonly logger = new Logger('ConfigureWebhookMiddlewareModule');
 
-  public configure(consumer: MiddlewareConsumer): void {
+  public override configure(consumer: MiddlewareConsumer): void {
     super.configure(consumer);
     this.logger.debug('Configured webhook routes with proper middleware.');
   }
