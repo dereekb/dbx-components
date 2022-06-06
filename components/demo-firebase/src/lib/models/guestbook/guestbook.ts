@@ -1,27 +1,4 @@
-import {
-  CollectionReference,
-  AbstractFirestoreDocument,
-  snapshotConverterFunctions,
-  firestoreString,
-  firestoreDate,
-  FirestoreCollection,
-  UserRelatedById,
-  DocumentReferenceRef,
-  FirestoreContext,
-  FirestoreCollectionWithParent,
-  firestoreBoolean,
-  DocumentDataWithId,
-  AbstractFirestoreDocumentWithParent,
-  optionalFirestoreDate,
-  FirestoreCollectionGroup,
-  CollectionGroup,
-  firestoreModelIdentity,
-  UserRelated,
-  FirestoreModelNames,
-  modifyBeforeSetInterceptAccessorFactoryFunction,
-  copyUserRelatedDataModifierConfig,
-  copyUserRelatedDataAccessorFactoryFunction
-} from '@dereekb/firebase';
+import { CollectionReference, AbstractFirestoreDocument, snapshotConverterFunctions, firestoreString, firestoreDate, FirestoreCollection, UserRelatedById, FirestoreContext, FirestoreCollectionWithParent, firestoreBoolean, DocumentDataWithId, AbstractFirestoreDocumentWithParent, optionalFirestoreDate, FirestoreCollectionGroup, CollectionGroup, firestoreModelIdentity, UserRelated, copyUserRelatedDataAccessorFactoryFunction, firestoreUID } from '@dereekb/firebase';
 import { GrantedReadRole } from '@dereekb/model';
 import { Maybe } from '@dereekb/util';
 
@@ -34,7 +11,7 @@ export interface GuestbookFirestoreCollections {
 export type GuestbookTypes = typeof guestbookIdentity | typeof guestbookEntryIdentity;
 
 // MARK: Guestbook
-export const guestbookIdentity = firestoreModelIdentity('guestbook');
+export const guestbookIdentity = firestoreModelIdentity('guestbook', 'gb');
 
 export interface Guestbook {
   /**
@@ -92,7 +69,7 @@ export function guestbookFirestoreCollection(firestoreContext: FirestoreContext)
 }
 
 // MARK: Guestbook Entry
-export const guestbookEntryIdentity = firestoreModelIdentity('guestbookEntry');
+export const guestbookEntryIdentity = firestoreModelIdentity('guestbookEntry', 'gbe');
 
 export interface GuestbookEntry extends UserRelated, UserRelatedById {
   /**
@@ -127,7 +104,7 @@ export class GuestbookEntryDocument extends AbstractFirestoreDocumentWithParent<
 
 export const guestbookEntryConverter = snapshotConverterFunctions<GuestbookEntry>({
   fields: {
-    uid: firestoreString(),
+    uid: firestoreUID(),
     message: firestoreString(),
     signed: firestoreString(),
     updatedAt: firestoreDate({ saveDefaultAsNow: true }),

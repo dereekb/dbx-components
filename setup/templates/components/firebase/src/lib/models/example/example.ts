@@ -8,7 +8,7 @@ export interface ExampleFirestoreCollections {
 export type ExampleTypes = typeof exampleIdentity;
 
 // MARK: Example
-export const exampleIdentity = firestoreModelIdentity('example');
+export const exampleIdentity = firestoreModelIdentity('example', 'ex');
 
 export interface Example extends UserRelatedById {
   /**

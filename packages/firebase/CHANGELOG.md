@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [7.2.0](https://github.com/dereekb/dbx-components/compare/v7.1.0-dev...v7.2.0) (2022-06-06)
+
+
+### Features
+
+* firestoreModeIdentity can now accept a collection name ([1e0646e](https://github.com/dereekb/dbx-components/commit/1e0646e598a0834d8b4c3d264bb5ee42626e9fc7))
+
+
+
 # [7.1.0](https://github.com/dereekb/dbx-components/compare/v7.0.1-dev...v7.1.0) (2022-06-06)
 
 

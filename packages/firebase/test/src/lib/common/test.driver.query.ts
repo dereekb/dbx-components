@@ -1,9 +1,9 @@
 import { SubscriptionObject } from '@dereekb/rxjs';
 import { filter, first, from, skip } from 'rxjs';
 import { limit, orderBy, startAfter, startAt, where, limitToLast, endAt, endBefore, makeDocuments, FirestoreQueryFactoryFunction, startAtValue, endAtValue, whereDocumentId, FirebaseAuthUserId } from '@dereekb/firebase';
-import { MockItemDocument, MockItem, MockItemSubItemDocument, MockItemSubItem, MockItemDeepSubItemDocument, MockItemDeepSubItem, MockItemUserDocument } from './firestore.mock.item';
+import { MockItemDocument, MockItem, MockItemSubItemDocument, MockItemSubItem, MockItemSubItemDeepDocument, MockItemSubItemDeep, MockItemUserDocument } from './firestore.mock.item';
 import { MockItemCollectionFixture } from './firestore.mock.item.fixture';
-import { allChildMockItemDeepSubItemsWithinMockItem } from './firestore.mock.item.query';
+import { allChildMockItemSubItemDeepsWithinMockItem } from './firestore.mock.item.query';
 
 /**
  * Describes query driver tests, using a MockItemCollectionFixture.
@@ -108,17 +108,17 @@ export function describeQueryDriverTests(f: MockItemCollectionFixture) {
 
         let deepSubItemParentA: MockItemSubItemDocument;
 
-        let queryDeepSubItems: FirestoreQueryFactoryFunction<MockItemDeepSubItem>;
+        let queryDeepSubItems: FirestoreQueryFactoryFunction<MockItemSubItemDeep>;
 
-        let allDeepSubItems: MockItemDeepSubItemDocument[];
+        let allDeepSubItems: MockItemSubItemDeepDocument[];
 
         beforeEach(async () => {
-          queryDeepSubItems = f.instance.mockItemDeepSubItemCollectionGroup.query;
+          queryDeepSubItems = f.instance.mockItemSubItemDeepCollectionGroup.query;
           deepSubItemParentA = allSubItems[0];
 
           const results = await Promise.all(
             allSubItems.map((parent: MockItemSubItemDocument) =>
-              makeDocuments(f.instance.mockItemDeepSubItemCollection(parent).documentAccessor(), {
+              makeDocuments(f.instance.mockItemSubItemDeepCollection(parent).documentAccessor(), {
                 count: deepSubItemCountPerItem,
                 init: (i) => {
                   return {
@@ -134,7 +134,7 @@ export function describeQueryDriverTests(f: MockItemCollectionFixture) {
 
         // tests querying for all nested items under a parent
         it('querying for only items belonging to mock item parentA', async () => {
-          const result = await queryDeepSubItems(allChildMockItemDeepSubItemsWithinMockItem(parentA.documentRef)).getDocs();
+          const result = await queryDeepSubItems(allChildMockItemSubItemDeepsWithinMockItem(parentA.documentRef)).getDocs();
           expect(result.docs.length).toBe(totalDeepSubItemsPerMockItem);
           result.docs.forEach((x) => expect(x.ref.parent?.parent?.parent?.parent?.path).toBe(parentA.documentRef.path));
         });
@@ -172,7 +172,7 @@ export function describeQueryDriverTests(f: MockItemCollectionFixture) {
                   /*
                   const results = await Promise.all(
                     allSubItems.map((parent: MockItemSubItemDocument) =>
-                      makeDocuments(f.instance.mockItemDeepSubItemCollection(parent).documentAccessor(), {
+                      makeDocuments(f.instance.mockItemSubItemDeepCollection(parent).documentAccessor(), {
                         count: 1,
                         newDocument: (x) => x.loadDocumentForId(targetId),
                         init: (i) => {

@@ -35,19 +35,18 @@ export type FirestoreModelName = ModelTypeString;
 export type FirestoreCollectionName = string;
 
 /**
- * FirestoreCollectionName derived from a FirestoreModelName
- */
-export type FirestoreModelCollectionName<M extends FirestoreModelName> = `${Lowercase<M>}`;
-
-/**
  * A firestore model's identity
  */
-export type FirestoreModelIdentity<M extends FirestoreModelName = FirestoreModelName> = {
+export type FirestoreModelIdentity<M extends FirestoreModelName = FirestoreModelName, C extends FirestoreCollectionName = FirestoreCollectionName> = {
   readonly model: M;
-  readonly collection: FirestoreModelCollectionName<M>;
+  readonly collection: C;
 };
 
-export type FirestoreCollectionNames<I extends FirestoreModelIdentity> = I extends FirestoreModelIdentity<infer M> ? FirestoreModelCollectionName<M> : never;
+/**
+ * A default collection name derived from the model name.
+ */
+export type FirestoreModelDefaultCollectionName<M extends FirestoreModelName> = `${Lowercase<M>}`;
+
 export type FirestoreModelNames<I extends FirestoreModelIdentity> = I extends FirestoreModelIdentity<infer M> ? M : never;
 
 /**
@@ -56,9 +55,11 @@ export type FirestoreModelNames<I extends FirestoreModelIdentity> = I extends Fi
  * @param modelName
  * @returns
  */
-export function firestoreModelIdentity<M extends FirestoreModelName>(modelName: M): FirestoreModelIdentity<M> {
+export function firestoreModelIdentity<M extends FirestoreModelName>(modelName: M): FirestoreModelIdentity<M, FirestoreModelDefaultCollectionName<M>>;
+export function firestoreModelIdentity<M extends FirestoreModelName, C extends FirestoreCollectionName = FirestoreCollectionName>(modelName: M, collectionName: C): FirestoreModelIdentity<M, C>;
+export function firestoreModelIdentity<M extends FirestoreModelName, C extends FirestoreCollectionName = FirestoreCollectionName>(modelName: M, collectionName?: C): FirestoreModelIdentity<M, C> {
   return {
-    collection: modelName.toLowerCase() as FirestoreModelCollectionName<M>,
+    collection: collectionName ?? (modelName.toLowerCase() as C),
     model: modelName
   };
 }
