@@ -28,3 +28,19 @@ export function findUnique<T, K extends PrimativeKey = PrimativeKey>(models: T[]
     return false;
   });
 }
+
+/**
+ * Finds unique values in the input.
+ */
+export type FindUniqueFunction<T> = (input: T[]) => T[];
+
+/**
+ * Creates a FindUniqueFunction.
+ *
+ * @param readKey
+ * @param additionalKeys
+ * @returns
+ */
+export function makeFindUniqueFunction<T, K extends PrimativeKey = PrimativeKey>(readKey: ReadKeyFunction<T, K>, additionalKeys: K[] = []): FindUniqueFunction<T> {
+  return (input: T[]) => findUnique(input, readKey, additionalKeys);
+}

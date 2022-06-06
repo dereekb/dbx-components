@@ -25,7 +25,14 @@ import {
   MockItemSubItemFirestoreCollectionGroup,
   mockItemSubItemFirestoreCollectionGroup,
   MockItemSubItemRoles,
-  MockItemTypes
+  MockItemTypes,
+  MockItemUser,
+  MockItemUserDocument,
+  mockItemUserFirestoreCollection,
+  MockItemUserFirestoreCollectionFactory,
+  mockItemUserFirestoreCollectionGroup,
+  MockItemUserFirestoreCollectionGroup,
+  MockItemUserRoles
 } from './firestore.mock.item';
 import { FirebaseAppModelContext, FirebasePermissionServiceModel, firebaseModelServiceFactory, firebaseModelsService, FirestoreContext } from '@dereekb/firebase';
 import { GrantedRoleMap } from '@dereekb/model';
@@ -36,6 +43,8 @@ export abstract class MockItemCollections {
   abstract readonly mockItemCollection: MockItemFirestoreCollection;
   abstract readonly mockItemPrivateCollectionFactory: MockItemPrivateFirestoreCollectionFactory;
   abstract readonly mockItemPrivateCollectionGroup: MockItemPrivateFirestoreCollectionGroup;
+  abstract readonly mockItemUserCollectionFactory: MockItemUserFirestoreCollectionFactory;
+  abstract readonly mockItemUserCollectionGroup: MockItemUserFirestoreCollectionGroup;
   abstract readonly mockItemSubItemCollectionFactory: MockItemSubItemFirestoreCollectionFactory;
   abstract readonly mockItemSubItemCollectionGroup: MockItemSubItemFirestoreCollectionGroup;
   abstract readonly mockItemDeepSubItemCollectionFactory: MockItemDeepSubItemFirestoreCollectionFactory;
@@ -47,6 +56,8 @@ export function makeMockItemCollections(firestoreContext: FirestoreContext): Moc
     mockItemCollection: mockItemFirestoreCollection(firestoreContext),
     mockItemPrivateCollectionFactory: mockItemPrivateFirestoreCollection(firestoreContext),
     mockItemPrivateCollectionGroup: mockItemPrivateFirestoreCollectionGroup(firestoreContext),
+    mockItemUserCollectionFactory: mockItemUserFirestoreCollection(firestoreContext),
+    mockItemUserCollectionGroup: mockItemUserFirestoreCollectionGroup(firestoreContext),
     mockItemSubItemCollectionFactory: mockItemSubItemFirestoreCollection(firestoreContext),
     mockItemSubItemCollectionGroup: mockItemSubItemFirestoreCollectionGroup(firestoreContext),
     mockItemDeepSubItemCollectionFactory: mockItemDeepSubItemFirestoreCollection(firestoreContext),
@@ -70,6 +81,16 @@ export const mockItemPrivateFirebaseModelServiceFactory = firebaseModelServiceFa
     return roles;
   },
   getFirestoreCollection: (c) => c.app.mockItemPrivateCollectionGroup
+});
+
+export const mockItemUserFirebaseModelServiceFactory = firebaseModelServiceFactory<MockFirebaseContext, MockItemUser, MockItemUserDocument, MockItemUserRoles>({
+  roleMapForModel: function (output: FirebasePermissionServiceModel<MockItemUser, MockItemUserDocument>, context: MockFirebaseContext, model: MockItemUserDocument): PromiseOrValue<GrantedRoleMap<MockItemUserRoles>> {
+    const isOwnerUser = context.auth?.uid === model.documentRef.id;
+    const roles: GrantedRoleMap<MockItemUserRoles> = context.rolesToReturn ?? { read: isOwnerUser };
+
+    return roles;
+  },
+  getFirestoreCollection: (c) => c.app.mockItemUserCollectionGroup
 });
 
 export const mockItemSubItemFirebaseModelServiceFactory = firebaseModelServiceFactory<MockFirebaseContext, MockItemSubItem, MockItemSubItemDocument, MockItemSubItemRoles>({
@@ -103,6 +124,7 @@ export type MockFirebaseBaseContext = FirebaseAppModelContext<MockFirebaseContex
 export const MOCK_FIREBASE_MODEL_SERVICE_FACTORIES = {
   mockItem: mockItemFirebaseModelServiceFactory,
   mockItemPrivate: mockItemPrivateFirebaseModelServiceFactory,
+  mockItemUser: mockItemUserFirebaseModelServiceFactory,
   mockItemSub: mockItemSubItemFirebaseModelServiceFactory,
   mockItemDeepSub: mockItemDeepSubItemFirebaseModelServiceFactory
 };

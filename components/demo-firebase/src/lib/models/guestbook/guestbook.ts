@@ -1,4 +1,27 @@
-import { CollectionReference, AbstractFirestoreDocument, snapshotConverterFunctions, firestoreString, firestoreDate, FirestoreCollection, UserRelatedById, DocumentReferenceRef, FirestoreContext, FirestoreCollectionWithParent, firestoreBoolean, DocumentDataWithId, AbstractFirestoreDocumentWithParent, optionalFirestoreDate, FirestoreCollectionGroup, CollectionGroup, firestoreModelIdentity } from '@dereekb/firebase';
+import {
+  CollectionReference,
+  AbstractFirestoreDocument,
+  snapshotConverterFunctions,
+  firestoreString,
+  firestoreDate,
+  FirestoreCollection,
+  UserRelatedById,
+  DocumentReferenceRef,
+  FirestoreContext,
+  FirestoreCollectionWithParent,
+  firestoreBoolean,
+  DocumentDataWithId,
+  AbstractFirestoreDocumentWithParent,
+  optionalFirestoreDate,
+  FirestoreCollectionGroup,
+  CollectionGroup,
+  firestoreModelIdentity,
+  UserRelated,
+  FirestoreModelNames,
+  modifyBeforeSetInterceptAccessorFactoryFunction,
+  copyUserRelatedDataModifierConfig,
+  copyUserRelatedDataAccessorFactoryFunction
+} from '@dereekb/firebase';
 import { GrantedReadRole } from '@dereekb/model';
 import { Maybe } from '@dereekb/util';
 
@@ -71,7 +94,7 @@ export function guestbookFirestoreCollection(firestoreContext: FirestoreContext)
 // MARK: Guestbook Entry
 export const guestbookEntryIdentity = firestoreModelIdentity('guestbookEntry');
 
-export interface GuestbookEntry extends UserRelatedById {
+export interface GuestbookEntry extends UserRelated, UserRelatedById {
   /**
    * Guestbook message.
    */
@@ -104,8 +127,9 @@ export class GuestbookEntryDocument extends AbstractFirestoreDocumentWithParent<
 
 export const guestbookEntryConverter = snapshotConverterFunctions<GuestbookEntry>({
   fields: {
-    message: firestoreString({ default: '' }),
-    signed: firestoreString({ default: '' }),
+    uid: firestoreString(),
+    message: firestoreString(),
+    signed: firestoreString(),
     updatedAt: firestoreDate({ saveDefaultAsNow: true }),
     createdAt: firestoreDate({ saveDefaultAsNow: true }),
     published: firestoreBoolean({ default: false, defaultBeforeSave: false })
@@ -118,6 +142,8 @@ export function guestbookEntryCollectionReferenceFactory(context: FirestoreConte
   };
 }
 
+export const guestbookEntryAccessorFactory = copyUserRelatedDataAccessorFactoryFunction<GuestbookEntry>();
+
 export type GuestbookEntryFirestoreCollection = FirestoreCollectionWithParent<GuestbookEntry, Guestbook, GuestbookEntryDocument, GuestbookDocument>;
 export type GuestbookEntryFirestoreCollectionFactory = (parent: GuestbookDocument) => GuestbookEntryFirestoreCollection;
 
@@ -128,6 +154,7 @@ export function guestbookEntryFirestoreCollectionFactory(firestoreContext: Fires
     return firestoreContext.firestoreCollectionWithParent({
       itemsPerPage: 50,
       collection: factory(parent),
+      accessorFactory: guestbookEntryAccessorFactory,
       makeDocument: (accessor, documentAccessor) => new GuestbookEntryDocument(accessor, documentAccessor),
       firestoreContext,
       parent
@@ -144,6 +171,7 @@ export type GuestbookEntryFirestoreCollectionGroup = FirestoreCollectionGroup<Gu
 export function guestbookEntryFirestoreCollectionGroup(firestoreContext: FirestoreContext): GuestbookEntryFirestoreCollectionGroup {
   return firestoreContext.firestoreCollectionGroup({
     itemsPerPage: 50,
+    accessorFactory: guestbookEntryAccessorFactory,
     queryLike: guestbookEntryCollectionReference(firestoreContext),
     makeDocument: (accessor, documentAccessor) => new GuestbookEntryDocument(accessor, documentAccessor),
     firestoreContext

@@ -1,7 +1,7 @@
 import { firstValueFrom } from 'rxjs';
 import { SubscriptionObject } from '@dereekb/rxjs';
-import { Transaction, DocumentReference, WriteBatch, FirestoreDocumentAccessor, makeDocuments, FirestoreDocumentDataAccessor, FirestoreContext, FirestoreDocument, RunTransaction } from '@dereekb/firebase';
-import { MockItemDocument, MockItem, MockItemPrivateDocument, MockItemPrivateFirestoreCollection, MockItemPrivate, MockItemSubItem, MockItemSubItemDocument, MockItemSubItemFirestoreCollection, MockItemSubItemFirestoreCollectionGroup } from './firestore.mock.item';
+import { Transaction, DocumentReference, WriteBatch, FirestoreDocumentAccessor, makeDocuments, FirestoreDocumentDataAccessor, FirestoreContext, FirestoreDocument, RunTransaction, FirebaseAuthUserId } from '@dereekb/firebase';
+import { MockItemDocument, MockItem, MockItemPrivateDocument, MockItemPrivateFirestoreCollection, MockItemPrivate, MockItemSubItem, MockItemSubItemDocument, MockItemSubItemFirestoreCollection, MockItemSubItemFirestoreCollectionGroup, MockItemUserFirestoreCollection, MockItemUserDocument, MockItemUser } from './firestore.mock.item';
 import { MockItemCollectionFixture } from './firestore.mock.item.fixture';
 
 /**
@@ -51,6 +51,34 @@ export function describeAccessorDriverTests(f: MockItemCollectionFixture) {
       });
 
       describe('Subcollections', () => {
+        describe('singleItemFirestoreCollection (MockItemUser)', () => {
+          let testUserId: FirebaseAuthUserId;
+          let mockItemUserFirestoreCollection: MockItemUserFirestoreCollection;
+          let itemUserDataDocument: MockItemUserDocument;
+          let userDataAccessor: FirestoreDocumentDataAccessor<MockItemUser>;
+
+          beforeEach(() => {
+            testUserId = 'userid' + Math.ceil(Math.random() * 100000);
+            mockItemUserFirestoreCollection = f.instance.collections.mockItemUserCollectionFactory(itemDocument);
+            itemUserDataDocument = mockItemUserFirestoreCollection.documentAccessor().loadDocumentForId(testUserId);
+            userDataAccessor = itemUserDataDocument.accessor;
+          });
+
+          describe('set()', () => {
+            describe('mockItemUserAccessorFactory usage', () => {
+              it('should copy the documents identifier to the uid field on set.', async () => {
+                await itemUserDataDocument.accessor.set({
+                  uid: '', // the mockItemUserAccessorFactory silently enforces the uid to be the same as the document.
+                  name: 'hello'
+                });
+
+                const snapshot = await itemUserDataDocument.accessor.get();
+                expect(snapshot.data()?.uid).toBe(testUserId);
+              });
+            });
+          });
+        });
+
         describe('singleItemFirestoreCollection (MockItemPrivate)', () => {
           let mockItemPrivateFirestoreCollection: MockItemPrivateFirestoreCollection;
           let itemPrivateDataDocument: MockItemPrivateDocument;

@@ -83,11 +83,11 @@ export interface DocumentSnapshot<T = DocumentData> {
 export type SetOptions = SetOptionsMerge | SetOptionsMergeFields;
 
 export interface SetOptionsMerge {
-  readonly merge?: boolean | undefined;
+  readonly merge: boolean | undefined;
 }
 
 export interface SetOptionsMergeFields {
-  readonly mergeFields?: Array<string | FieldPath>;
+  readonly mergeFields: Array<string | FieldPath>;
 }
 
 export interface SnapshotOptions {

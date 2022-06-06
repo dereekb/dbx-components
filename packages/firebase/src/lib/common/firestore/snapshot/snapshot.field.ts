@@ -1,5 +1,5 @@
 import { nowISODateString, toISODateString, toJsDate } from '@dereekb/date';
-import { ModelFieldMapFunctionsConfig, GetterOrValue, Maybe, ModelFieldMapConvertFunction, passThrough } from '@dereekb/util';
+import { ModelFieldMapFunctionsConfig, GetterOrValue, Maybe, ModelFieldMapConvertFunction, passThrough, unique, PrimativeKey, ReadKeyFunction, makeFindUniqueFunction, ModelFieldMapFunctionsWithDefaultsConfig, filterMaybeValues, MaybeSo } from '@dereekb/util';
 import { FIRESTORE_EMPTY_VALUE } from './snapshot';
 
 export interface BaseFirestoreFieldConfig<V, D = unknown> {
@@ -26,7 +26,7 @@ export type FirestoreFieldConfig<V, D = unknown> = FirestoreFieldConfigWithDefau
  * All firebase ModelFieldMapFunctionsConfig are configured to handle the read field value as null/undefined. This implies that
  * by design, the firebase database documents do not need to be fully intact for the system to handle them properly.
  */
-export type FirestoreModelFieldMapFunctionsConfig<V, D> = ModelFieldMapFunctionsConfig<V, Maybe<D>>;
+export type FirestoreModelFieldMapFunctionsConfig<V, D> = ModelFieldMapFunctionsWithDefaultsConfig<V, Maybe<D>>;
 
 export function firestoreField<V, D = unknown>(config: FirestoreFieldConfig<V, D>): FirestoreModelFieldMapFunctionsConfig<V, D> {
   return {
@@ -40,7 +40,7 @@ export function firestoreField<V, D = unknown>(config: FirestoreFieldConfig<V, D
           convert: config.fromData
         },
     to: {
-      default: config.defaultBeforeSave ?? FIRESTORE_EMPTY_VALUE, // always store the default empty value as the default
+      default: (config.defaultBeforeSave ?? FIRESTORE_EMPTY_VALUE) as GetterOrValue<D>, // always store the default empty value as the default
       convert: config.toData
     }
   } as FirestoreModelFieldMapFunctionsConfig<V, D>;
@@ -65,7 +65,7 @@ export type OptionalMapConfiguredFirestoreFieldConfig<V, D = unknown> = Omit<Bas
 
 export type FirestoreStringConfig = DefaultMapConfiguredFirestoreFieldConfig<string, string>;
 
-export function firestoreString(config: FirestoreStringConfig) {
+export function firestoreString(config?: FirestoreStringConfig) {
   return firestoreField<string, string>({
     default: '',
     ...config,
@@ -137,7 +137,7 @@ export function optionalFirestoreNumber() {
   return firestorePassThroughField<Maybe<number>>();
 }
 
-export type FirestoreArrayFieldConfig<T> = DefaultMapConfiguredFirestoreFieldConfig<T[], T[]> & Partial<FirestoreFieldConfigWithDefault<T[]>>;
+export type FirestoreArrayFieldConfig<T> = DefaultMapConfiguredFirestoreFieldConfig<T[], T[]> & Partial<FirestoreFieldDefault<T[]>>;
 
 export function firestoreArray<T>(config: FirestoreArrayFieldConfig<T>) {
   return firestoreField<T[], T[]>({
