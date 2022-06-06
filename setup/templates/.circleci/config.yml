@@ -8,14 +8,14 @@ defaults: &defaults
     - image: cimg/node:16.14
 orbs:
   nx: nrwl/nx@1.1.3
+  node: circleci/node@5.0.2
 jobs:
   build:
     <<: *defaults
     steps:
       - checkout
-      - run:
-          name: install dependencies
-          command: npm ci
+      # install node packages
+      - node/install-packages
       # initialize nx
       - nx/set-shas
       # build
