@@ -53,7 +53,7 @@ describe('FirestoreCollection', () => {
           const result = firestoreCollection.documentAccessor(context);
           expect(result).toBeDefined();
 
-          const document = result.loadDocumentForPath(specificIdentifier);
+          const document = result.loadDocumentForId(specificIdentifier);
           ref = document.documentRef as DocumentReference<MockItem>;
 
           const exists = await document.accessor.exists();

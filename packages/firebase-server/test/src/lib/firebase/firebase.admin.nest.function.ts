@@ -31,7 +31,7 @@ export class FirebaseAdminFunctionNestTestContextFixture<PI extends FirebaseAdmi
 
 export class FirebaseAdminFunctionNestTestContextInstance<PI extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends FirebaseAdminNestTestContextInstance<PI> implements FirebaseAdminFunctionNestTestContext {
   // MARK: FirebaseAdminTestContext (Forwarded)
-  get fnWrapper(): FirebaseAdminCloudFunctionWrapper {
+  override get fnWrapper(): FirebaseAdminCloudFunctionWrapper {
     return this.parent.fnWrapper;
   }
 }

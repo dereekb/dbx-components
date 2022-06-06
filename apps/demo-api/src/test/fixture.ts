@@ -100,7 +100,7 @@ export class DemoApiAuthorizedUserTestContextInstance<F extends FirebaseAdminFun
   }
 
   loadUserProfile(): ProfileDocument {
-    return this.nest.get(DemoFirestoreCollections).profileCollection.documentAccessor().loadDocumentForPath(this.uid);
+    return this.nest.get(DemoFirestoreCollections).profileCollection.documentAccessor().loadDocumentForId(this.uid);
   }
 }
 
@@ -166,13 +166,14 @@ export const demoGuestbookEntryContextFactory = () =>
     getCollection: (fi, params) => fi.demoFirestoreCollections.guestbookEntryCollectionFactory(params.g.document),
     makeInstance: (delegate, ref, testInstance) => new DemoApiGuestbookEntryTestContextInstance(delegate, ref, testInstance),
     makeRef: async (collection, params) => {
-      return collection.documentAccessor().documentRefForPath(params.u.uid);
+      return collection.documentAccessor().documentRefForId(params.u.uid);
     },
     initDocument: async (instance, params) => {
       const guestbookEntry = instance.document;
 
       if (params.init !== false) {
         await guestbookEntry.accessor.set({
+          uid: '',
           message: params.message ?? 'test',
           signed: params.signed ?? 'test',
           published: params.published ?? true,

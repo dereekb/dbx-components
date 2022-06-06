@@ -8,6 +8,12 @@ export function newDocuments<T, D extends FirestoreDocument<T>>(documentAccessor
 
 export interface MakeDocumentsParams<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> {
   count: number;
+
+  /**
+   * Optional override to create a new document using the input accessor.
+   */
+  newDocument?: (documentAccessor: FirestoreDocumentAccessor<T, D>) => D;
+
   /**
    * Initializes the input document with the returned data.
    *
@@ -24,10 +30,11 @@ export interface MakeDocumentsParams<T, D extends FirestoreDocument<T> = Firesto
  * @returns
  */
 export function makeDocuments<T, D extends FirestoreDocument<T>>(documentAccessor: FirestoreDocumentAccessor<T, D>, make: MakeDocumentsParams<T, D>): Promise<D[]> {
+  const newDocumentFn = make.newDocument ?? (() => documentAccessor.newDocument());
   return performMakeLoop({
     count: make.count,
     make: async (i: number) => {
-      const document: D = documentAccessor.newDocument();
+      const document: D = newDocumentFn(documentAccessor);
       const data = await make.init(i, document);
 
       if (data != null) {

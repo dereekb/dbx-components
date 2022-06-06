@@ -27,6 +27,14 @@ export class MockItemCollectionFixtureInstance {
     return this.collections.mockItemSubItemCollectionGroup;
   }
 
+  get mockItemUserCollection() {
+    return this.collections.mockItemUserCollectionFactory;
+  }
+
+  get mockItemUserCollectionGroup() {
+    return this.collections.mockItemUserCollectionGroup;
+  }
+
   get mockItemDeepSubItemCollection() {
     return this.collections.mockItemDeepSubItemCollectionFactory;
   }

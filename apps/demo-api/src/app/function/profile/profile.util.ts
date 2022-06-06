@@ -5,7 +5,7 @@ import { DemoApiNestContext } from '../function';
 
 export function profileForUser(nest: DemoApiNestContext, uid: FirebaseAuthUserId): ProfileDocument {
   const profileFirestoreCollection = nest.demoFirestoreCollections.profileCollection;
-  const profileDocument = profileFirestoreCollection.documentAccessor().loadDocumentForPath(uid);
+  const profileDocument = profileFirestoreCollection.documentAccessor().loadDocumentForId(uid);
   return profileDocument;
 }
 

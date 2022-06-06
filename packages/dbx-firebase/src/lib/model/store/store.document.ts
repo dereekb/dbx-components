@@ -115,7 +115,7 @@ export class AbstractDbxFirebaseDocumentStore<T, D extends FirestoreDocument<T> 
       } else if (key) {
         document = this.firestoreCollectionLike$.pipe(map((x) => x.documentAccessor().loadDocumentForKey(key)));
       } else if (id) {
-        document = this.firestoreCollection$.pipe(map((x) => x.documentAccessor().loadDocumentForPath(id)));
+        document = this.firestoreCollection$.pipe(map((x) => x.documentAccessor().loadDocumentForId(id)));
       } else {
         document = of(undefined);
       }

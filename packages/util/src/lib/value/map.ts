@@ -6,6 +6,8 @@ import { Maybe } from './maybe';
  */
 export type MapFunction<I, O> = (input: I) => O;
 
+export type MapArrayFunction<F extends MapFunction<any, any>> = F extends MapFunction<infer I, infer O> ? MapFunction<I[], O[]> : never;
+
 /**
  * Converts values from the input, and applies them to the target if a target is supplied.
  */
@@ -15,6 +17,16 @@ export type ApplyMapFunction<I, O> = (input: I, target?: Maybe<Partial<O>>) => O
  * Converts values from the input, and applies them to the target if a target is supplied.
  */
 export type ApplyMapFunctionWithOptions<I, O, C> = (input: I, target?: Maybe<Partial<O>>, options?: Maybe<C>) => O;
+
+export function mapArrayFunction<I, O>(mapFunction: MapFunction<I, O>): MapArrayFunction<MapFunction<I, O>> {
+  return (input: I[]) => input.map(mapFunction);
+}
+
+export const MAP_IDENTITY = (input: unknown) => input;
+
+export function mapIdentityFunction<T>(): MapFunction<T, T> {
+  return MAP_IDENTITY as MapFunction<T, T>;
+}
 
 // MARK: Pair
 export type MapFunctionOutputPair<O, I = unknown> = {

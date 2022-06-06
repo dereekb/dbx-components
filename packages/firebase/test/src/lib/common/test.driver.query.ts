@@ -1,7 +1,7 @@
 import { SubscriptionObject } from '@dereekb/rxjs';
 import { filter, first, from, skip } from 'rxjs';
-import { limit, orderBy, startAfter, startAt, where, limitToLast, endAt, endBefore, makeDocuments, FirestoreQueryFactoryFunction, startAtValue, endAtValue } from '@dereekb/firebase';
-import { MockItemDocument, MockItem, MockItemSubItemDocument, MockItemSubItem, MockItemDeepSubItemDocument, MockItemDeepSubItem } from './firestore.mock.item';
+import { limit, orderBy, startAfter, startAt, where, limitToLast, endAt, endBefore, makeDocuments, FirestoreQueryFactoryFunction, startAtValue, endAtValue, whereDocumentId, FirebaseAuthUserId } from '@dereekb/firebase';
+import { MockItemDocument, MockItem, MockItemSubItemDocument, MockItemSubItem, MockItemDeepSubItemDocument, MockItemDeepSubItem, MockItemUserDocument } from './firestore.mock.item';
 import { MockItemCollectionFixture } from './firestore.mock.item.fixture';
 import { allChildMockItemDeepSubItemsWithinMockItem } from './firestore.mock.item.query';
 
@@ -25,6 +25,49 @@ export function describeQueryDriverTests(f: MockItemCollectionFixture) {
             test: true
           };
         }
+      });
+    });
+
+    describe('mockItemUser', () => {
+      let testUserId: FirebaseAuthUserId;
+      let allMockUserItems: MockItemUserDocument[];
+
+      beforeEach(async () => {
+        testUserId = 'userid' + Math.ceil(Math.random() * 100000);
+
+        const results = await Promise.all(
+          items.map((parent: MockItemDocument) =>
+            makeDocuments(f.instance.mockItemUserCollection(parent).documentAccessor(), {
+              count: 1,
+              newDocument: (x) => x.loadDocumentForId(testUserId),
+              init: (i) => {
+                return {
+                  uid: '',
+                  name: `name ${i}`
+                };
+              }
+            })
+          )
+        );
+
+        allMockUserItems = results.flat();
+      });
+
+      describe('collection group', () => {
+        describe('query', () => {
+          describe('constraints', () => {
+            describe('where', () => {
+              it('should return the documents matching the input uid', async () => {
+                const result = await f.instance.mockItemUserCollectionGroup.query(where('uid', '==', testUserId)).getDocs();
+                expect(result.docs.length).toBe(testDocumentCount);
+
+                result.docs.forEach((x) => {
+                  expect(x.data().uid).toBe(testUserId);
+                });
+              });
+            });
+          });
+        });
       });
     });
 
@@ -117,6 +160,37 @@ export function describeQueryDriverTests(f: MockItemCollectionFixture) {
                   const ref = result.docs[0].ref;
                   expect(ref).toBeDefined();
                   expect(ref.parent).toBeDefined();
+                });
+              });
+
+              describe('whereDocumentId', () => {
+                it('should fail to query on collection groups.', async () => {
+                  // https://stackoverflow.com/questions/56149601/firestore-collection-group-query-on-documentid
+
+                  const targetId = 'targetid';
+
+                  /*
+                  const results = await Promise.all(
+                    allSubItems.map((parent: MockItemSubItemDocument) =>
+                      makeDocuments(f.instance.mockItemDeepSubItemCollection(parent).documentAccessor(), {
+                        count: 1,
+                        newDocument: (x) => x.loadDocumentForId(targetId),
+                        init: (i) => {
+                          return {
+                            value: i
+                          };
+                        }
+                      })
+                    )
+                  );
+                  */
+
+                  try {
+                    await querySubItems(whereDocumentId('==', targetId)).getDocs();
+                    fail('should have failed.');
+                  } catch (e) {
+                    expect(e).toBeDefined();
+                  }
                 });
               });
             });
@@ -382,6 +456,16 @@ export function describeQueryDriverTests(f: MockItemCollectionFixture) {
             const result = await query(where('value', '==', value)).getDocs();
             expect(result.docs.length).toBe(1);
             expect(result.docs[0].data().value).toBe(value);
+          });
+        });
+
+        describe('whereDocumentId', () => {
+          it('should return the documents matching the query.', async () => {
+            const targetId = items[0].id;
+
+            const result = await query(whereDocumentId('==', targetId)).getDocs();
+            expect(result.docs.length).toBe(1);
+            expect(result.docs[0].id).toBe(targetId);
           });
         });
 

@@ -1,4 +1,4 @@
-import { containsAllStringsAnyCase, containsAnyStringAnyCase, containsStringAnyCase, findUniqueCaseInsensitiveStrings } from './array.string';
+import { containsAllStringsAnyCase, containsAnyStringAnyCase, containsStringAnyCase, findUniqueCaseInsensitiveStrings, findUniqueTransform, TransformSingleStringFunction } from './array.string';
 
 describe('findUniqueCaseInsensitiveStrings', () => {
   it('should return only the strings that are unique from the array.', () => {
@@ -62,5 +62,78 @@ describe('containsAllStringsAnyCase', () => {
 
     const result = containsAllStringsAnyCase(values, [value]);
     expect(result).toBe(false);
+  });
+});
+
+describe('findUniqueTransform', () => {
+  describe('caseInsensitive=true', () => {
+    const transform = findUniqueTransform({
+      caseInsensitive: true
+    });
+
+    it('should return only unique strings', () => {
+      const values = ['tesT', 'test', 'TEST', 'TesT'];
+      const result = transform(values);
+      expect(result.length).toBe(1);
+      expect(result[0]).toBe(values[0]);
+    });
+  });
+
+  describe('transform', () => {
+    describe('caseInsensitive=true', () => {
+      const transformFn: TransformSingleStringFunction = (x) => `__${x}__`;
+
+      const transform = findUniqueTransform({
+        transform: transformFn,
+        caseInsensitive: true
+      });
+
+      it('should return only unique strings', () => {
+        const values = ['tesT', 'test', 'TEST', 'TesT'];
+        const result = transform(values);
+        expect(result.length).toBe(1);
+        expect(result[0]).toBe(transformFn(values[0]));
+      });
+    });
+
+    describe('caseInsensitive=false', () => {
+      const transformFn: TransformSingleStringFunction = (x) => `NEW_${x}`;
+
+      const transform = findUniqueTransform({
+        transform: transformFn,
+        caseInsensitive: false
+      });
+
+      it('should return only unique strings', () => {
+        const values = ['tesT', 'test', 'TEST', 'TesT'];
+        const result = transform([...values, ...values]);
+        expect(result.length).toBe(values.length);
+        expect(result[0]).toBe(transformFn(values[0]));
+      });
+    });
+  });
+
+  describe('with toLowercase=true', () => {
+    const transform = findUniqueTransform({
+      toLowercase: true
+    });
+
+    it('should return only unique strings', () => {
+      const result = transform(['test', 'TEST', 'tesT', 'TesT']);
+      expect(result.length).toBe(1);
+      expect(result[0]).toBe('test');
+    });
+  });
+
+  describe('with toUppercase=true', () => {
+    const transform = findUniqueTransform({
+      toUppercase: true
+    });
+
+    it('should return only unique strings', () => {
+      const result = transform(['test', 'TEST', 'tesT', 'TesT']);
+      expect(result.length).toBe(1);
+      expect(result[0]).toBe('TEST');
+    });
   });
 });

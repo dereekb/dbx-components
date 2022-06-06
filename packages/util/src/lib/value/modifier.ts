@@ -12,18 +12,20 @@ export type ModifierKey = string;
 export type ModifierFunction<T> = (input: T) => void;
 
 /**
+ * Retains a reference to a ModifierFunction
+ */
+export interface ModifierFunctionRef<T> {
+  readonly modify: ModifierFunction<T>;
+}
+
+/**
  * A modifier that has a key and modify function.
  */
-export interface Modifier<T> {
+export interface Modifier<T> extends ModifierFunctionRef<T> {
   /**
    * Modifier key.
    */
   readonly key: ModifierKey;
-
-  /**
-   *
-   */
-  readonly modify: ModifierFunction<T>;
 }
 
 /**
@@ -39,6 +41,8 @@ export function modifier<T>(key: string, modify: ModifierFunction<T>): Modifier<
     modify
   };
 }
+
+export const NOOP_MODIFIER: ModifierFunction<any> = () => undefined;
 
 /**
  * Map of Modifiers keyed by the modifier key.
@@ -79,7 +83,7 @@ export function removeModifiers<T>(modifiers: ArrayOrValue<Modifier<T>>, map: Ma
 }
 
 export function modifierMapToFunction<T>(map: Maybe<ModifierMap<T>>): ModifierFunction<T> {
-  return maybeModifierMapToFunction(map) ?? (() => undefined);
+  return maybeModifierMapToFunction(map) ?? NOOP_MODIFIER;
 }
 
 /**
@@ -89,9 +93,46 @@ export function modifierMapToFunction<T>(map: Maybe<ModifierMap<T>>): ModifierFu
  * @returns
  */
 export function maybeModifierMapToFunction<T>(map: Maybe<ModifierMap<T>>): Maybe<ModifierFunction<T>> {
-  const fns: ModifierFunction<T>[] = [];
-  map?.forEach((x) => fns.push(x.modify));
-  return (input) => {
-    fns.forEach((fn) => fn(input));
-  };
+  let fn: Maybe<ModifierFunction<T>>;
+
+  if (map != null) {
+    const fns: ModifierFunction<T>[] = [];
+    map.forEach((x) => fns.push(x.modify));
+    fn = (input) => fns.forEach((fn) => fn(input));
+  }
+
+  return fn;
+}
+
+/**
+ * Merges all modifiers into a single function.
+ *
+ * @param map
+ * @returns
+ */
+export function mergeModifiers<T>(modifiers: ModifierFunction<T>[]): ModifierFunction<T> {
+  return maybeMergeModifiers(modifiers) ?? NOOP_MODIFIER;
+}
+
+/**
+ * Merges all modifiers into a single function. If not modifier functions are input, returns
+ *
+ * @param map
+ * @returns
+ */
+export function maybeMergeModifiers<T>(modifiers: Maybe<ModifierFunction<T>[]>): Maybe<ModifierFunction<T>> {
+  let result: Maybe<ModifierFunction<T>> = undefined;
+
+  if (modifiers != null) {
+    switch (modifiers.length) {
+      case 1:
+        result = modifiers[0];
+        break;
+      default:
+        result = (input) => (modifiers as ModifierFunction<T>[]).forEach((fn) => fn(input));
+        break;
+    }
+  }
+
+  return result;
 }

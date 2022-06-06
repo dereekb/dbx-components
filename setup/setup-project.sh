@@ -217,7 +217,7 @@ git commit --no-verify -m "checkpoint: added firebase configuration"
 
 # Install npm dependencies
 npm install @dereekb/dbx-analytics$DBX_COMPONENTS_VERSION @dereekb/dbx-web$DBX_COMPONENTS_VERSION @dereekb/dbx-form$DBX_COMPONENTS_VERSION @dereekb/firebase$DBX_COMPONENTS_VERSION @dereekb/firebase-server$DBX_COMPONENTS_VERSION @dereekb/dbx-firebase$DBX_COMPONENTS_VERSION --force  # TODO: Remove force once possible.
-npm install -D firebase-tools @ngrx/store-devtools @firebase/rules-unit-testing firebase-functions-test@2.0.2 envfile
+npm install -D firebase-tools @ngrx/store-devtools @firebase/rules-unit-testing firebase-functions-test@2.0.2 envfile env-cmd
 
 git add --all
 git commit --no-verify -m "checkpoint: added @dereekb dependencies"
@@ -533,7 +533,6 @@ download_angular_ts_file "src/app/container/layout.component.ts"
 
 mkdir $ANGULAR_APP_FOLDER/src/app/state
 download_angular_ts_file "src/app/state/app.state.ts"
-download_angular_ts_file "src/app/state/entity-metadata.ts"
 
 mkdir $ANGULAR_APP_FOLDER/src/app/modules
 mkdir $ANGULAR_APP_FOLDER/src/app/modules/app

@@ -17,8 +17,6 @@ export interface Example extends UserRelatedById {
   username: string;
 }
 
-export interface ExampleRef extends DocumentReferenceRef<Example> { }
-
 export type ExampleRoles = GrantedReadRole;
 
 export class ExampleDocument extends AbstractFirestoreDocument<Example, ExampleDocument> {

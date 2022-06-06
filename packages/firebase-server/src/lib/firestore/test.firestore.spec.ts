@@ -47,7 +47,7 @@ describe('FirestoreCollection', () => {
         await firestore.runTransaction(async (transaction: Transaction) => {
           const documentAccessor = firestoreCollection.documentAccessorForTransaction(transaction);
 
-          const document = documentAccessor.loadDocumentForPath(specificIdentifier);
+          const document = documentAccessor.loadDocumentForId(specificIdentifier);
           ref = document.documentRef as DocumentReference<MockItem>;
 
           const exists = await document.accessor.exists(); // don't create if it exists

@@ -1,5 +1,5 @@
-import { MaybeMap, ModelFieldConversions, makeModelMapFunctions, Maybe, ApplyMapFunctionWithOptions, ModelConversionOptions, ModelFieldConversionsConfig, modelFieldConversions, TypedMappedModelData } from '@dereekb/util';
-import { PartialWithFieldValue, SnapshotOptions, SetOptions, WithFieldValue, DocumentSnapshot, FirestoreDataConverter, SetOptionsMerge, SetOptionsMergeFields, asTopLevelFieldPaths } from '../types';
+import { MaybeMap, ModelFieldConversions, makeModelMapFunctions, Maybe, ApplyMapFunctionWithOptions, ModelConversionOptions, ModelFieldConversionsConfig, modelFieldConversions, TypedMappedModelData, ModifierFunctionRef, ModifierFunction, ArrayOrValue, ModelModifier, modifyModelMapFunctions, PartialModelModifier } from '@dereekb/util';
+import { PartialWithFieldValue, SnapshotOptions, SetOptions, WithFieldValue, DocumentSnapshot, FirestoreDataConverter, SetOptionsMerge, SetOptionsMergeFields, asTopLevelFieldPaths, DocumentReference } from '../types';
 
 // MARK: Type
 /**
@@ -52,14 +52,18 @@ export type FirestoreModelData<T extends object, R extends object = object> = Pa
 
 // MARK: Snapshots
 export type SnapshotConverterConfigWithFields<T extends object, O extends object = FirestoreModelData<T>> = {
-  fields: ModelFieldConversionsConfig<T, O>;
+  readonly fields: ModelFieldConversionsConfig<T, O>;
 };
 
 export type SnapshotConverterConfigWithConversions<T extends object, O extends object = FirestoreModelData<T>> = {
-  fieldConversions: ModelFieldConversions<T, O>;
+  readonly fieldConversions: ModelFieldConversions<T, O>;
 };
 
-export type SnapshotConverterConfig<T extends object, O extends object = FirestoreModelData<T>> = SnapshotConverterConfigWithFields<T, O> | SnapshotConverterConfigWithConversions<T, O>;
+export type SnapshotConverterModifier<T extends object, O extends object = FirestoreModelData<T>> = PartialModelModifier<T, O>;
+
+export type SnapshotConverterConfig<T extends object, O extends object = FirestoreModelData<T>> = (SnapshotConverterConfigWithFields<T, O> | SnapshotConverterConfigWithConversions<T, O>) & {
+  readonly modifiers?: ArrayOrValue<SnapshotConverterModifier<T, O>>;
+};
 
 export interface SnapshotConverterFunctions<T extends object, O extends object = FirestoreModelData<T>> extends FirestoreDataConverter<T, O> {
   from: SnapshotConverterFromFunction<T, O>;
@@ -72,7 +76,8 @@ export type SnapshotConverterToFunction<T extends object, O extends object = Fir
 
 export function snapshotConverterFunctions<T extends object, O extends object = FirestoreModelData<T>>(config: SnapshotConverterConfig<T, O>): SnapshotConverterFunctions<T, O> {
   const conversions: ModelFieldConversions<T, O> = (config as SnapshotConverterConfigWithConversions<T, O>).fieldConversions ?? modelFieldConversions<T, O>((config as SnapshotConverterConfigWithFields<T, O>).fields);
-  const { from: fromData, to: toData } = makeModelMapFunctions<T, O>(conversions);
+  const mapFunctions = makeModelMapFunctions<T, O>(conversions);
+  const { from: fromData, to: toData } = config.modifiers ? modifyModelMapFunctions({ mapFunctions, modifiers: config.modifiers }) : mapFunctions;
 
   const from: SnapshotConverterFromFunction<T, O> = (input: DocumentSnapshot, target?: Maybe<Partial<T>>) => {
     const data = input.data();

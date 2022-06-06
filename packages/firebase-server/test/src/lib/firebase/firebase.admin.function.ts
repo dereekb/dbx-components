@@ -92,7 +92,7 @@ export class FirebaseAdminFunctionTestContextInstance extends FirebaseAdminTestC
     super(app);
   }
 
-  get fnWrapper() {
+  override get fnWrapper() {
     return this._fnWrapper();
   }
 }

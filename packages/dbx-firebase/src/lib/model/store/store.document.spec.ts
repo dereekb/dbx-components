@@ -46,7 +46,7 @@ describe('AbstractDbxFirebaseDocumentStore', () => {
         let ref: DocumentReference<MockItem>;
 
         beforeEach(() => {
-          const doc = f.instance.firestoreCollection.documentAccessor().loadDocumentForPath('test');
+          const doc = f.instance.firestoreCollection.documentAccessor().loadDocumentForId('test');
           ref = doc.documentRef;
         });
 
