@@ -103,13 +103,18 @@ export function modelFieldConversions<V extends object, D extends object>(config
 }
 
 export type ModelFieldMapFunctions<I = unknown, O = unknown> = {
-  from: ModelFieldMapFromFunction<I, O>;
-  to: ModelFieldMapToFunction<I, O>;
+  readonly from: ModelFieldMapFromFunction<I, O>;
+  readonly to: ModelFieldMapToFunction<I, O>;
 };
 
 export type ModelFieldMapFunctionsConfig<I = unknown, O = unknown> = {
-  from: ModelFieldMapFromConfig<I, O>;
-  to: ModelFieldMapToConfig<I, O>;
+  readonly from: ModelFieldMapFromConfig<I, O>;
+  readonly to: ModelFieldMapToConfig<I, O>;
+};
+
+export type ModelFieldMapFunctionsWithDefaultsConfig<I = unknown, O = unknown> = {
+  readonly from: ModelFieldMapFromWithDefaultConfig<I, O>;
+  readonly to: ModelFieldMapToWithDefaultConfig<I, O>;
 };
 
 export function modelFieldMapFunctions<I = unknown, O = unknown>(config: ModelFieldMapFunctionsConfig<I, O>): ModelFieldMapFunctions<I, O> {
@@ -152,6 +157,9 @@ export type ModelFieldMapConfig<I, O> = XOR<ModelFieldMapMaybeTooConfig<I, O>, M
 
 export type ModelFieldMapFromConfig<I = unknown, O = unknown> = ModelFieldMapConfig<O, I>;
 export type ModelFieldMapToConfig<I = unknown, O = unknown> = ModelFieldMapConfig<I, O>;
+
+export type ModelFieldMapFromWithDefaultConfig<I = unknown, O = unknown> = ModelFieldMapMaybeWithDefaultConfig<O, I>;
+export type ModelFieldMapToWithDefaultConfig<I = unknown, O = unknown> = ModelFieldMapMaybeWithDefaultConfig<I, O>;
 
 export type ModelFieldMapFunction<I = unknown, O = unknown> = MapFunction<Maybe<I>, O>;
 export type ModelFieldMapFromFunction<I, O> = ModelFieldMapFunction<O, I>;

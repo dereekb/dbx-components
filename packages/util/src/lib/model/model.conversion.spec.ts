@@ -2,6 +2,7 @@ import { build } from './../value/build';
 import { countPOJOKeys, KeyValueTypleValueFilter } from '../object';
 import { modelFieldMapFunction, makeModelMapFunctions, modelFieldConversions } from './model.conversion';
 import { copyField } from './model.conversion.field';
+import { modifyModelMapFunctions } from './model.modify';
 
 interface TestConversionModel {
   name: string;
@@ -144,6 +145,104 @@ describe('modelFieldMapFunction()', () => {
       const result = fn(100);
 
       expect(result).toBe(convertResultValue);
+    });
+  });
+});
+
+describe('modifyModelMapFunctions()', () => {
+  it('should wrap the modify function', () => {
+    const result = modifyModelMapFunctions({
+      mapFunctions,
+      modifiers: [
+        {
+          modifyData: () => undefined,
+          modifyModel: () => undefined
+        }
+      ]
+    });
+
+    expect(result).toBeDefined();
+    expect(result.from).toBeDefined();
+    expect(result.to).toBeDefined();
+  });
+
+  describe('function', () => {
+    describe('copy=false', () => {
+      it('should not copy the input model or data when applying modifiers.', () => {
+        const modifyDataName = '0';
+        const modifyModelName = '1';
+
+        const modifyMapFunctions = modifyModelMapFunctions({
+          mapFunctions,
+          modifiers: [
+            {
+              modifyData: (x) => (x.name = modifyDataName),
+              modifyModel: (x) => (x.name = modifyModelName)
+            }
+          ],
+          copy: false // do not modify a copy
+        });
+
+        const inputModel = {
+          ...defaultTestModel
+        };
+
+        expect(inputModel.name).toBe(defaultTestModel.name);
+
+        const data = modifyMapFunctions.to(inputModel);
+        expect(inputModel.name).toBe(modifyModelName);
+        expect(data).toBeDefined();
+        expect(data.name).toBe(modifyModelName);
+
+        const model = modifyMapFunctions.from(data);
+        expect(model).toBeDefined();
+        expect(data.name).toBe(modifyDataName);
+        expect(model.name).toBe(modifyDataName);
+      });
+    });
+
+    describe('conversions', () => {
+      let calledModifyData = false;
+      let calledModifyModel = false;
+
+      const modifyMapFunctions = modifyModelMapFunctions({
+        mapFunctions,
+        modifiers: [
+          {
+            modifyData: () => (calledModifyData = !calledModifyData),
+            modifyModel: () => (calledModifyModel = !calledModifyModel)
+          }
+        ]
+      });
+
+      beforeEach(() => {
+        calledModifyData = false;
+        calledModifyModel = false;
+      });
+
+      it('should call the modifyData function of all input modifiers when converting a defined value', () => {
+        const data = modifyMapFunctions.to(defaultTestModel);
+        expect(data).toBeDefined();
+        expect(calledModifyModel).toBe(true);
+        expect(calledModifyData).toBe(false);
+
+        const model = modifyMapFunctions.from(data);
+        expect(model).toBeDefined();
+        expect(calledModifyModel).toBe(true);
+        expect(calledModifyData).toBe(true);
+      });
+
+      it('should not call all the modifyData function of all input modifiers when converting an undefined value', () => {
+        const data = modifyMapFunctions.to(undefined);
+        expect(data).toBeDefined();
+        expect(calledModifyModel).toBe(false);
+        expect(calledModifyData).toBe(false);
+
+        const model = modifyMapFunctions.from(undefined);
+        expect(model).toBeDefined();
+        expect(calledModifyModel).toBe(false);
+        expect(calledModifyData).toBe(false);
+      });
     });
   });
 });
