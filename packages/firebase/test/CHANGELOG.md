@@ -2,6 +2,17 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [7.1.0](https://github.com/dereekb/dbx-components/compare/v7.0.1-dev...v7.1.0) (2022-06-06)
+
+
+### Features
+
+* added interceptAccessorFactory() ([9833539](https://github.com/dereekb/dbx-components/commit/98335398eaa6a3ee363bdf64a440d5438bbefb24))
+* added loadDocumentForId() to FirestoreDocumentAccessor ([3728145](https://github.com/dereekb/dbx-components/commit/372814540064ff4b40be032d57ddda12a8698d53))
+* added whereDocumentId() ([7f5f5b8](https://github.com/dereekb/dbx-components/commit/7f5f5b8a56b2e0ad2e43308cfd87b4f8b8503c59))
+
+
+
 ## [7.0.1](https://github.com/dereekb/dbx-components/compare/v7.0.0-dev...v7.0.1) (2022-06-05)
 
 

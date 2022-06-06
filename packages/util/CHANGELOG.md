@@ -2,6 +2,17 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [7.1.0](https://github.com/dereekb/dbx-components/compare/v7.0.1-dev...v7.1.0) (2022-06-06)
+
+
+### Features
+
+* added firestoreEncodedArray, firestoreUniqueArray ([4f7fc7c](https://github.com/dereekb/dbx-components/commit/4f7fc7ca274656ecdf13d69aa7d225f66a7f76da))
+* added interceptAccessorFactory() ([9833539](https://github.com/dereekb/dbx-components/commit/98335398eaa6a3ee363bdf64a440d5438bbefb24))
+* added ModelModifier ([118bde7](https://github.com/dereekb/dbx-components/commit/118bde78f04162f5dcad5d64feef2efb42c62d65))
+
+
+
 ## [7.0.1](https://github.com/dereekb/dbx-components/compare/v7.0.0-dev...v7.0.1) (2022-06-05)
 
 

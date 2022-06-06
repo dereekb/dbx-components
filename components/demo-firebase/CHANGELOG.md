@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [7.1.0](https://github.com/dereekb/dbx-components/compare/v7.0.1-dev...v7.1.0) (2022-06-06)
+
+
+### Features
+
+* added interceptAccessorFactory() ([9833539](https://github.com/dereekb/dbx-components/commit/98335398eaa6a3ee363bdf64a440d5438bbefb24))
+
+
+
 ## [7.0.1](https://github.com/dereekb/dbx-components/compare/v7.0.0-dev...v7.0.1) (2022-06-05)
 
 
