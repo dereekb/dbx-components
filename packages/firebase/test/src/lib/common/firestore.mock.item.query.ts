@@ -26,6 +26,6 @@ export function mockItemWithTestValue(test: boolean): FirestoreQueryConstraint {
  * @param parent
  * @returns
  */
-export function allChildMockItemDeepSubItemsWithinMockItem(mockItem: DocumentReference<MockItem>): FirestoreQueryConstraint[] {
+export function allChildMockItemSubItemDeepsWithinMockItem(mockItem: DocumentReference<MockItem>): FirestoreQueryConstraint[] {
   return allChildDocumentsUnderParent(mockItem);
 }

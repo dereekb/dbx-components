@@ -35,12 +35,12 @@ export class MockItemCollectionFixtureInstance {
     return this.collections.mockItemUserCollectionGroup;
   }
 
-  get mockItemDeepSubItemCollection() {
-    return this.collections.mockItemDeepSubItemCollectionFactory;
+  get mockItemSubItemDeepCollection() {
+    return this.collections.mockItemSubItemDeepCollectionFactory;
   }
 
-  get mockItemDeepSubItemCollectionGroup() {
-    return this.collections.mockItemDeepSubItemCollectionGroup;
+  get mockItemSubItemDeepCollectionGroup() {
+    return this.collections.mockItemSubItemDeepCollectionGroup;
   }
 
   constructor(readonly fixture: MockItemCollectionFixture) {}

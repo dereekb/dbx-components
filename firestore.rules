@@ -2,15 +2,15 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    match /profile/{profile} {
+    match /pr/{profile} {
       allow read: if true;
       allow list: if false;
     }
 
-    match /guestbook/{guestbook} {
+    match /gb/{guestbook} {
       allow read: if resourceIsPublished();
 
-      match /entry/{entry} {
+      match /gbe/{guestbookEntry} {
 
         // Can read any entry that is owned or published.
         allow get: if resourceIsPublished() || resourceIsOwnedByAuthUserId();
@@ -22,7 +22,7 @@ service cloud.firestore {
 
     // collection group example
     // https://firebase.google.com/docs/firestore/security/rules-query#collection_group_queries_and_security_rules
-    match /{path=**}/entry/{entry} {
+    match /{path=**}/gbe/{guestbookEntry} {
 
       // Can read any entry that is owned or published.
       allow get: if resourceIsPublished() || resourceIsOwnedByAuthUserId();

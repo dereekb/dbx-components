@@ -1,12 +1,12 @@
 import {
   MockItem,
-  MockItemDeepSubItem,
-  MockItemDeepSubItemDocument,
-  mockItemDeepSubItemFirestoreCollection,
-  MockItemDeepSubItemFirestoreCollectionFactory,
-  MockItemDeepSubItemFirestoreCollectionGroup,
-  mockItemDeepSubItemFirestoreCollectionGroup,
-  MockItemDeepSubItemRoles,
+  MockItemSubItemDeep,
+  MockItemSubItemDeepDocument,
+  mockItemSubItemDeepFirestoreCollection,
+  MockItemSubItemDeepFirestoreCollectionFactory,
+  MockItemSubItemDeepFirestoreCollectionGroup,
+  mockItemSubItemDeepFirestoreCollectionGroup,
+  MockItemSubItemDeepRoles,
   MockItemDocument,
   MockItemFirestoreCollection,
   mockItemFirestoreCollection,
@@ -47,8 +47,8 @@ export abstract class MockItemCollections {
   abstract readonly mockItemUserCollectionGroup: MockItemUserFirestoreCollectionGroup;
   abstract readonly mockItemSubItemCollectionFactory: MockItemSubItemFirestoreCollectionFactory;
   abstract readonly mockItemSubItemCollectionGroup: MockItemSubItemFirestoreCollectionGroup;
-  abstract readonly mockItemDeepSubItemCollectionFactory: MockItemDeepSubItemFirestoreCollectionFactory;
-  abstract readonly mockItemDeepSubItemCollectionGroup: MockItemDeepSubItemFirestoreCollectionGroup;
+  abstract readonly mockItemSubItemDeepCollectionFactory: MockItemSubItemDeepFirestoreCollectionFactory;
+  abstract readonly mockItemSubItemDeepCollectionGroup: MockItemSubItemDeepFirestoreCollectionGroup;
 }
 
 export function makeMockItemCollections(firestoreContext: FirestoreContext): MockItemCollections {
@@ -60,8 +60,8 @@ export function makeMockItemCollections(firestoreContext: FirestoreContext): Moc
     mockItemUserCollectionGroup: mockItemUserFirestoreCollectionGroup(firestoreContext),
     mockItemSubItemCollectionFactory: mockItemSubItemFirestoreCollection(firestoreContext),
     mockItemSubItemCollectionGroup: mockItemSubItemFirestoreCollectionGroup(firestoreContext),
-    mockItemDeepSubItemCollectionFactory: mockItemDeepSubItemFirestoreCollection(firestoreContext),
-    mockItemDeepSubItemCollectionGroup: mockItemDeepSubItemFirestoreCollectionGroup(firestoreContext)
+    mockItemSubItemDeepCollectionFactory: mockItemSubItemDeepFirestoreCollection(firestoreContext),
+    mockItemSubItemDeepCollectionGroup: mockItemSubItemDeepFirestoreCollectionGroup(firestoreContext)
   };
 }
 
@@ -101,12 +101,12 @@ export const mockItemSubItemFirebaseModelServiceFactory = firebaseModelServiceFa
   getFirestoreCollection: (c) => c.app.mockItemSubItemCollectionGroup
 });
 
-export const mockItemDeepSubItemFirebaseModelServiceFactory = firebaseModelServiceFactory<MockFirebaseContext, MockItemDeepSubItem, MockItemDeepSubItemDocument, MockItemDeepSubItemRoles>({
-  roleMapForModel: function (output: FirebasePermissionServiceModel<MockItemDeepSubItem, MockItemDeepSubItemDocument>, context: MockFirebaseContext, model: MockItemDeepSubItemDocument): PromiseOrValue<GrantedRoleMap<MockItemDeepSubItemRoles>> {
-    const roles: GrantedRoleMap<MockItemDeepSubItemRoles> = context.rolesToReturn ?? { read: true };
+export const mockItemSubItemDeepFirebaseModelServiceFactory = firebaseModelServiceFactory<MockFirebaseContext, MockItemSubItemDeep, MockItemSubItemDeepDocument, MockItemSubItemDeepRoles>({
+  roleMapForModel: function (output: FirebasePermissionServiceModel<MockItemSubItemDeep, MockItemSubItemDeepDocument>, context: MockFirebaseContext, model: MockItemSubItemDeepDocument): PromiseOrValue<GrantedRoleMap<MockItemSubItemDeepRoles>> {
+    const roles: GrantedRoleMap<MockItemSubItemDeepRoles> = context.rolesToReturn ?? { read: true };
     return roles;
   },
-  getFirestoreCollection: (c) => c.app.mockItemDeepSubItemCollectionGroup
+  getFirestoreCollection: (c) => c.app.mockItemSubItemDeepCollectionGroup
 });
 
 // MARK: Model Service
@@ -126,7 +126,7 @@ export const MOCK_FIREBASE_MODEL_SERVICE_FACTORIES = {
   mockItemPrivate: mockItemPrivateFirebaseModelServiceFactory,
   mockItemUser: mockItemUserFirebaseModelServiceFactory,
   mockItemSub: mockItemSubItemFirebaseModelServiceFactory,
-  mockItemDeepSub: mockItemDeepSubItemFirebaseModelServiceFactory
+  mockItemSubItemDeep: mockItemSubItemDeepFirebaseModelServiceFactory
 };
 
 export const mockFirebaseModelServices = firebaseModelsService<typeof MOCK_FIREBASE_MODEL_SERVICE_FACTORIES, MockFirebaseContext, MockModelTypes>(MOCK_FIREBASE_MODEL_SERVICE_FACTORIES);

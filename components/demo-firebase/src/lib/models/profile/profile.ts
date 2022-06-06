@@ -11,7 +11,7 @@ export interface ProfileFirestoreCollections {
 export type ProfileTypes = typeof profileIdentity | typeof profilePrivateDataIdentity;
 
 // MARK: Profile
-export const profileIdentity = firestoreModelIdentity('profile');
+export const profileIdentity = firestoreModelIdentity('profile', 'pr');
 
 export interface Profile extends UserRelatedById {
   /**
@@ -60,7 +60,7 @@ export function profileFirestoreCollection(firestoreContext: FirestoreContext): 
 }
 
 // MARK: Profile Private Data
-export const profilePrivateDataIdentity = firestoreModelIdentity('profilePrivate');
+export const profilePrivateDataIdentity = firestoreModelIdentity('profilePrivate', 'prp');
 
 export interface ProfilePrivateData {
   /**
