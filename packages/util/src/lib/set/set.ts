@@ -1,4 +1,4 @@
-import { Maybe } from '../value/maybe';
+import { Maybe } from '../value/maybe.type';
 import { flattenArray } from '../array/array';
 import { asIterable, IterableOrValue, useIterableOrValue } from '../iterable/iterable';
 import { symmetricDifference } from 'extra-set';

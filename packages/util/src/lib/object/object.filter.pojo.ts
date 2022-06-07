@@ -1,4 +1,4 @@
-import { Maybe } from '../value/maybe';
+import { Maybe } from '../value/maybe.type';
 import { filterMaybeValues } from '../array/array.value';
 import { filterKeyValueTuplesFunction, FilterKeyValueTuplesInput, filterKeyValueTuplesInputToFilter, KeyValueTuple, KeyValueTupleFilter, KeyValueTypleValueFilter } from './object.filter.tuple';
 

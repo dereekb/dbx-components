@@ -37,7 +37,7 @@ export type TransformSingleStringFunction = MapFunction<string, string>;
 export type TransformStringsFunction = MapFunction<string[], string[]>;
 
 export function transformStrings(config: TransformStringsConfig): TransformStringsFunction {
-  let transform: TransformStringsFunction = config.transform ? mapArrayFunction(config.transform) : config.toLowercase ? arrayToLowercase : config.toUppercase ? arrayToUppercase : mapIdentityFunction();
+  const transform: TransformStringsFunction = config.transform ? mapArrayFunction(config.transform) : config.toLowercase ? arrayToLowercase : config.toUppercase ? arrayToUppercase : mapIdentityFunction();
   return transform;
 }
 

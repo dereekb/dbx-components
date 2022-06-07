@@ -1,3 +1,6 @@
+/**
+ * Contains a reference to a filter object.
+ */
 export interface Filter<F> {
   filter?: F;
 }

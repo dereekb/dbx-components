@@ -1,4 +1,4 @@
-import { Maybe } from '../value/maybe';
+import { Maybe } from '../value/maybe.type';
 import { range, filterMaybeValuesFn } from '../array';
 import { StoredDataStorageKey } from './storage';
 

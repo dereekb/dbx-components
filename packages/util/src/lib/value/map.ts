@@ -1,5 +1,5 @@
 import { build } from './build';
-import { Maybe } from './maybe';
+import { Maybe } from './maybe.type';
 
 /**
  * Converts one value to another.

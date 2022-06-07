@@ -1,4 +1,4 @@
-import { Maybe } from '../value/maybe';
+import { Maybe } from '../value/maybe.type';
 
 /**
  * A valid ISO8601 formatted date string.

@@ -1,5 +1,5 @@
 import { setContainsAllValues } from '../set/set';
-import { Maybe } from '../value/maybe';
+import { Maybe } from '../value/maybe.type';
 
 /**
  * An application role.

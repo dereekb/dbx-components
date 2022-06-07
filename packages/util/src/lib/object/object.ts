@@ -1,7 +1,4 @@
 import { FieldOfType } from '../key';
-import { hasValueOrNotEmpty, Maybe } from '../value/maybe';
-import { filterMaybeValues } from '../array/array.value';
-import { FilterFunction, invertFilter } from '../filter/filter';
 
 export type EmptyObject = Record<string, never>;
 
@@ -33,30 +30,4 @@ export function mapToObject<T, K extends PropertyKey>(map: Map<K, T>): { [key: P
   });
 
   return object;
-}
-
-// MARK:
-/**
- * Recursively function that returns true if the input is not an object or if every key on the object is empty.
- *
- * @param obj
- */
-export function objectIsEmpty<T extends object>(obj: Maybe<T>): boolean {
-  if (obj != null && typeof obj === 'object') {
-    const keys = Object.keys(obj);
-
-    if (keys.length > 0) {
-      for (let i = 0; i < keys.length; i += 1) {
-        const key = keys[i];
-        const value = (obj as T)[key as keyof T];
-        const isEmpty = typeof obj === 'object' ? objectIsEmpty<object>(value as unknown as Maybe<object>) : !hasValueOrNotEmpty(value);
-
-        if (!isEmpty) {
-          return false;
-        }
-      }
-    }
-  }
-
-  return true;
 }

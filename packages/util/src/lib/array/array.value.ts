@@ -1,4 +1,4 @@
-import { Maybe, MaybeNot } from '../value/maybe';
+import { Maybe, MaybeNot } from '../value/maybe.type';
 
 export function filterMaybeValues<T>(values: Maybe<Maybe<T>[]>): T[] {
   if (values) {

@@ -4,7 +4,8 @@
 import { asGetter, Getter, GetterOrValue } from '../getter/getter';
 import { findPOJOKeys } from '../object/object.filter.pojo';
 import { filterKeyValueTuples, KeyValueTypleValueFilter } from '../object/object.filter.tuple';
-import { isMaybeSo, Maybe, MaybeSo } from '../value/maybe';
+import { Maybe, MaybeSo } from '../value/maybe.type';
+import { isMaybeSo } from '../value/maybe';
 import { ApplyMapFunctionWithOptions, MapFunction } from '../value/map';
 import { MergeReplace, ReplaceType } from '../type';
 import { mapObjectMap } from '../object';

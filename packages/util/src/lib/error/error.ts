@@ -1,5 +1,5 @@
 import { BaseError } from 'make-error';
-import { Maybe } from '../value/maybe';
+import { Maybe } from '../value/maybe.type';
 
 /**
  * A unique identifier for a specific error.

@@ -1,4 +1,5 @@
 import { FilterFunction, invertFilter } from '../filter/filter';
+import { hasValueOrNotEmpty, hasValueOrNotEmptyObject } from '../value/maybe';
 
 // MARK: For Each
 export type ForEachKeyValueTupleFunction<T extends object = object, K extends keyof T = keyof T> = (tuple: KeyValueTuple<T, K>, index: number) => void;
@@ -26,7 +27,7 @@ export type KeyValueTuple<T extends object = object, K extends keyof T = keyof T
 export type FilterKeyValueTuplesFunction<T extends object = object, K extends keyof T = keyof T> = (obj: T) => KeyValueTuple<T, K>[];
 
 export function filterKeyValueTuplesFunction<T extends object = object, K extends keyof T = keyof T>(filter?: FilterKeyValueTuplesInput<T, K>): FilterKeyValueTuplesFunction<T, K> {
-  if (filter) {
+  if (filter != null) {
     const filterFn = filterKeyValueTupleFunction<T, K>(filter);
 
     return (obj: T) => {
@@ -59,7 +60,23 @@ export enum KeyValueTypleValueFilter {
   /**
    * All values that are falsy.
    */
-  FALSY = 3
+  FALSY = 3,
+  /**
+   * All values that are empty.
+   */
+  EMPTY = 4,
+  /**
+   * All values that are empty. Objects that have no keys are considered empty too.
+   */
+  EMPTY_STRICT = 5,
+  /**
+   * All values that are falsy or empty.
+   */
+  FALSY_AND_EMPTY = 6,
+  /**
+   * All values that are falsy or empty or an empty objects.
+   */
+  FALSY_AND_EMPTY_STRICT = 7
 }
 
 export interface KeyValueTupleFilter<T extends object = object, K extends keyof T = keyof T> {
@@ -75,17 +92,17 @@ export interface KeyValueTupleFilter<T extends object = object, K extends keyof 
  * @returns
  */
 export function filterKeyValueTuplesInputToFilter<T extends object = object, K extends keyof T = keyof T>(input: FilterKeyValueTuplesInput<T, K>): KeyValueTupleFilter<T, K> {
-  if (typeof input === 'number') {
-    return { valueFilter: input };
-  } else {
+  if (typeof input === 'object') {
     return input;
+  } else {
+    return { valueFilter: input };
   }
 }
 
 export type FilterKeyValueTupleFunction<T extends object = object, K extends keyof T = keyof T> = FilterFunction<KeyValueTuple<T, K>>;
 
-export function filterKeyValueTupleFunction<T extends object = object, K extends keyof T = keyof T>(input: FilterKeyValueTuplesInput<T, K>): FilterKeyValueTupleFunction<T, K> {
-  const filter = typeof input === 'object' ? (input as KeyValueTupleFilter<T, K>) : { valueFilter: input };
+export function filterKeyValueTupleFunction<T extends object = object, K extends keyof T = keyof T>(inputFilter: FilterKeyValueTuplesInput<T, K>): FilterKeyValueTupleFunction<T, K> {
+  const filter = filterKeyValueTuplesInputToFilter(inputFilter);
   const { valueFilter: type, invertFilter: inverseFilter = false, keysFilter }: KeyValueTupleFilter<T, K> = filter;
 
   let filterFn: FilterKeyValueTupleFunction<T, K>;
@@ -99,6 +116,18 @@ export function filterKeyValueTupleFunction<T extends object = object, K extends
       break;
     case KeyValueTypleValueFilter.FALSY:
       filterFn = ([, x]) => Boolean(x);
+      break;
+    case KeyValueTypleValueFilter.EMPTY:
+      filterFn = ([, x]) => hasValueOrNotEmpty(x);
+      break;
+    case KeyValueTypleValueFilter.EMPTY_STRICT:
+      filterFn = ([, x]) => hasValueOrNotEmptyObject(x);
+      break;
+    case KeyValueTypleValueFilter.FALSY_AND_EMPTY:
+      filterFn = ([, x]) => Boolean(x) && hasValueOrNotEmpty(x);
+      break;
+    case KeyValueTypleValueFilter.FALSY_AND_EMPTY_STRICT:
+      filterFn = ([, x]) => Boolean(x) && hasValueOrNotEmptyObject(x);
       break;
     case KeyValueTypleValueFilter.NONE:
     default:

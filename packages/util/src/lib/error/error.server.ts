@@ -1,4 +1,4 @@
-import { Maybe } from '../value/maybe';
+import { Maybe } from '../value/maybe.type';
 import { ReadableError, ReadableDataError, StringErrorCode, CodedError } from './error';
 
 /**

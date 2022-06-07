@@ -1,4 +1,4 @@
-import { Maybe } from '../value/maybe';
+import { Maybe } from '../value/maybe.type';
 
 export interface PerformTaskLoopConfig<O> {
   next: (i: number, prev: Maybe<O>) => Promise<O>;
