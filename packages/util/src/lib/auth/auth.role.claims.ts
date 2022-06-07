@@ -1,5 +1,7 @@
 import { AuthRole, AuthRoleSet } from './auth.role';
-import { filterFromPOJO, forEachKeyValue, KeyValueTypleValueFilter, objectHasKey } from '../object/object';
+import { objectHasKey } from '../object/object';
+import { filterFromPOJO, forEachKeyValueOnPOJOFunction } from '../object/object.filter.pojo';
+import { forEachKeyValue, KeyValueTypleValueFilter } from '../object/object.filter.tuple';
 import { objectToTuples } from '../object/object.map';
 import { ArrayOrValue, asArray } from '../array/array';
 import { addToSet, setContainsAllValues } from '../set';
@@ -197,20 +199,20 @@ export function authRoleClaimsService<T extends AuthClaimsObject>(config: AuthRo
     return claims;
   };
 
+  const forEachKeyValueAddToSet = forEachKeyValueOnPOJOFunction<AuthClaimsUpdate<T>, Set<string>>({
+    forEach: ([claimsKey, value], i, claims, roles: Set<string>) => {
+      const entry = authRoleMap.get(claimsKey as string);
+
+      if (entry != null) {
+        const decodedRoles = entry.decodeRolesFromValue(value);
+        addToSet(roles, decodedRoles);
+      }
+    }
+  });
+
   const toRoles: AuthRoleRolesToClaimsFunction<T> = (claims: AuthClaimsUpdate<T>) => {
     const roles = new Set<string>();
-
-    forEachKeyValue(claims, {
-      forEach: ([claimsKey, value]) => {
-        const entry = authRoleMap.get(claimsKey as string);
-
-        if (entry != null) {
-          const decodedRoles = entry.decodeRolesFromValue(value);
-          addToSet(roles, decodedRoles);
-        }
-      }
-    });
-
+    forEachKeyValueAddToSet(claims, roles);
     return roles;
   };
 
