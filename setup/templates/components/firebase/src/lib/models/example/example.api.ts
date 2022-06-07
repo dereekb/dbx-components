@@ -26,7 +26,9 @@ export const exampleFunctionTypeConfigMap: FirebaseFunctionTypeConfigMap<Example
   [exampleSetUsernameKey]: null
 }
 
-export type ExampleModelCrudFunctionsConfig = {};
+export type ExampleModelCrudFunctionsConfig = {
+  example: null
+};
 
 export const exampleModelCrudFunctionsConfig: ModelFirebaseCrudFunctionConfigMap<ExampleModelCrudFunctionsConfig, ExampleTypes> = {};
 
