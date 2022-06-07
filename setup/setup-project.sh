@@ -34,7 +34,8 @@ SOURCE_BRANCH=${DBX_SETUP_PROJECT_BRANCH:-"main"}     # develop or main
 NAME=$FIREBASE_PROJECT_ID
 PROJECT_NAME=$FIREBASE_PROJECT_ID
 ANGULAR_APP_PREFIX=$FIREBASE_PROJECT_ID
-DBX_COMPONENTS_VERSION=${DBX_SETUP_PROJECT_COMPONENTS_VERSION:-"@^7.1.0"}
+DBX_COMPONENTS_VERSION=${DBX_SETUP_PROJECT_COMPONENTS_VERSION:-"^7.1.0"}
+NX_VERSION=${NX_SETUP_VERSIONS:-"14.1.8"} # NOTE: 14.1.8 is the last Angular 13 version
 
 # The app prefix is used in Angular and Nest classes as the prefix for classes/components
 APP_CODE_PREFIX="$(tr '[:lower:]' '[:upper:]' <<< ${INPUT_CODE_PREFIX:0:1})${INPUT_CODE_PREFIX:1}"
@@ -102,8 +103,7 @@ cd $PARENT_DIRECTORY
 
 # Create NX Workspace
 echo "Creating new dbx-components project in folder \"$NAME\" with project name \"$PROJECT_NAME\"..."
-# NOTE: 14.1.8 is the last Angular 13 version
-npx --yes create-nx-workspace@14.1.8 --interactive=false --style=scss --preset=angular --name=$NAME --appName=$PROJECT_NAME --packageManager=npm --nxCloud=$IS_NOT_CI_TEST
+npx --yes create-nx-workspace@$NX_VERSION --interactive=false --style=scss --preset=angular --name=$NAME --appName=$PROJECT_NAME --packageManager=npm --nxCloud=$IS_NOT_CI_TEST
 
 # Enter Folder
 echo "Entering new project folder, \"$NAME\""
@@ -121,14 +121,16 @@ npx --yes json -I -f package.json -e "this.scripts={ postinstall: 'ngcc --proper
 git add --all
 git commit --no-verify -m "checkpoint: init nx-cloud"
 
+# NOTE: Commented out since we
 # update nx to the latest version and commit
-npx -y nx migrate latest
-npm install
-
-if test -f "migrations.json"; then   # migrate if it is available
-  npx -y nx migrate --run-migrations
-  rm migrations.json                 # remove migrations file
-fi
+#
+#npx -y nx@$NX_VERSION migrate latest
+#npm install
+#
+#if test -f "migrations.json"; then   # migrate if it is available
+#  npx -y nx migrate --run-migrations
+#  rm migrations.json                 # remove migrations file
+#fi
 
 npx --yes json -I -f nx.json -e "this.workspaceLayout = { appsDir: '$APPS_FOLDER', libsDir: '$COMPONENTS_FOLDER' }";
 
@@ -137,20 +139,20 @@ git commit --no-verify -m "checkpoint: updated nx to latest version"
 
 # Add Nest App - https://nx.dev/packages/nest
 npm install -D @nrwl/nest           # install the nest generator
-npx -y nx g @nrwl/nest:app $API_APP_NAME
+npx -y nx@$NX_VERSION g @nrwl/nest:app $API_APP_NAME
 
 git add --all
 git commit --no-verify -m "checkpoint: added nest app"
 
 # Add App Components
-npx -y nx g @nrwl/angular:library --name=$ANGULAR_COMPONENTS_NAME --buildable --publishable --importPath $ANGULAR_COMPONENTS_NAME --standaloneConfig=true --simpleModuleName=true
+npx -y nx@$NX_VERSION g @nrwl/angular:library --name=$ANGULAR_COMPONENTS_NAME --buildable --publishable --importPath $ANGULAR_COMPONENTS_NAME --standaloneConfig=true --simpleModuleName=true
 
 git add --all
 git commit --no-verify -m "checkpoint: added angular components package"
 
 # Add Firebase Component
 npm install -D @nrwl/node
-npx -y nx g @nrwl/node:library --name=$FIREBASE_COMPONENTS_NAME --buildable --publishable --importPath $FIREBASE_COMPONENTS_NAME
+npx -y nx@$NX_VERSION g @nrwl/node:library --name=$FIREBASE_COMPONENTS_NAME --buildable --publishable --importPath $FIREBASE_COMPONENTS_NAME
 
 git add --all
 git commit --no-verify -m "checkpoint: added firebase components package"
@@ -217,7 +219,7 @@ git add --all
 git commit --no-verify -m "checkpoint: added firebase configuration"
 
 # Install npm dependencies
-npm install @dereekb/dbx-analytics$DBX_COMPONENTS_VERSION @dereekb/dbx-web$DBX_COMPONENTS_VERSION @dereekb/dbx-form$DBX_COMPONENTS_VERSION @dereekb/firebase$DBX_COMPONENTS_VERSION @dereekb/firebase-server$DBX_COMPONENTS_VERSION @dereekb/dbx-firebase$DBX_COMPONENTS_VERSION --force  # TODO: Remove force once possible.
+npm install @dereekb/dbx-analytics@$DBX_COMPONENTS_VERSION @dereekb/dbx-web@$DBX_COMPONENTS_VERSION @dereekb/dbx-form@$DBX_COMPONENTS_VERSION @dereekb/firebase@$DBX_COMPONENTS_VERSION @dereekb/firebase-server@$DBX_COMPONENTS_VERSION @dereekb/dbx-firebase@$DBX_COMPONENTS_VERSION --force  # TODO: Remove force once possible.
 npm install -D firebase-tools@^11.0.0 @ngrx/store-devtools@^13.0.0 @firebase/rules-unit-testing@^2.0.2 firebase-functions-test@2.0.2 envfile env-cmd
 
 git add --all
@@ -631,8 +633,8 @@ then
   echo "Finished setup in CI."
 else
   echo "Performing test build..."
-  npx -y nx build $ANGULAR_APP_NAME
-  npx -y nx build $API_APP_NAME
+  npx -y nx@$NX_VERSION build $ANGULAR_APP_NAME
+  npx -y nx@$NX_VERSION build $API_APP_NAME
 
   echo "Completed $ANGULAR_APP_NAME project setup."
   echo "Project was created at \"$(pwd)\""
