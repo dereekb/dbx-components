@@ -34,7 +34,7 @@ SOURCE_BRANCH=${DBX_SETUP_PROJECT_BRANCH:-"main"}     # develop or main
 NAME=$FIREBASE_PROJECT_ID
 PROJECT_NAME=$FIREBASE_PROJECT_ID
 ANGULAR_APP_PREFIX=$FIREBASE_PROJECT_ID
-DBX_COMPONENTS_VERSION=${DBX_SETUP_PROJECT_COMPONENTS_VERSION:-"@^5.0.0"}
+DBX_COMPONENTS_VERSION=${DBX_SETUP_PROJECT_COMPONENTS_VERSION:-"@^7.1.0"}
 
 # The app prefix is used in Angular and Nest classes as the prefix for classes/components
 APP_CODE_PREFIX="$(tr '[:lower:]' '[:upper:]' <<< ${INPUT_CODE_PREFIX:0:1})${INPUT_CODE_PREFIX:1}"
@@ -102,7 +102,8 @@ cd $PARENT_DIRECTORY
 
 # Create NX Workspace
 echo "Creating new dbx-components project in folder \"$NAME\" with project name \"$PROJECT_NAME\"..."
-npx --yes create-nx-workspace --interactive=false --style=scss --preset=angular --name=$NAME --appName=$PROJECT_NAME --packageManager=npm --nxCloud=$IS_NOT_CI_TEST
+# NOTE: 14.1.8 is the last Angular 13 version
+npx --yes create-nx-workspace@14.1.8 --interactive=false --style=scss --preset=angular --name=$NAME --appName=$PROJECT_NAME --packageManager=npm --nxCloud=$IS_NOT_CI_TEST
 
 # Enter Folder
 echo "Entering new project folder, \"$NAME\""
@@ -217,7 +218,7 @@ git commit --no-verify -m "checkpoint: added firebase configuration"
 
 # Install npm dependencies
 npm install @dereekb/dbx-analytics$DBX_COMPONENTS_VERSION @dereekb/dbx-web$DBX_COMPONENTS_VERSION @dereekb/dbx-form$DBX_COMPONENTS_VERSION @dereekb/firebase$DBX_COMPONENTS_VERSION @dereekb/firebase-server$DBX_COMPONENTS_VERSION @dereekb/dbx-firebase$DBX_COMPONENTS_VERSION --force  # TODO: Remove force once possible.
-npm install -D firebase-tools @ngrx/store-devtools @firebase/rules-unit-testing firebase-functions-test@2.0.2 envfile env-cmd
+npm install -D firebase-tools@^11.0.0 @ngrx/store-devtools@^13.0.0 @firebase/rules-unit-testing@^2.0.2 firebase-functions-test@2.0.2 envfile env-cmd
 
 git add --all
 git commit --no-verify -m "checkpoint: added @dereekb dependencies"
