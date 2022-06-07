@@ -1,5 +1,5 @@
-import { MaybeMap, ModelFieldConversions, makeModelMapFunctions, Maybe, ApplyMapFunctionWithOptions, ModelConversionOptions, ModelFieldConversionsConfig, modelFieldConversions, TypedMappedModelData, ModifierFunctionRef, ModifierFunction, ArrayOrValue, ModelModifier, modifyModelMapFunctions, PartialModelModifier } from '@dereekb/util';
-import { PartialWithFieldValue, SnapshotOptions, SetOptions, WithFieldValue, DocumentSnapshot, FirestoreDataConverter, SetOptionsMerge, SetOptionsMergeFields, asTopLevelFieldPaths, DocumentReference } from '../types';
+import { MaybeMap, ModelFieldConversions, makeModelMapFunctions, Maybe, ApplyMapFunctionWithOptions, ModelConversionOptions, ModelFieldConversionsConfig, modelFieldConversions, TypedMappedModelData, ArrayOrValue, modifyModelMapFunctions, PartialModelModifier } from '@dereekb/util';
+import { PartialWithFieldValue, SnapshotOptions, SetOptions, WithFieldValue, DocumentSnapshot, FirestoreDataConverter, SetOptionsMerge, SetOptionsMergeFields, asTopLevelFieldPaths } from '../types';
 
 // MARK: Type
 /**

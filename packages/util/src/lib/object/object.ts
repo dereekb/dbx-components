@@ -31,3 +31,15 @@ export function mapToObject<T, K extends PropertyKey>(map: Map<K, T>): { [key: P
 
   return object;
 }
+
+export type CopyObjectFunction<T> = (input: T) => T;
+
+/**
+ * Creates a shallow copy of an object using the spread operator.
+ *
+ * @param input
+ * @returns
+ */
+export function copyObject<T extends object>(input: T): T {
+  return { ...input };
+}

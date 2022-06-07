@@ -87,7 +87,7 @@ export function where(fieldPath: unknown, opStr: WhereFilterOp, value: unknown):
 // MARK: WhereDocumentId
 export const FIRESTORE_WHERE_DOCUMENT_ID_QUERY_CONSTRAINT_TYPE = 'where_doc_id';
 
-export interface WhereDocumentIdQueryConstraintData extends Omit<WhereQueryConstraintData, 'fieldPath'> {}
+export type WhereDocumentIdQueryConstraintData = Omit<WhereQueryConstraintData, 'fieldPath'>;
 
 export function whereDocumentId(opStr: WhereFilterOp, value: unknown): FirestoreQueryConstraint<WhereDocumentIdQueryConstraintData> {
   return firestoreQueryConstraint(FIRESTORE_WHERE_DOCUMENT_ID_QUERY_CONSTRAINT_TYPE, { opStr, value });

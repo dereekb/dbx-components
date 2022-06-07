@@ -1,6 +1,7 @@
-import { ISO8601DateString, modelFieldMapFunctions } from '@dereekb/util';
+import { ISO8601DateString, Maybe, modelFieldMapFunctions, objectHasKey } from '@dereekb/util';
 import { isValid } from 'date-fns';
-import { firestoreDate, firestoreEncodedArray, firestoreField, firestoreUniqueArray, firestoreUniqueKeyedArray, firestoreUniqueStringArray } from './snapshot.field';
+import { FirestoreModelKeyGrantedRoleArrayMap } from '../collection';
+import { firestoreArrayMap, firestoreDate, firestoreEncodedArray, firestoreField, firestoreMap, firestoreModelKeyGrantedRoleArrayMap, firestoreUniqueKeyedArray, firestoreUniqueStringArray } from './snapshot.field';
 
 describe('firestoreField()', () => {
   const defaultValue = -1;
@@ -125,5 +126,60 @@ describe('firestoreEncodedArray()', () => {
     const results = encodedArrayConfig.from.convert(data);
     expect(results.length).toBe(data.length);
     expect(results[0].key).toBe(data[0]);
+  });
+});
+
+describe('firestoreMap()', () => {
+  const firestoreMapConfig = firestoreMap<Maybe<number>, string>();
+
+  it('should filter out empty values from the final map.', () => {
+    const test = {
+      hasValue: 0,
+      isEmpty: null
+    };
+
+    const results = firestoreMapConfig.to.convert(test) as Partial<typeof test>;
+
+    expect(results).toBeDefined();
+    expect(results.hasValue).toBe(test.hasValue);
+    expect(objectHasKey(results, 'hasValue')).toBe(true);
+    expect(objectHasKey(results, 'isEmpty')).toBe(false);
+  });
+});
+
+describe('firestoreArrayMap()', () => {
+  const firestoreArrayMapConfig = firestoreArrayMap<number, string>();
+
+  it('should filter out empty arrays from the final map.', () => {
+    const test = {
+      hasValue: [0],
+      isEmpty: []
+    };
+
+    const results = firestoreArrayMapConfig.to.convert(test) as Partial<typeof test>;
+
+    expect(results).toBeDefined();
+    expect(results.hasValue).toContain(test.hasValue[0]);
+    expect(objectHasKey(results, 'hasValue')).toBe(true);
+    expect(objectHasKey(results, 'isEmpty')).toBe(false);
+  });
+});
+
+describe('firestoreModelKeyGrantedRoleArrayMap()', () => {
+  const firestoreArrayMapConfig = firestoreModelKeyGrantedRoleArrayMap();
+
+  it('should filter out empty arrays from the final map.', () => {
+    const test: FirestoreModelKeyGrantedRoleArrayMap<string> = {
+      amodelpath: ['true', ''],
+      emptymodelpath: []
+    };
+
+    const results = firestoreArrayMapConfig.to.convert(test) as Partial<typeof test>;
+
+    expect(results).toBeDefined();
+    expect(results.amodelpath).toContain('true');
+    expect(results.amodelpath).not.toContain('');
+    expect(objectHasKey(results, 'amodelpath')).toBe(true);
+    expect(objectHasKey(results, 'emptymodelpath')).toBe(false);
   });
 });

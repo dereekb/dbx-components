@@ -8,14 +8,7 @@ import { Maybe, MaybeNot, MaybeSo } from './maybe.type';
  * @param value
  * @returns
  */
-export function hasNonNullValue<T>(value: Maybe<T>): value is T;
-export function hasNonNullValue(value: true): true;
-export function hasNonNullValue(value: false): true;
-export function hasNonNullValue(value: number): true;
-export function hasNonNullValue(value: ''): true;
-export function hasNonNullValue(value: null): false;
-export function hasNonNullValue(value: undefined): false;
-export function hasNonNullValue<T>(value: Maybe<T>): boolean {
+export function hasNonNullValue<T = unknown>(value: Maybe<T>): value is MaybeSo<T> {
   return value != null;
 }
 
@@ -29,16 +22,7 @@ export function hasNonNullValue<T>(value: Maybe<T>): boolean {
  *
  * NaN has undefined behavior.
  */
-export function hasValueOrNotEmpty<T>(value: T): boolean;
-export function hasValueOrNotEmpty(value: 0): true;
-export function hasValueOrNotEmpty(value: true): true;
-export function hasValueOrNotEmpty(value: false): true;
-export function hasValueOrNotEmpty(value: number): true;
-export function hasValueOrNotEmpty(value: ''): false;
-export function hasValueOrNotEmpty(value: {}): true;
-export function hasValueOrNotEmpty(value: null): false;
-export function hasValueOrNotEmpty(value: undefined): false;
-export function hasValueOrNotEmpty(value: unknown): boolean {
+export function hasValueOrNotEmpty<T = unknown>(value: Maybe<T>): value is MaybeSo<T> {
   if (isIterable(value, true)) {
     return !isEmptyIterable(value);
   } else {
@@ -57,20 +41,11 @@ export function hasValueOrNotEmpty(value: unknown): boolean {
  *
  * NaN has undefined behavior.
  */
-export function hasValueOrNotEmptyObject<T>(value: T): boolean;
-export function hasValueOrNotEmptyObject(value: 0): true;
-export function hasValueOrNotEmptyObject(value: true): true;
-export function hasValueOrNotEmptyObject(value: false): true;
-export function hasValueOrNotEmptyObject(value: number): true;
-export function hasValueOrNotEmptyObject(value: ''): false;
-export function hasValueOrNotEmptyObject(value: {}): false;
-export function hasValueOrNotEmptyObject(value: null): false;
-export function hasValueOrNotEmptyObject(value: undefined): false;
-export function hasValueOrNotEmptyObject(value: unknown): boolean {
+export function hasValueOrNotEmptyObject<T = unknown>(value: Maybe<T>): value is MaybeSo<T> {
   if (isIterable(value, true)) {
     return !isEmptyIterable(value);
   } else if (isNotNullOrEmptyString(value)) {
-    return typeof value === 'object' ? !objectHasNoKeys(value as object) : true;
+    return typeof value === 'object' ? !objectHasNoKeys(value as unknown as object) : true;
   } else {
     return false;
   }
@@ -82,11 +57,6 @@ export function hasValueOrNotEmptyObject(value: unknown): boolean {
  * @param value
  * @returns
  */
-export function isStringOrTrue(value: ''): false;
-export function isStringOrTrue(value: false): false;
-export function isStringOrTrue(value: null): false;
-export function isStringOrTrue(value: undefined): false;
-export function isStringOrTrue(value: Maybe<string | boolean>): boolean;
 export function isStringOrTrue(value: Maybe<string | boolean>): boolean {
   return Boolean(value || value !== '');
 }
@@ -97,10 +67,6 @@ export function isStringOrTrue(value: Maybe<string | boolean>): boolean {
  * @param value
  * @returns
  */
-export function isNotNullOrEmptyString<T>(value: ''): false;
-export function isNotNullOrEmptyString<T>(value: null): false;
-export function isNotNullOrEmptyString<T>(value: undefined): false;
-export function isNotNullOrEmptyString<T>(value: Maybe<MaybeNot | '' | T>): value is MaybeSo<T>;
 export function isNotNullOrEmptyString<T>(value: Maybe<MaybeNot | '' | T>): value is MaybeSo<T> {
   return value != null && value !== '';
 }

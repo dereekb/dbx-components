@@ -1,15 +1,32 @@
+import { hasValueOrNotEmpty, hasNonNullValue } from '../value/maybe';
 import { Maybe, MaybeNot } from '../value/maybe.type';
 
+/**
+ * Filters all maybe values from the input array. If a maybe value is input, returns an empty array.
+ *
+ * @param values
+ * @returns
+ */
 export function filterMaybeValues<T>(values: Maybe<Maybe<T>[]>): T[] {
-  if (values) {
-    return values.filter(filterMaybeValuesFn);
+  if (values != null) {
+    return values.filter(hasNonNullValue);
   } else {
     return [];
   }
 }
 
-export function filterMaybeValuesFn<T>(value: Maybe<T>): value is T {
-  return value != null;
+/**
+ * Filters all empty and maybe values from the input array. If a maybe value is input, returns an empty array.
+ *
+ * @param values
+ * @returns
+ */
+export function filterEmptyValues<T>(values: Maybe<Maybe<T>[]>): T[] {
+  if (values != null) {
+    return values.filter(hasValueOrNotEmpty);
+  } else {
+    return [];
+  }
 }
 
 /**

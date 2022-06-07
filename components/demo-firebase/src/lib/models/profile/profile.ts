@@ -1,4 +1,4 @@
-import { firestoreModelIdentity, CollectionReference, AbstractFirestoreDocument, snapshotConverterFunctions, firestoreString, firestoreDate, FirestoreCollection, UserRelatedById, DocumentReferenceRef, FirestoreContext, SingleItemFirestoreCollection, optionalFirestoreString, CollectionGroup, FirestoreCollectionGroup } from '@dereekb/firebase';
+import { firestoreModelIdentity, CollectionReference, AbstractFirestoreDocument, snapshotConverterFunctions, firestoreString, firestoreDate, FirestoreCollection, UserRelatedById, FirestoreContext, SingleItemFirestoreCollection, optionalFirestoreString, CollectionGroup, FirestoreCollectionGroup } from '@dereekb/firebase';
 import { GrantedReadRole } from '@dereekb/model';
 import { Maybe } from '@dereekb/util';
 

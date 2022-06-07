@@ -1,6 +1,6 @@
 import { Observable, map } from 'rxjs';
 import { timeHasExpired, unixTimeNumberForNow } from '@dereekb/date';
-import { filterMaybeValuesFn, DataDoesNotExistError, DataIsExpiredError, ReadStoredData, StoredData, StoredDataStorageKey, StoredDataString, Maybe } from '@dereekb/util';
+import { DataDoesNotExistError, DataIsExpiredError, ReadStoredData, StoredData, StoredDataStorageKey, StoredDataString, Maybe, hasNonNullValue } from '@dereekb/util';
 import { StorageAccessor } from './storage.accessor';
 
 // MARK: SimpleStorageAccessor
@@ -153,7 +153,7 @@ export class SimpleStorageAccessor<T> implements StorageAccessor<T> {
               return null;
             }
           })
-          .filter(filterMaybeValuesFn);
+          .filter(hasNonNullValue);
       })
     );
   }
