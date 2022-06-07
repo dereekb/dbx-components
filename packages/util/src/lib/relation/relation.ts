@@ -79,14 +79,16 @@ export interface UpdateMiltiTypeRelationConfig<T> extends UpdateRelationConfig<T
  * For instance, a string collection of keys.
  */
 export class ModelRelationUtility {
-  static modifyStringCollection(current: RelationString[], change: RelationChange, mods: RelationString[]): RelationString[] {
+  static modifyStringCollection(current: Maybe<RelationString[]>, change: RelationChange, mods: RelationString[]): RelationString[] {
     return ModelRelationUtility.modifyCollection(current, change, mods, { readKey: (x) => x, merge: (a, b) => b });
   }
 
-  static modifyCollection<T extends RelationObject>(current: T[], change: RelationChange, mods: T[], config: UpdateRelationConfig<T>): T[];
-  static modifyCollection<T extends RelationObject>(current: T[], change: RelationChange, mods: T[], config: UpdateMiltiTypeRelationConfig<T>): T[];
-  static modifyCollection<T extends RelationObject>(current: T[], change: RelationChange, mods: T[], config: UpdateRelationConfig<T> | UpdateMiltiTypeRelationConfig<T>): T[] {
+  static modifyCollection<T extends RelationObject>(current: Maybe<T[]>, change: RelationChange, mods: T[], config: UpdateRelationConfig<T>): T[];
+  static modifyCollection<T extends RelationObject>(current: Maybe<T[]>, change: RelationChange, mods: T[], config: UpdateMiltiTypeRelationConfig<T>): T[];
+  static modifyCollection<T extends RelationObject>(current: Maybe<T[]>, change: RelationChange, mods: T[], config: UpdateRelationConfig<T> | UpdateMiltiTypeRelationConfig<T>): T[] {
     const { mask, readKey } = config;
+
+    current = current ?? []; //init current if not set.
 
     if (mask) {
       const { included: currentModify, excluded: currentRetain } = separateValues(current, mask);
@@ -232,12 +234,12 @@ export class ModelRelationUtility {
     return ModelRelationUtility.addToCollection(current, updateValues, readKey);
   }
 
-  static addToCollection<T extends RelationObject>(current: T[], add: T[], readKey: ReadRelationKeyFn<T>): T[] {
+  static addToCollection<T extends RelationObject>(current: Maybe<T[]>, add: T[], readKey: ReadRelationKeyFn<T>): T[] {
     current = current ?? [];
     return add?.length ? ModelRelationUtility.removeDuplicates([...add, ...current], readKey) : current; // Will keep any "added" before any existing ones.
   }
 
-  static removeFromCollection<T extends RelationObject>(current: T[], remove: T[], readKey: ReadRelationKeyFn<T>, shouldRemove?: (x: T) => boolean): T[] {
+  static removeFromCollection<T extends RelationObject>(current: Maybe<T[]>, remove: T[], readKey: ReadRelationKeyFn<T>, shouldRemove?: (x: T) => boolean): T[] {
     if (current?.length) {
       if (shouldRemove) {
         const currentKeyPairs = makeKeyPairs(current, readKey);
@@ -261,12 +263,12 @@ export class ModelRelationUtility {
     }
   }
 
-  static removeKeysFromCollection<T extends RelationObject>(current: T[], keysToRemove: string[], readKey: ReadRelationKeyFn<T>): T[] {
+  static removeKeysFromCollection<T extends RelationObject>(current: Maybe<T[]>, keysToRemove: string[], readKey: ReadRelationKeyFn<T>): T[] {
     return ModelRelationUtility.removeDuplicates(current, readKey, keysToRemove);
   }
 
-  static removeDuplicates<T>(relations: T[], readKey: ReadRelationKeyFn<T>, additionalKeys: string[] = []): T[] {
-    return findUnique(relations, readKey, additionalKeys);
+  static removeDuplicates<T>(relations: Maybe<T[]>, readKey: ReadRelationKeyFn<T>, additionalKeys: string[] = []): T[] {
+    return relations?.length ? findUnique(relations, readKey, additionalKeys) : [];
   }
 
   // MARK: Internal Utility

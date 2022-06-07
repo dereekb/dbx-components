@@ -187,10 +187,22 @@ export function firestoreUniqueStringArray(config: FirestoreUniqueStringArrayFie
   });
 }
 
+/**
+ * FirestoreField configuration for an array of ModelKey values.
+ *
+ * @returns
+ */
 export function firestoreModelKeyArray() {
   // firestore model key paths are case-sensitive, so don't transform them.
   return firestoreUniqueStringArray({});
 }
+
+/**
+ * FirestoreField configuration for an array of ModelId values.
+ *
+ * @returns
+ */
+export const firestoreModelIdArray = firestoreModelKeyArray;
 
 export type FirestoreEncodedArrayFieldConfig<T, E extends string | number> = DefaultMapConfiguredFirestoreFieldConfig<T[], E[]> & {
   readonly convert: {
@@ -259,7 +271,7 @@ export function firestoreMap<T, K extends string = string>(config: FirestoreMapF
 }
 
 /**
- * FirestoreField configuration for a map of granted roles, keyed by models.
+ * FirestoreField configuration for a map of granted roles, keyed by model keys.
  *
  * Filters out models with no/null roles by default.
  */
@@ -268,6 +280,13 @@ export function firestoreModelKeyGrantedRoleMap() {
     mapFilter: KeyValueTypleValueFilter.EMPTY
   });
 }
+
+/**
+ * FirestoreField configuration for a map of granted roles, keyed by model ids.
+ *
+ * Filters out models with no/null roles by default.
+ */
+export const firestoreModelIdGrantedRoleMap = firestoreModelKeyGrantedRoleMap;
 
 /**
  * FirestoreField configuration for a map-type object with array values.
@@ -287,7 +306,7 @@ export function firestoreArrayMap<T, K extends string = string>(config: Firestor
 }
 
 /**
- * FirestoreField configuration for a map of granted roles, keyed by models.
+ * FirestoreField configuration for a map of granted roles, keyed by models keys.
  *
  * Filters empty roles/arrays by default.
  */
@@ -296,6 +315,13 @@ export function firestoreModelKeyGrantedRoleArrayMap() {
     mapFieldValues: filterEmptyValues
   });
 }
+
+/**
+ * FirestoreField configuration for a map of granted roles, keyed by models ids.
+ *
+ * Filters empty roles/arrays by default.
+ */
+export const firestoreModelIdGrantedRoleArrayMap = firestoreModelKeyGrantedRoleArrayMap;
 
 // MARK: Deprecated
 export type FirestoreSetFieldConfig<T extends string | number> = DefaultMapConfiguredFirestoreFieldConfig<Set<T>, T[]>;
