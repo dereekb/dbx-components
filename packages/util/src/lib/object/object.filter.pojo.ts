@@ -233,7 +233,7 @@ export function filterFromPOJO<T extends object>(obj: T, config: FilterFromPOJO<
  * @param copy Whether or not to return a copy of the input object. Default is true.
  */
 export type FilterFromPOJOFunction<T> = (input: T) => T;
-export type GeneralFilterFromPOJOFunction = <T>(input: T) => T;
+export type GeneralFilterFromPOJOFunction<X = object> = <T extends X>(input: T) => T;
 
 export function filterFromPOJOFunction<T extends object>({ copy = false, filter: inputFilter = { valueFilter: KeyValueTypleValueFilter.UNDEFINED } }: FilterFromPOJO<T> = {}): FilterFromPOJOFunction<T> {
   const filter = filterKeyValueTuplesInputToFilter<T>(inputFilter);

@@ -1,5 +1,5 @@
-import { mergeObjects, filterFromPOJO } from '@dereekb/util';
-import { FormlyFieldConfig, FormlyTemplateOptions } from '@ngx-formly/core';
+import { mergeObjects, filterFromPOJO, mergeObjectsFunction, filterFromPOJOFunction, FilterKeyValueTuplesInput, GeneralFilterFromPOJOFunction } from '@dereekb/util';
+import { FormlyFieldConfig, FormlyFieldProps } from '@ngx-formly/core';
 
 export interface FieldConfig {
   key: string;
@@ -49,18 +49,27 @@ export function formlyField<T extends FormlyFieldConfig = FormlyFieldConfig>(fie
   return fieldConfig;
 }
 
-export function templateOptionsForFieldConfig<O extends object = object>(fieldConfig: Partial<FieldConfig> & Partial<LabeledFieldConfig> & Partial<AttributesFieldConfig> & Partial<DescriptionFieldConfig>, override?: PartialPotentialFieldConfig & O) {
-  const templateOptions = templateOptionsValueForFieldConfig(fieldConfig, override);
+export function propsForFieldConfig<O extends object = object>(fieldConfig: Partial<FieldConfig> & Partial<LabeledFieldConfig> & Partial<AttributesFieldConfig> & Partial<DescriptionFieldConfig>, override?: PartialPotentialFieldConfig & O) {
+  const props = propsValueForFieldConfig(fieldConfig, override);
 
   return {
-    templateOptions
+    props
   };
 }
 
-export function templateOptionsValueForFieldConfig<T extends FormlyTemplateOptions, O extends object = object>(fieldConfig: PartialPotentialFieldConfig, override?: PartialPotentialFieldConfig & O): Partial<T> {
-  const { label, placeholder, required, readonly, description, autocomplete } = mergeObjects<PartialPotentialFieldConfig>([fieldConfig, override], {
-    keysFilter: ['label', 'placeholder', 'required', 'readonly', 'description', 'autocomplete']
-  });
+export const partialPotentialFieldConfigKeys: (keyof PartialPotentialFieldConfig)[] = ['label', 'placeholder', 'required', 'readonly', 'description', 'autocomplete'];
+export const partialPotentialFieldConfigKeysFilter: FilterKeyValueTuplesInput<PartialPotentialFieldConfig> = {
+  keysFilter: partialPotentialFieldConfigKeys
+};
+
+export const mergePropsValueObjects = mergeObjectsFunction<PartialPotentialFieldConfig>(partialPotentialFieldConfigKeysFilter);
+
+export const filterPartialPotentialFieldConfigValuesFromObject = filterFromPOJOFunction<PartialPotentialFieldConfig>({
+  filter: partialPotentialFieldConfigKeysFilter
+}) as GeneralFilterFromPOJOFunction<PartialPotentialFieldConfig>;
+
+export function propsValueForFieldConfig<T extends FormlyFieldProps, O extends object = object>(fieldConfig: PartialPotentialFieldConfig, override?: PartialPotentialFieldConfig & O): Partial<T> & O {
+  const { label, placeholder, required, readonly, description, autocomplete } = mergePropsValueObjects([fieldConfig, override]);
   const attributes = mergeObjects([fieldConfig.attributes, override?.attributes]);
 
   const result = filterFromPOJO({
@@ -71,7 +80,7 @@ export function templateOptionsValueForFieldConfig<T extends FormlyTemplateOptio
     readonly,
     description,
     attributes
-  }) as T;
+  }) as T & O;
 
   // Apply autocomplete
   if (autocomplete != null) {

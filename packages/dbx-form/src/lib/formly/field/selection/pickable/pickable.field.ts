@@ -1,9 +1,9 @@
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { Maybe } from '@dereekb/util';
 import { Observable, of } from 'rxjs';
-import { LabeledFieldConfig, formlyField, templateOptionsForFieldConfig } from '../../field';
+import { LabeledFieldConfig, formlyField, propsForFieldConfig } from '../../field';
 import { PickableValueFieldDisplayValue } from './pickable';
-import { PickableItemFieldItem, PickableValueFieldsFieldConfig } from './pickable.field.directive';
+import { PickableItemFieldItem, PickableValueFieldsFieldProps } from './pickable.field.directive';
 export { PickableItemFieldItem };
 
 export function filterPickableItemFieldValuesByLabel<T>(filterText: Maybe<string>, values: PickableValueFieldDisplayValue<T>[]): Observable<T[]> {
@@ -23,17 +23,17 @@ export function sortPickableItemsByLabel<T>(chips: PickableItemFieldItem<T>[]): 
   return chips.sort((a, b) => a.itemValue.label.localeCompare(b.itemValue.label));
 }
 
-export interface PickableItemFieldConfig<T = unknown> extends LabeledFieldConfig, PickableValueFieldsFieldConfig<T> {}
+export interface PickableItemFieldConfig<T = unknown> extends LabeledFieldConfig, PickableValueFieldsFieldProps<T> {}
 
 export function pickableItemChipField<T = unknown>(config: PickableItemFieldConfig<T>): FormlyFieldConfig {
   const { key } = config;
   return formlyField({
     key,
     type: 'pickablechipfield',
-    ...templateOptionsForFieldConfig(config, {
+    ...propsForFieldConfig(config, {
+      ...config,
       autocomplete: false
-    }),
-    pickableField: config
+    })
   });
 }
 
@@ -42,9 +42,9 @@ export function pickableItemListField<T = unknown>(config: PickableItemFieldConf
   return formlyField({
     key,
     type: 'pickablelistfield',
-    ...templateOptionsForFieldConfig(config, {
+    ...propsForFieldConfig(config, {
+      ...config,
       autocomplete: false
-    }),
-    pickableField: config
+    })
   });
 }

@@ -48,7 +48,7 @@ export class DbxFormRepeatArrayTypeComponent extends FieldArrayType<DbxFormRepea
   }
 
   get label(): string {
-    return this.field.templateOptions.label ?? (this.field.key as string);
+    return this.field.props.label ?? (this.field.key as string);
   }
 
   get addText(): string {
@@ -60,7 +60,7 @@ export class DbxFormRepeatArrayTypeComponent extends FieldArrayType<DbxFormRepea
   }
 
   get max(): Maybe<number> {
-    return this.field.templateOptions?.maxLength;
+    return this.field.props?.maxLength;
   }
 
   get count(): number {

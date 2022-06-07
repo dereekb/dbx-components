@@ -1,18 +1,14 @@
 import { Component } from '@angular/core';
 import { Maybe } from '@dereekb/util';
-import { FieldTypeConfig, FieldWrapper, FormlyFieldConfig, FormlyTemplateOptions } from '@ngx-formly/core';
+import { FieldWrapper, FormlyFieldConfig } from '@ngx-formly/core';
 
 export interface DbxFormSectionConfig {
   header?: string;
   hint?: string;
 }
 
-export interface DbxFormSectionWrapperTemplateOptions extends FormlyTemplateOptions {
+export interface DbxFormSectionWrapperProps {
   sectionWrapper?: DbxFormSectionConfig;
-}
-
-export interface FormSectionFormlyConfig extends FormlyFieldConfig {
-  templateOptions?: DbxFormSectionWrapperTemplateOptions;
 }
 
 @Component({
@@ -22,12 +18,12 @@ export interface FormSectionFormlyConfig extends FormlyFieldConfig {
     </dbx-section>
   `
 })
-export class DbxFormSectionWrapperComponent extends FieldWrapper<FormSectionFormlyConfig & FieldTypeConfig> {
+export class DbxFormSectionWrapperComponent extends FieldWrapper<FormlyFieldConfig<DbxFormSectionWrapperProps>> {
   get header(): Maybe<string> {
-    return this.to.sectionWrapper?.header;
+    return this.props.sectionWrapper?.header;
   }
 
   get hint(): Maybe<string> {
-    return this.to.sectionWrapper?.hint;
+    return this.props.sectionWrapper?.hint;
   }
 }

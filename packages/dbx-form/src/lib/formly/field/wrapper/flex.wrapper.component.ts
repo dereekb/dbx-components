@@ -1,19 +1,15 @@
 import { Component } from '@angular/core';
 import { ScreenMediaWidthType } from '@dereekb/dbx-web';
 import { Maybe } from '@dereekb/util';
-import { FieldWrapper, FormlyFieldConfig, FormlyTemplateOptions } from '@ngx-formly/core';
+import { FieldWrapper, FormlyFieldConfig } from '@ngx-formly/core';
 
 export interface DbxFlexWrapperConfig {
   breakpoint?: ScreenMediaWidthType;
   relative?: boolean;
 }
 
-export interface DbxFlexWrapperWrapperTemplateOptions extends FormlyTemplateOptions {
+export interface DbxFlexWrapperWrapperProps {
   flexWrapper?: DbxFlexWrapperConfig;
-}
-
-export interface DbxFlexWrapperWrapperConfig extends FormlyFieldConfig {
-  templateOptions?: DbxFlexWrapperWrapperTemplateOptions;
 }
 
 @Component({
@@ -23,9 +19,9 @@ export interface DbxFlexWrapperWrapperConfig extends FormlyFieldConfig {
     </div>
   `
 })
-export class DbxFormFlexWrapperComponent extends FieldWrapper<DbxFlexWrapperWrapperConfig> {
+export class DbxFormFlexWrapperComponent extends FieldWrapper<FormlyFieldConfig<DbxFlexWrapperWrapperProps>> {
   get flexWrapper(): Maybe<DbxFlexWrapperConfig> {
-    return this.to.flexWrapper;
+    return this.props.flexWrapper;
   }
 
   get breakpoint() {

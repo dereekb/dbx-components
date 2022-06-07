@@ -15,7 +15,7 @@ export function testTextField(): FormlyFieldConfig {
   return formlyField({
     key: 'text',
     type: 'input',
-    templateOptions: {
+    props: {
       required: true
     },
     validators: {

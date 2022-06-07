@@ -1,6 +1,5 @@
-import { FormlyFieldConfig } from '@ngx-formly/material/form-field';
 import { Maybe, objectIsEmpty } from '@dereekb/util';
-import { FieldWrapper, FormlyTemplateOptions, FieldTypeConfig } from '@ngx-formly/core';
+import { FieldWrapper, FormlyFieldProps, FormlyFieldConfig } from '@ngx-formly/core';
 import { map, shareReplay, startWith, switchMap, BehaviorSubject, of } from 'rxjs';
 import { Directive, OnDestroy, OnInit } from '@angular/core';
 import { AbstractControl } from '@angular/forms';
@@ -14,18 +13,14 @@ export interface AbstractFormExpandableSectionConfig<T extends object = object> 
   hasValueFn?: (value: T) => boolean;
 }
 
-export interface FormExpandableSectionWrapperTemplateOptions<T extends object = object, S extends AbstractFormExpandableSectionConfig<T> = AbstractFormExpandableSectionConfig<T>> extends FormlyTemplateOptions {
+export interface FormExpandableSectionWrapperFieldProps<T extends object = object, S extends AbstractFormExpandableSectionConfig<T> = AbstractFormExpandableSectionConfig<T>> extends Pick<FormlyFieldProps, 'label'> {
   expandWrapper?: S;
-}
-
-export interface FormExpandableSectionFormlyConfig<T extends object = object, S extends AbstractFormExpandableSectionConfig<T> = AbstractFormExpandableSectionConfig<T>> extends FormlyFieldConfig {
-  templateOptions?: FormExpandableSectionWrapperTemplateOptions<T, S> & FormlyTemplateOptions;
 }
 
 export const DEFAULT_HAS_VALUE_FN = (x: object) => !objectIsEmpty(x);
 
 @Directive()
-export class AbstractFormExpandableSectionWrapperDirective<T extends object = object, S extends AbstractFormExpandableSectionConfig<T> = AbstractFormExpandableSectionConfig<T>> extends FieldWrapper<FormExpandableSectionFormlyConfig<T, S> & FieldTypeConfig> implements OnInit, OnDestroy {
+export class AbstractFormExpandableSectionWrapperDirective<T extends object = object, S extends AbstractFormExpandableSectionConfig<T> = AbstractFormExpandableSectionConfig<T>> extends FieldWrapper<FormlyFieldConfig<FormExpandableSectionWrapperFieldProps<T, S>>> implements OnInit, OnDestroy {
   protected _formControlObs = new BehaviorSubject<Maybe<AbstractControl>>(undefined);
   readonly formControl$ = this._formControlObs.pipe(filterMaybe());
 
@@ -55,7 +50,7 @@ export class AbstractFormExpandableSectionWrapperDirective<T extends object = ob
   );
 
   get expandableSection(): Maybe<S> {
-    return this.to.expandWrapper;
+    return this.props.expandWrapper;
   }
 
   get hasValueFn(): (value: T) => boolean {
@@ -63,13 +58,13 @@ export class AbstractFormExpandableSectionWrapperDirective<T extends object = ob
   }
 
   get expandLabel(): Maybe<string> {
-    let label: Maybe<string> = this.expandableSection?.expandLabel ?? this.field?.templateOptions?.label;
+    let label: Maybe<string> = this.expandableSection?.expandLabel ?? this.field?.props?.label;
 
     if (label == null) {
       const firstFieldGroup = this.field.fieldGroup?.[0];
 
       if (firstFieldGroup) {
-        label = firstFieldGroup.templateOptions?.label ?? (firstFieldGroup.key as string);
+        label = firstFieldGroup.props?.label ?? (firstFieldGroup.key as string);
       }
     }
 

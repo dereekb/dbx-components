@@ -3,21 +3,17 @@ import { Subject } from 'rxjs';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
 import { MatChipInputEvent } from '@angular/material/chips';
-import { AbstractDbxSearchableValueFieldDirective, SearchableValueFieldsFieldConfig, SearchableValueFieldsFormlyFieldConfig } from './searchable.field.directive';
+import { AbstractDbxSearchableValueFieldDirective, SearchableValueFieldsFieldProps } from './searchable.field.directive';
 import { COMMA, ENTER } from '@angular/cdk/keycodes';
 import { skipUntilTimeElapsedAfterLastEmission } from '@dereekb/date';
 import { PrimativeKey } from '@dereekb/util';
 
-export type SearchableChipValueFieldsFieldConfig<T, M = unknown, H extends PrimativeKey = PrimativeKey> = SearchableValueFieldsFieldConfig<T, M, H>;
-
-export interface SearchableChipValueFieldsFormlyFieldConfig<T, M = unknown, H extends PrimativeKey = PrimativeKey> extends SearchableValueFieldsFormlyFieldConfig<T, M, H> {
-  searchableField: SearchableChipValueFieldsFieldConfig<T, M, H>;
-}
+export type SearchableChipValueFieldsFieldProps<T, M = unknown, H extends PrimativeKey = PrimativeKey> = SearchableValueFieldsFieldProps<T, M, H>;
 
 @Component({
   templateUrl: 'searchable.chip.field.component.html'
 })
-export class DbxSearchableChipFieldComponent<T, M = unknown, H extends PrimativeKey = PrimativeKey> extends AbstractDbxSearchableValueFieldDirective<T, M, H, SearchableChipValueFieldsFormlyFieldConfig<T, M, H>> implements OnInit, OnDestroy {
+export class DbxSearchableChipFieldComponent<T, M = unknown, H extends PrimativeKey = PrimativeKey> extends AbstractDbxSearchableValueFieldDirective<T, M, H, SearchableChipValueFieldsFieldProps<T, M, H>> implements OnInit, OnDestroy {
   private _blur = new Subject<void>();
   private _blurSub = new SubscriptionObject();
 
