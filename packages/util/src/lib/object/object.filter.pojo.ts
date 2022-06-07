@@ -1,6 +1,8 @@
 import { Maybe } from '../value/maybe.type';
 import { filterMaybeValues } from '../array/array.value';
 import { filterKeyValueTuplesFunction, FilterKeyValueTuplesInput, filterKeyValueTuplesInputToFilter, KeyValueTuple, KeyValueTupleFilter, KeyValueTypleValueFilter } from './object.filter.tuple';
+import { cachedGetter, Getter } from '../getter';
+import { copyObject } from './object';
 
 // MARK: Object Merging/Overriding
 /**
@@ -8,15 +10,65 @@ import { filterKeyValueTuplesFunction, FilterKeyValueTuplesInput, filterKeyValue
  *
  * @param object
  */
-export function overrideInObject<T extends object>(target: Partial<T>, { from, filter }: { from: Partial<T>[]; filter?: KeyValueTupleFilter<T> }): Partial<T> {
-  const filterToRelevantValuesObject = filterFromPOJOFunction({ copy: false, filter });
+export function overrideInObject<T extends object>(target: Partial<T>, { copy = false, from, filter }: { copy?: boolean; from: Partial<T>[]; filter?: KeyValueTupleFilter<T> }): Partial<T> {
+  return overrideInObjectFunctionFactory({
+    copy,
+    filter,
+    dynamic: true // using only once, so no need to use the cache
+  })(from)(target);
+}
 
-  from.forEach((x) => {
-    const relevantValues = filterToRelevantValuesObject({ ...x } as T);
-    Object.assign(target, relevantValues);
-  });
+export type OverrideInObjectFunction<T> = (target: Partial<T>) => Partial<T>;
+export type OverrideInObjectFunctionFactory<T> = (from: Partial<T>[]) => OverrideInObjectFunction<T>;
 
-  return target;
+export interface OverrideInObjectFunctionFactoryConfig<T extends object> {
+  filter?: KeyValueTupleFilter<T>;
+  /**
+   * Whether or not to return a copy of the input value, rather than change it directly.
+   * If true, a copy of the input object will be returned.
+   * If false, the input object will be modified.
+   *
+   * False by default.
+   */
+  copy?: boolean;
+  /**
+   * Whether or not the template being applied to objects should be recalculated each time.
+   *
+   * This is only necessary if you expect the input targets to change and you want those changes reflected in your copy functions.
+   *
+   * False by default.
+   */
+  dynamic?: boolean;
+}
+
+export function overrideInObjectFunctionFactory<T extends object>({ filter, copy, dynamic = false }: OverrideInObjectFunctionFactoryConfig<T>): OverrideInObjectFunctionFactory<T> {
+  const filterToRelevantValuesObject = filter != null ? filterFromPOJOFunction({ filter, copy: false }) : defaultFilterFromPOJOFunctionNoCopy;
+
+  return (from: Partial<T>[]) => {
+    const rebuildTemplate: Getter<Partial<T>> = () => {
+      const template = {};
+
+      from.forEach((x) => {
+        const relevantValues = filterToRelevantValuesObject({ ...x } as T);
+        Object.assign(template, relevantValues);
+      });
+
+      return template;
+    };
+
+    const templateGetter: Getter<Partial<T>> = dynamic ? rebuildTemplate : cachedGetter(rebuildTemplate);
+
+    return (target: Partial<T>) => {
+      const template = templateGetter();
+
+      if (copy) {
+        target = copyObject(target);
+      }
+
+      Object.assign(target, template);
+      return target;
+    };
+  };
 }
 
 /**
@@ -25,9 +77,24 @@ export function overrideInObject<T extends object>(target: Partial<T>, { from, f
  * @param objects
  */
 export function mergeObjects<T extends object>(objects: Maybe<Partial<T>>[], filter?: KeyValueTupleFilter<T>): Partial<T> {
-  const object: Partial<T> = {};
-  overrideInObject(object, { from: filterMaybeValues(objects), filter });
-  return object;
+  return mergeObjectsFunction(filter)(objects);
+}
+
+/**
+ * Merges all values from the input objects into a single object.
+ *
+ * The order of overrides is kept, so the right-most item in the array will have priority over all objects before it.
+ */
+export type MergeObjectsFunction<T extends object> = (objects: Maybe<Partial<T>>[]) => Partial<T>;
+
+export function mergeObjectsFunction<T extends object>(filter?: KeyValueTupleFilter<T>): MergeObjectsFunction<T> {
+  const overrideFn = overrideInObjectFunctionFactory({
+    filter,
+    copy: false, // blank target object is passed
+    dynamic: true // no need to use cache, as cache won't be used.
+  });
+
+  return (objects: Maybe<Partial<T>>[]) => overrideFn(filterMaybeValues(objects))({});
 }
 
 // MARK: POJO
@@ -191,6 +258,11 @@ export function filterFromPOJOFunction<T extends object>({ copy = false, filter:
     return obj;
   };
 }
+
+/**
+ * Convenience function from filterFromPOJOFunction with copy set to false and using the default filter.
+ */
+export const defaultFilterFromPOJOFunctionNoCopy: FilterFromPOJOFunction<object> = filterFromPOJOFunction({ copy: false });
 
 // MARK: AssignValuesToPOJO
 export function assignValuesToPOJO<T extends object>(target: T, obj: T, filter?: FilterKeyValueTuplesInput<T>): T {

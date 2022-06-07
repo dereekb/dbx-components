@@ -1,7 +1,89 @@
-import { filterUndefinedValues } from '@dereekb/util';
+import { filterUndefinedValues, mergeObjects } from '@dereekb/util';
 import { objectHasKey } from './object';
-import { filterFromPOJO, allNonUndefinedKeys, allMaybeSoKeys, countPOJOKeys, findPOJOKeys } from './object.filter.pojo';
+import { filterFromPOJO, allNonUndefinedKeys, allMaybeSoKeys, countPOJOKeys, findPOJOKeys, overrideInObject } from './object.filter.pojo';
 import { KeyValueTypleValueFilter } from './object.filter.tuple';
+
+describe('overrideInObject', () => {
+  it('should override all non-undefined values.', () => {
+    const target = {
+      override: false,
+      c: 3
+    };
+
+    const otherValues = [
+      {
+        override: true,
+        a: 1,
+        c: undefined as unknown as number // undefined values are ignored by default
+      },
+      {
+        a: 2,
+        b: null // null values are not ignored
+      }
+    ];
+
+    const result = overrideInObject(target, { from: otherValues });
+
+    expect(target).toBe(result);
+    expect(target.override).toBe(otherValues[0].override);
+    expect((target as typeof otherValues[1]).a).toBe(otherValues[1].a);
+    expect((target as typeof otherValues[1]).b).toBe(otherValues[1].b);
+    expect(target.c).toBe(3);
+  });
+
+  describe('with config', () => {
+    describe('copy=true', () => {
+      it('should return a copy.', () => {
+        const target = {
+          override: false
+        };
+
+        const otherValues = [
+          {
+            override: true,
+            a: 1
+          },
+          {
+            a: 2,
+            b: 2
+          }
+        ];
+
+        const result = overrideInObject(target, { copy: true, from: otherValues });
+
+        expect(result).not.toBe(target);
+        expect(target.override).toBe(false);
+        expect(result.override).toBe(otherValues[0].override);
+        expect((result as typeof otherValues[1]).a).toBe(otherValues[1].a);
+        expect((result as typeof otherValues[1]).b).toBe(otherValues[1].b);
+      });
+    });
+  });
+});
+
+describe('mergeObjects', () => {
+  it('should merge the input objects into one', () => {
+    const otherValues = [
+      {
+        override: true,
+        a: 1,
+        b: null as unknown as number
+      },
+      {
+        override: undefined,
+        a: 2,
+        b: 2
+      }
+    ];
+
+    const result = mergeObjects(otherValues);
+
+    expect(result).toBeDefined();
+    expect(result.override).toBe(otherValues[0].override);
+    expect(result.a).toBe(otherValues[1].a);
+    expect(result.b).toBe(otherValues[1].b);
+  });
+});
 
 describe('findPOJOKeys()', () => {
   describe('with config', () => {
