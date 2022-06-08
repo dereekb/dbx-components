@@ -4,7 +4,7 @@ import { PrimativeKey, convertMaybeToArray, findUnique, makeValuesGroupMap, Mayb
 import { Directive, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { FormControl, AbstractControl } from '@angular/forms';
 import { MatInput } from '@angular/material/input';
-import { FieldTypeConfig, FormlyFieldConfig, FormlyFieldProps } from '@ngx-formly/core';
+import { FieldTypeConfig, FormlyFieldProps } from '@ngx-formly/core';
 import { FieldType } from '@ngx-formly/material';
 import { BehaviorSubject, combineLatest, Observable, of, filter, map, debounceTime, distinctUntilChanged, switchMap, startWith, shareReplay, mergeMap, first, delay } from 'rxjs';
 import { PickableValueFieldDisplayFn, PickableValueFieldDisplayValue, PickableValueFieldFilterFn, PickableValueFieldHashFn, PickableValueFieldLoadValuesFn, PickableValueFieldValue } from './pickable';

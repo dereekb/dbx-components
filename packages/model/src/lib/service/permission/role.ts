@@ -45,7 +45,7 @@ export function noAccessRoleMap(): NoAccessRoleMap {
   };
 }
 
-export function isNoAccessRoleMap<T extends string = string>(input: GrantedRoleMap<T> | NoAccessRoleMap): input is NoAccessRoleMap {
+export function isNoAccessRoleMap<R extends string = string>(input: GrantedRoleMap<R> | NoAccessRoleMap): input is NoAccessRoleMap {
   return (input as NoAccessRoleMap)[NO_ACCESS_ROLE_KEY] === true;
 }
 
@@ -59,17 +59,17 @@ export function fullAccessRoleMap(): FullAccessRoleMap {
   };
 }
 
-export function isFullAccessRoleMap<T extends string = string>(input: GrantedRoleMap<T> | FullAccessRoleMap): input is FullAccessRoleMap {
+export function isFullAccessRoleMap<R extends string = string>(input: GrantedRoleMap<R> | FullAccessRoleMap): input is FullAccessRoleMap {
   return (input as FullAccessRoleMap)[FULL_ACCESS_ROLE_KEY] === true;
 }
 
-export type GrantedRoleMap<T extends GrantedRole = string> = NoAccessRoleMap | FullAccessRoleMap | GrantedRoleKeysMap<T>;
+export type GrantedRoleMap<R extends GrantedRole = string> = NoAccessRoleMap | FullAccessRoleMap | GrantedRoleKeysMap<R>;
 
-export type GrantedRoleKeysMap<T extends GrantedRole = string> = {
-  [key in T]?: Maybe<boolean>;
+export type GrantedRoleKeysMap<R extends GrantedRole = string> = {
+  [key in R]?: Maybe<boolean>;
 };
 
-export interface GrantedRoleMapReader<T extends GrantedRole = string> {
+export interface GrantedRoleMapReader<R extends GrantedRole = string> {
   /**
    * Returns true if no access has been given.
    */
@@ -78,35 +78,35 @@ export interface GrantedRoleMapReader<T extends GrantedRole = string> {
   /**
    * Returns true if the role is granted.
    */
-  hasRole(role: T): boolean;
+  hasRole(role: R): boolean;
 
   /**
    * Returns true if the roles are granted.
    */
-  hasRoles(setIncludes: SetIncludesMode, roles: ArrayOrValue<T>): boolean;
+  hasRoles(setIncludes: SetIncludesMode, roles: ArrayOrValue<R>): boolean;
 
   /**
    * Returns true if the map explicitly contains the role.
    */
-  containsRoles(setIncludes: SetIncludesMode, roles: ArrayOrValue<T>): boolean;
+  containsRoles(setIncludes: SetIncludesMode, roles: ArrayOrValue<R>): boolean;
 }
 
-export function grantedRoleMapReader<T extends GrantedRole = string>(map: GrantedRoleMap<T>): GrantedRoleMapReader<T> {
+export function grantedRoleMapReader<R extends GrantedRole = string>(map: GrantedRoleMap<R>): GrantedRoleMapReader<R> {
   return new GrantedRoleMapReaderInstance(map);
 }
 
-export class GrantedRoleMapReaderInstance<T extends GrantedRole = string> implements GrantedRoleMapReader<T> {
-  constructor(private readonly _map: GrantedRoleMap<T>) {}
+export class GrantedRoleMapReaderInstance<R extends GrantedRole = string> implements GrantedRoleMapReader<R> {
+  constructor(private readonly _map: GrantedRoleMap<R>) {}
 
   hasNoAccess(): boolean {
     return (this._map as NoAccessRoleMap)[NO_ACCESS_ROLE_KEY];
   }
 
-  hasRole(role: T): boolean {
+  hasRole(role: R): boolean {
     return this.hasRoles('any', role);
   }
 
-  hasRoles(setIncludes: SetIncludesMode, inputRoles: ArrayOrValue<T>): boolean {
+  hasRoles(setIncludes: SetIncludesMode, inputRoles: ArrayOrValue<R>): boolean {
     if ((this._map as FullAccessRoleMap)[FULL_ACCESS_ROLE_KEY]) {
       return true;
     } else {
@@ -114,7 +114,7 @@ export class GrantedRoleMapReaderInstance<T extends GrantedRole = string> implem
     }
   }
 
-  containsRoles(setIncludes: SetIncludesMode, inputRoles: ArrayOrValue<T>): boolean {
+  containsRoles(setIncludes: SetIncludesMode, inputRoles: ArrayOrValue<R>): boolean {
     const roles = asArray(inputRoles);
 
     if (setIncludes === 'any') {

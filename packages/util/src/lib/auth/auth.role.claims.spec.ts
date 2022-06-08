@@ -1,7 +1,7 @@
 import { AUTH_USER_ROLE, Maybe, objectHasKey } from '@dereekb/util';
 import { containsAllValues, hasDifferentValues } from '../set';
 import { AuthRoleSet, AUTH_ADMIN_ROLE } from './auth.role';
-import { AuthClaimsObject, AuthRoleClaimsFactoryConfig, AuthRoleClaimsService, authRoleClaimsService, AUTH_ROLE_CLAIMS_DEFAULT_CLAIM_VALUE, AUTH_ROLE_CLAIMS_DEFAULT_EMPTY_VALUE } from './auth.role.claims';
+import { AuthClaimsObject, AuthRoleClaimsService, authRoleClaimsService, AUTH_ROLE_CLAIMS_DEFAULT_CLAIM_VALUE, AUTH_ROLE_CLAIMS_DEFAULT_EMPTY_VALUE } from './auth.role.claims';
 
 type TestClaims = {
   test: string;
