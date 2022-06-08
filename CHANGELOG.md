@@ -2,6 +2,26 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [7.3.0](https://github.com/dereekb/dbx-components/compare/v7.2.0-dev...v7.3.0) (2022-06-08)
+
+
+### Bug Fixes
+
+* fixed issue with example crud functions declaration ([8cb0aac](https://github.com/dereekb/dbx-components/commit/8cb0aac5b744b7f2b8f1e07b3fa432b75d747a1e))
+* locked nx version in setup-project ([25a30ed](https://github.com/dereekb/dbx-components/commit/25a30ed089376e1c99d06424f46039479798eb5c))
+* versions bump ([3a1a6cf](https://github.com/dereekb/dbx-components/commit/3a1a6cf5e594a9cd8dfb504fc2e14f561abe8413))
+
+
+### Features
+
+* added additional KeyValueTypleValueFilter values ([715b615](https://github.com/dereekb/dbx-components/commit/715b6150ee21629667c26c8c90745bb969937482))
+* added FirestoreMap, FirestoreArrayMap snapshot fields ([bd23fd3](https://github.com/dereekb/dbx-components/commit/bd23fd372e3f2180980d7aec9c1b6ee1ec2bb3c7))
+* added function builders for object filters ([c01db20](https://github.com/dereekb/dbx-components/commit/c01db2045412d513ae804f9a2d6154a267aae7cb))
+* added overrideInObjectFunctionFactory, mergeObjectsFunction ([4ea7d65](https://github.com/dereekb/dbx-components/commit/4ea7d6569e6aed0838cdf7218fd63824ff5a7b98))
+* updated [@ngx-formly](https://github.com/ngx-formly) to 6.0.0-beta.2 ([6f1737a](https://github.com/dereekb/dbx-components/commit/6f1737ab61473497b4c69c097b9f87da3f881c74))
+
+
+
 # [7.2.0](https://github.com/dereekb/dbx-components/compare/v7.1.0-dev...v7.2.0) (2022-06-06)
 
 
