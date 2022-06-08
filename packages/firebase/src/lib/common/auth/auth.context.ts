@@ -1,4 +1,4 @@
-import { AuthClaims, AuthRoleSet, Maybe } from '@dereekb/util';
+import { AuthClaims, AuthClaimsObject, AuthRoleSet, Maybe } from '@dereekb/util';
 import { FirebaseAuthToken } from './auth';
 
 /**
@@ -20,15 +20,29 @@ export interface FirebaseAuthContextInfo {
   /**
    * Returns true if the user is considered a system admin.
    */
-  isAdmin?(): boolean;
+  isAdmin(): boolean;
 
   /**
    * Retrieves the claims in the context.
    */
-  loadClaims(): Promise<AuthClaims>;
+  getClaims<T extends AuthClaimsObject = AuthClaimsObject>(): AuthClaims<T>;
 
   /**
    * The auth roles provided by the token in this context.
+   */
+  getAuthRoles(): AuthRoleSet;
+
+  /**
+   * Retrieves the claims in the context.
+   *
+   * @deprecated Claims are now available synchronously.
+   */
+  loadClaims<T extends AuthClaimsObject = AuthClaimsObject>(): Promise<AuthClaims<T>>;
+
+  /**
+   * The auth roles provided by the token in this context.
+   *
+   * @deprecated Auth role set is now available synchronously.
    */
   loadAuthRoles(): Promise<AuthRoleSet>;
 

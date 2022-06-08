@@ -3,7 +3,7 @@ import { Injectable, Optional } from '@angular/core';
 import { AuthUserState, DbxAuthService, loggedOutObsFromIsLoggedIn, loggedInObsFromIsLoggedIn, AuthUserIdentifier, authUserIdentifier } from '@dereekb/dbx-core';
 import { Auth, authState, User, IdTokenResult, ParsedToken, GoogleAuthProvider, signInWithPopup, AuthProvider, PopupRedirectResolver, signInAnonymously, signInWithEmailAndPassword, UserCredential, FacebookAuthProvider, GithubAuthProvider, TwitterAuthProvider, createUserWithEmailAndPassword } from '@angular/fire/auth';
 import { Observable, timeout, startWith, distinctUntilChanged, shareReplay, map, switchMap, firstValueFrom } from 'rxjs';
-import { AuthClaims, AuthClaimsObject, AuthRoleClaimsService, AuthRoleSet, cachedGetter, Maybe } from '@dereekb/util';
+import { AuthClaims, AuthClaimsObject, AuthRoleClaimsService, AuthRoleSet, AUTH_ADMIN_ROLE, cachedGetter, Maybe } from '@dereekb/util';
 import { AuthUserInfo, authUserInfoFromAuthUser, firebaseAuthTokenFromUser } from '../auth';
 import { sendPasswordResetEmail } from 'firebase/auth';
 import { authUserStateFromFirebaseAuthService } from './firebase.auth.rxjs';
@@ -14,6 +14,10 @@ export abstract class DbxFirebaseAuthServiceDelegate {
   abstract authUserStateObs(dbxFirebaseAuthService: DbxFirebaseAuthService): Observable<AuthUserState>;
   abstract authRolesObs(dbxFirebaseAuthService: DbxFirebaseAuthService): Observable<AuthRoleSet>;
   abstract isOnboarded(dbxFirebaseAuthService: DbxFirebaseAuthService): Observable<boolean>;
+  /**
+   * Whether or not the input roles imply the admin priviledges.
+   */
+  abstract isAdminInAuthRoleSet(authRoleSet: AuthRoleSet): boolean;
   abstract authRoleClaimsService?: Maybe<AuthRoleClaimsService<AuthClaimsObject>>;
 }
 
@@ -26,6 +30,9 @@ export const DEFAULT_DBX_FIREBASE_AUTH_SERVICE_DELEGATE: DbxFirebaseAuthServiceD
   },
   isOnboarded(dbxFirebaseAuthService: DbxFirebaseAuthService): Observable<boolean> {
     return dbxFirebaseAuthService.authUserState$.pipe(map((x) => x === 'user'));
+  },
+  isAdminInAuthRoleSet(authRoleSet: AuthRoleSet): boolean {
+    return authRoleSet.has(AUTH_ADMIN_ROLE);
   }
 };
 
@@ -76,6 +83,7 @@ export class DbxFirebaseAuthService implements DbxAuthService {
   readonly isOnboarded$: Observable<boolean>;
 
   private _authRoleClaimsService?: Maybe<AuthRoleClaimsService<AuthClaimsObject>>;
+  readonly isAdminInAuthRoleSet: (authRoleSet: AuthRoleSet) => boolean;
 
   constructor(readonly firebaseAuth: Auth, @Optional() delegate: DbxFirebaseAuthServiceDelegate) {
     delegate = delegate ?? DEFAULT_DBX_FIREBASE_AUTH_SERVICE_DELEGATE;
@@ -83,6 +91,7 @@ export class DbxFirebaseAuthService implements DbxAuthService {
     this.authRoles$ = delegate.authRolesObs(this);
     this.isOnboarded$ = delegate.isOnboarded(this);
     this._authRoleClaimsService = delegate.authRoleClaimsService;
+    this.isAdminInAuthRoleSet = delegate.isAdminInAuthRoleSet;
   }
 
   rolesForClaims<T extends AuthClaimsObject = AuthClaimsObject>(claims: AuthClaims<T>): AuthRoleSet {
@@ -99,7 +108,18 @@ export class DbxFirebaseAuthService implements DbxAuthService {
   }
 
   getAuthContextInfo(): Promise<Maybe<DbxFirebaseAuthContextInfo>> {
-    return firstValueFrom(this.authUser$).then((user) => (user ? new DbxFirebaseAuthContextInfo(this, user) : undefined));
+    return firstValueFrom(this.authUser$).then((user) => this.loadAuthContextInfoForUser(user));
+  }
+
+  async loadAuthContextInfoForUser(user: Maybe<User>): Promise<Maybe<DbxFirebaseAuthContextInfo>> {
+    let result: Maybe<DbxFirebaseAuthContextInfo>;
+
+    if (user) {
+      const jwtToken: IdTokenResult = await user.getIdTokenResult();
+      result = new DbxFirebaseAuthContextInfo(this, user, jwtToken);
+    }
+
+    return result;
   }
 
   logInWithGoogle(): Promise<UserCredential> {
@@ -162,19 +182,33 @@ export class DbxFirebaseAuthService implements DbxAuthService {
  */
 export class DbxFirebaseAuthContextInfo implements FirebaseAuthContextInfo {
   private _token = cachedGetter(() => firebaseAuthTokenFromUser(this.user));
+  private _roles = cachedGetter(() => this.service.rolesForClaims(this.getClaims()));
+  private _isAdmin = cachedGetter(() => this.service.isAdminInAuthRoleSet(this._roles()));
 
-  constructor(readonly service: DbxFirebaseAuthService, readonly user: User) {}
+  constructor(readonly service: DbxFirebaseAuthService, readonly user: User, readonly jwtToken: IdTokenResult) {}
 
   get uid() {
     return this.user.uid;
   }
 
-  loadClaims(): Promise<AuthClaims<AuthClaimsObject>> {
-    return this.user.getIdTokenResult().then((x) => x.claims as AuthClaimsObject);
+  isAdmin(): boolean {
+    return this._isAdmin();
+  }
+
+  getClaims<T extends AuthClaimsObject = AuthClaimsObject>(): AuthClaims<T> {
+    return this.jwtToken.claims as AuthClaims<T>;
+  }
+
+  getAuthRoles(): AuthRoleSet {
+    return this._roles();
+  }
+
+  loadClaims<T extends AuthClaimsObject = AuthClaimsObject>(): Promise<AuthClaims<T>> {
+    return Promise.resolve(this.getClaims());
   }
 
   loadAuthRoles(): Promise<AuthRoleSet> {
-    return this.loadClaims().then((x) => this.service.rolesForClaims(x));
+    return Promise.resolve(this.getAuthRoles());
   }
 
   get token(): FirebaseAuthToken {
