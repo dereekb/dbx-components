@@ -2,6 +2,20 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [7.5.0](https://github.com/dereekb/dbx-components/compare/v7.4.0-dev...v7.5.0) (2022-06-08)
+
+
+### Bug Fixes
+
+* updated GrantRolesOtherwiseFunction to allow returning Maybe ([552bb9c](https://github.com/dereekb/dbx-components/commit/552bb9c488c0f11aa1aca885d00c5a7c2a199591))
+
+
+### Features
+
+* added UseFunction, MappedUseFunction ([84b6cbe](https://github.com/dereekb/dbx-components/commit/84b6cbe23b7e020ad7de49633642429d7e32f7d4))
+
+
+
 # [7.4.0](https://github.com/dereekb/dbx-components/compare/v7.3.0-dev...v7.4.0) (2022-06-08)
 
 

@@ -49,7 +49,7 @@ export type InModelContextFirebaseModelPermissionService<C, T, D extends Firesto
 // MARK: Utility
 export const grantFullAccessIfAdmin: GeneralGrantRolesIfFunction = grantModelRolesIfAdminFunction(fullAccessRoleMap);
 
-export function grantModelRolesIfAdmin<R extends string = string>(context: FirebaseModelContext, rolesToGrantToAdmin: GetterOrValue<GrantedRoleMap<R>>, otherwise?: () => GrantedRoleMap<R>): GrantedRoleMap<R> {
+export function grantModelRolesIfAdmin<R extends string = string>(context: FirebaseModelContext, rolesToGrantToAdmin: GetterOrValue<GrantedRoleMap<R>>, otherwise?: GrantRolesOtherwiseFunction<R>): GrantedRoleMap<R> {
   return grantModelRolesIfAdminFunction(rolesToGrantToAdmin)(context, otherwise);
 }
 
@@ -94,8 +94,15 @@ export function grantModelRolesOnlyIfFunction<C extends FirebaseModelContext, R 
 /**
  * Grants the configured roles if the decision is made about the context. Otherwise, invokes the otherwise function if available, or returns a NoAccessRoleMap.
  */
-export type GrantRolesIfFunction<R extends string = string, C extends FirebaseModelContext = FirebaseModelContext> = (context: C, otherwise?: Getter<GrantedRoleMap<R>>) => GrantedRoleMap<R>;
-export type GeneralGrantRolesIfFunction = <R extends string = string, C extends FirebaseModelContext = FirebaseModelContext>(context: C, otherwise?: Getter<GrantedRoleMap<R>>) => GrantedRoleMap<R>;
+export type GrantRolesIfFunction<R extends string = string, C extends FirebaseModelContext = FirebaseModelContext> = (context: C, otherwise?: GrantRolesOtherwiseFunction<R>) => GrantedRoleMap<R>;
+export type GeneralGrantRolesIfFunction = <R extends string = string, C extends FirebaseModelContext = FirebaseModelContext>(context: C, otherwise?: GrantRolesOtherwiseFunction<R>) => GrantedRoleMap<R>;
+
+/**
+ * Used as the "else" statement for grantModelRolesIfFunction.
+ *
+ * If no roles are returned, the grantModelRolesIfFunction() will return a NoAccessRoleMap.
+ */
+export type GrantRolesOtherwiseFunction<R extends string = string> = Getter<Maybe<GrantedRoleMap<R>>>;
 
 /**
  * Creates a GrantRolesIfFunction.
@@ -105,9 +112,9 @@ export type GeneralGrantRolesIfFunction = <R extends string = string, C extends 
  * @returns
  */
 export function grantModelRolesIfFunction<C extends FirebaseModelContext, R extends string = string>(grantIf: DecisionFunction<C>, grantedRoles: GetterOrValue<GrantedRoleMap<R>>): GrantRolesIfFunction<R, C> {
-  return (context: C, otherwise: Getter<GrantedRoleMap<R>> = noAccessRoleMap) => {
+  return (context: C, otherwise: GrantRolesOtherwiseFunction<R> = noAccessRoleMap) => {
     const decision = grantIf(context);
-    const results = decision ? getValueFromGetter(grantedRoles) : otherwise();
+    const results = decision ? getValueFromGetter(grantedRoles) : otherwise() ?? noAccessRoleMap();
     return results;
   };
 }
