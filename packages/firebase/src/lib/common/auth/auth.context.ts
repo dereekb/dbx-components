@@ -1,4 +1,4 @@
-import { AuthClaims, AuthClaimsObject, AuthRoleSet, Maybe } from '@dereekb/util';
+import { AuthClaims, AuthClaimsObject, AuthRoleSet, mappedUseFunction, MappedUseFunction, Maybe, UseValue } from '@dereekb/util';
 import { FirebaseAuthToken } from './auth';
 
 /**
@@ -51,3 +51,7 @@ export interface FirebaseAuthContextInfo {
    */
   readonly token: FirebaseAuthToken;
 }
+
+export type UseFirebaseAuthContextInfo<I extends FirebaseAuthContextInfo = FirebaseAuthContextInfo> = UseValue<I>;
+
+export const useContextAuth: MappedUseFunction<FirebaseAuthContext, FirebaseAuthContextInfo> = mappedUseFunction((x) => x.auth);

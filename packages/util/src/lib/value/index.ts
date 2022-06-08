@@ -5,3 +5,4 @@ export * from './maybe.type';
 export * from './maybe';
 export * from './modifier';
 export * from './url';
+export * from './use';
