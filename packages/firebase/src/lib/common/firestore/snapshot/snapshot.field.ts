@@ -1,7 +1,7 @@
 import { GrantedRole } from '@dereekb/model';
 import { FirestoreModelKey } from '../collection/collection';
 import { nowISODateString, toISODateString, toJsDate } from '@dereekb/date';
-import { ModelFieldMapFunctionsConfig, GetterOrValue, Maybe, ModelFieldMapConvertFunction, passThrough, PrimativeKey, ReadKeyFunction, makeFindUniqueFunction, ModelFieldMapFunctionsWithDefaultsConfig, filterMaybeValues, MaybeSo, FindUniqueFunction, FindUniqueStringsTransformConfig, findUniqueTransform, MapFunction, FilterKeyValueTuplesInput, KeyValueTypleValueFilter, filterFromPOJOFunction, copyObject, CopyObjectFunction, mapObjectMapFunction, filterEmptyValues } from '@dereekb/util';
+import { ModelFieldMapFunctionsConfig, GetterOrValue, Maybe, ModelFieldMapConvertFunction, passThrough, PrimativeKey, ReadKeyFunction, makeFindUniqueFunction, ModelFieldMapFunctionsWithDefaultsConfig, filterMaybeValues, MaybeSo, FindUniqueFunction, FindUniqueStringsTransformConfig, findUniqueTransform, MapFunction, FilterKeyValueTuplesInput, KeyValueTypleValueFilter, filterFromPOJOFunction, copyObject, CopyObjectFunction, mapObjectMapFunction, filterEmptyValues, ModelKey } from '@dereekb/util';
 import { FIRESTORE_EMPTY_VALUE } from './snapshot';
 
 export interface BaseFirestoreFieldConfig<V, D = unknown> {
@@ -89,6 +89,9 @@ export function firestoreUID() {
 export function optionalFirestoreUID() {
   return optionalFirestoreString();
 }
+
+export const firestoreModelKey = firestoreString();
+export const firestoreModelId = firestoreString();
 
 export type FirestoreDateFieldConfig = DefaultMapConfiguredFirestoreFieldConfig<Date, string> & {
   saveDefaultAsNow?: boolean;
@@ -275,8 +278,8 @@ export function firestoreMap<T, K extends string = string>(config: FirestoreMapF
  *
  * Filters out models with no/null roles by default.
  */
-export function firestoreModelKeyGrantedRoleMap() {
-  return firestoreMap<GrantedRole, FirestoreModelKey>({
+export function firestoreModelKeyGrantedRoleMap<R extends GrantedRole>() {
+  return firestoreMap<R, FirestoreModelKey>({
     mapFilter: KeyValueTypleValueFilter.EMPTY
   });
 }
@@ -286,7 +289,7 @@ export function firestoreModelKeyGrantedRoleMap() {
  *
  * Filters out models with no/null roles by default.
  */
-export const firestoreModelIdGrantedRoleMap = firestoreModelKeyGrantedRoleMap;
+export const firestoreModelIdGrantedRoleMap: () => FirestoreModelFieldMapFunctionsConfig<FirestoreMapFieldType<ModelKey, string>, FirestoreMapFieldType<ModelKey, string>> = firestoreModelKeyGrantedRoleMap;
 
 /**
  * FirestoreField configuration for a map-type object with array values.
@@ -310,8 +313,8 @@ export function firestoreArrayMap<T, K extends string = string>(config: Firestor
  *
  * Filters empty roles/arrays by default.
  */
-export function firestoreModelKeyGrantedRoleArrayMap() {
-  return firestoreArrayMap<GrantedRole, FirestoreModelKey>({
+export function firestoreModelKeyGrantedRoleArrayMap<R extends GrantedRole>() {
+  return firestoreArrayMap<R, FirestoreModelKey>({
     mapFieldValues: filterEmptyValues
   });
 }
@@ -321,7 +324,7 @@ export function firestoreModelKeyGrantedRoleArrayMap() {
  *
  * Filters empty roles/arrays by default.
  */
-export const firestoreModelIdGrantedRoleArrayMap = firestoreModelKeyGrantedRoleArrayMap;
+export const firestoreModelIdGrantedRoleArrayMap: () => FirestoreModelFieldMapFunctionsConfig<FirestoreMapFieldType<ModelKey[], string>, FirestoreMapFieldType<ModelKey[], string>> = firestoreModelKeyGrantedRoleArrayMap;
 
 // MARK: Deprecated
 export type FirestoreSetFieldConfig<T extends string | number> = DefaultMapConfiguredFirestoreFieldConfig<Set<T>, T[]>;

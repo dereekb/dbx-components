@@ -1,4 +1,4 @@
-import { AUTH_USER_ROLE, Maybe } from '@dereekb/util';
+import { AUTH_USER_ROLE, Maybe, objectHasKey } from '@dereekb/util';
 import { containsAllValues, hasDifferentValues } from '../set';
 import { AuthRoleSet, AUTH_ADMIN_ROLE } from './auth.role';
 import { AuthClaimsObject, AuthRoleClaimsService, authRoleClaimsService, AUTH_ROLE_CLAIMS_DEFAULT_CLAIM_VALUE, AUTH_ROLE_CLAIMS_DEFAULT_EMPTY_VALUE } from './auth.role.claims';
@@ -7,10 +7,12 @@ type TestClaims = {
   test: string;
   u: number;
   m: string;
+  ignoredValue: boolean;
 };
 
 type TestComplexClaims = {
   type: number;
+  ignoredValue: boolean;
 };
 
 describe('authRoleClaimsFactory()', () => {
@@ -40,7 +42,8 @@ describe('authRoleClaimsFactory()', () => {
         },
         m: {
           roles: ['a', 'b', 'c'] // multiple roles applied when m exists.
-        }
+        },
+        ignoredValue: null // set ignored
       };
 
       const service = authRoleClaimsService<TestClaims>(claimsConfig);
@@ -55,6 +58,8 @@ describe('authRoleClaimsFactory()', () => {
         expect(result['test']).toBe(AUTH_ROLE_CLAIMS_DEFAULT_EMPTY_VALUE);
         expect(result['u']).toBe(claimsConfig['u'].value);
         expect(result['m']).toBe(AUTH_ROLE_CLAIMS_DEFAULT_CLAIM_VALUE);
+        expect(result['ignoredValue']).not.toBeDefined();
+        expect(objectHasKey(result, 'ignoredValue')).toBe(false);
       });
 
       it(`should apply the default value for every key in the config that doesn't exist in the roles set.`, () => {
@@ -101,7 +106,8 @@ describe('authRoleClaimsFactory()', () => {
                 return [AUTH_USER_ROLE];
             }
           }
-        }
+        },
+        ignoredValue: null // set ignored
       };
 
       const service = authRoleClaimsService<TestComplexClaims>(claimsConfig);
@@ -115,6 +121,15 @@ describe('authRoleClaimsFactory()', () => {
 
         expect(Object.keys(result).length).toBe(1);
         expect(result.type).toBe(AUTH_ROLE_CLAIMS_DEFAULT_EMPTY_VALUE);
+      });
+
+      it('should have ignored the ignoredValue.', () => {
+        const roles = new Set([]);
+        const result = service.toClaims(roles);
+
+        expect(Object.keys(result).length).toBe(1);
+        expect(result.ignoredValue).not.toBeDefined();
+        expect(objectHasKey(result, 'ignoredValue')).toBe(false);
       });
     });
   });

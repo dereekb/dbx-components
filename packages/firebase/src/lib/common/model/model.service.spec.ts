@@ -282,31 +282,6 @@ describe('firebaseModelsService', () => {
             expect(result.roleMap).toBeDefined();
             expect(isNoAccessRoleMap(result.roleMap)).toBe(true);
           });
-
-          describe('with adminGetsAllowAllRoles=true', () => {
-            beforeEach(() => {
-              (context as any).adminGetsAllowAllRoles = true;
-            });
-
-            it('should return fullAccessor if the user is an admin', async () => {
-              (context as Building<typeof context>).auth = {
-                isAdmin: () => true
-              } as any;
-
-              const result = await mockFirebaseModelServices('mockItem', context).roleMapForModel(item);
-              expect(isFullAccessRoleMap(result.roleMap)).toBe(true);
-            });
-
-            it('should return normal roles if the user is not an admin.', async () => {
-              (context as Building<typeof context>).auth = {
-                uid: 'test',
-                isAdmin: () => false
-              } as any;
-
-              const result = await mockFirebaseModelServices('mockItem', context).roleMapForModel(item);
-              expect(isFullAccessRoleMap(result.roleMap)).toBe(false);
-            });
-          });
         });
       });
     });

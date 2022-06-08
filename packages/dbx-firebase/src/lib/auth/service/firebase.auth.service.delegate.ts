@@ -2,7 +2,7 @@ import { addToSetCopy, AuthClaims, AuthClaimsObject, AuthRoleClaimsService, Auth
 import { map, Observable, switchMap } from 'rxjs';
 import { DbxFirebaseAuthService, DbxFirebaseAuthServiceDelegate, DEFAULT_DBX_FIREBASE_AUTH_SERVICE_DELEGATE } from './firebase.auth.service';
 
-export interface AuthRolesObsWithClaimsServiceConfig<T extends AuthClaimsObject> {
+export interface AuthRolesObsWithClaimsServiceConfig<T extends AuthClaimsObject> extends Partial<Pick<DbxFirebaseAuthServiceDelegate, 'isAdminInAuthRoleSet'>> {
   readonly claimsService: AuthRoleClaimsService<T>;
   /**
    * Whether or not to also add the current AuthUserState value to decoded roles.
@@ -31,6 +31,7 @@ export function defaultDbxFirebaseAuthServiceDelegateWithClaimsService<T extends
     authUserStateObs: DEFAULT_DBX_FIREBASE_AUTH_SERVICE_DELEGATE.authUserStateObs,
     authRolesObs: authRolesObsWithClaimsService(config),
     isOnboarded: DEFAULT_DBX_FIREBASE_AUTH_SERVICE_DELEGATE.isOnboarded,
+    isAdminInAuthRoleSet: config.isAdminInAuthRoleSet ?? DEFAULT_DBX_FIREBASE_AUTH_SERVICE_DELEGATE.isAdminInAuthRoleSet,
     authRoleClaimsService: config.claimsService as unknown as AuthRoleClaimsService<AuthClaimsObject>
   };
 }

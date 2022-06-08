@@ -300,11 +300,14 @@ export abstract class AbstractFirebaseServerAuthService<U extends FirebaseServer
 
     if (auth) {
       const _roles = cachedGetter(() => this.readRoles(auth.token as unknown as AuthClaims));
+      const getClaims = <T extends AuthClaimsObject = AuthClaimsObject>() => auth.token as unknown as AuthClaims<T>;
 
       result = {
         uid: auth.uid,
         isAdmin: () => this.isAdminInRoles(_roles()),
-        loadClaims: () => Promise.resolve(auth.token as unknown as AuthClaims),
+        getClaims,
+        getAuthRoles: _roles,
+        loadClaims: <T extends AuthClaimsObject = AuthClaimsObject>() => Promise.resolve(getClaims<T>()),
         loadAuthRoles: () => Promise.resolve(_roles()),
         token: firebaseAuthTokenFromDecodedIdToken(auth.token)
       };

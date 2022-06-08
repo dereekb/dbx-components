@@ -20,7 +20,7 @@ export type ClearAuthClaimValue = null;
 /**
  * Value in claims.
  */
-export type SimpleAuthClaimValue = string | number;
+export type SimpleAuthClaimValue = string | number | boolean;
 
 /**
  * Value in claims.
@@ -89,8 +89,10 @@ export interface AuthRoleClaimsFactoryConfigEntryEncodeOptions<V extends AuthCla
   decodeRolesFromValue: (value: Maybe<V>) => AuthRole[] | undefined;
 }
 
+export type IgnoreAuthRoleClaimsEntry = null;
+
 export type AuthRoleClaimsFactoryConfig<T extends AuthClaimsObject = AuthClaimsObject> = {
-  [K in keyof T]: AuthRoleClaimsFactoryConfigEntry<T[K]>;
+  [K in keyof T]: AuthRoleClaimsFactoryConfigEntry<T[K]> | IgnoreAuthRoleClaimsEntry;
 };
 
 export interface AuthRoleClaimsFactoryDefaults {
@@ -144,46 +146,48 @@ export function authRoleClaimsService<T extends AuthClaimsObject>(config: AuthRo
     return (entry as AuthRoleClaimsFactoryConfigEntrySimpleOptions).roles != null;
   }
 
-  const tuples: [AuthClaimKey, AuthRoleClaimsServiceConfigMapEntry][] = objectToTuples<AuthRoleClaimsFactoryConfigEntryEncodeOptions>(config as any).map((x) => {
-    const inputEntry = x[1];
-    let entry: AuthRoleClaimsFactoryConfigEntryEncodeOptions;
+  const tuples: [AuthClaimKey, AuthRoleClaimsServiceConfigMapEntry][] = objectToTuples<AuthRoleClaimsFactoryConfigEntry>(config as any)
+    .filter(([, entry]) => entry != null) // skip any ignored/null values
+    .map((x) => {
+      const inputEntry = x[1];
+      let entry: AuthRoleClaimsFactoryConfigEntryEncodeOptions;
 
-    if (isSimpleOptions(inputEntry)) {
-      const expectedValue = inputEntry.value ?? defaultClaimValue;
-      const claimRoles = asArray(inputEntry.roles);
+      if (isSimpleOptions(inputEntry)) {
+        const expectedValue = inputEntry.value ?? defaultClaimValue;
+        const claimRoles = asArray(inputEntry.roles);
 
-      // since checking uses equivalence, the objects will never match equivalence via the === properly.
-      // AuthRoleClaimsFactoryConfigEntryEncodeOptions is likely to be used for these cases unknownways, but this will help avoid unexpected errors.
-      if (typeof expectedValue === 'object') {
-        throw new Error(`failed decoding claims. Expected value to be a string or number. Object isn't supported with simple claims.`);
+        // since checking uses equivalence, the objects will never match equivalence via the === properly.
+        // AuthRoleClaimsFactoryConfigEntryEncodeOptions is likely to be used for these cases unknownways, but this will help avoid unexpected errors.
+        if (typeof expectedValue === 'object') {
+          throw new Error(`failed decoding claims. Expected value to be a string or number. Object isn't supported with simple claims.`);
+        }
+
+        entry = {
+          encodeValueFromRoles: (roles: AuthRoleSet) => {
+            let claimsValue;
+
+            // only set the claims value if all values are present in the claims.
+            if (setContainsAllValues(roles, claimRoles)) {
+              claimsValue = inputEntry.value ?? defaultClaimValue;
+            }
+
+            return claimsValue;
+          },
+          decodeRolesFromValue: (value: Maybe<AuthClaimValue>) => {
+            if (value === expectedValue) {
+              return claimRoles;
+            } else {
+              return [];
+            }
+          }
+        };
+      } else {
+        entry = inputEntry as AuthRoleClaimsFactoryConfigEntryEncodeOptions;
       }
 
-      entry = {
-        encodeValueFromRoles: (roles: AuthRoleSet) => {
-          let claimsValue;
-
-          // only set the claims value if all values are present in the claims.
-          if (setContainsAllValues(roles, claimRoles)) {
-            claimsValue = inputEntry.value ?? defaultClaimValue;
-          }
-
-          return claimsValue;
-        },
-        decodeRolesFromValue: (value: Maybe<AuthClaimValue>) => {
-          if (value === expectedValue) {
-            return claimRoles;
-          } else {
-            return [];
-          }
-        }
-      };
-    } else {
-      entry = inputEntry as AuthRoleClaimsFactoryConfigEntryEncodeOptions;
-    }
-
-    (entry as AuthRoleClaimsServiceConfigMapEntry).claimKey = x[0];
-    return [x[0], entry as AuthRoleClaimsServiceConfigMapEntry];
-  });
+      (entry as AuthRoleClaimsServiceConfigMapEntry).claimKey = x[0];
+      return [x[0], entry as AuthRoleClaimsServiceConfigMapEntry];
+    });
 
   const authRoleMap = new Map<AuthClaimKey, AuthRoleClaimsServiceConfigMapEntry>(tuples.map((x) => [x[0].toLowerCase(), x[1]]));
 
