@@ -2,6 +2,17 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [7.4.0](https://github.com/dereekb/dbx-components/compare/v7.3.0-dev...v7.4.0) (2022-06-08)
+
+
+### Features
+
+* added grantModelRolesIfFunction and related types ([5432fab](https://github.com/dereekb/dbx-components/commit/5432fab1677c29e24eac4015c35821aba2d64e10))
+* added ignore to AuthRoleClaimsFactoryConfig ([71e3cac](https://github.com/dereekb/dbx-components/commit/71e3cacad2ba211e5d64c4c60d8c62799b570fed))
+* updated FirebaseServerAuthUserContext to be synchronous ([92bfd84](https://github.com/dereekb/dbx-components/commit/92bfd849b4a6d6773c616069c3085b686938ef4d))
+
+
+
 # [7.3.0](https://github.com/dereekb/dbx-components/compare/v7.2.0-dev...v7.3.0) (2022-06-08)
 
 
