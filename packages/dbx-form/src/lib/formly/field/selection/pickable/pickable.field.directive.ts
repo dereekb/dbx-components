@@ -4,7 +4,7 @@ import { PrimativeKey, convertMaybeToArray, findUnique, makeValuesGroupMap, Mayb
 import { Directive, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { FormControl, AbstractControl } from '@angular/forms';
 import { MatInput } from '@angular/material/input';
-import { FieldTypeConfig, FormlyFieldConfig } from '@ngx-formly/core';
+import { FieldTypeConfig, FormlyFieldConfig, FormlyFieldProps } from '@ngx-formly/core';
 import { FieldType } from '@ngx-formly/material';
 import { BehaviorSubject, combineLatest, Observable, of, filter, map, debounceTime, distinctUntilChanged, switchMap, startWith, shareReplay, mergeMap, first, delay } from 'rxjs';
 import { PickableValueFieldDisplayFn, PickableValueFieldDisplayValue, PickableValueFieldFilterFn, PickableValueFieldHashFn, PickableValueFieldLoadValuesFn, PickableValueFieldValue } from './pickable';
@@ -18,7 +18,7 @@ export type PickableItemFieldItem<T, M = unknown> = DbxValueListItem<PickableVal
 
 export type PickableItemFieldItemSortFn<T, M = unknown> = (items: PickableItemFieldItem<T, M>[]) => PickableItemFieldItem<T, M>[];
 
-export interface PickableValueFieldsFieldConfig<T, M = unknown, H extends PrimativeKey = PrimativeKey> {
+export interface PickableValueFieldsFieldProps<T, M = unknown, H extends PrimativeKey = PrimativeKey> extends FormlyFieldProps {
   /**
    * Loads all pickable values.
    */
@@ -83,10 +83,6 @@ export interface PickableValueFieldsFieldConfig<T, M = unknown, H extends Primat
   changeSelectionModeToViewOnDisabled?: boolean;
 }
 
-export interface PickableValueFieldsFormlyFieldConfig<T, M = unknown, H extends PrimativeKey = PrimativeKey> extends FormlyFieldConfig {
-  pickableField: PickableValueFieldsFieldConfig<T, M, H>;
-}
-
 /**
  * Displayed value with the computed hash.
  */
@@ -98,7 +94,7 @@ export interface PickableValueFieldDisplayValueWithHash<T, M = unknown, H extend
  * Used for picking pre-set values using items as the presentation.
  */
 @Directive()
-export class AbstractDbxPickableItemFieldDirective<T, M = unknown, H extends PrimativeKey = PrimativeKey> extends FieldType<PickableValueFieldsFormlyFieldConfig<T, M, H> & FieldTypeConfig> implements OnInit, OnDestroy {
+export class AbstractDbxPickableItemFieldDirective<T, M = unknown, H extends PrimativeKey = PrimativeKey> extends FieldType<FieldTypeConfig<PickableValueFieldsFieldProps<T, M, H>>> implements OnInit, OnDestroy {
   @ViewChild('filterMatInput', { static: true })
   filterMatInput!: MatInput;
 
@@ -240,15 +236,15 @@ export class AbstractDbxPickableItemFieldDirective<T, M = unknown, H extends Pri
   readonly noItemsAvailable$ = this.filterItemsLoadingState$.pipe(isListLoadingStateEmpty(), distinctUntilChanged());
 
   get readonly(): Maybe<boolean> {
-    return this.field.templateOptions?.readonly;
+    return this.props.readonly;
   }
 
   get isReadonlyOrDisabled() {
     return this.readonly || this.disabled;
   }
 
-  get pickableField(): PickableValueFieldsFieldConfig<T, M, H> {
-    return this.field.pickableField;
+  get pickableField(): PickableValueFieldsFieldProps<T, M, H> {
+    return this.props;
   }
 
   get multiSelect(): boolean {
@@ -268,11 +264,11 @@ export class AbstractDbxPickableItemFieldDirective<T, M = unknown, H extends Pri
   }
 
   get label(): Maybe<string> {
-    return this.field.templateOptions?.label;
+    return this.props.label;
   }
 
   get autocomplete(): string {
-    return (this.field.templateOptions?.attributes?.['autocomplete'] ?? this.key) as string;
+    return (this.props.attributes?.['autocomplete'] ?? this.key) as string;
   }
 
   get changeSelectionModeToViewOnDisabled(): boolean {

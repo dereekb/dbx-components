@@ -1,10 +1,10 @@
 import { arrayToMap, Maybe, PrimativeKey, separateValues } from '@dereekb/util';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { Observable, of, switchMap, map } from 'rxjs';
-import { LabeledFieldConfig, formlyField, templateOptionsForFieldConfig, DescriptionFieldConfig } from '../../field';
+import { LabeledFieldConfig, formlyField, propsForFieldConfig, DescriptionFieldConfig } from '../../field';
 import { SearchableValueFieldDisplayFn, SearchableValueFieldDisplayValue, SearchableValueFieldValue } from './searchable';
-import { SearchableChipValueFieldsFieldConfig } from './searchable.chip.field.component';
-import { SearchableTextValueFieldsFieldConfig } from './searchable.text.field.component';
+import { SearchableChipValueFieldsFieldProps } from './searchable.chip.field.component';
+import { SearchableTextValueFieldsFieldProps } from './searchable.text.field.component';
 
 /**
  * Used to create a SearchableValueFieldDisplayFn function that will retrieve the metadata for items that are missing their metadata so they can be displayed properly.
@@ -60,32 +60,32 @@ export function searchableStringChipField<M = unknown>(config: StringSearchableC
   });
 }
 
-export interface SearchableChipFieldConfig<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> extends LabeledFieldConfig, DescriptionFieldConfig, SearchableChipValueFieldsFieldConfig<T, M, H> {}
+export interface SearchableChipFieldConfig<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> extends LabeledFieldConfig, DescriptionFieldConfig, SearchableChipValueFieldsFieldProps<T, M, H> {}
 
 export function searchableChipField<T, M = unknown, H extends PrimativeKey = PrimativeKey>(config: SearchableChipFieldConfig<T, M, H>): FormlyFieldConfig {
   const { key, placeholder } = config;
   return formlyField({
     key,
     type: 'searchablechipfield',
-    ...templateOptionsForFieldConfig(config, {
+    ...propsForFieldConfig(config, {
+      ...config,
       placeholder: placeholder ?? 'Add...',
       autocomplete: false
-    }),
-    searchableField: config
+    })
   });
 }
 
 // MARK: Text
-export interface SearchableTextFieldConfig<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> extends LabeledFieldConfig, DescriptionFieldConfig, SearchableTextValueFieldsFieldConfig<T, M, H> {}
+export interface SearchableTextFieldConfig<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey> extends LabeledFieldConfig, DescriptionFieldConfig, SearchableTextValueFieldsFieldProps<T, M, H> {}
 
 export function searchableTextField<T, M = unknown, H extends PrimativeKey = PrimativeKey>(config: SearchableTextFieldConfig<T, M, H>): FormlyFieldConfig {
   const { key } = config;
   return formlyField({
     key,
     type: 'searchabletextfield',
-    ...templateOptionsForFieldConfig(config, {
+    ...propsForFieldConfig(config, {
+      ...config,
       autocomplete: false
-    }),
-    searchableField: config
+    })
   });
 }

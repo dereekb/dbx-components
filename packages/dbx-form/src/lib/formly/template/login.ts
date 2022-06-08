@@ -55,7 +55,7 @@ export function textPasswordWithVerifyFieldGroup(config: TextPasswordWithVerifyF
   const verifyPasswordField = textVerifyPasswordField({
     ...config.password,
     ...config.verifyPassword,
-    label: config.verifyPassword?.label ?? `Verify ${passwordFieldConfig.templateOptions?.label}`,
+    label: config.verifyPassword?.label ?? `Verify ${passwordFieldConfig.props?.label}`,
     key: verifyPasswordFieldKey
   });
 

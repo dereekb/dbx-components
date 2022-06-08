@@ -1,5 +1,5 @@
 import { ArrayOrValue, asArray } from './../array/array';
-import { Maybe } from '../value/maybe';
+import { Maybe } from '../value/maybe.type';
 import { setContainsAnyValue } from './set';
 
 /**

@@ -2,7 +2,7 @@
 // any is used with intent here, as the recursive TreeNode value requires its use to terminate.
 
 import { TreeNode, TreeNodeWithoutChildren } from './tree';
-import { Maybe } from '../value/maybe';
+import { Maybe } from '../value/maybe.type';
 
 // MARK: Expand
 

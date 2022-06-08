@@ -20,4 +20,5 @@ else
   echo release pushed to origin
   git branch -d release
   echo cleaned up release branch
+  git checkout develop
 fi

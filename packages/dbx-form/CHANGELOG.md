@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [7.3.0](https://github.com/dereekb/dbx-components/compare/v7.2.0-dev...v7.3.0) (2022-06-08)
+
+
+### Features
+
+* updated [@ngx-formly](https://github.com/ngx-formly) to 6.0.0-beta.2 ([6f1737a](https://github.com/dereekb/dbx-components/commit/6f1737ab61473497b4c69c097b9f87da3f881c74))
+
+
+
 # [7.2.0](https://github.com/dereekb/dbx-components/compare/v7.1.0-dev...v7.2.0) (2022-06-06)
 
 

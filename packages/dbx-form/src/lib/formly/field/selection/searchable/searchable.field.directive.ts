@@ -3,23 +3,21 @@ import { DbxInjectionComponentConfig, mergeDbxInjectionComponentConfigs } from '
 import { filterMaybe, SubscriptionObject, LoadingState, LoadingStateContextInstance, successResult, startWithBeginLoading } from '@dereekb/rxjs';
 import { ChangeDetectorRef, Directive, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { AbstractControl, FormControl, ValidatorFn } from '@angular/forms';
-import { FieldTypeConfig, FormlyFieldConfig } from '@ngx-formly/core';
+import { FieldTypeConfig, FormlyFieldConfig, FormlyFieldProps } from '@ngx-formly/core';
 import { FieldType } from '@ngx-formly/material';
 import { debounceTime, distinctUntilChanged, first, map, mergeMap, shareReplay, startWith, switchMap, BehaviorSubject, of, Observable } from 'rxjs';
 import { SearchableValueFieldHashFn, SearchableValueFieldStringSearchFn, SearchableValueFieldDisplayFn, SearchableValueFieldDisplayValue, SearchableValueFieldValue, SearchableValueFieldAnchorFn, ConfiguredSearchableValueFieldDisplayValue } from './searchable';
 import { DbxDefaultSearchableFieldDisplayComponent } from './searchable.field.autocomplete.item.component';
 import { camelCase } from 'change-case';
 
-export interface StringValueFieldsFieldConfig {
+export interface StringValueFieldsFieldProps extends FormlyFieldProps {
   /**
    * Custom input validators.
    */
   textInputValidator?: ValidatorFn | ValidatorFn[];
 }
 
-export interface StringValueFieldsFormlyFieldConfig extends StringValueFieldsFieldConfig, FormlyFieldConfig {}
-
-export interface SearchableValueFieldsFieldConfig<T, M = unknown, H extends PrimativeKey = PrimativeKey> extends StringValueFieldsFieldConfig {
+export interface SearchableValueFieldsFieldProps<T, M = unknown, H extends PrimativeKey = PrimativeKey> extends FormlyFieldProps, StringValueFieldsFieldProps {
   /**
    * Whether or not to allow string values to be used directly, or if values can only be chosen from searching.
    */
@@ -68,17 +66,13 @@ export interface SearchableValueFieldsFieldConfig<T, M = unknown, H extends Prim
   showClearValue?: boolean;
 }
 
-export interface SearchableValueFieldsFormlyFieldConfig<T, M = unknown, H extends PrimativeKey = PrimativeKey> extends FormlyFieldConfig {
-  searchableField: SearchableValueFieldsFieldConfig<T, M, H>;
-}
-
 /**
  * Abstract searchable field that provides a feature for searching for values, and for displaying values using Observables.
  *
  * Display values are cached for performance.
  */
 @Directive()
-export abstract class AbstractDbxSearchableValueFieldDirective<T, M = unknown, H extends PrimativeKey = PrimativeKey, C extends SearchableValueFieldsFormlyFieldConfig<T, M, H> = SearchableValueFieldsFormlyFieldConfig<T, M, H>> extends FieldType<C & FieldTypeConfig> implements OnInit, OnDestroy {
+export abstract class AbstractDbxSearchableValueFieldDirective<T, M = unknown, H extends PrimativeKey = PrimativeKey, C extends SearchableValueFieldsFieldProps<T, M, H> = SearchableValueFieldsFieldProps<T, M, H>> extends FieldType<FieldTypeConfig<C>> implements OnInit, OnDestroy {
   /**
    * Whether or not to set/get values as an array.
    */
@@ -136,15 +130,15 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, M = unknown, H
   }
 
   get label(): Maybe<string> {
-    return this.field.templateOptions?.label;
+    return this.props.label;
   }
 
   get readonly(): Maybe<boolean> {
-    return this.field.templateOptions?.readonly;
+    return this.props.readonly;
   }
 
-  get searchableField(): SearchableValueFieldsFieldConfig<T, M, H> {
-    return this.field.searchableField;
+  get searchableField(): SearchableValueFieldsFieldProps<T, M, H> {
+    return this.props;
   }
 
   get searchOnEmptyText(): boolean {
@@ -152,7 +146,7 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, M = unknown, H
   }
 
   get autocomplete(): string {
-    return (this.field.templateOptions?.attributes?.['autocomplete'] ?? this.key) as string;
+    return (this.props.attributes?.['autocomplete'] ?? this.key) as string;
   }
 
   get hashForValue(): SearchableValueFieldHashFn<T, H> {

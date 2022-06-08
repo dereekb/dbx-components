@@ -1,6 +1,6 @@
 import { concatArrays, flattenArray } from './array';
 import { PrimativeKey, ReadKeyFunction } from '../key';
-import { Maybe } from '../value/maybe';
+import { Maybe } from '../value/maybe.type';
 
 export function concatArraysUnique<T extends PrimativeKey = PrimativeKey>(...arrays: Maybe<T[]>[]): T[] {
   return unique(concatArrays(...arrays));

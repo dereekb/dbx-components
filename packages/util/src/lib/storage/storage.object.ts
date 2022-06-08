@@ -1,6 +1,7 @@
-import { Maybe } from '../value/maybe';
-import { range, filterMaybeValuesFn } from '../array';
+import { Maybe } from '../value/maybe.type';
+import { range } from '../array/array.number';
 import { StoredDataStorageKey } from './storage';
+import { hasNonNullValue } from '../value/maybe';
 
 /**
  * Limited Class/Interface for storing string values synchronously.
@@ -45,7 +46,7 @@ export class StorageObjectUtility {
     if (length > 0) {
       result = range({ start: 0, end: length })
         .map((x) => storageObject.key(x))
-        .filter(filterMaybeValuesFn);
+        .filter(hasNonNullValue);
 
       if (prefix) {
         result = result.filter((x) => x.startsWith(prefix));

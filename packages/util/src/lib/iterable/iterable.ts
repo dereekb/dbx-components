@@ -1,4 +1,4 @@
-import { Maybe } from '../value/maybe';
+import { Maybe } from '../value/maybe.type';
 
 // MARK: Types
 /**
@@ -36,6 +36,20 @@ export function isIterable<T = unknown>(values: unknown, treatStringAsIterable =
   } else {
     return false;
   }
+}
+
+/**
+ * Returns true if there are values to iterate over.
+ *
+ * @param values
+ * @returns
+ */
+export function isEmptyIterable<T = unknown>(values: Iterable<T>): boolean {
+  for (const value of values) {
+    return false;
+  }
+
+  return true;
 }
 
 /**

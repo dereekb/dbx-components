@@ -1,5 +1,5 @@
 import { makeArray } from '../array';
-import { isIterable, useIterableOrValue } from './iterable';
+import { isEmptyIterable, isIterable, useIterableOrValue } from './iterable';
 
 describe('isIterable()', () => {
   it('should return true for an array.', () => {
@@ -24,6 +24,40 @@ describe('isIterable()', () => {
 
   it('should return false for a number.', () => {
     expect(isIterable('test')).toBe(false);
+  });
+});
+
+describe('isEmptyIterable()', () => {
+  it('should return true for empty arrays.', () => {
+    expect(isEmptyIterable([])).toBe(true);
+  });
+
+  it('should return false for non-empty arrays.', () => {
+    expect(isEmptyIterable(['test'])).toBe(false);
+  });
+
+  it('should return true for empty sets.', () => {
+    expect(isEmptyIterable(new Set())).toBe(true);
+  });
+
+  it('should return true for non-empty sets.', () => {
+    expect(isEmptyIterable(new Set('test'))).toBe(false);
+  });
+
+  it('should return true for empty strings.', () => {
+    expect(isEmptyIterable('')).toBe(true);
+  });
+
+  it('should return false for non-empty strings.', () => {
+    expect(isEmptyIterable('non-empty')).toBe(false);
+  });
+
+  it('should return true for empty maps.', () => {
+    expect(isEmptyIterable(new Map())).toBe(true);
+  });
+
+  it('should return false for non-empty maps.', () => {
+    expect(isEmptyIterable(new Map([['a', 'a']]))).toBe(false);
   });
 });
 

@@ -1,14 +1,14 @@
 import { FormGroup } from '@angular/forms';
 import { CompactContextStore, mapCompactModeObs } from '@dereekb/dbx-web';
 import { Component, OnDestroy, OnInit, Optional } from '@angular/core';
-import { FieldTypeConfig, FormlyFieldConfig } from '@ngx-formly/core';
+import { FieldTypeConfig, FormlyFieldProps } from '@ngx-formly/core';
 import { FieldType } from '@ngx-formly/material';
 import { Editor } from 'ngx-editor';
 import { debounceTime, filter } from 'rxjs';
 import { SubscriptionObject } from '@dereekb/rxjs';
 import { Maybe } from '@dereekb/util';
 
-export type TextEditorComponentFieldConfig = FormlyFieldConfig;
+export type TextEditorComponentFieldProps = FormlyFieldProps;
 
 @Component({
   template: `
@@ -26,7 +26,7 @@ export type TextEditorComponentFieldConfig = FormlyFieldConfig;
     </div>
   `
 })
-export class DbxTextEditorFieldComponent<T extends TextEditorComponentFieldConfig = TextEditorComponentFieldConfig> extends FieldType<T & FieldTypeConfig> implements OnInit, OnDestroy {
+export class DbxTextEditorFieldComponent<T extends TextEditorComponentFieldProps = TextEditorComponentFieldProps> extends FieldType<FieldTypeConfig<T>> implements OnInit, OnDestroy {
   private _editor?: Editor;
   private _sub = new SubscriptionObject();
 
@@ -51,11 +51,11 @@ export class DbxTextEditorFieldComponent<T extends TextEditorComponentFieldConfi
   }
 
   get label(): Maybe<string> {
-    return this.field.templateOptions?.label;
+    return this.field.props?.label;
   }
 
   get description(): Maybe<string> {
-    return this.to.description;
+    return this.props.description;
   }
 
   ngOnInit(): void {

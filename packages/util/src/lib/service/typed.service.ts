@@ -1,5 +1,5 @@
 import { asGetter, Getter, GetterOrValue } from '../getter/getter';
-import { forEachKeyValue } from '../object/object';
+import { forEachKeyValue } from '../object/object.filter.tuple';
 
 /**
  * Registry used to load model services when requested.

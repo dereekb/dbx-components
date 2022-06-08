@@ -1,5 +1,5 @@
 import { ArrayOrValue, asArray } from './../array/array';
-import { Maybe, MaybeNot } from '../value/maybe';
+import { Maybe, MaybeNot } from '../value/maybe.type';
 
 /**
  * Creates a Maybe Set with the input.

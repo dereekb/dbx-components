@@ -3,12 +3,12 @@ import { DbxInjectionComponentConfig, AbstractSubscriptionDirective, safeDetectC
 import { switchMapMaybeObs } from '@dereekb/rxjs';
 import { shareReplay, distinctUntilChanged, map, BehaviorSubject } from 'rxjs';
 import { ValidationErrors, FormGroup } from '@angular/forms';
-import { FieldType, FieldTypeConfig, FormlyFieldConfig } from '@ngx-formly/core';
+import { FieldType, FieldTypeConfig, FormlyFieldProps } from '@ngx-formly/core';
 import { ChecklistItemFieldDisplayComponent, ChecklistItemFieldDisplayContentObs } from './checklist.item';
 import { DbxDefaultChecklistItemFieldDisplayComponent } from './checklist.item.field.content.default.component';
 import { Maybe } from '@dereekb/util';
 
-export interface DbxChecklistItemFieldConfig<T = unknown> {
+export interface DbxChecklistItemFieldProps<T = unknown> extends FormlyFieldProps {
   /**
    * Observable used to retrieve content to display for the item.
    */
@@ -19,14 +19,10 @@ export interface DbxChecklistItemFieldConfig<T = unknown> {
   componentClass?: Type<ChecklistItemFieldDisplayComponent<T>>;
 }
 
-export interface ChecklistItemFormlyFieldConfig<T = unknown> extends FormlyFieldConfig {
-  checklistField: DbxChecklistItemFieldConfig<T>;
-}
-
 @Component({
   templateUrl: 'checklist.item.field.component.html'
 })
-export class DbxChecklistItemFieldComponent<T = unknown> extends FieldType<ChecklistItemFormlyFieldConfig<T> & FieldTypeConfig> implements OnInit, OnDestroy {
+export class DbxChecklistItemFieldComponent<T = unknown> extends FieldType<FieldTypeConfig<DbxChecklistItemFieldProps<T>>> implements OnInit, OnDestroy {
   private _displayContent = new BehaviorSubject<Maybe<ChecklistItemFieldDisplayContentObs<T>>>(undefined);
 
   readonly displayContent$ = this._displayContent.pipe(switchMapMaybeObs(), distinctUntilChanged(), shareReplay(1));
@@ -51,19 +47,19 @@ export class DbxChecklistItemFieldComponent<T = unknown> extends FieldType<Check
   }
 
   get label(): Maybe<string> {
-    return this.field.templateOptions?.label;
+    return this.props.label;
   }
 
   get description(): Maybe<string> {
-    return this.field.templateOptions?.description;
+    return this.props.description;
   }
 
   get required(): Maybe<boolean> {
-    return this.field.templateOptions?.required;
+    return this.props.required;
   }
 
-  get checklistField(): DbxChecklistItemFieldConfig<T> {
-    return this.field.checklistField;
+  get checklistField(): DbxChecklistItemFieldProps<T> {
+    return this.props;
   }
 
   get errors(): Maybe<ValidationErrors> {

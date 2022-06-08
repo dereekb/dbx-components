@@ -1,5 +1,5 @@
 import { MapFunction } from './value/map';
-import { Maybe } from './value/maybe';
+import { Maybe } from './value/maybe.type';
 
 export type MapStringFunction<T> = MapFunction<string, T>;
 

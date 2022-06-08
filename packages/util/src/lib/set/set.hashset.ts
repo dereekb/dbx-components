@@ -1,5 +1,5 @@
 import { PrimativeKey, ReadKeyFunction } from '../key';
-import { Maybe } from '../value/maybe';
+import { Maybe } from '../value/maybe.type';
 
 export interface HashSetConfig<K extends PrimativeKey, T> {
   readKey: ReadKeyFunction<T, K>;

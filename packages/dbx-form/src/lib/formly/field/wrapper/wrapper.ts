@@ -1,5 +1,5 @@
 import { DbxFormStyleWrapperConfig } from './style.wrapper.component';
-import { DbxFlexWrapperConfig } from './flex.wrapper.component';
+import { DbxFlexWrapperConfig, DbxFlexWrapperWrapperProps } from './flex.wrapper.component';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { DbxFormToggleWrapperConfig } from './toggle.wrapper.component';
 import { DbxFormSectionConfig } from './section.wrapper.component';
@@ -9,6 +9,7 @@ import { DbxFormExpandWrapperConfig } from './expandable.wrapper.component';
 import { DbxFlexSize } from '@dereekb/dbx-web';
 import { DbxFormWorkingWrapperConfig } from './working.wrapper.component';
 
+export const AUTO_TOUCH_WRAPPER_KEY = 'autotouch';
 export const EXPANDABLE_WRAPPER_KEY = 'expandable';
 export const TOGGLE_WRAPPER_KEY = 'toggle';
 export const SECTION_WRAPPER_KEY = 'section';
@@ -18,59 +19,56 @@ export const FLEX_WRAPPER_KEY = 'flex';
 export const STYLE_WRAPPER_KEY = 'style';
 export const WORKING_WRAPPER_KEY = 'working';
 
-export function addWrapperToFormlyFieldConfig<T extends object>(fieldConfig: FormlyFieldConfig, wrapperKey: string, wrapperTemplateOptionsConfig: T): FormlyFieldConfig {
-  fieldConfig.templateOptions = {
-    ...fieldConfig.templateOptions,
-    ...wrapperTemplateOptionsConfig
+export type WrapperFormlyFieldConfig<P, C extends FormlyFieldConfig> = FormlyFieldConfig<P> & {
+  wrappers: string[];
+  props: P;
+  fieldGroup: [C];
+};
+
+export function addWrapperToFormlyFieldConfig<C extends FormlyFieldConfig, P extends object>(fieldConfig: C, wrapperKey: string, wrapperProps: P): WrapperFormlyFieldConfig<P, C> {
+  // ??? can probably remove?
+  fieldConfig.props = {
+    ...fieldConfig.props,
+    ...wrapperProps
   };
 
   return {
     wrappers: [wrapperKey],
-    templateOptions: wrapperTemplateOptionsConfig,
+    props: wrapperProps,
     fieldGroup: [fieldConfig]
   };
 }
 
-export function expandWrapper<T extends object = object>(fieldConfig: FormlyFieldConfig, expandWrapper?: DbxFormExpandWrapperConfig<T>): FormlyFieldConfig {
-  return addWrapperToFormlyFieldConfig(fieldConfig, EXPANDABLE_WRAPPER_KEY, {
-    expandWrapper
-  });
+export function autoTouchWrapper<T extends object, C extends FormlyFieldConfig>(fieldConfig: C, autoTouchWrapper: DbxFormExpandWrapperConfig<T> = {}) {
+  return addWrapperToFormlyFieldConfig<C, DbxFormExpandWrapperConfig<T>>(fieldConfig, AUTO_TOUCH_WRAPPER_KEY, autoTouchWrapper);
 }
 
-export function toggleWrapper(fieldConfig: FormlyFieldConfig, expandWrapper?: DbxFormToggleWrapperConfig): FormlyFieldConfig {
-  return addWrapperToFormlyFieldConfig(fieldConfig, TOGGLE_WRAPPER_KEY, {
-    expandWrapper
-  });
+export function expandWrapper<T extends object, C extends FormlyFieldConfig>(fieldConfig: C, expandWrapper: DbxFormExpandWrapperConfig<T> = {}) {
+  return addWrapperToFormlyFieldConfig<C, DbxFormExpandWrapperConfig<T>>(fieldConfig, EXPANDABLE_WRAPPER_KEY, expandWrapper);
 }
 
-export function sectionWrapper(fieldConfig: FormlyFieldConfig, sectionWrapper?: DbxFormSectionConfig): FormlyFieldConfig {
-  return addWrapperToFormlyFieldConfig(fieldConfig, SECTION_WRAPPER_KEY, {
-    sectionWrapper
-  });
+export function toggleWrapper<C extends FormlyFieldConfig>(fieldConfig: C, toggleWrapper: DbxFormToggleWrapperConfig = {}) {
+  return addWrapperToFormlyFieldConfig<C, DbxFormToggleWrapperConfig>(fieldConfig, TOGGLE_WRAPPER_KEY, toggleWrapper);
 }
 
-export function subsectionWrapper(fieldConfig: FormlyFieldConfig, subsectionWrapper?: DbxFormSubsectionConfig): FormlyFieldConfig {
-  return addWrapperToFormlyFieldConfig(fieldConfig, SUBSECTION_WRAPPER_KEY, {
-    subsectionWrapper
-  });
+export function sectionWrapper<C extends FormlyFieldConfig>(fieldConfig: C, sectionWrapper: DbxFormSectionConfig = {}) {
+  return addWrapperToFormlyFieldConfig<C, DbxFormSectionConfig>(fieldConfig, SECTION_WRAPPER_KEY, sectionWrapper);
 }
 
-export function infoWrapper(fieldConfig: FormlyFieldConfig, infoWrapper: DbxFormInfoConfig): FormlyFieldConfig {
-  return addWrapperToFormlyFieldConfig(fieldConfig, INFO_WRAPPER_KEY, {
-    infoWrapper
-  });
+export function subsectionWrapper<C extends FormlyFieldConfig>(fieldConfig: C, subsectionWrapper: DbxFormSubsectionConfig = {}) {
+  return addWrapperToFormlyFieldConfig<C, DbxFormSubsectionConfig>(fieldConfig, SUBSECTION_WRAPPER_KEY, subsectionWrapper);
 }
 
-export function styleWrapper(fieldConfig: FormlyFieldConfig, styleWrapper: DbxFormStyleWrapperConfig): FormlyFieldConfig {
-  return addWrapperToFormlyFieldConfig(fieldConfig, STYLE_WRAPPER_KEY, {
-    styleWrapper
-  });
+export function infoWrapper<C extends FormlyFieldConfig>(fieldConfig: C, infoWrapper: DbxFormInfoConfig) {
+  return addWrapperToFormlyFieldConfig<C, DbxFormInfoConfig>(fieldConfig, INFO_WRAPPER_KEY, infoWrapper);
 }
 
-export function workingWrapper(fieldConfig: FormlyFieldConfig, workingWrapper?: DbxFormWorkingWrapperConfig): FormlyFieldConfig {
-  return addWrapperToFormlyFieldConfig(fieldConfig, WORKING_WRAPPER_KEY, {
-    workingWrapper
-  });
+export function styleWrapper<C extends FormlyFieldConfig>(fieldConfig: C, styleWrapper: DbxFormStyleWrapperConfig) {
+  return addWrapperToFormlyFieldConfig<C, DbxFormStyleWrapperConfig>(fieldConfig, STYLE_WRAPPER_KEY, styleWrapper);
+}
+
+export function workingWrapper<C extends FormlyFieldConfig>(fieldConfig: C, workingWrapper: DbxFormWorkingWrapperConfig = {}) {
+  return addWrapperToFormlyFieldConfig<C, DbxFormWorkingWrapperConfig>(fieldConfig, WORKING_WRAPPER_KEY, workingWrapper);
 }
 
 export interface DbxFlexLayoutWrapperGroupFieldConfig {
@@ -91,12 +89,12 @@ export function checkIsFieldFlexLayoutGroupFieldConfig(input: FormlyFieldConfig 
   }
 }
 
-export function flexLayoutWrapper(fieldConfigs: (FormlyFieldConfig | DbxFlexLayoutWrapperGroupFieldConfig)[], { relative, breakpoint, size: defaultSize = 2 }: DbxFlexLayoutWrapperGroupFieldConfigDefaults = {}): FormlyFieldConfig {
+export function flexLayoutWrapper(fieldConfigs: (FormlyFieldConfig | DbxFlexLayoutWrapperGroupFieldConfig)[], { relative, breakpoint, size: defaultSize = 2 }: DbxFlexLayoutWrapperGroupFieldConfigDefaults = {}): FormlyFieldConfig<DbxFlexWrapperWrapperProps> {
   return {
     wrappers: ['flex'],
     fieldGroupClassName: 'dbx-flex-group',
     // fieldGroupClassName: 'field-layout-group',
-    templateOptions: {
+    props: {
       flexWrapper: {
         breakpoint,
         relative

@@ -4,7 +4,7 @@ import { switchMap, shareReplay, map, startWith, tap, first, distinctUntilChange
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { AbstractControl, FormControl, Validators, FormGroup } from '@angular/forms';
 import { FieldType } from '@ngx-formly/material';
-import { FieldTypeConfig, FormlyFieldConfig } from '@ngx-formly/core';
+import { FieldTypeConfig, FormlyFieldProps } from '@ngx-formly/core';
 import { MatDatepickerInputEvent } from '@angular/material/datepicker';
 import { addMinutes, isSameDay, isSameMinute, startOfDay } from 'date-fns';
 import { filterMaybe, skipFirstMaybe, SubscriptionObject, switchMapMaybeDefault } from '@dereekb/rxjs';
@@ -26,7 +26,7 @@ export enum DbxDateTimeFieldTimeMode {
 
 export type DateTimePickerConfiguration = Omit<DateTimeMinuteConfig, 'date'>;
 
-export interface DbxDateTimeFieldConfig {
+export interface DbxDateTimeFieldProps extends FormlyFieldProps {
   /**
    * Whether or not the date is hidden, and automatically uses today/input date.
    */
@@ -59,14 +59,10 @@ export interface DbxDateTimeFieldConfig {
   getConfigObs?: () => Observable<DateTimePickerConfiguration>;
 }
 
-export interface DateTimeFormlyFieldConfig extends FormlyFieldConfig {
-  dateTimeField: DbxDateTimeFieldConfig;
-}
-
 @Component({
   templateUrl: 'datetime.field.component.html'
 })
-export class DbxDateTimeFieldComponent extends FieldType<DateTimeFormlyFieldConfig & FieldTypeConfig> implements OnInit, OnDestroy {
+export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDateTimeFieldProps>> implements OnInit, OnDestroy {
   private _sub = new SubscriptionObject();
   private _valueSub = new SubscriptionObject();
 
@@ -121,8 +117,8 @@ export class DbxDateTimeFieldComponent extends FieldType<DateTimeFormlyFieldConf
     return this.timeMode === DbxDateTimeFieldTimeMode.NONE;
   }
 
-  get dateTimeField() {
-    return this.field.dateTimeField;
+  get dateTimeField(): DbxDateTimeFieldProps {
+    return this.field.props;
   }
 
   get timeOnly(): Maybe<boolean> {
@@ -138,7 +134,7 @@ export class DbxDateTimeFieldComponent extends FieldType<DateTimeFormlyFieldConf
   }
 
   get description(): Maybe<string> {
-    return this.field.templateOptions?.description;
+    return this.field.props.description;
   }
 
   readonly fullDay$: Observable<boolean> = this.fullDayControl$.pipe(switchMap((control) => control.valueChanges.pipe(startWith(control.value))));

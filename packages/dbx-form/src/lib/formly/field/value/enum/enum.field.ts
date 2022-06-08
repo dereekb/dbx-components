@@ -17,7 +17,7 @@ export function staticEnumField<T = unknown>({ key, label = '', placeholder = ''
   const fieldConfig: FormlyFieldConfig = formlyField({
     key,
     type: 'select',
-    templateOptions: {
+    props: {
       label,
       description,
       placeholder,

@@ -6,6 +6,6 @@ export type HiddenFieldConfig = Pick<LabeledFieldConfig, 'key' | 'required'>;
 export function hiddenField({ key, required = false }: HiddenFieldConfig): FormlyFieldConfig {
   return formlyField({
     key,
-    templateOptions: { required }
+    props: { required }
   });
 }

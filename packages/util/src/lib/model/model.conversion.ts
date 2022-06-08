@@ -2,8 +2,10 @@
 // any is used with intent here, as there isn't enough typing information available when going from a parent of fields to the types of each child.
 
 import { asGetter, Getter, GetterOrValue } from '../getter/getter';
-import { filterKeyValueTuples, findPOJOKeys, KeyValueTypleValueFilter } from '../object/object';
-import { isMaybeSo, Maybe, MaybeSo } from '../value/maybe';
+import { findPOJOKeys } from '../object/object.filter.pojo';
+import { filterKeyValueTuples, KeyValueTypleValueFilter } from '../object/object.filter.tuple';
+import { Maybe, MaybeSo } from '../value/maybe.type';
+import { isMaybeSo } from '../value/maybe';
 import { ApplyMapFunctionWithOptions, MapFunction } from '../value/map';
 import { MergeReplace, ReplaceType } from '../type';
 import { mapObjectMap } from '../object';

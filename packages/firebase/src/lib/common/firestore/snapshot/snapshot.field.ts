@@ -1,5 +1,7 @@
+import { GrantedRole } from '@dereekb/model';
+import { FirestoreModelKey } from '../collection/collection';
 import { nowISODateString, toISODateString, toJsDate } from '@dereekb/date';
-import { ModelFieldMapFunctionsConfig, GetterOrValue, Maybe, ModelFieldMapConvertFunction, passThrough, unique, PrimativeKey, ReadKeyFunction, makeFindUniqueFunction, ModelFieldMapFunctionsWithDefaultsConfig, filterMaybeValues, MaybeSo, FindUniqueFunction, findUnique, findUniqueCaseInsensitiveStrings, FindUniqueStringsTransformConfig, findUniqueTransform, MapFunction } from '@dereekb/util';
+import { ModelFieldMapFunctionsConfig, GetterOrValue, Maybe, ModelFieldMapConvertFunction, passThrough, PrimativeKey, ReadKeyFunction, makeFindUniqueFunction, ModelFieldMapFunctionsWithDefaultsConfig, filterMaybeValues, MaybeSo, FindUniqueFunction, FindUniqueStringsTransformConfig, findUniqueTransform, MapFunction, FilterKeyValueTuplesInput, KeyValueTypleValueFilter, filterFromPOJOFunction, copyObject, CopyObjectFunction, mapObjectMapFunction, filterEmptyValues } from '@dereekb/util';
 import { FIRESTORE_EMPTY_VALUE } from './snapshot';
 
 export interface BaseFirestoreFieldConfig<V, D = unknown> {
@@ -185,6 +187,23 @@ export function firestoreUniqueStringArray(config: FirestoreUniqueStringArrayFie
   });
 }
 
+/**
+ * FirestoreField configuration for an array of ModelKey values.
+ *
+ * @returns
+ */
+export function firestoreModelKeyArray() {
+  // firestore model key paths are case-sensitive, so don't transform them.
+  return firestoreUniqueStringArray({});
+}
+
+/**
+ * FirestoreField configuration for an array of ModelId values.
+ *
+ * @returns
+ */
+export const firestoreModelIdArray = firestoreModelKeyArray;
+
 export type FirestoreEncodedArrayFieldConfig<T, E extends string | number> = DefaultMapConfiguredFirestoreFieldConfig<T[], E[]> & {
   readonly convert: {
     fromData: MapFunction<E, T>;
@@ -206,6 +225,103 @@ export function firestoreEncodedArray<T, E extends string | number>(config: Fire
     toData: (input: T[]) => filterMaybeValues((input as MaybeSo<T>[]).map(toData))
   });
 }
+
+/**
+ * Firestore/JSON maps only have string keys.
+ */
+export type FirestoreMapFieldType<T, K extends string = string> = Record<K, T>;
+export type FirestoreMapFieldConfig<T, K extends string = string> = DefaultMapConfiguredFirestoreFieldConfig<FirestoreMapFieldType<T, K>, FirestoreMapFieldType<T, K>> &
+  Partial<FirestoreFieldDefault<FirestoreMapFieldType<T, K>>> & {
+    /**
+     * Optional filter to apply when saving to data.
+     *
+     * By default will filter all null/undefined values from maps.
+     */
+    mapFilter?: FilterKeyValueTuplesInput<FirestoreMapFieldType<K>>;
+    /**
+     * Optional map function to apply to each input value before
+     */
+    mapFieldValues?: MapFunction<Maybe<T>, Maybe<T>>;
+  };
+
+/**
+ * FirestoreField configuration for a map-type object.
+ *
+ * By default it will remove all null/undefined keys from objects before saving.
+ *
+ * @param config
+ * @returns
+ */
+export function firestoreMap<T, K extends string = string>(config: FirestoreMapFieldConfig<T, K> = {}) {
+  const { mapFilter: filter = KeyValueTypleValueFilter.NULL, mapFieldValues } = config;
+  const filterFinalMapValuesFn = filterFromPOJOFunction<FirestoreMapFieldType<T, K>>({
+    copy: false, // no copy needed since we copy on the prior step.
+    filter
+  });
+  const makeCopy = (mapFieldValues ? mapObjectMapFunction(mapFieldValues) : copyObject) as CopyObjectFunction<FirestoreMapFieldType<T, K>>;
+
+  return firestoreField<FirestoreMapFieldType<T, K>, FirestoreMapFieldType<T, K>>({
+    default: config.default ?? ({} as FirestoreMapFieldType<T, K>),
+    fromData: passThrough,
+    toData: (model) => {
+      const copy = makeCopy(model);
+      return filterFinalMapValuesFn(copy);
+    }
+  });
+}
+
+/**
+ * FirestoreField configuration for a map of granted roles, keyed by model keys.
+ *
+ * Filters out models with no/null roles by default.
+ */
+export function firestoreModelKeyGrantedRoleMap() {
+  return firestoreMap<GrantedRole, FirestoreModelKey>({
+    mapFilter: KeyValueTypleValueFilter.EMPTY
+  });
+}
+
+/**
+ * FirestoreField configuration for a map of granted roles, keyed by model ids.
+ *
+ * Filters out models with no/null roles by default.
+ */
+export const firestoreModelIdGrantedRoleMap = firestoreModelKeyGrantedRoleMap;
+
+/**
+ * FirestoreField configuration for a map-type object with array values.
+ *
+ * @param config
+ * @returns
+ */
+export type FirestoreArrayMapFieldType<T, K extends string = string> = FirestoreMapFieldType<T[], K>;
+export type FirestoreArrayMapFieldConfig<T, K extends string = string> = FirestoreMapFieldConfig<T[], K>;
+
+export function firestoreArrayMap<T, K extends string = string>(config: FirestoreArrayMapFieldConfig<T, K> = {}) {
+  return firestoreMap({
+    mapFilter: KeyValueTypleValueFilter.EMPTY, // default to empty instead of null
+    mapFieldValues: filterMaybeValues, // filters all null/undefined values from arrays by default.
+    ...config
+  });
+}
+
+/**
+ * FirestoreField configuration for a map of granted roles, keyed by models keys.
+ *
+ * Filters empty roles/arrays by default.
+ */
+export function firestoreModelKeyGrantedRoleArrayMap() {
+  return firestoreArrayMap<GrantedRole, FirestoreModelKey>({
+    mapFieldValues: filterEmptyValues
+  });
+}
+
+/**
+ * FirestoreField configuration for a map of granted roles, keyed by models ids.
+ *
+ * Filters empty roles/arrays by default.
+ */
+export const firestoreModelIdGrantedRoleArrayMap = firestoreModelKeyGrantedRoleArrayMap;
 
 // MARK: Deprecated
 export type FirestoreSetFieldConfig<T extends string | number> = DefaultMapConfiguredFirestoreFieldConfig<Set<T>, T[]>;

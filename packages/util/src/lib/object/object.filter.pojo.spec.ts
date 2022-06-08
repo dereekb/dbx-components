@@ -1,4 +1,133 @@
-import { allMaybeSoKeys, allKeyValueTuples, allNonUndefinedKeys, filterKeyValueTupleFunction, KeyValueTypleValueFilter, filterFromPOJO, objectHasKey } from './object';
+import { filterUndefinedValues, mergeObjects } from '@dereekb/util';
+import { objectHasKey } from './object';
+import { filterFromPOJO, allNonUndefinedKeys, allMaybeSoKeys, countPOJOKeys, findPOJOKeys, overrideInObject } from './object.filter.pojo';
+import { KeyValueTypleValueFilter } from './object.filter.tuple';
+
+describe('overrideInObject', () => {
+  it('should override all non-undefined values.', () => {
+    const target = {
+      override: false,
+      c: 3
+    };
+
+    const otherValues = [
+      {
+        override: true,
+        a: 1,
+        c: undefined as unknown as number // undefined values are ignored by default
+      },
+      {
+        a: 2,
+        b: null // null values are not ignored
+      }
+    ];
+
+    const result = overrideInObject(target, { from: otherValues });
+
+    expect(target).toBe(result);
+    expect(target.override).toBe(otherValues[0].override);
+    expect((target as typeof otherValues[1]).a).toBe(otherValues[1].a);
+    expect((target as typeof otherValues[1]).b).toBe(otherValues[1].b);
+    expect(target.c).toBe(3);
+  });
+
+  describe('with config', () => {
+    describe('copy=true', () => {
+      it('should return a copy.', () => {
+        const target = {
+          override: false
+        };
+
+        const otherValues = [
+          {
+            override: true,
+            a: 1
+          },
+          {
+            a: 2,
+            b: 2
+          }
+        ];
+
+        const result = overrideInObject(target, { copy: true, from: otherValues });
+
+        expect(result).not.toBe(target);
+        expect(target.override).toBe(false);
+        expect(result.override).toBe(otherValues[0].override);
+        expect((result as typeof otherValues[1]).a).toBe(otherValues[1].a);
+        expect((result as typeof otherValues[1]).b).toBe(otherValues[1].b);
+      });
+    });
+  });
+});
+
+describe('mergeObjects', () => {
+  it('should merge the input objects into one', () => {
+    const otherValues = [
+      {
+        override: true,
+        a: 1,
+        b: null as unknown as number
+      },
+      {
+        override: undefined,
+        a: 2,
+        b: 2
+      }
+    ];
+
+    const result = mergeObjects(otherValues);
+
+    expect(result).toBeDefined();
+    expect(result.override).toBe(otherValues[0].override);
+    expect(result.a).toBe(otherValues[1].a);
+    expect(result.b).toBe(otherValues[1].b);
+  });
+});
+
+describe('findPOJOKeys()', () => {
+  describe('with config', () => {
+    describe('valueFilter = null', () => {
+      it('should return keys of all non-null/undefined values', () => {
+        const result = findPOJOKeys({ x: undefined, y: 'test', z: null }, KeyValueTypleValueFilter.NULL);
+        expect(result.length).toBe(1);
+        expect(result[0]).toBe('y');
+      });
+    });
+    describe('valueFilter = undefined', () => {
+      it('should return keys of all non-null/undefined values', () => {
+        const result = findPOJOKeys({ x: undefined, y: 'test', z: null }, KeyValueTypleValueFilter.UNDEFINED);
+        expect(result.length).toBe(2);
+        expect(result[0]).toBe('y');
+        expect(result[1]).toBe('z');
+      });
+    });
+  });
+});
+
+describe('countPOJOKeys()', () => {
+  it('should count all undefined keys be default.', () => {
+    const result = countPOJOKeys({ x: undefined, y: 'test', z: null });
+    expect(result).toBe(2);
+  });
+});
+
+describe('filterUndefinedValues', () => {
+  it('should return a copy of the input object with all undefined values removed.', () => {
+    const result = filterUndefinedValues({ x: undefined, y: 'test', z: null });
+    expect(result).toBeDefined();
+    expect(objectHasKey(result, 'y'));
+    expect(objectHasKey(result, 'z'));
+  });
+
+  describe('filterNull=true', () => {
+    it('should return a copy of the input object with all null and undefined values removed.', () => {
+      const result = filterUndefinedValues({ x: undefined, y: 'test', z: null }, true);
+      expect(result).toBeDefined();
+      expect(objectHasKey(result, 'y'));
+    });
+  });
+});
 
 describe('filterFromPOJO()', () => {
   it('should remove undefined values from the object by default', () => {
@@ -99,28 +228,5 @@ describe('allMaybeSoKeys()', () => {
     expect(result.findIndex((x) => x === 'b')).toBe(-1);
     expect(result.findIndex((x) => x === 'c')).toBe(-1);
     expect(result.findIndex((x) => x === 'd')).not.toBe(-1);
-  });
-});
-
-describe('filterKeyValueTuplesFn()', () => {
-  describe('config', () => {
-    describe('invertFilter', () => {
-      it('should not invert the filter if invertFilter is not defined.', () => {
-        const object = {
-          a: 0,
-          b: 1,
-          c: undefined
-        };
-
-        const tuples = allKeyValueTuples(object);
-        const filter = filterKeyValueTupleFunction<typeof object>({
-          valueFilter: KeyValueTypleValueFilter.NONE
-        });
-
-        const result = tuples.filter(filter);
-
-        expect(result.length).toBe(3);
-      });
-    });
   });
 });

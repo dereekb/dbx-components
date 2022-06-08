@@ -1,6 +1,6 @@
 import { PrimativeKey, ReadKeyFunction } from './key';
 import { mapToObject } from './object';
-import { Maybe } from './value/maybe';
+import { Maybe } from './value/maybe.type';
 
 // MARK: Types
 export interface SeparateResult<T> {

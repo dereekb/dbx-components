@@ -1,5 +1,5 @@
 import { FormlyFieldConfig } from '@ngx-formly/core/lib/core';
-import { AttributesFieldConfig, LabeledFieldConfig, formlyField, templateOptionsForFieldConfig } from '../../field';
+import { AttributesFieldConfig, LabeledFieldConfig, formlyField, propsForFieldConfig } from '../../field';
 
 export interface TextFieldLengthConfig {
   minLength?: number;
@@ -18,7 +18,7 @@ export function textField(config: TextFieldConfig): FormlyFieldConfig {
   return formlyField({
     key,
     type: 'input',
-    ...templateOptionsForFieldConfig(config, {
+    ...propsForFieldConfig(config, {
       type,
       minLength,
       maxLength,
@@ -36,7 +36,7 @@ export function textAreaField(config: TextAreaFieldConfig): FormlyFieldConfig {
   return formlyField({
     key,
     type: 'textarea',
-    ...templateOptionsForFieldConfig(config, {
+    ...propsForFieldConfig(config, {
       rows,
       minLength,
       maxLength

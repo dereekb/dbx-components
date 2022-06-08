@@ -8,10 +8,6 @@ export interface DbxFormStyleWrapperConfig {
   style: ObservableOrValue<string>;
 }
 
-export interface DbxFormStyleWrapperFormlyConfig extends FormlyFieldConfig {
-  styleWrapper: DbxFormStyleWrapperConfig;
-}
-
 @Component({
   template: `
     <div [ngClass]="(style$ | async) ?? ''">
@@ -19,16 +15,12 @@ export interface DbxFormStyleWrapperFormlyConfig extends FormlyFieldConfig {
     </div>
   `
 })
-export class DbxFormStyleWrapperComponent extends FieldWrapper<DbxFormStyleWrapperFormlyConfig> implements OnInit, OnDestroy {
+export class DbxFormStyleWrapperComponent extends FieldWrapper<FormlyFieldConfig<DbxFormStyleWrapperConfig>> implements OnInit, OnDestroy {
   private _style = new BehaviorSubject<Maybe<Observable<string>>>(undefined);
   readonly style$ = this._style.pipe(switchMapMaybeDefault(''), shareReplay(1));
 
-  get styleWrapper(): DbxFormStyleWrapperConfig {
-    return this.field.styleWrapper;
-  }
-
   get styleGetter(): ObservableOrValue<string> {
-    return this.styleWrapper.style;
+    return this.props.style;
   }
 
   ngOnInit(): void {

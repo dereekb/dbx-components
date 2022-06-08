@@ -1,20 +1,20 @@
-import { LabeledFieldConfig, formlyField, templateOptionsForFieldConfig } from '../field';
-import { DbxChecklistItemFieldConfig, ChecklistItemFormlyFieldConfig } from './checklist.item.field.component';
+import { FormlyFieldConfig } from '@ngx-formly/core';
+import { LabeledFieldConfig, formlyField, propsForFieldConfig } from '../field';
+import { DbxChecklistItemFieldProps } from './checklist.item.field.component';
 
-export interface ChecklistItemFieldConfig<T = unknown> extends LabeledFieldConfig, DbxChecklistItemFieldConfig<T> {}
+export interface ChecklistItemFieldConfig<T = unknown> extends LabeledFieldConfig, DbxChecklistItemFieldProps<T> {}
 export type ChecklistItemFieldBuilderInput<T = unknown> = Partial<ChecklistItemFieldConfig<T>> & Pick<ChecklistItemFieldConfig<T>, 'key' | 'displayContentObs'>;
 
-export function checklistItemField<T = unknown>(config: ChecklistItemFieldBuilderInput<T>): ChecklistItemFormlyFieldConfig<T> {
+export function checklistItemField<T = unknown>(config: ChecklistItemFieldBuilderInput<T>): FormlyFieldConfig<DbxChecklistItemFieldProps<T>> {
   const { key, displayContentObs, componentClass } = config;
 
-  const fieldConfig: ChecklistItemFormlyFieldConfig<T> = formlyField({
+  const fieldConfig = formlyField({
     key,
     type: 'checklistitem',
-    checklistField: {
+    ...propsForFieldConfig(config, {
       displayContentObs,
       componentClass
-    },
-    ...templateOptionsForFieldConfig(config)
+    })
   });
 
   return fieldConfig;

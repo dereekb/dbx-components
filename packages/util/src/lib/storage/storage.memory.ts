@@ -1,5 +1,5 @@
 import { objectHasKey } from '../object/object';
-import { Maybe } from '../value/maybe';
+import { Maybe } from '../value/maybe.type';
 import { StorageObject } from './storage.object';
 
 export class MemoryStorageInstance implements StorageObject {

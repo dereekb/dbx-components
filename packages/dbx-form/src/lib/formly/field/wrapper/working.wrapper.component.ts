@@ -7,10 +7,6 @@ import { FieldWrapper, FormlyFieldConfig } from '@ngx-formly/core';
  */
 export type DbxFormWorkingWrapperConfig = object;
 
-export interface DbxFormWorkingWrapperFormlyConfig extends FormlyFieldConfig {
-  styleWrapper: DbxFormWorkingWrapperConfig;
-}
-
 /**
  * Adds a loading bar to help signify asynchronos work is occuring.
  *
@@ -24,7 +20,7 @@ export interface DbxFormWorkingWrapperFormlyConfig extends FormlyFieldConfig {
     </div>
   `
 })
-export class DbxFormWorkingWrapperComponent extends FieldWrapper<DbxFormWorkingWrapperFormlyConfig> implements OnInit, OnDestroy {
+export class DbxFormWorkingWrapperComponent extends FieldWrapper<FormlyFieldConfig<DbxFormWorkingWrapperConfig>> implements OnInit, OnDestroy {
   readonly sub = new SubscriptionObject();
   readonly workingContext = new SimpleLoadingContext(false);
 

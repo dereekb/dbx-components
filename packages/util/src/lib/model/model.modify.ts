@@ -1,7 +1,7 @@
 import { MaybeMap } from '@dereekb/util';
 import { ArrayOrValue, asArray } from '../array/array';
 import { filterMaybeValues } from '../array/array.value';
-import { Maybe } from '../value/maybe';
+import { Maybe } from '../value/maybe.type';
 import { maybeMergeModifiers, ModifierFunction } from '../value/modifier';
 import { ModelConversionOptions, ModelMapFunction, ModelMapFunctions } from './model.conversion';
 

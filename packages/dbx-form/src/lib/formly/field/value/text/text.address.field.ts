@@ -51,7 +51,7 @@ export function addressField({ key = 'address', required = false }: Partial<Addr
   return {
     key,
     wrappers: ['section'],
-    templateOptions: {
+    props: {
       label: 'Address',
       placeholder: '',
       required

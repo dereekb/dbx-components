@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [7.3.0](https://github.com/dereekb/dbx-components/compare/v7.2.0-dev...v7.3.0) (2022-06-08)
+
+
+### Features
+
+* added FirestoreMap, FirestoreArrayMap snapshot fields ([bd23fd3](https://github.com/dereekb/dbx-components/commit/bd23fd372e3f2180980d7aec9c1b6ee1ec2bb3c7))
+
+
+
 # [7.2.0](https://github.com/dereekb/dbx-components/compare/v7.1.0-dev...v7.2.0) (2022-06-06)
 
 
