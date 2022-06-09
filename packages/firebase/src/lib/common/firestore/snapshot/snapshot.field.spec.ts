@@ -1,7 +1,7 @@
 import { ISO8601DateString, Maybe, modelFieldMapFunctions, objectHasKey } from '@dereekb/util';
 import { isValid } from 'date-fns';
 import { FirestoreModelKeyGrantedRoleArrayMap } from '../collection';
-import { firestoreArrayMap, firestoreDate, firestoreEncodedArray, firestoreEnum, firestoreField, firestoreMap, firestoreModelKeyGrantedRoleArrayMap, firestoreUniqueKeyedArray, firestoreUniqueStringArray } from './snapshot.field';
+import { firestoreArrayMap, firestoreDate, firestoreEncodedArray, firestoreEnum, firestoreField, firestoreMap, firestoreModelKeyGrantedRoleArrayMap, firestoreEnumArray, firestoreUniqueKeyedArray, firestoreUniqueStringArray } from './snapshot.field';
 
 describe('firestoreField()', () => {
   const defaultValue = -1;
@@ -98,6 +98,17 @@ describe('firestoreUniqueKeyedArray()', () => {
 
   it('should filter out duplicate keyed data.', () => {
     const data = [{ key: 'a' }, { key: 'a' }, { key: 'b' }];
+
+    const results = uniqueKeyedArrayConfig.from.convert(data);
+    expect(results.length).toBe(2);
+  });
+});
+
+describe('firestoreEnumArray()', () => {
+  const uniqueKeyedArrayConfig = firestoreEnumArray<TestFirestoreEnumType>();
+
+  it('should filter out duplicate keyed data.', () => {
+    const data: TestFirestoreEnumType[] = ['a', 'b', 'b'];
 
     const results = uniqueKeyedArrayConfig.from.convert(data);
     expect(results.length).toBe(2);
