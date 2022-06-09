@@ -1,5 +1,4 @@
-import { asGetter, GetterOrValue } from '@dereekb/util';
-import { Factory } from './../getter/getter';
+import { asGetter, Factory, GetterOrValue } from './../getter/getter';
 
 /**
  * incrementingNumberFactory() configuration.

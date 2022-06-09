@@ -1,7 +1,6 @@
-import { timeHasExpired } from '@dereekb/date';
 import { Milliseconds, DateOrUnixDateTimeNumber } from '@dereekb/util';
 import { filter, map, MonoTypeOperatorFunction, Observable, OperatorFunction, skipWhile, switchMap, takeWhile } from 'rxjs';
-import { hasExpired, toExpires, Expires } from './expires';
+import { hasExpired, toExpires, Expires, timeHasExpired } from './expires';
 
 /**
  * Creates a new Expires object at the current time on emission that will expire in the set amount of time.
