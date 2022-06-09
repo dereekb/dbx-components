@@ -7,7 +7,7 @@ import { UserRelated } from '../../../model/user';
 /**
  * Convenience function that checks the input context if the user is an admin or grants all roles.
  */
-export const grantFullAccessIfAdmin: GeneralGrantRolesIfFunction = grantModelRolesIfAdminFunction(fullAccessRoleMap);
+export const grantFullAccessIfAdmin: GeneralGrantRolesIfFunction<FirebaseModelContext> = grantModelRolesIfAdminFunction(fullAccessRoleMap);
 
 export function grantModelRolesIfAdmin<R extends string = string>(context: FirebaseModelContext, rolesToGrantToAdmin: GetterOrValue<GrantedRoleMap<R>>, otherwise?: GrantRolesOtherwiseFunction<R>): PromiseOrValue<GrantedRoleMap<R>> {
   return grantModelRolesIfAdminFunction(rolesToGrantToAdmin)(context, otherwise);
@@ -42,7 +42,7 @@ export type UserRelatedModelFirebaseModelContext<T extends UserRelated = UserRel
 /**
  * Convenience function that checks the input context if the user is related to the model by uid.
  */
-export const grantFullAccessIfAuthUserRelated: GeneralGrantRolesIfFunction = grantModelRolesIfAdminFunction(fullAccessRoleMap);
+export const grantFullAccessIfAuthUserRelated: GeneralGrantRolesIfFunction<UserRelatedModelFirebaseModelContext<UserRelated>> = grantModelRolesIfAuthUserRelatedModelFunction(fullAccessRoleMap);
 
 /**
  * Creates a GrantRolesIfFunction that grants roles if the user is related to the model by uid.
@@ -69,7 +69,7 @@ export const isOwnerOfUserRelatedModelInFirebaseModelContext: AsyncDecisionFunct
  * Grants the configured roles if the decision is made about the context. Otherwise, returns a NoAccessRoleMap.
  */
 export type GrantRolesOnlyIfFunction<C, R extends string = string> = (context: C) => Promise<GrantedRoleMap<R>>;
-export type GeneralGrantRolesOnlyIfFunction = <C, R extends string = string>(context: C) => Promise<GrantedRoleMap<R>>;
+export type GeneralGrantRolesOnlyIfFunction<C> = <R extends string = string>(context: C) => Promise<GrantedRoleMap<R>>;
 
 /**
  * Creates a GrantRolesOnlyIfFunction
@@ -87,7 +87,7 @@ export function grantModelRolesOnlyIfFunction<C, R extends string = string>(gran
  * Grants the configured roles if the decision is made about the context. Otherwise, invokes the otherwise function if available, or returns a NoAccessRoleMap.
  */
 export type GrantRolesIfFunction<C, R extends string = string> = (context: C, otherwise?: GrantRolesOtherwiseFunction<R>) => Promise<GrantedRoleMap<R>>;
-export type GeneralGrantRolesIfFunction = <C, R extends string = string>(context: C, otherwise?: GrantRolesOtherwiseFunction<R>) => Promise<GrantedRoleMap<R>>;
+export type GeneralGrantRolesIfFunction<C> = <R extends string = string>(context: C, otherwise?: GrantRolesOtherwiseFunction<R>) => Promise<GrantedRoleMap<R>>;
 
 /**
  * Used as the "else" statement for grantModelRolesIfFunction.
