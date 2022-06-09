@@ -1,4 +1,4 @@
-import { makeArray, Maybe, performMakeLoop, PromiseUtility } from '@dereekb/util';
+import { AsyncGetterOrValue, makeArray, Maybe, performMakeLoop, PromiseUtility, UseAsync, wrapUseAsyncFunction, useAsync } from '@dereekb/util';
 import { DocumentDataWithId, DocumentReference, DocumentSnapshot, QuerySnapshot, Transaction } from '../types';
 import { FirestoreDocument, FirestoreDocumentAccessor, LimitedFirestoreDocumentAccessor, LimitedFirestoreDocumentAccessorContextExtension } from './document';
 
@@ -95,3 +95,21 @@ export function documentDataWithId<T>(snapshot: DocumentSnapshot<T>): Maybe<Docu
 
   return data;
 }
+
+/**
+ * MappedUseAsyncFunction to load a snapshot from the input document and use it.
+ *
+ * @param document
+ * @param use
+ * @param defaultValue
+ * @returns
+ */
+export async function useDocumentSnapshot<T, D extends FirestoreDocument<T>, O = void>(document: Maybe<D>, use: UseAsync<DocumentSnapshot<T>, O>, defaultValue?: Maybe<AsyncGetterOrValue<O>>): Promise<Maybe<O>> {
+  const snapshot = await document?.accessor.get();
+  return useAsync(snapshot, use, defaultValue);
+}
+
+/**
+ * MappedUseAsyncFunction to load snapshot data from the input document and use it.
+ */
+export const useDocumentSnapshotData = wrapUseAsyncFunction(useDocumentSnapshot, (x) => x.data());
