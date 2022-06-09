@@ -39,7 +39,7 @@ export type NoAccessRoleMap = {
   [NO_ACCESS_ROLE_KEY]: true;
 };
 
-export function noAccessRoleMap(): NoAccessRoleMap {
+export function noAccessRoleMap<R extends string = string>(): GrantedRoleMap<R> {
   return {
     [NO_ACCESS_ROLE_KEY]: true
   };
@@ -53,7 +53,7 @@ export type FullAccessRoleMap = {
   [FULL_ACCESS_ROLE_KEY]: true;
 };
 
-export function fullAccessRoleMap(): FullAccessRoleMap {
+export function fullAccessRoleMap<R extends string = string>(): GrantedRoleMap<R> {
   return {
     [FULL_ACCESS_ROLE_KEY]: true
   };

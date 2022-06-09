@@ -1,5 +1,5 @@
-import { FirebaseAppModelContext, firebaseModelServiceFactory, firebaseModelsService, FirebasePermissionServiceModel, FirestoreContext } from '@dereekb/firebase';
-import { GrantedRoleMap, noAccessRoleMap } from '@dereekb/model';
+import { FirebaseAppModelContext, firebaseModelServiceFactory, firebaseModelsService, FirebasePermissionServiceModel, FirestoreContext, grantFullAccessIfAdmin, grantFullAccessIfAuthUserRelated } from '@dereekb/firebase';
+import { GrantedRoleMap } from '@dereekb/model';
 import { PromiseOrValue } from '@dereekb/util';
 import { GuestbookTypes, GuestbookFirestoreCollections, Guestbook, GuestbookDocument, GuestbookEntry, GuestbookEntryDocument, GuestbookEntryFirestoreCollectionFactory, GuestbookEntryFirestoreCollectionGroup, GuestbookEntryRoles, GuestbookFirestoreCollection, GuestbookRoles, guestbookEntryFirestoreCollectionFactory, guestbookEntryFirestoreCollectionGroup, guestbookFirestoreCollection } from './guestbook';
 import { ProfileTypes, Profile, ProfileDocument, ProfileFirestoreCollection, ProfileFirestoreCollections, ProfilePrivateData, ProfilePrivateDataDocument, ProfilePrivateDataFirestoreCollectionFactory, ProfilePrivateDataFirestoreCollectionGroup, ProfilePrivateDataRoles, ProfileRoles, profileFirestoreCollection, profilePrivateDataFirestoreCollectionFactory, profilePrivateDataFirestoreCollectionGroup } from './profile';
@@ -27,22 +27,14 @@ export function makeDemoFirestoreCollections(firestoreContext: FirestoreContext)
 // MARK: Guestbook
 export const guestbookFirebaseModelServiceFactory = firebaseModelServiceFactory<DemoFirebaseContext, Guestbook, GuestbookDocument, GuestbookRoles>({
   roleMapForModel: function (output: FirebasePermissionServiceModel<Guestbook, GuestbookDocument>, context: DemoFirebaseContext, model: GuestbookDocument): PromiseOrValue<GrantedRoleMap<GuestbookRoles>> {
-    const roles: GrantedRoleMap<GuestbookRoles> = noAccessRoleMap();
-
-    // todo: ...
-
-    return roles;
+    return grantFullAccessIfAdmin(context);
   },
   getFirestoreCollection: (c) => c.app.guestbookCollection
 });
 
 export const guestbookEntryFirebaseModelServiceFactory = firebaseModelServiceFactory<DemoFirebaseContext, GuestbookEntry, GuestbookEntryDocument, GuestbookEntryRoles>({
   roleMapForModel: function (output: FirebasePermissionServiceModel<GuestbookEntry, GuestbookEntryDocument>, context: DemoFirebaseContext, model: GuestbookEntryDocument): PromiseOrValue<GrantedRoleMap<GuestbookEntryRoles>> {
-    const roles: GrantedRoleMap<GuestbookEntryRoles> = noAccessRoleMap();
-
-    // todo: ...
-
-    return roles;
+    return grantFullAccessIfAuthUserRelated({ context, model });
   },
   getFirestoreCollection: (c) => c.app.guestbookEntryCollectionGroup
 });
@@ -50,22 +42,14 @@ export const guestbookEntryFirebaseModelServiceFactory = firebaseModelServiceFac
 // MARK: Profile
 export const profileFirebaseModelServiceFactory = firebaseModelServiceFactory<DemoFirebaseContext, Profile, ProfileDocument, ProfileRoles>({
   roleMapForModel: function (output: FirebasePermissionServiceModel<Profile, ProfileDocument>, context: DemoFirebaseContext, model: ProfileDocument): PromiseOrValue<GrantedRoleMap<ProfileRoles>> {
-    const roles: GrantedRoleMap<ProfileRoles> = noAccessRoleMap();
-
-    // todo: ...
-
-    return roles;
+    return grantFullAccessIfAuthUserRelated({ context, model });
   },
   getFirestoreCollection: (c) => c.app.profileCollection
 });
 
 export const profilePrivateDataFirebaseModelServiceFactory = firebaseModelServiceFactory<DemoFirebaseContext, ProfilePrivateData, ProfilePrivateDataDocument, ProfilePrivateDataRoles>({
   roleMapForModel: function (output: FirebasePermissionServiceModel<ProfilePrivateData, ProfilePrivateDataDocument>, context: DemoFirebaseContext, model: ProfilePrivateDataDocument): PromiseOrValue<GrantedRoleMap<ProfilePrivateDataRoles>> {
-    const roles: GrantedRoleMap<ProfilePrivateDataRoles> = noAccessRoleMap();
-
-    // todo: ...
-
-    return roles;
+    return grantFullAccessIfAdmin(context);
   },
   getFirestoreCollection: (c) => c.app.profilePrivateDataCollectionGroup
 });
@@ -84,6 +68,8 @@ export const DEMO_FIREBASE_MODEL_SERVICE_FACTORIES = {
   profilePrivate: profilePrivateDataFirebaseModelServiceFactory
 };
 
-export const demoFirebaseModelServices = firebaseModelsService<typeof DEMO_FIREBASE_MODEL_SERVICE_FACTORIES, DemoFirebaseBaseContext, DemoFirebaseModelTypes>(DEMO_FIREBASE_MODEL_SERVICE_FACTORIES);
+export type DemoFirebaseModelServiceFactories = typeof DEMO_FIREBASE_MODEL_SERVICE_FACTORIES;
 
-export type DemoFirebaseContext = DemoFirebaseBaseContext & { service: typeof demoFirebaseModelServices };
+export const demoFirebaseModelServices = firebaseModelsService<DemoFirebaseModelServiceFactories, DemoFirebaseBaseContext, DemoFirebaseModelTypes>(DEMO_FIREBASE_MODEL_SERVICE_FACTORIES);
+
+export type DemoFirebaseContext = DemoFirebaseBaseContext & { service: DemoFirebaseModelServiceFactories };
