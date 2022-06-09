@@ -1,4 +1,5 @@
-import { GetterOrValue, getValueFromGetter } from '../getter';
+import { AsyncGetterOrValue, GetterOrValue, getValueFromGetter } from '../getter';
+import { PromiseOrValue } from '../promise/promise';
 import { MapFunction } from './map';
 import { Maybe } from './maybe.type';
 
@@ -59,4 +60,41 @@ export function useContextFunction<I, O>(use: UseValue<I, O>, defaultValue?: Get
 
     return result;
   }) as UseContextFunction<I>;
+}
+
+// MARK: Async
+/**
+ * A map function with the intent of using the input value, and returning another value as a promise.
+ */
+export type UseAsync<I, O = void> = MapFunction<I, PromiseOrValue<O>>;
+
+export async function useAsync<I, O = void>(input: Maybe<I>, use: UseValue<I, O>, defaultValue?: Maybe<GetterOrValue<O>>): Promise<Maybe<O>> {
+  let result: Maybe<O>;
+
+  if (input != null) {
+    result = (await use(input)) as Maybe<O>;
+  } else {
+    result = await getValueFromGetter(defaultValue);
+  }
+
+  return result;
+}
+
+export type UseAsyncFunction<I> = MappedUseAsyncFunction<I, I>;
+export type MappedUseAsyncFunction<A, I> = <O = void>(input: Maybe<A>, use: UseAsync<I, O>, defaultValue?: Maybe<AsyncGetterOrValue<O>>) => Promise<Maybe<O>>;
+
+/**
+ * Creates a MappedUseFunction.
+ */
+export function mappedUseAsyncFunction<A, I>(map: MapFunction<A, Maybe<PromiseOrValue<I>>>): MappedUseAsyncFunction<A, I> {
+  return wrapUseAsyncFunction<A, I, I>(useAsync as any, map as any);
+}
+
+/**
+ * Wraps another MappedUseFunction or MappedUseAsyncFunction and maps the input values.
+ */
+export function wrapUseAsyncFunction<A, B, I>(mappedUsePromiseFn: MappedUseAsyncFunction<A, B>, map: MapFunction<B, Maybe<PromiseOrValue<I>>>): MappedUseAsyncFunction<A, I> {
+  return (<O = void>(input: Maybe<A>, useFn: UseAsync<I, O>, defaultValue?: Maybe<AsyncGetterOrValue<O>>) => {
+    return mappedUsePromiseFn<O>(input, (async (value: B) => useValue(await map(value), useFn, defaultValue)) as UseAsync<B, O>, defaultValue);
+  }) as MappedUseAsyncFunction<A, I>;
 }

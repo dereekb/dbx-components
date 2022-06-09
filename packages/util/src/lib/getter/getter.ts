@@ -1,3 +1,5 @@
+import { PromiseOrValue } from '../promise/promise';
+
 /**
  * Function that returns a value.
  */
@@ -22,6 +24,11 @@ export type FactoryWithRequiredInput<T, A> = (args: A) => T;
  * Either a Getter, or an instance of the item.
  */
 export type GetterOrValue<T> = T | Getter<T>;
+
+/**
+ * A GetterOrValue returned from a Promise.
+ */
+export type AsyncGetterOrValue<T> = GetterOrValue<PromiseOrValue<T>>;
 
 /**
  * Either a GetterWithInput, or a Getter.
