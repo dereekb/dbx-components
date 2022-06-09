@@ -8,7 +8,7 @@ import { DocumentReference, CollectionReference, Transaction, WriteBatch, Docume
 import { createOrUpdateWithAccessorSet, dataFromSnapshotStream, FirestoreDocumentDataAccessor } from './accessor';
 import { CollectionReferenceRef, DocumentReferenceRef, FirestoreContextReference } from '../reference';
 import { FirestoreDocumentContext } from './context';
-import { build } from '@dereekb/util';
+import { build, Maybe } from '@dereekb/util';
 import { FirestoreModelNameRef, FirestoreModelIdentity, FirestoreModelIdentityRef } from '../collection/collection';
 import { InterceptAccessorFactoryFunction } from './accessor.wrap';
 
@@ -276,17 +276,17 @@ export function firestoreDocumentAccessorFactory<T, D extends FirestoreDocument<
 // MARK: Extension
 export interface LimitedFirestoreDocumentAccessorForTransactionFactory<T, D extends FirestoreDocument<T> = FirestoreDocument<T>, A extends LimitedFirestoreDocumentAccessor<T, D> = LimitedFirestoreDocumentAccessor<T, D>> {
   /**
-   * Creates a new FirestoreDocumentAccessor for a Transaction.
+   * Creates a new FirestoreDocumentAccessor for a Transaction. If transaction is null/undefined, an accessor with a default context is returned.
    */
-  documentAccessorForTransaction(transaction: Transaction): A;
+  documentAccessorForTransaction(transaction: Maybe<Transaction>): A;
 }
 export type FirestoreDocumentAccessorForTransactionFactory<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> = LimitedFirestoreDocumentAccessorForTransactionFactory<T, D, FirestoreDocumentAccessor<T, D>>;
 
 export interface LimitedFirestoreDocumentAccessorForWriteBatchFactory<T, D extends FirestoreDocument<T> = FirestoreDocument<T>, A extends LimitedFirestoreDocumentAccessor<T, D> = LimitedFirestoreDocumentAccessor<T, D>> {
   /**
-   * Creates a new FirestoreDocumentAccessor for a WriteBatch.
+   * Creates a new FirestoreDocumentAccessor for a WriteBatch. If writeBatch is null/undefined an accessor with a default context is returned.
    */
-  documentAccessorForWriteBatch(writeBatch: WriteBatch): A;
+  documentAccessorForWriteBatch(writeBatch: Maybe<WriteBatch>): A;
 }
 export type FirestoreDocumentAccessorForWriteBatchFactory<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> = LimitedFirestoreDocumentAccessorForWriteBatchFactory<T, D, FirestoreDocumentAccessor<T, D>>;
 
@@ -306,11 +306,13 @@ export function firestoreDocumentAccessorContextExtension<T, D extends Firestore
 export function firestoreDocumentAccessorContextExtension<T, D extends FirestoreDocument<T> = FirestoreDocument<T>>({ documentAccessor, firestoreAccessorDriver }: FirestoreDocumentAccessorContextExtensionConfig<T, D> | LimitedFirestoreDocumentAccessorContextExtensionConfig<T, D>) {
   return {
     documentAccessor,
-    documentAccessorForTransaction(transaction: Transaction) {
-      return documentAccessor(firestoreAccessorDriver.transactionContextFactory(transaction));
+    documentAccessorForTransaction(transaction: Maybe<Transaction>) {
+      const context: Maybe<FirestoreDocumentContext<T>> = transaction ? firestoreAccessorDriver.transactionContextFactory(transaction) : undefined;
+      return documentAccessor(context);
     },
-    documentAccessorForWriteBatch(writeBatch: WriteBatch) {
-      return documentAccessor(firestoreAccessorDriver.writeBatchContextFactory(writeBatch));
+    documentAccessorForWriteBatch(writeBatch: Maybe<WriteBatch>) {
+      const context: Maybe<FirestoreDocumentContext<T>> = writeBatch ? firestoreAccessorDriver.writeBatchContextFactory(writeBatch) : undefined;
+      return documentAccessor(context);
     }
   };
 }
@@ -333,8 +335,8 @@ export abstract class AbstractFirestoreDocumentWithParent<P, T, D extends Abstra
 // MARK: Single-Document Accessor
 export interface FirestoreSingleDocumentAccessor<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> {
   loadDocument(): D;
-  loadDocumentForTransaction(transaction: Transaction): D;
-  loadDocumentForWriteBatch(writeBatch: WriteBatch): D;
+  loadDocumentForTransaction(transaction: Maybe<Transaction>): D;
+  loadDocumentForWriteBatch(writeBatch: Maybe<WriteBatch>): D;
 }
 
 export interface FirestoreSingleDocumentAccessorConfig<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> {
@@ -349,10 +351,10 @@ export function firestoreSingleDocumentAccessor<T, D extends FirestoreDocument<T
     loadDocument(): D {
       return accessors.documentAccessor().loadDocumentForId(identifier);
     },
-    loadDocumentForTransaction(transaction: Transaction): D {
+    loadDocumentForTransaction(transaction: Maybe<Transaction>): D {
       return accessors.documentAccessorForTransaction(transaction).loadDocumentForId(identifier);
     },
-    loadDocumentForWriteBatch(writeBatch: WriteBatch): D {
+    loadDocumentForWriteBatch(writeBatch: Maybe<WriteBatch>): D {
       return accessors.documentAccessorForWriteBatch(writeBatch).loadDocumentForId(identifier);
     }
   };
