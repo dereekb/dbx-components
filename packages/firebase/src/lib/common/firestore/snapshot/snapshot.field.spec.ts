@@ -78,10 +78,19 @@ type TestFirestoreEnumType = 'a' | 'b' | 'c';
 
 describe('firestoreEnum()', () => {
   const enumField = firestoreEnum<TestFirestoreEnumType>({ default: 'a' });
-  it('should pass the enum value through.', () => {
+
+  it('should return the default value if the input is not defined.', () => {
     const { from, to } = modelFieldMapFunctions(enumField);
 
-    const result = to(undefined);
+    const result = from(undefined);
+
+    expect(result).toBe('a');
+  });
+
+  it('should pass the enum values through.', () => {
+    const { from, to } = modelFieldMapFunctions(enumField);
+
+    const result = from('a');
 
     expect(result).toBe('a');
   });
@@ -105,13 +114,23 @@ describe('firestoreUniqueKeyedArray()', () => {
 });
 
 describe('firestoreEnumArray()', () => {
-  const uniqueKeyedArrayConfig = firestoreEnumArray<TestFirestoreEnumType>();
+  const firestoreEnumArrayConfig = firestoreEnumArray<TestFirestoreEnumType>();
 
   it('should filter out duplicate keyed data.', () => {
     const data: TestFirestoreEnumType[] = ['a', 'b', 'b'];
 
-    const results = uniqueKeyedArrayConfig.from.convert(data);
+    const results = firestoreEnumArrayConfig.from.convert(data);
     expect(results.length).toBe(2);
+  });
+
+  it('should return an empty array when converting to data.', () => {
+    const { from, to } = modelFieldMapFunctions(firestoreEnumArrayConfig);
+
+    const result = from(undefined);
+
+    expect(result).toBeDefined();
+    expect(Array.isArray(result)).toBe(true);
+    expect(result.length).toBe(0);
   });
 });
 
