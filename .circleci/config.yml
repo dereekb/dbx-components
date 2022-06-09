@@ -214,14 +214,31 @@ workflows:
           filters:
             branches:
               only: main
-      - deploy-to-firebase:
+      - publish-to-npm:
           requires:
             - build
           filters:
             branches:
               only: main
-      - publish-to-npm:
+  # Deploy to Firebase
+  deploy:
+    jobs:
+      # Wait for approval before deploying to firebase
+      # This prevents unnecessary deployments for smaller changes.
+      - hold-deploy-to-firebase:
+          type: approval
+          filters:
+            branches:
+              only: main
+      - build:
+          filters:
+            branches:
+              only: main
           requires:
+            - hold-deploy-to-firebase
+      - deploy-to-firebase:
+          requires:
+            - hold-deploy-to-firebase
             - build
           filters:
             branches:
