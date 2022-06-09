@@ -9,7 +9,7 @@ export interface OnMatchDeltaConfig<T> {
    */
   from: T;
   /**
-   * The target value to recieve after the first.
+   * The target value to receive after the first.
    */
   to: T;
   /**

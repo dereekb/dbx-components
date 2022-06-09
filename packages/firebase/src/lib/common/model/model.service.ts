@@ -1,5 +1,5 @@
 import { GrantedRole } from '@dereekb/model';
-import { Getter, cachedGetter, build, SetIncludesMode, ArrayOrValue, usePromise, UsePromiseUseFunction, UsePromiseFunction } from '@dereekb/util';
+import { Getter, cachedGetter, build, SetIncludesMode, ArrayOrValue, usePromise, UseAsync, UsePromiseFunction } from '@dereekb/util';
 import { FirestoreDocument } from '../firestore/accessor/document';
 import { FirestoreModelIdentity, FirestoreModelKey, FirestoreModelNames } from '../firestore/collection/collection';
 import { FirebaseModelCollectionLoader, firebaseModelLoader, FirebaseModelLoader, InContextFirebaseModelLoader } from './model/model.loader';
@@ -173,7 +173,7 @@ export type UseFirebaseModelsServiceSelection<Y extends FirebaseModelsService<an
   : never;
 
 export type UseFirebaseModelsServiceSelectionResult<Y extends FirebaseModelsService<any, any>, T extends FirebaseModelsServiceTypes<Y>> = Y extends FirebaseModelsService<infer X, infer C> ? (T extends keyof X ? (X[T] extends FirebaseModelServiceGetter<C, infer T, infer D, infer R> ? UsePromiseFunction<ContextGrantedModelRolesReader<C, T, D, R>> : never) : never) : never;
-export type UseFirebaseModelsServiceSelectionUseFunction<Y extends FirebaseModelsService<any, any>, T extends FirebaseModelsServiceTypes<Y>, O> = Y extends FirebaseModelsService<infer X, infer C> ? (T extends keyof X ? (X[T] extends FirebaseModelServiceGetter<C, infer T, infer D, infer R> ? UsePromiseUseFunction<ContextGrantedModelRolesReader<C, T, D, R>, O> : never) : never) : never;
+export type UseFirebaseModelsServiceSelectionUseFunction<Y extends FirebaseModelsService<any, any>, T extends FirebaseModelsServiceTypes<Y>, O> = Y extends FirebaseModelsService<infer X, infer C> ? (T extends keyof X ? (X[T] extends FirebaseModelServiceGetter<C, infer T, infer D, infer R> ? UseAsync<ContextGrantedModelRolesReader<C, T, D, R>, O> : never) : never) : never;
 
 export function selectFromFirebaseModelsService<Y extends FirebaseModelsService<any, any>, T extends FirebaseModelsServiceTypes<Y>>(service: Y, type: T, select: FirebaseModelsServiceSelection<Y, T>): FirebaseModelsServiceSelectionResult<Y, T> {
   return service(type, select.context).forKey(select.key) as FirebaseModelsServiceSelectionResult<Y, T>;

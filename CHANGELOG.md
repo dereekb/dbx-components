@@ -2,6 +2,23 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [7.7.0](https://github.com/dereekb/dbx-components/compare/v7.6.0-dev...v7.7.0) (2022-06-09)
+
+
+### Bug Fixes
+
+* documentAccessorForTransaction/WriteBatch now accepts a Maybe value ([beb1737](https://github.com/dereekb/dbx-components/commit/beb173794ce2cf60b41e43ccfc2b4e4eeda53224))
+* fixed grantFullAccessIfAuthUserRelated typings ([f83af85](https://github.com/dereekb/dbx-components/commit/f83af852f1fbad20ba86eb477d18f54e936dd41c))
+* grantFullAccessIfAuthUserRelated() now takes in a document or model ([53563dd](https://github.com/dereekb/dbx-components/commit/53563dd93a9ae25e84b6ef7f3e9d7ce857254bc6))
+
+
+### Features
+
+* added UseAsync ([f52ff34](https://github.com/dereekb/dbx-components/commit/f52ff345621ecbcb4d6b0f2957dcd7f4f901ac3a))
+* added useDocumentSnapshotData ([aa329f2](https://github.com/dereekb/dbx-components/commit/aa329f25cb105c871bc0fb22001abb7a98979b14))
+
+
+
 # [7.6.0](https://github.com/dereekb/dbx-components/compare/v7.5.0-dev...v7.6.0) (2022-06-09)
 
 
