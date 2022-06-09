@@ -27,8 +27,15 @@ export type MappedUseFunction<A, I> = <O = void>(input: Maybe<A>, use: UseValue<
  * Creates a MappedUseFunction.
  */
 export function mappedUseFunction<A, I>(map: MapFunction<A, Maybe<I>>): MappedUseFunction<A, I> {
+  return wrapUseFunction<A, I, I>(useValue as any, map as any);
+}
+
+/**
+ * Wraps another MappedUseFunction and maps the input values.
+ */
+export function wrapUseFunction<A, B, I>(mappedUseFn: MappedUseFunction<A, B>, map: MapFunction<B, Maybe<I>>): MappedUseFunction<A, I> {
   return (<O = void>(input: Maybe<A>, useFn: UseValue<I, O>, defaultValue?: Maybe<GetterOrValue<O>>) => {
-    return useValue<A, O>(input, ((value: A) => useValue(map(value), useFn, defaultValue)) as UseValue<A, O>, defaultValue);
+    return mappedUseFn<O>(input, ((value: B) => useValue(map(value), useFn, defaultValue)) as UseValue<B, O>, defaultValue);
   }) as MappedUseFunction<A, I>;
 }
 

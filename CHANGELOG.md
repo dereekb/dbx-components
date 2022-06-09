@@ -2,6 +2,16 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [7.6.0](https://github.com/dereekb/dbx-components/compare/v7.5.0-dev...v7.6.0) (2022-06-09)
+
+
+### Features
+
+* added grantFullAccessIfAuthUserRelated() ([be05e09](https://github.com/dereekb/dbx-components/commit/be05e0939939e9e0d1c8d1d8afbcab1fb15e060b))
+* added wrapUseFunction() ([7bbae2f](https://github.com/dereekb/dbx-components/commit/7bbae2fdcbf8344c04c5c26db1d5a40b8048985b))
+
+
+
 # [7.5.0](https://github.com/dereekb/dbx-components/compare/v7.4.0-dev...v7.5.0) (2022-06-08)
 
 
