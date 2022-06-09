@@ -1,4 +1,4 @@
-import { performTaskLoop } from '@dereekb/util';
+import { performTaskLoop } from './promise.loop';
 import { waitForMs } from './wait';
 
 export interface PollConfig {

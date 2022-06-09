@@ -1,7 +1,7 @@
 import { ISO8601DateString, Maybe, modelFieldMapFunctions, objectHasKey } from '@dereekb/util';
 import { isValid } from 'date-fns';
 import { FirestoreModelKeyGrantedRoleArrayMap } from '../collection';
-import { firestoreArrayMap, firestoreDate, firestoreEncodedArray, firestoreField, firestoreMap, firestoreModelKeyGrantedRoleArrayMap, firestoreUniqueKeyedArray, firestoreUniqueStringArray } from './snapshot.field';
+import { firestoreArrayMap, firestoreDate, firestoreEncodedArray, firestoreEnum, firestoreField, firestoreMap, firestoreModelKeyGrantedRoleArrayMap, firestoreEnumArray, firestoreUniqueKeyedArray, firestoreUniqueStringArray } from './snapshot.field';
 
 describe('firestoreField()', () => {
   const defaultValue = -1;
@@ -74,6 +74,28 @@ describe('firestoreDate()', () => {
   });
 });
 
+type TestFirestoreEnumType = 'a' | 'b' | 'c';
+
+describe('firestoreEnum()', () => {
+  const enumField = firestoreEnum<TestFirestoreEnumType>({ default: 'a' });
+
+  it('should return the default value if the input is not defined.', () => {
+    const { from, to } = modelFieldMapFunctions(enumField);
+
+    const result = from(undefined);
+
+    expect(result).toBe('a');
+  });
+
+  it('should pass the enum values through.', () => {
+    const { from, to } = modelFieldMapFunctions(enumField);
+
+    const result = from('a');
+
+    expect(result).toBe('a');
+  });
+});
+
 interface TestUniqueItem {
   key: string;
 }
@@ -88,6 +110,27 @@ describe('firestoreUniqueKeyedArray()', () => {
 
     const results = uniqueKeyedArrayConfig.from.convert(data);
     expect(results.length).toBe(2);
+  });
+});
+
+describe('firestoreEnumArray()', () => {
+  const firestoreEnumArrayConfig = firestoreEnumArray<TestFirestoreEnumType>();
+
+  it('should filter out duplicate keyed data.', () => {
+    const data: TestFirestoreEnumType[] = ['a', 'b', 'b'];
+
+    const results = firestoreEnumArrayConfig.from.convert(data);
+    expect(results.length).toBe(2);
+  });
+
+  it('should return an empty array when converting to data.', () => {
+    const { from, to } = modelFieldMapFunctions(firestoreEnumArrayConfig);
+
+    const result = from(undefined);
+
+    expect(result).toBeDefined();
+    expect(Array.isArray(result)).toBe(true);
+    expect(result.length).toBe(0);
   });
 });
 

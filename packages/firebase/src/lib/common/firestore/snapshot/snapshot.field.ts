@@ -1,7 +1,32 @@
 import { GrantedRole } from '@dereekb/model';
 import { FirestoreModelKey } from '../collection/collection';
 import { nowISODateString, toISODateString, toJsDate } from '@dereekb/date';
-import { ModelFieldMapFunctionsConfig, GetterOrValue, Maybe, ModelFieldMapConvertFunction, passThrough, PrimativeKey, ReadKeyFunction, makeFindUniqueFunction, ModelFieldMapFunctionsWithDefaultsConfig, filterMaybeValues, MaybeSo, FindUniqueFunction, FindUniqueStringsTransformConfig, findUniqueTransform, MapFunction, FilterKeyValueTuplesInput, KeyValueTypleValueFilter, filterFromPOJOFunction, copyObject, CopyObjectFunction, mapObjectMapFunction, filterEmptyValues, ModelKey } from '@dereekb/util';
+import {
+  ModelFieldMapFunctionsConfig,
+  GetterOrValue,
+  Maybe,
+  ModelFieldMapConvertFunction,
+  passThrough,
+  PrimativeKey,
+  ReadKeyFunction,
+  makeFindUniqueFunction,
+  ModelFieldMapFunctionsWithDefaultsConfig,
+  filterMaybeValues,
+  MaybeSo,
+  FindUniqueFunction,
+  FindUniqueStringsTransformConfig,
+  findUniqueTransform,
+  MapFunction,
+  FilterKeyValueTuplesInput,
+  KeyValueTypleValueFilter,
+  filterFromPOJOFunction,
+  copyObject,
+  CopyObjectFunction,
+  mapObjectMapFunction,
+  filterEmptyValues,
+  ModelKey,
+  unique
+} from '@dereekb/util';
 import { FIRESTORE_EMPTY_VALUE } from './snapshot';
 
 export interface BaseFirestoreFieldConfig<V, D = unknown> {
@@ -78,6 +103,20 @@ export function firestoreString(config?: FirestoreStringConfig) {
 
 export function optionalFirestoreString() {
   return firestorePassThroughField<Maybe<string>>();
+}
+
+export type FirestoreEnumConfig<S extends string | number> = MapConfiguredFirestoreFieldConfigWithDefault<S, S>;
+
+export function firestoreEnum<S extends string | number>(config: FirestoreEnumConfig<S>) {
+  return firestoreField<S, S>({
+    ...config,
+    fromData: passThrough,
+    toData: passThrough
+  });
+}
+
+export function optionalFirestoreEnum<S extends string | number>() {
+  return firestorePassThroughField<Maybe<S>>();
 }
 
 export function firestoreUID() {
@@ -177,6 +216,21 @@ export function firestoreUniqueKeyedArray<T, K extends PrimativeKey = PrimativeK
   return firestoreUniqueArray({
     ...config,
     findUnique: makeFindUniqueFunction<T, K>(config.readKey)
+  });
+}
+
+export type FirestoreEnumArrayFieldConfig<S extends string | number> = Omit<FirestoreUniqueArrayFieldConfig<S>, 'findUnique'>;
+
+/**
+ * FirestoreField configuration for an array of unique enum values.
+ *
+ * @param config
+ * @returns
+ */
+export function firestoreEnumArray<S extends string | number>(config: FirestoreEnumArrayFieldConfig<S> = {}) {
+  return firestoreUniqueArray({
+    ...config,
+    findUnique: unique
   });
 }
 

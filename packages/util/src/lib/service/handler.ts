@@ -1,6 +1,9 @@
 import { PrimativeKey, ReadKeyFunction } from './../key';
 import { ArrayOrValue } from './../array/array';
-import { Maybe, PromiseOrValue, setKeysOnMap, build } from '@dereekb/util';
+import { build } from '../value/build';
+import { Maybe } from '../value/maybe.type';
+import { PromiseOrValue } from '../promise/promise';
+import { setKeysOnMap } from '../map/map';
 
 /**
  * Key used to signify
