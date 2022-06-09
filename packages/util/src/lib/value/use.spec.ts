@@ -1,11 +1,46 @@
 import { MapFunction } from './map';
-import { mappedUseFunction } from './use';
+import { MappedUseFunction, mappedUseFunction, wrapUseFunction } from './use';
 
 describe('mappedUseFunction()', () => {
   const mapFn: MapFunction<number, string> = (number: number) => String(number);
 
   describe('function', () => {
     const mappedUseFn = mappedUseFunction(mapFn);
+
+    describe('wrapUseFunction', () => {
+      it('should wrap a MappedUseFunction function', () => {
+        const result: MappedUseFunction<number, boolean> = wrapUseFunction(mappedUseFn, (input: string) => true);
+        expect(result).toBeDefined();
+      });
+
+      describe('function', () => {
+        const wrappedMapFn = (input: string) => input.toUpperCase();
+        const wrappedUseFn = wrapUseFunction(mappedUseFn, wrappedMapFn);
+
+        it('should use the value', () => {
+          let used = false;
+
+          wrappedUseFn(1, () => {
+            used = true;
+          });
+
+          expect(used).toBe(true);
+        });
+
+        it('should recieve the mapped value', () => {
+          const value = 1;
+          const expectValue = 'hello';
+          const expectedMappedValue = wrappedMapFn(mapFn(value));
+
+          const result = mappedUseFn(value, (mappedValue) => {
+            expect(mappedValue).toBe(expectedMappedValue);
+            return expectValue;
+          });
+
+          expect(result).toBe(expectValue);
+        });
+      });
+    });
 
     it('should use the value', () => {
       let used = false;

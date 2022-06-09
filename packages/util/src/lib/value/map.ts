@@ -1,3 +1,4 @@
+import { PromiseOrValue } from '../promise/promise';
 import { build } from './build';
 import { Maybe } from './maybe.type';
 
@@ -6,6 +7,14 @@ import { Maybe } from './maybe.type';
  */
 export type MapFunction<I, O> = (input: I) => O;
 
+/**
+ * Converts a MapFunction into one that returns a promise.
+ */
+export type AsyncMapFunction<F extends MapFunction<any, any>> = F extends MapFunction<infer I, infer O> ? MapFunction<I, PromiseOrValue<O>> : never;
+
+/**
+ * Converts a MapFunction into one that takes in arrays and returns arrays.
+ */
 export type MapArrayFunction<F extends MapFunction<any, any>> = F extends MapFunction<infer I, infer O> ? MapFunction<I[], O[]> : never;
 
 /**
@@ -83,3 +92,4 @@ export function mapFunctionOutput<O extends object, I = unknown>(output: O, inpu
  * A map function that derives a boolean from the input.
  */
 export type DecisionFunction<I> = MapFunction<I, boolean>;
+export type AsyncDecisionFunction<I> = AsyncMapFunction<DecisionFunction<I>>;
