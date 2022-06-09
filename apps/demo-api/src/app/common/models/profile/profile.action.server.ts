@@ -48,6 +48,7 @@ export function initProfileForUidFactory({ profileCollection: profileFirestoreCo
 
         // create the profile
         await profile.accessor.set({
+          uid,
           username,
           updatedAt: new Date()
         });

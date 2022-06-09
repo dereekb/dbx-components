@@ -1,3 +1,4 @@
+import { FirestoreDocument } from './../../firestore/accessor/document';
 import { fullAccessRoleMap, GrantedRoleMap, noAccessRoleMap } from '@dereekb/model';
 import { AsyncDecisionFunction, Getter, GetterOrValue, getValueFromGetter, Maybe, PromiseOrValue } from '@dereekb/util';
 import { FirebaseModelContext } from '../context';
@@ -34,8 +35,15 @@ export function grantModelRolesIfAdminFunction<R extends string = string>(rolesT
 export const isAdminInFirebaseModelContext: AsyncDecisionFunction<FirebaseModelContext> = (context: FirebaseModelContext) => context.auth?.isAdmin() ?? false;
 
 // MARK: User Related
-export type UserRelatedModelFirebaseModelContext<T extends UserRelated = UserRelated> = {
+export type UserRelatedModelFirebaseModelContext<T extends UserRelated = UserRelated> = UserRelatedModelFirebaseModelContextModelInput<T> | UserRelatedModelFirebaseModelContextDocumentInput<T>;
+
+export type UserRelatedModelFirebaseModelContextModelInput<T extends UserRelated = UserRelated> = {
   model: T;
+  context: FirebaseModelContext;
+};
+
+export type UserRelatedModelFirebaseModelContextDocumentInput<T extends UserRelated = UserRelated> = {
+  document: FirestoreDocument<T>;
   context: FirebaseModelContext;
 };
 
@@ -62,7 +70,28 @@ export function grantModelRolesIfAuthUserRelatedModelFunction<T extends UserRela
  * @param context
  * @returns
  */
-export const isOwnerOfUserRelatedModelInFirebaseModelContext: AsyncDecisionFunction<UserRelatedModelFirebaseModelContext<UserRelated>> = ({ context, model }: UserRelatedModelFirebaseModelContext) => context.auth?.uid === model.uid;
+export const isOwnerOfUserRelatedModelInFirebaseModelContext: AsyncDecisionFunction<UserRelatedModelFirebaseModelContext<UserRelated>> = async (context: UserRelatedModelFirebaseModelContext) => {
+  let decision = false;
+  const auth = context.context.auth;
+
+  if (auth != null) {
+    let model: Maybe<UserRelated> = (context as UserRelatedModelFirebaseModelContextModelInput).model;
+
+    if (!model) {
+      const document = (context as UserRelatedModelFirebaseModelContextDocumentInput).document;
+
+      if (document) {
+        model = (await document.accessor.get()).data();
+      }
+    }
+
+    if (model) {
+      decision = auth.uid === model.uid;
+    }
+  }
+
+  return decision;
+};
 
 // MARK: Grant Roles
 /**

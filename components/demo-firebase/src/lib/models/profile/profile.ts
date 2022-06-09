@@ -1,4 +1,4 @@
-import { firestoreModelIdentity, CollectionReference, AbstractFirestoreDocument, snapshotConverterFunctions, firestoreString, firestoreDate, FirestoreCollection, UserRelatedById, FirestoreContext, SingleItemFirestoreCollection, optionalFirestoreString, CollectionGroup, FirestoreCollectionGroup } from '@dereekb/firebase';
+import { firestoreModelIdentity, CollectionReference, AbstractFirestoreDocument, snapshotConverterFunctions, firestoreString, firestoreDate, FirestoreCollection, UserRelatedById, FirestoreContext, SingleItemFirestoreCollection, optionalFirestoreString, CollectionGroup, FirestoreCollectionGroup, UserRelated, copyUserRelatedDataAccessorFactoryFunction, firestoreUID } from '@dereekb/firebase';
 import { GrantedReadRole } from '@dereekb/model';
 import { Maybe } from '@dereekb/util';
 
@@ -13,7 +13,7 @@ export type ProfileTypes = typeof profileIdentity | typeof profilePrivateDataIde
 // MARK: Profile
 export const profileIdentity = firestoreModelIdentity('profile', 'pr');
 
-export interface Profile extends UserRelatedById {
+export interface Profile extends UserRelated, UserRelatedById {
   /**
    * Unique username.
    */
@@ -38,11 +38,14 @@ export class ProfileDocument extends AbstractFirestoreDocument<Profile, ProfileD
 
 export const profileConverter = snapshotConverterFunctions<Profile>({
   fields: {
+    uid: firestoreUID(),
     username: firestoreString({ default: '', defaultBeforeSave: null }),
     bio: optionalFirestoreString(),
     updatedAt: firestoreDate({ saveDefaultAsNow: true })
   }
 });
+
+export const profileAccessorFactory = copyUserRelatedDataAccessorFactoryFunction<Profile>();
 
 export function profileCollectionReference(context: FirestoreContext): CollectionReference<Profile> {
   return context.collection(profileIdentity.collection).withConverter<Profile>(profileConverter);
@@ -53,6 +56,7 @@ export type ProfileFirestoreCollection = FirestoreCollection<Profile, ProfileDoc
 export function profileFirestoreCollection(firestoreContext: FirestoreContext): ProfileFirestoreCollection {
   return firestoreContext.firestoreCollection({
     itemsPerPage: 50,
+    accessorFactory: profileAccessorFactory,
     collection: profileCollectionReference(firestoreContext),
     makeDocument: (accessor, documentAccessor) => new ProfileDocument(accessor, documentAccessor),
     firestoreContext

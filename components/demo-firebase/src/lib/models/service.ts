@@ -34,7 +34,7 @@ export const guestbookFirebaseModelServiceFactory = firebaseModelServiceFactory<
 
 export const guestbookEntryFirebaseModelServiceFactory = firebaseModelServiceFactory<DemoFirebaseContext, GuestbookEntry, GuestbookEntryDocument, GuestbookEntryRoles>({
   roleMapForModel: function (output: FirebasePermissionServiceModel<GuestbookEntry, GuestbookEntryDocument>, context: DemoFirebaseContext, model: GuestbookEntryDocument): PromiseOrValue<GrantedRoleMap<GuestbookEntryRoles>> {
-    return grantFullAccessIfAuthUserRelated({ context, model });
+    return grantFullAccessIfAuthUserRelated({ context, document: model });
   },
   getFirestoreCollection: (c) => c.app.guestbookEntryCollectionGroup
 });
@@ -42,7 +42,7 @@ export const guestbookEntryFirebaseModelServiceFactory = firebaseModelServiceFac
 // MARK: Profile
 export const profileFirebaseModelServiceFactory = firebaseModelServiceFactory<DemoFirebaseContext, Profile, ProfileDocument, ProfileRoles>({
   roleMapForModel: function (output: FirebasePermissionServiceModel<Profile, ProfileDocument>, context: DemoFirebaseContext, model: ProfileDocument): PromiseOrValue<GrantedRoleMap<ProfileRoles>> {
-    return grantFullAccessIfAuthUserRelated({ context, model });
+    return grantFullAccessIfAuthUserRelated({ context, document: model });
   },
   getFirestoreCollection: (c) => c.app.profileCollection
 });
