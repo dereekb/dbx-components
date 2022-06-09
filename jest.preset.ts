@@ -6,6 +6,8 @@ const rootPath = global.testFolderRootPath ?? '<rootDir>/../..';
 
 module.exports = {
   ...nxPreset,
+  maxConcurrency: 3,
+  maxWorkers: 3,
   setupFilesAfterEnv: [...(nxPreset.setupFilesAfterEnv ?? []), 'jest-date', `${rootPath}/jest.setup.ts`],
   reporters: isCI
     ? [
