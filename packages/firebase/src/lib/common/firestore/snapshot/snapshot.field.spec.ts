@@ -1,7 +1,7 @@
 import { ISO8601DateString, Maybe, modelFieldMapFunctions, objectHasKey } from '@dereekb/util';
 import { isValid } from 'date-fns';
 import { FirestoreModelKeyGrantedRoleArrayMap } from '../collection';
-import { firestoreArrayMap, firestoreDate, firestoreEncodedArray, firestoreField, firestoreMap, firestoreModelKeyGrantedRoleArrayMap, firestoreUniqueKeyedArray, firestoreUniqueStringArray } from './snapshot.field';
+import { firestoreArrayMap, firestoreDate, firestoreEncodedArray, firestoreEnum, firestoreField, firestoreMap, firestoreModelKeyGrantedRoleArrayMap, firestoreUniqueKeyedArray, firestoreUniqueStringArray } from './snapshot.field';
 
 describe('firestoreField()', () => {
   const defaultValue = -1;
@@ -71,6 +71,19 @@ describe('firestoreDate()', () => {
     const converted = dateField.to!.convert!(value);
     expect(converted).toBeDefined();
     expect(converted).toBe(dateString);
+  });
+});
+
+type TestFirestoreEnumType = 'a' | 'b' | 'c';
+
+describe('firestoreEnum()', () => {
+  const enumField = firestoreEnum<TestFirestoreEnumType>({ default: 'a' });
+  it('should pass the enum value through.', () => {
+    const { from, to } = modelFieldMapFunctions(enumField);
+
+    const result = to(undefined);
+
+    expect(result).toBe('a');
   });
 });
 
