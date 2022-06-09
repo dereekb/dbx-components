@@ -4,11 +4,8 @@
  * Typically Angular already imports this functionality. NestJS also will import this functionality on its own.
  */
 import 'reflect-metadata';
-import { RRuleError } from 'rrule';
 
 var window: any;
-
-RRuleError.emitLuxonTzidError = false;
 
 //https://stackoverflow.com/questions/39830580/jest-test-fails-typeerror-window-matchmedia-is-not-a-function
 beforeAll(() => {
