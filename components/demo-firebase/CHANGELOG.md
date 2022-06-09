@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [7.7.0](https://github.com/dereekb/dbx-components/compare/v7.6.0-dev...v7.7.0) (2022-06-09)
+
+
+### Bug Fixes
+
+* grantFullAccessIfAuthUserRelated() now takes in a document or model ([53563dd](https://github.com/dereekb/dbx-components/commit/53563dd93a9ae25e84b6ef7f3e9d7ce857254bc6))
+
+
+
 # [7.6.0](https://github.com/dereekb/dbx-components/compare/v7.5.0-dev...v7.6.0) (2022-06-09)
 
 

@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [7.7.0](https://github.com/dereekb/dbx-components/compare/v7.6.0-dev...v7.7.0) (2022-06-09)
+
+
+### Features
+
+* added UseAsync ([f52ff34](https://github.com/dereekb/dbx-components/commit/f52ff345621ecbcb4d6b0f2957dcd7f4f901ac3a))
+
+
+
 # [7.6.0](https://github.com/dereekb/dbx-components/compare/v7.5.0-dev...v7.6.0) (2022-06-09)
 
 

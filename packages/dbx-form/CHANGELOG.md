@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [7.7.0](https://github.com/dereekb/dbx-components/compare/v7.6.0-dev...v7.7.0) (2022-06-09)
+
+
+### Features
+
+* added useDocumentSnapshotData ([aa329f2](https://github.com/dereekb/dbx-components/commit/aa329f25cb105c871bc0fb22001abb7a98979b14))
+
+
+
 # [7.6.0](https://github.com/dereekb/dbx-components/compare/v7.5.0-dev...v7.6.0) (2022-06-09)
 
 

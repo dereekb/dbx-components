@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/dbx-web",
-  "version": "7.6.0",
+  "version": "7.7.0",
   "peerDependencies": {
     "@angular/common": "^13.0.0",
     "@angular/core": "^13.0.0"
