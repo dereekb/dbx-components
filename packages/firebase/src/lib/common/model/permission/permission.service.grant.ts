@@ -123,7 +123,7 @@ export type GeneralGrantRolesIfFunction<C> = <R extends string = string>(context
  *
  * If no roles are returned, the grantModelRolesIfFunction() will return a NoAccessRoleMap.
  */
-export type GrantRolesOtherwiseFunction<R extends string = string> = Getter<Maybe<PromiseOrValue<GrantedRoleMap<R>>>>;
+export type GrantRolesOtherwiseFunction<R extends string = string> = Getter<Maybe<PromiseOrValue<Maybe<GrantedRoleMap<R>>>>>;
 
 /**
  * Creates a GrantRolesIfFunction.
@@ -135,7 +135,7 @@ export type GrantRolesOtherwiseFunction<R extends string = string> = Getter<Mayb
 export function grantModelRolesIfFunction<C, R extends string = string>(grantIf: AsyncDecisionFunction<C>, grantedRoles: GetterOrValue<GrantedRoleMap<R>>): GrantRolesIfFunction<C, R> {
   return async (context: C, otherwise: GrantRolesOtherwiseFunction<R> = noAccessRoleMap) => {
     const decision = await grantIf(context);
-    const results = decision ? await getValueFromGetter(grantedRoles) : (await otherwise()) ?? noAccessRoleMap();
+    const results: GrantedRoleMap<R> = decision ? await getValueFromGetter(grantedRoles) : (await otherwise()) ?? noAccessRoleMap();
     return results;
   };
 }
