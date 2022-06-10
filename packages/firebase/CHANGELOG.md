@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [7.8.1](https://github.com/dereekb/dbx-components/compare/v7.8.0-dev...v7.8.1) (2022-06-10)
+
+
+### Bug Fixes
+
+* useAsync typings fixes with Maybe ([68f38a4](https://github.com/dereekb/dbx-components/commit/68f38a46559e48c61e8449622e69f2e610aeb1b4))
+
+
+
 # [7.8.0](https://github.com/dereekb/dbx-components/compare/v7.7.0-dev...v7.8.0) (2022-06-09)
 
 
