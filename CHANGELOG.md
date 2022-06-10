@@ -2,6 +2,22 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [7.8.0](https://github.com/dereekb/dbx-components/compare/v7.7.0-dev...v7.8.0) (2022-06-09)
+
+
+### Bug Fixes
+
+* firestoreEnum test fix ([5996b79](https://github.com/dereekb/dbx-components/commit/5996b79c292aaed67137738ac95652dce81060c7))
+* import path fixes ([0b72558](https://github.com/dereekb/dbx-components/commit/0b7255845e2502ed28d7f6b81711765acd72b452))
+
+
+### Features
+
+* added firestoreEnum() ([28e6704](https://github.com/dereekb/dbx-components/commit/28e670414f87eb538e996c5d823b5f79e9d9ae97))
+* added firestoreEnumArray() ([5f9e1b1](https://github.com/dereekb/dbx-components/commit/5f9e1b14237ff229a4a832b8fbd5f13a21f753a6))
+
+
+
 # [7.7.0](https://github.com/dereekb/dbx-components/compare/v7.6.0-dev...v7.7.0) (2022-06-09)
 
 
