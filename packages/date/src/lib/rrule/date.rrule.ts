@@ -146,7 +146,7 @@ export class DateRRuleInstance {
 
     const rruleOptions: Partial<Options> = {
       ...rrule.origOptions,
-      // tzid,
+      tzid: undefined,
       dtstart
     };
 
@@ -186,7 +186,6 @@ export class DateRRuleInstance {
     let startsAtDates: Date[];
 
     if (between) {
-      // This finds all
       startsAtDates = this.rrule.between(between.start, between.end, true);
     } else if (this.hasForeverRange()) {
       throw new Error('Rule expands infinitely. Specify a range.');
