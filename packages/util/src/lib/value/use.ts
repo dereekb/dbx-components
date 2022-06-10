@@ -86,14 +86,14 @@ export type MappedUseAsyncFunction<A, I> = <O = void>(input: Maybe<A>, use: UseA
 /**
  * Creates a MappedUseFunction.
  */
-export function mappedUseAsyncFunction<A, I>(map: MapFunction<A, Maybe<PromiseOrValue<I>>>): MappedUseAsyncFunction<A, I> {
+export function mappedUseAsyncFunction<A, I>(map: MapFunction<A, Maybe<PromiseOrValue<Maybe<I>>>>): MappedUseAsyncFunction<A, I> {
   return wrapUseAsyncFunction<A, I, I>(useAsync as any, map as any);
 }
 
 /**
  * Wraps another MappedUseFunction or MappedUseAsyncFunction and maps the input values.
  */
-export function wrapUseAsyncFunction<A, B, I>(mappedUsePromiseFn: MappedUseAsyncFunction<A, B>, map: MapFunction<B, Maybe<PromiseOrValue<I>>>): MappedUseAsyncFunction<A, I> {
+export function wrapUseAsyncFunction<A, B, I>(mappedUsePromiseFn: MappedUseAsyncFunction<A, B>, map: MapFunction<B, Maybe<PromiseOrValue<Maybe<I>>>>): MappedUseAsyncFunction<A, I> {
   return (<O = void>(input: Maybe<A>, useFn: UseAsync<I, O>, defaultValue?: Maybe<AsyncGetterOrValue<O>>) => {
     return mappedUsePromiseFn<O>(input, (async (value: B) => useValue(await map(value), useFn, defaultValue)) as UseAsync<B, O>, defaultValue);
   }) as MappedUseAsyncFunction<A, I>;

@@ -1,3 +1,4 @@
+import { Maybe } from '@dereekb/util';
 import { MapFunction } from './map';
 import { MappedUseFunction, mappedUseFunction, mappedUseAsyncFunction, MappedUseAsyncFunction, wrapUseFunction, wrapUseAsyncFunction } from './use';
 
@@ -211,6 +212,19 @@ describe('mappedUsePromiseFunction()', () => {
       describe('wrapUsePromiseFunction', () => {
         it('should wrap a MappedUsePromiseFunction function', () => {
           const result: MappedUseAsyncFunction<number, boolean> = wrapUseAsyncFunction(mappedUseAsyncFn, (input: string) => Promise.resolve(true));
+          expect(result).toBeDefined();
+        });
+
+        it('should be allowed wrap with a function that returns Maybe.', async () => {
+          const result: MappedUseAsyncFunction<number, boolean> = wrapUseAsyncFunction(mappedUseAsyncFn, (input: string) => {
+            let maybeBoolean: Maybe<boolean>;
+
+            if (input) {
+              maybeBoolean = true;
+            }
+
+            return maybeBoolean;
+          });
           expect(result).toBeDefined();
         });
 
