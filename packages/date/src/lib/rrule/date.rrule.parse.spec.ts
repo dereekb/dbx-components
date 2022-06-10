@@ -1,16 +1,28 @@
-import { Maybe } from '@dereekb/util';
+import { Maybe, TimezoneString } from '@dereekb/util';
+import RRule from 'rrule';
 import { baseDateToTargetDate } from '../date/date.timezone';
 import { DateRRuleParseUtility, RRuleExdateAttribute } from './date.rrule.parse';
 
 describe('DateRRuleParseUtility', () => {
-  describe('DSTART', () => {
-    describe('repeat yearly', () => {
-      /**
-       * Repeat yearly
-       */
-      const yearlyRepeatingRule = 'DTSTART;TZID=America/Los_Angeles:20210611T110000';
+  /**
+   * EXDATE with two of the same date defined.
+   */
+  const exdateLineA = 'EXDATE;TZID=America/Los_Angeles:20210611T110000,20210611T110000';
+  const exdateLineADate = baseDateToTargetDate(new Date(Date.UTC(2021, 6 - 1, 11, 11, 0, 0)), 'America/Los_Angeles');
 
-      describe('separateRRuleStringSetValues()', () => {
+  /**
+   * EXDATE with one UTC date defined.
+   */
+  const exdateLineB = 'EXDATE:20151225T173000Z';
+
+  describe('separateRRuleStringSetValues()', () => {
+    describe('DSTART', () => {
+      describe('repeat yearly', () => {
+        /**
+         * Repeat yearly
+         */
+        const yearlyRepeatingRule = 'DTSTART;TZID=America/Los_Angeles:20210611T110000';
+
         const rruleStringLineSet = [yearlyRepeatingRule];
 
         it('should parse the date', () => {
@@ -21,35 +33,41 @@ describe('DateRRuleParseUtility', () => {
         });
       });
     });
-  });
 
-  describe('EXDATE handling', () => {
-    /**
-     * EXDATE with two of the same date defined.
-     */
-    const exdateLineA = 'EXDATE;TZID=America/Los_Angeles:20210611T110000,20210611T110000';
-    const exdateLineADate = baseDateToTargetDate(new Date(Date.UTC(2021, 6 - 1, 11, 11, 0, 0)), 'America/Los_Angeles');
+    describe('rrule with EXDATE', () => {
+      const rruleStringLineSet = ['RRULE:FREQ=WEEKLY', exdateLineA];
 
-    /**
-     * EXDATE with one UTC date defined.
-     */
-    const exdateLineB = 'EXDATE:20151225T173000Z';
+      it('should parse the EXDATE values', () => {
+        const results = DateRRuleParseUtility.separateRRuleStringSetValues(rruleStringLineSet);
 
-    describe('separateRRuleStringSetValues()', () => {
-      describe('rrule with EXDATE', () => {
-        const rruleStringLineSet = ['RRULE:FREQ=WEEKLY', exdateLineA];
+        const exdatesArray = Array.from(results.exdates);
 
-        it('should parse the EXDATE values', () => {
-          const results = DateRRuleParseUtility.separateRRuleStringSetValues(rruleStringLineSet);
-
-          const exdatesArray = Array.from(results.exdates);
-
-          expect(exdatesArray.length).toBe(1);
-          expect(exdatesArray[0]).toBeSameSecondAs(exdateLineADate);
-        });
+        expect(exdatesArray.length).toBe(1);
+        expect(exdatesArray[0]).toBeSameSecondAs(exdateLineADate);
       });
     });
 
+    describe('examples', () => {
+      describe('mo,we,th at 11AM-12PM (1PM-2PM CST) 3 times', () => {
+        function describeParseTestForTimezone(tzid: TimezoneString) {
+          it('should parse the DTSTART and RRULE', () => {
+            const rules = `DTSTART;TZID=${tzid}:20181101T190000\nRRULE:FREQ=WEEKLY;BYDAY=MO,WE,TH;INTERVAL=1;COUNT=3`;
+            const rruleStringLineSet = [`DTSTART;TZID=${tzid}:20181101T190000`, 'RRULE:FREQ=WEEKLY;BYDAY=MO,WE,TH;INTERVAL=1;COUNT=3'];
+
+            const result = DateRRuleParseUtility.separateRRuleStringSetValues(rruleStringLineSet);
+            const lines = DateRRuleParseUtility.toRRuleLines(result.basic);
+
+            expect(lines).toBe(rules);
+          });
+        }
+
+        describeParseTestForTimezone(`America/Chicago`);
+        describeParseTestForTimezone(`America/Los_Angeles`);
+      });
+    });
+  });
+
+  describe('EXDATE handling', () => {
     describe('parseExdateAttributeFromLine()', () => {
       function describeLineTests(line: string, { hasTimezone = false, testValue = undefined as Maybe<(result: RRuleExdateAttribute) => void> }) {
         it('should parse the exdate', () => {
