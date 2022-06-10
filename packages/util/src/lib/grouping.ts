@@ -62,6 +62,62 @@ export function batch<T>(array: T[], batchSize: number): T[][] {
   return batch;
 }
 
+export interface BatchCount {
+  /**
+   * Total number of items to make.
+   */
+  totalItems: number;
+  /**
+   * Size of each batch/expected max number of items to create per make call.
+   */
+  itemsPerBatch: number;
+}
+
+export interface BatchCalc extends BatchCount {
+  batchCount: number;
+  /**
+   * Total number of full batches.
+   */
+  fullBatchCount: number;
+  /**
+   * The number of items not in a full batch.
+   */
+  remainder: number;
+}
+
+/**
+ * Calculates a BatchCount given the input.
+ *
+ * @param input
+ * @returns
+ */
+export function batchCalc(input: BatchCount): BatchCalc {
+  const { totalItems: total, itemsPerBatch: batchSize } = input;
+  const batchCount = Math.ceil(total / batchSize);
+  const remainder = total % batchSize;
+  const fullBatchCount = remainder ? batchCount - 1 : batchCount;
+
+  return {
+    totalItems: input.totalItems,
+    itemsPerBatch: input.itemsPerBatch,
+    batchCount,
+    fullBatchCount,
+    remainder
+  };
+}
+
+export function itemCountForBatchIndex(index: number, calc: BatchCalc): number {
+  let itemCount: number;
+
+  if (index < calc.fullBatchCount) {
+    itemCount = calc.itemsPerBatch;
+  } else {
+    itemCount = calc.remainder;
+  }
+
+  return itemCount;
+}
+
 /**
  * Convenience function for calling restoreOrder with two arrays of values, instead of an array of keys and array of values.
  *
