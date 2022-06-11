@@ -45,8 +45,3 @@ export function randomArrayFactory<T>(config: RandomArrayFactoryConfig<T>): Rand
   const factory = arrayFactory(config.make);
   return (count = nextRandomCount()) => factory(count);
 }
-
-/**
- * @deprecated Use randomArrayFactory instead.
- */
-export const makeRandomArrayFn = randomArrayFactory;

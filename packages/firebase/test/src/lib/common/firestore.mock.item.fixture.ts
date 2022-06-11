@@ -15,6 +15,10 @@ export class MockItemCollectionFixtureInstance {
     return this.collections.mockItemCollection;
   }
 
+  get mockItemCollection(): MockItemFirestoreCollection {
+    return this.collections.mockItemCollection;
+  }
+
   get mockItemPrivateCollection() {
     return this.collections.mockItemPrivateCollectionFactory;
   }
