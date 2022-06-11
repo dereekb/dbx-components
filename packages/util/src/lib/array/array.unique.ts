@@ -1,6 +1,8 @@
-import { concatArrays, flattenArray } from './array';
+import { concatArrays, flattenArray, mergeArrays } from './array';
 import { PrimativeKey, ReadKeyFunction } from '../key';
 import { Maybe } from '../value/maybe.type';
+import { filterMaybeValues } from './array.value';
+import { removeFromSet } from '../set/set';
 
 export function concatArraysUnique<T extends PrimativeKey = PrimativeKey>(...arrays: Maybe<T[]>[]): T[] {
   return unique(concatArrays(...arrays));
@@ -10,8 +12,14 @@ export function flattenArrayUnique<T extends PrimativeKey = PrimativeKey>(array:
   return unique(flattenArray(array));
 }
 
-export function unique<T extends PrimativeKey = PrimativeKey>(values: T[]): T[] {
-  return Array.from(new Set(values));
+export function unique<T extends PrimativeKey = PrimativeKey>(values: T[], exclude?: T[]): T[] {
+  const unique = new Set(values);
+
+  if (exclude != null && exclude.length) {
+    removeFromSet(unique, exclude);
+  }
+
+  return Array.from(unique);
 }
 
 export function findUnique<T, K extends PrimativeKey = PrimativeKey>(models: T[], readKey: ReadKeyFunction<T, K>, additionalKeys: K[] = []): T[] {
@@ -31,8 +39,10 @@ export function findUnique<T, K extends PrimativeKey = PrimativeKey>(models: T[]
 
 /**
  * Finds unique values in the input.
+ *
+ * Can also specify additional keys to exclude.
  */
-export type FindUniqueFunction<T> = (input: T[]) => T[];
+export type FindUniqueFunction<T> = (input: T[], exclude?: T[]) => T[];
 
 /**
  * Creates a FindUniqueFunction.
@@ -42,5 +52,5 @@ export type FindUniqueFunction<T> = (input: T[]) => T[];
  * @returns
  */
 export function makeFindUniqueFunction<T, K extends PrimativeKey = PrimativeKey>(readKey: ReadKeyFunction<T, K>, additionalKeys: K[] = []): FindUniqueFunction<T> {
-  return (input: T[]) => findUnique(input, readKey, additionalKeys);
+  return (input: T[], exclude?: T[]) => findUnique(input, readKey, exclude ? mergeArrays([filterMaybeValues(exclude.map(readKey)), additionalKeys]) : additionalKeys);
 }
