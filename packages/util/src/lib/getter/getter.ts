@@ -1,4 +1,5 @@
 import { PromiseOrValue } from '../promise/promise';
+import { Maybe } from '../value/maybe.type';
 
 /**
  * Function that returns a value.
@@ -93,4 +94,20 @@ export function asGetter<T>(input: GetterOrValue<T>): Getter<T> {
  */
 export function makeGetter<T>(input: T): Getter<T> {
   return () => input;
+}
+
+export function makeWithFactory<T>(factory: Factory<T>, count: number): T[] {
+  const results: T[] = [];
+
+  for (let i = 0; i < count; i += 1) {
+    results.push(factory());
+  }
+
+  return results;
+}
+
+export function makeWithFactoryInput<T, A>(factory: FactoryWithInput<T, A>, input: Maybe<A>[]): T[];
+export function makeWithFactoryInput<T, A>(factory: FactoryWithRequiredInput<T, A>, input: A[]): T[];
+export function makeWithFactoryInput<T, A>(factory: FactoryWithRequiredInput<T, A>, input: A[]): T[] {
+  return input.map((x) => factory(x));
 }
