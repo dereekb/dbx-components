@@ -28,6 +28,7 @@ import {
   unique
 } from '@dereekb/util';
 import { FIRESTORE_EMPTY_VALUE } from './snapshot';
+import { FirebaseAuthUserId } from '../../auth/auth';
 
 export interface BaseFirestoreFieldConfig<V, D = unknown> {
   fromData: ModelFieldMapConvertFunction<D, V>;
@@ -90,11 +91,11 @@ export type MapConfiguredFirestoreFieldConfig<V, D = unknown> = MapConfiguredFir
 export type DefaultMapConfiguredFirestoreFieldConfig<V, D = unknown> = Omit<FirestoreFieldConfigWithDefault<V, D>, 'fromData' | 'toData' | 'default'> & Partial<Pick<FirestoreFieldConfigWithDefault<V, D>, 'default'>>;
 export type OptionalMapConfiguredFirestoreFieldConfig<V, D = unknown> = Omit<BaseFirestoreFieldConfig<V, D>, 'fromData' | 'toData' | 'defaultBeforeSave'>;
 
-export type FirestoreStringConfig = DefaultMapConfiguredFirestoreFieldConfig<string, string>;
+export type FirestoreStringConfig<S extends string = string> = DefaultMapConfiguredFirestoreFieldConfig<S, S>;
 
-export function firestoreString(config?: FirestoreStringConfig) {
-  return firestoreField<string, string>({
-    default: '',
+export function firestoreString<S extends string = string>(config?: FirestoreStringConfig<S>) {
+  return firestoreField<S, S>({
+    default: '' as S,
     ...config,
     fromData: passThrough,
     toData: passThrough
@@ -120,7 +121,7 @@ export function optionalFirestoreEnum<S extends string | number>() {
 }
 
 export function firestoreUID() {
-  return firestoreString({
+  return firestoreString<FirebaseAuthUserId>({
     default: ''
   });
 }

@@ -1,3 +1,4 @@
+import { batchCalc, BatchCount, batch, itemCountForBatchIndex } from '../grouping';
 import { Maybe } from '../value/maybe.type';
 
 export interface PerformTaskLoopConfig<O> {
@@ -60,8 +61,10 @@ export function performTaskCountLoop<O>(config: PerformTaskCountLoopWithInitConf
 }
 
 // MARK: Loop Make
+export type PerformMakeLoopFunction<O> = (i: number, made: O[]) => Promise<O>;
+
 export interface PerformMakeLoopConfig<O> {
-  make: (i: number, made: O[]) => Promise<O>;
+  make: PerformMakeLoopFunction<O>;
   count: number;
 }
 
@@ -73,6 +76,31 @@ export function performMakeLoop<O>(config: PerformMakeLoopConfig<O>): Promise<O[
       const result: O = await config.make(i, accumulator);
       accumulator.push(result);
       return accumulator;
+    }
+  });
+}
+
+// MARK: Batch Loop
+export type PerformBatchLoopFunction<O> = (itemsToMake: number, i: number, made: O[][]) => Promise<O[]>;
+
+export interface PerformBatchLoopConfig<O> extends BatchCount {
+  /**
+   * Makes a certain number of items.
+   */
+  make: PerformBatchLoopFunction<O>;
+}
+
+export function performBatchLoop<O>(config: PerformBatchLoopConfig<O>): Promise<O[][]> {
+  const { make } = config;
+  const calc = batchCalc(config);
+  const { batchCount } = calc;
+
+  return performMakeLoop({
+    count: batchCount,
+    make: async (i, made: O[][]) => {
+      const itemsToMake = itemCountForBatchIndex(i, calc);
+      const batch: O[] = await make(itemsToMake, i, made);
+      return batch;
     }
   });
 }

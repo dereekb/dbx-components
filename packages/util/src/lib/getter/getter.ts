@@ -1,4 +1,6 @@
 import { PromiseOrValue } from '../promise/promise';
+import { MapFunction } from '../value/map';
+import { Maybe } from '../value/maybe.type';
 
 /**
  * Function that returns a value.
@@ -18,7 +20,7 @@ export type FactoryWithInput<O, I> = (args?: I) => O;
 /**
  * Function that returns a value with a single argument.
  */
-export type FactoryWithRequiredInput<T, A> = (args: A) => T;
+export type FactoryWithRequiredInput<T, A> = MapFunction<A, T>;
 
 /**
  * Either a Getter, or an instance of the item.
@@ -93,4 +95,25 @@ export function asGetter<T>(input: GetterOrValue<T>): Getter<T> {
  */
 export function makeGetter<T>(input: T): Getter<T> {
   return () => input;
+}
+
+/**
+ * A factory that can take in an index input optionally.
+ */
+export type FactoryWithIndex<T> = FactoryWithInput<T, number> | FactoryWithRequiredInput<T, number>;
+
+export function makeWithFactory<T>(factory: Factory<T> | FactoryWithIndex<T>, count: number): T[] {
+  const results: T[] = [];
+
+  for (let i = 0; i < count; i += 1) {
+    results.push(factory(i));
+  }
+
+  return results;
+}
+
+export function makeWithFactoryInput<T, A>(factory: FactoryWithInput<T, A>, input: Maybe<A>[]): T[];
+export function makeWithFactoryInput<T, A>(factory: FactoryWithRequiredInput<T, A>, input: A[]): T[];
+export function makeWithFactoryInput<T, A>(factory: FactoryWithRequiredInput<T, A>, input: A[]): T[] {
+  return input.map((x) => factory(x));
 }

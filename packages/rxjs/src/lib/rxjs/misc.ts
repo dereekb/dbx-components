@@ -1,4 +1,4 @@
-import { MakeRandomFunction, makeRandomFunction, RandomNumberFunction } from '@dereekb/util';
+import { RandomNumberFactoryConfig, randomNumberFactory, RandomNumberFactory } from '@dereekb/util';
 import { MonoTypeOperatorFunction, tap, delayWhen, timer, SchedulerLike, asyncScheduler } from 'rxjs';
 
 /**
@@ -27,11 +27,11 @@ export function tapLog<T = unknown>(messageOrFunction: (string | number) | ((val
  * @param maxOrArgs
  * @returns
  */
-export function randomDelay<T = unknown>(maxOrArgs: number | MakeRandomFunction): MonoTypeOperatorFunction<T> {
-  const makeRandomDelay = makeRandomFunction(maxOrArgs);
+export function randomDelay<T = unknown>(maxOrArgs: number | RandomNumberFactoryConfig): MonoTypeOperatorFunction<T> {
+  const makeRandomDelay = randomNumberFactory(maxOrArgs);
   return randomDelayWithRandomFunction(makeRandomDelay);
 }
 
-export function randomDelayWithRandomFunction<T = unknown>(makeRandomDelay: RandomNumberFunction, scheduler: SchedulerLike = asyncScheduler): MonoTypeOperatorFunction<T> {
+export function randomDelayWithRandomFunction<T = unknown>(makeRandomDelay: RandomNumberFactory, scheduler: SchedulerLike = asyncScheduler): MonoTypeOperatorFunction<T> {
   return delayWhen(() => timer(makeRandomDelay(), scheduler));
 }

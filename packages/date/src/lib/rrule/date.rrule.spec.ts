@@ -1,7 +1,9 @@
 import { CalendarDate, CalendarDateUtility, DateRangeParams, DateRangeType, maxFutureDate, targetDateToBaseDate } from '../date';
 import { addMinutes, addDays } from 'date-fns';
 import { DateRRuleInstance, DateRRuleUtility } from './date.rrule';
-import { RRuleStringLineSet } from './date.rrule.parse';
+import { DateRRuleParseUtility, RRuleStringLineSet } from './date.rrule.parse';
+import RRule from 'rrule';
+import { TimezoneString } from '@dereekb/util';
 
 describe('DateRRuleUtility', () => {
   describe('DateRRuleInstance', () => {
@@ -306,6 +308,41 @@ describe('DateRRuleUtility', () => {
             expect(range.finalRecurrenceEndsAt).toBeDefined();
           });
         });
+      });
+    });
+  });
+
+  describe('toRRuleOptions', () => {
+    describe('examples', () => {
+      describe('mo,we,th at 11AM-12PM (1PM-2PM CST) 3 times', () => {
+        function describeParseTestForTimezone(tzid: TimezoneString) {
+          it('should make the options', () => {
+            const rules = `DTSTART;TZID=${tzid}:20181101T190000\nRRULE:FREQ=WEEKLY;BYDAY=MO,WE,TH;INTERVAL=1;COUNT=3`;
+            const expectedDTStart = new Date(Date.UTC(2018, 10, 1, 19, 0, 0));
+
+            const output = RRule.parseString(rules);
+
+            expect(output.dtstart).toBeDefined();
+            expect(output.dtstart).toBeSameSecondAs(expectedDTStart);
+            expect(output.tzid).toBe(tzid);
+
+            const rruleStringLineSet = [`DTSTART;TZID=${tzid}:20181101T190000`, 'RRULE:FREQ=WEEKLY;BYDAY=MO,WE,TH;INTERVAL=1;COUNT=3'];
+
+            const result = DateRRuleParseUtility.separateRRuleStringSetValues(rruleStringLineSet);
+            const lines = DateRRuleParseUtility.toRRuleLines(result.basic);
+
+            expect(lines).toBe(rules);
+
+            const dateRruleOptions = DateRRuleUtility.toRRuleOptions(rruleStringLineSet);
+            const options = dateRruleOptions.options;
+
+            expect(options.tzid).toBe(output.tzid);
+            expect(options.dtstart as Date).toBeSameSecondAs(output.dtstart as Date);
+          });
+        }
+
+        describeParseTestForTimezone(`America/Chicago`);
+        describeParseTestForTimezone(`America/Los_Angeles`);
       });
     });
   });

@@ -2,6 +2,17 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [7.9.0](https://github.com/dereekb/dbx-components/compare/v7.8.1-dev...v7.9.0) (2022-06-11)
+
+
+### Features
+
+* added arrayFactory() ([5a7ef13](https://github.com/dereekb/dbx-components/commit/5a7ef13116ebbacd8b7a9502e3298fd30708f944))
+* added makeWithFactory() ([4a6f4a0](https://github.com/dereekb/dbx-components/commit/4a6f4a01a04e7800653bc942fe56b27ec457813e))
+* added performBatchLoop() ([7c6c947](https://github.com/dereekb/dbx-components/commit/7c6c9475eacfd3cc7f153ef949fef1187925a8cb))
+
+
+
 ## [7.8.1](https://github.com/dereekb/dbx-components/compare/v7.8.0-dev...v7.8.1) (2022-06-10)
 
 
