@@ -1,11 +1,13 @@
-export type RandomNumberFunction = () => number;
+import { Factory } from './../getter/getter';
 
-export interface MakeRandomFunction {
+export type RandomNumberFactory = Factory<number>;
+
+export interface RandomNumberFactoryConfig {
   min?: number;
   max: number;
 }
 
-export type MakeRandomFunctionInput = number | MakeRandomFunction;
+export type RandomNumberFactoryInput = number | RandomNumberFactoryConfig;
 
 /**
  * Used to generate a RandomNumberFunction that returns a number between the input and the maximum.
@@ -13,14 +15,22 @@ export type MakeRandomFunctionInput = number | MakeRandomFunction;
  * @param maxOrArgs
  * @returns
  */
-export function makeRandomFunction(maxOrArgs: MakeRandomFunctionInput): RandomNumberFunction {
-  const config: MakeRandomFunction = typeof maxOrArgs === 'number' ? { min: 0, max: maxOrArgs } : maxOrArgs;
+export function randomNumberFactory(maxOrArgs: RandomNumberFactoryInput): RandomNumberFactory {
+  const config: RandomNumberFactoryConfig = typeof maxOrArgs === 'number' ? { min: 0, max: maxOrArgs } : maxOrArgs;
   const { min, max } = config;
+  let fn: RandomNumberFactory;
 
   if (min != null) {
     const range = max - min;
-    return () => Math.random() * range + min;
+    fn = () => Math.random() * range + min;
   } else {
-    return () => Math.random() * max;
+    fn = () => Math.random() * max;
   }
+
+  return fn;
 }
+
+/**
+ * @deprecated use randomNumberFactory() instead.
+ */
+export const makeRandomFunction = randomNumberFactory;

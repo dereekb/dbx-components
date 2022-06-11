@@ -4,7 +4,7 @@ import { ChangeDetectorRef, Component, OnDestroy } from '@angular/core';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { filterPickableItemFieldValuesByLabel, pickableItemChipField, pickableItemListField, searchableChipField, searchableStringChipField, searchableTextField, SearchableValueFieldDisplayFn, SearchableValueFieldDisplayValue, SearchableValueFieldStringSearchFn, SearchableValueFieldValue } from '@dereekb/dbx-form';
 import { randomDelayWithRandomFunction } from '@dereekb/rxjs';
-import { makeRandomArrayFn, makeRandomFunction } from '@dereekb/util';
+import { randomArrayFactory, makeRandomFunction } from '@dereekb/util';
 import { DocFormExampleSelectionValue, DocFormExampleSelectionValueId, EXAMPLE_DISPLAY_FOR_SELECTION_VALUE, EXAMPLE_DISPLAY_FOR_SELECTION_VALUE_WITH_CUSTOM_DISPLAYS, EXAMPLE_SEARCH_FOR_SELECTION_VALUE, MAKE_EXAMPLE_SELECTION_VALUE } from '../component/selection.example';
 import { DocFormExamplePrimarySearchableFieldDisplayComponent } from '../component/selection.example.view';
 
@@ -31,7 +31,7 @@ export const DISPLAY_FOR_STRING_VALUE: SearchableValueFieldDisplayFn<string> = (
   return obs;
 };
 
-export const MAKE_RANDOM_STRING_VALUES = makeRandomArrayFn({ random: { min: 40, max: 40 }, make: () => ({ value: String(MAKE_EXAMPLE_SELECTION_VALUE().value) }) });
+export const MAKE_RANDOM_STRING_VALUES = randomArrayFactory({ random: { min: 40, max: 40 }, make: () => ({ value: String(MAKE_EXAMPLE_SELECTION_VALUE().value) }) });
 
 @Component({
   templateUrl: './selection.component.html'

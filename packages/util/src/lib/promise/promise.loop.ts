@@ -61,8 +61,10 @@ export function performTaskCountLoop<O>(config: PerformTaskCountLoopWithInitConf
 }
 
 // MARK: Loop Make
+export type PerformMakeLoopFunction<O> = (i: number, made: O[]) => Promise<O>;
+
 export interface PerformMakeLoopConfig<O> {
-  make: (i: number, made: O[]) => Promise<O>;
+  make: PerformMakeLoopFunction<O>;
   count: number;
 }
 
@@ -79,11 +81,13 @@ export function performMakeLoop<O>(config: PerformMakeLoopConfig<O>): Promise<O[
 }
 
 // MARK: Batch Loop
+export type PerformBatchLoopFunction<O> = (itemsToMake: number, i: number, made: O[][]) => Promise<O[]>;
+
 export interface PerformBatchLoopConfig<O> extends BatchCount {
   /**
    * Makes a certain number of items.
    */
-  make: (itemsToMake: number, i: number, made: O[][]) => Promise<O[]>;
+  make: PerformBatchLoopFunction<O>;
 }
 
 export function performBatchLoop<O>(config: PerformBatchLoopConfig<O>): Promise<O[][]> {

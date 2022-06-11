@@ -1,4 +1,5 @@
 import { PromiseOrValue } from '../promise/promise';
+import { MapFunction } from '../value/map';
 import { Maybe } from '../value/maybe.type';
 
 /**
@@ -19,7 +20,7 @@ export type FactoryWithInput<O, I> = (args?: I) => O;
 /**
  * Function that returns a value with a single argument.
  */
-export type FactoryWithRequiredInput<T, A> = (args: A) => T;
+export type FactoryWithRequiredInput<T, A> = MapFunction<A, T>;
 
 /**
  * Either a Getter, or an instance of the item.
@@ -96,11 +97,16 @@ export function makeGetter<T>(input: T): Getter<T> {
   return () => input;
 }
 
-export function makeWithFactory<T>(factory: Factory<T>, count: number): T[] {
+/**
+ * A factory that can take in an index input optionally.
+ */
+export type FactoryWithIndex<T> = FactoryWithInput<T, number> | FactoryWithRequiredInput<T, number>;
+
+export function makeWithFactory<T>(factory: Factory<T> | FactoryWithIndex<T>, count: number): T[] {
   const results: T[] = [];
 
   for (let i = 0; i < count; i += 1) {
-    results.push(factory());
+    results.push(factory(i));
   }
 
   return results;

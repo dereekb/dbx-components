@@ -1,4 +1,4 @@
-import { makeArray } from '../array';
+import { makeWithFactory } from '../getter';
 import { isEmptyIterable, isIterable, useIterableOrValue } from './iterable';
 
 describe('isIterable()', () => {
@@ -64,7 +64,7 @@ describe('isEmptyIterable()', () => {
 describe('useIterableOrValue()', () => {
   it('should have used the values from an array', () => {
     const expectedValue = 3;
-    const array = makeArray({ count: expectedValue, make: () => 1 });
+    const array = makeWithFactory(() => 1, expectedValue);
     let total = 0;
 
     useIterableOrValue(array, (x) => (total += x));
