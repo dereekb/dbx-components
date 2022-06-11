@@ -72,6 +72,11 @@ export const FIRESTORE_WHERE_QUERY_CONSTRAINT_TYPE = 'where';
 
 export type WhereFilterOp = '<' | '<=' | '==' | '!=' | '>=' | '>' | 'array-contains' | 'in' | 'not-in'; // 'array-contains-unknown' is not supported by firebase-server
 
+/**
+ * Maximum number of arguments allowed with the "in" and "array-contains" operators.
+ */
+export const FIRESTORE_MAX_WHERE_IN_FILTER_ARGS_COUNT = 10;
+
 export interface WhereQueryConstraintData {
   fieldPath: string | FieldPath;
   opStr: WhereFilterOp;

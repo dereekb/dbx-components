@@ -6,3 +6,4 @@ export * from './driver';
 export * from './collection';
 export * from './types';
 export * from './reference';
+export * from './util';

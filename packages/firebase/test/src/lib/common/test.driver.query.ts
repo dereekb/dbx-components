@@ -1,9 +1,10 @@
 import { SubscriptionObject } from '@dereekb/rxjs';
 import { filter, first, from, skip } from 'rxjs';
-import { limit, orderBy, startAfter, startAt, where, limitToLast, endAt, endBefore, makeDocuments, FirestoreQueryFactoryFunction, startAtValue, endAtValue, whereDocumentId, FirebaseAuthUserId } from '@dereekb/firebase';
+import { firestoreIdBatchVerifierFactory, limit, orderBy, startAfter, startAt, where, limitToLast, endAt, endBefore, makeDocuments, FirestoreQueryFactoryFunction, startAtValue, endAtValue, whereDocumentId, FirebaseAuthUserId } from '@dereekb/firebase';
 import { MockItemDocument, MockItem, MockItemSubItemDocument, MockItemSubItem, MockItemSubItemDeepDocument, MockItemSubItemDeep, MockItemUserDocument } from './firestore.mock.item';
 import { MockItemCollectionFixture } from './firestore.mock.item.fixture';
 import { allChildMockItemSubItemDeepsWithinMockItem } from './firestore.mock.item.query';
+import { arrayFactory, idBatchFactory, mapGetter, mapGetterFactory, randomArrayFactory, randomFromArrayFactory, randomNumberFactory, unique } from '@dereekb/util';
 
 /**
  * Describes query driver tests, using a MockItemCollectionFixture.
@@ -25,6 +26,35 @@ export function describeQueryDriverTests(f: MockItemCollectionFixture) {
             test: true
           };
         }
+      });
+    });
+
+    describe('firestoreIdBatchVerifier', () => {
+      const mockItemIdBatchVerifier = firestoreIdBatchVerifierFactory<MockItem, string>({
+        readKeys: (x) => [x.id],
+        fieldToQuery: '_id'
+      });
+
+      it('should return ids that are not taken.', async () => {
+        const takenIds = items.map((x) => x.id);
+
+        const idFactory = arrayFactory(mapGetter(randomNumberFactory(10000000), (x) => `test-id-${x}`));
+        const random = randomFromArrayFactory(takenIds);
+
+        const factory = idBatchFactory<string>({
+          verifier: mockItemIdBatchVerifier(f.instance.firestoreCollection),
+          factory: (count) => {
+            const ids = [random(), ...idFactory(count)];
+            return ids;
+          }
+        });
+
+        const idsToMake = 30;
+        const result = await factory(idsToMake);
+
+        expect(result).toBeDefined();
+        expect(unique(result).length).toBe(idsToMake);
+        expect(unique(result, takenIds).length).toBe(idsToMake);
       });
     });
 
