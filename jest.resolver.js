@@ -1,0 +1,58 @@
+const resolver = require('jest-preset-angular/build/resolvers/ng-jest-resolver.js');
+
+module.exports = (path, options) => {
+  const x = resolver(path, options);
+
+  // console.log('x: ', x);
+
+  // Call the defaultResolver, so we leverage its cache, error handling, etc.
+  const y = options.defaultResolver(x, {
+    ...options,
+    // Use packageFilter to process parsed `package.json` before the resolution (see https://www.npmjs.com/package/resolve#resolveid-opts-cb)
+    packageFilter: (pkg) => {
+      // see https://github.com/microsoft/accessibility-insights-web/pull/5421#issuecomment-1109168149
+      // see https://github.com/uuidjs/uuid/pull/616
+      //
+      // jest-environment-jsdom 28+ tries to use browser exports instead of default exports,
+      // but uuid/react-colorful only offers an ESM browser export and not a CommonJS one. Jest does not yet
+      // support ESM modules natively, so this causes a Jest error related to trying to parse
+      // "export" syntax.
+      //
+      // This workaround prevents Jest from considering uuid/react-colorful's module-based exports at all;
+      // it falls back to uuid's CommonJS+node "main" property.
+      //
+      // Once we're able to migrate our Jest config to ESM and a browser crypto
+      // implementation is available for the browser+ESM version of uuid to use (eg, via
+      // https://github.com/jsdom/jsdom/pull/3352 or a similar polyfill), this can go away.
+      //
+      // How to test if this is needed anymore:
+      // - comment it out
+      // - run `yarn test`
+      // - if all the tests pass, it means the workaround is no longer needed
+
+      /*
+      console.log('b:' , x);
+
+      if (x.includes('date-fns')) {
+        console.log('is: ', x);
+      }
+
+      if (pkg.name.includes('date-fns')) {
+        console.log('+++', pkg.name.includes('date-fns'), pkg.name, pkg)
+      }
+      */
+
+      if (pkg.name === 'uuid' || pkg.name === 'rxjs' || pkg.name === '@firebase/auth' || pkg.name === '@firebase/auth-compat' || pkg.name === '@firebase/firestore' || pkg.name === '@firebase/firestore-compat' || pkg.name === '@firebase/messaging' || pkg.name === '@firebase/util' || pkg.name === 'firebase') {
+        // console.log('>>>', pkg.name)
+        delete pkg['exports'];
+        delete pkg['module'];
+      }
+
+      return pkg;
+    }
+  });
+
+  // console.log('y: ', y);
+
+  return y;
+};

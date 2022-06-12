@@ -1,17 +1,11 @@
+(global as any).appTestType = 'angular';
+
+const jestPresetAngularSerializers = require('jest-preset-angular/build/serializers');
+
 module.exports = {
-  displayName: 'dbx-core',
-  setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
-  globals: {
-    'ts-jest': {
-      tsconfig: '<rootDir>/tsconfig.spec.json',
-      stringifyContentPathRegex: '\\.(html|svg)$'
-    }
-  },
+  preset: '../../jest.preset.ts',
   coverageDirectory: '../../coverage/packages/dbx-core',
-  transform: {
-    '^.+\\.(ts|mjs|js|html)$': 'jest-preset-angular'
-  },
-  transformIgnorePatterns: ['node_modules/(?!.*\\.mjs$)'],
-  snapshotSerializers: ['jest-preset-angular/build/serializers/no-ng-attributes', 'jest-preset-angular/build/serializers/ng-snapshot', 'jest-preset-angular/build/serializers/html-comment'],
-  preset: '../../jest.preset.ts'
+  displayName: 'dbx-core',
+  testEnvironment: 'jsdom',
+  snapshotSerializers: jestPresetAngularSerializers
 };
