@@ -569,6 +569,7 @@ download_api_ts_file () {
 
 rm $API_APP_FOLDER/src/main.ts
 download_api_ts_file "src/main.ts"
+download_api_ts_file "test-setup.ts"
 
 # Test Folder
 mkdir $API_APP_FOLDER/src/test
