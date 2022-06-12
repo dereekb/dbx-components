@@ -622,6 +622,7 @@ mkdir $API_APP_FOLDER/src/app/function/example
 download_api_ts_file "src/app/function/example/index.ts"
 download_api_ts_file "src/app/function/example/example.util.ts"
 download_api_ts_file "src/app/function/example/example.set.username.ts"
+download_api_ts_file "src/app/function/example/example.set.username.spec.ts"
 
 git add --all
 git commit --no-verify -m "checkpoint: setup api"
