@@ -1,6 +1,5 @@
 module.exports = {
   displayName: 'dbx-firebase',
-
   setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
   globals: {
     'ts-jest': {

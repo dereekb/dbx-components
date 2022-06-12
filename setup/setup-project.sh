@@ -318,6 +318,7 @@ rm jest.preset.js
 
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/jest.preset.ts -o jest.preset.ts
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/jest.setup.ts -o jest.setup.ts
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/jest.setup.typings.ts -o jest.setup.typings.ts
 
 # update all jest.config.ts files to point to jest.preset.ts instead of jest.preset.js
 update_jest_config_file () {
@@ -327,7 +328,8 @@ update_jest_config_file () {
 
   cp $JEST_CONFIG_FILE_PATH $JEST_CONFIG_FILE_PATH.tmp
   rm $JEST_CONFIG_FILE_PATH
-  sed -e "s:jest.preset.js:jest.preset.ts:g" $JEST_CONFIG_FILE_PATH.tmp > $JEST_CONFIG_FILE_PATH
+  # inject jest.setup.typings.ts too
+  sed -e "s:jest.preset.js:jest.preset.ts:g" -e "s:\"jest.config.ts\":\"../../jest.setup.typings.ts\", \"jest.config.ts\"" $JEST_CONFIG_FILE_PATH.tmp > $JEST_CONFIG_FILE_PATH
   rm $JEST_CONFIG_FILE_PATH.tmp
 }
 
@@ -569,7 +571,19 @@ download_api_ts_file () {
 
 rm $API_APP_FOLDER/src/main.ts
 download_api_ts_file "src/main.ts"
-download_api_ts_file "test-setup.ts"
+
+# add the setup file config
+download_api_ts_file "src/test-setup.ts"
+sed -e "2 i maxWorkers: 2," -e "2 i setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts']" $API_APP_FOLDER/jest.config.ts > $API_APP_FOLDER/jest.config.ts.tmp
+rm $API_APP_FOLDER/jest.config.ts
+cp $API_APP_FOLDER/jest.config.ts.tmp $API_APP_FOLDER/jest.config.ts
+rm $API_APP_FOLDER/jest.config.tmp
+
+# add the file to tsconfig.spec.json
+sed '2 i "files": ["src/test-setup.ts"]' $API_APP_FOLDER/tsconfig.spec.json > $API_APP_FOLDER/tsconfig.spec.json.tmp
+rm $API_APP_FOLDER/tsconfig.spec.json
+cp $API_APP_FOLDER/tsconfig.spec.json.tmp $API_APP_FOLDER/tsconfig.spec.json
+rm $API_APP_FOLDER/tsconfig.spec.json.tmp
 
 # Test Folder
 mkdir $API_APP_FOLDER/src/test
