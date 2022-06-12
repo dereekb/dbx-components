@@ -7,21 +7,28 @@ const isCI = require('is-ci');
 const { pathsToModuleNameMapper } = require('ts-jest');
 const { paths } = require('./tsconfig.base.json').compilerOptions;
 
+const jestPresetAngularSerializers = require('jest-preset-angular/build/serializers');
+
 // Since some folders are nested (util-test, firebase-test, etc.) we declare the global testFolderRootPath.
 const appTestType = global.appTestType ?? 'node';
+let customTestSetup = [].concat(global.customTestSetup ?? []);
 const rootPath = global.testFolderRootPath ?? '<rootDir>/../..';
 
+let testSetup = `${rootPath}/jest.setup.${appTestType}.ts`;
+
 let testEnvironment = 'node';
-let appTestTypeSetupFiles = [];
+let appTestTypeSetupFiles = [testSetup];
+let snapshotSerializers = [];
 
 switch (appTestType) {
   case 'angular':
-    appTestTypeSetupFiles.push(`${rootPath}/jest.setup.reflect.ts`);
     appTestTypeSetupFiles.push(`${rootPath}/jest.setup.angular.ts`);
+    snapshotSerializers = jestPresetAngularSerializers;
+    testEnvironment = 'jsdom';
     break;
+  case 'firebase':
   case 'nestjs':
   case 'node':
-    appTestTypeSetupFiles.push(`${rootPath}/jest.setup.reflect.ts`);
     break;
 }
 
@@ -29,7 +36,7 @@ module.exports = {
   ...nxPreset,
   maxConcurrency: 3,
   maxWorkers: 3,
-  setupFilesAfterEnv: [...(nxPreset.setupFilesAfterEnv ?? []), ...appTestTypeSetupFiles, `<rootDir>/src/test-setup.ts`, 'jest-date'],
+  setupFilesAfterEnv: [...(nxPreset.setupFilesAfterEnv ?? []), ...appTestTypeSetupFiles, ...(customTestSetup ? customTestSetup : []), 'jest-date'],
 
   testMatch: ['**/+(*.)+(spec|test).+(ts|js)?(x)'],
   globals: {
@@ -48,6 +55,9 @@ module.exports = {
   transform: {
     '^.+\\.(ts|js|mjs|html|svg)$': 'jest-preset-angular'
   },
+
+  snapshotSerializers: snapshotSerializers,
+
   /*
   transformIgnorePatterns: [
     'node_modules/(?!.*\\.mjs$)'

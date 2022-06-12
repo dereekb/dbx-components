@@ -7,7 +7,6 @@ process.env.JEST_JUNIT_OUTPUT_NAME = `${timezoneKey.toLowerCase()}.date.junit.xm
 
 module.exports = {
   displayName: 'date',
-  testEnvironment: 'node',
   coverageDirectory: '../../coverage/packages/date',
   preset: '../../jest.preset.ts'
 };

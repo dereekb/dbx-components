@@ -1,3 +1,5 @@
+(global as any).appTestType = 'firebase';
+
 module.exports = {
   displayName: 'demo-firebase',
   globals: {
