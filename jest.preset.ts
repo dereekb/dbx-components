@@ -1,15 +1,14 @@
 const nxPreset = require('@nrwl/jest/preset');
 const isCI = require('is-ci');
-
 const { pathsToModuleNameMapper } = require('ts-jest');
 const { paths } = require('./tsconfig.base.json').compilerOptions;
-
 const jestPresetAngularSerializers = require('jest-preset-angular/build/serializers');
 
-// Since some folders are nested (util-test, firebase-test, etc.) we declare the global testFolderRootPath.
+// Since some folders are nested (util-test, firebase-test, etc.) we declare the global testFolderRootPath in their jest.preset.ts and it gets read here.
 const appTestType = global.appTestType ?? 'node';
 let customTestSetup = [].concat(global.customTestSetup ?? []);
-const rootPath = global.testFolderRootPath ?? '<rootDir>/../..';
+
+const rootPath = global.testFolderRootPath ?? '<rootDir>/../..'; // most packages are 2 folders deep.
 
 let testSetup = `${rootPath}/jest.setup.${appTestType}.ts`;
 
@@ -19,6 +18,7 @@ let snapshotSerializers = [];
 
 switch (appTestType) {
   case 'angular':
+    // angular needs jsdom and serializers
     snapshotSerializers = jestPresetAngularSerializers;
     testEnvironment = 'jsdom';
     break;
@@ -54,12 +54,6 @@ module.exports = {
   },
 
   snapshotSerializers: snapshotSerializers,
-
-  /*
-  transformIgnorePatterns: [
-    'node_modules/(?!.*\\.mjs$)'
-  ],
-  */
 
   reporters: isCI
     ? [
