@@ -313,11 +313,15 @@ git add --all
 git commit --no-verify -m "checkpoint: added semver and commit linting"
 
 # add jest setup/configurations
-npm install -D jest-date jest-junit 
+npm install -D jest@^28.1.1 jest-environment-jsdom@^28.1.1 jest-preset-angular@^12.1.0 ts-jest@^28.0.4 jest-date@^1.1.4 jest-junit@^13.0.0
 rm jest.preset.js
 
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/jest.preset.ts -o jest.preset.ts
-curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/jest.setup.ts -o jest.setup.ts
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/jest.resolver.js -o jest.resolver.js
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/jest.setup.angular.ts -o jest.setup.angular.ts
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/jest.setup.firebase.ts -o jest.setup.firebase.ts
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/jest.setup.nestjs.ts -o jest.setup.nestjs.ts
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/jest.setup.node.ts -o jest.setup.node.ts
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/jest.setup.typings.ts -o jest.setup.typings.ts
 
 # update all jest.config.ts files to point to jest.preset.ts instead of jest.preset.js
@@ -424,6 +428,9 @@ download_app_ts_file () {
   download_ts_file "$DOWNLOAD_PATH" "$TARGET_FOLDER" "$FILE_PATH"
 }
 
+download_app_ts_file "jest.config.ts"
+download_app_ts_file "tsconfig.spec.json"
+
 rm $ANGULAR_COMPONENTS_FOLDER/src/index.ts
 echo "export * from './lib'" > $ANGULAR_COMPONENTS_FOLDER/src/index.ts
 
@@ -449,6 +456,9 @@ download_firebase_ts_file () {
   local DOWNLOAD_PATH=https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/setup/templates/components/firebase
   download_ts_file "$DOWNLOAD_PATH" "$TARGET_FOLDER" "$FILE_PATH"
 }
+
+download_firebase_ts_file "jest.config.ts"
+download_firebase_ts_file "tsconfig.spec.json"
 
 ## Lib Folder
 rm -r $FIREBASE_COMPONENTS_FOLDER/src/lib
@@ -487,6 +497,9 @@ download_angular_ts_file () {
   local DOWNLOAD_PATH=https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/setup/templates/apps/app
   download_ts_file "$DOWNLOAD_PATH" "$TARGET_FOLDER" "$FILE_PATH"
 }
+
+download_angular_ts_file "jest.config.ts"
+download_angular_ts_file "tsconfig.spec.json"
 
 download_angular_ts_file "src/styles.scss"
 download_angular_ts_file "src/main.ts"
@@ -573,17 +586,8 @@ rm $API_APP_FOLDER/src/main.ts
 download_api_ts_file "src/main.ts"
 
 # add the setup file config
-download_api_ts_file "src/test-setup.ts"
-sed -e "2 i maxWorkers: 2," -e "2 i setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts']" $API_APP_FOLDER/jest.config.ts > $API_APP_FOLDER/jest.config.ts.tmp
-rm $API_APP_FOLDER/jest.config.ts
-cp $API_APP_FOLDER/jest.config.ts.tmp $API_APP_FOLDER/jest.config.ts
-rm $API_APP_FOLDER/jest.config.tmp
-
-# add the file to tsconfig.spec.json
-sed '2 i "files": ["src/test-setup.ts"]' $API_APP_FOLDER/tsconfig.spec.json > $API_APP_FOLDER/tsconfig.spec.json.tmp
-rm $API_APP_FOLDER/tsconfig.spec.json
-cp $API_APP_FOLDER/tsconfig.spec.json.tmp $API_APP_FOLDER/tsconfig.spec.json
-rm $API_APP_FOLDER/tsconfig.spec.json.tmp
+download_api_ts_file "jest.config.ts"
+download_api_ts_file "tsconfig.spec.json"
 
 # Test Folder
 mkdir $API_APP_FOLDER/src/test
