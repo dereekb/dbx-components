@@ -1,3 +1,5 @@
+import 'jest-preset-angular/setup-jest';
+
 /**
  * Must be imported here so the Reflect functionality is availble in the Jest instance.
  *

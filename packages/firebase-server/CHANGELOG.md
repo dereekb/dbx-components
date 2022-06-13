@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [7.11.0](https://github.com/dereekb/dbx-components/compare/v7.10.0-dev...v7.11.0) (2022-06-13)
+
+
+### Features
+
+* added arrayToObject() ([edc723f](https://github.com/dereekb/dbx-components/commit/edc723f94a39f56dd6d43827595ee267830bf897))
+
+
+
 # [7.10.0](https://github.com/dereekb/dbx-components/compare/v7.9.0-dev...v7.10.0) (2022-06-11)
 
 

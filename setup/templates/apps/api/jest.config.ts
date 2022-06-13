@@ -1,8 +1,8 @@
 (global as any).appTestType = 'firebase';
 
 module.exports = {
-  displayName: 'demo-api',
+  displayName: 'API_APP_NAME',
   maxWorkers: 2,
-  coverageDirectory: '../../coverage/apps/demo-api',
+  coverageDirectory: '../../coverage/apps/API_APP_NAME',
   preset: '../../jest.preset.ts'
 };

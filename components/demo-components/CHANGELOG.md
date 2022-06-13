@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [7.11.0](https://github.com/dereekb/dbx-components/compare/v7.10.0-dev...v7.11.0) (2022-06-13)
+
+
+### Bug Fixes
+
+* added test-setup.ts config to setup-project.sh ([d374bf5](https://github.com/dereekb/dbx-components/commit/d374bf54af9114a63c9cefee30190376e12555ba))
+
+
+
 # [7.10.0](https://github.com/dereekb/dbx-components/compare/v7.9.0-dev...v7.10.0) (2022-06-11)
 
 

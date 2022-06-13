@@ -1,7 +1,7 @@
 (global as any).appTestType = 'angular';
 
 module.exports = {
-  displayName: 'demo',
-  coverageDirectory: '../../coverage/apps/demo',
+  displayName: 'ANGULAR_APP_NAME',
+  coverageDirectory: '../../coverage/apps/ANGULAR_APP_NAME',
   preset: '../../jest.preset.ts'
 };

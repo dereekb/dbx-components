@@ -7,17 +7,6 @@ process.env.JEST_JUNIT_OUTPUT_NAME = `${timezoneKey.toLowerCase()}.date.junit.xm
 
 module.exports = {
   displayName: 'date',
-
-  globals: {
-    'ts-jest': {
-      tsconfig: '<rootDir>/tsconfig.spec.json'
-    }
-  },
-  testEnvironment: 'node',
-  transform: {
-    '^.+\\.[tj]sx?$': 'ts-jest'
-  },
-  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
   coverageDirectory: '../../coverage/packages/date',
   preset: '../../jest.preset.ts'
 };

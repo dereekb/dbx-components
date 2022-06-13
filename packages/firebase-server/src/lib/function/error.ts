@@ -19,5 +19,5 @@ export function forbiddenError(serverError: ServerError) {
 }
 
 export function badRequestError(serverError: ServerError) {
-  return new functions.https.HttpsError('invalid-argument', serverError.message || 'forbidden', serverError);
+  return new functions.https.HttpsError('invalid-argument', serverError.message || 'bad request', serverError);
 }

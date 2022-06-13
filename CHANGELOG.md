@@ -2,6 +2,21 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [7.11.0](https://github.com/dereekb/dbx-components/compare/v7.10.0-dev...v7.11.0) (2022-06-13)
+
+
+### Bug Fixes
+
+* @nrwl/devkit version fix ([1818b79](https://github.com/dereekb/dbx-components/commit/1818b79a391036dd740bad6114994d7e8c379491))
+* added test-setup.ts config to setup-project.sh ([d374bf5](https://github.com/dereekb/dbx-components/commit/d374bf54af9114a63c9cefee30190376e12555ba))
+
+
+### Features
+
+* added arrayToObject() ([edc723f](https://github.com/dereekb/dbx-components/commit/edc723f94a39f56dd6d43827595ee267830bf897))
+
+
+
 # [7.10.0](https://github.com/dereekb/dbx-components/compare/v7.9.0-dev...v7.10.0) (2022-06-11)
 
 

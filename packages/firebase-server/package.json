@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/firebase-server",
-  "version": "7.10.0",
+  "version": "7.11.0",
   "devDependencies": {
     "firebase-functions-test": "2.0.2"
   },
@@ -12,7 +12,8 @@
     },
     "./test": {
       "main": "./test/index.js",
-      "types": "./test/index.d.ts"
+      "types": "./test/index.d.ts",
+      "default": "./test/index.js"
     }
   }
 }

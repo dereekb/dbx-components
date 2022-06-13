@@ -12,6 +12,27 @@ export function arrayToMap<T, V, K extends PrimativeKey = PrimativeKey>(values: 
 }
 
 /**
+ * Maps the values of the input array to a Record object. Can additionally specify a value function to map out the input value to another value for the map.
+ */
+export function arrayToObject<T, V, K extends PrimativeKey = PrimativeKey>(values: T[], keyFn: ReadKeyFunction<T, K>, valueFn: (t: T) => V): Record<K, T>;
+export function arrayToObject<T, K extends PrimativeKey = PrimativeKey>(values: T[], keyFn: ReadKeyFunction<T, K>, valueFn: (t: T) => T): Record<K, T>;
+export function arrayToObject<T, K extends PrimativeKey = PrimativeKey>(values: T[], keyFn: ReadKeyFunction<T, K>): Record<K, T>;
+export function arrayToObject<T, V, K extends PrimativeKey = PrimativeKey>(values: T[], keyFn: ReadKeyFunction<T, K>, valueFn: (t: T) => V = (t) => t as unknown as V): Record<K, V> {
+  const record: Record<K, V> = {} as Record<K, V>;
+
+  values.map((x) => {
+    const key = keyFn(x);
+    const value = valueFn(x);
+
+    if (key != undefined) {
+      record[key] = value;
+    }
+  });
+
+  return record;
+}
+
+/**
  * Generates a value for the input
  *
  * @param keys

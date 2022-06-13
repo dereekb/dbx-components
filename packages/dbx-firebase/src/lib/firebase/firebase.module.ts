@@ -44,7 +44,7 @@ export class DbxFirebaseDefaultFirestoreProviderModule {}
  */
 @NgModule({
   imports: [
-    provideAppCheck(((injector: Injector) => {
+    provideAppCheck((injector: Injector) => {
       const firebaseApp = injector.get(FirebaseApp);
       const firebaseOptions = injector.get<DbxFirebaseOptions>(DBX_FIREBASE_OPTIONS_TOKEN);
       const appCheckOptions = firebaseOptions.appCheck;
@@ -73,7 +73,7 @@ export class DbxFirebaseDefaultFirestoreProviderModule {}
       }
 
       return appCheck;
-    }) as any)
+    })
   ],
   providers: [
     {
@@ -90,7 +90,7 @@ export class DbxFirebaseDefaultAppCheckProviderModule {}
  */
 @NgModule({
   imports: [
-    provideAuth(((injector: Injector) => {
+    provideAuth((injector: Injector) => {
       const firebaseApp = injector.get(FirebaseApp);
       const auth = getAuth(firebaseApp);
       const emulators = injector.get<DbxFirebaseParsedEmulatorsConfig>(DbxFirebaseParsedEmulatorsConfig, undefined);
@@ -100,7 +100,7 @@ export class DbxFirebaseDefaultAppCheckProviderModule {}
       }
 
       return auth;
-    }) as any)
+    })
   ]
 })
 export class DbxFirebaseDefaultAuthProviderModule {}
@@ -110,7 +110,7 @@ export class DbxFirebaseDefaultAuthProviderModule {}
  */
 @NgModule({
   imports: [
-    provideStorage(((injector: Injector) => {
+    provideStorage((injector: Injector) => {
       const firebaseApp = injector.get(FirebaseApp);
       const storage = getStorage(firebaseApp);
       const emulators = injector.get<DbxFirebaseParsedEmulatorsConfig>(DbxFirebaseParsedEmulatorsConfig, undefined);
@@ -120,7 +120,7 @@ export class DbxFirebaseDefaultAuthProviderModule {}
       }
 
       return storage;
-    }) as any)
+    })
   ]
 })
 export class DbxFirebaseDefaultStorageProviderModule {}
@@ -130,7 +130,7 @@ export class DbxFirebaseDefaultStorageProviderModule {}
  */
 @NgModule({
   imports: [
-    provideFunctions(((injector: Injector) => {
+    provideFunctions((injector: Injector) => {
       const firebaseApp = injector.get(FirebaseApp);
       const firebaseOptions = injector.get<DbxFirebaseOptions>(DBX_FIREBASE_OPTIONS_TOKEN);
       const { functionsRegionOrCustomDomain } = firebaseOptions;
@@ -143,7 +143,7 @@ export class DbxFirebaseDefaultStorageProviderModule {}
       }
 
       return functions;
-    }) as any)
+    })
   ]
 })
 export class DbxFirebaseDefaultFunctionsProviderModule {}
@@ -153,10 +153,10 @@ export class DbxFirebaseDefaultFunctionsProviderModule {}
  */
 @NgModule({
   imports: [
-    provideFirebaseApp(((injector: Injector) => {
+    provideFirebaseApp((injector: Injector) => {
       const firebaseOptions = injector.get<DbxFirebaseOptions>(DBX_FIREBASE_OPTIONS_TOKEN);
       return initializeApp(firebaseOptions);
-    }) as any),
+    }),
     DbxFirebaseDefaultAppCheckProviderModule,
     DbxFirebaseDefaultFirestoreProviderModule,
     DbxFirebaseDefaultAuthProviderModule,
