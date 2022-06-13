@@ -324,24 +324,6 @@ curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/jes
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/jest.setup.node.ts -o jest.setup.node.ts
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/jest.setup.typings.ts -o jest.setup.typings.ts
 
-# update all jest.config.ts files to point to jest.preset.ts instead of jest.preset.js
-update_jest_config_file () {
-  local JEST_CONFIG_FOLDER_PATH=$1
-  local JEST_CONFIG_FILE_NAME=jest.config.ts
-  local JEST_CONFIG_FILE_PATH=$JEST_CONFIG_FOLDER_PATH/$JEST_CONFIG_FILE_NAME
-
-  cp $JEST_CONFIG_FILE_PATH $JEST_CONFIG_FILE_PATH.tmp
-  rm $JEST_CONFIG_FILE_PATH
-  # inject jest.setup.typings.ts too
-  sed -e "s:jest.preset.js:jest.preset.ts:g" -e "s:\"jest.config.ts\":\"../../jest.setup.typings.ts\", \"jest.config.ts\"" $JEST_CONFIG_FILE_PATH.tmp > $JEST_CONFIG_FILE_PATH
-  rm $JEST_CONFIG_FILE_PATH.tmp
-}
-
-update_jest_config_file "$ANGULAR_APP_FOLDER"
-update_jest_config_file "$API_APP_FOLDER"
-update_jest_config_file "$ANGULAR_COMPONENTS_FOLDER"
-update_jest_config_file "$FIREBASE_COMPONENTS_FOLDER"
-
 # add env files to ensure that jest CI tests export properly.
 mkdir tmp
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/setup/templates/apps/.env -o tmp/env.tmp
@@ -416,7 +398,7 @@ download_ts_file () {
   local FILE_PATH=$3
   local FULL_FILE_PATH=$TARGET_FOLDER/$FILE_PATH
   curl $DOWNLOAD_PATH/$FILE_PATH -o $FULL_FILE_PATH.tmp
-  sed -e "s:APP_CODE_PREFIX_UPPER:$APP_CODE_PREFIX_UPPER:g" -e "s:APP_CODE_PREFIX_LOWER:$APP_CODE_PREFIX_LOWER:g" -e "s:APP_CODE_PREFIX:$APP_CODE_PREFIX:g" -e "s:FIREBASE_COMPONENTS_NAME:$FIREBASE_COMPONENTS_NAME:g" -e "s:ANGULAR_COMPONENTS_NAME:$ANGULAR_COMPONENTS_NAME:g" -e "s:ANGULAR_APP_NAME:$ANGULAR_APP_NAME:g" -e "s:FIREBASE_EMULATOR_AUTH_PORT:$FIREBASE_EMULATOR_AUTH_PORT" -e "s:FIREBASE_EMULATOR_FIRESTORE_PORT:$FIREBASE_EMULATOR_FIRESTORE_PORT" -e "s:FIREBASE_EMULATOR_STORAGE_PORT:$FIREBASE_EMULATOR_STORAGE_PORT" $FULL_FILE_PATH.tmp > $FULL_FILE_PATH
+  sed -e "s:APP_CODE_PREFIX_UPPER:$APP_CODE_PREFIX_UPPER:g" -e "s:APP_CODE_PREFIX_LOWER:$APP_CODE_PREFIX_LOWER:g" -e "s:APP_CODE_PREFIX:$APP_CODE_PREFIX:g" -e "s:FIREBASE_COMPONENTS_NAME:$FIREBASE_COMPONENTS_NAME:g" -e "s:ANGULAR_COMPONENTS_NAME:$ANGULAR_COMPONENTS_NAME:g" -e "s:ANGULAR_APP_NAME:$ANGULAR_APP_NAME:g" -e "s:FIREBASE_EMULATOR_AUTH_PORT:$FIREBASE_EMULATOR_AUTH_PORT:g" -e "s:FIREBASE_EMULATOR_FIRESTORE_PORT:$FIREBASE_EMULATOR_FIRESTORE_PORT:g" -e "s:FIREBASE_EMULATOR_STORAGE_PORT:$FIREBASE_EMULATOR_STORAGE_PORT:g" $FULL_FILE_PATH.tmp > $FULL_FILE_PATH
   rm $FULL_FILE_PATH.tmp
 }
 

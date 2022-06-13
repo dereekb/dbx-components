@@ -1,4 +1,4 @@
-import { FirestoreCollection, FirestoreDocument, DocumentReference, FirestoreModelId } from '@dereekb/firebase';
+import { FirestoreCollection, FirestoreDocument, DocumentReference, FirestoreModelId, FirestoreModelKey } from '@dereekb/firebase';
 import { PromiseOrValue } from '@dereekb/util';
 import { JestTestContextFixture, useJestContextFixture, AbstractChildJestTestContextFixture } from '@dereekb/util/test';
 import { FirebaseAdminTestContext } from './firebase.admin';
@@ -8,6 +8,7 @@ import { FirebaseAdminTestContext } from './firebase.admin';
  */
 export interface ModelTestContext<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> {
   get documentId(): FirestoreModelId;
+  get documentKey(): FirestoreModelKey;
   get documentRef(): DocumentReference<T>;
   get document(): D;
 }
@@ -16,6 +17,10 @@ export class ModelTestContextFixture<T, D extends FirestoreDocument<T> = Firesto
   // MARK: ModelTestContext (Forwarded)
   get documentId(): FirestoreModelId {
     return this.instance.documentId;
+  }
+
+  get documentKey(): FirestoreModelKey {
+    return this.instance.documentKey;
   }
 
   get documentRef(): DocumentReference<T> {
@@ -32,6 +37,10 @@ export class ModelTestContextInstance<T, D extends FirestoreDocument<T> = Firest
 
   get documentId(): FirestoreModelId {
     return this.ref.id;
+  }
+
+  get documentKey(): FirestoreModelKey {
+    return this.ref.path;
   }
 
   get documentRef(): DocumentReference<T> {
