@@ -53,14 +53,17 @@ export function wrapJestTestContextFactory<W, F, E = any>(config: JestWrapTestCo
         const wrap = config.wrapFixture(inputFixture);
         let effect: E;
 
+        // add before each
         if (config.setupWrap != null) {
           beforeEach(async () => {
             effect = await config.setupWrap!(wrap);
           });
         }
 
+        // add tests
         buildTests(wrap);
 
+        // add after each
         if (config.teardownWrap != null) {
           afterEach(async () => {
             await config.teardownWrap!(wrap, effect);

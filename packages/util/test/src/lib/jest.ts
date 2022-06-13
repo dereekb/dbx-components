@@ -125,11 +125,12 @@ export function jestTestContextBuilder<I, F extends JestTestContextFixture<I>, C
     return (buildTests: JestBuildTestsWithContextFunction<F>) => {
       const fixture = builder.buildFixture(config);
 
-      // Before
+      // add before each
       if (builder.beforeEach != null) {
         beforeEach(builder.beforeEach);
       }
 
+      // add tests
       useJestContextFixture({
         fixture,
         /**
@@ -142,7 +143,7 @@ export function jestTestContextBuilder<I, F extends JestTestContextFixture<I>, C
         destroyInstance: (instance) => builder.teardownInstance(instance, config)
       });
 
-      // After
+      // add after each
       if (builder.afterEach != null) {
         afterEach(builder.afterEach);
       }
@@ -182,6 +183,9 @@ export function useJestContextFixture<C extends JestTestContextFixture<I>, I>(co
     }
   });
 
+  // Declare tests
+  buildTests(fixture);
+
   // Cleanup
   afterEach(async () => {
     clearInstance();
@@ -200,6 +204,4 @@ export function useJestContextFixture<C extends JestTestContextFixture<I>, I>(co
       }
     }
   });
-
-  buildTests(fixture);
 }
