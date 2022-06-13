@@ -35,6 +35,15 @@ export function describeQueryDriverTests(f: MockItemCollectionFixture) {
         fieldToQuery: '_id'
       });
 
+      it('should query on the id field.', async () => {
+        const takenIds = items.map((x) => x.id);
+
+        const result = await f.instance.mockItemCollection.queryDocument(whereDocumentId('in', takenIds)).getDocs();
+        expect(result).toBeDefined();
+        expect(result.length).toBe(takenIds.length);
+        expect(result.map((x) => x.id)).toContain(takenIds[0]);
+      });
+
       it('should return ids that are not taken.', async () => {
         const takenIds = items.map((x) => x.id);
 
@@ -42,7 +51,7 @@ export function describeQueryDriverTests(f: MockItemCollectionFixture) {
         const random = randomFromArrayFactory(takenIds);
 
         const factory = idBatchFactory<string>({
-          verifier: mockItemIdBatchVerifier(f.instance.firestoreCollection),
+          verifier: mockItemIdBatchVerifier(f.instance.mockItemCollection),
           factory: (count) => {
             const ids = [random(), ...idFactory(count)];
             return ids;
