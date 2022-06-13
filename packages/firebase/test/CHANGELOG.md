@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [7.11.1](https://github.com/dereekb/dbx-components/compare/v7.11.0-dev...v7.11.1) (2022-06-13)
+
+
+### Bug Fixes
+
+* firebase dependency fix ([0ebd9b9](https://github.com/dereekb/dbx-components/commit/0ebd9b946f5d1accfb25f2e73296c7051331cc8f))
+
+
+
 # [7.11.0](https://github.com/dereekb/dbx-components/compare/v7.10.0-dev...v7.11.0) (2022-06-13)
 
 

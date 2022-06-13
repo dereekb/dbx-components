@@ -218,13 +218,6 @@ npx --yes json -I -f firebase.json -e "this.emulators={ ui: { host: '$FIREBASE_L
 git add --all
 git commit --no-verify -m "checkpoint: added firebase configuration"
 
-# Install npm dependencies
-npm install @dereekb/dbx-analytics@$DBX_COMPONENTS_VERSION @dereekb/dbx-web@$DBX_COMPONENTS_VERSION @dereekb/dbx-form@$DBX_COMPONENTS_VERSION @dereekb/firebase@$DBX_COMPONENTS_VERSION @dereekb/firebase-server@$DBX_COMPONENTS_VERSION @dereekb/dbx-firebase@$DBX_COMPONENTS_VERSION --force  # TODO: Remove force once possible.
-npm install -D firebase-tools@^11.0.0 @ngrx/store-devtools@^13.0.0 @firebase/rules-unit-testing@^2.0.2 firebase-functions-test@2.0.2 envfile env-cmd
-
-git add --all
-git commit --no-verify -m "checkpoint: added @dereekb dependencies"
-
 # Docker
 # Create docker files
 echo "Copying Docker files from @dereekb/dbx-components"
@@ -338,6 +331,13 @@ npx --yes json -I -f nx.json -e "this.tasksRunnerOptions.default.options.cacheab
 
 git add --all
 git commit --no-verify -m "checkpoint: added jest configurations"
+
+# Install npm dependencies
+npm install @dereekb/dbx-analytics@$DBX_COMPONENTS_VERSION @dereekb/dbx-web@$DBX_COMPONENTS_VERSION @dereekb/dbx-form@$DBX_COMPONENTS_VERSION @dereekb/firebase@$DBX_COMPONENTS_VERSION @dereekb/firebase-server@$DBX_COMPONENTS_VERSION @dereekb/dbx-firebase@$DBX_COMPONENTS_VERSION
+npm install -D firebase-admin@10.3.0 firebase-functions@3.21.2 firebase-tools@^11.0.0 @ngrx/store-devtools@^13.0.0 @firebase/rules-unit-testing@^2.0.2 firebase-functions-test@2.2.0 envfile env-cmd
+
+git add --all
+git commit --no-verify -m "checkpoint: added @dereekb dependencies"
 
 # Add CircleCI Config
 echo "Copying CircleCI Configurations."
