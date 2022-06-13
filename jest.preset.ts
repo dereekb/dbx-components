@@ -1,6 +1,3 @@
-// https://github.com/rfprod/nx-ng-starter/blob/main/jest.preset.js
-// use as a template
-
 const nxPreset = require('@nrwl/jest/preset');
 const isCI = require('is-ci');
 
@@ -22,7 +19,6 @@ let snapshotSerializers = [];
 
 switch (appTestType) {
   case 'angular':
-    appTestTypeSetupFiles.push(`${rootPath}/jest.setup.angular.ts`);
     snapshotSerializers = jestPresetAngularSerializers;
     testEnvironment = 'jsdom';
     break;
@@ -38,6 +34,7 @@ module.exports = {
   maxWorkers: 3,
   setupFilesAfterEnv: [...(nxPreset.setupFilesAfterEnv ?? []), ...appTestTypeSetupFiles, ...(customTestSetup ? customTestSetup : []), 'jest-date'],
 
+  testEnvironment,
   testMatch: ['**/+(*.)+(spec|test).+(ts|js)?(x)'],
   globals: {
     'ts-jest': {
@@ -49,7 +46,7 @@ module.exports = {
 
   moduleFileExtensions: ['ts', 'html', 'js', 'mjs', 'json'],
   moduleNameMapper: pathsToModuleNameMapper(paths, { prefix: `${rootPath}/` }), // use to resolve packages in the project
-  resolver: 'jest-preset-angular/build/resolvers/ng-jest-resolver.js',
+  resolver: `${rootPath}/jest.resolver.js`,
 
   transformIgnorePatterns: ['node_modules/(?!.*\\.mjs$)'],
   transform: {
