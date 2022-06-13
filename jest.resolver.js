@@ -24,18 +24,6 @@ module.exports = (path, options) => {
       // - run `yarn test`
       // - if all the tests pass, it means the workaround is no longer needed
 
-      /*
-      console.log('b:' , x);
-
-      if (x.includes('date-fns')) {
-        console.log('is: ', x);
-      }
-
-      if (pkg.name.includes('date-fns')) {
-        console.log('+++', pkg.name.includes('date-fns'), pkg.name, pkg)
-      }
-      */
-
       const pkgNamesToTarget = new Set(['uuid', 'rxjs', '@firebase/auth', '@firebase/storage', '@firebase/functions', '@firebase/database', '@firebase/auth-compat', '@firebase/database-compat', '@firebase/app-compat', '@firebase/firestore', '@firebase/firestore-compat', '@firebase/messaging', '@firebase/util', 'firebase']);
 
       if (pkgNamesToTarget.has(pkg.name)) {
