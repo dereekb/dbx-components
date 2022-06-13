@@ -3,6 +3,9 @@ import { APP_CODE_PREFIX_LOWERApiFunctionContextFactory, APP_CODE_PREFIX_LOWERAu
 import { exampleSetUsernameKey } from 'APP_CODE_PREFIX_LOWER-firebase';
 import { exampleSetUsername } from './example.set.username';
 
+it('should run a test', () => {
+  expect(true).toBe(true);
+});
 
 APP_CODE_PREFIX_LOWERApiFunctionContextFactory((f) => {
 

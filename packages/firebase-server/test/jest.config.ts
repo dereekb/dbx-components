@@ -1,19 +1,10 @@
 (global as any).testFolderRootPath = '<rootDir>/../../..';
+(global as any).appTestType = 'firebase';
 
 module.exports = {
   displayName: 'firebase-server-test',
-  preset: '../../../jest.preset.ts',
-  setupFilesAfterEnv: ['<rootDir>/../test-setup.ts'],
-  maxWorkers: 2,
-  globals: {
-    'ts-jest': {
-      tsconfig: '<rootDir>/tsconfig.spec.json'
-    }
-  },
-  testEnvironment: 'node',
-  transform: {
-    '^.+\\.[tj]sx?$': 'ts-jest'
-  },
-  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
-  coverageDirectory: '../../../coverage/packages/firebase-server/test'
+  maxConcurrency: 1,
+  maxWorkers: 1,
+  coverageDirectory: '../../coverage/packages/firebase-server/test',
+  preset: '../../../jest.preset.ts'
 };

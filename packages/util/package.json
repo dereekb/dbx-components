@@ -10,7 +10,8 @@
     },
     "./test": {
       "main": "./test/index.js",
-      "types": "./test/index.d.ts"
+      "types": "./test/index.d.ts",
+      "default": "./test/index.js"
     }
   }
 }
