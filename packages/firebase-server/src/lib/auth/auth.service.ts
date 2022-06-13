@@ -206,6 +206,13 @@ export abstract class AbstractFirebaseServerAuthContext<C extends FirebaseServer
 
 // MARK: Service
 /**
+ * Reference to a FirebaseServerAuthService
+ */
+export interface FirebaseServerAuthServiceRef<S extends FirebaseServerAuthService = FirebaseServerAuthService> {
+  readonly authService: S;
+}
+
+/**
  * FirebaseServer auth service that provides accessors to auth-related components.
  */
 export abstract class FirebaseServerAuthService<U extends FirebaseServerAuthUserContext = FirebaseServerAuthUserContext, C extends FirebaseServerAuthContext = FirebaseServerAuthContext> {
