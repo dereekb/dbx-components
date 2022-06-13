@@ -313,7 +313,7 @@ git add --all
 git commit --no-verify -m "checkpoint: added semver and commit linting"
 
 # add jest setup/configurations
-npm install -D jest-date jest-junit
+npm install -D jest-date jest-junit 
 rm jest.preset.js
 
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/jest.preset.ts -o jest.preset.ts

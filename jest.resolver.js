@@ -1,12 +1,6 @@
-const resolver = require('jest-preset-angular/build/resolvers/ng-jest-resolver.js');
-
 module.exports = (path, options) => {
-  // const x = resolver(path, options);
-
-  // console.log('x: ', x);
-
   // Call the defaultResolver, so we leverage its cache, error handling, etc.
-  const y = options.defaultResolver(path, {
+  return options.defaultResolver(path, {
     ...options,
     // Use packageFilter to process parsed `package.json` before the resolution (see https://www.npmjs.com/package/resolve#resolveid-opts-cb)
     packageFilter: (pkg) => {
@@ -53,8 +47,4 @@ module.exports = (path, options) => {
       return pkg;
     }
   });
-
-  // console.log('y: ', y);
-
-  return y;
 };
