@@ -24,7 +24,7 @@ module.exports = (path, options) => {
       // - run `yarn test`
       // - if all the tests pass, it means the workaround is no longer needed
 
-      const pkgNamesToTarget = new Set(['uuid', 'rxjs', '@firebase/auth', '@firebase/storage', '@firebase/functions', '@firebase/database', '@firebase/auth-compat', '@firebase/database-compat', '@firebase/app-compat', '@firebase/firestore', '@firebase/firestore-compat', '@firebase/messaging', '@firebase/util', 'firebase']);
+      const pkgNamesToTarget = new Set(['uuid', 'rxjs', '@dereekb/firebase-server', '@dereekb/firebase', '@dereekb/util', '@firebase/auth', '@firebase/storage', '@firebase/functions', '@firebase/database', '@firebase/auth-compat', '@firebase/database-compat', '@firebase/app-compat', '@firebase/firestore', '@firebase/firestore-compat', '@firebase/messaging', '@firebase/util', 'firebase']);
 
       if (pkgNamesToTarget.has(pkg.name)) {
         // console.log('>>>', pkg.name)
