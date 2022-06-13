@@ -6,5 +6,5 @@ module.exports = {
   maxConcurrency: 1,
   maxWorkers: 1,
   coverageDirectory: '../../coverage/packages/firebase/test',
-  preset: '../../jest.preset.ts'
+  preset: '../../../jest.preset.ts'
 };

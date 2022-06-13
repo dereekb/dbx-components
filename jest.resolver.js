@@ -42,7 +42,9 @@ module.exports = (path, options) => {
       }
       */
 
-      if (pkg.name === 'uuid' || pkg.name === 'rxjs' || pkg.name === '@firebase/auth' || pkg.name === '@firebase/auth-compat' || pkg.name === '@firebase/database-compat' || pkg.name === '@firebase/app-compat' || pkg.name === '@firebase/firestore' || pkg.name === '@firebase/firestore-compat' || pkg.name === '@firebase/messaging' || pkg.name === '@firebase/util' || pkg.name === 'firebase') {
+      const pckNamesToTarget = new Set(['uuid', 'rxjs', '@firebase/auth', '@firebase/storage', '@firebase/functions', '@firebase/database', '@firebase/auth-compat', '@firebase/database-compat', '@firebase/app-compat', '@firebase/firestore', '@firebase/firestore-compat', '@firebase/messaging', '@firebase/util', 'firebase']);
+
+      if (pckNamesToTarget.has(pkg.name)) {
         // console.log('>>>', pkg.name)
         delete pkg['exports'];
         delete pkg['module'];
