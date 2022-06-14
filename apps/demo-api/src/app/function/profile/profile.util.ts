@@ -11,8 +11,6 @@ export function profileForUser(nest: DemoApiNestContext, uid: FirebaseAuthUserId
 
 export async function profileForUserRequest(request: NestContextCallableRequestWithAuth<DemoApiNestContext, ProfileParams>): Promise<ProfileDocument> {
   const { nest, data: params, auth } = request;
-  const profileFirestoreCollection = nest.demoFirestoreCollections.profileCollection;
-
   let profileDocument: ProfileDocument;
 
   if (params.key != null) {

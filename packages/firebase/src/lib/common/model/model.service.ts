@@ -97,8 +97,8 @@ export function inContextFirebaseModelServiceFactory<C, T, D extends FirestoreDo
 }
 
 // MARK: Service
-export type FirebaseModelsServiceFactory<C extends FirebaseModelServiceContext, K extends FirestoreModelIdentity = FirestoreModelIdentity> = {
-  [J in FirestoreModelNames<K>]: FirebaseModelServiceGetter<C, any>;
+export type FirebaseModelsServiceFactory<C extends FirebaseModelServiceContext, I extends FirestoreModelIdentity = FirestoreModelIdentity> = {
+  [J in FirestoreModelNames<I>]: FirebaseModelServiceGetter<C, any>;
 };
 
 /**
@@ -122,7 +122,7 @@ export type FirebaseModelsServiceTypes<S extends FirebaseModelsService<any, any>
  * @param services
  * @returns
  */
-export function firebaseModelsService<X extends FirebaseModelsServiceFactory<C, K>, C extends FirebaseModelServiceContext, K extends FirestoreModelIdentity = FirestoreModelIdentity>(services: X): FirebaseModelsService<X, C> {
+export function firebaseModelsService<X extends FirebaseModelsServiceFactory<C, I>, C extends FirebaseModelServiceContext, I extends FirestoreModelIdentity = FirestoreModelIdentity>(services: X): FirebaseModelsService<X, C> {
   const firebaseModelsServiceFunction: FirebaseModelsService<X, C> = <K extends keyof X>(type: K, context: C) => {
     const firebaseModelService = services[type] as FirebaseModelServiceGetter<C, unknown>;
 
@@ -147,7 +147,7 @@ export type InContextFirebaseModelsServiceFactory<Y> = Y extends FirebaseModelsS
  * @param service
  * @returns
  */
-export function inContextFirebaseModelsServiceFactory<X extends FirebaseModelsServiceFactory<C, K>, C extends FirebaseModelServiceContext, K extends FirestoreModelIdentity = FirestoreModelIdentity>(service: FirebaseModelsService<X, C>): InContextFirebaseModelsServiceFactory<FirebaseModelsService<X, C>> {
+export function inContextFirebaseModelsServiceFactory<X extends FirebaseModelsServiceFactory<C, I>, C extends FirebaseModelServiceContext, I extends FirestoreModelIdentity = FirestoreModelIdentity>(service: FirebaseModelsService<X, C>): InContextFirebaseModelsServiceFactory<FirebaseModelsService<X, C>> {
   const inContextFirebaseModelsServiceFactory: InContextFirebaseModelsServiceFactory<FirebaseModelsService<X, C>> = <K extends keyof X>(context: C) => {
     return (type: K) => service(type, context);
   };

@@ -1,6 +1,6 @@
-import { FirestoreModelKey, FirestoreModelKeyRef } from '@dereekb/firebase';
 import { Expose } from 'class-transformer';
 import { IsNotEmpty, IsString } from 'class-validator';
+import { FirestoreModelKey, FirestoreModelKeyRef } from '../../firestore/collection/collection';
 
 /**
  * Simple annotated params that implements FirestoreModelKeyRef.
