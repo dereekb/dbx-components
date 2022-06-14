@@ -1,4 +1,4 @@
-import { batchCalc, BatchCount, batch, itemCountForBatchIndex } from '../grouping';
+import { batchCalc, BatchCount, itemCountForBatchIndex } from '../grouping';
 import { Maybe } from '../value/maybe.type';
 
 export interface PerformTaskLoopConfig<O> {

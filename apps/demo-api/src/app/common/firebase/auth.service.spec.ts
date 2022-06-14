@@ -14,7 +14,7 @@ demoApiFunctionContextFactory((f) => {
 
       describe('loadClaims', () => {
         it('should load the claims', async () => {
-          let claims = await userContext.loadClaims<DemoApiAuthClaims>();
+          const claims = await userContext.loadClaims<DemoApiAuthClaims>();
           expect(claims).toBeDefined();
         });
       });

@@ -1,5 +1,4 @@
 import { Maybe, TimezoneString } from '@dereekb/util';
-import RRule from 'rrule';
 import { baseDateToTargetDate } from '../date/date.timezone';
 import { DateRRuleParseUtility, RRuleExdateAttribute } from './date.rrule.parse';
 

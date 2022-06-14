@@ -1,4 +1,4 @@
-import { UseJestFunctionMapFixture, useJestFunctionMapFixture } from './jest.function';
+import { useJestFunctionMapFixture } from './jest.function';
 
 describe('useJestFunctionFixtureArray', () => {
   const config = {

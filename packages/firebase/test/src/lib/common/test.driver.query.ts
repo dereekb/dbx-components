@@ -4,7 +4,7 @@ import { firestoreIdBatchVerifierFactory, limit, orderBy, startAfter, startAt, w
 import { MockItemDocument, MockItem, MockItemSubItemDocument, MockItemSubItem, MockItemSubItemDeepDocument, MockItemSubItemDeep, MockItemUserDocument } from './firestore.mock.item';
 import { MockItemCollectionFixture } from './firestore.mock.item.fixture';
 import { allChildMockItemSubItemDeepsWithinMockItem } from './firestore.mock.item.query';
-import { arrayFactory, idBatchFactory, mapGetter, mapGetterFactory, randomArrayFactory, randomFromArrayFactory, randomNumberFactory, unique } from '@dereekb/util';
+import { arrayFactory, idBatchFactory, mapGetter, randomFromArrayFactory, randomNumberFactory, unique } from '@dereekb/util';
 
 /**
  * Describes query driver tests, using a MockItemCollectionFixture.
