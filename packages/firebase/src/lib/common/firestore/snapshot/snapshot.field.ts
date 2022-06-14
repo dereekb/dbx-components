@@ -130,8 +130,8 @@ export function optionalFirestoreUID() {
   return optionalFirestoreString();
 }
 
-export const firestoreModelKey = firestoreString();
-export const firestoreModelId = firestoreString();
+export const firestoreModelKeyString = firestoreString();
+export const firestoreModelIdString = firestoreString();
 
 export type FirestoreDateFieldConfig = DefaultMapConfiguredFirestoreFieldConfig<Date, string> & {
   saveDefaultAsNow?: boolean;
