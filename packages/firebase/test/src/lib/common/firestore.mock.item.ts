@@ -99,7 +99,7 @@ export function mockItemFirestoreCollection(firestoreContext: FirestoreContext):
 }
 
 // MARK: MockItemPrivate
-export const mockItemPrivateIdentity = firestoreModelIdentity('mockItemPrivate', 'mip');
+export const mockItemPrivateIdentity = firestoreModelIdentity(mockItemIdentity, 'mockItemPrivate', 'mip');
 
 /**
  * Private data for each MockItem.
@@ -182,7 +182,7 @@ export function mockItemPrivateFirestoreCollectionGroup(firestoreContext: Firest
 }
 
 // MARK: MockItemUser
-export const mockItemUserIdentity = firestoreModelIdentity('mockItemUser', 'miu');
+export const mockItemUserIdentity = firestoreModelIdentity(mockItemIdentity, 'mockItemUser', 'miu');
 
 /**
  * An item associated per user to this item.
@@ -269,7 +269,7 @@ export function mockItemUserFirestoreCollectionGroup(firestoreContext: Firestore
 }
 
 // MARK: MockItemSubItem
-export const mockItemSubItemIdentity = firestoreModelIdentity('mockItemSub', 'misi');
+export const mockItemSubItemIdentity = firestoreModelIdentity(mockItemIdentity, 'mockItemSub', 'misi');
 
 /**
  * Data for a sub item in our firestore collection.
@@ -341,7 +341,7 @@ export function mockItemSubItemFirestoreCollectionGroup(firestoreContext: Firest
 }
 
 // MARK: Sub-Sub Item
-export const mockItemSubItemDeepIdentity = firestoreModelIdentity('mockItemSubItemDeep', 'misid');
+export const mockItemSubItemDeepIdentity = firestoreModelIdentity(mockItemSubItemIdentity, 'mockItemSubItemDeep', 'misid');
 
 /**
  * Data for a sub item in our firestore collection.

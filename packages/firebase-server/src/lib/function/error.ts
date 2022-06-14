@@ -14,10 +14,10 @@ export function preconditionConflictError(message: string) {
 }
 
 // MARK: General Errors
-export function forbiddenError(serverError: ServerError) {
-  return new functions.https.HttpsError('unauthenticated', serverError.message || 'forbidden', serverError);
+export function forbiddenError(serverError?: ServerError) {
+  return new functions.https.HttpsError('unauthenticated', serverError?.message || 'forbidden', serverError);
 }
 
-export function badRequestError(serverError: ServerError) {
-  return new functions.https.HttpsError('invalid-argument', serverError.message || 'bad request', serverError);
+export function badRequestError(serverError?: ServerError) {
+  return new functions.https.HttpsError('invalid-argument', serverError?.message || 'bad request', serverError);
 }

@@ -64,7 +64,7 @@ export function profileFirestoreCollection(firestoreContext: FirestoreContext): 
 }
 
 // MARK: Profile Private Data
-export const profilePrivateDataIdentity = firestoreModelIdentity('profilePrivate', 'prp');
+export const profilePrivateDataIdentity = firestoreModelIdentity(profileIdentity, 'profilePrivate', 'prp');
 
 export interface ProfilePrivateData {
   /**

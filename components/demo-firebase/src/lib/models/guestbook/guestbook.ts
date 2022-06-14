@@ -69,7 +69,7 @@ export function guestbookFirestoreCollection(firestoreContext: FirestoreContext)
 }
 
 // MARK: Guestbook Entry
-export const guestbookEntryIdentity = firestoreModelIdentity('guestbookEntry', 'gbe');
+export const guestbookEntryIdentity = firestoreModelIdentity(guestbookIdentity, 'guestbookEntry', 'gbe');
 
 export interface GuestbookEntry extends UserRelated, UserRelatedById {
   /**
