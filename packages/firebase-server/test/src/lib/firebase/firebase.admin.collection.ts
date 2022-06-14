@@ -55,11 +55,11 @@ export class ModelTestContextInstance<T, D extends FirestoreDocument<T> = Firest
 /**
  * authorizedUserContext/authorizedUserContextFactory parameters.
  */
-export interface ModelTestContextFactoryParams<T, D extends FirestoreDocument<T> = FirestoreDocument<T>, C = any, PI extends FirebaseAdminTestContext = FirebaseAdminTestContext, PF extends JestTestContextFixture<PI> = JestTestContextFixture<PI>, I extends ModelTestContextInstance<T, D, PI> = ModelTestContextInstance<T, D, PI>, F extends ModelTestContextFixture<T, D, PI, PF, I> = ModelTestContextFixture<T, D, PI, PF, I>> {
+export interface ModelTestContextFactoryParams<T, D extends FirestoreDocument<T> = FirestoreDocument<T>, C = any, PI extends FirebaseAdminTestContext = FirebaseAdminTestContext, PF extends JestTestContextFixture<PI> = JestTestContextFixture<PI>, I extends ModelTestContextInstance<T, D, PI> = ModelTestContextInstance<T, D, PI>, F extends ModelTestContextFixture<T, D, PI, PF, I> = ModelTestContextFixture<T, D, PI, PF, I>, CL extends FirestoreCollection<T, D> = FirestoreCollection<T, D>> {
   /**
    * Creates a ModelTestContextInstanceDelegate from the parent instance.
    */
-  getCollection: (parentInstance: PI, config: C) => FirestoreCollection<T, D>;
+  getCollection: (parentInstance: PI, config: C) => CL;
 
   /**
    * Creates the custom fixture. If not defined, a ModelTestContextFixture is created.
@@ -69,12 +69,12 @@ export interface ModelTestContextFactoryParams<T, D extends FirestoreDocument<T>
   /**
    * Optional function to create a DocumentReference.
    */
-  makeRef?: (collection: FirestoreCollection<T, D>, config: C, parentInstance: PI) => Promise<DocumentReference<T>>;
+  makeRef?: (collection: CL, config: C, parentInstance: PI) => Promise<DocumentReference<T>>;
 
   /**
    * Custom make instance function. If not defined, a ModelTestContextInstance will be generated.
    */
-  makeInstance?: (collection: FirestoreCollection<T, D>, ref: DocumentReference<T>, testInstance: PI) => PromiseOrValue<I>;
+  makeInstance?: (collection: CL, ref: DocumentReference<T>, testInstance: PI) => PromiseOrValue<I>;
 
   /**
    * Optional function to initialize the document for this instance.
@@ -87,8 +87,8 @@ export type ModelTestContextParams<C = any, PI extends FirebaseAdminTestContext 
 /**
  * Creates a new Jest Context that has a random user for authorization for use in firebase server tests.
  */
-export function modelTestContextFactory<T, D extends FirestoreDocument<T> = FirestoreDocument<T>, C = any, PI extends FirebaseAdminTestContext = FirebaseAdminTestContext, PF extends JestTestContextFixture<PI> = JestTestContextFixture<PI>, I extends ModelTestContextInstance<T, D, PI> = ModelTestContextInstance<T, D, PI>, F extends ModelTestContextFixture<T, D, PI, PF, I> = ModelTestContextFixture<T, D, PI, PF, I>>(
-  config: ModelTestContextFactoryParams<T, D, C, PI, PF, I, F>
+export function modelTestContextFactory<T, D extends FirestoreDocument<T> = FirestoreDocument<T>, C = any, PI extends FirebaseAdminTestContext = FirebaseAdminTestContext, PF extends JestTestContextFixture<PI> = JestTestContextFixture<PI>, I extends ModelTestContextInstance<T, D, PI> = ModelTestContextInstance<T, D, PI>, F extends ModelTestContextFixture<T, D, PI, PF, I> = ModelTestContextFixture<T, D, PI, PF, I>, CL extends FirestoreCollection<T, D> = FirestoreCollection<T, D>>(
+  config: ModelTestContextFactoryParams<T, D, C, PI, PF, I, F, CL>
 ): (params: ModelTestContextParams<C, PI, PF>, buildTests: (u: F) => void) => void {
   const { getCollection, makeRef = (collection) => collection.documentAccessor().newDocument().documentRef, makeInstance = (collection, ref, testInstance) => new ModelTestContextInstance(collection, ref, testInstance) as I, makeFixture = (f: PF) => new ModelTestContextFixture<T, D, PI, PF, I>(f), initDocument } = config;
 
