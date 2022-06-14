@@ -2,6 +2,16 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [7.12.0](https://github.com/dereekb/dbx-components/compare/v7.11.2-dev...v7.12.0) (2022-06-14)
+
+
+### Features
+
+* added isAdminOrTargetUserInRequestData() ([c597eb9](https://github.com/dereekb/dbx-components/commit/c597eb9ce968ae5e8d64f3bc2f6ba6520cb11681))
+* updated firestoreModelKey() ([1459a15](https://github.com/dereekb/dbx-components/commit/1459a150b00cd657cc5a835652c17945ae85ca15))
+
+
+
 ## [7.11.2](https://github.com/dereekb/dbx-components/compare/v7.11.1-dev...v7.11.2) (2022-06-13)
 
 
