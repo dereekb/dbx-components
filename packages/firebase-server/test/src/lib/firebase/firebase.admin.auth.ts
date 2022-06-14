@@ -141,6 +141,11 @@ export interface AuthorizedUserTestContextFactoryParams<PI extends FirebaseAdmin
   f: PF;
 
   user?: CreateRequest;
+
+  /**
+   * Optional template details.
+   */
+  template?: AuthorizedUserTestContextDetailsTemplate;
 }
 
 /**
@@ -160,7 +165,7 @@ export function authorizedUserContextFactory<PI extends FirebaseAdminTestContext
       buildTests,
       initInstance: async () => {
         const uid = inputUser?.uid || makeUid();
-        const { details, claims } = makeUserDetails(uid, params);
+        const { details, claims } = { ...makeUserDetails(uid, params), ...params.template };
         const auth = f.instance.auth;
 
         const userRecord = await auth.createUser({

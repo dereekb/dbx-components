@@ -1,3 +1,5 @@
+import { AuthData } from 'firebase-functions/lib/common/providers/https';
+import { DecodedIdToken } from 'firebase-admin/lib/auth/token-verifier';
 import * as admin from 'firebase-admin';
 import { Module } from '@nestjs/common';
 import { firebaseServerAuthModuleMetadata } from './auth.nest';
@@ -5,17 +7,26 @@ import { authorizedUserContextFactory, firebaseAdminFunctionNestContextFactory, 
 import { AbstractFirebaseServerAuthContext, AbstractFirebaseServerAuthService, AbstractFirebaseServerAuthUserContext } from './auth.service';
 import { AuthClaims, AuthClaimsUpdate, authRoleClaimsService, AuthRoleSet, AUTH_ADMIN_ROLE, AUTH_ROLE_CLAIMS_DEFAULT_CLAIM_VALUE, objectHasNoKeys } from '@dereekb/util';
 import { CallableContextWithAuthData } from '../function/context';
+import { NestContextCallableRequestWithAuth } from '../nest/function/nest';
+import { AbstractFirebaseNestContext } from '../nest/nest.provider';
+import { assertIsAdminOrTargetUserInRequestData, isAdminInRequest, isAdminOrTargetUserInRequestData } from './auth.nest.util';
 
 const TEST_CLAIMS_SERVICE_CONFIG = {
   a: { roles: [AUTH_ADMIN_ROLE] }
 };
 
-type TestAuthClaims = typeof TEST_CLAIMS_SERVICE_CONFIG;
+type TestAuthClaims = {
+  a?: 1;
+};
+
+const TEST_ADMIN_USER_CLAIMS: TestAuthClaims = {
+  a: 1
+};
 
 export class TestFirebaseServerAuthUserContext extends AbstractFirebaseServerAuthUserContext<TestAuthService> {}
 export class TestFirebaseServerAuthContext extends AbstractFirebaseServerAuthContext<TestFirebaseServerAuthContext, TestFirebaseServerAuthUserContext, TestAuthService> {}
 export class TestAuthService extends AbstractFirebaseServerAuthService<TestFirebaseServerAuthUserContext, TestFirebaseServerAuthContext> {
-  static readonly TEST_CLAIMS_SERVICE = authRoleClaimsService(TEST_CLAIMS_SERVICE_CONFIG);
+  static readonly TEST_CLAIMS_SERVICE = authRoleClaimsService<TestAuthClaims>(TEST_CLAIMS_SERVICE_CONFIG);
 
   protected _context(context: CallableContextWithAuthData): TestFirebaseServerAuthContext {
     return new TestFirebaseServerAuthContext(this, context);
@@ -248,6 +259,148 @@ describe('firebase server auth', () => {
             } catch (e) {
               expect(e).toBeDefined();
             }
+          });
+        });
+      });
+    });
+
+    describe('auth.nest.util', () => {
+      let context: AbstractFirebaseNestContext<any, any>;
+
+      beforeEach(() => {
+        context = {
+          authService
+        } as unknown as AbstractFirebaseNestContext<any, any>;
+      });
+
+      describe('with admin', () => {
+        userContext({ f, template: { claims: TEST_ADMIN_USER_CLAIMS } }, (u) => {
+          let token: DecodedIdToken;
+          let auth: AuthData;
+
+          beforeEach(async () => {
+            token = await u.loadDecodedIdToken();
+            auth = {
+              uid: u.uid,
+              token
+            };
+          });
+
+          describe('isAdminInRequest', () => {
+            it('should return true.', async () => {
+              const request: NestContextCallableRequestWithAuth<AbstractFirebaseNestContext<any, any>, any> = {
+                nest: context,
+                rawRequest: {} as any,
+                auth,
+                data: {} as any
+              };
+
+              const result = isAdminInRequest(request);
+              expect(result).toBe(true);
+            });
+          });
+
+          describe('isAdminOrTargetUserInRequestData', () => {
+            it('should return true.', async () => {
+              const request: NestContextCallableRequestWithAuth<AbstractFirebaseNestContext<any, any>, any> = {
+                nest: context,
+                rawRequest: {} as any,
+                auth,
+                data: {} as any
+              };
+
+              const result = isAdminOrTargetUserInRequestData(request);
+              expect(result).toBe(true);
+            });
+          });
+        });
+      });
+
+      describe('without admin', () => {
+        userContext({ f }, (u) => {
+          let token: DecodedIdToken;
+          let auth: AuthData;
+
+          beforeEach(async () => {
+            token = await u.loadDecodedIdToken();
+            auth = {
+              uid: u.uid,
+              token
+            };
+          });
+
+          describe('isAdminInRequest', () => {
+            it('should return false', async () => {
+              const request: NestContextCallableRequestWithAuth<AbstractFirebaseNestContext<any, any>, any> = {
+                nest: context,
+                rawRequest: {} as any,
+                auth,
+                data: {} as any
+              };
+
+              const result = isAdminInRequest(request);
+              expect(result).toBe(false);
+            });
+          });
+
+          describe('isAdminOrTargetUserInRequestData', () => {
+            let request: NestContextCallableRequestWithAuth<AbstractFirebaseNestContext<any, any>, any>;
+
+            beforeEach(() => {
+              request = {
+                nest: context,
+                rawRequest: {} as any,
+                auth,
+                data: {} as any
+              };
+            });
+
+            describe('assertIsAdminOrTargetUserInRequestData', () => {
+              describe('requireUid=false', () => {
+                it('should return the uid of the auth if the uid is not provided.', async () => {
+                  const result = assertIsAdminOrTargetUserInRequestData(request, false);
+                  expect(result).toBe(auth.uid);
+                });
+              });
+            });
+
+            describe('requireUid=false', () => {
+              it('should return true if the uid is not provided.', async () => {
+                const result = isAdminOrTargetUserInRequestData(request, false);
+                expect(result).toBe(true);
+              });
+
+              it('should return true if the uid is provided and matches the auth uid', async () => {
+                request.data.uid = auth.uid;
+                const result = isAdminOrTargetUserInRequestData(request, false);
+                expect(result).toBe(true);
+              });
+
+              it('should return false if the uid is provided and does not match the auth uid', async () => {
+                request.data.uid = 'otheruid';
+                const result = isAdminOrTargetUserInRequestData(request, false);
+                expect(result).toBe(false);
+              });
+            });
+
+            describe('requireUid=true', () => {
+              it('should return false if the uid is not provided.', async () => {
+                const result = isAdminOrTargetUserInRequestData(request, true);
+                expect(result).toBe(false);
+              });
+
+              it('should return true if the uid is provided and matches the auth uid.', async () => {
+                request.data.uid = auth.uid;
+                const result = isAdminOrTargetUserInRequestData(request, true);
+                expect(result).toBe(true);
+              });
+
+              it('should return false if the uid is provided and does not match the auth uid', async () => {
+                request.data.uid = 'otheruid';
+                const result = isAdminOrTargetUserInRequestData(request, false);
+                expect(result).toBe(false);
+              });
+            });
           });
         });
       });
