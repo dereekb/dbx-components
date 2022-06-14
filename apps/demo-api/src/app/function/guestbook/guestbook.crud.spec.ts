@@ -5,7 +5,7 @@ import { describeCloudFunctionTest } from '@dereekb/firebase-server/test';
 import { OnCallCreateModelResult } from '@dereekb/firebase';
 
 demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
-  describeCloudFunctionTest('createGuestbook', { f, fn: demoCreateModel }, (createGuestbookCloudFn) => {
+  describeCloudFunctionTest('createGuestbook', { f, fns: { demoCreateModel } }, ({ demoCreateModelCloudFn }) => {
     demoAuthorizedUserContext({ f }, (u) => {
       it('should create a guestbook.', async () => {
         const name = 'guestbook';
@@ -14,7 +14,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
           name
         };
 
-        const result: OnCallCreateModelResult = await u.callCloudFunction(createGuestbookCloudFn, {
+        const result: OnCallCreateModelResult = await u.callCloudFunction(demoCreateModelCloudFn, {
           modelType: guestbookIdentity.model,
           data: params
         });

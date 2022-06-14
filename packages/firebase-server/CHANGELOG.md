@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [7.13.0](https://github.com/dereekb/dbx-components/compare/v7.12.0-dev...v7.13.0) (2022-06-14)
+
+
+### Features
+
+* added describeCloudFunctionTest() to handle a map of functions ([5545149](https://github.com/dereekb/dbx-components/commit/55451495c305726d89973613d7d5b9a5be9871bc))
+
+
+
 # [7.12.0](https://github.com/dereekb/dbx-components/compare/v7.11.2-dev...v7.12.0) (2022-06-14)
 
 
