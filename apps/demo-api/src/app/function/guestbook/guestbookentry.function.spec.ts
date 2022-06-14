@@ -3,6 +3,7 @@ import { GuestbookEntry, guestbookEntryIdentity, UpdateGuestbookEntryParams } fr
 import { demoGuestbookEntryContext, DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserContext, demoGuestbookContext } from '../../../test/fixture';
 import { isDate, isValid } from 'date-fns';
 import { describeCloudFunctionTest } from '@dereekb/firebase-server/test';
+import { onCallTypedModelParams } from '@dereekb/firebase';
 
 demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
   describeCloudFunctionTest('updateGuestbookEntry', { f, fn: demoUpdateModel }, (updateGuestbookEntryCloudFn) => {
@@ -26,10 +27,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
               signed
             };
 
-            await u.callCloudFunction(updateGuestbookEntryCloudFn, {
-              modelType: guestbookEntryIdentity.model,
-              data: params
-            });
+            await u.callCloudFunction(updateGuestbookEntryCloudFn, onCallTypedModelParams(guestbookEntryIdentity.model, params));
 
             exists = await userGuestbookEntry.accessor.exists();
             expect(exists).toBe(true);
@@ -64,10 +62,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
                   published: true
                 };
 
-                await u.callCloudFunction(updateGuestbookEntryCloudFn, {
-                  modelType: guestbookEntryIdentity.model,
-                  data: params
-                });
+                await u.callCloudFunction(updateGuestbookEntryCloudFn, onCallTypedModelParams(guestbookEntryIdentity.model, params));
 
                 exists = await userGuestbookEntry.accessor.exists();
                 expect(exists).toBe(true);

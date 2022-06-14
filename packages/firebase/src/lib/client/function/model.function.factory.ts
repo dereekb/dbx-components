@@ -2,7 +2,7 @@ import { firebaseFunctionMapFactory } from '@dereekb/firebase';
 import { MaybeNot, build, cachedGetter, capitalizeFirstLetter } from '@dereekb/util';
 import { Functions, httpsCallable } from 'firebase/functions';
 import { NonNever } from 'ts-essentials';
-import { CREATE_MODEL_APP_FUNCTION_KEY, DELETE_MODEL_APP_FUNCTION_KEY, FirestoreModelIdentity, FirestoreModelNames, OnCallCreateModelResult, OnCallDeleteModelParams, OnCallUpdateModelParams, UPDATE_MODEL_APP_FUNCTION_KEY } from '../../common';
+import { CREATE_MODEL_APP_FUNCTION_KEY, DELETE_MODEL_APP_FUNCTION_KEY, FirestoreModelIdentity, FirestoreModelNames, OnCallCreateModelResult, OnCallDeleteModelParams, onCallTypedModelParams, OnCallUpdateModelParams, UPDATE_MODEL_APP_FUNCTION_KEY } from '../../common';
 import { FirebaseFunctionTypeMap, FirebaseFunctionMap, FirebaseFunction } from './function';
 import { mapHttpsCallable } from './function.callable';
 import { FirebaseFunctionTypeConfigMap } from './function.factory';
@@ -79,15 +79,15 @@ export function modelFirebaseFunctionMapFactory<M extends FirebaseFunctionTypeMa
           const modelTypeCruds = {};
 
           if (crudFunctions.has('create')) {
-            (modelTypeCruds as any)[`create${modelTypeSuffix}`] = mapHttpsCallable(_createFn(), { mapInput: (data) => ({ modelType, data } as OnCallUpdateModelParams) });
+            (modelTypeCruds as any)[`create${modelTypeSuffix}`] = mapHttpsCallable(_createFn(), { mapInput: (data) => onCallTypedModelParams(modelType, data) as OnCallUpdateModelParams });
           }
 
           if (crudFunctions.has('update')) {
-            (modelTypeCruds as any)[`update${modelTypeSuffix}`] = mapHttpsCallable(_updateFn(), { mapInput: (data) => ({ modelType, data } as OnCallUpdateModelParams) });
+            (modelTypeCruds as any)[`update${modelTypeSuffix}`] = mapHttpsCallable(_updateFn(), { mapInput: (data) => onCallTypedModelParams(modelType, data) as OnCallUpdateModelParams });
           }
 
           if (crudFunctions.has('delete')) {
-            (modelTypeCruds as any)[`delete${modelTypeSuffix}`] = mapHttpsCallable(_deleteFn(), { mapInput: (data) => ({ modelType, data } as OnCallDeleteModelParams) });
+            (modelTypeCruds as any)[`delete${modelTypeSuffix}`] = mapHttpsCallable(_deleteFn(), { mapInput: (data) => onCallTypedModelParams(modelType, data) as OnCallDeleteModelParams });
           }
 
           // tslint:disable-next-line

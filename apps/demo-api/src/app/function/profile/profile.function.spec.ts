@@ -3,6 +3,7 @@ import { profileSetUsername } from './profile.set.username';
 import { profileIdentity, SetProfileUsernameParams, UpdateProfileParams } from '@dereekb/demo-firebase';
 import { DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserContext } from '../../../test/fixture';
 import { describeCloudFunctionTest } from '@dereekb/firebase-server/test';
+import { onCallTypedModelParams } from '@dereekb/firebase';
 
 /**
  * NOTES:
@@ -72,10 +73,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
           bio
         };
 
-        await u.callCloudFunction(updateProfileCloudFn, {
-          modelType: profileIdentity.model,
-          data
-        });
+        await u.callCloudFunction(updateProfileCloudFn, onCallTypedModelParams(profileIdentity.model, data));
 
         const profileData = await u.instance.loadUserProfile().snapshotData();
         expect(profileData?.bio).toBe(bio);
