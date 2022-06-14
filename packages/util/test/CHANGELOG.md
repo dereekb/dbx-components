@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [7.11.2](https://github.com/dereekb/dbx-components/compare/v7.11.1-dev...v7.11.2) (2022-06-13)
+
+
+### Bug Fixes
+
+* fixed util jest test declaration order ([3a05fb1](https://github.com/dereekb/dbx-components/commit/3a05fb148668e1791b4c30282752da98ae918cbb))
+
+
+
 ## [7.11.1](https://github.com/dereekb/dbx-components/compare/v7.11.0-dev...v7.11.1) (2022-06-13)
 
 
