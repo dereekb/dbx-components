@@ -39,6 +39,7 @@ export type ExampleFirestoreCollection = FirestoreCollection<Example, ExampleDoc
 
 export function exampleFirestoreCollection(firestoreContext: FirestoreContext): ExampleFirestoreCollection {
   return firestoreContext.firestoreCollection({
+    modelIdentity: exampleIdentity,
     itemsPerPage: 50,
     collection: exampleCollectionReference(firestoreContext),
     makeDocument: (accessor, documentAccessor) => new ExampleDocument(accessor, documentAccessor),
