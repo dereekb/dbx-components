@@ -33,20 +33,6 @@ export interface FirebaseAuthContextInfo {
   getAuthRoles(): AuthRoleSet;
 
   /**
-   * Retrieves the claims in the context.
-   *
-   * @deprecated Claims are now available synchronously.
-   */
-  loadClaims<T extends AuthClaimsObject = AuthClaimsObject>(): Promise<AuthClaims<T>>;
-
-  /**
-   * The auth roles provided by the token in this context.
-   *
-   * @deprecated Auth role set is now available synchronously.
-   */
-  loadAuthRoles(): Promise<AuthRoleSet>;
-
-  /**
    * The token in the context.
    */
   readonly token: FirebaseAuthToken;

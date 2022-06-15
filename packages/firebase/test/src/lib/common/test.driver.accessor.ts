@@ -13,11 +13,11 @@ export function describeAccessorDriverTests(f: MockItemCollectionFixture) {
   describe('FirestoreAccessorDriver', () => {
     const testDocumentCount = 5;
 
-    let firestoreDocumentAccessor: FirestoreDocumentAccessor<MockItem, MockItemDocument>;
+    let mockItemFirestoreDocumentAccessor: FirestoreDocumentAccessor<MockItem, MockItemDocument>;
     let items: MockItemDocument[];
 
     beforeEach(async () => {
-      firestoreDocumentAccessor = f.instance.firestoreCollection.documentAccessor();
+      mockItemFirestoreDocumentAccessor = f.instance.firestoreCollection.documentAccessor();
       items = await makeDocuments(f.instance.firestoreCollection.documentAccessor(), {
         count: testDocumentCount,
         init: (i) => {
@@ -188,7 +188,7 @@ export function describeAccessorDriverTests(f: MockItemCollectionFixture) {
     describe('documentAccessor()', () => {
       describe('loadDocumentForKey()', () => {
         it('should load an existing document from the path.', async () => {
-          const document = firestoreDocumentAccessor.loadDocumentForKey(items[0].documentRef.path);
+          const document = mockItemFirestoreDocumentAccessor.loadDocumentForKey(items[0].key);
           const exists = await document.accessor.exists();
 
           expect(exists).toBe(true);
@@ -196,7 +196,16 @@ export function describeAccessorDriverTests(f: MockItemCollectionFixture) {
 
         it('should throw an exception if the path is invalid (points to collection)', () => {
           try {
-            firestoreDocumentAccessor.loadDocumentForKey('path');
+            mockItemFirestoreDocumentAccessor.loadDocumentForKey('path');
+            fail();
+          } catch (e) {
+            expect(e).toBeDefined();
+          }
+        });
+
+        it('should throw an exception if the path points to a different type/collection', () => {
+          try {
+            mockItemFirestoreDocumentAccessor.loadDocumentForKey('path/id');
             fail();
           } catch (e) {
             expect(e).toBeDefined();
@@ -205,7 +214,7 @@ export function describeAccessorDriverTests(f: MockItemCollectionFixture) {
 
         it('should throw an exception if the path is empty.', () => {
           try {
-            firestoreDocumentAccessor.loadDocumentForKey('');
+            mockItemFirestoreDocumentAccessor.loadDocumentForKey('');
             fail();
           } catch (e) {
             expect(e).toBeDefined();
@@ -214,7 +223,7 @@ export function describeAccessorDriverTests(f: MockItemCollectionFixture) {
 
         it('should throw an exception if the path is undefined.', () => {
           try {
-            firestoreDocumentAccessor.loadDocumentForKey(undefined as any);
+            mockItemFirestoreDocumentAccessor.loadDocumentForKey(undefined as any);
             fail();
           } catch (e) {
             expect(e).toBeDefined();
@@ -224,13 +233,13 @@ export function describeAccessorDriverTests(f: MockItemCollectionFixture) {
 
       describe('loadDocumentForId()', () => {
         it('should return a document with the given id.', () => {
-          const document = firestoreDocumentAccessor.loadDocumentForId('id');
+          const document = mockItemFirestoreDocumentAccessor.loadDocumentForId('id');
           expect(document).toBeDefined();
         });
 
         it('should throw an exception if the id is empty.', () => {
           try {
-            firestoreDocumentAccessor.loadDocumentForId('');
+            mockItemFirestoreDocumentAccessor.loadDocumentForId('');
             fail();
           } catch (e) {
             expect(e).toBeDefined();
@@ -239,7 +248,7 @@ export function describeAccessorDriverTests(f: MockItemCollectionFixture) {
 
         it('should throw an exception if the id is undefined.', () => {
           try {
-            firestoreDocumentAccessor.loadDocumentForId(undefined as any);
+            mockItemFirestoreDocumentAccessor.loadDocumentForId(undefined as any);
             fail();
           } catch (e) {
             expect(e).toBeDefined();

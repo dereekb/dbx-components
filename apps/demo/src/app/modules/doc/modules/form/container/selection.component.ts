@@ -4,14 +4,14 @@ import { ChangeDetectorRef, Component, OnDestroy } from '@angular/core';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { filterPickableItemFieldValuesByLabel, pickableItemChipField, pickableItemListField, searchableChipField, searchableStringChipField, searchableTextField, SearchableValueFieldDisplayFn, SearchableValueFieldDisplayValue, SearchableValueFieldStringSearchFn, SearchableValueFieldValue } from '@dereekb/dbx-form';
 import { randomDelayWithRandomFunction } from '@dereekb/rxjs';
-import { randomArrayFactory, makeRandomFunction } from '@dereekb/util';
+import { randomArrayFactory, randomNumberFactory } from '@dereekb/util';
 import { DocFormExampleSelectionValue, DocFormExampleSelectionValueId, EXAMPLE_DISPLAY_FOR_SELECTION_VALUE, EXAMPLE_DISPLAY_FOR_SELECTION_VALUE_WITH_CUSTOM_DISPLAYS, EXAMPLE_SEARCH_FOR_SELECTION_VALUE, MAKE_EXAMPLE_SELECTION_VALUE } from '../component/selection.example';
 import { DocFormExamplePrimarySearchableFieldDisplayComponent } from '../component/selection.example.view';
 
 export type TestStringSearchFunction = (text: string) => string[];
 
 export function makeSearchForStringValue(obs: Observable<TestStringSearchFunction>): SearchableValueFieldStringSearchFn<string> {
-  const makeRandomDelay = makeRandomFunction(1000); // use to show the loading bar.
+  const makeRandomDelay = randomNumberFactory(1000); // use to show the loading bar.
 
   return (search: string) => {
     return obs.pipe(

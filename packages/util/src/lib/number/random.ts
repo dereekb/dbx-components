@@ -71,8 +71,3 @@ export function randomNumberFactory(maxOrArgs: RandomNumberFactoryInput, roundin
 
   return fn;
 }
-
-/**
- * @deprecated use randomNumberFactory() instead.
- */
-export const makeRandomFunction = randomNumberFactory;
