@@ -9,6 +9,7 @@ import { Auth } from 'firebase-admin/lib/auth/auth';
 import { decode as decodeJwt } from 'jsonwebtoken';
 import { CallableContextOptions, ContextOptions, WrappedFunction, WrappedScheduledFunction } from 'firebase-functions-test/lib/main';
 import { EventContext } from 'firebase-functions/lib/cloud-functions';
+import { AuthData } from 'firebase-functions/lib/common/providers/https';
 
 export type CallCloudFunction<I = any> = WrappedScheduledFunction | WrappedFunction<I>;
 export type CallCloudFunctionParams<F> = F extends WrappedFunction<infer I> ? I : unknown;
@@ -219,13 +220,31 @@ export type DecodedFirestoreCreateCustomTokenResult = { claims?: any } & Pick<De
  * @returns
  */
 export async function createTestFunctionContextOptions(auth: Auth, userRecord: UserRecord): Promise<CallableContextOptions> {
-  const contextAuth = await createTestFirestoreTokenForUserRecord(auth, userRecord);
+  const authData: AuthData = await createTestFunctionContextAuthData(auth, userRecord);
 
   const contextOptions: CallableContextOptions = {
-    auth: contextAuth
+    auth: authData
   };
 
   return contextOptions;
+}
+
+/**
+ * Creates AuthData from the input auth and user record.
+ *
+ * @param auth
+ * @param userRecord
+ * @returns
+ */
+export async function createTestFunctionContextAuthData(auth: Auth, userRecord: UserRecord): Promise<AuthData> {
+  const token = await createTestFirestoreTokenForUserRecord(auth, userRecord);
+
+  const authData: AuthData = {
+    uid: token.uid,
+    token
+  };
+
+  return authData;
 }
 
 /**
