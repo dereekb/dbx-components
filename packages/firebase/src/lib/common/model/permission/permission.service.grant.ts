@@ -6,13 +6,12 @@ import { UserRelated } from '../../../model/user';
 
 // MARK: Admin
 /**
- * Convenience function that checks the input context if the user is an admin or grants all roles.
+ * DecisionFunction for a FirebaseModelContext that checks if the current user is an admin.
+ *
+ * @param context
+ * @returns
  */
-export const grantFullAccessIfAdmin: GeneralGrantRolesIfFunction<FirebaseModelContext> = grantModelRolesIfAdminFunction(fullAccessRoleMap);
-
-export function grantModelRolesIfAdmin<R extends string = string>(context: FirebaseModelContext, rolesToGrantToAdmin: GetterOrValue<GrantedRoleMap<R>>, otherwise?: GrantRolesOtherwiseFunction<R>): PromiseOrValue<GrantedRoleMap<R>> {
-  return grantModelRolesIfAdminFunction(rolesToGrantToAdmin)(context, otherwise);
-}
+export const isAdminInFirebaseModelContext: AsyncDecisionFunction<FirebaseModelContext> = (context: FirebaseModelContext) => context.auth?.isAdmin() ?? false;
 
 /**
  * Convenience function that checks the input context if the user is an admin or not and grants pre-set admin roles if they are.
@@ -27,12 +26,13 @@ export function grantModelRolesIfAdminFunction<R extends string = string>(rolesT
 }
 
 /**
- * DecisionFunction for a FirebaseModelContext that checks if the current user is an admin.
- *
- * @param context
- * @returns
+ * Convenience function that checks the input context if the user is an admin or grants all roles.
  */
-export const isAdminInFirebaseModelContext: AsyncDecisionFunction<FirebaseModelContext> = (context: FirebaseModelContext) => context.auth?.isAdmin() ?? false;
+export const grantFullAccessIfAdmin: GeneralGrantRolesIfFunction<FirebaseModelContext> = grantModelRolesIfAdminFunction(fullAccessRoleMap);
+
+export function grantModelRolesIfAdmin<R extends string = string>(context: FirebaseModelContext, rolesToGrantToAdmin: GetterOrValue<GrantedRoleMap<R>>, otherwise?: GrantRolesOtherwiseFunction<R>): PromiseOrValue<GrantedRoleMap<R>> {
+  return grantModelRolesIfAdminFunction(rolesToGrantToAdmin)(context, otherwise);
+}
 
 // MARK: User Related
 export type UserRelatedModelFirebaseModelContext<T extends UserRelated = UserRelated> = UserRelatedModelFirebaseModelContextModelInput<T> | UserRelatedModelFirebaseModelContextDocumentInput<T>;
@@ -46,23 +46,6 @@ export type UserRelatedModelFirebaseModelContextDocumentInput<T extends UserRela
   document: FirestoreDocument<T>;
   context: FirebaseModelContext;
 };
-
-/**
- * Convenience function that checks the input context if the user is related to the model by uid.
- */
-export const grantFullAccessIfAuthUserRelated: GeneralGrantRolesIfFunction<UserRelatedModelFirebaseModelContext<UserRelated>> = grantModelRolesIfAuthUserRelatedModelFunction(fullAccessRoleMap);
-
-/**
- * Creates a GrantRolesIfFunction that grants roles if the user is related to the model by uid.
- *
- * @param context
- * @param rolesToGrant
- * @param otherwise
- * @returns
- */
-export function grantModelRolesIfAuthUserRelatedModelFunction<T extends UserRelated, R extends string = string>(rolesToGrant: GetterOrValue<GrantedRoleMap<R>>): GrantRolesIfFunction<UserRelatedModelFirebaseModelContext<T>, R> {
-  return grantModelRolesIfFunction(isOwnerOfUserRelatedModelInFirebaseModelContext, rolesToGrant);
-}
 
 /**
  * DecisionFunction for a FirebaseModelContext that checks if the user is related to the model by uid.
@@ -92,6 +75,23 @@ export const isOwnerOfUserRelatedModelInFirebaseModelContext: AsyncDecisionFunct
 
   return decision;
 };
+
+/**
+ * Creates a GrantRolesIfFunction that grants roles if the user is related to the model by uid.
+ *
+ * @param context
+ * @param rolesToGrant
+ * @param otherwise
+ * @returns
+ */
+export function grantModelRolesIfAuthUserRelatedModelFunction<T extends UserRelated, R extends string = string>(rolesToGrant: GetterOrValue<GrantedRoleMap<R>>): GrantRolesIfFunction<UserRelatedModelFirebaseModelContext<T>, R> {
+  return grantModelRolesIfFunction(isOwnerOfUserRelatedModelInFirebaseModelContext, rolesToGrant);
+}
+
+/**
+ * Convenience function that checks the input context if the user is related to the model by uid.
+ */
+export const grantFullAccessIfAuthUserRelated: GeneralGrantRolesIfFunction<UserRelatedModelFirebaseModelContext<UserRelated>> = grantModelRolesIfAuthUserRelatedModelFunction(fullAccessRoleMap);
 
 // MARK: Grant Roles
 /**
@@ -133,6 +133,10 @@ export type GrantRolesOtherwiseFunction<R extends string = string> = Getter<Mayb
  * @returns
  */
 export function grantModelRolesIfFunction<C, R extends string = string>(grantIf: AsyncDecisionFunction<C>, grantedRoles: GetterOrValue<GrantedRoleMap<R>>): GrantRolesIfFunction<C, R> {
+  if (!grantIf) {
+    throw new Error('missing grant if');
+  }
+
   return async (context: C, otherwise: GrantRolesOtherwiseFunction<R> = noAccessRoleMap) => {
     const decision = await grantIf(context);
     const results: GrantedRoleMap<R> = decision ? await getValueFromGetter(grantedRoles) : (await otherwise()) ?? noAccessRoleMap();
