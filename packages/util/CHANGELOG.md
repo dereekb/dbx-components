@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [7.14.0](https://github.com/dereekb/dbx-components/compare/v7.13.1-dev...v7.14.0) (2022-06-15)
+
+
+### Features
+
+* added firestoreDocumentAccessor path validation ([b82fad1](https://github.com/dereekb/dbx-components/commit/b82fad123728cc9feb9ca450e9418467b6805f23))
+
+
+
 ## [7.13.1](https://github.com/dereekb/dbx-components/compare/v7.13.0-dev...v7.13.1) (2022-06-15)
 
 

@@ -203,14 +203,6 @@ export class DbxFirebaseAuthContextInfo implements FirebaseAuthContextInfo {
     return this._roles();
   }
 
-  loadClaims<T extends AuthClaimsObject = AuthClaimsObject>(): Promise<AuthClaims<T>> {
-    return Promise.resolve(this.getClaims());
-  }
-
-  loadAuthRoles(): Promise<AuthRoleSet> {
-    return Promise.resolve(this.getAuthRoles());
-  }
-
   get token(): FirebaseAuthToken {
     return this._token();
   }

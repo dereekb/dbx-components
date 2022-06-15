@@ -1,3 +1,4 @@
+import { FirestoreCollectionName } from './../collection/collection';
 import { DocumentData, CollectionReference, CollectionGroup, DocumentReference, Firestore } from '../types';
 import { DefaultFirestoreDocumentContextFactory } from '../accessor/context.default';
 import { WriteBatchFirestoreDocumentContextFactory } from '../accessor/context.batch';
@@ -10,6 +11,7 @@ export type FirestoreAccessorDriverCollectionRefFunction = <T = DocumentData>(fi
 export type FirestoreAccessorDriverSubcollectionRefFunction = <T = DocumentData>(document: DocumentReference, path: string, ...pathSegments: string[]) => CollectionReference<T>;
 export type FirestoreAccessorDriverDocumentRefFunction = <T = DocumentData>(collection: CollectionReference<T>, path?: string, ...pathSegments: string[]) => DocumentReference<T>;
 export type FirestoreAccessorDriverFullPathDocumentRefFunction = <T = DocumentData>(firestore: Firestore, fullPath: string) => DocumentReference<T>;
+export type FirestoreAccessorPathFuzzerFunction = (path: FirestoreCollectionName) => FirestoreCollectionName;
 
 /**
  * A driver to use for query functionality.
@@ -23,6 +25,12 @@ export interface FirestoreAccessorDriver extends FirestoreTransactionFactoryDriv
   readonly defaultContextFactory: DefaultFirestoreDocumentContextFactory;
   readonly writeBatchContextFactory: WriteBatchFirestoreDocumentContextFactory;
   readonly transactionContextFactory: TransactionFirestoreDocumentContextFactory;
+  /**
+   * Optional function that when made available communicates that paths are being fuzzed.
+   *
+   * This is usually only available within testing environments.
+   */
+  readonly fuzzedPathForPath?: FirestoreAccessorPathFuzzerFunction;
 }
 
 /**

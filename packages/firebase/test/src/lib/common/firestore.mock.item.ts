@@ -91,6 +91,7 @@ export type MockItemFirestoreCollection = FirestoreCollection<MockItem, MockItem
 
 export function mockItemFirestoreCollection(firestoreContext: FirestoreContext): MockItemFirestoreCollection {
   return firestoreContext.firestoreCollection({
+    modelIdentity: mockItemIdentity,
     itemsPerPage: 50,
     collection: mockItemCollectionReference(firestoreContext),
     makeDocument: (a, d) => new MockItemDocument(a, d),
@@ -156,6 +157,7 @@ export function mockItemPrivateFirestoreCollection(firestoreContext: FirestoreCo
 
   return (parent: MockItemDocument) => {
     return firestoreContext.singleItemFirestoreCollection({
+      modelIdentity: mockItemPrivateIdentity,
       itemsPerPage: 50,
       collection: factory(parent),
       makeDocument: (a, d) => new MockItemPrivateDocument(a, d),
@@ -174,6 +176,7 @@ export type MockItemPrivateFirestoreCollectionGroup = FirestoreCollectionGroup<M
 
 export function mockItemPrivateFirestoreCollectionGroup(firestoreContext: FirestoreContext): MockItemPrivateFirestoreCollectionGroup {
   return firestoreContext.firestoreCollectionGroup({
+    modelIdentity: mockItemPrivateIdentity,
     itemsPerPage: 50,
     queryLike: mockItemPrivateCollectionReference(firestoreContext),
     makeDocument: (accessor, documentAccessor) => new MockItemPrivateDocument(accessor, documentAccessor),
@@ -242,6 +245,7 @@ export function mockItemUserFirestoreCollection(firestoreContext: FirestoreConte
 
   return (parent: MockItemDocument) => {
     return firestoreContext.firestoreCollectionWithParent({
+      modelIdentity: mockItemUserIdentity,
       itemsPerPage: 50,
       collection: factory(parent),
       accessorFactory: mockItemUserAccessorFactory,
@@ -260,6 +264,7 @@ export type MockItemUserFirestoreCollectionGroup = FirestoreCollectionGroup<Mock
 
 export function mockItemUserFirestoreCollectionGroup(firestoreContext: FirestoreContext): MockItemUserFirestoreCollectionGroup {
   return firestoreContext.firestoreCollectionGroup({
+    modelIdentity: mockItemUserIdentity,
     itemsPerPage: 50,
     queryLike: mockItemUserCollectionReference(firestoreContext),
     accessorFactory: mockItemUserAccessorFactory,
@@ -316,6 +321,7 @@ export function mockItemSubItemFirestoreCollection(firestoreContext: FirestoreCo
 
   return (parent: MockItemDocument) => {
     return firestoreContext.firestoreCollectionWithParent({
+      modelIdentity: mockItemSubItemIdentity,
       itemsPerPage: 50,
       collection: factory(parent),
       makeDocument: (a, d) => new MockItemSubItemDocument(a, d),
@@ -333,6 +339,7 @@ export type MockItemSubItemFirestoreCollectionGroup = FirestoreCollectionGroup<M
 
 export function mockItemSubItemFirestoreCollectionGroup(firestoreContext: FirestoreContext): MockItemSubItemFirestoreCollectionGroup {
   return firestoreContext.firestoreCollectionGroup({
+    modelIdentity: mockItemSubItemIdentity,
     itemsPerPage: 50,
     queryLike: mockItemSubItemCollectionReference(firestoreContext),
     makeDocument: (accessor, documentAccessor) => new MockItemSubItemDocument(accessor, documentAccessor),
@@ -388,6 +395,7 @@ export function mockItemSubItemDeepFirestoreCollection(firestoreContext: Firesto
 
   return (parent: MockItemSubItemDocument) => {
     return firestoreContext.firestoreCollectionWithParent({
+      modelIdentity: mockItemSubItemDeepIdentity,
       itemsPerPage: 50,
       collection: factory(parent),
       makeDocument: (a, d) => new MockItemSubItemDeepDocument(a, d),
@@ -405,6 +413,7 @@ export type MockItemSubItemDeepFirestoreCollectionGroup = FirestoreCollectionGro
 
 export function mockItemSubItemDeepFirestoreCollectionGroup(firestoreContext: FirestoreContext): MockItemSubItemDeepFirestoreCollectionGroup {
   return firestoreContext.firestoreCollectionGroup({
+    modelIdentity: mockItemSubItemDeepIdentity,
     itemsPerPage: 50,
     queryLike: mockItemSubItemDeepCollectionReference(firestoreContext),
     makeDocument: (accessor, documentAccessor) => new MockItemSubItemDeepDocument(accessor, documentAccessor),

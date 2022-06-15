@@ -11,18 +11,6 @@ export interface MakeArray<T> {
   make: FactoryWithInput<T, number>;
 }
 
-/**
- * Makes an array of values of a certain length using a generator function.
- *
- * @param param0
- * @returns
- *
- * @deprecated use makeWithFactory instead.
- */
-export function makeArray<T>({ count, make }: MakeArray<T>): T[] {
-  return makeWithFactory(make as Factory<T>, count);
-}
-
 // MARK: Make Random Array
 export interface RandomArrayFactoryConfig<T> extends Omit<MakeArray<T>, 'count'> {
   random: RandomNumberFactory | RandomNumberFactoryInput;

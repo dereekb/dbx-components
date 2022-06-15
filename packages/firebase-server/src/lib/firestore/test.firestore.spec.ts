@@ -1,6 +1,6 @@
 import { DocumentReference, Transaction, Firestore } from '@google-cloud/firestore';
 import { DocumentSnapshot, makeFirestoreCollection } from '@dereekb/firebase';
-import { MockItem, mockItemCollectionReference, MockItemDocument, MockItemFirestoreCollection } from '@dereekb/firebase/test';
+import { mockItemIdentity, MockItem, mockItemCollectionReference, MockItemDocument, MockItemFirestoreCollection } from '@dereekb/firebase/test';
 import { Maybe } from '@dereekb/util';
 import { adminTestWithMockItemCollection } from '@dereekb/firebase-server/test';
 import { googleCloudFirestoreDrivers } from './driver';
@@ -20,6 +20,7 @@ describe('FirestoreCollection', () => {
         const itemsPerPage = 50;
 
         firestoreCollection = makeFirestoreCollection({
+          modelIdentity: mockItemIdentity,
           firestoreContext: f.parent.context,
           itemsPerPage,
           collection: mockItemCollectionReference(f.parent.context),

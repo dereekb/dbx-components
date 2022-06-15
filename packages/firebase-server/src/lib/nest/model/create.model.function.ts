@@ -38,7 +38,7 @@ export function createModelUnknownModelTypeError(modelType: FirestoreModelName) 
     serverError({
       status: 400,
       code: 'UNKNOWN_TYPE_ERROR',
-      message: 'Invalid type to create.',
+      message: `Invalid type "${modelType}" to create.`,
       data: {
         modelType
       }

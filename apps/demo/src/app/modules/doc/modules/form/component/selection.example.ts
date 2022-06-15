@@ -1,6 +1,6 @@
 import { makeMetaFilterSearchableFieldValueDisplayFn, SearchableValueFieldDisplayFn, SearchableValueFieldDisplayValue, SearchableValueFieldStringSearchFn, SearchableValueFieldValue } from '@dereekb/dbx-form';
 import { randomDelayWithRandomFunction } from '@dereekb/rxjs';
-import { randomArrayFactory, makeRandomFunction, pickOneRandomly } from '@dereekb/util';
+import { randomArrayFactory, randomNumberFactory, pickOneRandomly } from '@dereekb/util';
 import { map, Observable, of } from 'rxjs';
 import { DocFormExampleAccentSearchableFieldDisplayComponent, DocFormExamplePrimarySearchableFieldDisplayComponent, DocFormExampleWarnSearchableFieldDisplayComponent } from './selection.example.view';
 
@@ -23,7 +23,7 @@ export function MAKE_EXAMPLE_SELECTION_VALUE(id?: string) {
 export const MAKE_RANDOM_SELECTION_VALUES = randomArrayFactory({ random: { min: 12, max: 25 }, make: () => MAKE_EXAMPLE_SELECTION_VALUE() });
 
 export function EXAMPLE_SEARCH_FOR_SELECTION_VALUE(): SearchableValueFieldStringSearchFn<DocFormExampleSelectionValueId, any> {
-  const makeRandomDelay = makeRandomFunction(200); // use to show the loading bar.
+  const makeRandomDelay = randomNumberFactory(200); // use to show the loading bar.
 
   return (search: string = '') => {
     if (search.length > 3) {
