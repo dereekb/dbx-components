@@ -3,6 +3,7 @@ import { profileSetUsername } from './profile.set.username';
 import { profileIdentity, SetProfileUsernameParams, UpdateProfileParams } from '@dereekb/demo-firebase';
 import { DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserContext } from '../../../test/fixture';
 import { describeCloudFunctionTest } from '@dereekb/firebase-server/test';
+import { firestoreModelKey, onCallTypedModelParams } from '@dereekb/firebase';
 
 /**
  * NOTES:
@@ -66,16 +67,26 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
   // describe tests for updateProfile
   describeCloudFunctionTest('updateProfile', { f, fn: demoUpdateModel }, (updateProfileCloudFn) => {
     demoAuthorizedUserContext({ f }, (u) => {
-      it(`should update the user's profile.`, async () => {
+      it(`should update the target user's profile.`, async () => {
+        const bio = 'test bio';
+        const data: UpdateProfileParams = {
+          bio,
+          key: firestoreModelKey(profileIdentity, u.uid)
+        };
+
+        await u.callCloudFunction(updateProfileCloudFn, onCallTypedModelParams(profileIdentity.model, data));
+
+        const profileData = await u.instance.loadUserProfile().snapshotData();
+        expect(profileData?.bio).toBe(bio);
+      });
+
+      it(`should update the current user profile if no key is passed.`, async () => {
         const bio = 'test bio';
         const data: UpdateProfileParams = {
           bio
         };
 
-        await u.callCloudFunction(updateProfileCloudFn, {
-          modelType: profileIdentity.model,
-          data
-        });
+        await u.callCloudFunction(updateProfileCloudFn, onCallTypedModelParams(profileIdentity.model, data));
 
         const profileData = await u.instance.loadUserProfile().snapshotData();
         expect(profileData?.bio).toBe(bio);

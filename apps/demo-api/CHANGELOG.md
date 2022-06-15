@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [7.13.1](https://github.com/dereekb/dbx-components/compare/v7.13.0-dev...v7.13.1) (2022-06-15)
+
+
+### Bug Fixes
+
+* fixed createTestFunctionContextOptions() authData typing ([ba017cd](https://github.com/dereekb/dbx-components/commit/ba017cd5c48fe96277c8c40a6c24d0f65d937214))
+
+
+
 # [7.13.0](https://github.com/dereekb/dbx-components/compare/v7.12.0-dev...v7.13.0) (2022-06-14)
 
 

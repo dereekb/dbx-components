@@ -41,11 +41,11 @@ export const blockingEventWithAPP_CODE_PREFIXNestContext = blockingFunctionHandl
 export const taskqueueEventWithAPP_CODE_PREFIXNestContext = taskQueueFunctionHandlerWithNestContextFactory(mapAPP_CODE_PREFIXApiNestContext);
 
 // MARK: CRUD Functions
-export type APP_CODE_PREFIXCreateModelfunction<I, O extends OnCallCreateModelResult = OnCallCreateModelResult> = OnCallCreateModelFunction<APP_CODE_PREFIXApiNestContext, I, O>;
+export type APP_CODE_PREFIXCreateModelFunction<I, O extends OnCallCreateModelResult = OnCallCreateModelResult> = OnCallCreateModelFunction<APP_CODE_PREFIXApiNestContext, I, O>;
 export type APP_CODE_PREFIXOnCallCreateModelMap = OnCallCreateModelMap<APP_CODE_PREFIXApiNestContext, APP_CODE_PREFIXFirebaseModelTypes>;
 
-export type APP_CODE_PREFIXUpdateModelfunction<I, O = void> = OnCallUpdateModelFunction<APP_CODE_PREFIXApiNestContext, I, O>;
+export type APP_CODE_PREFIXUpdateModelFunction<I, O = void> = OnCallUpdateModelFunction<APP_CODE_PREFIXApiNestContext, I, O>;
 export type APP_CODE_PREFIXOnCallUpdateModelMap = OnCallUpdateModelMap<APP_CODE_PREFIXApiNestContext, APP_CODE_PREFIXFirebaseModelTypes>;
 
-export type APP_CODE_PREFIXDeleteModelfunction<I, O = void> = OnCallDeleteModelFunction<APP_CODE_PREFIXApiNestContext, I, O>;
+export type APP_CODE_PREFIXDeleteModelFunction<I, O = void> = OnCallDeleteModelFunction<APP_CODE_PREFIXApiNestContext, I, O>;
 export type APP_CODE_PREFIXOnCallDeleteModelMap = OnCallDeleteModelMap<APP_CODE_PREFIXApiNestContext, APP_CODE_PREFIXFirebaseModelTypes>;

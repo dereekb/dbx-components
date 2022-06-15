@@ -4,7 +4,7 @@ import { firestoreIdBatchVerifierFactory, limit, orderBy, startAfter, startAt, w
 import { MockItemDocument, MockItem, MockItemSubItemDocument, MockItemSubItem, MockItemSubItemDeepDocument, MockItemSubItemDeep, MockItemUserDocument } from './firestore.mock.item';
 import { MockItemCollectionFixture } from './firestore.mock.item.fixture';
 import { allChildMockItemSubItemDeepsWithinMockItem } from './firestore.mock.item.query';
-import { arrayFactory, idBatchFactory, mapGetter, randomFromArrayFactory, randomNumberFactory, unique } from '@dereekb/util';
+import { arrayFactory, idBatchFactory, mapGetter, randomFromArrayFactory, randomNumberFactory, unique, waitForMs } from '@dereekb/util';
 
 /**
  * Describes query driver tests, using a MockItemCollectionFixture.
@@ -357,18 +357,20 @@ export function describeQueryDriverTests(f: MockItemCollectionFixture) {
             });
 
           // add one item
-          makeDocuments(f.instance.firestoreCollection.documentAccessor(), {
-            count: itemsToAdd,
-            init: (i) => {
-              return {
-                value: `${i + items.length}`,
-                test: true
-              };
-            }
-          }).then(() => {
-            addCompleted = true;
-            tryComplete();
-          });
+          waitForMs(10).then(() =>
+            makeDocuments(f.instance.firestoreCollection.documentAccessor(), {
+              count: itemsToAdd,
+              init: (i) => {
+                return {
+                  value: `${i + items.length}`,
+                  test: true
+                };
+              }
+            }).then(() => {
+              addCompleted = true;
+              tryComplete();
+            })
+          );
         });
 
         it('should emit when the query results update (an item is removed).', (done) => {
@@ -392,15 +394,17 @@ export function describeQueryDriverTests(f: MockItemCollectionFixture) {
               tryComplete();
             });
 
-          items[0].accessor.exists().then((exists) => {
-            expect(exists).toBe(true);
+          waitForMs(10).then(() =>
+            items[0].accessor.exists().then((exists) => {
+              expect(exists).toBe(true);
 
-            // remove one item
-            return items[0].accessor.delete().then(() => {
-              deleteCompleted = true;
-              tryComplete();
-            });
-          });
+              // remove one item
+              return items[0].accessor.delete().then(() => {
+                deleteCompleted = true;
+                tryComplete();
+              });
+            })
+          );
         });
       });
 

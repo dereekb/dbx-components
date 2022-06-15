@@ -1,9 +1,23 @@
 import { ArrayOrValue, asArray } from '@dereekb/util';
 import { DocumentReferenceRef } from '../firestore/reference';
-import { FirestoreModelKey, FirestoreModelNameRef } from '../firestore/collection/collection';
+import { FirestoreModelKey, FirestoreModelName, FirestoreModelNameRef } from '../firestore/collection/collection';
 
 export interface OnCallTypedModelParams<T = unknown> extends FirestoreModelNameRef {
   data: T;
+}
+
+/**
+ * Creates a OnCallTypedModelParams
+ *
+ * @param modelType
+ * @param data
+ * @returns
+ */
+export function onCallTypedModelParams<T extends unknown>(modelType: FirestoreModelName, data: T): OnCallTypedModelParams<T> {
+  return {
+    modelType,
+    data
+  };
 }
 
 /**
