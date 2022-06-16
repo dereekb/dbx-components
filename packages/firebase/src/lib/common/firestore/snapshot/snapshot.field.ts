@@ -204,6 +204,7 @@ export function firestoreUniqueArray<T>(config: FirestoreUniqueArrayFieldConfig<
   const { findUnique } = config;
   return firestoreField<T[], T[]>({
     default: config.default ?? [],
+    defaultBeforeSave: config.defaultBeforeSave ?? [],
     fromData: findUnique,
     toData: findUnique
   });
@@ -235,9 +236,9 @@ export function firestoreEnumArray<S extends string | number>(config: FirestoreE
   });
 }
 
-export type FirestoreUniqueStringArrayFieldConfig = Omit<FirestoreUniqueArrayFieldConfig<string>, 'findUnique'> & FindUniqueStringsTransformConfig;
+export type FirestoreUniqueStringArrayFieldConfig<S extends string = string> = Omit<FirestoreUniqueArrayFieldConfig<S>, 'findUnique'> & FindUniqueStringsTransformConfig;
 
-export function firestoreUniqueStringArray(config: FirestoreUniqueStringArrayFieldConfig) {
+export function firestoreUniqueStringArray<S extends string = string>(config: FirestoreUniqueStringArrayFieldConfig<S>) {
   const findUnique = findUniqueTransform(config);
   return firestoreUniqueArray({
     ...config,
@@ -245,22 +246,8 @@ export function firestoreUniqueStringArray(config: FirestoreUniqueStringArrayFie
   });
 }
 
-/**
- * FirestoreField configuration for an array of ModelKey values.
- *
- * @returns
- */
-export function firestoreModelKeyArray() {
-  // firestore model key paths are case-sensitive, so don't transform them.
-  return firestoreUniqueStringArray({});
-}
-
-/**
- * FirestoreField configuration for an array of ModelId values.
- *
- * @returns
- */
-export const firestoreModelIdArray = firestoreModelKeyArray;
+export const firestoreModelKeyArrayField = firestoreUniqueStringArray<FirestoreModelKey>({});
+export const firestoreModelIdArrayField = firestoreModelKeyArrayField;
 
 export type FirestoreEncodedArrayFieldConfig<T, E extends string | number> = DefaultMapConfiguredFirestoreFieldConfig<T[], E[]> & {
   readonly convert: {
@@ -279,6 +266,7 @@ export function firestoreEncodedArray<T, E extends string | number>(config: Fire
   const { fromData, toData } = config.convert;
   return firestoreField<T[], E[]>({
     default: config.default ?? [],
+    defaultBeforeSave: config.defaultBeforeSave ?? [],
     fromData: (input: E[]) => (input as MaybeSo<E>[]).map(fromData),
     toData: (input: T[]) => filterMaybeValues((input as MaybeSo<T>[]).map(toData))
   });
