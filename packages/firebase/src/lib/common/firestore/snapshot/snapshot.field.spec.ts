@@ -1,6 +1,8 @@
-import { ISO8601DateString, Maybe, modelFieldMapFunctions, objectHasKey } from '@dereekb/util';
+import { asGetter, ISO8601DateString, Maybe, modelFieldMapFunctions, objectHasKey } from '@dereekb/util';
 import { isValid } from 'date-fns';
 import { FirestoreModelKeyGrantedRoleArrayMap } from '../collection';
+import { DocumentSnapshot } from '../types';
+import { snapshotConverterFunctions } from './snapshot';
 import { firestoreArrayMap, firestoreDate, firestoreEncodedArray, firestoreEnum, firestoreField, firestoreMap, firestoreModelKeyGrantedRoleArrayMap, firestoreEnumArray, firestoreUniqueKeyedArray, firestoreUniqueStringArray } from './snapshot.field';
 
 describe('firestoreField()', () => {
@@ -50,6 +52,28 @@ describe('firestoreField()', () => {
     });
   });
 });
+
+export interface TestSnapshotDefaults {
+  date: Date;
+  uniqueStringArray: string[];
+}
+
+export const testSnapshotDefaultsConverter = snapshotConverterFunctions<TestSnapshotDefaults>({
+  fields: {
+    date: firestoreDate({ saveDefaultAsNow: true }),
+    uniqueStringArray: firestoreUniqueStringArray()
+  }
+});
+
+export function testSnapshotDefaultsSnapshotData(data: Partial<TestSnapshotDefaults>) {
+  return {
+    id: '0',
+    ref: {
+      id: '0'
+    } as any,
+    data: asGetter(data)
+  } as DocumentSnapshot<TestSnapshotDefaults>;
+}
 
 describe('firestoreDate()', () => {
   const dateField = firestoreDate()!;
@@ -144,6 +168,12 @@ describe('firestoreUniqueStringArray()', () => {
 
     const results = uniqueStringArrayConfig.from.convert([...data, ...data]);
     expect(results.length).toBe(data.length);
+  });
+
+  it('from should convert null to the default empty array', () => {
+    const result = testSnapshotDefaultsConverter.from(testSnapshotDefaultsSnapshotData({}));
+
+    expect(Array.isArray(result.uniqueStringArray)).toBe(true);
   });
 });
 

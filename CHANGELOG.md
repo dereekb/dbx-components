@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [7.15.1](https://github.com/dereekb/dbx-components/compare/v7.15.0-dev...v7.15.1) (2022-06-16)
+
+
+### Bug Fixes
+
+* fixed defaults of firestore-snapshot array fields ([8d388a9](https://github.com/dereekb/dbx-components/commit/8d388a9a3216e2f7aca6144d9f5d0343d49ab5b0))
+
+
+
 # [7.15.0](https://github.com/dereekb/dbx-components/compare/v7.14.0-dev...v7.15.0) (2022-06-16)
 
 
