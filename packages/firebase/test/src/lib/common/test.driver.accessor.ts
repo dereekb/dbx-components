@@ -349,6 +349,36 @@ export function describeAccessorTests<T>(init: () => DescribeAccessorTests<T>) {
     });
   });
 
+  describe('create()', () => {
+    it('should create the document if it does not exist.', async () => {
+      const data = await c.accessor.get();
+
+      await c.accessor.delete();
+
+      let exists = await c.accessor.exists();
+      expect(exists).toBe(false);
+
+      await c.accessor.create(data);
+
+      exists = await c.accessor.exists();
+      expect(exists).toBe(true);
+    });
+
+    it('should throw an exception if the document exists.', async () => {
+      const data = await c.accessor.get();
+
+      const exists = await c.accessor.exists();
+      expect(exists).toBe(true);
+
+      try {
+        await c.accessor.create(data);
+        fail();
+      } catch (e) {
+        expect(e).toBeDefined();
+      }
+    });
+  });
+
   describe('get()', () => {
     it('should return a snapshot', async () => {
       const result = await c.accessor.get();

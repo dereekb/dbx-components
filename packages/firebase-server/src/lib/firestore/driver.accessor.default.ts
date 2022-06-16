@@ -10,6 +10,10 @@ export class DefaultFirestoreDocumentDataAccessor<T> implements FirestoreDocumen
     return streamFromOnSnapshot(({ next, error }) => this.documentRef.onSnapshot(next, error));
   }
 
+  create(data: T): Promise<GoogleCloudWriteResult> {
+    return this.documentRef.create(data);
+  }
+
   exists(): Promise<boolean> {
     return this.get().then((x) => x.exists);
   }

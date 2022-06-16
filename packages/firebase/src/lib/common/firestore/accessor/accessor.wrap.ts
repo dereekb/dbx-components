@@ -19,6 +19,10 @@ export abstract class AbstractFirestoreDocumentDataAccessorWrapper<T, D = Docume
     return this.accessor.stream();
   }
 
+  create(data: WithFieldValue<T>): Promise<WriteResult | void> {
+    return this.accessor.create(data);
+  }
+
   get(): Promise<DocumentSnapshot<T>> {
     return this.accessor.get();
   }

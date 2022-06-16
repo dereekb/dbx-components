@@ -13,6 +13,11 @@ export class WriteBatchFirestoreDocumentDataAccessor<T> implements FirestoreDocu
     return from(this.get()); // todo
   }
 
+  create(data: WithFieldValue<T>): Promise<void> {
+    this.batch.create(this.documentRef, data);
+    return Promise.resolve();
+  }
+
   exists(): Promise<boolean> {
     return this.get().then((x) => x.exists);
   }

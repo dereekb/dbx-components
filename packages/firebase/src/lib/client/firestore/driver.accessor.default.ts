@@ -2,6 +2,7 @@ import { DocumentReference, DocumentSnapshot, UpdateData, WithFieldValue, getDoc
 import { fromRef } from 'rxfire/firestore';
 import { Observable } from 'rxjs';
 import { FirestoreDocumentContext, FirestoreDocumentContextType, FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, SetOptions } from '../../common/firestore';
+import { createWithAccessor } from './driver.accessor.create';
 
 // MARK: Accessor
 export class DefaultFirestoreDocumentDataAccessor<T> implements FirestoreDocumentDataAccessor<T> {
@@ -9,6 +10,10 @@ export class DefaultFirestoreDocumentDataAccessor<T> implements FirestoreDocumen
 
   stream(): Observable<DocumentSnapshot<T>> {
     return fromRef(this.documentRef);
+  }
+
+  create(data: WithFieldValue<T>): Promise<void> {
+    return createWithAccessor(this)(data) as Promise<void>;
   }
 
   exists(): Promise<boolean> {
