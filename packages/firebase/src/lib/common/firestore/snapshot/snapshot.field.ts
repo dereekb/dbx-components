@@ -25,7 +25,8 @@ import {
   mapObjectMapFunction,
   filterEmptyValues,
   ModelKey,
-  unique
+  unique,
+  Getter
 } from '@dereekb/util';
 import { FIRESTORE_EMPTY_VALUE } from './snapshot';
 import { FirebaseAuthUserId } from '../../auth/auth';
@@ -186,7 +187,8 @@ export type FirestoreArrayFieldConfig<T> = DefaultMapConfiguredFirestoreFieldCon
 
 export function firestoreArray<T>(config: FirestoreArrayFieldConfig<T>) {
   return firestoreField<T[], T[]>({
-    default: config.default ?? [],
+    default: config.default ?? ((() => []) as Getter<T[]>),
+    defaultBeforeSave: config.defaultBeforeSave,
     fromData: passThrough,
     toData: passThrough
   });
@@ -203,8 +205,8 @@ export type FirestoreUniqueArrayFieldConfig<T> = FirestoreArrayFieldConfig<T> & 
 export function firestoreUniqueArray<T>(config: FirestoreUniqueArrayFieldConfig<T>) {
   const { findUnique } = config;
   return firestoreField<T[], T[]>({
-    default: config.default ?? [],
-    defaultBeforeSave: config.defaultBeforeSave ?? [],
+    default: config.default ?? ((() => []) as Getter<T[]>),
+    defaultBeforeSave: config.defaultBeforeSave,
     fromData: findUnique,
     toData: findUnique
   });
@@ -238,8 +240,8 @@ export function firestoreEnumArray<S extends string | number>(config: FirestoreE
 
 export type FirestoreUniqueStringArrayFieldConfig<S extends string = string> = Omit<FirestoreUniqueArrayFieldConfig<S>, 'findUnique'> & FindUniqueStringsTransformConfig;
 
-export function firestoreUniqueStringArray<S extends string = string>(config: FirestoreUniqueStringArrayFieldConfig<S>) {
-  const findUnique = findUniqueTransform(config);
+export function firestoreUniqueStringArray<S extends string = string>(config?: FirestoreUniqueStringArrayFieldConfig<S>) {
+  const findUnique = (config != null ? findUniqueTransform(config) : unique) as FindUniqueFunction<S>;
   return firestoreUniqueArray({
     ...config,
     findUnique
@@ -265,8 +267,8 @@ export type FirestoreEncodedArrayFieldConfig<T, E extends string | number> = Def
 export function firestoreEncodedArray<T, E extends string | number>(config: FirestoreEncodedArrayFieldConfig<T, E>) {
   const { fromData, toData } = config.convert;
   return firestoreField<T[], E[]>({
-    default: config.default ?? [],
-    defaultBeforeSave: config.defaultBeforeSave ?? [],
+    default: config.default ?? ((() => []) as Getter<T[]>),
+    defaultBeforeSave: config.defaultBeforeSave,
     fromData: (input: E[]) => (input as MaybeSo<E>[]).map(fromData),
     toData: (input: T[]) => filterMaybeValues((input as MaybeSo<T>[]).map(toData))
   });
@@ -307,7 +309,7 @@ export function firestoreMap<T, K extends string = string>(config: FirestoreMapF
   const makeCopy = (mapFieldValues ? mapObjectMapFunction(mapFieldValues) : copyObject) as CopyObjectFunction<FirestoreMapFieldType<T, K>>;
 
   return firestoreField<FirestoreMapFieldType<T, K>, FirestoreMapFieldType<T, K>>({
-    default: config.default ?? ({} as FirestoreMapFieldType<T, K>),
+    default: config.default ?? ((() => {}) as Getter<FirestoreMapFieldType<T, K>>),
     fromData: passThrough,
     toData: (model) => {
       const copy = makeCopy(model);
