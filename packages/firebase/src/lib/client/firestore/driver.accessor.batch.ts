@@ -1,6 +1,7 @@
 import { DocumentReference, DocumentSnapshot, getDoc, WriteBatch as FirebaseFirestoreWriteBatch, UpdateData as FirestoreUpdateData } from '@firebase/firestore';
 import { from, Observable } from 'rxjs';
 import { FirestoreDocumentContext, UpdateData, WithFieldValue, FirestoreDocumentContextType, FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, SetOptions } from '../../common/firestore';
+import { createWithAccessor } from './driver.accessor.create';
 
 // MARK: Accessor
 /**
@@ -11,6 +12,10 @@ export class WriteBatchFirestoreDocumentDataAccessor<T> implements FirestoreDocu
 
   stream(): Observable<DocumentSnapshot<T>> {
     return from(this.get());
+  }
+
+  create(data: WithFieldValue<T>): Promise<void> {
+    return createWithAccessor(this)(data) as Promise<void>;
   }
 
   exists(): Promise<boolean> {

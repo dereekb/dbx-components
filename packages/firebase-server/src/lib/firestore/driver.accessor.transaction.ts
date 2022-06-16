@@ -13,6 +13,11 @@ export class TransactionFirestoreDocumentDataAccessor<T> implements FirestoreDoc
     return from(this.get());
   }
 
+  create(data: WithFieldValue<T>): Promise<void> {
+    this.transaction.create(this.documentRef, data);
+    return Promise.resolve();
+  }
+
   exists(): Promise<boolean> {
     return this.get().then((x) => x.exists);
   }

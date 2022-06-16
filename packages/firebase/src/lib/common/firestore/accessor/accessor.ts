@@ -21,6 +21,10 @@ export interface FirestoreDocumentDataAccessor<T, D = DocumentData> extends Docu
    */
   stream(): Observable<DocumentSnapshot<T>>;
   /**
+   * Creates a document if it does not exist.
+   */
+  create(data: WithFieldValue<T>): Promise<WriteResult | void>;
+  /**
    * Returns the current snapshot.
    */
   get(): Promise<DocumentSnapshot<T>>;

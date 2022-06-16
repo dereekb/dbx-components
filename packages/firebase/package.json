@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/firebase",
-  "version": "7.14.0",
+  "version": "7.15.0",
   "devDependencies": {
     "@firebase/rules-unit-testing": "^2.0.0"
   },

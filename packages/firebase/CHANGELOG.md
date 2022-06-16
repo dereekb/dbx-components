@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [7.15.0](https://github.com/dereekb/dbx-components/compare/v7.14.0-dev...v7.15.0) (2022-06-16)
+
+
+### Features
+
+* added create to FirestoreDocumentDataAccessor ([9211975](https://github.com/dereekb/dbx-components/commit/921197542b80e6fd98245349c9cee98126d6c75b))
+
+
+
 # [7.14.0](https://github.com/dereekb/dbx-components/compare/v7.13.1-dev...v7.14.0) (2022-06-15)
 
 
