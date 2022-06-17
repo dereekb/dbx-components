@@ -2,6 +2,24 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [8.0.0](https://github.com/dereekb/dbx-components/compare/v7.16.0-dev...v8.0.0) (2022-06-17)
+
+
+### Code Refactoring
+
+* removed converter from DocumentReference ([33e9f6a](https://github.com/dereekb/dbx-components/commit/33e9f6aa33b83b93f2e08331855c26791557316a))
+
+
+### BREAKING CHANGES
+
+* - removed converter from DocumentReference
+- additionally, the following previous breaking changes were not properly tagged:
+- converter is now required for firestoreContext collection config
+- modelIdentity is now required in FirestoreContext firestore collection functions
+- removed other deprecated functions
+
+
+
 # [7.16.0](https://github.com/dereekb/dbx-components/compare/v7.15.2-dev...v7.16.0) (2022-06-17)
 
 
