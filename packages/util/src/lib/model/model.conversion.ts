@@ -179,18 +179,26 @@ export function modelFieldMapFunction<I, O>(config: ModelFieldMapConfig<I, O>): 
   const defaultOutput = (config as ModelFieldMapMaybeWithDefaultDataConfig<I, O>).default;
   const defaultInput = (config as ModelFieldMapMaybeWithDefaultValueConfig<I, O>).defaultInput;
 
+  const hasDefaultInput = defaultInput != null;
+
   const getDefaultOutput: Getter<O> = asGetter(defaultOutput);
   const getDefaultInput: Getter<I> = asGetter(defaultInput);
 
   return (input: Maybe<I>) => {
+    let result: O;
+
     if (isMaybeSo(input)) {
-      return convert(input);
+      result = convert(input);
     } else {
       if (convertMaybe) {
-        return convertMaybe(input ?? getDefaultInput());
+        result = convertMaybe(input ?? getDefaultInput());
+      } else if (hasDefaultInput) {
+        result = convert(getDefaultInput() as MaybeSo<I>);
       } else {
-        return getDefaultOutput();
+        result = getDefaultOutput();
       }
     }
+
+    return result;
   };
 }

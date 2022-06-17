@@ -96,6 +96,18 @@ export function describeAccessorDriverTests(f: MockItemCollectionFixture) {
             privateSub.destroy();
           });
 
+          describe('createOrUpdate()', () => {
+            it('should create the item if it does not exist', async () => {
+              let exists = await itemPrivateDataDocument.accessor.exists();
+              expect(exists).toBe(false);
+
+              await itemPrivateDataDocument.createOrUpdate({ createdAt: new Date() });
+
+              exists = await privateDataAccessor.exists();
+              expect(exists).toBe(true);
+            });
+          });
+
           describe('set()', () => {
             it('should create the item', async () => {
               let exists = await privateDataAccessor.exists();
