@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [8.0.1](https://github.com/dereekb/dbx-components/compare/v8.0.0-dev...v8.0.1) (2022-06-17)
+
+
+### Bug Fixes
+
+* fixed converter on loadDocument() ([1e680ac](https://github.com/dereekb/dbx-components/commit/1e680ac8c42f2777772b02fe7aa5a64d5abfa052))
+
+
+
 # [8.0.0](https://github.com/dereekb/dbx-components/compare/v7.16.0-dev...v8.0.0) (2022-06-17)
 
 
