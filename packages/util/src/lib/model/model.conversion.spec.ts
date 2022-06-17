@@ -25,6 +25,9 @@ const defaultTestModel: TestConversionModel = {
   date: new Date()
 };
 
+const defaultNumberFromValue = 0;
+const defaultNumberToValue = String(defaultNumberFromValue);
+
 const fields = modelFieldConversions<TestConversionModel, TestConversionDataModel>({
   name: copyField(''),
   test: copyField<boolean | undefined>(defaultTestValue),
@@ -41,11 +44,11 @@ const fields = modelFieldConversions<TestConversionModel, TestConversionDataMode
   number: {
     from: {
       convert: (x: string) => Number(x),
-      default: 0
+      default: defaultNumberFromValue
     },
     to: {
       convert: (x: number) => String(x),
-      default: '0'
+      default: defaultNumberToValue
     }
   }
 });
@@ -60,6 +63,16 @@ describe('makeModelMapFunctions', () => {
 
         expect(result.name).toBe(defaultTestModel.name);
         expect(result.number).toBe(String(defaultTestModel.number));
+        expect(result.test).toBe(defaultTestValue);
+        expect(result.date).toBeDefined();
+      });
+
+      it('should apply the default values for null values.', () => {
+        const result = mapFunctions.to({ test: null, date: null, number: null } as any);
+
+        expect(result.date).toBeDefined();
+        expect(result.date).not.toBeNull();
+        expect(result.number).toBe(defaultNumberToValue);
         expect(result.test).toBe(defaultTestValue);
       });
 

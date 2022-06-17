@@ -22,7 +22,8 @@ import {
   UserRelatedById,
   firestoreString,
   copyUserRelatedDataAccessorFactoryFunction,
-  firestoreUID
+  firestoreUID,
+  firestoreUniqueStringArray
 } from '@dereekb/firebase';
 import { GrantedReadRole } from '@dereekb/model';
 
