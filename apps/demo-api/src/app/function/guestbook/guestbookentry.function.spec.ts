@@ -42,6 +42,29 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
 
           describe('guestbook entry exists', () => {
             demoGuestbookEntryContext({ f, u, g }, (ge) => {
+              describe('reading a guestbook entry', () => {
+                describe('with incomplete database data', () => {
+                  beforeEach(async () => {
+                    // clear the data from the entry
+                    await ge.document.accessor.update({ updatedAt: null, createdAt: null } as any);
+                  });
+
+                  it('should read default times', async () => {
+                    const rawData = (await ge.document.accessor.getWithConverter(null)).data();
+
+                    expect(rawData?.updatedAt).toBeNull();
+                    expect(rawData?.createdAt).toBeNull();
+
+                    const data = await ge.document.snapshotData();
+
+                    expect(data?.updatedAt).toBeDefined();
+                    expect(data?.createdAt).toBeDefined();
+                    expect(isDate(data?.updatedAt)).toBe(true);
+                    expect(isDate(data?.createdAt)).toBe(true);
+                  });
+                });
+              });
+
               it('should update guestbook entry.', async () => {
                 const userGuestbookEntry = ge.document;
 

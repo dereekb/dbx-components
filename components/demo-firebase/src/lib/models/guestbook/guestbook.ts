@@ -54,13 +54,14 @@ export const guestbookConverter = snapshotConverterFunctions<Guestbook>({
 });
 
 export function guestbookCollectionReference(context: FirestoreContext): CollectionReference<Guestbook> {
-  return context.collection(guestbookIdentity.collection).withConverter<Guestbook>(guestbookConverter);
+  return context.collection(guestbookIdentity.collection);
 }
 
 export type GuestbookFirestoreCollection = FirestoreCollection<Guestbook, GuestbookDocument>;
 
 export function guestbookFirestoreCollection(firestoreContext: FirestoreContext): GuestbookFirestoreCollection {
   return firestoreContext.firestoreCollection({
+    converter: guestbookConverter,
     modelIdentity: guestbookIdentity,
     itemsPerPage: 50,
     collection: guestbookCollectionReference(firestoreContext),
@@ -116,7 +117,7 @@ export const guestbookEntryConverter = snapshotConverterFunctions<GuestbookEntry
 
 export function guestbookEntryCollectionReferenceFactory(context: FirestoreContext): (guestbook: GuestbookDocument) => CollectionReference<GuestbookEntry> {
   return (guestbook: GuestbookDocument) => {
-    return context.subcollection(guestbook.documentRef, guestbookEntryIdentity.collection).withConverter<GuestbookEntry>(guestbookEntryConverter);
+    return context.subcollection(guestbook.documentRef, guestbookEntryIdentity.collection);
   };
 }
 
@@ -130,6 +131,7 @@ export function guestbookEntryFirestoreCollectionFactory(firestoreContext: Fires
 
   return (parent: GuestbookDocument) => {
     return firestoreContext.firestoreCollectionWithParent({
+      converter: guestbookEntryConverter,
       modelIdentity: guestbookEntryIdentity,
       itemsPerPage: 50,
       collection: factory(parent),
@@ -142,13 +144,14 @@ export function guestbookEntryFirestoreCollectionFactory(firestoreContext: Fires
 }
 
 export function guestbookEntryCollectionReference(context: FirestoreContext): CollectionGroup<GuestbookEntry> {
-  return context.collectionGroup(guestbookEntryIdentity.collection).withConverter<GuestbookEntry>(guestbookEntryConverter);
+  return context.collectionGroup(guestbookEntryIdentity.collection);
 }
 
 export type GuestbookEntryFirestoreCollectionGroup = FirestoreCollectionGroup<GuestbookEntry, GuestbookEntryDocument>;
 
 export function guestbookEntryFirestoreCollectionGroup(firestoreContext: FirestoreContext): GuestbookEntryFirestoreCollectionGroup {
   return firestoreContext.firestoreCollectionGroup({
+    converter: guestbookEntryConverter,
     modelIdentity: guestbookEntryIdentity,
     itemsPerPage: 50,
     accessorFactory: guestbookEntryAccessorFactory,

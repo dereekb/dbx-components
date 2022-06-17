@@ -6,7 +6,7 @@ import { FirestoreAccessorDriverRef } from '../driver/accessor';
 import { FirestoreModelId, FirestoreModelIdRef, FirestoreModelKey, FirestoreModelKeyRef, FirestoreModelName } from './../collection/collection';
 import { DocumentReference, CollectionReference, Transaction, WriteBatch, DocumentSnapshot, SnapshotOptions, WriteResult } from '../types';
 import { createOrUpdateWithAccessorSet, dataFromSnapshotStream, FirestoreDocumentDataAccessor } from './accessor';
-import { CollectionReferenceRef, DocumentReferenceRef, FirestoreContextReference } from '../reference';
+import { CollectionReferenceRef, DocumentReferenceRef, FirestoreContextReference, FirestoreDataConverterRef } from '../reference';
 import { FirestoreDocumentContext } from './context';
 import { build, cachedGetter, Maybe } from '@dereekb/util';
 import { FirestoreModelNameRef, FirestoreModelIdentity, FirestoreModelIdentityRef } from '../collection/collection';
@@ -155,7 +155,7 @@ export interface LimitedFirestoreDocumentAccessorFactory<T, D extends FirestoreD
 /**
  * FirestoreDocumentAccessor configuration.
  */
-export interface LimitedFirestoreDocumentAccessorFactoryConfig<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> extends FirestoreModelIdentityRef, FirestoreContextReference, FirestoreAccessorDriverRef {
+export interface LimitedFirestoreDocumentAccessorFactoryConfig<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> extends FirestoreDataConverterRef<T>, FirestoreModelIdentityRef, FirestoreContextReference, FirestoreAccessorDriverRef {
   /**
    * Optional InterceptAccessorFactoryFunction to intercept/return a modified accessor factory.
    */
@@ -164,7 +164,7 @@ export interface LimitedFirestoreDocumentAccessorFactoryConfig<T, D extends Fire
 }
 
 export function limitedFirestoreDocumentAccessorFactory<T, D extends FirestoreDocument<T> = FirestoreDocument<T>>(config: LimitedFirestoreDocumentAccessorFactoryConfig<T, D>): LimitedFirestoreDocumentAccessorFactoryFunction<T, D> {
-  const { firestoreContext, firestoreAccessorDriver, makeDocument, accessorFactory: interceptAccessorFactory, modelIdentity } = config;
+  const { firestoreContext, firestoreAccessorDriver, makeDocument, accessorFactory: interceptAccessorFactory, converter, modelIdentity } = config;
   const expectedCollectionName = firestoreAccessorDriver.fuzzedPathForPath ? firestoreAccessorDriver.fuzzedPathForPath(modelIdentity.collection) : modelIdentity.collection;
 
   return (context?: FirestoreDocumentContext<T>) => {
@@ -177,6 +177,7 @@ export function limitedFirestoreDocumentAccessorFactory<T, D extends FirestoreDo
       }
 
       const accessor = dataAccessorFactory.accessorFor(ref);
+
       return makeDocument(accessor, documentAccessor);
     }
 
@@ -187,7 +188,7 @@ export function limitedFirestoreDocumentAccessorFactory<T, D extends FirestoreDo
         throw new Error(`unexpected key/path "${fullPath}" for expected type "${modelIdentity.collection}"/"${modelIdentity.model}".`);
       }
 
-      return ref;
+      return ref.withConverter(converter);
     }
 
     function loadDocumentForKey(fullPath: FirestoreModelKey): D {
@@ -230,11 +231,11 @@ export interface FirestoreDocumentAccessorFactoryConfig<T, D extends FirestoreDo
 }
 
 export function firestoreDocumentAccessorFactory<T, D extends FirestoreDocument<T> = FirestoreDocument<T>>(config: FirestoreDocumentAccessorFactoryConfig<T, D>): FirestoreDocumentAccessorFactoryFunction<T, D> {
-  const { firestoreAccessorDriver, collection } = config;
+  const { firestoreAccessorDriver, collection, converter } = config;
   const limitedFirestoreDocumentAccessor = limitedFirestoreDocumentAccessorFactory(config);
 
-  function documentRefForId(path: string, ...pathSegments: string[]): DocumentReference<T> {
-    return firestoreAccessorDriver.doc(collection, path, ...pathSegments);
+  function documentRefForId(path: string): DocumentReference<T> {
+    return firestoreAccessorDriver.doc(collection, path).withConverter(converter);
   }
 
   return (context?: FirestoreDocumentContext<T>) => {
@@ -250,12 +251,12 @@ export function firestoreDocumentAccessorFactory<T, D extends FirestoreDocument<
 
         x.documentRefForId = documentRefForId;
 
-        x.loadDocumentForId = (path: string, ...pathSegments: string[]): D => {
+        x.loadDocumentForId = (path: string): D => {
           if (!path) {
             throw new Error('Path was not provided to loadDocumentForId(). Use newDocument() for generating an id.');
           }
 
-          return documentAccessor.loadDocument(documentRefForId(path, ...pathSegments));
+          return documentAccessor.loadDocument(documentRefForId(path));
         };
       }
     });

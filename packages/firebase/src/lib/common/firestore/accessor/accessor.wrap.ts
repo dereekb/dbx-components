@@ -45,7 +45,7 @@ export abstract class AbstractFirestoreDocumentDataAccessorWrapper<T, D = Docume
   }
 
   update(data: UpdateData<D>, params?: FirestoreDocumentUpdateParams): Promise<void | WriteResult> {
-    return this.update(data, params);
+    return this.accessor.update(data, params);
   }
 }
 

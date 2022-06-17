@@ -44,15 +44,20 @@ export type FirestoreContextFactory<F extends Firestore = Firestore> = (firestor
  */
 export function firestoreContextFactory<F extends Firestore = Firestore>(drivers: FirestoreDrivers): FirestoreContextFactory<F> {
   return (firestore: F) => {
-    const makeFirestoreCollectionConfig = <T, PT, D extends FirestoreDocument<T> = FirestoreDocument<T>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>>(config: FirestoreContextFirestoreCollectionConfig<T, D> | FirestoreContextFirestoreCollectionGroupConfig<T, D> | FirestoreContextFirestoreCollectionWithParentConfig<T, PT, D, PD> | FirestoreContextSingleItemFirestoreCollectionConfig<T, PT, D, PD>) => ({
-      ...config,
-      queryLike: (config as FirestoreContextFirestoreCollectionConfig<T, D>).collection ?? (config as FirestoreContextFirestoreCollectionGroupConfig<T, D>).queryLike,
-      firestoreContext: context,
-      driverIdentifier: drivers.driverIdentifier,
-      driverType: drivers.driverType,
-      firestoreQueryDriver: drivers.firestoreQueryDriver,
-      firestoreAccessorDriver: drivers.firestoreAccessorDriver
-    });
+    const makeFirestoreCollectionConfig = <T, PT, D extends FirestoreDocument<T> = FirestoreDocument<T>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>>(config: FirestoreContextFirestoreCollectionConfig<T, D> | FirestoreContextFirestoreCollectionGroupConfig<T, D> | FirestoreContextFirestoreCollectionWithParentConfig<T, PT, D, PD> | FirestoreContextSingleItemFirestoreCollectionConfig<T, PT, D, PD>) => {
+      const queryLike = (config as FirestoreContextFirestoreCollectionConfig<T, D>).collection ?? (config as FirestoreContextFirestoreCollectionGroupConfig<T, D>).queryLike;
+
+      return {
+        ...config,
+        collection: config.converter ? (config as FirestoreContextFirestoreCollectionConfig<T, D>).collection?.withConverter(config.converter) : (config as FirestoreContextFirestoreCollectionConfig<T, D>).collection,
+        queryLike: config.converter ? queryLike.withConverter(config.converter) : queryLike,
+        firestoreContext: context,
+        driverIdentifier: drivers.driverIdentifier,
+        driverType: drivers.driverType,
+        firestoreQueryDriver: drivers.firestoreQueryDriver,
+        firestoreAccessorDriver: drivers.firestoreAccessorDriver
+      };
+    };
 
     const firestoreCollection = <T, D extends FirestoreDocument<T>>(config: FirestoreContextFirestoreCollectionConfig<T, D>) => makeFirestoreCollection(makeFirestoreCollectionConfig(config) as FirestoreCollectionConfig<T, D>);
     const firestoreCollectionGroup = <T, D extends FirestoreDocument<T>>(config: FirestoreContextFirestoreCollectionGroupConfig<T, D>) => makeFirestoreCollectionGroup(makeFirestoreCollectionConfig(config));

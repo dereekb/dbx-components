@@ -99,12 +99,12 @@ export function describeAccessorDriverTests(f: MockItemCollectionFixture) {
           describe('get()', () => {
             it('should read that data using the configured converter', async () => {
               await itemPrivateDataDocument.accessor.set({ values: null } as any);
-              const dataWithoutConverter = (await itemPrivateDataDocument.accessor.getWithConverter(null)).data();
+              const dataWithoutConverter: any = (await itemPrivateDataDocument.accessor.getWithConverter(null)).data();
 
               expect(dataWithoutConverter).toBeDefined();
-              expect(dataWithoutConverter!.values).toBeNull();
+              expect(dataWithoutConverter.values).toBeNull();
 
-              expect(itemPrivateDataDocument.documentRef.converter).toBeDefined();
+              expect(itemPrivateDataDocument.documentRef.converter ?? (itemPrivateDataDocument.documentRef as any)._converter).toBeDefined();
 
               const data = await itemPrivateDataDocument.snapshotData();
               expect(data?.values).toBeDefined();
@@ -119,10 +119,10 @@ export function describeAccessorDriverTests(f: MockItemCollectionFixture) {
               const data = await itemPrivateDataDocument.snapshotData();
               expect(data?.values).toBeDefined();
 
-              const dataWithoutConverter = (await itemPrivateDataDocument.accessor.getWithConverter(null)).data();
+              const dataWithoutConverter: any = (await itemPrivateDataDocument.accessor.getWithConverter(null)).data();
 
               expect(dataWithoutConverter).toBeDefined();
-              expect(dataWithoutConverter!.values).toBeNull();
+              expect(dataWithoutConverter.values).toBeNull();
             });
 
             it('should get the results with the input converter with a type', async () => {

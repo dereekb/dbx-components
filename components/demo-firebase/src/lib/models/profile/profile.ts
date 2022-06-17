@@ -48,7 +48,7 @@ export const profileConverter = snapshotConverterFunctions<Profile>({
 export const profileAccessorFactory = copyUserRelatedDataAccessorFactoryFunction<Profile>();
 
 export function profileCollectionReference(context: FirestoreContext): CollectionReference<Profile> {
-  return context.collection(profileIdentity.collection).withConverter<Profile>(profileConverter);
+  return context.collection(profileIdentity.collection);
 }
 
 export type ProfileFirestoreCollection = FirestoreCollection<Profile, ProfileDocument>;
@@ -56,6 +56,7 @@ export type ProfileFirestoreCollection = FirestoreCollection<Profile, ProfileDoc
 export function profileFirestoreCollection(firestoreContext: FirestoreContext): ProfileFirestoreCollection {
   return firestoreContext.firestoreCollection({
     modelIdentity: profileIdentity,
+    converter: profileConverter,
     itemsPerPage: 50,
     accessorFactory: profileAccessorFactory,
     collection: profileCollectionReference(firestoreContext),
@@ -97,7 +98,7 @@ export const profilePrivateDataConverter = snapshotConverterFunctions<ProfilePri
 
 export function profilePrivateDataCollectionReferenceFactory(context: FirestoreContext): (profile: ProfileDocument) => CollectionReference<ProfilePrivateData> {
   return (profile: ProfileDocument) => {
-    return context.subcollection(profile.documentRef, profilePrivateDataIdentity.collection).withConverter<ProfilePrivateData>(profilePrivateDataConverter);
+    return context.subcollection(profile.documentRef, profilePrivateDataIdentity.collection);
   };
 }
 
@@ -110,6 +111,7 @@ export function profilePrivateDataFirestoreCollectionFactory(firestoreContext: F
   return (parent: ProfileDocument) => {
     return firestoreContext.singleItemFirestoreCollection({
       modelIdentity: profilePrivateDataIdentity,
+      converter: profilePrivateDataConverter,
       itemsPerPage: 50,
       collection: factory(parent),
       makeDocument: (accessor, documentAccessor) => new ProfilePrivateDataDocument(accessor, documentAccessor),
@@ -121,7 +123,7 @@ export function profilePrivateDataFirestoreCollectionFactory(firestoreContext: F
 }
 
 export function profilePrivateDataCollectionReference(context: FirestoreContext): CollectionGroup<ProfilePrivateData> {
-  return context.collectionGroup(profilePrivateDataIdentity.collection).withConverter<ProfilePrivateData>(profilePrivateDataConverter);
+  return context.collectionGroup(profilePrivateDataIdentity.collection);
 }
 
 export type ProfilePrivateDataFirestoreCollectionGroup = FirestoreCollectionGroup<ProfilePrivateData, ProfilePrivateDataDocument>;
@@ -129,6 +131,7 @@ export type ProfilePrivateDataFirestoreCollectionGroup = FirestoreCollectionGrou
 export function profilePrivateDataFirestoreCollectionGroup(firestoreContext: FirestoreContext): ProfilePrivateDataFirestoreCollectionGroup {
   return firestoreContext.firestoreCollectionGroup({
     modelIdentity: profilePrivateDataIdentity,
+    converter: profilePrivateDataConverter,
     itemsPerPage: 50,
     queryLike: profilePrivateDataCollectionReference(firestoreContext),
     makeDocument: (accessor, documentAccessor) => new ProfilePrivateDataDocument(accessor, documentAccessor),

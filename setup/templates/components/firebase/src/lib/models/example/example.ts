@@ -32,7 +32,7 @@ export const exampleConverter = snapshotConverterFunctions<Example>({
 });
 
 export function exampleCollectionReference(context: FirestoreContext): CollectionReference<Example> {
-  return context.collection(exampleIdentity.collection).withConverter<Example>(exampleConverter);
+  return context.collection(exampleIdentity.collection);
 }
 
 export type ExampleFirestoreCollection = FirestoreCollection<Example, ExampleDocument>;
@@ -40,6 +40,7 @@ export type ExampleFirestoreCollection = FirestoreCollection<Example, ExampleDoc
 export function exampleFirestoreCollection(firestoreContext: FirestoreContext): ExampleFirestoreCollection {
   return firestoreContext.firestoreCollection({
     modelIdentity: exampleIdentity,
+    converter: exampleConverter,
     itemsPerPage: 50,
     collection: exampleCollectionReference(firestoreContext),
     makeDocument: (accessor, documentAccessor) => new ExampleDocument(accessor, documentAccessor),
