@@ -55,7 +55,7 @@ describe('AbstractDbxFirebaseDocumentStore', () => {
 
           sub.subscription = store.document$.pipe(first()).subscribe((document) => {
             expect(document).toBeDefined();
-            expect(document.documentRef).toBe(ref);
+            expect(document.documentRef.path).toBe(ref.path);
             done();
           });
         });
