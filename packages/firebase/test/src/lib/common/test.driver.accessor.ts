@@ -104,7 +104,8 @@ export function describeAccessorDriverTests(f: MockItemCollectionFixture) {
               expect(dataWithoutConverter).toBeDefined();
               expect(dataWithoutConverter.values).toBeNull();
 
-              expect(itemPrivateDataDocument.documentRef.converter ?? (itemPrivateDataDocument.documentRef as any)._converter).toBeDefined();
+              // converter on client, _converter on server
+              expect((itemPrivateDataDocument.documentRef as any).converter ?? (itemPrivateDataDocument.documentRef as any)._converter).toBeDefined();
 
               const data = await itemPrivateDataDocument.snapshotData();
               expect(data?.values).toBeDefined();

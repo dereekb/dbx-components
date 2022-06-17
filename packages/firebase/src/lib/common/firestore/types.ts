@@ -110,7 +110,6 @@ export interface FirestoreDataConverter<T, O = DocumentData> {
 
 // MARK: Document
 export interface DocumentReference<T = DocumentData> {
-  readonly converter?: FirestoreDataConverter<T> | null;
   readonly type?: 'document';
   readonly firestore: Firestore;
   readonly id: string;
@@ -149,7 +148,6 @@ export type Transaction = object;
 
 // MARK: Query
 export interface Query<T = DocumentData> {
-  readonly converter?: FirestoreDataConverter<T> | null;
   readonly type?: 'query' | 'collection';
   readonly firestore: Firestore;
   withConverter<U>(converter: FirestoreDataConverter<U>): Query<U>;

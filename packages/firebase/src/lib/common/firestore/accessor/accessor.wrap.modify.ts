@@ -127,5 +127,5 @@ export function copyUserRelatedDataModifierConfig<T extends UserRelated>(): Modi
 export const COPY_USER_RELATED_DATA_ACCESSOR_FACTORY_FUNCTION = cachedGetter(() => modifyBeforeSetInterceptAccessorFactoryFunction(copyUserRelatedDataModifierConfig()));
 
 export function copyUserRelatedDataAccessorFactoryFunction<T extends UserRelated, D = DocumentData>(): InterceptAccessorFactoryFunction<T, D> {
-  return COPY_USER_RELATED_DATA_ACCESSOR_FACTORY_FUNCTION() as InterceptAccessorFactoryFunction<T, D>;
+  return COPY_USER_RELATED_DATA_ACCESSOR_FACTORY_FUNCTION() as unknown as InterceptAccessorFactoryFunction<T, D>;
 }
