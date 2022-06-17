@@ -1,7 +1,7 @@
 import { DocumentReference, DocumentSnapshot, UpdateData, WithFieldValue, getDoc, deleteDoc, setDoc, updateDoc } from '@firebase/firestore';
 import { fromRef } from 'rxfire/firestore';
 import { Observable } from 'rxjs';
-import { FirestoreDocumentContext, FirestoreDocumentContextType, FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, SetOptions } from '../../common/firestore';
+import { DocumentData, FirestoreDataConverter, FirestoreDocumentContext, FirestoreDocumentContextType, FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, SetOptions } from '../../common/firestore';
 import { createWithAccessor } from './driver.accessor.create';
 
 // MARK: Accessor
@@ -22,6 +22,10 @@ export class DefaultFirestoreDocumentDataAccessor<T> implements FirestoreDocumen
 
   get(): Promise<DocumentSnapshot<T>> {
     return getDoc(this.documentRef);
+  }
+
+  getWithConverter<U = DocumentData>(converter: null | FirestoreDataConverter<U>): Promise<DocumentSnapshot<U>> {
+    return getDoc(this.documentRef.withConverter<U>(converter as FirestoreDataConverter<U>)) as Promise<DocumentSnapshot<U>>;
   }
 
   delete(): Promise<void> {

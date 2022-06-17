@@ -1,6 +1,6 @@
 import { DocumentReference, DocumentSnapshot, Transaction as GoogleCloudTransaction, SetOptions } from '@google-cloud/firestore';
 import { from, Observable } from 'rxjs';
-import { WithFieldValue, UpdateData, FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, FirestoreDocumentContext, FirestoreDocumentContextType, FirestoreDocumentUpdateParams } from '@dereekb/firebase';
+import { WithFieldValue, UpdateData, FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, FirestoreDocumentContext, FirestoreDocumentContextType, FirestoreDocumentUpdateParams, FirestoreDataConverter, DocumentData } from '@dereekb/firebase';
 
 // MARK: Accessor
 /**
@@ -24,6 +24,10 @@ export class TransactionFirestoreDocumentDataAccessor<T> implements FirestoreDoc
 
   get(): Promise<DocumentSnapshot<T>> {
     return this.transaction.get(this.documentRef);
+  }
+
+  getWithConverter<U = DocumentData>(converter: null | FirestoreDataConverter<U>): Promise<DocumentSnapshot<U>> {
+    return this.transaction.get(this.documentRef.withConverter<U>(converter as FirestoreDataConverter<U>));
   }
 
   delete(): Promise<void> {

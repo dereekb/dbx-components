@@ -1,6 +1,6 @@
 import { DocumentReference, WriteResult as GoogleCloudWriteResult, DocumentSnapshot } from '@google-cloud/firestore';
 import { Observable } from 'rxjs';
-import { WithFieldValue, UpdateData, FirestoreDocumentContext, FirestoreDocumentContextType, FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, FirestoreDocumentDeleteParams, FirestoreDocumentUpdateParams, SetOptions, streamFromOnSnapshot } from '@dereekb/firebase';
+import { WithFieldValue, UpdateData, FirestoreDocumentContext, FirestoreDocumentContextType, FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, FirestoreDocumentDeleteParams, FirestoreDocumentUpdateParams, SetOptions, streamFromOnSnapshot, FirestoreDataConverter, DocumentData } from '@dereekb/firebase';
 
 // MARK: Accessor
 export class DefaultFirestoreDocumentDataAccessor<T> implements FirestoreDocumentDataAccessor<T> {
@@ -20,6 +20,10 @@ export class DefaultFirestoreDocumentDataAccessor<T> implements FirestoreDocumen
 
   get(): Promise<DocumentSnapshot<T>> {
     return this.documentRef.get();
+  }
+
+  getWithConverter<U = DocumentData>(converter: null | FirestoreDataConverter<U>): Promise<DocumentSnapshot<U>> {
+    return this.documentRef.withConverter<U>(converter as FirestoreDataConverter<U>).get();
   }
 
   delete(params: FirestoreDocumentDeleteParams): Promise<GoogleCloudWriteResult> {

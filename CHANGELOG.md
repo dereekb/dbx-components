@@ -2,6 +2,20 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [7.16.0](https://github.com/dereekb/dbx-components/compare/v7.15.2-dev...v7.16.0) (2022-06-17)
+
+
+### Bug Fixes
+
+* fixed documentRef not having converter configured ([308f3fa](https://github.com/dereekb/dbx-components/commit/308f3fa18502c36915d65a7b9d7404a2c3bacbce))
+
+
+### Features
+
+* added getWithConverter() ([aef4b27](https://github.com/dereekb/dbx-components/commit/aef4b27dabfa926af098d5c1afac4fb77302b4ef))
+
+
+
 ## [7.15.2](https://github.com/dereekb/dbx-components/compare/v7.15.1-dev...v7.15.2) (2022-06-17)
 
 

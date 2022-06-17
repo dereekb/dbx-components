@@ -1,5 +1,5 @@
 import { FirestoreContext } from './context';
-import { CollectionReference, DocumentReference, Firestore, Query, Transaction } from './types';
+import { CollectionReference, DocumentReference, Firestore, FirestoreDataConverter, Query, Transaction } from './types';
 
 /**
  * Contains a reference to a Query.
@@ -34,4 +34,11 @@ export interface FirestoreContextReference<F extends Firestore = Firestore> {
  */
 export interface FirebaseTransactionContext {
   readonly transaction?: Transaction;
+}
+
+/**
+ * Contains contextual information about the current Transaction, if available.
+ */
+export interface FirestoreDataConverterRef<U = unknown> {
+  readonly converter: FirestoreDataConverter<U>;
 }

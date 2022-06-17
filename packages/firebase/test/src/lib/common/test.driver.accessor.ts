@@ -1,7 +1,7 @@
 import { firstValueFrom } from 'rxjs';
 import { SubscriptionObject } from '@dereekb/rxjs';
-import { Transaction, DocumentReference, WriteBatch, FirestoreDocumentAccessor, makeDocuments, FirestoreDocumentDataAccessor, FirestoreContext, FirestoreDocument, RunTransaction, FirebaseAuthUserId } from '@dereekb/firebase';
-import { MockItemDocument, MockItem, MockItemPrivateDocument, MockItemPrivateFirestoreCollection, MockItemPrivate, MockItemSubItem, MockItemSubItemDocument, MockItemSubItemFirestoreCollection, MockItemSubItemFirestoreCollectionGroup, MockItemUserFirestoreCollection, MockItemUserDocument, MockItemUser } from './firestore.mock.item';
+import { Transaction, DocumentReference, WriteBatch, FirestoreDocumentAccessor, makeDocuments, FirestoreDocumentDataAccessor, FirestoreContext, FirestoreDocument, RunTransaction, FirebaseAuthUserId, DocumentSnapshot, FirestoreDataConverter } from '@dereekb/firebase';
+import { MockItemDocument, MockItem, MockItemPrivateDocument, MockItemPrivateFirestoreCollection, MockItemPrivate, MockItemSubItem, MockItemSubItemDocument, MockItemSubItemFirestoreCollection, MockItemSubItemFirestoreCollectionGroup, MockItemUserFirestoreCollection, MockItemUserDocument, MockItemUser, mockItemConverter } from './firestore.mock.item';
 import { MockItemCollectionFixture } from './firestore.mock.item.fixture';
 
 /**
@@ -96,6 +96,48 @@ export function describeAccessorDriverTests(f: MockItemCollectionFixture) {
             privateSub.destroy();
           });
 
+          describe('get()', () => {
+            it('should read that data using the configured converter', async () => {
+              await itemPrivateDataDocument.accessor.set({ values: null } as any);
+              const dataWithoutConverter: any = (await itemPrivateDataDocument.accessor.getWithConverter(null)).data();
+
+              expect(dataWithoutConverter).toBeDefined();
+              expect(dataWithoutConverter.values).toBeNull();
+
+              expect(itemPrivateDataDocument.documentRef.converter ?? (itemPrivateDataDocument.documentRef as any)._converter).toBeDefined();
+
+              const data = await itemPrivateDataDocument.snapshotData();
+              expect(data?.values).toBeDefined();
+              expect(data?.values).not.toBeNull(); // should not be null due to the snapshot converter config
+            });
+          });
+
+          describe('getWithConverter()', () => {
+            it('should get the results with the input converter', async () => {
+              await itemPrivateDataDocument.accessor.set({ values: null } as any);
+
+              const data = await itemPrivateDataDocument.snapshotData();
+              expect(data?.values).toBeDefined();
+
+              const dataWithoutConverter: any = (await itemPrivateDataDocument.accessor.getWithConverter(null)).data();
+
+              expect(dataWithoutConverter).toBeDefined();
+              expect(dataWithoutConverter.values).toBeNull();
+            });
+
+            it('should get the results with the input converter with a type', async () => {
+              await itemPrivateDataDocument.accessor.set({ values: null } as any);
+
+              const data = await itemPrivateDataDocument.snapshotData();
+              expect(data?.values).toBeDefined();
+
+              const converter: FirestoreDataConverter<MockItem> = mockItemConverter;
+              const dataWithoutConverter: DocumentSnapshot<MockItem> = await itemPrivateDataDocument.accessor.getWithConverter(converter);
+
+              expect(dataWithoutConverter).toBeDefined();
+            });
+          });
+
           describe('createOrUpdate()', () => {
             it('should create the item if it does not exist', async () => {
               let exists = await itemPrivateDataDocument.accessor.exists();
@@ -113,7 +155,7 @@ export function describeAccessorDriverTests(f: MockItemCollectionFixture) {
               let exists = await privateDataAccessor.exists();
               expect(exists).toBe(false);
 
-              await privateDataAccessor.set({ createdAt: new Date() });
+              await privateDataAccessor.set({ values: [], createdAt: new Date() });
 
               exists = await privateDataAccessor.exists();
               expect(exists).toBe(true);
@@ -122,7 +164,7 @@ export function describeAccessorDriverTests(f: MockItemCollectionFixture) {
 
           describe('with item', () => {
             beforeEach(async () => {
-              await privateDataAccessor.set({ createdAt: new Date() });
+              await privateDataAccessor.set({ values: [], createdAt: new Date() });
             });
 
             describe('accessor', () => {

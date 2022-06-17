@@ -85,13 +85,14 @@ export const mockItemConverter = snapshotConverterFunctions<MockItem, MockItemDa
  * @returns
  */
 export function mockItemCollectionReference(context: FirestoreContext): CollectionReference<MockItem> {
-  return context.collection(mockItemIdentity.collection).withConverter<MockItem>(mockItemConverter);
+  return context.collection(mockItemIdentity.collection);
 }
 
 export type MockItemFirestoreCollection = FirestoreCollection<MockItem, MockItemDocument>;
 
 export function mockItemFirestoreCollection(firestoreContext: FirestoreContext): MockItemFirestoreCollection {
   return firestoreContext.firestoreCollection({
+    converter: mockItemConverter,
     modelIdentity: mockItemIdentity,
     itemsPerPage: 50,
     collection: mockItemCollectionReference(firestoreContext),
@@ -110,6 +111,7 @@ export const mockItemPrivateIdentity = firestoreModelIdentity(mockItemIdentity, 
  */
 export interface MockItemPrivate {
   comments?: Maybe<string>;
+  values: string[];
   createdAt: Date;
 }
 
@@ -134,6 +136,7 @@ export const mockItemPrivateIdentifier = '0';
 export const mockItemPrivateConverter = snapshotConverterFunctions({
   fieldConversions: modelFieldConversions<MockItemPrivate, MockItemPrivateData>({
     comments: optionalFirestoreString(),
+    values: firestoreUniqueStringArray(),
     createdAt: firestoreDate({ saveDefaultAsNow: true })
   })
 });
@@ -146,7 +149,7 @@ export const mockItemPrivateConverter = snapshotConverterFunctions({
  */
 export function mockItemPrivateCollectionReferenceFactory(context: FirestoreContext): (parent: MockItemDocument) => CollectionReference<MockItemPrivate> {
   return (parent: MockItemDocument) => {
-    return context.subcollection(parent.documentRef, mockItemPrivateIdentity.collection).withConverter<MockItemPrivate>(mockItemPrivateConverter);
+    return context.subcollection(parent.documentRef, mockItemPrivateIdentity.collection);
   };
 }
 
@@ -159,6 +162,7 @@ export function mockItemPrivateFirestoreCollection(firestoreContext: FirestoreCo
   return (parent: MockItemDocument) => {
     return firestoreContext.singleItemFirestoreCollection({
       modelIdentity: mockItemPrivateIdentity,
+      converter: mockItemPrivateConverter,
       itemsPerPage: 50,
       collection: factory(parent),
       makeDocument: (a, d) => new MockItemPrivateDocument(a, d),
@@ -170,7 +174,7 @@ export function mockItemPrivateFirestoreCollection(firestoreContext: FirestoreCo
 }
 
 export function mockItemPrivateCollectionReference(context: FirestoreContext): CollectionGroup<MockItemPrivate> {
-  return context.collectionGroup(mockItemPrivateIdentity.collection).withConverter<MockItemPrivate>(mockItemPrivateConverter);
+  return context.collectionGroup(mockItemPrivateIdentity.collection);
 }
 
 export type MockItemPrivateFirestoreCollectionGroup = FirestoreCollectionGroup<MockItemPrivate, MockItemPrivateDocument>;
@@ -178,6 +182,7 @@ export type MockItemPrivateFirestoreCollectionGroup = FirestoreCollectionGroup<M
 export function mockItemPrivateFirestoreCollectionGroup(firestoreContext: FirestoreContext): MockItemPrivateFirestoreCollectionGroup {
   return firestoreContext.firestoreCollectionGroup({
     modelIdentity: mockItemPrivateIdentity,
+    converter: mockItemPrivateConverter,
     itemsPerPage: 50,
     queryLike: mockItemPrivateCollectionReference(firestoreContext),
     makeDocument: (accessor, documentAccessor) => new MockItemPrivateDocument(accessor, documentAccessor),
@@ -232,7 +237,7 @@ export const mockItemUserConverter = snapshotConverterFunctions({
  */
 export function mockItemUserCollectionReferenceFactory(context: FirestoreContext): (parent: MockItemDocument) => CollectionReference<MockItemUser> {
   return (parent: MockItemDocument) => {
-    return context.subcollection(parent.documentRef, mockItemUserCollectionName).withConverter<MockItemUser>(mockItemUserConverter);
+    return context.subcollection(parent.documentRef, mockItemUserCollectionName);
   };
 }
 
@@ -247,6 +252,7 @@ export function mockItemUserFirestoreCollection(firestoreContext: FirestoreConte
   return (parent: MockItemDocument) => {
     return firestoreContext.firestoreCollectionWithParent({
       modelIdentity: mockItemUserIdentity,
+      converter: mockItemUserConverter,
       itemsPerPage: 50,
       collection: factory(parent),
       accessorFactory: mockItemUserAccessorFactory,
@@ -258,7 +264,7 @@ export function mockItemUserFirestoreCollection(firestoreContext: FirestoreConte
 }
 
 export function mockItemUserCollectionReference(context: FirestoreContext): CollectionGroup<MockItemUser> {
-  return context.collectionGroup(mockItemUserCollectionName).withConverter<MockItemUser>(mockItemUserConverter);
+  return context.collectionGroup(mockItemUserCollectionName);
 }
 
 export type MockItemUserFirestoreCollectionGroup = FirestoreCollectionGroup<MockItemUser, MockItemUserDocument>;
@@ -266,6 +272,7 @@ export type MockItemUserFirestoreCollectionGroup = FirestoreCollectionGroup<Mock
 export function mockItemUserFirestoreCollectionGroup(firestoreContext: FirestoreContext): MockItemUserFirestoreCollectionGroup {
   return firestoreContext.firestoreCollectionGroup({
     modelIdentity: mockItemUserIdentity,
+    converter: mockItemUserConverter,
     itemsPerPage: 50,
     queryLike: mockItemUserCollectionReference(firestoreContext),
     accessorFactory: mockItemUserAccessorFactory,
@@ -310,7 +317,7 @@ export const mockItemSubItemConverter = snapshotConverterFunctions<MockItemSubIt
 
 export function mockItemSubItemCollectionReferenceFactory(context: FirestoreContext): (parent: MockItemDocument) => CollectionReference<MockItemSubItem> {
   return (parent: MockItemDocument) => {
-    return context.subcollection(parent.documentRef, mockItemSubItemIdentity.collection).withConverter<MockItemSubItem>(mockItemSubItemConverter);
+    return context.subcollection(parent.documentRef, mockItemSubItemIdentity.collection);
   };
 }
 
@@ -323,6 +330,7 @@ export function mockItemSubItemFirestoreCollection(firestoreContext: FirestoreCo
   return (parent: MockItemDocument) => {
     return firestoreContext.firestoreCollectionWithParent({
       modelIdentity: mockItemSubItemIdentity,
+      converter: mockItemSubItemConverter,
       itemsPerPage: 50,
       collection: factory(parent),
       makeDocument: (a, d) => new MockItemSubItemDocument(a, d),
@@ -333,7 +341,7 @@ export function mockItemSubItemFirestoreCollection(firestoreContext: FirestoreCo
 }
 
 export function mockItemSubItemCollectionReference(context: FirestoreContext): CollectionGroup<MockItemSubItem> {
-  return context.collectionGroup(mockItemSubItemIdentity.collection).withConverter<MockItemSubItem>(mockItemSubItemConverter);
+  return context.collectionGroup(mockItemSubItemIdentity.collection);
 }
 
 export type MockItemSubItemFirestoreCollectionGroup = FirestoreCollectionGroup<MockItemSubItem, MockItemSubItemDocument>;
@@ -341,6 +349,7 @@ export type MockItemSubItemFirestoreCollectionGroup = FirestoreCollectionGroup<M
 export function mockItemSubItemFirestoreCollectionGroup(firestoreContext: FirestoreContext): MockItemSubItemFirestoreCollectionGroup {
   return firestoreContext.firestoreCollectionGroup({
     modelIdentity: mockItemSubItemIdentity,
+    converter: mockItemSubItemConverter,
     itemsPerPage: 50,
     queryLike: mockItemSubItemCollectionReference(firestoreContext),
     makeDocument: (accessor, documentAccessor) => new MockItemSubItemDocument(accessor, documentAccessor),
@@ -384,7 +393,7 @@ export const mockItemSubItemDeepConverter = snapshotConverterFunctions<MockItemS
 
 export function mockItemSubItemDeepCollectionReferenceFactory(context: FirestoreContext): (parent: MockItemSubItemDocument) => CollectionReference<MockItemSubItemDeep> {
   return (parent: MockItemSubItemDocument) => {
-    return context.subcollection(parent.documentRef, mockItemSubItemDeepIdentity.collection).withConverter<MockItemSubItemDeep>(mockItemSubItemDeepConverter);
+    return context.subcollection(parent.documentRef, mockItemSubItemDeepIdentity.collection);
   };
 }
 
@@ -397,6 +406,7 @@ export function mockItemSubItemDeepFirestoreCollection(firestoreContext: Firesto
   return (parent: MockItemSubItemDocument) => {
     return firestoreContext.firestoreCollectionWithParent({
       modelIdentity: mockItemSubItemDeepIdentity,
+      converter: mockItemSubItemDeepConverter,
       itemsPerPage: 50,
       collection: factory(parent),
       makeDocument: (a, d) => new MockItemSubItemDeepDocument(a, d),
@@ -407,7 +417,7 @@ export function mockItemSubItemDeepFirestoreCollection(firestoreContext: Firesto
 }
 
 export function mockItemSubItemDeepCollectionReference(context: FirestoreContext): CollectionGroup<MockItemSubItemDeep> {
-  return context.collectionGroup(mockItemSubItemDeepIdentity.collection).withConverter<MockItemSubItemDeep>(mockItemSubItemDeepConverter);
+  return context.collectionGroup(mockItemSubItemDeepIdentity.collection);
 }
 
 export type MockItemSubItemDeepFirestoreCollectionGroup = FirestoreCollectionGroup<MockItemSubItemDeep, MockItemSubItemDeepDocument>;
@@ -415,6 +425,7 @@ export type MockItemSubItemDeepFirestoreCollectionGroup = FirestoreCollectionGro
 export function mockItemSubItemDeepFirestoreCollectionGroup(firestoreContext: FirestoreContext): MockItemSubItemDeepFirestoreCollectionGroup {
   return firestoreContext.firestoreCollectionGroup({
     modelIdentity: mockItemSubItemDeepIdentity,
+    converter: mockItemSubItemDeepConverter,
     itemsPerPage: 50,
     queryLike: mockItemSubItemDeepCollectionReference(firestoreContext),
     makeDocument: (accessor, documentAccessor) => new MockItemSubItemDeepDocument(accessor, documentAccessor),

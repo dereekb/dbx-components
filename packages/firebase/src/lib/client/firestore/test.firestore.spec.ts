@@ -1,5 +1,5 @@
 import { DocumentSnapshot, DocumentReference, runTransaction, Transaction, Firestore, writeBatch } from '@firebase/firestore';
-import { MockItem, mockItemCollectionReference, MockItemDocument, MockItemFirestoreCollection, mockItemFirestoreCollection, authorizedTestWithMockItemCollection, mockItemIdentity } from '@dereekb/firebase/test';
+import { MockItem, mockItemCollectionReference, MockItemDocument, MockItemFirestoreCollection, mockItemFirestoreCollection, authorizedTestWithMockItemCollection, mockItemIdentity, mockItemConverter } from '@dereekb/firebase/test';
 import { FirestoreDocumentContext, makeFirestoreCollection } from '../../common/firestore';
 import { transactionDocumentContext } from './driver.accessor.transaction';
 import { Maybe } from '@dereekb/util';
@@ -20,6 +20,7 @@ describe('FirestoreCollection', () => {
         const itemsPerPage = 50;
 
         firestoreCollection = makeFirestoreCollection({
+          converter: mockItemConverter,
           modelIdentity: mockItemIdentity,
           firestoreContext: f.parent.context,
           itemsPerPage,
