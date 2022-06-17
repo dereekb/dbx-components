@@ -176,8 +176,7 @@ export function limitedFirestoreDocumentAccessorFactory<T, D extends FirestoreDo
         throw new Error('ref must be defined.');
       }
 
-      const accessor = dataAccessorFactory.accessorFor(ref);
-
+      const accessor = dataAccessorFactory.accessorFor(ref.withConverter(converter));
       return makeDocument(accessor, documentAccessor);
     }
 

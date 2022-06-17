@@ -38,6 +38,22 @@ export function permissionDeniedError(serverError?: ReadableDataError | ServerEr
   });
 }
 
+export function notFoundError(serverError?: ReadableDataError | ServerError) {
+  return new functions.https.HttpsError('not-found', serverError?.message || 'not found', {
+    status: 404,
+    ...serverError,
+    _error: undefined
+  });
+}
+
+export function modelNotAvailableError(serverError?: ReadableDataError | ServerError) {
+  return new functions.https.HttpsError('not-found', serverError?.message || 'model was not available', {
+    status: 404,
+    ...serverError,
+    _error: undefined
+  });
+}
+
 export function badRequestError(serverError?: ReadableDataError | ServerError) {
   return new functions.https.HttpsError('invalid-argument', serverError?.message || 'bad request', {
     status: 400,
