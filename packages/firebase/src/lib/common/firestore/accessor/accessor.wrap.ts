@@ -1,5 +1,5 @@
 import { Observable } from 'rxjs';
-import { DocumentData, DocumentReference, DocumentSnapshot, PartialWithFieldValue, SetOptions, UpdateData, WithFieldValue, WriteResult } from '../types';
+import { DocumentData, DocumentReference, DocumentSnapshot, FirestoreDataConverter, PartialWithFieldValue, SetOptions, UpdateData, WithFieldValue, WriteResult } from '../types';
 import { FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, FirestoreDocumentDeleteParams, FirestoreDocumentUpdateParams } from './accessor';
 
 // MARK: Abstract Wrapper
@@ -10,7 +10,6 @@ import { FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, Fi
  */
 export abstract class AbstractFirestoreDocumentDataAccessorWrapper<T, D = DocumentData> implements FirestoreDocumentDataAccessor<T, D> {
   constructor(readonly accessor: FirestoreDocumentDataAccessor<T, D>) {}
-
   get documentRef(): DocumentReference<T> {
     return this.accessor.documentRef;
   }
@@ -25,6 +24,10 @@ export abstract class AbstractFirestoreDocumentDataAccessorWrapper<T, D = Docume
 
   get(): Promise<DocumentSnapshot<T>> {
     return this.accessor.get();
+  }
+
+  getWithConverter<U = DocumentData>(converter: null | FirestoreDataConverter<U>): Promise<DocumentSnapshot<U>> {
+    return this.accessor.getWithConverter(converter);
   }
 
   exists(): Promise<boolean> {

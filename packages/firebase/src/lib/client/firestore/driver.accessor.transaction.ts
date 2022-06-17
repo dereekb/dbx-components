@@ -1,6 +1,6 @@
 import { DocumentReference, DocumentSnapshot, Transaction as FirebaseFirestoreTransaction, UpdateData, WithFieldValue } from '@firebase/firestore';
 import { from, Observable } from 'rxjs';
-import { FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, FirestoreDocumentContext, FirestoreDocumentContextType, SetOptions } from '../../common/firestore';
+import { FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, FirestoreDocumentContext, FirestoreDocumentContextType, SetOptions, DocumentData, FirestoreDataConverter } from '../../common/firestore';
 import { createWithAccessor } from './driver.accessor.create';
 
 // MARK: Accessor
@@ -24,6 +24,10 @@ export class TransactionFirestoreDocumentDataAccessor<T> implements FirestoreDoc
 
   get(): Promise<DocumentSnapshot<T>> {
     return this.transaction.get(this.documentRef);
+  }
+
+  getWithConverter<U = DocumentData>(converter: null | FirestoreDataConverter<U>): Promise<DocumentSnapshot<U>> {
+    return this.transaction.get(this.documentRef.withConverter<U>(converter as FirestoreDataConverter<U>)) as Promise<DocumentSnapshot<U>>;
   }
 
   delete(): Promise<void> {

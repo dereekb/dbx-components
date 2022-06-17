@@ -1,6 +1,6 @@
 import { filterMaybe } from '@dereekb/rxjs';
 import { filterUndefinedValues, Maybe } from '@dereekb/util';
-import { WriteResult, SnapshotOptions, DocumentReference, DocumentSnapshot, UpdateData, WithFieldValue, PartialWithFieldValue, SetOptions, Precondition, DocumentData } from '../types';
+import { WriteResult, SnapshotOptions, DocumentReference, DocumentSnapshot, UpdateData, WithFieldValue, PartialWithFieldValue, SetOptions, Precondition, DocumentData, FirestoreDataConverter } from '../types';
 import { map, Observable, OperatorFunction } from 'rxjs';
 import { DocumentReferenceRef } from '../reference';
 
@@ -28,6 +28,13 @@ export interface FirestoreDocumentDataAccessor<T, D = DocumentData> extends Docu
    * Returns the current snapshot.
    */
   get(): Promise<DocumentSnapshot<T>>;
+  /**
+   * Gets the data from the datastore using the input converter.
+   *
+   * @param converter
+   */
+  getWithConverter(converter: null): Promise<DocumentSnapshot<DocumentData>>;
+  getWithConverter<U = DocumentData>(converter: null | FirestoreDataConverter<U>): Promise<DocumentSnapshot<U>>;
   /**
    * Whether or not the target object currently exists.
    */

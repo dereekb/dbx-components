@@ -2,41 +2,28 @@ import { DocumentReference, DocumentSnapshot, getDoc, WriteBatch as FirebaseFire
 import { from, Observable } from 'rxjs';
 import { FirestoreDocumentContext, UpdateData, WithFieldValue, FirestoreDocumentContextType, FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, SetOptions } from '../../common/firestore';
 import { createWithAccessor } from './driver.accessor.create';
+import { DefaultFirestoreDocumentDataAccessor } from './driver.accessor.default';
 
 // MARK: Accessor
 /**
  * FirestoreDocumentDataAccessor implementation for a batch.
  */
-export class WriteBatchFirestoreDocumentDataAccessor<T> implements FirestoreDocumentDataAccessor<T> {
-  constructor(readonly batch: FirebaseFirestoreWriteBatch, readonly documentRef: DocumentReference<T>) {}
-
-  stream(): Observable<DocumentSnapshot<T>> {
-    return from(this.get());
+export class WriteBatchFirestoreDocumentDataAccessor<T> extends DefaultFirestoreDocumentDataAccessor<T> implements FirestoreDocumentDataAccessor<T> {
+  constructor(readonly batch: FirebaseFirestoreWriteBatch, documentRef: DocumentReference<T>) {
+    super(documentRef);
   }
 
-  create(data: WithFieldValue<T>): Promise<void> {
-    return createWithAccessor(this)(data) as Promise<void>;
-  }
-
-  exists(): Promise<boolean> {
-    return this.get().then((x) => x.exists());
-  }
-
-  get(): Promise<DocumentSnapshot<T>> {
-    return getDoc(this.documentRef);
-  }
-
-  delete(): Promise<void> {
+  override delete(): Promise<void> {
     this.batch.delete(this.documentRef);
     return Promise.resolve();
   }
 
-  set(data: WithFieldValue<T>, options?: SetOptions): Promise<void> {
+  override set(data: WithFieldValue<T>, options?: SetOptions): Promise<void> {
     this.batch.set(this.documentRef, data, options as SetOptions);
     return Promise.resolve();
   }
 
-  update(data: UpdateData<unknown>): Promise<void> {
+  override update(data: UpdateData<unknown>): Promise<void> {
     this.batch.update(this.documentRef, data as FirestoreUpdateData<T>);
     return Promise.resolve();
   }

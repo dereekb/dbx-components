@@ -110,6 +110,7 @@ export const mockItemPrivateIdentity = firestoreModelIdentity(mockItemIdentity, 
  */
 export interface MockItemPrivate {
   comments?: Maybe<string>;
+  values: string[];
   createdAt: Date;
 }
 
@@ -134,6 +135,7 @@ export const mockItemPrivateIdentifier = '0';
 export const mockItemPrivateConverter = snapshotConverterFunctions({
   fieldConversions: modelFieldConversions<MockItemPrivate, MockItemPrivateData>({
     comments: optionalFirestoreString(),
+    values: firestoreUniqueStringArray(),
     createdAt: firestoreDate({ saveDefaultAsNow: true })
   })
 });

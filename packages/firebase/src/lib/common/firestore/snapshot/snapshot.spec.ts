@@ -7,12 +7,14 @@ import { firestoreBoolean, firestoreDate, firestoreString, firestoreUniqueString
 export interface TestSnapshotDefaults {
   date: Date;
   uniqueStringArray: string[];
+  uniqueStringArrayWithDefaultValue: string[];
 }
 
 export const testSnapshotDefaultsConverter = snapshotConverterFunctions<TestSnapshotDefaults>({
   fields: {
     date: firestoreDate({ saveDefaultAsNow: true }),
-    uniqueStringArray: firestoreUniqueStringArray()
+    uniqueStringArray: firestoreUniqueStringArray(),
+    uniqueStringArrayWithDefaultValue: firestoreUniqueStringArray({ default: () => ['test'] })
   }
 });
 
@@ -61,6 +63,17 @@ describe('snapshotConverterFunctions()', () => {
         expect(Array.isArray(result.uniqueStringArray)).toBe(true);
       });
 
+      it('should apply default values when converting from an object with null values', () => {
+        const data = { uniqueStringArray: null, uniqueStringArrayWithDefaultValue: null };
+        const result = testSnapshotDefaultsConverter.from(testSnapshotDefaultsSnapshotData(data as any));
+
+        expect(result.date).not.toBeNull();
+        expect(isDate(result.date)).toBe(true);
+        expect(Array.isArray(result.uniqueStringArray)).toBe(true);
+        expect(Array.isArray(result.uniqueStringArrayWithDefaultValue)).toBe(true);
+        expect(result.uniqueStringArrayWithDefaultValue[0]).toBe('test');
+      });
+
       it('should exclude all unknown fields from the input data.', () => {
         const data = {
           date: new Date(),
@@ -79,7 +92,7 @@ describe('snapshotConverterFunctions()', () => {
         expect(x.b).not.toBeDefined();
         expect(x.c).not.toBeDefined();
 
-        expect(Object.keys(x).length).toBe(2);
+        expect(Object.keys(x).length).toBe(3);
       });
     });
 

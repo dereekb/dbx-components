@@ -1,6 +1,6 @@
 import { DocumentReference, WriteBatch as GoogleCloudWriteBatch, DocumentSnapshot } from '@google-cloud/firestore';
 import { from, Observable } from 'rxjs';
-import { WithFieldValue, FirestoreDocumentContext, FirestoreDocumentContextType, FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, FirestoreDocumentDeleteParams, FirestoreDocumentUpdateParams, UpdateData } from '@dereekb/firebase';
+import { WithFieldValue, FirestoreDocumentContext, FirestoreDocumentContextType, FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, FirestoreDocumentDeleteParams, FirestoreDocumentUpdateParams, UpdateData, DocumentData, FirestoreDataConverter } from '@dereekb/firebase';
 
 // MARK: Accessor
 /**
@@ -24,6 +24,10 @@ export class WriteBatchFirestoreDocumentDataAccessor<T> implements FirestoreDocu
 
   get(): Promise<DocumentSnapshot<T>> {
     return this.documentRef.get();
+  }
+
+  getWithConverter<U = DocumentData>(converter: null | FirestoreDataConverter<U>): Promise<DocumentSnapshot<U>> {
+    return this.documentRef.withConverter<U>(converter as FirestoreDataConverter<U>).get();
   }
 
   delete(params?: FirestoreDocumentDeleteParams): Promise<void> {
