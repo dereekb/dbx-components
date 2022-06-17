@@ -6,6 +6,7 @@ import { modifyModelMapFunctions } from './model.modify';
 
 interface TestConversionModel {
   name: string;
+  pureNumber: number;
   number: number;
   date: Date;
   test?: boolean;
@@ -13,6 +14,7 @@ interface TestConversionModel {
 
 interface TestConversionDataModel {
   name: string;
+  pureNumber: number;
   number: string;
   date?: number;
   test?: boolean;
@@ -21,6 +23,7 @@ interface TestConversionDataModel {
 const defaultTestValue: boolean = true;
 const defaultTestModel: TestConversionModel = {
   name: 'test',
+  pureNumber: 1,
   number: 1,
   date: new Date()
 };
@@ -30,6 +33,7 @@ const defaultNumberToValue = String(defaultNumberFromValue);
 
 const fields = modelFieldConversions<TestConversionModel, TestConversionDataModel>({
   name: copyField(''),
+  pureNumber: copyField(0),
   test: copyField<boolean | undefined>(defaultTestValue),
   date: {
     from: {
@@ -121,8 +125,9 @@ describe('makeModelMapFunctions', () => {
 
           const keysWithDefinedValue = countPOJOKeys(result, KeyValueTypleValueFilter.UNDEFINED);
 
-          expect(keysWithDefinedValue).toBe(1);
+          expect(keysWithDefinedValue).toBe(2);
           expect(result.name).toBe(defaultTestModel.name);
+          expect(result.pureNumber).toBe(defaultTestModel.pureNumber);
           expect(result.number).toBe(undefined);
           expect(result.test).toBe(undefined);
         });

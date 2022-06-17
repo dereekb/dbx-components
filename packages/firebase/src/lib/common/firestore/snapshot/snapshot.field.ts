@@ -59,15 +59,16 @@ export type FirestoreModelFieldMapFunctionsConfig<V, D> = ModelFieldMapFunctions
 
 export function firestoreField<V, D = unknown>(config: FirestoreFieldConfig<V, D>): FirestoreModelFieldMapFunctionsConfig<V, D> {
   return {
-    from: (config as FirestoreFieldConfigWithDefault<V, D>).default
-      ? {
-          default: (config as FirestoreFieldConfigWithDefault<V, D>).default,
-          convert: config.fromData
-        }
-      : {
-          defaultInput: (config as FirestoreFieldConfigWithDefaultData<V, D>).defaultData,
-          convert: config.fromData
-        },
+    from:
+      (config as FirestoreFieldConfigWithDefault<V, D>).default != null
+        ? {
+            default: (config as FirestoreFieldConfigWithDefault<V, D>).default,
+            convert: config.fromData
+          }
+        : {
+            defaultInput: (config as FirestoreFieldConfigWithDefaultData<V, D>).defaultData,
+            convert: config.fromData
+          },
     to: {
       default: (config.defaultBeforeSave ?? FIRESTORE_EMPTY_VALUE) as GetterOrValue<D>, // always store the default empty value as the default
       convert: config.toData
@@ -169,11 +170,14 @@ export function optionalFirestoreBoolean() {
   return firestorePassThroughField<Maybe<boolean>>();
 }
 
-export type FirestoreNumberFieldConfig = MapConfiguredFirestoreFieldConfigWithDefault<number, number>;
+export type FirestoreNumberFieldConfig = MapConfiguredFirestoreFieldConfigWithDefault<number, number> & {
+  saveDefault?: Maybe<boolean>;
+};
 
 export function firestoreNumber(config: FirestoreNumberFieldConfig) {
   return firestoreField<number, number>({
     default: config.default,
+    defaultBeforeSave: config.defaultBeforeSave ?? config.saveDefault ? config.default : undefined,
     fromData: passThrough,
     toData: passThrough
   });

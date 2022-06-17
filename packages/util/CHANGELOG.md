@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [8.0.2](https://github.com/dereekb/dbx-components/compare/v8.0.1-dev...v8.0.2) (2022-06-17)
+
+
+### Bug Fixes
+
+* fixed issue with snapshot falsy default values being ignored ([b433bc4](https://github.com/dereekb/dbx-components/commit/b433bc4a63b04d5aab99e1cf67b058cf20e7cc6a))
+
+
+
 ## [8.0.1](https://github.com/dereekb/dbx-components/compare/v8.0.0-dev...v8.0.1) (2022-06-17)
 
 

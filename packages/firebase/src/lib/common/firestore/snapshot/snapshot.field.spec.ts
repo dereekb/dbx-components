@@ -3,7 +3,7 @@ import { isValid } from 'date-fns';
 import { FirestoreModelKeyGrantedRoleArrayMap } from '../collection';
 import { DocumentSnapshot } from '../types';
 import { snapshotConverterFunctions } from './snapshot';
-import { firestoreArrayMap, firestoreDate, firestoreEncodedArray, firestoreEnum, firestoreField, firestoreMap, firestoreModelKeyGrantedRoleArrayMap, firestoreEnumArray, firestoreUniqueKeyedArray, firestoreUniqueStringArray } from './snapshot.field';
+import { firestoreArrayMap, firestoreDate, firestoreEncodedArray, firestoreEnum, firestoreField, firestoreMap, firestoreModelKeyGrantedRoleArrayMap, firestoreEnumArray, firestoreUniqueKeyedArray, firestoreUniqueStringArray, firestoreNumber } from './snapshot.field';
 
 describe('firestoreField()', () => {
   const defaultValue = -1;
@@ -95,6 +95,18 @@ describe('firestoreDate()', () => {
     const converted = dateField.to!.convert!(value);
     expect(converted).toBeDefined();
     expect(converted).toBe(dateString);
+  });
+});
+
+describe('firestoreNumber()', () => {
+  const numberField = firestoreNumber({ default: 0, defaultBeforeSave: 0 });
+
+  it('should return the default value if the input is not defined.', () => {
+    const { from, to } = modelFieldMapFunctions(numberField);
+
+    const result = from(undefined);
+
+    expect(result).toBe(0);
   });
 });
 
