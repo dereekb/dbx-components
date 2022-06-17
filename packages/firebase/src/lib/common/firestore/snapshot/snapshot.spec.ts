@@ -2,10 +2,12 @@ import { asGetter } from '@dereekb/util';
 import { isDate } from 'date-fns';
 import { DocumentSnapshot } from '../types';
 import { snapshotConverterFunctions } from './snapshot';
-import { firestoreBoolean, firestoreDate, firestoreString, firestoreUniqueStringArray } from './snapshot.field';
+import { firestoreBoolean, firestoreDate, firestoreNumber, firestoreString, firestoreUniqueStringArray } from './snapshot.field';
 
 export interface TestSnapshotDefaults {
   date: Date;
+  number: number;
+  numberWithStore: number;
   uniqueStringArray: string[];
   uniqueStringArrayWithDefaultValue: string[];
 }
@@ -13,6 +15,8 @@ export interface TestSnapshotDefaults {
 export const testSnapshotDefaultsConverter = snapshotConverterFunctions<TestSnapshotDefaults>({
   fields: {
     date: firestoreDate({ saveDefaultAsNow: true }),
+    number: firestoreNumber({ default: 0 }),
+    numberWithStore: firestoreNumber({ default: 0, saveDefault: true }),
     uniqueStringArray: firestoreUniqueStringArray(),
     uniqueStringArrayWithDefaultValue: firestoreUniqueStringArray({ default: () => ['test'] })
   }
@@ -51,6 +55,7 @@ describe('snapshotConverterFunctions()', () => {
         const x = testSnapshotDefaultsConverter.from(testSnapshotDefaultsSnapshotData(data));
 
         expect(x.date).toBeDefined();
+        expect(x.numberWithStore).toBe(0);
         expect(isDate(x.date)).toBe(true);
       });
 
@@ -60,15 +65,19 @@ describe('snapshotConverterFunctions()', () => {
 
         expect(result.date).not.toBeNull();
         expect(isDate(result.date)).toBe(true);
+        expect(result.number).toBe(0);
+        expect(result.numberWithStore).toBe(0);
         expect(Array.isArray(result.uniqueStringArray)).toBe(true);
       });
 
       it('should apply default values when converting from an object with null values', () => {
-        const data = { uniqueStringArray: null, uniqueStringArrayWithDefaultValue: null };
+        const data = { number: null, numberWithStore: null, uniqueStringArray: null, uniqueStringArrayWithDefaultValue: null };
         const result = testSnapshotDefaultsConverter.from(testSnapshotDefaultsSnapshotData(data as any));
 
         expect(result.date).not.toBeNull();
         expect(isDate(result.date)).toBe(true);
+        expect(result.number).toBe(0);
+        expect(result.numberWithStore).toBe(0);
         expect(Array.isArray(result.uniqueStringArray)).toBe(true);
         expect(Array.isArray(result.uniqueStringArrayWithDefaultValue)).toBe(true);
         expect(result.uniqueStringArrayWithDefaultValue[0]).toBe('test');
@@ -77,6 +86,7 @@ describe('snapshotConverterFunctions()', () => {
       it('should exclude all unknown fields from the input data.', () => {
         const data = {
           date: new Date(),
+          number: 100,
           uniqueStringArray: null,
           a: 'dgsdf',
           b: 5,
@@ -87,12 +97,13 @@ describe('snapshotConverterFunctions()', () => {
 
         expect(x.date).toBeDefined();
         expect(isDate(x.date)).toBe(true);
+        expect(x.number).toBe(100);
 
         expect(x.a).not.toBeDefined();
         expect(x.b).not.toBeDefined();
         expect(x.c).not.toBeDefined();
 
-        expect(Object.keys(x).length).toBe(3);
+        expect(Object.keys(x).length).toBe(5);
       });
     });
 
