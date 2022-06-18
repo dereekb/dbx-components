@@ -2,6 +2,8 @@ import { filterMaybe } from '@dereekb/rxjs';
 import { SubscriptionObject } from './../subscription';
 import { of, timeout, first, tap, Subject } from 'rxjs';
 import { onMatchDelta } from './delta';
+import { failDueToSuccess, failDueToSuccessError, failWithDoneDueToSuccess, failWithJestDoneCallback } from '@dereekb/util/test';
+import { tapAfterTimeout, throwErrorAfterTimeout } from './timeout';
 
 describe('onMatchDelta', () => {
   const from = 0;
@@ -49,17 +51,10 @@ describe('onMatchDelta', () => {
             requireConsecutive: true
           }),
           first(),
-          timeout({
-            first: 1000,
-            with: () =>
-              of(null as any as number).pipe(
-                tap(() => done()),
-                filterMaybe()
-              )
-          })
+          tapAfterTimeout(1000, () => done())
         )
         .subscribe(() => {
-          fail();
+          failWithJestDoneCallback(done);
         });
 
       subject.next(from);
@@ -69,7 +64,7 @@ describe('onMatchDelta', () => {
   });
 
   describe('requireConsecutive=false', () => {
-    it('should should emit once the target "from" value has been seen once.', () => {
+    it('should should emit once the target "from" value has been seen once.', (done) => {
       sub.subscription = subject
         .pipe(
           onMatchDelta({
@@ -78,14 +73,8 @@ describe('onMatchDelta', () => {
             requireConsecutive: true
           }),
           first(),
-          timeout({
-            first: 1000,
-            with: () =>
-              of(null as any as number).pipe(
-                tap(() => fail()),
-                filterMaybe()
-              )
-          })
+          // timeout after 1000
+          throwErrorAfterTimeout(1000, () => fail())
         )
         .subscribe((value) => {
           expect(value).toBe(to);

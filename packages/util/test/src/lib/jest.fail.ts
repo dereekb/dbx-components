@@ -7,6 +7,29 @@
 import { Building, isPromise, promiseReference, PromiseReference, PromiseOrValue } from '@dereekb/util';
 import { BaseError } from 'make-error';
 
+// MARK: Types
+interface JestDoneCallback {
+  (...args: any[]): any;
+  /**
+   * NOTE: Not typically available in Jest, but here for legacy purposes.
+   *
+   * @param error
+   */
+  fail(error?: string | { message: string }): any;
+}
+
+export function failWithJestDoneCallback(done: JestDoneCallback, e: unknown = new Error('fail')) {
+  if (done.fail != null) {
+    done.fail(e as Error);
+  } else {
+    done(e);
+  }
+}
+
+export type JestProvidesCallbackWithDone = (cb: JestDoneCallback) => void | undefined;
+export type JestProvidesCallback = JestProvidesCallbackWithDone | (() => Promise<unknown>);
+
+// MARK: Errors
 /**
  * Error thrown by fail() and used by expectError()
  */
@@ -33,6 +56,10 @@ export function failDueToSuccess() {
   throw failDueToSuccessError();
 }
 
+export function failWithDoneDueToSuccess(done: JestDoneCallback) {
+  failWithJestDoneCallback(done, failDueToSuccessError());
+}
+
 export function EXPECT_ERROR_DEFAULT_HANDLER(e: unknown) {
   if (e instanceof JestExpectedFailError) {
     // success
@@ -41,6 +68,7 @@ export function EXPECT_ERROR_DEFAULT_HANDLER(e: unknown) {
   }
 }
 
+// MARK: Expect Fail
 /**
  * Function that expects any failure to be thrown, then throws a JestExpectedFailError.
  *
@@ -93,19 +121,7 @@ export function expectSuccessfulFail<R extends PromiseOrValue<void>>(errorFn: ()
   }
 }
 
-interface JestDoneCallback {
-  (...args: any[]): any;
-  /**
-   * NOTE: Not typically available in Jest, but here for legacy purposes.
-   *
-   * @param error
-   */
-  fail(error?: string | { message: string }): any;
-}
-
-export type JestProvidesCallbackWithDone = (cb: JestDoneCallback) => void | undefined;
-export type JestProvidesCallback = JestProvidesCallbackWithDone | (() => Promise<unknown>);
-
+// MARK: ShouldFail
 interface JestShouldFailDoneCallback extends JestDoneCallback {
   failSuccessfully(): void;
 }
@@ -127,11 +143,7 @@ export function shouldFail(fn: JestShouldFailProvidesCallback): JestProvidesCall
   return (done) => {
     function handleError(e: unknown) {
       if (!(e instanceof JestExpectedFailError)) {
-        if (done.fail != null) {
-          done.fail(e as Error);
-        } else {
-          done(e);
-        }
+        failWithJestDoneCallback(done, e);
       } else {
         done();
       }

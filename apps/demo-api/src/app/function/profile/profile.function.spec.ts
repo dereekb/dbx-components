@@ -4,6 +4,7 @@ import { profileIdentity, SetProfileUsernameParams, UpdateProfileParams } from '
 import { DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserContext } from '../../../test/fixture';
 import { describeCloudFunctionTest } from '@dereekb/firebase-server/test';
 import { firestoreModelKey, onCallTypedModelParams } from '@dereekb/firebase';
+import { expectFail, expectSuccessfulFail, itShouldFail, shouldFail } from '@dereekb/util/test';
 
 /**
  * NOTES:
@@ -42,7 +43,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
 
       // second user
       demoAuthorizedUserContext({ f }, (u2) => {
-        it('should fail if the username is already taken.', async () => {
+        itShouldFail('if the username is already taken.', async () => {
           const fn = f.fnWrapper.wrapV1CloudFunction(profileSetUsername(f.nestAppPromiseGetter));
 
           const params: SetProfileUsernameParams = {
@@ -53,12 +54,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
           await fn(params, await u.makeContextOptions());
 
           // attempt to take with user 2
-          try {
-            await fn(params, await u2.makeContextOptions());
-            fail();
-          } catch (e) {
-            expect(e).toBeDefined();
-          }
+          await expectFail(async () => fn(params, await u2.makeContextOptions()));
         });
       });
     });
