@@ -78,6 +78,6 @@
       }
     }
   },
-  "implicitDependencies": ["!firebase-server-test", "!firebase-test"],
+  "implicitDependencies": ["!util-test", "!firebase-server-test", "!firebase-test"],
   "tags": []
 }

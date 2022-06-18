@@ -23,5 +23,5 @@
     }
   },
   "tags": [],
-  "implicitDependencies": ["demo", "demo-api"]
+  "implicitDependencies": ["demo", "demo-api", "!util-test"]
 }
