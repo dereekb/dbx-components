@@ -1,4 +1,4 @@
-import { failDueToSuccessError } from '@dereekb/util/test';
+import { failDueToSuccess } from '@dereekb/util/test';
 import { DbxInjectionContextDirective } from './injection.context.directive';
 import { DbxInjectionComponentModule } from './injection.component.module';
 import { Component, OnDestroy, Type, ViewChild } from '@angular/core';
@@ -195,7 +195,7 @@ describe('DbxInjectionContextDirective', () => {
             })
             .then(
               () => {
-                failDueToSuccessError();
+                failDueToSuccess();
               },
               (e) => {
                 expect(e).toBeDefined();
@@ -216,7 +216,7 @@ describe('DbxInjectionContextDirective', () => {
             })
             .then(
               () => {
-                failDueToSuccessError();
+                failDueToSuccess();
               },
               (e) => {
                 expect(e).toBeDefined();
@@ -258,7 +258,7 @@ describe('DbxInjectionContextDirective', () => {
               })
               .then(
                 () => {
-                  failDueToSuccessError();
+                  failDueToSuccess();
                 },
                 (e) => {
                   expect(e).toBeDefined();

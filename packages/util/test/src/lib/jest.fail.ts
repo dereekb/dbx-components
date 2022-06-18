@@ -4,11 +4,11 @@
  * Since fail() was silently removed, we redefine it.
  */
 
-import { Building, isPromise, promiseReference, PromiseReference, PromiseOrValue } from '@dereekb/util';
+import { Building, isPromise, promiseReference, PromiseReference, PromiseOrValue, build } from '@dereekb/util';
 import { BaseError } from 'make-error';
 
 // MARK: Types
-interface JestDoneCallback {
+export interface JestDoneCallback {
   (...args: any[]): any;
   /**
    * NOTE: Not typically available in Jest, but here for legacy purposes.
@@ -40,11 +40,11 @@ export type JestProvidesCallback = JestProvidesCallbackWithDone | (() => Promise
  */
 export class JestExpectedFailError extends BaseError {}
 
-export function failSuccessfullyError(message?: string) {
+export function failSuccessfullyError(message?: string): JestExpectedFailError {
   return new JestExpectedFailError(message);
 }
 
-export function failSuccessfully(message?: string) {
+export function failSuccessfully(message?: string): never {
   throw failSuccessfullyError(message);
 }
 
@@ -53,19 +53,19 @@ export function failSuccessfully(message?: string) {
  */
 export class JestUnexpectedSuccessFailureError extends BaseError {}
 
-export function failDueToSuccessError(message?: string) {
+export function failDueToSuccessError(message?: string): JestUnexpectedSuccessFailureError {
   return new JestUnexpectedSuccessFailureError(message ?? 'expected an error to occur but was successful instead');
 }
 
-export function failTest(message?: string) {
+export function failTest(message?: string): never {
   throw failDueToSuccessError(message);
 }
 
-export function failDueToSuccess() {
+export function failDueToSuccess(): never {
   throw failDueToSuccessError();
 }
 
-export function failWithDoneDueToSuccess(done: JestDoneCallback) {
+export function failWithDoneDueToSuccess(done: JestDoneCallback): void {
   failWithJestDoneCallback(done, failDueToSuccessError());
 }
 
@@ -131,7 +131,7 @@ export function expectSuccessfulFail<R extends PromiseOrValue<void>>(errorFn: ()
 }
 
 // MARK: ShouldFail
-interface JestShouldFailDoneCallback extends JestDoneCallback {
+export interface JestShouldFailDoneCallback extends JestDoneCallback {
   failSuccessfully(): void;
 }
 
@@ -160,33 +160,32 @@ export function shouldFail(fn: JestShouldFailProvidesCallback): JestProvidesCall
       }
     }
 
-    function handleErrorDueToSuccess() {
-      handleError(failDueToSuccessError());
-    }
-
     expectSuccessfulFail(() => {
       let result: PromiseOrValue<any>;
 
       if (usesDoneCallback) {
-        const fakeDone = fakeDoneHandler();
-        result = (fn as JestProvidesCallbackWithDone)(fakeDone as JestDoneCallback);
+        const fakeDone = build<JestShouldFailDoneCallback & JestFakeDoneHandler>({
+          base: fakeDoneHandler(),
+          build: (x) => {
+            x.failSuccessfully = () => {
+              (fakeDone as JestFakeDoneHandler)(failSuccessfullyError());
+            };
+          }
+        });
 
-        if (isPromise(result)) {
-          throw new Error('Configured to use "done" value while returning a promise. Configure your test to use one or the other.');
+        const callbackWithDoneResult = (fn as JestProvidesCallbackWithDone)(fakeDone as unknown as JestShouldFailDoneCallback);
+
+        if (isPromise(callbackWithDoneResult)) {
+          fakeDone.reject(new Error('Configured to use "done" value while returning a promise. Configure your test to use one or the other.'));
         }
 
         // return the fake done promise. Done/fail will resolve as a promise.
-        return fakeDone._ref.promise;
+        result = fakeDone._ref.promise;
       } else {
         result = (fn as JestShouldFailProvidesCallbackWithResult)();
-
-        if (isPromise(result)) {
-          return result; // return the promise
-        } else {
-          // done, but did not fail
-          handleErrorDueToSuccess();
-        }
       }
+
+      return result;
     }, handleError);
   };
 }

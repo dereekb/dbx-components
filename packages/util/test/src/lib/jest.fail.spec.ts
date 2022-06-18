@@ -1,4 +1,4 @@
-import { failSuccessfully, fakeDoneHandler, expectSuccessfulFail, JestExpectedFailError, shouldFail, JestProvidesCallback, failDueToSuccess, JestUnexpectedSuccessFailureError, expectFail } from './jest.fail';
+import { failSuccessfully, fakeDoneHandler, expectSuccessfulFail, JestExpectedFailError, shouldFail, JestProvidesCallback, failDueToSuccess, JestUnexpectedSuccessFailureError, expectFail, JestDoneCallback } from './jest.fail';
 
 describe('expectFail', () => {
   describe('sync', () => {
@@ -165,6 +165,10 @@ describe('shouldFail', () => {
         failSuccessfully();
       })
     );
+
+    testFailureCaseWithFunction('should fail if a promise is returned', ((done: JestDoneCallback) => {
+      return Promise.resolve(0 as any);
+    }) as any);
 
     testFailureCaseWithFunction('should fail done returns an error', (done) => {
       done(new Error('success'));
