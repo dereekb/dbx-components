@@ -1,5 +1,5 @@
 import { filterMaybe } from '@dereekb/rxjs';
-import { of, timeout, tap, MonoTypeOperatorFunction, throwError } from 'rxjs';
+import { of, timeout, tap, MonoTypeOperatorFunction, throwError, map } from 'rxjs';
 import { Getter } from '@dereekb/util';
 
 export function tapAfterTimeout<T>(timeoutDelay: number, useFn: () => void): MonoTypeOperatorFunction<T> {
@@ -12,6 +12,10 @@ export function tapAfterTimeout<T>(timeoutDelay: number, useFn: () => void): Mon
 export function throwErrorAfterTimeout<T>(timeoutDelay: number, error: Getter<unknown>): MonoTypeOperatorFunction<T> {
   return timeout({
     first: timeoutDelay,
-    with: () => of(null as unknown as T).pipe(throwError(() => error()) as any, filterMaybe())
+    with: () =>
+      of(null as unknown as T).pipe(
+        map(() => throwError(error)),
+        filterMaybe()
+      )
   }) as MonoTypeOperatorFunction<T>;
 }

@@ -18,7 +18,7 @@ interface JestDoneCallback {
   fail(error?: string | { message: string }): any;
 }
 
-export function failWithJestDoneCallback(done: JestDoneCallback, e: unknown = new Error('fail')) {
+export function failWithJestDoneCallback(done: JestDoneCallback, e: unknown = new Error('failed test')) {
   if (done.fail != null) {
     done.fail(e as Error);
   } else {

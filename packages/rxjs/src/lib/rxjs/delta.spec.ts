@@ -64,24 +64,28 @@ describe('onMatchDelta', () => {
   });
 
   describe('requireConsecutive=false', () => {
-    it('should should emit once the target "from" value has been seen once.', (done) => {
+    it('should should emit once the target "from" value has been seen once followed by the "to" value at any time.', (done) => {
       sub.subscription = subject
         .pipe(
           onMatchDelta({
             from,
             to,
-            requireConsecutive: true
+            requireConsecutive: false
           }),
           first(),
-          // timeout after 1000
-          throwErrorAfterTimeout(1000, () => fail())
+          tapAfterTimeout(1000, () => failWithJestDoneCallback(done))
         )
         .subscribe((value) => {
           expect(value).toBe(to);
+          done();
         });
 
       subject.next(from);
       subject.next(2);
+      subject.next(3);
+      subject.next(4);
+      subject.next(5);
+      subject.next(6);
       subject.next(to);
     });
   });
