@@ -1,9 +1,8 @@
-import { filterMaybe } from '@dereekb/rxjs';
 import { SubscriptionObject } from './../subscription';
-import { of, timeout, first, tap, Subject } from 'rxjs';
+import { first, Subject } from 'rxjs';
 import { onMatchDelta } from './delta';
-import { failDueToSuccess, failDueToSuccessError, failWithDoneDueToSuccess, failWithJestDoneCallback } from '@dereekb/util/test';
-import { tapAfterTimeout, throwErrorAfterTimeout } from './timeout';
+import { failWithJestDoneCallback } from '@dereekb/util/test';
+import { tapAfterTimeout } from './timeout';
 
 describe('onMatchDelta', () => {
   const from = 0;

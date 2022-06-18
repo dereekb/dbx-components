@@ -4,7 +4,7 @@ import { profileIdentity, SetProfileUsernameParams, UpdateProfileParams } from '
 import { DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserContext } from '../../../test/fixture';
 import { describeCloudFunctionTest } from '@dereekb/firebase-server/test';
 import { firestoreModelKey, onCallTypedModelParams } from '@dereekb/firebase';
-import { expectFail, expectSuccessfulFail, itShouldFail, shouldFail } from '@dereekb/util/test';
+import { expectFail, itShouldFail } from '@dereekb/util/test';
 
 /**
  * NOTES:

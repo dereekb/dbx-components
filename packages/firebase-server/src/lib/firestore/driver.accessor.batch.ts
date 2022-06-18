@@ -1,6 +1,6 @@
 import { DocumentReference, WriteBatch as GoogleCloudWriteBatch, DocumentSnapshot } from '@google-cloud/firestore';
 import { from, Observable } from 'rxjs';
-import { WithFieldValue, FirestoreDocumentContext, FirestoreDocumentContextType, FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, FirestoreDocumentDeleteParams, FirestoreDocumentUpdateParams, UpdateData, DocumentData, FirestoreDataConverter, unsupportedFirestoreDriverFunctionError } from '@dereekb/firebase';
+import { WithFieldValue, FirestoreDocumentContext, FirestoreDocumentContextType, FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, FirestoreDocumentDeleteParams, FirestoreDocumentUpdateParams, UpdateData, DocumentData, FirestoreDataConverter } from '@dereekb/firebase';
 
 // MARK: Accessor
 /**

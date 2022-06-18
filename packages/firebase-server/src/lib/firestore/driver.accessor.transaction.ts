@@ -1,6 +1,6 @@
 import { DocumentReference, DocumentSnapshot, Transaction as GoogleCloudTransaction, SetOptions } from '@google-cloud/firestore';
 import { from, Observable } from 'rxjs';
-import { WithFieldValue, UpdateData, FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, FirestoreDocumentContext, FirestoreDocumentContextType, FirestoreDocumentUpdateParams, FirestoreDataConverter, DocumentData, unsupportedFirestoreDriverFunctionError } from '@dereekb/firebase';
+import { WithFieldValue, UpdateData, FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, FirestoreDocumentContext, FirestoreDocumentContextType, FirestoreDocumentUpdateParams, FirestoreDataConverter, DocumentData } from '@dereekb/firebase';
 
 // MARK: Accessor
 /**

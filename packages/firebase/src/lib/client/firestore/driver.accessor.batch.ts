@@ -1,7 +1,5 @@
-import { DocumentReference, DocumentSnapshot, getDoc, WriteBatch as FirebaseFirestoreWriteBatch, UpdateData as FirestoreUpdateData } from '@firebase/firestore';
-import { from, Observable } from 'rxjs';
+import { DocumentReference, WriteBatch as FirebaseFirestoreWriteBatch, UpdateData as FirestoreUpdateData } from '@firebase/firestore';
 import { FirestoreDocumentContext, UpdateData, WithFieldValue, FirestoreDocumentContextType, FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, SetOptions } from '../../common/firestore';
-import { createWithAccessor } from './driver.accessor.create';
 import { DefaultFirestoreDocumentDataAccessor } from './driver.accessor.default';
 
 // MARK: Accessor
