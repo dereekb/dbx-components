@@ -1,3 +1,4 @@
+import { itShouldFail, expectFail } from '@dereekb/util/test';
 import { firstValueFrom } from 'rxjs';
 import { SubscriptionObject } from '@dereekb/rxjs';
 import { Transaction, DocumentReference, WriteBatch, FirestoreDocumentAccessor, makeDocuments, FirestoreDocumentDataAccessor, FirestoreContext, FirestoreDocument, RunTransaction, FirebaseAuthUserId, DocumentSnapshot, FirestoreDataConverter } from '@dereekb/firebase';
@@ -249,40 +250,34 @@ export function describeAccessorDriverTests(f: MockItemCollectionFixture) {
           expect(exists).toBe(true);
         });
 
-        it('should throw an exception if the path is invalid (points to collection)', () => {
-          try {
+        itShouldFail('if the path is invalid (points to collection)', () => {
+          expectFail(() => {
             mockItemFirestoreDocumentAccessor.loadDocumentForKey('path');
-            fail();
-          } catch (e) {
-            expect(e).toBeDefined();
-          }
+          });
         });
 
-        it('should throw an exception if the path points to a different type/collection', () => {
-          try {
+        itShouldFail('if the path points to a different type/collection', () => {
+          expectFail(() => {
             mockItemFirestoreDocumentAccessor.loadDocumentForKey('path/id');
-            fail();
-          } catch (e) {
-            expect(e).toBeDefined();
-          }
+          });
         });
 
-        it('should throw an exception if the path is empty.', () => {
-          try {
+        itShouldFail('if the path is empty.', () => {
+          expectFail(() => {
             mockItemFirestoreDocumentAccessor.loadDocumentForKey('');
-            fail();
-          } catch (e) {
-            expect(e).toBeDefined();
-          }
+          });
         });
 
-        it('should throw an exception if the path is undefined.', () => {
-          try {
+        itShouldFail('if the path is undefined.', () => {
+          expectFail(() => {
             mockItemFirestoreDocumentAccessor.loadDocumentForKey(undefined as any);
-            fail();
-          } catch (e) {
-            expect(e).toBeDefined();
-          }
+          });
+        });
+
+        itShouldFail('if the path is null.', () => {
+          expectFail(() => {
+            mockItemFirestoreDocumentAccessor.loadDocumentForKey(null as any);
+          });
         });
       });
 
@@ -292,22 +287,16 @@ export function describeAccessorDriverTests(f: MockItemCollectionFixture) {
           expect(document).toBeDefined();
         });
 
-        it('should throw an exception if the id is empty.', () => {
-          try {
+        itShouldFail('if the id is empty.', () => {
+          expectFail(() => {
             mockItemFirestoreDocumentAccessor.loadDocumentForId('');
-            fail();
-          } catch (e) {
-            expect(e).toBeDefined();
-          }
+          });
         });
 
-        it('should throw an exception if the id is undefined.', () => {
-          try {
+        itShouldFail('if the id is undefined.', () => {
+          expectFail(() => {
             mockItemFirestoreDocumentAccessor.loadDocumentForId(undefined as any);
-            fail();
-          } catch (e) {
-            expect(e).toBeDefined();
-          }
+          });
         });
       });
     });
@@ -419,18 +408,13 @@ export function describeAccessorTests<T>(init: () => DescribeAccessorTests<T>) {
       expect(exists).toBe(true);
     });
 
-    it('should throw an exception if the document exists.', async () => {
+    itShouldFail('if the document exists.', async () => {
       const data = await c.accessor.get();
 
       const exists = await c.accessor.exists();
       expect(exists).toBe(true);
 
-      try {
-        await c.accessor.create(data);
-        fail();
-      } catch (e) {
-        expect(e).toBeDefined();
-      }
+      await expectFail(() => c.accessor.create(data));
     });
   });
 
@@ -464,7 +448,7 @@ export function describeAccessorTests<T>(init: () => DescribeAccessorTests<T>) {
       expect(c.hasDataFromUpdate(snapshot.data())).toBe(true);
     });
 
-    it('should fail if the document does not exist.', async () => {
+    itShouldFail('if the document does not exist.', async () => {
       await c.accessor.delete();
 
       const snapshot = await c.accessor.get();
@@ -473,12 +457,7 @@ export function describeAccessorTests<T>(init: () => DescribeAccessorTests<T>) {
       const exists = await c.accessor.exists();
       expect(exists).toBe(false);
 
-      try {
-        await c.accessor.update(c.dataForUpdate());
-        fail();
-      } catch (e) {
-        expect(e).toBeDefined();
-      }
+      await expectFail(() => c.accessor.update(c.dataForUpdate()));
     });
 
     // todo: test that update does not call the converter when setting values.

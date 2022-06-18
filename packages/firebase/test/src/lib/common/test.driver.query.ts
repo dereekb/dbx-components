@@ -1,3 +1,4 @@
+import { expectFail, itShouldFail } from '@dereekb/util/test';
 import { SubscriptionObject } from '@dereekb/rxjs';
 import { filter, first, from, skip } from 'rxjs';
 import { firestoreIdBatchVerifierFactory, limit, orderBy, startAfter, startAt, where, limitToLast, endAt, endBefore, makeDocuments, FirestoreQueryFactoryFunction, startAtValue, endAtValue, whereDocumentId, FirebaseAuthUserId } from '@dereekb/firebase';
@@ -203,7 +204,7 @@ export function describeQueryDriverTests(f: MockItemCollectionFixture) {
               });
 
               describe('whereDocumentId', () => {
-                it('should fail to query on collection groups.', async () => {
+                itShouldFail('to query on collection groups.', async () => {
                   // https://stackoverflow.com/questions/56149601/firestore-collection-group-query-on-documentid
 
                   const targetId = 'targetid';
@@ -224,12 +225,7 @@ export function describeQueryDriverTests(f: MockItemCollectionFixture) {
                   );
                   */
 
-                  try {
-                    await querySubItems(whereDocumentId('==', targetId)).getDocs();
-                    fail('should have failed.');
-                  } catch (e) {
-                    expect(e).toBeDefined();
-                  }
+                  await expectFail(() => querySubItems(whereDocumentId('==', targetId)).getDocs());
                 });
               });
             });
@@ -453,18 +449,13 @@ export function describeQueryDriverTests(f: MockItemCollectionFixture) {
             expect(result.docs[1].data().value).toBe('4');
           });
 
-          it('should fail if orderby is not provided.', async () => {
+          itShouldFail('if orderby is not provided.', async () => {
             const limitCount = 2;
 
             const unlimited = await query().getDocs();
             expect(unlimited.docs.length).toBe(testDocumentCount);
 
-            try {
-              await query(limitToLast(limitCount)).getDocs();
-              fail();
-            } catch (e) {
-              expect(e).toBeDefined();
-            }
+            await expectFail(() => query(limitToLast(limitCount)).getDocs());
           });
 
           it('should stream results.', (done) => {

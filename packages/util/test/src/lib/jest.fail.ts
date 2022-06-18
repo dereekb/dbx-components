@@ -18,6 +18,11 @@ interface JestDoneCallback {
   fail(error?: string | { message: string }): any;
 }
 
+/**
+ * Passes the error to the JestDoneCallback.
+ * @param done
+ * @param e
+ */
 export function failWithJestDoneCallback(done: JestDoneCallback, e: unknown = new Error('failed test')) {
   if (done.fail != null) {
     done.fail(e as Error);
@@ -48,8 +53,12 @@ export function failSuccessfully(message?: string) {
  */
 export class JestUnexpectedSuccessFailureError extends BaseError {}
 
-export function failDueToSuccessError() {
-  return new JestUnexpectedSuccessFailureError('expected an error to occur but was successful instead');
+export function failDueToSuccessError(message?: string) {
+  return new JestUnexpectedSuccessFailureError(message ?? 'expected an error to occur but was successful instead');
+}
+
+export function failTest(message?: string) {
+  throw failDueToSuccessError(message);
 }
 
 export function failDueToSuccess() {
@@ -181,8 +190,19 @@ export function shouldFail(fn: JestShouldFailProvidesCallback): JestProvidesCall
 }
 
 // MARK: It
-export function itShouldFail(describe: string, fn: JestShouldFailProvidesCallback) {
-  it(`should fail ${describe}`, shouldFail(fn));
+export function itShouldFail(fn: JestShouldFailProvidesCallback): void;
+export function itShouldFail(describe: string, fn: JestShouldFailProvidesCallback): void;
+export function itShouldFail(describeOrFn: string | JestShouldFailProvidesCallback, fn?: JestShouldFailProvidesCallback): void {
+  let description;
+
+  if (typeof describeOrFn === 'string') {
+    description = `should fail ${describeOrFn}`;
+  } else {
+    fn = describeOrFn;
+    description = 'should fail';
+  }
+
+  it(description, shouldFail(fn as JestShouldFailProvidesCallback));
 }
 
 // MARK: Fake Done
