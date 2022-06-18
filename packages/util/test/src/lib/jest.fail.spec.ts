@@ -166,6 +166,13 @@ describe('shouldFail', () => {
       })
     );
 
+    it(
+      'should pass if done.failSuccessfully() is called.',
+      shouldFail((done) => {
+        done.failSuccessfully();
+      })
+    );
+
     testFailureCaseWithFunction('should fail if a promise is returned', ((done: JestDoneCallback) => {
       return Promise.resolve(0 as any);
     }) as any);

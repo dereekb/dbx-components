@@ -137,7 +137,7 @@ export interface JestShouldFailDoneCallback extends JestDoneCallback {
 
 export type JestShouldFailProvidesCallbackWithDone = (cb: JestShouldFailDoneCallback) => void | undefined;
 export type JestShouldFailProvidesCallbackWithResult = () => PromiseOrValue<unknown>;
-export type JestShouldFailProvidesCallback = JestProvidesCallbackWithDone | JestShouldFailProvidesCallbackWithResult;
+export type JestShouldFailProvidesCallback = JestShouldFailProvidesCallbackWithDone | JestShouldFailProvidesCallbackWithResult;
 
 /**
  * Used to wrap a Jest testing function and watch for JestExpectedFailError errors in order to pass the test. Other exceptions are treated normally as failures.
