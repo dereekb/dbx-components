@@ -19,7 +19,7 @@ export interface OnMatchDeltaConfig<T> {
    */
   isMatch?: (a: T, b: T) => boolean;
   /**
-   * Whether or not the two values must be emitted consencutively.
+   * Whether or not the two values must be emitted consecutively.
    *
    * For example, if requiredConsecutive=true and we are waiting for 1 -> 2, and the emissions are 1,0,2, the observable function will not emit 2.
    */
@@ -87,6 +87,8 @@ export function onMatchDelta<T>(config: OnMatchDeltaConfig<T>): MonoTypeOperator
             if (!acc.fromMatch || requireConsecutive) {
               fromMatch = isMatch(from, next);
               value = next;
+            } else if (!requireConsecutive) {
+              value = acc.value;
             }
           }
 

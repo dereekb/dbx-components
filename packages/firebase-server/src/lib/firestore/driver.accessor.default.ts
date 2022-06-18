@@ -35,7 +35,7 @@ export class DefaultFirestoreDocumentDataAccessor<T> implements FirestoreDocumen
   }
 
   update(data: UpdateData<T>, params?: FirestoreDocumentUpdateParams): Promise<GoogleCloudWriteResult> {
-    return this.documentRef.update(data as FirebaseFirestore.UpdateData, params?.precondition ?? {});
+    return params?.precondition ? this.documentRef.update(data as FirebaseFirestore.UpdateData<T>, params.precondition) : this.documentRef.update(data as FirebaseFirestore.UpdateData<T>);
   }
 }
 

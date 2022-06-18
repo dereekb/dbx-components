@@ -313,7 +313,7 @@ export function firestoreMap<T, K extends string = string>(config: FirestoreMapF
   const makeCopy = (mapFieldValues ? mapObjectMapFunction(mapFieldValues) : copyObject) as CopyObjectFunction<FirestoreMapFieldType<T, K>>;
 
   return firestoreField<FirestoreMapFieldType<T, K>, FirestoreMapFieldType<T, K>>({
-    default: config.default ?? ((() => {}) as Getter<FirestoreMapFieldType<T, K>>),
+    default: config.default ?? ((() => ({})) as Getter<FirestoreMapFieldType<T, K>>),
     fromData: passThrough,
     toData: (model) => {
       const copy = makeCopy(model);

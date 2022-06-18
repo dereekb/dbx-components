@@ -206,6 +206,7 @@ export function endBefore<T = DocumentData>(snapshot: DocumentSnapshot<T>): Fire
 export type FirestoreQueryConstraintHandlerFunction<B, D = unknown> = (builder: B, data: D, constraint: FirestoreQueryConstraint<D>) => B;
 
 export type FirestoreQueryConstraintHandlerMap<B> = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: Maybe<FirestoreQueryConstraintHandlerFunction<B, any>>;
 };
 

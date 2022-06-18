@@ -13,7 +13,7 @@ export interface OnCallTypedModelParams<T = unknown> extends FirestoreModelNameR
  * @param data
  * @returns
  */
-export function onCallTypedModelParams<T extends unknown>(modelType: FirestoreModelName, data: T): OnCallTypedModelParams<T> {
+export function onCallTypedModelParams<T>(modelType: FirestoreModelName, data: T): OnCallTypedModelParams<T> {
   return {
     modelType,
     data

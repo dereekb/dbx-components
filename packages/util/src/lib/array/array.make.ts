@@ -1,4 +1,4 @@
-import { FactoryWithInput, Factory, makeWithFactory } from '../getter';
+import { FactoryWithInput } from '../getter';
 import { randomNumberFactory, RandomNumberFactoryInput, RandomNumberFactory } from '../number/random';
 import { arrayFactory } from './array.factory';
 

@@ -2,7 +2,7 @@ import { Directive, EmbeddedViewRef, Injector, Input, TemplateRef, ViewContainer
 import { DbxInjectionContext, DbxInjectionContextConfig, provideDbxInjectionContext } from './injection.context';
 import { DbxInjectionInstance } from './injection.instance';
 import { DbxInjectionComponentConfig } from './injection';
-import { PromiseOrValue, PromiseFullRef, makePromiseFullRef, Maybe } from '@dereekb/util';
+import { PromiseOrValue, PromiseReference, promiseReference, Maybe } from '@dereekb/util';
 
 /**
  * DbxInjectedViewContext implementation. Acts similar to *ngIf, but instead switches to a different view without destroying the original child view.
@@ -12,7 +12,7 @@ import { PromiseOrValue, PromiseFullRef, makePromiseFullRef, Maybe } from '@dere
   providers: provideDbxInjectionContext(DbxInjectionContextDirective)
 })
 export class DbxInjectionContextDirective<O = unknown> implements DbxInjectionContext, OnInit, OnDestroy {
-  private _currentPromise: Maybe<PromiseFullRef<unknown>>;
+  private _currentPromise: Maybe<PromiseReference<unknown>>;
   private _instance = new DbxInjectionInstance(this._injector);
   private _embeddedView!: EmbeddedViewRef<O>;
   private _isDetached = false;
@@ -65,14 +65,14 @@ export class DbxInjectionContextDirective<O = unknown> implements DbxInjectionCo
     // clear the current context before showing something new.
     this.resetContext();
 
-    let promiseRef: Maybe<PromiseFullRef<O>>;
+    let promiseRef: Maybe<PromiseReference<O>>;
 
     let result: Maybe<O>;
     let error: unknown;
 
     // wait for the promise to resolve and use to finish using that instance.
     try {
-      promiseRef = makePromiseFullRef(async (resolve, reject) => {
+      promiseRef = promiseReference(async (resolve, reject) => {
         const injectionConfig: DbxInjectionComponentConfig<T> = {
           ...config.config,
           init: async (instance: T) => {
@@ -92,7 +92,7 @@ export class DbxInjectionContextDirective<O = unknown> implements DbxInjectionCo
         this.config = injectionConfig as DbxInjectionComponentConfig<unknown>;
       });
 
-      this._currentPromise = promiseRef as PromiseFullRef<unknown>;
+      this._currentPromise = promiseRef as PromiseReference<unknown>;
 
       // await the promise
       await promiseRef.promise;

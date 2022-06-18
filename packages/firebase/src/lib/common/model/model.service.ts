@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// The use of any here does not degrade the type-safety. The correct type is inferred in most cases.
+
 import { GrantedRole } from '@dereekb/model';
 import { Getter, cachedGetter, build, SetIncludesMode, ArrayOrValue, usePromise, UseAsync, UsePromiseFunction } from '@dereekb/util';
 import { FirestoreDocument } from '../firestore/accessor/document';

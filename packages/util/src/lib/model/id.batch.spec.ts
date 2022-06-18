@@ -1,4 +1,5 @@
 import { unique } from '@dereekb/util';
+import { itShouldFail, expectFail } from '@dereekb/util/test';
 import { arrayFactory } from '../array';
 import { randomNumberFactory } from '../number';
 import { idBatchFactory, IdBatchVerifier } from './id.batch';
@@ -41,7 +42,7 @@ describe('idBatchFactory()', () => {
       expect((await evenNumberVerifier.verify(result)).length).toBe(result.length);
     });
 
-    it('should throw an error if it fails to generate enough unique values.', async () => {
+    itShouldFail('if it fails to generate enough unique values.', async () => {
       const tenNumbersFactory = randomNumberFactory(10, 'floor');
 
       const tagsToMake = 100;
@@ -51,12 +52,7 @@ describe('idBatchFactory()', () => {
         factory: arrayFactory(tenNumbersFactory)
       });
 
-      try {
-        await failureFactory(tagsToMake);
-        fail();
-      } catch (e) {
-        expect(e).toBeDefined();
-      }
+      await expectFail(() => failureFactory(tagsToMake));
     });
   });
 });
