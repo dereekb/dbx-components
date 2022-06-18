@@ -13,13 +13,13 @@ let PROMISE_REF_NUMBER = 0;
 /**
  * Creates a new promise and returns the full ref for it.
  */
-export function makePromiseFullRef<O>(executor: PromiseExecutor<O>): PromiseFullRef<O> {
+export function makePromiseFullRef<O>(executor?: PromiseExecutor<O>): PromiseFullRef<O> {
   const ref = {} as Configurable<PromiseFullRef<O>> & { number: number };
 
   ref.promise = new Promise((resolve, reject) => {
     ref.resolve = resolve;
     ref.reject = reject;
-    executor(resolve, reject);
+    executor?.(resolve, reject);
   });
 
   ref.number = PROMISE_REF_NUMBER += 1; // added for debugging
