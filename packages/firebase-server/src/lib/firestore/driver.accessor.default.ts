@@ -1,6 +1,6 @@
 import { DocumentReference, WriteResult as GoogleCloudWriteResult, DocumentSnapshot } from '@google-cloud/firestore';
 import { Observable } from 'rxjs';
-import { WithFieldValue, UpdateData, FirestoreDocumentContext, FirestoreDocumentContextType, FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, FirestoreDocumentDeleteParams, FirestoreDocumentUpdateParams, SetOptions, streamFromOnSnapshot, FirestoreDataConverter, DocumentData } from '@dereekb/firebase';
+import { WithFieldValue, UpdateData, FirestoreDocumentContext, FirestoreDocumentContextType, FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, FirestoreDocumentDeleteParams, FirestoreDocumentUpdateParams, SetOptions, streamFromOnSnapshot, FirestoreDataConverter, DocumentData, unsupportedFirestoreDriverFunctionError } from '@dereekb/firebase';
 
 // MARK: Accessor
 export class DefaultFirestoreDocumentDataAccessor<T> implements FirestoreDocumentDataAccessor<T> {
@@ -35,7 +35,7 @@ export class DefaultFirestoreDocumentDataAccessor<T> implements FirestoreDocumen
   }
 
   update(data: UpdateData<T>, params?: FirestoreDocumentUpdateParams): Promise<GoogleCloudWriteResult> {
-    return this.documentRef.update(data as FirebaseFirestore.UpdateData, params?.precondition ?? {});
+    return params?.precondition ? this.documentRef.update(data as FirebaseFirestore.UpdateData<T>, params.precondition) : this.documentRef.update(data as FirebaseFirestore.UpdateData<T>);
   }
 }
 

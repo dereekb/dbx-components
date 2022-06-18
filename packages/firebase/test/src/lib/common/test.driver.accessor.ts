@@ -487,6 +487,31 @@ export function describeAccessorTests<T>(init: () => DescribeAccessorTests<T>) {
       expect(c.hasDataFromUpdate(snapshot.data())).toBe(true);
     });
 
+    describe('merge=true', () => {
+      it('should update the data if the document exists.', async () => {
+        const data = c.dataForUpdate();
+        await c.accessor.set(data, { merge: true });
+
+        const snapshot = await c.accessor.get();
+        expect(c.hasDataFromUpdate(snapshot.data())).toBe(true);
+      });
+
+      it('should succeed if the document does not exist.', async () => {
+        await c.accessor.delete();
+
+        let snapshot = await c.accessor.get();
+        expect(snapshot.data()).toBe(undefined);
+
+        const exists = await c.accessor.exists();
+        expect(exists).toBe(false);
+
+        await c.accessor.set(c.dataForUpdate(), { merge: true });
+
+        snapshot = await c.accessor.get();
+        expect(c.hasDataFromUpdate(snapshot.data())).toBe(true);
+      });
+    });
+
     // todo: test that set calls the converter when setting values.
   });
 

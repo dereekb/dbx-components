@@ -1,6 +1,6 @@
 import { DocumentReference, WriteBatch as GoogleCloudWriteBatch, DocumentSnapshot } from '@google-cloud/firestore';
 import { from, Observable } from 'rxjs';
-import { WithFieldValue, FirestoreDocumentContext, FirestoreDocumentContextType, FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, FirestoreDocumentDeleteParams, FirestoreDocumentUpdateParams, UpdateData, DocumentData, FirestoreDataConverter } from '@dereekb/firebase';
+import { WithFieldValue, FirestoreDocumentContext, FirestoreDocumentContextType, FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, FirestoreDocumentDeleteParams, FirestoreDocumentUpdateParams, UpdateData, DocumentData, FirestoreDataConverter, unsupportedFirestoreDriverFunctionError } from '@dereekb/firebase';
 
 // MARK: Accessor
 /**
@@ -41,9 +41,7 @@ export class WriteBatchFirestoreDocumentDataAccessor<T> implements FirestoreDocu
   }
 
   update(data: UpdateData<T>, params?: FirestoreDocumentUpdateParams): Promise<void> {
-    // todo: look into data typing casting more for this and the other types. Currently fails the building the demo-api app. "data as GoogleCloudUpdateData<T>"
-    // problem is related to T here being too open, but also the demo-api project shouldn't care.
-    this.batch.update(this.documentRef, data as FirebaseFirestore.UpdateData, params?.precondition);
+    this.batch.update(this.documentRef, data as FirebaseFirestore.UpdateData<T>, params?.precondition ?? { exists: true });
     return Promise.resolve();
   }
 }

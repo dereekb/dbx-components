@@ -140,7 +140,9 @@ export type JestShouldFailProvidesCallbackWithResult = () => PromiseOrValue<unkn
 export type JestShouldFailProvidesCallback = JestProvidesCallbackWithDone | JestShouldFailProvidesCallbackWithResult;
 
 /**
- * Used to wrap a Jest function and look for a specific failure.
+ * Used to wrap a Jest testing function and watch for JestExpectedFailError errors in order to pass the test. Other exceptions are treated normally as failures.
+ *
+ * This is typically used in conjunction with failSuccessfully(), expectSuccessfulFail(), or expectFail().
  *
  * @param fn
  * @param strict

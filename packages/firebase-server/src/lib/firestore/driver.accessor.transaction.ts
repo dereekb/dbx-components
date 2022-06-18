@@ -1,6 +1,6 @@
 import { DocumentReference, DocumentSnapshot, Transaction as GoogleCloudTransaction, SetOptions } from '@google-cloud/firestore';
 import { from, Observable } from 'rxjs';
-import { WithFieldValue, UpdateData, FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, FirestoreDocumentContext, FirestoreDocumentContextType, FirestoreDocumentUpdateParams, FirestoreDataConverter, DocumentData } from '@dereekb/firebase';
+import { WithFieldValue, UpdateData, FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, FirestoreDocumentContext, FirestoreDocumentContextType, FirestoreDocumentUpdateParams, FirestoreDataConverter, DocumentData, unsupportedFirestoreDriverFunctionError } from '@dereekb/firebase';
 
 // MARK: Accessor
 /**
@@ -41,7 +41,7 @@ export class TransactionFirestoreDocumentDataAccessor<T> implements FirestoreDoc
   }
 
   update(data: UpdateData<T>, params?: FirestoreDocumentUpdateParams): Promise<void> {
-    this.transaction.update(this.documentRef, data as FirebaseFirestore.UpdateData, params?.precondition ?? {});
+    this.transaction.update(this.documentRef, data as FirebaseFirestore.UpdateData<T>, params?.precondition ?? { exists: true });
     return Promise.resolve();
   }
 }
