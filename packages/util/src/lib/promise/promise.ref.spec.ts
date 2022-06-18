@@ -1,8 +1,8 @@
-import { makePromiseFullRef } from './promise.ref';
+import { promiseReference } from './promise.ref';
 
 describe('makePromiseFullRef', () => {
   it('should create a new PromiseFullRef', (done) => {
-    const result = makePromiseFullRef((resolve, reject) => {
+    const result = promiseReference((resolve, reject) => {
       // nothing is required to happen here if not required.
     });
 

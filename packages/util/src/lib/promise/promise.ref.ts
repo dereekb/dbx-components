@@ -1,10 +1,13 @@
 import { Configurable } from '../type';
 
-export interface PromiseFullRef<O = unknown> {
+/**
+ * A reference to a Promise and its resolve/reject functions.
+ */
+export type PromiseReference<O = unknown> = {
   readonly promise: Promise<O>;
   readonly resolve: (value: O | PromiseLike<O>) => void;
   readonly reject: (reason?: unknown) => void;
-}
+};
 
 export type PromiseExecutor<O> = (resolve: (value: O | PromiseLike<O>) => void, reject: (reason?: unknown) => void) => void;
 
@@ -13,8 +16,8 @@ let PROMISE_REF_NUMBER = 0;
 /**
  * Creates a new promise and returns the full ref for it.
  */
-export function makePromiseFullRef<O>(executor?: PromiseExecutor<O>): PromiseFullRef<O> {
-  const ref = {} as Configurable<PromiseFullRef<O>> & { number: number };
+export function promiseReference<O>(executor?: PromiseExecutor<O>): PromiseReference<O> {
+  const ref = {} as Configurable<PromiseReference<O>> & { number: number };
 
   ref.promise = new Promise((resolve, reject) => {
     ref.resolve = resolve;
@@ -26,3 +29,14 @@ export function makePromiseFullRef<O>(executor?: PromiseExecutor<O>): PromiseFul
 
   return ref;
 }
+
+// MARK: Compat
+/**
+ * @deprecated use PromiseReference instead.
+ */
+export type PromiseFullRef<O = unknown> = PromiseReference<O>;
+
+/**
+ * @deprecated use promiseReference() instead.
+ */
+export const makePromiseFullRef = promiseReference;

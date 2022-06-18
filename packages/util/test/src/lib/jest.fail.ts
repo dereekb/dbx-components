@@ -4,7 +4,7 @@
  * Since fail() was silently removed, we redefine it.
  */
 
-import { Building, isPromise, makePromiseFullRef, PromiseFullRef, PromiseOrValue, PromiseUtility } from '@dereekb/util';
+import { Building, isPromise, promiseReference, PromiseReference, PromiseOrValue, PromiseUtility } from '@dereekb/util';
 import { BaseError } from 'make-error';
 
 export class JestShouldFailError extends BaseError {}
@@ -107,12 +107,12 @@ export function itShouldFail(describe: string, fn: JestProvidesCallback) {
 }
 
 // MARK: Fake Done
-export interface JestFakeDoneHandler extends JestDoneCallback, PromiseFullRef {
-  _ref: PromiseFullRef;
+export interface JestFakeDoneHandler extends JestDoneCallback, PromiseReference {
+  _ref: PromiseReference;
 }
 
 export function fakeDoneHandler(): JestFakeDoneHandler {
-  const promiseRef = makePromiseFullRef();
+  const promiseRef = promiseReference();
 
   const doneHandler = promiseRef.resolve;
   const failHandler = (e: unknown) => {

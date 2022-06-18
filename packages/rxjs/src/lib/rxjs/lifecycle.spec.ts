@@ -1,7 +1,7 @@
 import { SubscriptionObject } from './../subscription';
 import { BehaviorSubject } from 'rxjs';
 import { cleanup } from './lifecycle';
-import { makePromiseFullRef, PromiseFullRef } from '@dereekb/util';
+import { promiseReference, PromiseReference } from '@dereekb/util';
 
 describe('cleanup()', () => {
   let sub: SubscriptionObject;
@@ -77,12 +77,12 @@ describe('cleanup()', () => {
     let isDone = false;
 
     const subject = new BehaviorSubject<number>(initialValue);
-    let promiseRef: PromiseFullRef;
+    let promiseRef: PromiseReference;
 
     const obs = subject.pipe(
       cleanup(() => {
         // this promise will not resolve until we call resolve externally.
-        promiseRef = makePromiseFullRef(() => 0);
+        promiseRef = promiseReference(() => 0);
 
         return promiseRef.promise.then(() => {
           destroyed = true;
