@@ -70,7 +70,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
           key: firestoreModelKey(profileIdentity, u.uid)
         };
 
-        await u.callCloudFunction(updateProfileCloudFn, onCallTypedModelParams(profileIdentity.model, data));
+        await u.callCloudFunction(updateProfileCloudFn, onCallTypedModelParams(profileIdentity, data));
 
         const profileData = await u.instance.loadUserProfile().snapshotData();
         expect(profileData?.bio).toBe(bio);
@@ -82,7 +82,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
           bio
         };
 
-        await u.callCloudFunction(updateProfileCloudFn, onCallTypedModelParams(profileIdentity.model, data));
+        await u.callCloudFunction(updateProfileCloudFn, onCallTypedModelParams(profileIdentity, data));
 
         const profileData = await u.instance.loadUserProfile().snapshotData();
         expect(profileData?.bio).toBe(bio);

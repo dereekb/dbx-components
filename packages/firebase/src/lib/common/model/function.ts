@@ -13,7 +13,13 @@ export interface OnCallTypedModelParams<T = unknown> extends FirestoreModelNameR
  * @param data
  * @returns
  */
-export function onCallTypedModelParams<T>(modelType: FirestoreModelName, data: T): OnCallTypedModelParams<T> {
+export function onCallTypedModelParams<T>(modelTypeInput: FirestoreModelName | FirestoreModelNameRef, data: T): OnCallTypedModelParams<T> {
+  const modelType = typeof modelTypeInput === 'string' ? modelTypeInput : modelTypeInput.modelType;
+
+  if (!modelType) {
+    throw new Error('modelType is required.');
+  }
+
   return {
     modelType,
     data

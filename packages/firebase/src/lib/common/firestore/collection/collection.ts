@@ -26,6 +26,11 @@ import { Building, ModelKey, ModelTypeString } from '@dereekb/util';
 export type FirestoreModelName = ModelTypeString;
 
 /**
+ * Alternative name for FirestoreModelName.
+ */
+export type FirestoreModelType = FirestoreModelName;
+
+/**
  * An all lowercase name that references a collection. Is usually the lowercase version of the FirestoreModelName.
  *
  * This is the part of the path that says what the collection is.
@@ -39,10 +44,13 @@ export type FirestoreModelIdentityType = 'root' | 'nested';
 /**
  * A firestore model's identity
  */
-export type FirestoreModelIdentity<M extends FirestoreModelName = FirestoreModelName, C extends FirestoreCollectionName = FirestoreCollectionName> = {
+export type FirestoreModelIdentity<M extends FirestoreModelName = FirestoreModelName, C extends FirestoreCollectionName = FirestoreCollectionName> = FirestoreModelNameRef & {
   readonly type: FirestoreModelIdentityType;
-  readonly model: M;
   readonly collection: C;
+  /**
+   * @deprecated use modelType instead.
+   */
+  readonly model: M; // NOTE: Remove later on.
 };
 
 /**
@@ -83,13 +91,15 @@ export function firestoreModelIdentity<P extends FirestoreModelIdentity<string, 
       type: 'nested',
       parent: parentOrModelName as P,
       collection: (collectionName as C) ?? ((collectionNameOrModelName as M).toLowerCase() as C),
-      model: collectionNameOrModelName as M
+      model: collectionNameOrModelName as M,
+      modelType: collectionNameOrModelName as M
     };
   } else {
     return {
       type: 'root',
       collection: (collectionNameOrModelName as C) ?? (parentOrModelName.toLowerCase() as C),
-      model: parentOrModelName
+      model: parentOrModelName,
+      modelType: parentOrModelName
     };
   }
 }
@@ -102,6 +112,22 @@ export interface FirestoreModelNameRef<M extends FirestoreModelName = FirestoreM
    * Returns the FirestoreModelName for this context.
    */
   readonly modelType: M;
+}
+
+/**
+ * Reads the FirestoreModelName from a FirestoreModelName or FirestoreModelNameRef.
+ *
+ * @param modelTypeInput
+ * @returns
+ */
+export function firestoreModelType(modelTypeInput: FirestoreModelName | FirestoreModelNameRef): FirestoreModelName {
+  const modelType = typeof modelTypeInput === 'string' ? modelTypeInput : modelTypeInput.modelType;
+
+  if (!modelType) {
+    throw new Error('modelType is required.');
+  }
+
+  return modelType;
 }
 
 /**
