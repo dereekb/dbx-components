@@ -1,5 +1,5 @@
 import { PromiseOrValue, serverError } from '@dereekb/util';
-import { FirestoreModelName, FirestoreModelIdentity, FirestoreModelNames, OnCallDeleteModelParams } from '@dereekb/firebase';
+import { FirestoreModelType, FirestoreModelIdentity, FirestoreModelTypes, OnCallDeleteModelParams } from '@dereekb/firebase';
 import { badRequestError } from '../../function';
 import { NestContextCallableRequestWithAuth } from '../function/nest';
 import { OnCallWithAuthorizedNestContext } from '../function/call';
@@ -8,7 +8,7 @@ import { OnCallWithAuthorizedNestContext } from '../function/call';
 export type OnCallDeleteModelFunction<N, I = unknown, O = void> = (request: NestContextCallableRequestWithAuth<N, I>) => PromiseOrValue<O>;
 
 export type OnCallDeleteModelMap<N, T extends FirestoreModelIdentity = FirestoreModelIdentity> = {
-  [K in FirestoreModelNames<T>]?: OnCallDeleteModelFunction<N, any, any>;
+  [K in FirestoreModelTypes<T>]?: OnCallDeleteModelFunction<N, any, any>;
 };
 
 /**
@@ -33,7 +33,7 @@ export function onCallDeleteModel<N>(map: OnCallDeleteModelMap<N>): OnCallWithAu
   };
 }
 
-export function deleteModelUnknownModelTypeError(modelType: FirestoreModelName) {
+export function deleteModelUnknownModelTypeError(modelType: FirestoreModelType) {
   return badRequestError(
     serverError({
       status: 400,

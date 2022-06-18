@@ -21,12 +21,12 @@ import { FirestoreCollectionQueryFactory, firestoreCollectionQueryFactory } from
 import { Building, ModelKey, ModelTypeString } from '@dereekb/util';
 
 /**
- * The camelCase model name.
+ * The camelCase model name/type.
  */
-export type FirestoreModelName = ModelTypeString;
+export type FirestoreModelType = ModelTypeString;
 
 /**
- * An all lowercase name that references a collection. Is usually the lowercase version of the FirestoreModelName.
+ * An all lowercase name that references a collection. Is usually the lowercase version of the FirestoreModelType.
  *
  * This is the part of the path that says what the collection is.
  *
@@ -39,23 +39,26 @@ export type FirestoreModelIdentityType = 'root' | 'nested';
 /**
  * A firestore model's identity
  */
-export type FirestoreModelIdentity<M extends FirestoreModelName = FirestoreModelName, C extends FirestoreCollectionName = FirestoreCollectionName> = {
+export type FirestoreModelIdentity<M extends FirestoreModelType = FirestoreModelType, C extends FirestoreCollectionName = FirestoreCollectionName> = FirestoreModelTypeRef<M> & {
   readonly type: FirestoreModelIdentityType;
-  readonly model: M;
   readonly collection: C;
+  /**
+   * @deprecated use modelType instead.
+   */
+  readonly model: M; // NOTE: Remove later on.
 };
 
 /**
  * A root-level FirestoreModelIdentity
  */
-export type RootFirestoreModelIdentity<M extends FirestoreModelName = FirestoreModelName, C extends FirestoreCollectionName = FirestoreCollectionName> = FirestoreModelIdentity<M, C> & {
+export type RootFirestoreModelIdentity<M extends FirestoreModelType = FirestoreModelType, C extends FirestoreCollectionName = FirestoreCollectionName> = FirestoreModelIdentity<M, C> & {
   readonly type: 'root';
 };
 
 /**
  * A nested FirestoreModelIdentity with a parent.
  */
-export type FirestoreModelIdentityWithParent<P extends FirestoreModelIdentity<string, string>, M extends FirestoreModelName = FirestoreModelName, C extends FirestoreCollectionName = FirestoreCollectionName> = FirestoreModelIdentity<M, C> & {
+export type FirestoreModelIdentityWithParent<P extends FirestoreModelIdentity<string, string>, M extends FirestoreModelType = FirestoreModelType, C extends FirestoreCollectionName = FirestoreCollectionName> = FirestoreModelIdentity<M, C> & {
   readonly type: 'nested';
   readonly parent: P;
 };
@@ -63,9 +66,9 @@ export type FirestoreModelIdentityWithParent<P extends FirestoreModelIdentity<st
 /**
  * A default collection name derived from the model name.
  */
-export type FirestoreModelDefaultCollectionName<M extends FirestoreModelName> = `${Lowercase<M>}`;
+export type FirestoreModelDefaultCollectionName<M extends FirestoreModelType> = `${Lowercase<M>}`;
 
-export type FirestoreModelNames<I extends FirestoreModelIdentity> = I extends FirestoreModelIdentity<infer M> ? M : never;
+export type FirestoreModelTypes<I extends FirestoreModelIdentity> = I extends FirestoreModelIdentity<infer M> ? M : never;
 
 /**
  * Creates a FirestoreModelIdentity value.
@@ -73,23 +76,25 @@ export type FirestoreModelNames<I extends FirestoreModelIdentity> = I extends Fi
  * @param modelName
  * @returns
  */
-export function firestoreModelIdentity<M extends FirestoreModelName>(modelName: M): RootFirestoreModelIdentity<M, FirestoreModelDefaultCollectionName<M>>;
-export function firestoreModelIdentity<P extends FirestoreModelIdentity<string, string>, M extends FirestoreModelName>(parent: P, modelName: M): FirestoreModelIdentityWithParent<P, M, FirestoreModelDefaultCollectionName<M>>;
-export function firestoreModelIdentity<M extends FirestoreModelName, C extends FirestoreCollectionName = FirestoreCollectionName>(modelName: M, collectionName: C): RootFirestoreModelIdentity<M, C>;
-export function firestoreModelIdentity<P extends FirestoreModelIdentity<string, string>, M extends FirestoreModelName, C extends FirestoreCollectionName = FirestoreCollectionName>(parent: P, modelName: M, collectionName: C): FirestoreModelIdentityWithParent<P, M, C>;
-export function firestoreModelIdentity<P extends FirestoreModelIdentity<string, string>, M extends FirestoreModelName, C extends FirestoreCollectionName = FirestoreCollectionName>(parentOrModelName: P | M, collectionNameOrModelName?: M | C, collectionName?: C): FirestoreModelIdentityWithParent<P, M, C> | RootFirestoreModelIdentity<M, C> {
+export function firestoreModelIdentity<M extends FirestoreModelType>(modelName: M): RootFirestoreModelIdentity<M, FirestoreModelDefaultCollectionName<M>>;
+export function firestoreModelIdentity<P extends FirestoreModelIdentity<string, string>, M extends FirestoreModelType>(parent: P, modelName: M): FirestoreModelIdentityWithParent<P, M, FirestoreModelDefaultCollectionName<M>>;
+export function firestoreModelIdentity<M extends FirestoreModelType, C extends FirestoreCollectionName = FirestoreCollectionName>(modelName: M, collectionName: C): RootFirestoreModelIdentity<M, C>;
+export function firestoreModelIdentity<P extends FirestoreModelIdentity<string, string>, M extends FirestoreModelType, C extends FirestoreCollectionName = FirestoreCollectionName>(parent: P, modelName: M, collectionName: C): FirestoreModelIdentityWithParent<P, M, C>;
+export function firestoreModelIdentity<P extends FirestoreModelIdentity<string, string>, M extends FirestoreModelType, C extends FirestoreCollectionName = FirestoreCollectionName>(parentOrModelName: P | M, collectionNameOrModelName?: M | C, collectionName?: C): FirestoreModelIdentityWithParent<P, M, C> | RootFirestoreModelIdentity<M, C> {
   if (typeof parentOrModelName === 'object') {
     return {
       type: 'nested',
       parent: parentOrModelName as P,
       collection: (collectionName as C) ?? ((collectionNameOrModelName as M).toLowerCase() as C),
-      model: collectionNameOrModelName as M
+      model: collectionNameOrModelName as M,
+      modelType: collectionNameOrModelName as M
     };
   } else {
     return {
       type: 'root',
       collection: (collectionNameOrModelName as C) ?? (parentOrModelName.toLowerCase() as C),
-      model: parentOrModelName
+      model: parentOrModelName,
+      modelType: parentOrModelName
     };
   }
 }
@@ -97,11 +102,27 @@ export function firestoreModelIdentity<P extends FirestoreModelIdentity<string, 
 /**
  * Reference to a FirestoreCollectionName
  */
-export interface FirestoreModelNameRef<M extends FirestoreModelName = FirestoreModelName> {
+export interface FirestoreModelTypeRef<M extends FirestoreModelType = FirestoreModelType> {
   /**
-   * Returns the FirestoreModelName for this context.
+   * Returns the FirestoreModelType for this context.
    */
   readonly modelType: M;
+}
+
+/**
+ * Reads the FirestoreModelType from a FirestoreModelType or FirestoreModelTypeRef.
+ *
+ * @param modelTypeInput
+ * @returns
+ */
+export function firestoreModelType(modelTypeInput: FirestoreModelType | FirestoreModelTypeRef): FirestoreModelType {
+  const modelType = typeof modelTypeInput === 'string' ? modelTypeInput : modelTypeInput.modelType;
+
+  if (!modelType) {
+    throw new Error('modelType is required.');
+  }
+
+  return modelType;
 }
 
 /**
@@ -117,7 +138,7 @@ export interface FirestoreCollectionNameRef {
 /**
  * Reference to a FirestoreModelIdentity
  */
-export interface FirestoreModelIdentityRef<M extends FirestoreModelName = FirestoreModelName> {
+export interface FirestoreModelIdentityRef<M extends FirestoreModelType = FirestoreModelType> {
   /**
    * Returns the FirestoreModelIdentity for this context.
    */
@@ -241,3 +262,17 @@ export function makeFirestoreCollection<T, D extends FirestoreDocument<T>>(input
     queryDocument
   };
 }
+
+// MARK: Compat
+
+/**
+ * Alternative name for FirestoreModelType.
+ */
+export type FirestoreModelName = FirestoreModelType;
+
+/**
+ * @deprecated replaced by FirestoreModelTypeRef
+ */
+export type FirestoreModelNameRef<M extends FirestoreModelType = FirestoreModelType> = FirestoreModelTypeRef<M>;
+
+export type FirestoreModelNames<I extends FirestoreModelIdentity> = FirestoreModelTypes<I>;

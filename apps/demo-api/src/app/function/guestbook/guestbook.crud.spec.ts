@@ -14,7 +14,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
           name
         };
 
-        const result: OnCallCreateModelResult = await u.callCloudFunction(demoCreateModelCloudFn, onCallTypedModelParams(guestbookIdentity.model, params));
+        const result: OnCallCreateModelResult = await u.callCloudFunction(demoCreateModelCloudFn, onCallTypedModelParams(guestbookIdentity, params));
 
         expect(result).toBeDefined();
         expect(result.modelKeys).toBeDefined();

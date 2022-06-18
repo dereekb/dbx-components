@@ -27,7 +27,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
               signed
             };
 
-            await u.callCloudFunction(updateGuestbookEntryCloudFn, onCallTypedModelParams(guestbookEntryIdentity.model, params));
+            await u.callCloudFunction(updateGuestbookEntryCloudFn, onCallTypedModelParams(guestbookEntryIdentity, params));
 
             exists = await userGuestbookEntry.accessor.exists();
             expect(exists).toBe(true);
@@ -85,7 +85,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
                   published: true
                 };
 
-                await u.callCloudFunction(updateGuestbookEntryCloudFn, onCallTypedModelParams(guestbookEntryIdentity.model, params));
+                await u.callCloudFunction(updateGuestbookEntryCloudFn, onCallTypedModelParams(guestbookEntryIdentity, params));
 
                 exists = await userGuestbookEntry.accessor.exists();
                 expect(exists).toBe(true);

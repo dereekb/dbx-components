@@ -84,6 +84,6 @@
       }
     }
   },
-  "implicitDependencies": ["!firebase-test"],
+  "implicitDependencies": ["!util-test", "!firebase-test"],
   "tags": []
 }

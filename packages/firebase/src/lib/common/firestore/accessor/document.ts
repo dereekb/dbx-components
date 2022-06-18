@@ -29,7 +29,7 @@ export abstract class AbstractFirestoreDocument<T, D extends AbstractFirestoreDo
   abstract get modelIdentity(): FirestoreModelIdentity<M>;
 
   get modelType(): M {
-    return this.modelIdentity.model;
+    return this.modelIdentity.modelType;
   }
 
   get id(): FirestoreModelId {
@@ -184,7 +184,7 @@ export function limitedFirestoreDocumentAccessorFactory<T, D extends FirestoreDo
       const ref: DocumentReference<T> = firestoreAccessorDriver.docAtPath(firestoreContext.firestore, fullPath);
 
       if (ref.parent?.id !== expectedCollectionName) {
-        throw new Error(`unexpected key/path "${fullPath}" for expected type "${modelIdentity.collection}"/"${modelIdentity.model}".`);
+        throw new Error(`unexpected key/path "${fullPath}" for expected type "${modelIdentity.collection}"/"${modelIdentity.modelType}".`);
       }
 
       return ref.withConverter(converter);

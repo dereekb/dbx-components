@@ -4,7 +4,7 @@
 import { GrantedRole } from '@dereekb/model';
 import { Getter, cachedGetter, build, SetIncludesMode, ArrayOrValue, usePromise, UseAsync, UsePromiseFunction } from '@dereekb/util';
 import { FirestoreDocument } from '../firestore/accessor/document';
-import { FirestoreModelIdentity, FirestoreModelKey, FirestoreModelNames } from '../firestore/collection/collection';
+import { FirestoreModelIdentity, FirestoreModelKey, FirestoreModelTypes } from '../firestore/collection/collection';
 import { FirebaseModelCollectionLoader, firebaseModelLoader, FirebaseModelLoader, InContextFirebaseModelLoader } from './model/model.loader';
 import { InContextFirebaseModelPermissionService, FirebasePermissionContext, firebaseModelPermissionService, FirebaseModelPermissionService, FirebasePermissionServiceInstanceDelegate, InModelContextFirebaseModelPermissionService, FirebasePermissionErrorContext } from './permission';
 import { ContextGrantedModelRolesReader, contextGrantedModelRolesReader } from './permission/permission.service.role';
@@ -101,7 +101,7 @@ export function inContextFirebaseModelServiceFactory<C, T, D extends FirestoreDo
 
 // MARK: Service
 export type FirebaseModelsServiceFactory<C extends FirebaseModelServiceContext, I extends FirestoreModelIdentity = FirestoreModelIdentity> = {
-  [J in FirestoreModelNames<I>]: FirebaseModelServiceGetter<C, any>;
+  [J in FirestoreModelTypes<I>]: FirebaseModelServiceGetter<C, any>;
 };
 
 /**

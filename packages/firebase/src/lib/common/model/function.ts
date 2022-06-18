@@ -1,8 +1,8 @@
 import { ArrayOrValue, asArray } from '@dereekb/util';
 import { DocumentReferenceRef } from '../firestore/reference';
-import { FirestoreModelKey, FirestoreModelName, FirestoreModelNameRef } from '../firestore/collection/collection';
+import { FirestoreModelKey, FirestoreModelType, FirestoreModelTypeRef } from '../firestore/collection/collection';
 
-export interface OnCallTypedModelParams<T = unknown> extends FirestoreModelNameRef {
+export interface OnCallTypedModelParams<T = unknown> extends FirestoreModelTypeRef {
   data: T;
 }
 
@@ -13,7 +13,13 @@ export interface OnCallTypedModelParams<T = unknown> extends FirestoreModelNameR
  * @param data
  * @returns
  */
-export function onCallTypedModelParams<T>(modelType: FirestoreModelName, data: T): OnCallTypedModelParams<T> {
+export function onCallTypedModelParams<T>(modelTypeInput: FirestoreModelType | FirestoreModelTypeRef, data: T): OnCallTypedModelParams<T> {
+  const modelType = typeof modelTypeInput === 'string' ? modelTypeInput : modelTypeInput.modelType;
+
+  if (!modelType) {
+    throw new Error('modelType is required.');
+  }
+
   return {
     modelType,
     data
