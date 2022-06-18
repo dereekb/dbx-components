@@ -1,5 +1,5 @@
 import { PromiseOrValue, serverError } from '@dereekb/util';
-import { FirestoreModelName, FirestoreModelIdentity, FirestoreModelNames, OnCallCreateModelParams, OnCallCreateModelResult } from '@dereekb/firebase';
+import { FirestoreModelType, FirestoreModelIdentity, FirestoreModelTypes, OnCallCreateModelParams, OnCallCreateModelResult } from '@dereekb/firebase';
 import { badRequestError } from '../../function';
 import { OnCallWithAuthorizedNestContext } from '../function/call';
 import { NestContextCallableRequestWithAuth } from '../function/nest';
@@ -8,7 +8,7 @@ import { NestContextCallableRequestWithAuth } from '../function/nest';
 export type OnCallCreateModelFunction<N, I = unknown, O extends OnCallCreateModelResult = OnCallCreateModelResult> = (request: NestContextCallableRequestWithAuth<N, I>) => PromiseOrValue<O>;
 
 export type OnCallCreateModelMap<N, T extends FirestoreModelIdentity = FirestoreModelIdentity> = {
-  [K in FirestoreModelNames<T>]?: OnCallCreateModelFunction<N, any, OnCallCreateModelResult>;
+  [K in FirestoreModelTypes<T>]?: OnCallCreateModelFunction<N, any, OnCallCreateModelResult>;
 };
 
 /**
@@ -33,7 +33,7 @@ export function onCallCreateModel<N>(map: OnCallCreateModelMap<N>): OnCallWithAu
   };
 }
 
-export function createModelUnknownModelTypeError(modelType: FirestoreModelName) {
+export function createModelUnknownModelTypeError(modelType: FirestoreModelType) {
   return badRequestError(
     serverError({
       status: 400,

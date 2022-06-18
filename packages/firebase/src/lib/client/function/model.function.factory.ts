@@ -5,7 +5,7 @@ import { firebaseFunctionMapFactory } from '@dereekb/firebase';
 import { MaybeNot, build, cachedGetter, capitalizeFirstLetter } from '@dereekb/util';
 import { Functions, httpsCallable } from 'firebase/functions';
 import { NonNever } from 'ts-essentials';
-import { CREATE_MODEL_APP_FUNCTION_KEY, DELETE_MODEL_APP_FUNCTION_KEY, FirestoreModelIdentity, FirestoreModelNames, OnCallCreateModelResult, OnCallDeleteModelParams, onCallTypedModelParams, OnCallUpdateModelParams, UPDATE_MODEL_APP_FUNCTION_KEY } from '../../common';
+import { CREATE_MODEL_APP_FUNCTION_KEY, DELETE_MODEL_APP_FUNCTION_KEY, FirestoreModelIdentity, FirestoreModelTypes, OnCallCreateModelResult, OnCallDeleteModelParams, onCallTypedModelParams, OnCallUpdateModelParams, UPDATE_MODEL_APP_FUNCTION_KEY } from '../../common';
 import { FirebaseFunctionTypeMap, FirebaseFunctionMap, FirebaseFunction } from './function';
 import { mapHttpsCallable } from './function.callable';
 import { FirebaseFunctionTypeConfigMap } from './function.factory';
@@ -16,7 +16,7 @@ export type ModelFirebaseUpdateFunction<I> = ModelFirebaseCrudFunction<I>;
 export type ModelFirebaseDeleteFunction<I> = ModelFirebaseCrudFunction<I>;
 
 export type ModelFirebaseCrudFunctionTypeMap<T extends FirestoreModelIdentity = FirestoreModelIdentity> = {
-  [K in FirestoreModelNames<T>]: ModelFirebaseCrudFunctionTypeMapEntry;
+  [K in FirestoreModelTypes<T>]: ModelFirebaseCrudFunctionTypeMapEntry;
 };
 
 export type ModelFirebaseCrudFunctionTypeMapEntry = MaybeNot | Partial<ModelFirebaseCrudFunctionCreateTypeConfig & ModelFirebaseCrudFunctionUpdateTypeConfig & ModelFirebaseCrudFunctionDeleteTypeConfig>;
@@ -39,7 +39,7 @@ export type ModelFirebaseCrudFunctionDeleteTypeConfig<I = unknown> = {
  * The FirestoreModelIdentities that are allowed are passed too which add type checking to make sure we're passing the expected identities.
  */
 export type ModelFirebaseCrudFunctionConfigMap<C extends ModelFirebaseCrudFunctionTypeMap<T>, T extends FirestoreModelIdentity> = NonNever<{
-  [K in FirestoreModelNames<T>]: C[K] extends null ? never : (keyof C[K])[];
+  [K in FirestoreModelTypes<T>]: C[K] extends null ? never : (keyof C[K])[];
 }>;
 
 export type ModelFirebaseCrudFunctionMap<C extends ModelFirebaseCrudFunctionTypeMap> = ModelFirebaseCrudFunctionRawMap<C>;
