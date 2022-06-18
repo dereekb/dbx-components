@@ -1,3 +1,4 @@
+import { itShouldFail, expectFail } from '@dereekb/util/test';
 import { range } from '../array';
 import { performBatchLoop, performMakeLoop, performTaskCountLoop, performTaskLoop } from './promise.loop';
 
@@ -26,34 +27,28 @@ describe('performTaskLoop()', () => {
     expect(result).toBe(initValue);
   });
 
-  it('should loop until an error occurs in next.', async () => {
+  itShouldFail('if an error occurs in next.', async () => {
     const maxIterations = 5;
 
-    try {
-      await performTaskLoop<number>({
+    await expectFail(() =>
+      performTaskLoop<number>({
         checkContinue: (_, i) => i < maxIterations,
         next: async () => {
           throw new Error();
         }
-      });
-      fail();
-    } catch (e) {
-      expect(e).toBeDefined();
-    }
+      })
+    );
   });
 
-  it('should loop until an error occurs in checkContinue.', async () => {
-    try {
-      await performTaskLoop<number>({
+  itShouldFail('if an error occurs in checkContinue.', async () => {
+    await expectFail(() =>
+      performTaskLoop<number>({
         checkContinue: () => {
           throw new Error();
         },
         next: async (i) => i
-      });
-      fail();
-    } catch (e) {
-      expect(e).toBeDefined();
-    }
+      })
+    );
   });
 });
 

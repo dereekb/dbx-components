@@ -1,3 +1,4 @@
+import { itShouldFail, expectFail } from '@dereekb/util/test';
 import { AuthData } from 'firebase-functions/lib/common/providers/https';
 import { DecodedIdToken } from 'firebase-admin/lib/auth/token-verifier';
 import * as admin from 'firebase-admin';
@@ -219,46 +220,26 @@ describe('firebase server auth', () => {
         });
 
         describe('loadRecord()', () => {
-          it('should throw an exception.', async () => {
-            try {
-              await authUserContext.loadRecord();
-              fail();
-            } catch (e) {
-              expect(e).toBeDefined();
-            }
+          itShouldFail('', async () => {
+            await expectFail(() => authUserContext.loadRecord());
           });
         });
 
         describe('loadClaims()', () => {
-          it('should throw an exception.', async () => {
-            try {
-              await authUserContext.loadClaims();
-              fail();
-            } catch (e) {
-              expect(e).toBeDefined();
-            }
+          itShouldFail(async () => {
+            await expectFail(() => authUserContext.loadClaims());
           });
         });
 
         describe('updateClaims()', () => {
-          it('should throw an exception.', async () => {
-            try {
-              await authUserContext.updateClaims({});
-              fail();
-            } catch (e) {
-              expect(e).toBeDefined();
-            }
+          itShouldFail(async () => {
+            await expectFail(() => authUserContext.updateClaims({}));
           });
         });
 
         describe('clearClaims()', () => {
-          it('should throw an exception.', async () => {
-            try {
-              await authUserContext.clearClaims();
-              fail();
-            } catch (e) {
-              expect(e).toBeDefined();
-            }
+          itShouldFail(async () => {
+            await expectFail(() => authUserContext.clearClaims());
           });
         });
       });

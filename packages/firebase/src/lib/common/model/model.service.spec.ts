@@ -1,3 +1,4 @@
+import { itShouldFail, expectFail } from '@dereekb/util/test';
 import { MockFirebaseContext, authorizedFirestoreFactory, MockItemCollectionFixture, testWithMockItemFixture, MOCK_FIREBASE_MODEL_SERVICE_FACTORIES, mockFirebaseModelServices, MockItem, MockItemDocument, MockItemRoles } from '@dereekb/firebase/test';
 import { GrantedRoleMap, isNoAccessRoleMap } from '@dereekb/model';
 import { ArrayOrValue, UsePromiseFunction } from '@dereekb/util';
@@ -133,7 +134,7 @@ describe('firebaseModelsService', () => {
               expect(result).toBe(value);
             });
 
-            it('should throw an exception if the model is not granted the expected roles.', async () => {
+            itShouldFail('if the model is not granted the expected roles.', async () => {
               setUseFnWithContext({
                 rolesToReturn: {
                   [readRoleKey]: false // not allowed to read
@@ -145,17 +146,17 @@ describe('firebaseModelsService', () => {
               const value = 0;
 
               try {
-                await useFn((x) => {
-                  expect(x.hasRole(readRoleKey)).toBe(true);
-                  used = true;
-                  return value;
-                });
-                fail(new Error('should have not been used.'));
+                await expectFail(() =>
+                  useFn((x) => {
+                    expect(x.hasRole(readRoleKey)).toBe(true);
+                    used = true;
+                    return value;
+                  })
+                );
               } catch (e) {
-                expect(e).toBeDefined();
+                expect(used).toBe(false);
+                throw e;
               }
-
-              expect(used).toBe(false);
             });
           });
         });

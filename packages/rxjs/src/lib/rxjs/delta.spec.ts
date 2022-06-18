@@ -1,7 +1,8 @@
-import { filterMaybe } from '@dereekb/rxjs';
 import { SubscriptionObject } from './../subscription';
-import { of, timeout, first, tap, Subject } from 'rxjs';
+import { first, Subject } from 'rxjs';
 import { onMatchDelta } from './delta';
+import { failWithJestDoneCallback } from '@dereekb/util/test';
+import { tapAfterTimeout } from './timeout';
 
 describe('onMatchDelta', () => {
   const from = 0;
@@ -49,17 +50,10 @@ describe('onMatchDelta', () => {
             requireConsecutive: true
           }),
           first(),
-          timeout({
-            first: 1000,
-            with: () =>
-              of(null as any as number).pipe(
-                tap(() => done()),
-                filterMaybe()
-              )
-          })
+          tapAfterTimeout(1000, () => done())
         )
         .subscribe(() => {
-          fail();
+          failWithJestDoneCallback(done);
         });
 
       subject.next(from);
@@ -69,30 +63,28 @@ describe('onMatchDelta', () => {
   });
 
   describe('requireConsecutive=false', () => {
-    it('should should emit once the target "from" value has been seen once.', () => {
+    it('should should emit once the target "from" value has been seen once followed by the "to" value at any time.', (done) => {
       sub.subscription = subject
         .pipe(
           onMatchDelta({
             from,
             to,
-            requireConsecutive: true
+            requireConsecutive: false
           }),
           first(),
-          timeout({
-            first: 1000,
-            with: () =>
-              of(null as any as number).pipe(
-                tap(() => fail()),
-                filterMaybe()
-              )
-          })
+          tapAfterTimeout(1000, () => failWithJestDoneCallback(done))
         )
         .subscribe((value) => {
           expect(value).toBe(to);
+          done();
         });
 
       subject.next(from);
       subject.next(2);
+      subject.next(3);
+      subject.next(4);
+      subject.next(5);
+      subject.next(6);
       subject.next(to);
     });
   });

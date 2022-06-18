@@ -8,7 +8,7 @@ import { DocumentReference, CollectionReference, Transaction, WriteBatch, Docume
 import { createOrUpdateWithAccessorSet, dataFromSnapshotStream, FirestoreDocumentDataAccessor } from './accessor';
 import { CollectionReferenceRef, DocumentReferenceRef, FirestoreContextReference, FirestoreDataConverterRef } from '../reference';
 import { FirestoreDocumentContext } from './context';
-import { build, cachedGetter, Maybe } from '@dereekb/util';
+import { build, Maybe } from '@dereekb/util';
 import { FirestoreModelNameRef, FirestoreModelIdentity, FirestoreModelIdentityRef } from '../collection/collection';
 import { InterceptAccessorFactoryFunction } from './accessor.wrap';
 

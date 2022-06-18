@@ -2,7 +2,12 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
-## [8.0.2](https://github.com/dereekb/dbx-components/compare/v8.0.1-dev...v8.0.2) (2022-06-17)
+# [8.1.0](https://github.com/dereekb/dbx-components/compare/v8.0.1-dev...v8.1.0) (2022-06-18)
+
+
+### Features
+
+* added jest fail test utilities ([#13](https://github.com/dereekb/dbx-components/issues/13)) ([5891777](https://github.com/dereekb/dbx-components/commit/5891777470a339892c8e7045c24b5dea174b1736))
 
 
 
