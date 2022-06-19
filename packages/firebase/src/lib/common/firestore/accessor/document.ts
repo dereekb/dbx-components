@@ -3,16 +3,16 @@
 
 import { Observable } from 'rxjs';
 import { FirestoreAccessorDriverRef } from '../driver/accessor';
-import { FirestoreModelId, FirestoreModelIdRef, FirestoreModelKey, FirestoreModelKeyRef, FirestoreModelName } from './../collection/collection';
+import { FirestoreCollectionName, FirestoreCollectionNameRef, FirestoreModelId, FirestoreModelIdRef, FirestoreModelKey, FirestoreModelKeyRef, FirestoreModelType } from './../collection/collection';
 import { DocumentReference, CollectionReference, Transaction, WriteBatch, DocumentSnapshot, SnapshotOptions, WriteResult } from '../types';
 import { createOrUpdateWithAccessorSet, dataFromSnapshotStream, FirestoreDocumentDataAccessor } from './accessor';
 import { CollectionReferenceRef, DocumentReferenceRef, FirestoreContextReference, FirestoreDataConverterRef } from '../reference';
 import { FirestoreDocumentContext } from './context';
 import { build, Maybe } from '@dereekb/util';
-import { FirestoreModelNameRef, FirestoreModelIdentity, FirestoreModelIdentityRef } from '../collection/collection';
+import { FirestoreModelTypeRef, FirestoreModelIdentity, FirestoreModelTypeModelIdentityRef } from '../collection/collection';
 import { InterceptAccessorFactoryFunction } from './accessor.wrap';
 
-export interface FirestoreDocument<T, M extends FirestoreModelName = FirestoreModelName> extends DocumentReferenceRef<T>, CollectionReferenceRef<T>, FirestoreModelIdentityRef<M>, FirestoreModelNameRef<M>, FirestoreModelKeyRef, FirestoreModelIdRef {
+export interface FirestoreDocument<T, M extends FirestoreModelType = FirestoreModelType> extends DocumentReferenceRef<T>, CollectionReferenceRef<T>, FirestoreModelTypeModelIdentityRef<M>, FirestoreModelTypeRef<M>, FirestoreCollectionNameRef, FirestoreModelKeyRef, FirestoreModelIdRef {
   readonly accessor: FirestoreDocumentDataAccessor<T>;
   readonly id: string;
 }
@@ -20,7 +20,7 @@ export interface FirestoreDocument<T, M extends FirestoreModelName = FirestoreMo
 /**
  * Abstract FirestoreDocument implementation that extends a FirestoreDocumentDataAccessor.
  */
-export abstract class AbstractFirestoreDocument<T, D extends AbstractFirestoreDocument<T, any, M>, M extends FirestoreModelName = FirestoreModelName> implements FirestoreDocument<T>, LimitedFirestoreDocumentAccessorRef<T, D>, CollectionReferenceRef<T> {
+export abstract class AbstractFirestoreDocument<T, D extends AbstractFirestoreDocument<T, any, M>, M extends FirestoreModelType = FirestoreModelType> implements FirestoreDocument<T>, LimitedFirestoreDocumentAccessorRef<T, D>, CollectionReferenceRef<T>, FirestoreCollectionNameRef {
   readonly stream$ = this.accessor.stream();
   readonly data$: Observable<T> = dataFromSnapshotStream(this.stream$);
 
@@ -30,6 +30,10 @@ export abstract class AbstractFirestoreDocument<T, D extends AbstractFirestoreDo
 
   get modelType(): M {
     return this.modelIdentity.modelType;
+  }
+
+  get collectionName(): FirestoreCollectionName {
+    return this.modelIdentity.collectionName;
   }
 
   get id(): FirestoreModelId {
@@ -73,7 +77,7 @@ export interface LimitedFirestoreDocumentAccessorRef<T, D extends FirestoreDocum
 
 export type FirestoreDocumentAccessorRef<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> = LimitedFirestoreDocumentAccessorRef<T, D, FirestoreDocumentAccessor<T, D>>;
 
-export interface LimitedFirestoreDocumentAccessor<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> extends FirestoreModelIdentityRef, FirestoreAccessorDriverRef {
+export interface LimitedFirestoreDocumentAccessor<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> extends FirestoreModelTypeModelIdentityRef, FirestoreAccessorDriverRef {
   readonly databaseContext: FirestoreDocumentContext<T>;
 
   /**
@@ -155,7 +159,7 @@ export interface LimitedFirestoreDocumentAccessorFactory<T, D extends FirestoreD
 /**
  * FirestoreDocumentAccessor configuration.
  */
-export interface LimitedFirestoreDocumentAccessorFactoryConfig<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> extends FirestoreDataConverterRef<T>, FirestoreModelIdentityRef, FirestoreContextReference, FirestoreAccessorDriverRef {
+export interface LimitedFirestoreDocumentAccessorFactoryConfig<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> extends FirestoreDataConverterRef<T>, FirestoreModelTypeModelIdentityRef, FirestoreContextReference, FirestoreAccessorDriverRef {
   /**
    * Optional InterceptAccessorFactoryFunction to intercept/return a modified accessor factory.
    */
@@ -165,7 +169,7 @@ export interface LimitedFirestoreDocumentAccessorFactoryConfig<T, D extends Fire
 
 export function limitedFirestoreDocumentAccessorFactory<T, D extends FirestoreDocument<T> = FirestoreDocument<T>>(config: LimitedFirestoreDocumentAccessorFactoryConfig<T, D>): LimitedFirestoreDocumentAccessorFactoryFunction<T, D> {
   const { firestoreContext, firestoreAccessorDriver, makeDocument, accessorFactory: interceptAccessorFactory, converter, modelIdentity } = config;
-  const expectedCollectionName = firestoreAccessorDriver.fuzzedPathForPath ? firestoreAccessorDriver.fuzzedPathForPath(modelIdentity.collection) : modelIdentity.collection;
+  const expectedCollectionName = firestoreAccessorDriver.fuzzedPathForPath ? firestoreAccessorDriver.fuzzedPathForPath(modelIdentity.collectionName) : modelIdentity.collectionName;
 
   return (context?: FirestoreDocumentContext<T>) => {
     const databaseContext: FirestoreDocumentContext<T> = context ?? config.firestoreAccessorDriver.defaultContextFactory();
@@ -184,7 +188,7 @@ export function limitedFirestoreDocumentAccessorFactory<T, D extends FirestoreDo
       const ref: DocumentReference<T> = firestoreAccessorDriver.docAtPath(firestoreContext.firestore, fullPath);
 
       if (ref.parent?.id !== expectedCollectionName) {
-        throw new Error(`unexpected key/path "${fullPath}" for expected type "${modelIdentity.collection}"/"${modelIdentity.modelType}".`);
+        throw new Error(`unexpected key/path "${fullPath}" for expected type "${modelIdentity.collectionName}"/"${modelIdentity.modelType}".`);
       }
 
       return ref.withConverter(converter);
