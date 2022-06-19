@@ -19,7 +19,7 @@ export interface Example extends UserRelatedById {
 
 export type ExampleRoles = GrantedReadRole;
 
-export class ExampleDocument extends AbstractFirestoreDocument<Example, ExampleDocument> {
+export class ExampleDocument extends AbstractFirestoreDocument<Example, ExampleDocument, typeof exampleIdentity> {
   get modelIdentity() {
     return exampleIdentity;
   }

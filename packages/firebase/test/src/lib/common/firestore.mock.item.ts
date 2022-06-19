@@ -47,7 +47,7 @@ export interface MockItem {
 
 export type MockItemRoles = GrantedReadRole | 'admin';
 
-export class MockItemDocument extends AbstractFirestoreDocument<MockItem, MockItemDocument> {
+export class MockItemDocument extends AbstractFirestoreDocument<MockItem, MockItemDocument, typeof mockItemIdentity> {
   get modelIdentity() {
     return mockItemIdentity;
   }
@@ -120,7 +120,7 @@ export type MockItemPrivateRoles = GrantedReadRole | 'admin';
 /**
  * FirestoreDocument for MockItem
  */
-export class MockItemPrivateDocument extends AbstractFirestoreDocument<MockItemPrivate, MockItemPrivateDocument> {
+export class MockItemPrivateDocument extends AbstractFirestoreDocument<MockItemPrivate, MockItemPrivateDocument, typeof mockItemPrivateIdentity> {
   get modelIdentity() {
     return mockItemPrivateIdentity;
   }
@@ -205,7 +205,7 @@ export type MockItemUserRoles = GrantedReadRole | 'admin';
 /**
  * FirestoreDocument for MockItem
  */
-export class MockItemUserDocument extends AbstractFirestoreDocument<MockItemUser, MockItemUserDocument> {
+export class MockItemUserDocument extends AbstractFirestoreDocument<MockItemUser, MockItemUserDocument, typeof mockItemUserIdentity> {
   get modelIdentity() {
     return mockItemUserIdentity;
   }
@@ -298,8 +298,8 @@ export type MockItemSubItemRoles = GrantedReadRole | 'admin';
 /**
  * FirestoreDocument for MockItem
  */
-export class MockItemSubItemDocument extends AbstractFirestoreDocumentWithParent<MockItem, MockItemSubItem, MockItemSubItemDocument> {
-  get modelIdentity(): FirestoreModelIdentity {
+export class MockItemSubItemDocument extends AbstractFirestoreDocumentWithParent<MockItem, MockItemSubItem, MockItemSubItemDocument, typeof mockItemSubItemIdentity> {
+  get modelIdentity() {
     return mockItemSubItemIdentity;
   }
 }
@@ -374,7 +374,7 @@ export type MockItemSubItemDeepRoles = GrantedReadRole | 'admin';
 /**
  * FirestoreDocument for MockSubItem
  */
-export class MockItemSubItemDeepDocument extends AbstractFirestoreDocumentWithParent<MockItemSubItem, MockItemSubItemDeep, MockItemSubItemDeepDocument> {
+export class MockItemSubItemDeepDocument extends AbstractFirestoreDocumentWithParent<MockItemSubItem, MockItemSubItemDeep, MockItemSubItemDeepDocument, typeof mockItemSubItemDeepIdentity> {
   get modelIdentity() {
     return mockItemSubItemDeepIdentity;
   }

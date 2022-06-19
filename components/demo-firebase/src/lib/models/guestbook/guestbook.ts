@@ -38,7 +38,7 @@ export type GuestbookRoles = 'admin' | GrantedReadRole;
 
 export type GuestbookWithId = DocumentDataWithId<Guestbook>;
 
-export class GuestbookDocument extends AbstractFirestoreDocument<Guestbook, GuestbookDocument> {
+export class GuestbookDocument extends AbstractFirestoreDocument<Guestbook, GuestbookDocument, typeof guestbookIdentity> {
   get modelIdentity() {
     return guestbookIdentity;
   }
@@ -98,7 +98,7 @@ export interface GuestbookEntry extends UserRelated, UserRelatedById {
 
 export type GuestbookEntryRoles = 'owner' | GrantedReadRole;
 
-export class GuestbookEntryDocument extends AbstractFirestoreDocumentWithParent<Guestbook, GuestbookEntry, GuestbookEntryDocument> {
+export class GuestbookEntryDocument extends AbstractFirestoreDocumentWithParent<Guestbook, GuestbookEntry, GuestbookEntryDocument, typeof guestbookEntryIdentity> {
   get modelIdentity() {
     return guestbookEntryIdentity;
   }

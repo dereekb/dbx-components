@@ -56,6 +56,9 @@ export type FirestoreModelIdentity<M extends FirestoreModelType = FirestoreModel
     readonly model: M; // NOTE: Remove later on.
   };
 
+export type FirestoreModelIdentityModelType<I> = I extends FirestoreModelIdentity<infer M> ? M : never;
+export type FirestoreModelIdentityCollectionName<I> = I extends FirestoreModelIdentity<infer M, infer C> ? C : never;
+
 /**
  * A root-level FirestoreModelIdentity
  */
@@ -148,7 +151,7 @@ export interface FirestoreCollectionNameRef<C extends FirestoreCollectionName = 
 }
 
 /**
- * Reference to a FirestoreModelIdentity via the
+ * Reference to a FirestoreModelIdentity via the FirestoreModelType and FirestoreCollectionName
  */
 export interface FirestoreModelTypeModelIdentityRef<M extends FirestoreModelType = FirestoreModelType, C extends FirestoreCollectionName = FirestoreCollectionName> {
   /**
@@ -160,7 +163,12 @@ export interface FirestoreModelTypeModelIdentityRef<M extends FirestoreModelType
 /**
  * Reference to a FirestoreModelIdentity
  */
-export type FirestoreModelIdentityRef<I extends FirestoreModelIdentity> = I extends FirestoreModelIdentity<infer M, infer C> ? FirestoreModelTypeModelIdentityRef<M, C> : never;
+export interface FirestoreModelIdentityRef<I extends FirestoreModelIdentity> {
+  /**
+   * Returns the FirestoreModelIdentity for this context.
+   */
+  readonly modelIdentity: I;
+}
 
 // MARK: Path
 /**
@@ -201,8 +209,8 @@ export type FirestoreModelKeyPart<C extends FirestoreCollectionName = FirestoreC
 /**
  * One part of a FirestoreModelKe
  */
-export type FirestoreIdentityModelKeyPart<I extends FirestoreModelIdentity, K extends FirestoreModelId = FirestoreModelId> = I extends FirestoreModelIdentity<infer M, infer C> ? FirestoreModelKeyPart<C, K> : never;
-export type FirestoreIdentityModelKey<I extends RootFirestoreModelIdentity, K extends FirestoreModelId = FirestoreModelId> = FirestoreIdentityModelKeyPart<I, K>;
+export type FirestoreCollectionModelKeyPart<N extends FirestoreCollectionNameRef = FirestoreCollectionNameRef, K extends FirestoreModelId = FirestoreModelId> = N extends FirestoreCollectionNameRef<infer C> ? FirestoreModelKeyPart<C, K> : never;
+export type FirestoreCollectionModelKey<N extends FirestoreCollectionNameRef = FirestoreCollectionNameRef, K extends FirestoreModelId = FirestoreModelId> = FirestoreCollectionModelKeyPart<N, K>;
 
 /**
  * Creates a firestoreModelKeyPart
@@ -211,27 +219,27 @@ export type FirestoreIdentityModelKey<I extends RootFirestoreModelIdentity, K ex
  * @param id
  * @returns
  */
-export function firestoreModelKeyPart<I extends FirestoreModelIdentity, K extends FirestoreModelId = FirestoreModelId>(identity: I, id: K): FirestoreIdentityModelKeyPart<I, K> {
-  return `${identity.collectionName}/${id}` as FirestoreIdentityModelKeyPart<I, K>;
+export function firestoreModelKeyPart<N extends FirestoreCollectionNameRef, K extends FirestoreModelId = FirestoreModelId>(identity: N, id: K): FirestoreCollectionModelKeyPart<N, K> {
+  return `${identity.collectionName}/${id}` as FirestoreCollectionModelKeyPart<N, K>;
 }
 
 /**
- * Creates a firestoreModelKey for root identities.
+ * Creates a firestoreModelKey for RootFirestoreModelIdentity values.
  *
  * @param identity
  * @param id
  * @returns
  */
-export const firestoreModelKey = firestoreModelKeyPart as <I extends RootFirestoreModelIdentity, K extends FirestoreModelId = FirestoreModelId>(identity: I, id: K) => FirestoreIdentityModelKey<I, K>;
+export const firestoreModelKey = firestoreModelKeyPart as <I extends RootFirestoreModelIdentity, K extends FirestoreModelId = FirestoreModelId>(identity: I, id: K) => FirestoreCollectionModelKey<I, K>;
 
 /**
- * Creates an array of FirestoreIdentityModelKey values from the input ids.
+ * Creates an array of FirestoreCollectionModelKey values from the input ids.
  *
  * @param identity
  * @param ids
  * @returns
  */
-export function firestoreModelKeys<I extends RootFirestoreModelIdentity, K extends FirestoreModelId = FirestoreModelId>(identity: I, ids: K[]): FirestoreIdentityModelKey<I, K>[] {
+export function firestoreModelKeys<I extends RootFirestoreModelIdentity, K extends FirestoreModelId = FirestoreModelId>(identity: I, ids: K[]): FirestoreCollectionModelKey<I, K>[] {
   return ids.map((x) => firestoreModelKey(identity, x));
 }
 
