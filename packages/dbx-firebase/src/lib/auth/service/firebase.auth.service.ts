@@ -73,10 +73,16 @@ export class DbxFirebaseAuthService implements DbxAuthService {
   readonly onLogIn$: Observable<void> = loggedInObsFromIsLoggedIn(this.isLoggedIn$);
   readonly onLogOut$: Observable<void> = loggedOutObsFromIsLoggedIn(this.isLoggedIn$);
   readonly userIdentifier$: Observable<AuthUserIdentifier> = this.currentAuthUser$.pipe(map((x) => authUserIdentifier(x?.uid)));
+  readonly uid$: Observable<AuthUserIdentifier> = this.userIdentifier$;
 
   readonly idTokenResult$: Observable<IdTokenResult> = this.authUser$.pipe(switchMap((x) => x.getIdTokenResult()));
 
   readonly claims$: Observable<ParsedToken> = this.idTokenResult$.pipe(map((x) => x.claims));
+  readonly currentAuthContextInfo$: Observable<Maybe<DbxFirebaseAuthContextInfo>> = this.currentAuthUser$.pipe(
+    switchMap((x) => this.loadAuthContextInfoForUser(x)),
+    shareReplay(1)
+  );
+  readonly authContextInfo$: Observable<Maybe<DbxFirebaseAuthContextInfo>> = this.currentAuthContextInfo$.pipe(filterMaybe());
 
   readonly authUserState$: Observable<AuthUserState>;
   readonly authRoles$: Observable<AuthRoleSet>;

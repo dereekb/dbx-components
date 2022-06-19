@@ -30,7 +30,7 @@ export interface Profile extends UserRelated, UserRelatedById {
 
 export type ProfileRoles = 'owner' | GrantedReadRole;
 
-export class ProfileDocument extends AbstractFirestoreDocument<Profile, ProfileDocument> {
+export class ProfileDocument extends AbstractFirestoreDocument<Profile, ProfileDocument, typeof profileIdentity> {
   get modelIdentity() {
     return profileIdentity;
   }
@@ -48,7 +48,7 @@ export const profileConverter = snapshotConverterFunctions<Profile>({
 export const profileAccessorFactory = copyUserRelatedDataAccessorFactoryFunction<Profile>();
 
 export function profileCollectionReference(context: FirestoreContext): CollectionReference<Profile> {
-  return context.collection(profileIdentity.collection);
+  return context.collection(profileIdentity.collectionName);
 }
 
 export type ProfileFirestoreCollection = FirestoreCollection<Profile, ProfileDocument>;
@@ -81,7 +81,7 @@ export interface ProfilePrivateData {
 
 export type ProfilePrivateDataRoles = 'owner' | GrantedReadRole;
 
-export class ProfilePrivateDataDocument extends AbstractFirestoreDocument<ProfilePrivateData, ProfilePrivateDataDocument> {
+export class ProfilePrivateDataDocument extends AbstractFirestoreDocument<ProfilePrivateData, ProfilePrivateDataDocument, typeof profilePrivateDataIdentity> {
   get modelIdentity() {
     return profilePrivateDataIdentity;
   }
@@ -98,7 +98,7 @@ export const profilePrivateDataConverter = snapshotConverterFunctions<ProfilePri
 
 export function profilePrivateDataCollectionReferenceFactory(context: FirestoreContext): (profile: ProfileDocument) => CollectionReference<ProfilePrivateData> {
   return (profile: ProfileDocument) => {
-    return context.subcollection(profile.documentRef, profilePrivateDataIdentity.collection);
+    return context.subcollection(profile.documentRef, profilePrivateDataIdentity.collectionName);
   };
 }
 
@@ -123,7 +123,7 @@ export function profilePrivateDataFirestoreCollectionFactory(firestoreContext: F
 }
 
 export function profilePrivateDataCollectionReference(context: FirestoreContext): CollectionGroup<ProfilePrivateData> {
-  return context.collectionGroup(profilePrivateDataIdentity.collection);
+  return context.collectionGroup(profilePrivateDataIdentity.collectionName);
 }
 
 export type ProfilePrivateDataFirestoreCollectionGroup = FirestoreCollectionGroup<ProfilePrivateData, ProfilePrivateDataDocument>;
