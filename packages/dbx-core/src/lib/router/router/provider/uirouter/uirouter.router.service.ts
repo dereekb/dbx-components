@@ -1,5 +1,5 @@
-import { filterNullAndUndefinedValues, KeyValueTypleValueFilter, mergeObjects } from '@dereekb/util';
-import { Subject, BehaviorSubject, Observable, switchMap, firstValueFrom, map } from 'rxjs';
+import { KeyValueTypleValueFilter, mergeObjects } from '@dereekb/util';
+import { Subject, BehaviorSubject, Observable, firstValueFrom, map } from 'rxjs';
 import { DbxRouterService, DbxRouterTransitionService } from '../../service';
 import { asSegueRef, asSegueRefString, SegueRef, SegueRefOrSegueRefRouterLink, SegueRefRawSegueParams } from '../../../segue';
 import { StateService, UIRouterGlobals, TransitionOptions, TransitionService } from '@uirouter/core';
