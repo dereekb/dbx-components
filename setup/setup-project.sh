@@ -34,7 +34,7 @@ SOURCE_BRANCH=${DBX_SETUP_PROJECT_BRANCH:-"main"}     # develop or main
 NAME=$FIREBASE_PROJECT_ID
 PROJECT_NAME=$FIREBASE_PROJECT_ID
 ANGULAR_APP_PREFIX=$FIREBASE_PROJECT_ID
-DBX_COMPONENTS_VERSION=${DBX_SETUP_PROJECT_COMPONENTS_VERSION:-"^7.1.0"}
+DBX_COMPONENTS_VERSION=${DBX_SETUP_PROJECT_COMPONENTS_VERSION:-"^8.1.0"}
 NX_VERSION=${NX_SETUP_VERSIONS:-"14.1.8"} # NOTE: 14.1.8 is the last Angular 13 version
 
 # The app prefix is used in Angular and Nest classes as the prefix for classes/components
@@ -333,8 +333,8 @@ git add --all
 git commit --no-verify -m "checkpoint: added jest configurations"
 
 # Install npm dependencies
-npm install @dereekb/dbx-analytics@$DBX_COMPONENTS_VERSION @dereekb/dbx-web@$DBX_COMPONENTS_VERSION @dereekb/dbx-form@$DBX_COMPONENTS_VERSION @dereekb/firebase@$DBX_COMPONENTS_VERSION @dereekb/firebase-server@$DBX_COMPONENTS_VERSION @dereekb/dbx-firebase@$DBX_COMPONENTS_VERSION
-npm install -D firebase-admin@10.3.0 firebase-functions@3.21.2 firebase-tools@^11.0.0 @ngrx/store-devtools@^13.0.0 @firebase/rules-unit-testing@^2.0.2 firebase-functions-test@2.2.0 envfile env-cmd
+npm install @dereekb/dbx-analytics@$DBX_COMPONENTS_VERSION @dereekb/dbx-web@$DBX_COMPONENTS_VERSION @dereekb/dbx-form@$DBX_COMPONENTS_VERSION @dereekb/firebase@$DBX_COMPONENTS_VERSION @dereekb/firebase-server@$DBX_COMPONENTS_VERSION @dereekb/dbx-firebase@$DBX_COMPONENTS_VERSION --force
+npm install -D firebase-admin@10.3.0 firebase-functions@3.21.2 firebase-tools@^11.0.0 @ngrx/store-devtools@^13.0.0 @firebase/rules-unit-testing@^2.0.2 firebase-functions-test@2.2.0 envfile env-cmd --force
 
 git add --all
 git commit --no-verify -m "checkpoint: added @dereekb dependencies"
