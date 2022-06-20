@@ -1,5 +1,6 @@
 import { itemAccumulator, ItemAccumulatorInstance, ItemAccumulatorMapFunction, PageItemIteration } from '@dereekb/rxjs';
-import { MapFunction } from '@dereekb/util';
+import { MapFunction, filterMaybeValues } from '@dereekb/util';
+import { documentDataFunction } from '../accessor';
 import { DocumentDataWithId, QueryDocumentSnapshotArray } from '../types';
 import { FirestoreItemPageIterationInstance } from './iterator';
 
@@ -28,16 +29,19 @@ export function firebaseQuerySnapshotAccumulator<O, T>(iteration: FirestoreItemP
  * @param iteration
  */
 export function firebaseQueryItemAccumulator<T>(iteration: FirestoreItemPageIterationInstance<T>): FirebaseQueryItemAccumulator<T>;
-export function firebaseQueryItemAccumulator<U, T>(iteration: FirestoreItemPageIterationInstance<T>, mapItem?: MapFunction<DocumentDataWithId<T>, U>): MappedFirebaseQuerySnapshotAccumulator<U[], T>;
-export function firebaseQueryItemAccumulator<U, T>(iteration: FirestoreItemPageIterationInstance<T>, mapItem?: MapFunction<DocumentDataWithId<T>, U>): MappedFirebaseQuerySnapshotAccumulator<U[], T> {
+export function firebaseQueryItemAccumulator<U, T>(iteration: FirestoreItemPageIterationInstance<T>, mapItem: MapFunction<DocumentDataWithId<T>, U>): MappedFirebaseQuerySnapshotAccumulator<U[], T>;
+export function firebaseQueryItemAccumulator<U, T>(iteration: FirestoreItemPageIterationInstance<T>, mapItem?: MapFunction<DocumentDataWithId<T>, U>): FirebaseQueryItemAccumulator<T> | MappedFirebaseQuerySnapshotAccumulator<U[], T>;
+export function firebaseQueryItemAccumulator<U, T>(iteration: FirestoreItemPageIterationInstance<T>, mapItem?: MapFunction<DocumentDataWithId<T>, U>): FirebaseQueryItemAccumulator<T> | MappedFirebaseQuerySnapshotAccumulator<U[], T> {
   mapItem = mapItem ?? (((x: DocumentDataWithId<T>) => x) as unknown as MapFunction<DocumentDataWithId<T>, U>);
 
+  const snapshotData = documentDataFunction<T>(true);
   const mapFn: ItemAccumulatorMapFunction<U[], QueryDocumentSnapshotArray<T>> = (x: QueryDocumentSnapshotArray<T>) => {
-    const result: U[] = x.map((y) => {
-      const data = y.data() as DocumentDataWithId<T>;
-      data.id = y.id;
-      return (mapItem as MapFunction<DocumentDataWithId<T>, U>)(data);
-    });
+    const result: U[] = filterMaybeValues(
+      x.map((y) => {
+        const data = snapshotData(y);
+        return data ? (mapItem as MapFunction<DocumentDataWithId<T>, U>)(data) : undefined;
+      })
+    );
 
     return result;
   };

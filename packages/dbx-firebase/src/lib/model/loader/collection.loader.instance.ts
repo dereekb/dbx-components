@@ -1,6 +1,6 @@
 import { PageListLoadingState, cleanupDestroyable, filterMaybe, useFirst, SubscriptionObject, accumulatorFlattenPageListLoadingState } from '@dereekb/rxjs';
 import { BehaviorSubject, combineLatest, map, shareReplay, distinctUntilChanged, Subject, throttleTime, switchMap, Observable, tap, startWith, NEVER } from 'rxjs';
-import { FirebaseQueryItemAccumulator, firebaseQueryItemAccumulator, FirestoreCollectionLike, FirestoreDocument, FirestoreItemPageIterationInstance, FirestoreItemPageIteratorFilter, FirestoreQueryConstraint, IterationQueryDocChangeWatcher, iterationQueryDocChangeWatcher } from '@dereekb/firebase';
+import { DocumentDataWithId, FirebaseQueryItemAccumulator, firebaseQueryItemAccumulator, FirestoreCollectionLike, FirestoreDocument, FirestoreItemPageIterationInstance, FirestoreItemPageIteratorFilter, FirestoreQueryConstraint, IterationQueryDocChangeWatcher, iterationQueryDocChangeWatcher } from '@dereekb/firebase';
 import { ArrayOrValue, Destroyable, Initialized, Maybe } from '@dereekb/util';
 import { DbxFirebaseCollectionLoader } from './collection.loader';
 
@@ -66,8 +66,8 @@ export class DbxFirebaseCollectionLoaderInstance<T = unknown, D extends Firestor
     shareReplay(1)
   );
 
-  readonly pageLoadingState$: Observable<PageListLoadingState<T>> = this.accumulator$.pipe(
-    switchMap((x) => accumulatorFlattenPageListLoadingState(x) as Observable<PageListLoadingState<T>>),
+  readonly pageLoadingState$: Observable<PageListLoadingState<DocumentDataWithId<T>>> = this.accumulator$.pipe(
+    switchMap((x) => accumulatorFlattenPageListLoadingState(x)),
     shareReplay(1)
   );
 
@@ -136,7 +136,7 @@ export class DbxFirebaseCollectionLoaderInstance<T = unknown, D extends Firestor
     this._collection.next(collection);
   }
 
-  // MARK: DbxFirebaseModelList
+  // MARK: DbxFirebaseCollectionLoader
   next() {
     useFirst(this.firestoreIteration$, (x) => x.next());
   }

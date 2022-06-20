@@ -1,4 +1,4 @@
-import { FirestoreItemPageIterationInstance, FirestoreQueryConstraint } from '@dereekb/firebase';
+import { DocumentDataWithId, FirestoreItemPageIterationInstance, FirestoreQueryConstraint } from '@dereekb/firebase';
 import { PageListLoadingState } from '@dereekb/rxjs';
 import { Maybe, ArrayOrValue } from '@dereekb/util';
 import { Observable } from 'rxjs';
@@ -9,7 +9,7 @@ import { Observable } from 'rxjs';
 export interface DbxFirebaseCollectionLoader<T = unknown> {
   readonly constraints$: Observable<Maybe<ArrayOrValue<FirestoreQueryConstraint>>>;
   readonly firestoreIteration$: Observable<FirestoreItemPageIterationInstance<T>>;
-  readonly pageLoadingState$: Observable<PageListLoadingState<T>>;
+  readonly pageLoadingState$: Observable<PageListLoadingState<DocumentDataWithId<T>>>;
 
   /**
    * Maximum number of pages to load from the interation.

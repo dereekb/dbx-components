@@ -136,8 +136,8 @@ export function documentData<T>(snapshot: DocumentSnapshot<T>, withId = false): 
 export type DocumentDataFunction<T> = (snapshot: DocumentSnapshot<T>) => Maybe<T>;
 export type DocumentDataWithIdFunction<T> = (snapshot: DocumentSnapshot<T>) => Maybe<DocumentDataWithId<T>>;
 
-export function documentDataFunction<T>(withId: true): (snapshot: DocumentSnapshot<T>) => DocumentDataWithIdFunction<T>;
-export function documentDataFunction<T>(withId: false): (snapshot: DocumentSnapshot<T>) => DocumentDataFunction<T>;
+export function documentDataFunction<T>(withId: true): DocumentDataWithIdFunction<T>;
+export function documentDataFunction<T>(withId: false): DocumentDataFunction<T>;
 export function documentDataFunction<T>(withId: boolean): DocumentDataWithIdFunction<T> | DocumentDataFunction<T>;
 export function documentDataFunction<T>(withId: boolean): DocumentDataWithIdFunction<T> | DocumentDataFunction<T> {
   return withId ? documentDataWithId : (snapshot) => snapshot.data();
@@ -176,3 +176,28 @@ export async function useDocumentSnapshot<T, D extends FirestoreDocument<T>, O =
  * MappedUseAsyncFunction to load snapshot data from the input document and use it.
  */
 export const useDocumentSnapshotData = wrapUseAsyncFunction(useDocumentSnapshot, (x) => x.data());
+
+// MARK: Key Accessors
+export function firestoreModelIdFromDocument<T, D extends FirestoreDocument<T>>(document: D): FirestoreModelId {
+  return document.id;
+}
+
+export function firestoreModelIdsFromDocuments<T, D extends FirestoreDocument<T>>(documents: D[]): FirestoreModelId[] {
+  return documents.map(firestoreModelIdFromDocument);
+}
+
+export function firestoreModelKeyFromDocument<T, D extends FirestoreDocument<T>>(document: D): FirestoreModelKey {
+  return document.key;
+}
+
+export function firestoreModelKeysFromDocuments<T, D extends FirestoreDocument<T>>(documents: D[]): FirestoreModelKey[] {
+  return documents.map(firestoreModelKeyFromDocument);
+}
+
+export function documentReferenceFromDocument<T, D extends FirestoreDocument<T>>(document: D): DocumentReference<T> {
+  return document.documentRef;
+}
+
+export function documentReferencesFromDocuments<T, D extends FirestoreDocument<T>>(documents: D[]): DocumentReference<T>[] {
+  return documents.map(documentReferenceFromDocument);
+}
