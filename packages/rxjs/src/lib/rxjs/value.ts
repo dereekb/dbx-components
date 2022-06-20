@@ -1,5 +1,6 @@
 import { combineLatest, filter, skipWhile, startWith, switchMap, timeout, MonoTypeOperatorFunction, Observable, of, OperatorFunction, map, delay } from 'rxjs';
 import { GetterOrValue, getValueFromGetter, Maybe } from '@dereekb/util';
+import { asObservableFromGetter, MaybeObservableOrValueGetter, ObservableOrValueGetter } from './getter';
 
 // MARK: Types
 export type IsCheckFunction<T = unknown> = (value: T) => Observable<boolean>;
@@ -59,6 +60,24 @@ export function switchMapMaybeDefault<T = unknown>(defaultValue: Maybe<T> = unde
       return x;
     } else {
       return of(defaultValue);
+    }
+  });
+}
+
+/**
+ * Provides a switchMap that will emit the observable value if the observable is defined, otherwise will use the input default.
+ *
+ * @param defaultValue
+ * @returns
+ */
+export function switchMapToDefault<T = unknown>(defaultObs: MaybeObservableOrValueGetter<T>): OperatorFunction<Maybe<T>, Maybe<T>>;
+export function switchMapToDefault<T = unknown>(defaultObs: ObservableOrValueGetter<T>): OperatorFunction<Maybe<T>, T>;
+export function switchMapToDefault<T = unknown>(defaultObs: MaybeObservableOrValueGetter<T>): OperatorFunction<Maybe<T>, Maybe<T>> {
+  return switchMap((x: Maybe<T>) => {
+    if (x != null) {
+      return of(x);
+    } else {
+      return asObservableFromGetter(defaultObs);
     }
   });
 }

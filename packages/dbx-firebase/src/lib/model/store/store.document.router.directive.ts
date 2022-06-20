@@ -1,8 +1,9 @@
-import { shareReplay, Observable, distinctUntilChanged, BehaviorSubject, combineLatest, map } from 'rxjs';
+import { Observable } from 'rxjs';
 import { OnDestroy, Directive, Host, Input, OnInit } from '@angular/core';
-import { DbxRouterService, AbstractSubscriptionDirective } from '@dereekb/dbx-core';
+import { DbxRouterService, AbstractSubscriptionDirective, DbxRouteParamReaderInstance } from '@dereekb/dbx-core';
 import { DbxFirebaseDocumentStoreDirective } from './store.document.directive';
 import { Maybe, ModelKey } from '@dereekb/util';
+import { MaybeObservableOrValueGetter } from '@dereekb/rxjs';
 
 export const DBX_FIREBASE_ROUTER_SYNC_DEFAULT_ID_PARAM_KEY = 'id';
 
@@ -13,16 +14,11 @@ export const DBX_FIREBASE_ROUTER_SYNC_DEFAULT_ID_PARAM_KEY = 'id';
   selector: '[dbxFirebaseDocumentStoreRouteId]'
 })
 export class DbxFirebaseDocumentStoreRouteIdDirective<T = unknown> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
-  private _idParamKey = new BehaviorSubject<string>(DBX_FIREBASE_ROUTER_SYNC_DEFAULT_ID_PARAM_KEY);
-  readonly idParamKey$ = this._idParamKey.asObservable();
+  private _paramReader = new DbxRouteParamReaderInstance<ModelKey>(this.dbxRouterService, DBX_FIREBASE_ROUTER_SYNC_DEFAULT_ID_PARAM_KEY);
 
-  readonly idFromParams$: Observable<Maybe<ModelKey>> = combineLatest([this.idParamKey$, this.dbxRouterService.params$]).pipe(
-    map(([key, params]) => {
-      return (params[key] as Maybe<string>) ?? undefined;
-    }),
-    distinctUntilChanged(),
-    shareReplay(1)
-  );
+  readonly idParamKey$ = this._paramReader.paramKey$;
+  readonly idFromParams$: Observable<Maybe<ModelKey>> = this._paramReader.paramValue$;
+  readonly id$: Observable<Maybe<ModelKey>> = this._paramReader.value$;
 
   constructor(@Host() readonly dbxFirebaseDocumentStoreDirective: DbxFirebaseDocumentStoreDirective<T>, readonly dbxRouterService: DbxRouterService) {
     super();
@@ -34,16 +30,21 @@ export class DbxFirebaseDocumentStoreRouteIdDirective<T = unknown> extends Abstr
 
   override ngOnDestroy(): void {
     super.ngOnDestroy();
-    this._idParamKey.complete();
+    this._paramReader.destroy();
   }
 
   // MARK: Input
   @Input('dbxFirebaseDocumentStoreRouteId')
   get idParam() {
-    return this._idParamKey.value;
+    return this._paramReader.paramKey;
   }
 
   set idParam(idParam: string) {
-    this._idParamKey.next(idParam || DBX_FIREBASE_ROUTER_SYNC_DEFAULT_ID_PARAM_KEY);
+    this._paramReader.paramKey = idParam;
+  }
+
+  @Input()
+  set dbxFirebaseDocumentStoreRouteIdDefault(defaultValue: MaybeObservableOrValueGetter<ModelKey>) {
+    this._paramReader.setDefaultValue(defaultValue);
   }
 }
