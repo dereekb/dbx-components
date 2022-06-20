@@ -1,6 +1,7 @@
-import { combineLatest, filter, skipWhile, startWith, switchMap, timeout, MonoTypeOperatorFunction, Observable, of, OperatorFunction, map, delay } from 'rxjs';
+import { combineLatest, filter, skipWhile, startWith, switchMap, timeout, MonoTypeOperatorFunction, Observable, of, OperatorFunction, map, delay, first } from 'rxjs';
 import { GetterOrValue, getValueFromGetter, Maybe } from '@dereekb/util';
 import { asObservableFromGetter, MaybeObservableOrValueGetter, ObservableOrValueGetter } from './getter';
+import { ObservableDecisionFunction } from './map';
 
 // MARK: Types
 export type IsCheckFunction<T = unknown> = (value: T) => Observable<boolean>;
@@ -65,6 +66,11 @@ export function switchMapMaybeDefault<T = unknown>(defaultValue: Maybe<T> = unde
 }
 
 /**
+ * Details when to pass the default value through.
+ */
+export type SwitchMapToDefaultFilterFunction<T> = ObservableDecisionFunction<Maybe<T>>;
+
+/**
  * Provides a switchMap that will emit the observable value if the observable is defined, otherwise will use the input default.
  *
  * @param defaultValue
@@ -72,14 +78,20 @@ export function switchMapMaybeDefault<T = unknown>(defaultValue: Maybe<T> = unde
  */
 export function switchMapToDefault<T = unknown>(defaultObs: MaybeObservableOrValueGetter<T>): OperatorFunction<Maybe<T>, Maybe<T>>;
 export function switchMapToDefault<T = unknown>(defaultObs: ObservableOrValueGetter<T>): OperatorFunction<Maybe<T>, T>;
-export function switchMapToDefault<T = unknown>(defaultObs: MaybeObservableOrValueGetter<T>): OperatorFunction<Maybe<T>, Maybe<T>> {
-  return switchMap((x: Maybe<T>) => {
-    if (x != null) {
-      return of(x);
-    } else {
-      return asObservableFromGetter(defaultObs);
-    }
-  });
+export function switchMapToDefault<T = unknown>(defaultObs: MaybeObservableOrValueGetter<T>, useDefault?: SwitchMapToDefaultFilterFunction<T>): OperatorFunction<Maybe<T>, Maybe<T>>;
+export function switchMapToDefault<T = unknown>(defaultObs: MaybeObservableOrValueGetter<T>, useDefault?: SwitchMapToDefaultFilterFunction<T>): OperatorFunction<Maybe<T>, Maybe<T>> {
+  const useDefaultFn = useDefault ? useDefault : (x: Maybe<T>) => of(x == null);
+  return switchMap((x: Maybe<T>) =>
+    useDefaultFn(x).pipe(
+      switchMap((useDefault) => {
+        if (useDefault) {
+          return asObservableFromGetter(defaultObs);
+        } else {
+          return of(x);
+        }
+      })
+    )
+  );
 }
 
 /**

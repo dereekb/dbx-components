@@ -1,6 +1,6 @@
-import { ObservableOrValueGetter, MaybeObservableOrValueGetter, switchMapToDefault, maybeValueFromObservableOrValueGetter } from '@dereekb/rxjs';
+import { ObservableOrValueGetter, MaybeObservableOrValueGetter, switchMapToDefault, maybeValueFromObservableOrValueGetter, SwitchMapToDefaultFilterFunction } from '@dereekb/rxjs';
 import { Destroyable, Maybe } from '@dereekb/util';
-import { BehaviorSubject, combineLatest, distinctUntilChanged, map, Observable, shareReplay } from 'rxjs';
+import { BehaviorSubject, combineLatest, distinctUntilChanged, map, Observable, of, shareReplay, switchMap } from 'rxjs';
 import { DbxRouterService } from '../service/router.service';
 
 /**
@@ -20,6 +20,9 @@ export interface DbxRouteParamReader<T> {
    */
   readonly value$: Observable<Maybe<T>>;
 
+  /**
+   * Param key getter/setters.
+   */
   get paramKey(): string;
   set paramKey(paramKey: Maybe<string>);
 
@@ -48,6 +51,7 @@ export class DbxRouteParamReaderInstance<T> implements DbxRouteParamReader<T>, D
     shareReplay(1)
   );
 
+  readonly nextDefaultValue$: Observable<Maybe<T>> = this._defaultValue.pipe(maybeValueFromObservableOrValueGetter(), shareReplay(1));
   readonly defaultValue$: Observable<Maybe<T>> = this._defaultValue.pipe(maybeValueFromObservableOrValueGetter(), shareReplay(1));
 
   readonly value$: Observable<Maybe<T>> = this.paramValue$.pipe(switchMapToDefault(this.defaultValue$), shareReplay(1));

@@ -1,13 +1,13 @@
-import { Observable } from 'rxjs';
-import { filterMaybe } from '@dereekb/rxjs';
+import { Observable, combineLatest, firstValueFrom } from 'rxjs';
+import { asObservable, filterMaybe, ObservableOrValue } from '@dereekb/rxjs';
 import { DbxRouterService, DbxRouterTransitionService } from '../../service';
-import { asSegueRef, SegueRefOrSegueRefRouterLink, SegueRefRawSegueParams } from '../../../segue';
+import { asSegueRef, SegueRef, SegueRefOrSegueRefRouterLink, SegueRefRawSegueParams } from '../../../segue';
 import { DbxRouterTransitionEvent, DbxRouterTransitionEventType } from '../../transition/transition';
-import { ActivatedRoute, NavigationBehaviorOptions, NavigationEnd, NavigationExtras, NavigationStart, Router, UrlTree } from '@angular/router';
+import { ActivatedRoute, NavigationBehaviorOptions, NavigationEnd, NavigationExtras, NavigationStart, Params, Router, UrlTree } from '@angular/router';
 import { Injectable } from '@angular/core';
 import { isArray } from 'class-validator';
 import { map } from 'rxjs/operators';
-import { Maybe } from '@dereekb/util';
+import { KeyValueTypleValueFilter, Maybe, mergeObjects } from '@dereekb/util';
 
 /**
  * AngularRouter implementation of DbxRouterService and DbxRouterTransitionService.
@@ -37,20 +37,42 @@ export class DbxAngularRouterService implements DbxRouterService, DbxRouterTrans
 
   constructor(readonly router: Router, readonly activatedRoute: ActivatedRoute) {}
 
-  go(input: SegueRefOrSegueRefRouterLink<NavigationExtras | NavigationBehaviorOptions>): Promise<boolean> {
-    const segueRef = asSegueRef(input);
-    const ref = segueRef.ref;
+  go(input: ObservableOrValue<SegueRefOrSegueRefRouterLink<NavigationExtras | NavigationBehaviorOptions>>): Promise<boolean> {
+    const inputObs = asObservable(input);
+    return firstValueFrom(inputObs).then((inputSegueRef) => {
+      const segueRef = asSegueRef(inputSegueRef);
+      const ref = segueRef.ref;
 
-    if (isArray(ref)) {
-      return this.router.navigate(ref as unknown[], {
-        ...segueRef.refOptions,
-        queryParams: segueRef.refParams
-      });
-    } else {
-      return this.router.navigateByUrl(ref as string | UrlTree, {
-        ...segueRef.refOptions
-      });
-    }
+      if (isArray(ref)) {
+        return this.router.navigate(ref as unknown[], {
+          ...segueRef.refOptions,
+          queryParams: segueRef.refParams
+        });
+      } else {
+        return this.router.navigateByUrl(ref as string | UrlTree, {
+          ...segueRef.refOptions
+        });
+      }
+    });
+  }
+
+  updateParams(inputParams: ObservableOrValue<SegueRefRawSegueParams>): Promise<boolean> {
+    const segueUpdate: Observable<SegueRefOrSegueRefRouterLink<NavigationExtras | NavigationBehaviorOptions>> = combineLatest([this.activatedRoute.params, asObservable(inputParams)]).pipe(
+      map(([currentParams, params]) => {
+        const refParams = mergeObjects([currentParams, params], KeyValueTypleValueFilter.UNDEFINED);
+        const segueRef: SegueRef<NavigationExtras | NavigationBehaviorOptions> = {
+          ref: this.activatedRoute.pathFromRoot,
+          refParams,
+          refOptions: {
+            replaceUrl: true
+          }
+        };
+
+        return segueRef;
+      })
+    );
+
+    return this.go(segueUpdate);
   }
 
   isActive(segueRef: SegueRefOrSegueRefRouterLink): boolean {
