@@ -2,6 +2,21 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [8.2.0](https://github.com/dereekb/dbx-components/compare/v8.1.2-dev...v8.2.0) (2022-06-20)
+
+
+### Bug Fixes
+
+* bump setup-project components version ([7c70476](https://github.com/dereekb/dbx-components/commit/7c704765692e9cbe21014082f36a52493bd27cd9))
+
+
+### Features
+
+* added DbxRouteParamDefaultInstance ([2608580](https://github.com/dereekb/dbx-components/commit/26085806ff2578ce2864140fc78e883b399c05e9))
+* added DbxRouteParamReader ([a855283](https://github.com/dereekb/dbx-components/commit/a8552835aabbfa85814984a8fdafd7bd1fb2963e))
+
+
+
 ## [8.1.2](https://github.com/dereekb/dbx-components/compare/v8.1.1-dev...v8.1.2) (2022-06-19)
 
 

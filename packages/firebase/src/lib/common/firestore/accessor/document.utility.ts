@@ -1,4 +1,5 @@
 import { AsyncGetterOrValue, Maybe, performMakeLoop, PromiseUtility, UseAsync, wrapUseAsyncFunction, useAsync, makeWithFactory } from '@dereekb/util';
+import { FirestoreModelId, FirestoreModelKey } from '../collection';
 import { DocumentDataWithId, DocumentReference, DocumentSnapshot, QuerySnapshot, Transaction } from '../types';
 import { FirestoreDocument, FirestoreDocumentAccessor, LimitedFirestoreDocumentAccessor, LimitedFirestoreDocumentAccessorContextExtension } from './document';
 
@@ -54,12 +55,30 @@ export function loadDocumentsForSnapshots<T, D extends FirestoreDocument<T>>(acc
   return snapshots.docs.map((x) => accessor.loadDocument(x.ref));
 }
 
+export function loadDocumentsForDocumentReferencesFromValues<I, T, D extends FirestoreDocument<T>>(accessor: LimitedFirestoreDocumentAccessor<T, D>, values: I[], getRef: (value: I) => DocumentReference<T>): D[] {
+  return loadDocumentsForDocumentReferences(accessor, values.map(getRef));
+}
+
+export const loadDocumentsForValues = loadDocumentsForDocumentReferencesFromValues;
+
 export function loadDocumentsForDocumentReferences<T, D extends FirestoreDocument<T>>(accessor: LimitedFirestoreDocumentAccessor<T, D>, refs: DocumentReference<T>[]): D[] {
   return refs.map((x) => accessor.loadDocument(x));
 }
 
-export function loadDocumentsForValues<I, T, D extends FirestoreDocument<T>>(accessor: LimitedFirestoreDocumentAccessor<T, D>, values: I[], getRef: (value: I) => DocumentReference<T>): D[] {
-  return values.map((x) => accessor.loadDocument(getRef(x)));
+export function loadDocumentsForKeysFromValues<I, T, D extends FirestoreDocument<T>>(accessor: LimitedFirestoreDocumentAccessor<T, D>, values: I[], getKey: (value: I) => FirestoreModelKey): D[] {
+  return loadDocumentsForKeys(accessor, values.map(getKey));
+}
+
+export function loadDocumentsForKeys<T, D extends FirestoreDocument<T>>(accessor: LimitedFirestoreDocumentAccessor<T, D>, keys: FirestoreModelKey[]): D[] {
+  return keys.map((x) => accessor.loadDocumentForKey(x));
+}
+
+export function loadDocumentsForIdsFromValues<I, T, D extends FirestoreDocument<T>>(accessor: LimitedFirestoreDocumentAccessor<T, D>, values: I[], getId: (value: I) => FirestoreModelId): D[] {
+  return loadDocumentsForKeys(accessor, values.map(getId));
+}
+
+export function loadDocumentsForIds<T, D extends FirestoreDocument<T>>(accessor: FirestoreDocumentAccessor<T, D>, ids: FirestoreModelId[]): D[] {
+  return ids.map((x) => accessor.loadDocumentForId(x));
 }
 
 /**

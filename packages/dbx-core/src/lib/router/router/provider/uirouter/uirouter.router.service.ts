@@ -1,9 +1,11 @@
-import { Subject, BehaviorSubject } from 'rxjs';
+import { filterNullAndUndefinedValues, KeyValueTypleValueFilter, mergeObjects } from '@dereekb/util';
+import { Subject, BehaviorSubject, Observable, switchMap, firstValueFrom, map } from 'rxjs';
 import { DbxRouterService, DbxRouterTransitionService } from '../../service';
-import { asSegueRef, asSegueRefString, SegueRefOrSegueRefRouterLink, SegueRefRawSegueParams } from '../../../segue';
+import { asSegueRef, asSegueRefString, SegueRef, SegueRefOrSegueRefRouterLink, SegueRefRawSegueParams } from '../../../segue';
 import { StateService, UIRouterGlobals, TransitionOptions, TransitionService } from '@uirouter/core';
 import { Injectable, OnDestroy } from '@angular/core';
 import { DbxRouterTransitionEvent, DbxRouterTransitionEventType } from '../../transition/transition';
+import { ObservableOrValue, asObservable } from '@dereekb/rxjs';
 
 /**
  * UIRouter implementation of DbxRouterService and DbxRouterTransitionService.
@@ -42,13 +44,38 @@ export class DbxUIRouterService implements DbxRouterService, DbxRouterTransition
     return this.uiRouterGlobals.params;
   }
 
-  go(input: SegueRefOrSegueRefRouterLink<TransitionOptions>): Promise<boolean> {
-    const segueRef = asSegueRef(input);
-    const params = { ...this.uiRouterGlobals.current.params, ...segueRef.refParams };
-    return this.state
-      .go(segueRef.ref as string, params, segueRef.refOptions)
-      .then(() => true)
-      .catch(() => false);
+  go(input: ObservableOrValue<SegueRefOrSegueRefRouterLink<TransitionOptions>>): Promise<boolean> {
+    const inputObs = asObservable(input);
+    return firstValueFrom(inputObs).then((inputSegueRef) => {
+      const segueRef = asSegueRef(inputSegueRef);
+      const params = { ...this.uiRouterGlobals.current.params, ...segueRef.refParams };
+      return this.state
+        .go(segueRef.ref as string, params, segueRef.refOptions)
+        .then(() => true)
+        .catch(() => false);
+    });
+  }
+
+  updateParams(inputParams: ObservableOrValue<SegueRefRawSegueParams>): Promise<boolean> {
+    const segueUpdate: Observable<SegueRefOrSegueRefRouterLink<TransitionOptions>> = asObservable(inputParams).pipe(
+      map((params) => {
+        const currentParams = this.uiRouterGlobals.params;
+        const refParams = mergeObjects([currentParams, params], KeyValueTypleValueFilter.UNDEFINED);
+
+        const ref: SegueRef<TransitionOptions> = {
+          ref: '.',
+          refParams,
+          refOptions: {
+            location: 'replace',
+            inherit: true
+          }
+        };
+
+        return ref;
+      })
+    );
+
+    return this.go(segueUpdate);
   }
 
   isActive(input: SegueRefOrSegueRefRouterLink): boolean {

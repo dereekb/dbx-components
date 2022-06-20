@@ -19,6 +19,13 @@ export abstract class DbxRouterService {
   abstract go(segueRef: ObservableOrValue<SegueRefOrSegueRefRouterLink>): Promise<boolean>;
 
   /**
+   * Navigates to the current url with updated parameters. Will be merged with the existing parameters.
+   *
+   * @param segueRef
+   */
+  abstract updateParams(params: ObservableOrValue<SegueRefRawSegueParams>): Promise<boolean>;
+
+  /**
    * Returns true if the input segue ref is considered active.
    *
    * @param segueRef

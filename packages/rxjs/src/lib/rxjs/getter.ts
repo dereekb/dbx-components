@@ -1,4 +1,4 @@
-import { Maybe } from '@dereekb/util';
+import { GetterOrValue, Maybe, getValueFromGetter } from '@dereekb/util';
 import { Observable, OperatorFunction, switchMap, of, isObservable } from 'rxjs';
 
 /**
@@ -25,11 +25,29 @@ export function asObservable<T>(valueOrObs: Maybe<ObservableOrValue<T>>): Observ
  * @returns
  */
 export function valueFromObservableOrValue<T>(): OperatorFunction<ObservableOrValue<T>, T> {
-  return switchMap((x) => {
-    if (isObservable(x)) {
-      return x;
-    } else {
-      return of(x);
-    }
-  });
+  return switchMap((x) => asObservable(x));
+}
+
+/**
+ * A GetterOrValue of a ObservableOrValue.
+ */
+export type ObservableOrValueGetter<T> = GetterOrValue<ObservableOrValue<T>>;
+export type MaybeObservableOrValueGetter<T> = Maybe<ObservableOrValueGetter<Maybe<T>>>;
+
+export function asObservableFromGetter<T>(input: ObservableOrValueGetter<T>): Observable<T> {
+  const obs = getValueFromGetter(input);
+  return asObservable(obs);
+}
+
+/**
+ * Switch map for an ObservableOrValueGetter that pipes through the value.
+ *
+ * @returns
+ */
+export function valueFromObservableOrValueGetter<T>(): OperatorFunction<ObservableOrValueGetter<T>, T> {
+  return switchMap((x) => asObservableFromGetter(x));
+}
+
+export function maybeValueFromObservableOrValueGetter<T>(): OperatorFunction<MaybeObservableOrValueGetter<T>, Maybe<T>> {
+  return switchMap((x) => (x != null ? asObservableFromGetter(x) : of(undefined)));
 }

@@ -17,7 +17,6 @@ import {
   CollectionGroup,
   FirestoreCollectionGroup,
   firestoreModelIdentity,
-  FirestoreModelIdentity,
   UserRelated,
   UserRelatedById,
   firestoreString,

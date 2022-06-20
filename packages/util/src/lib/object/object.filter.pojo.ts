@@ -22,7 +22,7 @@ export type OverrideInObjectFunction<T> = (target: Partial<T>) => Partial<T>;
 export type OverrideInObjectFunctionFactory<T> = (from: Partial<T>[]) => OverrideInObjectFunction<T>;
 
 export interface OverrideInObjectFunctionFactoryConfig<T extends object> {
-  filter?: KeyValueTupleFilter<T>;
+  filter?: FilterKeyValueTuplesInput<T>;
   /**
    * Whether or not to return a copy of the input value, rather than change it directly.
    * If true, a copy of the input object will be returned.
@@ -76,7 +76,7 @@ export function overrideInObjectFunctionFactory<T extends object>({ filter, copy
  *
  * @param objects
  */
-export function mergeObjects<T extends object>(objects: Maybe<Partial<T>>[], filter?: KeyValueTupleFilter<T>): Partial<T> {
+export function mergeObjects<T extends object>(objects: Maybe<Partial<T>>[], filter?: FilterKeyValueTuplesInput<T>): Partial<T> {
   return mergeObjectsFunction(filter)(objects);
 }
 
@@ -87,7 +87,7 @@ export function mergeObjects<T extends object>(objects: Maybe<Partial<T>>[], fil
  */
 export type MergeObjectsFunction<T extends object> = (objects: Maybe<Partial<T>>[]) => Partial<T>;
 
-export function mergeObjectsFunction<T extends object>(filter?: KeyValueTupleFilter<T>): MergeObjectsFunction<T> {
+export function mergeObjectsFunction<T extends object>(filter?: FilterKeyValueTuplesInput<T>): MergeObjectsFunction<T> {
   const overrideFn = overrideInObjectFunctionFactory({
     filter,
     copy: false, // blank target object is passed
