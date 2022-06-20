@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [8.3.0](https://github.com/dereekb/dbx-components/compare/v8.2.0-dev...v8.3.0) (2022-06-20)
+
+
+### Features
+
+* added DbxFirebaseDocumentLoaderInstance ([523d1df](https://github.com/dereekb/dbx-components/commit/523d1dff22ac979b75bd310677770665ec76ff63))
+
+
+
 # [8.2.0](https://github.com/dereekb/dbx-components/compare/v8.1.2-dev...v8.2.0) (2022-06-20)
 
 
