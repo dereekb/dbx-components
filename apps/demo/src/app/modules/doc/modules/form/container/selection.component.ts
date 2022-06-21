@@ -71,6 +71,12 @@ export class DocFormSelectionComponent implements OnDestroy {
       selectAllOption: true
     }),
     valueSelectionField({
+      key: 'selectWithObservable',
+      label: 'Select With Observable Data Source',
+      description: 'This select source uses an observable for values.',
+      options: of(VALUE_SELECTION_VALUES)
+    }),
+    valueSelectionField({
       key: 'selectOneNative',
       label: 'Select Native',
       description: 'This is a native selection field.',

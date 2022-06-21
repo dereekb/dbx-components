@@ -15,10 +15,12 @@ import { DocFormExampleComponentFormComponent, DocFormExampleComponentFormTestVi
 import { DocFormExampleComponent } from './component/example.form.component';
 import { DocFormTemplateComponent } from './container/template.component';
 import { DocFormDirectiveComponent } from './container/directive.component';
+import { FormlyMatNativeSelectModule } from '@ngx-formly/material/native-select';
 
 @NgModule({
   imports: [
     DocSharedModule,
+    FormlyMatNativeSelectModule,
     UIRouterModule.forChild({
       states: STATES
     })
