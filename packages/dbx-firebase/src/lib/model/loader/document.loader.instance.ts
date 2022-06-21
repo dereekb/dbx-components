@@ -1,5 +1,5 @@
-import { PageListLoadingState, filterMaybe, pageLoadingStateFromObs } from '@dereekb/rxjs';
-import { BehaviorSubject, map, shareReplay, distinctUntilChanged, Subject, switchMap, Observable } from 'rxjs';
+import { ObservableOrValue, useAsObservable, PageListLoadingState, filterMaybe, SubscriptionObject, asObservable, pageLoadingStateFromObs, tapLog } from '@dereekb/rxjs';
+import { BehaviorSubject, map, shareReplay, distinctUntilChanged, Subject, switchMap, Observable, startWith, exhaustMap } from 'rxjs';
 import { DocumentDataWithId, DocumentReference, documentReferencesFromDocuments, DocumentSnapshot, FirestoreDocument, FirestoreDocumentAccessor, firestoreModelIdsFromDocuments, FirestoreModelKey, firestoreModelKeysFromDocuments, getDataFromDocumentSnapshots, getDocumentSnapshots, LimitedFirestoreDocumentAccessor, loadDocumentsForDocumentReferences, loadDocumentsForIds, loadDocumentsForKeys } from '@dereekb/firebase';
 import { ArrayOrValue, asArray, Destroyable, Maybe } from '@dereekb/util';
 import { DbxFirebaseDocumentLoader, DbxLimitedFirebaseDocumentLoader } from './document.loader';
@@ -16,6 +16,7 @@ export class DbxLimitedFirebaseDocumentLoaderInstance<T = unknown, D extends Fir
 
   protected readonly _documents = new BehaviorSubject<Maybe<D[]>>(undefined);
   protected readonly _restart = new Subject<void>();
+  protected readonly _sub = new SubscriptionObject();
 
   readonly documents$ = this._documents.pipe(filterMaybe(), distinctUntilChanged());
   readonly keys$ = this.documents$.pipe(map(firestoreModelKeysFromDocuments));
@@ -23,7 +24,12 @@ export class DbxLimitedFirebaseDocumentLoaderInstance<T = unknown, D extends Fir
   readonly refs$ = this.documents$.pipe(map(documentReferencesFromDocuments));
 
   readonly snapshots$: Observable<DocumentSnapshot<T>[]> = this.documents$.pipe(
-    switchMap((docs) => this._restart.pipe(switchMap(() => getDocumentSnapshots<T, D>(docs)))),
+    switchMap((docs) =>
+      this._restart.pipe(
+        startWith(null),
+        exhaustMap(() => getDocumentSnapshots<T, D>(docs))
+      )
+    ),
     shareReplay(1)
   );
 
@@ -39,22 +45,23 @@ export class DbxLimitedFirebaseDocumentLoaderInstance<T = unknown, D extends Fir
   destroy(): void {
     this._documents.complete();
     this._restart.complete();
+    this._sub.destroy();
   }
 
   restart() {
     this._restart.next();
   }
 
-  setKeys(keys: Maybe<ArrayOrValue<FirestoreModelKey>>): void {
-    this.setDocuments(loadDocumentsForKeys(this.accessor, asArray(keys)));
+  setKeys(keys: Maybe<ObservableOrValue<ArrayOrValue<FirestoreModelKey>>>): void {
+    this.setDocuments(asObservable(keys).pipe(map((x) => loadDocumentsForKeys(this.accessor, asArray(x)))));
   }
 
-  setRefs(refs: Maybe<ArrayOrValue<DocumentReference<T>>>): void {
-    this.setDocuments(loadDocumentsForDocumentReferences(this.accessor, asArray(refs)));
+  setRefs(refs: Maybe<ObservableOrValue<ArrayOrValue<DocumentReference<T>>>>): void {
+    this.setDocuments(asObservable(refs).pipe(map((x) => loadDocumentsForDocumentReferences(this.accessor, asArray(x)))));
   }
 
-  setDocuments(docs: Maybe<ArrayOrValue<D>>): void {
-    this._documents.next(asArray(docs));
+  setDocuments(docs: Maybe<ObservableOrValue<ArrayOrValue<D>>>): void {
+    this._sub.subscription = useAsObservable(docs, (x) => this._documents.next(asArray(x)));
   }
 }
 
@@ -68,8 +75,8 @@ export function dbxLimitedFirebaseDocumentLoaderInstanceWithAccessor<T, D extend
 
 // MARK: Full DbxFirebaseDocumentLoaderInstance
 export class DbxFirebaseDocumentLoaderInstance<T = unknown, D extends FirestoreDocument<T> = FirestoreDocument<T>, A extends FirestoreDocumentAccessor<T, D> = FirestoreDocumentAccessor<T, D>> extends DbxLimitedFirebaseDocumentLoaderInstance<T, D, A> implements DbxFirebaseDocumentLoader<T>, Destroyable {
-  setIds(ids: Maybe<ArrayOrValue<FirestoreModelKey>>): void {
-    this.setDocuments(loadDocumentsForIds(this.accessor, asArray(ids)));
+  setIds(ids: Maybe<ObservableOrValue<ArrayOrValue<FirestoreModelKey>>>): void {
+    this.setDocuments(asObservable(ids).pipe(map((x) => loadDocumentsForIds(this.accessor, asArray(x)))));
   }
 }
 

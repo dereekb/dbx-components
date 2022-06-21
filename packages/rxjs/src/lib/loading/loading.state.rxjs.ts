@@ -1,7 +1,6 @@
-import { filterMaybe } from '@dereekb/rxjs';
 import { Maybe } from '@dereekb/util';
 import { MonoTypeOperatorFunction, OperatorFunction, startWith, Observable, filter, map } from 'rxjs';
-import { LoadingState, PageLoadingState, beginLoading, loadingStateHasFinishedLoading, loadingStateHasValue } from './loading.state';
+import { LoadingState, PageLoadingState, beginLoading, loadingStateHasFinishedLoading } from './loading.state';
 
 /**
  * Merges startWith() with beginLoading().

@@ -1,5 +1,5 @@
 import { GetterOrValue, Maybe, getValueFromGetter } from '@dereekb/util';
-import { Observable, OperatorFunction, switchMap, of, isObservable } from 'rxjs';
+import { Observable, OperatorFunction, switchMap, of, isObservable, Subscription, Observer } from 'rxjs';
 
 /**
  * A value that is either the value or an observable that returns the value.
@@ -50,4 +50,17 @@ export function valueFromObservableOrValueGetter<T>(): OperatorFunction<Observab
 
 export function maybeValueFromObservableOrValueGetter<T>(): OperatorFunction<MaybeObservableOrValueGetter<T>, Maybe<T>> {
   return switchMap((x) => (x != null ? asObservableFromGetter(x) : of(undefined)));
+}
+
+/**
+ * Convenience function for subscribing to a ObservableOrValue<T> value as an observable.
+ *
+ * @param input
+ * @param next
+ */
+export function useAsObservable<T>(input: ObservableOrValue<T>, next: (value: T) => void): Subscription;
+export function useAsObservable<T>(input: ObservableOrValue<T>, observer: Partial<Observer<T>>): Subscription;
+export function useAsObservable<T>(input: ObservableOrValue<T>, observer: ((value: T) => void) | Partial<Observer<T>>): Subscription;
+export function useAsObservable<T>(input: ObservableOrValue<T>, observer: ((value: T) => void) | Partial<Observer<T>>): Subscription {
+  return asObservable(input).subscribe(observer as Partial<Observer<T>>);
 }

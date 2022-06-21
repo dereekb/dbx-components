@@ -1,4 +1,4 @@
-import { map, startWith, shareReplay, catchError, delay, first, distinctUntilChanged, combineLatest, Observable, of, MonoTypeOperatorFunction } from 'rxjs';
+import { map, startWith, shareReplay, catchError, delay, first, distinctUntilChanged, combineLatest, Observable, of } from 'rxjs';
 import { Maybe, ReadableError, reduceBooleansWithAnd, reduceBooleansWithOr, ReadableDataError, Page, FilteredPage, PageNumber, objectHasKey, MapFunction, ErrorInput, toReadableError } from '@dereekb/util';
 
 /**
