@@ -1,4 +1,4 @@
-import { map, startWith, shareReplay, catchError, delay, first, distinctUntilChanged, combineLatest, Observable, of, MonoTypeOperatorFunction } from 'rxjs';
+import { map, startWith, shareReplay, catchError, delay, first, distinctUntilChanged, combineLatest, Observable, of } from 'rxjs';
 import { Maybe, ReadableError, reduceBooleansWithAnd, reduceBooleansWithOr, ReadableDataError, Page, FilteredPage, PageNumber, objectHasKey, MapFunction, ErrorInput, toReadableError } from '@dereekb/util';
 
 /**
@@ -219,20 +219,6 @@ export function loadingStateHasError(state: Maybe<LoadingState>): boolean {
   } else {
     return false;
   }
-}
-
-/**
- * Merges startWith() with beginLoading().
- *
- * Preferred over using both individually, as typing information can get lost.
- *
- * @returns
- */
-export function startWithBeginLoading<L extends LoadingState<T>, T = unknown>(): MonoTypeOperatorFunction<L>;
-export function startWithBeginLoading<L extends LoadingState<T>, T = unknown>(state?: Partial<LoadingState<T>>): MonoTypeOperatorFunction<L>;
-export function startWithBeginLoading<L extends PageLoadingState<T>, T = unknown>(state?: Partial<PageLoadingState<T>>): MonoTypeOperatorFunction<L>;
-export function startWithBeginLoading<L extends LoadingState<T>, T = unknown>(state?: Partial<L>): MonoTypeOperatorFunction<L> {
-  return startWith<L>(beginLoading(state) as unknown as L);
 }
 
 /**

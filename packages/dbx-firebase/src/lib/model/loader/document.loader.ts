@@ -1,5 +1,5 @@
 import { DocumentDataWithId, FirestoreModelKey, DocumentReference, FirestoreDocument, FirestoreModelId, DocumentSnapshot } from '@dereekb/firebase';
-import { PageListLoadingState } from '@dereekb/rxjs';
+import { ObservableOrValue, PageListLoadingState } from '@dereekb/rxjs';
 import { Maybe, ArrayOrValue } from '@dereekb/util';
 import { Observable } from 'rxjs';
 
@@ -47,21 +47,21 @@ export interface DbxLimitedFirebaseDocumentLoader<T = unknown, D extends Firesto
    *
    * @param constraints
    */
-  setKeys(keys: Maybe<ArrayOrValue<FirestoreModelKey>>): void;
+  setKeys(keys: Maybe<ObservableOrValue<ArrayOrValue<FirestoreModelKey>>>): void;
 
   /**
    * Sets the document references to load.
    *
    * @param constraints
    */
-  setRefs(refs: Maybe<ArrayOrValue<DocumentReference<T>>>): void;
+  setRefs(refs: Maybe<ObservableOrValue<ArrayOrValue<DocumentReference<T>>>>): void;
 
   /**
    * Sets the documents to load from.
    *
    * @param constraints
    */
-  setDocuments(docs: Maybe<ArrayOrValue<D>>): void;
+  setDocuments(docs: Maybe<ObservableOrValue<ArrayOrValue<D>>>): void;
 }
 
 export interface DbxFirebaseDocumentLoader<T = unknown, D extends FirestoreDocument<T> = FirestoreDocument<T>> extends DbxLimitedFirebaseDocumentLoader<T, D> {
@@ -70,5 +70,5 @@ export interface DbxFirebaseDocumentLoader<T = unknown, D extends FirestoreDocum
    *
    * @param constraints
    */
-  setIds(ids: Maybe<ArrayOrValue<FirestoreModelId>>): void;
+  setIds(ids: Maybe<ObservableOrValue<ArrayOrValue<FirestoreModelId>>>): void;
 }

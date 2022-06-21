@@ -2,6 +2,9 @@ import { formlyField, DescriptionFieldConfig, LabeledFieldConfig } from '../../f
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { EnumValueFieldOption } from './enum';
 
+/**
+ * @deprecated
+ */
 export interface StaticEnumFieldConfig<T> extends LabeledFieldConfig, DescriptionFieldConfig {
   /**
    * Whether or not multiple values can be selected.
@@ -13,6 +16,9 @@ export interface StaticEnumFieldConfig<T> extends LabeledFieldConfig, Descriptio
   options: EnumValueFieldOption<T>[];
 }
 
+/**
+ * @deprecated use valueSelectionField instead.
+ */
 export function staticEnumField<T = unknown>({ key, label = '', placeholder = '', description, multiple = false, required = false, options }: StaticEnumFieldConfig<T>): FormlyFieldConfig {
   const fieldConfig: FormlyFieldConfig = formlyField({
     key,

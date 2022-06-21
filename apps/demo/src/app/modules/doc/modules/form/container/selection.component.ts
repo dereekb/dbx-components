@@ -2,7 +2,7 @@ import { safeDetectChanges } from '@dereekb/dbx-core';
 import { BehaviorSubject, map, Observable, of, delay } from 'rxjs';
 import { ChangeDetectorRef, Component, OnDestroy } from '@angular/core';
 import { FormlyFieldConfig } from '@ngx-formly/core';
-import { filterPickableItemFieldValuesByLabel, pickableItemChipField, pickableItemListField, searchableChipField, searchableStringChipField, searchableTextField, SearchableValueFieldDisplayFn, SearchableValueFieldDisplayValue, SearchableValueFieldStringSearchFn, SearchableValueFieldValue } from '@dereekb/dbx-form';
+import { filterPickableItemFieldValuesByLabel, pickableItemChipField, pickableItemListField, searchableChipField, searchableStringChipField, searchableTextField, SearchableValueFieldDisplayFn, SearchableValueFieldDisplayValue, SearchableValueFieldStringSearchFn, SearchableValueFieldValue, valueSelectionField, ValueSelectionOption } from '@dereekb/dbx-form';
 import { randomDelayWithRandomFunction } from '@dereekb/rxjs';
 import { randomArrayFactory, randomNumberFactory } from '@dereekb/util';
 import { DocFormExampleSelectionValue, DocFormExampleSelectionValueId, EXAMPLE_DISPLAY_FOR_SELECTION_VALUE, EXAMPLE_DISPLAY_FOR_SELECTION_VALUE_WITH_CUSTOM_DISPLAYS, EXAMPLE_SEARCH_FOR_SELECTION_VALUE, MAKE_EXAMPLE_SELECTION_VALUE } from '../component/selection.example';
@@ -33,12 +33,51 @@ export const DISPLAY_FOR_STRING_VALUE: SearchableValueFieldDisplayFn<string> = (
 
 export const MAKE_RANDOM_STRING_VALUES = randomArrayFactory({ random: { min: 40, max: 40 }, make: () => ({ value: String(MAKE_EXAMPLE_SELECTION_VALUE().value) }) });
 
+export const VALUE_SELECTION_VALUES: ValueSelectionOption<number>[] = [
+  {
+    label: 'First Value',
+    value: 100
+  },
+  {
+    label: 'Second Value',
+    value: 200
+  },
+  {
+    label: 'Third Value',
+    value: 300
+  }
+];
+
 @Component({
   templateUrl: './selection.component.html'
 })
 export class DocFormSelectionComponent implements OnDestroy {
   private _searchStrings = new BehaviorSubject<TestStringSearchFunction>((search) => ['A', 'B', 'C', 'D'].map((x) => `${search} ${x}`.trim()));
   readonly searchFn$ = this._searchStrings.asObservable();
+
+  readonly valueSelectionFields: FormlyFieldConfig[] = [
+    valueSelectionField({
+      key: 'selectOne',
+      label: 'Select One',
+      description: 'This is a simple selection field for picking a single value.',
+      options: VALUE_SELECTION_VALUES
+    }),
+    valueSelectionField({
+      key: 'selectMultiple',
+      label: 'Select Multiple',
+      description: 'This is a simple selection field for picking an array of values.',
+      options: VALUE_SELECTION_VALUES,
+      multiple: true,
+      selectAllOption: true
+    }),
+    valueSelectionField({
+      key: 'selectOneNative',
+      label: 'Select Native',
+      description: 'This is a native selection field.',
+      options: VALUE_SELECTION_VALUES,
+      native: true
+    })
+  ];
 
   readonly pickableItemChipFields: FormlyFieldConfig[] = [
     pickableItemChipField({
