@@ -222,20 +222,6 @@ export function loadingStateHasError(state: Maybe<LoadingState>): boolean {
 }
 
 /**
- * Merges startWith() with beginLoading().
- *
- * Preferred over using both individually, as typing information can get lost.
- *
- * @returns
- */
-export function startWithBeginLoading<L extends LoadingState<T>, T = unknown>(): MonoTypeOperatorFunction<L>;
-export function startWithBeginLoading<L extends LoadingState<T>, T = unknown>(state?: Partial<LoadingState<T>>): MonoTypeOperatorFunction<L>;
-export function startWithBeginLoading<L extends PageLoadingState<T>, T = unknown>(state?: Partial<PageLoadingState<T>>): MonoTypeOperatorFunction<L>;
-export function startWithBeginLoading<L extends LoadingState<T>, T = unknown>(state?: Partial<L>): MonoTypeOperatorFunction<L> {
-  return startWith<L>(beginLoading(state) as unknown as L);
-}
-
-/**
  * Wraps an observable output and maps the value to a LoadingState.
  */
 export function loadingStateFromObs<T>(obs: Observable<T>, firstOnly?: boolean): Observable<LoadingState<T>> {

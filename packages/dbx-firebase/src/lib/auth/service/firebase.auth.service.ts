@@ -100,6 +100,16 @@ export class DbxFirebaseAuthService implements DbxAuthService {
     this.isAdminInAuthRoleSet = delegate.isAdminInAuthRoleSet;
   }
 
+  async refreshToken(): Promise<IdTokenResult> {
+    const user = this.firebaseAuth.currentUser;
+
+    if (!user) {
+      throw new Error('no user to refresh the token for.');
+    }
+
+    return user.getIdTokenResult(true);
+  }
+
   rolesForClaims<T extends AuthClaimsObject = AuthClaimsObject>(claims: AuthClaims<T>): AuthRoleSet {
     let result: AuthRoleSet;
 

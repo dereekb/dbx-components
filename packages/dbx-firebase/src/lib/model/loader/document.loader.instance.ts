@@ -15,7 +15,6 @@ export class DbxLimitedFirebaseDocumentLoaderInstance<T = unknown, D extends Fir
   readonly accessor: A = this._initConfig.accessor;
 
   protected readonly _documents = new BehaviorSubject<Maybe<D[]>>(undefined);
-
   protected readonly _restart = new Subject<void>();
 
   readonly documents$ = this._documents.pipe(filterMaybe(), distinctUntilChanged());
@@ -24,7 +23,7 @@ export class DbxLimitedFirebaseDocumentLoaderInstance<T = unknown, D extends Fir
   readonly refs$ = this.documents$.pipe(map(documentReferencesFromDocuments));
 
   readonly snapshots$: Observable<DocumentSnapshot<T>[]> = this.documents$.pipe(
-    switchMap((docs) => getDocumentSnapshots<T, D>(docs)),
+    switchMap((docs) => this._restart.pipe(switchMap(() => getDocumentSnapshots<T, D>(docs)))),
     shareReplay(1)
   );
 

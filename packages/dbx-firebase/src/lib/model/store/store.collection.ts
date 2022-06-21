@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Observable, shareReplay, distinctUntilChanged, Subscription, exhaustMap, first, map, switchMap, tap } from 'rxjs';
-import { FirebaseQueryItemAccumulator, FirestoreCollectionLike, FirestoreDocument, FirestoreItemPageIterationInstance, FirestoreQueryConstraint, IterationQueryDocChangeWatcher } from '@dereekb/firebase';
+import { FirebaseQueryItemAccumulator, FirestoreCollectionLike, FirestoreDocument, FirestoreItemPageIterationInstance, FirestoreQueryConstraint, IterationQueryDocChangeWatcher, DocumentDataWithId } from '@dereekb/firebase';
 import { ObservableOrValue, cleanupDestroyable, PageListLoadingState, filterMaybe } from '@dereekb/rxjs';
 import { ArrayOrValue, Maybe } from '@dereekb/util';
 import { LockSetComponentStore } from '@dereekb/dbx-core';
@@ -13,7 +13,7 @@ export interface DbxFirebaseCollectionStore<T, D extends FirestoreDocument<T> = 
   readonly firestoreIteration$: Observable<FirestoreItemPageIterationInstance<T>>;
   readonly queryChangeWatcher$: Observable<IterationQueryDocChangeWatcher<T>>;
   readonly accumulator$: Observable<FirebaseQueryItemAccumulator<T>>;
-  readonly pageLoadingState$: Observable<PageListLoadingState<T>>;
+  readonly pageLoadingState$: Observable<PageListLoadingState<DocumentDataWithId<T>>>;
 
   setMaxPages(observableOrValue: ObservableOrValue<Maybe<number>>): Subscription;
   setItemsPerPage(observableOrValue: ObservableOrValue<Maybe<number>>): Subscription;
@@ -102,7 +102,7 @@ export class AbstractDbxFirebaseCollectionStore<T, D extends FirestoreDocument<T
   readonly firestoreIteration$: Observable<FirestoreItemPageIterationInstance<T>> = this.loader$.pipe(switchMap((x) => x.firestoreIteration$));
   readonly queryChangeWatcher$: Observable<IterationQueryDocChangeWatcher<T>> = this.loader$.pipe(switchMap((x) => x.queryChangeWatcher$));
   readonly accumulator$: Observable<FirebaseQueryItemAccumulator<T>> = this.loader$.pipe(switchMap((x) => x.accumulator$));
-  readonly pageLoadingState$: Observable<PageListLoadingState<T>> = this.loader$.pipe(switchMap((x) => x.pageLoadingState$));
+  readonly pageLoadingState$: Observable<PageListLoadingState<DocumentDataWithId<T>>> = this.loader$.pipe(switchMap((x) => x.pageLoadingState$));
 
   readonly setFirestoreCollection = this.updater((state, firestoreCollection: FirestoreCollectionLike<T, D> | null | undefined) => ({ ...state, firestoreCollection }));
 }
