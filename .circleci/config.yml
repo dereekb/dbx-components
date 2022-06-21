@@ -114,7 +114,7 @@ jobs:
           command: mkdir ~/setup-test
       - run:
           name: run setup-project.sh script
-          command: cd setup && ./setup-project.sh myproject myproject 9200 ~/setup-test
+          command: cd setup && ./setup-project.sh myprojectapp myproject myproject 9200 ~/setup-test
       - run:
           name: replace test project's @dereekb in node_modules with generated packages
           command: rm -r ~/setup-test/myproject/node_modules/@dereekb && cp -r dist/packages ~/setup-test/myproject/node_modules/@dereekb
