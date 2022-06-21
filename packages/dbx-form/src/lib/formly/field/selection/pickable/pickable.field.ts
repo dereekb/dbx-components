@@ -1,17 +1,21 @@
 import { FormlyFieldConfig } from '@ngx-formly/core';
-import { Maybe } from '@dereekb/util';
+import { Maybe, searchStringFilterFunction, SearchStringFilterFunction, caseInsensitiveFilterByIndexOfDecisionFactory } from '@dereekb/util';
 import { Observable, of } from 'rxjs';
 import { LabeledFieldConfig, formlyField, propsForFieldConfig } from '../../field';
 import { PickableValueFieldDisplayValue } from './pickable';
 import { PickableItemFieldItem, PickableValueFieldsFieldProps } from './pickable.field.directive';
 export { PickableItemFieldItem };
 
+export const filterPickableItemFieldValuesByLabelFilterFunction: SearchStringFilterFunction<PickableValueFieldDisplayValue<any>> = searchStringFilterFunction({
+  readStrings: (x) => [x.label],
+  decisionFactory: caseInsensitiveFilterByIndexOfDecisionFactory
+});
+
 export function filterPickableItemFieldValuesByLabel<T>(filterText: Maybe<string>, values: PickableValueFieldDisplayValue<T>[]): Observable<T[]> {
   let filteredValues: PickableValueFieldDisplayValue<T>[];
 
   if (filterText) {
-    const searchString = filterText.toLocaleLowerCase();
-    filteredValues = values.filter((x) => x.label.toLocaleLowerCase().indexOf(searchString) !== -1);
+    filteredValues = filterPickableItemFieldValuesByLabelFilterFunction(filterText, values);
   } else {
     filteredValues = values;
   }

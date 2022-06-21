@@ -86,10 +86,3 @@ export function mapFunctionOutput<O extends object, I = unknown>(output: O, inpu
     }
   });
 }
-
-// MARK: MapTypes
-/**
- * A map function that derives a boolean from the input.
- */
-export type DecisionFunction<I> = MapFunction<I, boolean>;
-export type AsyncDecisionFunction<I> = AsyncMapFunction<DecisionFunction<I>>;

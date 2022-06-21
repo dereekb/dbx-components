@@ -1,10 +1,10 @@
 import { flattenArray } from './array';
 import { unique, findUnique } from './array.unique';
-import { ReadKeyFunction } from '../key';
+import { ReadKeyFunction, ReadKeysFunction } from '../key';
 import { caseInsensitiveString } from '../string';
 import { containsAllValues, containsAnyValue, hasDifferentValues } from '../set/set';
 import { mapIterable } from '../iterable/iterable.map';
-import { mapArrayFunction, MapFunction, mapIdentityFunction } from '../value';
+import { DecisionFunction, DecisionFunctionFactory, mapArrayFunction, MapFunction, mapIdentityFunction } from '../value';
 
 export function hasDifferentStringsNoCase(a: string[], b: string[]): boolean {
   return hasDifferentValues(a.map(caseInsensitiveString), b.map(caseInsensitiveString));
@@ -97,3 +97,33 @@ export function findUniqueTransform(config: FindUniqueStringsTransformConfig): F
     return (input: string[]) => Array.from(new Set(transform(input)));
   }
 }
+
+// MARK: Search Strings
+/**
+ * Filters values by the input filter text.
+ */
+export type SearchStringFilterFunction<T> = (filterText: string, values: T[]) => T[];
+
+export interface SearchStringFilterConfig<T> {
+  readStrings: ReadKeysFunction<T, string>;
+  decisionFactory: DecisionFunctionFactory<string, string>;
+}
+
+export function searchStringFilterFunction<T>(config: SearchStringFilterConfig<T>): SearchStringFilterFunction<T> {
+  const { readStrings, decisionFactory } = config;
+
+  return (filterText: string, values: T[]) => {
+    const decision = decisionFactory(filterText);
+
+    return values.filter((value: T) => {
+      const strings = readStrings(value);
+      const keep = strings.findIndex(decision) !== -1;
+      return keep;
+    });
+  };
+}
+
+export const caseInsensitiveFilterByIndexOfDecisionFactory: DecisionFunctionFactory<string, string> = (filterText: string) => {
+  const searchString = filterText.toLocaleLowerCase();
+  return (string: string) => string.toLocaleLowerCase().indexOf(searchString) !== -1;
+};
