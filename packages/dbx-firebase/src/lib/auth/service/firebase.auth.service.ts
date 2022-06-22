@@ -1,4 +1,4 @@
-import { filterMaybe, isNot } from '@dereekb/rxjs';
+import { filterMaybe, isNot, timeoutStartWith } from '@dereekb/rxjs';
 import { Injectable, Optional } from '@angular/core';
 import { AuthUserState, DbxAuthService, loggedOutObsFromIsLoggedIn, loggedInObsFromIsLoggedIn, AuthUserIdentifier, authUserIdentifier } from '@dereekb/dbx-core';
 import { Auth, authState, User, IdTokenResult, ParsedToken, GoogleAuthProvider, signInWithPopup, AuthProvider, PopupRedirectResolver, signInAnonymously, signInWithEmailAndPassword, UserCredential, FacebookAuthProvider, GithubAuthProvider, TwitterAuthProvider, createUserWithEmailAndPassword } from '@angular/fire/auth';
@@ -41,14 +41,7 @@ export const DEFAULT_DBX_FIREBASE_AUTH_SERVICE_DELEGATE: DbxFirebaseAuthServiceD
 export class DbxFirebaseAuthService implements DbxAuthService {
   private readonly _authState$: Observable<Maybe<User>> = authState(this.firebaseAuth);
 
-  readonly currentAuthUser$: Observable<Maybe<User>> = this._authState$.pipe(
-    timeout({
-      first: 1000,
-      with: () => this._authState$.pipe(startWith(null))
-    }),
-    distinctUntilChanged(),
-    shareReplay(1)
-  );
+  readonly currentAuthUser$: Observable<Maybe<User>> = this._authState$.pipe(timeoutStartWith(null as Maybe<User>, 1000), distinctUntilChanged(), shareReplay(1));
 
   readonly currentAuthUserInfo$: Observable<Maybe<AuthUserInfo>> = this.currentAuthUser$.pipe(map((x) => (x ? authUserInfoFromAuthUser(x) : undefined)));
 

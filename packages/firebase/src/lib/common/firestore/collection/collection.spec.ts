@@ -1,4 +1,4 @@
-import { childFirestoreModelKeyPath } from '.';
+import { childFirestoreModelKeyPath, isFirestoreModelId, isFirestoreModelKey } from '.';
 import { firestoreModelKeys, firestoreModelIdentity, firestoreModelKey, firestoreModelKeyPath } from './collection';
 
 describe('firestoreModelIdentity()', () => {
@@ -122,5 +122,37 @@ describe('childFirestoreModelKeyPath', () => {
       expect(result.length).toBe(1);
       expect(result[0]).toBe([`i/${key}`, `i/${key}`].join('/'));
     });
+  });
+});
+
+describe('isFirestoreModelId', () => {
+  it('should pass firestore model ids', () => {
+    expect(isFirestoreModelId('a')).toBe(true);
+  });
+
+  it('should fail on firestore model keys', () => {
+    expect(isFirestoreModelId('a/b')).toBe(false);
+  });
+});
+
+describe('isFirestoreModelKey', () => {
+  it('should pass root firestore model keys', () => {
+    expect(isFirestoreModelKey('a/b')).toBe(true);
+  });
+
+  it('should pass child firestore model keys', () => {
+    expect(isFirestoreModelKey('a/b/c/d')).toBe(true);
+  });
+
+  it('should fail on firestore model ids', () => {
+    expect(isFirestoreModelKey('a')).toBe(false);
+  });
+
+  it('should fail on firestore model ids that end with a slash', () => {
+    expect(isFirestoreModelKey('a/')).toBe(false);
+  });
+
+  it('should fail on firestore model keys that point to a collection', () => {
+    expect(isFirestoreModelKey('a/b/c')).toBe(false);
   });
 });

@@ -183,6 +183,22 @@ export interface FirestoreModelIdentityRef<I extends FirestoreModelIdentity> {
 export type FirestoreModelId = string;
 
 /**
+ * Firestore Model Id Regex
+ *
+ * https://stackoverflow.com/questions/52850099/what-is-the-reg-expression-for-firestore-constraints-on-document-ids
+ */
+export const FIRESTORE_MODEL_ID_REGEX = /^(?!\.\.?$)(?!.*__.*__)([^\s\/]{1,1500})$/;
+
+/**
+ * Returns true if the input string is a FirestoreModelId.
+ *
+ * @param input
+ */
+export function isFirestoreModelId(input: string | FirestoreModelId): input is FirestoreModelId {
+  return FIRESTORE_MODEL_ID_REGEX.test(input);
+}
+
+/**
  * Reference to a FirestoreModelId
  */
 export interface FirestoreModelIdRef {
@@ -200,6 +216,25 @@ export interface FirestoreModelIdRef {
  * collection/12345/subcollection/67890
  */
 export type FirestoreModelKey = ModelKey;
+
+/**
+ * Firestore Model Key Regex that checks for pairs.
+ */
+export const FIRESTORE_MODEL_KEY_REGEX = /^(?:([^\s\/]+)\/([^\s\/]+))(?:\/(?:([^\s\/]+))\/(?:([^\s\/]+)))*$/;
+
+/**
+ * Firestore Model Key Regex that is more strict
+ */
+export const FIRESTORE_MODEL_KEY_REGEX_STRICT = /^(?:(?:(?!\.\.?$)(?!.*__.*__)([^\s\/]+))\/(?:(?!\.\.?$)(?!.*__.*__)([^\s\/]+))\/?)(?:\/(?:(?!\.\.?$)(?!.*__.*__)([^\s\/]+))\/(?:(?!\.\.?$)(?!.*__.*__)([^\s\/]+)))*$/;
+
+/**
+ * Returns true if the input string is a FirestoreModelKey.
+ *
+ * @param input
+ */
+export function isFirestoreModelKey(input: string | FirestoreModelKey): input is FirestoreModelKey {
+  return FIRESTORE_MODEL_KEY_REGEX.test(input);
+}
 
 /**
  * A part of a FirestoreModelKey.
