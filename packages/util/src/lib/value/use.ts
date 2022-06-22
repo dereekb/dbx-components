@@ -28,7 +28,7 @@ export type MappedUseFunction<A, I> = <O = void>(input: Maybe<A>, use: UseValue<
  * Creates a MappedUseFunction.
  */
 export function mappedUseFunction<A, I>(map: MapFunction<A, Maybe<I>>): MappedUseFunction<A, I> {
-  return wrapUseFunction<A, I, I>(useValue as any, map as any);
+  return wrapUseFunction<A, I, I>(useValue as MappedUseFunction<A, I>, map as unknown as MapFunction<I, Maybe<I>>);
 }
 
 /**
@@ -87,7 +87,7 @@ export type MappedUseAsyncFunction<A, I> = <O = void>(input: Maybe<A>, use: UseA
  * Creates a MappedUseFunction.
  */
 export function mappedUseAsyncFunction<A, I>(map: MapFunction<A, Maybe<PromiseOrValue<Maybe<I>>>>): MappedUseAsyncFunction<A, I> {
-  return wrapUseAsyncFunction<A, I, I>(useAsync as any, map as any);
+  return wrapUseAsyncFunction<A, I, I>(useAsync as MappedUseAsyncFunction<A, I>, map as unknown as MapFunction<I, Maybe<PromiseOrValue<Maybe<I>>>>);
 }
 
 /**

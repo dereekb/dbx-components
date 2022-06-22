@@ -188,7 +188,7 @@ export type FirestoreModelId = string;
  * @param input
  * @returns
  */
-export function firestoreModelId(input: FirestoreModelId | FirestoreModelKey | DocumentReferenceRef<any> | FirestoreModelKeyRef | FirestoreModelIdRef): FirestoreModelId {
+export function firestoreModelId(input: FirestoreModelId | FirestoreModelKey | DocumentReferenceRef<unknown> | FirestoreModelKeyRef | FirestoreModelIdRef): FirestoreModelId {
   let key = '';
   let id;
 
@@ -197,8 +197,8 @@ export function firestoreModelId(input: FirestoreModelId | FirestoreModelKey | D
       id = (input as FirestoreModelIdRef).id;
     } else if ((input as FirestoreModelKeyRef).key) {
       key = (input as FirestoreModelKeyRef).key;
-    } else if ((input as DocumentReferenceRef<any>).documentRef != null) {
-      id = (input as DocumentReferenceRef<any>).documentRef.id;
+    } else if ((input as DocumentReferenceRef<unknown>).documentRef != null) {
+      id = (input as DocumentReferenceRef<unknown>).documentRef.id;
     }
   } else {
     key = input;
@@ -216,7 +216,7 @@ export function firestoreModelId(input: FirestoreModelId | FirestoreModelKey | D
  *
  * https://stackoverflow.com/questions/52850099/what-is-the-reg-expression-for-firestore-constraints-on-document-ids
  */
-export const FIRESTORE_MODEL_ID_REGEX = /^(?!\.\.?$)(?!.*__.*__)([^\s\/]{1,1500})$/;
+export const FIRESTORE_MODEL_ID_REGEX = /^(?!\.\.?$)(?!.*__.*__)([^\s/]{1,1500})$/;
 
 /**
  * Returns true if the input string is a FirestoreModelId.
@@ -249,12 +249,12 @@ export type FirestoreModelKey = ModelKey;
 /**
  * Firestore Model Key Regex that checks for pairs.
  */
-export const FIRESTORE_MODEL_KEY_REGEX = /^(?:([^\s\/]+)\/([^\s\/]+))(?:\/(?:([^\s\/]+))\/(?:([^\s\/]+)))*$/;
+export const FIRESTORE_MODEL_KEY_REGEX = /^(?:([^\s/]+)\/([^\s/]+))(?:\/(?:([^\s/]+))\/(?:([^\s/]+)))*$/;
 
 /**
  * Firestore Model Key Regex that is more strict
  */
-export const FIRESTORE_MODEL_KEY_REGEX_STRICT = /^(?:(?:(?!\.\.?$)(?!.*__.*__)([^\s\/]+))\/(?:(?!\.\.?$)(?!.*__.*__)([^\s\/]+))\/?)(?:\/(?:(?!\.\.?$)(?!.*__.*__)([^\s\/]+))\/(?:(?!\.\.?$)(?!.*__.*__)([^\s\/]+)))*$/;
+export const FIRESTORE_MODEL_KEY_REGEX_STRICT = /^(?:(?:(?!\.\.?$)(?!.*__.*__)([^\s/]+))\/(?:(?!\.\.?$)(?!.*__.*__)([^\s/]+))\/?)(?:\/(?:(?!\.\.?$)(?!.*__.*__)([^\s/]+))\/(?:(?!\.\.?$)(?!.*__.*__)([^\s/]+)))*$/;
 
 /**
  * Returns true if the input string is a FirestoreModelKey.

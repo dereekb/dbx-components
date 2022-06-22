@@ -1,16 +1,12 @@
 import { CdkDragDrop } from '@angular/cdk/drag-drop';
 import { Component } from '@angular/core';
 import { FactoryWithInput, getValueFromGetter, Maybe } from '@dereekb/util';
-import { FieldArrayTypeConfig, FieldArrayType, FormlyFieldConfig } from '@ngx-formly/core';
+import { FieldArrayTypeConfig, FieldArrayType, FormlyFieldConfig, FormlyFieldProps } from '@ngx-formly/core';
 
-export interface DbxFormRepeatArrayConfig {
+export interface DbxFormRepeatArrayConfig extends FormlyFieldProps {
   labelForField?: string | FactoryWithInput<string, FormlyFieldConfig>;
   addText?: string;
   removeText?: string;
-}
-
-export interface DbxFormRepeatArrayFormlyConfig extends FieldArrayTypeConfig {
-  repeatArrayField: DbxFormRepeatArrayConfig;
 }
 
 @Component({
@@ -42,9 +38,9 @@ export interface DbxFormRepeatArrayFormlyConfig extends FieldArrayTypeConfig {
     </div>
   `
 })
-export class DbxFormRepeatArrayTypeComponent extends FieldArrayType<DbxFormRepeatArrayFormlyConfig> {
+export class DbxFormRepeatArrayTypeComponent extends FieldArrayType<FieldArrayTypeConfig<DbxFormRepeatArrayConfig>> {
   get repeatArrayField(): DbxFormRepeatArrayConfig {
-    return this.field.repeatArrayField;
+    return this.field.props;
   }
 
   get label(): string {
@@ -60,7 +56,7 @@ export class DbxFormRepeatArrayTypeComponent extends FieldArrayType<DbxFormRepea
   }
 
   get max(): Maybe<number> {
-    return this.field.props?.maxLength;
+    return this.field.props.maxLength;
   }
 
   get count(): number {

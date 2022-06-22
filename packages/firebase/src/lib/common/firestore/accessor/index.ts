@@ -10,3 +10,4 @@ export * from './context.transaction';
 export * from './context';
 export * from './document';
 export * from './document.utility';
+export * from './document.rxjs';

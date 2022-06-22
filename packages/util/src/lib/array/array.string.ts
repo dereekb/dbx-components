@@ -4,7 +4,7 @@ import { ReadKeyFunction, ReadKeysFunction } from '../key';
 import { caseInsensitiveString } from '../string';
 import { containsAllValues, containsAnyValue, hasDifferentValues } from '../set/set';
 import { mapIterable } from '../iterable/iterable.map';
-import { DecisionFunction, DecisionFunctionFactory, mapArrayFunction, MapFunction, mapIdentityFunction } from '../value';
+import { DecisionFunctionFactory, mapArrayFunction, MapFunction, mapIdentityFunction } from '../value';
 
 export function hasDifferentStringsNoCase(a: string[], b: string[]): boolean {
   return hasDifferentValues(a.map(caseInsensitiveString), b.map(caseInsensitiveString));

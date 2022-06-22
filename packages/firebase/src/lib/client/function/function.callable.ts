@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// The use of any here does not degrade the type-safety. The correct type is inferred in most cases.
+
 import { FactoryWithInput, Maybe, PromiseOrValue } from '@dereekb/util';
 import { HttpsCallable, HttpsCallableResult } from 'firebase/functions';
 

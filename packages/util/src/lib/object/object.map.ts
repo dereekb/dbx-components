@@ -3,6 +3,7 @@ import { MapFunction } from '../value/map';
 /**
  * An object with values of a specific type keyed by either string or number or symbols.
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ObjectMap<T, K extends keyof any = string | number | symbol> = Record<K, T>;
 
 /**

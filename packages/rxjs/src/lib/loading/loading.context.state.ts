@@ -1,6 +1,7 @@
 import { Maybe, Destroyable } from '@dereekb/util';
 import { mergeMap, map, switchMap, shareReplay, distinctUntilChanged, BehaviorSubject, isObservable, Observable, of } from 'rxjs';
-import { filterMaybe, timeoutStartWith } from '../rxjs/value';
+import { timeoutStartWith } from '../rxjs/timeout';
+import { filterMaybe } from '../rxjs/value';
 import { LoadingContext, LoadingContextEvent } from './loading.context';
 import { beginLoading, LoadingState } from './loading.state';
 

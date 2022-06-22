@@ -42,6 +42,10 @@ export function modifier<T>(key: string, modify: ModifierFunction<T>): Modifier<
   };
 }
 
+/**
+ * No operation modifier.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const NOOP_MODIFIER: ModifierFunction<any> = () => undefined;
 
 /**

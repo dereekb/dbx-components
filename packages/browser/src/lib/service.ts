@@ -89,7 +89,7 @@ export abstract class AbstractAsyncWindowLoadedService<T> implements Destroyable
   }
 
   protected _onLoadServiceFailure(): Promise<T> | void {
-    // todo override in parent if needed.
+    // override in parent if needed.
   }
 
   private async completeLoadingService(): Promise<T> {

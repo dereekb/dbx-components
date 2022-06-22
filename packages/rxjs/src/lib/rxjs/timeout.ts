@@ -1,6 +1,15 @@
 import { filterMaybe } from '@dereekb/rxjs';
-import { of, timeout, tap, MonoTypeOperatorFunction, throwError, map } from 'rxjs';
-import { Getter } from '@dereekb/util';
+import { of, timeout, tap, MonoTypeOperatorFunction, throwError, map, Observable, startWith } from 'rxjs';
+import { Getter, GetterOrValue, getValueFromGetter } from '@dereekb/util';
+
+/**
+ * Used to pass a default value incase an observable has not yet started emititng values.
+ */
+export function timeoutStartWith<T>(defaultValue: GetterOrValue<T>, first = 0): MonoTypeOperatorFunction<T> {
+  return (source: Observable<T>) => {
+    return source.pipe(timeout({ first, with: () => source.pipe(startWith(getValueFromGetter(defaultValue))) }));
+  };
+}
 
 export function tapAfterTimeout<T>(timeoutDelay: number, useFn: () => void): MonoTypeOperatorFunction<T> {
   return timeout({

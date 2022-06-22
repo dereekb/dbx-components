@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/dbx-components",
-  "version": "8.5.1",
+  "version": "8.5.2",
   "license": "MIT",
   "scripts": {
     "postinstall": "ngcc --properties es2015 browser module main",
@@ -33,9 +33,9 @@
     "@ngrx/effects": "^13.0.2",
     "@ngrx/entity": "^13.0.2",
     "@ngrx/store": "^13.0.2",
-    "@ngx-formly/core": "6.0.0-beta.2",
-    "@ngx-formly/material": "6.0.0-beta.2",
-    "@ngx-formly/schematics": "6.0.0-beta.2",
+    "@ngx-formly/core": "6.0.0-beta.3",
+    "@ngx-formly/material": "6.0.0-beta.3",
+    "@ngx-formly/schematics": "6.0.0-beta.3",
     "@uirouter/angular": "^9.1.0",
     "@uirouter/core": "^6.0.8",
     "@uirouter/rx": "^1.0.0",

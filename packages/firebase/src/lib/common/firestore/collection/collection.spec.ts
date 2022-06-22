@@ -185,6 +185,10 @@ describe('isFirestoreModelKey', () => {
     expect(isFirestoreModelKey('a/')).toBe(false);
   });
 
+  it('should fail on firestore model keys that point to a collection and end with a slash', () => {
+    expect(isFirestoreModelKey('a/b/c/')).toBe(false);
+  });
+
   it('should fail on firestore model keys that point to a collection', () => {
     expect(isFirestoreModelKey('a/b/c')).toBe(false);
   });
