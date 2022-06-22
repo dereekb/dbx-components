@@ -1,5 +1,4 @@
-import { childFirestoreModelKeyPath, isFirestoreModelId, isFirestoreModelKey } from '.';
-import { firestoreModelKeys, firestoreModelIdentity, firestoreModelKey, firestoreModelKeyPath } from './collection';
+import { childFirestoreModelKeyPath, firestoreModelId, isFirestoreModelId, isFirestoreModelKey, firestoreModelKeys, firestoreModelIdentity, firestoreModelKey, firestoreModelKeyPath } from './collection';
 
 describe('firestoreModelIdentity()', () => {
   const testName = 'testNameWithPieces';
@@ -65,14 +64,48 @@ describe('firestoreModelIdentity()', () => {
   });
 });
 
+describe('firestoreModelId', () => {
+  const identity = firestoreModelIdentity('identity', 'i');
+
+  it('should return the id from model key', () => {
+    const id = 'test';
+    const key = firestoreModelKey(identity, id);
+    const result = firestoreModelId(key);
+    expect(result).toBe(id);
+  });
+
+  it('should return the id from a FirestoreModelIdRef', () => {
+    const id = 'test';
+    const result = firestoreModelId({
+      id
+    });
+    expect(result).toBe(id);
+  });
+
+  it('should return the id from a FirestoreModelKeyRef', () => {
+    const id = 'test';
+    const key = firestoreModelKey(identity, id);
+    const result = firestoreModelId({
+      key
+    });
+    expect(result).toBe(id);
+  });
+
+  it('should return the id from model id', () => {
+    const id = 'test';
+    const result = firestoreModelId(id);
+    expect(result).toBe(id);
+  });
+});
+
 describe('firestoreModelKey', () => {
   const identity = firestoreModelIdentity('identity', 'i');
 
   it('should create a FirestoreModelKey for the input identity and FirestoreModelKey', () => {
-    const key = 'hello';
-    const result = firestoreModelKey(identity, key);
+    const id = 'hello';
+    const result = firestoreModelKey(identity, id);
 
-    expect(result).toBe(`i/${key}`);
+    expect(result).toBe(`i/${id}`);
   });
 });
 
@@ -80,10 +113,10 @@ describe('firestoreModelKeys', () => {
   const identity = firestoreModelIdentity('identity', 'i');
 
   it('should create an array of model keys', () => {
-    const keys = ['a', 'b', 'c', 'd'];
-    const result = firestoreModelKeys(identity, keys);
+    const ids = ['a', 'b', 'c', 'd'];
+    const result = firestoreModelKeys(identity, ids);
 
-    expect(result.length).toBe(keys.length);
+    expect(result.length).toBe(ids.length);
   });
 });
 
