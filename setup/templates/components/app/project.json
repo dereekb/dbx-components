@@ -1,7 +1,7 @@
 {
   "projectType": "library",
   "sourceRoot": "ANGULAR_COMPONENTS_FOLDER/src",
-  "prefix": "ANGULAR_APP_PREFIX",
+  "prefix": "APP_CODE_PREFIX_LOWER",
   "targets": {
     "build": {
       "executor": "@nrwl/workspace:run-commands",

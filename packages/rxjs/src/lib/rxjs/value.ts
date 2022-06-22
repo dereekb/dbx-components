@@ -113,9 +113,9 @@ export function switchMapMaybeObs<T = unknown>(): OperatorFunction<Maybe<Observa
 /**
  * Used to pass a default value incase an observable has not yet started emititng values.
  */
-export function timeoutStartWith<T>(defaultValue: GetterOrValue<T>): MonoTypeOperatorFunction<T> {
+export function timeoutStartWith<T>(defaultValue: GetterOrValue<T>, first = 0): MonoTypeOperatorFunction<T> {
   return (source: Observable<T>) => {
-    return source.pipe(timeout({ first: 0, with: () => source.pipe(startWith(getValueFromGetter(defaultValue))) }));
+    return source.pipe(timeout({ first, with: () => source.pipe(startWith(getValueFromGetter(defaultValue))) }));
   };
 }
 

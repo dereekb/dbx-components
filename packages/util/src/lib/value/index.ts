@@ -1,4 +1,5 @@
 export * from './build';
+export * from './decision';
 export * from './equal';
 export * from './map';
 export * from './maybe.type';

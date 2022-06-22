@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [8.5.0](https://github.com/dereekb/dbx-components/compare/v8.4.0-dev...v8.5.0) (2022-06-22)
+
+
+### Features
+
+* added firestore key validators ([9d090db](https://github.com/dereekb/dbx-components/commit/9d090db1e84b97f11cc2b751dcbe7d2724960b2b))
+
+
+
 # [8.4.0](https://github.com/dereekb/dbx-components/compare/v8.3.0-dev...v8.4.0) (2022-06-21)
 
 

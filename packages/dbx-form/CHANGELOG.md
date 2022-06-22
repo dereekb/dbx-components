@@ -2,6 +2,16 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [8.5.0](https://github.com/dereekb/dbx-components/compare/v8.4.0-dev...v8.5.0) (2022-06-22)
+
+
+### Features
+
+* added Observable to ValueSelectionFieldConfig ([235c2de](https://github.com/dereekb/dbx-components/commit/235c2de9a1e0a7b40981cbe935038d379270f8ca))
+* added searchStringFilterFunction() ([f91aaaf](https://github.com/dereekb/dbx-components/commit/f91aaafb7fc4c304fbbd7fc2a3d471c4573ebdf3))
+
+
+
 # [8.4.0](https://github.com/dereekb/dbx-components/compare/v8.3.0-dev...v8.4.0) (2022-06-21)
 
 

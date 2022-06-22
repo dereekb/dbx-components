@@ -17,10 +17,13 @@ CI_GIT_USER_EMAIL=ci@example.dereekb.com    # git email to use in CI deployments
 CI_GIT_USER_NAME=ci                         # git username to use in CI deployments
 
 # - Created a project on firebase. This step is required.
-FIREBASE_PROJECT_ID=${1?:'firebase project id is required.'}  # example: gethapier
-INPUT_CODE_PREFIX=${2:-app}                                   # example: gethapier  #single-word prefix used in code
-FIREBASE_BASE_EMULATORS_PORT=${3:-9100}                       # example: 9100
-PARENT_DIRECTORY=${4:-'../../'}                               # parent directory to create this project within. Defaults to relative to this script's space within dbx-components.
+# - Create a Firestore Database
+# - Make sure you have upgraded to the Blaze plan
+FIREBASE_PROJECT_ID=${1?:'firebase project id is required.'}  # example: gethapierapp
+INPUT_PROJECT_NAME=${2:-"$FIREBASE_PROJECT_ID"}               # example: gethapier
+INPUT_CODE_PREFIX=${3:-app}                                   # example: gethapier  #single-word prefix used in code
+FIREBASE_BASE_EMULATORS_PORT=${4:-9100}                       # example: 9100
+PARENT_DIRECTORY=${5:-'../../'}                               # parent directory to create this project within. Defaults to relative to this script's space within dbx-components.
 
 # Whether or not to perform manual setup
 MANUAL_SETUP=${DBX_SETUP_PROJECT_MANUAL:-"y"}         # y/n
@@ -31,10 +34,9 @@ IS_NOT_CI_TEST=true
 SOURCE_BRANCH=${DBX_SETUP_PROJECT_BRANCH:-"main"}     # develop or main
 
 # - Project Details
-NAME=$FIREBASE_PROJECT_ID
-PROJECT_NAME=$FIREBASE_PROJECT_ID
-ANGULAR_APP_PREFIX=$FIREBASE_PROJECT_ID
-DBX_COMPONENTS_VERSION=${DBX_SETUP_PROJECT_COMPONENTS_VERSION:-"^8.1.0"}
+PROJECT_NAME=$INPUT_PROJECT_NAME
+NAME=$PROJECT_NAME
+DBX_COMPONENTS_VERSION=${DBX_SETUP_PROJECT_COMPONENTS_VERSION:-"^8.4.0"}
 NX_VERSION=${NX_SETUP_VERSIONS:-"14.1.8"} # NOTE: 14.1.8 is the last Angular 13 version
 
 # The app prefix is used in Angular and Nest classes as the prefix for classes/components

@@ -1,3 +1,4 @@
+import { ObservableOrValue } from '@dereekb/rxjs';
 import { Maybe } from '@dereekb/util';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { DescriptionFieldConfig, formlyField, LabeledFieldConfig, propsForFieldConfig } from '../field';
@@ -9,8 +10,13 @@ export interface ValueSelectionOption<T> {
 }
 
 export interface ValueSelectionFieldConfig<T> extends LabeledFieldConfig, DescriptionFieldConfig {
+  /**
+   * Whether or not to use the native select.
+   *
+   * Be sure to import FormlyMatNativeSelectModule.
+   */
   native?: boolean;
-  options: ValueSelectionOption<T>[];
+  options: ObservableOrValue<ValueSelectionOption<T>[]>;
   multiple?: boolean;
   selectAllOption?: true | string;
 }

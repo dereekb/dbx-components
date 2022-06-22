@@ -4,6 +4,7 @@ import { asSegueRef, asSegueRefString, SegueRefOrSegueRefRouterLink } from './..
 import { DbxAuthService } from '../../../service/auth.service';
 import { FactoryWithRequiredInput, getValueFromGetter, isGetter, Maybe } from '@dereekb/util';
 import { Injector } from '@angular/core';
+import { timeoutStartWith } from '@dereekb/rxjs';
 
 /**
  * authTransitionHookFn() configuration. The values are handled as:
@@ -104,6 +105,8 @@ export function makeAuthTransitionHook(config: AuthTransitionHookConfig): Transi
     }
 
     const resultObs = decisionObs.pipe(
+      // after 10 seconds of no transition working, redirect with a false decision
+      timeoutStartWith(false as AuthTransitionDecision, 10 * 1000),
       first(),
       switchMap((decision: AuthTransitionDecision): Observable<HookResult> => {
         if (typeof decision === 'boolean') {
