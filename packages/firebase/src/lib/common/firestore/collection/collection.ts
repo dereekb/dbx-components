@@ -1,4 +1,4 @@
-import { CollectionReferenceRef, FirestoreContextReference, QueryLikeReferenceRef } from '../reference';
+import { CollectionReferenceRef, DocumentReferenceRef, FirestoreContextReference, QueryLikeReferenceRef } from '../reference';
 import {
   FirestoreDocument,
   FirestoreDocumentAccessorFactory,
@@ -18,7 +18,7 @@ import { FirestoreItemPageIterationBaseConfig, FirestoreItemPageIterationFactory
 import { firestoreQueryFactory, FirestoreQueryFactory } from '../query/query';
 import { FirestoreDrivers } from '../driver/driver';
 import { FirestoreCollectionQueryFactory, firestoreCollectionQueryFactory } from './collection.query';
-import { ArrayOrValue, Building, ModelKey, ModelTypeString } from '@dereekb/util';
+import { ArrayOrValue, Building, lastValue, ModelKey, ModelTypeString } from '@dereekb/util';
 
 /**
  * The camelCase model name/type.
@@ -181,6 +181,35 @@ export interface FirestoreModelIdentityRef<I extends FirestoreModelIdentity> {
  * 12345
  */
 export type FirestoreModelId = string;
+
+/**
+ * Reads a firestoreModelId from the input.
+ *
+ * @param input
+ * @returns
+ */
+export function firestoreModelId(input: FirestoreModelId | FirestoreModelKey | DocumentReferenceRef<any> | FirestoreModelKeyRef | FirestoreModelIdRef): FirestoreModelId {
+  let key = '';
+  let id;
+
+  if (typeof input === 'object') {
+    if ((input as FirestoreModelIdRef).id) {
+      id = (input as FirestoreModelIdRef).id;
+    } else if ((input as FirestoreModelKeyRef).key) {
+      key = (input as FirestoreModelKeyRef).key;
+    } else if ((input as DocumentReferenceRef<any>).documentRef != null) {
+      id = (input as DocumentReferenceRef<any>).documentRef.id;
+    }
+  } else {
+    key = input;
+  }
+
+  if (id) {
+    return id;
+  } else {
+    return lastValue(key.split('/'));
+  }
+}
 
 /**
  * Firestore Model Id Regex

@@ -1,6 +1,7 @@
 import { cachedGetter, ClassLikeType, Getter, mapObjectMap, Maybe } from '@dereekb/util';
 import { Functions, httpsCallable, HttpsCallableOptions } from 'firebase/functions';
 import { FirebaseFunctionMap, FirebaseFunctionMapFunction, FirebaseFunctionTypeMap } from './function';
+import { directDataHttpsCallable } from './function.callable';
 
 // MARK: Functions Factory
 export interface FirebaseFunctionTypeConfig {
@@ -25,7 +26,7 @@ export function firebaseFunctionMapFactory<M extends FirebaseFunctionTypeMap>(co
         httpCallableOptions = config.options;
       }
 
-      const fn: FirebaseFunctionMapFunction<M, K> = httpsCallable(functionsInstance, key as string, httpCallableOptions);
+      const fn: FirebaseFunctionMapFunction<M, K> = directDataHttpsCallable<M[K][0], M[K][1]>(httpsCallable<M[K][0], M[K][1]>(functionsInstance, key as string, httpCallableOptions));
       return fn;
     };
 

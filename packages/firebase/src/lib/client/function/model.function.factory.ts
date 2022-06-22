@@ -82,15 +82,15 @@ export function modelFirebaseFunctionMapFactory<M extends FirebaseFunctionTypeMa
           const modelTypeCruds = {};
 
           if (crudFunctions.has('create')) {
-            (modelTypeCruds as any)[`create${modelTypeSuffix}`] = mapHttpsCallable(_createFn(), { mapInput: (data) => onCallTypedModelParams(modelType, data) as OnCallUpdateModelParams });
+            (modelTypeCruds as any)[`create${modelTypeSuffix}`] = mapHttpsCallable(_createFn(), { mapInput: (data) => onCallTypedModelParams(modelType, data) as OnCallUpdateModelParams }, true);
           }
 
           if (crudFunctions.has('update')) {
-            (modelTypeCruds as any)[`update${modelTypeSuffix}`] = mapHttpsCallable(_updateFn(), { mapInput: (data) => onCallTypedModelParams(modelType, data) as OnCallUpdateModelParams });
+            (modelTypeCruds as any)[`update${modelTypeSuffix}`] = mapHttpsCallable(_updateFn(), { mapInput: (data) => onCallTypedModelParams(modelType, data) as OnCallUpdateModelParams }, true);
           }
 
           if (crudFunctions.has('delete')) {
-            (modelTypeCruds as any)[`delete${modelTypeSuffix}`] = mapHttpsCallable(_deleteFn(), { mapInput: (data) => onCallTypedModelParams(modelType, data) as OnCallDeleteModelParams });
+            (modelTypeCruds as any)[`delete${modelTypeSuffix}`] = mapHttpsCallable(_deleteFn(), { mapInput: (data) => onCallTypedModelParams(modelType, data) as OnCallDeleteModelParams }, true);
           }
 
           // tslint:disable-next-line
