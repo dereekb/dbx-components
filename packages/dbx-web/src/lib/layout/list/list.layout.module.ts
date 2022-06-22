@@ -1,3 +1,4 @@
+import { MatRippleModule } from '@angular/material/core';
 import { DbxRouterAnchorModule } from '../../router/layout/anchor/anchor.module';
 import { DbxLoadingModule } from '../../loading/loading.module';
 import { MatIconModule } from '@angular/material/icon';
@@ -16,7 +17,7 @@ import { DbxValueListGridItemViewComponent, DbxValueListGridViewComponent } from
 import { FlexLayoutModule } from '@angular/flex-layout';
 
 @NgModule({
-  imports: [CommonModule, FlexLayoutModule, DbxLoadingModule, DbxRouterAnchorModule, InfiniteScrollModule, DbxInjectionComponentModule, MatListModule, MatIconModule],
+  imports: [CommonModule, MatRippleModule, FlexLayoutModule, DbxLoadingModule, DbxRouterAnchorModule, InfiniteScrollModule, DbxInjectionComponentModule, MatListModule, MatIconModule],
   declarations: [
     //
     DbxListComponent,

@@ -5,7 +5,7 @@ import { AbstractDbxValueListViewDirective } from './list.view.value.directive';
 import { AnchorType, anchorTypeForAnchor } from '@dereekb/dbx-core';
 import { DbxListView } from './list.view';
 import { Maybe, mergeObjects } from '@dereekb/util';
-import { DbxValueListViewConfig } from './list.view.value.component';
+import { DbxValueListItemViewComponent, DbxValueListViewConfig } from './list.view.value.component';
 
 export interface DbxValueListGridViewConfig<T, I extends DbxValueListItem<T> = DbxValueListItem<T>, V = unknown> extends DbxValueListViewConfig<T, I, V> {
   grid?: Maybe<Partial<DbxValueListGridItemViewGridSizeConfig>>;
@@ -53,14 +53,16 @@ export const DEFAULT_LIST_GRID_SIZE_CONFIG: DbxValueListGridItemViewGridSizeConf
   selector: 'dbx-list-grid-view-content',
   template: `
     <div [gdGap]="gap" [gdColumns]="columns">
-      <div *ngFor="let item of items" dbx-injection [config]="item.config"></div>
+      <dbx-anchor *ngFor="let item of items" matRipple [matRippleDisabled]="rippleDisabledOnItem(item)" class="dbx-list-grid-view-item" [anchor]="item.anchor" [disabled]="item.disabled" (click)="onClickItem(item)">
+        <div dbx-injection [config]="item.config"></div>
+      </dbx-anchor>
     </div>
   `,
   host: {
     class: 'dbx-list-grid-view'
   }
 })
-export class DbxValueListGridItemViewComponent<T, I extends DbxValueListItem<T> = DbxValueListItem<T>> {
+export class DbxValueListGridItemViewComponent<T, I extends DbxValueListItem<T> = DbxValueListItem<T>> extends DbxValueListItemViewComponent<T, I> {
   private _grid: DbxValueListGridItemViewGridSizeConfig = DEFAULT_LIST_GRID_SIZE_CONFIG;
 
   @Input()
@@ -78,29 +80,5 @@ export class DbxValueListGridItemViewComponent<T, I extends DbxValueListItem<T> 
 
   get columns() {
     return this._grid.columns;
-  }
-
-  @Input()
-  emitAllClicks?: Maybe<boolean>;
-
-  @Input()
-  items?: Maybe<DbxValueListItemConfig<T, I>[]>;
-
-  readonly disabled$ = this.dbxListView.disabled$;
-
-  constructor(readonly dbxListView: DbxListView<T>) {}
-
-  onClickItem(item: I) {
-    // do not emit clicks for disabled items.
-    if (!item.disabled) {
-      if (this.emitAllClicks || !item.anchor || anchorTypeForAnchor(item.anchor) === AnchorType.PLAIN) {
-        // only emit clicks for items with no anchor, or plain anchors.
-        this.onClickValue(item.itemValue);
-      }
-    }
-  }
-
-  onClickValue(value: T) {
-    this.dbxListView.clickValue?.next(value);
   }
 }
