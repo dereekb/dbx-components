@@ -38,9 +38,24 @@ export interface DbxLimitedFirebaseDocumentLoader<T = unknown, D extends Firesto
   readonly data$: Observable<DocumentDataWithId<T>[]>;
 
   /**
+   * Snapshot stream of the documents
+   */
+  readonly snapshotsStream$: Observable<DocumentSnapshot<T>[]>;
+
+  /**
+   * Data stream of the documents.
+   */
+  readonly dataStream$: Observable<DocumentDataWithId<T>[]>;
+
+  /**
    * Loading state for the document data.
    */
   readonly pageLoadingState$: Observable<PageListLoadingState<DocumentDataWithId<T>>>;
+
+  /**
+   * Loading state for the streamed document data.
+   */
+  readonly pageLoadingStateStream$: Observable<PageListLoadingState<DocumentDataWithId<T>>>;
 
   /**
    * Sets the keys of the models to load.

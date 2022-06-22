@@ -1,6 +1,6 @@
 import { ObservableOrValue, useAsObservable, PageListLoadingState, filterMaybe, SubscriptionObject, asObservable, pageLoadingStateFromObs, tapLog } from '@dereekb/rxjs';
 import { BehaviorSubject, map, shareReplay, distinctUntilChanged, Subject, switchMap, Observable, startWith, exhaustMap } from 'rxjs';
-import { DocumentDataWithId, DocumentReference, documentReferencesFromDocuments, DocumentSnapshot, FirestoreDocument, FirestoreDocumentAccessor, firestoreModelIdsFromDocuments, FirestoreModelKey, firestoreModelKeysFromDocuments, getDataFromDocumentSnapshots, getDocumentSnapshots, LimitedFirestoreDocumentAccessor, loadDocumentsForDocumentReferences, loadDocumentsForIds, loadDocumentsForKeys } from '@dereekb/firebase';
+import { dataFromDocumentSnapshots, DocumentDataWithId, DocumentReference, documentReferencesFromDocuments, DocumentSnapshot, FirestoreDocument, FirestoreDocumentAccessor, firestoreModelIdsFromDocuments, FirestoreModelKey, firestoreModelKeysFromDocuments, getDataFromDocumentSnapshots, getDocumentSnapshots, LimitedFirestoreDocumentAccessor, loadDocumentsForDocumentReferences, loadDocumentsForIds, loadDocumentsForKeys, streamDocumentSnapshots } from '@dereekb/firebase';
 import { ArrayOrValue, asArray, Destroyable, Maybe } from '@dereekb/util';
 import { DbxFirebaseDocumentLoader, DbxLimitedFirebaseDocumentLoader } from './document.loader';
 
@@ -38,7 +38,21 @@ export class DbxLimitedFirebaseDocumentLoaderInstance<T = unknown, D extends Fir
     shareReplay(1)
   );
 
+  /**
+   * Snapshot stream of the documents
+   */
+  readonly snapshotsStream$: Observable<DocumentSnapshot<T>[]> = this.documents$.pipe(
+    switchMap((docs) => streamDocumentSnapshots<T, D>(docs)),
+    shareReplay(1)
+  );
+
+  /**
+   * Data streamd of the documents.
+   */
+  readonly dataStream$: Observable<DocumentDataWithId<T>[]> = this.snapshotsStream$.pipe(dataFromDocumentSnapshots(), shareReplay(1));
+
   readonly pageLoadingState$: Observable<PageListLoadingState<DocumentDataWithId<T>>> = pageLoadingStateFromObs(this.data$, false);
+  readonly pageLoadingStateStream$: Observable<PageListLoadingState<DocumentDataWithId<T>>> = pageLoadingStateFromObs(this.dataStream$, false);
 
   constructor(private readonly _initConfig: DbxFirebaseDocumentLoaderInstanceInitConfig<T, D, A>) {}
 

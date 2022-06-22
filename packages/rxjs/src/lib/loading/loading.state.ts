@@ -1,5 +1,6 @@
-import { map, startWith, shareReplay, catchError, delay, first, distinctUntilChanged, combineLatest, Observable, of } from 'rxjs';
+import { map, shareReplay, catchError, first, distinctUntilChanged, combineLatest, Observable, of } from 'rxjs';
 import { Maybe, ReadableError, reduceBooleansWithAnd, reduceBooleansWithOr, ReadableDataError, Page, FilteredPage, PageNumber, objectHasKey, MapFunction, ErrorInput, toReadableError } from '@dereekb/util';
+import { timeoutStartWith } from '../rxjs/timeout';
 
 /**
  * A value/error pair used in loading situations.
@@ -223,6 +224,8 @@ export function loadingStateHasError(state: Maybe<LoadingState>): boolean {
 
 /**
  * Wraps an observable output and maps the value to a LoadingState.
+ *
+ * If firstOnly is provided, it will only take the first value the observable returns.
  */
 export function loadingStateFromObs<T>(obs: Observable<T>, firstOnly?: boolean): Observable<LoadingState<T>> {
   if (firstOnly) {
@@ -232,8 +235,7 @@ export function loadingStateFromObs<T>(obs: Observable<T>, firstOnly?: boolean):
   return obs.pipe(
     map((value) => ({ loading: false, value, error: undefined })),
     catchError((error) => of({ loading: false, error })),
-    delay(50),
-    startWith({ loading: true }),
+    timeoutStartWith({ loading: true }, 50),
     shareReplay(1)
   );
 }

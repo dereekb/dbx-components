@@ -1,16 +1,11 @@
-import { shareReplay, startWith, Observable, switchMap, BehaviorSubject, distinctUntilChanged, combineLatest, map, filter, take } from 'rxjs';
 import { Directive, Input, OnDestroy, OnInit } from '@angular/core';
-import { FirestoreDocument, IterationQueryDocChangeWatcherChangeType, IterationQueryDocChangeWatcherEvent } from '@dereekb/firebase';
+import { FirestoreDocument } from '@dereekb/firebase';
 import { Maybe } from '@dereekb/util';
 import { DbxFirebaseCollectionStore } from './store.collection';
 import { DbxFirebaseCollectionStoreDirective } from './store.collection.directive';
 import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
-
-/**
- * Refresh mode
- */
-export type DbxFirebaseCollectionChangeDirectiveMode = 'auto' | 'manual';
-export type DbxFirebaseCollectionChangeDirectiveEvent = Pick<IterationQueryDocChangeWatcherEvent<unknown>, 'time' | 'type'>;
+import { DbxFirebaseCollectionChangeWatcher, dbxFirebaseCollectionChangeWatcher, DbxFirebaseCollectionChangeWatcherEvent, DbxFirebaseCollectionChangeWatcherTriggerMode } from '../loader/collection.change.watcher';
+import { Observable } from 'rxjs';
 
 /**
  * Used to watch query doc changes and respond to them accordingly.
@@ -18,53 +13,36 @@ export type DbxFirebaseCollectionChangeDirectiveEvent = Pick<IterationQueryDocCh
 @Directive({
   selector: '[dbxFirebaseCollectionChange]'
 })
-export class DbxFirebaseCollectionChangeDirective<T = unknown, D extends FirestoreDocument<T> = FirestoreDocument<T>, S extends DbxFirebaseCollectionStore<T, D> = DbxFirebaseCollectionStore<T, D>> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
-  private _mode = new BehaviorSubject<DbxFirebaseCollectionChangeDirectiveMode>('manual');
-  readonly mode$ = this._mode.pipe(distinctUntilChanged());
+export class DbxFirebaseCollectionChangeDirective<T = unknown, D extends FirestoreDocument<T> = FirestoreDocument<T>, S extends DbxFirebaseCollectionStore<T, D> = DbxFirebaseCollectionStore<T, D>> extends AbstractSubscriptionDirective implements DbxFirebaseCollectionChangeWatcher, OnInit, OnDestroy {
+  private _watcher = dbxFirebaseCollectionChangeWatcher<T, D, S>(this.dbxFirebaseCollectionStoreDirective.store);
 
-  readonly event$: Observable<DbxFirebaseCollectionChangeDirectiveEvent> = this.dbxFirebaseCollectionStoreDirective.store.queryChangeWatcher$.pipe(
-    switchMap((x) =>
-      x.event$.pipe(
-        filter((x) => x.type !== 'none'), // do not share 'none' events.
-        take(1), // only need one event to mark as change is available.
-        startWith({
-          time: new Date(),
-          type: 'none' as IterationQueryDocChangeWatcherChangeType
-        })
-      )
-    ),
-    shareReplay(1)
-  );
-
-  readonly hasChangeAvailable$: Observable<boolean> = this.event$.pipe(
-    map((x) => x.type !== 'none'),
-    shareReplay(1)
-  );
+  readonly mode$: Observable<DbxFirebaseCollectionChangeWatcherTriggerMode> = this._watcher.mode$;
+  readonly event$: Observable<DbxFirebaseCollectionChangeWatcherEvent> = this._watcher.event$;
+  readonly hasChangeAvailable$: Observable<boolean> = this._watcher.hasChangeAvailable$;
+  readonly triggered$: Observable<boolean> = this._watcher.triggered$;
+  readonly trigger$: Observable<void> = this._watcher.trigger$;
 
   constructor(readonly dbxFirebaseCollectionStoreDirective: DbxFirebaseCollectionStoreDirective<T, D, S>) {
     super();
   }
-
   ngOnInit(): void {
-    this.sub = combineLatest([this.mode$, this.hasChangeAvailable$])
-      .pipe(filter(([mode, hasChange]) => mode === 'auto' && hasChange))
-      .subscribe(() => {
-        this.restart();
-      });
+    this.sub = this._watcher.trigger$.subscribe(() => {
+      this.restart();
+    });
   }
 
   override ngOnDestroy(): void {
     super.ngOnDestroy();
-    this._mode.complete();
+    this._watcher.destroy();
   }
 
   @Input('dbxFirebaseCollectionChange')
-  get mode(): DbxFirebaseCollectionChangeDirectiveMode {
-    return this._mode.value;
+  get mode(): DbxFirebaseCollectionChangeWatcherTriggerMode {
+    return this._watcher.mode;
   }
 
-  set mode(mode: Maybe<DbxFirebaseCollectionChangeDirectiveMode | ''>) {
-    this._mode.next(mode || 'manual');
+  set mode(mode: Maybe<DbxFirebaseCollectionChangeWatcherTriggerMode | ''>) {
+    this._watcher.mode = mode || 'off';
   }
 
   restart() {
