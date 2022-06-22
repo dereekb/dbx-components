@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [8.5.1](https://github.com/dereekb/dbx-components/compare/v8.5.0-dev...v8.5.1) (2022-06-22)
+
+
+### Bug Fixes
+
+* fixed function factory ([f722fb5](https://github.com/dereekb/dbx-components/commit/f722fb55c6948feb75d69eb1a7dc1eee6d731cb4))
+
+
+
 # [8.5.0](https://github.com/dereekb/dbx-components/compare/v8.4.0-dev...v8.5.0) (2022-06-22)
 
 
