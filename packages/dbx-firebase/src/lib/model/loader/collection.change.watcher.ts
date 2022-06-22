@@ -15,7 +15,8 @@ export type DbxFirebaseCollectionChangeWatcherEvent = Pick<IterationQueryDocChan
 /**
  * Used to watch a DbxFirebaseCollectionStore for when the query changes and
  */
-export interface DbxFirebaseCollectionChangeWatcher {
+export interface DbxFirebaseCollectionChangeWatcher<T = unknown, D extends FirestoreDocument<T> = FirestoreDocument<T>, S extends DbxFirebaseCollectionStore<T, D> = DbxFirebaseCollectionStore<T, D>> {
+  readonly store: S;
   /**
    * Current mode
    */
@@ -40,8 +41,8 @@ export interface DbxFirebaseCollectionChangeWatcher {
  * DbxFirebaseCollectionChangeWatcher instance
  */
 export class DbxFirebaseCollectionChangeWatcherInstance<T = unknown, D extends FirestoreDocument<T> = FirestoreDocument<T>, S extends DbxFirebaseCollectionStore<T, D> = DbxFirebaseCollectionStore<T, D>> implements Destroyable {
-  private _mode = new BehaviorSubject<DbxFirebaseCollectionChangeWatcherTriggerMode>('off');
-  private _sub = new SubscriptionObject();
+  private readonly _mode = new BehaviorSubject<DbxFirebaseCollectionChangeWatcherTriggerMode>(this._initialMode);
+  private readonly _sub = new SubscriptionObject();
 
   readonly mode$ = this._mode.pipe(distinctUntilChanged());
 
@@ -71,7 +72,7 @@ export class DbxFirebaseCollectionChangeWatcherInstance<T = unknown, D extends F
     map(() => undefined)
   );
 
-  constructor(readonly store: S) {}
+  constructor(readonly store: S, private _initialMode: DbxFirebaseCollectionChangeWatcherTriggerMode = 'off') {}
 
   destroy(): void {
     this._sub.destroy();
@@ -87,6 +88,6 @@ export class DbxFirebaseCollectionChangeWatcherInstance<T = unknown, D extends F
   }
 }
 
-export function dbxFirebaseCollectionChangeWatcher<T = unknown, D extends FirestoreDocument<T> = FirestoreDocument<T>, S extends DbxFirebaseCollectionStore<T, D> = DbxFirebaseCollectionStore<T, D>>(store: S): DbxFirebaseCollectionChangeWatcherInstance<T, D, S> {
-  return new DbxFirebaseCollectionChangeWatcherInstance(store);
+export function dbxFirebaseCollectionChangeWatcher<T, D extends FirestoreDocument<T> = FirestoreDocument<T>, S extends DbxFirebaseCollectionStore<T, D> = DbxFirebaseCollectionStore<T, D>>(store: S, mode?: DbxFirebaseCollectionChangeWatcherTriggerMode): DbxFirebaseCollectionChangeWatcherInstance<T, D, S> {
+  return new DbxFirebaseCollectionChangeWatcherInstance(store, mode);
 }
