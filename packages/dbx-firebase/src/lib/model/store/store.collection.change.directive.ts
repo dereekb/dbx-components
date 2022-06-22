@@ -6,6 +6,7 @@ import { DbxFirebaseCollectionStoreDirective } from './store.collection.directiv
 import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
 import { DbxFirebaseCollectionChangeWatcher, dbxFirebaseCollectionChangeWatcher, DbxFirebaseCollectionChangeWatcherEvent, DbxFirebaseCollectionChangeWatcherTriggerMode } from '../loader/collection.change.watcher';
 import { Observable } from 'rxjs';
+import { dbxFirebaseCollectionChangeTriggerInstanceForStore, dbxFirebaseCollectionChangeTriggerInstanceForWatcher } from '../loader/collection.change.trigger';
 
 /**
  * Used to watch query doc changes and respond to them accordingly.
@@ -13,8 +14,9 @@ import { Observable } from 'rxjs';
 @Directive({
   selector: '[dbxFirebaseCollectionChange]'
 })
-export class DbxFirebaseCollectionChangeDirective<T = unknown, D extends FirestoreDocument<T> = FirestoreDocument<T>, S extends DbxFirebaseCollectionStore<T, D> = DbxFirebaseCollectionStore<T, D>> extends AbstractSubscriptionDirective implements DbxFirebaseCollectionChangeWatcher, OnInit, OnDestroy {
+export class DbxFirebaseCollectionChangeDirective<T = unknown, D extends FirestoreDocument<T> = FirestoreDocument<T>, S extends DbxFirebaseCollectionStore<T, D> = DbxFirebaseCollectionStore<T, D>> implements DbxFirebaseCollectionChangeWatcher<T, D, S>, OnInit, OnDestroy {
   private _watcher = dbxFirebaseCollectionChangeWatcher<T, D, S>(this.dbxFirebaseCollectionStoreDirective.store);
+  private _trigger = dbxFirebaseCollectionChangeTriggerInstanceForWatcher<T, D, S>(this._watcher, () => this.restart());
 
   readonly mode$: Observable<DbxFirebaseCollectionChangeWatcherTriggerMode> = this._watcher.mode$;
   readonly event$: Observable<DbxFirebaseCollectionChangeWatcherEvent> = this._watcher.event$;
@@ -22,18 +24,19 @@ export class DbxFirebaseCollectionChangeDirective<T = unknown, D extends Firesto
   readonly triggered$: Observable<boolean> = this._watcher.triggered$;
   readonly trigger$: Observable<void> = this._watcher.trigger$;
 
-  constructor(readonly dbxFirebaseCollectionStoreDirective: DbxFirebaseCollectionStoreDirective<T, D, S>) {
-    super();
-  }
-  ngOnInit(): void {
-    this.sub = this._watcher.trigger$.subscribe(() => {
-      this.restart();
-    });
+  get store() {
+    return this._watcher.store;
   }
 
-  override ngOnDestroy(): void {
-    super.ngOnDestroy();
+  constructor(readonly dbxFirebaseCollectionStoreDirective: DbxFirebaseCollectionStoreDirective<T, D, S>) {}
+
+  ngOnInit(): void {
+    this._trigger.init();
+  }
+
+  ngOnDestroy(): void {
     this._watcher.destroy();
+    this._trigger.destroy();
   }
 
   @Input('dbxFirebaseCollectionChange')
