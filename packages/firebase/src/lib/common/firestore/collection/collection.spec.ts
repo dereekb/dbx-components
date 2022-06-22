@@ -1,3 +1,4 @@
+import { firestoreModelIdsFromKey, firestoreModelKeyPartPairs } from '.';
 import { childFirestoreModelKeyPath, firestoreModelId, isFirestoreModelId, isFirestoreModelKey, firestoreModelKeys, firestoreModelIdentity, firestoreModelKey, firestoreModelKeyPath } from './collection';
 
 describe('firestoreModelIdentity()', () => {
@@ -158,6 +159,17 @@ describe('childFirestoreModelKeyPath', () => {
   });
 });
 
+describe('firestoreModelIdsFromKey', () => {
+  it('should return the model ids', () => {
+    const modelKey = 'a/b/c/d';
+    const pairs = firestoreModelIdsFromKey(modelKey);
+    expect(pairs).toBeDefined();
+    expect(pairs?.length).toBe(2);
+    expect(pairs?.[0]).toBe('b');
+    expect(pairs?.[1]).toBe('d');
+  });
+});
+
 describe('isFirestoreModelId', () => {
   it('should pass firestore model ids', () => {
     expect(isFirestoreModelId('a')).toBe(true);
@@ -191,5 +203,16 @@ describe('isFirestoreModelKey', () => {
 
   it('should fail on firestore model keys that point to a collection', () => {
     expect(isFirestoreModelKey('a/b/c')).toBe(false);
+  });
+});
+
+describe('firestoreModelKeyPartPairs', () => {
+  it('should return the pairs for the model key', () => {
+    const modelKey = 'a/b/c/d';
+    const pairs = firestoreModelKeyPartPairs(modelKey);
+    expect(pairs).toBeDefined();
+    expect(pairs?.length).toBe(2);
+    expect(pairs?.[0].collectionName).toBe('a');
+    expect(pairs?.[0].id).toBe('b');
   });
 });

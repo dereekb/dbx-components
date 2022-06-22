@@ -4,9 +4,7 @@ import { DbxRouterService, AbstractSubscriptionDirective, DbxRouteParamReaderIns
 import { DbxFirebaseDocumentStoreDirective } from './store.document.directive';
 import { Maybe, ModelKey } from '@dereekb/util';
 import { MaybeObservableOrValueGetter, SwitchMapToDefaultFilterFunction } from '@dereekb/rxjs';
-
-export const DBX_FIREBASE_ROUTER_SYNC_DEFAULT_ID_PARAM_KEY = 'id';
-export const DBX_FIREBASE_ROUTER_SYNC_USE_DEFAULT_PARAM_VALUE = '0';
+import { dbxFirebaseIdRouteParamRedirect } from '../../router';
 
 /**
  * Used for synchronizing the document store id to the param of the route.
@@ -15,27 +13,10 @@ export const DBX_FIREBASE_ROUTER_SYNC_USE_DEFAULT_PARAM_VALUE = '0';
   selector: '[dbxFirebaseDocumentStoreRouteId]'
 })
 export class DbxFirebaseDocumentStoreRouteIdDirective<T = unknown> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
-  private _paramReader = new DbxRouteParamReaderInstance<ModelKey>(this.dbxRouterService, DBX_FIREBASE_ROUTER_SYNC_DEFAULT_ID_PARAM_KEY);
-  private _paramRedirect = new DbxRouteParamDefaultRedirectInstance<ModelKey>(this._paramReader);
-  private _useDefaultParam = new BehaviorSubject<string | SwitchMapToDefaultFilterFunction<ModelKey>>(DBX_FIREBASE_ROUTER_SYNC_USE_DEFAULT_PARAM_VALUE);
-  private _useDefaultParam$: Observable<SwitchMapToDefaultFilterFunction<ModelKey>> = this._useDefaultParam.pipe(
-    map((x) => {
-      let result: SwitchMapToDefaultFilterFunction<ModelKey>;
+  private _redirectInstance = dbxFirebaseIdRouteParamRedirect(this.dbxRouterService);
 
-      if (typeof x === 'string') {
-        result = (value: Maybe<ModelKey>) => of(value === x);
-      } else {
-        result = x;
-      }
-
-      return result;
-    }),
-    shareReplay(1)
-  );
-
-  readonly idParamKey$ = this._paramReader.paramKey$;
-  readonly idFromParams$: Observable<Maybe<ModelKey>> = this._paramReader.paramValue$;
-  readonly id$: Observable<Maybe<ModelKey>> = this._paramReader.value$;
+  readonly idFromParams$: Observable<Maybe<ModelKey>> = this._redirectInstance.paramValue$;
+  readonly id$: Observable<Maybe<ModelKey>> = this._redirectInstance.value$;
 
   constructor(@Host() readonly dbxFirebaseDocumentStoreDirective: DbxFirebaseDocumentStoreDirective<T>, readonly dbxRouterService: DbxRouterService) {
     super();
@@ -43,32 +24,27 @@ export class DbxFirebaseDocumentStoreRouteIdDirective<T = unknown> extends Abstr
 
   ngOnInit(): void {
     this.sub = this.dbxFirebaseDocumentStoreDirective.store.setId(this.idFromParams$);
-    this._paramRedirect.setUseDefaultFilter((value: Maybe<string>) => {
-      return this._useDefaultParam$.pipe(switchMap((x) => x(value)));
-    });
-    this._paramRedirect.init();
+    this._redirectInstance.init();
   }
 
   override ngOnDestroy(): void {
     super.ngOnDestroy();
-    this._paramReader.destroy();
-    this._paramRedirect.destroy();
-    this._useDefaultParam.complete();
+    this._redirectInstance.destroy();
   }
 
   // MARK: Input
   @Input('dbxFirebaseDocumentStoreRouteId')
   get idParam() {
-    return this._paramReader.paramKey;
+    return this._redirectInstance.paramKey;
   }
 
   set idParam(idParam: string) {
-    this._paramReader.paramKey = idParam;
+    this._redirectInstance.paramKey = idParam;
   }
 
   @Input()
   set dbxFirebaseDocumentStoreRouteIdDefault(defaultValue: MaybeObservableOrValueGetter<ModelKey>) {
-    this._paramReader.setDefaultValue(defaultValue);
+    this._redirectInstance.setDefaultValue(defaultValue);
   }
 
   /**
@@ -76,11 +52,11 @@ export class DbxFirebaseDocumentStoreRouteIdDirective<T = unknown> extends Abstr
    */
   @Input()
   set dbxFirebaseDocumentStoreRouteIdDefaultRedirect(redirect: Maybe<boolean> | '') {
-    this._paramRedirect.enabled = redirect !== false; // true by default
+    this._redirectInstance.setRedirectEnabled(redirect !== false); // true by default
   }
 
   @Input()
   set dbxFirebaseDocumentStoreRouteIdDefaultDecision(decider: string | SwitchMapToDefaultFilterFunction<ModelKey>) {
-    this._useDefaultParam.next(decider);
+    this._redirectInstance.setDecider(decider);
   }
 }

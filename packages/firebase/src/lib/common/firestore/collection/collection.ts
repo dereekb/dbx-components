@@ -18,7 +18,7 @@ import { FirestoreItemPageIterationBaseConfig, FirestoreItemPageIterationFactory
 import { firestoreQueryFactory, FirestoreQueryFactory } from '../query/query';
 import { FirestoreDrivers } from '../driver/driver';
 import { FirestoreCollectionQueryFactory, firestoreCollectionQueryFactory } from './collection.query';
-import { ArrayOrValue, Building, lastValue, ModelKey, ModelTypeString } from '@dereekb/util';
+import { ArrayOrValue, Building, lastValue, Maybe, ModelKey, ModelTypeString } from '@dereekb/util';
 
 /**
  * The camelCase model name/type.
@@ -212,6 +212,17 @@ export function firestoreModelId(input: FirestoreModelId | FirestoreModelKey | D
 }
 
 /**
+ * Returns the array of ids within a FirestoreModelKey.
+ *
+ * @param input
+ * @returns
+ */
+export function firestoreModelIdsFromKey(input: FirestoreModelKey | DocumentReferenceRef<unknown> | FirestoreModelKeyRef): FirestoreModelId[] {
+  const parts = firestoreModelKeyPartPairs(input);
+  return parts?.map((x) => x.id) ?? [];
+}
+
+/**
  * Firestore Model Id Regex
  *
  * https://stackoverflow.com/questions/52850099/what-is-the-reg-expression-for-firestore-constraints-on-document-ids
@@ -330,6 +341,46 @@ export function childFirestoreModelKeyPath(parent: FirestoreModelKeyPart, childr
   } else {
     return [`${parent}/${children}`];
   }
+}
+
+export interface FirestoreModelCollectionAndIdPair extends FirestoreModelIdRef, FirestoreCollectionNameRef {}
+
+export function firestoreModelKeyPartPairs(input: FirestoreModelKey | DocumentReferenceRef<unknown> | FirestoreModelKeyRef): Maybe<FirestoreModelCollectionAndIdPair[]> {
+  const key = readFirestoreModelKey(input);
+  let pairs: Maybe<FirestoreModelCollectionAndIdPair[]>;
+
+  if (key) {
+    const pieces = key?.split('/');
+    pairs = [];
+
+    if (pieces.length % 2 === 1) {
+      throw new Error('input key source was a collection ref or unavailable.');
+    }
+
+    for (let i = 0; i < pieces.length; i += 2) {
+      const collectionName = pieces[i];
+      const id = pieces[i + 1];
+      pairs.push({ id, collectionName });
+    }
+  }
+
+  return pairs;
+}
+
+export function readFirestoreModelKey(input: FirestoreModelKey | DocumentReferenceRef<unknown> | FirestoreModelKeyRef): Maybe<FirestoreModelKey> {
+  let key: Maybe<string>;
+
+  if (typeof input === 'object') {
+    if ((input as FirestoreModelKeyRef).key) {
+      key = (input as FirestoreModelKeyRef).key;
+    } else if ((input as DocumentReferenceRef<unknown>).documentRef != null) {
+      key = (input as DocumentReferenceRef<unknown>).documentRef.path;
+    }
+  } else {
+    key = input;
+  }
+
+  return key;
 }
 
 /**
