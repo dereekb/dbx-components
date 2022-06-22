@@ -88,22 +88,38 @@ export class DbxFirebaseCollectionChangeTriggerInstance<T, D extends FirestoreDo
  * @param triggerFunction
  * @returns
  */
-export function dbxFirebaseCollectionChangeTriggerInstanceForStore<T, D extends FirestoreDocument<T> = FirestoreDocument<T>, S extends DbxFirebaseCollectionStore<T, D> = DbxFirebaseCollectionStore<T, D>>(store: S, triggerFunction?: Maybe<DbxFirebaseCollectionChangeTriggerFunction<T, D, S>>): DbxFirebaseCollectionChangeTriggerInstance<T, D, S> {
-  return dbxFirebaseCollectionChangeTriggerInstance<T, D, S>({
+export function dbxFirebaseCollectionChangeTriggerForStore<T, D extends FirestoreDocument<T> = FirestoreDocument<T>, S extends DbxFirebaseCollectionStore<T, D> = DbxFirebaseCollectionStore<T, D>>(store: S, triggerFunction?: Maybe<DbxFirebaseCollectionChangeTriggerFunction<T, D, S>>): DbxFirebaseCollectionChangeTriggerInstance<T, D, S> {
+  return dbxFirebaseCollectionChangeTrigger<T, D, S>({
     watcher: dbxFirebaseCollectionChangeWatcher<T, D, S>(store, 'auto'),
     destroyWatcherOnDestroy: true,
     triggerFunction
   });
 }
 
-export function dbxFirebaseCollectionChangeTriggerInstanceForWatcher<T, D extends FirestoreDocument<T> = FirestoreDocument<T>, S extends DbxFirebaseCollectionStore<T, D> = DbxFirebaseCollectionStore<T, D>>(watcher: DbxFirebaseCollectionChangeWatcher<T, D, S>, triggerFunction?: Maybe<DbxFirebaseCollectionChangeTriggerFunction<T, D, S>>): DbxFirebaseCollectionChangeTriggerInstance<T, D, S> {
-  return dbxFirebaseCollectionChangeTriggerInstance<T, D, S>({
+export function dbxFirebaseCollectionChangeTriggerForWatcher<T, D extends FirestoreDocument<T> = FirestoreDocument<T>, S extends DbxFirebaseCollectionStore<T, D> = DbxFirebaseCollectionStore<T, D>>(watcher: DbxFirebaseCollectionChangeWatcher<T, D, S>, triggerFunction?: Maybe<DbxFirebaseCollectionChangeTriggerFunction<T, D, S>>): DbxFirebaseCollectionChangeTriggerInstance<T, D, S> {
+  return dbxFirebaseCollectionChangeTrigger<T, D, S>({
     watcher,
     destroyWatcherOnDestroy: false,
     triggerFunction
   });
 }
 
-export function dbxFirebaseCollectionChangeTriggerInstance<T, D extends FirestoreDocument<T> = FirestoreDocument<T>, S extends DbxFirebaseCollectionStore<T, D> = DbxFirebaseCollectionStore<T, D>>(config: DbxFirebaseCollectionChangeTriggerInstanceConfig<T, D, S>): DbxFirebaseCollectionChangeTriggerInstance<T, D, S> {
+export function dbxFirebaseCollectionChangeTrigger<T, D extends FirestoreDocument<T> = FirestoreDocument<T>, S extends DbxFirebaseCollectionStore<T, D> = DbxFirebaseCollectionStore<T, D>>(config: DbxFirebaseCollectionChangeTriggerInstanceConfig<T, D, S>): DbxFirebaseCollectionChangeTriggerInstance<T, D, S> {
   return new DbxFirebaseCollectionChangeTriggerInstance(config);
 }
+
+// MARK: Compat
+/**
+ * @deprecated
+ */
+export const dbxFirebaseCollectionChangeTriggerInstance = dbxFirebaseCollectionChangeTrigger;
+
+/**
+ * @deprecated
+ */
+export const dbxFirebaseCollectionChangeTriggerInstanceForStore = dbxFirebaseCollectionChangeTriggerForStore;
+
+/**
+ * @deprecated
+ */
+export const dbxFirebaseCollectionChangeTriggerInstanceForWatcher = dbxFirebaseCollectionChangeTriggerForWatcher;
