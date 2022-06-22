@@ -21,7 +21,7 @@ export class DocLayoutListComponent implements OnInit, OnDestroy {
   private _values = new BehaviorSubject<DocValue[]>([]);
   readonly state$: Observable<ListLoadingState<DocValue>> = this._values.pipe(
     switchMap((x) => {
-      return of(successResult(x)).pipe(delay(Math.random() * 500 + 1000), startWith<ListLoadingState<DocValue>>({ loading: true, value: takeFront(x, x.length - this.numberToLoadPerUpdate) }));
+      return of(successResult(x)).pipe(delay(Math.random() * 500 + 500), startWith<ListLoadingState<DocValue>>({ loading: true, value: takeFront(x, x.length - this.numberToLoadPerUpdate) }));
     })
   );
 

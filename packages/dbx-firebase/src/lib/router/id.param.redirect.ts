@@ -1,6 +1,5 @@
 import { Observable, BehaviorSubject, map, shareReplay, of, switchMap } from 'rxjs';
-import { OnDestroy, Directive, Host, Input, OnInit } from '@angular/core';
-import { DbxRouterService, AbstractSubscriptionDirective, DbxRouteParamReaderInstance, DbxRouteParamDefaultRedirectInstance, DbxRouteParamReader } from '@dereekb/dbx-core';
+import { DbxRouterService, DbxRouteParamReaderInstance, DbxRouteParamDefaultRedirectInstance, DbxRouteParamReader } from '@dereekb/dbx-core';
 import { Destroyable, Initialized, Maybe, ModelKey } from '@dereekb/util';
 import { MaybeObservableOrValueGetter, SwitchMapToDefaultFilterFunction } from '@dereekb/rxjs';
 
