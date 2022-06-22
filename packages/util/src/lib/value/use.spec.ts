@@ -10,7 +10,7 @@ describe('mappedUseFunction()', () => {
 
     describe('wrapUseFunction', () => {
       it('should wrap a MappedUseFunction function', () => {
-        const result: MappedUseFunction<number, boolean> = wrapUseFunction(mappedUseFn, (input: string) => true);
+        const result: MappedUseFunction<number, boolean> = wrapUseFunction(mappedUseFn, () => true);
         expect(result).toBeDefined();
       });
 
@@ -114,7 +114,7 @@ describe('mappedUsePromiseFunction()', () => {
     describe('sync usage', () => {
       describe('wrapUsePromiseFunction', () => {
         it('should wrap a MappedUsePromiseFunction function', () => {
-          const result: MappedUseAsyncFunction<number, boolean> = wrapUseAsyncFunction(mappedUseAsyncFn, (input: string) => true);
+          const result: MappedUseAsyncFunction<number, boolean> = wrapUseAsyncFunction(mappedUseAsyncFn, () => true);
           expect(result).toBeDefined();
         });
 
@@ -211,7 +211,7 @@ describe('mappedUsePromiseFunction()', () => {
     describe('async usage', () => {
       describe('wrapUsePromiseFunction', () => {
         it('should wrap a MappedUsePromiseFunction function', () => {
-          const result: MappedUseAsyncFunction<number, boolean> = wrapUseAsyncFunction(mappedUseAsyncFn, (input: string) => Promise.resolve(true));
+          const result: MappedUseAsyncFunction<number, boolean> = wrapUseAsyncFunction(mappedUseAsyncFn, () => Promise.resolve(true));
           expect(result).toBeDefined();
         });
 

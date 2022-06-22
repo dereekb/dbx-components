@@ -1,5 +1,4 @@
 import { AsyncGetterOrValue, Maybe, performMakeLoop, PromiseUtility, UseAsync, wrapUseAsyncFunction, useAsync, makeWithFactory, filterMaybeValues } from '@dereekb/util';
-import { Observable, combineLatest, shareReplay, map } from 'rxjs';
 import { FirestoreModelId, FirestoreModelKey } from '../collection';
 import { DocumentDataWithId, DocumentReference, DocumentSnapshot, QuerySnapshot, Transaction } from '../types';
 import { FirestoreDocument, FirestoreDocumentAccessor, LimitedFirestoreDocumentAccessor, LimitedFirestoreDocumentAccessorContextExtension } from './document';

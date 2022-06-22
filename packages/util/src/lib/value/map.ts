@@ -10,11 +10,13 @@ export type MapFunction<I, O> = (input: I) => O;
 /**
  * Converts a MapFunction into one that returns a promise.
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type AsyncMapFunction<F extends MapFunction<any, any>> = F extends MapFunction<infer I, infer O> ? MapFunction<I, PromiseOrValue<O>> : never;
 
 /**
  * Converts a MapFunction into one that takes in arrays and returns arrays.
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type MapArrayFunction<F extends MapFunction<any, any>> = F extends MapFunction<infer I, infer O> ? MapFunction<I[], O[]> : never;
 
 /**

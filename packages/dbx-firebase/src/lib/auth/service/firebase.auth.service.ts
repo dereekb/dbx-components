@@ -2,7 +2,7 @@ import { filterMaybe, isNot, timeoutStartWith } from '@dereekb/rxjs';
 import { Injectable, Optional } from '@angular/core';
 import { AuthUserState, DbxAuthService, loggedOutObsFromIsLoggedIn, loggedInObsFromIsLoggedIn, AuthUserIdentifier, authUserIdentifier } from '@dereekb/dbx-core';
 import { Auth, authState, User, IdTokenResult, ParsedToken, GoogleAuthProvider, signInWithPopup, AuthProvider, PopupRedirectResolver, signInAnonymously, signInWithEmailAndPassword, UserCredential, FacebookAuthProvider, GithubAuthProvider, TwitterAuthProvider, createUserWithEmailAndPassword } from '@angular/fire/auth';
-import { Observable, timeout, startWith, distinctUntilChanged, shareReplay, map, switchMap, firstValueFrom } from 'rxjs';
+import { Observable, distinctUntilChanged, shareReplay, map, switchMap, firstValueFrom } from 'rxjs';
 import { AuthClaims, AuthClaimsObject, AuthRoleClaimsService, AuthRoleSet, AUTH_ADMIN_ROLE, cachedGetter, Maybe } from '@dereekb/util';
 import { AuthUserInfo, authUserInfoFromAuthUser, firebaseAuthTokenFromUser } from '../auth';
 import { sendPasswordResetEmail } from 'firebase/auth';

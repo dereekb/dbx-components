@@ -7,6 +7,11 @@ export type ClassType<T = unknown> = {
   new (...args: unknown[]): T;
 };
 
+export type ObjectWithConstructor = {
+  // eslint-disable-next-line @typescript-eslint/ban-types
+  constructor: Function;
+};
+
 /**
  * Similar to ClassType, but allows for abstract classes.
  */
