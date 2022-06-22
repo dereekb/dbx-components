@@ -5,8 +5,9 @@ import { ObservableOrValue, cleanupDestroyable, PageListLoadingState, filterMayb
 import { ArrayOrValue, Maybe } from '@dereekb/util';
 import { LockSetComponentStore } from '@dereekb/dbx-core';
 import { DbxFirebaseCollectionLoaderInstance, dbxFirebaseCollectionLoaderInstance, DbxFirebaseCollectionLoaderInstanceData } from '../loader/collection.loader.instance';
+import { DbxFirebaseCollectionLoaderAccessor } from '../loader/collection.loader';
 
-export interface DbxFirebaseCollectionStore<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> extends DbxFirebaseCollectionLoaderInstanceData<T, D> {
+export interface DbxFirebaseCollectionStore<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> extends DbxFirebaseCollectionLoaderAccessor<T>, DbxFirebaseCollectionLoaderInstanceData<T, D> {
   readonly firestoreCollection$: Observable<Maybe<FirestoreCollectionLike<T, D>>>;
   readonly loader$: Observable<DbxFirebaseCollectionLoaderInstance<T, D>>;
 
@@ -99,6 +100,7 @@ export class AbstractDbxFirebaseCollectionStore<T, D extends FirestoreDocument<T
     shareReplay(1)
   );
 
+  readonly constraints$: Observable<Maybe<ArrayOrValue<FirestoreQueryConstraint>>> = this.loader$.pipe(switchMap((x) => x.constraints$));
   readonly firestoreIteration$: Observable<FirestoreItemPageIterationInstance<T>> = this.loader$.pipe(switchMap((x) => x.firestoreIteration$));
   readonly queryChangeWatcher$: Observable<IterationQueryDocChangeWatcher<T>> = this.loader$.pipe(switchMap((x) => x.queryChangeWatcher$));
   readonly accumulator$: Observable<FirebaseQueryItemAccumulator<T>> = this.loader$.pipe(switchMap((x) => x.accumulator$));

@@ -3,10 +3,9 @@ import { FirestoreDocument } from '@dereekb/firebase';
 import { Maybe } from '@dereekb/util';
 import { DbxFirebaseCollectionStore } from './store.collection';
 import { DbxFirebaseCollectionStoreDirective } from './store.collection.directive';
-import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
 import { DbxFirebaseCollectionChangeWatcher, dbxFirebaseCollectionChangeWatcher, DbxFirebaseCollectionChangeWatcherEvent, DbxFirebaseCollectionChangeWatcherTriggerMode } from '../loader/collection.change.watcher';
 import { Observable } from 'rxjs';
-import { dbxFirebaseCollectionChangeTriggerInstanceForStore, dbxFirebaseCollectionChangeTriggerInstanceForWatcher } from '../loader/collection.change.trigger';
+import { dbxFirebaseCollectionChangeTriggerForWatcher } from '../loader/collection.change.trigger';
 
 /**
  * Used to watch query doc changes and respond to them accordingly.
@@ -14,9 +13,9 @@ import { dbxFirebaseCollectionChangeTriggerInstanceForStore, dbxFirebaseCollecti
 @Directive({
   selector: '[dbxFirebaseCollectionChange]'
 })
-export class DbxFirebaseCollectionChangeDirective<T = unknown, D extends FirestoreDocument<T> = FirestoreDocument<T>, S extends DbxFirebaseCollectionStore<T, D> = DbxFirebaseCollectionStore<T, D>> implements DbxFirebaseCollectionChangeWatcher<T, D, S>, OnInit, OnDestroy {
-  private _watcher = dbxFirebaseCollectionChangeWatcher<T, D, S>(this.dbxFirebaseCollectionStoreDirective.store);
-  private _trigger = dbxFirebaseCollectionChangeTriggerInstanceForWatcher<T, D, S>(this._watcher, () => this.restart());
+export class DbxFirebaseCollectionChangeDirective<T = unknown, D extends FirestoreDocument<T> = FirestoreDocument<T>, S extends DbxFirebaseCollectionStore<T, D> = DbxFirebaseCollectionStore<T, D>> implements DbxFirebaseCollectionChangeWatcher<S>, OnInit, OnDestroy {
+  private _watcher = dbxFirebaseCollectionChangeWatcher(this.dbxFirebaseCollectionStoreDirective.store);
+  private _trigger = dbxFirebaseCollectionChangeTriggerForWatcher(this._watcher, () => this.restart());
 
   readonly mode$: Observable<DbxFirebaseCollectionChangeWatcherTriggerMode> = this._watcher.mode$;
   readonly event$: Observable<DbxFirebaseCollectionChangeWatcherEvent> = this._watcher.event$;
