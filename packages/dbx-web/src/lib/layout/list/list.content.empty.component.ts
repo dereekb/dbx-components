@@ -10,6 +10,5 @@ import { Component } from '@angular/core';
       <ng-content></ng-content>
     </div>
   `
-  // TODO: styleUrls: ['./container.scss']
 })
 export class DbxListEmptyContentComponent {}

@@ -1,8 +1,8 @@
-import { FirestoreDocument, IterationQueryDocChangeWatcherChangeType, IterationQueryDocChangeWatcherEvent } from '@dereekb/firebase';
+import { IterationQueryDocChangeWatcherChangeType, IterationQueryDocChangeWatcherEvent } from '@dereekb/firebase';
 import { SubscriptionObject } from '@dereekb/rxjs';
 import { Destroyable } from '@dereekb/util';
 import { filter, take, map, BehaviorSubject, distinctUntilChanged, Observable, switchMap, startWith, shareReplay, combineLatest } from 'rxjs';
-import { DbxFirebaseCollectionStore } from '../store/store.collection';
+import { DbxFirebaseCollectionLoaderAccessor } from './collection.loader';
 
 /**
  * DbxFirebaseCollectionChangeWatcher trigger modes
@@ -13,9 +13,9 @@ export type DbxFirebaseCollectionChangeWatcherTriggerMode = 'auto' | 'off';
 export type DbxFirebaseCollectionChangeWatcherEvent = Pick<IterationQueryDocChangeWatcherEvent<unknown>, 'time' | 'type'>;
 
 /**
- * Used to watch a DbxFirebaseCollectionStore for when the query changes and
+ * Used to watch a DbxFirebaseCollectionLoaderAccessor for when the query changes and
  */
-export interface DbxFirebaseCollectionChangeWatcher<T = unknown, D extends FirestoreDocument<T> = FirestoreDocument<T>, S extends DbxFirebaseCollectionStore<T, D> = DbxFirebaseCollectionStore<T, D>> {
+export interface DbxFirebaseCollectionChangeWatcher<S extends DbxFirebaseCollectionLoaderAccessor<any>> {
   readonly store: S;
   /**
    * Current mode
@@ -40,7 +40,7 @@ export interface DbxFirebaseCollectionChangeWatcher<T = unknown, D extends Fires
 /**
  * DbxFirebaseCollectionChangeWatcher instance
  */
-export class DbxFirebaseCollectionChangeWatcherInstance<T = unknown, D extends FirestoreDocument<T> = FirestoreDocument<T>, S extends DbxFirebaseCollectionStore<T, D> = DbxFirebaseCollectionStore<T, D>> implements Destroyable {
+export class DbxFirebaseCollectionChangeWatcherInstance<S extends DbxFirebaseCollectionLoaderAccessor<any>> implements Destroyable {
   private readonly _mode = new BehaviorSubject<DbxFirebaseCollectionChangeWatcherTriggerMode>(this._initialMode);
   private readonly _sub = new SubscriptionObject();
 
@@ -88,6 +88,6 @@ export class DbxFirebaseCollectionChangeWatcherInstance<T = unknown, D extends F
   }
 }
 
-export function dbxFirebaseCollectionChangeWatcher<T, D extends FirestoreDocument<T> = FirestoreDocument<T>, S extends DbxFirebaseCollectionStore<T, D> = DbxFirebaseCollectionStore<T, D>>(store: S, mode?: DbxFirebaseCollectionChangeWatcherTriggerMode): DbxFirebaseCollectionChangeWatcherInstance<T, D, S> {
+export function dbxFirebaseCollectionChangeWatcher<S extends DbxFirebaseCollectionLoaderAccessor<any>>(store: S, mode?: DbxFirebaseCollectionChangeWatcherTriggerMode): DbxFirebaseCollectionChangeWatcherInstance<S> {
   return new DbxFirebaseCollectionChangeWatcherInstance(store, mode);
 }

@@ -1,11 +1,10 @@
-import { onFalseToTrue, scanCount, SubscriptionObject, filterMaybe, ObservableOrValue, asObservable } from '@dereekb/rxjs';
-import { BehaviorSubject, combineLatest, filter, shareReplay, switchMap, exhaustMap, combineLatestWith, distinctUntilChanged, EMPTY, Observable } from 'rxjs';
-import { FirestoreDocument } from '@dereekb/firebase';
+import { SubscriptionObject, ObservableOrValue, asObservable } from '@dereekb/rxjs';
+import { BehaviorSubject, filter, switchMap, exhaustMap, EMPTY } from 'rxjs';
 import { Destroyable, Maybe, Initialized } from '@dereekb/util';
-import { DbxFirebaseCollectionStore } from '../store';
-import { DbxFirebaseCollectionChangeWatcher, dbxFirebaseCollectionChangeWatcher, DbxFirebaseCollectionChangeWatcherInstance } from './collection.change.watcher';
+import { DbxFirebaseCollectionChangeWatcher, dbxFirebaseCollectionChangeWatcher } from './collection.change.watcher';
+import { DbxFirebaseCollectionLoaderAccessor } from './collection.loader';
 
-export type DbxFirebaseCollectionChangeTriggerFunction<T, D extends FirestoreDocument<T> = FirestoreDocument<T>, S extends DbxFirebaseCollectionStore<T, D> = DbxFirebaseCollectionStore<T, D>> = (instance: DbxFirebaseCollectionChangeTriggerInstance<T, D, S>) => ObservableOrValue<void>;
+export type DbxFirebaseCollectionChangeTriggerFunction<S extends DbxFirebaseCollectionLoaderAccessor<any>> = (instance: DbxFirebaseCollectionChangeTriggerInstance<S>) => ObservableOrValue<void>;
 
 /**
  * Restarts the store.
@@ -13,10 +12,10 @@ export type DbxFirebaseCollectionChangeTriggerFunction<T, D extends FirestoreDoc
  * @param instance
  * @returns
  */
-export const DEFAULT_FIREBASE_COLLECTION_CHANGE_TRIGGER_FUNCTION: DbxFirebaseCollectionChangeTriggerFunction<any, any> = (instance) => instance.watcher.store.restart();
+export const DEFAULT_FIREBASE_COLLECTION_CHANGE_TRIGGER_FUNCTION: DbxFirebaseCollectionChangeTriggerFunction<any> = (instance) => instance.watcher.store.restart();
 
-export interface DbxFirebaseCollectionChangeTriggerInstanceConfig<T, D extends FirestoreDocument<T> = FirestoreDocument<T>, S extends DbxFirebaseCollectionStore<T, D> = DbxFirebaseCollectionStore<T, D>> {
-  readonly watcher: DbxFirebaseCollectionChangeWatcher<T, D, S> & Partial<Destroyable>;
+export interface DbxFirebaseCollectionChangeTriggerInstanceConfig<S extends DbxFirebaseCollectionLoaderAccessor<any>> {
+  readonly watcher: DbxFirebaseCollectionChangeWatcher<S> & Partial<Destroyable>;
   /**
    * Whether or not to also destroy the watcher when the trigger instance is destroyed.
    *
@@ -28,21 +27,21 @@ export interface DbxFirebaseCollectionChangeTriggerInstanceConfig<T, D extends F
    *
    * By default restarts the store.
    */
-  readonly triggerFunction?: Maybe<DbxFirebaseCollectionChangeTriggerFunction<T, D, S>>;
+  readonly triggerFunction?: Maybe<DbxFirebaseCollectionChangeTriggerFunction<S>>;
 }
 
-export interface DbxFirebaseCollectionChangeTrigger<T, D extends FirestoreDocument<T> = FirestoreDocument<T>, S extends DbxFirebaseCollectionStore<T, D> = DbxFirebaseCollectionStore<T, D>> {
-  readonly watcher: DbxFirebaseCollectionChangeWatcher<T, D, S>;
-  triggerFunction?: Maybe<DbxFirebaseCollectionChangeTriggerFunction<T, D, S>>;
+export interface DbxFirebaseCollectionChangeTrigger<S extends DbxFirebaseCollectionLoaderAccessor<any>> {
+  readonly watcher: DbxFirebaseCollectionChangeWatcher<S>;
+  triggerFunction?: Maybe<DbxFirebaseCollectionChangeTriggerFunction<S>>;
 }
 
-export class DbxFirebaseCollectionChangeTriggerInstance<T, D extends FirestoreDocument<T> = FirestoreDocument<T>, S extends DbxFirebaseCollectionStore<T, D> = DbxFirebaseCollectionStore<T, D>> implements DbxFirebaseCollectionChangeTrigger<T, D, S>, Initialized, Destroyable {
-  readonly watcher: DbxFirebaseCollectionChangeWatcher<T, D, S>;
+export class DbxFirebaseCollectionChangeTriggerInstance<S extends DbxFirebaseCollectionLoaderAccessor<any>> implements DbxFirebaseCollectionChangeTrigger<S>, Initialized, Destroyable {
+  readonly watcher: DbxFirebaseCollectionChangeWatcher<S>;
 
-  private _triggerFunction = new BehaviorSubject<Maybe<DbxFirebaseCollectionChangeTriggerFunction<T, D, S>>>(undefined);
+  private _triggerFunction = new BehaviorSubject<Maybe<DbxFirebaseCollectionChangeTriggerFunction<S>>>(undefined);
   private _sub = new SubscriptionObject();
 
-  constructor(readonly config: DbxFirebaseCollectionChangeTriggerInstanceConfig<T, D, S>) {
+  constructor(readonly config: DbxFirebaseCollectionChangeTriggerInstanceConfig<S>) {
     this.watcher = config.watcher;
     this.triggerFunction = config.triggerFunction ?? DEFAULT_FIREBASE_COLLECTION_CHANGE_TRIGGER_FUNCTION;
   }
@@ -72,11 +71,11 @@ export class DbxFirebaseCollectionChangeTriggerInstance<T, D extends FirestoreDo
     }
   }
 
-  get triggerFunction(): Maybe<DbxFirebaseCollectionChangeTriggerFunction<T, D, S>> {
+  get triggerFunction(): Maybe<DbxFirebaseCollectionChangeTriggerFunction<S>> {
     return this._triggerFunction.value;
   }
 
-  set triggerFunction(triggerFunction: Maybe<DbxFirebaseCollectionChangeTriggerFunction<T, D, S>>) {
+  set triggerFunction(triggerFunction: Maybe<DbxFirebaseCollectionChangeTriggerFunction<S>>) {
     this._triggerFunction.next(triggerFunction);
   }
 }
@@ -88,22 +87,38 @@ export class DbxFirebaseCollectionChangeTriggerInstance<T, D extends FirestoreDo
  * @param triggerFunction
  * @returns
  */
-export function dbxFirebaseCollectionChangeTriggerInstanceForStore<T, D extends FirestoreDocument<T> = FirestoreDocument<T>, S extends DbxFirebaseCollectionStore<T, D> = DbxFirebaseCollectionStore<T, D>>(store: S, triggerFunction?: Maybe<DbxFirebaseCollectionChangeTriggerFunction<T, D, S>>): DbxFirebaseCollectionChangeTriggerInstance<T, D, S> {
-  return dbxFirebaseCollectionChangeTriggerInstance<T, D, S>({
-    watcher: dbxFirebaseCollectionChangeWatcher<T, D, S>(store, 'auto'),
+export function dbxFirebaseCollectionChangeTriggerForStore<S extends DbxFirebaseCollectionLoaderAccessor<any>>(store: S, triggerFunction?: Maybe<DbxFirebaseCollectionChangeTriggerFunction<S>>): DbxFirebaseCollectionChangeTriggerInstance<S> {
+  return dbxFirebaseCollectionChangeTrigger<S>({
+    watcher: dbxFirebaseCollectionChangeWatcher<S>(store, 'auto'),
     destroyWatcherOnDestroy: true,
     triggerFunction
   });
 }
 
-export function dbxFirebaseCollectionChangeTriggerInstanceForWatcher<T, D extends FirestoreDocument<T> = FirestoreDocument<T>, S extends DbxFirebaseCollectionStore<T, D> = DbxFirebaseCollectionStore<T, D>>(watcher: DbxFirebaseCollectionChangeWatcher<T, D, S>, triggerFunction?: Maybe<DbxFirebaseCollectionChangeTriggerFunction<T, D, S>>): DbxFirebaseCollectionChangeTriggerInstance<T, D, S> {
-  return dbxFirebaseCollectionChangeTriggerInstance<T, D, S>({
+export function dbxFirebaseCollectionChangeTriggerForWatcher<S extends DbxFirebaseCollectionLoaderAccessor<any>>(watcher: DbxFirebaseCollectionChangeWatcher<S>, triggerFunction?: Maybe<DbxFirebaseCollectionChangeTriggerFunction<S>>): DbxFirebaseCollectionChangeTriggerInstance<S> {
+  return dbxFirebaseCollectionChangeTrigger<S>({
     watcher,
     destroyWatcherOnDestroy: false,
     triggerFunction
   });
 }
 
-export function dbxFirebaseCollectionChangeTriggerInstance<T, D extends FirestoreDocument<T> = FirestoreDocument<T>, S extends DbxFirebaseCollectionStore<T, D> = DbxFirebaseCollectionStore<T, D>>(config: DbxFirebaseCollectionChangeTriggerInstanceConfig<T, D, S>): DbxFirebaseCollectionChangeTriggerInstance<T, D, S> {
+export function dbxFirebaseCollectionChangeTrigger<S extends DbxFirebaseCollectionLoaderAccessor<any>>(config: DbxFirebaseCollectionChangeTriggerInstanceConfig<S>): DbxFirebaseCollectionChangeTriggerInstance<S> {
   return new DbxFirebaseCollectionChangeTriggerInstance(config);
 }
+
+// MARK: Compat
+/**
+ * @deprecated
+ */
+export const dbxFirebaseCollectionChangeTriggerInstance = dbxFirebaseCollectionChangeTrigger;
+
+/**
+ * @deprecated
+ */
+export const dbxFirebaseCollectionChangeTriggerInstanceForStore = dbxFirebaseCollectionChangeTriggerForStore;
+
+/**
+ * @deprecated
+ */
+export const dbxFirebaseCollectionChangeTriggerInstanceForWatcher = dbxFirebaseCollectionChangeTriggerForWatcher;

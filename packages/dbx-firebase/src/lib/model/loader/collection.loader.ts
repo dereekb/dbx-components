@@ -1,16 +1,24 @@
-import { DocumentDataWithId, FirestoreItemPageIterationInstance, FirestoreQueryConstraint } from '@dereekb/firebase';
+import { DocumentDataWithId, FirestoreItemPageIterationInstance, FirestoreQueryConstraint, IterationQueryDocChangeWatcher } from '@dereekb/firebase';
 import { PageListLoadingState } from '@dereekb/rxjs';
 import { Maybe, ArrayOrValue } from '@dereekb/util';
 import { Observable } from 'rxjs';
 
-/**
- * Abstract type that loads models from a configured collection.
- */
-export interface DbxFirebaseCollectionLoader<T = unknown> {
+export interface DbxFirebaseCollectionLoaderAccessor<T = unknown> {
   readonly constraints$: Observable<Maybe<ArrayOrValue<FirestoreQueryConstraint>>>;
   readonly firestoreIteration$: Observable<FirestoreItemPageIterationInstance<T>>;
   readonly pageLoadingState$: Observable<PageListLoadingState<DocumentDataWithId<T>>>;
+  readonly queryChangeWatcher$: Observable<IterationQueryDocChangeWatcher<T>>;
 
+  /**
+   * Restarts the loader and refreshes items from the beginning.
+   */
+  restart(): void;
+}
+
+/**
+ * Abstract type that loads models from a configured collection.
+ */
+export interface DbxFirebaseCollectionLoader<T = unknown> extends DbxFirebaseCollectionLoaderAccessor<T> {
   /**
    * Maximum number of pages to load from the interation.
    *
@@ -36,9 +44,4 @@ export interface DbxFirebaseCollectionLoader<T = unknown> {
    * Loads more items.
    */
   next(): void;
-
-  /**
-   * Resets/restarts the list.
-   */
-  restart(): void;
 }

@@ -2,7 +2,7 @@ import { PageListLoadingState, cleanupDestroyable, filterMaybe, useFirst, Subscr
 import { BehaviorSubject, combineLatest, map, shareReplay, distinctUntilChanged, Subject, throttleTime, switchMap, Observable, tap, startWith, NEVER } from 'rxjs';
 import { DocumentDataWithId, FirebaseQueryItemAccumulator, firebaseQueryItemAccumulator, FirestoreCollectionLike, FirestoreDocument, FirestoreItemPageIterationInstance, FirestoreItemPageIteratorFilter, FirestoreQueryConstraint, IterationQueryDocChangeWatcher, iterationQueryDocChangeWatcher } from '@dereekb/firebase';
 import { ArrayOrValue, Destroyable, Initialized, Maybe } from '@dereekb/util';
-import { DbxFirebaseCollectionLoader } from './collection.loader';
+import { DbxFirebaseCollectionLoader, DbxFirebaseCollectionLoaderAccessor } from './collection.loader';
 
 export interface DbxFirebaseCollectionLoaderInstanceInitConfig<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> {
   collection?: Maybe<FirestoreCollectionLike<T, D>>;
@@ -11,11 +11,7 @@ export interface DbxFirebaseCollectionLoaderInstanceInitConfig<T, D extends Fire
   constraints?: Maybe<ArrayOrValue<FirestoreQueryConstraint>>;
 }
 
-export interface DbxFirebaseCollectionLoaderInstanceData<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> {
-  readonly firestoreIteration$: Observable<FirestoreItemPageIterationInstance<T>>;
-  readonly accumulator$: Observable<FirebaseQueryItemAccumulator<T>>;
-  readonly pageLoadingState$: Observable<PageListLoadingState<T>>;
-}
+export type DbxFirebaseCollectionLoaderInstanceData<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> = DbxFirebaseCollectionLoaderAccessor<T>;
 
 /**
  * DbxFirebaseModelLoader implementation within an instance.

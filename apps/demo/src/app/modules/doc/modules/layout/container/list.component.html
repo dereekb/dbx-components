@@ -63,6 +63,19 @@
           </doc-complex-item-list>
         </div>
       </doc-feature-example>
+      <doc-feature-example header="dbx-list-grid-view">
+        <p>Instead of using a mat list, you can provide custom content to be rendered as a grid. Uses Angular Flexlayout to handle css.</p>
+        <p>The grid's gap and columns can be configured.</p>
+        <p>Note: Currently does not support selection.</p>
+
+        <p>Clicked Item (Plain): {{ clickedItemPlain | json }}</p>
+        <p>Clicked Item (Anchor): {{ clickedItem | json }}</p>
+        <div style="height: 400px">
+          <doc-item-list-grid [state$]="stateWithAnchors$" (loadMore)="loadMore()" (clickItem)="onPlainClick($event)">
+            <button bottom mat-raised-button (click)="loadMore()">Load More</button>
+          </doc-item-list-grid>
+        </div>
+      </doc-feature-example>
       <doc-feature-example header="dbxListItemModifier" hint="Used to inject list item Modifiers into lists that uses dbx-list-view or dbx-selection-list-view internally.">
         <p>dbxListItemModifier is used by dbx-list-view or dbx-selection-list-view to modify items using all modifiers registered with the dbxListItemModifier.</p>
         <p>The most common use case is to set the anchor for list items using a dbxListItemAnchorModifier. This lets developers set the anchor on each item without relying on the list view's configuration.</p>

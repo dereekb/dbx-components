@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [8.6.0](https://github.com/dereekb/dbx-components/compare/v8.5.3-dev...v8.6.0) (2022-06-22)
+
+
+### Features
+
+* added DbxValueListGridViewComponent ([cca9a62](https://github.com/dereekb/dbx-components/commit/cca9a62d078e9fc4a710aea5bb834eb22a7b952d))
+
+
+
 ## [8.5.3](https://github.com/dereekb/dbx-components/compare/v8.5.2-dev...v8.5.3) (2022-06-22)
 
 

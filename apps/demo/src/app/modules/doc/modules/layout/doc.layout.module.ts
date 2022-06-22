@@ -14,6 +14,7 @@ import { DocItemListComponent, DocItemListViewComponent } from './component/item
 import { DocSelectionItemListComponent, DocSelectionItemListViewComponent, DocSelectionItemListViewItemComponent } from './component/item.list.selection.component';
 import { DocCustomItemListComponent, DocCustomItemListViewComponent, DocCustomItemListViewItemComponent } from './component/item.list.custom.component';
 import { DocLayoutTwoColumnsComponent } from './container/two.component';
+import { DocItemListGridComponent, DocItemListGridViewComponent, DocItemListGridViewItemComponent } from './component/item.list.grid.component';
 
 @NgModule({
   imports: [
@@ -32,6 +33,9 @@ import { DocLayoutTwoColumnsComponent } from './container/two.component';
     DocCustomItemListComponent,
     DocCustomItemListViewComponent,
     DocCustomItemListViewItemComponent,
+    DocItemListGridComponent,
+    DocItemListGridViewComponent,
+    DocItemListGridViewItemComponent,
     // containers
     DocLayoutLayoutComponent,
     DocLayoutHomeComponent,
