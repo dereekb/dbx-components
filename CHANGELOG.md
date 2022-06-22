@@ -2,6 +2,23 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [8.5.0](https://github.com/dereekb/dbx-components/compare/v8.4.0-dev...v8.5.0) (2022-06-22)
+
+
+### Bug Fixes
+
+* added dbxStyleBody to template root layout ([2897f90](https://github.com/dereekb/dbx-components/commit/2897f90b869b30c103c4c16a78796a8899f11098))
+* setup-project fix ([9406bfc](https://github.com/dereekb/dbx-components/commit/9406bfc026616723bc0ea6388a2b47512455a733))
+
+
+### Features
+
+* added firestore key validators ([9d090db](https://github.com/dereekb/dbx-components/commit/9d090db1e84b97f11cc2b751dcbe7d2724960b2b))
+* added Observable to ValueSelectionFieldConfig ([235c2de](https://github.com/dereekb/dbx-components/commit/235c2de9a1e0a7b40981cbe935038d379270f8ca))
+* added searchStringFilterFunction() ([f91aaaf](https://github.com/dereekb/dbx-components/commit/f91aaafb7fc4c304fbbd7fc2a3d471c4573ebdf3))
+
+
+
 # [8.4.0](https://github.com/dereekb/dbx-components/compare/v8.3.0-dev...v8.4.0) (2022-06-21)
 
 
