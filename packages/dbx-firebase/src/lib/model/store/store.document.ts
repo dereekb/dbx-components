@@ -135,17 +135,17 @@ export class AbstractDbxFirebaseDocumentStore<T, D extends FirestoreDocument<T> 
 
   readonly id$: Observable<FirestoreModelId> = this.document$.pipe(
     map((x) => x.id),
-    shareReplay()
+    shareReplay(1)
   );
 
   readonly key$: Observable<FirestoreModelKey> = this.document$.pipe(
     map((x) => x.key),
-    shareReplay()
+    shareReplay(1)
   );
 
   readonly ref$: Observable<DocumentReference<T>> = this.document$.pipe(
     map((x) => x.documentRef),
-    shareReplay()
+    shareReplay(1)
   );
 
   readonly snapshot$: Observable<DocumentSnapshot<T>> = this.document$.pipe(
@@ -211,17 +211,17 @@ export class AbstractDbxFirebaseDocumentStore<T, D extends FirestoreDocument<T> 
   /**
    * Sets the id of the document to load.
    */
-  readonly setId = this.updater((state, id: Maybe<FirestoreModelId>) => (id ? { ...state, id, ref: undefined } : { ...state, id })) as (observableOrValue: Maybe<string> | Observable<Maybe<string>>) => Subscription;
+  readonly setId = this.updater((state, id: Maybe<FirestoreModelId>) => (id ? { ...state, id, key: undefined, ref: undefined } : { ...state, id })) as (observableOrValue: Maybe<string> | Observable<Maybe<string>>) => Subscription;
 
   /**
    * Sets the key of the document to load.
    */
-  readonly setKey = this.updater((state, key: Maybe<FirestoreModelKey>) => (key ? { ...state, key, ref: undefined } : { ...state, key })) as (observableOrValue: Maybe<string> | Observable<Maybe<string>>) => Subscription;
+  readonly setKey = this.updater((state, key: Maybe<FirestoreModelKey>) => (key ? { ...state, key, id: undefined, ref: undefined } : { ...state, key })) as (observableOrValue: Maybe<string> | Observable<Maybe<string>>) => Subscription;
 
   /**
    * Sets the ref of the document to load.
    */
-  readonly setRef = this.updater((state, ref: Maybe<DocumentReference<T>>) => (ref ? { ...state, id: undefined, ref } : { ...state, ref })) as (observableOrValue: Maybe<DocumentReference<T>> | Observable<Maybe<DocumentReference<T>>>) => Subscription;
+  readonly setRef = this.updater((state, ref: Maybe<DocumentReference<T>>) => (ref ? { ...state, key: undefined, id: undefined, ref } : { ...state, ref })) as (observableOrValue: Maybe<DocumentReference<T>> | Observable<Maybe<DocumentReference<T>>>) => Subscription;
 
   readonly clearRefs = this.updater((state) => ({ ...state, id: undefined, key: undefined, ref: undefined }));
 
