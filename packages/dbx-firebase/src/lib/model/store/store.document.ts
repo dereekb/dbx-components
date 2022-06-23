@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Observable, shareReplay, distinctUntilChanged, map, switchMap, combineLatest, Subscription, of } from 'rxjs';
-import { DocumentSnapshot, DocumentReference, FirestoreCollection, FirestoreDocument, documentDataWithId, DocumentDataWithId, FirestoreModelId, FirestoreModelKey, FirestoreCollectionLike, FirestoreModelIdentity } from '@dereekb/firebase';
+import { DocumentSnapshot, DocumentReference, FirestoreCollection, FirestoreDocument, documentDataWithId, DocumentDataWithId, FirestoreModelId, FirestoreModelKey, FirestoreCollectionLike, FirestoreModelIdentity, firestoreModelIdsFromKey, firestoreModelKeyPartPairs, FirestoreModelCollectionAndIdPair, firestoreModelKeyPairObject, FirestoreModelKeyPairObject } from '@dereekb/firebase';
 import { filterMaybe, LoadingState, beginLoading, successResult, loadingStateFromObs, errorResult, ObservableOrValue } from '@dereekb/rxjs';
 import { Maybe, isMaybeSo } from '@dereekb/util';
 import { LockSetComponent, LockSetComponentStore } from '@dereekb/dbx-core';
@@ -22,6 +22,11 @@ export interface DbxFirebaseDocumentStore<T, D extends FirestoreDocument<T> = Fi
   readonly id$: Observable<FirestoreModelId>;
   readonly key$: Observable<FirestoreModelKey>;
   readonly ref$: Observable<DocumentReference<T>>;
+
+  readonly keyModelIds$: Observable<FirestoreModelId[]>;
+  readonly keyPairs$: Observable<FirestoreModelCollectionAndIdPair[]>;
+  readonly keyPairObject$: Observable<FirestoreModelKeyPairObject>;
+
   readonly documentLoadingState$: Observable<LoadingState<D>>;
   readonly snapshot$: Observable<DocumentSnapshot<T>>;
   readonly snapshotLoadingState$: Observable<LoadingState<DocumentSnapshot<T>>>;
@@ -135,17 +140,21 @@ export class AbstractDbxFirebaseDocumentStore<T, D extends FirestoreDocument<T> 
 
   readonly id$: Observable<FirestoreModelId> = this.document$.pipe(
     map((x) => x.id),
-    shareReplay()
+    shareReplay(1)
   );
 
   readonly key$: Observable<FirestoreModelKey> = this.document$.pipe(
     map((x) => x.key),
-    shareReplay()
+    shareReplay(1)
   );
+
+  readonly keyModelIds$: Observable<FirestoreModelId[]> = this.key$.pipe(map(firestoreModelIdsFromKey), shareReplay(1));
+  readonly keyPairs$: Observable<FirestoreModelCollectionAndIdPair[]> = this.key$.pipe(map(firestoreModelKeyPartPairs), filterMaybe(), shareReplay(1));
+  readonly keyPairObject$: Observable<FirestoreModelKeyPairObject> = this.key$.pipe(map(firestoreModelKeyPairObject), filterMaybe(), shareReplay(1));
 
   readonly ref$: Observable<DocumentReference<T>> = this.document$.pipe(
     map((x) => x.documentRef),
-    shareReplay()
+    shareReplay(1)
   );
 
   readonly snapshot$: Observable<DocumentSnapshot<T>> = this.document$.pipe(
@@ -211,17 +220,17 @@ export class AbstractDbxFirebaseDocumentStore<T, D extends FirestoreDocument<T> 
   /**
    * Sets the id of the document to load.
    */
-  readonly setId = this.updater((state, id: Maybe<FirestoreModelId>) => (id ? { ...state, id, ref: undefined } : { ...state, id })) as (observableOrValue: Maybe<string> | Observable<Maybe<string>>) => Subscription;
+  readonly setId = this.updater((state, id: Maybe<FirestoreModelId>) => (id ? { ...state, id, key: undefined, ref: undefined } : { ...state, id })) as (observableOrValue: Maybe<string> | Observable<Maybe<string>>) => Subscription;
 
   /**
    * Sets the key of the document to load.
    */
-  readonly setKey = this.updater((state, key: Maybe<FirestoreModelKey>) => (key ? { ...state, key, ref: undefined } : { ...state, key })) as (observableOrValue: Maybe<string> | Observable<Maybe<string>>) => Subscription;
+  readonly setKey = this.updater((state, key: Maybe<FirestoreModelKey>) => (key ? { ...state, key, id: undefined, ref: undefined } : { ...state, key })) as (observableOrValue: Maybe<string> | Observable<Maybe<string>>) => Subscription;
 
   /**
    * Sets the ref of the document to load.
    */
-  readonly setRef = this.updater((state, ref: Maybe<DocumentReference<T>>) => (ref ? { ...state, id: undefined, ref } : { ...state, ref })) as (observableOrValue: Maybe<DocumentReference<T>> | Observable<Maybe<DocumentReference<T>>>) => Subscription;
+  readonly setRef = this.updater((state, ref: Maybe<DocumentReference<T>>) => (ref ? { ...state, key: undefined, id: undefined, ref } : { ...state, ref })) as (observableOrValue: Maybe<DocumentReference<T>> | Observable<Maybe<DocumentReference<T>>>) => Subscription;
 
   readonly clearRefs = this.updater((state) => ({ ...state, id: undefined, key: undefined, ref: undefined }));
 

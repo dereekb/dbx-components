@@ -18,7 +18,7 @@ import { FirestoreItemPageIterationBaseConfig, FirestoreItemPageIterationFactory
 import { firestoreQueryFactory, FirestoreQueryFactory } from '../query/query';
 import { FirestoreDrivers } from '../driver/driver';
 import { FirestoreCollectionQueryFactory, firestoreCollectionQueryFactory } from './collection.query';
-import { ArrayOrValue, Building, lastValue, Maybe, ModelKey, ModelTypeString } from '@dereekb/util';
+import { ArrayOrValue, arrayToObject, Building, lastValue, Maybe, ModelKey, ModelTypeString } from '@dereekb/util';
 
 /**
  * The camelCase model name/type.
@@ -341,6 +341,23 @@ export function childFirestoreModelKeyPath(parent: FirestoreModelKeyPart, childr
   } else {
     return [`${parent}/${children}`];
   }
+}
+
+export type FirestoreModelKeyPairObject = Record<FirestoreCollectionName, FirestoreModelId>;
+
+export function firestoreModelKeyPairObject(input: FirestoreModelKey | DocumentReferenceRef<unknown> | FirestoreModelKeyRef): Maybe<FirestoreModelKeyPairObject> {
+  const pairs = firestoreModelKeyPartPairs(input);
+  let object: Maybe<FirestoreModelKeyPairObject>;
+
+  if (pairs) {
+    object = arrayToObject(
+      pairs,
+      (x) => x.collectionName,
+      (x) => x.id
+    );
+  }
+
+  return object;
 }
 
 export interface FirestoreModelCollectionAndIdPair extends FirestoreModelIdRef, FirestoreCollectionNameRef {}
