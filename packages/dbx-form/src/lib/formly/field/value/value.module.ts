@@ -6,10 +6,11 @@ import { DbxFormFormlyEnumFieldModule } from './enum/enum.field.module';
 import { DbxFormFormlyPhoneFieldModule } from './phone/phone.field.module';
 import { DbxFormFormlyDateFieldModule } from './date/date.field.module';
 import { DbxFormFormlyTextFieldModule } from './text/text.field.module';
+import { DbxFormFormlyNumberFieldModule } from './number/number.field.module';
 
 @NgModule({
   imports: [CommonModule],
   declarations: [],
-  exports: [DbxFormFormlyArrayFieldModule, DbxFormFormlyBooleanFieldModule, DbxFormFormlyDateFieldModule, DbxFormFormlyEnumFieldModule, DbxFormFormlyPhoneFieldModule, DbxFormFormlyTextFieldModule]
+  exports: [DbxFormFormlyArrayFieldModule, DbxFormFormlyBooleanFieldModule, DbxFormFormlyDateFieldModule, DbxFormFormlyEnumFieldModule, DbxFormFormlyPhoneFieldModule, DbxFormFormlyNumberFieldModule, DbxFormFormlyTextFieldModule]
 })
 export class DbxFormFormlyValueModule {}
