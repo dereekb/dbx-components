@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Observable, shareReplay, distinctUntilChanged, map, switchMap, combineLatest, Subscription, of } from 'rxjs';
-import { DocumentSnapshot, DocumentReference, FirestoreCollection, FirestoreDocument, documentDataWithId, DocumentDataWithId, FirestoreModelId, FirestoreModelKey, FirestoreCollectionLike, FirestoreModelIdentity } from '@dereekb/firebase';
+import { DocumentSnapshot, DocumentReference, FirestoreCollection, FirestoreDocument, documentDataWithId, DocumentDataWithId, FirestoreModelId, FirestoreModelKey, FirestoreCollectionLike, FirestoreModelIdentity, firestoreModelIdsFromKey, firestoreModelKeyPartPairs, FirestoreModelCollectionAndIdPair, firestoreModelKeyPairObject, FirestoreModelKeyPairObject } from '@dereekb/firebase';
 import { filterMaybe, LoadingState, beginLoading, successResult, loadingStateFromObs, errorResult, ObservableOrValue } from '@dereekb/rxjs';
 import { Maybe, isMaybeSo } from '@dereekb/util';
 import { LockSetComponent, LockSetComponentStore } from '@dereekb/dbx-core';
@@ -22,6 +22,11 @@ export interface DbxFirebaseDocumentStore<T, D extends FirestoreDocument<T> = Fi
   readonly id$: Observable<FirestoreModelId>;
   readonly key$: Observable<FirestoreModelKey>;
   readonly ref$: Observable<DocumentReference<T>>;
+
+  readonly keyModelIds$: Observable<FirestoreModelId[]>;
+  readonly keyPairs$: Observable<FirestoreModelCollectionAndIdPair[]>;
+  readonly keyPairObject$: Observable<FirestoreModelKeyPairObject>;
+
   readonly documentLoadingState$: Observable<LoadingState<D>>;
   readonly snapshot$: Observable<DocumentSnapshot<T>>;
   readonly snapshotLoadingState$: Observable<LoadingState<DocumentSnapshot<T>>>;
@@ -142,6 +147,10 @@ export class AbstractDbxFirebaseDocumentStore<T, D extends FirestoreDocument<T> 
     map((x) => x.key),
     shareReplay(1)
   );
+
+  readonly keyModelIds$: Observable<FirestoreModelId[]> = this.key$.pipe(map(firestoreModelIdsFromKey), shareReplay(1));
+  readonly keyPairs$: Observable<FirestoreModelCollectionAndIdPair[]> = this.key$.pipe(map(firestoreModelKeyPartPairs), filterMaybe(), shareReplay(1));
+  readonly keyPairObject$: Observable<FirestoreModelKeyPairObject> = this.key$.pipe(map(firestoreModelKeyPairObject), filterMaybe(), shareReplay(1));
 
   readonly ref$: Observable<DocumentReference<T>> = this.document$.pipe(
     map((x) => x.documentRef),
