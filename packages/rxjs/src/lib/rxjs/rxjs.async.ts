@@ -100,6 +100,11 @@ export function asyncPusher<T>(config: AsyncPusherConfig<T> = {}): AsyncPusher<T
 }
 
 /**
+ * AsyncPusher cache
+ */
+export type AsyncPusherCache<T> = CachedFactoryWithInput<AsyncPusher<T>, Observable<unknown>>;
+
+/**
  * Creates a cache that returns an AsyncPusher.
  *
  * The CachedFactoryWithInput resunt can optionally be pass an observable to watch for the cleanup process.
@@ -107,7 +112,7 @@ export function asyncPusher<T>(config: AsyncPusherConfig<T> = {}): AsyncPusher<T
  * @param config
  * @returns
  */
-export function asyncPusherCache<T>(config?: AsyncPusherConfig<T>): CachedFactoryWithInput<AsyncPusher<T>, Observable<unknown>> {
+export function asyncPusherCache<T>(config?: AsyncPusherConfig<T>): AsyncPusherCache<T> {
   return cachedGetter((cleanupObs?: Observable<unknown>) => {
     const pusher = asyncPusher(config);
 

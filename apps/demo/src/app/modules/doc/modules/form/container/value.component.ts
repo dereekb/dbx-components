@@ -8,7 +8,12 @@ import { addressField, addressListField, cityField, countryField, emailField, ph
 export class DocFormValueComponent {
   readonly textFields: FormlyFieldConfig[] = [textField({ key: 'test', label: 'Text Field', description: 'A required text field.', placeholder: 'Placeholder', required: true, minLength: 4, maxLength: 15 }), nameField(), emailField(), cityField(), stateField(), countryField(), zipCodeField()];
 
-  readonly numberFields: FormlyFieldConfig[] = [numberField({ key: 'test', label: 'Number Field', description: 'A required number between 0 and 100.', placeholder: 'Placeholder', required: true, min: 0, max: 100 })];
+  readonly numberFields: FormlyFieldConfig[] = [
+    //
+    numberField({ key: 'test', label: 'Number Field', description: 'A number between 0 and 100.', placeholder: 'Placeholder', min: 0, max: 100 }),
+    numberField({ key: 'steptest', label: 'Number Field With Step', description: 'Any number, but increases in steps of 5.', step: 5 }),
+    numberField({ key: 'enforcedsteptest', label: 'Number Divisible by 5', description: 'Any number divisible by 5.', step: 5, enforceStep: true })
+  ];
 
   readonly textAreaField: FormlyFieldConfig[] = [textAreaField({ key: 'test', label: 'Text Area Field', description: 'A required text area field.', placeholder: 'Placeholder', required: true })];
 

@@ -1,5 +1,7 @@
-import { mergeObjects, filterFromPOJO, mergeObjectsFunction, filterFromPOJOFunction, FilterKeyValueTuplesInput, GeneralFilterFromPOJOFunction } from '@dereekb/util';
+import { AsyncValidatorFn, ValidatorFn } from '@angular/forms';
+import { mergeObjects, filterFromPOJO, mergeObjectsFunction, filterFromPOJOFunction, FilterKeyValueTuplesInput, GeneralFilterFromPOJOFunction, ArrayOrValue, Maybe, asArray, objectHasNoKeys } from '@dereekb/util';
 import { FormlyFieldConfig, FormlyFieldProps } from '@ngx-formly/core';
+import { ValidationMessageOption } from '@ngx-formly/core/lib/models';
 
 export interface FieldConfig {
   key: string;
@@ -110,4 +112,57 @@ export function disableFormlyFieldAutofillAttributes(): { name: string; autocomp
     name: 'password',
     autocomplete: 'off'
   };
+}
+
+export type FormlyMessageProperties = {
+  [messageProperties: string]: ValidationMessageOption['message'];
+};
+
+export interface ValidatorsForFieldConfigInput {
+  validators?: ArrayOrValue<ValidatorFn>;
+  asyncValidators?: ArrayOrValue<AsyncValidatorFn>;
+  messages?: Maybe<FormlyMessageProperties>;
+}
+
+export type ValidatorsForFieldConfig = {
+  validation?: {
+    messages?: FormlyMessageProperties;
+  };
+  validators?: {
+    validation: ValidatorFn[];
+  };
+  asyncValidators?: {
+    validation: AsyncValidatorFn[];
+  };
+};
+
+export function validatorsForFieldConfig(input: ValidatorsForFieldConfigInput): Maybe<ValidatorsForFieldConfig> {
+  const validators: ValidatorFn[] = asArray(input.validators);
+  const asyncValidators: AsyncValidatorFn[] = asArray(input.asyncValidators);
+  const messages: Maybe<FormlyMessageProperties> = input.messages;
+  let config: Maybe<ValidatorsForFieldConfig>;
+
+  if (messages || validators.length || asyncValidators.length) {
+    config = {};
+
+    if (validators.length) {
+      config.validators = {
+        validation: validators
+      };
+    }
+
+    if (asyncValidators.length) {
+      config.validators = {
+        validation: asyncValidators
+      };
+    }
+
+    if (messages && !objectHasNoKeys(messages)) {
+      config.validation = {
+        messages
+      };
+    }
+  }
+
+  return config;
 }
