@@ -1,6 +1,6 @@
 import { SubscriptionObject, filterMaybe } from '@dereekb/rxjs';
 import { Observable, BehaviorSubject, shareReplay, distinctUntilChanged } from 'rxjs';
-import { FormlyFieldConfig } from '@ngx-formly/core/lib/core';
+import { FormlyFieldConfig } from '@ngx-formly/core';
 import { OnInit, OnDestroy, Directive, Input } from '@angular/core';
 import { DbxFormlyContext } from './formly.context';
 import { Maybe } from '@dereekb/util';

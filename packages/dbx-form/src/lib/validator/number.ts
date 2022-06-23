@@ -1,4 +1,5 @@
 import { AbstractControl, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
+import { isNumberDivisibleBy, nearestDivisibleValues } from '@dereekb/util';
 
 /**
  * Merges the use of the min and max validator.
@@ -25,5 +26,38 @@ export function isInRange(min: number = Number.MIN_SAFE_INTEGER, max: number = N
     }
 
     return errors;
+  };
+}
+
+export const IS_DIVISIBLE_BY_VALIDATION_KEY = 'isDivisibleBy';
+
+export interface IsDivisibleByError {
+  value: number;
+  nearest: number;
+  divisor: number;
+  message: string;
+}
+
+export function isDivisibleBy(divisor: number): ValidatorFn {
+  if (divisor === 0) {
+    throw new Error('Divisior must be greater than zero.');
+  }
+
+  return (control: AbstractControl): ValidationErrors | null => {
+    const value: number | undefined = control.value;
+
+    if (value != null && !isNumberDivisibleBy(value, divisor)) {
+      const nearest = nearestDivisibleValues(value, divisor);
+      return {
+        [IS_DIVISIBLE_BY_VALIDATION_KEY]: {
+          value,
+          divisor,
+          nearest,
+          message: `Number must by divisible by ${divisor}. The two nearest valid values are ${nearest.nearestFloor} and ${nearest.nearestCeil}.`
+        }
+      };
+    }
+
+    return {};
   };
 }

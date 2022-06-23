@@ -1,5 +1,5 @@
-import { FormlyFieldConfig } from '@ngx-formly/core/lib/core';
-import { AttributesFieldConfig, LabeledFieldConfig, formlyField, propsForFieldConfig } from '../../field';
+import { FormlyFieldConfig } from '@ngx-formly/core';
+import { AttributesFieldConfig, LabeledFieldConfig, formlyField, propsForFieldConfig, DescriptionFieldConfig } from '../../field';
 
 export interface TextFieldLengthConfig {
   minLength?: number;
@@ -8,7 +8,7 @@ export interface TextFieldLengthConfig {
 
 export type TextFieldInputType = 'text' | 'password' | 'email';
 
-export interface TextFieldConfig extends LabeledFieldConfig, TextFieldLengthConfig, AttributesFieldConfig {
+export interface TextFieldConfig extends LabeledFieldConfig, DescriptionFieldConfig, TextFieldLengthConfig, AttributesFieldConfig {
   inputType?: TextFieldInputType;
   pattern?: string | RegExp;
 }
@@ -27,7 +27,7 @@ export function textField(config: TextFieldConfig): FormlyFieldConfig {
   });
 }
 
-export interface TextAreaFieldConfig extends LabeledFieldConfig, TextFieldLengthConfig, AttributesFieldConfig {
+export interface TextAreaFieldConfig extends LabeledFieldConfig, DescriptionFieldConfig, TextFieldLengthConfig, AttributesFieldConfig {
   rows?: number;
 }
 

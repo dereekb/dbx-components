@@ -343,11 +343,11 @@ export function childFirestoreModelKeyPath(parent: FirestoreModelKeyPart, childr
   }
 }
 
-export type FirestoreModelKeyPairObject = Record<FirestoreCollectionName, FirestoreModelId>;
+export type FirestoreModelCollectionAndIdPairObject = Record<FirestoreCollectionName, FirestoreModelId>;
 
-export function firestoreModelKeyPairObject(input: FirestoreModelKey | DocumentReferenceRef<unknown> | FirestoreModelKeyRef): Maybe<FirestoreModelKeyPairObject> {
+export function firestoreModelKeyPairObject(input: FirestoreModelKey | DocumentReferenceRef<unknown> | FirestoreModelKeyRef): Maybe<FirestoreModelCollectionAndIdPairObject> {
   const pairs = firestoreModelKeyPartPairs(input);
-  let object: Maybe<FirestoreModelKeyPairObject>;
+  let object: Maybe<FirestoreModelCollectionAndIdPairObject>;
 
   if (pairs) {
     object = arrayToObject(
@@ -362,8 +362,8 @@ export function firestoreModelKeyPairObject(input: FirestoreModelKey | DocumentR
 
 export interface FirestoreModelCollectionAndIdPair extends FirestoreModelIdRef, FirestoreCollectionNameRef {}
 
-export function firestoreModelKeyPartPairs(input: FirestoreModelKey | DocumentReferenceRef<unknown> | FirestoreModelKeyRef): Maybe<FirestoreModelCollectionAndIdPair[]> {
-  const key = readFirestoreModelKey(input);
+export function firestoreModelKeyPartPairs<T = unknown>(input: ReadFirestoreModelKeyInput<T>): Maybe<FirestoreModelCollectionAndIdPair[]> {
+  const key = readFirestoreModelKey<T>(input);
   let pairs: Maybe<FirestoreModelCollectionAndIdPair[]>;
 
   if (key) {
@@ -384,7 +384,9 @@ export function firestoreModelKeyPartPairs(input: FirestoreModelKey | DocumentRe
   return pairs;
 }
 
-export function readFirestoreModelKey(input: FirestoreModelKey | DocumentReferenceRef<unknown> | FirestoreModelKeyRef): Maybe<FirestoreModelKey> {
+export type ReadFirestoreModelKeyInput<T = unknown> = FirestoreModelKey | FirestoreModelKeyRef | DocumentReferenceRef<T>;
+
+export function readFirestoreModelKey<T = unknown>(input: ReadFirestoreModelKeyInput<T>): Maybe<FirestoreModelKey> {
   let key: Maybe<string>;
 
   if (typeof input === 'object') {
