@@ -2,6 +2,16 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [8.7.0](https://github.com/dereekb/dbx-components/compare/v8.6.1-dev...v8.7.0) (2022-06-23)
+
+
+### Features
+
+* added number field ([387b002](https://github.com/dereekb/dbx-components/commit/387b002509a2409c707d098512540add06a7b86a))
+* added step, enforceStep to numberField ([a57b1c7](https://github.com/dereekb/dbx-components/commit/a57b1c7f9f0194874e4dcadafabf01ee49d44c48))
+
+
+
 ## [8.6.1](https://github.com/dereekb/dbx-components/compare/v8.6.0-dev...v8.6.1) (2022-06-23)
 
 

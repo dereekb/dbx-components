@@ -1,4 +1,5 @@
 {
   "name": "@dereekb/util/test",
-  "version": "8.6.1"
+  "version": "8.7.0",
+  "type": "commonjs"
 }
