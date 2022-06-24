@@ -2,6 +2,16 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [8.7.1](https://github.com/dereekb/dbx-components/compare/v8.7.0-dev...v8.7.1) (2022-06-24)
+
+
+### Bug Fixes
+
+* fixed DbxTwoColumnSrefDirective input ([1df4eea](https://github.com/dereekb/dbx-components/commit/1df4eea03dab2e8e2d2f247cf763dddb1631692f))
+* fixed validation messages ([b53656d](https://github.com/dereekb/dbx-components/commit/b53656dd4243d8f7b34d131d08ab1a2ba6a16b7b))
+
+
+
 # [8.7.0](https://github.com/dereekb/dbx-components/compare/v8.6.1-dev...v8.7.0) (2022-06-23)
 
 
