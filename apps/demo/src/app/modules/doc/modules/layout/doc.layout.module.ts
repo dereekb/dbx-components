@@ -15,6 +15,7 @@ import { DocSelectionItemListComponent, DocSelectionItemListViewComponent, DocSe
 import { DocCustomItemListComponent, DocCustomItemListViewComponent, DocCustomItemListViewItemComponent } from './component/item.list.custom.component';
 import { DocLayoutTwoColumnsComponent } from './container/two.component';
 import { DocItemListGridComponent, DocItemListGridViewComponent, DocItemListGridViewItemComponent } from './component/item.list.grid.component';
+import { DocLayoutSectionPageComponent } from './container/section.page.component';
 
 @NgModule({
   imports: [
@@ -42,6 +43,7 @@ import { DocItemListGridComponent, DocItemListGridViewComponent, DocItemListGrid
     DocLayoutBarComponent,
     DocLayoutFlexComponent,
     DocLayoutSectionComponent,
+    DocLayoutSectionPageComponent,
     DocLayoutContentComponent,
     DocLayoutListComponent,
     DocLayoutTwoColumnsComponent,

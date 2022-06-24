@@ -35,32 +35,89 @@ $header-left-reserved-space-small-screen: 120px;
     }
   }
 
-  .dbx-section-hint {
+  .dbx-section-hint,
+  .dbx-section-hint-inline {
     margin: 0;
+    font-size: 16px;
   }
 
   // MARK: Page
   .dbx-section-page {
-    > .dbx-section-header > .dbx-section-header-content {
+    > .dbx-section-header {
       height: $content-navbar-height;
       max-height: $content-navbar-height;
-      overflow-x: auto;
-      overflow-y: hidden;
+      overflow: hidden;
       max-width: 100%;
 
-      .dbx-section-header-content-title {
-        max-width: calc(80% - #{$header-left-reserved-space});
+      > .dbx-section-header-content {
+        height: $content-navbar-height;
+        max-height: $content-navbar-height;
+        overflow-x: auto;
+        overflow-y: hidden;
+        max-width: 100%;
 
-        display: inline-flex !important;
-        justify-content: center;
-        align-items: center;
+        .dbx-section-header-content-title {
+          max-width: calc(80% - #{$header-left-reserved-space});
 
-        .mat-icon {
-          margin-right: 4px;
+          display: inline-flex !important;
+          justify-content: center;
+          align-items: center;
+
+          .mat-icon {
+            margin-right: 4px;
+          }
+
+          > .title-text {
+            @include theming.limit-text();
+          }
         }
+      }
+    }
 
-        > .title-text {
-          @include theming.limit-text();
+    .dbx-section-page {
+      &.dbx-content-page {
+        @include theming.nested-content-height(1);
+
+        .dbx-section-page {
+          &.dbx-content-page {
+            @include theming.nested-content-height(2);
+
+            .dbx-section-page {
+              &.dbx-content-page {
+                @include theming.nested-content-height(3);
+
+                .dbx-section-page {
+                  &.dbx-content-page {
+                    @include theming.nested-content-height(4);
+
+                    .dbx-section-page {
+                      &.dbx-content-page {
+                        @include theming.nested-content-height(5);
+
+                        .dbx-section-page {
+                          &.dbx-content-page {
+                            @include theming.nested-content-height(6);
+
+                            .dbx-section-page {
+                              &.dbx-content-page {
+                                @include theming.nested-content-height(7);
+
+                                .dbx-section-page {
+                                  &.dbx-content-page {
+                                    @include theming.nested-content-height(9);
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
         }
       }
     }
@@ -82,6 +139,12 @@ $header-left-reserved-space-small-screen: 120px;
           max-width: calc(80% - #{$header-left-reserved-space-small-screen});
         }
       }
+    }
+  }
+
+  .dbx-section-header.dbx-section-header-full-title > .dbx-section-header-content {
+    .dbx-section-header-content-title {
+      max-width: 100%;
     }
   }
 }

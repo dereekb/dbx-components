@@ -7,6 +7,7 @@ import { DocLayoutHomeComponent } from './container/home.component';
 import { DocLayoutLayoutComponent } from './container/layout.component';
 import { DocLayoutListComponent } from './container/list.component';
 import { DocLayoutSectionComponent } from './container/section.component';
+import { DocLayoutSectionPageComponent } from './container/section.page.component';
 import { DocLayoutTwoColumnsComponent } from './container/two.component';
 
 export const layoutState: Ng2StateDeclaration = {
@@ -46,6 +47,12 @@ export const docLayoutSectionState: Ng2StateDeclaration = {
   component: DocLayoutSectionComponent
 };
 
+export const docLayoutSectionPageState: Ng2StateDeclaration = {
+  url: '/sectionpage',
+  name: 'doc.layout.sectionpage',
+  component: DocLayoutSectionPageComponent
+};
+
 export const docLayoutListState: Ng2StateDeclaration = {
   url: '/list',
   name: 'doc.layout.list',
@@ -64,4 +71,4 @@ export const docLayoutTwoState: Ng2StateDeclaration = {
   component: DocLayoutTwoColumnsComponent
 };
 
-export const STATES: Ng2StateDeclaration[] = [layoutState, homeState, docLayoutBarState, docLayoutContentState, docLayoutFlexState, docLayoutSectionState, docLayoutListState, docLayoutTwoBlockState, docLayoutTwoState];
+export const STATES: Ng2StateDeclaration[] = [layoutState, homeState, docLayoutBarState, docLayoutContentState, docLayoutFlexState, docLayoutSectionState, docLayoutSectionPageState, docLayoutListState, docLayoutTwoBlockState, docLayoutTwoState];
