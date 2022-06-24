@@ -13,7 +13,7 @@ export interface TwoColumnsState {
   /**
    * Optional ref to use with TwoColumns that use an sref for the back button.
    */
-  backRef?: SegueRef;
+  backRef?: Maybe<SegueRef>;
 }
 
 const INITIAL_STATE: TwoColumnsState = {
@@ -82,7 +82,7 @@ export class TwoColumnsContextStore extends ComponentStore<TwoColumnsState> impl
   /**
    * Sets the new back ref.
    */
-  readonly setBackRef = this.updater((state, backRef: SegueRef) => ({ ...state, backRef }));
+  readonly setBackRef = this.updater((state, backRef: Maybe<SegueRef>) => ({ ...state, backRef }));
 
   /**
    * Emits a back event.

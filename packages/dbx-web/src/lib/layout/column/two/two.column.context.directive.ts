@@ -24,7 +24,7 @@ export class DbxTwoColumnContextDirective implements OnInit, OnDestroy {
   }
 
   @Input()
-  set showRight(showRight: Maybe<boolean>) {
-    this._showRight.next(showRight);
+  set showRight(showRight: Maybe<boolean | ''>) {
+    this._showRight.next(Boolean(showRight));
   }
 }
