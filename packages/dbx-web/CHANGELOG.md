@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [8.7.2](https://github.com/dereekb/dbx-components/compare/v8.7.1-dev...v8.7.2) (2022-06-24)
+
+
+### Bug Fixes
+
+* dbx-section-page fixes ([c23a9c4](https://github.com/dereekb/dbx-components/commit/c23a9c40e4935d7ec2b0b64928a0e50f6ceb5f9d))
+
+
+
 ## [8.7.1](https://github.com/dereekb/dbx-components/compare/v8.7.0-dev...v8.7.1) (2022-06-24)
 
 
