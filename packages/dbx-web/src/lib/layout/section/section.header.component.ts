@@ -29,12 +29,18 @@ import { DbxSectionHeaderHType } from './section';
       <span class="spacer"></span>
       <ng-content></ng-content>
     </div>
-    <p *ngIf="hint" class="dbx-section-hint dbx-hint">{{ hint }}</p>
+    <p *ngIf="hint && !hintInline" class="dbx-section-hint dbx-hint">{{ hint }}</p>
     <ng-template #headerContentTitleTemplate>
       <mat-icon *ngIf="icon">{{ icon }}</mat-icon>
-      <span class="title-text">{{ header }}</span>
+      <span class="title-text">
+        {{ header }}
+        <span *ngIf="hint && hintInline" class="dbx-section-hint-inline dbx-hint">{{ hint }}</span>
+      </span>
     </ng-template>
-  `
+  `,
+  host: {
+    '[class.dbx-section-header-full-title]': 'onlyHeader'
+  }
 })
 export class DbxSectionHeaderComponent {
   @Input()
@@ -44,10 +50,16 @@ export class DbxSectionHeaderComponent {
   header?: Maybe<string>;
 
   @Input()
+  onlyHeader = false;
+
+  @Input()
   icon?: Maybe<string>;
 
   @Input()
   hint?: Maybe<string>;
+
+  @Input()
+  hintInline?: Maybe<boolean>;
 
   get showTitle() {
     return Boolean(this.header || this.icon);

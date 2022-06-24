@@ -24,6 +24,12 @@ export const DOC_LAYOUT_ROUTES = [
     ref: 'doc.layout.section'
   },
   {
+    icon: 'view_module',
+    title: 'Section Page',
+    detail: 'dbx-section-page',
+    ref: 'doc.layout.sectionpage'
+  },
+  {
     icon: 'list',
     title: 'List',
     detail: 'dbx-list',

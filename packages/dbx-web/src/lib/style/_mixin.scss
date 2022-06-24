@@ -73,10 +73,33 @@
   Content height that sets the height to $content-height with an optional offset.
 */
 @mixin content-height($additionalOffset: 0) {
+  $temp: variables.$content-height;
+
   @if $additionalOffset !=0 {
-    height: calc(variables.$content-height - #{$additionalOffset});
+    height: calc($temp - #{$additionalOffset});
   } @else {
-    height: variables.$content-height;
+    height: $temp;
+  }
+}
+
+/**
+  Nested content height that sets the height to $content-height minus the total number of $content-navbar-heights above it, with an optional offset.
+*/
+@mixin nested-content-height($headers: 1, $additionalOffset: 0) {
+  @if $headers < 1 {
+    @error "Headers count #{$headers} must be greater than 1.";
+  }
+
+  @if $headers == 1 {
+    @include content-height($additionalOffset); // content-height properly handles this case.
+  } @else {
+    $temp: calc(variables.$content-height - variables.$content-navbar-height * ($headers - 1));
+
+    @if $additionalOffset !=0 {
+      height: calc($temp - #{$additionalOffset});
+    } @else {
+      height: $temp;
+    }
   }
 }
 
