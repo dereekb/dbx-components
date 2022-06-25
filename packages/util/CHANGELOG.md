@@ -2,6 +2,16 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [8.7.3](https://github.com/dereekb/dbx-components/compare/v8.7.2-dev...v8.7.3) (2022-06-25)
+
+
+### Bug Fixes
+
+* added KeyAsString ([1337d42](https://github.com/dereekb/dbx-components/commit/1337d42c0877173f55fe07e73958643766912301))
+* fixed filterKeyValueTupleFunction() keys filter ([dbf721f](https://github.com/dereekb/dbx-components/commit/dbf721fa74eb1678e61a3d1c8164d412e65ee4b0))
+
+
+
 ## [8.7.2](https://github.com/dereekb/dbx-components/compare/v8.7.1-dev...v8.7.2) (2022-06-24)
 
 
