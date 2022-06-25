@@ -32,6 +32,11 @@ export type KeysAsStrings<T> = {
   [K in keyof T as string]: T[K];
 };
 
+/**
+ * Converts the input value to a string, if possible. Never otherwise.
+ */
+export type KeyAsString<K> = K extends number | boolean | string | null | undefined ? `${K}` : never;
+
 export type BooleanKeyValueTransformMap<T> = KeyValueTransformMap<T, boolean>;
 
 // MARK: Typings

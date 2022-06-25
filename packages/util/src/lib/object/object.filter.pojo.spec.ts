@@ -120,7 +120,8 @@ describe('mergeObjects', () => {
       }
     ];
 
-    const result = mergeObjects<typeof otherValues[0]>(otherValues, { keysFilter: [1, 2] });
+    // keys filter can be either the string or number form
+    const result = mergeObjects<typeof otherValues[0]>(otherValues, { keysFilter: ['1', 2] });
     expect(result).toBeDefined();
 
     // javascript handles the strings and numbers all the same

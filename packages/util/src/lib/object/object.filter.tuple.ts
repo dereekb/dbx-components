@@ -1,4 +1,5 @@
 import { FilterFunction, invertFilter } from '../filter/filter';
+import { KeyAsString, KeysAsStrings } from '../type';
 import { hasValueOrNotEmpty, hasValueOrNotEmptyObject } from '../value/maybe';
 
 // MARK: For Each
@@ -85,7 +86,7 @@ export enum KeyValueTypleValueFilter {
 export interface KeyValueTupleFilter<T extends object = object, K extends keyof T = keyof T> {
   valueFilter?: KeyValueTypleValueFilter;
   invertFilter?: boolean;
-  keysFilter?: K[];
+  keysFilter?: (K | KeyAsString<K>)[];
 }
 
 /**
