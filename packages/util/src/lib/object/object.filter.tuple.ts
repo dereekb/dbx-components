@@ -44,6 +44,9 @@ export function allKeyValueTuples<T extends object = object, K extends keyof T =
 
 export type FilterKeyValueTuplesInput<T extends object = object, K extends keyof T = keyof T> = KeyValueTypleValueFilter | KeyValueTupleFilter<T, K>;
 
+/**
+ * Value filter options for filterKeyValueTupleFunction()
+ */
 export enum KeyValueTypleValueFilter {
   /**
    * No filter
@@ -103,7 +106,7 @@ export type FilterKeyValueTupleFunction<T extends object = object, K extends key
 
 export function filterKeyValueTupleFunction<T extends object = object, K extends keyof T = keyof T>(inputFilter: FilterKeyValueTuplesInput<T, K>): FilterKeyValueTupleFunction<T, K> {
   const filter = filterKeyValueTuplesInputToFilter(inputFilter);
-  const { valueFilter: type, invertFilter: inverseFilter = false, keysFilter }: KeyValueTupleFilter<T, K> = filter;
+  const { valueFilter: type = KeyValueTypleValueFilter.UNDEFINED, invertFilter: inverseFilter = false, keysFilter }: KeyValueTupleFilter<T, K> = filter;
 
   let filterFn: FilterKeyValueTupleFunction<T, K>;
 
@@ -137,7 +140,8 @@ export function filterKeyValueTupleFunction<T extends object = object, K extends
 
   if (keysFilter) {
     const filterByTypeFn = filterFn as FilterKeyValueTupleFunction<T, K>;
-    const keysSet = new Set(keysFilter);
+    // convert all the input keys to strings for our set, as Object.entries will return only strings.
+    const keysSet = new Set(keysFilter.map((x) => x.toString())) as Set<K>;
     filterFn = (x, i) => filterByTypeFn(x, i) && keysSet.has(x[0]);
   }
 

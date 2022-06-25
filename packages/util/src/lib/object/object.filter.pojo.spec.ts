@@ -83,6 +83,52 @@ describe('mergeObjects', () => {
     expect(result.a).toBe(otherValues[1].a);
     expect(result.b).toBe(otherValues[1].b);
   });
+
+  it('should merge the input objects with number keys into one', () => {
+    const otherValues = [
+      {
+        1: true,
+        2: 1,
+        3: null as unknown as number
+      },
+      {
+        1: undefined,
+        2: 2,
+        3: 2
+      }
+    ];
+
+    const result = mergeObjects(otherValues);
+
+    expect(result).toBeDefined();
+    expect(result[1]).toBe(otherValues[0][1]);
+    expect(result[2]).toBe(otherValues[1][2]);
+    expect(result[3]).toBe(otherValues[1][3]);
+  });
+
+  it('should filter number keys properly', () => {
+    const otherValues = [
+      {
+        1: true,
+        2: 1,
+        3: null as unknown as number
+      },
+      {
+        1: undefined,
+        2: 2,
+        3: 2
+      }
+    ];
+
+    const result = mergeObjects<typeof otherValues[0]>(otherValues, { keysFilter: [1, 2] });
+    expect(result).toBeDefined();
+
+    // javascript handles the strings and numbers all the same
+    expect(result['1']).toBeDefined();
+    expect(result['1']).toBe(true);
+    expect(result[2]).toBeDefined();
+    expect(result[2]).toBe(2);
+  });
 });
 
 describe('findPOJOKeys()', () => {
