@@ -51,6 +51,14 @@ export class DbxTwoColumnRightComponent implements AfterViewInit, OnDestroy {
     this._showBack.next(showBack);
   }
 
+  /**
+   * Minimum right-side width allowed in pixels.
+   */
+  @Input()
+  set minRightWidth(minRightWidth: Maybe<number | ''>) {
+    this.twoColumnsContextStore.setMinRightWidth(typeof minRightWidth === 'number' ? minRightWidth : undefined);
+  }
+
   public backClicked(): void {
     this.twoColumnsContextStore.back();
   }

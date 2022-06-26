@@ -1,4 +1,4 @@
-<dbx-two-column-head>
+<dbx-two-column-head [block]="true" [full]="true">
   <!-- Back Buttons -->
   <ng-container *ngIf="showBack$ | async">
     <button mat-icon-button class="back-button" (click)="backClicked()" aria-label="back button">
