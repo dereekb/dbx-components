@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [8.7.4](https://github.com/dereekb/dbx-components/compare/v8.7.3-dev...v8.7.4) (2022-06-26)
+
+
+### Bug Fixes
+
+* fixed DbxTwoColumnComponent styling ([77b4dd0](https://github.com/dereekb/dbx-components/commit/77b4dd0e90371c0841794f31e2db0442bf76416d))
+
+
+
 ## [8.7.3](https://github.com/dereekb/dbx-components/compare/v8.7.2-dev...v8.7.3) (2022-06-25)
 
 
