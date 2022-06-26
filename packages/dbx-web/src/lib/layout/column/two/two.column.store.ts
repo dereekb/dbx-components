@@ -14,11 +14,22 @@ export interface TwoColumnsState {
    * Optional ref to use with TwoColumns that use an sref for the back button.
    */
   backRef?: Maybe<SegueRef>;
+  /**
+   * Size of the view's total width in pixels.
+   */
+  totalWidth?: Maybe<number>;
+  /**
+   * Minimum right side size allowed before hiding the left content.
+   */
+  minRightWidth: number;
 }
+
+export const DEFAULT_TWO_COLUMNS_MIN_RIGHT_WIDTH = 320;
 
 const INITIAL_STATE: TwoColumnsState = {
   showRight: false,
-  fullLeft: false
+  fullLeft: false,
+  minRightWidth: DEFAULT_TWO_COLUMNS_MIN_RIGHT_WIDTH
 };
 
 @Injectable()
@@ -30,6 +41,17 @@ export class TwoColumnsContextStore extends ComponentStore<TwoColumnsState> impl
   }
 
   // MARK: Accessors
+  readonly hideLeft$ = this.state$.pipe(
+    map((x) => {
+      /**
+       * The right side is less-than or equal to half the total width when resizing, so we can use the total width to guess the best case current scenario.
+       */
+      const expectedRightWidth = (x.totalWidth ?? 0) / 2;
+      const hideLeft = x.showRight && expectedRightWidth < x.minRightWidth;
+      return hideLeft;
+    })
+  );
+
   /**
    * Pipes the current state of showRight.
    */
@@ -83,6 +105,16 @@ export class TwoColumnsContextStore extends ComponentStore<TwoColumnsState> impl
    * Sets the new back ref.
    */
   readonly setBackRef = this.updater((state, backRef: Maybe<SegueRef>) => ({ ...state, backRef }));
+
+  /**
+   * Sets the new total width.
+   */
+  readonly setTotalWidth = this.updater((state, totalWidth: Maybe<number>) => ({ ...state, totalWidth }));
+
+  /**
+   * Sets the new min right width.
+   */
+  readonly setMinRightWidth = this.updater((state, minRightWidth: Maybe<number>) => ({ ...state, minRightWidth: minRightWidth ?? DEFAULT_TWO_COLUMNS_MIN_RIGHT_WIDTH }));
 
   /**
    * Emits a back event.
