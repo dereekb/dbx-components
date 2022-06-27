@@ -18,7 +18,12 @@ export interface FirestoreItemPageIteratorFilter extends ItemPageLimit {
 }
 
 export interface FirestoreItemPageIterationBaseConfig<T> extends QueryLikeReferenceRef<T>, FirestoreQueryDriverRef, ItemPageLimit {
-  itemsPerPage: number;
+  /**
+   * (Optional) number of items per page to load in each query.
+   *
+   * Defaults to 50
+   */
+  itemsPerPage?: number;
 }
 
 export interface FirestoreItemPageIterationConfig<T> extends FirestoreItemPageIterationBaseConfig<T>, ItemPageIterationConfig<FirestoreItemPageIteratorFilter> {}
@@ -58,13 +63,15 @@ export function filterDisallowedFirestoreItemPageIteratorInputContraints(constra
   return constraints.filter((x) => !isIllegal.has(x.type));
 }
 
+export const DEFAULT_FIRESTORE_ITEM_PAGE_ITERATOR_ITEMS_PER_PAGE = 50;
+
 export function makeFirestoreItemPageIteratorDelegate<T>(): FirestoreItemPageIteratorDelegate<T> {
   return {
     loadItemsForPage: (request: ItemPageIteratorRequest<FirestoreItemPageQueryResult<T>, FirestoreItemPageIteratorFilter, FirestoreItemPageIterationConfig<T>>): Observable<ItemPageIteratorResult<FirestoreItemPageQueryResult<T>>> => {
       const { page, iteratorConfig } = request;
       const prevQueryResult$: Observable<Maybe<FirestoreItemPageQueryResult<T>>> = page > 0 ? request.lastItem$ : of(undefined);
 
-      const { queryLike, itemsPerPage, filter, firestoreQueryDriver: driver } = iteratorConfig;
+      const { queryLike, itemsPerPage = DEFAULT_FIRESTORE_ITEM_PAGE_ITERATOR_ITEMS_PER_PAGE, filter, firestoreQueryDriver: driver } = iteratorConfig;
       const { limit: filterLimit, constraints: filterConstraints } = filter ?? {};
 
       return prevQueryResult$.pipe(
