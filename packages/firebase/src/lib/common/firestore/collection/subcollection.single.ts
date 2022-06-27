@@ -2,11 +2,15 @@ import { FirestoreDocument, FirestoreSingleDocumentAccessor, firestoreSingleDocu
 import { FirestoreCollectionWithParent, FirestoreCollectionWithParentConfig, makeFirestoreCollectionWithParent } from './subcollection';
 
 // MARK: Single-Item Subcollection
+export type SingleItemFirestoreCollectionItemIdentifier = string;
+
+export const DEFAULT_SINGLE_ITEM_FIRESTORE_COLLECTION_ITEM_IDENTIFIER = '0';
+
 export interface SingleItemFirestoreCollectionConfig<T, PT, D extends FirestoreDocument<T> = FirestoreDocument<T>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>> extends FirestoreCollectionWithParentConfig<T, PT, D, PD> {
   /**
    * Identifier of the single item.
    */
-  readonly singleItemIdentifier: string;
+  readonly singleItemIdentifier?: SingleItemFirestoreCollectionItemIdentifier;
 }
 
 export interface SingleItemFirestoreCollection<T, PT, D extends FirestoreDocument<T> = FirestoreDocument<T>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>> extends FirestoreSingleDocumentAccessor<T, D> {
@@ -20,7 +24,7 @@ export function makeSingleItemFirestoreCollection<T, PT, D extends FirestoreDocu
     collection,
     ...firestoreSingleDocumentAccessor({
       accessors: collection,
-      singleItemIdentifier: config.singleItemIdentifier
+      singleItemIdentifier: config.singleItemIdentifier || DEFAULT_SINGLE_ITEM_FIRESTORE_COLLECTION_ITEM_IDENTIFIER
     })
   };
 }

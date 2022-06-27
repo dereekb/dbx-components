@@ -127,8 +127,6 @@ export class MockItemPrivateDocument extends AbstractFirestoreDocument<MockItemP
 
 export type MockItemPrivateData = FirestoreModelData<MockItemPrivate, {}>;
 
-export const mockItemPrivateIdentifier = '0';
-
 /**
  * Used to build a FirestoreDataConverter. Fields are configured via configuration. See the SnapshotConverterFunctions for more info.
  */
@@ -166,8 +164,7 @@ export function mockItemPrivateFirestoreCollection(firestoreContext: FirestoreCo
       collection: factory(parent),
       makeDocument: (a, d) => new MockItemPrivateDocument(a, d),
       firestoreContext,
-      parent,
-      singleItemIdentifier: mockItemPrivateIdentifier
+      parent
     });
   };
 }
