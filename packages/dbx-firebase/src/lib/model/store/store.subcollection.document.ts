@@ -75,10 +75,6 @@ export class AbstractDbxFirebaseDocumentWithParentStore<T, PT, D extends Firesto
  * AbstractDbxFirebaseDocumentWithParentStore extension for use with SingleItemFirestoreCollection.
  */
 export class AbstractSingleItemDbxFirebaseDocument<T, PT, D extends FirestoreDocument<T> = FirestoreDocument<T>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>, C extends DbxFirebaseDocumentWithParentStoreContextState<T, PT, D, PD> = DbxFirebaseDocumentWithParentStoreContextState<T, PT, D, PD>> extends AbstractDbxFirebaseDocumentWithParentStore<T, PT, D, PD, C> {
-  protected constructor(protected override readonly initialState?: C) {
-    super();
-  }
-
   /**
    * Sets the SingleItemFirestoreCollection to use.
    */
