@@ -99,7 +99,8 @@ export class DbxFormRepeatArrayTypeComponent extends FieldArrayType<FieldArrayTy
     }
 
     this.remove(currentIndex);
-    this.add(targetIndex, targetValue);
+    this.add(targetIndex, targetValue, { markAsDirty: true });
+    this.formControl.markAsTouched();
   }
 
   drop(event: CdkDragDrop<unknown>) {
