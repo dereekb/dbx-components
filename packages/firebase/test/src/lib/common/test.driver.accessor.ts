@@ -97,6 +97,15 @@ export function describeAccessorDriverTests(f: MockItemCollectionFixture) {
             privateSub.destroy();
           });
 
+          describe('singleItemFirestoreCollection accessor', () => {
+            it('should implement FirestoreSingleDocumentAccessor', () => {
+              expect(mockItemPrivateFirestoreCollection.singleItemIdentifier).toBeDefined();
+              expect(mockItemPrivateFirestoreCollection.loadDocument).toBeDefined();
+              expect(mockItemPrivateFirestoreCollection.loadDocumentForTransaction).toBeDefined();
+              expect(mockItemPrivateFirestoreCollection.loadDocumentForWriteBatch).toBeDefined();
+            });
+          });
+
           describe('get()', () => {
             it('should read that data using the configured converter', async () => {
               await itemPrivateDataDocument.accessor.set({ values: null } as any);

@@ -1,12 +1,8 @@
 import { Component } from '@angular/core';
 import { FieldWrapper, FormlyFieldConfig, FormlyFieldProps } from '@ngx-formly/core';
 
-export interface DbxFormInfoConfig {
+export interface DbxFormInfoConfig extends FormlyFieldProps {
   onInfoClick: () => void;
-}
-
-export interface DbxFormInfoWrapperProps extends FormlyFieldProps {
-  infoWrapper: DbxFormInfoConfig;
 }
 
 @Component({
@@ -23,9 +19,9 @@ export interface DbxFormInfoWrapperProps extends FormlyFieldProps {
     </div>
   `
 })
-export class DbxFormInfoWrapperComponent extends FieldWrapper<FormlyFieldConfig<DbxFormInfoWrapperProps>> {
+export class DbxFormInfoWrapperComponent extends FieldWrapper<FormlyFieldConfig<DbxFormInfoConfig>> {
   get infoWrapper(): DbxFormInfoConfig {
-    return this.props.infoWrapper;
+    return this.props;
   }
 
   onInfoClick(): void {

@@ -1,10 +1,11 @@
+import { ArrayOrValue, asArray } from '@dereekb/util';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { FieldConfig, formlyField, propsForFieldConfig } from '../../field';
 import { DbxFormRepeatArrayConfig } from './array.field.component';
 
 export interface RepeatArrayFieldConfig extends DbxFormRepeatArrayConfig, FieldConfig {
   label?: string;
-  repeatFieldGroup: FormlyFieldConfig[];
+  repeatFieldGroup: ArrayOrValue<FormlyFieldConfig>;
   maxLength?: number;
 }
 
@@ -21,7 +22,7 @@ export function repeatArrayField(config: RepeatArrayFieldConfig) {
       removeText
     }),
     fieldArray: {
-      fieldGroup: repeatFieldGroup
+      fieldGroup: asArray(repeatFieldGroup)
     }
   });
 }

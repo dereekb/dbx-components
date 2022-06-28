@@ -329,6 +329,7 @@ export abstract class AbstractFirestoreDocumentWithParent<P, T, D extends Abstra
 
 // MARK: Single-Document Accessor
 export interface FirestoreSingleDocumentAccessor<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> {
+  readonly singleItemIdentifier: string;
   loadDocument(): D;
   loadDocumentForTransaction(transaction: Maybe<Transaction>): D;
   loadDocumentForWriteBatch(writeBatch: Maybe<WriteBatch>): D;
@@ -340,17 +341,18 @@ export interface FirestoreSingleDocumentAccessorConfig<T, D extends FirestoreDoc
 }
 
 export function firestoreSingleDocumentAccessor<T, D extends FirestoreDocument<T> = FirestoreDocument<T>>(config: FirestoreSingleDocumentAccessorConfig<T, D>): FirestoreSingleDocumentAccessor<T, D> {
-  const { singleItemIdentifier: identifier, accessors } = config;
+  const { singleItemIdentifier, accessors } = config;
 
   return {
+    singleItemIdentifier,
     loadDocument(): D {
-      return accessors.documentAccessor().loadDocumentForId(identifier);
+      return accessors.documentAccessor().loadDocumentForId(singleItemIdentifier);
     },
     loadDocumentForTransaction(transaction: Maybe<Transaction>): D {
-      return accessors.documentAccessorForTransaction(transaction).loadDocumentForId(identifier);
+      return accessors.documentAccessorForTransaction(transaction).loadDocumentForId(singleItemIdentifier);
     },
     loadDocumentForWriteBatch(writeBatch: Maybe<WriteBatch>): D {
-      return accessors.documentAccessorForWriteBatch(writeBatch).loadDocumentForId(identifier);
+      return accessors.documentAccessorForWriteBatch(writeBatch).loadDocumentForId(singleItemIdentifier);
     }
   };
 }

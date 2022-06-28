@@ -2,6 +2,16 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [8.7.5](https://github.com/dereekb/dbx-components/compare/v8.7.4-dev...v8.7.5) (2022-06-28)
+
+
+### Bug Fixes
+
+* updated DbxFormlyFormComponent to poll for touched changes ([51670e4](https://github.com/dereekb/dbx-components/commit/51670e4c1cffd7f66665732a425ef071e995896b))
+* wrapper props fix ([b002f39](https://github.com/dereekb/dbx-components/commit/b002f3985c40684eb25cf05f2d703cf08bf53758))
+
+
+
 ## [8.7.4](https://github.com/dereekb/dbx-components/compare/v8.7.3-dev...v8.7.4) (2022-06-26)
 
 

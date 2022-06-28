@@ -1,11 +1,11 @@
 import { Maybe, objectIsEmpty } from '@dereekb/util';
 import { FieldWrapper, FormlyFieldProps, FormlyFieldConfig } from '@ngx-formly/core';
-import { map, shareReplay, startWith, switchMap, BehaviorSubject, of } from 'rxjs';
+import { map, shareReplay, startWith, switchMap, BehaviorSubject, of, distinctUntilChanged } from 'rxjs';
 import { Directive, OnDestroy, OnInit } from '@angular/core';
 import { AbstractControl } from '@angular/forms';
-import { filterMaybe } from '@dereekb/rxjs';
+import { filterMaybe, tapLog } from '@dereekb/rxjs';
 
-export interface AbstractFormExpandableSectionConfig<T extends object = object> {
+export interface AbstractFormExpandableSectionConfig<T extends object = object> extends Pick<FormlyFieldProps, 'label'> {
   expandLabel?: string;
   /**
    * Optional function to use for checking value existence.
@@ -13,14 +13,10 @@ export interface AbstractFormExpandableSectionConfig<T extends object = object> 
   hasValueFn?: (value: T) => boolean;
 }
 
-export interface FormExpandableSectionWrapperFieldProps<T extends object = object, S extends AbstractFormExpandableSectionConfig<T> = AbstractFormExpandableSectionConfig<T>> extends Pick<FormlyFieldProps, 'label'> {
-  expandWrapper?: S;
-}
-
 export const DEFAULT_HAS_VALUE_FN = (x: object) => !objectIsEmpty(x);
 
 @Directive()
-export class AbstractFormExpandableSectionWrapperDirective<T extends object = object, S extends AbstractFormExpandableSectionConfig<T> = AbstractFormExpandableSectionConfig<T>> extends FieldWrapper<FormlyFieldConfig<FormExpandableSectionWrapperFieldProps<T, S>>> implements OnInit, OnDestroy {
+export class AbstractFormExpandableSectionWrapperDirective<T extends object = object, S extends AbstractFormExpandableSectionConfig<T> = AbstractFormExpandableSectionConfig<T>> extends FieldWrapper<FormlyFieldConfig<S>> implements OnInit, OnDestroy {
   protected _formControlObs = new BehaviorSubject<Maybe<AbstractControl>>(undefined);
   readonly formControl$ = this._formControlObs.pipe(filterMaybe());
 
@@ -34,6 +30,7 @@ export class AbstractFormExpandableSectionWrapperDirective<T extends object = ob
         return this.hasValue$;
       }
     }),
+    distinctUntilChanged(),
     shareReplay(1)
   );
 
@@ -49,16 +46,16 @@ export class AbstractFormExpandableSectionWrapperDirective<T extends object = ob
     )
   );
 
-  get expandableSection(): Maybe<S> {
-    return this.props.expandWrapper;
+  get expandableSection(): S {
+    return this.props;
   }
 
   get hasValueFn(): (value: T) => boolean {
-    return this.expandableSection?.hasValueFn ?? (DEFAULT_HAS_VALUE_FN as (value: T) => boolean);
+    return this.expandableSection.hasValueFn ?? (DEFAULT_HAS_VALUE_FN as (value: T) => boolean);
   }
 
   get expandLabel(): Maybe<string> {
-    let label: Maybe<string> = this.expandableSection?.expandLabel ?? this.field?.props?.label;
+    let label: Maybe<string> = this.expandableSection.expandLabel ?? this.field.props?.label;
 
     if (label == null) {
       const firstFieldGroup = this.field.fieldGroup?.[0];

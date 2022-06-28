@@ -13,6 +13,7 @@ import { DocActionFormExampleFormComponent } from './component/action.example.fo
 import { DocActionMapComponent } from './container/map.component';
 import { DocActionExamplePopoverComponent } from './component/action.example.popover.form.component';
 import { DocActionExampleDialogComponent } from './component/action.example.dialog.component';
+import { DocActionFormExampleFormTwoComponent } from './component/action.example.form.two.component';
 
 @NgModule({
   imports: [
@@ -25,6 +26,7 @@ import { DocActionExampleDialogComponent } from './component/action.example.dial
     // component
     DocActionExampleToolsComponent,
     DocActionFormExampleFormComponent,
+    DocActionFormExampleFormTwoComponent,
     DocActionExampleDialogComponent,
     DocActionExamplePopoverComponent,
     // container

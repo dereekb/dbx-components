@@ -87,8 +87,6 @@ export class ProfilePrivateDataDocument extends AbstractFirestoreDocument<Profil
   }
 }
 
-export const profilePrivateDataIdentifier = '0';
-
 export const profilePrivateDataConverter = snapshotConverterFunctions<ProfilePrivateData>({
   fields: {
     usernameSetAt: firestoreDate({ saveDefaultAsNow: false }),
@@ -116,8 +114,7 @@ export function profilePrivateDataFirestoreCollectionFactory(firestoreContext: F
       collection: factory(parent),
       makeDocument: (accessor, documentAccessor) => new ProfilePrivateDataDocument(accessor, documentAccessor),
       firestoreContext,
-      parent,
-      singleItemIdentifier: profilePrivateDataIdentifier
+      parent
     });
   };
 }

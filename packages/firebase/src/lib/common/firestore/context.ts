@@ -28,7 +28,7 @@ export interface FirestoreContextFirestoreCollectionWithParentConfig<T, PT, D ex
 }
 
 export interface FirestoreContextSingleItemFirestoreCollectionConfig<T, PT, D extends FirestoreDocument<T> = FirestoreDocument<T>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>> extends FirestoreContextFirestoreCollectionWithParentConfig<T, PT, D, PD> {
-  readonly singleItemIdentifier: string;
+  readonly singleItemIdentifier?: string;
 }
 
 /**

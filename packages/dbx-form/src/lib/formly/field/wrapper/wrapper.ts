@@ -1,5 +1,5 @@
 import { DbxFormStyleWrapperConfig } from './style.wrapper.component';
-import { DbxFlexWrapperConfig, DbxFlexWrapperWrapperProps } from './flex.wrapper.component';
+import { DbxFlexWrapperConfig } from './flex.wrapper.component';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { DbxFormToggleWrapperConfig } from './toggle.wrapper.component';
 import { DbxFormSectionConfig } from './section.wrapper.component';
@@ -89,16 +89,14 @@ export function checkIsFieldFlexLayoutGroupFieldConfig(input: FormlyFieldConfig 
   }
 }
 
-export function flexLayoutWrapper(fieldConfigs: (FormlyFieldConfig | DbxFlexLayoutWrapperGroupFieldConfig)[], { relative, breakpoint, size: defaultSize = 2 }: DbxFlexLayoutWrapperGroupFieldConfigDefaults = {}): FormlyFieldConfig<DbxFlexWrapperWrapperProps> {
+export function flexLayoutWrapper(fieldConfigs: (FormlyFieldConfig | DbxFlexLayoutWrapperGroupFieldConfig)[], { relative, breakpoint, size: defaultSize = 2 }: DbxFlexLayoutWrapperGroupFieldConfigDefaults = {}): FormlyFieldConfig<DbxFlexWrapperConfig> {
   return {
     wrappers: ['flex'],
     fieldGroupClassName: 'dbx-flex-group',
     // fieldGroupClassName: 'field-layout-group',
     props: {
-      flexWrapper: {
-        breakpoint,
-        relative
-      }
+      breakpoint,
+      relative
     },
     fieldGroup: fieldConfigs.map((inputConfig) => {
       const fieldConfig: DbxFlexLayoutWrapperGroupFieldConfig = checkIsFieldFlexLayoutGroupFieldConfig(inputConfig)
