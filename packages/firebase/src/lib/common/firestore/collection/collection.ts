@@ -386,7 +386,10 @@ export function firestoreModelKeyPartPairs<T = unknown>(input: ReadFirestoreMode
 
 export type ReadFirestoreModelKeyInput<T = unknown> = FirestoreModelKey | FirestoreModelKeyRef | DocumentReferenceRef<T>;
 
-export function readFirestoreModelKey<T = unknown>(input: ReadFirestoreModelKeyInput<T>): Maybe<FirestoreModelKey> {
+export function readFirestoreModelKey<T = unknown>(input: ReadFirestoreModelKeyInput<T>, required: true): FirestoreModelKey;
+export function readFirestoreModelKey<T = unknown>(input: ReadFirestoreModelKeyInput<T>, required: false): Maybe<FirestoreModelKey>;
+export function readFirestoreModelKey<T = unknown>(input: ReadFirestoreModelKeyInput<T>, required?: boolean): Maybe<FirestoreModelKey>;
+export function readFirestoreModelKey<T = unknown>(input: ReadFirestoreModelKeyInput<T>, required = false): Maybe<FirestoreModelKey> {
   let key: Maybe<string>;
 
   if (typeof input === 'object') {
@@ -397,6 +400,10 @@ export function readFirestoreModelKey<T = unknown>(input: ReadFirestoreModelKeyI
     }
   } else {
     key = input;
+  }
+
+  if (!key && required) {
+    throw new Error('Key is required.');
   }
 
   return key;
