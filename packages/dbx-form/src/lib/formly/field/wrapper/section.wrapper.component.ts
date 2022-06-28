@@ -7,10 +7,6 @@ export interface DbxFormSectionConfig {
   hint?: string;
 }
 
-export interface DbxFormSectionWrapperProps {
-  sectionWrapper?: DbxFormSectionConfig;
-}
-
 @Component({
   template: `
     <dbx-section [header]="header" [hint]="hint">
@@ -18,12 +14,12 @@ export interface DbxFormSectionWrapperProps {
     </dbx-section>
   `
 })
-export class DbxFormSectionWrapperComponent extends FieldWrapper<FormlyFieldConfig<DbxFormSectionWrapperProps>> {
+export class DbxFormSectionWrapperComponent extends FieldWrapper<FormlyFieldConfig<DbxFormSectionConfig>> {
   get header(): Maybe<string> {
-    return this.props.sectionWrapper?.header;
+    return this.props.header;
   }
 
   get hint(): Maybe<string> {
-    return this.props.sectionWrapper?.hint;
+    return this.props.hint;
   }
 }

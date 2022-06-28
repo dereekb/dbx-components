@@ -8,10 +8,6 @@ export interface DbxFlexWrapperConfig {
   relative?: boolean;
 }
 
-export interface DbxFlexWrapperWrapperProps {
-  flexWrapper?: DbxFlexWrapperConfig;
-}
-
 @Component({
   template: `
     <div class="dbx-form-flex-section" dbxFlexGroup [content]="false" [relative]="relative" [breakpoint]="breakpoint">
@@ -19,16 +15,16 @@ export interface DbxFlexWrapperWrapperProps {
     </div>
   `
 })
-export class DbxFormFlexWrapperComponent extends FieldWrapper<FormlyFieldConfig<DbxFlexWrapperWrapperProps>> {
-  get flexWrapper(): Maybe<DbxFlexWrapperConfig> {
-    return this.props.flexWrapper;
+export class DbxFormFlexWrapperComponent extends FieldWrapper<FormlyFieldConfig<DbxFlexWrapperConfig>> {
+  get flexWrapper(): DbxFlexWrapperConfig {
+    return this.props;
   }
 
   get breakpoint() {
-    return this.flexWrapper?.breakpoint;
+    return this.flexWrapper.breakpoint;
   }
 
   get relative() {
-    return this.flexWrapper?.relative ?? false;
+    return this.flexWrapper.relative ?? false;
   }
 }

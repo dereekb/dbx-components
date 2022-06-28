@@ -17,13 +17,13 @@ export interface DbxFormExpandWrapperConfig<T extends object = object> extends A
         <ng-container #fieldComponent></ng-container>
       </ng-container>
       <ng-container *ngSwitchCase="false">
-        <span class="dbx-form-expandable-section-button" (click)="open()">{{ expandLabel }}</span>
+        <span class="dbx-form-expand-wrapper-button" (click)="open()">{{ expandLabel }}</span>
       </ng-container>
     </ng-container>
   `
 })
 export class DbxFormExpandWrapperComponent<T extends object = object> extends AbstractFormExpandableSectionWrapperDirective<T, DbxFormExpandWrapperConfig<T>> {
   get buttonType(): DbxFormExpandWrapperButtonType {
-    return this.expandableSection?.buttonType ?? 'button';
+    return this.expandableSection.buttonType ?? 'button';
   }
 }

@@ -7,10 +7,6 @@ export interface DbxFormSubsectionConfig {
   hint?: string;
 }
 
-export interface DbxFormSubsectionWrapperProps {
-  subsectionWrapper?: DbxFormSubsectionConfig;
-}
-
 @Component({
   template: `
     <dbx-subsection [header]="header" [hint]="hint">
@@ -18,12 +14,12 @@ export interface DbxFormSubsectionWrapperProps {
     </dbx-subsection>
   `
 })
-export class DbxFormSubsectionWrapperComponent extends FieldWrapper<FieldTypeConfig<DbxFormSubsectionWrapperProps>> {
+export class DbxFormSubsectionWrapperComponent extends FieldWrapper<FieldTypeConfig<DbxFormSubsectionConfig>> {
   get header(): Maybe<string> {
-    return this.props.subsectionWrapper?.header;
+    return this.props.header;
   }
 
   get hint(): Maybe<string> {
-    return this.props.subsectionWrapper?.hint;
+    return this.props.hint;
   }
 }

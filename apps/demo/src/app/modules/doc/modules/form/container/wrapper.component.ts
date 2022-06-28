@@ -8,7 +8,6 @@ import { FormlyFieldConfig } from '@ngx-formly/core';
 })
 export class DocFormWrapperComponent {
   readonly expandableField: FormlyFieldConfig[] = [
-    nameField(),
     expandWrapper(nameField(), {
       expandLabel: 'Add Name',
       buttonType: 'button'
