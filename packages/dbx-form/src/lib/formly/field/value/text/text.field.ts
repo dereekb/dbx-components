@@ -6,11 +6,14 @@ export interface TextFieldLengthConfig {
   maxLength?: number;
 }
 
+export interface TextFieldPatternConfig {
+  pattern?: string | RegExp;
+}
+
 export type TextFieldInputType = 'text' | 'password' | 'email';
 
-export interface TextFieldConfig extends LabeledFieldConfig, DescriptionFieldConfig, TextFieldLengthConfig, AttributesFieldConfig {
+export interface TextFieldConfig extends LabeledFieldConfig, DescriptionFieldConfig, TextFieldPatternConfig, TextFieldLengthConfig, AttributesFieldConfig {
   inputType?: TextFieldInputType;
-  pattern?: string | RegExp;
 }
 
 export function textField(config: TextFieldConfig): FormlyFieldConfig {
@@ -27,19 +30,20 @@ export function textField(config: TextFieldConfig): FormlyFieldConfig {
   });
 }
 
-export interface TextAreaFieldConfig extends LabeledFieldConfig, DescriptionFieldConfig, TextFieldLengthConfig, AttributesFieldConfig {
+export interface TextAreaFieldConfig extends LabeledFieldConfig, DescriptionFieldConfig, TextFieldPatternConfig, TextFieldLengthConfig, AttributesFieldConfig {
   rows?: number;
 }
 
 export function textAreaField(config: TextAreaFieldConfig): FormlyFieldConfig {
-  const { key, rows = 3, minLength, maxLength } = config;
+  const { key, rows = 3, pattern, minLength, maxLength } = config;
   return formlyField({
     key,
     type: 'textarea',
     ...propsForFieldConfig(config, {
       rows,
       minLength,
-      maxLength
+      maxLength,
+      pattern
     })
   });
 }
