@@ -25,6 +25,7 @@ export function makeSingleItemFirestoreCollection<T, PT, D extends FirestoreDocu
         singleItemIdentifier: config.singleItemIdentifier || DEFAULT_SINGLE_ITEM_FIRESTORE_COLLECTION_ITEM_IDENTIFIER
       });
 
+      x.singleItemIdentifier = singleAccessor.singleItemIdentifier;
       x.loadDocument = singleAccessor.loadDocument;
       x.loadDocumentForTransaction = singleAccessor.loadDocumentForTransaction;
       x.loadDocumentForWriteBatch = singleAccessor.loadDocumentForWriteBatch;
