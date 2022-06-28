@@ -93,14 +93,20 @@ export type MapConfiguredFirestoreFieldConfig<V, D = unknown> = MapConfiguredFir
 export type DefaultMapConfiguredFirestoreFieldConfig<V, D = unknown> = Omit<FirestoreFieldConfigWithDefault<V, D>, 'fromData' | 'toData' | 'default'> & Partial<Pick<FirestoreFieldConfigWithDefault<V, D>, 'default'>>;
 export type OptionalMapConfiguredFirestoreFieldConfig<V, D = unknown> = Omit<BaseFirestoreFieldConfig<V, D>, 'fromData' | 'toData' | 'defaultBeforeSave'>;
 
-export type FirestoreStringConfig<S extends string = string> = DefaultMapConfiguredFirestoreFieldConfig<S, S>;
+export interface FirestoreStringTransformOptions {
+  trim?: boolean;
+}
+
+export interface FirestoreStringConfig<S extends string = string> extends DefaultMapConfiguredFirestoreFieldConfig<S, S>, FirestoreStringTransformOptions {}
 
 export function firestoreString<S extends string = string>(config?: FirestoreStringConfig<S>) {
+  const transformData = config?.trim ? (x: S) => x.trim() as S : passThrough;
+
   return firestoreField<S, S>({
     default: '' as S,
     ...config,
-    fromData: passThrough,
-    toData: passThrough
+    fromData: transformData,
+    toData: transformData
   });
 }
 
