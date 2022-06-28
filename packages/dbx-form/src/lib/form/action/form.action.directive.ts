@@ -116,7 +116,8 @@ export class DbxActionFormDirective<T = object> implements OnInit, OnDestroy {
             exhaustMap((value) => {
               // Use both changes count and whether or not something was in the past to guage whether or not the item has been touched.
               // Angular Form's untouched is whether or not focus has been lost but we can still receive value updates.
-              // More than a certain amount of updates implies that it is being typed into.
+              // More than a certain amount of updates implies that it is being typed into/used.
+              // 3 changes and 2 seconds are arbitrary values derived from guesses about any slow/late changes that may come from external directives for setup.
               const isProbablyTouched = !event.untouched || ((event.changesCount ?? 0) > 3 && isPast(addSeconds(event.lastResetAt ?? new Date(), 2)));
 
               let validatorObs: Observable<boolean>;

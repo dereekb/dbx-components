@@ -1,12 +1,12 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { FormlyFieldConfig, FormlyFormOptions } from '@ngx-formly/core';
-import { distinctUntilChanged, map, throttleTime, startWith, BehaviorSubject, Observable, Subject, switchMap, shareReplay, of, scan } from 'rxjs';
+import { distinctUntilChanged, map, throttleTime, startWith, BehaviorSubject, Observable, Subject, switchMap, shareReplay, of, scan, filter, timeout, timer, tap, first } from 'rxjs';
 import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
 import { DbxForm, DbxFormDisabledKey, DbxFormEvent, DbxFormState, DEFAULT_FORM_DISABLED_KEY, provideDbxMutableForm } from '../form/form';
 import { DbxFormlyContext, DbxFormlyContextDelegate, DbxFormlyInitialize } from './formly.context';
 import { cloneDeep } from 'lodash';
-import { scanCount, switchMapMaybeObs, SubscriptionObject } from '@dereekb/rxjs';
+import { scanCount, switchMapMaybeObs, SubscriptionObject, filterMaybe, tapLog } from '@dereekb/rxjs';
 import { BooleanStringKeyArray, BooleanStringKeyArrayUtilityInstance, Maybe } from '@dereekb/util';
 
 export interface DbxFormlyFormState {
@@ -79,26 +79,43 @@ export class DbxFormlyFormComponent<T> extends AbstractSubscriptionDirective imp
             isFormDisabled: false
           }
         ),
-        map(({ changesSinceLastResetCount, isFormValid, isFormDisabled }) => {
-          const isReset = changesSinceLastResetCount <= 1; // first emission after reset is the first value.
-          const complete = isFormValid;
+        switchMap(({ changesSinceLastResetCount, isFormValid, isFormDisabled }) => {
+          const nextState = () => {
+            const isReset = changesSinceLastResetCount <= 1; // first emission after reset is the first value.
+            const complete = isFormValid;
 
-          const nextState: DbxFormEvent = {
-            isComplete: complete,
-            state: isReset ? DbxFormState.RESET : DbxFormState.USED,
-            status: this.form.status,
-            untouched: this.form.untouched,
-            pristine: this.form.pristine,
-            changesCount: changesSinceLastResetCount,
-            lastResetAt,
-            disabled: this.disabled,
-            isDisabled: isFormDisabled
+            const nextState: DbxFormEvent = {
+              isComplete: complete,
+              state: isReset ? DbxFormState.RESET : DbxFormState.USED,
+              status: this.form.status,
+              untouched: this.form.untouched,
+              pristine: this.form.pristine,
+              changesCount: changesSinceLastResetCount,
+              lastResetAt,
+              disabled: this.disabled,
+              isDisabled: isFormDisabled
+            };
+
+            return nextState;
           };
 
-          // console.log('Change: ', nextState);
+          const state = nextState();
 
-          return nextState;
+          if (isFormValid && this.form.untouched) {
+            return timer(150, 200).pipe(
+              // every 200 ms check if the form is now marked touched, then push a new state
+              filter(() => this.form.touched),
+              map(() => nextState()),
+              // only push the new state once
+              first(),
+              // send the first value immediately
+              startWith(state)
+            );
+          } else {
+            return of(state);
+          }
         })
+        // tapLog('Change: ')
       )
     ),
     shareReplay(1)

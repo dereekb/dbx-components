@@ -31,6 +31,15 @@
         <doc-action-form-example-form dbxActionForm [dbxFormSource]="defaultValue$"></doc-action-form-example-form>
         <dbx-button dbxActionButton text="Submit"></dbx-button>
       </dbx-action-example-tools>
+
+      <h3>Other Examples</h3>
+      <p class="dbx-hint">This example was for pinning down an issue related to the form not being marked complete. Forms that are marked untouched are not considered complete yet, until a sufficient number of changes have been made on a field, or the field is untouched.</p>
+      <div dbxAction dbxActionEnforceModified [dbxActionHandler]="handleFormAction">
+        <doc-action-form-example-form-two dbxActionForm></doc-action-form-example-form-two>
+        <p></p>
+        <dbx-button [raised]="true" text="Create Side" dbxActionButton></dbx-button>
+        <dbx-error dbxActionError></dbx-error>
+      </div>
     </doc-feature-example>
   </doc-feature-layout>
 </dbx-content-container>
