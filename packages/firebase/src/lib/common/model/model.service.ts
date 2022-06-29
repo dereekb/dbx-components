@@ -2,9 +2,9 @@
 // The use of any here does not degrade the type-safety. The correct type is inferred in most cases.
 
 import { GrantedRole } from '@dereekb/model';
-import { Getter, cachedGetter, build, SetIncludesMode, ArrayOrValue, usePromise, UseAsync, UsePromiseFunction } from '@dereekb/util';
+import { Getter, cachedGetter, build, SetIncludesMode, ArrayOrValue, usePromise, UseAsync, UsePromiseFunction, readModelKey } from '@dereekb/util';
 import { FirestoreDocument } from '../firestore/accessor/document';
-import { FirestoreModelIdentity, FirestoreModelKey, FirestoreModelTypes } from '../firestore/collection/collection';
+import { FirestoreModelIdentity, FirestoreModelKey, FirestoreModelTypes, readFirestoreModelKey, ReadFirestoreModelKeyInput } from '../firestore/collection/collection';
 import { FirebaseModelCollectionLoader, firebaseModelLoader, FirebaseModelLoader, InContextFirebaseModelLoader } from './model/model.loader';
 import { InContextFirebaseModelPermissionService, FirebasePermissionContext, firebaseModelPermissionService, FirebaseModelPermissionService, FirebasePermissionServiceInstanceDelegate, InModelContextFirebaseModelPermissionService, FirebasePermissionErrorContext } from './permission';
 import { ContextGrantedModelRolesReader, contextGrantedModelRolesReader } from './permission/permission.service.role';
@@ -168,7 +168,7 @@ export type UseFirebaseModelsServiceSelection<Y extends FirebaseModelsService<an
   ? X extends FirebaseModelsServiceFactory<C, FirestoreModelIdentity<T>>
     ? {
         context: C;
-        key: FirestoreModelKey;
+        key: X[T] extends FirebaseModelServiceGetter<C, infer M> ? ReadFirestoreModelKeyInput<M> : ReadFirestoreModelKeyInput;
         roles?: X[T] extends FirebaseModelServiceGetter<C, any, any, infer R> ? ArrayOrValue<R> : never;
         rolesSetIncludes?: SetIncludesMode;
       }
@@ -179,7 +179,8 @@ export type UseFirebaseModelsServiceSelectionResult<Y extends FirebaseModelsServ
 export type UseFirebaseModelsServiceSelectionUseFunction<Y extends FirebaseModelsService<any, any>, T extends FirebaseModelsServiceTypes<Y>, O> = Y extends FirebaseModelsService<infer X, infer C> ? (T extends keyof X ? (X[T] extends FirebaseModelServiceGetter<C, infer T, infer D, infer R> ? UseAsync<ContextGrantedModelRolesReader<C, T, D, R>, O> : never) : never) : never;
 
 export function selectFromFirebaseModelsService<Y extends FirebaseModelsService<any, any>, T extends FirebaseModelsServiceTypes<Y>>(service: Y, type: T, select: FirebaseModelsServiceSelection<Y, T>): FirebaseModelsServiceSelectionResult<Y, T> {
-  return service(type, select.context).forKey(select.key) as FirebaseModelsServiceSelectionResult<Y, T>;
+  const key = readFirestoreModelKey(select.key, true);
+  return service(type, select.context).forKey(key) as FirebaseModelsServiceSelectionResult<Y, T>;
 }
 
 export function useFirebaseModelsService<Y extends FirebaseModelsService<any, any>, T extends FirebaseModelsServiceTypes<Y>>(service: Y, type: T, select: UseFirebaseModelsServiceSelection<Y, T>): UseFirebaseModelsServiceSelectionResult<Y, T> {

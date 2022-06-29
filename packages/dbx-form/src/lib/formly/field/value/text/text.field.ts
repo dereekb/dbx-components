@@ -6,15 +6,18 @@ export interface TextFieldLengthConfig {
   maxLength?: number;
 }
 
-export type TextFieldInputType = 'text' | 'password' | 'email';
-
-export interface TextFieldConfig extends LabeledFieldConfig, DescriptionFieldConfig, TextFieldLengthConfig, AttributesFieldConfig {
-  inputType?: TextFieldInputType;
+export interface TextFieldPatternConfig {
   pattern?: string | RegExp;
 }
 
+export type TextFieldInputType = 'text' | 'password' | 'email';
+
+export interface TextFieldConfig extends LabeledFieldConfig, DescriptionFieldConfig, TextFieldPatternConfig, TextFieldLengthConfig, AttributesFieldConfig {
+  inputType?: TextFieldInputType;
+}
+
 export function textField(config: TextFieldConfig): FormlyFieldConfig {
-  const { key, pattern, minLength, maxLength = 1000, inputType: type = 'text' } = config;
+  const { key, pattern, minLength, maxLength, inputType: type = 'text' } = config;
   return formlyField({
     key,
     type: 'input',
@@ -27,19 +30,20 @@ export function textField(config: TextFieldConfig): FormlyFieldConfig {
   });
 }
 
-export interface TextAreaFieldConfig extends LabeledFieldConfig, DescriptionFieldConfig, TextFieldLengthConfig, AttributesFieldConfig {
+export interface TextAreaFieldConfig extends LabeledFieldConfig, DescriptionFieldConfig, TextFieldPatternConfig, TextFieldLengthConfig, AttributesFieldConfig {
   rows?: number;
 }
 
 export function textAreaField(config: TextAreaFieldConfig): FormlyFieldConfig {
-  const { key, rows = 3, minLength, maxLength = 1000 } = config;
+  const { key, rows = 3, pattern, minLength, maxLength } = config;
   return formlyField({
     key,
     type: 'textarea',
     ...propsForFieldConfig(config, {
       rows,
       minLength,
-      maxLength
+      maxLength,
+      pattern
     })
   });
 }
