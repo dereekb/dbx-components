@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, OnDestroy, ChangeDetectionStrategy, OnInit, Component, Inject, Input, ViewRef, ElementRef } from '@angular/core';
+import { ChangeDetectorRef, OnDestroy, ChangeDetectionStrategy, OnInit, Component, Inject, Input, ElementRef } from '@angular/core';
 import { AbstractSubscriptionDirective, safeMarkForCheck } from '@dereekb/dbx-core';
 import { ResizedEvent } from 'angular-resize-event';
 import { Observable, BehaviorSubject, combineLatest } from 'rxjs';

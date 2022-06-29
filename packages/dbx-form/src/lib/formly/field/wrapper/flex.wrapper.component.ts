@@ -1,6 +1,5 @@
 import { Component } from '@angular/core';
 import { ScreenMediaWidthType } from '@dereekb/dbx-web';
-import { Maybe } from '@dereekb/util';
 import { FieldWrapper, FormlyFieldConfig } from '@ngx-formly/core';
 
 export interface DbxFlexWrapperConfig {

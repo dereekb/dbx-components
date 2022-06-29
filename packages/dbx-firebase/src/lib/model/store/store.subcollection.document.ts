@@ -1,5 +1,5 @@
 import { filterMaybe } from '@dereekb/rxjs';
-import { Inject, Injectable, Optional } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { Observable, shareReplay, distinctUntilChanged, map, NEVER, switchMap, tap, Subscription } from 'rxjs';
 import { FirestoreDocument, FirestoreCollectionWithParentFactory, FirestoreCollection, DocumentReference, FirestoreModelId, FirestoreModelKey, SingleItemFirestoreCollection } from '@dereekb/firebase';
 import { Maybe } from '@dereekb/util';
