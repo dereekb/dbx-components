@@ -2,6 +2,16 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [8.8.0](https://github.com/dereekb/dbx-components/compare/v8.7.6-dev...v8.8.0) (2022-06-29)
+
+
+### Features
+
+* added FirestoreObjectArray ([e1050eb](https://github.com/dereekb/dbx-components/commit/e1050eb53c816025e016a07e2d7e41ee8c24362a))
+* added firestoreSubObjectField() ([3d6fbe1](https://github.com/dereekb/dbx-components/commit/3d6fbe17a10dfddf3e9bc1cecd522ed61efd6c49))
+
+
+
 ## [8.7.6](https://github.com/dereekb/dbx-components/compare/v8.7.5-dev...v8.7.6) (2022-06-29)
 
 
