@@ -28,7 +28,9 @@ import {
   unique,
   Getter,
   ToModelMapFunctionsInput,
-  toModelMapFunctions
+  toModelMapFunctions,
+  ModelMapFunctinosRef,
+  build
 } from '@dereekb/util';
 import { FirestoreModelData, FIRESTORE_EMPTY_VALUE } from './snapshot.type';
 import { FirebaseAuthUserId } from '../../auth/auth';
@@ -425,21 +427,31 @@ export type FirestoreSubObjectFieldConfig<T extends object, O extends object = F
   objectField: ToModelMapFunctionsInput<T, O>;
 };
 
+export type FirestoreSubObjectFieldMapFunctionsConfig<T extends object, O extends object = FirestoreModelData<T>> = FirestoreModelFieldMapFunctionsConfig<T, O> & ModelMapFunctinosRef<T, O>;
+
 /**
  * A nested object field that uses other FirestoreFieldConfig configurations to map a field.
  */
-export function firestoreSubObject<T extends object, O extends object = FirestoreModelData<T>>(config: FirestoreSubObjectFieldConfig<T, O>) {
-  const { from: fromData, to: toData } = toModelMapFunctions<T, O>(config.objectField);
+export function firestoreSubObject<T extends object, O extends object = FirestoreModelData<T>>(config: FirestoreSubObjectFieldConfig<T, O>): FirestoreSubObjectFieldMapFunctionsConfig<T, O> {
+  const mapFunctions = toModelMapFunctions<T, O>(config.objectField);
+  const { from: fromData, to: toData } = mapFunctions;
 
   const defaultWithFields: Getter<T> = () => fromData({} as O);
   const defaultBeforeSave = config.defaultBeforeSave ?? (config.saveDefaultObject ? () => toData({} as T) : null);
 
-  return firestoreField<T, O>({
-    default: config.default ?? defaultWithFields,
-    defaultBeforeSave,
-    fromData,
-    toData
+  const mapFunctionsConfig = build<FirestoreSubObjectFieldMapFunctionsConfig<T, O>>({
+    base: firestoreField<T, O>({
+      default: config.default ?? defaultWithFields,
+      defaultBeforeSave,
+      fromData,
+      toData
+    }),
+    build: (x) => {
+      x.mapFunctions = mapFunctions;
+    }
   });
+
+  return mapFunctionsConfig;
 }
 
 // MARK: Deprecated
