@@ -26,9 +26,14 @@ import {
   filterEmptyValues,
   ModelKey,
   unique,
-  Getter
+  Getter,
+  ToModelFieldConversionsInput,
+  toModelFieldConversions,
+  makeModelMapFunctions,
+  ToModelMapFunctionsInput,
+  toModelMapFunctions
 } from '@dereekb/util';
-import { FIRESTORE_EMPTY_VALUE } from './snapshot';
+import { FirestoreModelData, FIRESTORE_EMPTY_VALUE } from './snapshot.type';
 import { FirebaseAuthUserId } from '../../auth/auth';
 
 export interface BaseFirestoreFieldConfig<V, D = unknown> {
@@ -390,6 +395,39 @@ export function firestoreModelKeyGrantedRoleArrayMap<R extends GrantedRole>() {
  * Filters empty roles/arrays by default.
  */
 export const firestoreModelIdGrantedRoleArrayMap: () => FirestoreModelFieldMapFunctionsConfig<FirestoreMapFieldType<ModelKey[], string>, FirestoreMapFieldType<ModelKey[], string>> = firestoreModelKeyGrantedRoleArrayMap;
+
+/**
+ * firestoreSubObjectField configuration
+ */
+export type FirestoreSubObjectFieldConfig<T extends object, O extends object = FirestoreModelData<T>> = DefaultMapConfiguredFirestoreFieldConfig<T, O> & {
+  /**
+   * Whether or not to save the default object. Is ignored if defaultBeforeSave is set.
+   *
+   * Is false by default.
+   */
+  saveDefaultObject?: boolean;
+  /**
+   * The fields to use for conversion.
+   */
+  objectField: ToModelMapFunctionsInput<T, O>;
+};
+
+/**
+ * A nested object field that uses other FirestoreFieldConfig configurations to map a field.
+ */
+export function firestoreSubObjectField<T extends object, O extends object = FirestoreModelData<T>>(config: FirestoreSubObjectFieldConfig<T, O>) {
+  const { from: fromData, to: toData } = toModelMapFunctions<T, O>(config.objectField);
+
+  const defaultWithFields: Getter<T> = () => fromData({} as O);
+  const defaultBeforeSave = config.defaultBeforeSave ?? (config.saveDefaultObject ? () => toData({} as T) : null);
+
+  return firestoreField<T, O>({
+    default: config.default ?? defaultWithFields,
+    defaultBeforeSave,
+    fromData,
+    toData
+  });
+}
 
 // MARK: Deprecated
 export type FirestoreSetFieldConfig<T extends string | number> = DefaultMapConfiguredFirestoreFieldConfig<Set<T>, T[]>;

@@ -3,7 +3,7 @@ import { isValid } from 'date-fns';
 import { FirestoreModelKeyGrantedRoleArrayMap } from '../collection';
 import { DocumentSnapshot } from '../types';
 import { snapshotConverterFunctions } from './snapshot';
-import { firestoreArrayMap, firestoreDate, firestoreFieldMapArray, firestoreEnum, firestoreField, firestoreMap, firestoreModelKeyGrantedRoleArrayMap, firestoreEnumArray, firestoreUniqueKeyedArray, firestoreUniqueStringArray, firestoreNumber } from './snapshot.field';
+import { firestoreArrayMap, firestoreDate, firestoreFieldMapArray, firestoreEnum, firestoreField, firestoreMap, firestoreModelKeyGrantedRoleArrayMap, firestoreEnumArray, firestoreUniqueKeyedArray, firestoreUniqueStringArray, firestoreNumber, firestoreSubObjectField } from './snapshot.field';
 
 describe('firestoreField()', () => {
   const defaultValue = -1;
@@ -95,6 +95,14 @@ describe('firestoreDate()', () => {
     const converted = dateField.to!.convert!(value);
     expect(converted).toBeDefined();
     expect(converted).toBe(dateString);
+  });
+
+  describe('saveDefaultAsNow = true', () => {
+    it('should return a date for now if the date is undefined or null', () => {
+      const result = testSnapshotDefaultsConverter.mapFunctions.from({} as any);
+      const date = result.date;
+      expect(date).toBeDefined();
+    });
   });
 });
 
@@ -266,5 +274,96 @@ describe('firestoreModelKeyGrantedRoleArrayMap()', () => {
     expect(results.amodelpath).not.toContain('');
     expect(objectHasKey(results, 'amodelpath')).toBe(true);
     expect(objectHasKey(results, 'emptymodelpath')).toBe(false);
+  });
+});
+
+export interface TestFirestoreSubObjectParent {
+  object: TestFirestoreSubObject;
+}
+
+export interface TestFirestoreSubObject {
+  date: Date;
+  uniqueStringArray: string[];
+}
+
+describe('firestoreSubObjectField()', () => {
+  const testFirestoreSubObjectField = firestoreSubObjectField<TestFirestoreSubObject>({
+    objectField: testSnapshotDefaultsConverter
+  });
+
+  const testFirestoreSubObjectFieldConverter = snapshotConverterFunctions<TestFirestoreSubObjectParent>({
+    fields: {
+      object: testFirestoreSubObjectField
+    }
+  });
+
+  describe('converter', () => {
+    const testObject = {
+      date: new Date(),
+      uniqueStringArray: ['a', 'b']
+    };
+
+    const parent = {
+      object: testObject
+    };
+
+    it('should convert from an empty data object and return the default value', () => {
+      const result = testFirestoreSubObjectFieldConverter.mapFunctions.from({});
+
+      expect(result).toBeDefined();
+      expect(result.object).toBeDefined();
+      expect(result.object.date).toBeDefined();
+      expect(result.object.uniqueStringArray).toBeDefined();
+      expect(result.object.uniqueStringArray.length).toBe(0);
+    });
+
+    it('should convert an object and back.', () => {
+      const data = testFirestoreSubObjectFieldConverter.mapFunctions.to(parent);
+
+      expect(data).toBeDefined();
+      expect(data.object).toBeDefined();
+      expect(data.object.date).toBeDefined();
+      expect(data.object.uniqueStringArray).toBeDefined();
+
+      const result = testFirestoreSubObjectFieldConverter.mapFunctions.from(data);
+
+      expect(result).toBeDefined();
+      expect(result.object).toBeDefined();
+      expect(result.object.date).toBeDefined();
+      expect(result.object.date).toBeSameSecondAs(testObject.date);
+      expect(result.object.uniqueStringArray).toBeDefined();
+      expect(result.object.uniqueStringArray).toContain(testObject.uniqueStringArray[0]);
+      expect(result.object.uniqueStringArray).toContain(testObject.uniqueStringArray[1]);
+    });
+
+    describe('with saveDefaultObject unset', () => {
+      it('should convert an empty value to an empty object and have null for the embedded object.', () => {
+        const result = testFirestoreSubObjectFieldConverter.mapFunctions.to({} as typeof parent);
+
+        expect(result).toBeDefined();
+        expect(result.object).toBe(null);
+      });
+    });
+
+    describe('with saveDefaultObject=true', () => {
+      const testFirestoreSubObjectFieldConverterWithSaveDefaultObject = snapshotConverterFunctions<TestFirestoreSubObjectParent>({
+        fields: {
+          object: firestoreSubObjectField<TestFirestoreSubObject>({
+            objectField: testSnapshotDefaultsConverter,
+            saveDefaultObject: true
+          })
+        }
+      });
+
+      it('should convert an empty value to an object with a default value for the embedded object.', () => {
+        const result = testFirestoreSubObjectFieldConverterWithSaveDefaultObject.mapFunctions.to({} as typeof parent);
+
+        expect(result).toBeDefined();
+        expect(result.object).not.toBe(null);
+        expect(result.object).toBeDefined();
+        expect(result.object.date).toBeDefined();
+        expect(result.object.uniqueStringArray).toBeDefined();
+      });
+    });
   });
 });
