@@ -58,11 +58,13 @@ export interface TestSnapshotDefaults {
   uniqueStringArray: string[];
 }
 
+export const testSnapshotDefaultsFields = {
+  date: firestoreDate({ saveDefaultAsNow: true }),
+  uniqueStringArray: firestoreUniqueStringArray()
+};
+
 export const testSnapshotDefaultsConverter = snapshotConverterFunctions<TestSnapshotDefaults>({
-  fields: {
-    date: firestoreDate({ saveDefaultAsNow: true }),
-    uniqueStringArray: firestoreUniqueStringArray()
-  }
+  fields: testSnapshotDefaultsFields
 });
 
 export function testSnapshotDefaultsSnapshotData(data: Partial<TestSnapshotDefaults>) {
@@ -290,7 +292,7 @@ export interface TestFirestoreSubObject {
   uniqueStringArray: string[];
 }
 
-describe('firestoreSubObjectField()', () => {
+describe('firestoreSubObject()', () => {
   const testObject = {
     date: new Date(),
     uniqueStringArray: ['a', 'b']
@@ -312,6 +314,16 @@ describe('firestoreSubObjectField()', () => {
     const parent = {
       objects: [testObject, testObject]
     };
+
+    it('can pass a FirestoreSubObjectFieldMapFunctionsConfig to firestoreObjectArray()', () => {
+      expect(testFirestoreSubObjectField.mapFunctions).toBeDefined();
+
+      const result = firestoreObjectArray<TestFirestoreSubObject>({
+        objectField: testFirestoreSubObjectField
+      });
+
+      expect(result).toBeDefined();
+    });
 
     it('should convert an array of objects', () => {
       const data = testFirestoreSubObjectParentWithArrayConverter.mapFunctions.to(parent);
