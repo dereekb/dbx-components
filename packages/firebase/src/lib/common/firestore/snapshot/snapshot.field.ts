@@ -261,20 +261,20 @@ export function firestoreUniqueStringArray<S extends string = string>(config?: F
 export const firestoreModelKeyArrayField = firestoreUniqueStringArray<FirestoreModelKey>({});
 export const firestoreModelIdArrayField = firestoreModelKeyArrayField;
 
-export type FirestoreEncodedArrayFieldConfig<T, E extends string | number> = DefaultMapConfiguredFirestoreFieldConfig<T[], E[]> & {
-  readonly convert: {
-    fromData: MapFunction<E, T>;
-    toData: MapFunction<T, E>;
-  };
+export type FirestoreFieldMapArrayFieldConfig<T, E> = DefaultMapConfiguredFirestoreFieldConfig<T[], E[]> & {
+  /**
+   * Model converter to encode/decode individual items.
+   */
+  readonly convert: Omit<BaseFirestoreFieldConfig<T, E>, 'defaultBeforeSave'>;
 };
 
 /**
- * A Firestore array that encodes values to either string or number values using another FirestoreModelField config for encoding/decoding.
+ * A Firestore array that maps each array value using another FirestoreFieldConfig config.
  *
  * @param config
  * @returns
  */
-export function firestoreEncodedArray<T, E extends string | number>(config: FirestoreEncodedArrayFieldConfig<T, E>) {
+export function firestoreFieldMapArray<T, E>(config: FirestoreFieldMapArrayFieldConfig<T, E>) {
   const { fromData, toData } = config.convert;
   return firestoreField<T[], E[]>({
     default: config.default ?? ((() => []) as Getter<T[]>),
@@ -283,6 +283,16 @@ export function firestoreEncodedArray<T, E extends string | number>(config: Fire
     toData: (input: T[]) => filterMaybeValues((input as MaybeSo<T>[]).map(toData))
   });
 }
+
+/**
+ * @deprecated use FirestoreFieldMapArrayFieldConfig<T, E> instead.
+ */
+export type FirestoreEncodedArrayFieldConfig<T, E> = FirestoreFieldMapArrayFieldConfig<T, E>;
+
+/**
+ * @deprecated use firestoreFieldMapArray instead.
+ */
+export const firestoreEncodedArray = firestoreFieldMapArray;
 
 /**
  * Firestore/JSON maps only have string keys.

@@ -3,7 +3,7 @@ import { isValid } from 'date-fns';
 import { FirestoreModelKeyGrantedRoleArrayMap } from '../collection';
 import { DocumentSnapshot } from '../types';
 import { snapshotConverterFunctions } from './snapshot';
-import { firestoreArrayMap, firestoreDate, firestoreEncodedArray, firestoreEnum, firestoreField, firestoreMap, firestoreModelKeyGrantedRoleArrayMap, firestoreEnumArray, firestoreUniqueKeyedArray, firestoreUniqueStringArray, firestoreNumber } from './snapshot.field';
+import { firestoreArrayMap, firestoreDate, firestoreFieldMapArray, firestoreEnum, firestoreField, firestoreMap, firestoreModelKeyGrantedRoleArrayMap, firestoreEnumArray, firestoreUniqueKeyedArray, firestoreUniqueStringArray, firestoreNumber } from './snapshot.field';
 
 describe('firestoreField()', () => {
   const defaultValue = -1;
@@ -190,7 +190,7 @@ describe('firestoreUniqueStringArray()', () => {
 });
 
 describe('firestoreEncodedArray()', () => {
-  const encodedArrayConfig = firestoreEncodedArray<TestUniqueItem, string>({
+  const encodedArrayConfig = firestoreFieldMapArray<TestUniqueItem, string>({
     convert: {
       toData: (model: TestUniqueItem) => model.key,
       fromData: (data: string) => ({ key: data })
