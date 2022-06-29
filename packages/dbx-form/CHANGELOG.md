@@ -2,6 +2,16 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [8.7.6](https://github.com/dereekb/dbx-components/compare/v8.7.5-dev...v8.7.6) (2022-06-29)
+
+
+### Bug Fixes
+
+* added pattern to textAreaField() ([de64fa7](https://github.com/dereekb/dbx-components/commit/de64fa74291781bd3044074de252b893a7de60a9))
+* fixed DbxFormRepeatArrayTypeComponent mark touched ([eb1dcea](https://github.com/dereekb/dbx-components/commit/eb1dcea88e2917092464d1ac4bb8bc4c2adf08d8))
+
+
+
 ## [8.7.5](https://github.com/dereekb/dbx-components/compare/v8.7.4-dev...v8.7.5) (2022-06-28)
 
 
