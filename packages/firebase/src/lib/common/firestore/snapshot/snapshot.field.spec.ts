@@ -3,7 +3,7 @@ import { isValid } from 'date-fns';
 import { FirestoreModelKeyGrantedRoleArrayMap } from '../collection';
 import { DocumentSnapshot } from '../types';
 import { snapshotConverterFunctions } from './snapshot';
-import { firestoreArrayMap, firestoreDate, firestoreFieldMapArray, firestoreEnum, firestoreField, firestoreMap, firestoreModelKeyGrantedRoleArrayMap, firestoreEnumArray, firestoreUniqueKeyedArray, firestoreUniqueStringArray, firestoreNumber, firestoreSubObjectField } from './snapshot.field';
+import { firestoreArrayMap, firestoreDate, firestoreObjectArray, firestoreEnum, firestoreField, firestoreMap, firestoreModelKeyGrantedRoleArrayMap, firestoreEnumArray, firestoreUniqueKeyedArray, firestoreUniqueStringArray, firestoreNumber, firestoreSubObject, firestoreEncodedArray } from './snapshot.field';
 
 describe('firestoreField()', () => {
   const defaultValue = -1;
@@ -198,7 +198,7 @@ describe('firestoreUniqueStringArray()', () => {
 });
 
 describe('firestoreEncodedArray()', () => {
-  const encodedArrayConfig = firestoreFieldMapArray<TestUniqueItem, string>({
+  const encodedArrayConfig = firestoreEncodedArray<TestUniqueItem, string>({
     convert: {
       toData: (model: TestUniqueItem) => model.key,
       fromData: (data: string) => ({ key: data })
@@ -281,34 +281,80 @@ export interface TestFirestoreSubObjectParent {
   object: TestFirestoreSubObject;
 }
 
+export interface TestFirestoreSubObjectParentWithArray {
+  objects: TestFirestoreSubObject[];
+}
+
 export interface TestFirestoreSubObject {
   date: Date;
   uniqueStringArray: string[];
 }
 
 describe('firestoreSubObjectField()', () => {
-  const testFirestoreSubObjectField = firestoreSubObjectField<TestFirestoreSubObject>({
+  const testObject = {
+    date: new Date(),
+    uniqueStringArray: ['a', 'b']
+  };
+
+  const testFirestoreSubObjectField = firestoreSubObject<TestFirestoreSubObject>({
     objectField: testSnapshotDefaultsConverter
   });
 
-  const testFirestoreSubObjectFieldConverter = snapshotConverterFunctions<TestFirestoreSubObjectParent>({
-    fields: {
-      object: testFirestoreSubObjectField
-    }
+  describe('with firestoreObjectArray', () => {
+    const testFirestoreSubObjectParentWithArrayConverter = snapshotConverterFunctions<TestFirestoreSubObjectParentWithArray>({
+      fields: {
+        objects: firestoreObjectArray<TestFirestoreSubObject>({
+          objectField: testSnapshotDefaultsConverter
+        })
+      }
+    });
+
+    const parent = {
+      objects: [testObject, testObject]
+    };
+
+    it('should convert an array of objects', () => {
+      const data = testFirestoreSubObjectParentWithArrayConverter.mapFunctions.to(parent);
+
+      expect(data).toBeDefined();
+      expect(data.objects).toBeDefined();
+      expect(data.objects.length).toBe(parent.objects.length);
+      expect(data.objects[0].date).toBeDefined();
+      expect(data.objects[0].uniqueStringArray).toBeDefined();
+      expect(data.objects[1].date).toBeDefined();
+      expect(data.objects[1].uniqueStringArray).toBeDefined();
+
+      const result = testFirestoreSubObjectParentWithArrayConverter.mapFunctions.from(data);
+
+      expect(result).toBeDefined();
+      expect(result.objects).toBeDefined();
+      expect(result.objects.length).toBe(parent.objects.length);
+      expect(result.objects[0].date).toBeDefined();
+      expect(result.objects[0].date).toBeSameSecondAs(testObject.date);
+      expect(result.objects[0].uniqueStringArray).toBeDefined();
+      expect(result.objects[0].uniqueStringArray).toContain(testObject.uniqueStringArray[0]);
+      expect(result.objects[0].uniqueStringArray).toContain(testObject.uniqueStringArray[1]);
+      expect(result.objects[1].date).toBeDefined();
+      expect(result.objects[1].date).toBeSameSecondAs(testObject.date);
+      expect(result.objects[1].uniqueStringArray).toBeDefined();
+      expect(result.objects[1].uniqueStringArray).toContain(testObject.uniqueStringArray[0]);
+      expect(result.objects[1].uniqueStringArray).toContain(testObject.uniqueStringArray[1]);
+    });
   });
 
   describe('converter', () => {
-    const testObject = {
-      date: new Date(),
-      uniqueStringArray: ['a', 'b']
-    };
+    const testFirestoreSubObjectParentConverter = snapshotConverterFunctions<TestFirestoreSubObjectParent>({
+      fields: {
+        object: testFirestoreSubObjectField
+      }
+    });
 
     const parent = {
       object: testObject
     };
 
     it('should convert from an empty data object and return the default value', () => {
-      const result = testFirestoreSubObjectFieldConverter.mapFunctions.from({});
+      const result = testFirestoreSubObjectParentConverter.mapFunctions.from({});
 
       expect(result).toBeDefined();
       expect(result.object).toBeDefined();
@@ -318,14 +364,14 @@ describe('firestoreSubObjectField()', () => {
     });
 
     it('should convert an object and back.', () => {
-      const data = testFirestoreSubObjectFieldConverter.mapFunctions.to(parent);
+      const data = testFirestoreSubObjectParentConverter.mapFunctions.to(parent);
 
       expect(data).toBeDefined();
       expect(data.object).toBeDefined();
       expect(data.object.date).toBeDefined();
       expect(data.object.uniqueStringArray).toBeDefined();
 
-      const result = testFirestoreSubObjectFieldConverter.mapFunctions.from(data);
+      const result = testFirestoreSubObjectParentConverter.mapFunctions.from(data);
 
       expect(result).toBeDefined();
       expect(result.object).toBeDefined();
@@ -338,7 +384,7 @@ describe('firestoreSubObjectField()', () => {
 
     describe('with saveDefaultObject unset', () => {
       it('should convert an empty value to an empty object and have null for the embedded object.', () => {
-        const result = testFirestoreSubObjectFieldConverter.mapFunctions.to({} as typeof parent);
+        const result = testFirestoreSubObjectParentConverter.mapFunctions.to({} as typeof parent);
 
         expect(result).toBeDefined();
         expect(result.object).toBe(null);
@@ -348,7 +394,7 @@ describe('firestoreSubObjectField()', () => {
     describe('with saveDefaultObject=true', () => {
       const testFirestoreSubObjectFieldConverterWithSaveDefaultObject = snapshotConverterFunctions<TestFirestoreSubObjectParent>({
         fields: {
-          object: firestoreSubObjectField<TestFirestoreSubObject>({
+          object: firestoreSubObject<TestFirestoreSubObject>({
             objectField: testSnapshotDefaultsConverter,
             saveDefaultObject: true
           })

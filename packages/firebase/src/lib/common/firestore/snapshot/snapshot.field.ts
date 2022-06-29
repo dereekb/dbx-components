@@ -263,20 +263,20 @@ export function firestoreUniqueStringArray<S extends string = string>(config?: F
 export const firestoreModelKeyArrayField = firestoreUniqueStringArray<FirestoreModelKey>({});
 export const firestoreModelIdArrayField = firestoreModelKeyArrayField;
 
-export type FirestoreFieldMapArrayFieldConfig<T, E> = DefaultMapConfiguredFirestoreFieldConfig<T[], E[]> & {
-  /**
-   * Model converter to encode/decode individual items.
-   */
-  readonly convert: Omit<BaseFirestoreFieldConfig<T, E>, 'defaultBeforeSave'>;
+export type FirestoreEncodedArrayFieldConfig<T, E extends string | number> = DefaultMapConfiguredFirestoreFieldConfig<T[], E[]> & {
+  readonly convert: {
+    fromData: MapFunction<E, T>;
+    toData: MapFunction<T, E>;
+  };
 };
 
 /**
- * A Firestore array that maps each array value using another FirestoreFieldConfig config.
+ * A Firestore array that encodes values to either string or number values using another FirestoreModelField config for encoding/decoding.
  *
  * @param config
  * @returns
  */
-export function firestoreFieldMapArray<T, E>(config: FirestoreFieldMapArrayFieldConfig<T, E>) {
+export function firestoreEncodedArray<T, E extends string | number>(config: FirestoreEncodedArrayFieldConfig<T, E>) {
   const { fromData, toData } = config.convert;
   return firestoreField<T[], E[]>({
     default: config.default ?? ((() => []) as Getter<T[]>),
@@ -285,16 +285,6 @@ export function firestoreFieldMapArray<T, E>(config: FirestoreFieldMapArrayField
     toData: (input: T[]) => filterMaybeValues((input as MaybeSo<T>[]).map(toData))
   });
 }
-
-/**
- * @deprecated use FirestoreFieldMapArrayFieldConfig<T, E> instead.
- */
-export type FirestoreEncodedArrayFieldConfig<T, E> = FirestoreFieldMapArrayFieldConfig<T, E>;
-
-/**
- * @deprecated use firestoreFieldMapArray instead.
- */
-export const firestoreEncodedArray = firestoreFieldMapArray;
 
 /**
  * Firestore/JSON maps only have string keys.
@@ -394,6 +384,32 @@ export function firestoreModelKeyGrantedRoleArrayMap<R extends GrantedRole>() {
 export const firestoreModelIdGrantedRoleArrayMap: () => FirestoreModelFieldMapFunctionsConfig<FirestoreMapFieldType<ModelKey[], string>, FirestoreMapFieldType<ModelKey[], string>> = firestoreModelKeyGrantedRoleArrayMap;
 
 /**
+ * firestoreObjectArray configuration
+ */
+export type FirestoreObjectArrayFieldConfig<T extends object, O extends object = FirestoreModelData<T>> = DefaultMapConfiguredFirestoreFieldConfig<T[], O[]> & {
+  /**
+   * The field to use for conversion.
+   */
+  readonly objectField: ToModelMapFunctionsInput<T, O>;
+};
+
+/**
+ * A Firestore array that maps each array value using another FirestoreFieldConfig config.
+ *
+ * @param config
+ * @returns
+ */
+export function firestoreObjectArray<T extends object, O extends object = FirestoreModelData<T>>(config: FirestoreObjectArrayFieldConfig<T, O>) {
+  const { from, to } = toModelMapFunctions<T, O>(config.objectField);
+  return firestoreField<T[], O[]>({
+    default: config.default ?? ((() => []) as Getter<T[]>),
+    defaultBeforeSave: config.defaultBeforeSave,
+    fromData: (input: O[]) => input.map((x) => from(x)),
+    toData: (input: T[]) => filterMaybeValues(input).map((x) => to(x))
+  });
+}
+
+/**
  * firestoreSubObjectField configuration
  */
 export type FirestoreSubObjectFieldConfig<T extends object, O extends object = FirestoreModelData<T>> = DefaultMapConfiguredFirestoreFieldConfig<T, O> & {
@@ -412,7 +428,7 @@ export type FirestoreSubObjectFieldConfig<T extends object, O extends object = F
 /**
  * A nested object field that uses other FirestoreFieldConfig configurations to map a field.
  */
-export function firestoreSubObjectField<T extends object, O extends object = FirestoreModelData<T>>(config: FirestoreSubObjectFieldConfig<T, O>) {
+export function firestoreSubObject<T extends object, O extends object = FirestoreModelData<T>>(config: FirestoreSubObjectFieldConfig<T, O>) {
   const { from: fromData, to: toData } = toModelMapFunctions<T, O>(config.objectField);
 
   const defaultWithFields: Getter<T> = () => fromData({} as O);
