@@ -1,5 +1,5 @@
 import { build } from './../value/build';
-import { countPOJOKeys, KeyValueTypleValueFilter } from '../object';
+import { countPOJOKeys, KeyValueTypleValueFilter, objectHasNoKeys } from '../object';
 import { modelFieldMapFunction, makeModelMapFunctions, modelFieldConversions } from './model.conversion';
 import { copyField } from './model.conversion.field';
 import { modifyModelMapFunctions } from './model.modify';
@@ -80,6 +80,16 @@ describe('makeModelMapFunctions', () => {
         expect(result.test).toBe(defaultTestValue);
       });
 
+      it('should return an empty object if the input is null.', () => {
+        const result = mapFunctions.to(null);
+        expect(objectHasNoKeys(result)).toBe(true);
+      });
+
+      it('should return an empty object if the input is undefined.', () => {
+        const result = mapFunctions.to(undefined);
+        expect(objectHasNoKeys(result)).toBe(true);
+      });
+
       // todo: add target
     });
 
@@ -93,6 +103,15 @@ describe('makeModelMapFunctions', () => {
         expect(result.test).toBe(defaultTestValue);
       });
 
+      it('should return an empty object if the input is null.', () => {
+        const result = mapFunctions.from(null);
+        expect(objectHasNoKeys(result)).toBe(true);
+      });
+
+      it('should return an empty object if the input is undefined.', () => {
+        const result = mapFunctions.from(undefined);
+        expect(objectHasNoKeys(result)).toBe(true);
+      });
       // todo: add target
     });
 

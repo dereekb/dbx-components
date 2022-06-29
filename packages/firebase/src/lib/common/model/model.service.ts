@@ -2,7 +2,7 @@
 // The use of any here does not degrade the type-safety. The correct type is inferred in most cases.
 
 import { GrantedRole } from '@dereekb/model';
-import { Getter, cachedGetter, build, SetIncludesMode, ArrayOrValue, usePromise, UseAsync, UsePromiseFunction, readModelKey } from '@dereekb/util';
+import { Getter, cachedGetter, build, SetIncludesMode, ArrayOrValue, usePromise, UseAsync, UsePromiseFunction } from '@dereekb/util';
 import { FirestoreDocument } from '../firestore/accessor/document';
 import { FirestoreModelIdentity, FirestoreModelKey, FirestoreModelTypes, readFirestoreModelKey, ReadFirestoreModelKeyInput } from '../firestore/collection/collection';
 import { FirebaseModelCollectionLoader, firebaseModelLoader, FirebaseModelLoader, InContextFirebaseModelLoader } from './model/model.loader';

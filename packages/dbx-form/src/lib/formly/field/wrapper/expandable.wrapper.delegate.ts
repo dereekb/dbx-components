@@ -3,7 +3,7 @@ import { FieldWrapper, FormlyFieldProps, FormlyFieldConfig } from '@ngx-formly/c
 import { map, shareReplay, startWith, switchMap, BehaviorSubject, of, distinctUntilChanged } from 'rxjs';
 import { Directive, OnDestroy, OnInit } from '@angular/core';
 import { AbstractControl } from '@angular/forms';
-import { filterMaybe, tapLog } from '@dereekb/rxjs';
+import { filterMaybe } from '@dereekb/rxjs';
 
 export interface AbstractFormExpandableSectionConfig<T extends object = object> extends Pick<FormlyFieldProps, 'label'> {
   expandLabel?: string;

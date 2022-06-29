@@ -26,9 +26,11 @@ import {
   filterEmptyValues,
   ModelKey,
   unique,
-  Getter
+  Getter,
+  ToModelMapFunctionsInput,
+  toModelMapFunctions
 } from '@dereekb/util';
-import { FIRESTORE_EMPTY_VALUE } from './snapshot';
+import { FirestoreModelData, FIRESTORE_EMPTY_VALUE } from './snapshot.type';
 import { FirebaseAuthUserId } from '../../auth/auth';
 
 export interface BaseFirestoreFieldConfig<V, D = unknown> {
@@ -380,6 +382,65 @@ export function firestoreModelKeyGrantedRoleArrayMap<R extends GrantedRole>() {
  * Filters empty roles/arrays by default.
  */
 export const firestoreModelIdGrantedRoleArrayMap: () => FirestoreModelFieldMapFunctionsConfig<FirestoreMapFieldType<ModelKey[], string>, FirestoreMapFieldType<ModelKey[], string>> = firestoreModelKeyGrantedRoleArrayMap;
+
+/**
+ * firestoreObjectArray configuration
+ */
+export type FirestoreObjectArrayFieldConfig<T extends object, O extends object = FirestoreModelData<T>> = DefaultMapConfiguredFirestoreFieldConfig<T[], O[]> & {
+  /**
+   * The field to use for conversion.
+   */
+  readonly objectField: ToModelMapFunctionsInput<T, O>;
+};
+
+/**
+ * A Firestore array that maps each array value using another FirestoreFieldConfig config.
+ *
+ * @param config
+ * @returns
+ */
+export function firestoreObjectArray<T extends object, O extends object = FirestoreModelData<T>>(config: FirestoreObjectArrayFieldConfig<T, O>) {
+  const { from, to } = toModelMapFunctions<T, O>(config.objectField);
+  return firestoreField<T[], O[]>({
+    default: config.default ?? ((() => []) as Getter<T[]>),
+    defaultBeforeSave: config.defaultBeforeSave,
+    fromData: (input: O[]) => input.map((x) => from(x)),
+    toData: (input: T[]) => filterMaybeValues(input).map((x) => to(x))
+  });
+}
+
+/**
+ * firestoreSubObjectField configuration
+ */
+export type FirestoreSubObjectFieldConfig<T extends object, O extends object = FirestoreModelData<T>> = DefaultMapConfiguredFirestoreFieldConfig<T, O> & {
+  /**
+   * Whether or not to save the default object. Is ignored if defaultBeforeSave is set.
+   *
+   * Is false by default.
+   */
+  saveDefaultObject?: boolean;
+  /**
+   * The fields to use for conversion.
+   */
+  objectField: ToModelMapFunctionsInput<T, O>;
+};
+
+/**
+ * A nested object field that uses other FirestoreFieldConfig configurations to map a field.
+ */
+export function firestoreSubObject<T extends object, O extends object = FirestoreModelData<T>>(config: FirestoreSubObjectFieldConfig<T, O>) {
+  const { from: fromData, to: toData } = toModelMapFunctions<T, O>(config.objectField);
+
+  const defaultWithFields: Getter<T> = () => fromData({} as O);
+  const defaultBeforeSave = config.defaultBeforeSave ?? (config.saveDefaultObject ? () => toData({} as T) : null);
+
+  return firestoreField<T, O>({
+    default: config.default ?? defaultWithFields,
+    defaultBeforeSave,
+    fromData,
+    toData
+  });
+}
 
 // MARK: Deprecated
 export type FirestoreSetFieldConfig<T extends string | number> = DefaultMapConfiguredFirestoreFieldConfig<Set<T>, T[]>;

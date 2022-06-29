@@ -57,13 +57,16 @@ export interface ModelConversionOptions<I extends object> {
   definedOnly?: boolean;
 }
 
+/**
+ * A model conversion function. Performs a conversion on all non-null values.
+ */
 export type ModelConversionFieldValuesFunction<I extends object, O extends object> = ApplyMapFunctionWithOptions<Maybe<I>, O, ModelConversionOptions<I>>;
 
 export function makeModelConversionFieldValuesFunction<I extends object, O extends object>(fields: ModelConversionFieldValuesConfig<I>): ModelConversionFieldValuesFunction<I, O> {
   return (input: Maybe<I>, inputTarget?: Maybe<Partial<O>>, options?: Maybe<ModelConversionOptions<I>>) => {
     const target = (inputTarget ?? {}) as Building<TypedMappedModelData<I, O>>;
 
-    if (input) {
+    if (input != null) {
       let targetFields: ModelConversionFieldValuesConfig<I> = fields;
 
       // if options are provided, filter down.
@@ -201,4 +204,45 @@ export function modelFieldMapFunction<I, O>(config: ModelFieldMapConfig<I, O>): 
 
     return result;
   };
+}
+
+// MARK: Utility
+export type ModelFieldConversionsConfigRef<T extends object, O extends object> = {
+  readonly fields: ModelFieldConversionsConfig<T, O>;
+};
+
+export type ModelFieldConversionsRef<T extends object, O extends object> = {
+  readonly fieldConversions: ModelFieldConversions<T, O>;
+};
+
+export type ToModelFieldConversionsInput<T extends object, O extends object> = ModelFieldConversionsConfigRef<T, O> | ModelFieldConversionsRef<T, O>;
+
+/**
+ * Converts the input to a ModelFieldConversions value.
+ *
+ * @param input
+ * @returns
+ */
+export function toModelFieldConversions<T extends object, O extends object>(input: ToModelFieldConversionsInput<T, O>) {
+  const conversions: ModelFieldConversions<T, O> = (input as ModelFieldConversionsRef<T, O>).fieldConversions ?? modelFieldConversions<T, O>((input as ModelFieldConversionsConfigRef<T, O>).fields);
+  return conversions;
+}
+
+export type ModelMapFunctinosRef<T extends object, O extends object> = {
+  readonly mapFunctions: ModelMapFunctions<T, O>;
+};
+
+export type ToModelMapFunctionsInput<T extends object, O extends object> = ToModelFieldConversionsInput<T, O> | ModelMapFunctinosRef<T, O>;
+
+export function toModelMapFunctions<T extends object, O extends object>(input: ToModelMapFunctionsInput<T, O>): ModelMapFunctions<T, O> {
+  let mapFunctions: ModelMapFunctions<T, O>;
+
+  if ((input as ModelMapFunctinosRef<T, O>).mapFunctions != null) {
+    mapFunctions = (input as ModelMapFunctinosRef<T, O>).mapFunctions;
+  } else {
+    const conversions: ModelFieldConversions<T, O> = toModelFieldConversions(input as ToModelFieldConversionsInput<T, O>);
+    mapFunctions = makeModelMapFunctions<T, O>(conversions);
+  }
+
+  return mapFunctions;
 }
