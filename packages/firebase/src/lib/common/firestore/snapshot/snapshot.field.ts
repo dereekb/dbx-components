@@ -30,7 +30,13 @@ import {
   ToModelMapFunctionsInput,
   toModelMapFunctions,
   ModelMapFunctinosRef,
-  build
+  build,
+  TransformStringFunctionConfig,
+  transformStringFunction,
+  latLngStringFunction,
+  LatLngPrecision,
+  TransformStringFunction,
+  LatLngString
 } from '@dereekb/util';
 import { FirestoreModelData, FIRESTORE_EMPTY_VALUE } from './snapshot.type';
 import { FirebaseAuthUserId } from '../../auth/auth';
@@ -97,17 +103,24 @@ export type MapConfiguredFirestoreFieldConfig<V, D = unknown> = MapConfiguredFir
 export type DefaultMapConfiguredFirestoreFieldConfig<V, D = unknown> = Omit<FirestoreFieldConfigWithDefault<V, D>, 'fromData' | 'toData' | 'default'> & Partial<Pick<FirestoreFieldConfigWithDefault<V, D>, 'default'>>;
 export type OptionalMapConfiguredFirestoreFieldConfig<V, D = unknown> = Omit<BaseFirestoreFieldConfig<V, D>, 'fromData' | 'toData' | 'defaultBeforeSave'>;
 
-export interface FirestoreStringTransformOptions {
+export type FirestoreStringTransformOptions<S extends string = string> = TransformStringFunctionConfig | TransformStringFunction<S>;
+
+export interface FirestoreStringConfig<S extends string = string> extends DefaultMapConfiguredFirestoreFieldConfig<S, S> {
+  transform?: FirestoreStringTransformOptions;
+  /**
+   * @deprecated: use transform field instead.
+   */
   trim?: boolean;
 }
 
-export interface FirestoreStringConfig<S extends string = string> extends DefaultMapConfiguredFirestoreFieldConfig<S, S>, FirestoreStringTransformOptions {}
+export const DEFAULT_FIRESTORE_STRING_FIELD_VALUE = '';
 
 export function firestoreString<S extends string = string>(config?: FirestoreStringConfig<S>) {
-  const transformData = config?.trim ? (x: S) => x.trim() as S : passThrough;
+  const transform: Maybe<TransformStringFunctionConfig> = config?.transform ? (typeof config.transform === 'function' ? { transform: config?.transform } : config?.transform) : config?.trim ? { trim: true } : undefined;
+  const transformData = transform ? (transformStringFunction(transform) as MapFunction<S, S>) : passThrough;
 
   return firestoreField<S, S>({
-    default: '' as S,
+    default: DEFAULT_FIRESTORE_STRING_FIELD_VALUE as S,
     ...config,
     fromData: transformData,
     toData: transformData
@@ -452,6 +465,35 @@ export function firestoreSubObject<T extends object, O extends object = Firestor
   });
 
   return mapFunctionsConfig;
+}
+
+export interface FirestoreLatLngStringConfig extends DefaultMapConfiguredFirestoreFieldConfig<LatLngString, LatLngString> {
+  precision?: LatLngPrecision;
+}
+
+/**
+ * Default value used by firestoreLatLngString
+ */
+export const DEFAULT_FIRESTORE_LAT_LNG_STRING_VALUE = '0,0';
+
+/**
+ * Configuration for a LatLngString field.
+ *
+ * NOTE: The preference is to store LatLng values as strings as opposed to a lat/lng object or value pair as we could not sort/search lat and lng together, so indexing on them is useless.
+ * By storing them as a string we can add lat/lng to an object (implements the LatLngStringRef interface) using a single field, and can easily utilize the data object(s) using latLngDataPointFunction() to map the input.
+ *
+ * @param config
+ * @returns
+ */
+export function firestoreLatLngString(config?: FirestoreLatLngStringConfig) {
+  const { default: defaultValue, defaultBeforeSave, precision } = config ?? {};
+  const transform = latLngStringFunction({ precision, validate: true });
+
+  return firestoreString<LatLngString>({
+    default: defaultValue || DEFAULT_FIRESTORE_LAT_LNG_STRING_VALUE,
+    defaultBeforeSave,
+    transform
+  });
 }
 
 // MARK: Deprecated

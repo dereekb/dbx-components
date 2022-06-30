@@ -1,4 +1,5 @@
-import { containsAllStringsAnyCase, containsAnyStringAnyCase, containsStringAnyCase, findUniqueCaseInsensitiveStrings, findUniqueTransform, searchStringFilterFunction, TransformSingleStringFunction, caseInsensitiveFilterByIndexOfDecisionFactory } from './array.string';
+import { TransformStringFunction } from '../string/transform';
+import { containsAllStringsAnyCase, containsAnyStringAnyCase, containsStringAnyCase, findUniqueCaseInsensitiveStrings, findUniqueTransform, searchStringFilterFunction, caseInsensitiveFilterByIndexOfDecisionFactory } from './array.string';
 
 describe('findUniqueCaseInsensitiveStrings', () => {
   it('should return only the strings that are unique from the array.', () => {
@@ -81,7 +82,7 @@ describe('findUniqueTransform', () => {
 
   describe('transform', () => {
     describe('caseInsensitive=true', () => {
-      const transformFn: TransformSingleStringFunction = (x) => `__${x}__`;
+      const transformFn: TransformStringFunction = (x) => `__${x}__`;
 
       const transform = findUniqueTransform({
         transform: transformFn,
@@ -97,7 +98,7 @@ describe('findUniqueTransform', () => {
     });
 
     describe('caseInsensitive=false', () => {
-      const transformFn: TransformSingleStringFunction = (x) => `NEW_${x}`;
+      const transformFn: TransformStringFunction = (x) => `NEW_${x}`;
 
       const transform = findUniqueTransform({
         transform: transformFn,

@@ -1,9 +1,9 @@
-import { asGetter, ISO8601DateString, Maybe, modelFieldMapFunctions, objectHasKey } from '@dereekb/util';
+import { LatLngString, asGetter, ISO8601DateString, Maybe, modelFieldMapFunctions, objectHasKey, stringTrimFunction, latLngString } from '@dereekb/util';
 import { isValid } from 'date-fns';
 import { FirestoreModelKeyGrantedRoleArrayMap } from '../collection';
 import { DocumentSnapshot } from '../types';
 import { snapshotConverterFunctions } from './snapshot';
-import { firestoreArrayMap, firestoreDate, firestoreObjectArray, firestoreEnum, firestoreField, firestoreMap, firestoreModelKeyGrantedRoleArrayMap, firestoreEnumArray, firestoreUniqueKeyedArray, firestoreUniqueStringArray, firestoreNumber, firestoreSubObject, firestoreEncodedArray } from './snapshot.field';
+import { firestoreArrayMap, firestoreDate, firestoreObjectArray, firestoreEnum, firestoreField, firestoreMap, firestoreModelKeyGrantedRoleArrayMap, firestoreEnumArray, firestoreUniqueKeyedArray, firestoreUniqueStringArray, firestoreNumber, firestoreSubObject, firestoreEncodedArray, firestoreString, DEFAULT_FIRESTORE_STRING_FIELD_VALUE, firestoreLatLngString, DEFAULT_FIRESTORE_LAT_LNG_STRING_VALUE } from './snapshot.field';
 
 describe('firestoreField()', () => {
   const defaultValue = -1;
@@ -117,6 +117,47 @@ describe('firestoreNumber()', () => {
     const result = from(undefined);
 
     expect(result).toBe(0);
+  });
+});
+
+interface TestFirestoreString {
+  value: string;
+}
+
+describe('firestoreString()', () => {
+  describe('with transform', () => {
+    const stringField = firestoreString({ transform: stringTrimFunction });
+    const converter = snapshotConverterFunctions<TestFirestoreString>({
+      fields: {
+        value: stringField
+      }
+    });
+
+    it('should convert null values to the default', () => {
+      const result = converter.mapFunctions.from({
+        value: null
+      });
+
+      expect(result.value).toBe(DEFAULT_FIRESTORE_STRING_FIELD_VALUE);
+    });
+
+    describe('with custom default', () => {
+      const defaultValue: string = 'test';
+      const stringField = firestoreString({ default: defaultValue, transform: stringTrimFunction });
+      const converter = snapshotConverterFunctions<TestFirestoreString>({
+        fields: {
+          value: stringField
+        }
+      });
+
+      it('should convert null values to the configured default', () => {
+        const result = converter.mapFunctions.from({
+          value: null
+        });
+
+        expect(result.value).toBe(defaultValue);
+      });
+    });
   });
 });
 
@@ -423,5 +464,40 @@ describe('firestoreSubObject()', () => {
         expect(result.object.uniqueStringArray).toBeDefined();
       });
     });
+  });
+});
+
+interface TestFirestoreLatLngString {
+  value: LatLngString;
+}
+
+describe('firestoreLatLngString()', () => {
+  const defaultValue = '1,1';
+  const precision = 3;
+
+  const latLngStringField = firestoreLatLngString({ precision, default: defaultValue });
+  const converter = snapshotConverterFunctions<TestFirestoreLatLngString>({
+    fields: {
+      value: latLngStringField
+    }
+  });
+
+  it('should convert with the input precision.', () => {
+    const expectedValue = latLngString(50.123, 50.123);
+    const value = latLngString(50.123456, 50.123456);
+
+    const result = converter.mapFunctions.from({
+      value
+    });
+
+    expect(result.value).toBe(expectedValue);
+  });
+
+  it('should convert null to the default value.', () => {
+    const result = converter.mapFunctions.from({
+      value: null
+    });
+
+    expect(result.value).toBe(defaultValue);
   });
 });

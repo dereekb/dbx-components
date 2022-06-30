@@ -1,44 +1,31 @@
 import { flattenArray } from './array';
 import { unique, findUnique } from './array.unique';
 import { ReadKeyFunction, ReadKeysFunction } from '../key';
-import { caseInsensitiveString } from '../string';
+import { caseInsensitiveString } from '../string/string';
 import { containsAllValues, containsAnyValue, hasDifferentValues } from '../set/set';
 import { mapIterable } from '../iterable/iterable.map';
-import { DecisionFunctionFactory, mapArrayFunction, MapFunction, mapIdentityFunction } from '../value';
+import { isMapIdentityFunction, mapArrayFunction, MapFunction, mapIdentityFunction } from '../value/map';
+import { DecisionFunctionFactory } from '../value/decision';
+import { stringToLowercaseFunction, stringToUppercaseFunction, stringTrimFunction, transformStringFunction, TransformStringFunctionConfig } from '../string/transform';
 
 export function hasDifferentStringsNoCase(a: string[], b: string[]): boolean {
   return hasDifferentValues(a.map(caseInsensitiveString), b.map(caseInsensitiveString));
 }
 
-export function arrayToUppercase(input: string[]): string[] {
-  return input.map((x) => x.toUpperCase());
-}
+export const trimArray = mapArrayFunction(stringTrimFunction);
+export const arrayToUppercase = mapArrayFunction(stringToUppercaseFunction);
+export const arrayToLowercase = mapArrayFunction(stringToLowercaseFunction);
 
-export function arrayToLowercase(input: string[]): string[] {
-  return input.map((x) => x.toLowerCase());
-}
-
-export type TransformStringsConfig = {
-  /**
-   * Whether or not to store all values as lowercase. Ignored if transform is provided.
-   */
-  toLowercase?: boolean;
-  /**
-   * Whether or not to store all values as uppercase. Ignored if transform is provided.
-   */
-  toUppercase?: boolean;
-  /**
-   * Optional transform function for text.
-   */
-  transform?: TransformSingleStringFunction;
-};
-
-export type TransformSingleStringFunction = MapFunction<string, string>;
 export type TransformStringsFunction = MapFunction<string[], string[]>;
 
-export function transformStrings(config: TransformStringsConfig): TransformStringsFunction {
-  const transform: TransformStringsFunction = config.transform ? mapArrayFunction(config.transform) : config.toLowercase ? arrayToLowercase : config.toUppercase ? arrayToUppercase : mapIdentityFunction();
-  return transform;
+export function transformStrings(config: TransformStringFunctionConfig): TransformStringsFunction {
+  const transform = transformStringFunction(config);
+
+  if (isMapIdentityFunction(transform)) {
+    return mapIdentityFunction();
+  } else {
+    return mapArrayFunction(transform);
+  }
 }
 
 export function toCaseInsensitiveStringArray(values: Iterable<string>): string[] {
@@ -74,7 +61,7 @@ export function containsAllStringsAnyCase(values: Iterable<string>, valuesToFind
   return valuesToFindArray.length ? containsAllValues(toCaseInsensitiveStringArray(values), valuesToFindArray) : true;
 }
 
-export interface FindUniqueStringsTransformConfig extends TransformStringsConfig {
+export interface FindUniqueStringsTransformConfig extends TransformStringFunctionConfig {
   /**
    * Whether or not to compare values as lowercase when finding uniqueness.
    *

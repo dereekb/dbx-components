@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [8.9.0](https://github.com/dereekb/dbx-components/compare/v8.8.1-dev...v8.9.0) (2022-06-30)
+
+
+### Features
+
+* added firestoreLatLngString() ([2af3e5f](https://github.com/dereekb/dbx-components/commit/2af3e5fcbcae665994df5cc68d1c246b5417a07d))
+
+
+
 ## [8.8.1](https://github.com/dereekb/dbx-components/compare/v8.8.0-dev...v8.8.1) (2022-06-29)
 
 
