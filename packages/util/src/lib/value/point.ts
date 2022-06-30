@@ -267,7 +267,7 @@ export type LatLngPointRef = {
  * References a latLng using a LatLngString
  */
 export type LatLngStringRef = {
-  readonly latLng: LatLngPoint;
+  readonly latLng: LatLngString;
 };
 
 /**
