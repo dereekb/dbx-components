@@ -36,7 +36,7 @@ SOURCE_BRANCH=${DBX_SETUP_PROJECT_BRANCH:-"main"}     # develop or main
 # - Project Details
 PROJECT_NAME=$INPUT_PROJECT_NAME
 NAME=$PROJECT_NAME
-DBX_COMPONENTS_VERSION=${DBX_SETUP_PROJECT_COMPONENTS_VERSION:-"^8.4.0"}
+DBX_COMPONENTS_VERSION=${DBX_SETUP_PROJECT_COMPONENTS_VERSION:-"^8.9.0"}
 NX_VERSION=${NX_SETUP_VERSIONS:-"14.1.8"} # NOTE: 14.1.8 is the last Angular 13 version
 
 # The app prefix is used in Angular and Nest classes as the prefix for classes/components

@@ -179,7 +179,14 @@ jobs:
       - run:
           name: configure npmrc / npm login
           command: echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > ~/.npmrc
-      - run: npx nx affected --target=publish-npmjs --all
+      # - run: npx nx affected --target=publish-npmjs --all
+      # npm can potentially have issues with showing the newest package if a required dependency isn't available when published.
+      # since these dependencies rely on eachother, they should be published in dependency order
+      - run: npx nx run util:publish-npmjs && npx nx run rxjs:publish-npmjs
+      - run: npx nx run date:publish-npmjs && npx nx run model:publish-npmjs && npx nx run browser:publish-npmjs
+      - run: npx nx run nestjs:publish-npmjs && npx nx run firebase:publish-npmjs && npx nx run firebase-server:publish-npmjs
+      - run: npx nx run dbx-core:publish-npmjs && npx nx run dbx-web:publish-npmjs && npx nx run dbx-analytics:publish-npmjs && npx nx run dbx-form:publish-npmjs
+      - run: npx nx run dbx-firebase:publish-npmjs
 # --- WORKFLOWS ---
 workflows:
   version: 2
