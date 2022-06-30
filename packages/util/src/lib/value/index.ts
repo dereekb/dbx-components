@@ -7,3 +7,4 @@ export * from './maybe';
 export * from './modifier';
 export * from './url';
 export * from './use';
+export * from './point';

@@ -4,6 +4,7 @@ module.exports = (path, options) => {
     ...options,
     // Use packageFilter to process parsed `package.json` before the resolution (see https://www.npmjs.com/package/resolve#resolveid-opts-cb)
     packageFilter: (pkg) => {
+      // see https://thymikee.github.io/jest-preset-angular/docs/guides/troubleshooting/#resolver-needed-for-some-javascript-library-or-nested-dependencies
       // see https://github.com/microsoft/accessibility-insights-web/pull/5421#issuecomment-1109168149
       // see https://github.com/uuidjs/uuid/pull/616
       //
@@ -24,7 +25,26 @@ module.exports = (path, options) => {
       // - run `yarn test`
       // - if all the tests pass, it means the workaround is no longer needed
 
-      const pkgNamesToTarget = new Set(['uuid', 'rxjs', '@dereekb/firebase-server', '@dereekb/firebase', '@dereekb/util', '@firebase/auth', '@firebase/storage', '@firebase/functions', '@firebase/database', '@firebase/auth-compat', '@firebase/database-compat', '@firebase/app-compat', '@firebase/firestore', '@firebase/firestore-compat', '@firebase/messaging', '@firebase/util', 'firebase']);
+      const pkgNamesToTarget = new Set([
+        //
+        'uuid',
+        'rxjs',
+        '@dereekb/firebase-server',
+        '@dereekb/firebase',
+        '@dereekb/util',
+        '@firebase/auth',
+        '@firebase/storage',
+        '@firebase/functions',
+        '@firebase/database',
+        '@firebase/auth-compat',
+        '@firebase/database-compat',
+        '@firebase/app-compat',
+        '@firebase/firestore',
+        '@firebase/firestore-compat',
+        '@firebase/messaging',
+        '@firebase/util',
+        'firebase'
+      ]);
 
       if (pkgNamesToTarget.has(pkg.name)) {
         // console.log('>>>', pkg.name)

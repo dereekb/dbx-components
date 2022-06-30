@@ -1,6 +1,11 @@
 import { Maybe } from '../value/maybe.type';
 
 /**
+ * A string represented within a number.
+ */
+export type NumberString = string;
+
+/**
  * Returns true if the input value is divisible by the divisor.
  *
  * @param value

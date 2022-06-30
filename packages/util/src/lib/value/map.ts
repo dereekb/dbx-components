@@ -39,6 +39,10 @@ export function mapIdentityFunction<T>(): MapFunction<T, T> {
   return MAP_IDENTITY as MapFunction<T, T>;
 }
 
+export function isMapIdentityFunction(fn: unknown): fn is typeof MAP_IDENTITY {
+  return fn === MAP_IDENTITY;
+}
+
 // MARK: Pair
 export type MapFunctionOutputPair<O, I = unknown> = {
   input: I;
