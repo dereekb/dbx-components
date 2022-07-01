@@ -28,5 +28,6 @@ export * from './key';
 export * from './number';
 export * from './object';
 export * from './page';
+export * from './path';
 export * from './sort';
 export * from './type';

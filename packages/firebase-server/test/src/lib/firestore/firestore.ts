@@ -1,7 +1,7 @@
 import { Firestore } from '@google-cloud/firestore';
 import { TestFirestoreContext, TestFirestoreInstance, TestFirestoreContextFixture, TestingFirestoreDrivers, makeTestingFirestoreDrivers } from '@dereekb/firebase/test';
 import { jestTestContextBuilder } from '@dereekb/util/test';
-import { googleCloudFirestoreDrivers } from '@dereekb/firebase-server';
+import { googleCloudFirebaseStorageDrivers } from '@dereekb/firebase-server';
 import { firestoreContextFactory } from '@dereekb/firebase';
 
 export interface GoogleCloudTestFirestoreConfig {
@@ -47,7 +47,7 @@ export const googleCloudTestFirestoreBuilder = jestTestContextBuilder<GoogleClou
   },
   buildFixture: () => new GoogleCloudTestFirestoreContextFixture(),
   setupInstance: async (config) => {
-    const drivers = makeTestingFirestoreDrivers(googleCloudFirestoreDrivers());
+    const drivers = makeTestingFirestoreDrivers(googleCloudFirebaseStorageDrivers());
 
     const projectId = `firebase-server-test-${new Date().getTime()}-${COUNTER++}`;
     const firestore = new Firestore({

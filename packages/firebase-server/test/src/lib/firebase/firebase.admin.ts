@@ -3,7 +3,7 @@ import { Firestore } from '@google-cloud/firestore';
 import { Auth } from 'firebase-admin/lib/auth/auth';
 import { JestTestFirestoreContextFactory, makeTestingFirestoreDrivers, TestFirestoreContext, TestFirestoreContextFixture, TestFirestoreInstance } from '@dereekb/firebase/test';
 import { AbstractJestTestContextFixture, JestBuildTestsWithContextFunction, jestTestContextBuilder, JestTestContextFactory, JestTestContextFixture, useJestContextFixture } from '@dereekb/util/test';
-import { googleCloudFirestoreDrivers } from '@dereekb/firebase-server';
+import { googleCloudFirebaseStorageDrivers } from '@dereekb/firebase-server';
 import { GoogleCloudTestFirestoreInstance } from '../firestore/firestore';
 import { generateNewProjectId, isAdminEnvironmentInitialized } from './firebase';
 import { cachedGetter } from '@dereekb/util';
@@ -49,7 +49,7 @@ export class FirebaseAdminTestContextFixture extends AbstractJestTestContextFixt
 // MARK: FirebaseAdminTestBuilder
 export class FirebaseAdminTestContextInstance implements FirebaseAdminTestContext {
   readonly getTestFirestoreInstance = cachedGetter(() => {
-    const drivers = makeTestingFirestoreDrivers(googleCloudFirestoreDrivers());
+    const drivers = makeTestingFirestoreDrivers(googleCloudFirebaseStorageDrivers());
     return new GoogleCloudTestFirestoreInstance(drivers, this.firestore);
   });
 

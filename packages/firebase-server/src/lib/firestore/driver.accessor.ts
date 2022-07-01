@@ -50,7 +50,7 @@ export function docRefForPath<T>(start: DocRefForPathInput, path?: string, pathS
   return doc as DocumentReference<T>;
 }
 
-export function firestoreClientAccessorDriver(): FirestoreAccessorDriver {
+export function googleCloudFirestoreAccessorDriver(): FirestoreAccessorDriver {
   return {
     doc: <T>(collection: CollectionReference<T>, path?: string, ...pathSegments: string[]) => docRefForPath(collection as GoogleCloudCollectionReference, path, pathSegments) as DocumentReference<T>,
     docAtPath: <T>(firestore: Firestore, fullPath: string) => (firestore as GoogleCloudFirestore).doc(fullPath) as DocumentReference<T>,

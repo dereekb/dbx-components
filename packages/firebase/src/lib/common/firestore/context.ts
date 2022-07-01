@@ -6,7 +6,7 @@ import { DocumentReference, CollectionReference, DocumentData, Firestore, Collec
 import { QueryLikeReferenceRef } from './reference';
 
 /**
- * A @dereekb/firestore FirestoreContext. Wraps the main Firestore context and the drivers, as well as utility/convenience functions.
+ * A @dereekb/firebase FirestoreContext. Wraps the main Firestore context and the drivers, as well as utility/convenience functions.
  */
 export interface FirestoreContext<F extends Firestore = Firestore> extends RunTransactionFactoryReference, WriteBatchFactoryReference {
   readonly firestore: F;

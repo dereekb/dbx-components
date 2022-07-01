@@ -1,4 +1,4 @@
-import { testWithMockItemFixture } from '../common/firestore.mock.item.fixture';
+import { testWithMockItemFixture } from '../common/firestore/firestore.mock.item.fixture';
 import { authorizedFirestoreFactory } from './firestore.authorized';
 
 /**

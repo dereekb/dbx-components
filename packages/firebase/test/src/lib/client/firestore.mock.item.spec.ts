@@ -1,5 +1,5 @@
 import { CollectionReference, doc, getDoc, setDoc } from '@firebase/firestore';
-import { MockItemCollectionFixture, testWithMockItemFixture } from '../common/firestore.mock.item.fixture';
+import { MockItemCollectionFixture, testWithMockItemFixture } from '../common/firestore/firestore.mock.item.fixture';
 import { authorizedFirestoreFactory } from './firestore.authorized';
 
 describe('testWithMockItemFixture', () => {

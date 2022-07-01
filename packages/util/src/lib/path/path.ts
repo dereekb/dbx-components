@@ -117,10 +117,10 @@ export function slashPathStartTypeFactory(type: SlashPathStartType): SlashPathSt
 
   switch (type) {
     case 'relative':
-      fn = relativeSlashPathStartTypeFactory;
+      fn = toRelativeSlashPathStartType;
       break;
     case 'absolute':
-      fn = absoluteSlashPathStartTypeFactory;
+      fn = toAbsoluteSlashPathStartType;
       break;
     case 'any':
       fn = mapIdentityFunction();
@@ -137,7 +137,7 @@ export const ALL_SLASHES_REGEX = /\/+/g;
 export const ALL_DOUBLE_SLASHES_REGEX = /\/{2,}/g;
 export const ALL_SLASH_PATH_FILE_TYPE_SEPARATORS_REGEX = /\.+/g;
 
-export function relativeSlashPathStartTypeFactory(input: SlashPath): SlashPath {
+export function toRelativeSlashPathStartType(input: SlashPath): SlashPath {
   // remove all leading slashes
   return input.replace(LEADING_SLASHES_REGEX, '');
 }
@@ -147,7 +147,7 @@ export function relativeSlashPathStartTypeFactory(input: SlashPath): SlashPath {
  * @param input
  * @returns
  */
-export function absoluteSlashPathStartTypeFactory(input: SlashPath): SlashPath {
+export function toAbsoluteSlashPathStartType(input: SlashPath): SlashPath {
   // add a leading slash, and remove any multiple slashes if provided
   return input.startsWith(SLASH_PATH_SEPARATOR) ? input.replace(LEADING_SLASHES_REGEX, SLASH_PATH_SEPARATOR) : `${SLASH_PATH_SEPARATOR}${input}`;
 }
