@@ -32,6 +32,7 @@ export function firebaseStorageClientAccessorFolder(storage: ClientFirebaseStora
 
 export function firebaseStorageClientAccessorDriver(): FirebaseStorageAccessorDriver {
   return {
+    defaultBucket: (storage: FirebaseStorage) => (storage as ClientFirebaseStorage).app.options.storageBucket ?? '',
     file: (storage: FirebaseStorage, path: StoragePath) => firebaseStorageClientAccessorFile(storage as ClientFirebaseStorage, path),
     folder: (storage: FirebaseStorage, path: StoragePath) => firebaseStorageClientAccessorFolder(storage as ClientFirebaseStorage, path)
   };

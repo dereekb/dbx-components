@@ -12,15 +12,15 @@ export interface GoogleCloudTestFirebaseStorageConfig {
 
 export type GoogleCloudTestFirebaseStorageContext = TestFirebaseStorageContext;
 
-export function makeGoogleFirebaseStorageContext(drivers: TestingFirebaseStorageDrivers, firebaseStorage: FirebaseStorage): TestFirebaseStorageContext {
-  const context = firebaseStorageContextFactory(drivers)(firebaseStorage) as GoogleCloudTestFirebaseStorageContext;
+export function makeGoogleFirebaseStorageContext(drivers: TestingFirebaseStorageDrivers, firebaseStorage: FirebaseStorage, defaultBucketId: string): TestFirebaseStorageContext {
+  const context = firebaseStorageContextFactory(drivers)(firebaseStorage, { defaultBucketId }) as GoogleCloudTestFirebaseStorageContext;
   context.drivers = drivers;
   return context;
 }
 
 export class GoogleCloudTestFirebaseStorageInstance extends TestFirebaseStorageInstance {
-  constructor(drivers: TestingFirebaseStorageDrivers, firebaseStorage: FirebaseStorage) {
-    super(makeGoogleFirebaseStorageContext(drivers, firebaseStorage));
+  constructor(drivers: TestingFirebaseStorageDrivers, firebaseStorage: FirebaseStorage, defaultBucketId: string) {
+    super(makeGoogleFirebaseStorageContext(drivers, firebaseStorage, defaultBucketId));
   }
 }
 
@@ -58,7 +58,8 @@ export const googleCloudTestFirebaseStorageBuilder = jestTestContextBuilder<Goog
       apiEndpoint: `${config.host}:${config.port}`
     });
 
-    return new GoogleCloudTestFirebaseStorageInstance(drivers, firebaseStorage);
+    const defaultBucketId = projectId;
+    return new GoogleCloudTestFirebaseStorageInstance(drivers, firebaseStorage, defaultBucketId);
   },
   teardownInstance: async (instance, config) => {
     // nothing to teardown

@@ -1,5 +1,6 @@
 import { JestTestContextFactory } from '@dereekb/util/test';
 import { GoogleCloudTestFirestoreContextFixture, googleCloudTestFirestoreBuilder } from './firestore';
+import { testWithMockItemCollectionFixture } from '@dereekb/firebase/test';
 
 export type GoogleFirebaseFirestoreTestContextFactory = JestTestContextFactory<GoogleCloudTestFirestoreContextFixture>;
 
@@ -12,3 +13,10 @@ export const adminFirestoreFactory: GoogleFirebaseFirestoreTestContextFactory = 
   host: 'localhost',
   port: 9904
 });
+
+/**
+ * Convenience mock instance for tests within an authorized context.
+ *
+ * Uses @google-cloud/firestore
+ */
+export const dbxComponentsAdminTestWithMockItemCollection = testWithMockItemCollectionFixture()(adminFirestoreFactory);

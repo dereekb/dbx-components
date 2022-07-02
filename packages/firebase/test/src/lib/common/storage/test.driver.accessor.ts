@@ -13,6 +13,31 @@ import { MockItemCollectionFixture } from '../mock/mock.item.collection.fixture'
  */
 export function describeFirebaseStorageAccessorDriverTests(f: MockItemStorageFixture) {
   describe('FirebaseStorageAccessor', () => {
+    const testFilePath = 'test.png';
+
+    describe('file', () => {
+      const existsFilePath = 'exists.txt';
+
+      beforeEach(() => {
+        // todo: it should create a new file...
+      });
+
+      describe('getDownloadUrl()', () => {
+        itShouldFail('if the file does not exist.', async () => {
+          await expectFail(() => f.storageContext.file(testFilePath).getDownloadUrl());
+        });
+
+        //todo...
+
+        describe.skip('exists', () => {
+          it('should return the download url.', async () => {
+            const result = await f.storageContext.file(testFilePath).getDownloadUrl();
+            expect(result).toBeDefined();
+          });
+        });
+      });
+    });
+
     it('test todo', () => {
       expect(true).toBe(true);
     });

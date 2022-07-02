@@ -1,4 +1,4 @@
-import { toRelativeSlashPathStartType, SlashPath } from '@dereekb/util';
+import { toRelativeSlashPathStartType, SlashPath, FactoryWithRequiredInput } from '@dereekb/util';
 
 /**
  * Storage bucket identifier.
@@ -32,6 +32,50 @@ export interface StorageSlashPathRef {
  * If the bucket is not defined, it implies the default app bucket.
  */
 export interface StoragePath extends StorageBucketIdRef, StorageSlashPathRef {}
+
+/**
+ * Storage-Path related input.
+ */
+export type StoragePathInput = StorageSlashPath | StoragePath | StorageSlashPathRef;
+
+/**
+ * Converts the input to a StoragePath
+ */
+export type StoragePathFactory = FactoryWithRequiredInput<StoragePath, StoragePathInput>;
+
+export interface StoragePathFactoryConfig extends StorageBucketIdRef {
+  /**
+   * Whether or not to replace the bucketId on input that has it.
+   *
+   * False by default.
+   */
+  replaceBucket?: boolean;
+}
+
+/**
+ * Creates a StoragePathFactory.
+ *
+ * @param config
+ * @returns
+ */
+export function storagePathFactory(config: StoragePathFactoryConfig): StoragePathFactory {
+  const { replaceBucket = false, bucketId } = config;
+  return (input: StoragePathInput) => {
+    const { pathString, bucketId: inputBucketId } = typeof input === 'string' ? { pathString: input, bucketId: undefined } : (input as StoragePath);
+
+    if (replaceBucket) {
+      return {
+        pathString,
+        bucketId
+      };
+    } else {
+      return {
+        pathString,
+        bucketId: inputBucketId || bucketId
+      };
+    }
+  };
+}
 
 /**
  * A reference to a StoragePath

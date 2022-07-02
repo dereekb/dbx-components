@@ -1,5 +1,19 @@
 import { FirebaseStorageAccessorDriver, FirebaseStorageContext, FirebaseStorageDrivers } from '@dereekb/firebase';
 
+let bucketTestNameKey = 0;
+
+export function makeTestingFirebaseStorageAccesorDriver(driver: FirebaseStorageAccessorDriver): TestingFirebaseStorageAccessorDriver {
+  const time = new Date().getTime();
+  const random = Math.ceil(Math.random() * 999999) % 999999;
+  const testBucketName = `test-bucket-${time}-${random}-${(bucketTestNameKey += 1)}`;
+
+  const injectedDriver: TestingFirebaseStorageAccessorDriver = {
+    ...driver,
+    defaultBucket: () => testBucketName
+  };
+
+  return injectedDriver;
+}
 /**
  * Used to override/extend a FirebaseStorageAccessorDriver to provide better isolation between tests.
  */
@@ -22,15 +36,14 @@ export interface TestingFirebaseStorageDrivers extends FirebaseStorageDrivers {
 export function makeTestingFirebaseStorageDrivers(drivers: FirebaseStorageDrivers): TestingFirebaseStorageDrivers {
   return {
     ...drivers,
-    storageDriverType: 'testing'
-    // todo: if needed
-    // storageAccessorDriver: makeTestingFirebaseStorageAccesorDriver(drivers.firestoreAccessorDriver)
+    storageDriverType: 'testing',
+    storageAccessorDriver: makeTestingFirebaseStorageAccesorDriver(drivers.storageAccessorDriver)
   };
 }
 
 // MARK: Test FirebaseStorage Context
 export interface TestingFirebaseStorageContextExtension {
-  drivers: TestingFirebaseStorageDrivers;
+  readonly drivers: TestingFirebaseStorageDrivers;
 }
 
 export type TestFirebaseStorageContext<C = FirebaseStorageContext> = C & TestingFirebaseStorageContextExtension;

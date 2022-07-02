@@ -95,7 +95,7 @@ export function makeTestingFirestoreDrivers(drivers: FirestoreDrivers): TestingF
 
 // MARK: Test Firestore Context
 export interface TestingFirestoreContextExtension {
-  drivers: TestingFirestoreDrivers;
+  readonly drivers: TestingFirestoreDrivers;
 }
 
 export type TestFirestoreContext<C = FirestoreContext> = C & TestingFirestoreContextExtension;
