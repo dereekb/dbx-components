@@ -43,7 +43,7 @@ export function makeTestingFirebaseStorageDrivers(drivers: FirebaseStorageDriver
 
 // MARK: Test FirebaseStorage Context
 export interface TestingFirebaseStorageContextExtension {
-  readonly drivers: TestingFirebaseStorageDrivers;
+  drivers: TestingFirebaseStorageDrivers;
 }
 
 export type TestFirebaseStorageContext<C = FirebaseStorageContext> = C & TestingFirebaseStorageContextExtension;

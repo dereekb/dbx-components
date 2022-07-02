@@ -2,7 +2,7 @@ import { MockItemStorageFixture } from '../mock/mock.item.storage.fixture';
 import { itShouldFail, expectFail } from '@dereekb/util/test';
 import { firstValueFrom } from 'rxjs';
 import { SubscriptionObject } from '@dereekb/rxjs';
-import { Transaction, DocumentReference, WriteBatch, FirestoreDocumentAccessor, makeDocuments, FirestoreDocumentDataAccessor, FirestoreContext, FirestoreDocument, RunTransaction, FirebaseAuthUserId, DocumentSnapshot, FirestoreDataConverter } from '@dereekb/firebase';
+import { Transaction, DocumentReference, WriteBatch, FirestoreDocumentAccessor, makeDocuments, FirestoreDocumentDataAccessor, FirestoreContext, FirestoreDocument, RunTransaction, FirebaseAuthUserId, DocumentSnapshot, FirestoreDataConverter, FirebaseStorageAccessorFile } from '@dereekb/firebase';
 import { TestFirebaseStorageInstance } from './storage.instance';
 import { MockItemCollectionFixture } from '../mock/mock.item.collection.fixture';
 
@@ -13,27 +13,55 @@ import { MockItemCollectionFixture } from '../mock/mock.item.collection.fixture'
  */
 export function describeFirebaseStorageAccessorDriverTests(f: MockItemStorageFixture) {
   describe('FirebaseStorageAccessor', () => {
-    const testFilePath = 'test.png';
-
     describe('file', () => {
-      const existsFilePath = 'exists.txt';
+      const doesNotExistFilePath = 'test.png';
+      let doesNotExistFile: FirebaseStorageAccessorFile;
 
-      beforeEach(() => {
-        // todo: it should create a new file...
+      const existsFilePath = 'exists.txt';
+      let file: FirebaseStorageAccessorFile;
+
+      beforeEach(async () => {
+        doesNotExistFile = f.storageContext.file(doesNotExistFilePath);
+        file = f.storageContext.file(existsFilePath);
+        await file.upload('hello world', { stringFormat: 'raw', contentType: 'text/plain' });
+      });
+
+      describe('upload', () => {
+        let uploadFile: FirebaseStorageAccessorFile;
+
+        beforeEach(() => {
+          uploadFile = f.storageContext.file('upload.txt');
+        });
+
+        it('should upload a file.', async () => {
+          const contentType = 'text/plain';
+          await uploadFile.upload('test', { stringFormat: 'raw', contentType });
+
+          const metadata = await uploadFile.getMetadata();
+          expect(metadata.contentType).toBe(contentType);
+        });
+      });
+
+      describe('getMetadata()', () => {
+        itShouldFail('if the file does not exist.', async () => {
+          await expectFail(() => doesNotExistFile.getMetadata());
+        });
+
+        it('should return the metadata.', async () => {
+          const result = await file.getMetadata();
+          expect(result).toBeDefined();
+        });
       });
 
       describe('getDownloadUrl()', () => {
         itShouldFail('if the file does not exist.', async () => {
-          await expectFail(() => f.storageContext.file(testFilePath).getDownloadUrl());
+          await expectFail(() => doesNotExistFile.getDownloadUrl());
         });
 
-        //todo...
-
-        describe.skip('exists', () => {
-          it('should return the download url.', async () => {
-            const result = await f.storageContext.file(testFilePath).getDownloadUrl();
-            expect(result).toBeDefined();
-          });
+        it('should return the download url.', async () => {
+          const result = await file.getDownloadUrl();
+          expect(result).toBeDefined();
+          expect(typeof result).toBe('string');
         });
       });
     });

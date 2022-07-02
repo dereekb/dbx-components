@@ -1,4 +1,4 @@
-import { FirebaseStorageAccessorDriver, FirebaseStorageAccessorFile, FirebaseStorageAccessorFolder, FirebaseStorage, StoragePath } from '@dereekb/firebase';
+import { StorageServerUploadInput, FirebaseStorageAccessorDriver, FirebaseStorageAccessorFile, FirebaseStorageAccessorFolder, FirebaseStorage, StoragePath } from '@dereekb/firebase';
 import { Storage as GoogleCloudStorage, File as GoogleCloudFile } from '@google-cloud/storage';
 
 export function googleCloudStorageFileForStorageFilePath(storage: GoogleCloudStorage, path: StoragePath) {
@@ -13,7 +13,15 @@ export function googleCloudStorageAccessorFile(storage: GoogleCloudStorage, stor
   return {
     reference: file,
     storagePath,
-    getDownloadUrl: async () => file.publicUrl()
+    getDownloadUrl: async () => file.publicUrl(),
+    getMetadata: () => file.getMetadata().then((x) => x[0]),
+    upload: (input, options) =>
+      file.save(input as StorageServerUploadInput, {
+        // non-resumable
+        resumable: false,
+        // add content type
+        ...(options?.contentType ? { contentType: options?.contentType } : undefined)
+      })
   };
 }
 

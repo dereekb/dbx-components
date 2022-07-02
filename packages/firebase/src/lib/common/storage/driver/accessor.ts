@@ -1,6 +1,6 @@
 import { StorageBucketId } from './../storage';
 import { StoragePath, StoragePathRef } from '../storage';
-import { FirebaseStorage, StorageDownloadUrl } from '../types';
+import { FirebaseStorage, StorageClientUploadBytesInput, StorageDownloadUrl, StorageMetadata, StorageUploadInput, StorageUploadOptions, StorageUploadResult, StorageUploadTask } from '../types';
 import { Maybe } from '@dereekb/util';
 
 /**
@@ -12,6 +12,26 @@ export interface FirebaseStorageAccessorFile<R extends unknown = unknown> extend
    */
   readonly reference: R;
   getDownloadUrl(): Promise<StorageDownloadUrl>;
+  /**
+   * Returns the metadata from the input objects.
+   */
+  getMetadata(): Promise<StorageMetadata>;
+  /**
+   * Uploads data to the file's path.
+   */
+  upload(data: StorageUploadInput, options?: StorageUploadOptions): Promise<StorageUploadResult>;
+  /**
+   * Uploads data to the file's path using a resumable.
+   *
+   * Optional implementation.
+   */
+  uploadResumable?(data: StorageClientUploadBytesInput, options?: StorageUploadOptions): StorageUploadTask;
+  /**
+   * Uploads arbitrary data to the file's path using a stream.
+   *
+   * Optional implementation.
+   */
+  streamUpload?(data: StorageUploadInput): Promise<any>;
 }
 
 /**

@@ -12,14 +12,14 @@ export interface GoogleCloudTestFirebaseStorageConfig {
 
 export type GoogleCloudTestFirebaseStorageContext = TestFirebaseStorageContext;
 
-export function makeGoogleFirebaseStorageContext(drivers: TestingFirebaseStorageDrivers, firebaseStorage: FirebaseStorage, defaultBucketId: string): TestFirebaseStorageContext {
+export function makeGoogleFirebaseStorageContext(drivers: TestingFirebaseStorageDrivers, firebaseStorage: FirebaseStorage, defaultBucketId?: string): TestFirebaseStorageContext {
   const context = firebaseStorageContextFactory(drivers)(firebaseStorage, { defaultBucketId }) as GoogleCloudTestFirebaseStorageContext;
   context.drivers = drivers;
   return context;
 }
 
 export class GoogleCloudTestFirebaseStorageInstance extends TestFirebaseStorageInstance {
-  constructor(drivers: TestingFirebaseStorageDrivers, firebaseStorage: FirebaseStorage, defaultBucketId: string) {
+  constructor(drivers: TestingFirebaseStorageDrivers, firebaseStorage: FirebaseStorage, defaultBucketId?: string) {
     super(makeGoogleFirebaseStorageContext(drivers, firebaseStorage, defaultBucketId));
   }
 }
