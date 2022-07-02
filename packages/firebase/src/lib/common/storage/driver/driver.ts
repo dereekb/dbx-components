@@ -7,6 +7,6 @@ export type FirebaseStorageDriverType = 'production' | 'testing';
  * Implements all FirebaseStorage related driver reference interfaces.
  */
 export interface FirebaseStorageDrivers extends FirebaseStorageAccessorDriverRef {
-  driverIdentifier?: FirebaseStorageDriverIdentifier;
-  driverType: FirebaseStorageDriverType;
+  storageDriverIdentifier?: FirebaseStorageDriverIdentifier;
+  storageDriverType: FirebaseStorageDriverType;
 }

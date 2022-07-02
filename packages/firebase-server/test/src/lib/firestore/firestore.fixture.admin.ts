@@ -1,4 +1,4 @@
-import { testWithMockItemFixture } from '@dereekb/firebase/test';
+import { testWithMockItemCollectionFixture } from '@dereekb/firebase/test';
 import { adminFirestoreFactory } from './firestore.admin';
 
 /**
@@ -6,4 +6,4 @@ import { adminFirestoreFactory } from './firestore.admin';
  *
  * Uses @google-cloud/firestore
  */
-export const adminTestWithMockItemCollection = testWithMockItemFixture()(adminFirestoreFactory);
+export const adminTestWithMockItemCollection = testWithMockItemCollectionFixture()(adminFirestoreFactory);

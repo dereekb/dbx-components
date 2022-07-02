@@ -1,5 +1,5 @@
 import { Maybe, PromiseUtility } from '@dereekb/util';
-import { DocumentReference, Firestore, FirestoreAccessorDriver, FirestoreCollectionName, FirestoreContext, FirestoreDrivers } from '@dereekb/firebase';
+import { DocumentReference, FirebaseStorageDrivers, Firestore, FirestoreAccessorDriver, FirestoreCollectionName, FirestoreContext, FirestoreDrivers } from '@dereekb/firebase';
 
 // MARK: Test Accessor
 /**
@@ -75,7 +75,7 @@ export function makeTestingFirestoreAccesorDriver(driver: FirestoreAccessorDrive
  * Drivers used for testing. Provides additional functionality for controlling collection access to prevent cross-test contamination.
  */
 export interface TestingFirestoreDrivers extends FirestoreDrivers {
-  driverType: 'testing';
+  firestoreDriverType: 'testing';
   firestoreAccessorDriver: TestingFirestoreAccessorDriver;
 }
 
@@ -88,7 +88,7 @@ export interface TestingFirestoreDrivers extends FirestoreDrivers {
 export function makeTestingFirestoreDrivers(drivers: FirestoreDrivers): TestingFirestoreDrivers {
   return {
     ...drivers,
-    driverType: 'testing',
+    firestoreDriverType: 'testing',
     firestoreAccessorDriver: makeTestingFirestoreAccesorDriver(drivers.firestoreAccessorDriver)
   };
 }

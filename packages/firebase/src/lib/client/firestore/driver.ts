@@ -6,8 +6,8 @@ export type FirebaseFirestoreClientDrivers = FirestoreDrivers;
 
 export function firebaseFirestoreClientDrivers(): FirebaseFirestoreClientDrivers {
   return {
-    driverIdentifier: '@firebase/firestore',
-    driverType: 'production',
+    firestoreDriverIdentifier: '@firebase/firestore',
+    firestoreDriverType: 'production',
     firestoreAccessorDriver: firestoreClientAccessorDriver(),
     firestoreQueryDriver: firebaseFirestoreQueryDriver()
   };

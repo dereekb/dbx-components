@@ -20,7 +20,7 @@ export interface FirestoreContext<F extends Firestore = Firestore> extends RunTr
   singleItemFirestoreCollection<T, PT, D extends FirestoreDocument<T> = FirestoreDocument<T>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>>(config: FirestoreContextSingleItemFirestoreCollectionConfig<T, PT, D, PD>): SingleItemFirestoreCollection<T, PT, D, PD>;
 }
 
-export type FirestoreContextFirestoreCollectionConfig<T, D extends FirestoreDocument<T>> = Omit<FirestoreCollectionConfig<T, D>, 'driverIdentifier' | 'driverType' | 'firestoreQueryDriver' | 'firestoreAccessorDriver'>;
+export type FirestoreContextFirestoreCollectionConfig<T, D extends FirestoreDocument<T>> = Omit<FirestoreCollectionConfig<T, D>, 'firestoreDriverIdentifier' | 'firestoreDriverType' | 'firestoreQueryDriver' | 'firestoreAccessorDriver'>;
 export type FirestoreContextFirestoreCollectionGroupConfig<T, D extends FirestoreDocument<T>> = Omit<FirestoreContextFirestoreCollectionConfig<T, D>, 'collection'> & QueryLikeReferenceRef<T>;
 
 export interface FirestoreContextFirestoreCollectionWithParentConfig<T, PT, D extends FirestoreDocument<T> = FirestoreDocument<T>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>> extends Omit<FirestoreContextFirestoreCollectionConfig<T, D>, 'queryLike'> {
@@ -52,8 +52,8 @@ export function firestoreContextFactory<F extends Firestore = Firestore>(drivers
         collection: config.converter ? (config as FirestoreContextFirestoreCollectionConfig<T, D>).collection?.withConverter(config.converter) : (config as FirestoreContextFirestoreCollectionConfig<T, D>).collection,
         queryLike: config.converter ? queryLike.withConverter(config.converter) : queryLike,
         firestoreContext: context,
-        driverIdentifier: drivers.driverIdentifier,
-        driverType: drivers.driverType,
+        firestoreDriverIdentifier: drivers.firestoreDriverIdentifier,
+        firestoreDriverType: drivers.firestoreDriverType,
         firestoreQueryDriver: drivers.firestoreQueryDriver,
         firestoreAccessorDriver: drivers.firestoreAccessorDriver
       };

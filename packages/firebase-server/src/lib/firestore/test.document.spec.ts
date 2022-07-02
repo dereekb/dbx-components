@@ -9,7 +9,7 @@ describe('FirestoreDocumentAccessor', () => {
     let documentAccessor: FirestoreDocumentAccessor<MockItem, MockItemDocument>;
 
     beforeEach(async () => {
-      firestoreCollection = mockItemFirestoreCollection(f.parent.context);
+      firestoreCollection = mockItemFirestoreCollection(f.parent.firestoreContext);
       documentAccessor = firestoreCollection.documentAccessor();
     });
 

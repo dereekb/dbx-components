@@ -31,13 +31,13 @@ export interface StorageSlashPathRef {
  *
  * If the bucket is not defined, it implies the default app bucket.
  */
-export interface StorageFilePath extends StorageBucketIdRef, StorageSlashPathRef {}
+export interface StoragePath extends StorageBucketIdRef, StorageSlashPathRef {}
 
 /**
- * A reference to a StorageFilePath
+ * A reference to a StoragePath
  */
-export interface StorageFilePathRef {
-  storagePath: StorageFilePath;
+export interface StoragePathRef {
+  storagePath: StoragePath;
 }
 
 // MARK: Utilities
@@ -46,7 +46,7 @@ export type GoogleCloudStorageDefaultBucketFilePath<P extends StorageSlashPath =
 export type GoogleCloudStorageBucketAndFilePath<P extends StorageSlashPath = StorageSlashPath, S extends StorageBucketId = StorageBucketId> = `${GoogleCloudStorageBucketPrefix<S>}/${P}`;
 export type GoogleCloudStorageFilePath<P extends StorageSlashPath = StorageSlashPath> = GoogleCloudStorageDefaultBucketFilePath<P> | GoogleCloudStorageBucketAndFilePath<P>;
 
-export function firebaseStorageFilePathFromStorageFilePath(path: StorageFilePath): GoogleCloudStorageFilePath {
+export function firebaseStorageFilePathFromStorageFilePath(path: StoragePath): GoogleCloudStorageFilePath {
   const { bucketId, pathString } = path;
   const relativePathString = toRelativeSlashPathStartType(pathString);
   let storagePath: GoogleCloudStorageFilePath;

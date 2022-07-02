@@ -22,9 +22,9 @@ describe('FirestoreCollection', () => {
         firestoreCollection = makeFirestoreCollection({
           converter: mockItemConverter,
           modelIdentity: mockItemIdentity,
-          firestoreContext: f.parent.context,
+          firestoreContext: f.parent.firestoreContext,
           itemsPerPage,
-          collection: mockItemCollectionReference(f.parent.context),
+          collection: mockItemCollectionReference(f.parent.firestoreContext),
           makeDocument: (a, d) => new MockItemDocument(a, d),
           ...firebaseFirestoreClientDrivers()
         });
@@ -35,7 +35,7 @@ describe('FirestoreCollection', () => {
     });
 
     beforeEach(async () => {
-      firestoreCollection = mockItemFirestoreCollection(f.parent.context);
+      firestoreCollection = mockItemFirestoreCollection(f.parent.firestoreContext);
     });
 
     describe('documentAccessor()', () => {

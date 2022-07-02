@@ -1,9 +1,9 @@
 import { CollectionReference, doc, getDoc, setDoc } from '@firebase/firestore';
-import { MockItemCollectionFixture, testWithMockItemFixture } from '../common/firestore/firestore.mock.item.fixture';
-import { authorizedFirestoreFactory } from './firestore.authorized';
+import { MockItemCollectionFixture, testWithMockItemCollectionFixture } from '../common/mock/mock.item.collection.fixture';
+import { authorizedFirebaseFactory } from './firebase.authorized';
 
 describe('testWithMockItemFixture', () => {
-  const testWrapper = testWithMockItemFixture()(authorizedFirestoreFactory);
+  const testWrapper = testWithMockItemCollectionFixture()(authorizedFirebaseFactory);
 
   testWrapper((f: MockItemCollectionFixture) => {
     it('should create a document', async () => {

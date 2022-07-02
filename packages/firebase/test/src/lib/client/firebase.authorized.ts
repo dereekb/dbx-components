@@ -1,11 +1,11 @@
 import { JestTestContextFactory } from '@dereekb/util/test';
-import { firestoreTestBuilder, RulesUnitTestFirebaseTestingContextFixture } from './firestore';
+import { firebaseRulesUnitTestBuilder, RulesUnitTestFirebaseTestingContextFixture } from './firebase';
 
 export const TESTING_AUTHORIZED_FIREBASE_USER_ID = '0';
 
 export type FirebaseTestContextFactory = JestTestContextFactory<RulesUnitTestFirebaseTestingContextFixture>;
 
-export const authorizedFirestoreFactory: FirebaseTestContextFactory = firestoreTestBuilder({
+export const authorizedFirebaseFactory: FirebaseTestContextFactory = firebaseRulesUnitTestBuilder({
   testEnvironment: {
     firestore: {
       rules: `
@@ -13,6 +13,18 @@ export const authorizedFirestoreFactory: FirebaseTestContextFactory = firestoreT
       service cloud.firestore {
         match /databases/{database}/documents {
           match /{document=**} {
+            allow read, write: if true;
+          }
+        }
+      }
+      `
+    },
+    storage: {
+      rules: `
+      rules_version = '2';
+      service firebase.storage {
+        match /b/{bucket}/o {
+          match /{allPaths=**} {
             allow read, write: if true;
           }
         }

@@ -3,12 +3,13 @@ import * as functions from 'firebase-functions-test';
 import { Firestore } from '@google-cloud/firestore';
 import { Auth } from 'firebase-admin/lib/auth/auth';
 import { FeaturesList } from 'firebase-functions-test/lib/features';
-import { TestFirestoreContext, TestFirestoreInstance } from '@dereekb/firebase/test';
+import { TestFirebaseStorageContext, TestFirebaseStorageInstance, TestFirestoreContext, TestFirestoreInstance } from '@dereekb/firebase/test';
 import { AbstractJestTestContextFixture, jestTestContextBuilder, JestTestContextFactory, JestTestContextFixture } from '@dereekb/util/test';
 import { applyFirebaseGCloudTestProjectIdToFirebaseConfigEnv, getGCloudTestProjectId, isAdminEnvironmentInitialized, rollNewGCloudProjectEnvironmentVariable } from './firebase';
 import { FirebaseAdminTestContext, FirebaseAdminTestContextInstance } from './firebase.admin';
 import { Maybe, cachedGetter } from '@dereekb/util';
 import { firebaseAdminCloudFunctionWrapper } from './firebase.function';
+import { Storage as GoogleCloudStorage } from '@google-cloud/storage';
 
 // MARK: FirebaseAdminFunctionTestBuilder
 let functionsInitialized = false;
@@ -78,6 +79,18 @@ export class FirebaseAdminFunctionTestContextFixture extends AbstractJestTestCon
 
   get firestoreContext(): TestFirestoreContext {
     return this.instance.firestoreContext;
+  }
+
+  get storage(): GoogleCloudStorage {
+    return this.instance.storage;
+  }
+
+  get storageInstance(): TestFirebaseStorageInstance {
+    return this.instance.storageInstance;
+  }
+
+  get storageContext(): TestFirebaseStorageContext {
+    return this.instance.storageContext;
   }
 
   get fnWrapper() {

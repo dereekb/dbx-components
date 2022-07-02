@@ -3,17 +3,11 @@ import { Firestore } from '@dereekb/firebase';
 import { TestFirestoreContext } from './firestore';
 
 export class TestFirestoreInstance {
-  constructor(readonly context: TestFirestoreContext) {}
+  constructor(readonly firestoreContext: TestFirestoreContext) {}
 
   get firestore(): Firestore {
-    return this.context.firestore;
+    return this.firestoreContext.firestore;
   }
-
-  async clearFirestore(): Promise<void> {
-    // return this.context.clearFirestore();
-  }
-
-  // TODO: Add storage
 }
 
 export class TestFirestoreContextFixture<F extends TestFirestoreInstance = TestFirestoreInstance> extends AbstractJestTestContextFixture<F> {
@@ -21,8 +15,8 @@ export class TestFirestoreContextFixture<F extends TestFirestoreInstance = TestF
     return this.instance.firestore;
   }
 
-  get context(): TestFirestoreContext {
-    return this.instance.context;
+  get firestoreContext(): TestFirestoreContext {
+    return this.instance.firestoreContext;
   }
 }
 

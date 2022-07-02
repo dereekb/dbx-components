@@ -6,8 +6,8 @@ export type GoogleCloudFirestoreDrivers = FirestoreDrivers;
 
 export function googleCloudFirestoreDrivers(): GoogleCloudFirestoreDrivers {
   return {
-    driverIdentifier: '@google-cloud/firestore',
-    driverType: 'production',
+    firestoreDriverIdentifier: '@google-cloud/firestore',
+    firestoreDriverType: 'production',
     firestoreAccessorDriver: googleCloudFirestoreAccessorDriver(),
     firestoreQueryDriver: googleCloudFirestoreQueryDriver()
   };

@@ -5,8 +5,8 @@ export type GoogleCloudFirebaseStorageDrivers = FirebaseStorageDrivers;
 
 export function googleCloudFirebaseStorageDrivers(): GoogleCloudFirebaseStorageDrivers {
   return {
-    driverIdentifier: '@google-cloud/storage',
-    driverType: 'production',
+    storageDriverIdentifier: '@google-cloud/storage',
+    storageDriverType: 'production',
     storageAccessorDriver: googleCloudStorageFirebaseStorageAccessorDriver()
   };
 }
