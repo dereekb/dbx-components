@@ -9,6 +9,7 @@ export * from './getter';
 export * from './iterable';
 export * from './map';
 export * from './model';
+export * from './nodejs';
 export * from './misc';
 export * from './promise';
 export * from './relation';

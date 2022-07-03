@@ -55,7 +55,8 @@ export const googleCloudTestFirebaseStorageBuilder = jestTestContextBuilder<Goog
     const projectId = `firebase-storage-server-test-${new Date().getTime()}-${COUNTER++}`;
     const firebaseStorage = new GoogleCloudStorage({
       projectId,
-      apiEndpoint: `${config.host}:${config.port}`
+      // ensure http:// is provided so the library doesn't default to/try https://
+      apiEndpoint: `http://${config.host}:${config.port}`
     });
 
     const defaultBucketId = projectId;

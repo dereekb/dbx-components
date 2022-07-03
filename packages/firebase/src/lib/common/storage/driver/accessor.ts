@@ -11,11 +11,34 @@ export interface FirebaseStorageAccessorFile<R extends unknown = unknown> extend
    * Returns the underlying reference type.
    */
   readonly reference: R;
+  /**
+   * Returns true if the file exists.
+   */
+  exists(): Promise<boolean>;
+  /**
+   *
+   */
   getDownloadUrl(): Promise<StorageDownloadUrl>;
   /**
    * Returns the metadata from the input objects.
    */
   getMetadata(): Promise<StorageMetadata>;
+  /**
+   * Downloads the data as an ArrayBuffer.
+   */
+  getBytes(maxDownloadSizeBytes?: number): Promise<ArrayBuffer>;
+  /**
+   * Downloads the data as a Blob.
+   *
+   * Available only in the browser.
+   */
+  getBlob?(maxDownloadSizeBytes?: number): Promise<Blob>;
+  /**
+   * Returns a ReadableStream of the bytes.
+   *
+   * Available only in NodeJS.
+   */
+  getStream?(maxDownloadSizeBytes?: number): NodeJS.ReadableStream;
   /**
    * Uploads data to the file's path.
    */
@@ -27,11 +50,11 @@ export interface FirebaseStorageAccessorFile<R extends unknown = unknown> extend
    */
   uploadResumable?(data: StorageClientUploadBytesInput, options?: StorageUploadOptions): StorageUploadTask;
   /**
-   * Uploads arbitrary data to the file's path using a stream.
+   * Returns a WritableStream that can be written to.
    *
    * Optional implementation.
    */
-  streamUpload?(data: StorageUploadInput): Promise<any>;
+  uploadStream?(options?: StorageUploadOptions): NodeJS.WritableStream;
 }
 
 /**

@@ -1,8 +1,8 @@
-import { authorizedTestWithMockItemStorage, describeFirebaseStorageAccessorDriverTests } from '@dereekb/firebase/test';
-import { dbxComponentsAdminTestWithMockItemCollection } from '@dereekb/firebase-server/test';
+import { describeFirebaseStorageAccessorDriverTests } from '@dereekb/firebase/test';
+import { dbxComponentsAdminTestWithMockItemStorage } from '@dereekb/firebase-server/test';
 
 describe('firebase storage server', () => {
-  authorizedTestWithMockItemStorage((f) => {
+  dbxComponentsAdminTestWithMockItemStorage((f) => {
     describeFirebaseStorageAccessorDriverTests(f);
   });
 });

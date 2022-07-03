@@ -2,7 +2,7 @@ import { FirebaseStorageAccessorDriver, FirebaseStorageAccessorFile, FirebaseSto
 import { StorageReference, getDownloadURL, FirebaseStorage as ClientFirebaseStorage, ref } from '@firebase/storage';
 import { firebaseStorageFilePathFromStorageFilePath, StoragePath } from '../../common/storage/storage';
 import { FirebaseStorage, StorageClientUploadBytesInput, StorageClientUploadInput, StorageDataString, StorageUploadOptions } from '../../common/storage/types';
-import { getMetadata, uploadBytes, uploadBytesResumable, UploadMetadata, uploadString } from 'firebase/storage';
+import { getBytes, getMetadata, uploadBytes, uploadBytesResumable, UploadMetadata, uploadString } from 'firebase/storage';
 
 export function firebaseStorageRefForStorageFilePath(storage: ClientFirebaseStorage, path: StoragePath): StorageReference {
   return ref(storage, firebaseStorageFilePathFromStorageFilePath(path));
@@ -33,6 +33,11 @@ export function firebaseStorageClientAccessorFile(storage: ClientFirebaseStorage
   return {
     reference: ref,
     storagePath,
+    exists: () =>
+      getMetadata(ref).then(
+        (_) => true,
+        (_) => false
+      ),
     getDownloadUrl: () => getDownloadURL(ref),
     getMetadata: () => getMetadata(ref),
     upload: (input, options) => {
@@ -44,6 +49,7 @@ export function firebaseStorageClientAccessorFile(storage: ClientFirebaseStorage
         return uploadBytes(ref, input as StorageClientUploadBytesInput, metadataOption);
       }
     },
+    getBytes: (maxDownloadSizeBytes) => getBytes(ref, maxDownloadSizeBytes),
     uploadResumable: (input, options) => {
       let metadataOption: UploadMetadata | undefined = asUploadMetadata(options);
       return uploadBytesResumable(ref, input as StorageClientUploadBytesInput, metadataOption);
