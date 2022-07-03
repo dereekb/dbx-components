@@ -1,6 +1,6 @@
 import { StorageBucketId } from './../storage';
 import { StoragePath, StoragePathRef } from '../storage';
-import { FirebaseStorage, StorageClientUploadBytesInput, StorageDownloadUrl, StorageMetadata, StorageUploadInput, StorageUploadOptions, StorageUploadResult, StorageUploadTask } from '../types';
+import { FirebaseStorage, StorageClientUploadBytesInput, StorageDeleteFileOptions, StorageDownloadUrl, StorageMetadata, StorageUploadInput, StorageUploadOptions, StorageUploadResult, StorageUploadTask } from '../types';
 import { Maybe } from '@dereekb/util';
 
 /**
@@ -55,6 +55,12 @@ export interface FirebaseStorageAccessorFile<R extends unknown = unknown> extend
    * Optional implementation.
    */
   uploadStream?(options?: StorageUploadOptions): NodeJS.WritableStream;
+  /**
+   * Deletes the file.
+   *
+   * Throws an error if the file does not exist.
+   */
+  delete(options?: StorageDeleteFileOptions): Promise<void>;
 }
 
 /**

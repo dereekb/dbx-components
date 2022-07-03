@@ -1,6 +1,7 @@
-import { StorageServerUploadInput, FirebaseStorageAccessorDriver, FirebaseStorageAccessorFile, FirebaseStorageAccessorFolder, FirebaseStorage, StoragePath } from '@dereekb/firebase';
-import { Maybe } from '@dereekb/util';
-import { Storage as GoogleCloudStorage, File as GoogleCloudFile, DownloadOptions } from '@google-cloud/storage';
+import { StorageUploadOptions, StorageServerUploadInput, FirebaseStorageAccessorDriver, FirebaseStorageAccessorFile, FirebaseStorageAccessorFolder, FirebaseStorage, StoragePath, assertStorageUploadOptionsStringFormat, StorageDeleteFileOptions } from '@dereekb/firebase';
+import { Maybe, PromiseOrValue } from '@dereekb/util';
+import { SaveOptions, CreateWriteStreamOptions, Storage as GoogleCloudStorage, File as GoogleCloudFile, DownloadOptions } from '@google-cloud/storage';
+import { isArrayBuffer, isUint8Array } from 'util/types';
 
 export function googleCloudStorageFileForStorageFilePath(storage: GoogleCloudStorage, path: StoragePath) {
   return storage.bucket(path.bucketId).file(path.pathString);
@@ -22,6 +23,23 @@ export function googleCloudStorageAccessorFile(storage: GoogleCloudStorage, stor
     };
   }
 
+  function makeUploadOptions(options?: StorageUploadOptions): SaveOptions | CreateWriteStreamOptions {
+    let metadata: object | undefined;
+
+    if (options?.contentType) {
+      metadata = {
+        contentType: options?.contentType
+      };
+    }
+
+    return {
+      // non-resumable
+      resumable: false,
+      // add content type
+      ...(metadata ? { metadata } : undefined)
+    };
+  }
+
   return {
     reference: file,
     storagePath,
@@ -30,14 +48,39 @@ export function googleCloudStorageAccessorFile(storage: GoogleCloudStorage, stor
     getMetadata: () => file.getMetadata().then((x) => x[0]),
     getBytes: (maxDownloadSizeBytes) => file.download(makeDownloadOptions(maxDownloadSizeBytes)).then((x) => x[0]),
     getStream: (maxDownloadSizeBytes) => file.createReadStream(makeDownloadOptions(maxDownloadSizeBytes)),
-    upload: (input, options) =>
-      file.save(input as StorageServerUploadInput, {
-        // non-resumable
-        resumable: false,
-        // add content type
-        ...(options?.contentType ? { contentType: options?.contentType } : undefined)
-      }),
-    uploadStream: (options) => file.createWriteStream({ ...(options?.contentType ? { contentType: options?.contentType } : undefined) })
+    upload: async (input, options) => {
+      let dataToUpload: PromiseOrValue<Buffer>;
+
+      if (typeof input === 'string') {
+        const parsedStringFormat = assertStorageUploadOptionsStringFormat(options);
+        const stringFormat = parsedStringFormat === 'raw' ? 'utf-8' : parsedStringFormat;
+
+        if (stringFormat === 'data_url') {
+          // todo: support this later if necessary. Server should really never see this type.
+          throw new Error('"data_url" is unsupported.');
+        }
+
+        dataToUpload = Buffer.from(input, stringFormat);
+      } else {
+        if (Buffer.isBuffer(input)) {
+          dataToUpload = input;
+        } else if (isUint8Array(input)) {
+          dataToUpload = Buffer.from(input);
+        } else {
+          // NOTE: these values shouldn't ever be encountered in the NodeJS environment. May remove later.
+          if (isArrayBuffer(input)) {
+            dataToUpload = Buffer.from(input);
+          } else {
+            dataToUpload = input.arrayBuffer().then((x) => Buffer.from(x));
+          }
+        }
+      }
+
+      const data = await dataToUpload;
+      return file.save(data, makeUploadOptions(options));
+    },
+    uploadStream: (options) => file.createWriteStream(makeUploadOptions(options)),
+    delete: (options: StorageDeleteFileOptions) => file.delete(options).then((x) => undefined)
   };
 }
 

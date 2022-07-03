@@ -1,7 +1,7 @@
 import { MockItemStorageFixture } from '../mock/mock.item.storage.fixture';
 import { itShouldFail, expectFail } from '@dereekb/util/test';
 import { readableStreamToBuffer, useCallback } from '@dereekb/util';
-import { FirebaseStorageAccessorFile, StorageRawDataString } from '@dereekb/firebase';
+import { FirebaseStorageAccessorFile, StorageRawDataString, StorageBase64DataString } from '@dereekb/firebase';
 
 /**
  * Describes accessor driver tests, using a MockItemCollectionFixture.
@@ -15,16 +15,16 @@ export function describeFirebaseStorageAccessorDriverTests(f: MockItemStorageFix
       let doesNotExistFile: FirebaseStorageAccessorFile;
 
       const existsFilePath = 'exists.txt';
-      const existsFileContent = 'hello world';
-      let file: FirebaseStorageAccessorFile;
+      const existsFileContent = 'Hello! \ud83d\ude0a';
+      let existsFile: FirebaseStorageAccessorFile;
 
       beforeEach(async () => {
         doesNotExistFile = f.storageContext.file(doesNotExistFilePath);
-        file = f.storageContext.file(existsFilePath);
-        await file.upload(existsFileContent, { stringFormat: 'raw', contentType: 'text/plain' });
+        existsFile = f.storageContext.file(existsFilePath);
+        await existsFile.upload(existsFileContent, { stringFormat: 'raw', contentType: 'text/plain' });
       });
 
-      describe('uploading data', () => {
+      describe('uploading', () => {
         let uploadFile: FirebaseStorageAccessorFile;
 
         beforeEach(() => {
@@ -32,19 +32,100 @@ export function describeFirebaseStorageAccessorDriverTests(f: MockItemStorageFix
         });
 
         describe('upload()', () => {
-          it('should upload a raw string.', async () => {
-            const contentType = 'text/plain';
-            const data: StorageRawDataString = existsFileContent;
-            await uploadFile.upload(data, { stringFormat: 'raw', contentType });
+          describe('string types', () => {
+            itShouldFail('if stringFormat is not defined in the options', async () => {
+              const contentType = 'text/plain';
+              const data: StorageRawDataString = existsFileContent;
+              await expectFail(() => uploadFile.upload(data, { contentType }));
+            });
 
-            const metadata = await uploadFile.getMetadata();
-            expect(metadata.contentType).toBe(contentType);
+            it('should upload a raw UTF-16 string.', async () => {
+              const contentType = 'text/plain';
+              const data: StorageRawDataString = existsFileContent;
+              await uploadFile.upload(data, { stringFormat: 'raw', contentType });
 
-            const result = await uploadFile.getBytes();
-            expect(result).toBeDefined();
+              const metadata = await uploadFile.getMetadata();
+              expect(metadata.contentType).toBe(contentType);
 
-            const decoded = Buffer.from(result).toString('utf-8');
-            expect(decoded).toBe(data);
+              const result = await uploadFile.getBytes();
+              expect(result).toBeDefined();
+
+              const decoded = Buffer.from(result).toString('utf-8');
+              expect(decoded).toBe(data);
+            });
+
+            it('should upload a base64 string.', async () => {
+              const bytes = await existsFile.getBytes();
+              const data: StorageBase64DataString = Buffer.from(bytes).toString('base64');
+
+              const contentType = 'text/plain';
+              await uploadFile.upload(data, { stringFormat: 'base64', contentType });
+
+              const metadata = await uploadFile.getMetadata();
+              expect(metadata.contentType).toBe(contentType);
+
+              const result = await uploadFile.getBytes();
+              expect(result).toBeDefined();
+
+              const decoded = Buffer.from(result).toString('utf-8');
+              expect(decoded).toBe(existsFileContent);
+            });
+
+            it('should upload a base64url string.', async () => {
+              const bytes = await existsFile.getBytes();
+              const data: StorageBase64DataString = Buffer.from(bytes).toString('base64url');
+
+              const contentType = 'text/plain';
+              await uploadFile.upload(data, { stringFormat: 'base64url', contentType });
+
+              const metadata = await uploadFile.getMetadata();
+              expect(metadata.contentType).toBe(contentType);
+
+              const result = await uploadFile.getBytes();
+              expect(result).toBeDefined();
+
+              const decoded = Buffer.from(result).toString('utf-8');
+              expect(decoded).toBe(existsFileContent);
+            });
+          });
+
+          describe('data types', () => {
+            // NOTE: We can really only test how a NodeJS environment will behave here.
+
+            it('should upload a Uint8Array', async () => {
+              const dataBuffer = Buffer.from(existsFileContent, 'utf-8');
+              const data = new Uint8Array(dataBuffer);
+
+              const contentType = 'text/plain';
+              await uploadFile.upload(data, { contentType });
+
+              const metadata = await uploadFile.getMetadata();
+              expect(metadata.contentType).toBe(contentType);
+            });
+
+            it('should upload a Buffer', async () => {
+              const buffer = Buffer.from(existsFileContent, 'utf-8');
+
+              const contentType = 'text/plain';
+              await uploadFile.upload(buffer, { contentType });
+
+              const metadata = await uploadFile.getMetadata();
+              expect(metadata.contentType).toBe(contentType);
+            });
+
+            it('should upload a Blob', async () => {
+              const buffer = Buffer.from(existsFileContent, 'utf-8');
+              const data = new Uint8Array(buffer);
+              const blob = data.buffer; // blob-like
+
+              const contentType = 'text/plain';
+              await uploadFile.upload(blob as any, { contentType });
+
+              const metadata = await uploadFile.getMetadata();
+              expect(metadata.contentType).toBe(contentType);
+            });
+
+            // NOTE: File extends Blob, so above test should cover it ok.
           });
 
           // TODO: Test uploading other types.
@@ -75,7 +156,7 @@ export function describeFirebaseStorageAccessorDriverTests(f: MockItemStorageFix
 
       describe('exists()', () => {
         it('should return true if the file exists.', async () => {
-          const result = await file.exists();
+          const result = await existsFile.exists();
           expect(result).toBe(true);
         });
 
@@ -91,7 +172,7 @@ export function describeFirebaseStorageAccessorDriverTests(f: MockItemStorageFix
         });
 
         it('should return the metadata.', async () => {
-          const result = await file.getMetadata();
+          const result = await existsFile.getMetadata();
           expect(result).toBeDefined();
         });
       });
@@ -102,7 +183,7 @@ export function describeFirebaseStorageAccessorDriverTests(f: MockItemStorageFix
         });
 
         it('should download the file.', async () => {
-          const result = await file.getBytes();
+          const result = await existsFile.getBytes();
           expect(result).toBeDefined();
 
           const decoded = Buffer.from(result).toString('utf-8');
@@ -112,7 +193,7 @@ export function describeFirebaseStorageAccessorDriverTests(f: MockItemStorageFix
         describe('with maxDownloadSizeBytes configuration', () => {
           it('should download up to the maxDownloadSizeBytes number of bytes', async () => {
             const charactersToTake = 5;
-            const result = await file.getBytes(charactersToTake); // each normal utf-8 character is 1 byte
+            const result = await existsFile.getBytes(charactersToTake); // each normal utf-8 character is 1 byte
             expect(result).toBeDefined();
 
             const decoded = Buffer.from(result).toString('utf-8');
@@ -123,9 +204,9 @@ export function describeFirebaseStorageAccessorDriverTests(f: MockItemStorageFix
 
       describe('getStream()', () => {
         it('should download the file.', async () => {
-          if (file.getStream != null) {
+          if (existsFile.getStream != null) {
             // only test if the driver/file has getStream available
-            const stream = file.getStream();
+            const stream = existsFile.getStream();
             expect(stream).toBeDefined();
 
             const buffer = await readableStreamToBuffer(stream);
@@ -142,9 +223,28 @@ export function describeFirebaseStorageAccessorDriverTests(f: MockItemStorageFix
         });
 
         it('should return the download url.', async () => {
-          const result = await file.getDownloadUrl();
+          const result = await existsFile.getDownloadUrl();
           expect(result).toBeDefined();
           expect(typeof result).toBe('string');
+        });
+      });
+
+      describe('delete()', () => {
+        itShouldFail('if the file does not exist.', async () => {
+          await expectFail(() => doesNotExistFile.delete());
+        });
+
+        it('should delete the file at the path.', async () => {
+          await existsFile.delete();
+
+          const result = await existsFile.exists();
+          expect(result).toBe(false);
+        });
+
+        describe('ignoreNotFound=true', () => {
+          it('should not throw an error if the file does not exist.', async () => {
+            await doesNotExistFile.delete({ ignoreNotFound: true });
+          });
         });
       });
     });

@@ -29,7 +29,7 @@ export type StorageDownloadUrl = string;
 
 /**
  * Example:
- * '5b6p5Y+344GX44G+44GX44Gf77yB44GK44KB44Gn44Go44GG77yB';
+ * 'Hello! \\ud83d\\ude0a';
  */
 export type StorageRawDataString = string;
 
@@ -104,9 +104,14 @@ export type StorageClientUploadBytesInput = File | Blob | Uint8Array;
 export type StorageClientUploadInput = StorageClientUploadBytesInput | StorageDataString;
 
 /**
+ * Known types that can be uploaded by the client implementation.
+ */
+export type StorageServerUploadBytesInput = Buffer | Uint8Array;
+
+/**
  * Known types that can be uploaded by the server implementation.
  */
-export type StorageServerUploadInput = Buffer | StorageDataString;
+export type StorageServerUploadInput = StorageServerUploadBytesInput | StorageDataString;
 
 export type StorageUploadInput = StorageClientUploadInput | StorageServerUploadInput;
 
@@ -134,7 +139,7 @@ export type StorageUploadResult = StorageClientUploadResult | unknown;
 export interface StorageUploadOptions {
   resumable?: boolean;
   /**
-   * String format to handle the upload as.
+   * String format to handle the upload as. Required if the input is a string.
    */
   stringFormat?: StorageDataStringType;
   /**
@@ -144,7 +149,7 @@ export interface StorageUploadOptions {
   /**
    * other metadata to attach to the file.
    */
-  metadata?: StorageMetadata; // todo: ...
+  metadata?: StorageMetadata;
 }
 
 /**
@@ -222,3 +227,10 @@ export type StorageMetadata = {
 export type StorageCustomMetadata = {
   [key: string]: string;
 };
+
+export interface StorageDeleteFileOptions {
+  /**
+   * Ignores errors related to the file not existing.
+   */
+  ignoreNotFound?: boolean;
+}

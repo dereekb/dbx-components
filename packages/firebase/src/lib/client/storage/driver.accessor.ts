@@ -1,8 +1,14 @@
 import { FirebaseStorageAccessorDriver, FirebaseStorageAccessorFile, FirebaseStorageAccessorFolder } from '../../common/storage/driver/accessor';
 import { StorageReference, getDownloadURL, FirebaseStorage as ClientFirebaseStorage, ref } from '@firebase/storage';
 import { firebaseStorageFilePathFromStorageFilePath, StoragePath } from '../../common/storage/storage';
-import { FirebaseStorage, StorageClientUploadBytesInput, StorageClientUploadInput, StorageDataString, StorageUploadOptions } from '../../common/storage/types';
-import { getBytes, getMetadata, uploadBytes, uploadBytesResumable, UploadMetadata, uploadString } from 'firebase/storage';
+import { FirebaseStorage, StorageClientUploadBytesInput, StorageClientUploadInput, StorageDataString, StorageDeleteFileOptions, StorageUploadOptions } from '../../common/storage/types';
+import { getBytes, getMetadata, uploadBytes, uploadBytesResumable, UploadMetadata, uploadString, deleteObject, getBlob } from 'firebase/storage';
+import { assertStorageUploadOptionsStringFormat } from '../../common';
+import { ErrorInput, errorMessageContainsString, Maybe } from '@dereekb/util';
+
+export function isFirebaseStorageObjectNotFoundError(input: Maybe<ErrorInput | string>): boolean {
+  return errorMessageContainsString(input, 'storage/object-not-found');
+}
 
 export function firebaseStorageRefForStorageFilePath(storage: ClientFirebaseStorage, path: StoragePath): StorageReference {
   return ref(storage, firebaseStorageFilePathFromStorageFilePath(path));
@@ -41,19 +47,28 @@ export function firebaseStorageClientAccessorFile(storage: ClientFirebaseStorage
     getDownloadUrl: () => getDownloadURL(ref),
     getMetadata: () => getMetadata(ref),
     upload: (input, options) => {
+      const inputType = typeof input === 'string';
       let metadataOption: UploadMetadata | undefined = asUploadMetadata(options);
 
-      if (typeof input === 'string') {
-        return uploadString(ref, input as StorageDataString, options?.stringFormat ?? 'base64', metadataOption);
+      if (inputType) {
+        const stringFormat = assertStorageUploadOptionsStringFormat(options);
+        return uploadString(ref, input as StorageDataString, stringFormat, metadataOption);
       } else {
         return uploadBytes(ref, input as StorageClientUploadBytesInput, metadataOption);
       }
     },
     getBytes: (maxDownloadSizeBytes) => getBytes(ref, maxDownloadSizeBytes),
+    getBlob: (maxDownloadSizeBytes) => getBlob(ref, maxDownloadSizeBytes),
     uploadResumable: (input, options) => {
       let metadataOption: UploadMetadata | undefined = asUploadMetadata(options);
       return uploadBytesResumable(ref, input as StorageClientUploadBytesInput, metadataOption);
-    }
+    },
+    delete: (options: StorageDeleteFileOptions) =>
+      deleteObject(ref).catch((x) => {
+        if (!options.ignoreNotFound || !isFirebaseStorageObjectNotFoundError(x)) {
+          throw x;
+        }
+      })
   };
 }
 
