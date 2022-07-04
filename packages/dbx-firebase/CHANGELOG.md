@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [8.10.0](https://github.com/dereekb/dbx-components/compare/v8.9.1-dev...v8.10.0) (2022-07-04)
+
+
+### Features
+
+* added DbxFirebaseStorageService ([deeaa02](https://github.com/dereekb/dbx-components/commit/deeaa02908f4acb754afc52d42033734bd034924))
+
+
+
 ## [8.9.1](https://github.com/dereekb/dbx-components/compare/v8.9.0-dev...v8.9.1) (2022-06-30)
 
 
