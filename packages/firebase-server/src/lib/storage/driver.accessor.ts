@@ -1,10 +1,14 @@
-import { StorageUploadOptions, StorageServerUploadInput, FirebaseStorageAccessorDriver, FirebaseStorageAccessorFile, FirebaseStorageAccessorFolder, FirebaseStorage, StoragePath, assertStorageUploadOptionsStringFormat, StorageDeleteFileOptions } from '@dereekb/firebase';
-import { Maybe, PromiseOrValue } from '@dereekb/util';
-import { SaveOptions, CreateWriteStreamOptions, Storage as GoogleCloudStorage, File as GoogleCloudFile, DownloadOptions } from '@google-cloud/storage';
+import { StorageUploadOptions, StorageServerUploadInput, FirebaseStorageAccessorDriver, FirebaseStorageAccessorFile, FirebaseStorageAccessorFolder, FirebaseStorage, StoragePath, assertStorageUploadOptionsStringFormat, StorageDeleteFileOptions, StorageListFilesOptions, storageListFilesResultFactory, StorageListItemResult, StorageListFilesResult, StorageMetadata, StorageBucketId } from '@dereekb/firebase';
+import { fixMultiSlashesInSlashPath, ISO8601DateString, Maybe, PromiseOrValue, SlashPathFolder, slashPathName, SLASH_PATH_SEPARATOR, toRelativeSlashPathStartType, useCallback } from '@dereekb/util';
+import { SaveOptions, CreateWriteStreamOptions, GetFilesOptions, Storage as GoogleCloudStorage, File as GoogleCloudFile, Bucket as GoogleCloudBucket, DownloadOptions } from '@google-cloud/storage';
 import { isArrayBuffer, isUint8Array } from 'util/types';
 
+export function googleCloudStorageBucketForStorageFilePath(storage: GoogleCloudStorage, path: StoragePath) {
+  return storage.bucket(path.bucketId);
+}
+
 export function googleCloudStorageFileForStorageFilePath(storage: GoogleCloudStorage, path: StoragePath) {
-  return storage.bucket(path.bucketId).file(path.pathString);
+  return googleCloudStorageBucketForStorageFilePath(storage, path).file(path.pathString);
 }
 
 export interface GoogleCloudStorageAccessorFile extends FirebaseStorageAccessorFile<GoogleCloudFile> {}
@@ -86,13 +90,91 @@ export function googleCloudStorageAccessorFile(storage: GoogleCloudStorage, stor
 
 export interface GoogleCloudStorageAccessorFolder extends FirebaseStorageAccessorFolder<GoogleCloudFile> {}
 
-export function googleCloudStorageAccessorFolder(storage: GoogleCloudStorage, storagePath: StoragePath): GoogleCloudStorageAccessorFolder {
-  const file = googleCloudStorageFileForStorageFilePath(storage, storagePath);
+export interface GoogleCloudListResult {
+  files: GoogleCloudFile[];
+  nextQuery?: GetFilesOptions;
+  apiResponse: GoogleCloudStorageListApiResponse;
+}
 
-  return {
+export interface GoogleCloudStorageListApiResponse {
+  prefixes?: SlashPathFolder[];
+  items?: GoogleCloudStorageListApiResponseItem[];
+}
+
+export interface GoogleCloudStorageListApiResponseItem extends Pick<StorageMetadata, 'size' | 'generation' | 'metageneration' | 'contentDisposition' | 'contentType' | 'timeCreated' | 'updated' | 'contentEncoding' | 'md5Hash' | 'cacheControl'> {
+  kind: '#storage#object';
+  /**
+   * For the api response, the name is actually the full path in the bucket.
+   */
+  name: string;
+  bucket: StorageBucketId;
+}
+
+export const googleCloudStorageListFilesResultFactory = storageListFilesResultFactory({
+  hasItems(result: GoogleCloudListResult): boolean {
+    return Boolean(result.apiResponse.items || result.apiResponse.prefixes);
+  },
+  hasNext: (result: GoogleCloudListResult) => {
+    return result.nextQuery != null;
+  },
+  next(storage: GoogleCloudStorage, folder: FirebaseStorageAccessorFolder, result: GoogleCloudListResult): Promise<StorageListFilesResult> {
+    return folder.list(result.nextQuery);
+  },
+  file(storage: GoogleCloudStorage, fileResult: StorageListItemResult): FirebaseStorageAccessorFile {
+    return googleCloudStorageAccessorFile(storage, fileResult.storagePath);
+  },
+  folder(storage: GoogleCloudStorage, folderResult: StorageListItemResult): FirebaseStorageAccessorFolder {
+    return googleCloudStorageAccessorFolder(storage, folderResult.storagePath);
+  },
+  filesFromResult(result: GoogleCloudListResult): StorageListItemResult[] {
+    const items = result.apiResponse?.items ?? [];
+    return items.map((x) => ({ raw: x, name: slashPathName(x.name), storagePath: { bucketId: x.bucket, pathString: x.name } }));
+  },
+  foldersFromResult(result: GoogleCloudListResult, folder: FirebaseStorageAccessorFolder): StorageListItemResult[] {
+    const items = result.apiResponse?.prefixes ?? [];
+    return items.map((prefix) => ({ raw: prefix, name: slashPathName(prefix), storagePath: { bucketId: folder.storagePath.bucketId, pathString: prefix } }));
+  }
+});
+
+export function googleCloudStorageAccessorFolder(storage: GoogleCloudStorage, storagePath: StoragePath): GoogleCloudStorageAccessorFolder {
+  const bucket = googleCloudStorageBucketForStorageFilePath(storage, storagePath);
+  const file = bucket.file(storagePath.pathString);
+
+  const folder: GoogleCloudStorageAccessorFolder = {
     reference: file,
-    storagePath
+    storagePath,
+    exists: async () => folder.list({ maxResults: 1 }).then((x) => x.hasItems()),
+    list: (options?: StorageListFilesOptions) => {
+      return new Promise((resolve, reject) => {
+        bucket.getFiles(
+          {
+            ...options,
+            delimiter: SLASH_PATH_SEPARATOR,
+            autoPaginate: false,
+            versions: false,
+            maxResults: options?.maxResults,
+            // includeTrailingDelimiter: true,
+            prefix: toRelativeSlashPathStartType(fixMultiSlashesInSlashPath(storagePath.pathString + '/')) // make sure the folder always ends with a slash
+          },
+          (err: Error | null, files?: GoogleCloudFile[], nextQuery?: GetFilesOptions, apiResponse?: GoogleCloudStorageListApiResponse) => {
+            if (err) {
+              reject(err);
+            } else {
+              const result: GoogleCloudListResult = {
+                files: files as GoogleCloudFile[],
+                nextQuery,
+                apiResponse: apiResponse as object
+              };
+
+              resolve(googleCloudStorageListFilesResultFactory(storage, folder, options, result));
+            }
+          }
+        );
+      });
+    }
   };
+
+  return folder;
 }
 
 export function googleCloudStorageFirebaseStorageAccessorDriver(): FirebaseStorageAccessorDriver {

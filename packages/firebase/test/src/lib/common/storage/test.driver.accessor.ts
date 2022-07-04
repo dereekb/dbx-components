@@ -1,7 +1,7 @@
 import { MockItemStorageFixture } from '../mock/mock.item.storage.fixture';
 import { itShouldFail, expectFail } from '@dereekb/util/test';
-import { readableStreamToBuffer, useCallback } from '@dereekb/util';
-import { FirebaseStorageAccessorFile, StorageRawDataString, StorageBase64DataString } from '@dereekb/firebase';
+import { readableStreamToBuffer, SlashPathFolder, useCallback } from '@dereekb/util';
+import { FirebaseStorageAccessorFile, StorageRawDataString, StorageBase64DataString, FirebaseStorageAccessorFolder } from '@dereekb/firebase';
 
 /**
  * Describes accessor driver tests, using a MockItemCollectionFixture.
@@ -10,7 +10,7 @@ import { FirebaseStorageAccessorFile, StorageRawDataString, StorageBase64DataStr
  */
 export function describeFirebaseStorageAccessorDriverTests(f: MockItemStorageFixture) {
   describe('FirebaseStorageAccessor', () => {
-    describe('file', () => {
+    describe('file()', () => {
       const doesNotExistFilePath = 'test.png';
       let doesNotExistFile: FirebaseStorageAccessorFile;
 
@@ -244,6 +244,193 @@ export function describeFirebaseStorageAccessorDriverTests(f: MockItemStorageFix
         describe('ignoreNotFound=true', () => {
           it('should not throw an error if the file does not exist.', async () => {
             await doesNotExistFile.delete({ ignoreNotFound: true });
+          });
+        });
+      });
+    });
+
+    describe('folder()', () => {
+      const doesNotExistFolderPath: SlashPathFolder = '/doesnotexist/';
+      let doesNotExistFolder: FirebaseStorageAccessorFolder;
+
+      const existsFolderPath = '/test/two/';
+      let existsFolder: FirebaseStorageAccessorFolder;
+
+      const existsFileName = 'exists.txt';
+      const existsFilePath = existsFolderPath + existsFileName;
+
+      const existsFileContent = 'Hello! \ud83d\ude0a';
+      let existsFile: FirebaseStorageAccessorFile;
+
+      beforeEach(async () => {
+        doesNotExistFolder = f.storageContext.folder(doesNotExistFolderPath);
+        existsFolder = f.storageContext.folder(existsFolderPath);
+        existsFile = f.storageContext.file(existsFilePath);
+        await existsFile.upload(existsFileContent, { stringFormat: 'raw', contentType: 'text/plain' });
+      });
+
+      describe('exists', () => {
+        it('should return false if there are no items in the folder.', async () => {
+          const exists = await doesNotExistFolder.exists();
+          expect(exists).toBe(false);
+        });
+
+        it('should return true if there are items in the folder.', async () => {
+          const exists = await existsFolder.exists();
+          expect(exists).toBe(true);
+        });
+      });
+
+      describe('list', () => {
+        const existsBFileName = 'a.txt';
+        const existsBFilePath = existsFolderPath + existsBFileName;
+
+        const existsCFolderPath = existsFolderPath + 'c/';
+        const existsCFilePath = existsCFolderPath + 'c.txt';
+
+        const otherFolderPath = '/other/';
+        const otherFolderFilePath = otherFolderPath + 'other.txt';
+
+        beforeEach(async () => {
+          await f.storageContext.file(existsBFilePath).upload(existsFileContent, { stringFormat: 'raw', contentType: 'text/plain' });
+          await f.storageContext.file(existsCFilePath).upload(existsFileContent, { stringFormat: 'raw', contentType: 'text/plain' });
+          await f.storageContext.file(otherFolderFilePath).upload(existsFileContent, { stringFormat: 'raw', contentType: 'text/plain' });
+        });
+
+        describe('file()', () => {
+          it('should return the file for the result.', async () => {
+            const result = await existsFolder.list();
+            expect(result).toBeDefined();
+
+            const files = result.files();
+            const fileResult = files.find((x) => x.name === existsFileName);
+
+            const file = fileResult!.file();
+
+            const exists = await file.exists();
+            expect(exists).toBe(true);
+          });
+        });
+
+        describe('folder()', () => {
+          it('should return the folder for the result.', async () => {
+            const rootFolder = await f.storageContext.folder('/');
+
+            const result = await rootFolder.list();
+            expect(result).toBeDefined();
+
+            const folders = result.folders();
+            const folderResult = folders.find((x) => x.name === 'test');
+
+            const folder = folderResult!.folder();
+
+            const exists = await folder.exists();
+            expect(exists).toBe(true);
+          });
+        });
+
+        describe('next()', () => {
+          it('should return the next set of results.', async () => {
+            const maxResults = 1;
+            const rootFolder = await f.storageContext.folder(existsFolderPath);
+
+            const result = await rootFolder.list({ maxResults });
+            expect(result).toBeDefined();
+
+            const files = result.files();
+            expect(files.length).toBe(maxResults);
+
+            const next = await result.next();
+            expect(next).toBeDefined();
+
+            const nextFiles = next.files();
+            expect(nextFiles.length).toBe(maxResults);
+            expect(nextFiles[0].storagePath.pathString).not.toBe(files[0].storagePath.pathString);
+
+            expect(next.hasNext).toBe(false);
+          });
+
+          itShouldFail('if next() is called and hasNext was false.', async () => {
+            const rootFolder = await f.storageContext.folder(existsFolderPath);
+            const result = await rootFolder.list({});
+
+            expect(result.hasNext).toBe(false);
+
+            await expectFail(() => result.next());
+          });
+        });
+
+        it('should list all the direct files and folders that exist on the test path.', async () => {
+          const result = await existsFolder.list();
+          expect(result).toBeDefined();
+
+          const files = result.files();
+          expect(files.length).toBe(2);
+
+          const fileNames = new Set(files.map((x) => x.name));
+          expect(fileNames).toContain(existsFileName);
+          expect(fileNames).toContain(existsBFileName);
+
+          const folders = result.folders();
+          expect(folders.length).toBe(1);
+
+          const folderNames = new Set(folders.map((x) => x.name));
+          expect(folderNames).toContain('c');
+        });
+
+        it('should list all the direct folders that exist at the root.', async () => {
+          const rootFolder = await f.storageContext.folder('/');
+
+          const result = await rootFolder.list();
+          expect(result).toBeDefined();
+
+          const files = result.files();
+          expect(files.length).toBe(0); // files are under /test/ and /other/
+
+          const folders = result.folders();
+          expect(folders.length).toBe(2);
+
+          const names = new Set(folders.map((x) => x.name));
+
+          expect(names).toContain('test');
+          expect(names).toContain('other');
+        });
+
+        describe('maxResults', () => {
+          it('should respect the max results.', async () => {
+            const maxResults = 1;
+            const rootFolder = await f.storageContext.folder(existsFolderPath);
+
+            const result = await rootFolder.list({ maxResults });
+            expect(result).toBeDefined();
+
+            const files = result.files();
+            expect(files.length).toBe(maxResults);
+
+            const folders = result.folders();
+            expect(folders.length).toBe(1);
+
+            const names = new Set(folders.map((x) => x.name));
+            expect(names).toContain('c');
+          });
+
+          it('prefixes/folders are unaffected by maxResults.', async () => {
+            const maxResults = 1;
+            const rootFolder = await f.storageContext.folder('/');
+
+            const result = await rootFolder.list({ maxResults });
+            expect(result).toBeDefined();
+
+            const files = result.files();
+            expect(files.length).toBe(0); // files are under /test/ and /other/
+
+            const folders = result.folders();
+            expect(folders.length).toBe(2);
+
+            const names = new Set(folders.map((x) => x.name));
+
+            expect(names).toContain('test');
+            expect(names).toContain('other');
           });
         });
       });

@@ -71,12 +71,89 @@ export interface FirebaseStorageAccessorFile<R extends unknown = unknown> extend
   delete(options?: StorageDeleteFileOptions): Promise<void>;
 }
 
+export interface StorageListFilesOptions {
+  /**
+   * If set, limits the total number of `prefixes` and `items` to return.
+   * The default and maximum maxResults is 1000.
+   */
+  maxResults?: number;
+  /**
+   * The `nextPageToken` from a previous call to `list()`. If provided,
+   * listing is resumed from the previous position.
+   */
+  pageToken?: string;
+}
+
+export interface StorageListItemResult extends StoragePathRef {
+  /**
+   * Raw result
+   */
+  readonly raw?: unknown;
+  /**
+   * Name of the item
+   */
+  readonly name: string;
+}
+
+export interface StorageListFolderResult extends StorageListItemResult {
+  /**
+   * Gets this item as a FirebaseStorageAccessorFolder
+   */
+  folder(): FirebaseStorageAccessorFolder;
+}
+
+export interface StorageListFileResult extends StorageListItemResult {
+  /**
+   * Gets this item as a FirebaseStorageAccessorFile
+   */
+  file(): FirebaseStorageAccessorFile;
+}
+
+export interface StorageListFilesResult<R = unknown> {
+  /**
+   * The raw result.
+   */
+  raw: R;
+  /**
+   * Options used to retrieve the result.
+   */
+  options: StorageListFilesOptions | undefined;
+  /**
+   * Whether or not there are more results available.
+   */
+  hasNext: boolean;
+  /**
+   * Returns true if any files or folders exist in the results.
+   */
+  hasItems(): boolean;
+  /**
+   * Returns all the prefixes/folders in the result.
+   */
+  folders(): StorageListFolderResult[];
+  /**
+   * Returns all the files in the result.
+   */
+  files(): StorageListFileResult[];
+  /**
+   * Returns the next set of results, if available.
+   */
+  next(): Promise<StorageListFilesResult>;
+}
+
 /**
  * Generic interface for accessing "folder" information at the given path.
  */
 export interface FirebaseStorageAccessorFolder<R extends unknown = unknown> extends StoragePathRef {
   readonly reference: R;
-  // todo: list files, etc.
+  /**
+   * Returns true if the folder exists.
+   */
+  exists(): Promise<boolean>;
+  /**
+   * Performs a search for items
+   * @param options
+   */
+  list(options?: StorageListFilesOptions): Promise<StorageListFilesResult>;
 }
 
 export type FirebaseStorageAccessorDriverDefaultBucketFunction = (storage: FirebaseStorage) => Maybe<StorageBucketId>;

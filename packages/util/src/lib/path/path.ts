@@ -100,6 +100,26 @@ export function isValidSlashPath(input: string): input is SlashPath {
 }
 
 /**
+ * Returns the last part of the slash path.
+ *
+ * @param slashPath
+ */
+export function slashPathName(slashPath: SlashPath): string {
+  const parts = slashPathParts(slashPath);
+  return parts[parts.length - 1];
+}
+
+/**
+ * Returns each section of a SlashPath
+ *
+ * @param slashPath
+ * @returns
+ */
+export function slashPathParts(slashPath: SlashPath): string[] {
+  return slashPath.split(SLASH_PATH_SEPARATOR).filter((x) => Boolean(x));
+}
+
+/**
  * Slash path type to enforce.
  * - relative: path that does not start with a slash
  * - absolute: path that starts with a slash

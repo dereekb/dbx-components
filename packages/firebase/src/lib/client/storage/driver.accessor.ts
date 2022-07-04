@@ -1,9 +1,8 @@
-import { FirebaseStorageAccessorDriver, FirebaseStorageAccessorFile, FirebaseStorageAccessorFolder } from '../../common/storage/driver/accessor';
-import { StorageReference, getDownloadURL, FirebaseStorage as ClientFirebaseStorage, ref } from '@firebase/storage';
+import { FirebaseStorageAccessorDriver, FirebaseStorageAccessorFile, FirebaseStorageAccessorFolder, StorageListFilesOptions, StorageListFilesResult, StorageListItemResult } from '../../common/storage/driver/accessor';
 import { firebaseStorageFilePathFromStorageFilePath, StoragePath } from '../../common/storage/storage';
 import { FirebaseStorage, StorageClientUploadBytesInput, StorageClientUploadInput, StorageDataString, StorageDeleteFileOptions, StorageUploadOptions } from '../../common/storage/types';
-import { getBytes, getMetadata, uploadBytes, uploadBytesResumable, UploadMetadata, uploadString, deleteObject, getBlob } from 'firebase/storage';
-import { assertStorageUploadOptionsStringFormat } from '../../common';
+import { ListResult, list, StorageReference, getDownloadURL, FirebaseStorage as ClientFirebaseStorage, ref, getBytes, getMetadata, uploadBytes, uploadBytesResumable, UploadMetadata, uploadString, deleteObject, getBlob } from '@firebase/storage';
+import { assertStorageUploadOptionsStringFormat, storageListFilesResultFactory } from '../../common';
 import { ErrorInput, errorMessageContainsString, Maybe } from '@dereekb/util';
 
 export function isFirebaseStorageObjectNotFoundError(input: Maybe<ErrorInput | string>): boolean {
@@ -12,6 +11,13 @@ export function isFirebaseStorageObjectNotFoundError(input: Maybe<ErrorInput | s
 
 export function firebaseStorageRefForStorageFilePath(storage: ClientFirebaseStorage, path: StoragePath): StorageReference {
   return ref(storage, firebaseStorageFilePathFromStorageFilePath(path));
+}
+
+export function firebaseStorageFileExists(ref: StorageReference): Promise<boolean> {
+  return getMetadata(ref).then(
+    (_) => true,
+    (_) => false
+  );
 }
 
 export interface FirebaseStorageClientAccessorFile extends FirebaseStorageAccessorFile<StorageReference> {}
@@ -39,11 +45,7 @@ export function firebaseStorageClientAccessorFile(storage: ClientFirebaseStorage
   return {
     reference: ref,
     storagePath,
-    exists: () =>
-      getMetadata(ref).then(
-        (_) => true,
-        (_) => false
-      ),
+    exists: () => firebaseStorageFileExists(ref),
     getDownloadUrl: () => getDownloadURL(ref),
     getMetadata: () => getMetadata(ref),
     upload: (input, options) => {
@@ -74,13 +76,49 @@ export function firebaseStorageClientAccessorFile(storage: ClientFirebaseStorage
 
 export interface FirebaseStorageClientAccessorFolder extends FirebaseStorageAccessorFolder<StorageReference> {}
 
+export interface FirebaseStorageClientListResult {
+  listResult: ListResult;
+  options?: StorageListFilesOptions;
+}
+
+export const firebaseStorageClientListFilesResultFactory = storageListFilesResultFactory({
+  hasItems: (result: FirebaseStorageClientListResult) => {
+    return Boolean(result.listResult.items.length || result.listResult.prefixes.length);
+  },
+  hasNext: (result: FirebaseStorageClientListResult) => {
+    return result.listResult.nextPageToken != null;
+  },
+  next(storage: ClientFirebaseStorage, folder: FirebaseStorageAccessorFolder, result: FirebaseStorageClientListResult): Promise<StorageListFilesResult> {
+    return folder.list({
+      ...result.options,
+      pageToken: result.listResult.nextPageToken
+    });
+  },
+  file(storage: ClientFirebaseStorage, fileResult: StorageListItemResult): FirebaseStorageAccessorFile {
+    return firebaseStorageClientAccessorFile(storage, fileResult.storagePath);
+  },
+  folder(storage: ClientFirebaseStorage, folderResult: StorageListItemResult): FirebaseStorageAccessorFolder {
+    return firebaseStorageClientAccessorFolder(storage, folderResult.storagePath);
+  },
+  filesFromResult(result: FirebaseStorageClientListResult): StorageListItemResult[] {
+    return result.listResult.items.map((y) => ({ name: y.name, storagePath: { bucketId: y.bucket, pathString: y.fullPath } }));
+  },
+  foldersFromResult(result: FirebaseStorageClientListResult): StorageListItemResult[] {
+    return result.listResult.prefixes.map((y) => ({ name: y.name, storagePath: { bucketId: y.bucket, pathString: y.fullPath } }));
+  }
+});
+
 export function firebaseStorageClientAccessorFolder(storage: ClientFirebaseStorage, storagePath: StoragePath): FirebaseStorageClientAccessorFolder {
   const ref = firebaseStorageRefForStorageFilePath(storage, storagePath);
 
-  return {
+  const folder: FirebaseStorageClientAccessorFolder = {
     reference: ref,
-    storagePath
+    storagePath,
+    exists: () => folder.list({ maxResults: 1 }).then((x) => x.hasItems()),
+    list: (options?: StorageListFilesOptions) => list(ref, options).then((listResult) => firebaseStorageClientListFilesResultFactory(storage, folder, options, { options, listResult }))
   };
+
+  return folder;
 }
 
 export function firebaseStorageClientAccessorDriver(): FirebaseStorageAccessorDriver {

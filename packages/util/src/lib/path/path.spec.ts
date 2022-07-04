@@ -1,4 +1,18 @@
-import { replaceInvalidFilePathTypeSeparatorsInSlashPath, slashPathFactory, slashPathValidationFactory } from './path';
+import { replaceInvalidFilePathTypeSeparatorsInSlashPath, slashPathFactory, slashPathName, slashPathValidationFactory } from './path';
+
+describe('slashPathName', () => {
+  it('should return the file name', () => {
+    const expected = 'test.txt';
+    const result = slashPathName('/a/b/c/d/' + expected);
+    expect(result).toBe(expected);
+  });
+
+  it('should return the folder name', () => {
+    const expected = 'test';
+    const result = slashPathName('/a/b/c/d/' + expected + '/');
+    expect(result).toBe(expected);
+  });
+});
 
 describe('replaceInvalidFilePathTypeSeparatorsInSlashPath()', () => {
   it('should replace all extra file path type separators', () => {

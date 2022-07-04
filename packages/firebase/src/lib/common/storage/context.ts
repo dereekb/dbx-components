@@ -16,6 +16,9 @@ export interface FirebaseStorageContext<F extends FirebaseStorage = FirebaseStor
  */
 export type FirebaseStorageContextFactory<F extends FirebaseStorage = FirebaseStorage> = (firebaseStorage: F, config?: FirebaseStorageContextFactoryConfig) => FirebaseStorageContext;
 
+/**
+ * firebaseStorageContextFactory() configuration
+ */
 export interface FirebaseStorageContextFactoryConfig {
   /**
    * The default bucket
