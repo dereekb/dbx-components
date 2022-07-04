@@ -1,8 +1,11 @@
 import * as admin from 'firebase-admin';
-import { InjectionToken, Module, ModuleMetadata, Provider } from '@nestjs/common';
+import { FactoryProvider, InjectionToken, Module, ModuleMetadata, Provider } from '@nestjs/common';
 import { ClassLikeType } from '@dereekb/util';
 import { FIREBASE_APP_TOKEN } from '../firebase/firebase.nest';
 import { googleCloudFirebaseStorageContextFactory } from './storage';
+import { FirebaseServerStorageService } from './storage.service';
+import { AdditionalModuleMetadata, mergeModuleMetadata } from '@dereekb/nestjs';
+import { FirebaseStorageContext, FirebaseStorageContextFactoryConfig, StorageBucketId } from '@dereekb/firebase';
 
 // MARK: Tokens
 /**
@@ -14,6 +17,11 @@ export const FIREBASE_STORAGE_TOKEN: InjectionToken = 'FIREBASE_STORAGE_TOKEN';
  * Token to access the root StorageContext for a server.
  */
 export const FIREBASE_STORAGE_CONTEXT_TOKEN: InjectionToken = 'FIREBASE_STORAGE_CONTEXT_TOKEN';
+
+/**
+ * Token to the default bucket id string
+ */
+export const FIREBASE_STORAGE_CONTEXT_FACTORY_CONFIG_TOKEN: InjectionToken = 'FIREBASE_STORAGE_CONTEXT_FACTORY_CONFIG_TOKEN';
 
 /**
  * Nest provider module for Firebase that provides a firestore, etc. from the firestore token.
@@ -39,9 +47,75 @@ export class FirebaseServerStorageModule {}
     {
       provide: FIREBASE_STORAGE_CONTEXT_TOKEN,
       useFactory: googleCloudFirebaseStorageContextFactory,
-      inject: [FIREBASE_STORAGE_TOKEN]
+      inject: [FIREBASE_STORAGE_TOKEN, FIREBASE_STORAGE_CONTEXT_FACTORY_CONFIG_TOKEN]
     }
   ],
   exports: [FirebaseServerStorageModule, FIREBASE_STORAGE_CONTEXT_TOKEN]
 })
 export class FirebaseServerStorageContextModule {}
+
+// MARK: Token Configuration
+export function firebaseServerStorageDefaultBucketIdTokenProvider(input: StorageBucketId | FirebaseStorageContextFactoryConfig): Provider {
+  const config = typeof input === 'string' ? { defaultBucketId: input } : input;
+
+  if (!config.defaultBucketId) {
+    throw new Error('Non-empty defaultBucketId is required.');
+  }
+
+  return {
+    provide: FIREBASE_STORAGE_CONTEXT_FACTORY_CONFIG_TOKEN,
+    useValue: config
+  };
+}
+
+// MARK: AppAuth
+export type ProvideFirebaseServerStorageServiceSimple<T extends FirebaseServerStorageService> = Pick<FactoryProvider<T>, 'provide'> & {
+  useFactory: (context: FirebaseStorageContext) => T;
+};
+
+export function defaultProvideFirebaseServerStorageServiceSimple<T extends FirebaseServerStorageService = FirebaseServerStorageService>(): ProvideFirebaseServerStorageServiceSimple<FirebaseServerStorageService> {
+  return {
+    provide: FirebaseServerStorageService,
+    useFactory: (context: FirebaseStorageContext) => new FirebaseServerStorageService(context)
+  } as ProvideFirebaseServerStorageServiceSimple<FirebaseServerStorageService> as ProvideFirebaseServerStorageService<T>;
+}
+
+export type ProvideFirebaseServerStorageService<T extends FirebaseServerStorageService> = FactoryProvider<T> | ProvideFirebaseServerStorageServiceSimple<T>;
+
+export function provideFirebaseServerStorageService<T extends FirebaseServerStorageService = FirebaseServerStorageService>(provider: ProvideFirebaseServerStorageService<T>): [ProvideFirebaseServerStorageService<T>, Provider<T>] {
+  return [
+    {
+      ...provider,
+      inject: (provider as FactoryProvider<T>).inject ?? [FIREBASE_STORAGE_CONTEXT_TOKEN]
+    },
+    {
+      provide: FirebaseServerStorageService,
+      useExisting: provider.provide
+    }
+  ];
+}
+
+// MARK: app firebase auth module
+export interface FirebaseServerStorageModuleMetadataConfig<T extends FirebaseServerStorageService = FirebaseServerStorageService> extends AdditionalModuleMetadata {
+  readonly serviceProvider?: ProvideFirebaseServerStorageService<T>;
+}
+
+/**
+ * Convenience function used to generate ModuleMetadata for an app's Auth related modules and FirebaseServerStorageService provider.
+ *
+ * @param provide
+ * @param useFactory
+ * @returns
+ */
+export function firebaseServerStorageModuleMetadata<T extends FirebaseServerStorageService = FirebaseServerStorageService>(config?: FirebaseServerStorageModuleMetadataConfig<T>): ModuleMetadata {
+  const serviceProvider = config && config.serviceProvider ? config.serviceProvider : defaultProvideFirebaseServerStorageServiceSimple<T>();
+
+  return mergeModuleMetadata(
+    {
+      imports: [FirebaseServerStorageContextModule],
+      exports: [FirebaseServerStorageContextModule, serviceProvider.provide],
+      providers: provideFirebaseServerStorageService(serviceProvider)
+    },
+    config
+  );
+}

@@ -1,7 +1,8 @@
 import { AbstractChildJestTestContextFixture, JestBuildTestsWithContextFunction, JestTestContextFactory, JestTestContextFixture, useJestContextFixture } from '@dereekb/util/test';
 import { AbstractFirebaseAdminTestContextInstanceChild, firebaseAdminTestContextFactory, FirebaseAdminTestContextInstance } from './firebase.admin';
-import { Abstract, DynamicModule, INestApplicationContext, Provider, Type } from '@nestjs/common/interfaces';
-import { firebaseServerAppTokenProvider, NestAppPromiseGetter } from '@dereekb/firebase-server';
+import { Abstract, DynamicModule, FactoryProvider, INestApplicationContext, Provider, Type } from '@nestjs/common';
+import { StorageBucketId } from '@dereekb/firebase';
+import { firebaseServerAppTokenProvider, firebaseServerStorageDefaultBucketIdTokenProvider, NestAppPromiseGetter } from '@dereekb/firebase-server';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ArrayOrValue, asArray, asGetter, ClassType, Getter } from '@dereekb/util';
 
@@ -67,6 +68,14 @@ export interface FirebaseAdminNestTestConfig<PI extends FirebaseAdminTestContext
    */
   injectFirebaseServerAppTokenProvider?: boolean;
   /**
+   * Default storage bucket to use for tests.
+   */
+  defaultStorageBucket?: StorageBucketId;
+  /**
+   * Whether or not to force using the storage bucket.
+   */
+  forceStorageBucket?: boolean;
+  /**
    * Optional providers to pass to the TestingModule initialization.
    */
   makeProviders?: (instance: PI) => Provider<any>[];
@@ -98,7 +107,7 @@ export function firebaseAdminNestContextWithFixture<PI extends FirebaseAdminTest
   f: PF,
   buildTests: JestBuildTestsWithContextFunction<C>
 ) {
-  const { nestModules, makeProviders = () => [], injectFirebaseServerAppTokenProvider, makeFixture = (parent: PF) => new FirebaseAdminNestTestContextFixture<PI, PF, I>(parent) as C, makeInstance = (instance, nest) => new FirebaseAdminNestTestContextInstance<PI>(instance, nest) as I, initInstance } = config;
+  const { nestModules, makeProviders = () => [], forceStorageBucket = false, defaultStorageBucket: inputDefaultStorageBucket, injectFirebaseServerAppTokenProvider, makeFixture = (parent: PF) => new FirebaseAdminNestTestContextFixture<PI, PF, I>(parent) as C, makeInstance = (instance, nest) => new FirebaseAdminNestTestContextInstance<PI>(instance, nest) as I, initInstance } = config;
 
   useJestContextFixture({
     fixture: makeFixture(f),
@@ -110,11 +119,21 @@ export function firebaseAdminNestContextWithFixture<PI extends FirebaseAdminTest
     buildTests,
     initInstance: async () => {
       const imports = asArray(nestModules);
-      const providers = makeProviders(f.instance) ?? [];
+      const providers: (Provider | FactoryProvider)[] = makeProviders(f.instance) ?? [];
+      const defaultStorageBucket = inputDefaultStorageBucket ?? f.instance.app.options.storageBucket;
 
       // Inject the firebaseServerAppTokenProvider
       if (injectFirebaseServerAppTokenProvider) {
         providers.push(firebaseServerAppTokenProvider(asGetter(f.instance.app)));
+      }
+
+      if (defaultStorageBucket) {
+        providers.push(
+          firebaseServerStorageDefaultBucketIdTokenProvider({
+            defaultBucketId: defaultStorageBucket,
+            forceBucket: forceStorageBucket
+          })
+        );
       }
 
       const rootModule: DynamicModule = {

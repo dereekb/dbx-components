@@ -1,7 +1,15 @@
-import { StorageBucketId } from './../storage';
-import { StoragePath, StoragePathRef } from '../storage';
+import { StorageBucketId, StoragePathInput, StoragePath, StoragePathRef } from '../storage';
 import { FirebaseStorage, StorageClientUploadBytesInput, StorageDeleteFileOptions, StorageDownloadUrl, StorageMetadata, StorageUploadInput, StorageUploadOptions, StorageUploadResult, StorageUploadTask } from '../types';
 import { Maybe } from '@dereekb/util';
+
+/**
+ * Used for accessing files and folders in the storage.
+ */
+export interface FirebaseStorageAccessor {
+  defaultBucket: () => StorageBucketId;
+  file(path: StoragePathInput): FirebaseStorageAccessorFile;
+  folder(path: StoragePathInput): FirebaseStorageAccessorFolder;
+}
 
 /**
  * Generic interface for accessing data from a file at the given path.

@@ -10,7 +10,7 @@ export type AdditionalModuleMetadata = Partial<ModuleMetadata>;
  * @param additional
  * @returns
  */
-export function mergeModuleMetadata(base: ModuleMetadata, additional: AdditionalModuleMetadata): ModuleMetadata {
+export function mergeModuleMetadata(base: ModuleMetadata, additional: AdditionalModuleMetadata = {}): ModuleMetadata {
   return {
     controllers: mergeArrays([base.controllers, additional.controllers]),
     imports: mergeArrays([base.imports, additional.imports]),

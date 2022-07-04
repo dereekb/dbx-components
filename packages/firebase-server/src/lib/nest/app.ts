@@ -1,5 +1,5 @@
 import { ClassType, Getter, asGetter, makeGetter, mergeArrayOrValueIntoArray } from '@dereekb/util';
-import { DynamicModule, INestApplication, INestApplicationContext, NestApplicationOptions, Provider, Type } from '@nestjs/common';
+import { DynamicModule, FactoryProvider, INestApplication, INestApplicationContext, NestApplicationOptions, Provider, Type } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { ExpressAdapter } from '@nestjs/platform-express';
 import * as express from 'express';
@@ -7,6 +7,8 @@ import { firebaseServerAppTokenProvider } from '../firebase/firebase.nest';
 import * as admin from 'firebase-admin';
 import { ConfigureFirebaseWebhookMiddlewareModule } from './middleware/webhook';
 import { ConfigureFirebaseAppCheckMiddlewareModule } from './middleware/appcheck.module';
+import { StorageBucketId } from '@dereekb/firebase';
+import { firebaseServerStorageDefaultBucketIdTokenProvider } from '../storage/storage.nest';
 
 export interface NestServer {
   server: express.Express;
@@ -51,6 +53,14 @@ export interface NestServerInstanceConfig<T> {
    */
   readonly configureWebhooks?: boolean;
   /**
+   * Default storage bucket to use. If provided, overrides what the app uses in the default FirebaseServerStorageContextModule and default FirebaseStorageContext.
+   */
+  readonly defaultStorageBucket?: StorageBucketId;
+  /**
+   * Whether or not to force using the default storage bucket.
+   */
+  readonly forceStorageBucket?: boolean;
+  /**
    * Whether or not to verify with app check. Is true by default.
    */
   readonly appCheckEnabled?: boolean;
@@ -61,23 +71,25 @@ export interface NestServerInstanceConfig<T> {
 }
 
 export function nestServerInstance<T>(config: NestServerInstanceConfig<T>): NestServerInstance<T> {
-  const { moduleClass, providers: additionalProviders } = config;
+  const { moduleClass, providers: additionalProviders, defaultStorageBucket: inputDefaultStorageBucket, forceStorageBucket } = config;
   const serversCache = new Map<string, NestServer>();
 
   const initNestServer = (firebaseApp: admin.app.App): NestServer => {
     const appName = firebaseApp.name;
+    const defaultStorageBucket = inputDefaultStorageBucket ?? firebaseApp.options.storageBucket;
+
     let nestServer = serversCache.get(appName);
 
     if (!nestServer) {
       const server = express();
       const createNestServer = async (expressInstance: express.Express) => {
-        const providers = [firebaseServerAppTokenProvider(asGetter(firebaseApp))];
+        const providers: (Provider | FactoryProvider)[] = [firebaseServerAppTokenProvider(asGetter(firebaseApp))];
 
         if (additionalProviders) {
           mergeArrayOrValueIntoArray(providers, additionalProviders);
         }
 
-        const imports: Type<unknown>[] = [moduleClass];
+        const imports: (Type<unknown> | DynamicModule)[] = [moduleClass];
 
         // NOTE: https://cloud.google.com/functions/docs/writing/http#parsing_http_requests
         const options: NestApplicationOptions = { bodyParser: false }; // firebase already parses the requests
@@ -88,6 +100,15 @@ export function nestServerInstance<T>(config: NestServerInstanceConfig<T>): Nest
 
         if (config.appCheckEnabled != false) {
           imports.push(ConfigureFirebaseAppCheckMiddlewareModule);
+        }
+
+        if (defaultStorageBucket) {
+          providers.push(
+            firebaseServerStorageDefaultBucketIdTokenProvider({
+              defaultBucketId: defaultStorageBucket,
+              forceBucket: forceStorageBucket
+            })
+          );
         }
 
         const providersModule: DynamicModule = {

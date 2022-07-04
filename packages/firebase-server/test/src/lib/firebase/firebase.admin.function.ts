@@ -145,7 +145,8 @@ export const firebaseAdminFunctionTestBuilder = jestTestContextBuilder<FirebaseA
     }
 
     const projectId = getGCloudTestProjectId();
-    const app = admin.initializeApp({ projectId });
+    const storageBucket = 'b-' + projectId;
+    const app = admin.initializeApp({ projectId, storageBucket });
 
     return new FirebaseAdminFunctionTestContextInstance(firebaseFunctionsTestInstance!, app);
   },

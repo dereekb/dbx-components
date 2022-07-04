@@ -171,7 +171,9 @@ export const firebaseAdminTestBuilder = jestTestContextBuilder<FirebaseAdminTest
     }
 
     const projectId = generateNewProjectId();
-    const app = admin.initializeApp({ projectId });
+    const storageBucket = 'b-' + projectId;
+    const app = admin.initializeApp({ projectId, storageBucket });
+
     return new FirebaseAdminTestContextInstance(app);
   },
   teardownInstance: async (instance, config) => {

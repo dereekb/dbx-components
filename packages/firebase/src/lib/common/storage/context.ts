@@ -1,17 +1,14 @@
-import { FirebaseStorageAccessorFile, FirebaseStorageAccessorFolder } from './driver/accessor';
+import { FirebaseStorageAccessor } from './driver/accessor';
 import { FirebaseStorageDrivers } from './driver/driver';
-import { StorageBucketId, StoragePath, storagePathFactory, StoragePathFactory, StoragePathInput, StorageSlashPathRef } from './storage';
+import { StorageBucketId, storagePathFactory, StoragePathFactory, StoragePathInput } from './storage';
 import { FirebaseStorage } from './types';
 
 /**
  * A @dereekb/firebase FirebaseStorageContext. Wraps the main FirebaseStorage context and the drivers, as well as utility/convenience functions.
  */
-export interface FirebaseStorageContext<F extends FirebaseStorage = FirebaseStorage> {
+export interface FirebaseStorageContext<F extends FirebaseStorage = FirebaseStorage> extends FirebaseStorageAccessor {
   readonly storage: F;
   readonly drivers: FirebaseStorageDrivers;
-  defaultBucket: () => StorageBucketId;
-  file(path: StoragePathInput): FirebaseStorageAccessorFile;
-  folder(path: StoragePathInput): FirebaseStorageAccessorFolder;
 }
 
 /**
