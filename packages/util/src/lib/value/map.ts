@@ -1,11 +1,18 @@
+import { asArray, ArrayOrValue } from '../array/array';
+import { filterMaybeValues } from '../array/array.value';
 import { PromiseOrValue } from '../promise/promise';
 import { build } from './build';
-import { Maybe } from './maybe.type';
+import { Maybe, MaybeNot } from './maybe.type';
 
 /**
  * Converts one value to another.
  */
 export type MapFunction<I, O> = (input: I) => O;
+
+/**
+ * MapFunction with the same input as output.
+ */
+export type MapSameFunction<I> = MapFunction<I, I>;
 
 /**
  * Converts a MapFunction into one that returns a promise.
@@ -91,4 +98,57 @@ export function mapFunctionOutput<O extends object, I = unknown>(output: O, inpu
       x._input = input as MapFunctionOutput<O, I>['_input'];
     }
   });
+}
+
+// MARK: Chaining
+/**
+ * Chains together multiple MapSameFunctions in the same order. Functions that are not defined are ignored.
+ *
+ * @param fns
+ */
+export function chainMapSameFunctions<I>(input: ArrayOrValue<Maybe<MapSameFunction<I>>>): MapSameFunction<I> {
+  const fns = filterMaybeValues(asArray(input).filter((x) => !isMapIdentityFunction(x))); // remove all identify functions too
+  let fn: MapSameFunction<I>;
+
+  switch (fns.length) {
+    case 0:
+      fn = mapIdentityFunction();
+      break;
+    case 1:
+      fn = fns[0];
+      break;
+    default:
+      fn = fns[0];
+
+      for (let i = 1; i < fns.length; i += 1) {
+        fn = chainMapFunction(fn, fns[i]);
+      }
+      break;
+  }
+
+  return fn;
+}
+
+/**
+ * Creates a single function that chains the two map functions together, if apply is true or undefined.
+ *
+ * If apply is false, or the second map function is not defined, returns the first map function.
+ *
+ * @param a
+ * @param b
+ */
+export function chainMapFunction<I>(a: MapSameFunction<I>, b: Maybe<MapSameFunction<I>>): MapSameFunction<I>;
+export function chainMapFunction<I>(a: MapSameFunction<I>, b: Maybe<MapSameFunction<I>>, apply?: boolean): MapSameFunction<I>;
+export function chainMapFunction<I, O, B>(a: MapFunction<I, O>, b: MapFunction<O, B>): MapFunction<I, B>;
+export function chainMapFunction<I, O, B>(a: MapFunction<I, O>, b: MaybeNot): MapFunction<I, O>;
+export function chainMapFunction<I, O, B>(a: MapFunction<I, O>, b: Maybe<MapFunction<O, B>>, apply: false): MapFunction<I, O>;
+export function chainMapFunction<I, O, B>(a: MapFunction<I, O>, b: MaybeNot, apply: true): MapFunction<I, O>;
+export function chainMapFunction<I, O, B>(a: MapFunction<I, O>, b: MapFunction<O, B>, apply: true): MapFunction<I, B>;
+export function chainMapFunction<I, O, B>(a: MapFunction<I, O>, b: Maybe<MapFunction<O, B>>, apply: boolean): MapFunction<I, O> | MapFunction<I, B>;
+export function chainMapFunction<I, O, B>(a: MapFunction<I, O>, b: Maybe<MapFunction<O, B>>, apply = true): MapFunction<I, O> | MapFunction<I, B> {
+  if (apply && b != null) {
+    return (x) => b(a(x));
+  } else {
+    return a;
+  }
 }

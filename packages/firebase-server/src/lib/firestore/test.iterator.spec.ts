@@ -1,6 +1,6 @@
 import { describeFirestoreIterationTests } from '@dereekb/firebase/test';
-import { adminTestWithMockItemCollection } from '@dereekb/firebase-server/test';
+import { dbxComponentsAdminTestWithMockItemCollection } from '@dereekb/firebase-server/test';
 
-adminTestWithMockItemCollection((f) => {
+dbxComponentsAdminTestWithMockItemCollection((f) => {
   describeFirestoreIterationTests(f);
 });

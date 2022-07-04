@@ -1,15 +1,15 @@
 import { DocumentSnapshot } from '@google-cloud/firestore';
 import { MockItem, MockItemDocument, MockItemFirestoreCollection, mockItemFirestoreCollection } from '@dereekb/firebase/test';
-import { adminTestWithMockItemCollection } from '@dereekb/firebase-server/test';
+import { dbxComponentsAdminTestWithMockItemCollection } from '@dereekb/firebase-server/test';
 import { FirestoreDocumentAccessor } from '@dereekb/firebase';
 
 describe('FirestoreDocumentAccessor', () => {
-  adminTestWithMockItemCollection((f) => {
+  dbxComponentsAdminTestWithMockItemCollection((f) => {
     let firestoreCollection: MockItemFirestoreCollection;
     let documentAccessor: FirestoreDocumentAccessor<MockItem, MockItemDocument>;
 
     beforeEach(async () => {
-      firestoreCollection = mockItemFirestoreCollection(f.parent.context);
+      firestoreCollection = mockItemFirestoreCollection(f.parent.firestoreContext);
       documentAccessor = firestoreCollection.documentAccessor();
     });
 

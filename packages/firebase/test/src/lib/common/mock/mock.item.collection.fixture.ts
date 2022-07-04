@@ -1,12 +1,12 @@
 import { CollectionReference } from '@dereekb/firebase';
 import { AbstractWrappedFixtureWithInstance, JestTestWrappedContextFactoryBuilder, instanceWrapJestTestContextFactory } from '@dereekb/util/test';
-import { MockItemFirestoreCollection, MockItem } from './firestore.mock.item';
-import { TestFirestoreContextFixture } from './firestore.mock';
-import { makeMockItemCollections } from './firestore.mock.item.service';
+import { TestFirestoreContextFixture } from '../firestore/firestore.instance';
+import { MockItemFirestoreCollection, MockItem } from './mock.item';
+import { makeMockItemCollections } from './mock.item.service';
 
 // MARK: Test Item Testing Fixture
 export class MockItemCollectionFixtureInstance {
-  readonly collections = makeMockItemCollections(this.fixture.parent.context);
+  readonly collections = makeMockItemCollections(this.fixture.parent.firestoreContext);
 
   get collection(): CollectionReference<MockItem> {
     return this.firestoreCollection.collection;
@@ -57,13 +57,11 @@ export class MockItemCollectionFixture extends AbstractWrappedFixtureWithInstanc
 
 export interface MockItemCollectionFirebaseContextConfig {}
 
-export function testWithMockItemFixture(config?: MockItemCollectionFirebaseContextConfig): JestTestWrappedContextFactoryBuilder<MockItemCollectionFixture, TestFirestoreContextFixture> {
+export function testWithMockItemCollectionFixture(config?: MockItemCollectionFirebaseContextConfig): JestTestWrappedContextFactoryBuilder<MockItemCollectionFixture, TestFirestoreContextFixture> {
   return instanceWrapJestTestContextFactory({
     wrapFixture: (fixture) => new MockItemCollectionFixture(fixture),
     makeInstance: (wrap) => new MockItemCollectionFixtureInstance(wrap),
-    teardownInstance: (instance: MockItemCollectionFixtureInstance) => {
-      // instance.fixture.parent.instance.clearFirestore();
-    }
+    teardownInstance: (instance: MockItemCollectionFixtureInstance) => {}
     // TODO: Utilize config here using the setup/teardown later if needed.
   });
 }

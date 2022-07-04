@@ -33,7 +33,7 @@ import {
   mockItemUserFirestoreCollectionGroup,
   MockItemUserFirestoreCollectionGroup,
   MockItemUserRoles
-} from './firestore.mock.item';
+} from './mock.item';
 import { FirebaseAppModelContext, FirebasePermissionServiceModel, firebaseModelServiceFactory, firebaseModelsService, FirestoreContext } from '@dereekb/firebase';
 import { GrantedRoleMap } from '@dereekb/model';
 import { PromiseOrValue } from '@dereekb/util';

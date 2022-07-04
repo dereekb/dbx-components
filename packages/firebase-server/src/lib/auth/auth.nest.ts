@@ -25,12 +25,12 @@ export const FIREBASE_AUTH_TOKEN: InjectionToken = 'FIREBASE_AUTH_TOKEN';
 })
 export class FirebaseServerAuthModule {}
 
-// MARK: AppAuthCollections
-export type ProvideFirestoreServerAuthServiceSimple<T extends FirebaseServerAuthService> = Pick<FactoryProvider<T>, 'provide'> & {
+// MARK: AppAuth
+export type ProvideFirebaseServerAuthServiceSimple<T extends FirebaseServerAuthService> = Pick<FactoryProvider<T>, 'provide'> & {
   useFactory: (auth: admin.auth.Auth) => T;
 };
 
-export type ProvideFirebaseServerAuthService<T extends FirebaseServerAuthService> = FactoryProvider<T> | ProvideFirestoreServerAuthServiceSimple<T>;
+export type ProvideFirebaseServerAuthService<T extends FirebaseServerAuthService> = FactoryProvider<T> | ProvideFirebaseServerAuthServiceSimple<T>;
 
 export function provideFirebaseServerAuthService<T extends FirebaseServerAuthService>(provider: ProvideFirebaseServerAuthService<T>): [ProvideFirebaseServerAuthService<T>, Provider<T>] {
   return [
@@ -45,7 +45,7 @@ export function provideFirebaseServerAuthService<T extends FirebaseServerAuthSer
   ];
 }
 
-// MARK: app firestore module
+// MARK: app firebase auth module
 export interface FirebaseServerAuthModuleMetadataConfig<T extends FirebaseServerAuthService> extends AdditionalModuleMetadata {
   readonly serviceProvider: ProvideFirebaseServerAuthService<T>;
 }

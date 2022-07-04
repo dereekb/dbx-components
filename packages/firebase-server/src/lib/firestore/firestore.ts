@@ -2,6 +2,6 @@ import { FirestoreContextFactory, firestoreContextFactory } from '@dereekb/fireb
 import { googleCloudFirestoreDrivers } from './driver';
 
 /**
- * Creates a FirestoreContextFactory that uses the @firebase/firebase package.
+ * Creates a FirestoreContextFactory that uses the @'@google-cloud/firestore package.
  */
 export const googleCloudFirestoreContextFactory: FirestoreContextFactory = firestoreContextFactory(googleCloudFirestoreDrivers());

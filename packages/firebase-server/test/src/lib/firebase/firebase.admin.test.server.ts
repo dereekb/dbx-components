@@ -15,7 +15,7 @@ export function describeFirestoreTest(s: TestFirestoreContextFixture<TestFiresto
   let collection: MockItemFirestoreCollection;
 
   beforeEach(() => {
-    collection = mockItemFirestoreCollection(s.context);
+    collection = mockItemFirestoreCollection(s.firestoreContext);
   });
 
   describe('firestore', () => {

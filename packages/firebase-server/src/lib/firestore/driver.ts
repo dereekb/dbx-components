@@ -1,14 +1,14 @@
 import { FirestoreDrivers } from '@dereekb/firebase';
-import { firestoreClientAccessorDriver } from './driver.accessor';
-import { firestoreClientQueryDriver } from './driver.query';
+import { googleCloudFirestoreAccessorDriver } from './driver.accessor';
+import { googleCloudFirestoreQueryDriver } from './driver.query';
 
 export type GoogleCloudFirestoreDrivers = FirestoreDrivers;
 
 export function googleCloudFirestoreDrivers(): GoogleCloudFirestoreDrivers {
   return {
-    driverIdentifier: '@google-cloud/firestore',
-    driverType: 'production',
-    firestoreAccessorDriver: firestoreClientAccessorDriver(),
-    firestoreQueryDriver: firestoreClientQueryDriver()
+    firestoreDriverIdentifier: '@google-cloud/firestore',
+    firestoreDriverType: 'production',
+    firestoreAccessorDriver: googleCloudFirestoreAccessorDriver(),
+    firestoreQueryDriver: googleCloudFirestoreQueryDriver()
   };
 }

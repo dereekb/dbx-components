@@ -1,5 +1,5 @@
 import { FirestoreContext } from '@dereekb/firebase';
-import { DbxFirebaseFirestoreCollectionModule, DbxFirebaseEmulatorModule, DbxFirebaseDefaultFirebaseProvidersModule, DbxFirebaseAuthModule, DbxFirebaseFunctionsModule, defaultDbxFirebaseAuthServiceDelegateWithClaimsService, DbxFirebaseAuthServiceDelegate } from '@dereekb/dbx-firebase';
+import { DbxFirebaseFirestoreCollectionModule, DbxFirebaseEmulatorModule, DbxFirebaseDefaultFirebaseProvidersModule, DbxFirebaseAuthModule, DbxFirebaseFunctionsModule, defaultDbxFirebaseAuthServiceDelegateWithClaimsService, DbxFirebaseAuthServiceDelegate, DbxFirebaseStorageModule } from '@dereekb/dbx-firebase';
 import { NgModule } from '@angular/core';
 import { environment } from './environments/environment';
 import { DemoFirebaseFunctionsGetter, DemoFirestoreCollections, DEMO_AUTH_CLAIMS_SERVICE, DEMO_FIREBASE_FUNCTIONS_CONFIG, makeDemoFirebaseFunctions, makeDemoFirestoreCollections } from '@dereekb/demo-firebase';
@@ -27,7 +27,8 @@ export function demoAuthDelegateFactory(): DbxFirebaseAuthServiceDelegate {
     }),
     DbxFirebaseAuthModule.forRoot({
       delegateFactory: demoAuthDelegateFactory
-    })
+    }),
+    DbxFirebaseStorageModule.forRoot()
   ],
   providers: []
 })

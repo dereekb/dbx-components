@@ -1,10 +1,13 @@
-import { makeTestingFirestoreDrivers, TestFirestoreContext, TestingFirestoreDrivers } from '../common/firestore';
-import { Maybe } from '@dereekb/util';
+import { makeTestingFirestoreDrivers, TestFirestoreContext, TestingFirestoreDrivers } from '../common/firestore/firestore';
+import { Maybe, cachedGetter } from '@dereekb/util';
 import { jestTestContextBuilder } from '@dereekb/util/test';
 import { TestEnvironmentConfig, initializeTestEnvironment, RulesTestEnvironment, RulesTestContext, TokenOptions, EmulatorConfig } from '@firebase/rules-unit-testing';
-import { TestFirestoreContextFixture, TestFirestoreInstance } from '../common/firestore.mock';
-import { firebaseFirestoreClientDrivers, firestoreContextFactory } from '@dereekb/firebase';
+import { firebaseFirestoreClientDrivers, FirebaseStorage, firebaseStorageClientDrivers, firebaseStorageContextFactory, Firestore, firestoreContextFactory } from '@dereekb/firebase';
 import { setLogLevel } from 'firebase/firestore';
+import { makeTestingFirebaseStorageDrivers, TestFirebaseStorageContext, TestFirebaseStorageInstance, TestingFirebaseStorageDrivers } from '../common';
+import { TestFirebaseContextFixture, TestFirebaseInstance } from '../common/firebase.instance';
+
+export type TestingFirebaseDrivers = TestingFirestoreDrivers & TestingFirebaseStorageDrivers;
 
 export interface RulesUnitTestingContextConfig {
   userId: string;
@@ -17,10 +20,10 @@ export interface RulesUnitTestingTestEnvironmentConfig extends TestEnvironmentCo
    */
   collectionNames?: string[];
   firestore?: EmulatorConfig;
+  storage?: EmulatorConfig;
 }
 
 export interface RulesUnitTestingConfig {
-  clearFirestoreBetweenTests?: boolean;
   testEnvironment: RulesUnitTestingTestEnvironmentConfig;
   rulesContext?: Maybe<RulesUnitTestingContextConfig>;
 }
@@ -41,22 +44,53 @@ export function makeRulesTestFirestoreContext(drivers: TestingFirestoreDrivers, 
   return context;
 }
 
-export class RulesUnitTestTestFirestoreInstance extends TestFirestoreInstance {
-  constructor(drivers: TestingFirestoreDrivers, readonly rulesTestEnvironment: RulesTestEnvironment, readonly rulesTestContext: RulesTestContext) {
-    super(makeRulesTestFirestoreContext(drivers, rulesTestEnvironment, rulesTestContext));
-  }
-
-  // TODO: Add storage
+export interface RulesUnitTestTestFirebaseStorageContext extends TestFirebaseStorageContext {
+  readonly rulesTestEnvironment: RulesTestEnvironment;
+  readonly rulesTestContext: RulesTestContext;
 }
 
-export class RulesUnitTestFirebaseTestingContextFixture extends TestFirestoreContextFixture<RulesUnitTestTestFirestoreInstance> {}
+export function makeRulesTestFirebaseStorageContext(drivers: TestingFirebaseStorageDrivers, rulesTestEnvironment: RulesTestEnvironment, rulesTestContext: RulesTestContext): TestFirebaseStorageContext {
+  const context: RulesUnitTestTestFirebaseStorageContext = {
+    ...firebaseStorageContextFactory(drivers)(rulesTestContext.storage()),
+    drivers,
+    rulesTestContext,
+    rulesTestEnvironment
+  };
+
+  return context;
+}
+
+export class RulesUnitTestTestFirebaseInstance implements TestFirebaseInstance, TestFirebaseStorageInstance {
+  readonly _firestoreContext = cachedGetter(() => makeRulesTestFirestoreContext(this.drivers, this.rulesTestEnvironment, this.rulesTestContext));
+  readonly _storageContext = cachedGetter(() => makeRulesTestFirebaseStorageContext(this.drivers, this.rulesTestEnvironment, this.rulesTestContext));
+
+  constructor(readonly drivers: TestingFirebaseDrivers, readonly rulesTestEnvironment: RulesTestEnvironment, readonly rulesTestContext: RulesTestContext) {}
+
+  get firestoreContext(): TestFirestoreContext {
+    return this._firestoreContext();
+  }
+
+  get storageContext(): TestFirebaseStorageContext {
+    return this._storageContext();
+  }
+
+  get firestore(): Firestore {
+    return this.firestoreContext.firestore;
+  }
+
+  get storage(): FirebaseStorage {
+    return this.storageContext.storage;
+  }
+}
+
+export class RulesUnitTestFirebaseTestingContextFixture extends TestFirebaseContextFixture<RulesUnitTestTestFirebaseInstance> {}
 
 /**
  * A JestTestContextBuilderFunction for building firebase test context factories using @firebase/firebase and @firebase/rules-unit-testing. This means CLIENT TESTING ONLY. For server testing, look at @dereekb/firestore-server.
  *
  * This can be used to easily build a testing context that sets up RulesTestEnvironment for tests that sets itself up and tears itself down.
  */
-export const firestoreTestBuilder = jestTestContextBuilder<RulesUnitTestTestFirestoreInstance, RulesUnitTestFirebaseTestingContextFixture, RulesUnitTestingConfig>({
+export const firebaseRulesUnitTestBuilder = jestTestContextBuilder<RulesUnitTestTestFirebaseInstance, RulesUnitTestFirebaseTestingContextFixture, RulesUnitTestingConfig>({
   buildConfig: (input?: Partial<RulesUnitTestingConfig>) => {
     const config: RulesUnitTestingConfig = {
       testEnvironment: input?.testEnvironment ?? {},
@@ -67,7 +101,11 @@ export const firestoreTestBuilder = jestTestContextBuilder<RulesUnitTestTestFire
   },
   buildFixture: () => new RulesUnitTestFirebaseTestingContextFixture(),
   setupInstance: async (config) => {
-    const drivers = makeTestingFirestoreDrivers(firebaseFirestoreClientDrivers());
+    const drivers = {
+      ...makeTestingFirestoreDrivers(firebaseFirestoreClientDrivers()),
+      ...makeTestingFirebaseStorageDrivers(firebaseStorageClientDrivers())
+    };
+
     let testEnvironment = config.testEnvironment;
 
     if (config.testEnvironment.collectionNames) {
@@ -80,13 +118,9 @@ export const firestoreTestBuilder = jestTestContextBuilder<RulesUnitTestTestFire
 
     const rulesTestEnv = await initializeTestEnvironment(config.testEnvironment);
     const rulesTestContext = rulesTestContextForConfig(rulesTestEnv, config.rulesContext);
-    return new RulesUnitTestTestFirestoreInstance(drivers, rulesTestEnv, rulesTestContext);
+    return new RulesUnitTestTestFirebaseInstance(drivers, rulesTestEnv, rulesTestContext);
   },
   teardownInstance: async (instance, config) => {
-    if (config.clearFirestoreBetweenTests) {
-      await instance.clearFirestore();
-    }
-
     await instance.rulesTestEnvironment.cleanup(); // Cleanup
   }
 });

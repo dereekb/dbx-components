@@ -2,9 +2,7 @@ import { expectFail, itShouldFail } from '@dereekb/util/test';
 import { SubscriptionObject } from '@dereekb/rxjs';
 import { filter, first, from, skip } from 'rxjs';
 import { firestoreIdBatchVerifierFactory, limit, orderBy, startAfter, startAt, where, limitToLast, endAt, endBefore, makeDocuments, FirestoreQueryFactoryFunction, startAtValue, endAtValue, whereDocumentId, FirebaseAuthUserId } from '@dereekb/firebase';
-import { MockItemDocument, MockItem, MockItemSubItemDocument, MockItemSubItem, MockItemSubItemDeepDocument, MockItemSubItemDeep, MockItemUserDocument } from './firestore.mock.item';
-import { MockItemCollectionFixture } from './firestore.mock.item.fixture';
-import { allChildMockItemSubItemDeepsWithinMockItem } from './firestore.mock.item.query';
+import { MockItemCollectionFixture, allChildMockItemSubItemDeepsWithinMockItem, MockItemDocument, MockItem, MockItemSubItemDocument, MockItemSubItem, MockItemSubItemDeepDocument, MockItemSubItemDeep, MockItemUserDocument } from '../mock';
 import { arrayFactory, idBatchFactory, mapGetter, randomFromArrayFactory, randomNumberFactory, unique, waitForMs } from '@dereekb/util';
 
 /**
@@ -12,7 +10,7 @@ import { arrayFactory, idBatchFactory, mapGetter, randomFromArrayFactory, random
  *
  * @param f
  */
-export function describeQueryDriverTests(f: MockItemCollectionFixture) {
+export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) {
   describe('FirestoreQueryDriver', () => {
     const testDocumentCount = 5;
 

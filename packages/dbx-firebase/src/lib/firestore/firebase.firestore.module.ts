@@ -1,5 +1,5 @@
 import { ModuleWithProviders, NgModule } from '@angular/core';
-import { firebaseFirestoreContextFactory, FirestoreContext } from '@dereekb/firebase';
+import { clientFirebaseFirestoreContextFactory, FirestoreContext } from '@dereekb/firebase';
 import { DBX_FIRESTORE_CONTEXT_TOKEN } from './firebase.firestore';
 import { Firestore } from '@angular/fire/firestore';
 import { ClassLikeType } from '@dereekb/util';
@@ -20,7 +20,7 @@ export class DbxFirebaseFirestoreCollectionModule {
       providers: [
         {
           provide: DBX_FIRESTORE_CONTEXT_TOKEN,
-          useFactory: firebaseFirestoreContextFactory,
+          useFactory: clientFirebaseFirestoreContextFactory,
           deps: [Firestore]
         },
         {

@@ -1,4 +1,5 @@
 import { BaseError } from 'make-error';
+import { escapeStringForRegex } from '../string/replace';
 import { Maybe } from '../value/maybe.type';
 
 /**
@@ -72,4 +73,23 @@ export function toReadableError(inputError: Maybe<ErrorInput>): Maybe<CodedError
   }
 
   return error;
+}
+
+export function errorMessageContainsString(input: Maybe<ErrorInput | string>, target: string): boolean {
+  return input ? errorMessageContainsStringFunction(target)(input) : false;
+}
+
+export type ErrorMessageContainsStringFunction = (input: Maybe<ErrorInput | string>) => boolean;
+
+export function errorMessageContainsStringFunction(target: string): ErrorMessageContainsStringFunction {
+  const regex = new RegExp(escapeStringForRegex(target));
+
+  return (input: Maybe<ErrorInput | string>) => {
+    const message: Maybe<string> = messageFromError(input);
+    return message ? regex.test(message) : false;
+  };
+}
+
+export function messageFromError(input: Maybe<ErrorInput | string>): Maybe<string> {
+  return (typeof input === 'object' ? (input as ReadableError).message : input) || (input as string | undefined | null);
 }

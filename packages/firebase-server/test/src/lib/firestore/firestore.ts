@@ -21,8 +21,6 @@ export class GoogleCloudTestFirestoreInstance extends TestFirestoreInstance {
   constructor(drivers: TestingFirestoreDrivers, firestore: Firestore) {
     super(makeGoogleFirestoreContext(drivers, firestore));
   }
-
-  // TODO: Add storage
 }
 
 export class GoogleCloudTestFirestoreContextFixture extends TestFirestoreContextFixture<GoogleCloudTestFirestoreInstance> {}

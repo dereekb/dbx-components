@@ -1,6 +1,6 @@
 import { OnDestroy, OnInit, Component } from '@angular/core';
 import { HandleActionWithContext } from '@dereekb/dbx-core';
-import { DbxFirebaseAuthService } from '@dereekb/dbx-firebase';
+import { DbxFirebaseAuthService, DbxFirebaseStorageService } from '@dereekb/dbx-firebase';
 import { IsModifiedFunction, loadingStateContext } from '@dereekb/rxjs';
 import { first, map } from 'rxjs';
 import { DemoProfileFormValue, DemoProfileUsernameFormValue, ProfileDocumentStore } from '@dereekb/demo-components';
@@ -15,7 +15,7 @@ export class DemoProfileViewComponent implements OnInit, OnDestroy {
 
   readonly context = loadingStateContext({ obs: this.profileDocumentStore.dataLoadingState$ });
 
-  constructor(readonly profileDocumentStore: ProfileDocumentStore, readonly auth: DbxFirebaseAuthService) {}
+  constructor(readonly profileDocumentStore: ProfileDocumentStore, readonly auth: DbxFirebaseAuthService, readonly storage: DbxFirebaseStorageService) {}
 
   ngOnInit(): void {
     this.profileDocumentStore.setId(this.auth.userIdentifier$);

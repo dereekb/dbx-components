@@ -2,11 +2,11 @@ import { DocumentReference, Transaction, Firestore } from '@google-cloud/firesto
 import { DocumentSnapshot, makeFirestoreCollection } from '@dereekb/firebase';
 import { mockItemIdentity, MockItem, mockItemCollectionReference, MockItemDocument, MockItemFirestoreCollection, mockItemConverter } from '@dereekb/firebase/test';
 import { Maybe } from '@dereekb/util';
-import { adminTestWithMockItemCollection } from '@dereekb/firebase-server/test';
+import { dbxComponentsAdminTestWithMockItemCollection } from '@dereekb/firebase-server/test';
 import { googleCloudFirestoreDrivers } from './driver';
 
 describe('FirestoreCollection', () => {
-  adminTestWithMockItemCollection((f) => {
+  dbxComponentsAdminTestWithMockItemCollection((f) => {
     let firestore: Firestore;
     let firestoreCollection: MockItemFirestoreCollection;
 
@@ -22,9 +22,9 @@ describe('FirestoreCollection', () => {
         firestoreCollection = makeFirestoreCollection({
           converter: mockItemConverter,
           modelIdentity: mockItemIdentity,
-          firestoreContext: f.parent.context,
+          firestoreContext: f.parent.firestoreContext,
           itemsPerPage,
-          collection: mockItemCollectionReference(f.parent.context),
+          collection: mockItemCollectionReference(f.parent.firestoreContext),
           makeDocument: (a, d) => new MockItemDocument(a, d),
           ...googleCloudFirestoreDrivers()
         });

@@ -1,13 +1,15 @@
 import * as admin from 'firebase-admin';
 import { Firestore } from '@google-cloud/firestore';
 import { Auth } from 'firebase-admin/lib/auth/auth';
-import { JestTestFirestoreContextFactory, makeTestingFirestoreDrivers, TestFirestoreContext, TestFirestoreContextFixture, TestFirestoreInstance } from '@dereekb/firebase/test';
+import { JestTestFirestoreContextFactory, makeTestingFirestoreDrivers, TestFirestoreContext, TestFirestoreContextFixture, TestFirestoreInstance, makeTestingFirebaseStorageDrivers, TestFirebaseStorageContext, TestFirebaseStorageInstance } from '@dereekb/firebase/test';
 import { AbstractJestTestContextFixture, JestBuildTestsWithContextFunction, jestTestContextBuilder, JestTestContextFactory, JestTestContextFixture, useJestContextFixture } from '@dereekb/util/test';
-import { googleCloudFirestoreDrivers } from '@dereekb/firebase-server';
+import { googleCloudFirebaseStorageDrivers, googleCloudFirestoreDrivers, googleCloudStorageFromFirebaseAdminStorage } from '@dereekb/firebase-server';
 import { GoogleCloudTestFirestoreInstance } from '../firestore/firestore';
 import { generateNewProjectId, isAdminEnvironmentInitialized } from './firebase';
 import { cachedGetter } from '@dereekb/util';
 import { FirebaseAdminCloudFunctionWrapper, FirebaseAdminCloudFunctionWrapperSource } from './firebase.function';
+import { Storage as GoogleCloudStorage } from '@google-cloud/storage';
+import { GoogleCloudTestFirebaseStorageInstance } from '../storage/storage';
 
 export interface FirebaseAdminTestConfig {}
 
@@ -17,6 +19,9 @@ export interface FirebaseAdminTestContext extends FirebaseAdminCloudFunctionWrap
   readonly firestore: Firestore;
   readonly firestoreInstance: TestFirestoreInstance;
   readonly firestoreContext: TestFirestoreContext;
+  readonly storage: GoogleCloudStorage;
+  readonly storageInstance: TestFirebaseStorageInstance;
+  readonly storageContext: TestFirebaseStorageContext;
 }
 
 export class FirebaseAdminTestContextFixture extends AbstractJestTestContextFixture<FirebaseAdminTestContextInstance> implements FirebaseAdminTestContext {
@@ -41,6 +46,18 @@ export class FirebaseAdminTestContextFixture extends AbstractJestTestContextFixt
     return this.instance.firestoreContext;
   }
 
+  get storage(): GoogleCloudStorage {
+    return this.instance.storage;
+  }
+
+  get storageInstance(): TestFirebaseStorageInstance {
+    return this.instance.storageInstance;
+  }
+
+  get storageContext(): TestFirebaseStorageContext {
+    return this.instance.storageContext;
+  }
+
   get fnWrapper() {
     return this.instance.fnWrapper;
   }
@@ -51,6 +68,11 @@ export class FirebaseAdminTestContextInstance implements FirebaseAdminTestContex
   readonly getTestFirestoreInstance = cachedGetter(() => {
     const drivers = makeTestingFirestoreDrivers(googleCloudFirestoreDrivers());
     return new GoogleCloudTestFirestoreInstance(drivers, this.firestore);
+  });
+
+  readonly getTestFirebaseStorageInstance = cachedGetter(() => {
+    const drivers = makeTestingFirebaseStorageDrivers(googleCloudFirebaseStorageDrivers());
+    return new GoogleCloudTestFirebaseStorageInstance(drivers, this.storage);
   });
 
   constructor(readonly app: admin.app.App) {}
@@ -68,7 +90,19 @@ export class FirebaseAdminTestContextInstance implements FirebaseAdminTestContex
   }
 
   get firestoreContext(): TestFirestoreContext {
-    return this.firestoreInstance.context;
+    return this.firestoreInstance.firestoreContext;
+  }
+
+  get storage(): GoogleCloudStorage {
+    return googleCloudStorageFromFirebaseAdminStorage(this.app.storage());
+  }
+
+  get storageInstance(): TestFirebaseStorageInstance {
+    return this.getTestFirebaseStorageInstance();
+  }
+
+  get storageContext(): TestFirebaseStorageContext {
+    return this.storageInstance.storageContext;
   }
 
   get fnWrapper(): FirebaseAdminCloudFunctionWrapper {
@@ -100,6 +134,18 @@ export abstract class AbstractFirebaseAdminTestContextInstanceChild<F extends Fi
     return this.parent.firestoreContext;
   }
 
+  get storage(): GoogleCloudStorage {
+    return this.parent.storage;
+  }
+
+  get storageInstance(): TestFirebaseStorageInstance {
+    return this.parent.storageInstance;
+  }
+
+  get storageContext(): TestFirebaseStorageContext {
+    return this.parent.storageContext;
+  }
+
   get fnWrapper(): FirebaseAdminCloudFunctionWrapper {
     return this.parent.fnWrapper;
   }
@@ -125,7 +171,9 @@ export const firebaseAdminTestBuilder = jestTestContextBuilder<FirebaseAdminTest
     }
 
     const projectId = generateNewProjectId();
-    const app = admin.initializeApp({ projectId });
+    const storageBucket = 'b-' + projectId;
+    const app = admin.initializeApp({ projectId, storageBucket });
+
     return new FirebaseAdminTestContextInstance(app);
   },
   teardownInstance: async (instance, config) => {

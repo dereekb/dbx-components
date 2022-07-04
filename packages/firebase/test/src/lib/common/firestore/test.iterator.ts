@@ -1,9 +1,7 @@
 import { flattenAccumulatorResultItemArray, accumulatorCurrentPageListLoadingState, iteratorNextPageUntilPage, loadingStateHasFinishedLoading, SubscriptionObject, accumulatorFlattenPageListLoadingState } from '@dereekb/rxjs';
 import { QueryDocumentSnapshot, makeDocuments, FirestoreItemPageIterationFactoryFunction, FirestoreItemPageIterationInstance, firebaseQueryItemAccumulator, FirebaseQueryItemAccumulator, firebaseQuerySnapshotAccumulator, FirebaseQuerySnapshotAccumulator } from '@dereekb/firebase';
 import { filter, first, from, switchMap } from 'rxjs';
-import { MockItemDocument, MockItem } from './firestore.mock.item';
-import { MockItemCollectionFixture } from './firestore.mock.item.fixture';
-import { mockItemWithValue } from './firestore.mock.item.query';
+import { mockItemWithValue, MockItemCollectionFixture, MockItemDocument, MockItem } from '../mock';
 import { arrayContainsDuplicateValue } from '@dereekb/util';
 
 jest.setTimeout(9000);

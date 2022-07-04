@@ -36,7 +36,7 @@ SOURCE_BRANCH=${DBX_SETUP_PROJECT_BRANCH:-"main"}     # develop or main
 # - Project Details
 PROJECT_NAME=$INPUT_PROJECT_NAME
 NAME=$PROJECT_NAME
-DBX_COMPONENTS_VERSION=${DBX_SETUP_PROJECT_COMPONENTS_VERSION:-"^8.4.0"}
+DBX_COMPONENTS_VERSION=${DBX_SETUP_PROJECT_COMPONENTS_VERSION:-"8.9.0"}
 NX_VERSION=${NX_SETUP_VERSIONS:-"14.1.8"} # NOTE: 14.1.8 is the last Angular 13 version
 
 # The app prefix is used in Angular and Nest classes as the prefix for classes/components
@@ -140,7 +140,9 @@ git add --all
 git commit --no-verify -m "checkpoint: updated nx to latest version"
 
 # Add Nest App - https://nx.dev/packages/nest
-npm install -D @nrwl/nest           # install the nest generator
+# install the nest generator
+# temporary: install rxjs-for-await@~1.0.0 jasmine-marbles@^0.9.2 explicitly due to dependency resolution issue
+npm install -D @nrwl/nest@$NX_VERSION rxjs-for-await@~1.0.0 jasmine-marbles@^0.9.2
 npx -y nx@$NX_VERSION g @nrwl/nest:app $API_APP_NAME
 
 git add --all
@@ -153,7 +155,7 @@ git add --all
 git commit --no-verify -m "checkpoint: added angular components package"
 
 # Add Firebase Component
-npm install -D @nrwl/node
+npm install -D @nrwl/node@$NX_VERSION
 npx -y nx@$NX_VERSION g @nrwl/node:library --name=$FIREBASE_COMPONENTS_NAME --buildable --publishable --importPath $FIREBASE_COMPONENTS_NAME
 
 git add --all
@@ -595,6 +597,7 @@ download_api_ts_file "src/app/common/firebase/auth.module.ts"
 download_api_ts_file "src/app/common/firebase/auth.service.ts"
 download_api_ts_file "src/app/common/firebase/firebase.module.ts"
 download_api_ts_file "src/app/common/firebase/firestore.module.ts"
+download_api_ts_file "src/app/common/firebase/storage.module.ts"
 download_api_ts_file "src/app/common/firebase/index.ts"
 
 # Common Model Folder

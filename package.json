@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/dbx-components",
-  "version": "8.9.1",
+  "version": "8.10.0",
   "license": "MIT",
   "scripts": {
     "postinstall": "ngcc --properties es2015 browser module main",
@@ -125,7 +125,7 @@
     "eslint-plugin-import": "^2.26.0",
     "eslint-plugin-unused-imports": "^2.0.0",
     "firebase-functions-test": "~2.2.0",
-    "firebase-tools": "^11.0.0",
+    "firebase-tools": "^11.2.0",
     "rxjs-for-await": "~1.0.0",
     "jasmine-marbles": "^0.9.2",
     "husky": "^7.0.4",

@@ -50,7 +50,7 @@ export function firestoreClientQueryConstraintFunctionsDriver(): FirestoreQueryC
   });
 }
 
-export function firestoreClientQueryDriver(): FirestoreQueryDriver {
+export function googleCloudFirestoreQueryDriver(): FirestoreQueryDriver {
   return {
     ...firestoreClientQueryConstraintFunctionsDriver(),
     getDocs<T>(query: Query<T>, transaction?: Transaction): Promise<QuerySnapshot<T>> {

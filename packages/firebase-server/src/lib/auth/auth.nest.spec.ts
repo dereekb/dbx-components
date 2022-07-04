@@ -59,7 +59,7 @@ export class TestAuthAppModule {}
 /**
  * Test context factory that will automatically instantiate TestAppModule for each test, and make it available.
  */
-const firebaseAdminFunctionNestContext = firebaseAdminFunctionNestContextFactory({
+const firebaseAuthAdminFunctionNestContext = firebaseAdminFunctionNestContextFactory({
   nestModules: TestAuthAppModule,
   injectFirebaseServerAppTokenProvider: true
 });
@@ -71,10 +71,10 @@ type LoadClaimsTest = {
   second?: number;
 };
 
-describe('firebase server auth', () => {
+describe('firebase server nest auth', () => {
   initFirebaseServerAdminTestEnvironment();
 
-  firebaseAdminFunctionNestContext((f) => {
+  firebaseAuthAdminFunctionNestContext((f) => {
     let authService: TestAuthService;
 
     beforeEach(() => {

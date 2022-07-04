@@ -1,5 +1,5 @@
-import { mergeArrays } from '@dereekb/util';
-import { ModuleMetadata } from '@nestjs/common';
+import { mergeArrays, ArrayOrValue, asArray } from '@dereekb/util';
+import { ModuleMetadata, Provider, InjectionToken } from '@nestjs/common';
 
 export type AdditionalModuleMetadata = Partial<ModuleMetadata>;
 
@@ -10,11 +10,17 @@ export type AdditionalModuleMetadata = Partial<ModuleMetadata>;
  * @param additional
  * @returns
  */
-export function mergeModuleMetadata(base: ModuleMetadata, additional: AdditionalModuleMetadata): ModuleMetadata {
+export function mergeModuleMetadata(base: ModuleMetadata, additional: AdditionalModuleMetadata = {}): ModuleMetadata {
   return {
     controllers: mergeArrays([base.controllers, additional.controllers]),
     imports: mergeArrays([base.imports, additional.imports]),
     exports: mergeArrays([base.exports, additional.exports]),
     providers: mergeArrays([base.providers, additional.providers])
   };
+}
+
+export function injectionTokensFromProviders(providers: ArrayOrValue<Provider<unknown>>): InjectionToken[] {
+  return asArray(providers).map((x) => {
+    return typeof x === 'object' ? x.provide : x;
+  });
 }

@@ -2,6 +2,20 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [8.10.0](https://github.com/dereekb/dbx-components/compare/v8.9.1-dev...v8.10.0) (2022-07-04)
+
+
+### Features
+
+* added exists(), uploadStream(), getBytes(), getStream() ([e3fe97e](https://github.com/dereekb/dbx-components/commit/e3fe97e5e985125a5ca653c40fd79c7980845863))
+* added FirebaseStorageContext ([5a30d46](https://github.com/dereekb/dbx-components/commit/5a30d465181d91ce92e7405636fb5414787ac8aa))
+* added list() and list exists() ([388c593](https://github.com/dereekb/dbx-components/commit/388c59350897fcc42d61eb723896e23c42211507))
+* added SlashPath ([8c902ab](https://github.com/dereekb/dbx-components/commit/8c902ab0eb379783320f8a9375486a4e9ce0cd44))
+* added string functions ([1866db5](https://github.com/dereekb/dbx-components/commit/1866db58d96a1d893d01ff2890a9bccb38e2ca61))
+* added upload byte types, delete() ([655088b](https://github.com/dereekb/dbx-components/commit/655088b238ef80097a2f09c539a1282a608f246b))
+
+
+
 ## [8.9.1](https://github.com/dereekb/dbx-components/compare/v8.9.0-dev...v8.9.1) (2022-06-30)
 
 

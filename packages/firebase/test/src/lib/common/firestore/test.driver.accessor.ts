@@ -2,15 +2,14 @@ import { itShouldFail, expectFail } from '@dereekb/util/test';
 import { firstValueFrom } from 'rxjs';
 import { SubscriptionObject } from '@dereekb/rxjs';
 import { Transaction, DocumentReference, WriteBatch, FirestoreDocumentAccessor, makeDocuments, FirestoreDocumentDataAccessor, FirestoreContext, FirestoreDocument, RunTransaction, FirebaseAuthUserId, DocumentSnapshot, FirestoreDataConverter } from '@dereekb/firebase';
-import { MockItemDocument, MockItem, MockItemPrivateDocument, MockItemPrivateFirestoreCollection, MockItemPrivate, MockItemSubItem, MockItemSubItemDocument, MockItemSubItemFirestoreCollection, MockItemSubItemFirestoreCollectionGroup, MockItemUserFirestoreCollection, MockItemUserDocument, MockItemUser, mockItemConverter } from './firestore.mock.item';
-import { MockItemCollectionFixture } from './firestore.mock.item.fixture';
+import { MockItemCollectionFixture, MockItemDocument, MockItem, MockItemPrivateDocument, MockItemPrivateFirestoreCollection, MockItemPrivate, MockItemSubItem, MockItemSubItemDocument, MockItemSubItemFirestoreCollection, MockItemSubItemFirestoreCollectionGroup, MockItemUserFirestoreCollection, MockItemUserDocument, MockItemUser, mockItemConverter } from '../mock';
 
 /**
  * Describes accessor driver tests, using a MockItemCollectionFixture.
  *
  * @param f
  */
-export function describeAccessorDriverTests(f: MockItemCollectionFixture) {
+export function describeFirestoreAccessorDriverTests(f: MockItemCollectionFixture) {
   describe('FirestoreAccessorDriver', () => {
     const testDocumentCount = 5;
 
@@ -42,7 +41,7 @@ export function describeAccessorDriverTests(f: MockItemCollectionFixture) {
 
       describe('accessor', () => {
         describeAccessorTests<MockItem>(() => ({
-          context: f.parent.context,
+          context: f.parent.firestoreContext,
           accessor,
           dataForUpdate: () => ({ test: false }),
           hasDataFromUpdate: (data) => data.test === false,
@@ -182,7 +181,7 @@ export function describeAccessorDriverTests(f: MockItemCollectionFixture) {
               const TEST_COMMENTS = 'test';
 
               describeAccessorTests<MockItemPrivate>(() => ({
-                context: f.parent.context,
+                context: f.parent.firestoreContext,
                 accessor: privateDataAccessor,
                 dataForUpdate: () => ({ comments: TEST_COMMENTS }),
                 hasDataFromUpdate: (data) => data.comments === TEST_COMMENTS,
@@ -213,7 +212,7 @@ export function describeAccessorDriverTests(f: MockItemCollectionFixture) {
                 const TEST_VALUE = 1234;
 
                 describeAccessorTests<MockItemSubItem>(() => ({
-                  context: f.parent.context,
+                  context: f.parent.firestoreContext,
                   accessor: subItemDocument.accessor,
                   dataForUpdate: () => ({ value: TEST_VALUE }),
                   hasDataFromUpdate: (data) => data.value === TEST_VALUE,
@@ -236,7 +235,7 @@ export function describeAccessorDriverTests(f: MockItemCollectionFixture) {
                 const TEST_VALUE = 1234;
 
                 describeAccessorTests<MockItemSubItem>(() => ({
-                  context: f.parent.context,
+                  context: f.parent.firestoreContext,
                   accessor: subItemDocument.accessor,
                   dataForUpdate: () => ({ value: TEST_VALUE }),
                   hasDataFromUpdate: (data) => data.value === TEST_VALUE,
