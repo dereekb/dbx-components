@@ -140,7 +140,9 @@ git add --all
 git commit --no-verify -m "checkpoint: updated nx to latest version"
 
 # Add Nest App - https://nx.dev/packages/nest
-npm install -D @nrwl/nest           # install the nest generator
+# install the nest generator
+# temporary: install rxjs-for-await@~1.0.0 jasmine-marbles@^0.9.2 explicitly due to dependency resolution issue
+npm install -D @nrwl/nest@$NX_VERSION rxjs-for-await@~1.0.0 jasmine-marbles@^0.9.2
 npx -y nx@$NX_VERSION g @nrwl/nest:app $API_APP_NAME
 
 git add --all
@@ -153,7 +155,7 @@ git add --all
 git commit --no-verify -m "checkpoint: added angular components package"
 
 # Add Firebase Component
-npm install -D @nrwl/node
+npm install -D @nrwl/node@$NX_VERSION
 npx -y nx@$NX_VERSION g @nrwl/node:library --name=$FIREBASE_COMPONENTS_NAME --buildable --publishable --importPath $FIREBASE_COMPONENTS_NAME
 
 git add --all
