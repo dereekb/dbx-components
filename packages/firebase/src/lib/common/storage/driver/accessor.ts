@@ -14,7 +14,7 @@ export interface FirebaseStorageAccessor {
 /**
  * Generic interface for accessing data from a file at the given path.
  */
-export interface FirebaseStorageAccessorFile<R extends unknown = unknown> extends StoragePathRef {
+export interface FirebaseStorageAccessorFile<R = unknown> extends StoragePathRef {
   /**
    * Returns the underlying reference type.
    */
@@ -143,7 +143,7 @@ export interface StorageListFilesResult<R = unknown> {
 /**
  * Generic interface for accessing "folder" information at the given path.
  */
-export interface FirebaseStorageAccessorFolder<R extends unknown = unknown> extends StoragePathRef {
+export interface FirebaseStorageAccessorFolder<R = unknown> extends StoragePathRef {
   readonly reference: R;
   /**
    * Returns true if the folder exists.
@@ -157,8 +157,8 @@ export interface FirebaseStorageAccessorFolder<R extends unknown = unknown> exte
 }
 
 export type FirebaseStorageAccessorDriverDefaultBucketFunction = (storage: FirebaseStorage) => Maybe<StorageBucketId>;
-export type FirebaseStorageAccessorDriverFileFunction<R extends unknown = unknown> = (storage: FirebaseStorage, path: StoragePath) => FirebaseStorageAccessorFile<R>;
-export type FirebaseStorageAccessorDriverFolderFunction<R extends unknown = unknown> = (storage: FirebaseStorage, path: StoragePath) => FirebaseStorageAccessorFolder<R>;
+export type FirebaseStorageAccessorDriverFileFunction<R = unknown> = (storage: FirebaseStorage, path: StoragePath) => FirebaseStorageAccessorFile<R>;
+export type FirebaseStorageAccessorDriverFolderFunction<R = unknown> = (storage: FirebaseStorage, path: StoragePath) => FirebaseStorageAccessorFolder<R>;
 
 /**
  * A driver to use for storage functionality.

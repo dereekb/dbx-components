@@ -1,4 +1,4 @@
-import { FirebaseStorageDrivers, FirestoreDrivers } from '@dereekb/firebase';
+import { FirebaseStorageDrivers } from '@dereekb/firebase';
 import { googleCloudStorageFirebaseStorageAccessorDriver } from './driver.accessor';
 
 export type GoogleCloudFirebaseStorageDrivers = FirebaseStorageDrivers;

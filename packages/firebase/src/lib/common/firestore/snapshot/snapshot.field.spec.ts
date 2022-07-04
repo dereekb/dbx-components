@@ -3,7 +3,7 @@ import { isValid } from 'date-fns';
 import { FirestoreModelKeyGrantedRoleArrayMap } from '../collection';
 import { DocumentSnapshot } from '../types';
 import { snapshotConverterFunctions } from './snapshot';
-import { firestoreArrayMap, firestoreDate, firestoreObjectArray, firestoreEnum, firestoreField, firestoreMap, firestoreModelKeyGrantedRoleArrayMap, firestoreEnumArray, firestoreUniqueKeyedArray, firestoreUniqueStringArray, firestoreNumber, firestoreSubObject, firestoreEncodedArray, firestoreString, DEFAULT_FIRESTORE_STRING_FIELD_VALUE, firestoreLatLngString, DEFAULT_FIRESTORE_LAT_LNG_STRING_VALUE } from './snapshot.field';
+import { firestoreArrayMap, firestoreDate, firestoreObjectArray, firestoreEnum, firestoreField, firestoreMap, firestoreModelKeyGrantedRoleArrayMap, firestoreEnumArray, firestoreUniqueKeyedArray, firestoreUniqueStringArray, firestoreNumber, firestoreSubObject, firestoreEncodedArray, firestoreString, DEFAULT_FIRESTORE_STRING_FIELD_VALUE, firestoreLatLngString } from './snapshot.field';
 
 describe('firestoreField()', () => {
   const defaultValue = -1;

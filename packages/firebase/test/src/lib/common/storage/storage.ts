@@ -17,7 +17,7 @@ export function makeTestingFirebaseStorageAccesorDriver(driver: FirebaseStorageA
 /**
  * Used to override/extend a FirebaseStorageAccessorDriver to provide better isolation between tests.
  */
-export interface TestingFirebaseStorageAccessorDriver extends FirebaseStorageAccessorDriver {}
+export type TestingFirebaseStorageAccessorDriver = FirebaseStorageAccessorDriver;
 
 /**
  * Drivers used for testing. Provides additional functionality for controlling storage access to prevent cross-test contamination.

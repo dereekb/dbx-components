@@ -1,7 +1,7 @@
 import { chainMapSameFunctions, MapSameFunction } from '../value/map';
 import { asArray, ArrayOrValue, mergeArrayOrValueIntoArray } from '../array/array';
 import { firstAndLastCharacterOccurrence, replaceCharacterAtIndexWith, replaceStringsFunction, splitStringAtIndex } from '../string';
-import { chainMapFunction, MapFunction, mapIdentityFunction } from '../value';
+import { chainMapFunction, mapIdentityFunction } from '../value';
 import { FactoryWithRequiredInput } from '../getter/getter';
 
 export const SLASH_PATH_SEPARATOR = '/';
@@ -287,7 +287,7 @@ export function slashPathValidationFactory(config?: SlashPathValidationFactoryCo
     fns.push(replaceInvalidFilePathTypeSeparatorsInSlashPathFunction(replaceIllegalDotsWith));
   }
 
-  if (throwError === true || !Boolean(inputReplaceIllegalCharacters || inputReplaceIllegalDots)) {
+  if (throwError === true || !(inputReplaceIllegalCharacters || inputReplaceIllegalDots)) {
     fns.push((x) => {
       if (!isValidSlashPath(x)) {
         throw slashPathInvalidError();

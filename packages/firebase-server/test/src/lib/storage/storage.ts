@@ -1,4 +1,3 @@
-import { Storage as FirebaseAdminStorage } from 'firebase-admin/lib/storage/storage';
 import { Storage as GoogleCloudStorage } from '@google-cloud/storage';
 import { TestFirebaseStorageContext, TestFirebaseStorageInstance, TestFirebaseStorageContextFixture, TestingFirebaseStorageDrivers, makeTestingFirebaseStorageDrivers } from '@dereekb/firebase/test';
 import { jestTestContextBuilder } from '@dereekb/util/test';

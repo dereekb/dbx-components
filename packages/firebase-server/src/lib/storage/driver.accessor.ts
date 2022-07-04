@@ -1,6 +1,6 @@
-import { StorageUploadOptions, StorageServerUploadInput, FirebaseStorageAccessorDriver, FirebaseStorageAccessorFile, FirebaseStorageAccessorFolder, FirebaseStorage, StoragePath, assertStorageUploadOptionsStringFormat, StorageDeleteFileOptions, StorageListFilesOptions, storageListFilesResultFactory, StorageListItemResult, StorageListFilesResult, StorageMetadata, StorageBucketId } from '@dereekb/firebase';
-import { fixMultiSlashesInSlashPath, ISO8601DateString, Maybe, PromiseOrValue, SlashPathFolder, slashPathName, SLASH_PATH_SEPARATOR, toRelativeSlashPathStartType, useCallback } from '@dereekb/util';
-import { SaveOptions, CreateWriteStreamOptions, GetFilesOptions, Storage as GoogleCloudStorage, File as GoogleCloudFile, Bucket as GoogleCloudBucket, DownloadOptions } from '@google-cloud/storage';
+import { StorageUploadOptions, FirebaseStorageAccessorDriver, FirebaseStorageAccessorFile, FirebaseStorageAccessorFolder, FirebaseStorage, StoragePath, assertStorageUploadOptionsStringFormat, StorageDeleteFileOptions, StorageListFilesOptions, storageListFilesResultFactory, StorageListItemResult, StorageListFilesResult, StorageMetadata, StorageBucketId } from '@dereekb/firebase';
+import { fixMultiSlashesInSlashPath, Maybe, PromiseOrValue, SlashPathFolder, slashPathName, SLASH_PATH_SEPARATOR, toRelativeSlashPathStartType } from '@dereekb/util';
+import { SaveOptions, CreateWriteStreamOptions, GetFilesOptions, Storage as GoogleCloudStorage, File as GoogleCloudFile, DownloadOptions } from '@google-cloud/storage';
 import { isArrayBuffer, isUint8Array } from 'util/types';
 
 export function googleCloudStorageBucketForStorageFilePath(storage: GoogleCloudStorage, path: StoragePath) {
@@ -11,7 +11,7 @@ export function googleCloudStorageFileForStorageFilePath(storage: GoogleCloudSto
   return googleCloudStorageBucketForStorageFilePath(storage, path).file(path.pathString);
 }
 
-export interface GoogleCloudStorageAccessorFile extends FirebaseStorageAccessorFile<GoogleCloudFile> {}
+export type GoogleCloudStorageAccessorFile = FirebaseStorageAccessorFile<GoogleCloudFile>;
 
 export function googleCloudStorageAccessorFile(storage: GoogleCloudStorage, storagePath: StoragePath): GoogleCloudStorageAccessorFile {
   const file = googleCloudStorageFileForStorageFilePath(storage, storagePath);
@@ -88,7 +88,7 @@ export function googleCloudStorageAccessorFile(storage: GoogleCloudStorage, stor
   };
 }
 
-export interface GoogleCloudStorageAccessorFolder extends FirebaseStorageAccessorFolder<GoogleCloudFile> {}
+export type GoogleCloudStorageAccessorFolder = FirebaseStorageAccessorFolder<GoogleCloudFile>;
 
 export interface GoogleCloudListResult {
   files: GoogleCloudFile[];

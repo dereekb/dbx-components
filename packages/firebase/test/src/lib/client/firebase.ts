@@ -2,7 +2,6 @@ import { makeTestingFirestoreDrivers, TestFirestoreContext, TestingFirestoreDriv
 import { Maybe, cachedGetter } from '@dereekb/util';
 import { jestTestContextBuilder } from '@dereekb/util/test';
 import { TestEnvironmentConfig, initializeTestEnvironment, RulesTestEnvironment, RulesTestContext, TokenOptions, EmulatorConfig } from '@firebase/rules-unit-testing';
-import { TestFirestoreContextFixture, TestFirestoreInstance } from '../common/firestore/firestore.instance';
 import { firebaseFirestoreClientDrivers, FirebaseStorage, firebaseStorageClientDrivers, firebaseStorageContextFactory, Firestore, firestoreContextFactory } from '@dereekb/firebase';
 import { setLogLevel } from 'firebase/firestore';
 import { makeTestingFirebaseStorageDrivers, TestFirebaseStorageContext, TestFirebaseStorageInstance, TestingFirebaseStorageDrivers } from '../common';

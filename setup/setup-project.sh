@@ -595,6 +595,7 @@ download_api_ts_file "src/app/common/firebase/auth.module.ts"
 download_api_ts_file "src/app/common/firebase/auth.service.ts"
 download_api_ts_file "src/app/common/firebase/firebase.module.ts"
 download_api_ts_file "src/app/common/firebase/firestore.module.ts"
+download_api_ts_file "src/app/common/firebase/storage.module.ts"
 download_api_ts_file "src/app/common/firebase/index.ts"
 
 # Common Model Folder

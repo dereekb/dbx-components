@@ -1,4 +1,4 @@
-import { Factory, Getter } from '../getter/getter';
+import { Factory } from '../getter/getter';
 import { cutValueToPrecisionFunction, NumberPrecision } from '../number/round';
 
 // MARK: Lat/Lng Point
@@ -160,7 +160,7 @@ export function latLngPointPrecisionFunction(precision: LatLngPrecision): LatLng
  */
 export type LatLngStringFunction = ((lat: Latitude | LatLngPoint | LatLngString | string, lng?: Longitude) => LatLngString) & ((latLng: string | LatLngString) => LatLngString) & ((latLng: LatLngPoint) => LatLngString) & ((lat: Latitude, lng?: Longitude) => LatLngString);
 
-export interface LatLngStringFunctionConfig extends LatLngPointFunctionConfig {}
+export type LatLngStringFunctionConfig = LatLngPointFunctionConfig;
 
 /**
  * Creates a LatLngStringFunction
@@ -171,7 +171,7 @@ export interface LatLngStringFunctionConfig extends LatLngPointFunctionConfig {}
 export function latLngStringFunction(config?: LatLngStringFunctionConfig): LatLngStringFunction {
   const fn = latLngPointFunction(config);
   return (lat: Latitude | LatLngPoint | LatLngString | string, lng?: Longitude) => {
-    let latLng: LatLngPoint = fn(lat, lng);
+    const latLng: LatLngPoint = fn(lat, lng);
     return `${latLng.lat},${latLng.lng}`;
   };
 }

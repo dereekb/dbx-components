@@ -1,5 +1,5 @@
 import { Maybe, PromiseUtility } from '@dereekb/util';
-import { DocumentReference, FirebaseStorageDrivers, Firestore, FirestoreAccessorDriver, FirestoreCollectionName, FirestoreContext, FirestoreDrivers } from '@dereekb/firebase';
+import { DocumentReference, Firestore, FirestoreAccessorDriver, FirestoreCollectionName, FirestoreContext, FirestoreDrivers } from '@dereekb/firebase';
 
 // MARK: Test Accessor
 /**

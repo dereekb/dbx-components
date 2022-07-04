@@ -1,7 +1,7 @@
 import { Injector, ModuleWithProviders, NgModule, Provider } from '@angular/core';
 import { FirebaseApp } from '@angular/fire/app';
 import { Storage } from '@angular/fire/storage';
-import { clientFirebaseStorageContextFactory, firebaseStorageContextFactory, FirebaseStorageContextFactoryConfig } from '@dereekb/firebase';
+import { clientFirebaseStorageContextFactory, FirebaseStorageContextFactoryConfig } from '@dereekb/firebase';
 import { DBX_FIREBASE_STORAGE_CONTEXT_CONFIG_TOKEN, DBX_FIREBASE_STORAGE_CONTEXT_TOKEN } from './firebase.storage';
 import { DbxFirebaseStorageService } from './firebase.storage.service';
 

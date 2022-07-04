@@ -1,6 +1,6 @@
 import { FirebaseStorageAccessorDriver, FirebaseStorageAccessorFile, FirebaseStorageAccessorFolder, StorageListFilesOptions, StorageListFilesResult, StorageListItemResult } from '../../common/storage/driver/accessor';
 import { firebaseStorageFilePathFromStorageFilePath, StoragePath } from '../../common/storage/storage';
-import { FirebaseStorage, StorageClientUploadBytesInput, StorageClientUploadInput, StorageDataString, StorageDeleteFileOptions, StorageUploadOptions } from '../../common/storage/types';
+import { FirebaseStorage, StorageClientUploadBytesInput, StorageDataString, StorageDeleteFileOptions, StorageUploadOptions } from '../../common/storage/types';
 import { ListResult, list, StorageReference, getDownloadURL, FirebaseStorage as ClientFirebaseStorage, ref, getBytes, getMetadata, uploadBytes, uploadBytesResumable, UploadMetadata, uploadString, deleteObject, getBlob } from '@firebase/storage';
 import { assertStorageUploadOptionsStringFormat, storageListFilesResultFactory } from '../../common';
 import { ErrorInput, errorMessageContainsString, Maybe } from '@dereekb/util';
@@ -20,7 +20,7 @@ export function firebaseStorageFileExists(ref: StorageReference): Promise<boolea
   );
 }
 
-export interface FirebaseStorageClientAccessorFile extends FirebaseStorageAccessorFile<StorageReference> {}
+export type FirebaseStorageClientAccessorFile = FirebaseStorageAccessorFile<StorageReference>;
 
 export function firebaseStorageClientAccessorFile(storage: ClientFirebaseStorage, storagePath: StoragePath): FirebaseStorageClientAccessorFile {
   const ref = firebaseStorageRefForStorageFilePath(storage, storagePath);
@@ -50,7 +50,7 @@ export function firebaseStorageClientAccessorFile(storage: ClientFirebaseStorage
     getMetadata: () => getMetadata(ref),
     upload: (input, options) => {
       const inputType = typeof input === 'string';
-      let metadataOption: UploadMetadata | undefined = asUploadMetadata(options);
+      const metadataOption: UploadMetadata | undefined = asUploadMetadata(options);
 
       if (inputType) {
         const stringFormat = assertStorageUploadOptionsStringFormat(options);
@@ -62,7 +62,7 @@ export function firebaseStorageClientAccessorFile(storage: ClientFirebaseStorage
     getBytes: (maxDownloadSizeBytes) => getBytes(ref, maxDownloadSizeBytes),
     getBlob: (maxDownloadSizeBytes) => getBlob(ref, maxDownloadSizeBytes),
     uploadResumable: (input, options) => {
-      let metadataOption: UploadMetadata | undefined = asUploadMetadata(options);
+      const metadataOption: UploadMetadata | undefined = asUploadMetadata(options);
       return uploadBytesResumable(ref, input as StorageClientUploadBytesInput, metadataOption);
     },
     delete: (options: StorageDeleteFileOptions) =>
@@ -74,7 +74,7 @@ export function firebaseStorageClientAccessorFile(storage: ClientFirebaseStorage
   };
 }
 
-export interface FirebaseStorageClientAccessorFolder extends FirebaseStorageAccessorFolder<StorageReference> {}
+export type FirebaseStorageClientAccessorFolder = FirebaseStorageAccessorFolder<StorageReference>;
 
 export interface FirebaseStorageClientListResult {
   listResult: ListResult;

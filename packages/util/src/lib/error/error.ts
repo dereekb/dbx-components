@@ -1,4 +1,3 @@
-import { MaybeNot } from '@dereekb/util';
 import { BaseError } from 'make-error';
 import { escapeStringForRegex } from '../string/replace';
 import { Maybe } from '../value/maybe.type';
