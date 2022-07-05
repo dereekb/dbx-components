@@ -4,15 +4,15 @@ import { FirebaseStorageAccessorDriver, FirebaseStorageContext, FirebaseStorageD
 let bucketTestNameKey = 0;
 
 export interface MakeTestingFirebaseStorageAccessorDriverConfig {
-  createTestBucket?: boolean;
+  useTestDefaultBucket?: boolean;
 }
 
 export function makeTestingFirebaseStorageAccesorDriver(driver: FirebaseStorageAccessorDriver, config?: MakeTestingFirebaseStorageAccessorDriverConfig): TestingFirebaseStorageAccessorDriver {
-  const { createTestBucket } = config ?? {};
+  const { useTestDefaultBucket } = config ?? {};
 
   // The default bucket is only used if another bucket is not input.
   const defaultBucket =
-    (!driver.defaultBucket && createTestBucket !== false) || createTestBucket === true
+    (!driver.defaultBucket && useTestDefaultBucket !== false) || useTestDefaultBucket === true
       ? cachedGetter(() => {
           const time = new Date().getTime();
           const random = Math.ceil(Math.random() * 999999) % 999999;
