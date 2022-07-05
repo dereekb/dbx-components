@@ -10,9 +10,6 @@ export class ProfileDocumentStore extends AbstractDbxFirebaseDocumentStore<Profi
     super({ firestoreCollection: collections.profileCollection });
   }
 
-  setProfileUsername(params: SetProfileUsernameParams): Observable<LoadingState<void>> {
-    return loadingStateFromObs(from(this.profileFunctions[profileSetUsernameKey](params)));
-  }
-
-  readonly updateProfile = firebaseDocumentStoreUpdateFunction(this, this.profileFunctions.profile.updateProfile);
+  readonly updateProfile = firebaseDocumentStoreUpdateFunction(this, this.profileFunctions.profile.updateProfile.updateProfile);
+  readonly updateProfileUsername = firebaseDocumentStoreUpdateFunction(this, this.profileFunctions.profile.updateProfile.updateProfileUsername);
 }

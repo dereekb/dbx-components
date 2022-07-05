@@ -3,6 +3,7 @@ import { DocumentReferenceRef } from '../firestore/reference';
 import { FirestoreModelKey, FirestoreModelType, FirestoreModelTypeRef } from '../firestore/collection/collection';
 
 export interface OnCallTypedModelParams<T = unknown> extends FirestoreModelTypeRef {
+  specifier?: string;
   data: T;
 }
 
@@ -13,17 +14,23 @@ export interface OnCallTypedModelParams<T = unknown> extends FirestoreModelTypeR
  * @param data
  * @returns
  */
-export function onCallTypedModelParams<T>(modelTypeInput: FirestoreModelType | FirestoreModelTypeRef, data: T): OnCallTypedModelParams<T> {
+export function onCallTypedModelParams<T>(modelTypeInput: FirestoreModelType | FirestoreModelTypeRef, data: T, specifier?: string): OnCallTypedModelParams<T> {
   const modelType = typeof modelTypeInput === 'string' ? modelTypeInput : modelTypeInput.modelType;
 
   if (!modelType) {
     throw new Error('modelType is required.');
   }
 
-  return {
+  const result: OnCallTypedModelParams<T> = {
     modelType,
     data
   };
+
+  if (specifier != null) {
+    result.specifier = specifier;
+  }
+
+  return result;
 }
 
 /**

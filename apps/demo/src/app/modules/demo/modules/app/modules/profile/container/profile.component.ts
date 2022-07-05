@@ -50,7 +50,7 @@ export class DemoProfileViewComponent implements OnInit, OnDestroy {
   };
 
   handleChangeUsername: HandleActionWithContext<DemoProfileUsernameFormValue> = (form, context) => {
-    context.startWorkingWithLoadingStateObservable(this.profileDocumentStore.setProfileUsername(form));
+    context.startWorkingWithLoadingStateObservable(this.profileDocumentStore.updateProfileUsername(form));
   };
 
   handleUpdateProfile: HandleActionWithContext<DemoProfileFormValue> = (form, context) => {

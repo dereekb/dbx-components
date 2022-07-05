@@ -52,14 +52,17 @@ export const profileFunctionTypeConfigMap: FirebaseFunctionTypeConfigMap<Profile
 
 export type ProfileModelCrudFunctionsConfig = {
   profile: {
-    update: UpdateProfileParams;
+    update: {
+      _: UpdateProfileParams;
+      username: SetProfileUsernameParams;
+    };
     delete: UpdateProfileParams;
   };
   profilePrivate: null;
 };
 
 export const profileModelCrudFunctionsConfig: ModelFirebaseCrudFunctionConfigMap<ProfileModelCrudFunctionsConfig, ProfileTypes> = {
-  profile: ['update', 'delete']
+  profile: ['update:_,username', 'delete']
 };
 
 /**
@@ -73,7 +76,10 @@ export const profileFunctionMap = modelFirebaseFunctionMapFactory(profileFunctio
 export abstract class ProfileFunctions implements ModelFirebaseFunctionMap<ProfileFunctionTypeMap, ProfileModelCrudFunctionsConfig> {
   abstract [profileSetUsernameKey]: FirebaseFunctionMapFunction<ProfileFunctionTypeMap, 'profileSetUsername'>;
   abstract profile: {
-    updateProfile: ModelFirebaseCrudFunction<UpdateProfileParams>;
+    updateProfile: {
+      updateProfile: ModelFirebaseCrudFunction<UpdateProfileParams>;
+      updateProfileUsername: ModelFirebaseCrudFunction<SetProfileUsernameParams>;
+    };
     deleteProfile: ModelFirebaseCrudFunction<UpdateProfileParams>;
   };
 }

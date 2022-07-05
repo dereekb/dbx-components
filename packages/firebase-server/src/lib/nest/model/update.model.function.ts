@@ -1,11 +1,11 @@
 import { PromiseOrValue, serverError } from '@dereekb/util';
-import { FirestoreModelType, FirestoreModelIdentity, FirestoreModelTypes, OnCallUpdateModelParams } from '@dereekb/firebase';
+import { FirestoreModelType, FirestoreModelIdentity, FirestoreModelTypes, OnCallUpdateModelParams, ModelFirebaseCrudFunctionSpecifierRef } from '@dereekb/firebase';
 import { badRequestError } from '../../function';
 import { OnCallWithAuthorizedNestContext } from '../function/call';
 import { NestContextCallableRequestWithAuth } from '../function/nest';
 
 // MARK: Function
-export type OnCallUpdateModelFunction<N, I = unknown, O = void> = (request: NestContextCallableRequestWithAuth<N, I>) => PromiseOrValue<O>;
+export type OnCallUpdateModelFunction<N, I = unknown, O = void> = (request: NestContextCallableRequestWithAuth<N, I> & ModelFirebaseCrudFunctionSpecifierRef) => PromiseOrValue<O>;
 
 export type OnCallUpdateModelMap<N, T extends FirestoreModelIdentity = FirestoreModelIdentity> = {
   [K in FirestoreModelTypes<T>]?: OnCallUpdateModelFunction<N, any, any>;
@@ -25,6 +25,7 @@ export function onCallUpdateModel<N>(map: OnCallUpdateModelMap<N>): OnCallWithAu
     if (updateFn) {
       return updateFn({
         ...request,
+        specifier: request.data.specifier,
         data: request.data.data
       });
     } else {

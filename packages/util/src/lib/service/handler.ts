@@ -1,5 +1,5 @@
-import { PrimativeKey, ReadKeyFunction } from './../key';
-import { ArrayOrValue } from './../array/array';
+import { PrimativeKey, ReadKeyFunction } from '../key';
+import { ArrayOrValue } from '../array/array';
 import { build } from '../value/build';
 import { Maybe } from '../value/maybe.type';
 import { PromiseOrValue } from '../promise/promise';

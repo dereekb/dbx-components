@@ -1,11 +1,11 @@
 import { PromiseOrValue, serverError } from '@dereekb/util';
-import { FirestoreModelType, FirestoreModelIdentity, FirestoreModelTypes, OnCallDeleteModelParams } from '@dereekb/firebase';
+import { FirestoreModelType, FirestoreModelIdentity, FirestoreModelTypes, OnCallDeleteModelParams, ModelFirebaseCrudFunctionSpecifierRef } from '@dereekb/firebase';
 import { badRequestError } from '../../function';
 import { NestContextCallableRequestWithAuth } from '../function/nest';
 import { OnCallWithAuthorizedNestContext } from '../function/call';
 
 // MARK: Function
-export type OnCallDeleteModelFunction<N, I = unknown, O = void> = (request: NestContextCallableRequestWithAuth<N, I>) => PromiseOrValue<O>;
+export type OnCallDeleteModelFunction<N, I = unknown, O = void> = (request: NestContextCallableRequestWithAuth<N, I> & ModelFirebaseCrudFunctionSpecifierRef) => PromiseOrValue<O>;
 
 export type OnCallDeleteModelMap<N, T extends FirestoreModelIdentity = FirestoreModelIdentity> = {
   [K in FirestoreModelTypes<T>]?: OnCallDeleteModelFunction<N, any, any>;
@@ -25,6 +25,7 @@ export function onCallDeleteModel<N>(map: OnCallDeleteModelMap<N>): OnCallWithAu
     if (deleteFn) {
       return deleteFn({
         ...request,
+        specifier: request.data.specifier,
         data: request.data.data
       });
     } else {

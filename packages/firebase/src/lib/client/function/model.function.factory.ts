@@ -2,13 +2,25 @@
 // The use of any here does not degrade the type-safety. The correct type is inferred in most cases.
 
 import { firebaseFunctionMapFactory } from '@dereekb/firebase';
-import { MaybeNot, build, cachedGetter, capitalizeFirstLetter } from '@dereekb/util';
-import { Functions, httpsCallable } from 'firebase/functions';
+import { MaybeNot, build, cachedGetter, capitalizeFirstLetter, ValuesTypesAsArray, CommaSeparatedKeysOfObject, separateValues, Getter, ClassLikeType, ClassType } from '@dereekb/util';
+import { Functions, HttpsCallable, httpsCallable } from 'firebase/functions';
 import { NonNever } from 'ts-essentials';
-import { CREATE_MODEL_APP_FUNCTION_KEY, DELETE_MODEL_APP_FUNCTION_KEY, FirestoreModelIdentity, FirestoreModelTypes, OnCallCreateModelResult, OnCallDeleteModelParams, onCallTypedModelParams, OnCallUpdateModelParams, UPDATE_MODEL_APP_FUNCTION_KEY } from '../../common';
+import { CREATE_MODEL_APP_FUNCTION_KEY, DELETE_MODEL_APP_FUNCTION_KEY, FirestoreModelIdentity, FirestoreModelTypes, OnCallCreateModelResult, onCallTypedModelParams, UPDATE_MODEL_APP_FUNCTION_KEY } from '../../common';
 import { FirebaseFunctionTypeMap, FirebaseFunctionMap, FirebaseFunction } from './function';
 import { mapHttpsCallable } from './function.callable';
 import { FirebaseFunctionTypeConfigMap } from './function.factory';
+
+/**
+ * Used to specify which function to direct requests to.
+ */
+export type ModelFirebaseCrudFunctionSpecifier = string;
+
+/**
+ * Provides a reference to a ModelFirebaseCrudFunctionSpecifier if available.
+ */
+export type ModelFirebaseCrudFunctionSpecifierRef = {
+  specifier?: ModelFirebaseCrudFunctionSpecifier;
+};
 
 export type ModelFirebaseCrudFunction<I> = FirebaseFunction<I, void>;
 export type ModelFirebaseCreateFunction<I, O extends OnCallCreateModelResult = OnCallCreateModelResult> = FirebaseFunction<I, O>;
@@ -20,18 +32,27 @@ export type ModelFirebaseCrudFunctionTypeMap<T extends FirestoreModelIdentity = 
 };
 
 export type ModelFirebaseCrudFunctionTypeMapEntry = MaybeNot | Partial<ModelFirebaseCrudFunctionCreateTypeConfig & ModelFirebaseCrudFunctionUpdateTypeConfig & ModelFirebaseCrudFunctionDeleteTypeConfig>;
+export type ModelFirebaseCrudFunctionCreateTypeSpecifierConfig = Record<string | number, unknown>;
 
-export type ModelFirebaseCrudFunctionCreateTypeConfig<I = unknown> = {
-  create: I;
+// TODO: Typings here could potentially be improved to always enforce _ being provided if the passed object is
+
+export type ModelFirebaseCrudFunctionCreateTypeConfig = {
+  create: unknown | ModelFirebaseCrudFunctionCreateTypeSpecifierConfig;
 };
 
-export type ModelFirebaseCrudFunctionUpdateTypeConfig<I = unknown> = {
-  update: I;
+export type ModelFirebaseCrudFunctionUpdateTypeConfig = {
+  update: unknown | ModelFirebaseCrudFunctionCreateTypeSpecifierConfig;
 };
 
-export type ModelFirebaseCrudFunctionDeleteTypeConfig<I = unknown> = {
-  delete: I;
+export type ModelFirebaseCrudFunctionDeleteTypeConfig = {
+  delete: unknown | ModelFirebaseCrudFunctionCreateTypeSpecifierConfig;
 };
+
+export const MODEL_FUNCTION_FIREBASE_CRUD_FUNCTION_SPECIFIER_DEFAULT = '_';
+export type ModelFirebaseCrudFunctionSpecifierDefault = typeof MODEL_FUNCTION_FIREBASE_CRUD_FUNCTION_SPECIFIER_DEFAULT;
+
+export const MODEL_FUNCTION_FIREBASE_CRUD_FUNCTION_SPECIFIER_SPLITTER = ',';
+export type ModelFirebaseCrudFunctionSpecifierSplitter = typeof MODEL_FUNCTION_FIREBASE_CRUD_FUNCTION_SPECIFIER_SPLITTER;
 
 /**
  * The configuration for a types map.
@@ -39,8 +60,14 @@ export type ModelFirebaseCrudFunctionDeleteTypeConfig<I = unknown> = {
  * The FirestoreModelIdentities that are allowed are passed too which add type checking to make sure we're passing the expected identities.
  */
 export type ModelFirebaseCrudFunctionConfigMap<C extends ModelFirebaseCrudFunctionTypeMap<T>, T extends FirestoreModelIdentity> = NonNever<{
-  [K in FirestoreModelTypes<T>]: C[K] extends null ? never : (keyof C[K])[];
+  [K in FirestoreModelTypes<T>]: C[K] extends null ? never : ModelFirebaseCrudFunctionConfigMapEntry<C[K]>;
 }>;
+
+export type ModelFirebaseCrudFunctionConfigMapEntry<T> = ValuesTypesAsArray<{
+  [K in keyof T]: K extends string ? (T[K] extends Record<string, unknown> ? ModelFirebaseCrudFunctionConfigMapEntrySpecifier<K, T[K]> : K) : never;
+}>;
+
+export type ModelFirebaseCrudFunctionConfigMapEntrySpecifier<K extends string, M extends object> = `${K}:${CommaSeparatedKeysOfObject<M>}`;
 
 export type ModelFirebaseCrudFunctionMap<C extends ModelFirebaseCrudFunctionTypeMap> = ModelFirebaseCrudFunctionRawMap<C>;
 
@@ -49,12 +76,21 @@ export type ModelFirebaseCrudFunctionRawMap<C extends ModelFirebaseCrudFunctionT
 }>;
 
 export type ModelFirebaseCrudFunctionName<T extends string, K extends string> = `${K}${Capitalize<T>}`;
+export type ModelFirebaseCrudFunctionWithSpecifierName<T extends string, K extends string, S extends string> = `${K}${Capitalize<T>}${Capitalize<S>}`;
 
 export type ModelFirebaseCrudFunctionMapEntry<T extends string, E extends ModelFirebaseCrudFunctionTypeMapEntry> = E extends null
   ? never
   : {
-      [K in keyof E as K extends string ? ModelFirebaseCrudFunctionName<T, K> : never]: K extends 'create' ? ModelFirebaseCreateFunction<E[K]> : ModelFirebaseCrudFunction<E[K]>;
+      [K in keyof E as K extends string ? (E[K] extends Record<string, unknown> ? never : ModelFirebaseCrudFunctionName<T, K>) : never]: ModelFirebaseCrudFunctionMapEntryFunction<E, K>;
+    } & {
+      [K in keyof E as K extends string ? (E[K] extends Record<string, unknown> ? ModelFirebaseCrudFunctionName<T, K> : never) : never]: K extends string ? ModelFirebaseCrudFunctionMapEntrySpecifier<T, K, E[K]> : never;
     };
+
+export type ModelFirebaseCrudFunctionMapEntrySpecifier<T extends string, X extends string, M> = {
+  [K in keyof M as K extends string ? (X extends string ? (K extends ModelFirebaseCrudFunctionSpecifierDefault ? ModelFirebaseCrudFunctionName<T, X> : ModelFirebaseCrudFunctionWithSpecifierName<T, X, K>) : never) : never]: ModelFirebaseCrudFunctionMapEntryFunction<M, K>;
+};
+
+export type ModelFirebaseCrudFunctionMapEntryFunction<E extends ModelFirebaseCrudFunctionTypeMapEntry, K extends keyof E> = K extends 'create' ? ModelFirebaseCreateFunction<E[K]> : ModelFirebaseCrudFunction<E[K]>;
 
 export type ModelFirebaseFunctionMap<M extends FirebaseFunctionTypeMap, C extends ModelFirebaseCrudFunctionTypeMap> = FirebaseFunctionMap<M> & ModelFirebaseCrudFunctionMap<C>;
 
@@ -73,25 +109,58 @@ export function modelFirebaseFunctionMapFactory<M extends FirebaseFunctionTypeMa
     const _updateFn = cachedGetter(() => httpsCallable(functionsInstance, UPDATE_MODEL_APP_FUNCTION_KEY));
     const _deleteFn = cachedGetter(() => httpsCallable(functionsInstance, DELETE_MODEL_APP_FUNCTION_KEY));
 
+    function makeCrudFunction(fn: Getter<HttpsCallable<unknown, unknown>>, modelType: string, specifier?: string) {
+      return mapHttpsCallable(fn(), { mapInput: (data) => onCallTypedModelParams(modelType, data, specifier) }, true);
+    }
+
+    function makeCrudSpecifiers(crud: string, fn: Getter<HttpsCallable<unknown, unknown>>, modelType: string, specifierKeys: string[]): { [key: string]: HttpsCallable<unknown, unknown> } {
+      const modelTypeSuffix = capitalizeFirstLetter(modelType);
+      const specifiers: Record<string, HttpsCallable<unknown, unknown>> = {};
+
+      specifierKeys.forEach((inputSpecifier) => {
+        const specifier = inputSpecifier === MODEL_FUNCTION_FIREBASE_CRUD_FUNCTION_SPECIFIER_DEFAULT ? '' : inputSpecifier;
+        specifiers[`${crud}${modelTypeSuffix}${capitalizeFirstLetter(specifier)}`] = makeCrudFunction(fn, modelType, inputSpecifier) as HttpsCallable<unknown, unknown>;
+      });
+
+      return specifiers;
+    }
+
     const result = build<ModelFirebaseFunctionMap<M, U>>({
       base: functionMap as unknown as ModelFirebaseFunctionMap<M, U>,
       build: (x) => {
         Object.entries(crudConfigMap).forEach(([modelType, config]) => {
           const modelTypeSuffix = capitalizeFirstLetter(modelType);
-          const crudFunctions = new Set(config as string[]);
+          const { included: crudFunctionKeys, excluded: specifiedCrudFunctionKeys } = separateValues(config as string[], (x) => x.indexOf(':') === -1);
+
+          const crudFunctions = new Set(crudFunctionKeys);
+          const specifierFunctions = new Map<string, string[]>(
+            specifiedCrudFunctionKeys.map((x) => {
+              const [crud, functionsSplit] = x.split(':', 2);
+              const functions = functionsSplit.split(MODEL_FUNCTION_FIREBASE_CRUD_FUNCTION_SPECIFIER_SPLITTER);
+
+              return [crud, functions];
+            })
+          );
+
+          function addFunctions(crud: string, fn: Getter<HttpsCallable<unknown, unknown>>, modelType: string): void {
+            let crudFns: unknown;
+
+            if (crudFunctions.has(crud)) {
+              crudFns = makeCrudFunction(fn, modelType);
+            } else if (specifierFunctions.has(crud)) {
+              crudFns = makeCrudSpecifiers(crud, fn, modelType, specifierFunctions.get(crud) as string[]);
+            }
+
+            if (crudFns) {
+              (modelTypeCruds as any)[`${crud}${modelTypeSuffix}`] = crudFns;
+            }
+          }
+
           const modelTypeCruds = {};
 
-          if (crudFunctions.has('create')) {
-            (modelTypeCruds as any)[`create${modelTypeSuffix}`] = mapHttpsCallable(_createFn(), { mapInput: (data) => onCallTypedModelParams(modelType, data) as OnCallUpdateModelParams }, true);
-          }
-
-          if (crudFunctions.has('update')) {
-            (modelTypeCruds as any)[`update${modelTypeSuffix}`] = mapHttpsCallable(_updateFn(), { mapInput: (data) => onCallTypedModelParams(modelType, data) as OnCallUpdateModelParams }, true);
-          }
-
-          if (crudFunctions.has('delete')) {
-            (modelTypeCruds as any)[`delete${modelTypeSuffix}`] = mapHttpsCallable(_deleteFn(), { mapInput: (data) => onCallTypedModelParams(modelType, data) as OnCallDeleteModelParams }, true);
-          }
+          addFunctions('create', _createFn, modelType);
+          addFunctions('update', _updateFn, modelType);
+          addFunctions('delete', _deleteFn, modelType);
 
           // tslint:disable-next-line
           (x as any)[modelType] = modelTypeCruds;

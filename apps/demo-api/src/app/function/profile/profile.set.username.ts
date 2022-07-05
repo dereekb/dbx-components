@@ -4,6 +4,9 @@ import { onCallWithDemoNestContext } from '../function';
 import { userHasNoProfileError } from '../../common';
 import { profileForUserRequest } from './profile.util';
 
+/**
+ * @deprecated use updateProfileUsername instead.
+ */
 export const profileSetUsername = onCallWithDemoNestContext<SetProfileUsernameParams>(
   inAuthContext(async (request) => {
     const { nest, auth, data } = request;
