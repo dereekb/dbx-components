@@ -1,11 +1,11 @@
 import { PromiseOrValue, serverError } from '@dereekb/util';
-import { FirestoreModelType, FirestoreModelIdentity, FirestoreModelTypes, OnCallCreateModelParams, OnCallCreateModelResult } from '@dereekb/firebase';
+import { FirestoreModelType, FirestoreModelIdentity, FirestoreModelTypes, OnCallCreateModelParams, OnCallCreateModelResult, ModelFirebaseCrudFunctionSpecifierRef } from '@dereekb/firebase';
 import { badRequestError } from '../../function';
 import { OnCallWithAuthorizedNestContext } from '../function/call';
 import { NestContextCallableRequestWithAuth } from '../function/nest';
 
 // MARK: Function
-export type OnCallCreateModelFunction<N, I = unknown, O extends OnCallCreateModelResult = OnCallCreateModelResult> = (request: NestContextCallableRequestWithAuth<N, I>) => PromiseOrValue<O>;
+export type OnCallCreateModelFunction<N, I = unknown, O extends OnCallCreateModelResult = OnCallCreateModelResult> = (request: NestContextCallableRequestWithAuth<N, I> & ModelFirebaseCrudFunctionSpecifierRef) => PromiseOrValue<O>;
 
 export type OnCallCreateModelMap<N, T extends FirestoreModelIdentity = FirestoreModelIdentity> = {
   [K in FirestoreModelTypes<T>]?: OnCallCreateModelFunction<N, any, OnCallCreateModelResult>;
@@ -25,6 +25,7 @@ export function onCallCreateModel<N>(map: OnCallCreateModelMap<N>): OnCallWithAu
     if (createFn) {
       return createFn({
         ...request,
+        specifier: request.data.specifier,
         data: request.data.data
       });
     } else {

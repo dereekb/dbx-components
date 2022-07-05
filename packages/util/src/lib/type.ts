@@ -1,4 +1,4 @@
-import { Merge, NonNever, PickProperties, StrictOmit, Writable } from 'ts-essentials';
+import { Merge, NonNever, PickProperties, StrictOmit, UnionToIntersection, Writable } from 'ts-essentials';
 
 /**
  * Class typing, restricted to types that have a constructor via the new keyword.
@@ -32,10 +32,13 @@ export type KeysAsStrings<T> = {
   [K in keyof T as string]: T[K];
 };
 
+export type ValuesTypesAsArray<T> = T[keyof T][];
+
 /**
  * Converts the input value to a string, if possible. Never otherwise.
  */
-export type KeyAsString<K> = K extends number | boolean | string | null | undefined ? `${K}` : never;
+export type KeyAsString<K> = `${KeyCanBeString<K>}`;
+export type KeyCanBeString<K> = K extends number | boolean | string | null | undefined ? K : never;
 
 export type BooleanKeyValueTransformMap<T> = KeyValueTransformMap<T, boolean>;
 
@@ -86,3 +89,49 @@ export type StringKeyPropertyKeys<T> = keyof StringKeyProperties<T>;
  * Makes a readonly type able to be configured. Useful for configurating readonly types before they are used.
  */
 export type Configurable<T> = Writable<T>;
+
+/**
+ * StringConcatination of all keys of an object.
+ */
+export type CommaSeparatedKeysOfObject<T extends object> = CommaSeparatedKeys<`${KeyCanBeString<keyof T>}`>;
+export type CommaSeparatedKeys<T extends string> = StringConcatination<T, ','>;
+
+export type CommaSeparatedKeyCombinationsOfObject<T extends object> = CommaSeparatedKeyCombinations<`${KeyCanBeString<keyof T>}`>;
+export type CommaSeparatedKeyCombinations<T extends string> = StringCombinations<T, ','>;
+
+export type UnionToOvlds<U> = UnionToIntersection<U extends any ? (f: U) => void : never>;
+export type PopUnion<U> = UnionToOvlds<U> extends (a: infer A) => void ? A : never;
+
+/**
+ * A type that merges all combinations of strings together using a separator.
+ *
+ * Example:
+ * 'a' | 'b' | 'c' w/ ',' -> 'a' | 'b' | 'c' | 'a,b' | 'a,c' | 'a,b,c' | etc...
+ *
+ * Credit to:
+ *
+ * https://stackoverflow.com/a/65157132
+ */
+export type StringCombinations<S extends string, SEPARATOR extends string> = PopUnion<S> extends infer SELF
+  ? //
+    SELF extends string
+    ? Exclude<S, SELF> extends never
+      ? SELF
+      : `${StringCombinations<Exclude<S, SELF>, SEPARATOR>}${SEPARATOR}${SELF}` | StringCombinations<Exclude<S, SELF>, SEPARATOR> | SELF
+    : never
+  : never;
+
+/**
+ * A type that merges all the input strings together using a separator.
+ *
+ * Example:
+ * 'a' | 'b' | 'c' w/ ',' -> 'a,b,c' | 'a,c,b'
+ */
+export type StringConcatination<S extends string, SEPARATOR extends string> = PopUnion<S> extends infer SELF
+  ? //
+    SELF extends string
+    ? Exclude<S, SELF> extends never
+      ? SELF
+      : `${StringConcatination<Exclude<S, SELF>, SEPARATOR>}${SEPARATOR}${SELF}` | `${SELF}${SEPARATOR}${StringConcatination<Exclude<S, SELF>, SEPARATOR>}`
+    : never
+  : never;

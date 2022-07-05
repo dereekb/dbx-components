@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [8.11.0](https://github.com/dereekb/dbx-components/compare/v8.10.0-dev...v8.11.0) (2022-07-05)
+
+
+### Features
+
+* added specifier for crud functions ([39e366e](https://github.com/dereekb/dbx-components/commit/39e366e09936b5963cd3e74bc127ad3146d14ef7))
+
+
+
 # [8.10.0](https://github.com/dereekb/dbx-components/compare/v8.9.1-dev...v8.10.0) (2022-07-04)
 
 
