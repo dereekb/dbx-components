@@ -103,7 +103,7 @@ export const firebaseRulesUnitTestBuilder = jestTestContextBuilder<RulesUnitTest
   setupInstance: async (config) => {
     const drivers = {
       ...makeTestingFirestoreDrivers(firebaseFirestoreClientDrivers()),
-      ...makeTestingFirebaseStorageDrivers(firebaseStorageClientDrivers())
+      ...makeTestingFirebaseStorageDrivers(firebaseStorageClientDrivers(), { useTestDefaultBucket: true })
     };
 
     let testEnvironment = config.testEnvironment;

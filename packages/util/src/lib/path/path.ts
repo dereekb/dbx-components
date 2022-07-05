@@ -58,7 +58,7 @@ export type SlashPathType = 'folder' | 'file' | 'typedfile' | 'invalid';
  * @returns
  */
 export function slashPathType(input: SlashPath): SlashPathType {
-  const dotCount = input.split(SLASH_PATH_FILE_TYPE_SEPARATOR, 2).length;
+  const dotCount = input.split(SLASH_PATH_FILE_TYPE_SEPARATOR, 2).length - 1;
   let type: SlashPathType;
 
   switch (dotCount) {
@@ -76,7 +76,7 @@ export function slashPathType(input: SlashPath): SlashPathType {
       }
       break;
     case 1:
-      type = 'file';
+      type = 'typedfile';
       break;
     default:
       type = 'invalid';
@@ -86,9 +86,14 @@ export function slashPathType(input: SlashPath): SlashPathType {
   return type;
 }
 
-export function isSlashPathFile(input: string): input is SlashPathTypedFile {
+export function isSlashPathFile(input: string): input is SlashPathFile {
   const type = slashPathType(input);
   return type === 'file' || type === 'typedfile';
+}
+
+export function isSlashPathTypedFile(input: string): input is SlashPathTypedFile {
+  const type = slashPathType(input);
+  return type === 'typedfile';
 }
 
 export function isSlashPathFolder(input: string): input is SlashPathFolder {
