@@ -1,7 +1,7 @@
 import { chainMapSameFunctions, MapSameFunction } from '../value/map';
 import { asArray, ArrayOrValue, mergeArrayOrValueIntoArray } from '../array/array';
 import { firstAndLastCharacterOccurrence, replaceCharacterAtIndexWith, replaceStringsFunction, splitStringAtIndex } from '../string';
-import { chainMapFunction, mapIdentityFunction } from '../value';
+import { chainMapFunction, mapIdentityFunction, Maybe } from '../value';
 import { FactoryWithRequiredInput } from '../getter/getter';
 
 export const SLASH_PATH_SEPARATOR = '/';
@@ -303,7 +303,7 @@ export function slashPathValidationFactory(config?: SlashPathValidationFactoryCo
 /**
  * Factory use to generate/merge file paths together.
  */
-export type SlashPathFactory = FactoryWithRequiredInput<SlashPath, ArrayOrValue<SlashPath>>;
+export type SlashPathFactory = FactoryWithRequiredInput<SlashPath, ArrayOrValue<Maybe<SlashPath>>>;
 
 export interface SlashPathFactoryConfig {
   /**
@@ -322,18 +322,18 @@ export interface SlashPathFactoryConfig {
 
 export function slashPathFactory(config?: SlashPathFactoryConfig): SlashPathFactory {
   const { startType: type = 'any', basePath: inputBasePaths, validate = true } = config ?? {};
-  const basePath = inputBasePaths ? mergeSlashPaths(asArray(inputBasePaths)) : '';
+  const basePath = inputBasePaths ? mergeSlashPaths(asArray(inputBasePaths)) : undefined;
   const typeFactory = slashPathStartTypeFactory(type);
   const validationFactory = validate ? (typeof validate === 'boolean' ? slashPathValidationFactory() : slashPathValidationFactory(validate)) : null;
   const finalizeFn = chainMapFunction(typeFactory, validationFactory);
 
-  return (paths: ArrayOrValue<SlashPath>) => {
+  return (paths: ArrayOrValue<Maybe<SlashPath>>) => {
     const merged = mergeSlashPaths(mergeArrayOrValueIntoArray([basePath], paths));
     return finalizeFn(merged);
   };
 }
 
-export function mergeSlashPaths(paths: SlashPath[]): SlashPath {
+export function mergeSlashPaths(paths: Maybe<SlashPath>[]): SlashPath {
   const merge = paths.filter((x) => Boolean(x)).join(SLASH_PATH_SEPARATOR);
   return fixMultiSlashesInSlashPath(merge);
 }

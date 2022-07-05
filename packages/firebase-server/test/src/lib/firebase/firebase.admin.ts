@@ -72,7 +72,9 @@ export class FirebaseAdminTestContextInstance implements FirebaseAdminTestContex
 
   readonly getTestFirebaseStorageInstance = cachedGetter(() => {
     const drivers = makeTestingFirebaseStorageDrivers(googleCloudFirebaseStorageDrivers());
-    return new GoogleCloudTestFirebaseStorageInstance(drivers, this.storage);
+
+    const defaultBucketId = this.app.options.storageBucket;
+    return new GoogleCloudTestFirebaseStorageInstance(drivers, this.storage, defaultBucketId);
   });
 
   constructor(readonly app: admin.app.App) {}

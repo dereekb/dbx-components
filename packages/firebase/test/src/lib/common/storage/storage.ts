@@ -1,15 +1,29 @@
+import { cachedGetter } from '@dereekb/util';
 import { FirebaseStorageAccessorDriver, FirebaseStorageContext, FirebaseStorageDrivers } from '@dereekb/firebase';
 
 let bucketTestNameKey = 0;
 
-export function makeTestingFirebaseStorageAccesorDriver(driver: FirebaseStorageAccessorDriver): TestingFirebaseStorageAccessorDriver {
-  const time = new Date().getTime();
-  const random = Math.ceil(Math.random() * 999999) % 999999;
-  const testBucketName = `test-bucket-${time}-${random}-${(bucketTestNameKey += 1)}`;
+export interface MakeTestingFirebaseStorageAccessorDriverConfig {
+  createTestBucket?: boolean;
+}
+
+export function makeTestingFirebaseStorageAccesorDriver(driver: FirebaseStorageAccessorDriver, config?: MakeTestingFirebaseStorageAccessorDriverConfig): TestingFirebaseStorageAccessorDriver {
+  const { createTestBucket } = config ?? {};
+
+  // The default bucket is only used if another bucket is not input.
+  const defaultBucket =
+    (!driver.defaultBucket && createTestBucket !== false) || createTestBucket === true
+      ? cachedGetter(() => {
+          const time = new Date().getTime();
+          const random = Math.ceil(Math.random() * 999999) % 999999;
+          const testBucketName = `test-bucket-${time}-${random}-${(bucketTestNameKey += 1)}`;
+          return testBucketName;
+        })
+      : driver.defaultBucket;
 
   const injectedDriver: TestingFirebaseStorageAccessorDriver = {
     ...driver,
-    defaultBucket: () => testBucketName
+    defaultBucket
   };
 
   return injectedDriver;
@@ -33,11 +47,11 @@ export interface TestingFirebaseStorageDrivers extends FirebaseStorageDrivers {
  * @param drivers
  * @returns
  */
-export function makeTestingFirebaseStorageDrivers(drivers: FirebaseStorageDrivers): TestingFirebaseStorageDrivers {
+export function makeTestingFirebaseStorageDrivers(drivers: FirebaseStorageDrivers, config?: MakeTestingFirebaseStorageAccessorDriverConfig): TestingFirebaseStorageDrivers {
   return {
     ...drivers,
     storageDriverType: 'testing',
-    storageAccessorDriver: makeTestingFirebaseStorageAccesorDriver(drivers.storageAccessorDriver)
+    storageAccessorDriver: makeTestingFirebaseStorageAccesorDriver(drivers.storageAccessorDriver, config)
   };
 }
 

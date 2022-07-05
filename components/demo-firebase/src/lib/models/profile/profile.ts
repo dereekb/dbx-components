@@ -57,7 +57,6 @@ export function profileFirestoreCollection(firestoreContext: FirestoreContext): 
   return firestoreContext.firestoreCollection({
     modelIdentity: profileIdentity,
     converter: profileConverter,
-    itemsPerPage: 50,
     accessorFactory: profileAccessorFactory,
     collection: profileCollectionReference(firestoreContext),
     makeDocument: (accessor, documentAccessor) => new ProfileDocument(accessor, documentAccessor),
@@ -110,7 +109,6 @@ export function profilePrivateDataFirestoreCollectionFactory(firestoreContext: F
     return firestoreContext.singleItemFirestoreCollection({
       modelIdentity: profilePrivateDataIdentity,
       converter: profilePrivateDataConverter,
-      itemsPerPage: 50,
       collection: factory(parent),
       makeDocument: (accessor, documentAccessor) => new ProfilePrivateDataDocument(accessor, documentAccessor),
       firestoreContext,
@@ -129,7 +127,6 @@ export function profilePrivateDataFirestoreCollectionGroup(firestoreContext: Fir
   return firestoreContext.firestoreCollectionGroup({
     modelIdentity: profilePrivateDataIdentity,
     converter: profilePrivateDataConverter,
-    itemsPerPage: 50,
     queryLike: profilePrivateDataCollectionReference(firestoreContext),
     makeDocument: (accessor, documentAccessor) => new ProfilePrivateDataDocument(accessor, documentAccessor),
     firestoreContext
