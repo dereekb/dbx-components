@@ -86,9 +86,14 @@ export function slashPathType(input: SlashPath): SlashPathType {
   return type;
 }
 
-export function isSlashPathFile(input: string): input is SlashPathTypedFile {
+export function isSlashPathFile(input: string): input is SlashPathFile {
   const type = slashPathType(input);
   return type === 'file' || type === 'typedfile';
+}
+
+export function isSlashPathTypedFile(input: string): input is SlashPathTypedFile {
+  const type = slashPathType(input);
+  return type === 'typedfile';
 }
 
 export function isSlashPathFolder(input: string): input is SlashPathFolder {
