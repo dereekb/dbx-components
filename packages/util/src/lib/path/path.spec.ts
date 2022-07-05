@@ -1,4 +1,4 @@
-import { replaceInvalidFilePathTypeSeparatorsInSlashPath, slashPathFactory, slashPathName, slashPathValidationFactory } from './path';
+import { replaceInvalidFilePathTypeSeparatorsInSlashPath, slashPathFactory, slashPathName, slashPathValidationFactory, SlashPathFolder, slashPathType, SlashPathTypedFile, SlashPathFile } from './path';
 
 describe('slashPathName', () => {
   it('should return the file name', () => {
@@ -11,6 +11,26 @@ describe('slashPathName', () => {
     const expected = 'test';
     const result = slashPathName('/a/b/c/d/' + expected + '/');
     expect(result).toBe(expected);
+  });
+});
+
+describe('slashPathType', () => {
+  it('should identify a typed file', () => {
+    const typedFilePath: SlashPathTypedFile = 'wMNzlhSlp6Gb93V8u4Rs/CCCC_KGML3FKTP.pdf';
+    const type = slashPathType(typedFilePath);
+    expect(type).toBe('typedfile');
+  });
+
+  it('should identify a file', () => {
+    const path: SlashPathFile = 'wMNzlhSlp6Gb93V8u4Rs/CCCC_KGML3FKTP';
+    const type = slashPathType(path);
+    expect(type).toBe('file');
+  });
+
+  it('should identify a folder', () => {
+    const folderPath: SlashPathFolder = 'wMNzlhSlp6Gb93V8u4Rs/';
+    const type = slashPathType(folderPath);
+    expect(type).toBe('folder');
   });
 });
 
