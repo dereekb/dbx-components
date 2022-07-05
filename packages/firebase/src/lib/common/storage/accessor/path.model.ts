@@ -1,4 +1,4 @@
-import { SlashPath, slashPathFactory, SlashPathFolder, FactoryWithRequiredInput } from '@dereekb/util';
+import { SlashPath, slashPathFactory, SlashPathFolder, FactoryWithRequiredInput, SlashPathFile } from '@dereekb/util';
 import { readFirestoreModelKey, ReadFirestoreModelKeyInput } from '../../firestore/collection/collection';
 
 export const BASE_MODEL_STORAGE_FILE_PATH: SlashPathFolder = '/model/';
@@ -19,8 +19,10 @@ export interface ModelStorageSlashPathFactoryConfig {
 
 /**
  * Factory for SlashPath values using input ReadFirestoreModelKeyInput values.
+ *
+ * Can optionally specify an additional path to append.
  */
-export type ModelStorageSlashPathFactory<T extends object = object> = FactoryWithRequiredInput<SlashPath, ReadFirestoreModelKeyInput<T>>;
+export type ModelStorageSlashPathFactory<T extends object = object> = (input: ReadFirestoreModelKeyInput<T>, path?: SlashPath) => SlashPath;
 
 /**
  * Creates a ModelStorageSlashPathFactory.
@@ -29,9 +31,9 @@ export type ModelStorageSlashPathFactory<T extends object = object> = FactoryWit
  * @returns
  */
 export function modelStorageSlashPathFactory<T extends object = object>(config?: ModelStorageSlashPathFactoryConfig): ModelStorageSlashPathFactory<T> {
-  const { basePath = '' } = config ?? {};
-  return (input: ReadFirestoreModelKeyInput) => {
+  const { basePath } = config ?? {};
+  return (input: ReadFirestoreModelKeyInput, path?: SlashPath) => {
     const key = readFirestoreModelKey(input, true);
-    return MODEL_STORAGE_FILE_SLASH_PATH_FACTORY([basePath, key]);
+    return MODEL_STORAGE_FILE_SLASH_PATH_FACTORY([basePath, key, path]);
   };
 }
