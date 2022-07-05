@@ -63,7 +63,6 @@ export function guestbookFirestoreCollection(firestoreContext: FirestoreContext)
   return firestoreContext.firestoreCollection({
     converter: guestbookConverter,
     modelIdentity: guestbookIdentity,
-    itemsPerPage: 50,
     collection: guestbookCollectionReference(firestoreContext),
     makeDocument: (accessor, documentAccessor) => new GuestbookDocument(accessor, documentAccessor),
     firestoreContext
@@ -133,7 +132,6 @@ export function guestbookEntryFirestoreCollectionFactory(firestoreContext: Fires
     return firestoreContext.firestoreCollectionWithParent({
       converter: guestbookEntryConverter,
       modelIdentity: guestbookEntryIdentity,
-      itemsPerPage: 50,
       collection: factory(parent),
       accessorFactory: guestbookEntryAccessorFactory,
       makeDocument: (accessor, documentAccessor) => new GuestbookEntryDocument(accessor, documentAccessor),
@@ -153,7 +151,6 @@ export function guestbookEntryFirestoreCollectionGroup(firestoreContext: Firesto
   return firestoreContext.firestoreCollectionGroup({
     converter: guestbookEntryConverter,
     modelIdentity: guestbookEntryIdentity,
-    itemsPerPage: 50,
     accessorFactory: guestbookEntryAccessorFactory,
     queryLike: guestbookEntryCollectionReference(firestoreContext),
     makeDocument: (accessor, documentAccessor) => new GuestbookEntryDocument(accessor, documentAccessor),

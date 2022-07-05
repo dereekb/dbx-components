@@ -1,7 +1,7 @@
 import * as admin from 'firebase-admin';
 import { FactoryProvider, InjectionToken, Module, ModuleMetadata, Provider } from '@nestjs/common';
 import { FIREBASE_APP_TOKEN } from '../firebase/firebase.nest';
-import { googleCloudFirebaseStorageContextFactory } from './storage';
+import { googleCloudFirebaseStorageContextFactory, googleCloudStorageFromFirebaseAdminStorage } from './storage';
 import { FirebaseServerStorageService } from './storage.service';
 import { AdditionalModuleMetadata, injectionTokensFromProviders, mergeModuleMetadata } from '@dereekb/nestjs';
 import { FirebaseStorageContext, FirebaseStorageContextFactoryConfig, StorageBucketId } from '@dereekb/firebase';
@@ -29,7 +29,7 @@ export const FIREBASE_STORAGE_CONTEXT_FACTORY_CONFIG_TOKEN: InjectionToken = 'FI
   providers: [
     {
       provide: FIREBASE_STORAGE_TOKEN,
-      useFactory: (app: admin.app.App) => app.storage(),
+      useFactory: (app: admin.app.App) => googleCloudStorageFromFirebaseAdminStorage(app.storage()),
       inject: [FIREBASE_APP_TOKEN]
     }
   ],

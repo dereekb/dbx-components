@@ -132,7 +132,7 @@ export function describeFirebaseStorageAccessorDriverTests(f: MockItemStorageFix
         });
 
         describe('uploadStream()', () => {
-          it('should upload using a WritableStream', async () => {
+          it('should upload a string using a WritableStream', async () => {
             if (uploadFile.uploadStream != null) {
               const contentType = 'text/plain';
               const data: StorageRawDataString = existsFileContent;
@@ -140,6 +140,9 @@ export function describeFirebaseStorageAccessorDriverTests(f: MockItemStorageFix
 
               await useCallback((cb) => stream.write(data, 'utf-8', cb));
               await useCallback((cb) => stream.end(cb));
+
+              const exists = await uploadFile.exists();
+              expect(exists).toBe(true);
 
               const metadata = await uploadFile.getMetadata();
               expect(metadata.contentType).toBe(contentType);
@@ -151,6 +154,8 @@ export function describeFirebaseStorageAccessorDriverTests(f: MockItemStorageFix
               expect(decoded).toBe(data);
             }
           });
+
+          // TODO: Upload using a nodejs stream
         });
       });
 
