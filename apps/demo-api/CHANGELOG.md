@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [8.11.1](https://github.com/dereekb/dbx-components/compare/v8.11.0-dev...v8.11.1) (2022-07-05)
+
+
+### Bug Fixes
+
+* firebase storage test fix ([ff5c53a](https://github.com/dereekb/dbx-components/commit/ff5c53ab8a76a8b3ede356f2ba7d00006db3237f))
+
+
+
 # [8.11.0](https://github.com/dereekb/dbx-components/compare/v8.10.0-dev...v8.11.0) (2022-07-05)
 
 
