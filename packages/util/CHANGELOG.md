@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [8.11.2](https://github.com/dereekb/dbx-components/compare/v8.11.1-dev...v8.11.2) (2022-07-05)
+
+
+### Bug Fixes
+
+* fixed slashPathType() ([180f2d6](https://github.com/dereekb/dbx-components/commit/180f2d645c10d772aa9ba4255ec3b0f2b8655096))
+
+
+
 ## [8.11.1](https://github.com/dereekb/dbx-components/compare/v8.11.0-dev...v8.11.1) (2022-07-05)
 
 
