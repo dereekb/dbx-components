@@ -3,6 +3,11 @@ import { Expose, Type } from 'class-transformer';
 import { addMinutes } from 'date-fns';
 import { DateRange, dateRangeState, DateRangeState } from './date.range';
 
+export interface DateDurationSpan {
+  startsAt: Date;
+  duration: Minutes;
+}
+
 export class DateDurationSpan {
   @Expose()
   @Type(() => Date)

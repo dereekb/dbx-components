@@ -38,6 +38,11 @@ export function reduceNumbersFn<D extends number>(reduceFn: (a: number, b: numbe
 }
 
 /**
+ * Input for range()
+ */
+export type RangeInput = number | { start?: number; end: number };
+
+/**
  * Generates an array containing the range of numbers specified.
  *
  * The end value is not included.
@@ -45,15 +50,20 @@ export function reduceNumbersFn<D extends number>(reduceFn: (a: number, b: numbe
  * @param param0
  * @returns
  */
-export function range(input: number | { start?: number; end: number }): number[] {
+export function range(input: RangeInput, inputEnd?: number): number[] {
   const range = [];
 
   let start: number;
   let end: number;
 
   if (typeof input === 'number') {
-    start = 0;
-    end = input;
+    if (typeof inputEnd === 'number') {
+      start = input;
+      end = inputEnd;
+    } else {
+      start = 0;
+      end = input;
+    }
   } else {
     start = input.start ?? 0;
     end = input.end;

@@ -1,6 +1,6 @@
 import { Type } from 'class-transformer';
 import { IsEnum, IsOptional, IsDate, IsNumber } from 'class-validator';
-import { addDays, addHours, endOfDay, endOfMonth, endOfWeek, isPast, startOfDay, startOfMinute, startOfMonth, startOfWeek } from 'date-fns';
+import { addDays, addHours, endOfDay, endOfMonth, endOfWeek, isDate, isPast, startOfDay, startOfMinute, startOfMonth, startOfWeek } from 'date-fns';
 
 /**
  * Represents a start and end date.
@@ -8,6 +8,16 @@ import { addDays, addHours, endOfDay, endOfMonth, endOfWeek, isPast, startOfDay,
 export interface DateRange {
   start: Date;
   end: Date;
+}
+
+/**
+ * Returns true if the input is a DateRange.
+ *
+ * @param input
+ * @returns
+ */
+export function isDateRange(input: unknown): input is DateRange {
+  return typeof input === 'object' && isDate((input as DateRange).start) && isDate((input as DateRange).end);
 }
 
 export enum DateRangeType {
@@ -113,6 +123,28 @@ export class DateRangeParams {
   }
 }
 
+export interface DateRangeTypedInput {
+  type: DateRangeType;
+  date?: Date;
+  distance?: number;
+}
+
+/**
+ * dateRange() input that infers duration to be a number of days, starting from the input date if applicable.
+ */
+export interface DateRangeDayDistanceInput {
+  date?: Date;
+  distance: number;
+}
+
+export interface DateRangeDistanceInput extends DateRangeDayDistanceInput {
+  type?: DateRangeType;
+}
+
+export type DateRangeInput = (DateRangeTypedInput | DateRangeDistanceInput) & {
+  roundToMinute?: boolean;
+};
+
 /**
  * Creates a DateRange from the input DateRangeParams
  *
@@ -120,7 +152,7 @@ export class DateRangeParams {
  * @param roundToMinute
  * @returns
  */
-export function makeDateRange({ type, date = new Date(), distance }: DateRangeParams, roundToMinute = false): DateRange {
+export function dateRange({ type = DateRangeType.DAY, date = new Date(), distance, roundToMinute: inputRoundToMinute = false }: DateRangeInput, roundToMinute = inputRoundToMinute): DateRange {
   let start: Date;
   let end: Date;
 
@@ -222,3 +254,9 @@ export function dateRangeState({ start, end }: DateRange): DateRangeState {
     return DateRangeState.FUTURE;
   }
 }
+
+// MARK: Compat
+/**
+ * @deprecated use dateRange() instead.
+ */
+export const makeDateRange = dateRange;
