@@ -40,7 +40,7 @@
         "stylePreprocessorOptions": {
           "includePaths": ["packages"]
         },
-        "styles": ["apps/demo/src/styles.scss", "node_modules/angular-calendar/css/angular-calendar.css"],
+        "styles": ["apps/demo/src/styles.scss"],
         "scripts": []
       },
       "configurations": {

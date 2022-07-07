@@ -1,4 +1,6 @@
+@use 'sass:map';
 @use '../../style/theming';
+@use './style/angular-calendar' as calendar;
 
 // MARK: Variables
 $calendar-header-height: theming.$content-navbar-height;
@@ -8,6 +10,9 @@ $calendar-scrollable-content-bottom-padding: 12px;
 
 // MARK: Mixin
 @mixin core() {
+  @include calendar.cal-core();
+  @include calendar.cal-theme(());
+
   .dbx-calendar {
     .dbx-calendar-title {
       font-weight: bold;
@@ -34,13 +39,50 @@ $calendar-scrollable-content-bottom-padding: 12px;
 }
 
 @mixin color($theme-config) {
+  $color-config: theming.get-color-config($theme-config);
+  $primary: map.get($color-config, 'primary');
+  $accent: map.get($color-config, 'accent');
+  $background: map.get($color-config, 'background');
+  $foreground: map.get($color-config, 'foreground');
+
+  $background-color: theming.get-color-from-palette($background, 'background');
+  $hover-color: theming.get-color-from-palette($background, 'hover');
+  $focused-color: theming.get-color-from-palette($background, 'focused-button');
+  $border-color: theming.get-color-from-palette($foreground, 'divider');
+  $text-color: theming.get-color-from-palette($foreground, 'text');
+
+  $event-icon-color: theming.get-color-from-palette($primary, 600);
+  $event-bg-color: theming.get-color-from-palette($primary, 800);
+  $event-text-color: theming.get-color-from-palette($primary, '800-contrast');
+  $weekend-color: theming.get-color-from-palette($accent, 500);
+  $badge-color: theming.get-color-from-palette($accent, 500);
+  $current-time-marker-color: theming.get-color-from-palette($accent, 400);
+
+  // @debug $foreground;
+  @debug $background;
+
+  #{calendar.$cal-event-icon-color-var}: $event-icon-color; // text/border color
+  #{calendar.$cal-event-color-primary-var}: $event-text-color; // text/border color
+  #{calendar.$cal-event-color-secondary-var}: $event-bg-color; // event background color
+  #{calendar.$cal-border-color-var}: $border-color;
+  #{calendar.$cal-bg-primary-var}: $background-color;
+  #{calendar.$cal-bg-secondary-var}: $hover-color;
+  #{calendar.$cal-bg-active-var}: $hover-color;
+  #{calendar.$cal-today-bg-var}: $hover-color;
+  #{calendar.$cal-weekend-color-var}: $weekend-color;
+  #{calendar.$cal-badge-color-var}: $badge-color;
+  #{calendar.$cal-current-time-marker-color-var}: $current-time-marker-color;
+  #{calendar.$cal-white-var}: #fff;
+  #{calendar.$cal-gray-var}: #555;
+  #{calendar.$cal-black-var}: #000;
+  #{calendar.$cal-gradient-var}: inset 0 0 10px 0 rgba($background-color, 0.2);
 }
 
 @mixin typography($typography-config) {
 }
 
 @mixin theme($theme-config) {
-  @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-action-snackbar') {
+  @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-calendar') {
     $color: theming.get-color-config($theme-config);
     $typography: theming.get-typography-config($theme-config);
 
