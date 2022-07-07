@@ -8,12 +8,12 @@
 @use '../extension/extension';
 
 // Includes all of the typographic styles.
-@mixin all-component-typographies($typography-config) {
+@mixin all-component-typographies($typography-config, $theme-config) {
   @include button.typography($typography-config);
   @include error.typography($typography-config);
   @include action.all-action-typography($typography-config);
   @include interaction.all-interaction-typography($typography-config);
   @include layout.all-layout-typography($typography-config);
   @include router.all-router-typography($typography-config);
-  @include extension.all-extension-typography($typography-config);
+  @include extension.all-extension-typography($typography-config, $theme-config);
 }
