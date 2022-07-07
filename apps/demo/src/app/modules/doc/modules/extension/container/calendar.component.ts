@@ -18,6 +18,8 @@ export interface TestCalendarEventData extends DateBlock {
   providers: [DbxCalendarStore]
 })
 export class DocExtensionCalendarComponent implements OnInit {
+  showRight = true;
+
   constructor(readonly calendarStore: DbxCalendarStore<TestCalendarEventData>) {}
 
   ngOnInit(): void {

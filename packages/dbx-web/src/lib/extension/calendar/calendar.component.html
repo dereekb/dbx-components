@@ -22,7 +22,7 @@
       </span>
     </div>
   </div>
-  <div class="dbx-calendar-content" [ngClass]="'calendar-content-' + (displayType$ | async)!" [ngSwitch]="displayType$ | async">
+  <div class="dbx-calendar-content" [ngClass]="'dbx-calendar-content-' + (displayType$ | async)!" [ngSwitch]="displayType$ | async">
     <mwl-calendar-month-view *ngSwitchCase="'month'" [viewDate]="(viewDate$ | async)!" [events]="(events$ | async)!" [activeDayIsOpen]="(activeDayIsOpen$ | async)!" (dayClicked)="dayClicked($event.day)" (eventClicked)="eventClicked('Clicked', $event.event)"></mwl-calendar-month-view>
     <mwl-calendar-week-view *ngSwitchCase="'week'" [viewDate]="(viewDate$ | async)!" [events]="(events$ | async)!" (eventClicked)="eventClicked('Clicked', $event.event)"></mwl-calendar-week-view>
     <mwl-calendar-day-view *ngSwitchCase="'day'" [viewDate]="(viewDate$ | async)!" [events]="(events$ | async)!" (eventClicked)="eventClicked('Clicked', $event.event)"></mwl-calendar-day-view>

@@ -6,6 +6,7 @@ $cal-bg-primary-var: --cal-bg-primary;
 $cal-bg-secondary-var: --cal-bg-secondary;
 $cal-bg-active-var: --cal-bg-active;
 $cal-bg-active-dragover-var: --cal-bg-active-dragover;
+$cal-bg-highlight-var: --cal-bg-highlight;
 $cal-today-bg-var: --cal-today-bg;
 $cal-weekend-color-var: --cal-weekend-color;
 $cal-badge-color-var: --cal-badge-color;
@@ -23,6 +24,7 @@ $cal-bg-primary: var($cal-bg-primary-var);
 $cal-bg-secondary: var($cal-bg-secondary-var);
 $cal-bg-active: var($cal-bg-active-var);
 $cal-bg-active-dragover: var($cal-bg-active-dragover-var);
+$cal-bg-highlight: var($cal-bg-highlight-var);
 $cal-today-bg: var($cal-today-bg-var);
 $cal-weekend-color: var($cal-weekend-color-var);
 $cal-badge-color: var($cal-badge-color-var);
@@ -51,6 +53,8 @@ $cal-vars: map-merge(
     bg-secondary: $cal-bg-secondary,
     // the color used when hovering over cells and headers
     bg-active: $cal-bg-active,
+    // the color used when hovering over cells and headers
+    bg-highlight: $cal-bg-highlight,
     // the background color to mark today in the week view header
     today-bg: $cal-today-bg,
     // the color used to indicate a day is a weekend

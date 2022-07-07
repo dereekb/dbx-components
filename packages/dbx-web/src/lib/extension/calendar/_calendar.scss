@@ -4,9 +4,14 @@
 
 // MARK: Variables
 $calendar-header-height: theming.$content-navbar-height;
-$calendar-week-content-header-height: 52px;
-$calendar-month-content-header-height: 31px;
+$calendar-title-height: 22px;
+$calendar-week-content-header-height: 51px;
+$calendar-month-content-header-height: 29px;
 $calendar-scrollable-content-bottom-padding: 12px;
+$calendar-week-content-all-day-events-height: 110px;
+
+$calendar-title-and-header-height: calc($calendar-header-height + $calendar-title-height);
+$calendar-content-border-consideration: 2px;
 
 // MARK: Mixin
 @mixin core() {
@@ -14,7 +19,10 @@ $calendar-scrollable-content-bottom-padding: 12px;
   @include calendar.cal-theme(());
 
   .dbx-calendar {
+    height: 100%;
+
     .dbx-calendar-title {
+      height: $calendar-title-height;
       font-weight: bold;
       text-align: center;
       margin: 0;
@@ -24,15 +32,99 @@ $calendar-scrollable-content-bottom-padding: 12px;
     .dbx-calendar-header {
       height: $calendar-header-height;
       padding: 0px 8px;
+
+      display: flex;
+      width: 100%;
+      align-items: center;
+      box-sizing: border-box;
+
+      .dbx-calendar-controls {
+        width: 100%;
+      }
     }
 
     .dbx-calendar-content {
+      height: 100%;
+
       &.dbx-calendar-content-week {
+        height: calc(100% - $calendar-title-and-header-height - $calendar-week-content-header-height - $calendar-content-border-consideration);
         margin-top: $calendar-week-content-header-height;
       }
 
       &.dbx-calendar-content-month {
+        height: calc(100% - $calendar-title-and-header-height - $calendar-month-content-header-height - $calendar-content-border-consideration);
         margin-top: $calendar-month-content-header-height;
+      }
+
+      &.dbx-calendar-content-day .cal-week-view {
+        height: calc(100% - $calendar-title-and-header-height - $calendar-content-border-consideration);
+        overflow: auto;
+      }
+    }
+
+    .cal-month-view {
+      position: relative;
+      width: 100%;
+      height: 100%;
+
+      .cal-header {
+        margin-top: -$calendar-month-content-header-height;
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        box-sizing: border-box;
+      }
+
+      .cal-days {
+        overflow: auto;
+        height: 100%;
+      }
+    }
+
+    // Applies to both the day and week view.
+    .cal-week-view {
+      position: relative;
+      height: 100%;
+      width: 100%;
+
+      .cal-time-events {
+        .cal-day-column {
+          height: 1440px; // 1440 is the combined height of all the content.
+        }
+      }
+    }
+
+    .dbx-calendar-content-week {
+      .cal-week-view {
+        .cal-all-day-events {
+          // Day events set to specific height.
+          height: $calendar-week-content-all-day-events-height;
+        }
+
+        .cal-day-headers {
+          margin-top: -$calendar-week-content-header-height;
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          box-sizing: border-box;
+        }
+
+        .cal-time-events {
+          // Weirdness caused by our hack for using the cal-day-headers as an absolute position.
+          overflow: auto;
+          padding-bottom: $calendar-scrollable-content-bottom-padding;
+          height: 100%;
+          box-sizing: border-box;
+        }
+      }
+    }
+
+    .cal-day-view,
+    .cal-week-view {
+      .cal-event {
+        min-height: 25px;
       }
     }
   }
@@ -54,12 +146,10 @@ $calendar-scrollable-content-bottom-padding: 12px;
   $event-icon-color: theming.get-color-from-palette($primary, 600);
   $event-bg-color: theming.get-color-from-palette($primary, 800);
   $event-text-color: theming.get-color-from-palette($primary, '800-contrast');
+  $highlight-color: theming.get-color-from-palette($accent, 300);
   $weekend-color: theming.get-color-from-palette($accent, 500);
   $badge-color: theming.get-color-from-palette($accent, 500);
   $current-time-marker-color: theming.get-color-from-palette($accent, 400);
-
-  // @debug $foreground;
-  @debug $background;
 
   #{calendar.$cal-event-icon-color-var}: $event-icon-color; // text/border color
   #{calendar.$cal-event-color-primary-var}: $event-text-color; // text/border color
@@ -68,6 +158,7 @@ $calendar-scrollable-content-bottom-padding: 12px;
   #{calendar.$cal-bg-primary-var}: $background-color;
   #{calendar.$cal-bg-secondary-var}: $hover-color;
   #{calendar.$cal-bg-active-var}: $hover-color;
+  #{calendar.$cal-bg-highlight-var}: rgba($highlight-color, 0.3);
   #{calendar.$cal-today-bg-var}: $hover-color;
   #{calendar.$cal-weekend-color-var}: $weekend-color;
   #{calendar.$cal-badge-color-var}: $badge-color;

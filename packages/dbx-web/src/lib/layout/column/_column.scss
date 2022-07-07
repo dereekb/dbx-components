@@ -27,11 +27,6 @@ $two-columns-right-padding-size: 6px;
 
       overflow: auto;
       // background: red;
-
-      .two-column-reverse-sizing & {
-        width: calc(100% - #{$two-column-left-width});
-        overflow: hidden;
-      }
     }
 
     .right-column {
@@ -61,6 +56,23 @@ $two-columns-right-padding-size: 6px;
         display: none;
       }
 
+      .right-column {
+        max-width: 100%;
+      }
+    }
+  }
+
+  .dbx-two-column.two-column-reverse-sizing {
+    .left-column {
+      width: calc(100% - #{$two-column-left-width});
+      overflow: hidden;
+    }
+
+    .right-column {
+      max-width: $two-column-left-width;
+    }
+
+    &.hide-left-column {
       .right-column {
         max-width: 100%;
       }

@@ -172,6 +172,10 @@
       border-color: map-get($theme, border-color);
     }
 
+    .cal-day-cell.cal-in-month.cal-event-highlight {
+      background: map-get($theme, bg-highlight) !important;
+    }
+
     .cal-day-cell:not(:last-child) {
       border-right-color: map-get($theme, border-color);
 

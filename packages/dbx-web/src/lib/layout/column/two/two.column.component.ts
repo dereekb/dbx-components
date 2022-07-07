@@ -32,9 +32,9 @@ export interface DbxTwoColumnViewState {
 export class DbxTwoColumnComponent extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
   private _view: DbxTwoColumnViewState = { showRight: false, showFullLeft: true, hideLeftColumn: false, reverseSizing: false, inSectionPage: false };
 
-  private _reverseSizing = new BehaviorSubject<boolean>(false);
   private _inSectionPage = new BehaviorSubject<boolean>(false);
 
+  readonly reverseSizing$ = this.twoColumnsContextStore.reverseSizing$;
   readonly hideLeftColumn$: Observable<boolean> = this.twoColumnsContextStore.hideLeft$;
   readonly showRight$: Observable<boolean> = this.twoColumnsContextStore.showRight$;
   readonly showFullLeft$: Observable<boolean> = this.twoColumnsContextStore.showFullLeft$;
@@ -46,7 +46,7 @@ export class DbxTwoColumnComponent extends AbstractSubscriptionDirective impleme
   }
 
   ngOnInit(): void {
-    this.sub = combineLatest([this.showRight$, this.showFullLeft$, this.hideLeftColumn$, this._reverseSizing, this._inSectionPage]).subscribe(([showRight, showFullLeft, hideLeftColumn, reverseSizing, inSectionPage]: [boolean, boolean, boolean, boolean, boolean]) => {
+    this.sub = combineLatest([this.showRight$, this.showFullLeft$, this.hideLeftColumn$, this.reverseSizing$, this._inSectionPage]).subscribe(([showRight, showFullLeft, hideLeftColumn, reverseSizing, inSectionPage]: [boolean, boolean, boolean, boolean, boolean]) => {
       this._view = {
         showRight,
         showFullLeft,
@@ -61,7 +61,6 @@ export class DbxTwoColumnComponent extends AbstractSubscriptionDirective impleme
 
   override ngOnDestroy(): void {
     super.ngOnDestroy();
-    this._reverseSizing.complete();
     this._inSectionPage.complete();
   }
 
@@ -71,7 +70,7 @@ export class DbxTwoColumnComponent extends AbstractSubscriptionDirective impleme
 
   @Input()
   set reverseSizing(reverseSizing: boolean) {
-    this._reverseSizing.next(reverseSizing);
+    this.twoColumnsContextStore.setReverseSizing(reverseSizing);
   }
 
   @Input()
