@@ -89,15 +89,15 @@ export class ModelRecurrenceInfoUtility {
       }
     });
 
-    const dateRange = dateRRule.getRecurrenceDateRange();
+    const dates = dateRRule.getRecurrenceDateRange();
     const rruleSetString: RRuleLines = DateRRuleParseUtility.toRRuleLines(rrule);
 
     const recurrenceInfo = {
       timezone,
       rrule: rruleSetString,
-      start: dateRange.start,
-      end: dateRange.finalRecurrenceEndsAt ?? dateRange.end,
-      forever: dateRange.forever
+      start: dates.start,
+      end: dates.finalRecurrenceEndsAt ?? dates.end,
+      forever: dates.forever
     };
 
     return new ModelRecurrenceInfo(recurrenceInfo);

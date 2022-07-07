@@ -4,6 +4,7 @@
 @use '../interaction/interaction';
 @use '../layout/layout';
 @use '../router/router';
+@use '../extension/extension';
 
 // Includes all theming config
 @mixin all-component-core() {
@@ -13,4 +14,5 @@
   @include interaction.all-interaction-core();
   @include layout.all-layout-core();
   @include router.all-router-core();
+  @include extension.all-extension-core();
 }

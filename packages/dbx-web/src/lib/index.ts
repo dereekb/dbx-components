@@ -1,6 +1,7 @@
 export * from './action';
 export * from './button';
 export * from './error';
+export * from './extension';
 export * from './interaction';
 export * from './keypress';
 export * from './loading';

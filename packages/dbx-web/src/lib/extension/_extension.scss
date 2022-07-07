@@ -1,0 +1,13 @@
+@use './calendar/calendar';
+
+@mixin all-extension-core() {
+  @include calendar.core();
+}
+
+@mixin all-extension-typography($typography-config) {
+  @include calendar.typography($typography-config);
+}
+
+@mixin all-extension-theme($theme-config) {
+  @include calendar.theme($theme-config);
+}

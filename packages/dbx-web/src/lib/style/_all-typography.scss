@@ -5,6 +5,7 @@
 @use '../interaction/interaction';
 @use '../layout/layout';
 @use '../router/router';
+@use '../extension/extension';
 
 // Includes all of the typographic styles.
 @mixin all-component-typographies($typography-config) {
@@ -14,4 +15,5 @@
   @include interaction.all-interaction-typography($typography-config);
   @include layout.all-layout-typography($typography-config);
   @include router.all-router-typography($typography-config);
+  @include extension.all-extension-typography($typography-config);
 }

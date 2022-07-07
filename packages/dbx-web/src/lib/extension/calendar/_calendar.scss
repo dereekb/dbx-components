@@ -1,0 +1,55 @@
+@use '../../style/theming';
+
+// MARK: Variables
+$calendar-header-height: theming.$content-navbar-height;
+$calendar-week-content-header-height: 52px;
+$calendar-month-content-header-height: 31px;
+$calendar-scrollable-content-bottom-padding: 12px;
+
+// MARK: Mixin
+@mixin core() {
+  .dbx-calendar {
+    .dbx-calendar-title {
+      font-weight: bold;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+    }
+
+    .dbx-calendar-header {
+      height: $calendar-header-height;
+      padding: 0px 8px;
+    }
+
+    .dbx-calendar-content {
+      &.dbx-calendar-content-week {
+        margin-top: $calendar-week-content-header-height;
+      }
+
+      &.dbx-calendar-content-month {
+        margin-top: $calendar-month-content-header-height;
+      }
+    }
+  }
+}
+
+@mixin color($theme-config) {
+}
+
+@mixin typography($typography-config) {
+}
+
+@mixin theme($theme-config) {
+  @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-action-snackbar') {
+    $color: theming.get-color-config($theme-config);
+    $typography: theming.get-typography-config($theme-config);
+
+    @if $color !=null {
+      @include color($theme-config);
+    }
+
+    @if $typography !=null {
+      @include typography($typography);
+    }
+  }
+}

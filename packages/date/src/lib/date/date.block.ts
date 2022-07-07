@@ -139,21 +139,34 @@ export type DateBlockTimingRef = {
 };
 
 /**
- * An object that implements DateBlockTiming and DateBlockArrayRef
+ * An object that implements DateBlockTimingRef and DateBlockArrayRef
  */
-export interface DateBlockCollection<B extends DateBlock = DateBlock> extends DateBlockTiming, DateBlockArrayRef<B> {}
+export interface DateBlockCollection<B extends DateBlock = DateBlock> extends DateBlockTimingRef, DateBlockArrayRef<B> {}
 
 /**
  * An expanded DateBlock that implements DateDurationSpan and contains the DateBlock values.
  */
 export type DateBlockDurationSpan<B extends DateBlock = DateBlock> = DateDurationSpan & B;
 
+/**
+ * Convenience function for calling expandDateBlocks() with the input DateBlockCollection.
+ *
+ * @param collection
+ * @returns
+ */
 export function expandDateBlockCollection<B extends DateBlock = DateBlock>(collection: DateBlockCollection<B>): DateBlockDurationSpan<B>[] {
-  return expandDateBlocks(collection.blocks, collection);
+  return expandDateBlocks(collection.timing, collection.blocks);
 }
 
-export function expandDateBlocks<B extends DateBlock = DateBlock>(blocks: DateBlock[], timing: DateBlockTiming): DateBlockDurationSpan<B>[] {
-  return undefined as any;
+/**
+ * Convenience function for calling dateBlocksExpansionFactory() then passing the blocks.
+ *
+ * @param blocks
+ * @param timing
+ * @returns
+ */
+export function expandDateBlocks<B extends DateBlock = DateBlock>(timing: DateBlockTiming, blocks: B[]): DateBlockDurationSpan<B>[] {
+  return dateBlocksExpansionFactory({ timing })(blocks);
 }
 
 export type DateBlocksExpansionFactoryInput<B extends DateBlock = DateBlock> = DateBlockArrayRef<B> | DateBlockArray<B>;

@@ -84,28 +84,28 @@ export function makeDateQueryForDateItemRangeFilter(find: DateItemRangeFilter): 
 
   // Apply the timezone to the date range if provided.
   const range = find.timezone ? { ...find.range, date: utcToZonedTime(find.range.date, find.timezone) } : find.range;
-  const dateRange = dateRange(range);
+  const dates = dateRange(range);
 
   switch (range.type) {
     case DateRangeType.DAY:
     case DateRangeType.WEEK:
     case DateRangeType.MONTH:
-      dateRange.end = addSeconds(dateRange.end, 1); // Ends on the next day to encompass the full 24 hours, instead of 23:59:59 hours.
+      dates.end = addSeconds(dates.end, 1); // Ends on the next day to encompass the full 24 hours, instead of 23:59:59 hours.
       break;
   }
 
-  result.rStart = dateRange.start;
-  result.rEnd = dateRange.end;
+  result.rStart = dates.start;
+  result.rEnd = dates.end;
 
   // Range returns all values that are running withing that time period.
 
   if (find.rangeContained) {
     // If range contained, must have started and ended within the box entirely.
-    result.startsGte = dateRange.start;
-    result.endsLte = dateRange.end;
+    result.startsGte = dates.start;
+    result.endsLte = dates.end;
   } else {
-    result.startsLte = dateRange.end;
-    result.endsGte = dateRange.start;
+    result.startsLte = dates.end;
+    result.endsGte = dates.start;
   }
 
   return result;
