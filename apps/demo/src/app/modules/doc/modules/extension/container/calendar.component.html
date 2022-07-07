@@ -1,0 +1,26 @@
+<dbx-content-container>
+  <doc-feature-layout header="Calendar Extension" hint="">
+    <doc-feature-derived type="uses" from="mattlewis92/angular-calendar" url="https://github.com/mattlewis92/angular-calendar">
+      <p>Styles are not required, as the dbx-web library already builds custom/modified styling for use.</p>
+    </doc-feature-derived>
+    <!-- Examples -->
+    <doc-feature-example header="dbx-calendar" hint="Used to render a calendar.">
+      <dbx-calendar (clickEvent)="event = $event"></dbx-calendar>
+      <p>Picked Date: {{ date$ | async | date }}</p>
+      <p>Clicked Event: {{ event | json }}</p>
+    </doc-feature-example>
+    <doc-feature-example header="dbx-calendar in restricted two-column" hint="Example showing a calendar in a two-column view with a set height.">
+      <button (click)="showRight = !showRight" mat-raised-button color="accent">Toggle Right</button>
+      <dbx-two-column dbxTwoColumnContext [reverseSizing]="true" [dbxTwoColumnFullLeft]="true" [showRight]="showRight" style="height: 400px">
+        <dbx-two-block class="dbx-content-scroll-lock" left>
+          <dbx-calendar (clickEvent)="event = $event"></dbx-calendar>
+        </dbx-two-block>
+        <dbx-two-column-right right header="Right Side Header">
+          <div style="height: 100%">
+            <p>Clicked Event: {{ event | json }}</p>
+          </div>
+        </dbx-two-column-right>
+      </dbx-two-column>
+    </doc-feature-example>
+  </doc-feature-layout>
+</dbx-content-container>

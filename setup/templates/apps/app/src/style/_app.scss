@@ -86,7 +86,11 @@ This mixin creates the app-theme components and elements for @angular/material a
   @include dbx-form.theme($root-selector, $app-form-theme);
 }
 
-$dark-app-mat-theme: mat.define-dark-theme((color: (primary: $app-primary, accent: $app-accent, warn: $app-warn), density: null, typography: null));    // NOTE: setting density and typography to null is important!
+$dark-app-primary: mat.define-palette(mat.$purple-palette);
+$dark-app-accent: mat.define-palette(mat.$green-palette);
+$dark-app-warn: mat.define-palette(mat.$red-palette);
+
+$dark-app-mat-theme: mat.define-dark-theme((color: (primary: $dark-app-primary, accent: $dark-app-accent, warn: $dark-app-warn), density: null, typography: null));    // NOTE: setting density and typography to null is important!
 $dark-app-theme: dbx.define-dbx-theme-config($dark-app-mat-theme, $app-dbx-theme-with-banner-config);
 $dark-app-form-theme: dbx-form.define-dbx-form-theme-config($dark-app-theme);
 

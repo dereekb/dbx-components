@@ -115,23 +115,33 @@ export function takeNextUpcomingTime(date: Date, removeSeconds?: boolean): Date 
 }
 
 /**
- * Creates a new date and copies the hours/minutes from the previous date.
+ * Creates a new date and copies the hours/minutes from the previous date and applies them to a date for today.
  */
-export function copyHoursAndMinutesFromDateToToday(date: Date, removeSeconds?: boolean): Date {
-  return copyHoursAndMinutesToToday({
-    hours: date.getHours(),
-    minutes: date.getMinutes(),
-    removeSeconds
-  });
+export function copyHoursAndMinutesFromDateToToday(fromDate: Date, removeSeconds?: boolean): Date {
+  return copyHoursAndMinutesFromDate(new Date(), fromDate, removeSeconds);
 }
 
 /**
- * Creates a new date and copies the hours/minutes from the input.
+ * Creates a new date and copies the hours/minutes from the input date to the target date.
+ */
+export function copyHoursAndMinutesFromDate(target: Date, fromDate: Date, removeSeconds?: boolean): Date {
+  return copyHoursAndMinutesToDate(
+    {
+      hours: fromDate.getHours(),
+      minutes: fromDate.getMinutes(),
+      removeSeconds
+    },
+    target
+  );
+}
+
+/**
+ * Creates a new date and copies the hours/minutes from the input onto the target date, if provided. Defaults to now/today otherwise.
  *
  * Also rounds the seconds and milliseconds.
  */
-export function copyHoursAndMinutesToToday({ hours, minutes, removeSeconds = true }: { hours: number; minutes?: number; removeSeconds?: boolean }): Date {
-  return setDateValues(new Date(), {
+export function copyHoursAndMinutesToDate({ hours, minutes, removeSeconds = true }: { hours: number; minutes?: number; removeSeconds?: boolean }, target?: Maybe<Date>): Date {
+  return setDateValues(target ?? new Date(), {
     hours,
     ...(minutes != null
       ? {
@@ -147,6 +157,8 @@ export function copyHoursAndMinutesToToday({ hours, minutes, removeSeconds = tru
       : undefined)
   });
 }
+
+export const copyHoursAndMinutesToToday = copyHoursAndMinutesToDate;
 
 /**
  * Removes the seconds and milliseconds from the input date.

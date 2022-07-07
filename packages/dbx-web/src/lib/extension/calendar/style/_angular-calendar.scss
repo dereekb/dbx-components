@@ -1,0 +1,23 @@
+@forward './variables';
+
+@use './common/calendar-tooltip' as tooltip;
+@use './day/calendar-day-view' as day;
+@use './week/calendar-week-view' as week;
+@use './month/calendar-month-view' as month;
+
+@mixin cal-core() {
+  @include tooltip.cal-tooltip-core();
+  @include day.cal-day-view-core();
+  @include week.cal-week-view-core();
+  @include month.cal-month-view-core();
+}
+
+@mixin cal-theme($overrides: null) {
+  @if ($overrides == null) {
+    $overrides: ();
+  }
+
+  @include tooltip.cal-tooltip-theme($overrides);
+  @include month.cal-month-view-theme($overrides);
+  @include week.cal-week-view-theme($overrides);
+}

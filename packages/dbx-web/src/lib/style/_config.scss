@@ -19,13 +19,16 @@
 
   $input-dbx-screen-theme-config: map.get($input-dbx-theme-config, 'screen');
   $input-dbx-layout-theme-config: map.get($input-dbx-theme-config, 'layout');
+  $input-dbx-extension-theme-config: map.get($input-dbx-theme-config, 'extension');
 
   $dbx-screen: define-dbx-screen-config($input-dbx-screen-theme-config);
   $dbx-layout: define-dbx-layout-config($input-dbx-layout-theme-config);
+  $dbx-extension: define-dbx-extension-config($input-dbx-extension-theme-config);
 
   $dbx-theme-config: (
     'screen': $dbx-screen,
-    'layout': $dbx-layout
+    'layout': $dbx-layout,
+    'extension': $dbx-extension
   );
 
   @return map.merge(
@@ -143,4 +146,30 @@
 
 @function get-dbx-two-column-left-width($theme-config) {
   @return get-dbx-layout-config-var($theme-config, 'two-column-left-width');
+}
+
+// extension
+@function define-dbx-extension-config($input-dbx-theme-extension-config: null) {
+  $dbx-extension-config: (
+    // calendar
+    'calendar': 1 // enabled by default
+  );
+
+  @if ($input-dbx-theme-extension-config != null) {
+    $dbx-extension-config: map.merge($dbx-extension-config, $input-dbx-theme-extension-config);
+  }
+
+  @return $dbx-extension-config;
+}
+
+@function get-dbx-extension-config($theme-config) {
+  @return map.get(get-dbx-theme-config($theme-config), 'extension');
+}
+
+@function get-dbx-extension-config-var($theme-config, $item) {
+  @return map.get(get-dbx-extension-config($theme-config), $item);
+}
+
+@function get-dbx-extension-calendar-enabled($theme-config) {
+  @return get-dbx-extension-config-var($theme-config, 'calendar');
 }

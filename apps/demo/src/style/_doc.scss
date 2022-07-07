@@ -84,6 +84,7 @@ $doc-mat-theme: mat.define-light-theme(
     typography: null
   )
 ); // NOTE: setting density and typography to null is important!
+
 $doc-dbx-theme-with-banner-config: dbx.quick-define-dbx-config-via-banners(variables.$app-top-banner-height);
 $doc-theme: dbx.define-dbx-theme-config($doc-mat-theme, $doc-dbx-theme-with-banner-config);
 $doc-form-theme: dbx-form.define-dbx-form-theme-config($doc-theme);
@@ -96,17 +97,22 @@ This mixin creates the doc-theme components and elements for @angular/material a
   @include dbx-form.theme($root-selector, $doc-form-theme);
 }
 
+$dark-doc-primary: mat.define-palette(mat.$purple-palette);
+$dark-doc-accent: mat.define-palette(mat.$orange-palette);
+$dark-doc-warn: mat.define-palette(mat.$red-palette);
 $dark-doc-mat-theme: mat.define-dark-theme(
   (
     color: (
-      primary: $doc-primary,
-      accent: $doc-accent,
-      warn: $doc-warn
+      primary: $dark-doc-primary,
+      accent: $dark-doc-accent,
+      warn: $dark-doc-warn
     ),
     density: null,
     typography: null
   )
-); // NOTE: setting density and typography to null is important!
+);
+
+// NOTE: setting density and typography to null is important!
 $dark-doc-theme: dbx.define-dbx-theme-config($dark-doc-mat-theme, $doc-dbx-theme-with-banner-config);
 $dark-doc-form-theme: dbx-form.define-dbx-form-theme-config($dark-doc-theme);
 

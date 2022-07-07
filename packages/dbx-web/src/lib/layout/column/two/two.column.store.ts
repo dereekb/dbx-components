@@ -5,6 +5,13 @@ import { SegueRef } from '@dereekb/dbx-core';
 import { isMaybeNot, Maybe } from '@dereekb/util';
 
 export interface TwoColumnsState {
+  /**
+   * Whether or not to reverse the sizing.
+   */
+  reverseSizing: boolean;
+  /**
+   * Whether or not the right side should be shown.
+   */
   showRight: boolean;
   /**
    * Whether or not to allow the left to fill up the screen when no right is shown.
@@ -27,6 +34,7 @@ export interface TwoColumnsState {
 export const DEFAULT_TWO_COLUMNS_MIN_RIGHT_WIDTH = 320;
 
 const INITIAL_STATE: TwoColumnsState = {
+  reverseSizing: false,
   showRight: false,
   fullLeft: false,
   minRightWidth: DEFAULT_TWO_COLUMNS_MIN_RIGHT_WIDTH
@@ -51,6 +59,11 @@ export class TwoColumnsContextStore extends ComponentStore<TwoColumnsState> impl
       return hideLeft;
     })
   );
+
+  /**
+   * Pipes the current state of reverseSizing.
+   */
+  readonly reverseSizing$ = this.state$.pipe(map((x) => x.reverseSizing));
 
   /**
    * Pipes the current state of showRight.
@@ -90,6 +103,11 @@ export class TwoColumnsContextStore extends ComponentStore<TwoColumnsState> impl
    * Completely resets the store.
    */
   readonly reset = this.updater(() => ({ ...INITIAL_STATE }));
+
+  /**
+   * Changes the state to show right or not.
+   */
+  readonly setReverseSizing = this.updater((state, reverseSizing: Maybe<boolean>) => (isMaybeNot(reverseSizing) ? state : { ...state, reverseSizing }));
 
   /**
    * Changes the state to show right or not.

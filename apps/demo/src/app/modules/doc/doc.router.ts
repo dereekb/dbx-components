@@ -52,10 +52,28 @@ export const docInteractionState: Ng2StateDeclaration = {
   loadChildren: () => import('./modules/interaction/doc.interaction.module').then((m) => m.DocInteractionModule)
 };
 
+export const docExtensionState: Ng2StateDeclaration = {
+  url: '/extension',
+  name: 'doc.extension.**',
+  loadChildren: () => import('./modules/extension/doc.extension.module').then((m) => m.DocExtensionModule)
+};
+
 export const docFormState: Ng2StateDeclaration = {
   url: '/form',
   name: 'doc.form.**',
   loadChildren: () => import('./modules/form/doc.form.module').then((m) => m.DocFormModule)
 };
 
-export const STATES: Ng2StateDeclaration[] = [layoutState, docHomeState, docLayoutState, docActionState, docAuthState, docRouterState, docTextState, docInteractionState, docFormState];
+export const STATES: Ng2StateDeclaration[] = [
+  //
+  layoutState,
+  docHomeState,
+  docLayoutState,
+  docActionState,
+  docAuthState,
+  docRouterState,
+  docTextState,
+  docInteractionState,
+  docExtensionState,
+  docFormState
+];

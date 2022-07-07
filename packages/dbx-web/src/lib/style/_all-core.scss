@@ -4,13 +4,15 @@
 @use '../interaction/interaction';
 @use '../layout/layout';
 @use '../router/router';
+@use '../extension/extension';
 
 // Includes all theming config
-@mixin all-component-core() {
+@mixin all-component-core($theme-config) {
   @include button.core();
   @include error.core();
   @include action.all-action-core();
   @include interaction.all-interaction-core();
   @include layout.all-layout-core();
   @include router.all-router-core();
+  @include extension.all-extension-core($theme-config);
 }

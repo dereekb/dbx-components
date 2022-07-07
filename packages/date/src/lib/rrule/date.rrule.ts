@@ -1,6 +1,6 @@
 import { Maybe, TimezoneString } from '@dereekb/util';
 import { RRule, Options } from 'rrule';
-import { CalendarDate, DateSet, DateRange, DateRangeParams, makeDateRange, maxFutureDate, durationSpanToDateRange } from '../date';
+import { CalendarDate, DateSet, DateRange, DateRangeParams, dateRange, maxFutureDate, durationSpanToDateRange } from '../date';
 import { BaseDateAsUTC, DateTimezoneUtcNormalInstance } from '../date/date.timezone';
 import { DateRRule } from './date.rrule.extension';
 import { DateRRuleParseUtility, RRuleLines, RRuleStringLineSet, RRuleStringSetSeparation } from './date.rrule.parse';
@@ -178,7 +178,7 @@ export class DateRRuleInstance {
     let between: Maybe<DateRange>;
 
     if (options.range || options.rangeParams) {
-      between = options.range ?? makeDateRange(options.rangeParams as DateRangeParams);
+      between = options.range ?? dateRange(options.rangeParams as DateRangeParams);
       between.start = this.normalInstance.baseDateToTargetDate(between.start);
       between.end = this.normalInstance.baseDateToTargetDate(between.end);
     }

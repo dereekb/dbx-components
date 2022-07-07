@@ -1,3 +1,4 @@
+import { IndexNumber, IndexRef } from '../value/indexed';
 import { Maybe } from '../value/maybe.type';
 
 /**
@@ -5,12 +6,11 @@ import { Maybe } from '../value/maybe.type';
  *
  * This is useful for cases where you need the items in their index in the array.
  */
-export type IndexSet = number[];
+export type IndexSet = IndexNumber[];
 
 export type IndexSetPairSet<T> = IndexSetPair<T>[];
 
-export interface IndexSetPair<T> {
-  i: number;
+export interface IndexSetPair<T> extends IndexRef {
   item: Maybe<T>;
 }
 
@@ -22,7 +22,7 @@ export interface IndexSetPair<T> {
  * @returns
  */
 export function findToIndexSet<T>(input: T[], filter: (value: T) => boolean): IndexSet {
-  const filterIndexes: number[] = [];
+  const filterIndexes: IndexNumber[] = [];
 
   input.forEach((x, i) => {
     if (filter(x)) {
