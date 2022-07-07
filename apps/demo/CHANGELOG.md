@@ -2,6 +2,21 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [8.12.0](https://github.com/dereekb/dbx-components/compare/v8.11.2-dev...v8.12.0) (2022-07-07)
+
+
+### Bug Fixes
+
+* fixed two column reverseSizing ([c298776](https://github.com/dereekb/dbx-components/commit/c2987764dac307f6a9743f9172a68ea78b6e5f0a))
+
+
+### Features
+
+* added dbxCalendar ([88750cb](https://github.com/dereekb/dbx-components/commit/88750cb4302b8e67dcaadb4813979a8e73d1d7b7))
+* added dbxCalendar Styling ([f963986](https://github.com/dereekb/dbx-components/commit/f9639863a9cfe599525604c7b8c2d1dcb513ee0d))
+
+
+
 ## [8.11.2](https://github.com/dereekb/dbx-components/compare/v8.11.1-dev...v8.11.2) (2022-07-05)
 
 
