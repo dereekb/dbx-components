@@ -1,11 +1,27 @@
 import { Component, EventEmitter, Output } from '@angular/core';
 import { isSameMonth, format, differenceInMinutes } from 'date-fns';
 import { CalendarEvent } from 'angular-calendar';
-
 import { DbxCalendarStore, CalendarDisplayType, CalendarState } from './calendar.store';
 import { map, shareReplay, withLatestFrom } from 'rxjs/operators';
-import { CalendarUtility } from '.';
 import { MatButtonToggleChange } from '@angular/material/button-toggle';
+import { formatToTimeAndDurationString } from '@dereekb/date';
+
+export interface DbxCalendarEvent<T> {
+  event: CalendarEvent<T>;
+  action?: string;
+}
+
+function timeSubtitleForEvent(event: CalendarEvent): string {
+  let subtitle;
+
+  if (event.allDay) {
+    subtitle = `(All Day)`;
+  } else {
+    subtitle = formatToTimeAndDurationString(event.start, event.end ?? new Date());
+  }
+
+  return subtitle;
+}
 
 @Component({
   selector: 'dbx-calendar',
@@ -13,7 +29,7 @@ import { MatButtonToggleChange } from '@angular/material/button-toggle';
 })
 export class DbxCalendarComponent<T> {
   @Output()
-  viewEvent = new EventEmitter<CalendarEvent<T>>();
+  clickEvent = new EventEmitter<DbxCalendarEvent<T>>();
 
   readonly viewDate$ = this.calendarStore.date$;
 
@@ -21,7 +37,7 @@ export class DbxCalendarComponent<T> {
     map((events: CalendarEvent[]) => {
       return events
         .map((event: CalendarEvent) => {
-          const subtitle = CalendarUtility.timeSubtitleForEvent(event);
+          const subtitle = timeSubtitleForEvent(event);
           let title;
 
           if (event.allDay) {
@@ -74,7 +90,7 @@ export class DbxCalendarComponent<T> {
   }
 
   eventClicked(action: string, event: CalendarEvent<T>): void {
-    this.viewEvent.emit(event);
+    this.clickEvent.emit({ action, event });
   }
 
   typeToggleChanged(event: MatButtonToggleChange): void {

@@ -98,7 +98,7 @@ This mixin creates the doc-theme components and elements for @angular/material a
 }
 
 $dark-doc-primary: mat.define-palette(mat.$purple-palette);
-$dark-doc-accent: mat.define-palette(mat.$green-palette);
+$dark-doc-accent: mat.define-palette(mat.$orange-palette);
 $dark-doc-warn: mat.define-palette(mat.$red-palette);
 $dark-doc-mat-theme: mat.define-dark-theme(
   (
