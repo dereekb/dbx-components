@@ -1,6 +1,6 @@
 import { FirebaseFunctionGetter, FirebaseFunctionsConfigMap, lazyFirebaseFunctionsFactory } from '@dereekb/firebase';
 import { Functions } from 'firebase/functions';
-import { ProfileFunctionTypeMap, guestbookFunctionMap, GuestbookFunctions, GuestbookFunctionTypeMap, profileFunctionMap, ProfileFunctions } from './models';
+import { ProfileFunctionTypeMap, guestbookFunctionMap, GuestbookFunctions, GuestbookFunctionTypeMap, profileFunctionMap, ProfileFunctions } from './model';
 
 /**
  * FirebaseFunctionsMap type for Demo
