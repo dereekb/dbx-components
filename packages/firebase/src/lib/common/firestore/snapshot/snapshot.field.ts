@@ -36,7 +36,8 @@ import {
   latLngStringFunction,
   LatLngPrecision,
   TransformStringFunction,
-  LatLngString
+  LatLngString,
+  asObjectCopyFactory
 } from '@dereekb/util';
 import { FirestoreModelData, FIRESTORE_EMPTY_VALUE } from './snapshot.type';
 import { FirebaseAuthUserId } from '../../auth/auth';
@@ -47,11 +48,27 @@ export interface BaseFirestoreFieldConfig<V, D = unknown> {
   defaultBeforeSave?: GetterOrValue<D | null>;
 }
 
+/**
+ * Default value for firestoreField().
+ */
 export interface FirestoreFieldDefault<V> {
+  /**
+   * Default value to retrieve when a null/undefined value is encountered.
+   *
+   * Input objects that are passed without a Getter are transformed into an ObjectCopyFactory, so copies are already returned.
+   */
   default: GetterOrValue<V>;
 }
 
+/**
+ * Default Data value for firestoreField().
+ */
 export interface FirestoreFieldDefaultData<D = unknown> {
+  /**
+   * Default value to apply when a null/undefined value is encountered.
+   *
+   * Input objects that are passed without a Getter are transformed into an ObjectCopyFactory, so copies are already returned.
+   */
   defaultData: GetterOrValue<D>;
 }
 
@@ -72,11 +89,11 @@ export function firestoreField<V, D = unknown>(config: FirestoreFieldConfig<V, D
     from:
       (config as FirestoreFieldConfigWithDefault<V, D>).default != null
         ? {
-            default: (config as FirestoreFieldConfigWithDefault<V, D>).default,
+            default: asObjectCopyFactory((config as FirestoreFieldConfigWithDefault<V, D>).default),
             convert: config.fromData
           }
         : {
-            defaultInput: (config as FirestoreFieldConfigWithDefaultData<V, D>).defaultData,
+            defaultInput: asObjectCopyFactory((config as FirestoreFieldConfigWithDefaultData<V, D>).defaultData),
             convert: config.fromData
           },
     to: {

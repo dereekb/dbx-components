@@ -1,4 +1,4 @@
-import { LatLngString, asGetter, ISO8601DateString, Maybe, modelFieldMapFunctions, objectHasKey, stringTrimFunction, latLngString } from '@dereekb/util';
+import { LatLngString, asGetter, ISO8601DateString, Maybe, modelFieldMapFunctions, objectHasKey, stringTrimFunction, latLngString, MaybeSo } from '@dereekb/util';
 import { isValid } from 'date-fns';
 import { FirestoreModelKeyGrantedRoleArrayMap } from '../collection';
 import { DocumentSnapshot } from '../types';
@@ -48,6 +48,27 @@ describe('firestoreField()', () => {
 
       it('should return the converted value when a non-null is provided.', () => {
         expect(to(100)).toBe(toDataValue);
+      });
+    });
+
+    describe('with object', () => {
+      describe('with object passed as default', () => {
+        const defaultObject = { test: 'test' };
+
+        const objectFieldConfig = firestoreField<typeof defaultObject, typeof defaultObject>({
+          default: defaultObject,
+          fromData: (x) => x,
+          toData: (x) => x
+        });
+
+        const { from, to } = modelFieldMapFunctions(objectFieldConfig);
+
+        it('from should return a copy of the default object value if null is passed.', () => {
+          const result = from(null);
+          expect(result).toBeDefined();
+          expect(result.test).toBe(defaultObject.test);
+          expect(result).not.toBe(defaultObject);
+        });
       });
     });
   });

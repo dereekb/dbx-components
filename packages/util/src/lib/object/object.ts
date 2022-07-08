@@ -32,6 +32,9 @@ export function mapToObject<T, K extends PropertyKey>(map: Map<K, T>): { [key: P
   return object;
 }
 
+/**
+ * Returns a copy of the input object.
+ */
 export type CopyObjectFunction<T> = (input: T) => T;
 
 /**
