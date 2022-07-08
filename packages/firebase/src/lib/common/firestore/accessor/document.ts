@@ -5,7 +5,7 @@ import { Observable } from 'rxjs';
 import { FirestoreAccessorDriverRef } from '../driver/accessor';
 import { FirestoreCollectionNameRef, FirestoreModelId, FirestoreModelIdentityCollectionName, FirestoreModelIdentityModelType, FirestoreModelIdentityRef, FirestoreModelIdRef, FirestoreModelKey, FirestoreModelKeyRef } from './../collection/collection';
 import { DocumentReference, CollectionReference, Transaction, WriteBatch, DocumentSnapshot, SnapshotOptions, WriteResult } from '../types';
-import { createOrUpdateWithAccessorSet, dataFromSnapshotStream, FirestoreDocumentDataAccessor } from './accessor';
+import { createOrUpdateWithAccessorSet, dataFromSnapshotStream, FirestoreDocumentDataAccessor, updateWithAccessorSet } from './accessor';
 import { CollectionReferenceRef, DocumentReferenceRef, FirestoreContextReference, FirestoreDataConverterRef } from '../reference';
 import { FirestoreDocumentContext } from './context';
 import { build, Maybe } from '@dereekb/util';
@@ -58,6 +58,26 @@ export abstract class AbstractFirestoreDocument<T, D extends AbstractFirestoreDo
 
   snapshotData(options?: SnapshotOptions): Promise<T | undefined> {
     return this.snapshot().then((x) => x.data(options));
+  }
+
+  /**
+   * Creates the model if it does not exist, using the accessor's create functionality.
+   *
+   * @param data
+   * @returns
+   */
+  create(data: T): Promise<WriteResult | void> {
+    return this.accessor.create(data);
+  }
+
+  /**
+   * Updates the model if it exists using the accessor's set functionalty.
+   *
+   * @param data
+   * @returns
+   */
+  update(data: Partial<T>): Promise<WriteResult | void> {
+    return updateWithAccessorSet(this.accessor)(data);
   }
 
   /**
