@@ -91,19 +91,28 @@ export type StringKeyPropertyKeys<T> = keyof StringKeyProperties<T>;
 export type Configurable<T> = Writable<T>;
 
 /**
+ * StringOrder of all keys of an object.
+ */
+export type CommaSeparatedKeyOrderOfObject<T extends object> = CommaSeparatedKeyOrder<`${KeyCanBeString<keyof T>}`>;
+export type CommaSeparatedKeyOrder<T extends string> = StringOrder<T, ','>;
+
+/**
+ * StringCombinations of all keys of an object.
+ */
+export type CommaSeparatedKeyCombinationsOfObject<T extends object> = CommaSeparatedKeyCombinations<`${KeyCanBeString<keyof T>}`>;
+export type CommaSeparatedKeyCombinations<T extends string> = StringCombination<T, ','>;
+
+/**
  * StringConcatination of all keys of an object.
  */
 export type CommaSeparatedKeysOfObject<T extends object> = CommaSeparatedKeys<`${KeyCanBeString<keyof T>}`>;
 export type CommaSeparatedKeys<T extends string> = StringConcatination<T, ','>;
 
-export type CommaSeparatedKeyCombinationsOfObject<T extends object> = CommaSeparatedKeyCombinations<`${KeyCanBeString<keyof T>}`>;
-export type CommaSeparatedKeyCombinations<T extends string> = StringCombinations<T, ','>;
-
 export type UnionToOvlds<U> = UnionToIntersection<U extends any ? (f: U) => void : never>;
 export type PopUnion<U> = UnionToOvlds<U> extends (a: infer A) => void ? A : never;
 
 /**
- * A type that merges all combinations of strings together using a separator.
+ * A type that merges all combinations of strings together using a separator, but restricts a certain order.
  *
  * Example:
  * 'a' | 'b' | 'c' w/ ',' -> 'a' | 'b' | 'c' | 'a,b' | 'a,c' | 'a,b,c' | etc...
@@ -112,12 +121,27 @@ export type PopUnion<U> = UnionToOvlds<U> extends (a: infer A) => void ? A : nev
  *
  * https://stackoverflow.com/a/65157132
  */
-export type StringCombinations<S extends string, SEPARATOR extends string> = PopUnion<S> extends infer SELF
+export type StringOrder<S extends string, SEPARATOR extends string> = PopUnion<S> extends infer SELF
   ? //
     SELF extends string
     ? Exclude<S, SELF> extends never
       ? SELF
-      : `${StringCombinations<Exclude<S, SELF>, SEPARATOR>}${SEPARATOR}${SELF}` | StringCombinations<Exclude<S, SELF>, SEPARATOR> | SELF
+      : `${StringOrder<Exclude<S, SELF>, SEPARATOR>}${SEPARATOR}${SELF}` | StringOrder<Exclude<S, SELF>, SEPARATOR> | SELF
+    : never
+  : never;
+
+/**
+ * A type that merges all combinations of strings together using a separator.
+ *
+ * Example:
+ * 'a' | 'b' | 'c' w/ ',' -> 'a' | 'b' | 'c' | 'a,b' | 'b,a' | 'c,a,b' | etc...
+ */
+export type StringCombination<S extends string, SEPARATOR extends string> = PopUnion<S> extends infer SELF
+  ? //
+    SELF extends string
+    ? Exclude<S, SELF> extends never
+      ? SELF
+      : `${StringCombination<Exclude<S, SELF>, SEPARATOR>}${SEPARATOR}${SELF}` | `${SELF}${SEPARATOR}${StringCombination<Exclude<S, SELF>, SEPARATOR>}` | StringCombination<Exclude<S, SELF>, SEPARATOR> | SELF
     : never
   : never;
 
@@ -135,3 +159,10 @@ export type StringConcatination<S extends string, SEPARATOR extends string> = Po
       : `${StringConcatination<Exclude<S, SELF>, SEPARATOR>}${SEPARATOR}${SELF}` | `${SELF}${SEPARATOR}${StringConcatination<Exclude<S, SELF>, SEPARATOR>}`
     : never
   : never;
+
+// MARK: Compat
+
+/**
+ * @deprecated use StringCombination
+ */
+export type StringCombinations<S extends string, SEPARATOR extends string> = StringCombination<S, SEPARATOR>;
