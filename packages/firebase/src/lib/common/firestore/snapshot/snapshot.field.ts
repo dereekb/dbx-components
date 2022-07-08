@@ -29,7 +29,7 @@ import {
   Getter,
   ToModelMapFunctionsInput,
   toModelMapFunctions,
-  ModelMapFunctinosRef,
+  ModelMapFunctionsRef,
   build,
   TransformStringFunctionConfig,
   transformStringFunction,
@@ -457,7 +457,7 @@ export type FirestoreSubObjectFieldConfig<T extends object, O extends object = F
   objectField: ToModelMapFunctionsInput<T, O>;
 };
 
-export type FirestoreSubObjectFieldMapFunctionsConfig<T extends object, O extends object = FirestoreModelData<T>> = FirestoreModelFieldMapFunctionsConfig<T, O> & ModelMapFunctinosRef<T, O>;
+export type FirestoreSubObjectFieldMapFunctionsConfig<T extends object, O extends object = FirestoreModelData<T>> = FirestoreModelFieldMapFunctionsConfig<T, O> & ModelMapFunctionsRef<T, O>;
 
 /**
  * A nested object field that uses other FirestoreFieldConfig configurations to map a field.

@@ -228,17 +228,17 @@ export function toModelFieldConversions<T extends object, O extends object>(inpu
   return conversions;
 }
 
-export type ModelMapFunctinosRef<T extends object, O extends object> = {
+export type ModelMapFunctionsRef<T extends object, O extends object> = {
   readonly mapFunctions: ModelMapFunctions<T, O>;
 };
 
-export type ToModelMapFunctionsInput<T extends object, O extends object> = ToModelFieldConversionsInput<T, O> | ModelMapFunctinosRef<T, O>;
+export type ToModelMapFunctionsInput<T extends object, O extends object> = ToModelFieldConversionsInput<T, O> | ModelMapFunctionsRef<T, O>;
 
 export function toModelMapFunctions<T extends object, O extends object>(input: ToModelMapFunctionsInput<T, O>): ModelMapFunctions<T, O> {
   let mapFunctions: ModelMapFunctions<T, O>;
 
-  if ((input as ModelMapFunctinosRef<T, O>).mapFunctions != null) {
-    mapFunctions = (input as ModelMapFunctinosRef<T, O>).mapFunctions;
+  if ((input as ModelMapFunctionsRef<T, O>).mapFunctions != null) {
+    mapFunctions = (input as ModelMapFunctionsRef<T, O>).mapFunctions;
   } else {
     const conversions: ModelFieldConversions<T, O> = toModelFieldConversions(input as ToModelFieldConversionsInput<T, O>);
     mapFunctions = makeModelMapFunctions<T, O>(conversions);
