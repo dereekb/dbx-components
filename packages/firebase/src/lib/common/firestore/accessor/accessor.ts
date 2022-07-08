@@ -112,15 +112,37 @@ export function mapDataFromSnapshot<T>(options?: SnapshotOptions): OperatorFunct
  */
 export type CreateOrUpdateWithAccessorSetFunction<T> = (data: Partial<T>) => Promise<WriteResult | void>;
 
-export function createOrUpdateWithAccessorSet<T>(accessor: FirestoreDocumentDataAccessor<T>): (data: Partial<T>) => Promise<WriteResult | void> {
+export function createOrUpdateWithAccessorSet<T>(accessor: FirestoreDocumentDataAccessor<T>): CreateOrUpdateWithAccessorSetFunction<T> {
   return (data: Partial<T>) => {
     return accessor.exists().then((exists) => {
       if (exists) {
-        const update = filterUndefinedValues(data);
-        return accessor.set(update, { merge: true });
+        return updateWithAccessorSet(accessor)(data, true);
       } else {
         return accessor.set(data as WithFieldValue<T>);
       }
     });
+  };
+}
+
+/**
+ * Updates the target object using the input data.
+ *
+ * Calls accessor's set configured for updating/merging, and filters all undefined values from the input data.
+ * If it does exist, update will fail.
+ *
+ * @param data
+ */
+export type UpdateWithAccessorSetFunction<T> = (data: Partial<T>, forceUpdate?: boolean) => Promise<WriteResult | void>;
+
+export function updateWithAccessorSet<T>(accessor: FirestoreDocumentDataAccessor<T>): UpdateWithAccessorSetFunction<T> {
+  return async (data: Partial<T>, forceUpdate?: boolean) => {
+    const exists: boolean = forceUpdate || (await accessor.exists());
+
+    if (!exists) {
+      throw new Error(`Model "${accessor.documentRef.path}" does not exist.`);
+    }
+
+    const update = filterUndefinedValues(data);
+    return accessor.set(update, { merge: true });
   };
 }

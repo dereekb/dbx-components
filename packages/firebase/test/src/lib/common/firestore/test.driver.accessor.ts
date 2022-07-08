@@ -3,6 +3,7 @@ import { firstValueFrom } from 'rxjs';
 import { SubscriptionObject } from '@dereekb/rxjs';
 import { Transaction, DocumentReference, WriteBatch, FirestoreDocumentAccessor, makeDocuments, FirestoreDocumentDataAccessor, FirestoreContext, FirestoreDocument, RunTransaction, FirebaseAuthUserId, DocumentSnapshot, FirestoreDataConverter } from '@dereekb/firebase';
 import { MockItemCollectionFixture, MockItemDocument, MockItem, MockItemPrivateDocument, MockItemPrivateFirestoreCollection, MockItemPrivate, MockItemSubItem, MockItemSubItemDocument, MockItemSubItemFirestoreCollection, MockItemSubItemFirestoreCollectionGroup, MockItemUserFirestoreCollection, MockItemUserDocument, MockItemUser, mockItemConverter } from '../mock';
+import { addHours } from 'date-fns';
 
 /**
  * Describes accessor driver tests, using a MockItemCollectionFixture.
@@ -145,6 +146,31 @@ export function describeFirestoreAccessorDriverTests(f: MockItemCollectionFixtur
               const dataWithoutConverter: DocumentSnapshot<MockItem> = await itemPrivateDataDocument.accessor.getWithConverter(converter);
 
               expect(dataWithoutConverter).toBeDefined();
+            });
+          });
+
+          describe('update()', () => {
+            itShouldFail('if the item does not exist', async () => {
+              let exists = await itemPrivateDataDocument.accessor.exists();
+              expect(exists).toBe(false);
+              await expectFail(() => itemPrivateDataDocument.update({ createdAt: new Date() }));
+            });
+
+            it('should update the item if it exist', async () => {
+              await itemPrivateDataDocument.create({
+                createdAt: new Date(),
+                values: []
+              });
+
+              const newDate = new Date(0);
+
+              let exists = await itemPrivateDataDocument.accessor.exists();
+              expect(exists).toBe(true);
+
+              await itemPrivateDataDocument.update({ createdAt: newDate });
+
+              const data = await itemPrivateDataDocument.snapshotData();
+              expect(data?.createdAt.getTime()).toBe(0);
             });
           });
 

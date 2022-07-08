@@ -1,7 +1,7 @@
 import { ExampleDocument, SetExampleUsernameParams } from 'FIREBASE_COMPONENTS_NAME';
 import { inAuthContext } from '@dereekb/firebase-server';
 import { onCallWithAPP_CODE_PREFIXNestContext } from '../function';
-import { userHasNoExampleError } from '../../common/models/example/example.error';
+import { userHasNoExampleError } from '../../common/model/example/example.error';
 import { exampleForUser } from './example.util';
 
 

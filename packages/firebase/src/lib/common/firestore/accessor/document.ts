@@ -5,7 +5,7 @@ import { Observable } from 'rxjs';
 import { FirestoreAccessorDriverRef } from '../driver/accessor';
 import { FirestoreCollectionNameRef, FirestoreModelId, FirestoreModelIdentityCollectionName, FirestoreModelIdentityModelType, FirestoreModelIdentityRef, FirestoreModelIdRef, FirestoreModelKey, FirestoreModelKeyRef } from './../collection/collection';
 import { DocumentReference, CollectionReference, Transaction, WriteBatch, DocumentSnapshot, SnapshotOptions, WriteResult } from '../types';
-import { createOrUpdateWithAccessorSet, dataFromSnapshotStream, FirestoreDocumentDataAccessor } from './accessor';
+import { createOrUpdateWithAccessorSet, dataFromSnapshotStream, FirestoreDocumentDataAccessor, updateWithAccessorSet } from './accessor';
 import { CollectionReferenceRef, DocumentReferenceRef, FirestoreContextReference, FirestoreDataConverterRef } from '../reference';
 import { FirestoreDocumentContext } from './context';
 import { build, Maybe } from '@dereekb/util';
@@ -15,6 +15,12 @@ import { InterceptAccessorFactoryFunction } from './accessor.wrap';
 export interface FirestoreDocument<T, I extends FirestoreModelIdentity = FirestoreModelIdentity> extends DocumentReferenceRef<T>, CollectionReferenceRef<T>, FirestoreModelIdentityRef<I>, FirestoreModelTypeRef<FirestoreModelIdentityModelType<I>>, FirestoreCollectionNameRef<FirestoreModelIdentityCollectionName<I>>, FirestoreModelKeyRef, FirestoreModelIdRef {
   readonly accessor: FirestoreDocumentDataAccessor<T>;
   readonly id: string;
+
+  snapshot(): Promise<DocumentSnapshot<T>>;
+  snapshotData(options?: SnapshotOptions): Promise<T | undefined>;
+  create(data: T): Promise<WriteResult | void>;
+  update(data: Partial<T>): Promise<WriteResult | void>;
+  createOrUpdate(data: Partial<T>): Promise<WriteResult | void>;
 }
 
 /**
@@ -52,16 +58,45 @@ export abstract class AbstractFirestoreDocument<T, D extends AbstractFirestoreDo
     return this.accessor.documentRef.parent as CollectionReference<T>;
   }
 
+  /**
+   * Retrieves a DocumentSnapshot of the document.
+   * @returns
+   */
   snapshot(): Promise<DocumentSnapshot<T>> {
     return this.accessor.get();
   }
 
+  /**
+   * Retrieves the data of the DocumentSnapshot of the document.
+   * @param options
+   * @returns
+   */
   snapshotData(options?: SnapshotOptions): Promise<T | undefined> {
     return this.snapshot().then((x) => x.data(options));
   }
 
   /**
-   * Creates or updates the existing model using the accessor's set functionality.
+   * Creates the document if it does not exist, using the accessor's create functionality.
+   *
+   * @param data
+   * @returns
+   */
+  create(data: T): Promise<WriteResult | void> {
+    return this.accessor.create(data);
+  }
+
+  /**
+   * Updates the document if it exists using the accessor's set functionalty.
+   *
+   * @param data
+   * @returns
+   */
+  update(data: Partial<T>): Promise<WriteResult | void> {
+    return updateWithAccessorSet(this.accessor)(data);
+  }
+
+  /**
+   * Creates or updates the existing document using the accessor's set functionality.
    *
    * @param data
    * @returns

@@ -1,6 +1,6 @@
 import { FirebaseFunctionGetter, FirebaseFunctionsConfigMap, lazyFirebaseFunctionsFactory } from '@dereekb/firebase';
 import { Functions } from 'firebase/functions';
-import {ExampleFunctionTypeMap, exampleFunctionMap, ExampleFunctions } from './models';
+import {ExampleFunctionTypeMap, exampleFunctionMap, ExampleFunctions } from './model';
 
 export type APP_CODE_PREFIXFirebaseFunctionsMap = {
   exampleFunctions: ExampleFunctionTypeMap;
