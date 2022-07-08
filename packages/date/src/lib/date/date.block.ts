@@ -3,6 +3,7 @@ import { dateRange, DateRange, DateRangeDayDistanceInput, DateRangeType, isDateR
 import { DateDurationSpan } from './date.duration';
 import { differenceInDays, differenceInMilliseconds, isBefore, addDays, addMinutes, setSeconds } from 'date-fns';
 import { copyHoursAndMinutesFromDate } from './date';
+import { Expose, Type } from 'class-transformer';
 
 /**
  * Index from 0 of which day this block represents.
@@ -39,6 +40,25 @@ export type DateBlockArrayRef<B extends DateBlock = DateBlock> = {
  * - The end time should equal the ending date/time of the final end duration.
  */
 export interface DateBlockTiming extends DateRange, DateDurationSpan {}
+
+export class DateBlockTiming extends DateDurationSpan {
+  @Expose()
+  @Type(() => Date)
+  start!: Date;
+
+  @Expose()
+  @Type(() => Date)
+  end!: Date;
+
+  constructor(template: DateBlockTiming) {
+    super(template);
+
+    if (template) {
+      this.start = template.start;
+      this.end = template.end;
+    }
+  }
+}
 
 /**
  * The DateRange input for dateBlockTiming()
