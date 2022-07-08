@@ -37,7 +37,9 @@ import {
   LatLngPrecision,
   TransformStringFunction,
   LatLngString,
-  asObjectCopyFactory
+  asObjectCopyFactory,
+  modelFieldMapFunctions,
+  ModelMapFromFunction
 } from '@dereekb/util';
 import { FirestoreModelData, FIRESTORE_EMPTY_VALUE } from './snapshot.type';
 import { FirebaseAuthUserId } from '../../auth/auth';
@@ -418,12 +420,28 @@ export const firestoreModelIdGrantedRoleArrayMap: () => FirestoreModelFieldMapFu
 /**
  * firestoreObjectArray configuration
  */
-export type FirestoreObjectArrayFieldConfig<T extends object, O extends object = FirestoreModelData<T>> = DefaultMapConfiguredFirestoreFieldConfig<T[], O[]> & {
+export type FirestoreObjectArrayFieldConfig<T extends object, O extends object = FirestoreModelData<T>> = DefaultMapConfiguredFirestoreFieldConfig<T[], O[]> & (FirestoreObjectArrayFieldConfigObjectFieldInput<T, O> | FirestoreObjectArrayFieldConfigFirestoreFieldInput<T, O>);
+
+export type FirestoreObjectArrayFieldConfigObjectFieldInput<T extends object, O extends object = FirestoreModelData<T>> = {
   /**
    * The field to use for conversion.
    */
   readonly objectField: ToModelMapFunctionsInput<T, O>;
 };
+
+export type FirestoreObjectArrayFieldConfigFirestoreFieldInput<T extends object, O extends object = FirestoreModelData<T>> = {
+  /**
+   * FirestoreModelFieldMapFunctionsConfig to use for conversion.
+   */
+  readonly firestoreField: FirestoreModelFieldMapFunctionsConfig<T, O>;
+};
+
+export function firestoreFieldConfigToModelMapFunctionsRef<T extends object, O extends object = FirestoreModelData<T>>(config: FirestoreModelFieldMapFunctionsConfig<T, O>): ModelMapFunctionsRef<T, O> {
+  const mapFunctions = modelFieldMapFunctions(config);
+  return {
+    mapFunctions
+  } as ModelMapFunctionsRef<T, O>;
+}
 
 /**
  * A Firestore array that maps each array value using another FirestoreFieldConfig config.
@@ -432,7 +450,9 @@ export type FirestoreObjectArrayFieldConfig<T extends object, O extends object =
  * @returns
  */
 export function firestoreObjectArray<T extends object, O extends object = FirestoreModelData<T>>(config: FirestoreObjectArrayFieldConfig<T, O>) {
-  const { from, to } = toModelMapFunctions<T, O>(config.objectField);
+  const objectField = (config as FirestoreObjectArrayFieldConfigObjectFieldInput<T, O>).objectField ?? firestoreFieldConfigToModelMapFunctionsRef((config as FirestoreObjectArrayFieldConfigFirestoreFieldInput<T, O>).firestoreField);
+
+  const { from, to } = toModelMapFunctions<T, O>(objectField);
   return firestoreField<T[], O[]>({
     default: config.default ?? ((() => []) as Getter<T[]>),
     defaultBeforeSave: config.defaultBeforeSave,

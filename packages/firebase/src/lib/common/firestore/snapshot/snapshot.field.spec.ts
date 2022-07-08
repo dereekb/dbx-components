@@ -1,9 +1,10 @@
-import { LatLngString, asGetter, ISO8601DateString, Maybe, modelFieldMapFunctions, objectHasKey, stringTrimFunction, latLngString, MaybeSo } from '@dereekb/util';
+import { LatLngString, asGetter, ISO8601DateString, Maybe, modelFieldMapFunctions, objectHasKey, stringTrimFunction, latLngString, MaybeSo, passThrough } from '@dereekb/util';
 import { isValid } from 'date-fns';
 import { FirestoreModelKeyGrantedRoleArrayMap } from '../collection';
 import { DocumentSnapshot } from '../types';
 import { snapshotConverterFunctions } from './snapshot';
-import { firestoreArrayMap, firestoreDate, firestoreObjectArray, firestoreEnum, firestoreField, firestoreMap, firestoreModelKeyGrantedRoleArrayMap, firestoreEnumArray, firestoreUniqueKeyedArray, firestoreUniqueStringArray, firestoreNumber, firestoreSubObject, firestoreEncodedArray, firestoreString, DEFAULT_FIRESTORE_STRING_FIELD_VALUE, firestoreLatLngString } from './snapshot.field';
+import { firestoreArrayMap, firestoreDate, firestoreObjectArray, firestoreEnum, firestoreMap, firestoreModelKeyGrantedRoleArrayMap, firestoreEnumArray, firestoreUniqueKeyedArray, firestoreUniqueStringArray, firestoreNumber, firestoreSubObject, firestoreEncodedArray, firestoreString, DEFAULT_FIRESTORE_STRING_FIELD_VALUE, firestoreLatLngString, firestorePassThroughField, firestoreField } from './snapshot.field';
+import { FirestoreModelData } from './snapshot.type';
 
 describe('firestoreField()', () => {
   const defaultValue = -1;
@@ -65,6 +66,7 @@ describe('firestoreField()', () => {
 
         it('from should return a copy of the default object value if null is passed.', () => {
           const result = from(null);
+
           expect(result).toBeDefined();
           expect(result.test).toBe(defaultObject.test);
           expect(result).not.toBe(defaultObject);
@@ -353,6 +355,27 @@ export interface TestFirestoreSubObject {
   date: Date;
   uniqueStringArray: string[];
 }
+
+describe('firestoreObjectArray()', () => {
+  it('should allowed firestoreField', () => {
+    const fieldConfig = firestoreField<TestFirestoreSubObject, TestFirestoreSubObject>({
+      default: {
+        date: new Date(),
+        uniqueStringArray: []
+      },
+      fromData: passThrough,
+      toData: passThrough
+    });
+
+    const array = firestoreObjectArray<TestFirestoreSubObject, TestFirestoreSubObject>({
+      firestoreField: fieldConfig
+    });
+
+    const result = array.from.convert([{ date: new Date(), uniqueStringArray: [] }]);
+    expect(result).toBeDefined();
+    expect(result.length).toBe(1);
+  });
+});
 
 describe('firestoreSubObject()', () => {
   const testObject = {
