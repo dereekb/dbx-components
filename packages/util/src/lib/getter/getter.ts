@@ -1,3 +1,4 @@
+import { copyObject, CopyObjectFunction } from '../object';
 import { PromiseOrValue } from '../promise/promise';
 import { MapFunction } from '../value/map';
 import { Maybe } from '../value/maybe.type';
@@ -84,6 +85,37 @@ export function asGetter<T>(input: GetterOrValue<T>): Getter<T> {
     return input as Getter<T>;
   } else {
     return makeGetter(input);
+  }
+}
+
+/**
+ * A factory that returns a copy of a value.
+ */
+export type ObjectCopyFactory<T> = Factory<T>;
+
+/**
+ * Creates a getter from the input value that returns a copy of that value.
+ *
+ * @param value
+ */
+export function objectCopyFactory<T extends object>(value: T, copyFunction: CopyObjectFunction<T> = copyObject): ObjectCopyFactory<T> {
+  return () => copyFunction(value);
+}
+
+/**
+ * Returns a getter that will copy any input object values to a new object.
+ *
+ * Any input Getters are considered ObjectCopyFactory values and passed through directly.
+ *
+ * @param input
+ * @returns
+ */
+export function asObjectCopyFactory<T>(input: T | ObjectCopyFactory<T>, copyFunction?: CopyObjectFunction<T>): ObjectCopyFactory<T> {
+  if (typeof input === 'object') {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return objectCopyFactory<any>(input, copyFunction);
+  } else {
+    return asGetter(input);
   }
 }
 

@@ -29,14 +29,17 @@ import {
   Getter,
   ToModelMapFunctionsInput,
   toModelMapFunctions,
-  ModelMapFunctinosRef,
+  ModelMapFunctionsRef,
   build,
   TransformStringFunctionConfig,
   transformStringFunction,
   latLngStringFunction,
   LatLngPrecision,
   TransformStringFunction,
-  LatLngString
+  LatLngString,
+  asObjectCopyFactory,
+  modelFieldMapFunctions,
+  ModelMapFromFunction
 } from '@dereekb/util';
 import { FirestoreModelData, FIRESTORE_EMPTY_VALUE } from './snapshot.type';
 import { FirebaseAuthUserId } from '../../auth/auth';
@@ -47,11 +50,27 @@ export interface BaseFirestoreFieldConfig<V, D = unknown> {
   defaultBeforeSave?: GetterOrValue<D | null>;
 }
 
+/**
+ * Default value for firestoreField().
+ */
 export interface FirestoreFieldDefault<V> {
+  /**
+   * Default value to retrieve when a null/undefined value is encountered.
+   *
+   * Input objects that are passed without a Getter are transformed into an ObjectCopyFactory, so copies are already returned.
+   */
   default: GetterOrValue<V>;
 }
 
+/**
+ * Default Data value for firestoreField().
+ */
 export interface FirestoreFieldDefaultData<D = unknown> {
+  /**
+   * Default value to apply when a null/undefined value is encountered.
+   *
+   * Input objects that are passed without a Getter are transformed into an ObjectCopyFactory, so copies are already returned.
+   */
   defaultData: GetterOrValue<D>;
 }
 
@@ -72,11 +91,11 @@ export function firestoreField<V, D = unknown>(config: FirestoreFieldConfig<V, D
     from:
       (config as FirestoreFieldConfigWithDefault<V, D>).default != null
         ? {
-            default: (config as FirestoreFieldConfigWithDefault<V, D>).default,
+            default: asObjectCopyFactory((config as FirestoreFieldConfigWithDefault<V, D>).default),
             convert: config.fromData
           }
         : {
-            defaultInput: (config as FirestoreFieldConfigWithDefaultData<V, D>).defaultData,
+            defaultInput: asObjectCopyFactory((config as FirestoreFieldConfigWithDefaultData<V, D>).defaultData),
             convert: config.fromData
           },
     to: {
@@ -401,12 +420,28 @@ export const firestoreModelIdGrantedRoleArrayMap: () => FirestoreModelFieldMapFu
 /**
  * firestoreObjectArray configuration
  */
-export type FirestoreObjectArrayFieldConfig<T extends object, O extends object = FirestoreModelData<T>> = DefaultMapConfiguredFirestoreFieldConfig<T[], O[]> & {
+export type FirestoreObjectArrayFieldConfig<T extends object, O extends object = FirestoreModelData<T>> = DefaultMapConfiguredFirestoreFieldConfig<T[], O[]> & (FirestoreObjectArrayFieldConfigObjectFieldInput<T, O> | FirestoreObjectArrayFieldConfigFirestoreFieldInput<T, O>);
+
+export type FirestoreObjectArrayFieldConfigObjectFieldInput<T extends object, O extends object = FirestoreModelData<T>> = {
   /**
    * The field to use for conversion.
    */
   readonly objectField: ToModelMapFunctionsInput<T, O>;
 };
+
+export type FirestoreObjectArrayFieldConfigFirestoreFieldInput<T extends object, O extends object = FirestoreModelData<T>> = {
+  /**
+   * FirestoreModelFieldMapFunctionsConfig to use for conversion.
+   */
+  readonly firestoreField: FirestoreModelFieldMapFunctionsConfig<T, O>;
+};
+
+export function firestoreFieldConfigToModelMapFunctionsRef<T extends object, O extends object = FirestoreModelData<T>>(config: FirestoreModelFieldMapFunctionsConfig<T, O>): ModelMapFunctionsRef<T, O> {
+  const mapFunctions = modelFieldMapFunctions(config);
+  return {
+    mapFunctions
+  } as ModelMapFunctionsRef<T, O>;
+}
 
 /**
  * A Firestore array that maps each array value using another FirestoreFieldConfig config.
@@ -415,7 +450,9 @@ export type FirestoreObjectArrayFieldConfig<T extends object, O extends object =
  * @returns
  */
 export function firestoreObjectArray<T extends object, O extends object = FirestoreModelData<T>>(config: FirestoreObjectArrayFieldConfig<T, O>) {
-  const { from, to } = toModelMapFunctions<T, O>(config.objectField);
+  const objectField = (config as FirestoreObjectArrayFieldConfigObjectFieldInput<T, O>).objectField ?? firestoreFieldConfigToModelMapFunctionsRef((config as FirestoreObjectArrayFieldConfigFirestoreFieldInput<T, O>).firestoreField);
+
+  const { from, to } = toModelMapFunctions<T, O>(objectField);
   return firestoreField<T[], O[]>({
     default: config.default ?? ((() => []) as Getter<T[]>),
     defaultBeforeSave: config.defaultBeforeSave,
@@ -440,7 +477,7 @@ export type FirestoreSubObjectFieldConfig<T extends object, O extends object = F
   objectField: ToModelMapFunctionsInput<T, O>;
 };
 
-export type FirestoreSubObjectFieldMapFunctionsConfig<T extends object, O extends object = FirestoreModelData<T>> = FirestoreModelFieldMapFunctionsConfig<T, O> & ModelMapFunctinosRef<T, O>;
+export type FirestoreSubObjectFieldMapFunctionsConfig<T extends object, O extends object = FirestoreModelData<T>> = FirestoreModelFieldMapFunctionsConfig<T, O> & ModelMapFunctionsRef<T, O>;
 
 /**
  * A nested object field that uses other FirestoreFieldConfig configurations to map a field.
