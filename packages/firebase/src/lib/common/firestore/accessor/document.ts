@@ -24,6 +24,11 @@ export interface FirestoreDocument<T, I extends FirestoreModelIdentity = Firesto
 }
 
 /**
+ * Refers to the FirestoreDocument's data type using only the FirestoreDocument
+ */
+export type FirestoreDocumentData<D extends FirestoreDocument<any>> = D extends FirestoreDocument<infer T> ? T : never;
+
+/**
  * Abstract FirestoreDocument implementation that extends a FirestoreDocumentDataAccessor.
  */
 export abstract class AbstractFirestoreDocument<T, D extends AbstractFirestoreDocument<T, any, I>, I extends FirestoreModelIdentity = FirestoreModelIdentity> implements FirestoreDocument<T>, LimitedFirestoreDocumentAccessorRef<T, D>, CollectionReferenceRef<T> {
