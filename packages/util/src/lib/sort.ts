@@ -1,4 +1,4 @@
-export type SortingOrder = 'desc' | 'asc';
+export type SortingOrder = 'asc' | 'desc';
 
 export const SORT_VALUE_LESS_THAN: SortComparisonNumber = -1;
 export const SORT_VALUE_GREATER_THAN: SortComparisonNumber = 1;
@@ -11,8 +11,10 @@ export const SORT_VALUE_EQUAL: SortComparisonNumber = 0;
  * - smaller than another will return -1 (or less).
  * - equal to another will return 0
  * - greater than another will return 1 (or more).
+ * - Example: a - b
  *
  * In "descending" order, this returns the opposite values as "ascending".
+ * - Example: b - a
  */
 export type SortComparisonNumber = number;
 
@@ -23,15 +25,11 @@ export type SortCompareFunction<T> = (a: T, b: T) => SortComparisonNumber;
 
 /**
  * Comparison function that sorts in ascending order.
- *
- * This is the logical normal return order, where if an item is less than another, it should return SORT_VALUE_LESS_THAN (-1), etc.
  */
 export type AscendingSortCompareFunction<T> = SortCompareFunction<T>;
 
 /**
  * Comparison function that sorts in descending order.
- *
- * This is the logical normal return order, where if an item is less than another, it should return SORT_VALUE_LESS_THAN (-1), etc.
  */
 export type SortDescendingCompareFunction<T> = SortCompareFunction<T>;
 

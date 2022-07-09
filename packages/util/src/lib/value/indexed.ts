@@ -1,3 +1,5 @@
+import { SortCompareFunction } from '../sort';
+
 /**
  * A number that denotes which index an item is at.
  */
@@ -14,9 +16,29 @@ export interface IndexRef {
 }
 
 /**
+ * Creates a SortCompareFunction<T> that sorts by index on IndexRef values.
+ *
+ * @param input
+ * @returns
+ */
+export function sortAscendingIndexNumberRefFunction<T extends IndexRef>(): SortCompareFunction<T> {
+  return (a, b) => a.i - b.i;
+}
+
+/**
  * Returns an item's IndexNumber.
  */
 export type ReadIndexFunction<T> = (value: T) => IndexNumber;
+
+/**
+ * Creates a SortCompareFunction<T> that sorts by the read index.
+ *
+ * @param input
+ * @returns
+ */
+export function sortByIndexAscendingCompareFunction<T>(readIndex: ReadIndexFunction<T>): SortCompareFunction<T> {
+  return (a, b) => readIndex(a) - readIndex(b);
+}
 
 // MARK: IndexRange
 /**
