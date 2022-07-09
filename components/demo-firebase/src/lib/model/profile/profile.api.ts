@@ -77,8 +77,12 @@ export abstract class ProfileFunctions implements ModelFirebaseFunctionMap<Profi
   abstract [profileSetUsernameKey]: FirebaseFunctionMapFunction<ProfileFunctionTypeMap, 'profileSetUsername'>;
   abstract profile: {
     updateProfile: {
+      // full names
       updateProfile: ModelFirebaseCrudFunction<UpdateProfileParams>;
       updateProfileUsername: ModelFirebaseCrudFunction<SetProfileUsernameParams>;
+      // short names
+      update: ModelFirebaseCrudFunction<UpdateProfileParams>;
+      username: ModelFirebaseCrudFunction<SetProfileUsernameParams>;
     };
     deleteProfile: ModelFirebaseCrudFunction<UpdateProfileParams>;
   };

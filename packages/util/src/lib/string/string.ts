@@ -53,3 +53,13 @@ export function addPlusPrefixToNumber(value?: Maybe<number>, prefix = '+'): stri
 export function capitalizeFirstLetter(value: string): string {
   return value.charAt(0).toUpperCase() + value.slice(1);
 }
+
+/**
+ * Lowercases the first letter of the input.
+ *
+ * @param value
+ * @returns
+ */
+export function lowercaseFirstLetter(value: string): string {
+  return value.charAt(0).toLowerCase() + value.slice(1);
+}
