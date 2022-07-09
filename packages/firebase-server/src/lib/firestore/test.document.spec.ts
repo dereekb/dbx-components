@@ -2,6 +2,7 @@ import { DocumentSnapshot } from '@google-cloud/firestore';
 import { MockItem, MockItemDocument, MockItemFirestoreCollection, mockItemFirestoreCollection } from '@dereekb/firebase/test';
 import { dbxComponentsAdminTestWithMockItemCollection } from '@dereekb/firebase-server/test';
 import { FirestoreDocumentAccessor } from '@dereekb/firebase';
+import { assertSnapshotData } from '../function/assert';
 
 describe('FirestoreDocumentAccessor', () => {
   dbxComponentsAdminTestWithMockItemCollection((f) => {

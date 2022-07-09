@@ -1,4 +1,4 @@
-import { FirestoreDocument } from '@dereekb/firebase';
+import { FirestoreDocument, FirestoreDocumentData } from '@dereekb/firebase';
 import * as functions from 'firebase-functions';
 import { isContextWithAuthData } from './context';
 import { modelNotAvailableError, unauthenticatedContextHasNoUidError } from './error';
@@ -16,7 +16,7 @@ export function assertContextHasAuth(context: functions.https.CallableContext): 
  * @param message
  * @returns
  */
-export async function assertSnapshotData<T, D extends FirestoreDocument<T>>(document: D, message?: string): Promise<T> {
+export async function assertSnapshotData<D extends FirestoreDocument<any>>(document: D, message?: string): Promise<FirestoreDocumentData<D>> {
   const data = await document.snapshotData();
 
   if (data == null) {
