@@ -38,8 +38,7 @@ import {
   TransformStringFunction,
   LatLngString,
   asObjectCopyFactory,
-  modelFieldMapFunctions,
-  ModelMapFromFunction
+  modelFieldMapFunctions
 } from '@dereekb/util';
 import { FirestoreModelData, FIRESTORE_EMPTY_VALUE } from './snapshot.type';
 import { FirebaseAuthUserId } from '../../auth/auth';

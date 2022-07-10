@@ -1,4 +1,4 @@
-import { IndexNumber, groupValues, IndexRange, indexRangeCheckFunction, indexRangeCheckReaderFunction, IndexRef, makeValuesGroupMap, MINUTES_IN_DAY, ModelKey, MS_IN_DAY, objectToTuples, range, sortAscendingIndexNumberRefFunction, UniqueModel, lastValue, FactoryWithIndex, FactoryWithRequiredInput } from '@dereekb/util';
+import { IndexNumber, IndexRange, indexRangeCheckFunction, IndexRef, MINUTES_IN_DAY, MS_IN_DAY, sortAscendingIndexNumberRefFunction, UniqueModel, lastValue, FactoryWithRequiredInput } from '@dereekb/util';
 import { dateRange, DateRange, DateRangeDayDistanceInput, DateRangeType, isDateRange } from './date.range';
 import { DateDurationSpan } from './date.duration';
 import { differenceInDays, differenceInMilliseconds, isBefore, addDays, addMinutes, setSeconds } from 'date-fns';
@@ -224,7 +224,7 @@ export function dateBlocksExpansionFactory(config: DateBlocksExpansionFactoryCon
 
   return <B extends DateBlock = DateBlock>(input: DateBlocksExpansionFactoryInput<B>) => {
     const blocks = Array.isArray(input) ? input : input.blocks;
-    let spans: DateBlockDurationSpan<B>[] = [];
+    const spans: DateBlockDurationSpan<B>[] = [];
 
     blocks.forEach((x) => {
       if (isInRange(x.i)) {
@@ -331,7 +331,7 @@ export interface UniqueDateBlockRangeGroup<B extends DateBlockRange | UniqueDate
 export function groupUniqueDateBlocks<B extends DateBlockRange | UniqueDateBlock>(input: B[]): UniqueDateBlockRangeGroup<B> {
   const blocks = input.sort(sortAscendingIndexNumberRefFunction());
 
-  let i = 0;
+  const i = 0;
   let to: number;
 
   if (blocks.length === 0) {

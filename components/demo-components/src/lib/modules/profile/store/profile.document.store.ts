@@ -1,8 +1,6 @@
 import { Injectable } from '@angular/core';
 import { AbstractDbxFirebaseDocumentStore, firebaseDocumentStoreUpdateFunction } from '@dereekb/dbx-firebase';
-import { DemoFirestoreCollections, Profile, ProfileDocument, ProfileFunctions, SetProfileUsernameParams, profileSetUsernameKey } from '@dereekb/demo-firebase';
-import { LoadingState, loadingStateFromObs } from '@dereekb/rxjs';
-import { from, Observable } from 'rxjs';
+import { DemoFirestoreCollections, Profile, ProfileDocument, ProfileFunctions } from '@dereekb/demo-firebase';
 
 @Injectable()
 export class ProfileDocumentStore extends AbstractDbxFirebaseDocumentStore<Profile, ProfileDocument> {
