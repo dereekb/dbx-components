@@ -1,7 +1,7 @@
 import { Component, EventEmitter, Output } from '@angular/core';
-import { isSameMonth, format, differenceInMinutes } from 'date-fns';
+import { isSameMonth } from 'date-fns';
 import { CalendarEvent } from 'angular-calendar';
-import { DbxCalendarStore, CalendarDisplayType, CalendarState } from './calendar.store';
+import { DbxCalendarStore } from './calendar.store';
 import { map, shareReplay, withLatestFrom } from 'rxjs/operators';
 import { MatButtonToggleChange } from '@angular/material/button-toggle';
 import { formatToTimeAndDurationString } from '@dereekb/date';
