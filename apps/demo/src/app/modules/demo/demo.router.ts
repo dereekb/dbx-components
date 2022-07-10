@@ -2,6 +2,7 @@ import { Ng2StateDeclaration } from '@uirouter/angular';
 import { DemoHomeComponent } from './container/home.component';
 import { DemoLayoutComponent } from './container/layout.component';
 import { HasAuthStateData, redirectBasedOnAuthUserState } from '@dereekb/dbx-core';
+import { demoAppStateData } from './modules/app/demo.app.router.auth';
 
 export const layoutState: Ng2StateDeclaration = {
   parent: 'root',
@@ -52,13 +53,7 @@ export const demoAppFutureState: Ng2StateDeclaration = {
   name: 'demo.app.**',
   url: '/app',
   loadChildren: () => import('./modules/app/demo.app.module').then((m) => m.DemoAppModule),
-  data: {
-    authStates: 'user', // Onboarded users only.
-    redirectTo: redirectBasedOnAuthUserState({
-      // other states default to demo.auth, per configuration in the root module.
-      new: { ref: 'demo.onboard' }
-    })
-  } as HasAuthStateData
+  data: demoAppStateData
 };
 
 // TODO: Add public state that also allows anonymous viewers. Anonymous users still must sign the ToS. Their signature updates their Token.

@@ -1,12 +1,14 @@
 import { Ng2StateDeclaration } from '@uirouter/angular';
 import { DemoAppHomeComponent } from './container/home.component';
 import { DemoAppLayoutComponent } from './container/layout.component';
+import { demoAppStateData } from './demo.app.router.auth';
 
 export const demoAppState: Ng2StateDeclaration = {
   url: '/app',
   name: 'demo.app',
   redirectTo: 'demo.app.home',
-  component: DemoAppLayoutComponent
+  component: DemoAppLayoutComponent,
+  data: demoAppStateData
 };
 
 export const homeState: Ng2StateDeclaration = {
