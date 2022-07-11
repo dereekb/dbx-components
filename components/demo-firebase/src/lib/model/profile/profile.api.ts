@@ -57,7 +57,7 @@ export type ProfileModelCrudFunctionsConfig = {
     update: {
       _: UpdateProfileParams;
       username: SetProfileUsernameParams;
-      onboard: FinishOnboardingProfileParams;
+      onboard: [FinishOnboardingProfileParams, boolean];
     };
     delete: UpdateProfileParams;
   };
@@ -83,11 +83,11 @@ export abstract class ProfileFunctions implements ModelFirebaseFunctionMap<Profi
       // full names
       updateProfile: ModelFirebaseCrudFunction<UpdateProfileParams>;
       updateProfileUsername: ModelFirebaseCrudFunction<SetProfileUsernameParams>;
-      updateProfileOnboard: ModelFirebaseCrudFunction<FinishOnboardingProfileParams>;
+      updateProfileOnboard: ModelFirebaseCrudFunction<FinishOnboardingProfileParams, boolean>;
       // short names
       update: ModelFirebaseCrudFunction<UpdateProfileParams>;
       username: ModelFirebaseCrudFunction<SetProfileUsernameParams>;
-      onboard: ModelFirebaseCrudFunction<FinishOnboardingProfileParams>;
+      onboard: ModelFirebaseCrudFunction<FinishOnboardingProfileParams, boolean>;
     };
     deleteProfile: ModelFirebaseCrudFunction<UpdateProfileParams>;
   };

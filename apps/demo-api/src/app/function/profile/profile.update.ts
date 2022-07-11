@@ -24,7 +24,7 @@ export const updateProfileUsername: DemoUpdateModelfunction<SetProfileUsernamePa
   await setProfileUsername(profileDocument);
 };
 
-export const updateProfleOnboarding: DemoUpdateModelfunction<FinishOnboardingProfileParams> = async (request) => {
+export const updateProfleOnboarding: DemoUpdateModelfunction<FinishOnboardingProfileParams, boolean> = async (request) => {
   const { nest, auth, data } = request;
   const uid = auth.uid;
 
@@ -33,4 +33,6 @@ export const updateProfleOnboarding: DemoUpdateModelfunction<FinishOnboardingPro
   }
 
   await nest.authService.userContext(uid).addRoles(AUTH_ONBOARDED_ROLE);
+
+  return true;
 };
