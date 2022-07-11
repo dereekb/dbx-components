@@ -1,7 +1,8 @@
-import { ProfileDocument, SetProfileUsernameParams, UpdateProfileParams } from '@dereekb/demo-firebase';
+import { FinishOnboardingProfileParams, ProfileDocument, SetProfileUsernameParams, UpdateProfileParams } from '@dereekb/demo-firebase';
 import { DemoUpdateModelfunction } from '../function';
 import { profileForUserRequest } from './profile.util';
 import { userHasNoProfileError } from '../../common';
+import { AUTH_ONBOARDED_ROLE } from '@dereekb/util';
 
 export const updateProfile: DemoUpdateModelfunction<UpdateProfileParams> = async (request) => {
   const { nest, auth, data } = request;
@@ -21,4 +22,15 @@ export const updateProfileUsername: DemoUpdateModelfunction<SetProfileUsernamePa
   }
 
   await setProfileUsername(profileDocument);
+};
+
+export const updateProfleOnboarding: DemoUpdateModelfunction<FinishOnboardingProfileParams> = async (request) => {
+  const { nest, auth, data } = request;
+  const uid = auth.uid;
+
+  if (uid) {
+    await nest.profileActions.initProfileForUid(uid);
+  }
+
+  await nest.authService.userContext(uid).addRoles(AUTH_ONBOARDED_ROLE);
 };

@@ -1,45 +1,55 @@
 import { AuthUserState } from '@dereekb/dbx-core';
+import { asObservable, ObservableOrValue } from '@dereekb/rxjs';
 import { IdTokenResult } from 'firebase/auth';
 import { Observable, of, shareReplay, switchMap } from 'rxjs';
-import { DbxFirebaseAuthService } from './firebase.auth.service';
+import { AuthUserStateObsFunction, DbxFirebaseAuthService } from './firebase.auth.service';
 
 /**
- * Derives a user state from the input firebase auth service.
+ * Creates a AuthUserStateObsFunction that derives a user state from the input firebase auth service, and the optional stateForLoggedInUser input
  *
- * @param dbxFirebaseAuthService
  * @param stateForLoggedInUser Optional function that returns an observable for the user's state if they are logged in and not an anonymous user.
  * @returns
  */
-export function authUserStateFromFirebaseAuthService(dbxFirebaseAuthService: DbxFirebaseAuthService, stateForLoggedInUser: (dbxFirebaseAuthService: DbxFirebaseAuthService) => Observable<AuthUserState> = () => of('user')): Observable<AuthUserState> {
-  return dbxFirebaseAuthService.hasAuthUser$.pipe(
-    switchMap((hasUser) => {
-      let obs: Observable<AuthUserState>;
+export function authUserStateFromFirebaseAuthServiceFunction(stateForLoggedInUser: AuthUserStateObsFunction = () => of('user')): AuthUserStateObsFunction {
+  return (dbxFirebaseAuthService: DbxFirebaseAuthService) => {
+    return dbxFirebaseAuthService.hasAuthUser$.pipe(
+      switchMap((hasUser) => {
+        let obs: Observable<AuthUserState>;
 
-      if (hasUser) {
-        obs = dbxFirebaseAuthService.isAnonymousUser$.pipe(switchMap((isAnon) => (isAnon ? of('anon' as AuthUserState) : stateForLoggedInUser(dbxFirebaseAuthService))));
-      } else {
-        obs = of('none');
-      }
+        if (hasUser) {
+          obs = dbxFirebaseAuthService.isAnonymousUser$.pipe(switchMap((isAnon) => (isAnon ? of('anon' as AuthUserState) : stateForLoggedInUser(dbxFirebaseAuthService))));
+        } else {
+          obs = of('none');
+        }
 
-      return obs;
-    }),
-    shareReplay(1)
-  );
+        return obs;
+      }),
+      shareReplay(1)
+    );
+  };
+}
+
+export type StateFromTokenFunction = (token: IdTokenResult) => ObservableOrValue<AuthUserState>;
+
+export function stateFromTokenForLoggedInUserFunction(stateFromToken: StateFromTokenFunction, defaultState: AuthUserState = 'user'): AuthUserStateObsFunction {
+  return (dbxFirebaseAuthService: DbxFirebaseAuthService) => {
+    return readValueFromIdToken<AuthUserState>(dbxFirebaseAuthService, stateFromToken, defaultState);
+  };
 }
 
 /**
  * Convenience function to read a value from an IdTokenResult off of the current user.
  *
  * @param dbxFirebaseAuthService
- * @param readBooleanFromIdToken
+ * @param readValueFromIdToken
  * @param defaultValue
  * @returns
  */
-export function readValueFromIdToken<T>(dbxFirebaseAuthService: DbxFirebaseAuthService, readBooleanFromIdToken: (idToken: IdTokenResult) => Observable<T>, defaultValue: T): Observable<T> {
+export function readValueFromIdToken<T>(dbxFirebaseAuthService: DbxFirebaseAuthService, readValueFromIdToken: (idToken: IdTokenResult) => ObservableOrValue<T>, defaultValue: T): Observable<T> {
   return dbxFirebaseAuthService.currentAuthUserInfo$.pipe(
     switchMap((x) => {
       if (x) {
-        return dbxFirebaseAuthService.idTokenResult$.pipe(switchMap((x) => readBooleanFromIdToken(x)));
+        return dbxFirebaseAuthService.idTokenResult$.pipe(switchMap((x) => asObservable(readValueFromIdToken(x))));
       } else {
         return of(defaultValue);
       }

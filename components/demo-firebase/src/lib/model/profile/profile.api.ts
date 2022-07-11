@@ -34,6 +34,8 @@ export class UpdateProfileParams extends ProfileParams {
   bio?: Maybe<string>;
 }
 
+export class FinishOnboardingProfileParams extends ProfileParams {}
+
 /**
  * We set the key here to allow both the functions server and the type map/client access this shared key.
  */
@@ -55,6 +57,7 @@ export type ProfileModelCrudFunctionsConfig = {
     update: {
       _: UpdateProfileParams;
       username: SetProfileUsernameParams;
+      onboard: FinishOnboardingProfileParams;
     };
     delete: UpdateProfileParams;
   };
@@ -62,7 +65,7 @@ export type ProfileModelCrudFunctionsConfig = {
 };
 
 export const profileModelCrudFunctionsConfig: ModelFirebaseCrudFunctionConfigMap<ProfileModelCrudFunctionsConfig, ProfileTypes> = {
-  profile: ['update:_,username', 'delete']
+  profile: ['update:_,username,onboard', 'delete']
 };
 
 /**
@@ -80,9 +83,11 @@ export abstract class ProfileFunctions implements ModelFirebaseFunctionMap<Profi
       // full names
       updateProfile: ModelFirebaseCrudFunction<UpdateProfileParams>;
       updateProfileUsername: ModelFirebaseCrudFunction<SetProfileUsernameParams>;
+      updateProfileOnboard: ModelFirebaseCrudFunction<FinishOnboardingProfileParams>;
       // short names
       update: ModelFirebaseCrudFunction<UpdateProfileParams>;
       username: ModelFirebaseCrudFunction<SetProfileUsernameParams>;
+      onboard: ModelFirebaseCrudFunction<FinishOnboardingProfileParams>;
     };
     deleteProfile: ModelFirebaseCrudFunction<UpdateProfileParams>;
   };

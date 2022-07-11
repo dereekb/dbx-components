@@ -1,8 +1,20 @@
-import { addToSetCopy, AuthClaims, AuthClaimsObject, AuthRoleClaimsService, AuthRoleSet } from '@dereekb/util';
+import { addToSetCopy, AuthClaims, AuthClaimsObject, AuthRoleClaimsService, AuthRoleSet, filterMaybeValues } from '@dereekb/util';
 import { map, Observable, switchMap } from 'rxjs';
-import { DbxFirebaseAuthService, DbxFirebaseAuthServiceDelegate, DEFAULT_DBX_FIREBASE_AUTH_SERVICE_DELEGATE } from './firebase.auth.service';
+import { authUserStateFromFirebaseAuthServiceFunction, stateFromTokenForLoggedInUserFunction, StateFromTokenFunction } from './firebase.auth.rxjs';
+import { AuthUserStateObsFunction, DbxFirebaseAuthService, DbxFirebaseAuthServiceDelegate, DEFAULT_DBX_FIREBASE_AUTH_SERVICE_DELEGATE } from './firebase.auth.service';
 
-export interface AuthRolesObsWithClaimsServiceConfig<T extends AuthClaimsObject> extends Partial<Pick<DbxFirebaseAuthServiceDelegate, 'isAdminInAuthRoleSet'>> {
+export interface AuthRolesObsWithClaimsServiceConfig<T extends AuthClaimsObject> extends Partial<Pick<DbxFirebaseAuthServiceDelegate, 'isAdminInAuthRoleSet' | 'authUserStateObs'>> {
+  /**
+   * (Optional) alternative to supplying authUserStateObs. Is passed to authUserStateFromFirebaseAuthService.
+   */
+  readonly stateForLoggedInUser?: AuthUserStateObsFunction;
+  /**
+   * (Optional) alternative to supplying authUserStateObs.
+   */
+  readonly stateForLoggedInUserToken?: StateFromTokenFunction;
+  /**
+   * Claims service to use for decoding.
+   */
   readonly claimsService: AuthRoleClaimsService<T>;
   /**
    * Whether or not to also add the current AuthUserState value to decoded roles.
@@ -27,11 +39,17 @@ export function authRolesObsWithClaimsService<T extends AuthClaimsObject>(config
 export type DefaultDbxFirebaseAuthServiceDelegateWithClaimsServiceConfig<T extends AuthClaimsObject> = AuthRolesObsWithClaimsServiceConfig<T>;
 
 export function defaultDbxFirebaseAuthServiceDelegateWithClaimsService<T extends AuthClaimsObject>(config: DefaultDbxFirebaseAuthServiceDelegateWithClaimsServiceConfig<T>): DbxFirebaseAuthServiceDelegate {
+  if (filterMaybeValues([config.stateForLoggedInUser, config.stateForLoggedInUserToken, config.authUserStateObs]).length > 1) {
+    throw new Error('Cannot specify a combination of "stateForLoggedInUserToken", "stateForLoggedInUser" and "authUserStateObs". Must specify one at max.');
+  }
+
+  const authUserStateObs = config.authUserStateObs ?? authUserStateFromFirebaseAuthServiceFunction(config.stateForLoggedInUserToken ? stateFromTokenForLoggedInUserFunction(config.stateForLoggedInUserToken) : config.stateForLoggedInUser);
+
   return {
-    authUserStateObs: DEFAULT_DBX_FIREBASE_AUTH_SERVICE_DELEGATE.authUserStateObs,
+    authUserStateObs,
+    isAdminInAuthRoleSet: config.isAdminInAuthRoleSet ?? DEFAULT_DBX_FIREBASE_AUTH_SERVICE_DELEGATE.isAdminInAuthRoleSet,
     authRolesObs: authRolesObsWithClaimsService(config),
     isOnboarded: DEFAULT_DBX_FIREBASE_AUTH_SERVICE_DELEGATE.isOnboarded,
-    isAdminInAuthRoleSet: config.isAdminInAuthRoleSet ?? DEFAULT_DBX_FIREBASE_AUTH_SERVICE_DELEGATE.isAdminInAuthRoleSet,
     authRoleClaimsService: config.claimsService as unknown as AuthRoleClaimsService<AuthClaimsObject>
   };
 }
