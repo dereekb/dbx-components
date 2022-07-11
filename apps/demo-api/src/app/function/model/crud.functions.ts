@@ -1,5 +1,5 @@
 import { createGuestbook } from './../guestbook/guestbook.crud';
-import { updateProfile, updateProfileUsername } from '../profile/profile.update';
+import { updateProfile, updateProfileUsername, updateProfleOnboarding } from '../profile/profile.update';
 import { updateGuestbookEntry } from '../guestbook/guestbookentry.update';
 import { inAuthContext, onCallCreateModel, onCallDeleteModel, onCallUpdateModel, onCallSpecifierHandler } from '@dereekb/firebase-server';
 import { DemoOnCallCreateModelMap, DemoOnCallDeleteModelMap, DemoOnCallUpdateModelMap, onCallWithDemoNestContext } from '../function';
@@ -15,7 +15,8 @@ export const demoUpdateModelMap: DemoOnCallUpdateModelMap = {
   guestbookEntry: updateGuestbookEntry,
   profile: onCallSpecifierHandler({
     _: updateProfile,
-    username: updateProfileUsername
+    username: updateProfileUsername,
+    onboard: updateProfleOnboarding
   })
 };
 export const demoUpdateModel = onCallWithDemoNestContext(inAuthContext(onCallUpdateModel(demoUpdateModelMap)));

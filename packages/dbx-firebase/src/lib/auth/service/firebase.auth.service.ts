@@ -1,18 +1,23 @@
 import { filterMaybe, isNot, timeoutStartWith } from '@dereekb/rxjs';
 import { Injectable, Optional } from '@angular/core';
 import { AuthUserState, DbxAuthService, loggedOutObsFromIsLoggedIn, loggedInObsFromIsLoggedIn, AuthUserIdentifier, authUserIdentifier } from '@dereekb/dbx-core';
-import { Auth, authState, User, IdTokenResult, ParsedToken, GoogleAuthProvider, signInWithPopup, AuthProvider, PopupRedirectResolver, signInAnonymously, signInWithEmailAndPassword, UserCredential, FacebookAuthProvider, GithubAuthProvider, TwitterAuthProvider, createUserWithEmailAndPassword } from '@angular/fire/auth';
+import { Auth, authState, idToken, User, IdTokenResult, ParsedToken, GoogleAuthProvider, signInWithPopup, AuthProvider, PopupRedirectResolver, signInAnonymously, signInWithEmailAndPassword, UserCredential, FacebookAuthProvider, GithubAuthProvider, TwitterAuthProvider, createUserWithEmailAndPassword } from '@angular/fire/auth';
 import { of, Observable, distinctUntilChanged, shareReplay, map, switchMap, firstValueFrom } from 'rxjs';
 import { AuthClaims, AuthClaimsObject, AuthRoleClaimsService, AuthRoleSet, AUTH_ADMIN_ROLE, cachedGetter, Maybe } from '@dereekb/util';
 import { AuthUserInfo, authUserInfoFromAuthUser, firebaseAuthTokenFromUser } from '../auth';
 import { sendPasswordResetEmail } from 'firebase/auth';
-import { authUserStateFromFirebaseAuthService } from './firebase.auth.rxjs';
+import { authUserStateFromFirebaseAuthServiceFunction } from './firebase.auth.rxjs';
 import { FirebaseAuthContextInfo, FirebaseAuthToken } from '@dereekb/firebase';
+
+/**
+ * Returns an observable that returns the state of the
+ */
+export type AuthUserStateObsFunction = (dbxFirebaseAuthService: DbxFirebaseAuthService) => Observable<AuthUserState>;
 
 // MARK: Delegate
 export abstract class DbxFirebaseAuthServiceDelegate {
   fullControlOfAuthUserState?: boolean = false;
-  abstract authUserStateObs(dbxFirebaseAuthService: DbxFirebaseAuthService): Observable<AuthUserState>;
+  abstract authUserStateObs: AuthUserStateObsFunction;
   abstract authRolesObs(dbxFirebaseAuthService: DbxFirebaseAuthService): Observable<AuthRoleSet>;
   abstract isOnboarded(dbxFirebaseAuthService: DbxFirebaseAuthService): Observable<boolean>;
   /**
@@ -23,9 +28,7 @@ export abstract class DbxFirebaseAuthServiceDelegate {
 }
 
 export const DEFAULT_DBX_FIREBASE_AUTH_SERVICE_DELEGATE: DbxFirebaseAuthServiceDelegate = {
-  authUserStateObs(dbxFirebaseAuthService: DbxFirebaseAuthService): Observable<AuthUserState> {
-    return authUserStateFromFirebaseAuthService(dbxFirebaseAuthService);
-  },
+  authUserStateObs: authUserStateFromFirebaseAuthServiceFunction(),
   authRolesObs(dbxFirebaseAuthService: DbxFirebaseAuthService): Observable<AuthRoleSet> {
     return dbxFirebaseAuthService.authUserState$.pipe(map((x) => (x === 'user' ? new Set(['user']) : new Set())));
   },
@@ -69,7 +72,9 @@ export class DbxFirebaseAuthService implements DbxAuthService {
   readonly userIdentifier$: Observable<AuthUserIdentifier> = this.currentAuthUser$.pipe(map((x) => authUserIdentifier(x?.uid)));
   readonly uid$: Observable<AuthUserIdentifier> = this.userIdentifier$;
 
-  readonly idTokenResult$: Observable<IdTokenResult> = this.authUser$.pipe(switchMap((x) => x.getIdTokenResult()));
+  readonly currentIdTokenString$: Observable<Maybe<string>> = idToken(this.firebaseAuth).pipe(distinctUntilChanged());
+  readonly idTokenString$: Observable<string> = this.currentIdTokenString$.pipe(filterMaybe());
+  readonly idTokenResult$: Observable<IdTokenResult> = this.authUser$.pipe(switchMap((x) => this.idTokenString$.pipe(switchMap((y) => x.getIdTokenResult()))));
 
   readonly claims$: Observable<ParsedToken> = this.idTokenResult$.pipe(map((x) => x.claims));
   readonly currentAuthContextInfo$: Observable<Maybe<DbxFirebaseAuthContextInfo>> = this.currentAuthUser$.pipe(
@@ -94,10 +99,9 @@ export class DbxFirebaseAuthService implements DbxAuthService {
       this.authUserState$ = delegateAuthUserStateObs;
     } else {
       this.authUserState$ = this._authState$.pipe(
-        map((x) => Boolean(x)),
-        distinctUntilChanged((x, y) => x === y),
-        switchMap((x: boolean) => {
-          if (x) {
+        distinctUntilChanged(),
+        switchMap((x) => {
+          if (x != null) {
             return delegateAuthUserStateObs;
           } else {
             return of('none' as AuthUserState);

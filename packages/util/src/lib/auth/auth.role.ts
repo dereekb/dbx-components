@@ -16,6 +16,11 @@ export type AuthRole = string;
 export type AuthRoleSet = Set<AuthRole>;
 
 /**
+ * Auth role for an account that has been onboarded.
+ */
+export const AUTH_ONBOARDED_ROLE = 'onboarded';
+
+/**
  * Auth role for a full admin. Is allowed into all sections of the app.
  */
 export const AUTH_ADMIN_ROLE = 'admin';

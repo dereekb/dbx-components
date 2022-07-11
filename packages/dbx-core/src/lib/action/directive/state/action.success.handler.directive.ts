@@ -8,7 +8,7 @@ import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
 /**
  * Performs the action on success.
  */
-export type DbxActionSuccessHandlerFunction<O> = (value: O) => void;
+export type DbxActionSuccessHandlerFunction<O = unknown> = (value: O) => void;
 
 /**
  * Directive that executes a function on ActionContextStore Success.
