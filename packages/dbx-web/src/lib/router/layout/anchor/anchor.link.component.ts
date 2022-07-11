@@ -18,7 +18,7 @@ import { Maybe } from '@dereekb/util';
 })
 export class DbxAnchorLinkComponent {
   @Input()
-  anchor?: ClickableAnchor;
+  anchor?: Maybe<ClickableAnchor>;
 
   @Input()
   set ref(ref: Maybe<string>) {
