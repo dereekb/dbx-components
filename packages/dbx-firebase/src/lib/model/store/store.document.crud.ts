@@ -1,6 +1,6 @@
-import { FirestoreModelKeyRef, ModelFirebaseCreateFunction, ModelFirebaseDeleteFunction, ModelFirebaseUpdateFunction, OnCallCreateModelResult } from '@dereekb/firebase';
+import { FirestoreModelKeyRef, ModelFirebaseCreateFunction, ModelFirebaseDeleteFunction, ModelFirebaseUpdateFunction, OnCallCreateModelResult, TargetModelParams, InferredTargetModelParams } from '@dereekb/firebase';
 import { lazyFrom, LoadingState, loadingStateFromObs } from '@dereekb/rxjs';
-import { firstValue } from '@dereekb/util';
+import { firstValue, PartialOnKeys } from '@dereekb/util';
 import { first, Observable, switchMap } from 'rxjs';
 import { Writable } from 'ts-essentials';
 import { DbxFirebaseDocumentStore } from './store.document';
@@ -33,13 +33,30 @@ export function firebaseDocumentStoreCreateFunction<I, O extends OnCallCreateMod
     );
 }
 
+// MARK: Targeted Functions
+/**
+ * A parameter that refers to a specific key.
+ */
+export type DbxFirebaseDocumentStoreFunctionParams = TargetModelParams | InferredTargetModelParams;
+
+/**
+ * Used for the input to related functions
+ */
+export type DbxFirebaseDocumentStoreFunctionParamsInput<I extends DbxFirebaseDocumentStoreFunctionParams> = PartialOnKeys<I, 'key'>;
+export type DbxFirebaseDocumentStoreFunction<I extends DbxFirebaseDocumentStoreFunctionParams, O = void> = (params: DbxFirebaseDocumentStoreFunctionParamsInput<I>) => Observable<LoadingState<O>>;
+
 // MARK: Update
-export type DbxFirebaseDocumentStoreUpdateParams = Partial<Writable<FirestoreModelKeyRef>>;
-
-export type DbxFirebaseDocumentStoreUpdateFunction<I extends DbxFirebaseDocumentStoreUpdateParams> = (params: I) => Observable<LoadingState<void>>;
-
-export function firebaseDocumentStoreUpdateFunction<I extends DbxFirebaseDocumentStoreUpdateParams>(store: DbxFirebaseDocumentStore<any, any>, fn: ModelFirebaseUpdateFunction<I>): DbxFirebaseDocumentStoreUpdateFunction<I> {
-  return (params: I) =>
+/**
+ * Creates a DbxFirebaseDocumentStoreFunction for update.
+ *
+ * The store's current key is always injected into the params of the request.
+ *
+ * @param store
+ * @param fn
+ * @returns
+ */
+export function firebaseDocumentStoreUpdateFunction<I extends DbxFirebaseDocumentStoreFunctionParams, O = void>(store: DbxFirebaseDocumentStore<any, any>, fn: ModelFirebaseUpdateFunction<I, O>): DbxFirebaseDocumentStoreFunction<I, O> {
+  return (params: DbxFirebaseDocumentStoreFunctionParamsInput<I>) =>
     loadingStateFromObs(
       store.key$.pipe(
         first(),
@@ -47,26 +64,24 @@ export function firebaseDocumentStoreUpdateFunction<I extends DbxFirebaseDocumen
           fn({
             ...params,
             key // inject key into the parameters.
-          })
+          } as I)
         )
       )
     );
 }
 
 // MARK: Delete
-export type DbxFirebaseDocumentStoreDeleteParams = Partial<Writable<FirestoreModelKeyRef>>;
-
-export type DbxFirebaseDocumentStoreDeleteFunction<I extends DbxFirebaseDocumentStoreDeleteParams> = (params: I) => Observable<LoadingState<void>>;
-
 /**
- * Deletes a function for a store that DbxFirebaseDocumentStore captures the ModelFirebaseDeleteFunction result and sets the key of the created value.
+ * Creates a DbxFirebaseDocumentStoreFunction for delete.
+ *
+ * The store's current key is always injected into the params of the request.
  *
  * @param store
  * @param fn
  * @returns
  */
-export function firebaseDocumentStoreDeleteFunction<I>(store: DbxFirebaseDocumentStore<any, any>, fn: ModelFirebaseDeleteFunction<I>): DbxFirebaseDocumentStoreDeleteFunction<I> {
-  return (params: I) =>
+export function firebaseDocumentStoreDeleteFunction<I extends DbxFirebaseDocumentStoreFunctionParams, O = void>(store: DbxFirebaseDocumentStore<any, any>, fn: ModelFirebaseDeleteFunction<I, O>): DbxFirebaseDocumentStoreFunction<I, O> {
+  return (params: DbxFirebaseDocumentStoreFunctionParamsInput<I>) =>
     loadingStateFromObs(
       store.key$.pipe(
         first(),
@@ -74,7 +89,7 @@ export function firebaseDocumentStoreDeleteFunction<I>(store: DbxFirebaseDocumen
           fn({
             ...params,
             key // inject key into the parameters.
-          }).then((result) => {
+          } as I).then((result) => {
             store.clearRefs();
             return result;
           })

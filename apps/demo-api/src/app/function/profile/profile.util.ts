@@ -1,5 +1,5 @@
-import { ProfileDocument, ProfileParams } from '@dereekb/demo-firebase';
-import { FirebaseAuthUserId } from '@dereekb/firebase';
+import { ProfileDocument } from '@dereekb/demo-firebase';
+import { FirebaseAuthUserId, InferredTargetModelParams, TargetModelParams } from '@dereekb/firebase';
 import { NestContextCallableRequestWithAuth } from '@dereekb/firebase-server';
 import { DemoApiNestContext } from '../function';
 
@@ -9,7 +9,7 @@ export function profileForUser(nest: DemoApiNestContext, uid: FirebaseAuthUserId
   return profileDocument;
 }
 
-export async function profileForUserRequest(request: NestContextCallableRequestWithAuth<DemoApiNestContext, ProfileParams>): Promise<ProfileDocument> {
+export async function profileForUserRequest(request: NestContextCallableRequestWithAuth<DemoApiNestContext, TargetModelParams | InferredTargetModelParams>): Promise<ProfileDocument> {
   const { nest, data: params, auth } = request;
   let profileDocument: ProfileDocument;
 

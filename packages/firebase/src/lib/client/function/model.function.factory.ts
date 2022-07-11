@@ -22,30 +22,32 @@ export type ModelFirebaseCrudFunctionSpecifierRef = {
   specifier?: ModelFirebaseCrudFunctionSpecifier;
 };
 
-export type ModelFirebaseCrudFunction<I> = FirebaseFunction<I, void>;
-export type ModelFirebaseCreateFunction<I, O extends OnCallCreateModelResult = OnCallCreateModelResult> = FirebaseFunction<I, O>;
-export type ModelFirebaseUpdateFunction<I> = ModelFirebaseCrudFunction<I>;
-export type ModelFirebaseDeleteFunction<I> = ModelFirebaseCrudFunction<I>;
+export type ModelFirebaseCrudFunction<I, O = void> = FirebaseFunction<I, O>;
+export type ModelFirebaseCreateFunction<I, O extends OnCallCreateModelResult = OnCallCreateModelResult> = ModelFirebaseCrudFunction<I, O>;
+export type ModelFirebaseUpdateFunction<I, O = void> = ModelFirebaseCrudFunction<I, O>;
+export type ModelFirebaseDeleteFunction<I, O = void> = ModelFirebaseCrudFunction<I, O>;
 
 export type ModelFirebaseCrudFunctionTypeMap<T extends FirestoreModelIdentity = FirestoreModelIdentity> = {
   [K in FirestoreModelTypes<T>]: ModelFirebaseCrudFunctionTypeMapEntry;
 };
 
 export type ModelFirebaseCrudFunctionTypeMapEntry = MaybeNot | Partial<ModelFirebaseCrudFunctionCreateTypeConfig & ModelFirebaseCrudFunctionUpdateTypeConfig & ModelFirebaseCrudFunctionDeleteTypeConfig>;
-export type ModelFirebaseCrudFunctionCreateTypeSpecifierConfig = Record<string | number, unknown>;
+
+export type ModelFirebaseCrudFunctionTypeMapEntryWithReturnType<I = unknown, O = unknown> = [I, O];
+export type ModelFirebaseCrudFunctionTypeSpecifierConfig = Record<string | number, unknown | ModelFirebaseCrudFunctionTypeMapEntryWithReturnType>;
 
 // TODO: Typings here could potentially be improved to always enforce _ being provided if the passed object is
 
 export type ModelFirebaseCrudFunctionCreateTypeConfig = {
-  create: unknown | ModelFirebaseCrudFunctionCreateTypeSpecifierConfig;
+  create: unknown | ModelFirebaseCrudFunctionTypeSpecifierConfig;
 };
 
 export type ModelFirebaseCrudFunctionUpdateTypeConfig = {
-  update: unknown | ModelFirebaseCrudFunctionCreateTypeSpecifierConfig;
+  update: unknown | ModelFirebaseCrudFunctionTypeSpecifierConfig;
 };
 
 export type ModelFirebaseCrudFunctionDeleteTypeConfig = {
-  delete: unknown | ModelFirebaseCrudFunctionCreateTypeSpecifierConfig;
+  delete: unknown | ModelFirebaseCrudFunctionTypeSpecifierConfig;
 };
 
 export const MODEL_FUNCTION_FIREBASE_CRUD_FUNCTION_SPECIFIER_DEFAULT = '_';
@@ -94,8 +96,7 @@ export type ModelFirebaseCrudFunctionMapEntrySpecifierShort<MODEL extends string
   [SPECIFIER in keyof M as SPECIFIER extends string ? (CRUD extends string ? (SPECIFIER extends ModelFirebaseCrudFunctionSpecifierDefault ? CRUD : SPECIFIER) : never) : never]: ModelFirebaseCrudFunctionMapEntryFunction<M, SPECIFIER>;
 };
 
-export type ModelFirebaseCrudFunctionMapEntryFunction<E extends ModelFirebaseCrudFunctionTypeMapEntry, K extends keyof E> = K extends 'create' ? ModelFirebaseCreateFunction<E[K]> : ModelFirebaseCrudFunction<E[K]>;
-
+export declare type ModelFirebaseCrudFunctionMapEntryFunction<E extends ModelFirebaseCrudFunctionTypeMapEntry, K extends keyof E> = K extends 'create' ? ModelFirebaseCreateFunction<E[K]> : E[K] extends ModelFirebaseCrudFunctionTypeMapEntryWithReturnType<infer I, infer O> ? ModelFirebaseCrudFunction<I, O> : ModelFirebaseCrudFunction<E[K]>;
 export type ModelFirebaseFunctionMap<M extends FirebaseFunctionTypeMap, C extends ModelFirebaseCrudFunctionTypeMap> = FirebaseFunctionMap<M> & ModelFirebaseCrudFunctionMap<C>;
 
 /**

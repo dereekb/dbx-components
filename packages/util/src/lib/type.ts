@@ -74,6 +74,11 @@ export type RemoveIndex<T> = {
 export type KnownKeys<T> = keyof RemoveIndex<T>;
 
 /**
+ * Makes the input key(s) partially required.
+ */
+export type PartialOnKeys<T, K> = K extends keyof T ? Omit<T, K> & Partial<Pick<T, K>> : T;
+
+/**
  * Returns only properties that have string keys.
  */
 export type StringKeyProperties<T> = NonNever<{

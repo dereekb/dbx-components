@@ -1,5 +1,4 @@
-import { OnInit } from '@angular/core';
-import { Component } from '@angular/core';
+import { OnInit, Component } from '@angular/core';
 import { DbxActionSuccessHandlerFunction, DbxRouterService, HandleActionWithContext } from '@dereekb/dbx-core';
 import { DbxFirebaseAuthService } from '@dereekb/dbx-firebase';
 import { ProfileDocumentStore } from '@dereekb/demo-components';
