@@ -1,4 +1,4 @@
-import { IndexNumber, IndexRange, indexRangeCheckFunction, IndexRef, MINUTES_IN_DAY, MS_IN_DAY, sortAscendingIndexNumberRefFunction, UniqueModel, lastValue, FactoryWithRequiredInput } from '@dereekb/util';
+import { IndexNumber, IndexRange, indexRangeCheckFunction, IndexRef, MINUTES_IN_DAY, MS_IN_DAY, sortAscendingIndexNumberRefFunction, UniqueModel, lastValue, FactoryWithRequiredInput, FilterFunction, mergeFilterFunctions } from '@dereekb/util';
 import { dateRange, DateRange, DateRangeDayDistanceInput, DateRangeType, isDateRange } from './date.range';
 import { DateDurationSpan } from './date.duration';
 import { differenceInDays, differenceInMilliseconds, isBefore, addDays, addMinutes, setSeconds } from 'date-fns';
@@ -186,7 +186,7 @@ export function expandDateBlockCollection<B extends DateBlock = DateBlock>(colle
  * @returns
  */
 export function expandDateBlocks<B extends DateBlock = DateBlock>(timing: DateBlockTiming, blocks: B[]): DateBlockDurationSpan<B>[] {
-  return dateBlocksExpansionFactory({ timing })(blocks);
+  return dateBlocksExpansionFactory<B>({ timing })(blocks);
 }
 
 export type DateBlocksExpansionFactoryInput<B extends DateBlock = DateBlock> = DateBlockArrayRef<B> | DateBlockArray<B>;
@@ -194,9 +194,9 @@ export type DateBlocksExpansionFactoryInput<B extends DateBlock = DateBlock> = D
 /**
  * Used to convert the input DateBlocksExpansionFactoryInput into an array of DateBlockDurationSpan values
  */
-export type DateBlocksExpansionFactory = <B extends DateBlock = DateBlock>(input: DateBlocksExpansionFactoryInput<B>) => DateBlockDurationSpan<B>[];
+export type DateBlocksExpansionFactory<B extends DateBlock = DateBlock> = (input: DateBlocksExpansionFactoryInput<B>) => DateBlockDurationSpan<B>[];
 
-export interface DateBlocksExpansionFactoryConfig {
+export interface DateBlocksExpansionFactoryConfig<B extends DateBlock = DateBlock> {
   /**
    * Timing to use in the configuration.
    */
@@ -208,6 +208,10 @@ export interface DateBlocksExpansionFactoryConfig {
    * If false, the timing's range is ignored too, and only the DateBlockIndex values are considered.
    */
   rangeLimit?: DateBlockTimingRangeInput | false;
+  /**
+   * Additional filter function to filter potential blocks in/out.
+   */
+  filter?: FilterFunction<B>;
 }
 
 /**
@@ -216,18 +220,19 @@ export interface DateBlocksExpansionFactoryConfig {
  * @param config
  * @returns
  */
-export function dateBlocksExpansionFactory(config: DateBlocksExpansionFactoryConfig): DateBlocksExpansionFactory {
-  const { timing, rangeLimit } = config;
+export function dateBlocksExpansionFactory<B extends DateBlock = DateBlock>(config: DateBlocksExpansionFactoryConfig): DateBlocksExpansionFactory<B> {
+  const { timing, rangeLimit, filter: inputFilter } = config;
   const { startsAt: baseStart, duration } = timing;
   const indexRange = rangeLimit !== false ? dateBlockIndexRange(timing, rangeLimit) : { minIndex: Number.MIN_SAFE_INTEGER, maxIndex: Number.MAX_SAFE_INTEGER };
   const isInRange = indexRangeCheckFunction(indexRange);
+  const filter: FilterFunction<B> = mergeFilterFunctions<B>((x: B) => isInRange(x.i), inputFilter);
 
-  return <B extends DateBlock = DateBlock>(input: DateBlocksExpansionFactoryInput<B>) => {
+  return (input: DateBlocksExpansionFactoryInput<B>) => {
     const blocks = Array.isArray(input) ? input : input.blocks;
     const spans: DateBlockDurationSpan<B>[] = [];
 
-    blocks.forEach((x) => {
-      if (isInRange(x.i)) {
+    blocks.forEach((x, blockIndex) => {
+      if (filter(x, blockIndex)) {
         const startsAt = addDays(baseStart, x.i);
         const durationSpan: DateBlockDurationSpan<B> = {
           ...x,
