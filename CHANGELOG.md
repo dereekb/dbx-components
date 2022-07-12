@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [8.12.8](https://github.com/dereekb/dbx-components/compare/v8.12.7-dev...v8.12.8) (2022-07-12)
+
+
+### Bug Fixes
+
+* optionalFirestoreDate() ([58e170c](https://github.com/dereekb/dbx-components/commit/58e170c9d890e3953c316b78cd01fb9b49f3bf29))
+
+
+
 ## [8.12.7](https://github.com/dereekb/dbx-components/compare/v8.12.6-dev...v8.12.7) (2022-07-11)
 
 
