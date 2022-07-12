@@ -24,14 +24,14 @@ export class InferredTargetModelParams implements Partial<FirestoreModelKeyRef> 
 /**
  * Simple annotated params that implements FirestoreModelKeyRef but key is a FirestoreModelId.
  */
-export class TargetIdParams implements FirestoreModelKeyRef {
+export class TargetModelIdParams implements FirestoreModelKeyRef {
   @Expose()
   @IsNotEmpty()
   @IsFirestoreModelId()
   key!: FirestoreModelId;
 }
 
-export class InferredTargetIdParams implements Partial<FirestoreModelKeyRef> {
+export class InferredTargetModelIdParams implements Partial<FirestoreModelKeyRef> {
   @Expose()
   @IsOptional()
   @IsNotEmpty()

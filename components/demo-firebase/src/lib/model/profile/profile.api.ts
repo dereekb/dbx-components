@@ -1,5 +1,5 @@
 import { Expose } from 'class-transformer';
-import { FirebaseFunctionMapFunction, FirebaseFunctionTypeConfigMap, InferredTargetIdParams, ModelFirebaseCrudFunction, ModelFirebaseCrudFunctionConfigMap, ModelFirebaseFunctionMap, modelFirebaseFunctionMapFactory } from '@dereekb/firebase';
+import { FirebaseFunctionMapFunction, FirebaseFunctionTypeConfigMap, InferredTargetModelIdParams, InferredTargetModelParams, ModelFirebaseCrudFunction, ModelFirebaseCrudFunctionConfigMap, ModelFirebaseFunctionMap, modelFirebaseFunctionMapFactory } from '@dereekb/firebase';
 import { IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
 import { Maybe } from '@dereekb/util';
 import { ProfileTypes } from './profile';
@@ -7,7 +7,7 @@ import { ProfileTypes } from './profile';
 export const PROFILE_BIO_MAX_LENGTH = 200;
 export const PROFILE_USERNAME_MAX_LENGTH = 30;
 
-export class SetProfileUsernameParams extends InferredTargetIdParams {
+export class SetProfileUsernameParams extends InferredTargetModelParams {
   @Expose()
   @IsNotEmpty()
   @IsString()
@@ -15,7 +15,7 @@ export class SetProfileUsernameParams extends InferredTargetIdParams {
   username!: string;
 }
 
-export class UpdateProfileParams extends InferredTargetIdParams {
+export class UpdateProfileParams extends InferredTargetModelParams {
   @Expose()
   @IsOptional()
   @IsNotEmpty()
@@ -24,7 +24,7 @@ export class UpdateProfileParams extends InferredTargetIdParams {
   bio?: Maybe<string>;
 }
 
-export class FinishOnboardingProfileParams extends InferredTargetIdParams {}
+export class FinishOnboardingProfileParams extends InferredTargetModelParams {}
 
 /**
  * We set the key here to allow both the functions server and the type map/client access this shared key.
