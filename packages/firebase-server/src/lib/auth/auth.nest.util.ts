@@ -1,4 +1,5 @@
 import { UserRelated } from '@dereekb/firebase';
+import { ArrayOrValue, AuthRole, containsAllValues, asArray } from '@dereekb/util';
 import { forbiddenError } from '../function';
 import { NestContextCallableRequestWithAuth } from '../nest/function/nest';
 import { AbstractFirebaseNestContext } from '../nest/nest.provider';
@@ -44,4 +45,19 @@ export function assertHasSignedTosInRequest<N extends AbstractFirebaseNestContex
 
 export function hasSignedTosInRequest<N extends AbstractFirebaseNestContext<any, any> = AbstractFirebaseNestContext<any, any>, I = unknown>(request: NestContextCallableRequestWithAuth<N, I>) {
   return request.nest.authService.context(request).hasSignedTos;
+}
+
+export function assertHasRolesInRequest<N extends AbstractFirebaseNestContext<any, any> = AbstractFirebaseNestContext<any, any>, I = unknown>(request: NestContextCallableRequestWithAuth<N, I>, authRoles: ArrayOrValue<AuthRole>) {
+  if (!hasAuthRolesInRequest(request, authRoles)) {
+    throw forbiddenError({
+      message: 'Missing required auth roles.',
+      data: {
+        roles: asArray(authRoles)
+      }
+    });
+  }
+}
+
+export function hasAuthRolesInRequest<N extends AbstractFirebaseNestContext<any, any> = AbstractFirebaseNestContext<any, any>, I = unknown>(request: NestContextCallableRequestWithAuth<N, I>, authRoles: ArrayOrValue<AuthRole>) {
+  return containsAllValues(request.nest.authService.context(request).authRoles, authRoles);
 }

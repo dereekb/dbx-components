@@ -11,6 +11,13 @@ describe('setIncludes', () => {
       expect(result).toBe(true);
     });
 
+    it('should return true if the set includes the value', () => {
+      const values = 3;
+      const set = new Set([1, 2, values]);
+      const result = setIncludes(set, values, 'all');
+      expect(result).toBe(true);
+    });
+
     it('should return true if the set includes the string value', () => {
       const values = 'alongname';
       const set = new Set([values, 'b', 'c']);
@@ -39,6 +46,14 @@ describe('containsAnyValue', () => {
     expect(containsAnyValue(set, [value])).toBe(true);
   });
 
+  it('should return true if the array contains any value from the set.', () => {
+    const value = 1;
+    const set = new Set([value]);
+
+    expect(set.has(value));
+    expect(containsAnyValue(set, value)).toBe(true);
+  });
+
   it('should return true if the array contains any value from the array.', () => {
     const value = 'a';
     const array = [value];
@@ -63,6 +78,14 @@ describe('containsAnyValueFromSet', () => {
     expect(containsAnyValueFromSet([value], set)).toBe(true);
   });
 
+  it('should return true if the array contains a value from the set.', () => {
+    const value = 1;
+    const set = new Set([value]);
+
+    expect(set.has(value));
+    expect(containsAnyValueFromSet(value, set)).toBe(true);
+  });
+
   it('should return false if the array does not contain a value from the set.', () => {
     const value = 'a';
     const set = new Set();
@@ -77,6 +100,14 @@ describe('setContainsAnyValue', () => {
 
     expect(set.has(value));
     expect(setContainsAnyValue(set, [value])).toBe(true);
+  });
+
+  it('should return true if the set contains a value.', () => {
+    const value = 1;
+    const set = new Set([value]);
+
+    expect(set.has(value));
+    expect(setContainsAnyValue(set, value)).toBe(true);
   });
 
   it('should return false if the set does not contain the value.', () => {
