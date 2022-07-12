@@ -78,7 +78,7 @@ export type SetIncludesMode = 'all' | 'any';
 /**
  * Contextual function that checks whether or not the input values are included.
  */
-export type SetIncludesFunction<T> = (valuesToFind: Iterable<T>) => boolean;
+export type SetIncludesFunction<T> = (valuesToFind: IterableOrValue<T>) => boolean;
 
 /**
  * Creates a SetIncludesFunction using the input valuesSet and optional mode. By default the mode defaults to 'all'.
@@ -88,7 +88,7 @@ export type SetIncludesFunction<T> = (valuesToFind: Iterable<T>) => boolean;
  * @param mode
  */
 export function setIncludesFunction<T>(valuesSet: Set<T>, mode: SetIncludesMode = 'all'): SetIncludesFunction<T> {
-  let fn: (set: Set<T>, values: Iterable<T>) => boolean;
+  let fn: (set: Set<T>, values: IterableOrValue<T>) => boolean;
 
   if (mode === 'any') {
     fn = setContainsAnyValue;
@@ -107,23 +107,23 @@ export function setIncludesFunction<T>(valuesSet: Set<T>, mode: SetIncludesMode 
  * @param mode
  * @returns
  */
-export function setIncludes<T>(valuesSet: Set<T>, valuesToFind: Iterable<T>, mode?: SetIncludesMode): boolean {
+export function setIncludes<T>(valuesSet: Set<T>, valuesToFind: IterableOrValue<T>, mode?: SetIncludesMode): boolean {
   return setIncludesFunction(valuesSet, mode)(valuesToFind);
 }
 
 /**
  * Returns true if the input array contains any value from the second array.
  */
-export function containsAnyValue<T>(values: Iterable<T>, valuesToFind: Iterable<T>): boolean {
+export function containsAnyValue<T>(values: IterableOrValue<T>, valuesToFind: IterableOrValue<T>): boolean {
   const set = new Set(asIterable(valuesToFind, false));
   return containsAnyValueFromSet(values, set);
 }
 
-export function containsAnyValueFromSet<T>(values: Iterable<T>, valuesToFind: Set<T>): boolean {
+export function containsAnyValueFromSet<T>(values: IterableOrValue<T>, valuesToFind: Set<T>): boolean {
   return setContainsAnyValue(valuesToFind, values);
 }
 
-export function setContainsAnyValue<T>(valuesSet: Set<T>, valuesToFind: Iterable<T>): boolean {
+export function setContainsAnyValue<T>(valuesSet: Set<T>, valuesToFind: IterableOrValue<T>): boolean {
   return valuesSet ? Array.from(asIterable(valuesToFind)).findIndex((x) => valuesSet.has(x)) !== -1 : false;
 }
 
@@ -134,7 +134,7 @@ export function setContainsAnyValue<T>(valuesSet: Set<T>, valuesToFind: Iterable
  * @param valuesToFind
  * @returns
  */
-export function containsAllValues<T>(values: Iterable<T>, valuesToFind: Iterable<T>): boolean {
+export function containsAllValues<T>(values: Iterable<T>, valuesToFind: IterableOrValue<T>): boolean {
   const set = new Set(values);
   return setContainsAllValues(set, valuesToFind);
 }
@@ -147,6 +147,6 @@ export function containsAllValues<T>(values: Iterable<T>, valuesToFind: Iterable
  * @param returnOnEmptyValuesSet
  * @returns
  */
-export function setContainsAllValues<T>(valuesSet: Set<T>, valuesToFind: Iterable<T>): boolean {
+export function setContainsAllValues<T>(valuesSet: Set<T>, valuesToFind: IterableOrValue<T>): boolean {
   return valuesSet ? Array.from(asIterable(valuesToFind)).findIndex((x) => !valuesSet.has(x)) == -1 : false;
 }
