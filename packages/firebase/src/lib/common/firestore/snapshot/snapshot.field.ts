@@ -192,8 +192,12 @@ export function firestoreDate(config: FirestoreDateFieldConfig = {}) {
 export function optionalFirestoreDate() {
   return firestoreField<Maybe<Date>, Maybe<string>>({
     default: null,
-    fromData: (input: string) => toJsDate(input),
-    toData: (input: Date) => toISODateString(input)
+    fromData: (input: Maybe<string>) => {
+      return input != null ? toJsDate(input) : input;
+    },
+    toData: (input: Date) => {
+      return toISODateString(input);
+    }
   });
 }
 

@@ -3,7 +3,7 @@ import { isValid } from 'date-fns';
 import { FirestoreModelKeyGrantedRoleArrayMap } from '../collection';
 import { DocumentSnapshot } from '../types';
 import { snapshotConverterFunctions } from './snapshot';
-import { firestoreArrayMap, firestoreDate, firestoreObjectArray, firestoreEnum, firestoreMap, firestoreModelKeyGrantedRoleArrayMap, firestoreEnumArray, firestoreUniqueKeyedArray, firestoreUniqueStringArray, firestoreNumber, firestoreSubObject, firestoreEncodedArray, firestoreString, DEFAULT_FIRESTORE_STRING_FIELD_VALUE, firestoreLatLngString, firestoreField } from './snapshot.field';
+import { firestoreArrayMap, firestoreDate, firestoreObjectArray, firestoreEnum, firestoreMap, firestoreModelKeyGrantedRoleArrayMap, firestoreEnumArray, firestoreUniqueKeyedArray, firestoreUniqueStringArray, firestoreNumber, firestoreSubObject, firestoreEncodedArray, firestoreString, DEFAULT_FIRESTORE_STRING_FIELD_VALUE, firestoreLatLngString, firestoreField, optionalFirestoreDate } from './snapshot.field';
 
 describe('firestoreField()', () => {
   const defaultValue = -1;
@@ -179,6 +179,43 @@ describe('firestoreString()', () => {
 
         expect(result.value).toBe(defaultValue);
       });
+    });
+  });
+});
+
+interface TestOptionalFirestoreDate {
+  value?: Maybe<Date>;
+}
+
+describe('optionalFirestoreDate()', () => {
+  describe('with transform', () => {
+    const dateField = optionalFirestoreDate();
+    const converter = snapshotConverterFunctions<TestOptionalFirestoreDate>({
+      fields: {
+        value: dateField
+      }
+    });
+
+    it('should set null when undefined', () => {
+      const result = converter.mapFunctions.from({});
+
+      expect(result.value).toBe(undefined);
+    });
+
+    it('should pass through null values', () => {
+      const result = converter.mapFunctions.from({
+        value: null
+      });
+
+      expect(result.value).toBeUndefined();
+    });
+
+    it('should pass through undefined values', () => {
+      const result = converter.mapFunctions.from({
+        value: undefined
+      });
+
+      expect(result.value).toBeUndefined();
     });
   });
 });
