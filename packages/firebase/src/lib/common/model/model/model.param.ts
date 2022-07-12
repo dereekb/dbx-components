@@ -1,7 +1,7 @@
 import { Expose } from 'class-transformer';
 import { IsNotEmpty, IsOptional } from 'class-validator';
-import { FirestoreModelKey, FirestoreModelKeyRef } from '../../firestore/collection/collection';
-import { IsFirestoreModelKey } from './model.validator';
+import { FirestoreModelId, FirestoreModelKey, FirestoreModelKeyRef } from '../../firestore/collection/collection';
+import { IsFirestoreModelId, IsFirestoreModelKey } from './model.validator';
 
 /**
  * Simple annotated params that implements FirestoreModelKeyRef.
@@ -19,4 +19,22 @@ export class InferredTargetModelParams implements Partial<FirestoreModelKeyRef> 
   @IsNotEmpty()
   @IsFirestoreModelKey()
   key?: FirestoreModelKey;
+}
+
+/**
+ * Simple annotated params that implements FirestoreModelKeyRef but key is a FirestoreModelId.
+ */
+export class TargetModelIdParams implements FirestoreModelKeyRef {
+  @Expose()
+  @IsNotEmpty()
+  @IsFirestoreModelId()
+  key!: FirestoreModelId;
+}
+
+export class InferredTargetModelIdParams implements Partial<FirestoreModelKeyRef> {
+  @Expose()
+  @IsOptional()
+  @IsNotEmpty()
+  @IsFirestoreModelId()
+  key?: FirestoreModelId;
 }

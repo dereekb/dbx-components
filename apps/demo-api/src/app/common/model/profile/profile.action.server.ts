@@ -94,7 +94,7 @@ export function setProfileUsernameFactory({ firebaseServerActionTransformFunctio
         }
 
         const documentInTransaction = profileFirestoreCollection.documentAccessorForTransaction(transaction).loadDocument(documentRef);
-        const profilePrivateDataDocument = profilePrivateDataCollectionFactory(document).loadDocumentForTransaction(transaction);
+        const profilePrivateDataDocument = profilePrivateDataCollectionFactory(documentInTransaction).loadDocumentForTransaction(transaction);
 
         // update the username
         const snapshot = await documentInTransaction.snapshotData();

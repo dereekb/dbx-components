@@ -16,6 +16,11 @@ export type AuthRole = string;
 export type AuthRoleSet = Set<AuthRole>;
 
 /**
+ * Auth role for an account that has signed the terms of service.
+ */
+export const AUTH_TOS_SIGNED_ROLE = 'tos';
+
+/**
  * Auth role for an account that has been onboarded.
  */
 export const AUTH_ONBOARDED_ROLE = 'onboarded';

@@ -2,7 +2,7 @@ import { FinishOnboardingProfileParams, ProfileDocument, SetProfileUsernameParam
 import { DemoUpdateModelfunction } from '../function';
 import { profileForUserRequest } from './profile.util';
 import { userHasNoProfileError } from '../../common';
-import { AUTH_ONBOARDED_ROLE } from '@dereekb/util';
+import { AUTH_ONBOARDED_ROLE, AUTH_TOS_SIGNED_ROLE } from '@dereekb/util';
 
 export const updateProfile: DemoUpdateModelfunction<UpdateProfileParams> = async (request) => {
   const { nest, auth, data } = request;
@@ -32,7 +32,7 @@ export const updateProfleOnboarding: DemoUpdateModelfunction<FinishOnboardingPro
     await nest.profileActions.initProfileForUid(uid);
   }
 
-  await nest.authService.userContext(uid).addRoles(AUTH_ONBOARDED_ROLE);
+  await nest.authService.userContext(uid).addRoles([AUTH_ONBOARDED_ROLE, AUTH_TOS_SIGNED_ROLE]);
 
   return true;
 };

@@ -1,7 +1,7 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
 import { FirebaseAuthContextInfo, FirebaseAuthUserId } from '@dereekb/firebase';
-import { filterUndefinedValues, AUTH_ADMIN_ROLE, AuthClaims, AuthRoleSet, cachedGetter, filterNullAndUndefinedValues, ArrayOrValue, AuthRole, forEachKeyValue, ObjectMap, AuthClaimsUpdate, asSet, KeyValueTypleValueFilter, AuthClaimsObject, Maybe } from '@dereekb/util';
+import { filterUndefinedValues, AUTH_ADMIN_ROLE, AuthClaims, AuthRoleSet, cachedGetter, filterNullAndUndefinedValues, ArrayOrValue, AuthRole, forEachKeyValue, ObjectMap, AuthClaimsUpdate, asSet, KeyValueTypleValueFilter, AuthClaimsObject, Maybe, AUTH_TOS_SIGNED_ROLE } from '@dereekb/util';
 import { assertIsContextWithAuthData, CallableContextWithAuthData } from '../function/context';
 import { AuthDataRef, firebaseAuthTokenFromDecodedIdToken } from './auth.context';
 
@@ -156,6 +156,11 @@ export interface FirebaseServerAuthContext<U extends FirebaseServerAuthUserConte
   readonly isAdmin: boolean;
 
   /**
+   * Whether or not the context sees the user as having signed the terms of service.
+   */
+  readonly hasSignedTos: boolean;
+
+  /**
    * The auth roles provided by the token in this context.
    */
   readonly authRoles: AuthRoleSet;
@@ -172,8 +177,9 @@ export interface FirebaseServerAuthContext<U extends FirebaseServerAuthUserConte
 }
 
 export abstract class AbstractFirebaseServerAuthContext<C extends FirebaseServerAuthContext, U extends FirebaseServerAuthUserContext = FirebaseServerAuthUserContext, S extends FirebaseServerAuthService<U, C> = FirebaseServerAuthService<U, C>> implements FirebaseServerAuthContext {
-  private readonly _isAdmin = cachedGetter(() => this.service.isAdmin(this.claims));
   private readonly _authRoles = cachedGetter(() => this.service.readRoles(this.claims));
+  private readonly _isAdmin = cachedGetter(() => this.service.isAdminInRoles(this._authRoles()));
+  private readonly _hasSignedTos = cachedGetter(() => this.service.hasSignedTosInRoles(this._authRoles()));
   private readonly _userContext = cachedGetter(() => this.service.userContext(this.context.auth.uid));
 
   constructor(readonly service: S, readonly context: CallableContextWithAuthData) {}
@@ -184,6 +190,10 @@ export abstract class AbstractFirebaseServerAuthContext<C extends FirebaseServer
 
   get isAdmin(): boolean {
     return this._isAdmin();
+  }
+
+  get hasSignedTos(): boolean {
+    return this._hasSignedTos();
   }
 
   get authRoles(): AuthRoleSet {
@@ -244,11 +254,25 @@ export abstract class FirebaseServerAuthService<U extends FirebaseServerAuthUser
   abstract isAdmin(claims: AuthClaims): boolean;
 
   /**
+   * Whether or not the input claims indiciate the user has signed the ToS.
+   *
+   * @param claims
+   */
+  abstract hasSignedTos(claims: AuthClaims): boolean;
+
+  /**
    * Whether or not the input roles indicate admin priviledges.
    *
    * @param roles
    */
   abstract isAdminInRoles(roles: AuthRoleSet): boolean;
+
+  /**
+   * Whether or not the input roles indiciate the user has signed the ToS.
+   *
+   * @param claims
+   */
+  abstract hasSignedTosInRoles(roles: AuthRoleSet): boolean;
 
   /**
    * Reads the AuthRoleSet from the input claims.
@@ -295,6 +319,14 @@ export abstract class AbstractFirebaseServerAuthService<U extends FirebaseServer
 
   isAdminInRoles(roles: AuthRoleSet): boolean {
     return roles.has(AUTH_ADMIN_ROLE);
+  }
+
+  hasSignedTos(claims: AuthClaims): boolean {
+    return this.hasSignedTosInRoles(this.readRoles(claims));
+  }
+
+  hasSignedTosInRoles(roles: AuthRoleSet): boolean {
+    return roles.has(AUTH_TOS_SIGNED_ROLE);
   }
 
   abstract readRoles(claims: AuthClaims): AuthRoleSet;

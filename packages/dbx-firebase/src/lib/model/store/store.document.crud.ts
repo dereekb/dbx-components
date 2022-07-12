@@ -1,8 +1,7 @@
-import { FirestoreModelKeyRef, ModelFirebaseCreateFunction, ModelFirebaseDeleteFunction, ModelFirebaseUpdateFunction, OnCallCreateModelResult, TargetModelParams, InferredTargetModelParams } from '@dereekb/firebase';
+import { ModelFirebaseCreateFunction, ModelFirebaseDeleteFunction, ModelFirebaseUpdateFunction, OnCallCreateModelResult, TargetModelParams, InferredTargetModelParams } from '@dereekb/firebase';
 import { lazyFrom, LoadingState, loadingStateFromObs } from '@dereekb/rxjs';
 import { firstValue, PartialOnKeys } from '@dereekb/util';
 import { first, Observable, switchMap } from 'rxjs';
-import { Writable } from 'ts-essentials';
 import { DbxFirebaseDocumentStore } from './store.document';
 
 // MARK: Create
