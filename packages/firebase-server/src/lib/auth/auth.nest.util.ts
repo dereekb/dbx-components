@@ -33,3 +33,15 @@ export function isAdminOrTargetUserInRequestData<N extends AbstractFirebaseNestC
 
   return isAdminOrTargetUser;
 }
+
+export function assertHasSignedTosInRequest<N extends AbstractFirebaseNestContext<any, any> = AbstractFirebaseNestContext<any, any>, I = unknown>(request: NestContextCallableRequestWithAuth<N, I>) {
+  if (!hasSignedTosInRequest(request)) {
+    throw forbiddenError({
+      message: 'ToS has not been signed.'
+    });
+  }
+}
+
+export function hasSignedTosInRequest<N extends AbstractFirebaseNestContext<any, any> = AbstractFirebaseNestContext<any, any>, I = unknown>(request: NestContextCallableRequestWithAuth<N, I>) {
+  return request.nest.authService.context(request).hasSignedTos;
+}
