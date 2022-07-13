@@ -20,5 +20,19 @@
         <p>This requires the user role.</p>
       </ng-container>
     </doc-feature-example>
+
+    <doc-feature-example header="dbxAuthNotAnyRole" hint="Similar to ngIf, it is used to conditionally add content if the user has none of the given roles.">
+      <ng-container *dbxAuthNotAnyRole="noRoles">
+        <p>This requires no roles to view.</p>
+      </ng-container>
+
+      <ng-container *dbxAuthNotAnyRole="userRole">
+        <p>This requires not having the user role.</p>
+      </ng-container>
+
+      <ng-container *dbxAuthNotAnyRole="adminRole">
+        <p>This requires not having the admin role.</p>
+      </ng-container>
+    </doc-feature-example>
   </doc-feature-layout>
 </dbx-content-container>

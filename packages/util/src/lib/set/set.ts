@@ -112,6 +112,22 @@ export function setIncludes<T>(valuesSet: Set<T>, valuesToFind: IterableOrValue<
 }
 
 /**
+ * Returns false if the input array contains any value from the second array.
+ */
+export function containsNoneOfValue<T>(values: IterableOrValue<T>, valuesToFind: IterableOrValue<T>): boolean {
+  const set = new Set(asIterable(valuesToFind, false));
+  return containsNoValueFromSet(values, set);
+}
+
+export function containsNoValueFromSet<T>(values: IterableOrValue<T>, valuesToFind: Set<T>): boolean {
+  return setContainsNoneOfValue(valuesToFind, values);
+}
+
+export function setContainsNoneOfValue<T>(valuesSet: Set<T>, valuesToFind: IterableOrValue<T>): boolean {
+  return !setContainsAnyValue(valuesSet, valuesToFind);
+}
+
+/**
  * Returns true if the input array contains any value from the second array.
  */
 export function containsAnyValue<T>(values: IterableOrValue<T>, valuesToFind: IterableOrValue<T>): boolean {

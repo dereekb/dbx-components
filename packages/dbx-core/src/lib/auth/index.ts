@@ -5,5 +5,6 @@ export * from './auth.user';
 export * from './auth.module';
 export * from './auth.role.any.directive';
 export * from './auth.role.has.directive';
+export * from './auth.role.not.directive';
 export * from './auth.state.module';
 export * from './auth.state.service';
