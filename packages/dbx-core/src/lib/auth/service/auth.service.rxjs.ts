@@ -1,5 +1,5 @@
 import { AuthRole, AuthRoleSet, Maybe } from '@dereekb/util';
-import { onFalseToTrue, onTrueToFalse, setContainsAllValuesFrom } from '@dereekb/rxjs';
+import { onFalseToTrue, onTrueToFalse, setContainsAllValuesFrom, setContainsNoValueFrom } from '@dereekb/rxjs';
 import { map, Observable, OperatorFunction } from 'rxjs';
 
 /**
@@ -33,4 +33,8 @@ export function authRolesSetContainsAllRolesFrom(roles: Observable<Maybe<Iterabl
 
 export function authRolesSetContainsAnyRoleFrom(roles: Observable<Maybe<Iterable<AuthRole>>>): OperatorFunction<AuthRoleSet, boolean> {
   return setContainsAllValuesFrom<AuthRole>(roles);
+}
+
+export function authRolesSetContainsNoRolesFrom(roles: Observable<Maybe<Iterable<AuthRole>>>): OperatorFunction<AuthRoleSet, boolean> {
+  return setContainsNoValueFrom<AuthRole>(roles);
 }
