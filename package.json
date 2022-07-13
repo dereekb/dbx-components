@@ -127,7 +127,7 @@
     "eslint-plugin-import": "^2.26.0",
     "eslint-plugin-unused-imports": "^2.0.0",
     "firebase-functions-test": "~2.2.0",
-    "firebase-tools": "^11.2.0",
+    "firebase-tools": "^11.2.2",
     "husky": "^7.0.4",
     "is-ci": "^3.0.1",
     "jasmine-marbles": "^0.9.2",
