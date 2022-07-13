@@ -79,12 +79,16 @@ export class AbstractSingleItemDbxFirebaseDocument<T, PT, D extends FirestoreDoc
    * Sets the SingleItemFirestoreCollection to use.
    */
   override readonly setFirestoreCollection = this.updater((state, firestoreCollection: Maybe<FirestoreCollection<T, D>>) => {
-    const id = (firestoreCollection as SingleItemFirestoreCollection<T, PT, D, PD>).singleItemIdentifier;
+    if (firestoreCollection != null) {
+      const id = (firestoreCollection as SingleItemFirestoreCollection<T, PT, D, PD>).singleItemIdentifier;
 
-    if (id != null) {
-      return { ...state, firestoreCollection, id };
+      if (id != null) {
+        return { ...state, firestoreCollection, id };
+      } else {
+        throw new Error('AbstractSingleItemDbxFirebaseDocument only accepts SingleItemFirestoreCollection values with a singleItemIdentifier set for setFirestoreCollection.');
+      }
     } else {
-      throw new Error('AbstractSingleItemDbxFirebaseDocument only accepts SingleItemFirestoreCollection values with a singleItemIdentifier set for setFirestoreCollection.');
+      return { ...state, firestoreCollection: null };
     }
   });
 
