@@ -1,7 +1,7 @@
-import { ModelFirebaseCreateFunction, ModelFirebaseDeleteFunction, ModelFirebaseUpdateFunction, OnCallCreateModelResult, TargetModelParams, InferredTargetModelParams } from '@dereekb/firebase';
+import { ModelFirebaseCreateFunction, ModelFirebaseDeleteFunction, ModelFirebaseUpdateFunction, OnCallCreateModelResult, TargetModelParams, InferredTargetModelParams, ModelFirebaseCrudFunction } from '@dereekb/firebase';
 import { lazyFrom, LoadingState, loadingStateFromObs } from '@dereekb/rxjs';
 import { firstValue, PartialOnKeys } from '@dereekb/util';
-import { first, Observable, switchMap } from 'rxjs';
+import { first, from, Observable, of, switchMap } from 'rxjs';
 import { DbxFirebaseDocumentStore } from './store.document';
 
 // MARK: Create
@@ -32,6 +32,18 @@ export function firebaseDocumentStoreCreateFunction<I, O extends OnCallCreateMod
     );
 }
 
+export type DbxfirebaseDocumentStoreCrudFunction<I, O = void> = (input: I) => Observable<LoadingState<O>>;
+
+/**
+ * Creates a DbxfirebaseDocumentStoreCrudFunction from the input ModelFirebaseCrudFunction.
+ *
+ * @param fn
+ * @returns
+ */
+export function firebaseDocumentStoreCrudFunction<I, O = void>(fn: ModelFirebaseCrudFunction<I, O>): DbxfirebaseDocumentStoreCrudFunction<I, O> {
+  return (params: I) => loadingStateFromObs(from(fn(params)));
+}
+
 // MARK: Targeted Functions
 /**
  * A parameter that refers to a specific key.
@@ -42,7 +54,7 @@ export type DbxFirebaseDocumentStoreFunctionParams = TargetModelParams | Inferre
  * Used for the input to related functions
  */
 export type DbxFirebaseDocumentStoreFunctionParamsInput<I extends DbxFirebaseDocumentStoreFunctionParams> = PartialOnKeys<I, 'key'>;
-export type DbxFirebaseDocumentStoreFunction<I extends DbxFirebaseDocumentStoreFunctionParams, O = void> = (params: DbxFirebaseDocumentStoreFunctionParamsInput<I>) => Observable<LoadingState<O>>;
+export type DbxFirebaseDocumentStoreFunction<I extends DbxFirebaseDocumentStoreFunctionParams, O = void> = DbxfirebaseDocumentStoreCrudFunction<DbxFirebaseDocumentStoreFunctionParamsInput<I>, O>;
 
 // MARK: Update
 /**
