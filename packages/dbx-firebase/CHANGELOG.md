@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [8.12.10](https://github.com/dereekb/dbx-components/compare/v8.12.9-dev...v8.12.10) (2022-07-13)
+
+
+### Bug Fixes
+
+* fixed AbstractSingleItemDbxFirebaseDocument setFirestoreCollection ([d0e8352](https://github.com/dereekb/dbx-components/commit/d0e83522e10b1923146c4db6ef241fe2640338ef))
+
+
+
 ## [8.12.9](https://github.com/dereekb/dbx-components/compare/v8.12.8-dev...v8.12.9) (2022-07-12)
 
 
