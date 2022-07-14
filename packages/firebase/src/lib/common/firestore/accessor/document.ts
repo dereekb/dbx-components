@@ -373,6 +373,7 @@ export interface FirestoreSingleDocumentAccessor<T, D extends FirestoreDocument<
   loadDocument(): D;
   loadDocumentForTransaction(transaction: Maybe<Transaction>): D;
   loadDocumentForWriteBatch(writeBatch: Maybe<WriteBatch>): D;
+  documentRef(): DocumentReference<T>;
 }
 
 export interface FirestoreSingleDocumentAccessorConfig<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> {
@@ -393,6 +394,9 @@ export function firestoreSingleDocumentAccessor<T, D extends FirestoreDocument<T
     },
     loadDocumentForWriteBatch(writeBatch: Maybe<WriteBatch>): D {
       return accessors.documentAccessorForWriteBatch(writeBatch).loadDocumentForId(singleItemIdentifier);
+    },
+    documentRef(): DocumentReference<T> {
+      return accessors.documentAccessor().documentRefForId(singleItemIdentifier);
     }
   };
 }
