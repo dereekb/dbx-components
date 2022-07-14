@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [8.12.11](https://github.com/dereekb/dbx-components/compare/v8.12.10-dev...v8.12.11) (2022-07-14)
+
+
+### Bug Fixes
+
+* setup-project string replace ([fd7adf1](https://github.com/dereekb/dbx-components/commit/fd7adf1a0578e8403737b38363a1d310d05b3586))
+
+
+
 ## [8.12.10](https://github.com/dereekb/dbx-components/compare/v8.12.9-dev...v8.12.10) (2022-07-13)
 
 

@@ -159,6 +159,13 @@ export class DbxActionContextStoreSourceInstance<T = unknown, O = unknown> imple
     this.useStore((x) => x.trigger());
   }
 
+  public triggerWithValue(value: T | Observable<T>): void {
+    this.useStore((x) => {
+      x.trigger();
+      x.readyValue(value);
+    });
+  }
+
   public readyValue(value: T | Observable<T>): void {
     this.useStore((x) => x.readyValue(value));
   }

@@ -1,7 +1,7 @@
 import { expectFail, itShouldFail } from '@dereekb/util/test';
 import { DateRange, DateRangeInput } from './date.range';
 import { addDays, addHours, addMinutes, setHours, setMinutes, startOfDay, endOfDay, addSeconds, addMilliseconds } from 'date-fns';
-import { DateBlock, dateBlockIndexRange, dateBlocksExpansionFactory, dateBlockTiming, DateBlockTiming, expandUniqueDateBlocks, groupUniqueDateBlocks, isValidDateBlockTiming, UniqueDateBlockRange } from './date.block';
+import { DateBlock, dateBlockIndexRange, DateBlockRangeWithRange, dateBlocksExpansionFactory, dateBlockTiming, DateBlockTiming, expandDateBlockRange, expandUniqueDateBlocks, groupUniqueDateBlocks, isValidDateBlockTiming, UniqueDateBlockRange } from './date.block';
 import { MS_IN_DAY, MINUTES_IN_DAY, range, RangeInput } from '@dereekb/util';
 
 describe('dateBlockTiming', () => {
@@ -128,6 +128,10 @@ interface DataDateBlock extends DateBlock {
   value: string;
 }
 
+interface DataDateBlockRange extends DateBlockRangeWithRange {
+  value: string;
+}
+
 describe('dateBlocksExpansionFactory()', () => {
   describe('function', () => {
     function makeBlocks(input: RangeInput) {
@@ -139,8 +143,9 @@ describe('dateBlocksExpansionFactory()', () => {
     const duration = 60;
 
     const timing = dateBlockTiming({ startsAt, duration }, days);
-    const factory = dateBlocksExpansionFactory({ timing });
-    const blocks = makeBlocks(days);
+    const factory = dateBlocksExpansionFactory<DataDateBlock | DataDateBlockRange>({ timing });
+    const blocks: DataDateBlock[] = makeBlocks(days);
+    const blocksAsRange: DataDateBlockRange = { i: 0, to: days - 1, value: 'a' };
 
     it('should generate the timings for the input date blocks.', () => {
       const result = factory(blocks);
@@ -165,6 +170,31 @@ describe('dateBlocksExpansionFactory()', () => {
       expect(indexes).not.toContain(8);
     });
 
+    describe('with DateBlockRange input', () => {
+      it('should generate the timings for the input date blocks.', () => {
+        const result = factory([blocksAsRange]);
+        expect(result.length).toBe(days);
+      });
+
+      it('should filter out block indexes that fall outside the range.', () => {
+        const offset = 3;
+        const expectedResultCount = days - offset;
+        const blocksRange = { i: offset, to: days - 1, value: 'a' };
+
+        const result = factory([blocksRange]);
+        expect(result.length).toBe(expectedResultCount);
+
+        const indexes = result.map((x) => x.i);
+        expect(indexes).not.toContain(0);
+        expect(indexes).not.toContain(1);
+        expect(indexes).not.toContain(2);
+        expect(indexes).not.toContain(5);
+        expect(indexes).not.toContain(6);
+        expect(indexes).not.toContain(7);
+        expect(indexes).not.toContain(8);
+      });
+    });
+
     describe('with rangeLimit', () => {
       describe('rangeLimit=duration', () => {
         const daysLimit = 3;
@@ -182,6 +212,22 @@ describe('dateBlocksExpansionFactory()', () => {
           expect(indexes).not.toContain(0);
           expect(indexes).toContain(1);
           expect(indexes).toContain(2);
+        });
+
+        describe('with DateBlockRange input', () => {
+          it('should limit the index range to the first 3 days', () => {
+            const offset = 1;
+            const expectedResultCount = daysLimit - offset;
+            const blocksRange = { i: offset, to: 5, value: 'a' };
+
+            const result = factory([blocksRange]);
+            expect(result.length).toBe(expectedResultCount);
+
+            const indexes = result.map((x) => x.i);
+            expect(indexes).not.toContain(0);
+            expect(indexes).toContain(1);
+            expect(indexes).toContain(2);
+          });
         });
       });
 
@@ -244,6 +290,20 @@ describe('dateBlocksExpansionFactory()', () => {
           expect(indexes).toContain(7);
         });
       });
+    });
+  });
+});
+
+describe('expandDateBlockRange', () => {
+  it('should copy the input block and spread it over a range.', () => {
+    const lastIndex = 5;
+    const blocksRange = { i: 0, to: 5, value: 'a' };
+
+    const result = expandDateBlockRange(blocksRange);
+    expect(result.length).toBe(lastIndex + 1);
+    result.forEach((x, i) => {
+      expect(x.i).toBe(i);
+      expect(x.value).toBe(blocksRange.value);
     });
   });
 });

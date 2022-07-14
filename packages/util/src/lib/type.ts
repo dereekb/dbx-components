@@ -74,7 +74,12 @@ export type RemoveIndex<T> = {
 export type KnownKeys<T> = keyof RemoveIndex<T>;
 
 /**
- * Makes the input key(s) partially required.
+ * Makes the input key(s) required.
+ */
+export type RequiredOnKeys<T, K> = K extends keyof T ? Omit<T, K> & Required<Pick<T, K>> : T;
+
+/**
+ * Makes the input key(s) partials.
  */
 export type PartialOnKeys<T, K> = K extends keyof T ? Omit<T, K> & Partial<Pick<T, K>> : T;
 
