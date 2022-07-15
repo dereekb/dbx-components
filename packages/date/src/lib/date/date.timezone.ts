@@ -1,4 +1,4 @@
-import { addMilliseconds } from 'date-fns';
+import { addMilliseconds, hoursToMinutes, minutesToHours } from 'date-fns';
 import { MapFunction, isConsideredUtcTimezoneString, isSameNonNullValue, Maybe, Milliseconds, TimezoneString, UTC_TIMEZONE_STRING } from '@dereekb/util';
 import { getTimezoneOffset } from 'date-fns-tz';
 import { minutesToMs } from './date';
@@ -65,7 +65,27 @@ export function isSameDateTimezoneConversionConfig(a: DateTimezoneConversionConf
  * @returns
  */
 export function getCurrentSystemOffsetInMs(date: Date): number {
-  return -minutesToMs(date.getTimezoneOffset());
+  return minutesToMs(getCurrentSystemOffsetInMinutes(date));
+}
+
+/**
+ * Returns the current system time offset in hours.
+ *
+ * @param date
+ * @returns
+ */
+export function getCurrentSystemOffsetInHours(date: Date): number {
+  return minutesToHours(getCurrentSystemOffsetInMinutes(date));
+}
+
+/**
+ * Equivalent to -date.getTimezoneOffset().
+ *
+ * @param date
+ * @returns
+ */
+export function getCurrentSystemOffsetInMinutes(date: Date): number {
+  return -date.getTimezoneOffset();
 }
 
 export type DateTimezoneConversionTarget = 'target' | 'base' | 'system';
@@ -253,7 +273,36 @@ export class DateTimezoneUtcNormalInstance implements DateTimezoneBaseDateConver
   systemDateToTargetDate(date: Date): Date {
     return this._computeOffsetDate(date, 'system', 'target');
   }
+
+  targetDateToBaseDateOffset(date: Date): Milliseconds {
+    return this._getOffset(date, 'target', 'base');
+  }
+
+  baseDateToTargetDateOffset(date: Date): Milliseconds {
+    return this._getOffset(date, 'base', 'target');
+  }
+
+  baseDateToSystemDateOffset(date: Date): Milliseconds {
+    return this._getOffset(date, 'base', 'system');
+  }
+
+  systemDateToBaseDateOffset(date: Date): Milliseconds {
+    return this._getOffset(date, 'system', 'base');
+  }
+
+  targetDateToSystemDateOffset(date: Date): Milliseconds {
+    return this._getOffset(date, 'target', 'system');
+  }
+
+  systemDateToTargetDateOffset(date: Date): Milliseconds {
+    return this._getOffset(date, 'system', 'target');
+  }
 }
+
+/**
+ * Default DateTimezoneUtcNormalInstance configured with useSystemTimezone=true
+ */
+export const SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE = new DateTimezoneUtcNormalInstance({ useSystemTimezone: true });
 
 export function baseDateToTargetDate(date: Date, timezone: Maybe<TimezoneString>): Date {
   const instance = new DateTimezoneUtcNormalInstance(timezone);
@@ -266,9 +315,17 @@ export function targetDateToBaseDate(date: Date, timezone: Maybe<TimezoneString>
 }
 
 export function systemBaseDateToNormalDate(date: Date): Date {
-  return new DateTimezoneUtcNormalInstance({ useSystemTimezone: true }).baseDateToTargetDate(date);
+  return SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE.baseDateToTargetDate(date);
 }
 
 export function systemNormalDateToBaseDate(date: Date): Date {
-  return new DateTimezoneUtcNormalInstance({ useSystemTimezone: true }).targetDateToBaseDate(date);
+  return SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE.targetDateToBaseDate(date);
+}
+
+export function systemBaseDateToNormalDateOffset(date: Date): Milliseconds {
+  return SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE.baseDateToTargetDateOffset(date);
+}
+
+export function systemNormalDateToBaseDateOffset(date: Date): Milliseconds {
+  return SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE.targetDateToBaseDateOffset(date);
 }

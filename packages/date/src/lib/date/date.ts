@@ -1,7 +1,17 @@
-import { isDate, max as maxDate, parseISO, addDays, isPast, isAfter as isAfterDate, set as setDateValues, isValid, startOfMinute } from 'date-fns';
+import { isDate as dateFnsIsDate, max as maxDate, parseISO, addDays, isPast, isAfter as isAfterDate, set as setDateValues, isValid, startOfMinute, setMinutes, setSeconds, setMilliseconds } from 'date-fns';
 import { DateOrDateString, filterMaybeValues, ISO8601DateString, Maybe, Minutes, MINUTES_IN_DAY, MS_IN_HOUR, MS_IN_MINUTE, Seconds } from '@dereekb/util';
 
 export const MAX_FUTURE_DATE = new Date(Date.UTC(9999, 0));
+
+/**
+ * Returns true if the input is a date.
+ *
+ * @param input
+ * @returns
+ */
+export function isDate(input: unknown): input is Date {
+  return dateFnsIsDate(input);
+}
 
 export function msToMinutes(milliseconds: number): Minutes {
   return milliseconds / (60 * 1000);
@@ -168,4 +178,12 @@ export function roundDownToMinute(date = new Date()): Date {
     seconds: 0,
     milliseconds: 0
   });
+}
+
+export function removeMinutesAndSeconds(date: Date): Date {
+  return removeSeconds(setMinutes(date, 0));
+}
+
+export function removeSeconds(date: Date): Date {
+  return setMilliseconds(setSeconds(date, 0), 0);
 }
