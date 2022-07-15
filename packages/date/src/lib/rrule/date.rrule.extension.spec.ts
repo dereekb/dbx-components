@@ -1,7 +1,7 @@
 import { DateRRule } from './date.rrule.extension';
 import { DateRRuleInstance, DateRRuleUtility } from '@dereekb/date';
 
-describe('DateRRule', () => {
+describe.skip('DateRRule', () => {
   const currentDate = new Date('2018-10-01T00:00:00.000Z');
 
   const firstDate = new Date('2018-11-01T19:00:00.000Z');

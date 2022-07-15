@@ -1,9 +1,10 @@
-import { RequiredOnKeys, IndexNumber, IndexRange, indexRangeCheckFunction, IndexRef, MINUTES_IN_DAY, MS_IN_DAY, sortAscendingIndexNumberRefFunction, UniqueModel, lastValue, FactoryWithRequiredInput, FilterFunction, mergeFilterFunctions, range, copyObject } from '@dereekb/util';
+import { RequiredOnKeys, IndexNumber, IndexRange, indexRangeCheckFunction, IndexRef, MINUTES_IN_DAY, MS_IN_DAY, sortAscendingIndexNumberRefFunction, UniqueModel, lastValue, FactoryWithRequiredInput, FilterFunction, mergeFilterFunctions, range, Milliseconds, MINUTES_IN_HOUR, Minutes, Hours } from '@dereekb/util';
 import { dateRange, DateRange, DateRangeDayDistanceInput, DateRangeType, isDateRange } from './date.range';
 import { DateDurationSpan } from './date.duration';
-import { differenceInDays, differenceInMilliseconds, isBefore, addDays, addMinutes, setSeconds } from 'date-fns';
+import { differenceInDays, differenceInMilliseconds, isBefore, addDays, addMinutes, setSeconds, addMilliseconds, minutesToMilliseconds, millisecondsToHours, minutesToHours, hoursToMilliseconds, hoursToMinutes, addHours, isAfter } from 'date-fns';
 import { copyHoursAndMinutesFromDate } from './date';
 import { Expose, Type } from 'class-transformer';
+import { getCurrentSystemOffsetInHours } from './date.timezone';
 
 /**
  * Index from 0 of which day this block represents.
@@ -35,11 +36,47 @@ export type DateBlockArrayRef<B extends DateBlock = DateBlock> = {
  *
  * NOTES:
  * - start time should be the first second of the day (0 seconds and 0 minutes) for its given timezone. This lets us derive the proper offset.
- * - The startsAt time should be greater than or equal to start
- * - The startsAt time should be on the same date as start
+ *   This means that for GMT+1 the starting date would be 01:00, which can then be normalized to the system timezone to normalize the correct current date. This also means we can safely create a new DateBlockTiming using startOfDay(new Date()) and it will be the correct time.
+ * - The start date should always be normalized before being used.
+ * - The startsAt time should be greater than or equal to the normalized start
+ * - The startsAt time should be on the same date as normalized start
  * - The end time should equal the ending date/time of the final end duration.
  */
 export interface DateBlockTiming extends DateRange, DateDurationSpan {}
+
+/**
+ * The offset in milliseconds to the "real start date", the first second in the target day on in the system timezone.
+ *
+ * @param timing
+ */
+export function getCurrentDateBlockTimingOffset(timing: DateBlockTiming): Milliseconds {
+  const start = timing.start;
+  const dateHours = start.getUTCHours();
+
+  // if it is a positive offset, then the date is in the future so we subtract the offset from 24 hours to get the proper offset.
+  const originalUtcOffset = dateHours > 12 ? 24 - dateHours : -dateHours;
+  const originalUtcDate = addHours(start, originalUtcOffset); // convert to original UTC
+  const currentTimezoneOffsetInHours = getCurrentSystemOffsetInHours(originalUtcDate); // get the offset as it is on that day
+
+  // calculate the true offset
+  let offset: Hours = originalUtcOffset - currentTimezoneOffsetInHours;
+
+  if (offset === -24) {
+    offset = 0; // auckland can return -24 for itself
+  }
+
+  return hoursToMilliseconds(offset);
+}
+
+/**
+ * Returns the current timing offset given the input start date.
+ *
+ * @param timing
+ */
+export function getCurrentDateBlockTimingStartDate(timing: DateBlockTiming): Date {
+  const offset = getCurrentDateBlockTimingOffset(timing);
+  return addMilliseconds(timing.start, offset);
+}
 
 export class DateBlockTiming extends DateDurationSpan {
   @Expose()
@@ -72,6 +109,8 @@ export type DateBlockTimingRangeInput = DateRangeDayDistanceInput | DateRange | 
  *
  * If a number is passed as the input range, then the duration's startsAt date will be used.
  * The input range's date takes priority over the duration's startsAt date.
+ *
+ * The start date from the inputDate is considered to to have the offset noted in DateBlock, and will be retained.
  */
 export function dateBlockTiming(durationInput: DateDurationSpan, inputRange: DateBlockTimingRangeInput): DateBlockTiming {
   const { duration } = durationInput;
@@ -131,9 +170,14 @@ export function dateBlockTiming(durationInput: DateDurationSpan, inputRange: Dat
  * @returns
  */
 export function isValidDateBlockTiming(timing: DateBlockTiming): boolean {
-  const { start, end, startsAt, duration } = timing;
-  const msDifference = differenceInMilliseconds(startsAt, start);
-  const hasSeconds = start.getSeconds() !== 0;
+  const { end, startsAt, duration } = timing;
+
+  /**
+   * Use the startNormal, as the startsAt time is in the correct UTC date for the expected first time, but the start must be normalized to the system time before it can be used.
+   */
+  const startNormal = getCurrentDateBlockTimingStartDate(timing);
+  const msDifference = differenceInMilliseconds(startsAt, startNormal);
+  const hasSeconds = startNormal.getSeconds() !== 0;
 
   let isValid: boolean = false;
 

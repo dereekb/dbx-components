@@ -5,7 +5,7 @@ import { DateRRuleParseUtility, RRuleStringLineSet } from './date.rrule.parse';
 import RRule from 'rrule';
 import { TimezoneString } from '@dereekb/util';
 
-describe('DateRRuleUtility', () => {
+describe.skip('DateRRuleUtility', () => {
   describe('DateRRuleInstance', () => {
     describe('expand()', () => {
       describe('timezone shifting', () => {

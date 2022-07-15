@@ -42,27 +42,42 @@
       }
     },
     "test-timezones": {
-      "outputs": ["coverage/packages/date", "./.reports/jest/utc.date.junit.xml", "./.reports/jest/america-chicago.date.junit.xml", "./.reports/jest/america-los_angeles.date.junit.xml", "./.reports/jest/america-new_york.date.junit.xml", "./.reports/jest/asia-tokyo.date.junit.xml", "./.reports/jest/europe-dublic.date.junit.xml"],
+      "outputs": ["coverage/packages/date", "./.reports/jest/utc.date.junit.xml", "./.reports/jest/america-chicago.date.junit.xml", "./.reports/jest/pacific-auckland.date.junit.xml", "./.reports/jest/america-anchorage.date.junit.xml", "./.reports/jest/america-los_angeles.date.junit.xml", "./.reports/jest/america-new_york.date.junit.xml", "./.reports/jest/asia-tokyo.date.junit.xml", "./.reports/jest/asia-singapore.date.junit.xml", "./.reports/jest/europe-dublic.date.junit.xml"],
       "executor": "@nrwl/workspace:run-commands",
       "options": {
         "commands": [
           {
-            "command": "TZ=America/New_York nx test date"
+            "command": "TZ=Asia/Tokyo nx test date --no-cache"
           },
           {
-            "command": "TZ=America/Chicago nx test date"
+            "command": "TZ=Asia/Singapore nx test date --no-cache"
           },
           {
-            "command": "TZ=America/Los_Angeles nx test date"
+            "command": "TZ=Europe/Dublin nx test date --no-cache"
           },
           {
-            "command": "TZ=Europe/Dublin nx test date"
+            "command": "TZ=America/New_York nx test date --no-cache"
           },
           {
-            "command": "TZ=Asia/Tokyo nx test date"
+            "command": "TZ=America/Chicago nx test date --no-cache"
           },
           {
-            "command": "nx test date"
+            "command": "TZ=America/Los_Angeles nx test date --no-cache"
+          },
+          {
+            "command": "TZ=America/Anchorage nx test date --no-cache"
+          },
+          {
+            "command": "TZ=Pacific/Auckland nx test date --no-cache"
+          },
+          {
+            "command": "TZ=Pacific/Kiritimati nx test date --no-cache"
+          },
+          {
+            "command": "TZ=Pacific/Niue nx test date --no-cache"
+          },
+          {
+            "command": "nx test date --no-cache"
           }
         ],
         "parallel": false

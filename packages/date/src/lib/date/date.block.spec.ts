@@ -1,10 +1,86 @@
 import { expectFail, itShouldFail } from '@dereekb/util/test';
 import { DateRange, DateRangeInput } from './date.range';
-import { addDays, addHours, addMinutes, setHours, setMinutes, startOfDay, endOfDay, addSeconds, addMilliseconds } from 'date-fns';
-import { DateBlock, dateBlockIndexRange, DateBlockRangeWithRange, dateBlocksExpansionFactory, dateBlockTiming, DateBlockTiming, expandDateBlockRange, expandUniqueDateBlocks, groupUniqueDateBlocks, isValidDateBlockTiming, UniqueDateBlockRange } from './date.block';
-import { MS_IN_DAY, MINUTES_IN_DAY, range, RangeInput } from '@dereekb/util';
+import { addDays, addHours, addMinutes, setHours, setMinutes, startOfDay, endOfDay, addSeconds, addMilliseconds, minutesToMilliseconds, hoursToMilliseconds, millisecondsToHours, hoursToMinutes, minutesToHours } from 'date-fns';
+import { DateBlock, dateBlockIndexRange, DateBlockRangeWithRange, dateBlocksExpansionFactory, dateBlockTiming, DateBlockTiming, expandDateBlockRange, expandUniqueDateBlocks, getCurrentDateBlockTimingOffset, getCurrentDateBlockTimingStartDate, groupUniqueDateBlocks, isValidDateBlockTiming, UniqueDateBlockRange } from './date.block';
+import { MS_IN_DAY, MINUTES_IN_DAY, range, RangeInput, Hours } from '@dereekb/util';
+import { removeMinutesAndSeconds } from './date';
+import { getCurrentSystemOffsetInHours, getCurrentSystemOffsetInMinutes, systemNormalDateToBaseDate } from './date.timezone';
 
-describe('dateBlockTiming', () => {
+describe('getCurrentDateBlockTimingOffset()', () => {
+  const utcDate = new Date('2022-01-02T00:00:00Z'); // date in utc. Implies there is no offset to consider.
+
+  describe('system time', () => {
+    it('should apply the expected offset.', () => {
+      const start = new Date(2022, 0, 2); // first second of the day date with an offset equal to the current.
+
+      const systemTimezoneOffset = start.getTimezoneOffset();
+      const systemDateAsUtc = addMinutes(start, -systemTimezoneOffset); // timezone offset is inverse of UTC zones
+
+      expect(systemDateAsUtc).toBeSameSecondAs(utcDate);
+
+      const duration = 60;
+      const timing: DateBlockTiming = dateBlockTiming({ startsAt: start, duration: 60 }, { start: start, end: addMinutes(start, duration) });
+      const offset = getCurrentDateBlockTimingOffset(timing);
+
+      // zero offset when system timezone matches the given, otherwise creating a new start date would allow applying an offset.
+      expect(millisecondsToHours(offset)).toBe(0);
+      expect(addMilliseconds(start, offset)).toBeSameSecondAs(start);
+    });
+  });
+
+  const shiftStartDateInUTC = new Date(2022, 0, 2); // addHours(new Date(2022, 0, 2), getCurrentSystemOffsetInHours(utcDate));
+
+  function describeUTCShift(utc: Hours) {
+    const systemTimezoneHoursOffset = minutesToHours(-shiftStartDateInUTC.getTimezoneOffset());
+    let systemToTargetTimezoneDifference = utc - systemTimezoneHoursOffset;
+
+    if (systemToTargetTimezoneDifference === -24) {
+      systemToTargetTimezoneDifference = 0;
+    }
+
+    describe(`UTC${utc > 0 ? '+' : ''}${utc}`, () => {
+      it('should apply the expected offset.', () => {
+        // offset of 0 is equvalent to system time test
+        const timezoneOffsetDate = addHours(shiftStartDateInUTC, -systemToTargetTimezoneDifference); // hours offset is inverse
+
+        const duration = 60;
+        const timing: DateBlockTiming = dateBlockTiming({ startsAt: timezoneOffsetDate, duration }, { start: timezoneOffsetDate, end: addMinutes(timezoneOffsetDate, duration) });
+
+        const offset = getCurrentDateBlockTimingOffset(timing);
+        expect(millisecondsToHours(offset)).toBe(systemToTargetTimezoneDifference);
+        expect(addMilliseconds(timezoneOffsetDate, offset)).toBeSameSecondAs(shiftStartDateInUTC);
+      });
+    });
+  }
+
+  // builds a range of tests concerning valid date range offsets. from the system offset.
+  // only date block timing offsets of -11 to 12 are valid
+  range(-11, 12).forEach((x) => {
+    describeUTCShift(x);
+  });
+});
+
+describe('getCurrentDateBlockTimingStartDate()', () => {
+  const utcDate = new Date('2022-01-02T00:00:00Z'); // date in utc. Implies there is no offset to consider.
+
+  describe('system time', () => {
+    it('should apply the expected offset.', () => {
+      const start = new Date(2022, 0, 2);
+
+      const systemTimezoneOffset = start.getTimezoneOffset();
+      const systemDateAsUtc = addMinutes(start, -systemTimezoneOffset);
+
+      expect(systemDateAsUtc).toBeSameSecondAs(utcDate);
+
+      const timing: DateBlockTiming = dateBlockTiming({ startsAt: start, duration: 60 }, 2);
+      const date = getCurrentDateBlockTimingStartDate(timing);
+
+      expect(date).toBeSameSecondAs(start);
+    });
+  });
+});
+
+describe('dateBlockTiming()', () => {
   const startsAt = setMinutes(setHours(new Date(), 12), 0); // keep seconds to show rounding
   const days = 5;
   const minutes = 60;
@@ -15,14 +91,18 @@ describe('dateBlockTiming', () => {
     expect(result.duration).toBe(MINUTES_IN_DAY);
   });
 
-  itShouldFail('if the duration is greater than 24 hours.', () => {
-    expectFail(() => {
-      dateBlockTiming({ startsAt, duration: MINUTES_IN_DAY + 1 }, days);
-    });
-  });
-
   describe('range input', () => {
     describe('number of days', () => {
+      it('should start at the beginning of the startsAt date', () => {
+        const result = dateBlockTiming({ startsAt, duration: MINUTES_IN_DAY }, days);
+        expect(result.start).toBeSameSecondAs(startOfDay(startsAt));
+      });
+
+      it('should retain the startsAt time', () => {
+        const result = dateBlockTiming({ startsAt, duration: MINUTES_IN_DAY }, days);
+        expect(result.startsAt).toBeSameSecondAs(removeMinutesAndSeconds(startsAt));
+      });
+
       it('should create a timing for a specific time that last 1 day', () => {
         const days = 1;
         const result = dateBlockTiming({ startsAt, duration: minutes }, days);
