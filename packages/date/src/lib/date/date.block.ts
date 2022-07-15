@@ -60,6 +60,11 @@ export function getCurrentDateBlockTimingOffset(timing: DateBlockTiming): Millis
 
   // calculate the true offset
   let offset: Hours = originalUtcOffset - currentTimezoneOffsetInHours;
+
+  if (offset === -24) {
+    offset = 0; // auckland can return -24 for itself
+  }
+
   return hoursToMilliseconds(offset);
 }
 

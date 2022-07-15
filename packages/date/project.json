@@ -71,6 +71,12 @@
             "command": "TZ=Pacific/Auckland nx test date --no-cache"
           },
           {
+            "command": "TZ=Pacific/Kiritimati nx test date --no-cache"
+          },
+          {
+            "command": "TZ=Pacific/Niue nx test date --no-cache"
+          },
+          {
             "command": "nx test date --no-cache"
           }
         ],

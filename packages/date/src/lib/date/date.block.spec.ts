@@ -32,7 +32,11 @@ describe('getCurrentDateBlockTimingOffset()', () => {
 
   function describeUTCShift(utc: Hours) {
     const systemTimezoneHoursOffset = minutesToHours(-shiftStartDateInUTC.getTimezoneOffset());
-    const systemToTargetTimezoneDifference = utc - systemTimezoneHoursOffset;
+    let systemToTargetTimezoneDifference = utc - systemTimezoneHoursOffset;
+
+    if (systemToTargetTimezoneDifference === -24) {
+      systemToTargetTimezoneDifference = 0;
+    }
 
     describe(`UTC${utc > 0 ? '+' : ''}${utc}`, () => {
       it('should apply the expected offset.', () => {
