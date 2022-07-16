@@ -1,4 +1,4 @@
-import { RequiredOnKeys, IndexNumber, IndexRange, indexRangeCheckFunction, IndexRef, MINUTES_IN_DAY, MS_IN_DAY, sortAscendingIndexNumberRefFunction, UniqueModel, lastValue, FactoryWithRequiredInput, FilterFunction, mergeFilterFunctions, range, Milliseconds, Hours } from '@dereekb/util';
+import { DayOfWeek, RequiredOnKeys, IndexNumber, IndexRange, indexRangeCheckFunction, IndexRef, MINUTES_IN_DAY, MS_IN_DAY, sortAscendingIndexNumberRefFunction, UniqueModel, lastValue, FactoryWithRequiredInput, FilterFunction, mergeFilterFunctions, range, Milliseconds, Hours, MapFunction, getNextDay } from '@dereekb/util';
 import { dateRange, DateRange, DateRangeDayDistanceInput, DateRangeType, isDateRange } from './date.range';
 import { DateDurationSpan } from './date.duration';
 import { differenceInDays, differenceInMilliseconds, isBefore, addDays, addMinutes, setSeconds, addMilliseconds, hoursToMilliseconds, addHours } from 'date-fns';
@@ -196,6 +196,21 @@ export function isValidDateBlockTiming(timing: DateBlockTiming): boolean {
 }
 
 /**
+ * Converts the input index into the DayOfWeek that it represents.
+ */
+export type DateBlockDayOfWeekFactory = MapFunction<DateBlockIndex, DayOfWeek>;
+
+/**
+ * Creates a DateBlockDayOfWeekFactory
+ *
+ * @param dayForIndexZero
+ * @returns
+ */
+export function dateBlockDayOfWeekFactory(dayForIndexZero: DayOfWeek): DateBlockDayOfWeekFactory {
+  return (index: DateBlockIndex) => getNextDay(dayForIndexZero, index);
+}
+
+/**
  * Reference to a DateBlockTiming
  */
 export type DateBlockTimingRef = {
@@ -296,7 +311,7 @@ export function dateBlocksExpansionFactory<B extends DateBlock | DateBlockRange 
       blocksEvaluated += 1;
     }
 
-    const stopIndex = blocks.findIndex((block) => {
+    blocks.findIndex((block) => {
       if (dateBlockRangeHasRange(block)) {
         // Expands the block's range as if it is at a single index
         range(block.i, block.to + 1).findIndex((i) => {
@@ -518,13 +533,6 @@ export function expandUniqueDateBlocks<B extends DateBlockRange | UniqueDateBloc
     let latestTo: number = startAtIndex - 1;
 
     function addBlockWithRange(inputBlock: B, i: number, inputTo: number = i) {
-      // temporary
-      if (i <= latestTo) {
-        throw new Error('attempted to add an overlapping block.');
-      } else if (i > inputTo) {
-        throw new Error('attempted to add a negative block (i > to).');
-      }
-
       // Add in any necessary gap block first
       const gapSizeBetweenBlocks = i - (latestTo + 1);
 

@@ -1,8 +1,8 @@
 import { expectFail, itShouldFail } from '@dereekb/util/test';
 import { DateRange, DateRangeInput } from './date.range';
 import { addDays, addHours, addMinutes, setHours, setMinutes, startOfDay, endOfDay, addSeconds, addMilliseconds, millisecondsToHours, minutesToHours } from 'date-fns';
-import { DateBlock, dateBlockIndexRange, DateBlockRangeWithRange, dateBlocksExpansionFactory, dateBlockTiming, DateBlockTiming, expandDateBlockRange, expandUniqueDateBlocks, getCurrentDateBlockTimingOffset, getCurrentDateBlockTimingStartDate, groupUniqueDateBlocks, isValidDateBlockTiming, UniqueDateBlockRange } from './date.block';
-import { MS_IN_DAY, MINUTES_IN_DAY, range, RangeInput, Hours } from '@dereekb/util';
+import { DateBlock, dateBlockDayOfWeekFactory, DateBlockIndex, dateBlockIndexRange, DateBlockRangeWithRange, dateBlocksExpansionFactory, dateBlockTiming, DateBlockTiming, expandDateBlockRange, expandUniqueDateBlocks, getCurrentDateBlockTimingOffset, getCurrentDateBlockTimingStartDate, groupUniqueDateBlocks, isValidDateBlockTiming, UniqueDateBlockRange } from './date.block';
+import { MS_IN_DAY, MINUTES_IN_DAY, range, RangeInput, Hours, Day } from '@dereekb/util';
 import { removeMinutesAndSeconds } from './date';
 
 describe('getCurrentDateBlockTimingOffset()', () => {
@@ -160,7 +160,41 @@ describe('dateBlockTiming()', () => {
   });
 });
 
-describe('isValidDateBlockTiming', () => {
+describe('dateBlockDayOfWeekFactory()', () => {
+  describe('function', () => {
+    describe('from sunday', () => {
+      const factoryFromSunday = dateBlockDayOfWeekFactory(Day.SUNDAY);
+
+      it('should return the proper day of the week.', () => {
+        range(Day.SUNDAY, Day.SATURDAY).map((i: DateBlockIndex) => {
+          const result = factoryFromSunday(i);
+          expect(result).toBe(i);
+        });
+      });
+
+      it('should wrap around week.', () => {
+        range(Day.SUNDAY, Day.SATURDAY).map((i: DateBlockIndex) => {
+          const result = factoryFromSunday(i + 7); // add a full week to the index.
+          expect(result).toBe(i);
+        });
+      });
+    });
+
+    describe('from saturday', () => {
+      const factoryFromSaturday = dateBlockDayOfWeekFactory(Day.SATURDAY);
+
+      it('should return the day of the week for the input index.', () => {
+        expect(factoryFromSaturday(0)).toBe(Day.SATURDAY);
+        expect(factoryFromSaturday(1)).toBe(Day.SUNDAY);
+        expect(factoryFromSaturday(2)).toBe(Day.MONDAY);
+        expect(factoryFromSaturday(3)).toBe(Day.TUESDAY);
+        expect(factoryFromSaturday(4)).toBe(Day.WEDNESDAY);
+      });
+    });
+  });
+});
+
+describe('isValidDateBlockTiming()', () => {
   const startsAt = setMinutes(setHours(new Date(), 12), 0); // keep seconds to show rounding
   const validTiming = dateBlockTiming({ startsAt: startOfDay(new Date()), duration: 60 }, 1);
 
