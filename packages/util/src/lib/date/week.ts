@@ -23,3 +23,27 @@ export enum Day {
   FRIDAY = 5,
   SATURDAY = 6
 }
+
+export function getTomorrow(day: DayOfWeek): DayOfWeek {
+  return getNextDay(day, 1);
+}
+
+export function getDayOffset(day: DayOfWeek, days: number): DayOfWeek {
+  if (days === 0) {
+    return day;
+  } else if (days < 0) {
+    return getPreviousDay(day, days);
+  } else {
+    return getNextDay(day, days);
+  }
+}
+
+export function getPreviousDay(day: DayOfWeek, days: number = 1): DayOfWeek {
+  const offset = Math.abs(days) % 7;
+  const cap = 7 - offset;
+  return getNextDay(day, cap);
+}
+
+export function getNextDay(day: DayOfWeek, days: number = 1): DayOfWeek {
+  return Math.abs((day + days) % 7) as DayOfWeek;
+}
