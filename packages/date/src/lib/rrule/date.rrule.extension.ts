@@ -1,7 +1,14 @@
 import { Maybe } from '@dereekb/util';
 import { maxFutureDate } from '../date/date';
 import { RRule } from 'rrule';
-import { IterArgs } from 'rrule/dist/esm/src/iterresult';
+
+export interface IterArgs {
+  inc: boolean;
+  before: Date;
+  after: Date;
+  dt: Date;
+  _value: Date | Date[] | null;
+}
 
 // TODO: Fix typings in RRule, or better yet, add the given types up to RRule.
 

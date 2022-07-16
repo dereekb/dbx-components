@@ -1,15 +1,13 @@
-import { CalendarDate, CalendarDateUtility, DateRangeParams, DateRangeType, maxFutureDate, targetDateToBaseDate } from '../date';
-import { addMinutes, addDays } from 'date-fns';
+import { CalendarDate, calendarDateFactory, CalendarDateUtility, DateRangeParams, DateRangeType, maxFutureDate, targetDateToBaseDate } from '../date';
+import { addMinutes, addDays, addHours } from 'date-fns';
 import { DateRRuleInstance, DateRRuleUtility } from './date.rrule';
-import { DateRRuleParseUtility, RRuleStringLineSet } from './date.rrule.parse';
-import RRule from 'rrule';
-import { TimezoneString } from '@dereekb/util';
+import { RRuleStringLineSet } from './date.rrule.parse';
 
-describe.skip('DateRRuleUtility', () => {
+describe('DateRRuleUtility', () => {
   describe('DateRRuleInstance', () => {
     describe('expand()', () => {
       describe('timezone shifting', () => {
-        describe('(Denver to Los Angeles Time)', () => {
+        describe('(Denver to Current Timezone)', () => {
           /**
            * This example is from:
            *
@@ -17,15 +15,43 @@ describe.skip('DateRRuleUtility', () => {
            *
            * It show's RRule's weirdness when converting to timezones that aren't timezones.
            */
-          describe('mo,we,th at 11AM-12PM (1PM-2PM CST) 3 times', () => {
+          describe('mo at 7PM MDT we,th at 8PM MST 3 times', () => {
+            /**
+             * the DateRRuleUtility will:
+             * - first capture the UTC Date: new Date(Date.UTC(2018, 10, 1, 19, 0, 0)), which is a "target" date, since it has a specific timezone.
+             * This date should be treated as 7PM in Denver, despite being read as 7PM in UTC. To use it it is automatically converted to UTC.
+             * - capture the timezone (TZID=America/Denver) that is required for the above conversion
+             * - convert that date, 7PM in Denver, to 7PM in UTC. This will add the Denver offset on that day.
+             *
+             * NOTES:
+             * - After the MST timezone shift the original "target" date is still valid, so the event still occurs at 19:00 MST
+             */
             const rruleStringLineSet = ['DTSTART;TZID=America/Denver:20181101T190000;', 'RRULE:FREQ=WEEKLY;BYDAY=MO,WE,TH;INTERVAL=1;COUNT=3'];
 
-            const firstBaseDate = new Date(Date.UTC(2018, 10, 1, 19, 0, 0)); // what the parser will return from
-            const expectedFirstDate = targetDateToBaseDate(firstBaseDate, 'America/Denver'); // 2018-11-02T01:00:00.000Z
+            const firstBaseDate = new Date(Date.UTC(2018, 10, 1, 19, 0, 0)); // 2018-11-01T19:00:00.000Z, what the parser should return
+            const secondBaseDate = new Date(Date.UTC(2018, 10, 5, 19, 0, 0)); // 2018-11-05T19:00:00.000Z the 19:00 remains the same, since this still implies 7PM in Denver on this date.
+            const thirdBaseDate = new Date(Date.UTC(2018, 10, 7, 19, 0, 0));
 
-            const expectedExpandResults = [expectedFirstDate, addDays(expectedFirstDate, 4), addDays(expectedFirstDate, 6)];
+            // const wrongSecondBaseDate = addDays(firstBaseDate, 4); // NOTE: Do not use addDays, as it considers timezone changes, and would return 20:00 in Denver instead.
 
-            it('should build the proper dates', () => {
+            const mdtTimezoneOffset = -6;
+            const mstTimezoneOffset = -7;
+
+            const expectedFirstUtcDate = addHours(firstBaseDate, -mdtTimezoneOffset);
+            const expectedSecondUtcDate = addHours(secondBaseDate, -mstTimezoneOffset);
+            const expectedThirdUtcDate = addHours(thirdBaseDate, -mstTimezoneOffset);
+
+            const expectedFirstDate = targetDateToBaseDate(firstBaseDate, 'America/Denver'); // 2018-11-02T01:00:00.000Z, which is 2018-11-01T19:00:00.000Z - -6 hours for denver's offset
+            const expectedSecondDate = targetDateToBaseDate(secondBaseDate, 'America/Denver'); // 2018-11-06T02:00:00.000Z
+            const expectedThirdDate = targetDateToBaseDate(thirdBaseDate, 'America/Denver'); // 2018-11-08T02:00:00.000Z
+
+            const expectedExpandResults = [expectedFirstDate, expectedSecondDate, expectedThirdDate];
+
+            it('should build the proper dates denver', () => {
+              expect(expectedFirstDate).toBeSameSecondAs(expectedFirstUtcDate);
+              expect(expectedSecondDate).toBeSameSecondAs(expectedSecondUtcDate); // timezone changes to MST
+              expect(expectedThirdDate).toBeSameSecondAs(expectedThirdUtcDate);
+
               const results = DateRRuleUtility.expand({
                 instanceFrom: {
                   rruleStringLineSet,
@@ -109,7 +135,7 @@ describe.skip('DateRRuleUtility', () => {
       });
 
       describe('full day', () => {
-        describe('every monday', () => {
+        describe('every monday in the denver timezone', () => {
           let calendarDate: CalendarDate;
           let rangeParams: DateRangeParams;
           const rruleStringLineSet = ['RRULE:FREQ=WEEKLY;BYDAY=MO'];
@@ -117,7 +143,7 @@ describe.skip('DateRRuleUtility', () => {
           const numberOfWeeks = 2;
 
           beforeEach(() => {
-            calendarDate = CalendarDateUtility.calendarDateForDay('2021-07-05');
+            calendarDate = calendarDateFactory({ timezone: 'America/Denver' })('2021-07-05');
 
             // 2 weeks
             rangeParams = {
@@ -132,7 +158,8 @@ describe.skip('DateRRuleUtility', () => {
               instanceFrom: {
                 rruleStringLineSet,
                 options: {
-                  date: calendarDate
+                  date: calendarDate,
+                  timezone: 'America/Denver'
                 }
               },
               rangeParams
@@ -194,11 +221,15 @@ describe.skip('DateRRuleUtility', () => {
 
     describe('next()', () => {
       describe('mo,we,th at 11AM-12PM (1PM-2PM CST) 3 times', () => {
-        const rruleStringLineSet = ['DTSTART;TZID=America/Denver:20181101T190000;', 'RRULE:FREQ=WEEKLY;BYDAY=MO,WE,TH;INTERVAL=1;COUNT=3'];
         let dateRRule: DateRRuleInstance;
 
-        const firstBaseDate = new Date(Date.UTC(2018, 10, 1, 19, 0, 0)); // what the parser will return from
-        const expectedFirstDate = targetDateToBaseDate(firstBaseDate, 'America/Denver'); // 2018-11-02T01:00:00.000Z
+        const rruleStringLineSet = ['DTSTART;TZID=America/Denver:20181101T190000;', 'RRULE:FREQ=WEEKLY;BYDAY=MO,WE,TH;INTERVAL=1;COUNT=3'];
+
+        const firstBaseDate = new Date(Date.UTC(2018, 10, 1, 19, 0, 0)); // 2018-11-01T19:00:00.000Z, what the parser should return
+        const secondBaseDate = new Date(Date.UTC(2018, 10, 5, 19, 0, 0)); // 2018-11-05T19:00:00.000Z the 19:00 remains the same, since this still implies 7PM in Denver on this date.
+
+        const expectedFirstDate = targetDateToBaseDate(firstBaseDate, 'America/Denver'); // 2018-11-02T01:00:00.000Z, which is 2018-11-01T19:00:00.000Z - -6 hours for denver's offset
+        const expectedSecondDate = targetDateToBaseDate(secondBaseDate, 'America/Denver'); // 2018-11-06T02:00:00.000Z
 
         beforeEach(async () => {
           dateRRule = DateRRuleUtility.makeInstance({
@@ -217,7 +248,7 @@ describe.skip('DateRRuleUtility', () => {
 
         it('should return the next date', () => {
           const currentDate = addMinutes(expectedFirstDate, 5);
-          const nextDate = addDays(expectedFirstDate, 4);
+          const nextDate = expectedSecondDate;
 
           const next = dateRRule.nextRecurrenceDate(currentDate);
           expect(next).toBeSameSecondAs(nextDate);
@@ -312,6 +343,8 @@ describe.skip('DateRRuleUtility', () => {
     });
   });
 
+  // TODO: Can add test back once "import { parseString } from 'rrule/dist/esm/parsestring';" works in jest.
+  /*
   describe('toRRuleOptions', () => {
     describe('examples', () => {
       describe('mo,we,th at 11AM-12PM (1PM-2PM CST) 3 times', () => {
@@ -320,7 +353,7 @@ describe.skip('DateRRuleUtility', () => {
             const rules = `DTSTART;TZID=${tzid}:20181101T190000\nRRULE:FREQ=WEEKLY;BYDAY=MO,WE,TH;INTERVAL=1;COUNT=3`;
             const expectedDTStart = new Date(Date.UTC(2018, 10, 1, 19, 0, 0));
 
-            const output = RRule.parseString(rules);
+            const output = parseString(rules);
 
             expect(output.dtstart).toBeDefined();
             expect(output.dtstart).toBeSameSecondAs(expectedDTStart);
@@ -346,4 +379,5 @@ describe.skip('DateRRuleUtility', () => {
       });
     });
   });
+  */
 });

@@ -64,7 +64,7 @@
     "ngx-infinite-scroll": "^13.0.2",
     "ngx-mat-intl-tel-input": "git+https://git@github.com/dereekb/ngx-mat-intl-tel-input#dbe3d1144979df12bdc133f92692ad643a2cdecc",
     "reflect-metadata": "^0.1.13",
-    "rrule": "2.7.0",
+    "rrule": "git+https://git@github.com/dereekb/rrule#2b13b1ea881059ba2ecfec380e12ef244ef54570",
     "rxfire": "^6.0.3",
     "rxjs": "^7.0.0",
     "stripe": "^9.1.0",
