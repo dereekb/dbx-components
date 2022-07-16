@@ -178,7 +178,13 @@ export class DateRRuleInstance {
     let between: Maybe<DateRange>;
 
     if (options.range || options.rangeParams) {
-      between = options.range ?? dateRange(options.rangeParams as DateRangeParams);
+      if (options.range) {
+        between = options.range;
+      } else {
+        const rangeParams: DateRangeParams = options.rangeParams as DateRangeParams;
+        between = dateRange(rangeParams);
+      }
+
       between.start = this.normalInstance.baseDateToTargetDate(between.start);
       between.end = this.normalInstance.baseDateToTargetDate(between.end);
     }

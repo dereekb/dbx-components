@@ -52,21 +52,24 @@ describe('DateTimezoneUtcNormalInstance', () => {
         expect(instance.getCurrentOffset(utcBaseDate, 'base', 'target')).toBe(0);
       });
 
-      it('conversion from base to system should be non-zero.', () => {
-        expect(instance.getCurrentOffset(utcBaseDate, 'base', 'system')).not.toBe(0);
-      });
+      // if testing from within UTC, offset is going to be 0
+      if (utcBaseDate.getTimezoneOffset() !== 0) {
+        it('conversion from base to system should be non-zero.', () => {
+          expect(instance.getCurrentOffset(utcBaseDate, 'base', 'system')).not.toBe(0);
+        });
 
-      it('conversion from system to base should be non-zero.', () => {
-        expect(instance.getCurrentOffset(utcBaseDate, 'system', 'base')).not.toBe(0);
-      });
+        it('conversion from system to base should be non-zero.', () => {
+          expect(instance.getCurrentOffset(utcBaseDate, 'system', 'base')).not.toBe(0);
+        });
 
-      it('conversion from target to system should be non-zero.', () => {
-        expect(instance.getCurrentOffset(utcBaseDate, 'target', 'system')).not.toBe(0);
-      });
+        it('conversion from target to system should be non-zero.', () => {
+          expect(instance.getCurrentOffset(utcBaseDate, 'target', 'system')).not.toBe(0);
+        });
 
-      it('conversion from system to target should be non-zero.', () => {
-        expect(instance.getCurrentOffset(utcBaseDate, 'system', 'target')).not.toBe(0);
-      });
+        it('conversion from system to target should be non-zero.', () => {
+          expect(instance.getCurrentOffset(utcBaseDate, 'system', 'target')).not.toBe(0);
+        });
+      }
     });
   });
 

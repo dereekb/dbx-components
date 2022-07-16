@@ -1,10 +1,9 @@
 import { expectFail, itShouldFail } from '@dereekb/util/test';
 import { DateRange, DateRangeInput } from './date.range';
-import { addDays, addHours, addMinutes, setHours, setMinutes, startOfDay, endOfDay, addSeconds, addMilliseconds, minutesToMilliseconds, hoursToMilliseconds, millisecondsToHours, hoursToMinutes, minutesToHours } from 'date-fns';
+import { addDays, addHours, addMinutes, setHours, setMinutes, startOfDay, endOfDay, addSeconds, addMilliseconds, millisecondsToHours, minutesToHours } from 'date-fns';
 import { DateBlock, dateBlockIndexRange, DateBlockRangeWithRange, dateBlocksExpansionFactory, dateBlockTiming, DateBlockTiming, expandDateBlockRange, expandUniqueDateBlocks, getCurrentDateBlockTimingOffset, getCurrentDateBlockTimingStartDate, groupUniqueDateBlocks, isValidDateBlockTiming, UniqueDateBlockRange } from './date.block';
 import { MS_IN_DAY, MINUTES_IN_DAY, range, RangeInput, Hours } from '@dereekb/util';
 import { removeMinutesAndSeconds } from './date';
-import { getCurrentSystemOffsetInHours, getCurrentSystemOffsetInMinutes, systemNormalDateToBaseDate } from './date.timezone';
 
 describe('getCurrentDateBlockTimingOffset()', () => {
   const utcDate = new Date('2022-01-02T00:00:00Z'); // date in utc. Implies there is no offset to consider.

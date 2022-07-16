@@ -58,3 +58,8 @@ export function formatStartedEndedDistanceString({ start, end }: DateRange): str
 export function dateStringToDate(dateString: ISO8601DayString): Date {
   return startOfDay(parse(dateString, 'yyyy-MM-dd', new Date()));
 }
+
+export function dateStringToUTCDate(inputDateString: ISO8601DayString): Date {
+  const [yearString, monthString, dateString] = inputDateString.split('-');
+  return new Date(Date.UTC(Number(yearString), Number(monthString) - 1, Number(dateString)));
+}

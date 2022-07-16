@@ -1,12 +1,15 @@
 import { DateRRule } from './date.rrule.extension';
 import { DateRRuleInstance, DateRRuleUtility } from '@dereekb/date';
 
-describe.skip('DateRRule', () => {
+describe('DateRRule', () => {
   const currentDate = new Date('2018-10-01T00:00:00.000Z');
 
   const firstDate = new Date('2018-11-01T19:00:00.000Z');
   const lastDate = new Date('2018-11-07T19:00:00.000Z');
 
+  /**
+   * This represents 7PM in Denver
+   */
   const rruleStringLineSet = ['DTSTART;TZID=America/Denver:20181101T190000;', 'RRULE:FREQ=WEEKLY;BYDAY=MO,WE,TH;INTERVAL=1;COUNT=3'];
   let dateRRuleInstance: DateRRuleInstance;
   let dateRRule: DateRRule;

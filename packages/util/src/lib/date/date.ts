@@ -42,6 +42,8 @@ export type DateOrDateString = Date | ISO8601DateString;
 /**
  * A full date string Formatted as ISO8601.
  *
+ * Year, Month, Date
+ *
  * I.E. 1921-06-23
  */
 export type ISO8601DayString = string; // '1921-06-23'

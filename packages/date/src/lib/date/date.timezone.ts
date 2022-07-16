@@ -1,4 +1,4 @@
-import { addMilliseconds, hoursToMinutes, minutesToHours } from 'date-fns';
+import { addMilliseconds, minutesToHours } from 'date-fns';
 import { MapFunction, isConsideredUtcTimezoneString, isSameNonNullValue, Maybe, Milliseconds, TimezoneString, UTC_TIMEZONE_STRING } from '@dereekb/util';
 import { getTimezoneOffset } from 'date-fns-tz';
 import { minutesToMs } from './date';
@@ -129,18 +129,20 @@ export interface DateTimezoneBaseDateConverter {
   systemDateToBaseDate(date: Date): Date;
 }
 
-export type DateTimezoneConversionMap = {
-  [key: string]: number;
+export type DateTimezoneConversionMap<T = number> = {
+  [key: string]: T;
 };
 
-export function calculateAllConversions(date: Date, converter: DateTimezoneBaseDateConverter, map: (time: Milliseconds) => number = (x) => x): DateTimezoneConversionMap {
+export type DateTimezoneConversionFunction<T> = MapFunction<Milliseconds, T>;
+
+export function calculateAllConversions<T = number>(date: Date, converter: DateTimezoneBaseDateConverter, map: DateTimezoneConversionFunction<T> = ((x: Milliseconds) => x) as unknown as DateTimezoneConversionFunction<T>): DateTimezoneConversionMap<T> {
   const options: DateTimezoneConversionTarget[] = ['target', 'base', 'system'];
-  const conversions: DateTimezoneConversionMap = {};
+  const conversions: DateTimezoneConversionMap<T> = {};
 
   options.forEach((from) => {
     options.forEach((to) => {
       if (from !== to) {
-        conversions[`${from}-${to}`] = map(converter.getCurrentOffset(date, from, to));
+        conversions[`${from}-${to}`] = map(converter.getCurrentOffset(date, from, to)) as unknown as T;
       }
     });
   });
@@ -149,6 +151,8 @@ export function calculateAllConversions(date: Date, converter: DateTimezoneBaseD
 }
 
 type GetOffsetForDateFunction = MapFunction<Date, number>;
+
+export type DateTimezoneUtcNormalInstanceInput = Maybe<TimezoneString> | DateTimezoneConversionConfig;
 
 /**
  * Used for converting Dates to/from a UTC "base date" to a "normal date".
@@ -161,7 +165,7 @@ export class DateTimezoneUtcNormalInstance implements DateTimezoneBaseDateConver
   readonly hasConversion: boolean;
   private readonly _getOffset: DateTimezoneOffsetFunction;
 
-  constructor(config: Maybe<TimezoneString> | DateTimezoneConversionConfig) {
+  constructor(config: DateTimezoneUtcNormalInstanceInput) {
     if (config == null) {
       config = UTC_TIMEZONE_STRING;
     }
@@ -184,7 +188,10 @@ export class DateTimezoneUtcNormalInstance implements DateTimezoneBaseDateConver
     } else if (config.timezoneOffset != null) {
       getOffsetInMsFn = () => this.config.timezoneOffset as number;
     } else if (config.timezone) {
-      getOffsetInMsFn = (date) => getTimezoneOffset(this.config.timezone as string, date);
+      getOffsetInMsFn = (date) => {
+        const tzOffset = getTimezoneOffset(this.config.timezone as string, date);
+        return tzOffset;
+      };
     }
 
     const hasConversion = Boolean(getOffsetInMsFn);
@@ -230,6 +237,8 @@ export class DateTimezoneUtcNormalInstance implements DateTimezoneBaseDateConver
             default:
               throw new Error(`unexpected offset target "${target}"`);
           }
+
+          // console.log('Offset: ', { date: x, target, offset, offsetInHours: millisecondsToHours(offset) });
 
           return offset;
         }
@@ -297,6 +306,14 @@ export class DateTimezoneUtcNormalInstance implements DateTimezoneBaseDateConver
   systemDateToTargetDateOffset(date: Date): Milliseconds {
     return this._getOffset(date, 'system', 'target');
   }
+
+  calculateAllOffsets<T = number>(date: Date, map?: DateTimezoneConversionFunction<T>) {
+    return calculateAllConversions<T>(date, this, map);
+  }
+}
+
+export function dateTimezoneUtcNormal(config: DateTimezoneUtcNormalInstanceInput): DateTimezoneUtcNormalInstance {
+  return new DateTimezoneUtcNormalInstance(config);
 }
 
 /**
