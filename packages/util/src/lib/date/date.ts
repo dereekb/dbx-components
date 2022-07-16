@@ -17,6 +17,13 @@ export type ISO8601DateStringUTCFull = string;
  */
 export type TimezoneString = string;
 
+/**
+ * Object that references a TimezoneString.
+ */
+export interface TimezoneStringRef {
+  timezone: TimezoneString;
+}
+
 export const UTC_TIMEZONE_STRING = 'UTC';
 
 /**

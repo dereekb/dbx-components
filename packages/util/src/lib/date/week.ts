@@ -24,8 +24,12 @@ export enum Day {
   SATURDAY = 6
 }
 
-export function getTomorrow(day: DayOfWeek): DayOfWeek {
+export function getDayTomorrow(day: DayOfWeek): DayOfWeek {
   return getNextDay(day, 1);
+}
+
+export function getDayYesterday(day: DayOfWeek): DayOfWeek {
+  return getPreviousDay(day, 1);
 }
 
 export function getDayOffset(day: DayOfWeek, days: number): DayOfWeek {
