@@ -4,20 +4,21 @@
 import { Observable } from 'rxjs';
 import { FirestoreAccessorDriverRef } from '../driver/accessor';
 import { FirestoreCollectionNameRef, FirestoreModelId, FirestoreModelIdentityCollectionName, FirestoreModelIdentityModelType, FirestoreModelIdentityRef, FirestoreModelIdRef, FirestoreModelKey, FirestoreModelKeyRef } from './../collection/collection';
-import { DocumentReference, CollectionReference, Transaction, WriteBatch, DocumentSnapshot, SnapshotOptions, WriteResult } from '../types';
-import { createOrUpdateWithAccessorSet, dataFromSnapshotStream, FirestoreDocumentDataAccessor, updateWithAccessorSet } from './accessor';
+import { DocumentReference, CollectionReference, Transaction, WriteBatch, DocumentSnapshot, SnapshotOptions, WriteResult, FirestoreDataConverter } from '../types';
+import { createOrUpdateWithAccessorSet, dataFromSnapshotStream, FirestoreDocumentDataAccessor, FirestoreDocumentUpdateParams, updateWithAccessorSet, updateWithAccessorUpdateAndConverterFunction } from './accessor';
 import { CollectionReferenceRef, DocumentReferenceRef, FirestoreContextReference, FirestoreDataConverterRef } from '../reference';
 import { FirestoreDocumentContext } from './context';
 import { build, Maybe } from '@dereekb/util';
 import { FirestoreModelTypeRef, FirestoreModelIdentity, FirestoreModelTypeModelIdentityRef } from '../collection/collection';
 import { InterceptAccessorFactoryFunction } from './accessor.wrap';
 
-export interface FirestoreDocument<T, I extends FirestoreModelIdentity = FirestoreModelIdentity> extends DocumentReferenceRef<T>, CollectionReferenceRef<T>, FirestoreModelIdentityRef<I>, FirestoreModelTypeRef<FirestoreModelIdentityModelType<I>>, FirestoreCollectionNameRef<FirestoreModelIdentityCollectionName<I>>, FirestoreModelKeyRef, FirestoreModelIdRef {
+export interface FirestoreDocument<T, I extends FirestoreModelIdentity = FirestoreModelIdentity> extends FirestoreDataConverterRef<T>, DocumentReferenceRef<T>, CollectionReferenceRef<T>, FirestoreModelIdentityRef<I>, FirestoreModelTypeRef<FirestoreModelIdentityModelType<I>>, FirestoreCollectionNameRef<FirestoreModelIdentityCollectionName<I>>, FirestoreModelKeyRef, FirestoreModelIdRef {
   readonly accessor: FirestoreDocumentDataAccessor<T>;
   readonly id: string;
 
   snapshot(): Promise<DocumentSnapshot<T>>;
   snapshotData(options?: SnapshotOptions): Promise<T | undefined>;
+  exists(): Promise<boolean>;
   create(data: T): Promise<WriteResult | void>;
   update(data: Partial<T>): Promise<WriteResult | void>;
   createOrUpdate(data: Partial<T>): Promise<WriteResult | void>;
@@ -63,6 +64,10 @@ export abstract class AbstractFirestoreDocument<T, D extends AbstractFirestoreDo
     return this.accessor.documentRef.parent as CollectionReference<T>;
   }
 
+  get converter(): FirestoreDataConverter<T> {
+    return this.documentAccessor.converter;
+  }
+
   /**
    * Retrieves a DocumentSnapshot of the document.
    * @returns
@@ -81,6 +86,16 @@ export abstract class AbstractFirestoreDocument<T, D extends AbstractFirestoreDo
   }
 
   /**
+   * Returns true if the model exists.
+   *
+   * @param data
+   * @returns
+   */
+  exists(): Promise<boolean> {
+    return this.accessor.exists();
+  }
+
+  /**
    * Creates the document if it does not exist, using the accessor's create functionality.
    *
    * @param data
@@ -91,13 +106,17 @@ export abstract class AbstractFirestoreDocument<T, D extends AbstractFirestoreDo
   }
 
   /**
-   * Updates the document if it exists using the accessor's set functionalty.
+   * Updates the document using the accessor's update functionalty if the document exists. This differs from Firestore's default
+   * update implementation which does not use the configured converter. This update function will, allowing the use of
+   * snapshotConverterFunctions().
+   *
+   * Throws an exception when it does not exist.
    *
    * @param data
    * @returns
    */
-  update(data: Partial<T>): Promise<WriteResult | void> {
-    return updateWithAccessorSet(this.accessor)(data);
+  update(data: Partial<T>, params?: FirestoreDocumentUpdateParams): Promise<WriteResult | void> {
+    return updateWithAccessorUpdateAndConverterFunction(this.accessor, this.converter)(data, params);
   }
 
   /**
@@ -105,6 +124,8 @@ export abstract class AbstractFirestoreDocument<T, D extends AbstractFirestoreDo
    *
    * @param data
    * @returns
+   *
+   * @deprecated Use either create or update. Behavior of this function is undesirable, and it can trip up transactions since it will perform a read.
    */
   createOrUpdate(data: Partial<T>): Promise<WriteResult | void> {
     return createOrUpdateWithAccessorSet(this.accessor)(data);
@@ -117,7 +138,7 @@ export interface LimitedFirestoreDocumentAccessorRef<T, D extends FirestoreDocum
 
 export type FirestoreDocumentAccessorRef<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> = LimitedFirestoreDocumentAccessorRef<T, D, FirestoreDocumentAccessor<T, D>>;
 
-export interface LimitedFirestoreDocumentAccessor<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> extends FirestoreModelTypeModelIdentityRef, FirestoreAccessorDriverRef {
+export interface LimitedFirestoreDocumentAccessor<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> extends FirestoreDataConverterRef<T>, FirestoreModelTypeModelIdentityRef, FirestoreAccessorDriverRef {
   readonly databaseContext: FirestoreDocumentContext<T>;
 
   /**
@@ -240,6 +261,7 @@ export function limitedFirestoreDocumentAccessorFactory<T, D extends FirestoreDo
     }
 
     const documentAccessor: LimitedFirestoreDocumentAccessor<T, D> = {
+      converter,
       modelIdentity,
       loadDocumentFrom(document: FirestoreDocument<T>): D {
         return loadDocument(document.documentRef);

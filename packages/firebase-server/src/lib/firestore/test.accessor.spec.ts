@@ -1,3 +1,4 @@
+import { itShouldFail } from '@dereekb/util/test';
 import { DocumentSnapshot } from '@google-cloud/firestore';
 import { first } from 'rxjs';
 import { FirestoreDocumentAccessor } from '@dereekb/firebase';
@@ -118,6 +119,32 @@ describe('FirestoreDocumentDataAccessor', () => {
           const data = snapshot.data()!;
 
           expect(data.test).toBe(test);
+          expect(data.value).toBe(value);
+        });
+
+        it(`should create the object if it doesn't exist when merge is true`, async () => {
+          await document.accessor.delete();
+
+          const test = true;
+          const value = 'test';
+
+          const exists = await document.accessor.exists();
+          expect(exists).toBe(false);
+
+          // create it via set w/ merge
+          await document.accessor.set(
+            {
+              test,
+              value
+            },
+            {
+              merge: true
+            }
+          );
+
+          const snapshot = await document.accessor.get();
+          const data = snapshot.data()!;
+
           expect(data.value).toBe(value);
         });
       });

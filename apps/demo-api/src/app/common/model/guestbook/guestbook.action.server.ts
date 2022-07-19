@@ -33,7 +33,11 @@ export function guestbookCreateGuestbookFactory({ firebaseServerActionTransformF
     return async () => {
       const document: GuestbookDocument = guestbookAccessor.newDocument();
 
-      await document.createOrUpdate({ name });
+      await document.create({
+        name,
+        published: false,
+        locked: false
+      });
 
       return document;
     };
