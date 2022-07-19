@@ -6,6 +6,18 @@ import { ArrayOrValue, asArray, Maybe, SetIncludesMode } from '@dereekb/util';
 export type GrantedRole = string;
 
 /**
+ * Communicates that the current context is a system admin.
+ */
+export type GrantedSysAdminRole = typeof GRANTED_SYS_ADMIN_ROLE_KEY;
+export const GRANTED_SYS_ADMIN_ROLE_KEY = 'sysadmin';
+
+/**
+ * Communicates that the current context is an admin.
+ */
+export type GrantedAdminRole = typeof GRANTED_ADMIN_ROLE_KEY;
+export const GRANTED_ADMIN_ROLE_KEY = 'admin';
+
+/**
  * Communicates that the current context has read access to a model.
  */
 export type GrantedReadRole = typeof GRANTED_READ_ROLE_KEY;
