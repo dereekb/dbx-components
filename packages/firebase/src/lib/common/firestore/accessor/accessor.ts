@@ -1,5 +1,5 @@
 import { filterMaybe } from '@dereekb/rxjs';
-import { filterUndefinedValues, Maybe } from '@dereekb/util';
+import { filterUndefinedValues, Maybe, objectHasNoKeys } from '@dereekb/util';
 import { WriteResult, SnapshotOptions, DocumentReference, DocumentSnapshot, UpdateData, WithFieldValue, PartialWithFieldValue, SetOptions, Precondition, DocumentData, FirestoreDataConverter } from '../types';
 import { map, Observable, OperatorFunction } from 'rxjs';
 import { DocumentReferenceRef } from '../reference';
@@ -109,9 +109,16 @@ export function mapDataFromSnapshot<T>(options?: SnapshotOptions): OperatorFunct
  * If it does exist, update is done using set + merge on all defined values.
  *
  * @param data
+ * @deprecated See createOrUpdateWithAccessorSet()
  */
 export type CreateOrUpdateWithAccessorSetFunction<T> = (data: Partial<T>) => Promise<WriteResult | void>;
 
+/**
+ *
+ * @param accessor
+ * @returns
+ * @deprecated Use either create or update. Behavior of this function is undesirable, and it can trip up transactions since it will perform a read.
+ */
 export function createOrUpdateWithAccessorSet<T>(accessor: FirestoreDocumentDataAccessor<T>): CreateOrUpdateWithAccessorSetFunction<T> {
   return (data: Partial<T>) => {
     return accessor.exists().then((exists) => {
@@ -125,7 +132,7 @@ export function createOrUpdateWithAccessorSet<T>(accessor: FirestoreDocumentData
 }
 
 /**
- * Updates the target object using the input data.
+ * Updates the target object using the input data after checking existence.
  *
  * Calls accessor's set configured for updating/merging, and filters all undefined values from the input data.
  * If it does exist, update will fail.
@@ -134,6 +141,12 @@ export function createOrUpdateWithAccessorSet<T>(accessor: FirestoreDocumentData
  */
 export type UpdateWithAccessorSetFunction<T> = (data: Partial<T>, forceUpdate?: boolean) => Promise<WriteResult | void>;
 
+/**
+ * @deprecated This does not behave well within transactions.
+ *
+ * @param accessor
+ * @returns
+ */
 export function updateWithAccessorSet<T>(accessor: FirestoreDocumentDataAccessor<T>): UpdateWithAccessorSetFunction<T> {
   return async (data: Partial<T>, forceUpdate?: boolean) => {
     const exists: boolean = forceUpdate || (await accessor.exists());
@@ -144,5 +157,29 @@ export function updateWithAccessorSet<T>(accessor: FirestoreDocumentDataAccessor
 
     const update = filterUndefinedValues(data);
     return accessor.set(update, { merge: true });
+  };
+}
+
+/**
+ * Updates the target object using the input data that uses the input converter to build data suitable for the update function.
+ *
+ * If the target object does not exist, this will fail.
+ *
+ * @param data
+ */
+export type UpdateWithAccessorUpdateAndConverterFunction<T> = (data: Partial<T>, params?: FirestoreDocumentUpdateParams) => Promise<WriteResult | void>;
+
+/**
+ * Creates a updateWithAccessorUpdateAndConverter
+ *
+ * @param accessor
+ * @param converter
+ * @returns
+ */
+export function updateWithAccessorUpdateAndConverterFunction<T>(accessor: FirestoreDocumentDataAccessor<T>, converter: FirestoreDataConverter<T>): UpdateWithAccessorUpdateAndConverterFunction<T> {
+  return async (data: Partial<T>, params?: FirestoreDocumentUpdateParams) => {
+    const updateInput = filterUndefinedValues(data);
+    const updateData = converter.toFirestore(updateInput, { merge: true }); // treat it as a merge
+    return params != null ? accessor.update(updateData, params) : accessor.update(updateData);
   };
 }

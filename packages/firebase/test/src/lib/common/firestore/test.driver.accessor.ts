@@ -3,6 +3,7 @@ import { firstValueFrom } from 'rxjs';
 import { SubscriptionObject } from '@dereekb/rxjs';
 import { Transaction, DocumentReference, WriteBatch, FirestoreDocumentAccessor, makeDocuments, FirestoreDocumentDataAccessor, FirestoreContext, FirestoreDocument, RunTransaction, FirebaseAuthUserId, DocumentSnapshot, FirestoreDataConverter } from '@dereekb/firebase';
 import { MockItemCollectionFixture, MockItemDocument, MockItem, MockItemPrivateDocument, MockItemPrivateFirestoreCollection, MockItemPrivate, MockItemSubItem, MockItemSubItemDocument, MockItemSubItemFirestoreCollection, MockItemSubItemFirestoreCollectionGroup, MockItemUserFirestoreCollection, MockItemUserDocument, MockItemUser, mockItemConverter } from '../mock';
+import { Getter } from '@dereekb/util';
 
 /**
  * Describes accessor driver tests, using a MockItemCollectionFixture.
@@ -39,10 +40,10 @@ export function describeFirestoreAccessorDriverTests(f: MockItemCollectionFixtur
         accessor = itemDocument.accessor;
       });
 
-      describe('accessor', () => {
-        describeAccessorTests<MockItem>(() => ({
+      describe('accessors', () => {
+        describeFirestoreDocumentAccessorTests<MockItem>(() => ({
           context: f.parent.firestoreContext,
-          accessor,
+          firestoreDocument: () => itemDocument,
           dataForUpdate: () => ({ test: false }),
           hasDataFromUpdate: (data) => data.test === false,
           loadDocumentForTransaction: (transaction, ref) => f.instance.firestoreCollection.documentAccessorForTransaction(transaction).loadDocument(ref!),
@@ -173,18 +174,6 @@ export function describeFirestoreAccessorDriverTests(f: MockItemCollectionFixtur
             });
           });
 
-          describe('createOrUpdate()', () => {
-            it('should create the item if it does not exist', async () => {
-              let exists = await itemPrivateDataDocument.accessor.exists();
-              expect(exists).toBe(false);
-
-              await itemPrivateDataDocument.createOrUpdate({ createdAt: new Date() });
-
-              exists = await privateDataAccessor.exists();
-              expect(exists).toBe(true);
-            });
-          });
-
           describe('set()', () => {
             it('should create the item', async () => {
               let exists = await privateDataAccessor.exists();
@@ -202,12 +191,12 @@ export function describeFirestoreAccessorDriverTests(f: MockItemCollectionFixtur
               await privateDataAccessor.set({ values: [], createdAt: new Date() });
             });
 
-            describe('accessor', () => {
+            describe('accessors', () => {
               const TEST_COMMENTS = 'test';
 
-              describeAccessorTests<MockItemPrivate>(() => ({
+              describeFirestoreDocumentAccessorTests<MockItemPrivate>(() => ({
                 context: f.parent.firestoreContext,
-                accessor: privateDataAccessor,
+                firestoreDocument: () => itemPrivateDataDocument,
                 dataForUpdate: () => ({ comments: TEST_COMMENTS }),
                 hasDataFromUpdate: (data) => data.comments === TEST_COMMENTS,
                 loadDocumentForTransaction: (transaction, ref) => mockItemPrivateFirestoreCollection.loadDocumentForTransaction(transaction),
@@ -233,12 +222,12 @@ export function describeFirestoreAccessorDriverTests(f: MockItemCollectionFixtur
             });
 
             describe('with item', () => {
-              describe('accessor', () => {
+              describe('accessors', () => {
                 const TEST_VALUE = 1234;
 
-                describeAccessorTests<MockItemSubItem>(() => ({
+                describeFirestoreDocumentAccessorTests<MockItemSubItem>(() => ({
                   context: f.parent.firestoreContext,
-                  accessor: subItemDocument.accessor,
+                  firestoreDocument: () => subItemDocument,
                   dataForUpdate: () => ({ value: TEST_VALUE }),
                   hasDataFromUpdate: (data) => data.value === TEST_VALUE,
                   loadDocumentForTransaction: (transaction, ref) => mockItemSubItemFirestoreCollection.documentAccessorForTransaction(transaction).loadDocument(ref!),
@@ -256,12 +245,12 @@ export function describeFirestoreAccessorDriverTests(f: MockItemCollectionFixtur
             });
 
             describe('with item', () => {
-              describe('accessor', () => {
+              describe('accessors', () => {
                 const TEST_VALUE = 1234;
 
-                describeAccessorTests<MockItemSubItem>(() => ({
+                describeFirestoreDocumentAccessorTests<MockItemSubItem>(() => ({
                   context: f.parent.firestoreContext,
-                  accessor: subItemDocument.accessor,
+                  firestoreDocument: () => subItemDocument,
                   dataForUpdate: () => ({ value: TEST_VALUE }),
                   hasDataFromUpdate: (data) => data.value === TEST_VALUE,
                   loadDocumentForTransaction: (transaction, ref) => mockItemSubItemFirestoreCollectionGroup.documentAccessorForTransaction(transaction).loadDocument(ref!),
@@ -338,225 +327,309 @@ export function describeFirestoreAccessorDriverTests(f: MockItemCollectionFixtur
 
 export interface DescribeAccessorTests<T> {
   context: FirestoreContext;
-  accessor: FirestoreDocumentDataAccessor<any>;
+  firestoreDocument: Getter<FirestoreDocument<T>>;
   dataForUpdate: () => Partial<T>;
   hasDataFromUpdate: (data: T) => boolean;
   loadDocumentForTransaction: (transaction: Transaction, ref?: DocumentReference<T>) => FirestoreDocument<T>;
   loadDocumentForWriteBatch: (writeBatch: WriteBatch, ref?: DocumentReference<T>) => FirestoreDocument<T>;
 }
 
-export function describeAccessorTests<T>(init: () => DescribeAccessorTests<T>) {
+export function describeFirestoreDocumentAccessorTests<T>(init: () => DescribeAccessorTests<T>) {
   let c: DescribeAccessorTests<T>;
   let sub: SubscriptionObject;
+  let firestoreDocument: FirestoreDocument<T>;
+  let accessor: FirestoreDocumentDataAccessor<T>;
 
   beforeEach(() => {
     sub = new SubscriptionObject();
     c = init();
+    firestoreDocument = c.firestoreDocument();
+    accessor = firestoreDocument.accessor;
   });
 
   afterEach(() => {
     sub.destroy();
   });
 
-  describe('stream()', () => {
-    it('should return a snapshot stream', async () => {
-      const result = await c.accessor.stream();
-      expect(result).toBeDefined();
+  describe('AbstractFirestoreDocument', () => {
+    describe('snapshot()', () => {
+      it('should return the snapshot.', async () => {
+        const snapshot = await firestoreDocument.snapshot();
+        expect(snapshot).toBeDefined();
+      });
     });
 
-    it('should emit values on updates from the observable.', (done) => {
-      let count = 0;
+    describe('snapshotData()', () => {
+      it('should return the snapshot data if the model exists.', async () => {
+        const exists = await firestoreDocument.exists();
+        expect(exists).toBe(true);
 
-      sub.subscription = c.accessor.stream().subscribe((item) => {
-        count += 1;
-
-        if (count === 1) {
-          expect(c.hasDataFromUpdate(item.data())).toBe(false);
-        } else if (count === 2) {
-          expect(c.hasDataFromUpdate(item.data())).toBe(true);
-          done();
-        }
+        const data = await firestoreDocument.snapshotData();
+        expect(data).toBeDefined();
       });
 
-      setTimeout(() => {
-        c.accessor.update(c.dataForUpdate());
-      }, 100);
+      it('should return the undefined if the model does not exist.', async () => {
+        await accessor.delete();
+
+        const exists = await firestoreDocument.exists();
+        expect(exists).toBe(false);
+
+        const data = await firestoreDocument.snapshotData();
+        expect(data).toBeUndefined();
+      });
     });
 
-    describe('in transition context', () => {
-      let runTransaction: RunTransaction;
+    describe('create()', () => {
+      it('should create the document if it does not exist.', async () => {
+        const snapshot = await firestoreDocument.snapshot();
 
-      beforeEach(() => {
-        runTransaction = c.context.runTransaction;
+        await accessor.delete();
+
+        let exists = await firestoreDocument.exists();
+        expect(exists).toBe(false);
+
+        await firestoreDocument.create(snapshot.data() as T);
+
+        exists = await firestoreDocument.exists();
+        expect(exists).toBe(true);
       });
 
-      it('should return the first emitted value (observable completes immediately)', async () => {
-        await runTransaction(async (transaction) => {
-          const transactionItemDocument = c.loadDocumentForTransaction(transaction, c.accessor.documentRef);
+      itShouldFail('if the document exists.', async () => {
+        const snapshot = await firestoreDocument.snapshot();
+
+        const exists = await firestoreDocument.exists();
+        expect(exists).toBe(true);
+
+        await expectFail(() => firestoreDocument.create(snapshot.data() as T));
+      });
+    });
+
+    describe('update()', () => {
+      it('should update the data if the document exists.', async () => {
+        const data = c.dataForUpdate();
+        await firestoreDocument.update(data);
+
+        const snapshot = await firestoreDocument.snapshot();
+        expect(c.hasDataFromUpdate(snapshot.data() as T)).toBe(true);
+      });
+
+      itShouldFail('if the document does not exist.', async () => {
+        await accessor.delete();
+
+        const snapshot = await firestoreDocument.snapshot();
+        expect(snapshot.data()).toBe(undefined);
+
+        const exists = await firestoreDocument.exists();
+        expect(exists).toBe(false);
+
+        await expectFail(() => firestoreDocument.update(c.dataForUpdate()));
+      });
+
+      // TODO: Test within a transaction
+    });
+  });
+
+  describe('accessor', () => {
+    describe('stream()', () => {
+      it('should return a snapshot stream', async () => {
+        const result = await accessor.stream();
+        expect(result).toBeDefined();
+      });
+
+      it('should emit values on updates from the observable.', (done) => {
+        let count = 0;
+
+        sub.subscription = accessor.stream().subscribe((item) => {
+          count += 1;
+
+          if (count === 1) {
+            expect(c.hasDataFromUpdate(item.data() as T)).toBe(false);
+          } else if (count === 2) {
+            expect(c.hasDataFromUpdate(item.data() as T)).toBe(true);
+            done();
+          }
+        });
+
+        setTimeout(() => {
+          accessor.update(c.dataForUpdate());
+        }, 100);
+      });
+
+      describe('in transition context', () => {
+        let runTransaction: RunTransaction;
+
+        beforeEach(() => {
+          runTransaction = c.context.runTransaction;
+        });
+
+        it('should return the first emitted value (observable completes immediately)', async () => {
+          await runTransaction(async (transaction) => {
+            const transactionItemDocument = c.loadDocumentForTransaction(transaction, accessor.documentRef);
+
+            // load the value
+            const value = await firstValueFrom(transactionItemDocument.accessor.stream());
+
+            expect(value).toBeDefined();
+
+            // set to make the transaction valid
+            await transactionItemDocument.accessor.set({ value: 0 } as any, { merge: true });
+
+            return value;
+          });
+        });
+      });
+
+      describe('in batch context', () => {
+        it('should return the first emitted value (observable completes immediately)', async () => {
+          const writeBatch: WriteBatch = c.context.batch();
+          const batchItemDocument = c.loadDocumentForWriteBatch(writeBatch, accessor.documentRef);
 
           // load the value
-          const value = await firstValueFrom(transactionItemDocument.accessor.stream());
+          const value = await firstValueFrom(batchItemDocument.accessor.stream());
 
           expect(value).toBeDefined();
 
-          // set to make the transaction valid
-          await transactionItemDocument.accessor.set({ value: 0 } as any, { merge: true });
+          // set to make the batch changes valid
+          await batchItemDocument.accessor.set({ value: 0 } as any, { merge: true });
 
-          return value;
+          // commit the changes
+          await writeBatch.commit();
         });
       });
     });
 
-    describe('in batch context', () => {
-      it('should return the first emitted value (observable completes immediately)', async () => {
-        const writeBatch: WriteBatch = c.context.batch();
-        const batchItemDocument = c.loadDocumentForWriteBatch(writeBatch, c.accessor.documentRef);
+    describe('create()', () => {
+      it('should create the document if it does not exist.', async () => {
+        const snapshot = await accessor.get();
 
-        // load the value
-        const value = await firstValueFrom(batchItemDocument.accessor.stream());
+        await accessor.delete();
 
-        expect(value).toBeDefined();
-
-        // set to make the batch changes valid
-        await batchItemDocument.accessor.set({ value: 0 } as any, { merge: true });
-
-        // commit the changes
-        await writeBatch.commit();
-      });
-    });
-  });
-
-  describe('create()', () => {
-    it('should create the document if it does not exist.', async () => {
-      const data = await c.accessor.get();
-
-      await c.accessor.delete();
-
-      let exists = await c.accessor.exists();
-      expect(exists).toBe(false);
-
-      await c.accessor.create(data);
-
-      exists = await c.accessor.exists();
-      expect(exists).toBe(true);
-    });
-
-    itShouldFail('if the document exists.', async () => {
-      const data = await c.accessor.get();
-
-      const exists = await c.accessor.exists();
-      expect(exists).toBe(true);
-
-      await expectFail(() => c.accessor.create(data));
-    });
-  });
-
-  describe('get()', () => {
-    it('should return a snapshot', async () => {
-      const result = await c.accessor.get();
-      expect(result).toBeDefined();
-      expect(result.id).toBeDefined();
-    });
-  });
-
-  describe('exists()', () => {
-    it('should return true if the document exists', async () => {
-      const exists = await c.accessor.exists();
-      expect(exists).toBe(true);
-    });
-
-    it('should return false if the document does not exist', async () => {
-      await c.accessor.delete();
-      const exists = await c.accessor.exists();
-      expect(exists).toBe(false);
-    });
-  });
-
-  describe('update()', () => {
-    it('should update the data if the document exists.', async () => {
-      const data = c.dataForUpdate();
-      await c.accessor.update(data);
-
-      const snapshot = await c.accessor.get();
-      expect(c.hasDataFromUpdate(snapshot.data())).toBe(true);
-    });
-
-    itShouldFail('if the document does not exist.', async () => {
-      await c.accessor.delete();
-
-      const snapshot = await c.accessor.get();
-      expect(snapshot.data()).toBe(undefined);
-
-      const exists = await c.accessor.exists();
-      expect(exists).toBe(false);
-
-      await expectFail(() => c.accessor.update(c.dataForUpdate()));
-    });
-
-    // todo: test that update does not call the converter when setting values.
-  });
-
-  describe('set()', () => {
-    it('should create the object if it does not exist.', async () => {
-      await c.accessor.delete();
-
-      let exists = await c.accessor.exists();
-      expect(exists).toBe(false);
-
-      const data = c.dataForUpdate();
-      await c.accessor.set(data);
-
-      exists = await c.accessor.exists();
-      expect(exists).toBe(true);
-
-      const snapshot = await c.accessor.get();
-      expect(c.hasDataFromUpdate(snapshot.data())).toBe(true);
-    });
-
-    it('should update the data on the document for fields that are not undefined.', async () => {
-      const data = c.dataForUpdate();
-      await c.accessor.set(data);
-      const snapshot = await c.accessor.get();
-      expect(c.hasDataFromUpdate(snapshot.data())).toBe(true);
-    });
-
-    describe('merge=true', () => {
-      it('should update the data if the document exists.', async () => {
-        const data = c.dataForUpdate();
-        await c.accessor.set(data, { merge: true });
-
-        const snapshot = await c.accessor.get();
-        expect(c.hasDataFromUpdate(snapshot.data())).toBe(true);
-      });
-
-      it('should succeed if the document does not exist.', async () => {
-        await c.accessor.delete();
-
-        let snapshot = await c.accessor.get();
-        expect(snapshot.data()).toBe(undefined);
-
-        const exists = await c.accessor.exists();
+        let exists = await accessor.exists();
         expect(exists).toBe(false);
 
-        await c.accessor.set(c.dataForUpdate(), { merge: true });
+        await accessor.create(snapshot.data() as T);
 
-        snapshot = await c.accessor.get();
-        expect(c.hasDataFromUpdate(snapshot.data())).toBe(true);
+        exists = await accessor.exists();
+        expect(exists).toBe(true);
+      });
+
+      itShouldFail('if the document exists.', async () => {
+        const snapshot = await accessor.get();
+
+        const exists = await accessor.exists();
+        expect(exists).toBe(true);
+
+        await expectFail(() => accessor.create(snapshot.data() as T));
       });
     });
 
-    // todo: test that set calls the converter when setting values.
-  });
+    describe('get()', () => {
+      it('should return a snapshot', async () => {
+        const result = await accessor.get();
+        expect(result).toBeDefined();
+        expect(result.id).toBeDefined();
+      });
+    });
 
-  describe('delete()', () => {
-    it('should delete the document.', async () => {
-      await c.accessor.delete();
+    describe('exists()', () => {
+      it('should return true if the document exists', async () => {
+        const exists = await accessor.exists();
+        expect(exists).toBe(true);
+      });
 
-      const snapshot = await c.accessor.get();
-      expect(snapshot.data()).toBe(undefined);
+      it('should return false if the document does not exist', async () => {
+        await accessor.delete();
+        const exists = await accessor.exists();
+        expect(exists).toBe(false);
+      });
+    });
 
-      const exists = await c.accessor.exists();
-      expect(exists).toBe(false);
+    describe('update()', () => {
+      it('should update the data if the document exists.', async () => {
+        const data = c.dataForUpdate();
+        await accessor.update(data);
+
+        const snapshot = await accessor.get();
+        expect(c.hasDataFromUpdate(snapshot.data() as T)).toBe(true);
+      });
+
+      itShouldFail('if the document does not exist.', async () => {
+        await accessor.delete();
+
+        const snapshot = await accessor.get();
+        expect(snapshot.data()).toBe(undefined);
+
+        const exists = await accessor.exists();
+        expect(exists).toBe(false);
+
+        await expectFail(() => accessor.update(c.dataForUpdate()));
+      });
+
+      // todo: test that update does not call the converter when setting values.
+    });
+
+    describe('set()', () => {
+      it('should create the object if it does not exist.', async () => {
+        await accessor.delete();
+
+        let exists = await accessor.exists();
+        expect(exists).toBe(false);
+
+        const data = c.dataForUpdate();
+        await accessor.set(data as T);
+
+        exists = await accessor.exists();
+        expect(exists).toBe(true);
+
+        const snapshot = await accessor.get();
+        expect(c.hasDataFromUpdate(snapshot.data() as T)).toBe(true);
+      });
+
+      it('should update the data on the document for fields that are not undefined.', async () => {
+        const data = c.dataForUpdate();
+        await accessor.set(data as T);
+        const snapshot = await accessor.get();
+        expect(c.hasDataFromUpdate(snapshot.data() as T)).toBe(true);
+      });
+
+      describe('merge=true', () => {
+        it('should update the data if the document exists.', async () => {
+          const data = c.dataForUpdate();
+          await accessor.set(data, { merge: true });
+
+          const snapshot = await accessor.get();
+          expect(c.hasDataFromUpdate(snapshot.data() as T)).toBe(true);
+        });
+
+        it('should succeed if the document does not exist.', async () => {
+          await accessor.delete();
+
+          let snapshot = await accessor.get();
+          expect(snapshot.data()).toBe(undefined);
+
+          const exists = await accessor.exists();
+          expect(exists).toBe(false);
+
+          await accessor.set(c.dataForUpdate(), { merge: true });
+
+          snapshot = await accessor.get();
+          expect(c.hasDataFromUpdate(snapshot.data() as T)).toBe(true);
+        });
+      });
+
+      // todo: test that set calls the converter when setting values.
+    });
+
+    describe('delete()', () => {
+      it('should delete the document.', async () => {
+        await accessor.delete();
+
+        const snapshot = await accessor.get();
+        expect(snapshot.data()).toBe(undefined);
+
+        const exists = await accessor.exists();
+        expect(exists).toBe(false);
+      });
     });
   });
 }
