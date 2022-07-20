@@ -1,7 +1,6 @@
-import { DocumentReference, DocumentSnapshot, UpdateData, WithFieldValue, getDoc, deleteDoc, setDoc, updateDoc } from '@firebase/firestore';
-import { fromRef } from 'rxfire/firestore';
+import { onSnapshot, DocumentReference, DocumentSnapshot, UpdateData, WithFieldValue, getDoc, deleteDoc, setDoc, updateDoc } from '@firebase/firestore';
 import { Observable } from 'rxjs';
-import { assertFirestoreUpdateHasData, DocumentData, FirestoreDataConverter, FirestoreDocumentContext, FirestoreDocumentContextType, FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, SetOptions } from '../../common/firestore';
+import { assertFirestoreUpdateHasData, DocumentData, FirestoreDataConverter, FirestoreDocumentContext, FirestoreDocumentContextType, FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, SetOptions, streamFromOnSnapshot } from '../../common/firestore';
 import { createWithAccessor } from './driver.accessor.create';
 
 // MARK: Accessor
@@ -9,7 +8,7 @@ export class DefaultFirestoreDocumentDataAccessor<T> implements FirestoreDocumen
   constructor(readonly documentRef: DocumentReference<T>) {}
 
   stream(): Observable<DocumentSnapshot<T>> {
-    return fromRef(this.documentRef);
+    return streamFromOnSnapshot(({ next, error }) => onSnapshot(this.documentRef, next, error));
   }
 
   create(data: WithFieldValue<T>): Promise<void> {
