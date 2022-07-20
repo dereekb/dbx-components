@@ -425,7 +425,45 @@ export function describeFirestoreDocumentAccessorTests<T>(init: () => DescribeAc
         await expectFail(() => firestoreDocument.update(c.dataForUpdate()));
       });
 
-      // TODO: Test within a transaction
+      it('should not throw an error if the input update data is empty.', async () => {
+        await firestoreDocument.update({});
+      });
+    });
+
+    describe('transaction', () => {
+      describe('update()', () => {
+        it('should update the data if the document exists.', async () => {
+          await c.context.runTransaction(async (transaction) => {
+            const transactionDocument = await c.loadDocumentForTransaction(transaction, firestoreDocument.documentRef);
+
+            const currentData = await transactionDocument.snapshotData();
+            expect(currentData).toBeDefined();
+
+            const data = c.dataForUpdate();
+            await transactionDocument.update(data);
+          });
+
+          const snapshot = await firestoreDocument.snapshot();
+          expect(c.hasDataFromUpdate(snapshot.data() as T)).toBe(true);
+        });
+      });
+    });
+
+    describe('write batch', () => {
+      describe('update()', () => {
+        it('should update the data if the document exists.', async () => {
+          const batch = c.context.batch();
+          const batchDocument = await c.loadDocumentForWriteBatch(batch, firestoreDocument.documentRef);
+
+          const data = c.dataForUpdate();
+          await batchDocument.update(data);
+
+          await batch.commit();
+
+          const snapshot = await firestoreDocument.snapshot();
+          expect(c.hasDataFromUpdate(snapshot.data() as T)).toBe(true);
+        });
+      });
     });
   });
 
@@ -563,6 +601,10 @@ export function describeFirestoreDocumentAccessorTests<T>(init: () => DescribeAc
         expect(exists).toBe(false);
 
         await expectFail(() => accessor.update(c.dataForUpdate()));
+      });
+
+      itShouldFail('if the input is an empty object.', async () => {
+        await expectFail(() => accessor.update({}));
       });
 
       // todo: test that update does not call the converter when setting values.

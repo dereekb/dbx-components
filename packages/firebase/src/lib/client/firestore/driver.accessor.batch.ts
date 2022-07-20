@@ -1,5 +1,6 @@
+import { objectHasNoKeys } from '@dereekb/util';
 import { DocumentReference, WriteBatch as FirebaseFirestoreWriteBatch, UpdateData as FirestoreUpdateData } from '@firebase/firestore';
-import { FirestoreDocumentContext, UpdateData, WithFieldValue, FirestoreDocumentContextType, FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, SetOptions } from '../../common/firestore';
+import { FirestoreDocumentContext, UpdateData, WithFieldValue, FirestoreDocumentContextType, FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, SetOptions, assertFirestoreUpdateHasData } from '../../common/firestore';
 import { DefaultFirestoreDocumentDataAccessor } from './driver.accessor.default';
 
 // MARK: Accessor
@@ -22,6 +23,7 @@ export class WriteBatchFirestoreDocumentDataAccessor<T> extends DefaultFirestore
   }
 
   override update(data: UpdateData<unknown>): Promise<void> {
+    assertFirestoreUpdateHasData(data);
     this.batch.update(this.documentRef, data as FirestoreUpdateData<T>);
     return Promise.resolve();
   }

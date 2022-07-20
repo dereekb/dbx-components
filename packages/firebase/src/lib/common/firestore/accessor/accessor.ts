@@ -51,11 +51,10 @@ export interface FirestoreDocumentDataAccessor<T, D = DocumentData> extends Docu
   set(data: PartialWithFieldValue<T>, options: SetOptions): Promise<WriteResult | void>;
   set(data: WithFieldValue<T>): Promise<WriteResult | void>;
   /**
-   * Directly updates the data in the database, skipping any conversions, etc.
+   * Directly updates the data in the database, skipping the use of the converter, etc.
    *
+   * If the input data is undefined or an empty object, it will fail.
    * If the document doesn't exist, it will fail.
-   *
-   * NOTE: If you rely on the converter/conversion functionality, use set() with merge: true instead of update.
    *
    * @param data
    */
@@ -163,6 +162,8 @@ export function updateWithAccessorSet<T>(accessor: FirestoreDocumentDataAccessor
 /**
  * Updates the target object using the input data that uses the input converter to build data suitable for the update function.
  *
+ * If the input data after conversion is empty then returns void.
+ *
  * If the target object does not exist, this will fail.
  *
  * @param data
@@ -170,7 +171,7 @@ export function updateWithAccessorSet<T>(accessor: FirestoreDocumentDataAccessor
 export type UpdateWithAccessorUpdateAndConverterFunction<T> = (data: Partial<T>, params?: FirestoreDocumentUpdateParams) => Promise<WriteResult | void>;
 
 /**
- * Creates a updateWithAccessorUpdateAndConverter
+ * Creates an UpdateWithAccessorUpdateAndConverterFunction.
  *
  * @param accessor
  * @param converter
@@ -180,6 +181,10 @@ export function updateWithAccessorUpdateAndConverterFunction<T>(accessor: Firest
   return async (data: Partial<T>, params?: FirestoreDocumentUpdateParams) => {
     const updateInput = filterUndefinedValues(data);
     const updateData = converter.toFirestore(updateInput, { merge: true }); // treat it as a merge
-    return params != null ? accessor.update(updateData, params) : accessor.update(updateData);
+
+    // Only update
+    if (!objectHasNoKeys(updateData)) {
+      return params != null ? accessor.update(updateData, params) : accessor.update(updateData);
+    }
   };
 }
