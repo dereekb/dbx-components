@@ -424,6 +424,10 @@ export function describeFirestoreDocumentAccessorTests<T>(init: () => DescribeAc
 
         await expectFail(() => firestoreDocument.update(c.dataForUpdate()));
       });
+
+      it('should not throw an error if the input update data is empty.', async () => {
+        await firestoreDocument.update({});
+      });
     });
 
     describe('transaction', () => {
@@ -597,6 +601,10 @@ export function describeFirestoreDocumentAccessorTests<T>(init: () => DescribeAc
         expect(exists).toBe(false);
 
         await expectFail(() => accessor.update(c.dataForUpdate()));
+      });
+
+      itShouldFail('if the input is an empty object.', async () => {
+        await expectFail(() => accessor.update({}));
       });
 
       // todo: test that update does not call the converter when setting values.

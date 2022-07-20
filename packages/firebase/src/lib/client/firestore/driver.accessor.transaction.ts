@@ -1,6 +1,6 @@
 import { DocumentReference, DocumentSnapshot, Transaction as FirebaseFirestoreTransaction, UpdateData, WithFieldValue } from '@firebase/firestore';
 import { from, Observable } from 'rxjs';
-import { FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, FirestoreDocumentContext, FirestoreDocumentContextType, SetOptions, DocumentData, FirestoreDataConverter } from '../../common/firestore';
+import { FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, FirestoreDocumentContext, FirestoreDocumentContextType, SetOptions, DocumentData, FirestoreDataConverter, assertFirestoreUpdateHasData } from '../../common/firestore';
 import { createWithAccessor } from './driver.accessor.create';
 
 // MARK: Accessor
@@ -41,6 +41,7 @@ export class TransactionFirestoreDocumentDataAccessor<T> implements FirestoreDoc
   }
 
   update(data: UpdateData<unknown>): Promise<void> {
+    assertFirestoreUpdateHasData(data);
     this.transaction.update(this.documentRef, data);
     return Promise.resolve();
   }
