@@ -1,7 +1,7 @@
 import { itShouldFail, expectFail } from '@dereekb/util/test';
 import { firstValueFrom } from 'rxjs';
 import { SubscriptionObject } from '@dereekb/rxjs';
-import { Transaction, DocumentReference, WriteBatch, FirestoreDocumentAccessor, makeDocuments, FirestoreDocumentDataAccessor, FirestoreContext, FirestoreDocument, RunTransaction, FirebaseAuthUserId, DocumentSnapshot, FirestoreDataConverter } from '@dereekb/firebase';
+import { Transaction, DocumentReference, WriteBatch, FirestoreDocumentAccessor, makeDocuments, FirestoreDocumentDataAccessor, FirestoreContext, FirestoreDocument, RunTransaction, FirebaseAuthUserId, DocumentSnapshot, FirestoreDataConverter, getDocumentSnapshotPairs, useDocumentSnapshot, useDocumentSnapshotData } from '@dereekb/firebase';
 import { MockItemCollectionFixture, MockItemDocument, MockItem, MockItemPrivateDocument, MockItemPrivateFirestoreCollection, MockItemPrivate, MockItemSubItem, MockItemSubItemDocument, MockItemSubItemFirestoreCollection, MockItemSubItemFirestoreCollectionGroup, MockItemUserFirestoreCollection, MockItemUserDocument, MockItemUser, mockItemConverter } from '../mock';
 import { Getter } from '@dereekb/util';
 
@@ -349,6 +349,63 @@ export function describeFirestoreDocumentAccessorTests<T>(init: () => DescribeAc
 
   afterEach(() => {
     sub.destroy();
+  });
+
+  describe('utilities', () => {
+    describe('getDocumentSnapshotPairs()', () => {
+      it('should return the document and snapshot pairs for the input.', async () => {
+        const pairs = await getDocumentSnapshotPairs([firestoreDocument]);
+
+        expect(pairs.length).toBe(1);
+        expect(pairs[0]).toBeDefined();
+        expect(pairs[0].document).toBe(firestoreDocument);
+        expect(pairs[0].snapshot).toBeDefined();
+        expect(pairs[0].snapshot.data()).toBeDefined();
+      });
+    });
+
+    describe('useDocumentSnapshot()', () => {
+      it(`should use the input document value if it exists`, async () => {
+        const exists = await firestoreDocument.exists();
+        expect(exists).toBe(true);
+
+        let snapshotUsed = false;
+
+        await useDocumentSnapshot(firestoreDocument, (snapshot) => {
+          expect(snapshot).toBeDefined();
+          snapshotUsed = true;
+        });
+
+        expect(snapshotUsed).toBe(true);
+      });
+
+      it(`should not use the input undefined value`, async () => {
+        let snapshotUsed = false;
+
+        await useDocumentSnapshot(undefined, (snapshot) => {
+          expect(snapshot).toBeDefined();
+          snapshotUsed = true;
+        });
+
+        expect(snapshotUsed).toBe(false);
+      });
+    });
+
+    describe('useDocumentSnapshotData()', () => {
+      it(`should use the input document's snapshot data if it exists`, async () => {
+        const exists = await firestoreDocument.exists();
+        expect(exists).toBe(true);
+
+        let snapshotUsed = false;
+
+        await useDocumentSnapshotData(firestoreDocument, (data) => {
+          expect(data).toBeDefined();
+          snapshotUsed = true;
+        });
+
+        expect(snapshotUsed).toBe(true);
+      });
+    });
   });
 
   describe('AbstractFirestoreDocument', () => {

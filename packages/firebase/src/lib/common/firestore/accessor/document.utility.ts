@@ -1,7 +1,7 @@
 import { AsyncGetterOrValue, Maybe, performMakeLoop, PromiseUtility, UseAsync, wrapUseAsyncFunction, useAsync, makeWithFactory, filterMaybeValues } from '@dereekb/util';
 import { FirestoreModelId, FirestoreModelKey } from '../collection';
 import { DocumentDataWithId, DocumentReference, DocumentSnapshot, QuerySnapshot, Transaction } from '../types';
-import { FirestoreDocument, FirestoreDocumentAccessor, LimitedFirestoreDocumentAccessor, LimitedFirestoreDocumentAccessorContextExtension } from './document';
+import { FirestoreDocumentData, FirestoreDocument, FirestoreDocumentAccessor, LimitedFirestoreDocumentAccessor, LimitedFirestoreDocumentAccessorContextExtension } from './document';
 
 export function newDocuments<T, D extends FirestoreDocument<T>>(documentAccessor: FirestoreDocumentAccessor<T, D>, count: number): D[] {
   return makeWithFactory(() => documentAccessor.newDocument(), count);
@@ -47,16 +47,25 @@ export function makeDocuments<T, D extends FirestoreDocument<T>>(documentAccesso
   });
 }
 
-export function getDocumentSnapshots<T, D extends FirestoreDocument<T>>(documents: D[]): Promise<DocumentSnapshot<T>[]> {
+export function getDocumentSnapshots<D extends FirestoreDocument<any>>(documents: D[]): Promise<DocumentSnapshot<FirestoreDocumentData<D>>[]> {
   return PromiseUtility.runTasksForValues(documents, (x) => x.accessor.get());
 }
 
-export function getDocumentSnapshotsData<T, D extends FirestoreDocument<T>>(documents: D[]): Promise<DocumentDataWithId<T>[]>;
-export function getDocumentSnapshotsData<T, D extends FirestoreDocument<T>>(documents: D[], withId: true): Promise<DocumentDataWithId<T>[]>;
-export function getDocumentSnapshotsData<T, D extends FirestoreDocument<T>>(documents: D[], withId: false): Promise<T[]>;
-export function getDocumentSnapshotsData<T, D extends FirestoreDocument<T>>(documents: D[], withId?: boolean): Promise<DocumentDataWithId<T>[] | T[]>;
-export function getDocumentSnapshotsData<T, D extends FirestoreDocument<T>>(documents: D[], withId = true): Promise<DocumentDataWithId<T>[] | T[]> {
-  return getDocumentSnapshots<T, D>(documents).then((x: DocumentSnapshot<T>[]) => getDataFromDocumentSnapshots<T>(x, withId));
+export type FirestoreDocumentSnapshotPair<D extends FirestoreDocument<any>> = {
+  document: D;
+  snapshot: DocumentSnapshot<FirestoreDocumentData<D>>;
+};
+
+export function getDocumentSnapshotPairs<D extends FirestoreDocument<any>>(documents: D[]): Promise<FirestoreDocumentSnapshotPair<D>[]> {
+  return PromiseUtility.runTasksForValues(documents, (document) => document.accessor.get().then((snapshot) => ({ document, snapshot })));
+}
+
+export function getDocumentSnapshotsData<D extends FirestoreDocument<any>>(documents: D[]): Promise<DocumentDataWithId<FirestoreDocumentData<D>>[]>;
+export function getDocumentSnapshotsData<D extends FirestoreDocument<any>>(documents: D[], withId: true): Promise<DocumentDataWithId<FirestoreDocumentData<D>>[]>;
+export function getDocumentSnapshotsData<D extends FirestoreDocument<any>>(documents: D[], withId: false): Promise<FirestoreDocumentData<D>[]>;
+export function getDocumentSnapshotsData<D extends FirestoreDocument<any>>(documents: D[], withId?: boolean): Promise<DocumentDataWithId<FirestoreDocumentData<D>>[] | FirestoreDocumentData<D>[]>;
+export function getDocumentSnapshotsData<D extends FirestoreDocument<any>>(documents: D[], withId = true): Promise<DocumentDataWithId<FirestoreDocumentData<D>>[] | FirestoreDocumentData<D>[]> {
+  return getDocumentSnapshots<D>(documents).then((x: DocumentSnapshot<any>[]) => getDataFromDocumentSnapshots<FirestoreDocumentData<D>>(x, withId));
 }
 
 export function getDataFromDocumentSnapshots<T>(snapshots: DocumentSnapshot<T>[]): DocumentDataWithId<T>[];
@@ -167,7 +176,7 @@ export function documentDataWithId<T>(snapshot: DocumentSnapshot<T>): Maybe<Docu
  * @param defaultValue
  * @returns
  */
-export async function useDocumentSnapshot<T, D extends FirestoreDocument<T>, O = void>(document: Maybe<D>, use: UseAsync<DocumentSnapshot<T>, O>, defaultValue?: Maybe<AsyncGetterOrValue<O>>): Promise<Maybe<O>> {
+export async function useDocumentSnapshot<D extends FirestoreDocument<any>, O = void>(document: Maybe<D>, use: UseAsync<DocumentSnapshot<FirestoreDocumentData<D>>, O>, defaultValue?: Maybe<AsyncGetterOrValue<O>>): Promise<Maybe<O>> {
   const snapshot = await document?.accessor.get();
   return useAsync(snapshot, use, defaultValue);
 }
@@ -175,7 +184,7 @@ export async function useDocumentSnapshot<T, D extends FirestoreDocument<T>, O =
 /**
  * MappedUseAsyncFunction to load snapshot data from the input document and use it.
  */
-export const useDocumentSnapshotData = wrapUseAsyncFunction(useDocumentSnapshot, (x) => x.data());
+export const useDocumentSnapshotData = wrapUseAsyncFunction(useDocumentSnapshot, (x) => x.data()) as <D extends FirestoreDocument<any>, O = void>(document: Maybe<D>, use: UseAsync<FirestoreDocumentData<D>, O>, defaultValue?: Maybe<AsyncGetterOrValue<O>>) => Promise<Maybe<O>>;
 
 // MARK: Key Accessors
 export function firestoreModelIdFromDocument<T, D extends FirestoreDocument<T>>(document: D): FirestoreModelId {
