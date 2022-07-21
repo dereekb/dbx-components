@@ -408,9 +408,65 @@ export class DateBlockRange extends DateBlock {
 }
 
 /**
+ * Creates a DateBlockRange
+ *
+ * @param i
+ * @param to
+ * @returns
+ */
+export function dateBlockRange(i: number, to?: number): DateBlockRangeWithRange {
+  return { i, to: to ?? i };
+}
+
+/**
  * DateBlockRange that is known to have a to value.
  */
 export type DateBlockRangeWithRange = RequiredOnKeys<DateBlockRange, 'to'>;
+
+/**
+ * Groups the input values into DateBlockRange values.
+ *
+ * @param input
+ */
+export function groupToDateBlockRanges(input: (DateBlock | DateBlockRange)[]): DateBlockRange[] {
+  if (input.length === 0) {
+    return [];
+  }
+
+  // sort by index in ascending order
+  const blocks = input.sort(sortAscendingIndexNumberRefFunction());
+
+  function newBlockFromBlocksIndex(blocksIndex: number): DateBlockRangeWithRange {
+    const { i, to } = blocks[blocksIndex] as DateBlockRange;
+    return {
+      i,
+      to: to ?? i
+    };
+  }
+
+  // start at the first block
+  let current: DateBlockRangeWithRange = newBlockFromBlocksIndex(0);
+
+  const results: DateBlockRange[] = [];
+
+  for (let i = 1; i < blocks.length; i += 1) {
+    const block = blocks[i];
+    const isContinuous = block.i <= current.to + 1;
+
+    if (isContinuous) {
+      // extend the current block.
+      current.to = (blocks[i] as DateBlockRange).to ?? blocks[i].i;
+    } else {
+      // complete/create new block.
+      results.push(current);
+      current = newBlockFromBlocksIndex(i);
+    }
+  }
+
+  results.push(current);
+
+  return results;
+}
 
 /**
  * Expands a DateBlockRange into an array of DateBlock values.

@@ -1,7 +1,7 @@
 import { expectFail, itShouldFail } from '@dereekb/util/test';
 import { DateRange, DateRangeInput } from './date.range';
 import { addDays, addHours, addMinutes, setHours, setMinutes, startOfDay, endOfDay, addSeconds, addMilliseconds, millisecondsToHours, minutesToHours } from 'date-fns';
-import { DateBlock, dateBlockDayOfWeekFactory, DateBlockIndex, dateBlockIndexRange, DateBlockRangeWithRange, dateBlocksExpansionFactory, dateBlockTiming, DateBlockTiming, expandDateBlockRange, expandUniqueDateBlocks, getCurrentDateBlockTimingOffset, getCurrentDateBlockTimingStartDate, groupUniqueDateBlocks, isValidDateBlockTiming, UniqueDateBlockRange } from './date.block';
+import { DateBlock, dateBlockDayOfWeekFactory, DateBlockIndex, dateBlockIndexRange, dateBlockRange, DateBlockRangeWithRange, dateBlocksExpansionFactory, dateBlockTiming, DateBlockTiming, expandDateBlockRange, expandUniqueDateBlocks, getCurrentDateBlockTimingOffset, getCurrentDateBlockTimingStartDate, groupToDateBlockRanges, groupUniqueDateBlocks, isValidDateBlockTiming, UniqueDateBlockRange } from './date.block';
 import { MS_IN_DAY, MINUTES_IN_DAY, range, RangeInput, Hours, Day } from '@dereekb/util';
 import { removeMinutesAndSeconds } from './date';
 
@@ -404,6 +404,50 @@ describe('dateBlocksExpansionFactory()', () => {
         });
       });
     });
+  });
+});
+
+describe('groupToDateBlockRanges()', () => {
+  it('should group the input blocks that overlap eachother.', () => {
+    const input = [dateBlockRange(0, 4), dateBlockRange(0, 4), dateBlockRange(0, 4), dateBlockRange(0, 4)];
+    const result = groupToDateBlockRanges(input);
+
+    expect(result.length).toBe(1);
+    expect(result[0].i).toBe(0);
+    expect(result[0].to).toBe(4);
+  });
+
+  it('should group the input blocks that are contiguous but do not overlap.', () => {
+    const input = [dateBlockRange(0, 1), dateBlockRange(2, 3), dateBlockRange(4, 5), dateBlockRange(6, 7)];
+    const result = groupToDateBlockRanges(input);
+
+    expect(result.length).toBe(1);
+    expect(result[0].i).toBe(0);
+    expect(result[0].to).toBe(7);
+  });
+
+  it('should group the input blocks that are contiguous and overlap.', () => {
+    const input = [dateBlockRange(0, 5), dateBlockRange(2, 3), dateBlockRange(4, 7), dateBlockRange(4, 9)];
+    const result = groupToDateBlockRanges(input);
+
+    expect(result.length).toBe(1);
+    expect(result[0].i).toBe(0);
+    expect(result[0].to).toBe(9);
+  });
+
+  it('should only group the input blocks that are contiguous or overlap.', () => {
+    const input = [dateBlockRange(0, 2), dateBlockRange(4, 7), dateBlockRange(9, 12)];
+    const result = groupToDateBlockRanges(input);
+
+    expect(result.length).toBe(3);
+    expect(result[0].i).toBe(0);
+    expect(result[0].to).toBe(2);
+
+    expect(result[1].i).toBe(4);
+    expect(result[1].to).toBe(7);
+
+    expect(result[2].i).toBe(9);
+    expect(result[2].to).toBe(12);
   });
 });
 
