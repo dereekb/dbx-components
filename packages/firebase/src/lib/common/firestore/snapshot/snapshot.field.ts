@@ -39,7 +39,8 @@ import {
   LatLngString,
   asObjectCopyFactory,
   modelFieldMapFunctions,
-  UTC_TIMEZONE_STRING
+  UTC_TIMEZONE_STRING,
+  TimezoneString
 } from '@dereekb/util';
 import { FirestoreModelData, FIRESTORE_EMPTY_VALUE } from './snapshot.type';
 import { FirebaseAuthUserId } from '../../auth/auth';
@@ -537,13 +538,20 @@ export function firestoreLatLngString(config?: FirestoreLatLngStringConfig) {
   });
 }
 
+export interface FirestoreTimezoneStringConfig extends DefaultMapConfiguredFirestoreFieldConfig<TimezoneString, TimezoneString> {}
+
 /**
  * Default configuration for a TimezoneString.
  *
  * The value defaults to UTC
  */
-export function firestoreTimezoneString() {
-  return firestoreString({ default: UTC_TIMEZONE_STRING });
+export function firestoreTimezoneString(config?: FirestoreTimezoneStringConfig) {
+  const { default: defaultValue, defaultBeforeSave } = config ?? {};
+
+  return firestoreString<TimezoneString>({
+    default: defaultValue || DEFAULT_FIRESTORE_LAT_LNG_STRING_VALUE,
+    defaultBeforeSave
+  });
 }
 
 // MARK: Deprecated

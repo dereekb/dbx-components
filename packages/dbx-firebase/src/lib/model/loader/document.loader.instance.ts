@@ -27,7 +27,7 @@ export class DbxLimitedFirebaseDocumentLoaderInstance<T = unknown, D extends Fir
     switchMap((docs) =>
       this._restart.pipe(
         startWith(null),
-        exhaustMap(() => getDocumentSnapshots<T, D>(docs))
+        exhaustMap(() => getDocumentSnapshots<D>(docs))
       )
     ),
     shareReplay(1)

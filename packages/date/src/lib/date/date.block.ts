@@ -5,6 +5,7 @@ import { differenceInDays, differenceInMilliseconds, isBefore, addDays, addMinut
 import { copyHoursAndMinutesFromDate } from './date';
 import { Expose, Type } from 'class-transformer';
 import { getCurrentSystemOffsetInHours } from './date.timezone';
+import { IsDate, IsNumber, IsOptional, Min } from 'class-validator';
 
 /**
  * Index from 0 of which day this block represents.
@@ -16,6 +17,19 @@ export type DateBlockIndex = number;
  */
 export interface DateBlock extends IndexRef {
   i: DateBlockIndex;
+}
+
+export class DateBlock {
+  @Expose()
+  @IsNumber()
+  @Min(0)
+  i!: DateBlockIndex;
+
+  constructor(template?: DateBlock) {
+    if (template) {
+      this.i = template.i;
+    }
+  }
 }
 
 /**
@@ -80,10 +94,12 @@ export function getCurrentDateBlockTimingStartDate(timing: DateBlockTiming): Dat
 
 export class DateBlockTiming extends DateDurationSpan {
   @Expose()
+  @IsDate()
   @Type(() => Date)
   start!: Date;
 
   @Expose()
+  @IsDate()
   @Type(() => Date)
   end!: Date;
 
@@ -376,10 +392,81 @@ export interface DateBlockRange extends DateBlock {
   to?: DateBlockIndex;
 }
 
+export class DateBlockRange extends DateBlock {
+  @Expose()
+  @IsNumber()
+  @IsOptional()
+  @Min(0) // TODO: Consider valdiating against i to make sure it is not less than i
+  to?: DateBlockIndex;
+
+  constructor(template?: DateBlockRange) {
+    super(template);
+    if (template) {
+      this.to = template.to;
+    }
+  }
+}
+
+/**
+ * Creates a DateBlockRange
+ *
+ * @param i
+ * @param to
+ * @returns
+ */
+export function dateBlockRange(i: number, to?: number): DateBlockRangeWithRange {
+  return { i, to: to ?? i };
+}
+
 /**
  * DateBlockRange that is known to have a to value.
  */
 export type DateBlockRangeWithRange = RequiredOnKeys<DateBlockRange, 'to'>;
+
+/**
+ * Groups the input values into DateBlockRange values.
+ *
+ * @param input
+ */
+export function groupToDateBlockRanges(input: (DateBlock | DateBlockRange)[]): DateBlockRange[] {
+  if (input.length === 0) {
+    return [];
+  }
+
+  // sort by index in ascending order
+  const blocks = input.sort(sortAscendingIndexNumberRefFunction());
+
+  function newBlockFromBlocksIndex(blocksIndex: number): DateBlockRangeWithRange {
+    const { i, to } = blocks[blocksIndex] as DateBlockRange;
+    return {
+      i,
+      to: to ?? i
+    };
+  }
+
+  // start at the first block
+  let current: DateBlockRangeWithRange = newBlockFromBlocksIndex(0);
+
+  const results: DateBlockRange[] = [];
+
+  for (let i = 1; i < blocks.length; i += 1) {
+    const block = blocks[i];
+    const isContinuous = block.i <= current.to + 1;
+
+    if (isContinuous) {
+      // extend the current block.
+      current.to = (blocks[i] as DateBlockRange).to ?? blocks[i].i;
+    } else {
+      // complete/create new block.
+      results.push(current);
+      current = newBlockFromBlocksIndex(i);
+    }
+  }
+
+  results.push(current);
+
+  return results;
+}
 
 /**
  * Expands a DateBlockRange into an array of DateBlock values.
