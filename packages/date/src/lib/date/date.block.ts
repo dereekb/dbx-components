@@ -5,6 +5,7 @@ import { differenceInDays, differenceInMilliseconds, isBefore, addDays, addMinut
 import { copyHoursAndMinutesFromDate } from './date';
 import { Expose, Type } from 'class-transformer';
 import { getCurrentSystemOffsetInHours } from './date.timezone';
+import { IsDate, IsNumber, IsOptional, Min } from 'class-validator';
 
 /**
  * Index from 0 of which day this block represents.
@@ -16,6 +17,19 @@ export type DateBlockIndex = number;
  */
 export interface DateBlock extends IndexRef {
   i: DateBlockIndex;
+}
+
+export class DateBlock {
+  @Expose()
+  @IsNumber()
+  @Min(0)
+  i!: DateBlockIndex;
+
+  constructor(template?: DateBlock) {
+    if (template) {
+      this.i = template.i;
+    }
+  }
 }
 
 /**
@@ -80,10 +94,12 @@ export function getCurrentDateBlockTimingStartDate(timing: DateBlockTiming): Dat
 
 export class DateBlockTiming extends DateDurationSpan {
   @Expose()
+  @IsDate()
   @Type(() => Date)
   start!: Date;
 
   @Expose()
+  @IsDate()
   @Type(() => Date)
   end!: Date;
 
@@ -374,6 +390,21 @@ export interface DateBlockRange extends DateBlock {
    * If not provided, assumes this has no range and starts/ends at the same index, i.
    */
   to?: DateBlockIndex;
+}
+
+export class DateBlockRange extends DateBlock {
+  @Expose()
+  @IsNumber()
+  @IsOptional()
+  @Min(0) // TODO: Consider valdiating against i to make sure it is not less than i
+  to?: DateBlockIndex;
+
+  constructor(template?: DateBlockRange) {
+    super(template);
+    if (template) {
+      this.to = template.to;
+    }
+  }
 }
 
 /**

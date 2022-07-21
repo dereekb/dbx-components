@@ -1,4 +1,4 @@
-import { Type } from 'class-transformer';
+import { Expose, Type } from 'class-transformer';
 import { IsEnum, IsOptional, IsDate, IsNumber } from 'class-validator';
 import { addDays, addHours, endOfDay, endOfMonth, endOfWeek, isDate, isPast, startOfDay, startOfMinute, startOfMonth, startOfWeek } from 'date-fns';
 
@@ -8,6 +8,25 @@ import { addDays, addHours, endOfDay, endOfMonth, endOfWeek, isDate, isPast, sta
 export interface DateRange {
   start: Date;
   end: Date;
+}
+
+export class DateRange {
+  @Expose()
+  @IsDate()
+  @Type(() => Date)
+  start!: Date;
+
+  @Expose()
+  @IsDate()
+  @Type(() => Date)
+  end!: Date;
+
+  constructor(template: DateRange) {
+    if (template) {
+      this.start = template.start;
+      this.end = template.end;
+    }
+  }
 }
 
 /**
