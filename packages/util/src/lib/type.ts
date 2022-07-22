@@ -102,6 +102,8 @@ export type Configurable<T> = Writable<T>;
 
 /**
  * StringOrder of all keys of an object.
+ *
+ * NOTE: Intellisense may not return the correct order.
  */
 export type CommaSeparatedKeyOrderOfObject<T extends object> = CommaSeparatedKeyOrder<`${KeyCanBeString<keyof T>}`>;
 export type CommaSeparatedKeyOrder<T extends string> = StringOrder<T, ','>;
@@ -113,16 +115,26 @@ export type CommaSeparatedKeyCombinationsOfObject<T extends object> = CommaSepar
 export type CommaSeparatedKeyCombinations<T extends string> = StringCombination<T, ','>;
 
 /**
- * StringConcatination of all keys of an object.
+ * StringConcatination of all keys of an object in no particular order.
  */
 export type CommaSeparatedKeysOfObject<T extends object> = CommaSeparatedKeys<`${KeyCanBeString<keyof T>}`>;
 export type CommaSeparatedKeys<T extends string> = StringConcatination<T, ','>;
+
+/**
+ * StringConcatinationOrder of all keys of an object in lexiographical ascending order.
+ *
+ * NOTE: Intellisense may not return the correct order.
+ */
+export type OrderedCommaSeparatedKeysOfObject<T extends object> = OrderedCommaSeparatedKeys<`${KeyCanBeString<keyof T>}`>;
+export type OrderedCommaSeparatedKeys<T extends string> = StringConcatinationOrder<T, ','>;
 
 export type UnionToOvlds<U> = UnionToIntersection<U extends any ? (f: U) => void : never>;
 export type PopUnion<U> = UnionToOvlds<U> extends (a: infer A) => void ? A : never;
 
 /**
- * A type that merges all combinations of strings together using a separator, but restricts a certain order.
+ * A type that merges all combinations of strings together using a separator, but restricts the result to ascending lexigraphical order.
+ *
+ * NOTE: Intellisense may not display the correct order, but Typescript will enforce the expected order.
  *
  * Example:
  * 'a' | 'b' | 'c' w/ ',' -> 'a' | 'b' | 'c' | 'a,b' | 'a,c' | 'a,b,c' | etc...
@@ -136,7 +148,8 @@ export type StringOrder<S extends string, SEPARATOR extends string> = PopUnion<S
     SELF extends string
     ? Exclude<S, SELF> extends never
       ? SELF
-      : `${StringOrder<Exclude<S, SELF>, SEPARATOR>}${SEPARATOR}${SELF}` | StringOrder<Exclude<S, SELF>, SEPARATOR> | SELF
+      : // This works because the values of S are always interpreted in ascending lexiographical order
+        `${StringOrder<Exclude<S, SELF>, SEPARATOR>}${SEPARATOR}${SELF}` | StringOrder<Exclude<S, SELF>, SEPARATOR> | SELF
     : never
   : never;
 
@@ -156,19 +169,245 @@ export type StringCombination<S extends string, SEPARATOR extends string> = PopU
   : never;
 
 /**
+ * A type that merges all the input strings together and requires them sorted in ascending lexiographical order.
+ *
+ * NOTE: Intellisense may not display the correct order, but Typescript will enforce the expected order.
+ *
+ * Example:
+ * 'a' | 'c' | 'b' w/ ',' -> 'a,b,c'
+ */
+export type StringConcatinationOrder<S extends string, SEPARATOR extends string> = PopUnion<S> extends infer SELF
+  ? //
+    SELF extends string
+    ? Exclude<S, SELF> extends never
+      ? `${SELF}`
+      : // This works because the values of S are always interpreted in ascending lexiographical order
+        `${StringConcatinationOrder<Exclude<S, SELF>, SEPARATOR>}${SEPARATOR}${SELF}`
+    : never
+  : never;
+
+/**
  * A type that merges all the input strings together using a separator.
  *
  * Example:
- * 'a' | 'b' | 'c' w/ ',' -> 'a,b,c' | 'a,c,b'
+ * 'a' | 'b' | 'c' w/ ',' -> 'a,b,c' | 'a,c,b' | 'b,a,c' | etc...
  */
+export type StringConcatination<S extends string, SEPARATOR extends string> = StringConcatinationMany<S, SEPARATOR>;
+
+/**
+ * Used to "approximate" larger concatinations. In reality, this just excludes the earlier types from being present in the middle.
+ */
+export type StringConcatinationApproximation<S extends string, SEPARATOR extends string> = PopUnion<S> extends infer SELF
+  ? //
+    SELF extends string
+    ? Exclude<S, SELF> extends never
+      ? `${SELF}`
+      : `${StringConcatinationApproximation<Exclude<S, SELF>, SEPARATOR>}${SEPARATOR}${SELF}` | `${SELF}${SEPARATOR}${StringConcatinationApproximation<Exclude<S, SELF>, SEPARATOR>}`
+    : never
+  : never;
+
+/**
+ * Creates the concatinations for the input.
+ *
+ * Total number of concatinations is equal to n!.
+ *
+ * The max number of strings allowed is 7. If there are more than 7 strings passed, this function will use StringConcatinationApproximation.
+ */
+export type StringConcatinationMany<S extends string, SEPARATOR extends string> =
+  // a | b | c | d | e | f | g | h | i | j | k | l | m
+  PopUnion<S> extends infer ONE
+    ? // one
+      ONE extends string
+      ? PopUnion<Exclude<S, ONE>> extends infer TWO
+        ? // two
+          TWO extends string
+          ? Exclude<S, ONE | TWO> extends never
+            ? StringConcatinateTwo<ONE, TWO, SEPARATOR>
+            : PopUnion<Exclude<S, ONE | TWO>> extends infer THREE
+            ? // three
+              THREE extends string
+              ? Exclude<S, ONE | TWO | THREE> extends never
+                ? StringConcatinateThree<ONE, TWO, THREE, SEPARATOR>
+                : PopUnion<Exclude<S, ONE | TWO | THREE>> extends infer FOUR
+                ? // four
+                  FOUR extends string
+                  ? Exclude<S, ONE | TWO | THREE | FOUR> extends never
+                    ? StringConcatinateFour<ONE, TWO, THREE, FOUR, SEPARATOR>
+                    : PopUnion<Exclude<S, ONE | TWO | THREE | FOUR>> extends infer FIVE
+                    ? // five
+                      FIVE extends string
+                      ? Exclude<S, ONE | TWO | THREE | FOUR | FIVE> extends never
+                        ? StringConcatinateFive<ONE, TWO, THREE, FOUR, FIVE, SEPARATOR>
+                        : PopUnion<Exclude<S, ONE | TWO | THREE | FOUR | FIVE>> extends infer SIX
+                        ? // six
+                          SIX extends string
+                          ? Exclude<S, ONE | TWO | THREE | FOUR | FIVE | SIX> extends never
+                            ? StringConcatinateSix<ONE, TWO, THREE, FOUR, FIVE, SIX, SEPARATOR>
+                            : PopUnion<Exclude<S, ONE | TWO | THREE | FOUR | FIVE | SIX>> extends infer SEVEN
+                            ? // seven
+                              SEVEN extends string
+                              ? Exclude<S, ONE | TWO | THREE | FOUR | FIVE | SIX | SEVEN> extends never
+                                ? StringConcatinateSeven<ONE, TWO, THREE, FOUR, FIVE, SIX, SEVEN, SEPARATOR>
+                                : PopUnion<Exclude<S, ONE | TWO | THREE | FOUR | FIVE | SIX | SEVEN>> extends infer EIGHT
+                                ? // eight
+                                  EIGHT extends string
+                                  ? StringConcatinationApproximation<S, SEPARATOR> // use approximation, do not calculate 8! items
+                                  : never
+                                : StringConcatinateSeven<ONE, TWO, THREE, FOUR, FIVE, SIX, SEVEN, SEPARATOR>
+                              : never
+                            : StringConcatinateSix<ONE, TWO, THREE, FOUR, FIVE, SIX, SEPARATOR>
+                          : never
+                        : StringConcatinateFive<ONE, TWO, THREE, FOUR, FIVE, SEPARATOR>
+                      : never
+                    : StringConcatinateFour<ONE, TWO, THREE, FOUR, SEPARATOR>
+                  : never
+                : StringConcatinateThree<ONE, TWO, THREE, SEPARATOR>
+              : StringConcatinateTwo<ONE, TWO, SEPARATOR>
+            : StringConcatinateTwo<ONE, TWO, SEPARATOR>
+          : never
+        : ONE
+      : never
+    : never;
+
+export type StringConcatinateTwo<LEFT extends string, SELF extends string, SEPARATOR extends string> = `${LEFT}${SEPARATOR}${SELF}` | `${SELF}${SEPARATOR}${LEFT}`;
+export type StringConcatinateThree<LEFT extends string, RIGHT extends string, SELF extends string, SEPARATOR extends string> = `${LEFT}${SEPARATOR}${SELF}${SEPARATOR}${RIGHT}` | `${LEFT}${SEPARATOR}${RIGHT}${SEPARATOR}${SELF}` | `${SELF}${SEPARATOR}${RIGHT}${SEPARATOR}${LEFT}` | `${SELF}${SEPARATOR}${LEFT}${SEPARATOR}${RIGHT}` | `${RIGHT}${SEPARATOR}${LEFT}${SEPARATOR}${SELF}` | `${RIGHT}${SEPARATOR}${SELF}${SEPARATOR}${LEFT}`;
+export type StringConcatinateFour<ONE extends string, TWO extends string, THREE extends string, FOUR extends string, SEPARATOR extends string> = `${StringConcatinateThree<ONE, TWO, THREE, SEPARATOR>}${SEPARATOR}${FOUR}` | `${StringConcatinateThree<TWO, THREE, FOUR, SEPARATOR>}${SEPARATOR}${ONE}` | `${StringConcatinateThree<THREE, FOUR, ONE, SEPARATOR>}${SEPARATOR}${TWO}` | `${StringConcatinateThree<FOUR, ONE, TWO, SEPARATOR>}${SEPARATOR}${THREE}`;
+export type StringConcatinateFive<ONE extends string, TWO extends string, THREE extends string, FOUR extends string, FIVE extends string, SEPARATOR extends string> =
+  | `${StringConcatinateFour<ONE, TWO, THREE, FOUR, SEPARATOR>}${SEPARATOR}${FIVE}`
+  | `${StringConcatinateFour<TWO, THREE, FOUR, FIVE, SEPARATOR>}${SEPARATOR}${ONE}`
+  | `${StringConcatinateFour<THREE, FOUR, FIVE, ONE, SEPARATOR>}${SEPARATOR}${TWO}`
+  | `${StringConcatinateFour<FOUR, FIVE, ONE, TWO, SEPARATOR>}${SEPARATOR}${THREE}`
+  | `${StringConcatinateFour<FIVE, ONE, TWO, THREE, SEPARATOR>}${SEPARATOR}${FOUR}`;
+export type StringConcatinateSix<ONE extends string, TWO extends string, THREE extends string, FOUR extends string, FIVE extends string, SIX extends string, SEPARATOR extends string> =
+  | `${StringConcatinateFive<ONE, TWO, THREE, FOUR, FIVE, SEPARATOR>}${SEPARATOR}${SIX}`
+  | `${StringConcatinateFive<TWO, THREE, FOUR, FIVE, SIX, SEPARATOR>}${SEPARATOR}${ONE}`
+  | `${StringConcatinateFive<THREE, FOUR, FIVE, SIX, ONE, SEPARATOR>}${SEPARATOR}${TWO}`
+  | `${StringConcatinateFive<FOUR, FIVE, SIX, ONE, TWO, SEPARATOR>}${SEPARATOR}${THREE}`
+  | `${StringConcatinateFive<FIVE, SIX, ONE, TWO, THREE, SEPARATOR>}${SEPARATOR}${FOUR}`
+  | `${StringConcatinateFive<SIX, ONE, TWO, THREE, FOUR, SEPARATOR>}${SEPARATOR}${FIVE}`;
+export type StringConcatinateSeven<ONE extends string, TWO extends string, THREE extends string, FOUR extends string, FIVE extends string, SIX extends string, SEVEN extends string, SEPARATOR extends string> =
+  | `${StringConcatinateSix<SEVEN, ONE, TWO, THREE, FOUR, FIVE, SEPARATOR>}${SEPARATOR}${SIX}`
+  | `${StringConcatinateSix<TWO, THREE, FOUR, FIVE, SIX, SEVEN, SEPARATOR>}${SEPARATOR}${ONE}`
+  | `${StringConcatinateSix<THREE, FOUR, FIVE, SIX, SEVEN, ONE, SEPARATOR>}${SEPARATOR}${TWO}`
+  | `${StringConcatinateSix<FOUR, FIVE, SIX, SEVEN, ONE, TWO, SEPARATOR>}${SEPARATOR}${THREE}`
+  | `${StringConcatinateSix<FIVE, SIX, SEVEN, ONE, TWO, THREE, SEPARATOR>}${SEPARATOR}${FOUR}`
+  | `${StringConcatinateSix<SIX, SEVEN, ONE, TWO, THREE, FOUR, SEPARATOR>}${SEPARATOR}${FIVE}`;
+
+export type IsSingleCharacter<S extends string> = PopUnion<S> extends infer SELF ? (Exclude<S, SELF> extends never ? S : never) : never;
+
+export type HasTwoOrMoreCharacters<S extends string> =
+  // a | b | c
+  PopUnion<S> extends infer FIRST
+    ? // a
+      FIRST extends string
+      ? // b | c
+        PopUnion<Exclude<S, FIRST>> extends infer SECOND
+        ? SECOND extends string
+          ? S
+          : never
+        : never
+      : never
+    : never;
+
+export type HasThreeCharacters<S extends string> =
+  // a | b | c
+  PopUnion<S> extends infer FIRST
+    ? // a
+      FIRST extends string
+      ? // b | c
+        PopUnion<Exclude<S, FIRST>> extends infer SECOND
+        ? // b
+          SECOND extends string
+          ? // c
+            PopUnion<Exclude<S, FIRST | SECOND>> extends infer THIRD
+            ? THIRD extends string
+              ? Exclude<S, FIRST | SECOND | THIRD> extends never
+                ? S
+                : never
+              : never
+            : never
+          : never
+        : never
+      : never
+    : never;
+
+export type HasThreeOrMoreCharacters<S extends string> =
+  // a | b | c
+  PopUnion<S> extends infer FIRST
+    ? // a
+      FIRST extends string
+      ? // b | c
+        PopUnion<Exclude<S, FIRST>> extends infer SECOND
+        ? // b
+          SECOND extends string
+          ? // c
+            PopUnion<Exclude<S, FIRST | SECOND>> extends infer THIRD
+            ? THIRD extends string
+              ? S
+              : never
+            : never
+          : never
+        : never
+      : never
+    : never;
+
+/*
+
+export type StringConcatinationInner<S extends string, SEPARATOR extends string> = S extends HasThreeOrMoreCharacters<S>
+  ? never
+  : PopUnion<S> extends infer SELF
+  ? //
+    SELF extends string
+    ? PopUnion<Exclude<S, SELF>> extends infer LEFT
+      ? LEFT extends string
+        ? LEFT extends IsSingleCharacter<LEFT>
+          ? Exclude<S, SELF | LEFT> extends infer RIGHT
+            ? RIGHT extends string
+              ? RIGHT extends IsSingleCharacter<RIGHT>
+                ? `${LEFT}${SEPARATOR}${SELF}${SEPARATOR}${StringConcatination<RIGHT, SEPARATOR>}` | `${StringConcatination<RIGHT, SEPARATOR>}${SEPARATOR}${SELF}${SEPARATOR}${LEFT}`
+                : never
+              : never
+            : never
+          : never
+        : never
+      : never
+    : never
+  : never;
+
+export type StringConcatinationOuter<S extends string, SEPARATOR extends string> = PopUnion<S> extends infer SELF
+  ? //
+    SELF extends string
+    ? Exclude<S, SELF> extends never
+      ? `${SELF}`
+      : `${StringConcatination<Exclude<S, SELF>, SEPARATOR>}${SEPARATOR}${SELF}` | `${SELF}${SEPARATOR}${StringConcatination<Exclude<S, SELF>, SEPARATOR>}`
+    : never
+  : never;
+
+export type StringConcatinationInner<S extends string, SEPARATOR extends string> = PopUnion<S> extends infer SELF
+  ? //
+    SELF extends string
+    ? Exclude<S, SELF> extends infer NEXT
+      ? // ? PopUnion<NEXT> extends infer LEFT
+        NEXT extends string
+        ? `${NEXT}${SEPARATOR}${SELF}${SEPARATOR}${StringConcatination<Exclude<S, NEXT>, SEPARATOR>}` | `${StringConcatination<Exclude<S, NEXT>, SEPARATOR>}${SEPARATOR}${SELF}${SEPARATOR}${NEXT}`
+        : never
+      : never
+    : never
+  : // : never
+    never;
+
+*/
+
+/*
 export type StringConcatination<S extends string, SEPARATOR extends string> = PopUnion<S> extends infer SELF
   ? //
     SELF extends string
     ? Exclude<S, SELF> extends never
-      ? SELF
-      : `${StringConcatination<Exclude<S, SELF>, SEPARATOR>}${SEPARATOR}${SELF}` | `${SELF}${SEPARATOR}${StringConcatination<Exclude<S, SELF>, SEPARATOR>}`
+      ? `S${SELF}S`
+      : `X${StringConcatination<Exclude<S, SELF>, SEPARATOR>}X${SEPARATOR}A${SELF}A` | `Y${SELF}Y${SEPARATOR}B${StringConcatination<Exclude<S, SELF>, SEPARATOR>}B`
     : never
   : never;
+*/
 
 // MARK: Compat
 
