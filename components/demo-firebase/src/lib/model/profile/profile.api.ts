@@ -55,7 +55,7 @@ export type ProfileModelCrudFunctionsConfig = {
 };
 
 export const profileModelCrudFunctionsConfig: ModelFirebaseCrudFunctionConfigMap<ProfileModelCrudFunctionsConfig, ProfileTypes> = {
-  profile: ['update:username,_,onboard', 'delete']
+  profile: ['update:_,username,onboard', 'delete']
 };
 
 /**

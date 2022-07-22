@@ -1,5 +1,5 @@
 import { StringKeyPropertyKeys } from '@dereekb/util';
-import { CommaSeparatedKeyCombinationsOfObject, CommaSeparatedKeysOfObject, HasThreeCharacters, HasThreeOrMoreCharacters, IsSingleCharacter, KeyAsString, KeyCanBeString, MergeReplace, OrderedCommaSeparatedKeysOfObject, PopUnion, Replace, ReplaceType, StringConcatenation, StringKeyProperties } from './type';
+import { AllCommaSeparatedKeysOfObject, CommaSeparatedKeyCombinationsOfObject, CommaSeparatedKeysOfObject, HasThreeCharacters, HasThreeOrMoreCharacters, IsSingleCharacter, KeyAsString, KeyCanBeString, MergeReplace, OrderedCommaSeparatedKeysOfObject, PopUnion, Replace, ReplaceType, StringConcatenation, StringKeyProperties } from './type';
 
 type TYPE_A = {
   aOnly: boolean;
@@ -128,7 +128,7 @@ describe('OrderedCommaSeparatedKeysOfObject', () => {
   });
 });
 
-describe('CommaSeparatedKeysOfObject', () => {
+describe('AllCommaSeparatedKeysOfObject', () => {
   it('should compile', () => {
     const object = {
       a: 0,
@@ -138,7 +138,7 @@ describe('CommaSeparatedKeysOfObject', () => {
       1: 0
     };
 
-    const replaced: CommaSeparatedKeysOfObject<typeof object> = 'a,b,c,1,_';
+    const replaced: AllCommaSeparatedKeysOfObject<typeof object> = 'a,b,c,1,_';
     expect(replaced).toBeDefined();
   });
 
@@ -148,8 +148,8 @@ describe('CommaSeparatedKeysOfObject', () => {
       a: 0
     };
 
-    const a0: CommaSeparatedKeysOfObject<typeof object> = '_,a';
-    const a1: CommaSeparatedKeysOfObject<typeof object> = 'a,_';
+    const a0: AllCommaSeparatedKeysOfObject<typeof object> = '_,a';
+    const a1: AllCommaSeparatedKeysOfObject<typeof object> = 'a,_';
 
     const a0a: StringConcatenation<'_' | 'a', ','> = 'a,_';
     const a1a: StringConcatenation<'_' | 'a', ','> = '_,a';
@@ -170,12 +170,12 @@ describe('CommaSeparatedKeysOfObject', () => {
     const a: `${KeyCanBeString<keyof typeof object>}` = 'a';
     const b: `${KeyCanBeString<keyof typeof object>}` = 'b';
 
-    const a0: CommaSeparatedKeysOfObject<typeof object> = '_,a,b';
-    const a1: CommaSeparatedKeysOfObject<typeof object> = '_,b,a';
-    const a2: CommaSeparatedKeysOfObject<typeof object> = 'a,_,b';
-    const a3: CommaSeparatedKeysOfObject<typeof object> = 'b,_,a';
-    const a4: CommaSeparatedKeysOfObject<typeof object> = 'a,b,_';
-    const a5: CommaSeparatedKeysOfObject<typeof object> = 'b,a,_';
+    const a0: AllCommaSeparatedKeysOfObject<typeof object> = '_,a,b';
+    const a1: AllCommaSeparatedKeysOfObject<typeof object> = '_,b,a';
+    const a2: AllCommaSeparatedKeysOfObject<typeof object> = 'a,_,b';
+    const a3: AllCommaSeparatedKeysOfObject<typeof object> = 'b,_,a';
+    const a4: AllCommaSeparatedKeysOfObject<typeof object> = 'a,b,_';
+    const a5: AllCommaSeparatedKeysOfObject<typeof object> = 'b,a,_';
 
     const a0x: StringConcatenation<'a' | 'b' | '_', ','> = '_,a,b';
     const a1x: StringConcatenation<'_' | 'a' | 'b', ','> = '_,b,a';
@@ -193,15 +193,15 @@ describe('CommaSeparatedKeysOfObject', () => {
       c: 0
     };
 
-    const a0: CommaSeparatedKeysOfObject<typeof object> = '_,a,b,c';
-    const a1: CommaSeparatedKeysOfObject<typeof object> = '_,a,c,b';
-    const a2: CommaSeparatedKeysOfObject<typeof object> = '_,c,b,a';
-    const a3: CommaSeparatedKeysOfObject<typeof object> = '_,c,a,b';
-    const a4: CommaSeparatedKeysOfObject<typeof object> = '_,b,a,c';
-    const a5: CommaSeparatedKeysOfObject<typeof object> = '_,b,c,a';
-    const a6: CommaSeparatedKeysOfObject<typeof object> = 'b,_,a,c';
-    const a7: CommaSeparatedKeysOfObject<typeof object> = 'c,b,_,a';
-    const a8: CommaSeparatedKeysOfObject<typeof object> = 'a,_,b,c';
+    const a0: AllCommaSeparatedKeysOfObject<typeof object> = '_,a,b,c';
+    const a1: AllCommaSeparatedKeysOfObject<typeof object> = '_,a,c,b';
+    const a2: AllCommaSeparatedKeysOfObject<typeof object> = '_,c,b,a';
+    const a3: AllCommaSeparatedKeysOfObject<typeof object> = '_,c,a,b';
+    const a4: AllCommaSeparatedKeysOfObject<typeof object> = '_,b,a,c';
+    const a5: AllCommaSeparatedKeysOfObject<typeof object> = '_,b,c,a';
+    const a6: AllCommaSeparatedKeysOfObject<typeof object> = 'b,_,a,c';
+    const a7: AllCommaSeparatedKeysOfObject<typeof object> = 'c,b,_,a';
+    const a8: AllCommaSeparatedKeysOfObject<typeof object> = 'a,_,b,c';
   });
 
   it('should contain every concatenation (5)', () => {
@@ -213,8 +213,8 @@ describe('CommaSeparatedKeysOfObject', () => {
       d: 0
     };
 
-    const a0: CommaSeparatedKeysOfObject<typeof object> = '_,a,b,c,d';
-    const a1: CommaSeparatedKeysOfObject<typeof object> = '_,c,d,a,b';
+    const a0: AllCommaSeparatedKeysOfObject<typeof object> = '_,a,b,c,d';
+    const a1: AllCommaSeparatedKeysOfObject<typeof object> = '_,c,d,a,b';
   });
 
   it('should contain every concatenation (6)', () => {
@@ -227,7 +227,7 @@ describe('CommaSeparatedKeysOfObject', () => {
       e: 0
     };
 
-    const a0: CommaSeparatedKeysOfObject<typeof object> = 'e,d,b,c,a,_';
+    const a0: AllCommaSeparatedKeysOfObject<typeof object> = 'e,d,b,c,a,_';
   });
 
   it('should contain every concatenation (7)', () => {
@@ -241,7 +241,7 @@ describe('CommaSeparatedKeysOfObject', () => {
       f: 0
     };
 
-    const a0: CommaSeparatedKeysOfObject<typeof object> = 'f,e,d,c,a,_,b';
+    const a0: AllCommaSeparatedKeysOfObject<typeof object> = 'f,e,d,c,a,_,b';
   });
 
   it('should approximate concatenations with 8 or greater keys', () => {
@@ -256,7 +256,7 @@ describe('CommaSeparatedKeysOfObject', () => {
       g: 0
     };
 
-    const a0: CommaSeparatedKeysOfObject<typeof object> = 'g,f,e,d,c,b,a,_';
+    const a0: AllCommaSeparatedKeysOfObject<typeof object> = 'g,f,e,d,c,b,a,_';
   });
 });
 

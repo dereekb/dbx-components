@@ -115,10 +115,18 @@ export type CommaSeparatedKeyCombinationsOfObject<T extends object> = CommaSepar
 export type CommaSeparatedKeyCombinations<T extends string> = StringCombination<T, ','>;
 
 /**
- * StringConcatenation of all keys of an object in no particular order.
+ * StringConcatenationApproximation of keys of an object in approximate order.
  */
 export type CommaSeparatedKeysOfObject<T extends object> = CommaSeparatedKeys<`${KeyCanBeString<keyof T>}`>;
-export type CommaSeparatedKeys<T extends string> = StringConcatenation<T, ','>;
+export type CommaSeparatedKeys<T extends string> = StringConcatenationApproximation<T, ','>;
+
+/**
+ * StringConcatenation of all keys of an object in no particular order.
+ *
+ * May fail for more complex types, requiring the use of CommaSeparatedKeysOfObject.
+ */
+export type AllCommaSeparatedKeysOfObject<T extends object> = AllCommaSeparatedKeys<`${KeyCanBeString<keyof T>}`>;
+export type AllCommaSeparatedKeys<T extends string> = StringConcatenation<T, ','>;
 
 /**
  * StringConcatenationOrder of all keys of an object in ascending order.
