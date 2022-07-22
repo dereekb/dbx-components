@@ -1,5 +1,5 @@
 import { StringKeyPropertyKeys } from '@dereekb/util';
-import { CommaSeparatedKeyCombinationsOfObject, CommaSeparatedKeysOfObject, HasThreeCharacters, HasThreeOrMoreCharacters, IsSingleCharacter, KeyAsString, KeyCanBeString, MergeReplace, OrderedCommaSeparatedKeysOfObject, PopUnion, Replace, ReplaceType, StringConcatination, StringKeyProperties } from './type';
+import { CommaSeparatedKeyCombinationsOfObject, CommaSeparatedKeysOfObject, HasThreeCharacters, HasThreeOrMoreCharacters, IsSingleCharacter, KeyAsString, KeyCanBeString, MergeReplace, OrderedCommaSeparatedKeysOfObject, PopUnion, Replace, ReplaceType, StringConcatenation, StringKeyProperties } from './type';
 
 type TYPE_A = {
   aOnly: boolean;
@@ -142,7 +142,7 @@ describe('CommaSeparatedKeysOfObject', () => {
     expect(replaced).toBeDefined();
   });
 
-  it('should contain every concatination (2)', () => {
+  it('should contain every concatenation (2)', () => {
     const object = {
       _: 0,
       a: 0
@@ -151,15 +151,15 @@ describe('CommaSeparatedKeysOfObject', () => {
     const a0: CommaSeparatedKeysOfObject<typeof object> = '_,a';
     const a1: CommaSeparatedKeysOfObject<typeof object> = 'a,_';
 
-    const a0a: StringConcatination<'_' | 'a', ','> = 'a,_';
-    const a1a: StringConcatination<'_' | 'a', ','> = '_,a';
-    const a1b: StringConcatination<'_' | 'b', ','> = 'b,_';
-    const a0b: StringConcatination<'_' | 'b', ','> = '_,b';
-    const ab0: StringConcatination<'a' | 'b', ','> = 'a,b';
-    const ab1: StringConcatination<'a' | 'b', ','> = 'b,a';
+    const a0a: StringConcatenation<'_' | 'a', ','> = 'a,_';
+    const a1a: StringConcatenation<'_' | 'a', ','> = '_,a';
+    const a1b: StringConcatenation<'_' | 'b', ','> = 'b,_';
+    const a0b: StringConcatenation<'_' | 'b', ','> = '_,b';
+    const ab0: StringConcatenation<'a' | 'b', ','> = 'a,b';
+    const ab1: StringConcatenation<'a' | 'b', ','> = 'b,a';
   });
 
-  it('should contain every concatination (3)', () => {
+  it('should contain every concatenation (3)', () => {
     const object = {
       _: 0,
       a: 0,
@@ -177,15 +177,15 @@ describe('CommaSeparatedKeysOfObject', () => {
     const a4: CommaSeparatedKeysOfObject<typeof object> = 'a,b,_';
     const a5: CommaSeparatedKeysOfObject<typeof object> = 'b,a,_';
 
-    const a0x: StringConcatination<'a' | 'b' | '_', ','> = '_,a,b';
-    const a1x: StringConcatination<'_' | 'a' | 'b', ','> = '_,b,a';
-    const a2x: StringConcatination<'_' | 'a' | 'b', ','> = 'a,_,b';
-    const a3x: StringConcatination<'_' | 'a' | 'b', ','> = 'b,_,a';
-    const a4x: StringConcatination<'_' | 'a' | 'b', ','> = 'a,b,_';
-    const a5x: StringConcatination<'_' | 'a' | 'b', ','> = 'b,a,_';
+    const a0x: StringConcatenation<'a' | 'b' | '_', ','> = '_,a,b';
+    const a1x: StringConcatenation<'_' | 'a' | 'b', ','> = '_,b,a';
+    const a2x: StringConcatenation<'_' | 'a' | 'b', ','> = 'a,_,b';
+    const a3x: StringConcatenation<'_' | 'a' | 'b', ','> = 'b,_,a';
+    const a4x: StringConcatenation<'_' | 'a' | 'b', ','> = 'a,b,_';
+    const a5x: StringConcatenation<'_' | 'a' | 'b', ','> = 'b,a,_';
   });
 
-  it('should contain every concatination (4)', () => {
+  it('should contain every concatenation (4)', () => {
     const object = {
       _: 0,
       a: 0,
@@ -204,7 +204,7 @@ describe('CommaSeparatedKeysOfObject', () => {
     const a8: CommaSeparatedKeysOfObject<typeof object> = 'a,_,b,c';
   });
 
-  it('should contain every concatination (5)', () => {
+  it('should contain every concatenation (5)', () => {
     const object = {
       _: 0,
       a: 0,
@@ -217,7 +217,7 @@ describe('CommaSeparatedKeysOfObject', () => {
     const a1: CommaSeparatedKeysOfObject<typeof object> = '_,c,d,a,b';
   });
 
-  it('should contain every concatination (6)', () => {
+  it('should contain every concatenation (6)', () => {
     const object = {
       _: 0,
       a: 0,
@@ -230,7 +230,7 @@ describe('CommaSeparatedKeysOfObject', () => {
     const a0: CommaSeparatedKeysOfObject<typeof object> = 'e,d,b,c,a,_';
   });
 
-  it('should contain every concatination (7)', () => {
+  it('should contain every concatenation (7)', () => {
     const object = {
       _: 0,
       a: 0,
@@ -244,7 +244,7 @@ describe('CommaSeparatedKeysOfObject', () => {
     const a0: CommaSeparatedKeysOfObject<typeof object> = 'f,e,d,c,a,_,b';
   });
 
-  it('should approximate concatinations with 8 or greater keys', () => {
+  it('should approximate concatenations with 8 or greater keys', () => {
     const object = {
       _: 0,
       a: 0,

@@ -2,7 +2,7 @@
 // The use of any here does not degrade the type-safety. The correct type is inferred in most cases.
 
 import { firebaseFunctionMapFactory } from '@dereekb/firebase';
-import { MaybeNot, build, cachedGetter, capitalizeFirstLetter, ValuesTypesAsArray, CommaSeparatedKeysOfObject, separateValues, Getter, lowercaseFirstLetter } from '@dereekb/util';
+import { MaybeNot, build, cachedGetter, capitalizeFirstLetter, ValuesTypesAsArray, CommaSeparatedKeysOfObject, separateValues, Getter, lowercaseFirstLetter, OrderedCommaSeparatedKeysOfObject } from '@dereekb/util';
 import { Functions, HttpsCallable, httpsCallable } from 'firebase/functions';
 import { NonNever } from 'ts-essentials';
 import { CREATE_MODEL_APP_FUNCTION_KEY, DELETE_MODEL_APP_FUNCTION_KEY, FirestoreModelIdentity, FirestoreModelTypes, OnCallCreateModelResult, onCallTypedModelParams, UPDATE_MODEL_APP_FUNCTION_KEY } from '../../common';
@@ -69,7 +69,7 @@ export type ModelFirebaseCrudFunctionConfigMapEntry<T> = ValuesTypesAsArray<{
   [K in keyof T]: K extends string ? (T[K] extends Record<string, unknown> ? ModelFirebaseCrudFunctionConfigMapEntrySpecifier<K, T[K]> : K) : never;
 }>;
 
-export type ModelFirebaseCrudFunctionConfigMapEntrySpecifier<K extends string, M extends object> = `${K}:${CommaSeparatedKeysOfObject<M>}`;
+export type ModelFirebaseCrudFunctionConfigMapEntrySpecifier<K extends string, M extends object> = `${K}:${OrderedCommaSeparatedKeysOfObject<M>}`;
 
 export type ModelFirebaseCrudFunctionMap<C extends ModelFirebaseCrudFunctionTypeMap> = ModelFirebaseCrudFunctionRawMap<C>;
 
