@@ -176,6 +176,8 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
           expect(result.docs.length).toBe(totalDeepSubItemsPerMockItem);
           result.docs.forEach((x) => expect(x.ref.parent?.parent?.parent?.parent?.path).toBe(parentA.documentRef.path));
         });
+
+        // TODO: Add tests for allChildDocumentsUnderRelativePath
       });
 
       describe('sub item', () => {
