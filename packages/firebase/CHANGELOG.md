@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [8.13.4](https://github.com/dereekb/dbx-components/compare/v8.13.3-dev...v8.13.4) (2022-07-23)
+
+
+### Bug Fixes
+
+* fixed ModifyBeforeSetFirestoreDocumentDataAccessorWrapper ([68b5fff](https://github.com/dereekb/dbx-components/commit/68b5fff454b8e30b838702c6747ed217937cf2ff))
+
+
+
 ## [8.13.3](https://github.com/dereekb/dbx-components/compare/v8.13.2-dev...v8.13.3) (2022-07-21)
 
 

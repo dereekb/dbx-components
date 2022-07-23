@@ -72,3 +72,19 @@ export function splitStringAtIndex(input: string, index: number, inclusive = fal
   const tail = input.substring(index + (inclusive ? 0 : 1));
   return [head, tail];
 }
+
+/**
+ * Special UTF-8 character that is the starting character.
+ *
+ * Example usage is in Firebase string queries to restrict the string search to a specific string.
+ */
+export const UTF_8_START_CHARACTER = '\u0000';
+
+/**
+ * Special UTF-8 character that is very high.
+ *
+ * Example usage is in Firebase string queries as wildcards for searching:
+ *
+ * https://firebase.google.com/docs/database/rest/retrieve-data#range-queries
+ */
+export const UTF_PRIVATE_USAGE_AREA_START = '\uf8ff';

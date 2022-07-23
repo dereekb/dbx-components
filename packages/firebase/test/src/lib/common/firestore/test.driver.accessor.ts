@@ -65,6 +65,20 @@ export function describeFirestoreAccessorDriverTests(f: MockItemCollectionFixtur
             userDataAccessor = itemUserDataDocument.accessor;
           });
 
+          describe('create()', () => {
+            describe('mockItemUserAccessorFactory usage', () => {
+              it('should copy the documents identifier to the uid field on create.', async () => {
+                await itemUserDataDocument.accessor.create({
+                  uid: '', // the mockItemUserAccessorFactory silently enforces the uid to be the same as the document.
+                  name: 'hello'
+                });
+
+                const snapshot = await itemUserDataDocument.accessor.get();
+                expect(snapshot.data()?.uid).toBe(testUserId);
+              });
+            });
+          });
+
           describe('set()', () => {
             describe('mockItemUserAccessorFactory usage', () => {
               it('should copy the documents identifier to the uid field on set.', async () => {

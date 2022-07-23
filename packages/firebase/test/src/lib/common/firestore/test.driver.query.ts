@@ -1,9 +1,11 @@
+import { startOfDay, addDays, addHours, endOfDay } from 'date-fns';
 import { expectFail, itShouldFail } from '@dereekb/util/test';
 import { SubscriptionObject } from '@dereekb/rxjs';
 import { filter, first, from, skip } from 'rxjs';
-import { firestoreIdBatchVerifierFactory, limit, orderBy, startAfter, startAt, where, limitToLast, endAt, endBefore, makeDocuments, FirestoreQueryFactoryFunction, startAtValue, endAtValue, whereDocumentId, FirebaseAuthUserId } from '@dereekb/firebase';
+import { firestoreIdBatchVerifierFactory, limit, orderBy, startAfter, startAt, where, limitToLast, endAt, endBefore, makeDocuments, FirestoreQueryFactoryFunction, startAtValue, endAtValue, whereDocumentId, FirebaseAuthUserId, getDocumentSnapshotsData, whereDateIsBetween, whereDateIsInRange, whereDateIsBefore, whereDateIsOnOrAfter } from '@dereekb/firebase';
 import { MockItemCollectionFixture, allChildMockItemSubItemDeepsWithinMockItem, MockItemDocument, MockItem, MockItemSubItemDocument, MockItemSubItem, MockItemSubItemDeepDocument, MockItemSubItemDeep, MockItemUserDocument } from '../mock';
-import { arrayFactory, idBatchFactory, mapGetter, randomFromArrayFactory, randomNumberFactory, unique, waitForMs } from '@dereekb/util';
+import { arrayFactory, idBatchFactory, isEvenNumber, mapGetter, randomFromArrayFactory, randomNumberFactory, unique, waitForMs } from '@dereekb/util';
+import { DateRangeType } from '@dereekb/date';
 
 /**
  * Describes query driver tests, using a MockItemCollectionFixture.
@@ -16,12 +18,18 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
 
     let items: MockItemDocument[];
 
+    const startDate = addDays(startOfDay(new Date()), 1);
+    const EVEN_TAG = 'even';
+    const ODD_TAG = 'odd';
+
     beforeEach(async () => {
       items = await makeDocuments(f.instance.firestoreCollection.documentAccessor(), {
         count: testDocumentCount,
         init: (i) => {
           return {
             value: `${i}`,
+            date: addHours(startDate, i),
+            tags: [`${i}`, `${isEvenNumber(i) ? EVEN_TAG : ODD_TAG}`],
             test: true
           };
         }
@@ -176,6 +184,8 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
           expect(result.docs.length).toBe(totalDeepSubItemsPerMockItem);
           result.docs.forEach((x) => expect(x.ref.parent?.parent?.parent?.parent?.path).toBe(parentA.documentRef.path));
         });
+
+        // TODO: Add tests for allChildDocumentsUnderRelativePath
       });
 
       describe('sub item', () => {
@@ -482,12 +492,224 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
         });
 
         describe('where', () => {
-          it('should return the documents matching the query.', async () => {
-            const value = '0';
+          describe('==', () => {
+            it('should return the documents matching the query.', async () => {
+              const value = '0';
 
-            const result = await query(where('value', '==', value)).getDocs();
-            expect(result.docs.length).toBe(1);
-            expect(result.docs[0].data().value).toBe(value);
+              const result = await query(where('value', '==', value)).getDocs();
+              expect(result.docs.length).toBe(1);
+              expect(result.docs[0].data().value).toBe(value);
+            });
+          });
+
+          describe('in', () => {
+            it('should return the documents with any of the input values.', async () => {
+              const targetValue = ['0', '1', '2'];
+
+              const result = await query(where<MockItem>('value', 'in', targetValue)).getDocs();
+              expect(result.docs.length).toBe(3);
+              const values = result.docs.map((x) => x.data().value);
+
+              expect(values).toContain('0');
+              expect(values).toContain('1');
+              expect(values).toContain('2');
+            });
+          });
+
+          describe('not-in', () => {
+            it('should return the documents that do not contain any of the input values.', async () => {
+              const targetValue = ['0', '1', '2'];
+
+              const result = await query(where<MockItem>('value', 'not-in', targetValue)).getDocs();
+              expect(result.docs.length).toBe(2);
+              const values = result.docs.map((x) => x.data().value);
+
+              expect(values).not.toContain('0');
+              expect(values).not.toContain('1');
+              expect(values).not.toContain('2');
+              expect(values).toContain('3');
+              expect(values).toContain('4');
+            });
+          });
+
+          describe('searching array values', () => {
+            describe('in', () => {
+              it('should return the documents with arrays that only have the given values.', async () => {
+                // NOTE: we pass an array to match exactly
+                const targetValue = [['0', 'even']];
+
+                const result = await query(where<MockItem>('tags', 'in', targetValue)).getDocs();
+                expect(result.docs.length).toBe(1);
+                expect(result.docs[0].data().value).toBe('0');
+              });
+
+              it('should not return the document with arrays that have more than the requested values.', async () => {
+                const targetValue = [['0']];
+
+                const result = await query(where<MockItem>('tags', 'in', targetValue)).getDocs();
+                expect(result.docs.length).toBe(0);
+              });
+            });
+
+            describe('array-contains', () => {
+              it('should return the documents that contain the given value.', async () => {
+                const targetValue = '0';
+
+                const result = await query(where<MockItem>('tags', 'array-contains', targetValue)).getDocs();
+                expect(result.docs.length).toBe(1);
+                expect(result.docs[0].data().value).toBe('0');
+              });
+
+              itShouldFail('if an array is passed to where with array-contains', async () => {
+                const targetValues = ['0', 'even'];
+                await expectFail(() => query(where<MockItem>('tags', 'array-contains', targetValues)).getDocs());
+              });
+            });
+
+            describe('array-contains-any', () => {
+              it('should return the documents that contain the given value, even if it is not passed as an array.', async () => {
+                const targetValues = 'even';
+
+                const result = await query(where<MockItem>('tags', 'array-contains-any', targetValues)).getDocs();
+                expect(result.docs.length).toBe(Math.floor(testDocumentCount / 2) + 1);
+
+                result.docs.forEach((x) => {
+                  expect(isEvenNumber(Number(x.data().value)));
+                });
+              });
+
+              it('should return the documents that contain any of the given values.', async () => {
+                const targetValues = ['0', 'even'];
+
+                const result = await query(where<MockItem>('tags', 'array-contains-any', targetValues)).getDocs();
+                expect(result.docs.length).toBe(Math.floor(testDocumentCount / 2) + 1);
+
+                result.docs.forEach((x) => {
+                  expect(isEvenNumber(Number(x.data().value)));
+                });
+              });
+            });
+          });
+
+          describe('Compound Queries', () => {
+            /**
+             * Since we choose to store dates as strings, we can compare ranges of dates.
+             */
+            describe('Searching Date Strings', () => {
+              describe('whereDateIsBefore()', () => {
+                it('should return models with dates before the input.', async () => {
+                  const startHoursLater = 2;
+
+                  const endDate = addHours(startDate, startHoursLater);
+                  const result = await query(whereDateIsBefore<MockItem>('date', endDate)).getDocs();
+
+                  expect(result.docs.length).toBe(startHoursLater);
+
+                  // descending order by default
+                  expect(result.docs[0].data().date?.toISOString()).toBe(addHours(endDate, -1).toISOString());
+                  expect(result.docs[1].data().date?.toISOString()).toBe(addHours(endDate, -2).toISOString());
+                });
+
+                it('should return models with dates before the input in ascending order.', async () => {
+                  const startHoursLater = 2;
+
+                  const endDate = addHours(startDate, startHoursLater);
+                  const result = await query(whereDateIsBefore<MockItem>('date', endDate, 'asc')).getDocs();
+
+                  expect(result.docs.length).toBe(startHoursLater);
+
+                  // check ascending order
+                  expect(result.docs[0].data().date?.toISOString()).toBe(addHours(endDate, -2).toISOString());
+                  expect(result.docs[1].data().date?.toISOString()).toBe(addHours(endDate, -1).toISOString());
+                });
+              });
+
+              describe('whereDateIsOnOrAfter()', () => {
+                it('should return models with dates before the input.', async () => {
+                  const startHoursLater = 2;
+
+                  const start = addHours(startDate, startHoursLater);
+                  const result = await query(whereDateIsOnOrAfter<MockItem>('date', start)).getDocs();
+
+                  expect(result.docs.length).toBe(3);
+
+                  // ascending order by default
+                  expect(result.docs[0].data().date?.toISOString()).toBe(addHours(start, 0).toISOString());
+                  expect(result.docs[1].data().date?.toISOString()).toBe(addHours(start, 1).toISOString());
+                  expect(result.docs[2].data().date?.toISOString()).toBe(addHours(start, 2).toISOString());
+                });
+
+                it('should return models with dates before the input in descending order.', async () => {
+                  const startHoursLater = 2;
+
+                  const start = addHours(startDate, startHoursLater);
+                  const result = await query(whereDateIsOnOrAfter<MockItem>('date', start, 'desc')).getDocs();
+
+                  expect(result.docs.length).toBe(3);
+
+                  // check descending order
+                  expect(result.docs[0].data().date?.toISOString()).toBe(addHours(start, 2).toISOString());
+                  expect(result.docs[1].data().date?.toISOString()).toBe(addHours(start, 1).toISOString());
+                  expect(result.docs[2].data().date?.toISOString()).toBe(addHours(start, 0).toISOString());
+                });
+              });
+
+              describe('whereDateIsInRange()', () => {
+                it('should return the date values within the given range.', async () => {
+                  const startHoursLater = 1;
+                  const hoursRange = 2;
+
+                  const start = addHours(startDate, startHoursLater);
+                  const result = await query(whereDateIsInRange<MockItem>('date', { date: start, distance: hoursRange, type: DateRangeType.HOURS_RANGE })).getDocs();
+
+                  expect(result.docs.length).toBe(hoursRange);
+                  expect(result.docs[0].data().date?.toISOString()).toBe(start.toISOString());
+                  expect(result.docs[1].data().date?.toISOString()).toBe(addHours(start, 1).toISOString());
+                });
+              });
+
+              describe('whereDateIsBetween()', () => {
+                it('should return the date values within the given range.', async () => {
+                  const startHoursLater = 1;
+                  const hoursRange = 2;
+
+                  const start = addHours(startDate, startHoursLater);
+                  const end = addHours(start, hoursRange);
+
+                  const result = await query(whereDateIsBetween<MockItem>('date', { start, end })).getDocs();
+
+                  expect(result.docs.length).toBe(hoursRange);
+                  expect(result.docs[0].data().date?.toISOString()).toBe(start.toISOString());
+                  expect(result.docs[1].data().date?.toISOString()).toBe(addHours(start, 1).toISOString());
+                });
+
+                describe('with searching array value', () => {
+                  it('should search the date range and values that are tagged even.', async () => {
+                    const targetTag = 'even';
+
+                    const startHoursLater = 1;
+                    const hoursRange = 2;
+
+                    const start = addHours(startDate, startHoursLater);
+                    const end = addHours(start, hoursRange);
+
+                    const result = await query([
+                      // filter by dates first
+                      ...whereDateIsBetween<MockItem>('date', { start, end }),
+                      // only allow even items
+                      where<MockItem>('tags', 'array-contains-any', targetTag)
+                    ]).getDocs();
+
+                    expect(result.docs.length).toBe(1);
+
+                    const onlyResultData = result.docs[0].data();
+
+                    expect(onlyResultData.date?.toISOString()).toBe(addHours(start, 1).toISOString());
+                    expect(onlyResultData.tags).toContain(targetTag);
+                  });
+                });
+              });
+            });
           });
         });
 

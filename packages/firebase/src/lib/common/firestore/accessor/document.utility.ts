@@ -39,7 +39,7 @@ export function makeDocuments<T, D extends FirestoreDocument<T>>(documentAccesso
       const data = await make.init(i, document);
 
       if (data != null) {
-        await document.accessor.set(data);
+        await document.accessor.create(data);
       }
 
       return document;
