@@ -1,9 +1,11 @@
+import { startOfDay, addDays, addHours, endOfDay } from 'date-fns';
 import { expectFail, itShouldFail } from '@dereekb/util/test';
 import { SubscriptionObject } from '@dereekb/rxjs';
 import { filter, first, from, skip } from 'rxjs';
-import { firestoreIdBatchVerifierFactory, limit, orderBy, startAfter, startAt, where, limitToLast, endAt, endBefore, makeDocuments, FirestoreQueryFactoryFunction, startAtValue, endAtValue, whereDocumentId, FirebaseAuthUserId, getDocumentSnapshotsData } from '@dereekb/firebase';
+import { firestoreIdBatchVerifierFactory, limit, orderBy, startAfter, startAt, where, limitToLast, endAt, endBefore, makeDocuments, FirestoreQueryFactoryFunction, startAtValue, endAtValue, whereDocumentId, FirebaseAuthUserId, getDocumentSnapshotsData, whereDateIsBetween, whereDateIsInRange, whereDateIsBefore, whereDateIsOnOrAfter } from '@dereekb/firebase';
 import { MockItemCollectionFixture, allChildMockItemSubItemDeepsWithinMockItem, MockItemDocument, MockItem, MockItemSubItemDocument, MockItemSubItem, MockItemSubItemDeepDocument, MockItemSubItemDeep, MockItemUserDocument } from '../mock';
 import { arrayFactory, idBatchFactory, isEvenNumber, mapGetter, randomFromArrayFactory, randomNumberFactory, unique, waitForMs } from '@dereekb/util';
+import { DateRangeType } from '@dereekb/date';
 
 /**
  * Describes query driver tests, using a MockItemCollectionFixture.
@@ -16,6 +18,7 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
 
     let items: MockItemDocument[];
 
+    const startDate = addDays(startOfDay(new Date()), 1);
     const EVEN_TAG = 'even';
     const ODD_TAG = 'odd';
 
@@ -25,6 +28,7 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
         init: (i) => {
           return {
             value: `${i}`,
+            date: addHours(startDate, i),
             tags: [`${i}`, `${isEvenNumber(i) ? EVEN_TAG : ODD_TAG}`],
             test: true
           };
@@ -584,9 +588,128 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
                   expect(isEvenNumber(Number(x.data().value)));
                 });
               });
-
             });
+          });
 
+          describe('Compound Queries', () => {
+            /**
+             * Since we choose to store dates as strings, we can compare ranges of dates.
+             */
+            describe('Searching Date Strings', () => {
+              describe('whereDateIsBefore()', () => {
+                it('should return models with dates before the input.', async () => {
+                  const startHoursLater = 2;
+
+                  const endDate = addHours(startDate, startHoursLater);
+                  const result = await query(whereDateIsBefore<MockItem>('date', endDate)).getDocs();
+
+                  expect(result.docs.length).toBe(startHoursLater);
+
+                  // descending order by default
+                  expect(result.docs[0].data().date?.toISOString()).toBe(addHours(endDate, -1).toISOString());
+                  expect(result.docs[1].data().date?.toISOString()).toBe(addHours(endDate, -2).toISOString());
+                });
+
+                it('should return models with dates before the input in ascending order.', async () => {
+                  const startHoursLater = 2;
+
+                  const endDate = addHours(startDate, startHoursLater);
+                  const result = await query(whereDateIsBefore<MockItem>('date', endDate, 'asc')).getDocs();
+
+                  expect(result.docs.length).toBe(startHoursLater);
+
+                  // check ascending order
+                  expect(result.docs[0].data().date?.toISOString()).toBe(addHours(endDate, -2).toISOString());
+                  expect(result.docs[1].data().date?.toISOString()).toBe(addHours(endDate, -1).toISOString());
+                });
+              });
+
+              describe('whereDateIsOnOrAfter()', () => {
+                it('should return models with dates before the input.', async () => {
+                  const startHoursLater = 2;
+
+                  const start = addHours(startDate, startHoursLater);
+                  const result = await query(whereDateIsOnOrAfter<MockItem>('date', start)).getDocs();
+
+                  expect(result.docs.length).toBe(3);
+
+                  // ascending order by default
+                  expect(result.docs[0].data().date?.toISOString()).toBe(addHours(start, 0).toISOString());
+                  expect(result.docs[1].data().date?.toISOString()).toBe(addHours(start, 1).toISOString());
+                  expect(result.docs[2].data().date?.toISOString()).toBe(addHours(start, 2).toISOString());
+                });
+
+                it('should return models with dates before the input in descending order.', async () => {
+                  const startHoursLater = 2;
+
+                  const start = addHours(startDate, startHoursLater);
+                  const result = await query(whereDateIsOnOrAfter<MockItem>('date', start, 'desc')).getDocs();
+
+                  expect(result.docs.length).toBe(3);
+
+                  // check descending order
+                  expect(result.docs[0].data().date?.toISOString()).toBe(addHours(start, 2).toISOString());
+                  expect(result.docs[1].data().date?.toISOString()).toBe(addHours(start, 1).toISOString());
+                  expect(result.docs[2].data().date?.toISOString()).toBe(addHours(start, 0).toISOString());
+                });
+              });
+
+              describe('whereDateIsInRange()', () => {
+                it('should return the date values within the given range.', async () => {
+                  const startHoursLater = 1;
+                  const hoursRange = 2;
+
+                  const start = addHours(startDate, startHoursLater);
+                  const result = await query(whereDateIsInRange<MockItem>('date', { date: start, distance: hoursRange, type: DateRangeType.HOURS_RANGE })).getDocs();
+
+                  expect(result.docs.length).toBe(hoursRange);
+                  expect(result.docs[0].data().date?.toISOString()).toBe(start.toISOString());
+                  expect(result.docs[1].data().date?.toISOString()).toBe(addHours(start, 1).toISOString());
+                });
+              });
+
+              describe('whereDateIsBetween()', () => {
+                it('should return the date values within the given range.', async () => {
+                  const startHoursLater = 1;
+                  const hoursRange = 2;
+
+                  const start = addHours(startDate, startHoursLater);
+                  const end = addHours(start, hoursRange);
+
+                  const result = await query(whereDateIsBetween<MockItem>('date', { start, end })).getDocs();
+
+                  expect(result.docs.length).toBe(hoursRange);
+                  expect(result.docs[0].data().date?.toISOString()).toBe(start.toISOString());
+                  expect(result.docs[1].data().date?.toISOString()).toBe(addHours(start, 1).toISOString());
+                });
+
+                describe('with searching array value', () => {
+                  it('should search the date range and values that are tagged even.', async () => {
+                    const targetTag = 'even';
+
+                    const startHoursLater = 1;
+                    const hoursRange = 2;
+
+                    const start = addHours(startDate, startHoursLater);
+                    const end = addHours(start, hoursRange);
+
+                    const result = await query([
+                      // filter by dates first
+                      ...whereDateIsBetween<MockItem>('date', { start, end }),
+                      // only allow even items
+                      where<MockItem>('tags', 'array-contains-any', targetTag)
+                    ]).getDocs();
+
+                    expect(result.docs.length).toBe(1);
+
+                    const onlyResultData = result.docs[0].data();
+
+                    expect(onlyResultData.date?.toISOString()).toBe(addHours(start, 1).toISOString());
+                    expect(onlyResultData.tags).toContain(targetTag);
+                  });
+                });
+              });
+            });
           });
         });
 

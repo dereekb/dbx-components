@@ -23,7 +23,8 @@ import {
   copyUserRelatedDataAccessorFactoryFunction,
   firestoreUID,
   firestoreUniqueStringArray,
-  optionalFirestoreArray
+  optionalFirestoreArray,
+  optionalFirestoreDate
 } from '@dereekb/firebase';
 import { GrantedReadRole } from '@dereekb/model';
 
@@ -38,6 +39,10 @@ export const mockItemIdentity = firestoreModelIdentity('mockItem', 'mi');
  */
 export interface MockItem {
   value?: Maybe<string>;
+  /**
+   * Optional date value
+   */
+  date?: Maybe<Date>;
   /**
    * List of tags.
    */
@@ -78,6 +83,7 @@ export const mockItemConverter = snapshotConverterFunctions<MockItem, MockItemDa
   fields: {
     value: optionalFirestoreString(),
     tags: optionalFirestoreArray(),
+    date: optionalFirestoreDate(),
     test: firestoreBoolean({ default: true })
   }
 });

@@ -55,7 +55,6 @@ export class ModifyBeforeSetFirestoreDocumentDataAccessorWrapper<T extends objec
     this.modifier = mergeModifiers(asArray(config.modifier));
 
     let setFn: FirestoreDocumentDataAccessorSetFunction<T>;
-    let createFn: Maybe<FirestoreDocumentDataAccessorCreateFunction<T>>;
 
     const modifyData = (data: PartialWithFieldValue<T> | WithFieldValue<T>, options?: SetOptions) => {
       const copy = { ...data };

@@ -1,7 +1,9 @@
-import { Maybe, UTF_8_START_CHARACTER, UTF_PRIVATE_USAGE_AREA_START } from '@dereekb/util';
-import { DocumentReference } from '../types';
-import { endAtValue, FirestoreQueryConstraint, orderByDocumentId, startAtValue, orderBy, OrderByDirection } from './constraint';
+import { DateRange, dateRange, DateRangeInput } from '@dereekb/date';
+import { Maybe, StringKeyPropertyKeys, UTF_8_START_CHARACTER, UTF_PRIVATE_USAGE_AREA_START } from '@dereekb/util';
+import { DocumentReference, FieldPath, FieldPathOrStringPath, FieldPathOrStringPathOf } from '../types';
+import { endAtValue, FirestoreQueryConstraint, orderByDocumentId, startAtValue, orderBy, OrderByDirection, where } from './constraint';
 
+// MARK: Parents
 /**
  * Use with a CollectionGroup query to return all child documents that are under a given parent.
  *
@@ -36,6 +38,74 @@ export function allChildDocumentsUnderParentPath(parentPath: string): FirestoreQ
  * @param parentValue
  * @returns
  */
-export function allChildDocumentsUnderRelativePath(orderByField: string, parentValue: string, sortDirection?: OrderByDirection): FirestoreQueryConstraint[] {
-  return [orderBy(orderByField, sortDirection), startAtValue(parentValue), endAtValue(parentValue + UTF_PRIVATE_USAGE_AREA_START)];
+export function allChildDocumentsUnderRelativePath<T>(orderByFieldPath: StringKeyPropertyKeys<T>, parentValue: string, sortDirection?: OrderByDirection): FirestoreQueryConstraint[];
+export function allChildDocumentsUnderRelativePath(orderByFieldPath: FieldPathOrStringPath, parentValue: string, sortDirection?: OrderByDirection): FirestoreQueryConstraint[];
+export function allChildDocumentsUnderRelativePath<T = object>(orderByFieldPath: FieldPathOrStringPathOf<T> | FieldPathOrStringPath, parentValue: string, sortDirection?: OrderByDirection): FirestoreQueryConstraint[];
+export function allChildDocumentsUnderRelativePath<T = object>(orderByFieldPath: FieldPathOrStringPathOf<T> | FieldPathOrStringPath, parentValue: string, sortDirection?: OrderByDirection): FirestoreQueryConstraint[] {
+  return [orderBy(orderByFieldPath, sortDirection), startAtValue(parentValue), endAtValue(parentValue + UTF_PRIVATE_USAGE_AREA_START)];
+}
+
+// MARK: Dates
+/**
+ * Searches dates that follow between the dates derived from the input. Excludes the end date.
+ *
+ * Sorts in ascending order by default.
+ *
+ * @param field
+ * @param range
+ * @param sortDirection
+ */
+export function whereDateIsInRange<T>(field: StringKeyPropertyKeys<T>, rangeInput: DateRangeInput, sortDirection?: OrderByDirection): FirestoreQueryConstraint[];
+export function whereDateIsInRange(field: FieldPathOrStringPath, rangeInput: DateRangeInput, sortDirection?: OrderByDirection): FirestoreQueryConstraint[];
+export function whereDateIsInRange<T = object>(fieldPath: FieldPathOrStringPathOf<T> | FieldPathOrStringPath, rangeInput: DateRangeInput, sortDirection?: OrderByDirection): FirestoreQueryConstraint[];
+export function whereDateIsInRange<T = object>(fieldPath: FieldPathOrStringPathOf<T> | FieldPathOrStringPath, rangeInput: DateRangeInput, sortDirection?: OrderByDirection): FirestoreQueryConstraint[] {
+  const range = dateRange(rangeInput);
+  return whereDateIsBetween(fieldPath, range, sortDirection);
+}
+
+/**
+ * Searches dates that follow between the input DateRange. Excludes the end date.
+ *
+ * Sorts in ascending order by default.
+ *
+ * @param field
+ * @param range
+ * @param sortDirection
+ */
+export function whereDateIsBetween<T>(field: StringKeyPropertyKeys<T>, range: DateRange, sortDirection?: OrderByDirection): FirestoreQueryConstraint[];
+export function whereDateIsBetween(field: FieldPathOrStringPath, range: DateRange, sortDirection?: OrderByDirection): FirestoreQueryConstraint[];
+export function whereDateIsBetween<T = object>(fieldPath: FieldPathOrStringPathOf<T> | FieldPathOrStringPath, range: DateRange, sortDirection?: OrderByDirection): FirestoreQueryConstraint[];
+export function whereDateIsBetween<T = object>(fieldPath: FieldPathOrStringPathOf<T> | FieldPathOrStringPath, range: DateRange, sortDirection?: OrderByDirection): FirestoreQueryConstraint[] {
+  const { start, end } = range;
+  return [orderBy(fieldPath, sortDirection ?? 'asc'), where(fieldPath, '>=', start.toISOString()), where(fieldPath, '<', end.toISOString())];
+}
+
+/**
+ * Searches dates that are on or after the input date. If no date is input, uses now.
+ *
+ * Sorts in ascending order by default.
+ *
+ * @param field
+ * @param date
+ * @param sortDirection
+ */
+export function whereDateIsOnOrAfter<T>(field: StringKeyPropertyKeys<T>, date?: Date, sortDirection?: OrderByDirection): FirestoreQueryConstraint[];
+export function whereDateIsOnOrAfter(field: FieldPathOrStringPath, date?: Date, sortDirection?: OrderByDirection): FirestoreQueryConstraint[];
+export function whereDateIsOnOrAfter<T = object>(fieldPath: FieldPathOrStringPathOf<T> | FieldPathOrStringPath, date?: Date, sortDirection?: OrderByDirection): FirestoreQueryConstraint[];
+export function whereDateIsOnOrAfter<T = object>(fieldPath: FieldPathOrStringPathOf<T> | FieldPathOrStringPath, date: Date = new Date(), sortDirection?: OrderByDirection): FirestoreQueryConstraint[] {
+  return [orderBy(fieldPath, sortDirection ?? 'asc'), where(fieldPath, '>=', date.toISOString())];
+}
+
+/**
+ * Searches dates that are before the input date. If no date is input, uses now.
+ *
+ * @param field
+ * @param date
+ * @param sortDirection
+ */
+export function whereDateIsBefore<T>(field: StringKeyPropertyKeys<T>, date?: Date, sortDirection?: OrderByDirection): FirestoreQueryConstraint[];
+export function whereDateIsBefore(field: FieldPathOrStringPath, date?: Date, sortDirection?: OrderByDirection): FirestoreQueryConstraint[];
+export function whereDateIsBefore<T = object>(fieldPath: FieldPathOrStringPathOf<T> | FieldPathOrStringPath, date?: Date, sortDirection?: OrderByDirection): FirestoreQueryConstraint[];
+export function whereDateIsBefore<T = object>(fieldPath: FieldPathOrStringPathOf<T> | FieldPathOrStringPath, date: Date = new Date(), sortDirection?: OrderByDirection): FirestoreQueryConstraint[] {
+  return [orderBy(fieldPath, sortDirection ?? 'desc'), where(fieldPath, '<', date.toISOString())];
 }
