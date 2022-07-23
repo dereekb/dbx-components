@@ -1,5 +1,5 @@
 import { FieldPathOrStringPath, FieldPathOrStringPathOf } from './../types';
-import { ArrayOrValue, asArray, mergeArrayOrValueIntoArray, SeparateResult, separateValues, SortingOrder, Maybe, StringKeyPropertyKeys } from '@dereekb/util';
+import { ArrayOrValue, asArray, mergeArrayOrValueIntoArray, SeparateResult, separateValues, SortingOrder, Maybe, StringKeyPropertyKeys, convertToArray } from '@dereekb/util';
 import { DocumentSnapshot, DocumentData, FieldPath } from '../types';
 
 export type FirestoreQueryConstraintType = string;
@@ -70,10 +70,10 @@ export function offset(offset: number): FirestoreQueryConstraint<OffsetQueryCons
 // MARK: Where
 export const FIRESTORE_WHERE_QUERY_CONSTRAINT_TYPE = 'where';
 
-export type WhereFilterOp = '<' | '<=' | '==' | '!=' | '>=' | '>' | 'array-contains' | 'in' | 'not-in'; // 'array-contains-unknown' is not supported by firebase-server
+export type WhereFilterOp = '<' | '<=' | '==' | '!=' | '>=' | '>' | 'array-contains' | 'array-contains-any' | 'in' | 'not-in'; // 'array-contains-unknown' is not supported by firebase-server
 
 /**
- * Maximum number of arguments allowed with the "in" and "array-contains" operators.
+ * Maximum number of arguments allowed with the "in" and "array-contains"/"array-contains-any" operators.
  */
 export const FIRESTORE_MAX_WHERE_IN_FILTER_ARGS_COUNT = 10;
 
@@ -83,9 +83,35 @@ export interface WhereQueryConstraintData {
   value: unknown;
 }
 
+/**
+ * Configures a Firebase where query.
+ *
+ * https://firebase.google.com/docs/firestore/query-data/queries#simple_queries
+ *
+ * @param fieldPath
+ * @param opStr
+ * @param value
+ */
 export function where<T>(fieldPath: keyof T, opStr: WhereFilterOp, value: unknown): FirestoreQueryConstraint<WhereQueryConstraintData>;
 export function where(fieldPath: string | FieldPath, opStr: WhereFilterOp, value: unknown): FirestoreQueryConstraint<WhereQueryConstraintData>;
 export function where(fieldPath: unknown, opStr: WhereFilterOp, value: unknown): FirestoreQueryConstraint<WhereQueryConstraintData> {
+  switch (opStr) {
+    case 'array-contains':
+      if (Array.isArray(value)) {
+        throw new Error('array-contains does not accept array values. Did you mean "array-contains-any"?');
+      }
+      break;
+    case 'in':
+    case 'array-contains-any':
+      if (value == null) {
+        throw new Error(`"${opStr}" requires a non-null value.`);
+      }
+
+      // ensure the value is passed as an array.
+      value = convertToArray(value);
+      break;
+  }
+
   return firestoreQueryConstraint(FIRESTORE_WHERE_QUERY_CONSTRAINT_TYPE, { fieldPath: fieldPath as string, opStr, value });
 }
 

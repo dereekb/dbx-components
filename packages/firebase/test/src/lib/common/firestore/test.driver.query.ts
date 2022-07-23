@@ -1,9 +1,9 @@
 import { expectFail, itShouldFail } from '@dereekb/util/test';
 import { SubscriptionObject } from '@dereekb/rxjs';
 import { filter, first, from, skip } from 'rxjs';
-import { firestoreIdBatchVerifierFactory, limit, orderBy, startAfter, startAt, where, limitToLast, endAt, endBefore, makeDocuments, FirestoreQueryFactoryFunction, startAtValue, endAtValue, whereDocumentId, FirebaseAuthUserId } from '@dereekb/firebase';
+import { firestoreIdBatchVerifierFactory, limit, orderBy, startAfter, startAt, where, limitToLast, endAt, endBefore, makeDocuments, FirestoreQueryFactoryFunction, startAtValue, endAtValue, whereDocumentId, FirebaseAuthUserId, getDocumentSnapshotsData } from '@dereekb/firebase';
 import { MockItemCollectionFixture, allChildMockItemSubItemDeepsWithinMockItem, MockItemDocument, MockItem, MockItemSubItemDocument, MockItemSubItem, MockItemSubItemDeepDocument, MockItemSubItemDeep, MockItemUserDocument } from '../mock';
-import { arrayFactory, idBatchFactory, mapGetter, randomFromArrayFactory, randomNumberFactory, unique, waitForMs } from '@dereekb/util';
+import { arrayFactory, idBatchFactory, isEvenNumber, mapGetter, randomFromArrayFactory, randomNumberFactory, unique, waitForMs } from '@dereekb/util';
 
 /**
  * Describes query driver tests, using a MockItemCollectionFixture.
@@ -16,12 +16,16 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
 
     let items: MockItemDocument[];
 
+    const EVEN_TAG = 'even';
+    const ODD_TAG = 'odd';
+
     beforeEach(async () => {
       items = await makeDocuments(f.instance.firestoreCollection.documentAccessor(), {
         count: testDocumentCount,
         init: (i) => {
           return {
             value: `${i}`,
+            tags: [`${i}`, `${isEvenNumber(i) ? EVEN_TAG : ODD_TAG}`],
             test: true
           };
         }
@@ -484,12 +488,105 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
         });
 
         describe('where', () => {
-          it('should return the documents matching the query.', async () => {
-            const value = '0';
+          describe('==', () => {
+            it('should return the documents matching the query.', async () => {
+              const value = '0';
 
-            const result = await query(where('value', '==', value)).getDocs();
-            expect(result.docs.length).toBe(1);
-            expect(result.docs[0].data().value).toBe(value);
+              const result = await query(where('value', '==', value)).getDocs();
+              expect(result.docs.length).toBe(1);
+              expect(result.docs[0].data().value).toBe(value);
+            });
+          });
+
+          describe('in', () => {
+            it('should return the documents with any of the input values.', async () => {
+              const targetValue = ['0', '1', '2'];
+
+              const result = await query(where<MockItem>('value', 'in', targetValue)).getDocs();
+              expect(result.docs.length).toBe(3);
+              const values = result.docs.map((x) => x.data().value);
+
+              expect(values).toContain('0');
+              expect(values).toContain('1');
+              expect(values).toContain('2');
+            });
+          });
+
+          describe('not-in', () => {
+            it('should return the documents that do not contain any of the input values.', async () => {
+              const targetValue = ['0', '1', '2'];
+
+              const result = await query(where<MockItem>('value', 'not-in', targetValue)).getDocs();
+              expect(result.docs.length).toBe(2);
+              const values = result.docs.map((x) => x.data().value);
+
+              expect(values).not.toContain('0');
+              expect(values).not.toContain('1');
+              expect(values).not.toContain('2');
+              expect(values).toContain('3');
+              expect(values).toContain('4');
+            });
+          });
+
+          describe('searching array values', () => {
+            describe('in', () => {
+              it('should return the documents with arrays that only have the given values.', async () => {
+                // NOTE: we pass an array to match exactly
+                const targetValue = [['0', 'even']];
+
+                const result = await query(where<MockItem>('tags', 'in', targetValue)).getDocs();
+                expect(result.docs.length).toBe(1);
+                expect(result.docs[0].data().value).toBe('0');
+              });
+
+              it('should not return the document with arrays that have more than the requested values.', async () => {
+                const targetValue = [['0']];
+
+                const result = await query(where<MockItem>('tags', 'in', targetValue)).getDocs();
+                expect(result.docs.length).toBe(0);
+              });
+            });
+
+            describe('array-contains', () => {
+              it('should return the documents that contain the given value.', async () => {
+                const targetValue = '0';
+
+                const result = await query(where<MockItem>('tags', 'array-contains', targetValue)).getDocs();
+                expect(result.docs.length).toBe(1);
+                expect(result.docs[0].data().value).toBe('0');
+              });
+
+              itShouldFail('if an array is passed to where with array-contains', async () => {
+                const targetValues = ['0', 'even'];
+                await expectFail(() => query(where<MockItem>('tags', 'array-contains', targetValues)).getDocs());
+              });
+            });
+
+            describe('array-contains-any', () => {
+              it('should return the documents that contain the given value, even if it is not passed as an array.', async () => {
+                const targetValues = 'even';
+
+                const result = await query(where<MockItem>('tags', 'array-contains-any', targetValues)).getDocs();
+                expect(result.docs.length).toBe(Math.floor(testDocumentCount / 2) + 1);
+
+                result.docs.forEach((x) => {
+                  expect(isEvenNumber(Number(x.data().value)));
+                });
+              });
+
+              it('should return the documents that contain any of the given values.', async () => {
+                const targetValues = ['0', 'even'];
+
+                const result = await query(where<MockItem>('tags', 'array-contains-any', targetValues)).getDocs();
+                expect(result.docs.length).toBe(Math.floor(testDocumentCount / 2) + 1);
+
+                result.docs.forEach((x) => {
+                  expect(isEvenNumber(Number(x.data().value)));
+                });
+              });
+
+            });
+
           });
         });
 

@@ -43,3 +43,23 @@ export function nearestDivisibleValues(value: number, divisor: number): NearestD
     nearestFloor: floorPoint * divisor
   };
 }
+
+/**
+ * Returns true if the input is an even number.
+ *
+ * @param value
+ * @returns
+ */
+export function isEvenNumber(value: number): boolean {
+  return value % 2 === 0;
+}
+
+/**
+ * Returns true if the input is an odd number.
+ *
+ * @param value
+ * @returns
+ */
+export function isOddNumber(value: number): boolean {
+  return value % 2 === 1;
+}
