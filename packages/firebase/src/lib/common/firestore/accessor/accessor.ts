@@ -61,6 +61,7 @@ export interface FirestoreDocumentDataAccessor<T, D = DocumentData> extends Docu
   update(data: UpdateData<D>, params?: FirestoreDocumentUpdateParams): Promise<WriteResult | void>;
 }
 
+export type FirestoreDocumentDataAccessorCreateFunction<T> = (data: WithFieldValue<T>) => Promise<void | WriteResult>;
 export type FirestoreDocumentDataAccessorSetFunction<T> = (data: PartialWithFieldValue<T> | WithFieldValue<T>, options?: SetOptions) => Promise<void | WriteResult>;
 
 /**

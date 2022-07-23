@@ -1,12 +1,19 @@
-import { ArrayOrValue, asArray, mergeModifiers, ModifierFunction, cachedGetter } from '@dereekb/util';
+import { ArrayOrValue, asArray, mergeModifiers, ModifierFunction, cachedGetter, Maybe } from '@dereekb/util';
 import { UserRelated } from '../../../model/user';
 import { DocumentReferenceRef } from '../reference';
 import { SetOptionsMerge, SetOptionsMergeFields, DocumentData, PartialWithFieldValue, SetOptions, WithFieldValue } from '../types';
-import { FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorSetFunction } from './accessor';
+import { FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorCreateFunction, FirestoreDocumentDataAccessorSetFunction } from './accessor';
 import { AbstractFirestoreDocumentDataAccessorWrapper, interceptAccessorFactoryFunction, InterceptAccessorFactoryFunction } from './accessor.wrap';
 
 // MARK: Set Wrapper
-export type ModifyBeforeSetFistoreDataAccessorMode = 'always' | 'update' | 'set';
+/**
+ * Data accessor modes.
+ * - always: Always modifies on update, set, or create.
+ * - update: Only modifies when calling set with options
+ * - set:    Only modifies when calling create or set without options
+ * - create: Only modifies on create calls
+ */
+export type ModifyBeforeSetFistoreDataAccessorMode = 'always' | 'update' | 'set' | 'create';
 
 /**
  * Input fora ModifyBeforeSetFirestoreDocumentDataAccessorWrapper
@@ -48,8 +55,9 @@ export class ModifyBeforeSetFirestoreDocumentDataAccessorWrapper<T extends objec
     this.modifier = mergeModifiers(asArray(config.modifier));
 
     let setFn: FirestoreDocumentDataAccessorSetFunction<T>;
+    let createFn: Maybe<FirestoreDocumentDataAccessorCreateFunction<T>>;
 
-    const modifyAndSet: FirestoreDocumentDataAccessorSetFunction<T> = (data: PartialWithFieldValue<T> | WithFieldValue<T>, options?: SetOptions) => {
+    const modifyData = (data: PartialWithFieldValue<T> | WithFieldValue<T>, options?: SetOptions) => {
       const copy = { ...data };
       const input: ModifyBeforeSetFistoreDataAccessorInput<T> = {
         data: copy,
@@ -58,12 +66,20 @@ export class ModifyBeforeSetFirestoreDocumentDataAccessorWrapper<T extends objec
       };
 
       this.modifier(input);
+      return input;
+    };
+
+    const modifyAndSet: FirestoreDocumentDataAccessorSetFunction<T> = (data: PartialWithFieldValue<T> | WithFieldValue<T>, options?: SetOptions) => {
+      const input = modifyData(data, options);
       return super.set(input.data, options as SetOptions);
     };
+
+    let applyToCreateFunction = false;
 
     switch (when) {
       case 'always':
         setFn = modifyAndSet;
+        applyToCreateFunction = true;
         break;
       case 'set':
         setFn = (data: PartialWithFieldValue<T> | WithFieldValue<T>, options?: SetOptions) => {
@@ -74,6 +90,7 @@ export class ModifyBeforeSetFirestoreDocumentDataAccessorWrapper<T extends objec
             return super.set(data, options as SetOptions);
           }
         };
+        applyToCreateFunction = true;
         break;
       case 'update':
         setFn = (data: PartialWithFieldValue<T> | WithFieldValue<T>, options?: SetOptions) => {
@@ -85,9 +102,22 @@ export class ModifyBeforeSetFirestoreDocumentDataAccessorWrapper<T extends objec
           }
         };
         break;
+      case 'create':
+        setFn = (data: PartialWithFieldValue<T> | WithFieldValue<T>, options?: SetOptions) => super.set(data, options as SetOptions);
+        applyToCreateFunction = true;
+        break;
     }
 
     this.set = setFn;
+
+    if (applyToCreateFunction) {
+      const modifyAndCreate: FirestoreDocumentDataAccessorCreateFunction<T> = (data: WithFieldValue<T>) => {
+        const input = modifyData(data);
+        return super.create(input.data as T);
+      };
+
+      this.create = modifyAndCreate;
+    }
   }
 }
 
