@@ -1,4 +1,4 @@
-import { ReadableDataError, ServerError } from '@dereekb/util';
+import { ErrorMessageOrPartialServerError, Maybe, partialServerError, ReadableDataError, ServerError } from '@dereekb/util';
 import * as functions from 'firebase-functions';
 
 export function unauthenticatedContextHasNoAuthData() {
@@ -9,12 +9,9 @@ export function unauthenticatedContextHasNoUidError() {
   return new functions.https.HttpsError('unauthenticated', 'User has no uid.');
 }
 
-export function preconditionConflictError(message: string) {
-  return new functions.https.HttpsError('failed-precondition', message);
-}
-
 // MARK: General Errors
-export function unauthenticatedError(serverError?: Partial<ServerError>) {
+export function unauthenticatedError(messageOrError?: ErrorMessageOrPartialServerError) {
+  const serverError = partialServerError(messageOrError);
   return new functions.https.HttpsError('unauthenticated', serverError?.message || 'unauthenticated', {
     status: 401,
     ...serverError,
@@ -22,7 +19,8 @@ export function unauthenticatedError(serverError?: Partial<ServerError>) {
   });
 }
 
-export function forbiddenError(serverError?: Partial<ServerError>) {
+export function forbiddenError(messageOrError?: ErrorMessageOrPartialServerError) {
+  const serverError = partialServerError(messageOrError);
   return new functions.https.HttpsError('permission-denied', serverError?.message || 'forbidden', {
     status: 403,
     ...serverError,
@@ -30,7 +28,8 @@ export function forbiddenError(serverError?: Partial<ServerError>) {
   });
 }
 
-export function permissionDeniedError(serverError?: ReadableDataError | ServerError) {
+export function permissionDeniedError(messageOrError?: ErrorMessageOrPartialServerError) {
+  const serverError = partialServerError(messageOrError);
   return new functions.https.HttpsError('permission-denied', serverError?.message || 'permission denied', {
     status: 403,
     ...serverError,
@@ -38,7 +37,8 @@ export function permissionDeniedError(serverError?: ReadableDataError | ServerEr
   });
 }
 
-export function notFoundError(serverError?: ReadableDataError | ServerError) {
+export function notFoundError(messageOrError?: ErrorMessageOrPartialServerError) {
+  const serverError = partialServerError(messageOrError);
   return new functions.https.HttpsError('not-found', serverError?.message || 'not found', {
     status: 404,
     ...serverError,
@@ -46,7 +46,8 @@ export function notFoundError(serverError?: ReadableDataError | ServerError) {
   });
 }
 
-export function modelNotAvailableError(serverError?: ReadableDataError | ServerError) {
+export function modelNotAvailableError(messageOrError?: ErrorMessageOrPartialServerError) {
+  const serverError = partialServerError(messageOrError);
   return new functions.https.HttpsError('not-found', serverError?.message || 'model was not available', {
     status: 404,
     ...serverError,
@@ -54,15 +55,25 @@ export function modelNotAvailableError(serverError?: ReadableDataError | ServerE
   });
 }
 
-export function badRequestError(serverError?: ReadableDataError | ServerError) {
+export function badRequestError(messageOrError?: ErrorMessageOrPartialServerError) {
+  const serverError = partialServerError(messageOrError);
   return new functions.https.HttpsError('invalid-argument', serverError?.message || 'bad request', {
     status: 400,
     ...serverError,
     _error: undefined
   });
 }
+export function preconditionConflictError(messageOrError?: ErrorMessageOrPartialServerError) {
+  const serverError = partialServerError(messageOrError);
+  return new functions.https.HttpsError('failed-precondition', serverError?.message || 'conflict', {
+    status: 409,
+    ...serverError,
+    _error: undefined
+  });
+}
 
-export function alreadyExistsError(serverError?: ReadableDataError | ServerError) {
+export function alreadyExistsError(messageOrError?: ErrorMessageOrPartialServerError) {
+  const serverError = partialServerError(messageOrError);
   return new functions.https.HttpsError('already-exists', serverError?.message || 'already exists', {
     status: 409,
     ...serverError,
@@ -70,7 +81,8 @@ export function alreadyExistsError(serverError?: ReadableDataError | ServerError
   });
 }
 
-export function unavailableError(serverError?: ReadableDataError | ServerError) {
+export function unavailableError(messageOrError?: ErrorMessageOrPartialServerError) {
+  const serverError = partialServerError(messageOrError);
   return new functions.https.HttpsError('unavailable', serverError?.message || 'service unavailable', {
     status: 503,
     ...serverError,
@@ -78,7 +90,8 @@ export function unavailableError(serverError?: ReadableDataError | ServerError) 
   });
 }
 
-export function internalServerError(serverError?: ReadableDataError | ServerError) {
+export function internalServerError(messageOrError?: ErrorMessageOrPartialServerError) {
+  const serverError = partialServerError(messageOrError);
   return new functions.https.HttpsError('internal', serverError?.message || 'internal error', {
     status: 500,
     ...serverError,
