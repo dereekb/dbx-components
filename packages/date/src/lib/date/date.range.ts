@@ -77,6 +77,10 @@ export enum DateRangeType {
    */
   WEEKS_RADIUS = 'weeks_radius',
   /**
+   * All surrounding days that would appear on a calendar with this date.
+   */
+  CALENDAR_MONTH = 'calendar_month',
+  /**
    * Plus/minus 20 hours from the current day.
    *
    * @deprecated design not relevant anymore
@@ -237,6 +241,10 @@ export function dateRange({ type = DateRangeType.DAY, date = new Date(), distanc
       distance = Math.abs(distance);
       start = addDays(date, -distance * 7);
       end = addDays(date, distance * 7);
+      break;
+    case DateRangeType.CALENDAR_MONTH:
+      start = startOfMonth(endOfWeek(date));
+      end = endOfWeek(endOfMonth(start));
       break;
     case DateRangeType.WITHIN_DAY:
       start = addHours(date, -20);
