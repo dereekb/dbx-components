@@ -18,6 +18,28 @@ export interface ServerError<T = ServerErrorResponseData> extends ReadableDataEr
   status: number;
 }
 
+export type ErrorMessageOrPartialServerError<T = ServerErrorResponseData> = string | Partial<ReadableDataError | ServerError<T>>;
+
+/**
+ * Converts the input to a Partial ServerError
+ *
+ * @param message
+ */
+export function partialServerError<T = ServerErrorResponseData>(message: string): Partial<ServerError<T>>;
+export function partialServerError<T = ServerErrorResponseData>(serverError: Partial<ReadableDataError | ServerError<T>>): Partial<ServerError<T>>;
+export function partialServerError<T = ServerErrorResponseData>(messageOrError: Maybe<ErrorMessageOrPartialServerError<T>>): Partial<ServerError<T>>;
+export function partialServerError<T = ServerErrorResponseData>(messageOrError: Maybe<ErrorMessageOrPartialServerError<T>>): Partial<ServerError<T>> {
+  let serverError: Maybe<Partial<ServerError<T>>>;
+
+  if (typeof messageOrError === 'string') {
+    serverError = { message: messageOrError };
+  } else {
+    serverError = (messageOrError as Partial<ServerError<T>>) ?? {};
+  }
+
+  return serverError;
+}
+
 export interface ServerErrorMakeConfig<T> extends ServerError<T>, Partial<CodedError> {}
 
 export function serverError<T>(config: ServerErrorMakeConfig<T>): ServerError<T> {

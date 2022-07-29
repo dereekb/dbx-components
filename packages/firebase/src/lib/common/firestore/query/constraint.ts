@@ -97,7 +97,6 @@ export interface WhereQueryConstraintData {
  */
 export function where<T>(fieldPath: StringKeyPropertyKeys<T>, opStr: WhereFilterOp, value: unknown): FirestoreQueryConstraint<WhereQueryConstraintData>;
 export function where(fieldPath: FieldPathOrStringPath, opStr: WhereFilterOp, value: unknown): FirestoreQueryConstraint<WhereQueryConstraintData>;
-export function where<T = object>(fieldPath: FieldPathOrStringPathOf<T> | FieldPathOrStringPath, opStr: WhereFilterOp, value: unknown): FirestoreQueryConstraint<WhereQueryConstraintData>;
 export function where<T = object>(fieldPath: FieldPathOrStringPathOf<T> | FieldPathOrStringPath, opStr: WhereFilterOp, value: unknown): FirestoreQueryConstraint<WhereQueryConstraintData> {
   switch (opStr) {
     case 'array-contains':
@@ -140,7 +139,6 @@ export interface OrderByQueryConstraintData {
 
 export function orderBy<T>(fieldPath: StringKeyPropertyKeys<T>, directionStr?: OrderByDirection): FirestoreQueryConstraint<OrderByQueryConstraintData>;
 export function orderBy(fieldPath: FieldPathOrStringPath, directionStr?: OrderByDirection): FirestoreQueryConstraint<OrderByQueryConstraintData>;
-export function orderBy<T = object>(fieldPath: FieldPathOrStringPathOf<T> | FieldPathOrStringPath, directionStr?: OrderByDirection): FirestoreQueryConstraint<OrderByQueryConstraintData>;
 export function orderBy<T = object>(fieldPath: FieldPathOrStringPathOf<T> | FieldPathOrStringPath, directionStr?: OrderByDirection): FirestoreQueryConstraint<OrderByQueryConstraintData> {
   return firestoreQueryConstraint(FIRESTORE_ORDER_BY_QUERY_CONSTRAINT_TYPE, { fieldPath: fieldPath as FieldPathOrStringPath, directionStr });
 }
