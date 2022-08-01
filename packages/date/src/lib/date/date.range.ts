@@ -331,6 +331,30 @@ export function isDateRangeInDateRangeFunction(dateRange: DateRange): IsDateRang
   };
 }
 
+/**
+ * Returns true if the input DateRange overlaps the configured DateRange in any way.
+ */
+export type DateRangeOverlapsDateRangeFunction = (dateRange: DateRange) => boolean;
+
+export function dateRangeOverlapsDateRange(compareDateRange: DateRange, dateRange: DateRange): boolean {
+  return dateRangeOverlapsDateRangeFunction(dateRange)(compareDateRange);
+}
+
+/**
+ * Creates an DateRangeOverlapsDateRangeFunction
+ *
+ * @param dateRange
+ * @returns
+ */
+export function dateRangeOverlapsDateRangeFunction(dateRange: DateRange): DateRangeOverlapsDateRangeFunction {
+  const startTime = dateRange.start.getTime();
+  const endTime = dateRange.end.getTime();
+
+  return (input: DateRange) => {
+    return input.start.getTime() <= endTime && input.end.getTime() >= startTime;
+  };
+}
+
 // MARK: Compat
 /**
  * @deprecated use dateRange() instead.
