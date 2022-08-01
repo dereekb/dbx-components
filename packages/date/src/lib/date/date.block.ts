@@ -379,6 +379,24 @@ export function dateBlockIndexRange(timing: DateBlockTiming, limit?: DateBlockTi
   return { minIndex, maxIndex };
 }
 
+/**
+ * Returns blocks that are only in the given DateBlockRange.
+ *
+ * @param blocks
+ * @param range
+ * @returns
+ */
+export function dateBlocksInDateBlockRange<T extends DateBlock | DateBlockRange>(blocks: T[], range: DateBlockRangeWithRange): T[] {
+  return blocks.filter((x) => {
+    if (x.i >= range.i) {
+      const to = (x as DateBlockRange).to ?? x.i;
+      return to <= range.to;
+    }
+
+    return false;
+  });
+}
+
 // MARK: DateBlockRange
 /**
  * Represents a range of DateBlock values.

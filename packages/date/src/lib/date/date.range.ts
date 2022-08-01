@@ -1,6 +1,6 @@
 import { Expose, Type } from 'class-transformer';
 import { IsEnum, IsOptional, IsDate, IsNumber } from 'class-validator';
-import { addDays, addHours, endOfDay, endOfMonth, endOfWeek, isDate, isPast, startOfDay, startOfMinute, startOfMonth, startOfWeek } from 'date-fns';
+import { addDays, addHours, endOfDay, endOfMonth, endOfWeek, isBefore, isDate, isPast, startOfDay, startOfMinute, startOfMonth, startOfWeek } from 'date-fns';
 
 /**
  * Represents a start and end date.
@@ -280,6 +280,79 @@ export function dateRangeState({ start, end }: DateRange): DateRangeState {
   } else {
     return DateRangeState.FUTURE;
   }
+}
+
+/**
+ * Returns true if the input date is contained within the configured DateRange.
+ */
+export type IsDateInDateRangeFunction = (date: Date) => boolean;
+
+export function isDateInDateRange(date: Date, dateRange: DateRange): boolean {
+  return isDateInDateRangeFunction(dateRange)(date);
+}
+
+/**
+ * Creates an IsDateInDateRangeFunction
+ *
+ * @param dateRange
+ * @returns
+ */
+export function isDateInDateRangeFunction(dateRange: DateRange): IsDateInDateRangeFunction {
+  const startTime = dateRange.start.getTime();
+  const endTime = dateRange.end.getTime();
+
+  return (input: Date) => {
+    const time = input.getTime();
+    return time >= startTime && time <= endTime;
+  };
+}
+
+/**
+ * Returns true if the input DateRange is contained within the configured DateRange.
+ */
+export type IsDateRangeInDateRangeFunction = (dateRange: DateRange) => boolean;
+
+export function isDateRangeInDateRange(compareDateRange: DateRange, dateRange: DateRange): boolean {
+  return isDateRangeInDateRangeFunction(dateRange)(compareDateRange);
+}
+
+/**
+ * Creates an IsDateRangeInDateRangeFunction
+ *
+ * @param dateRange
+ * @returns
+ */
+export function isDateRangeInDateRangeFunction(dateRange: DateRange): IsDateRangeInDateRangeFunction {
+  const startTime = dateRange.start.getTime();
+  const endTime = dateRange.end.getTime();
+
+  return (input: DateRange) => {
+    return input.start.getTime() >= startTime && input.end.getTime() <= endTime;
+  };
+}
+
+/**
+ * Returns true if the input DateRange overlaps the configured DateRange in any way.
+ */
+export type DateRangeOverlapsDateRangeFunction = (dateRange: DateRange) => boolean;
+
+export function dateRangeOverlapsDateRange(compareDateRange: DateRange, dateRange: DateRange): boolean {
+  return dateRangeOverlapsDateRangeFunction(dateRange)(compareDateRange);
+}
+
+/**
+ * Creates an DateRangeOverlapsDateRangeFunction
+ *
+ * @param dateRange
+ * @returns
+ */
+export function dateRangeOverlapsDateRangeFunction(dateRange: DateRange): DateRangeOverlapsDateRangeFunction {
+  const startTime = dateRange.start.getTime();
+  const endTime = dateRange.end.getTime();
+
+  return (input: DateRange) => {
+    return input.start.getTime() <= endTime && input.end.getTime() >= startTime;
+  };
 }
 
 // MARK: Compat

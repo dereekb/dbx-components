@@ -1,7 +1,7 @@
 import { expectFail, itShouldFail } from '@dereekb/util/test';
 import { DateRange, DateRangeInput } from './date.range';
 import { addDays, addHours, addMinutes, setHours, setMinutes, startOfDay, endOfDay, addSeconds, addMilliseconds, millisecondsToHours, minutesToHours } from 'date-fns';
-import { DateBlock, dateBlockDayOfWeekFactory, DateBlockIndex, dateBlockIndexRange, dateBlockRange, DateBlockRangeWithRange, dateBlocksExpansionFactory, dateBlockTiming, DateBlockTiming, expandDateBlockRange, expandUniqueDateBlocks, getCurrentDateBlockTimingOffset, getCurrentDateBlockTimingStartDate, groupToDateBlockRanges, groupUniqueDateBlocks, isValidDateBlockTiming, UniqueDateBlockRange } from './date.block';
+import { DateBlock, dateBlockDayOfWeekFactory, DateBlockIndex, dateBlockIndexRange, dateBlockRange, DateBlockRangeWithRange, dateBlocksExpansionFactory, dateBlocksInDateBlockRange, dateBlockTiming, DateBlockTiming, expandDateBlockRange, expandUniqueDateBlocks, getCurrentDateBlockTimingOffset, getCurrentDateBlockTimingStartDate, groupToDateBlockRanges, groupUniqueDateBlocks, isValidDateBlockTiming, UniqueDateBlockRange } from './date.block';
 import { MS_IN_DAY, MINUTES_IN_DAY, range, RangeInput, Hours, Day } from '@dereekb/util';
 import { removeMinutesAndSeconds } from './date';
 
@@ -509,6 +509,40 @@ describe('dateBlockIndexRange', () => {
         expect(result.maxIndex).toBe(days + daysPastEnd);
       });
     });
+  });
+});
+
+describe('dateBlocksInDateBlockRange', () => {
+  it('should filter values that are within the range.', () => {
+    const range = { i: 0, to: 5 };
+    const input = [{ i: 0 }, { i: 1 }, { i: 2 }];
+
+    const result = dateBlocksInDateBlockRange(input, range);
+    expect(result.length).toBe(input.length);
+  });
+
+  it('should filter DateBlockRange values that are entirely within the range.', () => {
+    const range = { i: 0, to: 5 };
+    const input = [dateBlockRange(0, 5), dateBlockRange(2, 4)];
+
+    const result = dateBlocksInDateBlockRange(input, range);
+    expect(result.length).toBe(input.length);
+  });
+
+  it('should filter out values that are outside the range.', () => {
+    const range = { i: 0, to: 5 };
+    const input = [{ i: 6 }, { i: 7 }, { i: 8 }];
+
+    const result = dateBlocksInDateBlockRange(input, range);
+    expect(result.length).toBe(0);
+  });
+
+  it('should filter out DateBlockRange values that are only partially within the range.', () => {
+    const range = { i: 0, to: 5 };
+    const input = dateBlockRange(0, 10);
+
+    const result = dateBlocksInDateBlockRange([input], range);
+    expect(result.length).toBe(0);
   });
 });
 
