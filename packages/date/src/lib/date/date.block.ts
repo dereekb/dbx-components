@@ -303,7 +303,7 @@ export function dateBlocksExpansionFactory<B extends DateBlock | DateBlockRange 
   const { timing, rangeLimit, filter: inputFilter, blocksEvaluationLimit = Number.MAX_SAFE_INTEGER } = config;
   const { startsAt: baseStart, duration } = timing;
   const indexRange = rangeLimit !== false ? dateBlockIndexRange(timing, rangeLimit) : { minIndex: Number.MIN_SAFE_INTEGER, maxIndex: Number.MAX_SAFE_INTEGER };
-  const isInRange = indexRangeCheckFunction(indexRange);
+  const isInRange = indexRangeCheckFunction({ range: indexRange, inclusiveMaxIndex: false });
   const filter: FilterFunction<B> = mergeFilterFunctions<B>((x: B) => isInRange(x.i), inputFilter);
 
   return (input: DateBlocksExpansionFactoryInput<B>) => {
@@ -349,6 +349,21 @@ export function dateBlocksExpansionFactory<B extends DateBlock | DateBlockRange 
 }
 
 /**
+ * IndexRange used with DateBlocks.
+ *
+ * It has an exclusive max range. It is similar to a DateBlockRange.
+ */
+export type DateBlockIndexRange = IndexRange;
+
+export function dateBlockRangeToDateBlockIndexRange(range: DateBlockRange): DateBlockIndexRange {
+  return { minIndex: range.i, maxIndex: (range.to ?? range.i) + 1 };
+}
+
+export function dateBlockIndexRangeToDateBlockRange(range: DateBlockIndexRange): DateBlockRange {
+  return { i: range.minIndex, to: range.maxIndex - 1 };
+}
+
+/**
  * Generates a DateBlockIndexRange based on the input timing.
  *
  * An arbitrary limit can also be applied.
@@ -357,7 +372,7 @@ export function dateBlocksExpansionFactory<B extends DateBlock | DateBlockRange 
  * @param limit
  * @param fitToTimingRange
  */
-export function dateBlockIndexRange(timing: DateBlockTiming, limit?: DateBlockTimingRangeInput, fitToTimingRange = true): IndexRange {
+export function dateBlockIndexRange(timing: DateBlockTiming, limit?: DateBlockTimingRangeInput, fitToTimingRange = true): DateBlockIndexRange {
   const { start: zeroDate, end: endDate } = timing;
   let minIndex = 0;
   let maxIndex = differenceInDays(endDate, zeroDate);

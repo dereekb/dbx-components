@@ -1,3 +1,4 @@
+import { objectHasKey } from '@dereekb/util';
 import { SortCompareFunction } from '../sort';
 
 /**
@@ -46,11 +47,11 @@ export function sortByIndexAscendingCompareFunction<T>(readIndex: ReadIndexFunct
  */
 export interface IndexRange {
   /**
-   * Minimum index to consider, inclusive.
+   * Minimum index to consider. Inclusive.
    */
   minIndex: IndexNumber;
   /**
-   * Maximum index allowed, exclusive.
+   * Maximum index allowed. Typically exclusive.
    */
   maxIndex: IndexNumber;
 }
@@ -65,10 +66,10 @@ export type IndexRefRangeCheckFunction<T> = (value: T) => boolean;
  *
  * @param range
  */
-export function indexRangeCheckReaderFunction<T extends IndexRef>(range: IndexRange): IndexRefRangeCheckFunction<T>;
-export function indexRangeCheckReaderFunction<T>(range: IndexRange, read: ReadIndexFunction<T>): IndexRefRangeCheckFunction<T>;
-export function indexRangeCheckReaderFunction<T>(range: IndexRange, read: ReadIndexFunction<T> = (x: T) => (x as unknown as IndexRef).i): IndexRefRangeCheckFunction<T> {
-  const rangeCheck = indexRangeCheckFunction(range);
+export function indexRangeCheckReaderFunction<T extends IndexRef>(input: IndexRangeCheckFunctionInput): IndexRefRangeCheckFunction<T>;
+export function indexRangeCheckReaderFunction<T>(input: IndexRangeCheckFunctionInput, read: ReadIndexFunction<T>): IndexRefRangeCheckFunction<T>;
+export function indexRangeCheckReaderFunction<T>(input: IndexRangeCheckFunctionInput, read: ReadIndexFunction<T> = (x: T) => (x as unknown as IndexRef).i): IndexRefRangeCheckFunction<T> {
+  const rangeCheck = indexRangeCheckFunction(input);
   return (value: T) => rangeCheck(read(value));
 }
 
@@ -77,12 +78,31 @@ export function indexRangeCheckReaderFunction<T>(range: IndexRange, read: ReadIn
  */
 export type IndexRangeCheckFunction = (i: number) => boolean;
 
+export interface IndexRangeCheckFunctionConfig {
+  /**
+   * IndexRange to check.
+   */
+  range: IndexRange;
+  /**
+   * Whether or not the max index is inclusive. False by default.
+   */
+  inclusiveMaxIndex: boolean;
+}
+
+export type IndexRangeCheckFunctionInput = IndexRange | IndexRangeCheckFunctionConfig;
+
 /**
  * Creates an IndexRangeCheckFunction
  *
  * @param range
  */
-export function indexRangeCheckFunction(range: IndexRange): IndexRangeCheckFunction {
+export function indexRangeCheckFunction(input: IndexRangeCheckFunctionInput): IndexRangeCheckFunction {
+  const { range, inclusiveMaxIndex } = objectHasKey(input, 'range') ? (input as IndexRangeCheckFunctionConfig) : { range: input as IndexRange, inclusiveMaxIndex: false };
   const { minIndex, maxIndex } = range;
-  return (i) => i >= minIndex && i < maxIndex;
+
+  if (inclusiveMaxIndex) {
+    return (i) => i >= minIndex && i <= maxIndex;
+  } else {
+    return (i) => i >= minIndex && i < maxIndex;
+  }
 }
