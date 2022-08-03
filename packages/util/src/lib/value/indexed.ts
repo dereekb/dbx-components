@@ -66,9 +66,9 @@ export type IndexRefRangeCheckFunction<T> = (value: T) => boolean;
  *
  * @param range
  */
-export function indexRangeCheckReaderFunction<T extends IndexRef>(input: IndexRangeCheckFunctionInput): IndexRefRangeCheckFunction<T>;
-export function indexRangeCheckReaderFunction<T>(input: IndexRangeCheckFunctionInput, read: ReadIndexFunction<T>): IndexRefRangeCheckFunction<T>;
-export function indexRangeCheckReaderFunction<T>(input: IndexRangeCheckFunctionInput, read: ReadIndexFunction<T> = (x: T) => (x as unknown as IndexRef).i): IndexRefRangeCheckFunction<T> {
+export function indexRangeCheckReaderFunction<T extends IndexRef>(input: IndexRangeFunctionInput): IndexRefRangeCheckFunction<T>;
+export function indexRangeCheckReaderFunction<T>(input: IndexRangeFunctionInput, read: ReadIndexFunction<T>): IndexRefRangeCheckFunction<T>;
+export function indexRangeCheckReaderFunction<T>(input: IndexRangeFunctionInput, read: ReadIndexFunction<T> = (x: T) => (x as unknown as IndexRef).i): IndexRefRangeCheckFunction<T> {
   const rangeCheck = indexRangeCheckFunction(input);
   return (value: T) => rangeCheck(read(value));
 }
@@ -76,33 +76,108 @@ export function indexRangeCheckReaderFunction<T>(input: IndexRangeCheckFunctionI
 /**
  * Checks whether or not the input number is in the range.
  */
-export type IndexRangeCheckFunction = (i: number) => boolean;
+export type IndexRangeCheckFunction = (i: IndexNumber) => boolean;
 
-export interface IndexRangeCheckFunctionConfig {
+export interface IndexRangeFunctionConfig {
   /**
    * IndexRange to check.
    */
-  range: IndexRange;
+  indexRange: IndexRange;
   /**
    * Whether or not the max index is inclusive. False by default.
    */
   inclusiveMaxIndex: boolean;
 }
 
-export type IndexRangeCheckFunctionInput = IndexRange | IndexRangeCheckFunctionConfig;
+function indexRangeCheckFunctionConfigToIndexRange({ indexRange, inclusiveMaxIndex }: IndexRangeFunctionConfig): IndexRange {
+  if (inclusiveMaxIndex) {
+    const { minIndex, maxIndex: maxIndexInput } = indexRange;
+    const maxIndex = inclusiveMaxIndex ? maxIndexInput + 1 : maxIndexInput;
+    return { minIndex, maxIndex };
+  } else {
+    return indexRange;
+  }
+}
+
+export type IndexRangeFunctionInput = IndexRange | IndexRangeFunctionConfig;
+
+export function asIndexRangeCheckFunctionConfig(input: IndexRangeFunctionInput): IndexRangeFunctionConfig {
+  return objectHasKey<IndexRangeFunctionConfig>(input as IndexRangeFunctionConfig, 'indexRange') ? (input as IndexRangeFunctionConfig) : { indexRange: input as IndexRange, inclusiveMaxIndex: false };
+}
 
 /**
  * Creates an IndexRangeCheckFunction
  *
  * @param range
  */
-export function indexRangeCheckFunction(input: IndexRangeCheckFunctionInput): IndexRangeCheckFunction {
-  const { range, inclusiveMaxIndex } = objectHasKey(input, 'range') ? (input as IndexRangeCheckFunctionConfig) : { range: input as IndexRange, inclusiveMaxIndex: false };
-  const { minIndex, maxIndex } = range;
+export function indexRangeCheckFunction(input: IndexRangeFunctionInput): IndexRangeCheckFunction {
+  const { minIndex, maxIndex } = indexRangeCheckFunctionConfigToIndexRange(asIndexRangeCheckFunctionConfig(input));
+  return (i) => i >= minIndex && i < maxIndex;
+}
 
-  if (inclusiveMaxIndex) {
-    return (i) => i >= minIndex && i <= maxIndex;
-  } else {
-    return (i) => i >= minIndex && i < maxIndex;
-  }
+// MARK: Comparisons
+/**
+ * Returns true if the input index is contained within the configured IndexRange.
+ */
+export type IsIndexNumberInIndexRangeFunction = (index: IndexNumber) => boolean;
+
+export function isIndexNumberInIndexRange(index: IndexNumber, indexRange: IndexRange, inclusiveMaxIndex = false): boolean {
+  return isIndexNumberInIndexRangeFunction({ indexRange, inclusiveMaxIndex })(index);
+}
+
+/**
+ * Creates an IsIndexNumberInIndexRangeFunction
+ *
+ * @param indexRange
+ * @returns
+ */
+export function isIndexNumberInIndexRangeFunction(input: IndexRangeFunctionInput): IsIndexNumberInIndexRangeFunction {
+  const { minIndex, maxIndex } = indexRangeCheckFunctionConfigToIndexRange(asIndexRangeCheckFunctionConfig(input));
+  return (index: IndexNumber) => {
+    return index >= minIndex && index < maxIndex;
+  };
+}
+
+/**
+ * Returns true if the input IndexRange is contained within the configured IndexRange.
+ */
+export type IsIndexRangeInIndexRangeFunction = (indexRange: IndexRange) => boolean;
+
+export function isIndexRangeInIndexRange(compareIndexRange: IndexRange, indexRange: IndexRange): boolean {
+  return isIndexRangeInIndexRangeFunction(indexRange)(compareIndexRange);
+}
+
+/**
+ * Creates an IsIndexRangeInIndexRangeFunction
+ *
+ * @param indexRange
+ * @returns
+ */
+export function isIndexRangeInIndexRangeFunction(input: IndexRangeFunctionInput): IsIndexRangeInIndexRangeFunction {
+  const { minIndex, maxIndex } = indexRangeCheckFunctionConfigToIndexRange(asIndexRangeCheckFunctionConfig(input));
+  return (input: IndexRange) => {
+    return input.minIndex >= minIndex && input.maxIndex <= maxIndex;
+  };
+}
+
+/**
+ * Returns true if the input IndexRange overlaps the configured IndexRange in any way.
+ */
+export type IndexRangeOverlapsIndexRangeFunction = (indexRange: IndexRange) => boolean;
+
+export function indexRangeOverlapsIndexRange(compareIndexRange: IndexRange, indexRange: IndexRange): boolean {
+  return indexRangeOverlapsIndexRangeFunction(indexRange)(compareIndexRange);
+}
+
+/**
+ * Creates an IndexRangeOverlapsIndexRangeFunction
+ *
+ * @param indexRange
+ * @returns
+ */
+export function indexRangeOverlapsIndexRangeFunction(input: IndexRangeFunctionInput): IndexRangeOverlapsIndexRangeFunction {
+  const { minIndex, maxIndex } = indexRangeCheckFunctionConfigToIndexRange(asIndexRangeCheckFunctionConfig(input));
+  return (input: IndexRange) => {
+    return input.minIndex <= maxIndex && input.maxIndex >= minIndex;
+  };
 }

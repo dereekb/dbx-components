@@ -303,7 +303,7 @@ export function dateBlocksExpansionFactory<B extends DateBlock | DateBlockRange 
   const { timing, rangeLimit, filter: inputFilter, blocksEvaluationLimit = Number.MAX_SAFE_INTEGER } = config;
   const { startsAt: baseStart, duration } = timing;
   const indexRange = rangeLimit !== false ? dateBlockIndexRange(timing, rangeLimit) : { minIndex: Number.MIN_SAFE_INTEGER, maxIndex: Number.MAX_SAFE_INTEGER };
-  const isInRange = indexRangeCheckFunction({ range: indexRange, inclusiveMaxIndex: false });
+  const isInRange = indexRangeCheckFunction({ indexRange, inclusiveMaxIndex: false });
   const filter: FilterFunction<B> = mergeFilterFunctions<B>((x: B) => isInRange(x.i), inputFilter);
 
   return (input: DateBlocksExpansionFactoryInput<B>) => {
