@@ -507,8 +507,8 @@ export function groupToDateBlockRanges(input: (DateBlock | DateBlockRange)[]): D
  * @param block
  * @returns
  */
-export function expandDateBlockRange<B extends DateBlockRangeWithRange>(block: B): B[] {
-  return range(block.i, block.to + 1).map((i) => {
+export function expandDateBlockRange<B extends DateBlockRange | DateBlockRangeWithRange>(block: B): B[] {
+  return range(block.i, dateBlockEndIndex(block) + 1).map((i) => {
     return { ...block, i, to: i }; // copy block, set to as i
   });
 }
