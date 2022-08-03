@@ -1,4 +1,5 @@
 import { FieldOfType } from '../key';
+import { KeyAsString } from '../type';
 
 export type EmptyObject = Record<string, never>;
 
@@ -6,8 +7,9 @@ export function objectHasNoKeys(obj: object): obj is EmptyObject {
   return Object.keys(obj).length === 0;
 }
 
-export function objectHasKey<T, K extends keyof T = keyof T>(obj: T, key: K): boolean;
-export function objectHasKey<T>(obj: T, key: string): boolean;
+export function objectHasKey<T>(obj: T, key: KeyAsString<keyof T>): boolean;
+export function objectHasKey(obj: unknown, key: string): boolean;
+export function objectHasKey<T, K extends keyof T>(obj: T, key: K): boolean;
 export function objectHasKey<T>(obj: T, key: string): boolean {
   return Object.prototype.hasOwnProperty.call(obj, key);
 }
