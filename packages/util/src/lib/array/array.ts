@@ -47,6 +47,20 @@ export function lastValue<T>(input: ArrayOrValue<T>): T {
   }
 }
 
+/**
+ * Returns a tuple with the first and last value of the input.
+ *
+ * If the input is not an array, returns that value as the first and last value.
+ *
+ * @param input
+ * @returns
+ */
+export function firstAndLastValue<T>(input: ArrayOrValue<T>): [T, T] {
+  const first = firstValue(input);
+  const last = lastValue(input);
+  return [first, last];
+}
+
 export function valueAtIndex<T>(input: ArrayOrValue<T>, index: number): T {
   if (Array.isArray(input)) {
     return input[index];
