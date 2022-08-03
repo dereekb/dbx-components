@@ -1,4 +1,4 @@
-import { objectHasKey } from '@dereekb/util';
+import { objectHasKey } from '../object/object';
 import { SortCompareFunction } from '../sort';
 
 /**

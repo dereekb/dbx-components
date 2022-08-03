@@ -507,8 +507,8 @@ export function groupToDateBlockRanges(input: (DateBlock | DateBlockRange)[]): D
  * @param block
  * @returns
  */
-export function expandDateBlockRange<B extends DateBlockRangeWithRange>(block: B): B[] {
-  return range(block.i, block.to + 1).map((i) => {
+export function expandDateBlockRange<B extends DateBlockRange | DateBlockRangeWithRange>(block: B): B[] {
+  return range(block.i, dateBlockEndIndex(block) + 1).map((i) => {
     return { ...block, i, to: i }; // copy block, set to as i
   });
 }
@@ -556,7 +556,7 @@ export interface UniqueDateBlockRangeGroup<B extends DateBlockRange | UniqueDate
  * Groups all input DateBlockRange or UniqueDateBlock values into a UniqueDateBlockRangeGroup value.
  */
 export function groupUniqueDateBlocks<B extends DateBlockRange | UniqueDateBlock>(input: B[]): UniqueDateBlockRangeGroup<B> {
-  const blocks = input.sort(sortAscendingIndexNumberRefFunction());
+  const blocks = [...input].sort(sortAscendingIndexNumberRefFunction());
 
   const i = 0;
   let to: number;
@@ -613,7 +613,7 @@ export interface ExpandUniqueDateBlocksConfig<B extends DateBlockRange | UniqueD
    */
   overwriteOption?: ExpandUniqueDateBlocksOverwriteOption;
   /**
-   * Used to create new items to fill empty block sets.
+   * Used to create new items to fill empty block sets. Required when mode is set to "fill".
    */
   fillFactory?: FactoryWithRequiredInput<B, DateBlockRange>;
 }
