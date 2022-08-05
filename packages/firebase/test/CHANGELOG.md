@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [8.13.9](https://github.com/dereekb/dbx-components/compare/v8.13.8-dev...v8.13.9) (2022-08-05)
+
+
+### Bug Fixes
+
+* fixed issue with AbstractFirestoreDocument stream$ ([3752d11](https://github.com/dereekb/dbx-components/commit/3752d11f74d73b56759e513a57e5a7e979c223c1))
+
+
+
 ## [8.13.8](https://github.com/dereekb/dbx-components/compare/v8.13.7-dev...v8.13.8) (2022-08-03)
 
 
