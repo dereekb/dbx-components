@@ -1,6 +1,7 @@
 /*eslint @typescript-eslint/no-explicit-any:"off"*/
 // any is used with intent here, as the recursive AbstractFirestoreDocument requires its use to terminate.
 
+import { lazyFrom } from '@dereekb/rxjs';
 import { Observable } from 'rxjs';
 import { FirestoreAccessorDriverRef } from '../driver/accessor';
 import { FirestoreCollectionNameRef, FirestoreModelId, FirestoreModelIdentityCollectionName, FirestoreModelIdentityModelType, FirestoreModelIdentityRef, FirestoreModelIdRef, FirestoreModelKey, FirestoreModelKeyRef } from './../collection/collection';
@@ -33,8 +34,8 @@ export type FirestoreDocumentData<D extends FirestoreDocument<any>> = D extends 
  * Abstract FirestoreDocument implementation that extends a FirestoreDocumentDataAccessor.
  */
 export abstract class AbstractFirestoreDocument<T, D extends AbstractFirestoreDocument<T, any, I>, I extends FirestoreModelIdentity = FirestoreModelIdentity> implements FirestoreDocument<T>, LimitedFirestoreDocumentAccessorRef<T, D>, CollectionReferenceRef<T> {
-  readonly stream$ = this.accessor.stream();
-  readonly data$: Observable<T> = dataFromSnapshotStream(this.stream$);
+  readonly stream$ = lazyFrom(() => this.accessor.stream());
+  readonly data$: Observable<T> = lazyFrom(() => dataFromSnapshotStream(this.stream$));
 
   constructor(readonly accessor: FirestoreDocumentDataAccessor<T>, readonly documentAccessor: LimitedFirestoreDocumentAccessor<T, D>) {}
 

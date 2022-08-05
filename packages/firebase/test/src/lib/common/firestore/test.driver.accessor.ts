@@ -1,7 +1,7 @@
 import { itShouldFail, expectFail } from '@dereekb/util/test';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, first } from 'rxjs';
 import { SubscriptionObject } from '@dereekb/rxjs';
-import { Transaction, DocumentReference, WriteBatch, FirestoreDocumentAccessor, makeDocuments, FirestoreDocumentDataAccessor, FirestoreContext, FirestoreDocument, RunTransaction, FirebaseAuthUserId, DocumentSnapshot, FirestoreDataConverter, getDocumentSnapshotPairs, useDocumentSnapshot, useDocumentSnapshotData } from '@dereekb/firebase';
+import { Transaction, DocumentReference, WriteBatch, FirestoreDocumentAccessor, makeDocuments, FirestoreDocumentDataAccessor, FirestoreContext, FirestoreDocument, RunTransaction, FirebaseAuthUserId, DocumentSnapshot, FirestoreDataConverter, getDocumentSnapshotPairs, useDocumentSnapshot, useDocumentSnapshotData, AbstractFirestoreDocument } from '@dereekb/firebase';
 import { MockItemCollectionFixture, MockItemDocument, MockItem, MockItemPrivateDocument, MockItemPrivateFirestoreCollection, MockItemPrivate, MockItemSubItem, MockItemSubItemDocument, MockItemSubItemFirestoreCollection, MockItemSubItemFirestoreCollectionGroup, MockItemUserFirestoreCollection, MockItemUserDocument, MockItemUser, mockItemConverter } from '../mock';
 import { Getter } from '@dereekb/util';
 
@@ -344,8 +344,8 @@ export interface DescribeAccessorTests<T> {
   firestoreDocument: Getter<FirestoreDocument<T>>;
   dataForUpdate: () => Partial<T>;
   hasDataFromUpdate: (data: T) => boolean;
-  loadDocumentForTransaction: (transaction: Transaction, ref?: DocumentReference<T>) => FirestoreDocument<T>;
-  loadDocumentForWriteBatch: (writeBatch: WriteBatch, ref?: DocumentReference<T>) => FirestoreDocument<T>;
+  loadDocumentForTransaction: (transaction: Transaction, ref?: DocumentReference<T>) => AbstractFirestoreDocument<T, any>;
+  loadDocumentForWriteBatch: (writeBatch: WriteBatch, ref?: DocumentReference<T>) => FirestoreDocument<T, any>;
 }
 
 export function describeFirestoreDocumentAccessorTests<T>(init: () => DescribeAccessorTests<T>) {
@@ -502,6 +502,41 @@ export function describeFirestoreDocumentAccessorTests<T>(init: () => DescribeAc
     });
 
     describe('transaction', () => {
+      describe('stream$', () => {
+        it('should not cause the transaction to fail if the document is loaded after changes have begun.', async () => {
+          await c.context.runTransaction(async (transaction) => {
+            const transactionDocument = await c.loadDocumentForTransaction(transaction, firestoreDocument.documentRef);
+
+            const currentData = await transactionDocument.snapshotData();
+            expect(currentData).toBeDefined();
+
+            const data = c.dataForUpdate();
+            await transactionDocument.update(data);
+
+            // stream$ and data$ do not call stream() until called directly.
+            const secondLoading = await c.loadDocumentForTransaction(transaction, firestoreDocument.documentRef);
+            expect(secondLoading).toBeDefined();
+          });
+        });
+
+        itShouldFail('if stream$ is called after an update has occured in the transaction', async () => {
+          await expectFail(() =>
+            c.context.runTransaction(async (transaction) => {
+              const transactionDocument = await c.loadDocumentForTransaction(transaction, firestoreDocument.documentRef);
+
+              const currentData = await transactionDocument.snapshotData();
+              expect(currentData).toBeDefined();
+
+              const data = c.dataForUpdate();
+              await transactionDocument.update(data);
+
+              // read the stream using a promise so the error is captured
+              await firstValueFrom(c.loadDocumentForTransaction(transaction, firestoreDocument.documentRef).stream$);
+            })
+          );
+        });
+      });
+
       describe('update()', () => {
         it('should update the data if the document exists.', async () => {
           await c.context.runTransaction(async (transaction) => {

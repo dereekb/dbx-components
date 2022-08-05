@@ -56,14 +56,14 @@ export function preventComplete<T>(obs: Observable<T>): Observable<T> {
 }
 
 /**
- * Similar to from, but uses a Getter to keeps the Observable cold until it is subscribed to, then calls the promise.
+ * Similar to from, but uses a Getter to keeps the Observable cold until it is subscribed to, then calls the promise or observable.
  *
- * The promise is shared, so it can be called at max a
+ * The result value of the promise or the latest value of the observable is shared.
  *
  * @param getter
  * @returns
  */
-export function lazyFrom<T>(getter: Getter<Promise<T>>): Observable<T> {
+export function lazyFrom<T>(getter: Getter<Promise<T> | Observable<T>>): Observable<T> {
   return of(undefined).pipe(
     mergeMap(() => from(getter())),
     shareReplay(1)
