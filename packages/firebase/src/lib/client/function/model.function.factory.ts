@@ -83,20 +83,20 @@ export type ModelFirebaseCrudFunctionWithSpecifierName<MODEL extends string, CRU
 export type ModelFirebaseCrudFunctionMapEntry<MODEL extends string, E extends ModelFirebaseCrudFunctionTypeMapEntry> = E extends null
   ? never
   : {
-      [CRUD in keyof E as CRUD extends string ? (E[CRUD] extends Record<string, unknown> ? never : ModelFirebaseCrudFunctionName<MODEL, CRUD>) : never]: ModelFirebaseCrudFunctionMapEntryFunction<E, CRUD>;
+      [CRUD in keyof E as CRUD extends string ? (E[CRUD] extends Record<string, unknown> ? never : ModelFirebaseCrudFunctionName<MODEL, CRUD>) : never]: CRUD extends string ? ModelFirebaseCrudFunctionMapEntryFunction<E, CRUD, CRUD> : never;
     } & {
       [CRUD in keyof E as CRUD extends string ? (E[CRUD] extends Record<string, unknown> ? ModelFirebaseCrudFunctionName<MODEL, CRUD> : never) : never]: CRUD extends string ? ModelFirebaseCrudFunctionMapEntrySpecifier<MODEL, CRUD, E[CRUD]> | ModelFirebaseCrudFunctionMapEntrySpecifierShort<MODEL, CRUD, E[CRUD]> : never;
     };
 
 export type ModelFirebaseCrudFunctionMapEntrySpecifier<MODEL extends string, CRUD extends string, M> = {
-  [SPECIFIER in keyof M as SPECIFIER extends string ? (CRUD extends string ? (SPECIFIER extends ModelFirebaseCrudFunctionSpecifierDefault ? ModelFirebaseCrudFunctionName<MODEL, CRUD> : ModelFirebaseCrudFunctionWithSpecifierName<MODEL, CRUD, SPECIFIER>) : never) : never]: ModelFirebaseCrudFunctionMapEntryFunction<M, SPECIFIER>;
+  [SPECIFIER in keyof M as SPECIFIER extends string ? (CRUD extends string ? (SPECIFIER extends ModelFirebaseCrudFunctionSpecifierDefault ? ModelFirebaseCrudFunctionName<MODEL, CRUD> : ModelFirebaseCrudFunctionWithSpecifierName<MODEL, CRUD, SPECIFIER>) : never) : never]: ModelFirebaseCrudFunctionMapEntryFunction<M, SPECIFIER, CRUD>;
 };
 
 export type ModelFirebaseCrudFunctionMapEntrySpecifierShort<MODEL extends string, CRUD extends string, M> = {
-  [SPECIFIER in keyof M as SPECIFIER extends string ? (CRUD extends string ? (SPECIFIER extends ModelFirebaseCrudFunctionSpecifierDefault ? CRUD : SPECIFIER) : never) : never]: ModelFirebaseCrudFunctionMapEntryFunction<M, SPECIFIER>;
+  [SPECIFIER in keyof M as SPECIFIER extends string ? (CRUD extends string ? (SPECIFIER extends ModelFirebaseCrudFunctionSpecifierDefault ? CRUD : SPECIFIER) : never) : never]: ModelFirebaseCrudFunctionMapEntryFunction<M, SPECIFIER, CRUD>;
 };
 
-export declare type ModelFirebaseCrudFunctionMapEntryFunction<E extends ModelFirebaseCrudFunctionTypeMapEntry, K extends keyof E> = K extends 'create' ? ModelFirebaseCreateFunction<E[K]> : E[K] extends ModelFirebaseCrudFunctionTypeMapEntryWithReturnType<infer I, infer O> ? ModelFirebaseCrudFunction<I, O> : ModelFirebaseCrudFunction<E[K]>;
+export declare type ModelFirebaseCrudFunctionMapEntryFunction<E extends ModelFirebaseCrudFunctionTypeMapEntry, K extends keyof E, CRUD extends string> = E[K] extends ModelFirebaseCrudFunctionTypeMapEntryWithReturnType<infer I, infer O> ? ModelFirebaseCrudFunction<I, O> : CRUD extends 'create' ? ModelFirebaseCreateFunction<E[K]> : ModelFirebaseCrudFunction<E[K]>;
 export type ModelFirebaseFunctionMap<M extends FirebaseFunctionTypeMap, C extends ModelFirebaseCrudFunctionTypeMap> = FirebaseFunctionMap<M> & ModelFirebaseCrudFunctionMap<C>;
 
 /**
