@@ -5,22 +5,34 @@ import { DocSharedModule } from '../shared/doc.shared.module';
 import { DocExtensionLayoutComponent } from './container/layout.component';
 import { DocExtensionCalendarComponent } from './container/calendar.component';
 import { STATES } from './doc.extension.router';
-import { DbxCalendarRootModule } from '@dereekb/dbx-web';
+import { DbxCalendarRootModule, DbxWidgetModule, DbxWidgetService } from '@dereekb/dbx-web';
+import { DocExtensionWidgetComponent } from './container/widget.component';
+import { DOC_EXTENSION_WIDGET_EXAMPLE_TYPE, DocExtensionWidgetExampleComponent } from './component/widget.example.component';
 
 @NgModule({
   imports: [
     DocSharedModule,
     DbxCalendarRootModule,
+    DbxWidgetModule,
     UIRouterModule.forChild({
       states: STATES
     })
   ],
   declarations: [
     // component
+    DocExtensionWidgetExampleComponent,
     // container
     DocExtensionLayoutComponent,
     DocExtensionHomeComponent,
-    DocExtensionCalendarComponent
+    DocExtensionCalendarComponent,
+    DocExtensionWidgetComponent
   ]
 })
-export class DocExtensionModule {}
+export class DocExtensionModule {
+  constructor(dbxWidgetService: DbxWidgetService) {
+    dbxWidgetService.register({
+      type: DOC_EXTENSION_WIDGET_EXAMPLE_TYPE,
+      componentClass: DocExtensionWidgetExampleComponent
+    });
+  }
+}

@@ -1,0 +1,18 @@
+<dbx-content-container>
+  <doc-feature-layout header="Widget Extension" hint="">
+    <!-- Examples -->
+    <doc-feature-example header="dbx-widget-view" hint="Used to render a pre-configured widget based on the input data.">
+      <h2>Example with data</h2>
+      <p>The input config has a type that instructs which widget to inject into the view, and passes the data field directly.</p>
+      <p>Input Config: {{ examplePair | json }}</p>
+      <dbx-content-border>
+        <dbx-widget-view [config]="examplePair"></dbx-widget-view>
+      </dbx-content-border>
+      <h2>Example without data</h2>
+      <p>When not given content, the widget produces no visual output.</p>
+      <dbx-content-border>
+        <dbx-widget-view></dbx-widget-view>
+      </dbx-content-border>
+    </doc-feature-example>
+  </doc-feature-layout>
+</dbx-content-container>
