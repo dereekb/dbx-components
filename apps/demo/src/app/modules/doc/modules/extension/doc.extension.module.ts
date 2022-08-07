@@ -8,6 +8,7 @@ import { STATES } from './doc.extension.router';
 import { DbxCalendarRootModule, DbxWidgetModule, DbxWidgetService } from '@dereekb/dbx-web';
 import { DocExtensionWidgetComponent } from './container/widget.component';
 import { DOC_EXTENSION_WIDGET_EXAMPLE_TYPE, DocExtensionWidgetExampleComponent } from './component/widget.example.component';
+import { DocExtensionWidgetIconExampleComponent, DOC_EXTENSION_WIDGET_ICON_EXAMPLE_TYPE } from './component/widget.icon.example.component';
 
 @NgModule({
   imports: [
@@ -21,6 +22,7 @@ import { DOC_EXTENSION_WIDGET_EXAMPLE_TYPE, DocExtensionWidgetExampleComponent }
   declarations: [
     // component
     DocExtensionWidgetExampleComponent,
+    DocExtensionWidgetIconExampleComponent,
     // container
     DocExtensionLayoutComponent,
     DocExtensionHomeComponent,
@@ -33,6 +35,11 @@ export class DocExtensionModule {
     dbxWidgetService.register({
       type: DOC_EXTENSION_WIDGET_EXAMPLE_TYPE,
       componentClass: DocExtensionWidgetExampleComponent
+    });
+
+    dbxWidgetService.register({
+      type: DOC_EXTENSION_WIDGET_ICON_EXAMPLE_TYPE,
+      componentClass: DocExtensionWidgetIconExampleComponent
     });
   }
 }
