@@ -15,6 +15,12 @@ describe('slashPathName', () => {
 });
 
 describe('slashPathType', () => {
+  it('files with more than 1 dot should return invalid', () => {
+    const typedFilePath: SlashPathTypedFile = 'wMNzlhSlp6Gb93.V8u.4.Rs/CCCC_KGML3FKTP.pdf.tmp';
+    const type = slashPathType(typedFilePath);
+    expect(type).toBe('invalid');
+  });
+
   it('should identify a typed file', () => {
     const typedFilePath: SlashPathTypedFile = 'wMNzlhSlp6Gb93V8u4Rs/CCCC_KGML3FKTP.pdf';
     const type = slashPathType(typedFilePath);

@@ -2,6 +2,7 @@ import { symmetricDifferenceKeys } from '../set/set';
 import { findUnique } from '../array/array.unique';
 import { ReadKeyFunction, ReadKeysFunction } from '../key';
 import { Maybe } from '../value/maybe.type';
+import { MapFunction } from '../value/map';
 
 /**
  * A string model key
@@ -13,11 +14,17 @@ export type ModelKey = string;
  */
 export type ModelTypeString = string;
 
+export const DEFAULT_UNKNOWN_MODEL_TYPE_STRING: ModelTypeString = 'unknown';
+
 /**
  * A model with an identifier on the "id" key.
  */
 export interface UniqueModel {
   id?: ModelKey;
+}
+
+export interface TypedModel {
+  type: ModelTypeString;
 }
 
 export interface NamedUniqueModel extends UniqueModel {
@@ -26,9 +33,8 @@ export interface NamedUniqueModel extends UniqueModel {
 
 export type ModelOrKey<T extends UniqueModel> = T | ModelKey;
 
-export interface ModelKeyTypePair {
+export interface ModelKeyTypePair extends TypedModel {
   key: ModelKey;
-  type: ModelTypeString;
 }
 
 /**
@@ -48,6 +54,7 @@ export interface ReadModelKeyParams<T> {
 }
 
 export type ReadModelKeyFunction<T> = ReadKeyFunction<T, ModelKey>;
+export type ReadModelTypeFunction<T> = ReadKeyFunction<T, ModelTypeString>;
 export type ReadRelationKeysFunction<T> = ReadKeysFunction<T, ModelKey>;
 
 export type MultiModelKeyMap<T> = Map<string, T>;
@@ -203,5 +210,28 @@ export function decodeModelKeyTypePair(linkKey: ModelKey): ModelKeyTypePair {
   return {
     type: split[0],
     key: split[1]
+  };
+}
+
+// MARK: Type
+/**
+ * A type and data pair.
+ */
+export interface ModelTypeDataPair<T = unknown> extends TypedModel {
+  data: T;
+}
+
+/**
+ * Used for converting the input data into a ModelTypeDataPair value.
+ */
+export type ModelTypeDataPairFactory<T> = MapFunction<T, ModelTypeDataPair<T>>;
+
+export function modelTypeDataPairFactory<T>(typeReader: ReadModelTypeFunction<T>, defaultType = DEFAULT_UNKNOWN_MODEL_TYPE_STRING): ModelTypeDataPairFactory<T> {
+  return (data: T) => {
+    const type: ModelTypeString = typeReader(data) ?? defaultType;
+    return {
+      type,
+      data
+    };
   };
 }
