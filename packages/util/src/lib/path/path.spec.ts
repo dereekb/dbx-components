@@ -1,4 +1,4 @@
-import { replaceInvalidFilePathTypeSeparatorsInSlashPath, slashPathFactory, slashPathName, slashPathValidationFactory, SlashPathFolder, slashPathType, SlashPathTypedFile, SlashPathFile } from './path';
+import { replaceInvalidFilePathTypeSeparatorsInSlashPath, slashPathFactory, slashPathName, slashPathValidationFactory, SlashPathFolder, slashPathType, SlashPathTypedFile, SlashPathFile, SLASH_PATH_SEPARATOR, isolateSlashPathFunction } from './path';
 
 describe('slashPathName', () => {
   it('should return the file name', () => {
@@ -117,6 +117,58 @@ describe('slashPathFactory', () => {
         const result = slashPathWithBasePathFn('hello.png');
         expect(result).toBe('/test/hello.png');
       });
+    });
+  });
+});
+
+describe('isolateSlashPathFunction', () => {
+  describe('function', () => {
+    it('should isolate the input path range.', () => {
+      const parts = ['a', 'b', 'c', 'd', 'e'];
+      const path = parts.join(SLASH_PATH_SEPARATOR);
+
+      const result = isolateSlashPathFunction({ range: { minIndex: 2, maxIndex: 4 } })(path);
+      expect(result).toBe('c/d/');
+    });
+
+    it('should retain the file ending', () => {
+      const parts = ['a', 'b', 'c', 'd', 'e.e'];
+      const path = parts.join(SLASH_PATH_SEPARATOR);
+
+      const result = isolateSlashPathFunction({ range: { minIndex: 2, maxIndex: parts.length } })(path);
+      expect(result).toBe('c/d/e.e');
+    });
+
+    it('should retain the file ending', () => {
+      const parts = ['a', 'b', 'c', 'd', 'e'];
+      const path = parts.join(SLASH_PATH_SEPARATOR);
+
+      const result = isolateSlashPathFunction({ range: { minIndex: 2, maxIndex: parts.length } })(path);
+      expect(result).toBe('c/d/e');
+    });
+
+    it('should retain the folder ending', () => {
+      const parts = ['a', 'b', 'c', 'd', 'e/'];
+      const path = parts.join(SLASH_PATH_SEPARATOR);
+
+      const result = isolateSlashPathFunction({ range: { minIndex: 2, maxIndex: parts.length } })(path);
+      expect(result).toBe('c/d/e/');
+    });
+
+    it('should retain the absolute path prefix', () => {
+      const parts = ['/a', 'b', 'c', 'd', 'e'];
+      const path = parts.join(SLASH_PATH_SEPARATOR);
+
+      const result = isolateSlashPathFunction({ range: { minIndex: 2, maxIndex: parts.length } })(path);
+      expect(result).toBe('/c/d/e');
+    });
+
+    it('should retain the absolute path prefix and folder ending', () => {
+      const parts = ['/a', 'b', 'c', 'd', 'e/'];
+      const path = parts.join(SLASH_PATH_SEPARATOR);
+
+      const result = isolateSlashPathFunction({ range: { minIndex: 2, maxIndex: parts.length } })(path);
+      expect(result).toBe('/c/d/e/');
     });
   });
 });

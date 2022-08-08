@@ -1,8 +1,9 @@
 import { chainMapSameFunctions, MapSameFunction } from '../value/map';
 import { asArray, ArrayOrValue, mergeArrayOrValueIntoArray } from '../array/array';
 import { firstAndLastCharacterOccurrence, replaceCharacterAtIndexWith, replaceStringsFunction, splitStringAtIndex } from '../string';
-import { chainMapFunction, mapIdentityFunction, Maybe } from '../value';
+import { chainMapFunction, IndexNumber, indexRange, IndexRange, IndexRangeInput, mapIdentityFunction, Maybe } from '../value';
 import { FactoryWithRequiredInput } from '../getter/getter';
+import { sliceIndexRangeFunction } from '../array/array.index';
 
 export const SLASH_PATH_SEPARATOR = '/';
 export const SLASH_PATH_FILE_TYPE_SEPARATOR = '.';
@@ -345,4 +346,56 @@ export function mergeSlashPaths(paths: Maybe<SlashPath>[]): SlashPath {
 
 export function slashPathInvalidError() {
   return new Error('The slashPath is invalid.');
+}
+
+/**
+ * Splits the path and returns the items at the given ranges.
+ *
+ * @param path
+ */
+export function isolateSlashPath(path: SlashPath, range: IndexRangeInput): SlashPath {
+  return isolateSlashPathFunction({ range })(path);
+}
+
+/**
+ * isolateSlashPathFunction() config.
+ */
+export interface IsolateSlashPathFunctionConfig {
+  range: IndexRangeInput;
+}
+
+/**
+ * Isolates a configured index range of path elements.
+ *
+ * Path start type is retained. I.E. If a relative path is input, a relative path will be returned.
+ */
+export type IsolateSlashPathFunction = (path: SlashPath) => SlashPath;
+
+/**
+ * Creates an IsolateSlashPathFunction.
+ *
+ * @param config
+ * @returns
+ */
+export function isolateSlashPathFunction(config: IsolateSlashPathFunctionConfig): IsolateSlashPathFunction {
+  const range = indexRange(config.range);
+  const sliceRange = sliceIndexRangeFunction(range);
+
+  return (path: SlashPath) => {
+    const split = toRelativeSlashPathStartType(path).split(SLASH_PATH_SEPARATOR);
+    const splitRange = sliceRange(split);
+    let joined = splitRange.join(SLASH_PATH_SEPARATOR);
+
+    const isFolder = split.length > range.maxIndex;
+
+    if (isFolder) {
+      joined = joined + SLASH_PATH_SEPARATOR; // end with a slash.
+    }
+
+    if (path.startsWith(SLASH_PATH_SEPARATOR)) {
+      return toAbsoluteSlashPathStartType(joined);
+    } else {
+      return joined;
+    }
+  };
 }
