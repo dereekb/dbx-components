@@ -75,6 +75,15 @@
             <button bottom mat-raised-button (click)="loadMore()">Load More</button>
           </doc-item-list-grid>
         </div>
+
+        <h4>DbxListGridSize</h4>
+        <p>This directive allows changing the grid sizing of any child list grid. It is merged with the default configuration.</p>
+        <p>The example grid below has a larger gap and smaller column size compared to the previous example.</p>
+        <div style="height: 400px">
+          <doc-item-list-grid [dbxListGridSize]="customGridSize" [state$]="stateWithAnchors$" (loadMore)="loadMore()" (clickItem)="onPlainClick($event)">
+            <button bottom mat-raised-button (click)="loadMore()">Load More</button>
+          </doc-item-list-grid>
+        </div>
       </doc-feature-example>
       <doc-feature-example header="dbxListItemModifier" hint="Used to inject list item Modifiers into lists that uses dbx-list-view or dbx-selection-list-view internally.">
         <p>dbxListItemModifier is used by dbx-list-view or dbx-selection-list-view to modify items using all modifiers registered with the dbxListItemModifier.</p>

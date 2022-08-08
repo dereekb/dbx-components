@@ -1,5 +1,5 @@
 import { ClickableAnchor, safeDetectChanges } from '@dereekb/dbx-core';
-import { listItemModifier, ListItemModifier, ListSelectionState, AnchorForValueFunction } from '@dereekb/dbx-web';
+import { listItemModifier, ListItemModifier, ListSelectionState, AnchorForValueFunction, DbxValueListGridItemViewGridSizeConfig } from '@dereekb/dbx-web';
 import { CustomDocValue } from './../component/item.list.custom.component';
 import { ListLoadingState, mapLoadingStateResults, successResult } from '@dereekb/rxjs';
 import { BehaviorSubject, map, switchMap, startWith, Observable, delay, of } from 'rxjs';
@@ -96,6 +96,11 @@ export class DocLayoutListComponent implements OnInit, OnDestroy {
         safeDetectChanges(this.cdRef);
       }
     };
+  };
+
+  readonly customGridSize: Partial<DbxValueListGridItemViewGridSizeConfig> = {
+    columns: 'repeat(auto-fill, minmax(200px, 1fr))',
+    gap: '25px'
   };
 
   constructor(readonly cdRef: ChangeDetectorRef) {}
