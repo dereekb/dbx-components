@@ -1,4 +1,4 @@
-import { TimezoneString, CommaSeparatedString, flattenArray, Maybe } from '@dereekb/util';
+import { TimezoneString, CommaSeparatedString, flattenArray, Maybe, splitJoinRemainder } from '@dereekb/util';
 import { format } from 'date-fns-tz';
 import { DateSet } from '../date';
 import { DateTimezoneBaseDateConverter, DateTimezoneUtcNormalInstance } from '../date/date.timezone';
@@ -225,7 +225,7 @@ export class DateRRuleParseUtility {
   }
 
   static parseRawParam(param: RRuleRawParamString): RRuleParam {
-    const [key, value] = param.split('=', 2);
+    const [key, value] = splitJoinRemainder(param, '=', 2);
     return {
       key,
       value
@@ -233,7 +233,7 @@ export class DateRRuleParseUtility {
   }
 
   static parseRawLine(line: RRuleLineString): RRuleRawLine {
-    const [params, values] = line.split(RRuleStringSplitter, 2);
+    const [params, values] = splitJoinRemainder(line, RRuleStringSplitter, 2);
 
     if (line.length === 1) {
       return {

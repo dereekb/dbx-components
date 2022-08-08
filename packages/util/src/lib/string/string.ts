@@ -63,3 +63,30 @@ export function capitalizeFirstLetter(value: string): string {
 export function lowercaseFirstLetter(value: string): string {
   return value.charAt(0).toLowerCase() + value.slice(1);
 }
+
+/**
+ * Performs split, but joins the remainder instead of discarding them.
+ *
+ * @param input
+ */
+export function splitJoinRemainder(input: string, separator: string, limit: number): string[] {
+  const split = input.split(separator);
+  const components: string[] = [];
+
+  if (split.length > 1) {
+    const hasItemsToMerge = split.length > limit;
+    const stopIndex = hasItemsToMerge ? limit - 1 : split.length;
+
+    for (let i = 0; i < stopIndex; i += 1) {
+      components.push(split[i]);
+    }
+
+    if (hasItemsToMerge) {
+      components.push(split.slice(stopIndex).join(separator));
+    }
+  } else {
+    components.push(split[0]);
+  }
+
+  return components;
+}

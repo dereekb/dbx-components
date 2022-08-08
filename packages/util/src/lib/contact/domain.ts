@@ -1,4 +1,5 @@
 import { uniqueCaseInsensitiveStrings } from '../array';
+import { websiteDomainAndPathPairFromWebsiteUrl } from '../string/url';
 import { EmailAddress } from './email';
 
 export type EmailAddressDomain = string; // Domain name of an email address.
@@ -24,7 +25,7 @@ export function readDomainFromEmailAddress(address: EmailAddress): EmailAddressD
  * @param urlLikeInput
  * @returns The domain
  */
-export function readDomainFromUrlOrEmailAddress(urlLikeInput: string | EmailAddress | EmailAddressDomain): EmailAddressDomain {
+export function readEmailDomainFromUrlOrEmailAddress(urlLikeInput: string | EmailAddress | EmailAddressDomain): EmailAddressDomain {
   const emailSplit = urlLikeInput.split('@');
   const url = emailSplit[emailSplit.length - 1];
 
@@ -33,8 +34,7 @@ export function readDomainFromUrlOrEmailAddress(urlLikeInput: string | EmailAddr
   if (emailSplit.length > 1) {
     domain = url;
   } else {
-    const httpSplit = urlLikeInput.split('://');
-    domain = httpSplit[httpSplit.length - 1];
+    domain = websiteDomainAndPathPairFromWebsiteUrl(url).domain;
 
     // strip out www. if it is provided, as it is a 'special' domain type,
     // and emails probably don't come from there.
@@ -45,3 +45,6 @@ export function readDomainFromUrlOrEmailAddress(urlLikeInput: string | EmailAddr
 
   return domain;
 }
+
+// MARK: Compat
+export const readDomainFromUrlOrEmailAddress = readEmailDomainFromUrlOrEmailAddress;

@@ -13,7 +13,7 @@ import { DbxSelectionValueListItemViewComponent, DbxSelectionValueListViewCompon
 import { DbxValueListItemViewComponent, DbxValueListViewComponent } from './list.view.value.component';
 import { DbxValueListItemModifierDirective } from './list.view.value.modifier.directive';
 import { DbxListItemDisableRippleModifierDirective } from './list.view.value.modifier.ripple.directive';
-import { DbxValueListGridItemViewComponent, DbxValueListGridViewComponent } from './list.grid.view.component';
+import { DbxValueListGridItemViewComponent, DbxValueListGridSizeDirective, DbxValueListGridViewComponent } from './list.grid.view.component';
 import { FlexLayoutModule } from '@angular/flex-layout';
 
 @NgModule({
@@ -25,6 +25,7 @@ import { FlexLayoutModule } from '@angular/flex-layout';
     DbxListEmptyContentComponent,
     DbxValueListViewComponent,
     DbxValueListItemViewComponent,
+    DbxValueListGridSizeDirective,
     DbxValueListGridViewComponent,
     DbxValueListGridItemViewComponent,
     DbxSelectionValueListViewComponent,
@@ -38,6 +39,7 @@ import { FlexLayoutModule } from '@angular/flex-layout';
     DbxListEmptyContentComponent,
     DbxValueListViewComponent,
     DbxValueListItemViewComponent,
+    DbxValueListGridSizeDirective,
     DbxValueListGridViewComponent,
     DbxValueListGridItemViewComponent,
     DbxSelectionValueListViewComponent,

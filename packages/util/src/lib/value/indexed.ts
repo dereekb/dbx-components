@@ -57,6 +57,25 @@ export interface IndexRange {
 }
 
 /**
+ * An IndexNumber that represenst a range of a single index, or an IndexRange.
+ */
+export type IndexRangeInput = IndexNumber | IndexRange;
+
+/**
+ * Creates an IndexRange from the input.
+ *
+ * @param input
+ * @returns
+ */
+export function indexRange(input: IndexRangeInput): IndexRange {
+  if (typeof input === 'number') {
+    return { minIndex: input, maxIndex: input + 1 };
+  } else {
+    return input;
+  }
+}
+
+/**
  * Checks whether or not the input number is in the range.
  */
 export type IndexRefRangeCheckFunction<T> = (value: T) => boolean;

@@ -4,6 +4,12 @@ export const DOC_EXTENSION_ROUTES = [
     title: 'Calendar',
     detail: 'dbx-calendar',
     ref: 'doc.extension.calendar'
+  },
+  {
+    icon: 'code',
+    title: 'Widget',
+    detail: 'dbx-widget-view',
+    ref: 'doc.extension.widget'
   }
 ];
 

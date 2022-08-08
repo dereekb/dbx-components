@@ -1,4 +1,4 @@
-import { GrantedRole } from '@dereekb/model';
+import { UNKNOWN_WEBSITE_LINK_TYPE, WebsiteLink, GrantedRole } from '@dereekb/model';
 import { FirestoreModelKey } from '../collection/collection';
 import { nowISODateString, toISODateString, toJsDate } from '@dereekb/date';
 import {
@@ -40,7 +40,8 @@ import {
   asObjectCopyFactory,
   modelFieldMapFunctions,
   UTC_TIMEZONE_STRING,
-  TimezoneString
+  TimezoneString,
+  assignValuesToPOJOFunction
 } from '@dereekb/util';
 import { FirestoreModelData, FIRESTORE_EMPTY_VALUE } from './snapshot.type';
 import { FirebaseAuthUserId } from '../../auth/auth';
@@ -551,6 +552,33 @@ export function firestoreTimezoneString(config?: FirestoreTimezoneStringConfig) 
   return firestoreString<TimezoneString>({
     default: defaultValue || DEFAULT_FIRESTORE_LAT_LNG_STRING_VALUE,
     defaultBeforeSave
+  });
+}
+
+// MARK: WebsiteLink
+export const DEFAULT_WEBSITE_LINK: WebsiteLink = {
+  t: UNKNOWN_WEBSITE_LINK_TYPE,
+  d: ''
+};
+
+export const assignWebsiteLinkFunction = assignValuesToPOJOFunction<WebsiteLink>({ keysFilter: ['t', 'd'], valueFilter: KeyValueTypleValueFilter.EMPTY });
+export const firestoreWebsiteLinkAssignFn: MapFunction<WebsiteLink, WebsiteLink> = (input) => {
+  const behavior = assignWebsiteLinkFunction({ ...DEFAULT_WEBSITE_LINK }, input);
+  return behavior;
+};
+
+export function firestoreWebsiteLink() {
+  return firestoreField<WebsiteLink, WebsiteLink>({
+    default: () => DEFAULT_WEBSITE_LINK,
+    fromData: firestoreWebsiteLinkAssignFn,
+    toData: firestoreWebsiteLinkAssignFn
+  });
+}
+
+// MARK: WebsiteLink Array
+export function firestoreWebsiteLinkArray() {
+  return firestoreObjectArray({
+    firestoreField: firestoreWebsiteLink()
   });
 }
 

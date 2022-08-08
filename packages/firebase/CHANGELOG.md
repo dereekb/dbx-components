@@ -2,6 +2,20 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [8.14.0](https://github.com/dereekb/dbx-components/compare/v8.13.9-dev...v8.14.0) (2022-08-08)
+
+
+### Bug Fixes
+
+* fixed issue with ModelFirebaseCrudFunctionMapEntry for create ([a5ff2ef](https://github.com/dereekb/dbx-components/commit/a5ff2efe6b80fab53b7258af1feb4e0285d90e72))
+
+
+### Features
+
+* added WebsiteLink ([68eda11](https://github.com/dereekb/dbx-components/commit/68eda11f78f96c3f875bbd69fdc856b4164ea7a3))
+
+
+
 ## [8.13.9](https://github.com/dereekb/dbx-components/compare/v8.13.8-dev...v8.13.9) (2022-08-05)
 
 

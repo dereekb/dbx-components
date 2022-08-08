@@ -339,7 +339,7 @@ git commit --no-verify -m "checkpoint: added jest configurations"
 
 # Install npm dependencies
 npm install firebase@9.8.4 firebase-admin@^11.0.0 firebase-functions@^3.22.0 @dereekb/date@$DBX_COMPONENTS_VERSION @dereekb/model@$DBX_COMPONENTS_VERSION @dereekb/rxjs@$DBX_COMPONENTS_VERSION @dereekb/util@$DBX_COMPONENTS_VERSION @dereekb/dbx-analytics@$DBX_COMPONENTS_VERSION @dereekb/dbx-web@$DBX_COMPONENTS_VERSION @dereekb/dbx-form@$DBX_COMPONENTS_VERSION @dereekb/firebase@$DBX_COMPONENTS_VERSION @dereekb/firebase-server@$DBX_COMPONENTS_VERSION @dereekb/dbx-firebase@$DBX_COMPONENTS_VERSION
-npm install angular-calendar@^0.29.0    # TODO: Temporary
+npm install angular-calendar@~0.29.0 angular-resize-event@~3.1.1    # TODO: Temporary
 npm install -D firebase-tools@^11.0.0 @ngrx/store-devtools@^13.0.0 @firebase/rules-unit-testing@^2.0.2 firebase-functions-test@2.2.0 envfile env-cmd
 
 git add --all

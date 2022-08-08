@@ -2,6 +2,7 @@ import { Ng2StateDeclaration } from '@uirouter/angular';
 import { DocExtensionLayoutComponent } from './container/layout.component';
 import { DocExtensionCalendarComponent } from './container/calendar.component';
 import { DocExtensionHomeComponent } from './container/home.component';
+import { DocExtensionWidgetComponent } from './container/widget.component';
 
 export const layoutState: Ng2StateDeclaration = {
   url: '/extension',
@@ -22,4 +23,16 @@ export const docExtensionCalendarState: Ng2StateDeclaration = {
   component: DocExtensionCalendarComponent
 };
 
-export const STATES: Ng2StateDeclaration[] = [layoutState, homeState, docExtensionCalendarState];
+export const docExtensionWidgetState: Ng2StateDeclaration = {
+  url: '/widget',
+  name: 'doc.extension.widget',
+  component: DocExtensionWidgetComponent
+};
+
+export const STATES: Ng2StateDeclaration[] = [
+  //
+  layoutState,
+  homeState,
+  docExtensionCalendarState,
+  docExtensionWidgetState
+];

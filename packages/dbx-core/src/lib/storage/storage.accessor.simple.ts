@@ -1,6 +1,6 @@
 import { Observable, map } from 'rxjs';
 import { timeHasExpired, unixTimeNumberForNow } from '@dereekb/date';
-import { DataDoesNotExistError, DataIsExpiredError, ReadStoredData, StoredData, StoredDataStorageKey, StoredDataString, Maybe, hasNonNullValue } from '@dereekb/util';
+import { DataDoesNotExistError, DataIsExpiredError, ReadStoredData, StoredData, StoredDataStorageKey, StoredDataString, Maybe, hasNonNullValue, splitJoinRemainder } from '@dereekb/util';
 import { StorageAccessor } from './storage.accessor';
 
 // MARK: SimpleStorageAccessor
@@ -223,7 +223,7 @@ export class SimpleStorageAccessor<T> implements StorageAccessor<T> {
   }
 
   protected decodeStorageKey(storageKey: StoredDataStorageKey): string {
-    const split = storageKey.split(this._config.prefixSplitter, 2);
+    const split = splitJoinRemainder(storageKey, this._config.prefixSplitter, 2);
     return split[1];
   }
 

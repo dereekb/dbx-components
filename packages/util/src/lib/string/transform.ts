@@ -61,3 +61,26 @@ export function transformStringFunction<S extends string = string>(config: Trans
 
   return transform as unknown as TransformStringFunction<S>;
 }
+
+export function addPrefix(prefix: string, input: string): string {
+  return addPrefixFunction(prefix)(input);
+}
+
+/**
+ * Function that adds a configured prefix to the input string if it does not exist on that string.
+ */
+export type AddPrefixFunction = (input: string) => string;
+
+/**
+ * Creates an AddPrefixFunction
+ *
+ * @param input
+ * @param replacement
+ * @param is
+ * @returns
+ */
+export function addPrefixFunction(prefix: string): AddPrefixFunction {
+  return (input: string) => {
+    return input.startsWith(prefix) ? input : prefix + input;
+  };
+}

@@ -1,4 +1,4 @@
-import { IndexNumber, IndexRef } from '../value/indexed';
+import { IndexRange, IndexNumber, IndexRef, IndexRangeInput, indexRange } from '../value/indexed';
 import { Maybe } from '../value/maybe.type';
 
 /**
@@ -81,4 +81,14 @@ export function findBestIndexSetPair<T>(input: IndexSetPairSet<T>, compare: (a: 
   }
 
   return best;
+}
+
+/**
+ * Slices a configured index range from the input array.
+ */
+export type SliceIndexRangeFunction<T> = (input: T[]) => T[];
+
+export function sliceIndexRangeFunction<T>(inputRange: IndexRangeInput): SliceIndexRangeFunction<T> {
+  const range = indexRange(inputRange);
+  return (input: T[]) => input.slice(range.minIndex, range.maxIndex);
 }

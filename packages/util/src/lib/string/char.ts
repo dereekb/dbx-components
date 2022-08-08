@@ -1,3 +1,6 @@
+import { ArrayOrValue } from '../array/array';
+import { DecisionFunction } from '../value/decision';
+
 export interface FirstAndLastCharacterOccurrence {
   readonly first: number | -1;
   readonly last: number | -1;
@@ -44,6 +47,54 @@ export function firstAndLastCharacterOccurrence(input: string, find: string): Fi
     last,
     occurences
   };
+}
+
+/**
+ * Function that replaces the last character with the configured replacement string if it is any of the configured values.
+ */
+export type ReplaceLastCharacterIfIsFunction = (input: string) => string;
+
+/**
+ * Replaces the last character with the replacement string if it is any of the input values.
+ *
+ * @param input
+ * @param replacement
+ * @param is
+ * @returns
+ */
+export function replaceLastCharacterIfIsFunction(replacement: string, is: ArrayOrValue<string>): ReplaceLastCharacterIfIsFunction {
+  const matches = new Set(is);
+  return (input: string) => {
+    return replaceLastCharacterIf(input, replacement, (x) => matches.has(x));
+  };
+}
+
+/**
+ * Replaces the last character with the replacement string if the decision is true.
+ *
+ * @param input
+ * @param index
+ * @param replacement
+ * @returns
+ */
+export function replaceLastCharacterIf(input: string, replacement: string, decision: DecisionFunction<string>): string {
+  return input.length > 0 ? replaceCharacterAtIndexIf(input, input.length - 1, replacement, decision) : input;
+}
+
+/**
+ * Replaces the character at the given index with the replacement string if the decision is true.
+ *
+ * @param input
+ * @param index
+ * @param replacement
+ * @returns
+ */
+export function replaceCharacterAtIndexIf(input: string, index: number, replacement: string, decision: DecisionFunction<string>): string {
+  if (decision(input[index])) {
+    return replaceCharacterAtIndexWith(input, index, replacement);
+  } else {
+    return input;
+  }
 }
 
 /**
