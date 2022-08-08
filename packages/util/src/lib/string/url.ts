@@ -1,9 +1,11 @@
-import { toAbsoluteSlashPathStartType } from '../path/path';
+import { IndexRangeInput } from './../value/indexed';
+import { isolateSlashPathFunction, SLASH_PATH_SEPARATOR, toAbsoluteSlashPathStartType } from '../path/path';
 import { chainMapSameFunctions, MapFunction } from '../value/map';
 import { Maybe } from '../value/maybe.type';
 import { escapeStringForRegex } from './replace';
 import { splitJoinRemainder } from './string';
 import { TransformStringFunction } from './transform';
+import { replaceLastCharacterIfIsFunction } from './char';
 
 /**
  * A website domain.
@@ -15,15 +17,37 @@ import { TransformStringFunction } from './transform';
 export type WebsiteDomain = string;
 
 /**
+ * Simple website domain regex that looks for a period between the domain and the tld
+ */
+export const WEBSITE_DOMAIN_NAME_REGEX = /(.+)\.(.+)/;
+
+/**
+ * Returns true if the input probably has a website domain in it.
+ *
+ * Examples where it will return true:
+ * - dereekb.com
+ * - https://components.dereekb.com
+ * - https://components.dereekb.com/
+ * - https://components.dereekb.com/doc/home
+ *
+ * @param input
+ * @returns
+ */
+export function hasWebsiteDomain(input: string): input is WebsiteDomain {
+  return WEBSITE_DOMAIN_NAME_REGEX.test(input);
+}
+
+/**
  * A website url that starts with http:// or https://
  */
 export type BaseWebsiteUrl<D extends WebsiteDomain = WebsiteDomain> = `http://${D}` | `https://${D}`;
 
 /**
- * A website url.
+ * A website url. Is at minimum a domain.
  *
  * Examples:
  * - dereekb.com
+ * - https://components.dereekb.com
  * - https://components.dereekb.com/
  * - https://components.dereekb.com/doc/home
  */
@@ -61,10 +85,14 @@ export type IsolateWebsitePathFunction = MapFunction<WebsitePath | WebsiteDomain
 
 export interface IsolateWebsitePathFunctionConfig {
   /**
+   * Optional range of paths to isolate.
+   */
+  isolatePathComponents?: IndexRangeInput;
+  /**
    * Base path to remove/ignore when isolating a path from the input.
    *
    * For example:
-   * - can be /u or /u
+   * - For Reddit it could ignore /u or /u
    */
   ignoredBasePath?: string;
   /**
@@ -73,6 +101,12 @@ export interface IsolateWebsitePathFunctionConfig {
    * False by default.
    */
   removeQueryParameters?: boolean;
+  /**
+   * Whether or not to remove any trailing slash from the path.
+   *
+   * False by default.
+   */
+  removeTrailingSlash?: boolean;
 }
 
 /**
@@ -81,14 +115,40 @@ export interface IsolateWebsitePathFunctionConfig {
  * @param basePath
  */
 export function isolateWebsitePathFunction(config: IsolateWebsitePathFunctionConfig = {}): IsolateWebsitePathFunction {
-  const { removeQueryParameters, ignoredBasePath } = config;
+  const { removeQueryParameters, ignoredBasePath, isolatePathComponents, removeTrailingSlash } = config;
   const basePathRegex: Maybe<RegExp> = ignoredBasePath ? new RegExp('^' + escapeStringForRegex(toAbsoluteSlashPathStartType(ignoredBasePath))) : undefined;
+  const isolateRange = isolatePathComponents != null ? isolateSlashPathFunction({ range: isolatePathComponents, startType: 'absolute' }) : undefined;
+  const replaceTrailingSlash = removeTrailingSlash === true ? replaceLastCharacterIfIsFunction('', SLASH_PATH_SEPARATOR) : undefined;
 
   const pathTransform: TransformStringFunction<WebsitePath> = chainMapSameFunctions([
     // remove any base path
     basePathRegex != null ? (inputPath) => inputPath.replace(basePathRegex as RegExp, '') as WebsitePath : undefined,
     // remove the query parameters
-    removeQueryParameters != null ? (inputPath) => websitePathAndQueryPair(inputPath).path : undefined
+    removeQueryParameters != null ? (inputPath) => websitePathAndQueryPair(inputPath).path : undefined,
+    // isolate range
+    isolateRange != null
+      ? (inputPath) => {
+          let result = isolateRange(inputPath);
+
+          // retain the query if one is available.
+          if (removeQueryParameters !== true) {
+            const { query } = websitePathAndQueryPair(inputPath);
+
+            if (query) {
+              result = result + query;
+            }
+          }
+
+          return result as WebsitePath;
+        }
+      : undefined,
+    // remove trailing slash from path
+    replaceTrailingSlash != null
+      ? (((inputPath) => {
+          const { path, query } = websitePathAndQueryPair(inputPath);
+          return replaceTrailingSlash(path) + (query ?? '');
+        }) as TransformStringFunction<WebsitePath>)
+      : undefined
   ]);
 
   return (input: WebsitePath | WebsiteDomainAndPath | WebsiteUrl) => {
@@ -161,4 +221,13 @@ export const HTTP_OR_HTTPS_REGEX: RegExp = /^https:\/\/|http:\/\//;
  */
 export function removeHttpFromUrl(url: BaseWebsiteUrl | string): WebsiteDomainAndPath {
   return url.replace(HTTP_OR_HTTPS_REGEX, '');
+}
+
+/**
+ * Returns true if the input string starts with http/https
+ *
+ * @param input
+ */
+export function hasHttpPrefix(input: string): input is BaseWebsiteUrl {
+  return HTTP_OR_HTTPS_REGEX.test(input);
 }

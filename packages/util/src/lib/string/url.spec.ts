@@ -1,6 +1,28 @@
-import { isolateWebsitePathFunction, removeHttpFromUrl, websiteDomainAndPathPairFromWebsiteUrl, websitePathAndQueryPair, websitePathFromWebsiteDomainAndPath, websitePathFromWebsiteUrl } from './url';
+import { isolateWebsitePathFunction, hasWebsiteDomain, removeHttpFromUrl, websiteDomainAndPathPairFromWebsiteUrl, websitePathAndQueryPair, websitePathFromWebsiteDomainAndPath, websitePathFromWebsiteUrl } from './url';
 
 const domain = 'dereekb.com';
+
+describe('hasWebsiteDomain()', () => {
+  it('should return true for website domains', () => {
+    const result = hasWebsiteDomain('dereekb.com');
+    expect(result).toBe(true);
+  });
+
+  it('should return true for sub-domains', () => {
+    const result = hasWebsiteDomain('components.dereekb.com');
+    expect(result).toBe(true);
+  });
+
+  it('should return true for website domains with http prefix', () => {
+    const result = hasWebsiteDomain('https://dereekb.com');
+    expect(result).toBe(true);
+  });
+
+  it('should return false for strings without a tld', () => {
+    const result = hasWebsiteDomain('dereekb');
+    expect(result).toBe(false);
+  });
+});
 
 describe('isolateWebsitePathFunction()', () => {
   describe('function', () => {
@@ -41,6 +63,31 @@ describe('isolateWebsitePathFunction()', () => {
       it('should isolate the path from the input without the query parameters', () => {
         const result = isolateFn(fullUrl + '?test=true');
         expect(result).toBe(path);
+      });
+    });
+
+    describe('isolatePathComponents', () => {
+      const isolateFn = isolateWebsitePathFunction({
+        isolatePathComponents: 0 // keep only the first path part (/test)
+      });
+
+      it('should isolate the path from the input without the query parameters', () => {
+        const query = '?test=true';
+        const result = isolateFn(fullUrl + query);
+        expect(result).toBe(`${basePath}/${query}`);
+      });
+
+      describe('removeTrailingSlash=true', () => {
+        const isolateFn = isolateWebsitePathFunction({
+          removeTrailingSlash: true,
+          isolatePathComponents: 0 // keep only the first path part (/test)
+        });
+
+        it('should isolate the path from the input without the query parameters and remove the trailing slash', () => {
+          const query = '?test=true';
+          const result = isolateFn(fullUrl + query);
+          expect(result).toBe(`${basePath}${query}`);
+        });
       });
     });
   });

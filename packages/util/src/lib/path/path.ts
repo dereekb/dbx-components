@@ -361,7 +361,18 @@ export function isolateSlashPath(path: SlashPath, range: IndexRangeInput): Slash
  * isolateSlashPathFunction() config.
  */
 export interface IsolateSlashPathFunctionConfig {
+  /**
+   * Range to isolate
+   */
   range: IndexRangeInput;
+  /**
+   * Start type to force the result to be.
+   */
+  startType?: SlashPathStartType;
+  /**
+   * Whether or not to isolate the path to a file path. If true, the result string will not end with a slash.
+   */
+  asFile?: boolean;
 }
 
 /**
@@ -378,6 +389,7 @@ export type IsolateSlashPathFunction = (path: SlashPath) => SlashPath;
  * @returns
  */
 export function isolateSlashPathFunction(config: IsolateSlashPathFunctionConfig): IsolateSlashPathFunction {
+  const { startType, asFile } = config;
   const range = indexRange(config.range);
   const sliceRange = sliceIndexRangeFunction(range);
 
@@ -385,14 +397,13 @@ export function isolateSlashPathFunction(config: IsolateSlashPathFunctionConfig)
     const split = toRelativeSlashPathStartType(path).split(SLASH_PATH_SEPARATOR);
     const splitRange = sliceRange(split);
     let joined = splitRange.join(SLASH_PATH_SEPARATOR);
-
-    const isFolder = split.length > range.maxIndex;
+    const isFolder = asFile !== true && split.length > range.maxIndex;
 
     if (isFolder) {
       joined = joined + SLASH_PATH_SEPARATOR; // end with a slash.
     }
 
-    if (path.startsWith(SLASH_PATH_SEPARATOR)) {
+    if (startType === 'absolute' || path.startsWith(SLASH_PATH_SEPARATOR)) {
       return toAbsoluteSlashPathStartType(joined);
     } else {
       return joined;
