@@ -359,7 +359,7 @@ export function dateBlockRangeToDateBlockIndexRange(range: DateBlockRange): Date
   return { minIndex: range.i, maxIndex: (range.to ?? range.i) + 1 };
 }
 
-export function dateBlockIndexRangeToDateBlockRange(range: DateBlockIndexRange): DateBlockRange {
+export function dateBlockIndexRangeToDateBlockRange(range: DateBlockIndexRange): DateBlockRangeWithRange {
   return { i: range.minIndex, to: range.maxIndex - 1 };
 }
 
