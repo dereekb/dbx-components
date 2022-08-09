@@ -6,12 +6,13 @@ import { Observable } from 'rxjs';
 import { FirestoreAccessorDriverRef } from '../driver/accessor';
 import { FirestoreCollectionNameRef, FirestoreModelId, FirestoreModelIdentityCollectionName, FirestoreModelIdentityModelType, FirestoreModelIdentityRef, FirestoreModelIdRef, FirestoreModelKey, FirestoreModelKeyRef } from './../collection/collection';
 import { DocumentReference, CollectionReference, Transaction, WriteBatch, DocumentSnapshot, SnapshotOptions, WriteResult, FirestoreDataConverter } from '../types';
-import { createOrUpdateWithAccessorSet, dataFromSnapshotStream, FirestoreDocumentDataAccessor, FirestoreDocumentUpdateParams, updateWithAccessorSet, updateWithAccessorUpdateAndConverterFunction } from './accessor';
+import { FirestoreAccessorIncrementUpdate, createOrUpdateWithAccessorSet, dataFromSnapshotStream, FirestoreDocumentDataAccessor, FirestoreDocumentUpdateParams, updateWithAccessorSet, updateWithAccessorUpdateAndConverterFunction } from './accessor';
 import { CollectionReferenceRef, DocumentReferenceRef, FirestoreContextReference, FirestoreDataConverterRef } from '../reference';
 import { FirestoreDocumentContext } from './context';
 import { build, Maybe } from '@dereekb/util';
 import { FirestoreModelTypeRef, FirestoreModelIdentity, FirestoreModelTypeModelIdentityRef } from '../collection/collection';
 import { InterceptAccessorFactoryFunction } from './accessor.wrap';
+import { incrementUpdateWithAccessorFunction } from './increment';
 
 export interface FirestoreDocument<T, I extends FirestoreModelIdentity = FirestoreModelIdentity> extends FirestoreDataConverterRef<T>, DocumentReferenceRef<T>, CollectionReferenceRef<T>, FirestoreModelIdentityRef<I>, FirestoreModelTypeRef<FirestoreModelIdentityModelType<I>>, FirestoreCollectionNameRef<FirestoreModelIdentityCollectionName<I>>, FirestoreModelKeyRef, FirestoreModelIdRef {
   readonly accessor: FirestoreDocumentDataAccessor<T>;
@@ -23,6 +24,7 @@ export interface FirestoreDocument<T, I extends FirestoreModelIdentity = Firesto
   create(data: T): Promise<WriteResult | void>;
   update(data: Partial<T>): Promise<WriteResult | void>;
   createOrUpdate(data: Partial<T>): Promise<WriteResult | void>;
+  increment(data: FirestoreAccessorIncrementUpdate<T>): Promise<WriteResult | void>;
 }
 
 /**
@@ -130,6 +132,15 @@ export abstract class AbstractFirestoreDocument<T, D extends AbstractFirestoreDo
    */
   createOrUpdate(data: Partial<T>): Promise<WriteResult | void> {
     return createOrUpdateWithAccessorSet(this.accessor)(data);
+  }
+
+  /**
+   * Updates the document using the accessor's increment functionality.
+   *
+   * @param data
+   */
+  increment(data: FirestoreAccessorIncrementUpdate<T>): Promise<WriteResult | void> {
+    return incrementUpdateWithAccessorFunction<T>(this.accessor)(data);
   }
 }
 

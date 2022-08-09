@@ -1,6 +1,7 @@
 import { DocumentReference, DocumentSnapshot, Transaction as GoogleCloudTransaction, SetOptions } from '@google-cloud/firestore';
 import { from, Observable } from 'rxjs';
-import { WithFieldValue, UpdateData, FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, FirestoreDocumentContext, FirestoreDocumentContextType, FirestoreDocumentUpdateParams, FirestoreDataConverter, DocumentData } from '@dereekb/firebase';
+import { WithFieldValue, UpdateData, FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, FirestoreDocumentContext, FirestoreDocumentContextType, FirestoreDocumentUpdateParams, FirestoreDataConverter, DocumentData, FirestoreAccessorIncrementUpdate } from '@dereekb/firebase';
+import { firestoreServerIncrementUpdateToUpdateData } from './increment';
 
 // MARK: Accessor
 /**
@@ -38,6 +39,10 @@ export class TransactionFirestoreDocumentDataAccessor<T> implements FirestoreDoc
   set(data: WithFieldValue<T>, options?: SetOptions): Promise<void> {
     this.transaction.set(this.documentRef, data as Partial<T>, options as SetOptions);
     return Promise.resolve();
+  }
+
+  increment(data: FirestoreAccessorIncrementUpdate<T>, params?: FirestoreDocumentUpdateParams): Promise<void> {
+    return this.update(firestoreServerIncrementUpdateToUpdateData(data), params);
   }
 
   update(data: UpdateData<T>, params?: FirestoreDocumentUpdateParams): Promise<void> {

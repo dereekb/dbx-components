@@ -12,10 +12,26 @@ export type GrantedSysAdminRole = typeof GRANTED_SYS_ADMIN_ROLE_KEY;
 export const GRANTED_SYS_ADMIN_ROLE_KEY = 'sysadmin';
 
 /**
+ * Communicates that the current context is an admin/owner.
+ */
+export type GrantedOwnerRole = typeof GRANTED_OWNER_ROLE_KEY;
+export const GRANTED_OWNER_ROLE_KEY = 'owner';
+
+/**
  * Communicates that the current context is an admin.
  */
 export type GrantedAdminRole = typeof GRANTED_ADMIN_ROLE_KEY;
 export const GRANTED_ADMIN_ROLE_KEY = 'admin';
+
+/**
+ * Returns true if the input role is a GrantedAdminRole or a GrantedOwnerRole.
+ *
+ * @param role
+ * @returns
+ */
+export function isGrantedAdminLevelRole(role: GrantedRole): boolean {
+  return role === GRANTED_ADMIN_ROLE_KEY || role === GRANTED_OWNER_ROLE_KEY;
+}
 
 /**
  * Communicates that the current context has read access to a model.

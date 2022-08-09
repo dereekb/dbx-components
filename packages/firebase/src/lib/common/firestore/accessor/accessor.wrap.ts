@@ -1,6 +1,6 @@
 import { Observable } from 'rxjs';
 import { DocumentData, DocumentReference, DocumentSnapshot, FirestoreDataConverter, PartialWithFieldValue, SetOptions, UpdateData, WithFieldValue, WriteResult } from '../types';
-import { FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, FirestoreDocumentDeleteParams, FirestoreDocumentUpdateParams } from './accessor';
+import { FirestoreAccessorIncrementUpdate, FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, FirestoreDocumentDeleteParams, FirestoreDocumentUpdateParams } from './accessor';
 
 // MARK: Abstract Wrapper
 /**
@@ -46,6 +46,10 @@ export abstract class AbstractFirestoreDocumentDataAccessorWrapper<T, D = Docume
 
   update(data: UpdateData<D>, params?: FirestoreDocumentUpdateParams): Promise<void | WriteResult> {
     return this.accessor.update(data, params);
+  }
+
+  increment(data: FirestoreAccessorIncrementUpdate<T>, params?: FirestoreDocumentUpdateParams): Promise<WriteResult | void> {
+    return this.accessor.increment(data, params);
   }
 }
 

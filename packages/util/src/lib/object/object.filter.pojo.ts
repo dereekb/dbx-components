@@ -126,12 +126,28 @@ export const filterOnlyUndefinedValues: GeneralFilterFromPOJOFunction = filterFr
 export const filterNullAndUndefinedValues: GeneralFilterFromPOJOFunction = filterFromPOJOFunction({ copy: true, filter: { valueFilter: KeyValueTypleValueFilter.NULL } }) as GeneralFilterFromPOJOFunction;
 
 /**
+ * Returns a copy of the input object with all falsy and empty filtered from it.
+ *
+ * @param obj
+ * @returns
+ */
+export const filterFalsyAnyEmptyValues: GeneralFilterFromPOJOFunction = filterFromPOJOFunction({ copy: true, filter: { valueFilter: KeyValueTypleValueFilter.FALSY_AND_EMPTY } }) as GeneralFilterFromPOJOFunction;
+
+/**
  * Returns all keys that are not associated with an undefined value.
  *
  * @param obj
  * @returns
  */
 export const allNonUndefinedKeys: GeneralFindPOJOKeysFunction = findPOJOKeysFunction({ valueFilter: KeyValueTypleValueFilter.UNDEFINED });
+
+/**
+ * Returns all keys that are not associated with a falsy or empty value.
+ *
+ * @param obj
+ * @returns
+ */
+export const allFalsyOrEmptyKeys: GeneralFindPOJOKeysFunction = findPOJOKeysFunction({ valueFilter: KeyValueTypleValueFilter.FALSY_AND_EMPTY });
 
 /**
  * Returns all keys that are not associated with a null/undefined value.

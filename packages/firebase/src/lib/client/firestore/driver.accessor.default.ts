@@ -1,7 +1,8 @@
 import { onSnapshot, DocumentReference, DocumentSnapshot, UpdateData, WithFieldValue, getDoc, deleteDoc, setDoc, updateDoc } from '@firebase/firestore';
 import { Observable } from 'rxjs';
-import { assertFirestoreUpdateHasData, DocumentData, FirestoreDataConverter, FirestoreDocumentContext, FirestoreDocumentContextType, FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, SetOptions, streamFromOnSnapshot } from '../../common/firestore';
+import { assertFirestoreUpdateHasData, DocumentData, FirestoreAccessorIncrementUpdate, FirestoreDataConverter, FirestoreDocumentContext, FirestoreDocumentContextType, FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, SetOptions, streamFromOnSnapshot, WriteResult } from '../../common/firestore';
 import { createWithAccessor } from './driver.accessor.create';
+import { firestoreClientIncrementUpdateToUpdateData } from './increment';
 
 // MARK: Accessor
 export class DefaultFirestoreDocumentDataAccessor<T> implements FirestoreDocumentDataAccessor<T> {
@@ -33,6 +34,10 @@ export class DefaultFirestoreDocumentDataAccessor<T> implements FirestoreDocumen
 
   set(data: WithFieldValue<T>, options?: SetOptions): Promise<void> {
     return setDoc(this.documentRef, data, options as SetOptions);
+  }
+
+  increment(data: FirestoreAccessorIncrementUpdate<T>): Promise<void | WriteResult> {
+    return this.update(firestoreClientIncrementUpdateToUpdateData(data));
   }
 
   update(data: UpdateData<unknown>): Promise<void> {
