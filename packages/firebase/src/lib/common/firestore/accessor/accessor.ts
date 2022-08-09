@@ -1,8 +1,9 @@
 import { filterMaybe } from '@dereekb/rxjs';
-import { filterUndefinedValues, Maybe, objectHasNoKeys } from '@dereekb/util';
+import { filterUndefinedValues, KeyValueTransformMap, Maybe, objectHasNoKeys } from '@dereekb/util';
 import { WriteResult, SnapshotOptions, DocumentReference, DocumentSnapshot, UpdateData, WithFieldValue, PartialWithFieldValue, SetOptions, Precondition, DocumentData, FirestoreDataConverter } from '../types';
 import { map, Observable, OperatorFunction } from 'rxjs';
 import { DocumentReferenceRef } from '../reference';
+import { PickProperties } from 'ts-essentials';
 
 export interface FirestoreDocumentDeleteParams {
   precondition?: Precondition;
@@ -11,6 +12,13 @@ export interface FirestoreDocumentDeleteParams {
 export interface FirestoreDocumentUpdateParams {
   precondition?: Precondition;
 }
+
+/**
+ * Used for performing increment updates.
+ *
+ * Is an object that contains the amount to increment.
+ */
+export type FirestoreAccessorIncrementUpdate<T> = Partial<KeyValueTransformMap<PickProperties<T, Maybe<number> | number>, number>>;
 
 /**
  * Firestore database accessor instance used to retrieve and make changes to items in the database.
@@ -59,6 +67,15 @@ export interface FirestoreDocumentDataAccessor<T, D = DocumentData> extends Docu
    * @param data
    */
   update(data: UpdateData<D>, params?: FirestoreDocumentUpdateParams): Promise<WriteResult | void>;
+  /**
+   * Directly updates the data in the database using the input increment, skipping the use of the converter, etc.
+   *
+   * If the input data is undefined or an empty object, it will fail.
+   * If the document doesn't exist, it will fail.
+   *
+   * @param data
+   */
+  increment(data: FirestoreAccessorIncrementUpdate<T>, params?: FirestoreDocumentUpdateParams): Promise<WriteResult | void>;
 }
 
 export type FirestoreDocumentDataAccessorCreateFunction<T> = (data: WithFieldValue<T>) => Promise<void | WriteResult>;

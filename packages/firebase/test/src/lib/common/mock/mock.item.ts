@@ -44,6 +44,10 @@ export interface MockItem {
    */
   date?: Maybe<Date>;
   /**
+   * Optional number value
+   */
+  number?: Maybe<number>;
+  /**
    * List of tags.
    */
   tags?: Maybe<string[]>;
@@ -84,6 +88,7 @@ export const mockItemConverter = snapshotConverterFunctions<MockItem, MockItemDa
     value: optionalFirestoreString(),
     tags: optionalFirestoreArray(),
     date: optionalFirestoreDate(),
+    number: optionalFirestoreNumber(),
     test: firestoreBoolean({ default: true })
   }
 });

@@ -1,6 +1,7 @@
 import { DocumentReference, WriteBatch as GoogleCloudWriteBatch, DocumentSnapshot } from '@google-cloud/firestore';
 import { from, Observable } from 'rxjs';
-import { WithFieldValue, FirestoreDocumentContext, FirestoreDocumentContextType, FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, FirestoreDocumentDeleteParams, FirestoreDocumentUpdateParams, UpdateData, DocumentData, FirestoreDataConverter } from '@dereekb/firebase';
+import { WithFieldValue, FirestoreDocumentContext, FirestoreDocumentContextType, FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, FirestoreDocumentDeleteParams, FirestoreDocumentUpdateParams, UpdateData, DocumentData, FirestoreDataConverter, FirestoreAccessorIncrementUpdate } from '@dereekb/firebase';
+import { firestoreServerIncrementUpdateToUpdateData } from './increment';
 
 // MARK: Accessor
 /**
@@ -38,6 +39,10 @@ export class WriteBatchFirestoreDocumentDataAccessor<T> implements FirestoreDocu
   set(data: WithFieldValue<T>): Promise<void> {
     this.batch.set(this.documentRef, data);
     return Promise.resolve();
+  }
+
+  increment(data: FirestoreAccessorIncrementUpdate<T>, params?: FirestoreDocumentUpdateParams): Promise<void> {
+    return this.update(firestoreServerIncrementUpdateToUpdateData(data), params);
   }
 
   update(data: UpdateData<T>, params?: FirestoreDocumentUpdateParams): Promise<void> {

@@ -49,6 +49,47 @@ export function describeFirestoreAccessorDriverTests(f: MockItemCollectionFixtur
           loadDocumentForTransaction: (transaction, ref) => f.instance.firestoreCollection.documentAccessorForTransaction(transaction).loadDocument(ref!),
           loadDocumentForWriteBatch: (writeBatch, ref) => f.instance.firestoreCollection.documentAccessorForWriteBatch(writeBatch).loadDocument(ref!)
         }));
+
+        describe('increment()', () => {
+          it(`should increase the item's value`, async () => {
+            let data = await itemDocument.snapshotData();
+
+            expect(data?.number).toBe(undefined);
+
+            const update = { number: 3 };
+            await itemDocument.increment(update);
+
+            data = await itemDocument.snapshotData();
+            expect(data?.number).toBe(update.number);
+          });
+
+          it(`should decrease the item's value`, async () => {
+            let data = await itemDocument.snapshotData();
+
+            expect(data?.number).toBe(undefined);
+
+            const update = { number: -3 };
+            await itemDocument.increment(update);
+
+            data = await itemDocument.snapshotData();
+            expect(data?.number).toBe(update.number);
+          });
+
+          it(`should increase and decrease the item's value`, async () => {
+            let data = await itemDocument.snapshotData();
+
+            expect(data?.number).toBe(undefined);
+
+            const update = { number: 3 };
+            await itemDocument.increment(update);
+
+            const update2 = { number: -6 };
+            await itemDocument.increment(update2);
+
+            data = await itemDocument.snapshotData();
+            expect(data?.number).toBe(update.number + update2.number);
+          });
+        });
       });
 
       describe('Subcollections', () => {

@@ -1,6 +1,7 @@
 import { DocumentReference, WriteResult as GoogleCloudWriteResult, DocumentSnapshot } from '@google-cloud/firestore';
 import { Observable } from 'rxjs';
-import { WithFieldValue, UpdateData, FirestoreDocumentContext, FirestoreDocumentContextType, FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, FirestoreDocumentDeleteParams, FirestoreDocumentUpdateParams, SetOptions, streamFromOnSnapshot, FirestoreDataConverter, DocumentData } from '@dereekb/firebase';
+import { WithFieldValue, UpdateData, FirestoreDocumentContext, FirestoreDocumentContextType, FirestoreDocumentDataAccessor, FirestoreDocumentDataAccessorFactory, FirestoreDocumentDeleteParams, FirestoreDocumentUpdateParams, SetOptions, streamFromOnSnapshot, FirestoreDataConverter, DocumentData, FirestoreAccessorIncrementUpdate } from '@dereekb/firebase';
+import { firestoreServerIncrementUpdateToUpdateData } from './increment';
 
 // MARK: Accessor
 export class DefaultFirestoreDocumentDataAccessor<T> implements FirestoreDocumentDataAccessor<T> {
@@ -32,6 +33,10 @@ export class DefaultFirestoreDocumentDataAccessor<T> implements FirestoreDocumen
 
   set(data: WithFieldValue<T>, options?: SetOptions): Promise<GoogleCloudWriteResult> {
     return options ? this.documentRef.set(data as Partial<T>, options) : this.documentRef.set(data as T);
+  }
+
+  increment(data: FirestoreAccessorIncrementUpdate<T>, params?: FirestoreDocumentUpdateParams): Promise<GoogleCloudWriteResult> {
+    return this.update(firestoreServerIncrementUpdateToUpdateData(data), params);
   }
 
   update(data: UpdateData<T>, params?: FirestoreDocumentUpdateParams): Promise<GoogleCloudWriteResult> {
