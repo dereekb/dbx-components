@@ -1,6 +1,6 @@
 import { UNKNOWN_WEBSITE_LINK_TYPE, WebsiteLink, GrantedRole } from '@dereekb/model';
 import { FirestoreModelKey } from '../collection/collection';
-import { nowISODateString, toISODateString, toJsDate } from '@dereekb/date';
+import { DateBlockRange, nowISODateString, toISODateString, toJsDate } from '@dereekb/date';
 import {
   ModelFieldMapFunctionsConfig,
   GetterOrValue,
@@ -579,6 +579,37 @@ export function firestoreWebsiteLink() {
 export function firestoreWebsiteLinkArray() {
   return firestoreObjectArray({
     firestoreField: firestoreWebsiteLink()
+  });
+}
+
+// MARK: DateBlockRange
+export const DEFAULT_DATE_BLOCK_RANGE: DateBlockRange = {
+  i: 0
+};
+
+export const assignDateBlockRangeFunction = assignValuesToPOJOFunction<DateBlockRange>({ keysFilter: ['i', 'to'], valueFilter: KeyValueTypleValueFilter.NULL });
+export const firestoreDateBlockRangeAssignFn: MapFunction<DateBlockRange, DateBlockRange> = (input) => {
+  const block = assignDateBlockRangeFunction(DEFAULT_DATE_BLOCK_RANGE, input);
+
+  if (block.to == null) {
+    block.to = block.i;
+  }
+
+  return block;
+};
+
+export function firestoreDateBlockRange() {
+  return firestoreField<DateBlockRange, DateBlockRange>({
+    default: DEFAULT_DATE_BLOCK_RANGE,
+    fromData: firestoreDateBlockRangeAssignFn,
+    toData: firestoreDateBlockRangeAssignFn
+  });
+}
+
+// MARK: DateBlockRange Array
+export function firestoreDateBlockRangeArray() {
+  return firestoreObjectArray({
+    firestoreField: firestoreDateBlockRange()
   });
 }
 
