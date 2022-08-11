@@ -3,7 +3,7 @@
   "version": "8.15.2",
   "license": "MIT",
   "scripts": {
-    "postinstall": "ngcc --properties es2015 browser module main",
+    "postinstall": "ngcc --properties es2020 browser module main",
     "prepare": "husky install"
   },
   "private": true,
