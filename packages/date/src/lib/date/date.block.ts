@@ -1,4 +1,4 @@
-import { DayOfWeek, RequiredOnKeys, IndexNumber, IndexRange, indexRangeCheckFunction, IndexRef, MINUTES_IN_DAY, MS_IN_DAY, sortAscendingIndexNumberRefFunction, UniqueModel, lastValue, FactoryWithRequiredInput, FilterFunction, mergeFilterFunctions, range, Milliseconds, Hours, MapFunction, getNextDay } from '@dereekb/util';
+import { DayOfWeek, RequiredOnKeys, IndexNumber, IndexRange, indexRangeCheckFunction, IndexRef, MINUTES_IN_DAY, MS_IN_DAY, UniqueModel, lastValue, FactoryWithRequiredInput, FilterFunction, mergeFilterFunctions, range, Milliseconds, Hours, MapFunction, getNextDay, SortCompareFunction, sortAscendingIndexNumberRefFunction } from '@dereekb/util';
 import { dateRange, DateRange, DateRangeDayDistanceInput, DateRangeType, isDateRange } from './date.range';
 import { DateDurationSpan } from './date.duration';
 import { differenceInDays, differenceInMilliseconds, isBefore, addDays, addMinutes, setSeconds, addMilliseconds, hoursToMilliseconds, addHours } from 'date-fns';
@@ -452,6 +452,27 @@ export function dateBlockRange(i: number, to?: number): DateBlockRangeWithRange 
 }
 
 /**
+ * Sorts the input ranges by index and distance (to values).
+ *
+ * In many cases sortAscendingIndexNumberRefFunction may be preferential since
+ *
+ * @returns
+ */
+export function sortDateBlockRangeAndSizeFunction<T extends DateBlockRange>(): SortCompareFunction<T> {
+  return (a, b) => a.i - b.i || (a.to ?? a.i) - (b.to ?? b.i);
+}
+
+/**
+ * Sorts the input date ranges. This will retain the before/after order while also sorting items by index.
+ *
+ * @param input
+ * @returns
+ */
+export function sortDateBlockRanges<T extends DateBlockRange>(input: T[]): T[] {
+  return input.sort(sortAscendingIndexNumberRefFunction());
+}
+
+/**
  * DateBlockRange that is known to have a to value.
  */
 export type DateBlockRangeWithRange = RequiredOnKeys<DateBlockRange, 'to'>;
@@ -467,7 +488,7 @@ export function groupToDateBlockRanges(input: (DateBlock | DateBlockRange)[]): D
   }
 
   // sort by index in ascending order
-  const blocks = input.sort(sortAscendingIndexNumberRefFunction());
+  const blocks = sortDateBlockRanges(input);
 
   function newBlockFromBlocksIndex(blocksIndex: number): DateBlockRangeWithRange {
     const { i, to } = blocks[blocksIndex] as DateBlockRange;
@@ -553,10 +574,10 @@ export interface UniqueDateBlockRangeGroup<B extends DateBlockRange | UniqueDate
 }
 
 /**
- * Groups all input DateBlockRange or UniqueDateBlock values into a UniqueDateBlockRangeGroup value.
+ * Groups all input DateBlockRange or UniqueDateBlock values into a UniqueDateBlockRangeGroup value amd sorts the input.
  */
 export function groupUniqueDateBlocks<B extends DateBlockRange | UniqueDateBlock>(input: B[]): UniqueDateBlockRangeGroup<B> {
-  const blocks = [...input].sort(sortAscendingIndexNumberRefFunction());
+  const blocks = sortDateBlockRanges([...input]);
 
   const i = 0;
   let to: number;
@@ -662,7 +683,7 @@ export function expandUniqueDateBlocks<B extends DateBlockRange | UniqueDateBloc
         addGapBlock(gapStartIndex, i - 1);
       }
 
-      const to = Math.min(inputTo, maxAllowedIndex);
+      const to = Math.min(inputTo, maxAllowedIndex) || 0;
 
       const block: B = {
         ...inputBlock,
@@ -694,7 +715,7 @@ export function expandUniqueDateBlocks<B extends DateBlockRange | UniqueDateBloc
         };
 
         const block: B = fillFactory(dateBlockRange);
-        addBlockWithRange(block, i, to);
+        addBlockWithRange(block, i, to ?? i);
       } else if (blocks.length > 0) {
         // do not extend if no blocks have been pushed.
         const blockToExtend = lastValue(blocks);
@@ -776,6 +797,19 @@ export function expandUniqueDateBlocks<B extends DateBlockRange | UniqueDateBloc
           addBlockWithRange(current, currentNextIndex, currentEndIndex);
           // change next to start at the next range
           continueToNext({ ...next, i: currentEndIndex + 1, to: nextEndIndex });
+        } else {
+          // the next item ends before the current item.
+          if (overwriteOption === 'current') {
+            // add the next item first since it overwrites the current
+            addBlockWithRange(next, nextStartIndex, nextEndIndex);
+            // continue with the current item as next.
+            continueToNext({ ...current, i: nextEndIndex + 1, to: currentEndIndex });
+          } else {
+            // discard the next value.
+            discard(next);
+            // continue with the current value
+            continueToNext(current);
+          }
         }
       } else {
         // Check for any overlap
@@ -796,7 +830,6 @@ export function expandUniqueDateBlocks<B extends DateBlockRange | UniqueDateBloc
         } else {
           // add the block
           addBlockWithRange(current, currentNextIndex, currentEndIndex);
-
           // continue to next
           continueToNext();
         }
@@ -805,7 +838,6 @@ export function expandUniqueDateBlocks<B extends DateBlockRange | UniqueDateBloc
 
     if (current != null) {
       // if current != null, then atleast one block was input/remaining.
-
       const lastStartIndex = current.i;
       const lastEndIndex = dateBlockEndIndex(current);
 
