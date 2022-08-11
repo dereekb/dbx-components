@@ -1,8 +1,8 @@
 import { expectFail, itShouldFail } from '@dereekb/util/test';
 import { DateRange, DateRangeInput } from './date.range';
 import { addDays, addHours, addMinutes, setHours, setMinutes, startOfDay, endOfDay, addSeconds, addMilliseconds, millisecondsToHours, minutesToHours } from 'date-fns';
-import { DateBlock, dateBlockDayOfWeekFactory, DateBlockIndex, dateBlockIndexRange, dateBlockRange, DateBlockRangeWithRange, dateBlocksExpansionFactory, dateBlocksInDateBlockRange, dateBlockTiming, DateBlockTiming, expandDateBlockRange, expandUniqueDateBlocks, getCurrentDateBlockTimingOffset, getCurrentDateBlockTimingStartDate, groupToDateBlockRanges, groupUniqueDateBlocks, isValidDateBlockTiming, UniqueDateBlockRange } from './date.block';
-import { MS_IN_DAY, MINUTES_IN_DAY, range, RangeInput, Hours, Day } from '@dereekb/util';
+import { DateBlock, dateBlockDayOfWeekFactory, DateBlockIndex, dateBlockIndexRange, dateBlockRange, DateBlockRangeWithRange, dateBlocksExpansionFactory, dateBlocksInDateBlockRange, dateBlockTiming, DateBlockTiming, expandDateBlockRange, expandUniqueDateBlocks, getCurrentDateBlockTimingOffset, getCurrentDateBlockTimingStartDate, groupToDateBlockRanges, groupUniqueDateBlocks, isValidDateBlockTiming, sortDateBlockRanges, UniqueDateBlockRange } from './date.block';
+import { MS_IN_DAY, MINUTES_IN_DAY, range, RangeInput, Hours, Day, expandIndexSet } from '@dereekb/util';
 import { removeMinutesAndSeconds } from './date';
 
 describe('getCurrentDateBlockTimingOffset()', () => {
@@ -685,6 +685,23 @@ describe('expandUniqueDateBlocks', () => {
             });
           });
         });
+
+        describe('with larger first followed by smaller', () => {
+          it('incumbent value should be retained.', () => {
+            const blocks = [
+              { i: 0, to: 5, value: 'a' },
+              { i: 0, value: 'b' }
+            ];
+            const result = overwriteNextExpand(blocks);
+
+            expect(result.blocks.length).toBe(1);
+            expect(result.discarded.length).toBe(1);
+            expect(result.discarded[0].value).toBe(blocks[1].value);
+            expect(result.blocks[0].value).toBe(blocks[0].value);
+            expect(result.blocks[0].i).toBe(blocks[0].i);
+            expect(result.blocks[0].to).toBe(blocks[0].to);
+          });
+        });
       });
 
       describe('current', () => {
@@ -775,6 +792,25 @@ describe('expandUniqueDateBlocks', () => {
               expect(result.blocks[0].i).toBe(overlappingBlocksFirstEclipseSecond[0].i);
               expect(result.blocks[0].to).toBe(endAtIndex);
             });
+          });
+        });
+
+        describe('with larger first followed by smaller', () => {
+          it('should start with the new value and end with the former value.', () => {
+            const blocks = [
+              { i: 0, to: 5, value: 'a' },
+              { i: 0, value: 'b' }
+            ];
+            const result = overwriteNextExpand(blocks);
+
+            expect(result.blocks.length).toBe(2);
+            expect(result.discarded.length).toBe(0);
+            expect(result.blocks[0].value).toBe(blocks[1].value);
+            expect(result.blocks[1].value).toBe(blocks[0].value);
+            expect(result.blocks[0].i).toBe(blocks[1].i);
+            expect(result.blocks[0].to).toBe(blocks[1].to ?? 0);
+            expect(result.blocks[1].i).toBe(blocks[1].i + 1);
+            expect(result.blocks[1].to).toBe(blocks[0].to);
           });
         });
       });
@@ -968,5 +1004,81 @@ describe('expandUniqueDateBlocks', () => {
         });
       });
     });
+
+    describe('scenarios', () => {
+      it('should expand the blocks and not infinitely loop if another block comes after that has a 0-0 range.', async () => {
+        const i = 0;
+        const to = 2;
+
+        const allBlocks: any[] = [
+          {
+            i: 0,
+            to: 2
+          },
+          { i: 0, to: undefined }
+        ];
+
+        const requestedRangeBlocks = expandUniqueDateBlocks({
+          startAtIndex: i,
+          endAtIndex: to,
+          fillOption: 'fill',
+          overwriteOption: 'current',
+          fillFactory: (x) => x
+        })(allBlocks);
+
+        expect(requestedRangeBlocks.blocks).toBeDefined();
+        expect(requestedRangeBlocks.blocks.length).toBe(2);
+        expect(requestedRangeBlocks.blocks[0].i).toBe(0);
+        expect(requestedRangeBlocks.blocks[0].to).toBe(0);
+        expect(requestedRangeBlocks.blocks[1].i).toBe(1);
+        expect(requestedRangeBlocks.blocks[1].to).toBe(2);
+      });
+    });
+  });
+});
+
+describe('sortDateBlockRanges', () => {
+  it('should retain the order for items that have the same start index.', () => {
+    const allBlocks = [
+      {
+        i: 0,
+        to: 2,
+        id: 'a'
+      },
+      { i: 0, to: undefined, id: 'b' },
+      { i: 0, to: 3, id: 'c' },
+      { i: 0, to: 1, id: 'd' },
+      { i: 0, to: 100, id: 'e' }
+    ];
+
+    const sorted = sortDateBlockRanges(allBlocks);
+
+    expect(sorted[0].id).toBe('a');
+    expect(sorted[1].id).toBe('b');
+    expect(sorted[2].id).toBe('c');
+    expect(sorted[3].id).toBe('d');
+    expect(sorted[4].id).toBe('e');
+  });
+
+  it('should retain the before/after order for items that have the same start index.', () => {
+    const allBlocks = [
+      {
+        i: 0,
+        to: 2,
+        id: 'a'
+      },
+      { i: 1, to: undefined, id: 'b' },
+      { i: 2, to: 3, id: 'c' },
+      { i: 3, to: 1, id: 'd' },
+      { i: 0, to: 100, id: 'e' }
+    ];
+
+    const sorted = sortDateBlockRanges(allBlocks);
+
+    expect(sorted[0].id).toBe('a');
+    expect(sorted[1].id).toBe('e');
+    expect(sorted[2].id).toBe('b');
+    expect(sorted[3].id).toBe('c');
+    expect(sorted[4].id).toBe('d');
   });
 });
