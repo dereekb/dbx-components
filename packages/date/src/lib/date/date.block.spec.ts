@@ -1,7 +1,7 @@
 import { expectFail, itShouldFail } from '@dereekb/util/test';
 import { DateRange, DateRangeInput } from './date.range';
 import { addDays, addHours, addMinutes, setHours, setMinutes, startOfDay, endOfDay, addSeconds, addMilliseconds, millisecondsToHours, minutesToHours } from 'date-fns';
-import { DateBlock, dateBlockDayOfWeekFactory, DateBlockIndex, dateBlockIndexRange, dateBlockRange, DateBlockRangeWithRange, dateBlocksExpansionFactory, dateBlocksInDateBlockRange, dateBlockTiming, DateBlockTiming, expandDateBlockRange, expandUniqueDateBlocks, getCurrentDateBlockTimingOffset, getCurrentDateBlockTimingStartDate, groupToDateBlockRanges, groupUniqueDateBlocks, isValidDateBlockTiming, sortDateBlockRanges, UniqueDateBlockRange } from './date.block';
+import { DateBlock, dateBlockDayOfWeekFactory, DateBlockIndex, dateBlockIndexRange, DateBlockRange, dateBlockRange, DateBlockRangeWithRange, dateBlocksExpansionFactory, dateBlocksInDateBlockRange, dateBlockTiming, DateBlockTiming, expandDateBlockRange, expandUniqueDateBlocks, getCurrentDateBlockTimingOffset, getCurrentDateBlockTimingStartDate, groupToDateBlockRanges, groupUniqueDateBlocks, isValidDateBlockTiming, sortDateBlockRanges, UniqueDateBlockRange } from './date.block';
 import { MS_IN_DAY, MINUTES_IN_DAY, range, RangeInput, Hours, Day, expandIndexSet } from '@dereekb/util';
 import { removeMinutesAndSeconds } from './date';
 
@@ -596,7 +596,7 @@ describe('expandUniqueDateBlocks', () => {
   describe('function', () => {
     describe('overwrite', () => {
       describe('next', () => {
-        const overwriteNextExpand = expandUniqueDateBlocks<UniqueDataDateBlock>({ overwriteOption: 'next', fillOption: 'extend' });
+        const overwriteNextExpand = expandUniqueDateBlocks<UniqueDataDateBlock>({ retainOnOverlap: 'next', fillOption: 'extend' });
 
         describe('with index', () => {
           it('should use the latter value to overwrite the previous value', () => {
@@ -671,7 +671,7 @@ describe('expandUniqueDateBlocks', () => {
 
           describe('with endAtIndex', () => {
             const endAtIndex = 1; // use endAtIndex=1 for these tests
-            const overwriteNextWithEndIndexExpand = expandUniqueDateBlocks<UniqueDataDateBlock>({ endAtIndex, overwriteOption: 'next', fillOption: 'extend' });
+            const overwriteNextWithEndIndexExpand = expandUniqueDateBlocks<UniqueDataDateBlock>({ endAtIndex, retainOnOverlap: 'next', fillOption: 'extend' });
 
             it('the former value should only exist', () => {
               const result = overwriteNextWithEndIndexExpand(overlappingBlocksFirstEclipseSecond);
@@ -687,25 +687,27 @@ describe('expandUniqueDateBlocks', () => {
         });
 
         describe('with larger first followed by smaller', () => {
-          it('incumbent value should be retained.', () => {
+          it('should start with the new value and end with the former value.', () => {
             const blocks = [
               { i: 0, to: 5, value: 'a' },
               { i: 0, value: 'b' }
             ];
             const result = overwriteNextExpand(blocks);
 
-            expect(result.blocks.length).toBe(1);
-            expect(result.discarded.length).toBe(1);
-            expect(result.discarded[0].value).toBe(blocks[1].value);
-            expect(result.blocks[0].value).toBe(blocks[0].value);
-            expect(result.blocks[0].i).toBe(blocks[0].i);
-            expect(result.blocks[0].to).toBe(blocks[0].to);
+            expect(result.blocks.length).toBe(2);
+            expect(result.discarded.length).toBe(0);
+            expect(result.blocks[0].value).toBe(blocks[1].value);
+            expect(result.blocks[1].value).toBe(blocks[0].value);
+            expect(result.blocks[0].i).toBe(blocks[1].i);
+            expect(result.blocks[0].to).toBe(blocks[1].to ?? 0);
+            expect(result.blocks[1].i).toBe(blocks[1].i + 1);
+            expect(result.blocks[1].to).toBe(blocks[0].to);
           });
         });
       });
 
       describe('current', () => {
-        const overwriteNextExpand = expandUniqueDateBlocks<UniqueDataDateBlock>({ overwriteOption: 'current', fillOption: 'extend' });
+        const overwriteNextExpand = expandUniqueDateBlocks<UniqueDataDateBlock>({ retainOnOverlap: 'current', fillOption: 'extend' });
 
         describe('with index', () => {
           it('should use the former value and ignore the latter value', () => {
@@ -780,7 +782,7 @@ describe('expandUniqueDateBlocks', () => {
 
           describe('with endAtIndex', () => {
             const endAtIndex = 1; // use endAtIndex=1 for these tests
-            const overwriteNextWithEndIndexExpand = expandUniqueDateBlocks<UniqueDataDateBlock>({ endAtIndex, overwriteOption: 'current', fillOption: 'extend' });
+            const overwriteNextWithEndIndexExpand = expandUniqueDateBlocks<UniqueDataDateBlock>({ endAtIndex, retainOnOverlap: 'current', fillOption: 'extend' });
 
             it('the former value should only matter and eclipse the second', () => {
               const result = overwriteNextWithEndIndexExpand(overlappingBlocksFirstEclipseSecond);
@@ -796,21 +798,19 @@ describe('expandUniqueDateBlocks', () => {
         });
 
         describe('with larger first followed by smaller', () => {
-          it('should start with the new value and end with the former value.', () => {
+          it('current value should be retained.', () => {
             const blocks = [
               { i: 0, to: 5, value: 'a' },
               { i: 0, value: 'b' }
             ];
             const result = overwriteNextExpand(blocks);
 
-            expect(result.blocks.length).toBe(2);
-            expect(result.discarded.length).toBe(0);
-            expect(result.blocks[0].value).toBe(blocks[1].value);
-            expect(result.blocks[1].value).toBe(blocks[0].value);
-            expect(result.blocks[0].i).toBe(blocks[1].i);
-            expect(result.blocks[0].to).toBe(blocks[1].to ?? 0);
-            expect(result.blocks[1].i).toBe(blocks[1].i + 1);
-            expect(result.blocks[1].to).toBe(blocks[0].to);
+            expect(result.blocks.length).toBe(1);
+            expect(result.discarded.length).toBe(1);
+            expect(result.discarded[0].value).toBe(blocks[1].value);
+            expect(result.blocks[0].value).toBe(blocks[0].value);
+            expect(result.blocks[0].i).toBe(blocks[0].i);
+            expect(result.blocks[0].to).toBe(blocks[0].to);
           });
         });
       });
@@ -1022,7 +1022,7 @@ describe('expandUniqueDateBlocks', () => {
           startAtIndex: i,
           endAtIndex: to,
           fillOption: 'fill',
-          overwriteOption: 'current',
+          retainOnOverlap: 'next',
           fillFactory: (x) => x
         })(allBlocks);
 
@@ -1032,6 +1032,39 @@ describe('expandUniqueDateBlocks', () => {
         expect(requestedRangeBlocks.blocks[0].to).toBe(0);
         expect(requestedRangeBlocks.blocks[1].i).toBe(1);
         expect(requestedRangeBlocks.blocks[1].to).toBe(2);
+      });
+
+      it('should replace the current block with the next block.', async () => {
+        const i = 0;
+        const to = 5;
+
+        const allBlocks = [
+          {
+            i: 3,
+            to: 4,
+            value: 'overwrite me'
+          },
+          { i: 4, to: 4, value: 'canceled with' }
+        ];
+
+        const requestedRangeBlocks = expandUniqueDateBlocks({
+          startAtIndex: i,
+          endAtIndex: to,
+          fillOption: 'fill',
+          retainOnOverlap: 'next',
+          fillFactory: (x) => x
+        })(allBlocks);
+
+        expect(requestedRangeBlocks.blocks).toBeDefined();
+        expect(requestedRangeBlocks.blocks.length).toBe(4);
+        expect(requestedRangeBlocks.blocks[0].i).toBe(0);
+        expect(requestedRangeBlocks.blocks[0].to).toBe(allBlocks[0].i - 1);
+        expect(requestedRangeBlocks.blocks[1].i).toBe(allBlocks[0].i);
+        expect(requestedRangeBlocks.blocks[1].to).toBe(allBlocks[0].i);
+        expect(requestedRangeBlocks.blocks[2].i).toBe(allBlocks[1].i);
+        expect(requestedRangeBlocks.blocks[2].to).toBe(allBlocks[1].i);
+        expect(requestedRangeBlocks.blocks[3].i).toBe(5);
+        expect(requestedRangeBlocks.blocks[3].to).toBe(5);
       });
     });
   });

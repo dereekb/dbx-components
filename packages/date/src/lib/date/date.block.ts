@@ -608,7 +608,7 @@ export type ExpandUniqueDateBlocksFillOption = 'extend' | 'fill';
  * - current: keeps the "current" value
  * - next: the next/new value overwrites the previous one
  */
-export type ExpandUniqueDateBlocksOverwriteOption = 'current' | 'next';
+export type ExpandUniqueDateBlocksRetainOverlapOption = 'current' | 'next';
 
 export interface ExpandUniqueDateBlocksConfig<B extends DateBlockRange | UniqueDateBlock> {
   /**
@@ -630,9 +630,16 @@ export interface ExpandUniqueDateBlocksConfig<B extends DateBlockRange | UniqueD
   /**
    * (Optional) Determines how to handle overwrites.
    *
+   * - next: will retain the latest value (next) and overwrite the current value.
+   * - current: will retain the current value and ignore any future values at that index.
+   *
    * Defaults to next
    */
-  overwriteOption?: ExpandUniqueDateBlocksOverwriteOption;
+  retainOnOverlap?: ExpandUniqueDateBlocksRetainOverlapOption;
+  /**
+   * @Deprecated use retainOnOverlap instead. Will be removed in the future.
+   */
+  overwriteOption?: ExpandUniqueDateBlocksRetainOverlapOption;
   /**
    * Used to create new items to fill empty block sets. Required when mode is set to "fill".
    */
@@ -649,7 +656,8 @@ export interface ExpandUniqueDateBlocksResult<B extends DateBlockRange | UniqueD
 export type ExpandUniqueDateBlocksFunction<B extends DateBlockRange | UniqueDateBlock> = (input: B[] | UniqueDateBlockRangeGroup<B>) => ExpandUniqueDateBlocksResult<B>;
 
 export function expandUniqueDateBlocks<B extends DateBlockRange | UniqueDateBlock>(config: ExpandUniqueDateBlocksConfig<B>): ExpandUniqueDateBlocksFunction<B> {
-  const { startAtIndex = 0, endAtIndex, fillOption: fill, fillFactory: inputFillFactory, overwriteOption = 'next' } = config;
+  const { startAtIndex = 0, endAtIndex, fillOption: fill, fillFactory: inputFillFactory, retainOnOverlap: inputRetainOnOverlap, overwriteOption: deprecateOverwriteOption } = config;
+  const retainOnOverlap = inputRetainOnOverlap ?? deprecateOverwriteOption ?? 'next';
   const maxAllowedIndex: IndexNumber = endAtIndex ?? Number.MAX_SAFE_INTEGER;
   const fillFactory = inputFillFactory as FactoryWithRequiredInput<B, DateBlockRange>;
 
@@ -780,7 +788,7 @@ export function expandUniqueDateBlocks<B extends DateBlockRange | UniqueDateBloc
         // if next has the same range as current, then look at the tie-breaker
         if (nextEndIndex === currentEndIndex) {
           // if they're both on the same index, then take the one based on the overwrite value
-          if (overwriteOption === 'current') {
+          if (retainOnOverlap === 'current') {
             // add current
             addBlockWithRange(current, currentNextIndex, nextEndIndex);
             // discard and skip the "next" value
@@ -799,24 +807,23 @@ export function expandUniqueDateBlocks<B extends DateBlockRange | UniqueDateBloc
           continueToNext({ ...next, i: currentEndIndex + 1, to: nextEndIndex });
         } else {
           // the next item ends before the current item.
-          if (overwriteOption === 'current') {
-            // add the next item first since it overwrites the current
-            addBlockWithRange(next, nextStartIndex, nextEndIndex);
-            // continue with the current item as next.
-            continueToNext({ ...current, i: nextEndIndex + 1, to: currentEndIndex });
-          } else {
+          if (retainOnOverlap === 'current') {
             // discard the next value.
             discard(next);
             // continue with the current value
             continueToNext(current);
+          } else {
+            // add the next item first since it overwrites the current
+            addBlockWithRange(next, nextStartIndex, nextEndIndex);
+            // continue with the current item as next.
+            continueToNext({ ...current, i: nextEndIndex + 1, to: currentEndIndex });
           }
         }
       } else {
         // Check for any overlap
-        if (currentEndIndex > nextStartIndex) {
+        if (currentEndIndex >= nextStartIndex) {
           // handle overlap
-
-          if (overwriteOption === 'current') {
+          if (retainOnOverlap === 'current') {
             // add current
             addBlockWithRange(current, currentNextIndex, currentEndIndex);
             // change next to start at the next range
@@ -862,3 +869,9 @@ export function expandUniqueDateBlocks<B extends DateBlockRange | UniqueDateBloc
     return result;
   };
 }
+
+// MARK: Compat
+/**
+ * @Deprecated use ExpandUniqueDateBlocksRetainOverlapOption instead
+ */
+export type ExpandUniqueDateBlocksOverwriteOption = ExpandUniqueDateBlocksRetainOverlapOption;
