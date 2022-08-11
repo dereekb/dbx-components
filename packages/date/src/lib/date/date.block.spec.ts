@@ -1,7 +1,7 @@
 import { expectFail, itShouldFail } from '@dereekb/util/test';
 import { DateRange, DateRangeInput } from './date.range';
 import { addDays, addHours, addMinutes, setHours, setMinutes, startOfDay, endOfDay, addSeconds, addMilliseconds, millisecondsToHours, minutesToHours } from 'date-fns';
-import { DateBlock, dateBlockDayOfWeekFactory, DateBlockIndex, dateBlockIndexRange, DateBlockRange, dateBlockRange, DateBlockRangeWithRange, dateBlocksExpansionFactory, dateBlocksInDateBlockRange, dateBlockTiming, DateBlockTiming, expandDateBlockRange, expandUniqueDateBlocks, getCurrentDateBlockTimingOffset, getCurrentDateBlockTimingStartDate, groupToDateBlockRanges, groupUniqueDateBlocks, isValidDateBlockTiming, sortDateBlockRanges, UniqueDateBlockRange } from './date.block';
+import { DateBlock, dateBlockDayOfWeekFactory, DateBlockIndex, dateBlockIndexRange, DateBlockRange, dateBlockRange, DateBlockRangeWithRange, dateBlocksExpansionFactory, dateBlocksInDateBlockRange, dateBlockTiming, DateBlockTiming, expandDateBlockRange, expandUniqueDateBlocksFunction, getCurrentDateBlockTimingOffset, getCurrentDateBlockTimingStartDate, groupToDateBlockRanges, groupUniqueDateBlocks, isValidDateBlockTiming, sortDateBlockRanges, UniqueDateBlockRange } from './date.block';
 import { MS_IN_DAY, MINUTES_IN_DAY, range, RangeInput, Hours, Day, expandIndexSet } from '@dereekb/util';
 import { removeMinutesAndSeconds } from './date';
 
@@ -592,11 +592,11 @@ describe('groupUniqueDateBlocks()', () => {
   });
 });
 
-describe('expandUniqueDateBlocks', () => {
+describe('expandUniqueDateBlocksFunction', () => {
   describe('function', () => {
     describe('overwrite', () => {
       describe('next', () => {
-        const overwriteNextExpand = expandUniqueDateBlocks<UniqueDataDateBlock>({ retainOnOverlap: 'next', fillOption: 'extend' });
+        const overwriteNextExpand = expandUniqueDateBlocksFunction<UniqueDataDateBlock>({ retainOnOverlap: 'next', fillOption: 'extend' });
 
         describe('with index', () => {
           it('should use the latter value to overwrite the previous value', () => {
@@ -671,7 +671,7 @@ describe('expandUniqueDateBlocks', () => {
 
           describe('with endAtIndex', () => {
             const endAtIndex = 1; // use endAtIndex=1 for these tests
-            const overwriteNextWithEndIndexExpand = expandUniqueDateBlocks<UniqueDataDateBlock>({ endAtIndex, retainOnOverlap: 'next', fillOption: 'extend' });
+            const overwriteNextWithEndIndexExpand = expandUniqueDateBlocksFunction<UniqueDataDateBlock>({ endAtIndex, retainOnOverlap: 'next', fillOption: 'extend' });
 
             it('the former value should only exist', () => {
               const result = overwriteNextWithEndIndexExpand(overlappingBlocksFirstEclipseSecond);
@@ -707,7 +707,7 @@ describe('expandUniqueDateBlocks', () => {
       });
 
       describe('current', () => {
-        const overwriteNextExpand = expandUniqueDateBlocks<UniqueDataDateBlock>({ retainOnOverlap: 'current', fillOption: 'extend' });
+        const overwriteNextExpand = expandUniqueDateBlocksFunction<UniqueDataDateBlock>({ retainOnOverlap: 'current', fillOption: 'extend' });
 
         describe('with index', () => {
           it('should use the former value and ignore the latter value', () => {
@@ -782,7 +782,7 @@ describe('expandUniqueDateBlocks', () => {
 
           describe('with endAtIndex', () => {
             const endAtIndex = 1; // use endAtIndex=1 for these tests
-            const overwriteNextWithEndIndexExpand = expandUniqueDateBlocks<UniqueDataDateBlock>({ endAtIndex, retainOnOverlap: 'current', fillOption: 'extend' });
+            const overwriteNextWithEndIndexExpand = expandUniqueDateBlocksFunction<UniqueDataDateBlock>({ endAtIndex, retainOnOverlap: 'current', fillOption: 'extend' });
 
             it('the former value should only matter and eclipse the second', () => {
               const result = overwriteNextWithEndIndexExpand(overlappingBlocksFirstEclipseSecond);
@@ -818,10 +818,10 @@ describe('expandUniqueDateBlocks', () => {
 
     describe('fillOption', () => {
       describe('fill', () => {
-        const fillOptionExpand = expandUniqueDateBlocks<UniqueDataDateBlock>({ fillOption: 'fill', fillFactory: (x) => ({ ...x, value: 'new' }) });
+        const fillOptionExpand = expandUniqueDateBlocksFunction<UniqueDataDateBlock>({ fillOption: 'fill', fillFactory: (x) => ({ ...x, value: 'new' }) });
 
         itShouldFail('if fillFactory is not provided.', () => {
-          expectFail(() => expandUniqueDateBlocks({ fillOption: 'fill' }));
+          expectFail(() => expandUniqueDateBlocksFunction({ fillOption: 'fill' }));
         });
 
         it('should create a gap block for middle gaps', () => {
@@ -868,7 +868,7 @@ describe('expandUniqueDateBlocks', () => {
         });
 
         describe('with endAtIndex', () => {
-          const fillOptionExpandBlocksWithEndAtIndex = expandUniqueDateBlocks<UniqueDataDateBlock>({ endAtIndex, fillOption: 'fill', fillFactory: (x) => ({ ...x, value: 'new' }) });
+          const fillOptionExpandBlocksWithEndAtIndex = expandUniqueDateBlocksFunction<UniqueDataDateBlock>({ endAtIndex, fillOption: 'fill', fillFactory: (x) => ({ ...x, value: 'new' }) });
 
           it('should create a gap block for end gaps', () => {
             const result = fillOptionExpandBlocksWithEndAtIndex(blocksWithEndGap);
@@ -892,7 +892,7 @@ describe('expandUniqueDateBlocks', () => {
         });
 
         describe('with startAtIndex and endAtIndex', () => {
-          const fillOptionExpandBlocksWithStartAndEnd = expandUniqueDateBlocks<UniqueDataDateBlock>({ startAtIndex, endAtIndex, fillOption: 'fill', fillFactory: (x) => ({ ...x, value: 'new' }) });
+          const fillOptionExpandBlocksWithStartAndEnd = expandUniqueDateBlocksFunction<UniqueDataDateBlock>({ startAtIndex, endAtIndex, fillOption: 'fill', fillFactory: (x) => ({ ...x, value: 'new' }) });
 
           describe('block that starts after the endAtIndex', () => {
             it('should create a gap block for the startIndex to endIndex range and discard the input', () => {
@@ -919,7 +919,7 @@ describe('expandUniqueDateBlocks', () => {
       });
 
       describe('extend', () => {
-        const expandOptionExpandBlocks = expandUniqueDateBlocks<UniqueDataDateBlock>({ fillOption: 'extend' });
+        const expandOptionExpandBlocks = expandUniqueDateBlocksFunction<UniqueDataDateBlock>({ fillOption: 'extend' });
 
         it('should not extend the first block to stretch to the start', () => {
           const result = expandOptionExpandBlocks(blocksWithStartGap);
@@ -951,7 +951,7 @@ describe('expandUniqueDateBlocks', () => {
         });
 
         describe('with endAtIndex', () => {
-          const expandOptionWithEndIndexExpandBlocks = expandUniqueDateBlocks<UniqueDataDateBlock>({ endAtIndex, fillOption: 'extend' });
+          const expandOptionWithEndIndexExpandBlocks = expandUniqueDateBlocksFunction<UniqueDataDateBlock>({ endAtIndex, fillOption: 'extend' });
 
           describe('block that starts after the endAtIndex', () => {
             it('should filter that block out and return nothing.', () => {
@@ -973,7 +973,7 @@ describe('expandUniqueDateBlocks', () => {
         });
 
         describe('with startAt and endAt index', () => {
-          const expandOptionWithStartAndEndIndexExpandBlocks = expandUniqueDateBlocks<UniqueDataDateBlock>({ startAtIndex, endAtIndex, fillOption: 'extend' });
+          const expandOptionWithStartAndEndIndexExpandBlocks = expandUniqueDateBlocksFunction<UniqueDataDateBlock>({ startAtIndex, endAtIndex, fillOption: 'extend' });
 
           describe('block that starts after the endAtIndex', () => {
             it('should filter that block out and return nothing.', () => {
@@ -1018,7 +1018,7 @@ describe('expandUniqueDateBlocks', () => {
           { i: 0, to: undefined }
         ];
 
-        const requestedRangeBlocks = expandUniqueDateBlocks({
+        const requestedRangeBlocks = expandUniqueDateBlocksFunction({
           startAtIndex: i,
           endAtIndex: to,
           fillOption: 'fill',
@@ -1047,7 +1047,7 @@ describe('expandUniqueDateBlocks', () => {
           { i: 4, to: 4, value: 'canceled with' }
         ];
 
-        const requestedRangeBlocks = expandUniqueDateBlocks({
+        const requestedRangeBlocks = expandUniqueDateBlocksFunction({
           startAtIndex: i,
           endAtIndex: to,
           fillOption: 'fill',
@@ -1065,6 +1065,137 @@ describe('expandUniqueDateBlocks', () => {
         expect(requestedRangeBlocks.blocks[2].to).toBe(allBlocks[1].i);
         expect(requestedRangeBlocks.blocks[3].i).toBe(5);
         expect(requestedRangeBlocks.blocks[3].to).toBe(5);
+      });
+
+      it('should replace the current block with the next block that extends before the current block.', async () => {
+        const i = 0;
+        const to = 5;
+
+        const allBlocks = [
+          {
+            i: 3,
+            to: 4,
+            value: 'overwrite me'
+          }
+        ];
+
+        // this one comes "next", and below will prefer it to exist.
+        const nextBlocks = [{ i: 2, to: 4, value: 'canceled with' }];
+
+        const requestedRangeBlocks = expandUniqueDateBlocksFunction({
+          startAtIndex: i,
+          endAtIndex: to,
+          fillOption: 'fill',
+          retainOnOverlap: 'next',
+          fillFactory: (x) => x
+        })(allBlocks, nextBlocks);
+
+        expect(requestedRangeBlocks.blocks).toBeDefined();
+        expect(requestedRangeBlocks.blocks.length).toBe(3);
+        expect(requestedRangeBlocks.blocks[0].i).toBe(0);
+        expect(requestedRangeBlocks.blocks[0].to).toBe(nextBlocks[0].i - 1);
+        expect(requestedRangeBlocks.blocks[1].i).toBe(nextBlocks[0].i);
+        expect(requestedRangeBlocks.blocks[1].to).toBe(nextBlocks[0].to);
+        expect(requestedRangeBlocks.blocks[2].i).toBe(5);
+        expect(requestedRangeBlocks.blocks[2].to).toBe(5);
+      });
+
+      it('should replace all current blocks with the next block.', async () => {
+        const i = 0;
+        const to = 5;
+
+        const currentBlocks = range(i, to + 1).map((x) => ({ i: x, to: x, value: 'replace me' }));
+
+        // this one comes "next", and below will prefer it to exist.
+        const nextBlocks = [{ i: 0, to: 5, value: 'retained next' }];
+
+        const requestedRangeBlocks = expandUniqueDateBlocksFunction({
+          startAtIndex: i,
+          endAtIndex: to,
+          fillOption: 'fill',
+          retainOnOverlap: 'next',
+          fillFactory: (x) => ({ ...x, value: 'a' })
+        })(currentBlocks, nextBlocks);
+
+        expect(requestedRangeBlocks.blocks).toBeDefined();
+        expect(requestedRangeBlocks.blocks.length).toBe(1);
+        expect(requestedRangeBlocks.blocks[0].i).toBe(0);
+        expect(requestedRangeBlocks.blocks[0].to).toBe(nextBlocks[0].to);
+
+        currentBlocks.forEach((block, i) => {
+          expect(requestedRangeBlocks.discarded[i].i).toBe(block.i);
+        });
+      });
+
+      it('should retain all current blocks over the next block.', async () => {
+        const i = 0;
+        const to = 5;
+
+        const currentBlocks = range(i, to + 1).map((x) => ({ i: x, to: x, value: 'retain current' }));
+
+        // this one comes "next", and below will prefer it to exist.
+        const nextBlocks = [{ i: 0, to: 5, value: 'skip me' }];
+
+        const requestedRangeBlocks = expandUniqueDateBlocksFunction({
+          startAtIndex: i,
+          endAtIndex: to,
+          fillOption: 'fill',
+          retainOnOverlap: 'current',
+          fillFactory: (x) => ({ ...x, value: 'a' })
+        })(currentBlocks, nextBlocks);
+
+        expect(requestedRangeBlocks.blocks).toBeDefined();
+        expect(requestedRangeBlocks.discarded).toBeDefined();
+        expect(requestedRangeBlocks.discarded.length).toBe(1);
+
+        // discarded range might not be the same range that entered, but values/ids will be retained
+        expect(requestedRangeBlocks.discarded[0].value).toBe(nextBlocks[0].value);
+
+        expect(requestedRangeBlocks.blocks.length).toBe(currentBlocks.length);
+        currentBlocks.forEach((block, i) => {
+          expect(requestedRangeBlocks.blocks[i].i).toBe(block.i);
+        });
+      });
+
+      it('should replace the next block with the current block that extends before the current block.', async () => {
+        const i = 0;
+        const to = 5;
+
+        const currentBlocks = [
+          {
+            i: 3,
+            to: 4,
+            value: 'retain me'
+          }
+        ];
+
+        // this one comes "next", and below will prefer it to exist.
+        const nextBlocks = [{ i: 2, to: 4, value: 'overwrite empty area' }];
+
+        const filledValue = 'filled value';
+
+        const requestedRangeBlocks = expandUniqueDateBlocksFunction<typeof currentBlocks[0]>({
+          startAtIndex: i,
+          endAtIndex: to,
+          fillOption: 'fill',
+          retainOnOverlap: 'current',
+          fillFactory: (x) => ({ ...x, value: filledValue })
+        })(currentBlocks, nextBlocks);
+
+        expect(requestedRangeBlocks.blocks).toBeDefined();
+        expect(requestedRangeBlocks.blocks.length).toBe(4);
+        expect(requestedRangeBlocks.blocks[0].i).toBe(0);
+        expect(requestedRangeBlocks.blocks[0].to).toBe(nextBlocks[0].i - 1);
+        expect(requestedRangeBlocks.blocks[0].value).toBe(filledValue);
+        expect(requestedRangeBlocks.blocks[1].i).toBe(nextBlocks[0].i);
+        expect(requestedRangeBlocks.blocks[1].to).toBe(nextBlocks[0].i);
+        expect(requestedRangeBlocks.blocks[1].value).toBe(nextBlocks[0].value);
+        expect(requestedRangeBlocks.blocks[2].i).toBe(currentBlocks[0].i);
+        expect(requestedRangeBlocks.blocks[2].to).toBe(currentBlocks[0].to);
+        expect(requestedRangeBlocks.blocks[2].value).toBe(currentBlocks[0].value);
+        expect(requestedRangeBlocks.blocks[3].i).toBe(5);
+        expect(requestedRangeBlocks.blocks[3].to).toBe(5);
+        expect(requestedRangeBlocks.blocks[3].value).toBe(filledValue);
       });
     });
   });
