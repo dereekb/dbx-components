@@ -86,14 +86,17 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, M = unknown, H
   @ViewChild('textInput')
   textInput!: ElementRef<HTMLInputElement>;
 
-  readonly inputCtrl = new FormControl('');
+  readonly inputCtrl = new FormControl<string>('');
 
   private _formControlObs = new BehaviorSubject<Maybe<AbstractControl>>(undefined);
   readonly formControl$ = this._formControlObs.pipe(filterMaybe());
 
   private _displayHashMap = new BehaviorSubject<Map<H, ConfiguredSearchableValueFieldDisplayValue<T, M>>>(new Map());
 
-  readonly inputValue$: Observable<string> = this.inputCtrl.valueChanges.pipe(startWith(this.inputCtrl.value));
+  readonly inputValue$: Observable<string> = this.inputCtrl.valueChanges.pipe(
+    startWith(this.inputCtrl.value),
+    map((x) => x || '')
+  );
   readonly inputValueString$: Observable<string> = this.inputValue$.pipe(debounceTime(200), distinctUntilChanged());
 
   readonly searchResultsState$: Observable<LoadingState<ConfiguredSearchableValueFieldDisplayValue<T, M>[]>> = this.inputValueString$.pipe(
@@ -333,7 +336,7 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, M = unknown, H
     let addedValue = false;
 
     if (this.allowStringValues) {
-      const value = this.inputCtrl.value;
+      const value = this.inputCtrl.value || '';
 
       if ((value || '').trim()) {
         this._addWithTextValue(value);
