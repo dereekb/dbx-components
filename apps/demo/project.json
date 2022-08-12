@@ -14,12 +14,6 @@
     "build-base": {
       "executor": "@angular-devkit/build-angular:browser",
       "outputs": ["{options.outputPath}"],
-      "dependsOn": [
-        {
-          "target": "build",
-          "projects": "dependencies"
-        }
-      ],
       "options": {
         "outputPath": "dist/apps/demo",
         "index": "apps/demo/src/index.html",
@@ -37,7 +31,7 @@
             "output": "assets/dbx-firebase"
           }
         ],
-        "allowedCommonJsDependencies": ["validator", "date-fns-tz"],
+        "allowedCommonJsDependencies": ["lodash", "make-error", "validator", "date-fns-tz"],
         "stylePreprocessorOptions": {
           "includePaths": ["packages"]
         },
@@ -115,24 +109,12 @@
     },
     "deploy": {
       "executor": "@nrwl/workspace:run-commands",
-      "dependsOn": [
-        {
-          "target": "build",
-          "projects": "self"
-        }
-      ],
       "options": {
         "command": "npx firebase --project=default deploy --only hosting"
       }
     },
     "ci-deploy": {
       "executor": "@nrwl/workspace:run-commands",
-      "dependsOn": [
-        {
-          "target": "build",
-          "projects": "self"
-        }
-      ],
       "options": {
         "command": "npx firebase --project=default deploy --only hosting --token \"$FIREBASE_TOKEN\""
       }

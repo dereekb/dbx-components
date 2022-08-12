@@ -13,12 +13,6 @@
     "build-base": {
       "executor": "@nrwl/js:tsc",
       "outputs": ["{options.outputPath}"],
-      "dependsOn": [
-        {
-          "target": "build",
-          "projects": "dependencies"
-        }
-      ],
       "options": {
         "outputPath": "dist/packages/date",
         "tsConfig": "packages/date/tsconfig.lib.json",
@@ -91,6 +85,6 @@
       }
     }
   },
-  "implicitDependencies": ["!util-test"],
+  "implicitDependencies": ["util", "!util-test"],
   "tags": []
 }

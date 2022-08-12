@@ -13,12 +13,6 @@
     "build-base": {
       "executor": "@nrwl/js:tsc",
       "outputs": ["{options.outputPath}"],
-      "dependsOn": [
-        {
-          "target": "build",
-          "projects": "dependencies"
-        }
-      ],
       "options": {
         "outputPath": "dist/packages/rxjs",
         "tsConfig": "packages/rxjs/tsconfig.lib.json",

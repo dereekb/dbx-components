@@ -23,12 +23,6 @@
     "build-base": {
       "executor": "@nrwl/angular:package",
       "outputs": ["dist/packages/dbx-core"],
-      "dependsOn": [
-        {
-          "target": "build",
-          "projects": "dependencies"
-        }
-      ],
       "options": {
         "project": "packages/dbx-core/ng-package.json"
       },

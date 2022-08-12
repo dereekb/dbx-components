@@ -36,12 +36,6 @@
     "build-base": {
       "executor": "@nrwl/angular:package",
       "outputs": ["dist/packages/dbx-firebase"],
-      "dependsOn": [
-        {
-          "target": "build",
-          "projects": "dependencies"
-        }
-      ],
       "options": {
         "project": "packages/dbx-firebase/ng-package.json"
       },

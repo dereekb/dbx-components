@@ -17,12 +17,6 @@
     "build-base": {
       "executor": "@nrwl/js:tsc",
       "outputs": ["{options.outputPath}"],
-      "dependsOn": [
-        {
-          "target": "build",
-          "projects": "dependencies"
-        }
-      ],
       "options": {
         "outputPath": "dist/packages/firebase",
         "tsConfig": "packages/firebase/tsconfig.lib.json",
@@ -82,6 +76,6 @@
       }
     }
   },
-  "implicitDependencies": ["!util-test", "!firebase-test"],
+  "implicitDependencies": ["util", "model", "rxjs", "date", "!util-test", "!firebase-test"],
   "tags": []
 }

@@ -18,19 +18,25 @@
   },
   "targetDefaults": {
     "build": {
-      "dependsOn": ["build-base", "^build"]
+      "dependsOn": ["build-base"]
     },
     "build-base": {
       "dependsOn": ["^build-base"]
     },
+    "publish": {
+      "dependsOn": ["build"]
+    },
     "publish-npmjs": {
-      "dependsOn": ["build-base"]
+      "dependsOn": ["build"]
     },
     "test": {
-      "dependsOn": ["build-base"]
+      "dependsOn": ["build"]
+    },
+    "deploy": {
+      "dependsOn": ["build"]
     },
     "ci-deploy": {
-      "dependsOn": ["build-base"]
+      "dependsOn": ["build"]
     }
   },
   "generators": {

@@ -13,12 +13,6 @@
     "build-base": {
       "executor": "@nrwl/node:webpack",
       "outputs": ["{options.outputPath}"],
-      "dependsOn": [
-        {
-          "target": "build",
-          "projects": "dependencies"
-        }
-      ],
       "options": {
         "outputPath": "dist/apps/demo-api",
         "main": "apps/demo-api/src/main.ts",
@@ -102,12 +96,6 @@
     },
     "ci-deploy": {
       "executor": "@nrwl/workspace:run-commands",
-      "dependsOn": [
-        {
-          "target": "build",
-          "projects": "self"
-        }
-      ],
       "options": {
         "commands": [
           {
