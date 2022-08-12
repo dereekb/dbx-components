@@ -16,6 +16,23 @@
       }
     }
   },
+  "targetDefaults": {
+    "build": {
+      "dependsOn": ["build-base", "^build"]
+    },
+    "build-base": {
+      "dependsOn": ["^build-base"]
+    },
+    "publish-npmjs": {
+      "dependsOn": ["build-base"]
+    },
+    "test": {
+      "dependsOn": ["build-base"]
+    },
+    "ci-deploy": {
+      "dependsOn": ["build-base"]
+    }
+  },
   "generators": {
     "@nrwl/angular:application": {
       "style": "scss",

@@ -9,8 +9,8 @@
       "options": {
         "commands": [
           {
-            "description": "build dbx-analytics production",
-            "command": "npx nx run dbx-analytics:build-base:production"
+            "description": "build dbx-analytics production (done by targetDefaults)",
+            "command": "echo"
           },
           {
             "description": "copy license",

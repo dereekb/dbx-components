@@ -7,7 +7,7 @@
     "build": {
       "executor": "@nrwl/workspace:run-commands",
       "options": {
-        "command": "npx nx run demo:build-base",
+        "command": "echo",
         "color": true
       }
     },

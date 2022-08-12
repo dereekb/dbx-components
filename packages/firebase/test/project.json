@@ -6,7 +6,7 @@
     "build": {
       "executor": "@nrwl/workspace:run-commands",
       "options": {
-        "command": "npx nx run firebase-test:build-base",
+        "command": "echo",
         "color": true
       }
     },

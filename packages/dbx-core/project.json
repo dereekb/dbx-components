@@ -9,8 +9,8 @@
       "options": {
         "commands": [
           {
-            "description": "build dbx-core production",
-            "command": "npx nx run dbx-core:build-base:production"
+            "description": "build dbx-core production (done by targetDefaults)",
+            "command": "echo"
           },
           {
             "description": "copy license",

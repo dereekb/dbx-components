@@ -8,9 +8,6 @@
       "options": {
         "commands": [
           {
-            "command": "npx nx run firebase:build-base"
-          },
-          {
             "command": "npx nx run firebase-test:build-base"
           }
         ],

@@ -8,9 +8,6 @@
       "options": {
         "commands": [
           {
-            "command": "npx nx run util:build-base"
-          },
-          {
             "command": "npx nx run util-test:build-base"
           }
         ],

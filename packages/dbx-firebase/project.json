@@ -9,8 +9,8 @@
       "options": {
         "commands": [
           {
-            "description": "build dbx-firebase production",
-            "command": "npx nx run dbx-firebase:build-base:production"
+            "description": "build dbx-firebase production (done by targetDefaults)",
+            "command": "echo"
           },
           {
             "description": "copy all style files from src to map to respective directory",

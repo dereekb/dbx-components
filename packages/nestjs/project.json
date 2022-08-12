@@ -8,9 +8,6 @@
       "options": {
         "commands": [
           {
-            "command": "npx nx run nestjs:build-base"
-          },
-          {
             "command": "npx nx run nestjs-stripe:build-base"
           }
         ],

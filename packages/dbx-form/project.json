@@ -10,8 +10,8 @@
       "options": {
         "commands": [
           {
-            "description": "build dbx-form production",
-            "command": "npx nx run dbx-form:build-base:production"
+            "description": "build dbx-form production (done by targetDefaults)",
+            "command": "echo"
           },
           {
             "description": "copy all style files from src to map to respective directory",

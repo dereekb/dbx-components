@@ -10,8 +10,8 @@
       "options": {
         "commands": [
           {
-            "description": "build dbx-web production",
-            "command": "npx nx run dbx-web:build-base:production"
+            "description": "build dbx-web production (done by targetDefaults)",
+            "command": "echo"
           },
           {
             "description": "copy all style files from src to map to respective directory. How this works is it finds all .scss files in the dist/packages/dbx-web/src folder, then iterates over each file's path creates the directory one level up if it does not exist, followed by copying the file.",

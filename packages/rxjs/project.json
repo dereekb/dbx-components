@@ -6,7 +6,7 @@
     "build": {
       "executor": "@nrwl/workspace:run-commands",
       "options": {
-        "command": "npx nx run rxjs:build-base",
+        "command": "echo",
         "color": true
       }
     },
