@@ -5,7 +5,7 @@
     "build": {
       "executor": "@nrwl/workspace:run-commands",
       "options": {
-        "command": "npx nx run FIREBASE_COMPONENTS_NAME:build-base",
+        "command": "echo",
         "color": true
       }
     },

@@ -43,5 +43,6 @@
       }
     }
   },
+  "implicitDependencies": ["firebase", "firebase-test", "firebase-server"],
   "tags": []
 }
