@@ -82,7 +82,8 @@ export class DbxInjectionContextDirective<O = unknown> implements DbxInjectionCo
             }
 
             try {
-              resolve(config.use(instance) as PromiseOrValue<O>);
+              const result = (await config.use(instance)) as PromiseOrValue<O>;
+              resolve(result);
             } catch (e) {
               reject(e);
             }
