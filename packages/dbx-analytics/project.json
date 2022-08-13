@@ -10,6 +10,10 @@
       "options": {
         "commands": [
           {
+            "description": "build dbx-analytics production",
+            "command": "npx nx run dbx-analytics:build-base:production"
+          },
+          {
             "description": "copy license",
             "command": "echo 'copying dbx-analytics license' && cp LICENSE dist/packages/dbx-analytics"
           }

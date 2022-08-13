@@ -24,11 +24,8 @@
     }
   },
   "targetDefaults": {
-    "build": {
-      "dependsOn": ["build-base"]
-    },
     "build-base": {
-      "dependsOn": ["^build-base"]
+      "dependsOn": ["^build"]
     },
     "run-all-tests": {
       "dependsOn": ["build"]
