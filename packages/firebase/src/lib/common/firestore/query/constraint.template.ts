@@ -1,6 +1,6 @@
 import { DateRange, dateRange, DateRangeInput } from '@dereekb/date';
-import { Maybe, StringKeyPropertyKeys, UTF_8_START_CHARACTER, UTF_PRIVATE_USAGE_AREA_START } from '@dereekb/util';
-import { DocumentReference, FieldPath, FieldPathOrStringPath, FieldPathOrStringPathOf } from '../types';
+import { StringKeyPropertyKeys, UTF_8_START_CHARACTER, UTF_PRIVATE_USAGE_AREA_START } from '@dereekb/util';
+import { DocumentReference, FieldPathOrStringPath, FieldPathOrStringPathOf } from '../types';
 import { endAtValue, FirestoreQueryConstraint, orderByDocumentId, startAtValue, orderBy, OrderByDirection, where } from './constraint';
 
 // MARK: Parents

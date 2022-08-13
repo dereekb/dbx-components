@@ -39,7 +39,6 @@ import {
   LatLngString,
   asObjectCopyFactory,
   modelFieldMapFunctions,
-  UTC_TIMEZONE_STRING,
   TimezoneString,
   assignValuesToPOJOFunction
 } from '@dereekb/util';
@@ -535,7 +534,7 @@ export function firestoreLatLngString(config?: FirestoreLatLngStringConfig) {
   });
 }
 
-export interface FirestoreTimezoneStringConfig extends DefaultMapConfiguredFirestoreFieldConfig<TimezoneString, TimezoneString> {}
+export type FirestoreTimezoneStringConfig = DefaultMapConfiguredFirestoreFieldConfig<TimezoneString, TimezoneString>;
 
 /**
  * Default configuration for a TimezoneString.

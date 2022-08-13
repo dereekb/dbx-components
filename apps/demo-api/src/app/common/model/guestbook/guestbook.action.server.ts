@@ -55,12 +55,11 @@ export function guestbookEntryUpdateEntryFactory({ firebaseServerActionTransform
       await guestbookCollection.firestoreContext.runTransaction(async (transaction) => {
         const parentGuestbook = guestbookCollection.documentAccessorForTransaction(transaction).loadDocument(document.parent);
         const guestbookEntryDocument = guestbookEntryCollectionFactory(parentGuestbook).documentAccessorForTransaction(transaction).loadDocument(documentRef);
-        const [guestbookSnapshot, guestbookEntry] = await Promise.all([parentGuestbook.snapshot(), guestbookEntryDocument.snapshot()]);
-        const guestbookData = guestbookSnapshot.data();
+        const [guestbook, guestbookEntry] = await Promise.all([parentGuestbook.snapshotData(), guestbookEntryDocument.snapshotData()]);
 
-        if (!guestbookData) {
+        if (!guestbook) {
           throw new Error('The guestbook could not be found.');
-        } else if (guestbookData.locked) {
+        } else if (guestbook.locked) {
           throw new Error('The guestbook has been locked.');
         } else {
           const set: Partial<GuestbookEntry> = {

@@ -1,4 +1,4 @@
-import { IndexRange, IndexNumber, IndexRef, IndexRangeInput, indexRange } from '../value/indexed';
+import { IndexNumber, IndexRef, IndexRangeInput, indexRange } from '../value/indexed';
 import { Maybe } from '../value/maybe.type';
 
 /**

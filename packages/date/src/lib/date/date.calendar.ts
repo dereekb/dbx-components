@@ -2,7 +2,7 @@ import { ISO8601DayString } from '@dereekb/util';
 import { Expose } from 'class-transformer';
 import { daysToMinutes } from './date';
 import { DateDurationSpan } from './date.duration';
-import { dateStringToDate, dateStringToUTCDate } from './date.format';
+import { dateStringToUTCDate } from './date.format';
 import { dateTimezoneUtcNormal } from './date.timezone';
 
 /**

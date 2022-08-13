@@ -32,7 +32,7 @@ export const exampleConverter = snapshotConverterFunctions<Example>({
 });
 
 export function exampleCollectionReference(context: FirestoreContext): CollectionReference<Example> {
-  return context.collection(exampleIdentity.collection);
+  return context.collection(exampleIdentity.collectionName);
 }
 
 export type ExampleFirestoreCollection = FirestoreCollection<Example, ExampleDocument>;
