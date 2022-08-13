@@ -1,3 +1,4 @@
+/* eslint-disable */
 (global as any).testFolderRootPath = '<rootDir>/../../..';
 (global as any).appTestType = 'firebase';
 

@@ -1,3 +1,4 @@
+/* eslint-disable */
 module.exports = {
   displayName: 'util',
   preset: '../../jest.preset.ts',

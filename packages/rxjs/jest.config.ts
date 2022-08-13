@@ -1,3 +1,4 @@
+/* eslint-disable */
 module.exports = {
   displayName: 'rxjs',
   coverageDirectory: '../../coverage/packages/rxjs',

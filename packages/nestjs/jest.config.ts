@@ -1,3 +1,4 @@
+/* eslint-disable */
 (global as any).appTestType = 'nestjs';
 
 module.exports = {

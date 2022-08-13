@@ -71,7 +71,7 @@ export function guestbookEntryUpdateEntryFactory({ firebaseServerActionTransform
           };
 
           // create or update the value
-          if (guestbookEntry != null) {
+          if (guestbookEntry == null) {
             await guestbookEntryDocument.create(set as GuestbookEntry);
           } else {
             await guestbookEntryDocument.update(set);
