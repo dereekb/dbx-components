@@ -4,18 +4,8 @@
     "build-all": {
       "executor": "@nrwl/workspace:run-commands",
       "options": {
-        "commands": [
-          {
-            "description": "build the base of all projects seqentially.",
-            "command": "npx nx run-many --target=build-base --parallel --max-parallel=3"
-          },
-          {
-            "description": "build each of the projects that need to be built in a sequential order",
-            "command": "npx nx run-many --target=build --parallel=false"
-          }
-        ],
-        "color": true,
-        "parallel": false
+        "command": "npx nx run-many --target=build --parallel --max-parallel=2",
+        "color": true
       }
     },
     "version": {

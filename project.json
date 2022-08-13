@@ -5,14 +5,8 @@
     "build-all": {
       "executor": "@nrwl/workspace:run-commands",
       "options": {
-        "commands": [
-          {
-            "description": "build all the projects",
-            "command": "npx nx run-many --target=build --parallel --max-parallel=2"
-          }
-        ],
-        "color": true,
-        "parallel": false
+        "command": "npx nx run-many --target=build --parallel --max-parallel=2",
+        "color": true
       }
     },
     "start-release": {

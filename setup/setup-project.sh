@@ -39,7 +39,7 @@ SOURCE_BRANCH=${DBX_SETUP_PROJECT_BRANCH:-"main"}     # develop or main
 PROJECT_NAME=$INPUT_PROJECT_NAME
 NAME=$PROJECT_NAME
 DBX_COMPONENTS_VERSION=${DBX_SETUP_PROJECT_COMPONENTS_VERSION:-"8.15.2"}
-NX_VERSION=${NX_SETUP_VERSIONS:-"14.5.4"}
+NX_VERSION=${NX_SETUP_VERSIONS:-"14.5.5"}
 
 # The app prefix is used in Angular and Nest classes as the prefix for classes/components
 APP_CODE_PREFIX="$(tr '[:lower:]' '[:upper:]' <<< ${INPUT_CODE_PREFIX:0:1})${INPUT_CODE_PREFIX:1}"
@@ -366,7 +366,7 @@ sed -e "s/APP_ID/$ANGULAR_COMPONENTS_NAME/g" tmp/env.tmp > $ANGULAR_COMPONENTS_F
 sed -e "s/APP_ID/$FIREBASE_COMPONENTS_NAME/g" tmp/env.tmp > $FIREBASE_COMPONENTS_FOLDER/.env
 
 # make build-base and run-tests cacheable in nx cloud
-npx --yes json -I -f nx.json -e "this.tasksRunnerOptions.default.options.cacheableOperations=Array.from(new Set([...this.tasksRunnerOptions.default.options.cacheableOperations, ...['build-base', 'run-tests']])); this.targetDefaults={ 'build': { 'dependsOn': ['build-base'] }, 'build-base': { 'dependsOn': ['^build-base'] }, 'publish': { 'dependsOn': ['build'] }, 'publish-npmjs': { 'dependsOn': ['build'] }, 'test': { 'dependsOn': ['build'] }, 'deploy': { 'dependsOn': ['build'] }, 'ci-deploy': { 'dependsOn': ['build'] } };";
+npx --yes json -I -f nx.json -e "this.tasksRunnerOptions.default.options.cacheableOperations=Array.from(new Set([...this.tasksRunnerOptions.default.options.cacheableOperations, ...['build-base', 'run-tests']])); this.targetDefaults={ 'build': { 'dependsOn': ['^build'] }, 'publish': { 'dependsOn': ['build'] }, 'publish-npmjs': { 'dependsOn': ['build'] }, 'test': { 'dependsOn': ['build'] }, 'deploy': { 'dependsOn': ['build'] }, 'ci-deploy': { 'dependsOn': ['build'] } };";
 
 git add --all
 git commit --no-verify -m "checkpoint: added jest configurations"
