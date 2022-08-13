@@ -1,7 +1,6 @@
 @use './array/array';
 @use './boolean/boolean';
 @use './date/date';
-@use './enum/enum';
 @use './phone/phone';
 @use './text/text';
 
@@ -9,7 +8,6 @@
   @include array.core();
   @include boolean.core();
   @include date.core();
-  @include enum.core();
   @include phone.core();
   @include text.core();
 }
@@ -18,7 +16,6 @@
   @include array.typography($typography-config);
   @include boolean.typography($typography-config);
   @include date.typography($typography-config);
-  @include enum.typography($typography-config);
   @include phone.typography($typography-config);
   @include text.typography($typography-config);
 }
@@ -27,7 +24,6 @@
   @include array.theme($theme-config);
   @include boolean.theme($theme-config);
   @include date.theme($theme-config);
-  @include enum.theme($theme-config);
   @include phone.theme($theme-config);
   @include text.theme($theme-config);
 }

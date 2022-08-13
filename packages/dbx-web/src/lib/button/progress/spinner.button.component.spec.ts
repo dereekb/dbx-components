@@ -7,21 +7,19 @@ describe('DbxSpinnerButtonComponent', () => {
   let component: DbxSpinnerButtonComponent;
   let fixture: ComponentFixture<DbxSpinnerButtonComponent>;
 
-  beforeEach(
-    waitForAsync(() => {
-      TestBed.configureTestingModule({
-        imports: [DbxProgressButtonsModule.forRoot([{ active: true, text: 'test' }])],
-        providers: [{ provide: DBX_MAT_PROGRESS_BUTTON_GLOBAL_CONFIG, useValue: { active: true, text: 'test' } }]
-      }).compileComponents();
-    })
-  );
+  beforeEach(waitForAsync(() => {
+    TestBed.configureTestingModule({
+      imports: [DbxProgressButtonsModule.forRoot([{ working: true, text: 'test' }])],
+      providers: [{ provide: DBX_MAT_PROGRESS_BUTTON_GLOBAL_CONFIG, useValue: { working: true, text: 'test' } }]
+    }).compileComponents();
+  }));
 
   beforeEach(() => {
     fixture = TestBed.createComponent(DbxSpinnerButtonComponent);
     component = fixture.componentInstance;
     component.options = {
       spinnerColor: 'primary',
-      active: false,
+      working: false,
       buttonColor: 'primary',
       text: 'test button',
       disabled: false
@@ -49,7 +47,7 @@ describe('DbxSpinnerButtonComponent', () => {
     const spy = jasmine.createSpy('DbxSpinnerButtonComponentBtnClick');
     component.btnClick.subscribe(spy);
 
-    component.options = { active: true, text: 'test button' };
+    component.options = { working: true, text: 'test button' };
     const event = new MouseEvent('click', { bubbles: true });
     component.handleClick(event);
 
@@ -60,7 +58,7 @@ describe('DbxSpinnerButtonComponent', () => {
     const spy = jest.spyOn('DbxSpinnerButtonComponentBtnClick');
     component.btnClick.subscribe(spy);
 
-    component.options = { active: false, disabled: true, text: 'test button' };
+    component.options = { working: false, disabled: true, text: 'test button' };
     const event = new MouseEvent('click', { bubbles: true });
     component.handleClick(event);
 

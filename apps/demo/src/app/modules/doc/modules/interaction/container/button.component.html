@@ -15,7 +15,7 @@
       <dbx-button icon="settings" text="Test Button"></dbx-button>
 
       <h4>With Custom Content</h4>
-      <dbx-button (buttonClick)="clickBar1()" icon="settings" [working]="barButtonOptionsActiveState">
+      <dbx-button (buttonClick)="clickBar1()" icon="settings" [working]="barButtonOptionsWorkingState">
         <div style="width: 400px">
           <p>A</p>
           <p>B</p>
@@ -53,7 +53,7 @@
     </doc-feature-example>
 
     <doc-feature-example header="dbx-bar-button" hint="Component that displays a button and implements the DbxButton directive directly and wraps a dbx-spinner-button.">
-      <dbx-bar-button (btnClick)="clickBar1()" [options]="demoButton1" [working]="barButtonOptionsActiveState" [disabled]="false"></dbx-bar-button>
+      <dbx-bar-button (btnClick)="clickBar1()" [options]="demoButton1" [working]="barButtonOptionsWorkingState" [disabled]="false"></dbx-bar-button>
       <dbx-button-spacer></dbx-button-spacer>
       <dbx-bar-button (btnClick)="clickBar2()" [options]="barButtonOptions1"></dbx-bar-button>
       <dbx-button-spacer></dbx-button-spacer>

@@ -118,66 +118,6 @@ export function mapDataFromSnapshot<T>(options?: SnapshotOptions): OperatorFunct
 }
 
 /**
- * Creates or updates the target object using the input data.
- *
- * First checks that the data exists before writing to the datastore.
- *
- * If it does not exist, will call set without merge options in order to fully initialize the object's data.
- * If it does exist, update is done using set + merge on all defined values.
- *
- * @param data
- * @deprecated See createOrUpdateWithAccessorSet()
- */
-export type CreateOrUpdateWithAccessorSetFunction<T> = (data: Partial<T>) => Promise<WriteResult | void>;
-
-/**
- *
- * @param accessor
- * @returns
- * @deprecated Use either create or update. Behavior of this function is undesirable, and it can trip up transactions since it will perform a read.
- */
-export function createOrUpdateWithAccessorSet<T>(accessor: FirestoreDocumentDataAccessor<T>): CreateOrUpdateWithAccessorSetFunction<T> {
-  return (data: Partial<T>) => {
-    return accessor.exists().then((exists) => {
-      if (exists) {
-        return updateWithAccessorSet(accessor)(data, true);
-      } else {
-        return accessor.set(data as WithFieldValue<T>);
-      }
-    });
-  };
-}
-
-/**
- * Updates the target object using the input data after checking existence.
- *
- * Calls accessor's set configured for updating/merging, and filters all undefined values from the input data.
- * If it does exist, update will fail.
- *
- * @param data
- */
-export type UpdateWithAccessorSetFunction<T> = (data: Partial<T>, forceUpdate?: boolean) => Promise<WriteResult | void>;
-
-/**
- * @deprecated This does not behave well within transactions.
- *
- * @param accessor
- * @returns
- */
-export function updateWithAccessorSet<T>(accessor: FirestoreDocumentDataAccessor<T>): UpdateWithAccessorSetFunction<T> {
-  return async (data: Partial<T>, forceUpdate?: boolean) => {
-    const exists: boolean = forceUpdate || (await accessor.exists());
-
-    if (!exists) {
-      throw new Error(`Model "${accessor.documentRef.path}" does not exist.`);
-    }
-
-    const update = filterUndefinedValues(data);
-    return accessor.set(update, { merge: true });
-  };
-}
-
-/**
  * Updates the target object using the input data that uses the input converter to build data suitable for the update function.
  *
  * If the input data after conversion is empty then returns void.

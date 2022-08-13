@@ -71,22 +71,3 @@ export async function iterateFilteredPages<T, F>(inputPage: FilteredPage<F>, loa
 
   return count;
 }
-
-/**
- * @deprecated
- */
-export class FilteredPageUtility {
-  static page<F = unknown>(page: number, request?: FilteredPage<F>) {
-    return {
-      page,
-      filter: Object.assign({}, request?.filter)
-    };
-  }
-
-  static filter<F = unknown>(filter: F, request?: FilteredPage<F>) {
-    return {
-      page: request?.page,
-      filter: Object.assign({}, request?.filter, filter)
-    };
-  }
-}

@@ -637,10 +637,6 @@ export interface ExpandUniqueDateBlocksConfig<B extends DateBlockRange | UniqueD
    */
   retainOnOverlap?: ExpandUniqueDateBlocksRetainOverlapOption;
   /**
-   * @Deprecated use retainOnOverlap instead. Will be removed in the future.
-   */
-  overwriteOption?: ExpandUniqueDateBlocksRetainOverlapOption;
-  /**
    * Used to create new items to fill empty block sets. Required when mode is set to "fill".
    */
   fillFactory?: FactoryWithRequiredInput<B, DateBlockRangeWithRange>;
@@ -668,8 +664,8 @@ type DateBlockRangePriorityPair<B extends DateBlockRange | UniqueDateBlock> = {
 };
 
 export function expandUniqueDateBlocksFunction<B extends DateBlockRange | UniqueDateBlock>(config: ExpandUniqueDateBlocksConfig<B>): ExpandUniqueDateBlocksFunction<B> {
-  const { startAtIndex = 0, endAtIndex, fillOption: fill, fillFactory: inputFillFactory, retainOnOverlap: inputRetainOnOverlap, overwriteOption: deprecateOverwriteOption } = config;
-  const retainOnOverlap = inputRetainOnOverlap ?? deprecateOverwriteOption ?? 'next';
+  const { startAtIndex = 0, endAtIndex, fillOption: fill, fillFactory: inputFillFactory, retainOnOverlap: inputRetainOnOverlap } = config;
+  const retainOnOverlap = inputRetainOnOverlap ?? 'next';
   const maxAllowedIndex: IndexNumber = endAtIndex ?? Number.MAX_SAFE_INTEGER;
   const fillFactory = inputFillFactory as FactoryWithRequiredInput<B, DateBlockRange>;
 
@@ -914,14 +910,3 @@ export function expandUniqueDateBlocksFunction<B extends DateBlockRange | Unique
     return result;
   };
 }
-
-// MARK: Compat
-/**
- * @Deprecated use ExpandUniqueDateBlocksRetainOverlapOption instead
- */
-export type ExpandUniqueDateBlocksOverwriteOption = ExpandUniqueDateBlocksRetainOverlapOption;
-
-/**
- * @deprecated use expandUniqueDateBlocksFunction() instead.
- */
-export const expandUniqueDateBlocks = expandUniqueDateBlocksFunction;

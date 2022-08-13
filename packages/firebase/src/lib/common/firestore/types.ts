@@ -193,10 +193,6 @@ export interface WriteResult {
 
 export interface Precondition {
   readonly lastUpdateTime?: Timestamp;
-  /**
-   * @Deprecated not supported in all clients.
-   */
-  readonly exists?: boolean;
 }
 
 export interface ReadOnlyTransactionOptions {

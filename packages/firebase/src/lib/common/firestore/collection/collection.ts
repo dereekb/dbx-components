@@ -42,18 +42,6 @@ export type FirestoreModelIdentityType = 'root' | 'nested';
 export type FirestoreModelIdentity<M extends FirestoreModelType = FirestoreModelType, C extends FirestoreCollectionName = FirestoreCollectionName> = FirestoreModelTypeRef<M> &
   FirestoreCollectionNameRef<C> & {
     readonly type: FirestoreModelIdentityType;
-    /**
-     * @deprecated use collectionName instead.
-     *
-     * Will be removed in the future.
-     */
-    readonly collection: C;
-    /**
-     * @deprecated use modelType instead.
-     *
-     * Will be removed in the future.
-     */
-    readonly model: M; // NOTE: Remove later on.
   };
 
 export type FirestoreModelIdentityModelType<I> = I extends FirestoreModelIdentity<infer M> ? M : never;
@@ -98,8 +86,6 @@ export function firestoreModelIdentity<P extends FirestoreModelIdentity<string, 
       type: 'nested',
       parent: parentOrModelName as P,
       collectionName,
-      collection: collectionName,
-      model: collectionNameOrModelName as M,
       modelType: collectionNameOrModelName as M
     };
   } else {
@@ -107,8 +93,6 @@ export function firestoreModelIdentity<P extends FirestoreModelIdentity<string, 
     return {
       type: 'root',
       collectionName,
-      collection: collectionName,
-      model: parentOrModelName,
       modelType: parentOrModelName
     };
   }
@@ -483,21 +467,3 @@ export function makeFirestoreCollection<T, D extends FirestoreDocument<T>>(input
     queryDocument
   };
 }
-
-// MARK: Compat
-/**
- * Alternative name for FirestoreModelType.
- *
- * @deprecated replaced by FirestoreModelType
- */
-export type FirestoreModelName = FirestoreModelType;
-
-/**
- * @deprecated replaced by FirestoreModelTypeRef
- */
-export type FirestoreModelNameRef<M extends FirestoreModelType = FirestoreModelType> = FirestoreModelTypeRef<M>;
-
-/**
- * @deprecated replaced by FirestoreModelTypes
- */
-export type FirestoreModelNames<I extends FirestoreModelIdentity> = FirestoreModelTypes<I>;

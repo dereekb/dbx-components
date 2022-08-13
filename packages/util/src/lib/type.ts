@@ -358,14 +358,3 @@ export type HasThreeOrMoreCharacters<S extends string> =
         : never
       : never
     : never;
-
-// MARK: Compat
-/**
- * @deprecated use StringConcatenation
- */
-export type StringConcatination<S extends string, SEPARATOR extends string> = StringConcatenation<S, SEPARATOR>;
-
-/**
- * @deprecated use StringCombination
- */
-export type StringCombinations<S extends string, SEPARATOR extends string> = StringCombination<S, SEPARATOR>;

@@ -106,19 +106,3 @@ export function dbxFirebaseCollectionChangeTriggerForWatcher<S extends DbxFireba
 export function dbxFirebaseCollectionChangeTrigger<S extends DbxFirebaseCollectionLoaderAccessor<any>>(config: DbxFirebaseCollectionChangeTriggerInstanceConfig<S>): DbxFirebaseCollectionChangeTriggerInstance<S> {
   return new DbxFirebaseCollectionChangeTriggerInstance(config);
 }
-
-// MARK: Compat
-/**
- * @deprecated
- */
-export const dbxFirebaseCollectionChangeTriggerInstance = dbxFirebaseCollectionChangeTrigger;
-
-/**
- * @deprecated
- */
-export const dbxFirebaseCollectionChangeTriggerInstanceForStore = dbxFirebaseCollectionChangeTriggerForStore;
-
-/**
- * @deprecated
- */
-export const dbxFirebaseCollectionChangeTriggerInstanceForWatcher = dbxFirebaseCollectionChangeTriggerForWatcher;

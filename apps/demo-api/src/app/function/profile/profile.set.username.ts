@@ -5,7 +5,7 @@ import { userHasNoProfileError } from '../../common';
 import { profileForUserRequest } from './profile.util';
 
 /**
- * @deprecated use updateProfileUsername instead.
+ * @deprecated use updateProfileUsername's pattern with update functions instead.
  */
 export const profileSetUsername = onCallWithDemoNestContext<SetProfileUsernameParams>(
   inAuthContext(async (request) => {
