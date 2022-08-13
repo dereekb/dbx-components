@@ -6,8 +6,9 @@
   "targets": {
     "build": {
       "executor": "@nrwl/workspace:run-commands",
+      "outputs": ["dist/apps/demo"],
       "options": {
-        "command": "echo",
+        "command": "npx nx run demo:build-base",
         "color": true
       }
     },

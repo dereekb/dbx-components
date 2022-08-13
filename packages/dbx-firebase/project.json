@@ -10,6 +10,10 @@
       "options": {
         "commands": [
           {
+            "description": "build dbx-firebase production",
+            "command": "npx nx run dbx-firebase:build-base:production"
+          },
+          {
             "description": "copy all style files from src to map to respective directory",
             "command": "echo 'copying dbx-firebase scss files' && cd dist/packages/dbx-firebase/src && find * -type f -name \"*.scss\" -exec sh -c 'mkdir -p ../\"$(dirname {})\" && cp {} ../{}' \\;"
           },

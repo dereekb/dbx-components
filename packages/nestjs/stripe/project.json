@@ -12,7 +12,8 @@
         "packageJson": "packages/nestjs/stripe/package.json",
         "main": "packages/nestjs/stripe/src/index.ts",
         "assets": ["packages/nestjs/stripe/*.md", "LICENSE"]
-      }
+      },
+      "dependsOn": []
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",

@@ -12,7 +12,8 @@
         "packageJson": "packages/util/test/package.json",
         "main": "packages/util/test/src/index.ts",
         "assets": ["packages/util/test/*.md"]
-      }
+      },
+      "dependsOn": []
     },
     "lint": {
       "executor": "@nrwl/linter:eslint",

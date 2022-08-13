@@ -12,7 +12,8 @@
         "packageJson": "packages/firebase/test/package.json",
         "main": "packages/firebase/test/src/index.ts",
         "assets": ["packages/firebase/test/*.md"]
-      }
+      },
+      "dependsOn": []
     },
     "test": {
       "executor": "@nrwl/workspace:run-commands",

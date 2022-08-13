@@ -3,6 +3,14 @@
   "sourceRoot": "packages/date/src",
   "projectType": "library",
   "targets": {
+    "build": {
+      "executor": "@nrwl/workspace:run-commands",
+      "outputs": ["dist/packages/date"],
+      "options": {
+        "command": "npx nx run date:build-base",
+        "color": true
+      }
+    },
     "build-base": {
       "executor": "@nrwl/js:tsc",
       "outputs": ["{options.outputPath}"],
@@ -78,6 +86,6 @@
       }
     }
   },
-  "implicitDependencies": ["util", "!util-test"],
+  "implicitDependencies": ["!util-test"],
   "tags": []
 }
