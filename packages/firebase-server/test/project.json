@@ -3,13 +3,6 @@
   "sourceRoot": "packages/firebase-server/test/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "@nrwl/workspace:run-commands",
-      "options": {
-        "command": "echo",
-        "color": true
-      }
-    },
     "build-base": {
       "executor": "@nrwl/js:tsc",
       "outputs": ["{options.outputPath}"],
@@ -42,7 +35,5 @@
         "lintFilePatterns": ["packages/firebase-server/test/**/*.ts"]
       }
     }
-  },
-  "implicitDependencies": ["firebase", "firebase-test", "firebase-server"],
-  "tags": []
+  }
 }

@@ -2,6 +2,27 @@
   "$schema": "node_modules/nx/schemas/project-schema.json",
   "prefix": "workspace",
   "targets": {
+    "build-all": {
+      "executor": "@nrwl/workspace:run-commands",
+      "options": {
+        "commands": [
+          {
+            "description": "build the base of all projects seqentially.",
+            "command": "npx nx run-many --target=build-base --parallel --max-parallel=3"
+          },
+          {
+            "description": "build each of the projects that need to be built in a sequential order, up to firebase-server",
+            "command": "npx nx run-many --target=build --projects=util,nestjs,dbx-core,dbx-analytics,firebase --parallel=false"
+          },
+          {
+            "description": "firebase-server has trouble sometimes, so run it after finishing the other builds. Run dbx-web and dbx-form afterwards to ensure build steps are maintained (dist folder isn't deleted)",
+            "command": "npx nx run-many --target=build --projects=firebase-server,dbx-firebase,dbx-form,dbx-web --parallel=false"
+          }
+        ],
+        "color": true,
+        "parallel": false
+      }
+    },
     "start-release": {
       "executor": "@nrwl/workspace:run-commands",
       "options": {

@@ -6,7 +6,7 @@
     "build": {
       "executor": "@nrwl/workspace:run-commands",
       "options": {
-        "command": "echo",
+        "command": "echo built api",
         "color": true
       }
     },

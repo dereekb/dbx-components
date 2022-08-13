@@ -3,13 +3,6 @@
   "sourceRoot": "ANGULAR_COMPONENTS_FOLDER/src",
   "prefix": "APP_CODE_PREFIX_LOWER",
   "targets": {
-    "build": {
-      "executor": "@nrwl/workspace:run-commands",
-      "options": {
-        "command": "echo",
-        "color": true
-      }
-    },
     "build-base": {
       "executor": "@nrwl/angular:package",
       "outputs": ["ANGULAR_COMPONENTS_DIST_FOLDER"],

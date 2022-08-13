@@ -25,16 +25,16 @@
   },
   "targetDefaults": {
     "build": {
-      "dependsOn": ["build-base", "^build"]
+      "dependsOn": ["build-base"]
     },
     "build-base": {
       "dependsOn": ["^build-base"]
     },
     "run-all-tests": {
-      "dependsOn": ["build-base"]
+      "dependsOn": ["build"]
     },
     "test": {
-      "dependsOn": ["build-base"]
+      "dependsOn": ["build"]
     },
     "publish": {
       "dependsOn": ["build"]

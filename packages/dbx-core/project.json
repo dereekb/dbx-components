@@ -10,10 +10,6 @@
       "options": {
         "commands": [
           {
-            "description": "build dbx-core production (done by targetDefaults)",
-            "command": "echo"
-          },
-          {
             "description": "copy license",
             "command": "echo 'copying dbx-core license' && cp LICENSE dist/packages/dbx-core"
           }

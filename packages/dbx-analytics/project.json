@@ -10,10 +10,6 @@
       "options": {
         "commands": [
           {
-            "description": "build dbx-analytics production (done by targetDefaults)",
-            "command": "echo"
-          },
-          {
             "description": "copy license",
             "command": "echo 'copying dbx-analytics license' && cp LICENSE dist/packages/dbx-analytics"
           }

@@ -9,7 +9,7 @@
       "options": {
         "commands": [
           {
-            "command": "npx nx run firebase-server-test:build-base"
+            "command": "npx nx run firebase-server-test:build-base && sleep 1"
           }
         ],
         "parallel": false

@@ -21,11 +21,10 @@ jobs:
       - node/install-packages
       # initialize nx
       - nx/set-shas
-      # run build-base for each project
-      - run: npx nx affected --base=$NX_BASE --target=build-base --parallel --max-parallel=2
-      # run build for the buildable projects
-      - run: npx nx run-many --target=build --projects=util,nestjs,dbx-core,dbx-analytics,dbx-web,dbx-form,firebase --parallel=false
-      - run: npx nx run-many --target=build --projects=firebase-server,dbx-firebase --parallel=false
+      # builds everything in the project in order
+      - run: 
+          name: build
+          command: npx nx run workspace:build-all
       # persist builds to workspace
       - persist_to_workspace:
           root: ~/code

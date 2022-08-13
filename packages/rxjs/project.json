@@ -3,13 +3,6 @@
   "sourceRoot": "packages/rxjs/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "@nrwl/workspace:run-commands",
-      "options": {
-        "command": "echo",
-        "color": true
-      }
-    },
     "build-base": {
       "executor": "@nrwl/js:tsc",
       "outputs": ["{options.outputPath}"],

@@ -168,7 +168,7 @@ npm install -D @nrwl/angular@$NX_VERSION
 #  rm migrations.json                 # remove migrations file
 #fi
 
-npx --yes json -I -f nx.json -e "this.workspaceLayout = { appsDir: '$APPS_FOLDER', libsDir: '$COMPONENTS_FOLDER' }";
+npx --yes json -I -f nx.json -e "this.workspaceLayout = { appsDir: '$APPS_FOLDER', libsDir: '$COMPONENTS_FOLDER' };";
 
 git add --all
 git commit --no-verify -m "checkpoint: updated nx to latest version"

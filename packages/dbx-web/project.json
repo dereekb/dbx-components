@@ -6,13 +6,9 @@
   "targets": {
     "build": {
       "executor": "@nrwl/workspace:run-commands",
-      "outputs": ["dist/packages/dbx-web"],
+      "outputs": ["dist/packages/dbx-web", "dist/packages/dbx-web/_index.scss", "dist/packages/dbx-web/LICENSE", "dist/packages/dbx-web/**/*.scss"],
       "options": {
         "commands": [
-          {
-            "description": "build dbx-web production (done by targetDefaults)",
-            "command": "echo"
-          },
           {
             "description": "copy all style files from src to map to respective directory. How this works is it finds all .scss files in the dist/packages/dbx-web/src folder, then iterates over each file's path creates the directory one level up if it does not exist, followed by copying the file.",
             "command": "echo 'copying dbx-web scss files' && cd dist/packages/dbx-web/src && find * -type f -name \"*.scss\" -exec sh -c 'mkdir -p ../\"$(dirname {})\" && cp {} ../{}' \\;"

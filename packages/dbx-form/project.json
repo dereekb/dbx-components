@@ -6,13 +6,9 @@
   "targets": {
     "build": {
       "executor": "@nrwl/workspace:run-commands",
-      "outputs": ["dist/packages/dbx-form"],
+      "outputs": ["dist/packages/dbx-form", "dist/packages/dbx-form/_index.scss", "dist/packages/dbx-form/LICENSE", "dist/packages/dbx-form/**/*.scss"],
       "options": {
         "commands": [
-          {
-            "description": "build dbx-form production (done by targetDefaults)",
-            "command": "echo"
-          },
           {
             "description": "copy all style files from src to map to respective directory",
             "command": "echo 'copying dbx-form scss files' && cd dist/packages/dbx-form/src && find * -type f -name \"*.scss\" -exec sh -c 'mkdir -p ../\"$(dirname {})\" && cp {} ../{}' \\;"
