@@ -1,4 +1,4 @@
-import { OnInit, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { DbxWidgetDataPair } from '@dereekb/dbx-web';
 import { ListLoadingState, successResult } from '@dereekb/rxjs';
 import { map, Observable, of } from 'rxjs';

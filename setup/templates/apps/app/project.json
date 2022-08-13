@@ -5,6 +5,7 @@
   "targets": {
     "build": {
       "executor": "@nrwl/workspace:run-commands",
+      "outputs": ["ANGULAR_APP_DIST_FOLDER"],
       "options": {
         "command": "npx nx run ANGULAR_APP_NAME:build-base",
         "color": true
@@ -103,20 +104,12 @@
     },
     "deploy": {
       "executor": "@nrwl/workspace:run-commands",
-      "dependsOn": [{
-        "target": "build",
-        "projects": "self"
-      }],
       "options": {
         "command": "npx firebase --project=default deploy --only hosting"
       }
     },
     "ci-deploy": {
       "executor": "@nrwl/workspace:run-commands",
-      "dependsOn": [{
-        "target": "build",
-        "projects": "self"
-      }],
       "options": {
         "command": "npx firebase --project=default deploy --only hosting --token \"$FIREBASE_TOKEN\""
       }

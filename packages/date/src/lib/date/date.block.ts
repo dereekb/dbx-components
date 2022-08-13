@@ -1,4 +1,4 @@
-import { DayOfWeek, RequiredOnKeys, IndexNumber, IndexRange, indexRangeCheckFunction, IndexRef, MINUTES_IN_DAY, MS_IN_DAY, UniqueModel, lastValue, FactoryWithRequiredInput, FilterFunction, mergeFilterFunctions, range, Milliseconds, Hours, MapFunction, getNextDay, SortCompareFunction, sortAscendingIndexNumberRefFunction } from '@dereekb/util';
+import { DayOfWeek, RequiredOnKeys, IndexNumber, IndexRange, indexRangeCheckFunction, IndexRef, MINUTES_IN_DAY, MS_IN_DAY, UniqueModel, lastValue, FactoryWithRequiredInput, FilterFunction, mergeFilterFunctions, range, Milliseconds, Hours, MapFunction, getNextDay, SortCompareFunction, sortAscendingIndexNumberRefFunction, mergeArrayIntoArray } from '@dereekb/util';
 import { dateRange, DateRange, DateRangeDayDistanceInput, DateRangeType, isDateRange } from './date.range';
 import { DateDurationSpan } from './date.duration';
 import { differenceInDays, differenceInMilliseconds, isBefore, addDays, addMinutes, setSeconds, addMilliseconds, hoursToMilliseconds, addHours } from 'date-fns';
@@ -637,13 +637,9 @@ export interface ExpandUniqueDateBlocksConfig<B extends DateBlockRange | UniqueD
    */
   retainOnOverlap?: ExpandUniqueDateBlocksRetainOverlapOption;
   /**
-   * @Deprecated use retainOnOverlap instead. Will be removed in the future.
-   */
-  overwriteOption?: ExpandUniqueDateBlocksRetainOverlapOption;
-  /**
    * Used to create new items to fill empty block sets. Required when mode is set to "fill".
    */
-  fillFactory?: FactoryWithRequiredInput<B, DateBlockRange>;
+  fillFactory?: FactoryWithRequiredInput<B, DateBlockRangeWithRange>;
 }
 
 export interface ExpandUniqueDateBlocksResult<B extends DateBlockRange | UniqueDateBlock> extends UniqueDateBlockRangeGroup<B> {
@@ -653,11 +649,23 @@ export interface ExpandUniqueDateBlocksResult<B extends DateBlockRange | UniqueD
   discarded: B[];
 }
 
-export type ExpandUniqueDateBlocksFunction<B extends DateBlockRange | UniqueDateBlock> = (input: B[] | UniqueDateBlockRangeGroup<B>) => ExpandUniqueDateBlocksResult<B>;
+/**
+ * Expansion function used to sort/merge/replace DateBlockRange values by block.
+ *
+ * Can optionally specify a second array/group of blocks that are treated as "next" blocks which can take priority or not depending on the retain options.
+ */
+export type ExpandUniqueDateBlocksFunction<B extends DateBlockRange | UniqueDateBlock> = (input: B[] | UniqueDateBlockRangeGroup<B>, newBlocks?: B[] | UniqueDateBlockRangeGroup<B>) => ExpandUniqueDateBlocksResult<B>;
 
-export function expandUniqueDateBlocks<B extends DateBlockRange | UniqueDateBlock>(config: ExpandUniqueDateBlocksConfig<B>): ExpandUniqueDateBlocksFunction<B> {
-  const { startAtIndex = 0, endAtIndex, fillOption: fill, fillFactory: inputFillFactory, retainOnOverlap: inputRetainOnOverlap, overwriteOption: deprecateOverwriteOption } = config;
-  const retainOnOverlap = inputRetainOnOverlap ?? deprecateOverwriteOption ?? 'next';
+type DateBlockRangePriority = ExpandUniqueDateBlocksRetainOverlapOption;
+
+type DateBlockRangePriorityPair<B extends DateBlockRange | UniqueDateBlock> = {
+  priority: DateBlockRangePriority;
+  block: B;
+};
+
+export function expandUniqueDateBlocksFunction<B extends DateBlockRange | UniqueDateBlock>(config: ExpandUniqueDateBlocksConfig<B>): ExpandUniqueDateBlocksFunction<B> {
+  const { startAtIndex = 0, endAtIndex, fillOption: fill, fillFactory: inputFillFactory, retainOnOverlap: inputRetainOnOverlap } = config;
+  const retainOnOverlap = inputRetainOnOverlap ?? 'next';
   const maxAllowedIndex: IndexNumber = endAtIndex ?? Number.MAX_SAFE_INTEGER;
   const fillFactory = inputFillFactory as FactoryWithRequiredInput<B, DateBlockRange>;
 
@@ -665,17 +673,25 @@ export function expandUniqueDateBlocks<B extends DateBlockRange | UniqueDateBloc
     throw new Error('fillFactory is required when fillOption is "fill".');
   }
 
-  return (input: B[] | UniqueDateBlockRangeGroup<B>) => {
+  return (input: B[] | UniqueDateBlockRangeGroup<B>, newBlocks?: B[] | UniqueDateBlockRangeGroup<B>) => {
     const inputGroup = Array.isArray(input) ? groupUniqueDateBlocks(input) : input;
-    const sorted = inputGroup.blocks;
+    const sorted: DateBlockRangePriorityPair<B>[] = inputGroup.blocks.map((block) => ({ priority: 'current', block }));
+
+    if (newBlocks != null) {
+      const inputOverwriteGroup = Array.isArray(newBlocks) ? groupUniqueDateBlocks(newBlocks) : newBlocks;
+      mergeArrayIntoArray(
+        sorted,
+        inputOverwriteGroup.blocks.map((block) => ({ priority: 'next', block }))
+      ).sort((a, b) => a.block.i - b.block.i);
+    }
 
     const blocks: B[] = [];
     const discarded: B[] = [];
 
-    let current: B = sorted[0];
+    let current: DateBlockRangePriorityPair<B> = sorted[0];
     let currentNextIndex: IndexNumber;
 
-    let next: B = sorted[1];
+    let next: DateBlockRangePriorityPair<B> = sorted[1];
     let nextStartIndex: IndexNumber;
 
     let i = 0;
@@ -717,7 +733,7 @@ export function expandUniqueDateBlocks<B extends DateBlockRange | UniqueDateBloc
       const to = Math.min(inputTo, maxAllowedIndex);
 
       if (fill === 'fill') {
-        const dateBlockRange: DateBlockRange = {
+        const dateBlockRange: DateBlockRangeWithRange = {
           i,
           to
         };
@@ -733,19 +749,19 @@ export function expandUniqueDateBlocks<B extends DateBlockRange | UniqueDateBloc
       latestTo = to;
     }
 
-    function continueToNext(use?: B) {
+    function continueToNext(use?: B, priority?: DateBlockRangePriority) {
       i += 1;
-      current = use ?? sorted[i];
+      current = use != null ? ({ block: use, priority } as DateBlockRangePriorityPair<B>) : sorted[i];
       next = sorted[i + 1];
 
       if (next) {
-        nextStartIndex = next.i;
+        nextStartIndex = next.block.i;
 
         // complete loop once past the max allowed index
         if (nextStartIndex > maxAllowedIndex) {
           continueLoop = false;
         } else {
-          const nextEndIndex = dateBlockEndIndex(next);
+          const nextEndIndex = dateBlockEndIndex(next.block);
 
           if (nextEndIndex <= latestTo) {
             discardCurrent(); // skip until next is not less than or equal to the latest to
@@ -757,8 +773,8 @@ export function expandUniqueDateBlocks<B extends DateBlockRange | UniqueDateBloc
       }
     }
 
-    function discard(block: B) {
-      discarded.push(block);
+    function discard(pair: DateBlockRangePriorityPair<B>) {
+      discarded.push(pair.block);
     }
 
     function discardCurrent() {
@@ -773,24 +789,35 @@ export function expandUniqueDateBlocks<B extends DateBlockRange | UniqueDateBloc
 
     let continueLoop: boolean = Boolean(next); // only loop if next is defined, otherwise we just add the final item.
 
-    while (continueLoop) {
-      currentNextIndex = current.i;
-      nextStartIndex = next.i;
+    /**
+     * Used to determine how to handle two neighboring objects.
+     */
+    function shouldRetainCurrentOverNext() {
+      if (current.priority === next.priority) {
+        return retainOnOverlap === 'current';
+      } else {
+        return current.priority === retainOnOverlap;
+      }
+    }
 
-      const currentEndIndex = dateBlockEndIndex(current);
-      const nextEndIndex = dateBlockEndIndex(next);
+    while (continueLoop) {
+      currentNextIndex = current.block.i;
+      nextStartIndex = next.block.i;
+
+      const currentEndIndex = dateBlockEndIndex(current.block);
+      const nextEndIndex = dateBlockEndIndex(next.block);
 
       if (nextStartIndex < startAtIndex || currentEndIndex < startAtIndex) {
-        // do nothing if the next index is still before the start index.
+        // do nothing if the next index is still before the current start index.
         discardCurrent();
         continueToNext();
       } else if (currentNextIndex === nextStartIndex) {
         // if next has the same range as current, then look at the tie-breaker
         if (nextEndIndex === currentEndIndex) {
           // if they're both on the same index, then take the one based on the overwrite value
-          if (retainOnOverlap === 'current') {
+          if (shouldRetainCurrentOverNext()) {
             // add current
-            addBlockWithRange(current, currentNextIndex, nextEndIndex);
+            addBlockWithRange(current.block, currentNextIndex, nextEndIndex);
             // discard and skip the "next" value
             discardNext();
           } else {
@@ -801,42 +828,56 @@ export function expandUniqueDateBlocks<B extends DateBlockRange | UniqueDateBloc
           }
         } else if (nextEndIndex > currentEndIndex) {
           // handle overlap
-          // add current
-          addBlockWithRange(current, currentNextIndex, currentEndIndex);
-          // change next to start at the next range
-          continueToNext({ ...next, i: currentEndIndex + 1, to: nextEndIndex });
+          if (shouldRetainCurrentOverNext()) {
+            // add current
+            addBlockWithRange(current.block, currentNextIndex, currentEndIndex);
+            // change next to start at the next range
+            continueToNext({ ...next.block, i: currentEndIndex + 1, to: nextEndIndex }, next.priority);
+          } else {
+            //
+            discardCurrent();
+            continueToNext();
+          }
         } else {
           // the next item ends before the current item.
-          if (retainOnOverlap === 'current') {
+          if (shouldRetainCurrentOverNext()) {
             // discard the next value.
             discard(next);
             // continue with the current value
-            continueToNext(current);
+            continueToNext(current.block, current.priority);
           } else {
             // add the next item first since it overwrites the current
-            addBlockWithRange(next, nextStartIndex, nextEndIndex);
+            addBlockWithRange(next.block, nextStartIndex, nextEndIndex);
             // continue with the current item as next.
-            continueToNext({ ...current, i: nextEndIndex + 1, to: currentEndIndex });
+            continueToNext({ ...current.block, i: nextEndIndex + 1, to: currentEndIndex }, current.priority);
           }
         }
       } else {
         // Check for any overlap
         if (currentEndIndex >= nextStartIndex) {
           // handle overlap
-          if (retainOnOverlap === 'current') {
+          if (shouldRetainCurrentOverNext()) {
             // add current
-            addBlockWithRange(current, currentNextIndex, currentEndIndex);
-            // change next to start at the next range
-            continueToNext({ ...next, i: currentEndIndex + 1, to: nextEndIndex });
+            addBlockWithRange(current.block, currentNextIndex, currentEndIndex);
+
+            if (nextEndIndex > currentEndIndex) {
+              // change next to start at the next range
+              continueToNext({ ...next.block, i: currentEndIndex + 1, to: nextEndIndex }, next.priority);
+            } else {
+              // continue normally
+              continueToNext();
+            }
           } else {
             // add current up to the start index
-            addBlockWithRange(current, currentNextIndex, nextStartIndex - 1);
+            addBlockWithRange(current.block, currentNextIndex, nextStartIndex - 1);
             // continue normally
             continueToNext();
           }
         } else {
-          // add the block
-          addBlockWithRange(current, currentNextIndex, currentEndIndex);
+          // no overlap
+
+          // add the current block
+          addBlockWithRange(current.block, currentNextIndex, currentEndIndex);
           // continue to next
           continueToNext();
         }
@@ -845,14 +886,14 @@ export function expandUniqueDateBlocks<B extends DateBlockRange | UniqueDateBloc
 
     if (current != null) {
       // if current != null, then atleast one block was input/remaining.
-      const lastStartIndex = current.i;
-      const lastEndIndex = dateBlockEndIndex(current);
+      const lastStartIndex = current.block.i;
+      const lastEndIndex = dateBlockEndIndex(current.block);
 
       if (lastEndIndex < startAtIndex || lastEndIndex <= latestTo || lastStartIndex > maxAllowedIndex) {
         // if the block ends before the start index, then do nothing.
         discardCurrent();
       } else {
-        addBlockWithRange(current, Math.max(startAtIndex, lastStartIndex), Math.min(lastEndIndex, maxAllowedIndex));
+        addBlockWithRange(current.block, Math.max(startAtIndex, lastStartIndex), Math.min(lastEndIndex, maxAllowedIndex));
       }
 
       completeBlocks();
@@ -869,9 +910,3 @@ export function expandUniqueDateBlocks<B extends DateBlockRange | UniqueDateBloc
     return result;
   };
 }
-
-// MARK: Compat
-/**
- * @Deprecated use ExpandUniqueDateBlocksRetainOverlapOption instead
- */
-export type ExpandUniqueDateBlocksOverwriteOption = ExpandUniqueDateBlocksRetainOverlapOption;

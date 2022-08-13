@@ -1,9 +1,11 @@
 {
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "components/demo-firebase/src",
   "projectType": "library",
   "targets": {
     "build": {
       "executor": "@nrwl/workspace:run-commands",
+      "outputs": ["dist/components/demo-firebase"],
       "options": {
         "command": "npx nx run demo-firebase:build-base",
         "color": true

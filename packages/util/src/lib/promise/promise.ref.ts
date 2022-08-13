@@ -29,14 +29,3 @@ export function promiseReference<O>(executor?: PromiseExecutor<O>): PromiseRefer
 
   return ref;
 }
-
-// MARK: Compat
-/**
- * @deprecated use PromiseReference instead.
- */
-export type PromiseFullRef<O = unknown> = PromiseReference<O>;
-
-/**
- * @deprecated use promiseReference() instead.
- */
-export const makePromiseFullRef = promiseReference;

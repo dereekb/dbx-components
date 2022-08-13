@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/util",
-  "version": "8.15.2",
+  "version": "9.0.0",
   "type": "commonjs",
   "exports": {
     ".": {
@@ -13,5 +13,8 @@
       "types": "./test/index.d.ts",
       "default": "./test/index.js"
     }
+  },
+  "peerDependencies": {
+    "lodash.isequal": "^4.5.0"
   }
 }

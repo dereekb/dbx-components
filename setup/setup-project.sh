@@ -25,6 +25,8 @@ INPUT_CODE_PREFIX=${3:-app}                                   # example: gethapi
 FIREBASE_BASE_EMULATORS_PORT=${4:-9100}                       # example: 9100
 PARENT_DIRECTORY=${5:-'../../'}                               # parent directory to create this project within. Defaults to relative to this script's space within dbx-components.
 
+# Example: ./setup-project.sh gethapier test test 9300
+
 # Whether or not to perform manual setup
 MANUAL_SETUP=${DBX_SETUP_PROJECT_MANUAL:-"y"}         # y/n
 IS_CI_TEST=${DBX_SETUP_PROJECT_IS_CI_TEST:-"n"}       # y/n
@@ -36,8 +38,8 @@ SOURCE_BRANCH=${DBX_SETUP_PROJECT_BRANCH:-"main"}     # develop or main
 # - Project Details
 PROJECT_NAME=$INPUT_PROJECT_NAME
 NAME=$PROJECT_NAME
-DBX_COMPONENTS_VERSION=${DBX_SETUP_PROJECT_COMPONENTS_VERSION:-"8.9.0"}
-NX_VERSION=${NX_SETUP_VERSIONS:-"14.1.8"} # NOTE: 14.1.8 is the last Angular 13 version
+DBX_COMPONENTS_VERSION=${DBX_SETUP_PROJECT_COMPONENTS_VERSION:-"8.15.2"}
+NX_VERSION=${NX_SETUP_VERSIONS:-"14.5.5"}
 
 # The app prefix is used in Angular and Nest classes as the prefix for classes/components
 APP_CODE_PREFIX="$(tr '[:lower:]' '[:upper:]' <<< ${INPUT_CODE_PREFIX:0:1})${INPUT_CODE_PREFIX:1}"
@@ -94,7 +96,39 @@ then
   # Mark IS_NOT_CI_TEST as false and skip the login
   echo "Looks like this is being run as a CI test (DBX_SETUP_PROJECT_IS_CI_TEST=y)"
   IS_NOT_CI_TEST=false
+
+  # will configure the app to install from the CI built version instead of npm/remote
+  CI_DIST_PATH=file:~/code/dist/packages
+  DBX_COMPONENTS_VERSION_BROWSER=$CI_DIST_PATH/browser
+  DBX_COMPONENTS_VERSION_DATE=$CI_DIST_PATH/date
+  DBX_COMPONENTS_VERSION_DBX_ANALYTICS=$CI_DIST_PATH/dbx-analytics
+  DBX_COMPONENTS_VERSION_DBX_CORE=$CI_DIST_PATH/dbx-core
+  DBX_COMPONENTS_VERSION_DBX_FIREBASE=$CI_DIST_PATH/dbx-firebase
+  DBX_COMPONENTS_VERSION_DBX_FORM=$CI_DIST_PATH/dbx-form
+  DBX_COMPONENTS_VERSION_DBX_WEB=$CI_DIST_PATH/dbx-web
+  DBX_COMPONENTS_VERSION_FIREBASE=$CI_DIST_PATH/firebase
+  DBX_COMPONENTS_VERSION_FIREBASE_SERVER=$CI_DIST_PATH/firebase-server
+  DBX_COMPONENTS_VERSION_MODEL=$CI_DIST_PATH/model
+  DBX_COMPONENTS_VERSION_NESTJS=$CI_DIST_PATH/nestjs
+  DBX_COMPONENTS_VERSION_RXJS=$CI_DIST_PATH/rxjs
+  DBX_COMPONENTS_VERSION_UTIL=$CI_DIST_PATH/util
+
 else
+
+  DBX_COMPONENTS_VERSION_BROWSER=$DBX_COMPONENTS_VERSION
+  DBX_COMPONENTS_VERSION_DATE=$DBX_COMPONENTS_VERSION
+  DBX_COMPONENTS_VERSION_DBX_ANALYTICS=$DBX_COMPONENTS_VERSION
+  DBX_COMPONENTS_VERSION_DBX_CORE=$DBX_COMPONENTS_VERSION
+  DBX_COMPONENTS_VERSION_DBX_FIREBASE=$DBX_COMPONENTS_VERSION
+  DBX_COMPONENTS_VERSION_DBX_FORM=$DBX_COMPONENTS_VERSION
+  DBX_COMPONENTS_VERSION_DBX_WEB=$DBX_COMPONENTS_VERSION
+  DBX_COMPONENTS_VERSION_FIREBASE=$DBX_COMPONENTS_VERSION
+  DBX_COMPONENTS_VERSION_FIREBASE_SERVER=$DBX_COMPONENTS_VERSION
+  DBX_COMPONENTS_VERSION_MODEL=$DBX_COMPONENTS_VERSION
+  DBX_COMPONENTS_VERSION_NESTJS=$DBX_COMPONENTS_VERSION
+  DBX_COMPONENTS_VERSION_RXJS=$DBX_COMPONENTS_VERSION
+  DBX_COMPONENTS_VERSION_UTIL=$DBX_COMPONENTS_VERSION
+
   # Log into Firebase
   echo "First log into Firebase if you're are not already logged in already."
   npx firebase login
@@ -123,26 +157,26 @@ npx --yes json -I -f package.json -e "this.scripts={ postinstall: 'ngcc --proper
 git add --all
 git commit --no-verify -m "checkpoint: init nx-cloud"
 
-# NOTE: Commented out since we
 # update nx to the latest version and commit
 #
 #npx -y nx@$NX_VERSION migrate latest
-#npm install
+npm install -D @nrwl/angular@$NX_VERSION
+
 #
 #if test -f "migrations.json"; then   # migrate if it is available
 #  npx -y nx migrate --run-migrations
 #  rm migrations.json                 # remove migrations file
 #fi
 
-npx --yes json -I -f nx.json -e "this.workspaceLayout = { appsDir: '$APPS_FOLDER', libsDir: '$COMPONENTS_FOLDER' }";
+npx --yes json -I -f nx.json -e "this.workspaceLayout = { appsDir: '$APPS_FOLDER', libsDir: '$COMPONENTS_FOLDER' };";
 
 git add --all
 git commit --no-verify -m "checkpoint: updated nx to latest version"
 
 # Add Nest App - https://nx.dev/packages/nest
 # install the nest generator
-# temporary: install rxjs-for-await@~1.0.0 jasmine-marbles@^0.9.2 explicitly due to dependency resolution issue
-npm install -D @nrwl/nest@$NX_VERSION rxjs-for-await@~1.0.0 jasmine-marbles@^0.9.2
+# temporary: install jasmine-marbles@^0.9.2 explicitly due to dependency resolution issue
+npm install -D @nrwl/nest@$NX_VERSION jasmine-marbles@^0.9.2
 npx -y nx@$NX_VERSION g @nrwl/nest:app $API_APP_NAME
 
 git add --all
@@ -182,7 +216,13 @@ then
 
   echo "Adding alias prod to default"
   npx --yes json -I -f .firebaserc -e "this.projects = { ...this.projects, prod: this.projects.default }";
-  
+    
+  # remove the public folder. We will use the $ANGULAR_APP_DIST_FOLDER instead.
+  rm -r public
+
+  # remove the functions folder. We will use the $API_APP_DIST_FOLDER instead.
+  rm -r functions
+
 else
   # automatic configuration. This should typically only be used for CI/testing, as using the firebase CLI can pull existing content in after logging in.
   echo "Initializing firebase automatically using project name..."
@@ -198,12 +238,6 @@ else
   curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/setup/templates/firestore.rules -o firestore.rules
   curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/setup/templates/storage.rules -o storage.rules
 fi
-
-# remove the public folder. We will use the $ANGULAR_APP_DIST_FOLDER instead.
-rm -r public
-
-# remove the functions folder. We will use the $API_APP_DIST_FOLDER instead.
-rm -r functions
 
 # edit firebase.json to have the correct configuration.
 
@@ -311,7 +345,7 @@ git add --all
 git commit --no-verify -m "checkpoint: added semver and commit linting"
 
 # add jest setup/configurations
-npm install -D jest@^28.1.1 jest-environment-jsdom@^28.1.1 jest-preset-angular@^12.1.0 ts-jest@^28.0.4 jest-date@^1.1.4 jest-junit@^13.0.0
+npm install -D jest@^28.1.1 jest-environment-jsdom@^28.1.1 jest-preset-angular@^12.1.0 ts-jest@^28.0.4 jest-date@^1.1.4 jest-junit@^14.0.0
 rm jest.preset.js
 
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/jest.preset.ts -o jest.preset.ts
@@ -332,15 +366,47 @@ sed -e "s/APP_ID/$ANGULAR_COMPONENTS_NAME/g" tmp/env.tmp > $ANGULAR_COMPONENTS_F
 sed -e "s/APP_ID/$FIREBASE_COMPONENTS_NAME/g" tmp/env.tmp > $FIREBASE_COMPONENTS_FOLDER/.env
 
 # make build-base and run-tests cacheable in nx cloud
-npx --yes json -I -f nx.json -e "this.tasksRunnerOptions.default.options.cacheableOperations=Array.from(new Set([...this.tasksRunnerOptions.default.options.cacheableOperations, ...['build-base', 'run-tests']]));";
+npx --yes json -I -f nx.json -e "this.tasksRunnerOptions.default.options.cacheableOperations=Array.from(new Set([...this.tasksRunnerOptions.default.options.cacheableOperations, ...['build-base', 'run-tests']])); this.targetDefaults={ 'build': { 'dependsOn': ['^build'] }, 'publish': { 'dependsOn': ['build'] }, 'publish-npmjs': { 'dependsOn': ['build'] }, 'test': { 'dependsOn': ['build'] }, 'deploy': { 'dependsOn': ['build'] }, 'ci-deploy': { 'dependsOn': ['build'] } };";
 
 git add --all
 git commit --no-verify -m "checkpoint: added jest configurations"
 
 # Install npm dependencies
-npm install firebase@9.8.4 firebase-admin@^11.0.0 firebase-functions@^3.22.0 @dereekb/date@$DBX_COMPONENTS_VERSION @dereekb/model@$DBX_COMPONENTS_VERSION @dereekb/rxjs@$DBX_COMPONENTS_VERSION @dereekb/util@$DBX_COMPONENTS_VERSION @dereekb/dbx-analytics@$DBX_COMPONENTS_VERSION @dereekb/dbx-web@$DBX_COMPONENTS_VERSION @dereekb/dbx-form@$DBX_COMPONENTS_VERSION @dereekb/firebase@$DBX_COMPONENTS_VERSION @dereekb/firebase-server@$DBX_COMPONENTS_VERSION @dereekb/dbx-firebase@$DBX_COMPONENTS_VERSION
-npm install angular-calendar@~0.29.0 angular-resize-event@~3.1.1    # TODO: Temporary
-npm install -D firebase-tools@^11.0.0 @ngrx/store-devtools@^13.0.0 @firebase/rules-unit-testing@^2.0.2 firebase-functions-test@2.2.0 envfile env-cmd
+echo "Installing @dereekb dependencies"
+npm install rxjs@^7.5.0 firebase@^9.9.2 firebase-admin@^11.0.0 firebase-functions@^3.22.0 @dereekb/browser@$DBX_COMPONENTS_VERSION_BROWSER @dereekb/date@$DBX_COMPONENTS_VERSION_DATE @dereekb/dbx-analytics@$DBX_COMPONENTS_VERSION_DBX_ANALYTICS @dereekb/dbx-core@$DBX_COMPONENTS_VERSION_DBX_CORE @dereekb/dbx-firebase@$DBX_COMPONENTS_VERSION_DBX_FIREBASE @dereekb/dbx-form@$DBX_COMPONENTS_VERSION_DBX_FORM @dereekb/dbx-web@$DBX_COMPONENTS_VERSION_DBX_WEB @dereekb/firebase@$DBX_COMPONENTS_VERSION_FIREBASE @dereekb/firebase-server@$DBX_COMPONENTS_VERSION_FIREBASE_SERVER @dereekb/model@$DBX_COMPONENTS_VERSION_MODEL @dereekb/nestjs@$DBX_COMPONENTS_VERSION_NESTJS @dereekb/rxjs@$DBX_COMPONENTS_VERSION_RXJS @dereekb/util@$DBX_COMPONENTS_VERSION_UTIL
+
+if [[ "$IS_CI_TEST" =~ ^([yY][eE][sS]|[yY]|[tT])$ ]];
+then
+
+install_local_peer_deps() {
+  local FILE_PATH=$1
+  echo "Installing dependencies from: $FILE_PATH"
+  npm info x@$FILE_PATH peerDependencies --json | command sed 's/[\{\},]//g ; s/: /@/g; s/"@dereekb\/.*"@".*"//g ;';
+  npm info x@$FILE_PATH peerDependencies --json | command sed 's/[\{\},]//g ; s/: /@/g; s/"@dereekb\/.*"@".*"//g ;' | xargs npm install "$PKG";
+}
+
+# The CI environment does not seem to install any of the peer dependencies from the local @dereekb packages
+echo "Installing @dereekb peer dependencies for CI"
+install_local_peer_deps "$DBX_COMPONENTS_VERSION_BROWSER"
+install_local_peer_deps "$DBX_COMPONENTS_VERSION_DATE"
+install_local_peer_deps "$DBX_COMPONENTS_VERSION_DBX_ANALYTICS"
+install_local_peer_deps "$DBX_COMPONENTS_VERSION_DBX_CORE"
+install_local_peer_deps "$DBX_COMPONENTS_VERSION_DBX_FIREBASE" 
+install_local_peer_deps "$DBX_COMPONENTS_VERSION_DBX_FORM" 
+install_local_peer_deps "$DBX_COMPONENTS_VERSION_DBX_WEB" 
+install_local_peer_deps "$DBX_COMPONENTS_VERSION_FIREBASE" 
+install_local_peer_deps "$DBX_COMPONENTS_VERSION_FIREBASE_SERVER" 
+install_local_peer_deps "$DBX_COMPONENTS_VERSION_MODEL" 
+install_local_peer_deps "$DBX_COMPONENTS_VERSION_NESTJS" 
+install_local_peer_deps "$DBX_COMPONENTS_VERSION_RXJS" 
+install_local_peer_deps "$DBX_COMPONENTS_VERSION_UTIL"
+
+# TODO: Find a better way for the peers to be installed.
+# npm install @angular/cdk @angular/flex-layout @angular/fire @angular/material @ngrx/component-store @ngrx/data @ngrx/effects @ngrx/store @ngrx/entity @ngx-formly/core@6.0.0-rc.2 @ngx-formly/material@6.0.0-rc.2 @ngx-formly/schematics@6.0.0-rc.2 @uirouter/core ts-essentials extra-set change-case class-validator class-transformer @uirouter/angular@git+https://git@github.com/dereekb/uirouter-angular#7c4bb71689377b167af1d5bd0a38c91429afc041 ngx-editor ngx-mat-intl-tel-input ngx-infinite-scroll
+fi
+
+echo "Installing dev dependencies"
+npm install -D firebase-tools@^11.0.0 @ngrx/store-devtools@^14.1.0 @ngx-formly/schematics@6.0.0-rc.2 @firebase/rules-unit-testing@^2.0.4 firebase-functions-test@2.3.0 envfile env-cmd
 
 git add --all
 git commit --no-verify -m "checkpoint: added @dereekb dependencies"

@@ -13,9 +13,9 @@ export class DocInteractionButtonComponent {
 
   activateAndDeactivate(key: keyof this) {
     return () => {
-      this[key] = { ...this[key], active: true };
+      this[key] = { ...this[key], working: true };
       setTimeout(() => {
-        this[key] = { ...this[key], active: false };
+        this[key] = { ...this[key], working: false };
       }, 3350);
     };
   }
@@ -49,7 +49,7 @@ export class DocInteractionButtonComponent {
   };
 
   spinnerButtonOptions: DbxProgressButtonOptions = {
-    active: false,
+    working: false,
     text: 'Stroked Button',
     spinnerSize: 19,
     raised: false,
@@ -66,7 +66,7 @@ export class DocInteractionButtonComponent {
   };
 
   spinnerButtonOptions1: DbxProgressButtonOptions = {
-    active: false,
+    working: false,
     text: 'Raised Button',
     spinnerSize: 19,
     raised: true,
@@ -79,7 +79,7 @@ export class DocInteractionButtonComponent {
   };
 
   spinnerButtonOptions2: DbxProgressButtonOptions = {
-    active: false,
+    working: false,
     text: 'Default Button',
     spinnerSize: 19,
     raised: false,
@@ -92,7 +92,7 @@ export class DocInteractionButtonComponent {
   };
 
   spinnerButtonOptions3: DbxProgressButtonOptions = {
-    active: false,
+    working: false,
     text: 'Flat Button',
     spinnerSize: 19,
     raised: false,
@@ -106,7 +106,7 @@ export class DocInteractionButtonComponent {
   };
 
   spinnerButtonOptions4: DbxProgressButtonOptions = {
-    active: false,
+    working: false,
     text: 'Fab',
     spinnerSize: 19,
     raised: false,
@@ -134,7 +134,7 @@ export class DocInteractionButtonComponent {
     text: 'Stroked Button'
   };
 
-  barButtonOptionsActiveState = false;
+  barButtonOptionsWorkingState = false;
 
   barButtonOptions1: DbxProgressButtonOptions = {
     ...this.demoButton2,
@@ -142,7 +142,7 @@ export class DocInteractionButtonComponent {
   };
 
   barButtonOptions2: DbxProgressButtonOptions = {
-    active: false,
+    working: false,
     text: 'Default Button',
     buttonColor: 'primary',
     barColor: 'primary',
@@ -154,7 +154,7 @@ export class DocInteractionButtonComponent {
   };
 
   barButtonOptions3: DbxProgressButtonOptions = {
-    active: false,
+    working: false,
     text: 'Flat Button',
     buttonColor: 'primary',
     barColor: 'primary',
@@ -174,9 +174,9 @@ export class DocInteractionButtonComponent {
   clickSpin6 = this.activateAndDeactivate('spinnerButtonOptions5');
 
   clickBar1 = () => {
-    this.barButtonOptionsActiveState = true;
+    this.barButtonOptionsWorkingState = true;
     setTimeout(() => {
-      this.barButtonOptionsActiveState = false;
+      this.barButtonOptionsWorkingState = false;
     }, 3350);
   };
 

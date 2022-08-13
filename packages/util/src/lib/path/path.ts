@@ -1,7 +1,7 @@
 import { chainMapSameFunctions, MapSameFunction } from '../value/map';
 import { asArray, ArrayOrValue, mergeArrayOrValueIntoArray } from '../array/array';
 import { firstAndLastCharacterOccurrence, replaceCharacterAtIndexWith, replaceStringsFunction, splitStringAtIndex } from '../string';
-import { chainMapFunction, IndexNumber, indexRange, IndexRange, IndexRangeInput, mapIdentityFunction, Maybe } from '../value';
+import { chainMapFunction, indexRange, IndexRangeInput, mapIdentityFunction, Maybe } from '../value';
 import { FactoryWithRequiredInput } from '../getter/getter';
 import { sliceIndexRangeFunction } from '../array/array.index';
 

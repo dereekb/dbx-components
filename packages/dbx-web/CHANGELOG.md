@@ -2,6 +2,25 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [9.0.0](https://github.com/dereekb/dbx-components/compare/v8.15.2-dev...v9.0.0) (2022-08-13)
+
+
+### Code Refactoring
+
+* lint-fix ([50b09dc](https://github.com/dereekb/dbx-components/commit/50b09dc8907de951335249fcad654901f44348be))
+
+
+### Features
+
+* updated to angular 14 ([#15](https://github.com/dereekb/dbx-components/issues/15)) ([739726e](https://github.com/dereekb/dbx-components/commit/739726eabdf49007b096dbb892054887268c7732))
+
+
+### BREAKING CHANGES
+
+* prepare major version
+
+
+
 ## [8.15.2](https://github.com/dereekb/dbx-components/compare/v8.15.1-dev...v8.15.2) (2022-08-11)
 
 

@@ -95,7 +95,7 @@ export class DbxButtonComponent extends AbstractDbxButtonDirective {
 
     return {
       fab: false,
-      active: this.working,
+      working: this.working,
       buttonIcon,
       customStyle,
       customClass: 'dbx-button ' + (buttonIcon && !this.text ? 'dbx-button-no-text' : ''),

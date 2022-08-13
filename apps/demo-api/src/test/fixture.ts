@@ -181,7 +181,8 @@ export const demoGuestbookEntryContextFactory = () =>
       const guestbookEntry = instance.document;
 
       if (params.init !== false) {
-        await guestbookEntry.createOrUpdate({
+        await guestbookEntry.accessor.set({
+          uid: params.u.uid,
           message: params.message ?? 'test',
           signed: params.signed ?? 'test',
           published: params.published ?? true,

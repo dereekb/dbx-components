@@ -54,16 +54,14 @@ export function guestbookEntryUpdateEntryFactory({ firebaseServerActionTransform
       // perform the change in a transaction
       await guestbookCollection.firestoreContext.runTransaction(async (transaction) => {
         const parentGuestbook = guestbookCollection.documentAccessorForTransaction(transaction).loadDocument(document.parent);
-        const guestbookSnapshot = await parentGuestbook.snapshot();
-        const guestbookData = guestbookSnapshot.data();
+        const guestbookEntryDocument = guestbookEntryCollectionFactory(parentGuestbook).documentAccessorForTransaction(transaction).loadDocument(documentRef);
+        const [guestbook, guestbookEntry] = await Promise.all([parentGuestbook.snapshotData(), guestbookEntryDocument.snapshotData()]);
 
-        if (!guestbookData) {
+        if (!guestbook) {
           throw new Error('The guestbook could not be found.');
-        } else if (guestbookData.locked) {
+        } else if (guestbook.locked) {
           throw new Error('The guestbook has been locked.');
         } else {
-          const documentInTransaction = guestbookEntryCollectionFactory(parentGuestbook).documentAccessorForTransaction(transaction).loadDocument(documentRef);
-
           const set: Partial<GuestbookEntry> = {
             message,
             signed,
@@ -72,7 +70,11 @@ export function guestbookEntryUpdateEntryFactory({ firebaseServerActionTransform
           };
 
           // create or update the value
-          await documentInTransaction.createOrUpdate(set);
+          if (guestbookEntry == null) {
+            await guestbookEntryDocument.create(set as GuestbookEntry);
+          } else {
+            await guestbookEntryDocument.update(set);
+          }
         }
       });
 

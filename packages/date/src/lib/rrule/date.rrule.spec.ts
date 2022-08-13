@@ -1,4 +1,4 @@
-import { CalendarDate, calendarDateFactory, CalendarDateUtility, DateRangeParams, DateRangeType, maxFutureDate, targetDateToBaseDate } from '../date';
+import { CalendarDate, calendarDateFactory, calendarDateForDateDurationSpan, DateRangeParams, DateRangeType, maxFutureDate, targetDateToBaseDate } from '../date';
 import { addMinutes, addDays, addHours } from 'date-fns';
 import { DateRRuleInstance, DateRRuleUtility } from './date.rrule';
 import { RRuleStringLineSet } from './date.rrule.parse';
@@ -97,7 +97,7 @@ describe('DateRRuleUtility', () => {
             const rruleStringLineSet = ['RRULE:FREQ=WEEKLY', 'EXDATE;TZID=America/Los_Angeles:20210611T110000,20210611T110000'];
 
             beforeEach(() => {
-              calendarDate = CalendarDateUtility.calendarDateForDateDurationSpan({
+              calendarDate = calendarDateForDateDurationSpan({
                 startsAt: new Date('2021-02-05T19:00:00.000Z'),
                 duration: 60
               });
@@ -183,7 +183,7 @@ describe('DateRRuleUtility', () => {
           const numberOfDays = 8;
 
           beforeEach(() => {
-            calendarDate = CalendarDateUtility.calendarDateForDateDurationSpan({
+            calendarDate = calendarDateForDateDurationSpan({
               startsAt: new Date('2021-07-06T16:00:00.000Z'),
               duration: 60
             });
@@ -264,7 +264,7 @@ describe('DateRRuleUtility', () => {
         describe('every two days', () => {
           beforeEach(() => {
             rruleStringLineSet = ['RRULE:FREQ=DAILY;INTERVAL=2'];
-            calendarDate = CalendarDateUtility.calendarDateForDateDurationSpan({
+            calendarDate = calendarDateForDateDurationSpan({
               startsAt: new Date('2021-07-06T16:00:00.000Z'),
               duration: 60
             });
@@ -291,7 +291,7 @@ describe('DateRRuleUtility', () => {
         describe('first day of every month until April 1st 2022', () => {
           beforeEach(() => {
             rruleStringLineSet = ['FREQ=MONTHLY;BYMONTHDAY=1;INTERVAL=1;UNTIL=20220420T050000Z'];
-            calendarDate = CalendarDateUtility.calendarDateForDateDurationSpan({
+            calendarDate = calendarDateForDateDurationSpan({
               startsAt: new Date('2021-01-01T00:00:00.000Z'),
               duration: 60
             });
@@ -318,7 +318,7 @@ describe('DateRRuleUtility', () => {
         describe('second day of january, 10 times', () => {
           beforeEach(() => {
             rruleStringLineSet = ['FREQ=YEARLY;BYMONTH=1;BYMONTHDAY=2;COUNT=10'];
-            calendarDate = CalendarDateUtility.calendarDateForDateDurationSpan({
+            calendarDate = calendarDateForDateDurationSpan({
               startsAt: new Date('2021-01-01T00:00:00.000Z'),
               duration: 60
             });

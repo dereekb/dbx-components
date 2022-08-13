@@ -50,6 +50,13 @@ module.exports = (path, options) => {
         // console.log('>>>', pkg.name)
         delete pkg['exports'];
         delete pkg['module'];
+      } else if (pkg.name === 'angular-calendar') {
+        // TEMPORARY: remove if/when https://github.com/mattlewis92/angular-calendar/pull/1599 is accepted
+        pkg['exports']['./date-adapters/date-fns'] = {
+          main: './date-adapters/date-fns/index.js',
+          types: './date-adapters/date-fns/index.d.ts',
+          default: './date-adapters/date-fns/index.js'
+        };
       }
 
       return pkg;

@@ -1,3 +1,4 @@
+/* eslint-disable */
 (global as any).testFolderRootPath = '<rootDir>/../../..';
 
 module.exports = {

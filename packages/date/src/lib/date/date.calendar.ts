@@ -2,7 +2,7 @@ import { ISO8601DayString } from '@dereekb/util';
 import { Expose } from 'class-transformer';
 import { daysToMinutes } from './date';
 import { DateDurationSpan } from './date.duration';
-import { dateStringToDate, dateStringToUTCDate } from './date.format';
+import { dateStringToUTCDate } from './date.format';
 import { dateTimezoneUtcNormal } from './date.timezone';
 
 /**
@@ -72,22 +72,9 @@ export function calendarDate(day: ISO8601DayString, days?: number, timezone?: st
   return calendarDateFactory({ timezone })(day, days);
 }
 
-export class CalendarDateUtility {
-  /**
-   * @Deprecated use calendarDate() instead
-   */
-  static calendarDateForDay(day: ISO8601DayString, days?: number): CalendarDate {
-    return {
-      type: CalendarDateType.DAYS,
-      startsAt: dateStringToDate(day),
-      duration: daysToMinutes(days)
-    };
-  }
-
-  static calendarDateForDateDurationSpan(dateDurationSpan: DateDurationSpan): CalendarDate {
-    return {
-      type: CalendarDateType.TIME,
-      ...dateDurationSpan
-    };
-  }
+export function calendarDateForDateDurationSpan(dateDurationSpan: DateDurationSpan): CalendarDate {
+  return {
+    type: CalendarDateType.TIME,
+    ...dateDurationSpan
+  };
 }

@@ -4,10 +4,6 @@ import { ProgressSpinnerMode } from '@angular/material/progress-spinner';
 import { Maybe } from '@dereekb/util';
 
 export interface DbxProgressButtonOptions {
-  /**
-   * @deprecated alias for working
-   */
-  active?: boolean;
   working?: boolean;
   text?: string;
   spinnerText?: string;

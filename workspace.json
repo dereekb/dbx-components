@@ -23,6 +23,7 @@
     "rxjs": "packages/rxjs",
     "util": "packages/util",
     "util-test": "packages/util/test",
-    "workspace": ""
-  }
+    "workspace": "."
+  },
+  "$schema": "./node_modules/nx/schemas/workspace-schema.json"
 }

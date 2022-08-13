@@ -1,5 +1,5 @@
-import { addPrefix, E164PhoneNumber, EmailAddress, hasWebsiteDomain, IsolateWebsitePathFunction, isolateWebsitePathFunction, ModelKey, PhoneNumber, removeHttpFromUrl, toAbsoluteSlashPathStartType, toRelativeSlashPathStartType, WebsiteUrl } from '@dereekb/util';
-import { WebsiteLink, WebsiteLinkEncodedData, WebsiteLinkType } from './link';
+import { addPrefix, E164PhoneNumber, EmailAddress, hasWebsiteDomain, IsolateWebsitePathFunction, isolateWebsitePathFunction, ModelKey, removeHttpFromUrl, toAbsoluteSlashPathStartType, toRelativeSlashPathStartType, WebsiteUrl } from '@dereekb/util';
+import { WebsiteLink, WebsiteLinkType } from './link';
 
 /**
  * Used for isolating a username from a website that has the username as the base url.

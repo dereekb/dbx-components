@@ -1,4 +1,4 @@
-import { ArrayOrValue, asArray, mergeModifiers, ModifierFunction, cachedGetter, Maybe } from '@dereekb/util';
+import { ArrayOrValue, asArray, mergeModifiers, ModifierFunction, cachedGetter } from '@dereekb/util';
 import { UserRelated } from '../../../model/user';
 import { DocumentReferenceRef } from '../reference';
 import { SetOptionsMerge, SetOptionsMergeFields, DocumentData, PartialWithFieldValue, SetOptions, WithFieldValue } from '../types';

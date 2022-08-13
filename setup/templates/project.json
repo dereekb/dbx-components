@@ -1,6 +1,13 @@
 {
   "prefix": "workspace",
   "targets": {
+    "build-all": {
+      "executor": "@nrwl/workspace:run-commands",
+      "options": {
+        "command": "npx nx run-many --target=build --parallel --max-parallel=2",
+        "color": true
+      }
+    },
     "version": {
       "executor": "@jscutlery/semver:version",
       "options": {

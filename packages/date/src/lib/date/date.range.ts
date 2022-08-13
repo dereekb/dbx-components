@@ -1,6 +1,6 @@
 import { Expose, Type } from 'class-transformer';
 import { IsEnum, IsOptional, IsDate, IsNumber } from 'class-validator';
-import { addDays, addHours, endOfDay, endOfMonth, endOfWeek, isBefore, isDate, isPast, startOfDay, startOfMinute, startOfMonth, startOfWeek } from 'date-fns';
+import { addDays, addHours, endOfDay, endOfMonth, endOfWeek, isDate, isPast, startOfDay, startOfMinute, startOfMonth, startOfWeek } from 'date-fns';
 
 /**
  * Represents a start and end date.
@@ -79,25 +79,7 @@ export enum DateRangeType {
   /**
    * All surrounding days that would appear on a calendar with this date.
    */
-  CALENDAR_MONTH = 'calendar_month',
-  /**
-   * Plus/minus 20 hours from the current day.
-   *
-   * @deprecated design not relevant anymore
-   */
-  WITHIN_DAY = 'within_day',
-  /**
-   * Plus/minus 4 days from the current day.
-   *
-   * @deprecated design not relevant anymore
-   */
-  WITHIN_WEEK = 'within_week',
-  /**
-   * Plus/minus 16 days from the current day.
-   *
-   * @deprecated design not relevant anymore
-   */
-  WITHIN_MONTH = 'within_month'
+  CALENDAR_MONTH = 'calendar_month'
 }
 
 export enum DateRangeState {
@@ -246,18 +228,6 @@ export function dateRange({ type = DateRangeType.DAY, date = new Date(), distanc
       start = startOfMonth(endOfWeek(date));
       end = endOfWeek(endOfMonth(start));
       break;
-    case DateRangeType.WITHIN_DAY:
-      start = addHours(date, -20);
-      end = addHours(date, 20);
-      break;
-    case DateRangeType.WITHIN_WEEK:
-      start = startOfDay(addDays(date, -4));
-      end = endOfDay(addDays(date, 4));
-      break;
-    case DateRangeType.WITHIN_MONTH:
-      start = startOfDay(addDays(date, -16));
-      end = endOfDay(addDays(date, 16));
-      break;
   }
 
   return {
@@ -370,9 +340,3 @@ export function dateRangeOverlapsDateRangeFunction<T extends DateRange = DateRan
 
   return fn;
 }
-
-// MARK: Compat
-/**
- * @deprecated use dateRange() instead.
- */
-export const makeDateRange = dateRange;

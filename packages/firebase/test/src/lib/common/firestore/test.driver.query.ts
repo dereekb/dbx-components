@@ -1,8 +1,8 @@
-import { startOfDay, addDays, addHours, endOfDay } from 'date-fns';
+import { startOfDay, addDays, addHours } from 'date-fns';
 import { expectFail, itShouldFail } from '@dereekb/util/test';
 import { SubscriptionObject } from '@dereekb/rxjs';
 import { filter, first, from, skip } from 'rxjs';
-import { firestoreIdBatchVerifierFactory, limit, orderBy, startAfter, startAt, where, limitToLast, endAt, endBefore, makeDocuments, FirestoreQueryFactoryFunction, startAtValue, endAtValue, whereDocumentId, FirebaseAuthUserId, getDocumentSnapshotsData, whereDateIsBetween, whereDateIsInRange, whereDateIsBefore, whereDateIsOnOrAfter } from '@dereekb/firebase';
+import { firestoreIdBatchVerifierFactory, limit, orderBy, startAfter, startAt, where, limitToLast, endAt, endBefore, makeDocuments, FirestoreQueryFactoryFunction, startAtValue, endAtValue, whereDocumentId, FirebaseAuthUserId, whereDateIsBetween, whereDateIsInRange, whereDateIsBefore, whereDateIsOnOrAfter } from '@dereekb/firebase';
 import { MockItemCollectionFixture, allChildMockItemSubItemDeepsWithinMockItem, MockItemDocument, MockItem, MockItemSubItemDocument, MockItemSubItem, MockItemSubItemDeepDocument, MockItemSubItemDeep, MockItemUserDocument } from '../mock';
 import { arrayFactory, idBatchFactory, isEvenNumber, mapGetter, randomFromArrayFactory, randomNumberFactory, unique, waitForMs } from '@dereekb/util';
 import { DateRangeType } from '@dereekb/date';

@@ -39,7 +39,6 @@ import {
   LatLngString,
   asObjectCopyFactory,
   modelFieldMapFunctions,
-  UTC_TIMEZONE_STRING,
   TimezoneString,
   assignValuesToPOJOFunction
 } from '@dereekb/util';
@@ -128,16 +127,12 @@ export type FirestoreStringTransformOptions<S extends string = string> = Transfo
 
 export interface FirestoreStringConfig<S extends string = string> extends DefaultMapConfiguredFirestoreFieldConfig<S, S> {
   transform?: FirestoreStringTransformOptions;
-  /**
-   * @deprecated: use transform field instead.
-   */
-  trim?: boolean;
 }
 
 export const DEFAULT_FIRESTORE_STRING_FIELD_VALUE = '';
 
 export function firestoreString<S extends string = string>(config?: FirestoreStringConfig<S>) {
-  const transform: Maybe<TransformStringFunctionConfig> = config?.transform ? (typeof config.transform === 'function' ? { transform: config?.transform } : config?.transform) : config?.trim ? { trim: true } : undefined;
+  const transform: Maybe<TransformStringFunctionConfig> = config?.transform ? (typeof config.transform === 'function' ? { transform: config?.transform } : config?.transform) : undefined;
   const transformData = transform ? (transformStringFunction(transform) as MapFunction<S, S>) : passThrough;
 
   return firestoreField<S, S>({
@@ -539,7 +534,7 @@ export function firestoreLatLngString(config?: FirestoreLatLngStringConfig) {
   });
 }
 
-export interface FirestoreTimezoneStringConfig extends DefaultMapConfiguredFirestoreFieldConfig<TimezoneString, TimezoneString> {}
+export type FirestoreTimezoneStringConfig = DefaultMapConfiguredFirestoreFieldConfig<TimezoneString, TimezoneString>;
 
 /**
  * Default configuration for a TimezoneString.
@@ -610,24 +605,5 @@ export function firestoreDateBlockRange() {
 export function firestoreDateBlockRangeArray() {
   return firestoreObjectArray({
     firestoreField: firestoreDateBlockRange()
-  });
-}
-
-// MARK: Deprecated
-export type FirestoreSetFieldConfig<T extends string | number> = DefaultMapConfiguredFirestoreFieldConfig<Set<T>, T[]>;
-
-/**
- * Do not use.
- *
- * @deprecated should retrieve/store the data as a POJO array and not use class types like this.
- *
- * @param config
- * @returns
- */
-export function firestoreSet<T extends string | number>(config: FirestoreSetFieldConfig<T>) {
-  return firestoreField<Set<T>, T[]>({
-    default: config.default ?? (() => new Set()),
-    fromData: (data) => new Set(data),
-    toData: (set) => Array.from(set)
   });
 }

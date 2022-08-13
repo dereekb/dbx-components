@@ -1,4 +1,4 @@
-import { Inject, Injectable, Optional, Type } from '@angular/core';
+import { Injectable, Type } from '@angular/core';
 import { Maybe, filterMaybeValues, mapIterable } from '@dereekb/util';
 import { DbxWidgetType } from './widget';
 

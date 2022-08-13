@@ -9,8 +9,8 @@ import { MatInputModule } from '@angular/material/input';
 import { FormlyModule } from '@ngx-formly/core';
 import { DbxPhoneFieldComponent } from './phone.field.component';
 import { FlexLayoutModule } from '@angular/flex-layout';
-import { NgxMatIntlTelInputModule } from 'ngx-mat-intl-tel-input';
 import { FormlyMatFormFieldModule } from '@ngx-formly/material/form-field';
+import { NgxMatIntlTelInputComponent } from 'ngx-mat-intl-tel-input';
 
 @NgModule({
   imports: [
@@ -18,7 +18,6 @@ import { FormlyMatFormFieldModule } from '@ngx-formly/material/form-field';
     MatInputModule,
     MatFormFieldModule,
     FormsModule,
-    NgxMatIntlTelInputModule,
     ReactiveFormsModule,
     MatAutocompleteModule,
     MatChipsModule,
@@ -27,7 +26,8 @@ import { FormlyMatFormFieldModule } from '@ngx-formly/material/form-field';
     FormlyMatFormFieldModule,
     FormlyModule.forChild({
       types: [{ name: 'intphone', component: DbxPhoneFieldComponent, wrappers: ['form-field'] }]
-    })
+    }),
+    NgxMatIntlTelInputComponent
   ],
   declarations: [DbxPhoneFieldComponent],
   exports: []

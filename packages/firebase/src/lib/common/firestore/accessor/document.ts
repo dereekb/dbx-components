@@ -6,7 +6,7 @@ import { Observable } from 'rxjs';
 import { FirestoreAccessorDriverRef } from '../driver/accessor';
 import { FirestoreCollectionNameRef, FirestoreModelId, FirestoreModelIdentityCollectionName, FirestoreModelIdentityModelType, FirestoreModelIdentityRef, FirestoreModelIdRef, FirestoreModelKey, FirestoreModelKeyRef } from './../collection/collection';
 import { DocumentReference, CollectionReference, Transaction, WriteBatch, DocumentSnapshot, SnapshotOptions, WriteResult, FirestoreDataConverter } from '../types';
-import { FirestoreAccessorIncrementUpdate, createOrUpdateWithAccessorSet, dataFromSnapshotStream, FirestoreDocumentDataAccessor, FirestoreDocumentUpdateParams, updateWithAccessorSet, updateWithAccessorUpdateAndConverterFunction } from './accessor';
+import { FirestoreAccessorIncrementUpdate, dataFromSnapshotStream, FirestoreDocumentDataAccessor, FirestoreDocumentUpdateParams, updateWithAccessorUpdateAndConverterFunction } from './accessor';
 import { CollectionReferenceRef, DocumentReferenceRef, FirestoreContextReference, FirestoreDataConverterRef } from '../reference';
 import { FirestoreDocumentContext } from './context';
 import { build, Maybe } from '@dereekb/util';
@@ -23,7 +23,6 @@ export interface FirestoreDocument<T, I extends FirestoreModelIdentity = Firesto
   exists(): Promise<boolean>;
   create(data: T): Promise<WriteResult | void>;
   update(data: Partial<T>): Promise<WriteResult | void>;
-  createOrUpdate(data: Partial<T>): Promise<WriteResult | void>;
   increment(data: FirestoreAccessorIncrementUpdate<T>): Promise<WriteResult | void>;
 }
 
@@ -120,18 +119,6 @@ export abstract class AbstractFirestoreDocument<T, D extends AbstractFirestoreDo
    */
   update(data: Partial<T>, params?: FirestoreDocumentUpdateParams): Promise<WriteResult | void> {
     return updateWithAccessorUpdateAndConverterFunction(this.accessor, this.converter)(data, params);
-  }
-
-  /**
-   * Creates or updates the existing document using the accessor's set functionality.
-   *
-   * @param data
-   * @returns
-   *
-   * @deprecated Use either create or update. Behavior of this function is undesirable, and it can trip up transactions since it will perform a read.
-   */
-  createOrUpdate(data: Partial<T>): Promise<WriteResult | void> {
-    return createOrUpdateWithAccessorSet(this.accessor)(data);
   }
 
   /**

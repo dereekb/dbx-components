@@ -17,7 +17,7 @@ export function exampleServerActions(context: ExampleServerActionsContext): Exam
 export function setExampleUsernameFactory({ firebaseServerActionTransformFunctionFactory, exampleCollection }: ExampleServerActionsContext) {
   const { query: queryExample } = exampleCollection;
 
-  return firebaseServerActionTransformFunctionFactory(SetExampleUsernameParams, async (params) => {
+  return firebaseServerActionTransformFunctionFactory(SetExampleUsernameParams, async (params: SetExampleUsernameParams) => {
     const { username } = params;
 
     return async (document: ExampleDocument) => {

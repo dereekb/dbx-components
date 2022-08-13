@@ -45,6 +45,3 @@ export function readEmailDomainFromUrlOrEmailAddress(urlLikeInput: string | Emai
 
   return domain;
 }
-
-// MARK: Compat
-export const readDomainFromUrlOrEmailAddress = readEmailDomainFromUrlOrEmailAddress;

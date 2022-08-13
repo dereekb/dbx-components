@@ -25,7 +25,7 @@ export abstract class AbstractProgressButtonDirective extends AbstractSubscripti
         completeOptions = {
           ...globalConfig,
           ...options,
-          working: options?.working || options?.active || working,
+          working: options?.working || working,
           disabled: options?.disabled || disabled
         };
       }
@@ -62,7 +62,7 @@ export abstract class AbstractProgressButtonDirective extends AbstractSubscripti
   @HostListener('click', ['$event'])
   public handleClick(event: MouseEvent): void {
     this.options$.pipe(first()).subscribe((options) => {
-      if (!options.disabled && !options.active) {
+      if (!options.disabled && !options.working) {
         this.btnClick.emit(event);
       }
     });
@@ -85,14 +85,6 @@ export abstract class AbstractProgressButtonDirective extends AbstractSubscripti
   @Input()
   set buttonId(buttonId: string) {
     this._buttonId.next(buttonId);
-  }
-
-  /**
-   * @deprecated
-   */
-  @Input()
-  set active(active: boolean) {
-    this.working = active;
   }
 
   @Input()

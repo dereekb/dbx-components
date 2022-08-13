@@ -9,10 +9,8 @@ import { adapterFactory as dateAdapterFactory } from 'angular-calendar/date-adap
 import { MatButtonModule } from '@angular/material/button';
 import { FlexLayoutModule } from '@angular/flex-layout';
 
-const declarations = [DbxCalendarComponent];
-
 @NgModule({
-  declarations,
+  declarations: [DbxCalendarComponent],
   imports: [
     //
     CommonModule,
@@ -25,7 +23,7 @@ const declarations = [DbxCalendarComponent];
     CalendarWeekModule,
     DbxButtonModule
   ],
-  exports: declarations
+  exports: [DbxCalendarComponent]
 })
 export class DbxCalendarModule {}
 

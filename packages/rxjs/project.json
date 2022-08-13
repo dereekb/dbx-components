@@ -1,9 +1,11 @@
 {
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/rxjs/src",
   "projectType": "library",
   "targets": {
     "build": {
       "executor": "@nrwl/workspace:run-commands",
+      "outputs": ["dist/packages/rxjs"],
       "options": {
         "command": "npx nx run rxjs:build-base",
         "color": true
@@ -12,12 +14,6 @@
     "build-base": {
       "executor": "@nrwl/js:tsc",
       "outputs": ["{options.outputPath}"],
-      "dependsOn": [
-        {
-          "target": "build",
-          "projects": "dependencies"
-        }
-      ],
       "options": {
         "outputPath": "dist/packages/rxjs",
         "tsConfig": "packages/rxjs/tsconfig.lib.json",

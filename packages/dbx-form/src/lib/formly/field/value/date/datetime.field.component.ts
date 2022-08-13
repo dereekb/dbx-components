@@ -156,7 +156,7 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
 
   readonly timeInput$: Observable<ReadableTimeString> = this._updateTime.pipe(
     debounceTime(5),
-    map(() => this.timeInputCtrl.value),
+    map(() => this.timeInputCtrl.value || ''),
     distinctUntilChanged()
   );
 
