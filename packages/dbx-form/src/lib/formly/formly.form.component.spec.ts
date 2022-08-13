@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { DbxTestDbxFormComponent, FORM_TEST_PROVIDERS } from '../../test';
+import { FORM_TEST_PROVIDERS } from '../../test/test.formly';
+import { DbxTestDbxFormComponent } from '../../test/test.formly.component';
 
 describe('DbxInputFormControlComponent', () => {
   beforeEach(async () => {

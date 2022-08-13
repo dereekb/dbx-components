@@ -2,8 +2,10 @@
   "name": "@dereekb/dbx-web",
   "version": "8.15.2",
   "peerDependencies": {
-    "@angular/common": "^13.0.0",
-    "@angular/core": "^13.0.0"
+    "@angular/common": "^14.0.0",
+    "@angular/core": "^14.0.0",
+    "linkify-string": "4.0.0-beta.5",
+    "linkifyjs": "^4.0.0-beta.5"
   },
   "dependencies": {
     "tslib": "^2.3.0"

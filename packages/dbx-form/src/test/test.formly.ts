@@ -1,7 +1,7 @@
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { FormlyModule } from '@ngx-formly/core';
 import { FormlyMaterialModule } from '@ngx-formly/material';
-import { DbxFormExtensionModule } from '../lib';
+import { DbxFormExtensionModule } from '../lib/form.module';
 
 export const FORMLY_TEST_PROVIDERS = [
   FormlyModule.forRoot({

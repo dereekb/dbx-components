@@ -96,10 +96,6 @@
     },
     "ci-deploy": {
       "executor": "@nrwl/workspace:run-commands",
-      "dependsOn": [{
-        "target": "build",
-        "projects": "self"
-      }],
       "options": {
         "commands": [{
             "command": "npx nx run API_APP_NAME:build-base:production"

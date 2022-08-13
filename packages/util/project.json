@@ -1,9 +1,11 @@
 {
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/util/src",
   "projectType": "library",
   "targets": {
     "build": {
       "executor": "@nrwl/workspace:run-commands",
+      "outputs": ["dist/packages/util"],
       "options": {
         "commands": [
           {
@@ -19,12 +21,6 @@
     "build-base": {
       "executor": "@nrwl/js:tsc",
       "outputs": ["{options.outputPath}"],
-      "dependsOn": [
-        {
-          "target": "build",
-          "projects": "dependencies"
-        }
-      ],
       "options": {
         "outputPath": "dist/packages/util",
         "tsConfig": "packages/util/tsconfig.lib.json",
@@ -62,7 +58,7 @@
           }
         ],
         "color": true,
-        "parallel": true
+        "parallel": false
       }
     },
     "publish-npmjs": {

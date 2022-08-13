@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Component, ViewChild } from '@angular/core';
 import { DbxTestDbxFormComponent, FORM_TEST_PROVIDERS } from '../../../../../test';
-import { timeOnlyField } from '../../..';
+import { timeOnlyField } from '../../value/date/datetime.field';
 import { first } from 'rxjs';
 
 describe('DbxDateTimeFieldComponent', () => {

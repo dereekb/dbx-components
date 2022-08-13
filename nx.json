@@ -1,19 +1,49 @@
 {
-  "extends": "nx/presets/core.json",
   "npmScope": "dereekb",
   "affected": {
     "defaultBase": "develop"
   },
   "cli": {
+    "packageManager": "npm",
     "defaultCollection": "@nrwl/angular"
+  },
+  "implicitDependencies": {
+    "package.json": {
+      "dependencies": "*",
+      "devDependencies": "*"
+    },
+    ".eslintrc.json": "*"
   },
   "tasksRunnerOptions": {
     "default": {
       "runner": "@nrwl/nx-cloud",
       "options": {
-        "cacheableOperations": ["build", "build-base", "run-tests", "lint", "test", "e2e"],
+        "cacheableOperations": ["build", "run-tests", "test", "e2e"],
         "accessToken": "OWU3ZTBhOWYtYTI1MS00NTgyLTk5MWItOTNlYjQ4YTFiOWZkfHJlYWQtd3JpdGU="
       }
+    }
+  },
+  "targetDefaults": {
+    "build": {
+      "dependsOn": ["^build"]
+    },
+    "run-all-tests": {
+      "dependsOn": ["build"]
+    },
+    "test": {
+      "dependsOn": ["build"]
+    },
+    "publish": {
+      "dependsOn": ["build"]
+    },
+    "publish-npmjs": {
+      "dependsOn": ["build"]
+    },
+    "deploy": {
+      "dependsOn": ["build"]
+    },
+    "ci-deploy": {
+      "dependsOn": ["build"]
     }
   },
   "generators": {
@@ -31,5 +61,15 @@
       "style": "scss"
     }
   },
-  "defaultProject": "demo"
+  "defaultProject": "demo",
+  "workspaceLayout": {
+    "appsDir": "apps",
+    "libsDir": "packages"
+  },
+  "$schema": "./node_modules/nx/schemas/nx-schema.json",
+  "pluginsConfig": {
+    "@nrwl/js": {
+      "analyzeSourceFiles": true
+    }
+  }
 }

@@ -26,8 +26,8 @@ export const testFunctionTypeConfigMap: FirebaseFunctionTypeConfigMap<FunctionFa
 export type FunctionFactoryTestModelFunctionsMap = FirebaseFunctionMap<FunctionFactoryTestModelTypeMap>;
 
 export abstract class FunctionFactoryTestModelFunctions implements FirebaseFunctionMap<FunctionFactoryTestModelTypeMap> {
-  [functionFactoryTestModelFunctionA]: FirebaseFunctionMapFunction<FunctionFactoryTestModelTypeMap, 'a'>;
-  [functionFactoryTestModelFunctionB]: FirebaseFunctionMapFunction<FunctionFactoryTestModelTypeMap, 'b'>;
+  [functionFactoryTestModelFunctionA]!: FirebaseFunctionMapFunction<FunctionFactoryTestModelTypeMap, 'a'>;
+  [functionFactoryTestModelFunctionB]!: FirebaseFunctionMapFunction<FunctionFactoryTestModelTypeMap, 'b'>;
 }
 
 export const functionFactoryTestModelMap = firebaseFunctionMapFactory(testFunctionTypeConfigMap);

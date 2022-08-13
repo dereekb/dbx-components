@@ -4,6 +4,9 @@
   "devDependencies": {
     "firebase-functions-test": "2.0.2"
   },
+  "peerDependencies": {
+    "jsonwebtoken": "^8.0.0"
+  },
   "exports": {
     ".": {
       "main": "./src/index.js",

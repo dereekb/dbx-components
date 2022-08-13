@@ -1,6 +1,20 @@
 {
+  "$schema": "node_modules/nx/schemas/project-schema.json",
   "prefix": "workspace",
   "targets": {
+    "build-all": {
+      "executor": "@nrwl/workspace:run-commands",
+      "options": {
+        "commands": [
+          {
+            "description": "build all the projects",
+            "command": "npx nx run-many --target=build --parallel --max-parallel=2"
+          }
+        ],
+        "color": true,
+        "parallel": false
+      }
+    },
     "start-release": {
       "executor": "@nrwl/workspace:run-commands",
       "options": {

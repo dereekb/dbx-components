@@ -1,9 +1,11 @@
 {
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/firebase/src",
   "projectType": "library",
   "targets": {
     "build": {
       "executor": "@nrwl/workspace:run-commands",
+      "outputs": ["dist/packages/firebase"],
       "options": {
         "commands": [
           {
@@ -19,12 +21,6 @@
     "build-base": {
       "executor": "@nrwl/js:tsc",
       "outputs": ["{options.outputPath}"],
-      "dependsOn": [
-        {
-          "target": "build",
-          "projects": "dependencies"
-        }
-      ],
       "options": {
         "outputPath": "dist/packages/firebase",
         "tsConfig": "packages/firebase/tsconfig.lib.json",

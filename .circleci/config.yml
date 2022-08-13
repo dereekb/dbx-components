@@ -10,7 +10,7 @@ defaults: &defaults
 # https://circleci.com/blog/config-best-practices-dependency-caching/
 
 orbs:
-  nx: nrwl/nx@1.1.3
+  nx: nrwl/nx@1.6.0
   node: circleci/node@5.0.2
 jobs:
   build:
@@ -21,8 +21,10 @@ jobs:
       - node/install-packages
       # initialize nx
       - nx/set-shas
-      # build content
-      - run: npx nx affected --base=$NX_BASE --target=build --parallel --max-parallel=2
+      # builds everything in the project in order
+      - run: 
+          name: build
+          command: npx nx run workspace:build-all
       # persist builds to workspace
       - persist_to_workspace:
           root: ~/code
@@ -116,8 +118,11 @@ jobs:
           name: run setup-project.sh script
           command: cd setup && ./setup-project.sh myprojectapp myproject myproject 9200 ~/setup-test
       - run:
-          name: replace test project's @dereekb in node_modules with generated packages
+          name: replace test project's @dereekb in node_modules with generated packages (we don't want symlinks)
           command: rm -r ~/setup-test/myproject/node_modules/@dereekb && cp -r dist/packages ~/setup-test/myproject/node_modules/@dereekb
+      - run:
+          name: Try build components
+          command: cd ~/setup-test/myproject && npx nx run-many --target=build-base --projects=myproject-firebase,myproject-components
       - run:
           name: Try build
           command: cd ~/setup-test/myproject && npx -y nx build myproject && npx -y nx build myproject-api
@@ -203,8 +208,6 @@ workflows:
       - test-setup-script:
           requires:
             - build
-            - test-with-node
-            - test-with-node-firebase
       - run-release-and-push-to-main:
           requires:
             - build

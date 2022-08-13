@@ -103,20 +103,12 @@
     },
     "deploy": {
       "executor": "@nrwl/workspace:run-commands",
-      "dependsOn": [{
-        "target": "build",
-        "projects": "self"
-      }],
       "options": {
         "command": "npx firebase --project=default deploy --only hosting"
       }
     },
     "ci-deploy": {
       "executor": "@nrwl/workspace:run-commands",
-      "dependsOn": [{
-        "target": "build",
-        "projects": "self"
-      }],
       "options": {
         "command": "npx firebase --project=default deploy --only hosting --token \"$FIREBASE_TOKEN\""
       }

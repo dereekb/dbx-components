@@ -161,7 +161,7 @@ export class DbxFormlyFormComponent<T> extends AbstractSubscriptionDirective imp
   }
 
   getValue(): Observable<T> {
-    return of(this.form.value);
+    return of(this.form.value as T);
   }
 
   setValue(value: T): void {

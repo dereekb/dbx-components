@@ -1,9 +1,11 @@
 {
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/firebase-server/src",
   "projectType": "library",
   "targets": {
     "build": {
       "executor": "@nrwl/workspace:run-commands",
+      "outputs": ["dist/packages/firebase-server"],
       "options": {
         "commands": [
           {

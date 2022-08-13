@@ -72,11 +72,11 @@ export type ProvideFirebaseServerStorageServiceSimple<T extends FirebaseServerSt
   useFactory: (context: FirebaseStorageContext) => T;
 };
 
-export function defaultProvideFirebaseServerStorageServiceSimple<T extends FirebaseServerStorageService = FirebaseServerStorageService>(): ProvideFirebaseServerStorageServiceSimple<FirebaseServerStorageService> {
+export function defaultProvideFirebaseServerStorageServiceSimple(): ProvideFirebaseServerStorageServiceSimple<FirebaseServerStorageService> {
   return {
     provide: FirebaseServerStorageService,
     useFactory: (context: FirebaseStorageContext) => new FirebaseServerStorageService(context)
-  } as ProvideFirebaseServerStorageServiceSimple<FirebaseServerStorageService> as ProvideFirebaseServerStorageService<T>;
+  } as ProvideFirebaseServerStorageServiceSimple<FirebaseServerStorageService>;
 }
 
 export type ProvideFirebaseServerStorageService<T extends FirebaseServerStorageService> = FactoryProvider<T> | ProvideFirebaseServerStorageServiceSimple<T>;
@@ -112,7 +112,7 @@ export interface FirebaseServerStorageModuleMetadataConfig<T extends FirebaseSer
  * @returns
  */
 export function firebaseServerStorageModuleMetadata<T extends FirebaseServerStorageService = FirebaseServerStorageService>(config?: FirebaseServerStorageModuleMetadataConfig<T>): ModuleMetadata {
-  const serviceProvider = config && config.serviceProvider ? config.serviceProvider : defaultProvideFirebaseServerStorageServiceSimple<T>();
+  const serviceProvider = config && config.serviceProvider ? config.serviceProvider : defaultProvideFirebaseServerStorageServiceSimple();
   const providers = provideFirebaseServerStorageService(serviceProvider);
   const tokensToExport = injectionTokensFromProviders(providers);
 
