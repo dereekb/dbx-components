@@ -1,9 +1,10 @@
+import { encodeWebsiteFileLinkToWebsiteLinkEncodedData, WebsiteFileLink } from '@dereekb/model';
 import { LatLngString, asGetter, ISO8601DateString, Maybe, modelFieldMapFunctions, objectHasKey, stringTrimFunction, latLngString, passThrough } from '@dereekb/util';
 import { isValid } from 'date-fns';
 import { FirestoreModelKeyGrantedRoleArrayMap } from '../collection';
 import { DocumentSnapshot } from '../types';
 import { snapshotConverterFunctions } from './snapshot';
-import { firestoreArrayMap, firestoreDate, firestoreObjectArray, firestoreEnum, firestoreMap, firestoreModelKeyGrantedRoleArrayMap, firestoreEnumArray, firestoreUniqueKeyedArray, firestoreUniqueStringArray, firestoreNumber, firestoreSubObject, firestoreEncodedArray, firestoreString, DEFAULT_FIRESTORE_STRING_FIELD_VALUE, firestoreLatLngString, firestoreField, optionalFirestoreDate } from './snapshot.field';
+import { firestoreWebsiteFileLinkEncodedArray, firestoreArrayMap, firestoreDate, firestoreObjectArray, firestoreEnum, firestoreMap, firestoreModelKeyGrantedRoleArrayMap, firestoreEnumArray, firestoreUniqueKeyedArray, firestoreUniqueStringArray, firestoreNumber, firestoreSubObject, firestoreEncodedArray, firestoreString, DEFAULT_FIRESTORE_STRING_FIELD_VALUE, firestoreLatLngString, firestoreField, optionalFirestoreDate } from './snapshot.field';
 
 describe('firestoreField()', () => {
   const defaultValue = -1;
@@ -315,12 +316,62 @@ describe('firestoreEncodedArray()', () => {
     expect(results[0]).toBe(models[0].key);
   });
 
-  it('should convert to a deencoded form for each value.', () => {
+  it('should convert to a decoded form for each value.', () => {
     const data = ['a', 'b'];
 
     const results = encodedArrayConfig.from.convert(data);
     expect(results.length).toBe(data.length);
     expect(results[0].key).toBe(data[0]);
+  });
+
+  describe('declarations', () => {
+    describe('firestoreWebsiteFileLinkEncodedArray()', () => {
+      const exampleWithAll: WebsiteFileLink = {
+        type: 't',
+        mime: 'test/test',
+        name: 'test-name',
+        data: 'https://components.dereekb.com/'
+      };
+
+      interface TestWebsiteFileLinkObject {
+        l: WebsiteFileLink[];
+      }
+
+      const converter = snapshotConverterFunctions<TestWebsiteFileLinkObject>({
+        fields: {
+          l: firestoreWebsiteFileLinkEncodedArray()
+        }
+      });
+
+      it('should convert to an encoded form for each value.', () => {
+        const snapshot: DocumentSnapshot<TestWebsiteFileLinkObject> = {
+          id: '0',
+          ref: {
+            id: '0'
+          } as any,
+          data() {
+            return {
+              l: [encodeWebsiteFileLinkToWebsiteLinkEncodedData(exampleWithAll)]
+            } as any;
+          }
+        };
+
+        const result = converter.from(snapshot);
+        expect(result.l.length).toBe(1);
+        expect(result.l[0].data).toBe(exampleWithAll.data);
+      });
+
+      it('should convert to a decoded form for each value.', () => {
+        const data = {
+          l: [exampleWithAll]
+        };
+
+        const result = converter.to(data);
+
+        expect(result.l.length).toBe(data.l.length);
+        expect(result.l[0]).toBe(encodeWebsiteFileLinkToWebsiteLinkEncodedData(exampleWithAll));
+      });
+    });
   });
 });
 

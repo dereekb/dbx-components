@@ -156,7 +156,7 @@ It should look like this:
 ### Emulators In Docker
 We use Docker to run the emulators within a Docker Container. This lets us not worry about the host system having Java and other dependencies installed.
 
-The emulators require having `service_account.json` available. Make sure you get a valid service account JSON key file and add it to the workspace.
+The emulator do not require having `service_account.json` available, but would use it if you choose not to enable certain emulators. Make sure you get a valid service account JSON key file and add it to the workspace if you want to do this.
 
 To run the emulators execute:
 
@@ -174,9 +174,10 @@ Behind the scenes, `nx serve demo-api` runs two commands in parallel:
 
 Any changes made to the `demo-api` package will trigger. VS Code to build the project and update our dist, causing the functions emulator to update. This lets us develop in real time with an active emulated database.
 
+You can read more about how this code base has enabled hot reloading in the Hot Reloading section below.
+
 ### Testing
 Some tests run in just the node context, while others are run with the firebase emulators.
-
 
 ### CI Testing Output
 A couple things are configured for the CI to enable reports to be output to `.reports/jest`:
@@ -193,7 +194,11 @@ These three items come together and enable jest-junit to do it's job, and circle
 By default, Firebase API calls have their body parsed by express. This occurs before it reaches our demo-api's onRequest express server. If you add in additional body parsers and handlers be sure to update the request appropriately.
 
 ### Firebase Emulator Hot Reloading
-Firebase's emulators only support hot reloading of rules. To achieve hot reloading we use a combination of demo-api's `build-base` target along with the `entr` command, which watches for changes produced by `nx build-base demo-api`. Currently the emulators do not [shut down gracefully](https://github.com/firebase/firebase-tools/issues/3034) and/or communicate they have closed. We use the `./wait-for-ports.sh` script to shut these processes down within the docker container before attempting to restart the emulators. The script waits for about 5 seconds before hard-stopping the processes and waiting for the ports to be released. 
+Firebase's emulators only support hot reloading of Firebase rules. 
+
+To achieve hot reloading we use a combination of demo-api's `build-base` target along with the `entr` command, which watches for changes produced by `nx build-base demo-api`. 
+
+Currently the emulators do not [shut down gracefully](https://github.com/firebase/firebase-tools/issues/3034) and/or communicate they have closed. We use the `./wait-for-ports.sh` script to shut these processes down within the docker container before attempting to restart the emulators. The script waits for about 5 seconds before hard-stopping the processes and waiting for the ports to be released.
 
 ### Deploying Firebase Functions
 

@@ -1,4 +1,4 @@
-import { UNKNOWN_WEBSITE_LINK_TYPE, WebsiteLink, GrantedRole } from '@dereekb/model';
+import { UNKNOWN_WEBSITE_LINK_TYPE, WebsiteLink, GrantedRole, WebsiteFileLink, EncodedWebsiteFileLink, encodeWebsiteFileLinkToWebsiteLinkEncodedData, decodeWebsiteLinkEncodedDataToWebsiteFileLink } from '@dereekb/model';
 import { FirestoreModelKey } from '../collection/collection';
 import { DateBlockRange, nowISODateString, toISODateString, toJsDate } from '@dereekb/date';
 import {
@@ -574,6 +574,51 @@ export function firestoreWebsiteLink() {
 export function firestoreWebsiteLinkArray() {
   return firestoreObjectArray({
     firestoreField: firestoreWebsiteLink()
+  });
+}
+
+// MARK: WebsiteFileLink
+export const DEFAULT_WEBSITE_FILE_LINK: WebsiteFileLink = {
+  data: ''
+};
+
+export const assignWebsiteFileLinkFunction = assignValuesToPOJOFunction<WebsiteFileLink>({ keysFilter: ['type', 'name', 'mime'], valueFilter: KeyValueTypleValueFilter.EMPTY });
+export const firestoreWebsiteFileLinkAssignFn: MapFunction<WebsiteFileLink, WebsiteFileLink> = (input) => {
+  const behavior = assignWebsiteFileLinkFunction({ ...DEFAULT_WEBSITE_FILE_LINK }, input);
+  return behavior;
+};
+
+export function firestoreWebsiteFileLink() {
+  return firestoreField<WebsiteFileLink, WebsiteFileLink>({
+    default: () => DEFAULT_WEBSITE_FILE_LINK,
+    fromData: firestoreWebsiteFileLinkAssignFn,
+    toData: firestoreWebsiteFileLinkAssignFn
+  });
+}
+
+// MARK: WebsiteFileLink Array
+/**
+ * Stores the array of WebsiteFileLink values as an array of objects.
+ *
+ * @returns
+ */
+export function firestoreWebsiteFileLinkObjectArray() {
+  return firestoreObjectArray({
+    firestoreField: firestoreWebsiteFileLink()
+  });
+}
+
+/**
+ * Stores the array of WebsiteFileLink values as an array of EncodedWebsiteFileLink values.
+ *
+ * @returns
+ */
+export function firestoreWebsiteFileLinkEncodedArray() {
+  return firestoreEncodedArray<WebsiteFileLink, EncodedWebsiteFileLink>({
+    convert: {
+      fromData: decodeWebsiteLinkEncodedDataToWebsiteFileLink,
+      toData: encodeWebsiteFileLinkToWebsiteLinkEncodedData
+    }
   });
 }
 
