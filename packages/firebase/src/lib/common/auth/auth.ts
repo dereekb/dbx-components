@@ -1,4 +1,4 @@
-import { Maybe } from '@dereekb/util';
+import { Maybe, PhoneNumber } from '@dereekb/util';
 
 /**
  * Firebase User Identifier (UID)
@@ -11,7 +11,7 @@ export type FirebaseAuthUserId = string;
 export type FirebaseAuthToken = {
   email?: Maybe<string>;
   emailVerified?: Maybe<boolean>;
-  phoneNumber?: Maybe<string>;
+  phoneNumber?: Maybe<PhoneNumber>;
 };
 
 /**
