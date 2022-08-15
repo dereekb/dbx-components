@@ -155,6 +155,7 @@ export function describeFirestoreAccessorDriverTests(f: MockItemCollectionFixtur
           describe('singleItemFirestoreCollection accessor', () => {
             it('should implement FirestoreSingleDocumentAccessor', () => {
               expect(mockItemPrivateFirestoreCollection.singleItemIdentifier).toBeDefined();
+              expect(mockItemPrivateFirestoreCollection.documentRef).toBeDefined();
               expect(mockItemPrivateFirestoreCollection.loadDocument).toBeDefined();
               expect(mockItemPrivateFirestoreCollection.loadDocumentForTransaction).toBeDefined();
               expect(mockItemPrivateFirestoreCollection.loadDocumentForWriteBatch).toBeDefined();

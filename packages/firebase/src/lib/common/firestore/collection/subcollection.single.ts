@@ -26,6 +26,7 @@ export function makeSingleItemFirestoreCollection<T, PT, D extends FirestoreDocu
       });
 
       x.singleItemIdentifier = singleAccessor.singleItemIdentifier;
+      x.documentRef = singleAccessor.documentRef;
       x.loadDocument = singleAccessor.loadDocument;
       x.loadDocumentForTransaction = singleAccessor.loadDocumentForTransaction;
       x.loadDocumentForWriteBatch = singleAccessor.loadDocumentForWriteBatch;
