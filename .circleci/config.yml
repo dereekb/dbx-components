@@ -121,6 +121,9 @@ jobs:
           name: replace test project's @dereekb in node_modules with generated packages (we don't want symlinks)
           command: rm -r ~/setup-test/myproject/node_modules/@dereekb && cp -r dist/packages ~/setup-test/myproject/node_modules/@dereekb
       - run:
+          name: print package.json
+          command: cd ~/setup-test/myproject && cat package.json
+      - run:
           name: Try build components
           command: cd ~/setup-test/myproject && npx nx run-many --target=build-base --projects=myproject-firebase,myproject-components
       - run:

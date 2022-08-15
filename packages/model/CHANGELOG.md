@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [9.1.0](https://github.com/dereekb/dbx-components/compare/v9.0.0-dev...v9.1.0) (2022-08-15)
+
+
+### Features
+
+* added WebsiteFileLink ([dc58b5c](https://github.com/dereekb/dbx-components/commit/dc58b5c3a78c1e6fbf3ee065b02b270f15f4dc79))
+
+
+
 # [9.0.0](https://github.com/dereekb/dbx-components/compare/v8.15.2-dev...v9.0.0) (2022-08-13)
 
 

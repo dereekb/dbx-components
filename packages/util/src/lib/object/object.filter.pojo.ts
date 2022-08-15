@@ -131,7 +131,7 @@ export const filterNullAndUndefinedValues: GeneralFilterFromPOJOFunction = filte
  * @param obj
  * @returns
  */
-export const filterFalsyAnyEmptyValues: GeneralFilterFromPOJOFunction = filterFromPOJOFunction({ copy: true, filter: { valueFilter: KeyValueTypleValueFilter.FALSY_AND_EMPTY } }) as GeneralFilterFromPOJOFunction;
+export const filterFalsyAndEmptyValues: GeneralFilterFromPOJOFunction = filterFromPOJOFunction({ copy: true, filter: { valueFilter: KeyValueTypleValueFilter.FALSY_AND_EMPTY } }) as GeneralFilterFromPOJOFunction;
 
 /**
  * Returns all keys that are not associated with an undefined value.
