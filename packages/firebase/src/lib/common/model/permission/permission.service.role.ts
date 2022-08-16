@@ -8,6 +8,7 @@ import { FirebaseContextGrantedModelRoles, FirebasePermissionServiceModel } from
 export interface ContextGrantedModelRolesReader<C extends FirebasePermissionErrorContext, T, D extends FirestoreDocument<T> = FirestoreDocument<T>, R extends GrantedRole = GrantedRole> extends GrantedRoleMapReader<R>, FirebasePermissionServiceModel<T, D> {
   readonly roleMap: GrantedRoleMap<R>;
   readonly contextGrantedModelRoles: FirebaseContextGrantedModelRoles<C, T, D, R>;
+  assertExists(): this;
   assertHasRole(role: R): this;
   assertHasRoles(setIncludes: SetIncludesMode, roles: ArrayOrValue<R>): this;
   assertContainsRoles(setIncludes: SetIncludesMode, roles: ArrayOrValue<R>): this;
@@ -61,6 +62,14 @@ export class ContextGrantedModelRolesReaderInstance<C extends FirebasePermission
     return this._roleReader.containsRoles(setIncludes, roles);
   }
 
+  assertExists(): this {
+    if (!this.exists) {
+      this.throwDoesNotExistError();
+    }
+
+    return this;
+  }
+
   assertHasRole(role: R): this {
     if (!this.hasRole(role)) {
       this.throwPermissionError(role);
@@ -83,6 +92,11 @@ export class ContextGrantedModelRolesReaderInstance<C extends FirebasePermission
     }
 
     return this;
+  }
+
+  throwDoesNotExistError(): never {
+    const error = this.contextGrantedModelRoles.context.makeDoesNotExistError?.(this.contextGrantedModelRoles) ?? new Error(contextGrantedModelRolesReaderDoesNotExistErrorMessage(this.contextGrantedModelRoles));
+    throw error;
   }
 
   throwPermissionError(role?: ArrayOrValue<R>): never {
@@ -112,5 +126,17 @@ export function contextGrantedModelRolesReaderPermissionErrorMessage(contextGran
     message = `${message}: required role(s) "${roles}"`;
   }
 
+  return message;
+}
+
+/**
+ * Creates the default does not exist error message.
+ *
+ * @param contextGrantedModelRoles
+ * @param role
+ * @returns
+ */
+export function contextGrantedModelRolesReaderDoesNotExistErrorMessage(contextGrantedModelRoles: FirebaseContextGrantedModelRoles<FirebasePermissionErrorContext, unknown>) {
+  let message = `Does Not Exist ("${contextGrantedModelRoles.data?.document.modelType}":"${contextGrantedModelRoles.data?.document.id}")`;
   return message;
 }
