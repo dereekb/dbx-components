@@ -644,7 +644,7 @@ export interface ExpandUniqueDateBlocksConfig<B extends DateBlockRange | UniqueD
 
 export interface ExpandUniqueDateBlocksResult<B extends DateBlockRange | UniqueDateBlock> extends UniqueDateBlockRangeGroup<B> {
   /**
-   * Blocks that were removed.
+   * Blocks that were competely removed. Some blocks stay partially retained.
    */
   discarded: B[];
 }
@@ -809,6 +809,7 @@ export function expandUniqueDateBlocksFunction<B extends DateBlockRange | Unique
 
       if (nextStartIndex < startAtIndex || currentEndIndex < startAtIndex) {
         // do nothing if the next index is still before the current start index.
+
         discardCurrent();
         continueToNext();
       } else if (currentNextIndex === nextStartIndex) {
@@ -868,10 +869,20 @@ export function expandUniqueDateBlocksFunction<B extends DateBlockRange | Unique
               continueToNext();
             }
           } else {
-            // add current up to the start index
+            // add current up to the start index of next
             addBlockWithRange(current.block, currentNextIndex, nextStartIndex - 1);
-            // continue normally
-            continueToNext();
+
+            // check if the next one is fully contained
+            if (nextEndIndex < currentEndIndex) {
+              // add the next
+              addBlockWithRange(next.block, nextStartIndex, nextEndIndex);
+
+              // continue with the current
+              continueToNext({ ...current.block, i: nextEndIndex + 1, to: currentEndIndex }, next.priority);
+            } else {
+              // continue to next
+              continueToNext();
+            }
           }
         } else {
           // no overlap
