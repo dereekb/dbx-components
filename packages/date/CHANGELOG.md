@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [9.1.2](https://github.com/dereekb/dbx-components/compare/v9.1.1-dev...v9.1.2) (2022-08-16)
+
+
+### Bug Fixes
+
+* fixed expandUniqueDateBlocksFunction() scenario ([2341c24](https://github.com/dereekb/dbx-components/commit/2341c246c8c95c360501b2cf2166dfc65eab9122))
+
+
+
 ## [9.1.1](https://github.com/dereekb/dbx-components/compare/v9.1.0-dev...v9.1.1) (2022-08-16)
 
 
