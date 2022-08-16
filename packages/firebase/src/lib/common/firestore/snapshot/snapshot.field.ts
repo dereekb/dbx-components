@@ -143,8 +143,8 @@ export function firestoreString<S extends string = string>(config?: FirestoreStr
   });
 }
 
-export function optionalFirestoreString() {
-  return firestorePassThroughField<Maybe<string>>();
+export function optionalFirestoreString<S extends string = string>() {
+  return firestorePassThroughField<Maybe<S>>();
 }
 
 export type FirestoreEnumConfig<S extends string | number> = MapConfiguredFirestoreFieldConfigWithDefault<S, S>;

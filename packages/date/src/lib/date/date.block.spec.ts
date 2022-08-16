@@ -671,7 +671,12 @@ describe('expandUniqueDateBlocksFunction', () => {
 
           describe('with endAtIndex', () => {
             const endAtIndex = 1; // use endAtIndex=1 for these tests
-            const overwriteNextWithEndIndexExpand = expandUniqueDateBlocksFunction<UniqueDataDateBlock>({ endAtIndex, retainOnOverlap: 'next', fillOption: 'extend' });
+            const overwriteNextWithEndIndexExpand = expandUniqueDateBlocksFunction<UniqueDataDateBlock>({
+              //
+              endAtIndex,
+              retainOnOverlap: 'next',
+              fillOption: 'extend'
+            });
 
             it('the former value should only exist', () => {
               const result = overwriteNextWithEndIndexExpand(overlappingBlocksFirstEclipseSecond);
@@ -1196,6 +1201,47 @@ describe('expandUniqueDateBlocksFunction', () => {
         expect(requestedRangeBlocks.blocks[3].i).toBe(5);
         expect(requestedRangeBlocks.blocks[3].to).toBe(5);
         expect(requestedRangeBlocks.blocks[3].value).toBe(filledValue);
+      });
+
+      it(`should split a block and retain its attributes.`, async () => {
+        const i = 0;
+        const to = 5;
+
+        const allBlocks = [
+          {
+            i: 0,
+            to: 5,
+            value: 'retain'
+          }
+        ];
+
+        const cancelledBlocks = [
+          {
+            i: 1,
+            to: 1,
+            value: 'cancel'
+          }
+        ];
+
+        const requestedRangeBlocks = expandUniqueDateBlocksFunction<typeof cancelledBlocks[0]>({
+          startAtIndex: i,
+          endAtIndex: to,
+          fillOption: 'fill',
+          retainOnOverlap: 'next',
+          fillFactory: (x) => ({ ...x, value: 'new' })
+        })(allBlocks, cancelledBlocks);
+
+        expect(requestedRangeBlocks.blocks).toBeDefined();
+        expect(requestedRangeBlocks.blocks.length).toBe(3);
+        expect(requestedRangeBlocks.blocks[0].i).toBe(0);
+        expect(requestedRangeBlocks.blocks[0].to).toBe(0);
+        expect(requestedRangeBlocks.blocks[0].value).toBe(allBlocks[0].value);
+        expect(requestedRangeBlocks.blocks[1].i).toBe(1);
+        expect(requestedRangeBlocks.blocks[1].to).toBe(1);
+        expect(requestedRangeBlocks.blocks[1].value).toBe(cancelledBlocks[0].value);
+        expect(requestedRangeBlocks.blocks[2].i).toBe(2);
+        expect(requestedRangeBlocks.blocks[2].to).toBe(to);
+        expect(requestedRangeBlocks.blocks[2].value).toBe(allBlocks[0].value);
       });
     });
   });
