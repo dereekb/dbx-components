@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [9.1.1](https://github.com/dereekb/dbx-components/compare/v9.1.0-dev...v9.1.1) (2022-08-16)
+
+
+### Bug Fixes
+
+* fixed makeSingleItemFirestoreCollection ([4b8980d](https://github.com/dereekb/dbx-components/commit/4b8980ded100e67645b2deb3a2c12b08403fca62))
+
+
+
 # [9.1.0](https://github.com/dereekb/dbx-components/compare/v9.0.0-dev...v9.1.0) (2022-08-15)
 
 
