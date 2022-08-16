@@ -1,11 +1,11 @@
-import { FirebaseAppModelContext, FirebaseModelServiceContext, FirebaseModelsService, FirebaseModelsServiceSelectionResultRolesReader, FirebaseModelsServiceTypes, InContextFirebaseModelsService, inContextFirebaseModelsServiceFactory, UseFirebaseModelsServiceSelection, UseFirebaseModelsServiceSelectionUseFunction, useFirebaseModelsService } from '@dereekb/firebase';
+import { FirebaseAppModelContext, FirebaseModelServiceContext, FirebaseModelsService, FirebaseModelsServiceSelectionResultRolesReader, FirebaseModelsServiceTypes, InContextFirebaseModelsService, inContextFirebaseModelsServiceFactory, UseFirebaseModelsServiceSelection, UseFirebaseModelsServiceSelectionUseFunction, useFirebaseModelsService, FirebasePermissionErrorContextErrorFunction, FirebaseDoesNotExistErrorContextErrorFunction } from '@dereekb/firebase';
 import { build, BuildFunction, Getter } from '@dereekb/util';
 import { INestApplicationContext } from '@nestjs/common';
 import { AuthDataRef } from '../auth';
 import { FirebaseServerAuthService, FirebaseServerAuthServiceRef } from '../auth/auth.service';
 import { FirebaseServerStorageService, FirebaseServerStorageServiceRef } from '../storage';
 import { FirebaseServerActionsContext } from './function/context';
-import { nestFirebaseForbiddenPermissionError } from './model/permission.error';
+import { nestFirebaseDoesNotExistError, nestFirebaseForbiddenPermissionError } from './model/permission.error';
 
 /**
  * Getter for an INestApplicationContext promise. Nest should be initialized when the promise resolves.
@@ -32,6 +32,23 @@ export abstract class AbstractNestContext {
 }
 
 export abstract class AbstractFirebaseNestContext<A, Y extends FirebaseModelsService<any, FirebaseAppModelContext<A>>> extends AbstractNestContext implements FirebaseServerAuthServiceRef, FirebaseServerStorageServiceRef {
+  /**
+   * FirebasePermissionErrorContextErrorFunction to use with makeModelContext().
+   *
+   * Defaults to nestFirebaseForbiddenPermissionError().
+   */
+  protected makePermissionError: FirebasePermissionErrorContextErrorFunction = nestFirebaseForbiddenPermissionError;
+
+  /**
+   * FirebaseDoesNotExistErrorContextErrorFunction to use with makeModelContext().
+   *
+   * Defaults to nestFirebaseDoesNotExistError().
+   *
+   * Some configurations may prefer to use nestFirebaseForbiddenPermissionError instead, which returns a forbidden error instead.
+   * This prevents the leaking of information about the existence of an object.
+   */
+  protected makeDoesNotExistError: FirebaseDoesNotExistErrorContextErrorFunction = nestFirebaseDoesNotExistError;
+
   abstract get actionContext(): FirebaseServerActionsContext;
   abstract get authService(): FirebaseServerAuthService;
   abstract get firebaseModelsService(): Y;
@@ -52,7 +69,8 @@ export abstract class AbstractFirebaseNestContext<A, Y extends FirebaseModelsSer
     const base: FirebaseAppModelContext<A> = {
       auth: this.authService.authContextInfo(auth),
       app: this.app,
-      makePermissionError: nestFirebaseForbiddenPermissionError
+      makePermissionError: this.makePermissionError,
+      makeDoesNotExistError: this.makeDoesNotExistError
     };
 
     return buildFn

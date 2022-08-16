@@ -67,7 +67,7 @@ export function inContextFirebaseModelServiceFactory<C, T, D extends FirestoreDo
       const model = typeof modelOrKey === 'string' ? firebaseModelService.loadModelForKey(modelOrKey, context) : modelOrKey;
 
       const roleReader = () => contextGrantedModelRolesReader(inModelContextService);
-      const requireRole = (roles: ArrayOrValue<R>, setIncludes: SetIncludesMode = 'all') => roleReader().then((x) => x.assertHasRoles(setIncludes, roles));
+      const requireRole = (roles: ArrayOrValue<R>, setIncludes: SetIncludesMode = 'all') => roleReader().then((x) => x.assertExists() && x.assertHasRoles(setIncludes, roles));
       const requireUse = (roles: ArrayOrValue<R>, setIncludes?: SetIncludesMode) => usePromise(requireRole(roles, setIncludes));
 
       const inModelContextService: InModelContextFirebaseModelService<C, T, D, R> = build<InModelContextFirebaseModelService<C, T, D, R>>({
