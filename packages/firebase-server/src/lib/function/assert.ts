@@ -27,3 +27,20 @@ export async function assertSnapshotData<D extends FirestoreDocument<any>>(docum
 
   return data;
 }
+
+/**
+ * Asserts that the document exists. A modelNotAvailableError is thrown if the document does not exist.
+ *
+ * @param document
+ * @param message
+ * @returns
+ */
+export async function assertDocumentExists<D extends FirestoreDocument<any>>(document: D, message?: string): Promise<void> {
+  const exists = await document.exists();
+
+  if (!exists) {
+    throw modelNotAvailableError({
+      message: message ?? `The ${document.modelType} was unavailable.`
+    });
+  }
+}
