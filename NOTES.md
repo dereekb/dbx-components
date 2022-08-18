@@ -214,3 +214,105 @@ If you run into what looks like CORS issues, [check this issue comment out](http
 The dbx-components library has AppCheck enabled, so you will only be able to run the app against the emulators.
 
 You can read more about AppCheck configuration [here](https://firebase.google.com/docs/app-check/web/recaptcha-provider).
+
+
+# Adding Sub Libraries
+Because this workspace has some customization over Nx, there's a few changes that need to be made after creating a new nested/sub library.
+
+Steps/Checklist:
+
+## Creating the Project
+This example will follow the creation of dbx-form/mapbox.
+
+Example: `nx generate @nrwl/angular:library --name=dbx-form-mapbox --buildable --publishable --importPath @dereekb/dbx-form/mapbox --directory=dbx-form/mapbox`
+
+This will build a new library in the directory `packages/dbx-form/mapbox/dbx-form-mapbox`, but we will want to move it to `packages/dbx-form/mapbox` instead.
+
+`workspace.json` will need to be update to point to the proper path:
+
+```
+"dbx-form-mapbox": "packages/dbx-form/mapbox",
+```
+
+## Parent Project Changes
+The "parent project" (`dbx-form` in this case) needs to be updated to ignore building this project's files.
+
+### tsconfig
+Update `tsconfig.lib.json`, `tsconfig.json`, and `tsconfig.spec.json` to ignore the new directory. Add the following to each:
+
+```
+"exclude": ["mapbox/**"]
+```
+
+Extend any existing exclude where necessary.
+
+### project.json
+We want to update the `build` step to also call building the child project. The child project should not have a `build` step of its own, since its distribution requires the parent, so the parent project `dbx-form` will be configured to handle any build steps. 
+
+Add the following:
+```
+{
+  "description": "build dbx-form-mapbox production",
+  "command": "npx nx run dbx-form-mapbox:build-base:production"
+}
+```
+
+If there are other steps that `dbx-form-mapbox` requires, add them after this step.
+
+### package.json
+Update `package.json`'s exports value to include the new dist output from the child project:
+
+```
+"./mapbox": {
+  "main": "./mapbox/index.js",
+  "types": "./mapbox/index.d.ts",
+  "default": "./mapbox/index.js"
+}
+```
+
+## New/Child Project Changes
+We now need to configure the project to build and be used properly. Remember, the generated path was one level too deep, so we will need to update all the paths to reflect the new changes.
+
+### Path Replacement
+Search `packages/dbx-form/mapbox/dbx-form-mapbox` and replace it with `packages/dbx-form/mapbox`. 
+
+There will also be several relative paths that are `../../../../` that need to be replaced to `../../../` within the newly created project. Some files include `ng-package.json`, `project.json`, `tsconfig.spec.json`, `tsconfig.lib.json` and `tsconfig.json`.
+
+### jest.config.ts
+Since the dbx-components library has a lot of configuration setup in `jest.preset.ts`, we can simplify the setup here. Note, this is ONLY for this library. Your own project and other projects may be configured differently.
+
+```
+/* eslint-disable */
+(global as any).appTestType = 'angular';
+(global as any).testFolderRootPath = '<rootDir>/../../..';
+
+module.exports = {
+  displayName: 'dbx-form-mapbox',
+  preset: '../../../jest.preset.ts',
+  coverageDirectory: '../../../../coverage/packages/dbx-form/mapbox',
+};
+```
+
+### README.md
+Either delete it or replace it with the standard README.md that is in all the other packages. Since this package isn't directly uploaded to npmjs.org it doesn't matter what the contents are.
+
+### project.json
+Change `build` to `build-base` in the child `dbx-form-mapbox` project.json. 
+
+Add the following line to `build-base`:
+
+```
+      "dependsOn": []
+```
+
+This will prevent the `build-base` step from potentially calling a build-loop. Since `dbx-form-mapbox` is always built after the parent projects, this is ok. In some cases where this has dependencies that may not be build yet, we can add them as dependencies of `dbx-form` so they're built in the proper order.
+
+### .eslintrc.json
+This project has shared angular eslintrc configuration in the root. Update to the following:
+
+```
+{
+  "extends": ["../../.eslintrc.angular.json"],
+  "ignorePatterns": ["!**/*"]
+}
+```

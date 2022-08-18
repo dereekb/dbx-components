@@ -25,6 +25,7 @@
       "@dereekb/dbx-core": ["packages/dbx-core/src/index.ts"],
       "@dereekb/dbx-firebase": ["packages/dbx-firebase/src/index.ts"],
       "@dereekb/dbx-form": ["packages/dbx-form/src/index.ts"],
+      "@dereekb/dbx-form/mapbox": ["packages/dbx-form/mapbox/src/index.ts"],
       "@dereekb/dbx-web": ["packages/dbx-web/src/index.ts"],
       "@dereekb/demo-components": ["components/demo-components/src/index.ts"],
       "@dereekb/demo-firebase": ["components/demo-firebase/src/index.ts"],

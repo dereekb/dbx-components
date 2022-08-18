@@ -24,6 +24,10 @@
           {
             "description": "copy license",
             "command": "echo 'copying dbx-form license' && cp LICENSE dist/packages/dbx-form"
+          },
+          {
+            "description": "build dbx-form-mapbox production",
+            "command": "npx nx run dbx-form-mapbox:build-base:production"
           }
         ],
         "parallel": false,

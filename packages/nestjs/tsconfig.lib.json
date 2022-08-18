@@ -7,5 +7,5 @@
     "target": "es6"
   },
   "include": ["**/*.ts"],
-  "exclude": ["stripe/**", "jest.config.ts", "**/*.spec.ts", "**/*.test.ts"]
+  "exclude": ["stripe/**", "twilio/**", "jest.config.ts", "**/*.spec.ts", "**/*.test.ts"]
 }

@@ -22,6 +22,7 @@ export class DbxSearchableTextFieldComponent<T, M = unknown, H extends Primative
     shareReplay(1),
     tapDetectChanges(this.cdRef)
   );
+
   readonly hasValue$ = this.selectedDisplayValue$.pipe(map((x) => Boolean(x)));
   readonly showSelectedDisplayValue$ = this.selectedDisplayValue$.pipe(
     map((x) => this.showSelectedValue && Boolean(x)),
