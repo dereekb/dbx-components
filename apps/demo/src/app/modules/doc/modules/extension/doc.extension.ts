@@ -10,6 +10,12 @@ export const DOC_EXTENSION_ROUTES = [
     title: 'Widget',
     detail: 'dbx-widget-view',
     ref: 'doc.extension.widget'
+  },
+  {
+    icon: 'pin_drop',
+    title: 'Mapbox',
+    detail: 'mapbox extension',
+    ref: 'doc.extension.mapbox'
   }
 ];
 

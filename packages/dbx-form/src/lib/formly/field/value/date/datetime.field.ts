@@ -2,6 +2,7 @@ import { Observable, of } from 'rxjs';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { LabeledFieldConfig, formlyField, propsForFieldConfig, DescriptionFieldConfig } from '../../field';
 import { DbxDateTimeFieldProps, DbxDateTimeFieldTimeMode, DateTimePickerConfiguration } from './datetime.field.component';
+import { styleWrapper } from '../../wrapper/wrapper';
 
 export interface DateTimeFieldConfig extends LabeledFieldConfig, DescriptionFieldConfig, DbxDateTimeFieldProps {}
 export type TimeFieldConfig = Omit<DateTimeFieldConfig, 'showDate'>;
@@ -34,11 +35,10 @@ export function dateTimeField(config: Partial<DateTimeFieldConfig> = {}) {
       fullDayFieldName,
       getConfigObs,
       timeOnly
-    }),
-    styleWrapper: {
-      style: 'dbx-datetime-parent-form-field'
-    }
+    })
   });
 
-  return fieldConfig;
+  return styleWrapper(fieldConfig, {
+    classGetter: 'dbx-mat-form-field-disable-underline'
+  });
 }

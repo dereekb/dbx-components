@@ -8,5 +8,8 @@ export const environment: DemoEnvironment = {
     emulators: {
       useEmulators: false
     }
+  },
+  mapbox: {
+    token: 'pk.eyJ1IjoiZGVyZWVrYiIsImEiOiJjbDZ0bmliZTExcTByM2lycWU0a2FxNWZmIn0.PT1rSJQKOjNIYAwDTEdJ7w'
   }
 };

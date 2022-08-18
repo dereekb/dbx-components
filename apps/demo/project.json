@@ -32,11 +32,11 @@
             "output": "assets/dbx-firebase"
           }
         ],
-        "allowedCommonJsDependencies": ["lodash", "make-error", "validator", "date-fns-tz"],
+        "allowedCommonJsDependencies": ["lodash", "make-error", "validator", "date-fns-tz", "mapbox-gl"],
         "stylePreprocessorOptions": {
           "includePaths": ["packages"]
         },
-        "styles": ["apps/demo/src/styles.scss"],
+        "styles": ["mapbox-gl/src/css/mapbox-gl.css", "apps/demo/src/styles.scss"],
         "scripts": []
       },
       "configurations": {

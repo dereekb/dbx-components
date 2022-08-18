@@ -94,18 +94,21 @@ export function zipCodeField({ key = 'zip', required = false }: Partial<TextFiel
   });
 }
 
-export function latLngTextField({ key = 'latlng', required = false }: Partial<TextFieldConfig> = {}): FormlyFieldConfig {
+export const DEFAULT_LAT_LNG_TEXT_FIELD_PLACEHOLDER = '12.345,-67.8910';
+export const DEFAULT_LAT_LNG_TEXT_FIELD_PATTERN_MESSAGE = `Invalid/unknown coordinates`;
+
+export function latLngTextField({ key = 'latLng' }: Partial<TextFieldConfig> = {}): FormlyFieldConfig {
   const field = {
     ...textField({
       key,
       label: 'Coordinates',
-      required,
+      placeholder: DEFAULT_LAT_LNG_TEXT_FIELD_PLACEHOLDER,
       pattern: LAT_LNG_PATTERN,
       autocomplete: false
     }),
     ...validatorsForFieldConfig({
       messages: {
-        pattern: `Valid latitute/longitude format with a max precision of ${LAT_LNG_PATTERN_MAX_PRECISION}. Example: 40.12345,-100.123456`
+        pattern: DEFAULT_LAT_LNG_TEXT_FIELD_PATTERN_MESSAGE
       }
     })
   };

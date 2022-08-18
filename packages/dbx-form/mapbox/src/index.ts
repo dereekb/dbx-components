@@ -1,1 +1,2 @@
-export * from './lib/dbx-form-mapbox-dbx-form-mapbox.module';
+export * from './lib/field';
+export * from './lib/mapbox.module';

@@ -4,16 +4,6 @@
 
 // MARK: Mixin
 @mixin core() {
-  .dbx-datetime-parent-form-field {
-    > formly-wrapper-mat-form-field {
-      > mat-form-field.mat-form-field {
-        > .mat-form-field-wrapper > .mat-form-field-underline {
-          display: none;
-        }
-      }
-    }
-  }
-
   .dbx-datetime-field {
     width: 100%;
   }
