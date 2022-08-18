@@ -9,6 +9,7 @@
     "dbx-form": "packages/dbx-form",
     "dbx-form-mapbox": "packages/dbx-form/mapbox",
     "dbx-web": "packages/dbx-web",
+    "dbx-web-mapbox-dbx-web-mapbox": "packages/dbx-web/mapbox",
     "demo": "apps/demo",
     "demo-api": "apps/demo-api",
     "demo-components": "components/demo-components",
