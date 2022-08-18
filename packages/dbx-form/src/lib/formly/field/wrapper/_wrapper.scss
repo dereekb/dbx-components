@@ -6,6 +6,16 @@ $form-flex-section-group-item-padding: $form-flex-section-group-padding * 2;
 
 // MARK: Mixin
 @mixin core() {
+  .dbx-mat-form-field-disable-underline {
+    > formly-wrapper-mat-form-field {
+      > mat-form-field.mat-form-field {
+        > .mat-form-field-wrapper > .mat-form-field-underline {
+          display: none;
+        }
+      }
+    }
+  }
+
   .dbx-form-expand-wrapper-button {
     text-decoration: underline;
     margin-right: 8px;

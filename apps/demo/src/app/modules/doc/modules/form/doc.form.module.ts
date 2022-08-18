@@ -18,20 +18,36 @@ import { DocFormDirectiveComponent } from './container/directive.component';
 import { FormlyMatNativeSelectModule } from '@ngx-formly/material/native-select';
 
 @NgModule({
+  imports: [DocSharedModule, FormlyMatNativeSelectModule],
+  declarations: [
+    //
+    DocFormExampleChecklistFormComponent,
+    DocFormExampleComponentFormComponent,
+    DocFormExampleComponentFormTestViewAComponent,
+    DocFormExampleComponentFormTestViewBComponent,
+    DocFormExampleComponent
+  ],
+  exports: [
+    //
+    DocFormExampleChecklistFormComponent,
+    DocFormExampleComponentFormComponent,
+    DocFormExampleComponentFormTestViewAComponent,
+    DocFormExampleComponentFormTestViewBComponent,
+    DocFormExampleComponent
+  ]
+})
+export class DocFormComponentsModule {}
+
+@NgModule({
   imports: [
     DocSharedModule,
     FormlyMatNativeSelectModule,
+    DocFormComponentsModule,
     UIRouterModule.forChild({
       states: STATES
     })
   ],
   declarations: [
-    // component
-    DocFormExampleChecklistFormComponent,
-    DocFormExampleComponentFormComponent,
-    DocFormExampleComponentFormTestViewAComponent,
-    DocFormExampleComponentFormTestViewBComponent,
-    DocFormExampleComponent,
     // container
     DocFormLayoutComponent,
     DocFormHomeComponent,

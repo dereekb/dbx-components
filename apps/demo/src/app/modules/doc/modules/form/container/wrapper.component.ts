@@ -1,6 +1,6 @@
 import { MatDialog } from '@angular/material/dialog';
 import { Component } from '@angular/core';
-import { expandWrapper, flexLayoutWrapper, infoWrapper, nameField, sectionWrapper, subsectionWrapper, toggleWrapper, cityField, stateField, zipCodeField, countryField } from '@dereekb/dbx-form';
+import { expandWrapper, flexLayoutWrapper, infoWrapper, nameField, sectionWrapper, subsectionWrapper, toggleWrapper, cityField, stateField, zipCodeField, countryField, styleWrapper } from '@dereekb/dbx-form';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 
 @Component({
@@ -35,6 +35,13 @@ export class DocFormWrapperComponent {
       onInfoClick: () => {
         // this.matDialog.open()
       }
+    })
+  ];
+
+  readonly styleField: FormlyFieldConfig[] = [
+    styleWrapper(nameField(), {
+      styleGetter: { background: 'rgba(255,0,0,0.3)', 'border-color': 'blue' },
+      classGetter: 'dbx-content-border'
     })
   ];
 

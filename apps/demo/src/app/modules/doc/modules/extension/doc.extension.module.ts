@@ -9,12 +9,17 @@ import { DbxCalendarRootModule, DbxWidgetModule, DbxWidgetService } from '@deree
 import { DocExtensionWidgetComponent } from './container/widget.component';
 import { DOC_EXTENSION_WIDGET_EXAMPLE_TYPE, DocExtensionWidgetExampleComponent } from './component/widget.example.component';
 import { DocExtensionWidgetIconExampleComponent, DOC_EXTENSION_WIDGET_ICON_EXAMPLE_TYPE } from './component/widget.icon.example.component';
+import { DocFormComponentsModule } from '../form/doc.form.module';
+import { DocExtensionMapboxComponent } from './container/mapbox.component';
+import { DbxFormMapboxModule } from '@dereekb/dbx-form/mapbox';
 
 @NgModule({
   imports: [
     DocSharedModule,
     DbxCalendarRootModule,
+    DocFormComponentsModule,
     DbxWidgetModule,
+    DbxFormMapboxModule,
     UIRouterModule.forChild({
       states: STATES
     })
@@ -27,7 +32,8 @@ import { DocExtensionWidgetIconExampleComponent, DOC_EXTENSION_WIDGET_ICON_EXAMP
     DocExtensionLayoutComponent,
     DocExtensionHomeComponent,
     DocExtensionCalendarComponent,
-    DocExtensionWidgetComponent
+    DocExtensionWidgetComponent,
+    DocExtensionMapboxComponent
   ]
 })
 export class DocExtensionModule {

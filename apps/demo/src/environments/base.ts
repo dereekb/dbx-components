@@ -12,6 +12,9 @@ export interface DemoEnvironment {
     segment: string;
   };
   firebase: DbxFirebaseOptions;
+  mapbox: {
+    token: string;
+  };
 }
 
 export const base: DemoEnvironment = {
@@ -38,6 +41,9 @@ export const base: DemoEnvironment = {
     appCheck: {
       reCaptchaV3: '6LfojyAgAAAAADvgGBkWUbRJy-4660ZgkLFOtMvS'
     }
+  },
+  mapbox: {
+    token: 'pk.eyJ1IjoiZGVyZWVrYiIsImEiOiJjbDZ0bmxtNWsxcTRrM2RyMzBqM2liNGxzIn0.3uE_-LqdMC0SmZSYSag0Mw'
   }
 };
 

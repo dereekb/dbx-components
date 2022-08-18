@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [9.2.0](https://github.com/dereekb/dbx-components/compare/v9.1.2-dev...v9.2.0) (2022-08-18)
+
+
+### Features
+
+* added timezonePicker() ([a1b23c0](https://github.com/dereekb/dbx-components/commit/a1b23c03f742b20c3f8b631ee9a17730d16b9335))
+
+
+
 ## [9.1.2](https://github.com/dereekb/dbx-components/compare/v9.1.1-dev...v9.1.2) (2022-08-16)
 
 

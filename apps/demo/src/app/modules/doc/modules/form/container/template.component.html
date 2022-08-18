@@ -8,5 +8,12 @@
       <h4>Email and Password with verify fields.</h4>
       <doc-form-example-form [dbxFormSource]="invalidVerifyContent" [config]="usernamePasswordLoginWithVerifyField"></doc-form-example-form>
     </doc-feature-example>
+    <doc-feature-example header="timezonePicker()" hint="Creates field configurations pre-configured for timezone selection.">
+      <h4>Timezone Selection</h4>
+      <doc-form-example-form [config]="timezoneSelectionField"></doc-form-example-form>
+      <doc-feature-derived type="uses" from="vvo/tzdb" url="https://github.com/vvo/tzdb">
+        <p>Timezone strings are calculated/provided by vvo/tzdb.</p>
+      </doc-feature-derived>
+    </doc-feature-example>
   </doc-feature-layout>
 </dbx-content-container>

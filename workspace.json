@@ -7,6 +7,7 @@
     "dbx-core": "packages/dbx-core",
     "dbx-firebase": "packages/dbx-firebase",
     "dbx-form": "packages/dbx-form",
+    "dbx-form-mapbox": "packages/dbx-form/mapbox",
     "dbx-web": "packages/dbx-web",
     "demo": "apps/demo",
     "demo-api": "apps/demo-api",
@@ -23,7 +24,7 @@
     "rxjs": "packages/rxjs",
     "util": "packages/util",
     "util-test": "packages/util/test",
-    "workspace": "."
+    "workspace": ""
   },
   "$schema": "./node_modules/nx/schemas/workspace-schema.json"
 }

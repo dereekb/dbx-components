@@ -1,7 +1,8 @@
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { Validators, AbstractControl } from '@angular/forms';
 import { TextFieldConfig, textField } from './text.field';
-import { LabeledFieldConfig, DescriptionFieldConfig } from '../../field';
+import { LabeledFieldConfig, DescriptionFieldConfig, validatorsForFieldConfig } from '../../field';
+import { LAT_LNG_PATTERN, LAT_LNG_PATTERN_MAX_PRECISION } from '@dereekb/util';
 
 export const PHONE_LABEL_MAX_LENGTH = 100;
 
@@ -91,4 +92,26 @@ export function zipCodeField({ key = 'zip', required = false }: Partial<TextFiel
     autocomplete: 'postal-code',
     maxLength: ADDRESS_ZIP_MAX_LENGTH
   });
+}
+
+export const DEFAULT_LAT_LNG_TEXT_FIELD_PLACEHOLDER = '12.345,-67.8910';
+export const DEFAULT_LAT_LNG_TEXT_FIELD_PATTERN_MESSAGE = `Invalid/unknown coordinates`;
+
+export function latLngTextField({ key = 'latLng' }: Partial<TextFieldConfig> = {}): FormlyFieldConfig {
+  const field = {
+    ...textField({
+      key,
+      label: 'Coordinates',
+      placeholder: DEFAULT_LAT_LNG_TEXT_FIELD_PLACEHOLDER,
+      pattern: LAT_LNG_PATTERN,
+      autocomplete: false
+    }),
+    ...validatorsForFieldConfig({
+      messages: {
+        pattern: DEFAULT_LAT_LNG_TEXT_FIELD_PATTERN_MESSAGE
+      }
+    })
+  };
+
+  return field;
 }

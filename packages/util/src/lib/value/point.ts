@@ -22,10 +22,6 @@ export interface LatLngPoint {
   lng: Longitude;
 }
 
-export function latLngPoint(lat: Latitude, lng: Longitude): LatLngPoint {
-  return { lat, lng };
-}
-
 export function isValidLatitude(lat: Latitude): boolean {
   return lat >= MIN_LATITUDE_VALUE && lat <= MAX_LATITUDE_VALUE;
 }
@@ -48,10 +44,39 @@ export function isValidLatLngPoint(input: LatLngPoint): boolean {
   return isValidLatitude(input.lat) && isValidLongitude(input.lng);
 }
 
+export type LatLngTuple = [Latitude, Longitude];
+
+export function latLngTuple(lat: Latitude | LatLngPoint | LatLngString, lng?: Longitude): LatLngTuple {
+  return latLngTupleFunction()(lat, lng);
+}
+
+/**
+ * Converts the input to a LatLngString
+ */
+export type LatLngTupleFunction = ((lat: LatLngInput, lng?: Longitude) => LatLngTuple) & ((latLng: string | LatLngTuple) => LatLngTuple) & ((latLng: LatLngPoint) => LatLngTuple) & ((lat: Latitude, lng?: Longitude) => LatLngTuple);
+
+export type LatLngTupleFunctionConfig = LatLngPointFunctionConfig;
+
+/**
+ * Creates a LatLngTupleFunction
+ *
+ * @param precision
+ * @returns
+ */
+export function latLngTupleFunction(config?: LatLngTupleFunctionConfig): LatLngTupleFunction {
+  const fn = latLngPointFunction(config);
+  return (lat: LatLngInput, lng?: Longitude) => {
+    const latLng: LatLngPoint = fn(lat, lng);
+    return [latLng.lat, latLng.lng];
+  };
+}
+
 /**
  * A lat,lng encoded value.
  */
 export type LatLngString = `${Latitude},${Longitude}`;
+
+export type LatLngInput = Latitude | LatLngPoint | LatLngString | LatLngTuple | string;
 
 export type LatLngPrecision = NumberPrecision;
 
@@ -64,18 +89,20 @@ export type LatLngPrecision = NumberPrecision;
 export function latLngString(lat: Latitude, lng?: Longitude): LatLngString;
 export function latLngString(latLng: LatLngPoint): LatLngString;
 export function latLngString(latLng: LatLngString): LatLngString;
-export function latLngString(lat: Latitude | LatLngPoint | LatLngString, lng?: Longitude): LatLngString {
+export function latLngString(lat: LatLngInput, lng?: Longitude): LatLngString {
   return latLngStringFunction()(lat, lng);
 }
+
+export const LAT_LNG_PATTERN_MAX_PRECISION = 15;
 
 /**
  * A lat/lng regex with capture groups for lat and lng.
  *
- * Has a max precision of 10, which is easily precise enough for all GPS cases.
- *
  * https://stackoverflow.com/questions/3518504/regular-expression-for-matching-latitude-longitude-coordinates
+ *
+ * Has a max precision of 15 because Google Maps returns a 15 decimal places when copying a position.
  */
-export const LAT_LNG_PATTERN = /(?<lat>^[-+]?(?:[1-8]?\d(?:\.\d{0,10})?|90(?:\.0{0,10})?))\s*,\s*(?<lng>[-+]?(?:180(?:\.0{0,10})?|(?:1[0-7]\d|[1-9]?\d)(?:\.\d{0,10})?))$/;
+export const LAT_LNG_PATTERN = /(?<lat>^[-+]?(?:[1-8]?\d(?:\.\d{0,15})?|90(?:\.0{0,15})?))\s*,\s*(?<lng>[-+]?(?:180(?:\.0{0,15})?|(?:1[0-7]\d|[1-9]?\d)(?:\.\d{0,15})?))$/;
 
 /**
  * Checks whether or not the input has the expected pattern.
@@ -127,7 +154,7 @@ export const LAT_LONG_10CM_PRECISION = 6;
 export const LAT_LONG_1CM_PRECISION = 7;
 
 /**
- * 001.11 milimeter precision, 8 decimal places
+ * 001.11 millimeter precision, 8 decimal places
  */
 export const LAT_LONG_1MM_PRECISION = 8;
 
@@ -158,7 +185,7 @@ export function latLngPointPrecisionFunction(precision: LatLngPrecision): LatLng
 /**
  * Converts the input to a LatLngString
  */
-export type LatLngStringFunction = ((lat: Latitude | LatLngPoint | LatLngString | string, lng?: Longitude) => LatLngString) & ((latLng: string | LatLngString) => LatLngString) & ((latLng: LatLngPoint) => LatLngString) & ((lat: Latitude, lng?: Longitude) => LatLngString);
+export type LatLngStringFunction = ((lat: LatLngInput, lng?: Longitude) => LatLngString) & ((latLng: string | LatLngString) => LatLngString) & ((latLng: LatLngPoint) => LatLngString) & ((lat: Latitude, lng?: Longitude) => LatLngString);
 
 export type LatLngStringFunctionConfig = LatLngPointFunctionConfig;
 
@@ -170,7 +197,7 @@ export type LatLngStringFunctionConfig = LatLngPointFunctionConfig;
  */
 export function latLngStringFunction(config?: LatLngStringFunctionConfig): LatLngStringFunction {
   const fn = latLngPointFunction(config);
-  return (lat: Latitude | LatLngPoint | LatLngString | string, lng?: Longitude) => {
+  return (lat: LatLngInput, lng?: Longitude) => {
     const latLng: LatLngPoint = fn(lat, lng);
     return `${latLng.lat},${latLng.lng}`;
   };
@@ -179,7 +206,7 @@ export function latLngStringFunction(config?: LatLngStringFunctionConfig): LatLn
 /**
  * Converts the input to a LatLngPoint
  */
-export type LatLngPointFunction = ((lat: Latitude | LatLngPoint | LatLngString | string, lng?: Longitude) => LatLngPoint) & ((latLng: string | LatLngString) => LatLngPoint) & ((latLng: LatLngPoint) => LatLngPoint) & ((lat: Latitude, lng?: Longitude) => LatLngPoint);
+export type LatLngPointFunction = ((lat: LatLngInput, lng?: Longitude) => LatLngPoint) & ((latLng: string | LatLngString) => LatLngPoint) & ((latLng: LatLngPoint) => LatLngPoint) & ((lat: Latitude, lng?: Longitude) => LatLngPoint);
 
 export interface LatLngPointFunctionConfig {
   /**
@@ -199,6 +226,17 @@ export interface LatLngPointFunctionConfig {
 }
 
 /**
+ * Creates a LatLngPoint. Uses latLngPointFunction() internally.
+ *
+ * @param lat
+ * @param lng
+ * @returns
+ */
+export function latLngPoint(lat: LatLngInput, lng?: Longitude): LatLngPoint {
+  return latLngPointFunction()(lat, lng);
+}
+
+/**
  * Creates a LatLngPointFunction
  *
  * @param precision
@@ -209,17 +247,20 @@ export function latLngPointFunction(config?: LatLngPointFunctionConfig): LatLngP
   const precisionFunction = latLngPointPrecisionFunction(precision);
   const validateFunction = validLatLngPointFunction(defaultValue);
   const mapFn = validate !== false ? (input: LatLngPoint) => precisionFunction(validateFunction(input)) : precisionFunction;
-  return (lat: Latitude | LatLngPoint | LatLngString | string, lng?: Longitude) => {
+  return (lat: LatLngInput, lng?: Longitude) => {
     let latLng: LatLngPoint;
 
     const latType = typeof lat;
 
     if (latType === 'string') {
       latLng = latLngPointFromString(lat as string);
+    } else if (Array.isArray(lat)) {
+      const tuple = lat as LatLngTuple;
+      latLng = { lat: tuple[0], lng: tuple[1] };
     } else if (latType === 'object') {
       latLng = lat as LatLngPoint;
     } else if (lng != null) {
-      latLng = latLngPoint(lat as Latitude, lng);
+      latLng = { lat: lat as Latitude, lng };
     } else {
       throw new Error(`Invalid lat/lng input "${lat},${lng}"`);
     }

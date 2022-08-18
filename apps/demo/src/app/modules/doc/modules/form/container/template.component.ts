@@ -1,4 +1,4 @@
-import { usernamePasswordLoginFields } from '@dereekb/dbx-form';
+import { usernamePasswordLoginFields, timezoneStringField } from '@dereekb/dbx-form';
 import { Component } from '@angular/core';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 
@@ -14,6 +14,8 @@ export class DocFormTemplateComponent {
     username: 'email',
     verifyPassword: true
   });
+
+  readonly timezoneSelectionField: FormlyFieldConfig[] = [timezoneStringField()];
 
   readonly invalidVerifyContent = { username: 'test@test.com', password: 'verify', verifyPassword: 'other' };
 }
