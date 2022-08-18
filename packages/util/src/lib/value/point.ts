@@ -68,6 +68,8 @@ export function latLngString(lat: Latitude | LatLngPoint | LatLngString, lng?: L
   return latLngStringFunction()(lat, lng);
 }
 
+export const LAT_LNG_PATTERN_MAX_PRECISION = 10;
+
 /**
  * A lat/lng regex with capture groups for lat and lng.
  *

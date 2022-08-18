@@ -1,6 +1,6 @@
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { Component } from '@angular/core';
-import { addressField, addressListField, cityField, countryField, emailField, phoneField, nameField, phoneAndLabelSectionField, wrappedPhoneAndLabelField, repeatArrayField, stateField, textAreaField, textField, zipCodeField, phoneListField, dateTimeField, DbxDateTimeFieldTimeMode, toggleField, checkboxField, numberField } from '@dereekb/dbx-form';
+import { addressField, addressListField, cityField, countryField, emailField, phoneField, nameField, phoneAndLabelSectionField, wrappedPhoneAndLabelField, repeatArrayField, stateField, textAreaField, textField, zipCodeField, phoneListField, dateTimeField, DbxDateTimeFieldTimeMode, toggleField, checkboxField, numberField, latLngTextField } from '@dereekb/dbx-form';
 
 @Component({
   templateUrl: './value.component.html'
@@ -16,6 +16,8 @@ export class DocFormValueComponent {
   ];
 
   readonly textAreaField: FormlyFieldConfig[] = [textAreaField({ key: 'test', label: 'Text Area Field', description: 'A required text area field.', placeholder: 'Placeholder', required: true })];
+
+  readonly latLngTextField: FormlyFieldConfig[] = [latLngTextField()];
 
   readonly dateTimeFields: FormlyFieldConfig[] = [
     dateTimeField({ key: 'date', required: true, description: 'This is the default date field that requires the user pick a date and time.' }),
