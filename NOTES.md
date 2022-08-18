@@ -247,9 +247,9 @@ Update `tsconfig.lib.json`, `tsconfig.json`, and `tsconfig.spec.json` to ignore 
 Extend any existing exclude where necessary.
 
 ### project.json
-We want to update the `build` step to also call building the child project. The child project should not have a `build` step of its own, since its distribution requires the parent, so the parent project `dbx-form` will be configured to handle any build steps. 
+We want to update the `build` step to also call building the child project. The child project should not have a `build` step of its own, since its distribution requires the parent, so the parent project `dbx-form` will be configured to handle any build steps. For angular child projects, ng-packagr will automatically perform the build step when the parent (`dbx-form`) is built, so it is not required.
 
-Add the following:
+Add the following (except angular child projects):
 ```
 {
   "description": "build dbx-form-mapbox production",
@@ -257,10 +257,11 @@ Add the following:
 }
 ```
 
+
 If there are other steps that `dbx-form-mapbox` requires, add them after this step.
 
 ### package.json
-Update `package.json`'s exports value to include the new dist output from the child project:
+Update `package.json`'s exports value to include the new dist output from the child project. If it is an angular project, you'll exclude main,types and default since ng-packagr will apply these automatically.
 
 ```
 "./mapbox": {
@@ -268,6 +269,12 @@ Update `package.json`'s exports value to include the new dist output from the ch
   "types": "./mapbox/index.d.ts",
   "default": "./mapbox/index.js"
 }
+```
+
+For angular projects:
+
+```
+"./mapbox": {}
 ```
 
 ## New/Child Project Changes

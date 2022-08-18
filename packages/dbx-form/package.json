@@ -13,10 +13,6 @@
     ".": {
       "sass": "./_index.scss"
     },
-    "./mapbox": {
-      "main": "./mapbox/index.js",
-      "types": "./mapbox/index.d.ts",
-      "default": "./mapbox/index.js"
-    }
+    "./mapbox": {}
   }
 }

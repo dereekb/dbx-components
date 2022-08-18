@@ -20,8 +20,8 @@ export interface DbxFormMapboxLatLngComponentFieldProps extends FormlyFieldProps
   template: `
     <div class="dbx-mapbox-latlng-field" [ngClass]="(compactClass$ | async) ?? ''" [formGroup]="formGroup">
       <div class="dbx-mapbox-latlng-field-map">
-        <mgl-map [style]="'mapbox://styles/mapbox/streets-v9'" [zoom]="(zoom$ | async) || [8]" [center]="center$ | async">
-          <mgl-marker [lngLat]="latLng$ | async" [draggable]="!isReadonlyOrDisabled" (markerDragEnd)="onDragEnd($event)"></mgl-marker>
+        <mgl-map [style]="'mapbox://styles/mapbox/streets-v9'" [zoom]="(zoom$ | async) || [8]" [center]="(center$ | async) || [0, 0]">
+          <mgl-marker [lngLat]="(latLng$ | async) || [0, 0]" [draggable]="!isReadonlyOrDisabled" (markerDragEnd)="onDragEnd($event)"></mgl-marker>
         </mgl-map>
       </div>
       <div class="dbx-mapbox-latlng-field-input">
