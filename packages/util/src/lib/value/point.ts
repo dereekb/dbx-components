@@ -46,7 +46,7 @@ export function isValidLatLngPoint(input: LatLngPoint): boolean {
 
 export type LatLngTuple = [Latitude, Longitude];
 
-export function latLngTuple(lat: Latitude | LatLngPoint | LatLngString, lng?: Longitude): LatLngTuple {
+export function latLngTuple(lat: LatLngInput, lng?: Longitude): LatLngTuple {
   return latLngTupleFunction()(lat, lng);
 }
 
@@ -206,7 +206,7 @@ export function latLngStringFunction(config?: LatLngStringFunctionConfig): LatLn
 /**
  * Converts the input to a LatLngPoint
  */
-export type LatLngPointFunction = ((lat: LatLngInput, lng?: Longitude) => LatLngPoint) & ((latLng: string | LatLngString) => LatLngPoint) & ((latLng: LatLngPoint) => LatLngPoint) & ((lat: Latitude, lng?: Longitude) => LatLngPoint);
+export type LatLngPointFunction = ((lat: LatLngInput, lng?: Longitude) => LatLngPoint) & ((latLng: string | LatLngString) => LatLngPoint) & ((latLng: LatLngPoint) => LatLngPoint) & ((lat: Latitude, lng: Longitude) => LatLngPoint);
 
 export interface LatLngPointFunctionConfig {
   /**

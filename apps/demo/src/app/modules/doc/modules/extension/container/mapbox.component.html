@@ -2,6 +2,32 @@
   <doc-feature-layout header="Mapbox" hint="">
     <doc-feature-derived type="uses" from="wykks/ngx-mapbox-gl" url="https://github.com/Wykks/ngx-mapbox-gl"></doc-feature-derived>
     <!-- Examples -->
+    <h3>DbxMapboxMapStore</h3>
+    <doc-feature-example header="[dbxMapboxMap]" hint="This directive initializes an mgl-map and optionally connects it to an available DbxMapboxMapStore.">
+      <dbx-content-container>
+        <dbx-content-container>
+          <h4>DbxMapboxMapStore</h4>
+          <p>Map Service: {{ mapService$ | async }} Map Instance: {{ mapInstance$ | async }}</p>
+          <p>Lifecycle State: {{ lifecycleState$ | async }} | Move State: {{ moveState$ | async }}</p>
+          <p>Zoom State: {{ zoomState$ | async }} | Rotate State: {{ rotateState$ | async }}</p>
+          <p>Zoom: {{ zoom$ | async }} - Updates only when the map stops zooming.</p>
+          <p>Zoom Now: {{ zoomNow$ | async }} - Updates every 200ms as the map zooms.</p>
+          <p>Center: {{ center$ | async | json }} - Updates only when the map stops moving.</p>
+          <p>Center Now: {{ centerNow$ | async | json }} - Updates every 200ms as the map moves.</p>
+          <p>Pitch: {{ pitch$ | async | json }} | Pitch Now: {{ pitchNow$ | async | json }}</p>
+          <p>Bearing: {{ bearing$ | async | json }} | Bearing Now: {{ bearingNow$ | async | json }}</p>
+          <p>Bounds: {{ bounds$ | async | json }} | Bounds Now: {{ boundsNow$ | async | json }}</p>
+        </dbx-content-container>
+        <div style="height: 300px; width: 100%">
+          <mgl-map dbxMapboxMap></mgl-map>
+        </div>
+        <div>
+          <button mat-button (click)="centerAustin()">Austin, TX</button>
+          <button mat-button (click)="centerBryan()">Bryan, TX</button>
+          <button mat-button (click)="centerDenver()">Denver, CO</button>
+        </div>
+      </dbx-content-container>
+    </doc-feature-example>
     <h3>Forms</h3>
     <doc-feature-example header="mapboxLatLngField()" hint="A latLng value picker using a Mapbox map.">
       <doc-form-example-form [dbxFormlyFields]="mapboxLatLngField" [dbxFormSource]="defaultLatLngFieldValue"></doc-form-example-form>
