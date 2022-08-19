@@ -1,6 +1,6 @@
 import { cleanup, filterMaybe, onTrueToFalse } from '@dereekb/rxjs';
 import { Injectable, OnDestroy } from '@angular/core';
-import { LatLngBound, latLngBoundFunction, LatLngInput, LatLngPoint, latLngPointFunction, Maybe } from '@dereekb/util';
+import { isSameLatLngBound, isSameLatLngPoint, IsWithinLatLngBoundFunction, isWithinLatLngBoundFunction, LatLngBound, latLngBoundFunction, LatLngInput, LatLngPoint, latLngPointFunction, Maybe, OverlapsLatLngBoundFunction, overlapsLatLngBoundFunction } from '@dereekb/util';
 import { ComponentStore } from '@ngrx/component-store';
 import { MapService } from 'ngx-mapbox-gl';
 import { defaultIfEmpty, distinctUntilChanged, filter, map, shareReplay, switchMap, tap, NEVER, Observable, of, Subscription, startWith, interval, first, combineLatest } from 'rxjs';
@@ -377,21 +377,21 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
       return this.isMoving$.pipe(
         onTrueToFalse(),
         startWith(undefined),
-        switchMap((x) => this.centerNow$.pipe(first())),
-        distinctUntilChanged(),
+        switchMap(() => this.centerNow$.pipe(first())),
+        distinctUntilChanged(isSameLatLngPoint),
         shareReplay(1)
       );
     })
   );
 
-  readonly boundsNow$: Observable<LatLngBound> = this.whenInitialized$.pipe(
+  readonly boundNow$: Observable<LatLngBound> = this.whenInitialized$.pipe(
     switchMap(() =>
       this.mapInstance$.pipe(
         switchMap((x) =>
           this._renderingTimer.pipe(
             map(() => {
-              const bounds = x.getBounds();
-              return this.latLngBound([bounds.getSouthWest(), bounds.getNorthEast()]);
+              const bound = x.getBounds();
+              return this.latLngBound([bound.getSouthWest(), bound.getNorthEast()]);
             })
           )
         ),
@@ -400,16 +400,26 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
     )
   );
 
-  readonly bounds$: Observable<LatLngBound> = this.whenInitialized$.pipe(
+  readonly bound$: Observable<LatLngBound> = this.whenInitialized$.pipe(
     switchMap(() => {
       return this.isRendering$.pipe(
         onTrueToFalse(),
         startWith(undefined),
-        switchMap((x) => this.boundsNow$.pipe(first())),
-        distinctUntilChanged(),
+        switchMap((x) => this.boundNow$.pipe(first())),
+        distinctUntilChanged(isSameLatLngBound),
         shareReplay(1)
       );
     })
+  );
+
+  readonly isWithinBoundFunction$: Observable<IsWithinLatLngBoundFunction> = this.bound$.pipe(
+    map((x) => isWithinLatLngBoundFunction(x)),
+    shareReplay(1)
+  );
+
+  readonly overlapsBoundFunction$: Observable<OverlapsLatLngBoundFunction> = this.bound$.pipe(
+    map((x) => overlapsLatLngBoundFunction(x)),
+    shareReplay(1)
   );
 
   readonly zoomNow$: Observable<MapboxZoomLevel> = this.whenInitialized$.pipe(

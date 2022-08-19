@@ -23,8 +23,8 @@ export class DocExtensionMapboxComponent {
   readonly pitchNow$ = this.dbxMapboxMapStore.pitchNow$;
   readonly bearing$ = this.dbxMapboxMapStore.bearing$;
   readonly bearingNow$ = this.dbxMapboxMapStore.bearingNow$;
-  readonly bounds$ = this.dbxMapboxMapStore.bounds$;
-  readonly boundsNow$ = this.dbxMapboxMapStore.boundsNow$;
+  readonly bound$ = this.dbxMapboxMapStore.bound$;
+  readonly boundNow$ = this.dbxMapboxMapStore.boundNow$;
 
   readonly defaultLatLngFieldValue = {
     latLng: latLngString(30.5989668, -96.3831949),

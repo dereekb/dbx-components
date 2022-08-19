@@ -22,6 +22,14 @@ export interface LatLngPoint {
   lng: Longitude;
 }
 
+export function isLatLngPoint(input: LatLngPoint | unknown): input is LatLngPoint {
+  return typeof input === 'object' && (input as LatLngPoint).lat != null && (input as LatLngPoint).lng != null;
+}
+
+export function isSameLatLngPoint(a: LatLngPoint, b: LatLngPoint) {
+  return a.lat === b.lat && a.lng === b.lng;
+}
+
 export function isValidLatitude(lat: Latitude): boolean {
   return lat >= MIN_LATITUDE_VALUE && lat <= MAX_LATITUDE_VALUE;
 }

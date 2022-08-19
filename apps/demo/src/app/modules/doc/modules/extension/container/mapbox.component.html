@@ -16,7 +16,7 @@
           <p>Center Now: {{ centerNow$ | async | json }} - Updates every 200ms as the map moves.</p>
           <p>Pitch: {{ pitch$ | async | json }} | Pitch Now: {{ pitchNow$ | async | json }}</p>
           <p>Bearing: {{ bearing$ | async | json }} | Bearing Now: {{ bearingNow$ | async | json }}</p>
-          <p>Bounds: {{ bounds$ | async | json }} | Bounds Now: {{ boundsNow$ | async | json }}</p>
+          <p>Bound: {{ bound$ | async | json }} | Bound Now: {{ boundNow$ | async | json }}</p>
         </dbx-content-container>
         <div style="height: 300px; width: 100%">
           <mgl-map dbxMapboxMap></mgl-map>
