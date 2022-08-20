@@ -1,11 +1,12 @@
 import { cleanup, filterMaybe, onTrueToFalse } from '@dereekb/rxjs';
-import { Injectable, OnDestroy } from '@angular/core';
-import { isSameLatLngBound, isSameLatLngPoint, IsWithinLatLngBoundFunction, isWithinLatLngBoundFunction, LatLngBound, latLngBoundFunction, LatLngInput, LatLngPoint, latLngPointFunction, Maybe, OverlapsLatLngBoundFunction, overlapsLatLngBoundFunction } from '@dereekb/util';
+import { Inject, Injectable, OnDestroy } from '@angular/core';
+import { isSameLatLngBound, isSameLatLngPoint, IsWithinLatLngBoundFunction, isWithinLatLngBoundFunction, LatLngBound, latLngBoundFunction, LatLngPointInput, LatLngPoint, latLngPointFunction, Maybe, OverlapsLatLngBoundFunction, overlapsLatLngBoundFunction } from '@dereekb/util';
 import { ComponentStore } from '@ngrx/component-store';
 import { MapService } from 'ngx-mapbox-gl';
 import { defaultIfEmpty, distinctUntilChanged, filter, map, shareReplay, switchMap, tap, NEVER, Observable, of, Subscription, startWith, interval, first, combineLatest } from 'rxjs';
 import * as MapboxGl from 'mapbox-gl';
-import { MapboxStyleConfig, MapboxZoomLevel } from './mapbox';
+import { DbxMapboxClickEvent, KnownMapboxStyle, MapboxBearing, MapboxEaseTo, MapboxFitBounds, MapboxFlyTo, MapboxJumpTo, MapboxResetNorth, MapboxResetNorthPitch, MapboxRotateTo, MapboxSnapToNorth, MapboxStyleConfig, MapboxZoomLevel } from './mapbox';
+import { DbxMapboxService } from './mapbox.service';
 
 export type MapboxMapLifecycleState = 'init' | 'load' | 'render' | 'idle';
 export type MapboxMapMoveState = 'init' | 'idle' | 'moving';
@@ -32,6 +33,14 @@ export interface DbxMapboxStoreState {
   zoomState: MapboxMapZoomState;
   rotateState: MapboxMapRotateState;
   /**
+   * Latest click event
+   */
+  clickEvent?: Maybe<DbxMapboxClickEvent>;
+  /**
+   * Latest double-click event
+   */
+  doubleClickEvent?: Maybe<DbxMapboxClickEvent>;
+  /**
    * Latest error
    */
   error?: Maybe<Error>;
@@ -45,7 +54,7 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
   private latLngPoint = latLngPointFunction();
   private latLngBound = latLngBoundFunction();
 
-  constructor() {
+  constructor(@Inject(DbxMapboxService) private readonly dbxMapboxService: DbxMapboxService) {
     super({
       lifecycleState: 'init',
       moveState: 'init',
@@ -95,6 +104,9 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
               addListener('rotatestart', () => this._setRotateState('rotating'));
               addListener('rotateend', () => this._setRotateState('idle'));
 
+              addListener('click', (x) => this._setClickEvent(x));
+              addListener('dblclick', (x) => this._setDoubleClickEvent(x));
+
               const subs: Subscription[] = [];
 
               return {
@@ -120,9 +132,8 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
     );
   });
 
-  readonly setStyle = this.effect((input: Observable<MapboxStyleConfig | string>) => {
+  readonly setStyle = this.effect((input: Observable<MapboxStyleConfig | KnownMapboxStyle | string>) => {
     return input.pipe(
-      distinctUntilChanged(),
       switchMap((style) => {
         return this.mapInstance$.pipe(
           tap((map) => {
@@ -137,10 +148,9 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
     );
   });
 
-  readonly setCenter = this.effect((input: Observable<LatLngInput>) => {
+  readonly setCenter = this.effect((input: Observable<LatLngPointInput>) => {
     return input.pipe(
-      distinctUntilChanged(),
-      switchMap((center: LatLngInput) => {
+      switchMap((center: LatLngPointInput) => {
         const centerPoint = this.latLngPoint(center);
         return this.mapInstance$.pipe(tap((map) => map.setCenter(centerPoint)));
       })
@@ -149,7 +159,6 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
 
   readonly setZoom = this.effect((input: Observable<MapboxZoomLevel>) => {
     return input.pipe(
-      distinctUntilChanged(),
       switchMap((zoom: MapboxZoomLevel) => {
         return this.mapInstance$.pipe(tap((map) => map.setZoom(zoom)));
       })
@@ -158,7 +167,6 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
 
   readonly setMinZoom = this.effect((input: Observable<MapboxZoomLevel>) => {
     return input.pipe(
-      distinctUntilChanged(),
       switchMap((zoom: MapboxZoomLevel) => {
         return this.mapInstance$.pipe(tap((map) => map.setMinZoom(zoom)));
       })
@@ -167,7 +175,6 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
 
   readonly setMaxZoom = this.effect((input: Observable<MapboxZoomLevel>) => {
     return input.pipe(
-      distinctUntilChanged(),
       switchMap((zoom: MapboxZoomLevel) => {
         return this.mapInstance$.pipe(tap((map) => map.setMaxZoom(zoom)));
       })
@@ -176,7 +183,6 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
 
   readonly setPitch = this.effect((input: Observable<number>) => {
     return input.pipe(
-      distinctUntilChanged(),
       switchMap((pitch) => {
         return this.mapInstance$.pipe(tap((map) => map.setPitch(pitch)));
       })
@@ -185,7 +191,6 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
 
   readonly setMinPitch = this.effect((input: Observable<number>) => {
     return input.pipe(
-      distinctUntilChanged(),
       switchMap((pitch: number) => {
         return this.mapInstance$.pipe(tap((map) => map.setMinPitch(pitch)));
       })
@@ -194,7 +199,6 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
 
   readonly setMaxPitch = this.effect((input: Observable<number>) => {
     return input.pipe(
-      distinctUntilChanged(),
       switchMap((pitch: number) => {
         return this.mapInstance$.pipe(tap((map) => map.setMaxPitch(pitch)));
       })
@@ -203,16 +207,86 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
 
   readonly setBearing = this.effect((input: Observable<number>) => {
     return input.pipe(
-      distinctUntilChanged(),
       switchMap((bearing) => {
         return this.mapInstance$.pipe(tap((map) => map.setBearing(bearing)));
       })
     );
   });
 
+  readonly rotateTo = this.effect((input: Observable<MapboxBearing | MapboxRotateTo>) => {
+    return input.pipe(
+      switchMap((rotateInput: MapboxBearing | MapboxRotateTo) => {
+        const rotate: MapboxRotateTo = typeof rotateInput === 'number' ? { bearing: rotateInput } : rotateInput;
+        return this.mapInstance$.pipe(tap((map) => map.rotateTo(rotate.bearing, rotate.options, rotate?.eventData)));
+      })
+    );
+  });
+
+  readonly resetNorth = this.effect((input: Observable<Maybe<MapboxResetNorth> | void>) => {
+    return input.pipe(
+      switchMap((reset: Maybe<MapboxResetNorth> | void) => {
+        return this.mapInstance$.pipe(tap((map) => map.resetNorth(reset?.options, reset?.eventData)));
+      })
+    );
+  });
+
+  readonly resetNorthPitch = this.effect((input: Observable<Maybe<MapboxResetNorthPitch> | void>) => {
+    return input.pipe(
+      switchMap((reset: Maybe<MapboxResetNorthPitch> | void) => {
+        return this.mapInstance$.pipe(tap((map) => map.resetNorthPitch(reset?.options, reset?.eventData)));
+      })
+    );
+  });
+
+  readonly snapToNorth = this.effect((input: Observable<Maybe<MapboxSnapToNorth> | void>) => {
+    return input.pipe(
+      switchMap((snap: Maybe<MapboxSnapToNorth> | void) => {
+        return this.mapInstance$.pipe(tap((map) => map.snapToNorth(snap?.options, snap?.eventData)));
+      })
+    );
+  });
+
+  readonly fitBounds = this.effect((input: Observable<MapboxFitBounds>) => {
+    return input.pipe(
+      switchMap((x) => {
+        const bound = this.latLngBound(x.bounds);
+        return this.mapInstance$.pipe(tap((map) => map.fitBounds(new MapboxGl.LngLatBounds(bound.sw, bound.ne), x.options, x.eventData)));
+      })
+    );
+  });
+
+  readonly jumpTo = this.effect((input: Observable<MapboxJumpTo>) => {
+    return input.pipe(
+      switchMap((x) => {
+        const inputCenter = x.center ?? x.to?.center;
+        const center = inputCenter ? this.latLngPoint(inputCenter) : undefined;
+        return this.mapInstance$.pipe(tap((map) => map.jumpTo({ ...x.to, center }, x.eventData)));
+      })
+    );
+  });
+
+  readonly easeTo = this.effect((input: Observable<MapboxEaseTo>) => {
+    return input.pipe(
+      switchMap((x) => {
+        const inputCenter = x.center ?? x.to?.center;
+        const center = inputCenter ? this.latLngPoint(inputCenter) : undefined;
+        return this.mapInstance$.pipe(tap((map) => map.easeTo({ ...x.to, center }, x.eventData)));
+      })
+    );
+  });
+
+  readonly flyTo = this.effect((input: Observable<MapboxFlyTo>) => {
+    return input.pipe(
+      switchMap((x) => {
+        const inputCenter = x.center ?? x.to?.center;
+        const center = inputCenter ? this.latLngPoint(inputCenter) : undefined;
+        return this.mapInstance$.pipe(tap((map) => map.flyTo({ ...x.to, center }, x.eventData)));
+      })
+    );
+  });
+
   readonly resetPitchAndBearing = this.effect((input: Observable<void>) => {
     return input.pipe(
-      distinctUntilChanged(),
       switchMap(() => {
         return this.mapInstance$.pipe(
           tap((map) => {
@@ -225,7 +299,11 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
   });
 
   // MARK: Accessors
-  movingTimer(period = 200) {
+  get timerRefreshPeriod() {
+    return this.dbxMapboxService.mapboxMapStoreTimerRefreshPeriod;
+  }
+
+  movingTimer(period = this.timerRefreshPeriod) {
     return this.moveState$.pipe(
       switchMap((x) => {
         if (x === 'moving') {
@@ -238,7 +316,7 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
     );
   }
 
-  lifecycleRenderTimer(period = 200) {
+  lifecycleRenderTimer(period = this.timerRefreshPeriod) {
     return this.lifecycleState$.pipe(
       switchMap((x) => {
         if (x === 'render') {
@@ -485,12 +563,18 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
     })
   );
 
+  readonly clickEvent$ = this.state$.pipe(map((x) => x.clickEvent));
+  readonly doubleClickEvent$ = this.state$.pipe(map((x) => x.doubleClickEvent));
+
   // MARK: State Changes
   private readonly _setMapService = this.updater((state, mapService: Maybe<MapService>) => ({ mapService, moveState: 'init', lifecycleState: 'init', zoomState: 'init', rotateState: 'init' }));
   private readonly _setLifecycleState = this.updater((state, lifecycleState: MapboxMapLifecycleState) => ({ ...state, lifecycleState }));
   private readonly _setMoveState = this.updater((state, moveState: MapboxMapMoveState) => ({ ...state, moveState }));
   private readonly _setZoomState = this.updater((state, zoomState: MapboxMapZoomState) => ({ ...state, zoomState }));
   private readonly _setRotateState = this.updater((state, rotateState: MapboxMapRotateState) => ({ ...state, rotateState }));
+
+  private readonly _setClickEvent = this.updater((state, clickEvent: DbxMapboxClickEvent) => ({ ...state, clickEvent }));
+  private readonly _setDoubleClickEvent = this.updater((state, doubleClickEvent: DbxMapboxClickEvent) => ({ ...state, doubleClickEvent }));
 
   private readonly _setError = this.updater((state, error: Error) => ({ ...state, error }));
 }

@@ -1,31 +1,19 @@
 import { Injectable, Optional } from '@angular/core';
-import { LatLngInput } from '@dereekb/util';
+import { LatLngPointInput, Milliseconds } from '@dereekb/util';
 import { MapboxOptions } from 'mapbox-gl';
-import { MapboxZoomLevel } from './mapbox';
+import { KnownMapboxStyle, MapboxZoomLevel } from './mapbox';
 
 export class DbxMapboxConfig {
   readonly defaultStyle?: MapboxOptions['style'];
   readonly defaultZoom?: MapboxZoomLevel;
-  readonly defaultCenter?: LatLngInput;
+  readonly defaultCenter?: LatLngPointInput;
+  readonly defaultStoreRefreshPeriod?: number;
 }
 
-export type KnownMapboxStyle = 'mapbox://styles/mapbox/streets-v11' | 'mapbox://styles/mapbox/outdoors-v11' | 'mapbox://styles/mapbox/light-v10' | 'mapbox://styles/mapbox/dark-v10' | 'mapbox://styles/mapbox/satellite-v9' | 'mapbox://styles/mapbox/satellite-streets-v11' | 'mapbox://styles/mapbox/navigation-day-v1' | 'mapbox://styles/mapbox/navigation-night-v1';
-
-export const KNOWN_MAPBOX_STYLES: KnownMapboxStyle[] = [
-  //
-  'mapbox://styles/mapbox/streets-v11',
-  'mapbox://styles/mapbox/outdoors-v11',
-  'mapbox://styles/mapbox/light-v10',
-  'mapbox://styles/mapbox/dark-v10',
-  'mapbox://styles/mapbox/satellite-v9',
-  'mapbox://styles/mapbox/satellite-streets-v11',
-  'mapbox://styles/mapbox/navigation-day-v1',
-  'mapbox://styles/mapbox/navigation-night-v1'
-];
-
 export const DEFAULT_MAPBOX_STYLE: KnownMapboxStyle = 'mapbox://styles/mapbox/streets-v11';
-export const DEFAULT_MAPBOX_CENTER: LatLngInput = [30.2690138665, -97.7408297965];
+export const DEFAULT_MAPBOX_CENTER: LatLngPointInput = [30.2690138665, -97.7408297965];
 export const DEFAULT_MAPBOX_ZOOM: MapboxZoomLevel = 12;
+export const DEFAULT_MAPBOX_MAP_STORE_TIMER_REFRESH_PERIOD: Milliseconds = 200;
 
 @Injectable({
   providedIn: 'root'
@@ -45,7 +33,11 @@ export class DbxMapboxService {
     return this._config.defaultZoom ?? DEFAULT_MAPBOX_ZOOM;
   }
 
-  get defaultCenter(): LatLngInput {
+  get defaultCenter(): LatLngPointInput {
     return this._config.defaultCenter ?? DEFAULT_MAPBOX_CENTER;
+  }
+
+  get mapboxMapStoreTimerRefreshPeriod(): number {
+    return this._config.defaultStoreRefreshPeriod ?? DEFAULT_MAPBOX_MAP_STORE_TIMER_REFRESH_PERIOD;
   }
 }

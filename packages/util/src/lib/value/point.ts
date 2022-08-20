@@ -54,14 +54,14 @@ export function isValidLatLngPoint(input: LatLngPoint): boolean {
 
 export type LatLngTuple = [Latitude, Longitude];
 
-export function latLngTuple(lat: LatLngInput, lng?: Longitude): LatLngTuple {
+export function latLngTuple(lat: LatLngPointInput, lng?: Longitude): LatLngTuple {
   return latLngTupleFunction()(lat, lng);
 }
 
 /**
  * Converts the input to a LatLngString
  */
-export type LatLngTupleFunction = ((lat: LatLngInput, lng?: Longitude) => LatLngTuple) & ((latLng: string | LatLngTuple) => LatLngTuple) & ((latLng: LatLngPoint) => LatLngTuple) & ((lat: Latitude, lng?: Longitude) => LatLngTuple);
+export type LatLngTupleFunction = ((lat: LatLngPointInput, lng?: Longitude) => LatLngTuple) & ((latLng: string | LatLngTuple) => LatLngTuple) & ((latLng: LatLngPoint) => LatLngTuple) & ((lat: Latitude, lng?: Longitude) => LatLngTuple);
 
 export type LatLngTupleFunctionConfig = LatLngPointFunctionConfig;
 
@@ -73,7 +73,7 @@ export type LatLngTupleFunctionConfig = LatLngPointFunctionConfig;
  */
 export function latLngTupleFunction(config?: LatLngTupleFunctionConfig): LatLngTupleFunction {
   const fn = latLngPointFunction(config);
-  return (lat: LatLngInput, lng?: Longitude) => {
+  return (lat: LatLngPointInput, lng?: Longitude) => {
     const latLng: LatLngPoint = fn(lat, lng);
     return [latLng.lat, latLng.lng];
   };
@@ -84,7 +84,7 @@ export function latLngTupleFunction(config?: LatLngTupleFunctionConfig): LatLngT
  */
 export type LatLngString = `${Latitude},${Longitude}`;
 
-export type LatLngInput = Latitude | LatLngPoint | LatLngString | LatLngTuple | string;
+export type LatLngPointInput = Latitude | LatLngPoint | LatLngString | LatLngTuple | string;
 
 export type LatLngPrecision = NumberPrecision;
 
@@ -97,7 +97,7 @@ export type LatLngPrecision = NumberPrecision;
 export function latLngString(lat: Latitude, lng?: Longitude): LatLngString;
 export function latLngString(latLng: LatLngPoint): LatLngString;
 export function latLngString(latLng: LatLngString): LatLngString;
-export function latLngString(lat: LatLngInput, lng?: Longitude): LatLngString {
+export function latLngString(lat: LatLngPointInput, lng?: Longitude): LatLngString {
   return latLngStringFunction()(lat, lng);
 }
 
@@ -193,7 +193,7 @@ export function latLngPointPrecisionFunction(precision: LatLngPrecision): LatLng
 /**
  * Converts the input to a LatLngString
  */
-export type LatLngStringFunction = ((lat: LatLngInput, lng?: Longitude) => LatLngString) & ((latLng: string | LatLngString) => LatLngString) & ((latLng: LatLngPoint) => LatLngString) & ((lat: Latitude, lng?: Longitude) => LatLngString);
+export type LatLngStringFunction = ((lat: LatLngPointInput, lng?: Longitude) => LatLngString) & ((latLng: string | LatLngString) => LatLngString) & ((latLng: LatLngPoint) => LatLngString) & ((lat: Latitude, lng?: Longitude) => LatLngString);
 
 export type LatLngStringFunctionConfig = LatLngPointFunctionConfig;
 
@@ -205,7 +205,7 @@ export type LatLngStringFunctionConfig = LatLngPointFunctionConfig;
  */
 export function latLngStringFunction(config?: LatLngStringFunctionConfig): LatLngStringFunction {
   const fn = latLngPointFunction(config);
-  return (lat: LatLngInput, lng?: Longitude) => {
+  return (lat: LatLngPointInput, lng?: Longitude) => {
     const latLng: LatLngPoint = fn(lat, lng);
     return `${latLng.lat},${latLng.lng}`;
   };
@@ -214,7 +214,7 @@ export function latLngStringFunction(config?: LatLngStringFunctionConfig): LatLn
 /**
  * Converts the input to a LatLngPoint
  */
-export type LatLngPointFunction = ((lat: LatLngInput, lng?: Longitude) => LatLngPoint) & ((latLng: string | LatLngString) => LatLngPoint) & ((latLng: LatLngPoint) => LatLngPoint) & ((lat: Latitude, lng: Longitude) => LatLngPoint);
+export type LatLngPointFunction = ((lat: LatLngPointInput, lng?: Longitude) => LatLngPoint) & ((latLng: string | LatLngString) => LatLngPoint) & ((latLng: LatLngPoint) => LatLngPoint) & ((lat: Latitude, lng: Longitude) => LatLngPoint);
 
 export interface LatLngPointFunctionConfig {
   /**
@@ -240,7 +240,7 @@ export interface LatLngPointFunctionConfig {
  * @param lng
  * @returns
  */
-export function latLngPoint(lat: LatLngInput, lng?: Longitude): LatLngPoint {
+export function latLngPoint(lat: LatLngPointInput, lng?: Longitude): LatLngPoint {
   return latLngPointFunction()(lat, lng);
 }
 
@@ -255,7 +255,7 @@ export function latLngPointFunction(config?: LatLngPointFunctionConfig): LatLngP
   const precisionFunction = latLngPointPrecisionFunction(precision);
   const validateFunction = validLatLngPointFunction(defaultValue);
   const mapFn = validate !== false ? (input: LatLngPoint) => precisionFunction(validateFunction(input)) : precisionFunction;
-  return (lat: LatLngInput, lng?: Longitude) => {
+  return (lat: LatLngPointInput, lng?: Longitude) => {
     let latLng: LatLngPoint;
 
     const latType = typeof lat;
@@ -352,3 +352,9 @@ export function latLngDataPointFunction<T extends LatLngRef>(config?: LatLngPoin
     };
   };
 }
+
+// MARK: Compat
+/**
+ * @deprecated use LatLngPointInput
+ */
+export type LatLngInput = LatLngPointInput;

@@ -1,6 +1,6 @@
 import { Rectangle, rectangleOverlapsRectangle, Vector } from './vector';
 import { Writable } from 'ts-essentials';
-import { latLngPointFunction, LatLngPoint, LatLngInput, LatLngPrecision, LatLngPointFunction, isLatLngPoint, isSameLatLngPoint } from './point';
+import { latLngPointFunction, LatLngPoint, LatLngPointInput, LatLngPrecision, LatLngPointFunction, isLatLngPoint, isSameLatLngPoint } from './point';
 
 export type LatLngBoundSouthWestPoint = LatLngPoint;
 export type LatLngBoundNothEastPoint = LatLngPoint;
@@ -70,8 +70,8 @@ export function latLngBoundWestBound(bound: LatLngBound): number {
 /**
  * Tuple of the sw corner and the north east point.
  */
-export type LatLngBoundTuple = [LatLngBoundSouthWestPoint | LatLngInput, LatLngBoundNothEastPoint | LatLngInput];
-export type LatLngBoundTuplePoints = [LatLngInput, LatLngInput, LatLngInput, LatLngInput];
+export type LatLngBoundTuple = [LatLngBoundSouthWestPoint | LatLngPointInput, LatLngBoundNothEastPoint | LatLngPointInput];
+export type LatLngBoundTuplePoints = [LatLngPointInput, LatLngPointInput, LatLngPointInput, LatLngPointInput];
 export type LatLngBoundInput = LatLngBound | LatLngBoundTuple | LatLngBoundTuplePoints;
 
 // MARK: BoundTuple

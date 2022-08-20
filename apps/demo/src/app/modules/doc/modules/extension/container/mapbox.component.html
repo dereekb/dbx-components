@@ -4,6 +4,7 @@
     <!-- Examples -->
     <h3>DbxMapboxMapStore</h3>
     <doc-feature-example header="[dbxMapboxMap]" hint="This directive initializes an mgl-map and optionally connects it to an available DbxMapboxMapStore.">
+      <p>The DbxMapboxMapStore exposes a number of observables that provide the latest information about the state of a map.</p>
       <dbx-content-container>
         <dbx-content-container>
           <h4>DbxMapboxMapStore</h4>
@@ -17,15 +18,24 @@
           <p>Pitch: {{ pitch$ | async | json }} | Pitch Now: {{ pitchNow$ | async | json }}</p>
           <p>Bearing: {{ bearing$ | async | json }} | Bearing Now: {{ bearingNow$ | async | json }}</p>
           <p>Bound: {{ bound$ | async | json }} | Bound Now: {{ boundNow$ | async | json }}</p>
+          <p>Click: {{ click$ | async | json }} | Double Click: {{ doubleClick$ | async | json }}</p>
         </dbx-content-container>
         <div style="height: 300px; width: 100%">
           <mgl-map dbxMapboxMap></mgl-map>
         </div>
-        <div>
-          <button mat-button (click)="centerAustin()">Austin, TX</button>
-          <button mat-button (click)="centerBryan()">Bryan, TX</button>
-          <button mat-button (click)="centerDenver()">Denver, CO</button>
-        </div>
+        <dbx-bar fxLayout="row wrap">
+          <button mat-button (click)="centerAustin()">Austin, TX (jump)</button>
+          <button mat-button (click)="centerBryan()">Bryan, TX (fly)</button>
+          <button mat-button (click)="centerDenver()">Denver, CO (ease)</button>
+          <span class="dbx-spacer"></span>
+          <button mat-button (click)="resetBearing()">Reset Bearing</button>
+          <button mat-button (click)="resetNorthPitch()">Reset North Pitch</button>
+          <button mat-button (click)="rotateToSouth()">Rotate To South</button>
+          <span class="dbx-spacer"></span>
+          <button mat-button (click)="useStreetsMap()">Street Map</button>
+          <button mat-button (click)="useDarkMap()">Dark Map</button>
+          <button mat-button (click)="useSatelliteMap()">Sat Map</button>
+        </dbx-bar>
       </dbx-content-container>
     </doc-feature-example>
     <h3>Forms</h3>
