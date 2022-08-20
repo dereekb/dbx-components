@@ -247,7 +247,9 @@ Update `tsconfig.lib.json`, `tsconfig.json`, and `tsconfig.spec.json` to ignore 
 Extend any existing exclude where necessary.
 
 ### project.json
-We want to update the `build` step to also call building the child project. The child project should not have a `build` step of its own, since its distribution requires the parent, so the parent project `dbx-form` will be configured to handle any build steps. For angular child projects, ng-packagr will automatically perform the build step when the parent (`dbx-form`) is built, so it is not required.
+We want to update the `build` step to also call building the child project. The child project should not have a `build` step of its own, since its distribution requires the parent, so the parent project `dbx-form` will be configured to handle any build steps. 
+
+For Angular child projects, ng-packagr will automatically perform the build step when the parent (`dbx-form`) is built, so it is not required.
 
 Add the following (except angular child projects):
 ```
@@ -256,7 +258,6 @@ Add the following (except angular child projects):
   "command": "npx nx run dbx-form-mapbox:build-base:production"
 }
 ```
-
 
 If there are other steps that `dbx-form-mapbox` requires, add them after this step.
 
@@ -315,11 +316,11 @@ Add the following line to `build-base`:
 This will prevent the `build-base` step from potentially calling a build-loop. Since `dbx-form-mapbox` is always built after the parent projects, this is ok. In some cases where this has dependencies that may not be build yet, we can add them as dependencies of `dbx-form` so they're built in the proper order.
 
 ### .eslintrc.json
-This project has shared angular eslintrc configuration in the root. Update to the following:
+This project has shared Angular eslintrc configuration in the root. Update to the following:
 
 ```
 {
-  "extends": ["../../.eslintrc.angular.json"],
+  "extends": ["../../../.eslintrc.angular.json"],
   "ignorePatterns": ["!**/*"]
 }
 ```

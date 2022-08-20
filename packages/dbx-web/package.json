@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/dbx-web",
-  "version": "9.2.0",
+  "version": "9.3.0",
   "peerDependencies": {
     "@angular/common": "^14.0.0",
     "@angular/core": "^14.0.0",
@@ -13,6 +13,7 @@
   "exports": {
     ".": {
       "sass": "./_index.scss"
-    }
+    },
+    "./mapbox": {}
   }
 }

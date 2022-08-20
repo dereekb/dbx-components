@@ -1,3 +1,4 @@
+export * from './bound';
 export * from './build';
 export * from './decision';
 export * from './equal';

@@ -1,4 +1,14 @@
-import { latLngPoint, latLngPointFunction, latLngString } from './point';
+import { isLatLngPoint, latLngPoint, latLngPointFunction, latLngString } from './point';
+
+describe('isLatLngPoint()', () => {
+  it('should return true for points.', () => {
+    expect(isLatLngPoint({ lat: 0, lng: 0 })).toBe(true);
+  });
+
+  it('should return false for bound.', () => {
+    expect(isLatLngPoint({ sw: { lat: 0, lng: 0 }, ne: { lat: 0, lng: 0 } })).toBe(false);
+  });
+});
 
 describe('latLngPointFunction()', () => {
   const precision = 3;

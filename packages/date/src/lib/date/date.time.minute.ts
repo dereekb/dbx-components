@@ -58,7 +58,7 @@ export interface DateTimeMinuteDateStatus {
 }
 
 export interface RoundDateTimeMinute extends StepRoundDateTimeDown {
-  roundToBounds?: boolean;
+  roundToBound?: boolean;
 }
 
 /**
@@ -140,7 +140,7 @@ export class DateTimeMinuteInstance {
       step: round.step ?? this.step
     });
 
-    if (round.roundToBounds) {
+    if (round.roundToBound) {
       date = this._takeBoundedDate(date);
     }
 

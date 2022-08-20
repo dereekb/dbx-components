@@ -12,6 +12,8 @@ import { DocExtensionWidgetIconExampleComponent, DOC_EXTENSION_WIDGET_ICON_EXAMP
 import { DocFormComponentsModule } from '../form/doc.form.module';
 import { DocExtensionMapboxComponent } from './container/mapbox.component';
 import { DbxFormMapboxModule } from '@dereekb/dbx-form/mapbox';
+import { DbxMapboxModule } from '@dereekb/dbx-web/mapbox';
+import { NgxMapboxGLModule } from 'ngx-mapbox-gl';
 
 @NgModule({
   imports: [
@@ -19,6 +21,8 @@ import { DbxFormMapboxModule } from '@dereekb/dbx-form/mapbox';
     DbxCalendarRootModule,
     DocFormComponentsModule,
     DbxWidgetModule,
+    DbxMapboxModule,
+    NgxMapboxGLModule,
     DbxFormMapboxModule,
     UIRouterModule.forChild({
       states: STATES
