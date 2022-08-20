@@ -3,6 +3,7 @@
 // The list of file replacements can be found in `angular.json`.
 
 import { DbxFirebaseOptions } from '@dereekb/dbx-firebase';
+import { DbxMapboxOptions } from '@dereekb/dbx-web/mapbox';
 import firebaseInfo from '../../../../firebase.json';
 
 export interface DemoEnvironment {
@@ -12,9 +13,7 @@ export interface DemoEnvironment {
     segment: string;
   };
   firebase: DbxFirebaseOptions;
-  mapbox: {
-    token: string;
-  };
+  mapbox: DbxMapboxOptions;
 }
 
 export const base: DemoEnvironment = {
