@@ -1,6 +1,6 @@
 import { PageListLoadingState, cleanupDestroyable, filterMaybe, useFirst, SubscriptionObject, accumulatorFlattenPageListLoadingState } from '@dereekb/rxjs';
-import { BehaviorSubject, combineLatest, map, shareReplay, distinctUntilChanged, Subject, throttleTime, switchMap, Observable, tap, startWith, NEVER } from 'rxjs';
-import { DocumentDataWithId, FirebaseQueryItemAccumulator, firebaseQueryItemAccumulator, FirestoreCollectionLike, FirestoreDocument, FirestoreItemPageIterationInstance, FirestoreItemPageIteratorFilter, FirestoreQueryConstraint, IterationQueryDocChangeWatcher, iterationQueryDocChangeWatcher } from '@dereekb/firebase';
+import { BehaviorSubject, combineLatest, map, shareReplay, distinctUntilChanged, Subject, throttleTime, switchMap, Observable, tap, startWith, NEVER, share } from 'rxjs';
+import { DocumentDataWithIdAndKey, DocumentReference, FirebaseQueryItemAccumulator, firebaseQueryItemAccumulator, FirebaseQuerySnapshotAccumulator, firebaseQuerySnapshotAccumulator, FirestoreCollectionLike, FirestoreDocument, FirestoreItemPageIterationInstance, FirestoreItemPageIteratorFilter, FirestoreQueryConstraint, IterationQueryDocChangeWatcher, iterationQueryDocChangeWatcher } from '@dereekb/firebase';
 import { ArrayOrValue, Destroyable, Initialized, Maybe } from '@dereekb/util';
 import { DbxFirebaseCollectionLoader, DbxFirebaseCollectionLoaderAccessor } from './collection.loader';
 
@@ -56,13 +56,52 @@ export class DbxFirebaseCollectionLoaderInstance<T = unknown, D extends Firestor
     shareReplay(1)
   );
 
+  readonly snapshotAccumulator$: Observable<FirebaseQuerySnapshotAccumulator<T>> = this.firestoreIteration$.pipe(
+    map((x) => firebaseQuerySnapshotAccumulator<T>(x)),
+    cleanupDestroyable(),
+    shareReplay(1)
+  );
+
+  readonly snapshotAccumulatorDocumentRefs$: Observable<DocumentReference<T>[][]> = this.snapshotAccumulator$.pipe(
+    switchMap((x) => x.allItems$.pipe(map((y) => y.map((z) => z.map((zz) => zz.ref))))),
+    shareReplay(1)
+  );
+
+  readonly snapshotAccumulatorDocuments$: Observable<D[][]> = combineLatest([this.collection$.pipe(filterMaybe()), this.snapshotAccumulatorDocumentRefs$]).pipe(
+    map(([collection, documentRefs]) => {
+      const accessor = collection.documentAccessor();
+      return documentRefs.map((y) => y.map((z) => accessor.loadDocument(z)));
+    }),
+    shareReplay(1)
+  );
+
   readonly accumulator$: Observable<FirebaseQueryItemAccumulator<T>> = this.firestoreIteration$.pipe(
     map((x) => firebaseQueryItemAccumulator<T>(x)),
     cleanupDestroyable(),
     shareReplay(1)
   );
 
-  readonly pageLoadingState$: Observable<PageListLoadingState<DocumentDataWithId<T>>> = this.accumulator$.pipe(
+  readonly accumulatorItems$: Observable<DocumentDataWithIdAndKey<T>[][]> = this.accumulator$.pipe(
+    switchMap((x) => x.allItems$),
+    shareReplay(1)
+  );
+
+  readonly allDocumentRefs$: Observable<DocumentReference<T>[]> = this.snapshotAccumulatorDocumentRefs$.pipe(
+    map((x) => x.flat()),
+    shareReplay(1)
+  );
+
+  readonly allDocuments$: Observable<D[]> = this.snapshotAccumulatorDocuments$.pipe(
+    map((x) => x.flat()),
+    shareReplay(1)
+  );
+
+  readonly allDocumentData$: Observable<DocumentDataWithIdAndKey<T>[]> = this.accumulatorItems$.pipe(
+    map((x) => x.flat()),
+    shareReplay(1)
+  );
+
+  readonly pageLoadingState$: Observable<PageListLoadingState<DocumentDataWithIdAndKey<T>>> = this.accumulator$.pipe(
     switchMap((x) => accumulatorFlattenPageListLoadingState(x)),
     shareReplay(1)
   );

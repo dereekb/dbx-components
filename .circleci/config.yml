@@ -15,6 +15,10 @@ orbs:
 jobs:
   build:
     <<: *defaults
+    parameters:
+      persist_build_to_workspace:
+        type: boolean
+        default: true
     steps:
       - checkout
       # install node packages
@@ -25,12 +29,16 @@ jobs:
       - run: 
           name: build
           command: npx nx run workspace:build-all
-      # persist builds to workspace
-      - persist_to_workspace:
-          root: ~/code
-          paths:
-            - node_modules
-            - dist
+      # persist builds to workspace if persist_build_to_workspace is true
+      # NOTE: it is always true in this config
+      - when:
+          condition: << parameters.persist_build_to_workspace >>
+          steps:
+            - persist_to_workspace:
+                root: ~/code
+                paths:
+                  - node_modules
+                  - dist
   # Runs tests for the projects that do not require the firebase emulators.
   test-with-node:
     <<: *defaults
@@ -172,8 +180,11 @@ jobs:
           at: ~/code
       - run:
           # NOTE: this uses make-env.js to produce a .env file that is uploaded. Ensure CircleCI has all required variables before release.
-          name: deploy updated projects
-          command: npx nx run-many --target=ci-deploy --all --parallel=false # deploy all projects
+          name: deploy api to Firebase Functions
+          command: npx nx run demo-api:ci-deploy
+      - run:
+          name: deploy demo website to Firebase Hosting
+          command: npx nx run demo:ci-deploy
       - run:
           name: deploy updated rules
           command: npx nx run workspace:ci-deploy-firebase-rules

@@ -18,6 +18,8 @@ import { StoreModule } from '@ngrx/store';
 import { EffectsModule } from '@ngrx/effects';
 import { metaReducers, ROOT_REDUCER } from './app/state/app.state';
 import { StoreDevtoolsModule } from '@ngrx/store-devtools';
+import { NgxMapboxGLModule } from 'ngx-mapbox-gl';
+import { DbxMapboxModule } from '@dereekb/dbx-web/mapbox';
 
 export function routerConfigFn(router: UIRouter, injector: Injector, module: StatesModule): any {
   const transitionService = router.transitionService;
@@ -126,6 +128,10 @@ export function makeSegmentConfig(): DbxAnalyticsSegmentApiServiceConfig {
       otherwise: { state: 'root' },
       config: routerConfigFn
     }),
+    NgxMapboxGLModule.withConfig({
+      accessToken: environment.mapbox.token
+    }),
+    DbxMapboxModule.forRoot(environment.mapbox)
   ],
   providers: [{
     provide: DbxAnalyticsSegmentApiServiceConfig,

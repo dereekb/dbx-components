@@ -8,5 +8,8 @@ export const environment: APP_CODE_PREFIXEnvironment = {
     emulators: {
       useEmulators: false
     }
+  },
+  mapbox: {
+    token: '' // TODO: put your production mapbox token here, or delete it
   }
 };

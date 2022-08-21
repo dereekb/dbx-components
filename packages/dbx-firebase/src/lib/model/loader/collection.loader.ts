@@ -1,4 +1,4 @@
-import { DocumentDataWithId, FirestoreItemPageIterationInstance, FirestoreQueryConstraint, IterationQueryDocChangeWatcher } from '@dereekb/firebase';
+import { DocumentDataWithIdAndKey, FirestoreItemPageIterationInstance, FirestoreQueryConstraint, IterationQueryDocChangeWatcher } from '@dereekb/firebase';
 import { PageListLoadingState } from '@dereekb/rxjs';
 import { Maybe, ArrayOrValue } from '@dereekb/util';
 import { Observable } from 'rxjs';
@@ -6,7 +6,7 @@ import { Observable } from 'rxjs';
 export interface DbxFirebaseCollectionLoaderAccessor<T = unknown> {
   readonly constraints$: Observable<Maybe<ArrayOrValue<FirestoreQueryConstraint>>>;
   readonly firestoreIteration$: Observable<FirestoreItemPageIterationInstance<T>>;
-  readonly pageLoadingState$: Observable<PageListLoadingState<DocumentDataWithId<T>>>;
+  readonly pageLoadingState$: Observable<PageListLoadingState<DocumentDataWithIdAndKey<T>>>;
   readonly queryChangeWatcher$: Observable<IterationQueryDocChangeWatcher<T>>;
 
   /**

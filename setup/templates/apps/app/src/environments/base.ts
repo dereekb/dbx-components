@@ -3,6 +3,7 @@
 // The list of file replacements can be found in `angular.json`.
 
 import { DbxFirebaseOptions } from "@dereekb/dbx-firebase";
+import { DbxMapboxOptions } from '@dereekb/dbx-web/mapbox';
 import firebaseInfo from '../../../../firebase.json';
 
 export interface APP_CODE_PREFIXEnvironment {
@@ -12,6 +13,7 @@ export interface APP_CODE_PREFIXEnvironment {
     segment: string;
   },
   firebase: DbxFirebaseOptions;
+  mapbox: DbxMapboxOptions;
 }
 
 export const base: APP_CODE_PREFIXEnvironment = {
@@ -35,6 +37,9 @@ export const base: APP_CODE_PREFIXEnvironment = {
       useEmulators: true,
       host: '0.0.0.0'
     }
+  },
+  mapbox: {
+    token: '' // TODO: put your mapbox token here, or delete it
   }
 };
 

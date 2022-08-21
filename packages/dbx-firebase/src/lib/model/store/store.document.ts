@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Observable, shareReplay, distinctUntilChanged, map, switchMap, combineLatest, Subscription, of } from 'rxjs';
-import { DocumentSnapshot, DocumentReference, FirestoreCollection, FirestoreDocument, documentDataWithId, DocumentDataWithId, FirestoreModelId, FirestoreModelKey, FirestoreCollectionLike, FirestoreModelIdentity, firestoreModelIdsFromKey, firestoreModelKeyPartPairs, FirestoreModelCollectionAndIdPair, firestoreModelKeyPairObject, FirestoreModelCollectionAndIdPairObject } from '@dereekb/firebase';
+import { DocumentSnapshot, DocumentReference, FirestoreCollection, FirestoreDocument, DocumentDataWithIdAndKey, FirestoreModelId, FirestoreModelKey, FirestoreCollectionLike, FirestoreModelIdentity, firestoreModelIdsFromKey, firestoreModelKeyPartPairs, FirestoreModelCollectionAndIdPair, firestoreModelKeyPairObject, FirestoreModelCollectionAndIdPairObject, documentDataWithIdAndKey } from '@dereekb/firebase';
 import { filterMaybe, LoadingState, beginLoading, successResult, loadingStateFromObs, errorResult, ObservableOrValue } from '@dereekb/rxjs';
 import { Maybe, isMaybeSo } from '@dereekb/util';
 import { LockSetComponent, LockSetComponentStore } from '@dereekb/dbx-core';
@@ -30,9 +30,9 @@ export interface DbxFirebaseDocumentStore<T, D extends FirestoreDocument<T> = Fi
   readonly documentLoadingState$: Observable<LoadingState<D>>;
   readonly snapshot$: Observable<DocumentSnapshot<T>>;
   readonly snapshotLoadingState$: Observable<LoadingState<DocumentSnapshot<T>>>;
-  readonly currentData$: Observable<Maybe<DocumentDataWithId<T>>>;
-  readonly data$: Observable<DocumentDataWithId<T>>;
-  readonly dataLoadingState$: Observable<LoadingState<DocumentDataWithId<T>>>;
+  readonly currentData$: Observable<Maybe<DocumentDataWithIdAndKey<T>>>;
+  readonly data$: Observable<DocumentDataWithIdAndKey<T>>;
+  readonly dataLoadingState$: Observable<LoadingState<DocumentDataWithIdAndKey<T>>>;
   readonly exists$: Observable<boolean>;
   readonly modelIdentity$: Observable<FirestoreModelIdentity>;
 
@@ -167,22 +167,22 @@ export class AbstractDbxFirebaseDocumentStore<T, D extends FirestoreDocument<T> 
     shareReplay(1)
   );
 
-  readonly currentData$: Observable<Maybe<DocumentDataWithId<T>>> = this.document$.pipe(
-    switchMap((x) => x.accessor.stream().pipe(map((y) => documentDataWithId(y)))),
+  readonly currentData$: Observable<Maybe<DocumentDataWithIdAndKey<T>>> = this.document$.pipe(
+    switchMap((x) => x.accessor.stream().pipe(map((y) => documentDataWithIdAndKey(y)))),
     shareReplay(1)
   );
 
-  readonly data$: Observable<DocumentDataWithId<T>> = this.currentDocument$.pipe(
+  readonly data$: Observable<DocumentDataWithIdAndKey<T>> = this.currentDocument$.pipe(
     switchMap(() => this.currentData$.pipe(filterMaybe())),
     shareReplay(1)
   );
 
-  readonly dataLoadingState$: Observable<LoadingState<DocumentDataWithId<T>>> = this.snapshotLoadingState$.pipe(
+  readonly dataLoadingState$: Observable<LoadingState<DocumentDataWithIdAndKey<T>>> = this.snapshotLoadingState$.pipe(
     map((x) => {
-      let result: LoadingState<DocumentDataWithId<T>>;
+      let result: LoadingState<DocumentDataWithIdAndKey<T>>;
 
       if (x.value) {
-        const data = documentDataWithId(x.value);
+        const data = documentDataWithIdAndKey(x.value);
 
         if (data) {
           result = successResult(data);
