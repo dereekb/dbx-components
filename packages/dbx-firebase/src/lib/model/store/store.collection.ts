@@ -16,6 +16,11 @@ export interface DbxFirebaseCollectionStore<T, D extends FirestoreDocument<T> = 
   readonly accumulator$: Observable<FirebaseQueryItemAccumulator<T>>;
   readonly pageLoadingState$: Observable<PageListLoadingState<DocumentDataWithIdAndKey<T>>>;
 
+  readonly hasDocuments$: Observable<boolean>;
+  readonly allDocumentRefs$: Observable<DocumentReference<T>[]>;
+  readonly allDocuments$: Observable<D[]>;
+  readonly allDocumentData$: Observable<DocumentDataWithIdAndKey<T>[]>;
+
   setMaxPages(observableOrValue: ObservableOrValue<Maybe<number>>): Subscription;
   setItemsPerPage(observableOrValue: ObservableOrValue<Maybe<number>>): Subscription;
   setConstraints(observableOrValue: ObservableOrValue<Maybe<ArrayOrValue<FirestoreQueryConstraint>>>): Subscription;
@@ -106,6 +111,7 @@ export class AbstractDbxFirebaseCollectionStore<T, D extends FirestoreDocument<T
   readonly accumulator$: Observable<FirebaseQueryItemAccumulator<T>> = this.loader$.pipe(switchMap((x) => x.accumulator$));
   readonly pageLoadingState$: Observable<PageListLoadingState<DocumentDataWithIdAndKey<T>>> = this.loader$.pipe(switchMap((x) => x.pageLoadingState$));
 
+  readonly hasDocuments$: Observable<boolean> = this.loader$.pipe(switchMap((x) => x.hasDocuments$));
   readonly allDocumentRefs$: Observable<DocumentReference<T>[]> = this.loader$.pipe(switchMap((x) => x.allDocumentRefs$));
   readonly allDocuments$: Observable<D[]> = this.loader$.pipe(switchMap((x) => x.allDocuments$));
   readonly allDocumentData$: Observable<DocumentDataWithIdAndKey<T>[]> = this.loader$.pipe(switchMap((x) => x.allDocumentData$));

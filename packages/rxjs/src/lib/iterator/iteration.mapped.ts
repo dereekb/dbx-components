@@ -26,6 +26,11 @@ export class MappedItemIterationInstance<O, I = unknown, M extends LoadingState<
   readonly hasNext$: Observable<boolean> = this.itemIterator.hasNext$;
   readonly canLoadMore$: Observable<boolean> = this.itemIterator.canLoadMore$;
 
+  readonly firstState$: Observable<M> = this.itemIterator.firstState$.pipe(
+    map((state) => mapLoadingStateResults(state, this.config)),
+    shareReplay(1)
+  );
+
   readonly latestState$: Observable<M> = this.itemIterator.latestState$.pipe(
     map((state) => mapLoadingStateResults(state, this.config)),
     shareReplay(1)

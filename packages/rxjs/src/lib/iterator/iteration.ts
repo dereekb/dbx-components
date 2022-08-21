@@ -20,6 +20,11 @@ export interface ItemIteration<V = unknown, L extends LoadingState<V> = LoadingS
   readonly canLoadMore$: Observable<boolean>;
 
   /**
+   * The first stable state that has finished loading.
+   */
+  readonly firstState$: Observable<L>;
+
+  /**
    * The latest stable state that has finished loading.
    */
   readonly latestState$: Observable<L>;

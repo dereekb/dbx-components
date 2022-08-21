@@ -86,6 +86,11 @@ export class DbxFirebaseCollectionLoaderInstance<T = unknown, D extends Firestor
     shareReplay(1)
   );
 
+  readonly hasDocuments$: Observable<boolean> = this.firestoreIteration$.pipe(
+    switchMap((x) => x.firstState$.pipe(map((x) => Boolean(x.value?.length)))),
+    shareReplay(1)
+  );
+
   readonly allDocumentRefs$: Observable<DocumentReference<T>[]> = this.snapshotAccumulatorDocumentRefs$.pipe(
     map((x) => x.flat()),
     shareReplay(1)
