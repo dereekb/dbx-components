@@ -1,6 +1,6 @@
 import { AsyncGetterOrValue, Maybe, performMakeLoop, PromiseUtility, UseAsync, wrapUseAsyncFunction, useAsync, makeWithFactory, filterMaybeValues } from '@dereekb/util';
 import { FirestoreModelId, FirestoreModelKey } from '../collection';
-import { DocumentDataWithId, DocumentReference, DocumentSnapshot, QuerySnapshot, Transaction } from '../types';
+import { DocumentDataWithId, DocumentDataWithIdAndKey, DocumentReference, DocumentSnapshot, QuerySnapshot, Transaction } from '../types';
 import { FirestoreDocumentData, FirestoreDocument, FirestoreDocumentAccessor, LimitedFirestoreDocumentAccessor, LimitedFirestoreDocumentAccessorContextExtension } from './document';
 
 export function newDocuments<T, D extends FirestoreDocument<T>>(documentAccessor: FirestoreDocumentAccessor<T, D>, count: number): D[] {
@@ -60,19 +60,19 @@ export function getDocumentSnapshotPairs<D extends FirestoreDocument<any>>(docum
   return PromiseUtility.runTasksForValues(documents, (document) => document.accessor.get().then((snapshot) => ({ document, snapshot })));
 }
 
-export function getDocumentSnapshotsData<D extends FirestoreDocument<any>>(documents: D[]): Promise<DocumentDataWithId<FirestoreDocumentData<D>>[]>;
-export function getDocumentSnapshotsData<D extends FirestoreDocument<any>>(documents: D[], withId: true): Promise<DocumentDataWithId<FirestoreDocumentData<D>>[]>;
+export function getDocumentSnapshotsData<D extends FirestoreDocument<any>>(documents: D[]): Promise<DocumentDataWithIdAndKey<FirestoreDocumentData<D>>[]>;
+export function getDocumentSnapshotsData<D extends FirestoreDocument<any>>(documents: D[], withId: true): Promise<DocumentDataWithIdAndKey<FirestoreDocumentData<D>>[]>;
 export function getDocumentSnapshotsData<D extends FirestoreDocument<any>>(documents: D[], withId: false): Promise<FirestoreDocumentData<D>[]>;
-export function getDocumentSnapshotsData<D extends FirestoreDocument<any>>(documents: D[], withId?: boolean): Promise<DocumentDataWithId<FirestoreDocumentData<D>>[] | FirestoreDocumentData<D>[]>;
-export function getDocumentSnapshotsData<D extends FirestoreDocument<any>>(documents: D[], withId = true): Promise<DocumentDataWithId<FirestoreDocumentData<D>>[] | FirestoreDocumentData<D>[]> {
+export function getDocumentSnapshotsData<D extends FirestoreDocument<any>>(documents: D[], withId?: boolean): Promise<DocumentDataWithIdAndKey<FirestoreDocumentData<D>>[] | FirestoreDocumentData<D>[]>;
+export function getDocumentSnapshotsData<D extends FirestoreDocument<any>>(documents: D[], withId = true): Promise<DocumentDataWithIdAndKey<FirestoreDocumentData<D>>[] | FirestoreDocumentData<D>[]> {
   return getDocumentSnapshots<D>(documents).then((x: DocumentSnapshot<any>[]) => getDataFromDocumentSnapshots<FirestoreDocumentData<D>>(x, withId));
 }
 
-export function getDataFromDocumentSnapshots<T>(snapshots: DocumentSnapshot<T>[]): DocumentDataWithId<T>[];
-export function getDataFromDocumentSnapshots<T>(snapshots: DocumentSnapshot<T>[], withId: true): DocumentDataWithId<T>[];
+export function getDataFromDocumentSnapshots<T>(snapshots: DocumentSnapshot<T>[]): DocumentDataWithIdAndKey<T>[];
+export function getDataFromDocumentSnapshots<T>(snapshots: DocumentSnapshot<T>[], withId: true): DocumentDataWithIdAndKey<T>[];
 export function getDataFromDocumentSnapshots<T>(snapshots: DocumentSnapshot<T>[], withId: false): T[];
-export function getDataFromDocumentSnapshots<T>(snapshots: DocumentSnapshot<T>[], withId?: boolean): DocumentDataWithId<T>[] | T[];
-export function getDataFromDocumentSnapshots<T>(snapshots: DocumentSnapshot<T>[], withId: boolean = true): DocumentDataWithId<T>[] | T[] {
+export function getDataFromDocumentSnapshots<T>(snapshots: DocumentSnapshot<T>[], withId?: boolean): DocumentDataWithIdAndKey<T>[] | T[];
+export function getDataFromDocumentSnapshots<T>(snapshots: DocumentSnapshot<T>[], withId: boolean = true): DocumentDataWithIdAndKey<T>[] | T[] {
   const mapFn = documentDataFunction<T>(withId);
   return filterMaybeValues<T>(snapshots.map(mapFn));
 }
@@ -131,25 +131,25 @@ export function firestoreDocumentLoader<T, D extends FirestoreDocument<T>>(acces
  * @param snapshot
  * @returns
  */
-export function documentData<T>(snapshot: DocumentSnapshot<T>): Maybe<DocumentDataWithId<T>>;
-export function documentData<T>(snapshot: DocumentSnapshot<T>, withId: true): Maybe<DocumentDataWithId<T>>;
+export function documentData<T>(snapshot: DocumentSnapshot<T>): Maybe<DocumentDataWithIdAndKey<T>>;
+export function documentData<T>(snapshot: DocumentSnapshot<T>, withId: true): Maybe<DocumentDataWithIdAndKey<T>>;
 export function documentData<T>(snapshot: DocumentSnapshot<T>, withId: false): Maybe<T>;
-export function documentData<T>(snapshot: DocumentSnapshot<T>, withId = false): Maybe<T> | Maybe<DocumentDataWithId<T>> {
+export function documentData<T>(snapshot: DocumentSnapshot<T>, withId = false): Maybe<T> | Maybe<DocumentDataWithIdAndKey<T>> {
   if (withId) {
-    return documentDataWithId(snapshot);
+    return documentDataWithIdAndKey(snapshot);
   } else {
     return snapshot.data();
   }
 }
 
 export type DocumentDataFunction<T> = (snapshot: DocumentSnapshot<T>) => Maybe<T>;
-export type DocumentDataWithIdFunction<T> = (snapshot: DocumentSnapshot<T>) => Maybe<DocumentDataWithId<T>>;
+export type DocumentDataWithIdAndKeyFunction<T> = (snapshot: DocumentSnapshot<T>) => Maybe<DocumentDataWithIdAndKey<T>>;
 
-export function documentDataFunction<T>(withId: true): DocumentDataWithIdFunction<T>;
+export function documentDataFunction<T>(withId: true): DocumentDataWithIdAndKeyFunction<T>;
 export function documentDataFunction<T>(withId: false): DocumentDataFunction<T>;
-export function documentDataFunction<T>(withId: boolean): DocumentDataWithIdFunction<T> | DocumentDataFunction<T>;
-export function documentDataFunction<T>(withId: boolean): DocumentDataWithIdFunction<T> | DocumentDataFunction<T> {
-  return withId ? documentDataWithId : (snapshot) => snapshot.data();
+export function documentDataFunction<T>(withId: boolean): DocumentDataWithIdAndKeyFunction<T> | DocumentDataFunction<T>;
+export function documentDataFunction<T>(withId: boolean): DocumentDataWithIdAndKeyFunction<T> | DocumentDataFunction<T> {
+  return withId ? documentDataWithIdAndKey : (snapshot) => snapshot.data();
 }
 
 /**
@@ -158,11 +158,12 @@ export function documentDataFunction<T>(withId: boolean): DocumentDataWithIdFunc
  * @param snapshot
  * @returns
  */
-export function documentDataWithId<T>(snapshot: DocumentSnapshot<T>): Maybe<DocumentDataWithId<T>> {
-  const data = snapshot.data() as DocumentDataWithId<T>;
+export function documentDataWithIdAndKey<T>(snapshot: DocumentSnapshot<T>): Maybe<DocumentDataWithIdAndKey<T>> {
+  const data = snapshot.data() as DocumentDataWithIdAndKey<T>;
 
   if (data) {
     data.id = snapshot.id; // attach the id to data
+    data.key = snapshot.ref.path; // attach the path/key to the data
   }
 
   return data;
@@ -210,3 +211,14 @@ export function documentReferenceFromDocument<T, D extends FirestoreDocument<T>>
 export function documentReferencesFromDocuments<T, D extends FirestoreDocument<T>>(documents: D[]): DocumentReference<T>[] {
   return documents.map(documentReferenceFromDocument);
 }
+
+// MARK: Compat
+/**
+ * @Deprecated use DocumentDataWithIdAndKeyFunction<T> instead.
+ */
+export type DocumentDataWithIdFunction<T> = DocumentDataWithIdAndKeyFunction<T>;
+
+/**
+ * @deprecated use documentDataWithIdAndKey instead.
+ */
+export const documentDataWithId = documentDataWithIdAndKey;

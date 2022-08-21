@@ -3,6 +3,7 @@
 
 import { StringKeyPropertyKeys } from '@dereekb/util';
 import { UnionToIntersection } from 'ts-essentials';
+import { FirestoreModelKey, FirestoreModelId } from './collection';
 
 // MARK: Firestore
 // These types are provided to avoid us from using the "any".
@@ -72,7 +73,17 @@ export interface DocumentData {
 /**
  * Document data with the id appended to it.
  */
-export type DocumentDataWithId<T = DocumentData> = T & { id: string };
+export type DocumentDataWithId<T = DocumentData> = T & { id: FirestoreModelId };
+
+/**
+ * Document data with the key appended to it.
+ */
+export type DocumentDataWithKey<T = DocumentData> = T & { key: FirestoreModelKey };
+
+/**
+ * Document data with the id and key appended to it.
+ */
+export type DocumentDataWithIdAndKey<T = DocumentData> = DocumentDataWithId<T> & DocumentDataWithKey<T>;
 
 export interface DocumentSnapshot<T = DocumentData> {
   readonly id: string;

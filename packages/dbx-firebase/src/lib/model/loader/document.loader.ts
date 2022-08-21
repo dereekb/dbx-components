@@ -1,4 +1,4 @@
-import { DocumentDataWithId, FirestoreModelKey, DocumentReference, FirestoreDocument, FirestoreModelId, DocumentSnapshot } from '@dereekb/firebase';
+import { DocumentDataWithIdAndKey, FirestoreModelKey, DocumentReference, FirestoreDocument, FirestoreModelId, DocumentSnapshot } from '@dereekb/firebase';
 import { ObservableOrValue, PageListLoadingState } from '@dereekb/rxjs';
 import { Maybe, ArrayOrValue } from '@dereekb/util';
 import { Observable } from 'rxjs';
@@ -35,7 +35,7 @@ export interface DbxLimitedFirebaseDocumentLoader<T = unknown, D extends Firesto
   /**
    * Data from the documents.
    */
-  readonly data$: Observable<DocumentDataWithId<T>[]>;
+  readonly data$: Observable<DocumentDataWithIdAndKey<T>[]>;
 
   /**
    * Snapshot stream of the documents
@@ -45,17 +45,17 @@ export interface DbxLimitedFirebaseDocumentLoader<T = unknown, D extends Firesto
   /**
    * Data stream of the documents.
    */
-  readonly dataStream$: Observable<DocumentDataWithId<T>[]>;
+  readonly dataStream$: Observable<DocumentDataWithIdAndKey<T>[]>;
 
   /**
    * Loading state for the document data.
    */
-  readonly pageLoadingState$: Observable<PageListLoadingState<DocumentDataWithId<T>>>;
+  readonly pageLoadingState$: Observable<PageListLoadingState<DocumentDataWithIdAndKey<T>>>;
 
   /**
    * Loading state for the streamed document data.
    */
-  readonly pageLoadingStateStream$: Observable<PageListLoadingState<DocumentDataWithId<T>>>;
+  readonly pageLoadingStateStream$: Observable<PageListLoadingState<DocumentDataWithIdAndKey<T>>>;
 
   /**
    * Sets the keys of the models to load.
