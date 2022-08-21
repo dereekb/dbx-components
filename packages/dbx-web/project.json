@@ -24,6 +24,10 @@
           {
             "description": "copy license",
             "command": "echo 'copying dbx-web license' && cp LICENSE dist/packages/dbx-web"
+          },
+          {
+            "description": "build dbx-web/mapbox",
+            "command": "npx nx run dbx-web-mapbox:build-base:production"
           }
         ],
         "parallel": false,
