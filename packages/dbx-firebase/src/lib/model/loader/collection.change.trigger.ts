@@ -83,6 +83,10 @@ export class DbxFirebaseCollectionChangeTriggerInstance<S extends DbxFirebaseCol
 /**
  * Creates a new DbxFirebaseCollectionChangeWatcher, set the modes to "auto", and creates a new DbxFirebaseCollectionChangeTriggerInstance.
  *
+ * If no trigger function is provided it will default to resetting the store.
+ *
+ * NOTE: Don't forget to initialize the DbxFirebaseCollectionChangeTriggerInstance and handle other lifecycle changes.
+ *
  * @param store
  * @param triggerFunction
  * @returns
@@ -91,7 +95,11 @@ export function dbxFirebaseCollectionChangeTriggerForStore<S extends DbxFirebase
   return dbxFirebaseCollectionChangeTrigger<S>({
     watcher: dbxFirebaseCollectionChangeWatcher<S>(store, 'auto'),
     destroyWatcherOnDestroy: true,
-    triggerFunction
+    triggerFunction:
+      triggerFunction ??
+      (() => {
+        store.restart();
+      })
   });
 }
 
