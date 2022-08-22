@@ -10,7 +10,7 @@ import { Component, Input } from '@angular/core';
   `,
   host: {
     class: 'dbx-two-column-head',
-    '[class.dbx-block]': 'block',
+    '[class.d-block]': 'block',
     '[class.full]': 'full'
   }
 })

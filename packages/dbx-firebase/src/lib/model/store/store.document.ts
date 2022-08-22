@@ -22,6 +22,7 @@ export interface DbxFirebaseDocumentStore<T, D extends FirestoreDocument<T> = Fi
   readonly id$: Observable<FirestoreModelId>;
   readonly key$: Observable<FirestoreModelKey>;
   readonly ref$: Observable<DocumentReference<T>>;
+  readonly hasRef$: Observable<boolean>;
 
   readonly keyModelIds$: Observable<FirestoreModelId[]>;
   readonly keyPairs$: Observable<FirestoreModelCollectionAndIdPair[]>;
@@ -33,6 +34,7 @@ export interface DbxFirebaseDocumentStore<T, D extends FirestoreDocument<T> = Fi
   readonly currentData$: Observable<Maybe<DocumentDataWithIdAndKey<T>>>;
   readonly data$: Observable<DocumentDataWithIdAndKey<T>>;
   readonly dataLoadingState$: Observable<LoadingState<DocumentDataWithIdAndKey<T>>>;
+  readonly currentExists$: Observable<boolean>;
   readonly exists$: Observable<boolean>;
   readonly modelIdentity$: Observable<FirestoreModelIdentity>;
 
@@ -131,6 +133,15 @@ export class AbstractDbxFirebaseDocumentStore<T, D extends FirestoreDocument<T> 
     shareReplay(1)
   );
 
+  /**
+   * Whether or not an id/ref/key has been input and currentDocument is not null.
+   */
+  readonly hasRef$: Observable<boolean> = this.currentDocument$.pipe(
+    map((x) => x?.documentRef != null),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+
   readonly document$: Observable<D> = this.currentDocument$.pipe(filterMaybe(), distinctUntilChanged(), shareReplay(1));
 
   readonly documentLoadingState$: Observable<LoadingState<D>> = this.currentDocument$.pipe(
@@ -197,6 +208,20 @@ export class AbstractDbxFirebaseDocumentStore<T, D extends FirestoreDocument<T> 
       }
 
       return result;
+    }),
+    shareReplay(1)
+  );
+
+  /**
+   * Returns false while hasRef$ is false, and then returns exists$.
+   */
+  readonly currentExists$: Observable<boolean> = this.hasRef$.pipe(
+    switchMap((hasRef) => {
+      if (hasRef) {
+        return this.exists$;
+      } else {
+        return of(false);
+      }
     }),
     shareReplay(1)
   );

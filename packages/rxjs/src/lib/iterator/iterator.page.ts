@@ -117,6 +117,10 @@ export interface ItemPageIterationInstanceState<V> {
    */
   n: number;
   current: Maybe<PageLoadingState<ItemPageIteratorResult<V>>>;
+  /**
+   * The first finished state. May not always be the same as firstSuccessful if the first state has an error.
+   */
+  firstFinished: Maybe<PageLoadingState<ItemPageIteratorResult<V>>>;
   latestFinished: Maybe<PageLoadingState<ItemPageIteratorResult<V>>>;
   firstSuccessful: Maybe<PageLoadingState<ItemPageIteratorResult<V>>>;
   lastSuccessful: Maybe<PageLoadingState<ItemPageIteratorResult<V>>>;
@@ -189,6 +193,7 @@ export class ItemPageIterationInstance<V, F, C extends ItemPageIterationConfig<F
         const next = {
           n,
           current: curr,
+          firstFinished: acc.firstFinished,
           latestFinished: acc.latestFinished,
           firstSuccessful: acc.firstSuccessful,
           lastSuccessful: acc.lastSuccessful
@@ -197,6 +202,11 @@ export class ItemPageIterationInstance<V, F, C extends ItemPageIterationConfig<F
         // If it was a replay of the previous result, change nothing.
         if (acc.current !== curr) {
           if (loadingStateHasFinishedLoading(curr)) {
+            // only set first finished once
+            if (!next.firstFinished) {
+              next.firstFinished = curr;
+            }
+
             next.latestFinished = curr;
 
             if (!loadingStateHasError(curr)) {
@@ -214,6 +224,7 @@ export class ItemPageIterationInstance<V, F, C extends ItemPageIterationConfig<F
       {
         n: -1,
         current: { page: FIRST_PAGE }, // Start with loading the first page
+        firstFinished: undefined,
         latestFinished: undefined,
         firstSuccessful: undefined,
         lastSuccessful: undefined
@@ -237,6 +248,15 @@ export class ItemPageIterationInstance<V, F, C extends ItemPageIterationConfig<F
    * Same as _nextTrigger$, but catches finished loading events.
    */
   readonly _nextFinished$: Observable<ItemPageIterationInstanceState<V>> = this._nextTrigger$.pipe(filter((x) => loadingStateHasFinishedLoading(x.current)));
+
+  /**
+   * The first page results that finished loading.
+   */
+  readonly firstPageResultState$: Observable<PageLoadingState<ItemPageIteratorResult<V>>> = this.state$.pipe(
+    map((x) => x.firstFinished),
+    filterMaybe(),
+    shareReplay(1)
+  );
 
   /**
    * The current page being loaded or the latest page finished loading.
@@ -371,6 +391,7 @@ export class ItemPageIterationInstance<V, F, C extends ItemPageIterationConfig<F
    */
   readonly hasNextAndCanLoadMore$: Observable<boolean> = iterationHasNextAndCanLoadMore(this);
 
+  readonly firstState$: Observable<PageLoadingState<V>> = this.firstPageResultState$.pipe(mapItemPageLoadingStateFromResultPageLoadingState(), shareReplay(1));
   readonly latestState$: Observable<PageLoadingState<V>> = this.latestPageResultState$.pipe(mapItemPageLoadingStateFromResultPageLoadingState(), shareReplay(1));
 
   readonly latestItems$: Observable<Maybe<V>> = this.latestState$.pipe(

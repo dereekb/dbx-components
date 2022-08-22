@@ -28,20 +28,29 @@
     }
   }
 
-  .d-block {
+  .d-block,
+  .dbx-block {
     display: block;
   }
 
-  .d-inline {
+  .d-iblock,
+  .dbx-iblock {
+    display: inline-block;
+  }
+
+  .d-inline,
+  .dbx-inline {
     display: inline;
   }
 
-  .d-iflex {
+  .d-iflex,
+  .dbx-iflex {
     display: inline-flex;
   }
 
   // force
-  .d-fiflex {
+  .d-fiflex,
+  .dbx-fiflex {
     display: inline-flex !important;
   }
 }
