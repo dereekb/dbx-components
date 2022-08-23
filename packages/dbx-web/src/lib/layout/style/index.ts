@@ -1,3 +1,4 @@
+export * from './style';
 export * from './style.layout.module';
 export * from './spacer.directive';
 export * from './style.directive';

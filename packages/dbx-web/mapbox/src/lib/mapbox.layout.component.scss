@@ -1,0 +1,54 @@
+$dbx-mapbox-layout-drawer-button-width: 35px;
+$dbx-mapbox-layout-drawer-no-content-button-width: 0px;
+$dbx-mapbox-layout-drawer-has-content-button-width: $dbx-mapbox-layout-drawer-button-width;
+
+.dbx-mapbox-layout-container {
+  height: 100%;
+  max-width: 100%;
+
+  .mat-drawer-container {
+    height: 100%;
+  }
+
+  .dbx-mapbox-layout-drawer-content {
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+  }
+}
+
+.dbx-mapbox-layout-content {
+  > .dbx-mapbox-layout-drawer-button {
+    position: absolute;
+    z-index: 2;
+    top: 40%;
+    border: none;
+    display: flex;
+
+    .left-drawer & {
+      left: 0;
+      border-radius: 0px 20px 20px 0px;
+    }
+
+    .right-drawer & {
+      right: 0;
+      border-radius: 20px 0px 0px 20px;
+    }
+
+    .has-drawer-content & {
+      width: $dbx-mapbox-layout-drawer-button-width;
+    }
+
+    .has-drawer-content.open-drawer & {
+      width: $dbx-mapbox-layout-drawer-has-content-button-width;
+    }
+
+    .no-drawer-content & {
+      width: $dbx-mapbox-layout-drawer-no-content-button-width;
+    }
+
+    mat-icon {
+      padding-left: 8px;
+    }
+  }
+}

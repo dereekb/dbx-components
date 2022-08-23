@@ -7,6 +7,7 @@ import { defaultIfEmpty, distinctUntilChanged, filter, map, shareReplay, switchM
 import * as MapboxGl from 'mapbox-gl';
 import { DbxMapboxClickEvent, KnownMapboxStyle, MapboxBearing, MapboxEaseTo, MapboxFitBounds, MapboxFlyTo, MapboxJumpTo, MapboxResetNorth, MapboxResetNorthPitch, MapboxRotateTo, MapboxSnapToNorth, MapboxStyleConfig, MapboxZoomLevel } from './mapbox';
 import { DbxMapboxService } from './mapbox.service';
+import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 
 export type MapboxMapLifecycleState = 'init' | 'load' | 'render' | 'idle';
 export type MapboxMapMoveState = 'init' | 'idle' | 'moving';
@@ -41,6 +42,16 @@ export interface DbxMapboxStoreState {
    */
   doubleClickEvent?: Maybe<DbxMapboxClickEvent>;
   /**
+   * Whether or not to retain content between resets.
+   *
+   * True by default.
+   */
+  retainContent: boolean;
+  /**
+   * Custom content configuration.
+   */
+  content?: Maybe<DbxInjectionComponentConfig<unknown>>;
+  /**
    * Latest error
    */
   error?: Maybe<Error>;
@@ -59,7 +70,8 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
       lifecycleState: 'init',
       moveState: 'init',
       zoomState: 'init',
-      rotateState: 'init'
+      rotateState: 'init',
+      retainContent: true
     });
   }
 
@@ -563,11 +575,28 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
     })
   );
 
-  readonly clickEvent$ = this.state$.pipe(map((x) => x.clickEvent));
-  readonly doubleClickEvent$ = this.state$.pipe(map((x) => x.doubleClickEvent));
+  readonly content$ = this.state$.pipe(
+    map((x) => x.content),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+
+  readonly hasContent$ = this.content$.pipe(map(Boolean));
+
+  readonly clickEvent$ = this.state$.pipe(
+    map((x) => x.clickEvent),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+
+  readonly doubleClickEvent$ = this.state$.pipe(
+    map((x) => x.doubleClickEvent),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
 
   // MARK: State Changes
-  private readonly _setMapService = this.updater((state, mapService: Maybe<MapService>) => ({ mapService, moveState: 'init', lifecycleState: 'init', zoomState: 'init', rotateState: 'init' }));
+  private readonly _setMapService = this.updater((state, mapService: Maybe<MapService>) => ({ mapService, moveState: 'init', lifecycleState: 'init', zoomState: 'init', rotateState: 'init', retainContent: state.retainContent, content: state.retainContent ? state.content : undefined }));
   private readonly _setLifecycleState = this.updater((state, lifecycleState: MapboxMapLifecycleState) => ({ ...state, lifecycleState }));
   private readonly _setMoveState = this.updater((state, moveState: MapboxMapMoveState) => ({ ...state, moveState }));
   private readonly _setZoomState = this.updater((state, zoomState: MapboxMapZoomState) => ({ ...state, zoomState }));
@@ -577,4 +606,7 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
   private readonly _setDoubleClickEvent = this.updater((state, doubleClickEvent: DbxMapboxClickEvent) => ({ ...state, doubleClickEvent }));
 
   private readonly _setError = this.updater((state, error: Error) => ({ ...state, error }));
+
+  readonly clearContent = this.updater((state) => ({ ...state, content: undefined }));
+  readonly setContent = this.updater((state, content: Maybe<DbxInjectionComponentConfig<unknown>>) => ({ ...state, content }));
 }
