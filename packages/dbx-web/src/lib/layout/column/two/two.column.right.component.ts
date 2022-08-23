@@ -20,6 +20,9 @@ export class DbxTwoColumnRightComponent implements AfterViewInit, OnDestroy {
   @Input()
   header?: string;
 
+  @Input()
+  block?: boolean;
+
   private _showBack = new BehaviorSubject<boolean>(true);
 
   readonly ref$: Observable<Maybe<ClickableAnchor>> = this.twoColumnsContextStore.backRef$;
