@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [9.3.3](https://github.com/dereekb/dbx-components/compare/v9.3.2-dev...v9.3.3) (2022-08-23)
+
+
+### Bug Fixes
+
+* fixed DbxMapboxMapDirective init issue ([789e368](https://github.com/dereekb/dbx-components/commit/789e3688819168e358f14904fec55b012fbbd969))
+
+
+
 ## [9.3.2](https://github.com/dereekb/dbx-components/compare/v9.3.1-dev...v9.3.2) (2022-08-22)
 
 
