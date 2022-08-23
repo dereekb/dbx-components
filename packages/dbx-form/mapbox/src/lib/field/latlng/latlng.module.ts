@@ -8,6 +8,7 @@ import { DbxTextModule } from '@dereekb/dbx-web';
 import { NgxMapboxGLModule } from 'ngx-mapbox-gl';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
+import { DbxMapboxModule } from '@dereekb/dbx-web/mapbox';
 
 @NgModule({
   imports: [
@@ -15,6 +16,7 @@ import { MatButtonModule } from '@angular/material/button';
     MatIconModule,
     MatButtonModule,
     DbxTextModule,
+    DbxMapboxModule,
     FormsModule,
     ReactiveFormsModule,
     MatInputModule,

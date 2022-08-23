@@ -10,6 +10,7 @@ import { Maybe, latLngString, LatLngString, LatLngPoint, LatLngPointFunctionConf
 import { isSameMinute } from 'date-fns';
 import { GeolocationService } from '@ng-web-apis/geolocation';
 import { Marker } from 'mapbox-gl';
+import { DbxMapboxMapStore } from '@dereekb/dbx-web/mapbox';
 
 export interface DbxFormMapboxLatLngComponentFieldProps extends FormlyFieldProps {
   zoom?: number;
@@ -20,7 +21,7 @@ export interface DbxFormMapboxLatLngComponentFieldProps extends FormlyFieldProps
   template: `
     <div class="dbx-mapbox-latlng-field" [ngClass]="(compactClass$ | async) ?? ''" [formGroup]="formGroup">
       <div class="dbx-mapbox-latlng-field-map">
-        <mgl-map [style]="'mapbox://styles/mapbox/streets-v9'" [zoom]="(zoom$ | async) || [8]" [center]="(center$ | async) || [0, 0]">
+        <mgl-map dbxMapboxMap>
           <mgl-marker [lngLat]="(latLng$ | async) || [0, 0]" [draggable]="!isReadonlyOrDisabled" (markerDragEnd)="onDragEnd($event)"></mgl-marker>
         </mgl-map>
       </div>
@@ -35,6 +36,7 @@ export interface DbxFormMapboxLatLngComponentFieldProps extends FormlyFieldProps
       </div>
     </div>
   `,
+  providers: [DbxMapboxMapStore],
   styleUrls: ['./latlng.field.component.scss']
 })
 export class DbxFormMapboxLatLngFieldComponent<T extends DbxFormMapboxLatLngComponentFieldProps = DbxFormMapboxLatLngComponentFieldProps> extends FieldType<FieldTypeConfig<T>> implements OnInit, OnDestroy {
@@ -45,7 +47,7 @@ export class DbxFormMapboxLatLngFieldComponent<T extends DbxFormMapboxLatLngComp
   });
 
   private _sub = new SubscriptionObject();
-  private _zoom = new BehaviorSubject<[number]>([12]);
+  private _zoom = new BehaviorSubject<number>(12);
 
   private _formControlObs = new BehaviorSubject<Maybe<AbstractControl>>(undefined);
   readonly formControl$ = this._formControlObs.pipe(filterMaybe());
@@ -65,12 +67,12 @@ export class DbxFormMapboxLatLngFieldComponent<T extends DbxFormMapboxLatLngComp
   readonly center$ = this.latLng$;
   readonly zoom$ = this._zoom.asObservable();
 
-  constructor(@Optional() readonly compact: CompactContextStore, private readonly geolocation$: GeolocationService) {
+  constructor(@Optional() readonly compact: CompactContextStore, private readonly geolocation$: GeolocationService, readonly dbxMapboxMapStore: DbxMapboxMapStore) {
     super();
   }
 
-  get zoom(): [number] {
-    return [Math.min(this.field.props.zoom || 12, 18)];
+  get zoom(): number {
+    return Math.min(this.field.props.zoom || 12, 18);
   }
 
   get formGroupName(): string {
@@ -97,6 +99,9 @@ export class DbxFormMapboxLatLngFieldComponent<T extends DbxFormMapboxLatLngComp
     this._latLngStringFunction = latLngStringFunction(this.field.props.latLngConfig);
     this._formControlObs.next(this.formControl);
     this._zoom.next(this.zoom);
+
+    this.dbxMapboxMapStore.setCenter(this.center$);
+    this.dbxMapboxMapStore.setZoom(this.zoom$);
 
     if (this.props.readonly) {
       this.formControl.disable();
