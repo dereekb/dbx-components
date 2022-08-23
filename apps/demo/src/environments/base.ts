@@ -42,7 +42,9 @@ export const base: DemoEnvironment = {
     }
   },
   mapbox: {
-    token: 'pk.eyJ1IjoiZGVyZWVrYiIsImEiOiJjbDZ0bmxtNWsxcTRrM2RyMzBqM2liNGxzIn0.3uE_-LqdMC0SmZSYSag0Mw'
+    token: 'pk.eyJ1IjoiZGVyZWVrYiIsImEiOiJjbDZ0bmxtNWsxcTRrM2RyMzBqM2liNGxzIn0.3uE_-LqdMC0SmZSYSag0Mw',
+    defaultCenter: [38.12078919594712, -98.18612358507816],
+    defaultZoom: 4
   }
 };
 

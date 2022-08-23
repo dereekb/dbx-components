@@ -125,6 +125,7 @@ export function makeSegmentConfig(): DbxAnalyticsSegmentApiServiceConfig {
       otherwise: { state: 'root' },
       config: routerConfigFn
     }),
+    // map
     NgxMapboxGLModule.withConfig({
       accessToken: environment.mapbox.token
     }),
