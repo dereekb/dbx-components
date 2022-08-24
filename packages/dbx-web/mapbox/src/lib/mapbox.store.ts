@@ -1,9 +1,9 @@
 import { cleanup, filterMaybe, onTrueToFalse } from '@dereekb/rxjs';
 import { Inject, Injectable, OnDestroy } from '@angular/core';
-import { isSameLatLngBound, isSameLatLngPoint, IsWithinLatLngBoundFunction, isWithinLatLngBoundFunction, LatLngBound, latLngBoundFunction, LatLngPointInput, LatLngPoint, latLngPointFunction, Maybe, OverlapsLatLngBoundFunction, overlapsLatLngBoundFunction } from '@dereekb/util';
+import { isSameLatLngBound, isSameLatLngPoint, IsWithinLatLngBoundFunction, isWithinLatLngBoundFunction, LatLngBound, latLngBoundFunction, LatLngPointInput, LatLngPoint, latLngPointFunction, Maybe, OverlapsLatLngBoundFunction, overlapsLatLngBoundFunction, diffLatLngBoundPoints, latLngBoundCenterPoint, addLatLngPoints } from '@dereekb/util';
 import { ComponentStore } from '@ngrx/component-store';
 import { MapService } from 'ngx-mapbox-gl';
-import { defaultIfEmpty, distinctUntilChanged, filter, map, shareReplay, switchMap, tap, NEVER, Observable, of, Subscription, startWith, interval, first, combineLatest } from 'rxjs';
+import { count, defaultIfEmpty, distinctUntilChanged, filter, map, shareReplay, switchMap, tap, NEVER, Observable, of, Subscription, startWith, interval, first, combineLatest } from 'rxjs';
 import * as MapboxGl from 'mapbox-gl';
 import { DbxMapboxClickEvent, KnownMapboxStyle, MapboxBearing, MapboxEaseTo, MapboxFitBounds, MapboxFlyTo, MapboxJumpTo, MapboxResetNorth, MapboxResetNorthPitch, MapboxRotateTo, MapboxSnapToNorth, MapboxStyleConfig, MapboxZoomLevel } from './mapbox';
 import { DbxMapboxService } from './mapbox.service';
@@ -22,6 +22,12 @@ export interface StringMapboxListenerPair {
 export interface TypedMapboxListenerPair<T extends keyof MapboxGl.MapEventType> {
   type: T;
   listener: (ev: MapboxGl.MapEventType[T] & MapboxGl.EventData) => void;
+}
+
+export interface DbxMapboxMarginCalculationSizing {
+  leftMargin: number;
+  rightMargin: number;
+  fullWidth: number;
 }
 
 export interface DbxMapboxStoreState {
@@ -338,6 +344,63 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
         }
       }),
       shareReplay()
+    );
+  }
+
+  atNextIdle(): Observable<boolean> {
+    return this.moveState$.pipe(
+      map((x) => x === 'idle'),
+      first()
+    );
+  }
+
+  calculateNextCenterWithOffset(inputOffset: LatLngPointInput): Observable<LatLngPoint> {
+    const offset = this.latLngPoint(inputOffset);
+
+    return this.atNextIdle().pipe(
+      switchMap(() =>
+        this.center$.pipe(
+          first(),
+          map((center) => {
+            const newCenter = {
+              lat: offset.lat + center.lat,
+              lng: offset.lng + center.lng
+            };
+            return newCenter;
+          })
+        )
+      )
+    );
+  }
+
+  calculateNextCenterOffsetWithScreenMarginChange(sizing: DbxMapboxMarginCalculationSizing): Observable<LatLngPoint> {
+    return this.atNextIdle().pipe(
+      switchMap(() =>
+        this.bound$.pipe(
+          (first(),
+          map((bounds) => {
+            const diff = diffLatLngBoundPoints(bounds);
+            const center = latLngBoundCenterPoint(bounds);
+
+            const offsetWidth = sizing.leftMargin + sizing.rightMargin; // 300 + 0
+            const newWidth = sizing.fullWidth - offsetWidth; // 1000 - 300 - 0
+            const newWidthRatio = newWidth / sizing.fullWidth; // 700 / 1000
+            const newCenterLongitudeWidth = diff.lng * newWidthRatio; // 70% offset
+
+            const effectiveOffset: LatLngPoint = {
+              lat: 0,
+              lng: newCenterLongitudeWidth / 2
+            };
+
+            const newCenter = addLatLngPoints(bounds.sw, effectiveOffset);
+            newCenter.lat = center.lat; // retain center position
+
+            // console.log({ sizing, bounds, effectiveOffset, newWidth, offsetWidth, diff, center, newCenter });
+
+            return newCenter;
+          }))
+        )
+      )
     );
   }
 

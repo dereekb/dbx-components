@@ -5,7 +5,7 @@
       <dbx-mapbox-layout-drawer></dbx-mapbox-layout-drawer>
     </div>
   </mat-drawer>
-  <mat-drawer-content class="dbx-mapbox-layout-content" (resized)="onResized($event)">
+  <mat-drawer-content #content class="dbx-mapbox-layout-content" (resized)="onResized($event)">
     <button mat-icon-button (click)="toggleDrawer()" class="dbx-mapbox-layout-drawer-button" [ngClass]="(drawerButtonClasses$ | async) || ''">
       <mat-icon>{{ buttonIcon$ | async }}</mat-icon>
     </button>

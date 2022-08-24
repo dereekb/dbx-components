@@ -1,4 +1,4 @@
-import { isLatLngPoint, latLngPoint, latLngPointFunction, latLngString, LonLatTuple, lonLatTuple } from './point';
+import { isLatLngPoint, latLngPoint, latLngPointFunction, latLngString, LonLatTuple, lonLatTuple, TOTAL_LONGITUDE_RANGE, wrapLngValue } from './point';
 
 describe('isLatLngPoint()', () => {
   it('should return true for points.', () => {
@@ -17,6 +17,23 @@ describe('lonLngTuple()', () => {
 
     expect(result[0]).toBe(input[0]);
     expect(result[1]).toBe(input[1]);
+  });
+});
+
+describe('wrapLngValue()', () => {
+  it('should wrap a negative value to the other side of the map.', () => {
+    const input = -190;
+    expect(wrapLngValue(input)).toBe(170);
+  });
+
+  it('should wrap a positive value to the other side of the map.', () => {
+    const input = 190;
+    expect(wrapLngValue(input)).toBe(-170);
+  });
+
+  it('should wrap a very positive value to the other side of the map.', () => {
+    const input = 190 + TOTAL_LONGITUDE_RANGE;
+    expect(wrapLngValue(input)).toBe(-170);
   });
 });
 

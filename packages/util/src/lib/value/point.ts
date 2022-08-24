@@ -14,8 +14,10 @@ export type Longitude = number;
 
 export const MIN_LATITUDE_VALUE = -90.0;
 export const MAX_LATITUDE_VALUE = 90.0;
+export const TOTAL_LATITUDE_RANGE = MAX_LATITUDE_VALUE - MIN_LATITUDE_VALUE;
 export const MIN_LONGITUDE_VALUE = -180.0;
 export const MAX_LONGITUDE_VALUE = 180.0;
+export const TOTAL_LONGITUDE_RANGE = MAX_LONGITUDE_VALUE - MIN_LONGITUDE_VALUE;
 
 export interface LatLngPoint {
   lat: Latitude;
@@ -38,6 +40,36 @@ export function isLatLngPoint(input: LatLngPoint | unknown): input is LatLngPoin
 
 export function isSameLatLngPoint(a: LatLngPoint, b: LatLngPoint) {
   return a.lat === b.lat && a.lng === b.lng;
+}
+
+export function diffLatLngPoints(a: LatLngPoint, b: LatLngPoint) {
+  return wrapLatLngPoint({ lat: a.lat - b.lat, lng: a.lng - b.lng });
+}
+
+export function addLatLngPoints(a: LatLngPoint, b: LatLngPoint) {
+  return wrapLatLngPoint({ lat: a.lat + b.lat, lng: a.lng + b.lng });
+}
+
+export function wrapLatLngPoint(a: LatLngPoint): LatLngPoint {
+  return { lat: capLatValue(a.lat), lng: wrapLngValue(a.lng) };
+}
+
+export function capLatValue(a: number): Latitude {
+  return Math.max(Math.min(a, MAX_LATITUDE_VALUE), MIN_LATITUDE_VALUE);
+}
+
+export function wrapLngValue(a: number): Longitude {
+  if (Math.abs(a) > MAX_LONGITUDE_VALUE) {
+    const normal = a % 180;
+
+    if (a > 0) {
+      return normal + MIN_LONGITUDE_VALUE;
+    } else {
+      return normal + MAX_LONGITUDE_VALUE;
+    }
+  } else {
+    return a;
+  }
 }
 
 export function isValidLatitude(lat: Latitude): boolean {

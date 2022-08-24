@@ -1,12 +1,12 @@
-import { switchMap } from 'rxjs/operators';
-import { startWith, mergeAll, shareReplay, throttleTime, map, distinctUntilChanged, of, BehaviorSubject, combineLatest, Subject, Observable, merge } from 'rxjs';
-import { Component, Input, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { skip, switchMap, first, startWith, mergeAll, shareReplay, throttleTime, map, distinctUntilChanged, of, BehaviorSubject, combineLatest, Subject, Observable, merge } from 'rxjs';
+import { Component, ElementRef, Input, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { DbxMapboxMapStore } from './mapbox.store';
 import { Maybe } from '@dereekb/util';
 import { dbxColorBackground, DbxThemeColor } from '@dereekb/dbx-web';
 import { ResizedEvent } from 'angular-resize-event';
 import { tapLog, SubscriptionObject } from '@dereekb/rxjs';
 import { MatDrawerContainer } from '@angular/material/sidenav';
+import { MapboxEaseTo } from './mapbox';
 
 export type DbxMapboxLayoutSide = 'left' | 'right';
 
@@ -26,10 +26,15 @@ export class DbxMapboxLayoutComponent extends SubscriptionObject implements OnIn
   @ViewChild(MatDrawerContainer)
   readonly container!: MatDrawerContainer;
 
+  @ViewChild('content', { read: ElementRef, static: true })
+  readonly content!: ElementRef;
+
   private _resized = new Subject<void>();
+  private _updateMargins = new Subject<void>();
   private _side = new BehaviorSubject<DbxMapboxLayoutSide>('right');
   private _openToggle = new BehaviorSubject<boolean>(true);
   private _color = new BehaviorSubject<Maybe<DbxThemeColor>>(undefined);
+  private _toggleSub = new SubscriptionObject();
 
   readonly side$ = this._side.pipe(distinctUntilChanged(), shareReplay(1));
 
@@ -92,18 +97,53 @@ export class DbxMapboxLayoutComponent extends SubscriptionObject implements OnIn
 
         // side changed
         if (reason === 's') {
-          setTimeout(() => this.container.updateContentMargins());
+          setTimeout(() => {
+            this._updateMargins.next();
+          });
         }
+      });
+    });
+
+    this._toggleSub.subscription = combineLatest([this.opened$.pipe(distinctUntilChanged(), skip(1)), this._updateMargins]).subscribe(([opened]) => {
+      let { right } = this.container._contentMargins;
+
+      this.container.updateContentMargins();
+
+      setTimeout(() => {
+        const flip = opened ? 1 : -1;
+
+        if (opened) {
+          right = this.container._contentMargins.right;
+        }
+
+        right = (right || 0) * flip;
+
+        const element: HTMLElement = this.content.nativeElement;
+        const width = element.clientWidth;
+
+        const easeTo: Observable<MapboxEaseTo> = this.dbxMapboxMapStore
+          .calculateNextCenterOffsetWithScreenMarginChange({
+            leftMargin: 0,
+            rightMargin: right,
+            fullWidth: width
+          })
+          .pipe(
+            first(),
+            map((center) => ({ to: { center, duration: 3200, essential: false } } as MapboxEaseTo))
+          );
+
+        this.dbxMapboxMapStore.easeTo(easeTo);
       });
     });
   }
 
   ngOnDestroy(): void {
-    console.log('destroy');
-    this._side.complete();
     this._resized.complete();
+    this._updateMargins.complete();
+    this._side.complete();
     this._openToggle.complete();
     this._color.complete();
+    this._toggleSub.destroy();
   }
 
   toggleDrawer(open?: boolean) {
