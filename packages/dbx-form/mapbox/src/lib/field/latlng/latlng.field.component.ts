@@ -1,13 +1,11 @@
-import { AbstractControl, FormControl, FormGroup } from '@angular/forms';
+import { AbstractControl, FormGroup } from '@angular/forms';
 import { CompactContextStore, mapCompactModeObs } from '@dereekb/dbx-web';
 import { Component, OnDestroy, OnInit, Optional } from '@angular/core';
 import { FieldTypeConfig, FormlyFieldProps } from '@ngx-formly/core';
 import { FieldType } from '@ngx-formly/material';
-import { Editor, Validators } from 'ngx-editor';
-import { first, BehaviorSubject, debounceTime, distinctUntilChanged, filter, shareReplay, startWith, switchMap, map, Observable, combineLatest, of } from 'rxjs';
+import { first, BehaviorSubject, filter, shareReplay, startWith, switchMap, map, Observable } from 'rxjs';
 import { filterMaybe, SubscriptionObject } from '@dereekb/rxjs';
-import { Maybe, latLngString, LatLngString, LatLngPoint, LatLngPointFunctionConfig, latLngPoint, LatLngStringFunction, latLngStringFunction } from '@dereekb/util';
-import { isSameMinute } from 'date-fns';
+import { Maybe, LatLngPoint, LatLngPointFunctionConfig, latLngPoint, LatLngStringFunction, latLngStringFunction } from '@dereekb/util';
 import { GeolocationService } from '@ng-web-apis/geolocation';
 import { Marker } from 'mapbox-gl';
 import { DbxMapboxMapStore } from '@dereekb/dbx-web/mapbox';

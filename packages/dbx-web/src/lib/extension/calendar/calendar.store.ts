@@ -2,8 +2,7 @@ import { Injectable } from '@angular/core';
 import { ComponentStore } from '@ngrx/component-store';
 import { CalendarEvent } from 'angular-calendar';
 import { differenceInDays, addDays, endOfDay, endOfMonth, endOfWeek, isSameDay, startOfDay, startOfMonth, startOfWeek, isBefore, isAfter } from 'date-fns';
-import { Observable } from 'rxjs';
-import { distinctUntilChanged, first, map, shareReplay, switchMap, tap } from 'rxjs/operators';
+import { Observable, distinctUntilChanged, first, map, shareReplay, switchMap, tap } from 'rxjs';
 
 export enum CalendarDisplayType {
   MONTH = 'month',

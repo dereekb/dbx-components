@@ -1,5 +1,5 @@
 import { FirebaseContextGrantedModelRoles, FirebaseDoesNotExistErrorContextErrorFunction, FirebasePermissionErrorContext, FirebasePermissionErrorContextErrorFunction } from '@dereekb/firebase';
-import { ArrayOrValue, serverError } from '@dereekb/util';
+import { ArrayOrValue } from '@dereekb/util';
 import { GrantedRole } from '@dereekb/model';
 import { forbiddenError, modelNotAvailableError } from '../../function/error';
 

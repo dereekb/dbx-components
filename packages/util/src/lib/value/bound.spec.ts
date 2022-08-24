@@ -1,6 +1,6 @@
 import { LatLngBound } from '@dereekb/util';
 import { latLngPoint } from './point';
-import { boundToRectangle, latLngBound, latLngBoundFunction, overlapsLatLngBoundFunction, TOTAL_SPAN_OF_LONGITUDE } from './bound';
+import { boundToRectangle, latLngBound, latLngBoundCenterPoint, latLngBoundFunction, overlapsLatLngBoundFunction, TOTAL_SPAN_OF_LONGITUDE } from './bound';
 
 describe('latLngBoundFunction()', () => {
   const precision = 3;
@@ -45,6 +45,16 @@ describe('latLngBoundFunction()', () => {
       expect(result.ne.lat).toBe(ne.lat);
       expect(result.ne.lng).toBe(ne.lng);
     });
+  });
+});
+
+describe('latLngBoundCenterPoint()', () => {
+  it('should return the center of the input bounds', () => {
+    const bound = latLngBound({ lat: 0, lng: 0 }, { lat: 40, lng: 40 });
+    const result = latLngBoundCenterPoint(bound);
+
+    expect(result.lat).toBe(20);
+    expect(result.lng).toBe(20);
   });
 });
 

@@ -1,1 +1,3 @@
-export type DbxBarColor = 'primary' | 'accent' | 'warn' | 'background';
+import { DbxThemeColor } from '../style/style';
+
+export type DbxBarColor = DbxThemeColor;

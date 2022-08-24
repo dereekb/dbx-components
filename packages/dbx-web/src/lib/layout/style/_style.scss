@@ -60,6 +60,8 @@
   $primary: map.get($color-config, 'primary');
   $accent: map.get($color-config, 'accent');
   $warn: map.get($color-config, 'warn');
+  $background: map.get($color-config, 'background');
+  $foreground: map.get($color-config, 'foreground');
 
   $primary-color: theming.get-color-from-palette($primary, 500);
   $primary-color-contrast: theming.get-color-from-palette($primary, '500-contrast');
@@ -69,6 +71,9 @@
 
   $warn-color: theming.get-color-from-palette($warn, 500);
   $warn-color-contrast: theming.get-color-from-palette($warn, '500-contrast');
+
+  $background-text-color: theming.get-color-from-palette($foreground, 'text');
+  $background-color: theming.get-color-from-palette($background, 'background');
 
   .dbx-primary {
     color: $primary-color;
@@ -95,6 +100,12 @@
   .dbx-warn-bg {
     background: $warn-color;
     color: $warn-color-contrast;
+  }
+
+  .dbx-bg,
+  .dbx-background {
+    color: $background-text-color;
+    background: $background-color;
   }
 }
 

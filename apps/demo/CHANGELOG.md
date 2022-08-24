@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [9.4.0](https://github.com/dereekb/dbx-components/compare/v9.3.3-dev...v9.4.0) (2022-08-24)
+
+
+### Features
+
+* added dbx-map-layout ([4955020](https://github.com/dereekb/dbx-components/commit/49550205754cedc9fd431c7d6440f106147e3e0b))
+
+
+
 ## [9.3.3](https://github.com/dereekb/dbx-components/compare/v9.3.2-dev...v9.3.3) (2022-08-23)
 
 

@@ -1,6 +1,6 @@
 import { Rectangle, rectangleOverlapsRectangle, Vector } from './vector';
 import { Writable } from 'ts-essentials';
-import { latLngPointFunction, LatLngPoint, LatLngPointInput, LatLngPrecision, LatLngPointFunction, isLatLngPoint, isSameLatLngPoint } from './point';
+import { latLngPointFunction, LatLngPoint, LatLngPointInput, LatLngPrecision, LatLngPointFunction, isLatLngPoint, isSameLatLngPoint, diffLatLngPoints } from './point';
 
 export type LatLngBoundSouthWestPoint = LatLngPoint;
 export type LatLngBoundNothEastPoint = LatLngPoint;
@@ -16,6 +16,10 @@ export function isLatLngBound(input: LatLngBound | unknown): input is LatLngBoun
 
 export function isSameLatLngBound(a: LatLngBound, b: LatLngBound): boolean {
   return isSameLatLngPoint(a.sw, b.sw) && isSameLatLngPoint(a.ne, b.ne);
+}
+
+export function diffLatLngBoundPoints(bounds: LatLngBound): LatLngPoint {
+  return diffLatLngPoints(bounds.ne, bounds.sw);
 }
 
 /**
@@ -46,8 +50,8 @@ export function latLngBoundSouthWestPoint(bound: LatLngBound): LatLngPoint {
 
 export function latLngBoundCenterPoint(bound: LatLngBound): LatLngPoint {
   const { sw, ne } = bound;
-  const lat = (sw.lng + ne.lng) / 2;
-  const lng = (sw.lat + ne.lat) / 2;
+  const lat = (sw.lat + ne.lat) / 2;
+  const lng = (sw.lng + ne.lng) / 2;
   return { lat, lng };
 }
 

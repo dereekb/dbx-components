@@ -1,4 +1,4 @@
-import { Observable, combineLatest, firstValueFrom } from 'rxjs';
+import { map, Observable, combineLatest, firstValueFrom } from 'rxjs';
 import { asObservable, filterMaybe, ObservableOrValue } from '@dereekb/rxjs';
 import { DbxRouterService, DbxRouterTransitionService } from '../../service';
 import { asSegueRef, SegueRef, SegueRefOrSegueRefRouterLink, SegueRefRawSegueParams } from '../../../segue';
@@ -6,7 +6,6 @@ import { DbxRouterTransitionEvent, DbxRouterTransitionEventType } from '../../tr
 import { ActivatedRoute, NavigationBehaviorOptions, NavigationEnd, NavigationExtras, NavigationStart, Router, UrlTree } from '@angular/router';
 import { Injectable } from '@angular/core';
 import { isArray } from 'class-validator';
-import { map } from 'rxjs/operators';
 import { KeyValueTypleValueFilter, Maybe, mergeObjects } from '@dereekb/util';
 
 /**
