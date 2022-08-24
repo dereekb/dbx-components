@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [9.5.0](https://github.com/dereekb/dbx-components/compare/v9.4.0-dev...v9.5.0) (2022-08-24)
+
+
+### Features
+
+* added dbx-mapbox-menu ([8e310a7](https://github.com/dereekb/dbx-components/commit/8e310a7ec0908cb345f5277a1bde2a7a31652fa6))
+
+
+
 # [9.4.0](https://github.com/dereekb/dbx-components/compare/v9.3.3-dev...v9.4.0) (2022-08-24)
 
 

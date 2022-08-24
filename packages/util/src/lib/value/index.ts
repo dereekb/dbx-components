@@ -10,3 +10,4 @@ export * from './modifier';
 export * from './url';
 export * from './use';
 export * from './point';
+export * from './vector';

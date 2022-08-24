@@ -8,4 +8,5 @@ export * from './loading';
 export * from './layout';
 export * from './router';
 export * from './screen';
+export * from './util';
 export * from './dbx-web.module';
