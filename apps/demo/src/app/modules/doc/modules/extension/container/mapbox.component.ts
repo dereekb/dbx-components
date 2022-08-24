@@ -22,6 +22,8 @@ export class DocExtensionMapboxComponent implements OnInit, OnDestroy {
   private _color = new BehaviorSubject<Maybe<DbxThemeColor>>(undefined);
   readonly color$: Observable<Maybe<DbxThemeColor>> = this._color.asObservable();
 
+  menuValue?: Maybe<number> = undefined;
+
   readonly mapService$ = this.dbxMapboxMapStore.mapService$;
   readonly mapInstance$ = this.dbxMapboxMapStore.mapInstance$;
   readonly moveState$ = this.dbxMapboxMapStore.moveState$;
@@ -40,6 +42,7 @@ export class DocExtensionMapboxComponent implements OnInit, OnDestroy {
   readonly boundNow$ = this.dbxMapboxMapStore.boundNow$;
   readonly click$ = this.dbxMapboxMapStore.clickEvent$.pipe(map((x) => x?.lngLat.toArray()));
   readonly doubleClick$ = this.dbxMapboxMapStore.doubleClickEvent$.pipe(map((x) => x?.lngLat.toArray()));
+  readonly rightClick$ = this.dbxMapboxMapStore.rightClickEvent$.pipe(map((x) => ({ loc: x?.lngLat.toArray(), x: x?.originalEvent?.pageX, y: x?.originalEvent?.pageY })));
 
   readonly defaultLatLngFieldValue = {
     latLng: latLngString(30.5989668, -96.3831949),
@@ -141,5 +144,9 @@ export class DocExtensionMapboxComponent implements OnInit, OnDestroy {
 
   useSatelliteMap() {
     this.dbxMapboxMapStore.setStyle('mapbox://styles/mapbox/satellite-v9' as KnownMapboxStyle);
+  }
+
+  clickMenuItem(value: number) {
+    this.menuValue = value;
   }
 }

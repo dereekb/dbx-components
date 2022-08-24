@@ -48,6 +48,10 @@ export interface DbxMapboxStoreState {
    */
   doubleClickEvent?: Maybe<DbxMapboxClickEvent>;
   /**
+   * Latest contextmenu event.
+   */
+  rightClickEvent?: Maybe<DbxMapboxClickEvent>;
+  /**
    * Whether or not to retain content between resets.
    *
    * True by default.
@@ -124,6 +128,7 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
 
               addListener('click', (x) => this._setClickEvent(x));
               addListener('dblclick', (x) => this._setDoubleClickEvent(x));
+              addListener('contextmenu', (x) => this._setRightClickEvent(x));
 
               const subs: Subscription[] = [];
 
@@ -658,6 +663,12 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
     shareReplay(1)
   );
 
+  readonly rightClickEvent$ = this.state$.pipe(
+    map((x) => x.rightClickEvent),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+
   // MARK: State Changes
   private readonly _setMapService = this.updater((state, mapService: Maybe<MapService>) => ({ mapService, moveState: 'init', lifecycleState: 'init', zoomState: 'init', rotateState: 'init', retainContent: state.retainContent, content: state.retainContent ? state.content : undefined }));
   private readonly _setLifecycleState = this.updater((state, lifecycleState: MapboxMapLifecycleState) => ({ ...state, lifecycleState }));
@@ -667,6 +678,7 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
 
   private readonly _setClickEvent = this.updater((state, clickEvent: DbxMapboxClickEvent) => ({ ...state, clickEvent }));
   private readonly _setDoubleClickEvent = this.updater((state, doubleClickEvent: DbxMapboxClickEvent) => ({ ...state, doubleClickEvent }));
+  private readonly _setRightClickEvent = this.updater((state, rightClickEvent: DbxMapboxClickEvent) => ({ ...state, rightClickEvent }));
 
   private readonly _setError = this.updater((state, error: Error) => ({ ...state, error }));
 

@@ -9,12 +9,14 @@ import { DbxInjectionComponentModule } from '@dereekb/dbx-core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { AngularResizeEventModule } from 'angular-resize-event';
+import { DbxMapboxMenuComponent } from './mapbox.menu.component';
 
 const declarations = [
   //
   DbxMapboxMapDirective,
   DbxMapboxLayoutComponent,
-  DbxMapboxLayoutDrawerComponent
+  DbxMapboxLayoutDrawerComponent,
+  DbxMapboxMenuComponent
 ];
 
 @NgModule({

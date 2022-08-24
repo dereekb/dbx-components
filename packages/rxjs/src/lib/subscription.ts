@@ -1,11 +1,11 @@
 import { Subscription } from 'rxjs';
-import { ArrayOrValue, convertToArray, Destroyable } from '@dereekb/util';
+import { ArrayOrValue, convertToArray, Destroyable, Maybe } from '@dereekb/util';
 
 /**
  * Destroyable object that wraps a subscription.
  */
 export class SubscriptionObject implements Destroyable {
-  private _subscription?: Subscription;
+  private _subscription?: Maybe<Subscription>;
 
   constructor(sub?: Subscription) {
     if (sub) {
@@ -17,11 +17,11 @@ export class SubscriptionObject implements Destroyable {
     return Boolean(this._subscription);
   }
 
-  public set subscription(sub: Subscription | undefined) {
+  public set subscription(sub: Maybe<Subscription>) {
     this.setSub(sub);
   }
 
-  public setSub(sub: Subscription | undefined) {
+  public setSub(sub: Maybe<Subscription>) {
     this.unsub();
     this._subscription = sub;
   }
