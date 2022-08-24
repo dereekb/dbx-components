@@ -24,6 +24,7 @@ $dbx-mapbox-layout-drawer-has-content-button-width: $dbx-mapbox-layout-drawer-bu
     top: 40%;
     border: none;
     display: flex;
+    overflow: hidden;
 
     .left-drawer & {
       left: 0;
