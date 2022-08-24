@@ -2,7 +2,7 @@ import { FormlyFieldConfig } from '@ngx-formly/core';
 import { Validators, AbstractControl } from '@angular/forms';
 import { TextFieldConfig, textField } from './text.field';
 import { LabeledFieldConfig, DescriptionFieldConfig, validatorsForFieldConfig } from '../../field';
-import { LAT_LNG_PATTERN, LAT_LNG_PATTERN_MAX_PRECISION } from '@dereekb/util';
+import { LAT_LNG_PATTERN } from '@dereekb/util';
 
 export const PHONE_LABEL_MAX_LENGTH = 100;
 

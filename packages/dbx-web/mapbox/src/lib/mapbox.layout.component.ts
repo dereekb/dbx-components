@@ -1,10 +1,10 @@
-import { skip, switchMap, first, startWith, mergeAll, shareReplay, throttleTime, map, distinctUntilChanged, of, BehaviorSubject, combineLatest, Subject, Observable, merge } from 'rxjs';
+import { skip, switchMap, first, startWith, shareReplay, throttleTime, map, distinctUntilChanged, BehaviorSubject, combineLatest, Subject, Observable } from 'rxjs';
 import { Component, ElementRef, Input, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { DbxMapboxMapStore } from './mapbox.store';
 import { Maybe } from '@dereekb/util';
 import { dbxColorBackground, DbxThemeColor } from '@dereekb/dbx-web';
 import { ResizedEvent } from 'angular-resize-event';
-import { tapLog, SubscriptionObject } from '@dereekb/rxjs';
+import { SubscriptionObject } from '@dereekb/rxjs';
 import { MatDrawerContainer } from '@angular/material/sidenav';
 import { MapboxEaseTo } from './mapbox';
 

@@ -45,22 +45,22 @@ export function rectangleOverlapsRectangle(a: Rectangle, b: Rectangle): boolean 
 }
 
 export function getOverlappingRectangle(a: Rectangle, b: Rectangle): Maybe<Rectangle> {
-  var xl = Math.max(a.bl.x, b.bl.x);
-  var yl = Math.max(a.bl.y, b.bl.y);
-  var xr = Math.min(a.tr.x, b.tr.x);
-  var yr = Math.min(a.tr.y, b.tr.y);
+  const xl = Math.max(a.bl.x, b.bl.x);
+  const yl = Math.max(a.bl.y, b.bl.y);
+  const xr = Math.min(a.tr.x, b.tr.x);
+  const yr = Math.min(a.tr.y, b.tr.y);
 
   // does not intersect
   if (xl > xr || yl > yr) {
     return undefined;
   }
 
-  let topRight: TopRightCorner = {
+  const topRight: TopRightCorner = {
     x: xr,
     y: yr
   };
 
-  let bottomLeft: BottomLeftCorner = {
+  const bottomLeft: BottomLeftCorner = {
     x: xl,
     y: yl
   };

@@ -137,6 +137,6 @@ export function contextGrantedModelRolesReaderPermissionErrorMessage(contextGran
  * @returns
  */
 export function contextGrantedModelRolesReaderDoesNotExistErrorMessage(contextGrantedModelRoles: FirebaseContextGrantedModelRoles<FirebasePermissionErrorContext, unknown>) {
-  let message = `Does Not Exist ("${contextGrantedModelRoles.data?.document.modelType}":"${contextGrantedModelRoles.data?.document.id}")`;
+  const message = `Does Not Exist ("${contextGrantedModelRoles.data?.document.modelType}":"${contextGrantedModelRoles.data?.document.id}")`;
   return message;
 }

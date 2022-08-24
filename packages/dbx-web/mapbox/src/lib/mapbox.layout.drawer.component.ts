@@ -1,7 +1,5 @@
-import { DbxMapboxMapDirective } from './mapbox.store.map.directive';
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { DbxMapboxMapStore } from './mapbox.store';
-import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
 
 /**
  * Content drawer that connects with DbxMapboxMapStore to
