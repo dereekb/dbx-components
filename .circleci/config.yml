@@ -19,6 +19,8 @@ jobs:
       persist_build_to_workspace:
         type: boolean
         default: true
+    environment:
+      CYPRESS_INSTALL_BINARY: 0
     steps:
       - checkout
       # install node packages
