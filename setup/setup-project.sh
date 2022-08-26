@@ -40,6 +40,7 @@ PROJECT_NAME=$INPUT_PROJECT_NAME
 NAME=$PROJECT_NAME
 DBX_COMPONENTS_VERSION=${DBX_SETUP_PROJECT_COMPONENTS_VERSION:-"8.15.2"}
 NX_VERSION=${NX_SETUP_VERSIONS:-"14.5.5"}
+ANGULAR_VERSION=${ANGULAR_SETUP_VERSIONS:-"14.1.2"}
 
 # The app prefix is used in Angular and Nest classes as the prefix for classes/components
 APP_CODE_PREFIX="$(tr '[:lower:]' '[:upper:]' <<< ${INPUT_CODE_PREFIX:0:1})${INPUT_CODE_PREFIX:1}"
@@ -160,7 +161,8 @@ git commit --no-verify -m "checkpoint: init nx-cloud"
 # update nx to the latest version and commit
 #
 #npx -y nx@$NX_VERSION migrate latest
-npm install -D @nrwl/angular@$NX_VERSION
+npm install @angular/animations@$ANGULAR_VERSION @angular/common@$ANGULAR_VERSION @angular/compiler@$ANGULAR_VERSION @angular/core@$ANGULAR_VERSION @angular/forms@$ANGULAR_VERSION @angular/material@$ANGULAR_VERSION @angular/cdk@$ANGULAR_VERSION @angular/platform-browser@$ANGULAR_VERSION @angular/platform-browser-dynamic@$ANGULAR_VERSION @angular/router@$ANGULAR_VERSION
+npm install -D @nrwl/angular@$NX_VERSION @angular/cli@$ANGULAR_VERSION @angular/compiler-cli@$ANGULAR_VERSION @angular-devkit/build-angular@$ANGULAR_VERSION
 
 #
 #if test -f "migrations.json"; then   # migrate if it is available
