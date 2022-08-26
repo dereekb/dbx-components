@@ -1,4 +1,7 @@
 #!/bin/bash
+# exit when any command fails
+set -e
+
 ## Usage:
 # ./setup-project.sh my-firebase-project-id
 # The prefix is optional. It should be a single word.
@@ -39,8 +42,8 @@ SOURCE_BRANCH=${DBX_SETUP_PROJECT_BRANCH:-"main"}     # develop or main
 PROJECT_NAME=$INPUT_PROJECT_NAME
 NAME=$PROJECT_NAME
 DBX_COMPONENTS_VERSION=${DBX_SETUP_PROJECT_COMPONENTS_VERSION:-"8.15.2"}
-NX_VERSION=${NX_SETUP_VERSIONS:-"14.5.5"}
-ANGULAR_VERSION=${ANGULAR_SETUP_VERSIONS:-"14.1.2"}
+NX_VERSION=${NX_SETUP_VERSIONS:-"14.5.10"}
+ANGULAR_VERSION=${ANGULAR_SETUP_VERSIONS:-"~14.1.2"}
 
 # The app prefix is used in Angular and Nest classes as the prefix for classes/components
 APP_CODE_PREFIX="$(tr '[:lower:]' '[:upper:]' <<< ${INPUT_CODE_PREFIX:0:1})${INPUT_CODE_PREFIX:1}"
@@ -161,8 +164,6 @@ git commit --no-verify -m "checkpoint: init nx-cloud"
 # update nx to the latest version and commit
 #
 #npx -y nx@$NX_VERSION migrate latest
-npm install @angular/animations@$ANGULAR_VERSION @angular/common@$ANGULAR_VERSION @angular/compiler@$ANGULAR_VERSION @angular/core@$ANGULAR_VERSION @angular/forms@$ANGULAR_VERSION @angular/material@$ANGULAR_VERSION @angular/cdk@$ANGULAR_VERSION @angular/platform-browser@$ANGULAR_VERSION @angular/platform-browser-dynamic@$ANGULAR_VERSION @angular/router@$ANGULAR_VERSION
-npm install -D @nrwl/angular@$NX_VERSION @angular/cli@$ANGULAR_VERSION @angular/compiler-cli@$ANGULAR_VERSION @angular-devkit/build-angular@$ANGULAR_VERSION
 
 #
 #if test -f "migrations.json"; then   # migrate if it is available
@@ -386,11 +387,16 @@ then
 install_local_peer_deps() {
   local FILE_PATH=$1
   echo "Installing dependencies from: $FILE_PATH"
-  npm info x@$FILE_PATH peerDependencies --json | command sed 's/[\{\},]//g ; s/: /@/g; s/"@dereekb\/.*"@".*"//g ;';
-  npm info x@$FILE_PATH peerDependencies --json | command sed 's/[\{\},]//g ; s/: /@/g; s/"@dereekb\/.*"@".*"//g ;' | xargs npm install "$PKG";
+  npm info x@$FILE_PATH peerDependencies --json | command sed 's/[\{\},]//g ; s/: /@/g; s/"@dereekb\/.*"@".*"//g ; s/"@angular\/.*"@".*"//g ;';
+  npm info x@$FILE_PATH peerDependencies --json | command sed 's/[\{\},]//g ; s/: /@/g; s/"@dereekb\/.*"@".*"//g ; s/"@angular\/.*"@".*"//g ;' | xargs npm install "$PKG";
 }
 
 # The CI environment does not seem to install any of the peer dependencies from the local @dereekb packages
+echo "Installing specific angular version"
+npm install -D @nrwl/angular@$NX_VERSION jest-preset-angular@12.2.0 @angular-devkit/build-angular@$ANGULAR_VERSION @angular/cli@$ANGULAR_VERSION @angular/compiler-cli@$ANGULAR_VERSION @angular/language-service@$ANGULAR_VERSION --force
+npm install @angular/fire@^7.4.1 @angular/flex-layout@^14.0.0-beta.40 @angular/animations@$ANGULAR_VERSION @angular/common@$ANGULAR_VERSION @angular/compiler@$ANGULAR_VERSION @angular/core@$ANGULAR_VERSION @angular/forms@$ANGULAR_VERSION @angular/material@$ANGULAR_VERSION @angular/cdk@$ANGULAR_VERSION @angular/platform-browser@$ANGULAR_VERSION @angular/platform-browser-dynamic@$ANGULAR_VERSION @angular/router@$ANGULAR_VERSION
+# note @angular/fire and @angular/flex-layout dependencies here are, as install_local ignores any @angular prefix
+
 echo "Installing @dereekb peer dependencies for CI"
 install_local_peer_deps "$DBX_COMPONENTS_VERSION_BROWSER"
 install_local_peer_deps "$DBX_COMPONENTS_VERSION_DATE"
@@ -405,9 +411,6 @@ install_local_peer_deps "$DBX_COMPONENTS_VERSION_MODEL"
 install_local_peer_deps "$DBX_COMPONENTS_VERSION_NESTJS" 
 install_local_peer_deps "$DBX_COMPONENTS_VERSION_RXJS" 
 install_local_peer_deps "$DBX_COMPONENTS_VERSION_UTIL"
-
-# TODO: Find a better way for the peers to be installed.
-# npm install @angular/cdk @angular/flex-layout @angular/fire @angular/material @ngrx/component-store @ngrx/data @ngrx/effects @ngrx/store @ngrx/entity @ngx-formly/core@6.0.0-rc.2 @ngx-formly/material@6.0.0-rc.2 @ngx-formly/schematics@6.0.0-rc.2 @uirouter/core ts-essentials extra-set change-case class-validator class-transformer @uirouter/angular@git+https://git@github.com/dereekb/uirouter-angular#7c4bb71689377b167af1d5bd0a38c91429afc041 ngx-editor ngx-mat-intl-tel-input ngx-infinite-scroll
 fi
 
 echo "Installing dev dependencies"
@@ -586,19 +589,19 @@ curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/app
 rm $ANGULAR_APP_FOLDER/src/index.html
 download_angular_ts_file "src/index.html"
 
-rm -r $ANGULAR_APP_FOLDER/src/style
+rm -rf $ANGULAR_APP_FOLDER/src/style ||:
 mkdir $ANGULAR_APP_FOLDER/src/style
 download_angular_ts_file "src/style/_app.scss"
 download_angular_ts_file "src/style/_style.scss"
 download_angular_ts_file "src/style/_variables.scss"
 
-rm -r $ANGULAR_APP_FOLDER/src/environments
+rm -rf $ANGULAR_APP_FOLDER/src/environments ||:
 mkdir $ANGULAR_APP_FOLDER/src/environments
 download_angular_ts_file "src/environments/base.ts"
 download_angular_ts_file "src/environments/environment.prod.ts"
 download_angular_ts_file "src/environments/environment.ts"
 
-rm -r $ANGULAR_APP_FOLDER/src/app
+rm -rf $ANGULAR_APP_FOLDER/src/app ||:
 mkdir -p $ANGULAR_APP_FOLDER/src/app
 download_angular_ts_file "src/app/app.router.ts"
 download_angular_ts_file "src/app/app.module.ts"
