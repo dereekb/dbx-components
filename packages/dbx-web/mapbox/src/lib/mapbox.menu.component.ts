@@ -2,7 +2,7 @@ import { SubscriptionObject } from '@dereekb/rxjs';
 import { filter, switchMap, BehaviorSubject, of } from 'rxjs';
 import { DbxMapboxService } from './mapbox.service';
 import { DbxMapboxMapStore } from './mapbox.store';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Directive, Host, HostListener, Input, OnInit, Optional, OnDestroy } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Directive, Host, HostListener, Input, OnInit, Optional, OnDestroy, NgZone } from '@angular/core';
 import { MapComponent, MapService } from 'ngx-mapbox-gl';
 import { Vector, latLngPoint, Maybe, DestroyFunction, DestroyFunctionObject } from '@dereekb/util';
 import { MatMenu, MatMenuTrigger } from '@angular/material/menu';
@@ -35,7 +35,7 @@ export class DbxMapboxMenuComponent extends AbstractSubscriptionDirective implem
     return this._pos;
   }
 
-  constructor(readonly dbxMapboxMapStore: DbxMapboxMapStore, @Host() readonly matMenuTrigger: MatMenuTrigger, readonly cdRef: ChangeDetectorRef) {
+  constructor(readonly dbxMapboxMapStore: DbxMapboxMapStore, @Host() readonly matMenuTrigger: MatMenuTrigger, readonly ngZone: NgZone, readonly cdRef: ChangeDetectorRef) {
     super();
   }
 
@@ -67,11 +67,11 @@ export class DbxMapboxMenuComponent extends AbstractSubscriptionDirective implem
           safeMarkForCheck(this.cdRef);
 
           // open menu
-          this.matMenuTrigger.openMenu();
+          this.ngZone.run(() => this.matMenuTrigger.openMenu());
 
           // prevent right clicks in the cdkOverlay while the menu is open
           this._preventRightClick.destroy = disableRightClickInCdkBackdrop(undefined, () => {
-            this.matMenuTrigger.closeMenu();
+            this.ngZone.run(() => this.matMenuTrigger.closeMenu());
           });
         }
       });
