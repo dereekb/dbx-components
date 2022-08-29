@@ -38,6 +38,13 @@ export interface FirebaseServerAuthUserContext extends FirebaseServerAuthUserIde
   removeRoles(roles: ArrayOrValue<AuthRole>): Promise<void>;
 
   /**
+   * Sets all the roles for the user.
+   *
+   * @param roles
+   */
+  setRoles(roles: AuthRole[] | AuthRoleSet): Promise<void>;
+
+  /**
    * Loads the claims from the user.
    */
   loadClaims<T extends AuthClaimsObject = AuthClaimsObject>(): Promise<AuthClaims<T>>;
@@ -91,12 +98,17 @@ export abstract class AbstractFirebaseServerAuthUserContext<S extends FirebaseSe
 
     forEachKeyValue(baseClaims, {
       forEach: ([key]) => {
-        claims[key] = null;
+        claims[key] = null; // set null on every key
       },
-      filter: KeyValueTypleValueFilter.NONE // hit all values
+      filter: KeyValueTypleValueFilter.NONE // don't skip any key/value
     });
 
     return this.updateClaims(claims);
+  }
+
+  async setRoles(roles: AuthRole[] | AuthRoleSet): Promise<void> {
+    const claims = this._claimsForRolesChange(Array.from(roles));
+    return this.setClaims(claims);
   }
 
   protected _claimsForRolesChange(roles: ArrayOrValue<AuthRole>) {
