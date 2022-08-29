@@ -213,12 +213,12 @@ export function optionalFirestoreBoolean() {
   return firestorePassThroughField<Maybe<boolean>>();
 }
 
-export type FirestoreNumberFieldConfig = MapConfiguredFirestoreFieldConfigWithDefault<number, number> & {
+export type FirestoreNumberFieldConfig<T extends number = number> = MapConfiguredFirestoreFieldConfigWithDefault<T, T> & {
   saveDefault?: Maybe<boolean>;
 };
 
-export function firestoreNumber(config: FirestoreNumberFieldConfig) {
-  return firestoreField<number, number>({
+export function firestoreNumber<T extends number = number>(config: FirestoreNumberFieldConfig<T>) {
+  return firestoreField<T, T>({
     default: config.default,
     defaultBeforeSave: config.defaultBeforeSave ?? config.saveDefault ? config.default : undefined,
     fromData: passThrough,
@@ -226,8 +226,8 @@ export function firestoreNumber(config: FirestoreNumberFieldConfig) {
   });
 }
 
-export function optionalFirestoreNumber() {
-  return firestorePassThroughField<Maybe<number>>();
+export function optionalFirestoreNumber<T extends number = number>() {
+  return firestorePassThroughField<Maybe<T>>();
 }
 
 export type FirestoreArrayFieldConfig<T> = DefaultMapConfiguredFirestoreFieldConfig<T[], T[]> & Partial<FirestoreFieldDefault<T[]>>;
