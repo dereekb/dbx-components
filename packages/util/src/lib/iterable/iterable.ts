@@ -21,6 +21,20 @@ export function asIterable<T = unknown>(values: IterableOrValue<T>, treatStringA
   return iterable;
 }
 
+export function iterableToArray<T = unknown>(values: IterableOrValue<T>, treatStringAsIterable?: boolean): Array<T> {
+  let iterable: Array<T>;
+
+  if (typeof values === 'string' && treatStringAsIterable) {
+    iterable = [values];
+  } else if (isIterable(values)) {
+    iterable = Array.from(values);
+  } else {
+    iterable = [values];
+  }
+
+  return iterable;
+}
+
 /**
  * Returns true if the input is an Iterable.
  *

@@ -1,6 +1,6 @@
 import { FirestoreDocument } from './../../firestore/accessor/document';
 import { fullAccessRoleMap, GrantedRoleMap, noAccessRoleMap } from '@dereekb/model';
-import { AsyncDecisionFunction, Getter, GetterOrValue, getValueFromGetter, Maybe, PromiseOrValue } from '@dereekb/util';
+import { ArrayOrValue, AsyncDecisionFunction, AuthRole, Getter, GetterOrValue, Maybe, PromiseOrValue, asArray, AuthRoleSet, setContainsAllValues, IterableOrValue, asIterable, iterableToArray, getValueFromGetter } from '@dereekb/util';
 import { FirebaseModelContext } from '../context';
 import { UserRelated } from '../../../model/user';
 
@@ -32,6 +32,37 @@ export const grantFullAccessIfAdmin: GeneralGrantRolesIfFunction<FirebaseModelCo
 
 export function grantModelRolesIfAdmin<R extends string = string>(context: FirebaseModelContext, rolesToGrantToAdmin: GetterOrValue<GrantedRoleMap<R>>, otherwise?: GrantRolesOtherwiseFunction<R>): PromiseOrValue<GrantedRoleMap<R>> {
   return grantModelRolesIfAdminFunction(rolesToGrantToAdmin)(context, otherwise);
+}
+
+// MARK: Auth Roles
+/**
+ * Convenience function that checks the input context if the user is an admin or not and grants pre-set admin roles if they are.
+ *
+ * @param context
+ * @param rolesToGrantToAdmin
+ * @param otherwise
+ * @returns
+ */
+export function grantModelRolesIfHasAuthRolesFunction<R extends string = string>(authRoles: AuthRole[], rolesToGrantToAdmin: GetterOrValue<GrantedRoleMap<R>>): GrantRolesIfFunction<FirebaseModelContext, R> {
+  return grantModelRolesIfFunction((context: FirebaseModelContext) => {
+    const currentAuthRoles = context.auth?.getAuthRoles();
+
+    if (currentAuthRoles) {
+      return setContainsAllValues(currentAuthRoles, authRoles);
+    } else {
+      return authRoles.length === 0;
+    }
+  }, rolesToGrantToAdmin);
+}
+
+export type GrantModelRolesIfHasAuthRolesFactory = <R extends string = string>(context: FirebaseModelContext, rolesToGrantToAdmin: GetterOrValue<GrantedRoleMap<R>>, otherwise?: GrantRolesOtherwiseFunction<R>) => PromiseOrValue<GrantedRoleMap<R>>;
+
+export function grantModelRolesIfHasAuthRolesFactory(authRoles: IterableOrValue<AuthRole>): GrantModelRolesIfHasAuthRolesFactory {
+  const authRolesToHave = iterableToArray(authRoles);
+
+  return <R extends string = string>(context: FirebaseModelContext, rolesToGrantToMatch: GetterOrValue<GrantedRoleMap<R>>, otherwise?: GrantRolesOtherwiseFunction<R>): PromiseOrValue<GrantedRoleMap<R>> => {
+    return grantModelRolesIfHasAuthRolesFunction(authRolesToHave, rolesToGrantToMatch)(context, otherwise);
+  };
 }
 
 // MARK: User Related
