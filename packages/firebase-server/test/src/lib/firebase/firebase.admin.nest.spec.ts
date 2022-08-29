@@ -1,3 +1,4 @@
+import { FirebaseServerEnvService } from '@dereekb/firebase-server';
 import { Injectable, Module } from '@nestjs/common';
 import { firebaseAdminFirestoreContextWithFixture } from './firebase.admin';
 import { firebaseAdminNestContextFactory } from './firebase.admin.nest';
@@ -26,6 +27,11 @@ describe('firebaseAdminNestContext', () => {
       it('should have initialized the nest module.', () => {
         const thing = f.instance.get(TestInjectable);
         expect(thing).toBeDefined();
+      });
+
+      it('should have created a FirebaseServerEnvService by default.', () => {
+        const envService = f.instance.get(FirebaseServerEnvService);
+        expect(envService).toBeDefined();
       });
     });
 
