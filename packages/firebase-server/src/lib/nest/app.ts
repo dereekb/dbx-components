@@ -3,12 +3,13 @@ import { DynamicModule, FactoryProvider, INestApplication, INestApplicationConte
 import { NestFactory } from '@nestjs/core';
 import { ExpressAdapter } from '@nestjs/platform-express';
 import * as express from 'express';
-import { firebaseServerAppTokenProvider } from '../firebase/firebase.nest';
+import { firebaseServerAppTokenProvider } from './firebase/firebase.module';
 import * as admin from 'firebase-admin';
-import { ConfigureFirebaseWebhookMiddlewareModule } from './middleware/webhook';
-import { ConfigureFirebaseAppCheckMiddlewareModule } from './middleware/appcheck.module';
+import { ConfigureFirebaseWebhookMiddlewareModule, ConfigureFirebaseAppCheckMiddlewareModule } from './middleware';
 import { StorageBucketId } from '@dereekb/firebase';
-import { firebaseServerStorageDefaultBucketIdTokenProvider } from '../storage/storage.nest';
+import { firebaseServerStorageDefaultBucketIdTokenProvider } from './storage/storage.module';
+import { FirebaseServerEnvService } from '../env/env.service';
+import { FirebaseServerEnvironmentConfig, firebaseServerEnvTokenProvider, DefaultFirebaseServerEnvService } from './env';
 
 export interface NestServer {
   server: express.Express;
@@ -27,8 +28,7 @@ export interface NestServerInstance<T> {
    *
    * If already initialized the server will not be initialized again.
    */
-  initNestServer(firebaseApp: admin.app.App): NestServer;
-
+  initNestServer(firebaseApp: admin.app.App, env?: NestServerEnvironmentConfig): NestServer;
   /**
    * Terminates the nest server for the input app.
    *
@@ -49,7 +49,11 @@ export interface NestServerInstanceConfig<T> {
    */
   readonly providers?: Provider<unknown>[];
   /**
-   * Whether or not to configure webhook usage. This will configure routes to use
+   * Whether or not to configure FirebaseServerEnvService to be provided globally.
+   */
+  readonly configureEnvService?: boolean;
+  /**
+   * Whether or not to configure webhook usage. This will configure the webhook routes.
    */
   readonly configureWebhooks?: boolean;
   /**
@@ -70,11 +74,15 @@ export interface NestServerInstanceConfig<T> {
   readonly applicationOptions?: NestApplicationOptions;
 }
 
+export interface NestServerEnvironmentConfig {
+  environment: FirebaseServerEnvironmentConfig;
+}
+
 export function nestServerInstance<T>(config: NestServerInstanceConfig<T>): NestServerInstance<T> {
   const { moduleClass, providers: additionalProviders, defaultStorageBucket: inputDefaultStorageBucket, forceStorageBucket } = config;
   const serversCache = new Map<string, NestServer>();
 
-  const initNestServer = (firebaseApp: admin.app.App): NestServer => {
+  const initNestServer = (firebaseApp: admin.app.App, env?: NestServerEnvironmentConfig): NestServer => {
     const appName = firebaseApp.name;
     const defaultStorageBucket = inputDefaultStorageBucket ?? firebaseApp.options.storageBucket;
 
@@ -84,6 +92,18 @@ export function nestServerInstance<T>(config: NestServerInstanceConfig<T>): Nest
       const server = express();
       const createNestServer = async (expressInstance: express.Express) => {
         const providers: (Provider | FactoryProvider)[] = [firebaseServerAppTokenProvider(asGetter(firebaseApp))];
+
+        // configure environment providers
+        if (env?.environment != null) {
+          providers.push(firebaseServerEnvTokenProvider(env.environment));
+
+          if (config.configureEnvService !== false) {
+            providers.push({
+              provide: FirebaseServerEnvService,
+              useClass: DefaultFirebaseServerEnvService
+            });
+          }
+        }
 
         if (additionalProviders) {
           mergeArrayOrValueIntoArray(providers, additionalProviders);

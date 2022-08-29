@@ -4,6 +4,7 @@ import { INestApplicationContext } from '@nestjs/common';
 import { AuthDataRef } from '../auth';
 import { FirebaseServerAuthService, FirebaseServerAuthServiceRef } from '../auth/auth.service';
 import { FirebaseServerStorageService, FirebaseServerStorageServiceRef } from '../storage';
+import { FirebaseServerEnvService, FirebaseServerEnvServiceRef } from '../env';
 import { FirebaseServerActionsContext } from './function/context';
 import { nestFirebaseDoesNotExistError, nestFirebaseForbiddenPermissionError } from './model/permission.error';
 
@@ -31,7 +32,7 @@ export abstract class AbstractNestContext {
   constructor(readonly nest: INestApplicationContext) {}
 }
 
-export abstract class AbstractFirebaseNestContext<A, Y extends FirebaseModelsService<any, FirebaseAppModelContext<A>>> extends AbstractNestContext implements FirebaseServerAuthServiceRef, FirebaseServerStorageServiceRef {
+export abstract class AbstractFirebaseNestContext<A, Y extends FirebaseModelsService<any, FirebaseAppModelContext<A>>> extends AbstractNestContext implements FirebaseServerEnvServiceRef, FirebaseServerAuthServiceRef, FirebaseServerStorageServiceRef {
   /**
    * FirebasePermissionErrorContextErrorFunction to use with makeModelContext().
    *
@@ -48,6 +49,10 @@ export abstract class AbstractFirebaseNestContext<A, Y extends FirebaseModelsSer
    * This prevents the leaking of information about the existence of an object.
    */
   protected makeDoesNotExistError: FirebaseDoesNotExistErrorContextErrorFunction = nestFirebaseDoesNotExistError;
+
+  get envService(): FirebaseServerEnvService {
+    return this.nest.get(FirebaseServerEnvService);
+  }
 
   abstract get actionContext(): FirebaseServerActionsContext;
   abstract get authService(): FirebaseServerAuthService;

@@ -2,8 +2,8 @@ import * as admin from 'firebase-admin';
 import { InjectionToken, Module, ModuleMetadata, Provider } from '@nestjs/common';
 import { FirestoreContext } from '@dereekb/firebase';
 import { ClassLikeType } from '@dereekb/util';
-import { googleCloudFirestoreContextFactory } from '../firestore/firestore';
-import { FIREBASE_APP_TOKEN } from '../firebase/firebase.nest';
+import { googleCloudFirestoreContextFactory } from '../../firestore/firestore';
+import { FIREBASE_APP_TOKEN } from '../firebase/firebase.module';
 
 // MARK: Tokens
 /**
