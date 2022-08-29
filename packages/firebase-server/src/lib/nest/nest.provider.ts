@@ -4,7 +4,7 @@ import { INestApplicationContext } from '@nestjs/common';
 import { AuthDataRef } from '../auth';
 import { FirebaseServerAuthService, FirebaseServerAuthServiceRef } from '../auth/auth.service';
 import { FirebaseServerStorageService, FirebaseServerStorageServiceRef } from '../storage';
-import { FirebaseServerEnvService, FirebaseServerEnvServiceRef } from './env';
+import { FirebaseServerEnvService, FirebaseServerEnvServiceRef } from '../env';
 import { FirebaseServerActionsContext } from './function/context';
 import { nestFirebaseDoesNotExistError, nestFirebaseForbiddenPermissionError } from './model/permission.error';
 

@@ -3,12 +3,13 @@ import { DynamicModule, FactoryProvider, INestApplication, INestApplicationConte
 import { NestFactory } from '@nestjs/core';
 import { ExpressAdapter } from '@nestjs/platform-express';
 import * as express from 'express';
-import { firebaseServerAppTokenProvider } from '../firebase/firebase.nest';
+import { firebaseServerAppTokenProvider } from './firebase/firebase.module';
 import * as admin from 'firebase-admin';
 import { ConfigureFirebaseWebhookMiddlewareModule, ConfigureFirebaseAppCheckMiddlewareModule } from './middleware';
 import { StorageBucketId } from '@dereekb/firebase';
-import { firebaseServerStorageDefaultBucketIdTokenProvider } from '../storage/storage.nest';
-import { FirebaseServerEnvironmentConfig, firebaseServerEnvTokenProvider, FirebaseServerEnvService, DefaultFirebaseServerEnvService } from './env';
+import { firebaseServerStorageDefaultBucketIdTokenProvider } from './storage/storage.module';
+import { FirebaseServerEnvService } from '../env/env.service';
+import { FirebaseServerEnvironmentConfig, firebaseServerEnvTokenProvider, DefaultFirebaseServerEnvService } from './env';
 
 export interface NestServer {
   server: express.Express;

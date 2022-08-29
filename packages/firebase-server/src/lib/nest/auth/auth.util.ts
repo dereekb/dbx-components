@@ -1,8 +1,8 @@
 import { UserRelated } from '@dereekb/firebase';
 import { ArrayOrValue, AuthRole, containsAllValues, asArray } from '@dereekb/util';
-import { forbiddenError } from '../function';
-import { NestContextCallableRequestWithAuth } from '../nest/function/nest';
-import { AbstractFirebaseNestContext } from '../nest/nest.provider';
+import { forbiddenError } from '../../function';
+import { NestContextCallableRequestWithAuth } from '../function/nest';
+import { AbstractFirebaseNestContext } from '../nest.provider';
 
 export function assertIsAdminInRequest<N extends AbstractFirebaseNestContext<any, any> = AbstractFirebaseNestContext<any, any>, I = unknown>(request: NestContextCallableRequestWithAuth<N, I>) {
   if (!isAdminInRequest(request)) {

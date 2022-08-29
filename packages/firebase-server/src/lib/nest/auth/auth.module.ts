@@ -1,7 +1,7 @@
 import * as admin from 'firebase-admin';
 import { FactoryProvider, InjectionToken, Module, ModuleMetadata, Provider } from '@nestjs/common';
-import { FIREBASE_APP_TOKEN } from '../firebase/firebase.nest';
-import { FirebaseServerAuthService } from './auth.service';
+import { FIREBASE_APP_TOKEN } from '../firebase/firebase.module';
+import { FirebaseServerAuthService } from '../../auth/auth.service';
 import { AdditionalModuleMetadata, mergeModuleMetadata } from '@dereekb/nestjs';
 
 // MARK: Tokens
