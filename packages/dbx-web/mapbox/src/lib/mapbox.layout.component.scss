@@ -1,3 +1,6 @@
+$dbx-mapbox-min-width-var: --dbx-mapbox-min-width-var;
+
+$dbx-mapbox-min-width-default: 60px;
 $dbx-mapbox-layout-drawer-button-width: 35px;
 $dbx-mapbox-layout-drawer-no-content-button-width: 0px;
 $dbx-mapbox-layout-drawer-has-content-button-width: $dbx-mapbox-layout-drawer-button-width;
@@ -8,6 +11,10 @@ $dbx-mapbox-layout-drawer-has-content-button-width: $dbx-mapbox-layout-drawer-bu
 
   .mat-drawer-container {
     height: 100%;
+  }
+
+  .dbx-mapbox-layout-drawer {
+    max-width: calc(100% - var($dbx-mapbox-min-width-var, $dbx-mapbox-min-width-default));
   }
 
   .dbx-mapbox-layout-drawer-content {

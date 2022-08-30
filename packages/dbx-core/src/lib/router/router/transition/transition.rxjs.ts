@@ -1,5 +1,5 @@
 import { ArrayOrValue, asArray } from '@dereekb/util';
-import { filter, map, MonoTypeOperatorFunction, Observable, distinctUntilChanged, shareReplay } from 'rxjs';
+import { filter, map, MonoTypeOperatorFunction, Observable, distinctUntilChanged, shareReplay, startWith } from 'rxjs';
 import { SegueRefOrSegueRefRouterLink } from '../../segue';
 import { DbxRouterService } from '../service/router.service';
 import { DbxRouterTransitionService } from '../service/router.transition.service';
@@ -52,6 +52,7 @@ export function isLatestSuccessfulRoute(config: IsLatestSuccessfulRouteConfig): 
   const checkRoute: (route: SegueRefOrSegueRefRouterLink) => boolean = activeExactly ? (route: SegueRefOrSegueRefRouterLink) => dbxRouterService.isActiveExactly(route) : (route: SegueRefOrSegueRefRouterLink) => dbxRouterService.isActive(route);
 
   return successTransition(dbxRouterTransitionService.transitions$).pipe(
+    startWith(undefined),
     map(() => {
       const isActive = routes.findIndex(checkRoute) !== -1;
       return isActive;
