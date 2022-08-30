@@ -5,7 +5,7 @@ export interface DocExtensionMapboxContentExampleData {}
 
 @Component({
   template: `
-    <div style="width: 340px; max-width: 80%">
+    <div style="width: 340px;">
       <dbx-content-border>
         <p>Example Content</p>
       </dbx-content-border>
