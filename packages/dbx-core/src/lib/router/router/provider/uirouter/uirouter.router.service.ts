@@ -79,13 +79,11 @@ export class DbxUIRouterService implements DbxRouterService, DbxRouterTransition
   }
 
   isActive(input: SegueRefOrSegueRefRouterLink): boolean {
-    const segueRef = asSegueRef(input);
-    const ref = segueRef.ref as string;
-    const refParams = segueRef.refParams;
+    return this.isActiveState(input, false);
+  }
 
-    const targetRef = ref.startsWith('.') ? `^${ref}` : ref;
-    const active = this.state.includes(targetRef, refParams);
-    return active;
+  isActiveExactly(input: SegueRefOrSegueRefRouterLink): boolean {
+    return this.isActiveState(input, true);
   }
 
   comparePrecision(aInput: SegueRefOrSegueRefRouterLink, bInput: SegueRefOrSegueRefRouterLink): number {
@@ -95,5 +93,16 @@ export class DbxUIRouterService implements DbxRouterService, DbxRouterTransition
     const aLength = aRef.length;
     const bLength = bRef.length;
     return aLength > bLength ? 1 : aLength === bLength ? 0 : -1;
+  }
+
+  // MARK: Internal
+  isActiveState(input: SegueRefOrSegueRefRouterLink, exactly: boolean): boolean {
+    const segueRef = asSegueRef(input);
+    const ref = segueRef.ref as string;
+    const refParams = segueRef.refParams;
+
+    const targetRef = ref.startsWith('.') ? `^${ref}` : ref;
+    const active = exactly ? this.state.is(targetRef, refParams) : this.state.includes(targetRef, refParams);
+    return active;
   }
 }
