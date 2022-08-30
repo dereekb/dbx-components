@@ -1,7 +1,7 @@
 import { ModelFirebaseCreateFunction, ModelFirebaseDeleteFunction, ModelFirebaseUpdateFunction, OnCallCreateModelResult, TargetModelParams, InferredTargetModelParams, ModelFirebaseCrudFunction } from '@dereekb/firebase';
 import { lazyFrom, LoadingState, loadingStateFromObs } from '@dereekb/rxjs';
 import { firstValue, PartialOnKeys } from '@dereekb/util';
-import { first, from, Observable, switchMap } from 'rxjs';
+import { shareReplay, exhaustMap, first, from, Observable } from 'rxjs';
 import { DbxFirebaseDocumentStore } from './store.document';
 
 // MARK: Create
@@ -41,7 +41,7 @@ export type DbxfirebaseDocumentStoreCrudFunction<I, O = void> = (input: I) => Ob
  * @returns
  */
 export function firebaseDocumentStoreCrudFunction<I, O = void>(fn: ModelFirebaseCrudFunction<I, O>): DbxfirebaseDocumentStoreCrudFunction<I, O> {
-  return (params: I) => loadingStateFromObs(from(fn(params)));
+  return (params: I) => loadingStateFromObs(from(fn(params)).pipe(shareReplay(1)));
 }
 
 // MARK: Targeted Functions
@@ -71,12 +71,13 @@ export function firebaseDocumentStoreUpdateFunction<I extends DbxFirebaseDocumen
     loadingStateFromObs(
       store.key$.pipe(
         first(),
-        switchMap((key) =>
+        exhaustMap((key) =>
           fn({
             ...params,
             key // inject key into the parameters.
           } as I)
-        )
+        ),
+        shareReplay(1)
       )
     );
 }
@@ -96,7 +97,7 @@ export function firebaseDocumentStoreDeleteFunction<I extends DbxFirebaseDocumen
     loadingStateFromObs(
       store.key$.pipe(
         first(),
-        switchMap((key) =>
+        exhaustMap((key) =>
           fn({
             ...params,
             key // inject key into the parameters.
@@ -104,7 +105,8 @@ export function firebaseDocumentStoreDeleteFunction<I extends DbxFirebaseDocumen
             store.clearRefs();
             return result;
           })
-        )
+        ),
+        shareReplay(1)
       )
     );
 }
