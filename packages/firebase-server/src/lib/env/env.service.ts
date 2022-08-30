@@ -8,5 +8,9 @@ export interface FirebaseServerEnvServiceRef<S extends FirebaseServerEnvService 
 export abstract class FirebaseServerEnvService {
   abstract readonly isTestingEnv: boolean;
   abstract readonly isProduction: boolean;
+  /**
+   * @deprecated use isDeveloperToolsEnabled instead.
+   */
   abstract readonly isDevelopmentToolsEnabled: boolean;
+  abstract readonly developerToolsEnabled: boolean;
 }

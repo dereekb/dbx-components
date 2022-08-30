@@ -33,6 +33,13 @@ export abstract class DbxRouterService {
   abstract isActive(segueRef: SegueRefOrSegueRefRouterLink): boolean;
 
   /**
+   * Returns true if the input segue ref is considered active exactly.
+   *
+   * @param segueRef
+   */
+  abstract isActiveExactly(segueRef: SegueRefOrSegueRefRouterLink): boolean;
+
+  /**
    * Compares the two refs for precision for a certain route.
    *
    * For example, if the parent route is input with a child route, the child route is

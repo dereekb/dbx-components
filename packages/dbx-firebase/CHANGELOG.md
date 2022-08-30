@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [9.5.4](https://github.com/dereekb/dbx-components/compare/v9.5.3-dev...v9.5.4) (2022-08-30)
+
+
+### Bug Fixes
+
+* fixed issue where firebaseDocumentStoreUpdateFunction() repeated ([c5e76c5](https://github.com/dereekb/dbx-components/commit/c5e76c5c3f7f419cd5c9e9342f5a2fb01cf6abfb))
+
+
+
 ## [9.5.3](https://github.com/dereekb/dbx-components/compare/v9.5.2-dev...v9.5.3) (2022-08-29)
 
 
