@@ -2,7 +2,7 @@ import { TransitionHookFn, Transition, HookResult, StateService, UIInjector, Tra
 import { catchError, map, first, firstValueFrom, Observable, of, switchMap } from 'rxjs';
 import { asSegueRef, asSegueRefString, SegueRefOrSegueRefRouterLink } from './../../../../router/segue';
 import { DbxAuthService } from '../../../service/auth.service';
-import { FactoryWithRequiredInput, getValueFromGetter, isGetter, Maybe } from '@dereekb/util';
+import { FactoryWithRequiredInput, getValueFromGetter, isGetter, Maybe, Milliseconds } from '@dereekb/util';
 import { Injector } from '@angular/core';
 import { timeoutStartWith } from '@dereekb/rxjs';
 
@@ -34,6 +34,11 @@ export interface AuthTransitionHookOptions {
    * The state to redirect the user to. Defaults to defaultRedirectTarget.
    */
   errorRedirectTarget?: string;
+
+  /**
+   * Timeout time for the decision obs. Defaults to 1000ms.
+   */
+  timeoutTime?: Milliseconds;
 }
 
 export interface AuthTransitionHookConfig extends AuthTransitionHookOptions {
@@ -54,7 +59,7 @@ export interface AuthTransitionStateData {
  * This generates a TransitionHookFn that can be used with redirecting routes.
  */
 export function makeAuthTransitionHook(config: AuthTransitionHookConfig): TransitionHookFn {
-  const { defaultRedirectTarget, errorRedirectTarget = defaultRedirectTarget } = config;
+  const { defaultRedirectTarget, errorRedirectTarget = defaultRedirectTarget, timeoutTime = 1000 } = config;
 
   // https://ui-router.github.io/ng2/docs/latest/modules/transition.html#hookresult
   const assertIsAuthenticated: TransitionHookFn = (transition: Transition): HookResult => {
@@ -105,8 +110,8 @@ export function makeAuthTransitionHook(config: AuthTransitionHookConfig): Transi
     }
 
     const resultObs = decisionObs.pipe(
-      // after 10 seconds of no transition working, redirect with a false decision
-      timeoutStartWith(false as AuthTransitionDecision, 10 * 1000),
+      // after the timeoutTime seconds of no transition working, redirect with a false decision
+      timeoutStartWith(false as AuthTransitionDecision, timeoutTime),
       first(),
       switchMap((decision: AuthTransitionDecision): Observable<HookResult> => {
         if (typeof decision === 'boolean') {
@@ -121,7 +126,7 @@ export function makeAuthTransitionHook(config: AuthTransitionHookConfig): Transi
         }
       }),
       catchError((x) => {
-        console.warn('Encountered error in auth transition hook.', x);
+        console.warn(`Encountered error in auth transition hook. Attempting redirect to ${errorRedirectTarget}.`, x);
         return of($state.target(errorRedirectTarget, { location: true })); // Redirect to home
       })
     );
