@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [9.5.5](https://github.com/dereekb/dbx-components/compare/v9.5.4-dev...v9.5.5) (2022-08-30)
+
+
+### Bug Fixes
+
+* fixed isLatestSuccessfulRoute() initial value ([fbde919](https://github.com/dereekb/dbx-components/commit/fbde91949b9e331b58d3aa7907198b5431220952))
+
+
+
 ## [9.5.4](https://github.com/dereekb/dbx-components/compare/v9.5.3-dev...v9.5.4) (2022-08-30)
 
 
