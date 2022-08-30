@@ -1,6 +1,6 @@
 import { Maybe } from '@dereekb/util';
-import { MonoTypeOperatorFunction, OperatorFunction, startWith, Observable, filter, map } from 'rxjs';
-import { LoadingState, PageLoadingState, beginLoading, loadingStateHasFinishedLoading } from './loading.state';
+import { MonoTypeOperatorFunction, OperatorFunction, startWith, Observable, filter, map, tap } from 'rxjs';
+import { LoadingState, PageLoadingState, beginLoading, loadingStateHasFinishedLoading, isSuccessLoadingState } from './loading.state';
 
 /**
  * Merges startWith() with beginLoading().
@@ -26,4 +26,20 @@ export function valueFromLoadingState<L extends LoadingState<T>, T = unknown>():
       map((x) => x.value)
     );
   };
+}
+
+/**
+ * Executes a function when the input state has a successful value.
+ *
+ * @param fn
+ */
+export function tapOnLoadingStateSuccess<L extends LoadingState<T>, T = unknown>(fn: (state: L) => void): MonoTypeOperatorFunction<L>;
+export function tapOnLoadingStateSuccess<L extends LoadingState<T>, T = unknown>(fn: (state: L) => void): MonoTypeOperatorFunction<L>;
+export function tapOnLoadingStateSuccess<L extends PageLoadingState<T>, T = unknown>(fn: (state: L) => void): MonoTypeOperatorFunction<L>;
+export function tapOnLoadingStateSuccess<L extends LoadingState<T>, T = unknown>(fn: (state: L) => void): MonoTypeOperatorFunction<L> {
+  return tap((state: L) => {
+    if (isSuccessLoadingState(state)) {
+      fn(state);
+    }
+  });
 }
