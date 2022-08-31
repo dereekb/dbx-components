@@ -1,4 +1,5 @@
 import { Factory } from '../getter/getter';
+import { boundNumberFunction, wrapNumberFunction } from '../number/bound';
 import { cutValueToPrecisionFunction, NumberPrecision } from '../number/round';
 
 // MARK: Lat/Lng Point
@@ -54,23 +55,8 @@ export function wrapLatLngPoint(a: LatLngPoint): LatLngPoint {
   return { lat: capLatValue(a.lat), lng: wrapLngValue(a.lng) };
 }
 
-export function capLatValue(a: number): Latitude {
-  return Math.max(Math.min(a, MAX_LATITUDE_VALUE), MIN_LATITUDE_VALUE);
-}
-
-export function wrapLngValue(a: number): Longitude {
-  if (Math.abs(a) > MAX_LONGITUDE_VALUE) {
-    const normal = a % 180;
-
-    if (a > 0) {
-      return normal + MIN_LONGITUDE_VALUE;
-    } else {
-      return normal + MAX_LONGITUDE_VALUE;
-    }
-  } else {
-    return a;
-  }
-}
+export const capLatValue = boundNumberFunction<Latitude>({ min: MIN_LATITUDE_VALUE, max: MAX_LATITUDE_VALUE });
+export const wrapLngValue = wrapNumberFunction<Longitude>({ min: MIN_LONGITUDE_VALUE, max: MAX_LONGITUDE_VALUE });
 
 export function isValidLatitude(lat: Latitude): boolean {
   return lat >= MIN_LATITUDE_VALUE && lat <= MAX_LATITUDE_VALUE;

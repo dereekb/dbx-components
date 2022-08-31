@@ -1,34 +1,8 @@
 import { MapFunction } from '../value/map';
 import { Factory } from './../getter/getter';
+import { roundingFunction, RoundingInput } from './round';
 
 export type RandomNumberFactory = Factory<number>;
-
-export type NumberRounding = 'none' | 'floor' | 'ceil' | 'round';
-export type RoundingFunction = MapFunction<number, number>;
-
-export function roundingFunction(type: NumberRounding): RoundingFunction {
-  let fn: RoundingFunction;
-
-  switch (type) {
-    case 'floor':
-      fn = Math.floor;
-      break;
-    case 'ceil':
-      fn = Math.ceil;
-      break;
-    case 'none':
-      fn = (x) => x;
-      break;
-    case 'round':
-    default:
-      fn = Math.round;
-      break;
-  }
-
-  return fn;
-}
-
-export type RoundingInput = NumberRounding | RoundingFunction;
 
 /**
  * randomNumberFactory configuration
