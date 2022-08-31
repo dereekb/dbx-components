@@ -5,5 +5,6 @@ export * from './mapbox.menu.component';
 export * from './mapbox.service';
 export * from './mapbox.store.map.directive';
 export * from './mapbox.store';
+export * from './mapbox.store.provide';
 export * from './mapbox';
 export * from './options';

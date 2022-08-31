@@ -1,4 +1,4 @@
-import { LatLngPointInput, LatLngBoundInput } from '@dereekb/util';
+import { LatLngPointInput, LatLngBoundInput, ZoomLevel } from '@dereekb/util';
 import * as MapboxGl from 'mapbox-gl';
 
 export type KnownMapboxStyle = 'mapbox://styles/mapbox/streets-v11' | 'mapbox://styles/mapbox/outdoors-v11' | 'mapbox://styles/mapbox/light-v10' | 'mapbox://styles/mapbox/dark-v10' | 'mapbox://styles/mapbox/satellite-v9' | 'mapbox://styles/mapbox/satellite-streets-v11' | 'mapbox://styles/mapbox/navigation-day-v1' | 'mapbox://styles/mapbox/navigation-night-v1';
@@ -15,7 +15,7 @@ export const KNOWN_MAPBOX_STYLES: KnownMapboxStyle[] = [
   'mapbox://styles/mapbox/navigation-night-v1'
 ];
 
-export type MapboxZoomLevel = number;
+export type MapboxZoomLevel = ZoomLevel;
 export type MapboxPitch = number;
 export type MapboxBearing = number;
 

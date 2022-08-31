@@ -1,8 +1,8 @@
 $dbx-mapbox-field-map-height: 220px;
 $dbx-mapbox-latlng-button-width: 40px;
 
-.dbx-mapbox-latlng-field {
-  .dbx-mapbox-latlng-field-map {
+.dbx-mapbox-input-field {
+  .dbx-mapbox-input-field-map {
     height: $dbx-mapbox-field-map-height;
     width: 100%;
 
@@ -12,12 +12,20 @@ $dbx-mapbox-latlng-button-width: 40px;
     }
   }
 
-  .dbx-mapbox-latlng-field-input {
+  .dbx-mapbox-input-field-input {
     display: flex;
     align-items: center;
 
-    .dbx-mapbox-latlng-field-input-field {
+    .dbx-mapbox-input-field-input-field {
       width: calc(100% - #{$dbx-mapbox-latlng-button-width});
     }
+  }
+}
+
+.dbx-mapbox-input-field-compact {
+  .dbx-latlng-field-input {
+    min-height: 120px;
+    height: 300px;
+    max-height: calc(var(--vh100) * 0.5);
   }
 }

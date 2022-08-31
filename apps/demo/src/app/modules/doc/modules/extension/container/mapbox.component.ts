@@ -1,7 +1,7 @@
-import { latLngString, LatLngTuple, Maybe, randomFromArrayFactory } from '@dereekb/util';
+import { latLngPoint, latLngString, LatLngTuple, Maybe, randomFromArrayFactory } from '@dereekb/util';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { Component, OnDestroy, OnInit } from '@angular/core';
-import { mapboxLatLngField } from '@dereekb/dbx-form/mapbox';
+import { mapboxLatLngField, mapboxZoomField } from '@dereekb/dbx-form/mapbox';
 import { DbxMapboxMapStore } from 'packages/dbx-web/mapbox/src/lib/mapbox.store';
 import { KnownMapboxStyle, DbxMapboxLayoutSide } from '@dereekb/dbx-web/mapbox';
 import { BehaviorSubject, map, Observable } from 'rxjs';
@@ -49,6 +49,11 @@ export class DocExtensionMapboxComponent implements OnInit, OnDestroy {
     latLngDisabled: latLngString(30.5989668, -96.3831949)
   };
 
+  readonly defaultZoomFieldValue = {
+    zoom: 10.1234,
+    zoomDisabled: 17.123456
+  };
+
   readonly mapboxLatLngField: FormlyFieldConfig[] = [
     mapboxLatLngField({
       key: 'latLng',
@@ -56,7 +61,22 @@ export class DocExtensionMapboxComponent implements OnInit, OnDestroy {
     }),
     mapboxLatLngField({
       key: 'latLngDisabled',
-      description: 'This is a read only coordinate picker.',
+      description: 'This is a read only coordinate picker. It will also re-center the map to the point after 3 seconds.',
+      readonly: true,
+      recenterTime: 3000
+    })
+  ];
+
+  readonly mapboxZoomField: FormlyFieldConfig[] = [
+    mapboxZoomField({
+      key: 'zoom',
+      description: 'This is a zoom picker.',
+      center: latLngPoint(30.5989668, -96.3831949)
+    }),
+    mapboxZoomField({
+      key: 'zoomDisabled',
+      description: 'This is a read only zoom picker.',
+      center: latLngPoint(30.5989668, -96.3831949),
       readonly: true
     })
   ];
