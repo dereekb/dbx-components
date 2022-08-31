@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [9.6.0](https://github.com/dereekb/dbx-components/compare/v9.5.5-dev...v9.6.0) (2022-08-31)
+
+
+### Bug Fixes
+
+* added error handling to DbxFirebaseAuthService authUserState ([206132f](https://github.com/dereekb/dbx-components/commit/206132f2dcc0c40adfd889ad98f70396021f87d1))
+
+
+
 ## [9.5.5](https://github.com/dereekb/dbx-components/compare/v9.5.4-dev...v9.5.5) (2022-08-30)
 
 
