@@ -40,7 +40,10 @@ import {
   asObjectCopyFactory,
   modelFieldMapFunctions,
   TimezoneString,
-  assignValuesToPOJOFunction
+  assignValuesToPOJOFunction,
+  TransformNumberFunction,
+  transformNumberFunction,
+  TransformNumberFunctionConfig
 } from '@dereekb/util';
 import { FirestoreModelData, FIRESTORE_EMPTY_VALUE } from './snapshot.type';
 import { FirebaseAuthUserId } from '../../auth/auth';
@@ -143,8 +146,17 @@ export function firestoreString<S extends string = string>(config?: FirestoreStr
   });
 }
 
-export function optionalFirestoreString<S extends string = string>() {
-  return firestorePassThroughField<Maybe<S>>();
+export function optionalFirestoreString<S extends string = string>(config?: Omit<FirestoreStringConfig<S>, 'default'>) {
+  const transform: Maybe<TransformStringFunctionConfig> = config?.transform ? (typeof config.transform === 'function' ? { transform: config?.transform } : config?.transform) : undefined;
+  const transformData = transform ? (transformStringFunction(transform) as MapFunction<S, S>) : passThrough;
+  const transformMaybeData = (x: Maybe<S>) => (x == null ? x : transformData(x));
+
+  return firestoreField<Maybe<S>, Maybe<S>>({
+    default: null,
+    ...config,
+    fromData: transformMaybeData,
+    toData: transformMaybeData
+  });
 }
 
 export type FirestoreEnumConfig<S extends string | number> = MapConfiguredFirestoreFieldConfigWithDefault<S, S>;
@@ -213,21 +225,36 @@ export function optionalFirestoreBoolean() {
   return firestorePassThroughField<Maybe<boolean>>();
 }
 
-export type FirestoreNumberFieldConfig<T extends number = number> = MapConfiguredFirestoreFieldConfigWithDefault<T, T> & {
-  saveDefault?: Maybe<boolean>;
-};
+export type FirestoreNumberTransformOptions<N extends number = number> = TransformNumberFunctionConfig<N> | TransformNumberFunction<N>;
 
-export function firestoreNumber<T extends number = number>(config: FirestoreNumberFieldConfig<T>) {
-  return firestoreField<T, T>({
-    default: config.default,
+export interface FirestoreNumberConfig<N extends number = number> extends MapConfiguredFirestoreFieldConfigWithDefault<N, N> {
+  saveDefault?: Maybe<boolean>;
+  transform?: FirestoreNumberTransformOptions<N>;
+}
+
+export function firestoreNumber<N extends number = number>(config: FirestoreNumberConfig<N>) {
+  const transform: Maybe<TransformNumberFunctionConfig<N>> = config?.transform ? (typeof config.transform === 'function' ? { transform: config?.transform } : config?.transform) : undefined;
+  const transformData = transform ? (transformNumberFunction<N>(transform) as MapFunction<N, N>) : passThrough;
+
+  return firestoreField<N, N>({
+    ...config,
     defaultBeforeSave: config.defaultBeforeSave ?? config.saveDefault ? config.default : undefined,
-    fromData: passThrough,
-    toData: passThrough
+    fromData: transformData,
+    toData: transformData
   });
 }
 
-export function optionalFirestoreNumber<T extends number = number>() {
-  return firestorePassThroughField<Maybe<T>>();
+export function optionalFirestoreNumber<N extends number = number>(config?: Omit<FirestoreNumberConfig<N>, 'default'>) {
+  const transform: Maybe<TransformNumberFunctionConfig<N>> = config?.transform ? (typeof config.transform === 'function' ? { transform: config?.transform } : config?.transform) : undefined;
+  const transformData = transform ? (transformNumberFunction<N>(transform) as MapFunction<N, N>) : passThrough;
+  const transformMaybeData = (x: Maybe<N>) => (x == null ? x : transformData(x));
+
+  return firestoreField<Maybe<N>, Maybe<N>>({
+    default: null,
+    ...config,
+    fromData: transformMaybeData,
+    toData: transformMaybeData
+  });
 }
 
 export type FirestoreArrayFieldConfig<T> = DefaultMapConfiguredFirestoreFieldConfig<T[], T[]> & Partial<FirestoreFieldDefault<T[]>>;
