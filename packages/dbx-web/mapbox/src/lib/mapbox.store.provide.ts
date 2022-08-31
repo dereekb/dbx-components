@@ -1,13 +1,19 @@
-import { Injectable, Injector, Optional, Provider, SkipSelf } from '@angular/core';
+import { Directive, Injectable, Injector, Optional, Provider, SkipSelf } from '@angular/core';
 import { DbxMapboxMapStore } from './mapbox.store';
 
 /**
  * Token used by provideMapboxStoreIfDoesNotExist() to prevent injecting a parent DbxMapboxMapStore into the child view.
  */
 @Injectable()
-export class DbxMapboxMapStoreInjectionBlock {
-  constructor(readonly dbxMapboxMapStore: DbxMapboxMapStore) {}
+export class DbxMapboxMapStoreProviderBlock {
+  constructor(@SkipSelf() readonly dbxMapboxMapStore: DbxMapboxMapStore) {}
 }
+
+@Directive({
+  selector: '[dbxMapboxStoreParentBlocker]',
+  providers: [DbxMapboxMapStoreProviderBlock]
+})
+export class DbxMapboxMapStoreInjectionBlockDirective {}
 
 /**
  * Creates a Provider that initializes a new DbxMapboxMapStore if a parent does not exist.
@@ -19,8 +25,8 @@ export class DbxMapboxMapStoreInjectionBlock {
 export function provideMapboxStoreIfParentIsUnavailable(): Provider {
   return {
     provide: DbxMapboxMapStore,
-    useFactory: (parentInjector: Injector, dbxMapboxMapStoreInjectionBlock?: DbxMapboxMapStoreInjectionBlock, dbxMapboxMapStore?: DbxMapboxMapStore) => {
-      if (!dbxMapboxMapStore || (dbxMapboxMapStore && (dbxMapboxMapStoreInjectionBlock == null || dbxMapboxMapStoreInjectionBlock.dbxMapboxMapStore === dbxMapboxMapStore))) {
+    useFactory: (parentInjector: Injector, dbxMapboxMapStoreInjectionBlock?: DbxMapboxMapStoreProviderBlock, dbxMapboxMapStore?: DbxMapboxMapStore) => {
+      if (!dbxMapboxMapStore || (dbxMapboxMapStore && dbxMapboxMapStoreInjectionBlock != null && dbxMapboxMapStoreInjectionBlock.dbxMapboxMapStore === dbxMapboxMapStore)) {
         // create a new dbxMapboxMapStore to use
         const injector = Injector.create({ providers: [{ provide: DbxMapboxMapStore }], parent: parentInjector });
         dbxMapboxMapStore = injector.get(DbxMapboxMapStore);
@@ -28,6 +34,6 @@ export function provideMapboxStoreIfParentIsUnavailable(): Provider {
 
       return dbxMapboxMapStore;
     },
-    deps: [Injector, [new Optional(), DbxMapboxMapStoreInjectionBlock], [new Optional(), new SkipSelf(), DbxMapboxMapStore]]
+    deps: [Injector, [new Optional(), DbxMapboxMapStoreProviderBlock], [new Optional(), new SkipSelf(), DbxMapboxMapStore]]
   };
 }

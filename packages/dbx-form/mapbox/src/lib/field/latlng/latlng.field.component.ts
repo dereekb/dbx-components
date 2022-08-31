@@ -126,8 +126,20 @@ export class DbxFormMapboxLatLngFieldComponent<T extends DbxFormMapboxLatLngComp
     this.dbxMapboxMapStore.setCenter(this.center$);
 
     if (this.showMap) {
-      // Set zoom only if showMap is false.
+      // Set zoom only if showMap is true
       this.dbxMapboxMapStore.setZoom(this.zoom$);
+
+      // recenter periodically
+      if (this.recenterTime > 0) {
+        this._centerSub.subscription = this.dbxMapboxMapStore.center$.pipe(skip(1), throttleTime(this.recenterTime, undefined, { leading: false, trailing: true })).subscribe(() => {
+          this.dbxMapboxMapStore.easeTo(
+            this.center$.pipe(
+              first(),
+              map((x) => ({ center: x } as MapboxEaseTo))
+            )
+          );
+        });
+      }
     } else {
       // use the center of the map to set locations
       this._sub.subscription = this.dbxMapboxMapStore.center$.subscribe((center) => {
@@ -139,17 +151,6 @@ export class DbxFormMapboxLatLngFieldComponent<T extends DbxFormMapboxLatLngComp
 
     if (this.props.readonly) {
       this.formControl.disable();
-    }
-
-    if (this.recenterTime > 0) {
-      this._centerSub.subscription = this.dbxMapboxMapStore.center$.pipe(skip(1), throttleTime(this.recenterTime, undefined, { leading: false, trailing: true })).subscribe(() => {
-        this.dbxMapboxMapStore.easeTo(
-          this.center$.pipe(
-            first(),
-            map((x) => ({ center: x } as MapboxEaseTo))
-          )
-        );
-      });
     }
   }
 

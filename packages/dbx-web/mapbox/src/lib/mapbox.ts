@@ -16,6 +16,14 @@ export const KNOWN_MAPBOX_STYLES: KnownMapboxStyle[] = [
 ];
 
 export type MapboxZoomLevel = ZoomLevel;
+
+export const MAPBOX_MIN_ZOOM_LEVEL: MapboxZoomLevel = 0;
+export const MAPBOX_MAX_ZOOM_LEVEL: MapboxZoomLevel = 22;
+
+export function mapboxZoomLevel(input: number): MapboxZoomLevel {
+  return Math.min(Math.max(input, MAPBOX_MIN_ZOOM_LEVEL), MAPBOX_MAX_ZOOM_LEVEL);
+}
+
 export type MapboxPitch = number;
 export type MapboxBearing = number;
 

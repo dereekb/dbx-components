@@ -8,7 +8,7 @@ import { filterMaybe, SubscriptionObject } from '@dereekb/rxjs';
 import { ZoomLevel, Maybe, LatLngPoint, LatLngPointFunctionConfig, latLngPoint, LatLngStringFunction, latLngStringFunction } from '@dereekb/util';
 import { GeolocationService } from '@ng-web-apis/geolocation';
 import { Marker } from 'mapbox-gl';
-import { DbxMapboxService, DbxMapboxMapStore, MapboxZoomLevel, provideMapboxStoreIfParentIsUnavailable } from '@dereekb/dbx-web/mapbox';
+import { DbxMapboxService, DbxMapboxMapStore, MapboxZoomLevel, provideMapboxStoreIfParentIsUnavailable, mapboxZoomLevel, MAPBOX_MAX_ZOOM_LEVEL, MAPBOX_MIN_ZOOM_LEVEL } from '@dereekb/dbx-web/mapbox';
 
 export interface DbxFormMapboxZoomComponentFieldProps extends FormlyFieldProps {
   /**
@@ -29,18 +29,22 @@ export interface DbxFormMapboxZoomComponentFieldProps extends FormlyFieldProps {
    * Max zoom level allowed.
    */
   maxZoom?: MapboxZoomLevel;
+  /**
+   * Step size when using arrow keys.
+   */
+  zoomStep?: number;
 }
 
 @Component({
   template: `
     <div class="dbx-mapbox-input-field" [ngClass]="(compactClass$ | async) ?? ''" [formGroup]="formGroup">
-      <div class="dbx-mapbox-input-field-map">
+      <div *ngIf="showMap" class="dbx-mapbox-input-field-map">
         <mgl-map dbxMapboxMap></mgl-map>
       </div>
       <div class="dbx-mapbox-input-field-input">
         <mat-form-field class="dbx-mapbox-input-field-input-field">
-          <mat-label *ngIf="showMap">Zoom Level</mat-label>
-          <input type="number" matInput min="0" [placeholder]="placeholder" [formControl]="formControl" />
+          <mat-label>Zoom Level</mat-label>
+          <input type="number" matInput [min]="minZoom" [max]="maxZoom" [step]="zoomStep" [placeholder]="placeholder" [formControl]="formControl" />
         </mat-form-field>
       </div>
     </div>
@@ -97,6 +101,18 @@ export class DbxFormMapboxZoomFieldComponent<T extends DbxFormMapboxZoomComponen
 
   get showMap(): boolean {
     return this.field.props.showMap ?? true;
+  }
+
+  get minZoom(): MapboxZoomLevel {
+    return mapboxZoomLevel(this.field.props.minZoom || MAPBOX_MIN_ZOOM_LEVEL);
+  }
+
+  get maxZoom(): MapboxZoomLevel {
+    return mapboxZoomLevel(this.field.props.maxZoom || MAPBOX_MAX_ZOOM_LEVEL);
+  }
+
+  get zoomStep(): number {
+    return mapboxZoomLevel(this.field.props.zoomStep || 1);
   }
 
   ngOnInit(): void {

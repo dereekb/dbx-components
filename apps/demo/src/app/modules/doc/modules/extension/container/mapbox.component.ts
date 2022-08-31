@@ -54,6 +54,11 @@ export class DocExtensionMapboxComponent implements OnInit, OnDestroy {
     zoomDisabled: 17.123456
   };
 
+  readonly defaultLatLngAndZoomFieldValue = {
+    latLng: latLngString(30.5989668, -96.3831949),
+    zoom: 10.1234
+  };
+
   readonly mapboxLatLngField: FormlyFieldConfig[] = [
     mapboxLatLngField({
       key: 'latLng',
@@ -78,6 +83,20 @@ export class DocExtensionMapboxComponent implements OnInit, OnDestroy {
       description: 'This is a read only zoom picker.',
       center: latLngPoint(30.5989668, -96.3831949),
       readonly: true
+    })
+  ];
+
+  readonly mapboxLatLngAndZoomField: FormlyFieldConfig[] = [
+    mapboxLatLngField({
+      key: 'latLng',
+      description: 'This is a coordinate picker synchronized with the big map.',
+      showMap: false
+    }),
+    mapboxZoomField({
+      key: 'zoom',
+      description: 'This is a zoom picker synchronized with the big map.',
+      showMap: false,
+      zoomStep: 0.5
     })
   ];
 
