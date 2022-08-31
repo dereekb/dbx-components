@@ -204,6 +204,72 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
     );
   });
 
+  readonly setKeyboardDisabled = this.effect((input: Observable<Maybe<boolean> | void>) => {
+    return input.pipe(
+      switchMap((disabled: Maybe<boolean> | void) => {
+        return this.mapInstance$.pipe(
+          tap((map) => {
+            if (disabled === false) {
+              map.keyboard.enable();
+            } else {
+              map.keyboard.disable();
+            }
+          })
+        );
+      })
+    );
+  });
+
+  readonly setDragRotateDisabled = this.effect((input: Observable<Maybe<boolean> | void>) => {
+    return input.pipe(
+      switchMap((disabled: Maybe<boolean> | void) => {
+        return this.mapInstance$.pipe(
+          tap((map) => {
+            if (disabled === false) {
+              map.dragRotate.enable();
+            } else {
+              map.dragRotate.disable();
+            }
+          })
+        );
+      })
+    );
+  });
+
+  readonly setDragPanDisabled = this.effect((input: Observable<Maybe<boolean> | void>) => {
+    return input.pipe(
+      switchMap((disabled: Maybe<boolean> | void) => {
+        return this.mapInstance$.pipe(
+          tap((map) => {
+            if (disabled === false) {
+              map.dragPan.enable();
+            } else {
+              map.dragPan.disable();
+            }
+          })
+        );
+      })
+    );
+  });
+
+  readonly setZoomDisabled = this.effect((input: Observable<Maybe<boolean> | void>) => {
+    return input.pipe(
+      switchMap((disabled: Maybe<boolean> | void) => {
+        return this.mapInstance$.pipe(
+          tap((map) => {
+            if (disabled === false) {
+              map.scrollZoom.enable();
+              map.doubleClickZoom.enable();
+            } else {
+              map.scrollZoom.disable();
+              map.doubleClickZoom.disable();
+            }
+          })
+        );
+      })
+    );
+  });
+
   readonly setPitch = this.effect((input: Observable<number>) => {
     return input.pipe(
       switchMap((pitch) => {

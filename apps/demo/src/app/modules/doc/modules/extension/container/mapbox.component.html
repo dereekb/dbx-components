@@ -76,10 +76,32 @@
           </doc-feature-example>
         </ng-template>
       </mat-tab>
+      <mat-tab label="Directive w/ Forms Example">
+        <ng-template matTabContent>
+          <doc-feature-example hint="This example shows the use of the mapbox formly fields configured to use a parent [dbxMapboxMap] instance.">
+            <dbx-content-container style="height: 500px">
+              <!-- Map View-->
+              <dbx-mapbox-layout [side]="side$ | async" [hasContent]="true" [opened]="true">
+                <!-- Drawer -->
+                <div drawer style="overflow-y: scroll; height: 100%">
+                  <doc-feature-example header="Mapbox Forms with Directive">
+                    <doc-form-example-form [dbxFormlyFields]="mapboxLatLngAndZoomField" [dbxFormSource]="defaultLatLngAndZoomFieldValue"></doc-form-example-form>
+                  </doc-feature-example>
+                </div>
+                <!-- Map -->
+                <mgl-map dbxMapboxMap></mgl-map>
+              </dbx-mapbox-layout>
+            </dbx-content-container>
+          </doc-feature-example>
+        </ng-template>
+      </mat-tab>
     </mat-tab-group>
     <h3>Forms</h3>
-    <doc-feature-example header="mapboxLatLngField()" hint="A latLng value picker using a Mapbox map.">
+    <doc-feature-example dbxMapboxStoreParentBlocker header="mapboxLatLngField()" hint="A latLng value picker using a Mapbox map.">
       <doc-form-example-form [dbxFormlyFields]="mapboxLatLngField" [dbxFormSource]="defaultLatLngFieldValue"></doc-form-example-form>
+    </doc-feature-example>
+    <doc-feature-example dbxMapboxStoreParentBlocker header="mapboxZoomField()" hint="A latLng value picker using a Mapbox map.">
+      <doc-form-example-form [dbxFormlyFields]="mapboxZoomField" [dbxFormSource]="defaultZoomFieldValue"></doc-form-example-form>
     </doc-feature-example>
   </doc-feature-layout>
 </dbx-content-container>

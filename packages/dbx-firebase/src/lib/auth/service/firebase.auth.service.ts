@@ -2,7 +2,7 @@ import { filterMaybe, isNot, timeoutStartWith } from '@dereekb/rxjs';
 import { Injectable, Optional } from '@angular/core';
 import { AuthUserState, DbxAuthService, loggedOutObsFromIsLoggedIn, loggedInObsFromIsLoggedIn, AuthUserIdentifier, authUserIdentifier } from '@dereekb/dbx-core';
 import { Auth, authState, idToken, User, IdTokenResult, ParsedToken, GoogleAuthProvider, signInWithPopup, AuthProvider, PopupRedirectResolver, signInAnonymously, signInWithEmailAndPassword, UserCredential, FacebookAuthProvider, GithubAuthProvider, TwitterAuthProvider, createUserWithEmailAndPassword } from '@angular/fire/auth';
-import { of, Observable, distinctUntilChanged, shareReplay, map, switchMap, firstValueFrom } from 'rxjs';
+import { of, Observable, distinctUntilChanged, shareReplay, map, switchMap, firstValueFrom, catchError } from 'rxjs';
 import { AuthClaims, AuthClaimsObject, AuthRoleClaimsService, AuthRoleSet, AUTH_ADMIN_ROLE, cachedGetter, Maybe } from '@dereekb/util';
 import { AuthUserInfo, authUserInfoFromAuthUser, firebaseAuthTokenFromUser } from '../auth';
 import { sendPasswordResetEmail } from 'firebase/auth';
@@ -93,7 +93,11 @@ export class DbxFirebaseAuthService implements DbxAuthService {
   constructor(readonly firebaseAuth: Auth, @Optional() delegate: DbxFirebaseAuthServiceDelegate) {
     delegate = delegate ?? DEFAULT_DBX_FIREBASE_AUTH_SERVICE_DELEGATE;
 
-    const delegateAuthUserStateObs = delegate.authUserStateObs(this).pipe(distinctUntilChanged(), shareReplay(1));
+    const delegateAuthUserStateObs = delegate.authUserStateObs(this).pipe(
+      catchError(() => of('error' as AuthUserState)),
+      distinctUntilChanged(),
+      shareReplay(1)
+    );
 
     if (delegate.fullControlOfAuthUserState) {
       this.authUserState$ = delegateAuthUserStateObs;

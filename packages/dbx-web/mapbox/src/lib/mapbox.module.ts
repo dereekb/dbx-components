@@ -10,13 +10,15 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { AngularResizeEventModule } from 'angular-resize-event';
 import { DbxMapboxMenuComponent } from './mapbox.menu.component';
+import { DbxMapboxMapStoreInjectionBlockDirective } from './mapbox.store.provide';
 
 const declarations = [
   //
   DbxMapboxMapDirective,
   DbxMapboxLayoutComponent,
   DbxMapboxLayoutDrawerComponent,
-  DbxMapboxMenuComponent
+  DbxMapboxMenuComponent,
+  DbxMapboxMapStoreInjectionBlockDirective
 ];
 
 @NgModule({

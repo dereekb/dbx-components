@@ -1,51 +1,68 @@
 import { AbstractControl, FormGroup } from '@angular/forms';
 import { CompactContextStore, mapCompactModeObs } from '@dereekb/dbx-web';
-import { Component, OnDestroy, OnInit, Optional } from '@angular/core';
+import { Component, NgZone, OnDestroy, OnInit, Optional } from '@angular/core';
 import { FieldTypeConfig, FormlyFieldProps } from '@ngx-formly/core';
 import { FieldType } from '@ngx-formly/material';
-import { first, BehaviorSubject, filter, shareReplay, startWith, switchMap, map, Observable } from 'rxjs';
+import { skip, first, BehaviorSubject, filter, shareReplay, startWith, switchMap, map, Observable, throttleTime } from 'rxjs';
 import { filterMaybe, SubscriptionObject } from '@dereekb/rxjs';
-import { Maybe, LatLngPoint, LatLngPointFunctionConfig, latLngPoint, LatLngStringFunction, latLngStringFunction } from '@dereekb/util';
+import { Maybe, LatLngPoint, LatLngPointFunctionConfig, latLngPoint, LatLngStringFunction, latLngStringFunction, Milliseconds } from '@dereekb/util';
 import { GeolocationService } from '@ng-web-apis/geolocation';
 import { Marker } from 'mapbox-gl';
-import { DbxMapboxMapStore } from '@dereekb/dbx-web/mapbox';
+import { DbxMapboxMapStore, MapboxEaseTo, MapboxZoomLevel, provideMapboxStoreIfParentIsUnavailable } from '@dereekb/dbx-web/mapbox';
 
 export interface DbxFormMapboxLatLngComponentFieldProps extends FormlyFieldProps {
-  zoom?: number;
+  /**
+   * (Optional) Whether or not the show the map. If the map is not shown, relies on the center of the parent map to determine position.
+   *
+   * Defaults to true.
+   *
+   * Cases where this would be set false is if another map is being used.
+   */
+  showMap?: boolean;
+  /**
+   * (Optional) Zoom to start the map at. Ignored if the showMap is false.
+   */
+  zoom?: MapboxZoomLevel;
+  /**
+   * Time until recentering on the marker. If the time is 0 then the recentering is disabled.
+   */
+  recenterTime?: Milliseconds;
   latLngConfig?: LatLngPointFunctionConfig;
 }
 
 @Component({
   template: `
-    <div class="dbx-mapbox-latlng-field" [ngClass]="(compactClass$ | async) ?? ''" [formGroup]="formGroup">
-      <div class="dbx-mapbox-latlng-field-map">
+    <div class="dbx-mapbox-input-field" [ngClass]="(compactClass$ | async) ?? ''" [formGroup]="formGroup">
+      <div *ngIf="showMap" class="dbx-mapbox-input-field-map">
         <mgl-map dbxMapboxMap>
-          <mgl-marker [lngLat]="(latLng$ | async) || [0, 0]" [draggable]="!isReadonlyOrDisabled" (markerDragEnd)="onDragEnd($event)"></mgl-marker>
+          <mgl-marker [lngLat]="(latLng$ | async) || [0, 0]" [draggable]="!isReadonlyOrDisabled" (markerDragEnd)="onMarkerDragEnd($event)"></mgl-marker>
         </mgl-map>
       </div>
-      <div class="dbx-mapbox-latlng-field-input">
+      <div class="dbx-mapbox-input-field-input">
         <button mat-icon-button (click)="useCurrentLocation()" [disabled]="isReadonlyOrDisabled">
           <mat-icon>my_location</mat-icon>
         </button>
-        <mat-form-field class="dbx-mapbox-latlng-field-input-field">
+        <mat-form-field class="dbx-mapbox-input-field-input-field">
           <mat-label>Coordinates</mat-label>
           <input type="text" matInput [placeholder]="placeholder" [formControl]="formControl" />
         </mat-form-field>
       </div>
     </div>
   `,
-  providers: [DbxMapboxMapStore],
-  styleUrls: ['./latlng.field.component.scss']
+  providers: [provideMapboxStoreIfParentIsUnavailable()],
+  styleUrls: ['../mapbox.field.component.scss']
 })
 export class DbxFormMapboxLatLngFieldComponent<T extends DbxFormMapboxLatLngComponentFieldProps = DbxFormMapboxLatLngComponentFieldProps> extends FieldType<FieldTypeConfig<T>> implements OnInit, OnDestroy {
   private _latLngStringFunction!: LatLngStringFunction;
 
   readonly compactClass$ = mapCompactModeObs(this.compact?.mode$, {
-    compact: 'dbx-texteditor-field-compact'
+    compact: 'dbx-mapbox-input-field-compact'
   });
 
   private _sub = new SubscriptionObject();
-  private _zoom = new BehaviorSubject<number>(12);
+  private _geoSub = new SubscriptionObject();
+  private _centerSub = new SubscriptionObject();
+  private _zoom = new BehaviorSubject<MapboxZoomLevel>(12);
 
   private _formControlObs = new BehaviorSubject<Maybe<AbstractControl>>(undefined);
   readonly formControl$ = this._formControlObs.pipe(filterMaybe());
@@ -65,11 +82,11 @@ export class DbxFormMapboxLatLngFieldComponent<T extends DbxFormMapboxLatLngComp
   readonly center$ = this.latLng$;
   readonly zoom$ = this._zoom.asObservable();
 
-  constructor(@Optional() readonly compact: CompactContextStore, private readonly geolocation$: GeolocationService, readonly dbxMapboxMapStore: DbxMapboxMapStore) {
+  constructor(@Optional() readonly compact: CompactContextStore, private readonly geolocation$: GeolocationService, readonly dbxMapboxMapStore: DbxMapboxMapStore, readonly ngZone: NgZone) {
     super();
   }
 
-  get zoom(): number {
+  get zoom(): MapboxZoomLevel {
     return Math.min(this.field.props.zoom || 12, 18);
   }
 
@@ -93,13 +110,44 @@ export class DbxFormMapboxLatLngFieldComponent<T extends DbxFormMapboxLatLngComp
     return this.props.readonly || this.disabled;
   }
 
+  get showMap(): boolean {
+    return this.field.props.showMap ?? true;
+  }
+
+  get recenterTime(): Milliseconds {
+    return this.field.props.recenterTime || 10 * 1000;
+  }
+
   ngOnInit(): void {
     this._latLngStringFunction = latLngStringFunction(this.field.props.latLngConfig);
     this._formControlObs.next(this.formControl);
     this._zoom.next(this.zoom);
 
     this.dbxMapboxMapStore.setCenter(this.center$);
-    this.dbxMapboxMapStore.setZoom(this.zoom$);
+
+    if (this.showMap) {
+      // Set zoom only if showMap is true
+      this.dbxMapboxMapStore.setZoom(this.zoom$);
+
+      // recenter periodically
+      if (this.recenterTime > 0) {
+        this._centerSub.subscription = this.dbxMapboxMapStore.center$.pipe(skip(1), throttleTime(this.recenterTime, undefined, { leading: false, trailing: true })).subscribe(() => {
+          this.dbxMapboxMapStore.easeTo(
+            this.center$.pipe(
+              first(),
+              map((x) => ({ center: x } as MapboxEaseTo))
+            )
+          );
+        });
+      }
+    } else {
+      // use the center of the map to set locations
+      this._sub.subscription = this.dbxMapboxMapStore.center$.subscribe((center) => {
+        if (!this.isReadonlyOrDisabled) {
+          this.ngZone.run(() => this.setValue(center));
+        }
+      });
+    }
 
     if (this.props.readonly) {
       this.formControl.disable();
@@ -108,13 +156,15 @@ export class DbxFormMapboxLatLngFieldComponent<T extends DbxFormMapboxLatLngComp
 
   override ngOnDestroy(): void {
     super.ngOnDestroy();
-    this._formControlObs.complete();
-    this._zoom.complete();
     this._sub.destroy();
+    this._geoSub.destroy();
+    this._zoom.complete();
+    this._formControlObs.complete();
+    this._centerSub.destroy();
   }
 
   useCurrentLocation() {
-    this._sub.subscription = this.geolocation$.pipe(first()).subscribe((position) => {
+    this._geoSub.subscription = this.geolocation$.pipe(first()).subscribe((position) => {
       if (position) {
         const { latitude: lat, longitude: lng } = position.coords;
         this.setValue({ lat, lng });
@@ -122,7 +172,7 @@ export class DbxFormMapboxLatLngFieldComponent<T extends DbxFormMapboxLatLngComp
     });
   }
 
-  onDragEnd(marker: Marker) {
+  onMarkerDragEnd(marker: Marker) {
     this.setValue(marker.getLngLat());
   }
 

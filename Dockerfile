@@ -7,6 +7,9 @@ WORKDIR /code
 # Skip Husky triggers inside container
 ENV HUSKY=0
 
+# Cypress is not needed inside container
+ENV CYPRESS_INSTALL_BINARY=0
+
 # Create volume mount point at /code
 VOLUME ["/code"]
 

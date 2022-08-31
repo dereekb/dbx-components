@@ -31,6 +31,7 @@ export class DbxMapboxLayoutComponent extends SubscriptionObject implements OnIn
 
   private _resized = new Subject<void>();
   private _updateMargins = new Subject<void>();
+  private _forceHasContent = new BehaviorSubject<boolean>(false);
   private _side = new BehaviorSubject<DbxMapboxLayoutSide>('right');
   private _openToggle = new BehaviorSubject<boolean>(true);
   private _color = new BehaviorSubject<Maybe<DbxThemeColor>>(undefined);
@@ -38,7 +39,13 @@ export class DbxMapboxLayoutComponent extends SubscriptionObject implements OnIn
 
   readonly side$ = this._side.pipe(distinctUntilChanged(), shareReplay(1));
 
-  readonly opened$ = combineLatest([this.dbxMapboxMapStore.hasContent$, this._openToggle]).pipe(
+  readonly hasContent$ = combineLatest([this._forceHasContent, this.dbxMapboxMapStore.hasContent$]).pipe(
+    map(([hasContent, forceHasContent]) => hasContent || forceHasContent),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+
+  readonly opened$ = combineLatest([this.hasContent$, this._openToggle]).pipe(
     map(([hasContent, open]) => hasContent && open),
     distinctUntilChanged(),
     shareReplay(1)
@@ -144,6 +151,7 @@ export class DbxMapboxLayoutComponent extends SubscriptionObject implements OnIn
     this._openToggle.complete();
     this._color.complete();
     this._toggleSub.destroy();
+    this._forceHasContent.complete();
   }
 
   toggleDrawer(open?: boolean) {
@@ -165,6 +173,13 @@ export class DbxMapboxLayoutComponent extends SubscriptionObject implements OnIn
   set opened(opened: Maybe<boolean>) {
     if (opened != null) {
       this._openToggle.next(opened);
+    }
+  }
+
+  @Input()
+  set hasContent(hasContent: Maybe<boolean>) {
+    if (hasContent != null) {
+      this._forceHasContent.next(hasContent);
     }
   }
 
