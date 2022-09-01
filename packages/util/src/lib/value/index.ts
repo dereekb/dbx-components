@@ -7,6 +7,7 @@ export * from './map';
 export * from './maybe.type';
 export * from './maybe';
 export * from './modifier';
+export * from './pixel';
 export * from './url';
 export * from './use';
 export * from './point';
