@@ -1,6 +1,6 @@
 import { cleanup, filterMaybe, onTrueToFalse } from '@dereekb/rxjs';
 import { Inject, Injectable, OnDestroy } from '@angular/core';
-import { isSameLatLngBound, isSameLatLngPoint, IsWithinLatLngBoundFunction, isWithinLatLngBoundFunction, LatLngBound, latLngBoundFunction, LatLngPointInput, LatLngPoint, latLngPointFunction, Maybe, OverlapsLatLngBoundFunction, overlapsLatLngBoundFunction, diffLatLngBoundPoints, latLngBoundCenterPoint, addLatLngPoints } from '@dereekb/util';
+import { isSameLatLngBound, isSameLatLngPoint, IsWithinLatLngBoundFunction, isWithinLatLngBoundFunction, LatLngBound, latLngBoundFunction, LatLngPointInput, LatLngPoint, latLngPointFunction, Maybe, OverlapsLatLngBoundFunction, overlapsLatLngBoundFunction, diffLatLngBoundPoints, latLngBoundCenterPoint, addLatLngPoints, isDefaultLatLngPoint, swMostLatLngPoint, neMostLatLngPoint, latLngBoundWrapsMap } from '@dereekb/util';
 import { ComponentStore } from '@ngrx/component-store';
 import { MapService } from 'ngx-mapbox-gl';
 import { defaultIfEmpty, distinctUntilChanged, filter, map, shareReplay, switchMap, tap, NEVER, Observable, of, Subscription, startWith, interval, first, combineLatest } from 'rxjs';
@@ -73,7 +73,7 @@ export interface DbxMapboxStoreState {
 @Injectable()
 export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> implements OnDestroy {
   private latLngPoint = latLngPointFunction();
-  private latLngBound = latLngBoundFunction();
+  private latLngBound = latLngBoundFunction({ pointFunction: latLngPointFunction({ wrap: false, validate: false }) });
 
   constructor(@Inject(DbxMapboxService) private readonly dbxMapboxService: DbxMapboxService) {
     super({
@@ -615,7 +615,13 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
           this._renderingTimer.pipe(
             map(() => {
               const bound = x.getBounds();
-              return this.latLngBound([bound.getSouthWest(), bound.getNorthEast()]);
+              const boundSw = bound.getSouthWest();
+              const boundNe = bound.getNorthEast();
+
+              const sw = isDefaultLatLngPoint(boundSw) ? swMostLatLngPoint() : boundSw;
+              const ne = isDefaultLatLngPoint(boundNe) ? neMostLatLngPoint() : boundNe;
+
+              return this.latLngBound(sw, ne);
             })
           )
         ),
@@ -634,6 +640,12 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
         shareReplay(1)
       );
     })
+  );
+
+  readonly boundWrapsAroundWorld$: Observable<boolean> = this.bound$.pipe(
+    map((x) => latLngBoundWrapsMap(x)),
+    distinctUntilChanged(),
+    shareReplay(1)
   );
 
   readonly isWithinBoundFunction$: Observable<IsWithinLatLngBoundFunction> = this.bound$.pipe(

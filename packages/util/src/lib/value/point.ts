@@ -70,6 +70,18 @@ export function defaultLatLngPoint(): LatLngPoint {
   return { lat: 0, lng: 0 };
 }
 
+export function isDefaultLatLngPoint(point: LatLngPoint): boolean {
+  return point.lat === 0 && point.lng === 0;
+}
+
+export function swMostLatLngPoint(): LatLngPoint {
+  return { lat: MIN_LATITUDE_VALUE, lng: MIN_LONGITUDE_VALUE };
+}
+
+export function neMostLatLngPoint(): LatLngPoint {
+  return { lat: MAX_LATITUDE_VALUE, lng: MAX_LONGITUDE_VALUE };
+}
+
 /**
  * Returns true if the input point's lat/lng values are within the acceptable values range.
  *
@@ -276,13 +288,17 @@ export interface LatLngPointFunctionConfig {
    */
   precision?: LatLngPrecision;
   /**
-   * Whether or not to validate and only return valid LatLng values.
+   * Whether or not to wrap invalid LatLng values. If false, the values are validated and a default value is used instead.
    *
    * Is true by default.
    */
+  wrap?: boolean;
+  /**
+   * Whether or not to valiate the input. Is ignored if wrap is not false.
+   */
   validate?: boolean;
   /**
-   * The default LatLngPoint to return.
+   * The default LatLngPoint to return if an invalid point is entered. Only used if validate is true.
    */
   default?: Factory<LatLngPoint>;
   /**
@@ -311,10 +327,10 @@ export function latLngPoint(lat: LatLngPointInput, lng?: Longitude): LatLngPoint
  * @returns
  */
 export function latLngPointFunction(config?: LatLngPointFunctionConfig): LatLngPointFunction {
-  const { validate, default: defaultValue, precision = LAT_LONG_1MM_PRECISION, readLonLatTuples } = config ?? {};
+  const { validate, wrap, default: defaultValue, precision = LAT_LONG_1MM_PRECISION, readLonLatTuples } = config ?? {};
   const precisionFunction = latLngPointPrecisionFunction(precision);
-  const validateFunction = validLatLngPointFunction(defaultValue);
-  const mapFn = validate !== false ? (input: LatLngPoint) => precisionFunction(validateFunction(input)) : precisionFunction;
+  const wrapFunction = wrap !== false ? wrapLatLngPoint : validate !== false ? validLatLngPointFunction(defaultValue) : undefined;
+  const mapFn = wrapFunction ? (input: LatLngPoint) => precisionFunction(wrapFunction(input)) : precisionFunction;
   return (lat: LatLngPointInput, lng?: Longitude) => {
     let latLng: LatLngPoint;
 

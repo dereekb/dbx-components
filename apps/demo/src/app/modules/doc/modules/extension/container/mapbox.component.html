@@ -53,7 +53,7 @@
                 <p>Center Now: {{ centerNow$ | async | json }} - Updates every 200ms as the map moves.</p>
                 <p>Pitch: {{ pitch$ | async | json }} | Pitch Now: {{ pitchNow$ | async | json }}</p>
                 <p>Bearing: {{ bearing$ | async | json }} | Bearing Now: {{ bearingNow$ | async | json }}</p>
-                <p>Bound: {{ bound$ | async | json }} | Bound Now: {{ boundNow$ | async | json }}</p>
+                <p>Bound: {{ bound$ | async | json }} | Bound Now: {{ boundNow$ | async | json }} | Wraps World: {{ boundWrapsAroundWorld$ | async }}</p>
                 <p>Click: {{ click$ | async | json }} | Double Click: {{ doubleClick$ | async | json }} | Right Click: {{ rightClick$ | async | json }}</p>
               </dbx-content-container>
               <div style="height: 300px; width: 100%">
