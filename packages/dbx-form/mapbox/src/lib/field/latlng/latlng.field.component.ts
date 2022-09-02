@@ -143,9 +143,11 @@ export class DbxFormMapboxLatLngFieldComponent<T extends DbxFormMapboxLatLngComp
     } else {
       // use the center of the map to set locations
       this._sub.subscription = this.dbxMapboxMapStore.center$.subscribe((center) => {
-        if (!this.isReadonlyOrDisabled) {
-          this.ngZone.run(() => this.setValue(center));
-        }
+        this.dbxMapboxMapStore.centerGivenMargin$.pipe(first()).subscribe(() => {
+          if (!this.isReadonlyOrDisabled) {
+            this.ngZone.run(() => this.setValue(center));
+          }
+        });
       });
     }
 
