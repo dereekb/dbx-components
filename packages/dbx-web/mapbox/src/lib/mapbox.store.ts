@@ -65,6 +65,10 @@ export interface DbxMapboxStoreState {
    * Latest error
    */
   error?: Maybe<Error>;
+  /**
+   * Map margin/offset
+   */
+  margin?: Maybe<DbxMapboxMarginCalculationSizing>;
 }
 
 /**
@@ -448,7 +452,7 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
     return this.atNextIdle().pipe(
       switchMap(() =>
         this.bound$.pipe(
-          (first(),
+          first(),
           map((bounds) => {
             const diff = diffLatLngBoundPoints(bounds);
             const center = latLngBoundCenterPoint(bounds);
@@ -469,7 +473,7 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
             // console.log({ sizing, bounds, effectiveOffset, newWidth, offsetWidth, diff, center, newCenter });
 
             return newCenter;
-          }))
+          })
         )
       )
     );
@@ -593,7 +597,8 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
         switchMap((x) => this._movingTimer.pipe(map(() => this.latLngPoint(x.getCenter())))),
         shareReplay(1)
       )
-    )
+    ),
+    shareReplay(1)
   );
 
   readonly center$: Observable<LatLngPoint> = this.whenInitialized$.pipe(
@@ -605,7 +610,42 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
         distinctUntilChanged(isSameLatLngPoint),
         shareReplay(1)
       );
+    }),
+    shareReplay(1)
+  );
+
+  readonly margin$ = this.state$.pipe(
+    map((x) => x.margin),
+    distinctUntilChanged((a, b) => a != null && b != null && a.fullWidth === b.fullWidth && a.leftMargin === b.leftMargin && a.rightMargin === b.rightMargin),
+    shareReplay(1)
+  );
+
+  readonly reverseMargin$ = this.margin$.pipe(
+    map((x) => {
+      if (x) {
+        return { leftMargin: -x.leftMargin, rightMargin: -x.rightMargin, fullWidth: x.fullWidth };
+      } else {
+        return x;
+      }
     })
+  );
+
+  readonly centerGivenMargin$: Observable<LatLngPoint> = this.whenInitialized$.pipe(
+    switchMap(() => {
+      return this.reverseMargin$.pipe(
+        switchMap((x) => {
+          if (x) {
+            return this.center$.pipe(switchMap((_) => this.calculateNextCenterOffsetWithScreenMarginChange(x)));
+          } else {
+            return this.isMoving$.pipe(
+              filter((x) => !x),
+              switchMap(() => this.center$)
+            );
+          }
+        })
+      );
+    }),
+    shareReplay(1)
   );
 
   readonly boundNow$: Observable<LatLngBound> = this.whenInitialized$.pipe(
@@ -748,6 +788,8 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
   );
 
   // MARK: State Changes
+  readonly setMargin = this.updater((state, margin: Maybe<DbxMapboxMarginCalculationSizing>) => ({ ...state, margin }));
+
   private readonly _setMapService = this.updater((state, mapService: Maybe<MapService>) => ({ mapService, moveState: 'init', lifecycleState: 'init', zoomState: 'init', rotateState: 'init', retainContent: state.retainContent, content: state.retainContent ? state.content : undefined }));
   private readonly _setLifecycleState = this.updater((state, lifecycleState: MapboxMapLifecycleState) => ({ ...state, lifecycleState }));
   private readonly _setMoveState = this.updater((state, moveState: MapboxMapMoveState) => ({ ...state, moveState }));

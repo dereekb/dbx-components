@@ -27,6 +27,8 @@
               <button mat-button (click)="rightDrawer()">Right Drawer</button>
               <button mat-button (click)="changeDrawerColor()">Change Button Color</button>
             </dbx-bar>
+            <h4>centerGivenMargin$</h4>
+            <p>centerGivenMargin: {{ centerGivenMargin$ | async | json }} | margin: {{ margin$ | async | json }}</p>
             <h4>dbx-mapbox-menu</h4>
             <p>The dbx-mapbox-menu component can be used to attach a mat-menu to the DbxMapboxStoreState directive.</p>
             <p>Right Click: {{ rightClick$ | async | json }}</p>

@@ -111,7 +111,9 @@ export class DbxMapboxLayoutComponent extends SubscriptionObject implements OnIn
       });
     });
 
-    this._toggleSub.subscription = combineLatest([this.opened$.pipe(distinctUntilChanged(), skip(1)), this._updateMargins]).subscribe(([opened]) => {
+    let init = false;
+
+    this._toggleSub.subscription = combineLatest([this.opened$.pipe(distinctUntilChanged()), this._updateMargins]).subscribe(([opened]) => {
       let { right } = this.container._contentMargins;
 
       this.container.updateContentMargins();
@@ -128,18 +130,24 @@ export class DbxMapboxLayoutComponent extends SubscriptionObject implements OnIn
         const element: HTMLElement = this.content.nativeElement;
         const width = element.clientWidth;
 
-        const easeTo: Observable<MapboxEaseTo> = this.dbxMapboxMapStore
-          .calculateNextCenterOffsetWithScreenMarginChange({
-            leftMargin: 0,
-            rightMargin: right,
-            fullWidth: width
-          })
-          .pipe(
-            first(),
-            map((center) => ({ to: { center, duration: 3200, essential: false } } as MapboxEaseTo))
-          );
+        const margin = {
+          leftMargin: 0,
+          rightMargin: right,
+          fullWidth: width
+        };
 
-        this.dbxMapboxMapStore.easeTo(easeTo);
+        const easeTo: Observable<MapboxEaseTo> = this.dbxMapboxMapStore.calculateNextCenterOffsetWithScreenMarginChange(margin).pipe(
+          first(),
+          map((center) => ({ to: { center, duration: 3200, essential: false } } as MapboxEaseTo))
+        );
+
+        this.dbxMapboxMapStore.setMargin(opened ? margin : undefined);
+
+        if (!init) {
+          this.dbxMapboxMapStore.easeTo(easeTo);
+        } else {
+          init = true;
+        }
       });
     });
   }

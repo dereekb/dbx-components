@@ -44,6 +44,8 @@ export class DocExtensionMapboxComponent implements OnInit, OnDestroy {
   readonly doubleClick$ = this.dbxMapboxMapStore.doubleClickEvent$.pipe(map((x) => x?.lngLat.toArray()));
   readonly rightClick$ = this.dbxMapboxMapStore.rightClickEvent$.pipe(map((x) => ({ loc: x?.lngLat.toArray(), x: x?.originalEvent?.pageX, y: x?.originalEvent?.pageY })));
   readonly boundWrapsAroundWorld$ = this.dbxMapboxMapStore.boundWrapsAroundWorld$;
+  readonly margin$ = this.dbxMapboxMapStore.margin$;
+  readonly centerGivenMargin$ = this.dbxMapboxMapStore.centerGivenMargin$;
 
   readonly defaultLatLngFieldValue = {
     latLng: latLngString(30.5989668, -96.3831949),
