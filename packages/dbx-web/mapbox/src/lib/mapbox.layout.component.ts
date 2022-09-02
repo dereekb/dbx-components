@@ -1,4 +1,4 @@
-import { skip, switchMap, first, startWith, shareReplay, throttleTime, map, distinctUntilChanged, BehaviorSubject, combineLatest, Subject, Observable } from 'rxjs';
+import { tap, skip, switchMap, first, startWith, shareReplay, throttleTime, map, distinctUntilChanged, BehaviorSubject, combineLatest, Subject, Observable, interval, take } from 'rxjs';
 import { Component, ElementRef, Input, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { DbxMapboxMapStore } from './mapbox.store';
 import { Maybe } from '@dereekb/util';
@@ -9,6 +9,8 @@ import { MatDrawerContainer } from '@angular/material/sidenav';
 import { MapboxEaseTo } from './mapbox';
 
 export type DbxMapboxLayoutSide = 'left' | 'right';
+
+export type DbxMapboxLayoutMode = 'side' | 'push';
 
 /**
  * Responsive component meant to split a left and right column.
@@ -32,12 +34,14 @@ export class DbxMapboxLayoutComponent extends SubscriptionObject implements OnIn
   private _resized = new Subject<void>();
   private _updateMargins = new Subject<void>();
   private _forceHasContent = new BehaviorSubject<boolean>(false);
+  private _mode = new BehaviorSubject<DbxMapboxLayoutMode>('side');
   private _side = new BehaviorSubject<DbxMapboxLayoutSide>('right');
   private _openToggle = new BehaviorSubject<boolean>(true);
   private _color = new BehaviorSubject<Maybe<DbxThemeColor>>(undefined);
   private _toggleSub = new SubscriptionObject();
 
   readonly side$ = this._side.pipe(distinctUntilChanged(), shareReplay(1));
+  readonly mode$: Observable<DbxMapboxLayoutMode> = this._mode.pipe(distinctUntilChanged(), shareReplay(1));
 
   readonly hasContent$ = combineLatest([this._forceHasContent, this.dbxMapboxMapStore.hasContent$]).pipe(
     map(([hasContent, forceHasContent]) => hasContent || forceHasContent),
@@ -113,43 +117,65 @@ export class DbxMapboxLayoutComponent extends SubscriptionObject implements OnIn
 
     let init = false;
 
-    this._toggleSub.subscription = combineLatest([this.opened$.pipe(distinctUntilChanged()), this._updateMargins]).subscribe(([opened]) => {
-      let { right } = this.container._contentMargins;
+    this._toggleSub.subscription = this.mode$
+      .pipe(
+        switchMap((mode) => {
+          let obs: Observable<unknown>;
 
-      this.container.updateContentMargins();
+          if (mode === 'push') {
+            obs = combineLatest([this.opened$.pipe(distinctUntilChanged()), this._updateMargins]).pipe(
+              tap(([opened]) => {
+                let { right } = this.container._contentMargins;
 
-      setTimeout(() => {
-        const flip = opened ? 1 : -1;
+                this.container.updateContentMargins();
 
-        if (opened) {
-          right = this.container._contentMargins.right;
-        }
+                setTimeout(() => {
+                  const flip = opened ? 1 : -1;
 
-        right = (right || 0) * flip;
+                  if (opened) {
+                    right = this.container._contentMargins.right;
+                  }
 
-        const element: HTMLElement = this.content.nativeElement;
-        const width = element.clientWidth;
+                  right = (right || 0) * flip;
 
-        const margin = {
-          leftMargin: 0,
-          rightMargin: right,
-          fullWidth: width
-        };
+                  const element: HTMLElement = this.content.nativeElement;
+                  const width = element.clientWidth;
 
-        const easeTo: Observable<MapboxEaseTo> = this.dbxMapboxMapStore.calculateNextCenterOffsetWithScreenMarginChange(margin).pipe(
-          first(),
-          map((center) => ({ to: { center, duration: 3200, essential: false } } as MapboxEaseTo))
-        );
+                  const margin = {
+                    leftMargin: 0,
+                    rightMargin: right,
+                    fullWidth: width
+                  };
 
-        this.dbxMapboxMapStore.setMargin(opened ? margin : undefined);
+                  const easeTo: Observable<MapboxEaseTo> = this.dbxMapboxMapStore.calculateNextCenterOffsetWithScreenMarginChange(margin).pipe(
+                    first(),
+                    map((center) => ({ to: { center, duration: 3200, essential: false } } as MapboxEaseTo))
+                  );
 
-        if (!init) {
-          this.dbxMapboxMapStore.easeTo(easeTo);
-        } else {
-          init = true;
-        }
-      });
-    });
+                  this.dbxMapboxMapStore.setMargin(opened ? margin : undefined);
+
+                  if (!init) {
+                    this.dbxMapboxMapStore.easeTo(easeTo);
+                  } else {
+                    init = true;
+                  }
+                });
+              })
+            );
+          } else {
+            obs = combineLatest([this.opened$.pipe(distinctUntilChanged()), this._updateMargins]).pipe(
+              switchMap((_) => this.dbxMapboxMapStore.mapInstance$),
+              tap((x) => {
+                this.container.updateContentMargins();
+                x.triggerRepaint();
+              })
+            );
+          }
+
+          return obs;
+        })
+      )
+      .subscribe();
   }
 
   ngOnDestroy(): void {
@@ -174,6 +200,13 @@ export class DbxMapboxLayoutComponent extends SubscriptionObject implements OnIn
   set side(side: Maybe<DbxMapboxLayoutSide>) {
     if (side != null) {
       this._side.next(side);
+    }
+  }
+
+  @Input()
+  set mode(mode: Maybe<DbxMapboxLayoutMode>) {
+    if (mode != null) {
+      this._mode.next(mode);
     }
   }
 
