@@ -105,13 +105,20 @@ export class DocExtensionMapboxComponent implements OnInit, OnDestroy {
 
   readonly mapboxDemoMarkers: DbxMapboxMarker[] = [
     {
-      icon: 'map',
       latLng: latLngPoint([30.599056767713982, -96.38305877734588]),
-      size: 'medium',
+      size: 'small',
+      label: 'DSST',
+      icon: 'map',
       anchor: {
         onClick: () => {
           this.centerBryan(14);
         }
+      },
+      style: {
+        background: 'red',
+        padding: '2px',
+        color: 'white',
+        'border-radius': '50%'
       }
     },
     {
