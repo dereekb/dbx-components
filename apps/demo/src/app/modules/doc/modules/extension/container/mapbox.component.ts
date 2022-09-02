@@ -1,9 +1,9 @@
-import { latLngPoint, latLngString, LatLngTuple, Maybe, randomFromArrayFactory } from '@dereekb/util';
+import { latLngPoint, latLngString, LatLngTuple, Maybe, Pixels, randomFromArrayFactory } from '@dereekb/util';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { mapboxLatLngField, mapboxZoomField } from '@dereekb/dbx-form/mapbox';
 import { DbxMapboxMapStore } from 'packages/dbx-web/mapbox/src/lib/mapbox.store';
-import { KnownMapboxStyle, DbxMapboxLayoutSide } from '@dereekb/dbx-web/mapbox';
+import { KnownMapboxStyle, DbxMapboxLayoutSide, DbxMapboxMarker } from '@dereekb/dbx-web/mapbox';
 import { BehaviorSubject, map, Observable } from 'rxjs';
 import { DocExtensionMapboxContentExampleComponent } from '../component/mapbox.content.example.component';
 import { DbxThemeColor } from '@dereekb/dbx-web';
@@ -43,6 +43,9 @@ export class DocExtensionMapboxComponent implements OnInit, OnDestroy {
   readonly click$ = this.dbxMapboxMapStore.clickEvent$.pipe(map((x) => x?.lngLat.toArray()));
   readonly doubleClick$ = this.dbxMapboxMapStore.doubleClickEvent$.pipe(map((x) => x?.lngLat.toArray()));
   readonly rightClick$ = this.dbxMapboxMapStore.rightClickEvent$.pipe(map((x) => ({ loc: x?.lngLat.toArray(), x: x?.originalEvent?.pageX, y: x?.originalEvent?.pageY })));
+  readonly boundWrapsAroundWorld$ = this.dbxMapboxMapStore.boundWrapsAroundWorld$;
+  readonly margin$ = this.dbxMapboxMapStore.margin$;
+  readonly centerGivenMargin$ = this.dbxMapboxMapStore.centerGivenMargin$;
 
   readonly defaultLatLngFieldValue = {
     latLng: latLngString(30.5989668, -96.3831949),
@@ -100,6 +103,44 @@ export class DocExtensionMapboxComponent implements OnInit, OnDestroy {
     })
   ];
 
+  readonly mapboxDemoMarkers: DbxMapboxMarker[] = [
+    {
+      icon: 'map',
+      latLng: latLngPoint([30.599056767713982, -96.38305877734588]),
+      size: 'medium',
+      anchor: {
+        onClick: () => {
+          this.centerBryan(14);
+        }
+      }
+    },
+    {
+      icon: 'map',
+      latLng: latLngPoint([39.76501871707782, -104.90412501004826]),
+      label: 'Teaching Nomad',
+      size: 'small',
+      anchor: {
+        onClick: () => {
+          this.centerDenver(14);
+        }
+      }
+    },
+    {
+      latLng: latLngPoint([30.269026910097345, -97.74083986490928]),
+      label: 'HelloSubs',
+      size: 'large',
+      image: (pixels: Pixels) => `url(https://placekitten.com/g/${pixels}/)`,
+      anchor: {
+        onClick: () => {
+          this.centerAustin(14);
+        }
+      },
+      style: {
+        'border-radius': '50%'
+      }
+    }
+  ];
+
   constructor(readonly dbxMapboxMapStore: DbxMapboxMapStore) {}
 
   ngOnInit(): void {
@@ -143,18 +184,18 @@ export class DocExtensionMapboxComponent implements OnInit, OnDestroy {
     this._color.next(randomFromArrayFactory<DbxThemeColor>((['primary', 'accent', 'background', 'warn'] as DbxThemeColor[]).filter((x) => x !== this._color.value))());
   }
 
-  centerAustin() {
-    this.dbxMapboxMapStore.jumpTo({ center: [30.269026910097345, -97.74083986490928] });
+  centerAustin(zoom?: number) {
+    this.dbxMapboxMapStore.jumpTo({ to: { center: [30.269026910097345, -97.74083986490928], zoom } });
   }
 
-  centerBryan() {
+  centerBryan(zoom?: number) {
     const center: LatLngTuple = [30.599056767713982, -96.38305877734588];
-    this.dbxMapboxMapStore.flyTo({ center });
+    this.dbxMapboxMapStore.flyTo({ to: { center, zoom } });
   }
 
-  centerDenver() {
+  centerDenver(zoom?: number) {
     const center: LatLngTuple = [39.76501871707782, -104.90412501004826];
-    this.dbxMapboxMapStore.easeTo({ to: { center, zoom: 9 } });
+    this.dbxMapboxMapStore.easeTo({ to: { center, zoom } });
   }
 
   resetBearing() {

@@ -10,7 +10,9 @@
               <!-- Map View-->
               <dbx-mapbox-layout [side]="side$ | async" [opened]="open$ | async" [drawerColor]="color$ | async">
                 <!-- Drawer -->
-                <mgl-map dbxMapboxMap></mgl-map>
+                <mgl-map dbxMapboxMap>
+                  <dbx-mapbox-marker *ngFor="let marker of mapboxDemoMarkers" [marker]="marker"></dbx-mapbox-marker>
+                </mgl-map>
               </dbx-mapbox-layout>
               <dbx-mapbox-menu [matMenuTriggerFor]="menu"></dbx-mapbox-menu>
             </dbx-content-container>
@@ -25,6 +27,8 @@
               <button mat-button (click)="rightDrawer()">Right Drawer</button>
               <button mat-button (click)="changeDrawerColor()">Change Button Color</button>
             </dbx-bar>
+            <h4>centerGivenMargin$</h4>
+            <p>centerGivenMargin: {{ centerGivenMargin$ | async | json }} | margin: {{ margin$ | async | json }}</p>
             <h4>dbx-mapbox-menu</h4>
             <p>The dbx-mapbox-menu component can be used to attach a mat-menu to the DbxMapboxStoreState directive.</p>
             <p>Right Click: {{ rightClick$ | async | json }}</p>
@@ -34,6 +38,7 @@
               <button mat-menu-item (click)="clickMenuItem(2)">Item 2</button>
               <button mat-menu-item (click)="clickMenuItem(3)">Item 3</button>
             </mat-menu>
+            <h4>dbx-mapbox-marker</h4>
           </doc-feature-example>
         </ng-template>
       </mat-tab>
@@ -53,7 +58,7 @@
                 <p>Center Now: {{ centerNow$ | async | json }} - Updates every 200ms as the map moves.</p>
                 <p>Pitch: {{ pitch$ | async | json }} | Pitch Now: {{ pitchNow$ | async | json }}</p>
                 <p>Bearing: {{ bearing$ | async | json }} | Bearing Now: {{ bearingNow$ | async | json }}</p>
-                <p>Bound: {{ bound$ | async | json }} | Bound Now: {{ boundNow$ | async | json }}</p>
+                <p>Bound: {{ bound$ | async | json }} | Bound Now: {{ boundNow$ | async | json }} | Wraps World: {{ boundWrapsAroundWorld$ | async }}</p>
                 <p>Click: {{ click$ | async | json }} | Double Click: {{ doubleClick$ | async | json }} | Right Click: {{ rightClick$ | async | json }}</p>
               </dbx-content-container>
               <div style="height: 300px; width: 100%">

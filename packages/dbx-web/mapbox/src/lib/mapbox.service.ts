@@ -12,7 +12,7 @@ export class DbxMapboxConfig {
 
 export const DEFAULT_MAPBOX_STYLE: KnownMapboxStyle = 'mapbox://styles/mapbox/streets-v11';
 export const DEFAULT_MAPBOX_CENTER: LatLngPointInput = [30.2690138665, -97.7408297965];
-export const DEFAULT_MAPBOX_ZOOM: MapboxZoomLevel = 12;
+export const DEFAULT_MAPBOX_ZOOM: MapboxZoomLevel = 8;
 export const DEFAULT_MAPBOX_MAP_STORE_TIMER_REFRESH_PERIOD: Milliseconds = 200;
 
 @Injectable({

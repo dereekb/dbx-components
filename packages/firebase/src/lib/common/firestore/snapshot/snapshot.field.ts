@@ -552,7 +552,7 @@ export const DEFAULT_FIRESTORE_LAT_LNG_STRING_VALUE = '0,0';
  */
 export function firestoreLatLngString(config?: FirestoreLatLngStringConfig) {
   const { default: defaultValue, defaultBeforeSave, precision } = config ?? {};
-  const transform = latLngStringFunction({ precision, validate: true });
+  const transform = latLngStringFunction({ precision, wrap: false, validate: true });
 
   return firestoreString<LatLngString>({
     default: defaultValue || DEFAULT_FIRESTORE_LAT_LNG_STRING_VALUE,

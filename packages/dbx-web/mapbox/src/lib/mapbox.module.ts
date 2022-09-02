@@ -11,6 +11,9 @@ import { MatIconModule } from '@angular/material/icon';
 import { AngularResizeEventModule } from 'angular-resize-event';
 import { DbxMapboxMenuComponent } from './mapbox.menu.component';
 import { DbxMapboxMapStoreInjectionBlockDirective } from './mapbox.store.provide';
+import { DbxMapboxMarkerComponent } from './mapbox.marker.component';
+import { NgxMapboxGLModule } from 'ngx-mapbox-gl';
+import { DbxRouterAnchorModule } from '@dereekb/dbx-web';
 
 const declarations = [
   //
@@ -18,6 +21,7 @@ const declarations = [
   DbxMapboxLayoutComponent,
   DbxMapboxLayoutDrawerComponent,
   DbxMapboxMenuComponent,
+  DbxMapboxMarkerComponent,
   DbxMapboxMapStoreInjectionBlockDirective
 ];
 
@@ -29,7 +33,9 @@ const declarations = [
     DbxInjectionComponentModule,
     MatButtonModule,
     MatIconModule,
-    AngularResizeEventModule
+    AngularResizeEventModule,
+    DbxRouterAnchorModule,
+    NgxMapboxGLModule
   ],
   declarations,
   exports: declarations

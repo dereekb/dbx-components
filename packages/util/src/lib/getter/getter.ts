@@ -63,7 +63,7 @@ export function isGetter<T = unknown>(value: unknown): value is Getter<T> {
  */
 export function getValueFromGetter<T>(input: GetterOrValue<T>): T;
 export function getValueFromGetter<T>(this: unknown, input: GetterOrValue<T>): T;
-export function getValueFromGetter<T>(this: unknown, input: GetterOrValue<T>, inputArgs?: unknown): T;
+export function getValueFromGetter<T, A>(this: unknown, input: FactoryWithRequiredInput<T, A>, args: A): T;
 export function getValueFromGetter<T, A>(this: unknown, input: GetterOrFactoryWithInput<T, A>, args?: A): T;
 export function getValueFromGetter<T extends string | number | object | symbol, A>(this: unknown, input: GetterOrValueWithInput<T, A>, args?: A): T;
 export function getValueFromGetter<T, A>(this: unknown, input: unknown, args?: A): T {

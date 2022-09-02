@@ -1,6 +1,6 @@
 import { cleanup, filterMaybe, onTrueToFalse } from '@dereekb/rxjs';
 import { Inject, Injectable, OnDestroy } from '@angular/core';
-import { isSameLatLngBound, isSameLatLngPoint, IsWithinLatLngBoundFunction, isWithinLatLngBoundFunction, LatLngBound, latLngBoundFunction, LatLngPointInput, LatLngPoint, latLngPointFunction, Maybe, OverlapsLatLngBoundFunction, overlapsLatLngBoundFunction, diffLatLngBoundPoints, latLngBoundCenterPoint, addLatLngPoints } from '@dereekb/util';
+import { isSameLatLngBound, isSameLatLngPoint, IsWithinLatLngBoundFunction, isWithinLatLngBoundFunction, LatLngBound, latLngBoundFunction, LatLngPointInput, LatLngPoint, latLngPointFunction, Maybe, OverlapsLatLngBoundFunction, overlapsLatLngBoundFunction, diffLatLngBoundPoints, latLngBoundCenterPoint, addLatLngPoints, isDefaultLatLngPoint, swMostLatLngPoint, neMostLatLngPoint, latLngBoundWrapsMap } from '@dereekb/util';
 import { ComponentStore } from '@ngrx/component-store';
 import { MapService } from 'ngx-mapbox-gl';
 import { defaultIfEmpty, distinctUntilChanged, filter, map, shareReplay, switchMap, tap, NEVER, Observable, of, Subscription, startWith, interval, first, combineLatest } from 'rxjs';
@@ -65,6 +65,10 @@ export interface DbxMapboxStoreState {
    * Latest error
    */
   error?: Maybe<Error>;
+  /**
+   * Map margin/offset
+   */
+  margin?: Maybe<DbxMapboxMarginCalculationSizing>;
 }
 
 /**
@@ -73,7 +77,7 @@ export interface DbxMapboxStoreState {
 @Injectable()
 export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> implements OnDestroy {
   private latLngPoint = latLngPointFunction();
-  private latLngBound = latLngBoundFunction();
+  private latLngBound = latLngBoundFunction({ pointFunction: latLngPointFunction({ wrap: false, validate: false }) });
 
   constructor(@Inject(DbxMapboxService) private readonly dbxMapboxService: DbxMapboxService) {
     super({
@@ -448,7 +452,7 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
     return this.atNextIdle().pipe(
       switchMap(() =>
         this.bound$.pipe(
-          (first(),
+          first(),
           map((bounds) => {
             const diff = diffLatLngBoundPoints(bounds);
             const center = latLngBoundCenterPoint(bounds);
@@ -469,7 +473,7 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
             // console.log({ sizing, bounds, effectiveOffset, newWidth, offsetWidth, diff, center, newCenter });
 
             return newCenter;
-          }))
+          })
         )
       )
     );
@@ -593,7 +597,8 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
         switchMap((x) => this._movingTimer.pipe(map(() => this.latLngPoint(x.getCenter())))),
         shareReplay(1)
       )
-    )
+    ),
+    shareReplay(1)
   );
 
   readonly center$: Observable<LatLngPoint> = this.whenInitialized$.pipe(
@@ -605,7 +610,42 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
         distinctUntilChanged(isSameLatLngPoint),
         shareReplay(1)
       );
+    }),
+    shareReplay(1)
+  );
+
+  readonly margin$ = this.state$.pipe(
+    map((x) => x.margin),
+    distinctUntilChanged((a, b) => a != null && b != null && a.fullWidth === b.fullWidth && a.leftMargin === b.leftMargin && a.rightMargin === b.rightMargin),
+    shareReplay(1)
+  );
+
+  readonly reverseMargin$ = this.margin$.pipe(
+    map((x) => {
+      if (x) {
+        return { leftMargin: -x.leftMargin, rightMargin: -x.rightMargin, fullWidth: x.fullWidth };
+      } else {
+        return x;
+      }
     })
+  );
+
+  readonly centerGivenMargin$: Observable<LatLngPoint> = this.whenInitialized$.pipe(
+    switchMap(() => {
+      return this.reverseMargin$.pipe(
+        switchMap((x) => {
+          if (x) {
+            return this.center$.pipe(switchMap((_) => this.calculateNextCenterOffsetWithScreenMarginChange(x)));
+          } else {
+            return this.isMoving$.pipe(
+              filter((x) => !x),
+              switchMap(() => this.center$)
+            );
+          }
+        })
+      );
+    }),
+    shareReplay(1)
   );
 
   readonly boundNow$: Observable<LatLngBound> = this.whenInitialized$.pipe(
@@ -615,7 +655,13 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
           this._renderingTimer.pipe(
             map(() => {
               const bound = x.getBounds();
-              return this.latLngBound([bound.getSouthWest(), bound.getNorthEast()]);
+              const boundSw = bound.getSouthWest();
+              const boundNe = bound.getNorthEast();
+
+              const sw = isDefaultLatLngPoint(boundSw) ? swMostLatLngPoint() : boundSw;
+              const ne = isDefaultLatLngPoint(boundNe) ? neMostLatLngPoint() : boundNe;
+
+              return this.latLngBound(sw, ne);
             })
           )
         ),
@@ -634,6 +680,12 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
         shareReplay(1)
       );
     })
+  );
+
+  readonly boundWrapsAroundWorld$: Observable<boolean> = this.bound$.pipe(
+    map((x) => latLngBoundWrapsMap(x)),
+    distinctUntilChanged(),
+    shareReplay(1)
   );
 
   readonly isWithinBoundFunction$: Observable<IsWithinLatLngBoundFunction> = this.bound$.pipe(
@@ -736,6 +788,8 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
   );
 
   // MARK: State Changes
+  readonly setMargin = this.updater((state, margin: Maybe<DbxMapboxMarginCalculationSizing>) => ({ ...state, margin: margin && (margin.rightMargin !== 0 || margin.leftMargin !== 0) ? margin : undefined }));
+
   private readonly _setMapService = this.updater((state, mapService: Maybe<MapService>) => ({ mapService, moveState: 'init', lifecycleState: 'init', zoomState: 'init', rotateState: 'init', retainContent: state.retainContent, content: state.retainContent ? state.content : undefined }));
   private readonly _setLifecycleState = this.updater((state, lifecycleState: MapboxMapLifecycleState) => ({ ...state, lifecycleState }));
   private readonly _setMoveState = this.updater((state, moveState: MapboxMapMoveState) => ({ ...state, moveState }));
