@@ -1,6 +1,6 @@
 import { FirestoreDocument } from './../../firestore/accessor/document';
 import { fullAccessRoleMap, GrantedRoleMap, noAccessRoleMap } from '@dereekb/model';
-import { ArrayOrValue, AsyncDecisionFunction, AuthRole, Getter, GetterOrValue, Maybe, PromiseOrValue, asArray, AuthRoleSet, setContainsAllValues, IterableOrValue, asIterable, iterableToArray, getValueFromGetter } from '@dereekb/util';
+import { AsyncDecisionFunction, AuthRole, Getter, GetterOrValue, Maybe, PromiseOrValue, setContainsAllValues, IterableOrValue, iterableToArray, getValueFromGetter } from '@dereekb/util';
 import { FirebaseModelContext } from '../context';
 import { UserRelated } from '../../../model/user';
 

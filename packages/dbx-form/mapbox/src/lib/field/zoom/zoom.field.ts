@@ -1,6 +1,4 @@
-import { DEFAULT_LAT_LNG_TEXT_FIELD_PATTERN_MESSAGE, DEFAULT_LAT_LNG_TEXT_FIELD_PLACEHOLDER, DescriptionFieldConfig, FieldConfig, formlyField, LabeledFieldConfig, propsForFieldConfig, styleWrapper, validatorsForFieldConfig } from '@dereekb/dbx-form';
-import { MAPBOX_MAX_ZOOM_LEVEL } from '@dereekb/dbx-web/mapbox';
-import { LAT_LNG_PATTERN } from '@dereekb/util';
+import { DescriptionFieldConfig, FieldConfig, formlyField, LabeledFieldConfig, propsForFieldConfig, styleWrapper } from '@dereekb/dbx-form';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { DbxFormMapboxZoomComponentFieldProps } from './zoom.field.component';
 

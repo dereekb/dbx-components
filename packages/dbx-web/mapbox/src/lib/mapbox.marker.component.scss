@@ -2,7 +2,6 @@
   display: flex;
   align-items: center;
   flex-direction: column;
-  font-weight: bold;
 
   .dbx-mapbox-marker-content {
     display: flex;
@@ -14,5 +13,9 @@
       height: 100%;
       font-size: inherit;
     }
+  }
+
+  .dbx-mapbox-marker-label {
+    font-size: 0.9em;
   }
 }

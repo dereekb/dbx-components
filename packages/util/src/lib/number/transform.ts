@@ -1,4 +1,4 @@
-import { chainMapSameFunctions, MapFunction, MAP_IDENTITY } from '../value/map';
+import { chainMapSameFunctions, MapFunction } from '../value/map';
 import { Maybe } from '../value/maybe.type';
 import { boundNumberFunction, BoundNumberFunctionConfig } from './bound';
 import { cutValueToPrecisionFunction, NumberPrecision, roundNumberToStepFunction, RoundNumberToStepFunctionInput } from './round';
@@ -25,7 +25,7 @@ export type TransformNumberFunctionConfig<N extends number = number> = {
 export type TransformNumberFunction<N extends number = number> = MapFunction<N, N>;
 
 export function transformNumberFunction<N extends number = number>(config: TransformNumberFunctionConfig<N>): TransformNumberFunction<N> {
-  let transformFunctions: Maybe<TransformNumberFunction<N>>[] = [config.transform];
+  const transformFunctions: Maybe<TransformNumberFunction<N>>[] = [config.transform];
 
   if (config.roundToStep) {
     transformFunctions.push(roundNumberToStepFunction(config.roundToStep) as unknown as TransformNumberFunction<N>);

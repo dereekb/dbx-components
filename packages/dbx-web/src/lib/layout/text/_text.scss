@@ -39,6 +39,19 @@ $mat-hint-opacity: 0.54; // Opacity to mirror mat-hint
   $color-config: theming.get-color-config($theme-config);
   $accent: map.get($color-config, 'accent');
   $warn: map.get($color-config, 'warn');
+  $background: map.get($color-config, 'background');
+  $foreground: map.get($color-config, 'foreground');
+
+  $text-color: theming.get-color-from-palette($foreground, 'text');
+  $border-color: theming.get-color-from-palette($background, 'background');
+  $outlined-text-color: transparentize($border-color, 0.6);
+
+  $is-dark: map.get($theme-config, is-dark);
+
+  @if $is-dark == true {
+    $text-color: darken($text-color, 35);
+    $outlined-text-color: $border-color;
+  }
 
   $ok-color: color.scale(blue, $lightness: 30%);
   $success-color: green;
@@ -70,6 +83,11 @@ $mat-hint-opacity: 0.54; // Opacity to mirror mat-hint
 
   .dbx-note {
     opacity: $note-opacity;
+  }
+
+  .dbx-outlined-text {
+    color: $text-color;
+    text-shadow: -1px -1px 0 $outlined-text-color, 1px -1px 0 $outlined-text-color, -1px 1px 0 $outlined-text-color, 1px 1px 0 $outlined-text-color;
   }
 }
 

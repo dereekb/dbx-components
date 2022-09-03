@@ -1,5 +1,5 @@
 import { Writable } from 'ts-essentials';
-import { MapFunction, MapSameFunction } from '../value/map';
+import { MapFunction } from '../value/map';
 
 // MARK: Number
 export interface NumberBound<T extends number = number> {
@@ -27,7 +27,7 @@ export function isInNumberBoundFunction(bounds: NumberBound): IsInNumberBoundFun
 }
 
 // MARK: Wrap
-export interface WrapNumberFunctionConfig<T extends number = number> extends NumberBound<T> {}
+export type WrapNumberFunctionConfig<T extends number = number> = NumberBound<T>;
 
 export type WrapNumberFunction<T extends number = number> = MapFunction<number, T> & {
   readonly _wrap: WrapNumberFunctionConfig;

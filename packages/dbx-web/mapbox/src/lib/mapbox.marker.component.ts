@@ -1,38 +1,6 @@
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
-import { ClickableAnchor } from '@dereekb/dbx-core';
-import { FactoryWithRequiredInput, getValueFromGetter, LatLngPointRef, Maybe, Pixels } from '@dereekb/util';
-
-/**
- * DbxMapboxMarkerSize. Numbers are converted to pixels.
- */
-export type DbxMapboxMarkerSize = 'small' | 'medium' | 'large' | 'tall' | Pixels;
-
-export interface DbxMapboxMarker extends LatLngPointRef {
-  /**
-   * icon
-   */
-  icon?: string;
-  /**
-   * label
-   */
-  label?: string;
-  /**
-   * Image URL
-   */
-  image?: string | FactoryWithRequiredInput<string, Pixels>;
-  /**
-   * Size of the marker.
-   */
-  size?: DbxMapboxMarkerSize;
-  /**
-   *
-   */
-  anchor?: ClickableAnchor;
-  /**
-   * Additional object styling
-   */
-  style?: object;
-}
+import { getValueFromGetter, latLngPointFunction, Maybe } from '@dereekb/util';
+import { DbxMapboxMarker } from './mapbox.marker';
 
 @Component({
   selector: 'dbx-mapbox-marker',
@@ -43,7 +11,7 @@ export interface DbxMapboxMarker extends LatLngPointRef {
           <div class="dbx-mapbox-marker-content" [ngStyle]="style">
             <mat-icon *ngIf="icon">{{ icon }}</mat-icon>
           </div>
-          <div class="dbx-mapbox-marker-label" *ngIf="label">{{ label }}</div>
+          <div class="dbx-mapbox-marker-label dbx-outlined-text" *ngIf="label">{{ label }}</div>
         </div>
       </dbx-anchor>
     </mgl-marker>
@@ -52,6 +20,8 @@ export interface DbxMapboxMarker extends LatLngPointRef {
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxMapboxMarkerComponent {
+  private static _latLngPoint = latLngPointFunction({ wrap: true });
+
   private _marker!: Maybe<DbxMapboxMarker>;
 
   @Input()
@@ -66,7 +36,8 @@ export class DbxMapboxMarkerComponent {
   constructor() {}
 
   get latLng() {
-    return this._marker?.latLng;
+    const input = this._marker?.latLng;
+    return input ? DbxMapboxMarkerComponent._latLngPoint(input) : undefined;
   }
 
   get anchor() {
@@ -82,8 +53,8 @@ export class DbxMapboxMarkerComponent {
   }
 
   get style() {
-    let width: number = 0;
-    let height: number = 0;
+    let width = 0;
+    let height = 0;
 
     const size = this._marker?.size || 'medium';
 
@@ -114,7 +85,7 @@ export class DbxMapboxMarkerComponent {
     const imageInput = this._marker?.image;
     const image = imageInput ? (typeof imageInput === 'string' ? imageInput : getValueFromGetter(imageInput, width)) : undefined;
 
-    let style = {
+    const style = {
       ...this._marker?.style,
       width: width + 'px',
       height: height + 'px',
