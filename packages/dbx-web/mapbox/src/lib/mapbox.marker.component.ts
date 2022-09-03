@@ -1,13 +1,13 @@
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { ClickableAnchor } from '@dereekb/dbx-core';
-import { FactoryWithRequiredInput, getValueFromGetter, LatLngPointRef, Maybe, Pixels } from '@dereekb/util';
+import { FactoryWithRequiredInput, getValueFromGetter, latLngPointFunction, LatLngPointRef, LatLngRef, Maybe, Pixels } from '@dereekb/util';
 
 /**
  * DbxMapboxMarkerSize. Numbers are converted to pixels.
  */
 export type DbxMapboxMarkerSize = 'small' | 'medium' | 'large' | 'tall' | Pixels;
 
-export interface DbxMapboxMarker extends LatLngPointRef {
+export type DbxMapboxMarker = LatLngRef & {
   /**
    * icon
    */
@@ -32,7 +32,7 @@ export interface DbxMapboxMarker extends LatLngPointRef {
    * Additional object styling
    */
   style?: object;
-}
+};
 
 @Component({
   selector: 'dbx-mapbox-marker',
@@ -52,6 +52,8 @@ export interface DbxMapboxMarker extends LatLngPointRef {
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxMapboxMarkerComponent {
+  private static _latLngPoint = latLngPointFunction({ wrap: true });
+
   private _marker!: Maybe<DbxMapboxMarker>;
 
   @Input()
@@ -66,7 +68,8 @@ export class DbxMapboxMarkerComponent {
   constructor() {}
 
   get latLng() {
-    return this._marker?.latLng;
+    const input = this._marker?.latLng;
+    return input ? DbxMapboxMarkerComponent._latLngPoint(input) : undefined;
   }
 
   get anchor() {
