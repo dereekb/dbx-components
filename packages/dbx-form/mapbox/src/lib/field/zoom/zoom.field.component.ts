@@ -3,11 +3,9 @@ import { CompactContextStore, mapCompactModeObs } from '@dereekb/dbx-web';
 import { Component, NgZone, OnDestroy, OnInit, Optional } from '@angular/core';
 import { FieldTypeConfig, FormlyFieldProps } from '@ngx-formly/core';
 import { FieldType } from '@ngx-formly/material';
-import { first, BehaviorSubject, filter, shareReplay, startWith, switchMap, map, Observable } from 'rxjs';
+import { BehaviorSubject, shareReplay, startWith, switchMap, Observable } from 'rxjs';
 import { filterMaybe, SubscriptionObject } from '@dereekb/rxjs';
-import { ZoomLevel, Maybe, LatLngPoint, LatLngPointFunctionConfig, latLngPoint, LatLngStringFunction, latLngStringFunction } from '@dereekb/util';
-import { GeolocationService } from '@ng-web-apis/geolocation';
-import { Marker } from 'mapbox-gl';
+import { ZoomLevel, Maybe, LatLngPoint, latLngPoint } from '@dereekb/util';
 import { DbxMapboxService, DbxMapboxMapStore, MapboxZoomLevel, provideMapboxStoreIfParentIsUnavailable, mapboxZoomLevel, MAPBOX_MAX_ZOOM_LEVEL, MAPBOX_MIN_ZOOM_LEVEL } from '@dereekb/dbx-web/mapbox';
 
 export interface DbxFormMapboxZoomComponentFieldProps extends FormlyFieldProps {

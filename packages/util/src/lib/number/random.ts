@@ -1,4 +1,3 @@
-import { MapFunction } from '../value/map';
 import { Factory } from './../getter/getter';
 import { roundingFunction, RoundingInput } from './round';
 

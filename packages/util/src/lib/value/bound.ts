@@ -1,6 +1,6 @@
 import { Rectangle, rectangleOverlapsRectangle, Vector } from './vector';
 import { Writable } from 'ts-essentials';
-import { latLngPointFunction, LatLngPoint, LatLngPointInput, LatLngPrecision, LatLngPointFunction, isLatLngPoint, isSameLatLngPoint, diffLatLngPoints, MAX_LONGITUDE_VALUE, MIN_LONGITUDE_VALUE, TOTAL_LONGITUDE_RANGE } from './point';
+import { latLngPointFunction, LatLngPoint, LatLngPointInput, LatLngPrecision, LatLngPointFunction, isLatLngPoint, isSameLatLngPoint, diffLatLngPoints, TOTAL_LONGITUDE_RANGE } from './point';
 
 export type LatLngBoundSouthWestPoint = LatLngPoint;
 export type LatLngBoundNothEastPoint = LatLngPoint;

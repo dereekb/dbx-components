@@ -1,5 +1,4 @@
-import * as admin from 'firebase-admin';
-import { FactoryProvider, InjectionToken, Module, ModuleMetadata, Provider } from '@nestjs/common';
+import { InjectionToken, Provider } from '@nestjs/common';
 import { FirebaseServerEnvironmentConfig } from './env.config';
 
 // MARK: Tokens

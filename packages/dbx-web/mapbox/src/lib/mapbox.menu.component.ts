@@ -1,11 +1,9 @@
 import { SubscriptionObject } from '@dereekb/rxjs';
 import { filter, switchMap, BehaviorSubject, of } from 'rxjs';
-import { DbxMapboxService } from './mapbox.service';
 import { DbxMapboxMapStore } from './mapbox.store';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Directive, Host, HostListener, Input, OnInit, Optional, OnDestroy, NgZone } from '@angular/core';
-import { MapComponent, MapService } from 'ngx-mapbox-gl';
-import { Vector, latLngPoint, Maybe, DestroyFunction, DestroyFunctionObject } from '@dereekb/util';
-import { MatMenu, MatMenuTrigger } from '@angular/material/menu';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Host, Input, OnInit, OnDestroy, NgZone } from '@angular/core';
+import { Maybe, DestroyFunctionObject } from '@dereekb/util';
+import { MatMenuTrigger } from '@angular/material/menu';
 import { AbstractSubscriptionDirective, safeMarkForCheck } from '@dereekb/dbx-core';
 import { disableRightClickInCdkBackdrop } from '@dereekb/dbx-web';
 

@@ -1,6 +1,5 @@
-import { tapLog } from '@dereekb/rxjs';
 import { BehaviorSubject, combineLatest, distinctUntilChanged, map, shareReplay } from 'rxjs';
-import { MapFunction, Maybe } from '@dereekb/util';
+import { Maybe } from '@dereekb/util';
 import { Component, Input, OnDestroy } from '@angular/core';
 import { DbxMapboxMarkerFactory } from './mapbox.marker';
 

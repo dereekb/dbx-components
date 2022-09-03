@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
-import { ClickableAnchor } from '@dereekb/dbx-core';
-import { FactoryWithRequiredInput, getValueFromGetter, latLngPointFunction, LatLngPointRef, LatLngRef, Maybe, Pixels } from '@dereekb/util';
+import { getValueFromGetter, latLngPointFunction, Maybe } from '@dereekb/util';
 import { DbxMapboxMarker } from './mapbox.marker';
 
 @Component({
@@ -54,8 +53,8 @@ export class DbxMapboxMarkerComponent {
   }
 
   get style() {
-    let width: number = 0;
-    let height: number = 0;
+    let width = 0;
+    let height = 0;
 
     const size = this._marker?.size || 'medium';
 
@@ -86,7 +85,7 @@ export class DbxMapboxMarkerComponent {
     const imageInput = this._marker?.image;
     const image = imageInput ? (typeof imageInput === 'string' ? imageInput : getValueFromGetter(imageInput, width)) : undefined;
 
-    let style = {
+    const style = {
       ...this._marker?.style,
       width: width + 'px',
       height: height + 'px',
