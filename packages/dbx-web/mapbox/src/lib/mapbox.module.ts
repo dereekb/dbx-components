@@ -14,6 +14,7 @@ import { DbxMapboxMapStoreInjectionBlockDirective } from './mapbox.store.provide
 import { DbxMapboxMarkerComponent } from './mapbox.marker.component';
 import { NgxMapboxGLModule } from 'ngx-mapbox-gl';
 import { DbxRouterAnchorModule } from '@dereekb/dbx-web';
+import { DbxMapboxMarkersComponent } from './mapbox.markers.component';
 
 const declarations = [
   //
@@ -22,6 +23,7 @@ const declarations = [
   DbxMapboxLayoutDrawerComponent,
   DbxMapboxMenuComponent,
   DbxMapboxMarkerComponent,
+  DbxMapboxMarkersComponent,
   DbxMapboxMapStoreInjectionBlockDirective
 ];
 

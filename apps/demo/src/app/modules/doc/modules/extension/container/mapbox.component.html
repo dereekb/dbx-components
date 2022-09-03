@@ -12,6 +12,7 @@
                 <!-- Drawer -->
                 <mgl-map dbxMapboxMap>
                   <dbx-mapbox-marker *ngFor="let marker of mapboxDemoMarkers" [marker]="marker"></dbx-mapbox-marker>
+                  <dbx-mapbox-markers [data]="mapboxMarkersData" [markerFactory]="mapboxMarkerFactory"></dbx-mapbox-markers>
                 </mgl-map>
               </dbx-mapbox-layout>
               <dbx-mapbox-menu [matMenuTriggerFor]="menu"></dbx-mapbox-menu>

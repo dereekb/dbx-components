@@ -1,9 +1,9 @@
-import { latLngPoint, latLngString, LatLngTuple, Maybe, Pixels, randomFromArrayFactory } from '@dereekb/util';
+import { latLngPoint, latLngString, LatLngTuple, Maybe, Pixels, randomFromArrayFactory, range } from '@dereekb/util';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { mapboxLatLngField, mapboxZoomField } from '@dereekb/dbx-form/mapbox';
 import { DbxMapboxMapStore } from 'packages/dbx-web/mapbox/src/lib/mapbox.store';
-import { KnownMapboxStyle, DbxMapboxLayoutSide, DbxMapboxMarker } from '@dereekb/dbx-web/mapbox';
+import { KnownMapboxStyle, DbxMapboxLayoutSide, DbxMapboxMarker, DbxMapboxMarkerFactory, dbxMapboxColoredDotStyle } from '@dereekb/dbx-web/mapbox';
 import { BehaviorSubject, map, Observable } from 'rxjs';
 import { DocExtensionMapboxContentExampleComponent } from '../component/mapbox.content.example.component';
 import { DbxThemeColor } from '@dereekb/dbx-web';
@@ -147,6 +147,16 @@ export class DocExtensionMapboxComponent implements OnInit, OnDestroy {
       }
     }
   ];
+
+  readonly mapboxMarkersData: LatLngTuple[] = range(0, 3).map((x) => [40 + x * 5, -100]);
+  readonly mapboxMarkerDotStyle = dbxMapboxColoredDotStyle('blue', 'white');
+  readonly mapboxMarkerFactory: DbxMapboxMarkerFactory<LatLngTuple> = (latLng, i) => ({
+    icon: 'arrow',
+    label: `M${i}`,
+    latLng,
+    size: 'small',
+    style: this.mapboxMarkerDotStyle
+  });
 
   constructor(readonly dbxMapboxMapStore: DbxMapboxMapStore) {}
 

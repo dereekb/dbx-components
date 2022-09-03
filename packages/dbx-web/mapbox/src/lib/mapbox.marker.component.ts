@@ -1,38 +1,7 @@
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { ClickableAnchor } from '@dereekb/dbx-core';
 import { FactoryWithRequiredInput, getValueFromGetter, latLngPointFunction, LatLngPointRef, LatLngRef, Maybe, Pixels } from '@dereekb/util';
-
-/**
- * DbxMapboxMarkerSize. Numbers are converted to pixels.
- */
-export type DbxMapboxMarkerSize = 'small' | 'medium' | 'large' | 'tall' | Pixels;
-
-export type DbxMapboxMarker = LatLngRef & {
-  /**
-   * icon
-   */
-  icon?: string;
-  /**
-   * label
-   */
-  label?: string;
-  /**
-   * Image URL
-   */
-  image?: string | FactoryWithRequiredInput<string, Pixels>;
-  /**
-   * Size of the marker.
-   */
-  size?: DbxMapboxMarkerSize;
-  /**
-   *
-   */
-  anchor?: ClickableAnchor;
-  /**
-   * Additional object styling
-   */
-  style?: object;
-};
+import { DbxMapboxMarker } from './mapbox.marker';
 
 @Component({
   selector: 'dbx-mapbox-marker',
@@ -43,7 +12,7 @@ export type DbxMapboxMarker = LatLngRef & {
           <div class="dbx-mapbox-marker-content" [ngStyle]="style">
             <mat-icon *ngIf="icon">{{ icon }}</mat-icon>
           </div>
-          <div class="dbx-mapbox-marker-label" *ngIf="label">{{ label }}</div>
+          <div class="dbx-mapbox-marker-label dbx-outlined-text" *ngIf="label">{{ label }}</div>
         </div>
       </dbx-anchor>
     </mgl-marker>

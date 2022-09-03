@@ -394,6 +394,13 @@ export type LatLngPointRef = {
 };
 
 /**
+ * References a latLng using a LatLngTuple
+ */
+export type LatLngTupleRef = {
+  readonly latLng: LatLngTuple;
+};
+
+/**
  * References a latLng using a LatLngString
  */
 export type LatLngStringRef = {
@@ -403,7 +410,14 @@ export type LatLngStringRef = {
 /**
  * An object that references a latLng
  */
-export type LatLngRef = LatLngPointRef | LatLngStringRef;
+export type LatLngRef = LatLngPointRef | LatLngStringRef | LatLngTupleRef;
+
+/**
+ * References a latLng using a LatLngPointInput.
+ */
+export type LatLngInputRef = {
+  readonly latLng: LatLngPointInput;
+};
 
 /**
  * A LatLngPointRef with arbitrary data
