@@ -1,6 +1,25 @@
 import { ObservableOrValue, useAsObservable, PageListLoadingState, filterMaybe, SubscriptionObject, asObservable, pageLoadingStateFromObs } from '@dereekb/rxjs';
 import { BehaviorSubject, map, shareReplay, distinctUntilChanged, Subject, switchMap, Observable, startWith, exhaustMap } from 'rxjs';
-import { dataFromDocumentSnapshots, DocumentDataWithIdAndKey, DocumentReference, documentReferencesFromDocuments, DocumentSnapshot, FirestoreDocument, FirestoreDocumentAccessor, firestoreModelIdsFromDocuments, FirestoreModelKey, firestoreModelKeysFromDocuments, getDataFromDocumentSnapshots, getDocumentSnapshots, LimitedFirestoreDocumentAccessor, loadDocumentsForDocumentReferences, loadDocumentsForIds, loadDocumentsForKeys, streamDocumentSnapshots } from '@dereekb/firebase';
+import {
+  dataFromDocumentSnapshots,
+  DocumentDataWithIdAndKey,
+  DocumentReference,
+  documentReferencesFromDocuments,
+  DocumentSnapshot,
+  FirestoreDocument,
+  FirestoreDocumentAccessor,
+  firestoreModelIdsFromDocuments,
+  FirestoreModelKey,
+  firestoreModelKeysFromDocuments,
+  getDataFromDocumentSnapshots,
+  getDocumentSnapshots,
+  latestSnapshotsFromDocuments,
+  LimitedFirestoreDocumentAccessor,
+  loadDocumentsForDocumentReferences,
+  loadDocumentsForIds,
+  loadDocumentsForKeys,
+  streamDocumentSnapshots
+} from '@dereekb/firebase';
 import { ArrayOrValue, asArray, Destroyable, Maybe } from '@dereekb/util';
 import { DbxFirebaseDocumentLoader, DbxLimitedFirebaseDocumentLoader } from './document.loader';
 
@@ -42,7 +61,7 @@ export class DbxLimitedFirebaseDocumentLoaderInstance<T = unknown, D extends Fir
    * Snapshot stream of the documents
    */
   readonly snapshotsStream$: Observable<DocumentSnapshot<T>[]> = this.documents$.pipe(
-    switchMap((docs) => streamDocumentSnapshots<T, D>(docs)),
+    switchMap((docs) => latestSnapshotsFromDocuments(docs)),
     shareReplay(1)
   );
 

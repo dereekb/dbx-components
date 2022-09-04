@@ -1,6 +1,6 @@
 import { LatLngBound } from '@dereekb/util';
 import { latLngPoint } from './point';
-import { boundToRectangle, latLngBound, latLngBoundCenterPoint, latLngBoundFunction, overlapsLatLngBoundFunction, TOTAL_SPAN_OF_LONGITUDE } from './bound';
+import { boundToRectangle, isLatLngBoundWithinLatLngBound, isLatLngPointWithinLatLngBound, isWithinLatLngBoundFunction, latLngBound, latLngBoundCenterPoint, latLngBoundFullyWrapsMap, latLngBoundFunction, latLngBoundStrictlyWrapsMap, overlapsLatLngBoundFunction, TOTAL_SPAN_OF_LONGITUDE } from './bound';
 
 describe('latLngBoundFunction()', () => {
   const precision = 3;
@@ -55,6 +55,104 @@ describe('latLngBoundCenterPoint()', () => {
 
     expect(result.lat).toBe(20);
     expect(result.lng).toBe(20);
+  });
+});
+
+describe('latLngBoundStrictlyWrapsMap()', () => {
+  it('should return true if the bound wraps over the longitudinal edge of the map', () => {
+    const bound = latLngBound({ lat: 0, lng: 160 }, { lat: 40, lng: -160 });
+    expect(latLngBoundStrictlyWrapsMap(bound)).toBe(true);
+  });
+
+  it('should return false if the bound does not wrap over the longitudinal edge of the map', () => {
+    const bound = latLngBound({ lat: 0, lng: 0 }, { lat: 40, lng: 40 });
+    expect(latLngBoundStrictlyWrapsMap(bound)).toBe(false);
+  });
+});
+
+describe('latLngBoundFullyWrapsMap()', () => {
+  it('should return true if the bound fully wraps the map', () => {
+    const bound = latLngBound({ lat: 0, lng: -360 }, { lat: 40, lng: 360 });
+    expect(latLngBoundFullyWrapsMap(bound)).toBe(true);
+  });
+
+  it('should return false if the bound only wraps over the longitudinal edge of the map', () => {
+    const bound = latLngBound({ lat: 0, lng: 160 }, { lat: 40, lng: -160 });
+    expect(latLngBoundFullyWrapsMap(bound)).toBe(false);
+  });
+});
+
+describe('isLatLngBoundWithinLatLngBound()', () => {
+  describe('normal bound', () => {
+    const bound = latLngBound({ lat: 0, lng: 0 }, { lat: 40, lng: 40 });
+
+    it('should return true if the bound is the same.', () => {
+      expect(isLatLngBoundWithinLatLngBound(bound, bound)).toBe(true);
+    });
+
+    it('should return false if the bound is not fully in the bound.', () => {
+      const inputBound = latLngBound({ lat: -20, lng: -20 }, { lat: 40, lng: 40 });
+      expect(isLatLngBoundWithinLatLngBound(inputBound, bound)).toBe(false);
+    });
+
+    it('should return false if the bound is not in the bound.', () => {
+      const inputBound = latLngBound({ lat: -20, lng: -20 }, { lat: -10, lng: -10 });
+      expect(isLatLngBoundWithinLatLngBound(inputBound, bound)).toBe(false);
+    });
+  });
+});
+
+describe('isLatLngPointWithinLatLngBound()', () => {
+  describe('normal bound', () => {
+    const bound = latLngBound({ lat: 0, lng: 0 }, { lat: 40, lng: 40 });
+
+    it('should return true if the point is in the bound.', () => {
+      const point = latLngPoint(10, 10);
+      expect(isLatLngPointWithinLatLngBound(point, bound)).toBe(true);
+    });
+
+    it('should return false if the point is not in the bound.', () => {
+      const point = latLngPoint(-10, 10);
+      expect(isLatLngPointWithinLatLngBound(point, bound)).toBe(false);
+    });
+  });
+
+  describe('bound wraps map strictly', () => {
+    const bound = latLngBound({ lat: 0, lng: 170 }, { lat: 40, lng: -170 });
+
+    it('should return true if the point is in the bound on the sw side.', () => {
+      const point = latLngPoint(10, 175);
+      expect(isLatLngPointWithinLatLngBound(point, bound)).toBe(true);
+    });
+
+    it('should return true if the point is in the bound on the ne side.', () => {
+      const point = latLngPoint(10, -175);
+      expect(isLatLngPointWithinLatLngBound(point, bound)).toBe(true);
+    });
+
+    it('should return false if the point is not in the bound.', () => {
+      const point = latLngPoint(-10, 10);
+      expect(isLatLngPointWithinLatLngBound(point, bound)).toBe(false);
+    });
+  });
+
+  describe('bound wraps map fully', () => {
+    const bound = latLngBound({ lat: 0, lng: -360 }, { lat: 40, lng: 360 });
+
+    it('should return true if the point is in the bound in the east.', () => {
+      const point = latLngPoint(10, 175);
+      expect(isLatLngPointWithinLatLngBound(point, bound)).toBe(true);
+    });
+
+    it('should return true if the point is in the bound in the west.', () => {
+      const point = latLngPoint(10, -175);
+      expect(isLatLngPointWithinLatLngBound(point, bound)).toBe(true);
+    });
+
+    it('should return false if the point is not in the bound.', () => {
+      const point = latLngPoint(-10, 10);
+      expect(isLatLngPointWithinLatLngBound(point, bound)).toBe(false);
+    });
   });
 });
 
