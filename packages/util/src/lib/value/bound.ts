@@ -23,13 +23,32 @@ export function diffLatLngBoundPoints(bounds: LatLngBound): LatLngPoint {
 }
 
 /**
- * Returns true if the input LatLngBound wrap across the wrapped longitudinal edge of a map.
+ * Returns true if the input LatLngBound either strictly wraps the map or fully wraps the map.
  *
  * @param bound
  * @returns
  */
 export function latLngBoundWrapsMap(bound: LatLngBound) {
-  return bound.sw.lng > bound.ne.lng || Math.abs(bound.ne.lng - bound.sw.lng) > TOTAL_LONGITUDE_RANGE;
+  return latLngBoundStrictlyWrapsMap(bound) || latLngBoundFullyWrapsMap(bound);
+}
+
+/**
+ * Returns true if the input LatLngBound's sw corner comes after the ne corner.
+ *
+ * @param bound
+ * @returns
+ */
+export function latLngBoundStrictlyWrapsMap(bound: LatLngBound) {
+  return bound.sw.lng > bound.ne.lng;
+}
+
+/**
+ * Returns true if the LatLngBound's sw and ne longitudes's total distance is greater than the
+ * @param bound
+ * @returns
+ */
+export function latLngBoundFullyWrapsMap(bound: LatLngBound) {
+  return Math.abs(bound.ne.lng - bound.sw.lng) > TOTAL_LONGITUDE_RANGE;
 }
 
 export function latLngBoundNorthEastPoint(bound: LatLngBound): LatLngPoint {
@@ -192,15 +211,16 @@ export function isLatLngBoundWithinLatLngBound(bound: LatLngBound, within: LatLn
 
 export function isLatLngPointWithinLatLngBound(point: LatLngPoint, within: LatLngBound): boolean {
   const { sw, ne } = within;
+  const { lat, lng } = point;
 
-  const latIsBounded = sw.lat <= point.lat && ne.lat <= point.lat;
+  const latIsBounded = lat >= sw.lat && lat <= ne.lat;
 
   if (latIsBounded) {
-    if (latLngBoundWrapsMap(within)) {
-      // test for map wrapping
-      return sw.lng >= point.lng && ne.lat >= point.lng;
+    if (latLngBoundStrictlyWrapsMap(within)) {
+      // included if between sw to the max possible value/bound (180), and ne to the min possible value/bound (-180)
+      return lng >= sw.lng || lng <= ne.lng;
     } else {
-      return sw.lng <= point.lng && ne.lat <= point.lng;
+      return lng >= sw.lng && lng <= ne.lng;
     }
   }
 
