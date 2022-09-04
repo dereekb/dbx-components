@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [9.6.5](https://github.com/dereekb/dbx-components/compare/v9.6.4-dev...v9.6.5) (2022-09-04)
+
+
+### Bug Fixes
+
+* fixed isLatLngPointWithinLatLngBound() ([d57c369](https://github.com/dereekb/dbx-components/commit/d57c369393e337299fccd4fec64366d43fe3cd56))
+
+
+
 ## [9.6.4](https://github.com/dereekb/dbx-components/compare/v9.6.3-dev...v9.6.4) (2022-09-03)
 
 
