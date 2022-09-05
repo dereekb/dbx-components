@@ -3,8 +3,8 @@ import { FormlyFieldConfig } from '@ngx-formly/core';
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { mapboxLatLngField, mapboxZoomField } from '@dereekb/dbx-form/mapbox';
 import { DbxMapboxMapStore } from 'packages/dbx-web/mapbox/src/lib/mapbox.store';
-import { KnownMapboxStyle, DbxMapboxLayoutSide, DbxMapboxMarker, DbxMapboxMarkerFactory, dbxMapboxColoredDotStyle } from '@dereekb/dbx-web/mapbox';
-import { shareReplay, BehaviorSubject, map, Observable, combineLatest } from 'rxjs';
+import { KnownMapboxStyle, DbxMapboxLayoutSide, DbxMapboxMarker, DbxMapboxMarkerFactory, dbxMapboxColoredDotStyle, filterByMapboxViewportBound } from '@dereekb/dbx-web/mapbox';
+import { shareReplay, BehaviorSubject, map, Observable, combineLatest, of } from 'rxjs';
 import { DocExtensionMapboxContentExampleComponent } from '../component/mapbox.content.example.component';
 import { DbxThemeColor } from '@dereekb/dbx-web';
 import { tapDetectChanges } from '@dereekb/dbx-core';
@@ -174,6 +174,21 @@ export class DocExtensionMapboxComponent implements OnInit, OnDestroy {
     size: 'small',
     style: this.mapboxMarkerDotStyle
   });
+
+  readonly markersInView$ = of([...this.mapboxDemoMarkers, ...this.mapboxMarkersData.map(this.mapboxMarkerFactory)].map((x, i) => ({ ...x, zoom: 10 }))).pipe(
+    filterByMapboxViewportBound({
+      boundFunctionObs: this.dbxMapboxMapStore.viewportBoundFunction$,
+      /**
+       * Can alternatively use isWithinBoundFunction$ to get items that are entirely contained within the viewport.
+       */
+      boundDecisionObs: this.dbxMapboxMapStore.overlapsBoundFunction$,
+      readValue: (x) => {
+        return { center: x.latLng, zoom: x.zoom };
+      }
+    }),
+    map((x) => x.map((y) => ({ label: y.label, center: y.latLng, zoom: y.zoom }))),
+    shareReplay(1)
+  );
 
   constructor(readonly dbxMapboxMapStore: DbxMapboxMapStore, readonly cdRef: ChangeDetectorRef) {}
 

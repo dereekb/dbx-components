@@ -5,6 +5,36 @@ import { Maybe } from '../value/maybe.type';
  */
 export type NumberString = string;
 
+export type NumberOrNumberString = number | NumberString;
+
+/**
+ * asNumber() input
+ */
+export type AsNumberInput = Maybe<NumberOrNumberString>;
+
+/**
+ * Converts the input value to a number.
+ *
+ * @param input
+ */
+export function asNumber(input: AsNumberInput): number {
+  let value: number;
+
+  switch (typeof input) {
+    case 'number':
+      value = input;
+      break;
+    case 'string':
+      value = Number(input);
+      break;
+    default:
+      value = 0;
+      break;
+  }
+
+  return value;
+}
+
 /**
  * Returns true if the input value is divisible by the divisor.
  *

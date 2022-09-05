@@ -40,6 +40,10 @@
               <button mat-menu-item (click)="clickMenuItem(3)">Item 3</button>
             </mat-menu>
             <h4>dbx-mapbox-marker</h4>
+            <h4>filterByMapboxViewportBound()</h4>
+            <p>RXJS OperatorFunction that allows for filtering on objects that are in view when the map stops moving, using each item's center and zoom values to derive bounds.</p>
+            <p>Markers that are considered in view is displayed below.</p>
+            <p>{{ markersInView$ | async | json }}</p>
           </doc-feature-example>
         </ng-template>
       </mat-tab>

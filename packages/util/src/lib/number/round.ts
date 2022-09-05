@@ -1,7 +1,7 @@
 import { Writable } from 'ts-essentials';
 import { MapFunction } from '../value/map';
 import { Maybe } from '../value/maybe.type';
-import { NumberString } from './number';
+import { NumberString, asNumber, AsNumberInput } from './number';
 
 // MARK: Rounding
 export type NumberRounding = 'none' | 'floor' | 'ceil' | 'round';
@@ -44,14 +44,14 @@ export type NumberPrecision = number;
  * @param precision
  * @returns
  */
-export function cutValueToPrecision(input: Maybe<number | NumberString>, precision: NumberPrecision): number {
+export function cutValueToPrecision(input: AsNumberInput, precision: NumberPrecision): number {
   return cutValueToPrecisionFunction(precision)(input);
 }
 
 /**
  * Rounds the input using cutToPrecision
  */
-export type CutValueToPrecisionFunction = ((input: Maybe<number | NumberString>) => number) & {
+export type CutValueToPrecisionFunction = ((input: AsNumberInput) => number) & {
   readonly _precision: number;
 };
 
@@ -62,22 +62,8 @@ export type CutValueToPrecisionFunction = ((input: Maybe<number | NumberString>)
  * @returns
  */
 export function cutValueToPrecisionFunction(precision: NumberPrecision): CutValueToPrecisionFunction {
-  const fn: Writable<CutValueToPrecisionFunction> = ((input: Maybe<number | NumberString>) => {
-    let value: number;
-
-    switch (typeof input) {
-      case 'number':
-        value = input;
-        break;
-      case 'string':
-        value = Number(input);
-        break;
-      default:
-        value = 0;
-        break;
-    }
-
-    return cutToPrecision(value, precision);
+  const fn: Writable<CutValueToPrecisionFunction> = ((input: AsNumberInput) => {
+    return cutToPrecision(asNumber(input), precision);
   }) as CutValueToPrecisionFunction;
   fn._precision = precision;
   return fn as CutValueToPrecisionFunction;
