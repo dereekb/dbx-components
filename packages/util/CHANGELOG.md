@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [9.7.0](https://github.com/dereekb/dbx-components/compare/v9.6.5-dev...v9.7.0) (2022-09-05)
+
+
+### Features
+
+* added filterByMapboxViewportBound() ([a6beb56](https://github.com/dereekb/dbx-components/commit/a6beb56abf9d546eb00de2e7601316f80ccb925e))
+
+
+
 ## [9.6.5](https://github.com/dereekb/dbx-components/compare/v9.6.4-dev...v9.6.5) (2022-09-04)
 
 
