@@ -8,6 +8,7 @@ import * as MapboxGl from 'mapbox-gl';
 import { DbxMapboxClickEvent, KnownMapboxStyle, MapboxBearing, MapboxEaseTo, MapboxFitBounds, MapboxFlyTo, MapboxJumpTo, MapboxResetNorth, MapboxResetNorthPitch, MapboxRotateTo, MapboxSnapToNorth, MapboxStyleConfig, MapboxZoomLevel } from './mapbox';
 import { DbxMapboxService } from './mapbox.service';
 import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
+import { mapboxViewportBoundFunction, MapboxViewportBoundFunction } from './mapbox.util';
 
 export type MapboxMapLifecycleState = 'init' | 'load' | 'render' | 'idle';
 export type MapboxMapMoveState = 'init' | 'idle' | 'moving';
@@ -138,10 +139,14 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
               addListener('click', (x) => this._setClickEvent(x));
               addListener('dblclick', (x) => this._setDoubleClickEvent(x));
               addListener('contextmenu', (x) => this._setRightClickEvent(x));
-              addListener('resize', (event) => {
-                const { clientWidth: x, clientHeight: y } = event.target.getContainer();
+
+              const refreshForResize = () => {
+                const { clientWidth: x, clientHeight: y } = map.getCanvas();
                 this._setMapCanvasSize({ x, y });
-              });
+              };
+
+              addListener('resize', refreshForResize);
+              refreshForResize();
 
               const subs: Subscription[] = [];
 
@@ -667,8 +672,8 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
               const boundSw = bound.getSouthWest();
               const boundNe = bound.getNorthEast();
 
-              const sw = isDefaultLatLngPoint(boundSw) ? swMostLatLngPoint() : boundSw;
-              const ne = isDefaultLatLngPoint(boundNe) ? neMostLatLngPoint() : boundNe;
+              const sw = isDefaultLatLngPoint(boundSw) ? swMostLatLngPoint() : { lat: boundSw.lat, lng: boundSw.lng };
+              const ne = isDefaultLatLngPoint(boundNe) ? neMostLatLngPoint() : { lat: boundNe.lat, lng: boundNe.lng };
 
               return this.latLngBound(sw, ne);
             })
@@ -726,7 +731,7 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
       return this.isZooming$.pipe(
         onTrueToFalse(),
         startWith(undefined),
-        switchMap((x) => this.zoomNow$.pipe(first())),
+        switchMap(() => this.zoomNow$.pipe(first())),
         distinctUntilChanged(),
         shareReplay(1)
       );
@@ -747,7 +752,7 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
       return this.isRotating$.pipe(
         onTrueToFalse(),
         startWith(undefined),
-        switchMap((x) => this.pitchNow$.pipe(first())),
+        switchMap(() => this.pitchNow$.pipe(first())),
         distinctUntilChanged(),
         shareReplay(1)
       );
@@ -768,7 +773,7 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
       return this.isRotating$.pipe(
         onTrueToFalse(),
         startWith(undefined),
-        switchMap((x) => this.bearingNow$.pipe(first())),
+        switchMap(() => this.bearingNow$.pipe(first())),
         distinctUntilChanged(),
         shareReplay(1)
       );
@@ -790,6 +795,11 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
   );
 
   readonly mapCanvasSize$ = this.currentMapCanvasSize$.pipe(filterMaybe());
+
+  readonly viewportBoundFunction$: Observable<MapboxViewportBoundFunction> = this.mapCanvasSize$.pipe(
+    map((x) => mapboxViewportBoundFunction({ mapCanvasSize: x })),
+    shareReplay(1)
+  );
 
   readonly clickEvent$ = this.state$.pipe(
     map((x) => x.clickEvent),

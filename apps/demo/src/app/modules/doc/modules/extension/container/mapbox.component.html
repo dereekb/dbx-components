@@ -89,6 +89,7 @@
             <p>Bound Sizing: {{ boundSizing$ | async | json }}</p>
             <p>Canvas Size: {{ mapCanvasSize$ | async | json }}</p>
             <p>Bound ratio: {{ boundSizingRatio$ | async | json }}</p>
+            <p>Viewport Calc: {{ viewportBoundFunctionCalc$ | async | json }}</p>
             <dbx-content-container style="height: 500px">
               <!-- Map View-->
               <dbx-mapbox-layout [side]="side$ | async" [hasContent]="true" [opened]="true">

@@ -49,6 +49,13 @@ export class DocExtensionMapboxComponent implements OnInit, OnDestroy {
     shareReplay(1)
   );
 
+  readonly viewportBoundFunction$ = this.dbxMapboxMapStore.viewportBoundFunction$;
+  readonly viewportBoundFunctionCalc$ = combineLatest([this.center$, this.zoom$, this.viewportBoundFunction$]).pipe(
+    map(([c, z, fn]) => fn({ center: c, zoom: z })),
+    tapDetectChanges(this.cdRef),
+    shareReplay(1)
+  );
+
   readonly boundNow$ = this.dbxMapboxMapStore.boundNow$;
   readonly click$ = this.dbxMapboxMapStore.clickEvent$.pipe(map((x) => x?.lngLat.toArray()));
   readonly doubleClick$ = this.dbxMapboxMapStore.doubleClickEvent$.pipe(map((x) => x?.lngLat.toArray()));
