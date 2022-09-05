@@ -79,10 +79,15 @@ export class DbxFormMapboxLatLngFieldComponent<T extends DbxFormMapboxLatLngComp
     shareReplay(1)
   );
 
-  /**
-   * Center observable passed to the store. Do not pass invalid points.
-   */
-  readonly center$ = this.latLng$.pipe(skipWhile(isDefaultLatLngPoint), filter(isValidLatLngPoint));
+  readonly center$ = this.latLng$.pipe(
+    /**
+     * Center observable passed to the store. Do not pass invalid points.
+     *
+     * Also skip any initial 0,0 values so the center doesn't potentially "whip" from 0,0 to a final loaded value.
+     */
+    skipWhile(isDefaultLatLngPoint),
+    filter(isValidLatLngPoint)
+  );
 
   readonly zoom$ = this._zoom.asObservable();
 

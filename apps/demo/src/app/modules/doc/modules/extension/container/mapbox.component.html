@@ -85,11 +85,15 @@
       <mat-tab label="Directive w/ Forms Example">
         <ng-template matTabContent>
           <doc-feature-example hint="This example shows the use of the mapbox formly fields configured to use a parent [dbxMapboxMap] instance.">
+            <p>Bound: {{ bound$ | async | json }}</p>
+            <p>Bound Sizing: {{ boundSizing$ | async | json }}</p>
+            <p>Canvas Size: {{ mapCanvasSize$ | async | json }}</p>
+            <p>Bound ratio: {{ boundSizingRatio$ | async | json }}</p>
             <dbx-content-container style="height: 500px">
               <!-- Map View-->
               <dbx-mapbox-layout [side]="side$ | async" [hasContent]="true" [opened]="true">
                 <!-- Drawer -->
-                <div drawer style="overflow-y: scroll; height: 100%">
+                <div drawer style="overflow-y: scroll; height: 100%; max-width: 400px">
                   <doc-feature-example header="Mapbox Forms with Directive">
                     <doc-form-example-form [dbxFormlyFields]="mapboxLatLngAndZoomField" [dbxFormSource]="defaultLatLngAndZoomFieldValue"></doc-form-example-form>
                   </doc-feature-example>

@@ -1,6 +1,6 @@
 import { cleanup, filterMaybe, onTrueToFalse } from '@dereekb/rxjs';
 import { Inject, Injectable, OnDestroy } from '@angular/core';
-import { isSameLatLngBound, isSameLatLngPoint, IsWithinLatLngBoundFunction, isWithinLatLngBoundFunction, LatLngBound, latLngBoundFunction, LatLngPointInput, LatLngPoint, latLngPointFunction, Maybe, OverlapsLatLngBoundFunction, overlapsLatLngBoundFunction, diffLatLngBoundPoints, latLngBoundCenterPoint, addLatLngPoints, isDefaultLatLngPoint, swMostLatLngPoint, neMostLatLngPoint, latLngBoundWrapsMap } from '@dereekb/util';
+import { isSameLatLngBound, isSameLatLngPoint, IsWithinLatLngBoundFunction, isWithinLatLngBoundFunction, LatLngBound, latLngBoundFunction, LatLngPointInput, LatLngPoint, latLngPointFunction, Maybe, OverlapsLatLngBoundFunction, overlapsLatLngBoundFunction, diffLatLngBoundPoints, latLngBoundCenterPoint, addLatLngPoints, isDefaultLatLngPoint, swMostLatLngPoint, neMostLatLngPoint, latLngBoundWrapsMap, Vector, vectorsAreEqual } from '@dereekb/util';
 import { ComponentStore } from '@ngrx/component-store';
 import { MapService } from 'ngx-mapbox-gl';
 import { defaultIfEmpty, distinctUntilChanged, filter, map, shareReplay, switchMap, tap, NEVER, Observable, of, Subscription, startWith, interval, first, combineLatest } from 'rxjs';
@@ -40,6 +40,10 @@ export interface DbxMapboxStoreState {
   zoomState: MapboxMapZoomState;
   rotateState: MapboxMapRotateState;
   /**
+   * Visual container size of the map.
+   */
+  mapCanvasSize?: Maybe<Vector>;
+  /**
    * Latest click event
    */
   clickEvent?: Maybe<DbxMapboxClickEvent>;
@@ -76,8 +80,9 @@ export interface DbxMapboxStoreState {
  */
 @Injectable()
 export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> implements OnDestroy {
-  private latLngPoint = latLngPointFunction();
-  private latLngBound = latLngBoundFunction({ pointFunction: latLngPointFunction({ wrap: false, validate: false }) });
+  private safeLatLngPoint = latLngPointFunction();
+  private latLngPoint = latLngPointFunction({ wrap: false, validate: false });
+  private latLngBound = latLngBoundFunction({ pointFunction: this.latLngPoint });
 
   constructor(@Inject(DbxMapboxService) private readonly dbxMapboxService: DbxMapboxService) {
     super({
@@ -133,6 +138,10 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
               addListener('click', (x) => this._setClickEvent(x));
               addListener('dblclick', (x) => this._setDoubleClickEvent(x));
               addListener('contextmenu', (x) => this._setRightClickEvent(x));
+              addListener('resize', (event) => {
+                const { clientWidth: x, clientHeight: y } = event.target.getContainer();
+                this._setMapCanvasSize({ x, y });
+              });
 
               const subs: Subscription[] = [];
 
@@ -178,7 +187,7 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
   readonly setCenter = this.effect((input: Observable<LatLngPointInput>) => {
     return input.pipe(
       switchMap((center: LatLngPointInput) => {
-        const centerPoint = this.latLngPoint(center);
+        const centerPoint = this.safeLatLngPoint(center);
         return this.mapInstance$.pipe(tap((map) => map.setCenter(centerPoint)));
       })
     );
@@ -352,7 +361,7 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
     return input.pipe(
       switchMap((x) => {
         const inputCenter = x.center ?? x.to?.center;
-        const center = inputCenter ? this.latLngPoint(inputCenter) : undefined;
+        const center = inputCenter ? this.safeLatLngPoint(inputCenter) : undefined;
         return this.mapInstance$.pipe(tap((map) => map.jumpTo({ ...x.to, center }, x.eventData)));
       })
     );
@@ -362,7 +371,7 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
     return input.pipe(
       switchMap((x) => {
         const inputCenter = x.center ?? x.to?.center;
-        const center = inputCenter ? this.latLngPoint(inputCenter) : undefined;
+        const center = inputCenter ? this.safeLatLngPoint(inputCenter) : undefined;
         return this.mapInstance$.pipe(tap((map) => map.easeTo({ ...x.to, center }, x.eventData)));
       })
     );
@@ -372,7 +381,7 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
     return input.pipe(
       switchMap((x) => {
         const inputCenter = x.center ?? x.to?.center;
-        const center = inputCenter ? this.latLngPoint(inputCenter) : undefined;
+        const center = inputCenter ? this.safeLatLngPoint(inputCenter) : undefined;
         return this.mapInstance$.pipe(tap((map) => map.flyTo({ ...x.to, center }, x.eventData)));
       })
     );
@@ -454,7 +463,7 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
         this.bound$.pipe(
           first(),
           map((bounds) => {
-            const diff = diffLatLngBoundPoints(bounds);
+            const diff = diffLatLngBoundPoints(bounds, true);
             const center = latLngBoundCenterPoint(bounds);
 
             const offsetWidth = sizing.leftMargin + sizing.rightMargin; // 300 + 0
@@ -682,6 +691,11 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
     })
   );
 
+  readonly boundSizing$: Observable<LatLngPoint> = this.bound$.pipe(
+    map((x) => diffLatLngBoundPoints(x)),
+    shareReplay(1)
+  );
+
   readonly boundWrapsAroundWorld$: Observable<boolean> = this.bound$.pipe(
     map((x) => latLngBoundWrapsMap(x)),
     distinctUntilChanged(),
@@ -769,6 +783,14 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
 
   readonly hasContent$ = this.content$.pipe(map(Boolean));
 
+  readonly currentMapCanvasSize$ = this.state$.pipe(
+    map((x) => x.mapCanvasSize),
+    distinctUntilChanged((a, b) => a != null && b != null && vectorsAreEqual(a, b)),
+    shareReplay(1)
+  );
+
+  readonly mapCanvasSize$ = this.currentMapCanvasSize$.pipe(filterMaybe());
+
   readonly clickEvent$ = this.state$.pipe(
     map((x) => x.clickEvent),
     distinctUntilChanged(),
@@ -796,6 +818,7 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
   private readonly _setZoomState = this.updater((state, zoomState: MapboxMapZoomState) => ({ ...state, zoomState }));
   private readonly _setRotateState = this.updater((state, rotateState: MapboxMapRotateState) => ({ ...state, rotateState }));
 
+  private readonly _setMapCanvasSize = this.updater((state, mapCanvasSize: Vector) => ({ ...state, mapCanvasSize }));
   private readonly _setClickEvent = this.updater((state, clickEvent: DbxMapboxClickEvent) => ({ ...state, clickEvent }));
   private readonly _setDoubleClickEvent = this.updater((state, doubleClickEvent: DbxMapboxClickEvent) => ({ ...state, doubleClickEvent }));
   private readonly _setRightClickEvent = this.updater((state, rightClickEvent: DbxMapboxClickEvent) => ({ ...state, rightClickEvent }));

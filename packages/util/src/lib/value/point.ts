@@ -43,12 +43,14 @@ export function isSameLatLngPoint(a: LatLngPoint, b: LatLngPoint) {
   return a.lat === b.lat && a.lng === b.lng;
 }
 
-export function diffLatLngPoints(a: LatLngPoint, b: LatLngPoint) {
-  return wrapLatLngPoint({ lat: a.lat - b.lat, lng: a.lng - b.lng });
+export function diffLatLngPoints(a: LatLngPoint, b: LatLngPoint, wrap = true) {
+  const point = { lat: a.lat - b.lat, lng: a.lng - b.lng };
+  return wrap ? wrapLatLngPoint(point) : point;
 }
 
-export function addLatLngPoints(a: LatLngPoint, b: LatLngPoint) {
-  return wrapLatLngPoint({ lat: a.lat + b.lat, lng: a.lng + b.lng });
+export function addLatLngPoints(a: LatLngPoint, b: LatLngPoint, wrap = true) {
+  const point = { lat: a.lat + b.lat, lng: a.lng + b.lng };
+  return wrap ? wrapLatLngPoint(point) : point;
 }
 
 export function wrapLatLngPoint(a: LatLngPoint): LatLngPoint {

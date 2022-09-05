@@ -1,12 +1,13 @@
 import { latLngPoint, latLngString, LatLngTuple, Maybe, Pixels, randomFromArrayFactory, range } from '@dereekb/util';
 import { FormlyFieldConfig } from '@ngx-formly/core';
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { mapboxLatLngField, mapboxZoomField } from '@dereekb/dbx-form/mapbox';
 import { DbxMapboxMapStore } from 'packages/dbx-web/mapbox/src/lib/mapbox.store';
 import { KnownMapboxStyle, DbxMapboxLayoutSide, DbxMapboxMarker, DbxMapboxMarkerFactory, dbxMapboxColoredDotStyle } from '@dereekb/dbx-web/mapbox';
-import { BehaviorSubject, map, Observable } from 'rxjs';
+import { shareReplay, BehaviorSubject, map, Observable, combineLatest } from 'rxjs';
 import { DocExtensionMapboxContentExampleComponent } from '../component/mapbox.content.example.component';
 import { DbxThemeColor } from '@dereekb/dbx-web';
+import { tapDetectChanges } from '@dereekb/dbx-core';
 
 @Component({
   templateUrl: './mapbox.component.html',
@@ -39,6 +40,15 @@ export class DocExtensionMapboxComponent implements OnInit, OnDestroy {
   readonly bearing$ = this.dbxMapboxMapStore.bearing$;
   readonly bearingNow$ = this.dbxMapboxMapStore.bearingNow$;
   readonly bound$ = this.dbxMapboxMapStore.bound$;
+  readonly boundSizing$ = this.dbxMapboxMapStore.boundSizing$;
+  readonly mapCanvasSize$ = this.dbxMapboxMapStore.mapCanvasSize$;
+
+  readonly boundSizingRatio$ = combineLatest([this.boundSizing$, this.mapCanvasSize$]).pipe(
+    map(([point, vector]) => ({ x: point.lng / vector.x, y: point.lat / vector.y })),
+    tapDetectChanges(this.cdRef),
+    shareReplay(1)
+  );
+
   readonly boundNow$ = this.dbxMapboxMapStore.boundNow$;
   readonly click$ = this.dbxMapboxMapStore.clickEvent$.pipe(map((x) => x?.lngLat.toArray()));
   readonly doubleClick$ = this.dbxMapboxMapStore.doubleClickEvent$.pipe(map((x) => x?.lngLat.toArray()));
@@ -158,7 +168,7 @@ export class DocExtensionMapboxComponent implements OnInit, OnDestroy {
     style: this.mapboxMarkerDotStyle
   });
 
-  constructor(readonly dbxMapboxMapStore: DbxMapboxMapStore) {}
+  constructor(readonly dbxMapboxMapStore: DbxMapboxMapStore, readonly cdRef: ChangeDetectorRef) {}
 
   ngOnInit(): void {
     this.dbxMapboxMapStore.setContent({

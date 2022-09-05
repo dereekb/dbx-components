@@ -18,8 +18,8 @@ export function isSameLatLngBound(a: LatLngBound, b: LatLngBound): boolean {
   return isSameLatLngPoint(a.sw, b.sw) && isSameLatLngPoint(a.ne, b.ne);
 }
 
-export function diffLatLngBoundPoints(bounds: LatLngBound): LatLngPoint {
-  return diffLatLngPoints(bounds.ne, bounds.sw);
+export function diffLatLngBoundPoints(bounds: LatLngBound, wrap = false): LatLngPoint {
+  return diffLatLngPoints(bounds.ne, bounds.sw, wrap);
 }
 
 /**
