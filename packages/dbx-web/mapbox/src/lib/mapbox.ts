@@ -27,6 +27,13 @@ export function mapboxZoomLevel(input: number): MapboxZoomLevel {
 export type MapboxPitch = number;
 export type MapboxBearing = number;
 
+/**
+ * Size of the tiles. Vector-based tiles used by the web are generally 512x512, and legacy ones are 256x256.
+ *
+ * https://blog.mapbox.com/512-map-tiles-cb5bfd6e72ba
+ */
+export type MapboxTileSize = 512 | 256;
+
 export type DbxMapboxClickEvent = MapboxGl.MapMouseEvent & MapboxGl.EventData;
 
 export interface MapboxStyleConfig {

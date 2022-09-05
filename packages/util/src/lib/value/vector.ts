@@ -5,6 +5,12 @@ export interface Vector {
   y: number;
 }
 
+export type VectorTuple = [number, number];
+
+export function vectorsAreEqual(a: Vector, b: Vector): boolean {
+  return a.x === b.x && a.y === b.y;
+}
+
 export type RectangleOrigin = Vector;
 export type TopRightCorner = Vector;
 export type BottomLeftCorner = Vector;

@@ -1,6 +1,7 @@
 import { Rectangle, rectangleOverlapsRectangle, Vector } from './vector';
 import { Writable } from 'ts-essentials';
 import { latLngPointFunction, LatLngPoint, LatLngPointInput, LatLngPrecision, LatLngPointFunction, isLatLngPoint, isSameLatLngPoint, diffLatLngPoints, TOTAL_LONGITUDE_RANGE } from './point';
+import { DecisionFunction } from './decision';
 
 export type LatLngBoundSouthWestPoint = LatLngPoint;
 export type LatLngBoundNothEastPoint = LatLngPoint;
@@ -18,8 +19,8 @@ export function isSameLatLngBound(a: LatLngBound, b: LatLngBound): boolean {
   return isSameLatLngPoint(a.sw, b.sw) && isSameLatLngPoint(a.ne, b.ne);
 }
 
-export function diffLatLngBoundPoints(bounds: LatLngBound): LatLngPoint {
-  return diffLatLngPoints(bounds.ne, bounds.sw);
+export function diffLatLngBoundPoints(bounds: LatLngBound, wrap = false): LatLngPoint {
+  return diffLatLngPoints(bounds.ne, bounds.sw, wrap);
 }
 
 /**
@@ -186,10 +187,12 @@ export function latLngBoundFunction(config?: LatLngBoundFunctionConfig): LatLngB
   };
 }
 
+export type LatLngBoundCheckFunction = DecisionFunction<LatLngBound | LatLngPoint>;
+
 /**
  * Function that returns true if the input is entirely within the context's bound.
  */
-export type IsWithinLatLngBoundFunction = ((boundOrPoint: LatLngBound | LatLngPoint) => boolean) & { readonly _bound: LatLngBound };
+export type IsWithinLatLngBoundFunction = LatLngBoundCheckFunction & { readonly _bound: LatLngBound };
 
 export function isWithinLatLngBoundFunction(bound: LatLngBound): IsWithinLatLngBoundFunction {
   const fn = ((boundOrPoint: LatLngBound | LatLngPoint) => {
@@ -230,7 +233,7 @@ export function isLatLngPointWithinLatLngBound(point: LatLngPoint, within: LatLn
 /**
  * Function that returns true if the input overlaps the context's bound.
  */
-export type OverlapsLatLngBoundFunction = ((boundOrPoint: LatLngBound | LatLngPoint) => boolean) & { readonly _bound: LatLngBound };
+export type OverlapsLatLngBoundFunction = LatLngBoundCheckFunction & { readonly _bound: LatLngBound };
 
 export function latLngBoundOverlapsLatLngBound(a: LatLngBound, b: LatLngBound): boolean {
   return overlapsLatLngBoundFunction(a)(b);

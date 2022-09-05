@@ -3,9 +3,9 @@ import { CompactContextStore, mapCompactModeObs } from '@dereekb/dbx-web';
 import { Component, NgZone, OnDestroy, OnInit, Optional } from '@angular/core';
 import { FieldTypeConfig, FormlyFieldProps } from '@ngx-formly/core';
 import { FieldType } from '@ngx-formly/material';
-import { skip, first, BehaviorSubject, filter, shareReplay, startWith, switchMap, map, Observable, throttleTime } from 'rxjs';
-import { filterMaybe, SubscriptionObject } from '@dereekb/rxjs';
-import { Maybe, LatLngPoint, LatLngPointFunctionConfig, latLngPoint, LatLngStringFunction, latLngStringFunction, Milliseconds } from '@dereekb/util';
+import { skip, first, BehaviorSubject, filter, shareReplay, startWith, switchMap, map, Observable, throttleTime, skipWhile } from 'rxjs';
+import { filterMaybe, SubscriptionObject, tapLog } from '@dereekb/rxjs';
+import { Maybe, LatLngPoint, LatLngPointFunctionConfig, latLngPoint, LatLngStringFunction, latLngStringFunction, Milliseconds, latLngPointFunction, isDefaultLatLngPoint, validLatLngPoint, isValidLatLngPoint } from '@dereekb/util';
 import { GeolocationService } from '@ng-web-apis/geolocation';
 import { Marker } from 'mapbox-gl';
 import { DbxMapboxMapStore, MapboxEaseTo, MapboxZoomLevel, provideMapboxStoreIfParentIsUnavailable } from '@dereekb/dbx-web/mapbox';
@@ -54,6 +54,7 @@ export interface DbxFormMapboxLatLngComponentFieldProps extends FormlyFieldProps
 })
 export class DbxFormMapboxLatLngFieldComponent<T extends DbxFormMapboxLatLngComponentFieldProps = DbxFormMapboxLatLngComponentFieldProps> extends FieldType<FieldTypeConfig<T>> implements OnInit, OnDestroy {
   private _latLngStringFunction!: LatLngStringFunction;
+  private _latLngPointFunction = latLngPointFunction({ wrap: false, validate: false });
 
   readonly compactClass$ = mapCompactModeObs(this.compact?.mode$, {
     compact: 'dbx-mapbox-input-field-compact'
@@ -74,12 +75,20 @@ export class DbxFormMapboxLatLngFieldComponent<T extends DbxFormMapboxLatLngComp
 
   readonly latLng$: Observable<LatLngPoint> = this.value$.pipe(
     filterMaybe(),
-    map((x) => latLngPoint(x)),
-    filter((x) => x.lat !== 0 && x.lng !== 0),
+    map((x) => this._latLngPointFunction(x)),
     shareReplay(1)
   );
 
-  readonly center$ = this.latLng$;
+  readonly center$ = this.latLng$.pipe(
+    /**
+     * Center observable passed to the store. Do not pass invalid points.
+     *
+     * Also skip any initial 0,0 values so the center doesn't potentially "whip" from 0,0 to a final loaded value.
+     */
+    skipWhile(isDefaultLatLngPoint),
+    filter(isValidLatLngPoint)
+  );
+
   readonly zoom$ = this._zoom.asObservable();
 
   constructor(@Optional() readonly compact: CompactContextStore, private readonly geolocation$: GeolocationService, readonly dbxMapboxMapStore: DbxMapboxMapStore, readonly ngZone: NgZone) {
@@ -119,7 +128,7 @@ export class DbxFormMapboxLatLngFieldComponent<T extends DbxFormMapboxLatLngComp
   }
 
   ngOnInit(): void {
-    this._latLngStringFunction = latLngStringFunction(this.field.props.latLngConfig);
+    this._latLngStringFunction = latLngStringFunction({ ...this.field.props.latLngConfig, wrap: this.field.props.latLngConfig?.wrap || false, validate: this.field.props.latLngConfig?.validate || false });
     this._formControlObs.next(this.formControl);
     this._zoom.next(this.zoom);
 
