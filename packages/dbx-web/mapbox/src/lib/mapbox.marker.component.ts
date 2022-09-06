@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input, OnDestroy } from '@angular/core';
 import { getValueFromGetter, latLngPointFunction, Maybe } from '@dereekb/util';
 import { DbxMapboxMarker } from './mapbox.marker';
 
@@ -32,8 +32,6 @@ export class DbxMapboxMarkerComponent {
   set marker(marker: Maybe<DbxMapboxMarker>) {
     this._marker = marker;
   }
-
-  constructor() {}
 
   get latLng() {
     const input = this._marker?.latLng;

@@ -14,12 +14,25 @@ export function tapDetectChanges<T>(cdRef: ChangeDetectorRef, timeout = 0): Mono
 }
 
 /**
- * Triggers a detection change on the input view as long as the view has not been destroyed.
+ * Triggers a check for detecting any changes on the model safely to ve registered via detectChanges().
  *
  * @param cdRef
  */
 export function safeDetectChanges(cdRef: ChangeDetectorRef): void {
   safeUseCdRef(cdRef, () => cdRef.detectChanges());
+}
+
+/**
+ * Convenience function used within observables for views that use the OnPush ChangeDetectionStrategy and needs to call markForCheck when a new observable value is pushed.
+ *
+ * NOTE: If the observable is being consumed via the "async" pipe, this may not be necessary.
+ *
+ * @param cdRef
+ * @param timeout
+ * @returns
+ */
+export function tapSafeMarkForCheck<T>(cdRef: ChangeDetectorRef, timeout = 0): MonoTypeOperatorFunction<T> {
+  return tap(() => setTimeout(() => safeMarkForCheck(cdRef), timeout));
 }
 
 /**

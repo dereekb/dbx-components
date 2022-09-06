@@ -1,4 +1,4 @@
-import { latLngPoint, latLngString, LatLngTuple, Maybe, Pixels, randomFromArrayFactory, range } from '@dereekb/util';
+import { latLngPoint, latLngString, LatLngTuple, Maybe, Pixels, randomLatLngFactory, range, latLngTuple, randomFromArrayFactory } from '@dereekb/util';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { mapboxLatLngField, mapboxZoomField } from '@dereekb/dbx-form/mapbox';
@@ -168,14 +168,32 @@ export class DocExtensionMapboxComponent implements OnInit, OnDestroy {
   readonly mapboxMarkersData: LatLngTuple[] = range(0, 3).map((x) => [40 + x * 5, -100]);
   readonly mapboxMarkerDotStyle = dbxMapboxColoredDotStyle('blue', 'white');
   readonly mapboxMarkerFactory: DbxMapboxMarkerFactory<LatLngTuple> = (latLng, i) => ({
-    icon: 'arrow',
+    icon: 'arrow_upward',
     label: `M${i}`,
     latLng,
     size: 'small',
     style: this.mapboxMarkerDotStyle
   });
 
-  readonly markersInView$ = of([...this.mapboxDemoMarkers, ...this.mapboxMarkersData.map(this.mapboxMarkerFactory)].map((x, i) => ({ ...x, zoom: 10 }))).pipe(
+  private _addedMarkersData = new BehaviorSubject<LatLngTuple[]>([]);
+  readonly addedMapboxMarkersData$ = this._addedMarkersData.asObservable();
+
+  readonly randomMarkerDotStyle = dbxMapboxColoredDotStyle('white', 'black');
+  readonly randomMarkerFactory: DbxMapboxMarkerFactory<LatLngTuple> = (latLng, i) => ({
+    icon: 'shuffle',
+    label: `R${i}`,
+    latLng,
+    size: 'small',
+    style: this.randomMarkerDotStyle
+  });
+
+  readonly markersInView$ = combineLatest([
+    // default items
+    of([...this.mapboxDemoMarkers, ...this.mapboxMarkersData.map(this.mapboxMarkerFactory)].map((x, i) => ({ ...x, zoom: 10 }))),
+    // added markers
+    this.addedMapboxMarkersData$.pipe(map((x) => x.map(this.randomMarkerFactory)))
+  ]).pipe(
+    map(([a, b]) => [...a, ...b]),
     filterByMapboxViewportBound({
       boundFunctionObs: this.dbxMapboxMapStore.viewportBoundFunction$,
       /**
@@ -183,10 +201,11 @@ export class DocExtensionMapboxComponent implements OnInit, OnDestroy {
        */
       boundDecisionObs: this.dbxMapboxMapStore.overlapsBoundFunction$,
       readValue: (x) => {
-        return { center: x.latLng, zoom: x.zoom };
-      }
+        return { center: x.latLng, zoom: (x as { zoom?: number })?.zoom };
+      },
+      defaultZoom: 8
     }),
-    map((x) => x.map((y) => ({ label: y.label, center: y.latLng, zoom: y.zoom }))),
+    map((x) => x.map((y) => ({ label: y.label, center: y.latLng }))),
     shareReplay(1)
   );
 
@@ -199,11 +218,34 @@ export class DocExtensionMapboxComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this._side.complete();
     this._open.complete();
     this._color.complete();
+    this._addedMarkersData.complete();
   }
 
   addDrawerContent() {
+    this.dbxMapboxMapStore.setContent({
+      componentClass: DocExtensionMapboxContentExampleComponent
+    });
+  }
+
+  addRandomMarker() {
+    const value = [...this._addedMarkersData.value, latLngTuple(randomLatLngFactory()())];
+    this._addedMarkersData.next(value);
+  }
+
+  removeRandomMarker() {
+    const value = [...this._addedMarkersData.value];
+    value.pop();
+    this._addedMarkersData.next(value);
+  }
+
+  clearRandomMarkers() {
+    this._addedMarkersData.next([]);
+  }
+
+  removeMarker() {
     this.dbxMapboxMapStore.setContent({
       componentClass: DocExtensionMapboxContentExampleComponent
     });
