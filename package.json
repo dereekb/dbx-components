@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/dbx-components",
-  "version": "9.7.0",
+  "version": "9.7.1",
   "license": "MIT",
   "scripts": {
     "postinstall": "ngcc --properties es2020 browser module main && echo >> .env.secret",
