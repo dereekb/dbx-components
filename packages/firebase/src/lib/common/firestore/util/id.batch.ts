@@ -1,4 +1,4 @@
-import { ArrayOrValue, FactoryWithRequiredInput, IdBatchVerifier, IdBatchVerifierFunction, PrimativeKey, ReadKeysFunction, unique } from '@dereekb/util';
+import { ArrayOrValue, FactoryWithRequiredInput, IdBatchVerifier, IdBatchVerifierFunction, PrimativeKey, ReadMultipleKeysFunction, unique } from '@dereekb/util';
 import { FirestoreCollectionLike } from '../collection';
 import { FirestoreQueryConstraint, FIRESTORE_MAX_WHERE_IN_FILTER_ARGS_COUNT, where, whereDocumentId } from '../query/constraint';
 import { DocumentSnapshot } from '../types';
@@ -8,7 +8,7 @@ export type FirestoreIdBatchVerifierFactoryBaseConfig<T, I extends PrimativeKey>
   /**
    * Reads the existing identifier(s) from the queried model.
    */
-  readKeys: ReadKeysFunction<DocumentSnapshot<T>, I>;
+  readKeys: ReadMultipleKeysFunction<DocumentSnapshot<T>, I>;
 };
 
 export type FirestoreIdBatchVerifierFactoryFieldsQueryConfig<T, I extends PrimativeKey> = FirestoreIdBatchVerifierFactoryBaseConfig<T, I> & {

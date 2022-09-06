@@ -463,6 +463,7 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
   }
 
   calculateNextCenterOffsetWithScreenMarginChange(sizing: DbxMapboxMarginCalculationSizing): Observable<LatLngPoint> {
+    // TODO: Consider calculating this using the viewport() function from @mapbox/geo-viewport
     return this.atNextIdle().pipe(
       switchMap(() =>
         this.bound$.pipe(

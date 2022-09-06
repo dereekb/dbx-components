@@ -3,15 +3,16 @@ import { FormlyFieldConfig } from '@ngx-formly/core';
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { mapboxLatLngField, mapboxZoomField } from '@dereekb/dbx-form/mapbox';
 import { DbxMapboxMapStore } from 'packages/dbx-web/mapbox/src/lib/mapbox.store';
-import { KnownMapboxStyle, DbxMapboxLayoutSide, DbxMapboxMarker, DbxMapboxMarkerFactory, dbxMapboxColoredDotStyle, filterByMapboxViewportBound } from '@dereekb/dbx-web/mapbox';
+import { KnownMapboxStyle, DbxMapboxLayoutSide, DbxMapboxMarker, DbxMapboxMarkerFactory, dbxMapboxColoredDotStyle, filterByMapboxViewportBound, DbxMapboxChangeDetectorRefService } from '@dereekb/dbx-web/mapbox';
 import { shareReplay, BehaviorSubject, map, Observable, combineLatest, of } from 'rxjs';
 import { DocExtensionMapboxContentExampleComponent } from '../component/mapbox.content.example.component';
 import { DbxThemeColor } from '@dereekb/dbx-web';
 import { tapDetectChanges } from '@dereekb/dbx-core';
+import { EXAMPLE_RANDOM_MAPBOX_MARKER_FACTORY, EXAMPLE_RANDOM_MAPBOX_MARKER_STYLE } from '../component/mapbox.markers.example.component';
 
 @Component({
   templateUrl: './mapbox.component.html',
-  providers: [DbxMapboxMapStore]
+  providers: [DbxMapboxMapStore, DbxMapboxChangeDetectorRefService]
 })
 export class DocExtensionMapboxComponent implements OnInit, OnDestroy {
   private _side = new BehaviorSubject<Maybe<DbxMapboxLayoutSide>>(undefined);
@@ -22,6 +23,9 @@ export class DocExtensionMapboxComponent implements OnInit, OnDestroy {
 
   private _color = new BehaviorSubject<Maybe<DbxThemeColor>>(undefined);
   readonly color$: Observable<Maybe<DbxThemeColor>> = this._color.asObservable();
+
+  private _showMarkers = new BehaviorSubject<boolean>(true);
+  readonly showMarkers$ = this._showMarkers.asObservable();
 
   menuValue?: Maybe<number> = undefined;
 
@@ -178,20 +182,11 @@ export class DocExtensionMapboxComponent implements OnInit, OnDestroy {
   private _addedMarkersData = new BehaviorSubject<LatLngTuple[]>([]);
   readonly addedMapboxMarkersData$ = this._addedMarkersData.asObservable();
 
-  readonly randomMarkerDotStyle = dbxMapboxColoredDotStyle('white', 'black');
-  readonly randomMarkerFactory: DbxMapboxMarkerFactory<LatLngTuple> = (latLng, i) => ({
-    icon: 'shuffle',
-    label: `R${i}`,
-    latLng,
-    size: 'small',
-    style: this.randomMarkerDotStyle
-  });
-
   readonly markersInView$ = combineLatest([
     // default items
     of([...this.mapboxDemoMarkers, ...this.mapboxMarkersData.map(this.mapboxMarkerFactory)].map((x, i) => ({ ...x, zoom: 10 }))),
     // added markers
-    this.addedMapboxMarkersData$.pipe(map((x) => x.map(this.randomMarkerFactory)))
+    this.addedMapboxMarkersData$.pipe(map((x) => x.map(EXAMPLE_RANDOM_MAPBOX_MARKER_FACTORY)))
   ]).pipe(
     map(([a, b]) => [...a, ...b]),
     filterByMapboxViewportBound({
@@ -222,6 +217,7 @@ export class DocExtensionMapboxComponent implements OnInit, OnDestroy {
     this._open.complete();
     this._color.complete();
     this._addedMarkersData.complete();
+    this._showMarkers.complete();
   }
 
   addDrawerContent() {
@@ -230,8 +226,10 @@ export class DocExtensionMapboxComponent implements OnInit, OnDestroy {
     });
   }
 
+  readonly randomLatLngBounds = { sw: { lat: -60 }, ne: { lat: 60 } };
+
   addRandomMarker() {
-    const value = [...this._addedMarkersData.value, latLngTuple(randomLatLngFactory()())];
+    const value = [...this._addedMarkersData.value, latLngTuple(randomLatLngFactory(this.randomLatLngBounds)())];
     this._addedMarkersData.next(value);
   }
 
@@ -249,6 +247,10 @@ export class DocExtensionMapboxComponent implements OnInit, OnDestroy {
     this.dbxMapboxMapStore.setContent({
       componentClass: DocExtensionMapboxContentExampleComponent
     });
+  }
+
+  toggleMarkers() {
+    this._showMarkers.next(!this._showMarkers.value);
   }
 
   clearDrawerContent() {

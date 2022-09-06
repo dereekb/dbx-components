@@ -1,7 +1,9 @@
 import { BehaviorSubject, combineLatest, distinctUntilChanged, map, shareReplay } from 'rxjs';
 import { Maybe } from '@dereekb/util';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input, OnDestroy, Optional } from '@angular/core';
 import { DbxMapboxMarkerFactory } from './mapbox.marker';
+import { DbxMapboxChangeDetectorRefService } from './mapbox.cdref.service';
+import { tapSafeMarkForCheck } from '@dereekb/dbx-core';
 
 /**
  * Component used to render a set of DbxMapboxMarker values from the input data and marker factory.
@@ -25,8 +27,11 @@ export class DbxMapboxMarkersComponent<T> implements OnDestroy {
         return [];
       }
     }),
+    tapSafeMarkForCheck(this.cdRefService?.cdRef),
     shareReplay(1)
   );
+
+  constructor(@Optional() readonly cdRefService?: DbxMapboxChangeDetectorRefService) {}
 
   @Input()
   get data() {
@@ -34,7 +39,7 @@ export class DbxMapboxMarkersComponent<T> implements OnDestroy {
   }
 
   set data(data: Maybe<T[]>) {
-    this._data.next(data);
+    this._data.next(data || []);
   }
 
   @Input()

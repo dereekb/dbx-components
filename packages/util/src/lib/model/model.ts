@@ -1,6 +1,6 @@
 import { symmetricDifferenceKeys } from '../set/set';
 import { findUnique } from '../array/array.unique';
-import { ReadKeyFunction, ReadKeysFunction } from '../key';
+import { ReadKeyFunction, ReadMultipleKeysFunction } from '../key';
 import { Maybe } from '../value/maybe.type';
 import { MapFunction } from '../value/map';
 
@@ -55,7 +55,7 @@ export interface ReadModelKeyParams<T> {
 
 export type ReadModelKeyFunction<T> = ReadKeyFunction<T, ModelKey>;
 export type ReadModelTypeFunction<T> = ReadKeyFunction<T, ModelTypeString>;
-export type ReadRelationKeysFunction<T> = ReadKeysFunction<T, ModelKey>;
+export type ReadRelationKeysFunction<T> = ReadMultipleKeysFunction<T, ModelKey>;
 
 export type MultiModelKeyMap<T> = Map<string, T>;
 

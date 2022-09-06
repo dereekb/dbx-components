@@ -1,6 +1,6 @@
 import { flattenArray } from './array';
 import { unique, findUnique } from './array.unique';
-import { ReadKeyFunction, ReadKeysFunction } from '../key';
+import { ReadKeyFunction, ReadMultipleKeysFunction } from '../key';
 import { caseInsensitiveString } from '../string/string';
 import { containsAllValues, containsAnyValue, hasDifferentValues } from '../set/set';
 import { mapIterable } from '../iterable/iterable.map';
@@ -92,7 +92,7 @@ export function findUniqueTransform(config: FindUniqueStringsTransformConfig): F
 export type SearchStringFilterFunction<T> = (filterText: string, values: T[]) => T[];
 
 export interface SearchStringFilterConfig<T> {
-  readStrings: ReadKeysFunction<T, string>;
+  readStrings: ReadMultipleKeysFunction<T, string>;
   decisionFactory: DecisionFunctionFactory<string, string>;
 }
 

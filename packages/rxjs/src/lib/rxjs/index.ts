@@ -4,6 +4,7 @@ export * from './delta';
 export * from './timeout';
 export * from './factory';
 export * from './getter';
+export * from './key';
 export * from './lifecycle';
 export * from './loading';
 export * from './misc';
