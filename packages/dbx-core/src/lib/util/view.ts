@@ -1,4 +1,4 @@
-import { MonoTypeOperatorFunction, tap } from 'rxjs';
+import { MonoTypeOperatorFunction, noop, tap } from 'rxjs';
 import { ChangeDetectorRef, ViewRef, ElementRef } from '@angular/core';
 import { Maybe } from '@dereekb/util';
 
@@ -9,8 +9,8 @@ import { Maybe } from '@dereekb/util';
  * @param timeout
  * @returns
  */
-export function tapDetectChanges<T>(cdRef: ChangeDetectorRef, timeout = 0): MonoTypeOperatorFunction<T> {
-  return tap(() => setTimeout(() => safeDetectChanges(cdRef), timeout));
+export function tapDetectChanges<T>(cdRef: Maybe<ChangeDetectorRef>, timeout = 0): MonoTypeOperatorFunction<T> {
+  return cdRef ? tap(() => setTimeout(() => safeDetectChanges(cdRef), timeout)) : tap();
 }
 
 /**
@@ -31,8 +31,8 @@ export function safeDetectChanges(cdRef: ChangeDetectorRef): void {
  * @param timeout
  * @returns
  */
-export function tapSafeMarkForCheck<T>(cdRef: ChangeDetectorRef, timeout = 0): MonoTypeOperatorFunction<T> {
-  return tap(() => setTimeout(() => safeMarkForCheck(cdRef), timeout));
+export function tapSafeMarkForCheck<T>(cdRef: Maybe<ChangeDetectorRef>, timeout = 0): MonoTypeOperatorFunction<T> {
+  return cdRef ? tap(() => setTimeout(() => safeMarkForCheck(cdRef), timeout)) : tap();
 }
 
 /**

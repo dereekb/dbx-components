@@ -3,7 +3,7 @@ import { FormlyFieldConfig } from '@ngx-formly/core';
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { mapboxLatLngField, mapboxZoomField } from '@dereekb/dbx-form/mapbox';
 import { DbxMapboxMapStore } from 'packages/dbx-web/mapbox/src/lib/mapbox.store';
-import { KnownMapboxStyle, DbxMapboxLayoutSide, DbxMapboxMarker, DbxMapboxMarkerFactory, dbxMapboxColoredDotStyle, filterByMapboxViewportBound } from '@dereekb/dbx-web/mapbox';
+import { KnownMapboxStyle, DbxMapboxLayoutSide, DbxMapboxMarker, DbxMapboxMarkerFactory, dbxMapboxColoredDotStyle, filterByMapboxViewportBound, DbxMapboxChangeDetectorRefService } from '@dereekb/dbx-web/mapbox';
 import { shareReplay, BehaviorSubject, map, Observable, combineLatest, of } from 'rxjs';
 import { DocExtensionMapboxContentExampleComponent } from '../component/mapbox.content.example.component';
 import { DbxThemeColor } from '@dereekb/dbx-web';
@@ -12,7 +12,7 @@ import { EXAMPLE_RANDOM_MAPBOX_MARKER_FACTORY, EXAMPLE_RANDOM_MAPBOX_MARKER_STYL
 
 @Component({
   templateUrl: './mapbox.component.html',
-  providers: [DbxMapboxMapStore]
+  providers: [DbxMapboxMapStore, DbxMapboxChangeDetectorRefService]
 })
 export class DocExtensionMapboxComponent implements OnInit, OnDestroy {
   private _side = new BehaviorSubject<Maybe<DbxMapboxLayoutSide>>(undefined);
