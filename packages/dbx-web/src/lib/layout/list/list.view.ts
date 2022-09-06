@@ -1,6 +1,6 @@
 import { Observable } from 'rxjs';
 import { ListLoadingState, ListLoadingStateContext } from '@dereekb/rxjs';
-import { EventEmitter, forwardRef, Provider, Type } from '@angular/core';
+import { EventEmitter, forwardRef, Provider, TrackByFunction, Type } from '@angular/core';
 import { Maybe } from '@dereekb/util';
 
 export type DbxListSelectionMode = 'select' | 'view';
@@ -31,6 +31,10 @@ export abstract class DbxListView<T, S extends ListLoadingState<T> = ListLoading
    * Values of the list view.
    */
   abstract readonly values$: Observable<T[]>;
+  /**
+   * Track by configuration.
+   */
+  abstract trackBy?: TrackByFunction<T>;
   /**
    * (Optional) clicked event emitter.
    *

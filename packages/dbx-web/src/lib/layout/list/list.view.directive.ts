@@ -1,6 +1,6 @@
 import { ListLoadingStateContext, switchMapMaybeObs } from '@dereekb/rxjs';
 import { BehaviorSubject, Observable, of, shareReplay } from 'rxjs';
-import { Directive, EventEmitter, Input, OnDestroy, Output } from '@angular/core';
+import { Directive, EventEmitter, Input, OnDestroy, Output, TrackByFunction } from '@angular/core';
 import { DbxListSelectionMode, DbxListView } from './list.view';
 import { Maybe } from '@dereekb/util';
 
@@ -12,6 +12,8 @@ export abstract class AbstractDbxListViewDirective<T> implements DbxListView<T>,
   private readonly _disabled = new BehaviorSubject<boolean>(false);
   private readonly _selectionMode = new BehaviorSubject<Maybe<DbxListSelectionMode>>(undefined);
   private readonly _values$ = new BehaviorSubject<Maybe<Observable<T[]>>>(undefined);
+
+  readonly trackBy?: TrackByFunction<T> | undefined;
 
   readonly values$ = this._values$.pipe(switchMapMaybeObs(), shareReplay(1));
   readonly disabled$ = this._disabled.asObservable();

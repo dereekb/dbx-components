@@ -1,6 +1,6 @@
 import { GuestbookEntry } from '@dereekb/demo-firebase';
-import { Component } from '@angular/core';
-import { AbstractDbxSelectionListWrapperDirective, AbstractDbxValueListViewItemComponent, AbstractDbxSelectionListViewDirective, DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE, DbxSelectionValueListViewConfig, provideDbxListView, DEFAULT_DBX_SELECTION_VALUE_LIST_DIRECTIVE_TEMPLATE, DbxValueAsListItem, provideDbxListViewWrapper } from '@dereekb/dbx-web';
+import { Component, TrackByFunction } from '@angular/core';
+import { AbstractDbxSelectionListWrapperDirective, AbstractDbxValueListViewItemComponent, AbstractDbxSelectionListViewDirective, DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE, DbxSelectionValueListViewConfig, provideDbxListView, DEFAULT_DBX_SELECTION_VALUE_LIST_DIRECTIVE_TEMPLATE, DbxValueAsListItem, provideDbxListViewWrapper, trackByModelKeyRef } from '@dereekb/dbx-web';
 import { of } from 'rxjs';
 
 export type GuestbookEntryWithSelection = DbxValueAsListItem<GuestbookEntry>;
@@ -24,6 +24,8 @@ export class DemoGuestbookEntryListComponent extends AbstractDbxSelectionListWra
   providers: provideDbxListView(DemoGuestbookEntryListViewComponent)
 })
 export class DemoGuestbookEntryListViewComponent extends AbstractDbxSelectionListViewDirective<GuestbookEntry> {
+  override trackBy = trackByModelKeyRef();
+
   readonly config: DbxSelectionValueListViewConfig<GuestbookEntryWithSelection> = {
     componentClass: DemoGuestbookEntryListViewItemComponent,
     mapValuesToItemValues: (x) => of(x.map((y) => ({ ...y, icon: y.icon, itemValue: y })))

@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, TrackByFunction } from '@angular/core';
 import { shareReplay, map } from 'rxjs';
 import { DbxValueListItem, AbstractDbxValueListViewConfig, DbxValueListItemConfig } from './list.view.value';
 import { AbstractDbxValueListViewDirective } from './list.view.value.directive';
@@ -33,7 +33,7 @@ export class DbxValueListViewComponent<T, I extends DbxValueListItem<T> = DbxVal
   selector: 'dbx-list-view-content',
   template: `
     <mat-nav-list [disabled]="disabled$ | async">
-      <dbx-anchor *ngFor="let item of items" [anchor]="item.anchor" [disabled]="item.disabled">
+      <dbx-anchor *ngFor="let item of items; trackBy: trackByFunction" [anchor]="item.anchor" [disabled]="item.disabled">
         <a mat-list-item class="dbx-list-view-item" [disabled]="item.disabled" [disableRipple]="rippleDisabledOnItem(item)" (click)="onClickItem(item)">
           <mat-icon matListIcon *ngIf="item.icon">{{ item.icon }}</mat-icon>
           <div dbx-injection [config]="item.config"></div>
@@ -54,7 +54,12 @@ export class DbxValueListItemViewComponent<T, I extends DbxValueListItem<T> = Db
 
   readonly disabled$ = this.dbxListView.disabled$;
 
-  constructor(readonly dbxListView: DbxListView<T>) {}
+  readonly trackByFunction: TrackByFunction<DbxValueListItemConfig<T, I>>;
+
+  constructor(readonly dbxListView: DbxListView<T>) {
+    const trackBy = dbxListView.trackBy;
+    this.trackByFunction = trackBy ? (index: number, item: DbxValueListItemConfig<T, I>) => trackBy(index, item.itemValue) : () => undefined;
+  }
 
   onClickItem(item: I) {
     // do not emit clicks for disabled items.

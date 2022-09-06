@@ -79,7 +79,7 @@ export class DbxValueListGridSizeDirective implements OnDestroy {
   selector: 'dbx-list-grid-view-content',
   template: `
     <div [gdGap]="gap$ | async" [gdColumns]="columns$ | async">
-      <dbx-anchor *ngFor="let item of items" matRipple [matRippleDisabled]="rippleDisabledOnItem(item)" class="dbx-list-grid-view-item" [anchor]="item.anchor" [disabled]="item.disabled" (click)="onClickItem(item)">
+      <dbx-anchor *ngFor="let item of items; trackBy: trackByFunction" matRipple [matRippleDisabled]="rippleDisabledOnItem(item)" class="dbx-list-grid-view-item" [anchor]="item.anchor" [disabled]="item.disabled" (click)="onClickItem(item)">
         <div dbx-injection [config]="item.config"></div>
       </dbx-anchor>
     </div>

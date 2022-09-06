@@ -2,6 +2,7 @@ export * from './list.content.empty.component';
 export * from './list.component';
 export * from './list.directive';
 export * from './list.layout.module';
+export * from './list.track';
 export * from './list.grid.view.directive';
 export * from './list.grid.view.component';
 export * from './list.view.directive';
