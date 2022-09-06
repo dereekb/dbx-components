@@ -223,37 +223,6 @@ export function loadingStateHasError(state: Maybe<LoadingState>): boolean {
 }
 
 /**
- * Wraps an observable output and maps the value to a LoadingState.
- *
- * If firstOnly is provided, it will only take the first value the observable returns.
- */
-export function loadingStateFromObs<T>(obs: Observable<T>, firstOnly?: boolean): Observable<LoadingState<T>> {
-  if (firstOnly) {
-    obs = obs.pipe(first());
-  }
-
-  return obs.pipe(
-    map((value) => ({ loading: false, value, error: undefined })),
-    catchError((error) => of({ loading: false, error })),
-    timeoutStartWith({ loading: true }, 50),
-    shareReplay(1)
-  );
-}
-
-/**
- * Convenience function for creating a pipe that merges the two input observables.
- */
-export function combineLoadingStates<A, B>(obsA: Observable<LoadingState<A>>, obsB: Observable<LoadingState<B>>): Observable<LoadingState<A & B>>;
-export function combineLoadingStates<A extends object, B extends object, C>(obsA: Observable<LoadingState<A>>, obsB: Observable<LoadingState<B>>, mergeFn?: (a: A, b: B) => C): Observable<LoadingState<C>>;
-export function combineLoadingStates<A extends object, B extends object, C>(obsA: Observable<LoadingState<A>>, obsB: Observable<LoadingState<B>>, inputMergeFn?: (a: A, b: B) => C): Observable<LoadingState<C>> {
-  return combineLatest([obsA, obsB]).pipe(
-    distinctUntilChanged((x, y) => x?.[0] === y?.[0] && x?.[1] === y?.[1]), // Prevent remerging the same values!
-    map(([a, b]) => mergeLoadingStates(a, b, inputMergeFn as (a: A, b: B) => C)),
-    shareReplay(1) // Share the result.
-  );
-}
-
-/**
  * Merges the input loading states.
  *
  * If one is unavailable, it is considered loading.
