@@ -5,6 +5,7 @@ import { Maybe, LatLngTuple } from '@dereekb/util';
 export const EXAMPLE_RANDOM_MAPBOX_MARKER_STYLE = dbxMapboxColoredDotStyle('white', 'black');
 
 export const EXAMPLE_RANDOM_MAPBOX_MARKER_FACTORY: DbxMapboxMarkerFactory<LatLngTuple> = (latLng, i) => ({
+  id: `r${i}`,
   icon: 'shuffle',
   label: `R${i}`,
   latLng,

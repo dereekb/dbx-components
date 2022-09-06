@@ -1,9 +1,8 @@
 import { BehaviorSubject, combineLatest, distinctUntilChanged, map, shareReplay } from 'rxjs';
 import { Maybe } from '@dereekb/util';
-import { ChangeDetectionStrategy, Component, Input, OnDestroy, Optional } from '@angular/core';
-import { DbxMapboxMarkerFactory } from './mapbox.marker';
-import { DbxMapboxChangeDetectorRefService } from './mapbox.cdref.service';
-import { tapSafeMarkForCheck } from '@dereekb/dbx-core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy, Optional } from '@angular/core';
+import { DbxMapboxMarker, DbxMapboxMarkerFactory } from './mapbox.marker';
+import { DbxMapboxChangeService } from './mapbox.change.service';
 
 /**
  * Component used to render a set of DbxMapboxMarker values from the input data and marker factory.
@@ -11,7 +10,7 @@ import { tapSafeMarkForCheck } from '@dereekb/dbx-core';
 @Component({
   selector: 'dbx-mapbox-markers',
   template: `
-    <dbx-mapbox-marker *ngFor="let marker of markers$ | async" [marker]="marker"></dbx-mapbox-marker>
+    <dbx-mapbox-marker *ngFor="let marker of markers$ | async; trackBy: trackMarkerById" [marker]="marker"></dbx-mapbox-marker>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -27,11 +26,12 @@ export class DbxMapboxMarkersComponent<T> implements OnDestroy {
         return [];
       }
     }),
-    tapSafeMarkForCheck(this.cdRefService?.cdRef),
     shareReplay(1)
   );
 
-  constructor(@Optional() readonly cdRefService?: DbxMapboxChangeDetectorRefService) {}
+  trackMarkerById(index: number, marker: DbxMapboxMarker) {
+    return marker.id;
+  }
 
   @Input()
   get data() {

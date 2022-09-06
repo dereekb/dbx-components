@@ -3,6 +3,8 @@ import { safeDetectChanges, safeMarkForCheck } from '@dereekb/dbx-core';
 
 /**
  * Provided in the parent component that allows children to import the parent's cdRef for use.
+ *
+ * @Deprecated consider using DbxMapboxChangeService instead.
  */
 @Injectable({
   providedIn: null

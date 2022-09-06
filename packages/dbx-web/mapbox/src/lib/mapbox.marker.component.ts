@@ -1,11 +1,12 @@
-import { ChangeDetectionStrategy, Component, Input, OnDestroy } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input, OnDestroy, Optional } from '@angular/core';
 import { getValueFromGetter, latLngPointFunction, Maybe } from '@dereekb/util';
+import { DbxMapboxChangeService } from './mapbox.change.service';
 import { DbxMapboxMarker } from './mapbox.marker';
 
 @Component({
   selector: 'dbx-mapbox-marker',
   template: `
-    <mgl-marker *ngIf="marker" [lngLat]="latLng">
+    <mgl-marker [lngLat]="latLng">
       <dbx-anchor [anchor]="anchor">
         <div class="dbx-mapbox-marker">
           <div class="dbx-mapbox-marker-content" [ngStyle]="style">
@@ -19,17 +20,19 @@ import { DbxMapboxMarker } from './mapbox.marker';
   styleUrls: ['./mapbox.marker.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class DbxMapboxMarkerComponent {
+export class DbxMapboxMarkerComponent implements OnDestroy {
   private static _latLngPoint = latLngPointFunction({ wrap: true });
 
-  private _marker!: Maybe<DbxMapboxMarker>;
+  private _marker!: DbxMapboxMarker;
+
+  constructor(@Optional() private readonly _dbxMapboxChangeService?: DbxMapboxChangeService) {}
 
   @Input()
   get marker() {
     return this._marker;
   }
 
-  set marker(marker: Maybe<DbxMapboxMarker>) {
+  set marker(marker: DbxMapboxMarker) {
     this._marker = marker;
   }
 
@@ -92,5 +95,9 @@ export class DbxMapboxMarkerComponent {
     };
 
     return style;
+  }
+
+  ngOnDestroy(): void {
+    this._dbxMapboxChangeService?.emitMarkerDestroyed();
   }
 }
