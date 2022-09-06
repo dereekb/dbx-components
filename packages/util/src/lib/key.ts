@@ -1,5 +1,5 @@
-import { MapArrayFunction, MapFunction } from './value/map';
-import { mapArrayFunction } from './value';
+import { addToSet, ArrayOrValue, asArray, mergeArrayOrValueIntoArray } from '@dereekb/util';
+import { MapFunction } from './value/map';
 import { Maybe } from './value/maybe.type';
 
 /**
@@ -18,28 +18,37 @@ export type FieldOfType<T> = keyof T;
 export type ReadKeyFunction<T, K extends PrimativeKey = PrimativeKey> = MapFunction<T, Maybe<K>>;
 
 /**
- * Reads all defined keys from the input objects.
+ * Reads multiple keys from the input object.
  */
-export type ReadKeysFunction<T, K extends PrimativeKey = PrimativeKey> = MapFunction<T[], K[]>;
+export type ReadMultipleKeysFunction<T, K extends PrimativeKey = PrimativeKey> = MapFunction<T, K[]>;
 
 /**
- * Creates a ReadKeysFunction using a ReadKeyFunction.
+ * Reads multiple keys from the input object or objects
+ */
+export type ReadKeysFunction<T, K extends PrimativeKey = PrimativeKey> = MapFunction<ArrayOrValue<T>, K[]>;
+
+/**
+ * Creates a ReadKeysFromFunction using a ReadKeyFunction.
  *
  * @param read
  */
-export function readKeysFunction<T, K extends PrimativeKey = PrimativeKey>(readKey: ReadKeyFunction<T, K>): ReadKeysFunction<T, K> {
-  return (values: T[]) => {
-    const keys: K[] = new Array(values.length);
+export function readKeysFunction<T, K extends PrimativeKey = PrimativeKey>(readKey: ReadKeyFunction<T, K> | ReadMultipleKeysFunction<T, K>): ReadKeysFunction<T, K> {
+  return (values: ArrayOrValue<T>) => {
+    if (Array.isArray(values)) {
+      const keys: K[] = new Array(values.length);
 
-    values.forEach((x) => {
-      const key = readKey(x);
+      values.forEach((x) => {
+        const key = readKey(x);
 
-      if (key != null) {
-        keys.push(key);
-      }
-    });
+        if (key != null) {
+          mergeArrayOrValueIntoArray(keys, key);
+        }
+      });
 
-    return keys;
+      return keys;
+    } else {
+      return asArray(readKey(values));
+    }
   };
 }
 
@@ -48,18 +57,26 @@ export function readKeysFunction<T, K extends PrimativeKey = PrimativeKey>(readK
  */
 export type ReadKeysSetFunction<T, K extends PrimativeKey = PrimativeKey> = MapFunction<T[], Set<K>>;
 
-export function readKeysSetFunction<T, K extends PrimativeKey = PrimativeKey>(readKey: ReadKeyFunction<T, K>): ReadKeysSetFunction<T, K> {
-  return (values: T[]) => {
-    const keys = new Set<K>();
+export function readKeysSetFunction<T, K extends PrimativeKey = PrimativeKey>(readKey: ReadKeyFunction<T, K> | ReadMultipleKeysFunction<T, K>): ReadKeysSetFunction<T, K> {
+  return (values: ArrayOrValue<T>) => {
+    if (Array.isArray(values)) {
+      const keys = new Set<K>();
 
-    values.forEach((x) => {
-      const key = readKey(x);
+      values.forEach((x) => {
+        const key = readKey(x);
 
-      if (key != null) {
-        keys.add(key);
-      }
-    });
+        if (key != null) {
+          if (Array.isArray(key)) {
+            key.forEach((x) => keys.add(x));
+          } else {
+            keys.add(key);
+          }
+        }
+      });
 
-    return keys;
+      return keys;
+    } else {
+      return new Set<K>(asArray(readKey(values)));
+    }
   };
 }

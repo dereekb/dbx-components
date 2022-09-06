@@ -1,4 +1,4 @@
-import { containsAllValues, PrimativeKey, ReadKeyFunction, readKeysFunction, readKeysSetFunction, readModelKeys, readModelKeysFromObjects, setContainsAllValues } from '@dereekb/util';
+import { containsAllValues, PrimativeKey, ReadKeyFunction, readKeysFunction, readKeysSetFunction, readModelKeys, readModelKeysFromObjects, ReadMultipleKeysFunction, setContainsAllValues } from '@dereekb/util';
 import { distinctUntilChanged, MonoTypeOperatorFunction } from 'rxjs';
 
 /**
@@ -6,7 +6,7 @@ import { distinctUntilChanged, MonoTypeOperatorFunction } from 'rxjs';
  *
  * @param readkey
  */
-export function distinctUntilKeysChange<T, K extends PrimativeKey = PrimativeKey>(readKey: ReadKeyFunction<T, K>): MonoTypeOperatorFunction<T[]> {
+export function distinctUntilKeysChange<T, K extends PrimativeKey = PrimativeKey>(readKey: ReadKeyFunction<T, K> | ReadMultipleKeysFunction<T, K>): MonoTypeOperatorFunction<T[]> {
   const readKeysSet = readKeysSetFunction(readKey);
   const readKeysArray = readKeysFunction(readKey);
 
