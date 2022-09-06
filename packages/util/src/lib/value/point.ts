@@ -1,4 +1,5 @@
 import { Factory } from '../getter/getter';
+import { randomNumberFactory } from '../number';
 import { boundNumberFunction, wrapNumberFunction } from '../number/bound';
 import { cutValueToPrecisionFunction, NumberPrecision } from '../number/round';
 import { chainMapSameFunctions, mapIdentityFunction } from './map';
@@ -453,6 +454,16 @@ export function latLngDataPointFunction<T extends LatLngRef>(config?: LatLngPoin
       latLng,
       data
     };
+  };
+}
+
+// MARK: Utility
+export function randomLatLngFactory(): () => LatLngPoint {
+  const randomLatFactory = randomNumberFactory({ min: MIN_LATITUDE_VALUE, max: MAX_LATITUDE_VALUE });
+  const randomLngFactory = randomNumberFactory({ min: MIN_LONGITUDE_VALUE, max: MAX_LONGITUDE_VALUE });
+
+  return () => {
+    return { lat: randomLatFactory(), lng: randomLngFactory() };
   };
 }
 

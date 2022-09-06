@@ -2,7 +2,6 @@ import { BehaviorSubject, combineLatest, distinctUntilChanged, map, shareReplay 
 import { Maybe } from '@dereekb/util';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy } from '@angular/core';
 import { DbxMapboxMarkerFactory } from './mapbox.marker';
-import { tapDetectChanges } from '@dereekb/dbx-core';
 
 /**
  * Component used to render a set of DbxMapboxMarker values from the input data and marker factory.
@@ -26,11 +25,8 @@ export class DbxMapboxMarkersComponent<T> implements OnDestroy {
         return [];
       }
     }),
-    tapDetectChanges(this.cdRef),
     shareReplay(1)
   );
-
-  constructor(readonly cdRef: ChangeDetectorRef) {}
 
   @Input()
   get data() {

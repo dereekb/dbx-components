@@ -13,6 +13,7 @@
                 <mgl-map dbxMapboxMap>
                   <dbx-mapbox-marker *ngFor="let marker of mapboxDemoMarkers" [marker]="marker"></dbx-mapbox-marker>
                   <dbx-mapbox-markers [data]="mapboxMarkersData" [markerFactory]="mapboxMarkerFactory"></dbx-mapbox-markers>
+                  <dbx-mapbox-markers [data]="addedMapboxMarkersData$ | async" [markerFactory]="randomMarkerFactory"></dbx-mapbox-markers>
                 </mgl-map>
               </dbx-mapbox-layout>
               <dbx-mapbox-menu [matMenuTriggerFor]="menu"></dbx-mapbox-menu>
@@ -39,7 +40,11 @@
               <button mat-menu-item (click)="clickMenuItem(2)">Item 2</button>
               <button mat-menu-item (click)="clickMenuItem(3)">Item 3</button>
             </mat-menu>
-            <h4>dbx-mapbox-marker</h4>
+            <h4>dbx-mapbox-markers</h4>
+            <p>Used to render markers for the input data. Markers for data are generated via the [markerFactory] input.</p>
+            <button mat-button (click)="addRandomMarker()">Add Marker</button>
+            <button mat-button (click)="removeRandomMarker()">Remove Marker</button>
+            <button mat-button (click)="clearRandomMarkers()">Clear Random Markers</button>
             <h4>filterByMapboxViewportBound()</h4>
             <p>RXJS OperatorFunction that allows for filtering on objects that are in view when the map stops moving, using each item's center and zoom values to derive bounds.</p>
             <p>Markers that are considered in view is displayed below.</p>
