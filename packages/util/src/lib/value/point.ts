@@ -458,9 +458,16 @@ export function latLngDataPointFunction<T extends LatLngRef>(config?: LatLngPoin
 }
 
 // MARK: Utility
-export function randomLatLngFactory(): () => LatLngPoint {
-  const randomLatFactory = randomNumberFactory({ min: MIN_LATITUDE_VALUE, max: MAX_LATITUDE_VALUE });
-  const randomLngFactory = randomNumberFactory({ min: MIN_LONGITUDE_VALUE, max: MAX_LONGITUDE_VALUE });
+export interface RandomLatLngFactoryConfig {
+  sw?: Partial<LatLngPoint>;
+  ne?: Partial<LatLngPoint>;
+}
+
+export function randomLatLngFactory(config?: RandomLatLngFactoryConfig): () => LatLngPoint {
+  const { sw, ne } = { ...config, sw: { lat: MIN_LATITUDE_VALUE, lng: MIN_LONGITUDE_VALUE, ...config?.sw }, ne: { lat: MAX_LATITUDE_VALUE, lng: MAX_LONGITUDE_VALUE, ...config?.ne } };
+
+  const randomLatFactory = randomNumberFactory({ min: sw.lat, max: ne.lat });
+  const randomLngFactory = randomNumberFactory({ min: sw.lng, max: ne.lng });
 
   return () => {
     return { lat: randomLatFactory(), lng: randomLngFactory() };

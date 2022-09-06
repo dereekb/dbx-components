@@ -15,6 +15,7 @@ import { DbxFormMapboxModule } from '@dereekb/dbx-form/mapbox';
 import { DbxMapboxModule } from '@dereekb/dbx-web/mapbox';
 import { NgxMapboxGLModule } from 'ngx-mapbox-gl';
 import { DocExtensionMapboxContentExampleComponent } from './component/mapbox.content.example.component';
+import { DocExtensionMapboxMarkersExampleComponent } from './component/mapbox.markers.example.component';
 
 @NgModule({
   imports: [
@@ -34,6 +35,7 @@ import { DocExtensionMapboxContentExampleComponent } from './component/mapbox.co
     DocExtensionWidgetExampleComponent,
     DocExtensionWidgetIconExampleComponent,
     DocExtensionMapboxContentExampleComponent,
+    DocExtensionMapboxMarkersExampleComponent,
     // container
     DocExtensionLayoutComponent,
     DocExtensionHomeComponent,

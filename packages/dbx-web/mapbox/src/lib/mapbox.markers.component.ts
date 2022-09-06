@@ -34,7 +34,7 @@ export class DbxMapboxMarkersComponent<T> implements OnDestroy {
   }
 
   set data(data: Maybe<T[]>) {
-    this._data.next(data);
+    this._data.next(data || []);
   }
 
   @Input()
