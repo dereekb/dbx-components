@@ -31,11 +31,13 @@ export interface NamedUniqueModel extends UniqueModel {
   name?: string;
 }
 
-export type ModelOrKey<T extends UniqueModel> = T | ModelKey;
-
-export interface ModelKeyTypePair extends TypedModel {
+export interface ModelKeyRef {
   key: ModelKey;
 }
+
+export type ModelOrKey<T extends UniqueModel> = T | ModelKey;
+
+export interface ModelKeyTypePair extends TypedModel, ModelKeyRef {}
 
 /**
  * An encoded ModelKeyTypePair.

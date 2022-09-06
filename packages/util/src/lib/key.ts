@@ -35,7 +35,7 @@ export type ReadKeysFunction<T, K extends PrimativeKey = PrimativeKey> = MapFunc
 export function readKeysFunction<T, K extends PrimativeKey = PrimativeKey>(readKey: ReadKeyFunction<T, K> | ReadMultipleKeysFunction<T, K>): ReadKeysFunction<T, K> {
   return (values: ArrayOrValue<T>) => {
     if (Array.isArray(values)) {
-      const keys: K[] = new Array(values.length);
+      const keys: K[] = [];
 
       values.forEach((x) => {
         const key = readKey(x);

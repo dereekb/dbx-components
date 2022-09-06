@@ -1,4 +1,5 @@
 export * from './mapbox.cdref.service';
+export * from './mapbox.change.service';
 export * from './mapbox.module';
 export * from './mapbox.layout.component';
 export * from './mapbox.layout.drawer.component';

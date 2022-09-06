@@ -3,7 +3,7 @@ import { FormlyFieldConfig } from '@ngx-formly/core';
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { mapboxLatLngField, mapboxZoomField } from '@dereekb/dbx-form/mapbox';
 import { DbxMapboxMapStore } from 'packages/dbx-web/mapbox/src/lib/mapbox.store';
-import { KnownMapboxStyle, DbxMapboxLayoutSide, DbxMapboxMarker, DbxMapboxMarkerFactory, dbxMapboxColoredDotStyle, filterByMapboxViewportBound, DbxMapboxChangeDetectorRefService } from '@dereekb/dbx-web/mapbox';
+import { KnownMapboxStyle, DbxMapboxLayoutSide, DbxMapboxMarker, DbxMapboxMarkerFactory, dbxMapboxColoredDotStyle, filterByMapboxViewportBound, DbxMapboxChangeDetectorRefService, DbxMapboxChangeService } from '@dereekb/dbx-web/mapbox';
 import { shareReplay, BehaviorSubject, map, Observable, combineLatest, of } from 'rxjs';
 import { DocExtensionMapboxContentExampleComponent } from '../component/mapbox.content.example.component';
 import { DbxThemeColor } from '@dereekb/dbx-web';
@@ -12,7 +12,7 @@ import { EXAMPLE_RANDOM_MAPBOX_MARKER_FACTORY, EXAMPLE_RANDOM_MAPBOX_MARKER_STYL
 
 @Component({
   templateUrl: './mapbox.component.html',
-  providers: [DbxMapboxMapStore, DbxMapboxChangeDetectorRefService]
+  providers: [DbxMapboxMapStore, DbxMapboxChangeService]
 })
 export class DocExtensionMapboxComponent implements OnInit, OnDestroy {
   private _side = new BehaviorSubject<Maybe<DbxMapboxLayoutSide>>(undefined);
@@ -126,6 +126,7 @@ export class DocExtensionMapboxComponent implements OnInit, OnDestroy {
 
   readonly mapboxDemoMarkers: DbxMapboxMarker[] = [
     {
+      id: 'dsst',
       latLng: latLngPoint([30.599056767713982, -96.38305877734588]),
       size: 'small',
       label: 'DSST',
@@ -143,6 +144,7 @@ export class DocExtensionMapboxComponent implements OnInit, OnDestroy {
       }
     },
     {
+      id: 'tn',
       icon: 'map',
       latLng: latLngPoint([39.76501871707782, -104.90412501004826]),
       label: 'Teaching Nomad',
@@ -154,6 +156,7 @@ export class DocExtensionMapboxComponent implements OnInit, OnDestroy {
       }
     },
     {
+      id: 'hs',
       latLng: latLngPoint([30.269026910097345, -97.74083986490928]),
       label: 'HelloSubs',
       size: 'large',
@@ -172,6 +175,7 @@ export class DocExtensionMapboxComponent implements OnInit, OnDestroy {
   readonly mapboxMarkersData: LatLngTuple[] = range(0, 3).map((x) => [40 + x * 5, -100]);
   readonly mapboxMarkerDotStyle = dbxMapboxColoredDotStyle('blue', 'white');
   readonly mapboxMarkerFactory: DbxMapboxMarkerFactory<LatLngTuple> = (latLng, i) => ({
+    id: `m${i}`,
     icon: 'arrow_upward',
     label: `M${i}`,
     latLng,

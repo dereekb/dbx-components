@@ -12,7 +12,7 @@ export interface TextChip<T = unknown> {
   selector: 'dbx-text-chips',
   template: `
     <mat-chip-list *ngIf="chips" [multiple]="false">
-      <mat-chip *ngFor="let chip of chips" selected [color]="chip.color" [matTooltip]="chip.tooltip!" matTooltipPosition="above">
+      <mat-chip *ngFor="let chip of chips; trackBy: trackChipByText" selected [color]="chip.color" [matTooltip]="chip.tooltip!" matTooltipPosition="above">
         {{ chip.text }}
       </mat-chip>
     </mat-chip-list>
@@ -21,4 +21,8 @@ export interface TextChip<T = unknown> {
 export class DbxTextChipsComponent<T = unknown> {
   @Input()
   chips?: Maybe<TextChip<T>[]>;
+
+  trackChipByText(index: number, chip: TextChip<T>) {
+    return chip.text;
+  }
 }
