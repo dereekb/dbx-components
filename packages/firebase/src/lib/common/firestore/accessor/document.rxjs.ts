@@ -1,10 +1,10 @@
-import { Observable, combineLatest, shareReplay, map, OperatorFunction } from 'rxjs';
+import { Observable, combineLatest, shareReplay, map, OperatorFunction, of } from 'rxjs';
 import { DocumentDataWithIdAndKey, DocumentSnapshot } from '../types';
 import { FirestoreDocument, FirestoreDocumentData } from './document';
 import { getDataFromDocumentSnapshots } from './document.utility';
 
 export function latestSnapshotsFromDocuments<D extends FirestoreDocument<any>>(documents: D[]): Observable<DocumentSnapshot<FirestoreDocumentData<D>>[]> {
-  return combineLatest(documents.map((x) => x.accessor.stream())).pipe(shareReplay(1));
+  return documents.length ? combineLatest(documents.map((x) => x.accessor.stream())).pipe(shareReplay(1)) : of([]);
 }
 
 export function latestDataFromDocuments<D extends FirestoreDocument<any>>(documents: D[]): Observable<DocumentDataWithIdAndKey<FirestoreDocumentData<D>>[]> {
