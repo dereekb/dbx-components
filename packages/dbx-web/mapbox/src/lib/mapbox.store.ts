@@ -1,6 +1,6 @@
 import { cleanup, filterMaybe, onTrueToFalse } from '@dereekb/rxjs';
 import { Inject, Injectable, OnDestroy } from '@angular/core';
-import { isSameLatLngBound, isSameLatLngPoint, IsWithinLatLngBoundFunction, isWithinLatLngBoundFunction, LatLngBound, latLngBoundFunction, LatLngPointInput, LatLngPoint, latLngPointFunction, Maybe, OverlapsLatLngBoundFunction, overlapsLatLngBoundFunction, diffLatLngBoundPoints, latLngBoundCenterPoint, addLatLngPoints, isDefaultLatLngPoint, swMostLatLngPoint, neMostLatLngPoint, latLngBoundWrapsMap, Vector, vectorsAreEqual } from '@dereekb/util';
+import { isSameLatLngBound, isSameLatLngPoint, IsWithinLatLngBoundFunction, isWithinLatLngBoundFunction, LatLngBound, latLngBoundFunction, LatLngPointInput, LatLngPoint, latLngPointFunction, Maybe, OverlapsLatLngBoundFunction, overlapsLatLngBoundFunction, diffLatLngBoundPoints, latLngBoundCenterPoint, addLatLngPoints, isDefaultLatLngPoint, swMostLatLngPoint, neMostLatLngPoint, latLngBoundWrapsMap, Vector, vectorsAreEqual, filterUndefinedValues } from '@dereekb/util';
 import { ComponentStore } from '@ngrx/component-store';
 import { MapService } from 'ngx-mapbox-gl';
 import { defaultIfEmpty, distinctUntilChanged, filter, map, shareReplay, switchMap, tap, NEVER, Observable, of, Subscription, startWith, interval, first, combineLatest } from 'rxjs';
@@ -81,7 +81,7 @@ export interface DbxMapboxStoreState {
  */
 @Injectable()
 export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> implements OnDestroy {
-  private safeLatLngPoint = latLngPointFunction();
+  private safeLatLngPoint = latLngPointFunction({ wrap: true });
   private latLngPoint = latLngPointFunction({ wrap: false, validate: false });
   private latLngBound = latLngBoundFunction({ pointFunction: this.latLngPoint });
 
@@ -211,8 +211,8 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
       switchMap((zoomRange: Partial<MapboxZoomLevelRange>) => {
         return this.mapInstance$.pipe(
           tap((map) => {
-            map.setMinZoom(zoomRange.min);
-            map.setMaxZoom(zoomRange.max);
+            map.setMinZoom(zoomRange.min || null);
+            map.setMaxZoom(zoomRange.max || null);
           })
         );
       })
@@ -380,7 +380,7 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
       switchMap((x) => {
         const inputCenter = x.center ?? x.to?.center;
         const center = inputCenter ? this.safeLatLngPoint(inputCenter) : undefined;
-        return this.mapInstance$.pipe(tap((map) => map.jumpTo({ ...x.to, center }, x.eventData)));
+        return this.mapInstance$.pipe(tap((map) => map.jumpTo(filterUndefinedValues({ ...x.to, center }), x.eventData)));
       })
     );
   });
@@ -390,7 +390,7 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
       switchMap((x) => {
         const inputCenter = x.center ?? x.to?.center;
         const center = inputCenter ? this.safeLatLngPoint(inputCenter) : undefined;
-        return this.mapInstance$.pipe(tap((map) => map.easeTo({ ...x.to, center }, x.eventData)));
+        return this.mapInstance$.pipe(tap((map) => map.easeTo(filterUndefinedValues({ ...x.to, center }), x.eventData)));
       })
     );
   });
@@ -400,7 +400,7 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
       switchMap((x) => {
         const inputCenter = x.center ?? x.to?.center;
         const center = inputCenter ? this.safeLatLngPoint(inputCenter) : undefined;
-        return this.mapInstance$.pipe(tap((map) => map.flyTo({ ...x.to, center }, x.eventData)));
+        return this.mapInstance$.pipe(tap((map) => map.flyTo(filterUndefinedValues({ ...x.to, center }), x.eventData)));
       })
     );
   });
