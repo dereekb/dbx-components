@@ -118,9 +118,11 @@ export class DocExtensionMapboxComponent implements OnInit, OnDestroy {
     }),
     mapboxZoomField({
       key: 'zoom',
-      description: 'This is a zoom picker synchronized with the big map.',
+      description: 'This is a zoom picker synchronized with the big map. It has a min and max zoom.',
       showMap: false,
-      zoomStep: 0.5
+      zoomStep: 0.5,
+      minZoom: 6,
+      maxZoom: 15
     })
   ];
 

@@ -5,7 +5,7 @@ import { ComponentStore } from '@ngrx/component-store';
 import { MapService } from 'ngx-mapbox-gl';
 import { defaultIfEmpty, distinctUntilChanged, filter, map, shareReplay, switchMap, tap, NEVER, Observable, of, Subscription, startWith, interval, first, combineLatest } from 'rxjs';
 import * as MapboxGl from 'mapbox-gl';
-import { DbxMapboxClickEvent, KnownMapboxStyle, MapboxBearing, MapboxEaseTo, MapboxFitBounds, MapboxFlyTo, MapboxJumpTo, MapboxResetNorth, MapboxResetNorthPitch, MapboxRotateTo, MapboxSnapToNorth, MapboxStyleConfig, MapboxZoomLevel } from './mapbox';
+import { DbxMapboxClickEvent, KnownMapboxStyle, MapboxBearing, MapboxEaseTo, MapboxFitBounds, MapboxFlyTo, MapboxJumpTo, MapboxResetNorth, MapboxResetNorthPitch, MapboxRotateTo, MapboxSnapToNorth, MapboxStyleConfig, MapboxZoomLevel, MapboxZoomLevelRange } from './mapbox';
 import { DbxMapboxService } from './mapbox.service';
 import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { mapboxViewportBoundFunction, MapboxViewportBoundFunction } from './mapbox.util';
@@ -202,6 +202,19 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
     return input.pipe(
       switchMap((zoom: MapboxZoomLevel) => {
         return this.mapInstance$.pipe(tap((map) => map.setZoom(zoom)));
+      })
+    );
+  });
+
+  readonly setZoomRange = this.effect((input: Observable<Partial<MapboxZoomLevelRange>>) => {
+    return input.pipe(
+      switchMap((zoomRange: Partial<MapboxZoomLevelRange>) => {
+        return this.mapInstance$.pipe(
+          tap((map) => {
+            map.setMinZoom(zoomRange.min);
+            map.setMaxZoom(zoomRange.max);
+          })
+        );
       })
     );
   });
