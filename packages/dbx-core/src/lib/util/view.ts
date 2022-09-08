@@ -1,4 +1,4 @@
-import { MonoTypeOperatorFunction, noop, tap } from 'rxjs';
+import { MonoTypeOperatorFunction, tap } from 'rxjs';
 import { ChangeDetectorRef, ViewRef, ElementRef } from '@angular/core';
 import { Maybe } from '@dereekb/util';
 

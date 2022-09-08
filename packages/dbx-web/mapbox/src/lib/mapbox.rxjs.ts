@@ -1,5 +1,5 @@
 import { ObservableOrValue, asObservable } from '@dereekb/rxjs';
-import { LAT_LONG_10M_PRECISION, LatLngPointInput, LatLngBound, LatLngBoundCheckFunction, latLngPointFunction, roundNumberToStepFunction, RoundNumberToStepFunctionInput, LatLngPrecision, LAT_LONG_1M_PRECISION, Maybe } from '@dereekb/util';
+import { LAT_LONG_10M_PRECISION, LatLngPointInput, LatLngBound, LatLngBoundCheckFunction, latLngPointFunction, roundNumberToStepFunction, RoundNumberToStepFunctionInput, LatLngPrecision, Maybe } from '@dereekb/util';
 import { combineLatestWith, map, Observable, OperatorFunction, switchMap, shareReplay, distinctUntilChanged } from 'rxjs';
 import { MapboxZoomLevel } from './mapbox';
 import { MapboxViewportBoundFunction } from './mapbox.util';
@@ -85,7 +85,7 @@ export function filterByMapboxViewportBound<T>(config: FilterMapboxBoundConfig<T
           }),
           combineLatestWith(boundDecisionObs),
           map(([items, boundFunction]) => {
-            let valuesInBounds: T[] = [];
+            const valuesInBounds: T[] = [];
 
             items.forEach((item) => {
               if (boundFunction(item.bound)) {

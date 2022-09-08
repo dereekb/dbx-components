@@ -1,8 +1,7 @@
 import { BehaviorSubject, combineLatest, distinctUntilChanged, map, shareReplay } from 'rxjs';
 import { Maybe } from '@dereekb/util';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy, Optional } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input, OnDestroy } from '@angular/core';
 import { DbxMapboxMarker, DbxMapboxMarkerFactory } from './mapbox.marker';
-import { DbxMapboxChangeService } from './mapbox.change.service';
 
 /**
  * Component used to render a set of DbxMapboxMarker values from the input data and marker factory.

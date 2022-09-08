@@ -1,7 +1,7 @@
 import { Writable } from 'ts-essentials';
 import { MapFunction } from '../value/map';
 import { Maybe } from '../value/maybe.type';
-import { NumberString, asNumber, AsNumberInput } from './number';
+import { asNumber, AsNumberInput } from './number';
 
 // MARK: Rounding
 export type NumberRounding = 'none' | 'floor' | 'ceil' | 'round';

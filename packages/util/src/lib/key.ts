@@ -1,4 +1,4 @@
-import { addToSet, ArrayOrValue, asArray, mergeArrayOrValueIntoArray } from '@dereekb/util';
+import { ArrayOrValue, asArray, mergeArrayOrValueIntoArray } from '@dereekb/util';
 import { MapFunction } from './value/map';
 import { Maybe } from './value/maybe.type';
 

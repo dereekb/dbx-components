@@ -1,9 +1,8 @@
 import { switchMap } from 'rxjs/operators';
-import { ChangeDetectorRef, Host, Injectable, OnDestroy, OnInit } from '@angular/core';
-import { SubscriptionObject, tapLog } from '@dereekb/rxjs';
+import { Injectable, OnDestroy } from '@angular/core';
+import { SubscriptionObject } from '@dereekb/rxjs';
 import { tap, merge, Subject, throttleTime } from 'rxjs';
 import { DbxMapboxMapStore } from './mapbox.store';
-import { Initialized } from '@dereekb/util';
 
 /**
  * Provided in the parent component that allows children to emit events related to their lifecycles.

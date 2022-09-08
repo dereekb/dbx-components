@@ -1,6 +1,6 @@
 import { LatLngBound } from '@dereekb/util';
 import { latLngPoint } from './point';
-import { boundToRectangle, isLatLngBoundWithinLatLngBound, isLatLngPointWithinLatLngBound, isWithinLatLngBoundFunction, latLngBound, latLngBoundCenterPoint, latLngBoundFullyWrapsMap, latLngBoundFunction, latLngBoundStrictlyWrapsMap, overlapsLatLngBoundFunction, TOTAL_SPAN_OF_LONGITUDE } from './bound';
+import { boundToRectangle, isLatLngBoundWithinLatLngBound, isLatLngPointWithinLatLngBound, latLngBound, latLngBoundCenterPoint, latLngBoundFullyWrapsMap, latLngBoundFunction, latLngBoundStrictlyWrapsMap, overlapsLatLngBoundFunction, TOTAL_SPAN_OF_LONGITUDE } from './bound';
 
 describe('latLngBoundFunction()', () => {
   const precision = 3;
