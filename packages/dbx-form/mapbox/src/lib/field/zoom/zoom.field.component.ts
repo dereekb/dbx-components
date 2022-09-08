@@ -8,7 +8,7 @@ import { filterMaybe, SubscriptionObject } from '@dereekb/rxjs';
 import { ZoomLevel, Maybe, LatLngPoint, latLngPoint } from '@dereekb/util';
 import { DbxMapboxService, DbxMapboxMapStore, MapboxZoomLevel, provideMapboxStoreIfParentIsUnavailable, mapboxZoomLevel, MAPBOX_MAX_ZOOM_LEVEL, MAPBOX_MIN_ZOOM_LEVEL } from '@dereekb/dbx-web/mapbox';
 
-export interface DbxFormMapboxZoomComponentFieldProps extends FormlyFieldProps {
+export interface DbxFormMapboxZoomComponentFieldProps extends Omit<FormlyFieldProps, 'min' | 'max'> {
   /**
    * (Optional) Whether or not the show the map. Cases where this would be set false is if another map is being used.
    *
@@ -51,6 +51,8 @@ export interface DbxFormMapboxZoomComponentFieldProps extends FormlyFieldProps {
   styleUrls: ['../mapbox.field.component.scss']
 })
 export class DbxFormMapboxZoomFieldComponent<T extends DbxFormMapboxZoomComponentFieldProps = DbxFormMapboxZoomComponentFieldProps> extends FieldType<FieldTypeConfig<T>> implements OnInit, OnDestroy {
+  private _undoZoomLimit = false;
+
   readonly compactClass$ = mapCompactModeObs(this.compact?.mode$, {
     compact: 'dbx-mapbox-input-field-compact'
   });
@@ -117,6 +119,10 @@ export class DbxFormMapboxZoomFieldComponent<T extends DbxFormMapboxZoomComponen
     this._formControlObs.next(this.formControl);
     this._center.next(this.center);
 
+    // set/sync props for error messages
+    (this.props as FormlyFieldProps).min = this.minZoom;
+    (this.props as FormlyFieldProps).max = this.maxZoom;
+
     this.dbxMapboxMapStore.setZoom(this.zoom$);
 
     // Set center only if showMap is false.
@@ -130,11 +136,19 @@ export class DbxFormMapboxZoomFieldComponent<T extends DbxFormMapboxZoomComponen
       if (this.showMap) {
         this.dbxMapboxMapStore.setZoomDisabled();
       }
+    } else {
+      // set zoom limits
+      this.dbxMapboxMapStore.setZoomRange({ min: this.minZoom, max: this.maxZoom });
+
+      // flat to undo them later if not using the same map
+      this._undoZoomLimit = !this.showMap;
     }
 
     this._sub.subscription = this.dbxMapboxMapStore.zoom$.subscribe((zoom) => {
       if (!this.isReadonlyOrDisabled) {
-        this.ngZone.run(() => this.setValue(zoom));
+        this.ngZone.run(() => {
+          this.setValue(zoom);
+        });
       }
     });
   }
@@ -144,6 +158,10 @@ export class DbxFormMapboxZoomFieldComponent<T extends DbxFormMapboxZoomComponen
     this._formControlObs.complete();
     this._center.complete();
     this._sub.destroy();
+
+    if (!this._undoZoomLimit) {
+      this.dbxMapboxMapStore.setZoomRange({});
+    }
   }
 
   setValue(zoom?: Maybe<ZoomLevel>) {

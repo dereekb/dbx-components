@@ -3,12 +3,12 @@ import { FormlyFieldConfig } from '@ngx-formly/core';
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { mapboxLatLngField, mapboxZoomField } from '@dereekb/dbx-form/mapbox';
 import { DbxMapboxMapStore } from 'packages/dbx-web/mapbox/src/lib/mapbox.store';
-import { KnownMapboxStyle, DbxMapboxLayoutSide, DbxMapboxMarker, DbxMapboxMarkerFactory, dbxMapboxColoredDotStyle, filterByMapboxViewportBound, DbxMapboxChangeDetectorRefService, DbxMapboxChangeService } from '@dereekb/dbx-web/mapbox';
+import { KnownMapboxStyle, DbxMapboxLayoutSide, DbxMapboxMarker, DbxMapboxMarkerFactory, dbxMapboxColoredDotStyle, filterByMapboxViewportBound, DbxMapboxChangeService } from '@dereekb/dbx-web/mapbox';
 import { shareReplay, BehaviorSubject, map, Observable, combineLatest, of } from 'rxjs';
 import { DocExtensionMapboxContentExampleComponent } from '../component/mapbox.content.example.component';
 import { DbxThemeColor } from '@dereekb/dbx-web';
 import { tapDetectChanges } from '@dereekb/dbx-core';
-import { EXAMPLE_RANDOM_MAPBOX_MARKER_FACTORY, EXAMPLE_RANDOM_MAPBOX_MARKER_STYLE } from '../component/mapbox.markers.example.component';
+import { EXAMPLE_RANDOM_MAPBOX_MARKER_FACTORY } from '../component/mapbox.markers.example.component';
 
 @Component({
   templateUrl: './mapbox.component.html',
@@ -118,9 +118,11 @@ export class DocExtensionMapboxComponent implements OnInit, OnDestroy {
     }),
     mapboxZoomField({
       key: 'zoom',
-      description: 'This is a zoom picker synchronized with the big map.',
+      description: 'This is a zoom picker synchronized with the big map. It has a min and max zoom.',
       showMap: false,
-      zoomStep: 0.5
+      zoomStep: 0.5,
+      minZoom: 6,
+      maxZoom: 15
     })
   ];
 

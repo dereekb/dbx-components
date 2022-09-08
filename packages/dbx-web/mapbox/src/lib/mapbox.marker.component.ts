@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, Input, OnDestroy, Optional } from '@angular/core';
-import { getValueFromGetter, latLngPointFunction, Maybe } from '@dereekb/util';
+import { getValueFromGetter, latLngPointFunction } from '@dereekb/util';
 import { DbxMapboxChangeService } from './mapbox.change.service';
 import { DbxMapboxMarker } from './mapbox.marker';
 
