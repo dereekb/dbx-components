@@ -2,6 +2,16 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [9.7.4](https://github.com/dereekb/dbx-components/compare/v9.7.3-dev...v9.7.4) (2022-09-08)
+
+
+### Bug Fixes
+
+* fixed issue with easeTo input ([eb03604](https://github.com/dereekb/dbx-components/commit/eb03604c99de548b9f8e6a6b0553a1bd27d209c9))
+* fixed zoom limits in DbxFormMapboxZoomFieldComponent ([a49e72c](https://github.com/dereekb/dbx-components/commit/a49e72caec7cbe959fd310614917d72cd900bfdb))
+
+
+
 ## [9.7.3](https://github.com/dereekb/dbx-components/compare/v9.7.2-dev...v9.7.3) (2022-09-06)
 
 
