@@ -1,9 +1,10 @@
 version: '3'
 services:
-  demo-api-webhook-server:
+  dbx-components-offline-server:
     image: nginx:1.21
     ports:
-      - '8443:8443'
+      - '80'
+      - '443:443'
     volumes:
       - type: bind
         source: ./docker/nginx/certs
@@ -14,7 +15,7 @@ services:
         target: /etc/nginx/snippets
         read_only: true
       - type: bind
-        source: ./docker/nginx/webhook-nginx.conf
+        source: ./docker/nginx/offline-nginx.conf
         target: /etc/nginx/nginx.conf
         read_only: true
       - type: bind
@@ -24,8 +25,3 @@ services:
       - type: bind
         source: ./tmp/nginx/webhook/nginx
         target: /var/log/nginx
-    networks:
-      - demo-api-network
-networks:
-  demo-api-network:
-    driver: bridge

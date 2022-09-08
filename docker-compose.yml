@@ -3,6 +3,7 @@ version: '3'
 services:
   demo-api-server:
     build: .
+    network_mode: host
     volumes:
       - ./:/code
       - /code/node_modules # Excludes node_modules
@@ -16,10 +17,8 @@ services:
     environment:
       # Credentials URL
       - GCLOUD_PROJECT=dereekb-components
+      - NODE_EXTRA_CA_CERTS=/code/docker/nginx/certs/firebase.crt
     command: npx nx run demo-api:serve
     tty: true
-    networks:
-      - demo-api-network
-networks:
-  demo-api-network:
-    driver: bridge
+    # extra_hosts:    # uncomment for enabling local development. Don't forget to start the offline nginx server!
+    # - "firebase-public.firebaseio.com:0.0.0.0"
