@@ -17,11 +17,12 @@ If you need the local system or Java to access the file, then add this to your D
 ```
 # Copy the development certificate and trust it
 COPY ./docker/nginx/certs/firebase.crt /usr/local/share/ca-certificates/firebase.crt
-RUN keytool -import -alias FIREBASE_OFFLINE -file /usr/local/share/ca-certificates/firebase.crt -keystore /etc/ssl/certs/java/cacerts
+RUN keytool -import -alias FIREBASE_OFFLINE -file /usr/local/share/ca-certificates/firebase.crt -keystore /etc/ssl/certs/java/cacerts  # Java
+RUN update-ca-certificates # Linux
 ```
 
 Otherwise, if you're just using the firebase cli, you just need to add [NODE_EXTRA_CA_CERTS](https://nodejs.org/api/cli.html#cli_node_extra_ca_certs_file) as an environment variable and have it point to firebase.crt.
 
-This way this works is we add `firebase-public.firebaseio.com` to `extra_hosts` in docker-compose.yml and point it to the local machine. Our docker compose file `docker-compose-nginx-offline.yml` defines an NGINX host that will act as the firebase-public.firebaseio.com host and use the above SSL certificate and serve `cli.json` in the html folder.
+This way this works is we add `firebase-public.firebaseio.com` to `extra_hosts` in `docker-compose.yml` and point it to the local machine. Our docker compose file `docker-compose-nginx-offline.yml` defines an NGINX host that will act as the firebase-public.firebaseio.com host and use the above SSL certificate and serve `cli.json` in the html folder.
 
 Make sure that container is on before the server tries to turn on.

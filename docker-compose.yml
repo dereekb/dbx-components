@@ -14,11 +14,11 @@ services:
     ports:
       # - '9229:9229' # node-inspect debug port. Can be disabled if not being used.
       - '9900-9906:9900-9906' # expose for browser access
+    command: npx nx run demo-api:serve
+    tty: true
     environment:
       # Credentials URL
       - GCLOUD_PROJECT=dereekb-components
       - NODE_EXTRA_CA_CERTS=/code/docker/nginx/certs/firebase.crt
-    command: npx nx run demo-api:serve
-    tty: true
     # extra_hosts:    # uncomment for enabling local development. Don't forget to start the offline nginx server!
     # - "firebase-public.firebaseio.com:0.0.0.0"
