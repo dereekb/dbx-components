@@ -153,6 +153,8 @@ export function primativeKeyStringDencoder<D extends PrimativeKey, E extends Pri
     });
   }
 
+  const joiner = splitter || '';
+
   const splitEncodedValues = splitter ? (encodedValues: string) => encodedValues.split(splitter) : (encodedValues: string) => new Array(encodedValues);
 
   return (input: string | (E | D)[]) => {
@@ -161,7 +163,7 @@ export function primativeKeyStringDencoder<D extends PrimativeKey, E extends Pri
       return dencoder(split);
     } else {
       const encoded = dencoder(input as D[]);
-      return encoded.join(splitter) as any;
+      return encoded.join(joiner) as any;
     }
   };
 }
