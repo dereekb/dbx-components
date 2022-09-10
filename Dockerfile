@@ -25,5 +25,10 @@ COPY ./package-lock.json .
 # This is done to prevent node_modules system package conflicts
 RUN npm ci
 
+# Copy the development certificate and trust it (Uncomment if the firebase.crt needs to be accessed via Java or the system. NODE_EXTRA_CA_CERTS is used for nodejs certs)
+# COPY ./docker/nginx/certs/firebase.crt /usr/local/share/ca-certificates/firebase.crt
+# RUN keytool -import -alias FIREBASE_OFFLINE -file /usr/local/share/ca-certificates/firebase.crt -keystore /etc/ssl/certs/java/cacerts
+# RUN update-ca-certificates
+
 # Run serve by default
 CMD ["npx nx run demo-api:serve"]

@@ -1,10 +1,31 @@
 import { encodeWebsiteFileLinkToWebsiteLinkEncodedData, WebsiteFileLink } from '@dereekb/model';
-import { LatLngString, asGetter, ISO8601DateString, Maybe, modelFieldMapFunctions, objectHasKey, stringTrimFunction, latLngString, passThrough } from '@dereekb/util';
+import { LatLngString, asGetter, ISO8601DateString, Maybe, modelFieldMapFunctions, objectHasKey, stringTrimFunction, latLngString, passThrough, primativeKeyStringDencoder, primativeKeyDencoder } from '@dereekb/util';
 import { isValid } from 'date-fns';
 import { FirestoreModelKeyGrantedRoleArrayMap } from '../collection';
 import { DocumentSnapshot } from '../types';
 import { snapshotConverterFunctions } from './snapshot';
-import { firestoreWebsiteFileLinkEncodedArray, firestoreArrayMap, firestoreDate, firestoreObjectArray, firestoreEnum, firestoreMap, firestoreModelKeyGrantedRoleArrayMap, firestoreEnumArray, firestoreUniqueKeyedArray, firestoreUniqueStringArray, firestoreNumber, firestoreSubObject, firestoreEncodedArray, firestoreString, DEFAULT_FIRESTORE_STRING_FIELD_VALUE, firestoreLatLngString, firestoreField, optionalFirestoreDate } from './snapshot.field';
+import {
+  firestoreWebsiteFileLinkEncodedArray,
+  firestoreArrayMap,
+  firestoreDate,
+  firestoreObjectArray,
+  firestoreEnum,
+  firestoreMap,
+  firestoreModelKeyGrantedRoleArrayMap,
+  firestoreEnumArray,
+  firestoreUniqueKeyedArray,
+  firestoreUniqueStringArray,
+  firestoreNumber,
+  firestoreSubObject,
+  firestoreEncodedArray,
+  firestoreString,
+  DEFAULT_FIRESTORE_STRING_FIELD_VALUE,
+  firestoreLatLngString,
+  firestoreField,
+  optionalFirestoreDate,
+  firestoreDencoderStringArray,
+  firestoreDencoderArray
+} from './snapshot.field';
 
 describe('firestoreField()', () => {
   const defaultValue = -1;
@@ -372,6 +393,49 @@ describe('firestoreEncodedArray()', () => {
         expect(result.l[0]).toBe(encodeWebsiteFileLinkToWebsiteLinkEncodedData(exampleWithAll));
       });
     });
+  });
+});
+
+describe('firestoreDencoderArray()', () => {
+  const firestoreMapConfig = firestoreDencoderArray<number, string>({
+    dencoder: primativeKeyDencoder<number, string>({
+      values: {
+        a: 0,
+        b: 1
+      }
+    })
+  });
+
+  it('should encode the values.', () => {
+    const test = [0, 1, 2];
+    const results = firestoreMapConfig.to.convert(test) as string[];
+
+    expect(results).toBeDefined();
+    expect(Array.isArray(results));
+    expect(results.length).toBe(2);
+    expect(results[0]).toBe('a');
+    expect(results[1]).toBe('b');
+  });
+});
+
+describe('firestoreDencoderStringArray()', () => {
+  const firestoreMapConfig = firestoreDencoderStringArray<number, string>({
+    dencoder: primativeKeyStringDencoder<number, string>({
+      dencoder: {
+        values: {
+          a: 0,
+          b: 1
+        }
+      }
+    })
+  });
+
+  it('should encode the values.', () => {
+    const test = [0, 1, 2];
+    const results = firestoreMapConfig.to.convert(test);
+
+    expect(results).toBeDefined();
+    expect(results).toBe('ab');
   });
 });
 

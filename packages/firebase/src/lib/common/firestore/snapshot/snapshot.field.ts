@@ -43,7 +43,9 @@ import {
   assignValuesToPOJOFunction,
   TransformNumberFunction,
   transformNumberFunction,
-  TransformNumberFunctionConfig
+  TransformNumberFunctionConfig,
+  PrimativeKeyStringDencoderFunction,
+  PrimativeKeyDencoderFunction
 } from '@dereekb/util';
 import { FirestoreModelData, FIRESTORE_EMPTY_VALUE } from './snapshot.type';
 import { FirebaseAuthUserId } from '../../auth/auth';
@@ -345,6 +347,45 @@ export function firestoreEncodedArray<T, E extends string | number>(config: Fire
     defaultBeforeSave: config.defaultBeforeSave,
     fromData: (input: E[]) => (input as MaybeSo<E>[]).map(fromData),
     toData: (input: T[]) => filterMaybeValues((input as MaybeSo<T>[]).map(toData))
+  });
+}
+
+export type FirestoreDencoderArrayFieldConfig<D extends PrimativeKey, E extends PrimativeKey> = DefaultMapConfiguredFirestoreFieldConfig<D[], E[]> & {
+  readonly dencoder: PrimativeKeyDencoderFunction<D, E>;
+};
+
+/**
+ * An array that is stored as an array of encoded values using a PrimativeKeyDencoderFunction.
+ * @param config
+ * @returns
+ */
+export function firestoreDencoderArray<D extends PrimativeKey, E extends PrimativeKey>(config: FirestoreDencoderArrayFieldConfig<D, E>) {
+  const { dencoder } = config;
+  return firestoreField<D[], E[]>({
+    default: config.default ?? ((() => []) as Getter<D[]>),
+    defaultBeforeSave: config.defaultBeforeSave,
+    fromData: (input: E[]) => dencoder(input) as D[],
+    toData: (input: D[]) => dencoder(input) as E[]
+  });
+}
+
+export type FirestoreDencoderStringArrayFieldConfig<D extends PrimativeKey, E extends PrimativeKey, S extends string = string> = DefaultMapConfiguredFirestoreFieldConfig<D[], S> & {
+  readonly dencoder: PrimativeKeyStringDencoderFunction<D, E>;
+};
+
+/**
+ * An array that is stored as an encoded string using a PrimativeKeyDencoderString configuration.
+ *
+ * @param config
+ * @returns
+ */
+export function firestoreDencoderStringArray<D extends PrimativeKey, E extends PrimativeKey, S extends string = string>(config: FirestoreDencoderStringArrayFieldConfig<D, E, S>) {
+  const { dencoder } = config;
+  return firestoreField<D[], S>({
+    default: config.default ?? ((() => []) as Getter<D[]>),
+    defaultBeforeSave: config.defaultBeforeSave,
+    fromData: (input: S) => dencoder(input) as D[],
+    toData: (input: D[]) => dencoder(input) as S
   });
 }
 
