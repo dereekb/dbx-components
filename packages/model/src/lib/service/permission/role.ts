@@ -1,4 +1,4 @@
-import { ArrayOrValue, asArray, Maybe, SetIncludesMode } from '@dereekb/util';
+import { ArrayOrValue, arrayToObject, asArray, Maybe, SetIncludesMode } from '@dereekb/util';
 
 /**
  * A granted role for a model.
@@ -171,4 +171,18 @@ export class GrantedRoleMapReaderInstance<R extends GrantedRole = string> implem
 
     return true;
   }
+}
+
+/**
+ * Converts the input array of roles to a GrantedRoleKeysMap.
+ *
+ * @param roles
+ * @returns
+ */
+export function grantedRoleKeysMapFromArray<R extends GrantedRole = string>(roles: R[], value = true): GrantedRoleKeysMap<R> {
+  return arrayToObject(
+    roles,
+    (x) => x,
+    () => value
+  );
 }
