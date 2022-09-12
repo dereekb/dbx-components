@@ -45,7 +45,8 @@ import {
   transformNumberFunction,
   TransformNumberFunctionConfig,
   PrimativeKeyStringDencoderFunction,
-  PrimativeKeyDencoderFunction
+  PrimativeKeyDencoderFunction,
+  mapObjectMap
 } from '@dereekb/util';
 import { FirestoreModelData, FIRESTORE_EMPTY_VALUE } from './snapshot.type';
 import { FirebaseAuthUserId } from '../../auth/auth';
@@ -402,7 +403,7 @@ export type FirestoreMapFieldConfig<T, K extends string = string> = DefaultMapCo
      */
     mapFilter?: FilterKeyValueTuplesInput<FirestoreMapFieldType<K>>;
     /**
-     * Optional map function to apply to each input value before
+     * Optional map function to apply to each input value before saving.
      */
     mapFieldValues?: MapFunction<Maybe<T>, Maybe<T>>;
   };
@@ -450,6 +451,65 @@ export function firestoreModelKeyGrantedRoleMap<R extends GrantedRole>() {
  * Filters out models with no/null roles by default.
  */
 export const firestoreModelIdGrantedRoleMap: () => FirestoreModelFieldMapFunctionsConfig<FirestoreMapFieldType<ModelKey, string>, FirestoreMapFieldType<ModelKey, string>> = firestoreModelKeyGrantedRoleMap;
+
+/**
+ * Firestore/JSON maps only have string keys.
+ */
+export type FirestoreEncodedMapFieldValueType<D extends PrimativeKey, S extends string = string> = Record<S, D[]>;
+export type FirestoreEncodedMapFieldConfig<D extends PrimativeKey, E extends string = string, S extends string = string> = DefaultMapConfiguredFirestoreFieldConfig<FirestoreEncodedMapFieldValueType<D, S>, FirestoreMapFieldType<E, S>> &
+  Partial<FirestoreFieldDefault<FirestoreEncodedMapFieldValueType<D, S>>> & {
+    /**
+     * Optional filter to apply when saving to data.
+     *
+     * By default will filter all null/undefined values from maps.
+     */
+    mapFilter?: FilterKeyValueTuplesInput<FirestoreMapFieldType<E>>;
+    /**
+     * Dencoder to use for the input values.
+     */
+    readonly dencoder: PrimativeKeyStringDencoderFunction<D, E>;
+  };
+
+/**
+ * FirestoreField configuration for a map-type object that uses a Dencoder to encode/decode values.
+ *
+ * By default it will remove all null/undefined keys from objects before saving.
+ *
+ * @param config
+ * @returns
+ */
+export function firestoreEncodedMap<D extends PrimativeKey, E extends string = string, S extends string = string>(config: FirestoreEncodedMapFieldConfig<D, E, S>) {
+  const { mapFilter: filter = KeyValueTypleValueFilter.EMPTY, dencoder } = config;
+  const filterFinalMapValuesFn = filterFromPOJOFunction<FirestoreMapFieldType<E, S>>({
+    copy: false, // skip copying. Handled before input
+    filter
+  });
+
+  return firestoreField<FirestoreEncodedMapFieldValueType<D, S>, FirestoreMapFieldType<E, S>>({
+    default: config.default ?? ((() => ({})) as Getter<FirestoreEncodedMapFieldValueType<D, S>>),
+    fromData: (input: FirestoreMapFieldType<E, S>) => {
+      const copy = copyObject(input);
+      const result = mapObjectMap<FirestoreMapFieldType<E, S>, E, D[]>(copy, (x) => dencoder(x as E) as D[]);
+      return result;
+    },
+    toData: (input: FirestoreEncodedMapFieldValueType<D, S>) => {
+      const encodedMap: FirestoreMapFieldType<E, S> = mapObjectMap<FirestoreMapFieldType<D[], S>, D[], E>(input, (x) => dencoder(x as D[]) as E);
+      const result = filterFinalMapValuesFn(encodedMap);
+      return result;
+    }
+  });
+}
+
+/**
+ * FirestoreField configuration for a map of encoded granted roles, keyed by model keys.
+ *
+ * Filters out models with empty/no roles by default.
+ */
+export function firestoreModelKeyEncodedGrantedRoleMap<D extends GrantedRole, E extends string>(dencoder: PrimativeKeyStringDencoderFunction<D, E>) {
+  return firestoreEncodedMap<D, E, FirestoreModelKey>({
+    dencoder
+  });
+}
 
 /**
  * FirestoreField configuration for a map-type object with array values.
