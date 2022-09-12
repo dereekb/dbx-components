@@ -4,7 +4,7 @@ import { Writable } from 'ts-essentials';
 /**
  * Map object of PrimativeKey dencoder values, keyed by the encoded value.
  */
-export type PrimativeKeyDencoderMap<D extends PrimativeKey, E extends PrimativeKey> = {
+export type PrimativeKeyDencoderValueMap<D extends PrimativeKey, E extends PrimativeKey> = {
   [key in E]: D;
 };
 
@@ -14,9 +14,9 @@ export type PrimativeKeyDencoderTupleArray<D extends PrimativeKey, E extends Pri
 /**
  * PrimativeKeyDencoder values. No key or value should be repeated.
  */
-export type PrimativeKeyDencoderValues<D extends PrimativeKey, E extends PrimativeKey> = PrimativeKeyDencoderTupleArray<D, E> | PrimativeKeyDencoderMap<D, E>;
+export type PrimativeKeyDencoderValues<D extends PrimativeKey, E extends PrimativeKey> = PrimativeKeyDencoderTupleArray<D, E> | PrimativeKeyDencoderValueMap<D, E>;
 
-export type PrimativeKeyDeconderMap<D extends PrimativeKey, E extends PrimativeKey> = Map<D | E, E | D> & { readonly _tuples: PrimativeKeyDencoderTupleArray<D, E> };
+export type PrimativeKeyDencoderMap<D extends PrimativeKey, E extends PrimativeKey> = Map<D | E, E | D> & { readonly _tuples: PrimativeKeyDencoderTupleArray<D, E> };
 
 /**
  * Creates a Map of the PrimativeKeyDencoder values.
@@ -25,7 +25,7 @@ export type PrimativeKeyDeconderMap<D extends PrimativeKey, E extends PrimativeK
  *
  * @param values
  */
-export function primativeKeyDencoderMap<D extends PrimativeKey, E extends PrimativeKey>(values: PrimativeKeyDencoderValues<D, E>): PrimativeKeyDeconderMap<D, E> {
+export function primativeKeyDencoderMap<D extends PrimativeKey, E extends PrimativeKey>(values: PrimativeKeyDencoderValues<D, E>): PrimativeKeyDencoderMap<D, E> {
   const map = new Map<D | E, E | D>();
 
   let valuesArray: [E, D][];
@@ -54,8 +54,8 @@ export function primativeKeyDencoderMap<D extends PrimativeKey, E extends Primat
     map.set(e, d);
   });
 
-  (map as Writable<PrimativeKeyDeconderMap<D, E>>)._tuples = valuesArray;
-  return map as PrimativeKeyDeconderMap<D, E>;
+  (map as Writable<PrimativeKeyDencoderMap<D, E>>)._tuples = valuesArray;
+  return map as PrimativeKeyDencoderMap<D, E>;
 }
 
 export interface PrimativeKeyDencoderConfig<D extends PrimativeKey, E extends PrimativeKey> {
@@ -72,7 +72,7 @@ export type PrimativeKeyDencoderFunction<D extends PrimativeKey, E extends Prima
   ((decodedValue: D) => E) &
   ((encodedValues: E[]) => D[]) &
   ((decodedValues: D[]) => E[]) & {
-    readonly _map: PrimativeKeyDeconderMap<D, E>;
+    readonly _map: PrimativeKeyDencoderMap<D, E>;
   };
 
 export const PRIMATIVE_KEY_DENCODER_VALUE = (input: unknown) => null;
