@@ -1,3 +1,4 @@
+import { FIREBASE_SERVER_AUTH_CLAIMS_SETUP_LAST_COM_DATE_KEY } from './../../auth/auth.service';
 import { itShouldFail, expectFail } from '@dereekb/util/test';
 import { AuthData } from 'firebase-functions/lib/common/providers/https';
 import { DecodedIdToken } from 'firebase-admin/lib/auth/token-verifier';
@@ -5,8 +6,8 @@ import * as admin from 'firebase-admin';
 import { Module } from '@nestjs/common';
 import { firebaseServerAuthModuleMetadata } from './auth.module';
 import { authorizedUserContextFactory, firebaseAdminFunctionNestContextFactory, initFirebaseServerAdminTestEnvironment } from '@dereekb/firebase-server/test';
-import { AbstractFirebaseServerAuthContext, AbstractFirebaseServerAuthService, AbstractFirebaseServerAuthUserContext } from '../../auth/auth.service';
-import { AuthClaims, AuthClaimsUpdate, authRoleClaimsService, AuthRoleSet, AUTH_ADMIN_ROLE, AUTH_ROLE_CLAIMS_DEFAULT_CLAIM_VALUE, objectHasNoKeys } from '@dereekb/util';
+import { AbstractFirebaseServerAuthContext, AbstractFirebaseServerAuthService, AbstractFirebaseServerAuthUserContext, AbstractFirebaseServerNewUserService, FirebaseServerAuthNewUserSetupDetails, FirebaseServerAuthUserContext, FirebaseServerNewUserService, FIREBASE_SERVER_AUTH_CLAIMS_SETUP_PASSWORD_KEY } from '../../auth/auth.service';
+import { AuthClaims, AuthClaimsUpdate, authRoleClaimsService, AuthRoleSet, AUTH_ADMIN_ROLE, AUTH_ROLE_CLAIMS_DEFAULT_CLAIM_VALUE, Maybe, objectHasNoKeys } from '@dereekb/util';
 import { CallableContextWithAuthData } from '../../function/context';
 import { NestContextCallableRequestWithAuth } from '../function/nest';
 import { AbstractFirebaseNestContext } from '../nest.provider';
@@ -24,7 +25,16 @@ const TEST_ADMIN_USER_CLAIMS: TestAuthClaims = {
   a: 1
 };
 
-export class TestFirebaseServerAuthUserContext extends AbstractFirebaseServerAuthUserContext<TestAuthService> {}
+export class TestSetupContentFirebaseServerNewUserService extends AbstractFirebaseServerNewUserService<TestFirebaseServerAuthUserContext> {
+  onSetupUser?: (x: Maybe<FirebaseServerAuthNewUserSetupDetails<TestFirebaseServerAuthUserContext>>) => void;
+
+  protected async sendSetupContentToUser(user: Maybe<FirebaseServerAuthNewUserSetupDetails<TestFirebaseServerAuthUserContext>>): Promise<void> {
+    // send nothing.
+    this.onSetupUser?.(user);
+  }
+}
+
+export class TestFirebaseServerAuthUserContext extends AbstractFirebaseServerAuthUserContext<TestAuthService> implements FirebaseServerAuthUserContext {}
 export class TestFirebaseServerAuthContext extends AbstractFirebaseServerAuthContext<TestFirebaseServerAuthContext, TestFirebaseServerAuthUserContext, TestAuthService> {}
 export class TestAuthService extends AbstractFirebaseServerAuthService<TestFirebaseServerAuthUserContext, TestFirebaseServerAuthContext> {
   static readonly TEST_CLAIMS_SERVICE = authRoleClaimsService<TestAuthClaims>(TEST_CLAIMS_SERVICE_CONFIG);
@@ -43,6 +53,10 @@ export class TestAuthService extends AbstractFirebaseServerAuthService<TestFireb
 
   claimsForRoles(roles: AuthRoleSet): AuthClaimsUpdate<TestAuthClaims> {
     return TestAuthService.TEST_CLAIMS_SERVICE.toClaims(roles);
+  }
+
+  override newUser() {
+    return new TestSetupContentFirebaseServerNewUserService(this);
   }
 }
 
@@ -219,6 +233,13 @@ describe('firebase server nest auth', () => {
           authUserContext = authService.userContext('test');
         });
 
+        describe('exists()', () => {
+          it('should return false', async () => {
+            const exists = await authUserContext.exists();
+            expect(exists).toBe(false);
+          });
+        });
+
         describe('loadRecord()', () => {
           itShouldFail('', async () => {
             await expectFail(() => authUserContext.loadRecord());
@@ -240,6 +261,86 @@ describe('firebase server nest auth', () => {
         describe('clearClaims()', () => {
           itShouldFail(async () => {
             await expectFail(() => authUserContext.clearClaims());
+          });
+        });
+      });
+    });
+
+    describe('AbstractFirebaseServerNewUserService', () => {
+      let newUserService: TestSetupContentFirebaseServerNewUserService;
+
+      beforeEach(() => {
+        newUserService = authService.newUser();
+      });
+
+      describe('initializeNewUser()', () => {
+        let email = 'test@test.com';
+
+        it('should initialize a new user', async () => {
+          let setupSent = false;
+
+          newUserService.onSetupUser = () => {
+            setupSent = true;
+          };
+
+          const exists = await authService.auth
+            .getUserByEmail(email)
+            .then((x) => true)
+            .catch(() => false);
+
+          expect(exists).toBe(false);
+
+          const result = await newUserService.initializeNewUser({
+            email
+          });
+
+          expect(result).toBeDefined();
+          expect(setupSent).toBe(true);
+
+          const claims = result.customClaims as Record<string, string>;
+
+          expect(claims[FIREBASE_SERVER_AUTH_CLAIMS_SETUP_PASSWORD_KEY]).toBeDefined();
+          expect(claims[FIREBASE_SERVER_AUTH_CLAIMS_SETUP_LAST_COM_DATE_KEY]).toBeDefined();
+        });
+      });
+
+      describe('newly initialized user', () => {
+        let email = 'inittest@test.com';
+        let initializedUser: admin.auth.UserRecord;
+
+        beforeEach(async () => {
+          initializedUser = await newUserService.initializeNewUser({
+            email,
+            sendSetupContent: false
+          });
+        });
+
+        describe('markUserSetupAsComplete()', () => {
+          it('should clear the setup claims from the user.', async () => {
+            await newUserService.markUserSetupAsComplete(initializedUser.uid);
+
+            const claims = await authService.userContext(initializedUser.uid).loadClaims();
+
+            expect(claims[FIREBASE_SERVER_AUTH_CLAIMS_SETUP_PASSWORD_KEY]).not.toBeDefined();
+            expect(claims[FIREBASE_SERVER_AUTH_CLAIMS_SETUP_LAST_COM_DATE_KEY]).not.toBeDefined();
+          });
+        });
+
+        describe('sendSetupContent()', () => {
+          it('should update the last communcation date in claims.', async () => {
+            let claims = await authService.userContext(initializedUser.uid).loadClaims();
+
+            // setup not defined since sendSetupEmail should be false.
+
+            expect(claims[FIREBASE_SERVER_AUTH_CLAIMS_SETUP_PASSWORD_KEY]).toBeDefined();
+            expect(claims[FIREBASE_SERVER_AUTH_CLAIMS_SETUP_LAST_COM_DATE_KEY]).not.toBeDefined();
+
+            await newUserService.sendSetupContent(initializedUser.uid);
+
+            claims = await authService.userContext(initializedUser.uid).loadClaims();
+
+            expect(claims[FIREBASE_SERVER_AUTH_CLAIMS_SETUP_PASSWORD_KEY]).toBeDefined();
+            expect(claims[FIREBASE_SERVER_AUTH_CLAIMS_SETUP_LAST_COM_DATE_KEY]).toBeDefined();
           });
         });
       });

@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [9.8.0](https://github.com/dereekb/dbx-components/compare/v9.7.7-dev...v9.8.0) (2022-09-15)
+
+
+### Features
+
+* added FirebaseServerNewUserService ([10d64dc](https://github.com/dereekb/dbx-components/commit/10d64dc137e533a62d7449709a93056741a840e4))
+
+
+
 ## [9.7.7](https://github.com/dereekb/dbx-components/compare/v9.7.6-dev...v9.7.7) (2022-09-12)
 
 
