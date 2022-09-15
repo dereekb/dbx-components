@@ -5,6 +5,7 @@ import { ISO8601DateString, Milliseconds, filterUndefinedValues, AUTH_ADMIN_ROLE
 import { assertIsContextWithAuthData, CallableContextWithAuthData } from '../function/context';
 import { AuthDataRef, firebaseAuthTokenFromDecodedIdToken } from './auth.context';
 import { hasExpired, hoursToMs, timeHasExpired, toISODateString } from '@dereekb/date';
+import { getAuthUserOrUndefined } from './auth.util';
 
 export interface FirebaseServerAuthUserIdentifierContext {
   /**
@@ -85,17 +86,7 @@ export abstract class AbstractFirebaseServerAuthUserContext<S extends FirebaseSe
   constructor(readonly service: S, readonly uid: FirebaseAuthUserId) {}
 
   async exists(): Promise<boolean> {
-    return this._loadRecord()
-      .then(() => true)
-      .catch((error: FirebaseAuthError) => {
-        this._loadRecord.reset(); // reset cache result incase existence changes.
-
-        if (error.code === FIREBASE_AUTH_USER_NOT_FOUND_ERROR) {
-          return false;
-        } else {
-          throw error;
-        }
-      });
+    return getAuthUserOrUndefined(this._loadRecord()).then((x) => Boolean(x));
   }
 
   loadRecord(): Promise<admin.auth.UserRecord> {
@@ -288,7 +279,7 @@ export interface FirebaseServerAuthInitializeNewUser {
   /**
    * Whether or not to send a setup email. Is true by default.
    */
-  readonly sendSetupEmail?: boolean;
+  readonly sendSetupContent?: boolean;
 }
 
 export interface FirebaseServerAuthCreateNewUserResult {
@@ -316,19 +307,21 @@ export abstract class AbstractFirebaseServerNewUserService<U extends FirebaseSer
   constructor(readonly authService: FirebaseServerAuthService<U, C>) {}
 
   async initializeNewUser(input: FirebaseServerAuthInitializeNewUser): Promise<admin.auth.UserRecord> {
-    const { uid, email, phone, sendSetupEmail } = input;
+    const { uid, email, phone, sendSetupContent: sendSetupEmail } = input;
 
-    let userRecord: Maybe<admin.auth.UserRecord>;
+    let userRecordPromise: Promise<admin.auth.UserRecord>;
 
     if (uid) {
-      userRecord = await this.authService.auth.getUser(uid);
+      userRecordPromise = this.authService.auth.getUser(uid);
     } else if (email) {
-      userRecord = await this.authService.auth.getUserByEmail(email);
+      userRecordPromise = this.authService.auth.getUserByEmail(email);
     } else if (phone) {
-      userRecord = await this.authService.auth.getUserByPhoneNumber(phone);
+      userRecordPromise = this.authService.auth.getUserByPhoneNumber(phone);
     } else {
       throw new Error('email or phone is required to initialize a new user.');
     }
+
+    let userRecord: Maybe<admin.auth.UserRecord> = await getAuthUserOrUndefined(userRecordPromise);
 
     if (!userRecord) {
       const createResult = await this.createNewUser(input);
@@ -344,7 +337,7 @@ export abstract class AbstractFirebaseServerNewUserService<U extends FirebaseSer
       }
 
       // return the new record
-      userRecord = createResult.user;
+      userRecord = await userContext.loadRecord();
     }
 
     return userRecord;
@@ -353,7 +346,7 @@ export abstract class AbstractFirebaseServerNewUserService<U extends FirebaseSer
   /**
    * Sends the setup content to the user. Returns true if content was sent or was already recently sent.
    *
-   * @param uid S
+   * @param uid
    */
   async sendSetupContent(uid: FirebaseAuthUserId): Promise<boolean> {
     const setupDetails = await this.loadSetupDetails(uid);
@@ -392,7 +385,7 @@ export abstract class AbstractFirebaseServerNewUserService<U extends FirebaseSer
     return details;
   }
 
-  async updateSetupContentSentTime(details: FirebaseServerAuthNewUserSetupDetails<U>): Promise<void> {
+  protected async updateSetupContentSentTime(details: FirebaseServerAuthNewUserSetupDetails<U>): Promise<void> {
     await details.userContext.updateClaims<FirebaseServerAuthNewUserClaims>({
       setupCommunicationAt: toISODateString(new Date())
     });
@@ -441,7 +434,7 @@ export abstract class AbstractFirebaseServerNewUserService<U extends FirebaseSer
   protected abstract sendSetupContentToUser(user: Maybe<FirebaseServerAuthNewUserSetupDetails<U>>): Promise<void>;
 
   protected async updateClaimsToClearUser(userContext: U): Promise<void> {
-    await userContext.setClaims<FirebaseServerAuthNewUserClaims>({
+    await userContext.updateClaims<FirebaseServerAuthNewUserClaims>({
       [FIREBASE_SERVER_AUTH_CLAIMS_SETUP_PASSWORD_KEY]: null,
       [FIREBASE_SERVER_AUTH_CLAIMS_SETUP_LAST_COM_DATE_KEY]: null
     });

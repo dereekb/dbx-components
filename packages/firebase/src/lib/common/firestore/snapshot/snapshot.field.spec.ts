@@ -1,7 +1,7 @@
-import { encodeWebsiteFileLinkToWebsiteLinkEncodedData, WebsiteFileLink } from '@dereekb/model';
-import { LatLngString, asGetter, ISO8601DateString, Maybe, modelFieldMapFunctions, objectHasKey, stringTrimFunction, latLngString, passThrough, primativeKeyStringDencoder, primativeKeyDencoder } from '@dereekb/util';
+import { encodeWebsiteFileLinkToWebsiteLinkEncodedData, GrantedReadRole, GrantedUpdateRole, WebsiteFileLink } from '@dereekb/model';
+import { LatLngString, asGetter, ISO8601DateString, Maybe, modelFieldMapFunctions, objectHasKey, stringTrimFunction, latLngString, passThrough, primativeKeyStringDencoder, primativeKeyDencoder, PrimativeKeyDencoderValueMap } from '@dereekb/util';
 import { isValid } from 'date-fns';
-import { FirestoreModelKeyGrantedRoleArrayMap } from '../collection';
+import { FirestoreModelKeyGrantedRoleArrayMap, FirestoreModelKeyGrantedRoleMap } from '../collection';
 import { DocumentSnapshot } from '../types';
 import { snapshotConverterFunctions } from './snapshot';
 import {
@@ -24,7 +24,8 @@ import {
   firestoreField,
   optionalFirestoreDate,
   firestoreDencoderStringArray,
-  firestoreDencoderArray
+  firestoreDencoderArray,
+  firestoreModelKeyEncodedGrantedRoleMap
 } from './snapshot.field';
 
 describe('firestoreField()', () => {
@@ -455,6 +456,40 @@ describe('firestoreMap()', () => {
     expect(objectHasKey(results, 'hasValue')).toBe(true);
     expect(objectHasKey(results, 'isEmpty')).toBe(false);
   });
+});
+
+export type TestSnapshotGrantedRoles = GrantedReadRole | GrantedUpdateRole;
+
+export type TestSnapshotRolesMap = FirestoreModelKeyGrantedRoleArrayMap<TestSnapshotGrantedRoles>;
+
+export interface TestSnapshotRolesObject {
+  r: TestSnapshotRolesMap;
+}
+
+export enum TestRoleCodeEnum {
+  READ = 'r',
+  UPDATE = 'u'
+}
+
+export const TEST_ROLE_CODE_MAP: PrimativeKeyDencoderValueMap<TestSnapshotGrantedRoles, TestRoleCodeEnum> = {
+  r: 'read',
+  u: 'update'
+};
+
+export const TEST_ROLE_DENCODER = primativeKeyStringDencoder({
+  dencoder: primativeKeyDencoder({
+    values: TEST_ROLE_CODE_MAP
+  })
+});
+
+describe('firestoreModelKeyEncodedGrantedRoleMap()', () => {
+  const converter = snapshotConverterFunctions<TestSnapshotRolesObject>({
+    fields: {
+      r: firestoreModelKeyEncodedGrantedRoleMap<TestSnapshotGrantedRoles, TestRoleCodeEnum>(TEST_ROLE_DENCODER)
+    }
+  });
+
+  // TODO: add tests
 });
 
 describe('firestoreArrayMap()', () => {
