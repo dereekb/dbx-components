@@ -9,7 +9,8 @@ import { ConfigureFirebaseWebhookMiddlewareModule, ConfigureFirebaseAppCheckMidd
 import { StorageBucketId } from '@dereekb/firebase';
 import { firebaseServerStorageDefaultBucketIdTokenProvider } from './storage/storage.module';
 import { FirebaseServerEnvService } from '../env/env.service';
-import { FirebaseServerEnvironmentConfig, firebaseServerEnvTokenProvider, DefaultFirebaseServerEnvService } from './env';
+import { DefaultFirebaseServerEnvService } from './env';
+import { ServerEnvironmentConfig, serverEnvTokenProvider } from '@dereekb/nestjs';
 
 export interface NestServer {
   server: express.Express;
@@ -75,7 +76,7 @@ export interface NestServerInstanceConfig<T> {
 }
 
 export interface NestServerEnvironmentConfig {
-  environment: FirebaseServerEnvironmentConfig;
+  environment: ServerEnvironmentConfig;
 }
 
 export function nestServerInstance<T>(config: NestServerInstanceConfig<T>): NestServerInstance<T> {
@@ -95,7 +96,7 @@ export function nestServerInstance<T>(config: NestServerInstanceConfig<T>): Nest
 
         // configure environment providers
         if (env?.environment != null) {
-          providers.push(firebaseServerEnvTokenProvider(env.environment));
+          providers.push(serverEnvTokenProvider(env.environment));
 
           if (config.configureEnvService !== false) {
             providers.push({

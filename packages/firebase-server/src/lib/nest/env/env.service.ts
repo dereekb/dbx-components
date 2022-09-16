@@ -1,28 +1,13 @@
+import { ServerEnvironmentService } from '@dereekb/nestjs';
 import { Inject, Injectable } from '@nestjs/common';
-import { isTestNodeEnv, FirebaseServerEnvService } from '../../env';
-import { FirebaseServerEnvironmentConfig } from './env.config';
-import { FIREBASE_SERVER_ENV_TOKEN } from './env.nest';
+import { FirebaseServerEnvService } from '../../env';
 
 @Injectable()
-export class DefaultFirebaseServerEnvService implements FirebaseServerEnvService {
-  constructor(@Inject(FIREBASE_SERVER_ENV_TOKEN) readonly env: FirebaseServerEnvironmentConfig) {}
-
-  get isTestingEnv() {
-    return isTestNodeEnv();
-  }
-
-  get isProduction() {
-    return this.env.production;
-  }
-
+export class DefaultFirebaseServerEnvService extends ServerEnvironmentService implements FirebaseServerEnvService {
   /**
-   * @deprecated use isDeveloperToolsEnabled instead.
+   * @deprecated use isDeveloperToolsEnabled instead.z
    */
   get isDevelopmentToolsEnabled() {
     return this.developerToolsEnabled;
-  }
-
-  get developerToolsEnabled() {
-    return Boolean(!this.isProduction && this.env.developerToolsEnabled);
   }
 }
