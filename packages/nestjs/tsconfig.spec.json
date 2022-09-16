@@ -6,5 +6,5 @@
     "types": ["jest", "node"]
   },
   "include": ["**/*.spec.ts", "**/*.d.ts", "../../jest.setup.typings.ts", "jest.config.ts"],
-  "exclude": ["stripe/**", "twilio/**"]
+  "exclude": ["stripe/**", "mailgun/**", "twilio/**"]
 }
