@@ -21,6 +21,7 @@
     "firebase-test": "packages/firebase/test",
     "model": "packages/model",
     "nestjs": "packages/nestjs",
+    "nestjs-mailgun": "packages/nestjs/mailgun",
     "nestjs-stripe": "packages/nestjs/stripe",
     "rxjs": "packages/rxjs",
     "util": "packages/util",

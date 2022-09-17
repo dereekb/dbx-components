@@ -1,15 +1,13 @@
+import { serverEnvTokenProvider, SERVER_ENV_TOKEN } from '@dereekb/nestjs';
 import { InjectionToken, Provider } from '@nestjs/common';
-import { FirebaseServerEnvironmentConfig } from './env.config';
 
-// MARK: Tokens
+// MARK: Compat
 /**
- * Token to access a configured FirebaseServerEnvironmentConfig for the app.
+ * @Deprecated use SERVER_ENV_TOKEN instead.
  */
-export const FIREBASE_SERVER_ENV_TOKEN: InjectionToken = 'FIREBASE_SERVER_ENV_TOKEN';
+export const FIREBASE_SERVER_ENV_TOKEN: InjectionToken = SERVER_ENV_TOKEN;
 
-export function firebaseServerEnvTokenProvider<T extends FirebaseServerEnvironmentConfig = FirebaseServerEnvironmentConfig>(env: T): Provider {
-  return {
-    provide: FIREBASE_SERVER_ENV_TOKEN,
-    useValue: env
-  };
-}
+/**
+ * @deprecated use serverEnvTokenProvider() instead.
+ */
+export const firebaseServerEnvTokenProvider = serverEnvTokenProvider;

@@ -13,6 +13,9 @@
           },
           {
             "command": "npx nx run nestjs-stripe:build-base"
+          },
+          {
+            "command": "npx nx run nestjs-mailgun:build-base"
           }
         ],
         "parallel": false
@@ -61,6 +64,10 @@
           {
             "description": "run nestjs-stripe tests",
             "command": "npx nx test nestjs-stripe"
+          },
+          {
+            "description": "run nestjs-mailgun tests",
+            "command": "npx nx test nestjs-mailgun"
           }
         ],
         "color": true,

@@ -2,9 +2,10 @@ import { AbstractChildJestTestContextFixture, JestBuildTestsWithContextFunction,
 import { AbstractFirebaseAdminTestContextInstanceChild, firebaseAdminTestContextFactory, FirebaseAdminTestContextInstance } from './firebase.admin';
 import { Abstract, DynamicModule, FactoryProvider, INestApplicationContext, Provider, Type } from '@nestjs/common';
 import { StorageBucketId } from '@dereekb/firebase';
-import { DefaultFirebaseServerEnvService, firebaseServerAppTokenProvider, FirebaseServerEnvironmentConfig, FirebaseServerEnvService, firebaseServerEnvTokenProvider, firebaseServerStorageDefaultBucketIdTokenProvider, NestAppPromiseGetter } from '@dereekb/firebase-server';
+import { DefaultFirebaseServerEnvService, firebaseServerAppTokenProvider, FirebaseServerEnvService, firebaseServerStorageDefaultBucketIdTokenProvider, NestAppPromiseGetter } from '@dereekb/firebase-server';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ArrayOrValue, asArray, asGetter, ClassType, Getter } from '@dereekb/util';
+import { ServerEnvironmentConfig, serverEnvTokenProvider } from '@dereekb/nestjs';
 
 // MARK: FirebaseAdminNestTestBuilder
 export interface FirebaseAdminNestTestContext {
@@ -62,17 +63,17 @@ export interface FirebaseAdminNestTestConfig<PI extends FirebaseAdminTestContext
    */
   nestModules: ArrayOrValue<ClassType>;
   /**
-   * Whether or not to inject the firebase env service provider (and firebaseServerEnvTokenProvider()) by default.
+   * Whether or not to inject the env service provider (and serverEnvTokenProvider()) by default.
    *
    * If false will affect the default envConfig value.
    */
-  injectFirebaseServerEnvServiceProvider?: boolean;
+  injectServerEnvServiceProvider?: boolean;
   /**
-   * (Optional) FirebaseServerEnvironmentConfig. Overrides the default which sets production=false.
+   * (Optional) ServerEnvironmentServiceConfig. Overrides the default which sets production=false.
    *
    * If injectFirebaseServerEnvServiceProvider is false then this requires a value to be provided in order to be injected.
    */
-  envConfig?: FirebaseServerEnvironmentConfig;
+  envConfig?: ServerEnvironmentConfig;
   /**
    * Whether or not to inject the firebase server provider (firebaseServerAppTokenProvider()).
    *
@@ -119,7 +120,7 @@ export function firebaseAdminNestContextWithFixture<PI extends FirebaseAdminTest
   f: PF,
   buildTests: JestBuildTestsWithContextFunction<C>
 ) {
-  const { nestModules, makeProviders = () => [], forceStorageBucket = false, defaultStorageBucket: inputDefaultStorageBucket, envConfig, injectFirebaseServerAppTokenProvider, injectFirebaseServerEnvServiceProvider, makeFixture = (parent: PF) => new FirebaseAdminNestTestContextFixture<PI, PF, I>(parent) as C, makeInstance = (instance, nest) => new FirebaseAdminNestTestContextInstance<PI>(instance, nest) as I, initInstance } = config;
+  const { nestModules, makeProviders = () => [], forceStorageBucket = false, defaultStorageBucket: inputDefaultStorageBucket, envConfig, injectFirebaseServerAppTokenProvider, injectServerEnvServiceProvider, makeFixture = (parent: PF) => new FirebaseAdminNestTestContextFixture<PI, PF, I>(parent) as C, makeInstance = (instance, nest) => new FirebaseAdminNestTestContextInstance<PI>(instance, nest) as I, initInstance } = config;
 
   useJestContextFixture({
     fixture: makeFixture(f),
@@ -134,11 +135,11 @@ export function firebaseAdminNestContextWithFixture<PI extends FirebaseAdminTest
       const providers: (Provider | FactoryProvider)[] = makeProviders(f.instance) ?? [];
       const defaultStorageBucket = inputDefaultStorageBucket ?? f.instance.app.options.storageBucket;
 
-      // Inject the firebaseServerEnvTokenProvider and optionally the FirebaseServerEnvService
-      if (injectFirebaseServerEnvServiceProvider !== false || envConfig != null) {
-        providers.push(firebaseServerEnvTokenProvider(envConfig || { production: false }));
+      // Inject the serverEnvTokenProvider and optionally the FirebaseServerEnvService
+      if (injectServerEnvServiceProvider !== false || envConfig != null) {
+        providers.push(serverEnvTokenProvider(envConfig || { production: false }));
 
-        if (injectFirebaseServerEnvServiceProvider !== false) {
+        if (injectServerEnvServiceProvider !== false) {
           providers.push({
             provide: FirebaseServerEnvService,
             useClass: DefaultFirebaseServerEnvService

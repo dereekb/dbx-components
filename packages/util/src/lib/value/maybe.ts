@@ -23,7 +23,7 @@ export function hasNonNullValue<T = unknown>(value: Maybe<T>): value is MaybeSo<
  * NaN has undefined behavior.
  */
 export function hasValueOrNotEmpty<T = unknown>(value: Maybe<T>): value is MaybeSo<T> {
-  if (isIterable(value, true)) {
+  if (isIterable(value, false)) {
     return !isEmptyIterable(value);
   } else {
     return isNotNullOrEmptyString(value);

@@ -1,0 +1,36 @@
+{
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/nestjs/mailgun/src",
+  "projectType": "library",
+  "targets": {
+    "build-base": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/packages/nestjs/mailgun",
+        "tsConfig": "packages/nestjs/mailgun/tsconfig.lib.json",
+        "packageJson": "packages/nestjs/mailgun/package.json",
+        "main": "packages/nestjs/mailgun/src/index.ts",
+        "assets": ["packages/nestjs/mailgun/*.md", "LICENSE"]
+      },
+      "dependsOn": []
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["packages/nestjs/mailgun/**/*.ts"]
+      }
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": ["coverage/packages/nestjs/mailgun"],
+      "options": {
+        "jestConfig": "packages/nestjs/mailgun/jest.config.ts",
+        "passWithNoTests": true
+      }
+    }
+  },
+  "implicitDependencies": ["!util-test"],
+  "tags": []
+}

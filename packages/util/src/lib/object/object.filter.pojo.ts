@@ -1,5 +1,6 @@
-import { Maybe } from '../value/maybe.type';
+import { ArrayOrValue, asArray } from './../array/array';
 import { filterMaybeValues } from '../array/array.value';
+import { Maybe } from '../value/maybe.type';
 import { filterKeyValueTuplesFunction, FilterKeyValueTuplesInput, filterKeyValueTuplesInputToFilter, KeyValueTuple, KeyValueTupleFilter, KeyValueTypleValueFilter } from './object.filter.tuple';
 import { cachedGetter, Getter } from '../getter';
 import { copyObject } from './object';
@@ -10,12 +11,12 @@ import { copyObject } from './object';
  *
  * @param object
  */
-export function overrideInObject<T extends object>(target: Partial<T>, { copy = false, from, filter }: { copy?: boolean; from: Partial<T>[]; filter?: KeyValueTupleFilter<T> }): Partial<T> {
+export function overrideInObject<T extends object>(target: Partial<T>, { copy = false, from, filter }: { copy?: boolean; from: ArrayOrValue<Partial<T>>; filter?: KeyValueTupleFilter<T> }): Partial<T> {
   return overrideInObjectFunctionFactory({
     copy,
     filter,
     dynamic: true // using only once, so no need to use the cache
-  })(from)(target);
+  })(asArray(from))(target);
 }
 
 export type OverrideInObjectFunction<T> = (target: Partial<T>) => Partial<T>;

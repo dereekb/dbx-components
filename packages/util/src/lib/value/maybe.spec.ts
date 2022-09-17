@@ -19,6 +19,7 @@ describe('hasValueOrNotEmpty()', () => {
     expect(hasValueOrNotEmpty(new Set([1]))).toBe(true);
     expect(hasValueOrNotEmpty(new Map([[1, 1]]))).toBe(true);
     expect(hasValueOrNotEmpty('test')).toBe(true);
+    expect(hasValueOrNotEmpty('a')).toBe(true);
   });
 });
 

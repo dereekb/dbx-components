@@ -58,6 +58,14 @@
                   <span class="dbx-button-spacer" *ngIf="!last">,</span>
                 </ng-container>
               </div>
+              <div *ngIf="package.children" class="package-child-package-list">
+                <p class="dbx-label">Child Packages</p>
+                <div class="package-child-package" *ngFor="let child of package.children; let last = last">
+                  <p class="package-name">{{ child.name }}</p>
+                  <p class="dbx-hint package-description">{{ child.description }}</p>
+                  <p class="dbx-button-spacer" *ngIf="!last"></p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
