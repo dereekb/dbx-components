@@ -1,5 +1,5 @@
 import { ServerEnvironmentService } from '@dereekb/nestjs';
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { FirebaseServerEnvService } from '../../env';
 
 @Injectable()

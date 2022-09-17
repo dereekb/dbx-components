@@ -1,7 +1,7 @@
 import { encodeWebsiteFileLinkToWebsiteLinkEncodedData, GrantedReadRole, GrantedUpdateRole, WebsiteFileLink } from '@dereekb/model';
 import { LatLngString, asGetter, ISO8601DateString, Maybe, modelFieldMapFunctions, objectHasKey, stringTrimFunction, latLngString, passThrough, primativeKeyStringDencoder, primativeKeyDencoder, PrimativeKeyDencoderValueMap } from '@dereekb/util';
 import { isValid } from 'date-fns';
-import { FirestoreModelKeyGrantedRoleArrayMap, FirestoreModelKeyGrantedRoleMap } from '../collection';
+import { FirestoreModelKeyGrantedRoleArrayMap } from '../collection';
 import { DocumentSnapshot } from '../types';
 import { snapshotConverterFunctions } from './snapshot';
 import {

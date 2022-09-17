@@ -1,5 +1,4 @@
 import { objectIsEmpty } from './object.empty';
-import { areEqualPOJOValues } from './object.equal';
 
 describe('objectIsEmpty()', () => {
   it('should return false for a simple object.', () => {

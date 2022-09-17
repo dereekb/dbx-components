@@ -1,4 +1,4 @@
-import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { MailgunServiceConfig } from './mailgun.config';
 import { MailgunClient, MailgunMessagesClient } from './mailgun.type';
 import Mailgun from 'mailgun.js';

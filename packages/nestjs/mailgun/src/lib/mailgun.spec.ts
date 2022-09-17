@@ -1,7 +1,4 @@
 import { convertMailgunTemplateEmailRequestToMailgunMessageData } from './mailgun';
-import { MailgunApi } from './mailgun.api';
-import { MailgunServiceConfig } from './mailgun.config';
-import { MailgunService } from './mailgun.service';
 
 const testEmail = 'test.components@dereekb.com';
 const testEmail2 = 'test2.components@dereekb.com';

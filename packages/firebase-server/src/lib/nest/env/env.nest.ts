@@ -1,5 +1,5 @@
 import { serverEnvTokenProvider, SERVER_ENV_TOKEN } from '@dereekb/nestjs';
-import { InjectionToken, Provider } from '@nestjs/common';
+import { InjectionToken } from '@nestjs/common';
 
 // MARK: Compat
 /**

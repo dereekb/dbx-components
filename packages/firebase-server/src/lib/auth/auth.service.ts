@@ -1,10 +1,10 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
-import { FirebaseAuthContextInfo, FirebaseAuthError, FirebaseAuthUserId, FIREBASE_AUTH_USER_NOT_FOUND_ERROR } from '@dereekb/firebase';
+import { FirebaseAuthContextInfo, FirebaseAuthUserId } from '@dereekb/firebase';
 import { ISO8601DateString, Milliseconds, filterUndefinedValues, AUTH_ADMIN_ROLE, AuthClaims, AuthRoleSet, cachedGetter, filterNullAndUndefinedValues, ArrayOrValue, AuthRole, forEachKeyValue, ObjectMap, AuthClaimsUpdate, asSet, KeyValueTypleValueFilter, AuthClaimsObject, Maybe, AUTH_TOS_SIGNED_ROLE, EmailAddress, E164PhoneNumber, randomNumberFactory, PasswordString } from '@dereekb/util';
 import { assertIsContextWithAuthData, CallableContextWithAuthData } from '../function/context';
 import { AuthDataRef, firebaseAuthTokenFromDecodedIdToken } from './auth.context';
-import { hasExpired, hoursToMs, timeHasExpired, toISODateString } from '@dereekb/date';
+import { hoursToMs, timeHasExpired, toISODateString } from '@dereekb/date';
 import { getAuthUserOrUndefined } from './auth.util';
 
 export interface FirebaseServerAuthUserIdentifierContext {
