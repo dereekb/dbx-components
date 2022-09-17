@@ -16,6 +16,13 @@ export abstract class MailgunServiceConfig {
    */
   sender!: EmailParticipantString;
 
+  /**
+   * Additional messages config
+   */
+  messages!: {
+    recipientVariablePrefix?: string | false;
+  };
+
   static assertValidConfig(config: MailgunServiceConfig) {
     if (!config.mailgun.username) {
       throw new Error('No mailgun username specified.');
@@ -25,6 +32,8 @@ export abstract class MailgunServiceConfig {
       throw new Error('No mailgun domain specified.');
     } else if (!config.sender) {
       throw new Error('No mailgun sender specified.');
+    } else if (!config.messages) {
+      throw new Error('No mailgun messages config specified.');
     }
   }
 }

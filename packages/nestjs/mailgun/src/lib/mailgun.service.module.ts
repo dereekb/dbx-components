@@ -1,7 +1,7 @@
 import { ServerEnvironmentService } from '@dereekb/nestjs';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { MailgunUtility } from './mailgun';
+import { convertMailgunRecipientToString } from './mailgun';
 import { MailgunApi } from './mailgun.api';
 import { MailgunServiceConfig } from './mailgun.config';
 import { MailgunService } from './mailgun.service';
@@ -28,6 +28,7 @@ export function mailgunServiceConfigFactory(configService: ConfigService, server
   const name = configService.get<string>('MAILGUN_SENDER_NAME');
   const email = configService.get<string>('MAILGUN_SENDER_EMAIL');
   const url = configService.get<string>('MAILGUN_API_URL');
+  const recipientVariablePrefix = configService.get<string | undefined>('MAILGUN_MESSAGES_RECIPIENT_VARIABLE_PREFIX') ?? undefined;
 
   if (!email) {
     throw new Error('MAILGUN_SENDER_EMAIL is required but was not configured.');
@@ -44,10 +45,13 @@ export function mailgunServiceConfigFactory(configService: ConfigService, server
       url
     },
     domain,
-    sender: MailgunUtility.convertRecipientToString({
+    sender: convertMailgunRecipientToString({
       name,
       email
-    })
+    }),
+    messages: {
+      recipientVariablePrefix
+    }
   };
 
   MailgunServiceConfig.assertValidConfig(config);

@@ -1,8 +1,10 @@
+import { ServerEnvironmentService } from '@dereekb/nestjs';
 import { MailgunApi } from './mailgun.api';
 import { MailgunServiceConfig } from './mailgun.config';
 import { MailgunService } from './mailgun.service';
 
 const testEmail = 'test.components@dereekb.com';
+const testEmail2 = 'test2.components@dereekb.com';
 const templateName = 'test';
 
 // provided in Environment Variables
@@ -21,10 +23,11 @@ describe('MailgunService', () => {
         key: apiKey
       },
       domain,
-      sender: `Mailgun Sandbox <postmaster@${domain}>`
+      sender: `Mailgun Sandbox <postmaster@${domain}>`,
+      messages: {}
     };
     mailgunApi = new MailgunApi(mailgunConfig);
-    mailgunService = new MailgunService(mailgunApi);
+    mailgunService = new MailgunService(mailgunApi, { isTestingEnv: true } as ServerEnvironmentService);
   });
 
   describe('sendTemplateEmail()', () => {
@@ -45,6 +48,44 @@ describe('MailgunService', () => {
       });
 
       expect(result.status).toBe(200);
+    });
+
+    describe('attachments', () => {
+      it('should send an attachment', () => {});
+    });
+
+    describe('multiple recipients', () => {
+      it('should send a test email to multiple recipients.', async () => {
+        const result = await mailgunService.sendTemplateEmail({
+          to: [
+            {
+              email: testEmail,
+              name: 'Test',
+              userVariables: {
+                value: 'a'
+              }
+            },
+            {
+              email: testEmail2,
+              name: 'Test',
+              userVariables: {
+                value: 'b'
+              }
+            }
+          ],
+          subject: 'test',
+          template: templateName,
+          testEmail: true,
+          templateVariables: {
+            test: true,
+            a: 1,
+            b: 2,
+            c: ['d', 'e']
+          }
+        });
+
+        expect(result.status).toBe(200);
+      });
     });
   });
 });
