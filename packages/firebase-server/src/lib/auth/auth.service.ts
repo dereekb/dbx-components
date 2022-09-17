@@ -1,10 +1,10 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
-import { FirebaseAuthContextInfo, FirebaseAuthError, FirebaseAuthUserId, FIREBASE_AUTH_USER_NOT_FOUND_ERROR } from '@dereekb/firebase';
+import { FirebaseAuthContextInfo, FirebaseAuthUserId } from '@dereekb/firebase';
 import { ISO8601DateString, Milliseconds, filterUndefinedValues, AUTH_ADMIN_ROLE, AuthClaims, AuthRoleSet, cachedGetter, filterNullAndUndefinedValues, ArrayOrValue, AuthRole, forEachKeyValue, ObjectMap, AuthClaimsUpdate, asSet, KeyValueTypleValueFilter, AuthClaimsObject, Maybe, AUTH_TOS_SIGNED_ROLE, EmailAddress, E164PhoneNumber, randomNumberFactory, PasswordString } from '@dereekb/util';
 import { assertIsContextWithAuthData, CallableContextWithAuthData } from '../function/context';
 import { AuthDataRef, firebaseAuthTokenFromDecodedIdToken } from './auth.context';
-import { hasExpired, hoursToMs, timeHasExpired, toISODateString } from '@dereekb/date';
+import { hoursToMs, timeHasExpired, toISODateString } from '@dereekb/date';
 import { getAuthUserOrUndefined } from './auth.util';
 
 export interface FirebaseServerAuthUserIdentifierContext {
@@ -263,6 +263,10 @@ export interface FirebaseServerAuthInitializeNewUser {
    */
   readonly uid?: FirebaseAuthUserId;
   /**
+   * User's display name
+   */
+  readonly displayName?: string;
+  /**
    * Email for the new user, if applicable.
    */
   readonly email?: EmailAddress;
@@ -307,7 +311,7 @@ export abstract class AbstractFirebaseServerNewUserService<U extends FirebaseSer
   constructor(readonly authService: FirebaseServerAuthService<U, C>) {}
 
   async initializeNewUser(input: FirebaseServerAuthInitializeNewUser): Promise<admin.auth.UserRecord> {
-    const { uid, email, phone, sendSetupContent: sendSetupEmail } = input;
+    const { uid, displayName, email, phone, sendSetupContent: sendSetupEmail } = input;
 
     let userRecordPromise: Promise<admin.auth.UserRecord>;
 
@@ -410,11 +414,12 @@ export abstract class AbstractFirebaseServerNewUserService<U extends FirebaseSer
   }
 
   protected async createNewUser(input: FirebaseServerAuthInitializeNewUser): Promise<FirebaseServerAuthCreateNewUserResult> {
-    const { uid, email, phone: phoneNumber, setupPassword: inputPassword } = input;
+    const { uid, displayName, email, phone: phoneNumber, setupPassword: inputPassword } = input;
     const password = inputPassword ?? this.generateRandomSetupPassword();
 
     const user = await this.authService.auth.createUser({
       uid,
+      displayName,
       email,
       phoneNumber,
       password
@@ -431,7 +436,7 @@ export abstract class AbstractFirebaseServerNewUserService<U extends FirebaseSer
     return `${x}`;
   }
 
-  protected abstract sendSetupContentToUser(user: Maybe<FirebaseServerAuthNewUserSetupDetails<U>>): Promise<void>;
+  protected abstract sendSetupContentToUser(user: FirebaseServerAuthNewUserSetupDetails<U>): Promise<void>;
 
   protected async updateClaimsToClearUser(userContext: U): Promise<void> {
     await userContext.updateClaims<FirebaseServerAuthNewUserClaims>({
@@ -442,7 +447,7 @@ export abstract class AbstractFirebaseServerNewUserService<U extends FirebaseSer
 }
 
 export class NoSetupContentFirebaseServerNewUserService<U extends FirebaseServerAuthUserContext = FirebaseServerAuthUserContext> extends AbstractFirebaseServerNewUserService<U> {
-  protected async sendSetupContentToUser(user: Maybe<FirebaseServerAuthNewUserSetupDetails<U>>): Promise<void> {
+  protected async sendSetupContentToUser(user: FirebaseServerAuthNewUserSetupDetails<U>): Promise<void> {
     // send nothing.
   }
 }

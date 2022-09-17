@@ -28,6 +28,23 @@
   .package-primary-package-list {
     margin: 4px 0;
   }
+
+  .package-child-package-list {
+    padding-left: 12px;
+    margin: 4px 0;
+
+    .package-child-package {
+      font-size: 0.9em;
+
+      .package-name {
+        font-weight: bold;
+      }
+
+      .package-description {
+        font-size: 0.9em;
+      }
+    }
+  }
 }
 
 .features {

@@ -6,7 +6,7 @@ import * as admin from 'firebase-admin';
 import { Module } from '@nestjs/common';
 import { firebaseServerAuthModuleMetadata } from './auth.module';
 import { authorizedUserContextFactory, firebaseAdminFunctionNestContextFactory, initFirebaseServerAdminTestEnvironment } from '@dereekb/firebase-server/test';
-import { AbstractFirebaseServerAuthContext, AbstractFirebaseServerAuthService, AbstractFirebaseServerAuthUserContext, AbstractFirebaseServerNewUserService, FirebaseServerAuthNewUserSetupDetails, FirebaseServerAuthUserContext, FirebaseServerNewUserService, FIREBASE_SERVER_AUTH_CLAIMS_SETUP_PASSWORD_KEY } from '../../auth/auth.service';
+import { AbstractFirebaseServerAuthContext, AbstractFirebaseServerAuthService, AbstractFirebaseServerAuthUserContext, AbstractFirebaseServerNewUserService, FirebaseServerAuthNewUserSetupDetails, FirebaseServerAuthUserContext, FIREBASE_SERVER_AUTH_CLAIMS_SETUP_PASSWORD_KEY } from '../../auth/auth.service';
 import { AuthClaims, AuthClaimsUpdate, authRoleClaimsService, AuthRoleSet, AUTH_ADMIN_ROLE, AUTH_ROLE_CLAIMS_DEFAULT_CLAIM_VALUE, Maybe, objectHasNoKeys } from '@dereekb/util';
 import { CallableContextWithAuthData } from '../../function/context';
 import { NestContextCallableRequestWithAuth } from '../function/nest';
@@ -274,7 +274,7 @@ describe('firebase server nest auth', () => {
       });
 
       describe('initializeNewUser()', () => {
-        let email = 'test@test.com';
+        const email = 'test@test.com';
 
         it('should initialize a new user', async () => {
           let setupSent = false;
@@ -305,7 +305,7 @@ describe('firebase server nest auth', () => {
       });
 
       describe('newly initialized user', () => {
-        let email = 'inittest@test.com';
+        const email = 'inittest@test.com';
         let initializedUser: admin.auth.UserRecord;
 
         beforeEach(async () => {

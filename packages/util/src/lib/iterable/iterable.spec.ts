@@ -18,7 +18,7 @@ describe('isIterable()', () => {
     expect(isIterable('test')).toBe(false);
   });
 
-  it('should return true for a string if treatStringAsIterable = false', () => {
+  it('should return true for a non-empty string if treatStringAsIterable=true', () => {
     expect(isIterable('test', true)).toBe(true);
   });
 

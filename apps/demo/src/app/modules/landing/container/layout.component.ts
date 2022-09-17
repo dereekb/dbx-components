@@ -6,6 +6,12 @@ export interface LandingItem {
   name: string;
   description: string;
   packages: ClickableAnchorLink[];
+  children?: LandingItemChild[];
+}
+
+export interface LandingItemChild {
+  name: string;
+  description: string;
 }
 
 @Component({
@@ -48,6 +54,17 @@ export class LandingLayoutComponent {
           title: '@angular/material',
           url: 'https://material.angular.io/',
           target: '_blank'
+        },
+        {
+          title: 'ngx-mapbox-gl',
+          url: 'https://github.com/Wykks/ngx-mapbox-gl',
+          target: '_blank'
+        }
+      ],
+      children: [
+        {
+          name: '@dereekb/dbx-web/mapbox',
+          description: 'Mapbox integration'
         }
       ]
     },
@@ -86,6 +103,37 @@ export class LandingLayoutComponent {
           title: 'firebase',
           url: 'https://firebase.google.com/',
           target: '_blank'
+        }
+      ]
+    },
+    {
+      name: '@dereekb/nestjs',
+      description: 'Set of NestJS utilities and modules, primarily webhooks and external API support.',
+      packages: [
+        {
+          title: 'nestjs',
+          url: 'https://nestjs.com/',
+          target: '_blank'
+        },
+        {
+          title: 'mailgun.js',
+          url: 'https://github.com/mailgun/mailgun.js',
+          target: '_blank'
+        },
+        {
+          title: 'stripe-node',
+          url: 'https://github.com/stripe/stripe-node',
+          target: '_blank'
+        }
+      ],
+      children: [
+        {
+          name: '@dereekb/nestjs/stripe',
+          description: 'Stripe webhooks'
+        },
+        {
+          name: '@dereekb/nestjs/mailgun',
+          description: 'Mailgun API'
         }
       ]
     },

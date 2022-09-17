@@ -11,6 +11,11 @@ Example: `nx g @nrwl/node:library firebase --buildable --publishable --importPat
 
 Example: `nx generate @nrwl/angular:library --name=dbx-firebase --buildable --publishable --importPath @dereekb/dbx-firebase`
 
+## Creating a NestJS Library
+
+### Creating a child NestJS Library
+Example: `nx generate @nrwl/nest:library --name=mailgun --buildable --publishable --importPath @dereekb/nestjs/mailgun --directory=nestjs`
+
 # Setting up Firebase for Nx
 These steps were use for setting up firebase for the demo components. Inspiration [from here](https://itnext.io/nx-nest-firebase-the-dream-616e8ee71920).
 
