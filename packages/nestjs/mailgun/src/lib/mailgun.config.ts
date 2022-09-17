@@ -1,13 +1,10 @@
 import { EmailParticipantString } from '@dereekb/util';
 import { MailgunSenderDomainString } from './mailgun';
+import { MailgunOptions } from './mailgun.type';
 
 export abstract class MailgunServiceConfig {
   // Mailgun Config
-  mailgun!: {
-    username: string;
-    key: string;
-    url?: string; // Base URL to send emails from.
-  };
+  mailgun!: MailgunOptions;
 
   /**
    * Main domain to send emails from.
