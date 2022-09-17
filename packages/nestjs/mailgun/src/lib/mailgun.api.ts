@@ -1,11 +1,9 @@
 import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { MailgunServiceConfig } from './mailgun.config';
 import { MailgunClient, MailgunMessagesClient } from './mailgun.type';
-import MailgunClass from 'mailgun.js';
+import Mailgun from 'mailgun.js';
 
 import * as FormData from 'form-data';
-
-const Mailgun: typeof MailgunClass = require('mailgun.js'); // TODO: Check if we can import/use MailgunClass directly.
 
 @Injectable()
 export class MailgunApi {

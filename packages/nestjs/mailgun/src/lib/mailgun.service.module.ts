@@ -28,7 +28,7 @@ export function mailgunServiceConfigFactory(configService: ConfigService, server
   const name = configService.get<string>('MAILGUN_SENDER_NAME');
   const email = configService.get<string>('MAILGUN_SENDER_EMAIL');
   const url = configService.get<string>('MAILGUN_API_URL');
-  const recipientVariablePrefix = configService.get<string | undefined>('MAILGUN_MESSAGES_RECIPIENT_VARIABLE_PREFIX') ?? undefined;
+  const recipientVariablePrefix = configService.get<string | false | undefined>('MAILGUN_MESSAGES_RECIPIENT_VARIABLE_PREFIX') ?? undefined;
 
   if (!email) {
     throw new Error('MAILGUN_SENDER_EMAIL is required but was not configured.');

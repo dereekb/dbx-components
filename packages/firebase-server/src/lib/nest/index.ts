@@ -1,5 +1,6 @@
 export * from './auth';
 export * from './env';
+export * from './extension';
 export * from './firebase';
 export * from './firestore';
 export * from './function';
