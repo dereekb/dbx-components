@@ -1,4 +1,5 @@
 import { ServerEnvironmentService } from '@dereekb/nestjs';
+import { MailgunFileAttachment } from './mailgun';
 import { MailgunApi } from './mailgun.api';
 import { MailgunServiceConfig } from './mailgun.config';
 import { MailgunService } from './mailgun.service';
@@ -51,7 +52,33 @@ describe('MailgunService', () => {
     });
 
     describe('attachments', () => {
-      it('should send an attachment', () => {});
+      it('should send an attachment', async () => {
+        const textFileAttachment: MailgunFileAttachment = {
+          filename: 'test.txt',
+          data: 'helloworld'
+        };
+
+        const result = await mailgunService.sendTemplateEmail({
+          to: {
+            email: testEmail,
+            userVariables: {
+              value: 'a'
+            }
+          },
+          subject: 'test',
+          template: templateName,
+          testEmail: true,
+          templateVariables: {
+            test: true,
+            a: 1,
+            b: 2,
+            c: ['d', 'e']
+          },
+          attachments: textFileAttachment
+        });
+
+        expect(result.status).toBe(200);
+      });
     });
 
     describe('multiple recipients', () => {

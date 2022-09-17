@@ -16,6 +16,17 @@ export interface MailgunEmailRequest {
   subject: string;
 }
 
+export interface MailgunFileAttachment {
+  /**
+   * File name
+   */
+  filename: string;
+  /**
+   * File data as a buffer or string.
+   */
+  data: Buffer | string;
+}
+
 export interface MailgunTemplateEmailParameters {
   /**
    * Mailgun template name.
@@ -32,6 +43,10 @@ export interface MailgunTemplateEmailParameters {
 }
 
 export interface MailgunTemplateEmailRequest extends MailgunEmailRequest, MailgunTemplateEmailParameters {
+  /**
+   * Attachment(s) to send with the email.
+   */
+  attachments?: ArrayOrValue<MailgunFileAttachment>;
   /**
    * Apply custom parameters directly.
    */
@@ -122,6 +137,16 @@ export function convertMailgunTemplateEmailRequestToMailgunMessageData(config: C
         data[`v:${recipientVariableKey}`] = `%recipient.${key}%`;
       });
     }
+  }
+
+  const inputAttachments = request.attachments;
+
+  if (inputAttachments) {
+    if (data.attachment) {
+      throw new Error(`Cannot specify attachments in both messageData and in the request's attachments field.`);
+    }
+
+    data.attachment = inputAttachments;
   }
 
   return data;
