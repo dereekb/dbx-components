@@ -11,7 +11,7 @@
         "tsConfig": "packages/nestjs/mailgun/tsconfig.lib.json",
         "packageJson": "packages/nestjs/mailgun/package.json",
         "main": "packages/nestjs/mailgun/src/index.ts",
-        "assets": ["packages/nestjs/mailgun/*.md", "LICENSE"]
+        "assets": ["LICENSE"]
       },
       "dependsOn": []
     },

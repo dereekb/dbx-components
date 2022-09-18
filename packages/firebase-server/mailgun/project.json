@@ -1,0 +1,34 @@
+{
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/firebase-server/mailgun/src",
+  "projectType": "library",
+  "targets": {
+    "build-base": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/packages/firebase-server/mailgun",
+        "tsConfig": "packages/firebase-server/mailgun/tsconfig.lib.json",
+        "packageJson": "packages/firebase-server/mailgun/package.json",
+        "main": "packages/firebase-server/mailgun/src/index.ts",
+        "assets": []
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["packages/firebase-server/mailgun/**/*.ts"]
+      }
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": ["coverage/packages/firebase-server/mailgun"],
+      "options": {
+        "jestConfig": "packages/firebase-server/mailgun/jest.config.ts",
+        "passWithNoTests": true
+      }
+    }
+  },
+  "tags": []
+}

@@ -1,5 +1,5 @@
 import { MailgunService, MailgunTemplateEmailRequest } from '@dereekb/nestjs/mailgun';
-import { AbstractFirebaseServerNewUserService, FirebaseServerAuthNewUserSetupDetails, FirebaseServerAuthService, FirebaseServerAuthUserContext } from '../../../auth/auth.service';
+import { AbstractFirebaseServerNewUserService, FirebaseServerAuthNewUserSetupDetails, FirebaseServerAuthService, FirebaseServerAuthUserContext } from '@dereekb/firebase-server';
 
 /**
  * MailgunTemplateEmailRequest for AbstractMailgunContentFirebaseServerNewUserService.

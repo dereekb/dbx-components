@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/nestjs",
-  "version": "9.9.0",
+  "version": "9.9.1",
   "type": "commonjs",
   "exports": {
     ".": {
@@ -12,6 +12,11 @@
       "main": "./stripe/index.js",
       "types": "./stripe/index.d.ts",
       "default": "./stripe/index.js"
+    },
+    "./mailgun": {
+      "main": "./mailgun/index.js",
+      "types": "./mailgun/index.d.ts",
+      "default": "./mailgun/index.js"
     }
   }
 }

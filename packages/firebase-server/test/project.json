@@ -11,7 +11,7 @@
         "tsConfig": "packages/firebase-server/test/tsconfig.lib.json",
         "packageJson": "packages/firebase-server/test/package.json",
         "main": "packages/firebase-server/test/src/index.ts",
-        "assets": ["packages/firebase-server/test/*.md"]
+        "assets": []
       },
       "dependsOn": []
     },
