@@ -32,12 +32,6 @@
         "assets": ["packages/nestjs/*.md", "LICENSE"]
       }
     },
-    "publish": {
-      "executor": "@nrwl/workspace:run-commands",
-      "options": {
-        "command": "node tools/scripts/publish.mjs nestjs {args.ver} {args.tag}"
-      }
-    },
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "outputs": ["{options.outputFile}"],

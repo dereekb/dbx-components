@@ -17,6 +17,7 @@
     "demo-firebase": "components/demo-firebase",
     "firebase": "packages/firebase",
     "firebase-server": "packages/firebase-server",
+    "firebase-server-mailgun": "packages/firebase-server/mailgun",
     "firebase-server-test": "packages/firebase-server/test",
     "firebase-test": "packages/firebase/test",
     "model": "packages/model",

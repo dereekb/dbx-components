@@ -17,6 +17,11 @@
       "main": "./test/index.js",
       "types": "./test/index.d.ts",
       "default": "./test/index.js"
+    },
+    "./mailgun": {
+      "main": "./mailgun/index.js",
+      "types": "./mailgun/index.d.ts",
+      "default": "./mailgun/index.js"
     }
   }
 }

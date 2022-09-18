@@ -1,7 +1,6 @@
-# firebase-server
+@dereekb/firebase-server
+=======
 
-This library was generated with [Nx](https://nx.dev).
+The sources for this package are in the main [@dereekb/dbx-components](https://github.com/dereekb/dbx-components) repo. Please file issues and pull requests against that repo.
 
-## Running unit tests
-
-Run `nx test firebase-server` to execute the unit tests via [Jest](https://jestjs.io).
+License: MIT

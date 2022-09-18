@@ -11,7 +11,7 @@
         "tsConfig": "packages/nestjs/stripe/tsconfig.lib.json",
         "packageJson": "packages/nestjs/stripe/package.json",
         "main": "packages/nestjs/stripe/src/index.ts",
-        "assets": ["packages/nestjs/stripe/*.md", "LICENSE"]
+        "assets": ["LICENSE"]
       },
       "dependsOn": []
     },

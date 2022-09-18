@@ -1,11 +1,6 @@
-# nestjs
+@dereekb/nestjs
+=======
 
-This library was generated with [Nx](https://nx.dev).
+The sources for this package are in the main [@dereekb/dbx-components](https://github.com/dereekb/dbx-components) repo. Please file issues and pull requests against that repo.
 
-## Building
-
-Run `nx build nestjs` to build the library.
-
-## Running unit tests
-
-Run `nx test nestjs` to execute the unit tests via [Jest](https://jestjs.io).
+License: MIT
