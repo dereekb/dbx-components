@@ -308,6 +308,10 @@ export interface FirebaseServerNewUserService<D = unknown> {
 }
 
 export const DEFAULT_FIREBASE_PASSWORD_NUMBER_GENERATOR = randomNumberFactory({ min: 100000, max: 1000000 - 1 });
+
+/**
+ * 1 hour
+ */
 export const DEFAULT_SETUP_COM_THROTTLE_TIME = hoursToMs(1);
 
 export abstract class AbstractFirebaseServerNewUserService<U extends FirebaseServerAuthUserContext = FirebaseServerAuthUserContext, C extends FirebaseServerAuthContext = FirebaseServerAuthContext, D = unknown> implements FirebaseServerNewUserService<D> {

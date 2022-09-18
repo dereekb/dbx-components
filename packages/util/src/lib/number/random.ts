@@ -1,7 +1,10 @@
-import { Factory } from './../getter/getter';
+import { NumberFactory } from './factory';
 import { roundingFunction, RoundingInput } from './round';
 
-export type RandomNumberFactory = Factory<number>;
+/**
+ * Factory that generates random numbers.
+ */
+export type RandomNumberFactory = NumberFactory;
 
 /**
  * randomNumberFactory configuration

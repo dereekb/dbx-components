@@ -1,4 +1,6 @@
-import { asGetter, Factory, GetterOrValue } from './../getter/getter';
+import { asGetter, Factory, GetterOrValue } from '../getter/getter';
+
+export type NumberFactory = Factory<number>;
 
 /**
  * incrementingNumberFactory() configuration.
@@ -20,7 +22,7 @@ export interface IncrementingNumberFactoryConfig {
  * @param config
  * @returns
  */
-export function incrementingNumberFactory(config: IncrementingNumberFactoryConfig = {}): Factory<number> {
+export function incrementingNumberFactory(config: IncrementingNumberFactoryConfig = {}): NumberFactory {
   const { startAt: initial, increaseBy: inputIncreaseBy } = config;
   const increaseBy = asGetter(inputIncreaseBy ?? 1);
 
