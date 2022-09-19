@@ -5,7 +5,7 @@ import { StorageBucketId } from '@dereekb/firebase';
 import { DefaultFirebaseServerEnvService, firebaseServerAppTokenProvider, FirebaseServerEnvService, firebaseServerStorageDefaultBucketIdTokenProvider, NestAppPromiseGetter } from '@dereekb/firebase-server';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ArrayOrValue, asArray, asGetter, ClassType, Getter } from '@dereekb/util';
-import { ServerEnvironmentConfig, serverEnvTokenProvider } from '@dereekb/nestjs';
+import { ServerEnvironmentConfig, ServerEnvironmentService, serverEnvTokenProvider } from '@dereekb/nestjs';
 
 // MARK: FirebaseAdminNestTestBuilder
 export interface FirebaseAdminNestTestContext {
@@ -140,10 +140,16 @@ export function firebaseAdminNestContextWithFixture<PI extends FirebaseAdminTest
         providers.push(serverEnvTokenProvider(envConfig || { production: false }));
 
         if (injectServerEnvServiceProvider !== false) {
-          providers.push({
-            provide: FirebaseServerEnvService,
-            useClass: DefaultFirebaseServerEnvService
-          });
+          providers.push(
+            {
+              provide: FirebaseServerEnvService,
+              useClass: DefaultFirebaseServerEnvService
+            },
+            {
+              provide: ServerEnvironmentService,
+              useExisting: FirebaseServerEnvService
+            }
+          );
         }
       }
 

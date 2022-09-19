@@ -10,7 +10,7 @@ import { StorageBucketId } from '@dereekb/firebase';
 import { firebaseServerStorageDefaultBucketIdTokenProvider } from './storage/storage.module';
 import { FirebaseServerEnvService } from '../env/env.service';
 import { DefaultFirebaseServerEnvService } from './env';
-import { ServerEnvironmentConfig, serverEnvTokenProvider } from '@dereekb/nestjs';
+import { ServerEnvironmentConfig, ServerEnvironmentService, serverEnvTokenProvider } from '@dereekb/nestjs';
 
 export interface NestServer {
   server: express.Express;
@@ -99,10 +99,16 @@ export function nestServerInstance<T>(config: NestServerInstanceConfig<T>): Nest
           providers.push(serverEnvTokenProvider(env.environment));
 
           if (config.configureEnvService !== false) {
-            providers.push({
-              provide: FirebaseServerEnvService,
-              useClass: DefaultFirebaseServerEnvService
-            });
+            providers.push(
+              {
+                provide: FirebaseServerEnvService,
+                useClass: DefaultFirebaseServerEnvService
+              },
+              {
+                provide: ServerEnvironmentService,
+                useExisting: FirebaseServerEnvService
+              }
+            );
           }
         }
 
