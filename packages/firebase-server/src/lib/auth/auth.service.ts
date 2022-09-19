@@ -1,10 +1,10 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
-import { FirebaseAuthContextInfo, FirebaseAuthUserId } from '@dereekb/firebase';
+import { FirebaseAuthContextInfo, FirebaseAuthError, FirebaseAuthUserId, FIREBASE_AUTH_USER_NOT_FOUND_ERROR } from '@dereekb/firebase';
 import { ISO8601DateString, Milliseconds, filterUndefinedValues, AUTH_ADMIN_ROLE, AuthClaims, AuthRoleSet, cachedGetter, filterNullAndUndefinedValues, ArrayOrValue, AuthRole, forEachKeyValue, ObjectMap, AuthClaimsUpdate, asSet, KeyValueTypleValueFilter, AuthClaimsObject, Maybe, AUTH_TOS_SIGNED_ROLE, EmailAddress, E164PhoneNumber, randomNumberFactory, PasswordString } from '@dereekb/util';
 import { assertIsContextWithAuthData, CallableContextWithAuthData } from '../function/context';
 import { AuthDataRef, firebaseAuthTokenFromDecodedIdToken } from './auth.context';
-import { hoursToMs, timeHasExpired, toISODateString } from '@dereekb/date';
+import { hasExpired, hoursToMs, timeHasExpired, toISODateString } from '@dereekb/date';
 import { getAuthUserOrUndefined } from './auth.util';
 
 export interface FirebaseServerAuthUserIdentifierContext {
@@ -250,14 +250,14 @@ export interface FirebaseServerAuthNewUserClaims extends AuthClaimsObject {
   /**
    * Setup password time
    */
-  setupPassword: FirebaseServerAuthSetupPassword;
+  readonly setupPassword: FirebaseServerAuthSetupPassword;
   /**
    * Last setup communication time.
    */
-  setupCommunicationAt: ISO8601DateString;
+  readonly setupCommunicationAt: ISO8601DateString;
 }
 
-export interface FirebaseServerAuthInitializeNewUser {
+export interface FirebaseServerAuthInitializeNewUser<D = unknown> {
   /**
    * Specific user identifier to use.
    */
@@ -284,6 +284,10 @@ export interface FirebaseServerAuthInitializeNewUser {
    * Whether or not to send a setup email. Is true by default.
    */
   readonly sendSetupContent?: boolean;
+  /**
+   * Any additional setup context
+   */
+  readonly data?: D;
 }
 
 export interface FirebaseServerAuthCreateNewUserResult {
@@ -291,27 +295,32 @@ export interface FirebaseServerAuthCreateNewUserResult {
   readonly password: FirebaseServerAuthSetupPassword;
 }
 
-export interface FirebaseServerAuthNewUserSetupDetails<U extends FirebaseServerAuthUserContext = FirebaseServerAuthUserContext> {
+export interface FirebaseServerAuthNewUserSetupDetails<U extends FirebaseServerAuthUserContext = FirebaseServerAuthUserContext, D = unknown> {
   readonly userContext: U;
   readonly claims: FirebaseServerAuthNewUserClaims;
+  readonly data?: D;
 }
 
-export interface FirebaseServerNewUserService {
-  initializeNewUser(input: FirebaseServerAuthInitializeNewUser): Promise<admin.auth.UserRecord>;
-  sendSetupContent(uid: FirebaseAuthUserId): Promise<boolean>;
+export interface FirebaseServerNewUserService<D = unknown> {
+  initializeNewUser(input: FirebaseServerAuthInitializeNewUser<D>): Promise<admin.auth.UserRecord>;
+  sendSetupContent(uid: FirebaseAuthUserId, data?: D): Promise<boolean>;
   markUserSetupAsComplete(uid: FirebaseAuthUserId): Promise<boolean>;
 }
 
 export const DEFAULT_FIREBASE_PASSWORD_NUMBER_GENERATOR = randomNumberFactory({ min: 100000, max: 1000000 - 1 });
+
+/**
+ * 1 hour
+ */
 export const DEFAULT_SETUP_COM_THROTTLE_TIME = hoursToMs(1);
 
-export abstract class AbstractFirebaseServerNewUserService<U extends FirebaseServerAuthUserContext = FirebaseServerAuthUserContext, C extends FirebaseServerAuthContext = FirebaseServerAuthContext> implements FirebaseServerNewUserService {
+export abstract class AbstractFirebaseServerNewUserService<U extends FirebaseServerAuthUserContext = FirebaseServerAuthUserContext, C extends FirebaseServerAuthContext = FirebaseServerAuthContext, D = unknown> implements FirebaseServerNewUserService<D> {
   protected setupThrottleTime: Milliseconds = DEFAULT_SETUP_COM_THROTTLE_TIME;
 
   constructor(readonly authService: FirebaseServerAuthService<U, C>) {}
 
-  async initializeNewUser(input: FirebaseServerAuthInitializeNewUser): Promise<admin.auth.UserRecord> {
-    const { uid, displayName, email, phone, sendSetupContent: sendSetupEmail } = input;
+  async initializeNewUser(input: FirebaseServerAuthInitializeNewUser<D>): Promise<admin.auth.UserRecord> {
+    const { uid, email, phone, sendSetupContent: sendSetupEmail } = input;
 
     let userRecordPromise: Promise<admin.auth.UserRecord>;
 
@@ -352,8 +361,8 @@ export abstract class AbstractFirebaseServerNewUserService<U extends FirebaseSer
    *
    * @param uid
    */
-  async sendSetupContent(uid: FirebaseAuthUserId): Promise<boolean> {
-    const setupDetails = await this.loadSetupDetails(uid);
+  async sendSetupContent(uid: FirebaseAuthUserId, data?: D): Promise<boolean> {
+    const setupDetails: Maybe<FirebaseServerAuthNewUserSetupDetails<U, D>> = await this.loadSetupDetails(uid, data);
 
     if (setupDetails) {
       const { setupCommunicationAt } = setupDetails.claims;
@@ -367,10 +376,10 @@ export abstract class AbstractFirebaseServerNewUserService<U extends FirebaseSer
     return false;
   }
 
-  async loadSetupDetails(uid: FirebaseAuthUserId): Promise<Maybe<FirebaseServerAuthNewUserSetupDetails<U>>> {
+  async loadSetupDetails(uid: FirebaseAuthUserId, data?: D): Promise<Maybe<FirebaseServerAuthNewUserSetupDetails<U, D>>> {
     const userContext = this.authService.userContext(uid);
     const userExists = await userContext.exists();
-    let details: Maybe<FirebaseServerAuthNewUserSetupDetails<U>>;
+    let details: Maybe<FirebaseServerAuthNewUserSetupDetails<U, D>>;
 
     if (userExists) {
       const { setupPassword, setupCommunicationAt } = await userContext.loadClaims<FirebaseServerAuthNewUserClaims>();
@@ -381,7 +390,8 @@ export abstract class AbstractFirebaseServerNewUserService<U extends FirebaseSer
           claims: {
             setupPassword,
             setupCommunicationAt
-          }
+          },
+          data
         };
       }
     }
@@ -389,7 +399,7 @@ export abstract class AbstractFirebaseServerNewUserService<U extends FirebaseSer
     return details;
   }
 
-  protected async updateSetupContentSentTime(details: FirebaseServerAuthNewUserSetupDetails<U>): Promise<void> {
+  protected async updateSetupContentSentTime(details: FirebaseServerAuthNewUserSetupDetails<U, D>): Promise<void> {
     await details.userContext.updateClaims<FirebaseServerAuthNewUserClaims>({
       setupCommunicationAt: toISODateString(new Date())
     });
@@ -413,7 +423,7 @@ export abstract class AbstractFirebaseServerNewUserService<U extends FirebaseSer
     return userExists;
   }
 
-  protected async createNewUser(input: FirebaseServerAuthInitializeNewUser): Promise<FirebaseServerAuthCreateNewUserResult> {
+  protected async createNewUser(input: FirebaseServerAuthInitializeNewUser<D>): Promise<FirebaseServerAuthCreateNewUserResult> {
     const { uid, displayName, email, phone: phoneNumber, setupPassword: inputPassword } = input;
     const password = inputPassword ?? this.generateRandomSetupPassword();
 
@@ -436,7 +446,7 @@ export abstract class AbstractFirebaseServerNewUserService<U extends FirebaseSer
     return `${x}`;
   }
 
-  protected abstract sendSetupContentToUser(user: FirebaseServerAuthNewUserSetupDetails<U>): Promise<void>;
+  protected abstract sendSetupContentToUser(user: FirebaseServerAuthNewUserSetupDetails<U, D>): Promise<void>;
 
   protected async updateClaimsToClearUser(userContext: U): Promise<void> {
     await userContext.updateClaims<FirebaseServerAuthNewUserClaims>({
