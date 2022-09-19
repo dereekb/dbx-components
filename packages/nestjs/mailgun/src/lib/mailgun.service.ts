@@ -10,17 +10,26 @@ export class MailgunService {
   async sendTemplateEmail(request: MailgunTemplateEmailRequest): Promise<MailgunEmailMessageSendResult> {
     const domain = this.mailgunApi.domain;
     const sender = this.mailgunApi.sender;
-    const testEnvironment = this.serverEnvironmentService.isTestingEnv;
+    const isTestingEnvironment = this.serverEnvironmentService.isTestingEnv;
     const { recipientVariablePrefix } = this.mailgunApi.config.messages;
-    const data = convertMailgunTemplateEmailRequestToMailgunMessageData({ request, defaultSender: sender, recipientVariablePrefix, testEnvironment });
+    const data = convertMailgunTemplateEmailRequestToMailgunMessageData({ request, defaultSender: sender, recipientVariablePrefix, isTestingEnvironment });
 
-    let result;
+    let result: MailgunEmailMessageSendResult;
 
-    try {
-      result = await this.mailgunApi.messages.create(domain, data);
-    } catch (e) {
-      console.error('Failed sending email: ', e);
-      throw e;
+    const shouldSend = !isTestingEnvironment || request.sendTestEmails || this.mailgunApi.config.messages.sendTestEmails;
+
+    if (shouldSend) {
+      try {
+        result = await this.mailgunApi.messages.create(domain, data);
+      } catch (e) {
+        console.error('Failed sending email: ', e);
+        throw e;
+      }
+    } else {
+      result = {
+        status: 200,
+        message: 'Success. Env prevented sending email.'
+      };
     }
 
     return result;

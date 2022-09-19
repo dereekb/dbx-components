@@ -285,6 +285,10 @@ export interface FirebaseServerAuthInitializeNewUser<D = unknown> {
    */
   readonly sendSetupContent?: boolean;
   /**
+   * Whether or not to force sending the test details.
+   */
+  readonly sendDetailsInTestEnvironment?: boolean;
+  /**
    * Any additional setup context
    */
   readonly data?: D;
@@ -295,10 +299,20 @@ export interface FirebaseServerAuthCreateNewUserResult {
   readonly password: FirebaseServerAuthSetupPassword;
 }
 
-export interface FirebaseServerAuthNewUserSetupDetails<U extends FirebaseServerAuthUserContext = FirebaseServerAuthUserContext, D = unknown> {
+export interface FirebaseServerAuthNewUserSendSetupDetailsConfig<D = unknown> {
+  /**
+   * Whether or not to force sending the test details. Usage differs between providers.
+   */
+  readonly sendDetailsInTestEnvironment?: boolean;
+  /**
+   * Any additional setup context
+   */
+  readonly data?: D;
+}
+
+export interface FirebaseServerAuthNewUserSetupDetails<U extends FirebaseServerAuthUserContext = FirebaseServerAuthUserContext, D = unknown> extends FirebaseServerAuthNewUserSendSetupDetailsConfig<D> {
   readonly userContext: U;
   readonly claims: FirebaseServerAuthNewUserClaims;
-  readonly data?: D;
 }
 
 export interface FirebaseServerNewUserService<D = unknown> {
@@ -320,7 +334,7 @@ export abstract class AbstractFirebaseServerNewUserService<U extends FirebaseSer
   constructor(readonly authService: FirebaseServerAuthService<U, C>) {}
 
   async initializeNewUser(input: FirebaseServerAuthInitializeNewUser<D>): Promise<admin.auth.UserRecord> {
-    const { uid, email, phone, sendSetupContent: sendSetupEmail } = input;
+    const { uid, email, phone, sendSetupContent, data, sendDetailsInTestEnvironment } = input;
 
     let userRecordPromise: Promise<admin.auth.UserRecord>;
 
@@ -345,8 +359,8 @@ export abstract class AbstractFirebaseServerNewUserService<U extends FirebaseSer
         [FIREBASE_SERVER_AUTH_CLAIMS_SETUP_PASSWORD_KEY]: createResult.password
       });
 
-      if (sendSetupEmail !== false) {
-        await this.sendSetupContent(createResult.user.uid);
+      if (sendSetupContent !== false) {
+        await this.sendSetupContent(createResult.user.uid, { data, sendDetailsInTestEnvironment });
       }
 
       // return the new record
@@ -361,8 +375,8 @@ export abstract class AbstractFirebaseServerNewUserService<U extends FirebaseSer
    *
    * @param uid
    */
-  async sendSetupContent(uid: FirebaseAuthUserId, data?: D): Promise<boolean> {
-    const setupDetails: Maybe<FirebaseServerAuthNewUserSetupDetails<U, D>> = await this.loadSetupDetails(uid, data);
+  async sendSetupContent(uid: FirebaseAuthUserId, config?: FirebaseServerAuthNewUserSendSetupDetailsConfig<D>): Promise<boolean> {
+    const setupDetails: Maybe<FirebaseServerAuthNewUserSetupDetails<U, D>> = await this.loadSetupDetails(uid, config);
 
     if (setupDetails) {
       const { setupCommunicationAt } = setupDetails.claims;
@@ -376,7 +390,7 @@ export abstract class AbstractFirebaseServerNewUserService<U extends FirebaseSer
     return false;
   }
 
-  async loadSetupDetails(uid: FirebaseAuthUserId, data?: D): Promise<Maybe<FirebaseServerAuthNewUserSetupDetails<U, D>>> {
+  async loadSetupDetails(uid: FirebaseAuthUserId, config?: FirebaseServerAuthNewUserSendSetupDetailsConfig<D>): Promise<Maybe<FirebaseServerAuthNewUserSetupDetails<U, D>>> {
     const userContext = this.authService.userContext(uid);
     const userExists = await userContext.exists();
     let details: Maybe<FirebaseServerAuthNewUserSetupDetails<U, D>>;
@@ -391,7 +405,8 @@ export abstract class AbstractFirebaseServerNewUserService<U extends FirebaseSer
             setupPassword,
             setupCommunicationAt
           },
-          data
+          data: config?.data,
+          sendDetailsInTestEnvironment: config?.sendDetailsInTestEnvironment
         };
       }
     }
