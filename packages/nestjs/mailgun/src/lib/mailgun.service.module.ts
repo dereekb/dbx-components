@@ -33,9 +33,9 @@ export function mailgunServiceConfigFactory(configService: ConfigService, server
   if (!email) {
     throw new Error('MAILGUN_SENDER_EMAIL is required but was not configured.');
   } else if (!key) {
-    throw new Error('MAILGUN_API_KEY is required but was not configured.');
+    throw new Error('MAILGUN_API_KEY (or MAILGUN_SANDBOX_API_KEY for tests) is required but was not configured.');
   } else if (!domain) {
-    throw new Error('MAILGUN_DOMAIN is required but was not configured.');
+    throw new Error('MAILGUN_DOMAIN (or MAILGUN_SANDBOX_DOMAIN for tests) is required but was not configured.');
   }
 
   const config: MailgunServiceConfig = {
