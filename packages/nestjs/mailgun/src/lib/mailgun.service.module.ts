@@ -7,7 +7,9 @@ import { MailgunServiceConfig } from './mailgun.config';
 import { MailgunService } from './mailgun.service';
 
 export function mailgunServiceConfigFactory(configService: ConfigService, serverEnvironmentService: ServerEnvironmentService): MailgunServiceConfig {
-  const useSandbox = configService.get<boolean>('USE_MAILGUN_SANDBOX') ?? serverEnvironmentService.isTestingEnv;
+  const isTestingEnv = serverEnvironmentService.isTestingEnv;
+  const useSandbox = configService.get<boolean>('USE_MAILGUN_SANDBOX') ?? isTestingEnv;
+  const sendTestEmails = configService.get<boolean>('MAILGUN_SEND_TEST_EMAILS') || false;
 
   let key = configService.get<string>('MAILGUN_API_KEY');
   let domain = configService.get<string>('MAILGUN_DOMAIN');
@@ -50,6 +52,7 @@ export function mailgunServiceConfigFactory(configService: ConfigService, server
       email
     }),
     messages: {
+      sendTestEmails,
       recipientVariablePrefix
     }
   };

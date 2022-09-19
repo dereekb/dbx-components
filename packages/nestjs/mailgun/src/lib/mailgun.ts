@@ -37,9 +37,13 @@ export interface MailgunTemplateEmailParameters {
    */
   templateVariables?: Record<string, any>;
   /**
-   * Sends a test email to the Mailgun API
+   * Whether or not this is considered a test email.
    */
   testEmail?: boolean;
+  /**
+   * Overrides the global configuration for sending test emails to force sending. Useful when debugging specific tests.
+   */
+  sendTestEmails?: true | undefined;
 }
 
 export interface MailgunTemplateEmailRequest extends MailgunEmailRequest, MailgunTemplateEmailParameters {
@@ -62,11 +66,11 @@ export interface ConvertMailgunTemplateEmailRequestToMailgunMessageDataConfig {
   readonly request: MailgunTemplateEmailRequest;
   readonly defaultSender?: string;
   readonly recipientVariablePrefix?: Maybe<string | false>;
-  readonly testEnvironment?: boolean;
+  readonly isTestingEnvironment?: boolean;
 }
 
 export function convertMailgunTemplateEmailRequestToMailgunMessageData(config: ConvertMailgunTemplateEmailRequestToMailgunMessageDataConfig): MailgunMessageData {
-  const { request, defaultSender, testEnvironment, recipientVariablePrefix = DEFAULT_RECIPIENT_VARIABLE_PREFIX } = config;
+  const { request, defaultSender, isTestingEnvironment: testEnvironment, recipientVariablePrefix = DEFAULT_RECIPIENT_VARIABLE_PREFIX } = config;
   const toInput = asArray(request.to).map((x) => ({ ...x, email: x.email.toLowerCase() }));
 
   const from = request.from ? convertMailgunRecipientToString(request.from) : defaultSender;

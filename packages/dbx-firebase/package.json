@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/dbx-firebase",
-  "version": "9.9.3",
+  "version": "9.9.4",
   "peerDependencies": {
     "@angular/common": "^14.0.0",
     "@angular/core": "^14.0.0"

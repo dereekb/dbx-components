@@ -1,5 +1,5 @@
 import { MailgunService, MailgunTemplateEmailRequest } from '@dereekb/nestjs/mailgun';
-import { AbstractFirebaseServerNewUserService, FirebaseServerAuthNewUserSetupDetails, FirebaseServerAuthService, FirebaseServerAuthUserContext } from '@dereekb/firebase-server';
+import { AbstractFirebaseServerNewUserService, FirebaseServerAuthContext, FirebaseServerAuthNewUserSetupDetails, FirebaseServerAuthService, FirebaseServerAuthUserContext } from '@dereekb/firebase-server';
 
 /**
  * MailgunTemplateEmailRequest for AbstractMailgunContentFirebaseServerNewUserService.
@@ -11,12 +11,12 @@ export type NewUserMailgunContentRequest = Omit<MailgunTemplateEmailRequest, 'to
 /**
  * Abstract FirebaseServerNewUserService implementation that sends an email to a template on Mailgun.
  */
-export abstract class AbstractMailgunContentFirebaseServerNewUserService<U extends FirebaseServerAuthUserContext = FirebaseServerAuthUserContext> extends AbstractFirebaseServerNewUserService<U> {
-  constructor(authService: FirebaseServerAuthService<U>, readonly mailgunService: MailgunService) {
+export abstract class AbstractMailgunContentFirebaseServerNewUserService<U extends FirebaseServerAuthUserContext = FirebaseServerAuthUserContext, C extends FirebaseServerAuthContext = FirebaseServerAuthContext, D extends unknown = unknown> extends AbstractFirebaseServerNewUserService<U, C, D> {
+  constructor(authService: FirebaseServerAuthService<U, C>, readonly mailgunService: MailgunService) {
     super(authService);
   }
 
-  protected async sendSetupContentToUser(user: FirebaseServerAuthNewUserSetupDetails<U>): Promise<void> {
+  protected async sendSetupContentToUser(user: FirebaseServerAuthNewUserSetupDetails<U, D>): Promise<void> {
     const userRecord = await user.userContext.loadRecord();
     const { setupPassword } = user.claims;
     const { uid, displayName, email } = userRecord;
@@ -35,9 +35,10 @@ export abstract class AbstractMailgunContentFirebaseServerNewUserService<U exten
           displayName,
           setupPassword
         }
-      }
+      },
+      sendTestEmails: user.sendDetailsInTestEnvironment || undefined
     });
   }
 
-  protected abstract buildNewUserMailgunContentRequest(user: FirebaseServerAuthNewUserSetupDetails<U>): Promise<NewUserMailgunContentRequest>;
+  protected abstract buildNewUserMailgunContentRequest(user: FirebaseServerAuthNewUserSetupDetails<U, D>): Promise<NewUserMailgunContentRequest>;
 }

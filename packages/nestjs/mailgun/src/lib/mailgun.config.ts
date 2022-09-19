@@ -20,6 +20,17 @@ export abstract class MailgunServiceConfig {
    * Additional messages config
    */
   messages!: {
+    /**
+     * Whether or not to send test emails to Mailgun. Defaults to false.
+     *
+     * NOTE: Mailgun charges for any sent testmode emails to non-sandbox domains.
+     */
+    sendTestEmails?: boolean;
+    /**
+     * Global recipient variable prefix to use in emails. Adds each recipient variable to the template variables list with the given prefix.
+     *
+     * If false, the recipient variables are not added to the variables list.
+     */
     recipientVariablePrefix?: string | false;
   };
 
