@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [9.9.5](https://github.com/dereekb/dbx-components/compare/v9.9.4-dev...v9.9.5) (2022-09-19)
+
+
+### Bug Fixes
+
+* fixed primativeKeyStringDencoder() decoding ([427faf1](https://github.com/dereekb/dbx-components/commit/427faf1052163eedd84c84fdcaf83e62d0e627dd))
+
+
+
 ## [9.9.4](https://github.com/dereekb/dbx-components/compare/v9.9.3-dev...v9.9.4) (2022-09-19)
 
 
