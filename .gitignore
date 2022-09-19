@@ -7,7 +7,7 @@
 
 # env
 # do not publish secrets
-.env.secret
+.env.local
 
 # dependencies
 /node_modules
