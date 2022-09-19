@@ -1,5 +1,5 @@
 import { FirebaseAuthUserId } from '@dereekb/firebase';
-import { RemoveIndex, incrementingNumberFactory, mapGetter, asGetter, Factory, GetterOrValue, PromiseOrValue } from '@dereekb/util';
+import { RemoveIndex, incrementingNumberFactory, mapGetter, asGetter, Factory, GetterOrValue, PromiseOrValue, EmailAddress, E164PhoneNumber, randomEmailFactory, randomPhoneNumberFactory } from '@dereekb/util';
 import { AbstractChildJestTestContextFixture, JestTestContextFixture, useJestContextFixture } from '@dereekb/util/test';
 import { FirebaseAdminTestContext } from './firebase.admin';
 import { CreateRequest } from 'firebase-admin/lib/auth/auth-config';
@@ -60,6 +60,14 @@ export class AuthorizedUserTestContextInstance<PI extends FirebaseAdminTestConte
 
   loadUserRecord(): Promise<UserRecord> {
     return this.testContext.auth.getUser(this.uid);
+  }
+
+  async loadUserEmailAndPhone(): Promise<{ email: EmailAddress; phone?: E164PhoneNumber }> {
+    const record = await this.loadUserRecord();
+    return {
+      email: record.email as string,
+      phone: record.phoneNumber as E164PhoneNumber
+    };
   }
 
   loadIdToken(): Promise<string> {
@@ -140,14 +148,21 @@ export type AuthorizedUserTestContextFactoryConfig<PI extends FirebaseAdminTestC
 
 export interface AuthorizedUserTestContextFactoryParams<PI extends FirebaseAdminTestContext = FirebaseAdminTestContext, PF extends JestTestContextFixture<PI> = JestTestContextFixture<PI>> {
   f: PF;
-
   user?: CreateRequest;
-
+  /**
+   * Whether or not to add contact info. Is false by default.
+   *
+   * Any generated contact info will be overwritten by the input template.
+   */
+  addContactInfo?: boolean;
   /**
    * Optional template details.
    */
   template?: AuthorizedUserTestContextDetailsTemplate;
 }
+
+export const AUTHORIZED_USER_RANDOM_EMAIL_FACTORY = randomEmailFactory();
+export const AUTHORIZED_USER_RANDOM_PHONE_NUMBER_FACTORY = randomPhoneNumberFactory();
 
 /**
  * Creates a new Jest Context that has a random user for authorization for use in firebase server tests.
@@ -159,7 +174,7 @@ export function authorizedUserContextFactory<PI extends FirebaseAdminTestContext
   const makeUid = uidGetter ? asGetter(uidGetter) : testUidFactory;
 
   return (params: C, buildTests: (u: F) => void) => {
-    const { f, user: inputUser } = params;
+    const { f, user: inputUser, addContactInfo } = params;
 
     return useJestContextFixture<F, I>({
       fixture: makeFixture(f) as F,
@@ -169,9 +184,19 @@ export function authorizedUserContextFactory<PI extends FirebaseAdminTestContext
         const { details, claims } = { ...makeUserDetails(uid, params), ...params.template };
         const auth = f.instance.auth;
 
+        let email: EmailAddress | undefined;
+        let phoneNumber: E164PhoneNumber | undefined;
+
+        if (addContactInfo) {
+          email = AUTHORIZED_USER_RANDOM_EMAIL_FACTORY();
+          phoneNumber = AUTHORIZED_USER_RANDOM_PHONE_NUMBER_FACTORY();
+        }
+
         const userRecord = await auth.createUser({
           uid,
           displayName: 'Test Person',
+          email,
+          phoneNumber,
           ...details,
           ...inputUser
         });
