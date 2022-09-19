@@ -9,9 +9,9 @@
       "default": "./src/index.js"
     },
     "./test": {
-      "main": "./test/index.js",
-      "types": "./test/index.d.ts",
-      "default": "./test/index.js"
+      "main": "./test/src/index.js",
+      "types": "./test/src/index.d.ts",
+      "default": "./test/src/index.js"
     }
   },
   "peerDependencies": {

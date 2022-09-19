@@ -9,14 +9,14 @@
       "default": "./src/index.js"
     },
     "./stripe": {
-      "main": "./stripe/index.js",
-      "types": "./stripe/index.d.ts",
-      "default": "./stripe/index.js"
+      "main": "./stripe/src/index.js",
+      "types": "./stripe/src/index.d.ts",
+      "default": "./stripe/src/index.js"
     },
     "./mailgun": {
-      "main": "./mailgun/index.js",
-      "types": "./mailgun/index.d.ts",
-      "default": "./mailgun/index.js"
+      "main": "./mailgun/src/index.js",
+      "types": "./mailgun/src/index.d.ts",
+      "default": "./mailgun/src/index.js"
     }
   }
 }
