@@ -18,7 +18,7 @@ Run `npm install` to install all dependencies. It is also important that you ins
 
 This project's workspace is designed to run in a Unix-like environment. Development in a Windows environment is not tested/supported.
 
-Make sure you create a `.env.secret` file. The npm postinstall setup process should take care of this for you, but if you get an error then create it.
+Make sure you create a `.env.local` file. The npm postinstall setup process should take care of this for you, but if you get an error then create it.
 
 ## Build
 

@@ -36,13 +36,13 @@
     "run-emulators": {
       "executor": "@nrwl/workspace:run-commands",
       "options": {
-        "command": "npx env-cmd -f .env.secret --use-shell 'npx firebase --project=default emulators:start --import=/root/data/emulators --export-on-exit'"
+        "command": "npx env-cmd -f .env.local --use-shell 'npx firebase --project=default emulators:start --import=/root/data/emulators --export-on-exit'"
       }
     },
     "watch-emulators": {
       "executor": "@nrwl/workspace:run-commands",
       "options": {
-        "command": "echo 'starting server in 5...'; sleep 5; while sleep 2; do find API_APP_DIST_FOLDER | entr -r -s './wait-for-ports.sh && npx env-cmd -f .env.secret --use-shell npx firebase --project=default emulators:start --import=/root/data/emulators --export-on-exit'; done"
+        "command": "echo 'starting server in 5...'; sleep 5; while sleep 2; do find API_APP_DIST_FOLDER | entr -r -s './wait-for-ports.sh && npx env-cmd -f .env.local --use-shell npx firebase --project=default emulators:start --import=/root/data/emulators --export-on-exit'; done"
       }
     },
     "serve": {

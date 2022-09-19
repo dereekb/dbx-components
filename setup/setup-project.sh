@@ -325,7 +325,7 @@ curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/.en
 sed -e "s/9910/$ANGULAR_APP_PORT/g" .env.tmp > .env
 rm .env.tmp
 
-echo "SECRETS=" > .env.secret
+echo "SECRETS=" > .env.local
 
 git add --all
 git commit --no-verify -m "checkpoint: added Docker files and other utility files"
