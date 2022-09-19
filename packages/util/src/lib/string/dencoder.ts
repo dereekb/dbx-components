@@ -1,4 +1,4 @@
-import { FactoryWithRequiredInput, forEachKeyValue, KeyValueTypleValueFilter, PrimativeKey, ArrayOrValue, Maybe, filterMaybeValues } from '@dereekb/util';
+import { FactoryWithRequiredInput, forEachKeyValue, KeyValueTypleValueFilter, PrimativeKey, ArrayOrValue, Maybe, filterMaybeValues, iterableToArray } from '@dereekb/util';
 import { Writable } from 'ts-essentials';
 
 /**
@@ -155,7 +155,7 @@ export function primativeKeyStringDencoder<D extends PrimativeKey, E extends Pri
 
   const joiner = splitter || '';
 
-  const splitEncodedValues = splitter ? (encodedValues: string) => encodedValues.split(splitter) : (encodedValues: string) => new Array(encodedValues);
+  const splitEncodedValues = splitter ? (encodedValues: string) => encodedValues.split(splitter) : (encodedValues: string) => Array.from(encodedValues);
 
   return (input: string | (E | D)[]) => {
     if (typeof input === 'string') {
