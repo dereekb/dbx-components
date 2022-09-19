@@ -21,6 +21,7 @@ export interface AuthorizedUserTestContext {
   readonly uid: FirebaseAuthUserId;
   loadUserRecord(): Promise<UserRecord>;
   loadIdToken(): Promise<string>;
+  loadUserEmailAndPhone(): Promise<{ email: EmailAddress; phone?: E164PhoneNumber }>;
   loadDecodedIdToken(): Promise<DecodedIdToken>;
   makeContextOptions(): Promise<ContextOptions>;
   callCloudFunction<F extends CallCloudFunction, O = unknown>(fn: F, params: CallCloudFunctionParams<F>): Promise<O>;
@@ -34,6 +35,10 @@ export class AuthorizedUserTestContextFixture<PI extends FirebaseAdminTestContex
 
   loadUserRecord(): Promise<UserRecord> {
     return this.instance.loadUserRecord();
+  }
+
+  loadUserEmailAndPhone() {
+    return this.instance.loadUserEmailAndPhone();
   }
 
   loadIdToken(): Promise<string> {
@@ -103,6 +108,12 @@ export interface AuthorizedUserTestContextDetailsTemplate {
    * Custom claims object to add to a user's tokens.
    */
   claims?: object;
+  /**
+   * Whether or not to add contact info. Is false by default.
+   *
+   * Any generated contact info will be overwritten by the input template.
+   */
+  addContactInfo?: boolean;
 }
 
 /**
@@ -174,14 +185,15 @@ export function authorizedUserContextFactory<PI extends FirebaseAdminTestContext
   const makeUid = uidGetter ? asGetter(uidGetter) : testUidFactory;
 
   return (params: C, buildTests: (u: F) => void) => {
-    const { f, user: inputUser, addContactInfo } = params;
+    const { f, user: inputUser, addContactInfo: inputAddContactInfo } = params;
 
     return useJestContextFixture<F, I>({
       fixture: makeFixture(f) as F,
       buildTests,
       initInstance: async () => {
         const uid = inputUser?.uid || makeUid();
-        const { details, claims } = { ...makeUserDetails(uid, params), ...params.template };
+        const { details, claims, addContactInfo: userDetailsAddContactInfo } = { ...makeUserDetails(uid, params), ...params.template };
+        const addContactInfo = inputAddContactInfo || userDetailsAddContactInfo;
         const auth = f.instance.auth;
 
         let email: EmailAddress | undefined;

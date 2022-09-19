@@ -43,7 +43,7 @@ export interface MailgunTemplateEmailParameters {
   /**
    * Overrides the global configuration for sending test emails to force sending. Useful when debugging specific tests.
    */
-  sendTestEmails?: true;
+  sendTestEmails?: true | undefined;
 }
 
 export interface MailgunTemplateEmailRequest extends MailgunEmailRequest, MailgunTemplateEmailParameters {
