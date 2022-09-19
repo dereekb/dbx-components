@@ -419,24 +419,69 @@ describe('firestoreDencoderArray()', () => {
   });
 });
 
+export type TestDencoderRole = GrantedReadRole | GrantedUpdateRole;
+
+export enum TestDencoderRoleCodes {
+  READ = 'r',
+  UPDATE = 'u'
+}
+
+export const ROLE_CODE_MAP: PrimativeKeyDencoderValueMap<TestDencoderRole, TestDencoderRoleCodes> = {
+  r: 'read',
+  u: 'update'
+};
+
+export const ROLE_DENCODER = primativeKeyStringDencoder({
+  dencoder: primativeKeyDencoder({
+    values: ROLE_CODE_MAP
+  })
+});
+
+export interface TestDencoderStringArrayObject {
+  value: TestDencoderRole[];
+}
+
 describe('firestoreDencoderStringArray()', () => {
-  const firestoreMapConfig = firestoreDencoderStringArray<number, string>({
-    dencoder: primativeKeyStringDencoder<number, string>({
-      dencoder: {
-        values: {
-          a: 0,
-          b: 1
-        }
-      }
-    })
+  const firestoreDencoderField = firestoreDencoderStringArray({
+    dencoder: ROLE_DENCODER
   });
 
   it('should encode the values.', () => {
-    const test = [0, 1, 2];
-    const results = firestoreMapConfig.to.convert(test);
+    const test: TestDencoderRole[] = ['read', 'update'];
+    const results = firestoreDencoderField.to.convert(test);
 
     expect(results).toBeDefined();
-    expect(results).toBe('ab');
+    expect(results).toBe('ru');
+  });
+
+  describe('converter', () => {
+    const converter = snapshotConverterFunctions<TestDencoderStringArrayObject>({
+      fields: {
+        value: firestoreDencoderField
+      }
+    });
+
+    it('should encode the values.', () => {
+      const object: TestDencoderStringArrayObject = {
+        value: ['read', 'update']
+      };
+
+      const result = converter.to(object);
+
+      expect(result.value).toBe('ru');
+    });
+
+    it('should decode the values.', () => {
+      const object: TestDencoderStringArrayObject = {
+        value: ['read', 'update']
+      };
+
+      const encoded = converter.to(object);
+      const decoded = converter.mapFunctions.from(encoded);
+
+      expect(decoded.value).toContain('read');
+      expect(decoded.value).toContain('update');
+    });
   });
 });
 

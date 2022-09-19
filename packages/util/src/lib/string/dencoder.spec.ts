@@ -118,6 +118,16 @@ describe('primativeKeyStringDencoder()', () => {
         const result = fn(input);
         expect(result).toBe(`${TestEncodedValuesShort.TEST_A}${TestEncodedValuesShort.TEST_B}`);
       });
+
+      it('should encode and decode the input values', () => {
+        const input = ['testa', 'testb'];
+
+        const encoded = fn(input);
+        const decoded = fn(encoded);
+
+        expect(decoded).toContain(input[0]);
+        expect(decoded).toContain(input[1]);
+      });
     });
   });
 
@@ -148,6 +158,16 @@ describe('primativeKeyStringDencoder()', () => {
 
         const result = fn(input);
         expect(result).toBe(`${TestEncodedValuesLong.TEST_A_L}${splitter}${TestEncodedValuesLong.TEST_B_L}`);
+      });
+
+      it('should encode and decode the input values', () => {
+        const input = ['testa', 'testb'];
+
+        const encoded = fn(input);
+        const decoded = fn(encoded);
+
+        expect(decoded).toContain(input[0]);
+        expect(decoded).toContain(input[1]);
       });
     });
   });
