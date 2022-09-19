@@ -1,5 +1,5 @@
-import { isEmail } from 'class-validator';
-import { randomEmailFactory } from './random';
+import { isEmail, isPhoneNumber } from 'class-validator';
+import { randomEmailFactory, randomPhoneNumberFactory } from './random';
 
 describe('randomEmailFactory()', () => {
   describe('function', () => {
@@ -13,6 +13,20 @@ describe('randomEmailFactory()', () => {
 
       expect(result).toBeDefined();
       expect(isEmail(result)).toBe(true);
+    });
+  });
+});
+
+describe('randomPhoneNumberFactory()', () => {
+  describe('function', () => {
+    const factory = randomPhoneNumberFactory({
+      internationalAreaCodes: [1210]
+    });
+
+    it('should generate a valid phone number.', () => {
+      const result = factory();
+      expect(result).toBeDefined();
+      expect(isPhoneNumber(result)).toBe(true);
     });
   });
 });
