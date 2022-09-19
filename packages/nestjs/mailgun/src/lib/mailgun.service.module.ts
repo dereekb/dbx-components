@@ -7,7 +7,7 @@ import { MailgunServiceConfig } from './mailgun.config';
 import { MailgunService } from './mailgun.service';
 
 export function mailgunServiceConfigFactory(configService: ConfigService, serverEnvironmentService: ServerEnvironmentService): MailgunServiceConfig {
-  const useSandbox = configService.get<boolean>('USE_MAILGUN_SANDBOX') ?? false;
+  const useSandbox = configService.get<boolean>('USE_MAILGUN_SANDBOX') ?? serverEnvironmentService.isTestingEnv;
 
   let key = configService.get<string>('MAILGUN_API_KEY');
   let domain = configService.get<string>('MAILGUN_DOMAIN');
