@@ -12,3 +12,4 @@ export * from './date.time';
 export * from './date.timezone';
 export * from './date';
 export * from './date.unix';
+export * from './date.week';
