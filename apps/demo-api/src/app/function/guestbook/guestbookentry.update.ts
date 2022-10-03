@@ -1,8 +1,8 @@
 import { UpdateGuestbookEntryParams } from '@dereekb/demo-firebase';
-import { DemoUpdateModelfunction } from '../function';
+import { DemoUpdateModelFunction } from '../function';
 import { guestbookEntryForUser } from './guestbook.util';
 
-export const updateGuestbookEntry: DemoUpdateModelfunction<UpdateGuestbookEntryParams> = async (request) => {
+export const updateGuestbookEntry: DemoUpdateModelFunction<UpdateGuestbookEntryParams> = async (request) => {
   const { nest, auth, data } = request;
   const guestbookEntryUpdateEntry = await nest.guestbookActions.updateGuestbookEntry(data);
 
