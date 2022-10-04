@@ -1,7 +1,6 @@
 import { AsyncDecisionFunction, CronExpression, cronExpressionRepeatingEveryNMinutes, mapObjectMap, MappedObjectMap, Minutes } from '@dereekb/util';
 import { scheduleJob, Job, RecurrenceRule } from 'node-schedule';
 import { NestApplicationScheduleConfiguredFunction } from './schedule';
-import { PubSub } from '@google-cloud/pubsub';
 
 // MARK: Utilities
 export type NestApplicationScheduleConfiguredFunctionMap = {

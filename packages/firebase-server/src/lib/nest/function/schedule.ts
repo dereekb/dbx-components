@@ -73,3 +73,5 @@ export type NestApplicationScheduleConfiguredFunction<F extends object = object>
 };
 
 export type NestApplicationScheduleConfiguredFunctionFactory<F extends object = object> = NestApplicationFunctionFactory<NestApplicationScheduleConfiguredFunction<F>>;
+
+export type NestApplicationScheduleConfiguredFunctionMap = Record<string, NestApplicationScheduleConfiguredFunction>;

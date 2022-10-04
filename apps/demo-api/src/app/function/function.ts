@@ -16,7 +16,9 @@ import {
   OnCallCreateModelMap,
   onScheduleWithNestApplicationFactory,
   onScheduleWithNestContextFactory,
-  OnScheduleWithNestContext
+  OnScheduleWithNestContext,
+  OnCallDevelopmentFunction,
+  OnCallDevelopmentFunctionMap
 } from '@dereekb/firebase-server';
 import { OnCallCreateModelResult } from '@dereekb/firebase';
 import { ProfileServerActions, GuestbookServerActions, DemoApiAuthService, DemoFirebaseServerActionsContext } from '../common';
@@ -71,4 +73,9 @@ export type DemoOnCallUpdateModelMap = OnCallUpdateModelMap<DemoApiNestContext, 
 export type DemoDeleteModelFunction<I, O = void> = OnCallDeleteModelFunction<DemoApiNestContext, I, O>;
 export type DemoOnCallDeleteModelMap = OnCallDeleteModelMap<DemoApiNestContext, DemoFirebaseModelTypes>;
 
+// MARK: Schedule Functions
 export type DemoScheduleFunction = OnScheduleWithNestContext<DemoApiNestContext>;
+
+// MARK: Development Functions
+export type DemoDevelopmentFunction<I = unknown, O = void> = OnCallDevelopmentFunction<DemoApiNestContext, I, O>;
+export type DemoOnCallDevelopmentFunctionMap = OnCallDevelopmentFunctionMap<DemoApiNestContext>;

@@ -3,6 +3,9 @@ import 'reflect-metadata';
 import { onRequest } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
 import { allAppFunctions, allScheduledAppFunctions, initNestServer } from './app/app';
+import { demoDevelopmentFunctionMap } from './app/function/model/development.functions';
+import { firebaseServerDevFunctions } from '@dereekb/firebase-server';
+import { onCallWithDemoNestContext } from './app/function/function';
 
 const app = admin.initializeApp();
 
@@ -14,6 +17,14 @@ export const api = onRequest(server);
 export const { initUserOnCreate, profileSetUsername, createModel, updateModel, deleteModel } = allAppFunctions(nest);
 
 // Scheduled Functions
-const scheduledFunctions = allScheduledAppFunctions(nest);
+const allScheduledFunctions = allScheduledAppFunctions(nest);
+export const { exampleSchedule } = allScheduledFunctions;
 
-export const { exampleSchedule } = scheduledFunctions;
+// Admin/Developer Functions
+export const { dev } = firebaseServerDevFunctions({
+  enabled: true,
+  nest,
+  developerFunctionsMap: demoDevelopmentFunctionMap,
+  onCallFactory: onCallWithDemoNestContext,
+  allScheduledFunctions
+});
