@@ -1,6 +1,6 @@
 import { ScheduledFunctionDevelopmentFirebaseFunctionListEntry, ScheduledFunctionDevelopmentFirebaseFunctionParams, ScheduledFunctionDevelopmentFirebaseFunctionResult } from '@dereekb/firebase';
 import { forEachKeyValue, cachedGetter } from '@dereekb/util';
-import { NestApplicationScheduleConfiguredFunctionMap } from '../function/schedule.util';
+import { NestApplicationScheduleConfiguredFunctionMap } from '../function/schedule';
 import { OnCallDevelopmentFunction } from './development.function';
 import { noRunNameSpecifiedForScheduledFunctionDevelopmentFunction, unknownScheduledFunctionDevelopmentFunctionName, unknownScheduledFunctionDevelopmentFunctionType } from './development.schedule.function.error';
 
@@ -35,7 +35,7 @@ export function makeScheduledFunctionDevelopmentFunction(config: MakeScheduledFu
         const targetRunName = data.run;
 
         if (!targetRunName) {
-          throw noRunNameSpecifiedForScheduledFunctionDevelopmentFunction(type);
+          throw noRunNameSpecifiedForScheduledFunctionDevelopmentFunction();
         }
 
         const targetFunction = allScheduledFunctions[targetRunName];

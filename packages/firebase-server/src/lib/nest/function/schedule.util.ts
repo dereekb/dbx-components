@@ -1,12 +1,8 @@
 import { AsyncDecisionFunction, CronExpression, cronExpressionRepeatingEveryNMinutes, mapObjectMap, MappedObjectMap, Minutes } from '@dereekb/util';
 import { scheduleJob, Job, RecurrenceRule } from 'node-schedule';
-import { NestApplicationScheduleConfiguredFunction } from './schedule';
+import { NestApplicationScheduleConfiguredFunctionMap } from './schedule';
 
 // MARK: Utilities
-export type NestApplicationScheduleConfiguredFunctionMap = {
-  [key: string]: NestApplicationScheduleConfiguredFunction;
-};
-
 export type NestApplicationScheduleConfiguredFunctionJobMap<T extends NestApplicationScheduleConfiguredFunctionMap> = MappedObjectMap<T, Job>;
 
 export type ScheduledRecurrenceValue = Minutes | CronExpression | RecurrenceRule;

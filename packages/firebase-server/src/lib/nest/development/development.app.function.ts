@@ -2,7 +2,7 @@ import { inAuthContext } from '@dereekb/firebase-server';
 import { OnCallDevelopmentParams, SCHEDULED_FUNCTION_DEV_FUNCTION_SPECIFIER } from '@dereekb/firebase';
 import { CallableHttpFunction, RunnableHttpFunction } from '../../function/type';
 import { NestAppPromiseGetter } from '../app';
-import { NestApplicationScheduleConfiguredFunctionMap } from '../function/schedule.util';
+import { NestApplicationScheduleConfiguredFunctionMap } from '../function/schedule';
 import { OnCallWithNestContextFactory } from '../function/v1/call';
 import { OnCallHandlerWithNestContextFactory } from '../function/v2/call';
 import { AbstractFirebaseNestContext } from '../nest.provider';
@@ -19,7 +19,13 @@ export interface FirebaseServerDevFunctionsConfig<N extends AbstractFirebaseNest
   readonly nest: NestAppPromiseGetter;
   readonly developerFunctionsMap: OnCallDevelopmentFunctionMap<N>;
   readonly onCallFactory: OnCallWithNestContextFactory<N> | OnCallHandlerWithNestContextFactory<N>;
+  /**
+   * Whether or not to disable adding the dev schedule function. False by default.
+   */
   readonly disableDevelopmentScheduleFunction?: boolean;
+  /**
+   * Map of all scheduled functions. Used by the dev schedule function. If not provided, the dev schedule function is not generated.
+   */
   readonly allScheduledFunctions?: S;
 }
 

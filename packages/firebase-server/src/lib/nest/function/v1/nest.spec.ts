@@ -7,7 +7,8 @@ import * as functions from 'firebase-functions';
 import { NestApplicationFunctionFactory } from '../../nest.provider';
 import { OnCallWithNestApplication } from '../call';
 import { OnScheduleConfig, OnScheduleWithNestApplication } from '../schedule';
-import { onScheduleWithNestApplicationFactory } from './schedule';
+import { NestApplicationScheduleCloudFunctionFactory, onScheduleWithNestApplicationFactory } from './schedule';
+import { WrappedScheduledFunction } from 'firebase-functions-test/lib/v1';
 
 @Injectable()
 export class TestInjectable {}
@@ -131,14 +132,11 @@ describe('nest function utilities', () => {
       });
 
       it('should retrieve the module.', async () => {
-        const expectedValue = 0;
-
         // This creates a factory that we can pass handlers to, which will return another factory that accepts a nestAppGetter for our INestApplication.
         // This is to allow us to create all our functions for our app without being bound to a specific nest context, which could make testing more difficult.
         const factory = onScheduleWithNestApplicationFactory();
 
         let retrievedNestApplication = false; // use as a flag for our tests.
-        const testData = { test: true }; // use as the test data to be passed to our handler.
 
         // Our actual handler function that is invoked by our applications.
         const handler: OnScheduleWithNestApplication = (request) => {
@@ -148,12 +146,12 @@ describe('nest function utilities', () => {
         };
 
         const scheduleConfig: OnScheduleConfig = {
-          schedule: ''
+          cron: 1 // every 1 minute
         };
 
         // Create our runnable factory.
         // This type will take in a NestApplicationPromiseGetter to build the final runnable.
-        const runnableFactory: NestApplicationFunctionFactory<any> = factory(scheduleConfig, handler);
+        const runnableFactory: NestApplicationScheduleCloudFunctionFactory = factory(scheduleConfig, handler);
 
         // For our tests, we pass it the testing context's nest getter.
         // This runnable is now the cloud function that the "firebase-functions" library can consume.
@@ -161,12 +159,10 @@ describe('nest function utilities', () => {
 
         // For our tests, we use the "firebase-functions-test" wrap function to wrap it once more into a function we can use.
         // We can now execute this test function against the emulators and in our test nest context.
-        const testFunction = f.fnWrapper.wrapV1CloudFunction<typeof testData>(runnable);
+        const testFunction: WrappedScheduledFunction = f.fnWrapper.wrapV1CloudFunction(runnable);
 
         // Now we test the wrapped function. This should call our handler.
-        const result = await testFunction(testData);
-
-        expect(result).toBe(expectedValue);
+        await testFunction();
         expect(retrievedNestApplication).toBe(true);
       });
     });

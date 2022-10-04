@@ -16,7 +16,7 @@ export function makeOnScheduleWithNestApplicationRequest(nestApplication: INestA
 // Factory should return a function that can also be called directly for immediate execution.
 
 // MARK: Nest
-export type NestApplicationScheduleCloudFunctionFactory = NestApplicationScheduleConfiguredFunctionFactory<functions.CloudFunction<unknown>>;
+export type NestApplicationScheduleCloudFunctionFactory<I = unknown> = NestApplicationScheduleConfiguredFunctionFactory<functions.CloudFunction<I>>;
 
 /**
  * Factory function for generating a NestApplicationFunctionFactory for a HttpsFunctions/Runnable firebase function.

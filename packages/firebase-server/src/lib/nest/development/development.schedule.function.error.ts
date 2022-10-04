@@ -2,7 +2,7 @@ import { badRequestError } from '../../function/error';
 
 export const NO_RUN_NAME_SPECIFIED_FOR_SCHEDULED_FUNCTION_DEVELOPMENT_FUNCTION_CODE = 'NO_RUN_NAME_SPECIFIED_FOR_SCHEDULED_FUNCTION_DEVELOPMENT_FUNCTION';
 
-export function noRunNameSpecifiedForScheduledFunctionDevelopmentFunction(type: unknown) {
+export function noRunNameSpecifiedForScheduledFunctionDevelopmentFunction() {
   return badRequestError({
     code: NO_RUN_NAME_SPECIFIED_FOR_SCHEDULED_FUNCTION_DEVELOPMENT_FUNCTION_CODE,
     message: `Must specify run parameter.`

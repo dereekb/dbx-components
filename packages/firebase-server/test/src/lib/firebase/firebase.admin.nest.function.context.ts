@@ -1,6 +1,6 @@
 import { useJestFunctionFixture, useJestFunctionMapFixture } from '@dereekb/util/test';
-import { NestApplicationRunnableHttpFunctionFactory } from '@dereekb/firebase-server';
-import { FirebaseAdminFunctionNestTestContext, wrapCloudFunctionForNestTestsGetter } from './firebase.admin.nest.function';
+import { NestApplicationRunnableHttpFunctionFactory, NestApplicationScheduleCloudFunctionFactory } from '@dereekb/firebase-server';
+import { FirebaseAdminFunctionNestTestContext, wrapCloudFunctionForNestTestsGetter, WrapCloudFunctionForNestTestsInput } from './firebase.admin.nest.function';
 import { WrappedCloudFunctionV1 } from './firebase.function';
 import { mapObjectMap } from '@dereekb/util';
 
@@ -10,13 +10,13 @@ export interface CloudFunctionTestBaseConfig {
 }
 
 export interface CloudFunctionTestSingleConfig<I> extends CloudFunctionTestBaseConfig {
-  fn: NestApplicationRunnableHttpFunctionFactory<I>;
+  fn: WrapCloudFunctionForNestTestsInput<I>;
 }
 
 export type CloudFunctionTestSingleFunction<I> = (fn: WrappedCloudFunctionV1<I>) => void;
 
 export type CloudFunctionTestConfigMapObject = {
-  [key: string]: NestApplicationRunnableHttpFunctionFactory<any>;
+  [key: string]: WrapCloudFunctionForNestTestsInput<any>;
 };
 
 export interface CloudFunctionTestMultipleConfig<I, T extends CloudFunctionTestConfigMapObject> extends CloudFunctionTestBaseConfig {
@@ -24,7 +24,7 @@ export interface CloudFunctionTestMultipleConfig<I, T extends CloudFunctionTestC
 }
 
 export type CloudFunctionTestMultipleFixture<T extends CloudFunctionTestConfigMapObject> = {
-  [K in keyof T as K extends string ? `${K}CloudFn` : never]: T[K] extends NestApplicationRunnableHttpFunctionFactory<infer I> ? WrappedCloudFunctionV1<I> : never;
+  [K in keyof T as K extends string ? `${K}CloudFn` : never]: T[K] extends WrapCloudFunctionForNestTestsInput<infer I> ? WrappedCloudFunctionV1<I> : never;
 };
 
 export type CloudFunctionTestMultipleFunction<T extends CloudFunctionTestConfigMapObject> = (fn: CloudFunctionTestMultipleFixture<T>) => void;

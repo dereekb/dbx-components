@@ -8,8 +8,8 @@ import { AssertDevelopmentRequestFunction } from './development.assert.function'
 // MARK: Function
 export type OnCallDevelopmentFunction<N, I = unknown, O = unknown> = (request: NestContextCallableRequest<N, I> & DevelopmentFirebaseFunctionSpecifierRef) => PromiseOrValue<O>;
 
-export type OnCallDevelopmentFunctionMap<N, T extends FirestoreModelIdentity = FirestoreModelIdentity> = {
-  [K in FirestoreModelTypes<T>]?: OnCallDevelopmentFunction<N, any, any>;
+export type OnCallDevelopmentFunctionMap<N> = {
+  [key: string]: OnCallDevelopmentFunction<N, any, any>;
 };
 
 export interface OnCallDevelopmentConfig<N> {
