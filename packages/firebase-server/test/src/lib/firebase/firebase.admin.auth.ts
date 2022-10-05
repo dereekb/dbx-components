@@ -12,7 +12,7 @@ import { EventContext } from 'firebase-functions/lib/cloud-functions';
 import { AuthData } from 'firebase-functions/lib/common/providers/https';
 
 export type CallCloudFunction<I = any> = WrappedScheduledFunction | WrappedFunction<I>;
-export type CallCloudFunctionParams<F> = F extends WrappedFunction<infer I> ? I : unknown;
+export type CallCloudFunctionParams<F> = F extends WrappedFunction<infer I> ? I : unknown | undefined | void;
 
 /**
  * Testing context for a single user.
@@ -53,8 +53,10 @@ export class AuthorizedUserTestContextFixture<PI extends FirebaseAdminTestContex
     return this.instance.makeContextOptions();
   }
 
-  callCloudFunction<F extends CallCloudFunction, O = unknown>(fn: F, params: CallCloudFunctionParams<F>): Promise<O> {
-    return this.instance.callCloudFunction(fn, params);
+  callCloudFunction<F extends WrappedScheduledFunction, O = unknown>(fn: F): Promise<O>;
+  callCloudFunction<F extends WrappedFunction<any>, O = unknown>(fn: F, params: CallCloudFunctionParams<F>): Promise<O>;
+  callCloudFunction<F extends CallCloudFunction, O = unknown>(fn: F, params?: CallCloudFunctionParams<F>): Promise<O> {
+    return this.instance.callCloudFunction(fn, params as CallCloudFunctionParams<F>);
   }
 }
 
@@ -87,7 +89,9 @@ export class AuthorizedUserTestContextInstance<PI extends FirebaseAdminTestConte
     return this.loadUserRecord().then((record) => createTestFunctionContextOptions(this.testContext.auth, record));
   }
 
-  callCloudFunction<F extends CallCloudFunction, O = unknown>(fn: F, params: CallCloudFunctionParams<F>): Promise<O> {
+  callCloudFunction<F extends WrappedScheduledFunction, O = unknown>(fn: F): Promise<O>;
+  callCloudFunction<F extends WrappedFunction<any>, O = unknown>(fn: F, params: CallCloudFunctionParams<F>): Promise<O>;
+  callCloudFunction<F extends CallCloudFunction, O = unknown>(fn: F, params?: CallCloudFunctionParams<F>): Promise<O> {
     return this.makeContextOptions().then((options) => (fn as WrappedFunction<unknown>)(params, options));
   }
 

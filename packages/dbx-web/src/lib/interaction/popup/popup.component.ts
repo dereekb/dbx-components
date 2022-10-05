@@ -1,6 +1,6 @@
 import { Component, NgZone, Type, OnDestroy } from '@angular/core';
 import { NgPopoverRef } from 'ng-overlay-container';
-import { Maybe } from '@dereekb/util';
+import { Maybe, PixelsString } from '@dereekb/util';
 import { CompactMode, CompactContextStore } from '../../layout';
 import { BehaviorSubject, Subject, filter, first, map, shareReplay, startWith } from 'rxjs';
 import { PopupGlobalPositionStrategy, PopupPosition, PopupPositionOffset } from './popup.position.strategy';
@@ -29,6 +29,8 @@ export interface DbxPopupComponentConfig<O, I, T> {
   data?: I;
   isDraggable?: boolean;
   init?: (component: T, controller: DbxPopupController<O, I>) => void;
+  width?: PixelsString;
+  height?: PixelsString;
 }
 
 /**

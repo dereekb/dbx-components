@@ -1,17 +1,17 @@
 import { FinishOnboardingProfileParams, ProfileDocument, SetProfileUsernameParams, UpdateProfileParams } from '@dereekb/demo-firebase';
-import { DemoUpdateModelfunction } from '../function';
+import { DemoUpdateModelFunction } from '../function';
 import { profileForUserRequest } from './profile.util';
 import { userHasNoProfileError } from '../../common';
 import { AUTH_ONBOARDED_ROLE, AUTH_TOS_SIGNED_ROLE } from '@dereekb/util';
 
-export const updateProfile: DemoUpdateModelfunction<UpdateProfileParams> = async (request) => {
+export const updateProfile: DemoUpdateModelFunction<UpdateProfileParams> = async (request) => {
   const { nest, auth, data } = request;
   const updateProfile = await nest.profileActions.updateProfile(data);
   const profileDocument: ProfileDocument = await profileForUserRequest(request);
   await updateProfile(profileDocument);
 };
 
-export const updateProfileUsername: DemoUpdateModelfunction<SetProfileUsernameParams> = async (request) => {
+export const updateProfileUsername: DemoUpdateModelFunction<SetProfileUsernameParams> = async (request) => {
   const { nest, auth, data } = request;
   const setProfileUsername = await nest.profileActions.setProfileUsername(data);
   const profileDocument: ProfileDocument = await profileForUserRequest(request);
@@ -24,7 +24,7 @@ export const updateProfileUsername: DemoUpdateModelfunction<SetProfileUsernamePa
   await setProfileUsername(profileDocument);
 };
 
-export const updateProfleOnboarding: DemoUpdateModelfunction<FinishOnboardingProfileParams, boolean> = async (request) => {
+export const updateProfleOnboarding: DemoUpdateModelFunction<FinishOnboardingProfileParams, boolean> = async (request) => {
   const { nest, auth, data } = request;
   const uid = auth.uid;
 

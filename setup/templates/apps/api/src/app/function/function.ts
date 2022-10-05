@@ -1,6 +1,6 @@
 import { INestApplicationContext } from '@nestjs/common';
 import { APP_CODE_PREFIXFirebaseContextAppContext, APP_CODE_PREFIX_LOWERFirebaseModelServices, APP_CODE_PREFIXFirebaseModelTypes, APP_CODE_PREFIXFirestoreCollections } from "FIREBASE_COMPONENTS_NAME";
-import { onCallWithNestApplicationFactory, onCallWithNestContextFactory, taskQueueFunctionHandlerWithNestContextFactory, cloudEventHandlerWithNestContextFactory, blockingFunctionHandlerWithNestContextFactory, onEventWithNestContextFactory, AbstractFirebaseNestContext, OnCallCreateModelFunction, OnCallCreateModelMap, OnCallUpdateModelFunction, OnCallUpdateModelMap, OnCallDeleteModelMap, OnCallDeleteModelFunction } from '@dereekb/firebase-server';
+import { onCallWithNestApplicationFactory, onCallWithNestContextFactory, taskQueueFunctionHandlerWithNestContextFactory, cloudEventHandlerWithNestContextFactory, blockingFunctionHandlerWithNestContextFactory, onEventWithNestContextFactory, AbstractFirebaseNestContext, OnCallCreateModelFunction, OnCallCreateModelMap, OnCallUpdateModelFunction, OnCallUpdateModelMap, OnCallDeleteModelMap, OnCallDeleteModelFunction, onScheduleWithNestApplicationFactory, onScheduleWithNestContextFactory, OnScheduleWithNestContext, OnCallDevelopmentFunction, OnCallDevelopmentFunctionMap } from '@dereekb/firebase-server';
 import { OnCallCreateModelResult } from '@dereekb/firebase';
 import { APP_CODE_PREFIXFirebaseServerActionsContext, ExampleServerActions, APP_CODE_PREFIXApiAuthService } from '../common';
 
@@ -35,6 +35,8 @@ export class APP_CODE_PREFIXApiNestContext extends AbstractFirebaseNestContext<A
 export const mapAPP_CODE_PREFIXApiNestContext = (nest: INestApplicationContext) => new APP_CODE_PREFIXApiNestContext(nest);
 export const onCallWithAPP_CODE_PREFIXNest = onCallWithNestApplicationFactory();
 export const onCallWithAPP_CODE_PREFIXNestContext = onCallWithNestContextFactory(onCallWithAPP_CODE_PREFIXNest, mapAPP_CODE_PREFIXApiNestContext);
+export const onScheduleWithAPP_CODE_PREFIXNest = onScheduleWithNestApplicationFactory();
+export const onScheduleWithAPP_CODE_PREFIXNestContext = onScheduleWithNestContextFactory(onScheduleWithAPP_CODE_PREFIXNest, mapAPP_CODE_PREFIXApiNestContext);
 export const onEventWithAPP_CODE_PREFIXNestContext = onEventWithNestContextFactory(mapAPP_CODE_PREFIXApiNestContext);
 export const cloudEventWithAPP_CODE_PREFIXNestContext = cloudEventHandlerWithNestContextFactory(mapAPP_CODE_PREFIXApiNestContext);
 export const blockingEventWithAPP_CODE_PREFIXNestContext = blockingFunctionHandlerWithNestContextFactory(mapAPP_CODE_PREFIXApiNestContext);
@@ -49,3 +51,10 @@ export type APP_CODE_PREFIXOnCallUpdateModelMap = OnCallUpdateModelMap<APP_CODE_
 
 export type APP_CODE_PREFIXDeleteModelFunction<I, O = void> = OnCallDeleteModelFunction<APP_CODE_PREFIXApiNestContext, I, O>;
 export type APP_CODE_PREFIXOnCallDeleteModelMap = OnCallDeleteModelMap<APP_CODE_PREFIXApiNestContext, APP_CODE_PREFIXFirebaseModelTypes>;
+
+// MARK: Schedule Functions
+export type APP_CODE_PREFIXScheduleFunction = OnScheduleWithNestContext<APP_CODE_PREFIXApiNestContext>;
+
+// MARK: Development Functions
+export type APP_CODE_PREFIXDevelopmentFunction<I = unknown, O = void> = OnCallDevelopmentFunction<APP_CODE_PREFIXApiNestContext, I, O>;
+export type APP_CODE_PREFIXOnCallDevelopmentFunctionMap = OnCallDevelopmentFunctionMap<APP_CODE_PREFIXApiNestContext>;

@@ -3,7 +3,7 @@ version: '3'
 services:
   demo-api-server:
     build: .
-    network_mode: host
+    # network_mode: host    # uncomment for enabling local development. will prevent parallel execution (I.E. tests and local dev at same time)
     volumes:
       - ./:/code
       - /code/node_modules # Excludes node_modules

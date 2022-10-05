@@ -1,0 +1,17 @@
+<dbx-two-column class="dbx-firebase-development-popup-content" [dbxTwoColumnFullLeft]="true">
+  <dbx-two-block left>
+    <div>
+      <h4>Info</h4>
+      <p>Scheduler (Running): {{ schedulerRunning$ | async }} : {{ schedulerInterval$ | async }}s : {{ schedulerError$ | async }}</p>
+    </div>
+    <div>
+      <h4>Tools</h4>
+      <div dbxAction dbxActionEnforceModified dbxActionAutoTrigger instantTrigger dbxActionLogger [dbxActionHandler]="handleFormUpdate">
+        <dbx-firebase-development-popup-content-form dbxActionForm [dbxFormSource]="formData$" dbxFormSourceMode="always" [dbxActionFormModified]="isFormModified" [config]="formConfig$ | async"></dbx-firebase-development-popup-content-form>
+      </div>
+    </div>
+  </dbx-two-block>
+  <dbx-two-column-right right [header]="(rightTitle$ | async) || ''">
+    <dbx-widget-view [config]="widgetConfig$ | async"></dbx-widget-view>
+  </dbx-two-column-right>
+</dbx-two-column>

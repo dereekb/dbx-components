@@ -207,6 +207,59 @@ export function firestoreModelIdsFromKey(input: FirestoreModelKey | DocumentRefe
 }
 
 /**
+ * A FirestoreModelKey that has been "flat" to a FirestoreModelId.
+ *
+ * This is useful in cases where another object's is is derivative from a FirestoreModelKey.
+ *
+ * All slashes are removed from the object in order to make it a valid FirestoreModelId.
+ */
+export type FlatFirestoreModelKey = FirestoreModelId;
+
+/**
+ * A FlatFirestoreModelKey that is encoded in a "one-way" manner by removing all slashes.
+ *
+ * This is useful for cases where the original ModelKey does not need to be inferred from the flat key.
+ */
+export type OneWayFlatFirestoreModelKey = FlatFirestoreModelKey;
+
+/**
+ * Creates a OneWayFlatFirestoreModelKey from the input FirestoreModelKey.
+ *
+ * @param key
+ * @returns
+ */
+export function flatFirestoreModelKey(key: FirestoreModelKey): OneWayFlatFirestoreModelKey {
+  return key.replace(/\//g, '');
+}
+
+/**
+ * A FlatFirestoreModelKey that is encoded in a "two-way" manner by replacing the slashes with underscores.
+ *
+ * This is useful for cases where the original ModelKey needs to be inferred from the flat key.
+ */
+export type TwoWayFlatFirestoreModelKey = FlatFirestoreModelKey;
+
+/**
+ * Creates a TwoWayFlatFirestoreModelKey from the input FirestoreModelKey.
+ *
+ * @param key
+ * @returns
+ */
+export function twoWayFlatFirestoreModelKey(key: FirestoreModelKey): TwoWayFlatFirestoreModelKey {
+  return key.replace(/\//g, '_');
+}
+
+/**
+ * Creates a TwoWayFlatFirestoreModelKey from the input FirestoreModelKey.
+ *
+ * @param key
+ * @returns
+ */
+export function inferKeyFromTwoWayFlatFirestoreModelKey(key: TwoWayFlatFirestoreModelKey): FirestoreModelKey {
+  return key.replace(/\_/g, '/');
+}
+
+/**
  * Firestore Model Id Regex
  *
  * https://stackoverflow.com/questions/52850099/what-is-the-reg-expression-for-firestore-constraints-on-document-ids

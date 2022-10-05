@@ -1,4 +1,4 @@
-import { combineLatest, filter, skipWhile, startWith, switchMap, MonoTypeOperatorFunction, Observable, of, OperatorFunction, map, delay } from 'rxjs';
+import { combineLatest, filter, skipWhile, startWith, switchMap, MonoTypeOperatorFunction, Observable, of, OperatorFunction, map, delay, noop, EMPTY } from 'rxjs';
 import { Maybe } from '@dereekb/util';
 import { asObservableFromGetter, MaybeObservableOrValueGetter, ObservableOrValueGetter } from './getter';
 import { ObservableDecisionFunction } from './map';
@@ -92,6 +92,22 @@ export function switchMapToDefault<T = unknown>(defaultObs: MaybeObservableOrVal
       })
     )
   );
+}
+
+/**
+ * Provides a switchMap that will emit from the input observable if defined, otherwise emits empty.
+ *
+ * @param defaultValue
+ * @returns
+ */
+export function switchMapWhileTrue<T = unknown>(obs: MaybeObservableOrValueGetter<T>): OperatorFunction<boolean, Maybe<T>> {
+  return switchMap((x: boolean) => {
+    if (x) {
+      return asObservableFromGetter(obs);
+    } else {
+      return EMPTY;
+    }
+  });
 }
 
 /**

@@ -545,6 +545,11 @@ mkdir $FIREBASE_COMPONENTS_FOLDER/src/lib/auth
 download_firebase_ts_file "src/lib/auth/claims.ts"
 download_firebase_ts_file "src/lib/auth/index.ts"
 
+# Development Folder
+mkdir $FIREBASE_COMPONENTS_FOLDER/src/lib/development
+download_firebase_ts_file "src/lib/development/development.api.ts"
+download_firebase_ts_file "src/lib/development/index.ts"
+
 # Model/Example Folder
 mkdir $FIREBASE_COMPONENTS_FOLDER/src/lib/model
 download_firebase_ts_file "src/lib/model/index.ts"
@@ -703,6 +708,8 @@ download_api_ts_file "src/app/function/function.ts"
 mkdir $API_APP_FOLDER/src/app/function/model
 download_api_ts_file "src/app/function/model/index.ts"
 download_api_ts_file "src/app/function/model/crud.functions.ts"
+download_api_ts_file "src/app/function/model/development.functions.ts"
+download_api_ts_file "src/app/function/model/schedule.functions.ts"
 
 mkdir $API_APP_FOLDER/src/app/function/auth
 download_api_ts_file "src/app/function/auth/index.ts"
@@ -710,6 +717,8 @@ download_api_ts_file "src/app/function/auth/init.user.function.ts"
 
 mkdir $API_APP_FOLDER/src/app/function/example
 download_api_ts_file "src/app/function/example/index.ts"
+download_api_ts_file "src/app/function/example/example.development.ts"
+download_api_ts_file "src/app/function/example/example.schedule.ts"
 download_api_ts_file "src/app/function/example/example.util.ts"
 download_api_ts_file "src/app/function/example/example.set.username.ts"
 download_api_ts_file "src/app/function/example/example.set.username.spec.ts"

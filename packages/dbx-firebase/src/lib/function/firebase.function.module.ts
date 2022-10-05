@@ -1,11 +1,17 @@
 import { ModuleWithProviders, NgModule, Provider } from '@angular/core';
 import { Functions } from '@angular/fire/functions';
-import { FirebaseFunctionsConfigMap, FirebaseFunctionsMap, LazyFirebaseFunctions } from '@dereekb/firebase';
+import { FirebaseDevelopmentFunctions, FirebaseFunctionsConfigMap, FirebaseFunctionsMap, FIREBASE_DEVELOPMENT_FUNCTIONS_MAP_KEY, LazyFirebaseFunctions } from '@dereekb/firebase';
 import { ClassLikeType, forEachKeyValue } from '@dereekb/util';
 
 export interface DbxFirebaseFunctionsModuleConfig<T, M extends FirebaseFunctionsMap = FirebaseFunctionsMap> {
   functionsGetterToken: ClassLikeType<T>;
   functionsGetterFactory: (functions: Functions) => T;
+  /**
+   * Key of the functions config to use to inject FirebaseDevelopmentFunctions using that same provider.
+   *
+   * Defaults to "developmentFunctions". If false, will not be injected automatically.
+   */
+  developmentFunctionsKey?: string | false;
   /**
    * Optional functions config map to provide.
    *
@@ -16,6 +22,8 @@ export interface DbxFirebaseFunctionsModuleConfig<T, M extends FirebaseFunctions
 
 /**
  * Used to initialize the LazyFirebaseFunctions type for a DbxFirebase app.
+ *
+ * Handles the  key different, automatically injecting FirebaseDevelopmentFunctions with this existing value.
  */
 @NgModule()
 export class DbxFirebaseFunctionsModule {
@@ -48,6 +56,20 @@ export class DbxFirebaseFunctionsModule {
           });
         }
       });
+
+      // Add a provider for FirebaseDevelopmentFunctions if developmentFunctions is provided.
+      const developmentFunctionsKey = config.developmentFunctionsKey ?? FIREBASE_DEVELOPMENT_FUNCTIONS_MAP_KEY;
+
+      if (developmentFunctionsKey) {
+        const developmentFunctionsConfig = config.functionsConfigMap[developmentFunctionsKey];
+
+        if (developmentFunctionsConfig != null) {
+          providers.push({
+            provide: FirebaseDevelopmentFunctions,
+            useExisting: developmentFunctionsConfig[0]
+          });
+        }
+      }
     }
 
     return {

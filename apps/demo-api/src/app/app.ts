@@ -4,6 +4,7 @@ import { NestAppPromiseGetter, nestServerInstance } from '@dereekb/firebase-serv
 import { UPDATE_MODEL_APP_FUNCTION_KEY, DELETE_MODEL_APP_FUNCTION_KEY, CREATE_MODEL_APP_FUNCTION_KEY } from '@dereekb/firebase';
 import { DemoApiAppModule } from './app.module';
 import { profileSetUsername, initUserOnCreate } from './function';
+import { demoExampleUsageOfSchedule } from './function/model/schedule.functions';
 
 export const { initNestServer } = nestServerInstance({
   moduleClass: DemoApiAppModule,
@@ -30,5 +31,17 @@ export function allAppFunctions(nest: NestAppPromiseGetter) {
     // Profile
     [profileSetUsernameKey]: profileSetUsername(nest)
     // Guestbook
+  };
+}
+
+/**
+ * Builder for all scheduled functions in the app.
+ *
+ * @param nest
+ */
+export function allScheduledAppFunctions(nest: NestAppPromiseGetter) {
+  return {
+    // Scheduled Functions
+    exampleSchedule: demoExampleUsageOfSchedule(nest)
   };
 }

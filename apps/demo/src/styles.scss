@@ -34,3 +34,13 @@ mgl-map {
   height: 100%;
   width: 100%;
 }
+
+// Emulator Warning
+.firebase-emulator-warning {
+  font-size: 0.5em;
+  height: 8px;
+  border: none !important;
+  overflow: hidden;
+  background: red !important;
+  color: white !important;
+}

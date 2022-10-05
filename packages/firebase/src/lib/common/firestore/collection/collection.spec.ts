@@ -1,4 +1,4 @@
-import { firestoreModelIdsFromKey, firestoreModelKeyPartPairs } from '.';
+import { firestoreModelIdsFromKey, firestoreModelKeyPart, firestoreModelKeyPartPairs, flatFirestoreModelKey, inferKeyFromTwoWayFlatFirestoreModelKey, twoWayFlatFirestoreModelKey } from '.';
 import { childFirestoreModelKeyPath, firestoreModelId, isFirestoreModelId, isFirestoreModelKey, firestoreModelKeys, firestoreModelIdentity, firestoreModelKey, firestoreModelKeyPath } from './collection';
 
 describe('firestoreModelIdentity()', () => {
@@ -96,6 +96,41 @@ describe('firestoreModelId', () => {
     const id = 'test';
     const result = firestoreModelId(id);
     expect(result).toBe(id);
+  });
+});
+
+describe('oneWayFlatFirestoreModelKey()', () => {
+  const identity = firestoreModelIdentity('identity', 'i');
+  const childIdentity = firestoreModelIdentity(identity, 'identity', 'c');
+
+  it('should create a FirestoreModelKey for the input identity and FirestoreModelKey', () => {
+    const parent = firestoreModelKey(identity, '1234');
+    const childKey = firestoreModelKeyPath(parent, firestoreModelKeyPart(childIdentity, '5678'));
+    const result = flatFirestoreModelKey(childKey);
+    expect(result).toBe(`i1234c5678`);
+  });
+});
+
+describe('twoWayFlatFirestoreModelKey()', () => {
+  const identity = firestoreModelIdentity('identity', 'i');
+  const childIdentity = firestoreModelIdentity(identity, 'identity', 'c');
+
+  it('should create a FirestoreModelKey for the input identity and FirestoreModelKey', () => {
+    const parent = firestoreModelKey(identity, '1234');
+    const childKey = firestoreModelKeyPath(parent, firestoreModelKeyPart(childIdentity, '5678'));
+    const result = twoWayFlatFirestoreModelKey(childKey);
+    expect(result).toBe(`i_1234_c_5678`);
+  });
+
+  describe('inferKeyFromTwoWayFlatFirestoreModelKey()', () => {
+    it('should infer the original key', () => {
+      const parent = firestoreModelKey(identity, '1234');
+      const childKey = firestoreModelKeyPath(parent, firestoreModelKeyPart(childIdentity, '5678'));
+      const encoded = twoWayFlatFirestoreModelKey(childKey);
+      const decoded = inferKeyFromTwoWayFlatFirestoreModelKey(encoded);
+
+      expect(decoded).toBe(childKey);
+    });
   });
 });
 

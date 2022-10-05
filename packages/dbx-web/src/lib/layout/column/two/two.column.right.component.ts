@@ -36,13 +36,13 @@ export class DbxTwoColumnRightComponent implements AfterViewInit, OnDestroy {
 
   ngAfterViewInit(): void {
     setTimeout(() => {
-      this.twoColumnsContextStore.setShowRight(true);
+      this.twoColumnsContextStore.setHasRight(true);
     });
   }
 
   ngOnDestroy(): void {
     this._showBack.complete();
-    this.twoColumnsContextStore.setShowRight(false);
+    this.twoColumnsContextStore.setHasRight(false);
   }
 
   @Input()

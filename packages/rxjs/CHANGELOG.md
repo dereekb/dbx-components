@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [9.10.0](https://github.com/dereekb/dbx-components/compare/v9.9.5-dev...v9.10.0) (2022-10-05)
+
+
+### Features
+
+* added DbxFirebaseDevelopmentSchedulerService ([713bac5](https://github.com/dereekb/dbx-components/commit/713bac57dd1864c52394a16d990f04fc81e0c543))
+
+
+
 ## [9.9.5](https://github.com/dereekb/dbx-components/compare/v9.9.4-dev...v9.9.5) (2022-09-19)
 
 
