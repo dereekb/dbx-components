@@ -4,6 +4,7 @@ import { initEnvironmentForScheduleConfiguredFunctions, nestAppHasDevelopmentSch
 import { CREATE_MODEL_APP_FUNCTION_KEY, UPDATE_MODEL_APP_FUNCTION_KEY, DELETE_MODEL_APP_FUNCTION_KEY } from '@dereekb/firebase';
 import { APP_CODE_PREFIXApiAppModule } from './app.module';
 import { exampleSetUsername } from './function';
+import { APP_CODE_PREFIX_LOWERExampleUsageOfSchedule } from './function/model/schedule.functions';
 
 export const {
   initNestServer
@@ -24,14 +25,9 @@ export function allAppFunctions(nest: NestAppPromiseGetter) {
   };
 }
 
- export function allScheduledAppFunctions(nest: NestAppPromiseGetter) {
-  return initEnvironmentForScheduleConfiguredFunctions(
-    {
-      // Scheduled Functions
-    },
-    {
-      // Only enable when the development scheduler is enabled
-      checkEnabled: nestAppHasDevelopmentSchedulerEnabled(nest)
-    }
-  );
+export function allScheduledAppFunctions(nest: NestAppPromiseGetter) {
+  return {
+    // Scheduled Functions
+    exampleSchedule: APP_CODE_PREFIX_LOWERExampleUsageOfSchedule(nest)
+  };
 }

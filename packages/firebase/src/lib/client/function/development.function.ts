@@ -1,6 +1,5 @@
-import { DemoDevelopmentFunctionTypeMap } from '@dereekb/demo-firebase';
 import { ScheduledFunctionDevelopmentFirebaseFunctionParams, ScheduledFunctionDevelopmentFirebaseFunctionResult, SCHEDULED_FUNCTION_DEV_FUNCTION_SPECIFIER } from '../../common/development/function.schedule';
-import { FirebaseFunctionMapFunction } from './function';
+import { FirebaseFunction, FirebaseFunctionMapFunction } from './function';
 
 /**
  * The default functions key for the FirebaseDevelopmentFunctionTypeMap/Functions, used in an app's functions map.
@@ -20,5 +19,5 @@ export type FirebaseDevelopmentFunctionTypeMap = {
  * Is used by dbx-firebase
  */
 export abstract class FirebaseDevelopmentFunctions {
-  abstract scheduledFunction: FirebaseFunctionMapFunction<DemoDevelopmentFunctionTypeMap, 'scheduledFunction'>;
+  abstract scheduledFunction: FirebaseFunction<ScheduledFunctionDevelopmentFirebaseFunctionParams, ScheduledFunctionDevelopmentFirebaseFunctionResult>;
 }

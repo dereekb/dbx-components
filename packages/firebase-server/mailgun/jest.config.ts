@@ -1,16 +1,11 @@
 /* eslint-disable */
-export default {
+(global as any).testFolderRootPath = '<rootDir>/../../..';
+(global as any).appTestType = 'firebase';
+
+module.exports = {
   displayName: 'firebase-server-mailgun',
-  preset: '../../../jest.preset.js',
-  globals: {
-    'ts-jest': {
-      tsconfig: '<rootDir>/tsconfig.spec.json'
-    }
-  },
-  testEnvironment: 'node',
-  transform: {
-    '^.+\\.[tj]s$': 'ts-jest'
-  },
-  moduleFileExtensions: ['ts', 'js', 'html'],
-  coverageDirectory: '../../../coverage/packages/firebase-server/mailgun'
+  maxConcurrency: 1,
+  maxWorkers: 1,
+  coverageDirectory: '../../../coverage/packages/firebase-server/mailgun',
+  preset: '../../../jest.preset.ts'
 };
