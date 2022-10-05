@@ -41,7 +41,7 @@ export function onScheduleWithNestApplicationFactory(baseSchedule?: OnScheduleCo
     }
 
     return (nestAppPromiseGetter: NestApplicationPromiseGetter) => {
-      let builder = functions.pubsub.schedule(schedule.cron as string).retryConfig(schedule);
+      let builder = functions.pubsub.schedule(cron).retryConfig(schedule);
 
       if (schedule.timezone) {
         builder = builder.timeZone(schedule.timezone);
