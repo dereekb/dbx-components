@@ -1,5 +1,5 @@
 import { inAuthContext } from '@dereekb/firebase-server';
-import { OnCallDevelopmentParams, SCHEDULED_FUNCTION_DEV_FUNCTION_SPECIFIER } from '@dereekb/firebase';
+import { OnCallDevelopmentParams, RUN_DEV_FUNCTION_APP_FUNCTION_KEY, SCHEDULED_FUNCTION_DEV_FUNCTION_SPECIFIER } from '@dereekb/firebase';
 import { CallableHttpFunction, RunnableHttpFunction } from '../../function/type';
 import { NestAppPromiseGetter } from '../app';
 import { NestApplicationScheduleConfiguredFunctionMap } from '../function/schedule';
@@ -30,7 +30,7 @@ export interface FirebaseServerDevFunctionsConfig<N extends AbstractFirebaseNest
 }
 
 export interface FirebaseServerDevFunctions {
-  readonly dev: RunnableHttpFunction<OnCallDevelopmentParams> | CallableHttpFunction<OnCallDevelopmentParams>;
+  readonly [RUN_DEV_FUNCTION_APP_FUNCTION_KEY]: RunnableHttpFunction<OnCallDevelopmentParams> | CallableHttpFunction<OnCallDevelopmentParams>;
 }
 
 export function firebaseServerDevFunctions<N extends AbstractFirebaseNestContext<any, any>, S extends NestApplicationScheduleConfiguredFunctionMap>(config: FirebaseServerDevFunctionsConfig<N, S>): FirebaseServerDevFunctions {
@@ -43,7 +43,7 @@ export function firebaseServerDevFunctions<N extends AbstractFirebaseNestContext
       ...developerFunctionsMap
     };
 
-    if (allScheduledFunctions && disableDevelopmentScheduleFunction != null) {
+    if (allScheduledFunctions && disableDevelopmentScheduleFunction !== false) {
       fullFunctionsMap[SCHEDULED_FUNCTION_DEV_FUNCTION_SPECIFIER] = makeScheduledFunctionDevelopmentFunction({
         allScheduledFunctions
       });

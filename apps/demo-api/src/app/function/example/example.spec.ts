@@ -1,6 +1,6 @@
 import { demoDevelopmentFunctionMap } from './../model/development.functions';
 import { demoExampleUsageOfSchedule } from '../model/schedule.functions';
-import { CreateGuestbookParams, DemoDevelopmentExampleParams, DemoDevelopmentExampleResult, DEMO_APP_EXAMPLE_DEVELOPMENT_FUNCTION_KEY, guestbookIdentity } from '@dereekb/demo-firebase';
+import { CreateGuestbookParams, DemoDevelopmentExampleParams, DemoDevelopmentExampleResult, DEMO_APP_EXAMPLE_DEVELOPMENT_FUNCTION_SPECIFIER, guestbookIdentity } from '@dereekb/demo-firebase';
 import { DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserContext } from '../../../test/fixture';
 import { describeCloudFunctionTest } from '@dereekb/firebase-server/test';
 import { OnCallCreateModelResult, onCallDevelopmentParams, OnCallDevelopmentParams, onCallTypedModelParams } from '@dereekb/firebase';
@@ -26,7 +26,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
           message: 'hello world'
         };
 
-        const result: DemoDevelopmentExampleResult = await u.callCloudFunction(devCloudFn, onCallDevelopmentParams(DEMO_APP_EXAMPLE_DEVELOPMENT_FUNCTION_KEY, params));
+        const result: DemoDevelopmentExampleResult = await u.callCloudFunction(devCloudFn, onCallDevelopmentParams(DEMO_APP_EXAMPLE_DEVELOPMENT_FUNCTION_SPECIFIER, params));
         expect(result.message).toBe(params.message);
       });
     });

@@ -20,7 +20,7 @@ $dbx-popup-border-radius: 4px;
   }
 
   .dbx-popup-content-container {
-    max-height: calc(theming.$app-height - #{$dbx-popup-controls-height});
+    max-height: calc(#{theming.$app-height} - #{$dbx-popup-controls-height});
     padding: $dbx-popup-content-padding;
     padding-top: $dbx-popup-content-padding-top;
     overflow: auto;

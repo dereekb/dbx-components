@@ -24,13 +24,8 @@ export class ScheduledFunctionDevelopmentFirebaseFunctionParams {
 }
 
 export class ScheduledFunctionDevelopmentFirebaseFunctionListEntry {
-  /**
-   * Name of the scheduled function to run
-   */
-  @Expose()
-  @IsNotEmpty()
-  @IsString()
   name!: string;
+  // TODO: Add priority to use for choosing execution order.
 }
 
 export interface ScheduledFunctionDevelopmentFirebaseFunctionListResult {
@@ -48,4 +43,4 @@ export type ScheduledFunctionDevelopmentFirebaseFunctionResult = ScheduledFuncti
 /**
  * Key used on the front-end and backend that refers to the specifier for the scheduled functions access.
  */
-export const SCHEDULED_FUNCTION_DEV_FUNCTION_SPECIFIER: DevelopmentFirebaseFunctionSpecifier = 'scheduledFunction';
+export const SCHEDULED_FUNCTION_DEV_FUNCTION_SPECIFIER = 'scheduledFunction';

@@ -14,6 +14,10 @@ export interface TwoColumnsState {
    */
   showRight: boolean;
   /**
+   * Whether or not there is any registered right content currently.
+   */
+  hasRight: boolean;
+  /**
    * Whether or not to allow the left to fill up the screen when no right is shown.
    */
   fullLeft: boolean;
@@ -36,6 +40,7 @@ export const DEFAULT_TWO_COLUMNS_MIN_RIGHT_WIDTH = 320;
 const INITIAL_STATE: TwoColumnsState = {
   reverseSizing: false,
   showRight: false,
+  hasRight: false,
   fullLeft: false,
   minRightWidth: DEFAULT_TWO_COLUMNS_MIN_RIGHT_WIDTH
 };
@@ -68,12 +73,22 @@ export class TwoColumnsContextStore extends ComponentStore<TwoColumnsState> impl
   /**
    * Pipes the current state of showRight.
    */
-  readonly showRight$ = this.state$.pipe(map((x) => x.showRight));
+  readonly hasRight$ = this.state$.pipe(map((x) => x.showRight));
+
+  /**
+   * Pipes the current state of showRight.
+   */
+  readonly currentShowRight$ = this.state$.pipe(map((x) => x.showRight));
+
+  /**
+   * Pipes the current state of showRight and hasRight
+   */
+  readonly showRight$ = this.state$.pipe(map((x) => x.hasRight && x.showRight));
 
   /**
    * Convenience function for the showRight compliment.
    */
-  readonly hideRight$ = this.state$.pipe(map((x) => !x.showRight));
+  readonly hideRight$ = this.showRight$.pipe(map((x) => !x));
 
   /**
    * Pipes the current state of fullLeft.
@@ -83,7 +98,7 @@ export class TwoColumnsContextStore extends ComponentStore<TwoColumnsState> impl
   /**
    * Whether or not to show the full left.
    */
-  readonly showFullLeft$ = this.state$.pipe(map((x) => !x.showRight && x.fullLeft));
+  readonly showFullLeft$ = this.state$.pipe(map((x) => !(x.hasRight && x.showRight) && x.fullLeft));
 
   /**
    * Pipes the current backRef value.
@@ -108,6 +123,11 @@ export class TwoColumnsContextStore extends ComponentStore<TwoColumnsState> impl
    * Changes the state to show right or not.
    */
   readonly setReverseSizing = this.updater((state, reverseSizing: Maybe<boolean>) => (isMaybeNot(reverseSizing) ? state : { ...state, reverseSizing }));
+
+  /**
+   * Changes the state to have right content or not.
+   */
+  readonly setHasRight = this.updater((state, hasRight: Maybe<boolean>) => (isMaybeNot(hasRight) ? state : { ...state, hasRight }));
 
   /**
    * Changes the state to show right or not.

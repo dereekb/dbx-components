@@ -26,7 +26,10 @@ export class DbxFirebaseDevelopmentPopupComponent extends AbstractPopupDirective
   static openPopup(popupService: DbxPopupService, popupKey?: DbxPopupKey): NgPopoverRef {
     return popupService.open({
       key: popupKey ?? DEFAULT_FIREBASE_DEVELOPMENT_POPUP_KEY,
-      componentClass: DbxFirebaseDevelopmentPopupComponent
+      componentClass: DbxFirebaseDevelopmentPopupComponent,
+      closeOnTransition: false,
+      isDraggable: true,
+      position: 'center'
     });
   }
 

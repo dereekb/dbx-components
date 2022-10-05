@@ -27,9 +27,9 @@ export function sortPickableItemsByLabel<T>(chips: PickableItemFieldItem<T>[]): 
   return chips.sort((a, b) => a.itemValue.label.localeCompare(b.itemValue.label));
 }
 
-export interface PickableItemFieldConfig<T = unknown> extends LabeledFieldConfig, PickableValueFieldsFieldProps<T> {}
+export interface PickableItemFieldConfig<T = unknown, M = unknown> extends LabeledFieldConfig, PickableValueFieldsFieldProps<T, M> {}
 
-export function pickableItemChipField<T = unknown>(config: PickableItemFieldConfig<T>): FormlyFieldConfig {
+export function pickableItemChipField<T = unknown, M = unknown>(config: PickableItemFieldConfig<T, M>): FormlyFieldConfig {
   const { key } = config;
   return formlyField({
     key,
@@ -41,7 +41,7 @@ export function pickableItemChipField<T = unknown>(config: PickableItemFieldConf
   });
 }
 
-export function pickableItemListField<T = unknown>(config: PickableItemFieldConfig<T>): FormlyFieldConfig {
+export function pickableItemListField<T = unknown, M = unknown>(config: PickableItemFieldConfig<T, M>): FormlyFieldConfig {
   const { key } = config;
   return formlyField({
     key,

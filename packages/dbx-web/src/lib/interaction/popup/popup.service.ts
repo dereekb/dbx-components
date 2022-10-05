@@ -31,8 +31,8 @@ export class DbxPopupService {
         position
       },
       configuration: {
-        width: APP_POPUP_NORMAL_WIDTH,
-        height: APP_POPUP_NORMAL_HEIGHT,
+        width: config.width ?? APP_POPUP_NORMAL_WIDTH,
+        height: config.height ?? APP_POPUP_NORMAL_HEIGHT,
         useGlobalPositionStrategy: true,
         hasBackdrop: false,
         isResizable: false,

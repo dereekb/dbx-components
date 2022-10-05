@@ -8,7 +8,7 @@ $dbx-popup-controls-height: 33px;
 @mixin core() {
   .dbx-prompt-page {
     .dbx-prompt-page-content-wrap {
-      padding-top: calc(theming.$app-height * 0.2);
+      padding-top: calc(#{theming.$app-height} * 0.2);
     }
   }
 

@@ -1,4 +1,4 @@
-import { DevelopmentFirebaseFunctionConfigMap, developmentFirebaseFunctionMapFactory } from '@dereekb/firebase';
+import { DevelopmentFirebaseFunctionConfigMap, DevelopmentFirebaseFunctionMap, developmentFirebaseFunctionMapFactory, FirebaseDevelopmentFunctions, FirebaseDevelopmentFunctionTypeMap, FirebaseFunctionMapFunction, ScheduledFunctionDevelopmentFirebaseFunctionParams, ScheduledFunctionDevelopmentFirebaseFunctionResult, SCHEDULED_FUNCTION_DEV_FUNCTION_SPECIFIER } from '@dereekb/firebase';
 import { Expose } from 'class-transformer';
 import { IsNotEmpty, IsString, MaxLength } from 'class-validator';
 
@@ -16,17 +16,25 @@ export class DemoDevelopmentExampleResult {
   message!: string;
 }
 
-export const DEMO_APP_EXAMPLE_DEVELOPMENT_FUNCTION_KEY = 'example';
+export const DEMO_APP_EXAMPLE_DEVELOPMENT_FUNCTION_SPECIFIER = 'example';
 
-export type DemoDevelopmentFunctionTypeMap = {
-  [DEMO_APP_EXAMPLE_DEVELOPMENT_FUNCTION_KEY]: [DemoDevelopmentExampleParams, DemoDevelopmentExampleResult];
+export type DemoDevelopmentFunctionTypeMap = FirebaseDevelopmentFunctionTypeMap & {
+  [DEMO_APP_EXAMPLE_DEVELOPMENT_FUNCTION_SPECIFIER]: [DemoDevelopmentExampleParams, DemoDevelopmentExampleResult];
 };
 
 export const demoDevelopmentFunctionsConfig: DevelopmentFirebaseFunctionConfigMap<DemoDevelopmentFunctionTypeMap> = {
-  [DEMO_APP_EXAMPLE_DEVELOPMENT_FUNCTION_KEY]: null
+  scheduledFunction: null,
+  example: null
 };
 
 /**
  * Used to generate our ProfileFunctionMap for a Functions instance.
  */
 export const demoDevelopmentFunctionMap = developmentFirebaseFunctionMapFactory<DemoDevelopmentFunctionTypeMap>(demoDevelopmentFunctionsConfig);
+
+/**
+ * Declared as an abstract class so we can inject it into our Angular app using this token.
+ */
+export abstract class DemoDevelopmentFunctions extends FirebaseDevelopmentFunctions implements DevelopmentFirebaseFunctionMap<DemoDevelopmentFunctionTypeMap> {
+  abstract example: FirebaseFunctionMapFunction<DemoDevelopmentFunctionTypeMap, 'example'>;
+}

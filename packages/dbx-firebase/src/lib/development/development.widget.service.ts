@@ -8,11 +8,15 @@ import { DbxWidgetEntry, DbxWidgetType } from '@dereekb/dbx-web';
 export const DEFAULT_FIREBASE_DEVELOPMENT_WIDGET_PROVIDERS_TOKEN = new InjectionToken('DefaultDbxFirebaseDevelopmentWidgetEntries');
 
 export interface DbxFirebaseDevelopmentWidgetEntry {
-  readonly label?: string;
+  readonly label: string;
   /**
    * Widget entry for this provider.
    */
   readonly widget: DbxWidgetEntry;
+  /**
+   * Whether or not auth is required. False by default.
+   */
+  readonly auth?: boolean;
 }
 
 /**

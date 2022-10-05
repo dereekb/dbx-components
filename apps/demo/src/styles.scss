@@ -37,6 +37,10 @@ mgl-map {
 
 // Emulator Warning
 .firebase-emulator-warning {
-  width: 200px !important;
+  font-size: 0.5em;
+  height: 8px;
+  border: none !important;
   overflow: hidden;
+  background: red !important;
+  color: white !important;
 }

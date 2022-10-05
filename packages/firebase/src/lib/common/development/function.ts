@@ -36,4 +36,4 @@ export function onCallDevelopmentParams<T>(specifier: string, data: T): OnCallDe
 /**
  * Key used on the front-end and backend that refers to a specific function for creating models.
  */
-export const RUN_DEV_FUNCTION_APP_FUNCTION_KEY = 'runDevFunction';
+export const RUN_DEV_FUNCTION_APP_FUNCTION_KEY = 'dev';
