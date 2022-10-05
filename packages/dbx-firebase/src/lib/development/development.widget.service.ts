@@ -1,23 +1,12 @@
 import { iterableToArray } from '@dereekb/util';
 import { Inject, Injectable, InjectionToken, Optional } from '@angular/core';
-import { DbxWidgetEntry, DbxWidgetType } from '@dereekb/dbx-web';
+import { DbxWidgetService, DbxWidgetType } from '@dereekb/dbx-web';
+import { DbxFirebaseDevelopmentWidgetEntry } from './development.widget';
 
 /**
  * Default providers to inject.
  */
 export const DEFAULT_FIREBASE_DEVELOPMENT_WIDGET_PROVIDERS_TOKEN = new InjectionToken('DefaultDbxFirebaseDevelopmentWidgetEntries');
-
-export interface DbxFirebaseDevelopmentWidgetEntry {
-  readonly label: string;
-  /**
-   * Widget entry for this provider.
-   */
-  readonly widget: DbxWidgetEntry;
-  /**
-   * Whether or not auth is required. False by default.
-   */
-  readonly auth?: boolean;
-}
 
 /**
  * Service used for registering widgets used for development.
@@ -30,7 +19,7 @@ export interface DbxFirebaseDevelopmentWidgetEntry {
 export class DbxFirebaseDevelopmentWidgetService {
   private _entries = new Map<DbxWidgetType, DbxFirebaseDevelopmentWidgetEntry>();
 
-  constructor(@Optional() @Inject(DEFAULT_FIREBASE_DEVELOPMENT_WIDGET_PROVIDERS_TOKEN) defaultEntries: DbxFirebaseDevelopmentWidgetEntry[]) {
+  constructor(@Optional() @Inject(DEFAULT_FIREBASE_DEVELOPMENT_WIDGET_PROVIDERS_TOKEN) defaultEntries: DbxFirebaseDevelopmentWidgetEntry[], readonly dbxWidgetService: DbxWidgetService) {
     if (defaultEntries) {
       defaultEntries.forEach((x) => this.register(x, false));
     }
@@ -47,6 +36,7 @@ export class DbxFirebaseDevelopmentWidgetService {
 
     if (override || !this._entries.has(type)) {
       this._entries.set(type, provider);
+      this.dbxWidgetService.register(provider.widget, override);
       return true;
     } else {
       return false;
