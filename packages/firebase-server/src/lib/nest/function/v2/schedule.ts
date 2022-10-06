@@ -38,6 +38,8 @@ export function onScheduleHandlerWithNestApplicationFactory(baseSchedule?: OnSch
       if (schedule.cron) {
         if (typeof schedule.cron === 'number') {
           schedule.schedule = cronExpressionRepeatingEveryNMinutes(schedule.cron);
+        } else {
+          schedule.schedule = schedule.cron;
         }
       } else {
         throw new Error('Missing required "cron" or "schedule" variable for configuration.');
