@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [9.10.2](https://github.com/dereekb/dbx-components/compare/v9.10.1-dev...v9.10.2) (2022-10-06)
+
+
+### Bug Fixes
+
+* fixed DbxPickableItemField selection ([1c980e6](https://github.com/dereekb/dbx-components/commit/1c980e69d52a3381a1c7ee7a44f9c3b6c8d2b217))
+
+
+
 ## [9.10.1](https://github.com/dereekb/dbx-components/compare/v9.10.0-dev...v9.10.1) (2022-10-06)
 
 

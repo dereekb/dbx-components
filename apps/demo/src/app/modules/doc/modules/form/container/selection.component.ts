@@ -111,6 +111,16 @@ export class DocFormSelectionComponent implements OnDestroy {
       displayForValue: DISPLAY_FOR_STRING_VALUE
     }),
     pickableItemChipField({
+      key: 'stringItemChipsWithSingleValueMax',
+      label: 'String Item Chips With Single Value Selection',
+      filterLabel: 'Filter',
+      description: 'You can only select one value at a time.',
+      filterValues: filterPickableItemFieldValuesByLabel,
+      loadValues: () => of([{ value: 'a' }, { value: 'b' }, { value: 'c' }]),
+      displayForValue: DISPLAY_FOR_STRING_VALUE,
+      asArrayValue: false
+    }),
+    pickableItemChipField({
       key: 'stringItemChipsWithFilter',
       label: 'String Item Chips With Filter With Delay',
       filterLabel: 'Filter',
@@ -136,6 +146,15 @@ export class DocFormSelectionComponent implements OnDestroy {
       description: 'This is read only.',
       loadValues: () => of([{ value: 'a' }, { value: 'b' }, { value: 'c' }]),
       displayForValue: DISPLAY_FOR_STRING_VALUE
+    }),
+    pickableItemListField<DocFormExampleSelectionValueId>({
+      key: 'stringItemListSingleValue',
+      label: 'String Item List With Single Value Selection',
+      description: 'You can only select one value at a time. The value is returned as an array anyways.',
+      loadValues: () => of([{ value: 'a' }, { value: 'b' }, { value: 'c' }]),
+      displayForValue: DISPLAY_FOR_STRING_VALUE,
+      multiSelect: false,
+      asArrayValue: true // return as array anyways
     }),
     pickableItemListField<DocFormExampleSelectionValueId>({
       key: 'stringItemListWithFilter',

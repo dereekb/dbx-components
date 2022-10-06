@@ -38,6 +38,8 @@ export function onScheduleWithNestApplicationFactory(baseSchedule?: OnScheduleCo
       throw new Error('Missing required "cron" variable for configuration.');
     } else if (typeof schedule.cron === 'number') {
       cron = cronExpressionRepeatingEveryNMinutes(schedule.cron);
+    } else {
+      cron = schedule.cron;
     }
 
     return (nestAppPromiseGetter: NestApplicationPromiseGetter) => {

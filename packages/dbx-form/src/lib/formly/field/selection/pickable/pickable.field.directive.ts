@@ -255,6 +255,10 @@ export class AbstractDbxPickableItemFieldDirective<T, M = unknown, H extends Pri
     return this.pickableField.asArrayValue ?? true;
   }
 
+  get pickOnlyOne(): boolean {
+    return this.asArrayValue === false || this.multiSelect === false;
+  }
+
   get filterLabel(): Maybe<string> {
     return this.pickableField.filterLabel;
   }
@@ -419,7 +423,15 @@ export class AbstractDbxPickableItemFieldDirective<T, M = unknown, H extends Pri
   }
 
   addValue(value: T): void {
-    this.setValues([...this.values, value]);
+    let newValues: T[];
+
+    if (this.pickOnlyOne) {
+      newValues = [value];
+    } else {
+      newValues = [...this.values, value];
+    }
+
+    this.setValues(newValues);
   }
 
   removeValue(value: T): void {
@@ -434,7 +446,7 @@ export class AbstractDbxPickableItemFieldDirective<T, M = unknown, H extends Pri
       values = findUnique(values, this.hashForValue);
     }
 
-    if (!this.multiSelect) {
+    if (this.pickOnlyOne) {
       values = [values[0]].filter((x) => x != null);
     }
 
