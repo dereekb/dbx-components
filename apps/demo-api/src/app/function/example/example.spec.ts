@@ -1,10 +1,9 @@
 import { demoDevelopmentFunctionMap } from './../model/development.functions';
 import { demoExampleUsageOfSchedule } from '../model/schedule.functions';
-import { CreateGuestbookParams, DemoDevelopmentExampleParams, DemoDevelopmentExampleResult, DEMO_APP_EXAMPLE_DEVELOPMENT_FUNCTION_SPECIFIER, guestbookIdentity } from '@dereekb/demo-firebase';
+import { DemoDevelopmentExampleParams, DemoDevelopmentExampleResult, DEMO_APP_EXAMPLE_DEVELOPMENT_FUNCTION_SPECIFIER } from '@dereekb/demo-firebase';
 import { DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserContext } from '../../../test/fixture';
 import { describeCloudFunctionTest } from '@dereekb/firebase-server/test';
-import { OnCallCreateModelResult, onCallDevelopmentParams, OnCallDevelopmentParams, onCallTypedModelParams } from '@dereekb/firebase';
-import { exampleUsageOfSchedule } from './example.schedule';
+import { onCallDevelopmentParams } from '@dereekb/firebase';
 import { onCallDevelopmentFunction } from '@dereekb/firebase-server';
 import { onCallWithDemoNestContext } from '../function';
 

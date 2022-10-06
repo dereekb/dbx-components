@@ -24,7 +24,7 @@ export class DbxAuthNotAnyRolesDirective extends AbstractIfDirective implements 
     this._targetRoles.complete();
   }
 
-  @Input('dbxAuthNotRoles')
+  @Input('dbxAuthNotAnyRoles')
   set targetRoles(roles: Maybe<ArrayOrValue<AuthRole>>) {
     this._targetRoles.next(roles);
   }

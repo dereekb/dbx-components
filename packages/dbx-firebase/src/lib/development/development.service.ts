@@ -1,6 +1,4 @@
-import { iterableToArray } from '@dereekb/util';
 import { Inject, Injectable, InjectionToken, Optional } from '@angular/core';
-import { DbxWidgetEntry, DbxWidgetType } from '@dereekb/dbx-web';
 
 /**
  * Enabled state

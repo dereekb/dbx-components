@@ -1,6 +1,6 @@
 import * as functions from 'firebase-functions';
 import { INestApplicationContext } from '@nestjs/common';
-import { MakeNestContext, NestApplicationFunctionFactory, NestApplicationPromiseGetter } from '../../nest.provider';
+import { MakeNestContext, NestApplicationPromiseGetter } from '../../nest.provider';
 import { NestApplicationScheduleConfiguredFunction, NestApplicationScheduleConfiguredFunctionFactory, OnScheduleConfig, OnScheduleWithNestApplication, OnScheduleWithNestApplicationRequest, OnScheduleWithNestContext, setNestContextOnScheduleRequest } from '../schedule';
 import { cronExpressionRepeatingEveryNMinutes, CronExpression, mergeObjects } from '@dereekb/util';
 import { Buildable } from 'ts-essentials';

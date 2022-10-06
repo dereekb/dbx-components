@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output, OnDestroy, HostListener, AfterViewInit, Directive } from '@angular/core';
+import { OnDestroy, HostListener, AfterViewInit, Directive } from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { DbxPopupService } from '@dereekb/dbx-web';
 import { NgPopoverRef } from 'ng-overlay-container';
