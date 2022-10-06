@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [9.10.2](https://github.com/dereekb/dbx-components/compare/v9.10.1-dev...v9.10.2) (2022-10-06)
+
+
+### Bug Fixes
+
+* fixed scheduler cron issue ([8a96047](https://github.com/dereekb/dbx-components/commit/8a960475ee43908f54d839e76c4d0320976a403d))
+
+
+
 ## [9.10.1](https://github.com/dereekb/dbx-components/compare/v9.10.0-dev...v9.10.1) (2022-10-06)
 
 
