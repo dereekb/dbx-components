@@ -173,7 +173,7 @@ export function yearWeekCodeForCalendarMonthFactory(factory: YearWeekCodeFactory
  */
 export type YearWeekCodeDateFactory = (yearWeekCode: YearWeekCode) => Date;
 
-export interface YearWeekCodeDateConfig extends Pick<YearWeekCodeConfig, 'timezone'> {}
+export type YearWeekCodeDateConfig = Pick<YearWeekCodeConfig, 'timezone'>;
 
 /**
  * Creates a YearWeekCodeDateFactory using the optional input config.

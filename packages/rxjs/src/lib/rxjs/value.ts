@@ -1,4 +1,4 @@
-import { combineLatest, filter, skipWhile, startWith, switchMap, MonoTypeOperatorFunction, Observable, of, OperatorFunction, map, delay, noop, EMPTY } from 'rxjs';
+import { combineLatest, filter, skipWhile, startWith, switchMap, MonoTypeOperatorFunction, Observable, of, OperatorFunction, map, delay, EMPTY } from 'rxjs';
 import { Maybe } from '@dereekb/util';
 import { asObservableFromGetter, MaybeObservableOrValueGetter, ObservableOrValueGetter } from './getter';
 import { ObservableDecisionFunction } from './map';

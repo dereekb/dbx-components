@@ -1,6 +1,5 @@
 import { Expose } from 'class-transformer';
-import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
-import { DevelopmentFirebaseFunctionSpecifier } from './function';
+import { IsEnum, IsOptional, IsString } from 'class-validator';
 
 export type ScheduledFunctionDevelopmentFunctionType = 'list' | 'run';
 

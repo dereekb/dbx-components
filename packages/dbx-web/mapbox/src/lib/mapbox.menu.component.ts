@@ -37,6 +37,11 @@ export class DbxMapboxMenuComponent extends AbstractSubscriptionDirective implem
     super();
   }
 
+  @Input()
+  set active(active: Maybe<boolean>) {
+    this._active.next(active ?? true);
+  }
+
   ngOnInit(): void {
     this.sub = this._active
       .pipe(
@@ -89,10 +94,5 @@ export class DbxMapboxMenuComponent extends AbstractSubscriptionDirective implem
     if (this.matMenuTrigger) {
       this.matMenuTrigger.closeMenu();
     }
-  }
-
-  @Input('dbxMapboxMenu')
-  set active(active: Maybe<boolean>) {
-    this._active.next(active ?? true);
   }
 }

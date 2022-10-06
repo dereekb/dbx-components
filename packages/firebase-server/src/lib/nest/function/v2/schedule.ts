@@ -1,7 +1,7 @@
 import { GlobalOptions } from 'firebase-functions/v2/options';
 import { scheduler } from 'firebase-functions/v2';
 import { INestApplicationContext } from '@nestjs/common';
-import { MakeNestContext, NestApplicationFunctionFactory, NestApplicationPromiseGetter } from '../../nest.provider';
+import { MakeNestContext, NestApplicationPromiseGetter } from '../../nest.provider';
 import { NestApplicationScheduleConfiguredFunction, NestApplicationScheduleConfiguredFunctionFactory, OnScheduleConfig, OnScheduleWithNestApplication, OnScheduleWithNestApplicationRequest, OnScheduleWithNestContext, setNestContextOnScheduleRequest } from '../schedule';
 import { cronExpressionRepeatingEveryNMinutes, mergeObjects } from '@dereekb/util';
 import { Buildable } from 'ts-essentials';

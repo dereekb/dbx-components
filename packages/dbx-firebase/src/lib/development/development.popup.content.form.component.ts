@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { provideFormlyContext, AbstractConfigAsyncFormlyFormDirective, AbstractAsyncFormlyFormDirective, AbstractSyncFormlyFormDirective, pickableItemChipField, filterPickableItemFieldValuesByLabel, SearchableValueFieldDisplayFn, SearchableValueFieldDisplayValue, SearchableValueFieldValue } from '@dereekb/dbx-form';
+import { provideFormlyContext, AbstractConfigAsyncFormlyFormDirective, pickableItemChipField, filterPickableItemFieldValuesByLabel, SearchableValueFieldDisplayFn, SearchableValueFieldDisplayValue, SearchableValueFieldValue } from '@dereekb/dbx-form';
 import { Maybe } from '@dereekb/util';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { map, Observable, of } from 'rxjs';
