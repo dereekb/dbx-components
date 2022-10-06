@@ -50,7 +50,7 @@ export class DbxPickableListFieldItemListViewComponent<T> extends AbstractDbxSel
   };
 
   get multiple(): boolean {
-    return this.dbxPickableListFieldComponent.multiSelect;
+    return !this.dbxPickableListFieldComponent.pickOnlyOne;
   }
 
   get selectionMode(): Maybe<DbxListSelectionMode> {
