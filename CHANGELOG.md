@@ -2,6 +2,16 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [9.10.1](https://github.com/dereekb/dbx-components/compare/v9.10.0-dev...v9.10.1) (2022-10-06)
+
+
+### Bug Fixes
+
+* dependency fix ([3445223](https://github.com/dereekb/dbx-components/commit/3445223b048b323d918b07298a2823205af616f6))
+* onScheduleWithNestApplicationFactory fix ([3736e30](https://github.com/dereekb/dbx-components/commit/3736e307056c306b23a617ade294273059c1a323))
+
+
+
 # [9.10.0](https://github.com/dereekb/dbx-components/compare/v9.9.5-dev...v9.10.0) (2022-10-05)
 
 

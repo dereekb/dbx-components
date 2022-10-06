@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/dbx-web/mapbox",
-  "version": "9.10.0",
+  "version": "9.10.1",
   "peerDependencies": {
     "@angular/common": "^14.1.0",
     "@angular/core": "^14.1.0"
