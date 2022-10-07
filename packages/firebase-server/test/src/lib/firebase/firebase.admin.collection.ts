@@ -1,5 +1,5 @@
 import { FirestoreCollection, FirestoreDocument, DocumentReference, FirestoreModelId, FirestoreModelKey } from '@dereekb/firebase';
-import { PromiseOrValue } from '@dereekb/util';
+import { Getter, Maybe, PromiseOrValue } from '@dereekb/util';
 import { JestTestContextFixture, useJestContextFixture, AbstractChildJestTestContextFixture } from '@dereekb/util/test';
 import { FirebaseAdminTestContext } from './firebase.admin';
 
@@ -67,6 +67,11 @@ export interface ModelTestContextFactoryParams<T, D extends FirestoreDocument<T>
   makeFixture?: (parent: PF) => F;
 
   /**
+   * Optional function to try and get an existing reference from the input config. This model will be considered to be fully initialized.
+   */
+  useRef?: (config: C, parentInstance: PI) => Promise<Maybe<DocumentReference<T>>>;
+
+  /**
    * Optional function to create a DocumentReference.
    */
   makeRef?: (collection: CL, config: C, parentInstance: PI) => Promise<DocumentReference<T>>;
@@ -82,7 +87,7 @@ export interface ModelTestContextFactoryParams<T, D extends FirestoreDocument<T>
   initDocument?: (instance: I, config: C) => Promise<void>;
 }
 
-export type ModelTestContextParams<C = any, PI extends FirebaseAdminTestContext = FirebaseAdminTestContext, PF extends JestTestContextFixture<PI> = JestTestContextFixture<PI>> = { f: PF } & C;
+export type ModelTestContextParams<C = any, PI extends FirebaseAdminTestContext = FirebaseAdminTestContext, PF extends JestTestContextFixture<PI> = JestTestContextFixture<PI>> = { f: PF; ref?: Maybe<DocumentReference<any>> } & C;
 
 /**
  * Creates a new Jest Context that has a random user for authorization for use in firebase server tests.
@@ -90,7 +95,7 @@ export type ModelTestContextParams<C = any, PI extends FirebaseAdminTestContext 
 export function modelTestContextFactory<T, D extends FirestoreDocument<T> = FirestoreDocument<T>, C = any, PI extends FirebaseAdminTestContext = FirebaseAdminTestContext, PF extends JestTestContextFixture<PI> = JestTestContextFixture<PI>, I extends ModelTestContextInstance<T, D, PI> = ModelTestContextInstance<T, D, PI>, F extends ModelTestContextFixture<T, D, PI, PF, I> = ModelTestContextFixture<T, D, PI, PF, I>, CL extends FirestoreCollection<T, D> = FirestoreCollection<T, D>>(
   config: ModelTestContextFactoryParams<T, D, C, PI, PF, I, F, CL>
 ): (params: ModelTestContextParams<C, PI, PF>, buildTests: (u: F) => void) => void {
-  const { getCollection, makeRef = (collection) => collection.documentAccessor().newDocument().documentRef, makeInstance = (collection, ref, testInstance) => new ModelTestContextInstance(collection, ref, testInstance) as I, makeFixture = (f: PF) => new ModelTestContextFixture<T, D, PI, PF, I>(f), initDocument } = config;
+  const { getCollection, useRef: loadRef, makeRef = (collection) => collection.documentAccessor().newDocument().documentRef, makeInstance = (collection, ref, testInstance) => new ModelTestContextInstance(collection, ref, testInstance) as I, makeFixture = (f: PF) => new ModelTestContextFixture<T, D, PI, PF, I>(f), initDocument } = config;
 
   return (params: ModelTestContextParams<C, PI, PF>, buildTests: (u: F) => void) => {
     const { f } = params;
@@ -100,10 +105,22 @@ export function modelTestContextFactory<T, D extends FirestoreDocument<T> = Fire
       initInstance: async () => {
         const parentInstance = f.instance;
         const collection = getCollection(parentInstance, params);
-        const ref = await makeRef(collection, params, parentInstance);
+
+        let ref: Maybe<DocumentReference<T>> = params.ref as Maybe<DocumentReference<T>>;
+        let init = ref == null;
+
+        if (ref != null && loadRef != null) {
+          ref = await loadRef(params, parentInstance);
+          init = false;
+        }
+
+        if (!ref) {
+          ref = await makeRef(collection, params, parentInstance);
+        }
+
         const instance: I = await makeInstance(collection, ref, parentInstance);
 
-        if (initDocument) {
+        if (init && initDocument) {
           await initDocument(instance, params);
         }
 
