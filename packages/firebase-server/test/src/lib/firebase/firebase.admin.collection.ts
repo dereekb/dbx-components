@@ -1,5 +1,5 @@
-import { FirestoreCollection, FirestoreDocument, DocumentReference, FirestoreModelId, FirestoreModelKey } from '@dereekb/firebase';
-import { Getter, Maybe, PromiseOrValue } from '@dereekb/util';
+import { FirestoreCollection, FirestoreDocument, DocumentReference, FirestoreModelId, FirestoreModelKey, FirestoreCollectionLike } from '@dereekb/firebase';
+import { AsyncGetterOrValue, Getter, GetterOrValue, getValueFromGetter, Maybe, PromiseOrValue } from '@dereekb/util';
 import { JestTestContextFixture, useJestContextFixture, AbstractChildJestTestContextFixture } from '@dereekb/util/test';
 import { FirebaseAdminTestContext } from './firebase.admin';
 
@@ -33,7 +33,7 @@ export class ModelTestContextFixture<T, D extends FirestoreDocument<T> = Firesto
 }
 
 export class ModelTestContextInstance<T, D extends FirestoreDocument<T> = FirestoreDocument<T>, PI extends FirebaseAdminTestContext = FirebaseAdminTestContext> implements ModelTestContext<T, D> {
-  constructor(readonly collection: FirestoreCollection<T, D>, readonly ref: DocumentReference<T>, readonly testContext: PI) {}
+  constructor(readonly collection: FirestoreCollectionLike<T, D>, readonly ref: DocumentReference<T>, readonly testContext: PI) {}
 
   get documentId(): FirestoreModelId {
     return this.ref.id;
@@ -55,7 +55,7 @@ export class ModelTestContextInstance<T, D extends FirestoreDocument<T> = Firest
 /**
  * authorizedUserContext/authorizedUserContextFactory parameters.
  */
-export interface ModelTestContextFactoryParams<T, D extends FirestoreDocument<T> = FirestoreDocument<T>, C = any, PI extends FirebaseAdminTestContext = FirebaseAdminTestContext, PF extends JestTestContextFixture<PI> = JestTestContextFixture<PI>, I extends ModelTestContextInstance<T, D, PI> = ModelTestContextInstance<T, D, PI>, F extends ModelTestContextFixture<T, D, PI, PF, I> = ModelTestContextFixture<T, D, PI, PF, I>, CL extends FirestoreCollection<T, D> = FirestoreCollection<T, D>> {
+export interface ModelTestContextFactoryParams<T, D extends FirestoreDocument<T> = FirestoreDocument<T>, C = any, PI extends FirebaseAdminTestContext = FirebaseAdminTestContext, PF extends JestTestContextFixture<PI> = JestTestContextFixture<PI>, I extends ModelTestContextInstance<T, D, PI> = ModelTestContextInstance<T, D, PI>, F extends ModelTestContextFixture<T, D, PI, PF, I> = ModelTestContextFixture<T, D, PI, PF, I>, CL extends FirestoreCollectionLike<T, D> = FirestoreCollectionLike<T, D>> {
   /**
    * Creates a ModelTestContextInstanceDelegate from the parent instance.
    */
@@ -67,12 +67,9 @@ export interface ModelTestContextFactoryParams<T, D extends FirestoreDocument<T>
   makeFixture?: (parent: PF) => F;
 
   /**
-   * Optional function to try and get an existing reference from the input config. This model will be considered to be fully initialized.
-   */
-  useRef?: (config: C, parentInstance: PI) => Promise<Maybe<DocumentReference<T>>>;
-
-  /**
    * Optional function to create a DocumentReference.
+   *
+   * If not provided, expects the input CL type to be a full FirestoreCollection, instead of a FirestoreCollectionLike.
    */
   makeRef?: (collection: CL, config: C, parentInstance: PI) => Promise<DocumentReference<T>>;
 
@@ -85,17 +82,46 @@ export interface ModelTestContextFactoryParams<T, D extends FirestoreDocument<T>
    * Optional function to initialize the document for this instance.
    */
   initDocument?: (instance: I, config: C) => Promise<void>;
+
+  /**
+   * Optional function to retrieve a collection given the input document.
+   *
+   * Required if using ModelTestContextDocumentRefParam as input.
+   */
+  collectionForDocument?: (document: D) => CL;
 }
 
-export type ModelTestContextParams<C = any, PI extends FirebaseAdminTestContext = FirebaseAdminTestContext, PF extends JestTestContextFixture<PI> = JestTestContextFixture<PI>> = { f: PF; ref?: Maybe<DocumentReference<any>> } & C;
+export interface ModelTestContextDocumentRefParams<D extends FirestoreDocument<any> = FirestoreDocument<any>> {
+  /**
+   * Custom document to use that is already initialized.
+   */
+  readonly doc: AsyncGetterOrValue<D>;
+}
+
+export type ModelTestContextParams<C = any, PI extends FirebaseAdminTestContext = FirebaseAdminTestContext, PF extends JestTestContextFixture<PI> = JestTestContextFixture<PI>> = { f: PF } & (C | ModelTestContextDocumentRefParams);
 
 /**
  * Creates a new Jest Context that has a random user for authorization for use in firebase server tests.
  */
-export function modelTestContextFactory<T, D extends FirestoreDocument<T> = FirestoreDocument<T>, C = any, PI extends FirebaseAdminTestContext = FirebaseAdminTestContext, PF extends JestTestContextFixture<PI> = JestTestContextFixture<PI>, I extends ModelTestContextInstance<T, D, PI> = ModelTestContextInstance<T, D, PI>, F extends ModelTestContextFixture<T, D, PI, PF, I> = ModelTestContextFixture<T, D, PI, PF, I>, CL extends FirestoreCollection<T, D> = FirestoreCollection<T, D>>(
+export function modelTestContextFactory<T, D extends FirestoreDocument<T> = FirestoreDocument<T>, C = any, PI extends FirebaseAdminTestContext = FirebaseAdminTestContext, PF extends JestTestContextFixture<PI> = JestTestContextFixture<PI>, I extends ModelTestContextInstance<T, D, PI> = ModelTestContextInstance<T, D, PI>, F extends ModelTestContextFixture<T, D, PI, PF, I> = ModelTestContextFixture<T, D, PI, PF, I>, CL extends FirestoreCollectionLike<T, D> = FirestoreCollectionLike<T, D>>(
   config: ModelTestContextFactoryParams<T, D, C, PI, PF, I, F, CL>
 ): (params: ModelTestContextParams<C, PI, PF>, buildTests: (u: F) => void) => void {
-  const { getCollection, useRef: loadRef, makeRef = (collection) => collection.documentAccessor().newDocument().documentRef, makeInstance = (collection, ref, testInstance) => new ModelTestContextInstance(collection, ref, testInstance) as I, makeFixture = (f: PF) => new ModelTestContextFixture<T, D, PI, PF, I>(f), initDocument } = config;
+  const {
+    getCollection,
+    collectionForDocument,
+    makeRef = (collection) => {
+      const accessor = (collection as unknown as FirestoreCollection<T, D>).documentAccessor();
+
+      if (accessor.newDocument == null) {
+        throw new Error('collection passed to makeRef() was not a full FirestoreCollection. Either supply a custom makeRef() function or a FirestoreCollection that has newDocument() available on the documentAccessor.');
+      }
+
+      return accessor.newDocument().documentRef;
+    },
+    makeInstance = (collection, ref, testInstance) => new ModelTestContextInstance(collection, ref, testInstance) as I,
+    makeFixture = (f: PF) => new ModelTestContextFixture<T, D, PI, PF, I>(f),
+    initDocument
+  } = config;
 
   return (params: ModelTestContextParams<C, PI, PF>, buildTests: (u: F) => void) => {
     const { f } = params;
@@ -104,24 +130,37 @@ export function modelTestContextFactory<T, D extends FirestoreDocument<T> = Fire
       buildTests,
       initInstance: async () => {
         const parentInstance = f.instance;
-        const collection = getCollection(parentInstance, params);
 
-        let ref: Maybe<DocumentReference<T>> = params.ref as Maybe<DocumentReference<T>>;
-        let init = ref == null;
+        let ref: DocumentReference<T>;
+        let collection: CL;
+        let init: boolean;
 
-        if (ref != null && loadRef != null) {
-          ref = await loadRef(params, parentInstance);
+        if ((params as ModelTestContextDocumentRefParams).doc) {
+          const doc = await getValueFromGetter((params as ModelTestContextDocumentRefParams).doc);
+
+          if (!collectionForDocument) {
+            throw new Error('collectionForDocument() is required when using ModelTestContextDocumentRefParams values as input.');
+          }
+
+          collection = collectionForDocument(doc as D);
+          const expectedCollectionName = collection.documentAccessor().modelIdentity.collectionName;
+
+          if (expectedCollectionName !== doc.modelIdentity.collectionName) {
+            throw new Error(`Input doc is in a different collection (${doc.modelIdentity.collectionName}) than expected (${expectedCollectionName}).`);
+          }
+
+          ref = doc.documentRef;
           init = false;
-        }
-
-        if (!ref) {
-          ref = await makeRef(collection, params, parentInstance);
+        } else {
+          collection = getCollection(parentInstance, params as C);
+          ref = await makeRef(collection, params as C, parentInstance);
+          init = true;
         }
 
         const instance: I = await makeInstance(collection, ref, parentInstance);
 
         if (init && initDocument) {
-          await initDocument(instance, params);
+          await initDocument(instance, params as C);
         }
 
         return instance;
