@@ -1,5 +1,5 @@
 import { FirestoreCollection, FirestoreDocument, DocumentReference, FirestoreModelId, FirestoreModelKey } from '@dereekb/firebase';
-import { Getter, Maybe, PromiseOrValue } from '@dereekb/util';
+import { Getter, GetterOrValue, getValueFromGetter, Maybe, PromiseOrValue } from '@dereekb/util';
 import { JestTestContextFixture, useJestContextFixture, AbstractChildJestTestContextFixture } from '@dereekb/util/test';
 import { FirebaseAdminTestContext } from './firebase.admin';
 
@@ -87,7 +87,7 @@ export interface ModelTestContextFactoryParams<T, D extends FirestoreDocument<T>
   initDocument?: (instance: I, config: C) => Promise<void>;
 }
 
-export type ModelTestContextParams<C = any, PI extends FirebaseAdminTestContext = FirebaseAdminTestContext, PF extends JestTestContextFixture<PI> = JestTestContextFixture<PI>> = { f: PF; ref?: Maybe<DocumentReference<any>> } & C;
+export type ModelTestContextParams<C = any, PI extends FirebaseAdminTestContext = FirebaseAdminTestContext, PF extends JestTestContextFixture<PI> = JestTestContextFixture<PI>> = { f: PF; ref?: GetterOrValue<Maybe<DocumentReference<any>>> } & C;
 
 /**
  * Creates a new Jest Context that has a random user for authorization for use in firebase server tests.
@@ -106,7 +106,7 @@ export function modelTestContextFactory<T, D extends FirestoreDocument<T> = Fire
         const parentInstance = f.instance;
         const collection = getCollection(parentInstance, params);
 
-        let ref: Maybe<DocumentReference<T>> = params.ref as Maybe<DocumentReference<T>>;
+        let ref: Maybe<DocumentReference<T>> = getValueFromGetter(params.ref);
         let init = ref == null;
 
         if (ref != null && loadRef != null) {
