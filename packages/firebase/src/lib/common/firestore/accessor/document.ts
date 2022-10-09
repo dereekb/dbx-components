@@ -5,14 +5,15 @@ import { lazyFrom } from '@dereekb/rxjs';
 import { Observable } from 'rxjs';
 import { FirestoreAccessorDriverRef } from '../driver/accessor';
 import { FirestoreCollectionNameRef, FirestoreModelId, FirestoreModelIdentityCollectionName, FirestoreModelIdentityModelType, FirestoreModelIdentityRef, FirestoreModelIdRef, FirestoreModelKey, FirestoreModelKeyRef } from './../collection/collection';
-import { DocumentReference, CollectionReference, Transaction, WriteBatch, DocumentSnapshot, SnapshotOptions, WriteResult, FirestoreDataConverter } from '../types';
+import { DocumentReference, CollectionReference, Transaction, WriteBatch, DocumentSnapshot, SnapshotOptions, WriteResult, FirestoreDataConverter, DocumentData } from '../types';
 import { FirestoreAccessorIncrementUpdate, dataFromSnapshotStream, FirestoreDocumentDataAccessor, FirestoreDocumentUpdateParams, updateWithAccessorUpdateAndConverterFunction } from './accessor';
 import { CollectionReferenceRef, DocumentReferenceRef, FirestoreContextReference, FirestoreDataConverterRef } from '../reference';
 import { FirestoreDocumentContext } from './context';
-import { build, Maybe } from '@dereekb/util';
+import { build, Factory, Maybe } from '@dereekb/util';
 import { FirestoreModelTypeRef, FirestoreModelIdentity, FirestoreModelTypeModelIdentityRef } from '../collection/collection';
 import { InterceptAccessorFactoryFunction } from './accessor.wrap';
 import { incrementUpdateWithAccessorFunction } from './increment';
+import { FirestoreDataConverterFactory, InterceptFirestoreDataConverterFactory } from './converter';
 
 export interface FirestoreDocument<T, I extends FirestoreModelIdentity = FirestoreModelIdentity> extends FirestoreDataConverterRef<T>, DocumentReferenceRef<T>, CollectionReferenceRef<T>, FirestoreModelIdentityRef<I>, FirestoreModelTypeRef<FirestoreModelIdentityModelType<I>>, FirestoreCollectionNameRef<FirestoreModelIdentityCollectionName<I>>, FirestoreModelKeyRef, FirestoreModelIdRef {
   readonly accessor: FirestoreDocumentDataAccessor<T>;
@@ -167,6 +168,11 @@ export interface LimitedFirestoreDocumentAccessor<T, D extends FirestoreDocument
    * @param ref
    */
   documentRefForKey(fullPath: FirestoreModelKey): DocumentReference<T>;
+
+  /**
+   * Returns the converter factory for this accessor.
+   */
+  readonly converterFactory: FirestoreDataConverterFactory<T>;
 }
 
 export interface FirestoreDocumentAccessor<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> extends LimitedFirestoreDocumentAccessor<T, D>, CollectionReferenceRef<T>, FirestoreAccessorDriverRef {
@@ -224,12 +230,17 @@ export interface LimitedFirestoreDocumentAccessorFactoryConfig<T, D extends Fire
    * Optional InterceptAccessorFactoryFunction to intercept/return a modified accessor factory.
    */
   readonly accessorFactory?: InterceptAccessorFactoryFunction<T>;
+  /**
+   * Optional InterceptFirestoreDataConverterFactory to return a modified converter.
+   */
+  readonly converterFactory?: InterceptFirestoreDataConverterFactory<T>;
   readonly makeDocument: FirestoreDocumentFactoryFunction<T, D>;
 }
 
 export function limitedFirestoreDocumentAccessorFactory<T, D extends FirestoreDocument<T> = FirestoreDocument<T>>(config: LimitedFirestoreDocumentAccessorFactoryConfig<T, D>): LimitedFirestoreDocumentAccessorFactoryFunction<T, D> {
-  const { firestoreContext, firestoreAccessorDriver, makeDocument, accessorFactory: interceptAccessorFactory, converter, modelIdentity } = config;
+  const { firestoreContext, firestoreAccessorDriver, makeDocument, accessorFactory: interceptAccessorFactory, converter: inputConverter, converterFactory: inputConverterFactory, modelIdentity } = config;
   const expectedCollectionName = firestoreAccessorDriver.fuzzedPathForPath ? firestoreAccessorDriver.fuzzedPathForPath(modelIdentity.collectionName) : modelIdentity.collectionName;
+  const converterFactory: FirestoreDataConverterFactory<T> = inputConverterFactory ? (ref) => (ref ? inputConverterFactory(ref) ?? inputConverter : inputConverter) : () => inputConverter;
 
   return (context?: FirestoreDocumentContext<T>) => {
     const databaseContext: FirestoreDocumentContext<T> = context ?? config.firestoreAccessorDriver.defaultContextFactory();
@@ -240,6 +251,7 @@ export function limitedFirestoreDocumentAccessorFactory<T, D extends FirestoreDo
         throw new Error('ref must be defined.');
       }
 
+      const converter = converterFactory(ref);
       const accessor = dataAccessorFactory.accessorFor(ref.withConverter(converter));
       return makeDocument(accessor, documentAccessor);
     }
@@ -251,6 +263,7 @@ export function limitedFirestoreDocumentAccessorFactory<T, D extends FirestoreDo
         throw new Error(`unexpected key/path "${fullPath}" for expected type "${modelIdentity.collectionName}"/"${modelIdentity.modelType}".`);
       }
 
+      const converter = converterFactory(ref);
       return ref.withConverter(converter);
     }
 
@@ -260,7 +273,8 @@ export function limitedFirestoreDocumentAccessorFactory<T, D extends FirestoreDo
     }
 
     const documentAccessor: LimitedFirestoreDocumentAccessor<T, D> = {
-      converter,
+      converter: inputConverter,
+      converterFactory,
       modelIdentity,
       loadDocumentFrom(document: FirestoreDocument<T>): D {
         return loadDocument(document.documentRef);
