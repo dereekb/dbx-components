@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [9.11.1](https://github.com/dereekb/dbx-components/compare/v9.11.0-dev...v9.11.1) (2022-10-09)
+
+
+### Bug Fixes
+
+* fixed DbxFirebaseDevelopmentSchedulerService error handling ([3763fdf](https://github.com/dereekb/dbx-components/commit/3763fdf830fbc6d0f2d134d0d66513b2dab39964))
+
+
+
 # [9.11.0](https://github.com/dereekb/dbx-components/compare/v9.10.4-dev...v9.11.0) (2022-10-09)
 
 
