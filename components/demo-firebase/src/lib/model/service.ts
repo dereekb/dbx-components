@@ -1,10 +1,12 @@
-import { FirebaseAppModelContext, firebaseModelServiceFactory, firebaseModelsService, FirebasePermissionServiceModel, FirestoreContext, grantFullAccessIfAdmin, grantFullAccessIfAuthUserRelated } from '@dereekb/firebase';
+import { FirebaseAppModelContext, firebaseModelServiceFactory, firebaseModelsService, FirebasePermissionServiceModel, FirestoreContext, FirestoreDocumentAccessor, grantFullAccessIfAdmin, grantFullAccessIfAuthUserRelated, SystemState, SystemStateDocument, systemStateFirestoreCollection, SystemStateFirestoreCollection, SystemStateFirestoreCollections, SystemStateStoredData } from '@dereekb/firebase';
 import { GrantedRoleMap } from '@dereekb/model';
 import { PromiseOrValue } from '@dereekb/util';
 import { GuestbookTypes, GuestbookFirestoreCollections, Guestbook, GuestbookDocument, GuestbookEntry, GuestbookEntryDocument, GuestbookEntryFirestoreCollectionFactory, GuestbookEntryFirestoreCollectionGroup, GuestbookEntryRoles, GuestbookFirestoreCollection, GuestbookRoles, guestbookEntryFirestoreCollectionFactory, guestbookEntryFirestoreCollectionGroup, guestbookFirestoreCollection } from './guestbook';
 import { ProfileTypes, Profile, ProfileDocument, ProfileFirestoreCollection, ProfileFirestoreCollections, ProfilePrivateData, ProfilePrivateDataDocument, ProfilePrivateDataFirestoreCollectionFactory, ProfilePrivateDataFirestoreCollectionGroup, ProfilePrivateDataRoles, ProfileRoles, profileFirestoreCollection, profilePrivateDataFirestoreCollectionFactory, profilePrivateDataFirestoreCollectionGroup } from './profile';
+import { demoSystemStateStoredDataConverterMap, ExampleSystemData, EXAMPLE_SYSTEM_DATA_SYSTEM_STATE_TYPE } from './system/system';
 
-export abstract class DemoFirestoreCollections implements ProfileFirestoreCollections, GuestbookFirestoreCollections {
+export abstract class DemoFirestoreCollections implements ProfileFirestoreCollections, GuestbookFirestoreCollections, SystemStateFirestoreCollections {
+  abstract readonly systemStateCollection: SystemStateFirestoreCollection;
   abstract readonly guestbookCollection: GuestbookFirestoreCollection;
   abstract readonly guestbookEntryCollectionGroup: GuestbookEntryFirestoreCollectionGroup;
   abstract readonly guestbookEntryCollectionFactory: GuestbookEntryFirestoreCollectionFactory;
@@ -15,6 +17,7 @@ export abstract class DemoFirestoreCollections implements ProfileFirestoreCollec
 
 export function makeDemoFirestoreCollections(firestoreContext: FirestoreContext): DemoFirestoreCollections {
   return {
+    systemStateCollection: systemStateFirestoreCollection(firestoreContext, demoSystemStateStoredDataConverterMap),
     guestbookCollection: guestbookFirestoreCollection(firestoreContext),
     guestbookEntryCollectionGroup: guestbookEntryFirestoreCollectionGroup(firestoreContext),
     guestbookEntryCollectionFactory: guestbookEntryFirestoreCollectionFactory(firestoreContext),
@@ -73,3 +76,8 @@ export type DemoFirebaseModelServiceFactories = typeof DEMO_FIREBASE_MODEL_SERVI
 export const demoFirebaseModelServices = firebaseModelsService<DemoFirebaseModelServiceFactories, DemoFirebaseBaseContext, DemoFirebaseModelTypes>(DEMO_FIREBASE_MODEL_SERVICE_FACTORIES);
 
 export type DemoFirebaseContext = DemoFirebaseBaseContext & { service: DemoFirebaseModelServiceFactories };
+
+// MARK: System
+export function loadExampleSystemState(accessor: FirestoreDocumentAccessor<SystemState<SystemStateStoredData>, SystemStateDocument<SystemStateStoredData>>): SystemStateDocument<ExampleSystemData> {
+  return accessor.loadDocumentForId(EXAMPLE_SYSTEM_DATA_SYSTEM_STATE_TYPE) as SystemStateDocument<ExampleSystemData>;
+}

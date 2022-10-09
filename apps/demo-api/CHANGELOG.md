@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [9.11.0](https://github.com/dereekb/dbx-components/compare/v9.10.4-dev...v9.11.0) (2022-10-09)
+
+
+### Features
+
+* added SystemStateDocument ([d4a0fcf](https://github.com/dereekb/dbx-components/commit/d4a0fcf53e4e98c91ec8915e9122b7af9ded35f7))
+
+
+
 ## [9.10.4](https://github.com/dereekb/dbx-components/compare/v9.10.3-dev...v9.10.4) (2022-10-07)
 
 
