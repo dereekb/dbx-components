@@ -59,14 +59,19 @@ export class DbxFirebaseDevelopmentSchedulerService implements Initialized {
                 exhaustMap(() => {
                   console.log('Running scheduled tasks in order... ', executionOrder);
 
-                  return PromiseUtility.runTasksForValues(executionOrder, (taskName) => this.runScheduledFunction(taskName), { sequential: true, retriesAllowed: 0, retryWait: 0 }).catch((e) => {
-                    console.log('Failed running scheduled task: ', e);
-                    this._error.next(true);
-                  });
+                  return PromiseUtility.runTasksForValues(executionOrder, (taskName) => this.runScheduledFunction(taskName), { sequential: true, retriesAllowed: 0, retryWait: 0 })
+                    .then(() => true)
+                    .catch((e) => {
+                      console.log('Failed running scheduled task: ', e);
+                      this._error.next(true);
+                      return false;
+                    });
                 }),
-                tap(() => {
-                  console.log('Successfully finished running all scheduled tasks.');
-                  this._error.next(false);
+                tap((success) => {
+                  if (success) {
+                    console.log('Successfully finished running all scheduled tasks.');
+                    this._error.next(false);
+                  }
                 })
               );
             })
