@@ -88,7 +88,7 @@ export interface ModelTestContextFactoryParams<T, D extends FirestoreDocument<T>
    *
    * Required if using ModelTestContextDocumentRefParam as input.
    */
-  collectionForDocument?: (document: D) => CL;
+  collectionForDocument?: (parentInstance: PI, document: D) => CL;
 }
 
 export interface ModelTestContextDocumentRefParams<D extends FirestoreDocument<any> = FirestoreDocument<any>> {
@@ -142,7 +142,7 @@ export function modelTestContextFactory<T, D extends FirestoreDocument<T> = Fire
             throw new Error('collectionForDocument() is required when using ModelTestContextDocumentRefParams values as input.');
           }
 
-          collection = collectionForDocument(doc as D);
+          collection = collectionForDocument(parentInstance, doc as D);
           const expectedCollectionName = collection.documentAccessor().modelIdentity.collectionName;
 
           if (expectedCollectionName !== doc.modelIdentity.collectionName) {
