@@ -143,6 +143,9 @@ export const demoGuestbookContextFactory = () =>
   modelTestContextFactory<Guestbook, GuestbookDocument, DemoApiGuestbookTestContextParams, DemoApiFunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiFunctionContextFixture<FirebaseAdminFunctionTestContextInstance>, DemoApiGuestbookTestContextInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiGuestbookTestContextFixture<FirebaseAdminFunctionTestContextInstance>>({
     makeFixture: (f) => new DemoApiGuestbookTestContextFixture(f),
     getCollection: (fi) => fi.demoFirestoreCollections.guestbookCollection,
+    collectionForDocument: (fi, doc) => {
+      return fi.demoFirestoreCollections.guestbookCollection;
+    },
     makeInstance: (delegate, ref, testInstance) => new DemoApiGuestbookTestContextInstance(delegate, ref, testInstance),
     initDocument: async (instance, params) => {
       const guestbook = instance.document;
@@ -173,6 +176,10 @@ export const demoGuestbookEntryContextFactory = () =>
   modelTestContextFactory<GuestbookEntry, GuestbookEntryDocument, DemoApiGuestbookEntryTestContextParams, DemoApiFunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiFunctionContextFixture<FirebaseAdminFunctionTestContextInstance>, DemoApiGuestbookEntryTestContextInstance<FirebaseAdminFunctionTestContextInstance>, DemoApiGuestbookEntryTestContextFixture<FirebaseAdminFunctionTestContextInstance>, GuestbookEntryFirestoreCollection>({
     makeFixture: (f) => new DemoApiGuestbookEntryTestContextFixture(f),
     getCollection: (fi, params) => fi.demoFirestoreCollections.guestbookEntryCollectionFactory(params.g.document),
+    collectionForDocument: (fi, doc) => {
+      const parent = fi.demoFirestoreCollections.guestbookCollection.documentAccessor().loadDocument(doc.parent);
+      return fi.demoFirestoreCollections.guestbookEntryCollectionFactory(parent);
+    },
     makeInstance: (delegate, ref, testInstance) => new DemoApiGuestbookEntryTestContextInstance(delegate, ref, testInstance),
     makeRef: async (collection, params) => {
       return collection.documentAccessor().documentRefForId(params.u.uid);
