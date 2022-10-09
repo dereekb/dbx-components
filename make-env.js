@@ -4,6 +4,8 @@
  * The expected usage is:
  *
  * node make-env.js
+ *
+ * Be sure to put all environment variables that have secrets that need to be deployed into the .env file, or declare them below.
  */
 const fs = require('fs');
 const { parse, stringify } = require('envfile');
@@ -34,9 +36,13 @@ function initWithProcessEnv(defaultValue, keysSource = env) {
 // ======================================
 // Configure Here using JS
 // ======================================
-
 const placeholderValue = 'plc';
-initWithProcessEnv(placeholderValue); // Init with process.env, copying values from process.env onto the existing keys of our env variable
+
+// Init with process.env, copying values from process.env onto the existing keys of our env variable
+initWithProcessEnv(placeholderValue);
+
+// Explicit Declaration
+copyToEnvFromProcessEnv('MAILGUN_DOMAIN');
 
 // ======================================
 // Finish Configuration
