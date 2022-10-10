@@ -7,6 +7,7 @@ import {
   DateBlockIndex,
   dateBlockIndexRange,
   dateBlockRange,
+  dateBlockRangeBlocksCount,
   dateBlockRangeIncludedByRangeFunction,
   dateBlockRangesFullyCoverDateBlockRangeFunction,
   DateBlockRangeWithRange,
@@ -563,6 +564,44 @@ describe('groupToDateBlockRanges()', () => {
 
     expect(result[2].i).toBe(9);
     expect(result[2].to).toBe(12);
+  });
+});
+
+describe('dateBlockRangeBlocksCount()', () => {
+  it('should return 1 for a DateBlock.', () => {
+    const count = dateBlockRangeBlocksCount({ i: 100 });
+    expect(count).toBe(1);
+  });
+
+  it('should return 2 for two DateBlocks.', () => {
+    const count = dateBlockRangeBlocksCount([{ i: 100 }, { i: 101 }]);
+    expect(count).toBe(2);
+  });
+
+  it('should return 1 for two DateBlocks that have the same value.', () => {
+    const count = dateBlockRangeBlocksCount([{ i: 100 }, { i: 100 }]);
+    expect(count).toBe(1);
+  });
+
+  it('should return 10 for a DateBlockRange.', () => {
+    const count = dateBlockRangeBlocksCount({ i: 5, to: 15 });
+    expect(count).toBe(11); // 11 blocks
+  });
+
+  it('should return the sum of two unique DateBlockRanges.', () => {
+    const count = dateBlockRangeBlocksCount([
+      { i: 5, to: 15 }, // 11 blocks
+      { i: 25, to: 35 } // 11 blocks
+    ]);
+    expect(count).toBe(22);
+  });
+
+  it('should return the unique blocks for DateBlockRanges.', () => {
+    const count = dateBlockRangeBlocksCount([
+      { i: 5, to: 10 }, // 6 blocks
+      { i: 5, to: 15 } // 11 blocks
+    ]);
+    expect(count).toBe(11);
   });
 });
 
