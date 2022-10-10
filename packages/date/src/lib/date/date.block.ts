@@ -1,4 +1,4 @@
-import { DayOfWeek, RequiredOnKeys, IndexNumber, IndexRange, indexRangeCheckFunction, IndexRef, MINUTES_IN_DAY, MS_IN_DAY, UniqueModel, lastValue, FactoryWithRequiredInput, FilterFunction, mergeFilterFunctions, range, Milliseconds, Hours, MapFunction, getNextDay, SortCompareFunction, sortAscendingIndexNumberRefFunction, mergeArrayIntoArray, Configurable } from '@dereekb/util';
+import { DayOfWeek, RequiredOnKeys, IndexNumber, IndexRange, indexRangeCheckFunction, IndexRef, MINUTES_IN_DAY, MS_IN_DAY, UniqueModel, lastValue, FactoryWithRequiredInput, FilterFunction, mergeFilterFunctions, range, Milliseconds, Hours, MapFunction, getNextDay, SortCompareFunction, sortAscendingIndexNumberRefFunction, mergeArrayIntoArray, Configurable, ArrayOrValue } from '@dereekb/util';
 import { dateRange, DateRange, DateRangeDayDistanceInput, DateRangeType, isDateRange } from './date.range';
 import { DateDurationSpan } from './date.duration';
 import { differenceInDays, differenceInMilliseconds, isBefore, addDays, addMinutes, setSeconds, addMilliseconds, hoursToMilliseconds, addHours, differenceInHours, isAfter } from 'date-fns';
@@ -412,11 +412,15 @@ export interface DateBlockDayTimingInfo {
    * Whether or not the block is within the configured range.
    */
   isInRange: boolean;
+  /**
+   * Time the timing starts on the input day.
+   */
+  startsAtOnDay: Date;
 }
 
 export type DateBlockDayInfoFactory = (date: Date) => DateBlockDayTimingInfo;
 
-export function dateBlocksDayInfoFactory(config: DateBlocksDayTimingInfoFactoryConfig) {
+export function dateBlocksDayInfoFactory(config: DateBlocksDayTimingInfoFactoryConfig): DateBlockDayInfoFactory {
   const { timing, rangeLimit } = config;
   const { startsAt, duration } = timing;
   const indexRange = rangeLimit !== false ? dateBlockIndexRange(timing, rangeLimit) : { minIndex: Number.MIN_SAFE_INTEGER, maxIndex: Number.MAX_SAFE_INTEGER };
@@ -427,10 +431,10 @@ export function dateBlocksDayInfoFactory(config: DateBlocksDayTimingInfoFactoryC
     const dayIndex = dayIndexFactory(input);
     const isInRange = checkIsInRange(dayIndex);
 
-    const startsAtToday = copyHoursAndMinutesFromDate(input, startsAt, false);
+    const startsAtOnDay = copyHoursAndMinutesFromDate(input, startsAt, false);
     const potentiallyInProgress = !isAfter(startsAt, input);
 
-    const isInProgress = potentiallyInProgress && isBefore(input, addMinutes(startsAtToday, duration));
+    const isInProgress = potentiallyInProgress && isBefore(input, addMinutes(startsAtOnDay, duration));
     const hasOccuredToday = potentiallyInProgress && !isInProgress;
 
     const currentIndex: DateBlockIndex = isInProgress || hasOccuredToday ? dayIndex : dayIndex - 1; // If not in progress and hasn't occured today, current index is the previous index.
@@ -442,7 +446,8 @@ export function dateBlocksDayInfoFactory(config: DateBlocksDayTimingInfoFactoryC
       nextIndex,
       hasOccuredToday,
       isInProgress,
-      isInRange
+      isInRange,
+      startsAtOnDay
     };
   };
 }
@@ -550,6 +555,27 @@ export function dateBlockRange(i: number, to?: number): DateBlockRangeWithRange 
   return { i, to: to ?? i };
 }
 
+export function dateBlockRangeWithRange(inputDateBlockRange: DateBlockRange): DateBlockRangeWithRange {
+  return dateBlockRange(inputDateBlockRange.i, inputDateBlockRange.to);
+}
+
+/**
+ * Function that returns true if the input range covers the full range of the configured DateBlockRange.
+ */
+export type DateBlockRangeIncludedByRangeFunction = (range: DateBlockRangeWithRange) => boolean;
+
+/**
+ * Creates a DateBlockRangeIncludedByRangeFunction
+ *
+ * @param inputRange
+ * @returns
+ */
+export function dateBlockRangeIncludedByRangeFunction(inputRange: DateBlockRange): DateBlockRangeIncludedByRangeFunction {
+  const i = inputRange.i;
+  const to = inputRange.to ?? i;
+  return (range) => range.i <= i && range.to >= to;
+}
+
 /**
  * Sorts the input ranges by index and distance (to values).
  *
@@ -581,7 +607,7 @@ export type DateBlockRangeWithRange = RequiredOnKeys<DateBlockRange, 'to'>;
  *
  * @param input
  */
-export function groupToDateBlockRanges(input: (DateBlock | DateBlockRange)[]): DateBlockRange[] {
+export function groupToDateBlockRanges(input: (DateBlock | DateBlockRange)[]): DateBlockRangeWithRange[] {
   if (input.length === 0) {
     return [];
   }
@@ -600,7 +626,7 @@ export function groupToDateBlockRanges(input: (DateBlock | DateBlockRange)[]): D
   // start at the first block
   let current: DateBlockRangeWithRange = newBlockFromBlocksIndex(0);
 
-  const results: DateBlockRange[] = [];
+  const results: DateBlockRangeWithRange[] = [];
 
   for (let i = 1; i < blocks.length; i += 1) {
     const block = blocks[i];
@@ -619,6 +645,26 @@ export function groupToDateBlockRanges(input: (DateBlock | DateBlockRange)[]): D
   results.push(current);
 
   return results;
+}
+
+/**
+ * Checks whether or not the input range is fully included by the configured ranges.
+ */
+export type DateBlockRangesFullyCoverDateBlockRangeFunction = (range: DateBlockRange) => boolean;
+
+/**
+ * Creates a dateBlockRangesFullyCoverDateBlockRangeFunction
+ *
+ * @param ranges
+ * @returns
+ */
+export function dateBlockRangesFullyCoverDateBlockRangeFunction(ranges: ArrayOrValue<DateBlockRange>): DateBlockRangesFullyCoverDateBlockRangeFunction {
+  const groupedRanges = Array.isArray(ranges) ? groupToDateBlockRanges(ranges) : [dateBlockRangeWithRange(ranges)];
+
+  return (inputRange: DateBlockRange) => {
+    const fn = dateBlockRangeIncludedByRangeFunction(inputRange);
+    return groupedRanges.findIndex(fn) !== -1;
+  };
 }
 
 /**

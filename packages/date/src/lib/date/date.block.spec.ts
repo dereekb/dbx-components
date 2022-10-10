@@ -7,6 +7,8 @@ import {
   DateBlockIndex,
   dateBlockIndexRange,
   dateBlockRange,
+  dateBlockRangeIncludedByRangeFunction,
+  dateBlockRangesFullyCoverDateBlockRangeFunction,
   DateBlockRangeWithRange,
   dateBlocksDayInfoFactory,
   dateBlocksExpansionFactory,
@@ -564,6 +566,87 @@ describe('groupToDateBlockRanges()', () => {
   });
 });
 
+describe('dateBlockRangesFullyCoverDateBlockRangeFunction()', () => {
+  describe('function', () => {
+    describe('single range', () => {
+      const range = dateBlockRange(5, 10);
+      const fn = dateBlockRangesFullyCoverDateBlockRangeFunction(range);
+
+      it('should return true for the same range.', () => {
+        const result = fn(range);
+        expect(result).toBe(true);
+      });
+
+      it('should return true for a range that is smaller and fully covered', () => {
+        const result = fn(dateBlockRange(5, 6));
+        expect(result).toBe(true);
+      });
+
+      it('should return false for a range that is larger and not fully covered.', () => {
+        const result = fn(dateBlockRange(2, 12));
+        expect(result).toBe(false);
+      });
+
+      it('should return false for a range that is smaller and not fully covered', () => {
+        const result = fn(dateBlockRange(1, 4));
+        expect(result).toBe(false);
+      });
+    });
+
+    describe('split range', () => {
+      const rangeA = dateBlockRange(1, 3);
+      const rangeB = dateBlockRange(5, 8);
+      const fn = dateBlockRangesFullyCoverDateBlockRangeFunction([rangeA, rangeB]);
+
+      it('should return true for rangeA.', () => {
+        const result = fn(rangeA);
+        expect(result).toBe(true);
+      });
+
+      it('should return true for rangeB.', () => {
+        const result = fn(rangeB);
+        expect(result).toBe(true);
+      });
+
+      it('should return false for a range that is larger and not fully covered.', () => {
+        const result = fn(dateBlockRange(1, 12));
+        expect(result).toBe(false);
+      });
+    });
+
+    describe('merged range', () => {
+      const rangeA = dateBlockRange(2, 4);
+      const rangeB = dateBlockRange(5, 10);
+      const fn = dateBlockRangesFullyCoverDateBlockRangeFunction([rangeA, rangeB]);
+
+      it('should return true for rangeA.', () => {
+        const result = fn(rangeA);
+        expect(result).toBe(true);
+      });
+
+      it('should return true for rangeB.', () => {
+        const result = fn(rangeB);
+        expect(result).toBe(true);
+      });
+
+      it('should return false for a range that is larger and not fully covered.', () => {
+        const result = fn(dateBlockRange(0, 12));
+        expect(result).toBe(false);
+      });
+
+      it('should return false for a range that is smaller and not fully covered', () => {
+        const result = fn(dateBlockRange(1, 3));
+        expect(result).toBe(false);
+      });
+
+      it('should return false for a range that is not fully covered', () => {
+        const result = fn(dateBlockRange(10, 12));
+        expect(result).toBe(false);
+      });
+    });
+  });
+});
+
 describe('expandDateBlockRange', () => {
   it('should copy the input block and spread it over a range.', () => {
     const lastIndex = 5;
@@ -656,6 +739,38 @@ describe('dateBlocksInDateBlockRange', () => {
 
     const result = dateBlocksInDateBlockRange([input], range);
     expect(result.length).toBe(0);
+  });
+});
+
+describe('dateBlockRangeIncludedByRangeFunction()', () => {
+  describe('function', () => {
+    const range = dateBlockRange(5, 10);
+    const fn = dateBlockRangeIncludedByRangeFunction(range);
+
+    it('should return true for the same range.', () => {
+      const result = fn(range);
+      expect(result).toBe(true);
+    });
+
+    it('should return true for a range that is larger and includes the full range.', () => {
+      const result = fn(dateBlockRange(2, 12));
+      expect(result).toBe(true);
+    });
+
+    it('should return false for a range that is smaller and does not include the full range.', () => {
+      const result = fn(dateBlockRange(1, 4));
+      expect(result).toBe(false);
+    });
+
+    it('should return false for a range that is partial and does not include the full range.', () => {
+      const result = fn(dateBlockRange(5, 8));
+      expect(result).toBe(false);
+    });
+
+    it('should return false for a range that is partial and bigger and does not include the full range.', () => {
+      const result = fn(dateBlockRange(6, 12));
+      expect(result).toBe(false);
+    });
   });
 });
 
