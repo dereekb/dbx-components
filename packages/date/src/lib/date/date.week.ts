@@ -215,7 +215,7 @@ export interface YearWeekCodeGroupFactoryConfig<B> {
 }
 
 /**
- * Crates a YearWeekCodeGroupFactory.
+ * Creates a YearWeekCodeGroupFactory.
  *
  * @param config
  * @returns

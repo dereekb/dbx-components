@@ -1,7 +1,7 @@
-import { DayOfWeek, RequiredOnKeys, IndexNumber, IndexRange, indexRangeCheckFunction, IndexRef, MINUTES_IN_DAY, MS_IN_DAY, UniqueModel, lastValue, FactoryWithRequiredInput, FilterFunction, mergeFilterFunctions, range, Milliseconds, Hours, MapFunction, getNextDay, SortCompareFunction, sortAscendingIndexNumberRefFunction, mergeArrayIntoArray } from '@dereekb/util';
+import { DayOfWeek, RequiredOnKeys, IndexNumber, IndexRange, indexRangeCheckFunction, IndexRef, MINUTES_IN_DAY, MS_IN_DAY, UniqueModel, lastValue, FactoryWithRequiredInput, FilterFunction, mergeFilterFunctions, range, Milliseconds, Hours, MapFunction, getNextDay, SortCompareFunction, sortAscendingIndexNumberRefFunction, mergeArrayIntoArray, Configurable } from '@dereekb/util';
 import { dateRange, DateRange, DateRangeDayDistanceInput, DateRangeType, isDateRange } from './date.range';
 import { DateDurationSpan } from './date.duration';
-import { differenceInDays, differenceInMilliseconds, isBefore, addDays, addMinutes, setSeconds, addMilliseconds, hoursToMilliseconds, addHours } from 'date-fns';
+import { differenceInDays, differenceInMilliseconds, isBefore, addDays, addMinutes, setSeconds, addMilliseconds, hoursToMilliseconds, addHours, differenceInHours, isAfter } from 'date-fns';
 import { copyHoursAndMinutesFromDate } from './date';
 import { Expose, Type } from 'class-transformer';
 import { getCurrentSystemOffsetInHours } from './date.timezone';
@@ -90,6 +90,39 @@ export function getCurrentDateBlockTimingOffset(timing: DateBlockTiming): Millis
 export function getCurrentDateBlockTimingStartDate(timing: DateBlockTiming): Date {
   const offset = getCurrentDateBlockTimingOffset(timing);
   return addMilliseconds(timing.start, offset);
+}
+
+/**
+ * Returns the DateBlockIndex of the input date relative to the configured D
+ */
+export type DateTimingRelativeIndexFactory = ((date: Date) => DateBlockIndex) & {
+  readonly _timing: DateBlockTiming;
+};
+
+/**
+ *
+ * @param timing
+ * @returns
+ */
+export function dateTimingRelativeIndexFactory(timing: DateBlockTiming): DateTimingRelativeIndexFactory {
+  const startDate = getCurrentDateBlockTimingStartDate(timing);
+  const factory = ((date: Date) => {
+    const diff = differenceInHours(date, startDate);
+    let daysOffset = Math.floor(diff / 24);
+    return daysOffset;
+  }) as Configurable<Partial<DateTimingRelativeIndexFactory>>;
+  factory._timing = timing;
+  return factory as DateTimingRelativeIndexFactory;
+}
+
+/**
+ * Gets the relative index of the input date compared to the input timing.
+ *
+ * @param timing
+ * @param date
+ */
+export function getRelativeIndexForDateTiming(timing: DateBlockTiming, date = new Date()): DateBlockIndex {
+  return dateTimingRelativeIndexFactory(timing)(date);
 }
 
 export class DateBlockTiming extends DateDurationSpan {
@@ -345,6 +378,72 @@ export function dateBlocksExpansionFactory<B extends DateBlock | DateBlockRange 
     });
 
     return spans;
+  };
+}
+
+export type DateBlocksDayTimingInfoFactoryConfig = Pick<DateBlocksExpansionFactoryConfig, 'timing' | 'rangeLimit'>;
+
+export interface DateBlockDayTimingInfo {
+  /**
+   * Index for the day
+   */
+  dayIndex: DateBlockIndex;
+  /**
+   * Index for the previous/current execution.
+   *
+   * If the index is currently in progress given the timing, this will return the dayIndex.
+   */
+  currentIndex: DateBlockIndex;
+  /**
+   * Index for the next execution.
+   *
+   * If the index is currently in progress given the timing, this will return the dayIndex + 1.
+   */
+  nextIndex: DateBlockIndex;
+  /**
+   * Whether or not today's timing has already occured in it's entirety.
+   */
+  hasOccuredToday: boolean;
+  /**
+   * Whether or not today's timing is currenctly in progress.
+   */
+  isInProgress: boolean;
+  /**
+   * Whether or not the block is within the configured range.
+   */
+  isInRange: boolean;
+}
+
+export type DateBlockDayInfoFactory = (date: Date) => DateBlockDayTimingInfo;
+
+export function dateBlocksDayInfoFactory(config: DateBlocksDayTimingInfoFactoryConfig) {
+  const { timing, rangeLimit } = config;
+  const { startsAt, duration } = timing;
+  const indexRange = rangeLimit !== false ? dateBlockIndexRange(timing, rangeLimit) : { minIndex: Number.MIN_SAFE_INTEGER, maxIndex: Number.MAX_SAFE_INTEGER };
+  const checkIsInRange = indexRangeCheckFunction({ indexRange, inclusiveMaxIndex: false });
+  const dayIndexFactory = dateTimingRelativeIndexFactory(timing);
+
+  return (input: Date) => {
+    const dayIndex = dayIndexFactory(input);
+    const isInRange = checkIsInRange(dayIndex);
+
+    const startsAtToday = copyHoursAndMinutesFromDate(input, startsAt, false);
+    const potentiallyInProgress = !isAfter(startsAt, input);
+
+    const isInProgress = potentiallyInProgress && isBefore(input, addMinutes(startsAtToday, duration));
+    const hasOccuredToday = potentiallyInProgress && !isInProgress;
+
+    const currentIndex: DateBlockIndex = isInProgress || hasOccuredToday ? dayIndex : dayIndex - 1; // If not in progress and hasn't occured today, current index is the previous index.
+    const nextIndex: DateBlockIndex = currentIndex + 1;
+
+    return {
+      dayIndex,
+      currentIndex,
+      nextIndex,
+      hasOccuredToday,
+      isInProgress,
+      isInRange
+    };
   };
 }
 
