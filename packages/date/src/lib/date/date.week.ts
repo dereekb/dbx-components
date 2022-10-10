@@ -12,9 +12,9 @@ export type YearWeekCode = number;
 /**
  * Used for default YearWeekCode values
  */
-export const UNKNOWN_JOB_YEAR_WEEK = 0;
+export const UNKNOWN_YEAR_WEEK_CODE = 0;
 
-export type UnknownYearWeekCode = typeof UNKNOWN_JOB_YEAR_WEEK;
+export type UnknownYearWeekCode = typeof UNKNOWN_YEAR_WEEK_CODE;
 
 /**
  * The week in the year. Starts from 1.
@@ -246,3 +246,9 @@ export function yearWeekCodeGroupFactory<B>(config: YearWeekCodeGroupFactoryConf
     return groups;
   };
 }
+
+// MARK: Compat
+/**
+ * @deprecated use UNKNOWN_YEAR_WEEK_CODE instead.
+ */
+export const UNKNOWN_JOB_YEAR_WEEK = UNKNOWN_YEAR_WEEK_CODE;
