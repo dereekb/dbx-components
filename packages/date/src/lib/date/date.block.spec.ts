@@ -1,7 +1,29 @@
 import { expectFail, itShouldFail } from '@dereekb/util/test';
 import { DateRange, DateRangeInput } from './date.range';
-import { addDays, addHours, addMinutes, setHours, setMinutes, startOfDay, endOfDay, addSeconds, addMilliseconds, millisecondsToHours, minutesToHours } from 'date-fns';
-import { DateBlock, dateBlockDayOfWeekFactory, DateBlockIndex, dateBlockIndexRange, dateBlockRange, DateBlockRangeWithRange, dateBlocksExpansionFactory, dateBlocksInDateBlockRange, dateBlockTiming, DateBlockTiming, expandDateBlockRange, expandUniqueDateBlocksFunction, getCurrentDateBlockTimingOffset, getCurrentDateBlockTimingStartDate, groupToDateBlockRanges, groupUniqueDateBlocks, isValidDateBlockTiming, sortDateBlockRanges, UniqueDateBlockRange } from './date.block';
+import { addDays, addHours, addMinutes, setHours, setMinutes, startOfDay, endOfDay, addSeconds, addMilliseconds, millisecondsToHours, minutesToHours, startOfMinute } from 'date-fns';
+import {
+  DateBlock,
+  dateBlockDayOfWeekFactory,
+  DateBlockIndex,
+  dateBlockIndexRange,
+  dateBlockRange,
+  DateBlockRangeWithRange,
+  dateBlocksDayInfoFactory,
+  dateBlocksExpansionFactory,
+  dateBlocksInDateBlockRange,
+  dateBlockTiming,
+  DateBlockTiming,
+  expandDateBlockRange,
+  expandUniqueDateBlocksFunction,
+  getCurrentDateBlockTimingOffset,
+  getCurrentDateBlockTimingStartDate,
+  getRelativeIndexForDateTiming,
+  groupToDateBlockRanges,
+  groupUniqueDateBlocks,
+  isValidDateBlockTiming,
+  sortDateBlockRanges,
+  UniqueDateBlockRange
+} from './date.block';
 import { MS_IN_DAY, MINUTES_IN_DAY, range, RangeInput, Hours, Day } from '@dereekb/util';
 import { removeMinutesAndSeconds } from './date';
 
@@ -76,6 +98,38 @@ describe('getCurrentDateBlockTimingStartDate()', () => {
 
       expect(date).toBeSameSecondAs(start);
     });
+  });
+});
+
+describe('getRelativeIndexForDateTiming()', () => {
+  const start = startOfDay(new Date());
+  const startsAt = addHours(start, 12); // Noon on the day
+  const days = 5;
+  const timing = dateBlockTiming({ startsAt, duration: 60 }, days);
+
+  it('same time should return an index of 0', () => {
+    const result = getRelativeIndexForDateTiming(timing, startsAt);
+    expect(result).toBe(0);
+  });
+
+  it('same 24 hour period should return an index of 0', () => {
+    const result = getRelativeIndexForDateTiming(timing, addHours(startsAt, 6));
+    expect(result).toBe(0);
+  });
+
+  it('yesterday should return an index of -1', () => {
+    const result = getRelativeIndexForDateTiming(timing, addDays(startsAt, -1));
+    expect(result).toBe(-1);
+  });
+
+  it('tomorrow should return an index of 1', () => {
+    const result = getRelativeIndexForDateTiming(timing, addDays(startsAt, 1));
+    expect(result).toBe(1);
+  });
+
+  it('one week later should return an index of 7', () => {
+    const result = getRelativeIndexForDateTiming(timing, addDays(startsAt, 7));
+    expect(result).toBe(7);
   });
 });
 
@@ -404,6 +458,65 @@ describe('dateBlocksExpansionFactory()', () => {
         });
       });
     });
+  });
+});
+
+describe('dateBlocksDayInfoFactory()', () => {
+  const start = startOfDay(new Date());
+  const startsAt = addHours(start, 12); // Noon on the day
+  const days = 5;
+  const duration = 60;
+  const timing = dateBlockTiming({ startsAt, duration }, days);
+  const factory = dateBlocksDayInfoFactory({ timing });
+
+  it('should calculate the day info for before occurrence for today', () => {
+    const result = factory(start);
+    expect(result.dayIndex).toBe(0);
+    expect(result.isInProgress).toBe(false);
+    expect(result.hasOccuredToday).toBe(false);
+    expect(result.isInRange).toBe(true);
+    expect(result.currentIndex).toBe(-1);
+    expect(result.nextIndex).toBe(0);
+  });
+
+  it('should calculate the day info for the startsAt time (is occurring)', () => {
+    const result = factory(startsAt);
+    expect(result.dayIndex).toBe(0);
+    expect(result.isInProgress).toBe(true);
+    expect(result.hasOccuredToday).toBe(false);
+    expect(result.isInRange).toBe(true);
+    expect(result.currentIndex).toBe(0);
+    expect(result.nextIndex).toBe(1);
+  });
+
+  it('should calculate the day info for after occurrence for today', () => {
+    const result = factory(addMinutes(startsAt, duration * 2));
+    expect(result.dayIndex).toBe(0);
+    expect(result.isInProgress).toBe(false);
+    expect(result.hasOccuredToday).toBe(true);
+    expect(result.isInRange).toBe(true);
+    expect(result.currentIndex).toBe(0);
+    expect(result.nextIndex).toBe(1);
+  });
+
+  it('should calculate the day info for tomorrow at the startsAt time (is occurring)', () => {
+    const result = factory(addDays(startsAt, 1));
+    expect(result.dayIndex).toBe(1);
+    expect(result.isInProgress).toBe(true);
+    expect(result.hasOccuredToday).toBe(false);
+    expect(result.isInRange).toBe(true);
+    expect(result.currentIndex).toBe(1);
+    expect(result.nextIndex).toBe(2);
+  });
+
+  it('should calculate the day info for after occurrence for tomorrow', () => {
+    const result = factory(addMinutes(addDays(startsAt, 1), duration * 2));
+    expect(result.dayIndex).toBe(1);
+    expect(result.isInProgress).toBe(false);
+    expect(result.hasOccuredToday).toBe(true);
+    expect(result.isInRange).toBe(true);
+    expect(result.currentIndex).toBe(1);
+    expect(result.nextIndex).toBe(2);
   });
 });
 
