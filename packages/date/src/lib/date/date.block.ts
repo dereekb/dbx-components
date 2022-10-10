@@ -1,4 +1,4 @@
-import { DayOfWeek, RequiredOnKeys, IndexNumber, IndexRange, indexRangeCheckFunction, IndexRef, MINUTES_IN_DAY, MS_IN_DAY, UniqueModel, lastValue, FactoryWithRequiredInput, FilterFunction, mergeFilterFunctions, range, Milliseconds, Hours, MapFunction, getNextDay, SortCompareFunction, sortAscendingIndexNumberRefFunction, mergeArrayIntoArray, Configurable, ArrayOrValue, indexRange, asArray } from '@dereekb/util';
+import { DayOfWeek, RequiredOnKeys, IndexNumber, IndexRange, indexRangeCheckFunction, IndexRef, MINUTES_IN_DAY, MS_IN_DAY, UniqueModel, lastValue, FactoryWithRequiredInput, FilterFunction, mergeFilterFunctions, range, Milliseconds, Hours, MapFunction, getNextDay, SortCompareFunction, sortAscendingIndexNumberRefFunction, mergeArrayIntoArray, Configurable, ArrayOrValue, indexRange, asArray, sumOfIntegersBetween } from '@dereekb/util';
 import { dateRange, DateRange, DateRangeDayDistanceInput, DateRangeType, isDateRange } from './date.range';
 import { DateDurationSpan } from './date.duration';
 import { differenceInDays, differenceInMilliseconds, isBefore, addDays, addMinutes, setSeconds, addMilliseconds, hoursToMilliseconds, addHours, differenceInHours, isAfter } from 'date-fns';
@@ -647,6 +647,48 @@ export function groupToDateBlockRanges(input: (DateBlock | DateBlockRange)[]): D
   return results;
 }
 
+export interface DateBlockRangeBlockCountInfo {
+  /**
+   * Total number of blocks.
+   */
+  readonly count: number;
+  /**
+   * The "total" if all indexes were added together. Used for calculating the average.
+   */
+  readonly total: number;
+  /**
+   * The average block index
+   */
+  readonly average: number;
+}
+
+/**
+ * Counts the number of blocks in the input range.
+ *
+ * @param inputDateBlockRange
+ * @returns
+ */
+export function dateBlockRangeBlocksCountInfo(inputDateBlockRange: ArrayOrValue<DateBlock | DateBlockRange>): DateBlockRangeBlockCountInfo {
+  const group = groupToDateBlockRanges(asArray(inputDateBlockRange));
+
+  let count = 0;
+  let total = 0;
+
+  group.forEach((x) => {
+    const blocks = Math.abs(x.to - x.i) + 1; // +1 for inclusivity
+    count += blocks;
+
+    const size = sumOfIntegersBetween(x.i, x.to);
+    total += size;
+  });
+
+  return {
+    count,
+    total,
+    average: total / count
+  };
+}
+
 /**
  * Counts the number of blocks in the input range.
  *
@@ -654,16 +696,7 @@ export function groupToDateBlockRanges(input: (DateBlock | DateBlockRange)[]): D
  * @returns
  */
 export function dateBlockRangeBlocksCount(inputDateBlockRange: ArrayOrValue<DateBlock | DateBlockRange>): number {
-  const group = groupToDateBlockRanges(asArray(inputDateBlockRange));
-
-  let count = 0;
-
-  group.forEach((x) => {
-    const size = Math.abs(x.to - x.i) + 1; // +1 for inclusivity
-    count += size;
-  });
-
-  return count;
+  return dateBlockRangeBlocksCountInfo(inputDateBlockRange).count;
 }
 
 /**

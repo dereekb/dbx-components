@@ -8,6 +8,7 @@ import {
   dateBlockIndexRange,
   dateBlockRange,
   dateBlockRangeBlocksCount,
+  dateBlockRangeBlocksCountInfo,
   dateBlockRangeIncludedByRangeFunction,
   dateBlockRangesFullyCoverDateBlockRangeFunction,
   DateBlockRangeWithRange,
@@ -564,6 +565,22 @@ describe('groupToDateBlockRanges()', () => {
 
     expect(result[2].i).toBe(9);
     expect(result[2].to).toBe(12);
+  });
+});
+
+describe('dateBlockRangeBlocksCountInfo()', () => {
+  it('should return the correct calculations for DateBlock at index 100.', () => {
+    const { count, total, average } = dateBlockRangeBlocksCountInfo({ i: 100 });
+    expect(count).toBe(1);
+    expect(total).toBe(100);
+    expect(average).toBe(100);
+  });
+
+  it('should return the correct calculations for a DateBlockRange.', () => {
+    const { count, total, average } = dateBlockRangeBlocksCountInfo({ i: 51, to: 100 });
+    expect(count).toBe(50); // 50 blocks
+    expect(total).toBe(3775);
+    expect(average).toBe(75.5);
   });
 });
 

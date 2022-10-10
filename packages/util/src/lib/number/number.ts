@@ -93,3 +93,20 @@ export function isEvenNumber(value: number): boolean {
 export function isOddNumber(value: number): boolean {
   return value % 2 === 1;
 }
+
+/**
+ * The sum of all numbers between the two input number values, inclusive.
+ *
+ * @param from
+ * @param to
+ */
+export function sumOfIntegersBetween(from: number, to: number): number {
+  const x = Math.floor(from);
+  const y = Math.ceil(to);
+
+  const totalNumbers = y - x + 1;
+  const sum = x + y;
+
+  const sumOfIntegers = (sum / 2) * totalNumbers;
+  return sumOfIntegers;
+}
