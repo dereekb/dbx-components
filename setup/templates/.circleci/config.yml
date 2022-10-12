@@ -96,19 +96,28 @@ jobs:
           name: delete release branch
           command: git push origin --delete release
   # Deploys rules and configured projects to Firebase.
-  # COMPLETE CIRCLECI SETUP AND PROVIDE "FIREBASE_TOKEN" ENVIRONMENT VARIABLE
+  # COMPLETE CIRCLECI SETUP AND PROVIDE "FIREBASE_SECRETS_BASE64" ENVIRONMENT VARIABLE
   deploy-to-firebase:
-    <<: *defaults
+    <<: *defaults          
+    environment:
+      GOOGLE_APPLICATION_CREDENTIALS: ~/code/firebase-secrets.json
     steps:
       - checkout
       - attach_workspace:
           at: ~/code
       - run:
+          name: decode firebase secrets
+          command: echo $FIREBASE_SECRETS_BASE64 | base64 -d > ~/code/firebase-secrets.json 
+      - run:
           name: deploy updated projects
           command: npx nx run-many --target=ci-deploy --all --parallel=false # deploy all projects
+          environment:
+            GOOGLE_APPLICATION_CREDENTIALS: ~/code/firebase-secrets.json
       - run:
           name: deploy updated rules
           command: npx nx run workspace:ci-deploy-firebase-rules
+          environment:
+            GOOGLE_APPLICATION_CREDENTIALS: ~/code/firebase-secrets.json
   # Publishes content to npm. This should occur after running a release.
   # REMOVE IF YOU DO NOT NEED TO PUBLISH TO NPM
   publish-to-npm:

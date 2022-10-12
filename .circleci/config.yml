@@ -176,10 +176,15 @@ jobs:
   # Deploys rules and configured projects to Firebase.
   deploy-to-firebase:
     <<: *defaults
+    environment:
+      GOOGLE_APPLICATION_CREDENTIALS: ~/code/firebase-secrets.json
     steps:
       - checkout
       - attach_workspace:
           at: ~/code
+      - run:
+          name: decode firebase secrets
+          command: echo $FIREBASE_SECRETS_BASE64 | base64 -d > ~/code/firebase-secrets.json
       - run:
           # NOTE: this uses make-env.js to produce a .env file that is uploaded. Ensure CircleCI has all required variables before release.
           name: deploy api to Firebase Functions
