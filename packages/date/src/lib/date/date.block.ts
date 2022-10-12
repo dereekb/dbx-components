@@ -506,14 +506,36 @@ export function dateBlockIndexRange(timing: DateBlockTiming, limit?: DateBlockTi
  * @returns
  */
 export function dateBlocksInDateBlockRange<T extends DateBlock | DateBlockRange>(blocks: T[], range: DateBlockRangeWithRange): T[] {
-  return blocks.filter((x) => {
-    if (x.i >= range.i) {
-      const to = (x as DateBlockRange).to ?? x.i;
+  const dateBlockIsWithinDateBlockRange = dateBlockIsWithinDateBlockRangeFunction(range);
+  return blocks.filter(dateBlockIsWithinDateBlockRange);
+}
+
+/**
+ * Function that returns true if the input range is equal or falls within the configured DateBlockRange.
+ */
+export type DateBlockIsWithinDateBlockRangeFunction = (input: DateBlock | DateBlockRange) => boolean;
+
+export function dateBlockIsWithinDateBlockRangeFunction(inputRange: DateBlock | DateBlockRange): DateBlockIsWithinDateBlockRangeFunction {
+  const range = dateBlockRangeWithRange(inputRange);
+  return (input: DateBlock | DateBlockRange) => {
+    if (input.i >= range.i) {
+      const to = (input as DateBlockRange).to ?? input.i;
       return to <= range.to;
     }
 
     return false;
-  });
+  };
+}
+
+/**
+ * Returns true if the first DateBlock or DateBlockRange contains the second input.
+ *
+ * @param range
+ * @param isContainedWithin
+ * @returns
+ */
+export function dateBlockRangeContainsDateBlock(range: DateBlock | DateBlockRange, contains: DateBlock | DateBlockRange) {
+  return dateBlockIsWithinDateBlockRangeFunction(range)(dateBlockRangeWithRange(contains));
 }
 
 // MARK: DateBlockRange
@@ -685,7 +707,7 @@ export function dateBlockRangeBlocksCountInfo(inputDateBlockRange: ArrayOrValue<
   return {
     count,
     total,
-    average: total / count
+    average: count > 0 ? total / count : 0
   };
 }
 
