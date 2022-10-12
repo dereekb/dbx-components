@@ -1,4 +1,4 @@
-import { DayOfWeek, RequiredOnKeys, IndexNumber, IndexRange, indexRangeCheckFunction, IndexRef, MINUTES_IN_DAY, MS_IN_DAY, UniqueModel, lastValue, FactoryWithRequiredInput, FilterFunction, mergeFilterFunctions, range, Milliseconds, Hours, MapFunction, getNextDay, SortCompareFunction, sortAscendingIndexNumberRefFunction, mergeArrayIntoArray, Configurable, ArrayOrValue, indexRange, asArray, sumOfIntegersBetween } from '@dereekb/util';
+import { DayOfWeek, RequiredOnKeys, IndexNumber, IndexRange, indexRangeCheckFunction, IndexRef, MINUTES_IN_DAY, MS_IN_DAY, UniqueModel, lastValue, FactoryWithRequiredInput, FilterFunction, mergeFilterFunctions, range, Milliseconds, Hours, MapFunction, getNextDay, SortCompareFunction, sortAscendingIndexNumberRefFunction, mergeArrayIntoArray, Configurable, ArrayOrValue, indexRange, asArray, sumOfIntegersBetween, filterMaybeValues, Maybe } from '@dereekb/util';
 import { dateRange, DateRange, DateRangeDayDistanceInput, DateRangeType, isDateRange } from './date.range';
 import { DateDurationSpan } from './date.duration';
 import { differenceInDays, differenceInMilliseconds, isBefore, addDays, addMinutes, setSeconds, addMilliseconds, hoursToMilliseconds, addHours, differenceInHours, isAfter } from 'date-fns';
@@ -764,7 +764,7 @@ export interface UniqueDateBlock extends DateBlock, UniqueModel {}
 export interface UniqueDateBlockRange extends UniqueDateBlock, DateBlockRange {}
 
 /**
- * Returns true if the input DateBlockRange has a "to" value greater than it's "i" value.
+ * Returns true if the input DateBlockRange is longer than 1 block (I.E. has a "to" value greater than it's "i" value).
  *
  * @param input
  */
@@ -1139,4 +1139,50 @@ export function expandUniqueDateBlocksFunction<B extends DateBlockRange | Unique
 
     return result;
   };
+}
+
+/**
+ * Modifies or filter out any blocks that are outside the range to fit within the configured range.
+ */
+export type ModifyDateBlocksToFitRangeFunction = <B extends DateBlock | DateBlockRange | UniqueDateBlock>(input: B[]) => B[];
+
+/**
+ * Creatse a ModifyDateBlocksToFitRangeFunction
+ */
+export function modifyDateBlocksToFitRangeFunction(range: DateBlockRange): ModifyDateBlocksToFitRangeFunction {
+  const { i, to } = dateBlockRangeWithRange(range);
+  const dateBlockIsWithinDateBlockRange = dateBlockIsWithinDateBlockRangeFunction(range);
+  return <B extends DateBlock | DateBlockRange | UniqueDateBlock>(input: B[]) =>
+    filterMaybeValues(
+      input.map((x) => {
+        let result: Maybe<B>;
+
+        const inRange = dateBlockIsWithinDateBlockRange(x);
+
+        if (!inRange) {
+          const asRange = dateBlockRangeWithRange(x);
+          const rangesOverlap = asRange.i < to && asRange.to > i;
+
+          if (rangesOverlap) {
+            result = {
+              ...x,
+              i: Math.max(i, asRange.i), // should be no smaller than i
+              to: Math.min(to, asRange.to) // should be no larger than to
+            };
+          }
+        } else {
+          result = x;
+        }
+
+        return result;
+      })
+    );
+}
+
+export function modifyDateBlocksToFitRange<B extends DateBlock | DateBlockRange | UniqueDateBlock>(range: DateBlockRange, input: B[]): B[] {
+  return modifyDateBlocksToFitRangeFunction(range)(input);
+}
+
+export function modifyDateBlockToFitRange<B extends DateBlock | DateBlockRange | UniqueDateBlock>(range: DateBlockRange, input: B): Maybe<B> {
+  return modifyDateBlocksToFitRange(range, [input])[0];
 }
