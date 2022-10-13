@@ -100,7 +100,7 @@ jobs:
   deploy-to-firebase:
     <<: *defaults          
     environment:
-      GOOGLE_APPLICATION_CREDENTIALS: ~/code/firebase-secrets.json
+      GOOGLE_APPLICATION_CREDENTIALS: firebase-secrets.json
     steps:
       - checkout
       - attach_workspace:
@@ -111,13 +111,9 @@ jobs:
       - run:
           name: deploy updated projects
           command: npx nx run-many --target=ci-deploy --all --parallel=false # deploy all projects
-          environment:
-            GOOGLE_APPLICATION_CREDENTIALS: ~/code/firebase-secrets.json
       - run:
           name: deploy updated rules
           command: npx nx run workspace:ci-deploy-firebase-rules
-          environment:
-            GOOGLE_APPLICATION_CREDENTIALS: ~/code/firebase-secrets.json
   # Publishes content to npm. This should occur after running a release.
   # REMOVE IF YOU DO NOT NEED TO PUBLISH TO NPM
   publish-to-npm:

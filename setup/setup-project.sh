@@ -258,7 +258,7 @@ npx --yes json -I -f firebase.json -e "this.functions={ source:'$API_APP_DIST_FO
 npx --yes json -I -f firebase.json -e "this.firestore={ rules: 'firestore.rules', indexes: 'firestore.indexes.json' }";
 
 # Emulators
-npx --yes json -I -f firebase.json -e "this.emulators={ ui: { host: '$FIREBASE_LOCALHOST', enabled: true, port: $FIREBASE_EMULATOR_UI_PORT }, hosting: { host: '$FIREBASE_LOCALHOST', port: $FIREBASE_EMULATOR_HOSTING_PORT }, functions: { host: '$FIREBASE_LOCALHOST', port: $FIREBASE_EMULATOR_FUNCTIONS_PORT }, auth: { host: '$FIREBASE_LOCALHOST', port: $FIREBASE_EMULATOR_AUTH_PORT }, firestore: { host: '$FIREBASE_LOCALHOST', port: $FIREBASE_EMULATOR_FIRESTORE_PORT }, pubsub: { host: '$FIREBASE_LOCALHOST', port: $FIREBASE_EMULATOR_PUBSUB_PORT }, storage: { host: '$FIREBASE_LOCALHOST', port: $FIREBASE_EMULATOR_STORAGE_PORT } };";
+npx --yes json -I -f firebase.json -e "this.emulators={ singleProjectMode: false, ui: { host: '$FIREBASE_LOCALHOST', enabled: true, port: $FIREBASE_EMULATOR_UI_PORT }, hosting: { host: '$FIREBASE_LOCALHOST', port: $FIREBASE_EMULATOR_HOSTING_PORT }, functions: { host: '$FIREBASE_LOCALHOST', port: $FIREBASE_EMULATOR_FUNCTIONS_PORT }, auth: { host: '$FIREBASE_LOCALHOST', port: $FIREBASE_EMULATOR_AUTH_PORT }, firestore: { host: '$FIREBASE_LOCALHOST', port: $FIREBASE_EMULATOR_FIRESTORE_PORT }, pubsub: { host: '$FIREBASE_LOCALHOST', port: $FIREBASE_EMULATOR_PUBSUB_PORT }, storage: { host: '$FIREBASE_LOCALHOST', port: $FIREBASE_EMULATOR_STORAGE_PORT } };";
 
 git add --all
 git commit --no-verify -m "checkpoint: added firebase configuration"
@@ -422,7 +422,7 @@ install_local_peer_deps "$DBX_COMPONENTS_VERSION_UTIL"
 fi
 
 echo "Installing dev dependencies"
-npm install -D firebase-tools@11.4.0 @ngrx/store-devtools@^14.1.0 @ngx-formly/schematics@6.0.0-rc.2 @firebase/rules-unit-testing@^2.0.4 firebase-functions-test@2.3.0 envfile env-cmd
+npm install -D firebase-tools@^11.4.3 @ngrx/store-devtools@^14.1.0 @ngx-formly/schematics@6.0.0-rc.2 @firebase/rules-unit-testing@^2.0.4 firebase-functions-test@2.3.0 envfile env-cmd
 
 git add --all
 git commit --no-verify -m "checkpoint: added @dereekb dependencies"

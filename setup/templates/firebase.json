@@ -48,5 +48,7 @@
   "storage": {
     "rules": "storage.rules"
   },
-  "emulators": {}
+  "emulators": {
+    "singleProjectMode": false
+  }
 }

@@ -66,7 +66,7 @@ Then set the `GOOGLE_APPLICATION_CREDENTIALS` environment variable for any steps
 
 ```
 environment:
-  GOOGLE_APPLICATION_CREDENTIALS: ~/code/firebase-secrets.json
+  GOOGLE_APPLICATION_CREDENTIALS: firebase-secrets.json
 ```
 
 This is preferred to FIREBASE_TOKEN, since FIREBASE_TOKEN is always available, while you can more easily control when to decode and use your GOOGLE_SERVICE_ACCOUNT_JSON.
