@@ -177,7 +177,7 @@ jobs:
   deploy-to-firebase:
     <<: *defaults
     environment:
-      GOOGLE_APPLICATION_CREDENTIALS: ~/code/firebase-secrets.json
+      GOOGLE_APPLICATION_CREDENTIALS: firebase-secrets.json
     steps:
       - checkout
       - attach_workspace:
