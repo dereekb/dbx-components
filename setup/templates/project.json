@@ -26,7 +26,7 @@
     "ci-deploy-firebase-rules": {
       "executor": "@nrwl/workspace:run-commands",
       "options": {
-        "command": "npx firebase --project=default deploy --only firestore:rules,storage --token \"$FIREBASE_TOKEN\""
+        "command": "npx firebase --project=default deploy --only firestore:rules,storage"
       }
     }
   }

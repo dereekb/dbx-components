@@ -43,7 +43,37 @@ Add this to CircleCI to specify a specific auth token. You should generate a new
 
 Add it to CircleCI as `NX_CLOUD_AUTH_TOKEN`
 
+#### GOOGLE_SERVICE_ACCOUNT_JSON
+This is needed for deploying to firebase, and authenticating with the CLI. You'll need a service accounts JSON file for your project.
+
+https://console.firebase.google.com/project/_/settings/serviceaccounts/adminsdk
+
+Once downloaded, you will need to encode it:
+
+In terminal use: `cat dereekb-components-firebase-adminsdk.json | base64`
+
+Add this string to CircleCI as `FIREBASE_SECRETS_BASE64`.
+
+In your CI, add a step that decodes your firebase secret:
+
+```
+- run:
+    name: decode firebase secrets
+    command: echo ${{ FIREBASE_SECRETS_BASE64 }} | base64 -d > ~/code/firebase-secrets.json 
+```
+
+Then set the `GOOGLE_APPLICATION_CREDENTIALS` environment variable for any steps that require this to the decoded path:
+
+```
+environment:
+  GOOGLE_APPLICATION_CREDENTIALS: ~/code/firebase-secrets.json
+```
+
+This is preferred to FIREBASE_TOKEN, since FIREBASE_TOKEN is always available, while you can more easily control when to decode and use your GOOGLE_SERVICE_ACCOUNT_JSON.
+
 #### FIREBASE_TOKEN
+THIS IS DEPRECATED: Use GOOGLE_SERVICE_ACCOUNT_JSON above instead.
+
 This is the important one, as it lets CircleCI deploy to Firebase. The easiest way to generate a token is [using the Firebase CLI](https://github.com/firebase/firebase-tools#using-with-ci-systems).
 
 Run `firebase login:ci` to generate a new token, then add it to CircleCI as `FIREBASE_TOKEN`.

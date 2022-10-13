@@ -25,6 +25,7 @@ import {
   groupToDateBlockRanges,
   groupUniqueDateBlocks,
   isValidDateBlockTiming,
+  modifyDateBlocksToFitRangeFunction,
   sortDateBlockRanges,
   UniqueDateBlockRange
 } from './date.block';
@@ -1574,5 +1575,38 @@ describe('sortDateBlockRanges', () => {
     expect(sorted[2].id).toBe('b');
     expect(sorted[3].id).toBe('c');
     expect(sorted[4].id).toBe('d');
+  });
+});
+
+describe('modifyDateBlocksToFitRangeFunction()', () => {
+  describe('function', () => {
+    const range = { i: 2, to: 4 };
+    const fn = modifyDateBlocksToFitRangeFunction(range);
+
+    it('should retain the same range', () => {
+      const result = fn([range]);
+      expect(result[0]).toBe(range);
+    });
+
+    it('should filter out blocks that are outside the range.', () => {
+      const outside = [
+        { x: 'a', i: range.i - 1 },
+        { x: 'c', i: range.to + 1 }
+      ];
+      const values = [...outside, { x: 'b', ...range }];
+
+      const result = fn(values);
+      expect(result.length).toBe(1);
+    });
+
+    it('should reduce the range of items that are larger than the range.', () => {
+      const value = { x: 'a', i: range.i - 1, to: range.to + 1 };
+      const result = fn([value]);
+
+      expect(result.length).toBe(1);
+      expect(result[0].x).toBe(value.x);
+      expect(result[0].i).toBe(range.i);
+      expect(result[0].to).toBe(range.to);
+    });
   });
 });

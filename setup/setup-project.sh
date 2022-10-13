@@ -422,7 +422,7 @@ install_local_peer_deps "$DBX_COMPONENTS_VERSION_UTIL"
 fi
 
 echo "Installing dev dependencies"
-npm install -D firebase-tools@^11.0.0 @ngrx/store-devtools@^14.1.0 @ngx-formly/schematics@6.0.0-rc.2 @firebase/rules-unit-testing@^2.0.4 firebase-functions-test@2.3.0 envfile env-cmd
+npm install -D firebase-tools@11.4.0 @ngrx/store-devtools@^14.1.0 @ngx-formly/schematics@6.0.0-rc.2 @firebase/rules-unit-testing@^2.0.4 firebase-functions-test@2.3.0 envfile env-cmd
 
 git add --all
 git commit --no-verify -m "checkpoint: added @dereekb dependencies"

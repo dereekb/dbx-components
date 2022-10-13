@@ -104,7 +104,7 @@
             "command": "npx nx make-env API_APP_NAME"
           },
           {
-            "command": "npx firebase --project=prod deploy --only functions --token \"$FIREBASE_TOKEN\""
+            "command": "npx firebase --project=prod deploy --only functions"
           }
         ],
         "parallel": false

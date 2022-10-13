@@ -117,7 +117,7 @@
     "ci-deploy": {
       "executor": "@nrwl/workspace:run-commands",
       "options": {
-        "command": "npx firebase --project=default deploy --only hosting --token \"$FIREBASE_TOKEN\""
+        "command": "npx firebase --project=default deploy --only hosting"
       }
     }
   },

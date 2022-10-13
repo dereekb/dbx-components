@@ -106,7 +106,7 @@
             "command": "npx nx make-env demo-api"
           },
           {
-            "command": "npx firebase --project=prod deploy --only functions --force --token \"$FIREBASE_TOKEN\""
+            "command": "npx firebase --project=prod deploy --only functions --force"
           }
         ],
         "parallel": false
