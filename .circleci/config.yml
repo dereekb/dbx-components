@@ -12,11 +12,15 @@ defaults: &defaults
 orbs:
   nx: nrwl/nx@1.6.0
   node: circleci/node@5.0.2
+  snyk: snyk/snyk@1.2.3
 jobs:
   build:
     <<: *defaults
     parameters:
       persist_build_to_workspace:
+        type: boolean
+        default: true
+      scan_with_snyk:
         type: boolean
         default: true
     environment:
@@ -25,6 +29,14 @@ jobs:
       - checkout
       # install node packages
       - node/install-packages
+      # scan vulnerabilities with snyk if enabled
+      - when:
+          condition: << parameters.scan_with_snyk >>
+          steps:
+            - snyk/scan:
+                fail-on-issues: true
+                monitor-on-build: true
+                severity-threshold: critical
       # initialize nx
       - nx/set-shas
       # builds everything in the project in order
