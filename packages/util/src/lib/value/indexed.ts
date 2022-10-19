@@ -17,6 +17,11 @@ export interface IndexRef {
 }
 
 /**
+ * IndexRef object that may not have an index set yet
+ */
+export type MaybeIndexRef<T extends IndexRef> = Omit<T, 'i'> & Partial<Pick<T, 'i'>>;
+
+/**
  * Creates a SortCompareFunction<T> that sorts by index on IndexRef values.
  *
  * @param input
