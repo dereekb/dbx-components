@@ -1,4 +1,7 @@
+import { findValuesFrom, FindValuesFromInput } from './../set/set';
+import { ArrayOrValue, asArray } from './../array/array';
 import { objectHasKey } from '../object/object';
+import { HashSet } from '../set/set.hashset';
 import { SortCompareFunction } from '../sort';
 
 /**
@@ -37,6 +40,16 @@ export function sortAscendingIndexNumberRefFunction<T extends IndexRef>(): SortC
 export type ReadIndexFunction<T> = (value: T) => IndexNumber;
 
 /**
+ * Reads an IndexNumber from an IndexRef.
+ *
+ * @param indexRef
+ * @returns
+ */
+export function readIndexNumber(indexRef: IndexRef): IndexNumber {
+  return indexRef.i;
+}
+
+/**
  * Creates a SortCompareFunction<T> that sorts by the read index.
  *
  * @param input
@@ -44,6 +57,39 @@ export type ReadIndexFunction<T> = (value: T) => IndexNumber;
  */
 export function sortByIndexAscendingCompareFunction<T>(readIndex: ReadIndexFunction<T>): SortCompareFunction<T> {
   return (a, b) => readIndex(a) - readIndex(b);
+}
+
+/**
+ * Creates a HashSet with items keyed by their IndexNumber for the input values.
+ *
+ * @param input
+ * @returns
+ */
+export function hashSetForIndexed<T extends IndexRef>(input?: ArrayOrValue<T>): HashSet<IndexNumber, T> {
+  const values = input != null ? asArray(input) : undefined;
+  return new HashSet<IndexNumber, T>({ readKey: readIndexNumber }, values);
+}
+
+export interface FindItemsByIndexInput<T extends IndexRef> extends Pick<FindValuesFromInput<T, IndexNumber>, 'values' | 'exclude'> {
+  /**
+   * Indexes to find or exclude.
+   */
+  readonly indexes: ArrayOrValue<IndexNumber>;
+}
+
+/**
+ * Convenience function to return all values that match one of the input indexes.
+ *
+ * @param values
+ */
+export function findItemsByIndex<T extends IndexRef>(config: FindItemsByIndexInput<T>): T[] {
+  const { indexes, values, exclude } = config;
+  return findValuesFrom({
+    values,
+    exclude,
+    readKey: readIndexNumber,
+    keysToFind: indexes
+  });
 }
 
 // MARK: IndexRange

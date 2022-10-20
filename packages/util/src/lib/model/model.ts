@@ -35,7 +35,12 @@ export interface ModelKeyRef {
   key: ModelKey;
 }
 
-export type ModelOrKey<T extends UniqueModel> = T | ModelKey;
+export type ModelOrKey<T> = T | ModelKey;
+
+/**
+ * ModelOrKey where the model extends UniqueModel
+ */
+export type UniqueModelOrKey<T extends UniqueModel> = ModelOrKey<T>;
 
 export interface ModelKeyTypePair extends TypedModel, ModelKeyRef {}
 
@@ -79,7 +84,7 @@ export function uniqueKeys(keys: ModelKey[]): ModelKey[] {
 
 export function uniqueModels<T extends UniqueModel>(models: T[], readKey?: ReadModelKeyFunction<T>): T[];
 export function uniqueModels<T>(models: T[], readKey: ReadModelKeyFunction<T>): T[];
-export function uniqueModels<T>(models: T[], readKey: ReadModelKeyFunction<T> = readUniqueModelKey): T[] {
+export function uniqueModels<T>(models: T[], readKey: ReadModelKeyFunction<T> = readUniqueModelKey as ReadModelKeyFunction<T>): T[] {
   return findUnique(models, readKey);
 }
 
@@ -102,7 +107,7 @@ export function removeModelsWithSameKey<T>(input: T[], model: T, read: ReadModel
 
 export function removeModelsWithKey<T extends UniqueModel>(input: T[], key: Maybe<ModelKey>, read?: ReadModelKeyFunction<T>): T[];
 export function removeModelsWithKey<T>(input: T[], key: Maybe<ModelKey>, read: ReadModelKeyFunction<T>): T[];
-export function removeModelsWithKey<T>(input: T[], key: Maybe<ModelKey>, read: ReadModelKeyFunction<T> = readUniqueModelKey): T[] {
+export function removeModelsWithKey<T>(input: T[], key: Maybe<ModelKey>, read: ReadModelKeyFunction<T> = readUniqueModelKey as ReadModelKeyFunction<T>): T[] {
   return input.filter((x) => read(x) !== key);
 }
 
@@ -112,7 +117,7 @@ export function makeModelMap<T>(input: T[], read?: ReadModelKeyFunction<T>): Map
   const map = new Map<Maybe<ModelKey>, T>();
 
   if (input) {
-    input.forEach((x) => map.set(readModelKey(x, { required: false, read }), x));
+    input.forEach((x) => map.set(readModelKey<T>(x, { required: false, read: read as ReadModelKeyFunction<T> }), x));
   }
 
   return map;
@@ -158,7 +163,7 @@ export function requireModelKey<T extends UniqueModel>(input: ModelOrKey<T> | un
 
 export function readModelKey<T>(input: ModelOrKey<T> | undefined, params: ReadModelKeyParams<T>): Maybe<ModelKey>;
 export function readModelKey<T extends UniqueModel>(input: ModelOrKey<T> | undefined, params?: Partial<ReadModelKeyParams<T>>): Maybe<ModelKey>;
-export function readModelKey<T>(input: ModelOrKey<T> | undefined, { required = false, read = (x) => (x as UniqueModel).id }: Partial<ReadModelKeyParams<T>> = {}): Maybe<ModelKey> {
+export function readModelKey<T>(input: ModelOrKey<T> | undefined, { required = false, read = readUniqueModelKey as ReadModelKeyFunction<T> }: Partial<ReadModelKeyParams<T>> = {}): Maybe<ModelKey> {
   let key: Maybe<ModelKey>;
 
   switch (typeof input) {

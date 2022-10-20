@@ -1,4 +1,4 @@
-import { copyObject, CopyObjectFunction } from '../object';
+import { copyObject, CopyObjectFunction } from '../object/object';
 import { PromiseOrValue } from '../promise/promise';
 import { MapFunction } from '../value/map';
 import { Maybe } from '../value/maybe.type';

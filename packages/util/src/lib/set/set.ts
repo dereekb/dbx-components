@@ -2,6 +2,7 @@ import { Maybe } from '../value/maybe.type';
 import { flattenArray } from '../array/array';
 import { asIterable, IterableOrValue, useIterableOrValue } from '../iterable/iterable';
 import { symmetricDifference } from 'extra-set';
+import { PrimativeKey, ReadKeyFunction, readKeysSetFrom } from '../key';
 
 export function asSet<T>(values: IterableOrValue<T>): Set<T> {
   let set: Set<T>;
@@ -63,8 +64,83 @@ export function excludeValuesFromSet<T>(values: T[], set: Set<T>): T[] {
 }
 
 export function filterValuesFromSet<T>(values: T[], set: Set<T>, exclude = false): T[] {
-  const filterFn = exclude ? (x: T) => !set.has(x) : (x: T) => set.has(x);
+  const filterFn = setHasValueFunction(set, exclude);
   return values.filter(filterFn);
+}
+
+/**
+ * Returns true if the set has the value. Alternatively, this function can be configured to work in exclusion mode, and may return the opposite.
+ */
+export type SetHasValueFunction<T> = (value: T) => boolean;
+
+/**
+ * Creates a SetHasValueFunction. May create a function that returns the inverse.
+ *
+ * @param set
+ * @param exclude
+ * @returns
+ */
+export function setHasValueFunction<T>(set: Set<T>, exclude: boolean): SetHasValueFunction<T> {
+  let hasValueFunction: SetHasValueFunction<T>;
+
+  if (exclude) {
+    hasValueFunction = (x) => !set.has(x);
+  } else {
+    hasValueFunction = (x) => set.has(x);
+  }
+
+  return hasValueFunction;
+}
+
+export interface FindValuesFromInput<T, K extends PrimativeKey = PrimativeKey> {
+  /**
+   * Values to filter on.
+   */
+  readonly values: T[];
+  /**
+   * Keys to find.
+   */
+  readonly keysToFind?: IterableOrValue<K>;
+  /**
+   * Values with the same key to match on.
+   */
+  readonly valuesToFind?: T[];
+  /**
+   * Reads the key to filter.
+   */
+  readonly readKey: ReadKeyFunction<T, K>;
+  /**
+   * Whether or not to exclude found values.
+   *
+   * For values that do not have keys, this will be used as the result. I.E. if exclude is true, and a value has no key, it will be returned in the results.
+   */
+  readonly exclude?: boolean;
+}
+
+/**
+ * Finds values from the set based on the input.
+ *
+ * @param config
+ * @returns
+ */
+export function findValuesFrom<T, K extends PrimativeKey = PrimativeKey>(config: FindValuesFromInput<T, K>): T[] {
+  const { readKey, values, exclude = false } = config;
+
+  let set: Set<K>;
+
+  if (config.keysToFind != null) {
+    set = asSet(config.keysToFind);
+  } else if (config.valuesToFind != null) {
+    set = readKeysSetFrom<T, K>(readKey, config.valuesToFind);
+  } else {
+    set = new Set();
+  }
+
+  const filterFn = setHasValueFunction(set, exclude);
+  return values.filter((x) => {
+    const key = readKey(x);
+    return key != null ? filterFn(key) : exclude;
+  });
 }
 
 /**
