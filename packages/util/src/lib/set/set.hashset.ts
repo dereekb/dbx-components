@@ -49,7 +49,40 @@ export class HashSet<K extends PrimativeKey, T> implements Set<T> {
 
   has(value: T): boolean {
     const key = this.config.readKey(value);
+    return this.hasKeyValue(key);
+  }
+
+  hasKeyValue(key: Maybe<K>): boolean {
     return this._map.has(key);
+  }
+
+  valueForKey(key: Maybe<K>): T | undefined {
+    return this._map.get(key);
+  }
+
+  valueKeyEntriesForKeys(keys: Maybe<K>[]): [Maybe<K>, Maybe<T>][] {
+    let values: [Maybe<K>, Maybe<T>][] = [];
+
+    keys.forEach((key) => {
+      const value = this.valueForKey(key);
+      values.push([key, value]);
+    });
+
+    return values;
+  }
+
+  valuesForKeys(keys: Maybe<K>[]): T[] {
+    let values: T[] = [];
+
+    keys.forEach((key) => {
+      const value = this.valueForKey(key);
+
+      if (value != null) {
+        values.push(value);
+      }
+    });
+
+    return values;
   }
 
   forEach(callbackfn: (value: T, value2: T, set: Set<T>) => void, thisArg?: unknown): void {

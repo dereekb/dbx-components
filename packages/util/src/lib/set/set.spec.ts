@@ -1,6 +1,88 @@
-import { setIncludes } from '@dereekb/util';
+import { setIncludes, ReadKeyFunction } from '@dereekb/util';
 import { firstValueFromIterable } from '../iterable';
-import { asSet, containsAnyValue, containsAnyValueFromSet, setContainsAllValues, setContainsAnyValue } from './set';
+import { asSet, containsAnyValue, containsAnyValueFromSet, findValuesFrom, setContainsAllValues, setContainsAnyValue } from './set';
+
+describe('findValuesFrom()', () => {
+  const values = [1, 2, 3, 4, 5];
+  const readKey: ReadKeyFunction<number, string> = (x) => String(x);
+
+  describe('exclude=true', () => {
+    it('should return all values if both keysToFind and valuesToFind is undefined', () => {
+      const results = findValuesFrom({
+        values,
+        readKey,
+        exclude: true
+      });
+
+      expect(results.length).toBe(values.length);
+    });
+
+    it('should return excluded values found via key', () => {
+      const results = findValuesFrom({
+        values,
+        readKey,
+        keysToFind: ['1', '2'],
+        exclude: true
+      });
+
+      expect(results.length).toBe(3);
+      expect(results).not.toContain(1);
+      expect(results).not.toContain(2);
+      expect(results).toContain(3);
+      expect(results).toContain(4);
+      expect(results).toContain(5);
+    });
+
+    it('should return excluded values found via value', () => {
+      const results = findValuesFrom({
+        values,
+        readKey,
+        valuesToFind: [1, 2],
+        exclude: true
+      });
+
+      expect(results.length).toBe(3);
+      expect(results).not.toContain(1);
+      expect(results).not.toContain(2);
+      expect(results).toContain(3);
+      expect(results).toContain(4);
+      expect(results).toContain(5);
+    });
+  });
+
+  it('should return no values if both keysToFind and valuesToFind is undefined', () => {
+    const results = findValuesFrom({
+      values,
+      readKey
+    });
+
+    expect(results.length).toBe(0);
+  });
+
+  it('should return values found via key', () => {
+    const results = findValuesFrom({
+      values,
+      readKey,
+      keysToFind: ['1', '2']
+    });
+
+    expect(results.length).toBe(2);
+    expect(results).toContain(1);
+    expect(results).toContain(2);
+  });
+
+  it('should return values found via value', () => {
+    const results = findValuesFrom({
+      values,
+      readKey,
+      valuesToFind: [1, 2]
+    });
+
+    expect(results.length).toBe(2);
+    expect(results).toContain(1);
+    expect(results).toContain(2);
+  });
+});
 
 describe('setIncludes', () => {
   describe('mode=all', () => {

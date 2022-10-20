@@ -53,6 +53,16 @@ export function readKeysFunction<T, K extends PrimativeKey = PrimativeKey>(readK
 }
 
 /**
+ * Convenience function for reading all the keys for the input values.
+ * @param readKey
+ * @param values
+ * @returns
+ */
+export function readKeysFrom<T, K extends PrimativeKey = PrimativeKey>(readKey: ReadKeyFunction<T, K> | ReadMultipleKeysFunction<T, K>, values: T[]): K[] {
+  return readKeysFunction(readKey)(values);
+}
+
+/**
  * Reads all defined keys from the input objects to a Set.
  */
 export type ReadKeysSetFunction<T, K extends PrimativeKey = PrimativeKey> = MapFunction<T[], Set<K>>;
@@ -79,4 +89,14 @@ export function readKeysSetFunction<T, K extends PrimativeKey = PrimativeKey>(re
       return new Set<K>(asArray(readKey(values)));
     }
   };
+}
+
+/**
+ * Convenience function for reading all the keys for the input values.
+ * @param readKey
+ * @param values
+ * @returns
+ */
+export function readKeysSetFrom<T, K extends PrimativeKey = PrimativeKey>(readKey: ReadKeyFunction<T, K> | ReadMultipleKeysFunction<T, K>, values: T[]): Set<K> {
+  return readKeysSetFunction(readKey)(values);
 }

@@ -1,5 +1,5 @@
 import { range } from '../array/array.number';
-import { IndexRange, indexRangeOverlapsIndexRangeFunction, isIndexNumberInIndexRangeFunction, isIndexRangeInIndexRangeFunction, sortAscendingIndexNumberRefFunction } from './indexed';
+import { findItemsByIndex, IndexRange, indexRangeOverlapsIndexRangeFunction, isIndexNumberInIndexRangeFunction, isIndexRangeInIndexRangeFunction, sortAscendingIndexNumberRefFunction } from './indexed';
 
 describe('sortAscendingIndexNumberRefFunction()', () => {
   describe('sort()', () => {
@@ -12,6 +12,21 @@ describe('sortAscendingIndexNumberRefFunction()', () => {
 
       expect(items[0].i).toBe(0);
     });
+  });
+});
+
+describe('findItemsByIndex()', () => {
+  it('should return the items with the filtered indexes.', () => {
+    const indexes = [0, 1, 2, 3, 4, 5];
+    const values = indexes.map((i) => ({ i, name: String(i) }));
+
+    const result = findItemsByIndex({
+      values,
+      indexes: [1, 2]
+    });
+
+    expect(result).toContain(values[1]);
+    expect(result).toContain(values[2]);
   });
 });
 
