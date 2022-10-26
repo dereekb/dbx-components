@@ -321,9 +321,17 @@ export interface DateBlocksExpansionFactoryConfig<B extends DateBlock | DateBloc
    */
   filter?: FilterFunction<B>;
   /**
+   * (Optional) Additional filter function based on the calcualted DateBlockDurationSpan.
+   */
+  durationSpanFilter?: FilterFunction<DateBlockDurationSpan<B>>;
+  /**
    * (Optional) Max number of blocks to evaluate.
    */
   blocksEvaluationLimit?: number;
+  /**
+   * (Optional) Max number of DateBlockDurationSpan values to return.
+   */
+  maxDateBlocksToReturn?: number;
 }
 
 /**
@@ -333,11 +341,12 @@ export interface DateBlocksExpansionFactoryConfig<B extends DateBlock | DateBloc
  * @returns
  */
 export function dateBlocksExpansionFactory<B extends DateBlock | DateBlockRange = DateBlock>(config: DateBlocksExpansionFactoryConfig): DateBlocksExpansionFactory<B> {
-  const { timing, rangeLimit, filter: inputFilter, blocksEvaluationLimit = Number.MAX_SAFE_INTEGER } = config;
+  const { timing, rangeLimit, filter: inputFilter, durationSpanFilter: inputDurationSpanFilter, maxDateBlocksToReturn = Number.MAX_SAFE_INTEGER, blocksEvaluationLimit = Number.MAX_SAFE_INTEGER } = config;
   const { startsAt: baseStart, duration } = timing;
   const indexRange = rangeLimit !== false ? dateBlockIndexRange(timing, rangeLimit) : { minIndex: Number.MIN_SAFE_INTEGER, maxIndex: Number.MAX_SAFE_INTEGER };
   const isInRange = indexRangeCheckFunction({ indexRange, inclusiveMaxIndex: false });
   const filter: FilterFunction<B> = mergeFilterFunctions<B>((x: B) => isInRange(x.i), inputFilter);
+  const durationSpanFilter: FilterFunction<DateBlockDurationSpan<B>> = inputDurationSpanFilter ?? (() => true);
 
   return (input: DateBlocksExpansionFactoryInput<B>) => {
     const blocks = Array.isArray(input) ? input : input.blocks;
@@ -346,6 +355,9 @@ export function dateBlocksExpansionFactory<B extends DateBlock | DateBlockRange 
     let blocksEvaluated = 0;
 
     function filterAndPush(block: B, blockIndex: number) {
+      // increase the evaluation count early in-case we set the blocksEvaluationLimit below.
+      blocksEvaluated += 1;
+
       if (filter(block, blockIndex)) {
         const startsAt = addDays(baseStart, block.i);
         const durationSpan: DateBlockDurationSpan<B> = {
@@ -353,11 +365,16 @@ export function dateBlocksExpansionFactory<B extends DateBlock | DateBlockRange 
           startsAt,
           duration
         };
-        spans.push(durationSpan);
-      }
 
-      // increase the count
-      blocksEvaluated += 1;
+        // try the duration span filter
+        if (durationSpanFilter(durationSpan, blockIndex)) {
+          if (spans.length >= maxDateBlocksToReturn) {
+            blocksEvaluated = blocksEvaluationLimit; // trigger return below
+          } else {
+            spans.push(durationSpan);
+          }
+        }
+      }
     }
 
     blocks.findIndex((block) => {
@@ -374,7 +391,7 @@ export function dateBlocksExpansionFactory<B extends DateBlock | DateBlockRange 
         filterAndPush(block, blocksEvaluated);
       }
 
-      return blocksEvaluated >= blocksEvaluationLimit;
+      return blocksEvaluated >= blocksEvaluationLimit; // continue iterating until we hit the evaluation limit or run out of items.
     });
 
     return spans;

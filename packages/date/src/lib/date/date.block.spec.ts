@@ -1,6 +1,6 @@
 import { expectFail, itShouldFail } from '@dereekb/util/test';
 import { DateRange, DateRangeInput } from './date.range';
-import { addDays, addHours, addMinutes, setHours, setMinutes, startOfDay, endOfDay, addSeconds, addMilliseconds, millisecondsToHours, minutesToHours, startOfMinute } from 'date-fns';
+import { addDays, addHours, addMinutes, setHours, setMinutes, startOfDay, endOfDay, addSeconds, addMilliseconds, millisecondsToHours, minutesToHours, startOfMinute, isAfter } from 'date-fns';
 import {
   DateBlock,
   dateBlockDayOfWeekFactory,
@@ -31,6 +31,7 @@ import {
 } from './date.block';
 import { MS_IN_DAY, MINUTES_IN_DAY, range, RangeInput, Hours, Day } from '@dereekb/util';
 import { removeMinutesAndSeconds } from './date';
+import { dateBlockDurationSpanHasNotEndedFilterFunction, dateBlockDurationSpanHasNotStartedFilterFunction } from './date.filter';
 
 describe('getCurrentDateBlockTimingOffset()', () => {
   const utcDate = new Date('2022-01-02T00:00:00Z'); // date in utc. Implies there is no offset to consider.
@@ -364,6 +365,30 @@ describe('dateBlocksExpansionFactory()', () => {
         expect(indexes).not.toContain(6);
         expect(indexes).not.toContain(7);
         expect(indexes).not.toContain(8);
+      });
+    });
+
+    describe('with durationSpanFilter', () => {
+      describe('filter checks the future', () => {
+        const pastDays = 2;
+
+        const now = addDays(startsAt, pastDays);
+        const factory = dateBlocksExpansionFactory({ timing, durationSpanFilter: dateBlockDurationSpanHasNotEndedFilterFunction(now) });
+
+        it('should filter out spans that have not ended.', () => {
+          const result = factory(blocks);
+          expect(result.length).toBe(days - pastDays);
+        });
+      });
+    });
+
+    describe('with maxDateBlocksToReturn', () => {
+      const maxDateBlocksToReturn = 1;
+      const factory = dateBlocksExpansionFactory({ timing, maxDateBlocksToReturn });
+
+      it('should generate up to the maximum number of blocks to return.', () => {
+        const result = factory(blocks);
+        expect(result.length).toBe(maxDateBlocksToReturn);
       });
     });
 
