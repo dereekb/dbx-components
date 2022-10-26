@@ -69,6 +69,18 @@ export function filterValuesFromSet<T>(values: T[], set: Set<T>, exclude = false
 }
 
 /**
+ * Convenience function for using setHasValueFunction with IterableOrValue input.
+ *
+ * @param iterable
+ * @param exclude
+ * @returns
+ */
+export function hasValueFunction<T>(iterable: IterableOrValue<T>, exclude: boolean = false): SetHasValueFunction<T> {
+  const set = asSet(iterable);
+  return setHasValueFunction(set, exclude);
+}
+
+/**
  * Returns true if the set has the value. Alternatively, this function can be configured to work in exclusion mode, and may return the opposite.
  */
 export type SetHasValueFunction<T> = (value: T) => boolean;
