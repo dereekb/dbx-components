@@ -58,6 +58,27 @@ export type DateBlockArrayRef<B extends DateBlock = DateBlock> = {
  */
 export interface DateBlockTiming extends DateRange, DateDurationSpan {}
 
+export class DateBlockTiming extends DateDurationSpan {
+  @Expose()
+  @IsDate()
+  @Type(() => Date)
+  start!: Date;
+
+  @Expose()
+  @IsDate()
+  @Type(() => Date)
+  end!: Date;
+
+  constructor(template: DateBlockTiming) {
+    super(template);
+
+    if (template) {
+      this.start = template.start;
+      this.end = template.end;
+    }
+  }
+}
+
 /**
  * The offset in milliseconds to the "real start date", the first second in the target day on in the system timezone.
  *
@@ -83,7 +104,7 @@ export function getCurrentDateBlockTimingOffset(timing: DateBlockTiming): Millis
 }
 
 /**
- * Returns the current timing offset given the input start date.
+ * Returns the startsAt date in the current timezone for the given date.
  *
  * @param timing
  */
@@ -123,27 +144,6 @@ export function dateTimingRelativeIndexFactory(timing: DateBlockTiming): DateTim
  */
 export function getRelativeIndexForDateTiming(timing: DateBlockTiming, date = new Date()): DateBlockIndex {
   return dateTimingRelativeIndexFactory(timing)(date);
-}
-
-export class DateBlockTiming extends DateDurationSpan {
-  @Expose()
-  @IsDate()
-  @Type(() => Date)
-  start!: Date;
-
-  @Expose()
-  @IsDate()
-  @Type(() => Date)
-  end!: Date;
-
-  constructor(template: DateBlockTiming) {
-    super(template);
-
-    if (template) {
-      this.start = template.start;
-      this.end = template.end;
-    }
-  }
 }
 
 /**

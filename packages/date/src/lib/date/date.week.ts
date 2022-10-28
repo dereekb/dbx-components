@@ -53,6 +53,51 @@ export function yearWeekCodePair(yearWeekCode: YearWeekCode): YearWeekCodePair {
 }
 
 /**
+ * Creates a YearWeekCodePair using the input date and the current timezone.
+ *
+ * @param date
+ * @returns
+ */
+export function yearWeekCodePairFromDate(date: Date): YearWeekCodePair {
+  let year: YearWeekCode;
+  const week = getWeek(date);
+
+  // check if the date is not in the previous year, in which case we need to add one.
+  if (week === 1) {
+    year = getYear(endOfWeek(date)); // the last day is the important one to get the year from.
+  } else {
+    year = getYear(date);
+  }
+
+  return {
+    year,
+    week
+  };
+}
+
+/**
+ * Creates a YearWeekCode from the input pair.
+ *
+ * @param pair
+ * @returns
+ */
+export function yearWeekCodeFromPair(pair: YearWeekCodePair): YearWeekCode {
+  const { year, week } = pair;
+  const encodedYear = year * 100;
+  return encodedYear + week;
+}
+
+/**
+ * Creates a YearWeekCode from the input Date.
+ *
+ * @param date
+ * @returns
+ */
+export function yearWeekCodeFromDate(date: Date): YearWeekCode {
+  return yearWeekCodeFromPair(yearWeekCodePairFromDate(date));
+}
+
+/**
  * Used to convert the input to a YearWeekCode.
  */
 export type YearWeekCodeFactory = ((dateOrYear: Date | number, inputWeek?: YearWeekCodeIndex) => YearWeekCode) & {
@@ -98,26 +143,19 @@ export function yearWeekCodeFactory(config?: YearWeekCodeConfig): YearWeekCodeFa
   const normal = yearWeekCodeDateTimezoneInstance(config?.timezone);
 
   const result: Building<YearWeekCodeFactory> = (dateOrYear: Date | number, inputWeek?: YearWeekCodeIndex) => {
-    let year: number;
-    let week: YearWeekCodeIndex;
+    let pair: YearWeekCodePair;
 
     if (isDate(dateOrYear)) {
       const normalDate = normal.systemDateToTargetDate(dateOrYear as Date);
-      week = getWeek(normalDate);
-
-      // check if the date is not in the previous year, in which case we need to add one.
-      if (week === 1) {
-        year = getYear(endOfWeek(normalDate)); // the last day is the important one to get the year from.
-      } else {
-        year = getYear(normalDate);
-      }
+      pair = yearWeekCodePairFromDate(normalDate);
     } else {
-      year = dateOrYear as number;
-      week = inputWeek as YearWeekCodeIndex;
+      pair = {
+        year: dateOrYear as number,
+        week: inputWeek as YearWeekCodeIndex
+      };
     }
 
-    const encodedYear = year * 100;
-    return encodedYear + week;
+    return yearWeekCodeFromPair(pair);
   };
 
   result._normal = normal;

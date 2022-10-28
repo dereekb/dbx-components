@@ -218,6 +218,19 @@ describe('dateBlockTiming()', () => {
       });
     });
   });
+
+  describe('scenarios', () => {
+    describe('Jan 2nd 2022', () => {
+      const startsAt = new Date('2022-01-02T00:00:00Z'); // Sunday
+
+      it('should generate the correct timing.', () => {
+        const weekTiming = dateBlockTiming({ startsAt, duration: 60 }, 7); // Sunday-Saturday
+
+        expect(weekTiming.startsAt).toBeSameSecondAs(startsAt);
+        expect(weekTiming.duration).toBe(60);
+      });
+    });
+  });
 });
 
 describe('dateBlockDayOfWeekFactory()', () => {
