@@ -282,13 +282,36 @@ export function filterFromPOJOFunction<T extends object>({ copy = false, filter:
 export const defaultFilterFromPOJOFunctionNoCopy: FilterFromPOJOFunction<object> = filterFromPOJOFunction({ copy: false });
 
 // MARK: AssignValuesToPOJO
-export function assignValuesToPOJO<T extends object>(target: T, obj: T, filter?: FilterKeyValueTuplesInput<T>): T {
-  return assignValuesToPOJOFunction(filter)(target, obj);
+export function assignValuesToPOJO<T extends object, K extends keyof T = keyof T>(target: T, obj: T, input?: AssignValuesToPOJOFunctionInput<T, K>): T {
+  return assignValuesToPOJOFunction<T, K>(input)(target, obj);
 }
 
+/**
+ * Assigns values from the object to the target based on the configuration, and returns the result.
+ */
 export type AssignValuesToPOJOFunction<T> = (target: T, obj: T) => T;
 
-export function assignValuesToPOJOFunction<T extends object>(filter: FilterKeyValueTuplesInput<T> = KeyValueTypleValueFilter.UNDEFINED): AssignValuesToPOJOFunction<T> {
+export type AssignValuesToPOJOFunctionInput<T extends object = object, K extends keyof T = keyof T> =
+  | KeyValueTypleValueFilter
+  | (KeyValueTupleFilter<T, K> & {
+      /**
+       * Whether or not to copy the object before assigning values, and returning the new object.
+       *
+       * True by default.
+       */
+      copy?: boolean;
+    });
+
+/**
+ * Creates a AssignValuesToPOJOFunction from the input values.
+ *
+ * @param input
+ * @returns
+ */
+export function assignValuesToPOJOFunction<T extends object, K extends keyof T = keyof T>(input: AssignValuesToPOJOFunctionInput<T, K> = KeyValueTypleValueFilter.UNDEFINED): AssignValuesToPOJOFunction<T> {
+  const filter: FilterKeyValueTuplesInput<T> = input;
+  const copy = (typeof input === 'object' ? input.copy : true) ?? true;
+
   const assignEachValueToTarget = forEachKeyValueOnPOJOFunction<T, T>({
     filter,
     forEach: ([key, value], i, object: T, target: T) => {
@@ -296,9 +319,10 @@ export function assignValuesToPOJOFunction<T extends object>(filter: FilterKeyVa
     }
   });
 
-  return (target: T, obj: T) => {
+  return (inputTarget: T, obj: T) => {
+    const target = copy ? { ...inputTarget } : inputTarget;
     assignEachValueToTarget(obj, target);
-    return obj;
+    return target;
   };
 }
 
