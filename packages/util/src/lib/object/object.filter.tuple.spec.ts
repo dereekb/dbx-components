@@ -44,11 +44,30 @@ describe('filterKeyValueTupleFunction()', () => {
 describe('filterKeyValueTuplesFunction()', () => {
   describe('config', () => {
     describe('valueFilter', () => {
+      describe('NULL', () => {
+        const filterNullAndUndefinedValues = filterKeyValueTuplesFunction<any>(KeyValueTypleValueFilter.NULL);
+
+        it('should filter out null values.', () => {
+          const result = filterNullAndUndefinedValues({
+            // filter out
+            a: null,
+            b: undefined,
+            // keep
+            e: 0,
+            f: false
+          });
+
+          expect(result.length).toBe(2);
+          expect(result[0][0]).toBe('e');
+          expect(result[1][0]).toBe('f');
+        });
+      });
+
       describe('empty', () => {
-        const filterEmptyValues = filterKeyValueTuplesFunction<any>(KeyValueTypleValueFilter.EMPTY);
+        const filterOutEmptyValues = filterKeyValueTuplesFunction<any>(KeyValueTypleValueFilter.EMPTY);
 
         it('should filter out empty values.', () => {
-          const result = filterEmptyValues({
+          const result = filterOutEmptyValues({
             // filter out
             a: '',
             b: [],

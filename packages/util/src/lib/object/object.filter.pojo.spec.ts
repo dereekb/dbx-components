@@ -1,6 +1,6 @@
-import { filterUndefinedValues, mergeObjects } from '@dereekb/util';
+import { filterUndefinedValues, Maybe, mergeObjects } from '@dereekb/util';
 import { objectHasKey } from './object';
-import { filterFromPOJO, allNonUndefinedKeys, allMaybeSoKeys, countPOJOKeys, findPOJOKeys, overrideInObject } from './object.filter.pojo';
+import { filterFromPOJO, allNonUndefinedKeys, allMaybeSoKeys, countPOJOKeys, findPOJOKeys, overrideInObject, assignValuesToPOJOFunction } from './object.filter.pojo';
 import { KeyValueTypleValueFilter } from './object.filter.tuple';
 
 describe('overrideInObject', () => {
@@ -147,6 +147,33 @@ describe('findPOJOKeys()', () => {
         expect(result.length).toBe(2);
         expect(result[0]).toBe('y');
         expect(result[1]).toBe('z');
+      });
+    });
+  });
+});
+
+interface TestObject {
+  v: number;
+  ms?: Maybe<string>;
+}
+
+describe('assignValuesToPOJOFunction()', () => {
+  describe('function', () => {
+    describe('filter=NULL', () => {
+      const assignFunction = assignValuesToPOJOFunction<TestObject>({ keysFilter: ['v', 'ms'], valueFilter: KeyValueTypleValueFilter.NULL });
+
+      it('should not copy null values to the target object.', () => {
+        const result = assignFunction({ v: 0 }, { v: 1, ms: null });
+
+        expect(result.v).toBe(1);
+        expect(objectHasKey(result, 'ms')).toBe(false);
+      });
+
+      it('should not copy undefined values to the target object.', () => {
+        const result = assignFunction({ v: 0 }, { v: 1, ms: undefined });
+
+        expect(result.v).toBe(1);
+        expect(objectHasKey(result, 'ms')).toBe(false);
       });
     });
   });

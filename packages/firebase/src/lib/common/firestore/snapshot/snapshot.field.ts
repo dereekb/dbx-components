@@ -686,7 +686,7 @@ export const DEFAULT_WEBSITE_LINK: WebsiteLink = {
 
 export const assignWebsiteLinkFunction = assignValuesToPOJOFunction<WebsiteLink>({ keysFilter: ['t', 'd'], valueFilter: KeyValueTypleValueFilter.EMPTY });
 export const firestoreWebsiteLinkAssignFn: MapFunction<WebsiteLink, WebsiteLink> = (input) => {
-  const behavior = assignWebsiteLinkFunction({ ...DEFAULT_WEBSITE_LINK }, input);
+  const behavior = assignWebsiteLinkFunction(DEFAULT_WEBSITE_LINK, input);
   return behavior;
 };
 
@@ -712,7 +712,7 @@ export const DEFAULT_WEBSITE_FILE_LINK: WebsiteFileLink = {
 
 export const assignWebsiteFileLinkFunction = assignValuesToPOJOFunction<WebsiteFileLink>({ keysFilter: ['type', 'name', 'mime'], valueFilter: KeyValueTypleValueFilter.EMPTY });
 export const firestoreWebsiteFileLinkAssignFn: MapFunction<WebsiteFileLink, WebsiteFileLink> = (input) => {
-  const behavior = assignWebsiteFileLinkFunction({ ...DEFAULT_WEBSITE_FILE_LINK }, input);
+  const behavior = assignWebsiteFileLinkFunction(DEFAULT_WEBSITE_FILE_LINK, input);
   return behavior;
 };
 
