@@ -3,6 +3,7 @@ import { ArrayOrValue, asArray } from './../array/array';
 import { objectHasKey } from '../object/object';
 import { HashSet } from '../set/set.hashset';
 import { SortCompareFunction } from '../sort';
+import { FactoryWithRequiredInput } from '../getter';
 
 /**
  * A number that denotes which index an item is at.
@@ -105,6 +106,61 @@ export interface IndexRange {
    * Maximum index allowed. Typically exclusive.
    */
   maxIndex: IndexNumber;
+}
+
+/**
+ * Returns the IndexRange for the input value.
+ */
+export type ReadIndexRangeFunction<T> = FactoryWithRequiredInput<IndexRange, T>;
+
+/**
+ * Creates a SortCompareFunction<T> that sorts by the read index.
+ *
+ * @param input
+ * @returns
+ */
+export function sortByIndexRangeAscendingCompareFunction<T>(readIndexRange: ReadIndexRangeFunction<T>): SortCompareFunction<T> {
+  return (a, b) => {
+    const ra = readIndexRange(a);
+    const rb = readIndexRange(b);
+
+    const comp = ra.minIndex - rb.minIndex; // sort by smaller minIndexes first
+
+    if (comp === 0) {
+      return ra.maxIndex - rb.maxIndex; // sort by larger maxIndexes first
+    } else {
+      return comp;
+    }
+  };
+}
+
+/**
+ * IndexRange and value pair.
+ */
+export interface IndexRangeReaderPair<T = unknown> {
+  range: IndexRange;
+  value: T;
+}
+
+/**
+ * Creates a IndexRangeReaderPair with the input value.
+ */
+export type IndexRangeReaderPairFactory<T> = FactoryWithRequiredInput<IndexRangeReaderPair<T>, T>;
+
+/**
+ * Creates a new IndexRangeReaderPairFactory
+ *
+ * @param reader
+ * @returns
+ */
+export function indexRangeReaderPairFactory<T>(reader: ReadIndexRangeFunction<T>): IndexRangeReaderPairFactory<T> {
+  return (value: T) => {
+    const range = reader(value);
+    return {
+      range,
+      value
+    };
+  };
 }
 
 /**
