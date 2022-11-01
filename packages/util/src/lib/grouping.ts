@@ -1,5 +1,6 @@
 import { PrimativeKey, ReadKeyFunction } from './key';
 import { mapToObject } from './object';
+import { DecisionFunction } from './value/decision';
 import { Maybe } from './value/maybe.type';
 
 // MARK: Types
@@ -229,7 +230,7 @@ export function makeKeyPairs<T, K extends string | number = string | number>(val
  * @param checkInclusion
  * @returns
  */
-export function separateValues<T>(values: T[], checkInclusion: (x: T) => boolean): SeparateResult<T> {
+export function separateValues<T>(values: T[], checkInclusion: DecisionFunction<T>): SeparateResult<T> {
   const result: KeyedGroupingResult<T, { in: unknown; out: unknown }> = groupValues(values, (x) => {
     return checkInclusion(x) ? 'in' : 'out';
   });

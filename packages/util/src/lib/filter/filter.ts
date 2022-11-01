@@ -10,6 +10,9 @@ export interface Filter<F> {
 
 export type OptionalFilter<F> = Partial<Filter<F>>;
 
+/**
+ * Function used for filtering items that takes in a value and index.
+ */
 export type FilterFunction<T = unknown> = (value: T, index: number) => boolean;
 
 /**
