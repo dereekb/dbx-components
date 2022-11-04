@@ -562,6 +562,10 @@ download_firebase_ts_file "src/lib/model/example/example.query.ts"
 download_firebase_ts_file "src/lib/model/example/example.ts"
 download_firebase_ts_file "src/lib/model/example/index.ts"
 
+mkdir $FIREBASE_COMPONENTS_FOLDER/src/lib/model/system
+download_firebase_ts_file "src/lib/model/system/system.ts"
+download_firebase_ts_file "src/lib/model/system/index.ts"
+
 git add --all
 git commit --no-verify -m "checkpoint: setup api components"
 
