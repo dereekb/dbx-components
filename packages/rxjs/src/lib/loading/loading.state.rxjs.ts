@@ -1,7 +1,7 @@
 import { Maybe } from '@dereekb/util';
 import { MonoTypeOperatorFunction, OperatorFunction, startWith, Observable, filter, map, tap, catchError, combineLatest, distinctUntilChanged, first, of, shareReplay } from 'rxjs';
 import { timeoutStartWith } from '../rxjs';
-import { LoadingState, PageLoadingState, beginLoading, loadingStateHasFinishedLoading, isSuccessLoadingState, mergeLoadingStates } from './loading.state';
+import { LoadingState, PageLoadingState, beginLoading, loadingStateHasFinishedLoading, isSuccessLoadingState, mergeLoadingStates, mapLoadingStateResults, MapLoadingStateResultsConfiguration } from './loading.state';
 
 /**
  * Wraps an observable output and maps the value to a LoadingState.
@@ -74,4 +74,14 @@ export function tapOnLoadingStateSuccess<L extends LoadingState<T>, T = unknown>
       fn(state);
     }
   });
+}
+
+/**
+ * Convenience function for using mapLoadingStateResults with an Observable.
+ */
+export function mapLoadingState<A, B, L extends LoadingState<A> = LoadingState<A>, O extends LoadingState<B> = LoadingState<B>>(config: MapLoadingStateResultsConfiguration<A, B, L, O>): OperatorFunction<L, O>;
+export function mapLoadingState<A, B, L extends PageLoadingState<A> = PageLoadingState<A>, O extends PageLoadingState<B> = PageLoadingState<B>>(config: MapLoadingStateResultsConfiguration<A, B, L, O>): OperatorFunction<L, O>;
+export function mapLoadingState<A, B, L extends Partial<PageLoadingState<A>> = Partial<PageLoadingState<A>>, O extends Partial<PageLoadingState<B>> = Partial<PageLoadingState<B>>>(config: MapLoadingStateResultsConfiguration<A, B, L, O>): OperatorFunction<L, O>;
+export function mapLoadingState<A, B, L extends Partial<PageLoadingState<A>> = Partial<PageLoadingState<A>>, O extends Partial<PageLoadingState<B>> = Partial<PageLoadingState<B>>>(config: MapLoadingStateResultsConfiguration<A, B, L, O>): OperatorFunction<L, O> {
+  return map((state: L) => mapLoadingStateResults(state, config));
 }

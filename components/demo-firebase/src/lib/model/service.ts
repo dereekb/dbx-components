@@ -1,4 +1,4 @@
-import { FirebaseAppModelContext, firebaseModelServiceFactory, firebaseModelsService, FirebasePermissionServiceModel, FirestoreContext, FirestoreDocumentAccessor, grantFullAccessIfAdmin, grantFullAccessIfAuthUserRelated, SystemState, SystemStateDocument, systemStateFirestoreCollection, SystemStateFirestoreCollection, SystemStateFirestoreCollections, SystemStateStoredData } from '@dereekb/firebase';
+import { FirebaseAppModelContext, firebaseModelServiceFactory, firebaseModelsService, FirebasePermissionServiceModel, FirestoreContext, FirestoreDocumentAccessor, grantFullAccessIfAdmin, grantFullAccessIfAuthUserRelated, SystemState, SystemStateDocument, systemStateFirestoreCollection, SystemStateFirestoreCollection, SystemStateFirestoreCollections, SystemStateRoles, SystemStateStoredData, SystemStateTypes } from '@dereekb/firebase';
 import { GrantedRoleMap } from '@dereekb/model';
 import { PromiseOrValue } from '@dereekb/util';
 import { GuestbookTypes, GuestbookFirestoreCollections, Guestbook, GuestbookDocument, GuestbookEntry, GuestbookEntryDocument, GuestbookEntryFirestoreCollectionFactory, GuestbookEntryFirestoreCollectionGroup, GuestbookEntryRoles, GuestbookFirestoreCollection, GuestbookRoles, guestbookEntryFirestoreCollectionFactory, guestbookEntryFirestoreCollectionGroup, guestbookFirestoreCollection } from './guestbook';
@@ -26,6 +26,14 @@ export function makeDemoFirestoreCollections(firestoreContext: FirestoreContext)
     profilePrivateDataCollectionGroup: profilePrivateDataFirestoreCollectionGroup(firestoreContext)
   };
 }
+
+// MARK: System
+export const systemStateFirebaseModelServiceFactory = firebaseModelServiceFactory<DemoFirebaseContext, SystemState, SystemStateDocument, SystemStateRoles>({
+  roleMapForModel: function (output: FirebasePermissionServiceModel<SystemState, SystemStateDocument>, context: DemoFirebaseContext, model: SystemStateDocument): PromiseOrValue<GrantedRoleMap<SystemStateRoles>> {
+    return grantFullAccessIfAdmin(context);
+  },
+  getFirestoreCollection: (c) => c.app.systemStateCollection
+});
 
 // MARK: Guestbook
 export const guestbookFirebaseModelServiceFactory = firebaseModelServiceFactory<DemoFirebaseContext, Guestbook, GuestbookDocument, GuestbookRoles>({
@@ -58,13 +66,14 @@ export const profilePrivateDataFirebaseModelServiceFactory = firebaseModelServic
 });
 
 // MARK: Services
-export type DemoFirebaseModelTypes = GuestbookTypes | ProfileTypes;
+export type DemoFirebaseModelTypes = SystemStateTypes | GuestbookTypes | ProfileTypes;
 
 export type DemoFirebaseContextAppContext = DemoFirestoreCollections;
 
 export type DemoFirebaseBaseContext = FirebaseAppModelContext<DemoFirebaseContextAppContext>;
 
 export const DEMO_FIREBASE_MODEL_SERVICE_FACTORIES = {
+  systemState: systemStateFirebaseModelServiceFactory,
   guestbook: guestbookFirebaseModelServiceFactory,
   guestbookEntry: guestbookEntryFirebaseModelServiceFactory,
   profile: profileFirebaseModelServiceFactory,
