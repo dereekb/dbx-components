@@ -1,7 +1,7 @@
-import { SystemStateDocumentStore } from '@dereekb/dbx-firebase';
 import { SystemState, SystemStateStoredData, SystemStateTypeIdentifier } from '@dereekb/firebase';
 import { LoadingState, mapLoadingState } from '@dereekb/rxjs';
 import { map, Observable, shareReplay } from 'rxjs';
+import { SystemStateDocumentStore } from './systemstate.document.store';
 
 /**
  * Abstract class used for accessing a SystemStateDocumentStore's data.
