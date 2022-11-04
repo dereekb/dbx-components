@@ -2,6 +2,16 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [9.11.12](https://github.com/dereekb/dbx-components/compare/v9.11.11-dev...v9.11.12) (2022-11-04)
+
+
+### Bug Fixes
+
+* added system files to setup ([2251546](https://github.com/dereekb/dbx-components/commit/2251546683f4befefc37f78070eaa362c93c7e24))
+* fixed circular dependency import ([9b68403](https://github.com/dereekb/dbx-components/commit/9b68403cbc86612bc4f608e63028ced2d9853bdb))
+
+
+
 ## [9.11.11](https://github.com/dereekb/dbx-components/compare/v9.11.10-dev...v9.11.11) (2022-11-01)
 
 

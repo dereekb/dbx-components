@@ -8,8 +8,8 @@ import { firestorePassThroughField } from '../../common/firestore/snapshot/snaps
 import { mapObjectMap, ModelFieldMapFunctionsConfig, cachedGetter } from '@dereekb/util';
 
 // MARK: Collection
-export interface SystemStateFirestoreCollections {
-  readonly systemStateCollection: SystemStateFirestoreCollection;
+export abstract class SystemStateFirestoreCollections {
+  abstract readonly systemStateCollection: SystemStateFirestoreCollection;
 }
 
 export type SystemStateTypes = typeof systemStateIdentity;
@@ -62,7 +62,7 @@ export function systemStateCollectionReference(context: FirestoreContext): Colle
   return context.collection(systemStateIdentity.collectionName);
 }
 
-export type SystemStateFirestoreCollection = FirestoreCollection<SystemState, SystemStateDocument>;
+export type SystemStateFirestoreCollection<T extends SystemStateStoredData = SystemStateStoredData> = FirestoreCollection<SystemState<T>, SystemStateDocument<T>>;
 
 /**
  * A ModelFieldMapFunctionsConfig used for data conversion.
