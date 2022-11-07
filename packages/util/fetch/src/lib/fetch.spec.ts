@@ -9,6 +9,8 @@ const testFetch: FetchService = fetchService({
   makeRequest: (x, y) => new Request(x as RequestInfo, y as RequestInit) as any
 });
 
+jest.setTimeout(30000);
+
 describe('fetchService()', () => {
   it('should have the defined service items.', () => {
     expect(testFetch.fetchRequestFactory).toBeDefined();

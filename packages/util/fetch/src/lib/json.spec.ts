@@ -10,6 +10,8 @@ const testFetch: FetchService = fetchService({
   makeRequest: (x, y) => new Request(x as RequestInfo, y as RequestInit) as any
 });
 
+jest.setTimeout(30000);
+
 describe('fetchJson()', () => {
   // Expected result: {"statusCode":403,"message":"Forbidden"}
   const forbiddenUrl = 'https://components.dereekb.com/api/webhook';
@@ -19,6 +21,15 @@ describe('fetchJson()', () => {
 
   describe('GET', () => {
     const method = 'GET';
+
+    it('should send a GET request by default.', async () => {
+      // TODO: Switch to different resource later
+
+      // NOTE: Fetch will not throw an error on non-ok results, allowing us to test against the webhook url.
+
+      const response = await fetchJson<{ statusCode: number; message: 'Forbidden' }>(forbiddenUrl);
+      expect(response.message).toBe('Forbidden');
+    });
 
     it('should send a GET request and should parse the result as JSON.', async () => {
       // TODO: Switch to different resource later
