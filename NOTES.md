@@ -2,10 +2,15 @@
 Set of notes relevant to setting up an Nx environment, similar to this one.
 
 # Using Nx
-## Creating a NodeJs Library
+## Creating a NodeJS Library
 Be sure to include the `--buildable` and `--publishable` flags if relevant.
 
 Example: `nx g @nrwl/node:library firebase --buildable --publishable --importPath @dereekb/firebase`
+
+### Creating a child NodeJS Library
+Example: `nx generate @nrwl/node:library --name=fetch --buildable --publishable --importPath @dereekb/util/fetch --directory=util`
+
+This example will end up as a child of @dereekb/util.
 
 ## Creating an Angular Library
 

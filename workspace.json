@@ -26,6 +26,7 @@
     "nestjs-stripe": "packages/nestjs/stripe",
     "rxjs": "packages/rxjs",
     "util": "packages/util",
+    "util-fetch": "packages/util/fetch",
     "util-test": "packages/util/test",
     "workspace": ""
   },
