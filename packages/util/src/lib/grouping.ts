@@ -1,3 +1,4 @@
+import { Factory } from './getter/getter';
 import { PrimativeKey, ReadKeyFunction } from './key';
 import { mapToObject } from './object';
 import { DecisionFunction } from './value/decision';
