@@ -4,11 +4,9 @@ import { fetchService, fetchRequestFactory, FetchRequestFactory, FetchService } 
 import fetch, { Request, RequestInfo, RequestInit } from 'node-fetch';
 import { FetchResponseError, requireOkResponse } from './error';
 import { fetchJsonFunction } from './json';
+import { nodeFetchService } from './provider';
 
-const testFetch: FetchService = fetchService({
-  makeFetch: fetch as any,
-  makeRequest: (x, y) => new Request(x as RequestInfo, y as RequestInit) as any
-});
+const testFetch: FetchService = nodeFetchService;
 
 jest.setTimeout(30000);
 

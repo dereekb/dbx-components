@@ -5,7 +5,7 @@ defaults: &defaults
   working_directory: ~/code # "code" is our working directory
   resource_class: large
   docker:
-    - image: cimg/node:18.12
+    - image: cimg/node:16.18
 
 # https://circleci.com/blog/config-best-practices-dependency-caching/
 

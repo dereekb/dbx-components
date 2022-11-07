@@ -1,13 +1,10 @@
 import { itShouldFail, expectFail } from '@dereekb/util/test';
 import { fetchService, FetchService } from './fetch';
-import fetch, { Request, RequestInfo, RequestInit } from 'node-fetch';
+import { nodeFetchService } from './provider';
 
 // TEMP: Fetch global is not available in jest? Use node-fetch@2 for now.
 
-const testFetch: FetchService = fetchService({
-  makeFetch: fetch as any,
-  makeRequest: (x, y) => new Request(x as RequestInfo, y as RequestInit) as any
-});
+const testFetch: FetchService = nodeFetchService;
 
 jest.setTimeout(30000);
 
