@@ -1,11 +1,11 @@
 import { objectToMap } from '@dereekb/util';
-import { fetchURL, FetchURLQueryKeyValueTuple, isURL, isURLSearchParams } from './url';
+import { fetchURL, FetchURLQueryKeyValueStringTuple, FetchURLQueryKeyValueTuple, isURL, isURLSearchParams } from './url';
 
 const urlString = 'https://components.dereekb.com/';
 const url = new URL(urlString);
 
 const queryKey = 'hello';
-const queryParamsTuples: FetchURLQueryKeyValueTuple[] = [
+const queryParamsTuples: FetchURLQueryKeyValueStringTuple[] = [
   [queryKey, 'world'],
   [queryKey, 'word'],
   ['henlo', 'wrold']
@@ -74,7 +74,23 @@ describe('fetchURL()', () => {
       expect(result.href).toBe(url.href + `?${new URLSearchParams(Array.from(expectedParams.entries())).toString()}`);
     });
 
+    it('should return the url with query params of different types attached as an object', () => {
+      const queryParamsObject = {
+        1: 'test',
+        henlo: 1,
+        wrold: true
+      };
+      const expectedParams = objectToMap(queryParamsObject);
+      const result = fetchURL({ url, queryParams: queryParamsObject });
+      expect(result.href).toBe(url.href + `?${new URLSearchParams(Array.from(expectedParams.entries()).map((x) => [String(x[0]), String(x[1])])).toString()}`);
+    });
+
     it('should return the url with query params attached as a tuple', () => {
+      const result = fetchURL({ url, queryParams: queryParamsTuples });
+      expect(result.href).toBe(url.href + `?${queryParams.toString()}`);
+    });
+
+    it('should return the url with query params attached as a tuple with an array of values', () => {
       const result = fetchURL({ url, queryParams: queryParamsTuples });
       expect(result.href).toBe(url.href + `?${queryParams.toString()}`);
     });
@@ -86,7 +102,13 @@ describe('fetchURL()', () => {
     });
 
     it('should return the url with query params attached as a string with a "?" attached', () => {
-      const result = fetchURL({ url, queryParams: `?${queryParams.toString()}` });
+      // same as queryParamsTuples but has the two values in an array instead of separate
+      const queryParamsTuplesWithArray: FetchURLQueryKeyValueTuple[] = [
+        [queryKey, [queryParamsTuples[0][1], queryParamsTuples[1][1]]],
+        ['henlo', 'wrold']
+      ];
+
+      const result = fetchURL({ url, queryParams: queryParamsTuplesWithArray });
       expect(result.href).toBe(url.href + `?${queryParams.toString()}`);
     });
 
