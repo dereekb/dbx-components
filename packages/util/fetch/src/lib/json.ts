@@ -1,4 +1,4 @@
-import { ConfiguredFetch, FetchMethod } from './fetch';
+import { FetchMethod, ConfiguredFetch } from './fetch.type';
 
 export type FetchJsonBody = string | object;
 

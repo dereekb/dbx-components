@@ -1,13 +1,13 @@
-import { MapFunction, Maybe, removeTrailingFileTypeSeparators, WebsitePath, WebsiteUrl } from '@dereekb/util';
-import { requireOkResponse } from './error';
-
-export type FetchMethod = Request['method'];
+import { Factory, MapFunction, Maybe, removeTrailingFileTypeSeparators, WebsitePath, WebsiteUrl } from '@dereekb/util';
+import { fetchOk, requireOkResponse } from './error';
+import { ConfiguredFetchWithTimeout, RequestInitWithTimeout, RequestWithTimeout } from './fetch.type';
+import { fetchTimeout } from './timeout';
 
 /**
  * Interface used for creating fetch related resource factories.
  */
 export interface FetchService {
-  makeFetch: (config?: ConfigureFetchInput) => ConfiguredFetch;
+  makeFetch: (config?: ConfigureFetchInput) => ConfiguredFetchWithTimeout;
   makeRequest: FetchRequestFactory;
   fetchRequestFactory: typeof fetchRequestFactory;
 }
@@ -15,7 +15,7 @@ export interface FetchService {
 /**
  * fetchService() configuration.
  */
-export type FetchServiceConfig = Required<Pick<ConfigureFetchInput, 'makeFetch' | 'makeRequest'>>;
+export type FetchServiceConfig = Required<Pick<ConfigureFetchInput, 'makeFetch' | 'makeRequest'>> & Pick<ConfigureFetchInput, 'baseRequest'>;
 
 /**
  * Used to create a FetchService.
@@ -24,11 +24,11 @@ export type FetchServiceConfig = Required<Pick<ConfigureFetchInput, 'makeFetch' 
  * @returns
  */
 export function fetchService(config: FetchServiceConfig): FetchService {
-  const { makeFetch: inputMakeFetch, makeRequest } = config;
+  const { makeFetch: inputMakeFetch, makeRequest, baseRequest } = config;
 
   const factory = {
-    fetchRequestFactory: (config: FetchRequestFactoryInput) => fetchRequestFactory({ makeRequest, ...config }),
-    makeFetch: (config: ConfigureFetchInput = {}) => configureFetch({ makeRequest, makeFetch: inputMakeFetch, ...config }),
+    fetchRequestFactory: (config: FetchRequestFactoryInput) => fetchRequestFactory({ makeRequest, baseRequest, ...config }),
+    makeFetch: (config: ConfigureFetchInput = {}) => configureFetch({ makeRequest, makeFetch: inputMakeFetch, baseRequest, ...config }),
     makeRequest: config.makeRequest
   };
 
@@ -40,6 +40,12 @@ export type MapFetchResponseFunction = MapFunction<Promise<Response>, Promise<Re
 
 export interface ConfigureFetchInput extends FetchRequestFactoryInput {
   makeFetch?: typeof fetch;
+  /**
+   * Whether or not to add timeout handling using timeoutFetch().
+   *
+   * Default: false
+   */
+  useTimeout?: boolean;
   /**
    * Whether or not to map the fetch response using requireOkResponse().
    *
@@ -54,24 +60,30 @@ export interface ConfigureFetchInput extends FetchRequestFactoryInput {
   mapResponse?: MapFetchResponseFunction;
 }
 
-export type ConfiguredFetch = typeof fetch;
-
 /**
  * Creates a function that wraps fetch and uses a FetchRequestFactory to generate a Request before invoking Fetch.
  *
  * @param config
  * @returns
  */
-export function configureFetch(config: ConfigureFetchInput): ConfiguredFetch {
-  const { makeFetch = fetch, requireOkResponse: inputRequireOkResponse, mapResponse } = config;
+export function configureFetch(config: ConfigureFetchInput): ConfiguredFetchWithTimeout {
+  const { makeFetch: inputMakeFetch = fetch, useTimeout, requireOkResponse: inputRequireOkResponse, mapResponse } = config;
+  let makeFetch = inputMakeFetch;
+
+  if (useTimeout) {
+    // add fetchTimeout
+    makeFetch = fetchTimeout(makeFetch);
+  }
+
+  if (inputRequireOkResponse) {
+    // Add fetchOk
+    makeFetch = fetchOk(makeFetch);
+  }
+
   const makeFetchRequest = fetchRequestFactory(config);
 
   return (input: RequestInfo | URL, init?: RequestInit | undefined) => {
     let response = makeFetch(makeFetchRequest(input, init));
-
-    if (inputRequireOkResponse) {
-      response = requireOkResponse(response);
-    }
 
     if (mapResponse) {
       response = mapResponse(response);
@@ -100,6 +112,12 @@ export interface FetchRequestFactoryInput {
    */
   baseRequest?: RequestInit;
   /**
+   * Default timeout to add to requestInit values.
+   *
+   * NOTE: This timeout is not used by this fetchRequest directly, but instead
+   */
+  timeout?: number;
+  /**
    * Maps the input RequestInit value to another.
    *
    * If baseRequest is provided, the values will already be appended before reaching this factory.
@@ -107,16 +125,15 @@ export interface FetchRequestFactoryInput {
   requestInitFactory?: FetchRequestInitFactory;
 }
 
-export type FetchRequestInitFactory = (currRequest: Request, init?: RequestInit) => RequestInit | undefined;
+export type FetchRequestInitFactory = (currRequest: Request, init?: RequestInit) => RequestInitWithTimeout | undefined;
 
 export type FetchRequestFactory = (input: RequestInfo | URL, init?: RequestInit | undefined) => Request;
+export type AbortControllerFactory = Factory<AbortController>;
 
 export function fetchRequestFactory(config: FetchRequestFactoryInput): FetchRequestFactory {
-  const { makeRequest = (input, init) => new Request(input, init), baseUrl: inputBaseUrl, baseRequest, requestInitFactory, useBaseUrlForConfiguredFetchRequests = false } = config;
-
-  console.log({ makeRequest, config });
-
+  const { makeRequest = (input, init) => new Request(input, init), baseUrl: inputBaseUrl, baseRequest: inputBaseRequest, timeout, requestInitFactory, useBaseUrlForConfiguredFetchRequests = false } = config;
   const baseUrl = inputBaseUrl ? new URL(removeTrailingFileTypeSeparators(inputBaseUrl)) : undefined;
+  const baseRequest = timeout ? { ...inputBaseRequest, timeout } : inputBaseRequest;
 
   const buildUrl = baseUrl
     ? (url: string | WebsitePath | URL) => {
@@ -163,9 +180,9 @@ export function fetchRequestFactory(config: FetchRequestFactoryInput): FetchRequ
   let buildRequestInit: FetchRequestInitFactory;
 
   if (baseRequest && requestInitFactory) {
-    buildRequestInit = (req, x) => requestInitFactory(req, { ...baseRequest, ...x });
+    buildRequestInit = (req, x) => requestInitFactory(req, { ...baseRequest, timeout: (req as RequestWithTimeout).timeout, ...x } as RequestInitWithTimeout);
   } else if (baseRequest) {
-    buildRequestInit = (_, x) => ({ ...baseRequest, ...x });
+    buildRequestInit = (req, x) => ({ ...baseRequest, timeout: (req as RequestWithTimeout).timeout, ...x });
   } else if (requestInitFactory) {
     buildRequestInit = requestInitFactory;
   } else {
@@ -175,7 +192,10 @@ export function fetchRequestFactory(config: FetchRequestFactoryInput): FetchRequ
   return (input: RequestInfo | URL, init?: RequestInit | undefined) => {
     const fixedRequest = buildRequestWithFixedUrl(input);
     init = buildRequestInit(fixedRequest, init);
-    return makeRequest(fixedRequest, init);
+
+    const request = makeRequest(fixedRequest, init);
+    (request as RequestWithTimeout).timeout = timeout; // copy/set timeout on the request directly
+    return request;
   };
 }
 
