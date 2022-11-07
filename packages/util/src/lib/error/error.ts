@@ -12,7 +12,6 @@ export type StringErrorCode = string;
  */
 export interface CodedError {
   code: StringErrorCode;
-
   /**
    * The original error, if available.
    */

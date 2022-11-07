@@ -1,10 +1,13 @@
-import { Maybe, removeTrailingFileTypeSeparators, WebsitePath, WebsiteUrl } from '@dereekb/util';
+import { MapFunction, Maybe, removeTrailingFileTypeSeparators, WebsitePath, WebsiteUrl } from '@dereekb/util';
+import { requireOkResponse } from './error';
+
+export type FetchMethod = Request['method'];
 
 /**
  * Interface used for creating fetch related resource factories.
  */
 export interface FetchService {
-  makeFetch: typeof configureFetch;
+  makeFetch: (config?: ConfigureFetchInput) => ConfiguredFetch;
   makeRequest: FetchRequestFactory;
   fetchRequestFactory: typeof fetchRequestFactory;
 }
@@ -24,8 +27,8 @@ export function fetchService(config: FetchServiceConfig): FetchService {
   const { makeFetch: inputMakeFetch, makeRequest } = config;
 
   const factory = {
-    makeFetch: (config: ConfigureFetchInput) => configureFetch({ makeFetch: inputMakeFetch, ...config }),
     fetchRequestFactory: (config: FetchRequestFactoryInput) => fetchRequestFactory({ makeRequest, ...config }),
+    makeFetch: (config: ConfigureFetchInput = {}) => configureFetch({ makeRequest, makeFetch: inputMakeFetch, ...config }),
     makeRequest: config.makeRequest
   };
 
@@ -33,8 +36,22 @@ export function fetchService(config: FetchServiceConfig): FetchService {
 }
 
 // MARK: Make Fetch
+export type MapFetchResponseFunction = MapFunction<Promise<Response>, Promise<Response>>;
+
 export interface ConfigureFetchInput extends FetchRequestFactoryInput {
   makeFetch?: typeof fetch;
+  /**
+   * Whether or not to map the fetch response using requireOkResponse().
+   *
+   * Default: false
+   */
+  requireOkResponse?: boolean;
+  /**
+   * (Optional) MapFetchResponseFunction
+   *
+   * If requireOkResponse is true, this mapping occurs afterwards.
+   */
+  mapResponse?: MapFetchResponseFunction;
 }
 
 export type ConfiguredFetch = typeof fetch;
@@ -46,11 +63,21 @@ export type ConfiguredFetch = typeof fetch;
  * @returns
  */
 export function configureFetch(config: ConfigureFetchInput): ConfiguredFetch {
-  const { makeFetch = fetch } = config;
+  const { makeFetch = fetch, requireOkResponse: inputRequireOkResponse, mapResponse } = config;
   const makeFetchRequest = fetchRequestFactory(config);
 
   return (input: RequestInfo | URL, init?: RequestInit | undefined) => {
-    return makeFetch(makeFetchRequest(input, init));
+    let response = makeFetch(makeFetchRequest(input, init));
+
+    if (inputRequireOkResponse) {
+      response = requireOkResponse(response);
+    }
+
+    if (mapResponse) {
+      response = mapResponse(response);
+    }
+
+    return response;
   };
 }
 
@@ -85,7 +112,10 @@ export type FetchRequestInitFactory = (currRequest: Request, init?: RequestInit)
 export type FetchRequestFactory = (input: RequestInfo | URL, init?: RequestInit | undefined) => Request;
 
 export function fetchRequestFactory(config: FetchRequestFactoryInput): FetchRequestFactory {
-  const { makeRequest: requestFactory = (input, init) => new Request(input, init), baseUrl: inputBaseUrl, baseRequest, requestInitFactory, useBaseUrlForConfiguredFetchRequests = false } = config;
+  const { makeRequest = (input, init) => new Request(input, init), baseUrl: inputBaseUrl, baseRequest, requestInitFactory, useBaseUrlForConfiguredFetchRequests = false } = config;
+
+  console.log({ makeRequest, config });
+
   const baseUrl = inputBaseUrl ? new URL(removeTrailingFileTypeSeparators(inputBaseUrl)) : undefined;
 
   const buildUrl = baseUrl
@@ -98,7 +128,7 @@ export function fetchRequestFactory(config: FetchRequestFactoryInput): FetchRequ
     if (isFetchRequest(input)) {
       return input;
     } else {
-      return new Request(input);
+      return makeRequest(input);
     }
   }
 
@@ -118,12 +148,12 @@ export function fetchRequestFactory(config: FetchRequestFactoryInput): FetchRequ
             request = input;
           }
         } else {
-          request = requestFactory(input);
+          request = makeRequest(input);
         }
 
         if (!request) {
           const url = buildUrl(relativeUrl as string);
-          request = requestFactory(url.href, baseRequest);
+          request = makeRequest(url.href, baseRequest);
         }
 
         return request;
@@ -145,7 +175,7 @@ export function fetchRequestFactory(config: FetchRequestFactoryInput): FetchRequ
   return (input: RequestInfo | URL, init?: RequestInit | undefined) => {
     const fixedRequest = buildRequestWithFixedUrl(input);
     init = buildRequestInit(fixedRequest, init);
-    return requestFactory(fixedRequest, init);
+    return makeRequest(fixedRequest, init);
   };
 }
 
