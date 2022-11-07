@@ -85,6 +85,16 @@ describe('fetchURL()', () => {
       expect(result.href).toBe(url.href + `?${new URLSearchParams(Array.from(expectedParams.entries()).map((x) => [String(x[0]), String(x[1])])).toString()}`);
     });
 
+    it('should return the url with query params of different types attached as an object with an array as a set of values for a key', () => {
+      const queryParamsObject = {
+        [queryKey]: [queryParamsTuples[0][1], queryParamsTuples[1][1]],
+        henlo: 'wrold'
+      };
+
+      const result = fetchURL({ url, queryParams: queryParamsObject });
+      expect(result.href).toBe(url.href + `?${queryParams.toString()}`);
+    });
+
     it('should return the url with query params attached as a tuple', () => {
       const result = fetchURL({ url, queryParams: queryParamsTuples });
       expect(result.href).toBe(url.href + `?${queryParams.toString()}`);
