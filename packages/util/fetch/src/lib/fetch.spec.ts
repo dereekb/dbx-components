@@ -1,5 +1,5 @@
 import { itShouldFail, expectFail } from '@dereekb/util/test';
-import { fetchService, fetchRequestFactory, FetchRequestFactory, FetchService } from './fetch';
+import { fetchService, FetchService } from './fetch';
 import fetch, { Request, RequestInfo, RequestInit } from 'node-fetch';
 
 // TEMP: Fetch global is not available in jest? Use node-fetch@2 for now.
@@ -7,6 +7,14 @@ import fetch, { Request, RequestInfo, RequestInit } from 'node-fetch';
 const testFetch: FetchService = fetchService({
   makeFetch: fetch as any,
   makeRequest: (x, y) => new Request(x as RequestInfo, y as RequestInit) as any
+});
+
+describe('fetchService()', () => {
+  it('should have the defined service items.', () => {
+    expect(testFetch.fetchRequestFactory).toBeDefined();
+    expect(testFetch.makeFetch).toBeDefined();
+    expect(testFetch.makeRequest).toBeDefined();
+  });
 });
 
 describe('fetchRequestFactory()', () => {
