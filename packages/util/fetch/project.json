@@ -1,0 +1,34 @@
+{
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/util/fetch/src",
+  "projectType": "library",
+  "targets": {
+    "build-base": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/packages/util/fetch",
+        "tsConfig": "packages/util/fetch/tsconfig.lib.json",
+        "packageJson": "packages/util/fetch/package.json",
+        "main": "packages/util/fetch/src/index.ts",
+        "assets": ["packages/util/fetch/*.md"]
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["packages/util/fetch/**/*.ts"]
+      }
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": ["coverage/packages/util/fetch", "./.reports/jest/util-fetch.junit.xml"],
+      "options": {
+        "jestConfig": "packages/util/fetch/jest.config.ts",
+        "passWithNoTests": true
+      }
+    }
+  },
+  "tags": []
+}

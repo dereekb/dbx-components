@@ -25,13 +25,15 @@ import {
   groupToDateBlockRanges,
   groupUniqueDateBlocks,
   isValidDateBlockTiming,
+  isValidDateBlockTimingStartDate,
   modifyDateBlocksToFitRangeFunction,
   sortDateBlockRanges,
   UniqueDateBlockRange
 } from './date.block';
 import { MS_IN_DAY, MINUTES_IN_DAY, range, RangeInput, Hours, Day } from '@dereekb/util';
-import { removeMinutesAndSeconds } from './date';
+import { roundDownToHour, roundDownToMinute, removeMinutesAndSeconds } from './date';
 import { dateBlockDurationSpanHasNotEndedFilterFunction, dateBlockDurationSpanHasNotStartedFilterFunction } from './date.filter';
+import { systemBaseDateToNormalDate, systemNormalDateToBaseDate } from './date.timezone';
 
 describe('getCurrentDateBlockTimingOffset()', () => {
   const utcDate = new Date('2022-01-02T00:00:00Z'); // date in utc. Implies there is no offset to consider.
@@ -140,7 +142,8 @@ describe('getRelativeIndexForDateTiming()', () => {
 });
 
 describe('dateBlockTiming()', () => {
-  const startsAt = setMinutes(setHours(new Date(), 12), 0); // keep seconds to show rounding
+  const startsAt = setMinutes(setHours(systemNormalDateToBaseDate(new Date()), 12), 0); // keep seconds to show rounding
+  const start = systemNormalDateToBaseDate(startOfDay(startsAt));
   const days = 5;
   const minutes = 60;
 
@@ -159,7 +162,7 @@ describe('dateBlockTiming()', () => {
 
       it('should retain the startsAt time', () => {
         const result = dateBlockTiming({ startsAt, duration: MINUTES_IN_DAY }, days);
-        expect(result.startsAt).toBeSameSecondAs(removeMinutesAndSeconds(startsAt));
+        expect(result.startsAt).toBeSameSecondAs(roundDownToHour(startsAt));
       });
 
       it('should create a timing for a specific time that last 1 day', () => {
@@ -168,8 +171,8 @@ describe('dateBlockTiming()', () => {
         expect(result).toBeDefined();
         expect(result.start).toBeSameMinuteAs(startOfDay(startsAt));
         expect(result.startsAt).toBeSameMinuteAs(startsAt);
+        expect(result.end).toBeSameMinuteAs(addMinutes(startsAt, minutes));
         expect(result.duration).toBe(minutes);
-        expect(result.end).toBeSameMinuteAs(addMinutes(addDays(startsAt, days), minutes));
       });
 
       it('should create a timing for a specific time that last 5 days', () => {
@@ -178,25 +181,60 @@ describe('dateBlockTiming()', () => {
         expect(result.start).toBeSameMinuteAs(startOfDay(startsAt));
         expect(result.startsAt).toBeSameMinuteAs(startsAt);
         expect(result.duration).toBe(minutes);
-        expect(result.end).toBeSameMinuteAs(addMinutes(addDays(startsAt, days), minutes));
+        expect(result.end).toBeSameMinuteAs(addMinutes(addDays(startsAt, days - 1), minutes));
       });
     });
 
     describe('Range', () => {
-      it('should create a timing for a specific time that last 5 days using a Range', () => {
+      itShouldFail('if the input start date of the date range is not a valid DateBlockTiming start date', () => {
         const start = addHours(startsAt, -6);
-        const dateRange: DateRange = { start: start, end: addDays(endOfDay(startsAt), days) };
+        expect(isValidDateBlockTimingStartDate(start)).toBe(false);
+
+        const dateRange: DateRange = { start: start, end: start };
+        expectFail(() => dateBlockTiming({ startsAt, duration: minutes }, dateRange));
+      });
+
+      it('should create a timing that starts at the input start time with a start before the startsAt time (same day)', () => {
+        const start = roundDownToHour(addHours(startsAt, -6));
+        const dateRange: DateRange = { start: start, end: start };
+        const result = dateBlockTiming({ startsAt, duration: minutes }, dateRange);
+
+        expect(result).toBeDefined();
+        expect(result.start).toBeSameMinuteAs(start);
+        expect(result.startsAt).toBeSameMinuteAs(startsAt);
+        expect(result.duration).toBe(minutes);
+        expect(result.end).toBeSameMinuteAs(addMinutes(startsAt, minutes));
+      });
+
+      it('should create a timing that starts at the input start time with a start after the startsAt time (next day)', () => {
+        const start = roundDownToHour(addHours(startsAt, 6));
+        const dateRange: DateRange = { start: start, end: start };
+
+        const result = dateBlockTiming({ startsAt, duration: minutes }, dateRange);
+        const expectedStartsAt = addDays(startsAt, 1);
+
+        expect(result).toBeDefined();
+        expect(result.start).toBeSameMinuteAs(start);
+        expect(result.startsAt).toBeSameMinuteAs(expectedStartsAt);
+        expect(result.duration).toBe(minutes);
+        expect(result.end).toBeSameMinuteAs(addMinutes(expectedStartsAt, minutes));
+      });
+
+      it('should create a timing that starts at the input start time and last 5 days using a Range', () => {
+        const start = startOfDay(startsAt);
+        const dateRange: DateRange = { start: start, end: endOfDay(addDays(startsAt, days - 1)) };
         const result = dateBlockTiming({ startsAt, duration: minutes }, dateRange);
         expect(result).toBeDefined();
         expect(result.start).toBeSameMinuteAs(start);
         expect(result.startsAt).toBeSameMinuteAs(startsAt);
         expect(result.duration).toBe(minutes);
-        expect(result.end).toBeSameMinuteAs(addMinutes(addDays(startsAt, days), minutes));
+        expect(result.end).toBeSameMinuteAs(addMinutes(addDays(startsAt, days - 1), minutes));
       });
 
-      it('should create a timing for a specific time that last 4 days using a Range', () => {
-        const start = addHours(startsAt, 6); // start is 6 hours after startAt
-        const dateRange: DateRange = { start: start, end: addDays(endOfDay(startsAt), days) };
+      it('should create a timing that starts at the input start time and last 4 days using a Range (next day)', () => {
+        const days = 4;
+        const start = roundDownToHour(addHours(startsAt, 6)); // start is 6 hours after startAt
+        const dateRange: DateRange = { start: start, end: endOfDay(addDays(start, days)) };
         const result = dateBlockTiming({ startsAt, duration: minutes }, dateRange);
         expect(result).toBeDefined();
         expect(result.start).toBeSameMinuteAs(start);
@@ -214,22 +252,108 @@ describe('dateBlockTiming()', () => {
         expect(result.start).toBeSameMinuteAs(startOfDay(startsAt));
         expect(result.startsAt).toBeSameMinuteAs(startsAt);
         expect(result.duration).toBe(minutes);
-        expect(result.end).toBeSameMinuteAs(addMinutes(addDays(startsAt, days), minutes));
+        expect(result.end).toBeSameMinuteAs(addMinutes(addDays(startsAt, days - 1), minutes));
       });
     });
   });
 
   describe('scenarios', () => {
     describe('Jan 2nd 2022', () => {
-      const startsAt = new Date('2022-01-02T00:00:00Z'); // Sunday
+      const duration = 60;
+      const startsAt = systemNormalDateToBaseDate(new Date('2022-01-02T00:00:00Z')); // Sunday
+      const endsAtDate = addDays(startsAt, 6); // Saturday
+      const expectedEndsAt = addMinutes(endsAtDate, duration);
 
-      it('should generate the correct timing.', () => {
-        const weekTiming = dateBlockTiming({ startsAt, duration: 60 }, 7); // Sunday-Saturday
+      it('should generate the correct timing when inputting the number of days.', () => {
+        const weekTiming = dateBlockTiming({ startsAt, duration }, 7); // Sunday-Saturday
 
+        expect(weekTiming.start).toBeSameSecondAs(startsAt); // also the start of the day
         expect(weekTiming.startsAt).toBeSameSecondAs(startsAt);
+        expect(weekTiming.end).toBeSameSecondAs(expectedEndsAt);
+        expect(weekTiming.duration).toBe(60);
+      });
+
+      it('should generate the correct timing when inputting the range of days.', () => {
+        const weekTiming = dateBlockTiming({ startsAt, duration }, { start: startsAt, end: endsAtDate }); // Sunday-Saturday
+
+        expect(weekTiming.start).toBeSameSecondAs(startsAt); // also the start of the day
+        expect(weekTiming.startsAt).toBeSameSecondAs(startsAt);
+        expect(weekTiming.end).toBeSameSecondAs(expectedEndsAt);
+        expect(weekTiming.duration).toBe(60);
+      });
+
+      it('should generate the correct timing when inputting the range of days.', () => {
+        const weekTiming = dateBlockTiming({ startsAt, duration }, { distance: 7 }); // Sunday-Saturday
+
+        expect(weekTiming.start).toBeSameSecondAs(startsAt); // also the start of the day
+        expect(weekTiming.startsAt).toBeSameSecondAs(startsAt);
+        expect(weekTiming.end).toBeSameSecondAs(expectedEndsAt);
         expect(weekTiming.duration).toBe(60);
       });
     });
+
+    describe('Sun Nov 6, 5:04PM', () => {
+      it('should generate the correct timing for a single day.', () => {
+        const now = systemNormalDateToBaseDate(new Date('2022-11-06T17:04:41.134Z')); // Sunday, Nov 6th, 5:04PM
+        const expectedStartsAt = roundDownToMinute(now);
+        const expectedEnd = addMinutes(expectedStartsAt, 60);
+
+        const duration = 60;
+        const weekTiming = dateBlockTiming({ startsAt: now, duration }, 1);
+
+        expect(weekTiming.start).toBeSameSecondAs(startOfDay(now));
+        expect(weekTiming.startsAt).toBeSameSecondAs(expectedStartsAt);
+        expect(weekTiming.end).toBeSameSecondAs(expectedEnd);
+        expect(weekTiming.duration).toBe(60);
+      });
+    });
+  });
+});
+
+describe('isValidDateBlockTiming()', () => {
+  const startsAt = setMinutes(setHours(new Date(), 12), 0); // keep seconds to show rounding
+  const validTiming = dateBlockTiming({ startsAt: startOfDay(new Date()), duration: 60 }, 1);
+
+  it('should return true if a valid timing is input.', () => {
+    const validTiming = dateBlockTiming({ startsAt: startOfDay(new Date()), duration: 60 }, 1);
+    const isValid = isValidDateBlockTiming(validTiming);
+    expect(isValid).toBe(true);
+  });
+
+  it('should return false if the starts time has seconds.', () => {
+    const invalidTiming: DateBlockTiming = { ...validTiming, start: addSeconds(validTiming.start, 10) };
+    const isValid = isValidDateBlockTiming(invalidTiming);
+    expect(isValid).toBe(false);
+  });
+
+  it('should return false if the starts time has milliseconds.', () => {
+    const invalidTiming: DateBlockTiming = { ...validTiming, start: addMilliseconds(validTiming.start, 10) };
+    const isValid = isValidDateBlockTiming(invalidTiming);
+    expect(isValid).toBe(false);
+  });
+
+  it('should return false if the startsAt time is before the start time.', () => {
+    const start = addHours(startOfDay(startsAt), 2);
+    const isValid = isValidDateBlockTiming({ startsAt: addMinutes(start, -10), start, end: endOfDay(start), duration: 10 });
+    expect(isValid).toBe(false);
+  });
+
+  it('should return false if the startsAt time is more than 24 hours after the start time.', () => {
+    const invalidTiming: DateBlockTiming = { ...validTiming, startsAt: addMilliseconds(validTiming.start, MS_IN_DAY + 1) };
+    const isValid = isValidDateBlockTiming(invalidTiming);
+    expect(isValid).toBe(false);
+  });
+
+  it('should return false if the end is not the expected end time.', () => {
+    const invalidTiming: DateBlockTiming = { ...validTiming, end: addMinutes(validTiming.end, 1), duration: validTiming.duration };
+    const isValid = isValidDateBlockTiming(invalidTiming);
+    expect(isValid).toBe(false);
+  });
+
+  it('should return false if the duration time is greater than 24 hours.', () => {
+    const invalidTiming: DateBlockTiming = { ...validTiming, duration: MINUTES_IN_DAY + 1 };
+    const isValid = isValidDateBlockTiming(invalidTiming);
+    expect(isValid).toBe(false);
   });
 });
 
@@ -264,46 +388,6 @@ describe('dateBlockDayOfWeekFactory()', () => {
         expect(factoryFromSaturday(4)).toBe(Day.WEDNESDAY);
       });
     });
-  });
-});
-
-describe('isValidDateBlockTiming()', () => {
-  const startsAt = setMinutes(setHours(new Date(), 12), 0); // keep seconds to show rounding
-  const validTiming = dateBlockTiming({ startsAt: startOfDay(new Date()), duration: 60 }, 1);
-
-  it('should return true if the startsAt time is equal to the start time.', () => {
-    const isValid = isValidDateBlockTiming(dateBlockTiming({ startsAt: startOfDay(new Date()), duration: 60 }, 1));
-    expect(isValid).toBe(true);
-  });
-
-  it('should return false if the starts time has seconds.', () => {
-    const invalidTiming: DateBlockTiming = { ...validTiming, start: addSeconds(validTiming.start, 10) };
-    const isValid = isValidDateBlockTiming(invalidTiming);
-    expect(isValid).toBe(false);
-  });
-
-  it('should return false if the startsAt time is before the start time.', () => {
-    const start = addHours(startOfDay(startsAt), 2);
-    const isValid = isValidDateBlockTiming({ startsAt: addMinutes(start, -10), start, end: endOfDay(start), duration: 10 });
-    expect(isValid).toBe(false);
-  });
-
-  it('should return false if the startsAt time is more than 24 hours after the start time.', () => {
-    const invalidTiming: DateBlockTiming = { ...validTiming, startsAt: addMilliseconds(validTiming.start, MS_IN_DAY + 1) };
-    const isValid = isValidDateBlockTiming(invalidTiming);
-    expect(isValid).toBe(false);
-  });
-
-  it('should return false if the end is not the expected end time.', () => {
-    const invalidTiming: DateBlockTiming = { ...validTiming, end: addMinutes(validTiming.end, 1), duration: validTiming.duration };
-    const isValid = isValidDateBlockTiming(invalidTiming);
-    expect(isValid).toBe(false);
-  });
-
-  it('should return false if the duration time is greater than 24 hours.', () => {
-    const invalidTiming: DateBlockTiming = { ...validTiming, duration: MINUTES_IN_DAY + 1 };
-    const isValid = isValidDateBlockTiming(invalidTiming);
-    expect(isValid).toBe(false);
   });
 });
 
@@ -460,7 +544,7 @@ describe('dateBlocksExpansionFactory()', () => {
       });
 
       describe('rangeLimit=DateRangeDayDistanceInput', () => {
-        const factory = dateBlocksExpansionFactory({ timing, rangeLimit: { date: addDays(timing.start, 1), distance: 3 } });
+        const factory = dateBlocksExpansionFactory({ timing, rangeLimit: { distance: 3 } });
 
         it('should limit the index range to the first 3 days', () => {
           const expectedResultCount = 3;
@@ -469,10 +553,10 @@ describe('dateBlocksExpansionFactory()', () => {
           expect(result.length).toBe(expectedResultCount);
 
           const indexes = result.map((x) => x.i);
-          expect(indexes).not.toContain(0);
+          expect(indexes).toContain(0);
           expect(indexes).toContain(1);
           expect(indexes).toContain(2);
-          expect(indexes).toContain(3);
+          expect(indexes).not.toContain(3);
           expect(indexes).not.toContain(4);
         });
       });
@@ -756,17 +840,13 @@ describe('expandDateBlockRange', () => {
   });
 });
 
-describe('dateBlockIndexRange', () => {
+describe('dateBlockIndexRange()', () => {
   const days = 5;
-  const start = new Date(0);
-  const end = addDays(start, days);
+  const start = systemNormalDateToBaseDate(new Date(0)); // 1970-01-01 UTC start of day
 
-  const timing: DateBlockTiming = {
-    start,
-    end,
-    startsAt: start,
-    duration: 60
-  };
+  const duration = 60;
+  const timing = dateBlockTiming({ startsAt: start, duration }, days);
+  const end = timing.end;
 
   it('should generate the dateBlockIndexRange for a given date.', () => {
     const result = dateBlockIndexRange(timing);
@@ -774,7 +854,63 @@ describe('dateBlockIndexRange', () => {
     expect(result.maxIndex).toBe(days);
   });
 
+  it('should return the expected IndexRange for a single day', () => {
+    const days = 1;
+    const timing = dateBlockTiming({ startsAt: start, duration }, days);
+    const result = dateBlockIndexRange(timing);
+
+    expect(result.minIndex).toBe(0);
+    expect(result.maxIndex).toBe(days);
+  });
+
   describe('with limit', () => {
+    it('should return the expected range if the limit is the same as the range', () => {
+      const days = 1;
+      const timing = dateBlockTiming({ startsAt: start, duration }, days);
+
+      const limit = {
+        start: timing.start,
+        end: timing.end
+      };
+
+      const result = dateBlockIndexRange(timing, limit);
+
+      expect(result.minIndex).toBe(0);
+      expect(result.maxIndex).toBe(days);
+    });
+
+    /*
+    it('should return a zero range if the end is the same time as the start in limit', () => {
+      const days = 1;
+      const timing = dateBlockTiming({ startsAt: start, duration }, days);
+
+      const limit = {
+        start: timing.start,
+        end: timing.start
+      };
+
+      const result = dateBlockIndexRange(timing, limit);
+  
+      expect(result.minIndex).toBe(0);
+      expect(result.maxIndex).toBe(0);
+    });
+    */
+
+    it('should limit a two day timing to a single day', () => {
+      const days = 2;
+      const timing = dateBlockTiming({ startsAt: start, duration }, days);
+
+      const limit = {
+        start: timing.start,
+        end: addDays(timing.end, -1) // limit 1 day less
+      };
+
+      const result = dateBlockIndexRange(timing, limit);
+
+      expect(result.minIndex).toBe(0);
+      expect(result.maxIndex).toBe(days - 1); // expects 1 day
+    });
+
     it('should generate the dateBlockIndexRange for one day in the future (1,5).', () => {
       const limit = {
         start: addHours(start, 24),

@@ -1,5 +1,5 @@
 import { ModelFirebaseCrudFunctionSpecifier, ModelFirebaseCrudFunctionSpecifierRef, MODEL_FUNCTION_FIREBASE_CRUD_FUNCTION_SPECIFIER_DEFAULT } from '@dereekb/firebase';
-import { objectToMap, PromiseOrValue, serverError } from '@dereekb/util';
+import { Maybe, objectToMap, PromiseOrValue, serverError } from '@dereekb/util';
 import { NestContextCallableRequestWithAuth } from '../function/nest';
 import { badRequestError } from '../../function';
 
@@ -11,11 +11,11 @@ export type OnCallSpecifierHandlerConfig<N> = {
   /**
    * The default handler function.
    */
-  _: OnCallSpecifierHandlerFunction<N, any, any>;
-  [key: string]: OnCallSpecifierHandlerFunction<N, any, any>;
+  _?: Maybe<OnCallSpecifierHandlerFunction<N, any, any>>;
+  [key: string]: Maybe<OnCallSpecifierHandlerFunction<N, any, any>>;
 };
 
-export function onCallSpecifierHandler<N>(config: OnCallSpecifierHandlerConfig<N>): OnCallSpecifierHandlerFunction<N> {
+export function onCallSpecifierHandler<N, I = any, O = any>(config: OnCallSpecifierHandlerConfig<N>): OnCallSpecifierHandlerFunction<N, I, O> {
   const map = objectToMap(config);
 
   return async (request) => {

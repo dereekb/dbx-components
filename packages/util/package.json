@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/util",
-  "version": "9.11.13",
+  "version": "9.12.0",
   "type": "commonjs",
   "exports": {
     ".": {
@@ -12,6 +12,11 @@
       "main": "./test/src/index.js",
       "types": "./test/src/index.d.ts",
       "default": "./test/src/index.js"
+    },
+    "./fetch": {
+      "main": "./fetch/src/index.js",
+      "types": "./fetch/src/index.d.ts",
+      "default": "./fetch/src/index.js"
     }
   },
   "peerDependencies": {

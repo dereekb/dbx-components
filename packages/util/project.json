@@ -12,6 +12,9 @@
             "command": "npx nx run util:build-base"
           },
           {
+            "command": "npx nx run util-fetch:build-base"
+          },
+          {
             "command": "npx nx run util-test:build-base"
           }
         ],
@@ -55,6 +58,10 @@
           {
             "description": "run util-test tests",
             "command": "npx nx test util-test"
+          },
+          {
+            "description": "run util-fetch tests",
+            "command": "npx nx test util-fetch"
           }
         ],
         "color": true,

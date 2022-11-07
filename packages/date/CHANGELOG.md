@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [9.12.0](https://github.com/dereekb/dbx-components/compare/v9.11.13-dev...v9.12.0) (2022-11-07)
+
+
+### Bug Fixes
+
+* fixed dateBlockTiming() with 1 day distance ([5399706](https://github.com/dereekb/dbx-components/commit/5399706860274dfe005fb5939bd38468d4a4d7bf))
+
+
+
 ## [9.11.13](https://github.com/dereekb/dbx-components/compare/v9.11.12-dev...v9.11.13) (2022-11-05)
 
 

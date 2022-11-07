@@ -1,8 +1,8 @@
 import { DayOfWeek, RequiredOnKeys, IndexNumber, IndexRange, indexRangeCheckFunction, IndexRef, MINUTES_IN_DAY, MS_IN_DAY, UniqueModel, lastValue, FactoryWithRequiredInput, FilterFunction, mergeFilterFunctions, range, Milliseconds, Hours, MapFunction, getNextDay, SortCompareFunction, sortAscendingIndexNumberRefFunction, mergeArrayIntoArray, Configurable, ArrayOrValue, indexRange, asArray, sumOfIntegersBetween, filterMaybeValues, Maybe, hasValueFunction } from '@dereekb/util';
 import { dateRange, DateRange, DateRangeDayDistanceInput, DateRangeType, isDateRange } from './date.range';
 import { DateDurationSpan } from './date.duration';
-import { differenceInDays, differenceInMilliseconds, isBefore, addDays, addMinutes, setSeconds, addMilliseconds, hoursToMilliseconds, addHours, differenceInHours, isAfter } from 'date-fns';
-import { copyHoursAndMinutesFromDate } from './date';
+import { differenceInDays, differenceInMilliseconds, isBefore, addDays, addMinutes, getSeconds, getMilliseconds, getMinutes, setSeconds, addMilliseconds, hoursToMilliseconds, addHours, differenceInHours, isAfter, setMilliseconds } from 'date-fns';
+import { copyHoursAndMinutesFromDate, roundDownToMinute } from './date';
 import { Expose, Type } from 'class-transformer';
 import { getCurrentSystemOffsetInHours } from './date.timezone';
 import { IsDate, IsNumber, IsOptional, Min } from 'class-validator';
@@ -113,6 +113,10 @@ export function getCurrentDateBlockTimingStartDate(timing: DateBlockTiming): Dat
   return addMilliseconds(timing.start, offset);
 }
 
+export function isValidDateBlockTimingStartDate(date: Date): boolean {
+  return getMinutes(date) === 0 && getSeconds(date) === 0 && getMilliseconds(date) === 0;
+}
+
 /**
  * Returns the DateBlockIndex of the input date relative to the configured D
  */
@@ -149,15 +153,19 @@ export function getRelativeIndexForDateTiming(timing: DateBlockTiming, date = ne
 /**
  * The DateRange input for dateBlockTiming()
  */
-export type DateBlockTimingRangeInput = DateRangeDayDistanceInput | DateRange | number;
+export type DateBlockTimingRangeInput = Pick<DateRangeDayDistanceInput, 'distance'> | DateRange | number;
 
 /**
  * Creates a valid DateBlock timing from the DateDurationSpan and range input.
  *
  * The duration is first considered, then the date range is applied to it.
  *
- * If a number is passed as the input range, then the duration's startsAt date will be used.
- * The input range's date takes priority over the duration's startsAt date.
+ * If a number is passed as the input range, then the duration's startsAt date will be used and the input number used as the distance.
+ * The input range's date takes priority over the duration's startsAt start date, meaning the input date range will be adapted
+ * to fit the startsAt time.
+ *
+ * The input range date is used as the start and end date ranges, meaning they will be used as the expected date offset (have only hours, no minutes/seconds/milliseconds) and be validated as such.
+ * The end date is used just to determine the number of days, but a minimum of 1 day is always enforced as a DateBlockTiming must contain atleast 1 day.
  *
  * The start date from the inputDate is considered to to have the offset noted in DateBlock, and will be retained.
  */
@@ -175,28 +183,36 @@ export function dateBlockTiming(durationInput: DateDurationSpan, inputRange: Dat
   let range: DateRange;
 
   if (typeof inputRange === 'number') {
-    numberOfBlockedDays = inputRange;
+    numberOfBlockedDays = inputRange - 1;
     range = dateRange({ type: DateRangeType.DAY, date: startsAt, distance: numberOfBlockedDays });
   } else if (isDateRange(inputRange)) {
     range = inputRange;
     inputDate = inputRange.start;
-    numberOfBlockedDays = differenceInDays(inputRange.end, inputRange.start);
+
+    if (!isValidDateBlockTimingStartDate(inputRange.start)) {
+      throw new Error('Invalid dateBlockTiming start date passed to dateBlockTiming() via inputRange.');
+    }
+
+    numberOfBlockedDays = differenceInDays(inputRange.end, inputRange.start); // min of 1 day
   } else {
-    inputDate = inputRange.date;
-    numberOfBlockedDays = inputRange.distance;
-    range = dateRange(inputRange, true);
+    inputDate = startsAt; // TODO: May not be needed?
+    numberOfBlockedDays = inputRange.distance - 1;
+    range = dateRange({ date: inputDate, distance: inputRange.distance }, true);
   }
 
   if (inputDate != null) {
     // input date takes priority, so move the startsAt's date to be on the same date.
     startsAt = copyHoursAndMinutesFromDate(range.start, startsAt, true);
 
-    if (isBefore(startsAt, range.start)) {
+    const startedBeforeRange = isBefore(startsAt, range.start);
+
+    if (startedBeforeRange) {
       startsAt = addDays(startsAt, 1); // starts 24 hours later
-      numberOfBlockedDays = numberOfBlockedDays - 1; // reduce number of applied days by 1
+      numberOfBlockedDays = Math.max(numberOfBlockedDays - 1, 0); // reduce number of applied days by 1, to a min of 0
     }
   } else {
-    startsAt = setSeconds(startsAt, 0); // clear seconds from startsAt
+    startsAt = roundDownToMinute(startsAt); // clear seconds and milliseconds from startsAt
+    // numberOfBlockedDays = numberOfBlockedDays - 1; // reduce number of applied days by 1
   }
 
   const start = range.start;
@@ -344,6 +360,7 @@ export function dateBlocksExpansionFactory<B extends DateBlock | DateBlockRange 
   const { timing, rangeLimit, filter: inputFilter, durationSpanFilter: inputDurationSpanFilter, maxDateBlocksToReturn = Number.MAX_SAFE_INTEGER, blocksEvaluationLimit = Number.MAX_SAFE_INTEGER } = config;
   const { startsAt: baseStart, duration } = timing;
   const indexRange = rangeLimit !== false ? dateBlockIndexRange(timing, rangeLimit) : { minIndex: Number.MIN_SAFE_INTEGER, maxIndex: Number.MAX_SAFE_INTEGER };
+
   const isInRange = indexRangeCheckFunction({ indexRange, inclusiveMaxIndex: false });
   const filter: FilterFunction<B> = mergeFilterFunctions<B>((x: B) => isInRange(x.i), inputFilter);
   const durationSpanFilter: FilterFunction<DateBlockDurationSpan<B>> = inputDurationSpanFilter ?? (() => true);
@@ -501,12 +518,13 @@ export function dateBlockIndexRangeToDateBlockRange(range: DateBlockIndexRange):
 export function dateBlockIndexRange(timing: DateBlockTiming, limit?: DateBlockTimingRangeInput, fitToTimingRange = true): DateBlockIndexRange {
   const { start: zeroDate, end: endDate } = timing;
   let minIndex = 0;
-  let maxIndex = differenceInDays(endDate, zeroDate);
+  let maxIndex = differenceInDays(endDate, zeroDate) + 1;
 
   if (limit) {
     const { start, end } = dateBlockTiming(timing, limit);
     const limitMin = differenceInDays(start, zeroDate);
-    const limitMax = differenceInDays(end, zeroDate);
+    const hoursDiff = differenceInHours(end, zeroDate) / 24;
+    const limitMax = Math.ceil(hoursDiff);
 
     if (fitToTimingRange) {
       minIndex = Math.min(limitMin, maxIndex);

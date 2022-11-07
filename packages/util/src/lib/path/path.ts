@@ -340,7 +340,7 @@ export function slashPathFactory(config?: SlashPathFactoryConfig): SlashPathFact
 }
 
 export function mergeSlashPaths(paths: Maybe<SlashPath>[]): SlashPath {
-  const merge = paths.filter((x) => Boolean(x)).join(SLASH_PATH_SEPARATOR);
+  const merge = paths.filter(Boolean).join(SLASH_PATH_SEPARATOR);
   return fixMultiSlashesInSlashPath(merge);
 }
 
