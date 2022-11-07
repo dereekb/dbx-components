@@ -1,4 +1,4 @@
-import { ArrayOrValue, forEachInIterable, forEachKeyValue, isIterable, mapIterable, useIterableOrValue } from '@dereekb/util';
+import { ArrayOrValue, forEachInIterable, forEachKeyValue, isIterable, mapIterable, Maybe, useIterableOrValue } from '@dereekb/util';
 
 export type SimpleFetchURLInput = URL | string;
 
@@ -58,14 +58,23 @@ export function fetchURLQueryKeyValueStringTuples(input: Iterable<FetchURLQueryK
 
   forEachInIterable(input, (tuple) => {
     const [key, values] = tuple;
-    const keyString = String(key);
-    useIterableOrValue(values, (value) => paramTuples.push([keyString, String(value)]));
+
+    // ignore null/undefined keys and values
+    if (key != null && values != null) {
+      const keyString = String(key);
+      useIterableOrValue(values, (value) => {
+        // ignore null/undefined values
+        if (value != null) {
+          paramTuples.push([keyString, String(value)]);
+        }
+      });
+    }
   });
 
   return paramTuples;
 }
 
-export type FetchURLQueryKeyValueTuple = [FetchURLQueryKeyValueTupleKey, ArrayOrValue<FetchURLQueryKeyValueTupleKeyValue>];
+export type FetchURLQueryKeyValueTuple = [Maybe<FetchURLQueryKeyValueTupleKey>, Maybe<ArrayOrValue<Maybe<FetchURLQueryKeyValueTupleKeyValue>>>];
 export type FetchURLQueryKeyValueTupleKey = string | number;
 export type FetchURLQueryKeyValueTupleKeyValue = string | number | boolean;
 
@@ -89,7 +98,7 @@ export function queryParamsToSearchParams(input: FetchURLQueryParamsInput): URLS
 
 export type FetchURLSearchTupleValueKey = string | number;
 export type FetchURLSearchTupleValue = string | number;
-export type FetchURLSearchParamsObject = Record<FetchURLQueryKeyValueTupleKey, ArrayOrValue<FetchURLQueryKeyValueTupleKeyValue>>;
+export type FetchURLSearchParamsObject = Partial<Record<FetchURLQueryKeyValueTupleKey, Maybe<ArrayOrValue<FetchURLQueryKeyValueTupleKeyValue>>>>;
 
 export function fetchURLSearchParamsObjectToURLSearchParams(input: FetchURLSearchParamsObject): URLSearchParams {
   const paramTuples: [string, string][] = [];
@@ -97,7 +106,18 @@ export function fetchURLSearchParamsObjectToURLSearchParams(input: FetchURLSearc
   forEachKeyValue(input as FetchURLSearchParamsObject, {
     forEach: (tuple) => {
       const [key, values] = tuple;
-      useIterableOrValue(values, (x) => paramTuples.push([String(key), String(x)]));
+
+      // ignore null/undefined keys and values
+      if (key != null && values != null) {
+        const keyString = String(key);
+
+        useIterableOrValue(values, (x) => {
+          // ignore null/undefined values
+          if (x != null) {
+            paramTuples.push([keyString, String(x)]);
+          }
+        });
+      }
     }
   });
 

@@ -95,6 +95,18 @@ describe('fetchURL()', () => {
       expect(result.href).toBe(url.href + `?${queryParams.toString()}`);
     });
 
+    it('should return the url with query params of different types attached as an object and ignore null values', () => {
+      const queryParamsObject = {
+        [queryKey]: [queryParamsTuples[0][1], queryParamsTuples[1][1]],
+        henlo: 'wrold',
+        remove: null,
+        ignored: undefined
+      };
+
+      const result = fetchURL({ url, queryParams: queryParamsObject });
+      expect(result.href).toBe(url.href + `?${queryParams.toString()}`);
+    });
+
     it('should return the url with query params attached as a tuple', () => {
       const result = fetchURL({ url, queryParams: queryParamsTuples });
       expect(result.href).toBe(url.href + `?${queryParams.toString()}`);
@@ -111,7 +123,7 @@ describe('fetchURL()', () => {
       expect(result.href).toBe(url.href + `?${new URLSearchParams(Array.from(expectedParams.entries())).toString()}`);
     });
 
-    it('should return the url with query params attached as a string with a "?" attached', () => {
+    it('should return the url with query params attached as a tuples array', () => {
       // same as queryParamsTuples but has the two values in an array instead of separate
       const queryParamsTuplesWithArray: FetchURLQueryKeyValueTuple[] = [
         [queryKey, [queryParamsTuples[0][1], queryParamsTuples[1][1]]],
@@ -119,6 +131,23 @@ describe('fetchURL()', () => {
       ];
 
       const result = fetchURL({ url, queryParams: queryParamsTuplesWithArray });
+      expect(result.href).toBe(url.href + `?${queryParams.toString()}`);
+    });
+
+    it('should return the url with query params attached as a tuples array undefined keys and values', () => {
+      // same as queryParamsTuples but has the two values in an array instead of separate
+      const queryParamsTuplesWithArray: FetchURLQueryKeyValueTuple[] = [
+        [queryKey, [queryParamsTuples[0][1], queryParamsTuples[1][1], null, undefined]],
+        ['henlo', 'wrold'],
+        [null, 'removed']
+      ];
+
+      const result = fetchURL({ url, queryParams: queryParamsTuplesWithArray });
+      expect(result.href).toBe(url.href + `?${queryParams.toString()}`);
+    });
+
+    it('should return the url with query params attached as a string with a "?" attached', () => {
+      const result = fetchURL({ url, queryParams: `?${queryParams.toString()}` });
       expect(result.href).toBe(url.href + `?${queryParams.toString()}`);
     });
 
