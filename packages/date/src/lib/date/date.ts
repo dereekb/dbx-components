@@ -114,8 +114,8 @@ export function utcDayForDate(date: Date): Date {
  * - if 10PM on any day is passed then 9PM the next day will be returned.
  * - if 11PM on any day is passed, 11PM today will be returned.
  */
-export function takeNextUpcomingTime(date: Date, removeSeconds?: boolean): Date {
-  date = copyHoursAndMinutesFromDateToToday(date, removeSeconds);
+export function takeNextUpcomingTime(date: Date, roundDownToMinute?: boolean): Date {
+  date = copyHoursAndMinutesFromDateToToday(date, roundDownToMinute);
 
   if (isPast(date)) {
     date = addDays(date, 1);
@@ -127,19 +127,19 @@ export function takeNextUpcomingTime(date: Date, removeSeconds?: boolean): Date 
 /**
  * Creates a new date and copies the hours/minutes from the previous date and applies them to a date for today.
  */
-export function copyHoursAndMinutesFromDateToToday(fromDate: Date, removeSeconds?: boolean): Date {
-  return copyHoursAndMinutesFromDate(new Date(), fromDate, removeSeconds);
+export function copyHoursAndMinutesFromDateToToday(fromDate: Date, roundDownToMinute?: boolean): Date {
+  return copyHoursAndMinutesFromDate(new Date(), fromDate, roundDownToMinute);
 }
 
 /**
  * Creates a new date and copies the hours/minutes from the input date to the target date.
  */
-export function copyHoursAndMinutesFromDate(target: Date, fromDate: Date, removeSeconds?: boolean): Date {
+export function copyHoursAndMinutesFromDate(target: Date, fromDate: Date, roundDownToMinute?: boolean): Date {
   return copyHoursAndMinutesToDate(
     {
       hours: fromDate.getHours(),
       minutes: fromDate.getMinutes(),
-      removeSeconds
+      roundDownToMinute
     },
     target
   );
@@ -150,7 +150,7 @@ export function copyHoursAndMinutesFromDate(target: Date, fromDate: Date, remove
  *
  * Also rounds the seconds and milliseconds.
  */
-export function copyHoursAndMinutesToDate({ hours, minutes, removeSeconds = true }: { hours: number; minutes?: number; removeSeconds?: boolean }, target?: Maybe<Date>): Date {
+export function copyHoursAndMinutesToDate({ hours, minutes, removeSeconds, roundDownToMinute = true }: { hours: number; minutes?: number; removeSeconds?: boolean; roundDownToMinute?: boolean }, target?: Maybe<Date>): Date {
   return setDateValues(target ?? new Date(), {
     hours,
     ...(minutes != null
@@ -159,7 +159,7 @@ export function copyHoursAndMinutesToDate({ hours, minutes, removeSeconds = true
         }
       : undefined),
     // Remove Seconds/Milliseconds
-    ...(removeSeconds
+    ...(roundDownToMinute || removeSeconds
       ? {
           seconds: 0,
           milliseconds: 0
@@ -171,7 +171,7 @@ export function copyHoursAndMinutesToDate({ hours, minutes, removeSeconds = true
 export const copyHoursAndMinutesToToday = copyHoursAndMinutesToDate;
 
 /**
- * Removes the seconds and milliseconds from the input date.
+ * Removes the seconds and milliseconds from the input date, or returns the current date with no seconds or milliseconds.
  */
 export function roundDownToMinute(date = new Date()): Date {
   return setDateValues(date, {
@@ -180,10 +180,26 @@ export function roundDownToMinute(date = new Date()): Date {
   });
 }
 
-export function removeMinutesAndSeconds(date: Date): Date {
-  return removeSeconds(setMinutes(date, 0));
+/**
+ * Removes all minutes,
+ * @param date
+ * @returns
+ */
+export function roundDownToHour(date: Date): Date {
+  return setDateValues(date, {
+    minutes: 0,
+    seconds: 0,
+    milliseconds: 0
+  });
 }
 
-export function removeSeconds(date: Date): Date {
-  return setMilliseconds(setSeconds(date, 0), 0);
-}
+// MARK: Compat
+/**
+ * @deprecated Use roundDownToHour instead.
+ */
+export const removeMinutesAndSeconds = roundDownToHour;
+
+/**
+ * @deprecated Use roundDownToMinute instead.
+ */
+export const removeSeconds = roundDownToMinute;
