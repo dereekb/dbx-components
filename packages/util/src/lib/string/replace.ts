@@ -47,15 +47,7 @@ export function escapeStringForRegex(input: string): string {
   /**
    * index of all occurences in the input to replace/merge together.
    */
-  const occurrences: number[] = [];
-
-  for (let i = 0; i < input.length; i += 1) {
-    const char = input[i];
-
-    if (REGEX_SPECIAL_CHARACTERS_SET.has(char)) {
-      occurrences.push(i);
-    }
-  }
+  const occurrences = findAllCharacterOccurences(REGEX_SPECIAL_CHARACTERS_SET, input);
 
   let result: string;
 
@@ -98,4 +90,26 @@ export function escapeStringForRegex(input: string): string {
   }
 
   return result;
+}
+
+export type FindAllCharacterOccurencesFunction = (input: string) => number[];
+
+export function findAllCharacterOccurencesFunction(characterSet: Set<string>): FindAllCharacterOccurencesFunction {
+  return (input: string) => {
+    const occurrences: number[] = [];
+
+    for (let i = 0; i < input.length; i += 1) {
+      const char = input[i];
+
+      if (characterSet.has(char)) {
+        occurrences.push(i);
+      }
+    }
+
+    return occurrences;
+  };
+}
+
+export function findAllCharacterOccurences(set: Set<string>, input: string): number[] {
+  return findAllCharacterOccurencesFunction(set)(input);
 }

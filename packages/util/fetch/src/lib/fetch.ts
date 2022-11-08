@@ -1,4 +1,4 @@
-import { Factory, MapFunction, Maybe, removeTrailingFileTypeSeparators, WebsitePath, WebsiteUrl } from '@dereekb/util';
+import { Factory, fixMultiSlashesInSlashPath, MapFunction, Maybe, removeTrailingFileTypeSeparators, removeTrailingSlashes, WebsitePath, WebsiteUrl } from '@dereekb/util';
 import { fetchOk, requireOkResponse } from './error';
 import { ConfiguredFetchWithTimeout, RequestInitWithTimeout, RequestWithTimeout } from './fetch.type';
 import { fetchTimeout } from './timeout';
@@ -132,12 +132,15 @@ export type AbortControllerFactory = Factory<AbortController>;
 
 export function fetchRequestFactory(config: FetchRequestFactoryInput): FetchRequestFactory {
   const { makeRequest = (input, init) => new Request(input, init), baseUrl: inputBaseUrl, baseRequest: inputBaseRequest, timeout, requestInitFactory, useBaseUrlForConfiguredFetchRequests = false } = config;
-  const baseUrl = inputBaseUrl ? new URL(removeTrailingFileTypeSeparators(inputBaseUrl)) : undefined;
+  const baseUrl = inputBaseUrl ? new URL(removeTrailingSlashes(inputBaseUrl)) : undefined;
   const baseRequest = timeout ? { ...inputBaseRequest, timeout } : inputBaseRequest;
 
   const buildUrl = baseUrl
     ? (url: string | WebsitePath | URL) => {
-        return new URL(url, baseUrl);
+        // retain the origin and any pathname from the base url
+        const urlPath = baseUrl.origin + fixMultiSlashesInSlashPath('/' + baseUrl.pathname + '/' + url);
+        const result = new URL(urlPath, baseUrl);
+        return result;
       }
     : undefined;
 

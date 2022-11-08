@@ -1,4 +1,4 @@
-import { replaceInvalidFilePathTypeSeparatorsInSlashPath, slashPathFactory, slashPathName, slashPathValidationFactory, SlashPathFolder, slashPathType, SlashPathTypedFile, SlashPathFile, SLASH_PATH_SEPARATOR, isolateSlashPathFunction } from './path';
+import { replaceInvalidFilePathTypeSeparatorsInSlashPath, slashPathFactory, slashPathName, slashPathValidationFactory, SlashPathFolder, slashPathType, SlashPathTypedFile, SlashPathFile, SLASH_PATH_SEPARATOR, isolateSlashPathFunction, removeTrailingFileTypeSeparators, removeTrailingSlashes } from './path';
 
 describe('slashPathName', () => {
   it('should return the file name', () => {
@@ -37,6 +37,40 @@ describe('slashPathType', () => {
     const folderPath: SlashPathFolder = 'wMNzlhSlp6Gb93V8u4Rs/';
     const type = slashPathType(folderPath);
     expect(type).toBe('folder');
+  });
+});
+
+describe('removeTrailingSlashes()', () => {
+  it('should remove all trailing slashes', () => {
+    const folderName = 'wMNzlhSlp6Gb93V8u4Rs';
+    const folderPath: SlashPathFolder = `${folderName}/`;
+    const result = removeTrailingSlashes(folderPath);
+    expect(result).toBe(folderName);
+  });
+
+  it('should remove all trailing slashes from a url', () => {
+    const url = 'https://components.dereekb.com';
+    const urlPath = `${url}/`;
+    const result = removeTrailingSlashes(urlPath);
+    expect(result).toBe(url);
+  });
+});
+
+describe('removeTrailingFileTypeSeparators()', () => {
+  it('should remove the trailing file type separator (".")', () => {
+    const filename = 'filename';
+    const typedFilePath: SlashPathTypedFile = `${filename}.`;
+
+    const result = removeTrailingFileTypeSeparators(typedFilePath);
+    expect(result).toBe(filename);
+  });
+
+  it('should not remove the trailing file type.', () => {
+    const filename = 'filename';
+    const typedFilePath: SlashPathTypedFile = `${filename}.pdf`;
+
+    const result = removeTrailingFileTypeSeparators(typedFilePath);
+    expect(result).toBe(typedFilePath);
   });
 });
 
