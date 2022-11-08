@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [9.13.0](https://github.com/dereekb/dbx-components/compare/v9.12.4-dev...v9.13.0) (2022-11-08)
+
+
+### Features
+
+* added OnCallReadModelFunction ([4c0eeb9](https://github.com/dereekb/dbx-components/commit/4c0eeb938ba409d66ec5d049ef01802084c1a459))
+
+
+
 ## [9.12.4](https://github.com/dereekb/dbx-components/compare/v9.12.3-dev...v9.12.4) (2022-11-08)
 
 

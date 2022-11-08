@@ -42,14 +42,14 @@ export function firebaseModelServiceFactory<C extends FirebaseModelServiceContex
 }
 
 // MARK: InContext
-export type LimitedInContextFirebaseModelService<C, T, D extends FirestoreDocument<T> = FirestoreDocument<T>, R extends GrantedRole = GrantedRole> = InContextFirebaseModelPermissionService<C, T, D, R> &
+export type LimitedInContextFirebaseModelService<C extends FirebasePermissionErrorContext, T, D extends FirestoreDocument<T> = FirestoreDocument<T>, R extends GrantedRole = GrantedRole> = InContextFirebaseModelPermissionService<C, T, D, R> &
   InContextFirebaseModelLoader<T, D> & {
     forKey: (key: FirestoreModelKey) => InModelContextFirebaseModelService<C, T, D, R>;
   };
-export type InContextFirebaseModelService<C, T, D extends FirestoreDocument<T> = FirestoreDocument<T>, R extends GrantedRole = GrantedRole> = InModelContextFirebaseModelServiceFactory<C, T, D, R> & LimitedInContextFirebaseModelService<C, T, D, R>;
-export type InContextFirebaseModelServiceFactory<C, T, D extends FirestoreDocument<T> = FirestoreDocument<T>, R extends GrantedRole = GrantedRole> = (context: C) => InContextFirebaseModelService<C, T, D, R>;
-export type InModelContextFirebaseModelServiceFactory<C, T, D extends FirestoreDocument<T> = FirestoreDocument<T>, R extends GrantedRole = GrantedRole> = (modelOrKey: D | FirestoreModelKey) => InModelContextFirebaseModelService<C, T, D, R>;
-export type InModelContextFirebaseModelService<C, T, D extends FirestoreDocument<T> = FirestoreDocument<T>, R extends GrantedRole = GrantedRole> = InModelContextFirebaseModelPermissionService<C, T, D, R> &
+export type InContextFirebaseModelService<C extends FirebasePermissionErrorContext, T, D extends FirestoreDocument<T> = FirestoreDocument<T>, R extends GrantedRole = GrantedRole> = InModelContextFirebaseModelServiceFactory<C, T, D, R> & LimitedInContextFirebaseModelService<C, T, D, R>;
+export type InContextFirebaseModelServiceFactory<C extends FirebasePermissionErrorContext, T, D extends FirestoreDocument<T> = FirestoreDocument<T>, R extends GrantedRole = GrantedRole> = (context: C) => InContextFirebaseModelService<C, T, D, R>;
+export type InModelContextFirebaseModelServiceFactory<C extends FirebasePermissionErrorContext, T, D extends FirestoreDocument<T> = FirestoreDocument<T>, R extends GrantedRole = GrantedRole> = (modelOrKey: D | FirestoreModelKey) => InModelContextFirebaseModelService<C, T, D, R>;
+export type InModelContextFirebaseModelService<C extends FirebasePermissionErrorContext, T, D extends FirestoreDocument<T> = FirestoreDocument<T>, R extends GrantedRole = GrantedRole> = InModelContextFirebaseModelPermissionService<C, T, D, R> &
   InModelContextFirebaseModelServiceUseFunction<C, T, D, R> & {
     roleReader: () => Promise<ContextGrantedModelRolesReader<C, T, D, R>>;
     requireRole: (roles: ArrayOrValue<R>, setIncludes?: SetIncludesMode) => Promise<ContextGrantedModelRolesReader<C, T, D, R>>;
@@ -57,9 +57,9 @@ export type InModelContextFirebaseModelService<C, T, D extends FirestoreDocument
     use: UsePromiseFunction<ContextGrantedModelRolesReader<C, T, D, R>>;
   };
 
-export type InModelContextFirebaseModelServiceUseFunction<C, T, D extends FirestoreDocument<T> = FirestoreDocument<T>, R extends GrantedRole = GrantedRole> = (roles: ArrayOrValue<R>, setIncludes?: SetIncludesMode) => UsePromiseFunction<ContextGrantedModelRolesReader<C, T, D, R>>;
+export type InModelContextFirebaseModelServiceUseFunction<C extends FirebasePermissionErrorContext, T, D extends FirestoreDocument<T> = FirestoreDocument<T>, R extends GrantedRole = GrantedRole> = (roles: ArrayOrValue<R>, setIncludes?: SetIncludesMode) => UsePromiseFunction<ContextGrantedModelRolesReader<C, T, D, R>>;
 
-export function inContextFirebaseModelServiceFactory<C, T, D extends FirestoreDocument<T> = FirestoreDocument<T>, R extends GrantedRole = GrantedRole>(factory: FirebaseModelServiceGetter<C, T, D, R>): InContextFirebaseModelServiceFactory<C, T, D, R> {
+export function inContextFirebaseModelServiceFactory<C extends FirebaseModelServiceContext, T, D extends FirestoreDocument<T> = FirestoreDocument<T>, R extends GrantedRole = GrantedRole>(factory: FirebaseModelServiceGetter<C, T, D, R>): InContextFirebaseModelServiceFactory<C, T, D, R> {
   return (context: C) => {
     const firebaseModelService = factory();
 

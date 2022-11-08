@@ -18,7 +18,9 @@ import {
   onScheduleWithNestContextFactory,
   OnScheduleWithNestContext,
   OnCallDevelopmentFunction,
-  OnCallDevelopmentFunctionMap
+  OnCallDevelopmentFunctionMap,
+  OnCallReadModelFunction,
+  OnCallReadModelMap
 } from '@dereekb/firebase-server';
 import { OnCallCreateModelResult } from '@dereekb/firebase';
 import { ProfileServerActions, GuestbookServerActions, DemoApiAuthService, DemoFirebaseServerActionsContext } from '../common';
@@ -66,6 +68,9 @@ export const taskqueueEventWithDemoNestContext = taskQueueFunctionHandlerWithNes
 // MARK: CRUD Functions
 export type DemoCreateModelFunction<I, O extends OnCallCreateModelResult = OnCallCreateModelResult> = OnCallCreateModelFunction<DemoApiNestContext, I, O>;
 export type DemoOnCallCreateModelMap = OnCallCreateModelMap<DemoApiNestContext, DemoFirebaseModelTypes>;
+
+export type DemoReadModelFunction<I, O> = OnCallReadModelFunction<DemoApiNestContext, I, O>;
+export type DemoOnCallReadModelMap = OnCallReadModelMap<DemoApiNestContext, DemoFirebaseModelTypes>;
 
 export type DemoUpdateModelFunction<I, O = void> = OnCallUpdateModelFunction<DemoApiNestContext, I, O>;
 export type DemoOnCallUpdateModelMap = OnCallUpdateModelMap<DemoApiNestContext, DemoFirebaseModelTypes>;

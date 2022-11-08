@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [9.13.0](https://github.com/dereekb/dbx-components/compare/v9.12.4-dev...v9.13.0) (2022-11-08)
+
+
+### Bug Fixes
+
+* fixed issue where empty queries were being appended to url ([2c787e8](https://github.com/dereekb/dbx-components/commit/2c787e83b505ef48b84034a22a66fcc2e478014f))
+
+
+
 ## [9.12.4](https://github.com/dereekb/dbx-components/compare/v9.12.3-dev...v9.12.4) (2022-11-08)
 
 

@@ -14,7 +14,7 @@ const { server, nest } = initNestServer(app, { environment });
 export const api = onRequest(server);
 
 // App Functions
-export const { initUserOnCreate, profileSetUsername, createModel, updateModel, deleteModel } = allAppFunctions(nest);
+export const { initUserOnCreate, profileSetUsername, createModel, readModel, updateModel, deleteModel } = allAppFunctions(nest);
 
 // Scheduled Functions
 const allScheduledFunctions = allScheduledAppFunctions(nest);

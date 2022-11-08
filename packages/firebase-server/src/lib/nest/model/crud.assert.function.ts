@@ -3,7 +3,7 @@ import { NestContextCallableRequestWithAuth } from '../function/nest';
 
 export interface AssertModelCrudRequestFunctionContext<N, I = unknown> {
   request: NestContextCallableRequestWithAuth<N, I>;
-  crud: 'create' | 'update' | 'delete';
+  crud: 'create' | 'read' | 'update' | 'delete';
   modelType: string;
   specifier: Maybe<string>;
 }

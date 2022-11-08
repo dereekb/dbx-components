@@ -74,6 +74,14 @@ describe('fetchURL()', () => {
       expect(result).toBe(url.href + `?${new URLSearchParams(Array.from(expectedParams.entries())).toString()}`);
     });
 
+    it('should not append an empty query to the url.', () => {
+      const queryParamsObject = {
+        hello: null
+      };
+      const result = fetchURL({ url, queryParams: queryParamsObject });
+      expect(result).toBe(url.href);
+    });
+
     it('should return the url with query params of different types attached as an object', () => {
       const queryParamsObject = {
         1: 'test',
