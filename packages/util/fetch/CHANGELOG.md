@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [9.12.4](https://github.com/dereekb/dbx-components/compare/v9.12.3-dev...v9.12.4) (2022-11-08)
+
+
+### Bug Fixes
+
+* fixed fetch issues ([8859b49](https://github.com/dereekb/dbx-components/commit/8859b4967030e9cecc336195f4d12551b9cc8d93))
+
+
+
 ## [9.12.3](https://github.com/dereekb/dbx-components/compare/v9.12.2-dev...v9.12.3) (2022-11-07)
 
 
