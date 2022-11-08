@@ -186,6 +186,10 @@ export function replaceMultipleFilePathsInSlashPath(input: SlashPath): SlashPath
   return input.replace(ALL_DOUBLE_SLASHES_REGEX, SLASH_PATH_SEPARATOR);
 }
 
+export function removeTrailingSlashes(input: SlashPath): SlashPath {
+  return input.replace(TRAILING_SLASHES_REGEX, '');
+}
+
 export function removeTrailingFileTypeSeparators(input: SlashPath): SlashPath {
   return input.replace(TRAILING_FILE_TYPE_SEPARATORS_REGEX, '');
 }

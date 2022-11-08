@@ -1,4 +1,4 @@
-import { ServerError } from '@dereekb/util';
+import { ServerError, WebsiteDomain, WebsitePath } from '@dereekb/util';
 import { itShouldFail, expectFail, failDueToSuccess, failSuccessfully } from '@dereekb/util/test';
 import { fetchService, fetchRequestFactory, FetchRequestFactory, FetchService } from './fetch';
 import fetch, { Request, RequestInfo, RequestInit } from 'node-fetch';
@@ -12,10 +12,27 @@ jest.setTimeout(30000);
 
 describe('fetchJson()', () => {
   // Expected result: {"statusCode":403,"message":"Forbidden"}
+  const forbiddenUrlBaseUrl: WebsiteDomain = 'https://components.dereekb.com/api';
+  const forbiddernUrlRelativeUrl: WebsitePath = '/webhook';
+
   const forbiddenUrl = 'https://components.dereekb.com/api/webhook';
 
   const fetch = testFetch.makeFetch();
   const fetchJson = fetchJsonFunction(fetch);
+
+  describe('fetch with base url', () => {
+    const fetch = testFetch.makeFetch({
+      baseUrl: forbiddenUrlBaseUrl
+    });
+
+    const fetchJson = fetchJsonFunction(fetch);
+
+    it('should send a GET request by default.', async () => {
+      // NOTE: Fetch will not throw an error on non-ok results, allowing us to test against the webhook url.
+      const response = await fetchJson<{ statusCode: number; message: 'Forbidden' }>(forbiddernUrlRelativeUrl);
+      expect(response.message).toBe('Forbidden');
+    });
+  });
 
   describe('GET', () => {
     const method = 'GET';

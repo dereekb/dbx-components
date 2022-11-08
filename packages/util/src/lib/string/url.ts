@@ -2,10 +2,10 @@ import { IndexRangeInput } from './../value/indexed';
 import { isolateSlashPathFunction, SLASH_PATH_SEPARATOR, toAbsoluteSlashPathStartType } from '../path/path';
 import { chainMapSameFunctions, MapFunction } from '../value/map';
 import { Maybe } from '../value/maybe.type';
-import { escapeStringForRegex } from './replace';
+import { escapeStringForRegex, findAllCharacterOccurences, findAllCharacterOccurencesFunction } from './replace';
 import { splitJoinRemainder } from './string';
 import { TransformStringFunction } from './transform';
-import { replaceLastCharacterIfIsFunction } from './char';
+import { replaceCharacterAtIndexWith, replaceLastCharacterIfIsFunction } from './char';
 
 /**
  * A website domain.
@@ -163,12 +163,39 @@ export interface WebsitePathAndQueryPair {
 }
 
 export function websitePathAndQueryPair(inputPath: string | WebsitePath): WebsitePathAndQueryPair {
-  const [path, query] = inputPath.split('?', 2);
+  const [path, rawQuery] = inputPath.split('?', 2);
+  const query = rawQuery ? fixExtraQueryParameters(rawQuery, true) : undefined;
 
   return {
     path: path as WebsitePath,
     query: query ? `?${query}` : undefined
   };
+}
+
+/**
+ * Replaces any extra query parameter "?" characters with an "&" character.
+ *
+ * Can also choose to replace all instead, incase the input string should be considered the query without.
+ *
+ * @param input
+ */
+export function fixExtraQueryParameters(input: string, replaceAll = false): string {
+  const questionMarkIndexes = findAllCharacterOccurences(new Set('?'), input);
+  let indexesToReplace: number[] | undefined;
+  let fixed = input;
+
+  if (replaceAll && questionMarkIndexes.length) {
+    indexesToReplace = questionMarkIndexes;
+  } else if (questionMarkIndexes.length > 1) {
+    indexesToReplace = questionMarkIndexes.reverse();
+    indexesToReplace.pop(); // remove the "first" so it does not get replaced.
+  }
+
+  if (indexesToReplace?.length) {
+    indexesToReplace.forEach((index) => (fixed = replaceCharacterAtIndexWith(fixed, index, '&')));
+  }
+
+  return fixed;
 }
 
 /**

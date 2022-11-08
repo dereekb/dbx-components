@@ -1,4 +1,4 @@
-import { isolateWebsitePathFunction, hasWebsiteDomain, removeHttpFromUrl, websiteDomainAndPathPairFromWebsiteUrl, websitePathAndQueryPair, websitePathFromWebsiteDomainAndPath, websitePathFromWebsiteUrl } from './url';
+import { isolateWebsitePathFunction, hasWebsiteDomain, removeHttpFromUrl, websiteDomainAndPathPairFromWebsiteUrl, websitePathAndQueryPair, websitePathFromWebsiteDomainAndPath, websitePathFromWebsiteUrl, fixExtraQueryParameters } from './url';
 
 const domain = 'dereekb.com';
 
@@ -101,6 +101,27 @@ describe('websitePathAndQueryPair()', () => {
     const result = websitePathAndQueryPair(`${path}${query}`);
     expect(result.path).toBe(path);
     expect(result.query).toBe(query);
+  });
+
+  it('should return the website path from the input url (no query)', () => {
+    const path = '/test/hello/world';
+
+    const result = websitePathAndQueryPair(`${path}`);
+    expect(result.path).toBe(path);
+    expect(result.query).not.toBeDefined();
+  });
+});
+
+describe('fixExtraQueryParameters()', () => {
+  it('should replace any extra query parameters', () => {
+    const path = '/test/hello/world';
+    const query = 'hello=world';
+
+    const input = path + '?' + query + '&' + query + '?' + query + '?' + query;
+    const expected = path + '?' + query + '&' + query + '&' + query + '&' + query;
+
+    const result = fixExtraQueryParameters(input);
+    expect(result).toBe(expected);
   });
 });
 

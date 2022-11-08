@@ -32,34 +32,72 @@ describe('fetchRequestFactory()', () => {
       });
 
       describe('valid', () => {
-        const baseUrl = 'https://components.dereekb.com/';
+        describe('base url as domain and path', () => {
+          describe('with slash at end', () => {
+            const baseUrl = 'https://components.dereekb.com/api/';
 
-        const factory = testFetch.fetchRequestFactory({
-          baseUrl
+            const factory = testFetch.fetchRequestFactory({
+              baseUrl
+            });
+
+            describe('url input as string', () => {
+              it('should append the base url with the path to the request.', () => {
+                const result = factory('test');
+                expect(result.url).toBe(`${baseUrl}test`);
+              });
+            });
+          });
+
+          describe('without slash at end', () => {
+            const baseUrl = 'https://components.dereekb.com/api';
+
+            const factory = testFetch.fetchRequestFactory({
+              baseUrl
+            });
+
+            describe('url input as string', () => {
+              it('should append the base url with the path to the request.', () => {
+                const result = factory('test');
+                expect(result.url).toBe(`${baseUrl}/test`);
+              });
+            });
+          });
         });
 
-        it('should retain the path of an input request.', () => {
-          const expectedUrl = 'https://google.com/';
-          const request = testFetch.makeRequest(expectedUrl);
-          const result = factory(request);
-          expect(result.url).toBe(expectedUrl);
-        });
+        describe('base url as domain', () => {
+          const baseUrl = 'https://components.dereekb.com/';
 
-        it('should retain the path of an input URL.', () => {
-          const expectedUrl = 'https://google.com/';
-          const request = new URL(expectedUrl);
-          const result = factory(request);
-          expect(result.url).toBe(expectedUrl);
-        });
+          const factory = testFetch.fetchRequestFactory({
+            baseUrl
+          });
 
-        it('should append the base url to the request.', () => {
-          const result = factory('test');
-          expect(result.url).toBe('https://components.dereekb.com/test');
-        });
+          describe('url input as string', () => {
+            it('should retain the path of an input request if it begins with http(s).', () => {
+              const expectedUrl = 'https://google.com/';
+              const request = testFetch.makeRequest(expectedUrl);
+              const result = factory(request);
+              expect(result.url).toBe(expectedUrl);
+            });
 
-        it('should append the base url to the request if it has a front slash.', () => {
-          const result = factory('/test');
-          expect(result.url).toBe('https://components.dereekb.com/test');
+            it('should append the base url to the request.', () => {
+              const result = factory('test');
+              expect(result.url).toBe('https://components.dereekb.com/test');
+            });
+
+            it('should append the base url to the request if it has a front slash.', () => {
+              const result = factory('/test');
+              expect(result.url).toBe('https://components.dereekb.com/test');
+            });
+          });
+
+          describe('url input as URL', () => {
+            it('should use the URL as is, and ignore the baseUrl.', () => {
+              const expectedUrl = 'https://google.com/';
+              const request = new URL(expectedUrl);
+              const result = factory(request);
+              expect(result.url).toBe(expectedUrl);
+            });
+          });
         });
       });
     });

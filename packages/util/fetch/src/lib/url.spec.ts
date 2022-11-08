@@ -42,26 +42,26 @@ describe('fetchURL()', () => {
   describe('with string url', () => {
     it('should return the url', () => {
       const result = fetchURL(urlString);
-      expect(result.href).toBe(urlString);
+      expect(result).toBe(urlString);
     });
   });
 
   describe('with URL', () => {
     it('should return the url', () => {
       const result = fetchURL(url);
-      expect(result.href).toBe(url.href);
+      expect(result).toBe(url.href);
     });
   });
 
   describe('with FetchURLConfiguration input', () => {
     it('should return the url', () => {
       const result = fetchURL({ url });
-      expect(result.href).toBe(url.href);
+      expect(result).toBe(url.href);
     });
 
     it('should return the url with query params attached', () => {
       const result = fetchURL({ url, queryParams });
-      expect(result.href).toBe(url.href + `?${queryParams.toString()}`);
+      expect(result).toBe(url.href + `?${queryParams.toString()}`);
     });
 
     it('should return the url with query params attached as an object', () => {
@@ -71,7 +71,7 @@ describe('fetchURL()', () => {
       };
       const expectedParams = objectToMap(queryParamsObject);
       const result = fetchURL({ url, queryParams: queryParamsObject });
-      expect(result.href).toBe(url.href + `?${new URLSearchParams(Array.from(expectedParams.entries())).toString()}`);
+      expect(result).toBe(url.href + `?${new URLSearchParams(Array.from(expectedParams.entries())).toString()}`);
     });
 
     it('should return the url with query params of different types attached as an object', () => {
@@ -82,7 +82,7 @@ describe('fetchURL()', () => {
       };
       const expectedParams = objectToMap(queryParamsObject);
       const result = fetchURL({ url, queryParams: queryParamsObject });
-      expect(result.href).toBe(url.href + `?${new URLSearchParams(Array.from(expectedParams.entries()).map((x) => [String(x[0]), String(x[1])])).toString()}`);
+      expect(result).toBe(url.href + `?${new URLSearchParams(Array.from(expectedParams.entries()).map((x) => [String(x[0]), String(x[1])])).toString()}`);
     });
 
     it('should return the url with query params of different types attached as an object with an array as a set of values for a key', () => {
@@ -92,7 +92,7 @@ describe('fetchURL()', () => {
       };
 
       const result = fetchURL({ url, queryParams: queryParamsObject });
-      expect(result.href).toBe(url.href + `?${queryParams.toString()}`);
+      expect(result).toBe(url.href + `?${queryParams.toString()}`);
     });
 
     it('should return the url with query params of different types attached as an object and ignore null values', () => {
@@ -104,23 +104,23 @@ describe('fetchURL()', () => {
       };
 
       const result = fetchURL({ url, queryParams: queryParamsObject });
-      expect(result.href).toBe(url.href + `?${queryParams.toString()}`);
+      expect(result).toBe(url.href + `?${queryParams.toString()}`);
     });
 
     it('should return the url with query params attached as a tuple', () => {
       const result = fetchURL({ url, queryParams: queryParamsTuples });
-      expect(result.href).toBe(url.href + `?${queryParams.toString()}`);
+      expect(result).toBe(url.href + `?${queryParams.toString()}`);
     });
 
     it('should return the url with query params attached as a tuple with an array of values', () => {
       const result = fetchURL({ url, queryParams: queryParamsTuples });
-      expect(result.href).toBe(url.href + `?${queryParams.toString()}`);
+      expect(result).toBe(url.href + `?${queryParams.toString()}`);
     });
 
     it('should return the url with query params attached as a Map', () => {
       const expectedParams = new Map(queryParamsTuples);
       const result = fetchURL({ url, queryParams: expectedParams });
-      expect(result.href).toBe(url.href + `?${new URLSearchParams(Array.from(expectedParams.entries())).toString()}`);
+      expect(result).toBe(url.href + `?${new URLSearchParams(Array.from(expectedParams.entries())).toString()}`);
     });
 
     it('should return the url with query params attached as a tuples array', () => {
@@ -131,7 +131,7 @@ describe('fetchURL()', () => {
       ];
 
       const result = fetchURL({ url, queryParams: queryParamsTuplesWithArray });
-      expect(result.href).toBe(url.href + `?${queryParams.toString()}`);
+      expect(result).toBe(url.href + `?${queryParams.toString()}`);
     });
 
     it('should return the url with query params attached as a tuples array undefined keys and values', () => {
@@ -143,17 +143,17 @@ describe('fetchURL()', () => {
       ];
 
       const result = fetchURL({ url, queryParams: queryParamsTuplesWithArray });
-      expect(result.href).toBe(url.href + `?${queryParams.toString()}`);
+      expect(result).toBe(url.href + `?${queryParams.toString()}`);
     });
 
     it('should return the url with query params attached as a string with a "?" attached', () => {
       const result = fetchURL({ url, queryParams: `?${queryParams.toString()}` });
-      expect(result.href).toBe(url.href + `?${queryParams.toString()}`);
+      expect(result).toBe(url.href + `?${queryParams.toString()}`);
     });
 
     it('should return the url with query params attached as a string without a "?" attached', () => {
       const result = fetchURL({ url, queryParams: `${queryParams.toString()}` });
-      expect(result.href).toBe(url.href + `?${queryParams.toString()}`);
+      expect(result).toBe(url.href + `?${queryParams.toString()}`);
     });
   });
 });

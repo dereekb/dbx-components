@@ -1,4 +1,4 @@
-import { ArrayOrValue, forEachInIterable, forEachKeyValue, isIterable, mapIterable, Maybe, useIterableOrValue } from '@dereekb/util';
+import { ArrayOrValue, fixExtraQueryParameters, forEachInIterable, forEachKeyValue, isIterable, mapIterable, Maybe, useIterableOrValue } from '@dereekb/util';
 
 export type SimpleFetchURLInput = URL | string;
 
@@ -15,19 +15,19 @@ export interface FetchURLConfiguration {
 
 export type FetchURLInput = SimpleFetchURLInput | FetchURLConfiguration;
 
-export function fetchURL(input: FetchURLInput): URL {
-  let url: URL;
+export function fetchURL(input: FetchURLInput): string {
+  let url: string;
 
   if (typeof input === 'string') {
-    url = new URL(input);
-  } else if (isURL(input)) {
     url = input;
+  } else if (isURL(input)) {
+    url = input.href;
   } else {
     const baseUrl = fetchURL(input.url);
 
     if (input.queryParams) {
       const searchParams = queryParamsToSearchParams(input.queryParams);
-      url = new URL(`?${searchParams.toString()}`, baseUrl);
+      url = fixExtraQueryParameters(baseUrl + `?${searchParams.toString()}`);
     } else {
       url = baseUrl;
     }
