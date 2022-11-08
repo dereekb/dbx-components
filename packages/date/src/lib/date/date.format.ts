@@ -9,6 +9,10 @@ export function formatToTimeRangeString(start: Date, end: Date): string {
   return `${formatToTimeString(start)} - ${formatToTimeString(end)}`;
 }
 
+export function formatToISO8601DayString(date: Date = new Date()): ISO8601DayString {
+  return format(date, 'yyyy-MM-dd');
+}
+
 export function formatToDateString(date: Date): string {
   return format(date, 'EEE, MMM do');
 }
