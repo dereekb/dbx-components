@@ -5,7 +5,7 @@ import { firebaseFunctionMapFactory } from '@dereekb/firebase';
 import { MaybeNot, build, cachedGetter, capitalizeFirstLetter, ValuesTypesAsArray, CommaSeparatedKeysOfObject, separateValues, Getter, lowercaseFirstLetter } from '@dereekb/util';
 import { Functions, HttpsCallable, httpsCallable } from 'firebase/functions';
 import { NonNever } from 'ts-essentials';
-import { CREATE_MODEL_APP_FUNCTION_KEY, DELETE_MODEL_APP_FUNCTION_KEY, FirestoreModelIdentity, FirestoreModelTypes, OnCallCreateModelResult, onCallTypedModelParams, UPDATE_MODEL_APP_FUNCTION_KEY } from '../../common';
+import { CREATE_MODEL_APP_FUNCTION_KEY, DELETE_MODEL_APP_FUNCTION_KEY, FirestoreModelIdentity, FirestoreModelTypes, OnCallCreateModelResult, onCallTypedModelParams, READ_MODEL_APP_FUNCTION_KEY, UPDATE_MODEL_APP_FUNCTION_KEY } from '../../common';
 import { FirebaseFunctionTypeMap, FirebaseFunctionMap, FirebaseFunction } from './function';
 import { mapHttpsCallable } from './function.callable';
 import { FirebaseFunctionTypeConfigMap } from './function.factory';
@@ -24,6 +24,7 @@ export type ModelFirebaseCrudFunctionSpecifierRef = {
 
 export type ModelFirebaseCrudFunction<I, O = void> = FirebaseFunction<I, O>;
 export type ModelFirebaseCreateFunction<I, O extends OnCallCreateModelResult = OnCallCreateModelResult> = ModelFirebaseCrudFunction<I, O>;
+export type ModelFirebaseReadFunction<I, O> = ModelFirebaseCrudFunction<I, O>;
 export type ModelFirebaseUpdateFunction<I, O = void> = ModelFirebaseCrudFunction<I, O>;
 export type ModelFirebaseDeleteFunction<I, O = void> = ModelFirebaseCrudFunction<I, O>;
 
@@ -31,15 +32,19 @@ export type ModelFirebaseCrudFunctionTypeMap<T extends FirestoreModelIdentity = 
   [K in FirestoreModelTypes<T>]: ModelFirebaseCrudFunctionTypeMapEntry;
 };
 
-export type ModelFirebaseCrudFunctionTypeMapEntry = MaybeNot | Partial<ModelFirebaseCrudFunctionCreateTypeConfig & ModelFirebaseCrudFunctionUpdateTypeConfig & ModelFirebaseCrudFunctionDeleteTypeConfig>;
+export type ModelFirebaseCrudFunctionTypeMapEntry = MaybeNot | Partial<ModelFirebaseCrudFunctionCreateTypeConfig & ModelFirebaseCrudFunctionReadTypeConfig & ModelFirebaseCrudFunctionUpdateTypeConfig & ModelFirebaseCrudFunctionDeleteTypeConfig>;
 
 export type ModelFirebaseCrudFunctionTypeMapEntryWithReturnType<I = unknown, O = unknown> = [I, O];
 export type ModelFirebaseCrudFunctionTypeSpecifierConfig = Record<string | number, unknown | ModelFirebaseCrudFunctionTypeMapEntryWithReturnType>;
 
-// TODO: Typings here could potentially be improved to always enforce _ being provided if the passed object is
+// TODO: Typings here could potentially be improved to always enforce _ being provided if the passed object is...
 
 export type ModelFirebaseCrudFunctionCreateTypeConfig = {
   create: unknown | ModelFirebaseCrudFunctionTypeSpecifierConfig;
+};
+
+export type ModelFirebaseCrudFunctionReadTypeConfig = {
+  read: unknown | ModelFirebaseCrudFunctionTypeSpecifierConfig;
 };
 
 export type ModelFirebaseCrudFunctionUpdateTypeConfig = {
@@ -88,15 +93,15 @@ export type ModelFirebaseCrudFunctionMapEntry<MODEL extends string, E extends Mo
       [CRUD in keyof E as CRUD extends string ? (E[CRUD] extends Record<string, unknown> ? ModelFirebaseCrudFunctionName<MODEL, CRUD> : never) : never]: CRUD extends string ? ModelFirebaseCrudFunctionMapEntrySpecifier<MODEL, CRUD, E[CRUD]> | ModelFirebaseCrudFunctionMapEntrySpecifierShort<MODEL, CRUD, E[CRUD]> : never;
     };
 
-export type ModelFirebaseCrudFunctionMapEntrySpecifier<MODEL extends string, CRUD extends string, M> = {
+export type ModelFirebaseCrudFunctionMapEntrySpecifier<MODEL extends string, CRUD extends string, M extends unknown | ModelFirebaseCrudFunctionTypeSpecifierConfig> = {
   [SPECIFIER in keyof M as SPECIFIER extends string ? (CRUD extends string ? (SPECIFIER extends ModelFirebaseCrudFunctionSpecifierDefault ? ModelFirebaseCrudFunctionName<MODEL, CRUD> : ModelFirebaseCrudFunctionWithSpecifierName<MODEL, CRUD, SPECIFIER>) : never) : never]: ModelFirebaseCrudFunctionMapEntryFunction<M, SPECIFIER, CRUD>;
 };
 
-export type ModelFirebaseCrudFunctionMapEntrySpecifierShort<MODEL extends string, CRUD extends string, M> = {
+export type ModelFirebaseCrudFunctionMapEntrySpecifierShort<MODEL extends string, CRUD extends string, M extends unknown | ModelFirebaseCrudFunctionTypeSpecifierConfig> = {
   [SPECIFIER in keyof M as SPECIFIER extends string ? (CRUD extends string ? (SPECIFIER extends ModelFirebaseCrudFunctionSpecifierDefault ? CRUD : SPECIFIER) : never) : never]: ModelFirebaseCrudFunctionMapEntryFunction<M, SPECIFIER, CRUD>;
 };
 
-export declare type ModelFirebaseCrudFunctionMapEntryFunction<E extends ModelFirebaseCrudFunctionTypeMapEntry, K extends keyof E, CRUD extends string> = E[K] extends ModelFirebaseCrudFunctionTypeMapEntryWithReturnType<infer I, infer O> ? ModelFirebaseCrudFunction<I, O> : CRUD extends 'create' ? ModelFirebaseCreateFunction<E[K]> : ModelFirebaseCrudFunction<E[K]>;
+export declare type ModelFirebaseCrudFunctionMapEntryFunction<E extends unknown | ModelFirebaseCrudFunctionTypeSpecifierConfig, K extends keyof E, CRUD extends string> = E[K] extends ModelFirebaseCrudFunctionTypeMapEntryWithReturnType<infer I, infer O> ? ModelFirebaseCrudFunction<I, O> : CRUD extends 'create' ? ModelFirebaseCreateFunction<E[K]> : ModelFirebaseCrudFunction<E[K]>;
 export type ModelFirebaseFunctionMap<M extends FirebaseFunctionTypeMap, C extends ModelFirebaseCrudFunctionTypeMap> = FirebaseFunctionMap<M> & ModelFirebaseCrudFunctionMap<C>;
 
 /**
@@ -110,6 +115,7 @@ export function modelFirebaseFunctionMapFactory<M extends FirebaseFunctionTypeMa
   return (functionsInstance: Functions) => {
     const functionMap: FirebaseFunctionMap<M> = functionFactory(functionsInstance);
 
+    const _readFn = cachedGetter(() => httpsCallable(functionsInstance, READ_MODEL_APP_FUNCTION_KEY));
     const _createFn = cachedGetter(() => httpsCallable(functionsInstance, CREATE_MODEL_APP_FUNCTION_KEY));
     const _updateFn = cachedGetter(() => httpsCallable(functionsInstance, UPDATE_MODEL_APP_FUNCTION_KEY));
     const _deleteFn = cachedGetter(() => httpsCallable(functionsInstance, DELETE_MODEL_APP_FUNCTION_KEY));
@@ -148,7 +154,6 @@ export function modelFirebaseFunctionMapFactory<M extends FirebaseFunctionTypeMa
             specifiedCrudFunctionKeys.map((x) => {
               const [crud, functionsSplit] = x.split(':', 2);
               const functions = functionsSplit.split(MODEL_FUNCTION_FIREBASE_CRUD_FUNCTION_SPECIFIER_SPLITTER);
-
               return [crud, functions];
             })
           );
@@ -170,6 +175,7 @@ export function modelFirebaseFunctionMapFactory<M extends FirebaseFunctionTypeMa
           const modelTypeCruds = {};
 
           addFunctions('create', _createFn, modelType);
+          addFunctions('read', _readFn, modelType);
           addFunctions('update', _updateFn, modelType);
           addFunctions('delete', _deleteFn, modelType);
 

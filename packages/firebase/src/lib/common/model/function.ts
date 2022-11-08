@@ -41,6 +41,13 @@ export const CREATE_MODEL_APP_FUNCTION_KEY = 'createModel';
 export type OnCallCreateModelParams<T = unknown> = OnCallTypedModelParams<T>;
 
 /**
+ * Key used on the front-end and backend that refers to a specific function for reading models.
+ */
+export const READ_MODEL_APP_FUNCTION_KEY = 'readModel';
+
+export type OnCallReadModelParams<T = unknown> = OnCallTypedModelParams<T>;
+
+/**
  * Key used on the front-end and backend that refers to a specific function for updating models.
  */
 export const UPDATE_MODEL_APP_FUNCTION_KEY = 'updateModel';
