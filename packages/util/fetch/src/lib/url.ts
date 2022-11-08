@@ -1,4 +1,4 @@
-import { ArrayOrValue, fixExtraQueryParameters, forEachInIterable, forEachKeyValue, isIterable, mapIterable, Maybe, useIterableOrValue } from '@dereekb/util';
+import { ArrayOrValue, fixExtraQueryParameters, forEachInIterable, forEachKeyValue, isEmptyIterable, isIterable, mapIterable, Maybe, useIterableOrValue } from '@dereekb/util';
 
 export type SimpleFetchURLInput = URL | string;
 
@@ -27,7 +27,12 @@ export function fetchURL(input: FetchURLInput): string {
 
     if (input.queryParams) {
       const searchParams = queryParamsToSearchParams(input.queryParams);
-      url = fixExtraQueryParameters(baseUrl + `?${searchParams.toString()}`);
+
+      if (!isEmptyIterable(searchParams)) {
+        url = fixExtraQueryParameters(baseUrl + `?${searchParams.toString()}`);
+      } else {
+        url = baseUrl;
+      }
     } else {
       url = baseUrl;
     }
