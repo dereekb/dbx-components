@@ -1,4 +1,4 @@
-import { Maybe, PhoneNumber, WebsiteUrl } from '@dereekb/util';
+import { ISO8601DateString, Maybe, PasswordString, PhoneNumber, WebsiteUrl } from '@dereekb/util';
 
 /**
  * Firebase User Identifier (UID)
@@ -30,3 +30,19 @@ export interface FirebaseAuthDetails extends FirebaseAuthToken, FirebaseAuthUser
  * For instance, a database model (or its parent) may have an ownership key associated with it that is compared with the user's current claims.
  */
 export type FirebaseAuthOwnershipKey = string;
+
+/**
+ * Password used for completing setup.
+ */
+export type FirebaseAuthSetupPassword = PasswordString;
+
+export interface FirebaseAuthNewUserClaimsData {
+  /**
+   * Setup password
+   */
+  readonly setupPassword: FirebaseAuthSetupPassword;
+  /**
+   * Last setup communication time.
+   */
+  readonly setupCommunicationAt: ISO8601DateString;
+}
