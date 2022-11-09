@@ -1,6 +1,6 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
-import { FirebaseAuthContextInfo, FirebaseAuthUserId } from '@dereekb/firebase';
+import { FirebaseAuthContextInfo, FirebaseAuthDetails, FirebaseAuthUserId } from '@dereekb/firebase';
 import { ISO8601DateString, Milliseconds, filterUndefinedValues, AUTH_ADMIN_ROLE, AuthClaims, AuthRoleSet, cachedGetter, filterNullAndUndefinedValues, ArrayOrValue, AuthRole, forEachKeyValue, ObjectMap, AuthClaimsUpdate, asSet, KeyValueTypleValueFilter, AuthClaimsObject, Maybe, AUTH_TOS_SIGNED_ROLE, EmailAddress, E164PhoneNumber, randomNumberFactory, PasswordString } from '@dereekb/util';
 import { assertIsContextWithAuthData, CallableContextWithAuthData } from '../function/context';
 import { AuthDataRef, firebaseAuthTokenFromDecodedIdToken } from './auth.context';
@@ -24,6 +24,11 @@ export interface FirebaseServerAuthUserContext extends FirebaseServerAuthUserIde
    * Loads the record of the user.
    */
   loadRecord(): Promise<admin.auth.UserRecord>;
+
+  /**
+   * Loads the details object of the user.
+   */
+  loadDetails(): Promise<FirebaseAuthDetails>;
 
   /**
    * Loads the roles of the user.
@@ -91,6 +96,10 @@ export abstract class AbstractFirebaseServerAuthUserContext<S extends FirebaseSe
 
   loadRecord(): Promise<admin.auth.UserRecord> {
     return this._loadRecord();
+  }
+
+  loadDetails(): Promise<FirebaseAuthDetails> {
+    return this.loadRecord().then((record) => this.service.authDetailsForRecord(record));
   }
 
   async loadRoles(): Promise<AuthRoleSet> {
@@ -327,6 +336,13 @@ export interface FirebaseServerNewUserService<D = unknown, U extends FirebaseSer
    * @param config
    */
   loadSetupDetails(uid: FirebaseAuthUserId, config?: FirebaseServerAuthNewUserSendSetupDetailsConfig<D>): Promise<Maybe<FirebaseServerAuthNewUserSetupDetails<U, D>>>;
+  /**
+   * Loads the setup details for the input user context. If the user does not exist or does not need to be setup then undefined is returned.
+   *
+   * @param uid
+   * @param config
+   */
+  loadSetupDetailsForUserContext(userContext: U, config?: FirebaseServerAuthNewUserSendSetupDetailsConfig<D>): Promise<Maybe<FirebaseServerAuthNewUserSetupDetails<U, D>>>;
   markUserSetupAsComplete(uid: FirebaseAuthUserId): Promise<boolean>;
 }
 
@@ -405,19 +421,26 @@ export abstract class AbstractFirebaseServerNewUserService<U extends FirebaseSer
     let details: Maybe<FirebaseServerAuthNewUserSetupDetails<U, D>>;
 
     if (userExists) {
-      const { setupPassword, setupCommunicationAt } = await userContext.loadClaims<FirebaseServerAuthNewUserClaims>();
+      details = await this.loadSetupDetailsForUserContext(userContext, config);
+    }
 
-      if (setupPassword) {
-        details = {
-          userContext,
-          claims: {
-            setupPassword,
-            setupCommunicationAt
-          },
-          data: config?.data,
-          sendDetailsInTestEnvironment: config?.sendDetailsInTestEnvironment
-        };
-      }
+    return details;
+  }
+
+  async loadSetupDetailsForUserContext(userContext: U, config?: FirebaseServerAuthNewUserSendSetupDetailsConfig<D>): Promise<Maybe<FirebaseServerAuthNewUserSetupDetails<U, D>>> {
+    let details: Maybe<FirebaseServerAuthNewUserSetupDetails<U, D>>;
+    const { setupPassword, setupCommunicationAt } = await userContext.loadClaims<FirebaseServerAuthNewUserClaims>();
+
+    if (setupPassword) {
+      details = {
+        userContext,
+        claims: {
+          setupPassword,
+          setupCommunicationAt
+        },
+        data: config?.data,
+        sendDetailsInTestEnvironment: config?.sendDetailsInTestEnvironment
+      };
     }
 
     return details;
@@ -573,6 +596,12 @@ export abstract class FirebaseServerAuthService<U extends FirebaseServerAuthUser
    * Returns the new user service to create a new user programmatically.
    */
   abstract newUser(): FirebaseServerNewUserService;
+
+  /**
+   * Returns the auth details for the given UserRecord.
+   * @param record
+   */
+  abstract authDetailsForRecord(record: admin.auth.UserRecord): FirebaseAuthDetails;
 }
 
 /**
@@ -632,5 +661,17 @@ export abstract class AbstractFirebaseServerAuthService<U extends FirebaseServer
     }
 
     return result;
+  }
+
+  authDetailsForRecord(record: admin.auth.UserRecord): FirebaseAuthDetails {
+    return {
+      uid: record.uid,
+      email: record.email,
+      emailVerified: record.emailVerified,
+      phoneNumber: record.phoneNumber,
+      disabled: record.disabled,
+      displayName: record.displayName,
+      photoURL: record.photoURL
+    };
   }
 }
