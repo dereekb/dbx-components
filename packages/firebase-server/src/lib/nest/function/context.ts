@@ -2,37 +2,7 @@ import { ValidationError } from 'class-validator';
 import { toTransformAndValidateFunctionResultFactory, TransformAndValidateFunctionResultFactory, transformAndValidateObjectFactory, TransformAndValidateObjectFactory } from '@dereekb/model';
 import { HttpException, ValidationPipe } from '@nestjs/common';
 import { https } from 'firebase-functions';
-
-// MARK: Transform Context
-/**
- * Context used for transforming content.
- */
-export interface FirebaseServerActionsTransformContext {
-  readonly firebaseServerActionTransformFactory: TransformAndValidateObjectFactory;
-  readonly firebaseServerActionTransformFunctionFactory: TransformAndValidateFunctionResultFactory;
-}
-
-export function firebaseServerActionsTransformContext(): FirebaseServerActionsTransformContext {
-  const firebaseServerActionTransformFactory = firebaseServerActionsTransformFactory();
-  const firebaseServerActionTransformFunctionFactory = toTransformAndValidateFunctionResultFactory(firebaseServerActionTransformFactory);
-
-  return {
-    firebaseServerActionTransformFactory,
-    firebaseServerActionTransformFunctionFactory
-  };
-}
-
-export function firebaseServerActionsTransformFactory(): TransformAndValidateObjectFactory {
-  const nestValidationExceptionFactory = new ValidationPipe().createExceptionFactory();
-
-  return transformAndValidateObjectFactory({
-    handleValidationError: (validationError: ValidationError[]) => {
-      const nestError = nestValidationExceptionFactory(validationError);
-      const details = (nestError as HttpException).getResponse();
-      throw new https.HttpsError('invalid-argument', 'Parameters validation check failed.', details);
-    }
-  });
-}
+import { mapIdentityFunction } from '@dereekb/util';
 
 // MARK: Action Context
 /**
@@ -45,8 +15,48 @@ export abstract class AbstractFirebaseServerActionsContext implements FirebaseSe
   abstract readonly firebaseServerActionTransformFunctionFactory: TransformAndValidateFunctionResultFactory<unknown>;
 }
 
-export function firebaseServerActionsContext(): FirebaseServerActionsContext {
+export function firebaseServerActionsContext(logError?: FirebaseServerActionsTransformFactoryLogErrorFunctionInput): FirebaseServerActionsContext {
   return {
-    ...firebaseServerActionsTransformContext()
+    ...firebaseServerActionsTransformContext(logError)
   };
+}
+
+// MARK: Transform Context
+export type FirebaseServerActionsTransformFactoryLogErrorFunction = (details: object) => void;
+export type FirebaseServerActionsTransformFactoryLogErrorFunctionInput = FirebaseServerActionsTransformFactoryLogErrorFunction | boolean;
+
+export const defaultFirebaseServerActionsTransformFactoryLogErrorFunction: FirebaseServerActionsTransformFactoryLogErrorFunction = (details) => {
+  console.log('firebaseServerActionsTransformFactory() encountered validation error: ', details);
+};
+
+/**
+ * Context used for transforming content.
+ */
+export interface FirebaseServerActionsTransformContext {
+  readonly firebaseServerActionTransformFactory: TransformAndValidateObjectFactory;
+  readonly firebaseServerActionTransformFunctionFactory: TransformAndValidateFunctionResultFactory;
+}
+
+export function firebaseServerActionsTransformContext(logError?: FirebaseServerActionsTransformFactoryLogErrorFunctionInput): FirebaseServerActionsTransformContext {
+  const firebaseServerActionTransformFactory = firebaseServerActionsTransformFactory(logError);
+  const firebaseServerActionTransformFunctionFactory = toTransformAndValidateFunctionResultFactory(firebaseServerActionTransformFactory);
+
+  return {
+    firebaseServerActionTransformFactory,
+    firebaseServerActionTransformFunctionFactory
+  };
+}
+
+export function firebaseServerActionsTransformFactory(logError: FirebaseServerActionsTransformFactoryLogErrorFunctionInput = false): TransformAndValidateObjectFactory {
+  const nestValidationExceptionFactory = new ValidationPipe().createExceptionFactory();
+  const logErrorFunction = logError !== false ? (typeof logError === 'function' ? logError : defaultFirebaseServerActionsTransformFactoryLogErrorFunction) : mapIdentityFunction;
+
+  return transformAndValidateObjectFactory({
+    handleValidationError: (validationError: ValidationError[]) => {
+      const nestError = nestValidationExceptionFactory(validationError);
+      const details = (nestError as HttpException).getResponse();
+      logErrorFunction(details as object);
+      throw new https.HttpsError('invalid-argument', 'Parameters validation check failed.', details);
+    }
+  });
 }

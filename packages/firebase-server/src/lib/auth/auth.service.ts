@@ -1,6 +1,6 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
-import { FirebaseAuthContextInfo, FirebaseAuthDetails, FirebaseAuthUserId } from '@dereekb/firebase';
+import { FirebaseAuthContextInfo, FirebaseAuthDetails, FirebaseAuthUserId, FirebaseAuthNewUserClaimsData, FirebaseAuthSetupPassword } from '@dereekb/firebase';
 import { ISO8601DateString, Milliseconds, filterUndefinedValues, AUTH_ADMIN_ROLE, AuthClaims, AuthRoleSet, cachedGetter, filterNullAndUndefinedValues, ArrayOrValue, AuthRole, forEachKeyValue, ObjectMap, AuthClaimsUpdate, asSet, KeyValueTypleValueFilter, AuthClaimsObject, Maybe, AUTH_TOS_SIGNED_ROLE, EmailAddress, E164PhoneNumber, randomNumberFactory, PasswordString } from '@dereekb/util';
 import { assertIsContextWithAuthData, CallableContextWithAuthData } from '../function/context';
 import { AuthDataRef, firebaseAuthTokenFromDecodedIdToken } from './auth.context';
@@ -250,23 +250,7 @@ export abstract class AbstractFirebaseServerAuthContext<C extends FirebaseServer
 export const FIREBASE_SERVER_AUTH_CLAIMS_SETUP_PASSWORD_KEY = 'setupPassword';
 export const FIREBASE_SERVER_AUTH_CLAIMS_SETUP_LAST_COM_DATE_KEY = 'setupCommunicationAt';
 
-/**
- * Password used for completing setup.
- */
-export type FirebaseServerAuthSetupPassword = PasswordString;
-
-export interface FirebaseServerAuthNewUserClaimsData {
-  /**
-   * Setup password time
-   */
-  readonly setupPassword: FirebaseServerAuthSetupPassword;
-  /**
-   * Last setup communication time.
-   */
-  readonly setupCommunicationAt: ISO8601DateString;
-}
-
-export interface FirebaseServerAuthNewUserClaims extends FirebaseServerAuthNewUserClaimsData, AuthClaimsObject {}
+export interface FirebaseServerAuthNewUserClaims extends FirebaseAuthNewUserClaimsData, AuthClaimsObject {}
 
 export interface FirebaseServerAuthInitializeNewUser<D = unknown> {
   /**
@@ -290,7 +274,7 @@ export interface FirebaseServerAuthInitializeNewUser<D = unknown> {
    *
    * This is a setup password and should not be the user's permenant/final password.
    */
-  readonly setupPassword?: FirebaseServerAuthSetupPassword;
+  readonly setupPassword?: FirebaseAuthSetupPassword;
   /**
    * Whether or not to send a setup email. Is true by default.
    */
@@ -307,7 +291,7 @@ export interface FirebaseServerAuthInitializeNewUser<D = unknown> {
 
 export interface FirebaseServerAuthCreateNewUserResult {
   readonly user: admin.auth.UserRecord;
-  readonly password: FirebaseServerAuthSetupPassword;
+  readonly password: FirebaseAuthSetupPassword;
 }
 
 export interface FirebaseServerAuthNewUserSendSetupDetailsConfig<D = unknown> {
@@ -323,7 +307,7 @@ export interface FirebaseServerAuthNewUserSendSetupDetailsConfig<D = unknown> {
 
 export interface FirebaseServerAuthNewUserSetupDetails<U extends FirebaseServerAuthUserContext = FirebaseServerAuthUserContext, D = unknown> extends FirebaseServerAuthNewUserSendSetupDetailsConfig<D> {
   readonly userContext: U;
-  readonly claims: FirebaseServerAuthNewUserClaimsData;
+  readonly claims: FirebaseAuthNewUserClaimsData;
 }
 
 export interface FirebaseServerNewUserService<D = unknown, U extends FirebaseServerAuthUserContext = FirebaseServerAuthUserContext> {
@@ -488,7 +472,7 @@ export abstract class AbstractFirebaseServerNewUserService<U extends FirebaseSer
     };
   }
 
-  protected generateRandomSetupPassword(): FirebaseServerAuthSetupPassword {
+  protected generateRandomSetupPassword(): FirebaseAuthSetupPassword {
     const x = DEFAULT_FIREBASE_PASSWORD_NUMBER_GENERATOR();
     return `${x}`;
   }
@@ -675,3 +659,6 @@ export abstract class AbstractFirebaseServerAuthService<U extends FirebaseServer
     };
   }
 }
+
+// MARK: Compat
+export { FirebaseAuthNewUserClaimsData as FirebaseServerAuthNewUserClaimsData, FirebaseAuthSetupPassword as FirebaseServerAuthSetupPassword };
