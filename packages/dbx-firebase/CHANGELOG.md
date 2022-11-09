@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [9.14.0](https://github.com/dereekb/dbx-components/compare/v9.13.0-dev...v9.14.0) (2022-11-09)
+
+
+### Features
+
+* added firebaseDocumentStoreReadFunction() ([f2fd7ee](https://github.com/dereekb/dbx-components/commit/f2fd7eef3b088a615b9226231fde3342676f4f64))
+
+
+
 # [9.13.0](https://github.com/dereekb/dbx-components/compare/v9.12.4-dev...v9.13.0) (2022-11-08)
 
 
