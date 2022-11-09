@@ -10,9 +10,9 @@ export interface LoadingStateContextEvent<T = unknown> extends LoadingContextEve
 
 export type LoadingEventForLoadingPairConfig<S extends LoadingState = LoadingState> = AbstractLoadingEventForLoadingPairConfig<S>;
 
-export interface LoadingStateContext<L = unknown, S extends LoadingState<L> = LoadingState<L>> extends AbstractLoadingStateContext<L, S, LoadingStateContextEvent<L>> {
-  readonly list$: Observable<L[]>;
-  readonly values$: Observable<L[]>;
+export interface LoadingStateContext<T = unknown, S extends LoadingState<T> = LoadingState<T>> extends AbstractLoadingStateContext<T, S, LoadingStateContextEvent<T>> {
+  readonly list$: Observable<T[]>;
+  readonly values$: Observable<T[]>;
   readonly isEmpty$: Observable<boolean>;
 }
 

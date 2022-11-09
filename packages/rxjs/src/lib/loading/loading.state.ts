@@ -24,6 +24,11 @@ export interface LoadingState<T = unknown> extends LoadingErrorPair {
 }
 
 /**
+ * Returns the value type inferred from the LoadingState type.
+ */
+export type LoadingStateValue<L extends LoadingState> = L extends LoadingState<infer T> ? T : never;
+
+/**
  * Loading state with a value key.
  */
 export type LoadingStateWithValue<T = unknown> = LoadingState<T> & {
@@ -40,12 +45,12 @@ export type LoadingStateWithMaybeSoValue<T = unknown> = LoadingState<T> & {
 /**
  * Convenience identifier for a LoadingState that returns a list.
  */
-export type ListLoadingState<T> = LoadingState<T[]>;
+export type ListLoadingState<T = unknown> = LoadingState<T[]>;
 
 /**
  * LoadingState with a Page.
  */
-export interface PageLoadingState<T> extends LoadingState<T>, Page {}
+export interface PageLoadingState<T = unknown> extends LoadingState<T>, Page {}
 
 /**
  * PageLoadingState with a filter.
@@ -140,7 +145,7 @@ export function allLoadingStatesHaveFinishedLoading(states: LoadingState[]): boo
   return reduceBooleansWithAnd(states.map(loadingStateHasFinishedLoading), true);
 }
 
-export function loadingStateIsIdle(state: Maybe<LoadingState>): boolean {
+export function loadingStateIsIdle<L extends LoadingState>(state: Maybe<L>): boolean {
   if (state) {
     return loadingStateType(state) === LoadingStateType.IDLE;
   } else {
@@ -148,7 +153,7 @@ export function loadingStateIsIdle(state: Maybe<LoadingState>): boolean {
   }
 }
 
-export function loadingStateIsLoading(state: Maybe<LoadingState>): boolean {
+export function loadingStateIsLoading<L extends LoadingState>(state: Maybe<L>): boolean {
   if (state) {
     const loading = state.loading;
 
@@ -162,7 +167,7 @@ export function loadingStateIsLoading(state: Maybe<LoadingState>): boolean {
   }
 }
 
-export function isSuccessLoadingState(state: Maybe<LoadingState>): boolean {
+export function isSuccessLoadingState<L extends LoadingState>(state: Maybe<L>): boolean {
   if (state) {
     return loadingStateType(state) === LoadingStateType.SUCCESS;
   } else {
@@ -170,7 +175,7 @@ export function isSuccessLoadingState(state: Maybe<LoadingState>): boolean {
   }
 }
 
-export function isErrorLoadingState(state: Maybe<LoadingState>): boolean {
+export function isErrorLoadingState<L extends LoadingState>(state: Maybe<L>): boolean {
   if (state) {
     return loadingStateType(state) === LoadingStateType.ERROR;
   } else {
@@ -178,7 +183,7 @@ export function isErrorLoadingState(state: Maybe<LoadingState>): boolean {
   }
 }
 
-export function loadingStateHasFinishedLoading(state: Maybe<LoadingState>): boolean {
+export function loadingStateHasFinishedLoading<L extends LoadingState>(state: Maybe<L>): boolean {
   if (state) {
     const loading = state.loading;
 
@@ -198,7 +203,7 @@ export function loadingStateHasFinishedLoading(state: Maybe<LoadingState>): bool
  * @param state
  * @returns
  */
-export function loadingStateHasValue(state: Maybe<LoadingState>): boolean {
+export function loadingStateHasValue<L extends LoadingState>(state: Maybe<L>): boolean {
   if (state) {
     return loadingStateHasFinishedLoading(state) && state.value != null;
   } else {
@@ -212,7 +217,7 @@ export function loadingStateHasValue(state: Maybe<LoadingState>): boolean {
  * @param state
  * @returns
  */
-export function loadingStateHasError(state: Maybe<LoadingState>): boolean {
+export function loadingStateHasError<L extends LoadingState>(state: Maybe<L>): boolean {
   if (state) {
     return loadingStateHasFinishedLoading(state) && state.error != null;
   } else {
@@ -260,7 +265,7 @@ export function mergeLoadingStates<A extends object, B extends object, C>(a: Loa
 /**
  * Updates the input state to start loading.
  */
-export function updatedStateForSetLoading<T, S extends LoadingState<T> = LoadingState<T>>(state: S, loading = true): S {
+export function updatedStateForSetLoading<S extends LoadingState>(state: S, loading = true): S {
   return {
     ...state,
     value: undefined,
@@ -272,7 +277,7 @@ export function updatedStateForSetLoading<T, S extends LoadingState<T> = Loading
 /**
  * Updates the input state with the input error.
  */
-export function updatedStateForSetValue<T, S extends LoadingState<T> = LoadingState<T>>(state: S, value: T | undefined): S {
+export function updatedStateForSetValue<S extends LoadingState>(state: S, value: LoadingStateValue<S> | undefined): S {
   return {
     ...state,
     value: value ?? undefined,
@@ -284,7 +289,7 @@ export function updatedStateForSetValue<T, S extends LoadingState<T> = LoadingSt
 /**
  * Updates the input state with the input error.
  */
-export function updatedStateForSetError<T, S extends LoadingState<T> = LoadingState<T>>(state: S, error?: ReadableDataError): S {
+export function updatedStateForSetError<S extends LoadingState = LoadingState>(state: S, error?: ReadableDataError): S {
   return {
     ...state,
     loading: false,

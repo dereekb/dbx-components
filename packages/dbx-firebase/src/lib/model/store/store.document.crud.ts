@@ -1,4 +1,4 @@
-import { ModelFirebaseCreateFunction, ModelFirebaseDeleteFunction, ModelFirebaseUpdateFunction, OnCallCreateModelResult, TargetModelParams, InferredTargetModelParams, ModelFirebaseCrudFunction } from '@dereekb/firebase';
+import { ModelFirebaseCreateFunction, ModelFirebaseDeleteFunction, ModelFirebaseUpdateFunction, OnCallCreateModelResult, TargetModelParams, InferredTargetModelParams, ModelFirebaseCrudFunction, ModelFirebaseReadFunction } from '@dereekb/firebase';
 import { lazyFrom, LoadingState, loadingStateFromObs } from '@dereekb/rxjs';
 import { firstValue, PartialOnKeys } from '@dereekb/util';
 import { shareReplay, exhaustMap, first, from, Observable } from 'rxjs';
@@ -32,7 +32,7 @@ export function firebaseDocumentStoreCreateFunction<I, O extends OnCallCreateMod
     );
 }
 
-export type DbxfirebaseDocumentStoreCrudFunction<I, O = void> = (input: I) => Observable<LoadingState<O>>;
+export type DbxFirebaseDocumentStoreCrudFunction<I, O = void> = (input: I) => Observable<LoadingState<O>>;
 
 /**
  * Creates a DbxfirebaseDocumentStoreCrudFunction from the input ModelFirebaseCrudFunction.
@@ -40,7 +40,7 @@ export type DbxfirebaseDocumentStoreCrudFunction<I, O = void> = (input: I) => Ob
  * @param fn
  * @returns
  */
-export function firebaseDocumentStoreCrudFunction<I, O = void>(fn: ModelFirebaseCrudFunction<I, O>): DbxfirebaseDocumentStoreCrudFunction<I, O> {
+export function firebaseDocumentStoreCrudFunction<I, O = void>(fn: ModelFirebaseCrudFunction<I, O>): DbxFirebaseDocumentStoreCrudFunction<I, O> {
   return (params: I) => loadingStateFromObs(from(fn(params)).pipe(shareReplay(1)));
 }
 
@@ -54,7 +54,23 @@ export type DbxFirebaseDocumentStoreFunctionParams = TargetModelParams | Inferre
  * Used for the input to related functions
  */
 export type DbxFirebaseDocumentStoreFunctionParamsInput<I extends DbxFirebaseDocumentStoreFunctionParams> = PartialOnKeys<I, 'key'>;
-export type DbxFirebaseDocumentStoreFunction<I extends DbxFirebaseDocumentStoreFunctionParams, O = void> = DbxfirebaseDocumentStoreCrudFunction<DbxFirebaseDocumentStoreFunctionParamsInput<I>, O>;
+export type DbxFirebaseDocumentStoreFunction<I extends DbxFirebaseDocumentStoreFunctionParams, O = void> = DbxFirebaseDocumentStoreCrudFunction<DbxFirebaseDocumentStoreFunctionParamsInput<I>, O>;
+
+// MARK: Read
+/**
+ * Creates a DbxfirebaseDocumentStoreCrudFunction for read.
+ *
+ * The store's current key is always injected into the params of the request.
+ *
+ * For functions that do not require the store's current key, use firebaseDocumentStoreCrudFunction() instead.
+ *
+ * @param store
+ * @param fn
+ * @returns
+ */
+export function firebaseDocumentStoreReadFunction<I extends DbxFirebaseDocumentStoreFunctionParams, O>(store: DbxFirebaseDocumentStore<any, any>, fn: ModelFirebaseReadFunction<I, O>): DbxFirebaseDocumentStoreFunction<I, O> {
+  return firebaseDocumentStoreUpdateFunction(store, fn);
+}
 
 // MARK: Update
 /**
@@ -110,3 +126,9 @@ export function firebaseDocumentStoreDeleteFunction<I extends DbxFirebaseDocumen
       )
     );
 }
+
+// MARK: Compat
+/**
+ * @deprecated DbxfirebaseDocumentStoreCrudFunction is undefined.
+ */
+export type DbxfirebaseDocumentStoreCrudFunction<I, O = void> = DbxFirebaseDocumentStoreCrudFunction<I, O>;

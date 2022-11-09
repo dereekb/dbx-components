@@ -1,7 +1,7 @@
 import { Maybe } from '@dereekb/util';
 import { MonoTypeOperatorFunction, OperatorFunction, startWith, Observable, filter, map, tap, catchError, combineLatest, distinctUntilChanged, first, of, shareReplay } from 'rxjs';
 import { timeoutStartWith } from '../rxjs';
-import { LoadingState, PageLoadingState, beginLoading, loadingStateHasFinishedLoading, isSuccessLoadingState, mergeLoadingStates, mapLoadingStateResults, MapLoadingStateResultsConfiguration } from './loading.state';
+import { LoadingState, PageLoadingState, beginLoading, loadingStateHasFinishedLoading, isSuccessLoadingState, mergeLoadingStates, mapLoadingStateResults, MapLoadingStateResultsConfiguration, LoadingStateValue } from './loading.state';
 
 /**
  * Wraps an observable output and maps the value to a LoadingState.
@@ -41,21 +41,21 @@ export function combineLoadingStates<A extends object, B extends object, C>(obsA
  *
  * @returns
  */
-export function startWithBeginLoading<L extends LoadingState<T>, T = unknown>(): MonoTypeOperatorFunction<L>;
-export function startWithBeginLoading<L extends LoadingState<T>, T = unknown>(state?: Partial<LoadingState<T>>): MonoTypeOperatorFunction<L>;
-export function startWithBeginLoading<L extends PageLoadingState<T>, T = unknown>(state?: Partial<PageLoadingState<T>>): MonoTypeOperatorFunction<L>;
-export function startWithBeginLoading<L extends LoadingState<T>, T = unknown>(state?: Partial<L>): MonoTypeOperatorFunction<L> {
+export function startWithBeginLoading<L extends LoadingState>(): MonoTypeOperatorFunction<L>;
+export function startWithBeginLoading<L extends LoadingState>(state?: Partial<LoadingState>): MonoTypeOperatorFunction<L>;
+export function startWithBeginLoading<L extends PageLoadingState>(state?: Partial<PageLoadingState>): MonoTypeOperatorFunction<L>;
+export function startWithBeginLoading<L extends LoadingState>(state?: Partial<L>): MonoTypeOperatorFunction<L> {
   return startWith<L>(beginLoading(state) as unknown as L);
 }
 
 /**
  * Returns the value once the LoadingState has finished loading.
  */
-export function valueFromLoadingState<L extends LoadingState<T>, T = unknown>(): OperatorFunction<L, Maybe<T>> {
+export function valueFromLoadingState<L extends LoadingState>(): OperatorFunction<L, Maybe<LoadingStateValue<L>>> {
   return (obs: Observable<L>) => {
     return obs.pipe(
-      filter((x) => loadingStateHasFinishedLoading(x)),
-      map((x) => x.value)
+      filter(loadingStateHasFinishedLoading),
+      map((x) => x.value as Maybe<LoadingStateValue<L>>)
     );
   };
 }
@@ -65,10 +65,10 @@ export function valueFromLoadingState<L extends LoadingState<T>, T = unknown>():
  *
  * @param fn
  */
-export function tapOnLoadingStateSuccess<L extends LoadingState<T>, T = unknown>(fn: (state: L) => void): MonoTypeOperatorFunction<L>;
-export function tapOnLoadingStateSuccess<L extends LoadingState<T>, T = unknown>(fn: (state: L) => void): MonoTypeOperatorFunction<L>;
-export function tapOnLoadingStateSuccess<L extends PageLoadingState<T>, T = unknown>(fn: (state: L) => void): MonoTypeOperatorFunction<L>;
-export function tapOnLoadingStateSuccess<L extends LoadingState<T>, T = unknown>(fn: (state: L) => void): MonoTypeOperatorFunction<L> {
+export function tapOnLoadingStateSuccess<L extends LoadingState>(fn: (state: L) => void): MonoTypeOperatorFunction<L>;
+export function tapOnLoadingStateSuccess<L extends LoadingState>(fn: (state: L) => void): MonoTypeOperatorFunction<L>;
+export function tapOnLoadingStateSuccess<L extends PageLoadingState>(fn: (state: L) => void): MonoTypeOperatorFunction<L>;
+export function tapOnLoadingStateSuccess<L extends LoadingState>(fn: (state: L) => void): MonoTypeOperatorFunction<L> {
   return tap((state: L) => {
     if (isSuccessLoadingState(state)) {
       fn(state);
