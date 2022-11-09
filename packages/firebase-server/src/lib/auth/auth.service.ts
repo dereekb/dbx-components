@@ -246,7 +246,7 @@ export const FIREBASE_SERVER_AUTH_CLAIMS_SETUP_LAST_COM_DATE_KEY = 'setupCommuni
  */
 export type FirebaseServerAuthSetupPassword = PasswordString;
 
-export interface FirebaseServerAuthNewUserClaims extends AuthClaimsObject {
+export interface FirebaseServerAuthNewUserClaimsData {
   /**
    * Setup password time
    */
@@ -256,6 +256,8 @@ export interface FirebaseServerAuthNewUserClaims extends AuthClaimsObject {
    */
   readonly setupCommunicationAt: ISO8601DateString;
 }
+
+export interface FirebaseServerAuthNewUserClaims extends FirebaseServerAuthNewUserClaimsData, AuthClaimsObject {}
 
 export interface FirebaseServerAuthInitializeNewUser<D = unknown> {
   /**
@@ -312,12 +314,19 @@ export interface FirebaseServerAuthNewUserSendSetupDetailsConfig<D = unknown> {
 
 export interface FirebaseServerAuthNewUserSetupDetails<U extends FirebaseServerAuthUserContext = FirebaseServerAuthUserContext, D = unknown> extends FirebaseServerAuthNewUserSendSetupDetailsConfig<D> {
   readonly userContext: U;
-  readonly claims: FirebaseServerAuthNewUserClaims;
+  readonly claims: FirebaseServerAuthNewUserClaimsData;
 }
 
-export interface FirebaseServerNewUserService<D = unknown> {
+export interface FirebaseServerNewUserService<D = unknown, U extends FirebaseServerAuthUserContext = FirebaseServerAuthUserContext> {
   initializeNewUser(input: FirebaseServerAuthInitializeNewUser<D>): Promise<admin.auth.UserRecord>;
-  sendSetupContent(uid: FirebaseAuthUserId, data?: D): Promise<boolean>;
+  sendSetupContent(uid: FirebaseAuthUserId, data?: FirebaseServerAuthNewUserSendSetupDetailsConfig<D>): Promise<boolean>;
+  /**
+   * Loads the setup details for the user. If the user does not exist or does not need to be setup then undefined is returned.
+   *
+   * @param uid
+   * @param config
+   */
+  loadSetupDetails(uid: FirebaseAuthUserId, config?: FirebaseServerAuthNewUserSendSetupDetailsConfig<D>): Promise<Maybe<FirebaseServerAuthNewUserSetupDetails<U, D>>>;
   markUserSetupAsComplete(uid: FirebaseAuthUserId): Promise<boolean>;
 }
 
@@ -328,7 +337,7 @@ export const DEFAULT_FIREBASE_PASSWORD_NUMBER_GENERATOR = randomNumberFactory({ 
  */
 export const DEFAULT_SETUP_COM_THROTTLE_TIME = hoursToMs(1);
 
-export abstract class AbstractFirebaseServerNewUserService<U extends FirebaseServerAuthUserContext = FirebaseServerAuthUserContext, C extends FirebaseServerAuthContext = FirebaseServerAuthContext, D = unknown> implements FirebaseServerNewUserService<D> {
+export abstract class AbstractFirebaseServerNewUserService<U extends FirebaseServerAuthUserContext = FirebaseServerAuthUserContext, C extends FirebaseServerAuthContext = FirebaseServerAuthContext, D = unknown> implements FirebaseServerNewUserService<D, U> {
   protected setupThrottleTime: Milliseconds = DEFAULT_SETUP_COM_THROTTLE_TIME;
 
   constructor(readonly authService: FirebaseServerAuthService<U, C>) {}
