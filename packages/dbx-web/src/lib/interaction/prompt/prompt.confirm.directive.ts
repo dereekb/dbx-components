@@ -12,7 +12,7 @@ import { DbxPromptConfirmDialogComponent } from './prompt.confirm.dialog.compone
  */
 @Directive()
 export abstract class AbstractPromptConfirmDirective implements DbxPromptConfirm {
-  config?: DbxPromptConfirmConfig;
+  config?: Maybe<DbxPromptConfirmConfig>;
 
   private _dialogRef?: MatDialogRef<DbxPromptConfirmDialogComponent, boolean>;
   private _dialogPromise?: Promise<boolean>;
@@ -22,7 +22,7 @@ export abstract class AbstractPromptConfirmDirective implements DbxPromptConfirm
   showDialog(): Observable<boolean> {
     if (!this._dialogPromise) {
       this._dialogPromise = new Promise<boolean>((resolve) => {
-        this._dialogRef = DbxPromptConfirmDialogComponent.openDialog(this.matDialog);
+        this._dialogRef = DbxPromptConfirmDialogComponent.openDialog(this.matDialog, this.config);
         this._dialogRef.afterClosed().subscribe((result: Maybe<boolean>) => {
           this._dialogRef = undefined;
           this._dialogPromise = undefined;
@@ -49,7 +49,7 @@ export abstract class AbstractPromptConfirmDirective implements DbxPromptConfirm
 })
 export class DbxPromptConfirmDirective extends AbstractPromptConfirmDirective {
   @Input('dbxPromptConfirm')
-  override config?: DbxPromptConfirmConfig;
+  override config?: Maybe<DbxPromptConfirmConfig>;
 
   constructor(dialog: MatDialog) {
     super(dialog);

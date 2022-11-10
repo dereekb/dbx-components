@@ -1,5 +1,5 @@
 import { MatDialog } from '@angular/material/dialog';
-import { DbxActionDialogFunction, DbxPopoverService, DbxActionPopoverFunction } from '@dereekb/dbx-web';
+import { DbxActionDialogFunction, DbxPopoverService, DbxActionPopoverFunction, DbxActionConfirmConfig, DbxPromptConfirmTypes } from '@dereekb/dbx-web';
 import { ChangeDetectorRef, Component, OnDestroy } from '@angular/core';
 import { DbxActionContextMachine, HandleActionFunction, safeDetectChanges } from '@dereekb/dbx-core';
 import { of, delay, BehaviorSubject, tap } from 'rxjs';
@@ -12,6 +12,13 @@ import { DocActionExampleDialogComponent } from '../component/action.example.dia
 export class DocActionInteractionComponent implements OnDestroy {
   successValue: any;
   undoValue: any;
+
+  readonly confirmConfig: DbxActionConfirmConfig<unknown> = {
+    title: 'Confirm Example',
+    prompt: 'Example Prompt here.',
+    confirmText: 'Customized Confirm',
+    cancelText: 'Cancel Customized'
+  };
 
   private _value = new BehaviorSubject<{ test: number }>({ test: 0 });
   readonly value$ = this._value.asObservable();

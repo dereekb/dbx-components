@@ -32,9 +32,9 @@ export class DbxPromptConfirmDialogComponent extends AbstractDialogDirective<boo
     return this.data.component;
   }
 
-  static openDialog(matDialog: MatDialog, config: DbxPromptConfirmDialogConfig = DEFAULT_DBX_PROMPT_CONFIRM_DIALOG_CONFIG): MatDialogRef<DbxPromptConfirmDialogComponent, boolean> {
+  static openDialog(matDialog: MatDialog, config?: Maybe<DbxPromptConfirmDialogConfig>): MatDialogRef<DbxPromptConfirmDialogComponent, boolean> {
     const dialogRef = matDialog.open(DbxPromptConfirmDialogComponent, {
-      data: config
+      data: config || DEFAULT_DBX_PROMPT_CONFIRM_DIALOG_CONFIG
     });
     return dialogRef;
   }
