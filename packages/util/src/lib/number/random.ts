@@ -11,7 +11,9 @@ export type RandomNumberFactory = NumberFactory;
  */
 export interface RandomNumberFactoryConfig {
   /**
-   * Rounding type. By default will round to
+   * Rounding configuration.
+   *
+   * No rounding by default.
    */
   round?: RoundingInput;
   min?: number;
