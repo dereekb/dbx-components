@@ -39,12 +39,15 @@
       <dbx-content-elevate>
         <p>This content is elevated.</p>
       </dbx-content-elevate>
+      <dbx-content-elevate [elevate]="false">
+        <p>This content is not elevated.</p>
+      </dbx-content-elevate>
     </doc-feature-example>
     <doc-feature-example header=".dbx-content-box" hint="Wraps the content in a box with box-sizing.">
       <dbx-content-box>
         <p>This content is in a box that is elevated.</p>
       </dbx-content-box>
-      <dbx-content-box [elevated]="false">
+      <dbx-content-box [elevate]="false">
         <p>This content is in a box that is not elevated.</p>
       </dbx-content-box>
     </doc-feature-example>
