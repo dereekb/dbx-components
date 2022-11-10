@@ -330,7 +330,7 @@ export interface FirebaseServerNewUserService<D = unknown, U extends FirebaseSer
   markUserSetupAsComplete(uid: FirebaseAuthUserId): Promise<boolean>;
 }
 
-export const DEFAULT_FIREBASE_PASSWORD_NUMBER_GENERATOR = randomNumberFactory({ min: 100000, max: 1000000 - 1 });
+export const DEFAULT_FIREBASE_PASSWORD_NUMBER_GENERATOR = randomNumberFactory({ min: 100000, max: 1000000 - 1, round: 'floor' }); // 6 digits
 
 /**
  * 1 hour
@@ -473,8 +473,7 @@ export abstract class AbstractFirebaseServerNewUserService<U extends FirebaseSer
   }
 
   protected generateRandomSetupPassword(): FirebaseAuthSetupPassword {
-    const x = DEFAULT_FIREBASE_PASSWORD_NUMBER_GENERATOR();
-    return `${x}`;
+    return `${DEFAULT_FIREBASE_PASSWORD_NUMBER_GENERATOR()}`;
   }
 
   protected abstract sendSetupContentToUser(user: FirebaseServerAuthNewUserSetupDetails<U, D>): Promise<void>;

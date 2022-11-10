@@ -1,4 +1,4 @@
-import { Directive } from '@angular/core';
+import { Directive, Input } from '@angular/core';
 
 /**
  * Section used to elevate content in a pre-configured manner.
@@ -6,7 +6,11 @@ import { Directive } from '@angular/core';
 @Directive({
   selector: 'dbx-content-elevate,[dbxContentElevate]',
   host: {
-    class: 'd-block dbx-content-elevate'
+    class: 'd-block',
+    '[class.dbx-content-elevate]': 'elevate'
   }
 })
-export class DbxContentElevateDirective {}
+export class DbxContentElevateDirective {
+  @Input()
+  elevate = true;
+}

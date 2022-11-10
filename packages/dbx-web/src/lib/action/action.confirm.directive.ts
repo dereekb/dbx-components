@@ -4,6 +4,7 @@ import { AbstractPromptConfirmDirective } from '../interaction/prompt/prompt.con
 import { DbxPromptConfirmConfig } from '../interaction/prompt/prompt.confirm.component';
 import { SubscriptionObject } from '@dereekb/rxjs';
 import { DbxActionContextStoreSourceInstance } from '@dereekb/dbx-core';
+import { Maybe } from '@dereekb/util';
 
 /**
  * DbxActionConfirmDirective configuration.
@@ -26,7 +27,7 @@ export interface DbxActionConfirmConfig<T> extends DbxPromptConfirmConfig {
 })
 export class DbxActionConfirmDirective<T, O> extends AbstractPromptConfirmDirective implements OnInit, OnDestroy {
   @Input('dbxActionConfirm')
-  override config?: DbxActionConfirmConfig<T>;
+  override config?: Maybe<DbxActionConfirmConfig<T>>;
 
   private _sourceSubscription = new SubscriptionObject();
 

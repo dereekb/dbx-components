@@ -13,9 +13,15 @@
       </dbx-action-example-tools>
     </doc-feature-example>
 
-    <doc-feature-example header="dbxActionButtonTrigger" hint="Used to link a dbx-button to an action and pass through click events..">
+    <doc-feature-example header="dbxActionButtonTrigger" hint="Used to link a dbx-button to an action and only responds to click events, ignoring the working state, unlike .">
       <dbx-action-example-tools dbxAction [dbxActionHandler]="handleAction" [dbxActionValueStream]="value$">
         <dbx-button dbxActionButtonTrigger text="Action Button Trigger"></dbx-button>
+      </dbx-action-example-tools>
+    </doc-feature-example>
+
+    <doc-feature-example header="dbxActionConfirm" hint="Used to add a confirmation dialog to an action.">
+      <dbx-action-example-tools dbxAction [dbxActionConfirm]="confirmConfig" [dbxActionHandler]="handleAction">
+        <dbx-button dbxActionButton text="Action Button Trigger"></dbx-button>
       </dbx-action-example-tools>
     </doc-feature-example>
 
