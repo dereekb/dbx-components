@@ -2,6 +2,16 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [9.15.0](https://github.com/dereekb/dbx-components/compare/v9.14.2-dev...v9.15.0) (2022-11-10)
+
+
+### Bug Fixes
+
+* fixed dbxActionConfirm input ([b31a350](https://github.com/dereekb/dbx-components/commit/b31a350ef62798dc4dc0e38e431c6f113d502376))
+* fixed styling with elevation in dbx-section ([c203ac8](https://github.com/dereekb/dbx-components/commit/c203ac8bb58a1653a26507c1e82d94a924677073))
+
+
+
 ## [9.14.2](https://github.com/dereekb/dbx-components/compare/v9.14.1-dev...v9.14.2) (2022-11-09)
 
 

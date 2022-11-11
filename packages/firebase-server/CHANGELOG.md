@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [9.15.0](https://github.com/dereekb/dbx-components/compare/v9.14.2-dev...v9.15.0) (2022-11-10)
+
+
+### Bug Fixes
+
+* fixed generateRandomSetupPassword() generating decimals ([a2d67a8](https://github.com/dereekb/dbx-components/commit/a2d67a878ad7df80cf68a407de0c9ce6abdf8312))
+
+
+
 ## [9.14.2](https://github.com/dereekb/dbx-components/compare/v9.14.1-dev...v9.14.2) (2022-11-09)
 
 
