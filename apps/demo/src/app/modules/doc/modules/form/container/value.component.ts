@@ -26,7 +26,12 @@ export class DocFormValueComponent {
     dateTimeField({ key: 'timeOnly', timeOnly: true, description: 'This date field is for picking a time only.' })
   ];
 
-  readonly addressFields: FormlyFieldConfig[] = [addressField(), addressListField()];
+  readonly addressFields: FormlyFieldConfig[] = [
+    //
+    addressField(),
+    addressField({ key: 'slim', hint: 'Line 1 and country are omitted.', stateField: { asCode: true }, includeLine2: false, includeCountry: false }),
+    addressListField()
+  ];
 
   readonly toggleField: FormlyFieldConfig[] = [
     toggleField({

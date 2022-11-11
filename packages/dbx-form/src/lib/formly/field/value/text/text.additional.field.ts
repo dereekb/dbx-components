@@ -2,14 +2,15 @@ import { FormlyFieldConfig } from '@ngx-formly/core';
 import { Validators, AbstractControl } from '@angular/forms';
 import { TextFieldConfig, textField } from './text.field';
 import { LabeledFieldConfig, DescriptionFieldConfig, validatorsForFieldConfig } from '../../field';
-import { LAT_LNG_PATTERN } from '@dereekb/util';
+import { LAT_LNG_PATTERN, US_STATE_CODE_STRING_REGEX as US_STATE_CODE_REGEX } from '@dereekb/util';
 
 export const PHONE_LABEL_MAX_LENGTH = 100;
 
 export const ADDRESS_COUNTRY_MAX_LENGTH = 80;
 export const ADDRESS_CITY_MAX_LENGTH = 80;
-export const ADDRESS_STATE_MAX_LENGTH = 80;
-export const ADDRESS_ZIP_MAX_LENGTH = 20;
+export const ADDRESS_STATE_MAX_LENGTH = 30;
+export const ADDRESS_STATE_CODE_MAX_LENGTH = 2;
+export const ADDRESS_ZIP_MAX_LENGTH = 11;
 
 export const LABEL_STRING_MAX_LENGTH = 100;
 export const SEARCH_STRING_MAX_LENGTH = 100;
@@ -50,47 +51,66 @@ export function emailField(config: EmailFieldConfig = {}): FormlyFieldConfig {
   return emailFieldConfig;
 }
 
-export function cityField({ key = 'city', required = false }: Partial<TextFieldConfig> = {}): FormlyFieldConfig {
+export interface CityFieldConfig extends Partial<TextFieldConfig> {}
+
+export function cityField(config: CityFieldConfig = {}): FormlyFieldConfig {
+  const { key = 'city', placeholder = '', label = 'City', autocomplete = 'city', maxLength = ADDRESS_CITY_MAX_LENGTH, required = false } = config;
   return textField({
+    ...config,
     key,
-    label: 'City',
-    placeholder: '',
+    placeholder,
+    label,
+    autocomplete,
     required,
-    autocomplete: 'city',
-    maxLength: ADDRESS_CITY_MAX_LENGTH
+    maxLength
   });
 }
 
-export function stateField({ key = 'state', required = false }: Partial<TextFieldConfig> = {}): FormlyFieldConfig {
+export interface StateFieldConfig extends Partial<TextFieldConfig> {
+  asCode?: boolean;
+}
+
+export function stateField(config: StateFieldConfig = {}): FormlyFieldConfig {
+  const { asCode = false, pattern = asCode ? US_STATE_CODE_REGEX : undefined, key = 'state', placeholder = '', label = 'State', autocomplete = 'state', maxLength = asCode ? ADDRESS_STATE_CODE_MAX_LENGTH : ADDRESS_STATE_MAX_LENGTH, required = false } = config;
   return textField({
+    ...config,
     key,
-    label: 'State',
-    placeholder: '',
+    placeholder,
+    label,
+    pattern,
+    autocomplete,
     required,
-    autocomplete: 'state',
-    maxLength: ADDRESS_STATE_MAX_LENGTH
+    maxLength
   });
 }
 
-export function countryField({ key = 'country', required = false }: Partial<TextFieldConfig> = {}): FormlyFieldConfig {
+export interface CountryFieldConfig extends Partial<TextFieldConfig> {}
+
+export function countryField(config: CountryFieldConfig = {}): FormlyFieldConfig {
+  const { key = 'country', placeholder = '', label = 'Country', autocomplete = 'country', maxLength = ADDRESS_COUNTRY_MAX_LENGTH, required = false } = config;
   return textField({
+    ...config,
     key,
-    label: 'Country',
-    placeholder: '',
+    placeholder,
+    label,
+    autocomplete,
     required,
-    autocomplete: 'country',
-    maxLength: ADDRESS_COUNTRY_MAX_LENGTH
+    maxLength
   });
 }
 
-export function zipCodeField({ key = 'zip', required = false }: Partial<TextFieldConfig> = {}): FormlyFieldConfig {
+export interface ZipCodeFieldConfig extends Partial<TextFieldConfig> {}
+
+export function zipCodeField(config: ZipCodeFieldConfig = {}): FormlyFieldConfig {
+  const { key = 'zip', placeholder = '', label = 'Zip Code', autocomplete = 'postal-code', maxLength = ADDRESS_ZIP_MAX_LENGTH, required = false } = config;
   return textField({
+    ...config,
     key,
-    label: 'Zip Code',
-    placeholder: '',
+    placeholder,
+    label,
+    autocomplete,
     required,
-    autocomplete: 'postal-code',
-    maxLength: ADDRESS_ZIP_MAX_LENGTH
+    maxLength
   });
 }
 
