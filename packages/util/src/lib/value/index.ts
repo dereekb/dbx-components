@@ -1,3 +1,4 @@
+export * from './address';
 export * from './bound';
 export * from './build';
 export * from './cron';

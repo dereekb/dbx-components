@@ -46,7 +46,8 @@ import {
   TransformNumberFunctionConfig,
   PrimativeKeyStringDencoderFunction,
   PrimativeKeyDencoderFunction,
-  mapObjectMap
+  mapObjectMap,
+  UnitedStatesAddress
 } from '@dereekb/util';
 import { FirestoreModelData, FIRESTORE_EMPTY_VALUE } from './snapshot.type';
 import { FirebaseAuthUserId } from '../../auth/auth';
@@ -778,5 +779,24 @@ export function firestoreDateBlockRange() {
 export function firestoreDateBlockRangeArray() {
   return firestoreObjectArray({
     firestoreField: firestoreDateBlockRange()
+  });
+}
+
+// MARK: Address
+export const DEFAULT_UNITED_STATES_ADDRESS: UnitedStatesAddress = {
+  line1: '',
+  city: '',
+  state: '',
+  zip: ''
+};
+
+export const assignUnitedStatesAddressFunction = assignValuesToPOJOFunction<UnitedStatesAddress>({ keysFilter: ['line1', 'line2', 'city', 'state', 'zip'], valueFilter: KeyValueTypleValueFilter.EMPTY });
+export const firestoreUnitedStatesAddressAssignFn: MapFunction<UnitedStatesAddress, UnitedStatesAddress> = (input) => assignUnitedStatesAddressFunction(DEFAULT_UNITED_STATES_ADDRESS, input);
+
+export function firestoreUnitedStatesAddress() {
+  return firestoreField<UnitedStatesAddress, UnitedStatesAddress>({
+    default: DEFAULT_UNITED_STATES_ADDRESS,
+    fromData: firestoreUnitedStatesAddressAssignFn,
+    toData: firestoreUnitedStatesAddressAssignFn
   });
 }
