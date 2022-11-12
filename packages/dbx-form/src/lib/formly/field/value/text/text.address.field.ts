@@ -5,8 +5,7 @@ import { flexLayoutWrapper, sectionWrapper } from '../../wrapper/wrapper';
 import { FieldConfig } from '../../field';
 import { repeatArrayField } from '../array/array.field';
 import { DbxFormSectionConfig } from '../../wrapper/section.wrapper.component';
-
-export const ADDRESS_LINE_MAX_LENGTH = 100;
+import { ADDRESS_LINE_MAX_LENGTH } from '@dereekb/model';
 
 export interface AddressFormlyFieldsConfig {
   line1Field?: CityFieldConfig;
@@ -15,6 +14,12 @@ export interface AddressFormlyFieldsConfig {
   stateField?: StateFieldConfig;
   zipCodeField?: ZipCodeFieldConfig;
   countryField?: CountryFieldConfig;
+  /**
+   * Whether or not to make required fields required.
+   *
+   * True by default.
+   */
+  requiredFields?: boolean;
   /**
    * Whether or not to include the second address line.
    *
@@ -35,7 +40,8 @@ export interface AddressLineFieldConfig extends Partial<TextFieldConfig> {
 
 export function addressLineField(config: AddressLineFieldConfig = {}): FormlyFieldConfig {
   const { line = 1 } = config;
-  const lineCode = Math.min(1, line);
+  const lineCode = Math.max(1, line); // minimum of line 1
+
   const { key = `line${lineCode}`, placeholder = '', label = line ? `Line ${line}` : 'Street', autocomplete = `address-line${lineCode}`, maxLength = ADDRESS_LINE_MAX_LENGTH, required = false } = config;
   return textField({
     ...config,
@@ -49,32 +55,32 @@ export function addressLineField(config: AddressLineFieldConfig = {}): FormlyFie
 }
 
 export function addressFormlyFields(config: AddressFormlyFieldsConfig = {}): FormlyFieldConfig[] {
-  const { includeLine2 = true, includeCountry = true } = config;
+  const { requiredFields = true, includeLine2 = true, includeCountry = true } = config;
 
   const singleLineFields = [
     {
-      field: cityField(config.cityField)
+      field: cityField({ required: requiredFields, ...config.cityField })
     },
     {
-      field: stateField(config.stateField)
+      field: stateField({ required: requiredFields, ...config.stateField })
     },
     {
-      field: zipCodeField(config.zipCodeField)
+      field: zipCodeField({ required: requiredFields, ...config.zipCodeField })
     }
   ];
 
   if (includeCountry) {
     singleLineFields.push({
-      field: countryField(config.countryField)
+      field: countryField({ required: requiredFields, ...config.countryField })
     });
   }
 
   let lines: FormlyFieldConfig[];
 
   if (includeLine2) {
-    lines = [addressLineField({ ...config.line1Field, line: 1 }), addressLineField({ ...config.line2Field, line: 2 })];
+    lines = [addressLineField({ required: requiredFields, ...config.line1Field, line: 1 }), addressLineField({ ...config.line2Field, line: 2 })];
   } else {
-    lines = [addressLineField({ ...config.line1Field, line: 0 })];
+    lines = [addressLineField({ required: requiredFields, ...config.line1Field, line: 0 })];
   }
 
   return [...lines, flexLayoutWrapper(singleLineFields, { size: 1, relative: true })];

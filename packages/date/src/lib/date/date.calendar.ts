@@ -2,7 +2,7 @@ import { ISO8601DayString } from '@dereekb/util';
 import { Expose } from 'class-transformer';
 import { daysToMinutes } from './date';
 import { DateDurationSpan } from './date.duration';
-import { dateStringToUTCDate } from './date.format';
+import { parseISO8601DayStringToUTCDate } from './date.format';
 import { dateTimezoneUtcNormal } from './date.timezone';
 
 /**
@@ -57,7 +57,7 @@ export function calendarDateFactory(config?: CalendarDateConfig): CalendarDateFa
   const normal = dateTimezoneUtcNormal(normalConfig);
 
   return (day: ISO8601DayString, days?: number) => {
-    const date = dateStringToUTCDate(day);
+    const date = parseISO8601DayStringToUTCDate(day);
     const startsAt = normal.targetDateToBaseDate(date);
 
     return {

@@ -45,15 +45,6 @@ export function latestMinute(time = new Date()): Date {
   return startOfMinute(time);
 }
 
-/**
- * Returns an ISO8601DateString for now.
- *
- * @returns
- */
-export function nowISODateString(): ISO8601DateString {
-  return toISODateString(new Date());
-}
-
 export function toISODateString(input: DateOrDateString): ISO8601DateString {
   const date = toJsDate(input);
 
@@ -203,3 +194,10 @@ export const removeMinutesAndSeconds = roundDownToHour;
  * @deprecated Use roundDownToMinute instead.
  */
 export const removeSeconds = roundDownToMinute;
+
+/**
+ * @deprecated Use formatToISO8601DateString instead.
+ */
+export function nowISODateString(): ISO8601DateString {
+  return toISODateString(new Date());
+}

@@ -9,6 +9,10 @@ export function formatToTimeRangeString(start: Date, end: Date): string {
   return `${formatToTimeString(start)} - ${formatToTimeString(end)}`;
 }
 
+export function formatToISO8601DateString(date: Date = new Date()): ISO8601DayString {
+  return date.toISOString();
+}
+
 export function formatToISO8601DayString(date: Date = new Date()): ISO8601DayString {
   return format(date, 'yyyy-MM-dd');
 }
@@ -59,11 +63,22 @@ export function formatStartedEndedDistanceString({ start, end }: DateRange): str
   return distanceText;
 }
 
-export function dateStringToDate(dateString: ISO8601DayString): Date {
+export function parseISO8601DayStringToDate(dateString: ISO8601DayString): Date {
   return startOfDay(parse(dateString, 'yyyy-MM-dd', new Date()));
 }
 
-export function dateStringToUTCDate(inputDateString: ISO8601DayString): Date {
+export function parseISO8601DayStringToUTCDate(inputDateString: ISO8601DayString): Date {
   const [yearString, monthString, dateString] = inputDateString.split('-');
   return new Date(Date.UTC(Number(yearString), Number(monthString) - 1, Number(dateString)));
 }
+
+// MARK: Compat
+/**
+ * @Deprecated use parseISO8601DayStringToDate instead.
+ */
+export const dateStringToDate = parseISO8601DayStringToDate;
+
+/**
+ * @Deprecated use parseISO8601DayStringToUTCDate instead.
+ */
+export const dateStringToUTCDate = parseISO8601DayStringToUTCDate;
