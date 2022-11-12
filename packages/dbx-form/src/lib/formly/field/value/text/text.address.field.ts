@@ -5,8 +5,7 @@ import { flexLayoutWrapper, sectionWrapper } from '../../wrapper/wrapper';
 import { FieldConfig } from '../../field';
 import { repeatArrayField } from '../array/array.field';
 import { DbxFormSectionConfig } from '../../wrapper/section.wrapper.component';
-
-export const ADDRESS_LINE_MAX_LENGTH = 100;
+import { ADDRESS_LINE_MAX_LENGTH } from '@dereekb/model';
 
 export interface AddressFormlyFieldsConfig {
   line1Field?: CityFieldConfig;

@@ -37,8 +37,20 @@ export interface UnitedStatesAddress {
   zip: ZipCodeString;
 }
 
+/**
+ * Regex expression for all US states and territories.
+ */
 export const US_STATE_CODE_STRING_REGEX = /^((A[LKSZR])|(C[AOT])|(D[EC])|(F[ML])|(G[AU])|(HI)|(I[DLNA])|(K[SY])|(LA)|(M[EHDAINSOT])|(N[EVHJMYCD])|(MP)|(O[HKR])|(P[WAR])|(RI)|(S[CD])|(T[NX])|(UT)|(V[TIA])|(W[AVIY]))$/;
 
 export function isUsStateCodeString(input: string): boolean {
   return US_STATE_CODE_STRING_REGEX.test(input);
 }
+
+/**
+ * Simple regex expression for zip codes.
+ *
+ * Credit to:
+ *
+ * https://stackoverflow.com/a/19844362
+ */
+export const ZIP_CODE_STRING_REGEX = /^[a-z0-9][a-z0-9\- ]{0,10}[a-z0-9]$/;

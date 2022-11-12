@@ -2,15 +2,10 @@ import { FormlyFieldConfig } from '@ngx-formly/core';
 import { Validators, AbstractControl } from '@angular/forms';
 import { TextFieldConfig, textField } from './text.field';
 import { LabeledFieldConfig, DescriptionFieldConfig, validatorsForFieldConfig } from '../../field';
-import { LAT_LNG_PATTERN, US_STATE_CODE_STRING_REGEX as US_STATE_CODE_REGEX } from '@dereekb/util';
+import { LAT_LNG_PATTERN, US_STATE_CODE_STRING_REGEX, ZIP_CODE_STRING_REGEX } from '@dereekb/util';
+import { ADDRESS_CITY_MAX_LENGTH, ADDRESS_STATE_CODE_MAX_LENGTH, ADDRESS_STATE_MAX_LENGTH, ADDRESS_COUNTRY_MAX_LENGTH, ADDRESS_ZIP_MAX_LENGTH } from '@dereekb/model';
 
 export const PHONE_LABEL_MAX_LENGTH = 100;
-
-export const ADDRESS_COUNTRY_MAX_LENGTH = 80;
-export const ADDRESS_CITY_MAX_LENGTH = 80;
-export const ADDRESS_STATE_MAX_LENGTH = 30;
-export const ADDRESS_STATE_CODE_MAX_LENGTH = 2;
-export const ADDRESS_ZIP_MAX_LENGTH = 11;
 
 export const LABEL_STRING_MAX_LENGTH = 100;
 export const SEARCH_STRING_MAX_LENGTH = 100;
@@ -71,7 +66,7 @@ export interface StateFieldConfig extends Partial<TextFieldConfig> {
 }
 
 export function stateField(config: StateFieldConfig = {}): FormlyFieldConfig {
-  const { asCode = false, pattern = asCode ? US_STATE_CODE_REGEX : undefined, key = 'state', placeholder = '', label = 'State', autocomplete = 'state', maxLength = asCode ? ADDRESS_STATE_CODE_MAX_LENGTH : ADDRESS_STATE_MAX_LENGTH, required = false } = config;
+  const { asCode = false, pattern = asCode ? US_STATE_CODE_STRING_REGEX : undefined, key = 'state', placeholder = '', label = 'State', autocomplete = 'state', maxLength = asCode ? ADDRESS_STATE_CODE_MAX_LENGTH : ADDRESS_STATE_MAX_LENGTH, required = false } = config;
   return textField({
     ...config,
     key,
@@ -102,12 +97,13 @@ export function countryField(config: CountryFieldConfig = {}): FormlyFieldConfig
 export interface ZipCodeFieldConfig extends Partial<TextFieldConfig> {}
 
 export function zipCodeField(config: ZipCodeFieldConfig = {}): FormlyFieldConfig {
-  const { key = 'zip', placeholder = '', label = 'Zip Code', autocomplete = 'postal-code', maxLength = ADDRESS_ZIP_MAX_LENGTH, required = false } = config;
+  const { key = 'zip', placeholder = '', label = 'Zip Code', autocomplete = 'postal-code', pattern = ZIP_CODE_STRING_REGEX, maxLength = ADDRESS_ZIP_MAX_LENGTH, required = false } = config;
   return textField({
     ...config,
     key,
     placeholder,
     label,
+    pattern,
     autocomplete,
     required,
     maxLength
