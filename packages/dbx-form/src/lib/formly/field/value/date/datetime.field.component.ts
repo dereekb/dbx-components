@@ -1,5 +1,5 @@
-import { LogicalDateStringCode, dateFromLogicalDate, Maybe, ReadableTimeString } from '@dereekb/util';
-import { DateTimeMinuteConfig, DateTimeMinuteInstance, guessCurrentTimezone, readableTimeStringToDate, toLocalReadableTimeString, toReadableTimeString, utcDayForDate } from '@dereekb/date';
+import { ISO8601DateString, ISO8601DayString, LogicalDateStringCode, dateFromLogicalDate, Maybe, ReadableTimeString } from '@dereekb/util';
+import { DateTimeMinuteConfig, DateTimeMinuteInstance, formatToDateString, formatToISO8601DayString, guessCurrentTimezone, readableTimeStringToDate, toLocalReadableTimeString, toReadableTimeString, utcDayForDate, formatToISO8601DateString, toJsDate, parseISO8601DayStringToDate } from '@dereekb/date';
 import { switchMap, shareReplay, map, startWith, tap, first, distinctUntilChanged, debounceTime, throttleTime, BehaviorSubject, Observable, combineLatest, Subject, merge, interval } from 'rxjs';
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { AbstractControl, FormControl, Validators, FormGroup } from '@angular/forms';
@@ -24,9 +24,67 @@ export enum DbxDateTimeFieldTimeMode {
   NONE = 'none'
 }
 
+export enum DbxDateTimeValueMode {
+  /**
+   * Value is returned/parsed as a Date.
+   */
+  DATE = 0,
+  /**
+   * Value is returned/parsed as an ISO8601DateString
+   */
+  DATE_STRING = 1,
+  /**
+   * Value is returned/parsed as an ISO8601DayString, relative to the current timezone.
+   */
+  DAY_STRING = 2
+}
+
+export function dbxDateTimeInputValueParseFactory(mode: DbxDateTimeValueMode): (date: Maybe<Date | string>) => Maybe<Date> {
+  let factory: (date: Maybe<Date | string>) => Maybe<Date>;
+
+  switch (mode) {
+    case DbxDateTimeValueMode.DAY_STRING:
+      factory = (x) => (typeof x === 'string' ? parseISO8601DayStringToDate(x) : x);
+      break;
+    case DbxDateTimeValueMode.DATE_STRING:
+    case DbxDateTimeValueMode.DATE:
+    default:
+      factory = (x) => (x != null ? toJsDate(x) : x);
+      break;
+  }
+
+  return factory;
+}
+
+export function dbxDateTimeOutputValueFactory(mode: DbxDateTimeValueMode): (date: Maybe<Date>) => Maybe<Date | string> {
+  let factory: (date: Maybe<Date>) => Maybe<Date | string>;
+
+  switch (mode) {
+    case DbxDateTimeValueMode.DATE_STRING:
+      factory = (x) => (x != null ? formatToISO8601DateString(x) : x);
+      break;
+    case DbxDateTimeValueMode.DAY_STRING:
+      factory = (x) => (x != null ? formatToISO8601DayString(x) : x);
+      break;
+    case DbxDateTimeValueMode.DATE:
+    default:
+      factory = (x) => x;
+      break;
+  }
+
+  return factory;
+}
+
 export type DateTimePickerConfiguration = Omit<DateTimeMinuteConfig, 'date'>;
 
 export interface DbxDateTimeFieldProps extends FormlyFieldProps {
+  /**
+   * Value mode.
+   *
+   * Defaults to DATE
+   */
+  valueMode?: DbxDateTimeValueMode;
+
   /**
    * Whether or not the date is hidden, and automatically uses today/input date.
    */
@@ -77,8 +135,8 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
   private _updateTime = new Subject<void>();
 
   readonly value$ = this.formControl$.pipe(
-    switchMap((control) => control.valueChanges.pipe(startWith(control.value))),
-    distinctUntilChanged((a, b) => isSameMinute(a, b)),
+    switchMap((control) => control.valueChanges.pipe(startWith(control.value), map(dbxDateTimeInputValueParseFactory(this.valueMode)))),
+    distinctUntilChanged((a, b) => (a != null && b != null ? isSameMinute(a, b) : a === b)),
     shareReplay(1)
   );
 
@@ -131,6 +189,10 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
 
   get timeMode(): DbxDateTimeFieldTimeMode {
     return this.timeOnly ? DbxDateTimeFieldTimeMode.REQUIRED : this.dateTimeField.timeMode ?? DbxDateTimeFieldTimeMode.REQUIRED;
+  }
+
+  get valueMode(): DbxDateTimeValueMode {
+    return this.field.props.valueMode ?? DbxDateTimeValueMode.DATE;
   }
 
   get description(): Maybe<string> {
@@ -222,7 +284,11 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
     this._formControlObs.next(this.formControl);
     this._config.next(this.dateTimeField.getConfigObs?.());
 
-    this._sub.subscription = this.timeOutput$.pipe(skipFirstMaybe()).subscribe((value) => {
+    const valueFactory = dbxDateTimeOutputValueFactory(this.valueMode);
+
+    this._sub.subscription = this.timeOutput$.pipe(skipFirstMaybe()).subscribe((dateValue) => {
+      const value = valueFactory(dateValue);
+
       this.formControl.setValue(value);
       this.formControl.markAsDirty();
       this.formControl.markAsTouched();

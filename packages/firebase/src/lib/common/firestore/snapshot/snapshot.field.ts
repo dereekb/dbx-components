@@ -1,6 +1,6 @@
 import { UNKNOWN_WEBSITE_LINK_TYPE, WebsiteLink, GrantedRole, WebsiteFileLink, EncodedWebsiteFileLink, encodeWebsiteFileLinkToWebsiteLinkEncodedData, decodeWebsiteLinkEncodedDataToWebsiteFileLink } from '@dereekb/model';
 import { FirestoreModelKey } from '../collection/collection';
-import { DateBlockRange, nowISODateString, toISODateString, toJsDate } from '@dereekb/date';
+import { DateBlockRange, formatToISO8601DateString, toISODateString, toJsDate } from '@dereekb/date';
 import {
   ModelFieldMapFunctionsConfig,
   GetterOrValue,
@@ -197,7 +197,7 @@ export type FirestoreDateFieldConfig = DefaultMapConfiguredFirestoreFieldConfig<
 export function firestoreDate(config: FirestoreDateFieldConfig = {}) {
   return firestoreField<Date, string>({
     default: config.default ?? (() => new Date()),
-    defaultBeforeSave: config.defaultBeforeSave ?? (config.saveDefaultAsNow ? nowISODateString : null),
+    defaultBeforeSave: config.defaultBeforeSave ?? (config.saveDefaultAsNow ? formatToISO8601DateString : null),
     fromData: (input: string) => toJsDate(input),
     toData: (input: Date) => toISODateString(input)
   });
