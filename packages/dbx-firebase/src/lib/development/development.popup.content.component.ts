@@ -1,4 +1,4 @@
-import { DbxAuthService, HandleActionWithContext } from '@dereekb/dbx-core';
+import { ClickableAnchor, DbxAuthService, HandleActionWithContext } from '@dereekb/dbx-core';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { DbxWidgetDataPair, TwoColumnsContextStore } from '@dereekb/dbx-web';
 import { DevelopmentFirebaseFunctionSpecifier } from '@dereekb/firebase';
@@ -10,6 +10,7 @@ import { DbxFirebaseDevelopmentSchedulerService } from './development.scheduler.
 import { DbxFirebaseDevelopmentPopupContentFormValue } from './development.popup.content.form.component';
 import { msToSeconds } from '@dereekb/date';
 import { DEVELOPMENT_FIREBASE_SERVER_SCHEDULER_WIDGET_KEY } from './development.scheduler.widget.component';
+import { DbxFirebaseEmulatorService } from '../firebase';
 
 @Component({
   selector: 'dbx-firebase-development-popup-content',
@@ -23,6 +24,14 @@ export class DbxFirebaseDevelopmentPopupContentComponent implements OnInit, OnDe
   readonly entries = this.dbxFirebaseDevelopmentWidgetService.getEntries();
 
   private _activeEntrySelector = new BehaviorSubject<Maybe<DevelopmentFirebaseFunctionSpecifier>>(DEVELOPMENT_FIREBASE_SERVER_SCHEDULER_WIDGET_KEY);
+
+  get showEmulatorButton() {
+    return this.dbxFirebaseEmulatorService.useEmulators === true;
+  }
+
+  get emulatorUIAnchor(): ClickableAnchor {
+    return this.dbxFirebaseEmulatorService.emulatorUIAnchor ?? {};
+  }
 
   readonly isLoggedIn$ = this.dbxAuthService.isLoggedIn$;
 
@@ -64,7 +73,7 @@ export class DbxFirebaseDevelopmentPopupContentComponent implements OnInit, OnDe
     map((specifier) => ({ specifier }))
   );
 
-  constructor(readonly twoColumnsContextStore: TwoColumnsContextStore, readonly dbxAuthService: DbxAuthService, readonly dbxFirebaseDevelopmentWidgetService: DbxFirebaseDevelopmentWidgetService, readonly dbxFirebaseDevelopmentSchedulerService: DbxFirebaseDevelopmentSchedulerService) {}
+  constructor(readonly twoColumnsContextStore: TwoColumnsContextStore, readonly dbxAuthService: DbxAuthService, readonly dbxFirebaseDevelopmentWidgetService: DbxFirebaseDevelopmentWidgetService, readonly dbxFirebaseDevelopmentSchedulerService: DbxFirebaseDevelopmentSchedulerService, readonly dbxFirebaseEmulatorService: DbxFirebaseEmulatorService) {}
 
   ngOnInit(): void {
     this.twoColumnsContextStore.setShowRight(this.showRight$);

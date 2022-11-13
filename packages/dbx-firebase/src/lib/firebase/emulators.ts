@@ -45,7 +45,9 @@ export interface DbxFirebaseEmulatorsConfig {
 }
 
 export abstract class DbxFirebaseParsedEmulatorsConfig implements DbxFirebaseEmulatorsConfig {
-  useEmulators?: boolean;
+  abstract useEmulators: boolean;
+  host?: string;
+  ui?: Required<DbxFirebaseEmulatorConfig>;
   auth?: Required<DbxFirebaseEmulatorConfig>;
   firestore?: Required<DbxFirebaseEmulatorConfig>;
   storage?: Required<DbxFirebaseEmulatorConfig>;

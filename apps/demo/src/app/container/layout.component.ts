@@ -1,7 +1,7 @@
 import { DbxStyleService } from '@dereekb/dbx-web';
 import { ClickableAnchor } from '@dereekb/dbx-core';
 import { Component } from '@angular/core';
-import { environment } from '../../environments/environment';
+import { DbxFirebaseEmulatorService } from '@dereekb/dbx-firebase';
 
 @Component({
   templateUrl: './layout.component.html',
@@ -29,20 +29,13 @@ export class AppLayoutComponent {
     target: '_blank'
   };
 
-  constructor(readonly dbxStyleService: DbxStyleService) {}
+  constructor(readonly dbxStyleService: DbxStyleService, readonly dbxFirebaseEmulatorService: DbxFirebaseEmulatorService) {}
 
   get showEmulatorButton() {
-    return environment.firebase.emulators.useEmulators === true;
+    return this.dbxFirebaseEmulatorService.useEmulators === true;
   }
 
   get emulator(): ClickableAnchor {
-    const ui = environment.firebase.emulators?.ui;
-
-    return ui
-      ? {
-          url: `http://${ui.host ?? 'localhost'}:${ui.port}`,
-          target: '_blank'
-        }
-      : {};
+    return this.dbxFirebaseEmulatorService.emulatorUIAnchor ?? {};
   }
 }

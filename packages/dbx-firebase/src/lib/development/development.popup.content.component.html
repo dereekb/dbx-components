@@ -3,6 +3,11 @@
     <div>
       <h4>Info</h4>
       <p>Scheduler (Running): {{ schedulerRunning$ | async }} : {{ schedulerInterval$ | async }}s : {{ schedulerError$ | async }}</p>
+      <div>
+        <dbx-anchor [anchor]="emulatorUIAnchor" *ngIf="showEmulatorButton">
+          <button mat-flat-button color="accent">Emulator Enabled</button>
+        </dbx-anchor>
+      </div>
     </div>
     <div>
       <h4>Tools</h4>
