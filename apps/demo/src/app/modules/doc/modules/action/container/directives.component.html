@@ -29,6 +29,21 @@
       <p>Success value: {{ successValue | json }}</p>
     </doc-feature-example>
 
+    <doc-feature-example header="dbxActionPreSuccess" hint="Structural directive that shows template content before the action has success.">
+      <p>dbxActionPreSuccess can be used just like ngIf.</p>
+      <dbx-action-example-tools dbxAction [dbxActionHandler]="handleAction" [dbxActionValue]="value$ | async">
+        <dbx-button dbxActionButton text="Action Button"></dbx-button>
+        <p *dbxActionPreSuccess>No success yet!</p>
+        <p *dbxActionPreSuccess="3000">No success yet! (Re-appears after 3 seconds.)</p>
+      </dbx-action-example-tools>
+    </doc-feature-example>
+
+    <doc-feature-example header="dbxActionDisabledOnSuccess" hint="Directive that disables the action after it succeeds.">
+      <dbx-action-example-tools dbxAction dbxActionDisabledOnSuccess [dbxActionHandler]="handleAction" [dbxActionValue]="value$ | async">
+        <dbx-button dbxActionButton text="Action Button"></dbx-button>
+      </dbx-action-example-tools>
+    </doc-feature-example>
+
     <h3>Auto</h3>
     <p>Auto action directives are used to automatically change the state of the action.</p>
     <doc-feature-example header="dbxActionAutoModify" hint="Used to automatically set the action's isModified flag to true any time isModified is false.">

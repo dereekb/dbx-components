@@ -6,23 +6,23 @@ import { AbstractIfDirective } from '../../../view/if.directive';
 import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
 
 /**
- * Structural directive that displays the content when the store has a success value.
+ * Structural directive that displays the content before the store has success.
  *
- * Can be configured to show for a temporary period.
+ * Can be configured to hide for a temporary period.
  */
 @Directive({
-  selector: '[dbxActionHasSuccess]'
+  selector: '[dbxActionPreSuccess]'
 })
-export class DbxActionHasSuccessDirective extends AbstractIfDirective implements OnDestroy {
-  @Input('dbxActionHasSuccess')
-  hideAfter?: Maybe<number> | '';
+export class DbxActionPreSuccessDirective extends AbstractIfDirective implements OnDestroy {
+  @Input('dbxActionPreSuccess')
+  hideFor?: Maybe<number> | '';
 
   readonly show$ = this.source.isSuccess$.pipe(
     exhaustMap((success) => {
       if (success) {
-        return emitDelayObs(true, false, this.hideAfter || undefined);
+        return emitDelayObs(false, true, this.hideFor || undefined);
       } else {
-        return of(false);
+        return of(true);
       }
     }),
     shareReplay(1)
