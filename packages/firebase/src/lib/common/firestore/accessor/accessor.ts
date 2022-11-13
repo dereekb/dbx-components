@@ -1,7 +1,7 @@
 import { filterMaybe } from '@dereekb/rxjs';
 import { filterUndefinedValues, KeyValueTransformMap, Maybe, objectHasNoKeys } from '@dereekb/util';
 import { WriteResult, SnapshotOptions, DocumentReference, DocumentSnapshot, UpdateData, WithFieldValue, PartialWithFieldValue, SetOptions, Precondition, DocumentData, FirestoreDataConverter } from '../types';
-import { map, Observable, OperatorFunction } from 'rxjs';
+import { from, map, Observable, OperatorFunction } from 'rxjs';
 import { DocumentReferenceRef } from '../reference';
 import { PickProperties } from 'ts-essentials';
 
@@ -94,6 +94,39 @@ export interface FirestoreDocumentDataAccessorFactory<T, D = DocumentData> {
 }
 
 // MARK: Utility
+export enum FirestoreAccessorStreamMode {
+  /**
+   *
+   */
+  STREAM = 0,
+  /**
+   *
+   */
+  GET = 1
+}
+
+/**
+ * Retrieves a DocumentSnapshot's data observable using the input stream mode.
+ *
+ * @param accessor
+ * @param mode
+ * @returns
+ */
+export function snapshotStreamDataForAccessor<T>(accessor: FirestoreDocumentDataAccessor<T>, mode: FirestoreAccessorStreamMode, options?: SnapshotOptions): Observable<T | undefined> {
+  return dataFromSnapshotStream<T>(snapshotStreamForAccessor(accessor, mode), options);
+}
+
+/**
+ * Retrieves a DocumentSnapshot observable using the input stream mode.
+ *
+ * @param accessor
+ * @param mode
+ * @returns
+ */
+export function snapshotStreamForAccessor<T>(accessor: FirestoreDocumentDataAccessor<T>, mode: FirestoreAccessorStreamMode): Observable<DocumentSnapshot<T>> {
+  return mode === FirestoreAccessorStreamMode.GET ? from(accessor.get()) : accessor.stream();
+}
+
 /**
  * Maps data from the given snapshot stream.
  *
