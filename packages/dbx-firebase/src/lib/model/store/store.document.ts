@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Observable, shareReplay, distinctUntilChanged, map, switchMap, combineLatest, Subscription, of } from 'rxjs';
-import { DocumentSnapshot, DocumentReference, FirestoreCollection, FirestoreDocument, DocumentDataWithIdAndKey, FirestoreModelId, FirestoreModelKey, FirestoreCollectionLike, FirestoreModelIdentity, firestoreModelIdsFromKey, firestoreModelKeyPartPairs, FirestoreModelCollectionAndIdPair, firestoreModelKeyPairObject, FirestoreModelCollectionAndIdPairObject, documentDataWithIdAndKey } from '@dereekb/firebase';
+import { DocumentSnapshot, DocumentReference, FirestoreCollection, FirestoreDocument, DocumentDataWithIdAndKey, FirestoreModelId, FirestoreModelKey, FirestoreCollectionLike, FirestoreModelIdentity, firestoreModelIdsFromKey, firestoreModelKeyPartPairs, FirestoreModelCollectionAndIdPair, firestoreModelKeyPairObject, FirestoreModelCollectionAndIdPairObject, documentDataWithIdAndKey, FirestoreAccessorStreamMode } from '@dereekb/firebase';
 import { filterMaybe, LoadingState, beginLoading, successResult, loadingStateFromObs, errorResult, ObservableOrValue } from '@dereekb/rxjs';
 import { Maybe, isMaybeSo } from '@dereekb/util';
 import { LockSetComponent, LockSetComponentStore } from '@dereekb/dbx-core';
@@ -16,6 +16,8 @@ export interface DbxFirebaseDocumentStore<T, D extends FirestoreDocument<T> = Fi
   readonly inputKey$: Observable<FirestoreModelKey>;
   readonly currentInputRef$: Observable<Maybe<DocumentReference<T>>>;
   readonly inputRef$: Observable<DocumentReference<T>>;
+
+  readonly streamMode$: Observable<FirestoreAccessorStreamMode>;
 
   readonly currentDocument$: Observable<Maybe<D>>;
   readonly document$: Observable<D>;
@@ -38,14 +40,30 @@ export interface DbxFirebaseDocumentStore<T, D extends FirestoreDocument<T> = Fi
   readonly exists$: Observable<boolean>;
   readonly modelIdentity$: Observable<FirestoreModelIdentity>;
 
-  setId: (observableOrValue: ObservableOrValue<Maybe<FirestoreModelId>>) => Subscription;
-  setKey: (observableOrValue: ObservableOrValue<Maybe<FirestoreModelKey>>) => Subscription;
-  setRef: (observableOrValue: ObservableOrValue<Maybe<DocumentReference<T>>>) => Subscription;
+  /**
+   * Sets the id of the document to load.
+   */
+  readonly setId: (observableOrValue: ObservableOrValue<Maybe<FirestoreModelId>>) => Subscription;
+
+  /**
+   * Sets the key of the document to load.
+   */
+  readonly setKey: (observableOrValue: ObservableOrValue<Maybe<FirestoreModelKey>>) => Subscription;
+
+  /**
+   * Sets the ref of the document to load.
+   */
+  readonly setRef: (observableOrValue: ObservableOrValue<Maybe<DocumentReference<T>>>) => Subscription;
 
   /**
    * Clears the key/id/ref and current document from the store.
    */
-  clearRefs: () => void;
+  readonly clearRefs: () => void;
+
+  /**
+   * Sets the stream mode.
+   */
+  readonly setStreamMode: (observableOrValue: ObservableOrValue<FirestoreAccessorStreamMode>) => Subscription;
 
   /**
    * Sets the FirestoreCollection to retrieve documents from.
@@ -61,6 +79,7 @@ export interface DbxFirebaseDocumentStore<T, D extends FirestoreDocument<T> = Fi
 export interface DbxFirebaseDocumentStoreContextState<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> {
   readonly firestoreCollectionLike?: Maybe<FirestoreCollectionLike<T, D>>;
   readonly firestoreCollection?: Maybe<FirestoreCollection<T, D>>;
+  readonly streamMode?: FirestoreAccessorStreamMode;
   readonly id?: Maybe<FirestoreModelId>;
   readonly key?: Maybe<FirestoreModelKey>;
   readonly ref?: Maybe<DocumentReference<T>>;
@@ -112,6 +131,12 @@ export class AbstractDbxFirebaseDocumentStore<T, D extends FirestoreDocument<T> 
   );
 
   readonly inputRef$: Observable<DocumentReference<T>> = this.currentInputRef$.pipe(filterMaybe(), distinctUntilChanged(), shareReplay(1));
+
+  readonly streamMode$: Observable<FirestoreAccessorStreamMode> = this.state$.pipe(
+    map((x) => x.streamMode ?? FirestoreAccessorStreamMode.STREAM),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
 
   readonly currentDocument$: Observable<Maybe<D>> = combineLatest([this.currentInputId$, this.currentInputKey$, this.currentInputRef$]).pipe(
     switchMap(([id, key, ref]) => {
@@ -168,8 +193,8 @@ export class AbstractDbxFirebaseDocumentStore<T, D extends FirestoreDocument<T> 
     shareReplay(1)
   );
 
-  readonly snapshot$: Observable<DocumentSnapshot<T>> = this.document$.pipe(
-    switchMap((x) => x.accessor.stream()),
+  readonly snapshot$: Observable<DocumentSnapshot<T>> = combineLatest([this.document$, this.streamMode$]).pipe(
+    switchMap(([x, mode]) => x.snapshotStream(mode)),
     shareReplay(1)
   );
 
@@ -178,8 +203,8 @@ export class AbstractDbxFirebaseDocumentStore<T, D extends FirestoreDocument<T> 
     shareReplay(1)
   );
 
-  readonly currentData$: Observable<Maybe<DocumentDataWithIdAndKey<T>>> = this.document$.pipe(
-    switchMap((x) => x.accessor.stream().pipe(map((y) => documentDataWithIdAndKey(y)))),
+  readonly currentData$: Observable<Maybe<DocumentDataWithIdAndKey<T>>> = this.snapshot$.pipe(
+    map((x) => documentDataWithIdAndKey(x)),
     shareReplay(1)
   );
 
@@ -242,20 +267,11 @@ export class AbstractDbxFirebaseDocumentStore<T, D extends FirestoreDocument<T> 
   );
 
   // MARK: State Changes
-  /**
-   * Sets the id of the document to load.
-   */
   readonly setId = this.updater((state, id: Maybe<FirestoreModelId>) => (id ? { ...state, id, key: undefined, ref: undefined } : { ...state, id })) as (observableOrValue: Maybe<string> | Observable<Maybe<string>>) => Subscription;
-
-  /**
-   * Sets the key of the document to load.
-   */
   readonly setKey = this.updater((state, key: Maybe<FirestoreModelKey>) => (key ? { ...state, key, id: undefined, ref: undefined } : { ...state, key })) as (observableOrValue: Maybe<string> | Observable<Maybe<string>>) => Subscription;
-
-  /**
-   * Sets the ref of the document to load.
-   */
   readonly setRef = this.updater((state, ref: Maybe<DocumentReference<T>>) => (ref ? { ...state, key: undefined, id: undefined, ref } : { ...state, ref })) as (observableOrValue: Maybe<DocumentReference<T>> | Observable<Maybe<DocumentReference<T>>>) => Subscription;
+
+  readonly setStreamMode = this.updater((state, streamMode: FirestoreAccessorStreamMode) => ({ ...state, streamMode }));
 
   readonly clearRefs = this.updater((state) => ({ ...state, id: undefined, key: undefined, ref: undefined }));
 

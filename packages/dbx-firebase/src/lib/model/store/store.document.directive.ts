@@ -1,6 +1,6 @@
 import { Directive, forwardRef, Input, Provider, Type } from '@angular/core';
-import { DocumentReference, FirestoreDocument } from '@dereekb/firebase';
-import { ModelKey } from '@dereekb/util';
+import { DocumentReference, FirestoreAccessorStreamMode, FirestoreDocument, FirestoreModelKey, FirestoreModelId } from '@dereekb/firebase';
+import { Maybe, ModelKey } from '@dereekb/util';
 import { DbxFirebaseDocumentStore } from './store.document';
 
 /**
@@ -26,13 +26,23 @@ export abstract class DbxFirebaseDocumentStoreDirective<T = unknown, D extends F
 
   // MARK: Inputs
   @Input()
-  set id(id: ModelKey) {
+  set id(id: Maybe<FirestoreModelId>) {
     this.store.setId(id);
   }
 
   @Input()
-  set ref(ref: DocumentReference<T>) {
+  set key(key: Maybe<FirestoreModelKey>) {
+    this.store.setKey(key);
+  }
+
+  @Input()
+  set ref(ref: Maybe<DocumentReference<T>>) {
     this.store.setRef(ref);
+  }
+
+  @Input()
+  set streamMode(streamMode: FirestoreAccessorStreamMode) {
+    this.store.setStreamMode(streamMode);
   }
 }
 

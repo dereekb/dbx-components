@@ -56,6 +56,15 @@ export type DateOrDateString = Date | ISO8601DateString;
 export type ISO8601DayString = string; // '1921-06-23'
 
 /**
+ * Regex for an ISO8601DayString.
+ */
+export const ISO8601_DAY_STRING_REGEX = /^\d{4}-\d{2}-\d{2}$/;
+
+export function isISO8601DayString(input: string): input is ISO8601DayString {
+  return ISO8601_DAY_STRING_REGEX.test(input);
+}
+
+/**
  * Time in seconds (instead of ms) since the epoch.
  */
 export type UnixDateTimeNumber = number;

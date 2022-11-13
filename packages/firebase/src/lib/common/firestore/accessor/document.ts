@@ -6,7 +6,7 @@ import { Observable } from 'rxjs';
 import { FirestoreAccessorDriverRef } from '../driver/accessor';
 import { FirestoreCollectionNameRef, FirestoreModelId, FirestoreModelIdentityCollectionName, FirestoreModelIdentityModelType, FirestoreModelIdentityRef, FirestoreModelIdRef, FirestoreModelKey, FirestoreModelKeyRef } from './../collection/collection';
 import { DocumentReference, CollectionReference, Transaction, WriteBatch, DocumentSnapshot, SnapshotOptions, WriteResult, FirestoreDataConverter, DocumentData } from '../types';
-import { FirestoreAccessorIncrementUpdate, dataFromSnapshotStream, FirestoreDocumentDataAccessor, FirestoreDocumentUpdateParams, updateWithAccessorUpdateAndConverterFunction } from './accessor';
+import { FirestoreAccessorIncrementUpdate, dataFromSnapshotStream, FirestoreDocumentDataAccessor, FirestoreDocumentUpdateParams, updateWithAccessorUpdateAndConverterFunction, FirestoreAccessorStreamMode, snapshotStreamDataForAccessor, snapshotStreamForAccessor } from './accessor';
 import { CollectionReferenceRef, DocumentReferenceRef, FirestoreContextReference, FirestoreDataConverterRef } from '../reference';
 import { FirestoreDocumentContext } from './context';
 import { build, Factory, Maybe } from '@dereekb/util';
@@ -18,7 +18,8 @@ import { FirestoreDataConverterFactory, InterceptFirestoreDataConverterFactory }
 export interface FirestoreDocument<T, I extends FirestoreModelIdentity = FirestoreModelIdentity> extends FirestoreDataConverterRef<T>, DocumentReferenceRef<T>, CollectionReferenceRef<T>, FirestoreModelIdentityRef<I>, FirestoreModelTypeRef<FirestoreModelIdentityModelType<I>>, FirestoreCollectionNameRef<FirestoreModelIdentityCollectionName<I>>, FirestoreModelKeyRef, FirestoreModelIdRef {
   readonly accessor: FirestoreDocumentDataAccessor<T>;
   readonly id: string;
-
+  snapshotStream(mode: FirestoreAccessorStreamMode): Observable<DocumentSnapshot<T>>;
+  snapshotDataStream(mode: FirestoreAccessorStreamMode, options?: SnapshotOptions): Observable<T | undefined>;
   snapshot(): Promise<DocumentSnapshot<T>>;
   snapshotData(options?: SnapshotOptions): Promise<T | undefined>;
   exists(): Promise<boolean>;
@@ -69,6 +70,25 @@ export abstract class AbstractFirestoreDocument<T, D extends AbstractFirestoreDo
 
   get converter(): FirestoreDataConverter<T> {
     return this.documentAccessor.converter;
+  }
+
+  /**
+   * Retrieves a DocumentSnapshot of the document as an Observable. Streams based on the input mode.
+   *
+   * @returns
+   */
+  snapshotStream(mode: FirestoreAccessorStreamMode): Observable<DocumentSnapshot<T>> {
+    return snapshotStreamForAccessor(this.accessor, mode);
+  }
+
+  /**
+   * Retrieves the data of the DocumentSnapshot of the document as an Observable. Streams based on the input mode.
+   *
+   * @param options
+   * @returns
+   */
+  snapshotDataStream(mode: FirestoreAccessorStreamMode, options?: SnapshotOptions): Observable<T | undefined> {
+    return snapshotStreamDataForAccessor(this.accessor, mode, options);
   }
 
   /**
