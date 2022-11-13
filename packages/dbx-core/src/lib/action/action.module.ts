@@ -17,7 +17,9 @@ import {
   DbxActionContextLoggerDirective,
   DbxActionHasSuccessDirective,
   DbxActionSuccessHandlerDirective,
-  DbxActionIsWorkingDirective
+  DbxActionIsWorkingDirective,
+  DbxActionDisabledOnSuccessDirective,
+  DbxActionPreSuccessDirective
 } from './directive';
 
 @NgModule({
@@ -31,12 +33,14 @@ import {
     DbxActionSourceDirective,
     DbxActionHandlerDirective,
     DbxActionDisabledDirective,
+    DbxActionDisabledOnSuccessDirective,
     DbxActionEnforceModifiedDirective,
     DbxActionAutoTriggerDirective,
     dbxActionValueStreamDirective,
     DbxActionAutoModifyDirective,
     DbxActionValueDirective,
     DbxActionContextLoggerDirective,
+    DbxActionPreSuccessDirective,
     DbxActionHasSuccessDirective,
     DbxActionSuccessHandlerDirective,
     DbxActionIsWorkingDirective
@@ -50,12 +54,14 @@ import {
     DbxActionSourceDirective,
     DbxActionHandlerDirective,
     DbxActionDisabledDirective,
+    DbxActionDisabledOnSuccessDirective,
     DbxActionEnforceModifiedDirective,
     DbxActionAutoTriggerDirective,
     dbxActionValueStreamDirective,
     DbxActionAutoModifyDirective,
     DbxActionValueDirective,
     DbxActionContextLoggerDirective,
+    DbxActionPreSuccessDirective,
     DbxActionHasSuccessDirective,
     DbxActionSuccessHandlerDirective,
     DbxActionIsWorkingDirective

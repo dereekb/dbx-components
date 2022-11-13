@@ -16,6 +16,7 @@ export class DbxFirebaseEmulatorModule {
 
     const finalConfig: DbxFirebaseParsedEmulatorsConfig = {
       useEmulators: config.useEmulators !== false,
+      ui: emulatorConfig(config.ui),
       auth: emulatorConfig(config.auth),
       firestore: emulatorConfig(config.firestore),
       storage: emulatorConfig(config.storage),
