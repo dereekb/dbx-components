@@ -21,6 +21,8 @@ export abstract class DbxRouterService {
   /**
    * Navigates to the current url with updated parameters. Will be merged with the existing parameters.
    *
+   * The new state will replace the current state in the history.
+   *
    * @param segueRef
    */
   abstract updateParams(params: ObservableOrValue<SegueRefRawSegueParams>): Promise<boolean>;

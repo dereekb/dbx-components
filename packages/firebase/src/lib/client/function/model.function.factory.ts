@@ -135,7 +135,7 @@ export function modelFirebaseFunctionMapFactory<M extends FirebaseFunctionTypeMa
         const fullSpecifierName = `${crud}${modelTypeSuffix}${capitalizeFirstLetter(specifier)}`;
         specifiers[fullSpecifierName] = specifierFn;
 
-        const shortSpecifierName = lowercaseFirstLetter(specifier) ?? crud;
+        const shortSpecifierName = lowercaseFirstLetter(specifier) || crud;
         specifiers[shortSpecifierName] = specifierFn;
       });
 

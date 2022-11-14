@@ -21,17 +21,12 @@ import { DbxFirebaseEmulatorService } from '../firebase';
 export class DbxFirebaseDevelopmentPopupContentComponent implements OnInit, OnDestroy {
   private readonly _backSub = new SubscriptionObject();
 
+  readonly showEmulatorButton = this.dbxFirebaseEmulatorService.useEmulators === true;
+  readonly emulatorUIAnchor: ClickableAnchor = this.dbxFirebaseEmulatorService.emulatorUIAnchor ?? {};
+
   readonly entries = this.dbxFirebaseDevelopmentWidgetService.getEntries();
 
   private _activeEntrySelector = new BehaviorSubject<Maybe<DevelopmentFirebaseFunctionSpecifier>>(DEVELOPMENT_FIREBASE_SERVER_SCHEDULER_WIDGET_KEY);
-
-  get showEmulatorButton() {
-    return this.dbxFirebaseEmulatorService.useEmulators === true;
-  }
-
-  get emulatorUIAnchor(): ClickableAnchor {
-    return this.dbxFirebaseEmulatorService.emulatorUIAnchor ?? {};
-  }
 
   readonly isLoggedIn$ = this.dbxAuthService.isLoggedIn$;
 

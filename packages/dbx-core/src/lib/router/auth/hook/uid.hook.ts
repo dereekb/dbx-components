@@ -28,8 +28,14 @@ export interface RedirectForUserIdentifierParamHookInput {
   readonly transitionService: TransitionService;
   /**
    * Whether or not the current user can view the target user.
+   *
+   * Can return another users identifier, or true to allow access, or false/null/undefined to deny access.
    */
-  readonly canViewUser: (targetUid: AuthUserIdentifier, authService: DbxAuthService, injector: Injector) => Observable<boolean | AuthUserIdentifier>;
+  readonly canViewUser: (targetUid: AuthUserIdentifier, authService: DbxAuthService, injector: Injector) => Observable<Maybe<boolean | AuthUserIdentifier>>;
+  /**
+   * Hook priority
+   */
+  readonly priority?: number;
 }
 
 /**
@@ -38,7 +44,7 @@ export interface RedirectForUserIdentifierParamHookInput {
  * If not, or
  */
 export function redirectForUserIdentifierParamHook(input: RedirectForUserIdentifierParamHookInput): void {
-  const { uidParam = DEFAULT_REDIRECT_FOR_USER_IDENTIFIER_PARAM_KEY, defaultParamValue = DEFAULT_REDIRECT_FOR_USER_IDENTIFIER_PARAM_VALUE, transitionService, canViewUser } = input;
+  const { uidParam = DEFAULT_REDIRECT_FOR_USER_IDENTIFIER_PARAM_KEY, defaultParamValue = DEFAULT_REDIRECT_FOR_USER_IDENTIFIER_PARAM_VALUE, priority = 100, transitionService, canViewUser } = input;
   const criteria: HookMatchCriteria = typeof input.criteria === 'string' ? { entering: input.criteria } : input.criteria;
 
   // https://ui-router.github.io/ng2/docs/latest/modules/transition.html#hookresult
@@ -58,13 +64,13 @@ export function redirectForUserIdentifierParamHook(input: RedirectForUserIdentif
 
           let redirectToUid: Maybe<Observable<Maybe<AuthUserIdentifier>>>;
 
-          if (!transitionTargetUid || transitionTargetUid === DEFAULT_REDIRECT_FOR_USER_IDENTIFIER_PARAM_VALUE) {
+          if (!transitionTargetUid || transitionTargetUid === defaultParamValue) {
             // If uid isn't set, default to the current user.
             redirectToUid = of(currentUserId);
           } else if (currentUserId !== transitionTargetUid) {
             redirectToUid = canViewUser(transitionTargetUid, authService, injector).pipe(
               map((x) => {
-                if (typeof x === 'boolean') {
+                if (x == null || typeof x === 'boolean') {
                   return x ? transitionTargetUid : currentUserId;
                 } else {
                   return x;
@@ -95,5 +101,5 @@ export function redirectForUserIdentifierParamHook(input: RedirectForUserIdentif
   };
 
   // Register the "requires auth" hook with the TransitionsService
-  transitionService.onBefore(criteria, assertAllowedUid, { priority: 100 });
+  transitionService.onBefore(criteria, assertAllowedUid, { priority });
 }

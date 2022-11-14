@@ -6,7 +6,7 @@ import { SubscriptionObject, switchMapToDefault, SwitchMapToDefaultFilterFunctio
 const DEFAULT_REDIRECT_INSTANCE_FORWARD_FACTORY = defaultForwardFunctionFactory<SwitchMapToDefaultFilterFunction<unknown>>((value) => of(value == null));
 
 /**
- * Utility class used in conjuction with a DbxRouteParamReaderInstance to redirect when the default param does not equal the
+ * Utility class used in conjuction with a DbxRouteParamReaderInstance to redirect when the default param is not valid.
  */
 export class DbxRouteParamDefaultRedirectInstance<T> implements Initialized, Destroyable {
   private _enabled = new BehaviorSubject<boolean>(true);

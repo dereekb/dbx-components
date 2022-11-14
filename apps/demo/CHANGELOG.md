@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [9.15.5](https://github.com/dereekb/dbx-components/compare/v9.15.4-dev...v9.15.5) (2022-11-14)
+
+
+### Bug Fixes
+
+* removed console print from DbxFirebaseEmulatorService ([8e5b622](https://github.com/dereekb/dbx-components/commit/8e5b6221dc193c7a3eb729cd9932b4817f1097d9))
+
+
+
 ## [9.15.4](https://github.com/dereekb/dbx-components/compare/v9.15.3-dev...v9.15.4) (2022-11-13)
 
 
