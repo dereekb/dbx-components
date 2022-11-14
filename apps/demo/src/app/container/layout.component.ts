@@ -29,13 +29,8 @@ export class AppLayoutComponent {
     target: '_blank'
   };
 
+  readonly showEmulatorButton = this.dbxFirebaseEmulatorService.useEmulators === true;
+  readonly emulator: ClickableAnchor = this.dbxFirebaseEmulatorService.emulatorUIAnchor ?? {};
+
   constructor(readonly dbxStyleService: DbxStyleService, readonly dbxFirebaseEmulatorService: DbxFirebaseEmulatorService) {}
-
-  get showEmulatorButton() {
-    return this.dbxFirebaseEmulatorService.useEmulators === true;
-  }
-
-  get emulator(): ClickableAnchor {
-    return this.dbxFirebaseEmulatorService.emulatorUIAnchor ?? {};
-  }
 }

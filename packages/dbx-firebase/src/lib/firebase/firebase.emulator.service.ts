@@ -13,9 +13,6 @@ export class DbxFirebaseEmulatorService {
 
   get emulatorUIAnchor(): Maybe<ClickableUrl> {
     const ui = this.emulatorsConfig.ui;
-
-    console.log('Config: ', ui, this.emulatorsConfig);
-
     return ui
       ? {
           url: `http://${ui.host ?? 'localhost'}:${ui.port}`,
