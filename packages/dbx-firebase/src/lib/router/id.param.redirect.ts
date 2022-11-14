@@ -81,6 +81,10 @@ export class DbxFirebaseIdRouteParamRedirectInstance implements DbxFirebaseIdRou
   setDecider(decider: string | SwitchMapToDefaultFilterFunction<ModelKey>): void {
     this._useDefaultParamDecider.next(decider);
   }
+
+  setParamValue(value: MaybeObservableOrValueGetter<string>): void {
+    this._paramReader.setParamValue(value);
+  }
 }
 
 export function dbxFirebaseIdRouteParamRedirect(dbxRouterService: DbxRouterService): DbxFirebaseIdRouteParamRedirectInstance {

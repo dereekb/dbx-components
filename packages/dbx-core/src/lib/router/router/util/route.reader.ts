@@ -1,6 +1,6 @@
-import { ObservableOrValueGetter, MaybeObservableOrValueGetter, switchMapToDefault, maybeValueFromObservableOrValueGetter } from '@dereekb/rxjs';
+import { ObservableOrValueGetter, MaybeObservableOrValueGetter, switchMapToDefault, maybeValueFromObservableOrValueGetter, valueFromObservableOrValueGetter, asObservableFromGetter } from '@dereekb/rxjs';
 import { Destroyable, Maybe } from '@dereekb/util';
-import { BehaviorSubject, combineLatest, distinctUntilChanged, map, Observable, shareReplay } from 'rxjs';
+import { BehaviorSubject, combineLatest, distinctUntilChanged, first, map, Observable, shareReplay } from 'rxjs';
 import { DbxRouterService } from '../service/router.service';
 
 /**
@@ -32,6 +32,12 @@ export interface DbxRouteParamReader<T> {
    * @param defaultValue
    */
   setDefaultValue(defaultValue: MaybeObservableOrValueGetter<T>): void;
+  /**
+   * Updates the value on the current route for the paramKey.
+   *
+   * @param value
+   */
+  setParamValue(value: MaybeObservableOrValueGetter<T>): void;
 }
 
 /**
@@ -60,6 +66,7 @@ export class DbxRouteParamReaderInstance<T> implements DbxRouteParamReader<T>, D
 
   destroy(): void {
     this._paramKey.complete();
+    this._defaultValue.complete();
   }
 
   get paramKey(): string {
@@ -72,5 +79,18 @@ export class DbxRouteParamReaderInstance<T> implements DbxRouteParamReader<T>, D
 
   setDefaultValue(defaultValue: MaybeObservableOrValueGetter<T>): void {
     this._defaultValue.next(defaultValue ?? this.defaultValue);
+  }
+
+  /**
+   * Convenience function to set the param value on the router.
+   *
+   * @param value
+   */
+  setParamValue(value: MaybeObservableOrValueGetter<T>): void {
+    combineLatest([this.paramKey$, asObservableFromGetter(value)])
+      .pipe(first())
+      .subscribe(([paramKey, value]) => {
+        this.dbxRouterService.updateParams({ [paramKey]: value });
+      });
   }
 }
