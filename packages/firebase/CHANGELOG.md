@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [9.15.5](https://github.com/dereekb/dbx-components/compare/v9.15.4-dev...v9.15.5) (2022-11-14)
+
+
+### Bug Fixes
+
+* fixed modelFirebaseFunctionMapFactory() short specifier ([ae28afe](https://github.com/dereekb/dbx-components/commit/ae28afef90df357980ec516e250c5c82899fb896))
+
+
+
 ## [9.15.4](https://github.com/dereekb/dbx-components/compare/v9.15.3-dev...v9.15.4) (2022-11-13)
 
 

@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [9.15.5](https://github.com/dereekb/dbx-components/compare/v9.15.4-dev...v9.15.5) (2022-11-14)
+
+
+### Bug Fixes
+
+* fixed redirectForUserIdentifierParamHook() ([1be07a3](https://github.com/dereekb/dbx-components/commit/1be07a3ea9a0b7f8fbe583fe2914b5245cad7b98))
+
+
+
 ## [9.15.4](https://github.com/dereekb/dbx-components/compare/v9.15.3-dev...v9.15.4) (2022-11-13)
 
 
