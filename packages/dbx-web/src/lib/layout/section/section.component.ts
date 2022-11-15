@@ -15,7 +15,7 @@ import { DbxSectionHeaderComponent } from './section.header.component';
     </div>
   `,
   host: {
-    class: 'd-block, dbx-section',
+    class: 'd-block dbx-section',
     '[class]': `(elevate) ? 'dbx-section-elevate dbx-content-elevate' : ''`
   }
 })

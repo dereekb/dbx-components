@@ -7,6 +7,10 @@
         <p>{{ lorem }}</p>
         <button mat-button mat-flat-button color="primary">Ok</button>
       </dbx-section>
+      <dbx-section header="Header With Icon And Elevated" icon="star" hint="This is a section with an icon." [elevate]="true">
+        <span sectionHeader>Custom Navigation Span</span>
+        <p>This section is configured with elevation and a star icon.</p>
+      </dbx-section>
     </doc-feature-example>
     <doc-feature-example header="dbx-subsection" hint="The subsection has a smaller header than a section.">
       <dbx-subsection header="Subsection Header" hint="This is the subsection hint.">
@@ -14,6 +18,13 @@
         <p>{{ lorem }}</p>
         <button mat-button mat-flat-button color="primary">Ok</button>
       </dbx-subsection>
+      <dbx-section header="Parent Section" icon="circle" hint="This is a section with a subsection inside.">
+        <dbx-subsection header="Subsection Header" icon="circle" hint="This is the subsection hint and a circle." [elevate]="true">
+          <span sectionHeader>Custom Navigation Span</span>
+          <p>{{ lorem }}</p>
+          <button mat-button mat-flat-button color="primary">Ok</button>
+        </dbx-subsection>
+      </dbx-section>
     </doc-feature-example>
   </doc-feature-layout>
 </dbx-content-container>
