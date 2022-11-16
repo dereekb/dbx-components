@@ -90,3 +90,15 @@ export function splitJoinRemainder(input: string, separator: string, limit: numb
 
   return components;
 }
+
+export type FirstNameLastNameTuple = [string, string | undefined];
+
+/**
+ * Splits the input string like it is a name with a space separating the first and last name string.
+ *
+ * @param input
+ * @returns
+ */
+export function splitJoinNameString(input: string): FirstNameLastNameTuple {
+  return splitJoinRemainder(input, ' ', 2) as FirstNameLastNameTuple;
+}
