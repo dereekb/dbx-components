@@ -26,10 +26,11 @@ $header-left-reserved-space-small-screen: 120px;
       h5 {
         padding-top: 4px;
         padding-bottom: 1px;
-        height: $page-h1-height;
+        min-height: $page-h1-height;
         display: inline-flex;
         align-items: center;
         margin: 0;
+        overflow: hidden;
 
         > .mat-icon {
           padding-right: 2px;
@@ -39,6 +40,18 @@ $header-left-reserved-space-small-screen: 120px;
 
       display: flex;
       align-items: center;
+    }
+  }
+
+  .dbx-section-header-strict {
+    .dbx-section-header-content {
+      h1,
+      h2,
+      h3,
+      h4,
+      h5 {
+        height: $page-h1-height;
+      }
     }
   }
 

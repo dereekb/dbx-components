@@ -1,6 +1,6 @@
 import { Component, Input } from '@angular/core';
-import { Maybe } from '@dereekb/util';
-import { DbxSectionHeaderHType } from './section';
+import { forEachKeyValue, KeyValueTypleValueFilter, Maybe } from '@dereekb/util';
+import { DbxSectionHeaderConfig, DbxSectionHeaderHType } from './section';
 
 /**
  * Component used to style a section's header.
@@ -50,7 +50,7 @@ export class DbxSectionHeaderComponent {
   header?: Maybe<string>;
 
   @Input()
-  onlyHeader = false;
+  onlyHeader?: Maybe<boolean> = false;
 
   @Input()
   icon?: Maybe<string>;
@@ -60,6 +60,39 @@ export class DbxSectionHeaderComponent {
 
   @Input()
   hintInline?: Maybe<boolean>;
+
+  constructor() {}
+
+  @Input()
+  set headerConfig(headerConfig: Maybe<DbxSectionHeaderConfig>) {
+    if (headerConfig) {
+      if (headerConfig.h !== undefined) {
+        this.h = headerConfig.h;
+      }
+
+      if (headerConfig.header !== undefined) {
+        this.header = headerConfig.header;
+      }
+
+      if (headerConfig.onlyHeader !== undefined) {
+        this.onlyHeader = headerConfig.onlyHeader;
+      }
+
+      if (headerConfig.icon !== undefined) {
+        this.icon = headerConfig.icon;
+      }
+
+      if (headerConfig.hint !== undefined) {
+        this.hint = headerConfig.hint;
+      }
+
+      if (headerConfig.hintInline !== undefined) {
+        this.hintInline = headerConfig.hintInline;
+      }
+
+      console.log(headerConfig);
+    }
+  }
 
   get showTitle() {
     return Boolean(this.header || this.icon);

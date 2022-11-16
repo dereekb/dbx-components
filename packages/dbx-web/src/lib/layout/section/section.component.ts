@@ -7,7 +7,7 @@ import { DbxSectionHeaderComponent } from './section.header.component';
 @Component({
   selector: 'dbx-section',
   template: `
-    <div class="dbx-section-header" [h]="3" [header]="header" [icon]="icon" [hint]="hint">
+    <div class="dbx-section-header" [h]="h ?? 3" [header]="header" [onlyHeader]="onlyHeader" [icon]="icon" [hint]="hint" [hintInline]="hintInline">
       <ng-content select="[sectionHeader]"></ng-content>
     </div>
     <div class="dbx-section-content">

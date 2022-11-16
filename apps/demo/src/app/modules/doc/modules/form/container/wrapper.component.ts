@@ -20,6 +20,13 @@ export class DocFormWrapperComponent {
     sectionWrapper(nameField(), {
       header: 'Header',
       hint: 'Section Field Hint'
+    }),
+    sectionWrapper(nameField(), {
+      h: 1,
+      header: 'Header with star and configured size',
+      icon: 'star',
+      hint: 'Section Field Hint Inline',
+      hintInline: true
     })
   ];
 
