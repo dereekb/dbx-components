@@ -15,7 +15,7 @@ export class DbxActionContextLoggerDirective extends AbstractSubscriptionDirecti
 
   ngOnInit(): void {
     this.sub = this.source.state$.subscribe((state) => {
-      console.log('State: ', state);
+      console.log('dbxActionLogger - state: ', state);
     });
   }
 }
