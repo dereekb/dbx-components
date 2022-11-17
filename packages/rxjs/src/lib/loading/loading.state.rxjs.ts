@@ -1,7 +1,7 @@
-import { Maybe } from '@dereekb/util';
+import { DecisionFunction, Maybe, ReadableError } from '@dereekb/util';
 import { MonoTypeOperatorFunction, OperatorFunction, startWith, Observable, filter, map, tap, catchError, combineLatest, distinctUntilChanged, first, of, shareReplay } from 'rxjs';
 import { timeoutStartWith } from '../rxjs';
-import { LoadingState, PageLoadingState, beginLoading, loadingStateHasFinishedLoading, isSuccessLoadingState, mergeLoadingStates, mapLoadingStateResults, MapLoadingStateResultsConfiguration, LoadingStateValue } from './loading.state';
+import { LoadingState, PageLoadingState, beginLoading, loadingStateHasFinishedLoading, isSuccessLoadingState, mergeLoadingStates, mapLoadingStateResults, MapLoadingStateResultsConfiguration, LoadingStateValue, loadingStateHasValue, LoadingStateType, loadingStateType, loadingStateIsLoading, loadingStateHasError } from './loading.state';
 
 /**
  * Wraps an observable output and maps the value to a LoadingState.
@@ -49,15 +49,63 @@ export function startWithBeginLoading<L extends LoadingState>(state?: Partial<L>
 }
 
 /**
- * Returns the value once the LoadingState has finished loading.
+ * Returns the value once the LoadingState has finished loading with success.
  */
-export function valueFromLoadingState<L extends LoadingState>(): OperatorFunction<L, Maybe<LoadingStateValue<L>>> {
+export function valueFromLoadingState<L extends LoadingState>(): OperatorFunction<L, LoadingStateValue<L>> {
+  return (obs: Observable<L>) => {
+    return obs.pipe(
+      filter(loadingStateHasValue),
+      map((x) => x.value as LoadingStateValue<L>)
+    );
+  };
+}
+
+/**
+ * Returns the error once the LoadingState has finished loading with an error.
+ */
+export function errorFromLoadingState<L extends LoadingState>(): OperatorFunction<L, ReadableError> {
+  return (obs: Observable<L>) => {
+    return obs.pipe(
+      filter(loadingStateHasError),
+      map((x) => x.error as ReadableError)
+    );
+  };
+}
+
+/**
+ * Returns the value once the LoadingState has finished loading, even if an error occured or there is no value.
+ */
+export function valueFromFinishedLoadingState<L extends LoadingState>(): OperatorFunction<L, Maybe<LoadingStateValue<L>>> {
   return (obs: Observable<L>) => {
     return obs.pipe(
       filter(loadingStateHasFinishedLoading),
       map((x) => x.value as Maybe<LoadingStateValue<L>>)
     );
   };
+}
+
+/**
+ * Executes a function when the piped LoadingState has the configured state.
+ *
+ * @param fn
+ */
+export function tapOnLoadingStateType<L extends LoadingState>(fn: (state: L) => void, type: LoadingStateType): MonoTypeOperatorFunction<L>;
+export function tapOnLoadingStateType<L extends LoadingState>(fn: (state: L) => void, type: LoadingStateType): MonoTypeOperatorFunction<L>;
+export function tapOnLoadingStateType<L extends PageLoadingState>(fn: (state: L) => void, type: LoadingStateType): MonoTypeOperatorFunction<L>;
+export function tapOnLoadingStateType<L extends LoadingState>(fn: (state: L) => void, type: LoadingStateType): MonoTypeOperatorFunction<L> {
+  let decisionFunction: DecisionFunction<L>;
+
+  if (type === LoadingStateType.LOADING) {
+    decisionFunction = loadingStateIsLoading;
+  } else {
+    decisionFunction = (state) => loadingStateType(state) === type;
+  }
+
+  return tap((state: L) => {
+    if (state != null && decisionFunction(state)) {
+      fn(state);
+    }
+  });
 }
 
 /**
@@ -69,11 +117,7 @@ export function tapOnLoadingStateSuccess<L extends LoadingState>(fn: (state: L) 
 export function tapOnLoadingStateSuccess<L extends LoadingState>(fn: (state: L) => void): MonoTypeOperatorFunction<L>;
 export function tapOnLoadingStateSuccess<L extends PageLoadingState>(fn: (state: L) => void): MonoTypeOperatorFunction<L>;
 export function tapOnLoadingStateSuccess<L extends LoadingState>(fn: (state: L) => void): MonoTypeOperatorFunction<L> {
-  return tap((state: L) => {
-    if (isSuccessLoadingState(state)) {
-      fn(state);
-    }
-  });
+  return tapOnLoadingStateType(fn, LoadingStateType.SUCCESS);
 }
 
 /**
