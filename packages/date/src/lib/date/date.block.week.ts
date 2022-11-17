@@ -1,7 +1,7 @@
 import { addDays } from 'date-fns';
-import { makeValuesGroupMap, MapFunction, Maybe } from '@dereekb/util';
-import { DateBlockIndex, DateBlockTiming, getCurrentDateBlockTimingOffset, getCurrentDateBlockTimingStartDate } from './date.block';
-import { YearWeekCode, YearWeekCodeConfig, YearWeekCodeDateReader, YearWeekCodeFactory, yearWeekCodeFactory, yearWeekCodeFromDate, YearWeekCodeGroup, yearWeekCodeGroupFactory, YearWeekCodeGroupFactory, YearWeekCodeGroupFactoryConfig } from './date.week';
+import { MapFunction, Maybe } from '@dereekb/util';
+import { DateBlockIndex, DateBlockTiming, getCurrentDateBlockTimingStartDate } from './date.block';
+import { YearWeekCode, YearWeekCodeDateReader, YearWeekCodeFactory, yearWeekCodeFromDate, yearWeekCodeGroupFactory, YearWeekCodeGroupFactory } from './date.week';
 
 /**
  * Used to return the proper YearWeekCode for the input DateBlockIndex relative to the configured timing, or a Date.

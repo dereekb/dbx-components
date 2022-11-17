@@ -61,7 +61,7 @@ export class HashSet<K extends PrimativeKey, T> implements Set<T> {
   }
 
   valueKeyEntriesForKeys(keys: Maybe<K>[]): [Maybe<K>, Maybe<T>][] {
-    let values: [Maybe<K>, Maybe<T>][] = [];
+    const values: [Maybe<K>, Maybe<T>][] = [];
 
     keys.forEach((key) => {
       const value = this.valueForKey(key);
@@ -72,7 +72,7 @@ export class HashSet<K extends PrimativeKey, T> implements Set<T> {
   }
 
   valuesForKeys(keys: Maybe<K>[]): T[] {
-    let values: T[] = [];
+    const values: T[] = [];
 
     keys.forEach((key) => {
       const value = this.valueForKey(key);

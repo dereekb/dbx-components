@@ -1,9 +1,9 @@
 import { Component } from '@angular/core';
-import { DbxSectionHeaderConfig, DbxSectionHeaderHType } from '@dereekb/dbx-web';
+import { DbxSectionHeaderConfig } from '@dereekb/dbx-web';
 import { Maybe } from '@dereekb/util';
 import { FieldWrapper, FormlyFieldConfig } from '@ngx-formly/core';
 
-export interface DbxFormSectionConfig extends DbxSectionHeaderConfig {}
+export type DbxFormSectionConfig = DbxSectionHeaderConfig;
 
 @Component({
   template: `

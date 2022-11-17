@@ -1,5 +1,5 @@
-import { Factory, fixMultiSlashesInSlashPath, MapFunction, Maybe, removeTrailingFileTypeSeparators, removeTrailingSlashes, WebsitePath, WebsiteUrl } from '@dereekb/util';
-import { fetchOk, requireOkResponse } from './error';
+import { Factory, fixMultiSlashesInSlashPath, MapFunction, Maybe, removeTrailingSlashes, WebsitePath, WebsiteUrl } from '@dereekb/util';
+import { fetchOk } from './error';
 import { ConfiguredFetchWithTimeout, RequestInitWithTimeout, RequestWithTimeout } from './fetch.type';
 import { fetchTimeout } from './timeout';
 

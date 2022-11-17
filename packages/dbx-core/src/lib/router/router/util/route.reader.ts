@@ -1,4 +1,4 @@
-import { ObservableOrValueGetter, MaybeObservableOrValueGetter, switchMapToDefault, maybeValueFromObservableOrValueGetter, valueFromObservableOrValueGetter, asObservableFromGetter } from '@dereekb/rxjs';
+import { ObservableOrValueGetter, MaybeObservableOrValueGetter, switchMapToDefault, maybeValueFromObservableOrValueGetter, asObservableFromGetter } from '@dereekb/rxjs';
 import { Destroyable, Maybe } from '@dereekb/util';
 import { BehaviorSubject, combineLatest, distinctUntilChanged, first, map, Observable, shareReplay } from 'rxjs';
 import { DbxRouterService } from '../service/router.service';

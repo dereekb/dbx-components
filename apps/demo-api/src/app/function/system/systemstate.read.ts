@@ -1,5 +1,3 @@
-import { onCallCreateModelResultWithDocs } from '@dereekb/firebase';
-import { assertIsAdminInRequest, assertIsAdminOrTargetUserInRequestData } from '@dereekb/firebase-server';
 import { ExampleReadParams, ExampleReadResponse } from '@dereekb/demo-firebase';
 import { DemoReadModelFunction } from '../function';
 

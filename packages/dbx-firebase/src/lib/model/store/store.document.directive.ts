@@ -1,6 +1,6 @@
 import { Directive, forwardRef, Input, Provider, Type } from '@angular/core';
 import { DocumentReference, FirestoreAccessorStreamMode, FirestoreDocument, FirestoreModelKey, FirestoreModelId } from '@dereekb/firebase';
-import { Maybe, ModelKey } from '@dereekb/util';
+import { Maybe } from '@dereekb/util';
 import { DbxFirebaseDocumentStore } from './store.document';
 
 /**

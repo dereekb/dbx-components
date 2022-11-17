@@ -1,7 +1,7 @@
-import { itShouldFail, expectFail, failDueToSuccess, failSuccessfully } from '@dereekb/util/test';
-import { fetchService, fetchRequestFactory, FetchRequestFactory, FetchService } from './fetch';
+import { itShouldFail, failDueToSuccess, failSuccessfully } from '@dereekb/util/test';
+import { fetchService, FetchService } from './fetch';
 import fetch, { Request, RequestInfo, RequestInit } from 'node-fetch';
-import { FetchResponseError, requireOkResponse } from './error';
+import { requireOkResponse } from './error';
 import { waitForMs } from '@dereekb/util';
 import { FetchTimeoutError } from './timeout';
 

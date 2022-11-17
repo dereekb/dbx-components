@@ -46,7 +46,7 @@ export function emailField(config: EmailFieldConfig = {}): FormlyFieldConfig {
   return emailFieldConfig;
 }
 
-export interface CityFieldConfig extends Partial<TextFieldConfig> {}
+export type CityFieldConfig = Partial<TextFieldConfig>;
 
 export function cityField(config: CityFieldConfig = {}): FormlyFieldConfig {
   const { key = 'city', placeholder = '', label = 'City', autocomplete = 'city', maxLength = ADDRESS_CITY_MAX_LENGTH, required = false } = config;
@@ -82,7 +82,7 @@ export function stateField(config: StateFieldConfig = {}): FormlyFieldConfig {
   });
 }
 
-export interface CountryFieldConfig extends Partial<TextFieldConfig> {}
+export type CountryFieldConfig = Partial<TextFieldConfig>;
 
 export function countryField(config: CountryFieldConfig = {}): FormlyFieldConfig {
   const { key = 'country', placeholder = '', label = 'Country', autocomplete = 'country', maxLength = ADDRESS_COUNTRY_MAX_LENGTH, required = false } = config;
@@ -97,7 +97,7 @@ export function countryField(config: CountryFieldConfig = {}): FormlyFieldConfig
   });
 }
 
-export interface ZipCodeFieldConfig extends Partial<TextFieldConfig> {}
+export type ZipCodeFieldConfig = Partial<TextFieldConfig>;
 
 export function zipCodeField(config: ZipCodeFieldConfig = {}): FormlyFieldConfig {
   const { key = 'zip', placeholder = '', label = 'Zip Code', autocomplete = 'postal-code', pattern = ZIP_CODE_STRING_REGEX, maxLength = ADDRESS_ZIP_MAX_LENGTH, required = false } = config;

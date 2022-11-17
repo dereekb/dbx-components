@@ -1,5 +1,5 @@
 import { itShouldFail, expectFail } from '@dereekb/util/test';
-import { fetchService, FetchService } from './fetch';
+import { FetchService } from './fetch';
 import { nodeFetchService } from './provider';
 
 // TEMP: Fetch global is not available in jest? Use node-fetch@2 for now.

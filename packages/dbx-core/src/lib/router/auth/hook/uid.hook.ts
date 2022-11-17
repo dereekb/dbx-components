@@ -2,7 +2,7 @@ import { AuthUserIdentifier } from '../../../auth/auth.user';
 import { DbxAuthService } from '../../../auth/service/auth.service';
 import { TransitionService, TransitionHookFn, Transition, HookResult, StateService, HookMatchCriteria } from '@uirouter/core';
 import { Maybe } from '@dereekb/util';
-import { map, first, filter, switchMap, firstValueFrom, Observable, of } from 'rxjs';
+import { map, first, switchMap, firstValueFrom, Observable, of } from 'rxjs';
 import { Injector } from '@angular/core';
 
 export const DEFAULT_REDIRECT_FOR_USER_IDENTIFIER_PARAM_VALUE = '0';
