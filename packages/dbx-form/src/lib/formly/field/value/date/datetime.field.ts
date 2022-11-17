@@ -25,7 +25,7 @@ export function timeOnlyField(config: Partial<TimeFieldConfig> = {}): FormlyFiel
 }
 
 export function dateTimeField(config: Partial<DateTimeFieldConfig> = {}) {
-  const { key = 'date', dateLabel, timeLabel, timeMode = DbxDateTimeFieldTimeMode.REQUIRED, valueMode, fullDayInUTC, fullDayFieldName, getConfigObs, hideDateHint, timeOnly = false } = config;
+  const { key = 'date', dateLabel, timeLabel, timeMode = DbxDateTimeFieldTimeMode.REQUIRED, valueMode, fullDayInUTC, fullDayFieldName, getConfigObs, getSyncFieldsObs, hideDateHint, timeOnly = false } = config;
 
   const fieldConfig: FormlyFieldConfig<DbxDateTimeFieldProps> = formlyField({
     key,
@@ -39,7 +39,8 @@ export function dateTimeField(config: Partial<DateTimeFieldConfig> = {}) {
       fullDayFieldName,
       fullDayInUTC,
       hideDateHint,
-      getConfigObs
+      getConfigObs,
+      getSyncFieldsObs
     })
   });
 
@@ -56,18 +57,23 @@ export interface DateDateRangeFieldConfig {
 export function dateRangeField(config: DateDateRangeFieldConfig = {}): FormlyFieldConfig {
   const { start, end } = config;
 
+  const startFieldKey = start?.key ?? 'start';
+  const endFieldKey = end?.key ?? 'end';
+
   const startField = dateTimeField({
     dateLabel: 'Start',
     timeMode: DbxDateTimeFieldTimeMode.NONE,
-    key: 'start',
-    ...start
+    getSyncFieldsObs: () => of([{ syncWith: endFieldKey, syncType: 'after' }]),
+    ...start,
+    key: startFieldKey
   });
 
   const endField = dateTimeField({
     dateLabel: 'End',
     timeMode: DbxDateTimeFieldTimeMode.NONE,
-    key: 'end',
-    ...end
+    getSyncFieldsObs: () => of([{ syncWith: startFieldKey, syncType: 'before' }]),
+    ...end,
+    key: endFieldKey
   });
 
   return {

@@ -1,13 +1,13 @@
-import { LogicalDateStringCode, dateFromLogicalDate, Maybe, ReadableTimeString } from '@dereekb/util';
-import { DateTimeMinuteConfig, DateTimeMinuteInstance, formatToISO8601DayString, guessCurrentTimezone, readableTimeStringToDate, toLocalReadableTimeString, toReadableTimeString, utcDayForDate, formatToISO8601DateString, toJsDate, parseISO8601DayStringToDate } from '@dereekb/date';
-import { switchMap, shareReplay, map, startWith, tap, first, distinctUntilChanged, debounceTime, throttleTime, BehaviorSubject, Observable, combineLatest, Subject, merge, interval } from 'rxjs';
+import { LogicalDateStringCode, Maybe, ReadableTimeString, ArrayOrValue, ISO8601DateString, asArray, filterMaybeValues, dateFromLogicalDate } from '@dereekb/util';
+import { DateTimeMinuteConfig, DateTimeMinuteInstance, formatToISO8601DayString, guessCurrentTimezone, readableTimeStringToDate, toLocalReadableTimeString, toReadableTimeString, utcDayForDate, formatToISO8601DateString, toJsDate, parseISO8601DayStringToDate, safeToJsDate, findMinDate, findMaxDate } from '@dereekb/date';
+import { switchMap, shareReplay, map, startWith, tap, first, distinctUntilChanged, debounceTime, throttleTime, BehaviorSubject, Observable, combineLatest, Subject, merge, interval, of } from 'rxjs';
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { AbstractControl, FormControl, Validators, FormGroup } from '@angular/forms';
 import { FieldType } from '@ngx-formly/material';
 import { FieldTypeConfig, FormlyFieldProps } from '@ngx-formly/core';
 import { MatDatepickerInputEvent } from '@angular/material/datepicker';
-import { addMinutes, isSameDay, isSameMinute, startOfDay } from 'date-fns';
-import { filterMaybe, skipFirstMaybe, SubscriptionObject, switchMapMaybeDefault } from '@dereekb/rxjs';
+import { max as maxDate, min as minDate, addMinutes, isSameDay, isSameMinute, startOfDay } from 'date-fns';
+import { filterMaybe, skipFirstMaybe, SubscriptionObject, switchMapMaybeDefault, tapLog } from '@dereekb/rxjs';
 
 export enum DbxDateTimeFieldTimeMode {
   /**
@@ -77,6 +77,19 @@ export function dbxDateTimeOutputValueFactory(mode: DbxDateTimeValueMode): (date
 
 export type DateTimePickerConfiguration = Omit<DateTimeMinuteConfig, 'date'>;
 
+export type DbxDateTimeFieldSyncType = 'before' | 'after';
+
+export interface DbxDateTimeFieldSyncField {
+  /**
+   * Field key/path to sync with/against.
+   */
+  syncWith: string;
+  /**
+   * How to sync against the other field.
+   */
+  syncType: DbxDateTimeFieldSyncType;
+}
+
 export interface DbxDateTimeFieldProps extends FormlyFieldProps {
   /**
    * Custom date label.
@@ -136,6 +149,35 @@ export interface DbxDateTimeFieldProps extends FormlyFieldProps {
    * Used for returning the configuration observable.
    */
   getConfigObs?: () => Observable<DateTimePickerConfiguration>;
+
+  /**
+   * Used for syncing with one or more fields with a Date value.
+   */
+  getSyncFieldsObs?: () => Observable<ArrayOrValue<DbxDateTimeFieldSyncField>>;
+}
+
+export interface DbxDateTimeFieldSyncParsedField extends Pick<DbxDateTimeFieldSyncField, 'syncType'> {
+  control: AbstractControl<Maybe<Date | ISO8601DateString>>;
+}
+
+export function syncConfigValueObs(parseConfigsObs: Observable<DbxDateTimeFieldSyncParsedField[]>, type: DbxDateTimeFieldSyncType): Observable<Maybe<Date>> {
+  return parseConfigsObs.pipe(
+    switchMap((x) => {
+      const config = x.find((y) => y.syncType === type);
+      let result: Observable<Maybe<Date>>;
+
+      if (config) {
+        const { control } = config;
+        result = control.valueChanges.pipe(startWith(control.value), map(safeToJsDate));
+      } else {
+        result = of(undefined);
+      }
+
+      return result;
+    }),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
 }
 
 @Component({
@@ -191,6 +233,7 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
   });
 
   private _config = new BehaviorSubject<Maybe<Observable<DateTimePickerConfiguration>>>(undefined);
+  private _syncConfigObs = new BehaviorSubject<Maybe<Observable<ArrayOrValue<DbxDateTimeFieldSyncField>>>>(undefined);
 
   get dateLabel(): string {
     return this.props.dateLabel ?? 'Date';
@@ -255,7 +298,43 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
     distinctUntilChanged()
   );
 
-  readonly config$ = this._config.pipe(switchMapMaybeDefault(), shareReplay(1));
+  readonly syncConfigObs$ = this._syncConfigObs.pipe(switchMapMaybeDefault(), shareReplay(1));
+
+  readonly parsedSyncConfigs$: Observable<DbxDateTimeFieldSyncParsedField[]> = this.syncConfigObs$.pipe(
+    map((x) => {
+      let parsed: DbxDateTimeFieldSyncParsedField[];
+
+      if (x) {
+        parsed = filterMaybeValues(
+          asArray(x).map((y) => {
+            const control = this.form.get(y.syncWith);
+
+            if (control) {
+              return {
+                control,
+                ...y
+              };
+            } else {
+              return undefined;
+            }
+          })
+        );
+      } else {
+        parsed = [];
+      }
+
+      return parsed;
+    }),
+    shareReplay(1)
+  );
+
+  readonly syncConfigBeforeValue$: Observable<Maybe<Date>> = syncConfigValueObs(this.parsedSyncConfigs$, 'before');
+  readonly syncConfigAfterValue$: Observable<Maybe<Date>> = syncConfigValueObs(this.parsedSyncConfigs$, 'after');
+
+  // TODO: Get min/max using the DateTimePickerConfiguration too
+
+  readonly dateInputMin$: Observable<Maybe<Date>> = this.syncConfigBeforeValue$;
+  readonly dateInputMax$: Observable<Maybe<Date>> = this.syncConfigAfterValue$;
 
   readonly rawDateTime$: Observable<Maybe<Date>> = combineLatest([this.dateValue$, this.timeInput$.pipe(startWith(null)), this.fullDay$]).pipe(
     map(([date, timeString, fullDay]) => {
@@ -285,7 +364,32 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
     shareReplay(1)
   );
 
-  readonly timeOutput$: Observable<Maybe<Date>> = combineLatest([this.rawDateTime$, this._offset, this.config$.pipe(distinctUntilChanged())]).pipe(
+  readonly config$ = combineLatest([this._config.pipe(switchMapMaybeDefault(), shareReplay(1)), this.dateInputMin$, this.dateInputMax$]).pipe(
+    map(([x, dateInputMin, dateInputMax]) => {
+      let result: Maybe<DateTimePickerConfiguration> = x;
+
+      if (dateInputMin != null || dateInputMax != null) {
+        const { min: limitMin, max: limitMax } = x?.limits ?? {};
+        const min = findMinDate([dateInputMin, limitMin]);
+        const max = findMaxDate([dateInputMax, limitMax]);
+
+        result = {
+          ...x,
+          limits: {
+            ...x?.limits,
+            min,
+            max
+          }
+        };
+      }
+
+      return result;
+    }),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+
+  readonly timeOutput$: Observable<Maybe<Date>> = combineLatest([this.rawDateTime$, this._offset, this.config$]).pipe(
     throttleTime(40, undefined, { leading: false, trailing: true }),
     distinctUntilChanged((current, next) => current[0] === next[0] && next[1] === 0),
     tap(([, stepsOffset]) => (stepsOffset ? this._offset.next(0) : 0)),
@@ -298,7 +402,6 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
         });
 
         date = instance.limit(date);
-
         const minutes = stepsOffset * 5;
         date = addMinutes(date, minutes);
       }
@@ -316,6 +419,7 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
   ngOnInit(): void {
     this._formControlObs.next(this.formControl);
     this._config.next(this.dateTimeField.getConfigObs?.());
+    this._syncConfigObs.next(this.dateTimeField.getSyncFieldsObs?.());
 
     const valueFactory = dbxDateTimeOutputValueFactory(this.valueMode);
 
@@ -386,6 +490,7 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
     this._formControlObs.complete();
     this._config.complete();
     this._updateTime.complete();
+    this._syncConfigObs.complete();
     this._sub.destroy();
     this._valueSub.destroy();
   }

@@ -89,8 +89,6 @@ export class DbxSectionHeaderComponent {
       if (headerConfig.hintInline !== undefined) {
         this.hintInline = headerConfig.hintInline;
       }
-
-      console.log(headerConfig);
     }
   }
 

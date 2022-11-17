@@ -19,7 +19,7 @@
     <div class="dbx-hint" [ngSwitch]="fullDay$ | async">
       <small *ngSwitchCase="true">
         <b class="dbx-ok">All Day</b>
-        {{ dateValue$ | async | date: 'fullDate' }} ({{ dateValue$ | async | dateDistance }})
+        {{ displayValue$ | async | date: 'fullDate' }} ({{ displayValue$ | async | dateDistance }})
       </small>
       <small *ngSwitchCase="false">
         <ng-container *ngIf="value$ | async">
@@ -38,7 +38,7 @@
   </button>
   <mat-form-field class="dbx-datetime-row-field">
     <mat-label>{{ dateLabel }}</mat-label>
-    <input #dateInput matInput [matDatepicker]="picker" (dateChange)="datePicked($event)" [value]="dateValue$ | async" />
+    <input #dateInput matInput [min]="dateInputMin$ | async" [max]="dateInputMax$ | async" [matDatepicker]="picker" (dateChange)="datePicked($event)" [value]="dateValue$ | async" />
     <mat-datepicker #picker></mat-datepicker>
   </mat-form-field>
 </ng-template>
