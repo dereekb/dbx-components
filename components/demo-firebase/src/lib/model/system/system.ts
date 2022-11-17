@@ -1,4 +1,4 @@
-import { firestoreSubObject, firestoreDate, snapshotConverterFunctions, SystemStateStoredData, SystemStateStoredDataFieldConverterConfig, SystemStateStoredDataConverterMap } from '@dereekb/firebase';
+import { firestoreSubObject, firestoreDate, SystemStateStoredData, SystemStateStoredDataFieldConverterConfig, SystemStateStoredDataConverterMap } from '@dereekb/firebase';
 
 export const EXAMPLE_SYSTEM_DATA_SYSTEM_STATE_TYPE = 'example';
 

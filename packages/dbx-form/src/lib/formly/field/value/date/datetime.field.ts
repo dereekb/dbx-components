@@ -1,8 +1,8 @@
 import { Observable, of } from 'rxjs';
 import { FormlyFieldConfig } from '@ngx-formly/core';
-import { LabeledFieldConfig, formlyField, propsForFieldConfig, DescriptionFieldConfig } from '../../field';
+import { LabeledFieldConfig, formlyField, propsAndConfigForFieldConfig, DescriptionFieldConfig } from '../../field';
 import { DbxDateTimeFieldProps, DbxDateTimeFieldTimeMode, DateTimePickerConfiguration } from './datetime.field.component';
-import { styleWrapper } from '../../wrapper/wrapper';
+import { flexLayoutWrapper, styleWrapper } from '../../wrapper/wrapper';
 
 export interface DateTimeFieldConfig extends LabeledFieldConfig, DescriptionFieldConfig, DbxDateTimeFieldProps {}
 export type TimeFieldConfig = Omit<DateTimeFieldConfig, 'showDate'>;
@@ -25,23 +25,59 @@ export function timeOnlyField(config: Partial<TimeFieldConfig> = {}): FormlyFiel
 }
 
 export function dateTimeField(config: Partial<DateTimeFieldConfig> = {}) {
-  const { key = 'date', timeMode = DbxDateTimeFieldTimeMode.REQUIRED, valueMode, fullDayInUTC, fullDayFieldName, getConfigObs, hideDateHint, timeOnly = false } = config;
+  const { key = 'date', dateLabel, timeLabel, timeMode = DbxDateTimeFieldTimeMode.REQUIRED, valueMode, fullDayInUTC, fullDayFieldName, getConfigObs, getSyncFieldsObs, hideDateHint, timeOnly = false } = config;
 
   const fieldConfig: FormlyFieldConfig<DbxDateTimeFieldProps> = formlyField({
     key,
     type: 'datetime',
-    ...propsForFieldConfig(config, {
+    ...propsAndConfigForFieldConfig(config, {
+      dateLabel,
+      timeLabel,
       valueMode,
       timeOnly,
       timeMode: timeOnly ? DbxDateTimeFieldTimeMode.REQUIRED : timeMode,
       fullDayFieldName,
       fullDayInUTC,
       hideDateHint,
-      getConfigObs
+      getConfigObs,
+      getSyncFieldsObs
     })
   });
 
   return styleWrapper(fieldConfig, {
     classGetter: 'dbx-mat-form-field-disable-underline'
   });
+}
+
+export interface DateDateRangeFieldConfig {
+  start?: Partial<DateTimeFieldConfig>;
+  end?: Partial<DateTimeFieldConfig>;
+}
+
+export function dateRangeField(config: DateDateRangeFieldConfig = {}): FormlyFieldConfig {
+  const { start, end } = config;
+
+  const startFieldKey = start?.key ?? 'start';
+  const endFieldKey = end?.key ?? 'end';
+
+  const startField = dateTimeField({
+    dateLabel: 'Start',
+    timeMode: DbxDateTimeFieldTimeMode.NONE,
+    getSyncFieldsObs: () => of([{ syncWith: endFieldKey, syncType: 'after' }]),
+    ...start,
+    key: startFieldKey
+  });
+
+  const endField = dateTimeField({
+    dateLabel: 'End',
+    timeMode: DbxDateTimeFieldTimeMode.NONE,
+    getSyncFieldsObs: () => of([{ syncWith: startFieldKey, syncType: 'before' }]),
+    ...end,
+    key: endFieldKey
+  });
+
+  return {
+    key: undefined,
+    fieldGroup: [flexLayoutWrapper([startField, endField], { size: 1, relative: true })]
+  };
 }

@@ -1,6 +1,6 @@
 import { Minutes } from '@dereekb/util';
 import { Expose, Type } from 'class-transformer';
-import { addHours, addMinutes } from 'date-fns';
+import { addMinutes } from 'date-fns';
 import { DateRange, dateRangeState, DateRangeState } from './date.range';
 
 export interface DateDurationSpan {

@@ -2,7 +2,7 @@ import { IndexRangeInput } from './../value/indexed';
 import { isolateSlashPathFunction, SLASH_PATH_SEPARATOR, toAbsoluteSlashPathStartType } from '../path/path';
 import { chainMapSameFunctions, MapFunction } from '../value/map';
 import { Maybe } from '../value/maybe.type';
-import { escapeStringForRegex, findAllCharacterOccurences, findAllCharacterOccurencesFunction } from './replace';
+import { escapeStringForRegex, findAllCharacterOccurences } from './replace';
 import { splitJoinRemainder } from './string';
 import { TransformStringFunction } from './transform';
 import { replaceCharacterAtIndexWith, replaceLastCharacterIfIsFunction } from './char';

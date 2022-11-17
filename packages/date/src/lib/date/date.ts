@@ -1,5 +1,5 @@
-import { isDate as dateFnsIsDate, max as maxDate, parseISO, addDays, isPast, isAfter as isAfterDate, set as setDateValues, isValid, startOfMinute, setMinutes, setSeconds, setMilliseconds } from 'date-fns';
-import { DateOrDateString, filterMaybeValues, ISO8601DateString, Maybe, Minutes, MINUTES_IN_DAY, MS_IN_HOUR, MS_IN_MINUTE, Seconds, TimezoneString } from '@dereekb/util';
+import { isDate as dateFnsIsDate, max as maxDate, min as minDate, parseISO, addDays, isPast, isAfter as isAfterDate, set as setDateValues, isValid, startOfMinute } from 'date-fns';
+import { DateOrDateString, filterMaybeValues, ISO8601DateString, Maybe, Minutes, MINUTES_IN_DAY, MS_IN_HOUR, MS_IN_MINUTE, Seconds, TimezoneString, ArrayOrValue, asArray } from '@dereekb/util';
 
 export const MAX_FUTURE_DATE = new Date(Date.UTC(9999, 0));
 
@@ -57,6 +57,10 @@ export function toISODateString(input: DateOrDateString): ISO8601DateString {
 
 export function guessCurrentTimezone(): TimezoneString {
   return Intl.DateTimeFormat()?.resolvedOptions()?.timeZone;
+}
+
+export function safeToJsDate(input: Maybe<DateOrDateString>): Maybe<Date> {
+  return input != null ? toJsDate(input) : undefined;
 }
 
 /**
@@ -183,6 +187,31 @@ export function roundDownToHour(date: Date): Date {
     milliseconds: 0
   });
 }
+
+export type ReduceDatesFunction = (inputDates: ArrayOrValue<Maybe<Date>>) => Maybe<Date>;
+
+export function reduceDatesFunction(reduceDates: (dates: Date[]) => Maybe<Date>): ReduceDatesFunction {
+  return (inputDates: ArrayOrValue<Maybe<Date>>) => {
+    const dates = filterMaybeValues(asArray(inputDates));
+    let result: Maybe<Date>;
+
+    if (dates.length) {
+      result = reduceDates(dates);
+    }
+
+    return result;
+  };
+}
+
+/**
+ * Finds the minimum date in the input. If no dates are input, returns undefined.
+ */
+export const findMinDate = reduceDatesFunction(minDate);
+
+/**
+ * Finds the maximum date in the input. If no dates are input, returns undefined.
+ */
+export const findMaxDate = reduceDatesFunction(maxDate);
 
 // MARK: Compat
 /**

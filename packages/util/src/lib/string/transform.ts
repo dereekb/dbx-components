@@ -32,6 +32,10 @@ export type TransformStringFunctionConfig<S extends string = string> = {
   transform?: TransformStringFunction<S>;
 };
 
+export interface TransformStringFunctionConfigRef<S extends string = string> {
+  transform: TransformStringFunctionConfig<S>;
+}
+
 export type TransformStringFunction<S extends string = string> = MapFunction<S, S>;
 
 export function transformStringFunction<S extends string = string>(config: TransformStringFunctionConfig): TransformStringFunction<S> {
@@ -82,5 +86,28 @@ export type AddPrefixFunction = (input: string) => string;
 export function addPrefixFunction(prefix: string): AddPrefixFunction {
   return (input: string) => {
     return input.startsWith(prefix) ? input : prefix + input;
+  };
+}
+
+export function addSuffix(suffix: string, input: string): string {
+  return addSuffixFunction(suffix)(input);
+}
+
+/**
+ * Function that adds a configured suffix to the input string if it does not exist on that string.
+ */
+export type AddSuffixFunction = (input: string) => string;
+
+/**
+ * Creates an AddSuffixFunction
+ *
+ * @param input
+ * @param replacement
+ * @param is
+ * @returns
+ */
+export function addSuffixFunction(suffix: string): AddSuffixFunction {
+  return (input: string) => {
+    return input.endsWith(suffix) ? input : input + suffix;
   };
 }

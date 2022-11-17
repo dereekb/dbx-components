@@ -1,6 +1,6 @@
 import { DescriptionFieldConfig } from './../field';
 import { FormlyFieldConfig } from '@ngx-formly/core';
-import { LabeledFieldConfig, formlyField, propsForFieldConfig } from '../field';
+import { LabeledFieldConfig, formlyField, propsAndConfigForFieldConfig } from '../field';
 import { TextFieldLengthConfig } from '../value/text/text.field';
 
 export interface TextEditorFieldConfig extends LabeledFieldConfig, DescriptionFieldConfig, TextFieldLengthConfig {}
@@ -16,7 +16,7 @@ export function textEditorField(config: TextEditorFieldConfig): FormlyFieldConfi
       // Set to trigger value update on blurs with the form. However, the value is set internally too.
       updateOn: 'blur'
     },
-    ...propsForFieldConfig(config, {
+    ...propsAndConfigForFieldConfig(config, {
       minLength,
       maxLength
     })

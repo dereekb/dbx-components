@@ -10,7 +10,7 @@ export class FetchTimeoutError extends BaseError {
 export function fetchTimeout(inputFetch: typeof fetch): typeof fetch {
   return (input: RequestInfo | URL, init: RequestInit | undefined) => {
     let controller: AbortController | undefined;
-    let timeout: number | null | undefined = (init as RequestInitWithTimeout)?.timeout ?? (input as RequestWithTimeout).timeout;
+    const timeout: number | null | undefined = (init as RequestInitWithTimeout)?.timeout ?? (input as RequestWithTimeout).timeout;
 
     // if signal is not provided, and a timeout is specified, configure the timeout
     if (!init?.signal && timeout) {

@@ -25,12 +25,12 @@ export interface LimitDateTimeConfig {
     /**
      * The minimum date allowed.
      */
-    min?: Date;
+    min?: Maybe<Date>;
 
     /**
      * The maximum date allowed.
      */
-    max?: Date;
+    max?: Maybe<Date>;
 
     /**
      * The date must be in the future.

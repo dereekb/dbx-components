@@ -1,7 +1,5 @@
-import { mergeArrayOrValueIntoArray } from '@dereekb/util';
-import { ArrayOrValue } from './../array/array';
 import { PrimativeKey, ReadKeyFunction, ReadMultipleKeysFunction } from '../key';
-import { IterableOrValue, iterableToArray, useIterableOrValue } from '../iterable';
+import { IterableOrValue, useIterableOrValue } from '../iterable';
 import { Maybe } from '../value/maybe.type';
 
 /**
@@ -91,7 +89,7 @@ export interface MultiValueMapBuilder<T, K extends PrimativeKey = PrimativeKey> 
  * @returns
  */
 export function multiValueMapBuilder<T, K extends PrimativeKey = PrimativeKey>(): MultiValueMapBuilder<T, K> {
-  let map = new Map<Maybe<K>, T[]>();
+  const map = new Map<Maybe<K>, T[]>();
 
   const builder: MultiValueMapBuilder<T, K> = {
     map: () => map,

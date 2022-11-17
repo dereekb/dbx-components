@@ -1,4 +1,4 @@
-import { ArrayOrValue, fixExtraQueryParameters, forEachInIterable, forEachKeyValue, isEmptyIterable, isIterable, mapIterable, Maybe, useIterableOrValue } from '@dereekb/util';
+import { ArrayOrValue, fixExtraQueryParameters, forEachInIterable, forEachKeyValue, isEmptyIterable, isIterable, Maybe, useIterableOrValue } from '@dereekb/util';
 
 export type SimpleFetchURLInput = URL | string;
 

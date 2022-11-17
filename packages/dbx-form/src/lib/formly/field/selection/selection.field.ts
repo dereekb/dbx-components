@@ -1,7 +1,7 @@
 import { ObservableOrValue } from '@dereekb/rxjs';
 import { Maybe } from '@dereekb/util';
 import { FormlyFieldConfig } from '@ngx-formly/core';
-import { DescriptionFieldConfig, formlyField, LabeledFieldConfig, propsForFieldConfig } from '../field';
+import { DescriptionFieldConfig, formlyField, LabeledFieldConfig, propsAndConfigForFieldConfig } from '../field';
 
 export interface ValueSelectionOption<T> {
   value: T;
@@ -34,7 +34,7 @@ export function valueSelectionField<T>(config: ValueSelectionFieldConfig<T>): Fo
   return formlyField({
     key,
     type: native ? 'native-select' : 'select',
-    ...propsForFieldConfig(config, {
+    ...propsAndConfigForFieldConfig(config, {
       options: config.options,
       multiple: config.multiple ?? false,
       ...selectAllOptionConfig

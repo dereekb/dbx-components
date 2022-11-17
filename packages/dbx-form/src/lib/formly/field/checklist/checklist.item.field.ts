@@ -1,5 +1,5 @@
 import { FormlyFieldConfig } from '@ngx-formly/core';
-import { LabeledFieldConfig, formlyField, propsForFieldConfig } from '../field';
+import { LabeledFieldConfig, formlyField, propsAndConfigForFieldConfig } from '../field';
 import { DbxChecklistItemFieldProps } from './checklist.item.field.component';
 
 export interface ChecklistItemFieldConfig<T = unknown> extends LabeledFieldConfig, DbxChecklistItemFieldProps<T> {}
@@ -11,7 +11,7 @@ export function checklistItemField<T = unknown>(config: ChecklistItemFieldBuilde
   const fieldConfig = formlyField({
     key,
     type: 'checklistitem',
-    ...propsForFieldConfig(config, {
+    ...propsAndConfigForFieldConfig(config, {
       displayContentObs,
       componentClass
     })

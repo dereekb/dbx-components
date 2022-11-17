@@ -1,12 +1,22 @@
 import { AsyncValidatorFn, ValidatorFn } from '@angular/forms';
-import { mergeObjects, filterFromPOJO, mergeObjectsFunction, filterFromPOJOFunction, FilterKeyValueTuplesInput, GeneralFilterFromPOJOFunction, ArrayOrValue, Maybe, asArray, objectHasNoKeys } from '@dereekb/util';
+import { mergeObjects, filterFromPOJO, mergeObjectsFunction, filterFromPOJOFunction, FilterKeyValueTuplesInput, GeneralFilterFromPOJOFunction, ArrayOrValue, Maybe, asArray, objectHasNoKeys, MapFunction } from '@dereekb/util';
 import { FormlyFieldConfig, FormlyFieldProps } from '@ngx-formly/core';
 import { ValidationMessageOption } from '@ngx-formly/core/lib/models';
 
-export interface FieldConfig {
+export type FormlyValueParser<I = any, O = any> = MapFunction<I, O>;
+
+export interface FieldConfigParsersRef {
+  parsers: FormlyValueParser[];
+}
+
+export interface FieldConfig extends Pick<FormlyFieldConfig, 'expressions' | 'parsers'>, Partial<FieldConfigParsersRef> {
   key: string;
   required?: boolean;
   readonly?: boolean;
+}
+
+export interface FieldConfigWithParsers {
+  parsers?: FormlyValueParser[];
 }
 
 export type DisableAutocompleteForField = false;
@@ -51,11 +61,21 @@ export function formlyField<T extends FormlyFieldConfig = FormlyFieldConfig>(fie
   return fieldConfig;
 }
 
-export function propsForFieldConfig<O extends object = object>(fieldConfig: Partial<FieldConfig> & Partial<LabeledFieldConfig> & Partial<AttributesFieldConfig> & Partial<DescriptionFieldConfig>, override?: PartialPotentialFieldConfig & O) {
+/**
+ * Creates an object with propers, expressions, and parsers properly configured from the input FieldConfig.
+ *
+ * @param fieldConfig
+ * @param override
+ * @returns
+ */
+export function propsAndConfigForFieldConfig<O extends object = object>(fieldConfig: Partial<FieldConfig> & Partial<LabeledFieldConfig> & Partial<AttributesFieldConfig> & Partial<DescriptionFieldConfig>, override?: PartialPotentialFieldConfig & O) {
+  const { expressions, parsers } = fieldConfig;
   const props = propsValueForFieldConfig(fieldConfig, override);
 
   return {
-    props
+    props,
+    expressions,
+    parsers
   };
 }
 
@@ -166,3 +186,10 @@ export function validatorsForFieldConfig(input: ValidatorsForFieldConfigInput): 
 
   return config;
 }
+
+/**
+ * MARK: Compat
+ *
+ * @deprecated use propsAndConfigForFieldConfig instead.
+ */
+export const propsForFieldConfig = propsAndConfigForFieldConfig;

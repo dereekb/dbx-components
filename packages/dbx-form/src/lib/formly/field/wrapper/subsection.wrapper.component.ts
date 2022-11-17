@@ -3,7 +3,7 @@ import { DbxSectionHeaderConfig } from '@dereekb/dbx-web';
 import { Maybe } from '@dereekb/util';
 import { FieldTypeConfig, FieldWrapper } from '@ngx-formly/core';
 
-export interface DbxFormSubsectionConfig extends DbxSectionHeaderConfig {}
+export type DbxFormSubsectionConfig = DbxSectionHeaderConfig;
 
 @Component({
   template: `

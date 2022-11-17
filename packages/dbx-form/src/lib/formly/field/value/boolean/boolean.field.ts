@@ -1,5 +1,5 @@
 import { FormlyFieldConfig } from '@ngx-formly/core';
-import { LabeledFieldConfig, formlyField, DefaultValueFieldConfig, DescriptionFieldConfig, propsForFieldConfig } from '../../field';
+import { LabeledFieldConfig, formlyField, DefaultValueFieldConfig, DescriptionFieldConfig, propsAndConfigForFieldConfig } from '../../field';
 
 export interface ToggleFieldConfig extends Omit<LabeledFieldConfig, 'placeholder' | 'autocomplete'>, DefaultValueFieldConfig<boolean>, DescriptionFieldConfig {}
 
@@ -11,7 +11,7 @@ export function toggleField(config: ToggleFieldConfig): FormlyFieldConfig {
     type: 'toggle',
     wrappers: ['autotouch', 'form-field'], // NOTE: Must specify form-field if other wrapper specified, otherwise it will not be used.
     defaultValue: defaultValue ?? false,
-    ...propsForFieldConfig(config)
+    ...propsAndConfigForFieldConfig(config)
   });
 }
 
@@ -24,7 +24,7 @@ export function checkboxField(config: CheckboxFieldConfig): FormlyFieldConfig {
     key,
     type: 'checkbox',
     defaultValue: defaultValue ?? false,
-    ...propsForFieldConfig(config)
+    ...propsAndConfigForFieldConfig(config)
   });
 }
 

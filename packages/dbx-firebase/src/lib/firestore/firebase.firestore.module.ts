@@ -1,9 +1,8 @@
 import { ModuleWithProviders, NgModule, Provider } from '@angular/core';
-import { clientFirebaseFirestoreContextFactory, FirestoreContext } from '@dereekb/firebase';
+import { clientFirebaseFirestoreContextFactory, FirestoreContext, SystemStateFirestoreCollections } from '@dereekb/firebase';
 import { DBX_FIRESTORE_CONTEXT_TOKEN } from './firebase.firestore';
 import { Firestore } from '@angular/fire/firestore';
 import { ClassLikeType } from '@dereekb/util';
-import { SystemStateFirestoreCollections } from '@dereekb/firebase';
 
 export function provideSystemStateFirestoreCollections(appCollection: SystemStateFirestoreCollections): SystemStateFirestoreCollections {
   if (!appCollection.systemStateCollection) {

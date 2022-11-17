@@ -1,4 +1,4 @@
-import { FirebaseAuthUserId, FirebaseAuthUserIdRef } from '../common/auth/auth';
+import { FirebaseAuthUserIdRef } from '../common/auth/auth';
 
 /**
  * The model is related to a user with the model's uid.

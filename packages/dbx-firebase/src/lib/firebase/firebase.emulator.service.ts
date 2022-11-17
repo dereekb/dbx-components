@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { ClickableAnchor, ClickableUrl } from '@dereekb/dbx-core';
+import { ClickableUrl } from '@dereekb/dbx-core';
 import { Maybe } from '@dereekb/util';
 import { DbxFirebaseParsedEmulatorsConfig } from './emulators';
 

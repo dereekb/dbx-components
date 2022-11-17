@@ -1,5 +1,5 @@
 import { ReadKeyFunction, ReadMultipleKeysFunction } from '../key';
-import { keyValueMapFactory, readKeysToMap, readMultipleKeysToMap } from './map.key';
+import { readKeysToMap, readMultipleKeysToMap } from './map.key';
 
 describe('readKeysToMap()', () => {
   it('should create a map.', () => {

@@ -1,7 +1,8 @@
 import { ValidatorFn } from '@angular/forms';
+import { concatArrays, TransformNumberFunctionConfigRef, transformNumberFunction } from '@dereekb/util';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { isDivisibleBy } from '../../../../validator';
-import { AttributesFieldConfig, LabeledFieldConfig, formlyField, propsForFieldConfig, DescriptionFieldConfig, validatorsForFieldConfig } from '../../field';
+import { AttributesFieldConfig, LabeledFieldConfig, formlyField, propsAndConfigForFieldConfig, DescriptionFieldConfig, validatorsForFieldConfig, FieldConfigParsersRef, FormlyValueParser } from '../../field';
 
 export interface NumberFieldNumberConfig {
   min?: number;
@@ -12,12 +13,29 @@ export interface NumberFieldNumberConfig {
 
 export type NumberFieldInputType = 'number';
 
-export interface NumberFieldConfig extends LabeledFieldConfig, DescriptionFieldConfig, NumberFieldNumberConfig, AttributesFieldConfig {
+export interface NumberFieldConfig extends LabeledFieldConfig, DescriptionFieldConfig, NumberFieldNumberConfig, AttributesFieldConfig, Partial<TransformNumberFunctionConfigRef> {
   inputType?: NumberFieldInputType;
+}
+
+export function numberFieldTransformParser(config: Partial<FieldConfigParsersRef> & Partial<TransformNumberFunctionConfigRef>) {
+  const { parsers: inputParsers, transform } = config;
+  let parsers: FormlyValueParser[] | undefined;
+
+  if (inputParsers) {
+    parsers = inputParsers;
+  }
+
+  if (transform) {
+    const transformParser: FormlyValueParser = transformNumberFunction(transform);
+    parsers = concatArrays([transformParser], parsers);
+  }
+
+  return parsers;
 }
 
 export function numberField(config: NumberFieldConfig): FormlyFieldConfig {
   const { key, min, max, step, enforceStep, inputType: type = 'number' } = config;
+  const parsers = numberFieldTransformParser(config);
 
   const validators: ValidatorFn[] = [];
 
@@ -28,7 +46,7 @@ export function numberField(config: NumberFieldConfig): FormlyFieldConfig {
   return formlyField({
     key,
     type: 'input',
-    ...propsForFieldConfig(config, {
+    ...propsAndConfigForFieldConfig(config, {
       type,
       min,
       max,
@@ -36,6 +54,7 @@ export function numberField(config: NumberFieldConfig): FormlyFieldConfig {
     }),
     ...validatorsForFieldConfig({
       validators
-    })
+    }),
+    parsers
   });
 }

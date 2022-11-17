@@ -38,6 +38,12 @@ export interface IsDivisibleByError {
   message: string;
 }
 
+/**
+ * Angular Form ValidationFn for checking isDivisibleBy the input divisor.
+ *
+ * @param divisor
+ * @returns
+ */
 export function isDivisibleBy(divisor: number): ValidatorFn {
   if (divisor === 0) {
     throw new Error('Divisior must be greater than zero.');

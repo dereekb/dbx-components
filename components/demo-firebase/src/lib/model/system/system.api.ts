@@ -1,4 +1,4 @@
-import { FirebaseFunctionTypeConfigMap, ModelFirebaseCrudFunctionConfigMap, SystemStateTypes, ModelFirebaseFunctionMap, ModelFirebaseCreateFunction, OnCallCreateModelResult, ModelFirebaseCrudFunction, modelFirebaseFunctionMapFactory } from '@dereekb/firebase';
+import { FirebaseFunctionTypeConfigMap, ModelFirebaseCrudFunctionConfigMap, SystemStateTypes, ModelFirebaseFunctionMap, ModelFirebaseCrudFunction, modelFirebaseFunctionMapFactory } from '@dereekb/firebase';
 import { Expose } from 'class-transformer';
 import { IsString } from 'class-validator';
 
