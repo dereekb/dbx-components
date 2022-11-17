@@ -2,6 +2,16 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [9.15.6](https://github.com/dereekb/dbx-components/compare/v9.15.5-dev...v9.15.6) (2022-11-17)
+
+
+### Bug Fixes
+
+* dbx-section style fixes ([2bdaa88](https://github.com/dereekb/dbx-components/commit/2bdaa888177fcd6cc939b42e552e0445db4a86c3))
+* fixed dateTimeField input issue ([5823200](https://github.com/dereekb/dbx-components/commit/582320020557595c1cfb797224e63b8307c0f41f))
+
+
+
 ## [9.15.5](https://github.com/dereekb/dbx-components/compare/v9.15.4-dev...v9.15.5) (2022-11-14)
 
 
