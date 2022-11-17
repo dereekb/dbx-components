@@ -1,4 +1,4 @@
-import { DescriptionFieldConfig, FieldConfig, formlyField, LabeledFieldConfig, propsForFieldConfig, styleWrapper } from '@dereekb/dbx-form';
+import { DescriptionFieldConfig, FieldConfig, formlyField, LabeledFieldConfig, propsAndConfigForFieldConfig, styleWrapper } from '@dereekb/dbx-form';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { DbxFormMapboxZoomComponentFieldProps } from './zoom.field.component';
 
@@ -10,7 +10,7 @@ export function mapboxZoomField(config: MapboxZoomFieldConfig = {}): FormlyField
     ...formlyField({
       key,
       type: 'mapbox-zoom-picker',
-      ...propsForFieldConfig(config, {
+      ...propsAndConfigForFieldConfig(config, {
         label: config.label ?? 'Zoom',
         autocomplete: false,
         showMap,

@@ -1,7 +1,7 @@
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { Maybe, searchStringFilterFunction, SearchStringFilterFunction, caseInsensitiveFilterByIndexOfDecisionFactory } from '@dereekb/util';
 import { Observable, of } from 'rxjs';
-import { LabeledFieldConfig, formlyField, propsForFieldConfig } from '../../field';
+import { LabeledFieldConfig, formlyField, propsAndConfigForFieldConfig } from '../../field';
 import { PickableValueFieldDisplayValue } from './pickable';
 import { PickableItemFieldItem, PickableValueFieldsFieldProps } from './pickable.field.directive';
 export { PickableItemFieldItem };
@@ -34,7 +34,7 @@ export function pickableItemChipField<T = unknown, M = unknown>(config: Pickable
   return formlyField({
     key,
     type: 'pickablechipfield',
-    ...propsForFieldConfig(config, {
+    ...propsAndConfigForFieldConfig(config, {
       ...config,
       autocomplete: false
     })
@@ -46,7 +46,7 @@ export function pickableItemListField<T = unknown, M = unknown>(config: Pickable
   return formlyField({
     key,
     type: 'pickablelistfield',
-    ...propsForFieldConfig(config, {
+    ...propsAndConfigForFieldConfig(config, {
       ...config,
       autocomplete: false
     })

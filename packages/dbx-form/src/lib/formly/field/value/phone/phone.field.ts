@@ -2,7 +2,7 @@ import { DbxFormSectionConfig } from '../../wrapper/section.wrapper.component';
 import { sectionWrapper, flexLayoutWrapper } from '../../wrapper/wrapper';
 import { textField, TextFieldConfig } from '../text/text.field';
 import { FormlyFieldConfig } from '@ngx-formly/core';
-import { LabeledFieldConfig, formlyField, propsForFieldConfig } from '../../field';
+import { LabeledFieldConfig, formlyField, propsAndConfigForFieldConfig } from '../../field';
 import { InternationalPhoneFormlyFieldProps } from './phone.field.component';
 import { repeatArrayField, RepeatArrayFieldConfig } from '../array/array.field';
 
@@ -14,7 +14,7 @@ export function phoneField(config: Partial<InternationalPhoneFieldConfig> = {}):
   const fieldConfig = formlyField({
     key,
     type: 'intphone',
-    ...propsForFieldConfig(config, {
+    ...propsAndConfigForFieldConfig(config, {
       preferredCountries,
       onlyCountries
     })

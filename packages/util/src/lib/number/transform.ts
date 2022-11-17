@@ -22,6 +22,10 @@ export type TransformNumberFunctionConfig<N extends number = number> = {
   bounds?: BoundNumberFunctionConfig<N>;
 };
 
+export interface TransformNumberFunctionConfigRef<N extends number = number> {
+  transform: TransformNumberFunctionConfig<N>;
+}
+
 export type TransformNumberFunction<N extends number = number> = MapFunction<N, N>;
 
 export function transformNumberFunction<N extends number = number>(config: TransformNumberFunctionConfig<N>): TransformNumberFunction<N> {

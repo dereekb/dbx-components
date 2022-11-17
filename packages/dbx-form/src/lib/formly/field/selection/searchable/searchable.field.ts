@@ -1,7 +1,7 @@
 import { arrayToMap, Maybe, PrimativeKey, separateValues } from '@dereekb/util';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { Observable, of, switchMap, map } from 'rxjs';
-import { LabeledFieldConfig, formlyField, propsForFieldConfig, DescriptionFieldConfig } from '../../field';
+import { LabeledFieldConfig, formlyField, propsAndConfigForFieldConfig, DescriptionFieldConfig } from '../../field';
 import { SearchableValueFieldDisplayFn, SearchableValueFieldDisplayValue, SearchableValueFieldValue } from './searchable';
 import { SearchableChipValueFieldsFieldProps } from './searchable.chip.field.component';
 import { SearchableTextValueFieldsFieldProps } from './searchable.text.field.component';
@@ -67,7 +67,7 @@ export function searchableChipField<T, M = unknown, H extends PrimativeKey = Pri
   return formlyField({
     key,
     type: 'searchablechipfield',
-    ...propsForFieldConfig(config, {
+    ...propsAndConfigForFieldConfig(config, {
       ...config,
       placeholder: placeholder ?? 'Add...',
       autocomplete: false
@@ -83,7 +83,7 @@ export function searchableTextField<T, M = unknown, H extends PrimativeKey = Pri
   return formlyField({
     key,
     type: 'searchabletextfield',
-    ...propsForFieldConfig(config, {
+    ...propsAndConfigForFieldConfig(config, {
       ...config,
       autocomplete: false
     })

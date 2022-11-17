@@ -1,4 +1,4 @@
-import { DEFAULT_LAT_LNG_TEXT_FIELD_PATTERN_MESSAGE, DEFAULT_LAT_LNG_TEXT_FIELD_PLACEHOLDER, DescriptionFieldConfig, FieldConfig, formlyField, LabeledFieldConfig, propsForFieldConfig, styleWrapper, validatorsForFieldConfig } from '@dereekb/dbx-form';
+import { DEFAULT_LAT_LNG_TEXT_FIELD_PATTERN_MESSAGE, DEFAULT_LAT_LNG_TEXT_FIELD_PLACEHOLDER, DescriptionFieldConfig, FieldConfig, formlyField, LabeledFieldConfig, propsAndConfigForFieldConfig, styleWrapper, validatorsForFieldConfig } from '@dereekb/dbx-form';
 import { LAT_LNG_PATTERN } from '@dereekb/util';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { DbxFormMapboxLatLngComponentFieldProps } from './latlng.field.component';
@@ -11,7 +11,7 @@ export function mapboxLatLngField(config: MapboxLatLngFieldConfig = {}): FormlyF
     ...formlyField({
       key,
       type: 'mapbox-latlng-picker',
-      ...propsForFieldConfig(config, {
+      ...propsAndConfigForFieldConfig(config, {
         label: config.label ?? 'Location',
         placeholder: DEFAULT_LAT_LNG_TEXT_FIELD_PLACEHOLDER,
         pattern: LAT_LNG_PATTERN,

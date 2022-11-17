@@ -1,6 +1,6 @@
 import { Observable, of } from 'rxjs';
 import { FormlyFieldConfig } from '@ngx-formly/core';
-import { LabeledFieldConfig, formlyField, propsForFieldConfig, DescriptionFieldConfig } from '../../field';
+import { LabeledFieldConfig, formlyField, propsAndConfigForFieldConfig, DescriptionFieldConfig } from '../../field';
 import { DbxDateTimeFieldProps, DbxDateTimeFieldTimeMode, DateTimePickerConfiguration } from './datetime.field.component';
 import { styleWrapper } from '../../wrapper/wrapper';
 
@@ -30,7 +30,7 @@ export function dateTimeField(config: Partial<DateTimeFieldConfig> = {}) {
   const fieldConfig: FormlyFieldConfig<DbxDateTimeFieldProps> = formlyField({
     key,
     type: 'datetime',
-    ...propsForFieldConfig(config, {
+    ...propsAndConfigForFieldConfig(config, {
       valueMode,
       timeOnly,
       timeMode: timeOnly ? DbxDateTimeFieldTimeMode.REQUIRED : timeMode,

@@ -75,7 +75,10 @@ export function stateField(config: StateFieldConfig = {}): FormlyFieldConfig {
     pattern,
     autocomplete,
     required,
-    maxLength
+    maxLength,
+    transform: {
+      toUppercase: true
+    }
   });
 }
 

@@ -2,6 +2,7 @@ import { FormlyFieldConfig } from '@ngx-formly/core';
 import { Component } from '@angular/core';
 import { addressField, addressListField, cityField, countryField, emailField, phoneField, nameField, phoneAndLabelSectionField, wrappedPhoneAndLabelField, repeatArrayField, stateField, textAreaField, textField, zipCodeField, phoneListField, dateTimeField, DbxDateTimeFieldTimeMode, toggleField, checkboxField, numberField, latLngTextField, DbxDateTimeValueMode } from '@dereekb/dbx-form';
 import { addDays } from 'date-fns';
+import { addSuffixFunction } from '@dereekb/util';
 
 @Component({
   templateUrl: './value.component.html'
@@ -14,7 +15,18 @@ export class DocFormValueComponent {
     dayOnlyAsString: addDays(new Date(), 12)
   };
 
-  readonly textFields: FormlyFieldConfig[] = [textField({ key: 'test', label: 'Text Field', description: 'A required text field.', placeholder: 'Placeholder', required: true, minLength: 4, maxLength: 15 }), nameField(), emailField(), cityField(), stateField(), countryField(), zipCodeField()];
+  readonly textFields: FormlyFieldConfig[] = [
+    //
+    textField({ key: 'test', label: 'Text Field', description: 'A required text field.', placeholder: 'Placeholder', required: true, minLength: 4, maxLength: 15 }),
+    textField({ key: 'transform', label: 'Transformed Text Field', description: 'Text Field With String Transform Config. Adds _ between each letter as you type.', transform: { trim: true, transform: addSuffixFunction('_') } }),
+    nameField(),
+    emailField(),
+    cityField(),
+    stateField(),
+    stateField({ label: 'State With Code Input', key: 'stateAsCode', asCode: true }),
+    countryField(),
+    zipCodeField()
+  ];
 
   readonly numberFields: FormlyFieldConfig[] = [
     //
