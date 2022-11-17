@@ -1,6 +1,6 @@
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { Component } from '@angular/core';
-import { addressField, addressListField, cityField, countryField, emailField, phoneField, nameField, phoneAndLabelSectionField, wrappedPhoneAndLabelField, repeatArrayField, stateField, textAreaField, textField, zipCodeField, phoneListField, dateTimeField, DbxDateTimeFieldTimeMode, toggleField, checkboxField, numberField, latLngTextField, DbxDateTimeValueMode } from '@dereekb/dbx-form';
+import { addressField, addressListField, cityField, countryField, emailField, phoneField, nameField, phoneAndLabelSectionField, wrappedPhoneAndLabelField, repeatArrayField, stateField, textAreaField, textField, zipCodeField, phoneListField, dateTimeField, DbxDateTimeFieldTimeMode, toggleField, checkboxField, numberField, latLngTextField, DbxDateTimeValueMode, dateRangeField } from '@dereekb/dbx-form';
 import { addDays } from 'date-fns';
 import { addSuffixFunction } from '@dereekb/util';
 
@@ -47,6 +47,8 @@ export class DocFormValueComponent {
     dateTimeField({ key: 'dayOnlyAsString', timeMode: DbxDateTimeFieldTimeMode.NONE, valueMode: DbxDateTimeValueMode.DAY_STRING, description: 'This date field is for picking a day only and as an ISO8601DayString.' }),
     dateTimeField({ key: 'timeOnly', timeOnly: true, description: 'This date field is for picking a time only. The date hint is also hidden.', hideDateHint: true })
   ];
+
+  readonly dateRangeFields: FormlyFieldConfig[] = [dateRangeField({})];
 
   readonly addressFields: FormlyFieldConfig[] = [
     //

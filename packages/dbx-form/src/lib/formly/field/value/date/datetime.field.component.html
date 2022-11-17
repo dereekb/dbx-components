@@ -37,7 +37,7 @@
     <mat-icon>calendar_today</mat-icon>
   </button>
   <mat-form-field class="dbx-datetime-row-field">
-    <mat-label>Date</mat-label>
+    <mat-label>{{ dateLabel }}</mat-label>
     <input #dateInput matInput [matDatepicker]="picker" (dateChange)="datePicked($event)" [value]="dateValue$ | async" />
     <mat-datepicker #picker></mat-datepicker>
   </mat-form-field>
@@ -81,7 +81,7 @@
     </button>
   </mat-menu>
   <mat-form-field class="dbx-datetime-row-field">
-    <mat-label>Time</mat-label>
+    <mat-label>{{ timeLabel }}</mat-label>
     <input #timeInput matInput [formControl]="timeInputCtrl" (focus)="focusTime()" (focusout)="focusOutTime()" (keydown)="keydownOnInput($event)" />
   </mat-form-field>
 </ng-template>

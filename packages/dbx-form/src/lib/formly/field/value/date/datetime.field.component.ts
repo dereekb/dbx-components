@@ -7,7 +7,7 @@ import { FieldType } from '@ngx-formly/material';
 import { FieldTypeConfig, FormlyFieldProps } from '@ngx-formly/core';
 import { MatDatepickerInputEvent } from '@angular/material/datepicker';
 import { addMinutes, isSameDay, isSameMinute, startOfDay } from 'date-fns';
-import { filterMaybe, skipFirstMaybe, SubscriptionObject, switchMapMaybeDefault, tapLog } from '@dereekb/rxjs';
+import { filterMaybe, skipFirstMaybe, SubscriptionObject, switchMapMaybeDefault } from '@dereekb/rxjs';
 
 export enum DbxDateTimeFieldTimeMode {
   /**
@@ -78,6 +78,20 @@ export function dbxDateTimeOutputValueFactory(mode: DbxDateTimeValueMode): (date
 export type DateTimePickerConfiguration = Omit<DateTimeMinuteConfig, 'date'>;
 
 export interface DbxDateTimeFieldProps extends FormlyFieldProps {
+  /**
+   * Custom date label.
+   *
+   * Defaults to Date
+   */
+  dateLabel?: string;
+
+  /**
+   * Custom time label.
+   *
+   * Defaults to Time
+   */
+  timeLabel?: string;
+
   /**
    * Value mode.
    *
@@ -178,6 +192,14 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
 
   private _config = new BehaviorSubject<Maybe<Observable<DateTimePickerConfiguration>>>(undefined);
 
+  get dateLabel(): string {
+    return this.props.dateLabel ?? 'Date';
+  }
+
+  get timeLabel(): string {
+    return this.props.timeLabel ?? 'Time';
+  }
+
   get dateOnly(): boolean {
     return this.timeMode === DbxDateTimeFieldTimeMode.NONE;
   }
@@ -221,7 +243,7 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
 
   readonly date$ = this.dateInputCtrl.valueChanges.pipe(startWith(this.dateInputCtrl.value), filterMaybe(), shareReplay(1));
 
-  readonly dateValue$ = merge(this.date$.pipe(tapLog('date')), this.value$.pipe(skipFirstMaybe())).pipe(
+  readonly dateValue$ = merge(this.date$, this.value$.pipe(skipFirstMaybe())).pipe(
     map((x: Maybe<Date>) => (x ? startOfDay(x) : x)),
     distinctUntilChanged((a, b) => a != null && b != null && isSameDay(a, b)),
     shareReplay(1)
@@ -370,8 +392,6 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
 
   datePicked(event: MatDatepickerInputEvent<Date>): void {
     const date = event.value;
-
-    console.log('date picked?', event);
 
     if (date) {
       this.dateInputCtrl.setValue(date);
