@@ -15,7 +15,7 @@
       </button>
     </div>
   </div>
-  <div class="dbx-datetime-row dbx-datetime-hint-row" fxFlex="100">
+  <div *ngIf="!hideDateHint" class="dbx-datetime-row dbx-datetime-hint-row" fxFlex="100">
     <div class="dbx-hint" [ngSwitch]="fullDay$ | async">
       <small *ngSwitchCase="true">
         <b class="dbx-ok">All Day</b>
@@ -38,7 +38,7 @@
   </button>
   <mat-form-field class="dbx-datetime-row-field">
     <mat-label>Date</mat-label>
-    <input #dateInput matInput [formControl]="dateInputCtrl" [matDatepicker]="picker" (dateChange)="datePicked($event)" [value]="dateValue$ | async" />
+    <input #dateInput matInput [matDatepicker]="picker" (dateChange)="datePicked($event)" [value]="dateValue$ | async" />
     <mat-datepicker #picker></mat-datepicker>
   </mat-form-field>
 </ng-template>
