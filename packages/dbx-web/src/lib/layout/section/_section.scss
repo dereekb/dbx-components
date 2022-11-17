@@ -7,7 +7,7 @@ $content-navbar-height: theming.$content-navbar-height;
 
 $page-h1-height: 32px;
 
-$header-bottom-padding: 16px;
+$header-bottom-margin: 16px;
 $header-left-reserved-space: 200px;
 $header-left-reserved-space-small-screen: 120px;
 
@@ -15,7 +15,7 @@ $header-left-reserved-space-small-screen: 120px;
 @mixin core() {
   // MARK: Header
   .dbx-section-header {
-    padding: 0 0 $header-bottom-padding;
+    margin: 0 0 $header-bottom-margin;
     box-sizing: border-box;
 
     .dbx-section-header-content {
@@ -24,14 +24,34 @@ $header-left-reserved-space-small-screen: 120px;
       h3,
       h4,
       h5 {
-        padding-top: 5px;
-        height: $page-h1-height;
-        display: inline;
+        padding-top: 4px;
+        padding-bottom: 1px;
+        min-height: $page-h1-height;
+        display: inline-flex;
+        align-items: center;
         margin: 0;
+        overflow: hidden;
+
+        > .mat-icon {
+          padding-right: 2px;
+          padding-bottom: 2px;
+        }
       }
 
       display: flex;
       align-items: center;
+    }
+  }
+
+  .dbx-section-header-strict {
+    .dbx-section-header-content {
+      h1,
+      h2,
+      h3,
+      h4,
+      h5 {
+        height: $page-h1-height;
+      }
     }
   }
 

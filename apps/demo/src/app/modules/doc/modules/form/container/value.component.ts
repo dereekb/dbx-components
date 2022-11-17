@@ -1,11 +1,19 @@
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { Component } from '@angular/core';
 import { addressField, addressListField, cityField, countryField, emailField, phoneField, nameField, phoneAndLabelSectionField, wrappedPhoneAndLabelField, repeatArrayField, stateField, textAreaField, textField, zipCodeField, phoneListField, dateTimeField, DbxDateTimeFieldTimeMode, toggleField, checkboxField, numberField, latLngTextField, DbxDateTimeValueMode } from '@dereekb/dbx-form';
+import { addDays } from 'date-fns';
 
 @Component({
   templateUrl: './value.component.html'
 })
 export class DocFormValueComponent {
+  readonly dateValues = {
+    date: addDays(new Date(), -12),
+    dateAsString: addDays(new Date(), -6),
+    dayOnly: addDays(new Date(), 6),
+    dayOnlyAsString: addDays(new Date(), 12)
+  };
+
   readonly textFields: FormlyFieldConfig[] = [textField({ key: 'test', label: 'Text Field', description: 'A required text field.', placeholder: 'Placeholder', required: true, minLength: 4, maxLength: 15 }), nameField(), emailField(), cityField(), stateField(), countryField(), zipCodeField()];
 
   readonly numberFields: FormlyFieldConfig[] = [
@@ -21,11 +29,11 @@ export class DocFormValueComponent {
 
   readonly dateTimeFields: FormlyFieldConfig[] = [
     dateTimeField({ key: 'date', required: true, description: 'This is the default date field that requires the user pick a date and time.' }),
-    dateTimeField({ key: 'dateAsString', required: true, valueMode: DbxDateTimeValueMode.DATE_STRING, description: 'This date field returns the value as an ISO8601DateString.' }),
+    dateTimeField({ key: 'dateAsString', required: true, valueMode: DbxDateTimeValueMode.DATE_STRING, description: 'This date field returns the value as an ISO8601DateString. The date hint is also hidden.', hideDateHint: true }),
     dateTimeField({ key: 'timeOptional', timeMode: DbxDateTimeFieldTimeMode.OPTIONAL, description: 'This date field is for picking a day, with an optional time.' }),
     dateTimeField({ key: 'dayOnly', timeMode: DbxDateTimeFieldTimeMode.NONE, description: 'This date field is for picking a day only.' }),
     dateTimeField({ key: 'dayOnlyAsString', timeMode: DbxDateTimeFieldTimeMode.NONE, valueMode: DbxDateTimeValueMode.DAY_STRING, description: 'This date field is for picking a day only and as an ISO8601DayString.' }),
-    dateTimeField({ key: 'timeOnly', timeOnly: true, description: 'This date field is for picking a time only.' })
+    dateTimeField({ key: 'timeOnly', timeOnly: true, description: 'This date field is for picking a time only. The date hint is also hidden.', hideDateHint: true })
   ];
 
   readonly addressFields: FormlyFieldConfig[] = [

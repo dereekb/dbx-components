@@ -25,17 +25,19 @@ export function timeOnlyField(config: Partial<TimeFieldConfig> = {}): FormlyFiel
 }
 
 export function dateTimeField(config: Partial<DateTimeFieldConfig> = {}) {
-  const { key = 'date', timeMode = DbxDateTimeFieldTimeMode.REQUIRED, valueMode, fullDayFieldName, getConfigObs, timeOnly = false } = config;
+  const { key = 'date', timeMode = DbxDateTimeFieldTimeMode.REQUIRED, valueMode, fullDayInUTC, fullDayFieldName, getConfigObs, hideDateHint, timeOnly = false } = config;
 
   const fieldConfig: FormlyFieldConfig<DbxDateTimeFieldProps> = formlyField({
     key,
     type: 'datetime',
     ...propsForFieldConfig(config, {
+      valueMode,
+      timeOnly,
       timeMode: timeOnly ? DbxDateTimeFieldTimeMode.REQUIRED : timeMode,
       fullDayFieldName,
-      getConfigObs,
-      valueMode,
-      timeOnly
+      fullDayInUTC,
+      hideDateHint,
+      getConfigObs
     })
   });
 

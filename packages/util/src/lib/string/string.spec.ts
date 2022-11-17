@@ -1,4 +1,4 @@
-import { splitJoinRemainder } from './string';
+import { splitJoinNameString, splitJoinRemainder } from './string';
 
 describe('splitJoinRemainder()', () => {
   it('should handle having a single value', () => {
@@ -46,5 +46,18 @@ describe('splitJoinRemainder()', () => {
     expect(result[2]).toBe(values[2]);
     expect(result[3]).toBe(values[3]);
     expect(result[4]).toBe(values[4]);
+  });
+});
+
+describe('splitJoinNameString()', () => {
+  it('should split the name into a first and last name.', () => {
+    const first = 'Derek';
+    const last = 'Burgman';
+
+    const name = `${first} ${last}`;
+    const result = splitJoinNameString(name);
+
+    expect(result[0]).toBe(first);
+    expect(result[1]).toBe(last);
   });
 });

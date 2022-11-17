@@ -8,7 +8,7 @@ import { DbxSectionComponent } from './section.component';
   selector: 'dbx-subsection',
   template: `
     <div class="dbx-subsection">
-      <div class="dbx-section-header" [h]="h ?? 4" [header]="header" [icon]="icon" [hint]="hint">
+      <div class="dbx-section-header" [h]="h ?? 4" [header]="header" [onlyHeader]="onlyHeader" [icon]="icon" [hint]="hint" [hintInline]="hintInline">
         <ng-content select="[sectionHeader]"></ng-content>
       </div>
       <div class="dbx-section-content">

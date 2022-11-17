@@ -1,25 +1,19 @@
 import { Component } from '@angular/core';
+import { DbxSectionHeaderConfig } from '@dereekb/dbx-web';
 import { Maybe } from '@dereekb/util';
 import { FieldTypeConfig, FieldWrapper } from '@ngx-formly/core';
 
-export interface DbxFormSubsectionConfig {
-  header?: string;
-  hint?: string;
-}
+export interface DbxFormSubsectionConfig extends DbxSectionHeaderConfig {}
 
 @Component({
   template: `
-    <dbx-subsection [header]="header" [hint]="hint">
+    <dbx-subsection [headerConfig]="headerConfig">
       <ng-container #fieldComponent></ng-container>
     </dbx-subsection>
   `
 })
 export class DbxFormSubsectionWrapperComponent extends FieldWrapper<FieldTypeConfig<DbxFormSubsectionConfig>> {
-  get header(): Maybe<string> {
-    return this.props.header;
-  }
-
-  get hint(): Maybe<string> {
-    return this.props.hint;
+  get headerConfig(): Maybe<DbxSectionHeaderConfig> {
+    return this.props;
   }
 }
