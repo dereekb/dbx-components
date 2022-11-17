@@ -6,7 +6,7 @@ import { AbstractControl, FormControl, Validators, FormGroup } from '@angular/fo
 import { FieldType } from '@ngx-formly/material';
 import { FieldTypeConfig, FormlyFieldProps } from '@ngx-formly/core';
 import { MatDatepickerInputEvent } from '@angular/material/datepicker';
-import { max as maxDate, min as minDate, addMinutes, isSameDay, isSameMinute, startOfDay } from 'date-fns';
+import { max as maxDate, min as minDate, addMinutes, isSameDay, isSameMinute, startOfDay, addDays } from 'date-fns';
 import { filterMaybe, skipFirstMaybe, SubscriptionObject, switchMapMaybeDefault, tapLog } from '@dereekb/rxjs';
 
 export enum DbxDateTimeFieldTimeMode {
@@ -499,8 +499,7 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
     const date = event.value;
 
     if (date) {
-      this.dateInputCtrl.setValue(date);
-      this._updateTime.next();
+      this.setDateInputValue(date);
     }
   }
 
@@ -513,13 +512,48 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
     }
   }
 
+  setDateInputValue(date: Date) {
+    this.dateInputCtrl.setValue(date);
+    this._updateTime.next();
+  }
+
   setTime(time: ReadableTimeString): void {
     this.timeInputCtrl.setValue(time);
     this._offset.next(0);
     this._updateTime.next();
   }
 
-  keydownOnInput(event: KeyboardEvent): void {
+  keydownOnDateInput(event: KeyboardEvent): void {
+    let direction = 0;
+
+    switch (event.key?.toLowerCase()) {
+      case 'arrowup':
+        direction = 1;
+        break;
+      case 'arrowdown':
+        direction = -1;
+        break;
+    }
+
+    let offset = 1;
+
+    if (event.ctrlKey && event.shiftKey) {
+      offset = 365;
+    } else if (event.ctrlKey) {
+      offset = 30;
+    } else if (event.shiftKey) {
+      offset = 7;
+    }
+
+    if (direction !== 0) {
+      this.date$.pipe(first()).subscribe((date) => {
+        const newDate = addDays(date, offset * direction);
+        this.setDateInputValue(newDate);
+      });
+    }
+  }
+
+  keydownOnTimeInput(event: KeyboardEvent): void {
     let direction = 0;
 
     switch (event.key?.toLowerCase()) {
