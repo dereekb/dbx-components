@@ -29,12 +29,15 @@ export type DbxFormDisabledKey = string;
 
 export const DEFAULT_FORM_DISABLED_KEY = 'dbx_form_disabled';
 
+export interface DbxFormStateRef {
+  readonly state: DbxFormState;
+}
+
 /**
  * DbxForm stream event
  */
-export interface DbxFormEvent {
+export interface DbxFormEvent extends DbxFormStateRef {
   readonly isComplete: boolean;
-  readonly state: DbxFormState;
   readonly status: FormControlStatus;
   readonly pristine?: boolean;
   readonly untouched?: boolean;

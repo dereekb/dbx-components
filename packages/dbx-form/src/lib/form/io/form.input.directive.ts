@@ -1,24 +1,74 @@
-import { distinctUntilChanged, filter, first, map, switchMap, combineLatest, BehaviorSubject, Observable } from 'rxjs';
+import { distinctUntilChanged, filter, map, switchMap, combineLatest, BehaviorSubject, Observable, EMPTY, exhaustMap, takeUntil, Subject, tap, shareReplay } from 'rxjs';
 import { Directive, Host, Input, OnDestroy } from '@angular/core';
 import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
-import { DbxFormState, DbxMutableForm } from '../form';
+import { DbxFormState, DbxFormStateRef, DbxMutableForm } from '../form';
 import { Maybe } from '@dereekb/util';
-import { asObservable, ObservableOrValue } from '@dereekb/rxjs';
+import { asObservable, ObservableOrValue, cleanup } from '@dereekb/rxjs';
 
 export function dbxFormSourceObservable<T>(form: DbxMutableForm, inputObs: ObservableOrValue<T>, mode$: Observable<DbxFormSourceDirectiveMode>): Observable<T> {
-  const observable = asObservable(inputObs);
+  return dbxFormSourceObservableFromStream(form.stream$, inputObs, mode$);
+}
 
-  return combineLatest([observable.pipe(distinctUntilChanged()), mode$.pipe(distinctUntilChanged())]).pipe(
-    switchMap(([value, mode]) =>
-      form.stream$.pipe(
-        // wait for the form to finish initializing.
-        filter((x) => x.state !== DbxFormState.INITIALIZING),
-        // if mode is reset, then filter out changes until the form is reset again.
-        filter((x) => (mode === 'reset' ? x.state === DbxFormState.RESET : true)),
-        first(),
-        map(() => value)
-      )
-    )
+export function dbxFormSourceObservableFromStream<T>(stream$: Observable<DbxFormStateRef>, inputObs: ObservableOrValue<T>, mode$: Observable<DbxFormSourceDirectiveMode>): Observable<T> {
+  const value$ = asObservable(inputObs).pipe(shareReplay(1)); // catch/share the latest emission
+
+  const state$ = stream$.pipe(
+    map((x) => x.state),
+    distinctUntilChanged()
+  );
+
+  return combineLatest([mode$, value$]).pipe(
+    map((x) => x[0]),
+    distinctUntilChanged(),
+    switchMap((mode: DbxFormSourceDirectiveMode) => {
+      if (mode === 'reset') {
+        // reset only
+        return state$.pipe(
+          exhaustMap((state: DbxFormState) => {
+            if (state === DbxFormState.RESET) {
+              let firstValueSent = false;
+              const doneSubject = new Subject();
+
+              return combineLatest([value$, state$]).pipe(
+                map(([value, state]) => {
+                  if (!firstValueSent || state === DbxFormState.RESET) {
+                    return [value, true] as [T, boolean]; // always forward the first value.
+                  } else {
+                    return [value, false] as [T, boolean];
+                  }
+                }),
+                tap(([value, send]) => {
+                  firstValueSent = true;
+                  if (!send) {
+                    doneSubject.next(undefined);
+                  }
+                }),
+                filter(([value, send]) => send),
+                map((x) => x[0]),
+                takeUntil(doneSubject),
+                cleanup(() => {
+                  doneSubject.complete();
+                })
+              );
+            } else {
+              return EMPTY;
+            }
+          })
+        );
+      } else {
+        // pass any updated value while not initializing.
+        return state$.pipe(
+          map((x) => x === DbxFormState.INITIALIZING),
+          switchMap((initializing: boolean) => {
+            if (initializing) {
+              return EMPTY;
+            } else {
+              return value$;
+            }
+          })
+        );
+      }
+    })
   );
 }
 
@@ -61,7 +111,7 @@ export class DbxFormSourceDirective<T> extends AbstractSubscriptionDirective imp
     let subscription;
 
     if (inputObs) {
-      subscription = dbxFormSourceObservable(this.form, inputObs, this._mode).subscribe((x) => {
+      subscription = dbxFormSourceObservableFromStream(this.form.stream$, inputObs, this._mode).subscribe((x) => {
         this.form.setValue(x);
       });
     }
