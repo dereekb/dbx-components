@@ -1,4 +1,4 @@
-import { Maybe } from '@dereekb/util';
+import { Maybe, WebsiteUrl } from '@dereekb/util';
 
 export interface ClickableFunction {
   onClick?: (event?: Maybe<MouseEvent>) => void;
@@ -16,4 +16,11 @@ export interface ClickableUrl {
    * href target attribute.
    */
   target?: string;
+}
+
+export function clickableUrlInNewTab(url: string | WebsiteUrl): ClickableUrl {
+  return {
+    url,
+    target: '_blank'
+  };
 }

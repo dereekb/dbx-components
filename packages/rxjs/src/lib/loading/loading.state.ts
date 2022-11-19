@@ -198,7 +198,7 @@ export function loadingStateHasFinishedLoading<L extends LoadingState>(state: Ma
 }
 
 /**
- * Whether or not the input loading state has a non-null value.
+ * Whether or not the input loading state has finished loading and has a non-null value.
  *
  * @param state
  * @returns

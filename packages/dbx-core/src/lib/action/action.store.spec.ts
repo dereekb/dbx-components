@@ -1,5 +1,5 @@
 import { canReadyValue, ActionContextStore } from './action.store';
-import { of, first, timeoutWith } from 'rxjs';
+import { of, first, timeout } from 'rxjs';
 import { containsStringAnyCase } from '@dereekb/util';
 import { isErrorLoadingState, isSuccessLoadingState, loadingStateHasValue, loadingStateIsIdle, LoadingStateType } from '@dereekb/rxjs';
 
@@ -35,7 +35,7 @@ describe('ActionContextStore', () => {
 
         contextStore.readyValue(READY_VALUE);
 
-        contextStore.valueReady$.pipe(timeoutWith(100, of(TIMEOUT_VALUE))).subscribe((x) => {
+        contextStore.valueReady$.pipe(timeout({ first: 100, with: () => of(TIMEOUT_VALUE) })).subscribe((x) => {
           expect(x).toBe(TIMEOUT_VALUE);
           done();
         });

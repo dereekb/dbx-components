@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [9.15.8](https://github.com/dereekb/dbx-components/compare/v9.15.7-dev...v9.15.8) (2022-11-19)
+
+
+### Bug Fixes
+
+* fixed dbxFormSourceObservable() emission ([cf927b4](https://github.com/dereekb/dbx-components/commit/cf927b4345ab1bd9d8d0eb4addcd4f7b9efba9e0))
+
+
+
 ## [9.15.7](https://github.com/dereekb/dbx-components/compare/v9.15.6-dev...v9.15.7) (2022-11-17)
 
 
