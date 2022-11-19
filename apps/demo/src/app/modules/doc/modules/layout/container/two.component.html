@@ -77,5 +77,13 @@
         </div>
       </dbx-two-column>
     </doc-feature-example>
+    <doc-feature-example header="dbxTwoColumnSref and dbxTwoColumnSrefShowRight" hint="Directive used with dbxTwoColumn to configure the backRef value. Is often combined with dbxTwoColumnSrefShowRight, which handles the showRight value.">
+      <dbx-two-column dbxTwoColumnContext [dbxTwoColumnSref]="twoRef" dbxTwoColumnSrefShowRight style="height: 200px">
+        <dbx-two-block left style="height: 100%; background: red">
+          <dbx-anchor-list [anchors]="childAnchors"></dbx-anchor-list>
+        </dbx-two-block>
+        <ui-view right></ui-view>
+      </dbx-two-column>
+    </doc-feature-example>
   </doc-feature-layout>
 </dbx-content-container>
