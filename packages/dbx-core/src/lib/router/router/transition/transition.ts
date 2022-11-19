@@ -6,7 +6,7 @@ export enum DbxRouterTransitionEventType {
   /**
    * A transition ended.
    */
-  SUCCESS = 'ended'
+  SUCCESS = 'success'
 }
 
 export interface DbxRouterTransitionEvent {

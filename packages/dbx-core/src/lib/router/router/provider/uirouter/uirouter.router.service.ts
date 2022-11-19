@@ -1,6 +1,6 @@
 import { KeyValueTypleValueFilter, mergeObjects } from '@dereekb/util';
-import { Subject, BehaviorSubject, Observable, firstValueFrom, map } from 'rxjs';
-import { DbxRouterService, DbxRouterTransitionService } from '../../service';
+import { Subject, BehaviorSubject, Observable, firstValueFrom, map, filter } from 'rxjs';
+import { DbxRouterService, DbxRouterTransitionService, onRouterTransitionSuccessEvent } from '../../service';
 import { asSegueRef, asSegueRefString, SegueRef, SegueRefOrSegueRefRouterLink, SegueRefRawSegueParams } from '../../../segue';
 import { StateService, UIRouterGlobals, TransitionOptions, TransitionService } from '@uirouter/core';
 import { Injectable, OnDestroy } from '@angular/core';
