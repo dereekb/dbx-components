@@ -16,9 +16,9 @@ describe('dbxFormSourceObservableFromStream()', () => {
     subscriptionObject.destroy();
   });
 
-  function testTimeout() {
+  function testTimeout(first = 100) {
     return timeout({
-      first: 100,
+      first,
       with: () => of(TIMEOUT_VALUE)
     });
   }
@@ -171,6 +171,31 @@ describe('dbxFormSourceObservableFromStream()', () => {
             done();
           }
         });
+      });
+
+      it('should not pipe values when the state is changing between other non-initialized states.', (done) => {
+        // tests the case where the DbxFormState would change between RESET to USED, then pipe the previous value again, causing the form to reset.
+
+        let state$ = new BehaviorSubject<DbxFormState>(DbxFormState.INITIALIZING);
+        let values$ = new Subject<number>();
+
+        const obs$ = dbxFormSourceObservableFromStream(state$.pipe(map((state) => ({ state }))), values$, preventComplete(of('reset')));
+
+        subscriptionObject.subscription = obs$.pipe(bufferCount(3), testTimeout(), first()).subscribe({
+          next: (x) => {
+            expect(x).toBe(TIMEOUT_VALUE); // should only pipe values when values$ changes and the state is not initialized.
+            done();
+          }
+        });
+
+        values$.next(0);
+        state$.next(DbxFormState.RESET);
+        state$.next(DbxFormState.USED);
+        state$.next(DbxFormState.USED);
+        state$.next(DbxFormState.USED);
+        values$.next(1);
+        state$.next(DbxFormState.RESET);
+        state$.next(DbxFormState.USED);
       });
 
       it('should pipe values when the state is RESET.', (done) => {

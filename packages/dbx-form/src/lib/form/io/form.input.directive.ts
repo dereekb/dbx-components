@@ -59,6 +59,7 @@ export function dbxFormSourceObservableFromStream<T>(stream$: Observable<DbxForm
         // pass any updated value while not initializing.
         return state$.pipe(
           map((x) => x === DbxFormState.INITIALIZING),
+          distinctUntilChanged(),
           switchMap((initializing: boolean) => {
             if (initializing) {
               return EMPTY;
