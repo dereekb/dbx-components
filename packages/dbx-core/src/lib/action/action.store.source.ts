@@ -1,5 +1,5 @@
 import { first, switchMap, Observable, Subscription } from 'rxjs';
-import { forwardRef, Injectable, Provider, Type, OnDestroy } from '@angular/core';
+import { Injectable, OnDestroy } from '@angular/core';
 import { LockSet, filterMaybe, LoadingState, LoadingStateType } from '@dereekb/rxjs';
 import { Maybe, ReadableError } from '@dereekb/util';
 import { ActionContextState, ActionContextStore } from './action.store';
@@ -185,35 +185,4 @@ export class DbxActionContextStoreSourceInstance<T = unknown, O = unknown> imple
   public reset(): void {
     this.useStore((x) => x.reset());
   }
-}
-
-export const actionContextStoreSourceInstanceFactory = (source: ActionContextStoreSource) => {
-  return new DbxActionContextStoreSourceInstance(source);
-};
-
-/**
- * Provides an ActionContextStoreSource, as well as an DbxActionContextStoreSourceInstance.
- */
-export function provideActionStoreSource<S extends ActionContextStoreSource>(sourceType: Type<S>): Provider[] {
-  return [
-    {
-      provide: ActionContextStoreSource,
-      useExisting: forwardRef(() => sourceType)
-    },
-    {
-      provide: DbxActionContextStoreSourceInstance,
-      useFactory: actionContextStoreSourceInstanceFactory,
-      deps: [ActionContextStoreSource]
-    }
-  ];
-}
-
-export function provideSecondaryActionStoreSource<S extends SecondaryActionContextStoreSource>(sourceType: Type<S>): Provider[] {
-  return [
-    {
-      provide: SecondaryActionContextStoreSource,
-      useExisting: forwardRef(() => sourceType)
-    },
-    ...provideActionStoreSource(sourceType)
-  ];
 }

@@ -4,7 +4,7 @@
 
 // MARK: Mixin
 @mixin core() {
-  .dbx-anchor a {
+  a.dbx-anchor-a {
     color: inherit;
     text-decoration: none;
 
@@ -43,5 +43,15 @@
 
 @mixin theme($theme-config) {
   @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-router-anchor') {
+    $color: theming.get-color-config($theme-config);
+    $typography: theming.get-typography-config($theme-config);
+
+    @if $color !=null {
+      @include color($theme-config);
+    }
+
+    @if $typography !=null {
+      @include typography($typography);
+    }
   }
 }

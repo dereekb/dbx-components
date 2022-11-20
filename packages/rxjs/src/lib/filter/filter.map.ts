@@ -5,6 +5,9 @@ import { BehaviorSubject, Observable, switchMap, map, distinctUntilChanged, shar
 import { FilterSource, FilterSourceConnector } from './filter';
 import { Destroyable, Maybe } from '@dereekb/util';
 
+/**
+ * Used to identify a specific filter.
+ */
 export type FilterMapKey = string;
 
 /**

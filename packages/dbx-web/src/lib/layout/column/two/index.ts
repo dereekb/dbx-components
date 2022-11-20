@@ -7,3 +7,4 @@ export * from './two.column.module';
 export * from './two.column.right.component';
 export * from './two.column.sref.directive';
 export * from './two.column.store';
+export * from './two.column.sref.showright.directive';

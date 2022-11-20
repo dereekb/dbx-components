@@ -6,6 +6,7 @@ import { Observable } from 'rxjs';
 
 export interface ClickableAnchor extends ClickableFunction, ClickableUrl, Partial<SegueRef> {
   disabled?: boolean;
+  selected?: boolean;
 }
 
 export interface ClickableAnchorLink extends ClickableAnchor {
@@ -85,8 +86,10 @@ export function anchorTypeForAnchor(anchor: Maybe<ClickableAnchor>, disabled?: M
 
 export abstract class DbxAnchor<T extends ClickableAnchor = ClickableAnchor> {
   abstract disabled$: Observable<Maybe<boolean>>;
+  abstract selected$: Observable<Maybe<boolean>>;
   abstract anchor$: Observable<Maybe<T>>;
   abstract disabled: Maybe<boolean>;
+  abstract selected: Maybe<boolean>;
   abstract anchor: Maybe<T>;
   abstract type$: Observable<AnchorType>;
 }

@@ -13,11 +13,16 @@ $active-child-item-left-padding: 5px;
 
 @mixin color($theme-config) {
   $color-config: theming.get-color-config($theme-config);
+  $foreground: map.get($color-config, 'foreground');
+  $primary: map.get($color-config, 'primary');
+
   $background: map.get($color-config, 'background');
   $background-hover-color: theming.get-color-from-palette($background, 'hover');
   $background-disabled-color: theming.get-color-from-palette($background, 'contrast');
 
   .dbx-anchor-list.mat-nav-list {
+    padding-top: 0;
+
     // MARK: Muting
     // items that are not active are muted
     .mat-list-item {
@@ -33,6 +38,14 @@ $active-child-item-left-padding: 5px;
     .dbx-anchor-active {
       .mat-list-item {
         opacity: 0.9;
+      }
+    }
+
+    // selected
+    .dbx-anchor-selected {
+      .mat-list-item {
+        opacity: 1;
+        background: color.scale($color: $background-hover-color, $alpha: 10%);
       }
     }
 

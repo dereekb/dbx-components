@@ -15,11 +15,11 @@ import { STATES } from './doc.interaction.router';
 import { DocInteractionFilterComponent } from './container/filter.component';
 import { DocInteractionTestFilterPopoverButtonComponent } from './component/filter.popover.button.component';
 import { DocInteractionTestFilterCustomFilterFormComponent } from './component/filter.custom.form.component';
-import { DocInteractionTestFilterPresetFilterFormComponent } from './component/filter.preset.form.component';
 import { DocInteractionExampleDialogComponent } from './component/interaction.dialog.component';
 import { DocInteractionExamplePopoverComponent } from './component/interaction.popover.component';
 import { DocInteractionExamplePopoverContentComponent } from './component/interaction.popover.content.component';
 import { DocInteractionButtonComponent } from './container/button.component';
+import { DocInteractionTestFilterPresetMenuComponent } from './component/filter.preset.menu.component';
 
 @NgModule({
   imports: [
@@ -33,8 +33,8 @@ import { DocInteractionButtonComponent } from './container/button.component';
     DocInteractionTestFilterPopoverButtonComponent,
     DocInteractionTestFilterCustomFilterComponent,
     DocInteractionTestFilterPresetFilterComponent,
+    DocInteractionTestFilterPresetMenuComponent,
     DocInteractionTestFilterCustomFilterFormComponent,
-    DocInteractionTestFilterPresetFilterFormComponent,
     DocInteractionExampleDialogComponent,
     DocInteractionExamplePopoverComponent,
     DocInteractionExamplePopoverContentComponent,

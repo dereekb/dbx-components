@@ -1,13 +1,36 @@
 import { of, Observable } from 'rxjs';
-import { Directive, OnDestroy, OnInit } from '@angular/core';
+import { Directive, forwardRef, OnDestroy, OnInit, Provider, Type } from '@angular/core';
 import { FilterSource, FilterSourceInstance, ObservableOrValue } from '@dereekb/rxjs';
 import { Maybe } from '@dereekb/util';
+import { provideFilterSource } from './filter.content';
+
+export abstract class FilterSourceDirective<F = unknown> implements FilterSource<F> {
+  abstract filter$: Observable<F>;
+  abstract initWithFilter(filterObs: Observable<F>): void;
+  abstract setFilter(filter: F): void;
+  abstract resetFilter(): void;
+}
 
 /**
- * Abstract FilterSource implementation.
+ * Angular provider convenience function for a FilterSourceDirective.
+ */
+export function provideFilterSourceDirective<S extends FilterSourceDirective<F>, F = unknown>(sourceType: Type<S>): Provider[] {
+  return [
+    {
+      provide: FilterSourceDirective,
+      useExisting: forwardRef(() => sourceType)
+    },
+    ...provideFilterSource(sourceType)
+  ];
+}
+
+/**
+ * Abstract FilterSource implementation and directive.
  */
 @Directive()
-export abstract class AbstractFilterSourceDirective<F> implements FilterSource<F>, OnInit, OnDestroy {
+export abstract class AbstractFilterSourceDirective<F = unknown> implements FilterSourceDirective<F>, OnInit, OnDestroy {
+  protected defaultFilterValue?: Maybe<F>;
+
   protected _defaultFilterSource = new FilterSourceInstance<F>();
 
   readonly filter$: Observable<F> = this._defaultFilterSource.filter$;
@@ -34,6 +57,6 @@ export abstract class AbstractFilterSourceDirective<F> implements FilterSource<F
 
   // MARK: Internal
   protected makeDefaultFilter(): ObservableOrValue<Maybe<F>> {
-    return of(undefined);
+    return of(this.defaultFilterValue);
   }
 }

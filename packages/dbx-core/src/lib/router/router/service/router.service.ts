@@ -1,11 +1,12 @@
 import { ObservableOrValue } from '@dereekb/rxjs';
 import { Observable } from 'rxjs';
 import { SegueRefOrSegueRefRouterLink, SegueRefRawSegueParams } from '../../segue';
+import { DbxRouterTransitionService } from './router.transition.service';
 
 /**
  * Router service definition that can route the app and provide routing details.
  */
-export abstract class DbxRouterService {
+export abstract class DbxRouterService extends DbxRouterTransitionService {
   /**
    * Params of the current successfully loaded route.
    */

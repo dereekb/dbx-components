@@ -1,27 +1,42 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { AbstractDbxActionHandlerDirective, DbxActionContextStoreSourceInstance, FilterSourceDirective, HandleActionFunction, provideActionStoreSource } from '@dereekb/dbx-core';
+import { of } from 'rxjs';
 
 /**
- * Used for adding a reset and filter button to a form.
+ * Action component used to simplify creating a filter form.
+ *
+ * Provides a DbxAction and configures the action to set the filter on a FilterSourceDirective when triggered.
  */
 @Component({
   selector: 'dbx-filter-wrapper',
-  templateUrl: './filter.wrapper.component.html'
+  templateUrl: './filter.wrapper.component.html',
+  providers: [provideActionStoreSource(null)]
 })
-export class DbxFilterWrapperComponent {
+export class DbxFilterWrapperComponent<F = unknown> extends AbstractDbxActionHandlerDirective<F> {
   @Input()
-  modified?: boolean;
+  applyRaised = true;
 
-  @Output()
-  readonly applyFilter = new EventEmitter();
+  @Input()
+  applyIcon = 'filter_list';
 
-  @Output()
-  readonly resetFilter = new EventEmitter();
+  @Input()
+  applyText = 'Filter';
 
-  filterClicked(): void {
-    this.applyFilter.emit();
+  constructor(source: DbxActionContextStoreSourceInstance<F>, readonly filterSourceDirective: FilterSourceDirective<F>) {
+    super(source);
+    // configure handler function
+    this._dbxActionHandlerInstance.handlerFunction = (filter: F) => {
+      this.filterSourceDirective.setFilter(filter);
+      return of(true);
+    };
   }
 
-  resetClicked(): void {
-    this.resetFilter.emit();
+  applyFilter(): void {
+    this.source.setIsModified(true); // Force setting modified.
+    this.source.trigger();
+  }
+
+  resetFilter(): void {
+    this.filterSourceDirective.resetFilter();
   }
 }

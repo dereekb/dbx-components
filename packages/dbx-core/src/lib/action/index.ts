@@ -5,5 +5,6 @@ export * from './action.machine';
 export * from './action.module';
 export * from './action.reference';
 export * from './action.store.source';
+export * from './action.store.source.provide';
 export * from './action.store';
 export * from './action';

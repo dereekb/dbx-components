@@ -11,7 +11,7 @@ import { Maybe } from '@dereekb/util';
 @Directive({
   selector: '[dbxFilterMapSource]',
   exportAs: 'dbxFilterMapSource',
-  providers: [...provideFilterSource(DbxFilterMapSourceDirective)]
+  providers: [provideFilterSource(DbxFilterMapSourceDirective)]
 })
 export class DbxFilterMapSourceDirective<F> extends AbstractDbxFilterMapInstanceDirective<F> implements FilterSource<F> {
   readonly filter$: Observable<F> = this.instance$.pipe(switchMap((x) => x.filter$));
@@ -25,7 +25,7 @@ export class DbxFilterMapSourceDirective<F> extends AbstractDbxFilterMapInstance
     this._key.next(key);
   }
 
-  initWithFilter?(filterObs: Observable<F>): void {
+  initWithFilter(filterObs: Observable<F>): void {
     this.instance$.pipe(first()).subscribe((x) => x.initWithFilter(filterObs));
   }
 }
