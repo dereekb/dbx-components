@@ -1,9 +1,8 @@
 import { addDays, startOfDay } from 'date-fns';
 import { BehaviorSubject } from 'rxjs';
 import { Component } from '@angular/core';
-import { AbstractFilterSourceDirective, ClickableAnchor, provideActionStoreSource, provideFilterSourceDirective } from '@dereekb/dbx-core';
-import { DocInteractionTestFilter } from './filter';
-import { ClickableFilterPreset } from '@dereekb/dbx-web';
+import { ClickableFilterPreset, AbstractFilterSourceDirective, ClickableAnchor, provideActionStoreSource, provideFilterSourceDirective } from '@dereekb/dbx-core';
+import { DocInteractionTestFilter, DOC_INTERACTION_TEST_PRESETS } from './filter';
 
 @Component({
   selector: 'doc-interaction-test-filter-preset-filter',
@@ -11,27 +10,5 @@ import { ClickableFilterPreset } from '@dereekb/dbx-web';
   providers: [provideFilterSourceDirective(DocInteractionTestFilterPresetFilterComponent)]
 })
 export class DocInteractionTestFilterPresetFilterComponent extends AbstractFilterSourceDirective<DocInteractionTestFilter> {
-  readonly presets: ClickableFilterPreset<DocInteractionTestFilter>[] = [
-    {
-      title: 'John Doe',
-      preset: 'johndoe',
-      presetValue: {
-        name: 'John Doe'
-      }
-    },
-    {
-      title: 'Today',
-      preset: 'today',
-      presetValue: {
-        date: startOfDay(new Date())
-      }
-    },
-    {
-      title: 'Tomorrow',
-      preset: 'tomorrow',
-      presetValue: {
-        date: startOfDay(addDays(new Date(), 1))
-      }
-    }
-  ];
+  readonly presets: ClickableFilterPreset<DocInteractionTestFilter>[] = DOC_INTERACTION_TEST_PRESETS;
 }

@@ -11,6 +11,9 @@ import { DbxCoreFilterModule, DbxInjectionComponentModule } from '@dereekb/dbx-c
 import { DbxButtonModule } from '../../button';
 import { DbxPresetFilterListComponent } from './filter.preset.list.component';
 import { DbxRouterAnchorListModule } from '../../router/layout/anchorlist/anchorlist.module';
+import { DbxPresetFilterMenuComponent } from './filter.preset.menu.component';
+import { MatMenuModule } from '@angular/material/menu';
+import { DbxRouterAnchorModule } from '../../router';
 
 @NgModule({
   imports: [
@@ -18,14 +21,16 @@ import { DbxRouterAnchorListModule } from '../../router/layout/anchorlist/anchor
     DbxPopoverInteractionModule,
     DbxCoreFilterModule,
     DbxButtonModule,
+    DbxRouterAnchorModule,
     DbxRouterAnchorListModule,
     DbxInjectionComponentModule,
     FlexLayoutModule,
     // Material
+    MatMenuModule,
     MatIconModule,
     MatButtonModule
   ],
-  declarations: [DbxFilterPopoverComponent, DbxFilterPopoverButtonComponent, DbxFilterWrapperComponent, DbxPresetFilterListComponent],
-  exports: [DbxCoreFilterModule, DbxFilterPopoverButtonComponent, DbxFilterWrapperComponent, DbxPresetFilterListComponent]
+  declarations: [DbxFilterPopoverComponent, DbxFilterPopoverButtonComponent, DbxFilterWrapperComponent, DbxPresetFilterListComponent, DbxPresetFilterMenuComponent],
+  exports: [DbxCoreFilterModule, DbxFilterPopoverButtonComponent, DbxFilterWrapperComponent, DbxPresetFilterListComponent, DbxPresetFilterMenuComponent]
 })
 export class DbxFilterInteractionModule {}

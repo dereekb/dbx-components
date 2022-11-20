@@ -3,7 +3,7 @@ import { Observable } from 'rxjs';
 /**
  * Source that provides a filter observable.
  */
-export abstract class FilterSource<F = object> {
+export abstract class FilterSource<F = unknown> {
   /**
    * Provided filter.
    */

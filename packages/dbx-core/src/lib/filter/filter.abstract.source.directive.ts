@@ -2,6 +2,7 @@ import { of, Observable } from 'rxjs';
 import { Directive, forwardRef, OnDestroy, OnInit, Provider, Type } from '@angular/core';
 import { FilterSource, FilterSourceInstance, ObservableOrValue } from '@dereekb/rxjs';
 import { Maybe } from '@dereekb/util';
+import { provideFilterSource } from './filter.content';
 
 export abstract class FilterSourceDirective<F = unknown> implements FilterSource<F> {
   abstract filter$: Observable<F>;
@@ -13,12 +14,13 @@ export abstract class FilterSourceDirective<F = unknown> implements FilterSource
 /**
  * Angular provider convenience function for a FilterSourceDirective.
  */
-export function provideFilterSourceDirective<S extends FilterSourceDirective>(sourceType: Type<S>): Provider[] {
+export function provideFilterSourceDirective<S extends FilterSourceDirective<F>, F = unknown>(sourceType: Type<S>): Provider[] {
   return [
     {
       provide: FilterSourceDirective,
       useExisting: forwardRef(() => sourceType)
-    }
+    },
+    ...provideFilterSource(sourceType)
   ];
 }
 

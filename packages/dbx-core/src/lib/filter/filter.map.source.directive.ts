@@ -25,7 +25,7 @@ export class DbxFilterMapSourceDirective<F> extends AbstractDbxFilterMapInstance
     this._key.next(key);
   }
 
-  initWithFilter?(filterObs: Observable<F>): void {
+  initWithFilter(filterObs: Observable<F>): void {
     this.instance$.pipe(first()).subscribe((x) => x.initWithFilter(filterObs));
   }
 }
