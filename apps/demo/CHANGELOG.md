@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [9.16.0](https://github.com/dereekb/dbx-components/compare/v9.15.8-dev...v9.16.0) (2022-11-20)
+
+
+### Features
+
+* added DbxPresetMenuFilter ([2c08ad7](https://github.com/dereekb/dbx-components/commit/2c08ad79e464dac307d0dd347487b4e7d3d75a6b))
+
+
+
 ## [9.15.8](https://github.com/dereekb/dbx-components/compare/v9.15.7-dev...v9.15.8) (2022-11-19)
 
 
