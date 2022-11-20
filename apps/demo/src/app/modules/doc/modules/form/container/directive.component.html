@@ -17,7 +17,7 @@
       <p>dbxFormLoadingSource behaves the same way as dbxFormSource, but only sets the value when the loading state has finished loading.</p>
       <p>If the loading state has an error, the form is set to an empty value.</p>
       <doc-form-example-form #b="exampleForm" [dbxFormlyFields]="testFieldsC" [dbxFormLoadingSource]="loadingData$"></doc-form-example-form>
-      <button mat-raised-button color="warn" (click)="a.resetForm()">Reset Form</button>
+      <button mat-raised-button color="warn" (click)="b.resetForm()">Reset Form</button>
     </doc-feature-example>
 
     <doc-feature-example header="dbxFormValueChange" hint="Emits form value changed events.">

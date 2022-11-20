@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [9.16.1](https://github.com/dereekb/dbx-components/compare/v9.16.0-dev...v9.16.1) (2022-11-20)
+
+
+### Bug Fixes
+
+* fixed DbxFormSourceDirective always mode ([ed73d44](https://github.com/dereekb/dbx-components/commit/ed73d44debc11ecbb9f1923d79ee856b0527ad4b))
+
+
+
 # [9.16.0](https://github.com/dereekb/dbx-components/compare/v9.15.8-dev...v9.16.0) (2022-11-20)
 
 
