@@ -2,7 +2,8 @@ import { filterMaybe } from '@dereekb/rxjs';
 import { Directive, Input, OnDestroy } from '@angular/core';
 import { Maybe } from '@dereekb/util';
 import { BehaviorSubject, switchMap } from 'rxjs';
-import { provideSecondaryActionStoreSource, SecondaryActionContextStoreSource, ActionContextStoreSource, actionContextStoreSourcePipe } from '../../action.store.source';
+import { SecondaryActionContextStoreSource, ActionContextStoreSource, actionContextStoreSourcePipe } from '../../action.store.source';
+import { provideSecondaryActionStoreSource } from '../../action.store.source.provide';
 
 /**
  * Directive that provides a DbxActionSourceDirective that is passed in.

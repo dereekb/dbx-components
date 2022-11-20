@@ -3,8 +3,9 @@ import { Directive, Input, OnDestroy } from '@angular/core';
 import { Maybe } from '@dereekb/util';
 import { BehaviorSubject, switchMap } from 'rxjs';
 import { ActionKey } from './action.map';
-import { provideSecondaryActionStoreSource, SecondaryActionContextStoreSource } from '../../action.store.source';
+import { SecondaryActionContextStoreSource } from '../../action.store.source';
 import { DbxActionContextMapDirective } from './action.map.directive';
+import { provideSecondaryActionStoreSource } from '../../action.store.source.provide';
 
 /**
  * Directive that provides a ActionContextStoreSource using the input key and DbxActionContextMapDirective.

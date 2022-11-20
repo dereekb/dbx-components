@@ -3,9 +3,9 @@
     <ng-content></ng-content>
   </div>
   <div fxLayout="row">
-    <button mat-raised-button (click)="filterClicked()">Apply Filter</button>
+    <dbx-button dbxActionButton [raised]="applyRaised" [text]="applyText" [icon]="applyIcon"></dbx-button>
     <div class="spacer"></div>
-    <button mat-icon-button (click)="resetClicked()">
+    <button mat-icon-button (click)="resetFilter()">
       <mat-icon>clear</mat-icon>
     </button>
   </div>

@@ -5,6 +5,7 @@ import { DbxActionWorkInstanceDelegate, HandleActionFunction } from './action.ha
 import { DbxActionContextBaseSource } from './action.holder';
 import { Destroyable, Maybe } from '@dereekb/util';
 import { SubscriptionObject, workFactory } from '@dereekb/rxjs';
+import { Injectable, OnDestroy } from '@angular/core';
 
 /**
  * DbxActionContextMachine configuration.
@@ -16,8 +17,10 @@ export interface DbxActionContextMachineConfig<T = unknown, O = unknown> {
   oneTimeUse: boolean;
   /**
    * Function to handle any valueReady events.
+   *
+   * If false, will not subscribe/handle valueReady$ events.
    */
-  handleValueReady: HandleActionFunction<T, O>;
+  handleValueReady: HandleActionFunction<T, O> | false;
   /**
    * Optional function to execute after the action has succeeded.
    */
@@ -38,14 +41,16 @@ export class DbxActionContextMachine<T = unknown, O = unknown> extends DbxAction
     super(source);
 
     // Handle Value Ready
-    this._handleValueReadySub.subscription = this.sourceInstance.valueReady$.subscribe((value) => {
-      const doWork = workFactory({
-        work: config.handleValueReady,
-        delegate: new DbxActionWorkInstanceDelegate<T, O>(this.sourceInstance)
-      });
+    if (config.handleValueReady !== false) {
+      this._handleValueReadySub.subscription = this.sourceInstance.valueReady$.subscribe((value) => {
+        const doWork = workFactory({
+          work: config.handleValueReady as HandleActionFunction<T, O>,
+          delegate: new DbxActionWorkInstanceDelegate<T, O>(this.sourceInstance)
+        });
 
-      doWork(value);
-    });
+        doWork(value);
+      });
+    }
 
     // If this is a one-time use, then destroy it after the first success comes through.
     if (this.config.oneTimeUse) {
@@ -68,5 +73,22 @@ export class DbxActionContextMachine<T = unknown, O = unknown> extends DbxAction
 
   get isShutdown(): boolean {
     return this._isShutdown;
+  }
+}
+
+/**
+ * DbxActionContextMachine that implements OnDestroy and is configured for use as a Service/Injectable.
+ */
+@Injectable()
+export class DbxActionContextMachineAsService<T = unknown, O = unknown> extends DbxActionContextMachine<T, O> implements OnDestroy {
+  constructor() {
+    super({
+      oneTimeUse: false,
+      handleValueReady: false
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy();
   }
 }

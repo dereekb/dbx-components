@@ -4,7 +4,7 @@
     <ng-container *ngTemplateOutlet="content"></ng-container>
   </ng-container>
   <!-- Click -->
-  <a class="dbx-anchor-a dbx-anchor-click" (click)="clickAnchor()" *ngSwitchCase="1">
+  <a class="dbx-anchor-a dbx-anchor-click" [ngClass]="(selectedClass$ | async) || ''" (click)="clickAnchor()" *ngSwitchCase="1">
     <ng-container *ngTemplateOutlet="content"></ng-container>
   </a>
   <!-- Router -->

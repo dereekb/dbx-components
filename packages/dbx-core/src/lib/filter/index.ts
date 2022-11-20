@@ -1,4 +1,3 @@
-export * from './action';
 export * from './filter.abstract.connector.directive';
 export * from './filter.abstract.source.directive';
 export * from './filter.connector.directive';

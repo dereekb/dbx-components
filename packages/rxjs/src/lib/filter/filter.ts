@@ -17,26 +17,40 @@ export abstract class FilterSource<F = object> {
 }
 
 /**
- * An object that contains a preset identifier for the filter.
+ * Preset identifier.
  */
-export interface FilterPreset<P = string> {
-  preset?: P;
+export type FilterPresetString = string;
+
+/**
+ * An object that contains a FilterPresetString.
+ *
+ * When a preset value is present, it may either be used as the sole filter variable, or act as a base that is overwritten by other values.
+ */
+export interface FilterPresetStringRef<P extends string = string> {
+  /**
+   * Preset key.
+   */
+  preset: P;
 }
+
+export type FilterWithPreset<P extends string = string> = Partial<FilterPresetStringRef<P>>;
+
+export type FilterWithPresetOptional<F extends FilterWithPreset<P>, P extends string = string> = Partial<Pick<F, 'preset'>> & Omit<F, 'preset'>;
 
 /**
  * A FilterPreset with only the preset.
  */
-export type FilterOnlyWithPreset<F extends FilterPreset> = Pick<F, 'preset'>;
+export type FilterOnlyWithPresetString<F extends FilterWithPreset<P>, P extends string = string> = Pick<F, 'preset'>;
 
 /**
  * A FilterPreset without a preset value available.
  */
-export type FilterWithoutPreset<F extends FilterPreset> = Omit<F, 'preset'>;
+export type FilterWithoutPresetString<F extends FilterWithPreset<P>, P extends string = string> = Omit<F, 'preset'>;
 
 /**
  * A FilterSource that has a filter with a FilterPreset potentially available.
  */
-export abstract class PresetFilterSource<F extends FilterPreset> extends FilterSource<F> {}
+export abstract class PresetFilterSource<F extends FilterWithPreset<P>, P extends string = string> extends FilterSource<F> {}
 
 /**
  * A FilterSourceConnector connects with a Source for a function.

@@ -1,4 +1,4 @@
-import { skipFirstMaybe } from '@dereekb/rxjs';
+import { skipFirstMaybe, tapLog } from '@dereekb/rxjs';
 import { Input, Component, TemplateRef, ViewChild, OnDestroy } from '@angular/core';
 import { AbstractDbxAnchorDirective, DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { Maybe } from '@dereekb/util';
@@ -37,9 +37,15 @@ export class DbxAnchorComponent extends AbstractDbxAnchorDirective implements On
     distinctUntilChanged(),
     shareReplay(1)
   );
+
   readonly target$ = this.anchor$.pipe(
     map((x) => x?.target),
     distinctUntilChanged(),
+    shareReplay(1)
+  );
+
+  readonly selectedClass$ = this.selected$.pipe(
+    map((selected) => (selected ? 'dbx-anchor-selected' : '')),
     shareReplay(1)
   );
 

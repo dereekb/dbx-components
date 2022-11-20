@@ -1,59 +1,40 @@
 import { Directive, Host, Input, OnDestroy, OnInit } from '@angular/core';
-import { map, shareReplay, switchMap, tap, BehaviorSubject } from 'rxjs';
-import { AbstractSubscriptionDirective } from '../../../subscription';
 import { DbxActionContextStoreSourceInstance } from '../../action.store.source';
-import { DbxActionWorkInstanceDelegate, HandleActionWithFunctionOrContext } from '../../action.handler';
+import { HandleActionWithFunctionOrContext } from '../../action.handler';
 import { Maybe } from '@dereekb/util';
-import { filterMaybe, workFactory } from '@dereekb/rxjs';
+import { DbxActionHandlerInstance } from './action.handler.instance';
 
 /**
- * Context used for defining a function that performs an action using the input function on ValueReady.
+ * Abstract directive that wraps and handles a DbxActionHandlerInstance lifecycle.
+ */
+@Directive()
+export abstract class AbstractDbxActionHandlerDirective<T = unknown, O = unknown> implements OnInit, OnDestroy {
+  protected _dbxActionHandlerInstance = new DbxActionHandlerInstance<T, O>(this.source);
+
+  constructor(@Host() public readonly source: DbxActionContextStoreSourceInstance<T, O>) {}
+
+  ngOnInit(): void {
+    this._dbxActionHandlerInstance.init();
+  }
+
+  ngOnDestroy(): void {
+    this._dbxActionHandlerInstance.destroy();
+  }
+}
+
+/**
+ * Directive that wraps and controls a DbxActionHandlerInstance.
  */
 @Directive({
   selector: '[dbxActionHandler]'
 })
-export class DbxActionHandlerDirective<T = unknown, O = unknown> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
-  private _handlerFunction = new BehaviorSubject<Maybe<HandleActionWithFunctionOrContext<T, O>>>(undefined);
-  readonly handlerFunction$ = this._handlerFunction.pipe(filterMaybe(), shareReplay(1));
-
+export class DbxActionHandlerDirective<T = unknown, O = unknown> extends AbstractDbxActionHandlerDirective<T, O> {
   @Input('dbxActionHandler')
   get handlerFunction(): Maybe<HandleActionWithFunctionOrContext<T, O>> {
-    return this._handlerFunction.value;
+    return this._dbxActionHandlerInstance.handlerFunction;
   }
 
   set handlerFunction(handlerFunction: Maybe<HandleActionWithFunctionOrContext<T, O>>) {
-    this._handlerFunction.next(handlerFunction);
-  }
-
-  private _delegate = new DbxActionWorkInstanceDelegate<T, O>(this.source);
-
-  constructor(@Host() public readonly source: DbxActionContextStoreSourceInstance<T, O>) {
-    super();
-  }
-
-  ngOnInit(): void {
-    this.sub = this.handlerFunction$
-      .pipe(
-        switchMap((work) =>
-          this.source.valueReady$.pipe(
-            tap((value) => {
-              const context = workFactory({ work, delegate: this._delegate })(value);
-
-              if (context) {
-                // Add the action to the lockSet for the source to prevent it from being destroyed until the action completes.
-                this.source.lockSet.addLock('dbxActionHandler', context.isComplete$.pipe(map((x) => !x)));
-              }
-            })
-          )
-        )
-      )
-      .subscribe();
-  }
-
-  override ngOnDestroy(): void {
-    this.source.lockSet.onNextUnlock(() => {
-      super.ngOnDestroy();
-      this._handlerFunction.complete();
-    });
+    this._dbxActionHandlerInstance.handlerFunction = handlerFunction;
   }
 }
