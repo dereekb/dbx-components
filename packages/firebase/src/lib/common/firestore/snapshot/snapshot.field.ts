@@ -48,7 +48,8 @@ import {
   PrimativeKeyDencoderFunction,
   mapObjectMap,
   UnitedStatesAddress,
-  ZoomLevel
+  ZoomLevel,
+  DEFAULT_LAT_LNG_STRING_VALUE
 } from '@dereekb/util';
 import { FirestoreModelData, FIRESTORE_EMPTY_VALUE } from './snapshot.type';
 import { FirebaseAuthUserId } from '../../auth/auth';
@@ -641,8 +642,10 @@ export interface FirestoreLatLngStringConfig extends DefaultMapConfiguredFiresto
 
 /**
  * Default value used by firestoreLatLngString
+ *
+ * @Deprecated use DEFAULT_LAT_LNG_STRING_VALUE
  */
-export const DEFAULT_FIRESTORE_LAT_LNG_STRING_VALUE = '0,0';
+export const DEFAULT_FIRESTORE_LAT_LNG_STRING_VALUE = DEFAULT_LAT_LNG_STRING_VALUE;
 
 /**
  * Configuration for a LatLngString field.
@@ -658,7 +661,7 @@ export function firestoreLatLngString(config?: FirestoreLatLngStringConfig) {
   const transform = latLngStringFunction({ precision, wrap: false, validate: true });
 
   return firestoreString<LatLngString>({
-    default: defaultValue || DEFAULT_FIRESTORE_LAT_LNG_STRING_VALUE,
+    default: defaultValue || DEFAULT_LAT_LNG_STRING_VALUE,
     defaultBeforeSave,
     transform
   });
