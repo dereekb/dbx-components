@@ -24,6 +24,12 @@ export const DOC_FORM_ROUTES = [
     ref: 'doc.form.selection'
   },
   {
+    icon: 'code',
+    title: 'Expressions',
+    detail: 'formly expressions examples',
+    ref: 'doc.form.expression'
+  },
+  {
     icon: 'article',
     title: 'Text Editor',
     detail: 'text editor',

@@ -16,6 +16,7 @@ import { DocFormExampleComponent } from './component/example.form.component';
 import { DocFormTemplateComponent } from './container/template.component';
 import { DocFormDirectiveComponent } from './container/directive.component';
 import { FormlyMatNativeSelectModule } from '@ngx-formly/material/native-select';
+import { DocFormExpressionComponent } from './container/expression.component';
 
 @NgModule({
   imports: [DocSharedModule, FormlyMatNativeSelectModule],
@@ -54,6 +55,7 @@ export class DocFormComponentsModule {}
     DocFormChecklistComponent,
     DocFormValueComponent,
     DocFormSelectionComponent,
+    DocFormExpressionComponent,
     DocFormComponentComponent,
     DocFormDirectiveComponent,
     DocFormTextEditorComponent,
