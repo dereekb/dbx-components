@@ -4,6 +4,12 @@
 
 // MARK: Mixin
 @mixin core() {
+  .mat-form-field.mat-form-field-type-toggle {
+    .mat-form-field-wrapper .mat-form-field-subscript-wrapper {
+      // margin on the checkbox field is unnecessary. By removing it, it becomes more in-line with the other fields.
+      margin-top: 0px;
+    }
+  }
 }
 
 @mixin color($theme-config) {

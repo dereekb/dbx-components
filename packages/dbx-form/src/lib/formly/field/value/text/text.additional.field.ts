@@ -69,7 +69,7 @@ export interface StateFieldConfig extends Partial<TextFieldConfig> {
 }
 
 export function stateField(config: StateFieldConfig = {}): FormlyFieldConfig {
-  const { asCode = false, pattern = asCode ? US_STATE_CODE_STRING_REGEX : undefined, key = 'state', placeholder = '', label = 'State', autocomplete = 'state', maxLength = asCode ? ADDRESS_STATE_CODE_MAX_LENGTH : ADDRESS_STATE_MAX_LENGTH, required = false } = config;
+  const { asCode = false, pattern = asCode ? US_STATE_CODE_STRING_REGEX : undefined, key = 'state', placeholder = '', label = 'State', autocomplete = 'state', maxLength = asCode ? ADDRESS_STATE_CODE_MAX_LENGTH : ADDRESS_STATE_MAX_LENGTH, transform, required = false } = config;
   return textField({
     ...config,
     key,
@@ -80,7 +80,8 @@ export function stateField(config: StateFieldConfig = {}): FormlyFieldConfig {
     required,
     maxLength,
     transform: {
-      toUppercase: true
+      ...transform,
+      toUppercase: asCode || transform?.toUppercase
     }
   });
 }

@@ -1,6 +1,6 @@
 import { MatDialog } from '@angular/material/dialog';
 import { Component } from '@angular/core';
-import { expandWrapper, flexLayoutWrapper, infoWrapper, nameField, sectionWrapper, subsectionWrapper, toggleWrapper, cityField, stateField, zipCodeField, countryField, styleWrapper } from '@dereekb/dbx-form';
+import { expandWrapper, flexLayoutWrapper, infoWrapper, nameField, sectionWrapper, subsectionWrapper, toggleWrapper, cityField, stateField, zipCodeField, countryField, styleWrapper, toggleField } from '@dereekb/dbx-form';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 
 @Component({
@@ -52,7 +52,15 @@ export class DocFormWrapperComponent {
     })
   ];
 
-  readonly flexField: FormlyFieldConfig[] = [flexLayoutWrapper([cityField(), stateField()])];
+  readonly flexField: FormlyFieldConfig[] = [
+    flexLayoutWrapper([
+      cityField(),
+      stateField({
+        description: 'State Description'
+      }),
+      toggleField({ key: 'toggle', label: 'Toggle', description: 'Toggle Description' })
+    ])
+  ];
 
   readonly flexThreeField: FormlyFieldConfig[] = [
     flexLayoutWrapper(
