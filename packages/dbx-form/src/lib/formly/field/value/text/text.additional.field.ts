@@ -10,8 +10,11 @@ export const PHONE_LABEL_MAX_LENGTH = 100;
 export const LABEL_STRING_MAX_LENGTH = 100;
 export const SEARCH_STRING_MAX_LENGTH = 100;
 
-export function nameField({ key = 'name', label = 'Name', placeholder = 'John Doe', required = false, minLength, maxLength, attributes }: Partial<TextFieldConfig> = {}): FormlyFieldConfig {
+export function nameField(config: Partial<TextFieldConfig> = {}): FormlyFieldConfig {
+  const { key = 'name', label = 'Name', placeholder = 'John Doe', required = false, minLength, maxLength, attributes } = config;
+
   return textField({
+    ...config,
     key,
     label,
     placeholder,
