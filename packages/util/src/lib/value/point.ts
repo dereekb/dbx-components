@@ -154,6 +154,11 @@ export function latLngTupleFunction(config?: LatLngTupleFunctionConfig): LatLngT
  */
 export type LatLngString = `${Latitude},${Longitude}`;
 
+/**
+ * Default LatLng value as a string.
+ */
+export const DEFAULT_LAT_LNG_STRING_VALUE = '0,0';
+
 export type LatLngPointInput = Latitude | LatLngPoint | LonLatPoint | LatLngString | LatLngTuple | string;
 
 export type LatLngPrecision = NumberPrecision;

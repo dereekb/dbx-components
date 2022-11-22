@@ -63,6 +63,13 @@ export class DocFormSelectionComponent implements OnDestroy {
       options: VALUE_SELECTION_VALUES
     }),
     valueSelectionField({
+      key: 'selectOneWithClear',
+      label: 'Select One With Clear',
+      description: 'This is a simple selection field with a custom clear value added via the addClearOption.',
+      addClearOption: '>> Custom Clear Me <<',
+      options: VALUE_SELECTION_VALUES
+    }),
+    valueSelectionField({
       key: 'selectMultiple',
       label: 'Select Multiple',
       description: 'This is a simple selection field for picking an array of values.',

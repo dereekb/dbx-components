@@ -10,8 +10,11 @@ export const PHONE_LABEL_MAX_LENGTH = 100;
 export const LABEL_STRING_MAX_LENGTH = 100;
 export const SEARCH_STRING_MAX_LENGTH = 100;
 
-export function nameField({ key = 'name', label = 'Name', placeholder = 'John Doe', required = false, minLength, maxLength, attributes }: Partial<TextFieldConfig> = {}): FormlyFieldConfig {
+export function nameField(config: Partial<TextFieldConfig> = {}): FormlyFieldConfig {
+  const { key = 'name', label = 'Name', placeholder = 'John Doe', required = false, minLength, maxLength, attributes } = config;
+
   return textField({
+    ...config,
     key,
     label,
     placeholder,
@@ -66,7 +69,7 @@ export interface StateFieldConfig extends Partial<TextFieldConfig> {
 }
 
 export function stateField(config: StateFieldConfig = {}): FormlyFieldConfig {
-  const { asCode = false, pattern = asCode ? US_STATE_CODE_STRING_REGEX : undefined, key = 'state', placeholder = '', label = 'State', autocomplete = 'state', maxLength = asCode ? ADDRESS_STATE_CODE_MAX_LENGTH : ADDRESS_STATE_MAX_LENGTH, required = false } = config;
+  const { asCode = false, pattern = asCode ? US_STATE_CODE_STRING_REGEX : undefined, key = 'state', placeholder = '', label = 'State', autocomplete = 'state', maxLength = asCode ? ADDRESS_STATE_CODE_MAX_LENGTH : ADDRESS_STATE_MAX_LENGTH, transform, required = false } = config;
   return textField({
     ...config,
     key,
@@ -77,7 +80,8 @@ export function stateField(config: StateFieldConfig = {}): FormlyFieldConfig {
     required,
     maxLength,
     transform: {
-      toUppercase: true
+      ...transform,
+      toUppercase: asCode || transform?.toUppercase
     }
   });
 }

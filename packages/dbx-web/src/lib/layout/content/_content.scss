@@ -16,6 +16,8 @@ $max-content-container-width: $content-max-width;
 $content-container-padding: theming.$padding-4;
 $content-container-padding-small-screen: theming.$padding-2;
 
+$content-end-margin: theming.$padding-4;
+
 @mixin core() {
   .dbx-content-border {
     padding: $content-border-inner-padding;
@@ -35,6 +37,10 @@ $content-container-padding-small-screen: theming.$padding-2;
     &.dbx-content-box-wide {
       max-width: unset;
     }
+  }
+
+  .dbx-content-end {
+    margin-bottom: $content-end-margin;
   }
 
   .dbx-app-page {
@@ -112,11 +118,18 @@ $content-container-padding-small-screen: theming.$padding-2;
 
 @mixin color($theme-config) {
   $color-config: theming.get-color-config($theme-config);
+  $primary: map.get($color-config, 'primary');
+  $accent: map.get($color-config, 'accent');
+  $warn: map.get($color-config, 'warn');
   $background: map.get($color-config, 'background');
   $foreground: map.get($color-config, 'foreground');
   $content-color: theming.get-color-from-palette($foreground, 'text');
   $content-background: theming.get-color-from-palette($background, 'background');
   $content-border-background: theming.get-color-from-palette($background, 'hover');
+
+  $primary-color: theming.get-color-from-palette($primary, 500);
+  $accent-color: theming.get-color-from-palette($accent, 500);
+  $warn-color: theming.get-color-from-palette($warn, 500);
 
   .dbx-background {
     color: $content-color;
@@ -126,6 +139,18 @@ $content-container-padding-small-screen: theming.$padding-2;
   .dbx-content-border {
     // border-radius: 6px;
     border: 3px dashed $content-border-background;
+
+    &.dbx-content-border-primary {
+      border-color: $primary-color;
+    }
+
+    &.dbx-content-border-warn {
+      border-color: $warn-color;
+    }
+
+    &.dbx-content-border-accent {
+      border-color: $accent-color;
+    }
   }
 
   .dbx-content-container {

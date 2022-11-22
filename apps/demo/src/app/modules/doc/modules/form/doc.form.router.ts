@@ -9,6 +9,7 @@ import { DocFormComponentComponent } from './container/component.component';
 import { DocFormChecklistComponent } from './container/checklist.component';
 import { DocFormTemplateComponent } from './container/template.component';
 import { DocFormDirectiveComponent } from './container/directive.component';
+import { DocFormExpressionComponent } from './container/expression.component';
 
 export const layoutState: Ng2StateDeclaration = {
   url: '/form',
@@ -41,6 +42,12 @@ export const docFormComponentState: Ng2StateDeclaration = {
   component: DocFormComponentComponent
 };
 
+export const docFormExpressionState: Ng2StateDeclaration = {
+  url: '/expression',
+  name: 'doc.form.expression',
+  component: DocFormExpressionComponent
+};
+
 export const docFormSelectionState: Ng2StateDeclaration = {
   url: '/selection',
   name: 'doc.form.selection',
@@ -71,4 +78,17 @@ export const docFormTemplateState: Ng2StateDeclaration = {
   component: DocFormTemplateComponent
 };
 
-export const STATES: Ng2StateDeclaration[] = [layoutState, homeState, docFormValueState, docFormChecklistState, docFormComponentState, docFormSelectionState, docFormTextEditorState, docFormWrapperState, docFormDirectiveState, docFormTemplateState];
+export const STATES: Ng2StateDeclaration[] = [
+  //
+  layoutState,
+  homeState,
+  docFormValueState,
+  docFormChecklistState,
+  docFormComponentState,
+  docFormExpressionState,
+  docFormSelectionState,
+  docFormTextEditorState,
+  docFormWrapperState,
+  docFormDirectiveState,
+  docFormTemplateState
+];

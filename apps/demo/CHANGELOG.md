@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [9.16.2](https://github.com/dereekb/dbx-components/compare/v9.16.1-dev...v9.16.2) (2022-11-22)
+
+
+### Bug Fixes
+
+* fixed toggleField() description position ([a0ac203](https://github.com/dereekb/dbx-components/commit/a0ac20398f32961173462a09ecdf046674e11aef))
+
+
+
 ## [9.16.1](https://github.com/dereekb/dbx-components/compare/v9.16.0-dev...v9.16.1) (2022-11-20)
 
 

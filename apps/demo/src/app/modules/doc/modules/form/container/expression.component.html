@@ -1,0 +1,11 @@
+<dbx-content-container>
+  <doc-feature-layout header="Expression Examples">
+    <doc-feature-derived type="uses" from="@ngx-formly" url="https://formly.dev/docs/guide/expression-properties">
+      <p>This library lot of additional fields that extend formly, but you can pass in "expressions" to most configurations.</p>
+    </doc-feature-derived>
+    <!-- Examples -->
+    <doc-feature-example header="Hide Example" hint="You can conditionally show/hide fields based on another field's value using Formly's built-in expressions. Hidden fields will be removed from output, and not save values when show/hide is changed.">
+      <doc-form-example-form [dbxFormlyFields]="hideExpressionField"></doc-form-example-form>
+    </doc-feature-example>
+  </doc-feature-layout>
+</dbx-content-container>
