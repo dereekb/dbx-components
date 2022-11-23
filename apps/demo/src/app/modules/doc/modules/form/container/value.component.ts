@@ -71,13 +71,43 @@ export class DocFormValueComponent {
     })
   ];
 
+  readonly repeatArrayValue = {
+    test2: [
+      {
+        name: 'hello',
+        disable: false
+      },
+      {
+        name: 'start with disable=true',
+        disable: true
+      }
+    ]
+  };
+
   readonly repeatArrayFields: FormlyFieldConfig[] = [
     repeatArrayField({
       key: 'test',
       label: 'Test Field',
+      description: 'This is a generic repeat field. It is configured with custom add/remove text, and a max of 2 items.',
       addText: 'Add Test Field',
       removeText: 'Remove Test Field',
-      repeatFieldGroup: [nameField(), emailField(), phoneAndLabelSectionField(), addressListField()]
+      repeatFieldGroup: [nameField(), emailField(), phoneAndLabelSectionField(), addressListField()],
+      maxLength: 2
+    }),
+    repeatArrayField({
+      key: 'test2',
+      label: 'Field With Add and Remove Diabled',
+      repeatFieldGroup: [
+        nameField(),
+        toggleField({
+          key: 'disable',
+          label: 'Disable Remove'
+        })
+      ],
+      disableRearrange: true,
+      allowAdd: true,
+      allowRemove: ({ i, value }) => !(value as { disable: boolean }).disable,
+      labelForField: ({ value }) => (value as { name: string }).name
     })
   ];
 

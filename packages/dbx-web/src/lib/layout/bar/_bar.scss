@@ -6,6 +6,7 @@
 $pagebar-height-var: theming.$page-navbar-height-var;
 $pagebar-height: theming.$page-navbar-height;
 $bar-vertical-padding: theming.$padding-1;
+$bar-fixed-height: 40px;
 
 // MARK: Mixin
 @mixin core() {
@@ -23,6 +24,11 @@ $bar-vertical-padding: theming.$padding-1;
     display: flex;
     align-items: center;
     justify-content: center;
+  }
+
+  .dbx-bar-fixed-height {
+    height: $bar-fixed-height;
+    overflow: hidden;
   }
 
   .dbx-pagebar-hide {
