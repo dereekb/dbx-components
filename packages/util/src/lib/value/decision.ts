@@ -1,6 +1,7 @@
 import { FilterFunction, invertFilter } from '../filter/filter';
 import { FactoryWithRequiredInput } from '../getter/getter';
 import { MapFunction, AsyncMapFunction } from './map';
+import { Maybe } from './maybe.type';
 
 /**
  * A map function that derives a boolean from the input.
@@ -19,4 +20,21 @@ export type DecisionFunctionFactory<C, I> = FactoryWithRequiredInput<DecisionFun
  */
 export function invertDecision<T = unknown, F extends DecisionFunction<T> = DecisionFunction<T>>(decisionFn: F, invert = true): F {
   return invertFilter(decisionFn as FilterFunction, invert) as F;
+}
+
+/**
+ * Creates a DecisionFunction from the input.
+ *
+ * @param valueOrFunction
+ * @param defaultIfUndefined
+ * @returns
+ */
+export function asDecisionFunction<T = unknown>(valueOrFunction: Maybe<boolean | DecisionFunction<T>>, defaultIfUndefined = true): DecisionFunction<T> {
+  const input = valueOrFunction ?? defaultIfUndefined;
+
+  if (typeof input === 'boolean') {
+    return () => input;
+  } else {
+    return input;
+  }
 }

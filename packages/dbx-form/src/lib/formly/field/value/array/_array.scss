@@ -6,7 +6,7 @@
 
 // MARK: Mixin
 @mixin core() {
-  .example-custom-placeholder {
+  .dbx-form-repeat-array-drag-placeholder {
     background: #ccc;
     border: dotted 3px #999;
     min-height: 100px;
@@ -36,6 +36,10 @@
         display: block;
         padding: 6px;
       }
+    }
+
+    .dbx-form-repeat-array-footer {
+      margin-top: 6px;
     }
   }
 }

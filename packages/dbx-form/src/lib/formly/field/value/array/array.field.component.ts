@@ -1,50 +1,98 @@
 import { CdkDragDrop } from '@angular/cdk/drag-drop';
-import { Component } from '@angular/core';
-import { FactoryWithInput, getValueFromGetter, Maybe } from '@dereekb/util';
+import { Component, OnInit } from '@angular/core';
+import { asDecisionFunction, asGetter, cachedGetter, DecisionFunction, FactoryWithInput, FactoryWithRequiredInput, Getter, getValueFromGetter, IndexRef, makeGetter, Maybe } from '@dereekb/util';
 import { FieldArrayTypeConfig, FieldArrayType, FormlyFieldConfig, FormlyFieldProps } from '@ngx-formly/core';
 
-export interface DbxFormRepeatArrayConfig extends FormlyFieldProps {
-  labelForField?: string | FactoryWithInput<string, FormlyFieldConfig>;
+export interface DbxFormRepeatArrayPair<T = unknown> extends IndexRef {
+  value: T;
+}
+
+export interface DbxFormRepeatArrayFieldConfigPair<T = unknown> extends DbxFormRepeatArrayPair<T> {
+  fieldConfig: FormlyFieldConfig;
+}
+
+export interface DbxFormRepeatArrayConfig<T = unknown> extends Pick<FormlyFieldProps, 'maxLength' | 'label' | 'description'> {
+  labelForField?: string | FactoryWithRequiredInput<string, DbxFormRepeatArrayFieldConfigPair<T>>;
+  /**
+   * Text for the add button.
+   */
   addText?: string;
+  /**
+   * Text for the remove button.
+   */
   removeText?: string;
+  /**
+   * Whethe or not to disable rearranging items.
+   *
+   * False by default.
+   */
+  disableRearrange?: boolean;
+  /**
+   * Wether or not to show the add button.
+   *
+   * True by default.
+   */
+  allowAdd?: boolean;
+  /**
+   * Whether or not to allow removing items. Can optionally pass a decision function that decides whether or not a specific item can be removed.
+   */
+  allowRemove?: boolean | DecisionFunction<DbxFormRepeatArrayPair<T>>;
 }
 
 @Component({
   template: `
     <div class="dbx-form-repeat-array">
-      <dbx-subsection [header]="label">
+      <dbx-subsection [header]="label" [hint]="description">
         <!-- Fields -->
-        <div class="dbx-form-repeat-array-fields" cdkDropList (cdkDropListDropped)="drop($event)">
+        <div class="dbx-form-repeat-array-fields" cdkDropList [cdkDropListDisabled]="disableRearrange" (cdkDropListDropped)="drop($event)">
           <div class="dbx-form-repeat-array-field" cdkDrag cdkDragLockAxis="y" *ngFor="let field of field.fieldGroup; let i = index; let last = last">
-            <div class="example-custom-placeholder" *cdkDragPlaceholder></div>
-            <dbx-bar>
-              <button cdkDragHandle mat-flat-button><mat-icon>drag_handle</mat-icon></button>
+            <div class="dbx-form-repeat-array-drag-placeholder" *cdkDragPlaceholder></div>
+            <dbx-bar class="dbx-bar-fixed-height">
+              <button *ngIf="!disableRearrange" cdkDragHandle mat-flat-button><mat-icon>drag_handle</mat-icon></button>
               <dbx-button-spacer></dbx-button-spacer>
               <h4>
                 <span class="repeat-array-number">{{ i + 1 }}</span>
-                <span>{{ labelForItem(field) }}</span>
+                <span>{{ labelForItem(field, i) }}</span>
               </h4>
               <span class="dbx-spacer"></span>
-              <button mat-flat-button color="warn" (click)="remove(i)">{{ removeText }}</button>
+              <dbx-button *ngIf="allowRemove(i)" color="warn" [text]="removeText" (buttonClick)="remove(i)"></dbx-button>
             </dbx-bar>
             <formly-field class="dbx-form-repeat-array-field-content" [field]="field"></formly-field>
           </div>
         </div>
         <!-- Add Button -->
         <div class="dbx-form-repeat-array-footer">
-          <button *ngIf="canAdd" mat-raised-button (click)="add()">{{ addText }}</button>
+          <dbx-button *ngIf="allowAdd" [raised]="true" [disabled]="addItemDisabled" [text]="addText" (buttonClick)="add()"></dbx-button>
         </div>
       </dbx-subsection>
     </div>
   `
 })
-export class DbxFormRepeatArrayTypeComponent extends FieldArrayType<FieldArrayTypeConfig<DbxFormRepeatArrayConfig>> {
+export class DbxFormRepeatArrayTypeComponent<T = unknown> extends FieldArrayType<FieldArrayTypeConfig<DbxFormRepeatArrayConfig>> {
+  private _labelForField = cachedGetter(() => {
+    const input = this.repeatArrayField.labelForField;
+
+    if (typeof input === 'function') {
+      return input;
+    } else {
+      return makeGetter(input ?? '');
+    }
+  });
+
+  private _allowRemove: Getter<DecisionFunction<DbxFormRepeatArrayPair<T>>> = cachedGetter(() => {
+    return asDecisionFunction(this.field.props.allowRemove, true);
+  });
+
   get repeatArrayField(): DbxFormRepeatArrayConfig {
     return this.field.props;
   }
 
   get label(): string {
     return this.field.props.label ?? (this.field.key as string);
+  }
+
+  get description(): Maybe<string> {
+    return this.field.props.description;
   }
 
   get addText(): string {
@@ -63,7 +111,28 @@ export class DbxFormRepeatArrayTypeComponent extends FieldArrayType<FieldArrayTy
     return this.field.fieldGroup?.length ?? 0;
   }
 
-  get canAdd(): boolean {
+  get disableRearrange(): boolean {
+    return Boolean(this.field.props.disableRearrange);
+  }
+
+  get allowAdd(): boolean {
+    return this.field.props.allowAdd ?? true;
+  }
+
+  allowRemove(i: number) {
+    const array: unknown[] = this.model;
+    const value = array[i] as T;
+    return this._allowRemove()({
+      i,
+      value
+    });
+  }
+
+  get addItemDisabled() {
+    return !this.canAddItem;
+  }
+
+  get canAddItem(): boolean {
     const max = this.max;
 
     if (max == null) {
@@ -107,7 +176,14 @@ export class DbxFormRepeatArrayTypeComponent extends FieldArrayType<FieldArrayTy
     this.swapIndexes(event.previousIndex, event.currentIndex);
   }
 
-  labelForItem(field: FormlyFieldConfig): string {
-    return getValueFromGetter(this.repeatArrayField.labelForField ?? '', field);
+  labelForItem(fieldConfig: FormlyFieldConfig, i: number): string {
+    const array: unknown[] = this.model;
+    const value = array[i] as T;
+
+    return getValueFromGetter(this._labelForField(), {
+      i,
+      value,
+      fieldConfig
+    });
   }
 }
