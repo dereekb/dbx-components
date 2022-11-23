@@ -4,6 +4,9 @@ import { objectHasKey } from '../object/object';
 import { HashSet } from '../set/set.hashset';
 import { SortCompareFunction } from '../sort';
 import { FactoryWithRequiredInput } from '../getter';
+import { Maybe } from './maybe.type';
+import { separateValues } from '../grouping';
+import { readKeysToMap } from '../map/map.key';
 
 /**
  * A number that denotes which index an item is at.
@@ -41,6 +44,11 @@ export function sortAscendingIndexNumberRefFunction<T extends IndexRef>(): SortC
 export type ReadIndexFunction<T> = (value: T) => IndexNumber;
 
 /**
+ * Returns an item's index, if available.
+ */
+export type ReadMaybeIndexFunction<T> = (value: T) => Maybe<IndexNumber>;
+
+/**
  * Reads an IndexNumber from an IndexRef.
  *
  * @param indexRef
@@ -48,6 +56,63 @@ export type ReadIndexFunction<T> = (value: T) => IndexNumber;
  */
 export function readIndexNumber(indexRef: IndexRef): IndexNumber {
   return indexRef.i;
+}
+
+export interface IndexDeltaGroup<T> {
+  // Input
+  readonly inputItems: T[];
+  readonly previousItems?: Maybe<T[]>;
+  // Output
+  /**
+   * Items without an index.
+   */
+  readonly newItems: T[];
+  /**
+   * All items with an index.
+   */
+  readonly currentItems: T[];
+  /**
+   * Items from previousItems that have been removed.
+   */
+  readonly deletedItems?: T[];
+}
+
+export type IndexDeltaGroupFunction<T> = (inputItems: T[], previousItems?: Maybe<T[]>) => IndexDeltaGroup<T>;
+
+export function indexDeltaGroupFunction<T>(readIndex: ReadMaybeIndexFunction<T>): IndexDeltaGroupFunction<T> {
+  return (inputItems: T[], previousItems?: Maybe<T[]>) => {
+    const {
+      excluded: newItems, // items without an index and treated as "new"
+      included: currentItems
+    } = separateValues(inputItems, (x) => {
+      const index = readIndex(x);
+      return index != null;
+    });
+
+    let deletedItems: T[] | undefined;
+
+    if (previousItems != null) {
+      // compute delta if available
+      const currentItemsIndexMap = readKeysToMap(currentItems, readIndex);
+
+      deletedItems = previousItems.filter((x) => {
+        const index = readIndex(x);
+        return index != null && !currentItemsIndexMap.has(index);
+      });
+    }
+
+    return {
+      inputItems,
+      previousItems,
+      newItems,
+      currentItems,
+      deletedItems
+    };
+  };
+}
+
+export function indexDeltaGroup<T>(readIndex: ReadMaybeIndexFunction<T>, inputItems: T[], previousItems?: Maybe<T[]>): IndexDeltaGroup<T> {
+  return indexDeltaGroupFunction(readIndex)(inputItems, previousItems);
 }
 
 /**

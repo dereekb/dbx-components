@@ -1,5 +1,5 @@
 import { range } from '../array/array.number';
-import { findItemsByIndex, IndexRange, indexRangeOverlapsIndexRangeFunction, isIndexNumberInIndexRangeFunction, isIndexRangeInIndexRangeFunction, sortAscendingIndexNumberRefFunction } from './indexed';
+import { findItemsByIndex, indexDeltaGroupFunction, IndexRange, indexRangeOverlapsIndexRangeFunction, IndexRef, isIndexNumberInIndexRangeFunction, isIndexRangeInIndexRangeFunction, sortAscendingIndexNumberRefFunction } from './indexed';
 
 describe('sortAscendingIndexNumberRefFunction()', () => {
   describe('sort()', () => {
@@ -11,6 +11,54 @@ describe('sortAscendingIndexNumberRefFunction()', () => {
       items.sort(sortAscendingIndexNumberRefFunction());
 
       expect(items[0].i).toBe(0);
+    });
+  });
+});
+
+type ValueWithMaybeIndex = Partial<IndexRef> & {
+  x: string;
+};
+
+describe('indexDeltaGroupFunction()', () => {
+  describe('function', () => {
+    const groupingFunction = indexDeltaGroupFunction<ValueWithMaybeIndex>((x) => x.i);
+
+    it('should group items without a null/undefined index as newItems', () => {
+      const result = groupingFunction([{ x: 'a' }, { x: 'b', i: 0 }, { x: 'c', i: 1 }]);
+
+      expect(result.newItems.length).toBe(1);
+      expect(result.currentItems.length).toBe(2);
+    });
+
+    describe('with previous items', () => {
+      it('should separate current and deleted items', () => {
+        const previousItems = [
+          { x: 'b', i: 0 },
+          { x: 'c', i: 1 }
+        ];
+        const result = groupingFunction([{ x: 'a' }, { x: 'b', i: 0 }, { x: 'd', i: 2 }], previousItems);
+
+        expect(result.newItems.length).toBe(1);
+        expect(result.currentItems.length).toBe(2);
+        expect(result.currentItems[0].x).toBe('b');
+        expect(result.currentItems[1].x).toBe('d');
+        expect(result.deletedItems?.length).toBe(1);
+        expect(result.deletedItems?.[0].x).toBe('c');
+      });
+
+      it('should capture all deletedItems', () => {
+        const previousItems = [
+          { x: 'b', i: 0 },
+          { x: 'c', i: 1 }
+        ];
+        const result = groupingFunction([{ x: 'a' }], previousItems);
+
+        expect(result.newItems.length).toBe(1);
+        expect(result.currentItems.length).toBe(0);
+        expect(result.deletedItems?.length).toBe(2);
+        expect(result.deletedItems?.[0].x).toBe('b');
+        expect(result.deletedItems?.[1].x).toBe('c');
+      });
     });
   });
 });
