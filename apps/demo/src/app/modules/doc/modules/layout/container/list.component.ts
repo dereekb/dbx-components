@@ -1,5 +1,5 @@
 import { ClickableAnchor, safeDetectChanges } from '@dereekb/dbx-core';
-import { listItemModifier, ListItemModifier, ListSelectionState, AnchorForValueFunction, DbxValueListGridItemViewGridSizeConfig, DbxListSelectionMode } from '@dereekb/dbx-web';
+import { listItemModifier, ListItemModifier, ListSelectionState, AnchorForValueFunction, DbxValueListGridItemViewGridSizeConfig, DbxListSelectionMode, DbxValueListItemDecisionFunction, dbxValueListItemDecisionFunction } from '@dereekb/dbx-web';
 import { CustomDocValue } from './../component/item.list.custom.component';
 import { ListLoadingState, mapLoadingStateResults, successResult } from '@dereekb/rxjs';
 import { BehaviorSubject, map, switchMap, startWith, Observable, delay, of } from 'rxjs';
@@ -101,6 +101,10 @@ export class DocLayoutListComponent implements OnInit, OnDestroy {
       }
     };
   };
+
+  readonly isSelectedModifierFunction: DbxValueListItemDecisionFunction<DocValue> = dbxValueListItemDecisionFunction((value: DocValue) => {
+    return true; // all are selected.
+  });
 
   readonly customGridSize: Partial<DbxValueListGridItemViewGridSizeConfig> = {
     columns: 'repeat(auto-fill, minmax(200px, 1fr))',

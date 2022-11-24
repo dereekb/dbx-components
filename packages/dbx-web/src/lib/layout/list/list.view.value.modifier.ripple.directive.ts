@@ -1,14 +1,12 @@
 import { Directive, Input, OnDestroy } from '@angular/core';
-import { Maybe, ArrayOrValue, Modifier } from '@dereekb/util';
+import { Maybe, ArrayOrValue, Modifier, DecisionFunction } from '@dereekb/util';
 import { BehaviorSubject, Observable, map } from 'rxjs';
-import { DbxValueListItem } from './list.view.value';
+import { DbxValueListItem, DbxValueListItemDecisionFunction } from './list.view.value';
 import { AbstractDbxValueListItemModifierDirective } from './list.view.value.modifier.directive';
-
-export type DisableRippleForValueFunction<T> = (item: DbxValueListItem<T>) => boolean;
 
 export const DBX_LIST_ITEM_DISABLE_RIPPLE_LIST_ITEM_MODIFIER_KEY = 'disable_ripple_anchor';
 
-export const DBX_LIST_ITEM_DEFAULT_DISABLE_FUNCTION: DisableRippleForValueFunction<unknown> = <T>(item: DbxValueListItem<T>) => {
+export const DBX_LIST_ITEM_DEFAULT_DISABLE_FUNCTION: DbxValueListItemDecisionFunction<unknown> = <T>(item: DbxValueListItem<T>) => {
   return item.rippleDisabled || !item.anchor || (!item.anchor.ref && !item.anchor.url && !item.anchor.onClick);
 };
 
@@ -16,7 +14,7 @@ export const DBX_LIST_ITEM_DEFAULT_DISABLE_FUNCTION: DisableRippleForValueFuncti
   selector: '[dbxListItemDisableRippleModifier]'
 })
 export class DbxListItemDisableRippleModifierDirective<T> extends AbstractDbxValueListItemModifierDirective<T> implements OnDestroy {
-  private _disableRippleForItem = new BehaviorSubject<DisableRippleForValueFunction<T>>(DBX_LIST_ITEM_DEFAULT_DISABLE_FUNCTION);
+  private _disableRippleForItem = new BehaviorSubject<DbxValueListItemDecisionFunction<T>>(DBX_LIST_ITEM_DEFAULT_DISABLE_FUNCTION);
 
   readonly modifiers$: Observable<Maybe<ArrayOrValue<Modifier<DbxValueListItem<T>>>>> = this._disableRippleForItem.pipe(
     map((disableRippleForItem) => {
@@ -39,7 +37,13 @@ export class DbxListItemDisableRippleModifierDirective<T> extends AbstractDbxVal
   }
 
   @Input('dbxListItemDisableRippleModifier')
-  set disableRippleForItem(disableRippleForItem: Maybe<DisableRippleForValueFunction<T>>) {
+  set disableRippleForItem(disableRippleForItem: Maybe<DbxValueListItemDecisionFunction<T>>) {
     this._disableRippleForItem.next(disableRippleForItem ?? DBX_LIST_ITEM_DEFAULT_DISABLE_FUNCTION);
   }
 }
+
+// MARK: Compat
+/**
+ * @Deprecated use DbxValueListItemDecisionFunction instead.
+ */
+export type DisableRippleForValueFunction<T> = DecisionFunction<DbxValueListItem<T>>;

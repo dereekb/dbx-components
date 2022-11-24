@@ -57,20 +57,27 @@
 
         <p>Clicked: {{ clickedModifiedAnchorItem | json }}</p>
         <div style="height: 200px">
-          <doc-custom-item-list [state$]="stateWithAnchors$" [dbxListItemModifier]="inputDbxListItemModifier"></doc-custom-item-list>
+          <doc-complex-item-list [state$]="stateWithAnchors$" [dbxListItemModifier]="inputDbxListItemModifier"></doc-complex-item-list>
         </div>
 
         <h4>dbxListItemAnchorModifier</h4>
         <p>Used with dbxListItemModifier to set the anchor value on the list item using the itemValue of the list item.</p>
         <p>Clicked: {{ clickedModifiedAnchorItem | json }}</p>
         <div style="height: 200px">
-          <doc-custom-item-list [state$]="stateWithAnchors$" [dbxListItemModifier] [dbxListItemAnchorModifier]="makeClickAnchor"></doc-custom-item-list>
+          <doc-complex-item-list [state$]="stateWithAnchors$" [dbxListItemModifier] [dbxListItemAnchorModifier]="makeClickAnchor"></doc-complex-item-list>
+        </div>
+
+        <h4>dbxListItemSelectionModifier</h4>
+        <p>Used with dbxListItemModifier to change the selection of items. Is typically used in cases where items with a specific key or index are "selected".</p>
+        <p>This example sets all items to be selected.</p>
+        <div style="height: 200px">
+          <doc-complex-item-list [state$]="stateWithSelection$" [dbxListItemModifier] [dbxListItemIsSelectedModifier]="isSelectedModifierFunction"></doc-complex-item-list>
         </div>
       </doc-feature-example>
 
       <doc-feature-example header="dbxListItemDisableRippleModifier" hint="Used to disable ripples conditionally on a per-item basis using a function.">
         <div style="height: 200px">
-          <doc-custom-item-list [dbxListItemModifier] [dbxListItemDisableRippleModifier]="disableAllRipples" [state$]="stateWithAnchors$" [dbxListItemModifier]="inputDbxListItemModifier"></doc-custom-item-list>
+          <doc-complex-item-list [dbxListItemModifier] [dbxListItemDisableRippleModifier]="disableAllRipples" [state$]="stateWithAnchors$" [dbxListItemModifier]="inputDbxListItemModifier"></doc-complex-item-list>
         </div>
       </doc-feature-example>
 

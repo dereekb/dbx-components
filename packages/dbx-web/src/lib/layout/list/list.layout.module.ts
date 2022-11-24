@@ -15,6 +15,7 @@ import { DbxValueListItemModifierDirective } from './list.view.value.modifier.di
 import { DbxListItemDisableRippleModifierDirective } from './list.view.value.modifier.ripple.directive';
 import { DbxValueListGridItemViewComponent, DbxValueListGridSizeDirective, DbxValueListGridViewComponent } from './list.grid.view.component';
 import { FlexLayoutModule } from '@angular/flex-layout';
+import { DbxListItemIsSelectedModifierDirective } from './list.view.value.modifier.selection.directive';
 
 @NgModule({
   imports: [CommonModule, MatRippleModule, FlexLayoutModule, DbxLoadingModule, DbxRouterAnchorModule, InfiniteScrollModule, DbxInjectionComponentModule, MatListModule, MatIconModule],
@@ -31,7 +32,8 @@ import { FlexLayoutModule } from '@angular/flex-layout';
     DbxSelectionValueListViewComponent,
     DbxSelectionValueListItemViewComponent,
     DbxValueListItemModifierDirective,
-    DbxListItemDisableRippleModifierDirective
+    DbxListItemDisableRippleModifierDirective,
+    DbxListItemIsSelectedModifierDirective
   ],
   exports: [
     //
@@ -45,7 +47,8 @@ import { FlexLayoutModule } from '@angular/flex-layout';
     DbxSelectionValueListViewComponent,
     DbxSelectionValueListItemViewComponent,
     DbxValueListItemModifierDirective,
-    DbxListItemDisableRippleModifierDirective
+    DbxListItemDisableRippleModifierDirective,
+    DbxListItemIsSelectedModifierDirective
   ]
 })
 export class DbxListLayoutModule {}
