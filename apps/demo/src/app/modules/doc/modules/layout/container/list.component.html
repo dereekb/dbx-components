@@ -2,53 +2,19 @@
   <dbx-content>
     <doc-feature-layout header="List" hint="Lists are used to display items vertically.">
       <!-- Examples -->
-
-      <doc-feature-example header="dbx-list">
-        <p>It is important that a dbx-list has a set height available to it, otherwise it will expand to it's content height.</p>
-        <p>Selected: {{ selectionState | json }}</p>
-        <p>Values: {{ count$ | async }}</p>
-        <div style="height: 200px">
-          <doc-item-list [state$]="state$" (loadMore)="loadMore()" (selectionChange)="onSelectionChange($event)">
-            <p top>This is the top.</p>
-            <p bottom>This is the bottom.</p>
-          </doc-item-list>
-        </div>
-
-        <h4>Static List</h4>
-        <div style="height: 200px">
-          <doc-item-list [state$]="staticState$">
-            <p top>This is the top.</p>
-            <p bottom>This is the bottom.</p>
-          </doc-item-list>
-        </div>
-      </doc-feature-example>
-      <doc-feature-example header="dbx-list-view">
-        <p>To simplify declaration of lists, you can use dbx-list-view, which will inject your configured item components within a mat-list view that are wrapped by a dbx-anchor.</p>
-        <p>This pattern allows for a lot of flexibility and lets the developer focus on the item component without having to worry about non-visual elements.</p>
-
-        <p>Clicked Item (Plain): {{ clickedItemPlain | json }}</p>
-        <p>Clicked Item (Anchor): {{ clickedItem | json }}</p>
-        <div style="height: 200px">
-          <doc-custom-item-list [state$]="stateWithAnchors$" (clickItem)="onPlainClick($event)">
-            <button bottom mat-raised-button (click)="loadMore()">Load More</button>
-          </doc-custom-item-list>
-        </div>
-
-        <h4>Ripples</h4>
-        <p>The list view uses mat-nav-list internally, which displays a ripple on items that are clicked.</p>
-        <p>Ripples are disabled for items when a list has emitAllClicks=false configured on it or the items have no anchor. Items that are disabled also do not have a ripple.</p>
-        <div style="height: 200px">
-          <doc-custom-item-list [state$]="state$"></doc-custom-item-list>
-        </div>
-        <p>The dbxListItemDisableRippleModifier can also be used to disable ripples on models.</p>
-      </doc-feature-example>
-      <doc-feature-example header="dbx-selection-list-view">
+      <doc-feature-example header="dbx-selection-list-view" hint="One of the primary components when building a list view using dbx-components.">
         <p>To simplify declaration of selection lists, you can use dbx-selection-list-view, which will inject your configured item components within a mat-selection-list view and handle the the proper events.</p>
         <p>This pattern allows for a lot of flexibility and lets the developer focus on the item component without having to worry about the selection elements.</p>
         <p>In this demo, ~50% are selected already, and ~20% are disabled.</p>
 
+        <div>
+          <button mat-button mat-raised-button [color]="(selectionMode$ | async) !== 'select' ? 'accent' : null" (click)="setSelectionMode('view')">View Mode</button>
+          <dbx-button-spacer></dbx-button-spacer>
+          <button mat-button mat-raised-button [color]="(selectionMode$ | async) === 'select' ? 'accent' : null" (click)="setSelectionMode('select')">Select Mode</button>
+        </div>
+
         <div style="height: 200px">
-          <doc-complex-item-list [state$]="stateWithSelection$">
+          <doc-complex-item-list [selectionMode]="selectionMode$ | async" [state$]="stateWithSelection$">
             <button bottom mat-raised-button (click)="loadMore()">Load More</button>
           </doc-complex-item-list>
         </div>
@@ -106,6 +72,48 @@
         <div style="height: 200px">
           <doc-custom-item-list [dbxListItemModifier] [dbxListItemDisableRippleModifier]="disableAllRipples" [state$]="stateWithAnchors$" [dbxListItemModifier]="inputDbxListItemModifier"></doc-custom-item-list>
         </div>
+      </doc-feature-example>
+
+      <h3>Base Components</h3>
+      <p>There are a number of different directives and components that make up dbx-list. In most cases, your lists will be built using the 3 directives and components that make up the doc-complex-item-list example component (AbstractDbxSelectionListWrapperDirective, AbstractDbxSelectionListViewDirective, and AbstractDbxValueListViewItemComponent).</p>
+      <doc-feature-example header="dbx-list">
+        <p>It is important that a dbx-list has a set height available to it, otherwise it will expand to its full content height.</p>
+        <p>Selected: {{ selectionState | json }}</p>
+        <p>Values: {{ count$ | async }}</p>
+        <div style="height: 200px">
+          <doc-item-list [state$]="state$" (loadMore)="loadMore()" (selectionChange)="onSelectionChange($event)">
+            <p top>This is the top.</p>
+            <p bottom>This is the bottom.</p>
+          </doc-item-list>
+        </div>
+
+        <h4>Static List</h4>
+        <div style="height: 200px">
+          <doc-item-list [state$]="staticState$">
+            <p top>This is the top.</p>
+            <p bottom>This is the bottom.</p>
+          </doc-item-list>
+        </div>
+      </doc-feature-example>
+      <doc-feature-example header="dbx-list-view">
+        <p>To simplify declaration of lists, you can use dbx-list-view, which will inject your configured item components within a mat-list view that are wrapped by a dbx-anchor.</p>
+        <p>This pattern allows for a lot of flexibility and lets the developer focus on the item component without having to worry about non-visual elements.</p>
+
+        <p>Clicked Item (Plain): {{ clickedItemPlain | json }}</p>
+        <p>Clicked Item (Anchor): {{ clickedItem | json }}</p>
+        <div style="height: 200px">
+          <doc-custom-item-list [state$]="stateWithAnchors$" (clickItem)="onPlainClick($event)">
+            <button bottom mat-raised-button (click)="loadMore()">Load More</button>
+          </doc-custom-item-list>
+        </div>
+
+        <h4>Ripples</h4>
+        <p>The list view uses mat-nav-list internally, which displays a ripple on items that are clicked.</p>
+        <p>Ripples are disabled for items when a list has emitAllClicks=false configured on it or the items have no anchor. Items that are disabled also do not have a ripple.</p>
+        <div style="height: 200px">
+          <doc-custom-item-list [state$]="state$"></doc-custom-item-list>
+        </div>
+        <p>The dbxListItemDisableRippleModifier can also be used to disable ripples on models.</p>
       </doc-feature-example>
     </doc-feature-layout>
   </dbx-content>

@@ -27,7 +27,7 @@ export class DocSelectionItemListComponent extends AbstractDbxSelectionListWrapp
 export class DocSelectionItemListViewComponent extends AbstractDbxSelectionListViewDirective<DocValue> {
   readonly config: DbxSelectionValueListViewConfig<DocValueWithSelection> = {
     componentClass: DocSelectionItemListViewItemComponent,
-    mapValuesToItemValues: (x) => of(x.map((y) => ({ ...y, icon: y.icon, itemValue: y })))
+    mapValuesToItemValues: (x) => of(x.map((y) => ({ ...y, icon: y.icon, itemValue: y }))) // NOTE: Passes any extra values through too from y, like "selected".
   };
 }
 
