@@ -96,7 +96,9 @@ export class DocFormValueComponent {
     }),
     repeatArrayField({
       key: 'test2',
-      label: 'Field With Add and Remove Diabled',
+      label: 'Field With Add and Remove Diabled Via Field',
+      description: 'Shows the remove button being disabled when a value is a certain value, and shows the duplicate button.',
+      duplicateText: 'Make Copy',
       repeatFieldGroup: [
         nameField(),
         toggleField({
@@ -106,8 +108,10 @@ export class DocFormValueComponent {
       ],
       disableRearrange: true,
       allowAdd: true,
+      allowDuplicate: true,
       allowRemove: ({ i, value }) => !(value as { disable: boolean }).disable,
-      labelForField: ({ value }) => (value as { name: string }).name
+      labelForField: ({ value }) => (value as { name: string }).name,
+      addDuplicateToEnd: true
     })
   ];
 
