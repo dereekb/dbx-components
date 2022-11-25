@@ -116,9 +116,9 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, M = unknown, H
 
   readonly searchResults$: Observable<ConfiguredSearchableValueFieldDisplayValue<T, M>[]> = this.searchResultsState$.pipe(map((x) => x?.value ?? []));
 
-  readonly _formControlValue: Observable<T | T[]> = this.formControl$.pipe(switchMap((control) => control.valueChanges.pipe(startWith(control.value), shareReplay(1))));
+  readonly _formControlValue$: Observable<T | T[]> = this.formControl$.pipe(switchMap((control) => control.valueChanges.pipe(startWith(control.value), shareReplay(1))));
 
-  readonly values$: Observable<T[]> = this._formControlValue.pipe(map(convertMaybeToArray), shareReplay(1));
+  readonly values$: Observable<T[]> = this._formControlValue$.pipe(map(convertMaybeToArray), shareReplay(1));
 
   readonly displayValuesState$: Observable<LoadingState<ConfiguredSearchableValueFieldDisplayValue<T, M>[]>> = this.values$.pipe(
     distinctUntilChanged(),

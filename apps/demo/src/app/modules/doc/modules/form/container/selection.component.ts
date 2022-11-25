@@ -1,12 +1,15 @@
 import { safeDetectChanges } from '@dereekb/dbx-core';
-import { BehaviorSubject, map, Observable, of, delay } from 'rxjs';
-import { ChangeDetectorRef, Component, OnDestroy } from '@angular/core';
+import { BehaviorSubject, map, Observable, of, delay, startWith, switchMap } from 'rxjs';
+import { ChangeDetectorRef, Component, OnDestroy, Type, OnInit } from '@angular/core';
 import { FormlyFieldConfig } from '@ngx-formly/core';
-import { filterPickableItemFieldValuesByLabel, pickableItemChipField, pickableItemListField, searchableChipField, searchableStringChipField, searchableTextField, SearchableValueFieldDisplayFn, SearchableValueFieldDisplayValue, SearchableValueFieldStringSearchFn, SearchableValueFieldValue, valueSelectionField, ValueSelectionOption } from '@dereekb/dbx-form';
-import { randomDelayWithRandomFunction } from '@dereekb/rxjs';
-import { randomArrayFactory, randomNumberFactory } from '@dereekb/util';
+import { dbxListField, filterPickableItemFieldValuesByLabel, pickableItemChipField, pickableItemListField, searchableChipField, searchableStringChipField, searchableTextField, SearchableValueFieldDisplayFn, SearchableValueFieldDisplayValue, SearchableValueFieldStringSearchFn, SearchableValueFieldValue, valueSelectionField, ValueSelectionOption } from '@dereekb/dbx-form';
+import { ListLoadingState, randomDelayWithRandomFunction, successResult } from '@dereekb/rxjs';
+import { range, randomArrayFactory, randomNumberFactory, takeFront, readIndexNumber, IndexRef } from '@dereekb/util';
 import { DocFormExampleSelectionValue, DocFormExampleSelectionValueId, EXAMPLE_DISPLAY_FOR_SELECTION_VALUE, EXAMPLE_DISPLAY_FOR_SELECTION_VALUE_WITH_CUSTOM_DISPLAYS, EXAMPLE_SEARCH_FOR_SELECTION_VALUE, MAKE_EXAMPLE_SELECTION_VALUE } from '../component/selection.example';
 import { DocFormExamplePrimarySearchableFieldDisplayComponent } from '../component/selection.example.view';
+import { DocValue } from '../../layout/component/item.list';
+import { DocSelectionItemListComponent } from '../../layout/component/item.list.selection.component';
+import { AbstractDbxSelectionListWrapperDirective } from '@dereekb/dbx-web';
 
 export type TestStringSearchFunction = (text: string) => string[];
 
@@ -51,7 +54,7 @@ export const VALUE_SELECTION_VALUES: ValueSelectionOption<number>[] = [
 @Component({
   templateUrl: './selection.component.html'
 })
-export class DocFormSelectionComponent implements OnDestroy {
+export class DocFormSelectionComponent implements OnInit, OnDestroy {
   private _searchStrings = new BehaviorSubject<TestStringSearchFunction>((search) => ['A', 'B', 'C', 'D'].map((x) => `${search} ${x}`.trim()));
   readonly searchFn$ = this._searchStrings.asObservable();
 
@@ -89,6 +92,41 @@ export class DocFormSelectionComponent implements OnDestroy {
       description: 'This is a native selection field.',
       options: VALUE_SELECTION_VALUES,
       native: true
+    })
+  ];
+
+  readonly numberToLoadPerUpdate = 10;
+
+  private _values = new BehaviorSubject<(DocValue & IndexRef)[]>([]);
+
+  readonly initialListSelectionValues$ = of({
+    dbxlist: [1, 2, 4, 8, 16, 32, 64, 128, 256]
+  });
+
+  readonly state$: Observable<ListLoadingState<DocValue & IndexRef>> = this._values.pipe(
+    switchMap((x) => {
+      return of(successResult(x)).pipe(delay(Math.random() * 500 + 500), startWith<ListLoadingState<DocValue & IndexRef>>({ loading: true, value: takeFront(x, x.length - this.numberToLoadPerUpdate) }));
+    })
+  );
+
+  makeValues() {
+    const currentI = this._values.value.length;
+    return range(currentI, currentI + this.numberToLoadPerUpdate).map((i) => ({ i, icon: 'house', name: `${i}-${Math.random() * i}` }));
+  }
+
+  loadMore() {
+    this._values.next(this._values.value.concat(this.makeValues()));
+  }
+
+  readonly dbxListFields: FormlyFieldConfig[] = [
+    dbxListField<DocValue & IndexRef, AbstractDbxSelectionListWrapperDirective<DocValue & IndexRef>>({
+      key: 'dbxlist',
+      label: 'DbxList Label',
+      description: 'Uses a dbxList-related view/wrapper to display a list and select items. Selected items are keyed via a readKey function.',
+      state$: this.state$,
+      readKey: readIndexNumber,
+      loadMore: () => this.loadMore(), // load more is not usual for these as reloading values requires loading more, but it is available for the rare cases.
+      listComponentClass: of(DocSelectionItemListComponent as unknown as Type<AbstractDbxSelectionListWrapperDirective<DocValue & IndexRef>>)
     })
   ];
 
@@ -326,6 +364,10 @@ export class DocFormSelectionComponent implements OnDestroy {
   ];
 
   constructor(readonly cdRef: ChangeDetectorRef) {}
+
+  ngOnInit(): void {
+    this.loadMore();
+  }
 
   ngOnDestroy(): void {
     this._searchStrings.complete();

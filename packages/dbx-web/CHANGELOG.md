@@ -2,6 +2,22 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [9.17.0](https://github.com/dereekb/dbx-components/compare/v9.16.4-dev...v9.17.0) (2022-11-25)
+
+
+### Bug Fixes
+
+* styling fix ([c883a2c](https://github.com/dereekb/dbx-components/commit/c883a2cc9599405b0577006d2897cb26bcbb6f87))
+
+
+### Features
+
+* added DbxItemListFieldComponent ([467a879](https://github.com/dereekb/dbx-components/commit/467a879934737cdfd18c9211ee775c4990ac502a))
+* added dbxListItemIsSelectedModifier ([7dea240](https://github.com/dereekb/dbx-components/commit/7dea240f3d8efc4c55b03877d5662aa8c89c5992))
+* added duplicate button to repeatArrayField ([f4e027b](https://github.com/dereekb/dbx-components/commit/f4e027b9b30a9875581b262cee4547e80ba2e791))
+
+
+
 ## [9.16.4](https://github.com/dereekb/dbx-components/compare/v9.16.3-dev...v9.16.4) (2022-11-23)
 
 

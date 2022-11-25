@@ -43,6 +43,10 @@
         }
       }
     }
+
+    .mat-selection-list.mat-list-base .dbx-list-view-item.mat-list-item .mat-list-item-content .mat-list-text {
+      padding: 0; // kill padding on item in .mat-list-text for selection view, to match 0 padding in non-selection view
+    }
   }
 }
 

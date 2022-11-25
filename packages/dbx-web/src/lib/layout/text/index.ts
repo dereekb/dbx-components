@@ -1,3 +1,4 @@
+export * from './form.description.component';
 export * from './hint.component';
 export * from './icon.spacer.component';
 export * from './label.component';

@@ -119,14 +119,14 @@ export class AbstractDbxPickableItemFieldDirective<T, M = unknown, H extends Pri
     shareReplay(1)
   );
 
-  readonly _formControlValue: Observable<T | T[]> = this.formControl$.pipe(switchMap((control) => control.valueChanges.pipe(startWith(control.value), shareReplay(1))));
+  readonly _formControlValue$: Observable<T | T[]> = this.formControl$.pipe(switchMap((control) => control.valueChanges.pipe(startWith(control.value), shareReplay(1))));
 
   readonly loadResultsDisplayValues$: Observable<PickableValueFieldDisplayValueWithHash<T, M, H>[]> = this.loadResultsDisplayValuesState$.pipe(map((x) => x?.value ?? []));
 
   /**
    * Current values in the form control.
    */
-  readonly values$: Observable<T[]> = this._formControlValue.pipe(map(convertMaybeToArray), shareReplay(1));
+  readonly values$: Observable<T[]> = this._formControlValue$.pipe(map(convertMaybeToArray), shareReplay(1));
 
   /**
    * Current values with their display value.

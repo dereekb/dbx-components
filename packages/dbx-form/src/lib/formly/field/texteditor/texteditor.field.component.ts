@@ -20,9 +20,7 @@ export type TextEditorComponentFieldProps = FormlyFieldProps;
       <div class="dbx-texteditor-field-menu">
         <ngx-editor-menu [editor]="editor"></ngx-editor-menu>
       </div>
-      <div>
-        <dbx-hint *ngIf="description">{{ description }}</dbx-hint>
-      </div>
+      <dbx-form-description *ngIf="description">{{ description }}</dbx-form-description>
     </div>
   `
 })

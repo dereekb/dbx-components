@@ -50,6 +50,7 @@ import { DocLayoutTwoColumnsChildComponent } from './container/two.child.compone
     DocLayoutTwoColumnsComponent,
     DocLayoutTwoColumnsChildComponent,
     DocLayoutTwoBlockComponent
-  ]
+  ],
+  exports: [DocItemListComponent, DocItemListViewComponent]
 })
 export class DocLayoutModule {}

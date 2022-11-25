@@ -7,6 +7,7 @@ import { FactoryWithRequiredInput } from '../getter';
 import { Maybe } from './maybe.type';
 import { separateValues } from '../grouping';
 import { readKeysToMap } from '../map/map.key';
+import { isSelectedDecisionFunctionFactory } from '../set';
 
 /**
  * A number that denotes which index an item is at.
@@ -372,3 +373,6 @@ export function indexRangeOverlapsIndexRangeFunction(input: IndexRangeFunctionIn
     return input.minIndex <= maxIndex && input.maxIndex >= minIndex;
   };
 }
+
+// MARK: Selection
+export const isSelectedIndexDecisionFunction = isSelectedDecisionFunctionFactory<IndexRef, IndexNumber>({ readKey: readIndexNumber });

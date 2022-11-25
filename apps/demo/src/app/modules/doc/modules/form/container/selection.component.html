@@ -6,6 +6,10 @@
     <doc-feature-example header="valueSelectionField()" hint="A field that lets you select static options.">
       <doc-form-example-form [dbxFormlyFields]="valueSelectionFields"></doc-form-example-form>
     </doc-feature-example>
+    <h3>Dbx List</h3>
+    <doc-feature-example header="dbxListField()" hint="Allows you to use a dbxList to select items.">
+      <doc-form-example-form [dbxFormlyFields]="dbxListFields" [dbxFormSource]="initialListSelectionValues$"></doc-form-example-form>
+    </doc-feature-example>
     <h3>Pickable</h3>
     <p>Pickable fields are use to display a list of preset/static values that the user can choose from.</p>
     <doc-feature-example header="pickableItemChipField()" hint="A field that lets you choose items from a set of chips.">

@@ -1,7 +1,7 @@
 import { forwardRef, InjectionToken, Provider, StaticProvider, Type } from '@angular/core';
 import { ClickableAnchor, DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { map, Observable, of } from 'rxjs';
-import { Maybe } from '@dereekb/util';
+import { DecisionFunction, Maybe } from '@dereekb/util';
 
 export const DBX_VALUE_LIST_VIEW_ITEM = new InjectionToken<unknown>('DbxValueListViewItem');
 
@@ -12,6 +12,17 @@ export interface DbxValueListItem<T> {
   rippleDisabled?: boolean;
   selected?: boolean;
   anchor?: Maybe<ClickableAnchor>;
+}
+
+export type DbxValueListItemDecisionFunction<T> = DecisionFunction<DbxValueListItem<T>>;
+
+/**
+ * Convenience function for mapping a DecisionFunction for a value to a DecisionFunction for a DbxValueListItem with the same value type.
+ * @param decisionFunction
+ * @returns
+ */
+export function dbxValueListItemDecisionFunction<T>(decisionFunction: DecisionFunction<T>): DbxValueListItemDecisionFunction<T> {
+  return (item) => decisionFunction(item.itemValue);
 }
 
 /**

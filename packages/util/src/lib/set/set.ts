@@ -40,7 +40,8 @@ export function removeFromSet<T>(set: Set<T>, values: Maybe<IterableOrValue<T>>)
 }
 
 export function hasDifferentValues<T>(a: Maybe<Iterable<T>>, b: Maybe<Iterable<T>>): boolean {
-  return symmetricDifference(new Set(a), new Set(b)).size > 0;
+  const setA = new Set(a);
+  return a == null || b == null || !setContainsAllValues(setA, b) || setA.size !== new Set(b).size;
 }
 
 export function symmetricDifferenceKeys<T>(a: Maybe<Iterable<T>>, b: Maybe<Iterable<T>>): Maybe<T>[] {

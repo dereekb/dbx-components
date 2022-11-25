@@ -13,6 +13,7 @@ export * from './list.view.value.item.directive';
 export * from './list.view.value.modifier';
 export * from './list.view.value.modifier.directive';
 export * from './list.view.value.modifier.ripple.directive';
+export * from './list.view.value.modifier.selection.directive';
 export * from './list.view.value.selection.component';
 export * from './list.view.value';
 export * from './list.view';

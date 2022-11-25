@@ -1,0 +1,31 @@
+@use '../../../../style/theming';
+
+// MARK: Variables
+
+// MARK: Mixin
+@mixin core() {
+  .dbx-list-item-field-content {
+    height: 300px;
+  }
+}
+
+@mixin color($theme-config) {
+}
+
+@mixin typography($typography-config) {
+}
+
+@mixin theme($theme-config) {
+  @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-form-field-selection-list') {
+    $color: theming.get-color-config($theme-config);
+    $typography: theming.get-typography-config($theme-config);
+
+    @if $color !=null {
+      @include color($theme-config);
+    }
+
+    @if $typography !=null {
+      @include typography($typography);
+    }
+  }
+}
