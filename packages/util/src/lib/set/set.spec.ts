@@ -1,6 +1,48 @@
 import { setIncludes, ReadKeyFunction } from '@dereekb/util';
 import { firstValueFromIterable } from '../iterable';
-import { asSet, containsAnyValue, containsAnyValueFromSet, findValuesFrom, setContainsAllValues, setContainsAnyValue } from './set';
+import { asSet, containsAnyValue, containsAnyValueFromSet, findValuesFrom, hasDifferentValues, setContainsAllValues, setContainsAnyValue } from './set';
+
+describe('asSet()', () => {
+  it('should turn a single string value into a set with that string', () => {
+    const value = 'test';
+    const result = asSet(value);
+
+    expect(result.size).toBe(1);
+    expect(firstValueFromIterable(result)).toBe(value);
+  });
+});
+
+describe('hasDifferentValues()', () => {
+  it('should return true if the sets contain different values.', () => {
+    const a = [1];
+    const b = [1, 2, 3];
+
+    expect(hasDifferentValues(a, b)).toBe(true);
+    expect(hasDifferentValues(b, a)).toBe(true);
+  });
+
+  it('should return false if both inputs are undefined.', () => {
+    const a = undefined;
+    const b = undefined;
+
+    expect(hasDifferentValues(a, b)).toBe(true);
+    expect(hasDifferentValues(b, a)).toBe(true);
+  });
+
+  it('should return false if both inputs are null or undefined.', () => {
+    const a = null;
+    const b = undefined;
+
+    expect(hasDifferentValues(a, b)).toBe(true);
+    expect(hasDifferentValues(b, a)).toBe(true);
+  });
+
+  it('should return false if the sets contain the same values.', () => {
+    const a = [1, 2];
+
+    expect(hasDifferentValues(a, a)).toBe(false);
+  });
+});
 
 describe('findValuesFrom()', () => {
   const values = [1, 2, 3, 4, 5];
@@ -106,16 +148,6 @@ describe('setIncludes', () => {
       const result = setIncludes(set, values, 'all');
       expect(result).toBe(true);
     });
-  });
-});
-
-describe('asSet', () => {
-  it('should turn a single string value into a set with that string', () => {
-    const value = 'test';
-    const result = asSet(value);
-
-    expect(result.size).toBe(1);
-    expect(firstValueFromIterable(result)).toBe(value);
   });
 });
 

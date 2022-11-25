@@ -1,17 +1,21 @@
+@use './list/list';
 @use './pickable/pickable';
 @use './searchable/searchable';
 
 @mixin all-selection-core() {
+  @include list.core();
   @include pickable.core();
   @include searchable.core();
 }
 
 @mixin all-selection-typography($typography-config) {
+  @include list.typography($typography-config);
   @include pickable.typography($typography-config);
   @include searchable.typography($typography-config);
 }
 
 @mixin all-selection-theme($theme-config) {
+  @include list.theme($theme-config);
   @include pickable.theme($theme-config);
   @include searchable.theme($theme-config);
 }

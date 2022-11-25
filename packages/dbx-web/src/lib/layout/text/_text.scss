@@ -15,6 +15,10 @@ $mat-hint-opacity: 0.54; // Opacity to mirror mat-hint
     font-size: 0.8em;
   }
 
+  .dbx-label-padded {
+    padding-bottom: 6px;
+  }
+
   .text-center,
   .dbx-text-center {
     text-align: center;
@@ -32,6 +36,11 @@ $mat-hint-opacity: 0.54; // Opacity to mirror mat-hint
 
   .dbx-icon-spacer {
     margin-right: $icon-spacing;
+  }
+
+  .dbx-form-description {
+    font-size: 75%;
+    margin-top: 0.6666666667em;
   }
 }
 
@@ -72,7 +81,8 @@ $mat-hint-opacity: 0.54; // Opacity to mirror mat-hint
 
   .dbx-label,
   .dbx-sublabel,
-  .dbx-chip-sublabel {
+  .dbx-chip-sublabel,
+  .dbx-form-description {
     opacity: $mat-hint-opacity;
   }
 
