@@ -1,11 +1,13 @@
 @use '../../../../style/theming';
 
 // MARK: Variables
+$dbx-list-item-field-content-max-height: 300px;
 
 // MARK: Mixin
 @mixin core() {
   .dbx-list-item-field-content {
-    height: 300px;
+    max-height: $dbx-list-item-field-content-max-height;
+    overflow: auto;
   }
 }
 

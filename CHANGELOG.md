@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [9.17.1](https://github.com/dereekb/dbx-components/compare/v9.17.0-dev...v9.17.1) (2022-11-27)
+
+
+### Bug Fixes
+
+* added handleFetchJsonParseErrorFunction config ([71c1681](https://github.com/dereekb/dbx-components/commit/71c16810abd7d490769ae956cfa7e9f2e4d5a514))
+
+
+
 # [9.17.0](https://github.com/dereekb/dbx-components/compare/v9.16.4-dev...v9.17.0) (2022-11-25)
 
 
