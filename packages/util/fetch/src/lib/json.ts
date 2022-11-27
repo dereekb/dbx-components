@@ -3,6 +3,12 @@ import { fetchURL, FetchURLInput } from './url';
 
 export type FetchJsonBody = string | object;
 
+export class JsonResponseParseError extends Error {
+  constructor(readonly response: Response) {
+    super('Failed to parse the JSON body.');
+  }
+}
+
 /**
  * Converts the input to a JSON string, or undefined if not provided.
  *
@@ -27,15 +33,23 @@ export type FetchJsonWithInputFunction = <R>(url: FetchURLInput, input: FetchJso
  */
 export type FetchJsonFunction = FetchJsonGetFunction & FetchJsonMethodAndBodyFunction & FetchJsonWithInputFunction;
 
+export type HandleFetchJsonParseErrorFunction = (response: Response) => string | null | never;
+
+export const throwJsonResponseParseErrorFunction: HandleFetchJsonParseErrorFunction = (response: Response) => {
+  throw new JsonResponseParseError(response);
+};
+
+export const returnNullHandleFetchJsonParseErrorFunction: HandleFetchJsonParseErrorFunction = (response: Response) => null;
+
 /**
  * Creates a FetchJsonFunction from the input ConfiguredFetch.
  */
-export function fetchJsonFunction(fetch: ConfiguredFetch): FetchJsonFunction {
+export function fetchJsonFunction(fetch: ConfiguredFetch, handleFetchJsonParseErrorFunction: HandleFetchJsonParseErrorFunction = throwJsonResponseParseErrorFunction): FetchJsonFunction {
   return (url: FetchURLInput, methodOrInput?: string | FetchJsonInput, body?: FetchJsonBody) => {
     const requestUrl = fetchURL(url);
     const requestInit = fetchJsonRequestInit(methodOrInput, body);
     const response = fetch(requestUrl, requestInit);
-    return response.then((x) => x.json());
+    return response.then((x) => x.json().catch(handleFetchJsonParseErrorFunction));
   };
 }
 
