@@ -89,6 +89,11 @@ export interface ModelTestContextFactoryParams<T, D extends FirestoreDocument<T>
    * Required if using ModelTestContextDocumentRefParam as input.
    */
   collectionForDocument?: (parentInstance: PI, document: D) => CL;
+
+  /**
+   * Optional teardown function to cleanup after this object.
+   */
+  destroyInstance?(instance: I): PromiseOrValue<void>;
 }
 
 export interface ModelTestContextDocumentRefParams<D extends FirestoreDocument<any> = FirestoreDocument<any>> {
@@ -120,7 +125,8 @@ export function modelTestContextFactory<T, D extends FirestoreDocument<T> = Fire
     },
     makeInstance = (collection, ref, testInstance) => new ModelTestContextInstance(collection, ref, testInstance) as I,
     makeFixture = (f: PF) => new ModelTestContextFixture<T, D, PI, PF, I>(f),
-    initDocument
+    initDocument,
+    destroyInstance
   } = config;
 
   return (params: ModelTestContextParams<C, PI, PF>, buildTests: (u: F) => void) => {
@@ -164,7 +170,8 @@ export function modelTestContextFactory<T, D extends FirestoreDocument<T> = Fire
         }
 
         return instance;
-      }
+      },
+      destroyInstance
     });
   };
 }
