@@ -1,3 +1,4 @@
+import { mapIdentityFunction, MapSameFunction } from '@dereekb/util';
 import { FetchMethod, ConfiguredFetch } from './fetch.type';
 import { fetchURL, FetchURLInput } from './url';
 
@@ -21,8 +22,10 @@ export function fetchJsonBodyString(body: FetchJsonBody | undefined): string | u
 
 export interface FetchJsonInput extends Omit<RequestInit, 'body'> {
   method: FetchMethod;
-  body?: FetchJsonBody;
+  body?: FetchJsonBody | undefined;
 }
+
+export type FetchJsonInputMapFunction = MapSameFunction<FetchJsonInput>;
 
 export type FetchJsonGetFunction = <R>(url: FetchURLInput) => Promise<R>;
 export type FetchJsonMethodAndBodyFunction = <R>(url: FetchURLInput, method: string, body?: FetchJsonBody) => Promise<R>;
@@ -41,38 +44,84 @@ export const throwJsonResponseParseErrorFunction: HandleFetchJsonParseErrorFunct
 
 export const returnNullHandleFetchJsonParseErrorFunction: HandleFetchJsonParseErrorFunction = (response: Response) => null;
 
+export interface FetchJsonFunctionConfig extends FetchJsonRequestInitFunctionConfig {
+  handleFetchJsonParseErrorFunction?: HandleFetchJsonParseErrorFunction;
+}
+
 /**
  * Creates a FetchJsonFunction from the input ConfiguredFetch.
  */
-export function fetchJsonFunction(fetch: ConfiguredFetch, handleFetchJsonParseErrorFunction: HandleFetchJsonParseErrorFunction = throwJsonResponseParseErrorFunction): FetchJsonFunction {
+export function fetchJsonFunction(fetch: ConfiguredFetch, inputConfig?: FetchJsonFunctionConfig | HandleFetchJsonParseErrorFunction): FetchJsonFunction {
+  let config: FetchJsonFunctionConfig;
+
+  if (typeof inputConfig === 'function') {
+    config = {
+      handleFetchJsonParseErrorFunction: inputConfig as HandleFetchJsonParseErrorFunction
+    };
+  } else {
+    config = inputConfig ?? {};
+  }
+
+  config = {
+    ...config,
+    handleFetchJsonParseErrorFunction: config.handleFetchJsonParseErrorFunction ?? throwJsonResponseParseErrorFunction
+  };
+
+  const { handleFetchJsonParseErrorFunction } = config;
+  const configuredFetchJsonRequestInit = fetchJsonRequestInitFunction(config);
+
   return (url: FetchURLInput, methodOrInput?: string | FetchJsonInput, body?: FetchJsonBody) => {
     const requestUrl = fetchURL(url);
-    const requestInit = fetchJsonRequestInit(methodOrInput, body);
+    const requestInit = configuredFetchJsonRequestInit(methodOrInput, body);
     const response = fetch(requestUrl, requestInit);
     return response.then((x) => x.json().catch(handleFetchJsonParseErrorFunction));
   };
 }
 
-export function fetchJsonRequestInit(methodOrInput: string | FetchJsonInput = 'GET', body?: FetchJsonBody): RequestInit {
-  let config: FetchJsonInput;
-
-  if (methodOrInput === null) {
-    config = {
-      method: 'GET'
-    };
-  } else if (typeof methodOrInput === 'string') {
-    config = {
-      method: methodOrInput,
-      body
-    };
-  } else {
-    config = methodOrInput;
-  }
-
-  const requestInit: RequestInit = {
-    ...config,
-    body: fetchJsonBodyString(config.body)
-  };
-
-  return requestInit;
+export interface FetchJsonRequestInitFunctionConfig {
+  /**
+   * Default request method.
+   *
+   * Defaults to GET
+   */
+  defaultMethod?: string;
+  /**
+   * Optional map function to modify the FetchJsonInput before it is finalized into a RequestInit value.
+   */
+  mapFetchJsonInput?: FetchJsonInputMapFunction;
 }
+
+export type FetchJsonRequestInitFunction = (methodOrInput?: string | FetchJsonInput | undefined, body?: FetchJsonBody) => RequestInit;
+
+export function fetchJsonRequestInitFunction(config: FetchJsonRequestInitFunctionConfig = {}): FetchJsonRequestInitFunction {
+  const { defaultMethod = 'GET', mapFetchJsonInput = mapIdentityFunction() } = config;
+
+  return (methodOrInput: string | FetchJsonInput = defaultMethod, body?: FetchJsonBody) => {
+    let config: FetchJsonInput;
+
+    if (methodOrInput === null) {
+      config = {
+        method: defaultMethod
+      };
+    } else if (typeof methodOrInput === 'string') {
+      config = {
+        method: methodOrInput,
+        body
+      };
+    } else {
+      config = methodOrInput;
+    }
+
+    config = mapFetchJsonInput(config);
+
+    const requestInit: RequestInit = {
+      ...config,
+      method: config.method ?? defaultMethod,
+      body: fetchJsonBodyString(config.body)
+    };
+
+    return requestInit;
+  };
+}
+
+export const fetchJsonRequestInit = fetchJsonRequestInitFunction();
