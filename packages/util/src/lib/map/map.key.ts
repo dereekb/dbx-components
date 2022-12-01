@@ -1,6 +1,7 @@
 import { PrimativeKey, ReadKeyFunction, ReadMultipleKeysFunction } from '../key';
 import { IterableOrValue, useIterableOrValue } from '../iterable';
 import { Maybe } from '../value/maybe.type';
+import { expandArrayMapTuples, mapToTuples } from './map';
 
 /**
  * Creates a map by reading keys from the input values. Values without a key are ignored.
@@ -80,6 +81,9 @@ export type MultiValueMap<T, K extends PrimativeKey = PrimativeKey> = Map<Maybe<
  */
 export interface MultiValueMapBuilder<T, K extends PrimativeKey = PrimativeKey> {
   map(): MultiValueMap<T, K>;
+  entries(): [Maybe<K>, T[]][];
+  tuples(): [Maybe<K>, T][];
+  delete(key: Maybe<K>): void;
   add(key: Maybe<K>, value: IterableOrValue<T>): void;
 }
 
@@ -93,6 +97,11 @@ export function multiValueMapBuilder<T, K extends PrimativeKey = PrimativeKey>()
 
   const builder: MultiValueMapBuilder<T, K> = {
     map: () => map,
+    entries: () => mapToTuples(map),
+    tuples: () => expandArrayMapTuples(map),
+    delete: (key: Maybe<K>) => {
+      map.delete(key);
+    },
     add: (key: Maybe<K>, value: IterableOrValue<T>) => {
       let array = map.get(key);
 

@@ -1,5 +1,5 @@
 import { itShouldFail, expectFail } from '@dereekb/util/test';
-import { FetchService } from './fetch';
+import { FetchService, mergeRequestHeaders, mergeRequestInits } from './fetch';
 import { nodeFetchService } from './provider';
 
 // TEMP: Fetch global is not available in jest? Use node-fetch@2 for now.
@@ -101,5 +101,136 @@ describe('fetchRequestFactory()', () => {
         });
       });
     });
+  });
+});
+
+describe('mergeRequestInits()', () => {
+  it('should merge the headers', () => {
+    const a: HeadersInit = {
+      a: '1'
+    };
+
+    const b: HeadersInit = {
+      b: '1'
+    };
+
+    const result = mergeRequestInits({ headers: a }, { headers: b });
+    const headers = result.headers as unknown as [string, string][];
+
+    expect(headers.length).toBe(2);
+    expect(headers[0][1]).toBe('1');
+    expect(headers[1][1]).toBe('1');
+    expect(headers.map((x) => x[0])).toContain('a');
+    expect(headers.map((x) => x[0])).toContain('b');
+  });
+
+  it('should overwrite the headers', () => {
+    const a: HeadersInit = {
+      a: '1'
+    };
+
+    const b: HeadersInit = {
+      a: '2'
+    };
+
+    const result = mergeRequestInits({ headers: a }, { headers: b });
+    const headers = result.headers as unknown as [string, string][];
+
+    expect(headers.length).toBe(1);
+    expect(headers[0][0]).toBe('a');
+    expect(headers[0][1]).toBe(b.a);
+  });
+});
+
+describe('mergeRequestHeaders()', () => {
+  it('should merge two header objects', () => {
+    const a: HeadersInit = {
+      a: '1'
+    };
+
+    const b: HeadersInit = {
+      b: '1'
+    };
+
+    const result = mergeRequestHeaders([a, b]);
+
+    expect(result.length).toBe(2);
+    expect(result[0][1]).toBe('1');
+    expect(result[1][1]).toBe('1');
+    expect(result.map((x) => x[0])).toContain('a');
+    expect(result.map((x) => x[0])).toContain('b');
+  });
+
+  it('should merge overwrite the header values that have the same key', () => {
+    const a: HeadersInit = {
+      a: '1'
+    };
+
+    const b: HeadersInit = {
+      a: '2'
+    };
+
+    const result = mergeRequestHeaders([a, b]);
+
+    expect(result.length).toBe(1);
+    expect(result[0][0]).toBe('a');
+    expect(result[0][1]).toBe(b.a);
+  });
+
+  it('should merge two header tuples', () => {
+    const a: HeadersInit = [['a', '1']];
+    const b: HeadersInit = [['b', '1']];
+
+    const result = mergeRequestHeaders([a, b]);
+
+    expect(result.length).toBe(2);
+    expect(result.map((x) => x[0])).toContain('a');
+    expect(result.map((x) => x[0])).toContain('b');
+    expect(result[0][1]).toBe('1');
+    expect(result[1][1]).toBe('1');
+  });
+
+  it('should overwrite two header tuples', () => {
+    const a: HeadersInit = [['a', '1']];
+    const b: HeadersInit = [
+      ['a', '2'],
+      ['b', '1']
+    ];
+
+    const result = mergeRequestHeaders([a, b]);
+
+    expect(result.length).toBe(2);
+    const ra = result.find((x) => x[0] === 'a') as [string, string];
+    expect(ra[0]).toBe('a');
+    expect(ra[1]).toBe('2');
+  });
+
+  it('should overwrite two header tuples', () => {
+    const a: HeadersInit = [['a', '1']];
+    const b: HeadersInit = {
+      a: '2',
+      b: '1'
+    };
+
+    const result = mergeRequestHeaders([a, b]);
+
+    expect(result.length).toBe(2);
+    const ra = result.find((x) => x[0] === 'a') as [string, string];
+    expect(ra[0]).toBe('a');
+    expect(ra[1]).toBe('2');
+  });
+
+  it('should remove headers with empty values', () => {
+    const a: HeadersInit = [['a', '1']];
+    const b: HeadersInit = {
+      a: '',
+      b: '1'
+    };
+
+    const result = mergeRequestHeaders([a, b]);
+
+    expect(result.length).toBe(1);
+    const ra = result.find((x) => x[0] === 'a');
+    expect(ra).toBe(undefined);
   });
 });

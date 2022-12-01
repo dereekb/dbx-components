@@ -1,4 +1,4 @@
-import { Factory, fixMultiSlashesInSlashPath, MapFunction, Maybe, removeTrailingSlashes, WebsitePath, WebsiteUrl } from '@dereekb/util';
+import { Factory, fixMultiSlashesInSlashPath, MapFunction, Maybe, removeTrailingSlashes, WebsitePath, WebsiteUrl, mergeObjects, multiValueMapBuilder, filterMaybeValues, objectToTuples } from '@dereekb/util';
 import { fetchOk } from './error';
 import { ConfiguredFetchWithTimeout, RequestInitWithTimeout, RequestWithTimeout } from './fetch.type';
 import { fetchTimeout } from './timeout';
@@ -133,7 +133,7 @@ export type AbortControllerFactory = Factory<AbortController>;
 export function fetchRequestFactory(config: FetchRequestFactoryInput): FetchRequestFactory {
   const { makeRequest = (input, init) => new Request(input, init), baseUrl: inputBaseUrl, baseRequest: inputBaseRequest, timeout, requestInitFactory, useBaseUrlForConfiguredFetchRequests = false } = config;
   const baseUrl = inputBaseUrl ? new URL(removeTrailingSlashes(inputBaseUrl)) : undefined;
-  const baseRequest = timeout ? { ...inputBaseRequest, timeout } : inputBaseRequest;
+  const baseRequest = (timeout ? { ...inputBaseRequest, timeout } : inputBaseRequest) as RequestInitWithTimeout;
 
   const buildUrl = baseUrl
     ? (url: string | WebsitePath | URL) => {
@@ -182,10 +182,18 @@ export function fetchRequestFactory(config: FetchRequestFactoryInput): FetchRequ
 
   let buildRequestInit: FetchRequestInitFactory;
 
-  if (baseRequest && requestInitFactory) {
-    buildRequestInit = (req, x) => requestInitFactory(req, { ...baseRequest, timeout: (req as RequestWithTimeout).timeout, ...x } as RequestInitWithTimeout);
-  } else if (baseRequest) {
-    buildRequestInit = (req, x) => ({ ...baseRequest, timeout: (req as RequestWithTimeout).timeout, ...x });
+  if (baseRequest) {
+    function combineRequestInits(request: Request, requestInit: RequestInit | undefined) {
+      const merged: RequestInit = mergeRequestInits(baseRequest, requestInit) as RequestInitWithTimeout;
+      const timeout = (merged as RequestInitWithTimeout).timeout === undefined ? (request as RequestWithTimeout).timeout : (merged as RequestInitWithTimeout).timeout;
+
+      return { ...merged, timeout } as RequestInitWithTimeout;
+    }
+    if (requestInitFactory) {
+      buildRequestInit = (req, x) => requestInitFactory(req, combineRequestInits(req, x));
+    } else {
+      buildRequestInit = (req, x) => combineRequestInits(req, x);
+    }
   } else if (requestInitFactory) {
     buildRequestInit = requestInitFactory;
   } else {
@@ -200,6 +208,56 @@ export function fetchRequestFactory(config: FetchRequestFactoryInput): FetchRequ
     (request as RequestWithTimeout).timeout = timeout; // copy/set timeout on the request directly
     return request;
   };
+}
+
+export function mergeRequestInits<T extends RequestInit>(base: T, requestInit?: T | undefined): T {
+  if (requestInit) {
+    const headers: [string, string][] = mergeRequestHeaders([base.headers, requestInit?.headers]);
+    return { ...base, ...requestInit, headers };
+  } else {
+    return base;
+  }
+}
+
+export function mergeRequestHeaders(inputHeadersArray: Maybe<HeadersInit>[]): [string, string][] {
+  const headersMap = multiValueMapBuilder<string, string>();
+
+  filterMaybeValues(inputHeadersArray).forEach((headers, i) => {
+    let tuples: [string, string][] = headersToHeadersTuple(headers);
+    const visitedKeysSet = new Set();
+
+    tuples.forEach(([key, value]) => {
+      if (!visitedKeysSet.has(key)) {
+        headersMap.delete(key); // delete all existing values to "override" them
+        visitedKeysSet.add(key);
+      }
+
+      if (value) {
+        headersMap.add(key, value);
+      }
+    });
+  });
+
+  return headersMap.tuples() as [string, string][];
+}
+
+export function headersToHeadersTuple(headers: HeadersInit): [string, string][] {
+  let tuples: [string, string][] = [];
+
+  if (Array.isArray(headers)) {
+    // use as tuples
+    tuples = headers as [string, string][];
+  } else if (typeof headers.forEach === 'function') {
+    // use as a headers object
+    headers.forEach((value, key) => {
+      tuples.push([key, value]);
+    });
+  } else if (typeof headers === 'object') {
+    // use as a normal object
+    tuples = objectToTuples(headers as Record<string, string>);
+  }
+
+  return tuples;
 }
 
 export function isFetchRequest(input: unknown): input is Request {
