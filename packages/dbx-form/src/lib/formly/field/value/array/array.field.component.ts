@@ -4,10 +4,10 @@ import { asDecisionFunction, asGetter, cachedGetter, DecisionFunction, FactoryWi
 import { FieldArrayTypeConfig, FieldArrayType, FormlyFieldConfig, FormlyFieldProps } from '@ngx-formly/core';
 
 export interface DbxFormRepeatArrayPair<T = unknown> extends IndexRef {
-  value: T;
+  value?: T | undefined;
 }
 
-export interface DbxFormRepeatArrayFieldConfigPair<T = unknown> extends DbxFormRepeatArrayPair<T> {
+export interface DbxFormRepeatArrayFieldConfigPair<T = unknown> extends Partial<DbxFormRepeatArrayPair<T>> {
   fieldConfig: FormlyFieldConfig;
 }
 
@@ -146,7 +146,7 @@ export class DbxFormRepeatArrayTypeComponent<T = unknown> extends FieldArrayType
 
   allowRemove(i: number) {
     const array: unknown[] = this.model;
-    const value = array[i] as T;
+    const value = array[i] as T | undefined;
     return this._allowRemove()({
       i,
       value
