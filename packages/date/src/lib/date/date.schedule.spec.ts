@@ -8,6 +8,20 @@ describe('dateScheduleDateFilter()', () => {
   const start = new Date('2022-01-02T00:00:00Z'); // Sunday
 
   describe('function', () => {
+    describe('included', () => {
+      const dayIndexes = [0, 1, 2, 3];
+      const schedule: DateScheduleDateFilterConfig = { start: systemBaseDateToNormalDate(start), w: '0', d: dayIndexes };
+      const firstFourDays = dateScheduleDateFilter(schedule);
+
+      it('should allow the included days (indexes)', () => {
+        const maxIndex = 5;
+        const dateBlocks: DateBlockIndex[] = range(0, maxIndex);
+        const results = dateBlocks.filter(firstFourDays);
+
+        expect(results.length).toBe(dayIndexes.length);
+      });
+    });
+
     describe('schedule', () => {
       describe('weekdays and weekends', () => {
         const schedule: DateScheduleDateFilterConfig = { start: systemBaseDateToNormalDate(start), w: '89' };

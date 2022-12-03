@@ -251,7 +251,7 @@ export function dateScheduleDateFilter(config: DateScheduleDateFilterConfig): Da
       i = input;
       day = dayForIndex(i);
     } else {
-      i = differenceInDays(input, firstDateDay);
+      i = differenceInDays(input, firstDate);
       day = dayOfWeek(input);
     }
 

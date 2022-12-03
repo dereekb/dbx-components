@@ -1,8 +1,10 @@
+import { DateScheduleDayCode } from './../../../../../../../../../packages/date/src/lib/date/date.schedule';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { Component } from '@angular/core';
-import { addressField, addressListField, cityField, countryField, emailField, phoneField, nameField, phoneAndLabelSectionField, wrappedPhoneAndLabelField, repeatArrayField, stateField, textAreaField, textField, zipCodeField, phoneListField, dateTimeField, DbxDateTimeFieldTimeMode, toggleField, checkboxField, numberField, latLngTextField, DbxDateTimeValueMode, dateRangeField, dollarAmountField } from '@dereekb/dbx-form';
-import { addDays } from 'date-fns';
+import { addressField, addressListField, cityField, countryField, emailField, phoneField, nameField, phoneAndLabelSectionField, wrappedPhoneAndLabelField, repeatArrayField, stateField, textAreaField, textField, zipCodeField, phoneListField, dateTimeField, DbxDateTimeFieldTimeMode, toggleField, checkboxField, numberField, latLngTextField, DbxDateTimeValueMode, dateRangeField, dollarAmountField, DateTimePickerConfiguration } from '@dereekb/dbx-form';
+import { addDays, startOfDay } from 'date-fns';
 import { addSuffixFunction, randomBoolean } from '@dereekb/util';
+import { of } from 'rxjs';
 
 @Component({
   templateUrl: './value.component.html'
@@ -46,10 +48,62 @@ export class DocFormValueComponent {
     dateTimeField({ key: 'timeOptional', timeMode: DbxDateTimeFieldTimeMode.OPTIONAL, description: 'This date field is for picking a day, with an optional time.' }),
     dateTimeField({ key: 'dayOnly', timeMode: DbxDateTimeFieldTimeMode.NONE, description: 'This date field is for picking a day only.' }),
     dateTimeField({ key: 'dayOnlyAsString', timeMode: DbxDateTimeFieldTimeMode.NONE, valueMode: DbxDateTimeValueMode.DAY_STRING, description: 'This date field is for picking a day only and as an ISO8601DayString.' }),
-    dateTimeField({ key: 'timeOnly', timeOnly: true, description: 'This date field is for picking a time only. The date hint is also hidden.', hideDateHint: true })
+    dateTimeField({ key: 'timeOnly', timeOnly: true, description: 'This date field is for picking a time only. The date hint is also hidden.', hideDateHint: true }),
+    dateTimeField({
+      key: 'dateWithASchedule',
+      required: true,
+      description: 'This date is limited to specific days specified by a schedule of M/W/F and the next 7 days from today. A minimum of today and a maximum of 14 days from now.',
+      getConfigObs: () => {
+        const config: DateTimePickerConfiguration = {
+          limits: {
+            min: startOfDay(new Date()),
+            max: addDays(new Date(), 14)
+          },
+          schedule: {
+            w: `${DateScheduleDayCode.MONDAY}${DateScheduleDayCode.WEDNESDAY}${DateScheduleDayCode.FRIDAY}`,
+            d: [0, 1, 2, 3, 4, 5, 6] // next 7 days
+          }
+        };
+
+        return of(config);
+      }
+    })
   ];
 
-  readonly dateRangeFields: FormlyFieldConfig[] = [dateRangeField({})];
+  readonly dateRangeFields: FormlyFieldConfig[] = [
+    dateRangeField({}),
+    dateRangeField({
+      start: {
+        key: 'startLimited',
+        description: 'Must start on a M/T and no later than 14 days ago',
+        getConfigObs: () => {
+          const config: DateTimePickerConfiguration = {
+            limits: {
+              min: addDays(startOfDay(new Date()), -14)
+            },
+            schedule: {
+              w: `${DateScheduleDayCode.MONDAY}${DateScheduleDayCode.TUESDAY}`
+            }
+          };
+
+          return of(config);
+        }
+      },
+      end: {
+        key: 'endLimited',
+        description: 'Must end on a W/T/F',
+        getConfigObs: () => {
+          const config: DateTimePickerConfiguration = {
+            schedule: {
+              w: `${DateScheduleDayCode.WEDNESDAY}${DateScheduleDayCode.THURSDAY}${DateScheduleDayCode.FRIDAY}`
+            }
+          };
+
+          return of(config);
+        }
+      }
+    })
+  ];
 
   readonly addressFields: FormlyFieldConfig[] = [
     //
