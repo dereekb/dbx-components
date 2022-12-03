@@ -1,3 +1,6 @@
+import { Factory } from './getter/getter';
+
+// MARK: Reduce
 export function reduceBooleansWithAnd(array: boolean[], emptyArrayValue?: boolean): boolean {
   return reduceBooleansWithAndFn(emptyArrayValue)(array);
 }
@@ -22,4 +25,44 @@ export function reduceBooleansFn(reduceFn: (a: boolean, b: boolean) => boolean, 
   } else {
     return rFn;
   }
+}
+
+// MARK: Random
+/**
+ * Factory that generates boolean values.
+ */
+export type BooleanFactory = Factory<boolean>;
+
+/**
+ * Number from 0.0 to 100.0 used for the chance to return true.
+ */
+export type BooleanChance = number;
+
+export interface BooleanFactoryConfig {
+  /**
+   * Chance of returning true.
+   */
+  chance: BooleanChance;
+}
+
+/**
+ * Creates a new BooleanFactory.
+ *
+ * @param config
+ * @returns
+ */
+export function booleanFactory(config: BooleanFactoryConfig) {
+  const { chance: inputChance } = config;
+  const chance = inputChance / 100;
+  return () => Math.random() >= chance;
+}
+
+/**
+ * Returns a random boolean.
+ *
+ * @param chance
+ * @returns
+ */
+export function randomBoolean(chance: BooleanChance = 50): boolean {
+  return booleanFactory({ chance })();
 }

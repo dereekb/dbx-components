@@ -2,7 +2,7 @@ import { FormlyFieldConfig } from '@ngx-formly/core';
 import { Component } from '@angular/core';
 import { addressField, addressListField, cityField, countryField, emailField, phoneField, nameField, phoneAndLabelSectionField, wrappedPhoneAndLabelField, repeatArrayField, stateField, textAreaField, textField, zipCodeField, phoneListField, dateTimeField, DbxDateTimeFieldTimeMode, toggleField, checkboxField, numberField, latLngTextField, DbxDateTimeValueMode, dateRangeField, dollarAmountField } from '@dereekb/dbx-form';
 import { addDays } from 'date-fns';
-import { addSuffixFunction } from '@dereekb/util';
+import { addSuffixFunction, randomBoolean } from '@dereekb/util';
 
 @Component({
   templateUrl: './value.component.html'
@@ -61,6 +61,7 @@ export class DocFormValueComponent {
   readonly toggleField: FormlyFieldConfig[] = [
     toggleField({
       key: 'toggle',
+      label: 'Toggle Me',
       description: 'this is a toggle field'
     })
   ];
@@ -68,6 +69,7 @@ export class DocFormValueComponent {
   readonly checkboxField: FormlyFieldConfig[] = [
     checkboxField({
       key: 'checkbox',
+      label: 'Check Me',
       description: 'this is a checkbox field'
     })
   ];
@@ -95,7 +97,7 @@ export class DocFormValueComponent {
       repeatFieldGroup: [nameField(), emailField(), phoneAndLabelSectionField(), addressListField()],
       maxLength: 2
     }),
-    repeatArrayField({
+    repeatArrayField<{ name: string; disable: boolean }>({
       key: 'test2',
       label: 'Field With Add and Remove Diabled Via Field',
       description: 'Shows the remove button being disabled when a value is a certain value, and shows the duplicate button.',
@@ -107,6 +109,7 @@ export class DocFormValueComponent {
           label: 'Disable Remove'
         })
       ],
+      addTemplate: (i) => ({ name: `New Item ${i}`, disable: randomBoolean() }),
       disableRearrange: true,
       allowAdd: true,
       allowDuplicate: true,
