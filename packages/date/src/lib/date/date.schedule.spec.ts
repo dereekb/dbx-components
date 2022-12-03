@@ -5,12 +5,12 @@ import { addDays } from 'date-fns';
 import { range, UTC_TIMEZONE_STRING } from '@dereekb/util';
 
 describe('dateScheduleDateFilter()', () => {
-  const start = new Date('2022-01-02T00:00:00Z'); // Sunday
+  const start = systemNormalDateToBaseDate(new Date('2022-01-02T00:00:00Z')); // Sunday
 
   describe('function', () => {
     describe('included', () => {
       const dayIndexes = [0, 1, 2, 3];
-      const schedule: DateScheduleDateFilterConfig = { start: systemBaseDateToNormalDate(start), w: '0', d: dayIndexes };
+      const schedule: DateScheduleDateFilterConfig = { start, w: '0', d: dayIndexes };
       const firstFourDays = dateScheduleDateFilter(schedule);
 
       it('should allow the included days (indexes)', () => {
@@ -24,7 +24,7 @@ describe('dateScheduleDateFilter()', () => {
 
     describe('schedule', () => {
       describe('weekdays and weekends', () => {
-        const schedule: DateScheduleDateFilterConfig = { start: systemBaseDateToNormalDate(start), w: '89' };
+        const schedule: DateScheduleDateFilterConfig = { start, w: '89' };
         const weekDaysAndWeekends = dateScheduleDateFilter(schedule);
 
         it('should allow every day of the week (indexes)', () => {
@@ -45,7 +45,7 @@ describe('dateScheduleDateFilter()', () => {
       });
 
       describe('weekdays', () => {
-        const schedule: DateScheduleDateFilterConfig = { start: systemBaseDateToNormalDate(start), w: `${DateScheduleDayCode.WEEKDAY}` };
+        const schedule: DateScheduleDateFilterConfig = { start, w: `${DateScheduleDayCode.WEEKDAY}` };
         const weekDays = dateScheduleDateFilter(schedule);
 
         it('should allow every weekday (indexes)', () => {
@@ -66,7 +66,7 @@ describe('dateScheduleDateFilter()', () => {
       });
 
       describe('weekends', () => {
-        const schedule: DateScheduleDateFilterConfig = { start: systemBaseDateToNormalDate(start), w: `${DateScheduleDayCode.WEEKEND}` };
+        const schedule: DateScheduleDateFilterConfig = { start, w: `${DateScheduleDayCode.WEEKEND}` };
         const weekends = dateScheduleDateFilter(schedule);
 
         it('should allow every weekend (indexes)', () => {
@@ -85,7 +85,7 @@ describe('dateScheduleDateFilter()', () => {
       });
 
       describe('days', () => {
-        const schedule: DateScheduleDateFilterConfig = { start: systemBaseDateToNormalDate(start), w: `12` };
+        const schedule: DateScheduleDateFilterConfig = { start, w: `23` };
         const mondayAndTuesdays = dateScheduleDateFilter(schedule);
 
         it('should only allow the specified days of the week (indexes)', () => {
@@ -125,7 +125,7 @@ describe('dateScheduleDateFilter()', () => {
 });
 
 describe('dateScheduleDateBlockTimingFilter()', () => {
-  const startsAt = new Date('2022-01-02T00:00:00Z'); // Sunday
+  const startsAt = systemNormalDateToBaseDate(new Date('2022-01-02T00:00:00Z')); // Sunday
   const weekTiming = dateBlockTiming({ startsAt, duration: 60 }, 7); // Sunday-Saturday
 
   describe('function', () => {
@@ -169,7 +169,7 @@ describe('dateScheduleDateBlockTimingFilter()', () => {
       });
 
       describe('days', () => {
-        const schedule: DateSchedule = { w: `12` };
+        const schedule: DateSchedule = { w: `23` };
         const mondayAndTuesdays = dateScheduleDateBlockTimingFilter({ timing: weekTiming, schedule });
 
         it('should only allow the specified days of the week', () => {
