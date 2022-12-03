@@ -5,5 +5,5 @@
 module.exports = {
   displayName: 'dbx-form-mapbox',
   preset: '../../../jest.preset.ts',
-  coverageDirectory: '../../../../coverage/packages/dbx-form/mapbox'
+  coverageDirectory: '../../../coverage/packages/dbx-form/mapbox'
 };

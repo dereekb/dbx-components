@@ -13,8 +13,10 @@ Example: `nx generate @nrwl/node:library --name=fetch --buildable --publishable 
 This example will end up as a child of @dereekb/util.
 
 ## Creating an Angular Library
-
 Example: `nx generate @nrwl/angular:library --name=dbx-firebase --buildable --publishable --importPath @dereekb/dbx-firebase`
+
+### Creating a child Angular Library
+Example: `nx generate @nrwl/angular:library --name=calendar --buildable --publishable --importPath @dereekb/dbx-web/calendar --directory=dbx-web`
 
 ## Creating a NestJS Library
 
@@ -234,15 +236,9 @@ Steps/Checklist:
 ## Creating the Project
 This example will follow the creation of dbx-form/mapbox.
 
-Example: `nx generate @nrwl/angular:library --name=dbx-form-mapbox --buildable --publishable --importPath @dereekb/dbx-form/mapbox --directory=dbx-form/mapbox`
+Example: `nx generate @nrwl/angular:library --name=mapbox --buildable --publishable --importPath @dereekb/dbx-form/mapbox --directory=dbx-form`
 
-This will build a new library in the directory `packages/dbx-form/mapbox/dbx-form-mapbox`, but we will want to move it to `packages/dbx-form/mapbox` instead.
-
-`workspace.json` will need to be update to point to the proper path:
-
-```
-"dbx-form-mapbox": "packages/dbx-form/mapbox",
-```
+This will build a new library in the directory `packages/dbx-form/mapbox`. There are several changes that need to be made for it to be properly integrated into the project though and setup to build/export with the parent project. Our example library here will be distributed with `packages/dbx-form`.
 
 ## Parent Project Changes
 The "parent project" (`dbx-form` in this case) needs to be updated to ignore building this project's files.
@@ -291,11 +287,6 @@ For angular projects:
 ## New/Child Project Changes
 We now need to configure the project to build and be used properly. Remember, the generated path was one level too deep, so we will need to update all the paths to reflect the new changes.
 
-### Path Replacement
-Search `packages/dbx-form/mapbox/dbx-form-mapbox` and replace it with `packages/dbx-form/mapbox`. 
-
-There will also be several relative paths that are `../../../../` that need to be replaced to `../../../` within the newly created project. Some files include `ng-package.json`, `project.json`, `tsconfig.spec.json`, `tsconfig.lib.json` and `tsconfig.json`.
-
 ### jest.config.ts
 Since the dbx-components library has a lot of configuration setup in `jest.preset.ts`, we can simplify the setup here. Note, this is ONLY for this library. Your own project and other projects may be configured differently.
 
@@ -307,7 +298,7 @@ Since the dbx-components library has a lot of configuration setup in `jest.prese
 module.exports = {
   displayName: 'dbx-form-mapbox',
   preset: '../../../jest.preset.ts',
-  coverageDirectory: '../../../../coverage/packages/dbx-form/mapbox',
+  coverageDirectory: '../../../coverage/packages/dbx-form/mapbox',
 };
 ```
 
@@ -320,7 +311,7 @@ Change `build` to `build-base` in the child `dbx-form-mapbox` project.json.
 Add the following line to `build-base`:
 
 ```
-      "dependsOn": []
+  "dependsOn": []
 ```
 
 This will prevent the `build-base` step from potentially calling a build-loop. Since `dbx-form-mapbox` is always built after the parent projects, this is ok. In some cases where this has dependencies that may not be build yet, we can add them as dependencies of `dbx-form` so they're built in the proper order.

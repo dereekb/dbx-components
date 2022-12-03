@@ -7,6 +7,6 @@
     "inlineSources": true,
     "types": []
   },
-  "exclude": ["mapbox/**", "**/*.spec.ts", "**/*.test.ts", "jest.config.ts"],
+  "exclude": ["mapbox/**", "calendar/**", "**/*.spec.ts", "**/*.test.ts", "jest.config.ts"],
   "include": ["**/*.ts"]
 }

@@ -1,4 +1,5 @@
 {
+  "name": "dbx-web",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "projectType": "library",
   "sourceRoot": "packages/dbx-web/src",
@@ -28,6 +29,10 @@
           {
             "description": "build dbx-web/mapbox",
             "command": "npx nx run dbx-web-mapbox:build-base:production"
+          },
+          {
+            "description": "build dbx-web/calendar",
+            "command": "npx nx run dbx-web-calendar:build-base:production"
           }
         ],
         "parallel": false,

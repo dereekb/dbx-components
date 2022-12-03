@@ -70,6 +70,7 @@
     "ngx-infinite-scroll": "^14.0.0",
     "ngx-mapbox-gl": "^9.1.0",
     "ngx-mat-intl-tel-input": "^5.0.0",
+    "node-fetch": "~2.6.7",
     "reflect-metadata": "^0.1.13",
     "rrule": "git+https://git@github.com/dereekb/rrule#2b13b1ea881059ba2ecfec380e12ef244ef54570",
     "rxfire": "^6.0.3",
@@ -77,8 +78,7 @@
     "stripe": "^9.1.0",
     "ts-essentials": "^9.1.2",
     "tslib": "^2.0.0",
-    "zone.js": "^0.11.5",
-    "node-fetch": "~2.6.7"
+    "zone.js": "^0.11.5"
   },
   "devDependencies": {
     "@angular-devkit/build-angular": "14.2.10",
@@ -114,8 +114,8 @@
     "@types/jsonwebtoken": "^8.5.8",
     "@types/lodash.clonedeep": "^4.5.6",
     "@types/lodash.isequal": "^4.5.5",
-    "@types/mapbox__geo-viewport": "^0.4.1",
     "@types/mapbox-gl": "^2.7.5",
+    "@types/mapbox__geo-viewport": "^0.4.1",
     "@types/mockdate": "^3.0.0",
     "@types/node": "~18.11.9",
     "@types/node-fetch": "^2.6.2",
@@ -142,7 +142,7 @@
     "jest-junit": "^14.0.0",
     "jest-preset-angular": "12.2.3",
     "mockdate": "^3.0.5",
-    "ng-packagr": "14.2.2",
+    "ng-packagr": "~14.2.0",
     "nx": "14.8.6",
     "postcss": "^8.4.7",
     "postcss-import": "^14.0.2",

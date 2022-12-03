@@ -1,4 +1,5 @@
 {
+  "name": "dbx-web-mapbox",
   "projectType": "library",
   "sourceRoot": "packages/dbx-web/mapbox/src",
   "prefix": "dereekb",
@@ -17,7 +18,8 @@
           "tsConfig": "packages/dbx-web/mapbox/tsconfig.lib.json"
         }
       },
-      "defaultConfiguration": "production"
+      "defaultConfiguration": "production",
+      "dependsOn": []
     },
     "test": {
       "executor": "@nrwl/jest:jest",
