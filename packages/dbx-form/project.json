@@ -5,7 +5,7 @@
   "prefix": "dbx",
   "targets": {
     "build": {
-      "executor": "@nrwl/workspace:run-commands",
+      "executor": "nx:run-commands",
       "outputs": ["dist/packages/dbx-form", "dist/packages/dbx-form/_index.scss", "dist/packages/dbx-form/LICENSE", "dist/packages/dbx-form/**/*.scss"],
       "options": {
         "commands": [
@@ -65,7 +65,7 @@
       }
     },
     "publish-npmjs": {
-      "executor": "@nrwl/workspace:run-commands",
+      "executor": "nx:run-commands",
       "options": {
         "command": "cd ./dist/packages/dbx-form && npm publish --access public"
       }

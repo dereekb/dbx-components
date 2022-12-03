@@ -5,7 +5,7 @@
   "prefix": "dbx",
   "targets": {
     "build": {
-      "executor": "@nrwl/workspace:run-commands",
+      "executor": "nx:run-commands",
       "outputs": ["dist/packages/dbx-firebase", "dist/packages/dbx-firebase/_index.scss", "dist/packages/dbx-firebase/LICENSE", "dist/packages/dbx-firebase/**/*.scss", "dist/packages/dbx-firebase/assets"],
       "options": {
         "commands": [
@@ -59,13 +59,13 @@
       }
     },
     "watch": {
-      "executor": "@nrwl/workspace:run-commands",
+      "executor": "nx:run-commands",
       "options": {
         "command": "./exec-with-emulator.sh 'npx nx run-tests dbx-firebase --watch'"
       }
     },
     "test": {
-      "executor": "@nrwl/workspace:run-commands",
+      "executor": "nx:run-commands",
       "options": {
         "command": "./exec-with-emulator.sh 'npx nx run-tests dbx-firebase'"
       }
@@ -77,7 +77,7 @@
       }
     },
     "publish-npmjs": {
-      "executor": "@nrwl/workspace:run-commands",
+      "executor": "nx:run-commands",
       "options": {
         "command": "cd ./dist/packages/dbx-firebase && npm publish --access public"
       }
