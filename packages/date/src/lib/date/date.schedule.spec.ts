@@ -1,9 +1,116 @@
-import { DateBlock, dateBlockTiming, systemNormalDateToBaseDate } from '@dereekb/date';
-import { expandDateScheduleFactory, DateSchedule, dateScheduleDateBlockTimingFilter, DateScheduleDayCode, dateScheduleDayCodeFactory, dateScheduleEncodedWeek } from './date.schedule';
+import { dateBlockDayOfWeekFactory, DateBlockIndex } from './date.block';
+import { DateBlock, dateBlockTiming, systemBaseDateToNormalDate, systemNormalDateToBaseDate } from '@dereekb/date';
+import { expandDateScheduleFactory, DateSchedule, dateScheduleDateBlockTimingFilter, DateScheduleDayCode, dateScheduleDayCodeFactory, dateScheduleEncodedWeek, dateScheduleDateFilter, DateScheduleDateFilterConfig } from './date.schedule';
 import { addDays } from 'date-fns';
 import { range, UTC_TIMEZONE_STRING } from '@dereekb/util';
 
-describe('dateScheduleDateBlockTimingFilter', () => {
+describe('dateScheduleDateFilter()', () => {
+  const start = new Date('2022-01-02T00:00:00Z'); // Sunday
+
+  describe('function', () => {
+    describe('schedule', () => {
+      describe('weekdays and weekends', () => {
+        const schedule: DateScheduleDateFilterConfig = { start: systemBaseDateToNormalDate(start), w: '89' };
+        const weekDaysAndWeekends = dateScheduleDateFilter(schedule);
+
+        it('should allow every day of the week (indexes)', () => {
+          const maxIndex = 14;
+          const dateBlocks: DateBlockIndex[] = range(0, maxIndex);
+          const results = dateBlocks.filter(weekDaysAndWeekends);
+
+          expect(results.length).toBe(maxIndex);
+        });
+
+        it('should allow every day of the week (dates)', () => {
+          const maxIndex = 14;
+          const dateBlocks: Date[] = range(0, maxIndex).map((y) => addDays(start, y));
+          const results = dateBlocks.filter(weekDaysAndWeekends);
+
+          expect(results.length).toBe(maxIndex);
+        });
+      });
+
+      describe('weekdays', () => {
+        const schedule: DateScheduleDateFilterConfig = { start: systemBaseDateToNormalDate(start), w: `${DateScheduleDayCode.WEEKDAY}` };
+        const weekDays = dateScheduleDateFilter(schedule);
+
+        it('should allow every weekday (indexes)', () => {
+          const maxIndex = 14;
+          const dateBlocks: DateBlockIndex[] = range(0, maxIndex);
+          const results = dateBlocks.filter(weekDays);
+
+          expect(results.length).toBe(maxIndex - 4);
+        });
+
+        it('should allow every weekday (dates)', () => {
+          const maxIndex = 14;
+          const dateBlocks: Date[] = range(0, maxIndex).map((y) => addDays(start, y));
+          const results = dateBlocks.filter(weekDays);
+
+          expect(results.length).toBe(maxIndex - 4);
+        });
+      });
+
+      describe('weekends', () => {
+        const schedule: DateScheduleDateFilterConfig = { start: systemBaseDateToNormalDate(start), w: `${DateScheduleDayCode.WEEKEND}` };
+        const weekends = dateScheduleDateFilter(schedule);
+
+        it('should allow every weekend (indexes)', () => {
+          const maxIndex = 14;
+          const dateBlocks: DateBlockIndex[] = range(0, maxIndex);
+          const results = dateBlocks.filter(weekends);
+          expect(results.length).toBe(maxIndex - 10);
+        });
+
+        it('should allow every weekend (dates)', () => {
+          const maxIndex = 14;
+          const dateBlocks: Date[] = range(0, maxIndex).map((y) => addDays(start, y));
+          const results = dateBlocks.filter(weekends);
+          expect(results.length).toBe(maxIndex - 10);
+        });
+      });
+
+      describe('days', () => {
+        const schedule: DateScheduleDateFilterConfig = { start: systemBaseDateToNormalDate(start), w: `12` };
+        const mondayAndTuesdays = dateScheduleDateFilter(schedule);
+
+        it('should only allow the specified days of the week (indexes)', () => {
+          const maxIndex = 14;
+          const dateBlocks: DateBlockIndex[] = range(0, maxIndex);
+          const results = dateBlocks.filter(mondayAndTuesdays);
+
+          expect(results.length).toBe(4);
+
+          // week 1
+          expect(results[0]).toBe(1);
+          expect(results[1]).toBe(2);
+
+          // week 2
+          expect(results[2]).toBe(8);
+          expect(results[3]).toBe(9);
+        });
+
+        it('should only allow the specified days of the week (dates)', () => {
+          const maxIndex = 14;
+          const dateBlocks: Date[] = range(0, maxIndex).map((y) => addDays(start, y));
+          const results = dateBlocks.filter(mondayAndTuesdays);
+
+          expect(results.length).toBe(4);
+
+          // week 1
+          expect(results[0]).toBeSameSecondAs(addDays(start, 1));
+          expect(results[1]).toBeSameSecondAs(addDays(start, 2));
+
+          // week 2
+          expect(results[2]).toBeSameSecondAs(addDays(start, 8));
+          expect(results[3]).toBeSameSecondAs(addDays(start, 9));
+        });
+      });
+    });
+  });
+});
+
+describe('dateScheduleDateBlockTimingFilter()', () => {
   const startsAt = new Date('2022-01-02T00:00:00Z'); // Sunday
   const weekTiming = dateBlockTiming({ startsAt, duration: 60 }, 7); // Sunday-Saturday
 

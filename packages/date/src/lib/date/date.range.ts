@@ -3,10 +3,16 @@ import { IsEnum, IsOptional, IsDate, IsNumber } from 'class-validator';
 import { addDays, addHours, endOfDay, endOfMonth, endOfWeek, isDate, isPast, startOfDay, startOfMinute, startOfMonth, startOfWeek } from 'date-fns';
 
 /**
+ * Represents a start date.
+ */
+export interface DateRangeStart {
+  start: Date;
+}
+
+/**
  * Represents a start and end date.
  */
-export interface DateRange {
-  start: Date;
+export interface DateRange extends DateRangeStart {
   end: Date;
 }
 

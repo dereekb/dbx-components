@@ -1,9 +1,10 @@
-import { StringOrder, Maybe, mergeArrayIntoArray, firstValueFromIterable, DayOfWeek, addToSet, Day, range, DecisionFunction, FilterFunction, IndexRange, invertFilter } from '@dereekb/util';
+import { StringOrder, Maybe, mergeArrayIntoArray, firstValueFromIterable, DayOfWeek, addToSet, Day, range, DecisionFunction, FilterFunction, IndexRange, invertFilter, dayOfWeek } from '@dereekb/util';
 import { Expose } from 'class-transformer';
 import { IsString, Matches, IsOptional, Min, IsArray } from 'class-validator';
-import { getDay } from 'date-fns';
+import { differenceInDays, getDay } from 'date-fns';
 import { DateBlock, dateBlockDayOfWeekFactory, DateBlockDurationSpan, DateBlockIndex, dateBlockIndexRange, DateBlockRange, DateBlocksExpansionFactory, dateBlocksExpansionFactory, DateBlockTiming, getCurrentDateBlockTimingStartDate } from './date.block';
 import { dateBlockDurationSpanHasNotStartedFilterFunction, dateBlockDurationSpanHasNotEndedFilterFunction } from './date.filter';
+import { DateRangeStart, DateRangeState } from './date.range';
 import { YearWeekCodeConfig, yearWeekCodeDateTimezoneInstance } from './date.week';
 
 export enum DateScheduleDayCode {
@@ -211,6 +212,53 @@ export class DateSchedule implements DateSchedule {
   ex?: DateBlockIndex[];
 }
 
+// MARK: DateScheduleDate
+/**
+ * DateScheduleDateFilter input.
+ */
+export type DateScheduleDateFilterInput = Date | DateBlockIndex;
+
+/**
+ * Returns true if the date falls within the schedule.
+ */
+export type DateScheduleDateFilter = DecisionFunction<DateScheduleDateFilterInput>;
+
+/**
+ * dateScheduleDateFilter() configuration.
+ */
+export interface DateScheduleDateFilterConfig extends DateSchedule, Partial<DateRangeStart> {}
+
+/**
+ * Creates a DateScheduleDateFilter.
+ *
+ * @param config
+ * @returns
+ */
+export function dateScheduleDateFilter(config: DateScheduleDateFilterConfig): DateScheduleDateFilter {
+  const { w, start: firstDate = new Date() } = config;
+  const allowedDays: Set<DayOfWeek> = expandDateScheduleDayCodesToDayOfWeekSet(w);
+
+  const firstDateDay = getDay(firstDate);
+  const dayForIndex = dateBlockDayOfWeekFactory(firstDateDay);
+  const includedIndexes = new Set(config.d);
+  const excludedIndexes = new Set(config.ex);
+
+  return (input: DateScheduleDateFilterInput) => {
+    let i: DateBlockIndex;
+    let day: DayOfWeek;
+
+    if (typeof input === 'number') {
+      i = input;
+      day = dayForIndex(i);
+    } else {
+      i = differenceInDays(input, firstDateDay);
+      day = dayOfWeek(input);
+    }
+
+    return (allowedDays.has(day) && !excludedIndexes.has(i)) || includedIndexes.has(i);
+  };
+}
+
 // MARK: DateScheduleDateBlockTimingFilter
 export type DateScheduleDateBlockTimingFilter<B extends DateBlock = DateBlock> = DecisionFunction<B>;
 
@@ -218,7 +266,13 @@ export type DateScheduleDateBlockTimingFilter<B extends DateBlock = DateBlock> =
  * Configuration for dateScheduleDateBlockTimingFilter()
  */
 export interface DateScheduleDateBlockTimingFilterConfig {
+  /**
+   * Timing to filter with.
+   */
   timing: DateBlockTiming;
+  /**
+   * Schedule to filter with.
+   */
   schedule: DateSchedule;
   /**
    * Wether or not to expand on the inverse of the schedule, returning blocks that are not in the schedule.
@@ -251,19 +305,16 @@ export interface DateScheduleDateBlockTimingFilterConfig {
  * @returns
  */
 export function dateScheduleDateBlockTimingFilter<B extends DateBlock = DateBlock>({ timing, schedule }: DateScheduleDateBlockTimingFilterConfig): DateScheduleDateBlockTimingFilter<B> {
-  const allowedDays: Set<DayOfWeek> = expandDateScheduleDayCodesToDayOfWeekSet(schedule.w);
-
-  // start date in the current system timezone.
-  const firstDate = getCurrentDateBlockTimingStartDate(timing);
-  const firstDateDay = getDay(firstDate);
-  const dayForIndex = dateBlockDayOfWeekFactory(firstDateDay);
-  const includedIndexes = new Set(schedule.d);
-  const excludedIndexes = new Set(schedule.ex);
+  const isAllowed = dateScheduleDateFilter({
+    w: schedule.w,
+    d: schedule.d,
+    ex: schedule.ex,
+    start: getCurrentDateBlockTimingStartDate(timing) // start date in the current system timezone.
+  });
 
   return (block: Readonly<B>) => {
     const i = block.i;
-    const day = dayForIndex(i);
-    return (allowedDays.has(day) && !excludedIndexes.has(i)) || includedIndexes.has(i);
+    return isAllowed(i);
   };
 }
 

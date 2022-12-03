@@ -7,6 +7,7 @@ export * from './date.format';
 export * from './date.hashset';
 export * from './date.range';
 export * from './date.round';
+export * from './date.schedule';
 export * from './date.sort';
 export * from './date.time.limit';
 export * from './date.time.minute';

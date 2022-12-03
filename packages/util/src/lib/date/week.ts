@@ -12,6 +12,18 @@ export type Saturday = 6;
 export type DayOfWeek = Sunday | Monday | Tuesday | Wednesday | Thusrsday | Friday | Saturday | Sunday;
 
 /**
+ * Returns the day of the week for the input day.
+ *
+ * Equivalent to date.getDay()
+ *
+ * @param date
+ * @returns
+ */
+export function dayOfWeek(date: Date) {
+  return date.getDay() as DayOfWeek;
+}
+
+/**
  * Enum for the days of the week.
  */
 export enum Day {
