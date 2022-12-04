@@ -5,11 +5,11 @@
  *
  * This config is not meant to replace other typical configurations, like .env files, but instead is part of the build system.
  */
-export interface ServerEnvironmentConfig {
+export abstract class ServerEnvironmentConfig {
   /**
    * Whether or not this is a production environment.
    */
-  production: boolean;
+  abstract production: boolean;
   /**
    * (Optional) Whether or not custom "developer tools" should be enabled.
    *
@@ -17,5 +17,5 @@ export interface ServerEnvironmentConfig {
    *
    * This is always false when production is true.
    */
-  developerToolsEnabled?: boolean;
+  abstract developerToolsEnabled?: boolean;
 }
