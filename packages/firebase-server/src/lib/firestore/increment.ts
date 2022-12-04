@@ -8,7 +8,7 @@ import { UpdateData, FirestoreAccessorIncrementUpdate } from '@dereekb/firebase'
  * @param input
  * @returns
  */
-export function firestoreServerIncrementUpdateToUpdateData<T>(input: FirestoreAccessorIncrementUpdate<T>): UpdateData<T> {
+export function firestoreServerIncrementUpdateToUpdateData<T extends object>(input: FirestoreAccessorIncrementUpdate<T>): UpdateData<T> {
   return mapObjectMap(input, (incrementValue) => {
     return FieldValue.increment(incrementValue ?? 0);
   }) as UpdateData<T>;

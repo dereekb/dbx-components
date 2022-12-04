@@ -40,9 +40,9 @@ export class DefaultFirestoreDocumentDataAccessor<T> implements FirestoreDocumen
     return this.update(firestoreClientIncrementUpdateToUpdateData(data));
   }
 
-  update(data: UpdateData<unknown>): Promise<void> {
+  update(data: UpdateData<object>): Promise<void> {
     assertFirestoreUpdateHasData(data);
-    return updateDoc(this.documentRef, data);
+    return updateDoc(this.documentRef, data as UpdateData<T>);
   }
 }
 

@@ -12,7 +12,7 @@ export function unsupportedFirestoreDriverFunctionError(message?: string) {
  *
  * @param data
  */
-export function assertFirestoreUpdateHasData(data: UpdateData<unknown>) {
+export function assertFirestoreUpdateHasData(data: UpdateData<object>) {
   if (objectHasNoKeys(data)) {
     throw firestoreUpdateWithNoDataError();
   }

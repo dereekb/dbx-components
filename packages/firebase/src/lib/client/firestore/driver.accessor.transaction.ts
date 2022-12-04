@@ -45,9 +45,9 @@ export class TransactionFirestoreDocumentDataAccessor<T> implements FirestoreDoc
     return this.update(firestoreClientIncrementUpdateToUpdateData(data));
   }
 
-  update(data: UpdateData<unknown>): Promise<void> {
+  update(data: UpdateData<object>): Promise<void> {
     assertFirestoreUpdateHasData(data);
-    this.transaction.update(this.documentRef, data);
+    this.transaction.update(this.documentRef, data as UpdateData<T>);
     return Promise.resolve();
   }
 }
