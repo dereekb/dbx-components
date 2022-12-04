@@ -7,12 +7,12 @@ class TestModelClass {
   @Expose()
   @IsOptional()
   @IsFirestoreModelId()
-  id!: FirestoreModelId;
+  id!: string;
 
   @Expose()
   @IsOptional()
   @IsFirestoreModelKey()
-  key!: FirestoreModelKey;
+  key!: string;
 }
 
 describe('IsFirestoreModelKey', () => {

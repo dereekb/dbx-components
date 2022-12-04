@@ -41,9 +41,11 @@ SOURCE_BRANCH=${DBX_SETUP_PROJECT_BRANCH:-"main"}     # develop or main
 # - Project Details
 PROJECT_NAME=$INPUT_PROJECT_NAME
 NAME=$PROJECT_NAME
-DBX_COMPONENTS_VERSION=${DBX_SETUP_PROJECT_COMPONENTS_VERSION:-"8.15.2"}
-NX_VERSION=${NX_SETUP_VERSIONS:-"14.5.10"}
-ANGULAR_VERSION=${ANGULAR_SETUP_VERSIONS:-"~14.1.2"}
+DBX_COMPONENTS_VERSION=${DBX_SETUP_PROJECT_COMPONENTS_VERSION:-"9.17.3"}
+NX_VERSION=${NX_SETUP_VERSIONS:-"14.8.6"}
+ANGULAR_VERSION=${ANGULAR_SETUP_VERSIONS:-"^14.2.0"}
+
+echo "Creating project: '$PROJECT_NAME' - nx: $NX_VERSION - angular: $ANGULAR_VERSION"
 
 # The app prefix is used in Angular and Nest classes as the prefix for classes/components
 APP_CODE_PREFIX="$(tr '[:lower:]' '[:upper:]' <<< ${INPUT_CODE_PREFIX:0:1})${INPUT_CODE_PREFIX:1}"
@@ -331,7 +333,7 @@ git add --all
 git commit --no-verify -m "checkpoint: added Docker files and other utility files"
 
 # add semver for semantic versioning, husky for pre-commit hooks, and pretty-quick for running prettier
-npm install -D @jscutlery/semver husky pretty-quick @commitlint/cli @commitlint/config-angular
+npm install -D @jscutlery/semver@2.27.2 husky pretty-quick @commitlint/cli @commitlint/config-angular
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/.commitlintrc.json -o .commitlintrc.json
 
 mkdir .husky
@@ -352,7 +354,7 @@ git add --all
 git commit --no-verify -m "checkpoint: added semver and commit linting"
 
 # add jest setup/configurations
-npm install -D jest@^28.1.1 jest-environment-jsdom@^28.1.1 jest-preset-angular@^12.1.0 ts-jest@^28.0.4 jest-date@^1.1.4 jest-junit@^14.0.0
+npm install -D jest@28.1.3 jest-environment-jsdom@28.1.3 jest-preset-angular@12.2.3 ts-jest@^28.0.8 jest-date@^1.1.4 jest-junit@^14.0.0
 rm jest.preset.js
 
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/jest.preset.ts -o jest.preset.ts
@@ -397,8 +399,8 @@ install_local_peer_deps() {
 
 # The CI environment does not seem to install any of the peer dependencies from the local @dereekb packages
 echo "Installing specific angular version"
-npm install -D @nrwl/angular@$NX_VERSION jest-preset-angular@12.2.0 @angular-devkit/build-angular@$ANGULAR_VERSION @angular/cli@$ANGULAR_VERSION @angular/compiler-cli@$ANGULAR_VERSION @angular/language-service@$ANGULAR_VERSION --force
-npm install @angular/fire@^7.4.1 @angular/flex-layout@^14.0.0-beta.40 @angular/animations@$ANGULAR_VERSION @angular/common@$ANGULAR_VERSION @angular/compiler@$ANGULAR_VERSION @angular/core@$ANGULAR_VERSION @angular/forms@$ANGULAR_VERSION @angular/material@$ANGULAR_VERSION @angular/cdk@$ANGULAR_VERSION @angular/platform-browser@$ANGULAR_VERSION @angular/platform-browser-dynamic@$ANGULAR_VERSION @angular/router@$ANGULAR_VERSION
+npm install -D @nrwl/angular@$NX_VERSION jest-preset-angular@12.2.3 @angular-devkit/build-angular@$ANGULAR_VERSION @angular/cli@$ANGULAR_VERSION @angular/compiler-cli@$ANGULAR_VERSION @angular/language-service@$ANGULAR_VERSION
+npm install @angular/fire@^7.4.1 @angular/flex-layout@14.0.0-beta.41 @angular/animations@$ANGULAR_VERSION @angular/common@$ANGULAR_VERSION @angular/compiler@$ANGULAR_VERSION @angular/core@$ANGULAR_VERSION @angular/forms@$ANGULAR_VERSION @angular/material@$ANGULAR_VERSION @angular/cdk@$ANGULAR_VERSION @angular/platform-browser@$ANGULAR_VERSION @angular/platform-browser-dynamic@$ANGULAR_VERSION @angular/router@$ANGULAR_SETUP_VERSIONS
 # note @angular/fire and @angular/flex-layout dependencies here are, as install_local ignores any @angular prefix
 
 echo "Installing @dereekb peer dependencies for CI"
@@ -422,7 +424,7 @@ install_local_peer_deps "$DBX_COMPONENTS_VERSION_UTIL"
 fi
 
 echo "Installing dev dependencies"
-npm install -D firebase-tools@^11.14.3 @ngrx/store-devtools@^14.1.0 @ngx-formly/schematics@6.0.0-rc.2 @firebase/rules-unit-testing@^2.0.2 firebase-functions-test@^2.4.0 envfile env-cmd
+npm install -D firebase-tools@^11.14.3 @ngrx/store-devtools@14.3.2 @ngx-formly/schematics@6.0.3 @firebase/rules-unit-testing@^2.0.2 firebase-functions-test@^2.4.0 envfile env-cmd
 
 git add --all
 git commit --no-verify -m "checkpoint: added @dereekb dependencies"
@@ -446,7 +448,6 @@ echo "Applying Configuration to Projects"
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/setup/templates/workspace.json -o ./workspace.json.tmp
 sed -e "s:ANGULAR_APP_FOLDER:$ANGULAR_APP_FOLDER:g" -e "s:API_APP_FOLDER:$API_APP_FOLDER:g" -e "s:E2E_APP_FOLDER:$E2E_APP_FOLDER:g" -e "s:FIREBASE_COMPONENTS_FOLDER:$FIREBASE_COMPONENTS_FOLDER:g" -e "s:ANGULAR_COMPONENTS_FOLDER:$ANGULAR_COMPONENTS_FOLDER:g" -e "s:ANGULAR_APP_NAME:$ANGULAR_APP_NAME:g" -e "s:API_APP_NAME:$API_APP_NAME:g" -e "s:E2E_APP_NAME:$E2E_APP_NAME:g" -e "s:FIREBASE_COMPONENTS_NAME:$FIREBASE_COMPONENTS_NAME:g" -e "s:ANGULAR_COMPONENTS_NAME:$ANGULAR_COMPONENTS_NAME:g" ./workspace.json.tmp > ./workspace.json
 rm ./workspace.json.tmp
-rm ./angular.json
 
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/setup/templates/project.json -o ./project.json
 

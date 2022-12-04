@@ -1,3 +1,4 @@
+// @ts-nocheck
 const nxPreset = require('@nrwl/jest/preset');
 const isCI = require('is-ci');
 const { pathsToModuleNameMapper } = require('ts-jest');
@@ -15,26 +16,43 @@ let testSetup = `${rootPath}/jest.setup.${appTestType}.ts`;
 let testEnvironment = 'node';
 let appTestTypeSetupFiles = [testSetup];
 let snapshotSerializers = [];
+let globalSetup;
+let transform;
 
 switch (appTestType) {
   case 'angular':
     // angular needs jsdom and serializers
+    globalSetup = 'jest-preset-angular/global-setup';
     snapshotSerializers = jestPresetAngularSerializers;
     testEnvironment = 'jsdom';
+    transform = {
+      '^.+\\.(ts|js|mjs|html|svg)$': 'jest-preset-angular'
+    };
     break;
   case 'firebase':
   case 'nestjs':
   case 'node':
+    transform = {
+      '^.+\\.(ts|js|mjs|html|svg)$': 'ts-jest'
+    };
     break;
 }
 
 module.exports = {
+  /**
+   * Presets here: https://github.com/nrwl/nx/blob/master/packages/jest/preset/jest-preset.ts
+   *
+   * This project prefers to keep all the configuration between projects here, switching between them using the "appTestType" global variable for configuring things.
+   */
   ...nxPreset,
   maxConcurrency: 3,
   maxWorkers: 3,
   setupFilesAfterEnv: [...(nxPreset.setupFilesAfterEnv ?? []), ...appTestTypeSetupFiles, ...(customTestSetup ? customTestSetup : []), 'jest-date'],
 
   testEnvironment,
+
+  testEnvironmentOptions: {},
+
   testMatch: ['**/+(*.)+(spec|test).+(ts|js)?(x)'],
   globals: {
     'ts-jest': {
@@ -42,18 +60,18 @@ module.exports = {
       stringifyContentPathRegex: '\\.(html|svg)$'
     }
   },
-  // globalSetup: 'jest-preset-angular/global-setup',
 
-  moduleFileExtensions: ['ts', 'html', 'js', 'mjs', 'json'],
+  globalSetup,
+
+  moduleFileExtensions: ['ts', 'js', 'mjs', 'html'],
   moduleNameMapper: pathsToModuleNameMapper(paths, { prefix: `${rootPath}/` }), // use to resolve packages in the project
-  resolver: `${rootPath}/jest.resolver.js`,
+  resolver: `${rootPath}/jest.resolver.js`, // '@nrwl/jest/plugins/resolver',
 
   transformIgnorePatterns: ['node_modules/(?!.*\\.mjs$)'],
-  transform: {
-    '^.+\\.(ts|js|mjs|html|svg)$': 'jest-preset-angular'
-  },
 
-  snapshotSerializers: snapshotSerializers,
+  transform,
+
+  snapshotSerializers,
 
   reporters: isCI
     ? [

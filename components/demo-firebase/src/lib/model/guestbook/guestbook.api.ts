@@ -21,7 +21,7 @@ export abstract class GuestbookEntryParams {
   @Expose()
   @IsNotEmpty()
   @IsString()
-  guestbook!: ModelKey;
+  guestbook!: string; // ModelKey;
 }
 
 export class UpdateGuestbookEntryParams extends GuestbookEntryParams {

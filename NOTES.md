@@ -75,7 +75,7 @@ Find `targets` in your `project.json`, and add the following targets:
 
 ```
 "deploy-dist-to-hosting": {
-  "builder": "@nrwl/workspace:run-commands",
+  "builder": "nx:run-commands",
   "options": {
     "command": "firebase deploy --only hosting"
   }
@@ -88,7 +88,7 @@ Add the section below to add an action that calls build before calling deploy.
 
 ```
 "deploy": {
-  "builder": "@nrwl/workspace:run-commands",
+  "builder": "nx:run-commands",
   "options": {
     "commands": [
       {

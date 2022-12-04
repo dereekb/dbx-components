@@ -36,5 +36,5 @@ export class InferredTargetModelIdParams implements Partial<FirestoreModelKeyRef
   @IsOptional()
   @IsNotEmpty()
   @IsFirestoreModelId()
-  key?: FirestoreModelId;
+  key?: string; // FirestoreModelId;
 }

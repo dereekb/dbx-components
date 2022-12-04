@@ -4,27 +4,27 @@
   "prefix": "workspace",
   "targets": {
     "build-all": {
-      "executor": "@nrwl/workspace:run-commands",
+      "executor": "nx:run-commands",
       "options": {
         "command": "npx nx run-many --target=build --parallel --max-parallel=2",
         "color": true
       }
     },
     "lint-fix-all": {
-      "executor": "@nrwl/workspace:run-commands",
+      "executor": "nx:run-commands",
       "options": {
         "description": "",
         "command": "npx nx run-many --exclude=util-test,firebase-test,firebase-server-test --target=lint --fix"
       }
     },
     "start-release": {
-      "executor": "@nrwl/workspace:run-commands",
+      "executor": "nx:run-commands",
       "options": {
         "command": "./start-release.sh"
       }
     },
     "prettier": {
-      "executor": "@nrwl/workspace:run-commands",
+      "executor": "nx:run-commands",
       "options": {
         "command": "./start-release.sh"
       }
@@ -39,13 +39,13 @@
       }
     },
     "deploy-firebase-rules": {
-      "executor": "@nrwl/workspace:run-commands",
+      "executor": "nx:run-commands",
       "options": {
         "command": "npx firebase --project=default deploy --only firestore:rules,storage"
       }
     },
     "ci-deploy-firebase-rules": {
-      "executor": "@nrwl/workspace:run-commands",
+      "executor": "nx:run-commands",
       "options": {
         "command": "npx firebase --project=default deploy --only firestore:rules,storage"
       }
