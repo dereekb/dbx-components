@@ -1,1 +1,1 @@
-export * from './lib/dbx-web-calendar.module';
+export * from './lib';

@@ -2,7 +2,7 @@ import { NgModule } from '@angular/core';
 import { DbxCalendarComponent } from './calendar.component';
 import { CalendarDayModule, CalendarModule, CalendarWeekModule, DateAdapter } from 'angular-calendar';
 import { CommonModule } from '@angular/common';
-import { DbxButtonModule } from '../../button/button.module';
+import { DbxButtonModule } from '@dereekb/dbx-web';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { adapterFactory as dateAdapterFactory } from 'angular-calendar/date-adapters/date-fns';
@@ -10,7 +10,6 @@ import { MatButtonModule } from '@angular/material/button';
 import { FlexLayoutModule } from '@angular/flex-layout';
 
 @NgModule({
-  declarations: [DbxCalendarComponent],
   imports: [
     //
     CommonModule,
@@ -23,6 +22,7 @@ import { FlexLayoutModule } from '@angular/flex-layout';
     CalendarWeekModule,
     DbxButtonModule
   ],
+  declarations: [DbxCalendarComponent],
   exports: [DbxCalendarComponent]
 })
 export class DbxCalendarModule {}

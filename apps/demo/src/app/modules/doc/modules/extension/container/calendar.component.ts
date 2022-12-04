@@ -1,5 +1,5 @@
 import { OnInit, Component } from '@angular/core';
-import { DbxCalendarEvent, DbxCalendarStore } from '@dereekb/dbx-web';
+import { DbxCalendarEvent, DbxCalendarStore } from '@dereekb/dbx-web/calendar';
 import { DateBlock, DateBlockCollection, dateBlockTiming, durationSpanToDateRange, expandDateBlockCollection } from '@dereekb/date';
 import { addMonths, setHours } from 'date-fns/esm';
 import { Maybe, range } from '@dereekb/util';

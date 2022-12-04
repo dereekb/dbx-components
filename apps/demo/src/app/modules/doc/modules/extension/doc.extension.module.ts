@@ -5,7 +5,7 @@ import { DocSharedModule } from '../shared/doc.shared.module';
 import { DocExtensionLayoutComponent } from './container/layout.component';
 import { DocExtensionCalendarComponent } from './container/calendar.component';
 import { STATES } from './doc.extension.router';
-import { DbxCalendarRootModule, DbxWidgetModule, DbxWidgetService } from '@dereekb/dbx-web';
+import { DbxWidgetModule, DbxWidgetService } from '@dereekb/dbx-web';
 import { DocExtensionWidgetComponent } from './container/widget.component';
 import { DOC_EXTENSION_WIDGET_EXAMPLE_TYPE, DocExtensionWidgetExampleComponent } from './component/widget.example.component';
 import { DocExtensionWidgetIconExampleComponent, DOC_EXTENSION_WIDGET_ICON_EXAMPLE_TYPE } from './component/widget.icon.example.component';
@@ -16,6 +16,7 @@ import { DbxMapboxModule } from '@dereekb/dbx-web/mapbox';
 import { NgxMapboxGLModule } from 'ngx-mapbox-gl';
 import { DocExtensionMapboxContentExampleComponent } from './component/mapbox.content.example.component';
 import { DocExtensionMapboxMarkersExampleComponent } from './component/mapbox.markers.example.component';
+import { DbxCalendarRootModule } from '@dereekb/dbx-web/calendar';
 
 @NgModule({
   imports: [
