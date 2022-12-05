@@ -151,6 +151,9 @@ $calendar-content-border-consideration: 2px;
   $badge-color: theming.get-color-from-palette($accent, 500);
   $current-time-marker-color: theming.get-color-from-palette($accent, 400);
 
+  $selected-color: theming.get-color-from-palette($foreground, 'text');
+  $selected-background-color: $highlight-color;
+
   #{calendar.$cal-event-icon-color-var}: $event-icon-color; // text/border color
   #{calendar.$cal-event-color-primary-var}: $event-text-color; // text/border color
   #{calendar.$cal-event-color-secondary-var}: $event-bg-color; // event background color
@@ -167,6 +170,13 @@ $calendar-content-border-consideration: 2px;
   #{calendar.$cal-gray-var}: #555;
   #{calendar.$cal-black-var}: #000;
   #{calendar.$cal-gradient-var}: inset 0 0 10px 0 rgba($background-color, 0.2);
+
+  // MARK: Selection
+  .cal-day-selected,
+  .cal-day-selected:hover {
+    color: $selected-color;
+    background-color: $selected-background-color;
+  }
 }
 
 @mixin typography($typography-config) {

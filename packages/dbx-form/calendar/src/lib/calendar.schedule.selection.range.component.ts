@@ -1,11 +1,12 @@
-import { SubscriptionObject } from '@dereekb/rxjs';
+import { switchMap } from 'rxjs/operators';
+import { SubscriptionObject, tapLog } from '@dereekb/rxjs';
 import { Component, OnDestroy } from '@angular/core';
-import { DbxCalendarScheduleSelectionStore } from './calendar.schedule.selection.store';
+import { CalendarScheduleSelectionInputDateRange, DbxCalendarScheduleSelectionStore } from './calendar.schedule.selection.store';
 import { DbxCalendarStore } from '@dereekb/dbx-web/calendar';
 import { FormGroup, FormControl } from '@angular/forms';
-import { Maybe } from '@dereekb/util';
-import { distinctUntilChanged } from 'rxjs';
-import { isSameDate } from '@dereekb/date';
+import { Maybe, randomNumberFactory } from '@dereekb/util';
+import { distinctUntilChanged, filter, BehaviorSubject, noop, startWith, Observable, of } from 'rxjs';
+import { isSameDateDay, isSameDate } from '@dereekb/date';
 import { startOfDay } from 'date-fns';
 
 @Component({
@@ -13,6 +14,10 @@ import { startOfDay } from 'date-fns';
   templateUrl: './calendar.schedule.selection.range.component.html'
 })
 export class DbxScheduleSelectionCalendarDateRangeComponent implements OnDestroy {
+  readonly random = randomNumberFactory(10000)();
+
+  private _pickerOpened = new BehaviorSubject<boolean>(false);
+
   private _syncSub = new SubscriptionObject();
   private _valueSub = new SubscriptionObject();
 
@@ -21,25 +26,52 @@ export class DbxScheduleSelectionCalendarDateRangeComponent implements OnDestroy
     end: new FormControl<Maybe<Date>>(null)
   });
 
+  readonly pickerOpened$ = this._pickerOpened.asObservable();
+
   constructor(readonly dbxCalendarStore: DbxCalendarStore, readonly dbxCalendarScheduleSelectionStore: DbxCalendarScheduleSelectionStore) {}
 
   ngOnInit(): void {
-    this._syncSub.subscription = this.dbxCalendarScheduleSelectionStore.inputStartAndEnd$.subscribe((x) => {
+    this._syncSub.subscription = this.dbxCalendarScheduleSelectionStore.inputRange$.subscribe((x) => {
       this.range.setValue({
         start: x.inputStart ?? null,
         end: x.inputEnd ?? null
       });
     });
 
-    this._valueSub.subscription = this.range.valueChanges.pipe(distinctUntilChanged((a, b) => isSameDate(a.start, b.start) && isSameDate(a.end, b.end))).subscribe((x) => {
-      let inputStart = x.start ? startOfDay(x.start) : null;
-      let inputEnd = x.end ? startOfDay(x.end) : null;
-      this.dbxCalendarScheduleSelectionStore.setInputRange({ inputStart, inputEnd });
-    });
+    this._valueSub.subscription = this._pickerOpened
+      .pipe(
+        distinctUntilChanged(),
+        switchMap((opened) => {
+          let obs: Observable<{ start?: Maybe<Date>; end?: Maybe<Date> }>;
+
+          if (opened) {
+            obs = of({});
+          } else {
+            obs = this.range.valueChanges.pipe(startWith(this.range.value));
+          }
+
+          return obs;
+        }),
+        filter((x) => Boolean(x.start && x.end)),
+        distinctUntilChanged((a, b) => isSameDateDay(a.start, b.start) && isSameDateDay(a.end, b.end))
+      )
+      .subscribe((x) => {
+        if (x.start && x.end) {
+          this.dbxCalendarScheduleSelectionStore.setInputRange({ inputStart: x.start, inputEnd: x.end });
+        }
+      });
   }
 
   ngOnDestroy(): void {
     this._syncSub.destroy();
     this._valueSub.destroy();
+  }
+
+  pickerOpened() {
+    this._pickerOpened.next(true);
+  }
+
+  pickerClosed() {
+    this._pickerOpened.next(false);
   }
 }
