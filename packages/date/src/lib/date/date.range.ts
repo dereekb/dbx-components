@@ -10,6 +10,16 @@ export interface DateRangeStart {
 }
 
 /**
+ * Returns true if the input is a DateRangeStart.
+ *
+ * @param value
+ * @returns
+ */
+export function isDateRangeStart(value: unknown): value is DateRangeStart {
+  return typeof value === 'object' && isDate((value as DateRangeStart).start);
+}
+
+/**
  * Sorts the input DateRangeStart values in ascending order by start Date.
  *
  * @param a

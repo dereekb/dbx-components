@@ -1,4 +1,4 @@
-import { symmetricDifferenceKeys } from '../set/set';
+import { symmetricDifferenceArray } from '../set/set';
 import { findUnique } from '../array/array.unique';
 import { ReadKeyFunction, ReadMultipleKeysFunction } from '../key';
 import { Maybe } from '../value/maybe.type';
@@ -95,7 +95,7 @@ export function readModelKeysFromObjects<T extends UniqueModel>(input: T[], requ
 }
 
 export function symmetricDifferenceWithModels<T extends UniqueModel>(a: ModelOrKey<T>[], b: ModelOrKey<T>[], required?: boolean, read?: ReadModelKeyFunction<T>): Maybe<ModelKey>[] {
-  return symmetricDifferenceKeys(readModelKeys(a, required, read), readModelKeys(b, required, read));
+  return symmetricDifferenceArray(readModelKeys(a, required, read), readModelKeys(b, required, read));
 }
 
 // export function removeModelsWithSameKey<T extends UniqueModel>(input: T[], key: ModelKey, read?: ReadModelKeyFunction<T>): T[];
