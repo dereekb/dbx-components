@@ -1,1 +1,1 @@
-export * from './lib/dbx-form-calendar.module';
+export * from './lib';

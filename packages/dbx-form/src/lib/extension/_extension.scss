@@ -1,0 +1,38 @@
+@use '../style/config';
+@use './calendar/calendar';
+
+@mixin all-extension-core($theme-config) {
+  $calendar-enabled: 1;
+
+  @if ($theme-config != null) {
+    $calendar-enabled: config.get-dbx-extension-calendar-enabled($theme-config);
+  }
+
+  @if ($calendar-enabled == 1) {
+    @include calendar.core();
+  }
+}
+
+@mixin all-extension-typography($typography-config, $theme-config) {
+  $calendar-enabled: 1;
+
+  @if ($theme-config != null) {
+    $calendar-enabled: config.get-dbx-extension-calendar-enabled($theme-config);
+  }
+
+  @if ($calendar-enabled == 1) {
+    @include calendar.typography($typography-config);
+  }
+}
+
+@mixin all-extension-theme($theme-config) {
+  $calendar-enabled: 1;
+
+  @if ($theme-config != null) {
+    $calendar-enabled: config.get-dbx-extension-calendar-enabled($theme-config);
+  }
+
+  @if ($calendar-enabled == 1) {
+    @include calendar.theme($theme-config);
+  }
+}

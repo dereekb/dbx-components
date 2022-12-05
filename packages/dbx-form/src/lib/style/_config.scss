@@ -20,3 +20,7 @@
 @function get-dbx-form-theme-config($theme-config) {
   @return map.get($theme-config, 'dbx-form');
 }
+
+@function get-dbx-extension-calendar-enabled($theme-config) {
+  @return get-dbx-extension-config-var($theme-config, 'calendar');
+}

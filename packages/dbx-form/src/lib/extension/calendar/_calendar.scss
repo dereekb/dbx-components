@@ -1,0 +1,38 @@
+@use 'sass:map';
+@use '../../style/theming';
+
+// MARK: Variables
+
+// MARK: Mixin
+@mixin core() {
+  .dbx-schedule-selection-calendar-date-range-field {
+    &.mat-form-field-type-mat-date-range-input .mat-form-field-infix {
+      display: flex;
+
+      .mat-date-range-input {
+        display: flex;
+      }
+    }
+  }
+}
+
+@mixin color($theme-config) {
+}
+
+@mixin typography($typography-config) {
+}
+
+@mixin theme($theme-config) {
+  @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-form-calendar') {
+    $color: theming.get-color-config($theme-config);
+    $typography: theming.get-typography-config($theme-config);
+
+    @if $color !=null {
+      @include color($theme-config);
+    }
+
+    @if $typography !=null {
+      @include typography($typography);
+    }
+  }
+}

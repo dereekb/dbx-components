@@ -1,0 +1,22 @@
+<div class="dbx-calendar">
+  <h3 class="dbx-calendar-title">{{ (viewDate$ | async)! | calendarDate: (displayType$ | async) + 'ViewTitle':'en' }}</h3>
+  <div class="dbx-calendar-header">
+    <div class="dbx-calendar-controls" fxLayout="row">
+      <span class="dbx-calendar-controls-left" fxFlex="nogrow">
+        <button mat-stroked-button (click)="todayClicked()">Today</button>
+        <dbx-button-spacer></dbx-button-spacer>
+        <button mat-icon-button [attr.aria-label]="'Previous ' + (displayType$ | async) + ' button'" (click)="previousButtonClicked()">
+          <mat-icon>navigate_before</mat-icon>
+        </button>
+        <button mat-icon-button [attr.aria-label]="'Next' + (displayType$ | async)! + ' button'" (click)="nextButtonClicked()">
+          <mat-icon>navigate_next</mat-icon>
+        </button>
+      </span>
+      <span class="spacer"></span>
+      <span class="dbx-calendar-controls-right" fxFlex="nogrow">
+        <ng-content select="[controls]"></ng-content>
+      </span>
+    </div>
+  </div>
+  <ng-content></ng-content>
+</div>

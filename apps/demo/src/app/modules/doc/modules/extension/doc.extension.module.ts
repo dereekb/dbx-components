@@ -17,11 +17,14 @@ import { NgxMapboxGLModule } from 'ngx-mapbox-gl';
 import { DocExtensionMapboxContentExampleComponent } from './component/mapbox.content.example.component';
 import { DocExtensionMapboxMarkersExampleComponent } from './component/mapbox.markers.example.component';
 import { DbxCalendarRootModule } from '@dereekb/dbx-web/calendar';
+import { DocExtensionCalendarScheduleSelectionComponent } from './component/selection.calendar.component';
+import { DbxFormCalendarModule } from '@dereekb/dbx-form/calendar';
 
 @NgModule({
   imports: [
     DocSharedModule,
     DbxCalendarRootModule,
+    DbxFormCalendarModule,
     DocFormComponentsModule,
     DbxWidgetModule,
     DbxMapboxModule,
@@ -37,6 +40,7 @@ import { DbxCalendarRootModule } from '@dereekb/dbx-web/calendar';
     DocExtensionWidgetIconExampleComponent,
     DocExtensionMapboxContentExampleComponent,
     DocExtensionMapboxMarkersExampleComponent,
+    DocExtensionCalendarScheduleSelectionComponent,
     // container
     DocExtensionLayoutComponent,
     DocExtensionHomeComponent,
