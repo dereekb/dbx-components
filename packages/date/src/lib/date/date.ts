@@ -1,4 +1,4 @@
-import { isDate as dateFnsIsDate, max as maxDate, min as minDate, parseISO, addDays, isPast, isAfter as isAfterDate, set as setDateValues, isValid, startOfMinute } from 'date-fns';
+import { isDate as dateFnsIsDate, max as maxDate, min as minDate, parseISO, addDays, isPast, isAfter as isAfterDate, set as setDateValues, isValid, startOfMinute, isEqual as isEqualDate } from 'date-fns';
 import { DateOrDateString, filterMaybeValues, ISO8601DateString, Maybe, Minutes, MINUTES_IN_DAY, MS_IN_HOUR, MS_IN_MINUTE, Seconds, TimezoneString, ArrayOrValue, asArray } from '@dereekb/util';
 
 export const MAX_FUTURE_DATE = new Date(Date.UTC(9999, 0));
@@ -90,6 +90,21 @@ export function isAfter(a: Maybe<Date>, b: Maybe<Date>): Maybe<boolean>;
 export function isAfter(a: Maybe<Date>, b: Maybe<Date>, defaultValue: boolean): boolean;
 export function isAfter(a: Maybe<Date>, b: Maybe<Date>, defaultValue: Maybe<boolean> = undefined): Maybe<boolean> {
   return a && b ? isAfterDate(a, b) : defaultValue;
+}
+
+/**
+ * Returns true if both a and b are defined and a is equal to b, otherwise returns the default value.
+ *
+ * The default value is true if a and b are null/undefined.
+ *
+ * @param a
+ * @param b
+ */
+export function isSameDate(a: Maybe<Date>, b: Maybe<Date>): boolean;
+export function isSameDate(a: Maybe<Date>, b: Maybe<Date>, defaultValue: boolean): boolean;
+export function isSameDate(a: Maybe<Date>, b: Maybe<Date>, defaultValue: Maybe<boolean>): Maybe<boolean>;
+export function isSameDate(a: Maybe<Date>, b: Maybe<Date>, defaultValue: Maybe<boolean> = null): Maybe<boolean> {
+  return a != null && b != null ? isEqualDate(a, b) : defaultValue != null ? defaultValue : a == b;
 }
 
 // MARK: Unix Date/Time

@@ -10,6 +10,17 @@ export interface DateRangeStart {
 }
 
 /**
+ * Sorts the input DateRangeStart values in ascending order by start Date.
+ *
+ * @param a
+ * @param b
+ * @returns
+ */
+export function sortDateRangeStartAscendingCompareFunction<T extends DateRangeStart>(a: T, b: T): number {
+  return a.start.getTime() - b.start.getTime();
+}
+
+/**
  * Represents a start and end date.
  */
 export interface DateRange extends DateRangeStart {

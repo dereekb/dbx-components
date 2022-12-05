@@ -1,5 +1,5 @@
 import { DayOfWeek, RequiredOnKeys, IndexNumber, IndexRange, indexRangeCheckFunction, IndexRef, MINUTES_IN_DAY, MS_IN_DAY, UniqueModel, lastValue, FactoryWithRequiredInput, FilterFunction, mergeFilterFunctions, range, Milliseconds, Hours, MapFunction, getNextDay, SortCompareFunction, sortAscendingIndexNumberRefFunction, mergeArrayIntoArray, Configurable, ArrayOrValue, asArray, sumOfIntegersBetween, filterMaybeValues, Maybe } from '@dereekb/util';
-import { dateRange, DateRange, DateRangeDayDistanceInput, DateRangeType, isDateRange } from './date.range';
+import { dateRange, DateRange, DateRangeDayDistanceInput, DateRangeStart, DateRangeType, isDateRange } from './date.range';
 import { DateDurationSpan } from './date.duration';
 import { differenceInDays, differenceInMilliseconds, isBefore, addDays, addMinutes, getSeconds, getMilliseconds, getMinutes, addMilliseconds, hoursToMilliseconds, addHours, differenceInHours, isAfter } from 'date-fns';
 import { copyHoursAndMinutesFromDate, roundDownToMinute } from './date';
@@ -11,6 +11,11 @@ import { IsDate, IsNumber, IsOptional, Min } from 'class-validator';
  * Index from 0 of which day this block represents.
  */
 export type DateBlockIndex = number;
+
+/**
+ * Input type that is either a Date or a DateBlockIndex.
+ */
+export type DateOrDateBlockIndex = Date | DateBlockIndex;
 
 /**
  * A duration-span block.
@@ -58,6 +63,11 @@ export type DateBlockArrayRef<B extends DateBlock = DateBlock> = {
  */
 export interface DateBlockTiming extends DateRange, DateDurationSpan {}
 
+/**
+ * DateBlockTiming with only the start time. The start time infers what timezone it is in.
+ */
+export type DateBlockTimingStart = DateRangeStart;
+
 export class DateBlockTiming extends DateDurationSpan {
   @Expose()
   @IsDate()
@@ -84,7 +94,7 @@ export class DateBlockTiming extends DateDurationSpan {
  *
  * @param timing
  */
-export function getCurrentDateBlockTimingOffset(timing: DateBlockTiming): Milliseconds {
+export function getCurrentDateBlockTimingOffset(timing: DateRangeStart): Milliseconds {
   const start = timing.start;
   const dateHours = start.getUTCHours();
 
@@ -108,7 +118,7 @@ export function getCurrentDateBlockTimingOffset(timing: DateBlockTiming): Millis
  *
  * @param timing
  */
-export function getCurrentDateBlockTimingStartDate(timing: DateBlockTiming): Date {
+export function getCurrentDateBlockTimingStartDate(timing: DateBlockTimingStart): Date {
   const offset = getCurrentDateBlockTimingOffset(timing);
   return addMilliseconds(timing.start, offset);
 }
@@ -118,26 +128,31 @@ export function isValidDateBlockTimingStartDate(date: Date): boolean {
 }
 
 /**
- * Returns the DateBlockIndex of the input date relative to the configured D
+ * Returns the DateBlockIndex of the input date relative to the configured Date
  */
-export type DateTimingRelativeIndexFactory = ((date: Date) => DateBlockIndex) & {
-  readonly _timing: DateBlockTiming;
+export type DateTimingRelativeIndexFactory<T extends DateBlockTimingStart = DateBlockTimingStart> = ((input: DateOrDateBlockIndex) => DateBlockIndex) & {
+  readonly _timing: T;
 };
 
 /**
+ * Creates a DateTimingRelativeIndexFactory.
  *
  * @param timing
  * @returns
  */
-export function dateTimingRelativeIndexFactory(timing: DateBlockTiming): DateTimingRelativeIndexFactory {
+export function dateTimingRelativeIndexFactory<T extends DateBlockTimingStart = DateBlockTimingStart>(timing: T): DateTimingRelativeIndexFactory<T> {
   const startDate = getCurrentDateBlockTimingStartDate(timing);
-  const factory = ((date: Date) => {
-    const diff = differenceInHours(date, startDate);
-    const daysOffset = Math.floor(diff / 24);
-    return daysOffset;
+  const factory = ((input: DateOrDateBlockIndex) => {
+    if (typeof input === 'number') {
+      return input;
+    } else {
+      const diff = differenceInHours(input, startDate);
+      const daysOffset = Math.floor(diff / 24);
+      return daysOffset;
+    }
   }) as Configurable<Partial<DateTimingRelativeIndexFactory>>;
   factory._timing = timing;
-  return factory as DateTimingRelativeIndexFactory;
+  return factory as DateTimingRelativeIndexFactory<T>;
 }
 
 /**
@@ -146,7 +161,7 @@ export function dateTimingRelativeIndexFactory(timing: DateBlockTiming): DateTim
  * @param timing
  * @param date
  */
-export function getRelativeIndexForDateTiming(timing: DateBlockTiming, date = new Date()): DateBlockIndex {
+export function getRelativeIndexForDateTiming(timing: DateBlockTiming, date: DateOrDateBlockIndex = new Date()): DateBlockIndex {
   return dateTimingRelativeIndexFactory(timing)(date);
 }
 
