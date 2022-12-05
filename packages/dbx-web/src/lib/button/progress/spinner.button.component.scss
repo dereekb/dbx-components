@@ -28,9 +28,11 @@
         opacity: 0;
       }
     }
+
     mat-icon.mat-button-icon {
       padding-right: 5px;
       transition: opacity 0.3s ease-in-out;
+
       &.is-mat-icon {
         font-size: 18px;
         position: relative;

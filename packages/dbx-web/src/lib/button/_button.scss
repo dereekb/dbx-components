@@ -29,6 +29,15 @@ $button-spacer-width: 6px;
     // mat-spinners marked with dbx-spinner-custom should allow the stroke to be inherited.
     stroke: unset !important;
   }
+
+  .mat-button {
+    mat-icon.mat-button-icon,
+    mat-icon.mat-fab-icon {
+      &.mat-icon.mat-ligature-font[fontIcon]::before {
+        content: unset;
+      }
+    }
+  }
 }
 
 @mixin color($theme-config) {
