@@ -4,22 +4,27 @@
   "type": "commonjs",
   "exports": {
     ".": {
-      "main": "./src/index.js",
       "types": "./src/index.d.ts",
+      "main": "./src/index.js",
+      "require": "./src/index.js",
       "default": "./src/index.js"
     },
     "./test": {
-      "main": "./test/src/index.js",
       "types": "./test/src/index.d.ts",
+      "main": "./test/src/index.js",
+      "require": "./test/src/index.js",
       "default": "./test/src/index.js"
     },
     "./fetch": {
-      "main": "./fetch/src/index.js",
       "types": "./fetch/src/index.d.ts",
+      "main": "./fetch/src/index.js",
+      "require": "./fetch/src/index.js",
       "default": "./fetch/src/index.js"
     }
   },
   "peerDependencies": {
     "lodash.isequal": "^4.5.0"
-  }
+  },
+  "main": "./src/index.js",
+  "types": "./src/index.d.ts"
 }

@@ -4,19 +4,24 @@
   "type": "commonjs",
   "exports": {
     ".": {
-      "main": "./src/index.js",
       "types": "./src/index.d.ts",
+      "main": "./src/index.js",
+      "require": "./src/index.js",
       "default": "./src/index.js"
     },
     "./stripe": {
-      "main": "./stripe/src/index.js",
       "types": "./stripe/src/index.d.ts",
+      "main": "./stripe/src/index.js",
+      "require": "./stripe/src/index.js",
       "default": "./stripe/src/index.js"
     },
     "./mailgun": {
-      "main": "./mailgun/src/index.js",
       "types": "./mailgun/src/index.d.ts",
+      "main": "./mailgun/src/index.js",
+      "require": "./mailgun/src/index.js",
       "default": "./mailgun/src/index.js"
     }
-  }
+  },
+  "main": "./src/index.js",
+  "types": "./src/index.d.ts"
 }

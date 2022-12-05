@@ -6,14 +6,18 @@
   },
   "exports": {
     ".": {
-      "main": "./src/index.js",
       "types": "./src/index.d.ts",
+      "main": "./src/index.js",
+      "require": "./src/index.js",
       "default": "./src/index.js"
     },
     "./test": {
-      "main": "./test/index.js",
       "types": "./test/index.d.ts",
+      "main": "./test/index.js",
+      "require": "./test/index.js",
       "default": "./test/index.js"
     }
-  }
+  },
+  "main": "./src/index.js",
+  "types": "./src/index.d.ts"
 }
