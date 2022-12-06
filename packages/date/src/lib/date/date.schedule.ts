@@ -76,7 +76,7 @@ export function isDateScheduleEncodedWeek(input: string): input is DateScheduleE
  *
  * @param codes
  */
-export function dateScheduleEncodedWeek(codes: DateScheduleDayCode[]): DateScheduleEncodedWeek {
+export function dateScheduleEncodedWeek(codes: Iterable<DateScheduleDayCode>): DateScheduleEncodedWeek {
   const result = simplifyDateScheduleDayCodes(codes);
   return result.join('') as DateScheduleEncodedWeek;
 }
@@ -89,7 +89,7 @@ export function dateScheduleEncodedWeek(codes: DateScheduleDayCode[]): DateSched
  * @param codes
  * @returns
  */
-export function simplifyDateScheduleDayCodes(codes: DateScheduleDayCode[]): DateScheduleDayCode[] {
+export function simplifyDateScheduleDayCodes(codes: Iterable<DateScheduleDayCode>): DateScheduleDayCode[] {
   const codesSet = new Set(codes);
   const result: DateScheduleDayCode[] = [];
 

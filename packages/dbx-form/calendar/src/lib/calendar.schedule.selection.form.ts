@@ -1,5 +1,5 @@
-import { flexLayoutWrapper, nameField, toggleField } from '@dereekb/dbx-form';
-import { getDaysOfWeekNames, DayOfWeek } from '@dereekb/util';
+import { flexLayoutWrapper, toggleField } from '@dereekb/dbx-form';
+import { getDaysOfWeekNames } from '@dereekb/util';
 
 export function dbxScheduleSelectionCalendarDateDaysFormFields() {
   const fields = dbxScheduleSelectionCalendarDateDaysFormDayFields();

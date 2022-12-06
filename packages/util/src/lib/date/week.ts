@@ -142,5 +142,11 @@ export function getPreviousDay(day: DayOfWeek, days: number = 1): DayOfWeek {
 }
 
 export function getNextDay(day: DayOfWeek, days: number = 1): DayOfWeek {
-  return Math.abs((day + days) % 7) as DayOfWeek;
+  let result = ((day + days) % 7) as DayOfWeek;
+
+  if (result < 0) {
+    result = (7 + result) as DayOfWeek;
+  }
+
+  return result;
 }

@@ -6,7 +6,7 @@ import { map, shareReplay, BehaviorSubject, Subject, first, throttleTime } from 
 import { MatButtonToggleChange } from '@angular/material/button-toggle';
 import { DateOrDateBlockIndex, formatToTimeAndDurationString } from '@dereekb/date';
 import { DbxCalendarEvent, DbxCalendarStore, prepareAndSortCalendarEvents } from '@dereekb/dbx-web/calendar';
-import { DecisionFunction } from '@dereekb/util';
+import { DayOfWeek, DecisionFunction } from '@dereekb/util';
 import { DbxCalendarScheduleSelectionStore } from './calendar.schedule.selection.store';
 
 @Component({
@@ -19,13 +19,13 @@ export class DbxScheduleSelectionCalendarComponent<T> implements OnDestroy {
   clickEvent = new EventEmitter<DbxCalendarEvent<T>>();
 
   // refresh any time the selected day function updates
-  readonly isSelectedDayFunction$ = this.dbxCalendarScheduleSelectionStore.isSelectedDayFunction$;
-  readonly refresh$ = this.isSelectedDayFunction$.pipe(
+  readonly state$ = this.dbxCalendarScheduleSelectionStore.state$;
+  readonly refresh$ = this.state$.pipe(
     throttleTime(100),
     map(() => undefined)
   ) as Subject<undefined>;
-  readonly events$ = this.calendarStore.visibleEvents$.pipe(map(prepareAndSortCalendarEvents), shareReplay(1));
 
+  readonly events$ = this.calendarStore.visibleEvents$.pipe(map(prepareAndSortCalendarEvents), shareReplay(1));
   readonly viewDate$ = this.calendarStore.date$;
 
   constructor(readonly calendarStore: DbxCalendarStore<T>, readonly dbxCalendarScheduleSelectionStore: DbxCalendarScheduleSelectionStore) {}
@@ -39,16 +39,19 @@ export class DbxScheduleSelectionCalendarComponent<T> implements OnDestroy {
   }
 
   beforeMonthViewRender({ body }: { body: CalendarMonthViewDay[] }): void {
-    this.isSelectedDayFunction$.pipe(first()).subscribe((isSelectedDay) => {
-      body.forEach((day) => {
-        const { date } = day;
+    this.state$.pipe(first()).subscribe(({ isEnabledDay: isSelectedDay, allowedDaysOfWeek }) => {
+      body.forEach((viewDay) => {
+        const { date } = viewDay;
+        const day = date.getDay();
 
         // TODO: also color if it matches the filter.
 
         // TODO: add is disabled day when turning off days via dates.
 
-        if (isSelectedDay(date)) {
-          day.cssClass = 'cal-day-selected';
+        if (!allowedDaysOfWeek.has(day as DayOfWeek)) {
+          viewDay.cssClass = 'cal-day-disabled';
+        } else if (isSelectedDay(date)) {
+          viewDay.cssClass = 'cal-day-selected';
         }
       });
     });

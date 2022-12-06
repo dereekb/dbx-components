@@ -18,8 +18,6 @@ export class DbxScheduleSelectionCalendarDatePopoverButtonComponent {
 
   readonly buttonText$ = this.dbxCalendarScheduleSelectionStore.currentMinAndMaxDate$.pipe(
     map((x) => {
-      console.log({ x });
-
       if (x?.start && x.end) {
         return `${formatToDateString(x.start)} - ${formatToDateString(x.end)}`;
       } else {

@@ -69,8 +69,14 @@ export function range(input: RangeInput, inputEnd?: number): number[] {
     end = input.end;
   }
 
-  for (let i = start; i < end; i += 1) {
-    range.push(i);
+  if (end >= start) {
+    for (let i = start; i < end; i += 1) {
+      range.push(i);
+    }
+  } else {
+    for (let i = start; i > end; i -= 1) {
+      range.push(i);
+    }
   }
 
   return range;
