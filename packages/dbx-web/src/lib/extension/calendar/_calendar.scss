@@ -147,12 +147,12 @@ $calendar-content-border-consideration: 2px;
   $event-bg-color: theming.get-color-from-palette($primary, 800);
   $event-text-color: theming.get-color-from-palette($primary, '800-contrast');
   $highlight-color: theming.get-color-from-palette($accent, 300);
-  $weekend-color: theming.get-color-from-palette($accent, 500);
+  $weekend-color: $text-color; // theming.get-color-from-palette($accent, 500);
   $badge-color: theming.get-color-from-palette($accent, 500);
   $current-time-marker-color: theming.get-color-from-palette($accent, 400);
 
-  $selected-color: theming.get-color-from-palette($foreground, 'text');
-  $selected-background-color: $highlight-color;
+  $selected-color: theming.get-color-from-palette($primary, '500-contrast');
+  $selected-background-color: transparentize(theming.get-color-from-palette($primary, 500), 0.4);
 
   #{calendar.$cal-event-icon-color-var}: $event-icon-color; // text/border color
   #{calendar.$cal-event-color-primary-var}: $event-text-color; // text/border color
@@ -161,22 +161,17 @@ $calendar-content-border-consideration: 2px;
   #{calendar.$cal-bg-primary-var}: $background-color;
   #{calendar.$cal-bg-secondary-var}: $hover-color;
   #{calendar.$cal-bg-active-var}: $hover-color;
+  #{calendar.$cal-bg-selected-var}: $selected-background-color;
   #{calendar.$cal-bg-highlight-var}: rgba($highlight-color, 0.3);
   #{calendar.$cal-today-bg-var}: $hover-color;
   #{calendar.$cal-weekend-color-var}: $weekend-color;
   #{calendar.$cal-badge-color-var}: $badge-color;
+  #{calendar.$cal-selected-var}: $selected-color;
   #{calendar.$cal-current-time-marker-color-var}: $current-time-marker-color;
   #{calendar.$cal-white-var}: #fff;
   #{calendar.$cal-gray-var}: #555;
   #{calendar.$cal-black-var}: #000;
   #{calendar.$cal-gradient-var}: inset 0 0 10px 0 rgba($background-color, 0.2);
-
-  // MARK: Selection
-  .cal-day-selected,
-  .cal-day-selected:hover {
-    color: $selected-color;
-    background-color: $selected-background-color;
-  }
 }
 
 @mixin typography($typography-config) {

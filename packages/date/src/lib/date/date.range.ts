@@ -1,6 +1,8 @@
+import { Maybe } from '@dereekb/util';
 import { Expose, Type } from 'class-transformer';
 import { IsEnum, IsOptional, IsDate, IsNumber } from 'class-validator';
 import { addDays, addHours, endOfDay, endOfMonth, endOfWeek, isDate, isPast, startOfDay, startOfMinute, startOfMonth, startOfWeek } from 'date-fns';
+import { isSameDate } from './date';
 
 /**
  * Represents a start date.
@@ -64,6 +66,10 @@ export class DateRange {
  */
 export function isDateRange(input: unknown): input is DateRange {
   return typeof input === 'object' && isDate((input as DateRange).start) && isDate((input as DateRange).end);
+}
+
+export function isSameDateRange(a: Maybe<DateRange>, b: Maybe<DateRange>): boolean {
+  return isSameDate(a?.start, b?.start) && isSameDate(a?.end, b?.end);
 }
 
 export enum DateRangeType {

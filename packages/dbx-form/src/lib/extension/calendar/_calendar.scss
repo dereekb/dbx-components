@@ -5,6 +5,20 @@
 
 // MARK: Mixin
 @mixin core() {
+  .dbx-schedule-selection-calendar-date-days {
+    padding: 4px;
+
+    // Remove padding from form
+    .mat-form-field-wrapper {
+      padding-bottom: 6px;
+    }
+
+    .mat-form-field-infix {
+      padding: 0 !important;
+      border: none !important;
+    }
+  }
+
   .dbx-schedule-selection-calendar-date-range-field {
     &.mat-form-field-type-mat-date-range-input .mat-form-field-infix {
       display: flex;

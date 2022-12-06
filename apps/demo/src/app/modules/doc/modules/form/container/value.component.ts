@@ -1,10 +1,10 @@
-import { DateScheduleDayCode } from './../../../../../../../../../packages/date/src/lib/date/date.schedule';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { Component } from '@angular/core';
 import { addressField, addressListField, cityField, countryField, emailField, phoneField, nameField, phoneAndLabelSectionField, wrappedPhoneAndLabelField, repeatArrayField, stateField, textAreaField, textField, zipCodeField, phoneListField, dateTimeField, DbxDateTimeFieldTimeMode, toggleField, checkboxField, numberField, latLngTextField, DbxDateTimeValueMode, dateRangeField, dollarAmountField, DateTimePickerConfiguration } from '@dereekb/dbx-form';
 import { addDays, startOfDay } from 'date-fns';
 import { addSuffixFunction, randomBoolean } from '@dereekb/util';
 import { of } from 'rxjs';
+import { DateScheduleDayCode } from '@dereekb/date';
 
 @Component({
   templateUrl: './value.component.html'

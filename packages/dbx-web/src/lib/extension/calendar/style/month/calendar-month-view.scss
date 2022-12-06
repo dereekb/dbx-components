@@ -217,5 +217,15 @@
       background-color: map-get($theme, gray);
       box-shadow: map-get($theme, gradient);
     }
+
+    .cal-day-cell.cal-day-selected,
+    .cal-day-cell.cal-weekend.cal-day-selected {
+      color: map-get($theme, selected-color) !important;
+      background-color: map-get($theme, bg-selected-color) !important;
+
+      .cal-day-number {
+        color: map-get($theme, selected-color) !important;
+      }
+    }
   }
 }

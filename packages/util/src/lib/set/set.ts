@@ -274,6 +274,16 @@ export function setContainsAllValues<T>(valuesSet: Set<T>, valuesToFind: Iterabl
   return valuesSet ? Array.from(asIterable(valuesToFind)).findIndex((x) => !valuesSet.has(x)) == -1 : false;
 }
 
+/**
+ * Returns true if both sets are defined (or are both null/undefined) and have the same values.
+ *
+ * @param a
+ * @param b
+ */
+export function setsAreEquivalent<T>(a: Maybe<Set<T>>, b: Maybe<Set<T>>): boolean {
+  return a && b ? a.size === b.size && symmetricDifferenceArrayBetweenSets(a, b).length === 0 : !a && !b;
+}
+
 // MARK: Compat
 /**
  * @deprecated use symmetricDifferenceArray

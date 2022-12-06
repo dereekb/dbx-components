@@ -7,9 +7,11 @@ $cal-bg-secondary-var: --cal-bg-secondary;
 $cal-bg-active-var: --cal-bg-active;
 $cal-bg-active-dragover-var: --cal-bg-active-dragover;
 $cal-bg-highlight-var: --cal-bg-highlight;
+$cal-bg-selected-var: --cal-bg-selected;
 $cal-today-bg-var: --cal-today-bg;
 $cal-weekend-color-var: --cal-weekend-color;
 $cal-badge-color-var: --cal-badge-color;
+$cal-selected-var: --cal-selected;
 $cal-current-time-marker-color-var: --cal-current-time-marker-color;
 $cal-white-var: --cal-white;
 $cal-gray-var: --cal-gray;
@@ -25,9 +27,11 @@ $cal-bg-secondary: var($cal-bg-secondary-var);
 $cal-bg-active: var($cal-bg-active-var);
 $cal-bg-active-dragover: var($cal-bg-active-dragover-var);
 $cal-bg-highlight: var($cal-bg-highlight-var);
+$cal-bg-selected-color: var($cal-bg-selected-var);
 $cal-today-bg: var($cal-today-bg-var);
 $cal-weekend-color: var($cal-weekend-color-var);
 $cal-badge-color: var($cal-badge-color-var);
+$cal-selected-color: var($cal-selected-var);
 $cal-current-time-marker-color: var($cal-current-time-marker-color-var);
 $cal-white: var($cal-white-var);
 $cal-gray: var($cal-gray-var);
@@ -53,6 +57,8 @@ $cal-vars: map-merge(
     bg-secondary: $cal-bg-secondary,
     // the color used when hovering over cells and headers
     bg-active: $cal-bg-active,
+    // the color use when a cell is selected
+    bg-selected-color: $cal-bg-selected-color,
     // the color used when hovering over cells and headers
     bg-highlight: $cal-bg-highlight,
     // the background color to mark today in the week view header
@@ -61,6 +67,8 @@ $cal-vars: map-merge(
     weekend-color: $cal-weekend-color,
     // the badge background color on the month view
     badge-color: $cal-badge-color,
+    // the selected color on the month view
+    selected-color: $cal-selected-color,
     // the current time marker color on the week and day view
     current-time-marker-color: $cal-current-time-marker-color,
     // a standard white color used for tooltip text and month view event titles

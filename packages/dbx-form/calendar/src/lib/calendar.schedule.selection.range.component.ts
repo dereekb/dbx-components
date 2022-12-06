@@ -1,11 +1,11 @@
-import { switchMap } from 'rxjs/operators';
+import { switchMap, throttleTime } from 'rxjs/operators';
 import { SubscriptionObject, tapLog } from '@dereekb/rxjs';
 import { Component, OnDestroy } from '@angular/core';
 import { CalendarScheduleSelectionInputDateRange, DbxCalendarScheduleSelectionStore } from './calendar.schedule.selection.store';
 import { DbxCalendarStore } from '@dereekb/dbx-web/calendar';
 import { FormGroup, FormControl } from '@angular/forms';
 import { Maybe, randomNumberFactory } from '@dereekb/util';
-import { distinctUntilChanged, filter, BehaviorSubject, noop, startWith, Observable, of } from 'rxjs';
+import { distinctUntilChanged, filter, BehaviorSubject, noop, startWith, Observable, of, delay } from 'rxjs';
 import { isSameDateDay, isSameDate } from '@dereekb/date';
 import { startOfDay } from 'date-fns';
 
@@ -53,7 +53,8 @@ export class DbxScheduleSelectionCalendarDateRangeComponent implements OnDestroy
           return obs;
         }),
         filter((x) => Boolean(x.start && x.end)),
-        distinctUntilChanged((a, b) => isSameDateDay(a.start, b.start) && isSameDateDay(a.end, b.end))
+        distinctUntilChanged((a, b) => isSameDateDay(a.start, b.start) && isSameDateDay(a.end, b.end)),
+        throttleTime(100, undefined, { trailing: true })
       )
       .subscribe((x) => {
         if (x.start && x.end) {

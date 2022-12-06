@@ -120,6 +120,8 @@ describe('dateScheduleDateFilter()', () => {
           expect(results[3]).toBeSameSecondAs(addDays(start, 9));
         });
       });
+
+      // TODO: Test max date range
     });
   });
 });

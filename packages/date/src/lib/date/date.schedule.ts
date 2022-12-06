@@ -1,10 +1,10 @@
-import { StringOrder, Maybe, mergeArrayIntoArray, firstValueFromIterable, DayOfWeek, addToSet, Day, range, DecisionFunction, FilterFunction, IndexRange, invertFilter, dayOfWeek } from '@dereekb/util';
+import { StringOrder, Maybe, mergeArrayIntoArray, firstValueFromIterable, DayOfWeek, addToSet, Day, range, DecisionFunction, FilterFunction, IndexRange, invertFilter, dayOfWeek, asArray, enabledDaysFromDaysOfWeek, EnabledDays, daysOfWeekFromEnabledDays } from '@dereekb/util';
 import { Expose } from 'class-transformer';
 import { IsString, Matches, IsOptional, Min, IsArray } from 'class-validator';
 import { differenceInDays, getDay } from 'date-fns';
 import { DateBlock, dateBlockDayOfWeekFactory, DateBlockDurationSpan, DateBlockIndex, dateBlockIndexRange, DateBlockRange, DateBlocksExpansionFactory, dateBlocksExpansionFactory, DateBlockTiming, getCurrentDateBlockTimingStartDate } from './date.block';
 import { dateBlockDurationSpanHasNotStartedFilterFunction, dateBlockDurationSpanHasNotEndedFilterFunction } from './date.filter';
-import { DateRangeStart, DateRangeState } from './date.range';
+import { DateRange, DateRangeStart, DateRangeState } from './date.range';
 import { YearWeekCodeConfig, yearWeekCodeDateTimezoneInstance } from './date.week';
 
 export enum DateScheduleDayCode {
@@ -27,6 +27,29 @@ export enum DateScheduleDayCode {
    * All weekend days (Sat/Sun)
    */
   WEEKEND = 9
+}
+
+/**
+ * Creates an EnabledDays from the input.
+ *
+ * @param input
+ * @returns
+ */
+export function enabledDaysFromDateScheduleDayCodes(input: Maybe<Iterable<DateScheduleDayCode>>): EnabledDays {
+  const days = expandDateScheduleDayCodesToDayOfWeekSet(Array.from(new Set(input)));
+  return enabledDaysFromDaysOfWeek(days);
+}
+
+/**
+ * Creates an array of simplified DateScheduleDayCode[] values from the input.
+ *
+ * @param input
+ * @returns
+ */
+export function dateScheduleDayCodesFromEnabledDays(input: Maybe<EnabledDays>): DateScheduleDayCode[] {
+  const days = daysOfWeekFromEnabledDays(input);
+  const scheduleDayCodes = days.map((x) => x + 1);
+  return simplifyDateScheduleDayCodes(scheduleDayCodes);
 }
 
 /**
@@ -54,6 +77,19 @@ export function isDateScheduleEncodedWeek(input: string): input is DateScheduleE
  * @param codes
  */
 export function dateScheduleEncodedWeek(codes: DateScheduleDayCode[]): DateScheduleEncodedWeek {
+  const result = simplifyDateScheduleDayCodes(codes);
+  return result.join('') as DateScheduleEncodedWeek;
+}
+
+/**
+ * Reduces/merges any day codes into more simplified day codes.
+ *
+ * For instance, if all days of the week are selected, they will be reduced to "8".
+ *
+ * @param codes
+ * @returns
+ */
+export function simplifyDateScheduleDayCodes(codes: DateScheduleDayCode[]): DateScheduleDayCode[] {
   const codesSet = new Set(codes);
   const result: DateScheduleDayCode[] = [];
 
@@ -97,7 +133,7 @@ export function dateScheduleEncodedWeek(codes: DateScheduleDayCode[]): DateSched
     }
   }
 
-  return result.join('') as DateScheduleEncodedWeek;
+  return result;
 }
 
 /**
@@ -212,6 +248,11 @@ export class DateSchedule implements DateSchedule {
   ex?: DateBlockIndex[];
 }
 
+/**
+ * A schedule that occurs during a specific range.
+ */
+export interface DateScheduleRange extends DateSchedule, DateRange {}
+
 // MARK: DateScheduleDate
 /**
  * DateScheduleDateFilter input.
@@ -226,7 +267,7 @@ export type DateScheduleDateFilter = DecisionFunction<DateScheduleDateFilterInpu
 /**
  * dateScheduleDateFilter() configuration.
  */
-export interface DateScheduleDateFilterConfig extends DateSchedule, Partial<DateRangeStart> {}
+export interface DateScheduleDateFilterConfig extends DateSchedule, Partial<DateRange> {}
 
 /**
  * Creates a DateScheduleDateFilter.
@@ -235,11 +276,12 @@ export interface DateScheduleDateFilterConfig extends DateSchedule, Partial<Date
  * @returns
  */
 export function dateScheduleDateFilter(config: DateScheduleDateFilterConfig): DateScheduleDateFilter {
-  const { w, start: firstDate = new Date() } = config;
+  const { w, start: firstDate = new Date(), end } = config;
   const allowedDays: Set<DayOfWeek> = expandDateScheduleDayCodesToDayOfWeekSet(w);
 
   const firstDateDay = getDay(firstDate);
   const dayForIndex = dateBlockDayOfWeekFactory(firstDateDay);
+  const maxIndex = end != null ? getDay(end) : Number.MAX_SAFE_INTEGER;
   const includedIndexes = new Set(config.d);
   const excludedIndexes = new Set(config.ex);
 
@@ -255,7 +297,7 @@ export function dateScheduleDateFilter(config: DateScheduleDateFilterConfig): Da
       day = dayOfWeek(input);
     }
 
-    return (allowedDays.has(day) && !excludedIndexes.has(i)) || includedIndexes.has(i);
+    return (i < maxIndex && allowedDays.has(day) && !excludedIndexes.has(i)) || includedIndexes.has(i);
   };
 }
 

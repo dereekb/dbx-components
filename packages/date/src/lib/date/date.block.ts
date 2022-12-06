@@ -161,8 +161,44 @@ export function dateTimingRelativeIndexFactory<T extends DateBlockTimingStart = 
  * @param timing
  * @param date
  */
-export function getRelativeIndexForDateTiming(timing: DateBlockTiming, date: DateOrDateBlockIndex = new Date()): DateBlockIndex {
+export function getRelativeIndexForDateTiming(timing: DateBlockTimingStart, date: DateOrDateBlockIndex = new Date()): DateBlockIndex {
   return dateTimingRelativeIndexFactory(timing)(date);
+}
+
+/**
+ * Returns the Date of the input DateBlockIndex relative to the configured Date. If a date is entered, the date is returned.
+ */
+export type DateBlockTimingDateFactory<T extends DateBlockTimingStart = DateBlockTimingStart> = ((input: DateOrDateBlockIndex) => Date) & {
+  readonly _timing: T;
+};
+
+/**
+ * Creates a DateBlockTimingDateFactory.
+ *
+ * @param timing
+ * @returns
+ */
+export function dateBlockTimingDateFactory<T extends DateBlockTimingStart = DateBlockTimingStart>(timing: T): DateBlockTimingDateFactory<T> {
+  const startDate = getCurrentDateBlockTimingStartDate(timing);
+  const factory = ((input: DateOrDateBlockIndex) => {
+    if (isDate(input)) {
+      return input;
+    } else {
+      return addDays(startDate, input);
+    }
+  }) as Configurable<Partial<DateBlockTimingDateFactory>>;
+  factory._timing = timing;
+  return factory as DateBlockTimingDateFactory<T>;
+}
+
+/**
+ * Returns the date of the input index.
+ *
+ * @param timing
+ * @param date
+ */
+export function getRelativeDateForDateBlockTiming(timing: DateBlockTimingStart, input: DateOrDateBlockIndex): Date {
+  return dateBlockTimingDateFactory(timing)(input);
 }
 
 /**
@@ -286,7 +322,8 @@ export type DateBlockDayOfWeekFactory = MapFunction<DateBlockIndex, DayOfWeek>;
  * @param dayForIndexZero
  * @returns
  */
-export function dateBlockDayOfWeekFactory(dayForIndexZero: DayOfWeek): DateBlockDayOfWeekFactory {
+export function dateBlockDayOfWeekFactory(inputDayForIndexZero: DayOfWeek | Date): DateBlockDayOfWeekFactory {
+  const dayForIndexZero = typeof inputDayForIndexZero === 'number' ? inputDayForIndexZero : (inputDayForIndexZero.getDay() as DayOfWeek);
   return (index: DateBlockIndex) => getNextDay(dayForIndexZero, index);
 }
 

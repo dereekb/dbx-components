@@ -22,8 +22,7 @@ export class DbxScheduleSelectionCalendarComponent<T> implements OnDestroy {
   readonly isSelectedDayFunction$ = this.dbxCalendarScheduleSelectionStore.isSelectedDayFunction$;
   readonly refresh$ = this.isSelectedDayFunction$.pipe(
     throttleTime(100),
-    map((x) => undefined),
-    tapLog('refresh')
+    map(() => undefined)
   ) as Subject<undefined>;
   readonly events$ = this.calendarStore.visibleEvents$.pipe(map(prepareAndSortCalendarEvents), shareReplay(1));
 
@@ -40,12 +39,13 @@ export class DbxScheduleSelectionCalendarComponent<T> implements OnDestroy {
   }
 
   beforeMonthViewRender({ body }: { body: CalendarMonthViewDay[] }): void {
-    console.log('before render?');
     this.isSelectedDayFunction$.pipe(first()).subscribe((isSelectedDay) => {
       body.forEach((day) => {
         const { date } = day;
 
         // TODO: also color if it matches the filter.
+
+        // TODO: add is disabled day when turning off days via dates.
 
         if (isSelectedDay(date)) {
           day.cssClass = 'cal-day-selected';
