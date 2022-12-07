@@ -210,6 +210,8 @@ jobs:
   # Publishes content to npm. This should occur after running a release.
   publish-to-npm:
     <<: *defaults
+    environment:
+      NX_SKIP_NX_CACHE: 'true'
     steps:
       - checkout
       - attach_workspace:
