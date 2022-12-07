@@ -127,6 +127,10 @@ $calendar-content-border-consideration: 2px;
         min-height: 25px;
       }
     }
+
+    .cal-day-number {
+      user-select: none; // Do not allow selecting/highlighting text accidentally
+    }
   }
 }
 
@@ -134,6 +138,7 @@ $calendar-content-border-consideration: 2px;
   $color-config: theming.get-color-config($theme-config);
   $primary: map.get($color-config, 'primary');
   $accent: map.get($color-config, 'accent');
+  $warn: map.get($color-config, 'warn');
   $background: map.get($color-config, 'background');
   $foreground: map.get($color-config, 'foreground');
 
@@ -147,9 +152,18 @@ $calendar-content-border-consideration: 2px;
   $event-bg-color: theming.get-color-from-palette($primary, 800);
   $event-text-color: theming.get-color-from-palette($primary, '800-contrast');
   $highlight-color: theming.get-color-from-palette($accent, 300);
-  $weekend-color: theming.get-color-from-palette($accent, 500);
+  $weekend-color: $text-color; // theming.get-color-from-palette($accent, 500);
   $badge-color: theming.get-color-from-palette($accent, 500);
   $current-time-marker-color: theming.get-color-from-palette($accent, 400);
+
+  $selected-color: theming.get-color-from-palette($primary, '500-contrast');
+  $selected-background-color: transparentize(theming.get-color-from-palette($primary, 500), 0.4);
+
+  $disabled-color: theming.get-color-from-palette($warn, 500);
+  $disabled-background-color: theming.get-color-from-palette($background, 'background');
+
+  $not-applicable-color: transparentize($text-color, 0.7);
+  $not-applicable-background-color: $background-color;
 
   #{calendar.$cal-event-icon-color-var}: $event-icon-color; // text/border color
   #{calendar.$cal-event-color-primary-var}: $event-text-color; // text/border color
@@ -158,10 +172,16 @@ $calendar-content-border-consideration: 2px;
   #{calendar.$cal-bg-primary-var}: $background-color;
   #{calendar.$cal-bg-secondary-var}: $hover-color;
   #{calendar.$cal-bg-active-var}: $hover-color;
+  #{calendar.$cal-bg-selected-var}: $selected-background-color;
+  #{calendar.$cal-bg-disabled-var}: $disabled-background-color;
+  #{calendar.$cal-bg-not-applicable-var}: $not-applicable-background-color;
   #{calendar.$cal-bg-highlight-var}: rgba($highlight-color, 0.3);
   #{calendar.$cal-today-bg-var}: $hover-color;
   #{calendar.$cal-weekend-color-var}: $weekend-color;
   #{calendar.$cal-badge-color-var}: $badge-color;
+  #{calendar.$cal-selected-var}: $selected-color;
+  #{calendar.$cal-disabled-var}: $disabled-color;
+  #{calendar.$cal-not-applicable-var}: $not-applicable-color;
   #{calendar.$cal-current-time-marker-color-var}: $current-time-marker-color;
   #{calendar.$cal-white-var}: #fff;
   #{calendar.$cal-gray-var}: #555;

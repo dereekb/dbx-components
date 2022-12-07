@@ -17,6 +17,7 @@ import {
   dateBlocksInDateBlockRange,
   dateBlockTiming,
   DateBlockTiming,
+  dateTimingRelativeIndexFactory,
   expandDateBlockRange,
   expandUniqueDateBlocksFunction,
   getCurrentDateBlockTimingOffset,
@@ -105,6 +106,22 @@ describe('getCurrentDateBlockTimingStartDate()', () => {
       const date = getCurrentDateBlockTimingStartDate(timing);
 
       expect(date).toBeSameSecondAs(start);
+    });
+  });
+});
+
+describe('dateTimingRelativeIndexFactory()', () => {
+  describe('scenarios', () => {
+    describe('timezone change', () => {
+      const start = new Date('2023-03-12T06:00:00.000Z');
+      const dstDay = addDays(start, 1);
+
+      it('should handle daylight savings time changes.', () => {
+        const factory = dateTimingRelativeIndexFactory({ start });
+        const result = factory(dstDay);
+
+        expect(result).toBe(1);
+      });
     });
   });
 });

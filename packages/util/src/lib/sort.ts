@@ -1,3 +1,6 @@
+import { firstValueFromIterable, forEachInIterable } from './iterable/iterable';
+import { Maybe } from './value/maybe.type';
+
 export type SortingOrder = 'asc' | 'desc';
 
 export const SORT_VALUE_LESS_THAN: SortComparisonNumber = -1;
@@ -49,4 +52,49 @@ export function reverseCompareFn<T>(compareFn: SortCompareFunction<T>): SortComp
  */
 export function compareFnOrder<T>(ascendingCompareFn: AscendingSortCompareFunction<T>, order: SortingOrder = 'asc'): SortCompareFunction<T> {
   return order === 'asc' ? ascendingCompareFn : reverseCompareFn(ascendingCompareFn);
+}
+
+export interface MinAndMax<T> {
+  min: T;
+  max: T;
+}
+
+export type MinAndMaxFunctionResult<T> = MinAndMax<T> | null;
+
+/**
+ * Returns the min and maximum value from the input values.
+ *
+ * If the input iterable is empty, then returns undefined.
+ */
+export type MinAndMaxFunction<T> = (values: Iterable<T>) => MinAndMaxFunctionResult<T>;
+
+/**
+ * Creates a MinAndMaxFunction using the input compare.
+ *
+ * @param compare
+ */
+export function minAndMaxFunction<T>(compareFn: SortCompareFunction<T>): MinAndMaxFunction<T> {
+  return (values: Iterable<T>) => {
+    let min: Maybe<T> = firstValueFromIterable(values) ?? undefined;
+    let max: Maybe<T> = min;
+
+    if (min != null && max != null) {
+      forEachInIterable(values, (x) => {
+        const compareMin = compareFn(x, min as T);
+        const compareMax = compareFn(x, max as T);
+
+        if (compareMin < 0) {
+          min = x;
+        }
+
+        if (compareMax > 0) {
+          max = x;
+        }
+      });
+
+      return { min, max };
+    } else {
+      return null;
+    }
+  };
 }

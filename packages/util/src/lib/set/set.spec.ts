@@ -1,4 +1,4 @@
-import { setIncludes, ReadKeyFunction } from '@dereekb/util';
+import { setIncludes, ReadKeyFunction, setsAreEquivalent } from '@dereekb/util';
 import { firstValueFromIterable } from '../iterable';
 import { asSet, containsAnyValue, containsAnyValueFromSet, findValuesFrom, hasDifferentValues, setContainsAllValues, setContainsAnyValue } from './set';
 
@@ -247,6 +247,20 @@ describe('setContainsAllValues', () => {
     array.push('c'); // add c
 
     const result = setContainsAllValues(set, array);
+    expect(result).toBe(false);
+  });
+});
+
+describe('setsAreEquivalent()', () => {
+  it('should return true if the sets have the same values.', () => {
+    const values = [0, 1, 2];
+    const result = setsAreEquivalent(new Set(values), new Set(values));
+    expect(result).toBe(true);
+  });
+
+  it('should return false if one set is a subset of another set but not the same', () => {
+    const values = [0, 1, 2];
+    const result = setsAreEquivalent(new Set(values), new Set([0, 1]));
     expect(result).toBe(false);
   });
 });

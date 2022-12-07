@@ -1,9 +1,33 @@
-import { Component, EventEmitter, Output, OnDestroy } from '@angular/core';
+import { Component } from '@angular/core';
+import { dateScheduleDayCodesFromEnabledDays, enabledDaysFromDateScheduleDayCodes } from '@dereekb/date';
+import { HandleActionFunction } from '@dereekb/dbx-core';
+import { DbxCalendarStore } from '@dereekb/dbx-web/calendar';
+import { IsModifiedFunction } from '@dereekb/rxjs';
+import { setsAreEquivalent } from '@dereekb/util';
+import { map, shareReplay, Observable, of } from 'rxjs';
+import { DbxScheduleSelectionCalendarDateDaysFormValue } from './calendar.schedule.selection.days.form.component';
+import { DbxCalendarScheduleSelectionStore } from './calendar.schedule.selection.store';
 
 @Component({
   selector: 'dbx-schedule-selection-calendar-date-days',
-  templateUrl: './calendar.schedule.selection.days.component.html'
+  template: `
+    <div class="dbx-schedule-selection-calendar-date-days" dbxAction dbxActionAutoTrigger dbxActionEnforceModified [instantTrigger]="true" [dbxActionHandler]="updateScheduleDays">
+      <dbx-schedule-selection-calendar-date-days-form dbxActionForm [dbxFormSource]="template$" [dbxActionFormModified]="isFormModified"></dbx-schedule-selection-calendar-date-days-form>
+    </div>
+  `
 })
-export class DbxScheduleSelectionCalendarDateDaysComponent implements OnDestroy {
-  ngOnDestroy(): void {}
+export class DbxScheduleSelectionCalendarDateDaysComponent {
+  readonly template$: Observable<DbxScheduleSelectionCalendarDateDaysFormValue> = this.dbxCalendarScheduleSelectionStore.scheduleDays$.pipe(map(enabledDaysFromDateScheduleDayCodes), shareReplay());
+
+  readonly isFormModified: IsModifiedFunction<DbxScheduleSelectionCalendarDateDaysFormValue> = (value: DbxScheduleSelectionCalendarDateDaysFormValue) => {
+    const newSetValue = new Set(dateScheduleDayCodesFromEnabledDays(value));
+    return this.dbxCalendarScheduleSelectionStore.scheduleDays$.pipe(map((currentSet) => !setsAreEquivalent(currentSet, newSetValue)));
+  };
+
+  constructor(readonly dbxCalendarStore: DbxCalendarStore, readonly dbxCalendarScheduleSelectionStore: DbxCalendarScheduleSelectionStore) {}
+
+  readonly updateScheduleDays: HandleActionFunction<DbxScheduleSelectionCalendarDateDaysFormValue> = (value) => {
+    this.dbxCalendarScheduleSelectionStore.setScheduleDays(new Set(dateScheduleDayCodesFromEnabledDays(value)));
+    return of(true);
+  };
 }

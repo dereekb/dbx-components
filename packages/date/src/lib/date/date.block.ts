@@ -1,7 +1,7 @@
 import { DayOfWeek, RequiredOnKeys, IndexNumber, IndexRange, indexRangeCheckFunction, IndexRef, MINUTES_IN_DAY, MS_IN_DAY, UniqueModel, lastValue, FactoryWithRequiredInput, FilterFunction, mergeFilterFunctions, range, Milliseconds, Hours, MapFunction, getNextDay, SortCompareFunction, sortAscendingIndexNumberRefFunction, mergeArrayIntoArray, Configurable, ArrayOrValue, asArray, sumOfIntegersBetween, filterMaybeValues, Maybe } from '@dereekb/util';
 import { dateRange, DateRange, DateRangeDayDistanceInput, DateRangeStart, DateRangeType, isDateRange, isDateRangeStart } from './date.range';
 import { DateDurationSpan } from './date.duration';
-import { differenceInDays, differenceInMilliseconds, isBefore, addDays, addMinutes, getSeconds, getMilliseconds, getMinutes, addMilliseconds, hoursToMilliseconds, addHours, differenceInHours, isAfter } from 'date-fns';
+import { differenceInDays, differenceInMilliseconds, isBefore, addDays, addMinutes, getSeconds, getMilliseconds, getMinutes, addMilliseconds, hoursToMilliseconds, addHours, differenceInHours, isAfter, millisecondsToHours, minutesToHours } from 'date-fns';
 import { isDate, copyHoursAndMinutesFromDate, roundDownToMinute } from './date';
 import { Expose, Type } from 'class-transformer';
 import { getCurrentSystemOffsetInHours } from './date.timezone';
@@ -142,12 +142,18 @@ export type DateTimingRelativeIndexFactory<T extends DateBlockTimingStart = Date
  */
 export function dateTimingRelativeIndexFactory<T extends DateBlockTimingStart = DateBlockTimingStart>(timing: T): DateTimingRelativeIndexFactory<T> {
   const startDate = getCurrentDateBlockTimingStartDate(timing);
+  const baseOffset = startDate.getTimezoneOffset();
+
   const factory = ((input: DateOrDateBlockIndex) => {
     if (typeof input === 'number') {
       return input;
     } else {
-      const diff = differenceInHours(input, startDate);
+      const inputOffset = input.getTimezoneOffset();
+      const offsetDifferenceHours = minutesToHours(baseOffset - inputOffset); // handle timezone offset changes
+
+      const diff = differenceInHours(input, startDate) + offsetDifferenceHours;
       const daysOffset = Math.floor(diff / 24);
+
       return daysOffset;
     }
   }) as Configurable<Partial<DateTimingRelativeIndexFactory>>;
@@ -161,8 +167,44 @@ export function dateTimingRelativeIndexFactory<T extends DateBlockTimingStart = 
  * @param timing
  * @param date
  */
-export function getRelativeIndexForDateTiming(timing: DateBlockTiming, date: DateOrDateBlockIndex = new Date()): DateBlockIndex {
+export function getRelativeIndexForDateTiming(timing: DateBlockTimingStart, date: DateOrDateBlockIndex = new Date()): DateBlockIndex {
   return dateTimingRelativeIndexFactory(timing)(date);
+}
+
+/**
+ * Returns the Date of the input DateBlockIndex relative to the configured Date. If a date is entered, the date is returned.
+ */
+export type DateBlockTimingDateFactory<T extends DateBlockTimingStart = DateBlockTimingStart> = ((input: DateOrDateBlockIndex) => Date) & {
+  readonly _timing: T;
+};
+
+/**
+ * Creates a DateBlockTimingDateFactory.
+ *
+ * @param timing
+ * @returns
+ */
+export function dateBlockTimingDateFactory<T extends DateBlockTimingStart = DateBlockTimingStart>(timing: T): DateBlockTimingDateFactory<T> {
+  const startDate = getCurrentDateBlockTimingStartDate(timing);
+  const factory = ((input: DateOrDateBlockIndex) => {
+    if (isDate(input)) {
+      return input;
+    } else {
+      return addDays(startDate, input); // TODO: Is this right to use days, or should it use hours to avoid daylight savings?
+    }
+  }) as Configurable<Partial<DateBlockTimingDateFactory>>;
+  factory._timing = timing;
+  return factory as DateBlockTimingDateFactory<T>;
+}
+
+/**
+ * Returns the date of the input index.
+ *
+ * @param timing
+ * @param date
+ */
+export function getRelativeDateForDateBlockTiming(timing: DateBlockTimingStart, input: DateOrDateBlockIndex): Date {
+  return dateBlockTimingDateFactory(timing)(input);
 }
 
 /**
@@ -286,7 +328,8 @@ export type DateBlockDayOfWeekFactory = MapFunction<DateBlockIndex, DayOfWeek>;
  * @param dayForIndexZero
  * @returns
  */
-export function dateBlockDayOfWeekFactory(dayForIndexZero: DayOfWeek): DateBlockDayOfWeekFactory {
+export function dateBlockDayOfWeekFactory(inputDayForIndexZero: DayOfWeek | Date): DateBlockDayOfWeekFactory {
+  const dayForIndexZero = typeof inputDayForIndexZero === 'number' ? inputDayForIndexZero : (inputDayForIndexZero.getUTCDay() as DayOfWeek);
   return (index: DateBlockIndex) => getNextDay(dayForIndexZero, index);
 }
 

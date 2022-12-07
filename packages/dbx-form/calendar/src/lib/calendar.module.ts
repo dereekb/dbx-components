@@ -2,7 +2,7 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { NgModule } from '@angular/core';
 import { CalendarDayModule, CalendarModule, CalendarWeekModule, DateAdapter } from 'angular-calendar';
 import { CommonModule } from '@angular/common';
-import { DbxButtonModule, DbxPopoverInteractionModule } from '@dereekb/dbx-web';
+import { DbxActionModule, DbxButtonModule, DbxDialogInteractionModule, DbxPopoverInteractionModule } from '@dereekb/dbx-web';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { adapterFactory as dateAdapterFactory } from 'angular-calendar/date-adapters/date-fns';
@@ -17,20 +17,34 @@ import { DbxScheduleSelectionCalendarDateRangeComponent } from './calendar.sched
 import { DbxCalendarModule } from '@dereekb/dbx-web/calendar';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { DbxScheduleSelectionCalendarDateDaysFormComponent } from './calendar.schedule.selection.days.form.component';
+import { DbxFormlyModule, DbxFormModule } from '@dereekb/dbx-form';
+import { DbxScheduleSelectionCalendarCellComponent } from './calendar.schedule.selection.cell.component';
+import { DbxCalendarScheduleSelectionStoreInjectionBlockDirective } from './calendar.schedule.selection.store.provide';
+import { DbxScheduleSelectionCalendarDateDialogComponent } from './calendar.schedule.selection.dialog.component';
+import { DbxScheduleSelectionCalendarDateDialogButtonComponent } from './calendar.schedule.selection.dialog.button.component';
 
 const declarations = [
   //
   DbxScheduleSelectionCalendarComponent,
+  DbxScheduleSelectionCalendarDateDaysComponent,
+  DbxScheduleSelectionCalendarDateDaysFormComponent,
+  DbxScheduleSelectionCalendarDateRangeComponent,
   DbxScheduleSelectionCalendarDatePopoverButtonComponent,
+  DbxScheduleSelectionCalendarCellComponent,
   DbxScheduleSelectionCalendarDatePopoverComponent,
   DbxScheduleSelectionCalendarDatePopoverContentComponent,
-  DbxScheduleSelectionCalendarDateDaysComponent,
-  DbxScheduleSelectionCalendarDateRangeComponent
+  DbxCalendarScheduleSelectionStoreInjectionBlockDirective,
+  DbxScheduleSelectionCalendarDateDialogComponent,
+  DbxScheduleSelectionCalendarDateDialogButtonComponent
 ];
 
 @NgModule({
   imports: [
     //
+    DbxActionModule,
+    DbxFormModule,
+    DbxFormlyModule,
     DbxCalendarModule,
     CommonModule,
     MatIconModule,
@@ -41,6 +55,7 @@ const declarations = [
     MatButtonToggleModule,
     DbxButtonModule,
     MatDatepickerModule,
+    DbxDialogInteractionModule,
     DbxPopoverInteractionModule,
     CalendarModule,
     CalendarDayModule,

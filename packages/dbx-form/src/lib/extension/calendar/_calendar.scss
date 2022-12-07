@@ -5,6 +5,28 @@
 
 // MARK: Mixin
 @mixin core() {
+  .dbx-schedule-selection-calendar {
+    .dbx-calendar {
+      .cal-month-view .cal-cell-top {
+        min-height: 50px;
+      }
+    }
+  }
+
+  .dbx-schedule-selection-calendar-date-days {
+    padding: 4px;
+
+    // Remove padding from form
+    .mat-form-field-wrapper {
+      padding-bottom: 6px;
+    }
+
+    .mat-form-field-infix {
+      padding: 0 !important;
+      border: none !important;
+    }
+  }
+
   .dbx-schedule-selection-calendar-date-range-field {
     &.mat-form-field-type-mat-date-range-input .mat-form-field-infix {
       display: flex;
@@ -12,6 +34,35 @@
       .mat-date-range-input {
         display: flex;
       }
+    }
+
+    .date-range-field-customized {
+      display: flex;
+      align-items: center;
+
+      .date-range-field-customized-text {
+        padding: 4px 6px;
+        margin-right: 3px;
+        font-size: 0.8em;
+        font-weight: bold;
+        border-radius: 25px;
+      }
+    }
+  }
+
+  .dbx-schedule-selection-calendar-cell {
+    display: flex;
+    min-height: 56px;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    user-select: none;
+    padding-bottom: 4px;
+
+    > span {
+      height: 32px;
+      padding: 4px;
+      text-align: center;
     }
   }
 }
