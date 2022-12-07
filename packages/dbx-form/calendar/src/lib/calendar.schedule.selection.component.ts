@@ -8,6 +8,7 @@ import { DateOrDateBlockIndex, formatToTimeAndDurationString } from '@dereekb/da
 import { DbxCalendarEvent, DbxCalendarStore, prepareAndSortCalendarEvents } from '@dereekb/dbx-web/calendar';
 import { DayOfWeek, DecisionFunction } from '@dereekb/util';
 import { DbxCalendarScheduleSelectionStore } from './calendar.schedule.selection.store';
+import { CalendarScheduleSelectionDayState, CalendarScheduleSelectionMetadata } from './calendar.schedule.selection';
 
 @Component({
   selector: 'dbx-schedule-selection-calendar',
@@ -38,23 +39,38 @@ export class DbxScheduleSelectionCalendarComponent<T> implements OnDestroy {
     this.clickEvent.emit({ action, event });
   }
 
-  beforeMonthViewRender({ body }: { body: CalendarMonthViewDay[] }): void {
-    this.state$.pipe(first()).subscribe(({ isEnabledDay: isSelectedDay, indexFactory, isEnabledFilterDay, allowedDaysOfWeek }) => {
+  beforeMonthViewRender({ body }: { body: CalendarMonthViewDay<CalendarScheduleSelectionMetadata>[] }): void {
+    this.state$.pipe(first()).subscribe(({ isEnabledDay, indexFactory, isEnabledFilterDay, allowedDaysOfWeek }) => {
       body.forEach((viewDay) => {
         const { date } = viewDay;
-        const dateBlockIndex = date; // indexFactory(date);
+        const i = indexFactory(date);
         const day = date.getDay();
 
-        if (!isEnabledFilterDay(dateBlockIndex)) {
+        let state: CalendarScheduleSelectionDayState;
+
+        if (!isEnabledFilterDay(i)) {
           viewDay.cssClass = 'cal-day-not-applicable';
+          state = CalendarScheduleSelectionDayState.NOT_APPLICABLE;
         } else if (!allowedDaysOfWeek.has(day as DayOfWeek)) {
           viewDay.cssClass = 'cal-day-disabled';
-        } else if (isSelectedDay(dateBlockIndex)) {
+          state = CalendarScheduleSelectionDayState.DISABLED;
+        } else if (isEnabledDay(i)) {
           viewDay.cssClass = 'cal-day-selected';
+          state = CalendarScheduleSelectionDayState.SELECTED;
+        } else {
+          viewDay.cssClass = 'cal-day-not-selected';
+          state = CalendarScheduleSelectionDayState.NOT_SELECTED;
         }
+
+        viewDay.meta = {
+          state,
+          i
+        };
       });
     });
   }
 
-  ngOnDestroy(): void {}
+  ngOnDestroy(): void {
+    this.clickEvent.complete();
+  }
 }

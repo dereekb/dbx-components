@@ -32,7 +32,7 @@ import { Maybe, TimezoneString, DecisionFunction, IterableOrValue, iterableToArr
 import { ComponentStore } from '@ngrx/component-store';
 import { addYears, startOfDay, startOfYear } from 'date-fns';
 import { Observable, distinctUntilChanged, map, shareReplay, filter, share } from 'rxjs';
-import { CalendarScheduleSelectionValue } from './calendar.schedule.selection';
+import { CalendarScheduleSelectionCellContentFactory, CalendarScheduleSelectionValue, defaultCalendarScheduleSelectionCellContentFactory } from './calendar.schedule.selection';
 
 export interface CalendarScheduleSelectionInputDateRange {
   /**
@@ -112,6 +112,10 @@ export interface CalendarScheduleSelectionState extends PartialCalendarScheduleS
    * This function does not take the current filter into account.
    */
   isEnabledDay: DecisionFunction<DateOrDateBlockIndex>;
+  /**
+   * CalendarScheduleSelectionCellContentFactory for the view.
+   */
+  cellContentFactory: CalendarScheduleSelectionCellContentFactory;
 }
 
 export function initialCalendarScheduleSelectionState(): CalendarScheduleSelectionState {
@@ -131,7 +135,8 @@ export function initialCalendarScheduleSelectionState(): CalendarScheduleSelecti
     isEnabledFilterDay: () => true,
     isEnabledDay: () => false,
     minDate: new Date(0),
-    maxDate: startOfYear(addYears(new Date(), 100))
+    maxDate: startOfYear(addYears(new Date(), 100)),
+    cellContentFactory: defaultCalendarScheduleSelectionCellContentFactory
   };
 }
 
@@ -223,6 +228,12 @@ export class DbxCalendarScheduleSelectionStore extends ComponentStore<CalendarSc
     shareReplay(1)
   );
 
+  readonly cellContentFactory$ = this.state$.pipe(
+    map((x) => x.cellContentFactory),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+
   // MARK: State Changes
   readonly setFilter = this.updater((state, filter: Maybe<DateScheduleDateFilterConfig>) => updateStateWithFilter(state, filter));
   readonly clearFilter = this.updater((state) => updateStateWithFilter(state, undefined));
@@ -237,6 +248,8 @@ export class DbxCalendarScheduleSelectionStore extends ComponentStore<CalendarSc
 
   readonly setScheduleDays = this.updater((state, scheduleDays: Iterable<DateScheduleDayCode>) => updateStateWithChangedScheduleDays(state, scheduleDays));
   readonly setAllowAllScheduleDays = this.updater((state) => updateStateWithChangedScheduleDays(state, null));
+
+  readonly setCellContentFactory = this.updater((state, cellContentFactory: CalendarScheduleSelectionCellContentFactory) => ({ ...state, cellContentFactory }));
 }
 
 export function updateStateWithFilter(state: CalendarScheduleSelectionState, filter: Maybe<DateScheduleDateFilterConfig>): CalendarScheduleSelectionState {

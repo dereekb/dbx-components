@@ -19,6 +19,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { DbxScheduleSelectionCalendarDateDaysFormComponent } from './calendar.schedule.selection.days.form.component';
 import { DbxFormlyModule, DbxFormModule } from '@dereekb/dbx-form';
+import { DbxScheduleSelectionCalendarCellComponent } from './calendar.schedule.selection.cell.component';
 
 const declarations = [
   //
@@ -27,6 +28,7 @@ const declarations = [
   DbxScheduleSelectionCalendarDateDaysFormComponent,
   DbxScheduleSelectionCalendarDateRangeComponent,
   DbxScheduleSelectionCalendarDatePopoverButtonComponent,
+  DbxScheduleSelectionCalendarCellComponent,
   DbxScheduleSelectionCalendarDatePopoverComponent,
   DbxScheduleSelectionCalendarDatePopoverContentComponent
 ];

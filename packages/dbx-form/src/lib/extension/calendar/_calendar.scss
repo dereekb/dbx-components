@@ -5,6 +5,14 @@
 
 // MARK: Mixin
 @mixin core() {
+  .dbx-schedule-selection-calendar {
+    .dbx-calendar {
+      .cal-month-view .cal-cell-top {
+        min-height: 50px;
+      }
+    }
+  }
+
   .dbx-schedule-selection-calendar-date-days {
     padding: 4px;
 
@@ -26,6 +34,22 @@
       .mat-date-range-input {
         display: flex;
       }
+    }
+  }
+
+  .dbx-schedule-selection-calendar-cell {
+    display: flex;
+    min-height: 56px;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    user-select: none;
+    padding-bottom: 4px;
+
+    > span {
+      height: 32px;
+      padding: 4px;
+      text-align: center;
     }
   }
 }

@@ -298,8 +298,6 @@ export function dateScheduleDateFilter(config: DateScheduleDateFilterConfig): Da
       day = dayOfWeek(input);
     }
 
-    console.log({ firstDate, input, i, day });
-
     return (i >= 0 && i < maxIndex && allowedDays.has(day) && !excludedIndexes.has(i)) || includedIndexes.has(i);
   };
 }
