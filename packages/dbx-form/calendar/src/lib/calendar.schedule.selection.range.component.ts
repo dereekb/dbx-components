@@ -8,12 +8,34 @@ import { Maybe, randomNumberFactory } from '@dereekb/util';
 import { distinctUntilChanged, filter, BehaviorSubject, noop, startWith, Observable, of, delay } from 'rxjs';
 import { isSameDateDay, isSameDate } from '@dereekb/date';
 import { startOfDay } from 'date-fns';
+import { MatFormFieldAppearance } from '@angular/material/form-field';
 
 @Component({
   selector: 'dbx-schedule-selection-calendar-date-range',
   templateUrl: './calendar.schedule.selection.range.component.html'
 })
 export class DbxScheduleSelectionCalendarDateRangeComponent implements OnDestroy {
+  @Input()
+  required?: boolean;
+
+  @Input()
+  appearance: MatFormFieldAppearance = 'fill';
+
+  @Input()
+  label?: Maybe<string> = 'Enter a date range';
+
+  @Input()
+  hint?: Maybe<string>;
+
+  @Input()
+  set disabled(disabled: Maybe<boolean>) {
+    if (disabled) {
+      this.range.disable();
+    } else {
+      this.range.enable();
+    }
+  }
+
   @Input()
   showCustomize = false;
 

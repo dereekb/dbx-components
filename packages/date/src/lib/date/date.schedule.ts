@@ -1,10 +1,11 @@
-import { StringOrder, Maybe, mergeArrayIntoArray, firstValueFromIterable, DayOfWeek, addToSet, Day, range, DecisionFunction, FilterFunction, IndexRange, invertFilter, dayOfWeek, asArray, enabledDaysFromDaysOfWeek, EnabledDays, daysOfWeekFromEnabledDays } from '@dereekb/util';
+import { StringOrder, Maybe, mergeArrayIntoArray, firstValueFromIterable, DayOfWeek, addToSet, Day, range, DecisionFunction, FilterFunction, IndexRange, invertFilter, dayOfWeek, asArray, enabledDaysFromDaysOfWeek, EnabledDays, daysOfWeekFromEnabledDays, setsAreEquivalent, iterablesAreSetEquivalent } from '@dereekb/util';
 import { Expose } from 'class-transformer';
 import { IsString, Matches, IsOptional, Min, IsArray } from 'class-validator';
 import { differenceInDays, getDay } from 'date-fns';
+import { isSameDate } from './date';
 import { DateBlock, dateBlockDayOfWeekFactory, DateBlockDurationSpan, DateBlockIndex, dateBlockIndexRange, DateBlockRange, DateBlocksExpansionFactory, dateBlocksExpansionFactory, DateBlockTiming, dateTimingRelativeIndexFactory, getCurrentDateBlockTimingStartDate } from './date.block';
 import { dateBlockDurationSpanHasNotStartedFilterFunction, dateBlockDurationSpanHasNotEndedFilterFunction } from './date.filter';
-import { DateRange, DateRangeStart, DateRangeState } from './date.range';
+import { DateRange, DateRangeStart, DateRangeState, isSameDateRange } from './date.range';
 import { YearWeekCodeConfig, yearWeekCodeDateTimezoneInstance } from './date.week';
 
 export enum DateScheduleDayCode {
@@ -229,6 +230,14 @@ export interface DateSchedule {
   ex?: DateBlockIndex[];
 }
 
+export function isSameDateSchedule(a: Maybe<DateSchedule>, b: Maybe<DateSchedule>): boolean {
+  if (a && b) {
+    return a.w === b.w && iterablesAreSetEquivalent(a.ex, b.ex) && iterablesAreSetEquivalent(a.d, b.d);
+  } else {
+    return a == b;
+  }
+}
+
 export class DateSchedule implements DateSchedule {
   @Expose()
   @IsString()
@@ -252,6 +261,21 @@ export class DateSchedule implements DateSchedule {
  * A schedule that occurs during a specific range.
  */
 export interface DateScheduleRange extends DateSchedule, DateRange {}
+
+/**
+ * Returns true if both inputs have the same schedule and date range.
+ *
+ * @param a
+ * @param b
+ * @returns
+ */
+export function isSameDateScheduleRange(a: Maybe<DateScheduleRange>, b: Maybe<DateScheduleRange>): boolean {
+  if (a && b) {
+    return isSameDateRange(a, b) && isSameDateSchedule(a, b);
+  } else {
+    return a == b;
+  }
+}
 
 // MARK: DateScheduleDate
 /**

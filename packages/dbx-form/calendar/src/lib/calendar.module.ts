@@ -20,6 +20,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { DbxScheduleSelectionCalendarDateDaysFormComponent } from './calendar.schedule.selection.days.form.component';
 import { DbxFormlyModule, DbxFormModule } from '@dereekb/dbx-form';
 import { DbxScheduleSelectionCalendarCellComponent } from './calendar.schedule.selection.cell.component';
+import { DbxCalendarScheduleSelectionStoreInjectionBlockDirective } from './calendar.schedule.selection.store.provide';
 
 const declarations = [
   //
@@ -30,7 +31,8 @@ const declarations = [
   DbxScheduleSelectionCalendarDatePopoverButtonComponent,
   DbxScheduleSelectionCalendarCellComponent,
   DbxScheduleSelectionCalendarDatePopoverComponent,
-  DbxScheduleSelectionCalendarDatePopoverContentComponent
+  DbxScheduleSelectionCalendarDatePopoverContentComponent,
+  DbxCalendarScheduleSelectionStoreInjectionBlockDirective
 ];
 
 @NgModule({

@@ -17,8 +17,20 @@
   );
 }
 
+@function get-dbx-theme-config($theme-config) {
+  @return map.get($theme-config, 'dbx');
+}
+
 @function get-dbx-form-theme-config($theme-config) {
   @return map.get($theme-config, 'dbx-form');
+}
+
+@function get-dbx-extension-config($theme-config) {
+  @return map.get(get-dbx-theme-config($theme-config), 'extension');
+}
+
+@function get-dbx-extension-config-var($theme-config, $item) {
+  @return map.get(get-dbx-extension-config($theme-config), $item);
 }
 
 @function get-dbx-extension-calendar-enabled($theme-config) {

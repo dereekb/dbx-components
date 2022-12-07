@@ -11,6 +11,7 @@ import {
   dateScheduleDateFilter,
   DateScheduleDateFilterConfig,
   DateScheduleDayCode,
+  dateScheduleDayCodes,
   dateScheduleEncodedWeek,
   DateScheduleEncodedWeek,
   DateScheduleRange,
@@ -25,6 +26,7 @@ import {
   isSameDate,
   isSameDateDay,
   isSameDateRange,
+  isSameDateScheduleRange,
   systemBaseDateToNormalDate,
   systemNormalDateToBaseDate
 } from '@dereekb/date';
@@ -32,7 +34,7 @@ import { filterMaybe } from '@dereekb/rxjs';
 import { Maybe, TimezoneString, DecisionFunction, IterableOrValue, iterableToArray, addToSet, toggleInSet, isIndexNumberInIndexRangeFunction, MaybeMap, removeFromSet, excludeValues, minAndMaxNumber, setsAreEquivalent, DayOfWeek, range } from '@dereekb/util';
 import { ComponentStore } from '@ngrx/component-store';
 import { addYears, startOfDay, startOfYear } from 'date-fns';
-import { Observable, distinctUntilChanged, map, shareReplay, filter, share } from 'rxjs';
+import { Observable, distinctUntilChanged, map, shareReplay, filter, share, finalize } from 'rxjs';
 import { CalendarScheduleSelectionCellContentFactory, CalendarScheduleSelectionValue, defaultCalendarScheduleSelectionCellContentFactory } from './calendar.schedule.selection';
 
 export interface CalendarScheduleSelectionInputDateRange {
@@ -53,14 +55,6 @@ export interface CalendarScheduleSelectionState extends PartialCalendarScheduleS
    * Filters the days of the schedule to only allow selecting days in the schedule.
    */
   filter?: Maybe<DateScheduleDateFilterConfig>;
-  /**
-   * Optional timezone string.
-   *
-   * If not defined, defaults to the current timezone.
-   *
-   * When set will update the start Date.
-   */
-  timezone?: Maybe<TimezoneString>;
   /**
    * Minimum date allowed if no filter is set. If a filter is set, the greater of the two dates is used as the minimum.
    */
@@ -117,6 +111,10 @@ export interface CalendarScheduleSelectionState extends PartialCalendarScheduleS
    * CalendarScheduleSelectionCellContentFactory for the view.
    */
   cellContentFactory: CalendarScheduleSelectionCellContentFactory;
+  /**
+   * Current selection value.
+   */
+  currentSelectionValue?: Maybe<CalendarScheduleSelectionValue>;
 }
 
 export function initialCalendarScheduleSelectionState(): CalendarScheduleSelectionState {
@@ -179,11 +177,7 @@ export class DbxCalendarScheduleSelectionStore extends ComponentStore<CalendarSc
     shareReplay(1)
   );
 
-  readonly inputRange$: Observable<CalendarScheduleSelectionInputDateRange> = this.currentInputRange$.pipe(
-    //
-    filter(Boolean),
-    shareReplay(1)
-  );
+  readonly inputRange$: Observable<CalendarScheduleSelectionInputDateRange> = this.currentInputRange$.pipe(filterMaybe(), shareReplay(1));
 
   readonly selectedDates$: Observable<Set<DateBlockIndex>> = this.state$.pipe(
     map((x) => x.selectedIndexes),
@@ -215,7 +209,18 @@ export class DbxCalendarScheduleSelectionStore extends ComponentStore<CalendarSc
     shareReplay(1)
   );
 
-  readonly selectionValue$ = this.state$.pipe(map(computeScheduleSelectionValue), shareReplay(1));
+  readonly currentSelectionValue$ = this.state$.pipe(
+    map((x) => x.currentSelectionValue),
+    shareReplay(1)
+  );
+  readonly selectionValue$ = this.currentSelectionValue$.pipe(filterMaybe(), shareReplay(1));
+
+  readonly currentDateScheduleRangeValue$ = this.currentSelectionValue$.pipe(
+    map((x) => x?.dateScheduleRange),
+    distinctUntilChanged(isSameDateScheduleRange),
+    shareReplay(1)
+  );
+  readonly dateScheduleRangeValue$ = this.currentDateScheduleRangeValue$.pipe(filterMaybe(), shareReplay(1));
 
   readonly minDate$ = this.state$.pipe(
     map((x) => findMaxDate([x.filter?.start, x.minDate])),
@@ -256,6 +261,7 @@ export class DbxCalendarScheduleSelectionStore extends ComponentStore<CalendarSc
   readonly setScheduleDays = this.updater((state, scheduleDays: Iterable<DateScheduleDayCode>) => updateStateWithChangedScheduleDays(state, scheduleDays));
   readonly setAllowAllScheduleDays = this.updater((state) => updateStateWithChangedScheduleDays(state, null));
 
+  readonly setDateScheduleRangeValue = this.updater((state, value: Maybe<DateScheduleRange>) => updateStateWithDateScheduleRangeValue(state, value));
   readonly setCellContentFactory = this.updater((state, cellContentFactory: CalendarScheduleSelectionCellContentFactory) => ({ ...state, cellContentFactory }));
 }
 
@@ -269,6 +275,21 @@ export function updateStateWithFilter(state: CalendarScheduleSelectionState, fil
   return { ...state, filter, isEnabledFilterDay };
 }
 
+export function updateStateWithDateScheduleRangeValue(state: CalendarScheduleSelectionState, change: Maybe<DateScheduleRange>): CalendarScheduleSelectionState {
+  const isSameValue = isSameDateScheduleRange(state.currentSelectionValue?.dateScheduleRange, change);
+
+  if (isSameValue) {
+    return state;
+  } else {
+    if (change != null) {
+      const nextState: CalendarScheduleSelectionState = { ...state, inputStart: change.start, inputEnd: change.end, selectedIndexes: new Set(change.ex), scheduleDays: new Set(dateScheduleDayCodes(change.w)) };
+      return finalizeNewCalendarScheduleSelectionState(nextState);
+    } else {
+      return noSelectionCalendarScheduleSelectionState(state); // clear selection
+    }
+  }
+}
+
 export function updateStateWithChangedScheduleDays(state: CalendarScheduleSelectionState, change: Maybe<Iterable<DateScheduleDayCode>>): CalendarScheduleSelectionState {
   const { scheduleDays: currentScheduleDays } = state;
   const scheduleDays = new Set(change || [DateScheduleDayCode.WEEKDAY, DateScheduleDayCode.WEEKEND]);
@@ -278,8 +299,7 @@ export function updateStateWithChangedScheduleDays(state: CalendarScheduleSelect
   } else {
     const allowedDaysOfWeek = expandDateScheduleDayCodesToDayOfWeekSet(Array.from(scheduleDays));
     const nextState = { ...state, scheduleDays, allowedDaysOfWeek };
-    nextState.isEnabledDay = isEnabledDayInCalendarScheduleSelectionState(nextState);
-    return nextState;
+    return finalizeNewCalendarScheduleSelectionState(nextState);
   }
 }
 
@@ -322,11 +342,15 @@ export function updateStateWithChangedDates(state: CalendarScheduleSelectionStat
   const rangeAndExclusion = computeScheduleSelectionRangeAndExclusion(nextState);
 
   if (rangeAndExclusion) {
-    return { ...nextState, selectedIndexes: new Set(rangeAndExclusion.excluded), inputStart: rangeAndExclusion.start, inputEnd: rangeAndExclusion.end };
+    return finalizeNewCalendarScheduleSelectionState({ ...nextState, selectedIndexes: new Set(rangeAndExclusion.excluded), inputStart: rangeAndExclusion.start, inputEnd: rangeAndExclusion.end });
   } else {
     // no selected days
-    return { ...state, isEnabledDay: () => false, selectedIndexes: new Set(), inputStart: null, inputEnd: null };
+    return noSelectionCalendarScheduleSelectionState(state);
   }
+}
+
+export function noSelectionCalendarScheduleSelectionState(state: CalendarScheduleSelectionState): CalendarScheduleSelectionState {
+  return finalizeNewCalendarScheduleSelectionState({ ...state, selectedIndexes: new Set(), inputStart: null, inputEnd: null });
 }
 
 export function updateStateWithChangedRange(state: CalendarScheduleSelectionState, change: CalendarScheduleSelectionInputDateRange): CalendarScheduleSelectionState {
@@ -350,7 +374,12 @@ export function updateStateWithChangedRange(state: CalendarScheduleSelectionStat
   const excludedIndexesInNewRange = currentIndexes.filter(isInCurrentRange);
 
   const nextState = { ...state, excludedIndexesInNewRange, inputStart, inputEnd };
+  return finalizeNewCalendarScheduleSelectionState(nextState);
+}
+
+export function finalizeNewCalendarScheduleSelectionState(nextState: CalendarScheduleSelectionState): CalendarScheduleSelectionState {
   nextState.isEnabledDay = isEnabledDayInCalendarScheduleSelectionState(nextState);
+  nextState.currentSelectionValue = computeScheduleSelectionValue(nextState);
   return nextState;
 }
 
@@ -469,7 +498,7 @@ export function computeCalendarScheduleSelectionDateBlockRange(state: CalendarSc
     endRange = minAndMaxSelectedValues.max;
   }
 
-  if (inputStart && inputEnd) {
+  if (inputStart != null && inputEnd != null) {
     const inputStartIndex = indexFactory(inputStart);
     const inputEndIndex = indexFactory(inputEnd);
 

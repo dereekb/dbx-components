@@ -1,9 +1,12 @@
 import { OnInit, Component } from '@angular/core';
 import { DbxCalendarEvent, DbxCalendarStore } from '@dereekb/dbx-web/calendar';
-import { DateBlock, DateBlockCollection, dateBlockTiming, durationSpanToDateRange, expandDateBlockCollection } from '@dereekb/date';
+import { DateBlock, DateBlockCollection, dateBlockTiming, DateScheduleRange, durationSpanToDateRange, expandDateBlockCollection } from '@dereekb/date';
 import { addMonths, setHours } from 'date-fns/esm';
 import { Maybe, range } from '@dereekb/util';
 import { CalendarEvent } from 'angular-calendar';
+import { calendarScheduleField } from '@dereekb/dbx-form/calendar';
+import { startOfDay, addDays } from 'date-fns';
+import { Observable, of } from 'rxjs';
 
 export interface TestCalendarEventData extends DateBlock {
   value: string;
@@ -17,6 +20,24 @@ export class DocExtensionCalendarComponent implements OnInit {
   showRight = true;
 
   event: Maybe<DbxCalendarEvent<TestCalendarEventData>>;
+
+  readonly defaultCalendarScheduleFieldValue$ = of({
+    dateSchedule: {
+      start: startOfDay(new Date()),
+      end: addDays(startOfDay(new Date()), 14),
+      w: '8',
+      ex: [0, 3, 4, 5]
+    }
+  });
+
+  readonly calendarScheduleFields = [
+    calendarScheduleField({
+      key: 'dateSchedule',
+      required: true,
+      label: 'Custom Label',
+      description: 'Input field used for picking a DateScheduleRange value.'
+    })
+  ];
 
   readonly date$ = this.calendarStore.date$;
 

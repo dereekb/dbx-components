@@ -13,7 +13,7 @@ import { DbxCalendarScheduleSelectionStore } from '@dereekb/dbx-form/calendar';
   providers: [DbxCalendarScheduleSelectionStore]
 })
 export class DocExtensionCalendarScheduleSelectionWithFilterComponent {
-  readonly calendarSelectionValue$ = this.dbxCalendarScheduleSelectionStore.selectionValue$;
+  readonly calendarSelectionValue$ = this.dbxCalendarScheduleSelectionStore.currentSelectionValue$;
 
   constructor(readonly dbxCalendarScheduleSelectionStore: DbxCalendarScheduleSelectionStore) {
     dbxCalendarScheduleSelectionStore.setFilter({
