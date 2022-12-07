@@ -18,7 +18,7 @@ import { DocExtensionMapboxContentExampleComponent } from './component/mapbox.co
 import { DocExtensionMapboxMarkersExampleComponent } from './component/mapbox.markers.example.component';
 import { DbxCalendarRootModule } from '@dereekb/dbx-web/calendar';
 import { DocExtensionCalendarScheduleSelectionComponent } from './component/selection.calendar.component';
-import { DbxFormCalendarModule, DbxFormCalendarScheduleFieldModule } from '@dereekb/dbx-form/calendar';
+import { DbxFormCalendarModule, DbxFormDateScheduleRangeFieldModule } from '@dereekb/dbx-form/calendar';
 import { DocExtensionCalendarScheduleSelectionWithFilterComponent } from './component/selection.filter.calendar.component';
 
 @NgModule({
@@ -27,7 +27,7 @@ import { DocExtensionCalendarScheduleSelectionWithFilterComponent } from './comp
     DbxCalendarRootModule,
     DbxFormCalendarModule,
     DocFormComponentsModule,
-    DbxFormCalendarScheduleFieldModule,
+    DbxFormDateScheduleRangeFieldModule,
     DbxWidgetModule,
     DbxMapboxModule,
     NgxMapboxGLModule,

@@ -11,7 +11,7 @@ import { DbxCalendarScheduleSelectionStore } from '../../calendar.schedule.selec
 import { provideCalendarScheduleSelectionStoreIfParentIsUnavailable } from '../../calendar.schedule.selection.store.provide';
 import { MatFormFieldAppearance } from '@angular/material/form-field';
 
-export interface DbxFormCalendarScheduleComponentFieldProps extends Pick<FormlyFieldProps, 'label' | 'description' | 'readonly' | 'required'> {
+export interface DbxFormCalendarDateScheduleRangeFieldProps extends Pick<FormlyFieldProps, 'label' | 'description' | 'readonly' | 'required'> {
   appearance?: MatFormFieldAppearance;
   hideCustomize?: boolean;
   filter?: ObservableOrValue<Maybe<DateScheduleDateFilterConfig>>;
@@ -25,7 +25,7 @@ export interface DbxFormCalendarScheduleComponentFieldProps extends Pick<FormlyF
   `,
   providers: [provideCalendarScheduleSelectionStoreIfParentIsUnavailable()]
 })
-export class DbxFormCalendarScheduleFieldComponent<T extends DbxFormCalendarScheduleComponentFieldProps = DbxFormCalendarScheduleComponentFieldProps> extends FieldType<FieldTypeConfig<T>> implements OnInit, OnDestroy {
+export class DbxFormCalendarDateScheduleRangeFieldComponent<T extends DbxFormCalendarDateScheduleRangeFieldProps = DbxFormCalendarDateScheduleRangeFieldProps> extends FieldType<FieldTypeConfig<T>> implements OnInit, OnDestroy {
   private _syncSub = new SubscriptionObject();
   private _valueSub = new SubscriptionObject();
 
