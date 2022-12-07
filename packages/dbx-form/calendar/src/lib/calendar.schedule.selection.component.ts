@@ -39,18 +39,17 @@ export class DbxScheduleSelectionCalendarComponent<T> implements OnDestroy {
   }
 
   beforeMonthViewRender({ body }: { body: CalendarMonthViewDay[] }): void {
-    this.state$.pipe(first()).subscribe(({ isEnabledDay: isSelectedDay, allowedDaysOfWeek }) => {
+    this.state$.pipe(first()).subscribe(({ isEnabledDay: isSelectedDay, indexFactory, isEnabledFilterDay, allowedDaysOfWeek }) => {
       body.forEach((viewDay) => {
         const { date } = viewDay;
+        const dateBlockIndex = date; // indexFactory(date);
         const day = date.getDay();
 
-        // TODO: also color if it matches the filter.
-
-        // TODO: add is disabled day when turning off days via dates.
-
-        if (!allowedDaysOfWeek.has(day as DayOfWeek)) {
+        if (!isEnabledFilterDay(dateBlockIndex)) {
+          viewDay.cssClass = 'cal-day-not-applicable';
+        } else if (!allowedDaysOfWeek.has(day as DayOfWeek)) {
           viewDay.cssClass = 'cal-day-disabled';
-        } else if (isSelectedDay(date)) {
+        } else if (isSelectedDay(dateBlockIndex)) {
           viewDay.cssClass = 'cal-day-selected';
         }
       });

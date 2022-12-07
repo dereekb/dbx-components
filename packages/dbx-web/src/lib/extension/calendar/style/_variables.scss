@@ -9,11 +9,13 @@ $cal-bg-active-dragover-var: --cal-bg-active-dragover;
 $cal-bg-highlight-var: --cal-bg-highlight;
 $cal-bg-selected-var: --cal-bg-selected;
 $cal-bg-disabled-var: --cal-bg-disabled;
+$cal-bg-not-applicable-var: --cal-bg-not-applicable;
 $cal-today-bg-var: --cal-today-bg;
 $cal-weekend-color-var: --cal-weekend-color;
 $cal-badge-color-var: --cal-badge-color;
 $cal-selected-var: --cal-selected;
 $cal-disabled-var: --cal-disabled;
+$cal-not-applicable-var: --cal-not-applicable;
 $cal-current-time-marker-color-var: --cal-current-time-marker-color;
 $cal-white-var: --cal-white;
 $cal-gray-var: --cal-gray;
@@ -31,11 +33,13 @@ $cal-bg-active-dragover: var($cal-bg-active-dragover-var);
 $cal-bg-highlight: var($cal-bg-highlight-var);
 $cal-bg-selected-color: var($cal-bg-selected-var);
 $cal-bg-disabled-color: var($cal-bg-disabled-var);
+$cal-bg-not-applicable-color: var($cal-bg-not-applicable-var);
 $cal-today-bg: var($cal-today-bg-var);
 $cal-weekend-color: var($cal-weekend-color-var);
 $cal-badge-color: var($cal-badge-color-var);
 $cal-selected-color: var($cal-selected-var);
 $cal-disabled-color: var($cal-disabled-var);
+$cal-not-applicable-color: var($cal-not-applicable-var);
 $cal-current-time-marker-color: var($cal-current-time-marker-color-var);
 $cal-white: var($cal-white-var);
 $cal-gray: var($cal-gray-var);
@@ -65,6 +69,8 @@ $cal-vars: map-merge(
     bg-selected-color: $cal-bg-selected-color,
     // the color use when a cell is disabled
     bg-disabled-color: $cal-bg-disabled-color,
+    // the color use when a cell is not applicable
+    bg-not-applicable-color: $cal-bg-not-applicable-color,
     // the color used when hovering over cells and headers
     bg-highlight: $cal-bg-highlight,
     // the background color to mark today in the week view header
@@ -77,6 +83,8 @@ $cal-vars: map-merge(
     selected-color: $cal-selected-color,
     // the disabled color on the month view
     disabled-color: $cal-disabled-color,
+    // the not applicable color on the month view
+    not-applicable-color: $cal-not-applicable-color,
     // the current time marker color on the week and day view
     current-time-marker-color: $cal-current-time-marker-color,
     // a standard white color used for tooltip text and month view event titles

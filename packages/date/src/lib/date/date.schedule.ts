@@ -2,7 +2,7 @@ import { StringOrder, Maybe, mergeArrayIntoArray, firstValueFromIterable, DayOfW
 import { Expose } from 'class-transformer';
 import { IsString, Matches, IsOptional, Min, IsArray } from 'class-validator';
 import { differenceInDays, getDay } from 'date-fns';
-import { DateBlock, dateBlockDayOfWeekFactory, DateBlockDurationSpan, DateBlockIndex, dateBlockIndexRange, DateBlockRange, DateBlocksExpansionFactory, dateBlocksExpansionFactory, DateBlockTiming, getCurrentDateBlockTimingStartDate } from './date.block';
+import { DateBlock, dateBlockDayOfWeekFactory, DateBlockDurationSpan, DateBlockIndex, dateBlockIndexRange, DateBlockRange, DateBlocksExpansionFactory, dateBlocksExpansionFactory, DateBlockTiming, dateTimingRelativeIndexFactory, getCurrentDateBlockTimingStartDate } from './date.block';
 import { dateBlockDurationSpanHasNotStartedFilterFunction, dateBlockDurationSpanHasNotEndedFilterFunction } from './date.filter';
 import { DateRange, DateRangeStart, DateRangeState } from './date.range';
 import { YearWeekCodeConfig, yearWeekCodeDateTimezoneInstance } from './date.week';
@@ -281,7 +281,8 @@ export function dateScheduleDateFilter(config: DateScheduleDateFilterConfig): Da
 
   const firstDateDay = getDay(firstDate);
   const dayForIndex = dateBlockDayOfWeekFactory(firstDateDay);
-  const maxIndex = end != null ? getDay(end) : Number.MAX_SAFE_INTEGER;
+  const dateIndexForDate = dateTimingRelativeIndexFactory({ start: firstDate });
+  const maxIndex = end != null ? dateIndexForDate(end) : Number.MAX_SAFE_INTEGER;
   const includedIndexes = new Set(config.d);
   const excludedIndexes = new Set(config.ex);
 
@@ -293,11 +294,13 @@ export function dateScheduleDateFilter(config: DateScheduleDateFilterConfig): Da
       i = input;
       day = dayForIndex(i);
     } else {
-      i = differenceInDays(input, firstDate);
+      i = dateIndexForDate(input);
       day = dayOfWeek(input);
     }
 
-    return (i < maxIndex && allowedDays.has(day) && !excludedIndexes.has(i)) || includedIndexes.has(i);
+    console.log({ firstDate, input, i, day });
+
+    return (i >= 0 && i < maxIndex && allowedDays.has(day) && !excludedIndexes.has(i)) || includedIndexes.has(i);
   };
 }
 

@@ -7,6 +7,7 @@ import {
   dateBlockTimingDateFactory,
   DateOrDateBlockIndex,
   DateRange,
+  dateScheduleDateFilter,
   DateScheduleDateFilterConfig,
   DateScheduleDayCode,
   dateScheduleEncodedWeek,
@@ -15,6 +16,8 @@ import {
   DateTimingRelativeIndexFactory,
   dateTimingRelativeIndexFactory,
   expandDateScheduleDayCodesToDayOfWeekSet,
+  findMaxDate,
+  findMinDate,
   isDateInDateRangeFunction,
   IsDateWithinDateBlockRangeFunction,
   isDateWithinDateBlockRangeFunction,
@@ -58,11 +61,11 @@ export interface CalendarScheduleSelectionState extends PartialCalendarScheduleS
    */
   timezone?: Maybe<TimezoneString>;
   /**
-   * Minimum date allowed if no filter is set.
+   * Minimum date allowed if no filter is set. If a filter is set, the greater of the two dates is used as the minimum.
    */
   minDate?: Maybe<Date>;
   /**
-   * Max date allowed if no fitler is set.
+   * Maximum date allowed if no fitler is set. If a filter is set, the lesser of the two dates is used as the maximum.
    */
   maxDate?: Maybe<Date>;
   /**
@@ -100,7 +103,13 @@ export interface CalendarScheduleSelectionState extends PartialCalendarScheduleS
    */
   indexDayOfWeek: DateBlockDayOfWeekFactory;
   /**
+   * Decision function that returns true if a value is enabled given the current filter.
+   */
+  isEnabledFilterDay: DecisionFunction<DateOrDateBlockIndex>;
+  /**
    * Decision function that returns true if a value is enabled.
+   *
+   * This function does not take the current filter into account.
    */
   isEnabledDay: DecisionFunction<DateOrDateBlockIndex>;
 }
@@ -119,6 +128,7 @@ export function initialCalendarScheduleSelectionState(): CalendarScheduleSelecti
     scheduleDays,
     allowedDaysOfWeek,
     indexDayOfWeek,
+    isEnabledFilterDay: () => true,
     isEnabledDay: () => false,
     minDate: new Date(0),
     maxDate: startOfYear(addYears(new Date(), 100))
@@ -175,6 +185,11 @@ export class DbxCalendarScheduleSelectionStore extends ComponentStore<CalendarSc
     shareReplay(1)
   );
 
+  readonly isEnabledFilterDayFunction$: Observable<DecisionFunction<DateOrDateBlockIndex>> = this.state$.pipe(
+    map((x) => x.isEnabledFilterDay),
+    shareReplay(1)
+  );
+
   readonly isEnabledDayFunction$: Observable<DecisionFunction<DateOrDateBlockIndex>> = this.state$.pipe(
     map((x) => x.isEnabledDay),
     shareReplay(1)
@@ -197,24 +212,20 @@ export class DbxCalendarScheduleSelectionStore extends ComponentStore<CalendarSc
   readonly selectionValue$ = this.state$.pipe(map(computeScheduleSelectionValue), shareReplay(1));
 
   readonly minDate$ = this.state$.pipe(
-    map((x) => x.minDate || null),
+    map((x) => findMaxDate([x.filter?.start, x.minDate])),
     distinctUntilChanged(isSameDateDay),
     shareReplay(1)
   );
 
   readonly maxDate$ = this.state$.pipe(
-    map((x) => x.maxDate || null),
+    map((x) => findMinDate([x.filter?.end, x.maxDate])),
     distinctUntilChanged(isSameDateDay),
     shareReplay(1)
   );
 
   // MARK: State Changes
-  readonly setFilter = this.updater((state, filter: Maybe<DateScheduleDateFilterConfig>) => ({ ...state, filter }));
-
-  /**
-   * Set or clears the  DateScheduleDateFilterConfig
-   */
-  readonly clearFilter = this.updater((state) => ({ ...state, filter: undefined }));
+  readonly setFilter = this.updater((state, filter: Maybe<DateScheduleDateFilterConfig>) => updateStateWithFilter(state, filter));
+  readonly clearFilter = this.updater((state) => updateStateWithFilter(state, undefined));
 
   readonly setTimezone = this.updater((state, timezone: Maybe<TimezoneString>) => ({ ...state, timezone }));
   readonly setInputRange = this.updater((state, range: CalendarScheduleSelectionInputDateRange) => updateStateWithChangedRange(state, range));
@@ -228,11 +239,14 @@ export class DbxCalendarScheduleSelectionStore extends ComponentStore<CalendarSc
   readonly setAllowAllScheduleDays = this.updater((state) => updateStateWithChangedScheduleDays(state, null));
 }
 
-export interface CalendarScheduleSelectionStateDatesChange {
-  toggle?: IterableOrValue<DateOrDateBlockIndex>;
-  add?: IterableOrValue<DateOrDateBlockIndex>;
-  remove?: IterableOrValue<DateOrDateBlockIndex>;
-  set?: IterableOrValue<DateOrDateBlockIndex>;
+export function updateStateWithFilter(state: CalendarScheduleSelectionState, filter: Maybe<DateScheduleDateFilterConfig>): CalendarScheduleSelectionState {
+  let isEnabledFilterDay: Maybe<DecisionFunction<DateOrDateBlockIndex>> = () => true;
+
+  if (filter) {
+    isEnabledFilterDay = dateScheduleDateFilter(filter);
+  }
+
+  return { ...state, filter, isEnabledFilterDay };
 }
 
 export function updateStateWithChangedScheduleDays(state: CalendarScheduleSelectionState, change: Maybe<Iterable<DateScheduleDayCode>>): CalendarScheduleSelectionState {
@@ -247,6 +261,13 @@ export function updateStateWithChangedScheduleDays(state: CalendarScheduleSelect
     nextState.isEnabledDay = isEnabledDayInCalendarScheduleSelectionState(nextState);
     return nextState;
   }
+}
+
+export interface CalendarScheduleSelectionStateDatesChange {
+  toggle?: IterableOrValue<DateOrDateBlockIndex>;
+  add?: IterableOrValue<DateOrDateBlockIndex>;
+  remove?: IterableOrValue<DateOrDateBlockIndex>;
+  set?: IterableOrValue<DateOrDateBlockIndex>;
 }
 
 export function updateStateWithChangedDates(state: CalendarScheduleSelectionState, change: CalendarScheduleSelectionStateDatesChange): CalendarScheduleSelectionState {
@@ -397,7 +418,7 @@ export function computeCalendarScheduleSelectionRange(state: CalendarScheduleSel
 }
 
 export function computeCalendarScheduleSelectionDateBlockRange(state: CalendarScheduleSelectionState): Maybe<DateBlockRangeWithRange> {
-  const { indexFactory, inputStart, inputEnd, allowedDaysOfWeek, indexDayOfWeek, isEnabledDay } = state;
+  const { indexFactory, inputStart, inputEnd, allowedDaysOfWeek, indexDayOfWeek, isEnabledDay, isEnabledFilterDay } = state;
   const enabledSelectedIndexes = Array.from(state.selectedIndexes).filter((i) => allowedDaysOfWeek.has(indexDayOfWeek(i)));
   const minAndMaxSelectedValues = minAndMaxNumber(enabledSelectedIndexes);
 
@@ -427,7 +448,7 @@ export function computeCalendarScheduleSelectionDateBlockRange(state: CalendarSc
 
     // if the min is equal to the start index, then we are in the range and need to iterate dates until we find one that is not selected/excluded.
     for (let i = scanStartIndex; i <= scanEndIndex; i += 1) {
-      if (isEnabledDay(i)) {
+      if (isEnabledFilterDay(i) && isEnabledDay(i)) {
         startRange = i;
         break;
       }
@@ -435,7 +456,7 @@ export function computeCalendarScheduleSelectionDateBlockRange(state: CalendarSc
 
     // same with the max
     for (let i = scanEndIndex; i >= scanStartIndex; i -= 1) {
-      if (isEnabledDay(i)) {
+      if (isEnabledFilterDay(i) && isEnabledDay(i)) {
         endRange = i;
         break;
       }

@@ -190,7 +190,7 @@ export function dateBlockTimingDateFactory<T extends DateBlockTimingStart = Date
     if (isDate(input)) {
       return input;
     } else {
-      return addDays(startDate, input);
+      return addDays(startDate, input); // TODO: Is this right to use days, or should it use hours to avoid daylight savings?
     }
   }) as Configurable<Partial<DateBlockTimingDateFactory>>;
   factory._timing = timing;
