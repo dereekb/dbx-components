@@ -2,6 +2,22 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [9.18.0](https://github.com/dereekb/dbx-components/compare/v9.17.3-dev...v9.18.0) (2022-12-07)
+
+
+### Bug Fixes
+
+* fixed typescript import issue introduced in 4.7 ([168c8b9](https://github.com/dereekb/dbx-components/commit/168c8b96077f4bf091a12415f3174b20687de22d))
+
+
+### Features
+
+* added dateScheduleDateFilter() ([ab0e381](https://github.com/dereekb/dbx-components/commit/ab0e3810f3fc74695dc558a27e9c9d6d45302e1f))
+* added dateScheduleRangeField() ([#22](https://github.com/dereekb/dbx-components/issues/22)) ([1979f3b](https://github.com/dereekb/dbx-components/commit/1979f3b4573315ff4a2b289cc2e645718f33a29c))
+* added IsDateWithinDateBlockRangeFunction ([994c6b1](https://github.com/dereekb/dbx-components/commit/994c6b1a018bfb81801775b2901c565aab1d52c8))
+
+
+
 ## [9.17.3](https://github.com/dereekb/dbx-components/compare/v9.17.2-dev...v9.17.3) (2022-12-01)
 
 
