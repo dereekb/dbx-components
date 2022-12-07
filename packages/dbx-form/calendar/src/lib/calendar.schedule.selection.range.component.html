@@ -1,10 +1,17 @@
 <mat-form-field class="dbx-schedule-selection-calendar-date-range-field" appearance="fill">
   <mat-label>Enter a date range</mat-label>
+  <div *ngIf="showCustomize && (isCustomized$ | async)" class="date-range-field-customized">
+    <span class="dbx-accent-bg date-range-field-customized-text">Custom</span>
+  </div>
   <mat-date-range-input [min]="minDate$ | async" [max]="maxDate$ | async" [formGroup]="range" [rangePicker]="picker">
     <input matStartDate formControlName="start" placeholder="Start date" />
     <input matEndDate formControlName="end" placeholder="End date" />
   </mat-date-range-input>
   <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+  <div *ngIf="showCustomize">
+    <dbx-button-spacer></dbx-button-spacer>
+    <button mat-raised-button color="accent">Calendar</button>
+  </div>
   <mat-date-range-picker #picker (opened)="pickerOpened()" (closed)="pickerClosed()"></mat-date-range-picker>
   <mat-error *ngIf="range.controls.start.hasError('matStartDateInvalid')">Invalid start date</mat-error>
   <mat-error *ngIf="range.controls.end.hasError('matEndDateInvalid')">Invalid end date</mat-error>

@@ -1,6 +1,6 @@
 import { switchMap, throttleTime } from 'rxjs/operators';
 import { SubscriptionObject, tapLog } from '@dereekb/rxjs';
-import { Component, OnDestroy } from '@angular/core';
+import { Component, Input, OnDestroy } from '@angular/core';
 import { CalendarScheduleSelectionInputDateRange, DbxCalendarScheduleSelectionStore } from './calendar.schedule.selection.store';
 import { DbxCalendarStore } from '@dereekb/dbx-web/calendar';
 import { FormGroup, FormControl } from '@angular/forms';
@@ -14,6 +14,9 @@ import { startOfDay } from 'date-fns';
   templateUrl: './calendar.schedule.selection.range.component.html'
 })
 export class DbxScheduleSelectionCalendarDateRangeComponent implements OnDestroy {
+  @Input()
+  showCustomize = false;
+
   readonly random = randomNumberFactory(10000)();
 
   private _pickerOpened = new BehaviorSubject<boolean>(false);
@@ -28,6 +31,7 @@ export class DbxScheduleSelectionCalendarDateRangeComponent implements OnDestroy
 
   readonly minDate$ = this.dbxCalendarScheduleSelectionStore.minDate$;
   readonly maxDate$ = this.dbxCalendarScheduleSelectionStore.maxDate$;
+  readonly isCustomized$ = this.dbxCalendarScheduleSelectionStore.isCustomized$;
 
   readonly pickerOpened$ = this._pickerOpened.asObservable();
 

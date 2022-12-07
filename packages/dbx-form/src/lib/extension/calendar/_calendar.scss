@@ -35,6 +35,19 @@
         display: flex;
       }
     }
+
+    .date-range-field-customized {
+      display: flex;
+      align-items: center;
+
+      .date-range-field-customized-text {
+        padding: 4px 6px;
+        margin-right: 2px;
+        font-size: 0.8em;
+        font-weight: bold;
+        border-radius: 25px;
+      }
+    }
   }
 
   .dbx-schedule-selection-calendar-cell {
@@ -55,6 +68,14 @@
 }
 
 @mixin color($theme-config) {
+  $color-config: theming.get-color-config($theme-config);
+  $background: map.get($color-config, 'background');
+  $background-color: theming.get-color-from-palette($background, 'background');
+
+  .dbx-schedule-selection-calendar-date-range-field {
+    .date-range-field-customized-text {
+    }
+  }
 }
 
 @mixin typography($typography-config) {

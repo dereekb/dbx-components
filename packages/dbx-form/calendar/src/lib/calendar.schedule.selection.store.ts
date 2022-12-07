@@ -3,6 +3,7 @@ import {
   DateBlockDayOfWeekFactory,
   dateBlockDayOfWeekFactory,
   DateBlockIndex,
+  DateBlockRange,
   DateBlockRangeWithRange,
   dateBlockTimingDateFactory,
   DateOrDateBlockIndex,
@@ -234,6 +235,12 @@ export class DbxCalendarScheduleSelectionStore extends ComponentStore<CalendarSc
     shareReplay(1)
   );
 
+  readonly isCustomized$ = this.state$.pipe(
+    map((x) => x.selectedIndexes.size > 0),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+
   // MARK: State Changes
   readonly setFilter = this.updater((state, filter: Maybe<DateScheduleDateFilterConfig>) => updateStateWithFilter(state, filter));
   readonly clearFilter = this.updater((state) => updateStateWithFilter(state, undefined));
@@ -310,7 +317,16 @@ export function updateStateWithChangedDates(state: CalendarScheduleSelectionStat
 
   const nextState = { ...state, selectedIndexes };
   nextState.isEnabledDay = isEnabledDayInCalendarScheduleSelectionState(nextState);
-  return nextState;
+
+  // Recalculate the range and simplified to exclusions
+  const rangeAndExclusion = computeScheduleSelectionRangeAndExclusion(nextState);
+
+  if (rangeAndExclusion) {
+    return { ...nextState, selectedIndexes: new Set(rangeAndExclusion.excluded), inputStart: rangeAndExclusion.start, inputEnd: rangeAndExclusion.end };
+  } else {
+    // no selected days
+    return { ...state, isEnabledDay: () => false, selectedIndexes: new Set(), inputStart: null, inputEnd: null };
+  }
 }
 
 export function updateStateWithChangedRange(state: CalendarScheduleSelectionState, change: CalendarScheduleSelectionInputDateRange): CalendarScheduleSelectionState {
@@ -325,34 +341,15 @@ export function updateStateWithChangedRange(state: CalendarScheduleSelectionStat
     return state; // if no change, return the current state.
   }
 
-  const currentIndexes = Array.from(state.selectedIndexes);
-
-  let currentIndexesInRange: DateBlockIndex[] = [];
-
-  if (currentInputStart && currentInputEnd) {
-    const currentMinIndex = indexFactory(currentInputStart);
-    const currentMaxIndex = indexFactory(currentInputEnd) + 1;
-
-    const isInCurrentRange = isIndexNumberInIndexRangeFunction({ minIndex: currentMinIndex, maxIndex: currentMaxIndex });
-    currentIndexesInRange = currentIndexes.filter(isInCurrentRange);
-  }
-
-  // exclude all indexes that are within the new range
+  // retain all indexes that are within the new range
   const minIndex = indexFactory(inputStart);
   const maxIndex = indexFactory(inputEnd) + 1;
 
+  const currentIndexes: DateBlockIndex[] = Array.from(state.selectedIndexes);
   const isInCurrentRange = isIndexNumberInIndexRangeFunction({ minIndex, maxIndex });
-  const currentIndexesInNewRange = currentIndexes.filter(isInCurrentRange);
+  const excludedIndexesInNewRange = currentIndexes.filter(isInCurrentRange);
 
-  // exclude all items that are within the old range and not in the new range
-  const inOldRangeButNotInNewRange = excludeValues(currentIndexesInNewRange, currentIndexesInRange);
-
-  // set new selected indexes
-  const selectedIndexes = new Set(state.selectedIndexes);
-  addToSet(selectedIndexes, currentIndexesInRange); // retain exclusions
-  removeFromSet(selectedIndexes, inOldRangeButNotInNewRange); // clear items not in both
-
-  const nextState = { ...state, indexFactory, selectedIndexes, inputStart: inputStart, inputEnd: inputEnd };
+  const nextState = { ...state, excludedIndexesInNewRange, inputStart, inputEnd };
   nextState.isEnabledDay = isEnabledDayInCalendarScheduleSelectionState(nextState);
   return nextState;
 }
@@ -382,22 +379,19 @@ export function isEnabledDayInCalendarScheduleSelectionState(state: CalendarSche
 }
 
 export function computeScheduleSelectionValue(state: CalendarScheduleSelectionState): Maybe<CalendarScheduleSelectionValue> {
-  const { indexFactory, inputStart, inputEnd, selectedIndexes, scheduleDays, isEnabledDay, allowedDaysOfWeek, indexDayOfWeek } = state;
-  const dateFactory = dateBlockTimingDateFactory(state);
-  const dateBlockRange = computeCalendarScheduleSelectionDateBlockRange(state);
+  const { scheduleDays, allowedDaysOfWeek, indexDayOfWeek } = state;
+  const rangeAndExclusion = computeScheduleSelectionRangeAndExclusion(state);
 
-  if (dateBlockRange == null) {
-    return null; // returns null if no items are selected.
+  if (rangeAndExclusion == null) {
+    return null;
   }
 
-  const start = dateFactory(dateBlockRange.i);
-  const end = dateFactory(dateBlockRange.to);
-
+  const { start, end, excluded, dateBlockRange } = rangeAndExclusion;
   const indexOffset = dateBlockRange.i;
 
-  const ex: DateBlockIndex[] = range(dateBlockRange.i, dateBlockRange.to + 1)
+  const ex: DateBlockIndex[] = excluded
     .filter((x) => {
-      const isExcludedIndex = allowedDaysOfWeek.has(indexDayOfWeek(x)) && !isEnabledDay(x);
+      const isExcludedIndex = allowedDaysOfWeek.has(indexDayOfWeek(x));
       return isExcludedIndex;
     })
     .map((x) => x - indexOffset); // set to the proper offset
@@ -417,6 +411,38 @@ export function computeScheduleSelectionValue(state: CalendarScheduleSelectionSt
     dateScheduleRange,
     minMaxRange: { start, end }
   };
+}
+
+export interface CalendarScheduleSelectionRangeAndExclusion extends DateRange {
+  dateBlockRange: DateBlockRangeWithRange;
+  excluded: DateBlockIndex[];
+}
+
+export function computeScheduleSelectionRangeAndExclusion(state: CalendarScheduleSelectionState): Maybe<CalendarScheduleSelectionRangeAndExclusion> {
+  const { isEnabledDay } = state;
+  const dateFactory = dateBlockTimingDateFactory(state);
+  const dateBlockRange = computeCalendarScheduleSelectionDateBlockRange(state);
+
+  if (dateBlockRange == null) {
+    return null; // returns null if no items are selected.
+  }
+
+  const start = dateFactory(dateBlockRange.i);
+  const end = dateFactory(dateBlockRange.to);
+
+  const excluded: DateBlockIndex[] = range(dateBlockRange.i, dateBlockRange.to + 1).filter((x) => {
+    const isExcludedIndex = !isEnabledDay(x);
+    return isExcludedIndex;
+  });
+
+  const result: CalendarScheduleSelectionRangeAndExclusion = {
+    dateBlockRange,
+    start,
+    end,
+    excluded
+  };
+
+  return result;
 }
 
 export function computeCalendarScheduleSelectionRange(state: CalendarScheduleSelectionState): Maybe<DateRange> {
