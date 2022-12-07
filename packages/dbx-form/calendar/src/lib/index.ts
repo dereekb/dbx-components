@@ -4,6 +4,8 @@ export * from './calendar.schedule.selection.cell.component';
 export * from './calendar.schedule.selection.component';
 export * from './calendar.schedule.selection.days.component';
 export * from './calendar.schedule.selection.days.form.component';
+export * from './calendar.schedule.selection.dialog.component';
+export * from './calendar.schedule.selection.dialog.button.component';
 export * from './calendar.schedule.selection.form';
 export * from './calendar.schedule.selection.popover.button.component';
 export * from './calendar.schedule.selection.popover.component';

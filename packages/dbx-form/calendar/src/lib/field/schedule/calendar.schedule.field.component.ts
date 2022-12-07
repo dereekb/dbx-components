@@ -4,8 +4,8 @@ import { Component, NgZone, OnDestroy, OnInit, Optional } from '@angular/core';
 import { FieldTypeConfig, FormlyFieldProps } from '@ngx-formly/core';
 import { Maybe } from '@dereekb/util';
 import { FieldType } from '@ngx-formly/material';
-import { BehaviorSubject, distinctUntilChanged, map, shareReplay, startWith, switchMap } from 'rxjs';
-import { filterMaybe, ObservableOrValue, SubscriptionObject } from '@dereekb/rxjs';
+import { BehaviorSubject, distinctUntilChanged, map, shareReplay, startWith, Subscription, switchMap } from 'rxjs';
+import { filterMaybe, ObservableOrValue, SubscriptionObject, asObservable } from '@dereekb/rxjs';
 import { DateScheduleDateFilterConfig, isSameDateScheduleRange } from '@dereekb/date';
 import { DbxCalendarScheduleSelectionStore } from '../../calendar.schedule.selection.store';
 import { provideCalendarScheduleSelectionStoreIfParentIsUnavailable } from '../../calendar.schedule.selection.store.provide';
@@ -20,7 +20,9 @@ export interface DbxFormCalendarDateScheduleRangeFieldProps extends Pick<FormlyF
 @Component({
   template: `
     <div class="dbx-schedule-selection-field">
-      <dbx-schedule-selection-calendar-date-range [showCustomize]="showCustomize" [appearance]="appearance" [required]="required" [disabled]="isReadonlyOrDisabled" [label]="label" [hint]="description"></dbx-schedule-selection-calendar-date-range>
+      <dbx-schedule-selection-calendar-date-range [showCustomize]="showCustomize" [appearance]="appearance" [required]="required" [disabled]="isReadonlyOrDisabled" [label]="label" [hint]="description">
+        <dbx-schedule-selection-calendar-date-dialog-button customizeButton></dbx-schedule-selection-calendar-date-dialog-button>
+      </dbx-schedule-selection-calendar-date-range>
     </div>
   `,
   providers: [provideCalendarScheduleSelectionStoreIfParentIsUnavailable()]
@@ -28,6 +30,7 @@ export interface DbxFormCalendarDateScheduleRangeFieldProps extends Pick<FormlyF
 export class DbxFormCalendarDateScheduleRangeFieldComponent<T extends DbxFormCalendarDateScheduleRangeFieldProps = DbxFormCalendarDateScheduleRangeFieldProps> extends FieldType<FieldTypeConfig<T>> implements OnInit, OnDestroy {
   private _syncSub = new SubscriptionObject();
   private _valueSub = new SubscriptionObject();
+  private _filterSub = new SubscriptionObject();
 
   private _formControlObs = new BehaviorSubject<Maybe<AbstractControl>>(undefined);
   readonly formControl$ = this._formControlObs.pipe(filterMaybe());
@@ -69,6 +72,10 @@ export class DbxFormCalendarDateScheduleRangeFieldComponent<T extends DbxFormCal
     return !this.props.hideCustomize;
   }
 
+  get filter() {
+    return this.props.filter;
+  }
+
   ngOnInit(): void {
     this._formControlObs.next(this.formControl);
 
@@ -79,11 +86,19 @@ export class DbxFormCalendarDateScheduleRangeFieldComponent<T extends DbxFormCal
     this._valueSub.subscription = this.dbxCalendarScheduleSelectionStore.currentDateScheduleRangeValue$.subscribe((x) => {
       this.formControl.setValue(x);
     });
+
+    const filter = this.filter;
+
+    if (filter != null) {
+      this._filterSub.subscription = this.dbxCalendarScheduleSelectionStore.setFilter(asObservable(filter)) as Subscription;
+    }
   }
 
   override ngOnDestroy(): void {
     super.ngOnDestroy();
+    this._syncSub.destroy();
     this._valueSub.destroy();
     this._formControlObs.complete();
+    this._filterSub.destroy();
   }
 }

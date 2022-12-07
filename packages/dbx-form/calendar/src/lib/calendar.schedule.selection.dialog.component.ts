@@ -15,9 +15,9 @@ export interface DbxScheduleSelectionCalendarDatePopupConfig {
     </dbx-dialog-content>
   `
 })
-export class DbxScheduleSelectionCalendarDatePromptComponent extends AbstractDialogDirective<void> {
+export class DbxScheduleSelectionCalendarDateDialogComponent extends AbstractDialogDirective<void> {
   static openDialog(matDialog: MatDialog, { injector }: DbxScheduleSelectionCalendarDatePopupConfig) {
-    return matDialog.open(DbxScheduleSelectionCalendarDatePromptComponent, {
+    return matDialog.open(DbxScheduleSelectionCalendarDateDialogComponent, {
       injector,
       width: '80vw',
       minWidth: 460

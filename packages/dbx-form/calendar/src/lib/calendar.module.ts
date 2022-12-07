@@ -21,7 +21,8 @@ import { DbxScheduleSelectionCalendarDateDaysFormComponent } from './calendar.sc
 import { DbxFormlyModule, DbxFormModule } from '@dereekb/dbx-form';
 import { DbxScheduleSelectionCalendarCellComponent } from './calendar.schedule.selection.cell.component';
 import { DbxCalendarScheduleSelectionStoreInjectionBlockDirective } from './calendar.schedule.selection.store.provide';
-import { DbxScheduleSelectionCalendarDatePromptComponent } from './calendar.schedule.selection.dialog.component';
+import { DbxScheduleSelectionCalendarDateDialogComponent } from './calendar.schedule.selection.dialog.component';
+import { DbxScheduleSelectionCalendarDateDialogButtonComponent } from './calendar.schedule.selection.dialog.button.component';
 
 const declarations = [
   //
@@ -34,7 +35,8 @@ const declarations = [
   DbxScheduleSelectionCalendarDatePopoverComponent,
   DbxScheduleSelectionCalendarDatePopoverContentComponent,
   DbxCalendarScheduleSelectionStoreInjectionBlockDirective,
-  DbxScheduleSelectionCalendarDatePromptComponent
+  DbxScheduleSelectionCalendarDateDialogComponent,
+  DbxScheduleSelectionCalendarDateDialogButtonComponent
 ];
 
 @NgModule({

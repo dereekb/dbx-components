@@ -7,6 +7,7 @@ import { CalendarEvent } from 'angular-calendar';
 import { dateScheduleRangeField } from '@dereekb/dbx-form/calendar';
 import { startOfDay, addDays } from 'date-fns';
 import { Observable, of } from 'rxjs';
+import { DOC_EXTENSION_CALENDAR_SCHEDULE_TEST_FILTER } from '../component/selection.filter.calendar.component';
 
 export interface TestCalendarEventData extends DateBlock {
   value: string;
@@ -36,6 +37,12 @@ export class DocExtensionCalendarComponent implements OnInit {
       required: true,
       label: 'Custom Label',
       description: 'Input field used for picking a DateScheduleRange value.'
+    }),
+    dateScheduleRangeField({
+      key: 'dateScheduleWithFilter',
+      required: true,
+      description: 'Date schedule with a filter applied to it',
+      filter: DOC_EXTENSION_CALENDAR_SCHEDULE_TEST_FILTER
     })
   ];
 

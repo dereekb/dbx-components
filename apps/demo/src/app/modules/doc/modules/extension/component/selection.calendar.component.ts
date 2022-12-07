@@ -10,7 +10,9 @@ import { DbxCalendarScheduleSelectionStore } from '@dereekb/dbx-form/calendar';
     </dbx-content-border>
     <dbx-subsection header="Selector Components">
       <dbx-subsection header="dbx-schedule-selection-calendar-date-range" hint="Component used to control and set the date range.">
-        <dbx-schedule-selection-calendar-date-range [showCustomize]="true"></dbx-schedule-selection-calendar-date-range>
+        <dbx-schedule-selection-calendar-date-range [showCustomize]="true">
+          <dbx-schedule-selection-calendar-date-dialog-button customizeButton></dbx-schedule-selection-calendar-date-dialog-button>
+        </dbx-schedule-selection-calendar-date-range>
       </dbx-subsection>
       <dbx-subsection header="dbx-schedule-selection-calendar-date-days" hint="Component used to pick days in the selection.">
         <dbx-schedule-selection-calendar-date-days></dbx-schedule-selection-calendar-date-days>

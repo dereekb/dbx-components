@@ -9,7 +9,6 @@ import { distinctUntilChanged, filter, BehaviorSubject, startWith, Observable, o
 import { isSameDateDay } from '@dereekb/date';
 import { MatFormFieldAppearance } from '@angular/material/form-field';
 import { MatDialog } from '@angular/material/dialog';
-import { DbxScheduleSelectionCalendarDatePromptComponent } from './calendar.schedule.selection.dialog.component';
 
 @Component({
   selector: 'dbx-schedule-selection-calendar-date-range',
@@ -58,7 +57,7 @@ export class DbxScheduleSelectionCalendarDateRangeComponent implements OnDestroy
 
   readonly pickerOpened$ = this._pickerOpened.asObservable();
 
-  constructor(readonly dbxCalendarStore: DbxCalendarStore, readonly dbxCalendarScheduleSelectionStore: DbxCalendarScheduleSelectionStore, readonly matDialog: MatDialog, readonly injector: Injector) {}
+  constructor(readonly dbxCalendarStore: DbxCalendarStore, readonly dbxCalendarScheduleSelectionStore: DbxCalendarScheduleSelectionStore) {}
 
   ngOnInit(): void {
     this._syncSub.subscription = this.dbxCalendarScheduleSelectionStore.inputRange$.subscribe((x) => {
@@ -104,9 +103,5 @@ export class DbxScheduleSelectionCalendarDateRangeComponent implements OnDestroy
 
   pickerClosed() {
     this._pickerOpened.next(false);
-  }
-
-  clickCustomize() {
-    DbxScheduleSelectionCalendarDatePromptComponent.openDialog(this.matDialog, { injector: this.injector });
   }
 }
