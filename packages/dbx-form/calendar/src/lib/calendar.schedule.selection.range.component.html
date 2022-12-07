@@ -1,6 +1,6 @@
 <mat-form-field class="dbx-schedule-selection-calendar-date-range-field" appearance="fill">
   <mat-label>Enter a date range</mat-label>
-  <mat-date-range-input [formGroup]="range" [rangePicker]="picker">
+  <mat-date-range-input [min]="minDate$ | async" [max]="maxDate$ | async" [formGroup]="range" [rangePicker]="picker">
     <input matStartDate formControlName="start" placeholder="Start date" />
     <input matEndDate formControlName="end" placeholder="End date" />
   </mat-date-range-input>

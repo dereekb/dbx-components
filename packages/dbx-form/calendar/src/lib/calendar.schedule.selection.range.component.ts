@@ -26,6 +26,9 @@ export class DbxScheduleSelectionCalendarDateRangeComponent implements OnDestroy
     end: new FormControl<Maybe<Date>>(null)
   });
 
+  readonly minDate$ = this.dbxCalendarScheduleSelectionStore.minDate$;
+  readonly maxDate$ = this.dbxCalendarScheduleSelectionStore.maxDate$;
+
   readonly pickerOpened$ = this._pickerOpened.asObservable();
 
   constructor(readonly dbxCalendarStore: DbxCalendarStore, readonly dbxCalendarScheduleSelectionStore: DbxCalendarScheduleSelectionStore) {}

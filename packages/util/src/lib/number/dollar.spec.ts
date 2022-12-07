@@ -4,13 +4,13 @@ describe('isDollarAmountString()', () => {
   it('should return true for numbers without a decimal', () => {
     const string = '100';
     const result = isDollarAmountString(string);
-    expect(result);
+    expect(result).toBe(true);
   });
 
   it('should return true for numbers with two decimal places', () => {
     const string = '100.51';
     const result = isDollarAmountString(string);
-    expect(result);
+    expect(result).toBe(true);
   });
 
   it('should return false for numbers with a decimal period', () => {

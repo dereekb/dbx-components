@@ -255,12 +255,12 @@ describe('setsAreEquivalent()', () => {
   it('should return true if the sets have the same values.', () => {
     const values = [0, 1, 2];
     const result = setsAreEquivalent(new Set(values), new Set(values));
-    expect(result);
+    expect(result).toBe(true);
   });
 
   it('should return false if one set is a subset of another set but not the same', () => {
     const values = [0, 1, 2];
     const result = setsAreEquivalent(new Set(values), new Set([0, 1]));
-    expect(result);
+    expect(result).toBe(false);
   });
 });

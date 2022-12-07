@@ -1,4 +1,4 @@
-import { Maybe } from '@dereekb/util';
+import { Building, Maybe } from '@dereekb/util';
 import { Expose, Type } from 'class-transformer';
 import { IsEnum, IsOptional, IsDate, IsNumber } from 'class-validator';
 import { addDays, addHours, endOfDay, endOfMonth, endOfWeek, isDate, isPast, startOfDay, startOfMinute, startOfMonth, startOfWeek } from 'date-fns';
@@ -285,16 +285,16 @@ export function dateRangeState({ start, end }: DateRange): DateRangeState {
   }
 }
 
-export type DateRangeFunctionDateRangeRef<T extends DateRange = DateRange> = {
-  _dateRange: T;
+export type DateRangeFunctionDateRangeRef<T extends Partial<DateRange> = DateRange> = {
+  readonly _dateRange: T;
 };
 
 /**
- * Returns true if the input date is contained within the configured DateRange.
+ * Returns true if the input date is contained within the configured DateRange or DateRangeStart.
  */
-export type IsDateInDateRangeFunction<T extends DateRange = DateRange> = ((date: Date) => boolean) & DateRangeFunctionDateRangeRef<T>;
+export type IsDateInDateRangeFunction<T extends Partial<DateRange> = DateRange> = ((date: Date) => boolean) & DateRangeFunctionDateRangeRef<T>;
 
-export function isDateInDateRange(date: Date, dateRange: DateRange): boolean {
+export function isDateInDateRange(date: Date, dateRange: Partial<DateRange>): boolean {
   return isDateInDateRangeFunction(dateRange)(date);
 }
 
@@ -304,18 +304,38 @@ export function isDateInDateRange(date: Date, dateRange: DateRange): boolean {
  * @param dateRange
  * @returns
  */
-export function isDateInDateRangeFunction<T extends DateRange = DateRange>(dateRange: T): IsDateInDateRangeFunction<T> {
-  const startTime = dateRange.start.getTime();
-  const endTime = dateRange.end.getTime();
+export function isDateInDateRangeFunction<T extends Partial<DateRange>>(dateRange: T): IsDateInDateRangeFunction<T> {
+  let fn: Building<IsDateInDateRangeFunction<T>>;
 
-  const fn = ((input: Date) => {
-    const time = input.getTime();
-    return time >= startTime && time <= endTime;
-  }) as IsDateInDateRangeFunction<T>;
+  if (dateRange.start != null && dateRange.end != null) {
+    // Start And End
+    const startTime = dateRange.start.getTime();
+    const endTime = dateRange.end.getTime();
+    fn = ((input: Date) => {
+      const time = input.getTime();
+      return time >= startTime && time <= endTime;
+    }) as IsDateInDateRangeFunction<T>;
+  } else if (dateRange.start != null) {
+    // Start Only
+    const startTime = dateRange.start.getTime();
+    fn = ((input: Date) => {
+      const time = input.getTime();
+      return time >= startTime;
+    }) as IsDateInDateRangeFunction<T>;
+  } else if (dateRange.end != null) {
+    // End Only
+    const endTime = dateRange.end.getTime();
+    fn = ((input: Date) => {
+      const time = input.getTime();
+      return time <= endTime;
+    }) as IsDateInDateRangeFunction<T>;
+  } else {
+    fn = ((input: Date) => false) as IsDateInDateRangeFunction<T>;
+  }
 
   fn._dateRange = dateRange;
 
-  return fn;
+  return fn as IsDateInDateRangeFunction<T>;
 }
 
 /**
@@ -339,11 +359,11 @@ export function isDateRangeInDateRangeFunction<T extends DateRange = DateRange>(
 
   const fn = ((input: DateRange) => {
     return input.start.getTime() >= startTime && input.end.getTime() <= endTime;
-  }) as IsDateRangeInDateRangeFunction<T>;
+  }) as Building<IsDateRangeInDateRangeFunction<T>>;
 
   fn._dateRange = dateRange;
 
-  return fn;
+  return fn as IsDateRangeInDateRangeFunction<T>;
 }
 
 /**
@@ -367,9 +387,9 @@ export function dateRangeOverlapsDateRangeFunction<T extends DateRange = DateRan
 
   const fn = ((input: DateRange) => {
     return input.start.getTime() <= endTime && input.end.getTime() >= startTime;
-  }) as DateRangeOverlapsDateRangeFunction<T>;
+  }) as Building<DateRangeOverlapsDateRangeFunction<T>>;
 
   fn._dateRange = dateRange;
 
-  return fn;
+  return fn as DateRangeOverlapsDateRangeFunction<T>;
 }

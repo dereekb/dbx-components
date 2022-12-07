@@ -16,7 +16,7 @@ export class DbxScheduleSelectionCalendarDatePopoverButtonComponent {
   @ViewChild('buttonPopoverOrigin', { read: ElementRef })
   buttonPopoverOrigin!: ElementRef;
 
-  readonly buttonText$ = this.dbxCalendarScheduleSelectionStore.currentMinAndMaxDate$.pipe(
+  readonly buttonText$ = this.dbxCalendarScheduleSelectionStore.currentDateRange$.pipe(
     map((x) => {
       if (x?.start && x.end) {
         return `${formatToDateString(x.start)} - ${formatToDateString(x.end)}`;
