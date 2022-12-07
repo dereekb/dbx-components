@@ -1,5 +1,6 @@
 export * from './field';
 export * from './calendar.module';
+export * from './calendar.schedule.selection.cell.component';
 export * from './calendar.schedule.selection.component';
 export * from './calendar.schedule.selection.days.component';
 export * from './calendar.schedule.selection.days.form.component';
