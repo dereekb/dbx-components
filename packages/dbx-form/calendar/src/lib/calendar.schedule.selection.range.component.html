@@ -10,7 +10,7 @@
   <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
   <div *ngIf="showCustomize">
     <dbx-button-spacer></dbx-button-spacer>
-    <button mat-raised-button color="accent">Customize</button>
+    <button mat-raised-button color="accent" (click)="clickCustomize()">Customize</button>
   </div>
   <mat-date-range-picker #picker (opened)="pickerOpened()" (closed)="pickerClosed()"></mat-date-range-picker>
   <mat-error *ngIf="range.controls.start.hasError('matStartDateInvalid')">Invalid start date</mat-error>

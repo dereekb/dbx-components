@@ -4,7 +4,7 @@ import { DbxPopoverKey, AbstractPopoverDirective, DbxPopoverService } from '@der
 import { NgPopoverRef } from 'ng-overlay-container';
 import { of, map, shareReplay } from 'rxjs';
 import { DbxCalendarScheduleSelectionStore } from './calendar.schedule.selection.store';
-import { formatToDateString } from '@dereekb/date';
+import { formatToDateString, formatToMonthDayString, formatToShortDateString } from '@dereekb/date';
 
 @Component({
   selector: 'dbx-schedule-selection-calendar-date-popover-button',
@@ -19,7 +19,7 @@ export class DbxScheduleSelectionCalendarDatePopoverButtonComponent {
   readonly buttonText$ = this.dbxCalendarScheduleSelectionStore.currentDateRange$.pipe(
     map((x) => {
       if (x?.start && x.end) {
-        return `${formatToDateString(x.start)} - ${formatToDateString(x.end)}`;
+        return `${formatToMonthDayString(x.start)} - ${formatToMonthDayString(x.end)}`;
       } else {
         return 'Pick a Date Range';
       }

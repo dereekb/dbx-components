@@ -68,14 +68,6 @@
 }
 
 @mixin color($theme-config) {
-  $color-config: theming.get-color-config($theme-config);
-  $background: map.get($color-config, 'background');
-  $background-color: theming.get-color-from-palette($background, 'background');
-
-  .dbx-schedule-selection-calendar-date-range-field {
-    .date-range-field-customized-text {
-    }
-  }
 }
 
 @mixin typography($typography-config) {

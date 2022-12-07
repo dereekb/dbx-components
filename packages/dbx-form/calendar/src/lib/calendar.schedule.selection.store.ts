@@ -118,7 +118,7 @@ export interface CalendarScheduleSelectionState extends PartialCalendarScheduleS
 }
 
 export function initialCalendarScheduleSelectionState(): CalendarScheduleSelectionState {
-  const start = systemBaseDateToNormalDate(startOfDay(new Date()));
+  const start = startOfDay(new Date());
   const scheduleDays = new Set([DateScheduleDayCode.WEEKDAY, DateScheduleDayCode.WEEKEND]);
   const allowedDaysOfWeek = expandDateScheduleDayCodesToDayOfWeekSet(Array.from(scheduleDays));
   const indexFactory = dateTimingRelativeIndexFactory({ start });
@@ -282,10 +282,10 @@ export function updateStateWithDateScheduleRangeValue(state: CalendarScheduleSel
     return state;
   } else {
     if (change != null) {
-      const nextState: CalendarScheduleSelectionState = { ...state, inputStart: change.start, inputEnd: change.end, selectedIndexes: new Set(change.ex), scheduleDays: new Set(dateScheduleDayCodes(change.w)) };
-      return finalizeNewCalendarScheduleSelectionState(nextState);
+      const nextState: CalendarScheduleSelectionState = { ...state, inputStart: change.start, inputEnd: change.end, selectedIndexes: new Set(change.ex) };
+      return updateStateWithChangedScheduleDays(finalizeNewCalendarScheduleSelectionState(nextState), dateScheduleDayCodes(change.w));
     } else {
-      return noSelectionCalendarScheduleSelectionState(state); // clear selection
+      return noSelectionCalendarScheduleSelectionState(state); // clear selection, retain disabled days
     }
   }
 }
