@@ -1,7 +1,7 @@
 import { DayOfWeek, RequiredOnKeys, IndexNumber, IndexRange, indexRangeCheckFunction, IndexRef, MINUTES_IN_DAY, MS_IN_DAY, UniqueModel, lastValue, FactoryWithRequiredInput, FilterFunction, mergeFilterFunctions, range, Milliseconds, Hours, MapFunction, getNextDay, SortCompareFunction, sortAscendingIndexNumberRefFunction, mergeArrayIntoArray, Configurable, ArrayOrValue, asArray, sumOfIntegersBetween, filterMaybeValues, Maybe } from '@dereekb/util';
 import { dateRange, DateRange, DateRangeDayDistanceInput, DateRangeStart, DateRangeType, isDateRange, isDateRangeStart } from './date.range';
 import { DateDurationSpan } from './date.duration';
-import { differenceInDays, differenceInMilliseconds, isBefore, addDays, addMinutes, getSeconds, getMilliseconds, getMinutes, addMilliseconds, hoursToMilliseconds, addHours, differenceInHours, isAfter, millisecondsToHours, minutesToHours } from 'date-fns';
+import { differenceInDays, differenceInMilliseconds, isBefore, addDays, addMinutes, getSeconds, getMilliseconds, getMinutes, addMilliseconds, hoursToMilliseconds, addHours, differenceInHours, isAfter, minutesToHours } from 'date-fns';
 import { isDate, copyHoursAndMinutesFromDate, roundDownToMinute } from './date';
 import { Expose, Type } from 'class-transformer';
 import { getCurrentSystemOffsetInHours } from './date.timezone';

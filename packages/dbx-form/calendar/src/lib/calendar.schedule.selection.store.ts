@@ -3,7 +3,6 @@ import {
   DateBlockDayOfWeekFactory,
   dateBlockDayOfWeekFactory,
   DateBlockIndex,
-  DateBlockRange,
   DateBlockRangeWithRange,
   dateBlockTimingDateFactory,
   DateOrDateBlockIndex,
@@ -26,15 +25,13 @@ import {
   isSameDate,
   isSameDateDay,
   isSameDateRange,
-  isSameDateScheduleRange,
-  systemBaseDateToNormalDate,
-  systemNormalDateToBaseDate
+  isSameDateScheduleRange
 } from '@dereekb/date';
 import { filterMaybe } from '@dereekb/rxjs';
-import { Maybe, TimezoneString, DecisionFunction, IterableOrValue, iterableToArray, addToSet, toggleInSet, isIndexNumberInIndexRangeFunction, MaybeMap, removeFromSet, excludeValues, minAndMaxNumber, setsAreEquivalent, DayOfWeek, range } from '@dereekb/util';
+import { Maybe, TimezoneString, DecisionFunction, IterableOrValue, iterableToArray, addToSet, toggleInSet, isIndexNumberInIndexRangeFunction, MaybeMap, minAndMaxNumber, setsAreEquivalent, DayOfWeek, range } from '@dereekb/util';
 import { ComponentStore } from '@ngrx/component-store';
 import { addYears, startOfDay, startOfYear } from 'date-fns';
-import { Observable, distinctUntilChanged, map, shareReplay, filter, share, finalize } from 'rxjs';
+import { Observable, distinctUntilChanged, map, shareReplay } from 'rxjs';
 import { CalendarScheduleSelectionCellContentFactory, CalendarScheduleSelectionValue, defaultCalendarScheduleSelectionCellContentFactory } from './calendar.schedule.selection';
 
 export interface CalendarScheduleSelectionInputDateRange {
@@ -168,7 +165,7 @@ export class DbxCalendarScheduleSelectionStore extends ComponentStore<CalendarSc
     map(({ inputStart, inputEnd }) => ({ inputStart, inputEnd })),
     distinctUntilChanged((a, b) => isSameDate(a.inputStart, b.inputStart) && isSameDate(a.inputEnd, b.inputEnd)),
     map((x) => {
-      if (Boolean(x.inputStart && x.inputEnd)) {
+      if (x.inputStart && x.inputEnd) {
         return x as CalendarScheduleSelectionInputDateRange;
       } else {
         return undefined;

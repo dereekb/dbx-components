@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { AbstractFilterSourceDirective, provideActionStoreSource, provideFilterSourceDirective } from '@dereekb/dbx-core';
+import { AbstractFilterSourceDirective, provideFilterSourceDirective } from '@dereekb/dbx-core';
 import { DocInteractionTestFilter } from './filter';
 
 @Component({

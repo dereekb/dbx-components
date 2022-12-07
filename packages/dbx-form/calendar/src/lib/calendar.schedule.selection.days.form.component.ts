@@ -1,10 +1,10 @@
-import { Component, EventEmitter, Output, OnDestroy } from '@angular/core';
-import { AbstractSyncFormlyFormDirective, dateTimeField, nameField, provideFormlyContext, toggleField } from '@dereekb/dbx-form';
+import { Component } from '@angular/core';
+import { AbstractSyncFormlyFormDirective, provideFormlyContext } from '@dereekb/dbx-form';
 import { EnabledDays } from '@dereekb/util';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { dbxScheduleSelectionCalendarDateDaysFormFields } from './calendar.schedule.selection.form';
 
-export interface DbxScheduleSelectionCalendarDateDaysFormValue extends EnabledDays {}
+export type DbxScheduleSelectionCalendarDateDaysFormValue = EnabledDays;
 
 @Component({
   template: `

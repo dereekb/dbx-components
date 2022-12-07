@@ -1,4 +1,4 @@
-import { DateBlockIndex, DateBlockRangeWithRange, DateRange, DateScheduleRange } from '@dereekb/date';
+import { DateBlockIndex, DateRange, DateScheduleRange } from '@dereekb/date';
 import { FactoryWithRequiredInput } from '@dereekb/util';
 import { CalendarMonthViewDay } from 'angular-calendar';
 

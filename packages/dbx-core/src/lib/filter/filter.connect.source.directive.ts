@@ -1,7 +1,5 @@
 import { Directive, Host, OnInit } from '@angular/core';
 import { FilterSource, FilterSourceConnector } from '@dereekb/rxjs';
-import { AbstractFilterSourceConnectorDirective } from './filter.abstract.connector.directive';
-import { provideFilterSource, provideFilterSourceConnector } from './filter.content';
 
 /**
  * Connects the host FilterSource to a FilterSourceConnector.

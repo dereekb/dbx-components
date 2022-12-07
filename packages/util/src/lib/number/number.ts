@@ -1,4 +1,4 @@
-import { MinAndMax, minAndMaxFunction, MinAndMaxFunctionResult, SortCompareFunction } from '../sort';
+import { minAndMaxFunction, MinAndMaxFunctionResult, SortCompareFunction } from '../sort';
 import { Maybe } from '../value/maybe.type';
 
 /**

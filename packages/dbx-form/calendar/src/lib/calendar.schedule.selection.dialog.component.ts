@@ -1,4 +1,4 @@
-import { Component, ElementRef, Injector } from '@angular/core';
+import { Component, Injector } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { AbstractDialogDirective } from '@dereekb/dbx-web';
 

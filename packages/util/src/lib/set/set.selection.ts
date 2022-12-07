@@ -1,4 +1,3 @@
-import { iterableToArray } from '../iterable';
 import { PrimativeKey, ReadKeyFunction } from '../key';
 import { DecisionFunction } from '../value';
 

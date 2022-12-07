@@ -1,11 +1,10 @@
-import { StringOrder, Maybe, mergeArrayIntoArray, firstValueFromIterable, DayOfWeek, addToSet, Day, range, DecisionFunction, FilterFunction, IndexRange, invertFilter, dayOfWeek, asArray, enabledDaysFromDaysOfWeek, EnabledDays, daysOfWeekFromEnabledDays, setsAreEquivalent, iterablesAreSetEquivalent } from '@dereekb/util';
+import { StringOrder, Maybe, mergeArrayIntoArray, firstValueFromIterable, DayOfWeek, addToSet, Day, range, DecisionFunction, FilterFunction, IndexRange, invertFilter, dayOfWeek, enabledDaysFromDaysOfWeek, EnabledDays, daysOfWeekFromEnabledDays, iterablesAreSetEquivalent } from '@dereekb/util';
 import { Expose } from 'class-transformer';
 import { IsString, Matches, IsOptional, Min, IsArray } from 'class-validator';
-import { differenceInDays, getDay } from 'date-fns';
-import { isSameDate } from './date';
+import { getDay } from 'date-fns';
 import { DateBlock, dateBlockDayOfWeekFactory, DateBlockDurationSpan, DateBlockIndex, dateBlockIndexRange, DateBlockRange, DateBlocksExpansionFactory, dateBlocksExpansionFactory, DateBlockTiming, dateTimingRelativeIndexFactory, getCurrentDateBlockTimingStartDate } from './date.block';
 import { dateBlockDurationSpanHasNotStartedFilterFunction, dateBlockDurationSpanHasNotEndedFilterFunction } from './date.filter';
-import { DateRange, DateRangeStart, DateRangeState, isSameDateRange } from './date.range';
+import { DateRange, isSameDateRange } from './date.range';
 import { YearWeekCodeConfig, yearWeekCodeDateTimezoneInstance } from './date.week';
 
 export enum DateScheduleDayCode {
@@ -105,7 +104,7 @@ export function simplifyDateScheduleDayCodes(codes: Iterable<DateScheduleDayCode
 
     const hasSaturday = codesSet.has(DateScheduleDayCode.SATURDAY);
     const hasSunday = codesSet.has(DateScheduleDayCode.SUNDAY);
-    let hasAllWeekendDays: boolean = codesSet.has(DateScheduleDayCode.WEEKEND) || (hasSaturday && hasSunday);
+    const hasAllWeekendDays: boolean = codesSet.has(DateScheduleDayCode.WEEKEND) || (hasSaturday && hasSunday);
 
     if (!hasAllWeekendDays && hasSunday) {
       result.push(DateScheduleDayCode.SUNDAY);
@@ -194,7 +193,7 @@ export function expandDateScheduleDayCodesToDayOfWeekSet(input: DateScheduleDayC
  */
 export type DateScheduleDayCodeFactory = (date: Date) => DateScheduleDayCode;
 
-export interface DateScheduleDayCodeConfig extends Pick<YearWeekCodeConfig, 'timezone'> {}
+export type DateScheduleDayCodeConfig = Pick<YearWeekCodeConfig, 'timezone'>;
 
 /**
  * Creates a DateScheduleDayCodeFactory using the optional input config.

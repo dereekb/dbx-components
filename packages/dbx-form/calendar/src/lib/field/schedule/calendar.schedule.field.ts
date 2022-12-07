@@ -1,6 +1,4 @@
-import { filter } from 'rxjs';
-import { DEFAULT_LAT_LNG_TEXT_FIELD_PATTERN_MESSAGE, DEFAULT_LAT_LNG_TEXT_FIELD_PLACEHOLDER, DescriptionFieldConfig, FieldConfig, formlyField, LabeledFieldConfig, propsAndConfigForFieldConfig, styleWrapper, validatorsForFieldConfig } from '@dereekb/dbx-form';
-import { LAT_LNG_PATTERN } from '@dereekb/util';
+import { DescriptionFieldConfig, FieldConfig, formlyField, LabeledFieldConfig, propsAndConfigForFieldConfig } from '@dereekb/dbx-form';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { DbxFormCalendarDateScheduleRangeFieldProps } from './calendar.schedule.field.component';
 

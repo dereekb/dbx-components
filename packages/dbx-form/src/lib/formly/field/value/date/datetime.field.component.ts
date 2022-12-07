@@ -6,8 +6,8 @@ import { AbstractControl, FormControl, Validators, FormGroup } from '@angular/fo
 import { FieldType } from '@ngx-formly/material';
 import { FieldTypeConfig, FormlyFieldProps } from '@ngx-formly/core';
 import { MatDatepickerInputEvent } from '@angular/material/datepicker';
-import { max as maxDate, min as minDate, addMinutes, isSameDay, isSameMinute, startOfDay, addDays } from 'date-fns';
-import { filterMaybe, skipFirstMaybe, SubscriptionObject, switchMapMaybeDefault, tapLog } from '@dereekb/rxjs';
+import { addMinutes, isSameDay, isSameMinute, startOfDay, addDays } from 'date-fns';
+import { filterMaybe, skipFirstMaybe, SubscriptionObject, switchMapMaybeDefault } from '@dereekb/rxjs';
 
 export enum DbxDateTimeFieldTimeMode {
   /**

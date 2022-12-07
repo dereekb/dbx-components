@@ -1,10 +1,9 @@
 import { DbxScheduleSelectionCalendarDatePopoverComponent } from './calendar.schedule.selection.popover.component';
 import { Component, ElementRef, Injector, ViewChild } from '@angular/core';
-import { DbxPopoverKey, AbstractPopoverDirective, DbxPopoverService } from '@dereekb/dbx-web';
-import { NgPopoverRef } from 'ng-overlay-container';
-import { of, map, shareReplay } from 'rxjs';
+import { DbxPopoverService } from '@dereekb/dbx-web';
+import { map, shareReplay } from 'rxjs';
 import { DbxCalendarScheduleSelectionStore } from './calendar.schedule.selection.store';
-import { formatToDateString, formatToMonthDayString, formatToShortDateString } from '@dereekb/date';
+import { formatToMonthDayString } from '@dereekb/date';
 
 @Component({
   selector: 'dbx-schedule-selection-calendar-date-popover-button',

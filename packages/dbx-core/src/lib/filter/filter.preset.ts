@@ -1,4 +1,4 @@
-import { FilterPresetStringRef, FilterWithoutPresetString, FilterWithPreset, FilterWithPresetOptional, ObservableOrValueGetter } from '@dereekb/rxjs';
+import { FilterPresetStringRef, FilterWithPreset, FilterWithPresetOptional } from '@dereekb/rxjs';
 import { EmptyObject, GetterOrValue } from '@dereekb/util';
 import { ClickableAnchorLink } from '../router/anchor/anchor';
 

@@ -1,5 +1,4 @@
-import { minAndMaxFunction, StringKeyPropertyKeys } from '@dereekb/util';
-import { AllCommaSeparatedKeysOfObject, CommaSeparatedKeyCombinationsOfObject, HasThreeCharacters, HasThreeOrMoreCharacters, IsSingleCharacter, KeyAsString, KeyCanBeString, MergeReplace, OrderedCommaSeparatedKeysOfObject, Replace, ReplaceType, StringConcatenation, StringKeyProperties } from './type';
+import { minAndMaxFunction } from '@dereekb/util';
 
 describe('minAndMaxFunction()', () => {
   describe('function', () => {

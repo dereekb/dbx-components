@@ -1,4 +1,4 @@
-import { Component, Directive, EventEmitter, Input, OnDestroy, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnDestroy, Output } from '@angular/core';
 
 /**
  * Component used to show a close button at the bottom of a dialog.

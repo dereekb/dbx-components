@@ -1,13 +1,13 @@
 import { lastValue } from '@dereekb/util';
 import { addDays, addHours } from 'date-fns';
-import { DateScheduleDayCode, systemBaseDateToNormalDate, systemNormalDateToBaseDate } from '@dereekb/date';
+import { DateScheduleDayCode, systemNormalDateToBaseDate } from '@dereekb/date';
 import { computeCalendarScheduleSelectionDateBlockRange, initialCalendarScheduleSelectionState, updateStateWithChangedDates, updateStateWithChangedRange, updateStateWithChangedScheduleDays } from './calendar.schedule.selection.store';
 
 describe('computeScheduleSelectionValue()', () => {
   const start = systemNormalDateToBaseDate(new Date('2022-01-02T00:00:00Z')); // Sunday
 
   it('should calculate a 3 day selection.', () => {
-    let state = initialCalendarScheduleSelectionState();
+    const state = initialCalendarScheduleSelectionState();
   });
 
   describe('schedule days disabled', () => {});

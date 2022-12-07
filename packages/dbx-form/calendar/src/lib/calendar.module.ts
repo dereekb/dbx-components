@@ -1,11 +1,10 @@
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { NgModule } from '@angular/core';
-import { CalendarDayModule, CalendarModule, CalendarWeekModule, DateAdapter } from 'angular-calendar';
+import { CalendarDayModule, CalendarModule, CalendarWeekModule } from 'angular-calendar';
 import { CommonModule } from '@angular/common';
 import { DbxActionModule, DbxButtonModule, DbxDialogInteractionModule, DbxPopoverInteractionModule } from '@dereekb/dbx-web';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
-import { adapterFactory as dateAdapterFactory } from 'angular-calendar/date-adapters/date-fns';
 import { MatButtonModule } from '@angular/material/button';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { DbxScheduleSelectionCalendarComponent } from './calendar.schedule.selection.component';

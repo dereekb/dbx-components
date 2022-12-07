@@ -1,5 +1,5 @@
-import { dateBlockDayOfWeekFactory, DateBlockIndex } from './date.block';
-import { DateBlock, dateBlockTiming, systemBaseDateToNormalDate, systemNormalDateToBaseDate } from '@dereekb/date';
+import { DateBlockIndex } from './date.block';
+import { DateBlock, dateBlockTiming, systemNormalDateToBaseDate } from '@dereekb/date';
 import { expandDateScheduleFactory, DateSchedule, dateScheduleDateBlockTimingFilter, DateScheduleDayCode, dateScheduleDayCodeFactory, dateScheduleEncodedWeek, dateScheduleDateFilter, DateScheduleDateFilterConfig } from './date.schedule';
 import { addDays } from 'date-fns';
 import { range, UTC_TIMEZONE_STRING } from '@dereekb/util';

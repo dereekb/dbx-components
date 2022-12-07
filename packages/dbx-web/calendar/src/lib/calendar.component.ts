@@ -4,7 +4,6 @@ import { CalendarEvent } from 'angular-calendar';
 import { DbxCalendarStore } from './calendar.store';
 import { map, shareReplay, withLatestFrom } from 'rxjs';
 import { MatButtonToggleChange } from '@angular/material/button-toggle';
-import { formatToTimeAndDurationString } from '@dereekb/date';
 import { DbxCalendarEvent, prepareAndSortCalendarEvents } from './calendar';
 
 @Component({

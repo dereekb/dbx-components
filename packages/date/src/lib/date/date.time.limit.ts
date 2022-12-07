@@ -1,7 +1,6 @@
 import { Minutes, Hours, Days, LogicalDate, DATE_NOW_VALUE, Maybe } from '@dereekb/util';
 import { addMinutes, isBefore, min as minDate, max as maxDate } from 'date-fns';
 import { daysToMinutes, isAfter, roundDownToMinute, takeNextUpcomingTime } from './date';
-import { DateSchedule } from './date.schedule';
 
 export interface LimitDateTimeConfig {
   /**

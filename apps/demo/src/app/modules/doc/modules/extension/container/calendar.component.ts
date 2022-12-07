@@ -1,12 +1,11 @@
 import { OnInit, Component } from '@angular/core';
 import { DbxCalendarEvent, DbxCalendarStore } from '@dereekb/dbx-web/calendar';
-import { DateBlock, DateBlockCollection, dateBlockTiming, DateScheduleRange, durationSpanToDateRange, expandDateBlockCollection } from '@dereekb/date';
-import { addMonths, setHours } from 'date-fns/esm';
+import { DateBlock, DateBlockCollection, dateBlockTiming, durationSpanToDateRange, expandDateBlockCollection } from '@dereekb/date';
+import { addMonths, setHours, startOfDay, addDays } from 'date-fns/esm';
 import { Maybe, range } from '@dereekb/util';
 import { CalendarEvent } from 'angular-calendar';
 import { dateScheduleRangeField } from '@dereekb/dbx-form/calendar';
-import { startOfDay, addDays } from 'date-fns';
-import { Observable, of } from 'rxjs';
+import { of } from 'rxjs';
 import { DOC_EXTENSION_CALENDAR_SCHEDULE_TEST_FILTER } from '../component/selection.filter.calendar.component';
 
 export interface TestCalendarEventData extends DateBlock {

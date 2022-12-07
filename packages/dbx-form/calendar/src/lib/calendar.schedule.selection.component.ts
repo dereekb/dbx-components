@@ -1,12 +1,8 @@
-import { tapLog } from '@dereekb/rxjs';
 import { Component, EventEmitter, Output, OnDestroy } from '@angular/core';
-import { isSameMonth } from 'date-fns';
 import { CalendarEvent, CalendarMonthViewDay } from 'angular-calendar';
-import { map, shareReplay, BehaviorSubject, Subject, first, throttleTime } from 'rxjs';
-import { MatButtonToggleChange } from '@angular/material/button-toggle';
-import { DateOrDateBlockIndex, formatToTimeAndDurationString } from '@dereekb/date';
+import { map, shareReplay, Subject, first, throttleTime } from 'rxjs';
 import { DbxCalendarEvent, DbxCalendarStore, prepareAndSortCalendarEvents } from '@dereekb/dbx-web/calendar';
-import { DayOfWeek, DecisionFunction } from '@dereekb/util';
+import { DayOfWeek } from '@dereekb/util';
 import { DbxCalendarScheduleSelectionStore } from './calendar.schedule.selection.store';
 import { CalendarScheduleSelectionDayState, CalendarScheduleSelectionMetadata } from './calendar.schedule.selection';
 

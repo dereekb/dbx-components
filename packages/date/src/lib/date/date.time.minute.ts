@@ -1,8 +1,8 @@
 import { dateFromLogicalDate, Minutes, DecisionFunction } from '@dereekb/util';
-import { addMinutes, isAfter, set, isBefore } from 'date-fns';
+import { addMinutes, isAfter, isBefore } from 'date-fns';
 import { roundDownToMinute } from './date';
 import { roundDateTimeDownToSteps, StepRoundDateTimeDown } from './date.round';
-import { DateSchedule, dateScheduleDateFilter, DateScheduleDateFilter, DateScheduleDateFilterConfig } from './date.schedule';
+import { dateScheduleDateFilter, DateScheduleDateFilter, DateScheduleDateFilterConfig } from './date.schedule';
 import { LimitDateTimeConfig, LimitDateTimeInstance } from './date.time.limit';
 
 export interface DateTimeMinuteConfig extends LimitDateTimeConfig {

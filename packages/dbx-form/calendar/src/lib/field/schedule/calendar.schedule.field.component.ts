@@ -4,7 +4,7 @@ import { Component, NgZone, OnDestroy, OnInit, Optional } from '@angular/core';
 import { FieldTypeConfig, FormlyFieldProps } from '@ngx-formly/core';
 import { Maybe } from '@dereekb/util';
 import { FieldType } from '@ngx-formly/material';
-import { BehaviorSubject, distinctUntilChanged, map, shareReplay, startWith, Subscription, switchMap } from 'rxjs';
+import { BehaviorSubject, distinctUntilChanged, shareReplay, startWith, Subscription, switchMap } from 'rxjs';
 import { filterMaybe, ObservableOrValue, SubscriptionObject, asObservable } from '@dereekb/rxjs';
 import { DateScheduleDateFilterConfig, isSameDateScheduleRange } from '@dereekb/date';
 import { DbxCalendarScheduleSelectionStore } from '../../calendar.schedule.selection.store';

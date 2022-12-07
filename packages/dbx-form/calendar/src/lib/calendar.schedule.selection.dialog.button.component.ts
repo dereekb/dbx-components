@@ -1,4 +1,4 @@
-import { Component, ElementRef, Injector, Input } from '@angular/core';
+import { Component, Injector, Input } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { DbxScheduleSelectionCalendarDateDialogComponent } from './calendar.schedule.selection.dialog.component';
 

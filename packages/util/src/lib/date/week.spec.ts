@@ -1,4 +1,3 @@
-import { range } from '../array';
 import { Day, getDayOffset, getNextDay, getPreviousDay } from './week';
 
 describe('getDayOffset()', () => {
