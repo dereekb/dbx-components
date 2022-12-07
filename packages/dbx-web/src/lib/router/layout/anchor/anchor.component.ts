@@ -1,4 +1,4 @@
-import { skipFirstMaybe, tapLog } from '@dereekb/rxjs';
+import { skipFirstMaybe } from '@dereekb/rxjs';
 import { Input, Component, TemplateRef, ViewChild, OnDestroy } from '@angular/core';
 import { AbstractDbxAnchorDirective, DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { Maybe } from '@dereekb/util';

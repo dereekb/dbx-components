@@ -2,28 +2,36 @@ import { NgModule } from '@angular/core';
 import { DbxCalendarComponent } from './calendar.component';
 import { CalendarDayModule, CalendarModule, CalendarWeekModule, DateAdapter } from 'angular-calendar';
 import { CommonModule } from '@angular/common';
-import { DbxButtonModule } from '../../button/button.module';
+import { DbxButtonModule, DbxPopoverInteractionModule } from '@dereekb/dbx-web';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { adapterFactory as dateAdapterFactory } from 'angular-calendar/date-adapters/date-fns';
 import { MatButtonModule } from '@angular/material/button';
 import { FlexLayoutModule } from '@angular/flex-layout';
+import { DbxCalendarBaseComponent } from './calendar.base.component';
+
+const declarations = [
+  //
+  DbxCalendarBaseComponent,
+  DbxCalendarComponent
+];
 
 @NgModule({
-  declarations: [DbxCalendarComponent],
   imports: [
     //
     CommonModule,
     MatIconModule,
     MatButtonModule,
     MatButtonToggleModule,
+    DbxButtonModule,
+    DbxPopoverInteractionModule,
     CalendarModule,
     CalendarDayModule,
     FlexLayoutModule,
-    CalendarWeekModule,
-    DbxButtonModule
+    CalendarWeekModule
   ],
-  exports: [DbxCalendarComponent]
+  declarations,
+  exports: declarations
 })
 export class DbxCalendarModule {}
 

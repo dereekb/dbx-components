@@ -1,6 +1,6 @@
 import { UNKNOWN_WEBSITE_LINK_TYPE, WebsiteLink, GrantedRole, WebsiteFileLink, EncodedWebsiteFileLink, encodeWebsiteFileLinkToWebsiteLinkEncodedData, decodeWebsiteLinkEncodedDataToWebsiteFileLink } from '@dereekb/model';
 import { FirestoreModelKey } from '../collection/collection';
-import { DateBlockRange, formatToISO8601DateString, toISODateString, toJsDate } from '@dereekb/date';
+import { DateBlockRange, DateSchedule, formatToISO8601DateString, toISODateString, toJsDate } from '@dereekb/date';
 import {
   ModelFieldMapFunctionsConfig,
   GetterOrValue,
@@ -711,19 +711,19 @@ export function firestoreWebsiteLinkArray() {
 }
 
 // MARK: WebsiteFileLink
-export const DEFAULT_WEBSITE_FILE_LINK: WebsiteFileLink = {
+export const DEFAULT_FIRESTORE_WEBSITE_FILE_LINK_VALUE: WebsiteFileLink = {
   data: ''
 };
 
 export const assignWebsiteFileLinkFunction = assignValuesToPOJOFunction<WebsiteFileLink>({ keysFilter: ['type', 'name', 'mime'], valueFilter: KeyValueTypleValueFilter.EMPTY });
 export const firestoreWebsiteFileLinkAssignFn: MapFunction<WebsiteFileLink, WebsiteFileLink> = (input) => {
-  const behavior = assignWebsiteFileLinkFunction(DEFAULT_WEBSITE_FILE_LINK, input);
+  const behavior = assignWebsiteFileLinkFunction(DEFAULT_FIRESTORE_WEBSITE_FILE_LINK_VALUE, input);
   return behavior;
 };
 
 export function firestoreWebsiteFileLink() {
   return firestoreField<WebsiteFileLink, WebsiteFileLink>({
-    default: () => DEFAULT_WEBSITE_FILE_LINK,
+    default: () => DEFAULT_FIRESTORE_WEBSITE_FILE_LINK_VALUE,
     fromData: firestoreWebsiteFileLinkAssignFn,
     toData: firestoreWebsiteFileLinkAssignFn
   });
@@ -732,8 +732,6 @@ export function firestoreWebsiteFileLink() {
 // MARK: WebsiteFileLink Array
 /**
  * Stores the array of WebsiteFileLink values as an array of objects.
- *
- * @returns
  */
 export function firestoreWebsiteFileLinkObjectArray() {
   return firestoreObjectArray({
@@ -743,8 +741,6 @@ export function firestoreWebsiteFileLinkObjectArray() {
 
 /**
  * Stores the array of WebsiteFileLink values as an array of EncodedWebsiteFileLink values.
- *
- * @returns
  */
 export function firestoreWebsiteFileLinkEncodedArray() {
   return firestoreEncodedArray<WebsiteFileLink, EncodedWebsiteFileLink>({
@@ -756,13 +752,13 @@ export function firestoreWebsiteFileLinkEncodedArray() {
 }
 
 // MARK: DateBlockRange
-export const DEFAULT_DATE_BLOCK_RANGE: DateBlockRange = {
+export const DEFAULT_DATE_BLOCK_RANGE_VALUE: DateBlockRange = {
   i: 0
 };
 
 export const assignDateBlockRangeFunction = assignValuesToPOJOFunction<DateBlockRange>({ keysFilter: ['i', 'to'], valueFilter: KeyValueTypleValueFilter.NULL });
 export const firestoreDateBlockRangeAssignFn: MapFunction<DateBlockRange, DateBlockRange> = (input) => {
-  const block = assignDateBlockRangeFunction(DEFAULT_DATE_BLOCK_RANGE, input);
+  const block = assignDateBlockRangeFunction(DEFAULT_DATE_BLOCK_RANGE_VALUE, input);
 
   if (block.to == null) {
     block.to = block.i;
@@ -773,7 +769,7 @@ export const firestoreDateBlockRangeAssignFn: MapFunction<DateBlockRange, DateBl
 
 export function firestoreDateBlockRange() {
   return firestoreField<DateBlockRange, DateBlockRange>({
-    default: DEFAULT_DATE_BLOCK_RANGE,
+    default: DEFAULT_DATE_BLOCK_RANGE_VALUE,
     fromData: firestoreDateBlockRangeAssignFn,
     toData: firestoreDateBlockRangeAssignFn
   });
@@ -786,8 +782,27 @@ export function firestoreDateBlockRangeArray() {
   });
 }
 
+// MARK: Date Schedule
+export const DEFAULT_FIRESTORE_DATE_SCHEDULE_VALUE: DateSchedule = {
+  w: '0'
+};
+
+export const assignDateScheduleFunction = assignValuesToPOJOFunction<DateSchedule>({ keysFilter: ['w', 'd', 'ex'], valueFilter: KeyValueTypleValueFilter.NULL });
+export const firestoreDateScheduleAssignFn: MapFunction<DateSchedule, DateSchedule> = (input) => {
+  const block = assignDateScheduleFunction(DEFAULT_FIRESTORE_DATE_SCHEDULE_VALUE, input);
+  return block;
+};
+
+export function firestoreDateSchedule() {
+  return firestoreField<DateSchedule, DateSchedule>({
+    default: DEFAULT_FIRESTORE_DATE_SCHEDULE_VALUE,
+    fromData: firestoreDateScheduleAssignFn,
+    toData: firestoreDateScheduleAssignFn
+  });
+}
+
 // MARK: Address
-export const DEFAULT_UNITED_STATES_ADDRESS: UnitedStatesAddress = {
+export const DEFAULT_FIRESTORE_UNITED_STATES_ADDRESS_VALUE: UnitedStatesAddress = {
   line1: '',
   city: '',
   state: '',
@@ -795,21 +810,21 @@ export const DEFAULT_UNITED_STATES_ADDRESS: UnitedStatesAddress = {
 };
 
 export const assignUnitedStatesAddressFunction = assignValuesToPOJOFunction<UnitedStatesAddress>({ keysFilter: ['line1', 'line2', 'city', 'state', 'zip'], valueFilter: KeyValueTypleValueFilter.EMPTY });
-export const firestoreUnitedStatesAddressAssignFn: MapFunction<UnitedStatesAddress, UnitedStatesAddress> = (input) => assignUnitedStatesAddressFunction(DEFAULT_UNITED_STATES_ADDRESS, input);
+export const firestoreUnitedStatesAddressAssignFn: MapFunction<UnitedStatesAddress, UnitedStatesAddress> = (input) => assignUnitedStatesAddressFunction(DEFAULT_FIRESTORE_UNITED_STATES_ADDRESS_VALUE, input);
 
 export function firestoreUnitedStatesAddress() {
   return firestoreField<UnitedStatesAddress, UnitedStatesAddress>({
-    default: DEFAULT_UNITED_STATES_ADDRESS,
+    default: DEFAULT_FIRESTORE_UNITED_STATES_ADDRESS_VALUE,
     fromData: firestoreUnitedStatesAddressAssignFn,
     toData: firestoreUnitedStatesAddressAssignFn
   });
 }
 
 // MARK: Zoom
-export const MIN_FIRESTORE_MAP_ZOOM_LEVEL: ZoomLevel = 0;
-export const MAX_FIRESTORE_MAP_ZOOM_LEVEL: ZoomLevel = 22;
+export const MIN_FIRESTORE_MAP_ZOOM_LEVEL_VALUE: ZoomLevel = 0;
+export const MAX_FIRESTORE_MAP_ZOOM_LEVEL_VALUE: ZoomLevel = 22;
 
 /**
  * Convenience function for firestoreNumber() for storing an integer ZoomLevel value.
  */
-export const firestoreMapZoomLevel = firestoreNumber<ZoomLevel>({ default: 5, transform: { precision: 1, bounds: { min: MIN_FIRESTORE_MAP_ZOOM_LEVEL, max: MAX_FIRESTORE_MAP_ZOOM_LEVEL } } });
+export const firestoreMapZoomLevel = firestoreNumber<ZoomLevel>({ default: 5, transform: { precision: 1, bounds: { min: MIN_FIRESTORE_MAP_ZOOM_LEVEL_VALUE, max: MAX_FIRESTORE_MAP_ZOOM_LEVEL_VALUE } } });

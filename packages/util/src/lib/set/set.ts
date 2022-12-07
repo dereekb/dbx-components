@@ -31,6 +31,20 @@ export function addToSet<T>(set: Set<T>, values: Maybe<IterableOrValue<T>>) {
   useIterableOrValue(values, (x) => set.add(x));
 }
 
+export function toggleInSetCopy<T>(set: Set<T>, values: Maybe<IterableOrValue<T>>): Set<T> {
+  return copySetAndDo(set, (x) => toggleInSet(x, values));
+}
+
+export function toggleInSet<T>(set: Set<T>, values: Maybe<IterableOrValue<T>>) {
+  useIterableOrValue(values, (x) => {
+    if (set.has(x)) {
+      set.delete(x);
+    } else {
+      set.add(x);
+    }
+  });
+}
+
 export function removeFromSetCopy<T>(set: Set<T>, values: Maybe<IterableOrValue<T>>): Set<T> {
   return copySetAndDo(set, (x) => removeFromSet(x, values));
 }
@@ -44,11 +58,11 @@ export function hasDifferentValues<T>(a: Maybe<Iterable<T>>, b: Maybe<Iterable<T
   return a == null || b == null || !setContainsAllValues(setA, b) || setA.size !== new Set(b).size;
 }
 
-export function symmetricDifferenceKeys<T>(a: Maybe<Iterable<T>>, b: Maybe<Iterable<T>>): Maybe<T>[] {
-  return symmetricDifferenceKeysSet(new Set(a), new Set(b));
+export function symmetricDifferenceArray<T>(a: Maybe<Iterable<T>>, b: Maybe<Iterable<T>>): Maybe<T>[] {
+  return symmetricDifferenceArrayBetweenSets(new Set(a), new Set(b));
 }
 
-export function symmetricDifferenceKeysSet<T>(a: Set<Maybe<T>>, b: Set<Maybe<T>>): Maybe<T>[] {
+export function symmetricDifferenceArrayBetweenSets<T>(a: Set<Maybe<T>>, b: Set<Maybe<T>>): Maybe<T>[] {
   return Array.from(symmetricDifference(a, b));
 }
 
@@ -58,6 +72,10 @@ export function flattenArrayToSet<T>(array: T[][]): Set<T> {
 
 export function keepValuesFromSet<T>(values: T[], set: Set<T>): T[] {
   return filterValuesFromSet(values, set, false);
+}
+
+export function excludeValues<T>(valuesToExclude: T[], iterable: Maybe<Iterable<T>>): T[] {
+  return excludeValuesFromSet(valuesToExclude, new Set(iterable));
 }
 
 export function excludeValuesFromSet<T>(values: T[], set: Set<T>): T[] {
@@ -255,3 +273,35 @@ export function containsAllValues<T>(values: Iterable<T>, valuesToFind: Iterable
 export function setContainsAllValues<T>(valuesSet: Set<T>, valuesToFind: IterableOrValue<T>): boolean {
   return valuesSet ? Array.from(asIterable(valuesToFind)).findIndex((x) => !valuesSet.has(x)) == -1 : false;
 }
+
+/**
+ * Returns true if both iterables are defined (or are both null/undefined) and have the same values exactly.
+ *
+ * @param a
+ * @param b
+ * @returns
+ */
+export function iterablesAreSetEquivalent<T>(a: Maybe<Iterable<T>>, b: Maybe<Iterable<T>>): boolean {
+  return a && b ? setsAreEquivalent(new Set(a), new Set(b)) : a == b;
+}
+
+/**
+ * Returns true if both sets are defined (or are both null/undefined) and have the same values exactly.
+ *
+ * @param a
+ * @param b
+ */
+export function setsAreEquivalent<T>(a: Maybe<Set<T>>, b: Maybe<Set<T>>): boolean {
+  return a && b ? a.size === b.size && symmetricDifferenceArrayBetweenSets(a, b).length === 0 : a == b;
+}
+
+// MARK: Compat
+/**
+ * @deprecated use symmetricDifferenceArray
+ */
+export const symmetricDifferenceKeys = symmetricDifferenceArray;
+
+/**
+ * @deprecated use symmetricDifferenceArrayBetweenSets
+ */
+export const symmetricDifferenceKeysSet = symmetricDifferenceArrayBetweenSets;

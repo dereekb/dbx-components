@@ -21,7 +21,7 @@ export class WriteBatchFirestoreDocumentDataAccessor<T> extends DefaultFirestore
     return Promise.resolve();
   }
 
-  override update(data: UpdateData<unknown>): Promise<void> {
+  override update(data: UpdateData<object>): Promise<void> {
     assertFirestoreUpdateHasData(data);
     this.batch.update(this.documentRef, data as FirestoreUpdateData<T>);
     return Promise.resolve();

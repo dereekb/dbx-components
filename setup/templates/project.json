@@ -2,7 +2,7 @@
   "prefix": "workspace",
   "targets": {
     "build-all": {
-      "executor": "@nrwl/workspace:run-commands",
+      "executor": "nx:run-commands",
       "options": {
         "command": "npx nx run-many --target=build --parallel --max-parallel=2",
         "color": true
@@ -18,13 +18,13 @@
       }
     },
     "deploy-firebase-rules": {
-      "executor": "@nrwl/workspace:run-commands",
+      "executor": "nx:run-commands",
       "options": {
         "command": "npx firebase --project=default deploy --only firestore:rules,storage"
       }
     },
     "ci-deploy-firebase-rules": {
-      "executor": "@nrwl/workspace:run-commands",
+      "executor": "nx:run-commands",
       "options": {
         "command": "npx firebase --project=default deploy --only firestore:rules,storage"
       }

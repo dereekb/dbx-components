@@ -31,7 +31,8 @@
       "dependsOn": ["build"]
     },
     "test": {
-      "dependsOn": ["build"]
+      "dependsOn": ["build"],
+      "inputs": ["default", "^default", "{workspaceRoot}/jest.preset.ts"]
     },
     "publish": {
       "dependsOn": ["build"]

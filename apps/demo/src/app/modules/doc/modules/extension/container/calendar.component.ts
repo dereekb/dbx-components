@@ -1,9 +1,12 @@
 import { OnInit, Component } from '@angular/core';
-import { DbxCalendarEvent, DbxCalendarStore } from '@dereekb/dbx-web';
+import { DbxCalendarEvent, DbxCalendarStore } from '@dereekb/dbx-web/calendar';
 import { DateBlock, DateBlockCollection, dateBlockTiming, durationSpanToDateRange, expandDateBlockCollection } from '@dereekb/date';
-import { addMonths, setHours } from 'date-fns/esm';
+import { addMonths, setHours, startOfDay, addDays } from 'date-fns/esm';
 import { Maybe, range } from '@dereekb/util';
 import { CalendarEvent } from 'angular-calendar';
+import { dateScheduleRangeField } from '@dereekb/dbx-form/calendar';
+import { of } from 'rxjs';
+import { DOC_EXTENSION_CALENDAR_SCHEDULE_TEST_FILTER } from '../component/selection.filter.calendar.component';
 
 export interface TestCalendarEventData extends DateBlock {
   value: string;
@@ -17,6 +20,30 @@ export class DocExtensionCalendarComponent implements OnInit {
   showRight = true;
 
   event: Maybe<DbxCalendarEvent<TestCalendarEventData>>;
+
+  readonly defaultDateScheduleRangeFieldValue$ = of({
+    dateSchedule: {
+      start: startOfDay(new Date()),
+      end: addDays(startOfDay(new Date()), 14),
+      w: '8',
+      ex: [0, 3, 4, 5]
+    }
+  });
+
+  readonly dateScheduleRangeFields = [
+    dateScheduleRangeField({
+      key: 'dateSchedule',
+      required: true,
+      label: 'Custom Label',
+      description: 'Input field used for picking a DateScheduleRange value.'
+    }),
+    dateScheduleRangeField({
+      key: 'dateScheduleWithFilter',
+      required: true,
+      description: 'Date schedule with a filter applied to it',
+      filter: DOC_EXTENSION_CALENDAR_SCHEDULE_TEST_FILTER
+    })
+  ];
 
   readonly date$ = this.calendarStore.date$;
 

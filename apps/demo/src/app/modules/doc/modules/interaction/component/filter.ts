@@ -1,5 +1,5 @@
 import { ClickableFilterPreset } from '@dereekb/dbx-core';
-import { FilterPresetStringRef, FilterWithPreset } from '@dereekb/rxjs';
+import { FilterWithPreset } from '@dereekb/rxjs';
 import { Maybe } from '@dereekb/util';
 import { startOfDay, addDays } from 'date-fns';
 

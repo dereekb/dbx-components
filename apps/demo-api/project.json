@@ -1,10 +1,11 @@
 {
+  "name": "demo-api",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "apps/demo-api/src",
   "projectType": "application",
   "targets": {
     "build": {
-      "executor": "@nrwl/workspace:run-commands",
+      "executor": "nx:run-commands",
       "outputs": ["dist/apps/demo-api"],
       "options": {
         "command": "npx nx run demo-api:build-base",
@@ -37,19 +38,19 @@
       }
     },
     "run-emulators": {
-      "executor": "@nrwl/workspace:run-commands",
+      "executor": "nx:run-commands",
       "options": {
         "command": "npx env-cmd -f .env.local --use-shell 'npx firebase --project=default emulators:start --import=/root/data/emulators --export-on-exit'"
       }
     },
     "watch-emulators": {
-      "executor": "@nrwl/workspace:run-commands",
+      "executor": "nx:run-commands",
       "options": {
         "command": "echo 'starting server in 5...'; sleep 5; while sleep 2; do find dist/apps/demo-api | entr -r -s './wait-for-ports.sh && npx env-cmd -f .env.local --use-shell npx firebase --project=default emulators:start --import=/root/data/emulators --export-on-exit'; done"
       }
     },
     "serve": {
-      "executor": "@nrwl/workspace:run-commands",
+      "executor": "nx:run-commands",
       "options": {
         "commands": [
           {
@@ -70,7 +71,7 @@
       }
     },
     "test": {
-      "executor": "@nrwl/workspace:run-commands",
+      "executor": "nx:run-commands",
       "options": {
         "command": "./exec-with-emulator.sh 'npx nx run-tests demo-api'"
       }
@@ -84,19 +85,19 @@
       }
     },
     "watch": {
-      "executor": "@nrwl/workspace:run-commands",
+      "executor": "nx:run-commands",
       "options": {
         "command": "./exec-with-emulator.sh 'npx nx run-tests demo-api --watch'"
       }
     },
     "make-env": {
-      "executor": "@nrwl/workspace:run-commands",
+      "executor": "nx:run-commands",
       "options": {
         "command": "node ./make-env.js > dist/apps/demo-api/.env && cp .env.prod dist/apps/demo-api/.env.prod"
       }
     },
     "ci-deploy": {
-      "executor": "@nrwl/workspace:run-commands",
+      "executor": "nx:run-commands",
       "options": {
         "commands": [
           {

@@ -1,10 +1,11 @@
 {
+  "name": "firebase",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/firebase/src",
   "projectType": "library",
   "targets": {
     "build": {
-      "executor": "@nrwl/workspace:run-commands",
+      "executor": "nx:run-commands",
       "outputs": ["dist/packages/firebase"],
       "options": {
         "commands": [
@@ -37,13 +38,13 @@
       }
     },
     "watch": {
-      "executor": "@nrwl/workspace:run-commands",
+      "executor": "nx:run-commands",
       "options": {
         "command": "./exec-with-emulator.sh 'npx nx run-tests firebase --watch'"
       }
     },
     "test": {
-      "executor": "@nrwl/workspace:run-commands",
+      "executor": "nx:run-commands",
       "options": {
         "command": "./exec-with-emulator.sh 'npx nx run-tests firebase'"
       }
@@ -57,7 +58,7 @@
       }
     },
     "run-all-tests": {
-      "executor": "@nrwl/workspace:run-commands",
+      "executor": "nx:run-commands",
       "options": {
         "commands": [
           {
@@ -74,7 +75,7 @@
       }
     },
     "publish-npmjs": {
-      "executor": "@nrwl/workspace:run-commands",
+      "executor": "nx:run-commands",
       "options": {
         "command": "cd ./dist/packages/firebase && npm publish --access public"
       }

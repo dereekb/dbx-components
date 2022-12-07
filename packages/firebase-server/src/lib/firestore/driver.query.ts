@@ -23,7 +23,7 @@ import {
   FIRESTORE_END_AT_VALUE_QUERY_CONSTRAINT_TYPE
 } from '@dereekb/firebase';
 
-export type FirestoreServerQueryBuilder<T = unknown> = GoogleCloudQuery<T>;
+export type FirestoreServerQueryBuilder<T = any> = GoogleCloudQuery<T>;
 
 export const FIRESTORE_CLIENT_QUERY_CONSTRAINT_HANDLER_MAPPING: FullFirestoreQueryConstraintHandlersMapping<FirestoreServerQueryBuilder> = {
   [FIRESTORE_LIMIT_QUERY_CONSTRAINT_TYPE]: (builder, data) => builder.limit(data.limit),

@@ -16,6 +16,24 @@ $max-dialog-width: 90vw;
       width: $max-dialog-width;
     }
   }
+
+  .dbx-dialog-content-close {
+    display: block;
+    height: 8px;
+
+    > .mat-icon-button {
+      float: right;
+      margin-top: -15px;
+      margin-right: -15px;
+    }
+  }
+
+  .dbx-dialog-content-footer {
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 }
 
 @mixin color($theme-config) {

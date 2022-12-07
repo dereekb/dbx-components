@@ -38,7 +38,7 @@
   </button>
   <mat-form-field class="dbx-datetime-row-field">
     <mat-label>{{ dateLabel }}</mat-label>
-    <input #dateInput matInput [min]="dateInputMin$ | async" [max]="dateInputMax$ | async" [matDatepicker]="picker" (dateChange)="datePicked($event)" [value]="dateValue$ | async" (keydown)="keydownOnDateInput($event)" />
+    <input #dateInput matInput [min]="dateInputMin$ | async" [max]="dateInputMax$ | async" [matDatepicker]="picker" [matDatepickerFilter]="(pickerFilter$ | async) || defaultPickerFilter" (dateChange)="datePicked($event)" [value]="dateValue$ | async" (keydown)="keydownOnDateInput($event)" />
     <mat-datepicker #picker></mat-datepicker>
   </mat-form-field>
 </ng-template>

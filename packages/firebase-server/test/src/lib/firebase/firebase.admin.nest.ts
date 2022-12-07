@@ -46,10 +46,11 @@ export class FirebaseAdminNestTestContextInstance<PI extends FirebaseAdminTestCo
   get<TInput = any, TResult = TInput>(
     typeOrToken: Type<TInput> | Abstract<TInput> | string | symbol,
     options?: {
-      strict: boolean;
+      strict?: boolean | undefined;
+      each?: undefined | false;
     }
   ): TResult {
-    return this.nest.get(typeOrToken, options);
+    return options ? this.nest.get(typeOrToken, options) : this.nest.get(typeOrToken);
   }
 }
 

@@ -1,8 +1,8 @@
 import { DayOfWeek, RequiredOnKeys, IndexNumber, IndexRange, indexRangeCheckFunction, IndexRef, MINUTES_IN_DAY, MS_IN_DAY, UniqueModel, lastValue, FactoryWithRequiredInput, FilterFunction, mergeFilterFunctions, range, Milliseconds, Hours, MapFunction, getNextDay, SortCompareFunction, sortAscendingIndexNumberRefFunction, mergeArrayIntoArray, Configurable, ArrayOrValue, asArray, sumOfIntegersBetween, filterMaybeValues, Maybe } from '@dereekb/util';
-import { dateRange, DateRange, DateRangeDayDistanceInput, DateRangeType, isDateRange } from './date.range';
+import { dateRange, DateRange, DateRangeDayDistanceInput, DateRangeStart, DateRangeType, isDateRange, isDateRangeStart } from './date.range';
 import { DateDurationSpan } from './date.duration';
-import { differenceInDays, differenceInMilliseconds, isBefore, addDays, addMinutes, getSeconds, getMilliseconds, getMinutes, addMilliseconds, hoursToMilliseconds, addHours, differenceInHours, isAfter } from 'date-fns';
-import { copyHoursAndMinutesFromDate, roundDownToMinute } from './date';
+import { differenceInDays, differenceInMilliseconds, isBefore, addDays, addMinutes, getSeconds, getMilliseconds, getMinutes, addMilliseconds, hoursToMilliseconds, addHours, differenceInHours, isAfter, minutesToHours } from 'date-fns';
+import { isDate, copyHoursAndMinutesFromDate, roundDownToMinute } from './date';
 import { Expose, Type } from 'class-transformer';
 import { getCurrentSystemOffsetInHours } from './date.timezone';
 import { IsDate, IsNumber, IsOptional, Min } from 'class-validator';
@@ -11,6 +11,11 @@ import { IsDate, IsNumber, IsOptional, Min } from 'class-validator';
  * Index from 0 of which day this block represents.
  */
 export type DateBlockIndex = number;
+
+/**
+ * Input type that is either a Date or a DateBlockIndex.
+ */
+export type DateOrDateBlockIndex = Date | DateBlockIndex;
 
 /**
  * A duration-span block.
@@ -58,6 +63,11 @@ export type DateBlockArrayRef<B extends DateBlock = DateBlock> = {
  */
 export interface DateBlockTiming extends DateRange, DateDurationSpan {}
 
+/**
+ * DateBlockTiming with only the start time. The start time infers what timezone it is in.
+ */
+export type DateBlockTimingStart = DateRangeStart;
+
 export class DateBlockTiming extends DateDurationSpan {
   @Expose()
   @IsDate()
@@ -84,7 +94,7 @@ export class DateBlockTiming extends DateDurationSpan {
  *
  * @param timing
  */
-export function getCurrentDateBlockTimingOffset(timing: DateBlockTiming): Milliseconds {
+export function getCurrentDateBlockTimingOffset(timing: DateRangeStart): Milliseconds {
   const start = timing.start;
   const dateHours = start.getUTCHours();
 
@@ -108,7 +118,7 @@ export function getCurrentDateBlockTimingOffset(timing: DateBlockTiming): Millis
  *
  * @param timing
  */
-export function getCurrentDateBlockTimingStartDate(timing: DateBlockTiming): Date {
+export function getCurrentDateBlockTimingStartDate(timing: DateBlockTimingStart): Date {
   const offset = getCurrentDateBlockTimingOffset(timing);
   return addMilliseconds(timing.start, offset);
 }
@@ -118,26 +128,37 @@ export function isValidDateBlockTimingStartDate(date: Date): boolean {
 }
 
 /**
- * Returns the DateBlockIndex of the input date relative to the configured D
+ * Returns the DateBlockIndex of the input date relative to the configured Date
  */
-export type DateTimingRelativeIndexFactory = ((date: Date) => DateBlockIndex) & {
-  readonly _timing: DateBlockTiming;
+export type DateTimingRelativeIndexFactory<T extends DateBlockTimingStart = DateBlockTimingStart> = ((input: DateOrDateBlockIndex) => DateBlockIndex) & {
+  readonly _timing: T;
 };
 
 /**
+ * Creates a DateTimingRelativeIndexFactory.
  *
  * @param timing
  * @returns
  */
-export function dateTimingRelativeIndexFactory(timing: DateBlockTiming): DateTimingRelativeIndexFactory {
+export function dateTimingRelativeIndexFactory<T extends DateBlockTimingStart = DateBlockTimingStart>(timing: T): DateTimingRelativeIndexFactory<T> {
   const startDate = getCurrentDateBlockTimingStartDate(timing);
-  const factory = ((date: Date) => {
-    const diff = differenceInHours(date, startDate);
-    const daysOffset = Math.floor(diff / 24);
-    return daysOffset;
+  const baseOffset = startDate.getTimezoneOffset();
+
+  const factory = ((input: DateOrDateBlockIndex) => {
+    if (typeof input === 'number') {
+      return input;
+    } else {
+      const inputOffset = input.getTimezoneOffset();
+      const offsetDifferenceHours = minutesToHours(baseOffset - inputOffset); // handle timezone offset changes
+
+      const diff = differenceInHours(input, startDate) + offsetDifferenceHours;
+      const daysOffset = Math.floor(diff / 24);
+
+      return daysOffset;
+    }
   }) as Configurable<Partial<DateTimingRelativeIndexFactory>>;
   factory._timing = timing;
-  return factory as DateTimingRelativeIndexFactory;
+  return factory as DateTimingRelativeIndexFactory<T>;
 }
 
 /**
@@ -146,8 +167,44 @@ export function dateTimingRelativeIndexFactory(timing: DateBlockTiming): DateTim
  * @param timing
  * @param date
  */
-export function getRelativeIndexForDateTiming(timing: DateBlockTiming, date = new Date()): DateBlockIndex {
+export function getRelativeIndexForDateTiming(timing: DateBlockTimingStart, date: DateOrDateBlockIndex = new Date()): DateBlockIndex {
   return dateTimingRelativeIndexFactory(timing)(date);
+}
+
+/**
+ * Returns the Date of the input DateBlockIndex relative to the configured Date. If a date is entered, the date is returned.
+ */
+export type DateBlockTimingDateFactory<T extends DateBlockTimingStart = DateBlockTimingStart> = ((input: DateOrDateBlockIndex) => Date) & {
+  readonly _timing: T;
+};
+
+/**
+ * Creates a DateBlockTimingDateFactory.
+ *
+ * @param timing
+ * @returns
+ */
+export function dateBlockTimingDateFactory<T extends DateBlockTimingStart = DateBlockTimingStart>(timing: T): DateBlockTimingDateFactory<T> {
+  const startDate = getCurrentDateBlockTimingStartDate(timing);
+  const factory = ((input: DateOrDateBlockIndex) => {
+    if (isDate(input)) {
+      return input;
+    } else {
+      return addDays(startDate, input); // TODO: Is this right to use days, or should it use hours to avoid daylight savings?
+    }
+  }) as Configurable<Partial<DateBlockTimingDateFactory>>;
+  factory._timing = timing;
+  return factory as DateBlockTimingDateFactory<T>;
+}
+
+/**
+ * Returns the date of the input index.
+ *
+ * @param timing
+ * @param date
+ */
+export function getRelativeDateForDateBlockTiming(timing: DateBlockTimingStart, input: DateOrDateBlockIndex): Date {
+  return dateBlockTimingDateFactory(timing)(input);
 }
 
 /**
@@ -271,7 +328,8 @@ export type DateBlockDayOfWeekFactory = MapFunction<DateBlockIndex, DayOfWeek>;
  * @param dayForIndexZero
  * @returns
  */
-export function dateBlockDayOfWeekFactory(dayForIndexZero: DayOfWeek): DateBlockDayOfWeekFactory {
+export function dateBlockDayOfWeekFactory(inputDayForIndexZero: DayOfWeek | Date): DateBlockDayOfWeekFactory {
+  const dayForIndexZero = typeof inputDayForIndexZero === 'number' ? inputDayForIndexZero : (inputDayForIndexZero.getUTCDay() as DayOfWeek);
   return (index: DateBlockIndex) => getNextDay(dayForIndexZero, index);
 }
 
@@ -546,18 +604,24 @@ export function dateBlockIndexRange(timing: DateBlockTiming, limit?: DateBlockTi
  * @returns
  */
 export function dateBlocksInDateBlockRange<T extends DateBlock | DateBlockRange>(blocks: T[], range: DateBlockRangeWithRange): T[] {
-  const dateBlockIsWithinDateBlockRange = dateBlockIsWithinDateBlockRangeFunction(range);
+  const dateBlockIsWithinDateBlockRange = isDateBlockWithinDateBlockRangeFunction(range);
   return blocks.filter(dateBlockIsWithinDateBlockRange);
 }
+
+export type IsDateBlockWithinDateBlockRangeInput = DateBlockIndex | DateBlock | DateBlockRange;
 
 /**
  * Function that returns true if the input range is equal or falls within the configured DateBlockRange.
  */
-export type DateBlockIsWithinDateBlockRangeFunction = (input: DateBlock | DateBlockRange) => boolean;
+export type IsDateBlockWithinDateBlockRangeFunction = (input: IsDateBlockWithinDateBlockRangeInput) => boolean;
 
-export function dateBlockIsWithinDateBlockRangeFunction(inputRange: DateBlock | DateBlockRange): DateBlockIsWithinDateBlockRangeFunction {
+export function isDateBlockWithinDateBlockRangeFunction(inputRange: IsDateBlockWithinDateBlockRangeInput): IsDateBlockWithinDateBlockRangeFunction {
   const range = dateBlockRangeWithRange(inputRange);
-  return (input: DateBlock | DateBlockRange) => {
+  return (input: IsDateBlockWithinDateBlockRangeInput) => {
+    if (typeof input === 'number') {
+      input = { i: input };
+    }
+
     if (input.i >= range.i) {
       const to = (input as DateBlockRange).to ?? input.i;
       return to <= range.to;
@@ -574,8 +638,94 @@ export function dateBlockIsWithinDateBlockRangeFunction(inputRange: DateBlock | 
  * @param isContainedWithin
  * @returns
  */
-export function dateBlockRangeContainsDateBlock(range: DateBlock | DateBlockRange, contains: DateBlock | DateBlockRange) {
-  return dateBlockIsWithinDateBlockRangeFunction(range)(dateBlockRangeWithRange(contains));
+export function isDateBlockWithinDateBlockRange(range: IsDateBlockWithinDateBlockRangeInput, contains: IsDateBlockWithinDateBlockRangeInput) {
+  return isDateBlockWithinDateBlockRangeFunction(range)(dateBlockRangeWithRange(contains));
+}
+
+/**
+ * Input for a IsDateWithinDateBlockRangeFunction
+ */
+export type IsDateWithinDateBlockRangeInput = DateOrDateBlockIndex | DateRangeStart | DateRange | DateBlock | DateBlockRange;
+
+/**
+ * Function that returns true if the input range is equal or falls within the configured DateBlockRange.
+ */
+export type IsDateWithinDateBlockRangeFunction = (input: IsDateWithinDateBlockRangeInput) => boolean;
+
+export interface IsDateWithinDateBlockRangeConfig {
+  /**
+   * Optional date to make the indexes relative to when converting date values.
+   *
+   * If not provided, defaults to the index in the range if a date is provided, or throws an exception if a date range is input.
+   */
+  start?: Date;
+  /**
+   * Range to compare the input to.
+   */
+  range: IsDateWithinDateBlockRangeInput;
+}
+
+export function isDateWithinDateBlockRangeFunction(config: IsDateWithinDateBlockRangeConfig): IsDateWithinDateBlockRangeFunction {
+  const { start: inputStart, range: inputRange } = config;
+  let start: Date | undefined = inputStart;
+
+  let dateRange: (DateRangeStart & Partial<DateRange>) | undefined;
+  let rangeInput: DateBlock | DateBlockRange | undefined;
+
+  if (typeof inputRange === 'number') {
+    rangeInput = { i: inputRange };
+  } else if (isDate(inputRange)) {
+    dateRange = { start: inputRange };
+  } else if (isDateRangeStart(inputRange)) {
+    dateRange = inputRange;
+  } else {
+    rangeInput = inputRange as DateBlock | DateBlockRange;
+  }
+
+  if (start == null) {
+    if (dateRange) {
+      start = inputRange as Date;
+    } else {
+      throw new Error('Invalid isDateWithinDateBlockRangeFunction() config. Start date could not be determined from input.');
+    }
+  }
+
+  const indexFactory = dateTimingRelativeIndexFactory({ start });
+
+  function convertDateRangeToIndexRange(range: DateRangeStart & Partial<DateRange>) {
+    const i = indexFactory(range.start);
+    const end: Maybe<Date> = (range as DateRange).end;
+    const to: Maybe<number> = end != null ? indexFactory(end) : undefined;
+    return { i, to };
+  }
+
+  if (!rangeInput) {
+    if (dateRange) {
+      rangeInput = convertDateRangeToIndexRange(dateRange);
+    } else {
+      throw new Error('Invalid isDateWithinDateBlockRangeFunction() config. Range determined from input.'); // shouldn't occur
+    }
+  }
+
+  const isDateBlockWithinDateBlockRange = isDateBlockWithinDateBlockRangeFunction(rangeInput);
+
+  return (input: IsDateWithinDateBlockRangeInput) => {
+    let range: DateBlockIndex | DateBlock | DateBlockRange;
+
+    if (isDate(input)) {
+      range = indexFactory(input);
+    } else if (isDateRangeStart(input)) {
+      range = convertDateRangeToIndexRange(input);
+    } else {
+      range = input;
+    }
+
+    if (typeof input === 'number') {
+      range = { i: input };
+    }
+
+    return isDateBlockWithinDateBlockRange(range);
+  };
 }
 
 // MARK: DateBlockRange
@@ -617,8 +767,12 @@ export function dateBlockRange(i: number, to?: number): DateBlockRangeWithRange 
   return { i, to: to ?? i };
 }
 
-export function dateBlockRangeWithRange(inputDateBlockRange: DateBlockRange): DateBlockRangeWithRange {
-  return dateBlockRange(inputDateBlockRange.i, inputDateBlockRange.to);
+export function dateBlockRangeWithRange(inputDateBlockRange: DateBlockIndex | DateBlock | DateBlockRange): DateBlockRangeWithRange {
+  if (typeof inputDateBlockRange === 'number') {
+    inputDateBlockRange = { i: inputDateBlockRange };
+  }
+
+  return dateBlockRange(inputDateBlockRange.i, (inputDateBlockRange as DateBlockRange).to);
 }
 
 /**
@@ -1191,7 +1345,7 @@ export type ModifyDateBlocksToFitRangeFunction = <B extends DateBlock | DateBloc
  */
 export function modifyDateBlocksToFitRangeFunction(range: DateBlockRange): ModifyDateBlocksToFitRangeFunction {
   const { i, to } = dateBlockRangeWithRange(range);
-  const dateBlockIsWithinDateBlockRange = dateBlockIsWithinDateBlockRangeFunction(range);
+  const dateBlockIsWithinDateBlockRange = isDateBlockWithinDateBlockRangeFunction(range);
   return <B extends DateBlock | DateBlockRange | UniqueDateBlock>(input: B[]) =>
     filterMaybeValues(
       input.map((x) => {
@@ -1226,3 +1380,20 @@ export function modifyDateBlocksToFitRange<B extends DateBlock | DateBlockRange 
 export function modifyDateBlockToFitRange<B extends DateBlock | DateBlockRange | UniqueDateBlock>(range: DateBlockRange, input: B): Maybe<B> {
   return modifyDateBlocksToFitRange(range, [input])[0];
 }
+
+// MARK: Compat
+
+/**
+ * @deprecated use IsDateBlockWithinDateBlockRangeFunction instead.
+ */
+export type DateBlockIsWithinDateBlockRangeFunction = IsDateBlockWithinDateBlockRangeFunction;
+
+/**
+ * @deprecated use isDateBlockWithinDateBlockRangeFunction() instead.
+ */
+export const dateBlockIsWithinDateBlockRangeFunction = isDateBlockWithinDateBlockRangeFunction;
+
+/**
+ * @deprecated use isDateBlockWithinDateBlockRange() instead.
+ */
+export const dateBlockRangeContainsDateBlock = isDateBlockWithinDateBlockRange;

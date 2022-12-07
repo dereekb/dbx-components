@@ -1,3 +1,4 @@
+import { minAndMaxFunction, MinAndMaxFunctionResult, SortCompareFunction } from '../sort';
 import { Maybe } from '../value/maybe.type';
 
 /**
@@ -109,4 +110,10 @@ export function sumOfIntegersBetween(from: number, to: number): number {
 
   const sumOfIntegers = (sum / 2) * totalNumbers;
   return sumOfIntegers;
+}
+
+export const sortCompareNumberFunction: SortCompareFunction<number> = (a, b) => a - b;
+
+export function minAndMaxNumber(values: Iterable<number>): MinAndMaxFunctionResult<number> {
+  return minAndMaxFunction(sortCompareNumberFunction)(values);
 }

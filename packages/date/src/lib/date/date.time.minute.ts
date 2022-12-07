@@ -1,16 +1,19 @@
-import { dateFromLogicalDate, Minutes } from '@dereekb/util';
-import { addMinutes, isAfter, set, isBefore } from 'date-fns';
+import { dateFromLogicalDate, Minutes, DecisionFunction } from '@dereekb/util';
+import { addMinutes, isAfter, isBefore } from 'date-fns';
+import { roundDownToMinute } from './date';
 import { roundDateTimeDownToSteps, StepRoundDateTimeDown } from './date.round';
+import { dateScheduleDateFilter, DateScheduleDateFilter, DateScheduleDateFilterConfig } from './date.schedule';
 import { LimitDateTimeConfig, LimitDateTimeInstance } from './date.time.limit';
 
 export interface DateTimeMinuteConfig extends LimitDateTimeConfig {
+  /**
+   * Default date to consider.
+   */
   date?: Date;
-
   /**
    * Number of minutes each "step" is.
    */
   step?: Minutes;
-
   /**
    * Additional behavior
    */
@@ -25,6 +28,10 @@ export interface DateTimeMinuteConfig extends LimitDateTimeConfig {
      */
     capToMaxLimit?: boolean;
   };
+  /**
+   * Schedule to filter the days to.
+   */
+  schedule?: DateScheduleDateFilterConfig;
 }
 
 /**
@@ -55,6 +62,11 @@ export interface DateTimeMinuteDateStatus {
    * If the date is in the past.
    */
   inPast: boolean;
+
+  /**
+   * If the date is on a schedule day.
+   */
+  isInSchedule: boolean;
 }
 
 export interface RoundDateTimeMinute extends StepRoundDateTimeDown {
@@ -64,17 +76,19 @@ export interface RoundDateTimeMinute extends StepRoundDateTimeDown {
 /**
  * Instance for working with a single date/time.
  *
- * Can step the date forward/backwards, and validate
+ * Can step the date forward/backwards, and validate.
  */
 export class DateTimeMinuteInstance {
   private _date: Date;
   private _step: Minutes;
   private _limit: LimitDateTimeInstance;
+  private _dateFilter: DateScheduleDateFilter;
 
-  constructor(readonly config: DateTimeMinuteConfig = {}) {
-    this._date = config.date ?? new Date();
+  constructor(readonly config: DateTimeMinuteConfig = {}, dateOverride?: Date | null) {
+    this._date = (dateOverride == undefined ? config.date : dateOverride) || new Date();
     this._step = config.step ?? 1;
     this._limit = new LimitDateTimeInstance(config);
+    this._dateFilter = config.schedule ? dateScheduleDateFilter(config.schedule) : () => true;
   }
 
   get date(): Date {
@@ -93,16 +107,39 @@ export class DateTimeMinuteInstance {
     this._step = step;
   }
 
+  /**
+   * Returns true if the input is within the range and in the schedule.
+   *
+   * @param date
+   * @returns
+   */
+  isInValidRange(date?: Date): boolean {
+    const result = this.getStatus(date);
+    return result.isAfterMinimum && result.isBeforeMaximum && result.isInSchedule;
+  }
+
+  /**
+   * Returns true if the status is completely valid.
+   *
+   * @param date
+   * @returns
+   */
+  isValid(date?: Date): boolean {
+    const result = this.getStatus(date);
+    return result.isAfterMinimum && result.isBeforeMaximum && result.inFuture && result.inFutureMinutes && result.inPast && result.isInSchedule;
+  }
+
   getStatus(date = this.date): DateTimeMinuteDateStatus {
     let isBeforeMaximum = true;
     let isAfterMinimum = true;
     let inFuture = true;
     let inFutureMinutes = true;
     let inPast = true;
+    let isInSchedule = true;
 
     const { limits = {} } = this._limit.config;
     const { minimumMinutesIntoFuture } = this._limit;
-    const now = set(new Date(), { seconds: 0, milliseconds: 0 });
+    const now = roundDownToMinute(new Date());
 
     // Min/Future
     if (limits.min) {
@@ -125,12 +162,16 @@ export class DateTimeMinuteInstance {
       inPast = isBefore(date, now);
     }
 
+    // Schedule
+    isInSchedule = this._dateFilter(date);
+
     return {
       isBeforeMaximum,
       isAfterMinimum,
       inFuture,
       inFutureMinutes,
-      inPast
+      inPast,
+      isInSchedule
     };
   }
 
@@ -178,4 +219,15 @@ export class DateTimeMinuteInstance {
 
     return date;
   }
+}
+
+/**
+ * Creates a DecisionFunction for the input Date value.
+ *
+ * @param config
+ * @returns
+ */
+export function dateTimeMinuteDecisionFunction(config: DateTimeMinuteConfig): DecisionFunction<Date> {
+  const instance = new DateTimeMinuteInstance(config, null);
+  return (date: Date) => instance.isValid(date);
 }

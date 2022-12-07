@@ -1,8 +1,7 @@
 import { Maybe } from '@dereekb/util';
-import { filter, map, Observable, of, OperatorFunction, switchMap, shareReplay, startWith } from 'rxjs';
+import { filter, map, Observable, of, OperatorFunction, switchMap, startWith } from 'rxjs';
 import { SegueRefOrSegueRefRouterLink } from '../../segue';
 import { DbxRouterTransitionEvent, DbxRouterTransitionEventType } from '../transition';
-import { DbxRouterService } from './router.service';
 import { isSegueRefActiveFunction, IsSegueRefActiveFunctionConfig } from './router.service.util';
 
 // MARK: Transition Events

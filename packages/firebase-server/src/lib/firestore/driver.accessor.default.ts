@@ -39,7 +39,7 @@ export class DefaultFirestoreDocumentDataAccessor<T> implements FirestoreDocumen
     return this.update(firestoreServerIncrementUpdateToUpdateData(data), params);
   }
 
-  update(data: UpdateData<T>, params?: FirestoreDocumentUpdateParams): Promise<GoogleCloudWriteResult> {
+  update(data: UpdateData<object>, params?: FirestoreDocumentUpdateParams): Promise<GoogleCloudWriteResult> {
     return params?.precondition ? this.documentRef.update(data as FirebaseFirestore.UpdateData<T>, params.precondition) : this.documentRef.update(data as FirebaseFirestore.UpdateData<T>);
   }
 }

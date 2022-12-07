@@ -8,7 +8,7 @@ export interface RepeatArrayFieldConfig<T = unknown> extends DbxFormRepeatArrayC
 }
 
 export function repeatArrayField<T = unknown>(config: RepeatArrayFieldConfig<T>) {
-  const { key, label, description, repeatFieldGroup, maxLength, addText, removeText, duplicateText, labelForField, disableRearrange, allowAdd, allowRemove, allowDuplicate, addDuplicateToEnd } = config;
+  const { key, label, description, repeatFieldGroup, maxLength, addText, addTemplate, removeText, duplicateText, labelForField, disableRearrange, allowAdd, allowRemove, allowDuplicate, addDuplicateToEnd } = config;
 
   return formlyField({
     key,
@@ -19,6 +19,7 @@ export function repeatArrayField<T = unknown>(config: RepeatArrayFieldConfig<T>)
       maxLength,
       labelForField,
       addText,
+      addTemplate,
       removeText,
       duplicateText,
       disableRearrange,

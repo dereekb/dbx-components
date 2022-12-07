@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/firebase-server",
-  "version": "9.17.3",
+  "version": "9.18.0",
   "devDependencies": {
     "firebase-functions-test": "2.0.2"
   },
@@ -9,19 +9,24 @@
   },
   "exports": {
     ".": {
-      "main": "./src/index.js",
       "types": "./src/index.d.ts",
+      "main": "./src/index.js",
+      "require": "./src/index.js",
       "default": "./src/index.js"
     },
     "./test": {
-      "main": "./test/src/index.js",
       "types": "./test/src/index.d.ts",
+      "main": "./test/src/index.js",
+      "require": "./test/src/index.js",
       "default": "./test/src/index.js"
     },
     "./mailgun": {
-      "main": "./mailgun/src/index.js",
       "types": "./mailgun/src/index.d.ts",
+      "main": "./mailgun/src/index.js",
+      "require": "./mailgun/src/index.js",
       "default": "./mailgun/src/index.js"
     }
-  }
+  },
+  "main": "./src/index.js",
+  "types": "./src/index.d.ts"
 }

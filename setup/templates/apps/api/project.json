@@ -3,7 +3,7 @@
   "projectType": "application",
   "targets": {
     "build": {
-      "executor": "@nrwl/workspace:run-commands",
+      "executor": "nx:run-commands",
       "outputs": ["API_APP_DIST_FOLDER"],
       "options": {
         "command": "npx nx run API_APP_NAME:build-base",
@@ -34,19 +34,19 @@
       }
     },
     "run-emulators": {
-      "executor": "@nrwl/workspace:run-commands",
+      "executor": "nx:run-commands",
       "options": {
         "command": "npx env-cmd -f .env.local --use-shell 'npx firebase --project=default emulators:start --import=/root/data/emulators --export-on-exit'"
       }
     },
     "watch-emulators": {
-      "executor": "@nrwl/workspace:run-commands",
+      "executor": "nx:run-commands",
       "options": {
         "command": "echo 'starting server in 5...'; sleep 5; while sleep 2; do find API_APP_DIST_FOLDER | entr -r -s './wait-for-ports.sh && npx env-cmd -f .env.local --use-shell npx firebase --project=default emulators:start --import=/root/data/emulators --export-on-exit'; done"
       }
     },
     "serve": {
-      "executor": "@nrwl/workspace:run-commands",
+      "executor": "nx:run-commands",
       "options": {
         "commands": [{
             "command": "npx nx build-base API_APP_NAME --watch"
@@ -66,7 +66,7 @@
       }
     },
     "test": {
-      "executor": "@nrwl/workspace:run-commands",
+      "executor": "nx:run-commands",
       "options": {
         "command": "./exec-with-emulator.sh 'npx nx run-tests API_APP_NAME'",
         "color": true
@@ -84,19 +84,19 @@
       }
     },
     "watch": {
-      "executor": "@nrwl/workspace:run-commands",
+      "executor": "nx:run-commands",
       "options": {
         "command": "./exec-with-emulator.sh 'npx nx run-tests API_APP_NAME --watch'"
       }
     },
     "make-env": {
-      "executor": "@nrwl/workspace:run-commands",
+      "executor": "nx:run-commands",
       "options": {
         "command": "node ./make-env.js > API_APP_DIST_FOLDER/.env && cp .env.prod API_APP_DIST_FOLDER/.env.prod"
       }
     },
     "ci-deploy": {
-      "executor": "@nrwl/workspace:run-commands",
+      "executor": "nx:run-commands",
       "options": {
         "commands": [{
             "command": "npx nx run API_APP_NAME:build-base:production"

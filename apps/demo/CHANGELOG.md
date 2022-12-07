@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [9.18.0](https://github.com/dereekb/dbx-components/compare/v9.17.3-dev...v9.18.0) (2022-12-07)
+
+
+### Features
+
+* added dateScheduleRangeField() ([#22](https://github.com/dereekb/dbx-components/issues/22)) ([1979f3b](https://github.com/dereekb/dbx-components/commit/1979f3b4573315ff4a2b289cc2e645718f33a29c))
+
+
+
 ## [9.17.3](https://github.com/dereekb/dbx-components/compare/v9.17.2-dev...v9.17.3) (2022-12-01)
 
 

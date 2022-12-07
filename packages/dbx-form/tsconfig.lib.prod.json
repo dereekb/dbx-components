@@ -6,5 +6,5 @@
   "angularCompilerOptions": {
     "compilationMode": "partial"
   },
-  "exclude": ["mapbox/**", "jest.config.ts"]
+  "exclude": ["mapbox/**", "calendar/**", "jest.config.ts"]
 }

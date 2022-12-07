@@ -1,0 +1,12 @@
+<dbx-calendar-base>
+  <ng-container controls>
+    <mat-button-toggle-group name="calendarDisplayStyle" [value]="(displayType$ | async)!" (change)="typeToggleChanged($event)" aria-label="Display Style">
+      <mat-button-toggle value="month">Month</mat-button-toggle>
+      <mat-button-toggle value="week">Week</mat-button-toggle>
+      <mat-button-toggle value="day">Day</mat-button-toggle>
+    </mat-button-toggle-group>
+  </ng-container>
+  <div class="dbx-calendar-content" [ngClass]="'dbx-calendar-content-' + (displayType$ | async)!" [ngSwitch]="displayType$ | async">
+    <mwl-calendar-month-view *ngSwitchCase="'month'" [viewDate]="(viewDate$ | async)!" [events]="(events$ | async)!" [activeDayIsOpen]="(activeDayIsOpen$ | async)!" (dayClicked)="dayClicked($event.day)" (eventClicked)="eventClicked('Clicked', $event.event)"></mwl-calendar-month-view>
+  </div>
+</dbx-calendar-base>

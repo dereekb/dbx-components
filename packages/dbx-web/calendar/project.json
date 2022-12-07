@@ -1,0 +1,40 @@
+{
+  "name": "dbx-web-calendar",
+  "projectType": "library",
+  "sourceRoot": "packages/dbx-web/calendar/src",
+  "prefix": "dereekb",
+  "targets": {
+    "build-base": {
+      "executor": "@nrwl/angular:package",
+      "outputs": ["dist/packages/dbx-web/calendar"],
+      "options": {
+        "project": "packages/dbx-web/calendar/ng-package.json"
+      },
+      "configurations": {
+        "production": {
+          "tsConfig": "packages/dbx-web/calendar/tsconfig.lib.prod.json"
+        },
+        "development": {
+          "tsConfig": "packages/dbx-web/calendar/tsconfig.lib.json"
+        }
+      },
+      "defaultConfiguration": "production",
+      "dependsOn": []
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": ["coverage/packages/dbx-web/calendar"],
+      "options": {
+        "jestConfig": "packages/dbx-web/calendar/jest.config.ts",
+        "passWithNoTests": true
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "lintFilePatterns": ["packages/dbx-web/calendar/**/*.ts", "packages/dbx-web/calendar/**/*.html"]
+      }
+    }
+  },
+  "tags": []
+}

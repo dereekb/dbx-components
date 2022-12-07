@@ -15,7 +15,7 @@ const queryParams = new URLSearchParams(queryParamsTuples);
 describe('isURL()', () => {
   it('should return true for a URL instance.', () => {
     const result = isURL(url);
-    expect(result);
+    expect(result).toBe(true);
   });
   it('should return false for a string.', () => {
     const result = isURL(urlString);
@@ -26,7 +26,7 @@ describe('isURL()', () => {
 describe('isURLSearchParams()', () => {
   it('should return true for a URLSearchParams instance.', () => {
     const result = isURLSearchParams(queryParams);
-    expect(result);
+    expect(result).toBe(true);
   });
   it('should return false for a url string.', () => {
     const result = isURLSearchParams(urlString);

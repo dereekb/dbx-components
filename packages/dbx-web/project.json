@@ -1,11 +1,12 @@
 {
+  "name": "dbx-web",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "projectType": "library",
   "sourceRoot": "packages/dbx-web/src",
   "prefix": "dbx",
   "targets": {
     "build": {
-      "executor": "@nrwl/workspace:run-commands",
+      "executor": "nx:run-commands",
       "outputs": ["dist/packages/dbx-web", "dist/packages/dbx-web/_index.scss", "dist/packages/dbx-web/LICENSE", "dist/packages/dbx-web/**/*.scss"],
       "options": {
         "commands": [
@@ -28,6 +29,10 @@
           {
             "description": "build dbx-web/mapbox",
             "command": "npx nx run dbx-web-mapbox:build-base:production"
+          },
+          {
+            "description": "build dbx-web/calendar",
+            "command": "npx nx run dbx-web-calendar:build-base:production"
           }
         ],
         "parallel": false,
@@ -65,7 +70,7 @@
       }
     },
     "publish-npmjs": {
-      "executor": "@nrwl/workspace:run-commands",
+      "executor": "nx:run-commands",
       "options": {
         "command": "cd ./dist/packages/dbx-web && npm publish --access public"
       }

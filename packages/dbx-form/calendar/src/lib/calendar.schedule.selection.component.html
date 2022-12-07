@@ -1,0 +1,17 @@
+<dbx-calendar-base class="dbx-schedule-selection-calendar">
+  <ng-container controls>
+    <dbx-schedule-selection-calendar-date-popover-button></dbx-schedule-selection-calendar-date-popover-button>
+  </ng-container>
+  <div class="dbx-calendar-content dbx-calendar-content-month">
+    <mwl-calendar-month-view [refresh]="refresh$" [viewDate]="(viewDate$ | async)!" [events]="(events$ | async)!" (dayClicked)="dayClicked($event.day)" (eventClicked)="eventClicked('Clicked', $event.event)" (beforeViewRender)="beforeMonthViewRender($event)" [cellTemplate]="monthDayCellTemplate"></mwl-calendar-month-view>
+  </div>
+</dbx-calendar-base>
+
+<!-- Cell -->
+<ng-template #monthDayCellTemplate let-day="day" let-locale="locale">
+  <div class="cal-cell-top">
+    <span class="cal-day-badge" *ngIf="day.badgeTotal > 0">{{ day.badgeTotal }}</span>
+    <span class="cal-day-number">{{ day.date | calendarDate: 'monthViewDayNumber':locale }}</span>
+  </div>
+  <dbx-schedule-selection-calendar-cell [day]="day"></dbx-schedule-selection-calendar-cell>
+</ng-template>

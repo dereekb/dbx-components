@@ -1,7 +1,9 @@
-import { Minutes } from '@dereekb/util';
+import { Minutes as UtilMinutes } from '@dereekb/util';
 import { Expose, Type } from 'class-transformer';
 import { addMinutes } from 'date-fns';
 import { DateRange, dateRangeState, DateRangeState } from './date.range';
+
+export type Minutes = UtilMinutes; // TEMPORARY: weird issue with importing primative types with jest.
 
 export interface DateDurationSpan {
   startsAt: Date;

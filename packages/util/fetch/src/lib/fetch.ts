@@ -1,4 +1,4 @@
-import { Factory, fixMultiSlashesInSlashPath, MapFunction, Maybe, removeTrailingSlashes, WebsitePath, WebsiteUrl, mergeObjects, multiValueMapBuilder, filterMaybeValues, objectToTuples } from '@dereekb/util';
+import { Factory, fixMultiSlashesInSlashPath, MapFunction, Maybe, removeTrailingSlashes, WebsitePath, WebsiteUrl, multiValueMapBuilder, filterMaybeValues, objectToTuples } from '@dereekb/util';
 import { fetchOk } from './error';
 import { ConfiguredFetchWithTimeout, RequestInitWithTimeout, RequestWithTimeout } from './fetch.type';
 import { fetchTimeout } from './timeout';
@@ -223,7 +223,7 @@ export function mergeRequestHeaders(inputHeadersArray: Maybe<HeadersInit>[]): [s
   const headersMap = multiValueMapBuilder<string, string>();
 
   filterMaybeValues(inputHeadersArray).forEach((headers, i) => {
-    let tuples: [string, string][] = headersToHeadersTuple(headers);
+    const tuples: [string, string][] = headersToHeadersTuple(headers);
     const visitedKeysSet = new Set();
 
     tuples.forEach(([key, value]) => {

@@ -6,12 +6,12 @@ declare module 'stripe' {
   namespace Stripe {
     type TypedEventDataObject<T> = T;
 
-    interface TypedEventData<T> extends Stripe.Event.Data {
+    interface TypedEventData<T extends object> extends Stripe.Event.Data {
       object: T;
       previous_attributes?: Partial<T>;
     }
 
-    interface TypedEvent<T = unknown> extends Stripe.Event {
+    interface TypedEvent<T extends object = object> extends Stripe.Event {
       data: TypedEventData<T>;
       type: Exclude<Stripe.WebhookEndpointCreateParams.EnabledEvent, '*'>;
     }

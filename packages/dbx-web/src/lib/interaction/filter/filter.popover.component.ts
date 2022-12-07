@@ -5,7 +5,7 @@ import { Observable, BehaviorSubject, map, skip, first } from 'rxjs';
 import { AbstractPopoverDirective } from '../popover/abstract.popover.directive';
 import { DbxPopoverComponent } from '../popover/popover.component';
 import { DbxPopoverService } from '../popover/popover.service';
-import { FilterPresetStringRef, FilterSource, FilterSourceConnector, PresetFilterSource, filterMaybe, SubscriptionObject } from '@dereekb/rxjs';
+import { FilterSource, FilterSourceConnector, PresetFilterSource, filterMaybe, SubscriptionObject } from '@dereekb/rxjs';
 import { DbxPopoverKey } from '../popover/popover';
 
 export interface DbxFilterComponentParams<F extends object = object, P extends string = string> {

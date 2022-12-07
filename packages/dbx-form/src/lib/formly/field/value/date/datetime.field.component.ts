@@ -1,13 +1,13 @@
-import { LogicalDateStringCode, Maybe, ReadableTimeString, ArrayOrValue, ISO8601DateString, asArray, filterMaybeValues, dateFromLogicalDate } from '@dereekb/util';
-import { DateTimeMinuteConfig, DateTimeMinuteInstance, formatToISO8601DayString, guessCurrentTimezone, readableTimeStringToDate, toLocalReadableTimeString, toReadableTimeString, utcDayForDate, formatToISO8601DateString, toJsDate, parseISO8601DayStringToDate, safeToJsDate, findMinDate, findMaxDate } from '@dereekb/date';
+import { LogicalDateStringCode, Maybe, ReadableTimeString, ArrayOrValue, ISO8601DateString, asArray, filterMaybeValues, dateFromLogicalDate, DecisionFunction } from '@dereekb/util';
+import { DateTimeMinuteConfig, DateTimeMinuteInstance, formatToISO8601DayString, guessCurrentTimezone, readableTimeStringToDate, toLocalReadableTimeString, toReadableTimeString, utcDayForDate, formatToISO8601DateString, toJsDate, parseISO8601DayStringToDate, safeToJsDate, findMinDate, findMaxDate, dateTimeMinuteDecisionFunction } from '@dereekb/date';
 import { switchMap, shareReplay, map, startWith, tap, first, distinctUntilChanged, debounceTime, throttleTime, BehaviorSubject, Observable, combineLatest, Subject, merge, interval, of } from 'rxjs';
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { AbstractControl, FormControl, Validators, FormGroup } from '@angular/forms';
 import { FieldType } from '@ngx-formly/material';
 import { FieldTypeConfig, FormlyFieldProps } from '@ngx-formly/core';
 import { MatDatepickerInputEvent } from '@angular/material/datepicker';
-import { max as maxDate, min as minDate, addMinutes, isSameDay, isSameMinute, startOfDay, addDays } from 'date-fns';
-import { filterMaybe, skipFirstMaybe, SubscriptionObject, switchMapMaybeDefault, tapLog } from '@dereekb/rxjs';
+import { addMinutes, isSameDay, isSameMinute, startOfDay, addDays } from 'date-fns';
+import { filterMaybe, skipFirstMaybe, SubscriptionObject, switchMapMaybeDefault } from '@dereekb/rxjs';
 
 export enum DbxDateTimeFieldTimeMode {
   /**
@@ -160,17 +160,20 @@ export interface DbxDateTimeFieldSyncParsedField extends Pick<DbxDateTimeFieldSy
   control: AbstractControl<Maybe<Date | ISO8601DateString>>;
 }
 
-export function syncConfigValueObs(parseConfigsObs: Observable<DbxDateTimeFieldSyncParsedField[]>, type: DbxDateTimeFieldSyncType): Observable<Maybe<Date>> {
+export function syncConfigValueObs(parseConfigsObs: Observable<DbxDateTimeFieldSyncParsedField[]>, type: DbxDateTimeFieldSyncType): Observable<Date | null> {
   return parseConfigsObs.pipe(
     switchMap((x) => {
       const config = x.find((y) => y.syncType === type);
-      let result: Observable<Maybe<Date>>;
+      let result: Observable<Date | null>;
 
       if (config) {
         const { control } = config;
-        result = control.valueChanges.pipe(startWith(control.value), map(safeToJsDate));
+        result = control.valueChanges.pipe(
+          startWith(control.value),
+          map((x) => safeToJsDate(x) ?? null)
+        );
       } else {
-        result = of(undefined);
+        result = of(null);
       }
 
       return result;
@@ -286,8 +289,8 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
 
   readonly date$ = this.dateInputCtrl.valueChanges.pipe(startWith(this.dateInputCtrl.value), filterMaybe(), shareReplay(1));
 
-  readonly dateValue$ = merge(this.date$, this.value$.pipe(skipFirstMaybe())).pipe(
-    map((x: Maybe<Date>) => (x ? startOfDay(x) : x)),
+  readonly dateValue$: Observable<Date | null> = merge(this.date$, this.value$.pipe(skipFirstMaybe())).pipe(
+    map((x: Maybe<Date>) => (x ? startOfDay(x) : null)),
     distinctUntilChanged((a, b) => a != null && b != null && isSameDay(a, b)),
     shareReplay(1)
   );
@@ -328,13 +331,13 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
     shareReplay(1)
   );
 
-  readonly syncConfigBeforeValue$: Observable<Maybe<Date>> = syncConfigValueObs(this.parsedSyncConfigs$, 'before');
-  readonly syncConfigAfterValue$: Observable<Maybe<Date>> = syncConfigValueObs(this.parsedSyncConfigs$, 'after');
+  readonly syncConfigBeforeValue$: Observable<Date | null> = syncConfigValueObs(this.parsedSyncConfigs$, 'before');
+  readonly syncConfigAfterValue$: Observable<Date | null> = syncConfigValueObs(this.parsedSyncConfigs$, 'after');
 
   // TODO: Get min/max using the DateTimePickerConfiguration too
 
-  readonly dateInputMin$: Observable<Maybe<Date>> = this.syncConfigBeforeValue$;
-  readonly dateInputMax$: Observable<Maybe<Date>> = this.syncConfigAfterValue$;
+  readonly dateInputMin$: Observable<Date | null> = this.syncConfigBeforeValue$;
+  readonly dateInputMax$: Observable<Date | null> = this.syncConfigAfterValue$;
 
   readonly rawDateTime$: Observable<Maybe<Date>> = combineLatest([this.dateValue$, this.timeInput$.pipe(startWith(null)), this.fullDay$]).pipe(
     map(([date, timeString, fullDay]) => {
@@ -388,6 +391,21 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
     distinctUntilChanged(),
     shareReplay(1)
   );
+
+  readonly pickerFilter$: Observable<DecisionFunction<Date | null>> = this.config$.pipe(
+    distinctUntilChanged(),
+    map((x) => {
+      if (x) {
+        const filter = dateTimeMinuteDecisionFunction(x);
+        return (x: Date | null) => (x != null ? filter(x) : true);
+      } else {
+        return () => true;
+      }
+    }),
+    shareReplay(1)
+  );
+
+  readonly defaultPickerFilter: DecisionFunction<Date | null> = () => true;
 
   readonly timeOutput$: Observable<Maybe<Date>> = combineLatest([this.rawDateTime$, this._offset, this.config$]).pipe(
     throttleTime(40, undefined, { leading: false, trailing: true }),

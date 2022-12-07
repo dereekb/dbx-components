@@ -1,7 +1,5 @@
-import { addDays, startOfDay } from 'date-fns';
-import { BehaviorSubject } from 'rxjs';
 import { Component } from '@angular/core';
-import { ClickableFilterPreset, AbstractFilterSourceDirective, ClickableAnchor, provideActionStoreSource, provideFilterSourceDirective } from '@dereekb/dbx-core';
+import { ClickableFilterPreset, AbstractFilterSourceDirective, provideFilterSourceDirective } from '@dereekb/dbx-core';
 import { DocInteractionTestFilter, DOC_INTERACTION_TEST_PRESETS } from './filter';
 
 @Component({

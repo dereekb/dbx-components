@@ -40,7 +40,7 @@ describe('dbxFormSourceObservableFromStream()', () => {
   describe('mode', () => {
     describe('reset', () => {
       it('should not pipe values when the state is INITIALIZING.', (done) => {
-        let values = new BehaviorSubject<number>(0);
+        const values = new BehaviorSubject<number>(0);
 
         const obs$ = dbxFormSourceObservableFromStream(
           preventComplete(
@@ -61,7 +61,7 @@ describe('dbxFormSourceObservableFromStream()', () => {
       });
 
       it('should not pipe values when the state is INITIALIZING.', (done) => {
-        let values = new BehaviorSubject<number>(0);
+        const values = new BehaviorSubject<number>(0);
 
         const obs$ = dbxFormSourceObservableFromStream(
           preventComplete(
@@ -83,7 +83,7 @@ describe('dbxFormSourceObservableFromStream()', () => {
 
       it('should continue to pipe values while the state is RESET.', (done) => {
         const additionalValues = [0, 1, 2];
-        let values = new Subject<number>();
+        const values = new Subject<number>();
 
         const obs$ = dbxFormSourceObservableFromStream(
           preventComplete(
@@ -111,8 +111,8 @@ describe('dbxFormSourceObservableFromStream()', () => {
       });
 
       it('should only pipe values while the state is RESET.', (done) => {
-        let state$ = new BehaviorSubject<DbxFormState>(DbxFormState.INITIALIZING);
-        let values$ = new Subject<number>();
+        const state$ = new BehaviorSubject<DbxFormState>(DbxFormState.INITIALIZING);
+        const values$ = new Subject<number>();
 
         const obs$ = dbxFormSourceObservableFromStream(state$.pipe(map((state) => ({ state }))), values$, preventComplete(of('reset')));
 
@@ -133,8 +133,8 @@ describe('dbxFormSourceObservableFromStream()', () => {
 
       it('should pipe the first value recieved when reset occurs', (done) => {
         const value = 0;
-        let state$ = new BehaviorSubject<DbxFormState>(DbxFormState.INITIALIZING);
-        let values$ = new Subject<number>();
+        const state$ = new BehaviorSubject<DbxFormState>(DbxFormState.INITIALIZING);
+        const values$ = new Subject<number>();
 
         const obs$ = dbxFormSourceObservableFromStream(state$.pipe(map((state) => ({ state }))), values$, preventComplete(of('reset')));
 
@@ -153,7 +153,7 @@ describe('dbxFormSourceObservableFromStream()', () => {
 
     describe('always', () => {
       it('should not pipe values when the state is INITIALIZING.', (done) => {
-        let values = new BehaviorSubject<number>(0);
+        const values = new BehaviorSubject<number>(0);
 
         const obs$ = dbxFormSourceObservableFromStream(
           preventComplete(
@@ -176,8 +176,8 @@ describe('dbxFormSourceObservableFromStream()', () => {
       it('should not pipe values when the state is changing between other non-initialized states.', (done) => {
         // tests the case where the DbxFormState would change between RESET to USED, then pipe the previous value again, causing the form to reset.
 
-        let state$ = new BehaviorSubject<DbxFormState>(DbxFormState.INITIALIZING);
-        let values$ = new Subject<number>();
+        const state$ = new BehaviorSubject<DbxFormState>(DbxFormState.INITIALIZING);
+        const values$ = new Subject<number>();
 
         const obs$ = dbxFormSourceObservableFromStream(state$.pipe(map((state) => ({ state }))), values$, preventComplete(of('reset')));
 
@@ -200,7 +200,7 @@ describe('dbxFormSourceObservableFromStream()', () => {
 
       it('should pipe values when the state is RESET.', (done) => {
         const value = 0;
-        let values = new BehaviorSubject<number>(value);
+        const values = new BehaviorSubject<number>(value);
 
         const obs$ = dbxFormSourceObservableFromStream(
           preventComplete(
@@ -222,7 +222,7 @@ describe('dbxFormSourceObservableFromStream()', () => {
 
       it('should pipe values when the state is USED.', (done) => {
         const value = 0;
-        let values = new BehaviorSubject<number>(value);
+        const values = new BehaviorSubject<number>(value);
 
         const obs$ = dbxFormSourceObservableFromStream(
           preventComplete(
@@ -244,7 +244,7 @@ describe('dbxFormSourceObservableFromStream()', () => {
 
       it('should continue to pipe values while the state is not INITIALIZING.', (done) => {
         const additionalValues = [0, 1, 2];
-        let values = new Subject<number>();
+        const values = new Subject<number>();
 
         const obs$ = dbxFormSourceObservableFromStream(
           preventComplete(

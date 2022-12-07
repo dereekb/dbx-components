@@ -58,3 +58,9 @@ export function numberField(config: NumberFieldConfig): FormlyFieldConfig {
     parsers
   });
 }
+
+export type DollarAmountFieldConfig = Omit<NumberFieldConfig, 'roundToStep' | 'precision'>;
+
+export function dollarAmountField(config: DollarAmountFieldConfig) {
+  return numberField({ ...config, transform: { ...config.transform, precision: 2 } });
+}

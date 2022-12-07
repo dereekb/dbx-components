@@ -1,18 +1,17 @@
 import { Expose } from 'class-transformer';
 import { IsOptional, validate } from 'class-validator';
-import { FirestoreModelId, FirestoreModelKey } from '../../firestore/collection/collection';
 import { IsFirestoreModelId, IsFirestoreModelKey } from './model.validator';
 
 class TestModelClass {
   @Expose()
   @IsOptional()
   @IsFirestoreModelId()
-  id!: FirestoreModelId;
+  id!: string;
 
   @Expose()
   @IsOptional()
   @IsFirestoreModelKey()
-  key!: FirestoreModelKey;
+  key!: string;
 }
 
 describe('IsFirestoreModelKey', () => {

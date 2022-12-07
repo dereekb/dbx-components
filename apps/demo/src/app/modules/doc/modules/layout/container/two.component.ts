@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { SegueRef, ClickableAnchor, ClickableAnchorLinkTree } from '@dereekb/dbx-core';
+import { SegueRef, ClickableAnchorLinkTree } from '@dereekb/dbx-core';
 
 @Component({
   templateUrl: './two.component.html'

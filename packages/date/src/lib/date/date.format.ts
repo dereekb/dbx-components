@@ -17,6 +17,14 @@ export function formatToISO8601DayString(date: Date = new Date()): ISO8601DayStr
   return format(date, 'yyyy-MM-dd');
 }
 
+export function formatToShortDateString(date: Date = new Date()): ISO8601DayString {
+  return format(date, 'MM/dd/yyyy');
+}
+
+export function formatToMonthDayString(date: Date = new Date()): ISO8601DayString {
+  return format(date, 'MM/dd');
+}
+
 export function formatToDateString(date: Date): string {
   return format(date, 'EEE, MMM do');
 }

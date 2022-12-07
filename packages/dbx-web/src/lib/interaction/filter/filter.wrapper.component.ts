@@ -1,5 +1,5 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { AbstractDbxActionHandlerDirective, DbxActionContextStoreSourceInstance, FilterSourceDirective, HandleActionFunction, provideActionStoreSource } from '@dereekb/dbx-core';
+import { Component, Input } from '@angular/core';
+import { AbstractDbxActionHandlerDirective, DbxActionContextStoreSourceInstance, FilterSourceDirective, provideActionStoreSource } from '@dereekb/dbx-core';
 import { of } from 'rxjs';
 
 /**

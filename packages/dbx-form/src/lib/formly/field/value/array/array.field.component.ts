@@ -1,15 +1,17 @@
 import { CdkDragDrop } from '@angular/cdk/drag-drop';
-import { Component, OnInit, TrackByFunction } from '@angular/core';
-import { asDecisionFunction, asGetter, cachedGetter, DecisionFunction, FactoryWithInput, FactoryWithRequiredInput, Getter, getValueFromGetter, IndexRef, makeGetter, Maybe } from '@dereekb/util';
+import { Component, TrackByFunction } from '@angular/core';
+import { asDecisionFunction, cachedGetter, DecisionFunction, FactoryWithRequiredInput, Getter, getValueFromGetter, IndexRef, makeGetter, Maybe } from '@dereekb/util';
 import { FieldArrayTypeConfig, FieldArrayType, FormlyFieldConfig, FormlyFieldProps } from '@ngx-formly/core';
 
 export interface DbxFormRepeatArrayPair<T = unknown> extends IndexRef {
-  value: T;
+  value?: T | undefined;
 }
 
-export interface DbxFormRepeatArrayFieldConfigPair<T = unknown> extends DbxFormRepeatArrayPair<T> {
+export interface DbxFormRepeatArrayFieldConfigPair<T = unknown> extends Partial<DbxFormRepeatArrayPair<T>> {
   fieldConfig: FormlyFieldConfig;
 }
+
+export type DbxFormRepeatArrayAddTemplateFunction<T> = FactoryWithRequiredInput<Partial<Maybe<T>>, number>;
 
 export interface DbxFormRepeatArrayConfig<T = unknown> extends Pick<FormlyFieldProps, 'maxLength' | 'label' | 'description'> {
   labelForField?: string | FactoryWithRequiredInput<string, DbxFormRepeatArrayFieldConfigPair<T>>;
@@ -17,6 +19,10 @@ export interface DbxFormRepeatArrayConfig<T = unknown> extends Pick<FormlyFieldP
    * Text for the add button.
    */
   addText?: string;
+  /**
+   * Optional template function to create a new template when using the add button.
+   */
+  addTemplate?: DbxFormRepeatArrayAddTemplateFunction<T>;
   /**
    * Text for the duplicate button.
    */
@@ -75,7 +81,7 @@ export interface DbxFormRepeatArrayConfig<T = unknown> extends Pick<FormlyFieldP
         </div>
         <!-- Add Button -->
         <div class="dbx-form-repeat-array-footer">
-          <dbx-button *ngIf="allowAdd" [raised]="true" [disabled]="addItemDisabled" [text]="addText" (buttonClick)="add()"></dbx-button>
+          <dbx-button *ngIf="allowAdd" [raised]="true" [disabled]="addItemDisabled" [text]="addText" (buttonClick)="addClicked()"></dbx-button>
         </div>
       </dbx-subsection>
     </div>
@@ -120,6 +126,10 @@ export class DbxFormRepeatArrayTypeComponent<T = unknown> extends FieldArrayType
     return this.repeatArrayField.addText ?? 'Add';
   }
 
+  get addTemplate() {
+    return this.repeatArrayField.addTemplate;
+  }
+
   get removeText(): string {
     return this.repeatArrayField.removeText ?? 'Remove';
   }
@@ -146,7 +156,7 @@ export class DbxFormRepeatArrayTypeComponent<T = unknown> extends FieldArrayType
 
   allowRemove(i: number) {
     const array: unknown[] = this.model;
-    const value = array[i] as T;
+    const value = array[i] as T | undefined;
     return this._allowRemove()({
       i,
       value
@@ -195,6 +205,12 @@ export class DbxFormRepeatArrayTypeComponent<T = unknown> extends FieldArrayType
 
   moveDown(index: number) {
     this.swapIndexes(index, index + 1);
+  }
+
+  addClicked() {
+    const addTemplate = this.addTemplate;
+    const template = addTemplate ? addTemplate(this.count) : undefined;
+    this.add(undefined, template);
   }
 
   duplicate(index: number) {

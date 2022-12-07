@@ -1,9 +1,7 @@
 import { shareReplay } from 'rxjs/operators';
-import { BehaviorSubject, map, Observable, combineLatest, distinctUntilChanged, switchMap } from 'rxjs';
-import { Component, Input, OnDestroy, OnInit } from '@angular/core';
-import { ClickableFilterPreset, AbstractSubscriptionDirective, ClickableAnchor, ClickableAnchorLink, ClickableIconAnchorLink, FilterSourceDirective } from '@dereekb/dbx-core';
-import { GetterOrValue, getValueFromGetter, Maybe } from '@dereekb/util';
-import { FilterPresetStringRef, FilterWithPreset, tapLog } from '@dereekb/rxjs';
+import { BehaviorSubject, map, combineLatest, distinctUntilChanged, switchMap } from 'rxjs';
+import { Component, Input } from '@angular/core';
+import { FilterWithPreset } from '@dereekb/rxjs';
 import { AbstractDbxPresetFilterMenuComponent } from './filter.preset';
 
 export interface DbxPresetFilterMenuConfig {
@@ -30,7 +28,7 @@ export class DbxPresetFilterMenuComponent<F extends FilterWithPreset> extends Ab
 
   readonly buttonText$ = combineLatest([this._config, this.selectedPreset$]).pipe(
     map(([config, preset]) => {
-      let buttonText = preset?.title ?? config.unknownSelectionText ?? 'Filter';
+      const buttonText = preset?.title ?? config.unknownSelectionText ?? 'Filter';
       return buttonText;
     }),
     distinctUntilChanged(),

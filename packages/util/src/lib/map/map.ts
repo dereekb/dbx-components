@@ -1,5 +1,5 @@
 import { ArrayOrValue, asArray } from '../array/array';
-import { forEachInIterable, useIterableOrValue } from '../iterable/iterable';
+import { useIterableOrValue } from '../iterable/iterable';
 import { Maybe } from '../value/maybe.type';
 
 /**

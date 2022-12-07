@@ -1,9 +1,9 @@
 import { shareReplay } from 'rxjs/operators';
 import { BehaviorSubject, map, Observable, combineLatest, distinctUntilChanged, startWith } from 'rxjs';
-import { Component, Directive, Input, OnDestroy, OnInit } from '@angular/core';
-import { ClickableFilterPreset, AbstractSubscriptionDirective, ClickableAnchor, ClickableAnchorLink, ClickableIconAnchorLink, FilterSourceDirective } from '@dereekb/dbx-core';
-import { GetterOrValue, getValueFromGetter, Maybe, objectHasNoKeys } from '@dereekb/util';
-import { FilterPresetStringRef, FilterWithPreset, tapLog } from '@dereekb/rxjs';
+import { Directive, Input, OnDestroy } from '@angular/core';
+import { ClickableFilterPreset, ClickableAnchorLink, FilterSourceDirective } from '@dereekb/dbx-core';
+import { getValueFromGetter, Maybe, objectHasNoKeys } from '@dereekb/util';
+import { FilterWithPreset } from '@dereekb/rxjs';
 
 /**
  * Displays a button and menu for filtering presets.

@@ -1,12 +1,11 @@
 import { Component, OnDestroy, OnInit, Type } from '@angular/core';
 import { AbstractControl } from '@angular/forms';
 import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
-import { DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE, AbstractDbxSelectionListWrapperDirective, provideDbxListView, AbstractDbxSelectionListViewDirective, AbstractDbxValueListViewItemComponent, ListSelectionState, addConfigToValueListItems, DbxListSelectionMode, DbxValueListItemDecisionFunction, dbxValueListItemDecisionFunction } from '@dereekb/dbx-web';
-import { distinctUntilHasDifferentValues, distinctUntilObjectValuesChanged, filterMaybe, ListLoadingState, SubscriptionObject, switchMapMaybeObs } from '@dereekb/rxjs';
-import { convertMaybeToArray, hasDifferentValues, isSelectedDecisionFunctionFactory, isSelectedIndexDecisionFunction, MapFunction, Maybe, PrimativeKey, ReadKeyFunction, readKeysFrom } from '@dereekb/util';
+import { AbstractDbxSelectionListWrapperDirective, ListSelectionState, DbxValueListItemDecisionFunction, dbxValueListItemDecisionFunction } from '@dereekb/dbx-web';
+import { distinctUntilHasDifferentValues, filterMaybe, ListLoadingState, SubscriptionObject, switchMapMaybeObs } from '@dereekb/rxjs';
+import { convertMaybeToArray, hasDifferentValues, isSelectedDecisionFunctionFactory, Maybe, PrimativeKey, ReadKeyFunction, readKeysFrom } from '@dereekb/util';
 import { FormlyFieldProps, FieldType, FieldTypeConfig } from '@ngx-formly/core';
-import { map, Observable, shareReplay, BehaviorSubject, startWith, switchMap, distinctUntilChanged } from 'rxjs';
-import { PickableValueFieldLoadValuesFn } from '../pickable';
+import { map, Observable, shareReplay, BehaviorSubject, startWith, switchMap } from 'rxjs';
 
 export interface DbxItemListFieldProps<T = unknown, C extends AbstractDbxSelectionListWrapperDirective<T> = AbstractDbxSelectionListWrapperDirective<T>, K extends PrimativeKey = PrimativeKey> extends Pick<FormlyFieldProps, 'label' | 'description'> {
   /**

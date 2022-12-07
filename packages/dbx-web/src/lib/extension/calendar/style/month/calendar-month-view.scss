@@ -217,5 +217,35 @@
       background-color: map-get($theme, gray);
       box-shadow: map-get($theme, gradient);
     }
+
+    .cal-day-cell.cal-day-selected,
+    .cal-day-cell.cal-weekend.cal-day-selected {
+      color: map-get($theme, selected-color) !important;
+      background-color: map-get($theme, bg-selected-color) !important;
+
+      .cal-day-number {
+        color: map-get($theme, selected-color) !important;
+      }
+    }
+
+    .cal-day-cell.cal-day-disabled,
+    .cal-day-cell.cal-weekend.cal-day-disabled {
+      color: map-get($theme, disabled-color) !important;
+      background-color: map-get($theme, bg-disabled-color) !important;
+
+      .cal-day-number {
+        color: map-get($theme, disabled-color) !important;
+      }
+    }
+
+    .cal-day-cell.cal-day-not-applicable,
+    .cal-day-cell.cal-weekend.cal-day-not-applicable {
+      color: map-get($theme, not-applicable-color) !important;
+      background-color: map-get($theme, bg-not-applicable-color) !important;
+
+      .cal-day-number {
+        color: map-get($theme, not-applicable-color) !important;
+      }
+    }
   }
 }
