@@ -7,7 +7,7 @@
  *
  * Example:
  *
- * node make-env.js staging // This will copy all values in the current environment using the keys in the root .env value, and also look for those keys with values with a .staging prefix.
+ * node make-env.js staging       // This will copy all values in the current environment using the keys in the root .env value, and also look for those keys with values with a .staging prefix.
  *
  * For example, if MAILGUN_DOMAIN is defined in .env, the program will look at both MAILGUN_DOMAIN.staging and MAILGUN_DOMAIN for a value
  *
@@ -28,14 +28,15 @@ const env = {}; // this is the object that is parsed
 const keysToIgnoreFromTemplate = ['PUT_YOUR_REAL_SECRETS_INTO_ENV_SECRET', 'THIS_FILE_IS_COMMITTED_TO_GITHUB']; // these keys are ignored
 const keysToIgnore = new Set(keysToIgnoreFromTemplate);
 
-const envSpecifierType = new String(process.argv[2] || 'test').toLowerCase(); // Also use this to find variables. Always lowercase
+const envSpecifierType = new String(process.argv[2] || 'test').toUpperCase(); // Also use this to find variables. Always lowercase
+const envSpecifierSeparator = '__';
 
 Object.keys(template)
   .filter((x) => !keysToIgnore.has(x))
   .forEach((key) => (env[key] = ''));
 
 function copyToEnvFromProcessEnv(key, defaultValue = '') {
-  const envSpecificKey = `${key}_${envSpecifierType}`; // MY_ENV_VARIABLE.test
+  const envSpecificKey = `${key}${envSpecifierSeparator}${envSpecifierType}`; // MY_ENV_VARIABLE.test
   env[key] = process.env[envSpecificKey] || process.env[key] || defaultValue;
 }
 
@@ -61,11 +62,11 @@ function assertHasNoPlaceholderValues(defaultValue, ignoreKeys = new Set()) {
 const defaultPlaceholderValue = 'placeholder'; // This is the default value to use if an environment variable that is requested is not defined.
 initWithProcessEnv(defaultPlaceholderValue); // Init with process.env, copying values from process.env onto the existing keys of our env variable
 
-// Explicit Declaration
-copyToEnvFromProcessEnv('MAILGUN_DOMAIN');
-
 // Check there are no placeholder values remaining
 assertHasNoPlaceholderValues(defaultPlaceholderValue);
+
+// Explicit Declaration
+copyToEnvFromProcessEnv('MAILGUN_DOMAIN');
 
 // ======================================
 // Finish Configuration
