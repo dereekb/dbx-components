@@ -246,7 +246,7 @@ export function mergeLoadingStates<A extends object, B extends object, C>(a: Loa
       error
     };
   } else {
-    const loading = !a || !b || (a?.loading ?? b?.loading);
+    const loading = !a || !b || a?.loading || b?.loading;
     if (loading) {
       result = {
         loading: true
