@@ -1,0 +1,11 @@
+<dbx-content-container>
+  <doc-feature-layout header="Forms" hint="Set of pre-made form components available for use.">
+    <!-- Examples -->
+    <doc-feature-example header="dbx-form-search-form" hint="Premade form component used for searching.">
+      <dbx-form-search-form [config]="searchFormConfig" (search)="searchText = $event"></dbx-form-search-form>
+      <dbx-content-border>
+        <p>Search Text: {{ searchText }}</p>
+      </dbx-content-border>
+    </doc-feature-example>
+  </doc-feature-layout>
+</dbx-content-container>

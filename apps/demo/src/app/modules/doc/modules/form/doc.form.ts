@@ -48,6 +48,12 @@ export const DOC_FORM_ROUTES = [
     ref: 'doc.form.template'
   },
   {
+    icon: 'article',
+    title: 'Forms',
+    detail: 'premade forms',
+    ref: 'doc.form.form'
+  },
+  {
     icon: 'code',
     title: 'Component',
     detail: 'component form',
