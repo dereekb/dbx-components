@@ -1,7 +1,7 @@
 <div class="dbx-calendar">
   <h3 class="dbx-calendar-title">{{ (viewDate$ | async)! | calendarDate: (displayType$ | async) + 'ViewTitle':'en' }}</h3>
   <div class="dbx-calendar-header">
-    <div class="dbx-calendar-controls" fxLayout="row">
+    <div class="dbx-calendar-controls" fxLayout="row" fxLayout.xs="column" ngClass.xs="dbx-calendar-controls-compact">
       <span class="dbx-calendar-controls-left" fxFlex="nogrow">
         <button mat-stroked-button (click)="todayClicked()">Today</button>
         <dbx-button-spacer></dbx-button-spacer>
