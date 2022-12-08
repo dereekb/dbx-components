@@ -7,7 +7,7 @@ import { dbxFormSearchFormFields, DbxFormSearchFormFieldsConfig, DbxFormSearchFo
 
 @Component({
   template: `
-    <dbx-formly (dbxFormValueChange)="searchChanged($event)"></dbx-formly>
+    <dbx-formly class="dbx-form-search-form" (dbxFormValueChange)="searchChanged($event)"></dbx-formly>
   `,
   selector: 'dbx-form-search-form',
   providers: [provideFormlyContext()]
