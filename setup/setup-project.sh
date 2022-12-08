@@ -291,8 +291,23 @@ chmod +x reset-emulator-data.sh
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/reset.sh -o reset.sh
 chmod +x reset.sh
 
-curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/down.sh -o down.sh
-chmod +x down.sh
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/start-merge-in-main.sh -o start-merge-in-main.sh
+chmod +x start-merge-in-main.sh
+
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/end-merge-in-main.sh -o end-merge-in-main.sh
+chmod +x end-merge-in-main.sh
+
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/force-start-release.sh -o force-start-release.sh
+chmod +x force-start-release.sh
+
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/lint-fix-all.sh -o lint-fix-all.sh
+chmod +x lint-fix-all.sh
+
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/make-dev-tag.sh -o make-dev-tag.sh
+chmod +x make-dev-tag.sh
+
+curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/start-release.sh -o start-release.sh
+chmod +x start-release.sh
 
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/test-all.sh -o test-all.sh.tmp
 sed -e "s/demo-api/$API_APP_NAME/g" test-all.sh.tmp > test-all.sh
