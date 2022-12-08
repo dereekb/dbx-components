@@ -24,6 +24,14 @@ Example usage: `ssh-keygen -t rsa -b 4096 -C "ci@dereekb.com"`
 
 Tip: You can use `cat` to print your keys to your terminal (`cat dbxcomponentsci`, `cat dbxcomponentsci.pub`). The .pub is your public key which goes to github. The private key is uploaded to CircleCI.
 
+Don't forget to add the "add_ssh_keys" section to the step they will be used in.
+
+```
+  - add_ssh_keys:
+      fingerprints:
+        - 'SET_THIS_VALUE_TO_BE_VALID'
+```
+
 #### Add to Github
 Add your public key to your Github project in the Deploy Keys settings page. 
 
@@ -70,6 +78,12 @@ environment:
 ```
 
 This is preferred to FIREBASE_TOKEN, since FIREBASE_TOKEN is always available, while you can more easily control when to decode and use your GOOGLE_SERVICE_ACCOUNT_JSON.
+
+Additionally, you may need to update the account's roles within console.cloud.google.com in order to deploy functions properly. Follow instructions here:
+
+https://cloud.google.com/build/docs/deploying-builds/deploy-firebase
+
+You may also need to deploy from your own device/account first, as the first deployment configures the different services using permissions your service account doesn't have access to. Once you've deployed once no further configuration will be necessary and your service worker account used by your CI can deploy properly.
 
 #### FIREBASE_TOKEN
 THIS IS DEPRECATED: Use GOOGLE_SERVICE_ACCOUNT_JSON above instead.

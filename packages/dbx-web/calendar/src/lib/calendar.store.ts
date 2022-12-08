@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { isDateInDateRange } from '@dereekb/date';
 import { ComponentStore } from '@ngrx/component-store';
 import { CalendarEvent } from 'angular-calendar';
 import { differenceInDays, addDays, endOfDay, endOfMonth, endOfWeek, isSameDay, startOfDay, startOfMonth, startOfWeek, isBefore, isAfter } from 'date-fns';
@@ -145,6 +146,12 @@ export class DbxCalendarStore<T = any> extends ComponentStore<CalendarState<T>> 
         return false; // Type changed, date range changed.
       }
     }),
+    shareReplay(1)
+  );
+
+  readonly isLookingAtToday$ = this.visibleDateRange$.pipe(
+    map((x) => isDateInDateRange(new Date(), { start: x.start, end: x.end })),
+    distinctUntilChanged(),
     shareReplay(1)
   );
 

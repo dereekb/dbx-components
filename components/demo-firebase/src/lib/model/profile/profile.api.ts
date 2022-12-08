@@ -55,7 +55,10 @@ export type ProfileModelCrudFunctionsConfig = {
 };
 
 export const profileModelCrudFunctionsConfig: ModelFirebaseCrudFunctionConfigMap<ProfileModelCrudFunctionsConfig, ProfileTypes> = {
-  profile: ['update:_,username,onboard', 'delete']
+  profile: [
+    'update:_,username,onboard' as any, // use "any" once typescript complains about combinations
+    'delete'
+  ]
 };
 
 /**

@@ -65,6 +65,17 @@
       text-align: center;
     }
   }
+
+  .dbx-schedule-selection-calendar-date-dialog {
+    .dbx-calendar .dbx-calendar-header {
+      height: unset;
+
+      .dbx-controls.dbx-calendar-controls-compact {
+        justify-content: center;
+        align-items: center;
+      }
+    }
+  }
 }
 
 @mixin color($theme-config) {

@@ -93,7 +93,7 @@
     "make-env": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "node ./make-env.js > dist/apps/demo-api/.env && cp .env.prod dist/apps/demo-api/.env.prod"
+        "command": "node ./make-env.js prod > dist/apps/demo-api/.env && cp .env.prod dist/apps/demo-api/.env.prod"
       }
     },
     "ci-deploy": {

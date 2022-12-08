@@ -1,11 +1,18 @@
 /**
- * This is a stand-alone tool used to generate .env files for your deployments.
+ * This is a stand-alone tool used to generate .env files for your deployments. It uses the .env file as a template from which to pull keys that need to be defined.
  *
  * The expected usage is:
  *
- * node make-env.js
+ * node make-env.js <environment>
  *
- * Be sure to put all environment variables that have secrets that need to be deployed into the .env file, or declare them below.
+ * Example:
+ *
+ * node make-env.js staging       // This will copy all values in the current environment using the keys in the root .env value, and also look for those keys with values with a .staging prefix.
+ *
+ * For example, if MAILGUN_DOMAIN is defined in .env, the program will look at both MAILGUN_DOMAIN.staging and MAILGUN_DOMAIN for a value
+ *
+ * MAILGUN_DOMAIN_staging=staging.components.dereekb.com
+ * MAILGUN_API_KEY=todo
  */
 const fs = require('fs');
 const { parse, stringify } = require('envfile');
@@ -21,25 +28,42 @@ const env = {}; // this is the object that is parsed
 const keysToIgnoreFromTemplate = ['PUT_YOUR_REAL_SECRETS_INTO_ENV_SECRET', 'THIS_FILE_IS_COMMITTED_TO_GITHUB']; // these keys are ignored
 const keysToIgnore = new Set(keysToIgnoreFromTemplate);
 
+const envSpecifierType = new String(process.argv[2] || 'test').toUpperCase(); // Also use this to find variables. Always lowercase
+const envSpecifierSeparator = '__';
+
 Object.keys(template)
   .filter((x) => !keysToIgnore.has(x))
   .forEach((key) => (env[key] = ''));
 
 function copyToEnvFromProcessEnv(key, defaultValue = '') {
-  env[key] = process.env[key] || defaultValue;
+  const envSpecificKey = `${key}${envSpecifierSeparator}${envSpecifierType}`; // MY_ENV_VARIABLE.test
+  env[key] = process.env[envSpecificKey] || process.env[key] || defaultValue;
 }
 
 function initWithProcessEnv(defaultValue, keysSource = env) {
   Object.keys(keysSource).forEach((key) => copyToEnvFromProcessEnv(key, defaultValue));
 }
 
+function assertHasNoPlaceholderValues(defaultValue, ignoreKeys = new Set()) {
+  Object.keys(env)
+    .filter((x) => !ignoreKeys.has(x))
+    .forEach((key) => {
+      const value = env[key];
+
+      if (value === defaultValue) {
+        throw new Error(`The environment varible ${key} had a placeholder value. Ensure it exists in the environment.`);
+      }
+    });
+}
+
 // ======================================
 // Configure Here using JS
 // ======================================
-const placeholderValue = 'plc';
+const defaultPlaceholderValue = 'placeholder'; // This is the default value to use if an environment variable that is requested is not defined.
+initWithProcessEnv(defaultPlaceholderValue); // Init with process.env, copying values from process.env onto the existing keys of our env variable
 
-// Init with process.env, copying values from process.env onto the existing keys of our env variable
-initWithProcessEnv(placeholderValue);
+// Check there are no placeholder values remaining
+assertHasNoPlaceholderValues(defaultPlaceholderValue);
 
 // Explicit Declaration
 copyToEnvFromProcessEnv('MAILGUN_DOMAIN');
