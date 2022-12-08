@@ -3,7 +3,7 @@
   <div class="dbx-calendar-header">
     <div class="dbx-calendar-controls" fxLayout="row" fxLayout.xs="column" ngClass.xs="dbx-calendar-controls-compact">
       <span class="dbx-calendar-controls-left" fxFlex="nogrow">
-        <button mat-stroked-button (click)="todayClicked()">Today</button>
+        <button mat-stroked-button [disabled]="isLookingAtToday$ | async" (click)="todayClicked()">Today</button>
         <dbx-button-spacer></dbx-button-spacer>
         <button mat-icon-button [attr.aria-label]="'Previous ' + (displayType$ | async) + ' button'" (click)="previousButtonClicked()">
           <mat-icon>navigate_before</mat-icon>

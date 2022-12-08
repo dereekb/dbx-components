@@ -11,6 +11,8 @@ import { MatButtonToggleChange } from '@angular/material/button-toggle';
 export class DbxCalendarBaseComponent<T> {
   readonly viewDate$ = this.calendarStore.date$;
 
+  readonly isLookingAtToday$ = this.calendarStore.isLookingAtToday$;
+
   readonly activeDayIsOpen$ = this.calendarStore.eventsForDateState$.pipe(
     withLatestFrom(this.calendarStore.date$),
     map(([x, date]) => {
