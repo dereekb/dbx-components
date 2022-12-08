@@ -1,7 +1,15 @@
 import { MapFunction } from '../value/map';
 import { Maybe } from '../value/maybe.type';
 
+/**
+ * Converts a string to a value.
+ */
 export type MapStringFunction<T> = MapFunction<string, T>;
+
+/**
+ * Reads a string from the input value.
+ */
+export type ReadStringFunction<T, S extends string = string> = MapFunction<T, S>;
 
 /**
  * Represents a string that is made up of comma-separated values.

@@ -1,5 +1,5 @@
 import { FormlyFieldConfig } from '@ngx-formly/core';
-import { Maybe, searchStringFilterFunction, SearchStringFilterFunction, caseInsensitiveFilterByIndexOfDecisionFactory } from '@dereekb/util';
+import { Maybe, searchStringFilterFunction, SearchStringFilterFunction, caseInsensitiveFilterByIndexOfDecisionFactory, sortByStringFunction } from '@dereekb/util';
 import { Observable, of } from 'rxjs';
 import { LabeledFieldConfig, formlyField, propsAndConfigForFieldConfig } from '../../field';
 import { PickableValueFieldDisplayValue } from './pickable';
@@ -23,8 +23,10 @@ export function filterPickableItemFieldValuesByLabel<T>(filterText: Maybe<string
   return of(filteredValues.map((x) => x.value));
 }
 
+export const sortPickableItemsByLabelStringFunction = sortByStringFunction<PickableItemFieldItem<any>>((x) => x.itemValue.label);
+
 export function sortPickableItemsByLabel<T>(chips: PickableItemFieldItem<T>[]): PickableItemFieldItem<T>[] {
-  return chips.sort((a, b) => a.itemValue.label.localeCompare(b.itemValue.label));
+  return chips.sort(sortPickableItemsByLabelStringFunction);
 }
 
 export interface PickableItemFieldConfig<T = unknown, M = unknown> extends LabeledFieldConfig, PickableValueFieldsFieldProps<T, M> {}
