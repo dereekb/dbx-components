@@ -29,6 +29,11 @@ export interface LoadingState<T = unknown> extends LoadingErrorPair {
 export type LoadingStateValue<L extends LoadingState> = L extends LoadingState<infer T> ? T : never;
 
 /**
+ * Replaces the value type of the input loading state.
+ */
+export type LoadingStateWithValueType<L extends LoadingState, T> = L extends LoadingState ? Omit<L, 'value'> & LoadingState<T> : never;
+
+/**
  * Loading state with a value key.
  */
 export type LoadingStateWithValue<T = unknown> = LoadingState<T> & {
@@ -203,7 +208,7 @@ export function loadingStateHasFinishedLoading<L extends LoadingState>(state: Ma
  * @param state
  * @returns
  */
-export function loadingStateHasValue<L extends LoadingState>(state: Maybe<L>): boolean {
+export function loadingStateHasValue<L extends LoadingState>(state: Maybe<L> | LoadingStateWithMaybeSoValue<LoadingStateValue<L>>): state is LoadingStateWithMaybeSoValue<LoadingStateValue<L>> {
   if (state) {
     return loadingStateHasFinishedLoading(state) && state.value != null;
   } else {
@@ -224,6 +229,8 @@ export function loadingStateHasError<L extends LoadingState>(state: Maybe<L>): b
     return false;
   }
 }
+
+// TODO: Fix all LoadingState types to use the LoadingStateValue inference
 
 /**
  * Merges the input loading states.

@@ -14,5 +14,6 @@ export * from './rxjs';
 export * from './rxjs.async';
 export * from './rxjs.map';
 export * from './set';
+export * from './string';
 export * from './use';
 export * from './value';
