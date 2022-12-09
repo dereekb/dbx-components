@@ -15,7 +15,6 @@ $header-left-reserved-space-small-screen: 120px;
 @mixin core() {
   // MARK: Header
   .dbx-section-header {
-    margin: 0 0 $header-bottom-margin;
     box-sizing: border-box;
 
     .dbx-section-header-content {
@@ -63,6 +62,22 @@ $header-left-reserved-space-small-screen: 120px;
 
   // MARK: Page
   .dbx-section-page {
+    // Scroll Config
+    &.dbx-section-page-scroll-header {
+      overflow: hidden;
+
+      .dbx-section-page-content {
+        padding-top: $header-bottom-margin;
+        height: 100%;
+        overflow: auto;
+      }
+    }
+
+    &.dbx-section-page-scroll-locked {
+      overflow: hidden;
+    }
+
+    // Header
     > .dbx-section-header {
       height: $content-navbar-height;
       max-height: $content-navbar-height;
@@ -98,33 +113,65 @@ $header-left-reserved-space-small-screen: 120px;
       &.dbx-content-page {
         @include theming.nested-content-height(1);
 
+        .dbx-section-page-content {
+          @include theming.nested-content-height(2);
+        }
+
         .dbx-section-page {
           &.dbx-content-page {
             @include theming.nested-content-height(2);
+
+            .dbx-section-page-content {
+              @include theming.nested-content-height(3);
+            }
 
             .dbx-section-page {
               &.dbx-content-page {
                 @include theming.nested-content-height(3);
 
+                .dbx-section-page-content {
+                  @include theming.nested-content-height(4);
+                }
+
                 .dbx-section-page {
                   &.dbx-content-page {
                     @include theming.nested-content-height(4);
+
+                    .dbx-section-page-content {
+                      @include theming.nested-content-height(5);
+                    }
 
                     .dbx-section-page {
                       &.dbx-content-page {
                         @include theming.nested-content-height(5);
 
+                        .dbx-section-page-content {
+                          @include theming.nested-content-height(6);
+                        }
+
                         .dbx-section-page {
                           &.dbx-content-page {
                             @include theming.nested-content-height(6);
+
+                            .dbx-section-page-content {
+                              @include theming.nested-content-height(7);
+                            }
 
                             .dbx-section-page {
                               &.dbx-content-page {
                                 @include theming.nested-content-height(7);
 
+                                .dbx-section-page-content {
+                                  @include theming.nested-content-height(8);
+                                }
+
                                 .dbx-section-page {
                                   &.dbx-content-page {
-                                    @include theming.nested-content-height(9);
+                                    @include theming.nested-content-height(8);
+
+                                    .dbx-section-page-content {
+                                      @include theming.nested-content-height(9);
+                                    }
                                   }
                                 }
                               }

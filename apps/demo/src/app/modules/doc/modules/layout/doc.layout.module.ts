@@ -17,6 +17,7 @@ import { DocLayoutTwoColumnsComponent } from './container/two.component';
 import { DocItemListGridComponent, DocItemListGridViewComponent, DocItemListGridViewItemComponent } from './component/item.list.grid.component';
 import { DocLayoutSectionPageComponent } from './container/section.page.component';
 import { DocLayoutTwoColumnsChildComponent } from './container/two.child.component';
+import { DocLayoutSectionPageTwoComponent } from './container/section.page.two.component';
 
 @NgModule({
   imports: [
@@ -45,6 +46,7 @@ import { DocLayoutTwoColumnsChildComponent } from './container/two.child.compone
     DocLayoutFlexComponent,
     DocLayoutSectionComponent,
     DocLayoutSectionPageComponent,
+    DocLayoutSectionPageTwoComponent,
     DocLayoutContentComponent,
     DocLayoutListComponent,
     DocLayoutTwoColumnsComponent,

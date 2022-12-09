@@ -1,5 +1,5 @@
 import { TransformStringFunction } from '../string/transform';
-import { containsAllStringsAnyCase, containsAnyStringAnyCase, containsStringAnyCase, findUniqueCaseInsensitiveStrings, findUniqueTransform, searchStringFilterFunction, caseInsensitiveFilterByIndexOfDecisionFactory } from './array.string';
+import { containsAllStringsAnyCase, containsAnyStringAnyCase, containsStringAnyCase, findUniqueCaseInsensitiveStrings, findUniqueTransform } from './array.string';
 
 describe('findUniqueCaseInsensitiveStrings', () => {
   it('should return only the strings that are unique from the array.', () => {
@@ -135,25 +135,6 @@ describe('findUniqueTransform', () => {
       const result = transform(['test', 'TEST', 'tesT', 'TesT']);
       expect(result.length).toBe(1);
       expect(result[0]).toBe('TEST');
-    });
-  });
-});
-
-describe('searchStringFilterFunction', () => {
-  describe('function', () => {
-    const filterFunction = searchStringFilterFunction<string>({
-      readStrings: (x: string) => [x],
-      decisionFactory: caseInsensitiveFilterByIndexOfDecisionFactory
-    });
-
-    it('should return the values that match the filter', () => {
-      const filterText = 'a';
-      const values = ['a', 'AA', 'b'];
-
-      const result = filterFunction(filterText, values);
-      expect(result).toContain('a');
-      expect(result).toContain('AA');
-      expect(result).not.toContain('b');
     });
   });
 });

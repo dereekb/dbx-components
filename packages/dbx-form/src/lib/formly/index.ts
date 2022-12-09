@@ -1,5 +1,6 @@
 export * from './config';
 export * from './field';
+export * from './form';
 export * from './template';
 export * from './formly.context';
 export * from './formly.context.directive';

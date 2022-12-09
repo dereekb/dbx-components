@@ -5,8 +5,10 @@
       <p>All style colors are used as css variables, allowing for easy overwriting of values.</p>
     </doc-feature-derived>
     <!-- Examples -->
-    <doc-feature-example dbxMapboxStoreParentBlocker header="dateScheduleRangeField()" hint="A field used for building a schedule.">
-      <doc-form-example-form [dbxFormlyFields]="dateScheduleRangeFields" [dbxFormSource]="defaultDateScheduleRangeFieldValue$"></doc-form-example-form>
+    <doc-feature-example header="dbx-calendar" hint="Used to render a calendar. Uses a DbxCalendarStore.">
+      <dbx-calendar (clickEvent)="event = $event"></dbx-calendar>
+      <p>Picked Date: {{ date$ | async | date }}</p>
+      <p>Clicked Event: {{ event | json }}</p>
     </doc-feature-example>
     <doc-feature-example header="dbx-calendar in restricted two-column" hint="Example showing a calendar in a two-column view with a set height.">
       <button (click)="showRight = !showRight" mat-raised-button color="accent">Toggle Right</button>
@@ -21,16 +23,14 @@
         </dbx-two-column-right>
       </dbx-two-column>
     </doc-feature-example>
+    <doc-feature-example dbxMapboxStoreParentBlocker header="dateScheduleRangeField()" hint="A field used for building a schedule.">
+      <doc-form-example-form [dbxFormlyFields]="dateScheduleRangeFields" [dbxFormSource]="defaultDateScheduleRangeFieldValue$"></doc-form-example-form>
+    </doc-feature-example>
     <doc-feature-example header="dbx-schedule-selection-calendar" hint="Used select dates to form a DateSchedule or to select days of a DateSchedule. Uses a DbxCalendarScheduleSelectionStore.">
       <dbx-subsection header="With DateSchedule Filter" hint="A dbx-schedule-selection-calendar can be limited to a specific filter range.">
         <doc-extension-calendar-schedule-with-filter-example></doc-extension-calendar-schedule-with-filter-example>
       </dbx-subsection>
       <doc-extension-calendar-schedule-example></doc-extension-calendar-schedule-example>
-    </doc-feature-example>
-    <doc-feature-example header="dbx-calendar" hint="Used to render a calendar. Uses a DbxCalendarStore.">
-      <dbx-calendar (clickEvent)="event = $event"></dbx-calendar>
-      <p>Picked Date: {{ date$ | async | date }}</p>
-      <p>Clicked Event: {{ event | json }}</p>
     </doc-feature-example>
   </doc-feature-layout>
 </dbx-content-container>

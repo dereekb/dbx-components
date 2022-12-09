@@ -4,7 +4,7 @@ import { CustomDocValue } from './../component/item.list.custom.component';
 import { ListLoadingState, mapLoadingStateResults, successResult } from '@dereekb/rxjs';
 import { BehaviorSubject, map, switchMap, startWith, Observable, delay, of } from 'rxjs';
 import { ChangeDetectorRef, Component, OnInit, OnDestroy } from '@angular/core';
-import { DocValue, DocValueWithSelection } from '../component/item.list';
+import { DocValue, DocValueWithSelection, makeDocValues } from '../component/item.list';
 import { Maybe, range, takeFront } from '@dereekb/util';
 
 @Component({
@@ -139,7 +139,7 @@ export class DocLayoutListComponent implements OnInit, OnDestroy {
   }
 
   makeValues() {
-    return range(this.numberToLoadPerUpdate).map((x) => ({ icon: 'house', name: `${x}-${Math.random() * x}` }));
+    return makeDocValues(this.numberToLoadPerUpdate);
   }
 
   disableAllRipples = () => true;
