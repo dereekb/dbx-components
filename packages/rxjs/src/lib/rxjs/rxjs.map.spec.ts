@@ -55,6 +55,19 @@ describe('rxjs.map', () => {
 });
 
 describe('combineLatestFromObject()', () => {
+  it('should handle null values.', (done) => {
+    const obs = combineLatestFromObject({
+      a: undefined,
+      b: null
+    });
+
+    obs.pipe(first()).subscribe((y) => {
+      expect(y.a).toBe(undefined);
+      expect(y.b).toBe(null);
+      done();
+    });
+  });
+
   it('should merge all the latest values into a single object.', (done) => {
     const obs = combineLatestFromObject({
       a: true,

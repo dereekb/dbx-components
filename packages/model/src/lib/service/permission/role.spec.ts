@@ -1,4 +1,4 @@
-import { GrantedReadRole, GrantedRoleMap, grantedRoleMapReader } from './role';
+import { GrantedReadRole, GrantedRoleMap, grantedRoleMapReader, GrantedRoleTruthMapObject } from './role';
 
 const FIRST_ROLE = 'first';
 const SECOND_ROLE = 'second';
@@ -18,6 +18,18 @@ describe('grantedRoleMapReader()', () => {
 
   describe('reader', () => {
     const reader = grantedRoleMapReader(roleMap);
+
+    describe('truthMap()', () => {
+      it('should construct the truth map.', () => {
+        const result = reader.truthMap({
+          first: 'a',
+          second: undefined
+        });
+
+        expect(result.first).toBe('a');
+        expect(result.second).toBeUndefined();
+      });
+    });
 
     describe('hasRole', () => {
       it('should return true if the role is granted.', () => {

@@ -1,5 +1,5 @@
 import { FirestoreDocument } from '../../firestore/accessor/document';
-import { GrantedRole, GrantedRoleMap, grantedRoleMapReader, GrantedRoleMapReader } from '@dereekb/model';
+import { GrantedRole, GrantedRoleMap, grantedRoleMapReader, GrantedRoleMapReader, GrantedRoleTruthMap, GrantedRoleTruthMapObject } from '@dereekb/model';
 import { InModelContextFirebaseModelPermissionService } from './permission.service';
 import { SetIncludesMode, ArrayOrValue } from '@dereekb/util';
 import { FirebasePermissionErrorContext } from './permission.context';
@@ -44,6 +44,10 @@ export class ContextGrantedModelRolesReaderInstance<C extends FirebasePermission
 
   get roleMap() {
     return this.contextGrantedModelRoles.roleMap;
+  }
+
+  truthMap<M extends GrantedRoleTruthMapObject<any, R>>(input: M): GrantedRoleTruthMap<M> {
+    return this._roleReader.truthMap(input);
   }
 
   hasNoAccess(): boolean {

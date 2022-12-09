@@ -1,5 +1,5 @@
 import { FirestoreDocument, FirebasePermissionErrorContext, InModelContextFirebaseModelService, FirestoreDocumentData } from '@dereekb/firebase';
-import { GrantedRole, GrantedRoleMap, GrantedRoleMapReader } from '@dereekb/model';
+import { GrantedRole, GrantedRoleMap, GrantedRoleMapReader, GrantedRoleTruthMap, GrantedRoleTruthMapObject } from '@dereekb/model';
 import { SetIncludesMode, IterableOrValue } from '@dereekb/util';
 import { map, Observable, switchMap, shareReplay, distinctUntilChanged } from 'rxjs';
 
@@ -7,6 +7,7 @@ export interface DbxFirebaseInContextFirebaseModelRolesService<R extends Granted
   readonly roleReader$: Observable<GrantedRoleMapReader<R>>;
   readonly roleMap$: Observable<GrantedRoleMap<R>>;
   readonly hasNoAccess$: Observable<boolean>;
+  truthMap<M extends GrantedRoleTruthMapObject<any, R>>(input: M): Observable<GrantedRoleTruthMap<M>>;
   hasAnyRoles(roles: IterableOrValue<R>): Observable<boolean>;
   hasAllRoles(roles: IterableOrValue<R>): Observable<boolean>;
   hasRoles(setIncludes: SetIncludesMode, roles: IterableOrValue<R>): Observable<boolean>;
@@ -36,6 +37,13 @@ export class DbxFirebaseInContextFirebaseModelServiceInstance<D extends Firestor
     map((x) => x.hasNoAccess()),
     shareReplay(1)
   );
+
+  truthMap<M extends GrantedRoleTruthMapObject<any, R>>(input: M): Observable<GrantedRoleTruthMap<M>> {
+    return this.roleReader$.pipe(
+      map((x) => x.truthMap(input)),
+      shareReplay(1)
+    );
+  }
 
   hasAnyRoles(roles: IterableOrValue<R>): Observable<boolean> {
     return this.hasRoles('any', roles);

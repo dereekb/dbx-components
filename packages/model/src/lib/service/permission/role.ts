@@ -1,4 +1,4 @@
-import { ArrayOrValue, arrayToObject, IterableOrValue, iterableToArray, Maybe, SetIncludesMode } from '@dereekb/util';
+import { ArrayOrValue, arrayToObject, Building, forEachKeyValue, IterableOrValue, iterableToArray, Maybe, SetIncludesMode } from '@dereekb/util';
 
 /**
  * A granted role for a model.
@@ -98,6 +98,22 @@ export type GrantedRoleKeysMap<R extends GrantedRole = string> = {
 };
 
 /**
+ * Values keyed by roles.
+ */
+export type GrantedRoleTruthMapObject<T, R extends GrantedRole> = Partial<{
+  [K in R]: T;
+}>;
+
+/**
+ * Output that removes the keys of all roles that are not contained.
+ */
+export type GrantedRoleTruthMap<M extends GrantedRoleTruthMapObject<any, any>> = M extends GrantedRoleTruthMapObject<infer T, infer R>
+  ? Partial<{
+      [K in R]: T;
+    }>
+  : never;
+
+/**
  * Reader used for parsing/reading role values from a given context.
  */
 export interface GrantedRoleMapReader<R extends GrantedRole = GrantedRole> {
@@ -107,6 +123,13 @@ export interface GrantedRoleMapReader<R extends GrantedRole = GrantedRole> {
   hasNoAccess(): boolean;
 
   /**
+   * Creates a truth map from the input.
+   *
+   * @param values
+   */
+  truthMap<M extends GrantedRoleTruthMapObject<any, R>>(input: M): GrantedRoleTruthMap<M>;
+
+  /**
    * Returns true if the role is granted.
    */
   hasRole(role: R): boolean;
@@ -114,12 +137,12 @@ export interface GrantedRoleMapReader<R extends GrantedRole = GrantedRole> {
   /**
    * Returns true if the roles are granted.
    */
-  hasRoles(setIncludes: SetIncludesMode, roles: IterableOrValue<R>): boolean;
+  hasRoles(setIncludes: SetIncludesMode, roles: ArrayOrValue<R> | IterableOrValue<R>): boolean;
 
   /**
    * Returns true if the map explicitly contains the role.
    */
-  containsRoles(setIncludes: SetIncludesMode, roles: IterableOrValue<R>): boolean;
+  containsRoles(setIncludes: SetIncludesMode, roles: ArrayOrValue<R> | IterableOrValue<R>): boolean;
 }
 
 /**
@@ -137,6 +160,20 @@ export class GrantedRoleMapReaderInstance<R extends GrantedRole = string> implem
 
   hasNoAccess(): boolean {
     return (this._map as NoAccessRoleMap)[NO_ACCESS_ROLE_KEY];
+  }
+
+  truthMap<M extends GrantedRoleTruthMapObject<any, R>>(input: M): GrantedRoleTruthMap<M> {
+    const result: Building<GrantedRoleTruthMap<M>> = {};
+
+    forEachKeyValue(input, {
+      forEach: ([role, value]) => {
+        if (this.hasRole(role as R)) {
+          result[role as R] = value as any;
+        }
+      }
+    });
+
+    return result as GrantedRoleTruthMap<M>;
   }
 
   hasRole(role: R): boolean {
