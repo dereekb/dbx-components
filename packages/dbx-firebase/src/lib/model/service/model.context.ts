@@ -1,12 +1,24 @@
 import { FirestoreDocument, FirebasePermissionErrorContext, InModelContextFirebaseModelService, FirestoreDocumentData } from '@dereekb/firebase';
-import { GrantedRole } from '@dereekb/model';
+import { GrantedRole, GrantedRoleMap, GrantedRoleMapReader } from '@dereekb/model';
 import { SetIncludesMode, IterableOrValue } from '@dereekb/util';
 import { map, Observable, switchMap, shareReplay, distinctUntilChanged } from 'rxjs';
+
+export interface DbxFirebaseInContextFirebaseModelRolesService<R extends GrantedRole = GrantedRole> {
+  readonly roleReader$: Observable<GrantedRoleMapReader<R>>;
+  readonly roleMap$: Observable<GrantedRoleMap<R>>;
+  readonly hasNoAccess$: Observable<boolean>;
+  hasAnyRoles(roles: IterableOrValue<R>): Observable<boolean>;
+  hasAllRoles(roles: IterableOrValue<R>): Observable<boolean>;
+  hasRoles(setIncludes: SetIncludesMode, roles: IterableOrValue<R>): Observable<boolean>;
+  containsAnyRoles(roles: IterableOrValue<R>): Observable<boolean>;
+  containsAllRoles(roles: IterableOrValue<R>): Observable<boolean>;
+  containsRoles(setIncludes: SetIncludesMode, roles: IterableOrValue<R>): Observable<boolean>;
+}
 
 /**
  * Wraps an InModelContextFirebaseModelService observable and provides different piped observables.
  */
-export class DbxFirebaseInContextFirebaseModelServiceInstance<D extends FirestoreDocument<any>, R extends GrantedRole = GrantedRole, C extends FirebasePermissionErrorContext = FirebasePermissionErrorContext> {
+export class DbxFirebaseInContextFirebaseModelServiceInstance<D extends FirestoreDocument<any>, R extends GrantedRole = GrantedRole, C extends FirebasePermissionErrorContext = FirebasePermissionErrorContext> implements DbxFirebaseInContextFirebaseModelRolesService<R> {
   constructor(readonly modelService$: Observable<InModelContextFirebaseModelService<C, FirestoreDocumentData<D>, D, R>>) {}
 
   // MARK: Roles

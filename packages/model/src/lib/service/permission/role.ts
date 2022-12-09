@@ -100,7 +100,7 @@ export type GrantedRoleKeysMap<R extends GrantedRole = string> = {
 /**
  * Reader used for parsing/reading role values from a given context.
  */
-export interface GrantedRoleMapReader<R extends GrantedRole = string> {
+export interface GrantedRoleMapReader<R extends GrantedRole = GrantedRole> {
   /**
    * Returns true if no access has been given.
    */
