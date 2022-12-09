@@ -1,0 +1,22 @@
+<dbx-section-page header="dbx-section-page Two Columns" hint="Two Columns example on a page with search." [onlyHeader]="true">
+  <dbx-two-column dbxTwoColumnContext [reverseSizing]="true" [dbxTwoColumnFullLeft]="true" [showRight]="showRight">
+    <dbx-two-block left>
+      <dbx-two-column-head top>
+        <dbx-form-search-form (search)="search($event)"></dbx-form-search-form>
+      </dbx-two-column-head>
+      <doc-complex-item-list [state$]="state$" (loadMore)="loadMore()">
+        <dbx-list-empty-content empty>
+          <p>
+            No items that match.
+            <button mat-button (click)="loadMore()">Create more?</button>
+          </p>
+        </dbx-list-empty-content>
+      </doc-complex-item-list>
+    </dbx-two-block>
+    <dbx-two-column-right right header="Right Side Header">
+      <div style="height: 100%; background: #99ff99">
+        <span>Right</span>
+      </div>
+    </dbx-two-column-right>
+  </dbx-two-column>
+</dbx-section-page>

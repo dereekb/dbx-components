@@ -2,6 +2,7 @@
 @use '../formly/formly';
 @use '../layout/layout';
 @use '../formly/field/field';
+@use '../formly/form/form' as forms;
 @use '../extension/extension';
 
 // Includes all theming config
@@ -9,6 +10,7 @@
   @include form.theme($theme-config);
   @include formly.theme($theme-config);
   @include field.all-field-theme($theme-config);
+  @include forms.theme($theme-config);
   @include layout.theme($theme-config);
   @include extension.all-extension-theme($theme-config);
 }

@@ -7,10 +7,13 @@ import { dbxFormSearchFormFields, DbxFormSearchFormFieldsConfig, DbxFormSearchFo
 
 @Component({
   template: `
-    <dbx-formly class="dbx-form-search-form" (dbxFormValueChange)="searchChanged($event)"></dbx-formly>
+    <dbx-formly (dbxFormValueChange)="searchChanged($event)"></dbx-formly>
   `,
   selector: 'dbx-form-search-form',
-  providers: [provideFormlyContext()]
+  providers: [provideFormlyContext()],
+  host: {
+    class: 'd-block dbx-form-search-form'
+  }
 })
 export class DbxFormSearchFormComponent extends AbstractConfigAsyncFormlyFormDirective<DbxFormSearchFormFieldsValue, DbxFormSearchFormFieldsConfig> implements OnDestroy {
   @Output()

@@ -1,5 +1,5 @@
 import { DecisionFunction, Maybe, ReadableError } from '@dereekb/util';
-import { MonoTypeOperatorFunction, OperatorFunction, startWith, Observable, filter, map, tap, catchError, combineLatest, distinctUntilChanged, first, of, shareReplay, switchMap } from 'rxjs';
+import { MonoTypeOperatorFunction, OperatorFunction, startWith, Observable, filter, map, tap, catchError, combineLatest, distinctUntilChanged, first, of, shareReplay, switchMap, exhaustMap } from 'rxjs';
 import { timeoutStartWith } from '../rxjs';
 import { LoadingState, PageLoadingState, beginLoading, loadingStateHasFinishedLoading, mergeLoadingStates, mapLoadingStateResults, MapLoadingStateResultsConfiguration, LoadingStateValue, loadingStateHasValue, LoadingStateType, loadingStateType, loadingStateIsLoading, loadingStateHasError, LoadingStateWithValueType } from './loading.state';
 
@@ -142,17 +142,20 @@ export function mapLoadingStateValueWithOperator<L extends Partial<PageLoadingSt
   return (obs: Observable<L>) => {
     return obs.pipe(
       switchMap((state: L) => {
-        let obs: Observable<LoadingStateWithValueType<L, O>>;
+        let mappedObs: Observable<LoadingStateWithValueType<L, O>>;
+
+        // TODO: if the value changes to loading but retains the same values, the loading state will simply be passed along with the mapped values.
 
         if (loadingStateHasValue(state)) {
-          obs = of(state.value)
-            .pipe(operator)
-            .pipe(map((value) => ({ ...state, value } as unknown as LoadingStateWithValueType<L, O>)));
+          mappedObs = of(state.value).pipe(
+            operator,
+            map((value) => ({ ...state, value } as unknown as LoadingStateWithValueType<L, O>))
+          );
         } else {
-          obs = of(state) as unknown as Observable<LoadingStateWithValueType<L, O>>;
+          mappedObs = of(state) as unknown as Observable<LoadingStateWithValueType<L, O>>;
         }
 
-        return obs;
+        return mappedObs;
       })
     );
   };

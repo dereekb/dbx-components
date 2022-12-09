@@ -30,6 +30,12 @@ export const DOC_LAYOUT_ROUTES = [
     ref: 'doc.layout.sectionpage'
   },
   {
+    icon: 'view_module',
+    title: 'Two Column Page',
+    detail: 'dbx-section-page with two columns',
+    ref: 'doc.layout.sectionpagetwo'
+  },
+  {
     icon: 'list',
     title: 'List',
     detail: 'dbx-list',

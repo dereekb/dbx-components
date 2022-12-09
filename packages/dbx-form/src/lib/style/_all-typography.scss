@@ -2,6 +2,7 @@
 @use '../formly/formly';
 @use '../layout/layout';
 @use '../formly/field/field';
+@use '../formly/form/form' as forms;
 @use '../extension/extension';
 
 // Includes all of the typographic styles.
@@ -9,6 +10,7 @@
   @include form.typography($typography-config);
   @include formly.typography($typography-config);
   @include field.all-field-typography($typography-config);
+  @include forms.typography($typography-config);
   @include layout.typography($typography-config);
   @include extension.all-extension-typography($typography-config, $theme-config);
 }
