@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [9.18.3](https://github.com/dereekb/dbx-components/compare/v9.18.2-dev...v9.18.3) (2022-12-09)
+
+
+### Bug Fixes
+
+* fixed issue in mergeLoadingStates() ([4206396](https://github.com/dereekb/dbx-components/commit/4206396df9524bea79ba3b80d107aec7eb64a20a))
+
+
+
 ## [9.18.2](https://github.com/dereekb/dbx-components/compare/v9.18.1-dev...v9.18.2) (2022-12-08)
 
 

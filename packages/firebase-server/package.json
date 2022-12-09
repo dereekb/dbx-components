@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/firebase-server",
-  "version": "9.18.2",
+  "version": "9.18.3",
   "devDependencies": {
     "firebase-functions-test": "2.0.2"
   },
