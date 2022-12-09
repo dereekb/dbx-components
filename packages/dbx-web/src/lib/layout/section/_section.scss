@@ -62,21 +62,6 @@ $header-left-reserved-space-small-screen: 120px;
 
   // MARK: Page
   .dbx-section-page {
-    // Scroll Config
-    &.dbx-section-page-scroll-header {
-      overflow: hidden;
-
-      .dbx-section-page-content {
-        padding-top: $header-bottom-margin;
-        height: 100%;
-        overflow: auto;
-      }
-    }
-
-    &.dbx-section-page-scroll-locked {
-      overflow: hidden;
-    }
-
     // Header
     > .dbx-section-header {
       height: $content-navbar-height;
@@ -107,6 +92,24 @@ $header-left-reserved-space-small-screen: 120px;
           }
         }
       }
+    }
+
+    // Scroll Config
+    .dbx-section-page-content {
+      @include theming.nested-content-height(1); // always take up the height
+    }
+
+    &.dbx-section-page-scroll-header {
+      overflow: hidden;
+
+      .dbx-section-page-content {
+        padding-top: $header-bottom-margin;
+        overflow: auto;
+      }
+    }
+
+    &.dbx-section-page-scroll-locked {
+      overflow: hidden;
     }
 
     .dbx-section-page {
