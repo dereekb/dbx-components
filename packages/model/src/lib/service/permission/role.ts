@@ -1,4 +1,4 @@
-import { ArrayOrValue, arrayToObject, asArray, Maybe, SetIncludesMode } from '@dereekb/util';
+import { ArrayOrValue, arrayToObject, IterableOrValue, iterableToArray, Maybe, SetIncludesMode } from '@dereekb/util';
 
 /**
  * A granted role for a model.
@@ -97,6 +97,9 @@ export type GrantedRoleKeysMap<R extends GrantedRole = string> = {
   [key in R]?: Maybe<boolean>;
 };
 
+/**
+ * Reader used for parsing/reading role values from a given context.
+ */
 export interface GrantedRoleMapReader<R extends GrantedRole = string> {
   /**
    * Returns true if no access has been given.
@@ -111,14 +114,20 @@ export interface GrantedRoleMapReader<R extends GrantedRole = string> {
   /**
    * Returns true if the roles are granted.
    */
-  hasRoles(setIncludes: SetIncludesMode, roles: ArrayOrValue<R>): boolean;
+  hasRoles(setIncludes: SetIncludesMode, roles: IterableOrValue<R>): boolean;
 
   /**
    * Returns true if the map explicitly contains the role.
    */
-  containsRoles(setIncludes: SetIncludesMode, roles: ArrayOrValue<R>): boolean;
+  containsRoles(setIncludes: SetIncludesMode, roles: IterableOrValue<R>): boolean;
 }
 
+/**
+ * Creates a GrantedRoleMapReader.
+ *
+ * @param map
+ * @returns
+ */
 export function grantedRoleMapReader<R extends GrantedRole = string>(map: GrantedRoleMap<R>): GrantedRoleMapReader<R> {
   return new GrantedRoleMapReaderInstance(map);
 }
@@ -134,7 +143,7 @@ export class GrantedRoleMapReaderInstance<R extends GrantedRole = string> implem
     return this.hasRoles('any', role);
   }
 
-  hasRoles(setIncludes: SetIncludesMode, inputRoles: ArrayOrValue<R>): boolean {
+  hasRoles(setIncludes: SetIncludesMode, inputRoles: IterableOrValue<R>): boolean {
     if ((this._map as FullAccessRoleMap)[FULL_ACCESS_ROLE_KEY]) {
       return true;
     } else {
@@ -142,8 +151,8 @@ export class GrantedRoleMapReaderInstance<R extends GrantedRole = string> implem
     }
   }
 
-  containsRoles(setIncludes: SetIncludesMode, inputRoles: ArrayOrValue<R>): boolean {
-    const roles = asArray(inputRoles);
+  containsRoles(setIncludes: SetIncludesMode, inputRoles: IterableOrValue<R>): boolean {
+    const roles = iterableToArray(inputRoles);
 
     if (setIncludes === 'any') {
       return this.containsAnyRole(roles);
@@ -152,7 +161,7 @@ export class GrantedRoleMapReaderInstance<R extends GrantedRole = string> implem
     }
   }
 
-  containsAnyRole(roles: GrantedRole[]): boolean {
+  containsAnyRole(roles: ArrayOrValue<R>): boolean {
     for (const role of roles) {
       if ((this._map as GrantedRoleKeysMap)[role]) {
         return true;
@@ -162,7 +171,7 @@ export class GrantedRoleMapReaderInstance<R extends GrantedRole = string> implem
     return false;
   }
 
-  containsEachRole(roles: GrantedRole[]): boolean {
+  containsEachRole(roles: ArrayOrValue<R>): boolean {
     for (const role of roles) {
       if (!(this._map as GrantedRoleKeysMap)[role]) {
         return false;
