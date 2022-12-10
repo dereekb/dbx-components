@@ -1,10 +1,10 @@
 import { safeDetectChanges } from '@dereekb/dbx-core';
-import { BehaviorSubject, map, Observable, of, delay, startWith, switchMap } from 'rxjs';
+import { BehaviorSubject, map, Observable, of, delay, startWith, switchMap, Subject } from 'rxjs';
 import { ChangeDetectorRef, Component, OnDestroy, Type, OnInit } from '@angular/core';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { dbxListField, filterPickableItemFieldValuesByLabel, pickableItemChipField, pickableItemListField, searchableChipField, searchableStringChipField, searchableTextField, SearchableValueFieldDisplayFn, SearchableValueFieldDisplayValue, SearchableValueFieldStringSearchFn, SearchableValueFieldValue, valueSelectionField, ValueSelectionOption } from '@dereekb/dbx-form';
 import { ListLoadingState, randomDelayWithRandomFunction, successResult } from '@dereekb/rxjs';
-import { range, randomArrayFactory, randomNumberFactory, takeFront, readIndexNumber, IndexRef } from '@dereekb/util';
+import { range, randomArrayFactory, randomNumberFactory, takeFront, readIndexNumber, IndexRef, ModelKey, searchStringFilterFunction } from '@dereekb/util';
 import { DocFormExampleSelectionValue, DocFormExampleSelectionValueId, EXAMPLE_DISPLAY_FOR_SELECTION_VALUE, EXAMPLE_DISPLAY_FOR_SELECTION_VALUE_WITH_CUSTOM_DISPLAYS, EXAMPLE_SEARCH_FOR_SELECTION_VALUE, MAKE_EXAMPLE_SELECTION_VALUE } from '../component/selection.example';
 import { DocFormExamplePrimarySearchableFieldDisplayComponent } from '../component/selection.example.view';
 import { DocValue } from '../../layout/component/item.list';
@@ -50,6 +50,25 @@ export const VALUE_SELECTION_VALUES: ValueSelectionOption<number>[] = [
     value: 300
   }
 ];
+
+export interface ExampleSearchableMetadata {
+  /**
+   * Name
+   */
+  name: string;
+  /**
+   * School id
+   */
+  key: ModelKey;
+}
+
+const DISPLAY_FOR_EXAMPLE_METADATA_VALUE: SearchableValueFieldDisplayFn<string, ExampleSearchableMetadata> = (values: SearchableValueFieldValue<string, ExampleSearchableMetadata>[]) => {
+  const displayValues: SearchableValueFieldDisplayValue<string, ExampleSearchableMetadata>[] = values.map((x) => ({ ...x, label: x.meta?.name || 'META NOT FOUND' }));
+  const obs: Observable<SearchableValueFieldDisplayValue<string, ExampleSearchableMetadata>[]> = of(displayValues);
+  return obs;
+};
+
+const EMBEDDED_SCHOOLS_FILTER_FUNCTION = searchStringFilterFunction<ExampleSearchableMetadata>((x) => x.name);
 
 @Component({
   templateUrl: './selection.component.html'
@@ -322,6 +341,28 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
 
   valueClicked: any;
 
+  readonly exampleMetadataValues: ExampleSearchableMetadata[] = [
+    {
+      name: 'Test A',
+      key: '1'
+    },
+    {
+      name: 'Test B',
+      key: '2'
+    },
+    {
+      name: 'Test C',
+      key: '3'
+    }
+  ];
+
+  readonly anchorFieldValue = {
+    anchor1: 'a',
+    anchor3: '3'
+  };
+
+  readonly _refreshDisplayValues = new Subject();
+
   readonly searchableTextFieldsWithAnchors: FormlyFieldConfig[] = [
     searchableTextField({
       key: 'anchor1',
@@ -360,6 +401,32 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
           }))
         ),
       displayForValue: DISPLAY_FOR_STRING_VALUE
+    }),
+    searchableTextField({
+      key: 'anchor3',
+      label: 'Anchor Segue For Metadata Items',
+      description: `Metadata items are passed in. Note that the simple displayForValue function we used doesn't search remotely and just fills in default data if meta is missing.`,
+      allowStringValues: false,
+      searchOnEmptyText: true,
+      showSelectedValue: false,
+      search: (search: string) =>
+        of(this.exampleMetadataValues).pipe(
+          map((s) => {
+            const filteredSchools = EMBEDDED_SCHOOLS_FILTER_FUNCTION(search, s);
+            const result: SearchableValueFieldValue<string, ExampleSearchableMetadata>[] = filteredSchools.map((meta) => ({ meta, value: meta.key }));
+            return result;
+          })
+        ),
+      displayForValue: DISPLAY_FOR_EXAMPLE_METADATA_VALUE,
+      anchorForValue: (fieldValue) => {
+        return {
+          onClick: () => {
+            this.valueClicked = `Meta item click: ${fieldValue.value}`;
+            safeDetectChanges(this.cdRef);
+          }
+        };
+      },
+      refreshDisplayValues$: this._refreshDisplayValues
     })
   ];
 
@@ -371,5 +438,10 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this._searchStrings.complete();
+    this._refreshDisplayValues.complete;
+  }
+
+  refreshDisplayValues() {
+    this._refreshDisplayValues.next(0);
   }
 }

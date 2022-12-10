@@ -64,6 +64,16 @@ export interface SearchableValueFieldsFieldProps<T, M = unknown, H extends Prima
    * Whether or not to show "Clear" in the autcomplete list.
    */
   showClearValue?: boolean;
+  /**
+   * Label for the search input.
+   *
+   * Defaults to "Search"
+   */
+  searchLabel?: string;
+  /**
+   * (Optional) observable that will trigger the clearing of all cached display values.
+   */
+  refreshDisplayValues$?: Observable<unknown>;
 }
 
 /**
@@ -91,6 +101,7 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, M = unknown, H
   private _formControlObs = new BehaviorSubject<Maybe<AbstractControl>>(undefined);
   readonly formControl$ = this._formControlObs.pipe(filterMaybe());
 
+  private _clearDisplayHashMapSub = new SubscriptionObject();
   private _displayHashMap = new BehaviorSubject<Map<H, ConfiguredSearchableValueFieldDisplayValue<T, M>>>(new Map());
 
   readonly inputValue$: Observable<string> = this.inputCtrl.valueChanges.pipe(
@@ -192,6 +203,14 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, M = unknown, H
     return this.searchableField.showClearValue ?? true;
   }
 
+  get searchLabel() {
+    return this.searchableField.searchLabel ?? 'Search';
+  }
+
+  get refreshDisplayValues$() {
+    return this.searchableField.refreshDisplayValues$;
+  }
+
   loadDisplayValuesForValues(values: T[]): Observable<LoadingState<ConfiguredSearchableValueFieldDisplayValue<T, M>[]>> {
     return this.loadDisplayValuesForFieldValues(values.map((value) => ({ value })));
   }
@@ -266,6 +285,10 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, M = unknown, H
   ngOnInit(): void {
     this._formControlObs.next(this.formControl);
 
+    if (this.refreshDisplayValues$ != null) {
+      this._clearDisplayHashMapSub.subscription = this.refreshDisplayValues$.subscribe(() => this._displayHashMap.next(new Map()));
+    }
+
     if (this.searchableField.textInputValidator) {
       this.inputCtrl.setValidators(this.searchableField.textInputValidator);
     }
@@ -290,6 +313,7 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, M = unknown, H
     super.ngOnDestroy();
     this._displayHashMap.complete();
     this._formControlObs.complete();
+    this._clearDisplayHashMapSub.destroy();
     this.searchContext.destroy();
   }
 

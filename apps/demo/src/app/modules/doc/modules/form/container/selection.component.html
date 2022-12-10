@@ -30,7 +30,9 @@
       <h4>Anchors</h4>
       <p>It can also be configured to display content within a dbx-anchor value, allowing for navigation as a result of searching.</p>
       <p *ngIf="valueClicked" class="dbx-ok">Value Clicked: {{ valueClicked }}</p>
-      <doc-form-example-form [dbxFormlyFields]="searchableTextFieldsWithAnchors"></doc-form-example-form>
+      <doc-form-example-form [dbxFormlyFields]="searchableTextFieldsWithAnchors" [dbxFormSource]="anchorFieldValue"></doc-form-example-form>
+      <!-- TODO: Make this test more obvious when in use, like changing display text or similar. -->
+      <!-- <button mat-button (click)="refreshDisplayValues()">Refresh Display Values</button> -->
     </doc-feature-example>
   </doc-feature-layout>
 </dbx-content-container>

@@ -4,7 +4,7 @@
     <dbx-searchable-field-autocomplete-item [displayValue]="(selectedDisplayValue$ | async)!"></dbx-searchable-field-autocomplete-item>
   </div>
   <div class="dbx-searchable-text-field-input">
-    <div class="dbx-label">Search</div>
+    <div *ngIf="searchLabel" class="dbx-label">{{ searchLabel }}</div>
     <!-- View -->
     <input type="search" [name]="name" matInput #textInput [placeholder]="placeholder" [formControl]="inputCtrl" [matAutocomplete]="auto" [matAutocompleteDisabled]="readonly" autocomplete="{{ autocomplete }}" />
     <div class="searchable-field-form-loading">
