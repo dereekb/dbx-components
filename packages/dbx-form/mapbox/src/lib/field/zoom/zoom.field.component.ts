@@ -174,5 +174,7 @@ export class DbxFormMapboxZoomFieldComponent<T extends DbxFormMapboxZoomComponen
 
   setValue(zoom?: Maybe<ZoomLevel>) {
     this.formControl.setValue(zoom);
+    this.formControl.markAsTouched();
+    this.formControl.markAsDirty();
   }
 }
