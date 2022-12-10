@@ -320,7 +320,7 @@ export class ActionContextStore<T = unknown, O = unknown> extends ComponentStore
 
   afterDistinctLoadingStateTypeChange(): Observable<ActionContextState<T, O>> {
     return this.state$.pipe(
-      map((x) => [x, loadingStateForActionContextState(x)] as [ActionContextState, LoadingStateType]),
+      map((x) => [x, loadingStateTypeForActionContextState(x)] as [ActionContextState, LoadingStateType]),
       distinctUntilChanged((a, b) => a?.[1] === b?.[1]), // Filter out when the loading state remains the same.
       map((x) => x[0] as ActionContextState<T, O>),
       shareReplay(1)

@@ -154,7 +154,9 @@ export class DbxFormMapboxLatLngFieldComponent<T extends DbxFormMapboxLatLngComp
       this._sub.subscription = this.dbxMapboxMapStore.center$.subscribe((center) => {
         this.dbxMapboxMapStore.centerGivenMargin$.pipe(first()).subscribe(() => {
           if (!this.isReadonlyOrDisabled) {
-            this.ngZone.run(() => this.setValue(center));
+            this.ngZone.run(() => {
+              this.setValue(center);
+            });
           }
         });
       });
@@ -189,5 +191,7 @@ export class DbxFormMapboxLatLngFieldComponent<T extends DbxFormMapboxLatLngComp
 
   setValue(latLng?: Maybe<LatLngPoint>) {
     this.formControl.setValue(latLng ? this._latLngStringFunction(latLng) : latLng);
+    this.formControl.markAsTouched();
+    this.formControl.markAsDirty();
   }
 }

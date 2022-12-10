@@ -27,6 +27,9 @@ export type NavbarMode = 'bar' | 'button';
 })
 export class DbxNavbarComponent extends AbstractTransitionDirective implements OnDestroy {
   @Input()
+  icon: string = 'menu';
+
+  @Input()
   navAlign: HorizontalConnectionPos = 'center';
 
   private _inputMode = new BehaviorSubject<Maybe<NavbarMode>>(undefined);
@@ -63,6 +66,12 @@ export class DbxNavbarComponent extends AbstractTransitionDirective implements O
       );
     }),
     tapDetectChanges(this.cdRef),
+    shareReplay(1)
+  );
+
+  readonly hasNoAnchors$ = this.anchors$.pipe(
+    map((x) => x.length === 0),
+    distinctUntilChanged(),
     shareReplay(1)
   );
 
