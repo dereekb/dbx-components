@@ -20,6 +20,10 @@ export interface DbxFormMapboxZoomComponentFieldProps extends Omit<FormlyFieldPr
    */
   center?: LatLngPoint;
   /**
+   * Whether or not to lock the map itself to the min and max zoom levels.
+   */
+  lockMapToZoomLevels?: boolean;
+  /**
    * Min zoom level allowed
    */
   minZoom?: MapboxZoomLevel;
@@ -103,6 +107,10 @@ export class DbxFormMapboxZoomFieldComponent<T extends DbxFormMapboxZoomComponen
     return this.field.props.showMap ?? true;
   }
 
+  get lockMapToZoomLevels(): boolean {
+    return this.field.props.lockMapToZoomLevels ?? false;
+  }
+
   get minZoom(): MapboxZoomLevel {
     return mapboxZoomLevel(this.field.props.minZoom || MAPBOX_MIN_ZOOM_LEVEL);
   }
@@ -136,8 +144,8 @@ export class DbxFormMapboxZoomFieldComponent<T extends DbxFormMapboxZoomComponen
       if (this.showMap) {
         this.dbxMapboxMapStore.setZoomDisabled();
       }
-    } else {
-      // set zoom limits
+    } else if (this.lockMapToZoomLevels) {
+      // set zoom limits on the map
       this.dbxMapboxMapStore.setZoomRange({ min: this.minZoom, max: this.maxZoom });
 
       // flat to undo them later if not using the same map
