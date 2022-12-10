@@ -13,7 +13,7 @@ export interface DbxFirebaseDevelopmentPopupContentFormValue {
   readonly specifier?: Maybe<string>;
 }
 
-export const DISPLAY_FOR_STRING_VALUE: SearchableValueFieldDisplayFn<string, DbxFirebaseDevelopmentWidgetEntry> = (values: SearchableValueFieldValue<string, DbxFirebaseDevelopmentWidgetEntry>[]) => {
+const DISPLAY_FOR_DEVELOPMENT_POPUP_STRING_VALUE: SearchableValueFieldDisplayFn<string, DbxFirebaseDevelopmentWidgetEntry> = (values: SearchableValueFieldValue<string, DbxFirebaseDevelopmentWidgetEntry>[]) => {
   const displayValues: SearchableValueFieldDisplayValue<string, DbxFirebaseDevelopmentWidgetEntry>[] = values.map((x) => ({ ...x, label: x.meta?.label || x.value }));
   const obs: Observable<SearchableValueFieldDisplayValue<string, DbxFirebaseDevelopmentWidgetEntry>[]> = of(displayValues);
   return obs;
@@ -36,7 +36,7 @@ export class DbxFirebaseDevelopmentPopupContentFormComponent extends AbstractCon
           description: 'Pick a tool to get started.',
           filterValues: filterPickableItemFieldValuesByLabel,
           loadValues: () => of(config.entries.map((y) => ({ value: y.widget.type, meta: y }))),
-          displayForValue: DISPLAY_FOR_STRING_VALUE,
+          displayForValue: DISPLAY_FOR_DEVELOPMENT_POPUP_STRING_VALUE,
           asArrayValue: false
         })
       ];
