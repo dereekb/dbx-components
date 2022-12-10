@@ -17,7 +17,7 @@ import { DocFormTemplateComponent } from './container/template.component';
 import { DocFormDirectiveComponent } from './container/directive.component';
 import { FormlyMatNativeSelectModule } from '@ngx-formly/material/native-select';
 import { DocFormExpressionComponent } from './container/expression.component';
-import { DocLayoutModule } from '../layout/doc.layout.module';
+import { DocLayoutComponentsModule, DocLayoutModule } from '../layout/doc.layout.module';
 import { DocFormFormComponent } from './container/form.component';
 
 @NgModule({
@@ -44,7 +44,7 @@ export class DocFormComponentsModule {}
 @NgModule({
   imports: [
     DocSharedModule,
-    DocLayoutModule,
+    DocLayoutComponentsModule,
     FormlyMatNativeSelectModule,
     DocFormComponentsModule,
     UIRouterModule.forChild({

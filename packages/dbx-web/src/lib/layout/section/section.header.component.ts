@@ -9,24 +9,26 @@ import { DbxSectionHeaderConfig, DbxSectionHeaderHType } from './section';
   selector: 'dbx-section-header,.dbx-section-header',
   template: `
     <div class="dbx-section-header-content">
-      <ng-container [ngSwitch]="showTitle && (h ?? 1)">
-        <h1 *ngSwitchCase="1" class="dbx-section-header-content-title">
-          <ng-container *ngTemplateOutlet="headerContentTitleTemplate"></ng-container>
-        </h1>
-        <h2 *ngSwitchCase="2" class="dbx-section-header-content-title">
-          <ng-container *ngTemplateOutlet="headerContentTitleTemplate"></ng-container>
-        </h2>
-        <h3 *ngSwitchCase="3" class="dbx-section-header-content-title">
-          <ng-container *ngTemplateOutlet="headerContentTitleTemplate"></ng-container>
-        </h3>
-        <h4 *ngSwitchCase="4" class="dbx-section-header-content-title">
-          <ng-container *ngTemplateOutlet="headerContentTitleTemplate"></ng-container>
-        </h4>
-        <h5 *ngSwitchCase="5" class="dbx-section-header-content-title">
-          <ng-container *ngTemplateOutlet="headerContentTitleTemplate"></ng-container>
-        </h5>
+      <ng-container *ngIf="showTitle">
+        <ng-container [ngSwitch]="h ?? 1">
+          <h1 *ngSwitchCase="1" class="dbx-section-header-content-title">
+            <ng-container *ngTemplateOutlet="headerContentTitleTemplate"></ng-container>
+          </h1>
+          <h2 *ngSwitchCase="2" class="dbx-section-header-content-title">
+            <ng-container *ngTemplateOutlet="headerContentTitleTemplate"></ng-container>
+          </h2>
+          <h3 *ngSwitchCase="3" class="dbx-section-header-content-title">
+            <ng-container *ngTemplateOutlet="headerContentTitleTemplate"></ng-container>
+          </h3>
+          <h4 *ngSwitchCase="4" class="dbx-section-header-content-title">
+            <ng-container *ngTemplateOutlet="headerContentTitleTemplate"></ng-container>
+          </h4>
+          <h5 *ngSwitchCase="5" class="dbx-section-header-content-title">
+            <ng-container *ngTemplateOutlet="headerContentTitleTemplate"></ng-container>
+          </h5>
+        </ng-container>
+        <span class="spacer"></span>
       </ng-container>
-      <span class="spacer"></span>
       <ng-content></ng-content>
     </div>
     <p *ngIf="hint && !hintInline" class="dbx-section-hint dbx-hint">{{ hint }}</p>

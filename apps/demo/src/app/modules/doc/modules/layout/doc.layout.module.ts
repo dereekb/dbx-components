@@ -19,26 +19,25 @@ import { DocLayoutSectionPageComponent } from './container/section.page.componen
 import { DocLayoutTwoColumnsChildComponent } from './container/two.child.component';
 import { DocLayoutSectionPageTwoComponent } from './container/section.page.two.component';
 
+const declarations = [DocItemListComponent, DocItemListViewComponent, DocSelectionItemListComponent, DocSelectionItemListViewComponent, DocSelectionItemListViewItemComponent, DocCustomItemListComponent, DocCustomItemListViewComponent, DocCustomItemListViewItemComponent, DocItemListGridComponent, DocItemListGridViewComponent, DocItemListGridViewItemComponent];
+
+@NgModule({
+  imports: [DocSharedModule],
+  declarations,
+  exports: declarations
+})
+export class DocLayoutComponentsModule {}
+
 @NgModule({
   imports: [
     DocSharedModule,
+    DocLayoutComponentsModule,
     UIRouterModule.forChild({
       states: STATES
     })
   ],
   declarations: [
     // components
-    DocItemListComponent,
-    DocItemListViewComponent,
-    DocSelectionItemListComponent,
-    DocSelectionItemListViewComponent,
-    DocSelectionItemListViewItemComponent,
-    DocCustomItemListComponent,
-    DocCustomItemListViewComponent,
-    DocCustomItemListViewItemComponent,
-    DocItemListGridComponent,
-    DocItemListGridViewComponent,
-    DocItemListGridViewItemComponent,
     // containers
     DocLayoutLayoutComponent,
     DocLayoutHomeComponent,
