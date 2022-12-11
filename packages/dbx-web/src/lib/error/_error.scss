@@ -4,6 +4,20 @@
 
 // MARK: Mixin
 @mixin core() {
+  .dbx-error {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+
+    .dbx-error-message {
+      margin-left: 12px;
+    }
+  }
+
+  .dbx-error-default-error-widget {
+    overflow: hidden;
+    box-sizing: border-box;
+  }
 }
 
 @mixin color($theme-config) {

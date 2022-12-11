@@ -7,6 +7,8 @@ import { Maybe } from '../value/maybe.type';
  */
 export type StringErrorCode = string;
 
+export const DEFAULT_READABLE_ERROR_CODE = 'ERROR';
+
 /**
  * An error that is identified by a unique code.
  */
@@ -25,7 +27,14 @@ export interface ReadableError extends Partial<CodedError> {
   message?: Maybe<string>;
 }
 
-export function readableError(code: StringErrorCode, message?: string) {
+export function isDefaultReadableError(error: Maybe<ReadableError | StringErrorCode>) {
+  const code = typeof error === 'object' ? error?.code : error;
+  return !code || code === DEFAULT_READABLE_ERROR_CODE;
+}
+
+export type ReadableErrorWithCode<T extends ReadableError = ReadableError> = T & CodedError;
+
+export function readableError(code: StringErrorCode, message?: string): ReadableErrorWithCode {
   return {
     code,
     message
@@ -48,14 +57,19 @@ export type ErrorInput = ErrorWrapper | CodedError | ReadableError | ReadableDat
  * @param inputError
  * @returns
  */
-export function toReadableError(inputError: Maybe<ErrorInput>): Maybe<CodedError | ReadableError> {
-  let error: Maybe<CodedError | ReadableError>;
+export function toReadableError(inputError: Maybe<ErrorInput>): Maybe<CodedError | ReadableErrorWithCode> {
+  let error: Maybe<ReadableErrorWithCode>;
 
   if (inputError) {
     if ((inputError as CodedError).code) {
-      error = inputError as ReadableError;
+      error = {
+        ...(inputError as ReadableErrorWithCode)
+      };
     } else if ((inputError as ErrorWrapper).data) {
-      error = (inputError as ErrorWrapper).data as ReadableError;
+      error = {
+        code: DEFAULT_READABLE_ERROR_CODE,
+        ...(inputError as ErrorWrapper).data
+      };
     } else if (inputError instanceof BaseError) {
       error = {
         code: inputError.name,
@@ -64,7 +78,7 @@ export function toReadableError(inputError: Maybe<ErrorInput>): Maybe<CodedError
       };
     } else {
       error = {
-        code: 'ERROR',
+        code: DEFAULT_READABLE_ERROR_CODE,
         message: (inputError as ReadableError).message || '',
         _error: inputError
       };

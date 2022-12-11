@@ -5,7 +5,7 @@ import { Subject, filter, first, map, shareReplay, startWith } from 'rxjs';
 import { PopoverPositionStrategy } from './popover.position.strategy';
 import { Overlay } from '@angular/cdk/overlay';
 import { LockSet } from '@dereekb/rxjs';
-import { CompactContextStore, CompactMode } from '../../layout';
+import { CompactContextStore, CompactMode } from '../../layout/compact';
 import { Maybe } from '@dereekb/util';
 import { DbxPopoverController, DbxPopoverKey } from './popover';
 

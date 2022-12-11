@@ -1,0 +1,16 @@
+<dbx-content-container>
+  <doc-feature-layout header="Error" hint="The error module is used for displaying errors within the app.">
+    <!-- Examples -->
+    <doc-feature-example header="dbx-error" hint="Component that displays an error message. Expected input is a ReadableError">
+      <dbx-error [error]="readableErrorWithoutCode"></dbx-error>
+      <dbx-error [error]="readableError"></dbx-error>
+      <dbx-error [error]="longerReadableError"></dbx-error>
+      <dbx-error [error]="customTestError"></dbx-error>
+    </doc-feature-example>
+    <doc-feature-example header="dbx-error-details" hint="Component that is used by the error popover. Displays all information about an error.">
+      <dbx-error-details [error]="longerReadableError"></dbx-error-details>
+      <h4>Custom Widget</h4>
+      <dbx-error-details [error]="customTestError"></dbx-error-details>
+    </doc-feature-example>
+  </doc-feature-layout>
+</dbx-content-container>

@@ -7,12 +7,15 @@ export interface DbxPopoverConfig<O, I, T> extends DbxPopoverComponentConfig<O, 
   injector?: Injector;
   height?: string;
   width?: string;
+  isResizable?: boolean;
 }
 
 /**
  * Used for displaying a popover.
  */
-@Injectable()
+@Injectable({
+  providedIn: 'root'
+})
 export class DbxPopoverService {
   private _overlayContainerService: NgOverlayContainerService;
 
@@ -32,7 +35,7 @@ export class DbxPopoverService {
       width: config.height ?? '400px',
       hasBackdrop: true,
       isDraggable: false,
-      isResizable: false,
+      isResizable: config.isResizable ?? false,
       disableBackdropClose: false
     };
 

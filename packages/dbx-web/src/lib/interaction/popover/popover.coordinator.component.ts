@@ -13,7 +13,6 @@ import { delay, map, shareReplay } from 'rxjs';
       <ng-content></ng-content>
     </ng-container>
   `
-  // TODO: styleUrls: ['./popover.scss']
 })
 export class DbxPopoverCoordinatorComponent implements OnInit, OnDestroy {
   readonly isPopoverForKey$ = this.service.popovers$.pipe(

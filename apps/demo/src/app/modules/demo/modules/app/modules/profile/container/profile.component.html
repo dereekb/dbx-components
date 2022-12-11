@@ -11,7 +11,7 @@
       <dbx-section header="Information" dbxAction dbxActionAutoTrigger fastTrigger dbxActionEnforceModified [dbxActionHandler]="handleUpdateProfile" hint="Change your profile information.">
         <demo-profile-form [formDisabledOnWorking]="false" dbxActionForm [dbxFormSource]="profileData$" [dbxActionFormModified]="isProfileModified"></demo-profile-form>
         <dbx-error dbxActionError></dbx-error>
-        <dbx-action-progress></dbx-action-progress>
+        <dbx-loading-progress *dbxActionIsWorking [linear]="true"></dbx-loading-progress>
         <dbx-success *dbxActionHasSuccess="3000" dbxActionSuccess>Saved Changes</dbx-success>
       </dbx-section>
     </dbx-content-box>

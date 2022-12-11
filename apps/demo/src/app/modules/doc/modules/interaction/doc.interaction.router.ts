@@ -7,6 +7,7 @@ import { DocInteractionPopupComponent } from './container/popup.component';
 import { DocInteractionPromptComponent } from './container/prompt.component';
 import { DocInteractionFilterComponent } from './container/filter.component';
 import { DocInteractionButtonComponent } from './container/button.component';
+import { DocInteractionErrorComponent } from './container/error.component';
 
 export const layoutState: Ng2StateDeclaration = {
   url: '/interaction',
@@ -25,6 +26,12 @@ export const docInteractionButtonState: Ng2StateDeclaration = {
   url: '/button',
   name: 'doc.interaction.button',
   component: DocInteractionButtonComponent
+};
+
+export const docInteractionErrorState: Ng2StateDeclaration = {
+  url: '/error',
+  name: 'doc.interaction.error',
+  component: DocInteractionErrorComponent
 };
 
 export const docInteractionDialogState: Ng2StateDeclaration = {
@@ -57,4 +64,15 @@ export const docInteractionPopoverState: Ng2StateDeclaration = {
   component: DocInteractionPopoverComponent
 };
 
-export const STATES: Ng2StateDeclaration[] = [layoutState, homeState, docInteractionButtonState, docInteractionDialogState, docInteractionFilterState, docInteractionPromptState, docInteractionPopupState, docInteractionPopoverState];
+export const STATES: Ng2StateDeclaration[] = [
+  //
+  layoutState,
+  homeState,
+  docInteractionButtonState,
+  docInteractionErrorState,
+  docInteractionDialogState,
+  docInteractionFilterState,
+  docInteractionPromptState,
+  docInteractionPopupState,
+  docInteractionPopoverState
+];

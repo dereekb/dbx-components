@@ -7,6 +7,7 @@ $icon-spacing: 6px;
 $hint-opacity: 0.8;
 $note-opacity: 0.7;
 $mat-hint-opacity: 0.54; // Opacity to mirror mat-hint
+$dbx-label-padded-padding: 6px;
 
 // MARK: Mixin
 @mixin core() {
@@ -16,7 +17,7 @@ $mat-hint-opacity: 0.54; // Opacity to mirror mat-hint
   }
 
   .dbx-label-padded {
-    padding-bottom: 6px;
+    padding-bottom: $dbx-label-padded-padding;
   }
 
   .text-center,
@@ -24,8 +25,14 @@ $mat-hint-opacity: 0.54; // Opacity to mirror mat-hint
     text-align: center;
   }
 
+  .dbx-json,
   .prettyjson {
     white-space: pre-wrap !important;
+  }
+
+  .dbx-label-block {
+    display: block;
+    padding: 3px 0;
   }
 
   .dbx-text-no-overflow {
