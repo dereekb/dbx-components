@@ -1,3 +1,4 @@
+import { CUSTOM_TEST_ERROR_CODE, DocInteractionCustomErrorWidgetComponent } from './component/error.widget.component';
 import { DocInteractionExamplePopupContentComponent } from './component/interaction.popup.content.component';
 import { DocInteractionExamplePopupComponent } from './component/interaction.popup.component';
 import { DocInteractionTestFilterPresetFilterComponent } from './component/filter.preset.component';
@@ -20,6 +21,8 @@ import { DocInteractionExamplePopoverComponent } from './component/interaction.p
 import { DocInteractionExamplePopoverContentComponent } from './component/interaction.popover.content.component';
 import { DocInteractionButtonComponent } from './container/button.component';
 import { DocInteractionTestFilterPresetMenuComponent } from './component/filter.preset.menu.component';
+import { DocInteractionErrorComponent } from './container/error.component';
+import { DbxErrorWidgetService } from '@dereekb/dbx-web';
 
 @NgModule({
   imports: [
@@ -40,10 +43,12 @@ import { DocInteractionTestFilterPresetMenuComponent } from './component/filter.
     DocInteractionExamplePopoverContentComponent,
     DocInteractionExamplePopupComponent,
     DocInteractionExamplePopupContentComponent,
+    DocInteractionCustomErrorWidgetComponent,
     // container
     DocInteractionLayoutComponent,
     DocInteractionHomeComponent,
     DocInteractionButtonComponent,
+    DocInteractionErrorComponent,
     DocInteractionDialogComponent,
     DocInteractionFilterComponent,
     DocInteractionPopupComponent,
@@ -51,4 +56,11 @@ import { DocInteractionTestFilterPresetMenuComponent } from './component/filter.
     DocInteractionPromptComponent
   ]
 })
-export class DocInteractionModule {}
+export class DocInteractionModule {
+  constructor(readonly dbxErrorWidgetService: DbxErrorWidgetService) {
+    this.dbxErrorWidgetService.register({
+      code: CUSTOM_TEST_ERROR_CODE,
+      componentClass: DocInteractionCustomErrorWidgetComponent
+    });
+  }
+}

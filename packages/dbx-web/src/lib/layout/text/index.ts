@@ -1,6 +1,7 @@
 export * from './form.description.component';
 export * from './hint.component';
 export * from './icon.spacer.component';
+export * from './label.block.component';
 export * from './label.component';
 export * from './linkify.component';
 export * from './note.component';

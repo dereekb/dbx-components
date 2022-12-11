@@ -1,5 +1,7 @@
-import { Component, Input } from '@angular/core';
-import { Maybe, ErrorInput, toReadableError, ReadableError } from '@dereekb/util';
+import { Component, ElementRef, Input, ViewChild } from '@angular/core';
+import { Maybe, ErrorInput, toReadableError, ReadableError, ReadableErrorWithCode, isDefaultReadableError } from '@dereekb/util';
+import { DbxPopoverService } from '../interaction/popover/popover.service';
+import { DbxErrorPopoverComponent } from './error.popover.component';
 
 /**
  * Basic error component.
@@ -9,7 +11,12 @@ import { Maybe, ErrorInput, toReadableError, ReadableError } from '@dereekb/util
   templateUrl: './error.component.html'
 })
 export class DbxReadableErrorComponent {
-  private _error?: Maybe<ReadableError>;
+  @ViewChild('buttonPopoverOrigin', { read: ElementRef })
+  buttonPopoverOrigin!: ElementRef;
+
+  private _error?: Maybe<ReadableErrorWithCode>;
+
+  constructor(readonly popoverService: DbxPopoverService) {}
 
   get error(): Maybe<ReadableError> {
     return this._error;
@@ -20,7 +27,20 @@ export class DbxReadableErrorComponent {
     this._error = toReadableError(error);
   }
 
+  get isDefaultError() {
+    return isDefaultReadableError(this._error);
+  }
+
   get message(): Maybe<string> {
     return this._error?.message;
+  }
+
+  openErrorPopover() {
+    if (this.error != null) {
+      DbxErrorPopoverComponent.openPopover(this.popoverService, {
+        origin: this.buttonPopoverOrigin,
+        error: this.error
+      });
+    }
   }
 }

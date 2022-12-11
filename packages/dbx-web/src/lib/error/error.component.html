@@ -1,5 +1,4 @@
 <div *ngIf="error" class="dbx-error dbx-warn">
-  <h4>An error occured.</h4>
-  <!-- <p class="dbx-error-code" *ngIf="errorData.code">{{ errorData.code }}</p> -->
-  <p class="dbx-error-message" *ngIf="message">{{ message }}</p>
+  <button [disabled]="isDefaultError" #buttonPopoverOrigin mat-icon-button class="dbx-error-button" (click)="openErrorPopover()"><mat-icon>error</mat-icon></button>
+  <span class="dbx-error-message" *ngIf="message">{{ message }}</span>
 </div>

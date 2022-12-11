@@ -6,6 +6,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { DbxFormDescriptionComponent } from './form.description.component';
 import { DbxHintComponent } from './hint.component';
 import { DbxIconSpacerDirective } from './icon.spacer.component';
+import { DbxLabelBlockComponent } from './label.block.component';
 import { DbxLabelComponent } from './label.component';
 import { DbxLinkifyComponent } from './linkify.component';
 import { DbxNoteComponent } from './note.component';
@@ -17,7 +18,7 @@ import { DbxWarnComponent } from './warn.component';
 
 @NgModule({
   imports: [CommonModule, MatChipsModule, MatTooltipModule, MatIconModule],
-  declarations: [DbxNoteComponent, DbxNoticeComponent, DbxSuccessComponent, DbxWarnComponent, DbxHintComponent, DbxLabelComponent, DbxLinkifyComponent, DbxOkComponent, DbxTextChipsComponent, DbxIconSpacerDirective, DbxFormDescriptionComponent],
-  exports: [DbxNoteComponent, DbxNoticeComponent, DbxSuccessComponent, DbxWarnComponent, DbxHintComponent, DbxLabelComponent, DbxLinkifyComponent, DbxOkComponent, DbxTextChipsComponent, DbxIconSpacerDirective, DbxFormDescriptionComponent]
+  declarations: [DbxNoteComponent, DbxNoticeComponent, DbxSuccessComponent, DbxWarnComponent, DbxHintComponent, DbxLabelBlockComponent, DbxLabelComponent, DbxLinkifyComponent, DbxOkComponent, DbxTextChipsComponent, DbxIconSpacerDirective, DbxFormDescriptionComponent],
+  exports: [DbxNoteComponent, DbxNoticeComponent, DbxSuccessComponent, DbxWarnComponent, DbxHintComponent, DbxLabelBlockComponent, DbxLabelComponent, DbxLinkifyComponent, DbxOkComponent, DbxTextChipsComponent, DbxIconSpacerDirective, DbxFormDescriptionComponent]
 })
 export class DbxTextModule {}

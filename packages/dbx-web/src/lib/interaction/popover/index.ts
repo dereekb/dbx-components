@@ -3,6 +3,7 @@ export * from './abstract.popover.ref.directive';
 export * from './popover.action.directive';
 export * from './popover.component';
 export * from './popover.content.component';
+export * from './popover.content.module';
 export * from './popover.controls.directive';
 export * from './popover.coordinator.component';
 export * from './popover.coordinator.service';

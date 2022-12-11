@@ -6,6 +6,12 @@ export const DOC_INTERACTION_ROUTES = [
     ref: 'doc.interaction.button'
   },
   {
+    icon: 'warning',
+    title: 'Error',
+    detail: 'dbx-error',
+    ref: 'doc.interaction.error'
+  },
+  {
     icon: 'call_to_action',
     title: 'Dialog',
     detail: 'dbx-dialog',

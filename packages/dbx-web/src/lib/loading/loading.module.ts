@@ -8,9 +8,11 @@ import { DbxLoadingComponent } from './loading.component';
 import { DbxReadableErrorModule } from '../error';
 import { DbxActionLoadingContextDirective } from './loading.action.directive';
 
+const declarations = [DbxLoadingComponent, DbxBasicLoadingComponent, DbxLoadingProgressComponent, DbxActionLoadingContextDirective];
+
 @NgModule({
   imports: [CommonModule, DbxReadableErrorModule, MatProgressSpinnerModule, MatProgressBarModule],
-  declarations: [DbxLoadingComponent, DbxBasicLoadingComponent, DbxLoadingProgressComponent, DbxActionLoadingContextDirective],
-  exports: [DbxLoadingComponent, DbxBasicLoadingComponent, DbxLoadingProgressComponent, MatProgressSpinnerModule, MatProgressBarModule, DbxActionLoadingContextDirective]
+  declarations,
+  exports: [...declarations, MatProgressSpinnerModule, MatProgressBarModule]
 })
 export class DbxLoadingModule {}

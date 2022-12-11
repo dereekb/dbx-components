@@ -9,12 +9,10 @@ import { DbxActionKeyTriggerDirective } from './key.trigger.directive';
 import { DbxCoreActionModule } from '@dereekb/dbx-core';
 import { DbxActionConfirmDirective } from './action.confirm.directive';
 import { DbxPromptModule } from '../interaction/prompt/prompt.module';
-import { DbxLoadingModule } from '../loading';
-import { DbxActionProgressComponent } from './action.progress.component';
 
 @NgModule({
-  imports: [CommonModule, DbxCoreActionModule, DbxButtonModule, DbxLoadingModule, MatSnackBarModule, MatDialogModule, MatButtonModule, DbxPromptModule],
-  declarations: [DbxActionKeyTriggerDirective, DbxActionConfirmDirective, DbxActionProgressComponent],
-  exports: [DbxCoreActionModule, DbxActionKeyTriggerDirective, DbxActionConfirmDirective, DbxActionProgressComponent]
+  imports: [CommonModule, DbxCoreActionModule, DbxButtonModule, MatSnackBarModule, MatDialogModule, MatButtonModule, DbxPromptModule],
+  declarations: [DbxActionKeyTriggerDirective, DbxActionConfirmDirective],
+  exports: [DbxCoreActionModule, DbxActionKeyTriggerDirective, DbxActionConfirmDirective]
 })
 export class DbxActionModule {}

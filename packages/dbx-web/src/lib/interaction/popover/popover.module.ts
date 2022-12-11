@@ -6,24 +6,18 @@ import { MatDividerModule } from '@angular/material/divider';
 import { NgModule } from '@angular/core';
 import { NgOverlayContainerModule } from 'ng-overlay-container';
 import { DbxPopoverCoordinatorComponent } from './popover.coordinator.component';
-import { DbxPopoverService } from './popover.service';
-import { DbxPopoverContentComponent } from './popover.content.component';
 import { DbxPopoverComponent } from './popover.component';
-import { DbxPopoverControlsDirective } from './popover.controls.directive';
-import { DbxPopoverHeaderComponent } from './popover.header.component';
-import { DbxPopoverScrollContentComponent } from './popover.scroll.content.component';
-import { DbxActionPopoverDirective } from './popover.action.directive';
 import { DbxKeypressModule } from '../../keypress';
-import { DbxRouterAnchorModule } from '../../router';
-import { DbxActionModule } from '../../action/action.module';
-import { DbxButtonModule } from '../../button/button.module';
 import { DbxInjectionComponentModule } from '@dereekb/dbx-core';
 import { DbxStyleLayoutModule } from '../../layout/style/style.layout.module';
+import { DbxPopoverInteractionContentModule } from './popover.content.module';
+import { DbxActionPopoverDirective } from './popover.action.directive';
+
+const declarations = [DbxPopoverComponent, DbxPopoverCoordinatorComponent, DbxActionPopoverDirective];
 
 @NgModule({
-  imports: [CommonModule, MatIconModule, MatButtonModule, MatDividerModule, DbxButtonModule, DbxRouterAnchorModule, DbxActionModule, DbxKeypressModule, DbxStyleLayoutModule, DbxInjectionComponentModule, NgOverlayContainerModule, AngularResizeEventModule],
-  declarations: [DbxActionPopoverDirective, DbxPopoverComponent, DbxPopoverCoordinatorComponent, DbxPopoverContentComponent, DbxPopoverControlsDirective, DbxPopoverHeaderComponent, DbxPopoverScrollContentComponent],
-  exports: [DbxActionPopoverDirective, DbxPopoverContentComponent, DbxPopoverControlsDirective, DbxPopoverHeaderComponent, DbxPopoverScrollContentComponent],
-  providers: [DbxPopoverService]
+  imports: [CommonModule, MatIconModule, MatButtonModule, MatDividerModule, DbxKeypressModule, DbxStyleLayoutModule, DbxInjectionComponentModule, NgOverlayContainerModule, AngularResizeEventModule, DbxPopoverInteractionContentModule],
+  declarations,
+  exports: [...declarations, DbxPopoverInteractionContentModule]
 })
 export class DbxPopoverInteractionModule {}
