@@ -1,5 +1,5 @@
 import { DbxFirebaseEmailRecoveryFormValue } from './login.email.recovery.form.component';
-import { HandleActionFunction, DBX_INJECTION_COMPONENT_DATA, ClickableAnchor } from '@dereekb/dbx-core';
+import { HandleActionFunction, DBX_INJECTION_COMPONENT_DATA, ClickableAnchor, DbxActionSuccessHandlerFunction, HandleActionWithContext } from '@dereekb/dbx-core';
 import { DbxFirebaseAuthService } from './../service/firebase.auth.service';
 import { firstValueFrom, from, tap, BehaviorSubject } from 'rxjs';
 import { Component, EventEmitter, OnDestroy, Inject } from '@angular/core';
@@ -13,7 +13,7 @@ export interface DbxFirebaseLoginEmailContentComponentConfig extends DbxFirebase
   loginMode: DbxFirebaseLoginMode;
 }
 
-export type DbxFirebaseLoginEmailContentMode = 'login' | 'recover' | 'recovering';
+export type DbxFirebaseLoginEmailContentMode = 'login' | 'recover' | 'recoversent';
 
 @Component({
   templateUrl: './login.email.content.component.html'
@@ -96,22 +96,19 @@ export class DbxFirebaseLoginEmailContentComponent implements OnDestroy {
     this._emailMode.next('recover');
   }
 
-  readonly handleRecoveryAction: HandleActionFunction<DbxFirebaseEmailRecoveryFormValue> = (value) => {
+  readonly handleRecoveryAction: HandleActionWithContext<DbxFirebaseEmailRecoveryFormValue> = (value: DbxFirebaseEmailRecoveryFormValue, context) => {
     this.recoveryFormValue = value;
     this.emailFormValue = { username: value.email, password: '' };
-
-    const result = this.dbxFirebaseAuthService.sendPasswordResetEmail(value.email);
-
-    return from(result).pipe(
-      tap(() => {
-        this.onRecoveringSuccess();
-      })
-    );
+    context.startWorkingWithPromise(this.dbxFirebaseAuthService.sendPasswordResetEmail(value.email));
   };
 
   // MARK: Recovering
-  onRecoveringSuccess() {
-    // optionally override in parent
+  readonly handleRecoverySuccess: DbxActionSuccessHandlerFunction = (x) => {
+    this._emailMode.next('recoversent');
+  };
+
+  clickedRecoveryAcknowledged() {
+    this._emailMode.next('login');
   }
 
   // MARK: Cancel
