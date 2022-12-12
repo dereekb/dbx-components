@@ -14,9 +14,7 @@ export interface DbxErrorPopoverConfig {
 @Component({
   template: `
     <dbx-popover-content class="dbx-error-popover">
-      <dbx-popover-header icon="error">
-        <span class="dbx-warn dbx-error-popover-code" *ngIf="code">{{ code }}</span>
-      </dbx-popover-header>
+      <dbx-popover-header [header]="code" icon="error"></dbx-popover-header>
       <dbx-popover-scroll-content>
         <dbx-error-details [error]="error"></dbx-error-details>
       </dbx-popover-scroll-content>
