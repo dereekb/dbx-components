@@ -18,6 +18,8 @@ $content-container-padding-small-screen: theming.$padding-2;
 
 $content-end-margin: theming.$padding-4;
 
+$scroll-content-bottom-padding: 42px;
+
 @mixin core() {
   .dbx-content-border {
     padding: $content-border-inner-padding;
@@ -113,6 +115,10 @@ $content-end-margin: theming.$padding-4;
       overflow-x: hidden;
       overflow-y: auto;
     }
+  }
+
+  .dbx-scroll-content {
+    padding-bottom: $scroll-content-bottom-padding;
   }
 }
 
