@@ -107,7 +107,7 @@ export class WebsiteFileLink {
   data!: WebsiteFileLinkData;
 
   constructor(template?: WebsiteFileLink) {
-    if (template) {
+    if (template != null) {
       this.type = template.type;
       this.mime = template.mime;
       this.name = template.name;

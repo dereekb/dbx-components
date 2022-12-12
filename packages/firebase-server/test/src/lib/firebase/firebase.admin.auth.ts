@@ -24,7 +24,7 @@ export interface AuthorizedUserTestContext {
   loadUserEmailAndPhone(): Promise<{ email: EmailAddress; phone?: E164PhoneNumber }>;
   loadDecodedIdToken(): Promise<DecodedIdToken>;
   makeContextOptions(): Promise<ContextOptions>;
-  callCloudFunction<F extends CallCloudFunction, O = unknown>(fn: F, params: CallCloudFunctionParams<F>): Promise<O>;
+  callCloudFunction<F extends CallCloudFunction, O = unknown>(fn: F, params: CallCloudFunctionParams<F>, skipJsonConversion?: boolean): Promise<O>;
 }
 
 export class AuthorizedUserTestContextFixture<PI extends FirebaseAdminTestContext = FirebaseAdminTestContext, PF extends JestTestContextFixture<PI> = JestTestContextFixture<PI>, I extends AuthorizedUserTestContextInstance<PI> = AuthorizedUserTestContextInstance<PI>> extends AbstractChildJestTestContextFixture<I, PF> implements AuthorizedUserTestContext {
@@ -54,13 +54,18 @@ export class AuthorizedUserTestContextFixture<PI extends FirebaseAdminTestContex
   }
 
   callCloudFunction<F extends WrappedScheduledFunction, O = unknown>(fn: F): Promise<O>;
-  callCloudFunction<F extends WrappedFunction<any>, O = unknown>(fn: F, params: CallCloudFunctionParams<F>): Promise<O>;
-  callCloudFunction<F extends CallCloudFunction, O = unknown>(fn: F, params?: CallCloudFunctionParams<F>): Promise<O> {
-    return this.instance.callCloudFunction(fn, params as CallCloudFunctionParams<F>);
+  callCloudFunction<F extends WrappedFunction<any>, O = unknown>(fn: F, params: CallCloudFunctionParams<F>, skipJsonConversion?: boolean): Promise<O>;
+  callCloudFunction<F extends CallCloudFunction, O = unknown>(fn: F, params?: CallCloudFunctionParams<F>, skipJsonConversion = false): Promise<O> {
+    return this.instance.callCloudFunction(fn, params as CallCloudFunctionParams<F>, skipJsonConversion);
   }
 }
 
 export type CallEventFunctionEventContext = Partial<Omit<EventContext, 'auth'>>;
+
+function convertParamsToParsedJsonObjectAndBack<T = unknown>(object: T): T {
+  const paramsAsJson = JSON.parse(JSON.stringify(object));
+  return paramsAsJson as T;
+}
 
 export class AuthorizedUserTestContextInstance<PI extends FirebaseAdminTestContext = FirebaseAdminTestContext> implements AuthorizedUserTestContext {
   constructor(readonly uid: FirebaseAuthUserId, readonly testContext: PI) {}
@@ -90,13 +95,16 @@ export class AuthorizedUserTestContextInstance<PI extends FirebaseAdminTestConte
   }
 
   callCloudFunction<F extends WrappedScheduledFunction, O = unknown>(fn: F): Promise<O>;
-  callCloudFunction<F extends WrappedFunction<any>, O = unknown>(fn: F, params: CallCloudFunctionParams<F>): Promise<O>;
-  callCloudFunction<F extends CallCloudFunction, O = unknown>(fn: F, params?: CallCloudFunctionParams<F>): Promise<O> {
-    return this.makeContextOptions().then((options) => (fn as WrappedFunction<unknown>)(params, options));
+  callCloudFunction<F extends WrappedFunction<any>, O = unknown>(fn: F, params: CallCloudFunctionParams<F>, skipJsonConversion?: boolean): Promise<O>;
+  callCloudFunction<F extends CallCloudFunction, O = unknown>(fn: F, params?: CallCloudFunctionParams<F>, skipJsonConversion = false): Promise<O> {
+    // Parse to JSON then back to simulate sending JSON to the server, and the server parsing it as a POJO.
+    const parsedParams = params == null || skipJsonConversion ? params : convertParamsToParsedJsonObjectAndBack(params);
+    return this.makeContextOptions().then((options) => (fn as WrappedFunction<unknown>)(parsedParams, options));
   }
 
-  callEventCloudFunction<F extends WrappedFunction<any>, O = unknown>(fn: F, params: CallCloudFunctionParams<F>, contextOptions?: CallEventFunctionEventContext): Promise<O> {
-    return this.makeContextOptions().then((options) => (fn as WrappedFunction<unknown>)(params, contextOptions ? { ...contextOptions, ...options } : options));
+  callEventCloudFunction<F extends WrappedFunction<any>, O = unknown>(fn: F, params: CallCloudFunctionParams<F>, contextOptions?: CallEventFunctionEventContext, skipJsonConversion = false): Promise<O> {
+    const parsedParams = params == null || skipJsonConversion ? params : convertParamsToParsedJsonObjectAndBack(params);
+    return this.makeContextOptions().then((options) => (fn as WrappedFunction<unknown>)(parsedParams, contextOptions ? { ...contextOptions, ...options } : options));
   }
 }
 
