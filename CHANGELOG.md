@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [9.19.1](https://github.com/dereekb/dbx-components/compare/v9.19.0-dev...v9.19.1) (2022-12-12)
+
+
+### Bug Fixes
+
+* fixed DateBlockTiming class-validator validation/parsing ([23596cb](https://github.com/dereekb/dbx-components/commit/23596cba31818f16891e8105fa9f371a27b5ffd9))
+
+
+
 # [9.19.0](https://github.com/dereekb/dbx-components/compare/v9.18.6-dev...v9.19.0) (2022-12-11)
 
 
