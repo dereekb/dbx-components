@@ -51,7 +51,7 @@ export class DateRange {
   end!: Date;
 
   constructor(template: DateRange) {
-    if (template) {
+    if (template != null) {
       this.start = template.start;
       this.end = template.end;
     }

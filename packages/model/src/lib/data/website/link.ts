@@ -52,8 +52,8 @@ export class WebsiteLink {
   @MaxLength(WEBSITE_LINK_ENCODED_DATA_MAX_LENGTH)
   d!: WebsiteLinkEncodedData;
 
-  constructor(template: WebsiteLink) {
-    if (template) {
+  constructor(template?: WebsiteLink) {
+    if (template != null) {
       this.t = template.t;
       this.d = template.d;
     }
