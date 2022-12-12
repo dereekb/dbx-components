@@ -1,5 +1,6 @@
 import { Minutes as UtilMinutes } from '@dereekb/util';
 import { Expose, Type } from 'class-transformer';
+import { IsNumber } from 'class-validator';
 import { addMinutes } from 'date-fns';
 import { DateRange, dateRangeState, DateRangeState } from './date.range';
 
@@ -13,14 +14,17 @@ export interface DateDurationSpan {
 export class DateDurationSpan {
   @Expose()
   @Type(() => Date)
-  startsAt: Date;
+  startsAt!: Date;
 
   @Expose()
-  duration: Minutes;
+  @IsNumber()
+  duration!: Minutes;
 
-  constructor(template: DateDurationSpan) {
-    this.startsAt = template.startsAt;
-    this.duration = template.duration;
+  constructor(template?: DateDurationSpan) {
+    if (template != null) {
+      this.startsAt = template.startsAt;
+      this.duration = template.duration;
+    }
   }
 }
 

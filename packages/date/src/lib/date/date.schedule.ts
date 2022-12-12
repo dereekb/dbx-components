@@ -254,6 +254,14 @@ export class DateSchedule implements DateSchedule {
   @Min(0, { each: true })
   @IsArray()
   ex?: DateBlockIndex[];
+
+  constructor(template?: DateSchedule) {
+    if (template) {
+      this.w = template.w;
+      this.d = template.d;
+      this.ex = template.ex;
+    }
+  }
 }
 
 /**

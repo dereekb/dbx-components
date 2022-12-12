@@ -1,8 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // The use of any here does not degrade the type-safety. The correct type is inferred in most cases.
 
-import { FactoryWithInput, Maybe, PromiseOrValue } from '@dereekb/util';
+import { FactoryWithInput, Maybe, PromiseOrValue, ServerError, toReadableError } from '@dereekb/util';
+import { FirebaseError } from 'firebase/app';
 import { HttpsCallable, HttpsCallableResult } from 'firebase/functions';
+import { FirebaseServerError } from './error';
 
 export interface MapHttpsCallable<I, O, A, B> {
   mapInput?: FactoryWithInput<PromiseOrValue<A>, Maybe<I>>;
@@ -10,7 +12,8 @@ export interface MapHttpsCallable<I, O, A, B> {
 }
 
 /**
- * Maps input and output values for an
+ * Maps input and output values when using HttpsCallable.
+ *
  * @param callable
  * @param wrap
  * @returns
@@ -25,17 +28,21 @@ export function mapHttpsCallable<I, O, A, B = unknown>(callable: HttpsCallable<A
   return (async (inputData?: Maybe<I>): Promise<HttpsCallableResult<O> | O> => {
     const data: A = await mapInput(inputData);
 
-    const result: HttpsCallableResult<B> = await callable(data);
-    const resultData: Maybe<B> = result.data;
-    const mappedResultData: O = await mapOutput(resultData);
+    try {
+      const result: HttpsCallableResult<B> = await callable(data);
+      const resultData: Maybe<B> = result.data;
+      const mappedResultData: O = await mapOutput(resultData);
 
-    if (directData) {
-      return mappedResultData;
-    } else {
-      return {
-        ...result,
-        data: mappedResultData
-      };
+      if (directData) {
+        return mappedResultData;
+      } else {
+        return {
+          ...result,
+          data: mappedResultData
+        };
+      }
+    } catch (e) {
+      throw convertHttpsCallableErrorToReadableError(e);
     }
   }) as HttpsCallable<I, O> | DirectDataHttpsCallable<HttpsCallable<I, O>>;
 }
@@ -46,5 +53,22 @@ export function mapHttpsCallable<I, O, A, B = unknown>(callable: HttpsCallable<A
 export type DirectDataHttpsCallable<C extends HttpsCallable<any, any>> = C extends HttpsCallable<infer I, infer O> ? (data?: I | null) => Promise<O> : never;
 
 export function directDataHttpsCallable<I, O, C extends HttpsCallable<I, O> = HttpsCallable<I, O>>(callable: C): DirectDataHttpsCallable<C> {
-  return ((data: I) => callable(data).then((x) => x.data)) as DirectDataHttpsCallable<C>;
+  return ((data: I) =>
+    callable(data)
+      .then((x) => x.data)
+      .catch((e) => convertHttpsCallableErrorToReadableError(e))) as DirectDataHttpsCallable<C>;
+}
+
+export function convertHttpsCallableErrorToReadableError(error: unknown) {
+  let result: unknown;
+
+  if (error instanceof FirebaseError) {
+    result = FirebaseServerError.fromFirebaseError(error);
+  } else if (typeof error === 'object') {
+    result = toReadableError(error);
+  } else {
+    result = error;
+  }
+
+  return result;
 }

@@ -62,9 +62,7 @@ export function toReadableError(inputError: Maybe<ErrorInput>): Maybe<CodedError
 
   if (inputError) {
     if ((inputError as CodedError).code) {
-      error = {
-        ...(inputError as ReadableErrorWithCode)
-      };
+      error = inputError as CodedError;
     } else if ((inputError as ErrorWrapper).data) {
       error = {
         code: DEFAULT_READABLE_ERROR_CODE,

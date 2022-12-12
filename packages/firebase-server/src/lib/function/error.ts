@@ -62,7 +62,7 @@ export function notFoundError(messageOrError?: ErrorMessageOrPartialServerError)
   const serverError = partialServerError(messageOrError);
   return new functions.https.HttpsError('not-found', serverError?.message || 'not found', {
     status: 404,
-    error: NOT_FOUND_ERROR_CODE,
+    code: NOT_FOUND_ERROR_CODE,
     ...serverError,
     _error: undefined
   });
@@ -74,7 +74,7 @@ export function modelNotAvailableError(messageOrError?: ErrorMessageOrPartialSer
   const serverError = partialServerError(messageOrError);
   return new functions.https.HttpsError('not-found', serverError?.message || 'model was not available', {
     status: 404,
-    error: MODEL_NOT_AVAILABLE_ERROR_CODE,
+    code: MODEL_NOT_AVAILABLE_ERROR_CODE,
     ...serverError,
     _error: undefined
   });

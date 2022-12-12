@@ -1,8 +1,9 @@
-import { Exclude, Expose } from 'class-transformer';
+import { Exclude, Expose, Type } from 'class-transformer';
 import { CalendarDate, DateRange } from '../date';
 import { DateRRuleInstance, DateRRuleUtility } from './date.rrule';
 import { DateRRuleParseUtility, RRuleLines, RRuleStringLineSet } from './date.rrule.parse';
 import { TimezoneString as UtilTimezoneString } from '@dereekb/util';
+import { IsBoolean, IsOptional, IsString } from 'class-validator';
 
 export type TimezoneString = UtilTimezoneString; // TEMPORARY: weird issue with importing primative types with jest.
 
@@ -22,38 +23,47 @@ export class ModelRecurrenceInfo implements DateRange {
    * Required for RRules that have timezone-sensitive implementations.
    */
   @Expose()
+  @IsOptional()
+  @IsString()
   timezone?: TimezoneString;
 
   /**
    * RRules for this recurrence.
    */
   @Expose()
-  rrule: RRuleLines;
+  @IsString()
+  rrule!: RRuleLines;
 
   /**
    * First instance of the recurrence.
    */
   @Expose()
-  start: Date;
+  @Type(() => Date)
+  start!: Date;
 
   /**
    * Final instance of the recurrence.
    */
   @Expose()
-  end: Date;
+  @Type(() => Date)
+  end!: Date;
 
   /**
    * True if the recurrence has no end.
    */
   @Expose()
+  @IsOptional()
+  @IsBoolean()
   forever?: boolean;
 
-  constructor(template: ModelRecurrenceInfo) {
-    this.timezone = template.timezone;
-    this.rrule = template.rrule;
-    this.start = template.start;
-    this.end = template.end;
-    this.forever = template.forever;
+  constructor(template?: ModelRecurrenceInfo) {
+    if (template != null) {
+      this.timezone = template.timezone;
+      this.rrule = template.rrule;
+      this.start = template.start;
+      this.end = template.end;
+      this.forever = template.forever;
+    }
   }
 }
 

@@ -32,7 +32,7 @@ export class DbxReadableErrorComponent {
   }
 
   get message(): Maybe<string> {
-    return this._error?.message;
+    return this._error?.message || 'An error occured.';
   }
 
   openErrorPopover() {

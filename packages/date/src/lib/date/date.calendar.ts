@@ -1,5 +1,6 @@
 import { ISO8601DayString } from '@dereekb/util';
 import { Expose } from 'class-transformer';
+import { IsEnum } from 'class-validator';
 import { daysToMinutes } from './date';
 import { DateDurationSpan } from './date.duration';
 import { parseISO8601DayStringToUTCDate } from './date.format';
@@ -31,11 +32,15 @@ export class CalendarDate extends DateDurationSpan {
    * The type of event date.
    */
   @Expose()
+  @IsEnum(CalendarDateType)
   type: CalendarDateType = CalendarDateType.TIME;
 
-  constructor(template: CalendarDate) {
+  constructor(template?: CalendarDate) {
     super(template);
-    this.type = template.type;
+
+    if (template != null) {
+      this.type = template.type;
+    }
   }
 }
 

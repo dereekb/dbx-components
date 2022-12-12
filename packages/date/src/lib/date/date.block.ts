@@ -79,7 +79,7 @@ export class DateBlockTiming extends DateDurationSpan {
   @Type(() => Date)
   end!: Date;
 
-  constructor(template: DateBlockTiming) {
+  constructor(template?: DateBlockTiming) {
     super(template);
 
     if (template) {
