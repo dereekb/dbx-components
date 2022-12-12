@@ -9,7 +9,7 @@ import { Maybe } from '@dereekb/util';
 /**
  * DbxActionConfirmDirective configuration.
  */
-export interface DbxActionConfirmConfig<T> extends DbxPromptConfirmConfig {
+export interface DbxActionConfirmConfig<T = unknown> extends DbxPromptConfirmConfig {
   /**
    * Optionally set the readyValue passed to the instance.
    */
@@ -25,7 +25,7 @@ export interface DbxActionConfirmConfig<T> extends DbxPromptConfirmConfig {
 @Directive({
   selector: '[dbxActionConfirm]'
 })
-export class DbxActionConfirmDirective<T, O> extends AbstractPromptConfirmDirective implements OnInit, OnDestroy {
+export class DbxActionConfirmDirective<T = unknown, O = unknown> extends AbstractPromptConfirmDirective implements OnInit, OnDestroy {
   @Input('dbxActionConfirm')
   override config?: Maybe<DbxActionConfirmConfig<T>>;
 
