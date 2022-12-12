@@ -53,9 +53,9 @@ export function serverError<T>(config: ServerErrorMakeConfig<T>): ServerError<T>
  * Base server-error class.
  */
 export class ServerErrorResponse<T extends ServerErrorResponseData = ServerErrorResponseData> implements ServerError<T> {
-  public readonly code?: StringErrorCode;
   public readonly status: number;
-  public readonly message: Maybe<string>;
+  public readonly code?: StringErrorCode;
+  public readonly message?: Maybe<string>;
   public readonly data?: T;
 
   constructor({ code, status, data, message }: ServerError<T>) {

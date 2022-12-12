@@ -9,6 +9,8 @@ const TEST_ERROR_CODE = 'A_VERY_LONG_TEST_ERROR_CODE_USED_FOR_REFERENCE';
   templateUrl: './error.component.html'
 })
 export class DocInteractionErrorComponent {
+  readonly blankReadableError: ReadableError = {};
+
   readonly readableErrorWithoutCode: ReadableError = { message: 'This is an error without an error code.' };
 
   readonly readableError: ReadableError = readableError(TEST_ERROR_CODE, 'This is the example error message.');

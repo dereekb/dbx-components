@@ -112,8 +112,7 @@ export class WorkInstance<I = unknown, O = unknown> implements Destroyable {
         this.success(workResult);
       },
       error: (error: ReadableError) => {
-        const message = error.message ?? error.code ?? undefined;
-        this.reject(message ? { message } : undefined);
+        this.reject(error);
       }
     });
   }
