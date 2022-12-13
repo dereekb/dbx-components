@@ -1,7 +1,7 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
 import { FirebaseAuthContextInfo, FirebaseAuthDetails, FirebaseAuthUserId, FirebaseAuthNewUserClaimsData, FirebaseAuthSetupPassword } from '@dereekb/firebase';
-import { Milliseconds, filterUndefinedValues, AUTH_ADMIN_ROLE, AuthClaims, AuthRoleSet, cachedGetter, filterNullAndUndefinedValues, ArrayOrValue, AuthRole, forEachKeyValue, ObjectMap, AuthClaimsUpdate, asSet, KeyValueTypleValueFilter, AuthClaimsObject, Maybe, AUTH_TOS_SIGNED_ROLE, EmailAddress, E164PhoneNumber, randomNumberFactory } from '@dereekb/util';
+import { Milliseconds, filterUndefinedValues, AUTH_ADMIN_ROLE, AuthClaims, AuthRoleSet, cachedGetter, filterNullAndUndefinedValues, ArrayOrValue, AuthRole, forEachKeyValue, ObjectMap, AuthClaimsUpdate, asSet, KeyValueTypleValueFilter, AuthClaimsObject, Maybe, AUTH_TOS_SIGNED_ROLE, EmailAddress, E164PhoneNumber, randomNumberFactory, PasswordString } from '@dereekb/util';
 import { assertIsContextWithAuthData, CallableContextWithAuthData } from '../function/context';
 import { AuthDataRef, firebaseAuthTokenFromDecodedIdToken } from './auth.context';
 import { hoursToMs, timeHasExpired, toISODateString } from '@dereekb/date';
@@ -29,6 +29,16 @@ export interface FirebaseServerAuthUserContext extends FirebaseServerAuthUserIde
    * Loads the details object of the user.
    */
   loadDetails(): Promise<FirebaseAuthDetails>;
+
+  /**
+   * Changes the user's password.
+   */
+  setPassword(password: PasswordString): Promise<admin.auth.UserRecord>;
+
+  /**
+   * Updates a user's information.
+   */
+  updateUser(template: admin.auth.UpdateRequest): Promise<admin.auth.UserRecord>;
 
   /**
    * Loads the roles of the user.
@@ -100,6 +110,17 @@ export abstract class AbstractFirebaseServerAuthUserContext<S extends FirebaseSe
 
   loadDetails(): Promise<FirebaseAuthDetails> {
     return this.loadRecord().then((record) => this.service.authDetailsForRecord(record));
+  }
+
+  /**
+   * Sets the user's password.
+   */
+  async setPassword(password: PasswordString): Promise<admin.auth.UserRecord> {
+    return this.updateUser({ password });
+  }
+
+  async updateUser(template: admin.auth.UpdateRequest): Promise<admin.auth.UserRecord> {
+    return this.service.auth.updateUser(this.uid, template);
   }
 
   async loadRoles(): Promise<AuthRoleSet> {
