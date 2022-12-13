@@ -1,5 +1,5 @@
 import { Maybe, Destroyable, ReadableError, ErrorInput } from '@dereekb/util';
-import { filter, map, BehaviorSubject, Observable, of, first, shareReplay, switchMap, delay } from 'rxjs';
+import { filter, map, BehaviorSubject, Observable, of, first, shareReplay, switchMap, delay, firstValueFrom, from } from 'rxjs';
 import { beginLoading, errorResult, LoadingState, loadingStateHasFinishedLoading, loadingStateIsLoading, successResult } from '../loading';
 import { filterMaybe, preventComplete } from '../rxjs';
 import { SubscriptionObject } from '../subscription';
@@ -100,6 +100,13 @@ export class WorkInstance<I = unknown, O = unknown> implements Destroyable {
           )
         );
       });
+  }
+
+  /**
+   * Begins working using a promise.
+   */
+  startWorkingWithPromise(promise: Promise<O>): void {
+    this.startWorkingWithObservable(from(promise));
   }
 
   /**

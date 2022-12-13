@@ -18,5 +18,5 @@ import { Component, Input } from '@angular/core';
 })
 export class AppSideNavBarTitleComponent {
   @Input()
-  header: string;
+  header!: string;
 }

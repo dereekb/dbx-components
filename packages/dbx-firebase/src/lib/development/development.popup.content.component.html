@@ -11,7 +11,7 @@
     </div>
     <div>
       <h4>Tools</h4>
-      <div dbxAction dbxActionEnforceModified dbxActionAutoTrigger instantTrigger dbxActionLogger [dbxActionHandler]="handleFormUpdate">
+      <div dbxAction dbxActionEnforceModified dbxActionAutoTrigger instantTrigger [dbxActionHandler]="handleFormUpdate">
         <dbx-firebase-development-popup-content-form dbxActionForm [dbxFormSource]="formData$" dbxFormSourceMode="always" [dbxActionFormModified]="isFormModified" [config]="formConfig$ | async"></dbx-firebase-development-popup-content-form>
       </div>
     </div>

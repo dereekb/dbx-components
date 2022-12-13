@@ -5,7 +5,7 @@ import { AbstractDbxErrorWidgetComponent } from './error.widget.directive';
 @Component({
   template: `
     <dbx-label-block header="Error Code">{{ code }}</dbx-label-block>
-    <dbx-label-block header="Error Data" *ngIf="data">
+    <dbx-label-block header="Error Data" *ngIf="serverErrorData">
       <p class="dbx-json">{{ serverErrorData | json }}</p>
     </dbx-label-block>
   `,

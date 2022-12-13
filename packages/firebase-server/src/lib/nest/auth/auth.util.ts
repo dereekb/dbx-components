@@ -1,5 +1,6 @@
 import { UserRelated } from '@dereekb/firebase';
 import { ArrayOrValue, AuthRole, containsAllValues, asArray } from '@dereekb/util';
+import { FIREBASE_SERVER_AUTH_CLAIMS_SETUP_PASSWORD_KEY } from '../../auth/auth.service';
 import { forbiddenError } from '../../function';
 import { NestContextCallableRequestWithAuth } from '../function/nest';
 import { AbstractFirebaseNestContext } from '../nest.provider';
@@ -60,4 +61,16 @@ export function assertHasRolesInRequest<N extends AbstractFirebaseNestContext<an
 
 export function hasAuthRolesInRequest<N extends AbstractFirebaseNestContext<any, any> = AbstractFirebaseNestContext<any, any>, I = unknown>(request: NestContextCallableRequestWithAuth<N, I>, authRoles: ArrayOrValue<AuthRole>) {
   return containsAllValues(request.nest.authService.context(request).authRoles, authRoles);
+}
+
+/**
+ * Returns true if the claims have a FIREBASE_SERVER_AUTH_CLAIMS_SETUP_PASSWORD_KEY claims value, indicating they are a newly invited user.
+ *
+ * This may be used to filter out new users that were not invited from finishing their onboarding.
+ *
+ * @param request
+ */
+export async function hasNewUserSetupPasswordInRequest<N extends AbstractFirebaseNestContext<any, any> = AbstractFirebaseNestContext<any, any>, I = unknown>(request: NestContextCallableRequestWithAuth<N, I>) {
+  const claims = request.nest.authService.context(request).claims;
+  return claims[FIREBASE_SERVER_AUTH_CLAIMS_SETUP_PASSWORD_KEY] != null;
 }
