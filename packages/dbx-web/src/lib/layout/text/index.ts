@@ -8,6 +8,7 @@ export * from './note.component';
 export * from './notice.component';
 export * from './ok.component';
 export * from './success.component';
+export * from './text.chip.directive';
 export * from './text.chips.component';
 export * from './text.module';
 export * from './warn.component';

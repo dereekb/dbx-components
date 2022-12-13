@@ -49,6 +49,27 @@ $dbx-label-padded-padding: 6px;
     font-size: 75%;
     margin-top: 0.6666666667em;
   }
+
+  .dbx-chip {
+    font-size: 14px;
+    font-weight: 500;
+    position: relative;
+    box-sizing: border-box;
+  }
+
+  .dbx-chip.dbx-chip-small {
+    font-size: 12px;
+    padding: 2px 8px;
+    min-height: 20px;
+  }
+
+  .dbx-chip.dbx-chip-block {
+    border-radius: 0;
+  }
+
+  .dbx-chip-margin {
+    margin: 4px;
+  }
 }
 
 @mixin color($theme-config) {
