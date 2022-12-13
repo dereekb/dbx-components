@@ -16,7 +16,7 @@ export class DbxAnalyticsSegmentServiceListener extends AbstractDbxAnalyticsServ
       console.log('SegmentAnalyticsListenerService: Segment is logging events.');
     }
 
-    if (this._segmentApi.config.active) {
+    if (!this._segmentApi.config.active) {
       console.log('SegmentAnalyticsListenerService: Segment is disabled from sending events to the server.');
     }
   }

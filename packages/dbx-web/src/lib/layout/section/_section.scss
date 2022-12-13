@@ -192,12 +192,6 @@ $header-left-reserved-space-small-screen: 120px;
       }
     }
   }
-
-  // MARK: Subsection
-  .dbx-subsection {
-    > .dbx-section-header > .dbx-section-header-content {
-    }
-  }
 }
 
 @mixin color($theme-config) {

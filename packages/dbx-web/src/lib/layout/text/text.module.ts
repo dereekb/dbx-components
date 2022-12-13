@@ -13,12 +13,15 @@ import { DbxNoteComponent } from './note.component';
 import { DbxNoticeComponent } from './notice.component';
 import { DbxOkComponent } from './ok.component';
 import { DbxSuccessComponent } from './success.component';
+import { DbxChipDirective } from './text.chip.directive';
 import { DbxTextChipsComponent } from './text.chips.component';
 import { DbxWarnComponent } from './warn.component';
 
+const declarations = [DbxChipDirective, DbxNoteComponent, DbxNoticeComponent, DbxSuccessComponent, DbxWarnComponent, DbxHintComponent, DbxLabelBlockComponent, DbxLabelComponent, DbxLinkifyComponent, DbxOkComponent, DbxTextChipsComponent, DbxIconSpacerDirective, DbxFormDescriptionComponent];
+
 @NgModule({
   imports: [CommonModule, MatChipsModule, MatTooltipModule, MatIconModule],
-  declarations: [DbxNoteComponent, DbxNoticeComponent, DbxSuccessComponent, DbxWarnComponent, DbxHintComponent, DbxLabelBlockComponent, DbxLabelComponent, DbxLinkifyComponent, DbxOkComponent, DbxTextChipsComponent, DbxIconSpacerDirective, DbxFormDescriptionComponent],
-  exports: [DbxNoteComponent, DbxNoticeComponent, DbxSuccessComponent, DbxWarnComponent, DbxHintComponent, DbxLabelBlockComponent, DbxLabelComponent, DbxLinkifyComponent, DbxOkComponent, DbxTextChipsComponent, DbxIconSpacerDirective, DbxFormDescriptionComponent]
+  declarations,
+  exports: declarations
 })
 export class DbxTextModule {}

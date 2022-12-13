@@ -49,8 +49,8 @@ export class DbxFirebaseDevelopmentSchedulerService implements Initialized {
   init(): void {
     this._sub.subscription = this.running$
       .pipe(
-        tapLog('DbxFirebaseDevelopmentSchedulerService enabled state:'),
         switchMapWhileTrue(() => {
+          console.log('DbxFirebaseDevelopmentSchedulerService enabled.');
           return combineLatest([this._timerInterval, this.schedulerList$]).pipe(
             switchMap(([timerInterval, schedulerList]) => {
               const executionOrder: string[] = schedulerList.map((x) => x.name);

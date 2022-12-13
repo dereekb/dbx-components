@@ -6,8 +6,41 @@
         <doc-feature-example header="dbx-linkify" hint="Uses linkify to turn plaintext into html with links, etc.">
           <dbx-linkify [text]="linkify"></dbx-linkify>
         </doc-feature-example>
-        <doc-feature-example header="dbx-text-chips">
+        <doc-feature-example header="dbx-text-chips" hint="Displays a set of mat-chips, with an optional tooltip.">
           <dbx-text-chips [chips]="chips"></dbx-text-chips>
+        </doc-feature-example>
+        <doc-feature-example header="dbx-chip" hint="mat-chip like presentation.">
+          <div>
+            <p>
+              <dbx-chip dbxColor="primary">Primary</dbx-chip>
+              <dbx-chip dbxColor="accent">Accent</dbx-chip>
+              <dbx-chip dbxColor="warn">Warn</dbx-chip>
+              <dbx-chip dbxColor>Background</dbx-chip>
+            </p>
+          </div>
+          <div>
+            <p>
+              <dbx-chip [small]="true" dbxColor="primary">Primary</dbx-chip>
+              <dbx-chip [small]="true" dbxColor="accent">Accent</dbx-chip>
+              <dbx-chip [small]="true" dbxColor="warn">Warn</dbx-chip>
+              <dbx-chip [small]="true" dbxColor>Background</dbx-chip>
+            </p>
+          </div>
+          <div>
+            <p>
+              <dbx-chip [block]="true" [small]="true" dbxColor="primary">Primary</dbx-chip>
+              <dbx-chip [block]="true" [small]="true" dbxColor="accent">Accent</dbx-chip>
+              <dbx-chip [block]="true" [small]="true" dbxColor="warn">Warn</dbx-chip>
+              <dbx-chip [block]="true" [small]="true" dbxColor>Background</dbx-chip>
+            </p>
+          </div>
+          <div>
+            <p>
+              <dbx-chip dbxColor="primary">State</dbx-chip>
+              <dbx-button-spacer></dbx-button-spacer>
+              <span>Example Line Item With Chip</span>
+            </p>
+          </div>
         </doc-feature-example>
         <h4>Layouts</h4>
         <doc-feature-example header=".dbx-label-block">
