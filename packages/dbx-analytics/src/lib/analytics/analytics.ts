@@ -3,11 +3,13 @@ import { Maybe, PrimativeKey } from '@dereekb/util';
 export type DbxAnalyticsEventName = string;
 export type DbxAnalyticsUserId = string;
 
+export interface DbxAnalyticsUserProperties {
+  readonly [key: string]: PrimativeKey | boolean;
+}
+
 export interface DbxAnalyticsUser {
   readonly user: DbxAnalyticsUserId;
-  readonly properties?: {
-    readonly [key: string]: PrimativeKey | boolean;
-  };
+  readonly properties?: DbxAnalyticsUserProperties;
 }
 
 export interface DbxAnalyticsEventData {

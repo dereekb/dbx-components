@@ -12,7 +12,7 @@ export class DefaultFirebaseServerEnvService extends ServerEnvironmentService im
   }
 
   /**
-   * @deprecated use isDeveloperToolsEnabled instead.z
+   * @deprecated use developerToolsEnabled instead.
    */
   get isDevelopmentToolsEnabled() {
     return this.developerToolsEnabled;
