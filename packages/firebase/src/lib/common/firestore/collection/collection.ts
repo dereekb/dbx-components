@@ -18,7 +18,7 @@ import { FirestoreItemPageIterationBaseConfig, FirestoreItemPageIterationFactory
 import { firestoreQueryFactory, FirestoreQueryFactory } from '../query/query';
 import { FirestoreDrivers } from '../driver/driver';
 import { FirestoreCollectionQueryFactory, firestoreCollectionQueryFactory } from './collection.query';
-import { ArrayOrValue, arrayToObject, Building, lastValue, Maybe, ModelKey, ModelTypeString } from '@dereekb/util';
+import { ArrayOrValue, arrayToObject, Building, isEvenNumber, isOddNumber, lastValue, Maybe, ModelKey, ModelTypeString } from '@dereekb/util';
 
 /**
  * The camelCase model name/type.
@@ -33,6 +33,8 @@ export type FirestoreModelType = ModelTypeString;
  * Each collection name in the app should be unique, as usage of CollectionGroups would cause collections with the same name to be returned.
  */
 export type FirestoreCollectionName = string;
+
+export const FIRESTORE_COLLECTION_NAME_SEPARATOR = '/';
 
 export type FirestoreModelIdentityType = 'root' | 'nested';
 
@@ -191,7 +193,7 @@ export function firestoreModelId(input: FirestoreModelId | FirestoreModelKey | D
   if (id) {
     return id;
   } else {
-    return lastValue(key.split('/'));
+    return lastValue(key.split(FIRESTORE_COLLECTION_NAME_SEPARATOR));
   }
 }
 
@@ -256,7 +258,7 @@ export function twoWayFlatFirestoreModelKey(key: FirestoreModelKey): TwoWayFlatF
  * @returns
  */
 export function inferKeyFromTwoWayFlatFirestoreModelKey(key: TwoWayFlatFirestoreModelKey): FirestoreModelKey {
-  return key.replace(/\_/g, '/');
+  return key.replace(/\_/g, FIRESTORE_COLLECTION_NAME_SEPARATOR);
 }
 
 /**
@@ -362,7 +364,7 @@ export function firestoreModelKeys<I extends RootFirestoreModelIdentity, K exten
  * @returns
  */
 export function firestoreModelKeyPath(...parts: FirestoreModelKeyPart[]): FirestoreModelKey {
-  return parts.join('/');
+  return parts.join(FIRESTORE_COLLECTION_NAME_SEPARATOR);
 }
 
 /**
@@ -397,6 +399,58 @@ export function firestoreModelKeyPairObject(input: FirestoreModelKey | DocumentR
   return object;
 }
 
+export type FirestoreModelCollectionTypeArrayName = string;
+
+export function firestoreModelKeyCollectionTypeArrayName<T = unknown>(input: ReadFirestoreModelKeyInput<T>, separator: string = FIRESTORE_COLLECTION_NAME_SEPARATOR): Maybe<FirestoreModelCollectionTypeArrayName> {
+  return firestoreModelKeyCollectionTypeArray(input)?.join(separator);
+}
+
+export function firestoreIdentityTypeArrayName(input: FirestoreModelIdentity, separator: string = FIRESTORE_COLLECTION_NAME_SEPARATOR): Maybe<FirestoreModelCollectionTypeArrayName> {
+  return firestoreIdentityTypeArray(input)?.join(separator);
+}
+
+export type FirestoreModelCollectionTypeArray = FirestoreCollectionName[];
+
+export function firestoreIdentityTypeArray(input: FirestoreModelIdentity): FirestoreModelCollectionTypeArray {
+  let array: FirestoreCollectionName[] = [];
+
+  let current = input;
+
+  while (true) {
+    array.push(current.collectionName);
+
+    if (current.type === 'nested') {
+      current = (current as FirestoreModelIdentityWithParent<any>).parent as FirestoreModelIdentity;
+    } else {
+      break;
+    }
+  }
+
+  return array.reverse();
+}
+
+export function firestoreModelKeyCollectionTypeArray<T = unknown>(input: ReadFirestoreModelKeyInput<T>): Maybe<FirestoreModelCollectionTypeArray> {
+  const key = readFirestoreModelKey<T>(input);
+  let array: Maybe<FirestoreCollectionName[]>;
+
+  if (key) {
+    const pieces = key?.split(FIRESTORE_COLLECTION_NAME_SEPARATOR);
+
+    if (isOddNumber(pieces.length)) {
+      throw new Error('input key source was a collection ref or unavailable.');
+    }
+
+    array = [];
+
+    for (let i = 0; i < pieces.length; i += 2) {
+      const collectionName = pieces[i];
+      array.push(collectionName);
+    }
+  }
+
+  return array;
+}
+
 export interface FirestoreModelCollectionAndIdPair extends FirestoreModelIdRef, FirestoreCollectionNameRef {}
 
 export function firestoreModelKeyPartPairs<T = unknown>(input: ReadFirestoreModelKeyInput<T>): Maybe<FirestoreModelCollectionAndIdPair[]> {
@@ -404,12 +458,13 @@ export function firestoreModelKeyPartPairs<T = unknown>(input: ReadFirestoreMode
   let pairs: Maybe<FirestoreModelCollectionAndIdPair[]>;
 
   if (key) {
-    const pieces = key?.split('/');
-    pairs = [];
+    const pieces = key?.split(FIRESTORE_COLLECTION_NAME_SEPARATOR);
 
-    if (pieces.length % 2 === 1) {
+    if (isOddNumber(pieces.length)) {
       throw new Error('input key source was a collection ref or unavailable.');
     }
+
+    pairs = [];
 
     for (let i = 0; i < pieces.length; i += 2) {
       const collectionName = pieces[i];

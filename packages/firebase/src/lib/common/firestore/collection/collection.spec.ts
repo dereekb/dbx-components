@@ -1,4 +1,4 @@
-import { firestoreModelIdsFromKey, firestoreModelKeyPart, firestoreModelKeyPartPairs, flatFirestoreModelKey, inferKeyFromTwoWayFlatFirestoreModelKey, twoWayFlatFirestoreModelKey } from '.';
+import { firestoreIdentityTypeArray, firestoreIdentityTypeArrayName, firestoreModelIdsFromKey, firestoreModelKeyCollectionTypeArray, firestoreModelKeyCollectionTypeArrayName, firestoreModelKeyPart, firestoreModelKeyPartPairs, flatFirestoreModelKey, inferKeyFromTwoWayFlatFirestoreModelKey, twoWayFlatFirestoreModelKey } from '.';
 import { childFirestoreModelKeyPath, firestoreModelId, isFirestoreModelId, isFirestoreModelKey, firestoreModelKeys, firestoreModelIdentity, firestoreModelKey, firestoreModelKeyPath } from './collection';
 
 describe('firestoreModelIdentity()', () => {
@@ -191,6 +191,47 @@ describe('childFirestoreModelKeyPath', () => {
       expect(result.length).toBe(1);
       expect(result[0]).toBe([`i/${key}`, `i/${key}`].join('/'));
     });
+  });
+});
+
+describe('firestoreModelKeyCollectionTypeArrayName()', () => {
+  it('should return all the names concatinated by the default separator', () => {
+    const modelKey = 'a/akey/c/ckey';
+    const name = firestoreModelKeyCollectionTypeArrayName(modelKey);
+    expect(name).toBe('a/c');
+  });
+
+  it('should return all the names concatinated by the custom separator', () => {
+    const modelKey = 'a/akey/c/ckey';
+    const name = firestoreModelKeyCollectionTypeArrayName(modelKey, '_');
+    expect(name).toBe('a_c');
+  });
+});
+
+describe('firestoreModelKeyCollectionTypeArray()', () => {
+  it('should return all the names in an array', () => {
+    const modelKey = 'a/akey/c/ckey';
+    const result = firestoreModelKeyCollectionTypeArray(modelKey) as string[];
+    expect(result[0]).toBe('a');
+    expect(result[1]).toBe('c');
+  });
+});
+
+const testIdentityA = firestoreModelIdentity('typeA', 'a');
+const testIdentityB = firestoreModelIdentity(testIdentityA, 'typeC', 'c');
+
+describe('firestoreIdentityTypeArrayName()', () => {
+  it('should return all the names concatinated by the default separator', () => {
+    const result = firestoreIdentityTypeArrayName(testIdentityB);
+    expect(result).toBe('a/c');
+  });
+});
+
+describe('firestoreIdentityTypeArray()', () => {
+  it('should return all the names in an array', () => {
+    const result = firestoreIdentityTypeArray(testIdentityB);
+    expect(result[0]).toBe('a');
+    expect(result[1]).toBe('c');
   });
 });
 
