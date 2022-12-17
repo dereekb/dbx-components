@@ -1,7 +1,9 @@
+import { asArray, Maybe } from '@dereekb/util';
 import { Rectangle, rectangleOverlapsRectangle, Vector } from './vector';
 import { Writable } from 'ts-essentials';
-import { latLngPointFunction, LatLngPoint, LatLngPointInput, LatLngPrecision, LatLngPointFunction, isLatLngPoint, isSameLatLngPoint, diffLatLngPoints, TOTAL_LONGITUDE_RANGE } from './point';
+import { latLngPointFunction, LatLngPoint, LatLngPointInput, LatLngPrecision, LatLngPointFunction, isLatLngPoint, isSameLatLngPoint, diffLatLngPoints, TOTAL_LONGITUDE_RANGE, copyLatLngPoint } from './point';
 import { DecisionFunction } from './decision';
+import { ArrayOrValue, firstValue } from '../array';
 
 export type LatLngBoundSouthWestPoint = LatLngPoint;
 export type LatLngBoundNothEastPoint = LatLngPoint;
@@ -11,8 +13,14 @@ export interface LatLngBound {
   ne: LatLngBoundNothEastPoint;
 }
 
+export type LatLngBoundOrPoint = LatLngBound | LatLngPoint;
+
 export function isLatLngBound(input: LatLngBound | unknown): input is LatLngBound {
-  return typeof input === 'object' && (input as LatLngBound).sw !== null && (input as LatLngBound).ne !== null;
+  return typeof input === 'object' && (input as LatLngBound).sw != null && (input as LatLngBound).ne != null;
+}
+
+export function copyLatLngBound(input: LatLngBound): LatLngBound {
+  return { sw: copyLatLngPoint(input.sw), ne: copyLatLngPoint(input.ne) };
 }
 
 export function isSameLatLngBound(a: LatLngBound, b: LatLngBound): boolean {
@@ -187,7 +195,59 @@ export function latLngBoundFunction(config?: LatLngBoundFunctionConfig): LatLngB
   };
 }
 
-export type LatLngBoundCheckFunction = DecisionFunction<LatLngBound | LatLngPoint>;
+export type ExtendLatLngBoundInput = ArrayOrValue<LatLngBoundOrPoint>;
+
+export function latLngBoundFromInput(input: ExtendLatLngBoundInput): Maybe<LatLngBound> {
+  let bound: Maybe<LatLngBound>;
+
+  const first = firstValue(input);
+
+  if (first != null) {
+    if (isLatLngBound(first)) {
+      bound = first;
+    } else {
+      bound = {
+        sw: first,
+        ne: first
+      };
+    }
+
+    if (Array.isArray(input)) {
+      bound = extendLatLngBound(bound, input);
+    }
+  }
+
+  return bound;
+}
+
+export function extendLatLngBound(bound: LatLngBound, extendWith: ExtendLatLngBoundInput): LatLngBound {
+  let { sw, ne } = copyLatLngBound(bound);
+
+  asArray(extendWith).forEach((x) => {
+    let xsw: LatLngPoint;
+    let xne: LatLngPoint;
+
+    if (isLatLngBound(x)) {
+      xsw = x.sw;
+      xne = x.ne;
+    } else {
+      xsw = x;
+      xne = x;
+    }
+
+    sw.lng = Math.min(xsw.lng, sw.lng);
+    sw.lat = Math.min(xsw.lat, sw.lat);
+    ne.lng = Math.max(xne.lng, ne.lng);
+    ne.lat = Math.max(xne.lat, ne.lat);
+  });
+
+  return {
+    sw,
+    ne
+  };
+}
+
+export type LatLngBoundCheckFunction = DecisionFunction<LatLngBoundOrPoint>;
 
 /**
  * Function that returns true if the input is entirely within the context's bound.
@@ -195,7 +255,7 @@ export type LatLngBoundCheckFunction = DecisionFunction<LatLngBound | LatLngPoin
 export type IsWithinLatLngBoundFunction = LatLngBoundCheckFunction & { readonly _bound: LatLngBound };
 
 export function isWithinLatLngBoundFunction(bound: LatLngBound): IsWithinLatLngBoundFunction {
-  const fn = ((boundOrPoint: LatLngBound | LatLngPoint) => {
+  const fn = ((boundOrPoint: LatLngBoundOrPoint) => {
     if (isLatLngPoint(boundOrPoint)) {
       return isLatLngPointWithinLatLngBound(boundOrPoint, bound);
     } else {
@@ -242,9 +302,8 @@ export function latLngBoundOverlapsLatLngBound(a: LatLngBound, b: LatLngBound): 
 export function overlapsLatLngBoundFunction(bound: LatLngBound): OverlapsLatLngBoundFunction {
   const a: Rectangle = boundToRectangle(bound);
 
-  const fn = ((boundOrPoint: LatLngBound | LatLngPoint) => {
+  const fn = ((boundOrPoint: LatLngBoundOrPoint) => {
     if (isLatLngPoint(boundOrPoint)) {
-      console.log('x', boundOrPoint);
       return isLatLngPointWithinLatLngBound(boundOrPoint, bound);
     } else {
       return rectangleOverlapsRectangle(a, boundToRectangle(boundOrPoint));

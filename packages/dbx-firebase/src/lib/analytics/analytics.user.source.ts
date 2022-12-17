@@ -21,7 +21,9 @@ export const DEFAULT_DBX_FIREBASE_ANALYTICS_USER_PROPERTIES_FACTORY: DbxFirebase
 /**
  * DbxAnalyticsUserSource implementation that uses the DbxFirebaseAuthService.
  */
-@Injectable()
+@Injectable({
+  providedIn: 'root'
+})
 export class DbxFirebaseAnalyticsUserSource implements DbxAnalyticsUserSource {
   private _userPropertiesFactory = new BehaviorSubject<DbxFirebaseAnalyticsUserPropertiesFactory>(DEFAULT_DBX_FIREBASE_ANALYTICS_USER_PROPERTIES_FACTORY);
 
