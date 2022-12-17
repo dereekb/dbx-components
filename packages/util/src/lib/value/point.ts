@@ -1,7 +1,7 @@
 import { Factory } from '../getter/getter';
 import { randomNumberFactory } from '../number';
 import { boundNumberFunction, wrapNumberFunction } from '../number/bound';
-import { cutValueToPrecisionFunction, NumberPrecision } from '../number/round';
+import { cutValueToPrecisionFunction, NumberPrecision, RoundToPrecisionFunctionType } from '../number/round';
 import { chainMapSameFunctions, mapIdentityFunction } from './map';
 
 // MARK: Lat/Lng Point
@@ -264,8 +264,8 @@ export type LatLngPointPrecisionFunction = (latLngPoint: LatLngPoint) => LatLngP
  * @param precision
  * @returns
  */
-export function latLngPointPrecisionFunction(precision: LatLngPrecision): LatLngPointPrecisionFunction {
-  const precisionFunction = cutValueToPrecisionFunction(precision);
+export function latLngPointPrecisionFunction(precision: LatLngPrecision, precisionRounding?: RoundToPrecisionFunctionType): LatLngPointPrecisionFunction {
+  const precisionFunction = cutValueToPrecisionFunction(precision, precisionRounding);
   return (latLng: LatLngPoint) => {
     const { lat: latInput, lng: lngInput } = latLng;
     const lat = precisionFunction(latInput);
@@ -306,6 +306,10 @@ export interface LatLngPointFunctionConfig {
    */
   precision?: LatLngPrecision | null;
   /**
+   * Precision rounding to use.
+   */
+  precisionRounding?: RoundToPrecisionFunctionType;
+  /**
    * Whether or not to wrap invalid LatLng values. If false, the values are validated and a default value is used instead.
    *
    * Is true by default.
@@ -345,8 +349,8 @@ export function latLngPoint(lat: LatLngPointInput, lng?: Longitude): LatLngPoint
  * @returns
  */
 export function latLngPointFunction(config?: LatLngPointFunctionConfig): LatLngPointFunction {
-  const { validate, wrap, default: defaultValue, precision = LAT_LONG_1MM_PRECISION, readLonLatTuples } = config ?? {};
-  const precisionFunction: LatLngPointPrecisionFunction = precision != null ? latLngPointPrecisionFunction(precision) : mapIdentityFunction();
+  const { validate, wrap, default: defaultValue, precision = LAT_LONG_1MM_PRECISION, readLonLatTuples, precisionRounding } = config ?? {};
+  const precisionFunction: LatLngPointPrecisionFunction = precision != null ? latLngPointPrecisionFunction(precision, precisionRounding) : mapIdentityFunction();
   const wrapFunction = wrap !== false ? wrapLatLngPoint : validate !== false ? validLatLngPointFunction(defaultValue) : undefined;
   const mapFn = chainMapSameFunctions([wrapFunction, precisionFunction]);
   return (lat: LatLngPointInput, lng?: Longitude) => {
