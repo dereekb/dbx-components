@@ -4,10 +4,13 @@ import { DbxFirebaseCollectionHasChangeDirective } from './store.collection.chan
 import { DbxFirebaseCollectionListDirective } from './store.collection.list.directive';
 import { DbxFirebaseDocumentAuthIdDirective } from './store.document.auth.directive';
 import { DbxFirebaseDocumentStoreRouteIdDirective } from './store.document.router.directive';
+import { DbxFirebaseDocumentStoreRouteKeyDirective } from './store.document.router.key.directive';
+
+const declarations = [DbxFirebaseDocumentStoreRouteKeyDirective, DbxFirebaseCollectionListDirective, DbxFirebaseCollectionChangeDirective, DbxFirebaseCollectionHasChangeDirective, DbxFirebaseDocumentStoreRouteIdDirective, DbxFirebaseDocumentAuthIdDirective];
 
 @NgModule({
   imports: [],
-  declarations: [DbxFirebaseCollectionListDirective, DbxFirebaseCollectionChangeDirective, DbxFirebaseCollectionHasChangeDirective, DbxFirebaseDocumentStoreRouteIdDirective, DbxFirebaseDocumentAuthIdDirective],
-  exports: [DbxFirebaseCollectionListDirective, DbxFirebaseCollectionChangeDirective, DbxFirebaseCollectionHasChangeDirective, DbxFirebaseDocumentStoreRouteIdDirective, DbxFirebaseDocumentAuthIdDirective]
+  declarations,
+  exports: declarations
 })
 export class DbxFirebaseModelStoreModule {}

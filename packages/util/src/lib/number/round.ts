@@ -61,9 +61,10 @@ export type CutValueToPrecisionFunction = ((input: AsNumberInput) => number) & {
  * @param precision
  * @returns
  */
-export function cutValueToPrecisionFunction(precision: NumberPrecision): CutValueToPrecisionFunction {
+export function cutValueToPrecisionFunction(precision: NumberPrecision, roundingType: RoundToPrecisionFunctionType = 'cut'): CutValueToPrecisionFunction {
+  const roundFn = roundToPrecisionFunction(precision, roundingType);
   const fn: Writable<CutValueToPrecisionFunction> = ((input: AsNumberInput) => {
-    return cutToPrecision(asNumber(input), precision);
+    return roundFn(asNumber(input));
   }) as CutValueToPrecisionFunction;
   fn._precision = precision;
   return fn as CutValueToPrecisionFunction;
@@ -71,7 +72,34 @@ export function cutValueToPrecisionFunction(precision: NumberPrecision): CutValu
 
 // MARK: Number/Math
 /**
- * Rounds the input number to the given precision.
+ * Rounds the input number to the given precision using a configured rounding function.
+ *
+ * @param value
+ * @param precision
+ * @returns
+ */
+export type RoundToPrecisionFunction = MapFunction<number, number>;
+
+export type RoundToPrecisionFunctionType = NumberRounding | 'cut';
+
+/**
+ * Creates a RoundToPrecisionFunction
+ *
+ * @param precision
+ * @param roundFn
+ * @returns
+ */
+export function roundToPrecisionFunction(precision: NumberPrecision, roundFn: RoundToPrecisionFunctionType = 'round'): RoundToPrecisionFunction {
+  if (roundFn === 'cut') {
+    return (value) => cutToPrecision(value, precision);
+  } else {
+    const rndFn = roundingFunction(roundFn);
+    return (value) => +(rndFn(Number(value + 'e+' + precision)) + 'e-' + precision);
+  }
+}
+
+/**
+ * Rounds the input number to the given precision using a specific rounding function.
  *
  * @param value
  * @param precision

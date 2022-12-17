@@ -114,6 +114,9 @@ export class DocExtensionMapboxComponent implements OnInit, OnDestroy {
     mapboxLatLngField({
       key: 'latLng',
       description: 'This is a coordinate picker synchronized with the big map.',
+      latLngConfig: {
+        precision: 3
+      },
       showMap: false
     }),
     mapboxZoomField({

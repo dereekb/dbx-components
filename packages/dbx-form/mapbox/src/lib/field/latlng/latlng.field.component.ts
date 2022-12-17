@@ -5,7 +5,7 @@ import { FieldTypeConfig, FormlyFieldProps } from '@ngx-formly/core';
 import { FieldType } from '@ngx-formly/material';
 import { skip, first, BehaviorSubject, filter, shareReplay, startWith, switchMap, map, Observable, throttleTime, skipWhile } from 'rxjs';
 import { filterMaybe, SubscriptionObject } from '@dereekb/rxjs';
-import { Maybe, LatLngPoint, LatLngPointFunctionConfig, LatLngStringFunction, latLngStringFunction, Milliseconds, latLngPointFunction, isDefaultLatLngPoint, isValidLatLngPoint } from '@dereekb/util';
+import { Maybe, LatLngPoint, LatLngPointFunctionConfig, LatLngStringFunction, latLngStringFunction, Milliseconds, latLngPointFunction, isDefaultLatLngPoint, isValidLatLngPoint, LatLngPointFunction } from '@dereekb/util';
 import { GeolocationService } from '@ng-web-apis/geolocation';
 import { Marker } from 'mapbox-gl';
 import { DbxMapboxMapStore, MapboxEaseTo, MapboxZoomLevel, provideMapboxStoreIfParentIsUnavailable } from '@dereekb/dbx-web/mapbox';
@@ -54,7 +54,7 @@ export interface DbxFormMapboxLatLngComponentFieldProps extends FormlyFieldProps
 })
 export class DbxFormMapboxLatLngFieldComponent<T extends DbxFormMapboxLatLngComponentFieldProps = DbxFormMapboxLatLngComponentFieldProps> extends FieldType<FieldTypeConfig<T>> implements OnInit, OnDestroy {
   private _latLngStringFunction!: LatLngStringFunction;
-  private _latLngPointFunction = latLngPointFunction({ wrap: false, validate: false });
+  private _latLngPointFunction!: LatLngPointFunction;
 
   readonly compactClass$ = mapCompactModeObs(this.compact?.mode$, {
     compact: 'dbx-mapbox-input-field-compact'
@@ -128,7 +128,10 @@ export class DbxFormMapboxLatLngFieldComponent<T extends DbxFormMapboxLatLngComp
   }
 
   ngOnInit(): void {
-    this._latLngStringFunction = latLngStringFunction({ ...this.field.props.latLngConfig, wrap: this.field.props.latLngConfig?.wrap || false, validate: this.field.props.latLngConfig?.validate || false });
+    const latLngPointConfig = { ...this.field.props.latLngConfig, wrap: this.field.props.latLngConfig?.wrap || false, validate: this.field.props.latLngConfig?.validate || false, precisionRounding: this.field.props.latLngConfig?.precisionRounding ?? 'round' };
+    this._latLngStringFunction = latLngStringFunction(latLngPointConfig);
+    this._latLngPointFunction = latLngPointFunction(latLngPointConfig);
+
     this._formControlObs.next(this.formControl);
     this._zoom.next(this.zoom);
 
