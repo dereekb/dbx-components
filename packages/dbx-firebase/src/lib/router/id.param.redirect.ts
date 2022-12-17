@@ -4,6 +4,7 @@ import { Destroyable, Initialized, Maybe, ModelKey } from '@dereekb/util';
 import { MaybeObservableOrValueGetter, SwitchMapToDefaultFilterFunction } from '@dereekb/rxjs';
 
 export const DBX_FIREBASE_ID_ROUTER_PARAM_DEFAULT_ID_PARAM_KEY = 'id';
+export const DBX_FIREBASE_ID_ROUTER_PARAM_DEFAULT_KEY_PARAM_KEY = 'key';
 export const DBX_FIREBASE_ID_ROUTER_PARAM_DEFAULT_USE_PARAM_VALUE = '0';
 
 /**
@@ -12,7 +13,13 @@ export const DBX_FIREBASE_ID_ROUTER_PARAM_DEFAULT_USE_PARAM_VALUE = '0';
  * Can be configured to redirect to a default route if a specific value is seen.
  */
 export interface DbxFirebaseIdRouteParamRedirect extends DbxRouteParamReader<ModelKey> {
+  /**
+   * The id value as it is from the current state's params.
+   */
   readonly idFromParams$: Observable<Maybe<ModelKey>>;
+  /**
+   * The id value as it is when considering the default value.
+   */
   readonly id$: Observable<Maybe<ModelKey>>;
   setRedirectEnabled(redirect: Maybe<boolean>): void;
   setDecider(decider: string | SwitchMapToDefaultFilterFunction<ModelKey>): void;
@@ -22,7 +29,7 @@ export interface DbxFirebaseIdRouteParamRedirect extends DbxRouteParamReader<Mod
  * DbxFirebaseIdRouteParamRedirect instance
  */
 export class DbxFirebaseIdRouteParamRedirectInstance implements DbxFirebaseIdRouteParamRedirect, DbxRouteParamReader<ModelKey>, Initialized, Destroyable {
-  private _paramReader = new DbxRouteParamReaderInstance<ModelKey>(this.dbxRouterService, DBX_FIREBASE_ID_ROUTER_PARAM_DEFAULT_ID_PARAM_KEY);
+  private _paramReader = new DbxRouteParamReaderInstance<ModelKey>(this.dbxRouterService, this.defaultParamKey);
   private _paramRedirect = new DbxRouteParamDefaultRedirectInstance<ModelKey>(this._paramReader);
   private _useDefaultParamDecider = new BehaviorSubject<string | SwitchMapToDefaultFilterFunction<ModelKey>>(DBX_FIREBASE_ID_ROUTER_PARAM_DEFAULT_USE_PARAM_VALUE);
 
@@ -44,10 +51,11 @@ export class DbxFirebaseIdRouteParamRedirectInstance implements DbxFirebaseIdRou
   readonly paramValue$: Observable<Maybe<string>> = this._paramReader.paramValue$;
   readonly defaultValue$: Observable<Maybe<string>> = this._paramReader.defaultValue$;
   readonly value$: Observable<Maybe<string>> = this._paramReader.value$;
+
   readonly idFromParams$: Observable<Maybe<ModelKey>> = this.paramValue$;
   readonly id$: Observable<Maybe<ModelKey>> = this.value$;
 
-  constructor(readonly dbxRouterService: DbxRouterService) {}
+  constructor(readonly dbxRouterService: DbxRouterService, private readonly defaultParamKey = DBX_FIREBASE_ID_ROUTER_PARAM_DEFAULT_ID_PARAM_KEY) {}
 
   init(): void {
     this._paramRedirect.setUseDefaultFilter((value: Maybe<string>) => {
@@ -67,7 +75,7 @@ export class DbxFirebaseIdRouteParamRedirectInstance implements DbxFirebaseIdRou
   }
 
   set paramKey(paramKey: string) {
-    this._paramReader.paramKey = paramKey;
+    this._paramReader.paramKey = paramKey || this.defaultParamKey;
   }
 
   setDefaultValue(defaultValue: MaybeObservableOrValueGetter<string>): void {
@@ -87,6 +95,10 @@ export class DbxFirebaseIdRouteParamRedirectInstance implements DbxFirebaseIdRou
   }
 }
 
-export function dbxFirebaseIdRouteParamRedirect(dbxRouterService: DbxRouterService): DbxFirebaseIdRouteParamRedirectInstance {
-  return new DbxFirebaseIdRouteParamRedirectInstance(dbxRouterService);
+export function dbxFirebaseIdRouteParamRedirect(dbxRouterService: DbxRouterService, defaultParamKey?: string): DbxFirebaseIdRouteParamRedirectInstance {
+  return new DbxFirebaseIdRouteParamRedirectInstance(dbxRouterService, defaultParamKey);
+}
+
+export function dbxFirebaseKeyRouteParamRedirect(dbxRouterService: DbxRouterService, defaultParamKey: string = DBX_FIREBASE_ID_ROUTER_PARAM_DEFAULT_KEY_PARAM_KEY): DbxFirebaseIdRouteParamRedirectInstance {
+  return new DbxFirebaseIdRouteParamRedirectInstance(dbxRouterService, defaultParamKey);
 }

@@ -1,6 +1,26 @@
 import { Injectable } from '@angular/core';
 import { Observable, shareReplay, distinctUntilChanged, map, switchMap, combineLatest, Subscription, of } from 'rxjs';
-import { DocumentSnapshot, DocumentReference, FirestoreCollection, FirestoreDocument, DocumentDataWithIdAndKey, FirestoreModelId, FirestoreModelKey, FirestoreCollectionLike, FirestoreModelIdentity, firestoreModelIdsFromKey, firestoreModelKeyPartPairs, FirestoreModelCollectionAndIdPair, firestoreModelKeyPairObject, FirestoreModelCollectionAndIdPairObject, documentDataWithIdAndKey, FirestoreAccessorStreamMode } from '@dereekb/firebase';
+import {
+  DocumentSnapshot,
+  DocumentReference,
+  FirestoreCollection,
+  FirestoreDocument,
+  DocumentDataWithIdAndKey,
+  FirestoreModelId,
+  FirestoreModelKey,
+  FirestoreCollectionLike,
+  FirestoreModelIdentity,
+  firestoreModelIdsFromKey,
+  firestoreModelKeyPartPairs,
+  FirestoreModelCollectionAndIdPair,
+  firestoreModelKeyPairObject,
+  FirestoreModelCollectionAndIdPairObject,
+  documentDataWithIdAndKey,
+  FirestoreAccessorStreamMode,
+  FlatFirestoreModelKey,
+  TwoWayFlatFirestoreModelKey,
+  inferKeyFromTwoWayFlatFirestoreModelKey
+} from '@dereekb/firebase';
 import { filterMaybe, LoadingState, beginLoading, successResult, loadingStateFromObs, errorResult, ObservableOrValue } from '@dereekb/rxjs';
 import { Maybe, isMaybeSo } from '@dereekb/util';
 import { LockSetComponent, LockSetComponentStore } from '@dereekb/dbx-core';
@@ -49,6 +69,11 @@ export interface DbxFirebaseDocumentStore<T, D extends FirestoreDocument<T> = Fi
    * Sets the key of the document to load.
    */
   readonly setKey: (observableOrValue: ObservableOrValue<Maybe<FirestoreModelKey>>) => Subscription;
+
+  /**
+   * Sets the key of the document to load using a TwoWayFlatFirestoreModelKey.
+   */
+  readonly setFlatKey: (observableOrValue: ObservableOrValue<Maybe<TwoWayFlatFirestoreModelKey>>) => Subscription;
 
   /**
    * Sets the ref of the document to load.
@@ -269,6 +294,7 @@ export class AbstractDbxFirebaseDocumentStore<T, D extends FirestoreDocument<T> 
   // MARK: State Changes
   readonly setId = this.updater((state, id: Maybe<FirestoreModelId>) => (id ? { ...state, id, key: undefined, ref: undefined } : { ...state, id })) as (observableOrValue: Maybe<string> | Observable<Maybe<string>>) => Subscription;
   readonly setKey = this.updater((state, key: Maybe<FirestoreModelKey>) => (key ? { ...state, key, id: undefined, ref: undefined } : { ...state, key })) as (observableOrValue: Maybe<string> | Observable<Maybe<string>>) => Subscription;
+  readonly setFlatKey = this.updater((state, key: Maybe<TwoWayFlatFirestoreModelKey>) => (key ? { ...state, key: inferKeyFromTwoWayFlatFirestoreModelKey(key), id: undefined, ref: undefined } : { ...state, key })) as (observableOrValue: Maybe<string> | Observable<Maybe<string>>) => Subscription;
   readonly setRef = this.updater((state, ref: Maybe<DocumentReference<T>>) => (ref ? { ...state, key: undefined, id: undefined, ref } : { ...state, ref })) as (observableOrValue: Maybe<DocumentReference<T>> | Observable<Maybe<DocumentReference<T>>>) => Subscription;
 
   readonly setStreamMode = this.updater((state, streamMode: FirestoreAccessorStreamMode) => ({ ...state, streamMode }));

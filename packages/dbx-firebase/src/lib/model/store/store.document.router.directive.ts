@@ -14,7 +14,6 @@ import { dbxFirebaseIdRouteParamRedirect } from '../../router';
 })
 export class DbxFirebaseDocumentStoreRouteIdDirective<T = unknown> extends AbstractSubscriptionDirective implements OnInit, OnDestroy {
   private _redirectInstance = dbxFirebaseIdRouteParamRedirect(this.dbxRouterService);
-
   readonly idFromParams$: Observable<Maybe<ModelKey>> = this._redirectInstance.paramValue$;
   readonly id$: Observable<Maybe<ModelKey>> = this._redirectInstance.value$;
 
@@ -23,7 +22,7 @@ export class DbxFirebaseDocumentStoreRouteIdDirective<T = unknown> extends Abstr
   }
 
   ngOnInit(): void {
-    this.sub = this.dbxFirebaseDocumentStoreDirective.store.setId(this.idFromParams$);
+    this.sub = this.dbxFirebaseDocumentStoreDirective.store.setId(this.idFromParams$); // use from the params, as the params should get updated eventually to the id$ value
     this._redirectInstance.init();
   }
 

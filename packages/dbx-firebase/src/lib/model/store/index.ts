@@ -9,6 +9,7 @@ export * from './store.document.crud';
 export * from './store.document.auth.directive';
 export * from './store.document.directive';
 export * from './store.document.router.directive';
+export * from './store.document.router.key.directive';
 export * from './store.subcollection';
 export * from './store.subcollection.document';
 export * from './store.subcollection.directive';
