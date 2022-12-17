@@ -1,6 +1,31 @@
-import { LatLngBound } from '@dereekb/util';
-import { latLngPoint } from './point';
-import { boundToRectangle, isLatLngBoundWithinLatLngBound, isLatLngPointWithinLatLngBound, latLngBound, latLngBoundCenterPoint, latLngBoundFullyWrapsMap, latLngBoundFunction, latLngBoundStrictlyWrapsMap, overlapsLatLngBoundFunction, TOTAL_SPAN_OF_LONGITUDE } from './bound';
+import { LatLngBound, isSameLatLngBound } from '@dereekb/util';
+import { isSameLatLngPoint, latLngPoint } from './point';
+import { boundToRectangle, isLatLngBound, isLatLngBoundWithinLatLngBound, isLatLngPointWithinLatLngBound, latLngBound, latLngBoundCenterPoint, latLngBoundFromInput, latLngBoundFullyWrapsMap, latLngBoundFunction, latLngBoundStrictlyWrapsMap, overlapsLatLngBoundFunction, TOTAL_SPAN_OF_LONGITUDE } from './bound';
+
+describe('isLatLngBound()', () => {
+  const point = latLngPoint(20, 20);
+
+  it('should return false for a point.', () => {
+    const result = isLatLngBound(point);
+    expect(result).toBe(false);
+  });
+});
+
+describe('isSameLatLngBound()', () => {
+  const point = { lat: 40, lng: 40 };
+  const a = latLngBound({ lat: 0, lng: 0 }, point);
+  const b = latLngBound({ lat: -40, lng: -40 }, point);
+
+  it('should return false for a different bound.', () => {
+    const result = isSameLatLngBound(a, b);
+    expect(result).toBe(false);
+  });
+
+  it('should return true for the same bound.', () => {
+    const result = isSameLatLngBound(a, a);
+    expect(result).toBe(true);
+  });
+});
 
 describe('latLngBoundFunction()', () => {
   const precision = 3;
@@ -79,6 +104,58 @@ describe('latLngBoundFullyWrapsMap()', () => {
   it('should return false if the bound only wraps over the longitudinal edge of the map', () => {
     const bound = latLngBound({ lat: 0, lng: 160 }, { lat: 40, lng: -160 });
     expect(latLngBoundFullyWrapsMap(bound)).toBe(false);
+  });
+});
+
+describe('latLngBoundFromInput()', () => {
+  const point = { lat: 40, lng: 40 };
+  const bound = latLngBound({ lat: 0, lng: 0 }, point);
+
+  it('should create a bound from a bounds input.', () => {
+    const result = latLngBoundFromInput(bound);
+
+    expect(result).toBeDefined();
+    expect(isSameLatLngBound(result as LatLngBound, bound)).toBe(true);
+  });
+
+  it('should create a bound from a bound array input.', () => {
+    const result = latLngBoundFromInput([bound]);
+
+    expect(result).toBeDefined();
+    expect(isSameLatLngBound(result as LatLngBound, bound)).toBe(true);
+  });
+
+  it('should create a bound from a point input.', () => {
+    const result = latLngBoundFromInput(point);
+
+    expect(result).toBeDefined();
+    expect(isSameLatLngPoint(result!.ne, point)).toBe(true);
+    expect(isSameLatLngPoint(result!.sw, point)).toBe(true);
+  });
+
+  it('should create a bound from a point array input.', () => {
+    const result = latLngBoundFromInput([point]);
+
+    expect(result).toBeDefined();
+    expect(isSameLatLngPoint(result!.ne, point)).toBe(true);
+    expect(isSameLatLngPoint(result!.sw, point)).toBe(true);
+  });
+
+  it('should create a bound from a point and bound array input.', () => {
+    const result = latLngBoundFromInput([bound, point]);
+
+    expect(result).toBeDefined();
+    expect(isSameLatLngBound(result as LatLngBound, bound)).toBe(true);
+  });
+
+  it('should extend the bound from a point and bound array input.', () => {
+    const extension = { lat: -40, lng: -40 };
+
+    const result = latLngBoundFromInput([bound, point, extension]) as LatLngBound;
+
+    expect(result).toBeDefined();
+    expect(isSameLatLngBound(result, bound)).toBe(false);
+    expect(isSameLatLngPoint(result.sw, extension)).toBe(true);
   });
 });
 

@@ -11,7 +11,7 @@ import { FormlyModule } from '@ngx-formly/core';
 import { defaultValidationMessages } from '@dereekb/dbx-form';
 import { MAT_FORM_FIELD_DEFAULT_OPTIONS } from '@angular/material/form-field';
 import { RootFirebaseModule } from './root.firebase.module';
-import { DbxFirebaseLoginModule } from '@dereekb/dbx-firebase';
+import { DbxFirebaseAnalyticsUserSource, DbxFirebaseLoginModule } from '@dereekb/dbx-firebase';
 import { StoreModule } from '@ngrx/store';
 import { EffectsModule } from '@ngrx/effects';
 import { metaReducers, ROOT_REDUCER } from './app/state/app.state';
@@ -49,13 +49,14 @@ export function routerConfigFn(router: UIRouter, injector: Injector, module: Sta
   return undefined;
 }
 
-export function analyticsServiceConfigurationFactory(segmentApi: DbxAnalyticsSegmentApiService): DbxAnalyticsServiceConfiguration {
+export function analyticsServiceConfigurationFactory(segmentApi: DbxAnalyticsSegmentApiService, dbxFirebaseAnalyticsUserSource: DbxFirebaseAnalyticsUserSource): DbxAnalyticsServiceConfiguration {
   const segmentListener = new DbxAnalyticsSegmentServiceListener(segmentApi);
 
   const config: DbxAnalyticsServiceConfiguration = {
     isProduction: environment.production,
     logEvents: environment.testing,
-    listeners: [segmentListener]
+    listeners: [segmentListener],
+    userSource: dbxFirebaseAnalyticsUserSource
   };
 
   return config;
@@ -85,7 +86,7 @@ export function makeSegmentConfig(): DbxAnalyticsSegmentApiServiceConfig {
       analyticsConfigurationProvider: {
         provide: DbxAnalyticsServiceConfiguration,
         useFactory: analyticsServiceConfigurationFactory,
-        deps: [DbxAnalyticsSegmentApiService]
+        deps: [DbxAnalyticsSegmentApiService, DbxFirebaseAnalyticsUserSource]
       }
     }),
     DbxAppContextStateModule,

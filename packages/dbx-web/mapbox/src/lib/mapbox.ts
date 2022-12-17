@@ -1,4 +1,4 @@
-import { LatLngPointInput, LatLngBoundInput, ZoomLevel, ZoomLevelRange } from '@dereekb/util';
+import { LatLngPointInput, LatLngBoundInput, ZoomLevel, ZoomLevelRange, ExtendLatLngBoundInput } from '@dereekb/util';
 import * as MapboxGl from 'mapbox-gl';
 
 export type KnownMapboxStyle = 'mapbox://styles/mapbox/streets-v11' | 'mapbox://styles/mapbox/outdoors-v11' | 'mapbox://styles/mapbox/light-v10' | 'mapbox://styles/mapbox/dark-v10' | 'mapbox://styles/mapbox/satellite-v9' | 'mapbox://styles/mapbox/satellite-streets-v11' | 'mapbox://styles/mapbox/navigation-day-v1' | 'mapbox://styles/mapbox/navigation-night-v1';
@@ -43,6 +43,12 @@ export interface MapboxStyleConfig {
     diff?: boolean | undefined;
     localIdeographFontFamily?: string | undefined;
   };
+}
+
+export interface MapboxFitPositions {
+  positions: ExtendLatLngBoundInput;
+  options?: mapboxgl.FitBoundsOptions;
+  eventData?: mapboxgl.EventData;
 }
 
 export interface MapboxFitBounds {

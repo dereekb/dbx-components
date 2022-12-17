@@ -41,6 +41,10 @@ export function isLatLngPoint(input: LatLngPoint | unknown): input is LatLngPoin
   return typeof input === 'object' && (input as LatLngPoint).lat != null && (input as LatLngPoint).lng != null;
 }
 
+export function copyLatLngPoint(input: LatLngPoint): LatLngPoint {
+  return { lat: input.lat, lng: input.lng };
+}
+
 export function isSameLatLngPoint(a: LatLngPoint, b: LatLngPoint) {
   return a.lat === b.lat && a.lng === b.lng;
 }

@@ -3,8 +3,8 @@ import { FormlyFieldConfig } from '@ngx-formly/core';
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { mapboxLatLngField, mapboxZoomField } from '@dereekb/dbx-form/mapbox';
 import { DbxMapboxMapStore } from 'packages/dbx-web/mapbox/src/lib/mapbox.store';
-import { KnownMapboxStyle, DbxMapboxLayoutSide, DbxMapboxMarker, DbxMapboxMarkerFactory, dbxMapboxColoredDotStyle, filterByMapboxViewportBound, DbxMapboxChangeService } from '@dereekb/dbx-web/mapbox';
-import { shareReplay, BehaviorSubject, map, Observable, combineLatest, of } from 'rxjs';
+import { KnownMapboxStyle, DbxMapboxLayoutSide, DbxMapboxMarker, DbxMapboxMarkerFactory, dbxMapboxColoredDotStyle, filterByMapboxViewportBound, DbxMapboxChangeService, MapboxFitPositions } from '@dereekb/dbx-web/mapbox';
+import { shareReplay, BehaviorSubject, map, Observable, combineLatest, of, first } from 'rxjs';
 import { DocExtensionMapboxContentExampleComponent } from '../component/mapbox.content.example.component';
 import { DbxThemeColor } from '@dereekb/dbx-web';
 import { tapDetectChanges } from '@dereekb/dbx-core';
@@ -277,6 +277,20 @@ export class DocExtensionMapboxComponent implements OnInit, OnDestroy {
 
   rightDrawer() {
     this._side.next('right');
+  }
+
+  fitMapToAddedMarkers() {
+    const positions = this.addedMapboxMarkersData$.pipe(
+      map((x) => x.map((y) => latLngPoint(y))),
+      first()
+    );
+
+    this.dbxMapboxMapStore.fitPositions(
+      positions.pipe(
+        map((positions) => ({ positions, options: { minZoom: 8, padding: 20 } } as MapboxFitPositions)),
+        first()
+      )
+    );
   }
 
   changeDrawerColor() {

@@ -1,11 +1,11 @@
 import { cleanup, filterMaybe, onTrueToFalse } from '@dereekb/rxjs';
 import { Inject, Injectable, OnDestroy } from '@angular/core';
-import { isSameLatLngBound, isSameLatLngPoint, IsWithinLatLngBoundFunction, isWithinLatLngBoundFunction, LatLngBound, latLngBoundFunction, LatLngPointInput, LatLngPoint, latLngPointFunction, Maybe, OverlapsLatLngBoundFunction, overlapsLatLngBoundFunction, diffLatLngBoundPoints, latLngBoundCenterPoint, addLatLngPoints, isDefaultLatLngPoint, swMostLatLngPoint, neMostLatLngPoint, latLngBoundWrapsMap, Vector, vectorsAreEqual, filterUndefinedValues } from '@dereekb/util';
+import { isSameLatLngBound, isSameLatLngPoint, IsWithinLatLngBoundFunction, isWithinLatLngBoundFunction, LatLngBound, latLngBoundFunction, LatLngPointInput, LatLngPoint, latLngPointFunction, Maybe, OverlapsLatLngBoundFunction, overlapsLatLngBoundFunction, diffLatLngBoundPoints, latLngBoundCenterPoint, addLatLngPoints, isDefaultLatLngPoint, swMostLatLngPoint, neMostLatLngPoint, latLngBoundWrapsMap, Vector, vectorsAreEqual, filterUndefinedValues, latLngBoundFromInput } from '@dereekb/util';
 import { ComponentStore } from '@ngrx/component-store';
 import { MapService } from 'ngx-mapbox-gl';
-import { defaultIfEmpty, distinctUntilChanged, filter, map, shareReplay, switchMap, tap, NEVER, Observable, of, Subscription, startWith, interval, first, combineLatest } from 'rxjs';
+import { defaultIfEmpty, distinctUntilChanged, filter, map, shareReplay, switchMap, tap, NEVER, Observable, of, Subscription, startWith, interval, first, combineLatest, EMPTY } from 'rxjs';
 import * as MapboxGl from 'mapbox-gl';
-import { DbxMapboxClickEvent, KnownMapboxStyle, MapboxBearing, MapboxEaseTo, MapboxFitBounds, MapboxFlyTo, MapboxJumpTo, MapboxResetNorth, MapboxResetNorthPitch, MapboxRotateTo, MapboxSnapToNorth, MapboxStyleConfig, MapboxZoomLevel, MapboxZoomLevelRange } from './mapbox';
+import { DbxMapboxClickEvent, KnownMapboxStyle, MapboxBearing, MapboxEaseTo, MapboxFitBounds, MapboxFitPositions, MapboxFlyTo, MapboxJumpTo, MapboxResetNorth, MapboxResetNorthPitch, MapboxRotateTo, MapboxSnapToNorth, MapboxStyleConfig, MapboxZoomLevel, MapboxZoomLevelRange } from './mapbox';
 import { DbxMapboxService } from './mapbox.service';
 import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { mapboxViewportBoundFunction, MapboxViewportBoundFunction } from './mapbox.util';
@@ -362,6 +362,21 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
     return input.pipe(
       switchMap((snap: Maybe<MapboxSnapToNorth> | void) => {
         return this.mapInstance$.pipe(tap((map) => map.snapToNorth(snap?.options, snap?.eventData)));
+      })
+    );
+  });
+
+  readonly fitPositions = this.effect((input: Observable<MapboxFitPositions>) => {
+    return input.pipe(
+      switchMap((x) => {
+        const boundFromInput = latLngBoundFromInput(x.positions);
+
+        if (boundFromInput) {
+          const bound = this.latLngBound(boundFromInput);
+          return this.mapInstance$.pipe(tap((map) => map.fitBounds(new MapboxGl.LngLatBounds(bound.sw, bound.ne), x.options, x.eventData)));
+        } else {
+          return EMPTY;
+        }
       })
     );
   });
