@@ -18,7 +18,7 @@ import { FirestoreItemPageIterationBaseConfig, FirestoreItemPageIterationFactory
 import { firestoreQueryFactory, FirestoreQueryFactory } from '../query/query';
 import { FirestoreDrivers } from '../driver/driver';
 import { FirestoreCollectionQueryFactory, firestoreCollectionQueryFactory } from './collection.query';
-import { ArrayOrValue, arrayToObject, Building, isEvenNumber, isOddNumber, lastValue, Maybe, ModelKey, ModelTypeString } from '@dereekb/util';
+import { ArrayOrValue, arrayToObject, Building, isOddNumber, lastValue, Maybe, ModelKey, ModelTypeString } from '@dereekb/util';
 
 /**
  * The camelCase model name/type.
@@ -36,6 +36,13 @@ export type FirestoreCollectionName = string;
 
 export const FIRESTORE_COLLECTION_NAME_SEPARATOR = '/';
 
+/**
+ * Unique identifier for a nested collection type. Is the combination of all FirestoreCollectionNames of all parents.
+ *
+ * Example: parent/parentb/collectionname
+ */
+export type FirestoreCollectionType = ModelTypeString;
+
 export type FirestoreModelIdentityType = 'root' | 'nested';
 
 /**
@@ -44,6 +51,7 @@ export type FirestoreModelIdentityType = 'root' | 'nested';
 export type FirestoreModelIdentity<M extends FirestoreModelType = FirestoreModelType, C extends FirestoreCollectionName = FirestoreCollectionName> = FirestoreModelTypeRef<M> &
   FirestoreCollectionNameRef<C> & {
     readonly type: FirestoreModelIdentityType;
+    readonly collectionType: FirestoreCollectionType;
   };
 
 export type FirestoreModelIdentityModelType<I> = I extends FirestoreModelIdentity<infer M> ? M : never;
@@ -84,18 +92,22 @@ export function firestoreModelIdentity<P extends FirestoreModelIdentity<string, 
 export function firestoreModelIdentity<P extends FirestoreModelIdentity<string, string>, M extends FirestoreModelType, C extends FirestoreCollectionName = FirestoreCollectionName>(parentOrModelName: P | M, collectionNameOrModelName?: M | C, inputCollectionName?: C): FirestoreModelIdentityWithParent<P, M, C> | RootFirestoreModelIdentity<M, C> {
   if (typeof parentOrModelName === 'object') {
     const collectionName = (inputCollectionName as C) ?? ((collectionNameOrModelName as M).toLowerCase() as C);
+    const collectionType = `${parentOrModelName.collectionType}/${collectionName}`;
     return {
       type: 'nested',
       parent: parentOrModelName as P,
       collectionName,
-      modelType: collectionNameOrModelName as M
+      modelType: collectionNameOrModelName as M,
+      collectionType
     };
   } else {
     const collectionName = (collectionNameOrModelName as C) ?? (parentOrModelName.toLowerCase() as C);
+    const collectionType = collectionName;
     return {
       type: 'root',
       collectionName,
-      modelType: parentOrModelName
+      modelType: parentOrModelName,
+      collectionType
     };
   }
 }
@@ -296,6 +308,10 @@ export interface FirestoreModelIdRef {
  */
 export type FirestoreModelKey = ModelKey;
 
+export type FirestoreModelKeyTypePair = FirestoreModelCollectionTypeArray;
+
+export function firestoreModelKeyPair() {}
+
 /**
  * Firestore Model Key Regex that checks for pairs.
  */
@@ -401,12 +417,16 @@ export function firestoreModelKeyPairObject(input: FirestoreModelKey | DocumentR
 
 export type FirestoreModelCollectionTypeArrayName = string;
 
+export function firestoreModelKeyCollectionType<T = unknown>(input: ReadFirestoreModelKeyInput<T>) {
+  return firestoreModelKeyCollectionTypeArrayName(input, FIRESTORE_COLLECTION_NAME_SEPARATOR);
+}
+
 export function firestoreModelKeyCollectionTypeArrayName<T = unknown>(input: ReadFirestoreModelKeyInput<T>, separator: string = FIRESTORE_COLLECTION_NAME_SEPARATOR): Maybe<FirestoreModelCollectionTypeArrayName> {
   return firestoreModelKeyCollectionTypeArray(input)?.join(separator);
 }
 
-export function firestoreIdentityTypeArrayName(input: FirestoreModelIdentity, separator: string = FIRESTORE_COLLECTION_NAME_SEPARATOR): Maybe<FirestoreModelCollectionTypeArrayName> {
-  return firestoreIdentityTypeArray(input)?.join(separator);
+export function firestoreIdentityTypeArrayName(input: FirestoreModelIdentity, separator: string = FIRESTORE_COLLECTION_NAME_SEPARATOR): FirestoreModelCollectionTypeArrayName {
+  return firestoreIdentityTypeArray(input).join(separator);
 }
 
 export type FirestoreModelCollectionTypeArray = FirestoreCollectionName[];

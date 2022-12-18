@@ -9,10 +9,15 @@ export interface ClickableAnchor extends ClickableFunction, ClickableUrl, Partia
   selected?: boolean;
 }
 
-export interface ClickableAnchorLink extends ClickableAnchor {
+/**
+ * Title an an optional icon.
+ */
+export interface IconAndTitle {
   title: string;
   icon?: string;
 }
+
+export interface ClickableAnchorLink extends ClickableAnchor, IconAndTitle {}
 
 /**
  * ClickableAnchorLink that definitely has a SegueRef

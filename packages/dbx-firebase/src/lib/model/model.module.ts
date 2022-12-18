@@ -1,5 +1,5 @@
 import { NgModule } from '@angular/core';
-import { DbxFirebaseModelStoreModule } from './store/model.store.module';
+import { DbxFirebaseModelStoreModule } from './modules/store/model.store.module';
 
 @NgModule({
   exports: [DbxFirebaseModelStoreModule]

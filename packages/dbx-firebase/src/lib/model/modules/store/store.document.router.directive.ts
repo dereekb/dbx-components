@@ -4,7 +4,7 @@ import { DbxRouterService, AbstractSubscriptionDirective } from '@dereekb/dbx-co
 import { DbxFirebaseDocumentStoreDirective } from './store.document.directive';
 import { Maybe, ModelKey } from '@dereekb/util';
 import { MaybeObservableOrValueGetter, SwitchMapToDefaultFilterFunction } from '@dereekb/rxjs';
-import { dbxFirebaseIdRouteParamRedirect } from '../../router';
+import { dbxFirebaseIdRouteParamRedirect } from '../../../router';
 
 /**
  * Used for synchronizing the document store id to the param of the route.
