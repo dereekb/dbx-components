@@ -28,14 +28,14 @@ export function guestbookServerActions(context: GuestbookServerActionsContext): 
 export function guestbookCreateGuestbookFactory({ firebaseServerActionTransformFunctionFactory, guestbookCollection }: GuestbookServerActionsContext) {
   return firebaseServerActionTransformFunctionFactory(CreateGuestbookParams, async (params) => {
     const guestbookAccessor = guestbookCollection.documentAccessor();
-    const { name } = params;
+    const { name, published } = params;
 
     return async () => {
       const document: GuestbookDocument = guestbookAccessor.newDocument();
 
       await document.create({
         name,
-        published: false,
+        published: published || false,
         locked: false
       });
 

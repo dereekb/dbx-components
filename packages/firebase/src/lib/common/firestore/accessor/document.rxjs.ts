@@ -1,4 +1,5 @@
 import { Observable, combineLatest, shareReplay, map, OperatorFunction, of } from 'rxjs';
+import { FirestoreCollectionType, FirestoreModelKey, firestoreModelKeyCollectionType, FirestoreModelKeyCollectionTypePair } from '../collection/collection';
 import { DocumentDataWithIdAndKey, DocumentSnapshot } from '../types';
 import { FirestoreDocument, FirestoreDocumentData } from './document';
 import { getDataFromDocumentSnapshots } from './document.utility';
@@ -28,4 +29,8 @@ export function streamDocumentSnapshots<T, D extends FirestoreDocument<T>>(docum
  */
 export function streamDocumentData<T, D extends FirestoreDocument<T>>(documents: D[]): Observable<DocumentDataWithIdAndKey<T>[]> {
   return latestDataFromDocuments(documents);
+}
+
+export function asFirestoreModelKeyCollectionType() {
+  return map<FirestoreModelKey, FirestoreModelKeyCollectionTypePair>((key) => ({ key, collectionType: firestoreModelKeyCollectionType(key) as FirestoreCollectionType }));
 }

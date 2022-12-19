@@ -1,7 +1,7 @@
 import { SegueRef } from '@dereekb/dbx-core';
 import { FactoryWithRequiredInput, ModelKey, ModelTypeString } from '@dereekb/util';
 
-export interface DbxModelModuleStateTypeConfiguration {
+export interface DbxModelTypeConfiguration {
   /**
    * Popup label that can be used for these types.
    */
@@ -24,8 +24,6 @@ export interface DbxModelModuleStateTypeConfiguration {
   icon?: string;
 }
 
-export interface DbxModelModuleStateConfiguration {
-  types: {
-    [key: string]: DbxModelModuleStateTypeConfiguration;
-  };
+export interface DbxModelTypeConfigurationMap {
+  [key: string]: DbxModelTypeConfiguration;
 }

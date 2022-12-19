@@ -49,3 +49,7 @@ export function randomNumberFactory(maxOrArgs: RandomNumberFactoryInput, roundin
 
   return fn;
 }
+
+export function randomNumber(maxOrArgs: RandomNumberFactoryInput, roundingInput?: RoundingInput) {
+  return randomNumberFactory(maxOrArgs, roundingInput)();
+}

@@ -1,4 +1,5 @@
 import { Ng2StateDeclaration } from '@uirouter/angular';
+import { DemoAppHistoryComponent } from './container/history.component';
 import { DemoAppHomeComponent } from './container/home.component';
 import { DemoAppLayoutComponent } from './container/layout.component';
 import { demoAppStateData } from './demo.app.router.auth';
@@ -17,6 +18,12 @@ export const homeState: Ng2StateDeclaration = {
   component: DemoAppHomeComponent
 };
 
+export const historyState: Ng2StateDeclaration = {
+  url: '/history',
+  name: 'demo.app.history',
+  component: DemoAppHistoryComponent
+};
+
 export const demoGuestbookFutureState: Ng2StateDeclaration = {
   name: 'demo.app.guestbook.**',
   url: '/guestbook',
@@ -29,4 +36,11 @@ export const demoProfileFutureState: Ng2StateDeclaration = {
   loadChildren: () => import('./modules/profile/profile.module').then((m) => m.DemoProfileModule)
 };
 
-export const DEMO_APP_STATES: Ng2StateDeclaration[] = [demoAppState, homeState, demoGuestbookFutureState, demoProfileFutureState];
+export const DEMO_APP_STATES: Ng2StateDeclaration[] = [
+  //
+  demoAppState,
+  homeState,
+  historyState,
+  demoGuestbookFutureState,
+  demoProfileFutureState
+];

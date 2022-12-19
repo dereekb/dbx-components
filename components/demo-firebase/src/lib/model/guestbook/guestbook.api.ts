@@ -2,6 +2,7 @@ import { Expose } from 'class-transformer';
 import { FirebaseFunctionTypeConfigMap, ModelFirebaseCreateFunction, ModelFirebaseCrudFunction, ModelFirebaseCrudFunctionConfigMap, ModelFirebaseFunctionMap, modelFirebaseFunctionMapFactory } from '@dereekb/firebase';
 import { IsOptional, IsNotEmpty, IsString, MaxLength, IsBoolean } from 'class-validator';
 import { GuestbookTypes } from './guestbook';
+import { Maybe } from '@dereekb/util';
 
 export const GUESTBOOK_NAME_MAX_LENGTH = 40;
 
@@ -14,6 +15,11 @@ export class CreateGuestbookParams {
   @IsString()
   @MaxLength(GUESTBOOK_NAME_MAX_LENGTH)
   name!: string;
+
+  @Expose()
+  @IsOptional()
+  @IsBoolean()
+  published?: Maybe<boolean>;
 }
 
 export abstract class GuestbookEntryParams {

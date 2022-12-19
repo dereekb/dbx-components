@@ -1,7 +1,7 @@
 import { Action, combineReducers, createFeatureSelector, createSelector } from '@ngrx/store';
 
 import * as fromObjectModuleConfig from './model.module.config';
-import { DbxModelModuleStateConfiguration } from '../config';
+import { DbxModelModuleStateConfiguration } from './model.module.config';
 
 export const featureKey = 'app.model';
 
@@ -24,5 +24,3 @@ export const selectDbxModelFeature = createFeatureSelector<State, DbxModelState>
 
 // MARK: Module Config
 export const selectDbxModelFeatureObjectModuleConfig = createSelector(selectDbxModelFeature, (state: DbxModelState) => state[fromObjectModuleConfig.stateFeatureKey]);
-
-export const selectDbxModelFeatureObjectModuleTypesConfig = createSelector(selectDbxModelFeatureObjectModuleConfig, (state: DbxModelModuleStateConfiguration) => state.types);

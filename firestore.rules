@@ -32,11 +32,11 @@ service cloud.firestore {
     }
 
     function resourceIsPublished() {
-      return (resource.data.published != false);
+      return resource != null && resource.data != null && resource.data.published == true;
     }
 
     function resourceIsOwnedByAuthUserId() {
-      return (resource.id == request.auth.uid);
+      return resource != null && request.auth != null && (resource.id == request.auth.uid);
     }
 
   }

@@ -1,9 +1,9 @@
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { DbxInjectionComponentModule } from '@dereekb/dbx-core';
+import { StoreModule } from '@ngrx/store';
 import { DbxListLayoutModule } from '../../layout/list/list.layout.module';
-
-const declarations = [];
+import { fromDbxModel } from './state';
 
 /**
  * Contains components related to displaying content related to models identified only by their model key.
@@ -13,7 +13,8 @@ const declarations = [];
     //
     CommonModule,
     DbxListLayoutModule,
-    DbxInjectionComponentModule
+    DbxInjectionComponentModule,
+    StoreModule.forFeature(fromDbxModel.featureKey, fromDbxModel.reducers)
   ],
   declarations: [],
   exports: []

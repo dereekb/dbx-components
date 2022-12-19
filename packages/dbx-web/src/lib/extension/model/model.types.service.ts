@@ -2,12 +2,12 @@ import { Injectable } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { map, shareReplay } from 'rxjs/operators';
 import { capitalCase } from 'change-case';
-import { Observable } from 'rxjs';
-import { Building, ModelTypeString } from '@dereekb/util';
+import { Observable, BehaviorSubject } from 'rxjs';
+import { ArrayOrValue, Building, ModelTypeString, useIterableOrValue } from '@dereekb/util';
 import { DbxModelFullState, fromDbxModel } from './state';
-import { DbxModelModuleStateTypeConfiguration } from './state/config';
+import { DbxModelTypeConfiguration, DbxModelTypeConfigurationMap } from './model.types';
 
-export interface DbxModelTypeInfo extends DbxModelModuleStateTypeConfiguration {
+export interface DbxModelTypeInfo extends DbxModelTypeConfiguration {
   /**
    * Whether or not a response is expected for segues
    * to a view for objects of this type.
@@ -26,12 +26,37 @@ export interface DbxModelIconsMap {
 @Injectable({
   providedIn: 'root'
 })
-export class DbxModelTypesService<I extends DbxModelTypeInfo> {
+export class DbxModelTypesService<I extends DbxModelTypeInfo = DbxModelTypeInfo> {
+  private _configs = new BehaviorSubject<DbxModelTypeConfigurationMap>({});
+
   static readonly DEFAULT_ICON = 'help_outline';
 
   constructor(readonly store: Store<DbxModelFullState>) {}
 
-  readonly typesMap$ = this.store.select(fromDbxModel.selectDbxModelFeatureObjectModuleTypesConfig).pipe(
+  // MARK: Configuration
+  addTypeConfigs(configs: ArrayOrValue<DbxModelTypeConfiguration>) {
+    const types = {
+      ...this._configs.value
+    };
+
+    useIterableOrValue(configs, (config) => {
+      types[config.modelType] = config;
+    });
+
+    this._configs.next(types);
+  }
+
+  addTypeConfigsMap(configs: DbxModelTypeConfigurationMap) {
+    const newConfig: DbxModelTypeConfigurationMap = {
+      ...this._configs.value,
+      ...configs
+    };
+
+    this._configs.next(newConfig);
+  }
+
+  // MARK: Accessors
+  readonly typesMap$ = this._configs.pipe(
     map((types) => {
       const typesMap: Building<DbxModelTypesMap<I>> = {};
 
@@ -71,4 +96,16 @@ export class DbxModelTypesService<I extends DbxModelTypeInfo> {
   iconForType(type: ModelTypeString): Observable<string> {
     return this.iconMap$.pipe(map((x) => x[type]));
   }
+}
+
+function addModelTypeConfigsToTypes(currentTypes: DbxModelTypeConfigurationMap, configs: ArrayOrValue<DbxModelTypeConfiguration>) {
+  const types = {
+    ...currentTypes
+  };
+
+  useIterableOrValue(configs, (config) => {
+    types[config.modelType] = config;
+  });
+
+  return types;
 }

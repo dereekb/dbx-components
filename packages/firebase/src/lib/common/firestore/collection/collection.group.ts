@@ -22,7 +22,7 @@ export interface FirestoreCollectionGroup<T, D extends FirestoreDocument<T> = Fi
  * Creates a new FirestoreCollection from the input config.
  */
 export function makeFirestoreCollectionGroup<T, D extends FirestoreDocument<T>>(config: FirestoreCollectionGroupConfig<T, D>): FirestoreCollectionGroup<T, D> {
-  const { queryLike, firestoreContext, firestoreAccessorDriver } = config;
+  const { modelIdentity, queryLike, firestoreContext, firestoreAccessorDriver } = config;
   const firestoreIteration: FirestoreItemPageIterationFactoryFunction<T> = firestoreItemPageIterationFactory(config);
   const documentAccessor: LimitedFirestoreDocumentAccessorFactoryFunction<T, D> = limitedFirestoreDocumentAccessorFactory(config);
   const queryFactory: FirestoreQueryFactory<T> = firestoreQueryFactory(config);
@@ -34,6 +34,7 @@ export function makeFirestoreCollectionGroup<T, D extends FirestoreDocument<T>>(
   return {
     config,
     queryLike,
+    modelIdentity,
     firestoreContext,
     ...documentAccessorExtension,
     firestoreIteration,

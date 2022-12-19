@@ -8,6 +8,7 @@ export * from './key';
 export * from './lifecycle';
 export * from './loading';
 export * from './misc';
+export * from './model';
 export * from './map';
 export * from './number';
 export * from './rxjs';

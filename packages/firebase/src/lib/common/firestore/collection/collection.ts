@@ -18,7 +18,7 @@ import { FirestoreItemPageIterationBaseConfig, FirestoreItemPageIterationFactory
 import { firestoreQueryFactory, FirestoreQueryFactory } from '../query/query';
 import { FirestoreDrivers } from '../driver/driver';
 import { FirestoreCollectionQueryFactory, firestoreCollectionQueryFactory } from './collection.query';
-import { ArrayOrValue, arrayToObject, Building, isOddNumber, lastValue, Maybe, ModelKey, ModelTypeString } from '@dereekb/util';
+import { ArrayOrValue, arrayToObject, Building, forEachInIterable, isOddNumber, lastValue, Maybe, ModelKey, ModelKeyRef, ModelTypeString, useIterableOrValue } from '@dereekb/util';
 
 /**
  * The camelCase model name/type.
@@ -43,15 +43,22 @@ export const FIRESTORE_COLLECTION_NAME_SEPARATOR = '/';
  */
 export type FirestoreCollectionType = ModelTypeString;
 
+/**
+ * Reference to a FirestoreCollectionType
+ */
+export interface FirestoreCollectionTypeRef {
+  readonly collectionType: FirestoreCollectionType;
+}
+
 export type FirestoreModelIdentityType = 'root' | 'nested';
 
 /**
  * A firestore model's identity
  */
 export type FirestoreModelIdentity<M extends FirestoreModelType = FirestoreModelType, C extends FirestoreCollectionName = FirestoreCollectionName> = FirestoreModelTypeRef<M> &
-  FirestoreCollectionNameRef<C> & {
+  FirestoreCollectionNameRef<C> &
+  FirestoreCollectionTypeRef & {
     readonly type: FirestoreModelIdentityType;
-    readonly collectionType: FirestoreCollectionType;
   };
 
 export type FirestoreModelIdentityModelType<I> = I extends FirestoreModelIdentity<infer M> ? M : never;
@@ -113,6 +120,30 @@ export function firestoreModelIdentity<P extends FirestoreModelIdentity<string, 
 }
 
 /**
+ * Map that maps FirestoreModelIdentity value's FirestoreModelType, FirestoreCollectionName, and FirestoreCollectionType value to the FirestoreModelType.
+ */
+export type FirestoreModelIdentityTypeMap = Map<FirestoreModelType | FirestoreCollectionName | FirestoreCollectionType, FirestoreModelType>;
+
+/**
+ * Creates a FirestoreModelIdentityTypeMap from the input identities.
+ * @param identities
+ * @returns
+ */
+export function firestoreModelIdentityTypeMap(identities: Iterable<FirestoreModelIdentity>): FirestoreModelIdentityTypeMap {
+  let map = new Map<FirestoreModelType | FirestoreCollectionName, FirestoreModelType>();
+
+  forEachInIterable(identities, (x) => {
+    const { modelType, collectionName, collectionType } = x;
+
+    map.set(modelType, modelType);
+    map.set(collectionType, modelType);
+    map.set(collectionName, modelType);
+  });
+
+  return map;
+}
+
+/**
  * Reference to a FirestoreModelType
  */
 export interface FirestoreModelTypeRef<M extends FirestoreModelType = FirestoreModelType> {
@@ -161,7 +192,7 @@ export interface FirestoreModelTypeModelIdentityRef<M extends FirestoreModelType
 /**
  * Reference to a FirestoreModelIdentity
  */
-export interface FirestoreModelIdentityRef<I extends FirestoreModelIdentity> {
+export interface FirestoreModelIdentityRef<I extends FirestoreModelIdentity = FirestoreModelIdentity> {
   /**
    * Returns the FirestoreModelIdentity for this context.
    */
@@ -308,7 +339,10 @@ export interface FirestoreModelIdRef {
  */
 export type FirestoreModelKey = ModelKey;
 
-export type FirestoreModelKeyTypePair = FirestoreModelCollectionTypeArray;
+/**
+ * FirestoreModelKey and FirestoreCollectionType ref
+ */
+export type FirestoreModelKeyCollectionTypePair = FirestoreModelKeyRef & FirestoreCollectionTypeRef;
 
 export function firestoreModelKeyPair() {}
 
@@ -537,6 +571,7 @@ export interface FirestoreModelKeyRef {
  */
 export interface FirestoreCollectionLike<T, D extends FirestoreDocument<T> = FirestoreDocument<T>, A extends LimitedFirestoreDocumentAccessor<T, D> = LimitedFirestoreDocumentAccessor<T, D>>
   extends FirestoreContextReference,
+    FirestoreModelIdentityRef,
     QueryLikeReferenceRef<T>,
     FirestoreItemPageIterationFactory<T>,
     FirestoreQueryFactory<T>,
@@ -573,7 +608,7 @@ export interface FirestoreCollectionRef<T, D extends FirestoreDocument<T> = Fire
 export function makeFirestoreCollection<T, D extends FirestoreDocument<T>>(inputConfig: FirestoreCollectionConfig<T, D>): FirestoreCollection<T, D> {
   const config = inputConfig as FirestoreCollectionConfig<T, D> & QueryLikeReferenceRef<T>;
 
-  const { collection, firestoreContext, firestoreAccessorDriver } = config;
+  const { modelIdentity, collection, firestoreContext, firestoreAccessorDriver } = config;
   (config as unknown as Building<QueryLikeReferenceRef<T>>).queryLike = collection;
 
   const firestoreIteration: FirestoreItemPageIterationFactoryFunction<T> = firestoreItemPageIterationFactory(config);
@@ -586,6 +621,7 @@ export function makeFirestoreCollection<T, D extends FirestoreDocument<T>>(input
 
   return {
     config,
+    modelIdentity,
     collection,
     queryLike: collection,
     firestoreContext,
