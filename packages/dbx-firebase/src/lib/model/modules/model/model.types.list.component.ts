@@ -5,6 +5,9 @@ import { DbxFirebaseModelTypesServiceInstancePair } from './model.types.service'
 
 export type DbxFirestoreModelTypeInstanceItem = DbxValueAsListItem<DbxFirebaseModelTypesServiceInstancePair>;
 
+/**
+ * Renders an item as configured from the DbxFirebaseModelTypesServiceInstancePair.
+ */
 @Component({
   selector: 'dbx-firebase-model-type-instance-list',
   template: DEFAULT_LIST_WRAPPER_DIRECTIVE_TEMPLATE,
@@ -26,7 +29,7 @@ export class DbxFirebaseModelTypeInstanceComponent extends AbstractDbxSelectionL
 export class DbxFirebaseModelTypeInstanceViewComponent extends AbstractDbxSelectionListViewDirective<DbxFirebaseModelTypesServiceInstancePair> {
   readonly config: DbxSelectionValueListViewConfig<DbxFirestoreModelTypeInstanceItem> = {
     componentClass: DbxFirebaseModelTypeInstanceViewItemComponent,
-    mapValuesToItemValues: (x) => of(x.map((y) => ({ icon: y.icon, itemValue: y })))
+    mapValuesToItemValues: (x) => of(x.map((y) => ({ itemValue: y, icon: y.displayInfo.icon ?? y.icon, anchor: y.segueRef })))
   };
 }
 

@@ -1,6 +1,6 @@
 import { distinctUntilChanged, map, Observable, shareReplay, switchMap, combineLatest } from 'rxjs';
 import { FirestoreCollectionType, FirestoreDocument, FirestoreModelIdentity, FirestoreModelKey } from '@dereekb/firebase';
-import { DbxModelFullState, DbxModelTypeInfo, DbxModelTypesMap, DbxModelTypesService, onDbxModel } from '@dereekb/dbx-web';
+import { DbxModelTypeInfo, DbxModelTypesMap, DbxModelTypesService } from '@dereekb/dbx-web';
 import { ArrayOrValue, asArray, FactoryWithRequiredInput, Maybe, ModelTypeString } from '@dereekb/util';
 import { ClickableAnchorLinkSegueRef, IconAndTitle, SegueRef } from '@dereekb/dbx-core';
 import { ObservableOrValue } from '@dereekb/rxjs';
@@ -8,7 +8,6 @@ import { GrantedRole } from '@dereekb/model';
 import { Optional, Injectable } from '@angular/core';
 import { DbxFirebaseModelContextService } from '../../service/model.context.service';
 import { DbxFirebaseInContextFirebaseModelInfoServiceInstance } from '../../service/model.context';
-import { Store } from '@ngrx/store';
 
 /**
  * Configuration provided in the root module for configuring entries.
@@ -24,6 +23,8 @@ export interface DbxFirebaseModelTypesServiceEntry<T = unknown> extends Omit<Dbx
   readonly identity: FirestoreModelIdentity;
   /**
    * Creates the DbxFirebaseModelDisplayInfo for the input data.
+   *
+   * If no icon is provided, it uses the default icon configured in this entry.
    *
    * @param value
    * @returns
@@ -46,7 +47,7 @@ export type DbxFirebaseModelTypesMap = DbxModelTypesMap<DbxFirebaseModelTypeInfo
   providedIn: 'root'
 })
 export class DbxFirebaseModelTypesService {
-  constructor(readonly store: Store<DbxModelFullState>, readonly dbxFirebaseModelContextService: DbxFirebaseModelContextService, readonly dbxModelTypesService: DbxModelTypesService<DbxFirebaseModelTypeInfo>, @Optional() config?: DbxFirebaseModelTypesServiceConfig) {
+  constructor(readonly dbxFirebaseModelContextService: DbxFirebaseModelContextService, readonly dbxModelTypesService: DbxModelTypesService<DbxFirebaseModelTypeInfo>, @Optional() config?: DbxFirebaseModelTypesServiceConfig) {
     if (config) {
       this.register(config.entries);
     }
@@ -57,6 +58,7 @@ export class DbxFirebaseModelTypesService {
 
     if (data != null) {
       displayInfo = typeInfo.displayInfoFactory(data);
+      displayInfo.icon = displayInfo.icon || typeInfo.icon; // set default icon
     } else {
       displayInfo = this.getDefaultDisplayInfo(typeInfo);
     }
@@ -99,6 +101,10 @@ export class DbxFirebaseModelTypesService {
   instanceForKey<D extends FirestoreDocument<any> = any, R extends GrantedRole = GrantedRole>(key$: ObservableOrValue<FirestoreModelKey>): DbxFirebaseModelTypesServiceInstance<D, R> {
     return new DbxFirebaseModelTypesServiceInstance<D, R>(this.dbxFirebaseModelContextService.modelInfoInstance<D, R>(key$), this);
   }
+
+  instancePairsForKeys(keys: ArrayOrValue<ObservableOrValue<FirestoreModelKey>>) {
+    return dbxFirebaseModelTypesServiceInstancePairForKeysFactory(this)(keys);
+  }
 }
 
 /**
@@ -111,15 +117,24 @@ export interface DbxFirebaseModelTypesServiceInstancePair<D extends FirestoreDoc
   readonly segueRef: Maybe<ClickableAnchorLinkSegueRef>;
 }
 
+export type DbxFirebaseModelTypesServiceInstancePairForKeysFactory = (keys: ArrayOrValue<ObservableOrValue<FirestoreModelKey>>) => Observable<DbxFirebaseModelTypesServiceInstancePair[]>;
+
+export function dbxFirebaseModelTypesServiceInstancePairForKeysFactory(service: DbxFirebaseModelTypesService): DbxFirebaseModelTypesServiceInstancePairForKeysFactory {
+  return (keys: ArrayOrValue<ObservableOrValue<FirestoreModelKey>>) => {
+    const instances = asArray(keys).map((x) => service.instanceForKey(x).instancePair$);
+    return combineLatest(instances);
+  };
+}
+
 /**
  * DbxFirebaseModelTypesService instance
  */
 export class DbxFirebaseModelTypesServiceInstance<D extends FirestoreDocument<any> = any, R extends GrantedRole = GrantedRole> {
   readonly key$ = this.modelInfoInstance$.pipe(switchMap((x) => x.key$));
-  readonly collectionType$ = this.modelInfoInstance$.pipe(switchMap((x) => x.collectionType$));
+  readonly modelType$ = this.modelInfoInstance$.pipe(switchMap((x) => x.modelType$));
   readonly snapshotData$ = this.modelInfoInstance$.pipe(switchMap((x) => x.snapshotData$));
 
-  readonly typeInfo$ = this.collectionType$.pipe(
+  readonly typeInfo$ = this.modelType$.pipe(
     switchMap((x) => this.dbxFirebaseModelTypesService.infoForType(x)),
     distinctUntilChanged(),
     shareReplay(1)
@@ -136,17 +151,7 @@ export class DbxFirebaseModelTypesServiceInstance<D extends FirestoreDocument<an
   );
 
   readonly displayInfo$: Observable<DbxFirebaseModelDisplayInfo> = combineLatest([this.typeInfo$, this.snapshotData$]).pipe(
-    map(([typeInfo, data]) => {
-      let displayInfo: DbxFirebaseModelDisplayInfo;
-
-      if (data != null) {
-        displayInfo = typeInfo.displayInfoFactory(data);
-      } else {
-        displayInfo = this.dbxFirebaseModelTypesService.getDefaultDisplayInfo(typeInfo);
-      }
-
-      return displayInfo;
-    }),
+    map(([typeInfo, data]) => this.dbxFirebaseModelTypesService.getDisplayInfo(typeInfo, data)),
     shareReplay(1)
   );
 

@@ -7,7 +7,9 @@ import { DbxModelViewTrackerStorage } from './model.tracker.view.storage';
 /**
  * Service used for tracking/logging different kinds of events on objects.
  */
-@Injectable()
+@Injectable({
+  providedIn: 'root'
+})
 export class DbxModelTrackerService {
   private _defaultFolder: Maybe<string>;
 
@@ -22,7 +24,7 @@ export class DbxModelTrackerService {
   }
 
   // MARK: View
-  trackViewedDbxModel(modelKeyTypeNamePair: ModelKeyTypeNamePair, folder: Maybe<string> = this._defaultFolder): void {
+  trackViewedObject(modelKeyTypeNamePair: ModelKeyTypeNamePair, folder: Maybe<string> = this._defaultFolder): void {
     this.viewTrackerStorage
       .addEvent({
         m: modelKeyTypeNamePair,

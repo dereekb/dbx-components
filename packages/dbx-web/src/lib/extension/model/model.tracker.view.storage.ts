@@ -1,3 +1,4 @@
+import { Injectable } from '@angular/core';
 import { unixTimeNumberForNow } from '@dereekb/date';
 import { StorageAccessor } from '@dereekb/dbx-core';
 import { UnixDateTimeNumber, ModelKeyTypePair, encodeModelKeyTypePair, ModelRelationUtility, Maybe } from '@dereekb/util';
@@ -8,6 +9,9 @@ import { DbxModelViewTrackerEventSet, DbxModelViewTrackerEvent } from './model.t
 /**
  * Used for managing DbxModelViewTrackerEvent storage.
  */
+@Injectable({
+  providedIn: 'root'
+})
 export class DbxModelViewTrackerStorage {
   static readonly OBJECT_VIEW_TRACKER_STORAGE_LIST_KEY = 'dbxModelViewTrackerEvents';
   static readonly MAX_EVENTS = 60;

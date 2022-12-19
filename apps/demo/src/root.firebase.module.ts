@@ -1,4 +1,4 @@
-import { FirestoreContext } from '@dereekb/firebase';
+import { FirestoreContext, FirestoreModelCollectionAndIdPair, firestoreModelId, FirestoreModelKey, firestoreModelKeyPartPairs } from '@dereekb/firebase';
 import { DbxFirebaseFirestoreCollectionModule, DbxFirebaseEmulatorModule, DbxFirebaseDefaultFirebaseProvidersModule, DbxFirebaseAuthModule, DbxFirebaseFunctionsModule, defaultDbxFirebaseAuthServiceDelegateWithClaimsService, DbxFirebaseAuthServiceDelegate, DbxFirebaseStorageModule, DbxFirebaseDevelopmentModule, DbxFirebaseModelContextService, DbxFirebaseModelTypesServiceConfig, DbxFirebaseModelTypesServiceEntry } from '@dereekb/dbx-firebase';
 import { NgModule } from '@angular/core';
 import { environment } from './environments/environment';
@@ -19,14 +19,18 @@ export function demoAuthDelegateFactory(): DbxFirebaseAuthServiceDelegate {
 export function dbxFirebaseModelTypesServiceConfigFactory(): DbxFirebaseModelTypesServiceConfig {
   const guestbook: DbxFirebaseModelTypesServiceEntry<Guestbook> = {
     identity: guestbookIdentity,
+    icon: 'list',
     displayInfoFactory: (data) => {
       return {
         title: data.name
       };
     },
-    sref: () => {
+    sref: (key: FirestoreModelKey) => {
+      const id = firestoreModelId(key);
+
       return {
-        ref: ''
+        ref: 'demo.app.guestbook.list.guestbook',
+        refParams: { id }
       };
     }
   };

@@ -97,15 +97,3 @@ export class DbxModelTypesService<I extends DbxModelTypeInfo = DbxModelTypeInfo>
     return this.iconMap$.pipe(map((x) => x[type]));
   }
 }
-
-function addModelTypeConfigsToTypes(currentTypes: DbxModelTypeConfigurationMap, configs: ArrayOrValue<DbxModelTypeConfiguration>) {
-  const types = {
-    ...currentTypes
-  };
-
-  useIterableOrValue(configs, (config) => {
-    types[config.modelType] = config;
-  });
-
-  return types;
-}

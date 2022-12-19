@@ -1,4 +1,4 @@
-import { FirestoreDocument, FirestoreDocumentData, DocumentSnapshot, FirestoreAccessorStreamMode, SnapshotOptions, FirestoreModelKey, FirestoreCollectionType } from '@dereekb/firebase';
+import { FirestoreDocument, FirestoreDocumentData, DocumentSnapshot, FirestoreAccessorStreamMode, SnapshotOptions, FirestoreModelKey, FirestoreCollectionType, FirestoreModelType } from '@dereekb/firebase';
 import { GrantedRole, GrantedRoleMap, GrantedRoleMapReader, GrantedRoleTruthMap, GrantedRoleTruthMapObject } from '@dereekb/model';
 import { SetIncludesMode, IterableOrValue } from '@dereekb/util';
 import { Observable } from 'rxjs';
@@ -24,7 +24,7 @@ export interface DbxFirebaseInContextFirebaseModelRolesServiceInstance<R extends
  * DbxFirebaseInContextFirebaseModelRolesServiceInstance extension that provides access to the underlying model.
  */
 export interface DbxFirebaseInContextFirebaseModelInfoServiceInstance<D extends FirestoreDocument<any>, R extends GrantedRole = GrantedRole> extends DbxFirebaseInContextFirebaseModelRolesServiceInstance<R> {
-  readonly collectionType$: Observable<FirestoreCollectionType>;
+  readonly modelType$: Observable<FirestoreModelType>;
   readonly model$: Observable<D>;
   /**
    * Reads the data from the model once and returns the current state without streaming.

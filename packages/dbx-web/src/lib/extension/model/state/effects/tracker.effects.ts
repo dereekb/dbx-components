@@ -3,6 +3,7 @@ import { Actions, ofType, createEffect } from '@ngrx/effects';
 import { distinctUntilChanged, filter, map, tap } from 'rxjs/operators';
 import { onDbxAppAuth } from '@dereekb/dbx-core';
 import { DbxModelTrackerService } from '../../model.tracker.service';
+import { onDbxModel } from '..';
 
 /**
  * Used to pass Object Store events to the ObjectTracker.
@@ -11,7 +12,19 @@ import { DbxModelTrackerService } from '../../model.tracker.service';
 export class DbxModelTrackerEffects {
   constructor(private readonly actions$: Actions, private readonly dbxModelTrackerService: DbxModelTrackerService) {}
 
-  readonly setDefaultModelTrackerFolderFromAuth$ = createEffect(
+  readonly trackModelViewed$ = createEffect(
+    () =>
+      this.actions$.pipe(
+        ofType(onDbxModel.DbxModelStateModelActions.emitObjectViewEvent),
+        distinctUntilChanged((a, b) => a?.modelKeyTypeNamePair.key === b?.modelKeyTypeNamePair.key && a?.type === b?.type),
+        tap((x) => {
+          this.dbxModelTrackerService.trackViewedObject(x.modelKeyTypeNamePair);
+        })
+      ),
+    { dispatch: false }
+  );
+
+  readonly changeTrackerFolderToMatchAuth$ = createEffect(
     () =>
       this.actions$.pipe(
         ofType(onDbxAppAuth.DbxAppAuthUserActions.setUserIdentifier),

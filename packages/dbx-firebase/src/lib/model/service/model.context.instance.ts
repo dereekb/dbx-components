@@ -28,10 +28,9 @@ export class DbxFirebaseInContextFirebaseModelServiceInstance<D extends Firestor
   readonly key$ = this.modelService$.pipe(map((x) => x.model.key));
 
   // MARK: Model
-  readonly collectionType$ = this.key$.pipe(
-    map((x) => firestoreModelKeyCollectionType(x) as FirestoreCollectionType),
-    distinctUntilChanged(),
-    shareReplay(1)
+  readonly modelType$ = this.modelService$.pipe(
+    map((x) => x.model.modelType),
+    distinctUntilChanged()
   );
 
   readonly model$ = this.modelService$.pipe(
