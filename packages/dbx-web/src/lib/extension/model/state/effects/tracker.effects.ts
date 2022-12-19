@@ -16,9 +16,9 @@ export class DbxModelTrackerEffects {
     () =>
       this.actions$.pipe(
         ofType(onDbxModel.DbxModelStateModelActions.emitObjectViewEvent),
-        distinctUntilChanged((a, b) => a?.modelKeyTypeNamePair.key === b?.modelKeyTypeNamePair.key && a?.type === b?.type),
+        distinctUntilChanged((a, b) => a?.modelKeyTypeNamePair.key === b?.modelKeyTypeNamePair.key && a?.type === b?.type && a?.context === b?.context),
         tap((x) => {
-          this.dbxModelTrackerService.trackViewedObject(x.modelKeyTypeNamePair);
+          this.dbxModelTrackerService.trackViewedObject(x.modelKeyTypeNamePair, x.context);
         })
       ),
     { dispatch: false }

@@ -1,8 +1,23 @@
-import { UnixDateTimeNumber, ModelKeyTypePair, Maybe, ModelKey } from '@dereekb/util';
+import { UnixDateTimeNumber, ModelKeyTypePair, Maybe, ModelKey, ModelKeyTypeNamePair } from '@dereekb/util';
+
+/**
+ * Context in which a model was viewed.
+ */
+export type ModelViewContext = string;
 
 export interface DbxModelViewTrackerEvent {
+  /**
+   * Event time
+   */
   d?: UnixDateTimeNumber;
-  m: ModelKeyTypePair;
+  /**
+   * Context
+   */
+  c?: ModelViewContext;
+  /**
+   * Model info
+   */
+  m: ModelKeyTypeNamePair;
   folder?: Maybe<string>;
 }
 

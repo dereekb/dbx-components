@@ -3,6 +3,7 @@ import { createAction, props } from '@ngrx/store';
 
 export interface DbxModelObjectViewedParams {
   modelKeyTypeNamePair: ModelKeyTypeNamePair;
+  context?: string;
 }
 
 export interface DbxModelGoToObjectViewParams {

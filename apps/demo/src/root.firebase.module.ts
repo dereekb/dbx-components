@@ -1,6 +1,6 @@
-import { FirestoreContext, FirestoreModelCollectionAndIdPair, firestoreModelId, FirestoreModelKey, firestoreModelKeyPartPairs } from '@dereekb/firebase';
+import { FirestoreContext, firestoreModelId, FirestoreModelKey } from '@dereekb/firebase';
 import { DbxFirebaseFirestoreCollectionModule, DbxFirebaseEmulatorModule, DbxFirebaseDefaultFirebaseProvidersModule, DbxFirebaseAuthModule, DbxFirebaseFunctionsModule, defaultDbxFirebaseAuthServiceDelegateWithClaimsService, DbxFirebaseAuthServiceDelegate, DbxFirebaseStorageModule, DbxFirebaseDevelopmentModule, DbxFirebaseModelContextService, DbxFirebaseModelTypesServiceConfig, DbxFirebaseModelTypesServiceEntry } from '@dereekb/dbx-firebase';
-import { NgModule } from '@angular/core';
+import { Injector, NgModule } from '@angular/core';
 import { environment } from './environments/environment';
 import { Guestbook, DemoFirebaseFunctionsGetter, DemoFirestoreCollections, DEMO_API_AUTH_CLAIMS_ONBOARDED_TOKEN, DEMO_AUTH_CLAIMS_SERVICE, DEMO_FIREBASE_FUNCTIONS_CONFIG, guestbookIdentity, makeDemoFirebaseFunctions, makeDemoFirestoreCollections } from '@dereekb/demo-firebase';
 import { DemoFirebaseContextService, demoSetupDevelopmentWidget } from '@dereekb/demo-components';
@@ -25,7 +25,7 @@ export function dbxFirebaseModelTypesServiceConfigFactory(): DbxFirebaseModelTyp
         title: data.name
       };
     },
-    sref: (key: FirestoreModelKey) => {
+    srefBuilder: (injector: Injector) => (key: FirestoreModelKey) => {
       const id = firestoreModelId(key);
 
       return {
