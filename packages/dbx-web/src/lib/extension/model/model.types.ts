@@ -1,8 +1,12 @@
 import { Injector } from '@angular/core';
 import { SegueRef } from '@dereekb/dbx-core';
-import { FactoryWithRequiredInput, ModelKey, ModelTypeString } from '@dereekb/util';
+import { ModelKey, ModelTypeString } from '@dereekb/util';
+import { ModelViewContext } from './model.tracker';
 
-export type DbxModelTypeConfigurationSrefFactory = FactoryWithRequiredInput<SegueRef, ModelKey>;
+/**
+ * Generates a SegueRef based on the input model's key and optional view context.
+ */
+export type DbxModelTypeConfigurationSrefFactory = (key: ModelKey, context?: ModelViewContext) => SegueRef;
 
 /**
  * Generates a DbxModelTypeConfigurationSrefFactory.

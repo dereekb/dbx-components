@@ -26,12 +26,13 @@ export class DbxModelViewTrackerStorage {
     return DbxModelViewTrackerStorage.MAX_EVENTS;
   }
 
-  addEvent(event: DbxModelViewTrackerEvent): Observable<void> {
+  addTrackerEvent(event: DbxModelViewTrackerEvent): Observable<void> {
     const storageKey = this.getStorageKeyForFolder(event.folder);
     return this._getEventSetForStorageKey(storageKey).pipe(
       mergeMap((set) => {
-        const nextEvent = {
+        const nextEvent: DbxModelViewTrackerEvent = {
           d: event.d ?? unixTimeNumberForNow(),
+          c: event.c,
           m: event.m
         };
 
@@ -40,7 +41,7 @@ export class DbxModelViewTrackerStorage {
         e.sort((a, b) => (b.d ?? 0) - (a.d ?? 0));
 
         return this.storageAccessor.set(storageKey, {
-          l: Math.max(set.l ?? 0, nextEvent.d),
+          l: Math.max(set.l ?? 0, nextEvent.d as number),
           e: e.slice(0, this.maxEventsToKeep)
         });
       })
@@ -68,5 +69,13 @@ export class DbxModelViewTrackerStorage {
   getStorageKeyForFolder(folder?: Maybe<string>): string {
     const storageKey = `${this.storageKey}_${folder ?? 'default'}`;
     return storageKey;
+  }
+
+  // MARK: Compat
+  /**
+   * @deprecated use addTrackerEvent() instead.
+   */
+  addEvent(event: DbxModelViewTrackerEvent): Observable<void> {
+    return this.addTrackerEvent(event);
   }
 }

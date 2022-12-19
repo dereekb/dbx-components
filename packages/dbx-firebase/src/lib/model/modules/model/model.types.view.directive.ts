@@ -1,6 +1,6 @@
 import { distinctUntilModelKeyChange } from '@dereekb/rxjs';
-import { DbxModelObjectStateService } from '@dereekb/dbx-web';
-import { Directive, OnInit } from '@angular/core';
+import { DbxModelObjectStateService, ModelViewContext } from '@dereekb/dbx-web';
+import { Directive, Input, OnInit } from '@angular/core';
 import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
 import { combineLatestWith, first, map, switchMap } from 'rxjs';
 import { DbxFirebaseDocumentStoreDirective } from '../store/store.document.directive';
@@ -14,6 +14,9 @@ import { ModelKeyTypeNamePair } from '@dereekb/util';
   selector: '[dbxFirebaseModelViewedEvent]'
 })
 export class DbxfirebaseModelViewedEventDirective extends AbstractSubscriptionDirective implements OnInit {
+  @Input('dbxFirebaseModelViewedEvent')
+  context?: ModelViewContext | undefined;
+
   constructor(readonly dbxFirebaseDocumentStoreDirective: DbxFirebaseDocumentStoreDirective, readonly dbxModelObjectStateService: DbxModelObjectStateService, readonly dbxFirebaseModelTypesService: DbxFirebaseModelTypesService) {
     super();
   }
@@ -43,7 +46,7 @@ export class DbxfirebaseModelViewedEventDirective extends AbstractSubscriptionDi
         })
       )
       .subscribe((modelKeyTypeNamePair) => {
-        this.dbxModelObjectStateService.emitModelViewEvent({ modelKeyTypeNamePair });
+        this.dbxModelObjectStateService.emitModelViewEvent({ modelKeyTypeNamePair, context: this.context || undefined });
       });
   }
 }
