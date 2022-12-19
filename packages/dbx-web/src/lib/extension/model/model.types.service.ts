@@ -1,13 +1,11 @@
-import { Injectable } from '@angular/core';
-import { Store } from '@ngrx/store';
+import { Injectable, Injector } from '@angular/core';
 import { map, shareReplay } from 'rxjs/operators';
 import { capitalCase } from 'change-case';
 import { Observable, BehaviorSubject } from 'rxjs';
 import { ArrayOrValue, Building, ModelTypeString, useIterableOrValue } from '@dereekb/util';
-import { DbxModelFullState, fromDbxModel } from './state';
 import { DbxModelTypeConfiguration, DbxModelTypeConfigurationMap } from './model.types';
 
-export interface DbxModelTypeInfo extends DbxModelTypeConfiguration {
+export interface DbxModelTypeInfo extends Omit<DbxModelTypeConfiguration, 'srefFactory'> {
   /**
    * Whether or not a response is expected for segues
    * to a view for objects of this type.
@@ -31,7 +29,7 @@ export class DbxModelTypesService<I extends DbxModelTypeInfo = DbxModelTypeInfo>
 
   static readonly DEFAULT_ICON = 'help_outline';
 
-  constructor(readonly store: Store<DbxModelFullState>) {}
+  constructor(readonly injector: Injector) {}
 
   // MARK: Configuration
   addTypeConfigs(configs: ArrayOrValue<DbxModelTypeConfiguration>) {
@@ -65,13 +63,15 @@ export class DbxModelTypesService<I extends DbxModelTypeInfo = DbxModelTypeInfo>
 
         const label = config.label || capitalCase(type);
         const analyticsName = config.analyticsName || label;
+        const sref = config.srefBuilder ? config.srefBuilder(this.injector) : config.sref;
 
         typesMap[type] = {
           ...config,
+          sref,
           label,
           analyticsName,
           icon: config.icon ?? DbxModelTypesService.DEFAULT_ICON,
-          canSegueToView: Boolean(config.sref)
+          canSegueToView: Boolean(sref)
         } as I;
       });
 

@@ -1,5 +1,13 @@
+import { Injector } from '@angular/core';
 import { SegueRef } from '@dereekb/dbx-core';
 import { FactoryWithRequiredInput, ModelKey, ModelTypeString } from '@dereekb/util';
+
+export type DbxModelTypeConfigurationSrefFactory = FactoryWithRequiredInput<SegueRef, ModelKey>;
+
+/**
+ * Generates a DbxModelTypeConfigurationSrefFactory.
+ */
+export type DbxModelTypeConfigurationSrefFactoryBuilder = (injector: Injector) => DbxModelTypeConfigurationSrefFactory;
 
 export interface DbxModelTypeConfiguration {
   /**
@@ -17,7 +25,11 @@ export interface DbxModelTypeConfiguration {
   /**
    * Sref factory for viewing objects of this type.
    */
-  sref?: FactoryWithRequiredInput<SegueRef, ModelKey>;
+  sref?: DbxModelTypeConfigurationSrefFactory;
+  /**
+   * DbxModelTypeConfigurationSrefFactoryBuilder
+   */
+  srefBuilder?: DbxModelTypeConfigurationSrefFactoryBuilder;
   /**
    * Icon used to represent this model.
    */
