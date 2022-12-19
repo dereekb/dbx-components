@@ -27,3 +27,13 @@ export function distinctUntilKeysChange<T, K extends PrimativeKey = PrimativeKey
     return false;
   });
 }
+
+/**
+ * Convenience function for distinctUntilChange() that compares the values using a readKey function.
+ *
+ * @param readKey
+ * @returns
+ */
+export function distinctUntilObjectKeyChange<T>(readKey: ReadKeyFunction<T>): MonoTypeOperatorFunction<T> {
+  return distinctUntilChanged<T>((a, b) => (a != null && b != null ? readKey(a) === readKey(b) : a === b));
+}

@@ -65,13 +65,18 @@ export class DemoLayoutComponent {
 
   readonly userBottomNavAnchors: ClickableAnchorLinkTree[] = [
     {
+      title: 'History',
+      ref: 'demo.app.history',
+      icon: 'history'
+    },
+    {
       title: 'Notifications',
-      ref: 'demo.notification',
+      ref: 'demo.app.notification',
       disabled: true
     },
     {
       title: 'Settings',
-      ref: 'demo.setting',
+      ref: 'demo.app.setting',
       disabled: true
     },
     {

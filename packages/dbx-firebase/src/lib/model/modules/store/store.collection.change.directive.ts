@@ -3,9 +3,9 @@ import { FirestoreDocument } from '@dereekb/firebase';
 import { Maybe } from '@dereekb/util';
 import { DbxFirebaseCollectionStore } from './store.collection';
 import { DbxFirebaseCollectionStoreDirective } from './store.collection.directive';
-import { DbxFirebaseCollectionChangeWatcher, dbxFirebaseCollectionChangeWatcher, DbxFirebaseCollectionChangeWatcherEvent, DbxFirebaseCollectionChangeWatcherTriggerMode } from '../loader/collection.change.watcher';
+import { DbxFirebaseCollectionChangeWatcher, dbxFirebaseCollectionChangeWatcher, DbxFirebaseCollectionChangeWatcherEvent, DbxFirebaseCollectionChangeWatcherTriggerMode } from '../../loader/collection.change.watcher';
 import { Observable } from 'rxjs';
-import { dbxFirebaseCollectionChangeTriggerForWatcher } from '../loader/collection.change.trigger';
+import { dbxFirebaseCollectionChangeTriggerForWatcher } from '../../loader/collection.change.trigger';
 
 /**
  * Used to watch query doc changes and respond to them accordingly.

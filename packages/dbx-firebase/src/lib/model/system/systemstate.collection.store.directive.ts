@@ -1,6 +1,6 @@
 import { Directive } from '@angular/core';
 import { SystemState, SystemStateDocument } from '@dereekb/firebase';
-import { DbxFirebaseCollectionStoreDirective, provideDbxFirebaseCollectionStoreDirective } from '../store/store.collection.directive';
+import { DbxFirebaseCollectionStoreDirective, provideDbxFirebaseCollectionStoreDirective } from '../modules/store/store.collection.directive';
 import { SystemStateCollectionStore } from './systemstate.collection.store';
 
 @Directive({

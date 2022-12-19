@@ -1,7 +1,7 @@
 import { Directive, Host, OnInit } from '@angular/core';
 import { FirestoreDocument } from '@dereekb/firebase';
 import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
-import { DbxFirebaseAuthService } from '../../auth/service/firebase.auth.service';
+import { DbxFirebaseAuthService } from '../../../auth/service/firebase.auth.service';
 import { DbxFirebaseDocumentStoreDirective } from './store.document.directive';
 
 /**

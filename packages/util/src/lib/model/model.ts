@@ -14,6 +14,11 @@ export type ModelKey = string;
  */
 export type ModelTypeString = string;
 
+/**
+ * String model key from which the model's type can be inferred from.
+ */
+export type TypedModelKey = string;
+
 export const DEFAULT_UNKNOWN_MODEL_TYPE_STRING: ModelTypeString = 'unknown';
 
 /**

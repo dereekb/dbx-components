@@ -16,11 +16,13 @@ export abstract class DbxFirebaseDocumentStoreDirective<T = unknown, D extends F
   readonly documentLoadingState$ = this.store.documentLoadingState$;
 
   readonly id$ = this.store.id$;
+  readonly key$ = this.store.key$;
   readonly ref$ = this.store.ref$;
 
   readonly snapshot$ = this.store.snapshot$;
   readonly snapshotLoadingState$ = this.store.snapshotLoadingState$;
 
+  readonly modelIdentity$ = this.store.modelIdentity$;
   readonly data$ = this.store.data$;
   readonly loadingState$ = this.store.dataLoadingState$;
 

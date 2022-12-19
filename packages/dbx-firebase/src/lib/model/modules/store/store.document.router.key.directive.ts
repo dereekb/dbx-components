@@ -4,7 +4,7 @@ import { DbxRouterService, AbstractSubscriptionDirective } from '@dereekb/dbx-co
 import { DbxFirebaseDocumentStoreDirective } from './store.document.directive';
 import { Maybe, ModelKey } from '@dereekb/util';
 import { MaybeObservableOrValueGetter, SwitchMapToDefaultFilterFunction } from '@dereekb/rxjs';
-import { dbxFirebaseKeyRouteParamRedirect } from '../../router';
+import { dbxFirebaseKeyRouteParamRedirect } from '../../../router';
 import { TwoWayFlatFirestoreModelKey } from '@dereekb/firebase';
 
 /**

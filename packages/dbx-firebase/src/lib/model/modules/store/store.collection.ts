@@ -4,8 +4,8 @@ import { FirebaseQueryItemAccumulator, FirestoreCollectionLike, FirestoreDocumen
 import { ObservableOrValue, cleanupDestroyable, PageListLoadingState, filterMaybe } from '@dereekb/rxjs';
 import { ArrayOrValue, Maybe } from '@dereekb/util';
 import { LockSetComponentStore } from '@dereekb/dbx-core';
-import { DbxFirebaseCollectionLoaderInstance, dbxFirebaseCollectionLoaderInstance, DbxFirebaseCollectionLoaderInstanceData } from '../loader/collection.loader.instance';
-import { DbxFirebaseCollectionLoaderAccessor } from '../loader/collection.loader';
+import { DbxFirebaseCollectionLoaderInstance, dbxFirebaseCollectionLoaderInstance, DbxFirebaseCollectionLoaderInstanceData } from '../../loader/collection.loader.instance';
+import { DbxFirebaseCollectionLoaderAccessor } from '../../loader/collection.loader';
 
 export interface DbxFirebaseCollectionStore<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> extends DbxFirebaseCollectionLoaderAccessor<T>, DbxFirebaseCollectionLoaderInstanceData<T, D> {
   readonly firestoreCollection$: Observable<Maybe<FirestoreCollectionLike<T, D>>>;

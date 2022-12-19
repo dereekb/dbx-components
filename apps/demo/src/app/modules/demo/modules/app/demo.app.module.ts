@@ -2,12 +2,13 @@ import { DemoAppHomeComponent } from './container/home.component';
 import { DemoAppLayoutComponent } from './container/layout.component';
 import { NgModule } from '@angular/core';
 import { UIRouterModule } from '@uirouter/angular';
-import { DemoRootSharedModule } from '@dereekb/demo-components';
+import { DemoAppSharedModule, DemoRootSharedModule } from '@dereekb/demo-components';
 import { DEMO_APP_STATES } from './demo.app.router';
+import { DemoAppHistoryComponent } from './container/history.component';
 
 @NgModule({
   imports: [
-    DemoRootSharedModule,
+    DemoAppSharedModule,
     UIRouterModule.forChild({
       states: DEMO_APP_STATES
     })
@@ -15,7 +16,8 @@ import { DEMO_APP_STATES } from './demo.app.router';
   declarations: [
     // components
     DemoAppLayoutComponent,
-    DemoAppHomeComponent
+    DemoAppHomeComponent,
+    DemoAppHistoryComponent
   ]
 })
 export class DemoAppModule {}

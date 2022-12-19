@@ -18,7 +18,7 @@ import { FirestoreItemPageIterationBaseConfig, FirestoreItemPageIterationFactory
 import { firestoreQueryFactory, FirestoreQueryFactory } from '../query/query';
 import { FirestoreDrivers } from '../driver/driver';
 import { FirestoreCollectionQueryFactory, firestoreCollectionQueryFactory } from './collection.query';
-import { ArrayOrValue, arrayToObject, Building, isEvenNumber, isOddNumber, lastValue, Maybe, ModelKey, ModelTypeString } from '@dereekb/util';
+import { ArrayOrValue, arrayToObject, Building, forEachInIterable, isOddNumber, lastValue, Maybe, ModelKey, ModelKeyRef, ModelTypeString, useIterableOrValue } from '@dereekb/util';
 
 /**
  * The camelCase model name/type.
@@ -36,13 +36,28 @@ export type FirestoreCollectionName = string;
 
 export const FIRESTORE_COLLECTION_NAME_SEPARATOR = '/';
 
+/**
+ * Unique identifier for a nested collection type. Is the combination of all FirestoreCollectionNames of all parents.
+ *
+ * Example: parent/parentb/collectionname
+ */
+export type FirestoreCollectionType = ModelTypeString;
+
+/**
+ * Reference to a FirestoreCollectionType
+ */
+export interface FirestoreCollectionTypeRef {
+  readonly collectionType: FirestoreCollectionType;
+}
+
 export type FirestoreModelIdentityType = 'root' | 'nested';
 
 /**
  * A firestore model's identity
  */
 export type FirestoreModelIdentity<M extends FirestoreModelType = FirestoreModelType, C extends FirestoreCollectionName = FirestoreCollectionName> = FirestoreModelTypeRef<M> &
-  FirestoreCollectionNameRef<C> & {
+  FirestoreCollectionNameRef<C> &
+  FirestoreCollectionTypeRef & {
     readonly type: FirestoreModelIdentityType;
   };
 
@@ -84,20 +99,48 @@ export function firestoreModelIdentity<P extends FirestoreModelIdentity<string, 
 export function firestoreModelIdentity<P extends FirestoreModelIdentity<string, string>, M extends FirestoreModelType, C extends FirestoreCollectionName = FirestoreCollectionName>(parentOrModelName: P | M, collectionNameOrModelName?: M | C, inputCollectionName?: C): FirestoreModelIdentityWithParent<P, M, C> | RootFirestoreModelIdentity<M, C> {
   if (typeof parentOrModelName === 'object') {
     const collectionName = (inputCollectionName as C) ?? ((collectionNameOrModelName as M).toLowerCase() as C);
+    const collectionType = `${parentOrModelName.collectionType}/${collectionName}`;
     return {
       type: 'nested',
       parent: parentOrModelName as P,
       collectionName,
-      modelType: collectionNameOrModelName as M
+      modelType: collectionNameOrModelName as M,
+      collectionType
     };
   } else {
     const collectionName = (collectionNameOrModelName as C) ?? (parentOrModelName.toLowerCase() as C);
+    const collectionType = collectionName;
     return {
       type: 'root',
       collectionName,
-      modelType: parentOrModelName
+      modelType: parentOrModelName,
+      collectionType
     };
   }
+}
+
+/**
+ * Map that maps FirestoreModelIdentity value's FirestoreModelType, FirestoreCollectionName, and FirestoreCollectionType value to the FirestoreModelType.
+ */
+export type FirestoreModelIdentityTypeMap = Map<FirestoreModelType | FirestoreCollectionName | FirestoreCollectionType, FirestoreModelType>;
+
+/**
+ * Creates a FirestoreModelIdentityTypeMap from the input identities.
+ * @param identities
+ * @returns
+ */
+export function firestoreModelIdentityTypeMap(identities: Iterable<FirestoreModelIdentity>): FirestoreModelIdentityTypeMap {
+  let map = new Map<FirestoreModelType | FirestoreCollectionName, FirestoreModelType>();
+
+  forEachInIterable(identities, (x) => {
+    const { modelType, collectionName, collectionType } = x;
+
+    map.set(modelType, modelType);
+    map.set(collectionType, modelType);
+    map.set(collectionName, modelType);
+  });
+
+  return map;
 }
 
 /**
@@ -149,7 +192,7 @@ export interface FirestoreModelTypeModelIdentityRef<M extends FirestoreModelType
 /**
  * Reference to a FirestoreModelIdentity
  */
-export interface FirestoreModelIdentityRef<I extends FirestoreModelIdentity> {
+export interface FirestoreModelIdentityRef<I extends FirestoreModelIdentity = FirestoreModelIdentity> {
   /**
    * Returns the FirestoreModelIdentity for this context.
    */
@@ -297,6 +340,13 @@ export interface FirestoreModelIdRef {
 export type FirestoreModelKey = ModelKey;
 
 /**
+ * FirestoreModelKey and FirestoreCollectionType ref
+ */
+export type FirestoreModelKeyCollectionTypePair = FirestoreModelKeyRef & FirestoreCollectionTypeRef;
+
+export function firestoreModelKeyPair() {}
+
+/**
  * Firestore Model Key Regex that checks for pairs.
  */
 export const FIRESTORE_MODEL_KEY_REGEX = /^(?:([^\s/]+)\/([^\s/]+))(?:\/(?:([^\s/]+))\/(?:([^\s/]+)))*$/;
@@ -401,12 +451,16 @@ export function firestoreModelKeyPairObject(input: FirestoreModelKey | DocumentR
 
 export type FirestoreModelCollectionTypeArrayName = string;
 
+export function firestoreModelKeyCollectionType<T = unknown>(input: ReadFirestoreModelKeyInput<T>) {
+  return firestoreModelKeyCollectionTypeArrayName(input, FIRESTORE_COLLECTION_NAME_SEPARATOR);
+}
+
 export function firestoreModelKeyCollectionTypeArrayName<T = unknown>(input: ReadFirestoreModelKeyInput<T>, separator: string = FIRESTORE_COLLECTION_NAME_SEPARATOR): Maybe<FirestoreModelCollectionTypeArrayName> {
   return firestoreModelKeyCollectionTypeArray(input)?.join(separator);
 }
 
-export function firestoreIdentityTypeArrayName(input: FirestoreModelIdentity, separator: string = FIRESTORE_COLLECTION_NAME_SEPARATOR): Maybe<FirestoreModelCollectionTypeArrayName> {
-  return firestoreIdentityTypeArray(input)?.join(separator);
+export function firestoreIdentityTypeArrayName(input: FirestoreModelIdentity, separator: string = FIRESTORE_COLLECTION_NAME_SEPARATOR): FirestoreModelCollectionTypeArrayName {
+  return firestoreIdentityTypeArray(input).join(separator);
 }
 
 export type FirestoreModelCollectionTypeArray = FirestoreCollectionName[];
@@ -517,6 +571,7 @@ export interface FirestoreModelKeyRef {
  */
 export interface FirestoreCollectionLike<T, D extends FirestoreDocument<T> = FirestoreDocument<T>, A extends LimitedFirestoreDocumentAccessor<T, D> = LimitedFirestoreDocumentAccessor<T, D>>
   extends FirestoreContextReference,
+    FirestoreModelIdentityRef,
     QueryLikeReferenceRef<T>,
     FirestoreItemPageIterationFactory<T>,
     FirestoreQueryFactory<T>,
@@ -553,7 +608,7 @@ export interface FirestoreCollectionRef<T, D extends FirestoreDocument<T> = Fire
 export function makeFirestoreCollection<T, D extends FirestoreDocument<T>>(inputConfig: FirestoreCollectionConfig<T, D>): FirestoreCollection<T, D> {
   const config = inputConfig as FirestoreCollectionConfig<T, D> & QueryLikeReferenceRef<T>;
 
-  const { collection, firestoreContext, firestoreAccessorDriver } = config;
+  const { modelIdentity, collection, firestoreContext, firestoreAccessorDriver } = config;
   (config as unknown as Building<QueryLikeReferenceRef<T>>).queryLike = collection;
 
   const firestoreIteration: FirestoreItemPageIterationFactoryFunction<T> = firestoreItemPageIterationFactory(config);
@@ -566,6 +621,7 @@ export function makeFirestoreCollection<T, D extends FirestoreDocument<T>>(input
 
   return {
     config,
+    modelIdentity,
     collection,
     queryLike: collection,
     firestoreContext,

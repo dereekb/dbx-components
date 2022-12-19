@@ -24,7 +24,7 @@ import {
 import { filterMaybe, LoadingState, beginLoading, successResult, loadingStateFromObs, errorResult, ObservableOrValue } from '@dereekb/rxjs';
 import { Maybe, isMaybeSo } from '@dereekb/util';
 import { LockSetComponent, LockSetComponentStore } from '@dereekb/dbx-core';
-import { modelDoesNotExistError } from '../error';
+import { modelDoesNotExistError } from '../../error';
 
 export interface DbxFirebaseDocumentStore<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> extends LockSetComponent {
   readonly firestoreCollectionLike$: Observable<FirestoreCollectionLike<T, D>>;
