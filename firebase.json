@@ -61,7 +61,8 @@
     },
     "firestore": {
       "host": "0.0.0.0",
-      "port": 9904
+      "port": 9904,
+      "websocketPort": 9908
     },
     "pubsub": {
       "host": "0.0.0.0",

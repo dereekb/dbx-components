@@ -273,7 +273,7 @@ sed "s/demo-api/$API_APP_NAME/g" Dockerfile.tmp > Dockerfile
 rm Dockerfile.tmp
 
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/docker-compose.yml -o docker-compose.yml.tmp
-sed -e "s/demo-api-server/$DOCKER_CONTAINER_APP_NAME/g" -e "s/demo-api-network/$DOCKER_CONTAINER_NETWORK_NAME/g" -e "s/demo-api/$API_APP_NAME/g" -e "s/dereekb-components/$FIREBASE_PROJECT_ID/g" -e "s/9900-9906/$FIREBASE_EMULATOR_PORT_RANGE/g" docker-compose.yml.tmp > docker-compose.yml
+sed -e "s/demo-api-server/$DOCKER_CONTAINER_APP_NAME/g" -e "s/demo-api-network/$DOCKER_CONTAINER_NETWORK_NAME/g" -e "s/demo-api/$API_APP_NAME/g" -e "s/dereekb-components/$FIREBASE_PROJECT_ID/g" -e "s/9900-9908/$FIREBASE_EMULATOR_PORT_RANGE/g" docker-compose.yml.tmp > docker-compose.yml
 rm docker-compose.yml.tmp
 
 # download .gitignore
@@ -334,7 +334,7 @@ rm test-$API_APP_NAME.sh.tmp
 chmod +x test-$API_APP_NAME.sh
 
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/wait-for-ports.sh -o wait-for-ports.sh.tmp
-sed -e "s/9100-9106/$FIREBASE_EMULATOR_PORT_RANGE/g" wait-for-ports.sh.tmp > wait-for-ports.sh
+sed -e "s/9100-9108/$FIREBASE_EMULATOR_PORT_RANGE/g" wait-for-ports.sh.tmp > wait-for-ports.sh
 rm wait-for-ports.sh.tmp
 chmod +x wait-for-ports.sh
 

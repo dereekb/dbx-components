@@ -1,3 +1,5 @@
+import { EmailAddress } from '../contact/email';
+import { E164PhoneNumber, PhoneNumber } from '../contact/phone';
 import { IndexRangeInput } from './../value/indexed';
 import { isolateSlashPathFunction, SLASH_PATH_SEPARATOR, toAbsoluteSlashPathStartType } from '../path/path';
 import { chainMapSameFunctions, MapFunction } from '../value/map';
@@ -257,4 +259,21 @@ export function removeHttpFromUrl(url: BaseWebsiteUrl | string): WebsiteDomainAn
  */
 export function hasHttpPrefix(input: string): input is BaseWebsiteUrl {
   return HTTP_OR_HTTPS_REGEX.test(input);
+}
+
+// MARK: MailToUrl
+export interface MailToUrl {
+  email: string;
+}
+
+export type MailToUrlInput = EmailAddress | MailToUrl;
+
+export function mailToUrlString(input: MailToUrlInput): string {
+  const mailTo: MailToUrl = typeof input === 'string' ? { email: input } : input;
+  return `mailto:${mailTo.email}`;
+}
+
+// MARK: Tel
+export function telUrlString(phone: PhoneNumber): string {
+  return `tel:${phone}`;
 }

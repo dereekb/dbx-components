@@ -8,7 +8,7 @@ import { DecodedIdToken } from 'firebase-admin/lib/auth/token-verifier';
 import { Auth } from 'firebase-admin/lib/auth/auth';
 import { decode as decodeJwt } from 'jsonwebtoken';
 import { CallableContextOptions, ContextOptions, WrappedFunction, WrappedScheduledFunction } from 'firebase-functions-test/lib/main';
-import { EventContext } from 'firebase-functions/lib/cloud-functions';
+import { EventContext } from 'firebase-functions/lib/v1/cloud-functions';
 import { AuthData } from 'firebase-functions/lib/common/providers/https';
 
 export type CallCloudFunction<I = any> = WrappedScheduledFunction | WrappedFunction<I>;

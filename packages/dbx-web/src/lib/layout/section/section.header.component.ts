@@ -41,10 +41,14 @@ import { DbxSectionHeaderConfig, DbxSectionHeaderHType } from './section';
     </ng-template>
   `,
   host: {
-    '[class.dbx-section-header-full-title]': 'onlyHeader'
+    '[class.dbx-section-header-full-title]': 'onlyHeader',
+    '[class.dbx-section-header-padded]': 'paddedHeader'
   }
 })
 export class DbxSectionHeaderComponent {
+  @Input()
+  paddedHeader?: Maybe<boolean>;
+
   @Input()
   h?: Maybe<DbxSectionHeaderHType>;
 
