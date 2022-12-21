@@ -19,6 +19,6 @@ export class DocItemListComponent extends AbstractDbxSelectionListWrapperDirecti
 
 @Component({
   selector: 'doc-item-list-view',
-  templateUrl: './item.list.view.component.html'
+  templateUrl: './item.list.component.html'
 })
 export class DocItemListViewComponent extends AbstractDbxSelectionListViewDirective<DocValue> {}

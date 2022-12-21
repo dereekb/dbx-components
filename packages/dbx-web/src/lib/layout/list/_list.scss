@@ -48,6 +48,12 @@
       padding: 0; // kill padding on item in .mat-list-text for selection view, to match 0 padding in non-selection view
     }
   }
+
+  .dbx-list-view-item {
+    dbx-injection {
+      width: 100%;
+    }
+  }
 }
 
 @mixin color($theme-config) {
