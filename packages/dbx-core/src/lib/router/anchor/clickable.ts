@@ -1,4 +1,4 @@
-import { Maybe, WebsiteUrl } from '@dereekb/util';
+import { MailToUrlInput, mailToUrlString, Maybe, PhoneNumber, telUrlString, WebsiteUrl } from '@dereekb/util';
 
 export interface ClickableFunction {
   onClick?: (event?: Maybe<MouseEvent>) => void;
@@ -22,5 +22,17 @@ export function clickableUrlInNewTab(url: string | WebsiteUrl): ClickableUrl {
   return {
     url,
     target: '_blank'
+  };
+}
+
+export function clickableUrlMailTo(mailTo: MailToUrlInput): ClickableUrl {
+  return {
+    url: mailToUrlString(mailTo)
+  };
+}
+
+export function clickableUrlTel(tel: PhoneNumber): ClickableUrl {
+  return {
+    url: telUrlString(tel)
   };
 }
