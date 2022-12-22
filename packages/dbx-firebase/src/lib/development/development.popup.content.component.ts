@@ -33,7 +33,6 @@ export class DbxFirebaseDevelopmentPopupContentComponent implements OnInit, OnDe
   readonly entries$ = this.isLoggedIn$.pipe(
     distinctUntilChanged(),
     map((isLoggedIn) => this.entries),
-    tapLog('Entries'),
     shareReplay(1)
   );
 

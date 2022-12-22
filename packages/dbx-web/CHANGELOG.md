@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [9.20.3](https://github.com/dereekb/dbx-components/compare/v9.20.2-dev...v9.20.3) (2022-12-22)
+
+
+### Bug Fixes
+
+* fixed convertHttpsCallableErrorToReadableError() ([78decc8](https://github.com/dereekb/dbx-components/commit/78decc857912ac1b259e59fdf9ade7e6976af8c9))
+
+
+
 ## [9.20.2](https://github.com/dereekb/dbx-components/compare/v9.20.1-dev...v9.20.2) (2022-12-21)
 
 

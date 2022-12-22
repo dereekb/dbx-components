@@ -62,10 +62,12 @@ export function directDataHttpsCallable<I, O, C extends HttpsCallable<I, O> = Ht
 export function convertHttpsCallableErrorToReadableError(error: unknown) {
   let result: unknown;
 
-  if (error instanceof FirebaseError) {
-    result = FirebaseServerError.fromFirebaseError(error);
-  } else if (typeof error === 'object') {
-    result = toReadableError(error);
+  if (typeof error === 'object') {
+    if ((error as FirebaseError).name === 'FirebaseError' || ((error as FirebaseError).code && (error as { details: object }).details)) {
+      result = FirebaseServerError.fromFirebaseError(error as FirebaseError);
+    } else {
+      result = toReadableError(error);
+    }
   } else {
     result = error;
   }

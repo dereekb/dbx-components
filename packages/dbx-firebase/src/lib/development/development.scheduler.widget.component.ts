@@ -24,7 +24,7 @@ export function developmentFirebaseServerSchedulerWidgetEntry(): DbxFirebaseDeve
 })
 export class DbxFirebaseDevelopmentSchedulerWidgetComponent {
   readonly entries$ = this.dbxFirebaseDevelopmentSchedulerService.schedulerList$;
-  readonly state$ = loadingStateFromObs(this.entries$).pipe(tapLog('x'));
+  readonly state$ = loadingStateFromObs(this.entries$);
 
   constructor(readonly dbxFirebaseDevelopmentSchedulerService: DbxFirebaseDevelopmentSchedulerService) {}
 }
