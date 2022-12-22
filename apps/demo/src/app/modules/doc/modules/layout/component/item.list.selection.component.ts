@@ -33,9 +33,18 @@ export class DocSelectionItemListViewComponent extends AbstractDbxSelectionListV
 
 @Component({
   template: `
-    <div class="pad-3">
-      <h5 class="no-margin pad-0">{{ name }}</h5>
-      <div>{{ lorem }}</div>
+    <div class="dbx-list-item-padded dbx-list-two-line-item">
+      <div class="item-left">
+        <span>
+          {{ name }}
+          <span class="item-title">Item</span>
+        </span>
+        <span class="item-details">{{ lorem }}</span>
+      </div>
+      <dbx-spacer></dbx-spacer>
+      <div class="item-right">
+        <dbx-chip [small]="true" dbxColor="warn">Active</dbx-chip>
+      </div>
     </div>
   `
 })
