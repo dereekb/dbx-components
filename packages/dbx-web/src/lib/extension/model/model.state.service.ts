@@ -13,7 +13,7 @@ export class DbxModelObjectStateService {
   /**
    * Emit a model viewed event.
    */
-  emitModelViewEvent({ modelKeyTypeNamePair }: DbxModelObjectViewedParams): void {
-    this.store.dispatch(onDbxModel.DbxModelStateModelActions.emitObjectViewEvent({ modelKeyTypeNamePair }));
+  emitModelViewEvent({ modelKeyTypeNamePair, context }: DbxModelObjectViewedParams): void {
+    this.store.dispatch(onDbxModel.DbxModelStateModelActions.emitObjectViewEvent({ modelKeyTypeNamePair, context }));
   }
 }
