@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [9.20.4](https://github.com/dereekb/dbx-components/compare/v9.20.3-dev...v9.20.4) (2022-12-24)
+
+
+### Bug Fixes
+
+* fixed issue with transactions in firestoreCollectionQueryFactory ([79a1456](https://github.com/dereekb/dbx-components/commit/79a1456336df8b9cce1755a40f704c8d8591d064))
+
+
+
 ## [9.20.3](https://github.com/dereekb/dbx-components/compare/v9.20.2-dev...v9.20.3) (2022-12-22)
 
 

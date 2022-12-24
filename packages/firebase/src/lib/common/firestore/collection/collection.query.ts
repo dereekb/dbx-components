@@ -48,7 +48,7 @@ export function firestoreCollectionQueryFactory<T, D extends FirestoreDocument<T
         const result = await baseQuery.getFirstDoc(transaction);
         return result ? documentLoader([result.ref])[0] : undefined;
       },
-      getDocs: (transaction?: Transaction) => baseQuery.getDocs(transaction).then((x) => documentLoader(documentReferencesFromSnapshot(x))),
+      getDocs: (transaction?: Transaction) => baseQuery.getDocs(transaction).then((x) => documentLoader(documentReferencesFromSnapshot(x), transaction)),
       streamDocs: () => baseQuery.streamDocs().pipe(map((x) => documentLoader(documentReferencesFromSnapshot(x)))),
       filter: (...queryConstraints: ArrayOrValue<FirestoreQueryConstraint>[]) => wrapQuery(baseQuery.filter(...queryConstraints))
     };

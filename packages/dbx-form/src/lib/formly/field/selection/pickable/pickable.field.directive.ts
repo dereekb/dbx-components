@@ -1,5 +1,5 @@
 import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
-import { LoadingState, successResult, mapLoadingStateResults, filterMaybe, ListLoadingStateContextInstance, isListLoadingStateEmpty, startWithBeginLoading } from '@dereekb/rxjs';
+import { LoadingState, successResult, mapLoadingStateResults, filterMaybe, ListLoadingStateContextInstance, isListLoadingStateEmpty, startWithBeginLoading, SubscriptionObject } from '@dereekb/rxjs';
 import { PrimativeKey, convertMaybeToArray, findUnique, makeValuesGroupMap, Maybe, ArrayOrValue } from '@dereekb/util';
 import { Directive, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { FormControl, AbstractControl } from '@angular/forms';
@@ -81,6 +81,10 @@ export interface PickableValueFieldsFieldProps<T, M = unknown, H extends Primati
    * Changes the selection mode of the list to "view" mode on disabled, hiding the selection boxes.
    */
   changeSelectionModeToViewOnDisabled?: boolean;
+  /**
+   * (Optional) observable that will trigger the clearing of all cached display values.
+   */
+  refreshDisplayValues$?: Observable<unknown>;
 }
 
 /**
@@ -103,6 +107,7 @@ export class AbstractDbxPickableItemFieldDirective<T, M = unknown, H extends Pri
   private _formControlObs = new BehaviorSubject<Maybe<AbstractControl>>(undefined);
   readonly formControl$ = this._formControlObs.pipe(filterMaybe());
 
+  private _clearDisplayHashMapSub = new SubscriptionObject();
   private _displayHashMap = new BehaviorSubject<Map<H, PickableValueFieldDisplayValue<T, M>>>(new Map());
 
   readonly filterInputValue$: Observable<Maybe<string>> = this.inputCtrl.valueChanges.pipe(startWith(undefined));
@@ -341,6 +346,10 @@ export class AbstractDbxPickableItemFieldDirective<T, M = unknown, H extends Pri
     return this.pickableField.footerConfig;
   }
 
+  get refreshDisplayValues$() {
+    return this.pickableField.refreshDisplayValues$;
+  }
+
   loadDisplayValuesForValues(values: T[]): Observable<LoadingState<PickableValueFieldDisplayValueWithHash<T, M, H>[]>> {
     return this.loadDisplayValuesForFieldValues(values.map((value) => ({ value })));
   }
@@ -398,6 +407,10 @@ export class AbstractDbxPickableItemFieldDirective<T, M = unknown, H extends Pri
   ngOnInit(): void {
     this._formControlObs.next(this.formControl);
 
+    if (this.refreshDisplayValues$ != null) {
+      this._clearDisplayHashMapSub.subscription = this.refreshDisplayValues$.subscribe(() => this._displayHashMap.next(new Map()));
+    }
+
     // Focus after finished loading for the first time.
     this.context.loading$
       .pipe(
@@ -414,6 +427,7 @@ export class AbstractDbxPickableItemFieldDirective<T, M = unknown, H extends Pri
     super.ngOnDestroy();
     this._displayHashMap.complete();
     this._formControlObs.complete();
+    this._clearDisplayHashMapSub.destroy();
     this.filterResultsContext.destroy();
   }
 

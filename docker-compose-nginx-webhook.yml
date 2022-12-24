@@ -24,6 +24,7 @@ services:
       - type: bind
         source: ./tmp/nginx/webhook/nginx
         target: /var/log/nginx
+      # comment out to log to the console. Logs to the temp folder instead.
     networks:
       - demo-api-network
 networks:

@@ -110,9 +110,6 @@ export interface DbxFirebaseDocumentStoreContextState<T, D extends FirestoreDocu
   readonly ref?: Maybe<DocumentReference<T>>;
 }
 
-/**
- * Used for storing the state of a Person and related email threads.
- */
 @Injectable()
 export class AbstractDbxFirebaseDocumentStore<T, D extends FirestoreDocument<T> = FirestoreDocument<T>, C extends DbxFirebaseDocumentStoreContextState<T, D> = DbxFirebaseDocumentStoreContextState<T, D>> extends LockSetComponentStore<C> implements DbxFirebaseDocumentStore<T, D> {
   // MARK: Effects

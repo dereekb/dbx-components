@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/dbx-core",
-  "version": "9.20.3",
+  "version": "9.20.4",
   "peerDependencies": {
     "@angular/common": "^14.0.0",
     "@angular/core": "^14.0.0",
