@@ -37,9 +37,6 @@ export interface DbxFirebaseCollectionStoreContextState<T, D extends FirestoreDo
   readonly constraints?: Maybe<ArrayOrValue<FirestoreQueryConstraint>>;
 }
 
-/**
- * Used for storing the state of a Person and related email threads.
- */
 @Injectable()
 export class AbstractDbxFirebaseCollectionStore<T, D extends FirestoreDocument<T> = FirestoreDocument<T>, C extends DbxFirebaseCollectionStoreContextState<T, D> = DbxFirebaseCollectionStoreContextState<T, D>> extends LockSetComponentStore<C> implements DbxFirebaseCollectionStore<T, D> {
   // MARK: Effects

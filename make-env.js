@@ -28,16 +28,18 @@ const env = {}; // this is the object that is parsed
 const keysToIgnoreFromTemplate = ['PUT_YOUR_REAL_SECRETS_INTO_ENV_SECRET', 'THIS_FILE_IS_COMMITTED_TO_GITHUB']; // these keys are ignored
 const keysToIgnore = new Set(keysToIgnoreFromTemplate);
 
-const envSpecifierType = new String(process.argv[2] || 'test').toUpperCase(); // Also use this to find variables. Always lowercase
-const envSpecifierSeparator = '__';
+const envSpecifierTypeLower = envSpecifierType.toLowerCase();
+const envSpecifierSeparator = '_';
 
 Object.keys(template)
   .filter((x) => !keysToIgnore.has(x))
   .forEach((key) => (env[key] = ''));
 
 function copyToEnvFromProcessEnv(key, defaultValue = '') {
-  const envSpecificKey = `${key}${envSpecifierSeparator}${envSpecifierType}`; // MY_ENV_VARIABLE.test
-  env[key] = process.env[envSpecificKey] || process.env[key] || defaultValue;
+  const envSpecificKey = `${key}${envSpecifierSeparator}${envSpecifierType}`; // MY_ENV_VARIABLE_TEST
+  const envSpecificKeyLower = `${key}${envSpecifierSeparator}${envSpecifierTypeLower}`; // MY_ENV_VARIABLE_test
+
+  env[key] = process.env[envSpecificKey] || process.env[envSpecificKeyLower] || process.env[key] || defaultValue;
 }
 
 function initWithProcessEnv(defaultValue, keysSource = env) {
@@ -63,7 +65,9 @@ const defaultPlaceholderValue = 'placeholder'; // This is the default value to u
 initWithProcessEnv(defaultPlaceholderValue); // Init with process.env, copying values from process.env onto the existing keys of our env variable
 
 // Check there are no placeholder values remaining
-assertHasNoPlaceholderValues(defaultPlaceholderValue);
+if (envSpecifierTypeLower === 'staging' || envSpecifierTypeLower === 'prod') {
+  assertHasNoPlaceholderValues(defaultPlaceholderValue);
+}
 
 // Explicit Declaration
 copyToEnvFromProcessEnv('MAILGUN_DOMAIN');
