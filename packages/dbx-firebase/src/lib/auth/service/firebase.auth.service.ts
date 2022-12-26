@@ -1,11 +1,11 @@
 import { filterMaybe, isNot, timeoutStartWith } from '@dereekb/rxjs';
 import { Injectable, Optional } from '@angular/core';
 import { AuthUserState, DbxAuthService, loggedOutObsFromIsLoggedIn, loggedInObsFromIsLoggedIn, AuthUserIdentifier, authUserIdentifier } from '@dereekb/dbx-core';
-import { Auth, authState, idToken, User, IdTokenResult, ParsedToken, GoogleAuthProvider, signInWithPopup, AuthProvider, PopupRedirectResolver, signInAnonymously, signInWithEmailAndPassword, UserCredential, FacebookAuthProvider, GithubAuthProvider, TwitterAuthProvider, createUserWithEmailAndPassword } from '@angular/fire/auth';
+import { reauthenticateWithCredential, reauthenticateWithPopup, reauthenticateWithRedirect, reauthenticateWithPhoneNumber, Auth, authState, idToken, User, IdTokenResult, ParsedToken, GoogleAuthProvider, signInWithPopup, AuthProvider, PopupRedirectResolver, signInAnonymously, signInWithEmailAndPassword, UserCredential, FacebookAuthProvider, GithubAuthProvider, TwitterAuthProvider, createUserWithEmailAndPassword } from '@angular/fire/auth';
 import { of, Observable, distinctUntilChanged, shareReplay, map, switchMap, firstValueFrom, catchError } from 'rxjs';
 import { AuthClaims, AuthClaimsObject, AuthRoleClaimsService, AuthRoleSet, AUTH_ADMIN_ROLE, cachedGetter, Maybe } from '@dereekb/util';
 import { AuthUserInfo, authUserInfoFromAuthUser, firebaseAuthTokenFromUser } from '../auth';
-import { sendPasswordResetEmail } from 'firebase/auth';
+import { AuthCredential, sendPasswordResetEmail } from 'firebase/auth';
 import { authUserStateFromFirebaseAuthServiceFunction } from './firebase.auth.rxjs';
 import { FirebaseAuthContextInfo, FirebaseAuthToken } from '@dereekb/firebase';
 
@@ -210,6 +210,20 @@ export class DbxFirebaseAuthService implements DbxAuthService {
 
   logOut(): Promise<void> {
     return this.firebaseAuth.signOut();
+  }
+
+  reauthenticateWithPopup(provider: AuthProvider, resolver?: PopupRedirectResolver): Promise<UserCredential> {
+    return firstValueFrom(
+      this.currentAuthUser$.pipe(
+        switchMap((x: Maybe<User>) => {
+          if (x) {
+            return reauthenticateWithPopup(x, provider, resolver);
+          } else {
+            throw new Error('User is not logged in currently.');
+          }
+        })
+      )
+    );
   }
 }
 
