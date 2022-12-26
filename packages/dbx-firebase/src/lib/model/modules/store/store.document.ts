@@ -17,9 +17,9 @@ import {
   FirestoreModelCollectionAndIdPairObject,
   documentDataWithIdAndKey,
   FirestoreAccessorStreamMode,
-  FlatFirestoreModelKey,
   TwoWayFlatFirestoreModelKey,
-  inferKeyFromTwoWayFlatFirestoreModelKey
+  inferKeyFromTwoWayFlatFirestoreModelKey,
+  RootSingleItemFirestoreCollection
 } from '@dereekb/firebase';
 import { filterMaybe, LoadingState, beginLoading, successResult, loadingStateFromObs, errorResult, ObservableOrValue } from '@dereekb/rxjs';
 import { Maybe, isMaybeSo } from '@dereekb/util';
@@ -300,4 +300,49 @@ export class AbstractDbxFirebaseDocumentStore<T, D extends FirestoreDocument<T> 
 
   readonly setFirestoreCollection = this.updater((state, firestoreCollection: Maybe<FirestoreCollection<T, D>>) => ({ ...state, firestoreCollection }));
   readonly setFirestoreCollectionLike = this.updater((state, firestoreCollectionLike: Maybe<FirestoreCollectionLike<T, D>>) => ({ ...state, firestoreCollectionLike }));
+}
+
+/**
+ * AbstractDbxFirebaseDocumentWithParentStore extension for use with RootSingleItemFirestoreCollection.
+ */
+export class AbstractRootSingleItemDbxFirebaseDocument<T, D extends FirestoreDocument<T> = FirestoreDocument<T>, C extends DbxFirebaseDocumentStoreContextState<T, D> = DbxFirebaseDocumentStoreContextState<T, D>> extends AbstractDbxFirebaseDocumentStore<T, D, C> {
+  /**
+   * Sets the SingleItemFirestoreCollection to use.
+   */
+  override readonly setFirestoreCollection = this.updater((state, firestoreCollection: Maybe<FirestoreCollection<T, D>>) => {
+    if (firestoreCollection != null) {
+      const id = (firestoreCollection as RootSingleItemFirestoreCollection<T, D>).singleItemIdentifier;
+
+      if (id != null) {
+        return { ...state, firestoreCollection, id };
+      } else {
+        throw new Error('AbstractRootSingleItemDbxFirebaseDocument only accepts RootSingleItemFirestoreCollection values with a singleItemIdentifier set for setFirestoreCollection.');
+      }
+    } else {
+      return { ...state, firestoreCollection: null };
+    }
+  });
+
+  /**
+   * Does nothing on a AbstractRootSingleItemDbxFirebaseDocument.
+   *
+   * Ref is set with the FirestoreCollection
+   */
+  override readonly setId = this.updater((state, id: Maybe<FirestoreModelId>) => state) as (observableOrValue: Maybe<string> | Observable<Maybe<string>>) => Subscription;
+
+  /**
+   * Does nothing on a AbstractRootSingleItemDbxFirebaseDocument.
+   *
+   * Ref is set with the FirestoreCollection
+   */
+  override readonly setKey = this.updater((state, key: Maybe<FirestoreModelKey>) => state) as (observableOrValue: Maybe<string> | Observable<Maybe<string>>) => Subscription;
+
+  /**
+   * Does nothing on a AbstractRootSingleItemDbxFirebaseDocument.
+   *
+   * Ref is set with the FirestoreCollection
+   */
+  override readonly setRef = this.updater((state, ref: Maybe<DocumentReference<T>>) => state) as (observableOrValue: Maybe<DocumentReference<T>> | Observable<Maybe<DocumentReference<T>>>) => Subscription;
+
+  override readonly clearRefs = this.updater((state) => state);
 }
