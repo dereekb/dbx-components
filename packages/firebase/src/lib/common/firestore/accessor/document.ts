@@ -9,7 +9,7 @@ import { DocumentReference, CollectionReference, Transaction, WriteBatch, Docume
 import { FirestoreAccessorIncrementUpdate, dataFromSnapshotStream, FirestoreDocumentDataAccessor, FirestoreDocumentUpdateParams, updateWithAccessorUpdateAndConverterFunction, FirestoreAccessorStreamMode, snapshotStreamDataForAccessor, snapshotStreamForAccessor } from './accessor';
 import { CollectionReferenceRef, DocumentReferenceRef, FirestoreContextReference, FirestoreDataConverterRef } from '../reference';
 import { FirestoreDocumentContext } from './context';
-import { build, Maybe } from '@dereekb/util';
+import { build, Building, Maybe } from '@dereekb/util';
 import { FirestoreModelTypeRef, FirestoreModelIdentity, FirestoreModelTypeModelIdentityRef } from '../collection/collection';
 import { InterceptAccessorFactoryFunction } from './accessor.wrap';
 import { incrementUpdateWithAccessorFunction } from './increment';
@@ -454,4 +454,28 @@ export function firestoreSingleDocumentAccessor<T, D extends FirestoreDocument<T
       return accessors.documentAccessor().documentRefForId(singleItemIdentifier);
     }
   };
+}
+
+export const DEFAULT_SINGLE_ITEM_FIRESTORE_COLLECTION_DOCUMENT_IDENTIFIER = '0';
+
+export type SingleItemFirestoreCollectionDocumentIdentifier = string;
+
+export interface SingleItemFirestoreCollectionDocumentIdentifierRef {
+  /**
+   * Identifier of the single document in the collection.
+   */
+  readonly singleItemIdentifier: SingleItemFirestoreCollectionDocumentIdentifier;
+}
+
+export function extendFirestoreCollectionWithSingleDocumentAccessor<X extends FirestoreSingleDocumentAccessor<T, D> & FirestoreDocumentAccessorContextExtension<T, D>, T, D extends FirestoreDocument<T> = FirestoreDocument<T>>(x: Building<X>, singleItemIdentifier?: SingleItemFirestoreCollectionDocumentIdentifier): void {
+  const singleAccessor = firestoreSingleDocumentAccessor({
+    accessors: x as FirestoreDocumentAccessorContextExtension<T, D>,
+    singleItemIdentifier: singleItemIdentifier || DEFAULT_SINGLE_ITEM_FIRESTORE_COLLECTION_DOCUMENT_IDENTIFIER
+  });
+
+  x.singleItemIdentifier = singleAccessor.singleItemIdentifier;
+  x.documentRef = singleAccessor.documentRef;
+  x.loadDocument = singleAccessor.loadDocument;
+  x.loadDocumentForTransaction = singleAccessor.loadDocumentForTransaction;
+  x.loadDocumentForWriteBatch = singleAccessor.loadDocumentForWriteBatch;
 }
