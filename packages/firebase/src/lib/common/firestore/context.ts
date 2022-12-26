@@ -15,7 +15,7 @@ export interface FirestoreContext<F extends Firestore = Firestore> extends RunTr
   collectionGroup<T = DocumentData>(collectionId: string): CollectionGroup<T>;
   subcollection<T = DocumentData>(parent: DocumentReference, path: string, ...pathSegments: string[]): CollectionReference<T>;
   firestoreCollection<T, D extends FirestoreDocument<T>>(config: FirestoreContextFirestoreCollectionConfig<T, D>): FirestoreCollection<T, D>;
-  rootSingleItemFirestoreCollection<T, D extends FirestoreDocument<T>>(config: FirestoreContextFirestoreCollectionConfig<T, D>): FirestoreCollection<T, D>;
+  rootSingleItemFirestoreCollection<T, D extends FirestoreDocument<T>>(config: FirestoreContextFirestoreCollectionConfig<T, D>): RootSingleItemFirestoreCollection<T, D>;
   firestoreCollectionGroup<T, D extends FirestoreDocument<T>>(config: FirestoreContextFirestoreCollectionGroupConfig<T, D>): FirestoreCollectionGroup<T, D>;
   firestoreCollectionWithParent<T, PT, D extends FirestoreDocument<T> = FirestoreDocument<T>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>>(config: FirestoreContextFirestoreCollectionWithParentConfig<T, PT, D, PD>): FirestoreCollectionWithParent<T, PT, D, PD>;
   singleItemFirestoreCollection<T, PT, D extends FirestoreDocument<T> = FirestoreDocument<T>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>>(config: FirestoreContextSingleItemFirestoreCollectionConfig<T, PT, D, PD>): SingleItemFirestoreCollection<T, PT, D, PD>;
