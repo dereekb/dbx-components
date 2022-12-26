@@ -1,5 +1,5 @@
-import { FirestoreDocument } from './accessor/document';
-import { makeFirestoreCollection, FirestoreCollection, FirestoreCollectionConfig, FirestoreCollectionWithParent, FirestoreCollectionWithParentConfig, makeFirestoreCollectionWithParent, SingleItemFirestoreCollection, makeSingleItemFirestoreCollection, SingleItemFirestoreCollectionConfig, FirestoreCollectionGroup, makeFirestoreCollectionGroup } from './collection';
+import { FirestoreDocument, SingleItemFirestoreCollectionDocumentIdentifierRef } from './accessor/document';
+import { makeFirestoreCollection, FirestoreCollection, FirestoreCollectionConfig, FirestoreCollectionWithParent, FirestoreCollectionWithParentConfig, makeFirestoreCollectionWithParent, SingleItemFirestoreCollection, makeSingleItemFirestoreCollection, SingleItemFirestoreCollectionConfig, FirestoreCollectionGroup, makeFirestoreCollectionGroup, RootSingleItemFirestoreCollectionConfig, makeRootSingleItemFirestoreCollection, RootSingleItemFirestoreCollection } from './collection';
 import { FirestoreDrivers } from './driver/driver';
 import { WriteBatchFactoryReference, RunTransactionFactoryReference } from './driver';
 import { DocumentReference, CollectionReference, DocumentData, Firestore, CollectionGroup } from './types';
@@ -15,21 +15,23 @@ export interface FirestoreContext<F extends Firestore = Firestore> extends RunTr
   collectionGroup<T = DocumentData>(collectionId: string): CollectionGroup<T>;
   subcollection<T = DocumentData>(parent: DocumentReference, path: string, ...pathSegments: string[]): CollectionReference<T>;
   firestoreCollection<T, D extends FirestoreDocument<T>>(config: FirestoreContextFirestoreCollectionConfig<T, D>): FirestoreCollection<T, D>;
+  rootSingleItemFirestoreCollection<T, D extends FirestoreDocument<T>>(config: FirestoreContextFirestoreCollectionConfig<T, D>): FirestoreCollection<T, D>;
   firestoreCollectionGroup<T, D extends FirestoreDocument<T>>(config: FirestoreContextFirestoreCollectionGroupConfig<T, D>): FirestoreCollectionGroup<T, D>;
   firestoreCollectionWithParent<T, PT, D extends FirestoreDocument<T> = FirestoreDocument<T>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>>(config: FirestoreContextFirestoreCollectionWithParentConfig<T, PT, D, PD>): FirestoreCollectionWithParent<T, PT, D, PD>;
   singleItemFirestoreCollection<T, PT, D extends FirestoreDocument<T> = FirestoreDocument<T>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>>(config: FirestoreContextSingleItemFirestoreCollectionConfig<T, PT, D, PD>): SingleItemFirestoreCollection<T, PT, D, PD>;
 }
 
 export type FirestoreContextFirestoreCollectionConfig<T, D extends FirestoreDocument<T>> = Omit<FirestoreCollectionConfig<T, D>, 'firestoreDriverIdentifier' | 'firestoreDriverType' | 'firestoreQueryDriver' | 'firestoreAccessorDriver'>;
+
+export interface FirestoreContextRootSingleItemFirestoreCollectionConfig<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> extends FirestoreContextFirestoreCollectionConfig<T, D>, Partial<SingleItemFirestoreCollectionDocumentIdentifierRef> {}
+
 export type FirestoreContextFirestoreCollectionGroupConfig<T, D extends FirestoreDocument<T>> = Omit<FirestoreContextFirestoreCollectionConfig<T, D>, 'collection'> & QueryLikeReferenceRef<T>;
 
 export interface FirestoreContextFirestoreCollectionWithParentConfig<T, PT, D extends FirestoreDocument<T> = FirestoreDocument<T>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>> extends Omit<FirestoreContextFirestoreCollectionConfig<T, D>, 'queryLike'> {
   readonly parent: PD;
 }
 
-export interface FirestoreContextSingleItemFirestoreCollectionConfig<T, PT, D extends FirestoreDocument<T> = FirestoreDocument<T>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>> extends FirestoreContextFirestoreCollectionWithParentConfig<T, PT, D, PD> {
-  readonly singleItemIdentifier?: string;
-}
+export interface FirestoreContextSingleItemFirestoreCollectionConfig<T, PT, D extends FirestoreDocument<T> = FirestoreDocument<T>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>> extends FirestoreContextFirestoreCollectionWithParentConfig<T, PT, D, PD>, Partial<SingleItemFirestoreCollectionDocumentIdentifierRef> {}
 
 /**
  * Factory function for generating a FirestoreContext given the input Firestore.
@@ -71,6 +73,10 @@ export function firestoreContextFactory<F extends Firestore = Firestore>(drivers
       runTransaction: drivers.firestoreAccessorDriver.transactionFactoryForFirestore(firestore),
       batch: drivers.firestoreAccessorDriver.writeBatchFactoryForFirestore(firestore),
       firestoreCollection,
+      rootSingleItemFirestoreCollection<T, D extends FirestoreDocument<T> = FirestoreDocument<T>>(inputConfig: FirestoreContextRootSingleItemFirestoreCollectionConfig<T, D>): RootSingleItemFirestoreCollection<T, D> {
+        const config: RootSingleItemFirestoreCollectionConfig<T, D> = makeFirestoreCollectionConfig(inputConfig) as RootSingleItemFirestoreCollectionConfig<T, D>;
+        return makeRootSingleItemFirestoreCollection(config);
+      },
       firestoreCollectionGroup,
       firestoreCollectionWithParent<T, PT, D extends FirestoreDocument<T> = FirestoreDocument<T>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>>(inputConfig: FirestoreCollectionWithParentConfig<T, PT, D, PD>): FirestoreCollectionWithParent<T, PT, D, PD> {
         const config: FirestoreCollectionWithParentConfig<T, PT, D, PD> = makeFirestoreCollectionConfig(inputConfig) as FirestoreCollectionWithParentConfig<T, PT, D, PD>;
