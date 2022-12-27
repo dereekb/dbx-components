@@ -19,7 +19,9 @@ import {
   FirestoreAccessorStreamMode,
   TwoWayFlatFirestoreModelKey,
   inferKeyFromTwoWayFlatFirestoreModelKey,
-  RootSingleItemFirestoreCollection
+  RootSingleItemFirestoreCollection,
+  FlatFirestoreModelKey,
+  flatFirestoreModelKey
 } from '@dereekb/firebase';
 import { filterMaybe, LoadingState, beginLoading, successResult, loadingStateFromObs, errorResult, ObservableOrValue } from '@dereekb/rxjs';
 import { Maybe, isMaybeSo } from '@dereekb/util';
@@ -45,6 +47,7 @@ export interface DbxFirebaseDocumentStore<T, D extends FirestoreDocument<T> = Fi
   readonly key$: Observable<FirestoreModelKey>;
   readonly ref$: Observable<DocumentReference<T>>;
   readonly hasRef$: Observable<boolean>;
+  readonly flatKey$: Observable<FlatFirestoreModelKey>;
 
   readonly keyModelIds$: Observable<FirestoreModelId[]>;
   readonly keyPairs$: Observable<FirestoreModelCollectionAndIdPair[]>;
@@ -212,6 +215,11 @@ export class AbstractDbxFirebaseDocumentStore<T, D extends FirestoreDocument<T> 
 
   readonly ref$: Observable<DocumentReference<T>> = this.document$.pipe(
     map((x) => x.documentRef),
+    shareReplay(1)
+  );
+
+  readonly flatKey$: Observable<FlatFirestoreModelKey> = this.key$.pipe(
+    map((x) => flatFirestoreModelKey(x)),
     shareReplay(1)
   );
 
