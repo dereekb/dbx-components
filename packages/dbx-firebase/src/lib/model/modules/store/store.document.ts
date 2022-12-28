@@ -1,5 +1,5 @@
-import { Injectable } from '@angular/core';
-import { Observable, shareReplay, distinctUntilChanged, map, switchMap, combineLatest, Subscription, of } from 'rxjs';
+import { Inject, Injectable, Optional } from '@angular/core';
+import { Observable, shareReplay, distinctUntilChanged, map, switchMap, combineLatest, Subscription, of, single } from 'rxjs';
 import {
   DocumentSnapshot,
   DocumentReference,
@@ -310,10 +310,24 @@ export class AbstractDbxFirebaseDocumentStore<T, D extends FirestoreDocument<T> 
   readonly setFirestoreCollectionLike = this.updater((state, firestoreCollectionLike: Maybe<FirestoreCollectionLike<T, D>>) => ({ ...state, firestoreCollectionLike }));
 }
 
+function injectSingleItemIdIntoState<T, D extends FirestoreDocument<T> = FirestoreDocument<T>, C extends DbxFirebaseDocumentStoreContextState<T, D> = DbxFirebaseDocumentStoreContextState<T, D>>(state?: C | undefined): C | undefined {
+  const id = (state?.firestoreCollection as RootSingleItemFirestoreCollection<T, D>)?.singleItemIdentifier;
+
+  if (state && id != null) {
+    return { ...state, id };
+  } else {
+    return state;
+  }
+}
+
 /**
  * AbstractDbxFirebaseDocumentWithParentStore extension for use with RootSingleItemFirestoreCollection.
  */
 export class AbstractRootSingleItemDbxFirebaseDocument<T, D extends FirestoreDocument<T> = FirestoreDocument<T>, C extends DbxFirebaseDocumentStoreContextState<T, D> = DbxFirebaseDocumentStoreContextState<T, D>> extends AbstractDbxFirebaseDocumentStore<T, D, C> {
+  protected constructor(@Inject(null) @Optional() initialState?: C) {
+    super(injectSingleItemIdIntoState<T, D, C>(initialState));
+  }
+
   /**
    * Sets the SingleItemFirestoreCollection to use.
    */
