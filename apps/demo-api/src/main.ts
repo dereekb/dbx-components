@@ -11,7 +11,7 @@ const app = admin.initializeApp();
 
 const { server, nest } = initNestServer(app, { environment });
 
-export const api = onRequest(server);
+export const api = onRequest({ enforceAppCheck: false }, server);
 
 // App Functions
 export const { initUserOnCreate, profileSetUsername, createModel, readModel, updateModel, deleteModel } = allAppFunctions(nest);

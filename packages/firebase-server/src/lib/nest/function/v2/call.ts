@@ -20,10 +20,10 @@ export type OnCallHandlerWithNestApplicationFactory = <I, O>(fn: OnCallWithNestA
  * @param nestAppPromiseGetter
  * @returns
  */
-export function onCallHandlerWithNestApplicationFactory(): OnCallHandlerWithNestApplicationFactory {
+export function onCallHandlerWithNestApplicationFactory(opts: https.CallableOptions = {}): OnCallHandlerWithNestApplicationFactory {
   return <I, O>(fn: OnCallWithNestApplication<I, O>) => {
     return (nestAppPromiseGetter: NestApplicationPromiseGetter) =>
-      https.onCall((request: CallableRequest<I>) =>
+      https.onCall(opts, (request: CallableRequest<I>) =>
         nestAppPromiseGetter().then((nestApplication) =>
           fn({
             ...request,

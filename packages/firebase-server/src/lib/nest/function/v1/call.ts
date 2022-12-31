@@ -3,6 +3,7 @@ import { INestApplicationContext } from '@nestjs/common';
 import { RunnableHttpFunction } from '../../../function/type';
 import { MakeNestContext, NestApplicationFunctionFactory, NestApplicationPromiseGetter } from '../../nest.provider';
 import { OnCallWithNestApplication, OnCallWithNestApplicationRequest, OnCallWithNestContext, setNestContextOnRequest } from '../call';
+import { mapIdentityFunction } from '@dereekb/util';
 
 export function makeOnCallWithNestApplicationRequest<I>(nestApplication: INestApplicationContext, data: I, context: functions.https.CallableContext): OnCallWithNestApplicationRequest<I> {
   return {
@@ -20,15 +21,18 @@ export type NestApplicationRunnableHttpFunctionFactory<I> = NestApplicationFunct
  */
 export type OnCallWithNestApplicationFactory = <I = unknown, O = unknown>(fn: OnCallWithNestApplication<I, O>) => NestApplicationRunnableHttpFunctionFactory<I>;
 
+export type OnCallWithNestApplicationFactoryConfigFunctionBuilderFunction = (builder: functions.FunctionBuilder) => functions.FunctionBuilder;
+
 /**
  * Creates a factory for generating OnCallWithNestApplication functions.
  *
  * @param nestAppPromiseGetter
  * @returns
  */
-export function onCallWithNestApplicationFactory(): OnCallWithNestApplicationFactory {
+export function onCallWithNestApplicationFactory(builderFunction: OnCallWithNestApplicationFactoryConfigFunctionBuilderFunction = mapIdentityFunction()): OnCallWithNestApplicationFactory {
+  const functionsBuilder = builderFunction(functions.runWith({}));
   return <I, O>(fn: OnCallWithNestApplication<I, O>) => {
-    return (nestAppPromiseGetter: NestApplicationPromiseGetter) => functions.https.onCall((data: I, context: functions.https.CallableContext) => nestAppPromiseGetter().then((x) => fn(makeOnCallWithNestApplicationRequest(x, data, context))));
+    return (nestAppPromiseGetter: NestApplicationPromiseGetter) => functionsBuilder.https.onCall((data: I, context: functions.https.CallableContext) => nestAppPromiseGetter().then((x) => fn(makeOnCallWithNestApplicationRequest(x, data, context))));
   };
 }
 
