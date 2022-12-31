@@ -24,7 +24,11 @@ import {
   firestoreUID,
   firestoreUniqueStringArray,
   optionalFirestoreArray,
-  optionalFirestoreDate
+  optionalFirestoreDate,
+  firestoreSubObject,
+  SystemStateStoredData,
+  SystemStateStoredDataConverterMap,
+  SystemStateStoredDataFieldConverterConfig
 } from '@dereekb/firebase';
 import { GrantedReadRole } from '@dereekb/model';
 
@@ -435,3 +439,25 @@ export function mockItemSubItemDeepFirestoreCollectionGroup(firestoreContext: Fi
     firestoreContext
   });
 }
+
+// MARK: Mock System Item
+export const MOCK_SYSTEM_STATE_TYPE = 'mockitemsystemstate';
+
+export interface MockSystemData extends SystemStateStoredData {
+  /**
+   * Last updated at
+   */
+  lat: Date;
+}
+
+export const mockItemSystemDataConverter: SystemStateStoredDataFieldConverterConfig<MockSystemData> = firestoreSubObject<MockSystemData>({
+  objectField: {
+    fields: {
+      lat: firestoreDate({ saveDefaultAsNow: true })
+    }
+  }
+});
+
+export const mockItemSystemStateStoredDataConverterMap: SystemStateStoredDataConverterMap = {
+  [MOCK_SYSTEM_STATE_TYPE]: mockItemSystemDataConverter
+};
