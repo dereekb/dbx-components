@@ -2,23 +2,51 @@ import { asGetter } from '@dereekb/util';
 import { isDate } from 'date-fns';
 import { DocumentSnapshot } from '../types';
 import { snapshotConverterFunctions } from './snapshot';
-import { firestoreBoolean, firestoreDate, firestoreNumber, firestoreString, firestoreUniqueStringArray } from './snapshot.field';
+import { firestoreBoolean, firestoreDate, firestoreNumber, firestoreObjectArray, firestoreString, firestoreSubObject, firestoreUniqueStringArray } from './snapshot.field';
 
-export interface TestSnapshotDefaults {
+export interface TestSnapshotDefaultsEmbeddedDefaults {
   date: Date;
+  defaultDate: Date;
   number: number;
   numberWithStore: number;
   uniqueStringArray: string[];
   uniqueStringArrayWithDefaultValue: string[];
 }
 
+export const testSnapshotDefaultsEmbeddedDefaults = firestoreSubObject<TestSnapshotDefaultsEmbeddedDefaults>({
+  objectField: {
+    fields: {
+      date: firestoreDate({ saveDefaultAsNow: true }),
+      defaultDate: firestoreDate({}),
+      number: firestoreNumber({ default: 0 }),
+      numberWithStore: firestoreNumber({ default: 0, saveDefault: true }),
+      uniqueStringArray: firestoreUniqueStringArray(),
+      uniqueStringArrayWithDefaultValue: firestoreUniqueStringArray({ default: () => ['test'] })
+    }
+  }
+});
+
+export interface TestSnapshotDefaults {
+  date: Date;
+  defaultDate: Date;
+  number: number;
+  numberWithStore: number;
+  uniqueStringArray: string[];
+  uniqueStringArrayWithDefaultValue: string[];
+  embedded: TestSnapshotDefaultsEmbeddedDefaults[];
+}
+
 export const testSnapshotDefaultsConverter = snapshotConverterFunctions<TestSnapshotDefaults>({
   fields: {
     date: firestoreDate({ saveDefaultAsNow: true }),
+    defaultDate: firestoreDate({}),
     number: firestoreNumber({ default: 0 }),
     numberWithStore: firestoreNumber({ default: 0, saveDefault: true }),
     uniqueStringArray: firestoreUniqueStringArray(),
-    uniqueStringArrayWithDefaultValue: firestoreUniqueStringArray({ default: () => ['test'] })
+    uniqueStringArrayWithDefaultValue: firestoreUniqueStringArray({ default: () => ['test'] }),
+    embedded: firestoreObjectArray({
+      objectField: testSnapshotDefaultsEmbeddedDefaults
+    })
   }
 });
 
@@ -103,11 +131,18 @@ describe('snapshotConverterFunctions()', () => {
         expect(x.b).not.toBeDefined();
         expect(x.c).not.toBeDefined();
 
-        expect(Object.keys(x).length).toBe(5);
+        expect(Object.keys(x).length).toBe(7);
       });
     });
 
     describe('to() - to data', () => {
+      it('should apply the default value from date if null values are passed', () => {
+        const result = testSnapshotDefaultsConverter.to({ date: null } as any);
+        expect(result.defaultDate).toBeNull(); // saves nothing
+        expect(result.date).not.toBeNull();
+        expect(typeof result.date).toBe('string');
+      });
+
       it('should apply the beforeSaveDefault from uniqueStringArray if an empty object is passed', () => {
         const result = testSnapshotDefaultsConverter.to({} as any);
 
@@ -121,6 +156,17 @@ describe('snapshotConverterFunctions()', () => {
         expect(result.date).not.toBeNull();
         expect(typeof result.date).toBe('string');
         expect(result.uniqueStringArray).toBeNull();
+      });
+
+      describe('embedded', () => {
+        const result = testSnapshotDefaultsConverter.to({ embedded: [{}] } as any);
+        expect(result.embedded.length).toBe(1);
+
+        const first = result.embedded[0];
+
+        expect(result.defaultDate).toBeNull();
+        expect(typeof first.date).toBe('string');
+        expect(first.uniqueStringArray).toBeNull();
       });
     });
   });

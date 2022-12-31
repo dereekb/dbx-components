@@ -47,6 +47,10 @@ export class MockItemCollectionFixtureInstance {
     return this.collections.mockItemSubItemDeepCollectionGroup;
   }
 
+  get mockItemSystemState() {
+    return this.collections.mockItemSystemStateCollection;
+  }
+
   constructor(readonly fixture: MockItemCollectionFixture) {}
 }
 

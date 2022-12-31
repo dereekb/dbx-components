@@ -13,7 +13,7 @@ import { build, Building, Maybe } from '@dereekb/util';
 import { FirestoreModelTypeRef, FirestoreModelIdentity, FirestoreModelTypeModelIdentityRef } from '../collection/collection';
 import { InterceptAccessorFactoryFunction } from './accessor.wrap';
 import { incrementUpdateWithAccessorFunction } from './increment';
-import { FirestoreDataConverterFactory, InterceptFirestoreDataConverterFactory } from './converter';
+import { FirestoreDataConverterFactory, FirestoreDataConverterFactoryRef, InterceptFirestoreDataConverterFactory } from './converter';
 
 export interface FirestoreDocument<T, I extends FirestoreModelIdentity = FirestoreModelIdentity> extends FirestoreDataConverterRef<T>, DocumentReferenceRef<T>, CollectionReferenceRef<T>, FirestoreModelIdentityRef<I>, FirestoreModelTypeRef<FirestoreModelIdentityModelType<I>>, FirestoreCollectionNameRef<FirestoreModelIdentityCollectionName<I>>, FirestoreModelKeyRef, FirestoreModelIdRef {
   readonly accessor: FirestoreDocumentDataAccessor<T>;
@@ -69,7 +69,7 @@ export abstract class AbstractFirestoreDocument<T, D extends AbstractFirestoreDo
   }
 
   get converter(): FirestoreDataConverter<T> {
-    return this.documentAccessor.converter;
+    return this.documentAccessor.converterFactory(this.documentRef);
   }
 
   /**
@@ -190,6 +190,11 @@ export interface LimitedFirestoreDocumentAccessor<T, D extends FirestoreDocument
   documentRefForKey(fullPath: FirestoreModelKey): DocumentReference<T>;
 
   /**
+   * This is the default converter. Be sure to use the converterFactory instead when attempting to get the accurate converter for a document.
+   */
+  readonly converter: FirestoreDataConverter<T>;
+
+  /**
    * Returns the converter factory for this accessor.
    */
   readonly converterFactory: FirestoreDataConverterFactory<T>;
@@ -228,7 +233,7 @@ export type FirestoreDocumentFactoryFunction<T, D extends FirestoreDocument<T> =
 /**
  * Factory function used for creating a FirestoreDocumentAccessor.
  */
-export type LimitedFirestoreDocumentAccessorFactoryFunction<T, D extends FirestoreDocument<T> = FirestoreDocument<T>, A extends LimitedFirestoreDocumentAccessor<T, D> = LimitedFirestoreDocumentAccessor<T, D>> = (context?: FirestoreDocumentContext<T>) => A;
+export type LimitedFirestoreDocumentAccessorFactoryFunction<T, D extends FirestoreDocument<T> = FirestoreDocument<T>, A extends LimitedFirestoreDocumentAccessor<T, D> = LimitedFirestoreDocumentAccessor<T, D>> = ((context?: FirestoreDocumentContext<T>) => A) & FirestoreDataConverterFactoryRef<T>;
 
 /**
  * Factory type used for creating a FirestoreDocumentAccessor.
@@ -258,11 +263,11 @@ export interface LimitedFirestoreDocumentAccessorFactoryConfig<T, D extends Fire
 }
 
 export function limitedFirestoreDocumentAccessorFactory<T, D extends FirestoreDocument<T> = FirestoreDocument<T>>(config: LimitedFirestoreDocumentAccessorFactoryConfig<T, D>): LimitedFirestoreDocumentAccessorFactoryFunction<T, D> {
-  const { firestoreContext, firestoreAccessorDriver, makeDocument, accessorFactory: interceptAccessorFactory, converter: inputConverter, converterFactory: inputConverterFactory, modelIdentity } = config;
+  const { firestoreContext, firestoreAccessorDriver, makeDocument, accessorFactory: interceptAccessorFactory, converter: inputDefaultConverter, converterFactory: inputConverterFactory, modelIdentity } = config;
   const expectedCollectionName = firestoreAccessorDriver.fuzzedPathForPath ? firestoreAccessorDriver.fuzzedPathForPath(modelIdentity.collectionName) : modelIdentity.collectionName;
-  const converterFactory: FirestoreDataConverterFactory<T> = inputConverterFactory ? (ref) => (ref ? inputConverterFactory(ref) ?? inputConverter : inputConverter) : () => inputConverter;
+  const converterFactory: FirestoreDataConverterFactory<T> = inputConverterFactory ? (ref) => (ref ? inputConverterFactory(ref) ?? inputDefaultConverter : inputDefaultConverter) : () => inputDefaultConverter;
 
-  return (context?: FirestoreDocumentContext<T>) => {
+  const result = ((context?: FirestoreDocumentContext<T>) => {
     const databaseContext: FirestoreDocumentContext<T> = context ?? config.firestoreAccessorDriver.defaultContextFactory();
     const dataAccessorFactory = interceptAccessorFactory ? interceptAccessorFactory(databaseContext.accessorFactory) : databaseContext.accessorFactory;
 
@@ -293,7 +298,7 @@ export function limitedFirestoreDocumentAccessorFactory<T, D extends FirestoreDo
     }
 
     const documentAccessor: LimitedFirestoreDocumentAccessor<T, D> = {
-      converter: inputConverter,
+      converter: inputDefaultConverter,
       converterFactory,
       modelIdentity,
       loadDocumentFrom(document: FirestoreDocument<T>): D {
@@ -307,7 +312,9 @@ export function limitedFirestoreDocumentAccessorFactory<T, D extends FirestoreDo
     };
 
     return documentAccessor;
-  };
+  }) as Building<LimitedFirestoreDocumentAccessorFactoryFunction<T, D>>;
+  result.converterFactory = converterFactory;
+  return result as LimitedFirestoreDocumentAccessorFactoryFunction<T, D>;
 }
 
 // MARK: FirestoreDocumentAccessor
@@ -329,14 +336,16 @@ export interface FirestoreDocumentAccessorFactoryConfig<T, D extends FirestoreDo
 }
 
 export function firestoreDocumentAccessorFactory<T, D extends FirestoreDocument<T> = FirestoreDocument<T>>(config: FirestoreDocumentAccessorFactoryConfig<T, D>): FirestoreDocumentAccessorFactoryFunction<T, D> {
-  const { firestoreAccessorDriver, collection, converter } = config;
+  const { firestoreAccessorDriver, collection } = config;
   const limitedFirestoreDocumentAccessor = limitedFirestoreDocumentAccessorFactory(config);
 
   function documentRefForId(path: string): DocumentReference<T> {
-    return firestoreAccessorDriver.doc(collection, path).withConverter(converter);
+    const ref = firestoreAccessorDriver.doc(collection, path);
+    const converter = limitedFirestoreDocumentAccessor.converterFactory(ref);
+    return ref.withConverter(converter);
   }
 
-  return (context?: FirestoreDocumentContext<T>) => {
+  const result = ((context?: FirestoreDocumentContext<T>) => {
     const documentAccessor: FirestoreDocumentAccessor<T, D> = build<FirestoreDocumentAccessor<T, D>>({
       base: limitedFirestoreDocumentAccessor(context),
       build: (x) => {
@@ -360,7 +369,9 @@ export function firestoreDocumentAccessorFactory<T, D extends FirestoreDocument<
     });
 
     return documentAccessor;
-  };
+  }) as Building<FirestoreDocumentAccessorFactoryFunction<T, D>>;
+  result.converterFactory = limitedFirestoreDocumentAccessor.converterFactory;
+  return result as FirestoreDocumentAccessorFactoryFunction<T, D>;
 }
 
 // MARK: Extension

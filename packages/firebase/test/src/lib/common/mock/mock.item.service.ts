@@ -32,9 +32,10 @@ import {
   MockItemUserFirestoreCollectionFactory,
   mockItemUserFirestoreCollectionGroup,
   MockItemUserFirestoreCollectionGroup,
-  MockItemUserRoles
+  MockItemUserRoles,
+  mockItemSystemStateStoredDataConverterMap
 } from './mock.item';
-import { FirebaseAppModelContext, FirebasePermissionServiceModel, firebaseModelServiceFactory, firebaseModelsService, FirestoreContext } from '@dereekb/firebase';
+import { FirebaseAppModelContext, FirebasePermissionServiceModel, firebaseModelServiceFactory, firebaseModelsService, FirestoreContext, SystemStateFirestoreCollection, systemStateFirestoreCollection, grantFullAccessIfAdmin, SystemState, SystemStateDocument, SystemStateRoles, SystemStateTypes } from '@dereekb/firebase';
 import { GrantedRoleMap } from '@dereekb/model';
 import { PromiseOrValue } from '@dereekb/util';
 
@@ -49,6 +50,7 @@ export abstract class MockItemCollections {
   abstract readonly mockItemSubItemCollectionGroup: MockItemSubItemFirestoreCollectionGroup;
   abstract readonly mockItemSubItemDeepCollectionFactory: MockItemSubItemDeepFirestoreCollectionFactory;
   abstract readonly mockItemSubItemDeepCollectionGroup: MockItemSubItemDeepFirestoreCollectionGroup;
+  abstract readonly mockItemSystemStateCollection: SystemStateFirestoreCollection;
 }
 
 export function makeMockItemCollections(firestoreContext: FirestoreContext): MockItemCollections {
@@ -61,7 +63,8 @@ export function makeMockItemCollections(firestoreContext: FirestoreContext): Moc
     mockItemSubItemCollectionFactory: mockItemSubItemFirestoreCollection(firestoreContext),
     mockItemSubItemCollectionGroup: mockItemSubItemFirestoreCollectionGroup(firestoreContext),
     mockItemSubItemDeepCollectionFactory: mockItemSubItemDeepFirestoreCollection(firestoreContext),
-    mockItemSubItemDeepCollectionGroup: mockItemSubItemDeepFirestoreCollectionGroup(firestoreContext)
+    mockItemSubItemDeepCollectionGroup: mockItemSubItemDeepFirestoreCollectionGroup(firestoreContext),
+    mockItemSystemStateCollection: systemStateFirestoreCollection(firestoreContext, mockItemSystemStateStoredDataConverterMap)
   };
 }
 
@@ -109,8 +112,15 @@ export const mockItemSubItemDeepFirebaseModelServiceFactory = firebaseModelServi
   getFirestoreCollection: (c) => c.app.mockItemSubItemDeepCollectionGroup
 });
 
+export const mockItemSystemStateFirebaseModelServiceFactory = firebaseModelServiceFactory<MockFirebaseContext, SystemState, SystemStateDocument, SystemStateRoles>({
+  roleMapForModel: function (output: FirebasePermissionServiceModel<SystemState, SystemStateDocument>, context: MockFirebaseContext, model: SystemStateDocument): PromiseOrValue<GrantedRoleMap<SystemStateRoles>> {
+    return grantFullAccessIfAdmin(context); // only sys-admin allowed
+  },
+  getFirestoreCollection: (c) => c.app.mockItemSystemStateCollection
+});
+
 // MARK: Model Service
-export type MockModelTypes = MockItemTypes;
+export type MockModelTypes = SystemStateTypes | MockItemTypes;
 
 export type MockFirebaseContextAppContext = MockItemCollections;
 
@@ -122,6 +132,7 @@ export type MockFirebaseBaseContext = FirebaseAppModelContext<MockFirebaseContex
 };
 
 export const MOCK_FIREBASE_MODEL_SERVICE_FACTORIES = {
+  systemState: mockItemSystemStateFirebaseModelServiceFactory,
   mockItem: mockItemFirebaseModelServiceFactory,
   mockItemPrivate: mockItemPrivateFirebaseModelServiceFactory,
   mockItemUser: mockItemUserFirebaseModelServiceFactory,
