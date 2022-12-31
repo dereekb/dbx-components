@@ -20,7 +20,7 @@ $dbx-popover-header-height: 48px;
       @include fillPopoverContentHeight();
 
       &.dbx-popover-content-container-scrollable {
-        overflow-y: scroll;
+        overflow-y: auto;
       }
     }
 
