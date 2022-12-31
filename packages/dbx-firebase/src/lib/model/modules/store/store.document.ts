@@ -1,5 +1,5 @@
-import { Injectable } from '@angular/core';
-import { Observable, shareReplay, distinctUntilChanged, map, switchMap, combineLatest, Subscription, of } from 'rxjs';
+import { Inject, Injectable, Optional } from '@angular/core';
+import { Observable, shareReplay, distinctUntilChanged, map, switchMap, combineLatest, Subscription, of, single } from 'rxjs';
 import {
   DocumentSnapshot,
   DocumentReference,
@@ -19,7 +19,9 @@ import {
   FirestoreAccessorStreamMode,
   TwoWayFlatFirestoreModelKey,
   inferKeyFromTwoWayFlatFirestoreModelKey,
-  RootSingleItemFirestoreCollection
+  RootSingleItemFirestoreCollection,
+  FlatFirestoreModelKey,
+  flatFirestoreModelKey
 } from '@dereekb/firebase';
 import { filterMaybe, LoadingState, beginLoading, successResult, loadingStateFromObs, errorResult, ObservableOrValue } from '@dereekb/rxjs';
 import { Maybe, isMaybeSo } from '@dereekb/util';
@@ -45,6 +47,7 @@ export interface DbxFirebaseDocumentStore<T, D extends FirestoreDocument<T> = Fi
   readonly key$: Observable<FirestoreModelKey>;
   readonly ref$: Observable<DocumentReference<T>>;
   readonly hasRef$: Observable<boolean>;
+  readonly flatKey$: Observable<FlatFirestoreModelKey>;
 
   readonly keyModelIds$: Observable<FirestoreModelId[]>;
   readonly keyPairs$: Observable<FirestoreModelCollectionAndIdPair[]>;
@@ -215,6 +218,11 @@ export class AbstractDbxFirebaseDocumentStore<T, D extends FirestoreDocument<T> 
     shareReplay(1)
   );
 
+  readonly flatKey$: Observable<FlatFirestoreModelKey> = this.key$.pipe(
+    map((x) => flatFirestoreModelKey(x)),
+    shareReplay(1)
+  );
+
   readonly snapshot$: Observable<DocumentSnapshot<T>> = combineLatest([this.document$, this.streamMode$]).pipe(
     switchMap(([x, mode]) => x.snapshotStream(mode)),
     shareReplay(1)
@@ -302,10 +310,24 @@ export class AbstractDbxFirebaseDocumentStore<T, D extends FirestoreDocument<T> 
   readonly setFirestoreCollectionLike = this.updater((state, firestoreCollectionLike: Maybe<FirestoreCollectionLike<T, D>>) => ({ ...state, firestoreCollectionLike }));
 }
 
+function injectSingleItemIdIntoState<T, D extends FirestoreDocument<T> = FirestoreDocument<T>, C extends DbxFirebaseDocumentStoreContextState<T, D> = DbxFirebaseDocumentStoreContextState<T, D>>(state?: C | undefined): C | undefined {
+  const id = (state?.firestoreCollection as RootSingleItemFirestoreCollection<T, D>)?.singleItemIdentifier;
+
+  if (state && id != null) {
+    return { ...state, id };
+  } else {
+    return state;
+  }
+}
+
 /**
  * AbstractDbxFirebaseDocumentWithParentStore extension for use with RootSingleItemFirestoreCollection.
  */
 export class AbstractRootSingleItemDbxFirebaseDocument<T, D extends FirestoreDocument<T> = FirestoreDocument<T>, C extends DbxFirebaseDocumentStoreContextState<T, D> = DbxFirebaseDocumentStoreContextState<T, D>> extends AbstractDbxFirebaseDocumentStore<T, D, C> {
+  protected constructor(@Inject(null) @Optional() initialState?: C) {
+    super(injectSingleItemIdIntoState<T, D, C>(initialState));
+  }
+
   /**
    * Sets the SingleItemFirestoreCollection to use.
    */
