@@ -40,6 +40,8 @@ export interface NestServerInstance<T> {
 
 export class FirebaseNestServerRootModule {}
 
+export type ConfigureNestServerInstanceFunction = (nestApp: INestApplication) => INestApplication | void;
+
 export interface NestServerInstanceConfig<T> {
   /**
    * Module to instantiate.
@@ -73,6 +75,16 @@ export interface NestServerInstanceConfig<T> {
    * Additional nest application options.
    */
   readonly applicationOptions?: NestApplicationOptions;
+  /**
+   * Global routing prefix.
+   *
+   * Example: '/api'
+   */
+  readonly globalApiRoutePrefix?: string;
+  /**
+   * Optional configuration function
+   */
+  readonly configureNestServerInstance?: ConfigureNestServerInstanceFunction;
 }
 
 export interface NestServerEnvironmentConfig {
@@ -80,7 +92,7 @@ export interface NestServerEnvironmentConfig {
 }
 
 export function nestServerInstance<T>(config: NestServerInstanceConfig<T>): NestServerInstance<T> {
-  const { moduleClass, providers: additionalProviders, defaultStorageBucket: inputDefaultStorageBucket, forceStorageBucket } = config;
+  const { moduleClass, providers: additionalProviders, defaultStorageBucket: inputDefaultStorageBucket, forceStorageBucket, globalApiRoutePrefix, configureNestServerInstance } = config;
   const serversCache = new Map<string, NestServer>();
 
   const initNestServer = (firebaseApp: admin.app.App, env?: NestServerEnvironmentConfig): NestServer => {
@@ -146,7 +158,15 @@ export function nestServerInstance<T>(config: NestServerInstanceConfig<T>): Nest
           global: true
         };
 
-        const nestApp = await NestFactory.create(providersModule, new ExpressAdapter(expressInstance), options);
+        let nestApp = await NestFactory.create(providersModule, new ExpressAdapter(expressInstance), options);
+
+        if (globalApiRoutePrefix) {
+          nestApp = nestApp.setGlobalPrefix(globalApiRoutePrefix);
+        }
+
+        if (configureNestServerInstance) {
+          nestApp = configureNestServerInstance(nestApp) || nestApp;
+        }
 
         return nestApp.init();
       };

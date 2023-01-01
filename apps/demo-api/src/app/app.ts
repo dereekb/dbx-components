@@ -8,7 +8,8 @@ import { demoExampleUsageOfSchedule } from './function/model/schedule.functions'
 
 export const { initNestServer } = nestServerInstance({
   moduleClass: DemoApiAppModule,
-  configureWebhooks: true
+  configureWebhooks: true,
+  globalApiRoutePrefix: '/api' // our app needs to respond to all requests prefixed with '/api'
 });
 
 /**
