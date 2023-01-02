@@ -17,14 +17,7 @@ $dbx-flex-group-columns-count: 6;
     align-content: stretch;
     box-sizing: border-box;
 
-    // padding: $dbx-flex-group-padding;
     margin: 0 #{-$dbx-flex-group-padding} #{-$dbx-flex-group-padding} 0;
-    // padding: 0 $dbx-flex-group-padding $dbx-flex-group-padding 0;
-
-    > * {
-      box-sizing: border-box;
-      padding: 0 $dbx-flex-group-padding $dbx-flex-group-padding 0;
-    }
 
     @for $i from 1 through 6 {
       .dbx-flex-#{$i} {
