@@ -1,4 +1,4 @@
-import { LogicalDateStringCode, Maybe, ReadableTimeString, ArrayOrValue, ISO8601DateString, asArray, filterMaybeValues, dateFromLogicalDate, DecisionFunction } from '@dereekb/util';
+import { LogicalDateStringCode, Maybe, ReadableTimeString, ArrayOrValue, ISO8601DateString, asArray, filterMaybeValues, dateFromLogicalDate, DecisionFunction, randomNumber } from '@dereekb/util';
 import { DateTimeMinuteConfig, DateTimeMinuteInstance, formatToISO8601DayString, guessCurrentTimezone, readableTimeStringToDate, toLocalReadableTimeString, toReadableTimeString, utcDayForDate, formatToISO8601DateString, toJsDate, parseISO8601DayStringToDate, safeToJsDate, findMinDate, findMaxDate, dateTimeMinuteDecisionFunction } from '@dereekb/date';
 import { switchMap, shareReplay, map, startWith, tap, first, distinctUntilChanged, debounceTime, throttleTime, BehaviorSubject, Observable, combineLatest, Subject, merge, interval, of } from 'rxjs';
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
@@ -7,7 +7,7 @@ import { FieldType } from '@ngx-formly/material';
 import { FieldTypeConfig, FormlyFieldProps } from '@ngx-formly/core';
 import { MatDatepickerInputEvent } from '@angular/material/datepicker';
 import { addMinutes, isSameDay, isSameMinute, startOfDay, addDays } from 'date-fns';
-import { filterMaybe, skipFirstMaybe, SubscriptionObject, switchMapMaybeDefault } from '@dereekb/rxjs';
+import { filterMaybe, skipFirstMaybe, SubscriptionObject, switchMapMaybeDefault, tapLog } from '@dereekb/rxjs';
 
 export enum DbxDateTimeFieldTimeMode {
   /**
@@ -106,6 +106,16 @@ export interface DbxDateTimeFieldProps extends FormlyFieldProps {
   timeLabel?: string;
 
   /**
+   * Label to use for the date hint for "All Day". Defaults to "All Day".
+   */
+  allDayLabel?: string;
+
+  /**
+   * Label to use for the date hint for "At". Defaults to "At".
+   */
+  atTimeLabel?: string;
+
+  /**
    * Value mode.
    *
    * Defaults to DATE
@@ -144,6 +154,11 @@ export interface DbxDateTimeFieldProps extends FormlyFieldProps {
    * False by  default
    */
   hideDateHint?: boolean;
+
+  /**
+   * Whether or not to hide the date/calendar picker.
+   */
+  hideDatePicker?: boolean;
 
   /**
    * Used for returning the configuration observable.
@@ -246,6 +261,14 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
     return this.props.timeLabel ?? 'Time';
   }
 
+  get allDayLabel(): string {
+    return this.props.allDayLabel ?? 'All Day';
+  }
+
+  get atTimeLabel(): string {
+    return this.props.atTimeLabel ?? 'At';
+  }
+
   get dateOnly(): boolean {
     return this.timeMode === DbxDateTimeFieldTimeMode.NONE;
   }
@@ -262,12 +285,18 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
     return !this.timeOnly;
   }
 
-  get timeMode(): DbxDateTimeFieldTimeMode {
-    return this.timeOnly ? DbxDateTimeFieldTimeMode.REQUIRED : this.dateTimeField.timeMode ?? DbxDateTimeFieldTimeMode.REQUIRED;
-  }
-
   get valueMode(): DbxDateTimeValueMode {
     return this.field.props.valueMode ?? DbxDateTimeValueMode.DATE;
+  }
+
+  get timeMode(): DbxDateTimeFieldTimeMode {
+    const dateValuesOnly = this.valueMode === DbxDateTimeValueMode.DAY_STRING;
+
+    if (dateValuesOnly) {
+      return DbxDateTimeFieldTimeMode.NONE;
+    } else {
+      return this.timeOnly ? DbxDateTimeFieldTimeMode.REQUIRED : this.dateTimeField.timeMode ?? DbxDateTimeFieldTimeMode.REQUIRED;
+    }
   }
 
   get description(): Maybe<string> {
@@ -278,7 +307,15 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
     return this.field.props.hideDateHint ?? false;
   }
 
-  readonly fullDay$: Observable<boolean> = this.fullDayControl$.pipe(switchMap((control) => control.valueChanges.pipe(startWith(control.value))));
+  get hideDatePicker(): boolean {
+    return this.field.props.hideDatePicker ?? false;
+  }
+
+  readonly fullDay$: Observable<boolean> = this.fullDayControl$.pipe(
+    switchMap((control) => control.valueChanges.pipe(startWith(control.value))),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
 
   readonly showTimeInput$: Observable<boolean> = this.fullDay$.pipe(map((x) => !x && this.timeMode !== DbxDateTimeFieldTimeMode.NONE));
 
@@ -477,7 +514,8 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
     }
 
     if (!fullDayFieldCtrl) {
-      this._fullDayInputCtrl = new FormControl(true);
+      const isFullDay = this.timeMode === DbxDateTimeFieldTimeMode.NONE;
+      this._fullDayInputCtrl = new FormControl(isFullDay);
 
       // Set the control in the form too if the name is defined.
       if (isFullDayField) {
@@ -489,7 +527,7 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
 
     this._fullDayControlObs.next(fullDayFieldCtrl);
 
-    switch (this.dateTimeField.timeMode) {
+    switch (this.timeMode) {
       case DbxDateTimeFieldTimeMode.OPTIONAL:
         break;
       case DbxDateTimeFieldTimeMode.NONE:

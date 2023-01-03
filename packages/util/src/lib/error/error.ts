@@ -3,6 +3,11 @@ import { escapeStringForRegex } from '../string/replace';
 import { Maybe } from '../value/maybe.type';
 
 /**
+ * Generic function that is meant to throw an error if the input is known. Returns void otherwise.
+ */
+export type ThrowErrorFunction<T = unknown> = (error: T) => never | void;
+
+/**
  * A unique identifier for a specific error.
  */
 export type StringErrorCode = string;

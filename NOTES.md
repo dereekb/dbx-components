@@ -222,6 +222,8 @@ These are deployed to cloud functions. Note that anyone with access to your Goog
 #### CORS Issue
 If you run into what looks like CORS issues, [check this issue comment out](https://github.com/firebase/firebase-js-sdk/issues/6182#issuecomment-1133525775). Most likely your cloud functions were deployed and are set to "authenticated only", which is incorrect.
 
+You may need to change this from the [CloudRun tab](https://console.cloud.google.com/run?hl=en) instead of the functions tab.
+
 ### Firebase App Check
 The dbx-components library has AppCheck enabled, so you will only be able to run the app against the emulators.
 

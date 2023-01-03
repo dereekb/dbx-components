@@ -8,8 +8,8 @@ import { MailgunService } from './mailgun.service';
 
 export function mailgunServiceConfigFactory(configService: ConfigService, serverEnvironmentService: ServerEnvironmentService): MailgunServiceConfig {
   const isTestingEnv = serverEnvironmentService.isTestingEnv;
-  const useSandbox = configService.get<boolean>('USE_MAILGUN_SANDBOX') ?? isTestingEnv;
-  const sendTestEmails = configService.get<boolean>('MAILGUN_SEND_TEST_EMAILS') || false;
+  const useSandbox = configService.get<string>('USE_MAILGUN_SANDBOX') === 'true' || isTestingEnv;
+  const sendTestEmails = configService.get<string>('MAILGUN_SEND_TEST_EMAILS') === 'true';
 
   let key = configService.get<string>('MAILGUN_API_KEY');
   let domain = configService.get<string>('MAILGUN_DOMAIN');
