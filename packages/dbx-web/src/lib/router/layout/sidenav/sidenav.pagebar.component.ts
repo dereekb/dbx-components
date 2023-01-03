@@ -1,4 +1,5 @@
-import { Component } from '@angular/core';
+import { Component, Input } from '@angular/core';
+import { Maybe } from '@dereekb/util';
 import { DbxPagebarComponent } from '../../../layout/bar/pagebar.component';
 
 /**
@@ -9,7 +10,7 @@ import { DbxPagebarComponent } from '../../../layout/bar/pagebar.component';
   template: `
     <dbx-pagebar class="dbx-sidenav-pagebar" [color]="color">
       <span left>
-        <dbx-sidenav-button></dbx-sidenav-button>
+        <dbx-sidenav-button [sidenavMenuIcon]="sidenavMenuIcon"></dbx-sidenav-button>
         <dbx-button-spacer></dbx-button-spacer>
         <ng-content left></ng-content>
       </span>
@@ -17,4 +18,7 @@ import { DbxPagebarComponent } from '../../../layout/bar/pagebar.component';
     </dbx-pagebar>
   `
 })
-export class DbxSidenavPagebarComponent extends DbxPagebarComponent {}
+export class DbxSidenavPagebarComponent extends DbxPagebarComponent {
+  @Input()
+  sidenavMenuIcon: Maybe<string>;
+}
