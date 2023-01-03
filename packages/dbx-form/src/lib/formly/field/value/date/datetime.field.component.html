@@ -18,12 +18,12 @@
   <div *ngIf="!hideDateHint" class="dbx-datetime-row dbx-datetime-hint-row" fxFlex="100">
     <div class="dbx-hint" [ngSwitch]="fullDay$ | async">
       <small *ngSwitchCase="true">
-        <b class="dbx-ok">All Day</b>
+        <b class="dbx-ok">{{ allDayLabel }}</b>
         {{ displayValue$ | async | date: 'fullDate' }} ({{ displayValue$ | async | dateDistance }})
       </small>
       <small *ngSwitchCase="false">
         <ng-container *ngIf="value$ | async">
-          <b class="dbx-ok">At</b>
+          <b class="dbx-ok">{{ atTimeLabel }}</b>
           {{ displayValue$ | async | date: 'medium' }} ({{ displayValue$ | async | timeDistance }})
         </ng-container>
       </small>
@@ -33,7 +33,7 @@
 
 <!-- Date Input Template -->
 <ng-template #dateInputTemplate>
-  <button mat-icon-button (click)="picker.open()" [disabled]="disabled">
+  <button *ngIf="!hideDatePicker" mat-icon-button (click)="picker.open()" [disabled]="disabled">
     <mat-icon>calendar_today</mat-icon>
   </button>
   <mat-form-field class="dbx-datetime-row-field">

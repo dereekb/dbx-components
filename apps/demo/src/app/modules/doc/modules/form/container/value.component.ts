@@ -47,7 +47,7 @@ export class DocFormValueComponent {
     dateTimeField({ key: 'dateAsString', required: true, valueMode: DbxDateTimeValueMode.DATE_STRING, description: 'This date field returns the value as an ISO8601DateString. The date hint is also hidden.', hideDateHint: true }),
     dateTimeField({ key: 'timeOptional', timeMode: DbxDateTimeFieldTimeMode.OPTIONAL, description: 'This date field is for picking a day, with an optional time.' }),
     dateTimeField({ key: 'dayOnly', timeMode: DbxDateTimeFieldTimeMode.NONE, description: 'This date field is for picking a day only.' }),
-    dateTimeField({ key: 'dayOnlyAsString', timeMode: DbxDateTimeFieldTimeMode.NONE, valueMode: DbxDateTimeValueMode.DAY_STRING, description: 'This date field is for picking a day only and as an ISO8601DayString.' }),
+    dateTimeField({ key: 'dayOnlyAsString', allDayLabel: 'On', valueMode: DbxDateTimeValueMode.DAY_STRING, description: 'This date field is for picking a day only and as an ISO8601DayString. The calendar picker is hidden and the allDayLabel has been customized to be "On".', hideDatePicker: true }),
     dateTimeField({ key: 'timeOnly', timeOnly: true, description: 'This date field is for picking a time only. The date hint is also hidden.', hideDateHint: true }),
     dateTimeField({
       key: 'dateWithASchedule',
