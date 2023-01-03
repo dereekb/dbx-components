@@ -13,7 +13,7 @@ import { DbxBarColor } from '../../../layout/bar/bar';
   selector: 'dbx-sidenav-page',
   template: `
     <div [ngClass]="(hidePagebar$ | async) ? 'dbx-pagebar-hide' : ''">
-      <dbx-sidenav-pagebar [color]="color">
+      <dbx-sidenav-pagebar [sidenavMenuIcon]="sidenavMenuIcon" [color]="color">
         <ng-content left select="[navLeft]"></ng-content>
         <ng-content select="[navRight]"></ng-content>
       </dbx-sidenav-pagebar>
@@ -24,6 +24,9 @@ import { DbxBarColor } from '../../../layout/bar/bar';
   `
 })
 export class DbxSidenavPageComponent implements OnDestroy {
+  @Input()
+  sidenavMenuIcon: Maybe<string>;
+
   @Input()
   color?: Maybe<DbxBarColor>;
 
