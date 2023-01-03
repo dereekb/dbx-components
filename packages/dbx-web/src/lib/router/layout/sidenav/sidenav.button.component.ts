@@ -28,6 +28,7 @@ export class DbxSidenavButtonComponent {
     this.parent.toggleNav();
   }
 
+  @Input()
   get sidenavMenuIcon() {
     return this._sidenavMenuIcon;
   }

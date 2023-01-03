@@ -1,5 +1,6 @@
-import { ErrorMessageOrPartialServerError, partialServerError } from '@dereekb/util';
+import { ErrorMessageOrPartialServerError, partialServerError, ThrowErrorFunction } from '@dereekb/util';
 import * as functions from 'firebase-functions';
+import * as admin from 'firebase-admin';
 
 export const NO_AUTH_ERROR_CODE = 'NO_AUTH';
 
@@ -138,4 +139,13 @@ export function internalServerError(messageOrError?: ErrorMessageOrPartialServer
     ...serverError,
     _error: undefined
   });
+}
+
+// MARK: Utility
+export function handleFirebaseError(e: unknown, handleFirebaseError: ThrowErrorFunction<admin.FirebaseError>): never | void {
+  let firebaseError = (e as admin.FirebaseError).code ? (e as admin.FirebaseError) : undefined;
+
+  if (firebaseError) {
+    handleFirebaseError(firebaseError);
+  }
 }
