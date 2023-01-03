@@ -32,9 +32,12 @@ export interface FirebaseAuthDetails extends FirebaseAuthToken, FirebaseAuthUser
 export type FirebaseAuthOwnershipKey = string;
 
 /**
- * Password used for completing setup.
+ * Password used for completing setup or resetting a user.
  */
 export type FirebaseAuthSetupPassword = PasswordString;
+
+export const FIREBASE_SERVER_AUTH_CLAIMS_SETUP_PASSWORD_KEY = 'setupPassword';
+export const FIREBASE_SERVER_AUTH_CLAIMS_SETUP_LAST_COM_DATE_KEY = 'setupCommunicationAt';
 
 export interface FirebaseAuthNewUserClaimsData {
   /**
@@ -45,4 +48,18 @@ export interface FirebaseAuthNewUserClaimsData {
    * Last setup communication time.
    */
   readonly setupCommunicationAt: ISO8601DateString;
+}
+
+export const FIREBASE_SERVER_AUTH_CLAIMS_RESET_PASSWORD_KEY = 'resetPassword';
+export const FIREBASE_SERVER_AUTH_CLAIMS_RESET_LAST_COM_DATE_KEY = 'resetCommunicationAt';
+
+export interface FirebaseAuthResetUserPasswordClaimsData {
+  /**
+   * Reset password
+   */
+  readonly resetPassword: FirebaseAuthSetupPassword;
+  /**
+   * Last reset communication time.
+   */
+  readonly resetCommunicationAt: ISO8601DateString;
 }

@@ -1,6 +1,5 @@
-import { UserRelated } from '@dereekb/firebase';
+import { FIREBASE_SERVER_AUTH_CLAIMS_SETUP_PASSWORD_KEY, UserRelated } from '@dereekb/firebase';
 import { ArrayOrValue, AuthRole, containsAllValues, asArray } from '@dereekb/util';
-import { FIREBASE_SERVER_AUTH_CLAIMS_SETUP_PASSWORD_KEY } from '../../auth/auth.service';
 import { forbiddenError } from '../../function';
 import { NestContextCallableRequestWithAuth } from '../function/nest';
 import { AbstractFirebaseNestContext } from '../nest.provider';
