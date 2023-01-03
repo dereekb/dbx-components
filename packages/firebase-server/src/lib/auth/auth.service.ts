@@ -1,11 +1,13 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
-import { FirebaseAuthContextInfo, FirebaseAuthDetails, FirebaseAuthUserId, FirebaseAuthNewUserClaimsData, FirebaseAuthSetupPassword } from '@dereekb/firebase';
+import { FirebaseAuthContextInfo, FirebaseAuthDetails, FirebaseAuthUserId, FirebaseAuthNewUserClaimsData, FirebaseAuthSetupPassword, FirebaseAuthResetUserPasswordClaimsData, FIREBASE_SERVER_AUTH_CLAIMS_SETUP_LAST_COM_DATE_KEY, FIREBASE_SERVER_AUTH_CLAIMS_SETUP_PASSWORD_KEY, FIREBASE_SERVER_AUTH_CLAIMS_RESET_PASSWORD_KEY, FIREBASE_SERVER_AUTH_CLAIMS_RESET_LAST_COM_DATE_KEY } from '@dereekb/firebase';
 import { Milliseconds, filterUndefinedValues, AUTH_ADMIN_ROLE, AuthClaims, AuthRoleSet, cachedGetter, filterNullAndUndefinedValues, ArrayOrValue, AuthRole, forEachKeyValue, ObjectMap, AuthClaimsUpdate, asSet, KeyValueTypleValueFilter, AuthClaimsObject, Maybe, AUTH_TOS_SIGNED_ROLE, EmailAddress, E164PhoneNumber, randomNumberFactory, PasswordString } from '@dereekb/util';
 import { assertIsContextWithAuthData, CallableContextWithAuthData } from '../function/context';
 import { AuthDataRef, firebaseAuthTokenFromDecodedIdToken } from './auth.context';
 import { hoursToMs, timeHasExpired, toISODateString } from '@dereekb/date';
 import { getAuthUserOrUndefined } from './auth.util';
+
+export const DEFAULT_FIREBASE_PASSWORD_NUMBER_GENERATOR = randomNumberFactory({ min: 100000, max: 1000000 - 1, round: 'floor' }); // 6 digits
 
 export interface FirebaseServerAuthUserIdentifierContext {
   /**
@@ -13,6 +15,8 @@ export interface FirebaseServerAuthUserIdentifierContext {
    */
   readonly uid: FirebaseAuthUserId;
 }
+
+export interface FirebaseServerAuthResetUserPasswordClaims extends FirebaseAuthResetUserPasswordClaimsData, AuthClaimsObject {}
 
 export interface FirebaseServerAuthUserContext extends FirebaseServerAuthUserIdentifierContext {
   /**
@@ -31,7 +35,17 @@ export interface FirebaseServerAuthUserContext extends FirebaseServerAuthUserIde
   loadDetails(): Promise<FirebaseAuthDetails>;
 
   /**
-   * Changes the user's password.
+   * Generates a random reset token and updates the user's password to start a password reset flow.
+   */
+  beginResetPassword(): Promise<FirebaseServerAuthResetUserPasswordClaims>;
+
+  /**
+   * Returns the reset password claims if it exists.
+   */
+  loadResetPasswordClaims<T extends FirebaseServerAuthResetUserPasswordClaims = FirebaseServerAuthResetUserPasswordClaims>(): Promise<Maybe<T>>;
+
+  /**
+   * Changes the user's password. Will also clear any claims data related to resetting a password.
    */
   setPassword(password: PasswordString): Promise<admin.auth.UserRecord>;
 
@@ -112,11 +126,45 @@ export abstract class AbstractFirebaseServerAuthUserContext<S extends FirebaseSe
     return this.loadRecord().then((record) => this.service.authDetailsForRecord(record));
   }
 
+  protected _generateResetPasswordKey(): string {
+    return String(DEFAULT_FIREBASE_PASSWORD_NUMBER_GENERATOR());
+  }
+
+  async beginResetPassword(): Promise<FirebaseServerAuthResetUserPasswordClaims> {
+    const key = this._generateResetPasswordKey();
+    const passwordClaimsData: FirebaseServerAuthResetUserPasswordClaims = {
+      [FIREBASE_SERVER_AUTH_CLAIMS_RESET_PASSWORD_KEY]: key,
+      [FIREBASE_SERVER_AUTH_CLAIMS_RESET_LAST_COM_DATE_KEY]: toISODateString(new Date())
+    };
+
+    await this.updateClaims(passwordClaimsData);
+
+    return passwordClaimsData;
+  }
+
+  async loadResetPasswordClaims<T extends FirebaseServerAuthResetUserPasswordClaims = FirebaseServerAuthResetUserPasswordClaims>(): Promise<Maybe<T>> {
+    const claims = await this.loadClaims<T>();
+
+    if (claims.resetPassword != null) {
+      return claims;
+    } else {
+      return undefined;
+    }
+  }
+
   /**
    * Sets the user's password.
    */
   async setPassword(password: PasswordString): Promise<admin.auth.UserRecord> {
-    return this.updateUser({ password });
+    const record = await this.updateUser({ password });
+
+    // clear password reset claims
+    await this.updateClaims({
+      [FIREBASE_SERVER_AUTH_CLAIMS_RESET_PASSWORD_KEY]: null,
+      [FIREBASE_SERVER_AUTH_CLAIMS_RESET_LAST_COM_DATE_KEY]: null
+    });
+
+    return record;
   }
 
   async updateUser(template: admin.auth.UpdateRequest): Promise<admin.auth.UserRecord> {
@@ -268,9 +316,6 @@ export abstract class AbstractFirebaseServerAuthContext<C extends FirebaseServer
 }
 
 // MARK: New Account Initialization
-export const FIREBASE_SERVER_AUTH_CLAIMS_SETUP_PASSWORD_KEY = 'setupPassword';
-export const FIREBASE_SERVER_AUTH_CLAIMS_SETUP_LAST_COM_DATE_KEY = 'setupCommunicationAt';
-
 export interface FirebaseServerAuthNewUserClaims extends FirebaseAuthNewUserClaimsData, AuthClaimsObject {}
 
 export interface FirebaseServerAuthInitializeNewUser<D = unknown> {
@@ -350,8 +395,6 @@ export interface FirebaseServerNewUserService<D = unknown, U extends FirebaseSer
   loadSetupDetailsForUserContext(userContext: U, config?: FirebaseServerAuthNewUserSendSetupDetailsConfig<D>): Promise<Maybe<FirebaseServerAuthNewUserSetupDetails<U, D>>>;
   markUserSetupAsComplete(uid: FirebaseAuthUserId): Promise<boolean>;
 }
-
-export const DEFAULT_FIREBASE_PASSWORD_NUMBER_GENERATOR = randomNumberFactory({ min: 100000, max: 1000000 - 1, round: 'floor' }); // 6 digits
 
 /**
  * 1 hour
