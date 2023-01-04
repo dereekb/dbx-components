@@ -137,8 +137,14 @@ export abstract class AbstractFirebaseServerAuthUserContext<S extends FirebaseSe
       [FIREBASE_SERVER_AUTH_CLAIMS_RESET_LAST_COM_DATE_KEY]: toISODateString(new Date())
     };
 
+    // set the claims
+    await this.updateClaims({
+      [FIREBASE_SERVER_AUTH_CLAIMS_RESET_PASSWORD_KEY]: null,
+      [FIREBASE_SERVER_AUTH_CLAIMS_RESET_LAST_COM_DATE_KEY]: null
+    });
+
+    // update the user
     await this.updateUser({ password });
-    await this.setPassword(passwordClaimsData.resetPassword);
 
     return passwordClaimsData;
   }
