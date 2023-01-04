@@ -131,13 +131,14 @@ export abstract class AbstractFirebaseServerAuthUserContext<S extends FirebaseSe
   }
 
   async beginResetPassword(): Promise<FirebaseServerAuthResetUserPasswordClaims> {
-    const key = this._generateResetPasswordKey();
+    const password = this._generateResetPasswordKey();
     const passwordClaimsData: FirebaseServerAuthResetUserPasswordClaims = {
-      [FIREBASE_SERVER_AUTH_CLAIMS_RESET_PASSWORD_KEY]: key,
+      [FIREBASE_SERVER_AUTH_CLAIMS_RESET_PASSWORD_KEY]: password,
       [FIREBASE_SERVER_AUTH_CLAIMS_RESET_LAST_COM_DATE_KEY]: toISODateString(new Date())
     };
 
-    await this.updateClaims(passwordClaimsData);
+    await this.updateUser({ password });
+    await this.setPassword(passwordClaimsData.resetPassword);
 
     return passwordClaimsData;
   }
@@ -378,6 +379,18 @@ export interface FirebaseServerAuthNewUserSetupDetails<U extends FirebaseServerA
 
 export interface FirebaseServerNewUserService<D = unknown, U extends FirebaseServerAuthUserContext = FirebaseServerAuthUserContext> {
   initializeNewUser(input: FirebaseServerAuthInitializeNewUser<D>): Promise<admin.auth.UserRecord>;
+  /**
+   * Adds setup claims to a user.
+   *
+   * @param userContextOrUid
+   * @param setupPassword
+   */
+  addNewUserSetupClaims(userContextOrUid: U | FirebaseAuthUserId, setupPassword?: FirebaseAuthSetupPassword): Promise<U>;
+  /**
+   * Sends the setup content to the user. Returns true if content was sent or was already recently sent.
+   *
+   * @param uid
+   */
   sendSetupContent(uid: FirebaseAuthUserId, data?: FirebaseServerAuthNewUserSendSetupDetailsConfig<D>): Promise<boolean>;
   /**
    * Loads the setup details for the user. If the user does not exist or does not need to be setup then undefined is returned.
@@ -428,9 +441,7 @@ export abstract class AbstractFirebaseServerNewUserService<U extends FirebaseSer
 
       // add the setup password to the user's credentials
       const userContext = this.authService.userContext(createResult.user.uid);
-      await userContext.updateClaims({
-        [FIREBASE_SERVER_AUTH_CLAIMS_SETUP_PASSWORD_KEY]: createResult.password
-      });
+      await this.addNewUserSetupClaims(userContext, createResult.password);
 
       if (sendSetupContent !== false) {
         await this.sendSetupContent(createResult.user.uid, { data, sendDetailsInTestEnvironment });
@@ -443,11 +454,17 @@ export abstract class AbstractFirebaseServerNewUserService<U extends FirebaseSer
     return userRecord;
   }
 
-  /**
-   * Sends the setup content to the user. Returns true if content was sent or was already recently sent.
-   *
-   * @param uid
-   */
+  async addNewUserSetupClaims(userContextOrUid: U | FirebaseAuthUserId, setupPassword?: FirebaseAuthSetupPassword): Promise<U> {
+    const password = setupPassword ?? this.generateRandomSetupPassword();
+
+    const userContext: U = typeof userContextOrUid === 'string' ? this.authService.userContext(userContextOrUid) : userContextOrUid;
+    await userContext.updateClaims({
+      [FIREBASE_SERVER_AUTH_CLAIMS_SETUP_PASSWORD_KEY]: password
+    });
+
+    return userContext;
+  }
+
   async sendSetupContent(uid: FirebaseAuthUserId, config?: FirebaseServerAuthNewUserSendSetupDetailsConfig<D>): Promise<boolean> {
     const setupDetails: Maybe<FirebaseServerAuthNewUserSetupDetails<U, D>> = await this.loadSetupDetails(uid, config);
 
