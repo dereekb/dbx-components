@@ -40,6 +40,8 @@ export function mailgunServiceConfigFactory(configService: ConfigService, server
     throw new Error('MAILGUN_DOMAIN (or MAILGUN_SANDBOX_DOMAIN for tests) is required but was not configured.');
   }
 
+  const clientUrl = configService.get<string>('CLIENT_APP_URL') ?? domain;
+
   const config: MailgunServiceConfig = {
     mailgun: {
       username: configService.get<string>('MAILGUN_USERNAME') ?? 'api',
@@ -47,6 +49,7 @@ export function mailgunServiceConfigFactory(configService: ConfigService, server
       url
     },
     domain,
+    clientUrl,
     sender: convertMailgunRecipientToString({
       name,
       email

@@ -1,10 +1,15 @@
-import { EmailParticipantString } from '@dereekb/util';
+import { EmailParticipantString, WebsiteUrl } from '@dereekb/util';
 import { MailgunSenderDomainString } from './mailgun';
 import { MailgunOptions } from './mailgun.type';
 
 export abstract class MailgunServiceConfig {
   // Mailgun Config
   mailgun!: MailgunOptions;
+
+  /**
+   * Base URL to the client.
+   */
+  clientUrl!: WebsiteUrl;
 
   /**
    * Main domain to send emails from.
@@ -41,6 +46,8 @@ export abstract class MailgunServiceConfig {
       throw new Error('No mailgun key specified.');
     } else if (!config.domain) {
       throw new Error('No mailgun domain specified.');
+    } else if (!config.clientUrl) {
+      throw new Error('No client url specified.');
     } else if (!config.sender) {
       throw new Error('No mailgun sender specified.');
     } else if (!config.messages) {

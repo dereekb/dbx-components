@@ -24,6 +24,7 @@ describe('MailgunService', () => {
         key: apiKey
       },
       domain,
+      clientUrl: domain,
       sender: `Mailgun Sandbox <postmaster@${domain}>`,
       messages: {}
     };

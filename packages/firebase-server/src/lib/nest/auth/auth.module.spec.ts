@@ -291,7 +291,8 @@ describe('firebase server nest auth', () => {
           expect(exists).toBe(false);
 
           const result = await newUserService.initializeNewUser({
-            email
+            email,
+            sendSetupContent: true
           });
 
           expect(result).toBeDefined();
