@@ -131,13 +131,14 @@ export abstract class AbstractFirebaseServerAuthUserContext<S extends FirebaseSe
   }
 
   async beginResetPassword(): Promise<FirebaseServerAuthResetUserPasswordClaims> {
-    const key = this._generateResetPasswordKey();
+    const password = this._generateResetPasswordKey();
     const passwordClaimsData: FirebaseServerAuthResetUserPasswordClaims = {
-      [FIREBASE_SERVER_AUTH_CLAIMS_RESET_PASSWORD_KEY]: key,
+      [FIREBASE_SERVER_AUTH_CLAIMS_RESET_PASSWORD_KEY]: password,
       [FIREBASE_SERVER_AUTH_CLAIMS_RESET_LAST_COM_DATE_KEY]: toISODateString(new Date())
     };
 
-    await this.updateClaims(passwordClaimsData);
+    await this.updateUser({ password });
+    await this.setPassword(passwordClaimsData.resetPassword);
 
     return passwordClaimsData;
   }
