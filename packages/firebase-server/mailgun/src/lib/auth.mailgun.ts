@@ -1,4 +1,4 @@
-import { MailgunService, MailgunTemplateEmailRequest } from '@dereekb/nestjs/mailgun';
+import { MailgunRecipient, MailgunService, MailgunTemplateEmailRequest } from '@dereekb/nestjs/mailgun';
 import { AbstractFirebaseServerNewUserService, FirebaseServerAuthContext, FirebaseServerAuthNewUserSetupDetails, FirebaseServerAuthService, FirebaseServerAuthUserContext } from '@dereekb/firebase-server';
 
 /**
@@ -6,7 +6,9 @@ import { AbstractFirebaseServerNewUserService, FirebaseServerAuthContext, Fireba
  *
  * Omits the "to" input since it gets configured by the input.
  */
-export type NewUserMailgunContentRequest = Omit<MailgunTemplateEmailRequest, 'to'>;
+export interface NewUserMailgunContentRequest extends Omit<MailgunTemplateEmailRequest, 'to'> {
+  to?: Partial<Omit<MailgunRecipient, 'email'>>;
+}
 
 /**
  * Abstract FirebaseServerNewUserService implementation that sends an email to a template on Mailgun.
@@ -26,17 +28,21 @@ export abstract class AbstractMailgunContentFirebaseServerNewUserService<U exten
     }
 
     const baseRequest = await this.buildNewUserMailgunContentRequest(user);
+    const baseRequestTo = baseRequest.to;
+
     await this.mailgunService.sendTemplateEmail({
       ...baseRequest,
       to: {
+        name: baseRequestTo?.name,
         email,
         userVariables: {
-          uid,
+          setupPassword,
+          ...baseRequestTo?.userVariables,
           displayName,
-          setupPassword
+          uid
         }
       },
-      sendTestEmails: user.sendDetailsInTestEnvironment || undefined
+      sendTestEmails: baseRequest.sendTestEmails || user.sendDetailsInTestEnvironment || undefined
     });
   }
 

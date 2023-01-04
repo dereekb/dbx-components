@@ -343,7 +343,7 @@ export interface FirebaseServerAuthInitializeNewUser<D = unknown> {
    */
   readonly setupPassword?: FirebaseAuthSetupPassword;
   /**
-   * Whether or not to send a setup email. Is true by default.
+   * Whether or not to send a setup email. Is false by default.
    */
   readonly sendSetupContent?: boolean;
   /**
@@ -414,6 +414,13 @@ export interface FirebaseServerNewUserService<D = unknown, U extends FirebaseSer
  */
 export const DEFAULT_SETUP_COM_THROTTLE_TIME = hoursToMs(1);
 
+export type UserContextOrUid<U extends FirebaseServerAuthUserContext = FirebaseServerAuthUserContext> = U | FirebaseAuthUserId;
+
+export function userContextFromUid<U extends FirebaseServerAuthUserContext = FirebaseServerAuthUserContext>(authService: FirebaseServerAuthService<U>, userContextOrUid: UserContextOrUid<U>): U {
+  const userContext: U = typeof userContextOrUid === 'string' ? authService.userContext(userContextOrUid) : userContextOrUid;
+  return userContext;
+}
+
 export abstract class AbstractFirebaseServerNewUserService<U extends FirebaseServerAuthUserContext = FirebaseServerAuthUserContext, C extends FirebaseServerAuthContext = FirebaseServerAuthContext, D = unknown> implements FirebaseServerNewUserService<D, U> {
   protected setupThrottleTime: Milliseconds = DEFAULT_SETUP_COM_THROTTLE_TIME;
 
@@ -443,7 +450,8 @@ export abstract class AbstractFirebaseServerNewUserService<U extends FirebaseSer
       const userContext = this.authService.userContext(createResult.user.uid);
       await this.addNewUserSetupClaims(userContext, createResult.password);
 
-      if (sendSetupContent !== false) {
+      // only send if true
+      if (sendSetupContent === true) {
         await this.sendSetupContent(createResult.user.uid, { data, sendDetailsInTestEnvironment });
       }
 
@@ -457,7 +465,7 @@ export abstract class AbstractFirebaseServerNewUserService<U extends FirebaseSer
   async addNewUserSetupClaims(userContextOrUid: U | FirebaseAuthUserId, setupPassword?: FirebaseAuthSetupPassword): Promise<U> {
     const password = setupPassword ?? this.generateRandomSetupPassword();
 
-    const userContext: U = typeof userContextOrUid === 'string' ? this.authService.userContext(userContextOrUid) : userContextOrUid;
+    const userContext: U = userContextFromUid<U>(this.authService, userContextOrUid);
     await userContext.updateClaims({
       [FIREBASE_SERVER_AUTH_CLAIMS_SETUP_PASSWORD_KEY]: password
     });
@@ -465,8 +473,8 @@ export abstract class AbstractFirebaseServerNewUserService<U extends FirebaseSer
     return userContext;
   }
 
-  async sendSetupContent(uid: FirebaseAuthUserId, config?: FirebaseServerAuthNewUserSendSetupDetailsConfig<D>): Promise<boolean> {
-    const setupDetails: Maybe<FirebaseServerAuthNewUserSetupDetails<U, D>> = await this.loadSetupDetails(uid, config);
+  async sendSetupContent(userContextOrUid: U | FirebaseAuthUserId, config?: FirebaseServerAuthNewUserSendSetupDetailsConfig<D>): Promise<boolean> {
+    const setupDetails: Maybe<FirebaseServerAuthNewUserSetupDetails<U, D>> = await this.loadSetupDetails(userContextOrUid, config);
 
     if (setupDetails) {
       const { setupCommunicationAt } = setupDetails.claims;
@@ -480,8 +488,8 @@ export abstract class AbstractFirebaseServerNewUserService<U extends FirebaseSer
     return false;
   }
 
-  async loadSetupDetails(uid: FirebaseAuthUserId, config?: FirebaseServerAuthNewUserSendSetupDetailsConfig<D>): Promise<Maybe<FirebaseServerAuthNewUserSetupDetails<U, D>>> {
-    const userContext = this.authService.userContext(uid);
+  async loadSetupDetails(userContextOrUid: U | FirebaseAuthUserId, config?: FirebaseServerAuthNewUserSendSetupDetailsConfig<D>): Promise<Maybe<FirebaseServerAuthNewUserSetupDetails<U, D>>> {
+    const userContext: U = userContextFromUid<U>(this.authService, userContextOrUid);
     const userExists = await userContext.exists();
     let details: Maybe<FirebaseServerAuthNewUserSetupDetails<U, D>>;
 
