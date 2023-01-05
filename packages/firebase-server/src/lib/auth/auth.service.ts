@@ -494,6 +494,7 @@ export abstract class AbstractFirebaseServerNewUserService<U extends FirebaseSer
 
   async sendSetupContent(userContextOrUid: U | FirebaseAuthUserId, config?: FirebaseServerAuthNewUserSendSetupDetailsConfig<D>): Promise<boolean> {
     const setupDetails: Maybe<FirebaseServerAuthNewUserSetupDetails<U, D>> = await this.loadSetupDetails(userContextOrUid, config);
+    let sentContent = false;
 
     if (setupDetails) {
       const { setupCommunicationAt } = setupDetails.claims;
@@ -501,10 +502,11 @@ export abstract class AbstractFirebaseServerNewUserService<U extends FirebaseSer
       if (!setupCommunicationAt || timeHasExpired(new Date(setupCommunicationAt), this.setupThrottleTime)) {
         await this.sendSetupContentToUser(setupDetails);
         await this.updateSetupContentSentTime(setupDetails);
+        sentContent = true;
       }
     }
 
-    return false;
+    return sentContent;
   }
 
   async loadSetupDetails(userContextOrUid: U | FirebaseAuthUserId, config?: FirebaseServerAuthNewUserSendSetupDetailsConfig<D>): Promise<Maybe<FirebaseServerAuthNewUserSetupDetails<U, D>>> {
