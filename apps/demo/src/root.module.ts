@@ -11,7 +11,7 @@ import { FormlyModule } from '@ngx-formly/core';
 import { defaultValidationMessages } from '@dereekb/dbx-form';
 import { MAT_FORM_FIELD_DEFAULT_OPTIONS } from '@angular/material/form-field';
 import { RootFirebaseModule } from './root.firebase.module';
-import { DbxFirebaseAnalyticsUserSource, DbxFirebaseLoginModule } from '@dereekb/dbx-firebase';
+import { DbxFirebaseAnalyticsUserEventsListener, DbxFirebaseAnalyticsUserSource, DbxFirebaseLoginModule } from '@dereekb/dbx-firebase';
 import { StoreModule } from '@ngrx/store';
 import { EffectsModule } from '@ngrx/effects';
 import { metaReducers, ROOT_REDUCER } from './app/state/app.state';
@@ -155,4 +155,8 @@ export function makeSegmentConfig(): DbxAnalyticsSegmentApiServiceConfig {
   ],
   bootstrap: [UIView]
 })
-export class RootModule {}
+export class RootModule {
+  constructor(readonly dbxFirebaseAnalyticsUserEventsListener: DbxFirebaseAnalyticsUserEventsListener) {
+    this.dbxFirebaseAnalyticsUserEventsListener.init();
+  }
+}
