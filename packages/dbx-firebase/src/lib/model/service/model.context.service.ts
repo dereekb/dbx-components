@@ -1,4 +1,4 @@
-import { FirestoreModelType, asFirestoreModelKeyCollectionType, buildFirebaseCollectionTypeModelTypeMap, FirebasePermissionErrorContext, FirestoreCollectionType, FirestoreDocument, FirestoreModelIdentityTypeMap, FirestoreModelKey, InContextFirebaseModelsService } from '@dereekb/firebase';
+import { FirestoreModelType, asFirestoreModelKeyCollectionType, buildFirebaseCollectionTypeModelTypeMap, FirebasePermissionErrorContext, FirestoreDocument, FirestoreModelIdentityTypeMap, FirestoreModelKey, InContextFirebaseModelsService } from '@dereekb/firebase';
 import { asObservable, ObservableOrValue } from '@dereekb/rxjs';
 import { GrantedRole } from '@dereekb/model';
 import { shareReplay, map, Observable, OperatorFunction, first, switchMap } from 'rxjs';

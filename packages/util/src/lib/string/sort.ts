@@ -1,4 +1,4 @@
-import { SortCompareFunction, SortComparisonNumber } from '../sort';
+import { SortCompareFunction } from '../sort';
 import { ReadStringFunction } from './string';
 
 /**

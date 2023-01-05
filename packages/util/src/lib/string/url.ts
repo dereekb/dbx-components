@@ -1,5 +1,5 @@
 import { EmailAddress } from '../contact/email';
-import { E164PhoneNumber, PhoneNumber } from '../contact/phone';
+import { PhoneNumber } from '../contact/phone';
 import { IndexRangeInput } from './../value/indexed';
 import { isolateSlashPathFunction, SLASH_PATH_SEPARATOR, toAbsoluteSlashPathStartType } from '../path/path';
 import { chainMapSameFunctions, MapFunction } from '../value/map';

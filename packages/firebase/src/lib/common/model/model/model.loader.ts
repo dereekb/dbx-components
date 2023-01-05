@@ -1,4 +1,4 @@
-import { FirestoreModelIdentityRef, FirebaseTransactionContext, FirestoreCollectionLike, FirestoreDocument, FirestoreModelKey, LimitedFirestoreDocumentAccessor } from '../../firestore';
+import { FirebaseTransactionContext, FirestoreCollectionLike, FirestoreDocument, FirestoreModelKey, LimitedFirestoreDocumentAccessor } from '../../firestore';
 import { InContextModelLoader, ModelLoader } from '@dereekb/model';
 import { Getter } from '@dereekb/util';
 

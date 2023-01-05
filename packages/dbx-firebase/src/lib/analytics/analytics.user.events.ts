@@ -1,9 +1,8 @@
 import { Injectable } from '@angular/core';
-import { DbxAnalyticsService, DbxAnalyticsUser, DbxAnalyticsUserProperties, DbxAnalyticsUserSource } from '@dereekb/dbx-analytics';
+import { DbxAnalyticsService } from '@dereekb/dbx-analytics';
 import { filterMaybe, SubscriptionObject } from '@dereekb/rxjs';
-import { Destroyable, FactoryWithRequiredInput, Initialized, Maybe } from '@dereekb/util';
-import { BehaviorSubject, map, Observable, of, switchMap, shareReplay, combineLatest, first } from 'rxjs';
-import { AuthUserInfo } from '../auth/auth';
+import { Destroyable, Initialized } from '@dereekb/util';
+import { first } from 'rxjs';
 import { DbxFirebaseAuthService } from '../auth/service/firebase.auth.service';
 import { DbxFirebaseAnalyticsUserSource } from './analytics.user.source';
 

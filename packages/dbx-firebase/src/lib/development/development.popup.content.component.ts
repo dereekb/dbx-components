@@ -2,7 +2,7 @@ import { ClickableAnchor, DbxAuthService, HandleActionWithContext } from '@deree
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { DbxWidgetDataPair, TwoColumnsContextStore } from '@dereekb/dbx-web';
 import { DevelopmentFirebaseFunctionSpecifier } from '@dereekb/firebase';
-import { filterMaybe, IsModifiedFunction, SubscriptionObject, tapLog } from '@dereekb/rxjs';
+import { filterMaybe, IsModifiedFunction, SubscriptionObject } from '@dereekb/rxjs';
 import { Maybe } from '@dereekb/util';
 import { first, BehaviorSubject, distinctUntilChanged, map, shareReplay, combineLatest, Observable } from 'rxjs';
 import { DbxFirebaseDevelopmentWidgetService } from './development.widget.service';

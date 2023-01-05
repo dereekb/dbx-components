@@ -1,5 +1,5 @@
 import { build } from '@dereekb/util';
-import { extendFirestoreCollectionWithSingleDocumentAccessor, FirestoreDocument, FirestoreSingleDocumentAccessor, firestoreSingleDocumentAccessor, SingleItemFirestoreCollectionDocumentIdentifierRef } from '../accessor/document';
+import { extendFirestoreCollectionWithSingleDocumentAccessor, FirestoreDocument, FirestoreSingleDocumentAccessor, SingleItemFirestoreCollectionDocumentIdentifierRef } from '../accessor/document';
 import { FirestoreCollectionWithParent, FirestoreCollectionWithParentConfig, makeFirestoreCollectionWithParent } from './subcollection';
 
 // MARK: Single-Item Subcollection

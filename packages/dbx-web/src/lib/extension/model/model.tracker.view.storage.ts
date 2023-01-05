@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { unixTimeNumberForNow } from '@dereekb/date';
 import { StorageAccessor } from '@dereekb/dbx-core';
-import { UnixDateTimeNumber, ModelKeyTypePair, encodeModelKeyTypePair, ModelRelationUtility, Maybe } from '@dereekb/util';
+import { encodeModelKeyTypePair, ModelRelationUtility, Maybe } from '@dereekb/util';
 import { Observable, of } from 'rxjs';
 import { map, mergeMap, catchError } from 'rxjs/operators';
 import { DbxModelViewTrackerEventSet, DbxModelViewTrackerEvent } from './model.tracker';

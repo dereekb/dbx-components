@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { loadingStateFromObs, tapLog } from '@dereekb/rxjs';
+import { loadingStateFromObs } from '@dereekb/rxjs';
 import { DbxFirebaseDevelopmentSchedulerService } from './development.scheduler.service';
 import { DbxFirebaseDevelopmentWidgetEntry } from './development.widget';
 
