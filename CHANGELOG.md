@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [9.20.15](https://github.com/dereekb/dbx-components/compare/v9.20.14-dev...v9.20.15) (2023-01-05)
+
+
+### Bug Fixes
+
+* fixed beginResetPassword() ([fdce1b8](https://github.com/dereekb/dbx-components/commit/fdce1b8d583f4533f1d4ba4c7c7092c505bf1705))
+
+
+
 ## [9.20.14](https://github.com/dereekb/dbx-components/compare/v9.20.13-dev...v9.20.14) (2023-01-04)
 
 
