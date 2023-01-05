@@ -1,4 +1,4 @@
-import { GrantedReadRole, GrantedRoleMap, grantedRoleMapReader, GrantedRoleTruthMapObject } from './role';
+import { GrantedReadRole, GrantedRoleMap, grantedRoleMapReader } from './role';
 
 const FIRST_ROLE = 'first';
 const SECOND_ROLE = 'second';

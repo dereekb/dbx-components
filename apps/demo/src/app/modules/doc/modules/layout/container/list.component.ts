@@ -5,7 +5,7 @@ import { ListLoadingState, mapLoadingStateResults, successResult } from '@dereek
 import { BehaviorSubject, map, switchMap, startWith, Observable, delay, of } from 'rxjs';
 import { ChangeDetectorRef, Component, OnInit, OnDestroy } from '@angular/core';
 import { DocValue, DocValueWithSelection, makeDocValues } from '../component/item.list';
-import { Maybe, range, takeFront } from '@dereekb/util';
+import { Maybe, takeFront } from '@dereekb/util';
 
 @Component({
   templateUrl: './list.component.html'

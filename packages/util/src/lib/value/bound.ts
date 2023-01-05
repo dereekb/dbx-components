@@ -221,7 +221,7 @@ export function latLngBoundFromInput(input: ExtendLatLngBoundInput): Maybe<LatLn
 }
 
 export function extendLatLngBound(bound: LatLngBound, extendWith: ExtendLatLngBoundInput): LatLngBound {
-  let { sw, ne } = copyLatLngBound(bound);
+  const { sw, ne } = copyLatLngBound(bound);
 
   asArray(extendWith).forEach((x) => {
     let xsw: LatLngPoint;

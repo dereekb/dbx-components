@@ -18,7 +18,7 @@ import { FirestoreItemPageIterationBaseConfig, FirestoreItemPageIterationFactory
 import { firestoreQueryFactory, FirestoreQueryFactory } from '../query/query';
 import { FirestoreDrivers } from '../driver/driver';
 import { FirestoreCollectionQueryFactory, firestoreCollectionQueryFactory } from './collection.query';
-import { ArrayOrValue, arrayToObject, Building, forEachInIterable, isOddNumber, lastValue, Maybe, ModelKey, ModelKeyRef, ModelTypeString, useIterableOrValue } from '@dereekb/util';
+import { ArrayOrValue, arrayToObject, Building, forEachInIterable, isOddNumber, lastValue, Maybe, ModelKey, ModelTypeString } from '@dereekb/util';
 
 /**
  * The camelCase model name/type.
@@ -130,7 +130,7 @@ export type FirestoreModelIdentityTypeMap = Map<FirestoreModelType | FirestoreCo
  * @returns
  */
 export function firestoreModelIdentityTypeMap(identities: Iterable<FirestoreModelIdentity>): FirestoreModelIdentityTypeMap {
-  let map = new Map<FirestoreModelType | FirestoreCollectionName, FirestoreModelType>();
+  const map = new Map<FirestoreModelType | FirestoreCollectionName, FirestoreModelType>();
 
   forEachInIterable(identities, (x) => {
     const { modelType, collectionName, collectionType } = x;
@@ -466,7 +466,7 @@ export function firestoreIdentityTypeArrayName(input: FirestoreModelIdentity, se
 export type FirestoreModelCollectionTypeArray = FirestoreCollectionName[];
 
 export function firestoreIdentityTypeArray(input: FirestoreModelIdentity): FirestoreModelCollectionTypeArray {
-  let array: FirestoreCollectionName[] = [];
+  const array: FirestoreCollectionName[] = [];
 
   let current = input;
 

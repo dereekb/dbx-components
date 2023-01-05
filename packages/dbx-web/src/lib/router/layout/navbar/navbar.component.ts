@@ -27,7 +27,7 @@ export type NavbarMode = 'bar' | 'button';
 })
 export class DbxNavbarComponent extends AbstractTransitionDirective implements OnDestroy {
   @Input()
-  icon: string = 'menu';
+  icon = 'menu';
 
   @Input()
   navAlign: HorizontalConnectionPos = 'center';

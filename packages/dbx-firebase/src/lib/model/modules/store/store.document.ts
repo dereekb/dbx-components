@@ -1,5 +1,5 @@
 import { Inject, Injectable, Optional } from '@angular/core';
-import { Observable, shareReplay, distinctUntilChanged, map, switchMap, combineLatest, Subscription, of, single } from 'rxjs';
+import { Observable, shareReplay, distinctUntilChanged, map, switchMap, combineLatest, Subscription, of } from 'rxjs';
 import {
   DocumentSnapshot,
   DocumentReference,

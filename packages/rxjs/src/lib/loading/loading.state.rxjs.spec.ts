@@ -1,5 +1,5 @@
 import { Maybe } from '@dereekb/util';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, map } from 'rxjs';
 import { filterWithSearchString } from '../rxjs';
 import { LoadingState } from './loading.state';
 import { mapLoadingStateValueWithOperator } from './loading.state.rxjs';
@@ -30,6 +30,36 @@ describe('mapLoadingStateValueWithOperator()', () => {
         expect(value).toContain(expectedValues[1]);
         done();
       }
+    });
+  });
+
+  it('should not map undefined success values', (done) => {
+    const expectedValue = undefined;
+    const value = undefined;
+
+    const values$ = new BehaviorSubject<LoadingState<Maybe<string>>>({ value });
+
+    const obs = values$.pipe(mapLoadingStateValueWithOperator(map(() => 'hello world')));
+
+    obs.subscribe((state) => {
+      const { value } = state;
+      expect(value).toBe(expectedValue);
+      done();
+    });
+  });
+
+  it('should map null success values', (done) => {
+    const expectedValue = 'test';
+    const value = null;
+
+    const values$ = new BehaviorSubject<LoadingState<Maybe<string>>>({ value });
+
+    const obs = values$.pipe(mapLoadingStateValueWithOperator(map(() => expectedValue)));
+
+    obs.subscribe((state) => {
+      const { value } = state;
+      expect(value).toBe(expectedValue);
+      done();
     });
   });
 

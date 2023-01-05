@@ -1,6 +1,5 @@
-import { Component, Directive, Input } from '@angular/core';
+import { Directive, Input } from '@angular/core';
 import { Maybe } from '@dereekb/util';
-import { DbxThemeColor } from '../style/style';
 
 @Directive({
   selector: 'dbx-chip',

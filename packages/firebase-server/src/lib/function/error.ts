@@ -143,7 +143,7 @@ export function internalServerError(messageOrError?: ErrorMessageOrPartialServer
 
 // MARK: Utility
 export function handleFirebaseError(e: unknown, handleFirebaseError: ThrowErrorFunction<admin.FirebaseError>): never | void {
-  let firebaseError = (e as admin.FirebaseError).code ? (e as admin.FirebaseError) : undefined;
+  const firebaseError = (e as admin.FirebaseError).code ? (e as admin.FirebaseError) : undefined;
 
   if (firebaseError) {
     handleFirebaseError(firebaseError);

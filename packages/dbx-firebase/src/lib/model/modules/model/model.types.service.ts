@@ -32,7 +32,7 @@ export interface DbxFirebaseModelTypesServiceEntry<T = unknown> extends Omit<Dbx
   readonly displayInfoFactory: FactoryWithRequiredInput<DbxFirebaseModelDisplayInfo, T>;
 }
 
-export interface DbxFirebaseModelDisplayInfo extends IconAndTitle {}
+export type DbxFirebaseModelDisplayInfo = IconAndTitle;
 
 export interface DbxFirebaseModelTypeInfo<T = unknown> extends DbxModelTypeInfo, Pick<DbxFirebaseModelTypesServiceEntry<T>, 'identity' | 'displayInfoFactory'> {}
 

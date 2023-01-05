@@ -1,4 +1,4 @@
-import { FirestoreDocument, FirestoreDocumentData, DocumentSnapshot, FirestoreAccessorStreamMode, SnapshotOptions, FirestoreModelKey, FirestoreCollectionType, FirestoreModelType } from '@dereekb/firebase';
+import { FirestoreDocument, FirestoreDocumentData, DocumentSnapshot, FirestoreAccessorStreamMode, SnapshotOptions, FirestoreModelKey, FirestoreModelType } from '@dereekb/firebase';
 import { GrantedRole, GrantedRoleMap, GrantedRoleMapReader, GrantedRoleTruthMap, GrantedRoleTruthMapObject } from '@dereekb/model';
 import { SetIncludesMode, IterableOrValue } from '@dereekb/util';
 import { Observable } from 'rxjs';

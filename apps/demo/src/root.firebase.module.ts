@@ -37,7 +37,7 @@ export function dbxFirebaseModelTypesServiceConfigFactory(): DbxFirebaseModelTyp
 
   const entries: DbxFirebaseModelTypesServiceEntry<any>[] = [guestbook];
 
-  let config: DbxFirebaseModelTypesServiceConfig = {
+  const config: DbxFirebaseModelTypesServiceConfig = {
     entries
   };
 

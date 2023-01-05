@@ -1,4 +1,4 @@
-import { FirestoreDocument, FirebasePermissionErrorContext, InModelContextFirebaseModelService, FirestoreDocumentData, DocumentSnapshot, FirestoreAccessorStreamMode, SnapshotOptions, firestoreModelKeyCollectionType, FirestoreCollectionType, FirebaseModelServiceContext, FirebaseModelsServiceFactory, FirestoreModelIdentity, InContextFirebaseModelsService, FirestoreModelIdentityModelType, FirebaseModelsService } from '@dereekb/firebase';
+import { FirestoreDocument, FirebasePermissionErrorContext, InModelContextFirebaseModelService, FirestoreDocumentData, DocumentSnapshot, FirestoreAccessorStreamMode, SnapshotOptions, InContextFirebaseModelsService, FirebaseModelsService } from '@dereekb/firebase';
 import { GrantedRole, GrantedRoleTruthMap, GrantedRoleTruthMapObject } from '@dereekb/model';
 import { asObservable, ObservableOrValue } from '@dereekb/rxjs';
 import { SetIncludesMode, IterableOrValue, ModelKey } from '@dereekb/util';

@@ -102,9 +102,10 @@ export class DbxAnalyticsService implements DbxAnalyticsEventStreamService, DbxA
   private _userSourceSub = new SubscriptionObject();
   private _loggerSub = new SubscriptionObject();
 
-  constructor(private _config: DbxAnalyticsServiceConfiguration, @Optional() @Inject(DbxAnalyticsUserSource) userSource: Maybe<DbxAnalyticsUserSource> = _config.userSource) {
+  constructor(private _config: DbxAnalyticsServiceConfiguration, @Optional() @Inject(DbxAnalyticsUserSource) userSource?: Maybe<DbxAnalyticsUserSource>) {
     this._init();
 
+    userSource = userSource || _config.userSource;
     if (userSource) {
       this.setUserSource(userSource);
     }
@@ -237,7 +238,7 @@ export class DbxAnalyticsService implements DbxAnalyticsEventStreamService, DbxA
 
       // Create a new subscription
       this._loggerSub.subscription = this._subject.subscribe((x) => {
-        console.log(`AnalyticsService: Analytics Event - ${DbxAnalyticsStreamEventType[x.type]} User: ${x.userId} Data: ${JSON.stringify(x.event)}.`);
+        console.log(`AnalyticsService: Analytics Event - ${DbxAnalyticsStreamEventType[x.type]} | User: ${x.userId} | Data: ${JSON.stringify(x.event)}.`);
       });
     }
 
