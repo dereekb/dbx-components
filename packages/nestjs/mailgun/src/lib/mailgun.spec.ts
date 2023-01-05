@@ -9,7 +9,48 @@ const templateName = 'test';
 const apiKey = 'key-d7e36a9ead3fdb61983587832bd75b42'; // process.env['MAILGUN_SANDBOX_API_KEY'] as string;
 const domain = 'sandboxac03c39a759d4cf1b3511eb72715b996.mailgun.org' ?? (process.env['MAILGUN_SANDBOX_DOMAIN'] as string);
 
-describe('convertMailgunTemplateEmailRequestToMailgunMessageData', () => {
+describe('convertMailgunTemplateEmailRequestToMailgunMessageData()', () => {
+  describe('single recipient', () => {
+    describe('templateVariables', () => {
+      it('should encode the template variables properly.', () => {
+        const request = {
+          subject: 'Reset Your Dbx Components Password Requeset',
+          to: {
+            email: testEmail,
+            name: 'Test'
+          },
+          template: 'actiontemplate',
+          templateVariables: {
+            prompt: 'Reset Your Password Request - 337772',
+            line1: 'A password reset was requested. Log into Dbx Components with the following temporary password to begin password reset.',
+            line2: '337772',
+            text: 'Log Into Dbx Components',
+            url: 'https://components.dereekb.com/auth/login',
+            title: 'Reset Your Password Request - 337772',
+            object: {
+              a: 'b'
+            },
+            notkept: null,
+            date: new Date()
+          }
+        };
+
+        const result = convertMailgunTemplateEmailRequestToMailgunMessageData({ request });
+
+        expect(result['v:prompt']).toBe(request.templateVariables.prompt);
+        expect(result['v:line1']).toBe(request.templateVariables.line1);
+        expect(result['v:line2']).toBe(request.templateVariables.line2);
+        expect(result['v:text']).toBe(request.templateVariables.text);
+        expect(result['v:url']).toBe(request.templateVariables.url);
+        expect(result['v:object']).toBe(JSON.stringify(request.templateVariables.object));
+        expect(result['v:notkept']).not.toBeDefined();
+
+        // date is saved as an ISOString
+        expect(result['v:date']).toBe(request.templateVariables.date.toISOString());
+      });
+    });
+  });
+
   describe('multiple recipients', () => {
     const overrideValue = 'o';
     const mergedValue = 'm';
