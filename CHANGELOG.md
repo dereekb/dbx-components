@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [9.20.17](https://github.com/dereekb/dbx-components/compare/v9.20.16-dev...v9.20.17) (2023-01-05)
+
+
+### Bug Fixes
+
+* fixed convertMailgunTemplateEmailRequestToMailgunMessageData() ([e378c74](https://github.com/dereekb/dbx-components/commit/e378c74a28aadd674ff3749787aceed8a9ba6ab6))
+
+
+
 ## [9.20.16](https://github.com/dereekb/dbx-components/compare/v9.20.15-dev...v9.20.16) (2023-01-05)
 
 
