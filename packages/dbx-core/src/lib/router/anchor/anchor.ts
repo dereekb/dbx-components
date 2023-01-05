@@ -3,6 +3,7 @@ import { SegueRef } from '../segue';
 import { expandFlattenTreeFunction, expandTreeFunction, ExpandTreeFunction, FlattenTreeFunction, flattenTreeToArrayFunction, Maybe, TreeNode } from '@dereekb/util';
 import { Type, Provider, forwardRef } from '@angular/core';
 import { Observable } from 'rxjs';
+import { DbxInjectionComponentConfig } from '../../injection/injection';
 
 export interface ClickableAnchor extends ClickableFunction, ClickableUrl, Partial<SegueRef> {
   disabled?: boolean;
@@ -10,14 +11,23 @@ export interface ClickableAnchor extends ClickableFunction, ClickableUrl, Partia
 }
 
 /**
- * Title an an optional icon.
+ * Title and an optional icon.
  */
 export interface IconAndTitle {
   title: string;
   icon?: string;
 }
 
-export interface ClickableAnchorLink extends ClickableAnchor, IconAndTitle {}
+export interface ClickableAnchorLink extends ClickableAnchor, IconAndTitle {
+  /**
+   * Optional detail string/content.
+   */
+  hint?: string;
+  /**
+   * Custom injection content for this link.
+   */
+  content?: DbxInjectionComponentConfig;
+}
 
 /**
  * ClickableAnchorLink that definitely has a SegueRef

@@ -2,6 +2,7 @@ import { DOC_LAYOUT_ROOT_ROUTE } from './../../layout/doc.layout';
 import { Component } from '@angular/core';
 import { ClickableAnchorLinkTree } from '@dereekb/dbx-core';
 import { DOC_ROUTER_ROOT_ROUTE } from '../doc.router';
+import { DocRouterCustomAnchorContentComponent } from '../component/anchor.content';
 
 @Component({
   templateUrl: './anchorlist.component.html'
@@ -37,6 +38,36 @@ export class DocRouterAnchorListComponent {
           url: 'https://app.circleci.com/pipelines/github/dereekb/dbx-components'
         }
       ]
+    }
+  ];
+
+  customAnchors: ClickableAnchorLinkTree[] = [
+    {
+      icon: 'link',
+      title: 'CircleCI',
+      target: '_blank',
+      hint: 'This is a custom hint. This link goes to CircleCI.',
+      url: 'https://app.circleci.com/pipelines/github/dereekb/dbx-components'
+    },
+    {
+      icon: 'person',
+      title: 'Account',
+      target: '_blank',
+      hint: 'Manage your account information.'
+    },
+    {
+      icon: 'settings',
+      title: 'Settings',
+      target: '_blank',
+      hint: 'View other settings here.'
+    },
+    {
+      icon: 'shuffle',
+      title: 'Random',
+      hint: 'This content is injected using dbx-injection.',
+      content: {
+        componentClass: DocRouterCustomAnchorContentComponent
+      }
     }
   ];
 }

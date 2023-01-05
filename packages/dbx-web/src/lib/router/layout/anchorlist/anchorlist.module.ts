@@ -7,9 +7,10 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { DbxRouterAnchorModule } from '../anchor/anchor.module';
 import { MatMenuModule } from '@angular/material/menu';
 import { DbxAnchorListComponent } from './anchorlist.component';
+import { DbxInjectionComponentModule } from '@dereekb/dbx-core';
 
 @NgModule({
-  imports: [CommonModule, MatTabsModule, MatButtonModule, MatIconModule, MatListModule, MatMenuModule, DbxRouterAnchorModule],
+  imports: [CommonModule, DbxInjectionComponentModule, MatTabsModule, MatButtonModule, MatIconModule, MatListModule, MatMenuModule, DbxRouterAnchorModule],
   declarations: [DbxAnchorListComponent],
   exports: [DbxAnchorListComponent]
 })

@@ -28,6 +28,7 @@ const env = {}; // this is the object that is parsed
 const keysToIgnoreFromTemplate = ['PUT_YOUR_REAL_SECRETS_INTO_ENV_SECRET', 'THIS_FILE_IS_COMMITTED_TO_GITHUB']; // these keys are ignored
 const keysToIgnore = new Set(keysToIgnoreFromTemplate);
 
+const envSpecifierType = new String(process.argv[2] || 'test').toUpperCase(); // Also use this to find variables. Always lowercase
 const envSpecifierTypeLower = envSpecifierType.toLowerCase();
 const envSpecifierSeparator = '_';
 
@@ -57,7 +58,6 @@ function assertHasNoPlaceholderValues(defaultValue, ignoreKeys = new Set()) {
       }
     });
 }
-
 // ======================================
 // Configure Here using JS
 // ======================================

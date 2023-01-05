@@ -7,6 +7,7 @@ import { DocRouterHomeComponent } from './container/home.component';
 import { DocSharedModule } from '../shared/doc.shared.module';
 import { DocRouterNavbarComponent } from './container/navbar.component';
 import { STATES } from './doc.router.router';
+import { DocRouterCustomAnchorContentComponent } from './component/anchor.content';
 
 @NgModule({
   imports: [
@@ -15,6 +16,15 @@ import { STATES } from './doc.router.router';
       states: STATES
     })
   ],
-  declarations: [DocRouterLayoutComponent, DocRouterHomeComponent, DocRouterAnchorComponent, DocRouterAnchorListComponent, DocRouterNavbarComponent]
+  declarations: [
+    //
+    DocRouterCustomAnchorContentComponent,
+    //
+    DocRouterLayoutComponent,
+    DocRouterHomeComponent,
+    DocRouterAnchorComponent,
+    DocRouterAnchorListComponent,
+    DocRouterNavbarComponent
+  ]
 })
 export class DocRouterModule {}

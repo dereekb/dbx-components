@@ -6,6 +6,7 @@ import { assertIsContextWithAuthData, CallableContextWithAuthData } from '../fun
 import { AuthDataRef, firebaseAuthTokenFromDecodedIdToken } from './auth.context';
 import { hoursToMs, timeHasExpired, toISODateString } from '@dereekb/date';
 import { getAuthUserOrUndefined } from './auth.util';
+import { AuthUserIdentifier } from '@dereekb/dbx-core';
 
 export const DEFAULT_FIREBASE_PASSWORD_NUMBER_GENERATOR = randomNumberFactory({ min: 100000, max: 1000000 - 1, round: 'floor' }); // 6 digits
 
@@ -350,6 +351,10 @@ export interface FirebaseServerAuthInitializeNewUser<D = unknown> {
    */
   readonly sendSetupContent?: boolean;
   /**
+   * Whether or not to resend a setup email if the user already existed. Is false by default.
+   */
+  readonly sendSetupContentIfUserExists?: boolean;
+  /**
    * Whether or not to force sending the test details.
    */
   readonly sendDetailsInTestEnvironment?: boolean;
@@ -430,7 +435,7 @@ export abstract class AbstractFirebaseServerNewUserService<U extends FirebaseSer
   constructor(readonly authService: FirebaseServerAuthService<U, C>) {}
 
   async initializeNewUser(input: FirebaseServerAuthInitializeNewUser<D>): Promise<admin.auth.UserRecord> {
-    const { uid, email, phone, sendSetupContent, data, sendDetailsInTestEnvironment } = input;
+    const { uid, email, phone, sendSetupContent, sendSetupContentIfUserExists, data, sendDetailsInTestEnvironment } = input;
 
     let userRecordPromise: Promise<admin.auth.UserRecord>;
 
@@ -445,6 +450,8 @@ export abstract class AbstractFirebaseServerNewUserService<U extends FirebaseSer
     }
 
     let userRecord: Maybe<admin.auth.UserRecord> = await getAuthUserOrUndefined(userRecordPromise);
+    let userRecordId: AuthUserIdentifier;
+    let createdUser = false;
 
     if (!userRecord) {
       const createResult = await this.createNewUser(input);
@@ -453,13 +460,22 @@ export abstract class AbstractFirebaseServerNewUserService<U extends FirebaseSer
       const userContext = this.authService.userContext(createResult.user.uid);
       await this.addNewUserSetupClaims(userContext, createResult.password);
 
-      // only send if true
-      if (sendSetupContent === true) {
-        await this.sendSetupContent(createResult.user.uid, { data, sendDetailsInTestEnvironment });
-      }
-
-      // return the new record
+      createdUser = true;
+      userRecordId = userContext.uid;
       userRecord = await userContext.loadRecord();
+    } else {
+      userRecordId = userRecord.uid;
+    }
+
+    // send content if necessary
+    if ((createdUser && sendSetupContent === true) || sendSetupContentIfUserExists) {
+      const sentEmail = await this.sendSetupContent(userRecordId, { data, sendDetailsInTestEnvironment });
+
+      // reload the user record
+      if (sentEmail) {
+        const userContext = this.authService.userContext(userRecordId);
+        userRecord = await userContext.loadRecord();
+      }
     }
 
     return userRecord;
@@ -478,6 +494,7 @@ export abstract class AbstractFirebaseServerNewUserService<U extends FirebaseSer
 
   async sendSetupContent(userContextOrUid: U | FirebaseAuthUserId, config?: FirebaseServerAuthNewUserSendSetupDetailsConfig<D>): Promise<boolean> {
     const setupDetails: Maybe<FirebaseServerAuthNewUserSetupDetails<U, D>> = await this.loadSetupDetails(userContextOrUid, config);
+    let sentContent = false;
 
     if (setupDetails) {
       const { setupCommunicationAt } = setupDetails.claims;
@@ -485,10 +502,11 @@ export abstract class AbstractFirebaseServerNewUserService<U extends FirebaseSer
       if (!setupCommunicationAt || timeHasExpired(new Date(setupCommunicationAt), this.setupThrottleTime)) {
         await this.sendSetupContentToUser(setupDetails);
         await this.updateSetupContentSentTime(setupDetails);
+        sentContent = true;
       }
     }
 
-    return false;
+    return sentContent;
   }
 
   async loadSetupDetails(userContextOrUid: U | FirebaseAuthUserId, config?: FirebaseServerAuthNewUserSendSetupDetailsConfig<D>): Promise<Maybe<FirebaseServerAuthNewUserSetupDetails<U, D>>> {

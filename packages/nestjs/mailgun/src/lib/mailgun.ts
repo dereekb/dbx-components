@@ -92,7 +92,33 @@ export function convertMailgunTemplateEmailRequestToMailgunMessageData(config: C
     forEachKeyValue(request.templateVariables, {
       forEach: (x) => {
         const [key, value] = x;
-        data[`v:${key}`] = JSON.stringify(value);
+        let encodedValue;
+
+        switch (typeof value) {
+          case 'object':
+            if (value) {
+              if (value instanceof Date) {
+                encodedValue = value.toISOString();
+              } else {
+                encodedValue = JSON.stringify(value);
+              }
+            }
+            break;
+          case 'bigint':
+          case 'boolean':
+          case 'number':
+          case 'string':
+            encodedValue = String(value); // encoded as a string value
+            break;
+          default:
+            if (value) {
+              throw new Error(`Invalid value ${value} passed to templateVariables.`);
+            }
+        }
+
+        if (encodedValue != null) {
+          data[`v:${key}`] = encodedValue;
+        }
       }
     });
   }
