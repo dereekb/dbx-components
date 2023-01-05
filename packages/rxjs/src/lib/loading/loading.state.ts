@@ -195,7 +195,7 @@ export function loadingStateHasFinishedLoading<L extends LoadingState>(state: Ma
     if (loading === true) {
       return false;
     } else {
-      return loading === false || Boolean(state.value || state.error);
+      return loading === false || Boolean(state.value || state.error) || state.value === null;
     }
   } else {
     return false;
@@ -210,7 +210,7 @@ export function loadingStateHasFinishedLoading<L extends LoadingState>(state: Ma
  */
 export function loadingStateHasValue<L extends LoadingState>(state: Maybe<L> | LoadingStateWithMaybeSoValue<LoadingStateValue<L>>): state is LoadingStateWithMaybeSoValue<LoadingStateValue<L>> {
   if (state) {
-    return loadingStateHasFinishedLoading(state) && state.value != null;
+    return loadingStateHasFinishedLoading(state) && state.value !== undefined;
   } else {
     return false;
   }

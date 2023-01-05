@@ -70,6 +70,11 @@ describe('loadingStateIsLoading()', () => {
     expect(result).toBe(true);
   });
 
+  it('should return false if a loading state has value=null', () => {
+    const result = loadingStateIsLoading({ value: null });
+    expect(result).toBe(true);
+  });
+
   it('should return false if a loading state has loading=undefined, and error is set.', () => {
     const result = loadingStateIsLoading({ loading: undefined, error: { message: '' } });
     expect(result).toBe(false);
