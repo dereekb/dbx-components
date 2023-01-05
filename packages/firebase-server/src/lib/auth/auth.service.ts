@@ -138,10 +138,7 @@ export abstract class AbstractFirebaseServerAuthUserContext<S extends FirebaseSe
     };
 
     // set the claims
-    await this.updateClaims({
-      [FIREBASE_SERVER_AUTH_CLAIMS_RESET_PASSWORD_KEY]: null,
-      [FIREBASE_SERVER_AUTH_CLAIMS_RESET_LAST_COM_DATE_KEY]: null
-    });
+    await this.updateClaims(passwordClaimsData);
 
     // update the user
     await this.updateUser({ password });
