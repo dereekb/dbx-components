@@ -111,6 +111,57 @@ describe('firebase server nest auth', () => {
             });
           });
 
+          describe('loadDetails()', () => {
+            it('should load the details for the user.', async () => {
+              const details = await authUserContext.loadDetails();
+              expect(details).toBeDefined();
+            });
+          });
+
+          describe('beginResetPassword()', () => {
+            it('should add password reset claims to the user and change their password.', async () => {
+              let record = await authUserContext.loadRecord();
+              const passwordHash = record.passwordHash;
+              expect(passwordHash).not.toBeDefined(); // no password set in this test
+
+              let resetPasswordClaims = await authUserContext.loadResetPasswordClaims();
+              expect(resetPasswordClaims).toBeUndefined();
+
+              await authUserContext.beginResetPassword();
+
+              authUserContext = authService.userContext(u.uid);
+              record = await authUserContext.loadRecord();
+
+              expect(record.passwordHash).not.toBe(passwordHash);
+
+              resetPasswordClaims = await authUserContext.loadResetPasswordClaims();
+              expect(resetPasswordClaims).toBeDefined();
+            });
+          });
+
+          describe('setPassword()', () => {
+            it('should clear any reset password claims.', async () => {
+              await authUserContext.beginResetPassword();
+
+              authUserContext = authService.userContext(u.uid);
+              let record = await authUserContext.loadRecord();
+
+              expect(record.passwordHash).toBeDefined();
+
+              let resetPasswordClaims = await authUserContext.loadResetPasswordClaims();
+              expect(resetPasswordClaims).toBeDefined();
+
+              // set new password
+              await authUserContext.setPassword('newpassword');
+
+              authUserContext = authService.userContext(u.uid);
+              record = await authUserContext.loadRecord();
+
+              resetPasswordClaims = await authUserContext.loadResetPasswordClaims();
+              expect(resetPasswordClaims).not.toBeDefined();
+            });
+          });
+
           describe('addRoles()', () => {
             it('should update the claims to have the roles (as configured by the service).', async () => {
               await authUserContext.addRoles(AUTH_ADMIN_ROLE);
