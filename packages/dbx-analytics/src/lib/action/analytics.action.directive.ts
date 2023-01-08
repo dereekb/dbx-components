@@ -5,18 +5,14 @@ import { DbxActionContextStoreSourceInstance, AbstractSubscriptionDirective } fr
 import { DbxAnalyticsService } from '../analytics/analytics.service';
 import { Maybe, ReadableError } from '@dereekb/util';
 
-export enum DbxActionAnalyticsTriggerType {
-  TRIGGER,
-  READY,
-  SUCCESS,
-  ERROR
-}
-
+/**
+ * DbxActionAnalyticsDirective config
+ */
 export interface DbxActionAnalyticsConfig<T = unknown, O = unknown> {
-  onTriggered: (service: DbxAnalyticsService) => void;
-  onReady: (service: DbxAnalyticsService, value: T) => void;
-  onSuccess: (service: DbxAnalyticsService, value: Maybe<O>) => void;
-  onError: (service: DbxAnalyticsService, error: Maybe<ReadableError>) => void;
+  onTriggered?: (service: DbxAnalyticsService) => void;
+  onReady?: (service: DbxAnalyticsService, value: T) => void;
+  onSuccess?: (service: DbxAnalyticsService, value: Maybe<O>) => void;
+  onError?: (service: DbxAnalyticsService, error: Maybe<ReadableError>) => void;
 }
 
 /**
@@ -61,11 +57,16 @@ export class DbxActionAnalyticsDirective<T, O> extends AbstractSubscriptionDirec
           }
 
           if (onError) {
-            triggerObs.push(this.source.error$.pipe(tap((error) => onError(this.analyticsService, error))));
+            triggerObs.push(
+              this.source.error$.pipe(
+                filterMaybe(),
+                tap((error) => onError(this.analyticsService, error))
+              )
+            );
           }
 
           if (triggerObs.length) {
-            return merge(triggerObs);
+            return merge(...triggerObs);
           } else {
             return of();
           }
