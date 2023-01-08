@@ -19,6 +19,10 @@ export class MailgunApi {
     return this.client.messages;
   }
 
+  get clientUrl(): string {
+    return this.config.clientUrl;
+  }
+
   get domain(): string {
     return this.config.domain;
   }

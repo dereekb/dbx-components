@@ -49,6 +49,7 @@ import { FlexLayoutModule } from '@angular/flex-layout';
 import { DbxButtonModule, DbxInteractionModule, DbxRouterLayoutModule, DbxLayoutModule, DbxActionModule, DbxReadableErrorModule, DbxLoadingModule, DbxActionSnackbarModule } from '@dereekb/dbx-web';
 import { DbxFormExtensionModule } from '@dereekb/dbx-form';
 import { DbxAppContextStateModule, DbxCoreAuthModule, DbxPipesModule } from '@dereekb/dbx-core';
+import { DbxAnalyticsActionModule } from '@dereekb/dbx-analytics';
 
 const ANGULAR_MODULES = [CommonModule];
 
@@ -102,7 +103,7 @@ const ANGULAR_MATERIAL_MODULES = [
   FlexLayoutModule
 ];
 
-const DBX_MODULES = [DbxReadableErrorModule, DbxCoreAuthModule, DbxActionModule, DbxButtonModule, DbxLoadingModule, DbxInteractionModule, DbxRouterLayoutModule, DbxLayoutModule, DbxFormExtensionModule, DbxActionSnackbarModule, DbxPipesModule, DbxAppContextStateModule];
+const DBX_MODULES = [DbxReadableErrorModule, DbxAnalyticsActionModule, DbxCoreAuthModule, DbxActionModule, DbxButtonModule, DbxLoadingModule, DbxInteractionModule, DbxRouterLayoutModule, DbxLayoutModule, DbxFormExtensionModule, DbxActionSnackbarModule, DbxPipesModule, DbxAppContextStateModule];
 
 @NgModule({
   exports: [

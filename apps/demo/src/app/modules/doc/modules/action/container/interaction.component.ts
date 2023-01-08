@@ -5,6 +5,8 @@ import { DbxActionContextMachine, HandleActionFunction, safeDetectChanges } from
 import { of, delay, BehaviorSubject, tap } from 'rxjs';
 import { DocActionExamplePopoverComponent } from '../component/action.example.popover.form.component';
 import { DocActionExampleDialogComponent } from '../component/action.example.dialog.component';
+import { DbxActionAnalyticsConfig, DbxAnalyticsService } from '@dereekb/dbx-analytics';
+import { Maybe, ReadableError } from '@dereekb/util';
 
 @Component({
   templateUrl: './interaction.component.html'
@@ -18,6 +20,22 @@ export class DocActionInteractionComponent implements OnDestroy {
     prompt: 'Example Prompt here.',
     confirmText: 'Customized Confirm',
     cancelText: 'Cancel Customized'
+  };
+
+  readonly analyticsConfig: DbxActionAnalyticsConfig = {
+    onTriggered: (service: DbxAnalyticsService) => {
+      service.sendEventType('Analytics Trigger Example');
+      console.log('Triggered');
+    },
+    onReady: (service: DbxAnalyticsService, value) => {
+      console.log('Ready');
+    },
+    onSuccess: (service: DbxAnalyticsService, value) => {
+      console.log('Success');
+    },
+    onError: (service: DbxAnalyticsService, error: Maybe<ReadableError>) => {
+      console.log('Error');
+    }
   };
 
   private _value = new BehaviorSubject<{ test: number }>({ test: 0 });

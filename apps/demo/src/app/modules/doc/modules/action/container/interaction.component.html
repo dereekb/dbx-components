@@ -53,5 +53,12 @@
         <dbx-button dbxActionButton text="Open Dialog Action"></dbx-button>
       </dbx-action-example-tools>
     </doc-feature-example>
+
+    <h3>Analytics</h3>
+    <doc-feature-example header="dbxActionAnalytics" hint="Used to connect analytics to an action. Can listen to trigger, read, success, and error events from the action and send relevant analytics events.">
+      <dbx-action-example-tools dbxAction dbxActionValue [dbxActionHandler]="handleAction" [dbxActionAnalytics]="analyticsConfig">
+        <dbx-button dbxActionButton text="Open Action Value"></dbx-button>
+      </dbx-action-example-tools>
+    </doc-feature-example>
   </doc-feature-layout>
 </dbx-content-container>

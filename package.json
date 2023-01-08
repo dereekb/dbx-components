@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/dbx-components",
-  "version": "9.20.17",
+  "version": "9.20.18",
   "license": "MIT",
   "scripts": {
     "postinstall": "ngcc --properties es2020 browser module main && echo >> .env.local",

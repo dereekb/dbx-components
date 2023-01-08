@@ -49,7 +49,7 @@ export type DateOrDateString = Date | ISO8601DateString;
 /**
  * A full date string Formatted as ISO8601.
  *
- * Year, Month, Date
+ * Year, Month, Day
  *
  * I.E. 1921-06-23
  */
