@@ -65,6 +65,36 @@ export function isISO8601DayString(input: string): input is ISO8601DayString {
 }
 
 /**
+ * Date that is represented by slashes. Is considered in the Month/Day/Year format.
+ */
+export type MonthDaySlashDate = string; // 11/1/21
+
+/**
+ * Converts the input MonthDaySlashDate to an ISO8601DayString.
+ *
+ * @param slashDate
+ * @returns
+ */
+export function monthDaySlashDateToDateString(slashDate: MonthDaySlashDate): ISO8601DayString {
+  let [month, day, year] = slashDate.split('/');
+
+  if (month.length === 1) {
+    month = `0${month}`;
+  }
+
+  if (day.length === 1) {
+    day = `0${day}`;
+  }
+
+  if (year.length === 2) {
+    year = `20${year}`;
+  }
+
+  const result = `${year}-${month}-${day}`;
+  return result;
+}
+
+/**
  * Time in seconds (instead of ms) since the epoch.
  */
 export type UnixDateTimeNumber = number;

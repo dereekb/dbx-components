@@ -35,3 +35,10 @@ export class MailgunService {
     return result;
   }
 }
+
+/**
+ * Provides a reference to a MailgunService instance.
+ */
+export interface MailgunServiceRef {
+  readonly mailgunService: MailgunService;
+}
