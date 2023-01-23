@@ -4,7 +4,7 @@ import { initializeAppCheck, ReCaptchaV3Provider } from 'firebase/app-check';
 import { FirebaseApp, provideFirebaseApp } from '@angular/fire/app';
 import { provideStorage, getStorage, connectStorageEmulator } from '@angular/fire/storage';
 import { provideFunctions, getFunctions, connectFunctionsEmulator } from '@angular/fire/functions';
-import { provideFirestore, getFirestore, connectFirestoreEmulator, enableIndexedDbPersistence } from '@angular/fire/firestore';
+import { provideFirestore, getFirestore, connectFirestoreEmulator, enableIndexedDbPersistence, enableMultiTabIndexedDbPersistence } from '@angular/fire/firestore';
 import { provideAuth, getAuth, connectAuthEmulator } from '@angular/fire/auth';
 import { AppCheck, provideAppCheck } from '@angular/fire/app-check';
 import { DbxFirebaseParsedEmulatorsConfig } from './emulators';
@@ -22,6 +22,7 @@ import { DbxFirebaseAppCheckHttpInterceptor } from '../auth/appcheck/appcheck.in
   imports: [
     provideFirestore(((injector: Injector) => {
       const firebaseApp = injector.get(FirebaseApp);
+      const firebaseOptions = injector.get<DbxFirebaseOptions>(DBX_FIREBASE_OPTIONS_TOKEN);
       const firestore = getFirestore(firebaseApp);
       const emulators = injector.get<DbxFirebaseParsedEmulatorsConfig>(DbxFirebaseParsedEmulatorsConfig, undefined);
 
@@ -29,7 +30,13 @@ import { DbxFirebaseAppCheckHttpInterceptor } from '../auth/appcheck/appcheck.in
         connectFirestoreEmulator(firestore, emulators.firestore.host, emulators.firestore.port, {});
       }
 
-      enableIndexedDbPersistence(firestore);
+      if (firebaseOptions.enableIndexedDbPersistence !== false) {
+        enableIndexedDbPersistence(firestore);
+      }
+
+      if (firebaseOptions.enableMultiTabIndexedDbPersistence !== false) {
+        enableMultiTabIndexedDbPersistence(firestore);
+      }
 
       return firestore;
     }) as any)

@@ -16,4 +16,16 @@ export interface DbxFirebaseOptions extends FirebaseOptions, Pick<DbxFirebaseLog
    * Passed to the Functions initialization to set the domain to use when sending requests.
    */
   functionsRegionOrCustomDomain?: string | undefined;
+  /**
+   * Whether or not to call enableIndexedDbPersistence() for firestore at setup time.
+   *
+   * True by default.
+   */
+  enableIndexedDbPersistence?: boolean;
+  /**
+   * Whether or not to call enableMultiTabIndexedDbPersistence() for firestore at setup time.
+   *
+   * True by default.
+   */
+  enableMultiTabIndexedDbPersistence?: boolean;
 }
