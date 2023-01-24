@@ -30,12 +30,10 @@ import { DbxFirebaseAppCheckHttpInterceptor } from '../auth/appcheck/appcheck.in
         connectFirestoreEmulator(firestore, emulators.firestore.host, emulators.firestore.port, {});
       }
 
-      if (firebaseOptions.enableIndexedDbPersistence !== false) {
-        enableIndexedDbPersistence(firestore);
-      }
-
       if (firebaseOptions.enableMultiTabIndexedDbPersistence !== false) {
         enableMultiTabIndexedDbPersistence(firestore);
+      } else if (firebaseOptions.enableIndexedDbPersistence !== false) {
+        enableIndexedDbPersistence(firestore);
       }
 
       return firestore;
