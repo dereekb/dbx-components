@@ -24,4 +24,14 @@ export class DemoSetupDevelopmentWidgetComponent implements OnInit {
   readonly handleCreateGuestbook: HandleActionWithContext = (value, context) => {
     context.startWorkingWithLoadingStateObservable(this.guestbookDocumentStore.createGuestbook({ name: `My New Guestbook ${randomNumber(999)}`, published: true }));
   };
+
+  readonly handleCreateTwentyGuestbooks: HandleActionWithContext = (value, context) => {
+    context.startWorking();
+
+    for (let i = 0; i < 20; i += 1) {
+      this.guestbookDocumentStore.createGuestbook({ name: `My New Guestbook ${randomNumber(999)}`, published: true }).subscribe();
+    }
+
+    context.success();
+  };
 }

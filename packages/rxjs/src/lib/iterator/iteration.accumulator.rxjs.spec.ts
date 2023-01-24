@@ -2,7 +2,7 @@ import { ItemPageIterator, ItemPageIterationInstance } from './iterator.page';
 import { TestPageIteratorFilter, TEST_PAGE_ARRAY_ITERATOR_DELEGATE, TEST_PAGE_ARRAY_ITERATOR_PAGE_SIZE } from './iterator.page.spec';
 import { iteratorNextPageUntilPage } from './iteration.next';
 import { accumulatorFlattenPageListLoadingState, flattenAccumulatorResultItemArray } from './iteration.accumulator.rxjs';
-import { filter, first } from 'rxjs';
+import { filter, first, skip } from 'rxjs';
 import { itemAccumulator, ItemAccumulatorInstance } from './iteration.accumulator';
 import { PageItemIteration } from './iteration';
 import { loadingStateHasFinishedLoading } from '../loading';
@@ -108,6 +108,30 @@ describe('iteration.rxjs', () => {
             expect(Array.isArray(state.value)).toBe(true);
             done();
           });
+      });
+    });
+
+    it(`should return all the values when loading.`, (done) => {
+      iteratorNextPageUntilPage(iteration, 1).then(() => {
+        const obs = accumulatorFlattenPageListLoadingState(accumulator);
+
+        obs
+          .pipe(
+            //skip the first emission, which is the first page
+            skip(1)
+          )
+          .subscribe((state) => {
+            if (!loadingStateHasFinishedLoading(state)) {
+              expect(state.value).toBeDefined();
+              expect(Array.isArray(state.value)).toBe(true);
+            } else {
+              expect(state.value).toBeDefined();
+              expect(Array.isArray(state.value)).toBe(true);
+              done();
+            }
+          });
+
+        iteration.next();
       });
     });
   });
