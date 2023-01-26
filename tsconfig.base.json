@@ -30,6 +30,7 @@
       "@dereekb/dbx-web": ["packages/dbx-web/src/index.ts"],
       "@dereekb/dbx-web/calendar": ["packages/dbx-web/calendar/src/index.ts"],
       "@dereekb/dbx-web/mapbox": ["packages/dbx-web/mapbox/src/index.ts"],
+      "@dereekb/dbx-web/table": ["packages/dbx-web/table/src/index.ts"],
       "@dereekb/demo-components": ["components/demo-components/src/index.ts"],
       "@dereekb/demo-firebase": ["components/demo-firebase/src/index.ts"],
       "@dereekb/firebase": ["packages/firebase/src/index.ts"],
