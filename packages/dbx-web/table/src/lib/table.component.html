@@ -1,0 +1,48 @@
+<section class="dbx-table-view">
+  <dbx-loading [context]="context">
+    <table mat-table [dataSource]="dataSource">
+      <!-- Header/Item column -->
+      <ng-container matColumnDef="items" [sticky]="true">
+        <th mat-header-cell *matHeaderCellDef>
+          <dbx-table-input-cell></dbx-table-input-cell>
+        </th>
+        <td mat-cell *matCellDef="let element">
+          <dbx-table-item-header [element]="element"></dbx-table-item-header>
+        </td>
+        <td mat-footer-cell *matFooterCellDef>
+          <dbx-table-summary-start-cell></dbx-table-summary-start-cell>
+        </td>
+      </ng-container>
+
+      <!-- Column Definitions -->
+      <ng-container [matColumnDef]="column.columnName" *ngFor="let column of displayedColumns$ | async">
+        <th mat-header-cell *matHeaderCellDef>
+          <dbx-table-column-header [column]="column"></dbx-table-column-header>
+        </th>
+        <td mat-cell *matCellDef="let element">
+          <!-- TODO: Column Content View -->
+        </td>
+      </ng-container>
+
+      <!-- Tail/Action column -->
+      <ng-container matColumnDef="actions" [sticky]="true">
+        <th mat-header-cell *matHeaderCellDef>
+          <dbx-table-action-cell></dbx-table-action-cell>
+        </th>
+        <td mat-cell *matCellDef="let element">
+          <dbx-table-item-action [element]="element"></dbx-table-item-action>
+        </td>
+        <td mat-footer-cell *matFooterCellDef>
+          <dbx-table-summary-end-cell></dbx-table-summary-end-cell>
+        </td>
+      </ng-container>
+
+      <!-- Table View -->
+      <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+
+      <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+
+      <tr mat-footer-row *matFooterRowDef="displayedColumns; sticky: isSticky(stickyFooters, 'footer-1')"></tr>
+    </table>
+  </dbx-loading>
+</section>

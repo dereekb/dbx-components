@@ -20,6 +20,7 @@ import { DbxCalendarRootModule } from '@dereekb/dbx-web/calendar';
 import { DocExtensionCalendarScheduleSelectionComponent } from './component/selection.calendar.component';
 import { DbxFormCalendarModule, DbxFormDateScheduleRangeFieldModule } from '@dereekb/dbx-form/calendar';
 import { DocExtensionCalendarScheduleSelectionWithFilterComponent } from './component/selection.filter.calendar.component';
+import { DocExtensionTableComponent } from './container/table.component';
 
 @NgModule({
   imports: [
@@ -48,6 +49,7 @@ import { DocExtensionCalendarScheduleSelectionWithFilterComponent } from './comp
     DocExtensionLayoutComponent,
     DocExtensionHomeComponent,
     DocExtensionCalendarComponent,
+    DocExtensionTableComponent,
     DocExtensionWidgetComponent,
     DocExtensionMapboxComponent
   ]
