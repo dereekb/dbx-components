@@ -1,3 +1,4 @@
+export * from './date';
 export * from './table.cell.action.component';
 export * from './table.cell.input.component';
 export * from './table.cell.summaryend.component';

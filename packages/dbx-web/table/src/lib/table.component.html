@@ -1,8 +1,8 @@
 <section class="dbx-table-view">
   <dbx-loading [context]="context">
-    <table mat-table [dataSource]="dataSource">
+    <table mat-table [dataSource]="elements$">
       <!-- Header/Item column -->
-      <ng-container matColumnDef="items" [sticky]="true">
+      <ng-container [matColumnDef]="itemsColumnName" [sticky]="true">
         <th mat-header-cell *matHeaderCellDef>
           <dbx-table-input-cell></dbx-table-input-cell>
         </th>
@@ -15,17 +15,20 @@
       </ng-container>
 
       <!-- Column Definitions -->
-      <ng-container [matColumnDef]="column.columnName" *ngFor="let column of displayedColumns$ | async">
+      <ng-container [matColumnDef]="column.columnName" [sticky]="false" *ngFor="let column of innerColumns$ | async">
         <th mat-header-cell *matHeaderCellDef>
           <dbx-table-column-header [column]="column"></dbx-table-column-header>
         </th>
         <td mat-cell *matCellDef="let element">
-          <!-- TODO: Column Content View -->
+          <dbx-table-item-cell [element]="element" [column]="column"></dbx-table-item-cell>
+        </td>
+        <td mat-footer-cell *matFooterCellDef>
+          <dbx-table-column-footer [column]="column"></dbx-table-column-footer>
         </td>
       </ng-container>
 
       <!-- Tail/Action column -->
-      <ng-container matColumnDef="actions" [sticky]="true">
+      <ng-container [matColumnDef]="actionsColumnName" [stickyEnd]="true">
         <th mat-header-cell *matHeaderCellDef>
           <dbx-table-action-cell></dbx-table-action-cell>
         </th>
@@ -38,11 +41,11 @@
       </ng-container>
 
       <!-- Table View -->
-      <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+      <tr mat-header-row *matHeaderRowDef="displayedColumns$ | async; sticky: true"></tr>
 
-      <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
-
-      <tr mat-footer-row *matFooterRowDef="displayedColumns; sticky: isSticky(stickyFooters, 'footer-1')"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns$ | async"></tr>
+      <tr mat-footer-row *matFooterRowDef="displayedColumns$ | async; sticky: true"></tr>
     </table>
+    <dbx-loading [linear]="true" [context]="dataLoadingContext"></dbx-loading>
   </dbx-loading>
 </section>

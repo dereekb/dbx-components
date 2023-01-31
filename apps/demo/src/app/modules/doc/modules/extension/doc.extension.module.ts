@@ -13,6 +13,7 @@ import { DocFormComponentsModule } from '../form/doc.form.module';
 import { DocExtensionMapboxComponent } from './container/mapbox.component';
 import { DbxFormMapboxModule } from '@dereekb/dbx-form/mapbox';
 import { DbxMapboxModule } from '@dereekb/dbx-web/mapbox';
+import { DbxTableDateModule, DbxTableModule } from '@dereekb/dbx-web/table';
 import { NgxMapboxGLModule } from 'ngx-mapbox-gl';
 import { DocExtensionMapboxContentExampleComponent } from './component/mapbox.content.example.component';
 import { DocExtensionMapboxMarkersExampleComponent } from './component/mapbox.markers.example.component';
@@ -21,6 +22,9 @@ import { DocExtensionCalendarScheduleSelectionComponent } from './component/sele
 import { DbxFormCalendarModule, DbxFormDateScheduleRangeFieldModule } from '@dereekb/dbx-form/calendar';
 import { DocExtensionCalendarScheduleSelectionWithFilterComponent } from './component/selection.filter.calendar.component';
 import { DocExtensionTableComponent } from './container/table.component';
+import { DocExtensionTableItemActionExampleComponent } from './component/table.item.action.example.component';
+import { DocExtensionTableItemCellExampleComponent } from './component/table.item.cell.example.component';
+import { DocExtensionTableItemHeaderExampleComponent } from './component/table.item.header.example.component';
 
 @NgModule({
   imports: [
@@ -33,6 +37,8 @@ import { DocExtensionTableComponent } from './container/table.component';
     DbxMapboxModule,
     NgxMapboxGLModule,
     DbxFormMapboxModule,
+    DbxTableModule,
+    DbxTableDateModule,
     UIRouterModule.forChild({
       states: STATES
     })
@@ -45,6 +51,9 @@ import { DocExtensionTableComponent } from './container/table.component';
     DocExtensionMapboxMarkersExampleComponent,
     DocExtensionCalendarScheduleSelectionComponent,
     DocExtensionCalendarScheduleSelectionWithFilterComponent,
+    DocExtensionTableItemHeaderExampleComponent,
+    DocExtensionTableItemCellExampleComponent,
+    DocExtensionTableItemActionExampleComponent,
     // container
     DocExtensionLayoutComponent,
     DocExtensionHomeComponent,

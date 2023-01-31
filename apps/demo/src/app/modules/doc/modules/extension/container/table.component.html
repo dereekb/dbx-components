@@ -1,6 +1,12 @@
 <dbx-content-container>
   <doc-feature-layout header="Table Extension" hint="">
     <!-- Examples -->
-    <doc-feature-example header="dbx-table-view" hint="The base-level component that uses a material table to render data using the table configuration."></doc-feature-example>
+    <doc-feature-example header="dbx-table-view" hint="The base-level component that renders the state of a dbxTableStore.">
+      <dbx-table-view dbxTable [dbxTableInput]="exampleInput" [dbxTableViewDelegate]="exampleViewDelegate" [dbxTableDataDelegate]="exampleDataDelegate"></dbx-table-view>
+      <h3>Context Loading</h3>
+      <dbx-table-view dbxTable [dbxTableInput]="exampleInput" [dbxTableViewDelegate]="exampleViewDelegate" [dbxTableDataDelegate]="exampleLoadingContextDelegate"></dbx-table-view>
+      <h3>Data Loading</h3>
+      <dbx-table-view dbxTable [dbxTableInput]="exampleInput" [dbxTableViewDelegate]="exampleViewDelegate" [dbxTableDataDelegate]="exampleLoadingDataDelegate"></dbx-table-view>
+    </doc-feature-example>
   </doc-feature-layout>
 </dbx-content-container>

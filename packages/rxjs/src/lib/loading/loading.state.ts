@@ -122,8 +122,13 @@ export function idleLoadingState<T>(): LoadingState<T> {
 
 export function beginLoading<T = unknown>(): LoadingState<T>;
 export function beginLoading<T = unknown>(state?: Partial<PageLoadingState<T>>): PageLoadingState<T>;
+export function beginLoading<T = unknown>(state?: Partial<LoadingState<T>>): LoadingState<T>;
 export function beginLoading<T = unknown>(state?: Partial<LoadingState<T>>): LoadingState<T> {
   return state ? { ...state, loading: true } : { loading: true };
+}
+
+export function beginLoadingPage<T = unknown>(page: PageNumber, state?: Partial<PageLoadingState<T>>): PageLoadingState<T> {
+  return state ? { page, ...state, loading: true } : { page, loading: true };
 }
 
 export function successResult<T>(value: T): LoadingStateWithValue<T> {

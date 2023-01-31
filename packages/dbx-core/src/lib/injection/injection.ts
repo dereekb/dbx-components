@@ -1,5 +1,5 @@
 import { InjectionToken, Injector, NgModuleRef, StaticProvider, TemplateRef, Type, ViewRef } from '@angular/core';
-import { filterMaybeValues, Maybe, mergeArrays, mergeObjects } from '@dereekb/util';
+import { FactoryWithRequiredInput, filterMaybeValues, Maybe, mergeArrays, mergeObjects } from '@dereekb/util';
 
 export const DBX_INJECTION_COMPONENT_DATA = new InjectionToken('DbxInjectionComponentConfigData');
 
@@ -29,6 +29,8 @@ export interface DbxInjectionComponentConfig<T = unknown> {
    */
   data?: unknown;
 }
+
+export type DbxInjectionComponentConfigFactory<I, T = unknown> = FactoryWithRequiredInput<DbxInjectionComponentConfig<T>, I>;
 
 export interface DbxInjectionTemplateConfig<T = unknown> {
   /**

@@ -15,7 +15,7 @@ import { DbxTableStore } from './table.store';
 })
 export class DbxTableInputCellComponent {
   readonly config$ = this.tableStore.viewDelegate$.pipe(
-    map((x) => x.inputPicker),
+    map((x) => x.inputHeader),
     distinctUntilChanged()
   );
 

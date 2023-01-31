@@ -9,7 +9,7 @@ import { Maybe } from '@dereekb/util';
  * Abstract directive that has an element input.
  */
 @Directive()
-export abstract class AbstractDbxTableElementComponent<T, C = unknown> implements OnDestroy {
+export abstract class AbstractDbxTableElementDirective<T, C = unknown> implements OnDestroy {
   private readonly _element = new BehaviorSubject<Maybe<T>>(undefined);
   readonly element$ = this._element.pipe(filterMaybe(), distinctUntilChanged());
 

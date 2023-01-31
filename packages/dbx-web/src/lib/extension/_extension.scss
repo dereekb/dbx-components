@@ -1,38 +1,57 @@
 @use '../style/config';
 @use './calendar/calendar';
+@use './table/table';
 
 @mixin all-extension-core($theme-config) {
   $calendar-enabled: 1;
+  $table-enabled: 1;
 
   @if ($theme-config != null) {
     $calendar-enabled: config.get-dbx-extension-calendar-enabled($theme-config);
+    $table-enabled: config.get-dbx-extension-table-enabled($theme-config);
   }
 
   @if ($calendar-enabled == 1) {
     @include calendar.core();
   }
+
+  @if ($table-enabled == 1) {
+    @include table.core();
+  }
 }
 
 @mixin all-extension-typography($typography-config, $theme-config) {
   $calendar-enabled: 1;
+  $table-enabled: 1;
 
   @if ($theme-config != null) {
     $calendar-enabled: config.get-dbx-extension-calendar-enabled($theme-config);
+    $table-enabled: config.get-dbx-extension-table-enabled($theme-config);
   }
 
   @if ($calendar-enabled == 1) {
     @include calendar.typography($typography-config);
   }
+
+  @if ($table-enabled == 1) {
+    @include table.typography($typography-config);
+  }
 }
 
 @mixin all-extension-theme($theme-config) {
   $calendar-enabled: 1;
+  $table-enabled: 1;
 
   @if ($theme-config != null) {
     $calendar-enabled: config.get-dbx-extension-calendar-enabled($theme-config);
+    $table-enabled: config.get-dbx-extension-table-enabled($theme-config);
   }
 
   @if ($calendar-enabled == 1) {
     @include calendar.theme($theme-config);
+  }
+
+  @if ($table-enabled == 1) {
+    @include table.theme($theme-config);
   }
 }

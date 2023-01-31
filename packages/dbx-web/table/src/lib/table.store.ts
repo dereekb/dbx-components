@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { beginLoading, filterMaybe, LoadingState, PageListLoadingState, PageLoadingState, tapOnLoadingStateSuccess, valueFromLoadingState } from '@dereekb/rxjs';
+import { beginLoading, filterMaybe, LoadingState, PageListLoadingState, PageLoadingState, tapOnLoadingStateSuccess, valueFromLoadingState, tapLog } from '@dereekb/rxjs';
 import { Maybe } from '@dereekb/util';
 import { ComponentStore } from '@ngrx/component-store';
 import { Observable, distinctUntilChanged, first, map, shareReplay, switchMap, tap, combineLatest, of, EMPTY } from 'rxjs';
@@ -104,4 +104,5 @@ export class DbxTableStore<I = unknown, C = unknown, T = unknown> extends Compon
   // MARK: State Changes
   readonly setInput = this.updater((state, input: Maybe<I>) => ({ ...state, input }));
   readonly setDataDelegate = this.updater((state, dataDelegate: Maybe<DbxTableContextDataDelegate<I, C, T>>) => ({ ...state, dataDelegate }));
+  readonly setViewDelegate = this.updater((state, viewDelegate: Maybe<DbxTableViewDelegate<I, C, T>>) => ({ ...state, viewDelegate }));
 }
