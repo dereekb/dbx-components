@@ -1,3 +1,4 @@
+import { InfiniteScrollModule } from 'ngx-infinite-scroll';
 import { DbxLoadingModule } from '@dereekb/dbx-web';
 import { MatTableModule } from '@angular/material/table';
 import { NgModule } from '@angular/core';
@@ -30,7 +31,14 @@ const internalDeclarations = [
 ];
 
 @NgModule({
-  imports: [CommonModule, DbxLoadingModule, DbxInjectionComponentModule, MatTableModule],
+  imports: [
+    //
+    CommonModule,
+    DbxLoadingModule,
+    DbxInjectionComponentModule,
+    MatTableModule,
+    InfiniteScrollModule
+  ],
   declarations: [...exports, ...internalDeclarations],
   exports
 })

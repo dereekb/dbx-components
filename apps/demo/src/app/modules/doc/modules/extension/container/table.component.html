@@ -4,8 +4,12 @@
     <doc-feature-example header="dbx-table-view" hint="The base-level component that renders the state of a dbxTableStore.">
       <dbx-table-view dbxTable [dbxTableInput]="exampleInput" [dbxTableViewDelegate]="exampleViewDelegate" [dbxTableDataDelegate]="exampleDataDelegate"></dbx-table-view>
       <h3>Context Loading</h3>
+      <p class="dbx-hint">While the context is loading the table shows a spinning loader.</p>
       <dbx-table-view dbxTable [dbxTableInput]="exampleInput" [dbxTableViewDelegate]="exampleViewDelegate" [dbxTableDataDelegate]="exampleLoadingContextDelegate"></dbx-table-view>
       <h3>Data Loading</h3>
+      <p class="dbx-hint">This example shows how loading the data is handled. The delegate also provides a loadMore() functionality, allowing more items to load as the table is scrolled.</p>
+      <button *ngIf="isLoading$ | async" mat-raised-button (click)="loadMoreItems()">Finish Loading Items</button>
+      <p></p>
       <dbx-table-view dbxTable [dbxTableInput]="exampleInput" [dbxTableViewDelegate]="exampleViewDelegate" [dbxTableDataDelegate]="exampleLoadingDataDelegate"></dbx-table-view>
     </doc-feature-example>
   </doc-feature-layout>

@@ -1,14 +1,13 @@
 import { ChangeDetectionStrategy, Component, Injectable, OnDestroy, OnInit } from '@angular/core';
 import { DateBlock, DateDurationSpan, DateRangeDayDistanceInput, isSameDateDay } from '@dereekb/date';
 import { DbxTableStore } from '../table.store';
-
 import { MatDateRangeSelectionStrategy, DateRange, MAT_DATE_RANGE_SELECTION_STRATEGY } from '@angular/material/datepicker';
 import { DateAdapter } from '@angular/material/core';
 import { Days, Maybe } from '@dereekb/util';
 import { FormGroup, FormControl } from '@angular/forms';
 import { SubscriptionObject } from '@dereekb/rxjs';
-import { addDays } from 'date-fns';
-import { BehaviorSubject, distinctUntilChanged, filter, map, Observable, of, startWith, switchMap, throttleTime } from 'rxjs';
+import { addDays, format as formatDate } from 'date-fns';
+import { BehaviorSubject, distinctUntilChanged, filter, map, Observable, of, startWith, switchMap, throttleTime, combineLatest } from 'rxjs';
 import { DbxInjectionComponentConfig, DbxInjectionComponentConfigFactory } from '@dereekb/dbx-core';
 
 @Injectable()
@@ -36,6 +35,10 @@ export class DbxTableDateRangeDayDistanceInputCellInputRangeSelectionStrategy<D>
 
 export interface DbxTableDateRangeDayDistanceInputCellInputComponentConfig {
   /**
+   * Button format for the dates
+   */
+  buttonFormat?: string;
+  /**
    * Distance from the start to span.
    */
   daysDistance: Days;
@@ -45,17 +48,19 @@ export interface DbxTableDateRangeDayDistanceInputCellInputComponentConfig {
 
 export const DEFAULT_DBX_TABLE_DATE_RANGE_DAY_DISTIANCE_INPUT_CELL_COMPONENT_CONFIG = { daysDistance: 6 };
 
+export const DEFAULT_DBX_TABLE_DATE_RANGE_DAY_BUTTON_FORMAT = 'MMM dd';
+
 /**
  * Cell input for a DateRangeDayDistanceInput value.
  */
 @Component({
   template: `
     <div class="dbx-table-date-range-distance-input-cell">
-      <mat-date-range-input [min]="minDate$ | async" [max]="maxDate$ | async" [formGroup]="range" [rangePicker]="picker">
+      <mat-date-range-input class="dbx-table-date-range-distance-input" [min]="minDate$ | async" [max]="maxDate$ | async" [formGroup]="range" [rangePicker]="picker">
         <input matStartDate formControlName="start" placeholder="Start date" />
         <input matEndDate formControlName="end" placeholder="End date" />
       </mat-date-range-input>
-      <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+      <button mat-stroked-button color="primary" (click)="picker.open()">{{ dateRangeString$ | async }}</button>
       <mat-date-range-picker #picker (opened)="pickerOpened()" (closed)="pickerClosed()"></mat-date-range-picker>
     </div>
   `,
@@ -80,8 +85,21 @@ export class DbxTableDateRangeDayDistanceInputCellInputComponent implements OnIn
   });
 
   readonly pickerOpened$ = this._pickerOpened.asObservable();
+
   readonly minDate$ = this._config.pipe(map((x) => x.minDate));
   readonly maxDate$ = this._config.pipe(map((x) => x.maxDate));
+
+  readonly buttonFormat$ = this._config.pipe(map((x) => x.buttonFormat ?? DEFAULT_DBX_TABLE_DATE_RANGE_DAY_BUTTON_FORMAT));
+
+  readonly dateRangeString$ = combineLatest([this.buttonFormat$, this.range.valueChanges]).pipe(
+    map(([buttonFormat, { start, end }]) => {
+      if (start && end) {
+        return `${formatDate(start, buttonFormat)} - ${formatDate(end, buttonFormat)}`;
+      } else {
+        return `Select Date`;
+      }
+    })
+  );
 
   constructor(readonly tableStore: DbxTableStore<DateRangeDayDistanceInput>) {}
 

@@ -8,15 +8,28 @@
   .dbx-table-view {
     height: 600px;
     overflow: auto;
+
+    .dbx-table-view-table {
+      width: 100%;
+    }
+  }
+
+  .dbx-table-view-loading {
   }
 
   // MARK: Date
   .dbx-table-date-range-distance-input-cell {
     min-width: 140px;
+
+    .dbx-table-date-range-distance-input {
+      height: 0px;
+      overflow: hidden;
+    }
   }
 
   .dbx-table-date-column-header {
     min-width: 80px;
+    text-align: center;
 
     .dbx-table-date-column-header-left {
       margin-right: 4px;

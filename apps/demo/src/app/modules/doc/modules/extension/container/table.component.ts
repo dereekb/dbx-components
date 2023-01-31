@@ -1,13 +1,13 @@
 import { DocExtensionTableItemCellExampleComponent } from './../component/table.item.cell.example.component';
 import { startOfDay } from 'date-fns/esm';
-import { Component } from '@angular/core';
+import { Component, OnDestroy } from '@angular/core';
 import { DateRangeDayDistanceInput, expandDaysForDateRange, dateRange, formatToISO8601DayString, DateRangeType } from '@dereekb/date';
 import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { DbxWidgetDataPair } from '@dereekb/dbx-web';
 import { DbxTableColumn, DbxTableContextData, DbxTableContextDataDelegate, dbxTableDateHeaderInjectionFactory, dbxTableDateRangeDayDistanceInputCellInput, DbxTableViewDelegate } from '@dereekb/dbx-web/table';
 import { beginLoading, beginLoadingPage, ListLoadingState, PageListLoadingState, successPageResult, successResult } from '@dereekb/rxjs';
 import { Maybe, ModelKeyRef, range } from '@dereekb/util';
-import { delay, map, Observable, of, startWith, BehaviorSubject } from 'rxjs';
+import { delay, map, Observable, of, startWith, BehaviorSubject, skip, shareReplay, distinctUntilChanged, switchMap } from 'rxjs';
 import { DocExtensionTableItemActionExampleComponent } from '../component/table.item.action.example.component';
 import { DocExtensionTableItemHeaderExampleComponent } from '../component/table.item.header.example.component';
 import { ExampleTableData } from '../component/table.item';
@@ -15,14 +15,22 @@ import { ExampleTableData } from '../component/table.item';
 @Component({
   templateUrl: './table.component.html'
 })
-export class DocExtensionTableComponent {
+export class DocExtensionTableComponent implements OnDestroy {
   readonly exampleInput: DateRangeDayDistanceInput = {
     date: startOfDay(new Date()),
     distance: 6
   };
 
-  readonly exampleTableData: ExampleTableData[] = range(0, 10).map((x) => ({ name: `Example ${x}`, key: String(x) }));
+  readonly exampleTableData: ExampleTableData[] = range(0, 15).map((x) => ({ name: `Example ${x}`, key: String(x) }));
   readonly exampleTableDataItems = new BehaviorSubject<ExampleTableData[]>(this.exampleTableData);
+
+  readonly isLoading$ = this.exampleTableDataItems.pipe(
+    skip(1),
+    map((x) => false),
+    startWith(true),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
 
   readonly exampleViewDelegate: DbxTableViewDelegate<DateRangeDayDistanceInput, Date, ExampleTableData> = {
     inputHeader: dbxTableDateRangeDayDistanceInputCellInput(),
@@ -78,7 +86,12 @@ export class DocExtensionTableComponent {
     loadData: (input) => {
       const allDays = expandDaysForDateRange(dateRange({ ...input }));
       const columns: DbxTableColumn<Date>[] = allDays.map((x) => ({ columnName: formatToISO8601DayString(x), meta: x }));
-      const items$: Observable<PageListLoadingState<ExampleTableData>> = this.exampleTableDataItems.pipe(map((x) => successPageResult(0, x))).pipe(delay(2000), startWith(beginLoadingPage<ExampleTableData[]>(0)));
+      const items$: Observable<PageListLoadingState<ExampleTableData>> = this.exampleTableDataItems
+        .pipe(
+          skip(1),
+          switchMap((x) => of(successPageResult(0, x)).pipe(delay(1000), startWith(beginLoadingPage<ExampleTableData[]>(0))))
+        )
+        .pipe(startWith(beginLoadingPage<ExampleTableData[]>(0)));
 
       const result: DbxTableContextData<DateRangeDayDistanceInput, Date, ExampleTableData> = {
         input,
@@ -94,7 +107,11 @@ export class DocExtensionTableComponent {
   loadMoreItems() {
     const currentItems = this.exampleTableDataItems.value;
     const itemsCount = currentItems.length;
-    const newItems = range(itemsCount, itemsCount + 10).map((x) => ({ name: `Example ${x}`, key: String(x) }));
+    const newItems = range(itemsCount + 1, itemsCount + 15).map((x) => ({ name: `Example ${x}`, key: String(x) }));
     this.exampleTableDataItems.next([...currentItems, ...newItems]);
+  }
+
+  ngOnDestroy(): void {
+    this.exampleTableDataItems.complete();
   }
 }

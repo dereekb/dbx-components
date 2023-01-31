@@ -1,3 +1,5 @@
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
 import { DbxLoadingModule } from '@dereekb/dbx-web';
 import { MatTableModule } from '@angular/material/table';
 import { NgModule } from '@angular/core';
@@ -15,7 +17,18 @@ const declarations = [
 ];
 
 @NgModule({
-  imports: [CommonModule, DbxLoadingModule, DbxInjectionComponentModule, FormsModule, ReactiveFormsModule, MatDatepickerModule, MatTableModule],
+  imports: [
+    //
+    CommonModule,
+    DbxLoadingModule,
+    DbxInjectionComponentModule,
+    FormsModule,
+    ReactiveFormsModule,
+    MatIconModule,
+    MatDatepickerModule,
+    MatButtonModule,
+    MatTableModule
+  ],
   declarations,
   exports: declarations
 })

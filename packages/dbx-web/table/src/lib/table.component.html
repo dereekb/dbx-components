@@ -1,6 +1,7 @@
-<section class="dbx-table-view">
-  <dbx-loading [context]="context">
-    <table mat-table [dataSource]="elements$">
+<dbx-loading [context]="context">
+  <dbx-loading class="dbx-table-view-loading" [linear]="true" [context]="dataLoadingContext"></dbx-loading>
+  <section class="dbx-table-view" infinite-scroll [infiniteScrollDistance]="scrollDistance" [infiniteScrollThrottle]="throttleScroll" [scrollWindow]="false" (scrolled)="onScrollDown()">
+    <table class="dbx-table-view-table" mat-table [dataSource]="elements$" [trackBy]="(trackByFunction$ | async) || DEFAULT_TRACK_BY_FUNCTION">
       <!-- Header/Item column -->
       <ng-container [matColumnDef]="itemsColumnName" [sticky]="true">
         <th mat-header-cell *matHeaderCellDef>
@@ -44,8 +45,8 @@
       <tr mat-header-row *matHeaderRowDef="displayedColumns$ | async; sticky: true"></tr>
 
       <tr mat-row *matRowDef="let row; columns: displayedColumns$ | async"></tr>
+
       <tr mat-footer-row *matFooterRowDef="displayedColumns$ | async; sticky: true"></tr>
     </table>
-    <dbx-loading [linear]="true" [context]="dataLoadingContext"></dbx-loading>
-  </dbx-loading>
-</section>
+  </section>
+</dbx-loading>

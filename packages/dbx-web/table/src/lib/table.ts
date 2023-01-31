@@ -2,6 +2,7 @@ import { Observable } from 'rxjs';
 import { LoadingState, PageListLoadingState } from '@dereekb/rxjs';
 import { ClassType, Maybe } from '@dereekb/util';
 import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
+import { TrackByFunction } from '@angular/core';
 
 /**
  * Delegate used for retrieving data for a table.
@@ -49,6 +50,10 @@ export interface DbxTableColumn<C> {
  * Delegate used for generating view configurations given the input.
  */
 export interface DbxTableViewDelegate<I = unknown, C = unknown, T = unknown> {
+  /**
+   * Track by
+   */
+  readonly trackBy?: TrackByFunction<T>;
   /**
    * Input picker view configuration
    */
