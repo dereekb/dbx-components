@@ -13,6 +13,8 @@ $max-small-content-container-width: calc($content-max-width / 3);
 $max-medium-content-container-width: calc($content-max-width / 2);
 $max-content-container-width: $content-max-width;
 
+$pit-padding: theming.$padding-4;
+
 $content-container-padding: theming.$padding-4;
 $content-container-padding-small-screen: theming.$padding-2;
 
@@ -39,6 +41,14 @@ $scroll-content-bottom-padding: 42px;
     &.dbx-content-box-wide {
       max-width: unset;
     }
+  }
+
+  .dbx-content-pit {
+    padding: $pit-padding;
+  }
+
+  .dbx-content-pit > .dbx-label-block > .dbx-label {
+    opacity: 0.66; // increase opacity slightly to make it easier to read against background
   }
 
   .dbx-content-end {
@@ -140,6 +150,10 @@ $scroll-content-bottom-padding: 42px;
   .dbx-background {
     color: $content-color;
     background: $content-background;
+  }
+
+  .dbx-content-pit {
+    background: $content-border-background;
   }
 
   .dbx-content-border {

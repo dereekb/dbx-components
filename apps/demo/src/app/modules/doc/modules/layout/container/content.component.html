@@ -60,6 +60,30 @@
         <p>This content is in a box that is not elevated.</p>
       </dbx-content-box>
     </doc-feature-example>
+    <doc-feature-example header=".dbx-content-pit" hint="Content with a background, margin and internal label with space for content.">
+      <dbx-content-pit>
+        <p>This content is in pit.</p>
+      </dbx-content-pit>
+      <h4>Examples</h4>
+      <p>Example of a dbx-content-pit with dbx-label-block and content.</p>
+      <div fxLayout="row" fxLayoutGap="10px" fxLayoutAlign="start center">
+        <dbx-content-pit style="border-radius: 20px; width: 140px; height: 140px">
+          <dbx-label-block header="Example Label">
+            <div class="dbx-primary" style="text-align: center; font-size: 4.4em; font-weight: bold">100</div>
+          </dbx-label-block>
+        </dbx-content-pit>
+        <dbx-content-pit style="border-radius: 20px; width: 140px; height: 140px">
+          <dbx-label-block header="Example Label">
+            <div class="dbx-accent" style="text-align: center; font-size: 4.4em; font-weight: bold">100</div>
+          </dbx-label-block>
+        </dbx-content-pit>
+        <dbx-content-pit style="border-radius: 20px; width: 140px; height: 140px">
+          <dbx-label-block header="Example Label">
+            <div class="dbx-warn" style="text-align: center; font-size: 4.4em; font-weight: bold">100</div>
+          </dbx-label-block>
+        </dbx-content-pit>
+      </div>
+    </doc-feature-example>
     <doc-feature-example header=".dbx-content" hint="This view/class sets the height to be the height of the page, minus the top and (if known) content navigation bars.">
       <dbx-content>
         <div style="background: grey; height: 100%"></div>
