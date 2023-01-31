@@ -42,6 +42,7 @@ export function accumulatorFlattenPageListLoadingState<T, I = unknown>(accumulat
     map(
       ([state, values]) =>
         mapLoadingStateResults(state, {
+          alwaysMapValue: true,
           mapValue: () => values
         }) as PageListLoadingState<T>
     ),
@@ -57,6 +58,7 @@ export function accumulatorCurrentPageListLoadingState<V, I = unknown>(accumulat
     map(
       ([state, values]) =>
         mapLoadingStateResults(state, {
+          alwaysMapValue: true,
           mapValue: () => values
         }) as PageListLoadingState<V>
     ),

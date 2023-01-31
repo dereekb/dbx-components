@@ -4,6 +4,7 @@ import { DocExtensionCalendarComponent } from './container/calendar.component';
 import { DocExtensionHomeComponent } from './container/home.component';
 import { DocExtensionWidgetComponent } from './container/widget.component';
 import { DocExtensionMapboxComponent } from './container/mapbox.component';
+import { DocExtensionTableComponent } from './container/table.component';
 
 export const layoutState: Ng2StateDeclaration = {
   url: '/extension',
@@ -36,11 +37,18 @@ export const docExtensionMapboxState: Ng2StateDeclaration = {
   component: DocExtensionMapboxComponent
 };
 
+export const docExtensionTableState: Ng2StateDeclaration = {
+  url: '/table',
+  name: 'doc.extension.table',
+  component: DocExtensionTableComponent
+};
+
 export const STATES: Ng2StateDeclaration[] = [
   //
   layoutState,
   homeState,
   docExtensionCalendarState,
   docExtensionWidgetState,
-  docExtensionMapboxState
+  docExtensionMapboxState,
+  docExtensionTableState
 ];

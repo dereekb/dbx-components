@@ -16,6 +16,12 @@ export const DOC_EXTENSION_ROUTES = [
     title: 'Mapbox',
     detail: 'mapbox extension',
     ref: 'doc.extension.mapbox'
+  },
+  {
+    icon: 'table_view',
+    title: 'Table',
+    detail: 'table extension',
+    ref: 'doc.extension.table'
   }
 ];
 

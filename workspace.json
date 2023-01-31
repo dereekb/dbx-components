@@ -12,6 +12,7 @@
     "dbx-web": "packages/dbx-web",
     "dbx-web-calendar": "packages/dbx-web/calendar",
     "dbx-web-mapbox": "packages/dbx-web/mapbox",
+    "dbx-web-table": "packages/dbx-web/table",
     "demo": "apps/demo",
     "demo-api": "apps/demo-api",
     "demo-components": "components/demo-components",

@@ -6,13 +6,25 @@ import { DbxContentBorderDirective } from './content.border.directive';
 import { DbxContentContainerDirective } from './content.container.directive';
 import { DbxContentBoxDirective } from './content.box.directive';
 import { DbxContentPageDirective } from './content.page.directive';
+import { DbxContentPitDirective } from './content.pit.directive';
+
+const declarations = [
+  //
+  DbxContentDirective,
+  DbxContentContainerDirective,
+  DbxContentBorderDirective,
+  DbxContentElevateDirective,
+  DbxContentBoxDirective,
+  DbxContentPageDirective,
+  DbxContentPitDirective
+];
 
 /**
  * Module for container-type components.
  */
 @NgModule({
   imports: [CommonModule],
-  declarations: [DbxContentDirective, DbxContentContainerDirective, DbxContentBorderDirective, DbxContentElevateDirective, DbxContentBoxDirective, DbxContentPageDirective],
-  exports: [DbxContentDirective, DbxContentContainerDirective, DbxContentBorderDirective, DbxContentElevateDirective, DbxContentBoxDirective, DbxContentPageDirective]
+  declarations,
+  exports: declarations
 })
 export class DbxContentLayoutModule {}

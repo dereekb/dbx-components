@@ -151,8 +151,10 @@
 // extension
 @function define-dbx-extension-config($input-dbx-theme-extension-config: null) {
   $dbx-extension-config: (
-    // calendar
-    'calendar': 1 // enabled by default
+    // calendar enabled by default
+    'calendar': 1,
+    // table enabled by default
+    'table': 1
   );
 
   @if ($input-dbx-theme-extension-config != null) {
@@ -172,4 +174,8 @@
 
 @function get-dbx-extension-calendar-enabled($theme-config) {
   @return get-dbx-extension-config-var($theme-config, 'calendar');
+}
+
+@function get-dbx-extension-table-enabled($theme-config) {
+  @return get-dbx-extension-config-var($theme-config, 'table');
 }

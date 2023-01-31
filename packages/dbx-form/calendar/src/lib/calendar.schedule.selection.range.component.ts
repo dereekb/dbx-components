@@ -92,6 +92,7 @@ export class DbxScheduleSelectionCalendarDateRangeComponent implements OnDestroy
   }
 
   ngOnDestroy(): void {
+    this._pickerOpened.complete();
     this._syncSub.destroy();
     this._valueSub.destroy();
   }

@@ -1,7 +1,7 @@
-import { Building, Maybe } from '@dereekb/util';
+import { Building, FactoryWithRequiredInput, Maybe } from '@dereekb/util';
 import { Expose, Type } from 'class-transformer';
 import { IsEnum, IsOptional, IsDate, IsNumber } from 'class-validator';
-import { addDays, addHours, endOfDay, endOfMonth, endOfWeek, isDate, isPast, startOfDay, startOfMinute, startOfMonth, startOfWeek } from 'date-fns';
+import { addDays, addHours, differenceInDays, endOfDay, endOfMonth, endOfWeek, isAfter, isBefore, isDate, isPast, startOfDay, startOfMinute, startOfMonth, startOfWeek } from 'date-fns';
 import { isSameDate } from './date';
 
 /**
@@ -190,7 +190,7 @@ export type DateRangeInput = (DateRangeTypedInput | DateRangeDistanceInput) & {
  * @param roundToMinute
  * @returns
  */
-export function dateRange({ type = DateRangeType.DAY, date = new Date(), distance, roundToMinute: inputRoundToMinute = false }: DateRangeInput, roundToMinute = inputRoundToMinute): DateRange {
+export function dateRange({ type = DateRangeType.DAYS_RANGE, date = new Date(), distance, roundToMinute: inputRoundToMinute = false }: DateRangeInput, roundToMinute = inputRoundToMinute): DateRange {
   let start: Date;
   let end: Date;
 
@@ -267,6 +267,62 @@ export function dateRange({ type = DateRangeType.DAY, date = new Date(), distanc
     start,
     end
   };
+}
+
+export interface ExpandDaysForDateRangeConfig {
+  /**
+   * (Optiona) Max expansion size for expanding a date range.
+   *
+   * If the expected expansion is larger than this size, an exception is thrown.
+   *
+   * If 0 or false, there is no max size.
+   *
+   * Defaults to 1500 days.
+   */
+  maxExpansionSize?: number | 0 | false;
+}
+
+export const DEFAULT_EXPAND_DAYS_FOR_DATE_RANGE_MAX_EXPANSION_SIZE = 1500;
+
+export type ExpandDaysForDateRangeFunction = FactoryWithRequiredInput<Date[], DateRange>;
+
+/**
+ * Expands the input range into dates.
+ *
+ * @param param0
+ */
+export function expandDaysForDateRangeFunction(config: ExpandDaysForDateRangeConfig = {}): ExpandDaysForDateRangeFunction {
+  const { maxExpansionSize: inputMaxExpansionSize = DEFAULT_EXPAND_DAYS_FOR_DATE_RANGE_MAX_EXPANSION_SIZE } = config;
+  const maxExpansionSize = inputMaxExpansionSize ? inputMaxExpansionSize : Number.MAX_SAFE_INTEGER;
+
+  return ({ start, end }: DateRange) => {
+    // check the expansion isn't too large
+    const distance = Math.abs(differenceInDays(start, end));
+
+    if (distance > maxExpansionSize) {
+      throw new Error(`Attempted to expand days past the max expansion size of "${distance}"`);
+    }
+
+    const dates: Date[] = [];
+    let current = start;
+
+    while (!isAfter(current, end)) {
+      dates.push(current);
+      current = addDays(current, 1);
+    }
+
+    return dates;
+  };
+}
+
+/**
+ * Expands the input range to the days.
+ *
+ * @param range
+ * @returns
+ */
+export function expandDaysForDateRange(range: DateRange): Date[] {
+  return expandDaysForDateRangeFunction({})(range);
 }
 
 /**

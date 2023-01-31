@@ -122,8 +122,13 @@ export function idleLoadingState<T>(): LoadingState<T> {
 
 export function beginLoading<T = unknown>(): LoadingState<T>;
 export function beginLoading<T = unknown>(state?: Partial<PageLoadingState<T>>): PageLoadingState<T>;
+export function beginLoading<T = unknown>(state?: Partial<LoadingState<T>>): LoadingState<T>;
 export function beginLoading<T = unknown>(state?: Partial<LoadingState<T>>): LoadingState<T> {
   return state ? { ...state, loading: true } : { loading: true };
+}
+
+export function beginLoadingPage<T = unknown>(page: PageNumber, state?: Partial<PageLoadingState<T>>): PageLoadingState<T> {
+  return state ? { page, ...state, loading: true } : { page, loading: true };
 }
 
 export function successResult<T>(value: T): LoadingStateWithValue<T> {
@@ -339,6 +344,7 @@ export type MapLoadingStateFn<A, B, L extends LoadingState<A> = LoadingState<A>,
 export type MapLoadingStateValuesFn<A, B, L extends LoadingState<A> = LoadingState<A>> = (input: A, state: L) => B;
 
 export interface MapLoadingStateResultsConfiguration<A, B, L extends LoadingState<A> = LoadingState<A>, O extends LoadingState<B> = LoadingState<B>> {
+  alwaysMapValue?: boolean;
   mapValue?: MapLoadingStateValuesFn<A, B, L>;
   mapState?: MapLoadingStateFn<A, B, L, O>;
 }
@@ -347,12 +353,12 @@ export function mapLoadingStateResults<A, B, L extends LoadingState<A> = Loading
 export function mapLoadingStateResults<A, B, L extends PageLoadingState<A> = PageLoadingState<A>, O extends PageLoadingState<B> = PageLoadingState<B>>(input: L, config: MapLoadingStateResultsConfiguration<A, B, L, O>): O;
 export function mapLoadingStateResults<A, B, L extends Partial<PageLoadingState<A>> = Partial<PageLoadingState<A>>, O extends Partial<PageLoadingState<B>> = Partial<PageLoadingState<B>>>(input: L, config: MapLoadingStateResultsConfiguration<A, B, L, O>): O;
 export function mapLoadingStateResults<A, B, L extends Partial<PageLoadingState<A>> = Partial<PageLoadingState<A>>, O extends Partial<PageLoadingState<B>> = Partial<PageLoadingState<B>>>(input: L, config: MapLoadingStateResultsConfiguration<A, B, L, O>): O {
-  const { mapValue, mapState } = config;
+  const { mapValue, mapState, alwaysMapValue = false } = config;
   const inputValue = input?.value;
   let value: B;
 
-  if (inputValue != null && mapValue) {
-    value = mapValue(inputValue, input);
+  if ((inputValue != null || alwaysMapValue) && mapValue) {
+    value = mapValue(inputValue as A, input);
   } else {
     value = inputValue as unknown as B;
   }

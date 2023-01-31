@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/dbx-web",
-  "version": "9.20.20",
+  "version": "9.21.0",
   "peerDependencies": {
     "@angular/common": "^14.0.0",
     "@angular/core": "^14.0.0",
@@ -14,6 +14,8 @@
     ".": {
       "sass": "./_index.scss"
     },
-    "./mapbox": {}
+    "./mapbox": {},
+    "./calendar": {},
+    "./table": {}
   }
 }
