@@ -1,0 +1,60 @@
+@use 'sass:map';
+@use '../../style/theming';
+
+// MARK: Variables
+
+// MARK: Mixin
+@mixin core() {
+  .dbx-table-view {
+    height: 600px;
+    overflow: auto;
+
+    .dbx-table-view-table {
+      width: 100%;
+    }
+  }
+
+  .dbx-table-view-loading {
+  }
+
+  // MARK: Date
+  .dbx-table-date-range-distance-input-cell {
+    min-width: 140px;
+
+    .dbx-table-date-range-distance-input {
+      height: 0px;
+      overflow: hidden;
+    }
+  }
+
+  .dbx-table-date-column-header {
+    min-width: 80px;
+    text-align: center;
+
+    .dbx-table-date-column-header-left {
+      margin-right: 4px;
+      font-weight: 800;
+    }
+  }
+}
+
+@mixin color($theme-config) {
+}
+
+@mixin typography($typography-config) {
+}
+
+@mixin theme($theme-config) {
+  @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-table') {
+    $color: theming.get-color-config($theme-config);
+    $typography: theming.get-typography-config($theme-config);
+
+    @if $color !=null {
+      @include color($theme-config);
+    }
+
+    @if $typography !=null {
+      @include typography($typography);
+    }
+  }
+}

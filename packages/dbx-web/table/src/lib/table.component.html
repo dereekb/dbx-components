@@ -1,0 +1,52 @@
+<dbx-loading [context]="context">
+  <dbx-loading class="dbx-table-view-loading" [linear]="true" [context]="dataLoadingContext"></dbx-loading>
+  <section class="dbx-table-view" infinite-scroll [infiniteScrollDistance]="scrollDistance" [infiniteScrollThrottle]="throttleScroll" [scrollWindow]="false" (scrolled)="onScrollDown()">
+    <table class="dbx-table-view-table" mat-table [dataSource]="elements$" [trackBy]="(trackByFunction$ | async) || DEFAULT_TRACK_BY_FUNCTION">
+      <!-- Header/Item column -->
+      <ng-container [matColumnDef]="itemsColumnName" [sticky]="true">
+        <th mat-header-cell *matHeaderCellDef>
+          <dbx-table-input-cell></dbx-table-input-cell>
+        </th>
+        <td mat-cell *matCellDef="let element">
+          <dbx-table-item-header [element]="element"></dbx-table-item-header>
+        </td>
+        <td mat-footer-cell *matFooterCellDef>
+          <dbx-table-summary-start-cell></dbx-table-summary-start-cell>
+        </td>
+      </ng-container>
+
+      <!-- Column Definitions -->
+      <ng-container [matColumnDef]="column.columnName" [sticky]="false" *ngFor="let column of innerColumns$ | async">
+        <th mat-header-cell *matHeaderCellDef>
+          <dbx-table-column-header [column]="column"></dbx-table-column-header>
+        </th>
+        <td mat-cell *matCellDef="let element">
+          <dbx-table-item-cell [element]="element" [column]="column"></dbx-table-item-cell>
+        </td>
+        <td mat-footer-cell *matFooterCellDef>
+          <dbx-table-column-footer [column]="column"></dbx-table-column-footer>
+        </td>
+      </ng-container>
+
+      <!-- Tail/Action column -->
+      <ng-container [matColumnDef]="actionsColumnName" [stickyEnd]="true">
+        <th mat-header-cell *matHeaderCellDef>
+          <dbx-table-action-cell></dbx-table-action-cell>
+        </th>
+        <td mat-cell *matCellDef="let element">
+          <dbx-table-item-action [element]="element"></dbx-table-item-action>
+        </td>
+        <td mat-footer-cell *matFooterCellDef>
+          <dbx-table-summary-end-cell></dbx-table-summary-end-cell>
+        </td>
+      </ng-container>
+
+      <!-- Table View -->
+      <tr mat-header-row *matHeaderRowDef="displayedColumns$ | async; sticky: true"></tr>
+
+      <tr mat-row *matRowDef="let row; columns: displayedColumns$ | async"></tr>
+
+      <tr mat-footer-row *matFooterRowDef="displayedColumns$ | async; sticky: true"></tr>
+    </table>
+  </section>
+</dbx-loading>

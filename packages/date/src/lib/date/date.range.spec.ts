@@ -1,5 +1,38 @@
-import { addDays, addHours } from 'date-fns';
-import { dateRangeOverlapsDateRangeFunction, isDateInDateRangeFunction, isDateRangeInDateRangeFunction } from './date.range';
+import { startOfDay, addDays, addHours } from 'date-fns';
+import { dateRange, dateRangeOverlapsDateRangeFunction, DateRangeType, expandDaysForDateRangeFunction, isDateInDateRangeFunction, isDateRangeInDateRangeFunction } from './date.range';
+
+describe('expandDaysForDateRangeFunction()', () => {
+  describe('function', () => {
+    const expandFn = expandDaysForDateRangeFunction({});
+
+    it('should expand the range to an array of days', () => {
+      const days = 3;
+      const start = startOfDay(new Date());
+      const end = addDays(start, days - 1);
+
+      const result = expandFn({ start, end });
+      expect(result.length).toBe(days);
+
+      expect(result[0]).toBeSameSecondAs(start);
+      expect(result[1]).toBeSameSecondAs(addDays(start, 1));
+      expect(result[2]).toBeSameSecondAs(addDays(addDays(start, 1), 1));
+      expect(result[2]).toBeSameSecondAs(end);
+    });
+
+    it('should expand the dateRange', () => {
+      const distance = 3;
+      const { start, end } = dateRange({ date: new Date(), distance, type: DateRangeType.DAYS_RANGE });
+
+      const result = expandFn({ start, end });
+      expect(result.length).toBe(distance + 1);
+
+      expect(result[0]).toBeSameSecondAs(start);
+      expect(result[1]).toBeSameSecondAs(addDays(start, 1));
+      expect(result[2]).toBeSameSecondAs(addDays(addDays(start, 1), 1));
+      expect(result[3]).toBeSameSecondAs(addDays(addDays(addDays(start, 1), 1), 1));
+    });
+  });
+});
 
 describe('isDateInDateRangeFunction()', () => {
   describe('function', () => {
