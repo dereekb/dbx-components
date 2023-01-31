@@ -254,7 +254,7 @@ export function dateBlockTiming(durationInput: DateDurationSpan, inputRange: Dat
   } else {
     inputDate = startsAt; // TODO: May not be needed?
     numberOfBlockedDays = inputRange.distance - 1;
-    range = dateRange({ date: inputDate, distance: inputRange.distance }, true);
+    range = dateRange({ type: DateRangeType.DAY, date: inputDate, distance: inputRange.distance }, true);
   }
 
   if (inputDate != null) {
