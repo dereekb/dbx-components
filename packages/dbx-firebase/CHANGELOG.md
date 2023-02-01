@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [9.21.0](https://github.com/dereekb/dbx-components/compare/v9.20.20-dev...v9.21.0) (2023-01-31)
+
+
+### Bug Fixes
+
+* fixed enableMultiTabIndexedDbPersistence usage ([2c41552](https://github.com/dereekb/dbx-components/commit/2c41552c6849cd7cae2405cd456d92bca265a5d3))
+
+
+
 ## [9.20.20](https://github.com/dereekb/dbx-components/compare/v9.20.19-dev...v9.20.20) (2023-01-23)
 
 

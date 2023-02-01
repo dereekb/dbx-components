@@ -2,6 +2,16 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [9.21.0](https://github.com/dereekb/dbx-components/compare/v9.20.20-dev...v9.21.0) (2023-01-31)
+
+
+### Features
+
+* added dbx-content-pit ([cbce68a](https://github.com/dereekb/dbx-components/commit/cbce68ad73dc896acc34232e3375698133e99241))
+* dbx-table ([#23](https://github.com/dereekb/dbx-components/issues/23)) ([4661508](https://github.com/dereekb/dbx-components/commit/466150895b5bdc6e9e5289ef38ef5dd3e0ae67f9))
+
+
+
 ## [9.20.20](https://github.com/dereekb/dbx-components/compare/v9.20.19-dev...v9.20.20) (2023-01-23)
 
 
