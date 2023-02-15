@@ -3,6 +3,7 @@ export * from './assertion';
 export * from './auth';
 export * from './contact';
 export * from './error';
+export * from './file';
 export * from './filter';
 export * from './function';
 export * from './getter';
