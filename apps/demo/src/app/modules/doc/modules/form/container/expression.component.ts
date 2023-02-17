@@ -20,6 +20,7 @@ export class DocFormExpressionComponent {
   readonly hideExpressionField: FormlyFieldConfig[] = [
     toggleField({
       key: 'toggle',
+      label: 'Hide Toggle',
       description: 'this field is watched by another field to see when this is toggled on.'
     }),
     nameField({

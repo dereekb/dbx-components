@@ -2,6 +2,7 @@ import { AsyncValidatorFn, ValidatorFn } from '@angular/forms';
 import { mergeObjects, filterFromPOJO, mergeObjectsFunction, filterFromPOJOFunction, FilterKeyValueTuplesInput, GeneralFilterFromPOJOFunction, ArrayOrValue, Maybe, asArray, objectHasNoKeys, MapFunction } from '@dereekb/util';
 import { FormlyFieldConfig, FormlyFieldProps } from '@ngx-formly/core';
 import { ValidationMessageOption } from '@ngx-formly/core/lib/models';
+import { FormlyFieldProps as MaterialFormlyFormFieldProps } from '@ngx-formly/material/form-field';
 
 export type FormlyValueParser<I = any, O = any> = MapFunction<I, O>;
 
@@ -185,6 +186,11 @@ export function validatorsForFieldConfig(input: ValidatorsForFieldConfigInput): 
   }
 
   return config;
+}
+
+// MARK: Material
+export interface MaterialFormFieldConfig {
+  materialFormField?: Pick<MaterialFormlyFormFieldProps, 'prefix' | 'suffix' | 'hideLabel' | 'hideRequiredMarker' | 'hideFieldUnderline' | 'floatLabel' | 'appearance' | 'color' | 'hintStart' | 'hintEnd'>;
 }
 
 /**

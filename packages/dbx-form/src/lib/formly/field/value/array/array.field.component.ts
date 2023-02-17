@@ -65,16 +65,17 @@ export interface DbxFormRepeatArrayConfig<T = unknown> extends Pick<FormlyFieldP
         <div class="dbx-form-repeat-array-fields" cdkDropList [cdkDropListDisabled]="disableRearrange" (cdkDropListDropped)="drop($event)">
           <div class="dbx-form-repeat-array-field" cdkDrag cdkDragLockAxis="y" *ngFor="let field of field.fieldGroup; trackBy: trackByFunction; let i = index; let last = last">
             <div class="dbx-form-repeat-array-drag-placeholder" *cdkDragPlaceholder></div>
-            <dbx-bar class="dbx-bar-fixed-height">
-              <button *ngIf="!disableRearrange" cdkDragHandle mat-flat-button><mat-icon>drag_handle</mat-icon></button>
+            <dbx-bar class="dbx-form-repeat-array-bar dbx-bar-fixed-height">
+              <button *ngIf="!disableRearrange" cdkDragHandle mat-stroked-button><mat-icon>drag_handle</mat-icon></button>
               <dbx-button-spacer></dbx-button-spacer>
               <h4>
                 <span class="repeat-array-number">{{ i + 1 }}</span>
                 <span>{{ labelForItem(field, i) }}</span>
               </h4>
               <span class="dbx-spacer"></span>
-              <dbx-button *ngIf="allowDuplicate(i)" [text]="duplicateText" (buttonClick)="duplicate(i)"></dbx-button>
-              <dbx-button *ngIf="allowRemove(i)" color="warn" [text]="removeText" (buttonClick)="remove(i)"></dbx-button>
+              <dbx-button *ngIf="allowDuplicate(i)" [stroked]="true" [text]="duplicateText" (buttonClick)="duplicate(i)"></dbx-button>
+              <dbx-button-spacer></dbx-button-spacer>
+              <dbx-button *ngIf="allowRemove(i)" color="warn" [stroked]="true" [text]="removeText" (buttonClick)="remove(i)"></dbx-button>
             </dbx-bar>
             <formly-field class="dbx-form-repeat-array-field-content" [field]="field"></formly-field>
           </div>

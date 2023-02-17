@@ -85,6 +85,15 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
       options: VALUE_SELECTION_VALUES
     }),
     valueSelectionField({
+      key: 'materialCustomized',
+      label: 'Select One Customized',
+      description: 'This is a simple selection field with material form field customization.',
+      options: VALUE_SELECTION_VALUES,
+      materialFormField: {
+        appearance: 'outline'
+      }
+    }),
+    valueSelectionField({
       key: 'selectOneWithClear',
       label: 'Select One With Clear',
       description: 'This is a simple selection field with a custom clear value added via the addClearOption.',

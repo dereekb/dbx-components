@@ -9,7 +9,7 @@ import { map, Observable, shareReplay, BehaviorSubject, startWith, switchMap } f
 
 export interface DbxItemListFieldProps<T = unknown, C extends AbstractDbxSelectionListWrapperDirective<T> = AbstractDbxSelectionListWrapperDirective<T>, K extends PrimativeKey = PrimativeKey> extends Pick<FormlyFieldProps, 'label' | 'description'> {
   /**
-   * list to load/initialize
+   * List to render components from
    */
   readonly listComponentClass: Observable<Type<C>>;
   /**

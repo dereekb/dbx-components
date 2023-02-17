@@ -29,8 +29,8 @@
       }
 
       padding: 0;
-      margin-bottom: 2px;
-      // border: 1px solid rgba(0, 0, 0, 0.04);
+      margin-bottom: 4px;
+      border-radius: 4px;
 
       .dbx-form-repeat-array-field-content {
         display: block;
@@ -53,6 +53,10 @@
   .dbx-form-repeat-array-field {
     background: $form-repeat-array-field-bg;
     border: 4px solid $form-repeat-array-field-bg;
+  }
+
+  .dbx-form-repeat-array-bar {
+    background: none;
   }
 }
 
