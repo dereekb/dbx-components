@@ -42,7 +42,7 @@ export interface DbxFormMapboxLatLngComponentFieldProps extends FormlyFieldProps
         <button mat-icon-button (click)="useCurrentLocation()" [disabled]="isReadonlyOrDisabled">
           <mat-icon>my_location</mat-icon>
         </button>
-        <mat-form-field class="dbx-mapbox-input-field-input-field">
+        <mat-form-field class="dbx-mapbox-input-field-input-field" appearance="standard">
           <mat-label>Coordinates</mat-label>
           <input type="text" matInput [placeholder]="placeholder" [formControl]="formControl" />
         </mat-form-field>

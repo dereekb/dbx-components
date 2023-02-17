@@ -18,9 +18,6 @@ export class DbxScheduleSelectionCalendarDateRangeComponent implements OnDestroy
   required?: boolean;
 
   @Input()
-  appearance: MatFormFieldAppearance = this.matFormFieldDefaultOptions.appearance ?? 'fill';
-
-  @Input()
   label?: Maybe<string> = 'Enter a date range';
 
   @Input()
