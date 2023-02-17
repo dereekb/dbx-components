@@ -108,7 +108,7 @@ export class DocInteractionButtonComponent {
   spinnerButtonOptions4: DbxProgressButtonOptions = {
     working: false,
     text: 'Fab',
-    spinnerSize: 19,
+    spinnerSize: 25, // ignored
     raised: false,
     stroked: false,
     flat: false,
@@ -128,6 +128,22 @@ export class DocInteractionButtonComponent {
     ...this.spinnerButtonOptions3,
     text: '',
     spinnerSize: undefined
+  };
+
+  spinnerButtonOptions6: DbxProgressButtonOptions = {
+    working: false,
+    text: 'Icon', // ignored
+    spinnerSize: 25, // ignored
+    iconOnly: true,
+    buttonColor: 'primary',
+    spinnerColor: 'accent',
+    fullWidth: false,
+    disabled: false,
+    mode: 'indeterminate',
+    icon: {
+      fontIcon: 'settings',
+      inline: true
+    }
   };
 
   barButtonOptions: DbxProgressButtonOptions = {
@@ -172,6 +188,7 @@ export class DocInteractionButtonComponent {
   clickSpin4 = this.activateAndDeactivate('spinnerButtonOptions3');
   clickSpin5 = this.activateAndDeactivate('spinnerButtonOptions4');
   clickSpin6 = this.activateAndDeactivate('spinnerButtonOptions5');
+  clickSpin7 = this.activateAndDeactivate('spinnerButtonOptions6');
 
   clickBar1 = () => {
     this.barButtonOptionsWorkingState = true;
