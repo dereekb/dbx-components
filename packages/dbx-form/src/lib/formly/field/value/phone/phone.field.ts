@@ -9,12 +9,13 @@ import { repeatArrayField, RepeatArrayFieldConfig } from '../array/array.field';
 export interface InternationalPhoneFieldConfig extends LabeledFieldConfig, InternationalPhoneFormlyFieldProps {}
 
 export function phoneField(config: Partial<InternationalPhoneFieldConfig> = {}): FormlyFieldConfig<InternationalPhoneFormlyFieldProps> {
-  const { key = 'phone', preferredCountries, onlyCountries } = config;
+  const { key = 'phone', label = 'Phone Number', preferredCountries, onlyCountries } = config;
 
   const fieldConfig = formlyField({
     key,
     type: 'intphone',
     ...propsAndConfigForFieldConfig(config, {
+      label,
       preferredCountries,
       onlyCountries
     })

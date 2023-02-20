@@ -1,12 +1,10 @@
 import { DocExtensionTableItemCellExampleComponent } from './../component/table.item.cell.example.component';
 import { startOfDay } from 'date-fns/esm';
 import { Component, OnDestroy } from '@angular/core';
-import { DateRangeDayDistanceInput, expandDaysForDateRange, dateRange, formatToISO8601DayString, DateRangeType } from '@dereekb/date';
-import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
-import { DbxWidgetDataPair } from '@dereekb/dbx-web';
+import { DateRangeDayDistanceInput, expandDaysForDateRange, dateRange, formatToISO8601DayString } from '@dereekb/date';
 import { DbxTableColumn, DbxTableContextData, DbxTableContextDataDelegate, dbxTableDateHeaderInjectionFactory, dbxTableDateRangeDayDistanceInputCellInput, DbxTableViewDelegate } from '@dereekb/dbx-web/table';
-import { beginLoading, beginLoadingPage, ListLoadingState, PageListLoadingState, successPageResult, successResult } from '@dereekb/rxjs';
-import { Maybe, ModelKeyRef, range } from '@dereekb/util';
+import { beginLoadingPage, PageListLoadingState, successPageResult, successResult } from '@dereekb/rxjs';
+import { range } from '@dereekb/util';
 import { delay, map, Observable, of, startWith, BehaviorSubject, skip, shareReplay, distinctUntilChanged, switchMap } from 'rxjs';
 import { DocExtensionTableItemActionExampleComponent } from '../component/table.item.action.example.component';
 import { DocExtensionTableItemHeaderExampleComponent } from '../component/table.item.header.example.component';

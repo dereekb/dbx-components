@@ -1,30 +1,36 @@
 import { FormlyFieldConfig } from '@ngx-formly/core';
-import { LabeledFieldConfig, formlyField, DefaultValueFieldConfig, DescriptionFieldConfig, propsAndConfigForFieldConfig } from '../../field';
+import { LabeledFieldConfig, formlyField, DefaultValueFieldConfig, DescriptionFieldConfig, propsAndConfigForFieldConfig, MaterialFormFieldConfig } from '../../field';
 
-export interface ToggleFieldConfig extends Omit<LabeledFieldConfig, 'placeholder' | 'autocomplete'>, DefaultValueFieldConfig<boolean>, DescriptionFieldConfig {}
+export interface ToggleFieldConfig extends Omit<LabeledFieldConfig, 'placeholder' | 'autocomplete'>, DefaultValueFieldConfig<boolean>, DescriptionFieldConfig, MaterialFormFieldConfig {}
 
 export function toggleField(config: ToggleFieldConfig): FormlyFieldConfig {
-  const { key, defaultValue } = config;
+  const { key, defaultValue, materialFormField } = config;
 
   return formlyField({
     key,
     type: 'toggle',
     wrappers: ['autotouch', 'form-field'], // NOTE: Must specify form-field if other wrapper specified, otherwise it will not be used.
     defaultValue: defaultValue ?? false,
-    ...propsAndConfigForFieldConfig(config)
+    ...propsAndConfigForFieldConfig(config, {
+      appearance: 'standard',
+      ...materialFormField
+    })
   });
 }
 
-export interface CheckboxFieldConfig extends LabeledFieldConfig, DefaultValueFieldConfig<boolean>, DescriptionFieldConfig {}
+export interface CheckboxFieldConfig extends LabeledFieldConfig, DefaultValueFieldConfig<boolean>, DescriptionFieldConfig, MaterialFormFieldConfig {}
 
 export function checkboxField(config: CheckboxFieldConfig): FormlyFieldConfig {
-  const { key, defaultValue } = config;
+  const { key, defaultValue, materialFormField } = config;
 
   return formlyField({
     key,
     type: 'checkbox',
     defaultValue: defaultValue ?? false,
-    ...propsAndConfigForFieldConfig(config)
+    ...propsAndConfigForFieldConfig(config, {
+      appearance: 'standard',
+      ...materialFormField
+    })
   });
 }
 

@@ -1,6 +1,10 @@
 @use '../../../../style/theming';
 
 // MARK: Variables
+$dbx-datetime-button-spacing: 6px;
+$dbx-datetime-date-and-time-spacing: 6px;
+$dbx-datetime-button-width: 40px + ($dbx-datetime-button-spacing * 2); // times 2 for the spacing between the date and time inputs
+$dbx-datetime-row-width: 40px + ($dbx-datetime-button-spacing * 2); // times 2 for the spacing between the date and time inputs
 
 // MARK: Mixin
 @mixin core() {
@@ -8,11 +12,13 @@
     width: 100%;
   }
 
-  $dbx-datetime-button-width: 40px;
-
   .dbx-datetime-row {
     .dbx-datetime-row-field {
       width: calc(100% - #{$dbx-datetime-button-width});
+    }
+
+    .dbx-datetime-row-field.dbx-datetime-row-field-full-width {
+      width: 100%;
     }
 
     &.dbx-datetime-hint-row {

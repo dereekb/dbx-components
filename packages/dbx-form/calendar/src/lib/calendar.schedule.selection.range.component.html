@@ -1,13 +1,15 @@
-<mat-form-field class="dbx-schedule-selection-calendar-date-range-field" [appearance]="appearance">
+<mat-form-field class="dbx-schedule-selection-calendar-date-range-field">
   <mat-label *ngIf="label">{{ label }}</mat-label>
   <div *ngIf="showCustomize && (isCustomized$ | async)" class="date-range-field-customized">
     <span class="dbx-accent-bg date-range-field-customized-text">Custom</span>
   </div>
+  <dbx-button-spacer></dbx-button-spacer>
+  <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+  <dbx-button-spacer></dbx-button-spacer>
   <mat-date-range-input [required]="required" [min]="minDate$ | async" [max]="maxDate$ | async" [formGroup]="range" [rangePicker]="picker">
     <input matStartDate formControlName="start" placeholder="Start date" />
     <input matEndDate formControlName="end" placeholder="End date" />
   </mat-date-range-input>
-  <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
   <div *ngIf="showCustomize">
     <dbx-button-spacer></dbx-button-spacer>
     <ng-content select="[customizeButton]"></ng-content>

@@ -11,6 +11,10 @@ export class DbxSpinnerButtonComponent extends AbstractProgressButtonDirective {
   @ViewChild('button', { static: true, read: ElementRef })
   readonly buttonRef!: ElementRef<HTMLElement>;
 
+  get showText() {
+    return !(this.options.fab || this.options.iconOnly);
+  }
+
   calcSpinnerSize() {
     const options = this.options;
     const elem = this.buttonRef?.nativeElement;
@@ -19,7 +23,7 @@ export class DbxSpinnerButtonComponent extends AbstractProgressButtonDirective {
     let size;
 
     if (options) {
-      if (options.fab) {
+      if (options.fab || options.iconOnly) {
         size = height;
       } else {
         size = options.spinnerSize;

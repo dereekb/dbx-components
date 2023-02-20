@@ -24,12 +24,14 @@
 
     // hide without clearing display, which will prevent the input from being clickable.
     .dbx-searchable-text-field-input {
+      margin-top: 0;
       height: 0;
       opacity: 0;
     }
   }
 
   .mat-focused .dbx-searchable-text-field-has-value.dbx-searchable-text-field-show-value .dbx-searchable-text-field-input {
+    margin-top: 8px;
     opacity: unset;
     height: unset;
   }

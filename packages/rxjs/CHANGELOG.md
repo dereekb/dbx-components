@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [9.22.0](https://github.com/dereekb/dbx-components/compare/v9.21.0-dev...v9.22.0) (2023-02-20)
+
+
+### Features
+
+* sourceselect field ([d0875f5](https://github.com/dereekb/dbx-components/commit/d0875f5188161aec0f669a1bfed0ebe227d0d69a))
+
+
+
 # [9.21.0](https://github.com/dereekb/dbx-components/compare/v9.20.20-dev...v9.21.0) (2023-01-31)
 
 

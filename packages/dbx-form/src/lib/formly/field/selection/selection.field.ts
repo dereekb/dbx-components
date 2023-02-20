@@ -2,7 +2,7 @@ import { asObservable, ObservableOrValue } from '@dereekb/rxjs';
 import { Maybe } from '@dereekb/util';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { map } from 'rxjs';
-import { DescriptionFieldConfig, formlyField, LabeledFieldConfig, propsAndConfigForFieldConfig } from '../field';
+import { DescriptionFieldConfig, formlyField, LabeledFieldConfig, MaterialFormFieldConfig, propsAndConfigForFieldConfig } from '../field';
 
 export interface ValueSelectionOptionWithValue<T> {
   value: T;
@@ -17,7 +17,7 @@ export interface ValueSelectionOptionClear {
 
 export type ValueSelectionOption<T> = ValueSelectionOptionWithValue<T> | ValueSelectionOptionClear;
 
-export interface ValueSelectionFieldConfig<T> extends LabeledFieldConfig, DescriptionFieldConfig {
+export interface ValueSelectionFieldConfig<T> extends LabeledFieldConfig, DescriptionFieldConfig, MaterialFormFieldConfig {
   /**
    * Whether or not to use the native select.
    *
@@ -28,13 +28,22 @@ export interface ValueSelectionFieldConfig<T> extends LabeledFieldConfig, Descri
    * Whether or not to add a clear option to the input values. If using an observable, this
    */
   addClearOption?: string | boolean;
+  /**
+   * Values to select from.
+   */
   options: ObservableOrValue<ValueSelectionOption<T>[]>;
+  /**
+   * Allow selecting multiple values and return an array.
+   */
   multiple?: boolean;
+  /**
+   * The select all option configuration.
+   */
   selectAllOption?: true | string;
 }
 
 export function valueSelectionField<T>(config: ValueSelectionFieldConfig<T>): FormlyFieldConfig {
-  const { key, native = false, addClearOption = false, selectAllOption: inputSelectAllOption, options: inputOptions } = config;
+  const { key, native = false, addClearOption = false, selectAllOption: inputSelectAllOption, options: inputOptions, materialFormField } = config;
   let selectAllOptionConfig: Maybe<{ selectAllOption: string }>;
 
   if (inputSelectAllOption) {
@@ -49,6 +58,7 @@ export function valueSelectionField<T>(config: ValueSelectionFieldConfig<T>): Fo
     key,
     type: native ? 'native-select' : 'select',
     ...propsAndConfigForFieldConfig(config, {
+      ...materialFormField,
       options,
       multiple: config.multiple ?? false,
       ...selectAllOptionConfig

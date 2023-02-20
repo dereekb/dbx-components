@@ -14,12 +14,19 @@ export interface DbxProgressButtonOptions {
   stroked?: boolean;
   flat?: boolean;
   fab?: boolean;
+  /**
+   * Whether or not to render as an icon button.
+   */
+  iconOnly?: boolean;
   spinnerSize?: number;
   spinnerRatio?: number;
   mode?: ProgressSpinnerMode;
   value?: number;
   fullWidth?: boolean;
   disabled?: boolean;
+  /**
+   * @deprecated use buttonIcon instead.
+   */
   icon?: DbxProgressButtonIcon;
   type?: string;
   customStyle?: { [key: string]: string };

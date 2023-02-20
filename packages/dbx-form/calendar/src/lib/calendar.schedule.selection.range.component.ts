@@ -1,13 +1,12 @@
-import { switchMap, throttleTime } from 'rxjs/operators';
 import { SubscriptionObject } from '@dereekb/rxjs';
-import { Component, Input, OnDestroy } from '@angular/core';
+import { Component, Inject, Input, OnDestroy } from '@angular/core';
 import { DbxCalendarScheduleSelectionStore } from './calendar.schedule.selection.store';
 import { DbxCalendarStore } from '@dereekb/dbx-web/calendar';
 import { FormGroup, FormControl } from '@angular/forms';
 import { Maybe, randomNumberFactory } from '@dereekb/util';
-import { distinctUntilChanged, filter, BehaviorSubject, startWith, Observable, of } from 'rxjs';
+import { switchMap, throttleTime, distinctUntilChanged, filter, BehaviorSubject, startWith, Observable, of } from 'rxjs';
 import { isSameDateDay } from '@dereekb/date';
-import { MatFormFieldAppearance } from '@angular/material/form-field';
+import { MatFormFieldDefaultOptions, MAT_FORM_FIELD_DEFAULT_OPTIONS } from '@angular/material/form-field';
 
 @Component({
   selector: 'dbx-schedule-selection-calendar-date-range',
@@ -16,9 +15,6 @@ import { MatFormFieldAppearance } from '@angular/material/form-field';
 export class DbxScheduleSelectionCalendarDateRangeComponent implements OnDestroy {
   @Input()
   required?: boolean;
-
-  @Input()
-  appearance: MatFormFieldAppearance = 'fill';
 
   @Input()
   label?: Maybe<string> = 'Enter a date range';
@@ -56,7 +52,7 @@ export class DbxScheduleSelectionCalendarDateRangeComponent implements OnDestroy
 
   readonly pickerOpened$ = this._pickerOpened.asObservable();
 
-  constructor(readonly dbxCalendarStore: DbxCalendarStore, readonly dbxCalendarScheduleSelectionStore: DbxCalendarScheduleSelectionStore) {}
+  constructor(readonly dbxCalendarStore: DbxCalendarStore, readonly dbxCalendarScheduleSelectionStore: DbxCalendarScheduleSelectionStore, @Inject(MAT_FORM_FIELD_DEFAULT_OPTIONS) readonly matFormFieldDefaultOptions: MatFormFieldDefaultOptions) {}
 
   ngOnInit(): void {
     this._syncSub.subscription = this.dbxCalendarScheduleSelectionStore.inputRange$.subscribe((x) => {

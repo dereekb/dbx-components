@@ -10,12 +10,33 @@
 
       <h4>Disabled</h4>
       <dbx-button [disabled]="true" text="Test Button"></dbx-button>
+      <dbx-button-spacer></dbx-button-spacer>
+      <dbx-button [disabled]="true" text="Test Button" [raised]="true"></dbx-button>
+      <dbx-button-spacer></dbx-button-spacer>
+      <dbx-button [disabled]="true" text="Test Button" [working]="true"></dbx-button>
 
       <h4>With Icon</h4>
       <dbx-button icon="settings" text="Test Button"></dbx-button>
+      <dbx-button-spacer></dbx-button-spacer>
+      <dbx-button icon="settings" text="Test Button" [raised]="true"></dbx-button>
+      <dbx-button-spacer></dbx-button-spacer>
+      <dbx-button icon="settings" text="Test Button" [working]="true"></dbx-button>
+
+      <h4>Icon Only</h4>
+      <dbx-button icon="settings" [iconOnly]="true"></dbx-button>
+      <dbx-button-spacer></dbx-button-spacer>
+      <dbx-button icon="settings" [iconOnly]="true" [working]="true"></dbx-button>
 
       <h4>With Custom Content</h4>
       <dbx-button (buttonClick)="clickBar1()" icon="settings" [working]="barButtonOptionsWorkingState">
+        <div style="width: 400px">
+          <p>A</p>
+          <p>B</p>
+          <p>C</p>
+        </div>
+      </dbx-button>
+
+      <dbx-button (buttonClick)="clickBar1()" icon="settings" [working]="true">
         <div style="width: 400px">
           <p>A</p>
           <p>B</p>
@@ -38,6 +59,10 @@
       <dbx-spinner-button (btnClick)="clickSpin5()" [options]="spinnerButtonOptions4"></dbx-spinner-button>
       <dbx-button-spacer></dbx-button-spacer>
       <dbx-spinner-button (btnClick)="clickSpin5()" [options]="spinnerButtonOptions4" [working]="true"></dbx-spinner-button>
+      <dbx-button-spacer></dbx-button-spacer>
+      <dbx-spinner-button (btnClick)="clickSpin7()" [options]="spinnerButtonOptions6"></dbx-spinner-button>
+      <dbx-button-spacer></dbx-button-spacer>
+      <dbx-spinner-button (btnClick)="clickSpin7()" [options]="spinnerButtonOptions6" [working]="true"></dbx-spinner-button>
       <p></p>
       <dbx-spinner-button (btnClick)="clickSpin6()" [options]="spinnerButtonOptions5">
         <div style="width: 400px; height: 200px">

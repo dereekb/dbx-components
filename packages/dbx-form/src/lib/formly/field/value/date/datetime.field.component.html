@@ -2,14 +2,16 @@
   <!-- Date -->
   <div class="dbx-datetime-row" fxFlex.lt-sm="100" [fxFlex]="dateOnly ? '100' : '50'" *ngIf="showDateInput">
     <ng-container *ngTemplateOutlet="dateInputTemplate"></ng-container>
+    <!-- Additional spacing -->
+    <dbx-button-spacer *ngIf="!dateOnly"></dbx-button-spacer>
   </div>
   <!-- Time -->
   <div class="dbx-datetime-row" fxFlex.lt-sm="100" [fxFlex]="showDateInput ? '50' : '100'">
     <ng-container *ngIf="showTimeInput$ | async">
       <ng-container *ngTemplateOutlet="timeMenuAndInputTemplate"></ng-container>
     </ng-container>
-    <div class="add-time-button-wrapper" *ngIf="showAddTime$ | async">
-      <button mat-button class="add-time-button" ngClass.lt-sm="add-time-button-full" (click)="addTime()">
+    <div *ngIf="showAddTime$ | async" class="add-time-button-wrapper">
+      <button mat-button class="dbx-button-spacer add-time-button" ngClass.lt-sm="add-time-button-full" (click)="addTime()">
         <mat-icon>timer</mat-icon>
         Add Time
       </button>
@@ -33,10 +35,10 @@
 
 <!-- Date Input Template -->
 <ng-template #dateInputTemplate>
-  <button *ngIf="!hideDatePicker" mat-icon-button (click)="picker.open()" [disabled]="disabled">
+  <button class="dbx-button-spacer" *ngIf="!hideDatePicker" mat-icon-button (click)="picker.open()" [disabled]="disabled">
     <mat-icon>calendar_today</mat-icon>
   </button>
-  <mat-form-field class="dbx-datetime-row-field">
+  <mat-form-field class="dbx-datetime-row-field" [ngClass]="{ 'dbx-datetime-row-field-full-width': hideDatePicker }">
     <mat-label>{{ dateLabel }}</mat-label>
     <input #dateInput matInput [min]="dateInputMin$ | async" [max]="dateInputMax$ | async" [matDatepicker]="picker" [matDatepickerFilter]="(pickerFilter$ | async) || defaultPickerFilter" (dateChange)="datePicked($event)" [value]="dateValue$ | async" (keydown)="keydownOnDateInput($event)" />
     <mat-datepicker #picker></mat-datepicker>
@@ -45,7 +47,7 @@
 
 <!-- Time Menu/Input Template -->
 <ng-template #timeMenuAndInputTemplate>
-  <button mat-icon-button [matMenuTriggerFor]="timemenu" aria-label="opens the time menu" [disabled]="disabled">
+  <button class="dbx-button-spacer" mat-icon-button [matMenuTriggerFor]="timemenu" aria-label="opens the time menu" [disabled]="disabled">
     <mat-icon>timer</mat-icon>
   </button>
   <mat-menu #timemenu="matMenu">

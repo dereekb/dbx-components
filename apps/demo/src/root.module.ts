@@ -149,7 +149,8 @@ export function makeSegmentConfig(): DbxAnalyticsSegmentApiServiceConfig {
     {
       provide: MAT_FORM_FIELD_DEFAULT_OPTIONS,
       useValue: {
-        floatLabel: 'always'
+        floatLabel: 'always',
+        appearance: 'outline'
       }
     }
   ],

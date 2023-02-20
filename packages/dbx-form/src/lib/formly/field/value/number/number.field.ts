@@ -2,7 +2,7 @@ import { ValidatorFn } from '@angular/forms';
 import { concatArrays, TransformNumberFunctionConfigRef, transformNumberFunction } from '@dereekb/util';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { isDivisibleBy } from '../../../../validator';
-import { AttributesFieldConfig, LabeledFieldConfig, formlyField, propsAndConfigForFieldConfig, DescriptionFieldConfig, validatorsForFieldConfig, FieldConfigParsersRef, FormlyValueParser } from '../../field';
+import { AttributesFieldConfig, LabeledFieldConfig, formlyField, propsAndConfigForFieldConfig, DescriptionFieldConfig, validatorsForFieldConfig, FieldConfigParsersRef, FormlyValueParser, MaterialFormFieldConfig } from '../../field';
 
 export interface NumberFieldNumberConfig {
   min?: number;
@@ -13,7 +13,7 @@ export interface NumberFieldNumberConfig {
 
 export type NumberFieldInputType = 'number';
 
-export interface NumberFieldConfig extends LabeledFieldConfig, DescriptionFieldConfig, NumberFieldNumberConfig, AttributesFieldConfig, Partial<TransformNumberFunctionConfigRef> {
+export interface NumberFieldConfig extends LabeledFieldConfig, DescriptionFieldConfig, NumberFieldNumberConfig, AttributesFieldConfig, Partial<TransformNumberFunctionConfigRef>, MaterialFormFieldConfig {
   inputType?: NumberFieldInputType;
 }
 
@@ -34,7 +34,7 @@ export function numberFieldTransformParser(config: Partial<FieldConfigParsersRef
 }
 
 export function numberField(config: NumberFieldConfig): FormlyFieldConfig {
-  const { key, min, max, step, enforceStep, inputType: type = 'number' } = config;
+  const { key, min, max, step, enforceStep, inputType: type = 'number', materialFormField } = config;
   const parsers = numberFieldTransformParser(config);
 
   const validators: ValidatorFn[] = [];
@@ -47,6 +47,7 @@ export function numberField(config: NumberFieldConfig): FormlyFieldConfig {
     key,
     type: 'input',
     ...propsAndConfigForFieldConfig(config, {
+      ...materialFormField,
       type,
       min,
       max,

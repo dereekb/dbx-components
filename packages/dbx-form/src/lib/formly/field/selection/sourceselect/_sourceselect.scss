@@ -1,0 +1,54 @@
+@use '../../../../style/theming';
+
+// MARK: Variables
+
+// MARK: Mixin
+@mixin core() {
+  .dbx-source-select-field-loading {
+    /*
+    position: absolute;
+    bottom: 4px;
+    left: 0;
+    right: 0;
+    */
+
+    position: absolute;
+    bottom: 0px;
+    left: -12px;
+    right: -12px;
+  }
+
+  .dbx-source-select-field-content {
+    display: flex;
+
+    .dbx-source-select-field-select {
+    }
+
+    .dbx-source-select-field-button {
+      margin-top: -16px;
+      height: 10px;
+      overflow: visible;
+    }
+  }
+}
+
+@mixin color($theme-config) {
+}
+
+@mixin typography($typography-config) {
+}
+
+@mixin theme($theme-config) {
+  @include theming.private-check-duplicate-theme-styles($theme-config, 'dbx-form-field-source-select') {
+    $color: theming.get-color-config($theme-config);
+    $typography: theming.get-typography-config($theme-config);
+
+    @if $color !=null {
+      @include color($theme-config);
+    }
+
+    @if $typography !=null {
+      @include typography($typography);
+    }
+  }
+}

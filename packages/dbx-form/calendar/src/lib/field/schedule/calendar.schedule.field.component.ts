@@ -20,7 +20,7 @@ export interface DbxFormCalendarDateScheduleRangeFieldProps extends Pick<FormlyF
 @Component({
   template: `
     <div class="dbx-schedule-selection-field">
-      <dbx-schedule-selection-calendar-date-range [showCustomize]="showCustomize" [appearance]="appearance" [required]="required" [disabled]="isReadonlyOrDisabled" [label]="label" [hint]="description">
+      <dbx-schedule-selection-calendar-date-range [showCustomize]="showCustomize" [required]="required" [disabled]="isReadonlyOrDisabled" [label]="label" [hint]="description">
         <dbx-schedule-selection-calendar-date-dialog-button customizeButton></dbx-schedule-selection-calendar-date-dialog-button>
       </dbx-schedule-selection-calendar-date-range>
     </div>
@@ -50,10 +50,6 @@ export class DbxFormCalendarDateScheduleRangeFieldComponent<T extends DbxFormCal
 
   get formGroup(): FormGroup {
     return this.form as FormGroup;
-  }
-
-  get appearance(): MatFormFieldAppearance {
-    return this.props.appearance ?? 'standard';
   }
 
   get label(): Maybe<string> {

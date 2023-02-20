@@ -4,6 +4,10 @@
 
 // MARK: Mixin
 @mixin core() {
+  // MARK: Material Fixes
+  .mat-form-field-appearance-standard .mat-form-field-appearance-outline .mat-form-field-flex {
+    padding-top: unset;
+  }
 }
 
 @mixin color($theme-config) {

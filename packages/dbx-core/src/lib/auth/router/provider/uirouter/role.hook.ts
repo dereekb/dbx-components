@@ -61,7 +61,7 @@ export function enableHasAuthRoleHook(transitionService: TransitionService, conf
     makeDecisionsObs(transition: Transition, authService: DbxAuthService): Observable<AuthTransitionDecision> {
       const targetState = transition.targetState();
       const data: HasAuthRoleStateData = targetState.state().data;
-      let mapFn: OperatorFunction<AuthRoleSet, boolean> = hasAuthRoleDecisionPipe(data);
+      const mapFn: OperatorFunction<AuthRoleSet, boolean> = hasAuthRoleDecisionPipe(data);
       return authService.authRoles$.pipe(mapFn);
     }
   });

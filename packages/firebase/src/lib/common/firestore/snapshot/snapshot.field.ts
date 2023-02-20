@@ -820,6 +820,16 @@ export function firestoreUnitedStatesAddress() {
   });
 }
 
+export function optionalFirestoreUnitedStatesAddress() {
+  const mapFn = (x: Maybe<UnitedStatesAddress>) => (x == null ? x : firestoreUnitedStatesAddressAssignFn(x));
+
+  return firestoreField<Maybe<UnitedStatesAddress>, Maybe<UnitedStatesAddress>>({
+    default: DEFAULT_FIRESTORE_UNITED_STATES_ADDRESS_VALUE,
+    fromData: mapFn,
+    toData: mapFn
+  });
+}
+
 // MARK: Zoom
 export const MIN_FIRESTORE_MAP_ZOOM_LEVEL_VALUE: ZoomLevel = 0;
 export const MAX_FIRESTORE_MAP_ZOOM_LEVEL_VALUE: ZoomLevel = 22;

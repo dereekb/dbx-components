@@ -1,4 +1,4 @@
-import { Component, Directive, Input } from '@angular/core';
+import { Directive } from '@angular/core';
 
 /**
  * Component used to wrap content in a pit with a label.

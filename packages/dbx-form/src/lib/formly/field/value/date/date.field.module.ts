@@ -15,6 +15,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
 import { DbxFormFormlyWrapperModule } from '../../wrapper/form.wrapper.module';
+import { DbxButtonModule } from '@dereekb/dbx-web';
 
 @NgModule({
   imports: [
@@ -23,6 +24,7 @@ import { DbxFormFormlyWrapperModule } from '../../wrapper/form.wrapper.module';
     MatInputModule,
     MatDividerModule,
     MatFormFieldModule,
+    DbxButtonModule,
     MatButtonModule,
     MatDatepickerModule,
     MatNativeDateModule,

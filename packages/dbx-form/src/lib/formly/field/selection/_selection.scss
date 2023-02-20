@@ -1,21 +1,25 @@
 @use './list/list';
 @use './pickable/pickable';
 @use './searchable/searchable';
+@use './sourceselect/sourceselect';
 
 @mixin all-selection-core() {
   @include list.core();
   @include pickable.core();
   @include searchable.core();
+  @include sourceselect.core();
 }
 
 @mixin all-selection-typography($typography-config) {
   @include list.typography($typography-config);
   @include pickable.typography($typography-config);
   @include searchable.typography($typography-config);
+  @include sourceselect.typography($typography-config);
 }
 
 @mixin all-selection-theme($theme-config) {
   @include list.theme($theme-config);
   @include pickable.theme($theme-config);
   @include searchable.theme($theme-config);
+  @include sourceselect.theme($theme-config);
 }

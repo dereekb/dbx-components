@@ -1,12 +1,12 @@
-import { DescriptionFieldConfig } from './../field';
+import { DescriptionFieldConfig, MaterialFormFieldConfig } from './../field';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { LabeledFieldConfig, formlyField, propsAndConfigForFieldConfig } from '../field';
 import { TextFieldLengthConfig } from '../value/text/text.field';
 
-export interface TextEditorFieldConfig extends LabeledFieldConfig, DescriptionFieldConfig, TextFieldLengthConfig {}
+export interface TextEditorFieldConfig extends LabeledFieldConfig, DescriptionFieldConfig, TextFieldLengthConfig, MaterialFormFieldConfig {}
 
 export function textEditorField(config: TextEditorFieldConfig): FormlyFieldConfig {
-  const { key, minLength, maxLength } = config;
+  const { key, minLength, maxLength, materialFormField } = config;
   const fieldConfig: FormlyFieldConfig = formlyField({
     key,
     type: 'texteditor',
@@ -17,6 +17,7 @@ export function textEditorField(config: TextEditorFieldConfig): FormlyFieldConfi
       updateOn: 'blur'
     },
     ...propsAndConfigForFieldConfig(config, {
+      ...materialFormField,
       minLength,
       maxLength
     })

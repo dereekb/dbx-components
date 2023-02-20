@@ -1,6 +1,6 @@
 import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
 import { DbxListViewWrapper } from '@dereekb/dbx-web';
-import { Directive, Host, OnInit, OnDestroy } from '@angular/core';
+import { Directive, Host, OnInit } from '@angular/core';
 import { DbxFirebaseCollectionStoreDirective } from './store.collection.directive';
 import { tapLog } from '@dereekb/rxjs';
 

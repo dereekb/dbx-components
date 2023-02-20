@@ -48,6 +48,13 @@ export type LoadingStateWithMaybeSoValue<T = unknown> = LoadingState<T> & {
 };
 
 /**
+ * Loading state with an error
+ */
+export type LoadingStateWithError<T = unknown> = LoadingState<T> & {
+  error: ReadableError;
+};
+
+/**
  * Convenience identifier for a LoadingState that returns a list.
  */
 export type ListLoadingState<T = unknown> = LoadingState<T[]>;
@@ -208,12 +215,40 @@ export function loadingStateHasFinishedLoading<L extends LoadingState>(state: Ma
 }
 
 /**
- * Whether or not the input loading state has finished loading and has a non-null value.
+ * Whether or not the input loading state has a non-undefined value.
  *
  * @param state
  * @returns
  */
 export function loadingStateHasValue<L extends LoadingState>(state: Maybe<L> | LoadingStateWithMaybeSoValue<LoadingStateValue<L>>): state is LoadingStateWithMaybeSoValue<LoadingStateValue<L>> {
+  if (state) {
+    return state.value !== undefined;
+  } else {
+    return false;
+  }
+}
+
+/**
+ * Whether or not the input loading state has a non-null error.
+ *
+ * @param state
+ * @returns
+ */
+export function loadingStateHasError<L extends LoadingState>(state: Maybe<L> | LoadingState<LoadingStateValue<L>>): state is LoadingStateWithError<LoadingStateValue<L>> {
+  if (state) {
+    return state.error != null;
+  } else {
+    return false;
+  }
+}
+
+/**
+ * Whether or not the input loading state is not loading and has a non-null value.
+ *
+ * @param state
+ * @returns
+ */
+export function loadingStateHasFinishedLoadingWithValue<L extends LoadingState>(state: Maybe<L> | LoadingStateWithMaybeSoValue<LoadingStateValue<L>>): state is LoadingStateWithMaybeSoValue<LoadingStateValue<L>> {
   if (state) {
     return loadingStateHasFinishedLoading(state) && state.value !== undefined;
   } else {
@@ -222,12 +257,12 @@ export function loadingStateHasValue<L extends LoadingState>(state: Maybe<L> | L
 }
 
 /**
- * Whether or not the input loading state has an error defined.
+ * Whether or not the input loading state is not loading and has an error defined.
  *
  * @param state
  * @returns
  */
-export function loadingStateHasError<L extends LoadingState>(state: Maybe<L>): boolean {
+export function loadingStateHasFinishedLoadingWithError<L extends LoadingState>(state: Maybe<L> | LoadingState<LoadingStateValue<L>>): state is LoadingStateWithError<LoadingStateValue<L>> {
   if (state) {
     return loadingStateHasFinishedLoading(state) && state.error != null;
   } else {

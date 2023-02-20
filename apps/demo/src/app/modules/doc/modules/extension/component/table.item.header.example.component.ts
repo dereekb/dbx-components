@@ -1,8 +1,4 @@
-import { filterMaybe } from '@dereekb/rxjs';
-import { ChangeDetectionStrategy, Component, OnInit, OnDestroy, Input } from '@angular/core';
-import { AbstractDbxInjectionDirective } from '@dereekb/dbx-core';
-import { map, distinctUntilChanged, BehaviorSubject, switchMap } from 'rxjs';
-import { Maybe } from '@dereekb/util';
+import { Component } from '@angular/core';
 import { ExampleTableData } from './table.item';
 
 @Component({
