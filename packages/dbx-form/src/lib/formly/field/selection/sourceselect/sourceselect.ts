@@ -1,6 +1,6 @@
 import { SelectionDisplayValue } from './../selection';
 import { LoadingState } from '@dereekb/rxjs';
-import { Factory, FactoryWithInput, FactoryWithRequiredInput, MapFunction, Maybe, PrimativeKey } from '@dereekb/util';
+import { Factory, FactoryWithRequiredInput, MapFunction, Maybe, PrimativeKey } from '@dereekb/util';
 import { Observable } from 'rxjs';
 
 export interface SourceSelectValue<T extends PrimativeKey = PrimativeKey, M = unknown> {

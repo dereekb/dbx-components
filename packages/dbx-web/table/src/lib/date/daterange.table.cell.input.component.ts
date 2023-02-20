@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, Injectable, OnDestroy, OnInit } from '@angular/core';
-import { DateBlock, DateDurationSpan, DateRangeDayDistanceInput, isSameDateDay } from '@dereekb/date';
+import { DateRangeDayDistanceInput, isSameDateDay } from '@dereekb/date';
 import { DbxTableStore } from '../table.store';
 import { MatDateRangeSelectionStrategy, DateRange, MAT_DATE_RANGE_SELECTION_STRATEGY } from '@angular/material/datepicker';
 import { DateAdapter } from '@angular/material/core';
@@ -8,7 +8,7 @@ import { FormGroup, FormControl } from '@angular/forms';
 import { SubscriptionObject } from '@dereekb/rxjs';
 import { addDays, format as formatDate } from 'date-fns';
 import { BehaviorSubject, distinctUntilChanged, filter, map, Observable, of, startWith, switchMap, throttleTime, combineLatest } from 'rxjs';
-import { DbxInjectionComponentConfig, DbxInjectionComponentConfigFactory } from '@dereekb/dbx-core';
+import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 
 @Injectable()
 export class DbxTableDateRangeDayDistanceInputCellInputRangeSelectionStrategy<D> implements MatDateRangeSelectionStrategy<D> {

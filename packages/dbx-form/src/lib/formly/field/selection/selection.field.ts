@@ -1,4 +1,3 @@
-import { MatFormFieldAppearance } from '@angular/material/form-field';
 import { asObservable, ObservableOrValue } from '@dereekb/rxjs';
 import { Maybe } from '@dereekb/util';
 import { FormlyFieldConfig } from '@ngx-formly/core';

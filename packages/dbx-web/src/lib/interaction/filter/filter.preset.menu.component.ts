@@ -1,5 +1,4 @@
-import { shareReplay } from 'rxjs/operators';
-import { BehaviorSubject, map, combineLatest, distinctUntilChanged, switchMap } from 'rxjs';
+import { shareReplay, BehaviorSubject, map, combineLatest, distinctUntilChanged, switchMap } from 'rxjs';
 import { Component, Input } from '@angular/core';
 import { FilterWithPreset } from '@dereekb/rxjs';
 import { AbstractDbxPresetFilterMenuComponent } from './filter.preset';

@@ -1,9 +1,5 @@
-import { filterMaybe } from '@dereekb/rxjs';
-import { ChangeDetectionStrategy, Component, OnInit, OnDestroy, Input } from '@angular/core';
-import { AbstractDbxInjectionDirective } from '@dereekb/dbx-core';
-import { map, distinctUntilChanged, BehaviorSubject, switchMap, of } from 'rxjs';
-import { DbxTableStore } from './table.store';
-import { Maybe } from '@dereekb/util';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { map, distinctUntilChanged, switchMap, of } from 'rxjs';
 import { AbstractDbxTableElementDirective } from './table.item.directive';
 
 @Component({

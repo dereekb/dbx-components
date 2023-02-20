@@ -1,15 +1,15 @@
 <dbx-content-container>
   <doc-feature-layout header="Selection Fields" hint="">
     <!-- Examples -->
-    <h3>Source Select</h3>
-    <p>Selection field that provides a button for finding/retrieving additional values through an arbitrary source. The selectable value must always be a key. Several delegate functions handle retrieving values from pre-configured sources, and metadata via the existing values.</p>
-    <doc-feature-example header="sourceSelectField()" hint="A select that displays items from various sources, and a single button to retrieve more values.">
-      <doc-form-example-form [dbxFormlyFields]="sourceSelectFields" [dbxFormSource]="sourceSelectFieldsValue"></doc-form-example-form>
-    </doc-feature-example>
     <h3>Select</h3>
     <p>The typical select fields.</p>
     <doc-feature-example header="valueSelectionField()" hint="A field that lets you select static options.">
       <doc-form-example-form [dbxFormlyFields]="valueSelectionFields"></doc-form-example-form>
+    </doc-feature-example>
+    <h3>Source Select</h3>
+    <p>Selection field that provides a button for finding/retrieving additional values through an arbitrary source. The selectable value must always be a key. Several delegate functions handle retrieving values from pre-configured sources, and metadata via the existing values.</p>
+    <doc-feature-example header="sourceSelectField()" hint="A select that displays items from various sources, and a single button to retrieve more values.">
+      <doc-form-example-form [dbxFormlyFields]="sourceSelectFields" [dbxFormSource]="sourceSelectFieldsValue"></doc-form-example-form>
     </doc-feature-example>
     <h3>Dbx List</h3>
     <doc-feature-example header="dbxListField()" hint="Allows you to use a dbxList to select items.">

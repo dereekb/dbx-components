@@ -1,6 +1,5 @@
-import { arrayToMap, Maybe, PrimativeKey, separateValues } from '@dereekb/util';
+import { PrimativeKey } from '@dereekb/util';
 import { FormlyFieldConfig } from '@ngx-formly/core';
-import { Observable, of, switchMap, map } from 'rxjs';
 import { LabeledFieldConfig, formlyField, propsAndConfigForFieldConfig, DescriptionFieldConfig, MaterialFormFieldConfig } from '../../field';
 import { SourceSelectFieldProps } from './sourceselect.field.component';
 

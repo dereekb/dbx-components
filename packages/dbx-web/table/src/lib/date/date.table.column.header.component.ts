@@ -16,8 +16,8 @@ import { DbxTableColumn } from '../table';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DbxTableDateHeaderComponent {
-  left: string = 'E';
-  right: string = 'MMM d';
+  left = 'E';
+  right = 'MMM d';
 
   private _date: Maybe<Date>;
 

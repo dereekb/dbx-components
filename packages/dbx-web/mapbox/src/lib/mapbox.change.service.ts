@@ -1,7 +1,6 @@
-import { switchMap } from 'rxjs/operators';
 import { Injectable, OnDestroy } from '@angular/core';
 import { SubscriptionObject } from '@dereekb/rxjs';
-import { tap, merge, Subject, throttleTime } from 'rxjs';
+import { switchMap, tap, merge, Subject, throttleTime } from 'rxjs';
 import { DbxMapboxMapStore } from './mapbox.store';
 
 /**

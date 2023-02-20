@@ -1,8 +1,7 @@
-import { shareReplay } from 'rxjs/operators';
 import { Directive, OnInit, OnDestroy } from '@angular/core';
 import { AbstractSubscriptionDirective, DbxRouterService, isSegueRefActive } from '@dereekb/dbx-core';
 import { TwoColumnsContextStore } from './two.column.store';
-import { distinctUntilChanged, Subscription } from 'rxjs';
+import { shareReplay, distinctUntilChanged, Subscription } from 'rxjs';
 import { isNot } from '@dereekb/rxjs';
 
 /**

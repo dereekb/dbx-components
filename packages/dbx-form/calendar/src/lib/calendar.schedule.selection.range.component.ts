@@ -1,13 +1,12 @@
-import { switchMap, throttleTime } from 'rxjs/operators';
 import { SubscriptionObject } from '@dereekb/rxjs';
 import { Component, Inject, Input, OnDestroy } from '@angular/core';
 import { DbxCalendarScheduleSelectionStore } from './calendar.schedule.selection.store';
 import { DbxCalendarStore } from '@dereekb/dbx-web/calendar';
 import { FormGroup, FormControl } from '@angular/forms';
 import { Maybe, randomNumberFactory } from '@dereekb/util';
-import { distinctUntilChanged, filter, BehaviorSubject, startWith, Observable, of } from 'rxjs';
+import { switchMap, throttleTime, distinctUntilChanged, filter, BehaviorSubject, startWith, Observable, of } from 'rxjs';
 import { isSameDateDay } from '@dereekb/date';
-import { MatFormFieldAppearance, MatFormFieldDefaultOptions, MAT_FORM_FIELD_DEFAULT_OPTIONS } from '@angular/material/form-field';
+import { MatFormFieldDefaultOptions, MAT_FORM_FIELD_DEFAULT_OPTIONS } from '@angular/material/form-field';
 
 @Component({
   selector: 'dbx-schedule-selection-calendar-date-range',

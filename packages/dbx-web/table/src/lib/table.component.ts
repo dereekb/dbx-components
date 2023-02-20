@@ -1,9 +1,7 @@
-import { shareReplay } from 'rxjs/operators';
 import { ChangeDetectionStrategy, Component, OnDestroy, TrackByFunction } from '@angular/core';
 import { DbxTableStore } from './table.store';
-import { loadingStateContext, tapLog } from '@dereekb/rxjs';
-import { map, Observable } from 'rxjs';
-import { DbxValueListItemConfig } from '@dereekb/dbx-web';
+import { loadingStateContext } from '@dereekb/rxjs';
+import { shareReplay, map, Observable } from 'rxjs';
 
 export const DBX_TABLE_ITEMS_COLUMN_NAME = '_items';
 export const DBX_TABLE_ACTIONS_COLUMN_NAME = '_actions';
