@@ -7,7 +7,8 @@ import { DbxProgressButtonOptions } from './progress/button.progress.config';
 export enum DbxButtonDisplayType {
   RAISED,
   STROKED,
-  FLAT
+  FLAT,
+  ICON_ONLY
 }
 
 /**
@@ -60,6 +61,17 @@ export class DbxButtonComponent extends AbstractDbxButtonDirective {
   }
 
   @Input()
+  get iconOnly(): boolean {
+    return this.type === DbxButtonDisplayType.ICON_ONLY;
+  }
+
+  set iconOnly(iconOnly: boolean) {
+    if (iconOnly) {
+      this.type = DbxButtonDisplayType.ICON_ONLY;
+    }
+  }
+
+  @Input()
   public color: ThemePalette = 'primary';
 
   @Input()
@@ -107,6 +119,7 @@ export class DbxButtonComponent extends AbstractDbxButtonDirective {
       raised: this.raised,
       stroked: this.stroked,
       flat: this.flat,
+      iconOnly: this.iconOnly,
       mode: 'indeterminate',
       spinnerColor: this.color === 'primary' ? 'accent' : 'primary',
       customSpinnerColor,

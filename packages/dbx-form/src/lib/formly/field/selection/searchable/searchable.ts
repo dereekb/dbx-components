@@ -1,4 +1,4 @@
-import { PrimativeKey } from '@dereekb/util';
+import { MapFunction, PrimativeKey } from '@dereekb/util';
 import { DbxInjectionComponentConfig, ClickableAnchor } from '@dereekb/dbx-core';
 import { Observable } from 'rxjs';
 import { SelectionDisplayValue, SelectionValue, SelectionValueHashFn } from '../selection';
@@ -27,7 +27,7 @@ export interface ConfiguredSearchableValueFieldDisplayValue<T, M = unknown> exte
 /**
  * SearchableValueField function for searching values.
  */
-export type SearchableValueFieldStringSearchFn<T, M = unknown> = (search: string) => Observable<SearchableValueFieldValue<T, M>[]>;
+export type SearchableValueFieldStringSearchFn<T, M = unknown> = MapFunction<string, Observable<SearchableValueFieldValue<T, M>[]>>;
 
 /**
  * SearchableValueField function that allows the values a chance to go through another observable for unknown changes.
@@ -36,11 +36,11 @@ export type SearchableValueFieldStringSearchFn<T, M = unknown> = (search: string
  *
  * The value itself should not change. All other fields on the value may change, however.
  */
-export type SearchableValueFieldDisplayFn<T, M = unknown> = (values: SearchableValueFieldValue<T, M>[]) => Observable<SearchableValueFieldDisplayValue<T, M>[]>;
+export type SearchableValueFieldDisplayFn<T, M = unknown> = MapFunction<SearchableValueFieldValue<T, M>[], Observable<SearchableValueFieldDisplayValue<T, M>[]>>;
 
 /**
  * SearchableValueField function for setting anchor values on a field value.
  */
-export type SearchableValueFieldAnchorFn<T, M = unknown> = (value: SearchableValueFieldValue<T, M>) => ClickableAnchor;
+export type SearchableValueFieldAnchorFn<T, M = unknown> = MapFunction<SearchableValueFieldValue<T, M>, ClickableAnchor>;
 
 export type SearchableValueFieldHashFn<T, H extends PrimativeKey = PrimativeKey> = SelectionValueHashFn<T, H>;

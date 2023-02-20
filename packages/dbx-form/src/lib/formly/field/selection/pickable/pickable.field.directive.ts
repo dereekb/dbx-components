@@ -1,6 +1,6 @@
 import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { LoadingState, successResult, mapLoadingStateResults, filterMaybe, ListLoadingStateContextInstance, isListLoadingStateEmpty, startWithBeginLoading, SubscriptionObject } from '@dereekb/rxjs';
-import { PrimativeKey, convertMaybeToArray, findUnique, makeValuesGroupMap, Maybe, ArrayOrValue } from '@dereekb/util';
+import { PrimativeKey, convertMaybeToArray, findUnique, makeValuesGroupMap, Maybe, ArrayOrValue, separateValues } from '@dereekb/util';
 import { Directive, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { FormControl, AbstractControl } from '@angular/forms';
 import { MatInput } from '@angular/material/input';
@@ -367,8 +367,11 @@ export class AbstractDbxPickableItemFieldDirective<T, M = unknown, H extends Pri
       mergeMap((displayMap) => {
         const mappingResult = values.map((x) => [x, this.hashForValue(x.value)] as [PickableValueFieldValue<T, M>, H]).map(([x, hash], i) => [i, hash, x, displayMap.get(hash)] as [number, H, PickableValueFieldValue<T, M>, PickableValueFieldDisplayValueWithHash<T, M, H>]);
 
-        const hasDisplay = mappingResult.filter((x) => Boolean(x[3]));
-        const needsDisplay = mappingResult.filter((x) => !x[3]);
+        const {
+          //
+          included: hasDisplay,
+          excluded: needsDisplay
+        } = separateValues(mappingResult, (x) => Boolean(x[3]));
 
         if (needsDisplay.length > 0) {
           // Go get the display value.

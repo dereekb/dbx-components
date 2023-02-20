@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, ElementRef, ViewChild } from '@angular/core';
+import { provideDbxButton } from '@dereekb/dbx-core';
 import { AbstractProgressButtonDirective } from './base.progress.button.directive';
 
 @Component({

@@ -1,4 +1,4 @@
-import { ArrayOrValue, Maybe, convertMaybeToArray, findUnique, lastValue, PrimativeKey } from '@dereekb/util';
+import { ArrayOrValue, Maybe, convertMaybeToArray, findUnique, lastValue, PrimativeKey, separateValues } from '@dereekb/util';
 import { DbxInjectionComponentConfig, mergeDbxInjectionComponentConfigs } from '@dereekb/dbx-core';
 import { filterMaybe, SubscriptionObject, LoadingState, LoadingStateContextInstance, successResult, startWithBeginLoading } from '@dereekb/rxjs';
 import { ChangeDetectorRef, Directive, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
@@ -127,9 +127,9 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, M = unknown, H
 
   readonly searchResults$: Observable<ConfiguredSearchableValueFieldDisplayValue<T, M>[]> = this.searchResultsState$.pipe(map((x) => x?.value ?? []));
 
-  readonly _formControlValue$: Observable<T | T[]> = this.formControl$.pipe(switchMap((control) => control.valueChanges.pipe(startWith(control.value), shareReplay(1))));
+  readonly currentFormControlValue$: Observable<T | T[]> = this.formControl$.pipe(switchMap((control) => control.valueChanges.pipe(startWith(control.value), shareReplay(1))));
 
-  readonly values$: Observable<T[]> = this._formControlValue$.pipe(map(convertMaybeToArray), shareReplay(1));
+  readonly values$: Observable<T[]> = this.currentFormControlValue$.pipe(map(convertMaybeToArray), shareReplay(1));
 
   readonly displayValuesState$: Observable<LoadingState<ConfiguredSearchableValueFieldDisplayValue<T, M>[]>> = this.values$.pipe(
     distinctUntilChanged(),
@@ -228,8 +228,12 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, M = unknown, H
       mergeMap((displayMap) => {
         const mappingResult = values.map((x) => [x, this.hashForValue(x.value)] as [SearchableValueFieldValue<T, M>, H]).map(([x, hash], i) => [i, hash, x, displayMap.get(hash)] as [number, H, SearchableValueFieldValue<T, M>, ConfiguredSearchableValueFieldDisplayValue<T, M>]);
 
-        const hasDisplay = mappingResult.filter((x) => Boolean(x[3]));
-        const needsDisplay = mappingResult.filter((x) => !x[3]);
+        const {
+          //
+          included: hasDisplay,
+          excluded: needsDisplay
+        } = separateValues(mappingResult, (x) => Boolean(x[3]));
+
         let obs: Observable<ConfiguredSearchableValueFieldDisplayValue<T, M>[]>;
 
         if (needsDisplay.length > 0) {

@@ -292,7 +292,7 @@ export function iterablesAreSetEquivalent<T>(a: Maybe<Iterable<T>>, b: Maybe<Ite
  * @param b
  */
 export function setsAreEquivalent<T>(a: Maybe<Set<T>>, b: Maybe<Set<T>>): boolean {
-  return a && b ? a.size === b.size && symmetricDifferenceArrayBetweenSets(a, b).length === 0 : a == b;
+  return a && b ? a.size === b.size && setContainsAllValues(a, b) : a == b;
 }
 
 // MARK: Compat

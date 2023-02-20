@@ -16,3 +16,10 @@ export function sortByStringFunction<T>(readStringFn: ReadStringFunction<T>): So
     return as.localeCompare(bs);
   };
 }
+
+// MARK: Configured
+export interface SortByLabelInput {
+  label: string;
+}
+
+export const sortByLabelFunction: SortByStringFunction<SortByLabelInput> = sortByStringFunction((x) => x.label);

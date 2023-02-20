@@ -28,6 +28,8 @@ export abstract class AbstractProgressButtonDirective extends AbstractSubscripti
           working: options?.working || working,
           disabled: options?.disabled || disabled
         };
+
+        completeOptions.buttonIcon = completeOptions.buttonIcon || completeOptions.icon;
       }
 
       return completeOptions;
@@ -64,6 +66,7 @@ export abstract class AbstractProgressButtonDirective extends AbstractSubscripti
     this.options$.pipe(first()).subscribe((options) => {
       if (!options.disabled && !options.working) {
         this.btnClick.emit(event);
+        event.stopImmediatePropagation();
       }
     });
   }

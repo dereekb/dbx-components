@@ -2,8 +2,8 @@ import { safeDetectChanges } from '@dereekb/dbx-core';
 import { BehaviorSubject, map, Observable, of, delay, startWith, switchMap, Subject } from 'rxjs';
 import { ChangeDetectorRef, Component, OnDestroy, Type, OnInit } from '@angular/core';
 import { FormlyFieldConfig } from '@ngx-formly/core';
-import { dbxListField, filterPickableItemFieldValuesByLabel, pickableItemChipField, pickableItemListField, searchableChipField, searchableStringChipField, searchableTextField, SearchableValueFieldDisplayFn, SearchableValueFieldDisplayValue, SearchableValueFieldStringSearchFn, SearchableValueFieldValue, valueSelectionField, ValueSelectionOption } from '@dereekb/dbx-form';
-import { ListLoadingState, randomDelayWithRandomFunction, successResult } from '@dereekb/rxjs';
+import { dbxListField, filterPickableItemFieldValuesByLabel, pickableItemChipField, pickableItemListField, searchableChipField, searchableStringChipField, searchableTextField, SearchableValueFieldDisplayFn, SearchableValueFieldDisplayValue, SearchableValueFieldStringSearchFn, SearchableValueFieldValue, sourceSelectField, SourceSelectLoadSource, valueSelectionField, ValueSelectionOption, ValueSelectionOptionWithValue } from '@dereekb/dbx-form';
+import { ListLoadingState, randomDelayWithRandomFunction, successResult, beginLoading } from '@dereekb/rxjs';
 import { range, randomArrayFactory, randomNumberFactory, takeFront, readIndexNumber, IndexRef, ModelKey, searchStringFilterFunction } from '@dereekb/util';
 import { DocFormExampleSelectionValue, DocFormExampleSelectionValueId, EXAMPLE_DISPLAY_FOR_SELECTION_VALUE, EXAMPLE_DISPLAY_FOR_SELECTION_VALUE_WITH_CUSTOM_DISPLAYS, EXAMPLE_SEARCH_FOR_SELECTION_VALUE, MAKE_EXAMPLE_SELECTION_VALUE } from '../component/selection.example';
 import { DocFormExamplePrimarySearchableFieldDisplayComponent } from '../component/selection.example.view';
@@ -36,7 +36,7 @@ export const DISPLAY_FOR_STRING_VALUE: SearchableValueFieldDisplayFn<string> = (
 
 export const MAKE_RANDOM_STRING_VALUES = randomArrayFactory({ random: { min: 40, max: 40 }, make: () => ({ value: String(MAKE_EXAMPLE_SELECTION_VALUE().value) }) });
 
-export const VALUE_SELECTION_VALUES: ValueSelectionOption<number>[] = [
+export const VALUE_SELECTION_VALUES: ValueSelectionOptionWithValue<number>[] = [
   {
     label: 'First Value',
     value: 100
@@ -48,6 +48,24 @@ export const VALUE_SELECTION_VALUES: ValueSelectionOption<number>[] = [
   {
     label: 'Third Value',
     value: 300
+  }
+];
+
+export const MORE_VALUE_SELECTION_VALUES: ValueSelectionOptionWithValue<number>[] = [
+  {
+    label: 'Fourth Value',
+    value: 400
+  },
+  {
+    label: 'Fifth Value',
+    value: 500
+  }
+];
+
+export const EVEN_MORE_VALUE_SELECTION_VALUES: ValueSelectionOptionWithValue<number>[] = [
+  {
+    label: 'Sixth Value',
+    value: 500
   }
 ];
 
@@ -76,6 +94,73 @@ const EMBEDDED_SCHOOLS_FILTER_FUNCTION = searchStringFilterFunction<ExampleSearc
 export class DocFormSelectionComponent implements OnInit, OnDestroy {
   private _searchStrings = new BehaviorSubject<TestStringSearchFunction>((search) => ['A', 'B', 'C', 'D'].map((x) => `${search} ${x}`.trim()));
   readonly searchFn$ = this._searchStrings.asObservable();
+
+  readonly sourceSelectFields: FormlyFieldConfig[] = [
+    sourceSelectField<number, ValueSelectionOptionWithValue<number>>({
+      key: 'selectOne',
+      label: 'Select One',
+      description: 'This is a source selection field for picking a single value from various sources.',
+      valueReader: (x) => x.value,
+      metaLoader: (values) => of(values.map((x) => VALUE_SELECTION_VALUES.find((y) => y.value === x) as ValueSelectionOptionWithValue<number>)),
+      displayForValue: (input) => of(input.map((y) => ({ ...y, label: String(y.meta.label) }))),
+      loadSources: () => {
+        const sources: SourceSelectLoadSource<ValueSelectionOptionWithValue<number>>[] = [];
+        sources.push({ label: 'Source A', meta: of(successResult(VALUE_SELECTION_VALUES)) });
+        sources.push({ label: 'Source B', meta: of(successResult([...VALUE_SELECTION_VALUES, ...MORE_VALUE_SELECTION_VALUES])) }); // repeat values are ignored.
+        return of(sources);
+      }
+    }),
+    sourceSelectField({
+      key: 'selectMany',
+      label: 'Select Many',
+      multiple: true,
+      description: 'This is a source selection field for picking a multiple values from various sources.',
+      valueReader: (x) => x.value,
+      metaLoader: (values) => of(values.map((x) => VALUE_SELECTION_VALUES.find((y) => y.value === x) as ValueSelectionOptionWithValue<number>)),
+      displayForValue: (input) => of(input.map((y) => ({ ...y, label: String(y.meta.label) }))),
+      loadSources: () => {
+        const sources: SourceSelectLoadSource<ValueSelectionOptionWithValue<number>>[] = [];
+        sources.push({ label: 'Source A', meta: of(successResult(VALUE_SELECTION_VALUES)) });
+        sources.push({ label: 'Source B', meta: of(successResult([...VALUE_SELECTION_VALUES, ...MORE_VALUE_SELECTION_VALUES])) }); // repeat values are ignored.
+        return of(sources);
+      }
+    }),
+    sourceSelectField({
+      key: 'selectManyLoading',
+      label: 'Select Many Loading',
+      multiple: true,
+      description: 'This source demonstrates the loading bar showing while a source is being loaded.',
+      valueReader: (x) => x.value,
+      metaLoader: (values) => of(values.map((x) => VALUE_SELECTION_VALUES.find((y) => y.value === x) as ValueSelectionOptionWithValue<number>)),
+      displayForValue: (input) => of(input.map((y) => ({ ...y, label: String(y.meta.label) }))),
+      loadSources: () => {
+        const sources: SourceSelectLoadSource<ValueSelectionOptionWithValue<number>>[] = [];
+        sources.push({ label: 'Source A', meta: of(successResult(VALUE_SELECTION_VALUES)) });
+        sources.push({ label: 'Source B', meta: of(beginLoading<ValueSelectionOptionWithValue<number>[]>()) }); // demonstrates loading from another source
+        return of(sources);
+      }
+    }),
+    sourceSelectField({
+      key: 'selectManyWithSourceButton',
+      label: 'Select With Source Button',
+      multiple: true,
+      description: 'This source demonstrates the source selection button. The button can be configured to return both options to select immediately or options to add to the list.',
+      selectButtonIcon: 'search',
+      valueReader: (x) => x.value,
+      metaLoader: (values) => of(values.map((x) => VALUE_SELECTION_VALUES.find((y) => y.value === x) as ValueSelectionOptionWithValue<number>)),
+      displayForValue: (input) => of(input.map((y) => ({ ...y, label: String(y.meta.label) }))),
+      loadSources: () => {
+        const sources: SourceSelectLoadSource<ValueSelectionOptionWithValue<number>>[] = [];
+        sources.push({ label: 'Source A', meta: of(successResult(VALUE_SELECTION_VALUES)) });
+        return of(sources);
+      },
+      openSource: () => of({ select: EVEN_MORE_VALUE_SELECTION_VALUES, options: MORE_VALUE_SELECTION_VALUES }).pipe(delay(2000))
+    })
+  ];
+
+  readonly sourceSelectFieldsValue = {
+    selectManyLoading: [VALUE_SELECTION_VALUES[1].value] // will have a value already selected
+  };
 
   readonly valueSelectionFields: FormlyFieldConfig[] = [
     valueSelectionField({

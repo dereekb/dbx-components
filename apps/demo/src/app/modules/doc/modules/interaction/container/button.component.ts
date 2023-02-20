@@ -105,6 +105,22 @@ export class DocInteractionButtonComponent {
     mode: 'indeterminate'
   };
 
+  spinnerButtonOptions8: DbxProgressButtonOptions = {
+    working: false,
+    spinnerSize: 19,
+    raised: false,
+    stroked: false,
+    flat: true,
+    buttonColor: 'primary',
+    spinnerColor: 'accent',
+    fullWidth: false,
+    disabled: false,
+    buttonIcon: {
+      fontIcon: 'settings'
+    },
+    mode: 'indeterminate'
+  };
+
   spinnerButtonOptions4: DbxProgressButtonOptions = {
     working: false,
     text: 'Fab',
@@ -118,9 +134,8 @@ export class DocInteractionButtonComponent {
     fullWidth: false,
     disabled: false,
     mode: 'indeterminate',
-    icon: {
-      fontIcon: 'settings',
-      inline: true
+    buttonIcon: {
+      fontIcon: 'settings'
     }
   };
 
@@ -140,9 +155,8 @@ export class DocInteractionButtonComponent {
     fullWidth: false,
     disabled: false,
     mode: 'indeterminate',
-    icon: {
-      fontIcon: 'settings',
-      inline: true
+    buttonIcon: {
+      fontIcon: 'settings'
     }
   };
 
