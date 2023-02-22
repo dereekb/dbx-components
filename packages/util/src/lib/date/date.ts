@@ -143,3 +143,18 @@ export const MINUTES_IN_HOUR = 60;
 export const MS_IN_MINUTE = 1000 * 60;
 export const MS_IN_HOUR = MS_IN_MINUTE * 60;
 export const MS_IN_DAY = MS_IN_HOUR * 24;
+
+/**
+ * Day of the month, 1-31
+ */
+export type DayOfMonth = number;
+
+/**
+ * Month of the year, 1-12
+ */
+export type MonthOfYear = number;
+
+/**
+ * Year number. I.E. 2022
+ */
+export type YearNumber = number;
