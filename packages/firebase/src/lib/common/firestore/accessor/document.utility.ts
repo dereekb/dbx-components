@@ -60,6 +60,22 @@ export function getDocumentSnapshotPairs<D extends FirestoreDocument<any>>(docum
   return PromiseUtility.runTasksForValues(documents, (document) => document.accessor.get().then((snapshot) => ({ document, snapshot })));
 }
 
+export type FirestoreDocumentSnapshotDataPair<D extends FirestoreDocument<any>> = {
+  document: D;
+  snapshot: DocumentSnapshot<FirestoreDocumentData<D>>;
+  data: Maybe<FirestoreDocumentData<D>>;
+};
+
+export function getDocumentSnapshotDataPairs<D extends FirestoreDocument<any>>(documents: D[]): Promise<FirestoreDocumentSnapshotDataPair<D>[]> {
+  return PromiseUtility.runTasksForValues(documents, (document) => document.accessor.get().then((snapshot) => ({ document, snapshot, data: snapshot.data() })));
+}
+
+export type FirestoreDocumentSnapshotDataTuple<D extends FirestoreDocument<any>> = [D, Maybe<FirestoreDocumentData<D>>];
+
+export function getDocumentSnapshotDataTuples<D extends FirestoreDocument<any>>(documents: D[]): Promise<FirestoreDocumentSnapshotDataTuple<D>[]> {
+  return PromiseUtility.runTasksForValues(documents, (document) => document.accessor.get().then((snapshot) => [document, snapshot.data()]));
+}
+
 export function getDocumentSnapshotsData<D extends FirestoreDocument<any>>(documents: D[]): Promise<DocumentDataWithIdAndKey<FirestoreDocumentData<D>>[]>;
 export function getDocumentSnapshotsData<D extends FirestoreDocument<any>>(documents: D[], withId: true): Promise<DocumentDataWithIdAndKey<FirestoreDocumentData<D>>[]>;
 export function getDocumentSnapshotsData<D extends FirestoreDocument<any>>(documents: D[], withId: false): Promise<FirestoreDocumentData<D>[]>;
