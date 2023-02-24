@@ -555,6 +555,20 @@ export function readFirestoreModelKey<T = unknown>(input: ReadFirestoreModelKeyI
   return key;
 }
 
+export const FIRESTORE_DUMMY_MODEL_KEY = 'dummymodel/dummykey';
+
+/**
+ * Dummy value used to pass validations or other cases where a key is required but ultimately not used. Is not meant to reference a real model.
+ */
+export type FirestoreDummyModelKey = typeof FIRESTORE_DUMMY_MODEL_KEY;
+
+/**
+ * Returns the FirestoreDummyModelKey value.
+ */
+export function firestoreDummyKey(): FirestoreDummyModelKey {
+  return FIRESTORE_DUMMY_MODEL_KEY;
+}
+
 /**
  * Reference to a FirestoreModelKey
  */
