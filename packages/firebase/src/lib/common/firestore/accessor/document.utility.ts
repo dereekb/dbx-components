@@ -115,8 +115,8 @@ export function loadDocumentsForKeys<T, D extends FirestoreDocument<T>>(accessor
   return keys.map((x) => accessor.loadDocumentForKey(x));
 }
 
-export function loadDocumentsForIdsFromValues<I, T, D extends FirestoreDocument<T>>(accessor: LimitedFirestoreDocumentAccessor<T, D>, values: I[], getId: (value: I) => FirestoreModelId): D[] {
-  return loadDocumentsForKeys(accessor, values.map(getId));
+export function loadDocumentsForIdsFromValues<I, T, D extends FirestoreDocument<T>>(accessor: FirestoreDocumentAccessor<T, D>, values: I[], getId: (value: I) => FirestoreModelId): D[] {
+  return loadDocumentsForIds(accessor, values.map(getId));
 }
 
 export function loadDocumentsForIds<T, D extends FirestoreDocument<T>>(accessor: FirestoreDocumentAccessor<T, D>, ids: FirestoreModelId[]): D[] {
