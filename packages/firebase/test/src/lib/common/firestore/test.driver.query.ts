@@ -2,8 +2,8 @@ import { startOfDay, addDays, addHours } from 'date-fns';
 import { expectFail, itShouldFail } from '@dereekb/util/test';
 import { SubscriptionObject } from '@dereekb/rxjs';
 import { filter, first, from, skip } from 'rxjs';
-import { firestoreIdBatchVerifierFactory, limit, orderBy, startAfter, startAt, where, limitToLast, endAt, endBefore, makeDocuments, FirestoreQueryFactoryFunction, startAtValue, endAtValue, whereDocumentId, FirebaseAuthUserId, whereDateIsBetween, whereDateIsInRange, whereDateIsBefore, whereDateIsOnOrAfter } from '@dereekb/firebase';
-import { MockItemCollectionFixture, allChildMockItemSubItemDeepsWithinMockItem, MockItemDocument, MockItem, MockItemSubItemDocument, MockItemSubItem, MockItemSubItemDeepDocument, MockItemSubItemDeep, MockItemUserDocument } from '../mock';
+import { firestoreIdBatchVerifierFactory, limit, orderBy, startAfter, startAt, where, limitToLast, endAt, endBefore, makeDocuments, FirestoreQueryFactoryFunction, startAtValue, endAtValue, whereDocumentId, FirebaseAuthUserId, whereDateIsBetween, whereDateIsInRange, whereDateIsBefore, whereDateIsOnOrAfter, whereStringValueHasPrefix } from '@dereekb/firebase';
+import { MockItemCollectionFixture, allChildMockItemSubItemDeepsWithinMockItem, MockItemDocument, MockItem, MockItemSubItemDocument, MockItemSubItem, MockItemSubItemDeepDocument, MockItemSubItemDeep, MockItemUserDocument, mockItemIdentity } from '../mock';
 import { arrayFactory, idBatchFactory, isEvenNumber, mapGetter, randomFromArrayFactory, randomNumberFactory, unique, waitForMs } from '@dereekb/util';
 import { DateRangeType } from '@dereekb/date';
 
@@ -592,6 +592,47 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
           });
 
           describe('Compound Queries', () => {
+            describe('Searching Strings', () => {
+              describe('whereStringValueHasPrefix()', () => {
+                /*
+                  Create models that have model key like string values for prefix searching.
+                 */
+                const evenPrefix = mockItemIdentity.collectionType + '/';
+                const oddPrefix = mockItemIdentity.collectionType + 'd' + '/'; // similar, but not quite the same
+
+                const expectedNumberOfEvenValues = Math.ceil(testDocumentCount / 2);
+
+                beforeEach(async () => {
+                  items = await makeDocuments(f.instance.firestoreCollection.documentAccessor(), {
+                    count: testDocumentCount,
+                    init: (i) => {
+                      const isEven = isEvenNumber(i);
+                      const prefix = isEven ? evenPrefix : oddPrefix;
+
+                      return {
+                        value: `${prefix}${i}`,
+                        date: new Date(),
+                        tags: [],
+                        test: true
+                      };
+                    }
+                  });
+                });
+
+                it('should return only models with searched prefix', async () => {
+                  const result = await query(whereStringValueHasPrefix<MockItem>('value', evenPrefix)).getDocs();
+                  const values = result.docs.map((x) => x.data().value as string);
+                  console.log({ values });
+
+                  values.forEach((x) => {
+                    expect(x.startsWith(evenPrefix));
+                  });
+
+                  expect(result.docs.length).toBe(expectedNumberOfEvenValues);
+                });
+              });
+            });
+
             /**
              * Since we choose to store dates as strings, we can compare ranges of dates.
              */

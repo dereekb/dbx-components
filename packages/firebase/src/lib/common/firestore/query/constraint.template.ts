@@ -44,6 +44,19 @@ export function allChildDocumentsUnderRelativePath<T = object>(orderByFieldPath:
   return [orderBy(orderByFieldPath as FieldPathOrStringPath, sortDirection), startAtValue(parentValue), endAtValue(parentValue + UTF_PRIVATE_USAGE_AREA_START)];
 }
 
+/**
+ * Searches a specified field for string values that have a specific prefix.
+ *
+ * @param orderByFieldPath
+ * @param parentValue
+ * @param sortDirection
+ */
+export function whereStringValueHasPrefix<T>(orderByFieldPath: StringKeyPropertyKeys<T>, parentValue: string, sortDirection?: OrderByDirection): FirestoreQueryConstraint[];
+export function whereStringValueHasPrefix(orderByFieldPath: FieldPathOrStringPath, parentValue: string, sortDirection?: OrderByDirection): FirestoreQueryConstraint[];
+export function whereStringValueHasPrefix<T = object>(orderByFieldPath: FieldPathOrStringPathOf<T> | FieldPathOrStringPath, value: string, sortDirection?: OrderByDirection): FirestoreQueryConstraint[] {
+  return [orderBy(orderByFieldPath as FieldPathOrStringPath, sortDirection), startAtValue(value), endAtValue(value + UTF_PRIVATE_USAGE_AREA_START)];
+}
+
 // MARK: Dates
 /**
  * Searches dates that follow between the dates derived from the input. Excludes the end date.
