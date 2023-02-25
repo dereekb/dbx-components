@@ -1,5 +1,6 @@
 import { DateRange, dateRange, DateRangeInput } from '@dereekb/date';
 import { StringKeyPropertyKeys, UTF_8_START_CHARACTER, UTF_PRIVATE_USAGE_AREA_START } from '@dereekb/util';
+import { RootFirestoreModelIdentity } from '../collection/collection';
 import { DocumentReference, FieldPathOrStringPath, FieldPathOrStringPathOf } from '../types';
 import { endAtValue, FirestoreQueryConstraint, orderByDocumentId, startAtValue, orderBy, OrderByDirection, where } from './constraint';
 
@@ -42,6 +43,30 @@ export function allChildDocumentsUnderRelativePath<T>(orderByFieldPath: StringKe
 export function allChildDocumentsUnderRelativePath(orderByFieldPath: FieldPathOrStringPath, parentValue: string, sortDirection?: OrderByDirection): FirestoreQueryConstraint[];
 export function allChildDocumentsUnderRelativePath<T = object>(orderByFieldPath: FieldPathOrStringPathOf<T> | FieldPathOrStringPath, parentValue: string, sortDirection?: OrderByDirection): FirestoreQueryConstraint[] {
   return [orderBy(orderByFieldPath as FieldPathOrStringPath, sortDirection), startAtValue(parentValue), endAtValue(parentValue + UTF_PRIVATE_USAGE_AREA_START)];
+}
+
+/**
+ * Searches a specified field for string values that start with a model key's collection type.
+ *
+ * @param orderByFieldPath
+ * @param parentValue
+ * @param sortDirection
+ */
+export function whereStringHasRootIdentityModelKey<T = object>(orderByFieldPath: FieldPathOrStringPathOf<T> | FieldPathOrStringPath, value: RootFirestoreModelIdentity, sortDirection?: OrderByDirection): FirestoreQueryConstraint[] {
+  return whereStringValueHasPrefix(orderByFieldPath as FieldPathOrStringPath, `${value.collectionType}/`, sortDirection);
+}
+
+/**
+ * Searches a specified field for string values that have a specific prefix.
+ *
+ * @param orderByFieldPath
+ * @param parentValue
+ * @param sortDirection
+ */
+export function whereStringValueHasPrefix<T>(orderByFieldPath: StringKeyPropertyKeys<T>, parentValue: string, sortDirection?: OrderByDirection): FirestoreQueryConstraint[];
+export function whereStringValueHasPrefix(orderByFieldPath: FieldPathOrStringPath, parentValue: string, sortDirection?: OrderByDirection): FirestoreQueryConstraint[];
+export function whereStringValueHasPrefix<T = object>(orderByFieldPath: FieldPathOrStringPathOf<T> | FieldPathOrStringPath, value: string, sortDirection?: OrderByDirection): FirestoreQueryConstraint[] {
+  return [orderBy(orderByFieldPath as FieldPathOrStringPath, sortDirection), startAtValue(value), endAtValue(value + UTF_PRIVATE_USAGE_AREA_START)];
 }
 
 // MARK: Dates
