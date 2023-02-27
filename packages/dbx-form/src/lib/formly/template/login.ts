@@ -3,6 +3,7 @@ import { EmailFieldConfig, emailField } from '../field/value/text/text.additiona
 import { fieldValuesAreEqualValidator } from '../../validator/field';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { capitalizeFirstLetter, Maybe } from '@dereekb/util';
+import { MaterialFormFieldConfig } from '../field/field';
 
 /**
  * Convenience interface for the password parameters configuration for a TextPasswordField.
@@ -12,7 +13,7 @@ export type TextPasswordFieldPasswordParameters = Partial<Pick<TextFieldConfig, 
 /**
  * textPasswordField() configuration.
  */
-export interface TextPasswordFieldConfig extends Omit<TextFieldConfig, 'inputType' | 'key'>, Partial<Pick<TextFieldConfig, 'key'>> {}
+export interface TextPasswordFieldConfig extends Omit<TextFieldConfig, 'inputType' | 'key'>, Partial<Pick<TextFieldConfig, 'key' | 'materialFormField'>> {}
 
 /**
  * Configured simple text password field.

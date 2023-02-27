@@ -32,7 +32,7 @@ export const DISPLAY_FOR_TIMEZONE_STRING_VALUE: SearchableValueFieldDisplayFn<st
 /**
  * textPasswordField() configuration.
  */
-export interface TimezoneStringFieldConfig extends Omit<SearchableTextFieldConfig<TimezoneString, TimezoneInfo>, 'inputType' | 'searchOnEmptyText' | 'search' | 'displayForValue' | 'key'>, Partial<Pick<SearchableTextFieldConfig<TimezoneString, TimezoneInfo>, 'key'>> {}
+export interface TimezoneStringFieldConfig extends Omit<SearchableTextFieldConfig<TimezoneString, TimezoneInfo>, 'inputType' | 'searchOnEmptyText' | 'search' | 'displayForValue' | 'key'>, Partial<Pick<SearchableTextFieldConfig<TimezoneString, TimezoneInfo>, 'key' | 'materialFormField'>> {}
 
 /**
  * Template for login field that takes in a username and password.

@@ -1,25 +1,26 @@
 import { Maybe } from '@dereekb/util';
 import { FormlyFieldConfig } from '@ngx-formly/core';
-import { textField } from '../field';
+import { MaterialFormFieldConfig, textField } from '../field';
 
 export interface DbxFormSearchFormFieldsValue {
   search: string;
 }
 
-export interface DbxFormSearchFormFieldsConfig {
+export interface DbxFormSearchFormFieldsConfig extends MaterialFormFieldConfig {
   label?: string;
   placeholder?: string;
 }
 
 export function dbxFormSearchFormFields(config: Maybe<DbxFormSearchFormFieldsConfig>): FormlyFieldConfig[] {
-  const { label = ' ', placeholder = 'Search' } = config || {};
+  const { label = ' ', placeholder = 'Search', materialFormField } = config || {};
 
   return [
     textField({
       key: 'search',
       label,
       placeholder,
-      autocomplete: false
+      autocomplete: false,
+      materialFormField
     })
   ];
 }
