@@ -10,6 +10,18 @@ import { DbxPopoverKey } from '../popover/popover';
 
 export interface DbxFilterComponentParams<F extends object = object, P extends string = string> {
   /**
+   * Custom icon
+   *
+   * Defaults to "filter_list"
+   */
+  icon?: string;
+  /**
+   * Custom header text
+   *
+   * Defaults to "Filter"
+   */
+  header?: string;
+  /**
    * Custom filter component to initialize.
    */
   customFilterComponentClass?: Type<FilterSource<F>>;
@@ -88,12 +100,14 @@ export class DbxFilterPopoverComponent<F extends object> extends AbstractPopover
     })
   );
 
-  static openPopover<F extends object>(popupService: DbxPopoverService, { origin, initialFilterObs: inputSource, connector, customFilterComponentClass, presetFilterComponentClass }: DbxFilterPopoverComponentParams<F>, popoverKey?: DbxPopoverKey): NgPopoverRef {
+  static openPopover<F extends object>(popupService: DbxPopoverService, { origin, header, icon, initialFilterObs: inputSource, connector, customFilterComponentClass, presetFilterComponentClass }: DbxFilterPopoverComponentParams<F>, popoverKey?: DbxPopoverKey): NgPopoverRef {
     return popupService.open({
       key: popoverKey ?? DEFAULT_FILTER_POPOVER_KEY,
       origin,
       componentClass: DbxFilterPopoverComponent,
       data: {
+        header,
+        icon,
         initialFilterObs: inputSource,
         connector,
         customFilterComponentClass,
@@ -108,6 +122,14 @@ export class DbxFilterPopoverComponent<F extends object> extends AbstractPopover
 
   get config(): DbxFilterComponentParams<F> {
     return this.popover.data as DbxFilterComponentParams<F>;
+  }
+
+  get icon() {
+    return this.config.icon ?? 'filter_list';
+  }
+
+  get header() {
+    return this.config.header ?? 'Filter';
   }
 
   ngOnInit(): void {

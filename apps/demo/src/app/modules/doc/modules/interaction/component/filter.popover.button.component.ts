@@ -15,6 +15,8 @@ import { Maybe } from '@dereekb/util';
 })
 export class DocInteractionTestFilterPopoverButtonComponent {
   readonly config: DbxFilterButtonConfig<DocInteractionTestFilter> = {
+    icon: 'settings',
+    header: 'Custom Header',
     customFilterComponentClass: DocInteractionTestFilterCustomFilterComponent,
     presetFilterComponentClass: DocInteractionTestFilterPresetFilterComponent,
     connector: this.filterSourceConnector,
