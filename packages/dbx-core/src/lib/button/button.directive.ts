@@ -2,7 +2,7 @@ import { Directive, Input, Output, EventEmitter, OnDestroy, OnInit } from '@angu
 import { Maybe } from '@dereekb/util';
 import { BehaviorSubject, of, Subject, filter, first, switchMap } from 'rxjs';
 import { AbstractSubscriptionDirective } from '../subscription';
-import { DbxButton, DbxButtonInterceptor, provideDbxButton } from './button';
+import { DbxButton, DbxButtonDisplayContent, DbxButtonInterceptor, provideDbxButton } from './button';
 
 /**
  * Abstract button component.
@@ -38,6 +38,19 @@ export abstract class AbstractDbxButtonDirective extends AbstractSubscriptionDir
 
   @Input()
   text?: Maybe<string>;
+
+  @Input()
+  get buttonDisplay(): DbxButtonDisplayContent {
+    return {
+      icon: this.icon,
+      text: this.text
+    };
+  }
+
+  set buttonDisplay(buttonDisplay: Maybe<DbxButtonDisplayContent>) {
+    this.icon = buttonDisplay?.icon;
+    this.text = buttonDisplay?.text;
+  }
 
   @Output()
   readonly buttonClick = new EventEmitter();

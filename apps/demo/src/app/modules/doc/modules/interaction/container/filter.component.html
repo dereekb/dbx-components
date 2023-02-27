@@ -1,15 +1,15 @@
 <!-- Filter Map is provided up here. -->
 <dbx-content-container>
-  <doc-feature-layout header="Filter" hint="The filter module provides functionality for displaying a filter in a popover that can update a DbxFilterMap.">
+  <doc-feature-layout header="Filter" hint="The filter module provides functionality for displaying popovers and controls for filters that can update a DbxFilterMap.">
     <!-- Examples -->
     <doc-feature-example header="dbx-filter-popover-button" hint='Component that can display optionally both a "custom" and "preset" filter view for configuring a single filter.'>
       <dbx-content-border>
         <p>Filter Value: {{ filter$ | async | json }}</p>
       </dbx-content-border>
       <p>The filter popup will close by default when the filter updates/changes.</p>
-      <ng-container>
-        <doc-interaction-test-filter-popover-button [dbxFilterMapSourceConnector]="buttonFilterKey"></doc-interaction-test-filter-popover-button>
-      </ng-container>
+      <doc-interaction-test-filter-popover-button [dbxFilterMapSourceConnector]="buttonFilterKey"></doc-interaction-test-filter-popover-button>
+      <p>The button itself can be configured using the buttonDisplay property.</p>
+      <doc-interaction-test-filter-popover-button [buttonDisplay]="displayForFilter$ | async" [dbxFilterMapSourceConnector]="buttonFilterKey"></doc-interaction-test-filter-popover-button>
     </doc-feature-example>
     <doc-feature-example header="dbx-preset-filter-menu" hint="Component that displays a menu button and allows quick selection of preset filters.">
       <dbx-content-border>

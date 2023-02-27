@@ -1,14 +1,16 @@
 import { FilterSource, FilterSourceConnector } from '@dereekb/rxjs';
 import { DbxFilterButtonConfig } from '@dereekb/dbx-web';
-import { Component } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { DocInteractionTestFilterCustomFilterComponent } from './filter.custom.component';
 import { DocInteractionTestFilterPresetFilterComponent } from './filter.preset.component';
 import { DocInteractionTestFilter } from './filter';
+import { DbxButtonDisplayContent } from '@dereekb/dbx-core';
+import { Maybe } from '@dereekb/util';
 
 @Component({
   selector: 'doc-interaction-test-filter-popover-button',
   template: `
-    <dbx-filter-popover-button [config]="config"></dbx-filter-popover-button>
+    <dbx-filter-popover-button [buttonDisplay]="buttonDisplay" [config]="config"></dbx-filter-popover-button>
   `
 })
 export class DocInteractionTestFilterPopoverButtonComponent {
@@ -20,4 +22,7 @@ export class DocInteractionTestFilterPopoverButtonComponent {
   };
 
   constructor(readonly filterSourceConnector: FilterSourceConnector, readonly filterSource: FilterSource<DocInteractionTestFilter>) {}
+
+  @Input()
+  buttonDisplay?: Maybe<DbxButtonDisplayContent>;
 }

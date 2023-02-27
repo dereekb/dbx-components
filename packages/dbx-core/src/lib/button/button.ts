@@ -14,7 +14,21 @@ export interface DbxButtonInterceptor {
   interceptButtonClick: () => Observable<boolean>;
 }
 
-export abstract class DbxButton {
+/**
+ * Text and icon display content for a button.
+ */
+export interface DbxButtonDisplayContent {
+  /**
+   * button Icon, if applicable
+   */
+  icon?: Maybe<string>;
+  /**
+   * button text, if applicable
+   */
+  text?: Maybe<string>;
+}
+
+export abstract class DbxButton implements DbxButtonDisplayContent {
   abstract readonly disabled$: Observable<boolean>;
   abstract readonly working$: Observable<boolean>;
   abstract disabled: Maybe<boolean>;
@@ -33,4 +47,29 @@ export function provideDbxButton<S extends DbxButton>(sourceType: Type<S>): Prov
       useExisting: forwardRef(() => sourceType)
     }
   ];
+}
+
+// MARK: Display
+export type DbxButtonDisplayContentType = 'text_button' | 'icon_button';
+
+/**
+ * Delegate class used for retrieving the DbxButtonDisplayContent given an input value.
+ */
+export interface DbxButtonDisplayDelegate<T> {
+  /**
+   * Returns the DbxButtonDisplayContent for the input value.
+   *
+   * @param value
+   */
+  buttonDisplayContentForValue(value: T): DbxButtonDisplayContent;
+}
+
+/**
+ * Returns the DbxButtonDisplayContentType given the input content.
+ *
+ * @param content
+ * @returns
+ */
+export function dbxButtonDisplayContentType(content: DbxButtonDisplayContent): DbxButtonDisplayContentType {
+  return !content.text && content.icon ? 'icon_button' : 'text_button';
 }
