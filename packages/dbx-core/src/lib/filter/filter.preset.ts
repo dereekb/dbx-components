@@ -2,7 +2,7 @@ import { FilterPresetStringRef, FilterWithPreset, FilterWithPresetOptional } fro
 import { EmptyObject, GetterOrValue } from '@dereekb/util';
 import { ClickableAnchorLink } from '../router/anchor/anchor';
 
-export interface ClickableFilterPreset<F extends FilterWithPreset<P>, P extends string = string> extends Pick<ClickableAnchorLink, 'title' | 'icon' | 'disabled'>, FilterPresetStringRef {
+export interface ClickableFilterPreset<F extends FilterWithPreset<P>, P extends string = string> extends Pick<ClickableAnchorLink, 'title' | 'icon' | 'disabled'>, FilterPresetStringRef<P> {
   /**
    * GetterOrValue that retrieves the filter for this preset.
    *
