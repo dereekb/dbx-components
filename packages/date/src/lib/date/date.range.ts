@@ -1,4 +1,4 @@
-import { Building, FactoryWithRequiredInput, Maybe } from '@dereekb/util';
+import { Building, FactoryWithRequiredInput, MapFunction, Maybe } from '@dereekb/util';
 import { Expose, Type } from 'class-transformer';
 import { IsEnum, IsOptional, IsDate, IsNumber } from 'class-validator';
 import { addDays, addHours, differenceInDays, endOfDay, endOfMonth, endOfWeek, isAfter, isDate, isPast, startOfDay, startOfMinute, startOfMonth, startOfWeek } from 'date-fns';
@@ -269,6 +269,90 @@ export function dateRange({ type = DateRangeType.DAYS_RANGE, date = new Date(), 
   };
 }
 
+/**
+ * Function that iterates dates within a date range at a pre-configured iteration step.
+ */
+export type IterateDatesInDateRangeFunction = <T = void>(dateRange: DateRange, forEachFn: (date: Date) => T) => T[];
+
+/**
+ * Returns the next value to iterate on.
+ */
+export type IterateDaysGetNextValueFunction = MapFunction<Date, Date>;
+
+export interface IterateDaysInDateRangeFunctionConfig {
+  /**
+   * (Optiona) Max expansion size for expanding a date range.
+   *
+   * If the expected expansion is larger than this size, an exception is thrown.
+   *
+   * If 0 or false, there is no max size.
+   *
+   * Defaults to 4000 days.
+   */
+  readonly maxIterations?: number | 0 | false;
+  /**
+   * Whether or not to throw an error when the max iteration size is reached.
+   *
+   * True by default.
+   */
+  readonly throwErrorOnMaxIterations?: boolean;
+  readonly getNextDate: IterateDaysGetNextValueFunction;
+}
+
+export const DEFAULT_ITERATE_DAYS_IN_DATE_RANGE_MAX_ITERATIONS = 4000;
+
+export type IterateDaysInDateRangeFunctionConfigInput = IterateDaysInDateRangeFunctionConfig | IterateDaysGetNextValueFunction;
+
+/**
+ * Creates an IterateDaysInDateRangeFunction
+ *
+ * @param getNextDate
+ * @returns
+ */
+export function iterateDaysInDateRangeFunction(input: IterateDaysInDateRangeFunctionConfigInput): IterateDatesInDateRangeFunction {
+  const config = typeof input === 'function' ? { getNextDate: input } : input;
+  const { maxIterations: inputMaxIterations = DEFAULT_ITERATE_DAYS_IN_DATE_RANGE_MAX_ITERATIONS, throwErrorOnMaxIterations = true, getNextDate } = config;
+  const maxIterations: number = inputMaxIterations ? inputMaxIterations : Number.MAX_SAFE_INTEGER;
+
+  return <T>({ start, end }: DateRange, forEachFn: (date: Date) => T) => {
+    let current = start;
+    const results: T[] = [];
+
+    while (!isAfter(current, end)) {
+      const result = forEachFn(current);
+      results.push(result);
+      current = getNextDate(current);
+
+      if (results.length >= maxIterations) {
+        if (throwErrorOnMaxIterations) {
+          throw new Error(`iterateDaysInDateRangeFunction() reached max configured iterations of ${maxIterations}`);
+        } else {
+          break;
+        }
+      }
+    }
+
+    return results as any;
+  };
+}
+
+/**
+ * Iterates date values within the given DateRange.
+ */
+export function iterateDaysInDateRange(dateRange: DateRange, forEachFn: (date: Date) => void, getNextDate: (date: Date) => Date): void;
+export function iterateDaysInDateRange<T>(dateRange: DateRange, forEachFn: (date: Date) => T, getNextDate: (date: Date) => Date): T[];
+export function iterateDaysInDateRange<T = void>(dateRange: DateRange, forEachFn: (date: Date) => T, getNextDate: (date: Date) => Date): T extends void ? void : T[] {
+  return iterateDaysInDateRangeFunction(getNextDate)(dateRange, forEachFn) as any;
+}
+
+/**
+ * Iterates each day in the date range, starting from the start date.
+ *
+ * @param dateRange
+ * @param forEachFn
+ */
+export const forEachDayInDateRange: IterateDatesInDateRangeFunction = iterateDaysInDateRangeFunction((current) => addDays(current, 1));
+
 export interface ExpandDaysForDateRangeConfig {
   /**
    * (Optiona) Max expansion size for expanding a date range.
@@ -295,7 +379,9 @@ export function expandDaysForDateRangeFunction(config: ExpandDaysForDateRangeCon
   const { maxExpansionSize: inputMaxExpansionSize = DEFAULT_EXPAND_DAYS_FOR_DATE_RANGE_MAX_EXPANSION_SIZE } = config;
   const maxExpansionSize = inputMaxExpansionSize ? inputMaxExpansionSize : Number.MAX_SAFE_INTEGER;
 
-  return ({ start, end }: DateRange) => {
+  return (dateRange: DateRange) => {
+    const { start, end } = dateRange;
+
     // check the expansion isn't too large
     const distance = Math.abs(differenceInDays(start, end));
 
@@ -303,14 +389,7 @@ export function expandDaysForDateRangeFunction(config: ExpandDaysForDateRangeCon
       throw new Error(`Attempted to expand days past the max expansion size of "${distance}"`);
     }
 
-    const dates: Date[] = [];
-    let current = start;
-
-    while (!isAfter(current, end)) {
-      dates.push(current);
-      current = addDays(current, 1);
-    }
-
+    const dates: Date[] = forEachDayInDateRange(dateRange, (x) => x);
     return dates;
   };
 }

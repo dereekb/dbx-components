@@ -1,5 +1,34 @@
-import { startOfDay, addDays, addHours } from 'date-fns';
-import { dateRange, dateRangeOverlapsDateRangeFunction, DateRangeType, expandDaysForDateRangeFunction, isDateInDateRangeFunction, isDateRangeInDateRangeFunction } from './date.range';
+import { itShouldFail, expectFail } from '@dereekb/util/test';
+import { startOfDay, addDays, addHours, addWeeks } from 'date-fns';
+import { dateRange, dateRangeOverlapsDateRangeFunction, DateRangeType, expandDaysForDateRangeFunction, isDateInDateRangeFunction, isDateRangeInDateRangeFunction, iterateDaysInDateRangeFunction } from './date.range';
+
+describe('iterateDaysInDateRangeFunction()', () => {
+  describe('function', () => {
+    describe('maxIterations', () => {
+      it('should only iterate to the maximum number of iterations when throwErrorOnMaxIterations=false', () => {
+        const maxIterations = 10;
+        const fn = iterateDaysInDateRangeFunction({
+          maxIterations,
+          throwErrorOnMaxIterations: false, // don't throw the error
+          getNextDate: (x) => addDays(x, 1)
+        });
+
+        const result = fn({ start: new Date(), end: addWeeks(new Date(), 20) }, (x) => x);
+        expect(result.length).toBe(maxIterations);
+      });
+
+      itShouldFail('should throw an error after reaching the maximum number of iterations by default', () => {
+        const maxIterations = 10;
+        const fn = iterateDaysInDateRangeFunction({
+          maxIterations,
+          getNextDate: (x) => addDays(x, 1)
+        });
+
+        expectFail(() => fn({ start: new Date(), end: addWeeks(new Date(), 20) }, (x) => x));
+      });
+    });
+  });
+});
 
 describe('expandDaysForDateRangeFunction()', () => {
   describe('function', () => {
