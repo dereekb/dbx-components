@@ -1,12 +1,69 @@
-import { ISO8601DayString } from '@dereekb/util';
+import { ISO8601DayString, MapFunction } from '@dereekb/util';
 import { differenceInMinutes, format, formatDistance, formatDistanceToNow, parse, startOfDay } from 'date-fns';
+import { isDate } from './date';
 import { DateRange, dateRangeState, DateRangeState } from './date.range';
 
+export type FormatDateFunction = MapFunction<Date, string>;
+export type FormatDateRangeFunction = ((startOrDateRange: DateRange) => string) & ((startOrDateRange: Date, inputEnd?: Date) => string);
+
+export interface FormatDateRangeFunctionConfig {
+  /**
+   * Formats function
+   */
+  format: FormatDateFunction;
+  /**
+   * Whether or not to modify the dates to be relative to UTC instead of the current.
+   */
+  normalizeToUTC?: boolean;
+  /**
+   * Custom separator
+   */
+  separator?: string;
+}
+
+export type FormatDateRangeFunctionConfigInput = FormatDateFunction | FormatDateRangeFunctionConfig;
+
 /**
- * Formats the input to be start - end
+ * Creates a FormatDateRangeFunction using the input config.
+ *
+ * @param inputConfig
+ * @returns
+ */
+export function formatDateRangeFunction(inputConfig: FormatDateRangeFunctionConfigInput): FormatDateRangeFunction {
+  const config = typeof inputConfig === 'function' ? { format: inputConfig } : inputConfig;
+  const { format, separator = '-' } = config;
+
+  return (startOrDateRange: Date | DateRange, inputEnd?: Date) => {
+    const { start, end } = isDate(startOrDateRange) ? { start: startOrDateRange, end: inputEnd as Date } : startOrDateRange;
+
+    const string = `${format(start)} ${separator} ${format(end)}`;
+    return string;
+  };
+}
+
+/**
+ * Formats the input date range using the start and end dates and a format function.
+ */
+export function formatDateRange(range: DateRange, format: (date: Date) => string, separator?: string): string {
+  return formatDateRangeFunction({ format, separator })(range);
+}
+
+/**
+ * Formats the input dates to be time start - end using formatToTimeString().
+ *
+ * I.E. 12:00AM - 4:00PM
  */
 export function formatToTimeRangeString(start: Date, end: Date): string {
-  return `${formatToTimeString(start)} - ${formatToTimeString(end)}`;
+  return formatDateRange({ start, end }, formatToTimeString);
+}
+
+/**
+ * Formats the input dates to be date start - end using formatToShortDateString().
+ *
+ * I.E. 02/01/1992 - 03/01/1992
+ */
+export function formatToDayRangeString(start: Date, end: Date): string {
+  return formatDateRange({ start, end }, formatToShortDateString);
 }
 
 export function formatToISO8601DateString(date: Date = new Date()): ISO8601DayString {

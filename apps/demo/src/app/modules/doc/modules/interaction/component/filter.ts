@@ -3,14 +3,14 @@ import { FilterWithPreset } from '@dereekb/rxjs';
 import { Maybe } from '@dereekb/util';
 import { startOfDay, addDays } from 'date-fns';
 
-export type DocInteractionTestFilterPresets = 'today';
+export type DocInteractionTestFilterPresets = 'johndoe' | 'today' | 'tomorrow' | 'noicon' | 'delete';
 
 export interface DocInteractionTestFilter extends FilterWithPreset<DocInteractionTestFilterPresets> {
   name?: Maybe<string>;
   date?: Maybe<Date>;
 }
 
-export const DOC_INTERACTION_TEST_PRESETS: ClickableFilterPreset<DocInteractionTestFilter>[] = [
+export const DOC_INTERACTION_TEST_PRESETS: ClickableFilterPreset<DocInteractionTestFilter, DocInteractionTestFilterPresets>[] = [
   {
     icon: 'person',
     title: 'John Doe',
@@ -23,17 +23,17 @@ export const DOC_INTERACTION_TEST_PRESETS: ClickableFilterPreset<DocInteractionT
     icon: 'calendar_today',
     title: 'Today',
     preset: 'today',
-    presetValue: {
+    presetValue: () => ({
       date: startOfDay(new Date())
-    }
+    })
   },
   {
     icon: 'circle',
     title: 'Tomorrow',
     preset: 'tomorrow',
-    presetValue: {
+    presetValue: () => ({
       date: startOfDay(addDays(new Date(), 1))
-    }
+    })
   },
   {
     title: 'No Icon',

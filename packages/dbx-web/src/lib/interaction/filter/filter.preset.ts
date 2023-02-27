@@ -51,7 +51,7 @@ export abstract class AbstractDbxPresetFilterMenuComponent<F extends FilterWithP
   selectPreset(preset: ClickableFilterPreset<F>) {
     const presetValue = preset.presetValue;
 
-    if (presetValue == null || objectHasNoKeys(presetValue)) {
+    if (presetValue == null || (typeof presetValue !== 'function' && objectHasNoKeys(presetValue))) {
       this.filterSourceDirective.setFilter((presetValue ?? {}) as F);
       this.filterSourceDirective.resetFilter();
     } else {
