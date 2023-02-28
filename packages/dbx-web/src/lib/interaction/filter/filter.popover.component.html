@@ -1,6 +1,6 @@
 <dbx-popover-content>
   <!-- Header -->
-  <dbx-popover-header icon="filter_list" header="Filter">
+  <dbx-popover-header [icon]="icon" [header]="header">
     <ng-container *ngIf="showSwitchButtons" [ngSwitch]="showPreset$ | async">
       <button *ngSwitchCase="true" mat-flat-button color="accent" (click)="showCustom()">Custom</button>
       <button *ngSwitchCase="false" mat-flat-button color="accent" (click)="showPresets()">Presets</button>

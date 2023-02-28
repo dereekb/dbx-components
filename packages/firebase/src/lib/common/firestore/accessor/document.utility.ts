@@ -1,5 +1,5 @@
 import { AsyncGetterOrValue, Maybe, performMakeLoop, PromiseUtility, UseAsync, wrapUseAsyncFunction, useAsync, makeWithFactory, filterMaybeValues } from '@dereekb/util';
-import { FirestoreModelId, FirestoreModelKey } from '../collection';
+import { FirestoreModelId, FirestoreModelIdRef, FirestoreModelKey, FirestoreModelKeyRef } from '../collection';
 import { DocumentDataWithIdAndKey, DocumentReference, DocumentSnapshot, QuerySnapshot, Transaction } from '../types';
 import { FirestoreDocumentData, FirestoreDocument, FirestoreDocumentAccessor, LimitedFirestoreDocumentAccessor, LimitedFirestoreDocumentAccessorContextExtension } from './document';
 
@@ -8,19 +8,19 @@ export function newDocuments<T, D extends FirestoreDocument<T>>(documentAccessor
 }
 
 export interface MakeDocumentsParams<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> {
-  count: number;
+  readonly count: number;
 
   /**
    * Optional override to create a new document using the input accessor.
    */
-  newDocument?: (documentAccessor: FirestoreDocumentAccessor<T, D>) => D;
+  readonly newDocument?: (documentAccessor: FirestoreDocumentAccessor<T, D>) => D;
 
   /**
    * Initializes the input document with the returned data.
    *
    * This function may also optionally perform tasks with the passed document and return null/undefined.
    */
-  init: (i: number, document: D) => Maybe<T> | Promise<Maybe<T>>;
+  readonly init: (i: number, document: D) => Maybe<T> | Promise<Maybe<T>>;
 }
 
 /**
@@ -52,22 +52,30 @@ export function getDocumentSnapshots<D extends FirestoreDocument<any>>(documents
 }
 
 export type FirestoreDocumentSnapshotPair<D extends FirestoreDocument<any>> = {
-  document: D;
-  snapshot: DocumentSnapshot<FirestoreDocumentData<D>>;
+  readonly document: D;
+  readonly snapshot: DocumentSnapshot<FirestoreDocumentData<D>>;
 };
 
+export function getDocumentSnapshotPair<D extends FirestoreDocument<any>>(document: D): Promise<FirestoreDocumentSnapshotPair<D>> {
+  return document.accessor.get().then((snapshot) => ({ document, snapshot }));
+}
+
 export function getDocumentSnapshotPairs<D extends FirestoreDocument<any>>(documents: D[]): Promise<FirestoreDocumentSnapshotPair<D>[]> {
-  return PromiseUtility.runTasksForValues(documents, (document) => document.accessor.get().then((snapshot) => ({ document, snapshot })));
+  return PromiseUtility.runTasksForValues(documents, getDocumentSnapshotPair);
 }
 
 export type FirestoreDocumentSnapshotDataPair<D extends FirestoreDocument<any>> = {
-  document: D;
-  snapshot: DocumentSnapshot<FirestoreDocumentData<D>>;
-  data: Maybe<FirestoreDocumentData<D>>;
+  readonly document: D;
+  readonly snapshot: DocumentSnapshot<FirestoreDocumentData<D>>;
+  readonly data: Maybe<DocumentDataWithIdAndKey<FirestoreDocumentData<D>>>;
 };
 
+export function getDocumentSnapshotDataPair<D extends FirestoreDocument<any>>(document: D): Promise<FirestoreDocumentSnapshotDataPair<D>> {
+  return document.accessor.get().then((snapshot) => ({ document, snapshot, data: documentDataWithIdAndKey(snapshot) }));
+}
+
 export function getDocumentSnapshotDataPairs<D extends FirestoreDocument<any>>(documents: D[]): Promise<FirestoreDocumentSnapshotDataPair<D>[]> {
-  return PromiseUtility.runTasksForValues(documents, (document) => document.accessor.get().then((snapshot) => ({ document, snapshot, data: snapshot.data() })));
+  return PromiseUtility.runTasksForValues(documents, getDocumentSnapshotDataPair);
 }
 
 export type FirestoreDocumentSnapshotDataTuple<D extends FirestoreDocument<any>> = [D, Maybe<FirestoreDocumentData<D>>];
@@ -178,11 +186,42 @@ export function documentDataWithIdAndKey<T>(snapshot: DocumentSnapshot<T>): Mayb
   const data = snapshot.data() as DocumentDataWithIdAndKey<T>;
 
   if (data) {
-    data.id = snapshot.id; // attach the id to data
-    data.key = snapshot.ref.path; // attach the path/key to the data
+    setIdAndKeyFromSnapshotOnDocumentData(data, snapshot);
   }
 
   return data;
+}
+
+/**
+ * Sets the id and key values from the snapshot onto the input data.
+ *
+ * @param data
+ * @param snapshot
+ * @returns
+ */
+export function setIdAndKeyFromSnapshotOnDocumentData<T>(data: T, snapshot: DocumentSnapshot<T>): Maybe<DocumentDataWithIdAndKey<T>> {
+  const target = data as DocumentDataWithIdAndKey<T>;
+
+  target.id = snapshot.id; //set the id on data
+  target.key = snapshot.ref.path; // set the path/key on the data
+
+  return target;
+}
+
+/**
+ * Sets the id and key values from the snapshot onto the input data.
+ *
+ * @param data
+ * @param snapshot
+ * @returns
+ */
+export function setIdAndKeyFromKeyIdRefOnDocumentData<T>(data: T, modelRef: FirestoreModelKeyRef & FirestoreModelIdRef): Maybe<DocumentDataWithIdAndKey<T>> {
+  const target = data as DocumentDataWithIdAndKey<T>;
+
+  target.id = modelRef.id; // set the id on data
+  target.key = modelRef.key; // set the path/key on data
+
+  return target;
 }
 
 /**
