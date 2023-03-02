@@ -7,7 +7,7 @@ import { MatInput } from '@angular/material/input';
 import { FieldTypeConfig, FormlyFieldProps } from '@ngx-formly/core';
 import { FieldType } from '@ngx-formly/material';
 import { BehaviorSubject, combineLatest, Observable, of, filter, map, debounceTime, distinctUntilChanged, switchMap, startWith, shareReplay, mergeMap, first, delay } from 'rxjs';
-import { PickableValueFieldDisplayFn, PickableValueFieldDisplayValue, PickableValueFieldFilterFn, PickableValueFieldHashFn, PickableValueFieldLoadValuesFn, PickableValueFieldValue } from './pickable';
+import { PickableValueFieldDisplayFunction, PickableValueFieldDisplayValue, PickableValueFieldFilterFunction, PickableValueFieldHashFunction, PickableValueFieldLoadValuesFunction, PickableValueFieldValue } from './pickable';
 import { DbxValueListItem } from '@dereekb/dbx-web';
 import { camelCase } from 'change-case';
 
@@ -22,21 +22,21 @@ export interface PickableValueFieldsFieldProps<T, M = unknown, H extends Primati
   /**
    * Loads all pickable values.
    */
-  loadValues: PickableValueFieldLoadValuesFn<T, M>;
+  loadValues: PickableValueFieldLoadValuesFunction<T, M>;
   /**
    * Used for building a display value given the input.
    */
-  displayForValue: PickableValueFieldDisplayFn<T, M>;
+  displayForValue: PickableValueFieldDisplayFunction<T, M>;
   /**
    * Used for hashing display values and omitting repeat values.
    *
    * If hashForValue is not provided, the value's value will be used as is.
    */
-  hashForValue?: PickableValueFieldHashFn<T, H>;
+  hashForValue?: PickableValueFieldHashFunction<T, H>;
   /**
    * Used for filtering values via the search text.
    */
-  filterValues?: PickableValueFieldFilterFn<T, M>;
+  filterValues?: PickableValueFieldFilterFunction<T, M>;
   /**
    * Used for sorting the items before they are displayed.
    *
@@ -288,11 +288,11 @@ export class AbstractDbxPickableItemFieldDirective<T, M = unknown, H extends Pri
     return this.pickableField.sortItems;
   }
 
-  get hashForValue(): PickableValueFieldHashFn<T, H> {
+  get hashForValue(): PickableValueFieldHashFunction<T, H> {
     return this.pickableField.hashForValue ?? ((x) => x as unknown as H);
   }
 
-  get displayForValue(): PickableValueFieldDisplayFn<T, M> {
+  get displayForValue(): PickableValueFieldDisplayFunction<T, M> {
     return this.pickableField.displayForValue;
   }
 
@@ -300,7 +300,7 @@ export class AbstractDbxPickableItemFieldDirective<T, M = unknown, H extends Pri
     return Boolean(this.pickableField.filterValues);
   }
 
-  get filterValuesFn(): PickableValueFieldFilterFn<T, M> {
+  get filterValuesFn(): PickableValueFieldFilterFunction<T, M> {
     return this.pickableField.filterValues ?? ((_, x) => of(x.map((y) => y.value)));
   }
 
@@ -308,8 +308,8 @@ export class AbstractDbxPickableItemFieldDirective<T, M = unknown, H extends Pri
     return this.pickableField.skipFilterFnOnEmpty ?? true;
   }
 
-  get _filterValues(): PickableValueFieldFilterFn<T, M> {
-    let fn: PickableValueFieldFilterFn<T, M>;
+  get _filterValues(): PickableValueFieldFilterFunction<T, M> {
+    let fn: PickableValueFieldFilterFunction<T, M>;
 
     if (this.skipFilterFnOnEmpty) {
       fn = (filterText: Maybe<string>, values: PickableValueFieldDisplayValue<T, M>[]): Observable<T[]> => {
@@ -334,7 +334,7 @@ export class AbstractDbxPickableItemFieldDirective<T, M = unknown, H extends Pri
     return this.pickableField.showTextFilter ?? Boolean(this.pickableField.filterValues);
   }
 
-  get loadValuesFn(): PickableValueFieldLoadValuesFn<T, M> {
+  get loadValuesFn(): PickableValueFieldLoadValuesFunction<T, M> {
     return this.pickableField.loadValues;
   }
 
