@@ -1,4 +1,5 @@
 export * from './date.block';
+export * from './date.block.day';
 export * from './date.block.week';
 export * from './date.calendar';
 export * from './date.duration';

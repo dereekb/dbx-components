@@ -1,6 +1,6 @@
 import { DateBlockIndex } from './date.block';
 import { DateBlock, dateBlockTiming, systemNormalDateToBaseDate } from '@dereekb/date';
-import { expandDateScheduleFactory, DateSchedule, dateScheduleDateBlockTimingFilter, DateScheduleDayCode, dateScheduleDayCodeFactory, dateScheduleEncodedWeek, dateScheduleDateFilter, DateScheduleDateFilterConfig } from './date.schedule';
+import { expandDateScheduleFactory, DateSchedule, dateScheduleDateBlockTimingFilter, DateScheduleDayCode, dateScheduleDayCodeFactory, dateScheduleEncodedWeek, dateScheduleDateFilter, DateScheduleDateFilterConfig, dateScheduleDayCodes } from './date.schedule';
 import { addDays } from 'date-fns';
 import { range, UTC_TIMEZONE_STRING } from '@dereekb/util';
 
@@ -282,6 +282,22 @@ describe('expandDateScheduleFactory()', () => {
         });
       });
     });
+  });
+});
+
+describe('dateScheduleDayCodes()', () => {
+  it('should filter none from the results.', () => {
+    const code = DateScheduleDayCode.NONE;
+    const result = dateScheduleDayCodes(code);
+    expect(result.length).toBe(0);
+  });
+
+  it('should return an array from a single day code', () => {
+    const code = DateScheduleDayCode.SUNDAY;
+    const result = dateScheduleDayCodes(code);
+
+    expect(result.length).toBe(1);
+    expect(result[0]).toBe(code);
   });
 });
 

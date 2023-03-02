@@ -1,4 +1,4 @@
-import { StringOrder, Maybe, mergeArrayIntoArray, firstValueFromIterable, DayOfWeek, addToSet, Day, range, DecisionFunction, FilterFunction, IndexRange, invertFilter, dayOfWeek, enabledDaysFromDaysOfWeek, EnabledDays, daysOfWeekFromEnabledDays, iterablesAreSetEquivalent } from '@dereekb/util';
+import { StringOrder, Maybe, mergeArrayIntoArray, firstValueFromIterable, DayOfWeek, addToSet, Day, range, DecisionFunction, FilterFunction, IndexRange, invertFilter, dayOfWeek, enabledDaysFromDaysOfWeek, EnabledDays, daysOfWeekFromEnabledDays, iterablesAreSetEquivalent, ArrayOrValue, asArray } from '@dereekb/util';
 import { Expose } from 'class-transformer';
 import { IsString, Matches, IsOptional, Min, IsArray } from 'class-validator';
 import { getDay } from 'date-fns';
@@ -146,7 +146,7 @@ export function expandDateScheduleEncodedWeek(week: DateScheduleEncodedWeek): Da
   return Array.from(new Set(week)).map((x) => Number(x)) as DateScheduleDayCode[];
 }
 
-export type DateScheduleDayCodesInput = DateScheduleEncodedWeek | DateScheduleDayCode[];
+export type DateScheduleDayCodesInput = DateScheduleEncodedWeek | ArrayOrValue<DateScheduleDayCode>;
 
 /**
  * Converts the input DateScheduleDayCodesInput to an array of DateScheduleDayCode values.
@@ -155,7 +155,7 @@ export type DateScheduleDayCodesInput = DateScheduleEncodedWeek | DateScheduleDa
  * @returns
  */
 export function dateScheduleDayCodes(input: DateScheduleDayCodesInput): DateScheduleDayCode[] {
-  return typeof input === 'string' ? expandDateScheduleEncodedWeek(input) : input;
+  return typeof input === 'string' ? expandDateScheduleEncodedWeek(input) : asArray(input).filter((x) => Boolean(x));
 }
 
 /**

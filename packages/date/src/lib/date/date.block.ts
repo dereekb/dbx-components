@@ -13,6 +13,15 @@ import { IsDate, IsNumber, IsOptional, Min } from 'class-validator';
 export type DateBlockIndex = number;
 
 /**
+ * Returns true if the index is positive.
+ *
+ * @param input
+ */
+export function isValidDateBlockIndex(input: DateBlockIndex): boolean {
+  return input > 0;
+}
+
+/**
  * Input type that is either a Date or a DateBlockIndex.
  */
 export type DateOrDateBlockIndex = Date | DateBlockIndex;

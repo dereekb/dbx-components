@@ -1,7 +1,7 @@
 import { MapFunction, PrimativeKey } from '@dereekb/util';
 import { DbxInjectionComponentConfig, ClickableAnchor } from '@dereekb/dbx-core';
 import { Observable } from 'rxjs';
-import { SelectionDisplayValue, SelectionValue, SelectionValueHashFn } from '../selection';
+import { SelectionDisplayValue, SelectionValue, SelectionValueHashFunction } from '../selection';
 
 export interface SearchableValueFieldValue<T, M = unknown> extends SelectionValue<T, M> {
   /**
@@ -43,4 +43,4 @@ export type SearchableValueFieldDisplayFn<T, M = unknown> = MapFunction<Searchab
  */
 export type SearchableValueFieldAnchorFn<T, M = unknown> = MapFunction<SearchableValueFieldValue<T, M>, ClickableAnchor>;
 
-export type SearchableValueFieldHashFn<T, H extends PrimativeKey = PrimativeKey> = SelectionValueHashFn<T, H>;
+export type SearchableValueFieldHashFn<T, H extends PrimativeKey = PrimativeKey> = SelectionValueHashFunction<T, H>;

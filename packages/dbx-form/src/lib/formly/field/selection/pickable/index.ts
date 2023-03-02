@@ -4,3 +4,4 @@ export * from './pickable.field.module';
 export * from './pickable.list.field.component';
 export * from './pickable.field';
 export * from './pickable';
+export * from './pickable.util';
