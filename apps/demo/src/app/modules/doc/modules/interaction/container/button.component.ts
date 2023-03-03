@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { DbxButtonDisplayContent } from '@dereekb/dbx-core';
 import { DbxProgressButtonOptions } from '@dereekb/dbx-web';
 
 @Component({
@@ -19,6 +20,15 @@ export class DocInteractionButtonComponent {
       }, 3350);
     };
   }
+
+  buttonDisplay1: DbxButtonDisplayContent = {
+    icon: 'radio_button_checked',
+    text: 'Magic Button'
+  };
+
+  buttonDisplay2: DbxButtonDisplayContent = {
+    icon: 'radio_button_unchecked'
+  };
 
   demoButton1: DbxProgressButtonOptions = {
     id: 'button1',
