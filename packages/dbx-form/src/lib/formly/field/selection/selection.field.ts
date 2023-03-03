@@ -1,12 +1,10 @@
 import { asObservable, ObservableOrValue } from '@dereekb/rxjs';
-import { Maybe } from '@dereekb/util';
+import { LabeledValue, Maybe } from '@dereekb/util';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { map } from 'rxjs';
 import { DescriptionFieldConfig, formlyField, LabeledFieldConfig, MaterialFormFieldConfig, propsAndConfigForFieldConfig } from '../field';
 
-export interface ValueSelectionOptionWithValue<T> {
-  value: T;
-  label: string;
+export interface ValueSelectionOptionWithValue<T> extends LabeledValue<T> {
   disabled?: boolean;
 }
 

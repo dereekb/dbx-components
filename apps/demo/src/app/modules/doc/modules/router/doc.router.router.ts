@@ -3,6 +3,8 @@ import { DocRouterAnchorComponent } from './container/anchor.component';
 import { DocRouterAnchorListComponent } from './container/anchorlist.component';
 import { DocRouterHomeComponent } from './container/home.component';
 import { DocRouterLayoutComponent } from './container/layout.component';
+import { DocRouterNavbarAComponent } from './container/navbar.a.component';
+import { DocRouterNavbarBComponent } from './container/navbar.b.component';
 import { DocRouterNavbarComponent } from './container/navbar.component';
 
 export const layoutState: Ng2StateDeclaration = {
@@ -36,4 +38,25 @@ export const docRouterNavbarState: Ng2StateDeclaration = {
   component: DocRouterNavbarComponent
 };
 
-export const STATES: Ng2StateDeclaration[] = [layoutState, homeState, docRouterAnchorState, docRouterAnchorListState, docRouterNavbarState];
+export const docRouterNavbarAState: Ng2StateDeclaration = {
+  url: '/a',
+  name: 'doc.router.navbar.a',
+  component: DocRouterNavbarAComponent
+};
+
+export const docRouterNavbarBState: Ng2StateDeclaration = {
+  url: '/b',
+  name: 'doc.router.navbar.b',
+  component: DocRouterNavbarBComponent
+};
+
+export const STATES: Ng2StateDeclaration[] = [
+  //
+  layoutState,
+  homeState,
+  docRouterAnchorState,
+  docRouterAnchorListState,
+  docRouterNavbarState,
+  docRouterNavbarAState,
+  docRouterNavbarBState
+];

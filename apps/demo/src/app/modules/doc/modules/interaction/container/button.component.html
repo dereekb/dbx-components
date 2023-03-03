@@ -45,6 +45,24 @@
       </dbx-button>
     </doc-feature-example>
 
+    <doc-feature-example header="dbx-icon-button" hint="dbx-button Component that displays a button and am icon.">
+      <p class="dbx-hint">{{ testClicked }}</p>
+      <dbx-icon-button text="Test Button" (buttonClick)="onTestClick()"></dbx-icon-button>
+      <dbx-icon-button icon="magic_button" (buttonClick)="onTestClick()"></dbx-icon-button>
+      <dbx-icon-button [buttonDisplay]="buttonDisplay1" (buttonClick)="onTestClick()"></dbx-icon-button>
+
+      <h4>Disabled</h4>
+      <dbx-icon-button [disabled]="true" text="Test Button"></dbx-icon-button>
+
+      <h4>With Icon</h4>
+      <dbx-icon-button icon="settings" text="Test Button"></dbx-icon-button>
+
+      <h4>Icon Only</h4>
+      <dbx-icon-button icon="settings"></dbx-icon-button>
+      <dbx-button-spacer></dbx-button-spacer>
+      <dbx-icon-button [buttonDisplay]="buttonDisplay2" (buttonClick)="onTestClick()"></dbx-icon-button>
+    </doc-feature-example>
+
     <h3>Progress Buttons</h3>
     <doc-feature-derived from="mat-progress-buttons" url="https://github.com/michaeldoye/mat-progress-buttons"></doc-feature-derived>
     <doc-feature-example header="dbx-spinner-button" hint="Component that displays a button and implements the DbxButton directive directly and wraps a dbx-spinner-button.">

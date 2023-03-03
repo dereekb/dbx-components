@@ -2,6 +2,13 @@
   <doc-feature-layout header="Navbar" hint="Navbars are used to show anchors horizontally within a mat-nav, or as a menu button.">
     <!-- Examples -->
     <doc-feature-example header="dbx-navbar" hint="">
+      <!-- Nav Content -->
+      <dbx-content-border>
+        <ui-view>
+          <p>>>Navigation Content<<</p>
+        </ui-view>
+      </dbx-content-border>
+
       <h4>Breakpoints</h4>
       <p>Breakpoints declare the minimum amount of width (via ScreenMediaWidthType) that is available before the view is cut to a button.</p>
       <div>
@@ -24,9 +31,17 @@
         <span>Full</span>
         <dbx-navbar [anchors]="anchors" breakpoint="full"></dbx-navbar>
       </div>
+
+      <h4>Button</h4>
       <div>
-        <span>Mode set to button, with custom icon</span>
-        <dbx-navbar icon="add" [anchors]="anchors" mode="button"></dbx-navbar>
+        <span>Mode set to button. The button will get it's icon from the current anchor, or default to the input anchor.</span>
+        <dbx-navbar defaultIcon="add" [anchors]="anchors" mode="button"></dbx-navbar>
+      </div>
+
+      <h4>Icon Button</h4>
+      <div>
+        <span>Mode set to icon, with custom icon that does not change.</span>
+        <dbx-navbar icon="add" [anchors]="anchors" mode="icon"></dbx-navbar>
       </div>
 
       <h4>Nav Align</h4>

@@ -103,17 +103,13 @@ $header-left-reserved-space-small-screen: 120px;
       @include theming.nested-content-height(1); // always take up the height
     }
 
-    &.dbx-section-page-scroll-header {
-      overflow: hidden;
-
-      .dbx-section-page-content {
-        padding-top: $header-bottom-margin;
-        overflow: auto;
-      }
-    }
-
     &.dbx-section-page-scroll-locked {
       overflow: hidden;
+    }
+
+    &.dbx-section-page-scroll-body > .dbx-section-page-content {
+      overflow-y: auto; // content can scroll on y axis
+      overflow-x: hidden;
     }
 
     .dbx-section-page {
