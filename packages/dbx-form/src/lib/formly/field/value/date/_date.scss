@@ -8,6 +8,32 @@ $dbx-datetime-row-width: 40px + ($dbx-datetime-button-spacing * 2); // times 2 f
 
 // MARK: Mixin
 @mixin core() {
+  .dbx-mat-form-date-time-field-wrapper {
+    > formly-wrapper-mat-form-field {
+      > .mat-form-field > .mat-form-field-wrapper {
+        > .mat-form-field-flex {
+          padding-top: 0;
+
+          > .mat-form-field-infix {
+            border: none;
+          }
+        }
+
+        > .mat-form-field-subscript-wrapper {
+          margin-top: 2px;
+        }
+      }
+    }
+
+    .dbx-datetime-row-field > .mat-form-field-wrapper {
+      padding-bottom: 4px;
+
+      > .mat-form-field-subscript-wrapper {
+        margin-top: 0px;
+      }
+    }
+  }
+
   .dbx-datetime-field {
     width: 100%;
   }

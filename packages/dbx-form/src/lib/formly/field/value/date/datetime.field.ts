@@ -50,7 +50,7 @@ export function dateTimeField(config: Partial<DateTimeFieldConfig> = {}) {
   });
 
   return styleWrapper(fieldConfig, {
-    classGetter: 'dbx-mat-form-field-disable-underline'
+    classGetter: 'dbx-mat-form-field-disable-underline dbx-mat-form-date-time-field-wrapper'
   });
 }
 
