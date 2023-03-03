@@ -6,9 +6,19 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { DbxRouterAnchorModule } from '../anchor/anchor.module';
 import { MatMenuModule } from '@angular/material/menu';
 import { DbxNavbarComponent } from './navbar.component';
+import { DbxIconButtonModule } from '../../../button';
 
 @NgModule({
-  imports: [CommonModule, MatTabsModule, MatButtonModule, MatIconModule, MatMenuModule, DbxRouterAnchorModule],
+  imports: [
+    //
+    CommonModule,
+    DbxIconButtonModule,
+    MatTabsModule,
+    MatButtonModule,
+    MatIconModule,
+    MatMenuModule,
+    DbxRouterAnchorModule
+  ],
   declarations: [DbxNavbarComponent],
   exports: [DbxNavbarComponent]
 })

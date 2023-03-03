@@ -1,7 +1,5 @@
-import { BehaviorSubject, combineLatest, distinctUntilChanged, map, shareReplay, switchMap } from 'rxjs';
-import { ChangeDetectionStrategy, Component, ElementRef, Input, ViewChild } from '@angular/core';
-import { AbstractDbxButtonDirective, DbxButtonDisplayContent, dbxButtonDisplayContentType, DbxButtonDisplayContentType, DbxButtonDisplayDelegate, provideDbxButton } from '@dereekb/dbx-core';
-import { Maybe } from '@dereekb/util';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { AbstractDbxButtonDirective, provideDbxButton } from '@dereekb/dbx-core';
 
 /**
  * Simple dbx-button that displays a button with an icon.
@@ -20,6 +18,6 @@ import { Maybe } from '@dereekb/util';
     </ng-container>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  providers: [provideDbxButton(DbxIconButtonComponent)]
+  providers: provideDbxButton(DbxIconButtonComponent)
 })
 export class DbxIconButtonComponent extends AbstractDbxButtonDirective {}

@@ -20,8 +20,8 @@ export abstract class AbstractDbxButtonDirective extends AbstractSubscriptionDir
     return this._disabled.value;
   }
 
-  set disabled(disabled: boolean) {
-    this._disabled.next(disabled);
+  set disabled(disabled: Maybe<boolean>) {
+    this._disabled.next(disabled ?? false);
   }
 
   @Input()
@@ -29,8 +29,8 @@ export abstract class AbstractDbxButtonDirective extends AbstractSubscriptionDir
     return this._working.value;
   }
 
-  set working(working: boolean) {
-    this._working.next(working);
+  set working(working: Maybe<boolean>) {
+    this._working.next(working ?? false);
   }
 
   @Input()
