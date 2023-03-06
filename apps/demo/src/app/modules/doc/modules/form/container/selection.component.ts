@@ -243,6 +243,10 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
     })
   ];
 
+  readonly initialItemChipFieldsValues$ = of({
+    staticLabeledValuesExample: [0, 2, 19].map(String)
+  });
+
   readonly pickableItemChipFields: FormlyFieldConfig[] = [
     pickableItemChipField({
       key: 'stringItemChips',

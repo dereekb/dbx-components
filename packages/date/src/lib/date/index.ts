@@ -16,4 +16,5 @@ export * from './date.time';
 export * from './date.timezone';
 export * from './date';
 export * from './date.unix';
+export * from './date.validator';
 export * from './date.week';

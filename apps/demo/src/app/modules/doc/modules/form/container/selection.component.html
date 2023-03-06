@@ -18,7 +18,7 @@
     <h3>Pickable</h3>
     <p>Pickable fields are use to display a list of preset/static values that the user can choose from.</p>
     <doc-feature-example header="pickableItemChipField()" hint="A field that lets you choose items from a set of chips.">
-      <doc-form-example-form [dbxFormlyFields]="pickableItemChipFields"></doc-form-example-form>
+      <doc-form-example-form [dbxFormlyFields]="pickableItemChipFields" [dbxFormSource]="initialItemChipFieldsValues$"></doc-form-example-form>
     </doc-feature-example>
     <doc-feature-example header="pickableItemListField()" hint="A field that lets you choose values from a set of items.">
       <doc-form-example-form [dbxFormlyFields]="pickableItemListFields"></doc-form-example-form>
