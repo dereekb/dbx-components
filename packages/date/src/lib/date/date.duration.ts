@@ -1,6 +1,6 @@
 import { Minutes as UtilMinutes } from '@dereekb/util';
 import { Expose, Type } from 'class-transformer';
-import { IsNumber } from 'class-validator';
+import { IsNumber, Min } from 'class-validator';
 import { addMinutes } from 'date-fns';
 import { DateRange, dateRangeState, DateRangeState } from './date.range';
 
@@ -18,6 +18,7 @@ export class DateDurationSpan {
 
   @Expose()
   @IsNumber()
+  @Min(0) // minimum duration of 0
   duration!: Minutes;
 
   constructor(template?: DateDurationSpan) {
