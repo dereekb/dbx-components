@@ -372,6 +372,33 @@ describe('isValidDateBlockTiming()', () => {
     const isValid = isValidDateBlockTiming(invalidTiming);
     expect(isValid).toBe(false);
   });
+
+  describe('scenario', () => {
+    describe('daylight savings changes', () => {
+      /**
+       * Illustrates the effects of daylight savings changes
+       */
+      it('should return true for a timing generated via dateBlockTiming() for 2023-03-01T14:00:00.000Z with 15 days', () => {
+        const startsAt = new Date('2023-03-01T14:00:00.000Z');
+        const days = 15; // difference of 15 day causes an issue
+        const duration = 600;
+        const timing = dateBlockTiming({ startsAt, duration }, days);
+
+        const isValid = isValidDateBlockTiming(timing);
+        expect(isValid).toBe(true);
+      });
+
+      it('should return true for a timing generated via dateBlockTiming() for 2022-11-01T14:00:00.000Z with 15 days', () => {
+        const startsAt = new Date('2022-11-01T14:00:00.000Z');
+        const days = 15; // difference of 15 day causes an issue
+        const duration = 600;
+        const timing = dateBlockTiming({ startsAt, duration }, days);
+
+        const isValid = isValidDateBlockTiming(timing);
+        expect(isValid).toBe(true);
+      });
+    });
+  });
 });
 
 describe('dateBlockDayOfWeekFactory()', () => {

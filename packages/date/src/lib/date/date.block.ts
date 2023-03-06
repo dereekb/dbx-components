@@ -1,7 +1,7 @@
 import { DayOfWeek, RequiredOnKeys, IndexNumber, IndexRange, indexRangeCheckFunction, IndexRef, MINUTES_IN_DAY, MS_IN_DAY, UniqueModel, lastValue, FactoryWithRequiredInput, FilterFunction, mergeFilterFunctions, range, Milliseconds, Hours, MapFunction, getNextDay, SortCompareFunction, sortAscendingIndexNumberRefFunction, mergeArrayIntoArray, Configurable, ArrayOrValue, asArray, sumOfIntegersBetween, filterMaybeValues, Maybe } from '@dereekb/util';
 import { dateRange, DateRange, DateRangeDayDistanceInput, DateRangeStart, DateRangeType, isDateRange, isDateRangeStart } from './date.range';
 import { DateDurationSpan } from './date.duration';
-import { differenceInDays, differenceInMilliseconds, isBefore, addDays, addMinutes, getSeconds, getMilliseconds, getMinutes, addMilliseconds, hoursToMilliseconds, addHours, differenceInHours, isAfter, minutesToHours } from 'date-fns';
+import { differenceInDays, differenceInMilliseconds, isBefore, addDays, addMinutes, getSeconds, getMilliseconds, getMinutes, addMilliseconds, hoursToMilliseconds, addHours, differenceInHours, isAfter, minutesToHours, millisecondsToHours } from 'date-fns';
 import { isDate, copyHoursAndMinutesFromDate, roundDownToMinute } from './date';
 import { Expose, Type } from 'class-transformer';
 import { getCurrentSystemOffsetInHours } from './date.timezone';
@@ -98,12 +98,17 @@ export class DateBlockTiming extends DateDurationSpan {
   }
 }
 
+export interface CurrentDateBlockTimingOffsetData {
+  offset: Milliseconds;
+  currentTimezoneOffsetInHours: Hours;
+}
+
 /**
  * The offset in milliseconds to the "real start date", the first second in the target day on in the system timezone.
  *
  * @param timing
  */
-export function getCurrentDateBlockTimingOffset(timing: DateRangeStart): Milliseconds {
+export function getCurrentDateBlockTimingOffsetData(timing: DateRangeStart): CurrentDateBlockTimingOffsetData {
   const start = timing.start;
   const dateHours = start.getUTCHours();
 
@@ -119,7 +124,14 @@ export function getCurrentDateBlockTimingOffset(timing: DateRangeStart): Millise
     offset = 0; // auckland can return -24 for itself
   }
 
-  return hoursToMilliseconds(offset);
+  return {
+    offset: hoursToMilliseconds(offset),
+    currentTimezoneOffsetInHours
+  };
+}
+
+export function getCurrentDateBlockTimingOffset(timing: DateRangeStart): Milliseconds {
+  return getCurrentDateBlockTimingOffsetData(timing).offset;
 }
 
 /**
@@ -303,10 +315,15 @@ export function dateBlockTiming(durationInput: DateDurationSpan, inputRange: Dat
 export function isValidDateBlockTiming(timing: DateBlockTiming): boolean {
   const { end, startsAt, duration } = timing;
 
+  const {
+    offset,
+    currentTimezoneOffsetInHours: startOffsetInHours // offset as computed on the given date.
+  } = getCurrentDateBlockTimingOffsetData(timing);
+
   /**
    * Use the startNormal, as the startsAt time is in the correct UTC date for the expected first time, but the start must be normalized to the system time before it can be used.
    */
-  const startNormal = getCurrentDateBlockTimingStartDate(timing);
+  const startNormal = addMilliseconds(timing.start, offset);
   const msDifference = differenceInMilliseconds(startsAt, startNormal);
   const hasSeconds = startNormal.getSeconds() !== 0;
 
@@ -315,10 +332,13 @@ export function isValidDateBlockTiming(timing: DateBlockTiming): boolean {
   if (
     duration <= MINUTES_IN_DAY &&
     !hasSeconds && // start cannot have seconds
-    msDifference >= 0 && // startsAt is after secondsDifference
+    msDifference >= 0 && // startsAt is after secondsDifferencexw
     msDifference < MS_IN_DAY // startsAt is not more than 24 hours later
   ) {
-    const expectedFinalStartTime = addMinutes(end, -duration);
+    const endOffset = getCurrentSystemOffsetInHours(timing.end);
+    const timezoneOffsetDelta = endOffset - startOffsetInHours;
+
+    const expectedFinalStartTime = addHours(addMinutes(end, -duration), timezoneOffsetDelta);
     const difference = differenceInMilliseconds(startsAt, expectedFinalStartTime) % MS_IN_DAY;
     isValid = difference === 0;
   }
