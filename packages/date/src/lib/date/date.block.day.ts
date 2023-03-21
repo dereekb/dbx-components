@@ -1,6 +1,6 @@
 import { ArrayOrValue, asArray } from '@dereekb/util';
 import { DateBlockIndex } from './date.block';
-import { DateScheduleDayCode, dateScheduleDayCodes, DateScheduleDayCodesInput, DateScheduleEncodedWeek } from './date.schedule';
+import { DateScheduleDayCode, dateScheduleDayCodes, DateScheduleDayCodesInput, DateScheduleEncodedWeek, expandDateScheduleDayCodes } from './date.schedule';
 
 /**
  * Converts the input day codes into DateBlockIndex values.
@@ -9,5 +9,5 @@ import { DateScheduleDayCode, dateScheduleDayCodes, DateScheduleDayCodesInput, D
  * @returns
  */
 export function dateBlockIndexsForDateScheduleDayCodes(sundayIndex: DateBlockIndex, dayCodes: DateScheduleDayCodesInput): DateBlockIndex[] {
-  return dateScheduleDayCodes(dayCodes).map((x) => sundayIndex + x - 1);
+  return expandDateScheduleDayCodes(dayCodes).map((x) => sundayIndex + x - 1);
 }

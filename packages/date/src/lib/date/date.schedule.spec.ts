@@ -1,8 +1,8 @@
 import { DateBlockIndex } from './date.block';
 import { DateBlock, dateBlockTiming, systemNormalDateToBaseDate } from '@dereekb/date';
-import { expandDateScheduleFactory, DateSchedule, dateScheduleDateBlockTimingFilter, DateScheduleDayCode, dateScheduleDayCodeFactory, dateScheduleEncodedWeek, dateScheduleDateFilter, DateScheduleDateFilterConfig, dateScheduleDayCodes } from './date.schedule';
+import { expandDateScheduleFactory, DateSchedule, dateScheduleDateBlockTimingFilter, DateScheduleDayCode, dateScheduleDayCodeFactory, dateScheduleEncodedWeek, dateScheduleDateFilter, DateScheduleDateFilterConfig, weekdayDateScheduleDayCodes, rawDateScheduleDayCodes, expandDateScheduleDayCodes, DateScheduleEncodedWeek, weekendDateScheduleDayCodes, expandDateScheduleDayCodesToDayOfWeekSet } from './date.schedule';
 import { addDays } from 'date-fns';
-import { range, UTC_TIMEZONE_STRING } from '@dereekb/util';
+import { Day, range, UTC_TIMEZONE_STRING } from '@dereekb/util';
 
 describe('dateScheduleDateFilter()', () => {
   const start = systemNormalDateToBaseDate(new Date('2022-01-02T00:00:00Z')); // Sunday
@@ -285,19 +285,120 @@ describe('expandDateScheduleFactory()', () => {
   });
 });
 
-describe('dateScheduleDayCodes()', () => {
-  it('should filter none from the results.', () => {
-    const code = DateScheduleDayCode.NONE;
-    const result = dateScheduleDayCodes(code);
-    expect(result.length).toBe(0);
+describe('expandDateScheduleDayCodesToDayOfWeekSet()', () => {
+  it('should convert the input to DayOfWeek values', () => {
+    const code = DateScheduleDayCode.SUNDAY;
+    const result = expandDateScheduleDayCodesToDayOfWeekSet(code);
+
+    expect(result).toContain(Day.SUNDAY);
   });
 
-  it('should return an array from a single day code', () => {
-    const code = DateScheduleDayCode.SUNDAY;
-    const result = dateScheduleDayCodes(code);
+  it('should expand the weekend token into the individual weekend days', () => {
+    const code = DateScheduleDayCode.WEEKEND;
+    const result = expandDateScheduleDayCodesToDayOfWeekSet(code);
 
-    expect(result.length).toBe(1);
-    expect(result[0]).toBe(code);
+    expect(result).toContain(Day.SUNDAY);
+    expect(result).toContain(Day.SATURDAY);
+  });
+});
+
+describe('expandDateScheduleDayCodes()', () => {
+  describe('days', () => {
+    it('should filter none from the results.', () => {
+      const code = DateScheduleDayCode.NONE;
+      const result = expandDateScheduleDayCodes(code);
+      expect(result.length).toBe(0);
+    });
+
+    it('should return an array from a single day code', () => {
+      const code = DateScheduleDayCode.SUNDAY;
+      const result = expandDateScheduleDayCodes(code);
+
+      expect(result.length).toBe(1);
+      expect(result[0]).toBe(code);
+    });
+
+    it('should expand the weekday token into the individual weekdays.', () => {
+      const code = DateScheduleDayCode.WEEKDAY;
+      const result = expandDateScheduleDayCodes(code);
+
+      const expectedDays = weekdayDateScheduleDayCodes();
+      expect(result.length).toBe(expectedDays.length);
+
+      expectedDays.forEach((day) => {
+        expect(result).toContain(day);
+      });
+    });
+
+    it('should expand the weekend token into the individual weekends.', () => {
+      const code = DateScheduleDayCode.WEEKEND;
+      const result = expandDateScheduleDayCodes(code);
+
+      const expectedDays = weekendDateScheduleDayCodes();
+      expect(result.length).toBe(expectedDays.length);
+
+      expectedDays.forEach((day) => {
+        expect(result).toContain(day);
+      });
+    });
+  });
+
+  describe('days array', () => {
+    it('should filter none from the results.', () => {
+      const code = DateScheduleDayCode.NONE;
+      const result = expandDateScheduleDayCodes([code]);
+      expect(result.length).toBe(0);
+    });
+
+    it('should return an array containing the day', () => {
+      const code = DateScheduleDayCode.SUNDAY;
+      const result = expandDateScheduleDayCodes([code]);
+
+      expect(result.length).toBe(1);
+      expect(result[0]).toBe(code);
+    });
+  });
+});
+
+describe('rawDateScheduleDayCodes()', () => {
+  describe('days', () => {
+    it('should filter none from the results.', () => {
+      const code = DateScheduleDayCode.NONE;
+      const result = rawDateScheduleDayCodes(code);
+      expect(result.length).toBe(0);
+    });
+
+    it('should return an array from a single day code', () => {
+      const code = DateScheduleDayCode.SUNDAY;
+      const result = rawDateScheduleDayCodes(code);
+
+      expect(result.length).toBe(1);
+      expect(result[0]).toBe(code);
+    });
+  });
+
+  describe('days string', () => {
+    it('should filter none from the results.', () => {
+      const code = DateScheduleDayCode.NONE;
+      const result = rawDateScheduleDayCodes(code.toString() as DateScheduleEncodedWeek);
+      expect(result.length).toBe(0);
+    });
+
+    it('should return an array from a single day code string', () => {
+      const code = DateScheduleDayCode.SUNDAY;
+      const result = rawDateScheduleDayCodes(code.toString() as DateScheduleEncodedWeek);
+
+      expect(result.length).toBe(1);
+      expect(result[0]).toBe(code);
+    });
+
+    it('should return the weekend token', () => {
+      const code = DateScheduleDayCode.WEEKEND;
+      const result = rawDateScheduleDayCodes(code.toString() as DateScheduleEncodedWeek);
+
+      expect(result.length).toBe(1);
+      expect(result[0]).toBe(code);
+    });
   });
 });
 

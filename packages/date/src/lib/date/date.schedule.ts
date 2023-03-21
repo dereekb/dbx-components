@@ -1,4 +1,4 @@
-import { StringOrder, Maybe, mergeArrayIntoArray, firstValueFromIterable, DayOfWeek, addToSet, Day, range, DecisionFunction, FilterFunction, IndexRange, invertFilter, dayOfWeek, enabledDaysFromDaysOfWeek, EnabledDays, daysOfWeekFromEnabledDays, iterablesAreSetEquivalent, ArrayOrValue, asArray } from '@dereekb/util';
+import { StringOrder, Maybe, mergeArrayIntoArray, firstValueFromIterable, DayOfWeek, addToSet, Day, range, DecisionFunction, FilterFunction, IndexRange, invertFilter, dayOfWeek, enabledDaysFromDaysOfWeek, EnabledDays, daysOfWeekFromEnabledDays, iterablesAreSetEquivalent, ArrayOrValue, asArray, forEachInIterable } from '@dereekb/util';
 import { Expose } from 'class-transformer';
 import { IsString, Matches, IsOptional, Min, IsArray } from 'class-validator';
 import { getDay } from 'date-fns';
@@ -27,6 +27,14 @@ export enum DateScheduleDayCode {
    * All weekend days (Sat/Sun)
    */
   WEEKEND = 9
+}
+
+export function weekdayDateScheduleDayCodes() {
+  return [DateScheduleDayCode.MONDAY, DateScheduleDayCode.TUESDAY, DateScheduleDayCode.WEDNESDAY, DateScheduleDayCode.THURSDAY, DateScheduleDayCode.FRIDAY];
+}
+
+export function weekendDateScheduleDayCodes() {
+  return [DateScheduleDayCode.SATURDAY, DateScheduleDayCode.SUNDAY];
 }
 
 /**
@@ -136,27 +144,7 @@ export function simplifyDateScheduleDayCodes(codes: Iterable<DateScheduleDayCode
   return result;
 }
 
-/**
- * Expands a DateScheduleEncodedWeek to an array of DateScheduleDayCode valeus.
- *
- * @param week
- * @returns
- */
-export function expandDateScheduleEncodedWeek(week: DateScheduleEncodedWeek): DateScheduleDayCode[] {
-  return Array.from(new Set(week)).map((x) => Number(x)) as DateScheduleDayCode[];
-}
-
 export type DateScheduleDayCodesInput = DateScheduleEncodedWeek | ArrayOrValue<DateScheduleDayCode>;
-
-/**
- * Converts the input DateScheduleDayCodesInput to an array of DateScheduleDayCode values.
- *
- * @param input
- * @returns
- */
-export function dateScheduleDayCodes(input: DateScheduleDayCodesInput): DateScheduleDayCode[] {
-  return typeof input === 'string' ? expandDateScheduleEncodedWeek(input) : asArray(input).filter((x) => Boolean(x));
-}
 
 /**
  * Expands the input DateScheduleDayCodesInput to a Set of DayOfWeek values.
@@ -165,8 +153,35 @@ export function dateScheduleDayCodes(input: DateScheduleDayCodesInput): DateSche
  * @returns
  */
 export function expandDateScheduleDayCodesToDayOfWeekSet(input: DateScheduleDayCodesInput): Set<DayOfWeek> {
-  const codes: DateScheduleDayCode[] = dateScheduleDayCodes(input);
   const days = new Set<DayOfWeek>();
+  const dayCodesSet = expandDateScheduleDayCodesToDayCodesSet(input);
+
+  forEachInIterable(dayCodesSet, (code) => {
+    days.add((code - 1) as DayOfWeek);
+  });
+
+  return days;
+}
+
+/**
+ * Expands the input into an array of DateScheduleDayCode values.
+ *
+ * @param input
+ * @returns
+ */
+export function expandDateScheduleDayCodes(input: DateScheduleDayCodesInput): DateScheduleDayCode[] {
+  return Array.from(expandDateScheduleDayCodesToDayCodesSet(input));
+}
+
+/**
+ * Expands the input DateScheduleDayCodesInput to a Set of DayOfWeek values.
+ *
+ * @param input
+ * @returns
+ */
+export function expandDateScheduleDayCodesToDayCodesSet(input: DateScheduleDayCodesInput): Set<DateScheduleDayCode> {
+  const codes: DateScheduleDayCode[] = rawDateScheduleDayCodes(input);
+  const days = new Set<DateScheduleDayCode>();
 
   codes.forEach((code) => {
     switch (code) {
@@ -174,18 +189,36 @@ export function expandDateScheduleDayCodesToDayOfWeekSet(input: DateScheduleDayC
         // do nothing
         break;
       case 8:
-        addToSet(days, [1, 2, 3, 4, 5]); // monday-friday
+        addToSet(days, weekdayDateScheduleDayCodes()); // monday-friday
         break;
       case 9:
-        addToSet(days, [Day.SUNDAY, Day.SATURDAY]);
+        addToSet(days, weekendDateScheduleDayCodes());
         break;
       default: // remove offset
-        days.add((code - 1) as DayOfWeek);
+        days.add(code);
         break;
     }
   });
 
   return days;
+}
+
+/**
+ * Converts the input DateScheduleDayCodesInput to an array of DateScheduleDayCode values, but does not expand
+ *
+ * @param input
+ * @returns
+ */
+export function rawDateScheduleDayCodes(input: DateScheduleDayCodesInput): DateScheduleDayCode[] {
+  let dayCodes: DateScheduleDayCode[];
+
+  if (typeof input === 'string') {
+    dayCodes = Array.from(new Set(input)).map((x) => Number(x)) as DateScheduleDayCode[];
+  } else {
+    dayCodes = asArray(input);
+  }
+
+  return dayCodes.filter((x) => Boolean(x));
 }
 
 /**
@@ -444,3 +477,24 @@ export function expandDateSchedule(input: ExpandDateScheduleInput): DateBlockDur
 
   return expansionFactory([dateBlockForRange]);
 }
+
+// MARK: Compat
+/**
+ * Converts the input DateScheduleDayCodesInput to an array of DateScheduleDayCode values.
+ *
+ * @param input
+ * @returns
+ *
+ * @deprecated Use expandDateScheduleDayCodes or rawDateScheduleDayCodes depending on the need case.
+ */
+export const dateScheduleDayCodes = expandDateScheduleDayCodes;
+
+/**
+ * Expands a DateScheduleEncodedWeek to an array of DateScheduleDayCode valeus.
+ *
+ * @param week
+ * @returns
+ *
+ * @deprecated Use expandDateScheduleDayCodes instead.
+ */
+export const expandDateScheduleEncodedWeek = expandDateScheduleDayCodes;
