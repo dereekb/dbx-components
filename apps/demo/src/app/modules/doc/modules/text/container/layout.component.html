@@ -45,8 +45,27 @@
         <h4>Layouts</h4>
         <doc-feature-example header=".dbx-label-block">
           <dbx-label-block header="A custom label">
-            <p>{{ lorem }}</p>
+            {{ lorem }}
           </dbx-label-block>
+        </doc-feature-example>
+        <doc-feature-example header=".dbx-detail-block" hint="Text layout that contains an icon with content offset to the right.">
+          <dbx-detail-block header="A custom label and icon" icon="settings">
+            <span>{{ lorem }}</span>
+          </dbx-detail-block>
+          <dbx-detail-block icon="phone">
+            <dbx-anchor [anchor]="testAnchor" header>Custom header content with anchor example</dbx-anchor>
+            <span>{{ lorem }}</span>
+          </dbx-detail-block>
+          <dbx-detail-block icon="settings">
+            <span header>
+              <dbx-chip [small]="true" dbxColor="primary">Chip</dbx-chip>
+              Custom header with chip example
+            </span>
+            <span>{{ lorem }}</span>
+          </dbx-detail-block>
+          <dbx-detail-block header="No Icon Example">
+            <span>{{ lorem }}</span>
+          </dbx-detail-block>
         </doc-feature-example>
         <h4>Colors</h4>
         <doc-feature-example header=".dbx-hint">

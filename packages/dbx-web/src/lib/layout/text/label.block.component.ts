@@ -1,4 +1,5 @@
 import { Component, Input } from '@angular/core';
+import { Maybe } from '@dereekb/util';
 
 /**
  * Combines a dbx-label and arbitrary content.
@@ -15,5 +16,5 @@ import { Component, Input } from '@angular/core';
 })
 export class DbxLabelBlockComponent {
   @Input()
-  header?: string;
+  header?: Maybe<string>;
 }

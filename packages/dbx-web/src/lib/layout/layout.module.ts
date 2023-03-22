@@ -13,6 +13,7 @@ import { DbxBarLayoutModule } from './bar/bar.layout.module';
 import { DbxTextModule } from './text/text.module';
 import { DbxStyleLayoutModule } from './style/style.layout.module';
 import { DbxFlexLayoutModule } from './flex/flex.layout.module';
+import { DbxDetailBlockComponent } from './text/detail.block.component';
 
 @NgModule({
   exports: [DbxBarLayoutModule, DbxBlockLayoutModule, DbxCardBoxLayoutModule, DbxColumnLayoutModule, DbxCompactLayoutModule, DbxContentLayoutModule, DbxFlagLayoutModule, DbxFlexLayoutModule, DbxItemLayoutModule, DbxListLayoutModule, DbxSectionLayoutModule, DbxStepLayoutModule, DbxStyleLayoutModule, DbxTextModule]

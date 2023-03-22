@@ -3,6 +3,8 @@ import { NgModule } from '@angular/core';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { DbxDetailBlockComponent } from './detail.block.component';
+import { DbxDetailBlockHeaderComponent } from './detail.block.header.component';
 import { DbxFormDescriptionComponent } from './form.description.component';
 import { DbxHintComponent } from './hint.component';
 import { DbxIconSpacerDirective } from './icon.spacer.component';
@@ -17,7 +19,7 @@ import { DbxChipDirective } from './text.chip.directive';
 import { DbxTextChipsComponent } from './text.chips.component';
 import { DbxWarnComponent } from './warn.component';
 
-const declarations = [DbxChipDirective, DbxNoteComponent, DbxNoticeComponent, DbxSuccessComponent, DbxWarnComponent, DbxHintComponent, DbxLabelBlockComponent, DbxLabelComponent, DbxLinkifyComponent, DbxOkComponent, DbxTextChipsComponent, DbxIconSpacerDirective, DbxFormDescriptionComponent];
+const declarations = [DbxChipDirective, DbxDetailBlockComponent, DbxDetailBlockHeaderComponent, DbxNoteComponent, DbxNoticeComponent, DbxSuccessComponent, DbxWarnComponent, DbxHintComponent, DbxLabelBlockComponent, DbxLabelComponent, DbxLinkifyComponent, DbxOkComponent, DbxTextChipsComponent, DbxIconSpacerDirective, DbxFormDescriptionComponent];
 
 @NgModule({
   imports: [CommonModule, MatChipsModule, MatTooltipModule, MatIconModule],
