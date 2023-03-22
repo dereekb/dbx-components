@@ -8,6 +8,7 @@ $hint-opacity: 0.8;
 $note-opacity: 0.7;
 $mat-hint-opacity: 0.54; // Opacity to mirror mat-hint
 $dbx-label-padded-padding: 6px;
+$dbx-detail-block-content-offset: 30px;
 
 // MARK: Mixin
 @mixin core() {
@@ -33,6 +34,43 @@ $dbx-label-padded-padding: 6px;
   .dbx-label-block {
     display: block;
     padding: 3px 0;
+  }
+
+  .dbx-detail-block-header {
+    display: flex;
+    align-items: center;
+
+    .mat-icon {
+      padding-right: 6px;
+    }
+
+    .dbx-anchor-a {
+      text-decoration: underline;
+    }
+
+    padding-bottom: 12px;
+  }
+
+  .dbx-detail-block-header-no-icon {
+    padding-left: $dbx-detail-block-content-offset;
+  }
+
+  .dbx-detail-block {
+    .dbx-detail-block-header {
+      padding-bottom: 2px;
+
+      .dbx-detail-block-header-label {
+        font-weight: 400;
+      }
+    }
+
+    .dbx-detail-block-content {
+      opacity: 0.8;
+      font-size: 0.9em;
+      padding-left: $dbx-detail-block-content-offset;
+    }
+
+    padding-bottom: 12px;
   }
 
   .dbx-text-no-overflow {

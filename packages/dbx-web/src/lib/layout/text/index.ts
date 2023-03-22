@@ -1,3 +1,5 @@
+export * from './detail.block.component';
+export * from './detail.block.header.component';
 export * from './form.description.component';
 export * from './hint.component';
 export * from './icon.spacer.component';
