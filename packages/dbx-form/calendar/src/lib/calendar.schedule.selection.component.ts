@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Output, OnDestroy } from '@angular/core';
-import { CalendarEvent, CalendarMonthViewDay } from 'angular-calendar';
+import { CalendarEvent, CalendarMonthViewBeforeRenderEvent, CalendarMonthViewDay } from 'angular-calendar';
 import { map, shareReplay, Subject, first, throttleTime } from 'rxjs';
 import { DbxCalendarEvent, DbxCalendarStore, prepareAndSortCalendarEvents } from '@dereekb/dbx-web/calendar';
 import { DayOfWeek } from '@dereekb/util';
@@ -35,7 +35,8 @@ export class DbxScheduleSelectionCalendarComponent<T> implements OnDestroy {
     this.clickEvent.emit({ action, event });
   }
 
-  beforeMonthViewRender({ body }: { body: CalendarMonthViewDay<CalendarScheduleSelectionMetadata>[] }): void {
+  beforeMonthViewRender(renderEvent: CalendarMonthViewBeforeRenderEvent): void {
+    const { body }: { body: CalendarMonthViewDay<CalendarScheduleSelectionMetadata>[] } = renderEvent;
     this.state$.pipe(first()).subscribe(({ isEnabledDay, indexFactory, isEnabledFilterDay, allowedDaysOfWeek }) => {
       body.forEach((viewDay) => {
         const { date } = viewDay;
