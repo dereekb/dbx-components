@@ -1,7 +1,7 @@
-import { ISO8601DayString, MapFunction } from '@dereekb/util';
+import { ISO8601DayString, MapFunction, Maybe } from '@dereekb/util';
 import { differenceInMinutes, format, formatDistance, formatDistanceToNow, parse, startOfDay } from 'date-fns';
-import { isDate } from './date';
-import { DateRange, dateRangeState, DateRangeState } from './date.range';
+import { isDate, isSameDateDay } from './date';
+import { dateOrDateRangeToDateRange, DateRange, dateRangeState, DateRangeState } from './date.range';
 
 export type FormatDateFunction = MapFunction<Date, string>;
 export type FormatDateRangeFunction = ((startOrDateRange: DateRange) => string) & ((startOrDateRange: Date, inputEnd?: Date) => string);
@@ -19,6 +19,12 @@ export interface FormatDateRangeFunctionConfig {
    * Custom separator
    */
   separator?: string;
+  /**
+   * Whether or not to allow only printing a single date if the date range is the same.
+   *
+   * False by default.
+   */
+  simplifySameDate?: boolean;
 }
 
 export type FormatDateRangeFunctionConfigInput = FormatDateFunction | FormatDateRangeFunctionConfig;
@@ -31,12 +37,19 @@ export type FormatDateRangeFunctionConfigInput = FormatDateFunction | FormatDate
  */
 export function formatDateRangeFunction(inputConfig: FormatDateRangeFunctionConfigInput): FormatDateRangeFunction {
   const config = typeof inputConfig === 'function' ? { format: inputConfig } : inputConfig;
-  const { format, separator = '-' } = config;
+  const { format, separator = '-', simplifySameDate = false } = config;
 
   return (startOrDateRange: Date | DateRange, inputEnd?: Date) => {
     const { start, end } = isDate(startOrDateRange) ? { start: startOrDateRange, end: inputEnd as Date } : startOrDateRange;
 
-    const string = `${format(start)} ${separator} ${format(end)}`;
+    let string: string;
+
+    if (simplifySameDate && isSameDateDay(start, end)) {
+      string = format(start);
+    } else {
+      string = `${format(start)} ${separator} ${format(end)}`;
+    }
+
     return string;
   };
 }
@@ -44,8 +57,9 @@ export function formatDateRangeFunction(inputConfig: FormatDateRangeFunctionConf
 /**
  * Formats the input date range using the start and end dates and a format function.
  */
-export function formatDateRange(range: DateRange, format: (date: Date) => string, separator?: string): string {
-  return formatDateRangeFunction({ format, separator })(range);
+export function formatDateRange(range: DateRange, inputConfig: FormatDateRangeFunctionConfigInput, separator?: string): string {
+  const config = typeof inputConfig === 'function' ? { format: inputConfig, separator } : inputConfig;
+  return formatDateRangeFunction(config)(range);
 }
 
 /**
@@ -62,8 +76,10 @@ export function formatToTimeRangeString(start: Date, end: Date): string {
  *
  * I.E. 02/01/1992 - 03/01/1992
  */
-export function formatToDayRangeString(start: Date, end: Date): string {
-  return formatDateRange({ start, end }, formatToShortDateString);
+export function formatToDayRangeString(startOrDateRange: DateRange): string;
+export function formatToDayRangeString(start: Date, end?: Maybe<Date>): string;
+export function formatToDayRangeString(startOrDateRange: DateRange | Date, end?: Maybe<Date>): string {
+  return formatDateRange(dateOrDateRangeToDateRange(startOrDateRange, end), { format: formatToShortDateString, simplifySameDate: true });
 }
 
 export function formatToISO8601DateString(date: Date = new Date()): ISO8601DayString {
