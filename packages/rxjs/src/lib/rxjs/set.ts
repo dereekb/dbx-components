@@ -14,6 +14,6 @@ export function setContainsNoValueFrom<T>(valuesObs: Observable<Maybe<Iterable<T
   return combineLatestMapFrom(valuesObs, (set, values) => setContainsNoneOfValue(set, values ?? []));
 }
 
-export function distinctUntilHasDifferentValues<K extends PrimativeKey = PrimativeKey>() {
-  return distinctUntilChanged<K[]>((a, b) => !hasDifferentValues(a, b));
+export function distinctUntilHasDifferentValues<I extends Iterable<K>, K extends PrimativeKey>() {
+  return distinctUntilChanged<I>((a, b) => !hasDifferentValues(a, b));
 }
