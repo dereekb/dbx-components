@@ -1,3 +1,4 @@
+import { DateRange } from '@dereekb/date';
 import { formatDateRangeFunction, formatToDayRangeString, formatToShortDateString } from './date.format';
 
 describe('formatDateRangeFunction', () => {
@@ -41,5 +42,30 @@ describe('formatDateRangeFunction', () => {
       const result = fn({ start, end });
       expect(result).toBe(`${formatToShortDateString(start)} ${separator} ${formatToShortDateString(end)}`);
     });
+  });
+});
+
+describe('formatToDayRangeString()', () => {
+  const date = `2023-02-27`;
+  const endDate = `2023-02-28`;
+  const start = new Date(`${date}T00:00`);
+  const end = new Date(`${endDate}T00:00`);
+  const dateRange: DateRange = { start, end };
+
+  const expectedString = `${formatToShortDateString(start)} - ${formatToShortDateString(end)}`;
+
+  it('should format a DateRange', () => {
+    const result = formatToDayRangeString(start, end);
+    expect(result).toBe(expectedString);
+  });
+
+  it('should format a pair of Dates', () => {
+    const result = formatToDayRangeString(dateRange);
+    expect(result).toBe(expectedString);
+  });
+
+  it('should format a single Date', () => {
+    const result = formatToDayRangeString(start);
+    expect(result).toBe(formatToShortDateString(start));
   });
 });

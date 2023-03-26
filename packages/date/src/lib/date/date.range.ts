@@ -1,8 +1,8 @@
 import { Building, FactoryWithRequiredInput, MapFunction, Maybe } from '@dereekb/util';
 import { Expose, Type } from 'class-transformer';
 import { IsEnum, IsOptional, IsDate, IsNumber } from 'class-validator';
-import { addDays, addHours, differenceInDays, endOfDay, endOfMonth, endOfWeek, isAfter, isDate, isPast, startOfDay, startOfMinute, startOfMonth, startOfWeek } from 'date-fns';
-import { isSameDate } from './date';
+import { addDays, addHours, differenceInDays, endOfDay, endOfMonth, endOfWeek, isAfter, isPast, startOfDay, startOfMinute, startOfMonth, startOfWeek } from 'date-fns';
+import { isSameDate, isDate } from './date';
 
 /**
  * Represents a start date.
@@ -70,6 +70,16 @@ export function isDateRange(input: unknown): input is DateRange {
 
 export function isSameDateRange(a: Maybe<DateRange>, b: Maybe<DateRange>): boolean {
   return isSameDate(a?.start, b?.start) && isSameDate(a?.end, b?.end);
+}
+
+export type DateOrDateRange = Date | DateRange;
+
+export function dateOrDateRangeToDateRange(startOrDateRange: DateOrDateRange, end?: Maybe<Date>): DateRange {
+  if (isDate(startOrDateRange)) {
+    return { start: startOrDateRange, end: (end as Date) ?? startOrDateRange };
+  } else {
+    return startOrDateRange;
+  }
 }
 
 export enum DateRangeType {
