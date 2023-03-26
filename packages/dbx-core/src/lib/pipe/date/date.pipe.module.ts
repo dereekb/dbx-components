@@ -7,8 +7,10 @@ import { ToMinutesPipe } from './tominutes.pipe';
 import { DateFormatDistancePipe } from './dateformatdistance.pipe';
 import { DateDistancePipe } from './datedistance.pipe';
 import { DateDayRangePipe } from './datedayrange.pipe';
+import { DateTimeRangePipe } from './datetimerange.pipe';
+import { DateDayTimeRangePipe } from './datedaytimerange.pipe';
 
-const declarations = [DateFromToTimePipe, DateDayRangePipe, DateFormatDistancePipe, MinutesStringPipe, TimeDistanceCountdownPipe, TimeDistancePipe, DateDistancePipe, ToJsDatePipe, ToMinutesPipe];
+const declarations = [DateFromToTimePipe, DateDayRangePipe, DateDayTimeRangePipe, DateTimeRangePipe, DateFormatDistancePipe, MinutesStringPipe, TimeDistanceCountdownPipe, TimeDistancePipe, DateDistancePipe, ToJsDatePipe, ToMinutesPipe];
 
 @NgModule({
   exports: declarations,

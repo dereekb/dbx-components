@@ -3,6 +3,8 @@ export * from './datedayrange.pipe';
 export * from './datedistance.pipe';
 export * from './dateformatdistance.pipe';
 export * from './datefromtoformat.pipe';
+export * from './datedaytimerange.pipe';
+export * from './datetimerange.pipe';
 export * from './minutesstring.pipe';
 export * from './timedistance.pipe';
 export * from './tojsdate.pipe';

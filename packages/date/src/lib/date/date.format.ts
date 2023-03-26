@@ -66,9 +66,31 @@ export function formatDateRange(range: DateRange, inputConfig: FormatDateRangeFu
  * Formats the input dates to be time start - end using formatToTimeString().
  *
  * I.E. 12:00AM - 4:00PM
+ *
+ * If the input dates are on different days, then the format will come from formatToDayTimeRangeString().
+ *
+ * I.E. 1/1/2001 12:00AM - 1/2/2001 4:00PM
  */
-export function formatToTimeRangeString(start: Date, end: Date): string {
-  return formatDateRange({ start, end }, formatToTimeString);
+export function formatToTimeRangeString(startOrDateRange: DateRange): string;
+export function formatToTimeRangeString(start: Date, end?: Maybe<Date>): string;
+export function formatToTimeRangeString(startOrDateRange: DateRange | Date, end?: Maybe<Date>, onlyTimeRange?: boolean): string;
+export function formatToTimeRangeString(startOrDateRange: DateRange | Date, end?: Maybe<Date>, onlyTimeRange = false): string {
+  const dateRange = dateOrDateRangeToDateRange(startOrDateRange, end);
+  const isSameDay = onlyTimeRange || isSameDateDay(dateRange.start, dateRange.end);
+
+  let format: FormatDateFunction = isSameDay ? formatToTimeString : formatToShortDateAndTimeString;
+  return formatDateRange(dateRange, { format, simplifySameDate: false });
+}
+
+/**
+ * Formats the input dates to be date start - end using formatToShortDateAndTimeString().
+ *
+ * I.E. 1/1/2001 12:00AM - 1/2/2001 4:00PM
+ */
+export function formatToDayTimeRangeString(startOrDateRange: DateRange): string;
+export function formatToDayTimeRangeString(start: Date, end?: Maybe<Date>): string;
+export function formatToDayTimeRangeString(startOrDateRange: DateRange | Date, end?: Maybe<Date>): string {
+  return formatDateRange(dateOrDateRangeToDateRange(startOrDateRange, end), { format: formatToShortDateAndTimeString, simplifySameDate: false });
 }
 
 /**
@@ -90,8 +112,10 @@ export function formatToISO8601DayString(date: Date = new Date()): ISO8601DayStr
   return format(date, 'yyyy-MM-dd');
 }
 
+export const dateShortDateStringFormat = 'MM/dd/yyyy';
+
 export function formatToShortDateString(date: Date = new Date()): ISO8601DayString {
-  return format(date, 'MM/dd/yyyy');
+  return format(date, dateShortDateStringFormat);
 }
 
 export function formatToMonthDayString(date: Date = new Date()): ISO8601DayString {
@@ -102,8 +126,16 @@ export function formatToDateString(date: Date): string {
   return format(date, 'EEE, MMM do');
 }
 
+export const dateTimeStringFormat = 'h:mm a';
+
 export function formatToTimeString(date: Date): string {
-  return format(date, 'h:mm a');
+  return format(date, dateTimeStringFormat);
+}
+
+export const dateShortDateAndTimeStringFormat = `${dateShortDateStringFormat} ${dateTimeStringFormat}`;
+
+export function formatToShortDateAndTimeString(date: Date): string {
+  return format(date, dateShortDateAndTimeStringFormat);
 }
 
 export function formatToTimeAndDurationString(start: Date, end: Date): string {
