@@ -152,6 +152,7 @@ export class DbxFilterPopoverComponent<F extends object> extends AbstractPopover
   }
 
   ngOnDestroy(): void {
+    this._closeOnChangeSub.destroy();
     this._showPreset.complete();
   }
 

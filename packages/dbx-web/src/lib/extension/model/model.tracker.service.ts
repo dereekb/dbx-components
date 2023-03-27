@@ -13,6 +13,8 @@ import { DbxModelViewTrackerStorage } from './model.tracker.view.storage';
 export class DbxModelTrackerService {
   private _defaultFolder: Maybe<string>;
 
+  readonly newEvent$ = this.viewTrackerStorage.newEvent$;
+
   constructor(private readonly viewTrackerStorage: DbxModelViewTrackerStorage) {}
 
   get defaultFolder(): Maybe<string> {

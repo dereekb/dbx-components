@@ -36,6 +36,6 @@ export class DbxFilterPopoverButtonComponent<F extends object = object> extends 
 
   showFilterPopover(): void {
     const origin = this.buttonElement.nativeElement;
-    this.showFilterPopoverAtOrigin(origin);
+    this.showPopover(origin);
   }
 }

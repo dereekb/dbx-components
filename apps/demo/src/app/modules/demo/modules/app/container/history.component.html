@@ -1,7 +1,11 @@
 <dbx-content-page dbxAppContextState="public">
   <dbx-content-container>
-    <h2>History</h2>
-    <p>View recently viewed items here.</p>
-    <dbx-firebase-model-type-instance-list [state$]="state$"></dbx-firebase-model-type-instance-list>
+    <dbx-section-page header="History">
+      <div sectionHeader>
+        <dbx-spacer></dbx-spacer>
+        <dbx-firebase-model-history-popover-button></dbx-firebase-model-history-popover-button>
+      </div>
+      <dbx-firebase-model-history [historyFilter]="historyFilter"></dbx-firebase-model-history>
+    </dbx-section-page>
   </dbx-content-container>
 </dbx-content-page>

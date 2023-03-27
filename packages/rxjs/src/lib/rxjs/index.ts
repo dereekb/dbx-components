@@ -1,5 +1,6 @@
 export * from './array';
 export * from './boolean';
+export * from './decision';
 export * from './delta';
 export * from './timeout';
 export * from './factory';

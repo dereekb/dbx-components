@@ -1,4 +1,4 @@
-import { distinctUntilChanged, map, Observable, shareReplay, switchMap, combineLatest } from 'rxjs';
+import { distinctUntilChanged, map, Observable, shareReplay, switchMap, combineLatest, of } from 'rxjs';
 import { FirestoreCollectionType, FirestoreDocument, FirestoreModelIdentity, FirestoreModelKey } from '@dereekb/firebase';
 import { DbxModelTypeInfo, DbxModelTypesMap, DbxModelTypesService } from '@dereekb/dbx-web';
 import { ArrayOrValue, asArray, FactoryWithRequiredInput, Maybe, ModelTypeString } from '@dereekb/util';
@@ -122,7 +122,7 @@ export type DbxFirebaseModelTypesServiceInstancePairForKeysFactory = (keys: Arra
 export function dbxFirebaseModelTypesServiceInstancePairForKeysFactory(service: DbxFirebaseModelTypesService): DbxFirebaseModelTypesServiceInstancePairForKeysFactory {
   return (keys: ArrayOrValue<ObservableOrValue<FirestoreModelKey>>) => {
     const instances = asArray(keys).map((x) => service.instanceForKey(x).instancePair$);
-    return combineLatest(instances);
+    return instances.length ? combineLatest(instances) : of([]);
   };
 }
 
