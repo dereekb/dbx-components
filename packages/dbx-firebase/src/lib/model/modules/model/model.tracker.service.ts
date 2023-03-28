@@ -4,7 +4,7 @@ import { map, Observable, switchMap, shareReplay, startWith, combineLatest, iden
 import { Injectable } from '@angular/core';
 import { allDbxModelViewTrackerEventModelKeys, DbxModelTrackerService } from '@dereekb/dbx-web';
 import { DbxFirebaseModelTypesService, DbxFirebaseModelTypesServiceInstancePair } from './model.types.service';
-import { filterItemsWithObservableDecision, invertObservableDecision, ObservableDecisionFunction, tapLog } from '@dereekb/rxjs';
+import { filterItemsWithObservableDecision, invertObservableDecision, mapEachAsync, ObservableDecisionFunction, tapLog } from '@dereekb/rxjs';
 
 export interface DbxFirebaseModelTrackerFilterItem {
   instancePair: DbxFirebaseModelTypesServiceInstancePair;
@@ -43,10 +43,7 @@ export class DbxFirebaseModelTrackerService {
   );
 
   readonly filterItemHistoryPairs$: Observable<DbxFirebaseModelTrackerFilterItem[]> = this.historyPairs$.pipe(
-    switchMap((x) => {
-      const typeObs = x.map((instancePair) => instancePair.instance.identity$.pipe(map((identity) => ({ instancePair, identity }))));
-      return combineLatest(typeObs).pipe(first());
-    }),
+    mapEachAsync((instancePair) => instancePair.instance.identity$.pipe(map((identity) => ({ instancePair, identity }))), { onlyFirst: true }),
     shareReplay(1)
   );
 

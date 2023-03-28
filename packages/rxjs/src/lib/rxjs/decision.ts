@@ -1,5 +1,5 @@
 import { filterAndMapFunction, Milliseconds } from '@dereekb/util';
-import { combineLatest, map, MonoTypeOperatorFunction, Observable, switchMap, throttleTime } from 'rxjs';
+import { combineLatest, map, MonoTypeOperatorFunction, Observable, of, switchMap, throttleTime } from 'rxjs';
 
 /**
  * Decision-like that takes in a value and returns an Observable with a boolean.
@@ -37,7 +37,15 @@ export function filterItemsWithObservableDecision<T>(observableDecisionFunction:
   );
 
   return switchMap((values: T[]) => {
-    const valueObs = values.map((x) => observableDecisionFunction(x).pipe(map((y) => [x, y] as [T, boolean])));
-    return combineLatest(valueObs).pipe(throttleTime(throttle, undefined, { leading: true, trailing: true }), map(filterAndMap));
+    let obs: Observable<T[]>;
+
+    if (values.length) {
+      const valueObs = values.map((x) => observableDecisionFunction(x).pipe(map((y) => [x, y] as [T, boolean])));
+      obs = combineLatest(valueObs).pipe(throttleTime(throttle, undefined, { leading: true, trailing: true }), map(filterAndMap));
+    } else {
+      obs = of([]);
+    }
+
+    return obs;
   });
 }
