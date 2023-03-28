@@ -1,12 +1,12 @@
 import { Injector } from '@angular/core';
 import { SegueRef } from '@dereekb/dbx-core';
-import { ModelKey, ModelTypeString } from '@dereekb/util';
+import { Maybe, ModelKey, ModelTypeString } from '@dereekb/util';
 import { ModelViewContext } from './model.tracker';
 
 /**
- * Generates a SegueRef based on the input model's key and optional view context.
+ * Generates a SegueRef based on the input model's key and optional view context, or returns null/undefined if no ref is available.
  */
-export type DbxModelTypeConfigurationSrefFactory = (key: ModelKey, context?: ModelViewContext) => SegueRef;
+export type DbxModelTypeConfigurationSrefFactory = (key: ModelKey, context?: ModelViewContext) => Maybe<SegueRef>;
 
 /**
  * Generates a DbxModelTypeConfigurationSrefFactory.
