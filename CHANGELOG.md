@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+# [9.23.0](https://github.com/dereekb/dbx-components/compare/v9.22.11-dev...v9.23.0) (2023-03-28)
+
+
+### Features
+
+* added DbxFirebaseModelHistoryPopoverButtonComponent ([ce8a720](https://github.com/dereekb/dbx-components/commit/ce8a720bb600814e8ae695c8067323545d60de25))
+
+
+
 ## [9.22.11](https://github.com/dereekb/dbx-components/compare/v9.22.10-dev...v9.22.11) (2023-03-26)
 
 
