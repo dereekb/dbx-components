@@ -3,40 +3,31 @@ import { NgPopoverRef } from 'ng-overlay-container';
 import { DbxPopoverService } from '../popover/popover.service';
 import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
 import { DbxFilterPopoverComponent, DbxFilterComponentParams } from './filter.popover.component';
+import { AbstractPopoverRefDirective } from '../popover/abstract.popover.ref.directive';
 
 export type DbxFilterButtonConfig<F extends object> = DbxFilterComponentParams<F>;
 
 @Directive()
-export abstract class AbstractFilterPopoverButtonDirective<F extends object> extends AbstractSubscriptionDirective {
+export abstract class AbstractFilterPopoverButtonDirective<F extends object> extends AbstractPopoverRefDirective<unknown, unknown> {
   @Input()
   config?: DbxFilterButtonConfig<F>;
-
-  private _popoverRef?: NgPopoverRef<unknown, unknown>;
 
   constructor(private readonly popupService: DbxPopoverService) {
     super();
   }
 
-  protected showFilterPopoverAtOrigin(origin: ElementRef): void {
-    if (!this._popoverRef) {
-      this._showFilterPopover(origin);
-    }
-  }
-
-  private _showFilterPopover(origin: ElementRef): void {
+  protected override _makePopoverRef(origin?: ElementRef): NgPopoverRef<unknown, unknown> {
     const config = this.config;
 
     if (!config) {
       throw new Error('Missing filterButtonConfig.');
+    } else if (!origin) {
+      throw new Error('Missing origin.');
     }
 
-    this._popoverRef = DbxFilterPopoverComponent.openPopover(this.popupService, {
+    return DbxFilterPopoverComponent.openPopover(this.popupService, {
       origin,
       ...config
-    });
-
-    this.sub = this._popoverRef.afterClosed$.subscribe(() => {
-      this._popoverRef = undefined;
     });
   }
 }

@@ -35,9 +35,7 @@ export class DbxFirebaseModelTypeInstanceViewComponent extends AbstractDbxSelect
 
 @Component({
   template: `
-    <div>
-      <p>{{ title }}</p>
-    </div>
+    <span>{{ title }}</span>
   `
 })
 export class DbxFirebaseModelTypeInstanceViewItemComponent extends AbstractDbxValueListViewItemComponent<DbxFirebaseModelTypesServiceInstancePair> {

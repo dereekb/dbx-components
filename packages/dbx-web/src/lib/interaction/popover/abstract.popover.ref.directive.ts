@@ -1,4 +1,4 @@
-import { OnDestroy, Directive, EventEmitter, Output } from '@angular/core';
+import { OnDestroy, Directive, EventEmitter, Output, ElementRef } from '@angular/core';
 import { AbstractSubscriptionDirective } from '@dereekb/dbx-core';
 import { NgPopoverCloseEvent, NgPopoverRef } from 'ng-overlay-container';
 
@@ -9,14 +9,14 @@ import { NgPopoverCloseEvent, NgPopoverRef } from 'ng-overlay-container';
 export abstract class AbstractPopoverRefDirective<T = unknown, R = unknown> extends AbstractSubscriptionDirective {
   private _popoverRef?: NgPopoverRef<T, R>;
 
-  showPopover(): void {
+  showPopover(origin?: ElementRef): void {
     if (!this._popoverRef) {
-      this._showPopoverRef();
+      this._showPopoverRef(origin);
     }
   }
 
-  private _showPopoverRef(): void {
-    this._popoverRef = this._makePopoverRef();
+  private _showPopoverRef(origin?: ElementRef): void {
+    this._popoverRef = this._makePopoverRef(origin);
     this._afterOpened(this._popoverRef);
     this.sub = this._popoverRef.afterClosed$.subscribe((x) => {
       this._afterClosed(x);
@@ -24,7 +24,7 @@ export abstract class AbstractPopoverRefDirective<T = unknown, R = unknown> exte
     });
   }
 
-  protected abstract _makePopoverRef(): NgPopoverRef<T, R>;
+  protected abstract _makePopoverRef(origin?: ElementRef): NgPopoverRef<T, R>;
 
   protected _afterOpened(popoverRef: NgPopoverRef<T, R>): void {
     // Do nothing. Override in parent type

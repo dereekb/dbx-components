@@ -18,7 +18,7 @@ export type DecisionFunctionFactory<C, I> = FactoryWithRequiredInput<DecisionFun
  * @param invert whether or not to apply the inversion.
  * @returns
  */
-export function invertDecision<T = unknown, F extends DecisionFunction<T> = DecisionFunction<T>>(decisionFn: F, invert = true): F {
+export function invertDecision<F extends DecisionFunction<any>>(decisionFn: F, invert = true): F {
   return invertFilter(decisionFn as FilterFunction, invert) as F;
 }
 

@@ -1,5 +1,5 @@
-import { exhaustMap, map, scan, shareReplay, startWith, distinctUntilChanged, MonoTypeOperatorFunction, Observable, OperatorFunction } from 'rxjs';
-import { Maybe, ArrayOrValue, mergeArrayOrValueIntoArray, forEachWithArray, mergeArrayIntoArray, asArray } from '@dereekb/util';
+import { exhaustMap, map, scan, shareReplay, startWith, distinctUntilChanged, MonoTypeOperatorFunction, Observable, OperatorFunction, switchMap, combineLatest, of, first, ObservableInput } from 'rxjs';
+import { Maybe, ArrayOrValue, mergeArrayOrValueIntoArray, forEachWithArray, mergeArrayIntoArray, asArray, MapFunction } from '@dereekb/util';
 
 export function distinctUntilArrayLengthChanges<A>(getArray: (value: A) => unknown[]): MonoTypeOperatorFunction<A>;
 export function distinctUntilArrayLengthChanges<T>(): MonoTypeOperatorFunction<T[]>;
@@ -90,12 +90,43 @@ export function scanBuildArray<S, T>(init: ScanBuildArrayConfigFn<S, T>): Operat
   });
 }
 
+// MARK: MapForEach
 /**
- * Convenience function with map to forEachWithArray
+ * Convenience function that calls forEachWithArray() and returns the original array.
  *
  * @param forEach
  * @returns
  */
-export function mapForEach<T>(forEach: Maybe<(value: T) => void>): OperatorFunction<T[], T[]> {
+export function mapForEach<T>(forEach: Maybe<(value: T) => void>): MonoTypeOperatorFunction<T[]> {
   return forEach ? map((x) => forEachWithArray(x, forEach)) : map((x) => x);
+}
+
+// MARK: MapEachAsync
+export interface MapEachAsyncConfig {
+  /**
+   * Whether or not to map only the first
+   */
+  onlyFirst?: boolean;
+}
+
+/**
+ * Operator function that maps each value in the array independently using Observables, then combines the all results.
+ */
+export function mapEachAsync<I, O>(mapFunction: MapFunction<I, ObservableInput<O>>, config?: MapEachAsyncConfig): OperatorFunction<I[], O[]> {
+  const { onlyFirst = false } = config ?? {};
+
+  return switchMap((values: I[]) => {
+    if (values.length) {
+      const mappedObs = values.map(mapFunction);
+      let result = combineLatest(mappedObs);
+
+      if (onlyFirst) {
+        result = result.pipe(first());
+      }
+
+      return result;
+    } else {
+      return of([]);
+    }
+  });
 }

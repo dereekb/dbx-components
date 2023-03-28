@@ -3,11 +3,6 @@ import { MapKeysIntersectionObject, mapKeysIntersectionObjectToArray } from '@de
 import { asObservable, ObservableOrValue } from './getter';
 
 /**
- * Decision-like that takes in a value and returns an Observable with a boolean.
- */
-export type ObservableDecisionFunction<T> = (value: T) => Observable<boolean>;
-
-/**
  * OperatorFunction that pipes the input from the object with a keys observable to produce the result of mapKeysIntersectionObjectToArray.
  *
  * @param keysObs

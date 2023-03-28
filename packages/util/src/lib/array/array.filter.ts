@@ -1,5 +1,8 @@
+import { MapFunction } from '../value/map';
+import { DecisionFunction } from '../value/decision';
 import { copyArray } from './array';
 import { expandIndexSet, findBestIndexSetPair, findToIndexSet } from './array.index';
+import { forEachInIterable } from '../iterable/iterable';
 
 /**
  * Filters the input values by distance. The original order is retained.
@@ -91,4 +94,32 @@ export function applyBestFit<T>(input: T[], filter: (value: T) => boolean, compa
   }
 
   return input;
+}
+
+// MARK: Filter and Map
+/**
+ * Filters and maps the input values to an array.
+ */
+export type FilterAndMapFunction<I, O> = MapFunction<Iterable<I>, O[]>;
+
+/**
+ * Filters the input values and maps all correct values to a new value.
+ *
+ * @param values
+ * @param decisionFunction
+ * @param mapFunction
+ * @returns
+ */
+export function filterAndMapFunction<I, O>(decisionFunction: DecisionFunction<I>, mapFunction: MapFunction<I, O>): FilterAndMapFunction<I, O> {
+  return (values: Iterable<I>) => {
+    const result: O[] = [];
+
+    forEachInIterable(values, (x) => {
+      if (decisionFunction(x)) {
+        result.push(mapFunction(x));
+      }
+    });
+
+    return result;
+  };
 }

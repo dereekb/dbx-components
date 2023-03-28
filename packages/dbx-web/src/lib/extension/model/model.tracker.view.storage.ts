@@ -1,8 +1,9 @@
+import { tapLog } from '@dereekb/rxjs';
 import { Injectable } from '@angular/core';
 import { unixTimeNumberForNow } from '@dereekb/date';
 import { StorageAccessor } from '@dereekb/dbx-core';
 import { encodeModelKeyTypePair, ModelRelationUtility, Maybe } from '@dereekb/util';
-import { map, mergeMap, catchError, Observable, of } from 'rxjs';
+import { map, mergeMap, catchError, Observable, of, Subject, tap } from 'rxjs';
 import { DbxModelViewTrackerEventSet, DbxModelViewTrackerEvent } from './model.tracker';
 
 /**
@@ -14,6 +15,10 @@ import { DbxModelViewTrackerEventSet, DbxModelViewTrackerEvent } from './model.t
 export class DbxModelViewTrackerStorage {
   static readonly OBJECT_VIEW_TRACKER_STORAGE_LIST_KEY = 'dbxModelViewTrackerEvents';
   static readonly MAX_EVENTS = 60;
+
+  private _newEvent = new Subject<DbxModelViewTrackerEvent>();
+
+  readonly newEvent$ = this._newEvent.asObservable();
 
   constructor(readonly storageAccessor: StorageAccessor<DbxModelViewTrackerEventSet>) {}
 
@@ -39,10 +44,12 @@ export class DbxModelViewTrackerStorage {
         e.push(nextEvent);
         e.sort((a, b) => (b.d ?? 0) - (a.d ?? 0));
 
-        return this.storageAccessor.set(storageKey, {
-          l: Math.max(set.l ?? 0, nextEvent.d as number),
-          e: e.slice(0, this.maxEventsToKeep)
-        });
+        return this.storageAccessor
+          .set(storageKey, {
+            l: Math.max(set.l ?? 0, nextEvent.d as number),
+            e: e.slice(0, this.maxEventsToKeep)
+          })
+          .pipe(tap(() => this._newEvent.next(nextEvent)));
       })
     );
   }
