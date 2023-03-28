@@ -5,6 +5,7 @@ export * from './dateformatdistance.pipe';
 export * from './datefromtoformat.pipe';
 export * from './datedaytimerange.pipe';
 export * from './datetimerange.pipe';
+export * from './datetimerangeonly.pipe';
 export * from './minutesstring.pipe';
 export * from './timedistance.pipe';
 export * from './tojsdate.pipe';
