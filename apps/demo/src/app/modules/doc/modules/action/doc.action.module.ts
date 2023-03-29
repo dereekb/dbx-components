@@ -11,7 +11,7 @@ import { DocActionContextComponent } from './container/context.component';
 import { DocActionExampleToolsComponent } from './component/action.example.tool.component';
 import { DocActionFormExampleFormComponent } from './component/action.example.form.component';
 import { DocActionMapComponent } from './container/map.component';
-import { DocActionExamplePopoverComponent } from './component/action.example.popover.form.component';
+import { DocActionExamplePopoverComponent } from './component/action.example.popover.component';
 import { DocActionExampleDialogComponent } from './component/action.example.dialog.component';
 import { DocActionFormExampleFormTwoComponent } from './component/action.example.form.two.component';
 
