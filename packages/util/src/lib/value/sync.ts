@@ -16,3 +16,10 @@ export enum SyncState {
  * Whether or not the object is synchronized.
  */
 export type SyncStateBoolean = boolean;
+
+/**
+ * Whether or not the object needs to be synchronized.
+ *
+ * This is used in cases where the boolean is only ever true, and is generally undefined on the object when false.
+ */
+export type NeedsSyncBoolean = boolean;

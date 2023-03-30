@@ -1,5 +1,5 @@
 import { range } from '../array/array.number';
-import { findItemsByIndex, indexDeltaGroupFunction, IndexRange, indexRangeOverlapsIndexRangeFunction, IndexRef, isIndexNumberInIndexRangeFunction, isIndexRangeInIndexRangeFunction, sortAscendingIndexNumberRefFunction } from './indexed';
+import { findBestIndexMatchFunction, findItemsByIndex, indexDeltaGroupFunction, IndexRange, indexRangeOverlapsIndexRangeFunction, IndexRef, isIndexNumberInIndexRangeFunction, isIndexRangeInIndexRangeFunction, sortAscendingIndexNumberRefFunction } from './indexed';
 
 describe('sortAscendingIndexNumberRefFunction()', () => {
   describe('sort()', () => {
@@ -75,6 +75,20 @@ describe('findItemsByIndex()', () => {
 
     expect(result).toContain(values[1]);
     expect(result).toContain(values[2]);
+  });
+});
+
+describe('findBestIndexMatchFunction()', () => {
+  it('should return the best index match.', () => {
+    const options = [0, 5, 10, 15, 20].map((i) => ({ i }));
+    const fn = findBestIndexMatchFunction(options);
+
+    expect(fn({ i: 4 })).toBe(options[0]);
+    expect(fn({ i: 6 })).toBe(options[1]);
+    expect(fn({ i: 11 })).toBe(options[2]);
+    expect(fn({ i: 16 })).toBe(options[3]);
+    expect(fn({ i: 21 })).toBe(options[4]);
+    expect(fn({ i: 200 })).toBe(options[4]);
   });
 });
 

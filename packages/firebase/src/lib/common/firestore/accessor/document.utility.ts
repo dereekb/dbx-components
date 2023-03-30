@@ -84,6 +84,14 @@ export function getDocumentSnapshotDataTuples<D extends FirestoreDocument<any>>(
   return PromiseUtility.runTasksForValues(documents, (document) => document.accessor.get().then((snapshot) => [document, snapshot.data()]));
 }
 
+export function getDocumentSnapshotData<D extends FirestoreDocument<any>>(document: D): Promise<Maybe<DocumentDataWithIdAndKey<FirestoreDocumentData<D>>>>;
+export function getDocumentSnapshotData<D extends FirestoreDocument<any>>(document: D, withId: true): Promise<Maybe<DocumentDataWithIdAndKey<FirestoreDocumentData<D>>>>;
+export function getDocumentSnapshotData<D extends FirestoreDocument<any>>(document: D, withId: false): Promise<Maybe<FirestoreDocumentData<D>>>;
+export function getDocumentSnapshotData<D extends FirestoreDocument<any>>(document: D, withId?: boolean): Promise<Maybe<DocumentDataWithIdAndKey<FirestoreDocumentData<D>> | FirestoreDocumentData<D>>>;
+export function getDocumentSnapshotData<D extends FirestoreDocument<any>>(document: D, withId = true): Promise<Maybe<DocumentDataWithIdAndKey<FirestoreDocumentData<D>> | FirestoreDocumentData<D>>> {
+  return document.accessor.get().then((x: DocumentSnapshot<any>) => documentDataFunction<FirestoreDocumentData<D>>(withId)(x));
+}
+
 export function getDocumentSnapshotsData<D extends FirestoreDocument<any>>(documents: D[]): Promise<DocumentDataWithIdAndKey<FirestoreDocumentData<D>>[]>;
 export function getDocumentSnapshotsData<D extends FirestoreDocument<any>>(documents: D[], withId: true): Promise<DocumentDataWithIdAndKey<FirestoreDocumentData<D>>[]>;
 export function getDocumentSnapshotsData<D extends FirestoreDocument<any>>(documents: D[], withId: false): Promise<FirestoreDocumentData<D>[]>;
