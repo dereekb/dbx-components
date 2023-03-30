@@ -114,7 +114,7 @@ export function setDeltaFunction<T>(config: SetDeltaFunctionConfig<T>): SetDelta
 /**
  * Keys mapped by their change type.
  */
-export interface SetDeltaChangeKeys<K> {
+export interface SetDeltaChangeKeys<K extends PrimativeKey = PrimativeKey> {
   readonly removed: K[];
   readonly none: K[];
   readonly added: K[];
