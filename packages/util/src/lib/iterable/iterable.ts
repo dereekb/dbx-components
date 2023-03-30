@@ -1,3 +1,4 @@
+import { PrimativeKey, ReadKeyFunction } from '../key';
 import { Maybe } from '../value/maybe.type';
 
 // MARK: Types
@@ -21,7 +22,7 @@ export function asIterable<T = unknown>(values: IterableOrValue<T>, treatStringA
   return iterable;
 }
 
-export function iterableToArray<T = unknown>(values: IterableOrValue<T>, treatStringAsIterable?: boolean): Array<T> {
+export function iterableToArray<T = unknown>(values: IterableOrValue<T>, treatStringAsIterable?: boolean): T[] {
   let iterable: Array<T>;
 
   if (treatStringAsIterable && typeof values === 'string') {
@@ -33,6 +34,11 @@ export function iterableToArray<T = unknown>(values: IterableOrValue<T>, treatSt
   }
 
   return iterable;
+}
+
+export function iterableToMap<T, K extends PrimativeKey = PrimativeKey>(values: IterableOrValue<T>, readKey: ReadKeyFunction<T, K>): Map<Maybe<K>, T> {
+  const map = new Map<Maybe<K>, T>(iterableToArray(values).map((value) => [readKey(value), value]));
+  return map;
 }
 
 /**
