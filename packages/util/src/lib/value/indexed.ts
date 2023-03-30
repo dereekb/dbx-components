@@ -1,13 +1,14 @@
-import { findValuesFrom, FindValuesFromInput } from './../set/set';
-import { ArrayOrValue, asArray } from './../array/array';
+import { findValuesFrom, FindValuesFromInput } from '../set/set';
+import { ArrayOrValue, asArray, lastValue } from '../array/array';
 import { objectHasKey } from '../object/object';
 import { HashSet } from '../set/set.hashset';
-import { SortCompareFunction } from '../sort';
-import { FactoryWithRequiredInput } from '../getter';
+import { reverseCompareFn, SortCompareFunction } from '../sort';
+import { FactoryWithRequiredInput } from '../getter/getter';
 import { Maybe } from './maybe.type';
 import { separateValues } from '../grouping';
 import { readKeysToMap } from '../map/map.key';
-import { isSelectedDecisionFunctionFactory } from '../set';
+import { isSelectedDecisionFunctionFactory } from '../set/set.selection';
+import { iterableToArray } from '../iterable/iterable';
 
 /**
  * A number that denotes which index an item is at.
@@ -157,6 +158,29 @@ export function findItemsByIndex<T extends IndexRef>(config: FindItemsByIndexInp
     readKey: readIndexNumber,
     keysToFind: indexes
   });
+}
+
+/**
+ * Finds the best index match given the configured objects and returns the best match.
+ */
+export type FindBestIndexMatchFunction<T> = <I extends IndexRef>(value: I) => T;
+
+export function findBestIndexMatchFunction<T extends IndexRef>(items: Iterable<T>): FindBestIndexMatchFunction<T> {
+  // reverse the order so we can return the first item that is less than or equal to the input i
+  const bestMatchArray = iterableToArray<T>(items, false).sort(reverseCompareFn(sortAscendingIndexNumberRefFunction()));
+  const defaultMatch = lastValue(bestMatchArray);
+
+  if (bestMatchArray.length === 0) {
+    throw new Error('findBestIndexMatchFunction() input array cannot be empty.');
+  } else if (bestMatchArray.length === 1) {
+    return () => defaultMatch;
+  } else {
+    return (input) => {
+      const { i } = input;
+      const bestMatch = bestMatchArray.find((matchOption) => i >= matchOption.i);
+      return (bestMatch ?? defaultMatch) as T;
+    };
+  }
 }
 
 // MARK: IndexRange

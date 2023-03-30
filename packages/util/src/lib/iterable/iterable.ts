@@ -27,11 +27,7 @@ export function iterableToArray<T = unknown>(values: IterableOrValue<T>, treatSt
   if (treatStringAsIterable && typeof values === 'string') {
     iterable = [values];
   } else if (isIterable(values)) {
-    if (Array.isArray(values)) {
-      iterable = values as Array<T>;
-    } else {
-      iterable = Array.from(values);
-    }
+    iterable = Array.from(values); // copy the array
   } else {
     iterable = [values];
   }
