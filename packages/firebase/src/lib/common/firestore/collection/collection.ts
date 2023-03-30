@@ -507,6 +507,26 @@ export function firestoreModelKeyCollectionTypeArray<T = unknown>(input: ReadFir
 
 export interface FirestoreModelCollectionAndIdPair extends FirestoreModelIdRef, FirestoreCollectionNameRef {}
 
+/**
+ * Returns the collection name of the input key.
+ *
+ * @param input
+ * @returns
+ */
+export function firestoreModelKeyCollectionName<T = unknown>(input: ReadFirestoreModelKeyInput<T>): Maybe<FirestoreCollectionName> {
+  return firestoreModelKeyTypePair(input)?.collectionName;
+}
+
+/**
+ * Returns the last pair type from all generated pairs from the input.
+ *
+ * @param input
+ * @returns
+ */
+export function firestoreModelKeyTypePair<T = unknown>(input: ReadFirestoreModelKeyInput<T>): Maybe<FirestoreModelCollectionAndIdPair> {
+  return lastValue(firestoreModelKeyPartPairs(input));
+}
+
 export function firestoreModelKeyPartPairs<T = unknown>(input: ReadFirestoreModelKeyInput<T>): Maybe<FirestoreModelCollectionAndIdPair[]> {
   const key = readFirestoreModelKey<T>(input);
   let pairs: Maybe<FirestoreModelCollectionAndIdPair[]>;

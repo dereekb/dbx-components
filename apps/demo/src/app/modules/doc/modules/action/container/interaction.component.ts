@@ -3,7 +3,7 @@ import { DbxActionDialogFunction, DbxPopoverService, DbxActionPopoverFunction, D
 import { ChangeDetectorRef, Component, OnDestroy } from '@angular/core';
 import { DbxActionContextMachine, HandleActionFunction, safeDetectChanges } from '@dereekb/dbx-core';
 import { of, delay, BehaviorSubject, tap } from 'rxjs';
-import { DocActionExamplePopoverComponent } from '../component/action.example.popover.form.component';
+import { DocActionExamplePopoverComponent } from '../component/action.example.popover.component';
 import { DocActionExampleDialogComponent } from '../component/action.example.dialog.component';
 import { DbxActionAnalyticsConfig, DbxAnalyticsService } from '@dereekb/dbx-analytics';
 import { Maybe, ReadableError } from '@dereekb/util';

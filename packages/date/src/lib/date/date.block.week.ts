@@ -1,7 +1,7 @@
 import { addDays } from 'date-fns';
 import { MapFunction, Maybe } from '@dereekb/util';
 import { DateBlockIndex, DateBlockTiming, getCurrentDateBlockTimingStartDate } from './date.block';
-import { YearWeekCode, YearWeekCodeDateReader, YearWeekCodeFactory, yearWeekCodeFromDate, yearWeekCodeGroupFactory, YearWeekCodeGroupFactory } from './date.week';
+import { YearWeekCode, YearWeekCodeDateReader, YearWeekCodeFactory, yearWeekCodeFromDate, yearWeekCodeGroupFactory, YearWeekCodeGroupFactory, YearWeekCodeReader } from './date.week';
 
 /**
  * Used to return the proper YearWeekCode for the input DateBlockIndex relative to the configured timing, or a Date.
@@ -46,6 +46,7 @@ export function dateBlockIndexYearWeekCodeGroupFactory<B>(config: DateBlockIndex
 
   const factory = yearWeekCodeGroupFactory<B>({
     yearWeekCodeFactory: dateBlockIndexYearWeekCode as YearWeekCodeFactory,
+    yearWeekCodeReader: dateBlockIndexYearWeekCode as YearWeekCodeReader,
     dateReader: dateBlockIndexReader as YearWeekCodeDateReader<B>
   });
 
