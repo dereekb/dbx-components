@@ -1,5 +1,6 @@
 import { Building, makeValuesGroupMap, MapFunction, Maybe } from '@dereekb/util';
-import { isDate, getWeek, getYear, endOfWeek, startOfMonth, endOfMonth, isBefore, addWeeks, startOfWeek, setWeek } from 'date-fns';
+import { getWeek, getYear, endOfWeek, startOfMonth, endOfMonth, isBefore, addWeeks, startOfWeek, setWeek } from 'date-fns';
+import { isDate } from './date';
 import { dateTimezoneUtcNormal, DateTimezoneUtcNormalInstance, DateTimezoneUtcNormalInstanceInput, SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE } from './date.timezone';
 
 /**
@@ -8,6 +9,11 @@ import { dateTimezoneUtcNormal, DateTimezoneUtcNormalInstance, DateTimezoneUtcNo
  * 202201 is January 2022
  */
 export type YearWeekCode = number;
+
+/**
+ * String-version of a YearWeekCode. Usually used as a
+ */
+export type YearWeekCodeString = string;
 
 /**
  * Used for default YearWeekCode values
@@ -230,7 +236,7 @@ export function yearWeekCodeDateFactory(config?: YearWeekCodeDateConfig): YearWe
 }
 
 /**
- *
+ * Values grouped by a YearWeekCode value.
  */
 export interface YearWeekCodeGroup<B> {
   readonly items: B[];
@@ -245,10 +251,12 @@ export type YearWeekCodeGroupFactory<B> = (items: B[]) => YearWeekCodeGroup<B>[]
 /**
  * MapFunction that reads the relevant date to use for the YearWeekCode calculation from the input item.
  */
-export type YearWeekCodeDateReader<B> = MapFunction<B, Maybe<Date>>;
+export type YearWeekCodeDateReader<B> = MapFunction<B, Maybe<Date | YearWeekCode | YearWeekCodeString>>;
+export type YearWeekCodeReader = MapFunction<YearWeekCode | YearWeekCodeString, YearWeekCode>;
 
 export interface YearWeekCodeGroupFactoryConfig<B> {
   yearWeekCodeFactory?: YearWeekCodeFactory | YearWeekCodeConfig;
+  yearWeekCodeReader?: YearWeekCodeReader;
   dateReader: YearWeekCodeDateReader<B>;
 }
 
@@ -259,8 +267,9 @@ export interface YearWeekCodeGroupFactoryConfig<B> {
  * @returns
  */
 export function yearWeekCodeGroupFactory<B>(config: YearWeekCodeGroupFactoryConfig<B>): YearWeekCodeGroupFactory<B> {
-  const { yearWeekCodeFactory: factoryInput, dateReader } = config;
+  const { yearWeekCodeFactory: factoryInput, yearWeekCodeReader: readerInput, dateReader } = config;
   const readJobWeekYear = typeof factoryInput === 'function' ? factoryInput : yearWeekCodeFactory(factoryInput);
+  const yearWeekCodeReader = typeof readerInput === 'function' ? readerInput : (x: YearWeekCode | YearWeekCodeString) => Number(x);
 
   return (items: B[]) => {
     const map = makeValuesGroupMap(items, (item: B) => {
@@ -268,7 +277,11 @@ export function yearWeekCodeGroupFactory<B>(config: YearWeekCodeGroupFactoryConf
       const date = dateReader(item);
 
       if (date != null) {
-        yearWeekCode = readJobWeekYear(date);
+        if (isDate(date)) {
+          yearWeekCode = readJobWeekYear(date);
+        } else {
+          yearWeekCode = yearWeekCodeReader(date);
+        }
       }
 
       return yearWeekCode;

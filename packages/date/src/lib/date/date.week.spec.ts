@@ -1,7 +1,7 @@
 import { Day, UTC_TIMEZONE_STRING } from '@dereekb/util';
 import { addMinutes, getDay } from 'date-fns';
 import { dateBlockTiming, DateBlockDurationSpan, dateBlocksExpansionFactory } from './date.block';
-import { yearWeekCodeFactory, yearWeekCode, yearWeekCodeForCalendarMonthFactory, yearWeekCodeIndex, yearWeekCodeDateFactory, yearWeekCodeGroupFactory } from './date.week';
+import { yearWeekCodeFactory, yearWeekCode, yearWeekCodeForCalendarMonthFactory, yearWeekCodeIndex, yearWeekCodeDateFactory, yearWeekCodeGroupFactory, YearWeekCode, YearWeekCodeString } from './date.week';
 
 describe('yearWeekCodeFactory()', () => {
   describe('_normal', () => {
@@ -245,6 +245,30 @@ describe('yearWeekCodeGroupFactory()', () => {
   });
 
   describe('function', () => {
+    describe('yearWeekCode values', () => {
+      const groupFactory = yearWeekCodeGroupFactory<YearWeekCode | YearWeekCodeString>({
+        dateReader: (x) => x
+      });
+
+      it('should group the input number values by week.', () => {
+        const dates = [202202, 202203];
+        const groups = groupFactory(dates);
+
+        expect(groups.length).toBe(2);
+        expect(groups[0].week).toBe(202202);
+        expect(groups[1].week).toBe(202203);
+      });
+
+      it('should group the input string values by week.', () => {
+        const dates = [202202, 202203].map(String);
+        const groups = groupFactory(dates);
+
+        expect(groups.length).toBe(2);
+        expect(groups[0].week).toBe(202202);
+        expect(groups[1].week).toBe(202203);
+      });
+    });
+
     describe('timezone', () => {
       describe('UTC', () => {
         const groupFactory = yearWeekCodeGroupFactory<DateBlockDurationSpan>({
