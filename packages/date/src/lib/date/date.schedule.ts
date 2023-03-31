@@ -78,6 +78,16 @@ export function isDateScheduleEncodedWeek(input: string): input is DateScheduleE
 }
 
 /**
+ * Returns true if the input string represents an empty DateScheduleEncodedWeek.
+ *
+ * @param input
+ * @returns
+ */
+export function isEmptyDateScheduleEncodedWeek(input: string): input is DateScheduleEncodedWeek {
+  return input === '' || input === '0';
+}
+
+/**
  * Creates a DateScheduleEncodedWeek from an array of DateScheduleDayCode values.
  *
  * The returned encoded week is simplified.

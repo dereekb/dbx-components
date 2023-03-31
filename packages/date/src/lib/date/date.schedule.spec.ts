@@ -409,6 +409,12 @@ describe('dateScheduleEncodedWeek()', () => {
     expect(result).toBe('');
   });
 
+  it('should return an empty string if an empty array is provided.', () => {
+    const codes: DateScheduleDayCode[] = [];
+    const result = dateScheduleEncodedWeek(codes);
+    expect(result).toBe('');
+  });
+
   it('should return the weekdays that are is provided.', () => {
     const codes = range(DateScheduleDayCode.MONDAY, DateScheduleDayCode.THURSDAY + 1);
     const result = dateScheduleEncodedWeek(codes);
