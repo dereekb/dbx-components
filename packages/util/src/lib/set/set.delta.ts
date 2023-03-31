@@ -155,4 +155,4 @@ export function setDeltaChangeKeys<T, K extends PrimativeKey = PrimativeKey>(pai
 /**
  * Pre-configured SetDeltaFunction for PrimativeKey values.
  */
-export const primativeValuesDelta = setDeltaFunction<PrimativeKey>({ readKey: (x) => x }) as <T extends PrimativeKey>(past: Iterable<T>, next: Iterable<T>) => SetDeltaChangePair<T>[];
+export const primativeValuesDelta = setDeltaFunction<PrimativeKey>({ readKey: (x) => x }) as <T extends PrimativeKey>(past: Iterable<T>, next: Iterable<T>) => SetDeltaChangePair<T, T>[];
