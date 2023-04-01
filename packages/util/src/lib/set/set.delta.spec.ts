@@ -1,4 +1,4 @@
-import { primativeValuesDelta, SetDeltaChange, setDeltaChangeKeys, SetDeltaChangePair, setDeltaFunction } from './set.delta';
+import { primativeValuesDelta, SetDeltaChange, SetDeltaChangeKeys, setDeltaChangeKeys, SetDeltaChangePair, setDeltaFunction } from './set.delta';
 
 interface TestValue {
   value: string;
@@ -44,7 +44,7 @@ describe('primativeValuesDelta()', () => {
     const next = [...expectedAdded, ...expectedNone];
 
     const deltaPairs = primativeValuesDelta(past, next);
-    const delta = setDeltaChangeKeys(deltaPairs);
+    const delta: SetDeltaChangeKeys<number> = setDeltaChangeKeys(deltaPairs);
 
     expectedAdded.forEach((x) => expect(delta.added).toContain(x));
     expectedRemoved.forEach((x) => expect(delta.removed).toContain(x));

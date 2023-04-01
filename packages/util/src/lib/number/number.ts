@@ -1,4 +1,5 @@
 import { minAndMaxFunction, MinAndMaxFunctionResult, SortCompareFunction } from '../sort';
+import { MapFunction } from '../value/map';
 import { Maybe } from '../value/maybe.type';
 
 /**
@@ -7,6 +8,11 @@ import { Maybe } from '../value/maybe.type';
 export type NumberString = string;
 
 export type NumberOrNumberString = number | NumberString;
+
+/**
+ * Reads a number from the input value.
+ */
+export type ReadNumberFunction<T, N extends number = number> = MapFunction<T, N>;
 
 /**
  * asNumber() input

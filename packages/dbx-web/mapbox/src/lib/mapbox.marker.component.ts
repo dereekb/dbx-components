@@ -8,8 +8,8 @@ import { DbxMapboxMarker } from './mapbox.marker';
   template: `
     <mgl-marker [lngLat]="latLng">
       <dbx-anchor [anchor]="anchor">
-        <div class="dbx-mapbox-marker">
-          <div class="dbx-mapbox-marker-content" [ngStyle]="style">
+        <div class="dbx-mapbox-marker" [ngClass]="presentationClasses">
+          <div class="dbx-mapbox-marker-icon-content" [ngStyle]="style">
             <mat-icon *ngIf="icon">{{ icon }}</mat-icon>
           </div>
           <div class="dbx-mapbox-marker-label dbx-outlined-text" *ngIf="label">{{ label }}</div>
@@ -59,24 +59,29 @@ export class DbxMapboxMarkerComponent implements OnDestroy {
 
     const size = this._marker?.size || 'medium';
 
-    if (typeof size === 'number') {
-      width = size;
-    } else {
-      switch (size) {
-        case 'small':
-          width = 18;
+    switch (this.presentation) {
+      case 'normal':
+        if (typeof size === 'number') {
+          width = size;
+        } else {
+          switch (size) {
+            case 'small':
+              width = 18;
+              break;
+            case 'medium':
+              width = 24;
+              break;
+            case 'large':
+              width = 32;
+              break;
+            case 'tall':
+              width = 24;
+              height = 32;
+              break;
+          }
           break;
-        case 'medium':
-          width = 24;
-          break;
-        case 'large':
-          width = 32;
-          break;
-        case 'tall':
-          width = 24;
-          height = 32;
-          break;
-      }
+        }
+        break;
     }
 
     if (!height) {
@@ -86,15 +91,51 @@ export class DbxMapboxMarkerComponent implements OnDestroy {
     const imageInput = this._marker?.image;
     const image = imageInput ? (typeof imageInput === 'string' ? imageInput : getValueFromGetter(imageInput, width)) : undefined;
 
-    const style = {
+    const style: any = {
       ...this._marker?.style,
-      width: width + 'px',
-      height: height + 'px',
-      'font-size': width + 'px',
       'background-image': image
     };
 
+    if (width && height) {
+      style.width = width + 'px';
+      style.height = height + 'px';
+      style['font-size'] = width + 'px';
+    }
+
     return style;
+  }
+
+  get presentation() {
+    return this._marker.presentation ?? 'normal';
+  }
+
+  get presentationClasses() {
+    const presentation = this.presentation;
+    const markerClasses = this._marker.markerClasses;
+
+    let cssClasses: string = '';
+
+    switch (presentation) {
+      case 'chip':
+      case 'chip-small':
+        cssClasses = 'dbx-mapbox-marker-chip dbx-chip mat-standard-chip dbx-bg';
+
+        if (presentation === 'chip-small') {
+          cssClasses += ' dbx-chip-small';
+        }
+
+        break;
+    }
+
+    if (!this.icon) {
+      cssClasses += ' dbx-mapbox-marker-no-icon';
+    }
+
+    if (markerClasses) {
+      cssClasses += markerClasses;
+    }
+
+    return cssClasses;
   }
 
   ngOnDestroy(): void {

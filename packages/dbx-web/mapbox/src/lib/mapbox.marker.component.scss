@@ -1,9 +1,12 @@
+$small-marker-font-size: 18px;
+$small-chip-marker-font-size: 16px;
+
 .dbx-mapbox-marker {
   display: flex;
   align-items: center;
   flex-direction: column;
 
-  .dbx-mapbox-marker-content {
+  .dbx-mapbox-marker-icon-content {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -17,5 +20,41 @@
 
   .dbx-mapbox-marker-label {
     font-size: 0.9em;
+  }
+}
+
+.dbx-mapbox-marker.dbx-mapbox-marker-chip.dbx-chip {
+  flex-direction: row;
+  font-size: 1em;
+
+  .dbx-mapbox-marker-icon-content {
+    width: $small-marker-font-size;
+    height: $small-marker-font-size;
+    font-size: $small-marker-font-size;
+  }
+
+  &.dbx-chip-small {
+    .dbx-mapbox-marker-label {
+      padding-left: 3px;
+    }
+
+    .dbx-mapbox-marker-icon-content {
+      padding: 0 !important;
+      width: $small-chip-marker-font-size;
+      height: $small-chip-marker-font-size;
+      font-size: $small-chip-marker-font-size;
+    }
+  }
+
+  .dbx-mapbox-marker-label {
+    padding-left: 4px;
+  }
+}
+
+.dbx-mapbox-marker-no-icon > .dbx-mapbox-marker-icon-content {
+  display: none;
+
+  .dbx-mapbox-marker-label {
+    padding-left: 0;
   }
 }
