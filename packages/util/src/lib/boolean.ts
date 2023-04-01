@@ -54,13 +54,17 @@ export interface BooleanFactoryConfig {
 export function booleanFactory(config: BooleanFactoryConfig) {
   const { chance: inputChance } = config;
   const chance = inputChance / 100;
-  return () => Math.random() >= chance;
+  return () => {
+    const roll = Math.random();
+    const result = roll <= chance;
+    return result;
+  };
 }
 
 /**
  * Returns a random boolean.
  *
- * @param chance
+ * @param chance Number between 0 and 100
  * @returns
  */
 export function randomBoolean(chance: BooleanChance = 50): boolean {
