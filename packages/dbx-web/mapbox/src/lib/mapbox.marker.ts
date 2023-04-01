@@ -6,8 +6,24 @@ import { Pixels, FactoryWithRequiredInput, LatLngInputRef, UniqueModel } from '@
  */
 export type DbxMapboxMarkerSize = 'small' | 'medium' | 'large' | 'tall' | Pixels;
 
+/**
+ * Presentation style.
+ *
+ * - normal: Text under dot with optional icon within dot
+ * - chip: "dbx-chip"-like presentation
+ */
+export type DbxMapboxMarkerPresentation = 'normal' | 'chip' | 'chip-small';
+
 export type DbxMapboxMarker = UniqueModel &
   LatLngInputRef & {
+    /**
+     * Presentation style. Defaults to "normal"
+     */
+    presentation?: DbxMapboxMarkerPresentation;
+    /**
+     * Additional classes to add to the marker.
+     */
+    markerClasses?: string;
     /**
      * icon
      */
@@ -29,7 +45,7 @@ export type DbxMapboxMarker = UniqueModel &
      */
     anchor?: ClickableAnchor;
     /**
-     * Additional object styling
+     * Additional content styling
      */
     style?: object;
   };
@@ -50,7 +66,7 @@ export function dbxMapboxColoredDotStyle(background: string, color?: string) {
   return {
     background,
     padding: '2px',
-    color: color || 'white',
+    color: color ?? background ? 'white' : undefined,
     'border-radius': '50%'
   };
 }

@@ -1,4 +1,4 @@
-import { latLngPoint, latLngString, LatLngTuple, Maybe, Pixels, randomLatLngFactory, range, latLngTuple, randomFromArrayFactory } from '@dereekb/util';
+import { latLngPoint, latLngString, LatLngTuple, Maybe, Pixels, randomLatLngFactory, range, latLngTuple, randomFromArrayFactory, isEvenNumber, randomBoolean } from '@dereekb/util';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { mapboxLatLngField, mapboxZoomField } from '@dereekb/dbx-form/mapbox';
@@ -177,15 +177,17 @@ export class DocExtensionMapboxComponent implements OnInit, OnDestroy {
     }
   ];
 
-  readonly mapboxMarkersData: LatLngTuple[] = range(0, 3).map((x) => [40 + x * 5, -100]);
-  readonly mapboxMarkerDotStyle = dbxMapboxColoredDotStyle('blue', 'white');
+  readonly mapboxMarkersData: LatLngTuple[] = range(0, 9).map((x) => [40 + x * 5, -100]);
+  readonly mapboxMarkerPlainDotStyle = dbxMapboxColoredDotStyle('', '');
+  readonly mapboxMarkerDotStyle = dbxMapboxColoredDotStyle('red', 'white');
   readonly mapboxMarkerFactory: DbxMapboxMarkerFactory<LatLngTuple> = (latLng, i) => ({
     id: `m${i}`,
-    icon: 'arrow_upward',
-    label: `M${i}`,
+    presentation: i % 3 ? 'chip' : 'chip-small',
+    icon: isEvenNumber(i) ? 'arrow_upward' : undefined,
+    label: i % 4 ? `Item ${i}` : undefined,
     latLng,
     size: 'small',
-    style: this.mapboxMarkerDotStyle
+    style: randomBoolean(20) ? this.mapboxMarkerPlainDotStyle : this.mapboxMarkerDotStyle
   });
 
   private _addedMarkersData = new BehaviorSubject<LatLngTuple[]>([]);
