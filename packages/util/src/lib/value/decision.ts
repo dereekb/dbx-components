@@ -11,6 +11,10 @@ export type AsyncDecisionFunction<I> = AsyncMapFunction<DecisionFunction<I>>;
 
 export type DecisionFunctionFactory<C, I> = FactoryWithRequiredInput<DecisionFunction<I>, C>;
 
+export function decisionFunction<I>(decision: boolean): DecisionFunction<I> {
+  return () => decision;
+}
+
 /**
  * Used to invert a decision function by returning the opposite of what it returns.
  *
