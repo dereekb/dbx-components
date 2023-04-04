@@ -18,7 +18,7 @@ import { FirestoreItemPageIterationBaseConfig, FirestoreItemPageIterationFactory
 import { firestoreQueryFactory, FirestoreQueryFactory } from '../query/query';
 import { FirestoreDrivers } from '../driver/driver';
 import { FirestoreCollectionQueryFactory, firestoreCollectionQueryFactory } from './collection.query';
-import { ArrayOrValue, arrayToObject, Building, forEachInIterable, isOddNumber, lastValue, Maybe, ModelKey, ModelTypeString } from '@dereekb/util';
+import { ArrayOrValue, arrayToObject, Building, forEachInIterable, isOddNumber, lastValue, Maybe, ModelKey, ModelTypeString, takeFront } from '@dereekb/util';
 
 /**
  * The camelCase model name/type.
@@ -518,6 +518,35 @@ export function firestoreModelKeyCollectionName<T = unknown>(input: ReadFirestor
 }
 
 /**
+ * Returns the parent model key from up the specified amount of levels.
+ *
+ * @param input
+ * @param maxLevelsUp
+ */
+export function firestoreModelKeyParentKey<T = unknown>(input: ReadFirestoreModelKeyInput<T>, maxLevelsUp = 1): Maybe<FirestoreModelKey> {
+  const keyParts = firestoreModelKeyParentKeyPartPairs(input, maxLevelsUp);
+  let result: Maybe<FirestoreModelKey>;
+
+  if (keyParts) {
+    result = firestoreModelKeyPartPairsKeyPath(keyParts);
+  }
+
+  return result;
+}
+
+export function firestoreModelKeyParentKeyPartPairs<T = unknown>(input: ReadFirestoreModelKeyInput<T>, maxLevelsUp = 1): Maybe<FirestoreModelCollectionAndIdPair[]> {
+  const allParts = firestoreModelKeyPartPairs(input);
+  let parentParts: Maybe<FirestoreModelCollectionAndIdPair[]> = undefined;
+
+  if (allParts) {
+    const numberOfParts = Math.max(1, allParts.length - maxLevelsUp);
+    parentParts = takeFront(allParts, numberOfParts);
+  }
+
+  return parentParts;
+}
+
+/**
  * Returns the last pair type from all generated pairs from the input.
  *
  * @param input
@@ -548,6 +577,26 @@ export function firestoreModelKeyPartPairs<T = unknown>(input: ReadFirestoreMode
   }
 
   return pairs;
+}
+
+/**
+ * Creates a FirestoreModelKey from the input pairs.
+ *
+ * @param input
+ * @returns
+ */
+export function firestoreModelKeyPartPairsKeyPath(input: FirestoreModelCollectionAndIdPair[]): FirestoreModelKey {
+  return firestoreModelKeyPath(...firestoreModelKeyPartPairsPaths(input));
+}
+
+/**
+ * Maps the input FirestoreModelCollectionAndIdPair[] values to FirestoreModelKeyPart[] values.
+ *
+ * @param input
+ * @returns
+ */
+export function firestoreModelKeyPartPairsPaths(input: FirestoreModelCollectionAndIdPair[]): FirestoreModelKeyPart[] {
+  return input.map((x) => `${x.collectionName}/${x.id}`) as FirestoreModelKeyPart[];
 }
 
 export type ReadFirestoreModelKeyInput<T = unknown> = FirestoreModelKey | FirestoreModelKeyRef | DocumentReferenceRef<T>;

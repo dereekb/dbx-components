@@ -66,6 +66,12 @@ $header-left-reserved-space-small-screen: 120px;
 
   // MARK: Page
   .dbx-section-page {
+    &.dbx-section-page-full-header {
+      > .dbx-section-header > .dbx-section-header-content .dbx-section-header-content-title {
+        max-width: 100%;
+      }
+    }
+
     // Header
     > .dbx-section-header {
       height: $content-navbar-height;
