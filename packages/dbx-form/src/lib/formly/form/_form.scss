@@ -7,6 +7,25 @@
   .dbx-form-search-form {
     width: 100%;
   }
+
+  // adapt the search form to fit in the header
+  // TODO: Consider test that other one-field input forms fit in the dbx-section-page-header
+  .dbx-section-page-header-search-form {
+    .mat-form-field .mat-form-field-wrapper {
+      margin: 0;
+      padding: 0;
+
+      .mat-form-field-infix {
+        padding: 11px;
+      }
+    }
+  }
+
+  .dbx-section-page-header-search-bar {
+    width: 100%;
+    display: flex;
+    align-items: center;
+  }
 }
 
 @mixin color($theme-config) {

@@ -95,17 +95,37 @@ export function switchMapToDefault<T = unknown>(defaultObs: MaybeObservableOrVal
 }
 
 /**
- * Provides a switchMap that will emit from the input observable if defined, otherwise emits empty.
+ * Provides a switchMap that will emit from the input observable if the value is true, otherwise emits the otherwise value or empty.
  *
  * @param defaultValue
  * @returns
  */
-export function switchMapWhileTrue<T = unknown>(obs: MaybeObservableOrValueGetter<T>): OperatorFunction<boolean, Maybe<T>> {
+export function switchMapWhileTrue<T = unknown>(obs: MaybeObservableOrValueGetter<T>, otherwise?: MaybeObservableOrValueGetter<T>): OperatorFunction<boolean, Maybe<T>> {
+  return switchMapOnBoolean(true, obs, otherwise);
+}
+
+/**
+ * Provides a switchMap that will emit from the input observable if the value is false, otherwise emits the otherwise value or empty.
+ *
+ * @param defaultValue
+ * @returns
+ */
+export function switchMapWhileFalse<T = unknown>(obs: MaybeObservableOrValueGetter<T>, otherwise?: MaybeObservableOrValueGetter<T>): OperatorFunction<boolean, Maybe<T>> {
+  return switchMapOnBoolean(false, obs, otherwise);
+}
+
+/**
+ * Provides a switchMap that will emit from the input observable if the value matches the switchOnValue, otherwise emits the otherwise value or empty.
+ *
+ * @param defaultValue
+ * @returns
+ */
+export function switchMapOnBoolean<T = unknown>(switchOnValue: boolean, obs: MaybeObservableOrValueGetter<T>, otherwise?: MaybeObservableOrValueGetter<T>): OperatorFunction<boolean, Maybe<T>> {
   return switchMap((x: boolean) => {
-    if (x) {
+    if (x === switchOnValue) {
       return asObservableFromGetter(obs);
     } else {
-      return EMPTY;
+      return asObservableFromGetter(otherwise) ?? EMPTY;
     }
   });
 }

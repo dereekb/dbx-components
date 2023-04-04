@@ -14,7 +14,7 @@ import { DbxModelViewTrackerEventSet, DbxModelViewTrackerEvent } from './model.t
 })
 export class DbxModelViewTrackerStorage {
   static readonly OBJECT_VIEW_TRACKER_STORAGE_LIST_KEY = 'dbxModelViewTrackerEvents';
-  static readonly MAX_EVENTS = 60;
+  static readonly DEFAULT_MAX_EVENTS = 100;
 
   private _newEvent = new Subject<DbxModelViewTrackerEvent>();
 
@@ -27,7 +27,7 @@ export class DbxModelViewTrackerStorage {
   }
 
   protected get maxEventsToKeep(): number {
-    return DbxModelViewTrackerStorage.MAX_EVENTS;
+    return DbxModelViewTrackerStorage.DEFAULT_MAX_EVENTS;
   }
 
   addTrackerEvent(event: DbxModelViewTrackerEvent): Observable<void> {

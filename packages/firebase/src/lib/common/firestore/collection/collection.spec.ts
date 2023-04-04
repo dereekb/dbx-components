@@ -1,4 +1,4 @@
-import { firestoreIdentityTypeArray, firestoreIdentityTypeArrayName, firestoreModelIdsFromKey, firestoreModelKeyCollectionTypeArray, firestoreModelKeyCollectionTypeArrayName, firestoreModelKeyPart, firestoreModelKeyPartPairs, flatFirestoreModelKey, inferKeyFromTwoWayFlatFirestoreModelKey, twoWayFlatFirestoreModelKey } from '.';
+import { firestoreIdentityTypeArray, firestoreIdentityTypeArrayName, FirestoreModelCollectionAndIdPair, firestoreModelIdsFromKey, firestoreModelKeyCollectionTypeArray, firestoreModelKeyCollectionTypeArrayName, firestoreModelKeyParentKey, firestoreModelKeyParentKeyPartPairs, firestoreModelKeyPart, firestoreModelKeyPartPairs, firestoreModelKeyPartPairsKeyPath, flatFirestoreModelKey, inferKeyFromTwoWayFlatFirestoreModelKey, twoWayFlatFirestoreModelKey } from '.';
 import { childFirestoreModelKeyPath, firestoreModelId, isFirestoreModelId, isFirestoreModelKey, firestoreModelKeys, firestoreModelIdentity, firestoreModelKey, firestoreModelKeyPath } from './collection';
 
 describe('firestoreModelIdentity()', () => {
@@ -282,7 +282,33 @@ describe('isFirestoreModelKey', () => {
   });
 });
 
-describe('firestoreModelKeyPartPairs', () => {
+describe('firestoreModelKeyParentKey()', () => {
+  it('should return the parent key', () => {
+    const modelKey = 'a/b/c/d';
+    const result = firestoreModelKeyParentKey(modelKey);
+    expect(result).toBe('a/b');
+  });
+
+  it('should return the root parent key at a minimum', () => {
+    const modelKey = 'a/b/c/d';
+    const result = firestoreModelKeyParentKey(modelKey, 100);
+    expect(result).toBe('a/b');
+  });
+
+  it('should return the parent key two levels up', () => {
+    const modelKey = 'a/b/c/d/e/f';
+    const result = firestoreModelKeyParentKey(modelKey, 2);
+    expect(result).toBe('a/b');
+  });
+
+  it('should return the parent key two levels up on a 4 level item', () => {
+    const modelKey = 'a/b/c/d/e/f/g/h';
+    const result = firestoreModelKeyParentKey(modelKey, 2);
+    expect(result).toBe('a/b/c/d');
+  });
+});
+
+describe('firestoreModelKeyPartPairs()', () => {
   it('should return the pairs for the model key', () => {
     const modelKey = 'a/b/c/d';
     const pairs = firestoreModelKeyPartPairs(modelKey);
@@ -290,5 +316,29 @@ describe('firestoreModelKeyPartPairs', () => {
     expect(pairs?.length).toBe(2);
     expect(pairs?.[0].collectionName).toBe('a');
     expect(pairs?.[0].id).toBe('b');
+    expect(pairs?.[1].collectionName).toBe('c');
+    expect(pairs?.[1].id).toBe('d');
+  });
+});
+
+describe('firestoreModelKeyParentKeyPartPairs()', () => {
+  it('should return the parent pairs for the model key', () => {
+    const modelKey = 'a/b/c/d';
+    const pairs = firestoreModelKeyParentKeyPartPairs(modelKey);
+
+    expect(pairs).toBeDefined();
+    expect(pairs?.length).toBe(1);
+    expect(pairs?.[0].collectionName).toBe('a');
+    expect(pairs?.[0].id).toBe('b');
+  });
+});
+
+describe('firestoreModelKeyPartPairsKeyPath()', () => {
+  it('should generate a model key from the input parts.', () => {
+    const modelKey = 'a/b/c/d';
+    const pairs = firestoreModelKeyPartPairs(modelKey) as FirestoreModelCollectionAndIdPair[];
+
+    const result = firestoreModelKeyPartPairsKeyPath(pairs);
+    expect(result).toBe(modelKey);
   });
 });
