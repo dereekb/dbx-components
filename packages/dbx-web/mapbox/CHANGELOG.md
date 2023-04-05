@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [9.23.5](https://github.com/dereekb/dbx-components/compare/v9.23.4-dev...v9.23.5) (2023-04-04)
+
+
+### Bug Fixes
+
+* dbx-mapbox-marker icon content fix ([0b6165f](https://github.com/dereekb/dbx-components/commit/0b6165f552096498159e4643a1ddc47743ef4b79))
+
+
+
 ## [9.23.4](https://github.com/dereekb/dbx-components/compare/v9.23.3-dev...v9.23.4) (2023-04-01)
 
 
