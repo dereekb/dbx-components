@@ -3,6 +3,7 @@ import { Expose, Type } from 'class-transformer';
 import { IsEnum, IsOptional, IsDate, IsNumber } from 'class-validator';
 import { addDays, addHours, differenceInDays, endOfDay, endOfMonth, endOfWeek, isAfter, isPast, startOfDay, startOfMinute, startOfMonth, startOfWeek } from 'date-fns';
 import { isSameDate, isDate } from './date';
+import { sortByDateFunction } from './date.sort';
 
 /**
  * Represents a start date.
@@ -28,9 +29,7 @@ export function isDateRangeStart(value: unknown): value is DateRangeStart {
  * @param b
  * @returns
  */
-export function sortDateRangeStartAscendingCompareFunction<T extends DateRangeStart>(a: T, b: T): number {
-  return a.start.getTime() - b.start.getTime();
-}
+export const sortDateRangeStartAscendingCompareFunction = sortByDateFunction<DateRangeStart>((x) => x.start) as <T extends DateRangeStart>(a: T, b: T) => number;
 
 /**
  * Represents a start and end date.

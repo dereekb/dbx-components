@@ -1,7 +1,17 @@
 import { isDate as dateFnsIsDate, max as maxDate, min as minDate, parseISO, addDays, isPast, isAfter as isAfterDate, set as setDateValues, isValid, startOfMinute, isEqual as isEqualDate, isSameDay as isEqualDay } from 'date-fns';
-import { DateOrDateString, filterMaybeValues, ISO8601DateString, Maybe, Minutes, MINUTES_IN_DAY, MS_IN_HOUR, MS_IN_MINUTE, Seconds, TimezoneString, ArrayOrValue, asArray } from '@dereekb/util';
+import { DateOrDateString, filterMaybeValues, ISO8601DateString, Maybe, Minutes, MINUTES_IN_DAY, MS_IN_HOUR, MS_IN_MINUTE, Seconds, TimezoneString, ArrayOrValue, asArray, MapFunction, ISO8601DateStringUTCFull } from '@dereekb/util';
 
 export const MAX_FUTURE_DATE = new Date(Date.UTC(9999, 0));
+
+/**
+ * Reads a date from the input value
+ */
+export type ReadDateFunction<T> = MapFunction<T, Date>;
+
+/**
+ * Reads a ISO8601DateStringUTCFull value from the input value.
+ */
+export type ReadISO8601DateStringUTCFullFunction<T> = MapFunction<T, ISO8601DateStringUTCFull>;
 
 /**
  * Returns true if the input is a date.
