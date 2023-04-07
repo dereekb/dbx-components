@@ -1,4 +1,4 @@
-import { isLatLngPoint, latLngPoint, latLngPointFunction, latLngString, LonLatTuple, lonLatTuple, TOTAL_LONGITUDE_RANGE, wrapLngValue } from './point';
+import { DEFAULT_LAT_LNG_STRING_VALUE, defaultLatLngPoint, isDefaultLatLngPoint, isLatLngPoint, latLngPoint, latLngPointFunction, latLngString, LonLatTuple, lonLatTuple, TOTAL_LONGITUDE_RANGE, wrapLngValue, LatLngString } from './point';
 
 describe('isLatLngPoint()', () => {
   it('should return true for points.', () => {
@@ -7,6 +7,33 @@ describe('isLatLngPoint()', () => {
 
   it('should return false for bound.', () => {
     expect(isLatLngPoint({ sw: { lat: 0, lng: 0 }, ne: { lat: 0, lng: 0 } })).toBe(false);
+  });
+});
+
+describe('isDefaultLatLngPoint()', () => {
+  it('should return true for the default LatLngPoint', () => {
+    const result = isDefaultLatLngPoint(defaultLatLngPoint());
+    expect(result).toBe(true);
+  });
+
+  it('should return false for a LatLngPoint that is not the default', () => {
+    const result = isDefaultLatLngPoint({ lat: 1, lng: 1 });
+    expect(result).toBe(false);
+  });
+
+  it('should return true for an empty string', () => {
+    const result = isDefaultLatLngPoint('');
+    expect(result).toBe(true);
+  });
+
+  it('should return false for the default LatLngString', () => {
+    const result = isDefaultLatLngPoint(DEFAULT_LAT_LNG_STRING_VALUE);
+    expect(result).toBe(true);
+  });
+
+  it('should return false for a non-empty string that is not the default string', () => {
+    const result = isDefaultLatLngPoint('invalidLatLng' as LatLngString);
+    expect(result).toBe(false);
   });
 });
 
