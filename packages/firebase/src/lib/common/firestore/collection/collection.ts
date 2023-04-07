@@ -212,12 +212,17 @@ export interface FirestoreModelIdentityRef<I extends FirestoreModelIdentity = Fi
 export type FirestoreModelId = string;
 
 /**
+ * Input for firestoreModelId()
+ */
+export type FirestoreModelIdInput = FirestoreModelId | FirestoreModelKey | DocumentReferenceRef<any> | FirestoreModelKeyRef | FirestoreModelIdRef;
+
+/**
  * Reads a firestoreModelId from the input.
  *
  * @param input
  * @returns
  */
-export function firestoreModelId(input: FirestoreModelId | FirestoreModelKey | DocumentReferenceRef<unknown> | FirestoreModelKeyRef | FirestoreModelIdRef): FirestoreModelId {
+export function firestoreModelId(input: FirestoreModelIdInput): FirestoreModelId {
   let key = '';
   let id;
 
