@@ -5,7 +5,7 @@ import { FieldTypeConfig, FormlyFieldProps } from '@ngx-formly/core';
 import { FieldType } from '@ngx-formly/material';
 import { skip, first, BehaviorSubject, filter, shareReplay, startWith, switchMap, map, Observable, throttleTime, skipWhile } from 'rxjs';
 import { filterMaybe, SubscriptionObject } from '@dereekb/rxjs';
-import { Maybe, LatLngPoint, LatLngPointFunctionConfig, LatLngStringFunction, latLngStringFunction, Milliseconds, latLngPointFunction, isDefaultLatLngPoint, isValidLatLngPoint, LatLngPointFunction } from '@dereekb/util';
+import { Maybe, LatLngPoint, LatLngPointFunctionConfig, LatLngStringFunction, latLngStringFunction, Milliseconds, latLngPointFunction, isDefaultLatLngPoint, isValidLatLngPoint, LatLngPointFunction, isDefaultLatLngPointValue } from '@dereekb/util';
 import { GeolocationService } from '@ng-web-apis/geolocation';
 import { Marker } from 'mapbox-gl';
 import { DbxMapboxMapStore, MapboxEaseTo, MapboxZoomLevel, provideMapboxStoreIfParentIsUnavailable } from '@dereekb/dbx-web/mapbox';
@@ -79,13 +79,13 @@ export class DbxFormMapboxLatLngFieldComponent<T extends DbxFormMapboxLatLngComp
     shareReplay(1)
   );
 
-  readonly center$ = this.latLng$.pipe(
+  readonly center$: Observable<LatLngPoint> = this.latLng$.pipe(
     /**
      * Center observable passed to the store. Do not pass invalid points.
      *
      * Also skip any initial 0,0 values so the center doesn't potentially "whip" from 0,0 to a final loaded value.
      */
-    skipWhile(isDefaultLatLngPoint),
+    skipWhile<LatLngPoint>(isDefaultLatLngPoint),
     filter(isValidLatLngPoint)
   );
 
