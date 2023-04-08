@@ -1,5 +1,5 @@
-import { map, Observable, combineLatest, of } from 'rxjs';
-import { allKeyValueTuples, Building } from '@dereekb/util';
+import { map, Observable, combineLatest, of, OperatorFunction } from 'rxjs';
+import { allKeyValueTuples, Building, keyValueMapFactory, multiKeyValueMapFactory, PrimativeKey, ReadKeyFunction, ReadMultipleKeysFunction } from '@dereekb/util';
 import { asObservable } from './getter';
 
 /**
@@ -45,4 +45,25 @@ export function combineLatestFromObject<T extends ObservableObjectMap>(objectMap
       return result as ObservableObjectMapResult<T>;
     })
   );
+}
+
+// MARK: Keys Map
+/**
+ * Convenience function for creating a map() operator function using keyValueMapFactory().
+ *
+ * @param read
+ * @returns
+ */
+export function keyValueMap<T, K extends PrimativeKey = PrimativeKey>(read: ReadKeyFunction<T, K>): OperatorFunction<T[], Map<K, T>> {
+  return map(keyValueMapFactory(read));
+}
+
+/**
+ * Convenience function for creating a map() operator function using multiKeyValueMapFactory().
+ *
+ * @param read
+ * @returns
+ */
+export function multiKeyValueMap<T, K extends PrimativeKey = PrimativeKey>(read: ReadMultipleKeysFunction<T, K>): OperatorFunction<T[], Map<K, T>> {
+  return map(multiKeyValueMapFactory(read));
 }
