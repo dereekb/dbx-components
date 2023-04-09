@@ -264,6 +264,15 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
       displayForValue: DISPLAY_FOR_STRING_VALUE
     }),
     pickableItemChipField({
+      key: 'singleStringItemChips',
+      label: 'Single Selection',
+      description: 'This field only allows selecting one item at a time and returns the value by itself',
+      multiSelect: false,
+      asArrayValue: false,
+      loadValues: () => of([{ value: 'a' }, { value: 'b' }, { value: 'c' }]),
+      displayForValue: DISPLAY_FOR_STRING_VALUE
+    }),
+    pickableItemChipField({
       key: 'stringItemChipsWithFilter',
       label: 'String Item Chips With Filter',
       filterLabel: 'Filter',
@@ -285,7 +294,6 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
       key: 'staticLabeledValuesExample',
       label: 'pickableValueFieldValuesConfigForStaticLabeledValues() Example Usage',
       filterLabel: 'Filter',
-      description: 'You can only select one value at a time.',
       ...pickableValueFieldValuesConfigForStaticLabeledValues(
         range(50)
           .map((x) => String(x))
