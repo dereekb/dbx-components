@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [9.23.6](https://github.com/dereekb/dbx-components/compare/v9.23.5-dev...v9.23.6) (2023-04-09)
+
+
+### Bug Fixes
+
+* removed async from hasNewUserSetupPasswordInRequest() ([5c7bf2e](https://github.com/dereekb/dbx-components/commit/5c7bf2eafeed05d2e2d7f873af4ca3f38fe1efd0))
+
+
+
 ## [9.23.5](https://github.com/dereekb/dbx-components/compare/v9.23.4-dev...v9.23.5) (2023-04-04)
 
 

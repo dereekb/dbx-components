@@ -7,8 +7,14 @@ import { AbstractDbxSearchableValueFieldDirective, SearchableValueFieldsFieldPro
 import { COMMA, ENTER } from '@angular/cdk/keycodes';
 import { skipUntilTimeElapsedAfterLastEmission } from '@dereekb/date';
 import { PrimativeKey } from '@dereekb/util';
+import { SearchableValueFieldDisplayValue } from './searchable';
 
-export type SearchableChipValueFieldsFieldProps<T, M = unknown, H extends PrimativeKey = PrimativeKey> = SearchableValueFieldsFieldProps<T, M, H>;
+export interface SearchableChipValueFieldsFieldProps<T, M = unknown, H extends PrimativeKey = PrimativeKey> extends SearchableValueFieldsFieldProps<T, M, H> {
+  /**
+   * Whether or not to allow multiple items to be selected.
+   */
+  readonly multiSelect?: boolean;
+}
 
 @Component({
   templateUrl: 'searchable.chip.field.component.html'
@@ -38,6 +44,14 @@ export class DbxSearchableChipFieldComponent<T, M = unknown, H extends Primative
   addChip(event: MatChipInputEvent): void {
     const text = event.value ?? this.inputCtrl.value;
     return this._addWithTextValue(text);
+  }
+
+  override get multiSelect(): boolean {
+    return this.props.multiSelect ?? true;
+  }
+
+  protected override _syncSingleValue(value: SearchableValueFieldDisplayValue<T>): void {
+    // Do nothing
   }
 
   override ngOnInit(): void {

@@ -78,7 +78,11 @@ export function defaultLatLngPoint(): LatLngPoint {
   return { lat: 0, lng: 0 };
 }
 
-export function isDefaultLatLngPoint(point: LatLngPoint): boolean {
+export function isDefaultLatLngPoint(point: LatLngPoint | LatLngString | '') {
+  return typeof point === 'string' ? !point || point === DEFAULT_LAT_LNG_STRING_VALUE : isDefaultLatLngPointValue(point);
+}
+
+export function isDefaultLatLngPointValue(point: LatLngPoint) {
   return point.lat === 0 && point.lng === 0;
 }
 

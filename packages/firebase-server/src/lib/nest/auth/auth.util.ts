@@ -69,7 +69,7 @@ export function hasAuthRolesInRequest<N extends AbstractFirebaseNestContext<any,
  *
  * @param request
  */
-export async function hasNewUserSetupPasswordInRequest<N extends AbstractFirebaseNestContext<any, any> = AbstractFirebaseNestContext<any, any>, I = unknown>(request: NestContextCallableRequestWithAuth<N, I>) {
+export function hasNewUserSetupPasswordInRequest<N extends AbstractFirebaseNestContext<any, any> = AbstractFirebaseNestContext<any, any>, I = unknown>(request: NestContextCallableRequestWithAuth<N, I>) {
   const claims = request.nest.authService.context(request).claims;
   return claims[FIREBASE_SERVER_AUTH_CLAIMS_SETUP_PASSWORD_KEY] != null;
 }

@@ -1,6 +1,6 @@
 <div class="dbx-searchable-field">
   <!-- View -->
-  <mat-chip-list [selectable]="!readonly" [required]="required" [disabled]="readonly" #chipList>
+  <mat-chip-list [multiple]="multiSelect" [required]="required" [selectable]="!isReadonlyOrDisabled" [disabled]="readonly" #chipList>
     <mat-chip *ngFor="let displayValue of displayValues$ | async" [removable]="true" (removed)="removeWithDisplayValue(displayValue)">
       <span class="dbx-chip-label">{{ displayValue.label }}</span>
       <span class="dbx-chip-sublabel" *ngIf="displayValue.sublabel">{{ displayValue.sublabel }}</span>
