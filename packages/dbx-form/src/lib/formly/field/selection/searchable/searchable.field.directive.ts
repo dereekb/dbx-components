@@ -1,4 +1,4 @@
-import { ArrayOrValue, Maybe, convertMaybeToArray, findUnique, lastValue, PrimativeKey, separateValues } from '@dereekb/util';
+import { ArrayOrValue, Maybe, convertMaybeToArray, findUnique, lastValue, PrimativeKey, separateValues, asArray } from '@dereekb/util';
 import { DbxInjectionComponentConfig, mergeDbxInjectionComponentConfigs } from '@dereekb/dbx-core';
 import { filterMaybe, SubscriptionObject, LoadingState, LoadingStateContextInstance, successResult, startWithBeginLoading } from '@dereekb/rxjs';
 import { ChangeDetectorRef, Directive, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
@@ -22,6 +22,10 @@ export interface SearchableValueFieldsFieldProps<T, M = unknown, H extends Prima
    * Whether or not to allow string values to be used directly, or if values can only be chosen from searching.
    */
   allowStringValues?: boolean;
+  /**
+   * Whether or not to set/get values as an array or a single value. If set false, multiSelect is ignored.
+   */
+  asArrayValue?: boolean;
   /**
    * Optional conversion function. If provided, allowStringValues is considered true.
    */
@@ -84,9 +88,14 @@ export interface SearchableValueFieldsFieldProps<T, M = unknown, H extends Prima
 @Directive()
 export abstract class AbstractDbxSearchableValueFieldDirective<T, M = unknown, H extends PrimativeKey = PrimativeKey, C extends SearchableValueFieldsFieldProps<T, M, H> = SearchableValueFieldsFieldProps<T, M, H>> extends FieldType<FieldTypeConfig<C>> implements OnInit, OnDestroy {
   /**
+   * Whether or not to allow syncing to
+   */
+  allowSyncValueToInput = false;
+
+  /**
    * Whether or not to set/get values as an array.
    */
-  multiSelect = true;
+  abstract get multiSelect(): boolean;
 
   /**
    * Optional override set by the parent class for picking a default display for this directive.
@@ -98,11 +107,11 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, M = unknown, H
 
   readonly inputCtrl = new FormControl<string>('');
 
-  private _formControlObs = new BehaviorSubject<Maybe<AbstractControl>>(undefined);
+  private readonly _formControlObs = new BehaviorSubject<Maybe<AbstractControl>>(undefined);
   readonly formControl$ = this._formControlObs.pipe(filterMaybe());
 
-  private _clearDisplayHashMapSub = new SubscriptionObject();
-  private _displayHashMap = new BehaviorSubject<Map<H, ConfiguredSearchableValueFieldDisplayValue<T, M>>>(new Map());
+  private readonly _clearDisplayHashMapSub = new SubscriptionObject();
+  private readonly _displayHashMap = new BehaviorSubject<Map<H, ConfiguredSearchableValueFieldDisplayValue<T, M>>>(new Map());
 
   readonly inputValue$: Observable<string> = this.inputCtrl.valueChanges.pipe(
     startWith(this.inputCtrl.value),
@@ -121,15 +130,15 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, M = unknown, H
     shareReplay(1)
   );
 
-  readonly singleValueSyncSubscription = new SubscriptionObject();
+  private readonly _singleValueSyncSubscription = new SubscriptionObject();
 
   readonly searchContext = new LoadingStateContextInstance({ obs: this.searchResultsState$, showLoadingOnNoValue: false });
 
   readonly searchResults$: Observable<ConfiguredSearchableValueFieldDisplayValue<T, M>[]> = this.searchResultsState$.pipe(map((x) => x?.value ?? []));
 
-  readonly currentFormControlValue$: Observable<T | T[]> = this.formControl$.pipe(switchMap((control) => control.valueChanges.pipe(startWith(control.value), shareReplay(1))));
+  readonly _formControlValue$: Observable<T | T[]> = this.formControl$.pipe(switchMap((control) => control.valueChanges.pipe(startWith(control.value), shareReplay(1))));
 
-  readonly values$: Observable<T[]> = this.currentFormControlValue$.pipe(map(convertMaybeToArray), shareReplay(1));
+  readonly values$: Observable<T[]> = this._formControlValue$.pipe(map(convertMaybeToArray), shareReplay(1));
 
   readonly displayValuesState$: Observable<LoadingState<ConfiguredSearchableValueFieldDisplayValue<T, M>[]>> = this.values$.pipe(
     distinctUntilChanged(),
@@ -151,8 +160,20 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, M = unknown, H
     return this.props.readonly;
   }
 
+  get isReadonlyOrDisabled() {
+    return this.readonly || this.disabled;
+  }
+
   get searchableField(): SearchableValueFieldsFieldProps<T, M, H> {
     return this.props;
+  }
+
+  get asArrayValue(): boolean {
+    return this.searchableField.asArrayValue ?? true;
+  }
+
+  get pickOnlyOne(): boolean {
+    return this.asArrayValue === false || this.multiSelect === false;
   }
 
   get searchOnEmptyText(): boolean {
@@ -304,8 +325,8 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, M = unknown, H
       };
     }
 
-    if (this.multiSelect === false) {
-      this.singleValueSyncSubscription.subscription = this.displayValues$.subscribe((x) => {
+    if (this.allowSyncValueToInput && this.multiSelect === false) {
+      this._singleValueSyncSubscription.subscription = this.displayValues$.subscribe((x) => {
         if (x[0]) {
           this._syncSingleValue(x[0]);
         }
@@ -315,9 +336,10 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, M = unknown, H
 
   override ngOnDestroy(): void {
     super.ngOnDestroy();
-    this._displayHashMap.complete();
-    this._formControlObs.complete();
     this._clearDisplayHashMapSub.destroy();
+    this._displayHashMap.complete();
+    this._singleValueSyncSubscription.destroy();
+    this._formControlObs.complete();
     this.searchContext.destroy();
   }
 
@@ -404,18 +426,27 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, M = unknown, H
       values = findUnique(values, this.hashForValue);
     }
 
+    if (this.pickOnlyOne) {
+      values = [lastValue(values)].filter((x) => x != null);
+    }
+
     this._setValueOnFormControl(values);
   }
 
   // MARK: Internal
   protected _getValueOnFormControl(valueOnFormControl: ArrayOrValue<T>): T[] {
-    const value = valueOnFormControl != null ? ([] as T[]).concat(valueOnFormControl) : []; // Always return an array.
-    return value as T[];
+    const value: T[] = valueOnFormControl != null ? asArray(valueOnFormControl) : []; // Always return an array.
+    return value;
   }
 
   protected _setValueOnFormControl(values: T[]): void {
-    const value = this.multiSelect ? values : lastValue(values); // pick last value, as the last value added is the newest value.
-    this.formControl.setValue(value);
+    let newValue: T | T[] = values;
+
+    if (!this.asArrayValue) {
+      newValue = [values[0]].filter((x) => x != null)[0];
+    }
+
+    this.formControl.setValue(newValue);
     this.formControl.markAsDirty();
     this.formControl.markAsTouched();
   }

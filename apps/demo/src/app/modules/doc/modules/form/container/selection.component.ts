@@ -375,6 +375,17 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
       displayForValue: DISPLAY_FOR_STRING_VALUE
     }),
     searchableChipField({
+      key: 'pickOne',
+      label: 'Pick a Single Value',
+      description: 'Can only pick one value at a time. Saved as a single value.',
+      allowStringValues: false,
+      searchOnEmptyText: true,
+      multiSelect: false,
+      asArrayValue: false,
+      search: makeSearchForStringValue(this.searchFn$),
+      displayForValue: DISPLAY_FOR_STRING_VALUE
+    }),
+    searchableChipField({
       key: 'nonEmptySearch',
       label: 'Search Non-Empty Strings',
       description: 'This input does not search empty string value.',

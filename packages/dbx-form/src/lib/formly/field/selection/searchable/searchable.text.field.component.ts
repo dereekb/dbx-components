@@ -17,6 +17,8 @@ export interface SearchableTextValueFieldsFieldProps<T, M = unknown, H extends P
   templateUrl: 'searchable.text.field.component.html'
 })
 export class DbxSearchableTextFieldComponent<T, M = unknown, H extends PrimativeKey = PrimativeKey> extends AbstractDbxSearchableValueFieldDirective<T, M, H, SearchableTextValueFieldsFieldProps<T, M, H>> implements OnInit, OnDestroy {
+  override allowSyncValueToInput = true;
+
   readonly selectedDisplayValue$ = this.displayValues$.pipe(
     map((x) => x[0]),
     shareReplay(1),
@@ -39,7 +41,9 @@ export class DbxSearchableTextFieldComponent<T, M = unknown, H extends Primative
     return this.searchableField.showSelectedValue ?? !this.allowStringValues; // Show the selected value only if string values are allowed.
   }
 
-  override readonly multiSelect = false;
+  get multiSelect() {
+    return false;
+  }
 
   private _clearInputSub = new SubscriptionObject();
 
