@@ -1,4 +1,4 @@
-import { ArrayOrValue, Maybe, convertMaybeToArray, findUnique, lastValue, PrimativeKey, separateValues, asArray } from '@dereekb/util';
+import { ArrayOrValue, Maybe, convertMaybeToArray, lastValue, PrimativeKey, separateValues, asArray, filterUniqueValues } from '@dereekb/util';
 import { DbxInjectionComponentConfig, mergeDbxInjectionComponentConfigs } from '@dereekb/dbx-core';
 import { filterMaybe, SubscriptionObject, LoadingState, LoadingStateContextInstance, successResult, startWithBeginLoading } from '@dereekb/rxjs';
 import { ChangeDetectorRef, Directive, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
@@ -423,7 +423,7 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, M = unknown, H
   setValues(values: T[]): void {
     // Use to filter non-unique values.
     if (this.hashForValue) {
-      values = findUnique(values, this.hashForValue);
+      values = filterUniqueValues(values, this.hashForValue);
     }
 
     if (this.pickOnlyOne) {

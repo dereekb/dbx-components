@@ -23,20 +23,18 @@ export function makeMetaFilterSearchableFieldValueDisplayFn<T extends string | n
         map((result) => {
           const resultMap: Map<Maybe<T>, SearchableValueFieldValue<T, M>> = arrayToMap(result, (x) => x.value);
 
-          const mergedWithLoad = needLoading
-            .map((x) => {
-              const id = x.value;
-              const loadedItem = resultMap.get(id);
-              const anchor = x.anchor ?? loadedItem?.anchor;
-              const meta: M = loadedItem?.meta as M;
+          const mergedWithLoad = needLoading.map((x) => {
+            const id = x.value;
+            const loadedItem = resultMap.get(id);
+            const anchor = x.anchor ?? loadedItem?.anchor;
+            const meta: Maybe<M> = loadedItem?.meta;
 
-              return {
-                ...x,
-                anchor,
-                meta
-              };
-            })
-            .filter((x) => !x.meta);
+            return {
+              ...x,
+              anchor,
+              meta
+            };
+          });
 
           return mergedWithLoad;
         }),
@@ -46,7 +44,7 @@ export function makeMetaFilterSearchableFieldValueDisplayFn<T extends string | n
       allValues = of(loaded);
     }
 
-    return allValues.pipe(switchMap((x) => makeDisplayForValues(x)));
+    return allValues.pipe(switchMap(makeDisplayForValues));
   };
 }
 

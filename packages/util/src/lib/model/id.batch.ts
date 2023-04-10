@@ -1,6 +1,7 @@
-import { mergeIntoArray } from '../array';
+import { mergeIntoArray } from '../array/array';
 import { ArrayFactory, AsyncArrayFactory } from '../array/array.factory';
-import { FindUniqueFunction } from '../array/array.unique';
+import { FilterUniqueFunction } from '../array/array.unique';
+import { PrimativeKey } from '../key';
 import { performBatchLoop } from '../promise/promise.loop';
 import { AsyncMapFunction, MapFunction } from '../value/map';
 
@@ -12,11 +13,17 @@ export type IdBatchVerifierFunction<T> = AsyncMapFunction<MapFunction<T[], T[]>>
 /**
  * Used by to verify tags have not already been taken.
  */
-export type IdBatchVerifier<T> = {
+export type IdBatchVerifier<T, K extends PrimativeKey = PrimativeKey> = {
   /**
    * Optional function to ensure uniqueness.
+   *
+   * @deprecated use filterUnique instead
    */
-  findUnique?: FindUniqueFunction<T>;
+  findUnique?: FilterUniqueFunction<T, K>;
+  /**
+   * (Optional) Use to filter unique key values.
+   */
+  filterUnique?: FilterUniqueFunction<T, K>;
   verify: IdBatchVerifierFunction<T>;
   /**
    * Max number of tags that can be verified per batch.
@@ -24,9 +31,9 @@ export type IdBatchVerifier<T> = {
   maxBatchSize: number;
 };
 
-export interface IdBatchFactoryConfig<T> {
+export interface IdBatchFactoryConfig<T, K extends PrimativeKey = PrimativeKey> {
   readonly factory: ArrayFactory<T>;
-  readonly verifier: IdBatchVerifier<T>;
+  readonly verifier: IdBatchVerifier<T, K>;
 }
 
 /**
@@ -40,9 +47,9 @@ export type IdBatchFactory<T> = AsyncArrayFactory<T>;
  * @param config
  * @returns
  */
-export function idBatchFactory<T>(config: IdBatchFactoryConfig<T>): IdBatchFactory<T> {
+export function idBatchFactory<T, K extends PrimativeKey = PrimativeKey>(config: IdBatchFactoryConfig<T, K>): IdBatchFactory<T> {
   const { factory, verifier } = config;
-  const { maxBatchSize: tagsToGeneratePerBatch, findUnique = (x) => x, verify: verifyTags } = verifier;
+  const { maxBatchSize: tagsToGeneratePerBatch, findUnique = (x) => x, filterUnique = findUnique, verify: verifyTags } = verifier;
   const maxUniquenessFailures = 20; // arbitrary failure point, but generally shouldn't occur with proper input.
 
   return async (totalTagIdentifiersToGenerate: number) => {
@@ -54,7 +61,7 @@ export function idBatchFactory<T>(config: IdBatchFactoryConfig<T>): IdBatchFacto
       let uniquenessFailure = 0;
       while (ids.length < batchSize) {
         const countToGenerate = batchSize - ids.length;
-        let newIds = findUnique(factory(countToGenerate), uniquenessAccumulator);
+        let newIds = filterUnique(factory(countToGenerate), uniquenessAccumulator);
 
         if (newIds.length === 0) {
           uniquenessFailure += 1;

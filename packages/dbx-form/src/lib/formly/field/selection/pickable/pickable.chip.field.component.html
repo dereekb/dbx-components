@@ -7,6 +7,7 @@
     <div class="dbx-pickable-item-field-chips">
       <mat-chip-list [multiple]="multiSelect" [required]="required" [selectable]="!isReadonlyOrDisabled" [disabled]="readonly" #chipList>
         <mat-chip *ngFor="let item of items$ | async" (click)="itemClicked(item)" [selected]="item.selected" [disabled]="isReadonlyOrDisabled || item.disabled">
+          <mat-icon class="dbx-icon-spacer" *ngIf="item.itemValue.icon">{{ item.itemValue.icon }}</mat-icon>
           <span class="dbx-chip-label">{{ item.itemValue.label }}</span>
           <span class="dbx-chip-sublabel" *ngIf="item.itemValue.sublabel">{{ item.itemValue.sublabel }}</span>
         </mat-chip>

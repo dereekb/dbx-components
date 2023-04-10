@@ -57,7 +57,7 @@ export function describeFirestoreQueryDriverTests(f: MockItemCollectionFixture) 
         const idFactory = arrayFactory(mapGetter(randomNumberFactory(10000000), (x) => `test-id-${x}`));
         const random = randomFromArrayFactory(takenIds);
 
-        const factory = idBatchFactory<string>({
+        const factory = idBatchFactory<string, string>({
           verifier: mockItemIdBatchVerifier(f.instance.mockItemCollection),
           factory: (count) => {
             const ids = [random(), ...idFactory(count)];

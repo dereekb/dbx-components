@@ -4,7 +4,7 @@ import { ChangeDetectorRef, Component, OnDestroy, Type, OnInit } from '@angular/
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { dbxListField, filterPickableItemFieldValuesByLabel, pickableItemChipField, pickableItemListField, pickableValueFieldValuesConfigForStaticLabeledValues, searchableChipField, searchableStringChipField, searchableTextField, SearchableValueFieldDisplayFn, SearchableValueFieldDisplayValue, SearchableValueFieldStringSearchFn, SearchableValueFieldValue, sourceSelectField, SourceSelectLoadSource, valueSelectionField, ValueSelectionOptionWithValue } from '@dereekb/dbx-form';
 import { ListLoadingState, randomDelayWithRandomFunction, successResult, beginLoading } from '@dereekb/rxjs';
-import { range, randomArrayFactory, randomNumberFactory, takeFront, readIndexNumber, IndexRef, ModelKey, searchStringFilterFunction } from '@dereekb/util';
+import { range, randomArrayFactory, randomNumberFactory, takeFront, readIndexNumber, IndexRef, ModelKey, searchStringFilterFunction, randomPickFactory } from '@dereekb/util';
 import { DocFormExampleSelectionValue, DocFormExampleSelectionValueId, EXAMPLE_DISPLAY_FOR_SELECTION_VALUE, EXAMPLE_DISPLAY_FOR_SELECTION_VALUE_WITH_CUSTOM_DISPLAYS, EXAMPLE_SEARCH_FOR_SELECTION_VALUE, MAKE_EXAMPLE_SELECTION_VALUE } from '../component/selection.example';
 import { DocFormExamplePrimarySearchableFieldDisplayComponent } from '../component/selection.example.view';
 import { DocValue } from '../../layout/component/item.list';
@@ -28,8 +28,10 @@ export function makeSearchForStringValue(obs: Observable<TestStringSearchFunctio
   };
 }
 
+const RANDOM_ICON_FACTORY = randomPickFactory(['circle', 'favorite', 'pentagon', 'star', 'square']);
+
 export const DISPLAY_FOR_STRING_VALUE: SearchableValueFieldDisplayFn<string> = (values: SearchableValueFieldValue<string>[]) => {
-  const displayValues: SearchableValueFieldDisplayValue<string>[] = values.map((x) => ({ ...x, label: x.value, sublabel: 'item' }));
+  const displayValues: SearchableValueFieldDisplayValue<string>[] = values.map((x) => ({ ...x, icon: RANDOM_ICON_FACTORY(), label: x.value, sublabel: 'item' }));
   const obs: Observable<SearchableValueFieldDisplayValue<string>[]> = of(displayValues);
   return obs;
 };

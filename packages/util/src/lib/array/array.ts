@@ -200,17 +200,6 @@ export function takeLast<T>(values: T[], maxToTake: number, keepFromFront: numbe
 }
 
 /**
- * Picks an item randomly from the input array. If the array is empty, returns undefined.
- *
- * @param values
- */
-export function pickOneRandomly<T>(values: T[]): T {
-  const random = Math.random();
-  const index = Math.round(random * (values.length - 1));
-  return values[index];
-}
-
-/**
  * Performs forEach with the input array and returns the array.
  *
  * @param array

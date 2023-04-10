@@ -1,4 +1,4 @@
-import { arrayToMap, findUnique } from '../array';
+import { arrayToMap, filterUniqueValues } from '../array';
 import { makeKeyPairs, makeValuesGroupMap, restoreOrderWithValues, separateValues } from '../grouping';
 import { Maybe } from '../value/maybe.type';
 
@@ -268,7 +268,7 @@ export class ModelRelationUtility {
   }
 
   static removeDuplicates<T>(relations: Maybe<T[]>, readKey: ReadRelationKeyFn<T>, additionalKeys: string[] = []): T[] {
-    return relations?.length ? findUnique(relations, readKey, additionalKeys) : [];
+    return relations?.length ? filterUniqueValues(relations, readKey, additionalKeys) : [];
   }
 
   // MARK: Internal Utility

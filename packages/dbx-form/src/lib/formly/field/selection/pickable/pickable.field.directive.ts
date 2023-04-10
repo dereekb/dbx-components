@@ -1,6 +1,6 @@
 import { DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { LoadingState, successResult, mapLoadingStateResults, filterMaybe, ListLoadingStateContextInstance, isListLoadingStateEmpty, startWithBeginLoading, SubscriptionObject } from '@dereekb/rxjs';
-import { PrimativeKey, convertMaybeToArray, findUnique, makeValuesGroupMap, Maybe, ArrayOrValue, separateValues } from '@dereekb/util';
+import { PrimativeKey, convertMaybeToArray, makeValuesGroupMap, Maybe, ArrayOrValue, separateValues, filterUniqueValues } from '@dereekb/util';
 import { Directive, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { FormControl, AbstractControl } from '@angular/forms';
 import { MatInput } from '@angular/material/input';
@@ -460,7 +460,7 @@ export class AbstractDbxPickableItemFieldDirective<T, M = unknown, H extends Pri
   setValues(values: T[]): void {
     // Use to filter non-unique values.
     if (this.hashForValue) {
-      values = findUnique(values, this.hashForValue);
+      values = filterUniqueValues(values, this.hashForValue);
     }
 
     if (this.pickOnlyOne) {

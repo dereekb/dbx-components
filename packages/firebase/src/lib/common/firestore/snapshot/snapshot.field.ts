@@ -9,11 +9,9 @@ import {
   passThrough,
   PrimativeKey,
   ReadKeyFunction,
-  makeFindUniqueFunction,
   ModelFieldMapFunctionsWithDefaultsConfig,
   filterMaybeValues,
   MaybeSo,
-  FindUniqueFunction,
   FindUniqueStringsTransformConfig,
   findUniqueTransform,
   MapFunction,
@@ -26,6 +24,7 @@ import {
   filterEmptyValues,
   ModelKey,
   unique,
+  filterUniqueFunction,
   Getter,
   ToModelMapFunctionsInput,
   toModelMapFunctions,
@@ -49,7 +48,8 @@ import {
   mapObjectMap,
   UnitedStatesAddress,
   ZoomLevel,
-  DEFAULT_LAT_LNG_STRING_VALUE
+  DEFAULT_LAT_LNG_STRING_VALUE,
+  FilterUniqueFunction
 } from '@dereekb/util';
 import { FirestoreModelData, FIRESTORE_EMPTY_VALUE } from './snapshot.type';
 import { FirebaseAuthUserId } from '../../auth/auth';
@@ -278,11 +278,11 @@ export function optionalFirestoreArray<T>() {
   return firestorePassThroughField<Maybe<T[]>>();
 }
 
-export type FirestoreUniqueArrayFieldConfig<T> = FirestoreArrayFieldConfig<T> & {
-  readonly findUnique: FindUniqueFunction<T>;
+export type FirestoreUniqueArrayFieldConfig<T, K extends PrimativeKey = PrimativeKey> = FirestoreArrayFieldConfig<T> & {
+  readonly findUnique: FilterUniqueFunction<T, K>; // TODO: BREAKING CHANGE - Rename to filterUnique()
 };
 
-export function firestoreUniqueArray<T>(config: FirestoreUniqueArrayFieldConfig<T>) {
+export function firestoreUniqueArray<T, K extends PrimativeKey = PrimativeKey>(config: FirestoreUniqueArrayFieldConfig<T, K>) {
   const { findUnique } = config;
   return firestoreField<T[], T[]>({
     default: config.default ?? ((() => []) as Getter<T[]>),
@@ -299,7 +299,7 @@ export type FirestoreUniqueKeyedArrayFieldConfig<T, K extends PrimativeKey = Pri
 export function firestoreUniqueKeyedArray<T, K extends PrimativeKey = PrimativeKey>(config: FirestoreUniqueKeyedArrayFieldConfig<T, K>) {
   return firestoreUniqueArray({
     ...config,
-    findUnique: makeFindUniqueFunction<T, K>(config.readKey)
+    findUnique: filterUniqueFunction<T, K>(config.readKey)
   });
 }
 
@@ -312,7 +312,7 @@ export type FirestoreEnumArrayFieldConfig<S extends string | number> = Omit<Fire
  * @returns
  */
 export function firestoreEnumArray<S extends string | number>(config: FirestoreEnumArrayFieldConfig<S> = {}) {
-  return firestoreUniqueArray({
+  return firestoreUniqueArray<S, S>({
     ...config,
     findUnique: unique
   });
@@ -321,7 +321,7 @@ export function firestoreEnumArray<S extends string | number>(config: FirestoreE
 export type FirestoreUniqueStringArrayFieldConfig<S extends string = string> = Omit<FirestoreUniqueArrayFieldConfig<S>, 'findUnique'> & FindUniqueStringsTransformConfig;
 
 export function firestoreUniqueStringArray<S extends string = string>(config?: FirestoreUniqueStringArrayFieldConfig<S>) {
-  const findUnique = (config != null ? findUniqueTransform(config) : unique) as FindUniqueFunction<S>;
+  const findUnique = (config != null ? findUniqueTransform(config) : unique) as FilterUniqueFunction<S>;
   return firestoreUniqueArray({
     ...config,
     findUnique

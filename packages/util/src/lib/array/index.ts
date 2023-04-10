@@ -7,6 +7,7 @@ export * from './array.limit';
 export * from './array.make';
 export * from './array.map';
 export * from './array.number';
+export * from './array.random';
 export * from './array.set';
 export * from './array.string';
 export * from './array';

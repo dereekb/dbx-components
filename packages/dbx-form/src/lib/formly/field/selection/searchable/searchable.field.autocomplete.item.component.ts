@@ -60,9 +60,14 @@ export abstract class AbstractDbxSearchableFieldDisplayDirective<T> {
   selector: 'dbx-default-searchable-field-display',
   template: `
     <div class="dbx-default-searchable-field-display">
+      <mat-icon *ngIf="icon">{{ icon }}</mat-icon>
       <span class="dbx-chip-label">{{ displayValue.label }}</span>
       <span class="dbx-chip-sublabel" *ngIf="displayValue.sublabel">({{ displayValue.sublabel }})</span>
     </div>
   `
 })
-export class DbxDefaultSearchableFieldDisplayComponent<T> extends AbstractDbxSearchableFieldDisplayDirective<T> {}
+export class DbxDefaultSearchableFieldDisplayComponent<T> extends AbstractDbxSearchableFieldDisplayDirective<T> {
+  get icon() {
+    return this.displayValue.icon;
+  }
+}
