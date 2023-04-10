@@ -1,8 +1,8 @@
 import { symmetricDifferenceArray } from '../set/set';
-import { findUnique } from '../array/array.unique';
 import { ReadKeyFunction, ReadMultipleKeysFunction } from '../key';
 import { Maybe } from '../value/maybe.type';
 import { MapFunction } from '../value/map';
+import { filterUniqueValues } from '../array';
 
 /**
  * A string model key
@@ -90,7 +90,7 @@ export function uniqueKeys(keys: ModelKey[]): ModelKey[] {
 export function uniqueModels<T extends UniqueModel>(models: T[], readKey?: ReadModelKeyFunction<T>): T[];
 export function uniqueModels<T>(models: T[], readKey: ReadModelKeyFunction<T>): T[];
 export function uniqueModels<T>(models: T[], readKey: ReadModelKeyFunction<T> = readUniqueModelKey as ReadModelKeyFunction<T>): T[] {
-  return findUnique(models, readKey);
+  return filterUniqueValues(models, readKey);
 }
 
 export function readModelKeysFromObjects<T extends UniqueModel>(input: T[], required?: boolean, read?: ReadModelKeyFunction<T>): Maybe<ModelKey>[];

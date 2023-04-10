@@ -27,7 +27,7 @@ export type FirestoreIdBatchVerifierFactoryMakeQueryConfig<T, I extends Primativ
 
 export type FirestoreIdBatchVerifierFactoryConfig<T, I extends PrimativeKey> = FirestoreIdBatchVerifierFactoryMakeQueryConfig<T, I> | FirestoreIdBatchVerifierFactoryFieldsQueryConfig<T, I>;
 
-export type FirestoreIdBatchVerifierFactory<T, I extends PrimativeKey> = FactoryWithRequiredInput<IdBatchVerifier<I>, FirestoreCollectionLike<T>>;
+export type FirestoreIdBatchVerifierFactory<T, I extends PrimativeKey> = FactoryWithRequiredInput<IdBatchVerifier<I, I>, FirestoreCollectionLike<T>>;
 
 export function firestoreIdBatchVerifierFactory<T, I extends PrimativeKey>(config: FirestoreIdBatchVerifierFactoryConfig<T, I>): FirestoreIdBatchVerifierFactory<T, I> {
   const { readKeys } = config;
@@ -43,7 +43,7 @@ export function firestoreIdBatchVerifierFactory<T, I extends PrimativeKey>(confi
       return unusedKeys;
     };
 
-    const verifier: IdBatchVerifier<I> = {
+    const verifier: IdBatchVerifier<I, I> = {
       maxBatchSize: FIRESTORE_MAX_WHERE_IN_FILTER_ARGS_COUNT,
       findUnique: unique,
       verify

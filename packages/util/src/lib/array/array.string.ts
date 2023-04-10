@@ -1,5 +1,5 @@
 import { flattenArray } from './array';
-import { unique, findUnique } from './array.unique';
+import { unique, filterUniqueValues } from './array.unique';
 import { ReadKeyFunction } from '../key';
 import { caseInsensitiveString } from '../string/string';
 import { containsAllValues, containsAnyValue, hasDifferentValues } from '../set/set';
@@ -44,7 +44,7 @@ export function flattenArrayUniqueCaseInsensitiveStrings(array: string[][]): str
 }
 
 export function findUniqueCaseInsensitiveStrings<T, K extends string = string>(models: T[], readKey: ReadKeyFunction<T, K>, additionalKeys: K[] = []): T[] {
-  return findUnique(models, (x: T) => caseInsensitiveString(readKey(x)), toCaseInsensitiveStringArray(additionalKeys));
+  return filterUniqueValues(models, (x: T) => caseInsensitiveString(readKey(x)), toCaseInsensitiveStringArray(additionalKeys));
 }
 
 export function containsStringAnyCase(values: Iterable<string>, valueToFind: string): boolean {

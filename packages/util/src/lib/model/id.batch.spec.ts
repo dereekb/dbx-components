@@ -6,8 +6,8 @@ import { idBatchFactory, IdBatchVerifier } from './id.batch';
 
 describe('idBatchFactory()', () => {
   const maxBatchSize = 10;
-  const evenNumberVerifier: IdBatchVerifier<number> = {
-    findUnique: unique,
+  const evenNumberVerifier: IdBatchVerifier<number, number> = {
+    filterUnique: unique,
     verify: (x) => x.filter((y) => y % 2 === 0),
     maxBatchSize
   };
