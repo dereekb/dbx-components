@@ -76,11 +76,23 @@ export class DbxPickableListFieldItemListViewComponent<T> extends AbstractDbxSel
 
 @Component({
   template: `
-    <p>{{ label }}</p>
+    <div class="dbx-default-pickable-item-field-list-item">
+      <mat-icon class="dbx-icon-spacer" *ngIf="icon">{{ icon }}</mat-icon>
+      <span class="dbx-chip-label">{{ label }}</span>
+      <span class="dbx-chip-sublabel" *ngIf="sublabel">({{ sublabel }})</span>
+    </div>
   `
 })
 export class DbxPickableListFieldItemListViewItemComponent<T> extends AbstractDbxValueListViewItemComponent<PickableValueFieldDisplayValue<T>> {
   get label(): string {
     return this.itemValue.label;
+  }
+
+  get sublabel() {
+    return this.itemValue.sublabel;
+  }
+
+  get icon() {
+    return this.itemValue.icon;
   }
 }

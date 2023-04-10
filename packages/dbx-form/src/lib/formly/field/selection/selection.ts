@@ -1,4 +1,4 @@
-import { PrimativeKey, Maybe, MapFunction } from '@dereekb/util';
+import { PrimativeKey, Maybe, MapFunction, LabeledValue, LabelRef } from '@dereekb/util';
 
 export interface SelectionValue<T, M = unknown> {
   /**
@@ -14,9 +14,9 @@ export interface SelectionValue<T, M = unknown> {
 /**
  * Displayed value.
  */
-export interface SelectionDisplayValue<T, M = unknown> extends SelectionValue<T, M> {
-  label: string;
+export interface SelectionDisplayValue<T, M = unknown> extends SelectionValue<T, M>, LabelRef {
   sublabel?: string;
+  icon?: string;
   /**
    * Whether or not the value is known.
    */
