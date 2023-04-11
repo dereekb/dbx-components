@@ -7,6 +7,25 @@ import { Maybe } from '../value/maybe.type';
  */
 export type NumberString = string;
 
+/**
+ * Number that represents a percent.
+ */
+export type PercentNumber = number;
+
+/**
+ * Converts the percent number to a decimal value.
+ *
+ * @param input
+ * @returns
+ */
+export function percentNumberToDecimal(input: Maybe<number>): number {
+  return input ? input / 100 : 0;
+}
+
+export function percentNumberFromDecimal(input: Maybe<number>): PercentNumber {
+  return input ? input * 100 : 0;
+}
+
 export type NumberOrNumberString = number | NumberString;
 
 /**
