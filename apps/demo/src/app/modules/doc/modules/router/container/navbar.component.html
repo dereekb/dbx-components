@@ -34,13 +34,13 @@
 
       <h4>Button</h4>
       <div>
-        <span>Mode set to button. The button will get it's icon from the current anchor, or default to the input anchor.</span>
-        <dbx-navbar defaultIcon="add" [anchors]="anchors" mode="button"></dbx-navbar>
+        <span>Mode set to button. The button will get it's icon from the current anchor, or default to the input anchor. Default text is used for states that do not have an anchor.</span>
+        <dbx-navbar defaultIcon="add" defaultText="Default Text" [anchors]="iconButtonAnchors" mode="button"></dbx-navbar>
       </div>
 
       <h4>Icon Button</h4>
       <div>
-        <span>Mode set to icon, with custom icon that does not change.</span>
+        <span>When mode is set to icon only the icon is displayed. The icon input configures the navbar to only show that icon.</span>
         <dbx-navbar icon="add" [anchors]="anchors" mode="icon"></dbx-navbar>
       </div>
 

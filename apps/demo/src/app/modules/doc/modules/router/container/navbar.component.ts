@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { takeLast } from '@dereekb/util';
 import { DOC_ROUTER_ROUTES } from '../doc.router';
 
 @Component({
@@ -25,4 +26,6 @@ export class DocRouterNavbarComponent {
       ref: 'doc.router.navbar.b'
     }
   ];
+
+  iconButtonAnchors = takeLast(this.anchors, 2);
 }
