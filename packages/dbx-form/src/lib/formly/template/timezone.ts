@@ -44,6 +44,7 @@ export function timezoneStringField(config: TimezoneStringFieldConfig = {}): For
   return searchableTextField({
     key: 'timezone',
     label: 'Timezone',
+    asArrayValue: false,
     ...config,
     searchOnEmptyText: true,
     search: timezoneStringSearchFunction(),
