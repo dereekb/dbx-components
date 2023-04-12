@@ -55,7 +55,9 @@ $header-left-reserved-space-small-screen: 120px;
   }
 
   .dbx-section-header-padded {
-    padding: 0 4px;
+    .dbx-section-header {
+      padding: 0 4px;
+    }
   }
 
   .dbx-section-hint,

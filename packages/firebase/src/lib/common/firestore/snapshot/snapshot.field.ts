@@ -278,11 +278,11 @@ export function optionalFirestoreArray<T>() {
   return firestorePassThroughField<Maybe<T[]>>();
 }
 
-export type FirestoreUniqueArrayFieldConfig<T, K extends PrimativeKey = PrimativeKey> = FirestoreArrayFieldConfig<T> & {
+export type FirestoreUniqueArrayFieldConfig<T, K extends PrimativeKey = T extends PrimativeKey ? T : PrimativeKey> = FirestoreArrayFieldConfig<T> & {
   readonly findUnique: FilterUniqueFunction<T, K>; // TODO: BREAKING CHANGE - Rename to filterUnique()
 };
 
-export function firestoreUniqueArray<T, K extends PrimativeKey = PrimativeKey>(config: FirestoreUniqueArrayFieldConfig<T, K>) {
+export function firestoreUniqueArray<T, K extends PrimativeKey = T extends PrimativeKey ? T : PrimativeKey>(config: FirestoreUniqueArrayFieldConfig<T, K>) {
   const { findUnique } = config;
   return firestoreField<T[], T[]>({
     default: config.default ?? ((() => []) as Getter<T[]>),
@@ -322,7 +322,7 @@ export type FirestoreUniqueStringArrayFieldConfig<S extends string = string> = O
 
 export function firestoreUniqueStringArray<S extends string = string>(config?: FirestoreUniqueStringArrayFieldConfig<S>) {
   const findUnique = (config != null ? findUniqueTransform(config) : unique) as FilterUniqueFunction<S>;
-  return firestoreUniqueArray({
+  return firestoreUniqueArray<S, S>({
     ...config,
     findUnique
   });

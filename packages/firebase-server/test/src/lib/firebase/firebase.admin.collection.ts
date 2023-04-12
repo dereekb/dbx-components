@@ -1,4 +1,4 @@
-import { FirestoreCollection, FirestoreDocument, DocumentReference, FirestoreModelId, FirestoreModelKey, FirestoreCollectionLike } from '@dereekb/firebase';
+import { FirestoreCollection, FirestoreDocument, DocumentReference, FirestoreModelId, FirestoreModelKey, FirestoreCollectionLike, FlatFirestoreModelKey, flatFirestoreModelKey, TwoWayFlatFirestoreModelKey, twoWayFlatFirestoreModelKey } from '@dereekb/firebase';
 import { AsyncGetterOrValue, Getter, GetterOrValue, getValueFromGetter, Maybe, PromiseOrValue } from '@dereekb/util';
 import { JestTestContextFixture, useJestContextFixture, AbstractChildJestTestContextFixture } from '@dereekb/util/test';
 import { FirebaseAdminTestContext } from './firebase.admin';
@@ -9,6 +9,8 @@ import { FirebaseAdminTestContext } from './firebase.admin';
 export interface ModelTestContext<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> {
   get documentId(): FirestoreModelId;
   get documentKey(): FirestoreModelKey;
+  get documentFlatKey(): FlatFirestoreModelKey;
+  get documentTwoWayFlatKey(): TwoWayFlatFirestoreModelKey;
   get documentRef(): DocumentReference<T>;
   get document(): D;
 }
@@ -21,6 +23,14 @@ export class ModelTestContextFixture<T, D extends FirestoreDocument<T> = Firesto
 
   get documentKey(): FirestoreModelKey {
     return this.instance.documentKey;
+  }
+
+  get documentFlatKey(): FlatFirestoreModelKey {
+    return this.instance.documentFlatKey;
+  }
+
+  get documentTwoWayFlatKey(): TwoWayFlatFirestoreModelKey {
+    return this.instance.documentTwoWayFlatKey;
   }
 
   get documentRef(): DocumentReference<T> {
@@ -41,6 +51,14 @@ export class ModelTestContextInstance<T, D extends FirestoreDocument<T> = Firest
 
   get documentKey(): FirestoreModelKey {
     return this.ref.path;
+  }
+
+  get documentFlatKey(): FlatFirestoreModelKey {
+    return flatFirestoreModelKey(this.documentKey);
+  }
+
+  get documentTwoWayFlatKey(): TwoWayFlatFirestoreModelKey {
+    return twoWayFlatFirestoreModelKey(this.documentKey);
   }
 
   get documentRef(): DocumentReference<T> {

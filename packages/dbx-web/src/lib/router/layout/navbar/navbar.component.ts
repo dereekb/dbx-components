@@ -31,6 +31,7 @@ export class DbxNavbarComponent extends AbstractTransitionDirective implements O
 
   private _icon = new BehaviorSubject<Maybe<string>>(undefined);
   private _defaultIcon = new BehaviorSubject<Maybe<string>>('menu');
+  private _defaultText = new BehaviorSubject<Maybe<string>>(undefined);
 
   private _inputMode = new BehaviorSubject<Maybe<NavbarMode>>(undefined);
   private _breakpoint = new BehaviorSubject<ScreenMediaWidthType>('large');
@@ -77,16 +78,16 @@ export class DbxNavbarComponent extends AbstractTransitionDirective implements O
     shareReplay(1)
   );
 
-  readonly buttonDisplay$: Observable<DbxButtonDisplayContent> = combineLatest([this._defaultIcon, this._icon, this.selectedAnchor$, this.mode$]).pipe(
-    map(([defaultIcon, icon, selectedAmchor, mode]) => {
+  readonly buttonDisplay$: Observable<DbxButtonDisplayContent> = combineLatest([this._defaultIcon, this._icon, this._defaultText, this.selectedAnchor$, this.mode$]).pipe(
+    map(([defaultIcon, icon, defaultText, selectedAnchor, mode]) => {
       let content: DbxButtonDisplayContent;
 
       if (icon) {
-        content = { icon };
-      } else if (selectedAmchor) {
-        content = { icon: selectedAmchor.anchor.icon ?? this._defaultIcon.value, text: selectedAmchor.anchor.title };
+        content = { icon, text: defaultText };
+      } else if (selectedAnchor) {
+        content = { icon: selectedAnchor.anchor.icon ?? defaultIcon, text: selectedAnchor.anchor.title };
       } else {
-        content = { icon: this._defaultIcon.value ?? 'menu' };
+        content = { icon: defaultIcon ?? 'menu', text: defaultText };
       }
 
       if (mode === 'icon') {
@@ -105,6 +106,7 @@ export class DbxNavbarComponent extends AbstractTransitionDirective implements O
   ngOnDestroy(): void {
     this._icon.complete();
     this._defaultIcon.complete();
+    this._defaultText.complete();
     this._inputMode.complete();
     this._breakpoint.complete();
     this._anchors.complete();
@@ -119,6 +121,11 @@ export class DbxNavbarComponent extends AbstractTransitionDirective implements O
   @Input()
   public set defaultIcon(defaultIcon: Maybe<string>) {
     this._defaultIcon.next(defaultIcon);
+  }
+
+  @Input()
+  public set defaultText(defaultText: Maybe<string>) {
+    this._defaultText.next(defaultText);
   }
 
   @Input()
