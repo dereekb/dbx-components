@@ -13,7 +13,7 @@
     <ng-container *ngIf="showOpenSourceButton">
       <dbx-button-spacer></dbx-button-spacer>
       <dbx-action dbxActionValue [dbxActionHandler]="handleSelectOptions" class="dbx-source-select-field-button">
-        <dbx-button dbxActionButton [iconOnly]="true" [icon]="selectButtonIcon"></dbx-button>
+        <dbx-button #button dbxActionButton [iconOnly]="true" [icon]="selectButtonIcon"></dbx-button>
       </dbx-action>
     </ng-container>
   </div>

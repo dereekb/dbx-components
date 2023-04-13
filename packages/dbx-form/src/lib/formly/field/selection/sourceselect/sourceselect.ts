@@ -2,6 +2,7 @@ import { SelectionDisplayValue } from './../selection';
 import { LoadingState } from '@dereekb/rxjs';
 import { Factory, FactoryWithRequiredInput, MapFunction, Maybe, PrimativeKey } from '@dereekb/util';
 import { Observable } from 'rxjs';
+import { ElementRef } from '@angular/core';
 
 export interface SourceSelectValue<T extends PrimativeKey = PrimativeKey, M = unknown> {
   value: T;
@@ -64,10 +65,17 @@ export type SourceSelectMetaValueReader<T extends PrimativeKey = PrimativeKey, M
  */
 export type SourceSelectValueMetaLoader<T extends PrimativeKey = PrimativeKey, M = unknown> = FactoryWithRequiredInput<Observable<M[]>, T[]>;
 
+export interface SourceSelectOpenFunctionParams {
+  /**
+   * Origin of the button for the SourceSelect
+   */
+  origin: ElementRef;
+}
+
 /**
  * Returns an observable that returns an array of meta values to be added to the selection.
  */
-export type SourceSelectOpenFunction<M = unknown> = Factory<Observable<SourceSelectOpenSourceResult<M>>>;
+export type SourceSelectOpenFunction<M = unknown> = FactoryWithRequiredInput<Observable<SourceSelectOpenSourceResult<M>>, SourceSelectOpenFunctionParams>;
 
 /**
  * Returns an observable that returns an array of meta values to be added to the selection.
