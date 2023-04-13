@@ -156,7 +156,10 @@ export class DocFormSelectionComponent implements OnInit, OnDestroy {
         sources.push({ label: 'Source A', meta: of(successResult(VALUE_SELECTION_VALUES)) });
         return of(sources);
       },
-      openSource: () => of({ select: EVEN_MORE_VALUE_SELECTION_VALUES, options: MORE_VALUE_SELECTION_VALUES }).pipe(delay(2000))
+      openSource: ({ origin }) => {
+        console.log('origin: ', origin); // usable by popovers/etc.
+        return of({ select: EVEN_MORE_VALUE_SELECTION_VALUES, options: MORE_VALUE_SELECTION_VALUES }).pipe(delay(2000));
+      }
     })
   ];
 

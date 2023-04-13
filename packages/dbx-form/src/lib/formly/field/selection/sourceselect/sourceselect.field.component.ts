@@ -1,5 +1,5 @@
 import { filterMaybe, LoadingState, loadingStateHasValue, loadingStateIsLoading, LoadingStateWithMaybeSoValue, startWithBeginLoading, SubscriptionObject, successResult, beginLoading, mapLoadingStateValueWithOperator, loadingStateContext, valueFromLoadingState } from '@dereekb/rxjs';
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { distinctUntilChanged, map, switchMap, shareReplay, startWith, mergeMap, scan, BehaviorSubject, tap, first, Observable, combineLatest, of } from 'rxjs';
 import { HandleActionWithContext } from '@dereekb/dbx-core';
 import { addToSetCopy, asArray, convertMaybeToArray, filterMaybeValues, lastValue, makeValuesGroupMap, Maybe, mergeArrays, PrimativeKey, separateValues, setContainsAllValues, setsAreEquivalent, sortByStringFunction } from '@dereekb/util';
@@ -63,6 +63,9 @@ export class DbxFormSourceSelectFieldComponent<T extends PrimativeKey = Primativ
   private _formControlObs = new BehaviorSubject<Maybe<AbstractControl<T[]>>>(undefined);
   private _fromOpenSource = new BehaviorSubject<SelectFieldOpenSourceMap<T, M>>({ values: [], valuesSet: new Set() });
   private _loadSources = new BehaviorSubject<Maybe<Observable<SourceSelectLoadSource<M>[]>>>(undefined);
+
+  @ViewChild('button', { read: ElementRef, static: false })
+  buttonElement!: ElementRef;
 
   readonly formControl$ = this._formControlObs.pipe(filterMaybe());
 
@@ -436,7 +439,8 @@ export class DbxFormSourceSelectFieldComponent<T extends PrimativeKey = Primativ
     const { openSource } = this;
 
     if (openSource) {
-      const sourceObs = openSource();
+      const origin = this.buttonElement.nativeElement;
+      const sourceObs = openSource({ origin });
       context.startWorkingWithObservable(
         sourceObs.pipe(
           first(),
