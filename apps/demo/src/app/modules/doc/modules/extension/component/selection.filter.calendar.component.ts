@@ -7,7 +7,7 @@ export const DOC_EXTENSION_CALENDAR_SCHEDULE_TEST_FILTER: DateScheduleDateFilter
   start: startOfDay(new Date()),
   end: addDays(new Date(), 14), // two weeks
   w: '345', // Tues/Weds/Thurs
-  ex: []
+  ex: [1] // excludes one day
 };
 
 @Component({

@@ -42,6 +42,20 @@ describe('dateScheduleDateFilter()', () => {
 
           expect(results.length).toBe(maxIndex);
         });
+
+        describe('with exclusion', () => {
+          const ex = [0, 1, 2];
+          const scheduleWithExclusion: DateScheduleDateFilterConfig = { start, ex, w: '89' };
+          const weekDaysAndWeekendsWithExclusion = dateScheduleDateFilter(scheduleWithExclusion);
+
+          it('should exclude the configured indexes.', () => {
+            const maxIndex = 14;
+            const dateBlocks: DateBlockIndex[] = range(0, maxIndex);
+            const results = dateBlocks.filter(weekDaysAndWeekendsWithExclusion);
+
+            expect(results.length).toBe(maxIndex - ex.length);
+          });
+        });
       });
 
       describe('weekdays', () => {
@@ -218,6 +232,26 @@ describe('expandDateScheduleFactory()', () => {
           expect(results[0].i).toBe(0);
 
           expect(results[1].startsAt).toBeSameSecondAs(addDays(startsAt, 1));
+        });
+
+        describe('with exclusion in schedule', () => {
+          const ex = [0, 1, 2];
+          const scheduleWithExclusion: DateSchedule = { ...schedule, ex }; // Sunday/Monday/Tuesday out
+          const weekDaysAndWeekendsWithExclusion = expandDateScheduleFactory({ timing: weekTiming, schedule: scheduleWithExclusion });
+
+          it('should exclude the specified days in the schedule', () => {
+            const dateBlockForRange = {
+              i: 0,
+              to: 6
+            };
+
+            const results = weekDaysAndWeekendsWithExclusion([dateBlockForRange]);
+            expect(results.length).toBe(dateBlockForRange.to + 1 - ex.length);
+
+            expect(results[0].i).toBe(3);
+            expect(results[0].duration).toBe(weekTiming.duration);
+            expect(results[0].startsAt).toBeSameSecondAs(addDays(startsAt, ex.length));
+          });
         });
       });
 
