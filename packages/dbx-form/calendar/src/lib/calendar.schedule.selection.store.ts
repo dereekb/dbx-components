@@ -16,6 +16,7 @@ import {
   DateScheduleRange,
   DateTimingRelativeIndexFactory,
   dateTimingRelativeIndexFactory,
+  expandDateScheduleDayCodes,
   expandDateScheduleDayCodesToDayOfWeekSet,
   findMaxDate,
   findMinDate,
@@ -280,7 +281,7 @@ export function updateStateWithDateScheduleRangeValue(state: CalendarScheduleSel
   } else {
     if (change != null) {
       const nextState: CalendarScheduleSelectionState = { ...state, inputStart: change.start, inputEnd: change.end, selectedIndexes: new Set(change.ex) };
-      return updateStateWithChangedScheduleDays(finalizeNewCalendarScheduleSelectionState(nextState), dateScheduleDayCodes(change.w));
+      return updateStateWithChangedScheduleDays(finalizeNewCalendarScheduleSelectionState(nextState), expandDateScheduleDayCodes(change.w));
     } else {
       return noSelectionCalendarScheduleSelectionState(state); // clear selection, retain disabled days
     }
