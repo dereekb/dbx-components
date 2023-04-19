@@ -2,7 +2,7 @@ import { AbstractControl, FormGroup } from '@angular/forms';
 import { CompactContextStore } from '@dereekb/dbx-web';
 import { Component, NgZone, OnDestroy, OnInit, Optional } from '@angular/core';
 import { FieldTypeConfig, FormlyFieldProps } from '@ngx-formly/core';
-import { Maybe } from '@dereekb/util';
+import { AllOrNoneSelection, Maybe } from '@dereekb/util';
 import { FieldType } from '@ngx-formly/material';
 import { BehaviorSubject, distinctUntilChanged, shareReplay, startWith, Subscription, switchMap } from 'rxjs';
 import { filterMaybe, ObservableOrValue, SubscriptionObject, asObservable } from '@dereekb/rxjs';
@@ -15,6 +15,7 @@ export interface DbxFormCalendarDateScheduleRangeFieldProps extends Pick<FormlyF
   appearance?: MatFormFieldAppearance;
   hideCustomize?: boolean;
   filter?: ObservableOrValue<Maybe<DateScheduleDateFilterConfig>>;
+  initialSelection?: Maybe<AllOrNoneSelection>;
 }
 
 @Component({
@@ -72,6 +73,10 @@ export class DbxFormCalendarDateScheduleRangeFieldComponent<T extends DbxFormCal
     return this.props.filter;
   }
 
+  get initialSelection() {
+    return this.props.initialSelection;
+  }
+
   ngOnInit(): void {
     this._formControlObs.next(this.formControl);
 
@@ -87,6 +92,10 @@ export class DbxFormCalendarDateScheduleRangeFieldComponent<T extends DbxFormCal
 
     if (filter != null) {
       this._filterSub.subscription = this.dbxCalendarScheduleSelectionStore.setFilter(asObservable(filter)) as Subscription;
+    }
+
+    if (this.initialSelection !== undefined) {
+      this.dbxCalendarScheduleSelectionStore.setInitialSelectionState(this.initialSelection);
     }
   }
 

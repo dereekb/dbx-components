@@ -25,5 +25,6 @@ export class DocExtensionCalendarScheduleSelectionWithFilterComponent {
 
   constructor(readonly dbxCalendarScheduleSelectionStore: DbxCalendarScheduleSelectionStore) {
     dbxCalendarScheduleSelectionStore.setFilter(DOC_EXTENSION_CALENDAR_SCHEDULE_TEST_FILTER);
+    dbxCalendarScheduleSelectionStore.setInitialSelectionState('all');
   }
 }

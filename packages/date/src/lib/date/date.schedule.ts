@@ -358,6 +358,16 @@ export type DateScheduleDateFilter = DecisionFunction<DateScheduleDateFilterInpu
  */
 export interface DateScheduleDateFilterConfig extends DateSchedule, Partial<DateRange> {}
 
+export function copyDateScheduleDateFilterConfig(inputFilter: DateScheduleDateFilterConfig): DateScheduleDateFilterConfig {
+  return {
+    start: inputFilter.start,
+    end: inputFilter.end,
+    w: inputFilter.w,
+    d: inputFilter.d,
+    ex: inputFilter.ex
+  };
+}
+
 /**
  * Creates a DateScheduleDateFilter.
  *

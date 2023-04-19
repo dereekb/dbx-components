@@ -4,6 +4,8 @@ import { asIterable, IterableOrValue, useIterableOrValue } from '../iterable/ite
 import { symmetricDifference } from 'extra-set';
 import { PrimativeKey, ReadKeyFunction, readKeysSetFrom } from '../key';
 
+export type AllOrNoneSelection = 'all' | 'none';
+
 export function asSet<T>(values: IterableOrValue<T>): Set<T> {
   let set: Set<T>;
 
