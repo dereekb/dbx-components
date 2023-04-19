@@ -25,8 +25,10 @@ import {
   getRelativeIndexForDateTiming,
   groupToDateBlockRanges,
   groupUniqueDateBlocks,
+  isDateBlockWithinDateBlockRangeFunction,
   isValidDateBlockTiming,
   isValidDateBlockTimingStartDate,
+  modifyDateBlocksToFitRange,
   modifyDateBlocksToFitRangeFunction,
   sortDateBlockRanges,
   UniqueDateBlockRange
@@ -983,7 +985,7 @@ describe('dateBlockIndexRange()', () => {
   });
 });
 
-describe('dateBlocksInDateBlockRange', () => {
+describe('dateBlocksInDateBlockRange()', () => {
   it('should filter values that are within the range.', () => {
     const range = { i: 0, to: 5 };
     const input = [{ i: 0 }, { i: 1 }, { i: 2 }];
@@ -1014,6 +1016,24 @@ describe('dateBlocksInDateBlockRange', () => {
 
     const result = dateBlocksInDateBlockRange([input], range);
     expect(result.length).toBe(0);
+  });
+});
+
+describe('isDateBlockWithinDateBlockRangeFunction()', () => {
+  describe('function', () => {
+    describe('range 0-0', () => {
+      const fn = isDateBlockWithinDateBlockRangeFunction({ i: 0, to: 0 });
+
+      it('should return false for the range 0-1000', () => {
+        const result = fn({ i: 0, to: 1000 });
+        expect(result).toBe(false);
+      });
+
+      it('should return true for the range 0-0', () => {
+        const result = fn({ i: 0, to: 0 });
+        expect(result).toBe(true);
+      });
+    });
   });
 });
 
@@ -1826,5 +1846,14 @@ describe('modifyDateBlocksToFitRangeFunction()', () => {
       expect(result[0].i).toBe(range.i);
       expect(result[0].to).toBe(range.to);
     });
+  });
+});
+
+describe('modifyDateBlocksToFitRange()', () => {
+  it('should fit an input range of 0-1000 within a range of 0-0', () => {
+    const result = modifyDateBlocksToFitRange({ i: 0, to: 0 }, [{ i: 0, to: 1000 }]);
+    expect(result.length).toBe(1);
+    expect(result[0].i).toBe(0);
+    expect(result[0].to).toBe(0);
   });
 });
