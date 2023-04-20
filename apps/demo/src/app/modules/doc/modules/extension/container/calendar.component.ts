@@ -42,7 +42,8 @@ export class DocExtensionCalendarComponent implements OnInit {
       required: true,
       description: 'Date schedule with a filter applied to it, and an initial selection of everything.',
       filter: DOC_EXTENSION_CALENDAR_SCHEDULE_TEST_FILTER,
-      initialSelection: 'all'
+      computeSelectionResultRelativeToFilter: true,
+      initialSelectionState: 'all'
     })
   ];
 
