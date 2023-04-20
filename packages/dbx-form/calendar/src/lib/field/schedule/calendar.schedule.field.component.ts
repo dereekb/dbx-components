@@ -2,16 +2,16 @@ import { AbstractControl, FormGroup } from '@angular/forms';
 import { CompactContextStore } from '@dereekb/dbx-web';
 import { Component, NgZone, OnDestroy, OnInit, Optional } from '@angular/core';
 import { FieldTypeConfig, FormlyFieldProps } from '@ngx-formly/core';
-import { Maybe } from '@dereekb/util';
+import { AllOrNoneSelection, Maybe } from '@dereekb/util';
 import { FieldType } from '@ngx-formly/material';
 import { BehaviorSubject, distinctUntilChanged, shareReplay, startWith, Subscription, switchMap } from 'rxjs';
 import { filterMaybe, ObservableOrValue, SubscriptionObject, asObservable } from '@dereekb/rxjs';
 import { DateScheduleDateFilterConfig, isSameDateScheduleRange } from '@dereekb/date';
-import { DbxCalendarScheduleSelectionStore } from '../../calendar.schedule.selection.store';
+import { CalendarScheduleSelectionState, DbxCalendarScheduleSelectionStore } from '../../calendar.schedule.selection.store';
 import { provideCalendarScheduleSelectionStoreIfParentIsUnavailable } from '../../calendar.schedule.selection.store.provide';
 import { MatFormFieldAppearance } from '@angular/material/form-field';
 
-export interface DbxFormCalendarDateScheduleRangeFieldProps extends Pick<FormlyFieldProps, 'label' | 'description' | 'readonly' | 'required'> {
+export interface DbxFormCalendarDateScheduleRangeFieldProps extends Pick<FormlyFieldProps, 'label' | 'description' | 'readonly' | 'required'>, Pick<CalendarScheduleSelectionState, 'computeSelectionResultRelativeToFilter' | 'initialSelectionState'> {
   appearance?: MatFormFieldAppearance;
   hideCustomize?: boolean;
   filter?: ObservableOrValue<Maybe<DateScheduleDateFilterConfig>>;
@@ -72,6 +72,14 @@ export class DbxFormCalendarDateScheduleRangeFieldComponent<T extends DbxFormCal
     return this.props.filter;
   }
 
+  get initialSelectionState() {
+    return this.props.initialSelectionState;
+  }
+
+  get computeSelectionResultRelativeToFilter() {
+    return this.props.computeSelectionResultRelativeToFilter;
+  }
+
   ngOnInit(): void {
     this._formControlObs.next(this.formControl);
 
@@ -87,6 +95,14 @@ export class DbxFormCalendarDateScheduleRangeFieldComponent<T extends DbxFormCal
 
     if (filter != null) {
       this._filterSub.subscription = this.dbxCalendarScheduleSelectionStore.setFilter(asObservable(filter)) as Subscription;
+    }
+
+    if (this.initialSelectionState !== undefined) {
+      this.dbxCalendarScheduleSelectionStore.setInitialSelectionState(this.initialSelectionState);
+    }
+
+    if (this.computeSelectionResultRelativeToFilter != null) {
+      this.dbxCalendarScheduleSelectionStore.setComputeSelectionResultRelativeToFilter(this.computeSelectionResultRelativeToFilter);
     }
   }
 

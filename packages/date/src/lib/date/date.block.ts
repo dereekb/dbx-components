@@ -1384,7 +1384,7 @@ export function modifyDateBlocksToFitRangeFunction(range: DateBlockRange): Modif
 
         if (!inRange) {
           const asRange = dateBlockRangeWithRange(x);
-          const rangesOverlap = asRange.i < to && asRange.to > i;
+          const rangesOverlap = asRange.i <= to && asRange.to >= i;
 
           if (rangesOverlap) {
             result = {

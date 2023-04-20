@@ -1,6 +1,6 @@
 import { DateBlockIndex } from './date.block';
-import { DateBlock, dateBlockTiming, systemNormalDateToBaseDate } from '@dereekb/date';
-import { expandDateScheduleFactory, DateSchedule, dateScheduleDateBlockTimingFilter, DateScheduleDayCode, dateScheduleDayCodeFactory, dateScheduleEncodedWeek, dateScheduleDateFilter, DateScheduleDateFilterConfig, weekdayDateScheduleDayCodes, rawDateScheduleDayCodes, expandDateScheduleDayCodes, DateScheduleEncodedWeek, weekendDateScheduleDayCodes, expandDateScheduleDayCodesToDayOfWeekSet } from './date.schedule';
+import { DateBlock, dateBlockTiming, systemNormalDateToBaseDate, DateScheduleRange } from '@dereekb/date';
+import { expandDateScheduleFactory, DateSchedule, dateScheduleDateBlockTimingFilter, DateScheduleDayCode, dateScheduleDayCodeFactory, dateScheduleEncodedWeek, dateScheduleDateFilter, DateScheduleDateFilterConfig, weekdayDateScheduleDayCodes, rawDateScheduleDayCodes, expandDateScheduleDayCodes, DateScheduleEncodedWeek, weekendDateScheduleDayCodes, expandDateScheduleDayCodesToDayOfWeekSet, expandDateScheduleRange, expandDateScheduleRangeToDateBlockRanges } from './date.schedule';
 import { addDays } from 'date-fns';
 import { Day, range, UTC_TIMEZONE_STRING } from '@dereekb/util';
 
@@ -41,6 +41,20 @@ describe('dateScheduleDateFilter()', () => {
           const results = dateBlocks.filter(weekDaysAndWeekends);
 
           expect(results.length).toBe(maxIndex);
+        });
+
+        describe('with exclusion', () => {
+          const ex = [0, 1, 2];
+          const scheduleWithExclusion: DateScheduleDateFilterConfig = { start, ex, w: '89' };
+          const weekDaysAndWeekendsWithExclusion = dateScheduleDateFilter(scheduleWithExclusion);
+
+          it('should exclude the configured indexes.', () => {
+            const maxIndex = 14;
+            const dateBlocks: DateBlockIndex[] = range(0, maxIndex);
+            const results = dateBlocks.filter(weekDaysAndWeekendsWithExclusion);
+
+            expect(results.length).toBe(maxIndex - ex.length);
+          });
         });
       });
 
@@ -218,6 +232,26 @@ describe('expandDateScheduleFactory()', () => {
           expect(results[0].i).toBe(0);
 
           expect(results[1].startsAt).toBeSameSecondAs(addDays(startsAt, 1));
+        });
+
+        describe('with exclusion in schedule', () => {
+          const ex = [0, 1, 2];
+          const scheduleWithExclusion: DateSchedule = { ...schedule, ex }; // Sunday/Monday/Tuesday out
+          const weekDaysAndWeekendsWithExclusion = expandDateScheduleFactory({ timing: weekTiming, schedule: scheduleWithExclusion });
+
+          it('should exclude the specified days in the schedule', () => {
+            const dateBlockForRange = {
+              i: 0,
+              to: 6
+            };
+
+            const results = weekDaysAndWeekendsWithExclusion([dateBlockForRange]);
+            expect(results.length).toBe(dateBlockForRange.to + 1 - ex.length);
+
+            expect(results[0].i).toBe(3);
+            expect(results[0].duration).toBe(weekTiming.duration);
+            expect(results[0].startsAt).toBeSameSecondAs(addDays(startsAt, ex.length));
+          });
         });
       });
 
@@ -500,5 +534,101 @@ describe('dateScheduleDayCodeFactory()', () => {
         });
       });
     });
+  });
+});
+
+describe('expandDateScheduleRange()', () => {
+  const utc2022Week2StartDate = new Date('2022-01-02T00:00:00Z'); // sunday
+  const utc2022Week2EndDate = addDays(utc2022Week2StartDate, 6); // saturday
+
+  it('should expand a week.', () => {
+    const dateScheduleRange: DateScheduleRange = {
+      w: '89',
+      start: utc2022Week2StartDate,
+      end: utc2022Week2EndDate
+    };
+
+    const expansion = expandDateScheduleRange({ dateScheduleRange });
+    expect(expansion.length).toBe(7);
+
+    expect(expansion[0].startsAt).toBeSameSecondAs(dateScheduleRange.start);
+  });
+
+  it('should expand a week with excluded days.', () => {
+    const dateScheduleRange: DateScheduleRange = {
+      w: '89',
+      start: utc2022Week2StartDate,
+      end: utc2022Week2EndDate,
+      ex: [0, 2, 4, 6]
+    };
+
+    const expansion = expandDateScheduleRange({ dateScheduleRange });
+    expect(expansion.length).toBe(3);
+
+    expect(expansion[0].startsAt).toBeSameSecondAs(addDays(dateScheduleRange.start, 1));
+
+    const indexes = expansion.map((x) => x.i);
+    expect(indexes).toContain(1);
+    expect(indexes).toContain(3);
+    expect(indexes).toContain(5);
+  });
+
+  it('should expand a week with included days.', () => {
+    const dateScheduleRange: DateScheduleRange = {
+      w: '8',
+      start: utc2022Week2StartDate,
+      end: utc2022Week2EndDate,
+      d: [0]
+    };
+
+    const expansion = expandDateScheduleRange({ dateScheduleRange });
+    expect(expansion.length).toBe(6);
+
+    expect(expansion[0].startsAt).toBeSameSecondAs(dateScheduleRange.start);
+  });
+
+  it('should expand a week with only weekdays.', () => {
+    const dateScheduleRange: DateScheduleRange = {
+      w: '8',
+      start: utc2022Week2StartDate,
+      end: utc2022Week2EndDate
+    };
+
+    const expansion = expandDateScheduleRange({ dateScheduleRange });
+    expect(expansion.length).toBe(5);
+
+    expect(expansion[0].startsAt).toBeSameSecondAs(addDays(dateScheduleRange.start, 1));
+  });
+
+  it('should expand a week with only weekends.', () => {
+    const dateScheduleRange: DateScheduleRange = {
+      w: '9',
+      start: utc2022Week2StartDate,
+      end: utc2022Week2EndDate
+    };
+
+    const expansion = expandDateScheduleRange({ dateScheduleRange });
+    expect(expansion.length).toBe(2);
+
+    expect(expansion[0].startsAt).toBeSameSecondAs(dateScheduleRange.start);
+  });
+});
+
+describe('expandDateScheduleRangeToDateBlockRanges()', () => {
+  const utc2022Week2StartDate = new Date('2022-01-02T00:00:00Z'); // sunday
+  const utc2022Week2EndDate = addDays(utc2022Week2StartDate, 6); // saturday
+
+  it('should expand a week.', () => {
+    const dateScheduleRange: DateScheduleRange = {
+      w: '89',
+      start: utc2022Week2StartDate,
+      end: utc2022Week2EndDate
+    };
+
+    const expansion = expandDateScheduleRangeToDateBlockRanges({ dateScheduleRange });
+    expect(expansion.length).toBe(1);
+
+    expect(expansion[0].i).toBe(0);
+    expect(expansion[0].to).toBe(6);
   });
 });

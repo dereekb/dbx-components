@@ -40,8 +40,10 @@ export class DocExtensionCalendarComponent implements OnInit {
     dateScheduleRangeField({
       key: 'dateScheduleWithFilter',
       required: true,
-      description: 'Date schedule with a filter applied to it',
-      filter: DOC_EXTENSION_CALENDAR_SCHEDULE_TEST_FILTER
+      description: 'Date schedule with a filter applied to it, and an initial selection of everything.',
+      filter: DOC_EXTENSION_CALENDAR_SCHEDULE_TEST_FILTER,
+      computeSelectionResultRelativeToFilter: true,
+      initialSelectionState: 'all'
     })
   ];
 

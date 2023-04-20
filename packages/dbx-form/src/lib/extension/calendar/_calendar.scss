@@ -7,6 +7,8 @@
 @mixin core() {
   .dbx-schedule-selection-calendar {
     .dbx-calendar {
+      height: unset;
+
       .cal-month-view .cal-cell-top {
         min-height: 50px;
       }
