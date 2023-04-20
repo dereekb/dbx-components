@@ -1,7 +1,7 @@
-import { Building, FactoryWithRequiredInput, MapFunction, Maybe } from '@dereekb/util';
+import { Building, FactoryWithRequiredInput, MapFunction, Maybe, MS_IN_DAY } from '@dereekb/util';
 import { Expose, Type } from 'class-transformer';
 import { IsEnum, IsOptional, IsDate, IsNumber } from 'class-validator';
-import { addDays, addHours, differenceInDays, endOfDay, endOfMonth, endOfWeek, isAfter, isPast, startOfDay, startOfMinute, startOfMonth, startOfWeek } from 'date-fns';
+import { addDays, addHours, differenceInDays, endOfDay, endOfMonth, endOfWeek, isAfter, isPast, startOfDay, startOfMinute, startOfMonth, startOfWeek, addMilliseconds, millisecondsToHours } from 'date-fns';
 import { isSameDate, isDate } from './date';
 import { sortByDateFunction } from './date.sort';
 
@@ -536,4 +536,32 @@ export function dateRangeOverlapsDateRangeFunction<T extends DateRange = DateRan
   fn._dateRange = dateRange;
 
   return fn as DateRangeOverlapsDateRangeFunction<T>;
+}
+
+/**
+ * Reduces the date range to represent a 24 hour period.
+ *
+ * For example, a range of 10AM one day to 1PM three days later will be simplified to 10AM to 1PM.
+ *
+ * The order of times is retained. Date ranges that are 1PM to 10AM three days later will be simplified to 1PM to 10AM.
+ */
+export function fitDateRangeToDayPeriod<T extends DateRange = DateRange>(dateRange: T): T {
+  const startTime = dateRange.start.getTime();
+  const endTime = dateRange.end.getTime();
+
+  const distance = endTime - startTime;
+  let newDistance = distance % MS_IN_DAY;
+
+  // if the times are the same but not on the same day, then it is a 24 hour period.
+  if (newDistance === 0 && distance > 0) {
+    newDistance = MS_IN_DAY;
+  }
+
+  const end = addMilliseconds(dateRange.start, newDistance);
+
+  return {
+    ...dateRange,
+    start: dateRange.start,
+    end
+  };
 }
