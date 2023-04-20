@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [9.23.10](https://github.com/dereekb/dbx-components/compare/v9.23.9-dev...v9.23.10) (2023-04-20)
+
+
+### Bug Fixes
+
+* fixed modifyDateBlocksToFitRange() to fit to 0-0 range ([4803132](https://github.com/dereekb/dbx-components/commit/4803132951c34a8661425d2d4d7a89fc9b86e476))
+
+
+
 ## [9.23.9](https://github.com/dereekb/dbx-components/compare/v9.23.8-dev...v9.23.9) (2023-04-13)
 
 
