@@ -45,7 +45,7 @@ export type RangeInput = number | { start?: number; end: number };
 /**
  * Generates an array containing the range of numbers specified.
  *
- * The end value is not included.
+ * The end value is excluded.
  *
  * @param param0
  * @returns

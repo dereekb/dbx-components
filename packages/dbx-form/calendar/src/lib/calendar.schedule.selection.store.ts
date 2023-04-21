@@ -26,10 +26,12 @@ import {
   isSameDate,
   isSameDateDay,
   isSameDateRange,
-  isSameDateScheduleRange
+  isSameDateScheduleRange,
+  DateOrDateRangeOrDateBlockIndexOrDateBlockRange,
+  dateTimingRelativeIndexArrayFactory
 } from '@dereekb/date';
 import { filterMaybe } from '@dereekb/rxjs';
-import { Maybe, TimezoneString, DecisionFunction, IterableOrValue, iterableToArray, addToSet, toggleInSet, isIndexNumberInIndexRangeFunction, MaybeMap, minAndMaxNumber, setsAreEquivalent, DayOfWeek, range, AllOrNoneSelection } from '@dereekb/util';
+import { Maybe, TimezoneString, DecisionFunction, IterableOrValue, iterableToArray, addToSet, toggleInSet, isIndexNumberInIndexRangeFunction, MaybeMap, minAndMaxNumber, setsAreEquivalent, DayOfWeek, range, AllOrNoneSelection, unique, mergeArrays, ArrayOrValue } from '@dereekb/util';
 import { ComponentStore } from '@ngrx/component-store';
 import { addYears, startOfDay, startOfYear } from 'date-fns';
 import { Observable, distinctUntilChanged, map, shareReplay } from 'rxjs';
@@ -54,11 +56,19 @@ export interface CalendarScheduleSelectionState extends PartialCalendarScheduleS
    */
   filter?: Maybe<DateScheduleDateFilterConfig>;
   /**
+   * Additional exclusions that may not be defined within the filter.
+   */
+  inputExclusions?: Maybe<ArrayOrValue<DateOrDateRangeOrDateBlockIndexOrDateBlockRange>>;
+  /**
+   * The computed exclusions given the input exclusions.
+   */
+  computedExclusions?: Maybe<DateBlockIndex[]>;
+  /**
    * Minimum date allowed if no filter is set. If a filter is set, the greater of the two dates is used as the minimum.
    */
   minDate?: Maybe<Date>;
   /**
-   * Maximum date allowed if no fitler is set. If a filter is set, the lesser of the two dates is used as the maximum.
+   * Maximum date allowed if no filter is set. If a filter is set, the lesser of the two dates is used as the maximum.
    */
   maxDate?: Maybe<Date>;
   /**
@@ -275,6 +285,7 @@ export class DbxCalendarScheduleSelectionStore extends ComponentStore<CalendarSc
 
   // MARK: State Changes
   readonly setFilter = this.updater((state, filter: Maybe<DateScheduleDateFilterConfig>) => updateStateWithFilter(state, filter));
+  readonly setExclusions = this.updater((state, exclusions: Maybe<ArrayOrValue<DateOrDateRangeOrDateBlockIndexOrDateBlockRange>>) => updateStateWithExclusions(state, exclusions));
   readonly setComputeSelectionResultRelativeToFilter = this.updater((state, computeSelectionResultRelativeToFilter: Maybe<boolean>) => updateStateWithComputeSelectionResultRelativeToFilter(state, computeSelectionResultRelativeToFilter));
   readonly clearFilter = this.updater((state) => updateStateWithFilter(state, undefined));
 
@@ -315,13 +326,47 @@ export function updateStateWithComputeSelectionResultRelativeToFilter(currentSta
   return state;
 }
 
+export function updateStateWithExclusions(state: CalendarScheduleSelectionState, inputExclusions: Maybe<ArrayOrValue<DateOrDateRangeOrDateBlockIndexOrDateBlockRange>>): CalendarScheduleSelectionState {
+  let computedExclusions: Maybe<DateBlockIndex[]>;
+
+  if (inputExclusions) {
+    const { indexFactory } = state;
+    const indexArrayFactory = dateTimingRelativeIndexArrayFactory(indexFactory);
+    computedExclusions = indexArrayFactory(inputExclusions);
+  }
+
+  state = { ...state, inputExclusions, computedExclusions };
+  return updateStateWithFilter(state, state.filter);
+}
+
 export function updateStateWithFilter(state: CalendarScheduleSelectionState, inputFilter: Maybe<DateScheduleDateFilterConfig>): CalendarScheduleSelectionState {
+  const { computedExclusions: exclusions } = state;
+
   let isEnabledFilterDay: Maybe<DecisionFunction<DateOrDateBlockIndex>> = () => true;
   let filter: Maybe<DateScheduleDateFilterConfig> = null;
 
-  if (inputFilter) {
-    filter = copyDateScheduleDateFilterConfig(inputFilter); // copy filter
-    isEnabledFilterDay = dateScheduleDateFilter(filter);
+  if (inputFilter || exclusions?.length) {
+    let enabledFilter: DateScheduleDateFilterConfig;
+
+    if (inputFilter) {
+      filter = copyDateScheduleDateFilterConfig(inputFilter); // copy filter
+
+      if (exclusions?.length) {
+        enabledFilter = {
+          ...filter,
+          ex: unique(mergeArrays([filter.ex, exclusions]))
+        };
+      } else {
+        enabledFilter = filter;
+      }
+    } else {
+      enabledFilter = {
+        w: '89',
+        ex: exclusions as number[]
+      };
+    }
+
+    isEnabledFilterDay = dateScheduleDateFilter(enabledFilter);
   }
 
   state = { ...state, filter, isEnabledFilterDay };
