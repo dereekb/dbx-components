@@ -177,9 +177,48 @@ export function dateTimingRelativeIndexFactory<T extends DateBlockTimingStart = 
 
       return daysOffset;
     }
-  }) as Configurable<Partial<DateTimingRelativeIndexFactory>>;
+  }) as Configurable<Partial<DateTimingRelativeIndexFactory<T>>>;
   factory._timing = timing;
   return factory as DateTimingRelativeIndexFactory<T>;
+}
+
+/**
+ * Function that wraps a DateTimingRelativeIndexFactory and converts multuple Date/DateBlockIndex/DateBlockRange values into an array of DateBlockIndex values.
+ */
+export type DateTimingRelativeIndexArrayFactory<T extends DateBlockTimingStart = DateBlockTimingStart> = ((input: ArrayOrValue<DateOrDateRangeOrDateBlockIndexOrDateBlockRange>) => DateBlockIndex[]) & {
+  readonly _indexFactory: DateTimingRelativeIndexFactory<T>;
+};
+
+/**
+ * Creates a DateTimingRelativeIndexArrayFactory from the input DateTimingRelativeIndexFactory.
+ *
+ * @param indexFactory
+ */
+export function dateTimingRelativeIndexArrayFactory<T extends DateBlockTimingStart = DateBlockTimingStart>(indexFactory: DateTimingRelativeIndexFactory<T>): DateTimingRelativeIndexArrayFactory<T> {
+  const factory = ((input: ArrayOrValue<DateOrDateRangeOrDateBlockIndexOrDateBlockRange>) => {
+    const inputAsArray = asArray(input);
+    const result: DateBlockIndex[] = [];
+
+    inputAsArray.forEach((value: DateOrDateRangeOrDateBlockIndexOrDateBlockRange) => {
+      let resultIndexes: DateBlockIndex[];
+
+      if (typeof value === 'object' && !isDate(value)) {
+        if (isDateRange(value)) {
+          resultIndexes = range(indexFactory(value.start), indexFactory(value.end) + 1);
+        } else {
+          resultIndexes = range(value.i, (value.to ?? value.i) + 1);
+        }
+      } else {
+        resultIndexes = [indexFactory(value)];
+      }
+
+      mergeArrayIntoArray(result, resultIndexes);
+    });
+
+    return result;
+  }) as Configurable<Partial<DateTimingRelativeIndexArrayFactory<T>>>;
+  factory._indexFactory = indexFactory;
+  return factory as DateTimingRelativeIndexArrayFactory<T>;
 }
 
 /**
@@ -784,6 +823,9 @@ export class DateBlockRange extends DateBlock {
     }
   }
 }
+
+export type DateOrDateBlockIndexOrDateBlockRange = DateOrDateBlockIndex | DateBlockRange;
+export type DateOrDateRangeOrDateBlockIndexOrDateBlockRange = DateRange | DateOrDateBlockIndexOrDateBlockRange;
 
 /**
  * Creates a DateBlockRange

@@ -1,7 +1,7 @@
-import { ISO8601DayString, MapFunction, Maybe } from '@dereekb/util';
-import { differenceInMinutes, format, formatDistance, formatDistanceToNow, parse, startOfDay } from 'date-fns';
+import { ISO8601DayString, MapFunction, mapIdentityFunction, Maybe } from '@dereekb/util';
+import { differenceInMinutes, format, formatDistance, formatDistanceStrict, formatDistanceToNow, parse, startOfDay } from 'date-fns';
 import { isDate, isSameDateDay } from './date';
-import { dateOrDateRangeToDateRange, DateRange, dateRangeState, DateRangeState } from './date.range';
+import { dateOrDateRangeToDateRange, DateRange, dateRangeState, DateRangeState, fitDateRangeToDayPeriod } from './date.range';
 
 export type FormatDateFunction = MapFunction<Date, string>;
 export type FormatDateRangeFunction = ((startOrDateRange: DateRange) => string) & ((startOrDateRange: Date, inputEnd?: Date) => string);
@@ -40,8 +40,7 @@ export function formatDateRangeFunction(inputConfig: FormatDateRangeFunctionConf
   const { format, separator = '-', simplifySameDate = false } = config;
 
   return (startOrDateRange: Date | DateRange, inputEnd?: Date) => {
-    const { start, end } = isDate(startOrDateRange) ? { start: startOrDateRange, end: inputEnd as Date } : startOrDateRange;
-
+    const { start, end } = dateOrDateRangeToDateRange(startOrDateRange, inputEnd);
     let string: string;
 
     if (simplifySameDate && isSameDateDay(start, end)) {
@@ -60,6 +59,62 @@ export function formatDateRangeFunction(inputConfig: FormatDateRangeFunctionConf
 export function formatDateRange(range: DateRange, inputConfig: FormatDateRangeFunctionConfigInput, separator?: string): string {
   const config = typeof inputConfig === 'function' ? { format: inputConfig, separator } : inputConfig;
   return formatDateRangeFunction(config)(range);
+}
+
+/**
+ * formatDateRangeDistanceFunction() configuration
+ */
+export type FormatDateRangeDistanceFunctionConfig = {
+  /**
+   * Transforms the input date range before computing the distance.
+   */
+  transform?: MapFunction<DateRange, DateRange>;
+  /**
+   * Whether or not to only consider the time distance between the two start times of the days.
+   *
+   * This is useful for cases where the comparison of the total time between the two elements is important, but not the days inbetween.
+   */
+  onlyTimeRange?: boolean;
+} & (
+  | (Parameters<typeof formatDistance>[2] & {
+      strict?: false;
+    })
+  | (Parameters<typeof formatDistanceStrict>[2] & {
+      strict: true;
+    })
+);
+
+/**
+ * Formats the input date range using the start and end dates and distance format function
+ */
+export function formatDateRangeDistanceFunction(inputConfig: FormatDateRangeDistanceFunctionConfig): FormatDateRangeFunction {
+  const { transform: inputTransform, onlyTimeRange, strict = false } = inputConfig;
+  const transform: MapFunction<DateRange, DateRange> = inputTransform ?? onlyTimeRange ? fitDateRangeToDayPeriod : mapIdentityFunction();
+
+  return (startOrDateRange: Date | DateRange, inputEnd?: Date) => {
+    const { start, end } = transform(dateOrDateRangeToDateRange(startOrDateRange, inputEnd));
+
+    let string: string;
+
+    if (strict) {
+      string = formatDistanceStrict(end, start, inputConfig);
+    } else {
+      string = formatDistance(end, start, inputConfig);
+    }
+
+    return string;
+  };
+}
+
+/**
+ * Formats the range between the two dates into a string.
+ *
+ * @param range
+ * @param inputConfig
+ * @returns
+ */
+export function formatDateRangeDistance(range: DateRange, inputConfig: FormatDateRangeDistanceFunctionConfig = {}): string {
+  return formatDateRangeDistanceFunction(inputConfig)(range);
 }
 
 /**

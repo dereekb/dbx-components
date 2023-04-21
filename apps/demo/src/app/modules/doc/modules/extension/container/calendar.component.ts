@@ -44,6 +44,15 @@ export class DocExtensionCalendarComponent implements OnInit {
       filter: DOC_EXTENSION_CALENDAR_SCHEDULE_TEST_FILTER,
       computeSelectionResultRelativeToFilter: true,
       initialSelectionState: 'all'
+    }),
+    dateScheduleRangeField({
+      key: 'dateScheduleWithFilterAndExclusions',
+      required: true,
+      description: 'Date schedule with a filter applied to it and additional exclusions.',
+      filter: { ...DOC_EXTENSION_CALENDAR_SCHEDULE_TEST_FILTER, w: '89', ex: [] },
+      computeSelectionResultRelativeToFilter: true,
+      exclusions: [0, 2, 4],
+      initialSelectionState: 'all'
     })
   ];
 

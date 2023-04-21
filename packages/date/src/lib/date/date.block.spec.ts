@@ -1,11 +1,12 @@
 import { expectFail, itShouldFail } from '@dereekb/util/test';
-import { DateRange, DateRangeInput } from './date.range';
+import { dateRange, DateRange, DateRangeInput } from './date.range';
 import { addDays, addHours, addMinutes, setHours, setMinutes, startOfDay, endOfDay, addSeconds, addMilliseconds, millisecondsToHours, minutesToHours } from 'date-fns';
 import {
   DateBlock,
   dateBlockDayOfWeekFactory,
   DateBlockIndex,
   dateBlockIndexRange,
+  DateBlockRange,
   dateBlockRange,
   dateBlockRangeBlocksCount,
   dateBlockRangeBlocksCountInfo,
@@ -17,6 +18,7 @@ import {
   dateBlocksInDateBlockRange,
   dateBlockTiming,
   DateBlockTiming,
+  dateTimingRelativeIndexArrayFactory,
   dateTimingRelativeIndexFactory,
   expandDateBlockRange,
   expandUniqueDateBlocksFunction,
@@ -124,6 +126,77 @@ describe('dateTimingRelativeIndexFactory()', () => {
 
         expect(result).toBe(1);
       });
+    });
+  });
+});
+
+describe('dateTimingRelativeIndexArrayFactory()', () => {
+  const start = startOfDay(new Date());
+
+  describe('function', () => {
+    const indexFactory = dateTimingRelativeIndexFactory({ start });
+    const factory = dateTimingRelativeIndexArrayFactory(indexFactory);
+
+    it('should convert a DateRange', () => {
+      const days = 5;
+      const dateRange: DateRange = { start, end: addDays(start, days - 1) };
+      const result = factory(dateRange);
+
+      expect(result.length).toBe(days);
+      expect(result[0]).toBe(0);
+      expect(result[1]).toBe(1);
+      expect(result[2]).toBe(2);
+      expect(result[3]).toBe(3);
+      expect(result[4]).toBe(4);
+    });
+
+    it('should convert a Date', () => {
+      const result = factory(start);
+
+      expect(result.length).toBe(1);
+      expect(result[0]).toBe(0);
+    });
+
+    it('should convert a DateBlockRangeWithRange', () => {
+      const days = 5;
+      const dateRange: DateBlockRangeWithRange = { i: 0, to: days - 1 };
+      const result = factory(dateRange);
+
+      expect(result.length).toBe(days);
+      expect(result[0]).toBe(0);
+      expect(result[1]).toBe(1);
+      expect(result[2]).toBe(2);
+      expect(result[3]).toBe(3);
+      expect(result[4]).toBe(4);
+    });
+
+    it('should convert a DateBlockRange', () => {
+      const dateRange: DateBlockRange = { i: 0 };
+      const result = factory(dateRange);
+
+      expect(result.length).toBe(1);
+      expect(result[0]).toBe(0);
+    });
+
+    it('should convert a DateBlockIndex', () => {
+      const index = 100;
+      const result = factory(index);
+
+      expect(result.length).toBe(1);
+      expect(result[0]).toBe(index);
+    });
+
+    it('should convert an array of DateBlockIndex values', () => {
+      const index = 10;
+      const result = factory(range(0, index));
+
+      expect(result.length).toBe(index);
+      expect(result[0]).toBe(0);
+      expect(result[1]).toBe(1);
+      expect(result[2]).toBe(2);
+      expect(result[3]).toBe(3);
+      expect(result[4]).toBe(4);
+      expect(result[index - 1]).toBe(index - 1);
     });
   });
 });

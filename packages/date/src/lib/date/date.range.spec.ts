@@ -1,6 +1,6 @@
 import { itShouldFail, expectFail } from '@dereekb/util/test';
 import { startOfDay, addDays, addHours, addWeeks } from 'date-fns';
-import { dateRange, dateRangeOverlapsDateRangeFunction, DateRangeType, expandDaysForDateRangeFunction, isDateInDateRangeFunction, isDateRangeInDateRangeFunction, iterateDaysInDateRangeFunction } from './date.range';
+import { dateRange, dateRangeOverlapsDateRangeFunction, DateRangeType, expandDaysForDateRangeFunction, fitDateRangeToDayPeriod, isDateInDateRangeFunction, isDateRangeInDateRangeFunction, iterateDaysInDateRangeFunction } from './date.range';
 
 describe('iterateDaysInDateRangeFunction()', () => {
   describe('function', () => {
@@ -144,6 +144,32 @@ describe('dateRangeOverlapsDateRangeFunction()', () => {
 
     it('should return true if the same dateRange is used as input.', () => {
       expect(overlapsDateRange(dateRange)).toBe(true);
+    });
+  });
+});
+
+describe('fitDateRangeToDayPeriod()', () => {
+  describe('scenario', () => {
+    const date = `2023-02-27`;
+
+    it('should fit 10AM to 1PM to a day range period.', () => {
+      const start = new Date(`${date}T10:00`);
+      const expectedEnd = addHours(start, 3); // 10AM to 1PM
+      const end = addDays(expectedEnd, 1);
+
+      const result = fitDateRangeToDayPeriod({ start, end });
+      expect(result.start).toBeSameSecondAs(start);
+      expect(result.end).toBeSameSecondAs(expectedEnd);
+    });
+
+    it('should fit 1PM to 10AM to a day range period.', () => {
+      const start = new Date(`${date}T13:00`);
+      const expectedEnd = addDays(addHours(start, -3), 1); // 10AM to 1PM
+      const end = addDays(expectedEnd, 2);
+
+      const result = fitDateRangeToDayPeriod({ start, end });
+      expect(result.start).toBeSameSecondAs(start);
+      expect(result.end).toBeSameSecondAs(expectedEnd);
     });
   });
 });
