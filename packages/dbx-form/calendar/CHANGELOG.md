@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [9.23.12](https://github.com/dereekb/dbx-components/compare/v9.23.11-dev...v9.23.12) (2023-04-23)
+
+
+### Bug Fixes
+
+* fixed calendar schedule filter output value ([c9b6021](https://github.com/dereekb/dbx-components/commit/c9b6021b797a5298e56a2ad5dbee071d96a19bce))
+
+
+
 ## [9.23.11](https://github.com/dereekb/dbx-components/compare/v9.23.10-dev...v9.23.11) (2023-04-21)
 
 

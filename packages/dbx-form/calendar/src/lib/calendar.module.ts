@@ -22,6 +22,7 @@ import { DbxScheduleSelectionCalendarCellComponent } from './calendar.schedule.s
 import { DbxCalendarScheduleSelectionStoreInjectionBlockDirective } from './calendar.schedule.selection.store.provide';
 import { DbxScheduleSelectionCalendarDateDialogComponent } from './calendar.schedule.selection.dialog.component';
 import { DbxScheduleSelectionCalendarDateDialogButtonComponent } from './calendar.schedule.selection.dialog.button.component';
+import { DbxScheduleSelectionCalendarSelectionToggleButtonComponent } from './calendar.schedule.selection.toggle.button.component';
 
 const declarations = [
   //
@@ -35,7 +36,8 @@ const declarations = [
   DbxScheduleSelectionCalendarDatePopoverContentComponent,
   DbxCalendarScheduleSelectionStoreInjectionBlockDirective,
   DbxScheduleSelectionCalendarDateDialogComponent,
-  DbxScheduleSelectionCalendarDateDialogButtonComponent
+  DbxScheduleSelectionCalendarDateDialogButtonComponent,
+  DbxScheduleSelectionCalendarSelectionToggleButtonComponent
 ];
 
 @NgModule({

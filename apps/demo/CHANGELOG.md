@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [9.23.12](https://github.com/dereekb/dbx-components/compare/v9.23.11-dev...v9.23.12) (2023-04-23)
+
+
+### Bug Fixes
+
+* fixed getClosingValueFn usage in DbxPopoverComponent ([b9d3e3e](https://github.com/dereekb/dbx-components/commit/b9d3e3eba83404b8add5e68d25df92a79ba99cc9))
+
+
+
 ## [9.23.11](https://github.com/dereekb/dbx-components/compare/v9.23.10-dev...v9.23.11) (2023-04-21)
 
 
