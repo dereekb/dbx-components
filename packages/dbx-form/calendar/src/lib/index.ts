@@ -14,3 +14,4 @@ export * from './calendar.schedule.selection.range.component';
 export * from './calendar.schedule.selection.store.provide';
 export * from './calendar.schedule.selection.store';
 export * from './calendar.schedule.selection';
+export * from './calendar.schedule.selection.toggle.button.component';
