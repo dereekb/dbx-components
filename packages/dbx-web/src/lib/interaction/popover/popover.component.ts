@@ -1,12 +1,12 @@
 import { Component, NgZone, Type, OnInit, OnDestroy, ElementRef } from '@angular/core';
-import { NgOverlayContainerConfiguration, NgPopoverRef } from 'ng-overlay-container';
+import { NgOverlayContainerConfiguration, NgPopoverCloseType, NgPopoverRef } from 'ng-overlay-container';
 import { AbstractTransitionWatcherDirective, DbxRouterTransitionService, DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { Subject, filter, first, map, shareReplay, startWith } from 'rxjs';
 import { PopoverPositionStrategy } from './popover.position.strategy';
 import { Overlay } from '@angular/cdk/overlay';
 import { LockSet } from '@dereekb/rxjs';
 import { CompactContextStore, CompactMode } from '../../layout/compact';
-import { Maybe } from '@dereekb/util';
+import { asPromise, Maybe, PromiseOrValue } from '@dereekb/util';
 import { DbxPopoverController, DbxPopoverKey } from './popover';
 
 export abstract class DbxPopoverComponentController<O, I> extends DbxPopoverController<O, I> {
@@ -89,7 +89,7 @@ export class DbxPopoverComponent<O = unknown, I = unknown, T = unknown> extends 
   );
   readonly closing$ = this.isClosing$.pipe(filter((x) => x));
 
-  getClosingValueFn?: (value?: I) => Promise<O>;
+  getClosingValueFn?: (value: Maybe<I>, closeType: NgPopoverCloseType) => PromiseOrValue<O | undefined>;
 
   constructor(private popoverRef: NgPopoverRef<FullDbxPopoverComponentConfig<O, I, T>, O>, private compactContextState: CompactContextStore, dbxRouterTransitionService: DbxRouterTransitionService, ngZone: NgZone) {
     super(dbxRouterTransitionService, ngZone);
@@ -102,6 +102,21 @@ export class DbxPopoverComponent<O = unknown, I = unknown, T = unknown> extends 
         this._startedClosing = true;
         this.close();
         originalClose.call(this.popoverRef, x);
+      }
+    };
+
+    // Also intercept the _close function to capture backdropClose, etc.
+    const original_close = (this.popoverRef as any)._close;
+    (this.popoverRef as any)._close = (closeType: NgPopoverCloseType, inputValue: O | undefined) => {
+      const closeWithValue = (value?: O | undefined) => {
+        original_close.call(this.popoverRef, closeType, value);
+      };
+
+      if (closeType === 'close' || inputValue != null) {
+        closeWithValue(inputValue);
+      } else {
+        // expected to be a backdrop close. Get the closing value then close.
+        this._useClosingValue(closeType, (x) => closeWithValue(x));
       }
     };
 
@@ -154,23 +169,31 @@ export class DbxPopoverComponent<O = unknown, I = unknown, T = unknown> extends 
 
   // Popover Controls
   public close(): void {
-    if (!this._startedClosing && this.getClosingValueFn) {
-      this.getClosingValueFn().then(
-        (x) => {
-          this.return(x);
-        },
-        () => {
-          this.return();
-        }
-      );
+    if (!this._startedClosing && this.getClosingValueFn != null) {
+      this._useClosingValue('close', (x) => this.return(x));
     } else {
       this.return();
     }
   }
 
-  public return(value?: O): void {
+  public return(value?: O | undefined): void {
     this._closing.next();
     this.popoverRef.close(value);
+  }
+
+  private _useClosingValue(closeType: NgPopoverCloseType, useValue: (value?: O | undefined) => void) {
+    if (this.getClosingValueFn != null) {
+      asPromise(this.getClosingValueFn(this.data, closeType)).then(
+        (x) => {
+          useValue(x);
+        },
+        () => {
+          useValue();
+        }
+      );
+    } else {
+      useValue();
+    }
   }
 
   // Keypresses
