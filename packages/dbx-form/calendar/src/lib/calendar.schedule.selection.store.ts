@@ -136,9 +136,9 @@ export interface CalendarScheduleSelectionState extends PartialCalendarScheduleS
 }
 
 export function initialCalendarScheduleSelectionState(): CalendarScheduleSelectionState {
-  const start = startOfDay(new Date());
   const scheduleDays = new Set([DateScheduleDayCode.WEEKDAY, DateScheduleDayCode.WEEKEND]);
   const allowedDaysOfWeek = expandDateScheduleDayCodesToDayOfWeekSet(Array.from(scheduleDays));
+  const start = startOfDay(new Date());
   const indexFactory = dateTimingRelativeIndexFactory({ start });
   const indexDayOfWeek = dateBlockDayOfWeekFactory(start);
 
@@ -407,6 +407,14 @@ export function updateStateWithFilter(state: CalendarScheduleSelectionState, inp
   }
 
   state = { ...state, filter, isEnabledFilterDay };
+
+  // If the input filter has a start date, use that as the relative start to ensure indexes are compared the same.
+  if (filter && filter.start) {
+    const start = filter.start;
+    state.start = start;
+    state.indexFactory = dateTimingRelativeIndexFactory({ start });
+    state.indexDayOfWeek = dateBlockDayOfWeekFactory(start);
+  }
 
   // attempt to re-apply the initial selection state once filter is applied
   if (state.initialSelectionState) {
