@@ -16,6 +16,8 @@ export interface FirebaseAuthToken {
   email?: Maybe<string>;
   emailVerified?: Maybe<boolean>;
   phoneNumber?: Maybe<PhoneNumber>;
+  creationTime?: Maybe<ISO8601DateString>;
+  lastSignInTime?: Maybe<ISO8601DateString>;
 }
 
 export interface FirebaseAuthDetails extends FirebaseAuthToken, FirebaseAuthUserIdRef {
