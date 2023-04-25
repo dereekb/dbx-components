@@ -1,6 +1,6 @@
-import { ISO8601DayString, MapFunction, mapIdentityFunction, Maybe } from '@dereekb/util';
-import { differenceInMinutes, format, formatDistance, formatDistanceStrict, formatDistanceToNow, parse, startOfDay } from 'date-fns';
-import { isDate, isSameDateDay } from './date';
+import { DateOrDateString, ISO8601DateString, ISO8601DayString, MapFunction, mapIdentityFunction, Maybe, UTCDateString } from '@dereekb/util';
+import { differenceInMinutes, format, formatDistance, formatDistanceStrict, formatDistanceToNow, isValid, parse, startOfDay } from 'date-fns';
+import { isDate, isSameDateDay, safeToJsDate } from './date';
 import { dateOrDateRangeToDateRange, DateRange, dateRangeState, DateRangeState, fitDateRangeToDayPeriod } from './date.range';
 
 export type FormatDateFunction = MapFunction<Date, string>;
@@ -157,6 +157,17 @@ export function formatToDayRangeString(startOrDateRange: DateRange): string;
 export function formatToDayRangeString(start: Date, end?: Maybe<Date>): string;
 export function formatToDayRangeString(startOrDateRange: DateRange | Date, end?: Maybe<Date>): string {
   return formatDateRange(dateOrDateRangeToDateRange(startOrDateRange, end), { format: formatToShortDateString, simplifySameDate: true });
+}
+
+/**
+ * Safely formats the input to an ISO8601DateString if possible, otherwise returns undefined.
+ *
+ * @param input
+ * @returns
+ */
+export function safeFormatToISO8601DateString(input: Maybe<DateOrDateString | UTCDateString>): ISO8601DateString | undefined {
+  const date = safeToJsDate(input);
+  return date != null && isValid(date) ? formatToISO8601DateString(date) : undefined;
 }
 
 export function formatToISO8601DateString(date: Date = new Date()): ISO8601DayString {

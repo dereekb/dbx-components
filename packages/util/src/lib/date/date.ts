@@ -2,13 +2,41 @@ import { Maybe } from '../value/maybe.type';
 
 /**
  * A valid ISO8601 formatted date string.
+ *
+ * I.E. "2020-04-30T00:00:00.000Z"
  */
 export type ISO8601DateString = string;
+
+export const ISO_8601_DATE_STRING_REGEX = /(\d{4})-(\d{2})-(\d{2})T(\d{2})\:(\d{2})\:(\d{2})(Z|[+-](\d{2})\:(\d{2}))?/;
+
+export function isISO8601DateString(input: string): input is ISO8601DateString {
+  return ISO_8601_DATE_STRING_REGEX.test(input);
+}
+
+/**
+ * A UTC date string.
+ *
+ * I.E. "Sat, 03 Feb 2001 04:05:06 GMT"
+ */
+export type UTCDateString = string;
+
+/**
+ * Match examples:
+ *
+ * Sat, 03 Feb 2001 04:05:06 GMT
+ * Tue, 14 Mar 2023 12:34:56 UTC
+ * Wed, 25 May 2024 20:45:07 EST
+ */
+export const UTC_DATE_STRING_REGEX = /^([a-zA-Z]{3}, [0-9]{2} [a-zA-Z]{3} [0-9]{4} [0-9]{2}:[0-9]{2}:[0-9]{2} [A-Z]{3})$/;
+
+export function isUTCDateString(input: string): boolean {
+  return UTC_DATE_STRING_REGEX.test(input);
+}
 
 /**
  * A full ISO8601 date string that is in UTC.
  *
- * I.E. 2020-04-30T00:00:00.000Z
+ * I.E. "2020-04-30T00:00:00.000Z"
  */
 export type ISO8601DateStringUTCFull = string;
 
