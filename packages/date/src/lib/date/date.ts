@@ -1,5 +1,5 @@
-import { isDate as dateFnsIsDate, max as maxDate, min as minDate, parseISO, addDays, isPast, isAfter as isAfterDate, set as setDateValues, isValid, startOfMinute, isEqual as isEqualDate, isSameDay as isEqualDay } from 'date-fns';
-import { DateOrDateString, filterMaybeValues, ISO8601DateString, Maybe, Minutes, MINUTES_IN_DAY, MS_IN_HOUR, MS_IN_MINUTE, Seconds, TimezoneString, ArrayOrValue, asArray, MapFunction, ISO8601DateStringUTCFull } from '@dereekb/util';
+import { isDate as dateFnsIsDate, max as maxDate, min as minDate, parseISO, addDays, isPast, isAfter as isAfterDate, set as setDateValues, isValid, startOfMinute, isEqual as isEqualDate, isSameDay as isEqualDay, parse } from 'date-fns';
+import { DateOrDateString, filterMaybeValues, ISO8601DateString, Maybe, Minutes, MINUTES_IN_DAY, MS_IN_HOUR, MS_IN_MINUTE, Seconds, TimezoneString, ArrayOrValue, asArray, MapFunction, ISO8601DateStringUTCFull, UTCDateString, isISO8601DateString } from '@dereekb/util';
 
 export const MAX_FUTURE_DATE = new Date(Date.UTC(9999, 0));
 
@@ -69,7 +69,7 @@ export function guessCurrentTimezone(): TimezoneString {
   return Intl.DateTimeFormat()?.resolvedOptions()?.timeZone;
 }
 
-export function safeToJsDate(input: Maybe<DateOrDateString>): Maybe<Date> {
+export function safeToJsDate(input: Maybe<DateOrDateString | UTCDateString>): Maybe<Date> {
   return input != null ? toJsDate(input) : undefined;
 }
 
@@ -79,8 +79,12 @@ export function safeToJsDate(input: Maybe<DateOrDateString>): Maybe<Date> {
  * @param input
  * @returns
  */
-export function toJsDate(input: DateOrDateString): Date {
-  return isDate(input) ? (input as Date) : parseISO(input as string);
+export function toJsDate(input: DateOrDateString | UTCDateString): Date {
+  return isDate(input) ? (input as Date) : parseJsDateString(input as string) ?? new Date(input);
+}
+
+export function parseJsDateString(input: ISO8601DateString | UTCDateString): Maybe<Date> {
+  return isISO8601DateString(input) ? parseISO(input as string) : new Date(input);
 }
 
 /**
