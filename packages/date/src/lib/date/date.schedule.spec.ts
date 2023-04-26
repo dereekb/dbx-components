@@ -135,6 +135,30 @@ describe('dateScheduleDateFilter()', () => {
         });
       });
 
+      describe('scenario', () => {
+        it('should filter April 26th, 2023 as included within the filter for that date.', () => {
+          const w = '8';
+          const d: number[] = [];
+          const ex: number[] = [];
+
+          const start = new Date('Wed, 26 Apr 2023 05:00:00 GMT');
+          const end = new Date('Wed, 26 Apr 2023 22:00:00 GMT');
+
+          const filter = dateScheduleDateFilter({
+            w,
+            d,
+            ex,
+            start,
+            end
+          });
+
+          const indexZero = 0;
+
+          const result = filter(indexZero);
+          expect(result).toBe(true);
+        });
+      });
+
       // TODO: Test max date range
     });
   });
