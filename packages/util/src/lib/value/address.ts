@@ -1,3 +1,5 @@
+import { Maybe } from './maybe.type';
+
 /**
  * City name
  */
@@ -35,6 +37,16 @@ export interface UnitedStatesAddress {
   city: CityString;
   state: StateString | StateCodeString;
   zip: ZipCodeString;
+}
+
+/**
+ * Returns true if the input address is completely configured and not missing any info.
+ *
+ * @param input
+ * @returns
+ */
+export function isCompleteUnitedStatesAddress(input: Maybe<UnitedStatesAddress>): boolean {
+  return input != null ? Boolean(input.line1 && input.city && input.state && input.zip) : false;
 }
 
 /**

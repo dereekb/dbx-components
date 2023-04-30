@@ -188,7 +188,9 @@ export function useJestContextFixture<C extends JestTestContextFixture<I>, I>(co
 
   // Cleanup
   afterEach(async () => {
-    clearInstance();
+    if (clearInstance) {
+      clearInstance();
+    }
 
     if (fixture.instance != null) {
       console.warn('Expected instance to be set on fixture for cleanup but was set to something else.');

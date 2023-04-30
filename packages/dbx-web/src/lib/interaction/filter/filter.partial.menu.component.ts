@@ -1,21 +1,24 @@
 import { shareReplay, BehaviorSubject, map, combineLatest, distinctUntilChanged, switchMap } from 'rxjs';
 import { Component, Input } from '@angular/core';
 import { FilterWithPreset } from '@dereekb/rxjs';
-import { AbstractDbxPresetFilterMenuComponent } from './filter.preset';
+import { AbstractDbxPartialPresetFilterMenuDirective } from './filter.partial';
 import { DbxPresetFilterMenuConfig } from './filter.menu';
 
 /**
- * Displays a button and menu for filtering presets.
+ * Displays a button and menu for filtering partial preset values.
  */
 @Component({
-  selector: 'dbx-preset-filter-menu',
-  templateUrl: './filter.preset.menu.component.html'
+  selector: 'dbx-partial-preset-filter-menu',
+  templateUrl: './filter.partial.menu.component.html'
 })
-export class DbxPresetFilterMenuComponent<F extends FilterWithPreset> extends AbstractDbxPresetFilterMenuComponent<F> {
+export class DbxPartialPresetFilterMenuComponent<F extends FilterWithPreset> extends AbstractDbxPartialPresetFilterMenuDirective<F> {
   private _config = new BehaviorSubject<DbxPresetFilterMenuConfig>({});
 
-  readonly buttonText$ = combineLatest([this._config, this.selectedPreset$]).pipe(
-    map(([config, preset]) => preset?.title ?? config.unknownSelectionText ?? 'Filter'),
+  readonly buttonText$ = combineLatest([this._config, this.firstSelectedPartialPreset$]).pipe(
+    map(([config, preset]) => {
+      const buttonText = preset?.title ?? config.unknownSelectionText ?? 'Filter';
+      return buttonText;
+    }),
     distinctUntilChanged(),
     shareReplay(1)
   );
@@ -24,7 +27,7 @@ export class DbxPresetFilterMenuComponent<F extends FilterWithPreset> extends Ab
     switchMap((config) => {
       const filterIcon = config.filterIcon === false ? '' : config.filterIcon || 'arrow_drop_down';
 
-      return this.selectedPreset$.pipe(
+      return this.firstSelectedPartialPreset$.pipe(
         map((preset) => {
           let icon: string | undefined;
 

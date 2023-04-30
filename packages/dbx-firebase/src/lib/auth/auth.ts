@@ -1,9 +1,12 @@
 import { formatToISO8601DateString, safeFormatToISO8601DateString } from '@dereekb/date';
 import { FirebaseAuthToken } from '@dereekb/firebase';
-import { ISO8601DateString } from '@dereekb/util';
+import { ISO8601DateString, Maybe } from '@dereekb/util';
 import { User, UserInfo, UserMetadata } from 'firebase/auth';
 
-export type AuthUserInfo = Omit<UserInfo, 'providerId'> & UserMetadata;
+export type AuthUserInfo = Omit<UserInfo, 'providerId'> & {
+  creationTime?: Maybe<ISO8601DateString>;
+  lastSignInTime?: Maybe<ISO8601DateString>;
+};
 
 export function authUserInfoFromAuthUser(user: User): AuthUserInfo {
   return {

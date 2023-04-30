@@ -23,6 +23,7 @@ import { DocInteractionButtonComponent } from './container/button.component';
 import { DocInteractionTestFilterPresetMenuComponent } from './component/filter.preset.menu.component';
 import { DocInteractionErrorComponent } from './container/error.component';
 import { DbxErrorWidgetService } from '@dereekb/dbx-web';
+import { DocInteractionTestFilterPartialPresetMenuComponent } from './component/filter.partial.preset.menu.component';
 
 @NgModule({
   imports: [
@@ -37,6 +38,7 @@ import { DbxErrorWidgetService } from '@dereekb/dbx-web';
     DocInteractionTestFilterCustomFilterComponent,
     DocInteractionTestFilterPresetFilterComponent,
     DocInteractionTestFilterPresetMenuComponent,
+    DocInteractionTestFilterPartialPresetMenuComponent,
     DocInteractionTestFilterCustomFilterFormComponent,
     DocInteractionExampleDialogComponent,
     DocInteractionExamplePopoverComponent,

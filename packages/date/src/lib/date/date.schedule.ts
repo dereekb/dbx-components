@@ -381,7 +381,7 @@ export function dateScheduleDateFilter(config: DateScheduleDateFilterConfig): Da
   const firstDateDay = getDay(firstDate);
   const dayForIndex = dateBlockDayOfWeekFactory(firstDateDay);
   const dateIndexForDate = dateTimingRelativeIndexFactory({ start: firstDate });
-  const maxIndex = end != null ? dateIndexForDate(end) : Number.MAX_SAFE_INTEGER;
+  const maxIndex = end != null ? dateIndexForDate(end) : Number.MAX_SAFE_INTEGER; // max "to" value
   const includedIndexes = new Set(config.d);
   const excludedIndexes = new Set(config.ex);
 
@@ -397,7 +397,7 @@ export function dateScheduleDateFilter(config: DateScheduleDateFilterConfig): Da
       day = dayOfWeek(input);
     }
 
-    return (i >= 0 && i < maxIndex && allowedDays.has(day) && !excludedIndexes.has(i)) || includedIndexes.has(i);
+    return (i >= 0 && i <= maxIndex && allowedDays.has(day) && !excludedIndexes.has(i)) || includedIndexes.has(i);
   };
 }
 

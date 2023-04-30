@@ -84,7 +84,8 @@ export function toJsDate(input: DateOrDateString | UTCDateString): Date {
 }
 
 export function parseJsDateString(input: ISO8601DateString | UTCDateString): Maybe<Date> {
-  return isISO8601DateString(input) ? parseISO(input as string) : new Date(input);
+  const date = isISO8601DateString(input) ? parseISO(input as string) : new Date(input);
+  return isValid(date) ? date : undefined;
 }
 
 /**
