@@ -1,5 +1,7 @@
-import { filter, first, of, timeout } from 'rxjs';
+import { filter, first, of, Subject, timeout } from 'rxjs';
 import { FilterMap } from './filter.map';
+
+jest.setTimeout(1000);
 
 interface TestFilter {
   test?: boolean;
@@ -69,7 +71,29 @@ describe('FilterMap', () => {
   });
 
   describe('addFilterObs()', () => {
-    it('should replace the existing filter observable for that key', (done) => {
+    it('should recieve filters from all passed filters until the configured obs is marked complete.', (done) => {
+      const subjectA = new Subject<TestFilter>();
+      const subjectB = new Subject<TestFilter>();
+
+      filterMap.addFilterObs(testKey, subjectA);
+      filterMap.addFilterObs(testKey, subjectB);
+
+      let valuesSeen = 0;
+
+      filterMap.filterForKey(testKey).subscribe((filter) => {
+        valuesSeen += 1;
+
+        if (valuesSeen === 3) {
+          done();
+        }
+      });
+
+      subjectA.next({}); // send from a
+      subjectB.next({}); // send from b
+      subjectA.next({});
+    });
+
+    it('should add to the existing filter observable for that key', (done) => {
       const testFilterA = {};
       const testFilterB = {};
 
@@ -85,7 +109,7 @@ describe('FilterMap', () => {
           done();
         });
 
-      // replace filter
+      // add next filter, emitting latest value
       filterMap.addFilterObs(testKey, of(testFilterB));
     });
 

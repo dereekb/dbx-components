@@ -55,6 +55,14 @@ export abstract class AbstractFilterSourceDirective<F = unknown> implements Filt
     this._defaultFilterSource.resetFilter();
   }
 
+  get initialFilterTakesPriority() {
+    return this._defaultFilterSource.initialFilterTakesPriority;
+  }
+
+  set initialFilterTakesPriority(initialFilterTakesPriority: boolean) {
+    this._defaultFilterSource.initialFilterTakesPriority = initialFilterTakesPriority;
+  }
+
   // MARK: Internal
   protected makeDefaultFilter(): ObservableOrValue<Maybe<F>> {
     return of(this.defaultFilterValue);

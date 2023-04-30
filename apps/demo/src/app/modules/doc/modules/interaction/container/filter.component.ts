@@ -3,6 +3,7 @@ import { formatToISO8601DayString } from '@dereekb/date';
 import { DbxButtonDisplayContent } from '@dereekb/dbx-core';
 import { FilterMap, FilterMapKey } from '@dereekb/rxjs';
 import { Maybe } from '@dereekb/util';
+import { startOfDay } from 'date-fns';
 import { map, of, Observable } from 'rxjs';
 import { DocInteractionTestFilter, DOC_INTERACTION_TEST_PRESETS } from '../component/filter';
 
@@ -45,7 +46,7 @@ export class DocInteractionFilterComponent implements OnDestroy {
 
   constructor(readonly filterMap: FilterMap<DocInteractionTestFilter>) {
     this.filterMap.addDefaultFilterObs(this.buttonFilterKey, of({}));
-    this.filterMap.addDefaultFilterObs(this.menuFilterKey, of({}));
+    this.filterMap.addDefaultFilterObs(this.menuFilterKey, of({ date: startOfDay(new Date()) }));
     this.filterMap.addDefaultFilterObs(this.listFilterKey, of({}));
   }
 

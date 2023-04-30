@@ -2,16 +2,19 @@ import { shareReplay, BehaviorSubject, map, Observable, combineLatest, distinctU
 import { Directive, Input, OnDestroy } from '@angular/core';
 import { ClickableFilterPreset, ClickableAnchorLink, FilterSourceDirective } from '@dereekb/dbx-core';
 import { getValueFromGetter, Maybe, objectHasNoKeys } from '@dereekb/util';
-import { FilterWithPreset } from '@dereekb/rxjs';
+import { FilterWithPreset, tapLog } from '@dereekb/rxjs';
 
 /**
  * Displays a button and menu for filtering presets.
  */
 @Directive()
 export abstract class AbstractDbxPresetFilterMenuComponent<F extends FilterWithPreset> implements OnDestroy {
+  //TODO: Rename to AbstractDbxPresetFilterMenuDirective
+
   private _presets = new BehaviorSubject<ClickableFilterPreset<F>[]>([]);
 
   readonly selected$: Observable<Maybe<F>> = this.filterSourceDirective.filter$.pipe(startWith(undefined), distinctUntilChanged());
+
   readonly selectedPresetString$: Observable<Maybe<string>> = this.selected$.pipe(
     map((selectedFilter) => (selectedFilter ? selectedFilter.preset : undefined)),
     distinctUntilChanged()
@@ -52,6 +55,7 @@ export abstract class AbstractDbxPresetFilterMenuComponent<F extends FilterWithP
     const presetValue = preset.presetValue;
 
     if (presetValue == null || (typeof presetValue !== 'function' && objectHasNoKeys(presetValue))) {
+      // set and then reset if the value is null or empty
       this.filterSourceDirective.setFilter((presetValue ?? {}) as F);
       this.filterSourceDirective.resetFilter();
     } else {

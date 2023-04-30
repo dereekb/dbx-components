@@ -1,4 +1,5 @@
-import { ClickableFilterPreset } from '@dereekb/dbx-core';
+import { isSameDateDay } from '@dereekb/date';
+import { ClickableFilterPreset, ClickablePartialFilterPreset } from '@dereekb/dbx-core';
 import { FilterWithPreset } from '@dereekb/rxjs';
 import { Maybe } from '@dereekb/util';
 import { startOfDay, addDays } from 'date-fns';
@@ -51,5 +52,28 @@ export const DOC_INTERACTION_TEST_PRESETS: ClickableFilterPreset<DocInteractionT
     title: 'Reset With Null',
     preset: 'delete',
     presetValue: null
+  }
+];
+
+export const DOC_INTERACTION_TEST_PARTIAL_PRESETS: ClickablePartialFilterPreset<DocInteractionTestFilter>[] = [
+  {
+    icon: 'calendar_today',
+    title: 'Today',
+    partialPresetValue: () => ({
+      date: startOfDay(new Date())
+    }),
+    isActive: (x) => {
+      return isSameDateDay(x?.date, new Date());
+    }
+  },
+  {
+    icon: 'circle',
+    title: 'Tomorrow',
+    partialPresetValue: () => ({
+      date: startOfDay(addDays(new Date(), 1))
+    }),
+    isActive: (x) => {
+      return isSameDateDay(x?.date, startOfDay(addDays(new Date(), 1)));
+    }
   }
 ];

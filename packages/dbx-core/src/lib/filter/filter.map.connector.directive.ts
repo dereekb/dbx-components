@@ -25,6 +25,12 @@ export class DbxFilterMapSourceConnectorDirective<F> extends DbxFilterMapSourceD
 
   // MARK: FilterSourceConnector
   connectWithSource(filterSource: FilterSource<F>): void {
-    this.instance$.pipe(first()).subscribe((x) => x.connectWithSource(filterSource));
+    this.instance$.pipe(first()).subscribe((x) => {
+      x.connectWithSource(filterSource);
+
+      if (filterSource.initWithFilter) {
+        filterSource.initWithFilter(this.filter$);
+      }
+    });
   }
 }

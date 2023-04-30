@@ -20,6 +20,15 @@
         <doc-interaction-test-filter-preset-menu dbxFilterConnectSource></doc-interaction-test-filter-preset-menu>
       </ng-container>
     </doc-feature-example>
+    <doc-feature-example header="dbx-partial-preset-filter-menu" hint="Component that displays a menu button and allows quick selection of partial preset filters.">
+      <dbx-content-border>
+        <p>Filter Value: {{ menuFilter$ | async | json }}</p>
+      </dbx-content-border>
+      <p>dbx-partial-preset-filter-menu components are often wrapped by a class that provides a FilterSourceDirective.</p>
+      <ng-container [dbxFilterMapSourceConnector]="menuFilterKey">
+        <doc-interaction-test-filter-partial-preset-menu dbxFilterConnectSource></doc-interaction-test-filter-partial-preset-menu>
+      </ng-container>
+    </doc-feature-example>
     <doc-feature-example header="dbx-preset-filter-list" hint="Component that displays a preset list.">
       <dbx-content-border>
         <p>Filter Value: {{ listFilter$ | async | json }}</p>

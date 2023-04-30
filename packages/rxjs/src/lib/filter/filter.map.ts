@@ -1,9 +1,9 @@
 import { filterMaybe } from '../rxjs/value';
 import { ObservableOrValue } from '../rxjs/getter';
 import { FilterSourceInstance } from './filter.source';
-import { BehaviorSubject, Observable, switchMap, map, distinctUntilChanged, shareReplay, first } from 'rxjs';
+import { BehaviorSubject, Observable, switchMap, map, distinctUntilChanged, shareReplay, first, mergeAll, merge, Subscription, finalize } from 'rxjs';
 import { FilterSource, FilterSourceConnector } from './filter';
-import { Destroyable, Maybe } from '@dereekb/util';
+import { Destroyable, IndexNumber, IndexRef, Maybe } from '@dereekb/util';
 
 /**
  * Used to identify a specific filter.
@@ -31,7 +31,7 @@ export class FilterMap<F> implements Destroyable {
   }
 
   addFilterObs(key: FilterMapKey, obs: Observable<F>): void {
-    this._itemForKey(key).setFilterObs(obs);
+    this._itemForKey(key).addFilterObs(obs);
   }
 
   makeInstance(key: FilterMapKey): FilterMapKeyInstance<F> {
@@ -80,8 +80,20 @@ export class FilterMapKeyInstance<F> implements FilterSourceConnector<F>, Filter
   }
 }
 
+interface FilterMapItemObs<F> extends IndexRef {
+  readonly obs: Observable<F>;
+  readonly deleteOnComplete: Subscription;
+}
+
 class FilterMapItem<F> {
+  private _i = 0;
   private _source = new FilterSourceInstance<F>();
+  private _obs = new BehaviorSubject<FilterMapItemObs<F>[]>([]);
+
+  private obs$: Observable<F> = this._obs.pipe(
+    switchMap((x) => merge(...x.map((y) => y.obs))),
+    distinctUntilChanged()
+  );
 
   readonly filter$ = this._source.initialFilter$;
 
@@ -91,14 +103,45 @@ class FilterMapItem<F> {
     this._source.setDefaultFilter(obs);
   }
 
-  setFilterObs(obs: Observable<F>): void {
-    /**
-     * MapItem uses the behavior of the DefaultFilterSource to provide a default filter value.
-     */
-    this._source.initWithFilter(obs);
+  addFilterObs(obs: Observable<F>): void {
+    const currentObs = this._obs.value;
+    const existingObsItem = currentObs.find((x) => x.obs === obs);
+
+    if (!existingObsItem) {
+      const i = this._i++;
+
+      const deleteOnComplete = obs
+        .pipe(
+          finalize(() => {
+            this._deleteFilterObs(i);
+          })
+        )
+        .subscribe();
+
+      const nextObs = [...currentObs, { i, obs, deleteOnComplete }];
+      this._obs.next(nextObs);
+
+      if (i === 0) {
+        /**
+         * MapItem uses the behavior of the DefaultFilterSource to provide a default filter value.
+         */
+        this._source.initWithFilter(this.obs$);
+      }
+    }
+  }
+
+  private _deleteFilterObs(index: IndexNumber) {
+    const currentObs = this._obs.value;
+    const obsToRetain = currentObs.filter((x) => x.i !== index);
+
+    if (obsToRetain.length !== currentObs.length) {
+      this._obs.next(this._obs.value);
+    }
   }
 
   destroy() {
+    this._obs.value.forEach((x) => x.deleteOnComplete.unsubscribe());
     this._source.destroy();
+    this._obs.complete();
   }
 }
