@@ -3,6 +3,7 @@ import { randomNumberFactory } from '../number';
 import { boundNumberFunction, wrapNumberFunction } from '../number/bound';
 import { cutValueToPrecisionFunction, NumberPrecision, RoundToPrecisionFunctionType } from '../number/round';
 import { chainMapSameFunctions, mapIdentityFunction } from './map';
+import { Maybe } from './maybe.type';
 
 // MARK: Lat/Lng Point
 /**
@@ -45,8 +46,8 @@ export function copyLatLngPoint(input: LatLngPoint): LatLngPoint {
   return { lat: input.lat, lng: input.lng };
 }
 
-export function isSameLatLngPoint(a: LatLngPoint, b: LatLngPoint) {
-  return a.lat === b.lat && a.lng === b.lng;
+export function isSameLatLngPoint(a: Maybe<LatLngPoint>, b: Maybe<LatLngPoint>) {
+  return a && b ? a.lat === b.lat && a.lng === b.lng : a == b;
 }
 
 export function diffLatLngPoints(a: LatLngPoint, b: LatLngPoint, wrap = true) {
