@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [9.23.14](https://github.com/dereekb/dbx-components/compare/v9.23.13-dev...v9.23.14) (2023-04-30)
+
+
+### Bug Fixes
+
+* fixed dateScheduleDateFilter() not handling a 0-0 range properly ([bb33a36](https://github.com/dereekb/dbx-components/commit/bb33a362ebe03bcfa55c2277c7f0faae05ba34b2))
+
+
+
 ## [9.23.13](https://github.com/dereekb/dbx-components/compare/v9.23.12-dev...v9.23.13) (2023-04-25)
 
 
