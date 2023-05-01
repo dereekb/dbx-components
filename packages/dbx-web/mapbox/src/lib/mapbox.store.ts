@@ -650,7 +650,7 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> imple
         onTrueToFalse(),
         startWith(undefined),
         switchMap(() => this.centerNow$.pipe(first())),
-        distinctUntilChanged(isSameLatLngPoint),
+        distinctUntilChanged<LatLngPoint>(isSameLatLngPoint),
         shareReplay(1)
       );
     }),

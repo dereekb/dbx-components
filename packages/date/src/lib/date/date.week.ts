@@ -1,6 +1,7 @@
 import { Building, makeValuesGroupMap, MapFunction, Maybe } from '@dereekb/util';
-import { getWeek, getYear, endOfWeek, startOfMonth, endOfMonth, isBefore, addWeeks, startOfWeek, setWeek } from 'date-fns';
+import { getWeek, getYear, endOfWeek, startOfMonth, endOfMonth, isBefore, addWeeks, startOfWeek, setWeek, isAfter } from 'date-fns';
 import { isDate } from './date';
+import { DateRange } from './date.range';
 import { dateTimezoneUtcNormal, DateTimezoneUtcNormalInstance, DateTimezoneUtcNormalInstanceInput, SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE } from './date.timezone';
 
 /**
@@ -171,6 +172,49 @@ export function yearWeekCodeFactory(config?: YearWeekCodeConfig): YearWeekCodeFa
 /**
  * Used for returning an array of YearWeekCode values for a pre-configured date range.
  */
+export type YearWeekCodeForDateRangeFactory = (dateRange: DateRange) => YearWeekCode[];
+
+/**
+ * Returns the yearWeekCodes for the input Date's calendar month.
+ *
+ * The date is expected to be relative to UTC.
+ *
+ * @param date
+ */
+export function yearWeekCodeForDateRange(dateRange: DateRange): YearWeekCode[] {
+  return yearWeekCodeForDateRangeFactory(yearWeekCodeFactory({ timezone: SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE }))(dateRange);
+}
+
+/**
+ * Create a YearWeekCodeForMonthFactory.
+ *
+ * @param factory
+ * @returns
+ */
+export function yearWeekCodeForDateRangeFactory(factory: YearWeekCodeFactory = yearWeekCodeFactory()): YearWeekCodeForDateRangeFactory {
+  const { _normal } = factory;
+
+  return (dateRange: DateRange) => {
+    const start = _normal.systemDateToTargetDate(dateRange.start as Date);
+    const end = _normal.systemDateToTargetDate(dateRange.end as Date);
+
+    const weeks: YearWeekCode[] = [];
+
+    let current = start;
+
+    while (!isAfter(current, end)) {
+      const week = factory(current);
+      weeks.push(week);
+      current = addWeeks(current, 1);
+    }
+
+    return weeks;
+  };
+}
+
+/**
+ * Used for returning an array of YearWeekCode values for a pre-configured date range.
+ */
 export type YearWeekCodeForCalendarMonthFactory = (date: Date) => YearWeekCode[];
 
 /**
@@ -192,23 +236,15 @@ export function yearWeekCodeForCalendarMonth(date: Date): YearWeekCode[] {
  */
 export function yearWeekCodeForCalendarMonthFactory(factory: YearWeekCodeFactory = yearWeekCodeFactory()): YearWeekCodeForCalendarMonthFactory {
   const { _normal } = factory;
+  const dateRangeFactory = yearWeekCodeForDateRangeFactory(factory);
 
   return (date: Date) => {
-    const normalDate = _normal.systemDateToTargetDate(date as Date);
+    const normalDate = _normal.systemDateToTargetDate(date);
     const start = startOfMonth(endOfWeek(normalDate));
-    const end = endOfWeek(endOfMonth(start));
 
-    const weeks: YearWeekCode[] = [];
-
-    let current = start;
-
-    while (isBefore(current, end)) {
-      const week = factory(current);
-      weeks.push(week);
-      current = addWeeks(current, 1);
-    }
-
-    return weeks;
+    const normalEnd = endOfWeek(endOfMonth(start));
+    const end = _normal.targetDateToSystemDate(normalEnd);
+    return dateRangeFactory({ start, end });
   };
 }
 

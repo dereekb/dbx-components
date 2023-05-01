@@ -1,6 +1,42 @@
 import { itShouldFail, expectFail } from '@dereekb/util/test';
 import { startOfDay, addDays, addHours, addWeeks } from 'date-fns';
-import { dateRange, dateRangeOverlapsDateRangeFunction, DateRangeType, expandDaysForDateRangeFunction, fitDateRangeToDayPeriod, isDateInDateRangeFunction, isDateRangeInDateRangeFunction, iterateDaysInDateRangeFunction } from './date.range';
+import { dateRange, dateRangeOverlapsDateRangeFunction, DateRangeType, expandDaysForDateRangeFunction, fitDateRangeToDayPeriod, isDateInDateRangeFunction, isDateRangeInDateRangeFunction, isSameDateDayRange, iterateDaysInDateRangeFunction } from './date.range';
+
+describe('isSameDateDayRange()', () => {
+  const dateAString = '2020-04-30T00:00:00.000';
+  const dateA = new Date(dateAString);
+
+  const dateBString = '2020-05-30T00:00:00.000'; // month after
+  const dateB = new Date(dateBString);
+
+  it('should return true for both null', () => {
+    expect(isSameDateDayRange(null, null)).toBe(true);
+  });
+
+  it('should return true for both null or undefined', () => {
+    expect(isSameDateDayRange(null, undefined)).toBe(true);
+  });
+
+  it('should return false for a range and a null value', () => {
+    const range = { start: dateA, end: dateB };
+    expect(isSameDateDayRange(range, null)).toBe(false);
+  });
+
+  it('should return true for the same range', () => {
+    const range = { start: dateA, end: dateB };
+    expect(isSameDateDayRange(range, range)).toBe(true);
+  });
+
+  it('should return true for the same range with different times', () => {
+    const range = { start: dateA, end: dateB };
+    expect(isSameDateDayRange(range, { ...range, end: addHours(dateB, 8) })).toBe(true);
+  });
+
+  it('should return false for a range with different dates', () => {
+    const range = { start: dateA, end: dateB };
+    expect(isSameDateDayRange(range, { start: dateA, end: dateA })).toBe(false);
+  });
+});
 
 describe('iterateDaysInDateRangeFunction()', () => {
   describe('function', () => {

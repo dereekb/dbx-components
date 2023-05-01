@@ -1,7 +1,28 @@
 import { Day, UTC_TIMEZONE_STRING } from '@dereekb/util';
-import { addMinutes, getDay } from 'date-fns';
+import { addMinutes, addWeeks, getDay } from 'date-fns';
 import { dateBlockTiming, DateBlockDurationSpan, dateBlocksExpansionFactory } from './date.block';
-import { yearWeekCodeFactory, yearWeekCode, yearWeekCodeForCalendarMonthFactory, yearWeekCodeIndex, yearWeekCodeDateFactory, yearWeekCodeGroupFactory, YearWeekCode, YearWeekCodeString } from './date.week';
+import { yearWeekCodeFactory, yearWeekCode, yearWeekCodeForCalendarMonthFactory, yearWeekCodeIndex, yearWeekCodeDateFactory, yearWeekCodeGroupFactory, YearWeekCode, YearWeekCodeString, yearWeekCodeForDateRange } from './date.week';
+
+describe('yearWeekCodeForDateRange()', () => {
+  const utc2022Week1StartDate = new Date('2021-12-26T00:00:00.000'); // date in current timezone
+
+  it('should generate the year week codes for the date range.', () => {
+    const totalWeeks = 3;
+    const range = { start: utc2022Week1StartDate, end: addWeeks(utc2022Week1StartDate, totalWeeks - 1) };
+    const result = yearWeekCodeForDateRange(range);
+    expect(result.length).toBe(totalWeeks);
+    expect(result[0]).toBe(yearWeekCode(2022, 1));
+    expect(result[1]).toBe(yearWeekCode(2022, 2));
+    expect(result[2]).toBe(yearWeekCode(2022, 3));
+  });
+
+  it('should generate the year week codes for a single day date range.', () => {
+    const range = { start: utc2022Week1StartDate, end: utc2022Week1StartDate };
+    const result = yearWeekCodeForDateRange(range);
+    expect(result.length).toBe(1);
+    expect(result[0]).toBe(yearWeekCode(2022, 1));
+  });
+});
 
 describe('yearWeekCodeFactory()', () => {
   describe('_normal', () => {
