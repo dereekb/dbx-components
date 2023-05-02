@@ -3,10 +3,10 @@ import { LAT_LNG_PATTERN } from '@dereekb/util';
 import { FormlyFieldConfig } from '@ngx-formly/core';
 import { DbxFormMapboxLatLngComponentFieldProps } from './latlng.field.component';
 
-export interface MapboxLatLngFieldConfig extends Omit<LabeledFieldConfig, 'key'>, DescriptionFieldConfig, Partial<FieldConfig>, Pick<DbxFormMapboxLatLngComponentFieldProps, 'showMap' | 'zoom' | 'latLngConfig' | 'recenterTime'> {}
+export interface MapboxLatLngFieldConfig extends Omit<LabeledFieldConfig, 'key'>, DescriptionFieldConfig, Partial<FieldConfig>, Pick<DbxFormMapboxLatLngComponentFieldProps, 'showMap' | 'zoom' | 'latLngConfig' | 'recenterTime' | 'selectLocationOnMapClick'> {}
 
 export function mapboxLatLngField(config: MapboxLatLngFieldConfig = {}): FormlyFieldConfig {
-  const { key = 'latLng', latLngConfig, showMap, zoom, recenterTime } = config;
+  const { key = 'latLng', latLngConfig, showMap, zoom, recenterTime, selectLocationOnMapClick } = config;
   const fieldConfig: FormlyFieldConfig = {
     ...formlyField({
       key,
@@ -19,7 +19,8 @@ export function mapboxLatLngField(config: MapboxLatLngFieldConfig = {}): FormlyF
         showMap,
         zoom,
         latLngConfig,
-        recenterTime
+        recenterTime,
+        selectLocationOnMapClick
       })
     }),
     ...validatorsForFieldConfig({

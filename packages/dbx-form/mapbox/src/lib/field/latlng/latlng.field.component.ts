@@ -20,6 +20,12 @@ export interface DbxFormMapboxLatLngComponentFieldProps extends FormlyFieldProps
    */
   showMap?: boolean;
   /**
+   * Whether or not to enable clicking the map to select the location. Defaults to false.
+   *
+   * Only applicable when showMap is false.
+   */
+  selectLocationOnMapClick?: boolean;
+  /**
    * (Optional) Zoom to start the map at. Ignored if the showMap is false.
    */
   zoom?: MapboxZoomLevel;
@@ -39,12 +45,13 @@ export interface DbxFormMapboxLatLngComponentFieldProps extends FormlyFieldProps
         </mgl-map>
       </div>
       <div class="dbx-mapbox-input-field-input">
-        <button mat-icon-button (click)="useCurrentLocation()" [disabled]="isReadonlyOrDisabled">
+        <button mat-icon-button (click)="useCurrentLocation()" [disabled]="isReadonlyOrDisabled || (useCurrentLocationDisabled$ | async)">
           <mat-icon>my_location</mat-icon>
         </button>
         <mat-form-field class="dbx-mapbox-input-field-input-field" appearance="standard">
           <mat-label>Coordinates</mat-label>
           <input type="text" matInput [placeholder]="placeholder" [formControl]="formControl" />
+          <mat-hint class="dbx-hint dbx-warn" *ngIf="useCurrentLocationDisabled$ | async">Could not access your current location.</mat-hint>
         </mat-form-field>
       </div>
     </div>
@@ -60,9 +67,13 @@ export class DbxFormMapboxLatLngFieldComponent<T extends DbxFormMapboxLatLngComp
     compact: 'dbx-mapbox-input-field-compact'
   });
 
+  private _useCurrentLocationDisabled = new BehaviorSubject<boolean>(false);
+  readonly useCurrentLocationDisabled$ = this._useCurrentLocationDisabled.asObservable();
+
   private _sub = new SubscriptionObject();
   private _geoSub = new SubscriptionObject();
   private _centerSub = new SubscriptionObject();
+  private _clickSub = new SubscriptionObject();
   private _zoom = new BehaviorSubject<MapboxZoomLevel>(12);
 
   private _formControlObs = new BehaviorSubject<Maybe<AbstractControl>>(undefined);
@@ -123,8 +134,16 @@ export class DbxFormMapboxLatLngFieldComponent<T extends DbxFormMapboxLatLngComp
     return this.field.props.showMap ?? true;
   }
 
+  get selectLocationOnMapClick(): boolean {
+    return this.field.props.selectLocationOnMapClick ?? false;
+  }
+
   get recenterTime(): Milliseconds {
     return this.field.props.recenterTime || 10 * 1000;
+  }
+
+  get useCurrentLocationDisabled() {
+    return this._useCurrentLocationDisabled;
   }
 
   ngOnInit(): void {
@@ -163,6 +182,14 @@ export class DbxFormMapboxLatLngFieldComponent<T extends DbxFormMapboxLatLngComp
           }
         });
       });
+
+      if (this.selectLocationOnMapClick) {
+        this._clickSub.subscription = this.dbxMapboxMapStore.clickEvent$.subscribe((x) => {
+          if (x?.type === 'click') {
+            this.setValue(x.lngLat);
+          }
+        });
+      }
     }
 
     if (this.props.readonly) {
@@ -177,13 +204,19 @@ export class DbxFormMapboxLatLngFieldComponent<T extends DbxFormMapboxLatLngComp
     this._zoom.complete();
     this._formControlObs.complete();
     this._centerSub.destroy();
+    this._clickSub.destroy();
   }
 
   useCurrentLocation() {
-    this._geoSub.subscription = this.geolocation$.pipe(first()).subscribe((position) => {
-      if (position) {
-        const { latitude: lat, longitude: lng } = position.coords;
-        this.setValue({ lat, lng });
+    this._geoSub.subscription = this.geolocation$.pipe(first()).subscribe({
+      next: (position) => {
+        if (position) {
+          const { latitude: lat, longitude: lng } = position.coords;
+          this.setValue({ lat, lng });
+        }
+      },
+      error: () => {
+        this._useCurrentLocationDisabled.next(true);
       }
     });
   }

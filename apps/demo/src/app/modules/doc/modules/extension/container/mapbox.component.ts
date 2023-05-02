@@ -117,6 +117,7 @@ export class DocExtensionMapboxComponent implements OnInit, OnDestroy {
       latLngConfig: {
         precision: 3
       },
+      selectLocationOnMapClick: true,
       showMap: false
     }),
     mapboxZoomField({
