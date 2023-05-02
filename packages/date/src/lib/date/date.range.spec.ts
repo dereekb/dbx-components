@@ -1,6 +1,50 @@
 import { itShouldFail, expectFail } from '@dereekb/util/test';
-import { startOfDay, addDays, addHours, addWeeks } from 'date-fns';
+import { startOfDay, addDays, addHours, addWeeks, startOfWeek, endOfWeek, endOfDay } from 'date-fns';
 import { dateRange, dateRangeOverlapsDateRangeFunction, DateRangeType, expandDaysForDateRangeFunction, fitDateRangeToDayPeriod, isDateInDateRangeFunction, isDateRangeInDateRangeFunction, isSameDateDayRange, iterateDaysInDateRangeFunction } from './date.range';
+
+describe('dateRange()', () => {
+  describe('week', () => {
+    const utc2022Week1StartDate = new Date('2021-12-26T00:00:00.000'); // date in current timezone
+
+    it('should generate a week range', () => {
+      const expectedStart = startOfWeek(utc2022Week1StartDate);
+      const expectedEnd = endOfWeek(utc2022Week1StartDate);
+
+      const result = dateRange({ type: DateRangeType.WEEK, date: utc2022Week1StartDate });
+      expect(result.start).toBeSameSecondAs(expectedStart);
+      expect(result.end).toBeSameSecondAs(expectedEnd);
+    });
+
+    it('should generate a week range for the current week', () => {
+      const today = new Date();
+      const expectedStart = startOfWeek(today);
+      const expectedEnd = endOfWeek(today);
+
+      const result = dateRange(DateRangeType.WEEK);
+      expect(result.start).toBeSameSecondAs(expectedStart);
+      expect(result.end).toBeSameSecondAs(expectedEnd);
+    });
+
+    it('should generate a day range', () => {
+      const expectedStart = startOfDay(utc2022Week1StartDate);
+      const expectedEnd = endOfDay(utc2022Week1StartDate);
+
+      const result = dateRange({ type: DateRangeType.DAY, date: utc2022Week1StartDate });
+      expect(result.start).toBeSameSecondAs(expectedStart);
+      expect(result.end).toBeSameSecondAs(expectedEnd);
+    });
+
+    it('should generate a day range for the current day', () => {
+      const today = new Date();
+      const expectedStart = startOfDay(today);
+      const expectedEnd = endOfDay(today);
+
+      const result = dateRange(DateRangeType.DAY);
+      expect(result.start).toBeSameSecondAs(expectedStart);
+      expect(result.end).toBeSameSecondAs(expectedEnd);
+    });
+  });
+});
 
 describe('isSameDateDayRange()', () => {
   const dateAString = '2020-04-30T00:00:00.000';

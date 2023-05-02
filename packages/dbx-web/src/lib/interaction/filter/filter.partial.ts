@@ -11,7 +11,7 @@ import { FilterWithPreset, timeoutStartWith } from '@dereekb/rxjs';
 export abstract class AbstractDbxPartialPresetFilterMenuDirective<F> implements OnDestroy {
   private _partialPresets = new BehaviorSubject<ClickablePartialFilterPreset<F>[]>([]);
 
-  readonly filter$: Observable<Maybe<F>> = this.filterSourceDirective.filter$.pipe(startWith(undefined), distinctUntilChanged());
+  readonly filter$: Observable<Maybe<F>> = this.filterSourceDirective.filter$.pipe(startWith(undefined), distinctUntilChanged(), shareReplay(1));
 
   readonly selectedPartialPresets$: Observable<ClickablePartialFilterPreset<F>[]> = combineLatest([this._partialPresets, this.filter$]).pipe(
     map(([partialPresets, selectedFilter]) => {

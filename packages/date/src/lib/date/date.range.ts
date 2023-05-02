@@ -203,7 +203,11 @@ export type DateRangeInput = (DateRangeTypedInput | DateRangeDistanceInput) & {
  * @param roundToMinute
  * @returns
  */
-export function dateRange({ type = DateRangeType.DAYS_RANGE, date = new Date(), distance, roundToMinute: inputRoundToMinute = false }: DateRangeInput, roundToMinute = inputRoundToMinute): DateRange {
+export function dateRange(input: DateRangeType | DateRangeInput, inputRoundToMinute?: boolean): DateRange {
+  const config: DateRangeInput = typeof input === 'string' ? { type: input } : (input as DateRangeInput);
+  let { type = DateRangeType.DAYS_RANGE, date = new Date(), distance = undefined, roundToMinute: inputConfigRoundToMinute = false } = config;
+  const roundToMinute = inputRoundToMinute ?? inputConfigRoundToMinute;
+
   let start: Date;
   let end: Date;
 
@@ -274,6 +278,8 @@ export function dateRange({ type = DateRangeType.DAYS_RANGE, date = new Date(), 
       start = startOfMonth(endOfWeek(date));
       end = endOfWeek(endOfMonth(start));
       break;
+    default:
+      throw new Error(`Unknown date range type: ${type}`);
   }
 
   return {

@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [9.23.16](https://github.com/dereekb/dbx-components/compare/v9.23.15-dev...v9.23.16) (2023-05-02)
+
+
+### Bug Fixes
+
+* fixed DbxPartialPresetFilterMenuComponent generic ([11e099c](https://github.com/dereekb/dbx-components/commit/11e099c72cad1bce6359757f7e4d613e2ae1f8fe))
+
+
+
 ## [9.23.15](https://github.com/dereekb/dbx-components/compare/v9.23.14-dev...v9.23.15) (2023-05-01)
 
 
