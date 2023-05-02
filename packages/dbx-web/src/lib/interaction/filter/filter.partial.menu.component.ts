@@ -1,6 +1,5 @@
 import { shareReplay, BehaviorSubject, map, combineLatest, distinctUntilChanged, switchMap } from 'rxjs';
 import { Component, Input } from '@angular/core';
-import { FilterWithPreset } from '@dereekb/rxjs';
 import { AbstractDbxPartialPresetFilterMenuDirective } from './filter.partial';
 import { DbxPresetFilterMenuConfig } from './filter.menu';
 
@@ -11,7 +10,7 @@ import { DbxPresetFilterMenuConfig } from './filter.menu';
   selector: 'dbx-partial-preset-filter-menu',
   templateUrl: './filter.partial.menu.component.html'
 })
-export class DbxPartialPresetFilterMenuComponent<F extends FilterWithPreset> extends AbstractDbxPartialPresetFilterMenuDirective<F> {
+export class DbxPartialPresetFilterMenuComponent<F> extends AbstractDbxPartialPresetFilterMenuDirective<F> {
   private _config = new BehaviorSubject<DbxPresetFilterMenuConfig>({});
 
   readonly buttonText$ = combineLatest([this._config, this.firstSelectedPartialPreset$]).pipe(
