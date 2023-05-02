@@ -4,6 +4,9 @@
 </button>
 <mat-menu #menu class="dbx-preset-filter-menu">
   <dbx-anchor *ngFor="let anchor of presetAnchors$ | async" [anchor]="anchor">
-    <button mat-menu-item [ngClass]="anchor.selected ? 'active' : ''">{{ anchor.title }}</button>
+    <button mat-menu-item [ngClass]="anchor.selected ? 'active' : ''">
+      <mat-icon *ngIf="anchor.icon">{{ anchor.icon }}</mat-icon>
+      {{ anchor.title }}
+    </button>
   </dbx-anchor>
 </mat-menu>

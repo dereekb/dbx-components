@@ -1,5 +1,6 @@
 export * from './filter.module';
 export * from './filter.menu';
+export * from './filter.partial.list.component';
 export * from './filter.partial.menu.component';
 export * from './filter.partial';
 export * from './filter.popover.button.component';

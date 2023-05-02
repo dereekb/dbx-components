@@ -9,11 +9,11 @@ import { FilterWithPreset, tapLog } from '@dereekb/rxjs';
  */
 @Directive()
 export abstract class AbstractDbxPresetFilterMenuComponent<F extends FilterWithPreset> implements OnDestroy {
-  //TODO: Rename to AbstractDbxPresetFilterMenuDirective
+  //TODO: Rename to AbstractDbxPresetFilterMenuDirective with next breaking changes
 
   private _presets = new BehaviorSubject<ClickableFilterPreset<F>[]>([]);
 
-  readonly selected$: Observable<Maybe<F>> = this.filterSourceDirective.filter$.pipe(startWith(undefined), distinctUntilChanged());
+  readonly selected$: Observable<Maybe<F>> = this.filterSourceDirective.filter$.pipe(startWith(undefined), distinctUntilChanged(), shareReplay(1));
 
   readonly selectedPresetString$: Observable<Maybe<string>> = this.selected$.pipe(
     map((selectedFilter) => (selectedFilter ? selectedFilter.preset : undefined)),
