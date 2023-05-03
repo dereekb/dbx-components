@@ -13,9 +13,16 @@ export class DbxFirebaseEmulatorService {
 
   get emulatorUIAnchor(): Maybe<ClickableUrl> {
     const ui = this.emulatorsConfig.ui;
+    let host = this.emulatorsConfig.host;
+
+    // Issue where sometimes 0.0.0.0 is not configured to handle transferring traffic properly, compared to localhost. This sets 0.0.0.0 to localhost unless disallowed.
+    if (host === '0.0.0.0' && this.emulatorsConfig.allow0000ToLocalhost !== false) {
+      host = 'localhost';
+    }
+
     return ui
       ? {
-          url: `http://${ui.host ?? 'localhost'}:${ui.port}`,
+          url: `http://${host ?? 'localhost'}:${ui.port}`,
           target: '_blank'
         }
       : undefined;

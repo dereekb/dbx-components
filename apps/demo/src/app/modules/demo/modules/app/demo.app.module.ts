@@ -5,6 +5,7 @@ import { UIRouterModule } from '@uirouter/angular';
 import { DemoAppSharedModule } from '@dereekb/demo-components';
 import { DEMO_APP_STATES } from './demo.app.router';
 import { DemoAppHistoryComponent } from './container/history.component';
+import { DemoAppSettingsComponent } from './container/settings.component';
 
 @NgModule({
   imports: [
@@ -17,7 +18,8 @@ import { DemoAppHistoryComponent } from './container/history.component';
     // components
     DemoAppLayoutComponent,
     DemoAppHomeComponent,
-    DemoAppHistoryComponent
+    DemoAppHistoryComponent,
+    DemoAppSettingsComponent
   ]
 })
 export class DemoAppModule {}

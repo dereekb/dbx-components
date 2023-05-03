@@ -1,8 +1,8 @@
-import { filterMaybe, isNot, timeoutStartWith } from '@dereekb/rxjs';
-import { Injectable, Optional } from '@angular/core';
-import { AuthUserState, DbxAuthService, loggedOutObsFromIsLoggedIn, loggedInObsFromIsLoggedIn, AuthUserIdentifier, authUserIdentifier } from '@dereekb/dbx-core';
+import { filterMaybe, isNot, timeoutStartWith, tapLog, switchMapMaybeDefault } from '@dereekb/rxjs';
+import { Injectable, OnDestroy, Optional } from '@angular/core';
+import { AuthUserState, DbxAuthService, loggedOutObsFromIsLoggedIn, loggedInObsFromIsLoggedIn, AuthUserIdentifier, authUserIdentifier, NoAuthUserIdentifier } from '@dereekb/dbx-core';
 import { reauthenticateWithPopup, Auth, authState, idToken, User, IdTokenResult, ParsedToken, GoogleAuthProvider, signInWithPopup, AuthProvider, PopupRedirectResolver, signInAnonymously, signInWithEmailAndPassword, UserCredential, FacebookAuthProvider, GithubAuthProvider, TwitterAuthProvider, createUserWithEmailAndPassword } from '@angular/fire/auth';
-import { of, Observable, distinctUntilChanged, shareReplay, map, switchMap, firstValueFrom, catchError } from 'rxjs';
+import { of, Observable, distinctUntilChanged, shareReplay, map, switchMap, firstValueFrom, catchError, Subject, merge, EMPTY, share } from 'rxjs';
 import { AuthClaims, AuthClaimsObject, AuthRoleClaimsService, AuthRoleSet, AUTH_ADMIN_ROLE, cachedGetter, Maybe } from '@dereekb/util';
 import { AuthUserInfo, authUserInfoFromAuthUser, firebaseAuthTokenFromUser } from '../auth';
 import { sendPasswordResetEmail } from 'firebase/auth';
@@ -46,7 +46,6 @@ export class DbxFirebaseAuthService implements DbxAuthService {
   readonly _authState$: Observable<Maybe<User>> = authState(this.firebaseAuth);
 
   readonly currentAuthUser$: Observable<Maybe<User>> = this._authState$.pipe(timeoutStartWith(null as Maybe<User>, 1000), distinctUntilChanged(), shareReplay(1));
-
   readonly currentAuthUserInfo$: Observable<Maybe<AuthUserInfo>> = this.currentAuthUser$.pipe(map((x) => (x ? authUserInfoFromAuthUser(x) : undefined)));
 
   readonly authUser$: Observable<User> = this.currentAuthUser$.pipe(filterMaybe());
@@ -57,26 +56,48 @@ export class DbxFirebaseAuthService implements DbxAuthService {
     distinctUntilChanged(),
     shareReplay(1)
   );
+
   readonly isAnonymousUser$: Observable<boolean> = this.authUser$.pipe(
     map((x) => x.isAnonymous),
     distinctUntilChanged(),
     shareReplay(1)
   );
-  readonly isNotAnonymousUser$: Observable<boolean> = this.isAnonymousUser$.pipe(isNot());
+  readonly isNotAnonymousUser$: Observable<boolean> = this.isAnonymousUser$.pipe(isNot(), distinctUntilChanged(), shareReplay(1));
 
   readonly isLoggedIn$: Observable<boolean> = this.hasAuthUser$;
-
   readonly isNotLoggedIn$: Observable<boolean> = this.isLoggedIn$.pipe(isNot());
   readonly onLogIn$: Observable<void> = loggedInObsFromIsLoggedIn(this.isLoggedIn$);
   readonly onLogOut$: Observable<void> = loggedOutObsFromIsLoggedIn(this.isLoggedIn$);
-  readonly userIdentifier$: Observable<AuthUserIdentifier> = this.currentAuthUser$.pipe(map((x) => authUserIdentifier(x?.uid)));
-  readonly uid$: Observable<AuthUserIdentifier> = this.userIdentifier$;
 
-  readonly currentIdTokenString$: Observable<Maybe<string>> = idToken(this.firebaseAuth).pipe(distinctUntilChanged());
-  readonly idTokenString$: Observable<string> = this.currentIdTokenString$.pipe(filterMaybe());
-  readonly idTokenResult$: Observable<IdTokenResult> = this.authUser$.pipe(switchMap((x) => this.idTokenString$.pipe(switchMap((y) => x.getIdTokenResult()))));
+  readonly currentUid$: Observable<Maybe<AuthUserIdentifier>> = this.currentAuthUser$.pipe(
+    map((x) => x?.uid),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
 
-  readonly claims$: Observable<ParsedToken> = this.idTokenResult$.pipe(map((x) => x.claims));
+  readonly uid$: Observable<AuthUserIdentifier | NoAuthUserIdentifier> = this.currentUid$.pipe(map(authUserIdentifier), distinctUntilChanged(), shareReplay(1));
+  /**
+   * Alias for uid$
+   */
+  readonly userIdentifier$: Observable<AuthUserIdentifier | NoAuthUserIdentifier> = this.uid$;
+
+  readonly currentIdTokenString$: Observable<Maybe<string>> = idToken(this.firebaseAuth).pipe(distinctUntilChanged(), shareReplay(1));
+  readonly idTokenString$: Observable<string> = this.currentUid$.pipe(switchMap((x) => (x ? this.currentIdTokenString$.pipe(filterMaybe()) : EMPTY)));
+
+  readonly currentIdTokenResult$: Observable<Maybe<IdTokenResult>> = this.currentAuthUser$.pipe(
+    switchMap((x) => (x ? this.currentIdTokenString$.pipe(switchMap((y) => (y ? x.getIdTokenResult() : of(null)))) : of(null))),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+  readonly idTokenResult$: Observable<IdTokenResult> = this.currentIdTokenResult$.pipe(filterMaybe());
+
+  readonly currentClaims$: Observable<Maybe<ParsedToken>> = this.currentIdTokenResult$.pipe(
+    map((x) => (x ? x.claims : null)),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+  readonly claims$: Observable<ParsedToken> = this.currentClaims$.pipe(filterMaybe());
+
   readonly currentAuthContextInfo$: Observable<Maybe<DbxFirebaseAuthContextInfo>> = this.currentAuthUser$.pipe(
     switchMap((x) => this.loadAuthContextInfoForUser(x)),
     shareReplay(1)

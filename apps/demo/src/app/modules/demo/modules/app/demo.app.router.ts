@@ -1,3 +1,4 @@
+import { DemoAppSettingsComponent } from './container/settings.component';
 import { Ng2StateDeclaration } from '@uirouter/angular';
 import { DemoAppHistoryComponent } from './container/history.component';
 import { DemoAppHomeComponent } from './container/home.component';
@@ -24,6 +25,12 @@ export const historyState: Ng2StateDeclaration = {
   component: DemoAppHistoryComponent
 };
 
+export const settingsState: Ng2StateDeclaration = {
+  url: '/settings',
+  name: 'demo.app.settings',
+  component: DemoAppSettingsComponent
+};
+
 export const demoGuestbookFutureState: Ng2StateDeclaration = {
   name: 'demo.app.guestbook.**',
   url: '/guestbook',
@@ -41,6 +48,7 @@ export const DEMO_APP_STATES: Ng2StateDeclaration[] = [
   demoAppState,
   homeState,
   historyState,
+  settingsState,
   demoGuestbookFutureState,
   demoProfileFutureState
 ];
