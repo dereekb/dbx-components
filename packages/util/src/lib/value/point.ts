@@ -168,8 +168,11 @@ export type LatLngString = `${Latitude},${Longitude}`;
  */
 export const DEFAULT_LAT_LNG_STRING_VALUE = '0,0';
 
-export type LatLngPointInput = Latitude | LatLngPoint | LonLatPoint | LatLngString | LatLngTuple | string;
+export function defaultLatLngString(): typeof DEFAULT_LAT_LNG_STRING_VALUE {
+  return DEFAULT_LAT_LNG_STRING_VALUE;
+}
 
+export type LatLngPointInput = Latitude | LatLngPoint | LonLatPoint | LatLngString | LatLngTuple | string;
 export type LatLngPrecision = NumberPrecision;
 
 /**
