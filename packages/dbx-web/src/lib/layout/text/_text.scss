@@ -121,6 +121,11 @@ $dbx-detail-block-content-offset: 30px;
   .dbx-chip-margin {
     margin: 4px;
   }
+
+  .dbx-us-address {
+    white-space: pre-wrap !important;
+    line-height: 1.4;
+  }
 }
 
 @mixin color($theme-config) {

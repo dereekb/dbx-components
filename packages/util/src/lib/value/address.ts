@@ -1,3 +1,4 @@
+import { filterEmptyValues } from '../array/array.value';
 import { Maybe } from './maybe.type';
 
 /**
@@ -37,6 +38,52 @@ export interface UnitedStatesAddress {
   city: CityString;
   state: StateString | StateCodeString;
   zip: ZipCodeString;
+}
+
+/**
+ * UnitedStatesAddress with an additional name field for display.
+ */
+export interface UnitedStatesAddressWithContact extends UnitedStatesAddress {
+  name?: string;
+  phone?: string;
+}
+
+/**
+ * Creates a string from a UnitedStatesAddress. Linebreaks are added by default.
+ *
+ * @param input
+ * @returns
+ */
+export function unitedStatesAddressString(input: Maybe<Partial<UnitedStatesAddress | UnitedStatesAddressWithContact>>, addLinebreaks = true): Maybe<string> {
+  const { name, phone, line1, line2, zip, state, city } = (input as UnitedStatesAddressWithContact) ?? {};
+
+  let address: Maybe<string>;
+
+  const lineBreakLine = addLinebreaks ? '\n' : '';
+  const parts: Maybe<string>[] = [];
+
+  parts.push(name);
+  parts.push(phone);
+  parts.push(line1);
+  parts.push(line2);
+
+  if (city || state || zip) {
+    if (city && (state || zip)) {
+      parts.push(`${city}, ${state} ${zip}`);
+    } else if (city) {
+      parts.push(`${city}`);
+    } else if (state || zip) {
+      parts.push(`${state} ${zip}`);
+    }
+  }
+
+  const nonEmptyParts = filterEmptyValues(parts);
+
+  if (nonEmptyParts.length > 0) {
+    address = filterEmptyValues(nonEmptyParts.map((x) => x.trim())).join(lineBreakLine);
+  }
+
+  return address;
 }
 
 /**
