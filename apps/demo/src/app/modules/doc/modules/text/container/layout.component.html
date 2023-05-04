@@ -43,12 +43,36 @@
           </div>
         </doc-feature-example>
         <h4>Layouts</h4>
-        <doc-feature-example header=".dbx-label-block">
+        <doc-feature-example header="dbx-us-address" hint="Styles a UnitedStateAddressWithContent value. Provides more css classes to override.">
+          <dbx-label-block header="full address">
+            <dbx-us-address [address]="fullAddress"></dbx-us-address>
+          </dbx-label-block>
+          <dbx-label-block header="short address">
+            <dbx-us-address [address]="shortAddress"></dbx-us-address>
+          </dbx-label-block>
+          <dbx-label-block header="incomplete address">
+            <dbx-us-address [address]="incompleteAddress"></dbx-us-address>
+          </dbx-label-block>
+          <h4>unitedStatesAddressString()</h4>
+          <p>Alternatively, you can use the .dbx-us-address class to format a UnitedStateAddressWithContent string from unitedStatesAddressString().</p>
+          <div>
+            <dbx-label-block header="full address">
+              <p class="dbx-us-address">{{ fullAddressString }}</p>
+            </dbx-label-block>
+            <dbx-label-block header="short address">
+              <p class="dbx-us-address">{{ shortAddressString }}</p>
+            </dbx-label-block>
+            <dbx-label-block header="incomplete address">
+              <p class="dbx-us-address">{{ incompleteAddressString }}</p>
+            </dbx-label-block>
+          </div>
+        </doc-feature-example>
+        <doc-feature-example header="dbx-label-block">
           <dbx-label-block header="A custom label">
             {{ lorem }}
           </dbx-label-block>
         </doc-feature-example>
-        <doc-feature-example header=".dbx-detail-block" hint="Text layout that contains an icon with content offset to the right.">
+        <doc-feature-example header="dbx-detail-block" hint="Text layout that contains an icon with content offset to the right.">
           <dbx-detail-block header="A custom label and icon" icon="settings">
             <span>{{ lorem }}</span>
           </dbx-detail-block>

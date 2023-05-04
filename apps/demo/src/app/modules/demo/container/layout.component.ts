@@ -76,8 +76,8 @@ export class DemoLayoutComponent {
     },
     {
       title: 'Settings',
-      ref: 'demo.app.setting',
-      disabled: true
+      ref: 'demo.app.settings',
+      icon: 'settings'
     },
     {
       title: 'Logout',

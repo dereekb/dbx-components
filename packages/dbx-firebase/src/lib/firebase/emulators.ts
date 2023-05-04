@@ -47,6 +47,10 @@ export interface DbxFirebaseEmulatorsConfig {
 export abstract class DbxFirebaseParsedEmulatorsConfig implements DbxFirebaseEmulatorsConfig {
   abstract useEmulators: boolean;
   host?: string;
+  /**
+   * Fix used by some components to allow changing 0.0.0.0 to localhost. Defaults to true.
+   */
+  allow0000ToLocalhost?: boolean;
   ui?: Required<DbxFirebaseEmulatorConfig>;
   auth?: Required<DbxFirebaseEmulatorConfig>;
   firestore?: Required<DbxFirebaseEmulatorConfig>;

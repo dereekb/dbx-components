@@ -1,3 +1,4 @@
+export * from './address.component';
 export * from './detail.block.component';
 export * from './detail.block.header.component';
 export * from './form.description.component';

@@ -1,0 +1,15 @@
+<dbx-content-page dbxAppContextState="public">
+  <dbx-content-container>
+    <dbx-section-page header="Settings">
+      <dbx-section header="Token">
+        <dbx-content-pit>
+          <dbx-label-block>{{ currentIdTokenString$ | async }}</dbx-label-block>
+        </dbx-content-pit>
+        <dbx-content-pit>
+          <p class="dbx-json" style="overflow: hidden">{{ idTokenResult$ | async | json }}</p>
+        </dbx-content-pit>
+        <dbx-button (buttonClick)="refreshToken()" text="Refresh Token"></dbx-button>
+      </dbx-section>
+    </dbx-section-page>
+  </dbx-content-container>
+</dbx-content-page>
