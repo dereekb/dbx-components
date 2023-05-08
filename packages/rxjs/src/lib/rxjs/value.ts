@@ -1,5 +1,5 @@
 import { combineLatest, filter, skipWhile, startWith, switchMap, MonoTypeOperatorFunction, Observable, of, OperatorFunction, map, delay, EMPTY } from 'rxjs';
-import { Maybe } from '@dereekb/util';
+import { DecisionFunction, isMaybeSo, MapFunction, Maybe } from '@dereekb/util';
 import { asObservableFromGetter, MaybeObservableOrValueGetter, ObservableOrValueGetter } from './getter';
 import { ObservableDecisionFunction } from './decision';
 
@@ -144,6 +144,26 @@ export function switchMapMaybeObs<T = unknown>(): OperatorFunction<Maybe<Observa
 
     return subscriber;
   };
+}
+
+/**
+ * Performs the input map function on the input if it is not null/undefined.
+ *
+ * @param mapFn
+ * @returns
+ */
+export function mapMaybe<A, B>(mapFn: MapFunction<A, Maybe<B>>): OperatorFunction<Maybe<A>, Maybe<B>> {
+  return mapIf(mapFn as MapFunction<Maybe<A>, Maybe<B>>, isMaybeSo);
+}
+
+/**
+ * Performs the input map function on the input if the decision returns true.
+ *
+ * @param mapFn
+ * @returns
+ */
+export function mapIf<A, B>(mapFn: MapFunction<Maybe<A>, Maybe<B>>, decision: DecisionFunction<Maybe<A>>): OperatorFunction<Maybe<A>, Maybe<B>> {
+  return map((x: Maybe<A>) => (decision(x) ? mapFn(x) : undefined));
 }
 
 /**
