@@ -13,6 +13,16 @@ export type ObjectWithConstructor = {
 };
 
 /**
+ * Returns true if the input object is an object with a constructor.
+ *
+ * @param obj
+ * @returns
+ */
+export function isObjectWithConstructor(obj: any): obj is ObjectWithConstructor {
+  return !!obj.prototype && !!obj.prototype.constructor.name;
+}
+
+/**
  * Similar to ClassType, but allows for abstract classes.
  */
 export type ClassLikeType<T = unknown> = abstract new (...args: unknown[]) => T;

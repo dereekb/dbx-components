@@ -2,8 +2,6 @@ import { Component } from '@angular/core';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { AbstractDialogDirective } from '@dereekb/dbx-web';
 
-export const DEFAULT_INTERACTION_POPUP_COMPOSER_POPUP_KEY = 'popup';
-
 @Component({
   template: `
     <dbx-dialog-content>

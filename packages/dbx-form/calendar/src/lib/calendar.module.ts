@@ -23,6 +23,7 @@ import { DbxCalendarScheduleSelectionStoreInjectionBlockDirective } from './cale
 import { DbxScheduleSelectionCalendarDateDialogComponent } from './calendar.schedule.selection.dialog.component';
 import { DbxScheduleSelectionCalendarDateDialogButtonComponent } from './calendar.schedule.selection.dialog.button.component';
 import { DbxScheduleSelectionCalendarSelectionToggleButtonComponent } from './calendar.schedule.selection.toggle.button.component';
+import { DbxInjectionComponentModule } from '@dereekb/dbx-core';
 
 const declarations = [
   //
@@ -43,6 +44,7 @@ const declarations = [
 @NgModule({
   imports: [
     //
+    DbxInjectionComponentModule,
     DbxActionModule,
     DbxFormModule,
     DbxFormlyModule,

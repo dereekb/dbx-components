@@ -1,4 +1,7 @@
+import { asGetter } from '@dereekb/util';
 import { getValueFromGetter, GetterOrValueWithInput, makeWithFactory, makeWithFactoryInput } from './getter';
+
+class TestClass {}
 
 describe('getValueFromGetter()', () => {
   describe('GetterOrValueWithInput', () => {
@@ -21,6 +24,25 @@ describe('getValueFromGetter()', () => {
       const result = getValueFromGetter(getter, value);
       expect(result).toBe(value);
     });
+
+    it('should return the class/constructor type as a value.', () => {
+      const result = getValueFromGetter(TestClass);
+      expect(result).toBe(TestClass);
+    });
+  });
+});
+
+describe('asGetter()', () => {
+  it('should return a function as itself.', () => {
+    const fn = () => 1;
+    const result = asGetter(fn);
+    expect(result).toBe(fn);
+  });
+
+  it('should return a Type as Getter for itself', () => {
+    const result = asGetter(TestClass);
+    expect(result).not.toBe(TestClass);
+    expect(result()).toBe(TestClass);
   });
 });
 

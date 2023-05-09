@@ -13,7 +13,7 @@ export interface DbxScheduleSelectionCalendarDatePopoverConfig {
   template: `
     <dbx-popover-content>
       <dbx-popover-scroll-content>
-        <dbx-schedule-selection-calendar-date-popover-content (close)="close()"></dbx-schedule-selection-calendar-date-popover-content>
+        <dbx-schedule-selection-calendar-date-popover-content></dbx-schedule-selection-calendar-date-popover-content>
       </dbx-popover-scroll-content>
     </dbx-popover-content>
   `

@@ -9,6 +9,4 @@ import { Component, OnDestroy } from '@angular/core';
     </div>
   `
 })
-export class DbxScheduleSelectionCalendarDatePopoverContentComponent implements OnDestroy {
-  ngOnDestroy(): void {}
-}
+export class DbxScheduleSelectionCalendarDatePopoverContentComponent {}

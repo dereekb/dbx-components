@@ -1,5 +1,5 @@
 import { StringKeyPropertyKeys } from '@dereekb/util';
-import { AllCommaSeparatedKeysOfObject, CommaSeparatedKeyCombinationsOfObject, HasThreeCharacters, HasThreeOrMoreCharacters, IsSingleCharacter, KeyAsString, KeyCanBeString, MergeReplace, OrderedCommaSeparatedKeysOfObject, Replace, ReplaceType, StringConcatenation, StringKeyProperties } from './type';
+import { AllCommaSeparatedKeysOfObject, CommaSeparatedKeyCombinationsOfObject, HasThreeCharacters, HasThreeOrMoreCharacters, isObjectWithConstructor, IsSingleCharacter, KeyAsString, KeyCanBeString, MergeReplace, OrderedCommaSeparatedKeysOfObject, Replace, ReplaceType, StringConcatenation, StringKeyProperties } from './type';
 
 type TYPE_A = {
   aOnly: boolean;
@@ -15,6 +15,34 @@ type TYPE_C = {
   test: string;
   200: number;
 };
+
+class TestClass {}
+
+describe('isObjectWithConstructor()', () => {
+  it('should return true if the object is a Type/Class', () => {
+    expect(isObjectWithConstructor(TestClass)).toBe(true);
+  });
+
+  it('should return false if the object is an object with a value called constructor', () => {
+    expect(isObjectWithConstructor({ constructor: {} })).toBe(false);
+  });
+
+  it('should return false if the object is an object with a value called constructor that is the TestClass', () => {
+    expect(isObjectWithConstructor({ constructor: TestClass })).toBe(false);
+  });
+
+  it('should return false if the object is an object with a value called constructor that is a function', () => {
+    expect(isObjectWithConstructor({ constructor: () => {} })).toBe(false);
+  });
+
+  it('should return false if the object is a string', () => {
+    expect(isObjectWithConstructor('test')).toBe(false);
+  });
+
+  it('should return false if the object is an object', () => {
+    expect(isObjectWithConstructor({})).toBe(false);
+  });
+});
 
 describe('KeyAsString', () => {
   it('should not allow functions as key strings', () => {

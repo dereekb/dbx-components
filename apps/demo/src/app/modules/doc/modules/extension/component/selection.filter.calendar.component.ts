@@ -1,7 +1,8 @@
 import { addDays, startOfDay } from 'date-fns';
 import { Component } from '@angular/core';
-import { DbxCalendarScheduleSelectionStore } from '@dereekb/dbx-form/calendar';
+import { DbxCalendarScheduleSelectionStore, DbxScheduleSelectionCalendarComponentConfig } from '@dereekb/dbx-form/calendar';
 import { DateScheduleDateFilterConfig } from '@dereekb/date';
+import { DocExtensionExampleScheduleSelectionCalendarDatePopoverButtonComponent } from './example.calendar.schedule.selection.popover.button.component';
 
 export const DOC_EXTENSION_CALENDAR_SCHEDULE_TEST_FILTER: DateScheduleDateFilterConfig = {
   start: startOfDay(new Date()),
@@ -13,7 +14,7 @@ export const DOC_EXTENSION_CALENDAR_SCHEDULE_TEST_FILTER: DateScheduleDateFilter
 @Component({
   selector: 'doc-extension-calendar-schedule-with-filter-example',
   template: `
-    <dbx-schedule-selection-calendar></dbx-schedule-selection-calendar>
+    <dbx-schedule-selection-calendar [config]="config"></dbx-schedule-selection-calendar>
     <dbx-content-border>
       <p>Selection: {{ calendarSelectionValue$ | async | json }}</p>
     </dbx-content-border>
@@ -21,6 +22,12 @@ export const DOC_EXTENSION_CALENDAR_SCHEDULE_TEST_FILTER: DateScheduleDateFilter
   providers: [DbxCalendarScheduleSelectionStore]
 })
 export class DocExtensionCalendarScheduleSelectionWithFilterComponent {
+  readonly config: DbxScheduleSelectionCalendarComponentConfig = {
+    buttonInjectionConfig: {
+      componentClass: DocExtensionExampleScheduleSelectionCalendarDatePopoverButtonComponent
+    }
+  };
+
   readonly calendarSelectionValue$ = this.dbxCalendarScheduleSelectionStore.currentSelectionValue$;
 
   constructor(readonly dbxCalendarScheduleSelectionStore: DbxCalendarScheduleSelectionStore) {

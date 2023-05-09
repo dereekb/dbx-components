@@ -1,5 +1,5 @@
 import { combineLatest, filter, skipWhile, startWith, switchMap, MonoTypeOperatorFunction, Observable, of, OperatorFunction, map, delay, EMPTY } from 'rxjs';
-import { DecisionFunction, isMaybeSo, MapFunction, Maybe } from '@dereekb/util';
+import { DecisionFunction, Factory, Getter, GetterOrValue, getValueFromGetter, isMaybeSo, MapFunction, Maybe } from '@dereekb/util';
 import { asObservableFromGetter, MaybeObservableOrValueGetter, ObservableOrValueGetter } from './getter';
 import { ObservableDecisionFunction } from './decision';
 
@@ -92,6 +92,34 @@ export function switchMapToDefault<T = unknown>(defaultObs: MaybeObservableOrVal
       })
     )
   );
+}
+
+export interface SwitchMapObjectConfig<T> {
+  defaultGetter?: GetterOrValue<Maybe<T>>;
+}
+
+/**
+ * Provides a switchMap that retrieves and emits the value from the observable, unless the value is null/undefined/true in which case it emits the default value. If the value is false, null is emitted.
+ */
+export function switchMapObject<T extends object>(config: SwitchMapObjectConfig<T>): OperatorFunction<Maybe<ObservableOrValueGetter<Maybe<T | boolean>>>, Maybe<T>> {
+  const { defaultGetter } = config;
+  return switchMap((inputConfig: Maybe<ObservableOrValueGetter<Maybe<T | boolean>>>) => {
+    const obs: Observable<Maybe<T>> = asObservableFromGetter(inputConfig).pipe(
+      map((input) => {
+        let config: Maybe<T>;
+
+        if (input == null || input === true) {
+          config = defaultGetter ? getValueFromGetter(defaultGetter) : null;
+        } else if (input !== false) {
+          config = input;
+        }
+
+        return config;
+      })
+    );
+
+    return obs;
+  });
 }
 
 /**
