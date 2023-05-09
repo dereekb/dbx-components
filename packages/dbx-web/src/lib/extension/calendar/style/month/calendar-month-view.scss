@@ -36,6 +36,8 @@
       display: flex;
       flex-direction: column;
       align-items: stretch;
+      font-size: variables.$cal-month-weekday-header-font-size;
+      line-height: variables.$cal-month-weekday-header-line-height;
 
       .cal-event {
         pointer-events: all !important;

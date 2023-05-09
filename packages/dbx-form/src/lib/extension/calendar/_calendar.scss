@@ -9,6 +9,10 @@
     .dbx-calendar {
       height: unset;
 
+      .dbx-calendar-header {
+        height: unset;
+      }
+
       .cal-month-view .cal-cell-top {
         min-height: 50px;
       }

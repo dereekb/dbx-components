@@ -337,6 +337,11 @@
       border-color: map-get($theme, border-color);
     }
 
+    .cal-header {
+      font-size: variables.$cal-week-weekday-header-font-size;
+      line-height: variables.$cal-week-weekday-header-line-height;
+    }
+
     .cal-header.cal-today {
       background-color: map-get($theme, today-bg);
     }
