@@ -1,6 +1,6 @@
 import { itShouldFail, expectFail } from '@dereekb/util/test';
 import { startOfDay, addDays, addHours, addWeeks, startOfWeek, endOfWeek, endOfDay } from 'date-fns';
-import { dateRange, dateRangeOverlapsDateRangeFunction, DateRangeType, expandDaysForDateRangeFunction, fitDateRangeToDayPeriod, isDateInDateRangeFunction, isDateRangeInDateRangeFunction, isSameDateDayRange, iterateDaysInDateRangeFunction } from './date.range';
+import { clampDateFunction, clampDateRangeFunction, dateRange, dateRangeOverlapsDateRangeFunction, DateRangeType, expandDaysForDateRangeFunction, fitDateRangeToDayPeriod, isDateInDateRangeFunction, isDateRangeInDateRangeFunction, isSameDateDayRange, iterateDaysInDateRangeFunction } from './date.range';
 
 describe('dateRange()', () => {
   describe('week', () => {
@@ -251,5 +251,153 @@ describe('fitDateRangeToDayPeriod()', () => {
       expect(result.start).toBeSameSecondAs(start);
       expect(result.end).toBeSameSecondAs(expectedEnd);
     });
+  });
+});
+
+describe('clampDateFunction()', () => {
+  describe('date range with start only', () => {
+    const dateRange = { start: new Date() };
+    const fn = clampDateFunction(dateRange);
+
+    it('should clamp the start date.', () => {
+      const result = fn(addDays(new Date(), -1));
+      expect(result).toBeSameSecondAs(dateRange.start);
+    });
+
+    it('should not clamp the end date.', () => {
+      const input = addDays(new Date(), 1);
+      const result = fn(input);
+      expect(result).toBeSameSecondAs(input);
+    });
+  });
+
+  describe('date range with end only', () => {
+    const dateRange = { end: new Date() };
+    const fn = clampDateFunction(dateRange);
+
+    it('should clamp the end date.', () => {
+      const result = fn(addDays(new Date(), 1));
+      expect(result).toBeSameSecondAs(dateRange.end);
+    });
+
+    it('should not clamp the start date.', () => {
+      const input = addDays(new Date(), -1);
+      const result = fn(input);
+      expect(result).toBeSameSecondAs(input);
+    });
+  });
+
+  describe('date range with start and end', () => {
+    const dateRange = { start: new Date(), end: new Date() };
+    const fn = clampDateFunction(dateRange);
+
+    it('should clamp the start date.', () => {
+      const result = fn(addDays(new Date(), -1));
+      expect(result).toBeSameSecondAs(dateRange.start);
+    });
+
+    it('should clamp the end date.', () => {
+      const result = fn(addDays(new Date(), 1));
+      expect(result).toBeSameSecondAs(dateRange.end);
+    });
+  });
+});
+
+describe('clampDateRangeFunction()', () => {
+  describe('defaultClampNullValues=false/undefined', () => {
+    describe('date range with start only', () => {
+      const dateRange = { start: new Date() };
+      const fn = clampDateRangeFunction(dateRange);
+
+      describe('date range input with start only', () => {
+        it('should clamp the start date.', () => {
+          const result = fn({ start: addDays(new Date(), -1) });
+          expect(result.start).toBeSameSecondAs(dateRange.start);
+          expect(result.end).toBeUndefined();
+        });
+      });
+
+      describe('date range input with end only', () => {
+        it('should not clamp the end date.', () => {
+          const input = addDays(new Date(), 1);
+          const result = fn({ end: input });
+          expect(result.start).toBeUndefined();
+          expect(result.end).toBeSameSecondAs(input);
+        });
+      });
+    });
+
+    describe('date range with end only', () => {
+      const dateRange = { end: new Date() };
+      const fn = clampDateRangeFunction(dateRange);
+
+      describe('date range input with end only', () => {
+        it('should clamp the end date.', () => {
+          const result = fn({ end: addDays(new Date(), 1) });
+          expect(result.start).toBeUndefined();
+          expect(result.end).toBeSameSecondAs(dateRange.end);
+        });
+      });
+
+      describe('date range input with start only', () => {
+        it('should not clamp the start date.', () => {
+          const input = addDays(new Date(), -1);
+          const result = fn({ start: input });
+          expect(result.start).toBeSameSecondAs(input);
+          expect(result.end).toBeUndefined();
+        });
+      });
+    });
+  });
+
+  describe('defaultClampNullValues=true', () => {
+    describe('date range with start only', () => {
+      const dateRange = { start: new Date() };
+      const fn = clampDateRangeFunction(dateRange, true);
+
+      describe('date range input with start only', () => {
+        it('should clamp the start date.', () => {
+          const result = fn({ start: addDays(new Date(), -1) });
+          expect(result.start).toBeSameSecondAs(dateRange.start);
+          expect(result.end).toBeUndefined();
+        });
+      });
+
+      describe('date range input with end only', () => {
+        it('should add the start date and not clamp the end date.', () => {
+          const input = addDays(new Date(), 1);
+          const result = fn({ end: input });
+          expect(result.start).toBeSameSecondAs(dateRange.start);
+          expect(result.end).toBeSameSecondAs(input);
+        });
+      });
+    });
+
+    describe('date range with end only', () => {
+      const dateRange = { end: new Date() };
+      const fn = clampDateRangeFunction(dateRange, true);
+
+      describe('date range input with end only', () => {
+        it('should clamp the end date.', () => {
+          const result = fn({ end: addDays(new Date(), 1) });
+          expect(result.start).toBeUndefined();
+          expect(result.end).toBeSameSecondAs(dateRange.end);
+        });
+      });
+
+      describe('date range input with start only', () => {
+        it('should add the end date and not clamp the start date.', () => {
+          const input = addDays(new Date(), -1);
+          const result = fn({ start: input });
+          expect(result.start).toBeSameSecondAs(input);
+          expect(result.end).toBeSameSecondAs(dateRange.end);
+        });
+      });
+    });
+  });
+
+  describe('date range with start and end', () => {
+    const dateRange = { start: new Date(), end: new Date() };
+    const fn = clampDateRangeFunction(dateRange);
   });
 });
