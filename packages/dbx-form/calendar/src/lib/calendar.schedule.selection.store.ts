@@ -28,12 +28,13 @@ import {
   isSameDateRange,
   isSameDateScheduleRange,
   DateOrDateRangeOrDateBlockIndexOrDateBlockRange,
-  dateTimingRelativeIndexArrayFactory
+  dateTimingRelativeIndexArrayFactory,
+  isInfiniteDateRange
 } from '@dereekb/date';
 import { filterMaybe, switchMapToDefault } from '@dereekb/rxjs';
-import { Maybe, TimezoneString, DecisionFunction, IterableOrValue, iterableToArray, addToSet, toggleInSet, isIndexNumberInIndexRangeFunction, MaybeMap, minAndMaxNumber, setsAreEquivalent, DayOfWeek, range, AllOrNoneSelection, unique, mergeArrays, ArrayOrValue } from '@dereekb/util';
+import { Maybe, TimezoneString, DecisionFunction, IterableOrValue, iterableToArray, addToSet, toggleInSet, isIndexNumberInIndexRangeFunction, MaybeMap, minAndMaxNumber, setsAreEquivalent, DayOfWeek, range, AllOrNoneSelection, unique, mergeArrays, ArrayOrValue, objectHasNoKeys } from '@dereekb/util';
 import { ComponentStore } from '@ngrx/component-store';
-import { addYears, startOfDay, startOfYear } from 'date-fns';
+import { addYears, startOfDay, endOfDay, startOfYear } from 'date-fns';
 import { Observable, distinctUntilChanged, map, shareReplay, combineLatest, switchMap, of, tap, first } from 'rxjs';
 import { CalendarScheduleSelectionCellContentFactory, CalendarScheduleSelectionValue, defaultCalendarScheduleSelectionCellContentFactory } from './calendar.schedule.selection';
 
@@ -64,13 +65,9 @@ export interface CalendarScheduleSelectionState extends PartialCalendarScheduleS
    */
   computedExclusions?: Maybe<DateBlockIndex[]>;
   /**
-   * Minimum date allowed if no filter is set. If a filter is set, the greater of the two dates is used as the minimum.
+   * The min/max date range. Used for restricting the min/max value. Works with the filter. The greater/lesser of the start/end dates are used if both are provided.
    */
-  minDate?: Maybe<Date>;
-  /**
-   * Maximum date allowed if no filter is set. If a filter is set, the lesser of the two dates is used as the maximum.
-   */
-  maxDate?: Maybe<Date>;
+  minMaxDateRange?: Maybe<Partial<DateRange>>;
   /**
    * Start date. Is updated as the inputStart is modified or filter is provided that provides the start date.
    *
@@ -151,25 +148,23 @@ export function initialCalendarScheduleSelectionState(): CalendarScheduleSelecti
     indexDayOfWeek,
     isEnabledFilterDay: () => true,
     isEnabledDay: () => false,
-    minDate: null,
-    maxDate: null,
     computeSelectionResultRelativeToFilter: true,
     cellContentFactory: defaultCalendarScheduleSelectionCellContentFactory
   };
 }
 
 export function calendarScheduleMinDate(x: CalendarScheduleSelectionState): Maybe<Date> {
-  return findMaxDate([x.filter?.start, x.minDate]);
+  return findMaxDate([x.filter?.start, x.minMaxDateRange?.start]);
 }
 
 export function calendarScheduleMaxDate(x: CalendarScheduleSelectionState): Maybe<Date> {
-  return findMinDate([x.filter?.end, x.maxDate]);
+  return findMinDate([x.filter?.end, x.minMaxDateRange?.end]);
 }
 
-export function calendarScheduleMinAndMaxDate(x: CalendarScheduleSelectionState): Pick<CalendarScheduleSelectionState, 'minDate' | 'maxDate'> {
+export function calendarScheduleMinAndMaxDateRange(x: CalendarScheduleSelectionState): Partial<DateRange> {
   return {
-    minDate: calendarScheduleMinDate(x),
-    maxDate: calendarScheduleMaxDate(x)
+    start: calendarScheduleMinDate(x) || undefined,
+    end: calendarScheduleMaxDate(x) || undefined
   };
 }
 
@@ -201,8 +196,21 @@ export class DbxCalendarScheduleSelectionStore extends ComponentStore<CalendarSc
     shareReplay(1)
   );
 
-  readonly hasConfiguredMinMaxRange$ = this.state$.pipe(
-    map((x) => Boolean(x.minDate && x.maxDate) || Boolean(x.filter && x.filter.start && x.filter.end)),
+  readonly minMaxDateRange$ = this.state$.pipe(map(calendarScheduleMinAndMaxDateRange), distinctUntilChanged(isSameDateRange), shareReplay(1));
+
+  readonly minDate$ = this.minMaxDateRange$.pipe(
+    map((x) => x?.start),
+    distinctUntilChanged(isSameDateDay),
+    shareReplay(1)
+  );
+  readonly maxDate$ = this.minMaxDateRange$.pipe(
+    map((x) => x?.end),
+    distinctUntilChanged(isSameDateDay),
+    shareReplay(1)
+  );
+
+  readonly hasConfiguredMinMaxRange$ = this.minMaxDateRange$.pipe(
+    map((x) => x != null && x.start != null && x.end != null),
     distinctUntilChanged(),
     shareReplay(1)
   );
@@ -304,10 +312,6 @@ export class DbxCalendarScheduleSelectionStore extends ComponentStore<CalendarSc
 
   readonly dateScheduleRangeValue$ = this.currentDateScheduleRangeValue$.pipe(filterMaybe(), shareReplay(1));
 
-  readonly minDate$ = this.state$.pipe(map(calendarScheduleMinDate), distinctUntilChanged(isSameDateDay), shareReplay(1));
-
-  readonly maxDate$ = this.state$.pipe(map(calendarScheduleMaxDate), distinctUntilChanged(isSameDateDay), shareReplay(1));
-
   readonly cellContentFactory$ = this.state$.pipe(
     map((x) => x.cellContentFactory),
     distinctUntilChanged(),
@@ -321,6 +325,7 @@ export class DbxCalendarScheduleSelectionStore extends ComponentStore<CalendarSc
   );
 
   // MARK: State Changes
+  readonly setMinMaxDateRange = this.updater((state, filter: Maybe<Partial<DateRange>>) => updateStateWithMinMaxDateRange(state, filter));
   readonly setFilter = this.updater((state, filter: Maybe<DateScheduleDateFilterConfig>) => updateStateWithFilter(state, filter));
   readonly setExclusions = this.updater((state, exclusions: Maybe<ArrayOrValue<DateOrDateRangeOrDateBlockIndexOrDateBlockRange>>) => updateStateWithExclusions(state, exclusions));
   readonly setComputeSelectionResultRelativeToFilter = this.updater((state, computeSelectionResultRelativeToFilter: Maybe<boolean>) => updateStateWithComputeSelectionResultRelativeToFilter(state, computeSelectionResultRelativeToFilter));
@@ -376,13 +381,29 @@ export function updateStateWithExclusions(state: CalendarScheduleSelectionState,
   return updateStateWithFilter(state, state.filter);
 }
 
+export function updateStateWithMinMaxDateRange(state: CalendarScheduleSelectionState, minMaxDateRange: Maybe<Partial<DateRange>>): CalendarScheduleSelectionState {
+  state = { ...state };
+
+  if (minMaxDateRange != null && !isInfiniteDateRange(minMaxDateRange)) {
+    state.minMaxDateRange = {
+      start: minMaxDateRange.start != null ? startOfDay(minMaxDateRange.start) : undefined,
+      end: minMaxDateRange.end != null ? endOfDay(minMaxDateRange.end) : undefined
+    };
+  } else {
+    delete state.minMaxDateRange;
+  }
+
+  return updateStateWithFilter(state, state.filter);
+}
+
 export function updateStateWithFilter(state: CalendarScheduleSelectionState, inputFilter: Maybe<DateScheduleDateFilterConfig>): CalendarScheduleSelectionState {
-  const { computedExclusions: exclusions } = state;
+  const { computedExclusions: exclusions, minMaxDateRange } = state;
 
   let isEnabledFilterDay: Maybe<DecisionFunction<DateOrDateBlockIndex>> = () => true;
   let filter: Maybe<DateScheduleDateFilterConfig> = null;
 
-  if (inputFilter || exclusions?.length) {
+  // create the filter using inputFilter, exclusions, and minMaxDateRange
+  if (inputFilter || exclusions?.length || minMaxDateRange) {
     let enabledFilter: DateScheduleDateFilterConfig;
 
     if (inputFilter) {
@@ -403,12 +424,24 @@ export function updateStateWithFilter(state: CalendarScheduleSelectionState, inp
       };
     }
 
+    if (minMaxDateRange) {
+      enabledFilter.minMaxDateRange = minMaxDateRange;
+      enabledFilter.setStartAsMinDate = false;
+    }
+
+    /**
+     * If the input filter has a start date, use that as the relative start to ensure indexes are compared the same,
+     * otherwise use the state's start. This is important for the index calculations.
+     */
+    enabledFilter.start = inputFilter?.start ?? state.start;
+
+    // create the filter
     isEnabledFilterDay = dateScheduleDateFilter(enabledFilter);
   }
 
   state = { ...state, filter, isEnabledFilterDay };
 
-  // If the input filter has a start date, use that as the relative start to ensure indexes are compared the same.
+  // For the same reason as above, use the filter's start date as the relative start if applicable.
   if (filter && filter.start) {
     const start = filter.start;
     state.start = start;
@@ -469,8 +502,8 @@ export interface CalendarScheduleSelectionStateDatesChange {
 }
 
 export function updateStateWithChangedDates(state: CalendarScheduleSelectionState, change: CalendarScheduleSelectionStateDatesChange): CalendarScheduleSelectionState {
-  const { indexFactory, allowedDaysOfWeek, indexDayOfWeek, inputStart: currentInputStart, inputEnd: currentInputEnd } = state;
-  const { minDate, maxDate } = calendarScheduleMinAndMaxDate(state);
+  const { indexFactory, allowedDaysOfWeek, indexDayOfWeek, inputStart: currentInputStart, inputEnd: currentInputEnd, minMaxDateRange } = state;
+  const { start: minDate, end: maxDate } = calendarScheduleMinAndMaxDateRange(state);
   let inputStart = currentInputStart;
   let inputEnd = currentInputEnd;
 
@@ -534,10 +567,11 @@ export function noSelectionCalendarScheduleSelectionState(state: CalendarSchedul
 }
 
 export function updateStateWithChangedRange(state: CalendarScheduleSelectionState, change: CalendarScheduleSelectionInputDateRange): CalendarScheduleSelectionState {
-  const { inputStart: currentInputStart, inputEnd: currentInputEnd, indexFactory, minDate, maxDate } = state;
+  const { inputStart: currentInputStart, inputEnd: currentInputEnd, indexFactory, minMaxDateRange } = state;
+  const { start: minDate, end: maxDate }: Partial<DateRange> = minMaxDateRange ?? {};
 
   let inputStart: Date = startOfDay(change.inputStart);
-  let inputEnd: Date = startOfDay(change.inputEnd);
+  let inputEnd: Date = endOfDay(change.inputEnd);
 
   const isValidRange = minDate != null || maxDate != null ? isDateInDateRangeFunction({ start: minDate ?? undefined, end: maxDate ?? undefined }) : () => true;
 

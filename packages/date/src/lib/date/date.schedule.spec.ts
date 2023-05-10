@@ -159,7 +159,7 @@ describe('dateScheduleDateFilter()', () => {
         });
       });
 
-      // TODO: Test max date range
+      // TODO: Test min/max date range
     });
   });
 });

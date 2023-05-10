@@ -75,6 +75,24 @@ export function isSameDateDayRange(a: Maybe<Partial<DateRange>>, b: Maybe<Partia
   return a && b ? isSameDateDay(a.start, b.start) && isSameDateDay(a.end, b.end) : a == b;
 }
 
+/**
+ * Returns true if the date range has no start or end.
+ *
+ * @param input
+ * @returns
+ */
+export function isInfiniteDateRange(input: Partial<DateRange>): boolean {
+  return input.start == null && input.end == null;
+}
+
+export function isPartialDateRange(input: Partial<DateRange>): input is DateRange {
+  return (input.start != null || input.end != null) && !isFullDateRange(input);
+}
+
+export function isFullDateRange(input: Partial<DateRange>): input is DateRange {
+  return input.start != null && input.end != null;
+}
+
 export type DateOrDateRange = Date | DateRange;
 
 export function dateOrDateRangeToDateRange(startOrDateRange: DateOrDateRange, end?: Maybe<Date>): DateRange {
@@ -439,12 +457,14 @@ export function dateRangeState({ start, end }: DateRange): DateRangeState {
   }
 }
 
-export type DateRangeFunctionDateRangeRef<T extends Partial<DateRange> = DateRange> = {
+export type DateRangeFunctionDateRangeRef<T extends Partial<DateRange> = Partial<DateRange>> = {
   readonly _dateRange: T;
 };
 
 /**
  * Returns true if the input date is contained within the configured DateRange or DateRangeStart.
+ *
+ * A dateRange that has no start and end is considered to include all dates.
  */
 export type IsDateInDateRangeFunction<T extends Partial<DateRange> = DateRange> = ((date: Date) => boolean) & DateRangeFunctionDateRangeRef<T>;
 
@@ -484,7 +504,7 @@ export function isDateInDateRangeFunction<T extends Partial<DateRange>>(dateRang
       return time <= endTime;
     }) as IsDateInDateRangeFunction<T>;
   } else {
-    fn = ((input: Date) => false) as IsDateInDateRangeFunction<T>;
+    fn = ((input: Date) => true) as IsDateInDateRangeFunction<T>;
   }
 
   fn._dateRange = dateRange;
@@ -495,9 +515,9 @@ export function isDateInDateRangeFunction<T extends Partial<DateRange>>(dateRang
 /**
  * Returns true if the input DateRange is contained within the configured DateRange.
  */
-export type IsDateRangeInDateRangeFunction<T extends DateRange = DateRange> = ((dateRange: DateRange) => boolean) & DateRangeFunctionDateRangeRef<T>;
+export type IsDateRangeInDateRangeFunction<T extends Partial<DateRange> = Partial<DateRange>> = ((dateRange: DateRange) => boolean) & DateRangeFunctionDateRangeRef<T>;
 
-export function isDateRangeInDateRange(compareDateRange: DateRange, dateRange: DateRange): boolean {
+export function isDateRangeInDateRange(compareDateRange: DateRange, dateRange: Partial<DateRange>): boolean {
   return isDateRangeInDateRangeFunction(dateRange)(compareDateRange);
 }
 
@@ -507,16 +527,13 @@ export function isDateRangeInDateRange(compareDateRange: DateRange, dateRange: D
  * @param dateRange
  * @returns
  */
-export function isDateRangeInDateRangeFunction<T extends DateRange = DateRange>(dateRange: T): IsDateRangeInDateRangeFunction<T> {
-  const startTime = dateRange.start.getTime();
-  const endTime = dateRange.end.getTime();
+export function isDateRangeInDateRangeFunction<T extends Partial<DateRange> = DateRange>(dateRange: T): IsDateRangeInDateRangeFunction<T> {
+  const isDateInDateRange = isDateInDateRangeFunction(dateRange);
 
   const fn = ((input: DateRange) => {
-    return input.start.getTime() >= startTime && input.end.getTime() <= endTime;
+    return isDateInDateRange(input.start) && isDateInDateRange(input.end);
   }) as Building<IsDateRangeInDateRangeFunction<T>>;
-
   fn._dateRange = dateRange;
-
   return fn as IsDateRangeInDateRangeFunction<T>;
 }
 
@@ -579,9 +596,7 @@ export function fitDateRangeToDayPeriod<T extends DateRange = DateRange>(dateRan
 /**
  * Clamps the input range to the pre-configured date range.
  */
-export type ClampDateFunction = ((date: Date) => Date) & {
-  readonly _dateRange: Partial<DateRange>;
-};
+export type ClampDateFunction = ((date: Date) => Date) & DateRangeFunctionDateRangeRef;
 
 export function clampDateFunction(dateRange: Partial<DateRange>): ClampDateFunction {
   let fn: Building<ClampDateFunction>;
@@ -639,13 +654,8 @@ export function clampDateToDateRange(date: Date, dateRange: Partial<DateRange>) 
   return clampDateFunction(dateRange)(date);
 }
 
-export type ClampPartialDateRangeFunction = ((date: Partial<DateRange>, clampNullValues?: boolean) => Partial<DateRange>) & {
-  readonly _dateRange: Partial<DateRange>;
-};
-
-export type ClampDateRangeFunction = ((date: Partial<DateRange>, clampNullValues?: boolean) => DateRange) & {
-  readonly _dateRange: DateRange;
-};
+export type ClampPartialDateRangeFunction = ((date: Partial<DateRange>, clampNullValues?: boolean) => Partial<DateRange>) & DateRangeFunctionDateRangeRef;
+export type ClampDateRangeFunction = ((date: Partial<DateRange>, clampNullValues?: boolean) => DateRange) & DateRangeFunctionDateRangeRef<DateRange>;
 
 export function clampDateRangeFunction(dateRange: DateRange, defaultClampNullValues?: boolean): ClampDateRangeFunction;
 export function clampDateRangeFunction(dateRange: Partial<DateRange>, defaultClampNullValues?: boolean): ClampPartialDateRangeFunction;

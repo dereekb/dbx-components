@@ -1,9 +1,10 @@
 import { Injectable } from '@angular/core';
-import { isDateInDateRange } from '@dereekb/date';
+import { clampDateToDateRange, DateRange, isDateInDateRange, isFullDateRange, isSameDateDay, isSameDateRange } from '@dereekb/date';
+import { Maybe } from '@dereekb/util';
 import { ComponentStore } from '@ngrx/component-store';
 import { CalendarEvent } from 'angular-calendar';
 import { differenceInDays, addDays, endOfDay, endOfMonth, endOfWeek, isSameDay, startOfDay, startOfMonth, startOfWeek, isBefore, isAfter } from 'date-fns';
-import { Observable, distinctUntilChanged, first, map, shareReplay, switchMap, tap } from 'rxjs';
+import { Observable, distinctUntilChanged, first, map, shareReplay, switchMap, tap, combineLatest } from 'rxjs';
 
 export enum CalendarDisplayType {
   MONTH = 'month',
@@ -16,29 +17,49 @@ export interface CalendarViewDateRange {
   start: Date;
   end: Date;
   distance: number;
+  /**
+   * Whether or not the min navigation date is currently visible. This implies that we're at the minimum date.
+   */
+  isMinDateVisible: boolean;
+  /**
+   * Whether or not the maximum navigation date is visible. This implies that we're at the maximum date.
+   */
+  isMaxDateVisible: boolean;
 }
 
 export interface CalendarState<T = any> {
   /**
    * Calendar display mode
    */
-  type: CalendarDisplayType;
+  readonly type: CalendarDisplayType;
+  /**
+   * Whether or not to show the today button. Defaults to true.
+   */
+  readonly showTodayButton?: boolean;
   /**
    * Date that is selected.
    */
-  date: Date;
+  readonly date: Date;
   /**
    * Whether or not the day was tapped/set twice.
    */
-  dateTappedTwice: boolean;
+  readonly dateTappedTwice: boolean;
   /**
    * Set of calendar events.
    */
-  events: CalendarEvent<T>[];
+  readonly events: CalendarEvent<T>[];
+  /**
+   * Optional navigation range limitation that limits which dates can be navigated to.
+   */
+  readonly navigationRangeLimit?: Maybe<Partial<DateRange>>;
+  /**
+   * Whether or not to display the page buttons when applicable. Can only be displayed when a navigationRangeLimit is set.
+   */
+  readonly showPageButtons?: boolean;
 }
 
 export function visibleDateRangeForCalendarState(calendarState: CalendarState): CalendarViewDateRange {
-  const { type, date } = calendarState;
+  const { navigationRangeLimit, type, date } = calendarState;
   let start: Date;
   let end: Date;
   let distance: number;
@@ -61,13 +82,16 @@ export function visibleDateRangeForCalendarState(calendarState: CalendarState): 
       break;
   }
 
-  // console.log('Date range: ', start, end, distance);
+  const isMinDateVisible: boolean = navigationRangeLimit?.start != null ? isBefore(start, navigationRangeLimit.start) : false;
+  const isMaxDateVisible: boolean = navigationRangeLimit?.end != null ? isAfter(end, navigationRangeLimit.end) : false;
 
   return {
     type,
     start,
     end,
-    distance
+    distance,
+    isMinDateVisible,
+    isMaxDateVisible
   };
 }
 
@@ -78,6 +102,7 @@ export class DbxCalendarStore<T = any> extends ComponentStore<CalendarState<T>> 
   constructor() {
     super({
       type: CalendarDisplayType.MONTH,
+      showTodayButton: true,
       date: new Date(),
       dateTappedTwice: false,
       events: []
@@ -85,13 +110,30 @@ export class DbxCalendarStore<T = any> extends ComponentStore<CalendarState<T>> 
   }
 
   // MARK: Effects
+  readonly tapFirstPage = this.effect((input: Observable<void>) => {
+    return input.pipe(
+      switchMap(() =>
+        this.minNavigationDate$.pipe(
+          first(),
+          tap((x) => {
+            if (x) {
+              this.tapDay(x);
+            }
+          })
+        )
+      )
+    );
+  });
+
   readonly tapNext = this.effect((input: Observable<void>) => {
     return input.pipe(
       switchMap(() =>
         this.visibleDateRange$.pipe(
           first(),
-          tap(({ end }) => {
-            this.tapDay(addDays(end, 1));
+          tap(({ end, isMaxDateVisible }) => {
+            if (!isMaxDateVisible) {
+              this.tapDay(addDays(end, 1));
+            }
           })
         )
       )
@@ -103,8 +145,25 @@ export class DbxCalendarStore<T = any> extends ComponentStore<CalendarState<T>> 
       switchMap(() =>
         this.visibleDateRange$.pipe(
           first(),
-          tap(({ start }) => {
-            this.tapDay(addDays(start, -1));
+          tap(({ start, isMinDateVisible }) => {
+            if (!isMinDateVisible) {
+              this.tapDay(addDays(start, -1));
+            }
+          })
+        )
+      )
+    );
+  });
+
+  readonly tapLastPage = this.effect((input: Observable<void>) => {
+    return input.pipe(
+      switchMap(() =>
+        this.maxNavigationDate$.pipe(
+          first(),
+          tap((x) => {
+            if (x) {
+              this.tapDay(x);
+            }
           })
         )
       )
@@ -112,6 +171,13 @@ export class DbxCalendarStore<T = any> extends ComponentStore<CalendarState<T>> 
   });
 
   // MARK: Accessors
+
+  readonly showTodayButton$ = this.state$.pipe(
+    map((x) => x.showTodayButton),
+    distinctUntilChanged(),
+    shareReplay()
+  );
+
   readonly date$ = this.state$.pipe(map((x) => x.date));
   readonly dateTappedTwice$ = this.state$.pipe(map((x) => x.dateTappedTwice));
 
@@ -135,7 +201,7 @@ export class DbxCalendarStore<T = any> extends ComponentStore<CalendarState<T>> 
 
   readonly eventsForDate$ = this.eventsForDateState$.pipe(map((state) => state.events));
 
-  readonly visibleDateRange$ = this.state$.pipe(
+  readonly visibleDateRange$: Observable<CalendarViewDateRange> = this.state$.pipe(
     // If the date or type changes, check again.
     distinctUntilChanged((a, b) => a?.date === b?.date && a?.type === b?.type),
     map(visibleDateRangeForCalendarState),
@@ -150,7 +216,19 @@ export class DbxCalendarStore<T = any> extends ComponentStore<CalendarState<T>> 
   );
 
   readonly isLookingAtToday$ = this.visibleDateRange$.pipe(
-    map((x) => isDateInDateRange(new Date(), { start: x.start, end: x.end })),
+    map((x) => isDateInDateRange(new Date(), x)),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+
+  readonly isLookingAtMinimumDate$ = this.visibleDateRange$.pipe(
+    map((x) => x.isMinDateVisible),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+
+  readonly isLookingAtMaximumDate$ = this.visibleDateRange$.pipe(
+    map((x) => x.isMaxDateVisible),
     distinctUntilChanged(),
     shareReplay(1)
   );
@@ -161,13 +239,49 @@ export class DbxCalendarStore<T = any> extends ComponentStore<CalendarState<T>> 
     shareReplay(1)
   );
 
+  readonly navigationRangeLimit$ = this.state$.pipe(
+    map((x) => x.navigationRangeLimit),
+    distinctUntilChanged(isSameDateRange),
+    shareReplay(1)
+  );
+
+  readonly minNavigationDate$: Observable<Maybe<Date>> = this.navigationRangeLimit$.pipe(
+    map((x) => x?.start),
+    distinctUntilChanged(isSameDateDay),
+    shareReplay(1)
+  );
+
+  readonly maxNavigationDate$: Observable<Maybe<Date>> = this.navigationRangeLimit$.pipe(
+    map((x) => x?.end),
+    distinctUntilChanged(isSameDateDay),
+    shareReplay(1)
+  );
+
+  readonly isTodayInNavigationRangeLimit$ = this.navigationRangeLimit$.pipe(
+    map((x) => isDateInDateRange(new Date(), x ?? {})),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+
+  readonly canJumpToToday$ = combineLatest([this.isLookingAtToday$, this.isTodayInNavigationRangeLimit$]).pipe(
+    map(([isLookingAtToday, isTodayInNavigationRangeLimit]) => !isLookingAtToday && isTodayInNavigationRangeLimit),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+
+  readonly canShowPageButtons$ = this.state$.pipe(
+    map((x) => x.showPageButtons && x.navigationRangeLimit && isFullDateRange(x.navigationRangeLimit)),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+
   // MARK: State Changes
   /**
    * Tap a day.
    *
    * - If the same day is presented, dateTappedTwice is flipped.
    */
-  readonly tapDay = this.updater((state, date: Date) => ({ ...state, date, dateTappedTwice: isSameDay(date, state.date) ? !state.dateTappedTwice : false }));
+  readonly tapDay = this.updater((state, date: Date) => updateCalendarStateWithTappedDate(state, date));
 
   /**
    * Set all events on the calendar.
@@ -178,4 +292,36 @@ export class DbxCalendarStore<T = any> extends ComponentStore<CalendarState<T>> 
    * Set all events on the calendar.
    */
   readonly setDisplayType = this.updater((state, type: CalendarDisplayType) => ({ ...state, type }));
+
+  /**
+   * Sets the navigation limit.
+   */
+  readonly setNavigationRangeLimit = this.updater((state, navigationRangeLimit: Maybe<Partial<DateRange>>) => updateCalendarStateWithNavigationRangeLimit(state, navigationRangeLimit));
+
+  readonly setShowTodayButton = this.updater((state, showTodayButton: Maybe<boolean>) => ({ ...state, showTodayButton: showTodayButton != null ? showTodayButton : true }));
+  readonly setShowPageButtons = this.updater((state, showPageButtons: Maybe<boolean>) => ({ ...state, showPageButtons: showPageButtons != null ? showPageButtons : false }));
+}
+
+export function updateCalendarStateWithTappedDate(state: CalendarState, date: Date) {
+  // only update the date if it is different
+  if (!isSameDateDay(state.date, date)) {
+    // Only update the date if it is within the date range
+    if (!state.navigationRangeLimit || isDateInDateRange(date, state.navigationRangeLimit)) {
+      state = { ...state, date, dateTappedTwice: isSameDay(date, state.date) ? !state.dateTappedTwice : false };
+    }
+  }
+
+  return state;
+}
+
+export function updateCalendarStateWithNavigationRangeLimit(state: CalendarState, navigationRangeLimit: Maybe<Partial<DateRange>>) {
+  const { date } = state;
+
+  // cap the date if it doesn't fall within the range.
+  if (navigationRangeLimit && !isDateInDateRange(date, navigationRangeLimit)) {
+    const clampedDate = clampDateToDateRange(date, navigationRangeLimit);
+    return { ...state, date: clampedDate, navigationRangeLimit };
+  } else {
+    return { ...state, navigationRangeLimit };
+  }
 }

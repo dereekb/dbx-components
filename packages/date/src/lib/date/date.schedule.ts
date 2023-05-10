@@ -3,7 +3,7 @@ import { Expose } from 'class-transformer';
 import { IsString, Matches, IsOptional, Min, IsArray } from 'class-validator';
 import { getDay } from 'date-fns';
 import { copyHoursAndMinutesFromDate } from './date';
-import { DateBlock, dateBlockDayOfWeekFactory, DateBlockDurationSpan, DateBlockIndex, dateBlockIndexRange, DateBlockRange, DateBlockRangeWithRange, DateBlocksExpansionFactory, dateBlocksExpansionFactory, dateBlockTiming, DateBlockTiming, dateTimingRelativeIndexFactory, getCurrentDateBlockTimingStartDate, groupToDateBlockRanges } from './date.block';
+import { DateBlock, dateBlockDayOfWeekFactory, DateBlockDurationSpan, DateBlockIndex, dateBlockIndexRange, DateBlockRange, DateBlockRangeOrDateRange, DateBlockRangeWithRange, DateBlocksExpansionFactory, dateBlocksExpansionFactory, dateBlockTiming, DateBlockTiming, dateTimingRelativeIndexFactory, getCurrentDateBlockTimingStartDate, groupToDateBlockRanges } from './date.block';
 import { dateBlockDurationSpanHasNotStartedFilterFunction, dateBlockDurationSpanHasNotEndedFilterFunction } from './date.filter';
 import { DateRange, isSameDateRange } from './date.range';
 import { YearWeekCodeConfig, yearWeekCodeDateTimezoneInstance } from './date.week';
@@ -356,7 +356,13 @@ export type DateScheduleDateFilter = DecisionFunction<DateScheduleDateFilterInpu
 /**
  * dateScheduleDateFilter() configuration.
  */
-export interface DateScheduleDateFilterConfig extends DateSchedule, Partial<DateRange> {}
+export interface DateScheduleDateFilterConfig extends DateSchedule, Partial<DateRange> {
+  minMaxDateRange?: Maybe<Partial<DateBlockRangeOrDateRange>>;
+  /**
+   * Whether or not to restrict the start as the min date if a min date is not set in minMaxDateRange. True by default.
+   */
+  setStartAsMinDate?: boolean;
+}
 
 export function copyDateScheduleDateFilterConfig(inputFilter: DateScheduleDateFilterConfig): DateScheduleDateFilterConfig {
   return {
@@ -375,13 +381,14 @@ export function copyDateScheduleDateFilterConfig(inputFilter: DateScheduleDateFi
  * @returns
  */
 export function dateScheduleDateFilter(config: DateScheduleDateFilterConfig): DateScheduleDateFilter {
-  const { w, start: firstDate = new Date(), end } = config;
+  const { w, start: firstDate = new Date(), setStartAsMinDate = true, end, minMaxDateRange } = config;
   const allowedDays: Set<DayOfWeek> = expandDateScheduleDayCodesToDayOfWeekSet(w);
 
   const firstDateDay = getDay(firstDate);
   const dayForIndex = dateBlockDayOfWeekFactory(firstDateDay);
   const dateIndexForDate = dateTimingRelativeIndexFactory({ start: firstDate });
-  const maxIndex = end != null ? dateIndexForDate(end) : Number.MAX_SAFE_INTEGER; // max "to" value
+  const minIndex = minMaxDateRange?.start != null ? dateIndexForDate(minMaxDateRange.start) : setStartAsMinDate ? 0 : Number.MIN_SAFE_INTEGER;
+  const maxIndex = end != null ? dateIndexForDate(end) : minMaxDateRange?.end != null ? dateIndexForDate(minMaxDateRange.end) : Number.MAX_SAFE_INTEGER; // max "to" value
   const includedIndexes = new Set(config.d);
   const excludedIndexes = new Set(config.ex);
 
@@ -397,7 +404,7 @@ export function dateScheduleDateFilter(config: DateScheduleDateFilterConfig): Da
       day = dayOfWeek(input);
     }
 
-    return (i >= 0 && i <= maxIndex && allowedDays.has(day) && !excludedIndexes.has(i)) || includedIndexes.has(i);
+    return (i >= minIndex && i <= maxIndex && allowedDays.has(day) && !excludedIndexes.has(i)) || includedIndexes.has(i);
   };
 }
 

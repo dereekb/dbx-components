@@ -831,6 +831,14 @@ export class DateBlockRange extends DateBlock {
   }
 }
 
+/**
+ * Input type used for cases where a DateRange or a DateBlockRange are allowed as input but used the start/end parameters in DateRange.
+ */
+export interface DateBlockRangeOrDateRange {
+  start?: Maybe<DateOrDateBlockIndex>;
+  end?: Maybe<DateOrDateBlockIndex>;
+}
+
 export type DateOrDateBlockIndexOrDateBlockRange = DateOrDateBlockIndex | DateBlockRange;
 export type DateOrDateRangeOrDateBlockIndexOrDateBlockRange = DateRange | DateOrDateBlockIndexOrDateBlockRange;
 

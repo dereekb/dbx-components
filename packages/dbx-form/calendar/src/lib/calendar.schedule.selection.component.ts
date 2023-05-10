@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Output, OnDestroy, ChangeDetectorRef, Input } from '@angular/core';
+import { Component, EventEmitter, Output, OnDestroy, ChangeDetectorRef, Input, OnInit } from '@angular/core';
 import { CalendarEvent, CalendarMonthViewBeforeRenderEvent, CalendarMonthViewDay } from 'angular-calendar';
 import { map, shareReplay, Subject, first, throttleTime, BehaviorSubject, distinctUntilChanged, Observable, switchMap } from 'rxjs';
 import { DbxCalendarEvent, DbxCalendarStore, prepareAndSortCalendarEvents } from '@dereekb/dbx-web/calendar';
@@ -25,7 +25,7 @@ export interface DbxScheduleSelectionCalendarComponentConfig {
   templateUrl: './calendar.schedule.selection.component.html',
   providers: [DbxCalendarStore]
 })
-export class DbxScheduleSelectionCalendarComponent<T> implements OnDestroy {
+export class DbxScheduleSelectionCalendarComponent<T> implements OnInit, OnDestroy {
   private _config = new BehaviorSubject<DbxScheduleSelectionCalendarComponentConfig>({});
 
   readonly showClearSelectionButton$ = this._config.pipe(
@@ -53,6 +53,16 @@ export class DbxScheduleSelectionCalendarComponent<T> implements OnDestroy {
   readonly viewDate$ = this.calendarStore.date$;
 
   constructor(readonly calendarStore: DbxCalendarStore<T>, readonly dbxCalendarScheduleSelectionStore: DbxCalendarScheduleSelectionStore) {}
+
+  ngOnInit(): void {
+    this.calendarStore.setNavigationRangeLimit(this.dbxCalendarScheduleSelectionStore.minMaxDateRange$); // set navigation limit to the min/max allowed dates.
+    this.calendarStore.setShowPageButtons(true);
+  }
+
+  ngOnDestroy(): void {
+    this.clickEvent.complete();
+    this._config.complete();
+  }
 
   @Input()
   get config() {
@@ -101,9 +111,5 @@ export class DbxScheduleSelectionCalendarComponent<T> implements OnDestroy {
         };
       });
     });
-  }
-
-  ngOnDestroy(): void {
-    this.clickEvent.complete();
   }
 }

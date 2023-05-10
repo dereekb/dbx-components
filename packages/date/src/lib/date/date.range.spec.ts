@@ -184,6 +184,14 @@ describe('isDateRangeInDateRangeFunction()', () => {
     it('should return true if the same dateRange is used as input.', () => {
       expect(isInDateRange(dateRange)).toBe(true);
     });
+
+    describe('range with no bounds', () => {
+      const isInDateRange = isDateRangeInDateRangeFunction({});
+
+      it('should always return true.', () => {
+        expect(isInDateRange({ start: new Date(), end: new Date() })).toBe(true);
+      });
+    });
   });
 });
 
@@ -399,5 +407,11 @@ describe('clampDateRangeFunction()', () => {
   describe('date range with start and end', () => {
     const dateRange = { start: new Date(), end: new Date() };
     const fn = clampDateRangeFunction(dateRange);
+
+    it('should clamp the start and end date.', () => {
+      const result = fn({ start: addDays(new Date(), -1), end: addDays(new Date(), 1) });
+      expect(result.start).toBeSameSecondAs(dateRange.start);
+      expect(result.end).toBeSameSecondAs(dateRange.end);
+    });
   });
 });
