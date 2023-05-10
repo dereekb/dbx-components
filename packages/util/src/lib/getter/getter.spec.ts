@@ -3,6 +3,12 @@ import { getValueFromGetter, GetterOrValueWithInput, makeWithFactory, makeWithFa
 
 class TestClass {}
 
+const TEST_FUNCTION_VALUE = 'test';
+
+function testFunction() {
+  return TEST_FUNCTION_VALUE;
+}
+
 describe('getValueFromGetter()', () => {
   describe('GetterOrValueWithInput', () => {
     it('should return the value', () => {
@@ -16,6 +22,11 @@ describe('getValueFromGetter()', () => {
       const x: GetterOrValueWithInput<number, number> = () => value;
       const result = getValueFromGetter(x);
       expect(result).toBe(value);
+    });
+
+    it('should return the value from a known function', () => {
+      const result = getValueFromGetter(testFunction);
+      expect(result).toBe(TEST_FUNCTION_VALUE);
     });
 
     it('should return the value from a getter with arguments', () => {
@@ -33,6 +44,12 @@ describe('getValueFromGetter()', () => {
 });
 
 describe('asGetter()', () => {
+  it('should return a named function as itself.', () => {
+    const fn = testFunction;
+    const result = asGetter(fn);
+    expect(result).toBe(fn);
+  });
+
   it('should return a function as itself.', () => {
     const fn = () => 1;
     const result = asGetter(fn);
@@ -43,6 +60,13 @@ describe('asGetter()', () => {
     const result = asGetter(TestClass);
     expect(result).not.toBe(TestClass);
     expect(result()).toBe(TestClass);
+  });
+
+  it('should return a Date as Getter for itself', () => {
+    const value = new Date();
+    const result = asGetter(value);
+    expect(result).not.toBe(value);
+    expect(result()).toBe(value);
   });
 });
 
