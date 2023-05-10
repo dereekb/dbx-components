@@ -2,6 +2,15 @@
 
 This file was generated using [@jscutlery/semver](https://github.com/jscutlery/semver).
 
+## [9.23.18](https://github.com/dereekb/dbx-components/compare/v9.23.17-dev...v9.23.18) (2023-05-10)
+
+
+### Bug Fixes
+
+* fixed improper behavior with asGetter()/getValueFromGetter() ([d2570e9](https://github.com/dereekb/dbx-components/commit/d2570e9acb70d824e744d38657167a49f8ddc65f))
+
+
+
 ## [9.23.17](https://github.com/dereekb/dbx-components/compare/v9.23.16-dev...v9.23.17) (2023-05-04)
 
 
