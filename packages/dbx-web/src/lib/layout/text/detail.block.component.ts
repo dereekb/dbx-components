@@ -15,7 +15,7 @@ import { Maybe } from '@dereekb/util';
     </div>
   `,
   host: {
-    class: 'dbx-detail-block'
+    class: 'dbx-detail-block d-block'
   }
 })
 export class DbxDetailBlockComponent {

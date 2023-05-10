@@ -1,5 +1,6 @@
 import { copyObject, CopyObjectFunction } from '../object/object';
 import { PromiseOrValue } from '../promise/promise';
+import { isNonClassFunction } from '../type';
 import { MapFunction } from '../value/map';
 import { Maybe } from '../value/maybe.type';
 
@@ -67,8 +68,8 @@ export function getValueFromGetter<T, A>(this: unknown, input: FactoryWithRequir
 export function getValueFromGetter<T, A>(this: unknown, input: GetterOrFactoryWithInput<T, A>, args?: A): T;
 export function getValueFromGetter<T extends string | number | object | symbol, A>(this: unknown, input: GetterOrValueWithInput<T, A>, args?: A): T;
 export function getValueFromGetter<T, A>(this: unknown, input: unknown, args?: A): T {
-  if (typeof input === 'function') {
-    return input(args);
+  if (isNonClassFunction(input)) {
+    return (input as Function)(args);
   } else {
     return input as T;
   }
@@ -81,10 +82,10 @@ export function getValueFromGetter<T, A>(this: unknown, input: unknown, args?: A
  * @returns
  */
 export function asGetter<T>(input: GetterOrValue<T>): Getter<T> {
-  if (typeof input === 'function') {
+  if (isNonClassFunction(input)) {
     return input as Getter<T>;
   } else {
-    return makeGetter(input);
+    return () => input as T;
   }
 }
 

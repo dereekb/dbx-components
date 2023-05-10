@@ -6,7 +6,7 @@ import { AllOrNoneSelection, ArrayOrValue, Maybe } from '@dereekb/util';
 import { FieldType } from '@ngx-formly/material';
 import { BehaviorSubject, distinctUntilChanged, shareReplay, startWith, Subscription, switchMap } from 'rxjs';
 import { filterMaybe, ObservableOrValue, SubscriptionObject, asObservable } from '@dereekb/rxjs';
-import { DateBlockIndex, DateOrDateRangeOrDateBlockIndexOrDateBlockRange, DateScheduleDateFilterConfig, isSameDateScheduleRange } from '@dereekb/date';
+import { DateBlockIndex, DateOrDateRangeOrDateBlockIndexOrDateBlockRange, DateRange, DateScheduleDateFilterConfig, isSameDateScheduleRange } from '@dereekb/date';
 import { CalendarScheduleSelectionState, DbxCalendarScheduleSelectionStore } from '../../calendar.schedule.selection.store';
 import { provideCalendarScheduleSelectionStoreIfParentIsUnavailable } from '../../calendar.schedule.selection.store.provide';
 import { MatFormFieldAppearance } from '@angular/material/form-field';
@@ -14,6 +14,10 @@ import { MatFormFieldAppearance } from '@angular/material/form-field';
 export interface DbxFormCalendarDateScheduleRangeFieldProps extends Pick<FormlyFieldProps, 'label' | 'description' | 'readonly' | 'required'>, Pick<CalendarScheduleSelectionState, 'computeSelectionResultRelativeToFilter' | 'initialSelectionState'> {
   appearance?: MatFormFieldAppearance;
   hideCustomize?: boolean;
+  /**
+   * Optional min/max date range to filter on. Works in conjuction with the filter.
+   */
+  minMaxDateRange?: ObservableOrValue<Maybe<Partial<DateRange>>>;
   filter?: ObservableOrValue<Maybe<DateScheduleDateFilterConfig>>;
   exclusions?: ObservableOrValue<Maybe<ArrayOrValue<DateOrDateRangeOrDateBlockIndexOrDateBlockRange>>>;
 }
@@ -31,6 +35,7 @@ export interface DbxFormCalendarDateScheduleRangeFieldProps extends Pick<FormlyF
 export class DbxFormCalendarDateScheduleRangeFieldComponent<T extends DbxFormCalendarDateScheduleRangeFieldProps = DbxFormCalendarDateScheduleRangeFieldProps> extends FieldType<FieldTypeConfig<T>> implements OnInit, OnDestroy {
   private _syncSub = new SubscriptionObject();
   private _valueSub = new SubscriptionObject();
+  private _minMaxDateRangeSub = new SubscriptionObject();
   private _filterSub = new SubscriptionObject();
   private _exclusionsSub = new SubscriptionObject();
 
@@ -70,6 +75,10 @@ export class DbxFormCalendarDateScheduleRangeFieldComponent<T extends DbxFormCal
     return !this.props.hideCustomize;
   }
 
+  get minMaxDateRange() {
+    return this.props.minMaxDateRange;
+  }
+
   get filter() {
     return this.props.filter;
   }
@@ -97,10 +106,14 @@ export class DbxFormCalendarDateScheduleRangeFieldComponent<T extends DbxFormCal
       this.formControl.setValue(x);
     });
 
-    const { filter, exclusions } = this;
+    const { minMaxDateRange, filter, exclusions } = this;
 
     if (filter != null) {
       this._filterSub.subscription = this.dbxCalendarScheduleSelectionStore.setFilter(asObservable(filter)) as Subscription;
+    }
+
+    if (minMaxDateRange != null) {
+      this._minMaxDateRangeSub.subscription = this.dbxCalendarScheduleSelectionStore.setMinMaxDateRange(asObservable(minMaxDateRange)) as Subscription;
     }
 
     if (exclusions != null) {
@@ -114,8 +127,6 @@ export class DbxFormCalendarDateScheduleRangeFieldComponent<T extends DbxFormCal
     if (this.computeSelectionResultRelativeToFilter != null) {
       this.dbxCalendarScheduleSelectionStore.setComputeSelectionResultRelativeToFilter(this.computeSelectionResultRelativeToFilter);
     }
-
-    // TODO: Also add ability to set min/max dates independent of the filter
   }
 
   override ngOnDestroy(): void {
@@ -123,6 +134,7 @@ export class DbxFormCalendarDateScheduleRangeFieldComponent<T extends DbxFormCal
     this._syncSub.destroy();
     this._valueSub.destroy();
     this._filterSub.destroy();
+    this._minMaxDateRangeSub.destroy();
     this._exclusionsSub.destroy();
     this._formControlObs.complete();
   }

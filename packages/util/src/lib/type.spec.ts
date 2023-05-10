@@ -1,5 +1,5 @@
 import { StringKeyPropertyKeys } from '@dereekb/util';
-import { AllCommaSeparatedKeysOfObject, CommaSeparatedKeyCombinationsOfObject, HasThreeCharacters, HasThreeOrMoreCharacters, IsSingleCharacter, KeyAsString, KeyCanBeString, MergeReplace, OrderedCommaSeparatedKeysOfObject, Replace, ReplaceType, StringConcatenation, StringKeyProperties } from './type';
+import { AllCommaSeparatedKeysOfObject, CommaSeparatedKeyCombinationsOfObject, getFunctionType, HasThreeCharacters, HasThreeOrMoreCharacters, isClassLikeType, isObjectWithConstructor, IsSingleCharacter, KeyAsString, KeyCanBeString, MergeReplace, OrderedCommaSeparatedKeysOfObject, Replace, ReplaceType, StringConcatenation, StringKeyProperties } from './type';
 
 type TYPE_A = {
   aOnly: boolean;
@@ -15,6 +15,122 @@ type TYPE_C = {
   test: string;
   200: number;
 };
+
+class TestClass {}
+
+function knownFunction() {
+  return 'test';
+}
+
+async function knownAsyncFunction() {
+  return 'test';
+}
+
+describe('isObjectWithConstructor()', () => {
+  it('should return true if the object is a Type/Class', () => {
+    expect(isObjectWithConstructor(TestClass)).toBe(true);
+  });
+
+  it('should return true if the object is a known function that is not a Type/Class', () => {
+    expect(isObjectWithConstructor(knownFunction)).toBe(true);
+  });
+
+  it('should return false if object is an instance of a Type/Class', () => {
+    expect(isObjectWithConstructor(new TestClass())).toBe(false);
+  });
+
+  it('should return false if the object is an arrow function', () => {
+    expect(isObjectWithConstructor(() => true)).toBe(false);
+  });
+
+  it('should return false if the object is an object with a value called constructor', () => {
+    expect(isObjectWithConstructor({ constructor: {} })).toBe(false);
+  });
+
+  it('should return false if the object is an object with a value called constructor that is the TestClass', () => {
+    expect(isObjectWithConstructor({ constructor: TestClass })).toBe(false);
+  });
+
+  it('should return false if the object is an object with a value called constructor that is a function', () => {
+    expect(isObjectWithConstructor({ constructor: () => {} })).toBe(false);
+  });
+
+  it('should return false if the object is a string', () => {
+    expect(isObjectWithConstructor('test')).toBe(false);
+  });
+
+  it('should return false if the object is an object', () => {
+    expect(isObjectWithConstructor({})).toBe(false);
+  });
+});
+
+describe('isClassLikeType()', () => {
+  it('should return true if the object is a Type/Class', () => {
+    expect(isClassLikeType(TestClass)).toBe(true);
+  });
+
+  it('should return false if object is an instance of a Type/Class', () => {
+    expect(isClassLikeType(new TestClass())).toBe(false);
+  });
+
+  it('should return false if the object is a known function that is not a Type/Class', () => {
+    expect(isClassLikeType(knownFunction)).toBe(false);
+  });
+
+  it('should return false if the object is an arrow function', () => {
+    expect(isClassLikeType(() => true)).toBe(false);
+  });
+
+  it('should return false if the object is an object with a value called constructor', () => {
+    expect(isClassLikeType({ constructor: {} })).toBe(false);
+  });
+
+  it('should return false if the object is an object with a value called constructor that is the TestClass', () => {
+    expect(isClassLikeType({ constructor: TestClass })).toBe(false);
+  });
+
+  it('should return false if the object is an object with a value called constructor that is a function', () => {
+    expect(isClassLikeType({ constructor: () => {} })).toBe(false);
+  });
+
+  it('should return false if the object is a string', () => {
+    expect(isClassLikeType('test')).toBe(false);
+  });
+
+  it('should return false if the object is an object', () => {
+    expect(isClassLikeType({})).toBe(false);
+  });
+});
+
+describe('getFunctionType()', () => {
+  it('should return "class" if the object is a Type/Class', () => {
+    expect(getFunctionType(TestClass)).toBe('class');
+  });
+
+  it('should return "arrow" if the object is an arrow function', () => {
+    expect(getFunctionType(() => true)).toBe('arrow');
+  });
+
+  it('should return "function" if the object is a known function', () => {
+    expect(getFunctionType(knownFunction)).toBe('function');
+  });
+
+  it('should return "async" if the object is an async function', () => {
+    expect(getFunctionType(knownAsyncFunction)).toBe('function');
+  });
+
+  it('should return null if the object is an object', () => {
+    expect(getFunctionType({})).toBe(null);
+  });
+
+  it('should return null if the object is a string', () => {
+    expect(getFunctionType('test')).toBe(null);
+  });
+
+  it('should return null if the object is a number', () => {
+    expect(getFunctionType('test')).toBe(null);
+  });
+});
 
 describe('KeyAsString', () => {
   it('should not allow functions as key strings', () => {

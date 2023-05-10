@@ -1,4 +1,5 @@
 import { Merge, NonNever, PickProperties, StrictOmit, UnionToIntersection, Writable } from 'ts-essentials';
+import { Maybe } from './value/maybe.type';
 
 /**
  * Class typing, restricted to types that have a constructor via the new keyword.
@@ -11,6 +12,50 @@ export type ObjectWithConstructor = {
   // eslint-disable-next-line @typescript-eslint/ban-types
   constructor: Function;
 };
+
+/**
+ * Returns true if the input object is an object with a constructor.
+ *
+ * @param obj
+ * @returns
+ */
+export function isObjectWithConstructor(obj: any): obj is ObjectWithConstructor {
+  return typeof obj === 'function' && !!obj.prototype && !!obj.constructor && !!obj.prototype.constructor.name;
+}
+
+/**
+ * Returns true if the input object is a class type that requires using "new".
+ *
+ * @param obj
+ * @returns
+ */
+export function isClassLikeType(obj: unknown): obj is ClassLikeType {
+  return isObjectWithConstructor(obj) && !Object.getOwnPropertyDescriptor(obj, 'prototype')?.writable;
+}
+
+export type FunctionType = 'function' | 'class' | 'arrow';
+
+/**
+ * Returns the input value's function type, or null if not a function.
+ *
+ * @param x
+ * @returns
+ */
+export function getFunctionType(x: unknown): Maybe<FunctionType> {
+  // https://stackoverflow.com/a/69316645 // check writable to distinguish between a class type and an object
+  return typeof x === 'function' ? (x.prototype ? (Object.getOwnPropertyDescriptor(x, 'prototype')?.writable ? 'function' : 'class') : x.constructor.name === 'AsyncFunction' ? 'function' : 'arrow') : null;
+}
+
+/**
+ * Returns true if the input is a non-class function.
+ *
+ * @param x
+ * @returns
+ */
+export function isNonClassFunction(x: unknown): x is Function {
+  const type = getFunctionType(x);
+  return type != null && type !== 'class';
+}
 
 /**
  * Similar to ClassType, but allows for abstract classes.

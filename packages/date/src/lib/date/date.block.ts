@@ -2,7 +2,7 @@ import { DayOfWeek, RequiredOnKeys, IndexNumber, IndexRange, indexRangeCheckFunc
 import { dateRange, DateRange, DateRangeDayDistanceInput, DateRangeStart, DateRangeType, isDateRange, isDateRangeStart } from './date.range';
 import { DateDurationSpan } from './date.duration';
 import { differenceInDays, differenceInMilliseconds, isBefore, addDays, addMinutes, getSeconds, getMilliseconds, getMinutes, addMilliseconds, hoursToMilliseconds, addHours, differenceInHours, isAfter, minutesToHours, millisecondsToHours } from 'date-fns';
-import { isDate, copyHoursAndMinutesFromDate, roundDownToMinute } from './date';
+import { isDate, copyHoursAndMinutesFromDate, roundDownToMinute, copyHoursAndMinutesFromNow } from './date';
 import { Expose, Type } from 'class-transformer';
 import { getCurrentSystemOffsetInHours } from './date.timezone';
 import { IsDate, IsNumber, IsOptional, Min } from 'class-validator';
@@ -545,6 +545,10 @@ export type DateBlocksDayTimingInfoFactoryConfig = Pick<DateBlocksExpansionFacto
 
 export interface DateBlockDayTimingInfo {
   /**
+   * Input or calculated date.
+   */
+  date: Date;
+  /**
    * Index for the day
    */
   dayIndex: DateBlockIndex;
@@ -583,7 +587,7 @@ export interface DateBlockDayTimingInfo {
  *
  * The date may not exist within the range, but will still compute values using the input date and timing configuration.
  */
-export type DateBlockDayInfoFactory = (date: Date) => DateBlockDayTimingInfo;
+export type DateBlockDayInfoFactory = (date: DateOrDateBlockIndex) => DateBlockDayTimingInfo;
 
 export function dateBlocksDayInfoFactory(config: DateBlocksDayTimingInfoFactoryConfig): DateBlockDayInfoFactory {
   const { timing, rangeLimit } = config;
@@ -591,12 +595,14 @@ export function dateBlocksDayInfoFactory(config: DateBlocksDayTimingInfoFactoryC
   const indexRange = rangeLimit !== false ? dateBlockIndexRange(timing, rangeLimit) : { minIndex: Number.MIN_SAFE_INTEGER, maxIndex: Number.MAX_SAFE_INTEGER };
   const checkIsInRange = indexRangeCheckFunction({ indexRange, inclusiveMaxIndex: false });
   const dayIndexFactory = dateTimingRelativeIndexFactory(timing);
+  const dayFactory = dateBlockTimingDateFactory(timing);
 
-  return (input: Date) => {
+  return (input: DateOrDateBlockIndex) => {
+    const date = typeof input === 'number' ? copyHoursAndMinutesFromNow(dayFactory(input)) : input;
     const dayIndex = dayIndexFactory(input);
     const isInRange = checkIsInRange(dayIndex);
 
-    const startsAtOnDay = copyHoursAndMinutesFromDate(input, startsAt, false);
+    const startsAtOnDay = copyHoursAndMinutesFromDate(date, startsAt, false);
     const potentiallyInProgress = !isAfter(startsAt, input);
 
     const isInProgress = potentiallyInProgress && isBefore(input, addMinutes(startsAtOnDay, duration));
@@ -606,6 +612,7 @@ export function dateBlocksDayInfoFactory(config: DateBlocksDayTimingInfoFactoryC
     const nextIndex: DateBlockIndex = currentIndex + 1;
 
     return {
+      date,
       dayIndex,
       currentIndex,
       nextIndex,
@@ -822,6 +829,14 @@ export class DateBlockRange extends DateBlock {
       this.to = template.to;
     }
   }
+}
+
+/**
+ * Input type used for cases where a DateRange or a DateBlockRange are allowed as input but used the start/end parameters in DateRange.
+ */
+export interface DateBlockRangeOrDateRange {
+  start?: Maybe<DateOrDateBlockIndex>;
+  end?: Maybe<DateOrDateBlockIndex>;
 }
 
 export type DateOrDateBlockIndexOrDateBlockRange = DateOrDateBlockIndex | DateBlockRange;

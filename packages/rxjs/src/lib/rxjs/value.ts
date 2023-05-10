@@ -1,5 +1,5 @@
 import { combineLatest, filter, skipWhile, startWith, switchMap, MonoTypeOperatorFunction, Observable, of, OperatorFunction, map, delay, EMPTY } from 'rxjs';
-import { Maybe } from '@dereekb/util';
+import { DecisionFunction, Factory, Getter, GetterOrValue, getValueFromGetter, isMaybeSo, MapFunction, Maybe } from '@dereekb/util';
 import { asObservableFromGetter, MaybeObservableOrValueGetter, ObservableOrValueGetter } from './getter';
 import { ObservableDecisionFunction } from './decision';
 
@@ -94,6 +94,34 @@ export function switchMapToDefault<T = unknown>(defaultObs: MaybeObservableOrVal
   );
 }
 
+export interface SwitchMapObjectConfig<T> {
+  defaultGetter?: GetterOrValue<Maybe<T>>;
+}
+
+/**
+ * Provides a switchMap that retrieves and emits the value from the observable, unless the value is null/undefined/true in which case it emits the default value. If the value is false, null is emitted.
+ */
+export function switchMapObject<T extends object>(config: SwitchMapObjectConfig<T>): OperatorFunction<Maybe<ObservableOrValueGetter<Maybe<T | boolean>>>, Maybe<T>> {
+  const { defaultGetter } = config;
+  return switchMap((inputConfig: Maybe<ObservableOrValueGetter<Maybe<T | boolean>>>) => {
+    const obs: Observable<Maybe<T>> = asObservableFromGetter(inputConfig).pipe(
+      map((input) => {
+        let config: Maybe<T>;
+
+        if (input == null || input === true) {
+          config = defaultGetter ? getValueFromGetter(defaultGetter) : null;
+        } else if (input !== false) {
+          config = input;
+        }
+
+        return config;
+      })
+    );
+
+    return obs;
+  });
+}
+
 /**
  * Provides a switchMap that will emit from the input observable if the value is true, otherwise emits the otherwise value or empty.
  *
@@ -144,6 +172,26 @@ export function switchMapMaybeObs<T = unknown>(): OperatorFunction<Maybe<Observa
 
     return subscriber;
   };
+}
+
+/**
+ * Performs the input map function on the input if it is not null/undefined.
+ *
+ * @param mapFn
+ * @returns
+ */
+export function mapMaybe<A, B>(mapFn: MapFunction<A, Maybe<B>>): OperatorFunction<Maybe<A>, Maybe<B>> {
+  return mapIf(mapFn as MapFunction<Maybe<A>, Maybe<B>>, isMaybeSo);
+}
+
+/**
+ * Performs the input map function on the input if the decision returns true.
+ *
+ * @param mapFn
+ * @returns
+ */
+export function mapIf<A, B>(mapFn: MapFunction<Maybe<A>, Maybe<B>>, decision: DecisionFunction<Maybe<A>>): OperatorFunction<Maybe<A>, Maybe<B>> {
+  return map((x: Maybe<A>) => (decision(x) ? mapFn(x) : undefined));
 }
 
 /**

@@ -172,6 +172,13 @@ export function copyHoursAndMinutesFromDateToToday(fromDate: Date, roundDownToMi
 }
 
 /**
+ * Copies the hours/minutes from now to the target date.
+ */
+export function copyHoursAndMinutesFromNow(target: Date, roundDownToMinute?: boolean): Date {
+  return copyHoursAndMinutesFromDate(target, new Date(), roundDownToMinute);
+}
+
+/**
  * Creates a new date and copies the hours/minutes from the input date to the target date.
  */
 export function copyHoursAndMinutesFromDate(target: Date, fromDate: Date, roundDownToMinute?: boolean): Date {

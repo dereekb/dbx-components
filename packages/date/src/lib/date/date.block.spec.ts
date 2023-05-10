@@ -36,7 +36,7 @@ import {
   UniqueDateBlockRange
 } from './date.block';
 import { MS_IN_DAY, MINUTES_IN_DAY, range, RangeInput, Hours, Day } from '@dereekb/util';
-import { roundDownToHour, roundDownToMinute } from './date';
+import { copyHoursAndMinutesFromDate, roundDownToHour, roundDownToMinute } from './date';
 import { dateBlockDurationSpanHasNotEndedFilterFunction } from './date.filter';
 import { systemNormalDateToBaseDate } from './date.timezone';
 
@@ -714,6 +714,17 @@ describe('dateBlocksDayInfoFactory()', () => {
   const duration = 60;
   const timing = dateBlockTiming({ startsAt, duration }, days);
   const factory = dateBlocksDayInfoFactory({ timing });
+
+  it('should calculate the day info when provided a day index.', () => {
+    const result = factory(0);
+    expect(result.date).toBeSameMinuteAs(copyHoursAndMinutesFromDate(start, new Date()));
+    expect(result.dayIndex).toBe(0);
+    expect(result.isInProgress).toBe(false);
+    expect(result.hasOccuredToday).toBe(false);
+    expect(result.isInRange).toBe(true);
+    expect(result.currentIndex).toBe(-1);
+    expect(result.nextIndex).toBe(0);
+  });
 
   it('should calculate the day info for before occurrence for today', () => {
     const result = factory(start);

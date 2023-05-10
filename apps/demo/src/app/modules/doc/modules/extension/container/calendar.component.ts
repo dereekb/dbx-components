@@ -46,6 +46,14 @@ export class DocExtensionCalendarComponent implements OnInit {
       initialSelectionState: 'all'
     }),
     dateScheduleRangeField({
+      key: 'dateScheduleWithMinMaxDateRange',
+      required: true,
+      description: 'Date schedule with a min and max date range applied to it and all days selected.',
+      minMaxDateRange: of({ start: addDays(new Date(), -25), end: addDays(new Date(), 25) }),
+      computeSelectionResultRelativeToFilter: true,
+      initialSelectionState: 'all'
+    }),
+    dateScheduleRangeField({
       key: 'dateScheduleWithFilterAndExclusions',
       required: true,
       description: 'Date schedule with a filter applied to it and additional exclusions.',

@@ -1,3 +1,4 @@
+import { DocExtensionExampleScheduleSelectionCalendarDatePopoverContentComponent } from './component/example.calendar.schedule.selection.popover.content.component';
 import { NgModule } from '@angular/core';
 import { UIRouterModule } from '@uirouter/angular';
 import { DocExtensionHomeComponent } from './container/home.component';
@@ -25,6 +26,8 @@ import { DocExtensionTableComponent } from './container/table.component';
 import { DocExtensionTableItemActionExampleComponent } from './component/table.item.action.example.component';
 import { DocExtensionTableItemCellExampleComponent } from './component/table.item.cell.example.component';
 import { DocExtensionTableItemHeaderExampleComponent } from './component/table.item.header.example.component';
+import { DocExtensionExampleScheduleSelectionCalendarDatePopoverButtonComponent } from './component/example.calendar.schedule.selection.popover.button.component';
+import { DocExtensionExampleScheduleSelectionCalendarDatePopoverComponent } from './component/example.calendar.schedule.selection.popover.component';
 
 @NgModule({
   imports: [
@@ -45,6 +48,9 @@ import { DocExtensionTableItemHeaderExampleComponent } from './component/table.i
   ],
   declarations: [
     // component
+    DocExtensionExampleScheduleSelectionCalendarDatePopoverButtonComponent,
+    DocExtensionExampleScheduleSelectionCalendarDatePopoverComponent,
+    DocExtensionExampleScheduleSelectionCalendarDatePopoverContentComponent,
     DocExtensionWidgetExampleComponent,
     DocExtensionWidgetIconExampleComponent,
     DocExtensionMapboxContentExampleComponent,

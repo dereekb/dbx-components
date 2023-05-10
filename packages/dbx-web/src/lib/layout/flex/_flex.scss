@@ -6,8 +6,9 @@ $dbx-flex-group-columns-count: 6;
 
 // MARK: Mixin
 @mixin core() {
-  .dbx-flex {
+  .dbx-flex-bar {
     display: flex;
+    align-items: center;
   }
 
   .dbx-flex-group {

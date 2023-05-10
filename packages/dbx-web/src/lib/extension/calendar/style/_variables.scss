@@ -48,6 +48,10 @@ $cal-gradient: var($cal-gradient-var);
 
 $cal-hint-opacity: 0.7;
 $cal-out-month-hint-opacity: 0.3;
+$cal-month-weekday-header-font-size: 0.7em;
+$cal-month-weekday-header-line-height: 20px;
+$cal-week-weekday-header-font-size: $cal-month-weekday-header-font-size;
+$cal-week-weekday-header-line-height: $cal-month-weekday-header-line-height;
 
 $cal-vars: () !default;
 $cal-vars: map-merge(

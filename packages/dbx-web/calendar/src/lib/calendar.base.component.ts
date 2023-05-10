@@ -11,7 +11,12 @@ import { MatButtonToggleChange } from '@angular/material/button-toggle';
 export class DbxCalendarBaseComponent<T> {
   readonly viewDate$ = this.calendarStore.date$;
 
-  readonly isLookingAtToday$ = this.calendarStore.isLookingAtToday$;
+  readonly showTodayButton$ = this.calendarStore.showTodayButton$;
+  readonly canJumpToToday$ = this.calendarStore.canJumpToToday$;
+
+  readonly isLookingAtMinimumDate$ = this.calendarStore.isLookingAtMinimumDate$;
+  readonly isLookingAtMaximumDate$ = this.calendarStore.isLookingAtMaximumDate$;
+  readonly showPageButtons$ = this.calendarStore.canShowPageButtons$;
 
   readonly activeDayIsOpen$ = this.calendarStore.eventsForDateState$.pipe(
     withLatestFrom(this.calendarStore.date$),
@@ -32,12 +37,20 @@ export class DbxCalendarBaseComponent<T> {
     this.calendarStore.tapDay(new Date());
   }
 
+  firstPageButtonClicked(): void {
+    this.calendarStore.tapFirstPage();
+  }
+
   nextButtonClicked(): void {
     this.calendarStore.tapNext();
   }
 
   previousButtonClicked(): void {
     this.calendarStore.tapPrevious();
+  }
+
+  lastPageButtonClicked(): void {
+    this.calendarStore.tapLastPage();
   }
 
   typeToggleChanged(event: MatButtonToggleChange): void {

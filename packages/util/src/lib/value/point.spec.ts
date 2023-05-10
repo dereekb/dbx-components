@@ -16,6 +16,11 @@ describe('isDefaultLatLngPoint()', () => {
     expect(result).toBe(true);
   });
 
+  it('should return true for 0,0', () => {
+    const result = isDefaultLatLngPoint('0,0');
+    expect(result).toBe(true);
+  });
+
   it('should return false for a LatLngPoint that is not the default', () => {
     const result = isDefaultLatLngPoint({ lat: 1, lng: 1 });
     expect(result).toBe(false);

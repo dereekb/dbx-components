@@ -1,8 +1,10 @@
 <dbx-calendar-base class="dbx-schedule-selection-calendar">
   <ng-container controls>
-    <dbx-schedule-selection-calendar-selection-toggle-button></dbx-schedule-selection-calendar-selection-toggle-button>
-    <dbx-button-spacer></dbx-button-spacer>
-    <dbx-schedule-selection-calendar-date-popover-button></dbx-schedule-selection-calendar-date-popover-button>
+    <ng-container *ngIf="showClearSelectionButton$ | async">
+      <dbx-schedule-selection-calendar-selection-toggle-button></dbx-schedule-selection-calendar-selection-toggle-button>
+      <dbx-button-spacer></dbx-button-spacer>
+    </ng-container>
+    <dbx-injection [config]="datePopoverButtonInjectionConfig$ | async"></dbx-injection>
   </ng-container>
   <div class="dbx-calendar-content dbx-calendar-content-month">
     <mwl-calendar-month-view [refresh]="refresh$" [viewDate]="(viewDate$ | async)!" [events]="(events$ | async)!" (dayClicked)="dayClicked($event.day)" (eventClicked)="eventClicked('Clicked', $event.event)" (beforeViewRender)="beforeMonthViewRender($event)" [cellTemplate]="monthDayCellTemplate"></mwl-calendar-month-view>

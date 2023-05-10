@@ -18,6 +18,11 @@ $calendar-content-border-consideration: 2px;
   @include calendar.cal-core();
   @include calendar.cal-theme(());
 
+  .dbx-calendar.dbx-calendar-fixed-header-size .dbx-calendar-header {
+    height: $calendar-header-height;
+    padding: 0px 8px;
+  }
+
   .dbx-calendar {
     height: 100%;
 
@@ -30,9 +35,6 @@ $calendar-content-border-consideration: 2px;
     }
 
     .dbx-calendar-header {
-      height: $calendar-header-height;
-      padding: 0px 8px;
-
       display: flex;
       width: 100%;
       align-items: center;
