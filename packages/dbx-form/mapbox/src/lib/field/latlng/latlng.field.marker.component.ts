@@ -14,7 +14,6 @@ export class DbxFormMapboxLatLngFieldMarkerComponent {
   readonly marker$: Observable<Maybe<DbxMapboxMarker>> = combineLatest([this.fieldComponent.latLng$, this.fieldComponent.markerConfig$]).pipe(
     map(([latLng, markerConfig]) => {
       if (markerConfig !== false) {
-        console.log({ latLng, markerConfig });
         return { latLng, ...markerConfig };
       } else {
         return undefined;
