@@ -1,6 +1,6 @@
 import { copyObject, CopyObjectFunction } from '../object/object';
 import { PromiseOrValue } from '../promise/promise';
-import { isNonClassFunction } from '../type';
+import { ClassType, isNonClassFunction } from '../type';
 import { MapFunction } from '../value/map';
 import { Maybe } from '../value/maybe.type';
 
@@ -40,9 +40,14 @@ export type AsyncGetterOrValue<T> = GetterOrValue<PromiseOrValue<T>>;
 export type GetterOrFactoryWithInput<T, A> = Getter<T> | FactoryWithInput<T, A>;
 
 /**
+ * Types of values that can safely be retrieved via getValueFromGetter() or asGetter().
+ */
+export type GetterDistinctValue = boolean | string | number | object | symbol | ClassType;
+
+/**
  * Either a GetterOrValue, or a FactoryWithInput.
  */
-export type GetterOrValueWithInput<T extends string | number | object | symbol, A> = GetterOrValue<T> | FactoryWithInput<T, A>;
+export type GetterOrValueWithInput<T extends GetterDistinctValue, A> = GetterOrValue<T> | FactoryWithInput<T, A>;
 
 export type StringOrGetter = GetterOrValue<string>;
 
@@ -53,7 +58,7 @@ export type StringOrGetter = GetterOrValue<string>;
  * @returns
  */
 export function isGetter<T = unknown>(value: unknown): value is Getter<T> {
-  return typeof value === 'function';
+  return isNonClassFunction(value);
 }
 
 /**
@@ -66,7 +71,7 @@ export function getValueFromGetter<T>(input: GetterOrValue<T>): T;
 export function getValueFromGetter<T>(this: unknown, input: GetterOrValue<T>): T;
 export function getValueFromGetter<T, A>(this: unknown, input: FactoryWithRequiredInput<T, A>, args: A): T;
 export function getValueFromGetter<T, A>(this: unknown, input: GetterOrFactoryWithInput<T, A>, args?: A): T;
-export function getValueFromGetter<T extends string | number | object | symbol, A>(this: unknown, input: GetterOrValueWithInput<T, A>, args?: A): T;
+export function getValueFromGetter<T extends GetterDistinctValue, A>(this: unknown, input: GetterOrValueWithInput<T, A>, args?: A): T;
 export function getValueFromGetter<T, A>(this: unknown, input: unknown, args?: A): T {
   if (isNonClassFunction(input)) {
     return (input as Function)(args);

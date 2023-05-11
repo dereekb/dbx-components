@@ -1,5 +1,5 @@
 import { map, Observable, shareReplay } from 'rxjs';
-import { ChangeDetectionStrategy, Component, Input, OnDestroy, Optional } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Injector, Input, OnDestroy, Optional } from '@angular/core';
 import { getValueFromGetter, latLngPointFunction } from '@dereekb/util';
 import { DbxMapboxChangeService } from './mapbox.change.service';
 import { DbxMapboxMarker } from './mapbox.marker';
@@ -19,5 +19,5 @@ import { DbxMapboxInjectionStore } from './mapbox.injection.store';
 export class DbxMapboxInjectionComponent {
   readonly entries$: Observable<DbxInjectionArrayEntry[]> = this.dbxMapboxMapKeyInjectionStore.allInjectionConfigs$.pipe(shareReplay(1));
 
-  constructor(readonly dbxMapboxMapKeyInjectionStore: DbxMapboxInjectionStore) {}
+  constructor(readonly dbxMapboxMapKeyInjectionStore: DbxMapboxInjectionStore, readonly injector: Injector) {}
 }

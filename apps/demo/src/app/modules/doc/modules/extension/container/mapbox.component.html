@@ -14,7 +14,6 @@
                   <dbx-mapbox-marker *ngFor="let marker of mapboxDemoMarkers" [marker]="marker"></dbx-mapbox-marker>
                   <dbx-mapbox-markers [data]="mapboxMarkersData" [markerFactory]="mapboxMarkerFactory"></dbx-mapbox-markers>
                   <doc-extension-mapbox-markers-example *ngIf="showMarkers$ | async" [locations]="addedMapboxMarkersData$ | async"></doc-extension-mapbox-markers-example>
-                  <dbx-mapbox-injection></dbx-mapbox-injection>
                 </mgl-map>
               </dbx-mapbox-layout>
               <dbx-mapbox-menu [matMenuTriggerFor]="menu"></dbx-mapbox-menu>
@@ -78,9 +77,7 @@
                 <p>Click: {{ click$ | async | json }} | Double Click: {{ doubleClick$ | async | json }} | Right Click: {{ rightClick$ | async | json }}</p>
               </dbx-content-container>
               <div style="height: 300px; width: 100%">
-                <mgl-map dbxMapboxMap>
-                  <dbx-mapbox-injection></dbx-mapbox-injection>
-                </mgl-map>
+                <mgl-map dbxMapboxMap></mgl-map>
               </div>
               <dbx-bar fxLayout="row wrap">
                 <button mat-button (click)="centerAustin()">Austin, TX (jump)</button>

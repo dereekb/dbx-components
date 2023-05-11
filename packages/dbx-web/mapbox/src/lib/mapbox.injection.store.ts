@@ -1,12 +1,12 @@
 import { map, Observable, shareReplay } from 'rxjs';
 import { Injectable, OnDestroy } from '@angular/core';
-import { DbxInjectionArrayEntry } from '@dereekb/dbx-core';
+import { DbxInjectionArrayEntry, DbxInjectionComponentConfig, DbxInjectionComponentConfigWithoutInjector } from '@dereekb/dbx-core';
 import { ComponentStore } from '@ngrx/component-store';
-import { distinctUntilMapHasDifferentKeys } from '@dereekb/rxjs';
+import { distinctUntilMapHasDifferentKeys, ObservableOrValueGetter } from '@dereekb/rxjs';
 
 export type DbxMapboxInjectionKey = string;
 
-export interface DbxMapboxInjectionConfig extends DbxInjectionArrayEntry {
+export interface DbxMapboxInjectionConfig {
   /**
    * Unique key that identifies this config specifically.
    *
@@ -17,6 +17,10 @@ export interface DbxMapboxInjectionConfig extends DbxInjectionArrayEntry {
    * Arbitrary injection type. Is used for filtering on configurations.
    */
   readonly type?: string;
+  /**
+   * Injection configuration. The injector is disallowed, as the parent injector must include the mapbox component.
+   */
+  readonly injectionConfig: ObservableOrValueGetter<DbxInjectionComponentConfigWithoutInjector>;
 }
 
 export interface DbxMapboxMapInjectionStoreState {

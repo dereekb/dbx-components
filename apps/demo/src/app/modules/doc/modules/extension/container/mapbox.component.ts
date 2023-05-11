@@ -113,10 +113,11 @@ export class DocExtensionMapboxComponent implements OnInit, OnDestroy {
   readonly mapboxLatLngAndZoomField: FormlyFieldConfig[] = [
     mapboxLatLngField({
       key: 'latLng',
-      description: 'This is a coordinate picker synchronized with the big map.',
+      description: 'This is a coordinate picker synchronized with the big map. Click on the map to set a location.',
       latLngConfig: {
         precision: 3
       },
+      selectLocationOnMapDrag: false,
       selectLocationOnMapClick: true,
       showMap: false
     }),

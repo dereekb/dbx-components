@@ -1,4 +1,4 @@
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, map } from 'rxjs';
 import { ChangeDetectionStrategy, Component, Input, OnDestroy, TrackByFunction } from '@angular/core';
 import { DbxInjectionArrayEntry } from './injection.array';
 import { Maybe } from '@dereekb/util';
@@ -17,7 +17,6 @@ import { Maybe } from '@dereekb/util';
 })
 export class DbxInjectionArrayComponent implements OnDestroy {
   private _entries = new BehaviorSubject<DbxInjectionArrayEntry[]>([]);
-
   readonly entries$ = this._entries.asObservable();
 
   readonly trackByKeyFn: TrackByFunction<DbxInjectionArrayEntry> = (index, item) => item.key;
